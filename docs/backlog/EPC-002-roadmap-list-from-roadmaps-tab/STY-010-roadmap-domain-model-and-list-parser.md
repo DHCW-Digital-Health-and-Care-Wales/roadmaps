@@ -67,7 +67,7 @@ English
 publishes; category spellings match and an unknown one becomes no category; impossible
 or other-format dates become no date; `#ABC` becomes `#aabbcc` and the others no colour;
 Welsh with no English is dropped
-**And** `yes`, the unknown category, both dates, both colours and the orphan Welsh are
+**And** `yes`, the unknown category, both dates, all three colours and the orphan Welsh are
 each recorded as a problem with its row; `No` and blanks are not
 
 ### S4: Bad rows are skipped, not fatal
@@ -101,6 +101,7 @@ shape
 **When** the index is parsed
 **Then** `producta` is the second row's roadmap, published
 **And** the first row is skipped and recorded as a duplicate
+**And** when both rows are enabled, the first is kept and the second skipped and recorded
 
 ## Tests
 
@@ -114,7 +115,7 @@ existing suites, unchanged in what they assert.
 - **D2** (agent, 2026-11-10): the interim worksheet mapping over a parser-only story with
   no domain change, so STY-011 swaps only the data source.
 - **D3** (agent, 2026-11-10, Opus review): among rows sharing an id, the enabled row is
-  kept (else the first), matching the public site, which drops disabled rows before its
+  kept (the first enabled one, else the first row), matching the public site, which drops disabled rows before its
   duplicate check (ADR-009). Clarifies "the first" in S4; adds S7.
 - **D4** (agent, 2026-11-10, Opus review): S2's header variants are alternative
   spellings, each tested in its own header; the duplicate case puts two spellings of one

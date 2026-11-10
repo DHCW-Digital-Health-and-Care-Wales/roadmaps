@@ -578,4 +578,4 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
       sentence case.
 - **EPC-002 planning (orchestrator)** — `docs/analysis/roadmaps-tab-format.md`, ADR-009
   and EPC-002 (STY-010–012): roadmaps come from the first worksheet's rows, as on DHCW's
-  public site. Example data for every test is in `tests/fixtures/sheets/` (its README).
+  public site. Tests use only the example data in `tests/fixtures/sheets/` (its README) or inline rows.

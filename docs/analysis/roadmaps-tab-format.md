@@ -37,19 +37,19 @@ whose tab is hidden.
 
 ### Columns
 
-| Column                      | Meaning                                           | Rules in the public site                                                                                                                                   |
-| --------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Sheet`                     | The tab holding the roadmap's items               | **Required column**: missing fails the sync. A row with a blank `Sheet` is skipped. Its slug is the roadmap's URL.                                         |
-| `Enabled`                   | Whether the public site publishes the roadmap     | Exactly `Yes` (case-sensitive) publishes. `No` or blank does not. Any other value does not, with a warning. A missing column publishes nothing.            |
-| `Title` (+cy)               | The roadmap's name                                | Blank falls back to the `Sheet` value.                                                                                                                     |
-| `Category`                  | The landing page group                            | One of six values, matched like headers. Blank or unknown (warning) means "Other roadmaps". No Welsh column.                                               |
-| `Family` (+cy)              | Optional product family, e.g. `Single Record`     | Shown above the title with a swatch in the roadmap's colour; the roadmap page heading reads `Family: Title`.                                               |
-| `Status label` (+cy)        | Badge text, e.g. `Beta`                           | Free text.                                                                                                                                                 |
-| `Last updated`              | Date                                              | `YYYY-MM-DD` or `DD/MM/YYYY`, checked to be a real date; anything else is blanked with a warning.                                                          |
-| `Colour`                    | Highlight colour                                  | `#rgb` or `#rrggbb` only, so sheet text can't inject CSS; anything else warns. Default `#325083`.                                                          |
-| `Vision` (+cy)              | "Our vision" on the roadmap page                  | Optional. Blank shows a general intro sentence instead. Lines become paragraphs; lines starting `- ` form a bullet list.                                   |
-| `Service description` (+cy) | "Our value" on the roadmap page; the card summary | Optional; blank hides it. Same line rules as `Vision`.                                                                                                     |
-| `Product Lead`              | Who leads the product                             | Added in `50e67f9`. Free text, trimmed, shown as "Product lead" under the roadmap page title; blank hides it. No Welsh column: a name is the same in both. |
+| Column                      | Meaning                                           | Rules in the public site                                                                                                                                         |
+| --------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Sheet`                     | The tab holding the roadmap's items               | **Required column**: missing fails the sync. A row with a blank `Sheet` is skipped. Its slug is the roadmap's URL.                                               |
+| `Enabled`                   | Whether the public site publishes the roadmap     | Exactly `Yes` (case-sensitive) publishes. `No` or blank does not. Any other value does not, with a warning. A missing column enables nothing, so the sync fails. |
+| `Title` (+cy)               | The roadmap's name                                | Blank falls back to the `Sheet` value.                                                                                                                           |
+| `Category`                  | The landing page group                            | One of six values, matched like headers. Blank or unknown (warning) means "Other roadmaps". No Welsh column.                                                     |
+| `Family` (+cy)              | Optional product family, e.g. `Single Record`     | Shown above the title with a swatch in the roadmap's colour; the roadmap page heading reads `Family: Title`.                                                     |
+| `Status label` (+cy)        | Badge text, e.g. `Beta`                           | Free text.                                                                                                                                                       |
+| `Last updated`              | Date                                              | `YYYY-MM-DD` or `DD/MM/YYYY`, checked to be a real date; anything else is blanked with a warning.                                                                |
+| `Colour`                    | Highlight colour                                  | `#rgb` or `#rrggbb` only, so sheet text can't inject CSS; anything else warns. Default `#325083`.                                                                |
+| `Vision` (+cy)              | "Our vision" on the roadmap page                  | Optional. Blank shows a general intro sentence instead. Lines become paragraphs; lines starting `- ` form a bullet list.                                         |
+| `Service description` (+cy) | "Our value" on the roadmap page; the card summary | Optional; blank hides it. Same line rules as `Vision`.                                                                                                           |
+| `Product Lead`              | Who leads the product                             | Added in `50e67f9`. Free text, trimmed, shown as "Product lead" under the roadmap page title; blank hides it. No Welsh column: a name is the same in both.       |
 
 Categories, in the public site's display order, with Welsh names from its `content.ts`:
 
@@ -70,11 +70,7 @@ Categories, in the public site's display order, with Welsh names from its `conte
 - The landing page groups roadmaps by category in the order above, with "Other roadmaps"
   last, and sorts by title within each group.
 - The sync **fails as a whole**, leaving the previous site live, when the index has no
-  `Sheet` column, or no roadmap is enabled, or, **among enabled rows only** (disabled rows
-  are dropped first): a slug has no letters or digits, two rows share a slug, or a `Sheet`
-  names no tab, a colour is `#rgb` (it passes `safeColour`, then fails the snapshot
-  schema, which wants six digits), or the named roadmap tab lacks a `Title` or `Horizon`
-  column. A disabled row may therefore share a slug with an enabled one. Every other
+  `Sheet` column, or no roadmap is enabled, or, **among enabled rows only** (disabled rows are dropped first): a slug has no letters or digits; two rows share a slug; a `Sheet` names no tab; a colour is `#rgb` (it passes `safeColour`, then fails the snapshot schema, which wants six digits); or the named roadmap tab lacks a `Title` or `Horizon` column. A disabled row may therefore share a slug with an enabled one. Every other
   problem is a warning in the CI run summary.
 
 ### Roadmap tabs

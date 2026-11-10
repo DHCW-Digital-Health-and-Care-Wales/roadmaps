@@ -1,4 +1,4 @@
-# EPC-002: Roadmap list from the roadmaps tab — list the roadmaps the public site lists, not the worksheets
+# EPC-002: Roadmap list from the roadmap index — list the roadmaps the public site lists, not the worksheets
 
 - **Status**: Active — owner decisions recorded 2026-11-10; no story started
 - **Progress**: 0 of 3 terminal; next selectable: STY-010; blocked on: nothing
@@ -118,7 +118,7 @@ None.
 
 ## Related
 
-- [The roadmap list format the public site uses](../../analysis/roadmaps-tab-format.md)
+- [The roadmap index format the public site uses](../../analysis/roadmaps-tab-format.md)
   (Outcome: ADR-009 and this epic)
 - ADR-009, ADR-002, ADR-008
 - `tests/fixtures/sheets/README.md`

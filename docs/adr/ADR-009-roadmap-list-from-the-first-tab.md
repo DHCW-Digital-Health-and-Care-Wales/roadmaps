@@ -100,14 +100,14 @@ interface Roadmap {
 
 The editor keeps the list usable where the public site fails its whole sync:
 
-| Mistake                          | Public site                | Editor                                                    |
-| -------------------------------- | -------------------------- | --------------------------------------------------------- |
-| Two rows with the same slug      | sync fails if both enabled | the enabled row kept (else the first), the others skipped |
-| A slug with no letters or digits | sync fails if enabled      | row skipped                                               |
-| `Sheet` names no existing tab    | sync fails if enabled      | roadmap kept                                              |
-| Colour `#rgb`                    | sync fails if enabled      | expanded to `#rrggbb`                                     |
-| No `Enabled` column              | nothing published          | every roadmap listed as not published                     |
-| No roadmap enabled               | sync fails                 | listed as not published                                   |
+| Mistake                          | Public site                  | Editor                                                              |
+| -------------------------------- | ---------------------------- | ------------------------------------------------------------------- |
+| Two rows with the same slug      | sync fails if both enabled   | the first enabled row kept (else the first row), the others skipped |
+| A slug with no letters or digits | sync fails if enabled        | row skipped                                                         |
+| `Sheet` names no existing tab    | sync fails if enabled        | roadmap kept                                                        |
+| Colour `#rgb`                    | sync fails if enabled        | expanded to `#rrggbb`                                               |
+| No `Enabled` column              | sync fails (nothing enabled) | every roadmap listed as not published                               |
+| No roadmap enabled               | sync fails                   | listed as not published                                             |
 
 Disabled rows never fail the public site's sync, so a disabled draft may share a slug
 with the live row; keeping the enabled row means the editor shows, at that address, the

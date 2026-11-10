@@ -8,7 +8,7 @@
 - **Binding ADRs**: ADR-009 §"What a roadmap is", §"Which roadmaps, in what order";
   ADR-005; ADR-008
 - **Suggested model**: Sonnet — presentation work on a settled model; screenshots needed
-- **Delivered**: <PR URL>
+- **Delivered**: https://github.com/collisdigital/roadmaps-editor/pull/7
 
 ## Summary
 

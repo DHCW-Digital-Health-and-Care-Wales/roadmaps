@@ -106,8 +106,9 @@ not accepted becomes a record with Status `Needs grilling` instead.
    final diff, review it in the lanes `delegation.md` sets, resolve findings,
    fill the body from `.github/pull_request_template.md` and open the separate
    PR, linking it to the session where the runtime can. Leave it open for the
-   owner, like the primary; babysit it to green and squash-merge it per
-   `pr-watch.md` only when the user asked for merging. Set `retro: complete`
+   owner, like the primary; babysit it per `pr-watch.md` only when the user
+   asked for babysitting or merging, and squash-merge it only when they asked
+   for merging. Set `retro: complete`
    in the task handoff; do not recursively invoke this skill for that PR.
 5. Report the improvements and evidence, both PR URLs (and merge SHAs where
    merged), and any outstanding limitations. For a no-op or deferral, state

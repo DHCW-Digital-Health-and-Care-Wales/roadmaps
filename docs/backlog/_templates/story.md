@@ -51,7 +51,7 @@ marked _(optional)_ when it would be empty.
   (preferred order) | none
 - **Binding ADRs**: ADR-{nnnn} §<section>, ADR-{nnnn} | none
 - **Suggested model**: Opus | Sonnet | Haiku — <the reason, in a clause>
-- **Delivered**: <PR URL> — <open | merged at `sha` | closed unmerged>
+- **Delivered**: <PR URL>
   _(add on delivery)_
 
 ## Summary

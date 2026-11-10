@@ -1,10 +1,11 @@
 # Review and publish a branch
 
 1. Collect the screenshot manifest per `screenshots.md`; keep image files out
-   of commits. Discover the remote default branch and resolve its full SHA.
-   Record the merge-base and implementation head. Confirm the worktree is clean
-   after committing the intended changes; include untracked files deliberately
-   if reviewing before the commit. Every reviewer gets the same snapshot.
+   of commits. The PR's base is the remote default branch, or the
+   prerequisite's branch in a stacked delivery the user asked for; resolve its
+   full SHA. Record the merge-base with it and the implementation head.
+   Confirm the worktree is clean after committing the intended changes;
+   include untracked files deliberately if reviewing before the commit. Every reviewer gets the same snapshot.
 2. Dispatch the reviewers `delegation.md` sets (Opus and Sol for correctness,
    Sonnet for quality), each reading its skill. Store their reports
    independently. Resolve every actionable finding or record its
@@ -17,7 +18,7 @@
    `feat(roadmaps): S10 show each roadmap's owner`.
 4. Push the existing task branch without force-pushing. Do not create a
    duplicate if a PR already exists. Create the PR with
-   `gh pr create --base <default> --head <branch> --title '<title>' --body-file <body-file>`,
+   `gh pr create --base <base branch> --head <branch> --title '<title>' --body-file <body-file>`,
    adding one `--attach` per screenshot (`screenshots.md`), then read back the
    hosted image URLs. Link the PR to the session as the next call when the
    runtime supports it. Confirm the returned URL, and that the PR's head SHA

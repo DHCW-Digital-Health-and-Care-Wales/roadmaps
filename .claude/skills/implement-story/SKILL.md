@@ -13,10 +13,10 @@ eligible story, push its branch and open a PR, then implement one bounded
 retrospective on a separate PR. Do not start the next story automatically.
 
 **PR policy.** By default a PR is raised, linked and left open for the owner:
-do not watch, babysit or merge it. When the user asks for it to be babysat or
-merged ("merge when green", "babysit it"), step 5 follows
-`references/pr-watch.md` to green and squash-merges. The same policy covers
-the retrospective PR. Explicit user constraints override these defaults.
+do not watch, babysit or merge it. When the user asks for babysitting ("babysit
+it"), step 5 follows `references/pr-watch.md` to green and stops with the PR
+ready for review; only an explicit merge request ("merge when green") adds the
+squash-merge. The same policy covers the retrospective PR. Explicit user constraints override these defaults.
 
 ## 1. Establish the task
 
@@ -171,10 +171,12 @@ After the review fixes, capture the after screenshots per
 `.github/pull_request_template.md` once the review gates pass, following its
 comments, with actual verification and the Review record in its For agents
 block, and the screenshots attached in its Screenshots section. If the runtime can
-link a PR to the session, do so as the next call. Confirm the returned PR URL and
-head SHA. If GitHub access blocks delivery, finish local work, prepare the
-exact PR body, and report the needed access without asking for a raw token in
-chat.
+link a PR to the session, do so as the next call. Then fill the record's
+`Delivered` field with the PR URL in one more commit and push it; that
+record-only commit needs no further review. Confirm the PR URL and that its
+head SHA equals your local head. If GitHub access blocks delivery, finish
+local work, prepare the exact PR body, and report the needed access without
+asking for a raw token in chat.
 
 A delivery subagent hands the open PR and current task record to its
 top-level parent here, per `references/delegation.md`'s _PR handoff_. The

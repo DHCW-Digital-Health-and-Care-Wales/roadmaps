@@ -55,7 +55,7 @@ section, captioned and laid out as that section's template comment sets, and
 pass each referenced file with its own `--attach` flag:
 
 ```sh
-gh pr create --base main --head <branch> --title '<title>' --body-file <body-file> \
+gh pr create --base <base branch> --head <branch> --title '<title>' --body-file <body-file> \
   --attach <dir>/s1-roadmaps-desktop-light-en-before.png \
   --attach <dir>/s1-roadmaps-desktop-light-en-after.png
 ```

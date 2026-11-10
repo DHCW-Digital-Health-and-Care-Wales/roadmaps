@@ -14,7 +14,7 @@ statuses and are not rewritten.
 | Needs grilling | all          | A product decision blocks it; Open questions lists them         | agent                    | no         | live       |
 | Proposed       | all          | Specified and agreed; may be selected once Depends on is met    | agent after grilling     | yes        | live       |
 | In progress    | all          | A delivery agent holds it; note names the branch or PR          | delivering agent         | no         | live       |
-| Done           | all          | Implemented and verified in a PR; `Delivered` says if merged    | delivering agent         | no         | `_archive` |
+| Done           | all          | Implemented and verified in a PR; `Delivered` links it          | delivering agent         | no         | `_archive` |
 | Won't fix      | defect       | Owner decided not to fix                                        | owner only               | no         | `_archive` |
 | Won't do       | story, chore | Owner decided against doing it                                  | owner only               | no         | `_archive` |
 | Superseded     | all          | Another record holds all its remaining scenarios; note names it | agent, citing the record | no         | `_archive` |
@@ -61,10 +61,10 @@ stateDiagram-v2
 - **Partial delivery is not Done.** A scenario the owner drops or moves is a
   Decisions entry, not a departure, and the story can then be Done.
 - **Done moves with the PR.** The PR that delivers a record sets Done, moves
-  the file to `_archive/` and marks its epic row. `Delivered` is filled with
-  the PR's URL and `open` in a commit pushed once the PR exists; whoever merges
-  or closes it later updates the note. Dependents wait for the required
-  behaviour on the default branch, not for the note.
+  the file to `_archive/` and marks its epic row. `Delivered` links that PR,
+  added in a commit pushed once the PR exists; the PR's own state says whether
+  it merged, so the field is not updated afterwards. Dependents wait for the
+  required behaviour on the default branch.
 - **Reopening** a Won't fix / Won't do: move the file back to the live tree,
   set Proposed or Needs grilling, and add a Decisions entry citing the
   trigger. The ID is kept.

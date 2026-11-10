@@ -66,8 +66,9 @@ If that retro is a no-op, publish one report-only PR on an authorized separate
 branch cut from the default branch; it is evidence, not a manufactured process
 improvement. Both kinds are left open for the owner per orchestrate step 6. A
 report-only PR gets `pnpm format:check`, a check that each path and link it
-cites exists, and the three review lanes `delegation.md` sets (docs-only), but
-no automatic retrospective or babysitting of its own. Do not create one PR per item or event for metrics. If branch/access
+cites exists, review as a docs-only PR under `delegation.md`, but no automatic
+retrospective or babysitting of its own. Do not create one PR per item or
+event for metrics. If branch/access
 constraints prevent publication, save the final record in the run folder, give
 its location and exact publication blocker, and mark it unpublished in the
 handoff; a no-op alone is not a reason to discard it.

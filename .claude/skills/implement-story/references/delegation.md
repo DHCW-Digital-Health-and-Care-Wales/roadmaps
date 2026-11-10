@@ -97,8 +97,8 @@ notifications, use this lifecycle at every nesting level:
 Without asynchronous delegation, run reviewers in the foreground and wait for
 them. Never poll a running delegate, sleep, or set scheduled check-ins as a
 workaround for a missing notification. The fallback wake `orchestrate` defines
-is not a check-in: it guards one stalled wait and is removed when it fires or
-the wait ends.
+is not a check-in: it guards one stalled wait and is removed once that wait
+ends.
 
 A worker is **terminal** only when the runtime shows it neither running nor
 waiting on children of its own, whatever its last message or a `failed` label

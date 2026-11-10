@@ -272,9 +272,9 @@ an available authorized checkout/branch. Preserve any open primary PR and
 follow the retro skill's independence rules; defer if safe separation is
 unavailable. Run applicable checks, review it in the three lanes
 `delegation.md` sets, link the PR where the runtime can, and leave it for the
-owner: orchestration retrospective PRs are not babysat or merged. At intermediate handoffs, keep the run
-summary as a checkpoint in the shared handoff saved before launch; publish no
-separate partial summary per item. The final orchestrator includes the
+owner: orchestration retrospective PRs are not babysat or merged. At
+intermediate handoffs, keep the run summary as a checkpoint in the shared
+handoff saved before launch; publish no separate partial summary per item. The final orchestrator includes the
 queue's run summary in its retro PR, or publishes a report-only PR when that
 retro is a no-op, following `references/run-summary.md`. Intermediate retro
 findings/PRs remain in the outgoing session's report for the final

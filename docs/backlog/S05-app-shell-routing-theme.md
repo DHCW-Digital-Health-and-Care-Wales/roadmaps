@@ -56,7 +56,36 @@ unauthenticated welcome state, and the route skeleton.
 
 ## Acceptance criteria
 
-- [ ] App renders in dev; header responsive at 375px; keyboard focus visible everywhere.
-- [ ] No literal user-facing strings outside the i18n catalogues.
-- [ ] Only `src/app/composition.ts` imports from `@/infrastructure`.
-- [ ] All checks green.
+- [x] App renders in dev; header responsive at 375px; keyboard focus visible everywhere.
+- [x] No literal user-facing strings outside the i18n catalogues.
+- [x] Only `src/app/composition.ts` imports from `@/infrastructure`.
+- [x] All checks green.
+
+## Review notes
+
+Sol review (Codex `gpt-6.1-sol`, high) of the uncommitted S05 changes:
+
+1. **Major — closing the popup toasted "Disconnected from Google".** `connecting → ready
+{ lastError: "popup-closed" }` matched the disconnect branch. Fixed: the disconnect toast
+   now requires `ready` without a `lastError`. The test previously asserted before Sonner
+   rendered its queued toast; it now flushes Sonner's timer first and fails without the fix.
+   Sonner's store is global and replays active toasts into the next `Toaster`, so
+   `src/test/setup.ts` now dismisses all toasts after each test.
+2. **Minor — unknown-route test did not exercise hash history.** Fixed:
+   `renderWithProviders` accepts a `history`, and two tests run on `createHashHistory()`
+   (unknown hash path renders not-found; the skip link moves focus without changing the
+   hash).
+
+No other findings (composition, provider order, cache clearing, theme, layering, i18n,
+accessibility, S06 seams). Found while screenshotting: the focused skip link lost its padding
+(`not-sr-only` resets it); fixed with `focus:px-3 focus:py-2`.
+
+Decisions worth knowing:
+
+- The landing hero shows an inline notice for `error`, `lastError` and `expired`, and OAuth
+  failures also toast (per scope). On the landing page that is briefly both; the toast is
+  transient, and the inline notice explains startup failures (`script-load-failed`), which
+  never toast.
+- Expired sessions currently show the hero with "Reconnect". S06 decides whether `/` keeps
+  the roadmaps section (with a reconnect prompt) while expired.
+- The production bundle's main chunk is ~580 kB (Vite warns at 500 kB). Left for S08/S09.

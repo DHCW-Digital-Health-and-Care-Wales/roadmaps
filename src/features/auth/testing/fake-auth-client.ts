@@ -12,10 +12,15 @@ export interface FakeAuthClient extends AuthClient {
   readonly setState: (state: AuthState) => void
   /** Moves to `connected` (an hour from now). */
   readonly connect: Mock<() => void>
-  /** Moves to `ready`. */
+  /** Moves to `ready`, then calls `onDisconnect`. */
   readonly disconnect: Mock<() => void>
   /** Moves `connected` to `expired`. */
   readonly reportUnauthenticated: Mock<() => void>
+}
+
+export interface FakeAuthClientOptions {
+  /** Called after `disconnect()`, like the Google client's option of the same name. */
+  onDisconnect?: (() => void) | undefined
 }
 
 /**
@@ -24,6 +29,7 @@ export interface FakeAuthClient extends AuthClient {
  */
 export function createFakeAuthClient(
   initialState: AuthState = { status: "ready" },
+  { onDisconnect }: FakeAuthClientOptions = {},
 ): FakeAuthClient {
   const store = createExternalStore(initialState)
   const isConnected = () => store.getSnapshot().status === "connected"
@@ -48,6 +54,7 @@ export function createFakeAuthClient(
     }),
     disconnect: vi.fn(() => {
       store.setSnapshot({ status: "ready" })
+      onDisconnect?.()
     }),
     reportUnauthenticated: vi.fn(() => {
       if (isConnected()) store.setSnapshot({ status: "expired" })

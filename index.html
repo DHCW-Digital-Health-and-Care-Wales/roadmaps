@@ -9,6 +9,17 @@
     />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Product Roadmaps</title>
+    <script>
+      // Applies the stored theme before first paint, so dark mode never flashes light.
+      // Mirrors src/components/theme/theme-preference.ts (key and values).
+      try {
+        if (localStorage.getItem("roadmaps.theme") === "dark") {
+          document.documentElement.classList.add("dark")
+        }
+      } catch {
+        // Storage unavailable: keep the light default.
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -14,6 +14,7 @@ export const en = {
   layout: {
     skipToContent: "Skip to main content",
     home: "Product Roadmaps home",
+    notifications: "Notifications",
   },
   landing: {
     tagline: "A simple way to explore and manage your product roadmaps.",
@@ -67,6 +68,7 @@ export const en = {
     },
     loadFailed: "Couldn't load your roadmaps",
     detail: {
+      title: "Roadmap",
       comingSoon: "Roadmap details are coming soon.",
       back: "Back to roadmaps",
       connectPrompt: "Connect Google to view this roadmap.",
@@ -92,7 +94,8 @@ export const en = {
     home: "Go to the home page",
   },
   theme: {
-    toggle: "Toggle theme",
+    switchToDark: "Switch to dark theme",
+    switchToLight: "Switch to light theme",
   },
   language: {
     label: "Language",

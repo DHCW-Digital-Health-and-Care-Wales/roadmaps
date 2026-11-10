@@ -17,6 +17,7 @@ export const cy = {
   layout: {
     skipToContent: "Neidio i'r prif gynnwys",
     home: "Hafan Mapiau Trywydd Cynnyrch",
+    notifications: "Hysbysiadau",
   },
   landing: {
     tagline: "Ffordd syml o archwilio a rheoli eich mapiau trywydd cynnyrch.",
@@ -74,6 +75,7 @@ export const cy = {
     },
     loadFailed: "Doedd dim modd llwytho eich mapiau trywydd",
     detail: {
+      title: "Map trywydd",
       comingSoon: "Bydd manylion y map trywydd ar gael cyn bo hir.",
       back: "Yn ôl i'r mapiau trywydd",
       connectPrompt: "Cysylltwch â Google i weld y map trywydd hwn.",
@@ -101,7 +103,8 @@ export const cy = {
     home: "Mynd i'r hafan",
   },
   theme: {
-    toggle: "Newid thema",
+    switchToDark: "Newid i'r thema dywyll",
+    switchToLight: "Newid i'r thema olau",
   },
   language: {
     label: "Iaith",

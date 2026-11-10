@@ -27,6 +27,7 @@ src/
                     Only infrastructure/google-identity may use the `google` global.
   components/ui/    shadcn/ui (Base UI) generated components — keep close to upstream
   components/layout app shell pieces shared across features
+  components/theme  ThemeProvider, useTheme, ThemeToggle, stored preference (ADR-0005)
   lib/              small framework-agnostic utilities (errors, cn, query client factory)
   i18n/             i18next setup, supported languages, en/cy catalogues (ADR-0008)
   styles/           Tailwind v4 entry CSS + theme tokens
@@ -305,3 +306,58 @@ onDisconnect: () => queryClient.removeQueries({ queryKey: authScopedQueryKey }) 
       then the endonym (`max-sm:sr-only` on mobile, so the name never changes). Keep the
       space node; without it the name is "LanguageEnglish".
     - `.ts` files are not covered by the literal-string lint rule; keep copy out of them.
+- **S05 Composition root, routing, app shell, theme, auth UI** — TanStack Query 5.107.1 and
+  sonner 2.0.8 added (shadcn `badge`, `sonner`; `next-themes` removed: `ui/sonner.tsx` reads
+  our `useTheme`). New i18n keys: `layout.notifications`, `roadmaps.detail.title`,
+  `theme.switchToDark/switchToLight` (replaced `theme.toggle`).
+  - Composition: `composeApp(config?)` in `app/composition.ts` (the only importer of
+    `@/infrastructure`) builds and returns `AppServices = { i18n, queryClient, authClient,
+roadmapRepository }`; it also starts `syncDocumentLanguage` and wires the auth client's
+    `onDisconnect` to `removeAuthScopedQueries(queryClient)`. `main.tsx` calls it, then
+    `createAppRouter()` (hash history by default; `app/router.tsx`, registers the router type).
+  - Provider tree (`app/providers.tsx`, `<AppProviders services>`), outermost first:
+    `I18nextProvider` → `ThemeProvider` → `QueryClientProvider` → `AuthProvider` →
+    `RoadmapRepositoryProvider` → children, plus `<AuthNotifications />` and `<Toaster />`.
+  - Query client: `createQueryClient()` in `lib/query-client.ts` (staleTime 60 s, no refetch on
+    focus, `shouldRetryQuery`: only retryable `AppError`s, at most 2 retries). No `QueryCache`
+    hooks yet; S06 adds the `unauthenticated` → `reportUnauthenticated()` handling.
+  - Auth-scoped data: `authScopedQueryKey = ["auth-scoped"]` and
+    `removeAuthScopedQueries(queryClient)` in `features/auth/auth-scoped-queries.ts`. S06's
+    `roadmapKeys.all` must start with `...authScopedQueryKey` so disconnect clears it.
+  - Repository: `RoadmapRepositoryProvider` / `useRoadmapRepository()` in
+    `features/roadmaps/roadmap-repository-context.tsx`. Test double (already done for S06):
+    `createInMemoryRoadmapRepository(roadmaps | AppError)` in `features/roadmaps/testing/`,
+    which runs the repository contract.
+  - UI: `components/layout/{app-shell,app-header,brand-mark,not-found-page}.tsx` (the shell takes
+    `headerActions`; the root route composes `ConnectionStatus`, `LanguageSwitcher`,
+    `ThemeToggle`, `AuthButton`). `features/auth/components/`: `AuthButton` (Connect /
+    Reconnect / Disconnect; busy but focusable while initializing/connecting),
+    `ConnectionStatus` (live `role=status` badge; dot only below `sm`), `AuthNotifications`
+    (toasts: connected, disconnected, OAuth failure, popup blocked; one toast id `auth`).
+    `features/home/`: `HomePage` (connected → `RoadmapsPage`, otherwise `WelcomeHero`).
+  - Routes: `__root.tsx` (shell + `notFoundComponent`), `index.tsx` → `HomePage`,
+    `roadmaps.$roadmapId.tsx` → `RoadmapDetailPage` (placeholder; does not read the param yet).
+  - Theme: `components/theme/` — light default, key `roadmaps.theme`; the inline script in
+    `index.html` applies `dark` before paint (keep its key in step). `.dark` sets
+    `color-scheme`. Accent token `--brand` / `text-brand` (indigo), used sparingly. A global
+    `prefers-reduced-motion` rule in `globals.css` stills all animations.
+  - Tests: `await renderWithProviders({ path?, history?, authState?, roadmaps?, repository?,
+language? })` (`src/test/render-with-providers.tsx`) renders the real `AppProviders` and
+    routes with a fake auth client (its `disconnect` clears auth-scoped queries, via the
+    fake's new `onDisconnect` option), an in-memory repository and memory history. It returns
+    RTL's result plus `authClient`, `queryClient`, `router`, `i18n`. Scope queries with
+    `within(screen.getByRole("banner"|"main"))`, because header and hero both have "Connect
+    Google".
+  - S06 plug-in: put the list under the heading in `features/roadmaps/pages/roadmaps-page.tsx`
+    (rendered by `HomePage` when connected); revisit `HomePage` for `expired` if cached cards
+    should stay with a reconnect prompt. In the detail route, read `Route.useParams()` and pass
+    `roadmapId` to `RoadmapDetailPage`; replace `roadmaps.detail.title` with the roadmap name.
+  - Gotchas:
+    - Links styled as buttons use `buttonVariants()` on `<Link>`. Base UI's
+      `<Button render={<Link/>} nativeButton={false}>` adds `role="button"`.
+    - Sonner's store is global and replays active toasts into a new `Toaster`; `setup.ts`
+      dismisses them after each test. To assert a toast did _not_ appear, flush Sonner's
+      timer first (see `flushToasts` in `app/app.test.tsx`).
+    - The skip link prevents default and focuses `<main>`, because hash history owns the URL
+      fragment.
+    - The main JS chunk is ~580 kB, above Vite's warning threshold; consider chunking in S08/S09.

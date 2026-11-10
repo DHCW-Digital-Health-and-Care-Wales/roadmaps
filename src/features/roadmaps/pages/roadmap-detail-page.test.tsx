@@ -17,8 +17,8 @@ const connected: AuthState = {
 }
 
 const roadmaps: Roadmap[] = [
-  createTestRoadmap("0", "Platform"),
-  createTestRoadmap("42", "Mobile app"),
+  createTestRoadmap("producta", "Product A roadmap"),
+  createTestRoadmap("productb", "Product B roadmap"),
 ]
 
 function main() {
@@ -28,13 +28,16 @@ function main() {
 describe("RoadmapDetailPage", () => {
   it("names the roadmap, with a way back", async () => {
     await renderWithProviders({
-      path: "/roadmaps/42",
+      path: "/roadmaps/productb",
       authState: connected,
       roadmaps,
     })
 
     expect(
-      await main().findByRole("heading", { level: 1, name: "Mobile app" }),
+      await main().findByRole("heading", {
+        level: 1,
+        name: "Product B roadmap",
+      }),
     ).toBeInTheDocument()
     expect(
       main().getByText("Roadmap details are coming soon."),
@@ -51,17 +54,22 @@ describe("RoadmapDetailPage", () => {
       roadmaps,
     })
 
-    await user.click(await main().findByRole("link", { name: "Platform" }))
+    await user.click(
+      await main().findByRole("link", { name: "Product A roadmap" }),
+    )
 
-    expect(router.state.location.pathname).toBe("/roadmaps/0")
+    expect(router.state.location.pathname).toBe("/roadmaps/producta")
     expect(
-      await main().findByRole("heading", { level: 1, name: "Platform" }),
+      await main().findByRole("heading", {
+        level: 1,
+        name: "Product A roadmap",
+      }),
     ).toBeInTheDocument()
   })
 
   it("shows a loading placeholder", async () => {
     await renderWithProviders({
-      path: "/roadmaps/42",
+      path: "/roadmaps/productb",
       authState: connected,
       repository: { listRoadmaps: () => new Promise<never>(() => undefined) },
     })
@@ -71,7 +79,7 @@ describe("RoadmapDetailPage", () => {
 
   it("explains an unknown id", async () => {
     await renderWithProviders({
-      path: "/roadmaps/999",
+      path: "/roadmaps/0",
       authState: connected,
       roadmaps,
     })
@@ -83,7 +91,7 @@ describe("RoadmapDetailPage", () => {
       }),
     ).toBeInTheDocument()
     expect(
-      main().getByText("This roadmap doesn't exist or is no longer visible."),
+      main().getByText("This roadmap doesn't exist or is no longer listed."),
     ).toBeInTheDocument()
     expect(
       main().getAllByRole("link", { name: "Back to roadmaps" }),
@@ -91,7 +99,7 @@ describe("RoadmapDetailPage", () => {
   })
 
   it("asks to connect when not connected", async () => {
-    await renderWithProviders({ path: "/roadmaps/42", roadmaps })
+    await renderWithProviders({ path: "/roadmaps/productb", roadmaps })
 
     expect(
       main().getByRole("heading", { level: 1, name: "Roadmap" }),
@@ -106,7 +114,7 @@ describe("RoadmapDetailPage", () => {
 
   it("explains a failure to load", async () => {
     await renderWithProviders({
-      path: "/roadmaps/42",
+      path: "/roadmaps/productb",
       authState: connected,
       repository: createInMemoryRoadmapRepository(new AppError("not-found")),
     })
@@ -125,11 +133,11 @@ describe("RoadmapDetailPage", () => {
 
   it("keeps a cached roadmap visible, with Reconnect, once the session expires", async () => {
     const { authClient } = await renderWithProviders({
-      path: "/roadmaps/42",
+      path: "/roadmaps/productb",
       authState: connected,
       roadmaps,
     })
-    await main().findByRole("heading", { level: 1, name: "Mobile app" })
+    await main().findByRole("heading", { level: 1, name: "Product B roadmap" })
 
     act(() => {
       authClient.setState({ status: "expired" })
@@ -141,7 +149,7 @@ describe("RoadmapDetailPage", () => {
       within(alert).getByRole("button", { name: "Reconnect" }),
     ).toBeInTheDocument()
     expect(
-      main().getByRole("heading", { level: 1, name: "Mobile app" }),
+      main().getByRole("heading", { level: 1, name: "Product B roadmap" }),
     ).toBeInTheDocument()
   })
 
@@ -168,12 +176,12 @@ describe("RoadmapDetailPage", () => {
       await act(() =>
         router.navigate({
           to: "/roadmaps/$roadmapId",
-          params: { roadmapId: "0" },
+          params: { roadmapId: "producta" },
         }),
       )
 
       expect(
-        main().getByRole("heading", { level: 1, name: "Platform" }),
+        main().getByRole("heading", { level: 1, name: "Product A roadmap" }),
       ).toBeInTheDocument()
       expect(main().getByRole("alert")).toHaveTextContent(
         "Couldn't refresh your roadmaps",
@@ -186,7 +194,7 @@ describe("RoadmapDetailPage", () => {
       await act(() =>
         router.navigate({
           to: "/roadmaps/$roadmapId",
-          params: { roadmapId: "999" },
+          params: { roadmapId: "0" },
         }),
       )
 
@@ -204,7 +212,7 @@ describe("RoadmapDetailPage", () => {
 
   it("renders in Welsh", async () => {
     await renderWithProviders({
-      path: "/roadmaps/999",
+      path: "/roadmaps/0",
       authState: connected,
       roadmaps,
       language: "cy",

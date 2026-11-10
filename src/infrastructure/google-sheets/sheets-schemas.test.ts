@@ -3,7 +3,11 @@ import { z } from "zod/mini"
 
 import { AppError } from "@/lib/errors"
 
-import { describeGoogleError, parseSpreadsheetMetadata } from "./sheets-schemas"
+import {
+  describeGoogleError,
+  parseSheetValues,
+  parseSpreadsheetMetadata,
+} from "./sheets-schemas"
 
 describe("parseSpreadsheetMetadata", () => {
   it("parses worksheet properties, ignoring fields it does not use", () => {
@@ -70,6 +74,49 @@ describe("parseSpreadsheetMetadata", () => {
     let thrown: unknown
     try {
       parseSpreadsheetMetadata(json)
+    } catch (error) {
+      thrown = error
+    }
+
+    expect(thrown).toBeInstanceOf(AppError)
+    expect(thrown).toMatchObject({ kind: "invalid-response", retryable: false })
+    expect((thrown as AppError).cause).toBeInstanceOf(z.core.$ZodError)
+  })
+})
+
+describe("parseSheetValues", () => {
+  it("returns the rows as sent, ragged and with blank cells, ignoring other fields", () => {
+    const rows = parseSheetValues({
+      range: "Roadmaps!A1:Z1000",
+      majorDimension: "ROWS",
+      values: [["Sheet", "Enabled"], [], ["ProductA", "", "Yes"]],
+    })
+
+    expect(rows).toStrictEqual([
+      ["Sheet", "Enabled"],
+      [],
+      ["ProductA", "", "Yes"],
+    ])
+  })
+
+  it.each([
+    ["a missing values field", {}],
+    ["an empty values array", { values: [] }],
+  ])("treats %s as a tab with no rows", (_, json) => {
+    expect(parseSheetValues(json)).toStrictEqual([])
+  })
+
+  it.each([
+    ["null", null],
+    ["a string", "<html>"],
+    ["values that is not an array", { values: "Sheet" }],
+    ["a row that is not an array", { values: ["Sheet"] }],
+    ["a numeric cell", { values: [["Sheet"], [7]] }],
+    ["a null cell", { values: [["Sheet", null]] }],
+  ])("rejects %s as an invalid response", (_, json) => {
+    let thrown: unknown
+    try {
+      parseSheetValues(json)
     } catch (error) {
       thrown = error
     }

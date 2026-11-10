@@ -34,6 +34,27 @@ export function parseSpreadsheetMetadata(json: unknown): SpreadsheetMetadata {
   return result.data
 }
 
+/**
+ * Response of `GET /{spreadsheetId}/values/{range}?majorDimension=ROWS&valueRenderOption=
+ * FORMATTED_VALUE&fields=values`: every cell as displayed, so always a string. Google
+ * drops trailing blank cells and rows, and omits `values` for a range with none.
+ */
+const sheetValuesSchema = z.object({
+  values: z._default(z.array(z.array(z.string())), []),
+})
+
+/** Validates an untrusted values response into its rows, or throws `AppError('invalid-response')`. */
+export function parseSheetValues(json: unknown): string[][] {
+  const result = sheetValuesSchema.safeParse(json)
+  if (!result.success) {
+    throw new AppError("invalid-response", {
+      message: `Unexpected sheet values:\n${z.prettifyError(result.error)}`,
+      cause: result.error,
+    })
+  }
+  return result.data.values
+}
+
 /** Google's JSON error envelope, read only for diagnostics. */
 const googleErrorBodySchema = z.object({
   error: z.object({

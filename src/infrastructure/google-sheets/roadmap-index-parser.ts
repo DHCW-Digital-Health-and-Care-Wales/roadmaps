@@ -50,6 +50,8 @@ export type RoadmapIndexProblemCode =
   | "duplicate-id"
   /** No roadmap is published, which fails the public site's sync. */
   | "no-published-roadmap"
+  /** `Sheet` names no tab of the spreadsheet; the roadmap is kept. */
+  | "missing-tab"
 
 export interface RoadmapIndexEntry {
   roadmap: Roadmap
@@ -91,15 +93,19 @@ const WELSH_COLUMNS: readonly TextColumn[] = [
   "Service description",
 ]
 
-/** How the public site's `Category` values are spelled (its `CATEGORY_SHEET_VALUES`). */
-const CATEGORY_SHEET_VALUES: Readonly<Record<RoadmapCategory, string>> = {
-  "public-health-apps": "Public Health & Apps",
-  "gp-community-services": "GP & Community Services",
-  "tests-scans-results": "Tests, Scans & Results",
-  "urgent-emergency-care": "Urgent & Emergency Care",
-  "hospital-specialist-care": "Hospital & Specialist Care",
-  "national-systems-data": "National Systems & Data",
-}
+/**
+ * How the public site's `Category` values are spelled (its `CATEGORY_SHEET_VALUES`).
+ * Exported for tests that write roadmap index rows.
+ */
+export const CATEGORY_SHEET_VALUES: Readonly<Record<RoadmapCategory, string>> =
+  {
+    "public-health-apps": "Public Health & Apps",
+    "gp-community-services": "GP & Community Services",
+    "tests-scans-results": "Tests, Scans & Results",
+    "urgent-emergency-care": "Urgent & Emergency Care",
+    "hospital-specialist-care": "Hospital & Specialist Care",
+    "national-systems-data": "National Systems & Data",
+  }
 
 /** Lower case, accents removed: `Ŵ` folds to `w`. */
 const fold = (value: string) =>
@@ -168,6 +174,14 @@ class ProblemLog {
   }
 }
 
+export interface ParseRoadmapIndexOptions {
+  /**
+   * The spreadsheet's tab titles. When given, a kept roadmap whose `Sheet` matches none
+   * of them exactly records `missing-tab`.
+   */
+  tabTitles?: Iterable<string> | undefined
+}
+
 /**
  * Parses the roadmap index's rows (`rows[0]` being spreadsheet row 1) into roadmaps
  * and problems. Rows may be shorter than the header, as the Sheets API drops trailing
@@ -176,6 +190,7 @@ class ProblemLog {
  */
 export function parseRoadmapIndex(
   rows: readonly (readonly string[])[],
+  { tabTitles }: ParseRoadmapIndexOptions = {},
 ): RoadmapIndex {
   const [headerRow, ...bodyRows] = rows
   if (headerRow === undefined) {
@@ -200,7 +215,11 @@ export function parseRoadmapIndex(
     const row = toIndexRow(header, cells, i + 2)
     return row ? [row] : []
   })
-  const entries = keepOneRowPerId(indexRows, header, problems).map((indexRow) =>
+  const keptRows = keepOneRowPerId(indexRows, header, problems)
+  if (tabTitles !== undefined) {
+    recordMissingTabs(keptRows, new Set(tabTitles), header, problems)
+  }
+  const entries = keptRows.map((indexRow) =>
     toEntry(indexRow, header, problems),
   )
 
@@ -309,6 +328,21 @@ function keepOneRowPerId(
     skip("duplicate-id", indexRow)
     return false
   })
+}
+
+/** A missing tab never fails the list (ADR-009): the roadmap is kept. */
+function recordMissingTabs(
+  rows: readonly IndexRow[],
+  tabTitles: ReadonlySet<string>,
+  header: Header,
+  problems: ProblemLog,
+): void {
+  const column = header.english.get("Sheet")?.header ?? null
+  for (const { row, sheet } of rows) {
+    if (!tabTitles.has(sheet)) {
+      problems.record("missing-tab", { row, column, value: sheet })
+    }
+  }
 }
 
 /** Only an `Enabled` of exactly `Yes` publishes. */

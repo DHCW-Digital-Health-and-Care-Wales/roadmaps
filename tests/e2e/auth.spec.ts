@@ -1,7 +1,10 @@
 import type { Page } from "@playwright/test"
 
 import type { TokenOutcome } from "./fixtures/fake-gis"
+import { EXAMPLE_INDEX_ROWS, withRoadmapIndex } from "./fixtures/fake-sheets"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
+
+const [HEADER = [], , PRODUCT_B = []] = EXAMPLE_INDEX_ROWS
 
 function toasts(page: Page) {
   return page.getByRole("region", { name: /^Notifications/ })
@@ -143,13 +146,18 @@ test("disconnecting revokes the token and forgets the roadmaps", async ({
 
   // Nothing was kept: connecting again loads afresh, showing no old roadmaps meanwhile.
   const release = sheets.hold()
-  sheets.respondWith({ worksheets: [{ sheetId: 9, title: "New plans" }] })
+  sheets.spreadsheet = withRoadmapIndex([HEADER, PRODUCT_B])
   await connect(page)
   await expect(
     page.getByRole("status").filter({ hasText: "Loading roadmaps…" }),
   ).toBeVisible()
   await expect(roadmapCards(page)).toHaveCount(0)
   release()
-  await expect(roadmapCards(page)).toHaveText(["New plans"])
-  expect(sheets.tokens).toEqual(["e2e-token-1", "e2e-token-2"])
+  await expect(roadmapCards(page)).toHaveText(["Product B roadmap"])
+  expect(sheets.tokens).toEqual([
+    "e2e-token-1",
+    "e2e-token-1",
+    "e2e-token-2",
+    "e2e-token-2",
+  ])
 })

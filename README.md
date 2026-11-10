@@ -10,8 +10,9 @@ built; the [Product Lead persona](docs/backlog/personas/product-lead.md) describ
 is for.
 
 Today it is a static, frontend-only React app that lists roadmaps. You connect a Google
-account, the app reads one Google Spreadsheet's worksheet **metadata**, and each visible
-worksheet appears as a roadmap card. It runs entirely in the browser and is hosted on
+account, the app reads the **roadmap index** (the first tab) of one Google Spreadsheet,
+and each roadmap it lists appears as a card, as the public site lists them, published or
+not. It runs entirely in the browser and is hosted on
 GitHub Pages: **<https://collisdigital.github.io/roadmaps-editor/>**.
 
 Google Sheets is a _temporary_ data source. The app is built so that a PostgreSQL-backed
@@ -23,6 +24,7 @@ The UI is available in English and Welsh (Cymraeg).
 ## Contents
 
 - [How it works](#how-it-works)
+- [Spreadsheet format](#spreadsheet-format)
 - [Architecture](#architecture)
 - [Technology choices](#technology-choices)
 - [Getting started](#getting-started)
@@ -42,14 +44,35 @@ The UI is available in English and Welsh (Cymraeg).
    an account and allows access to Google Sheets.
 3. GIS returns a short-lived access token (about an hour). It stays in memory only: it is
    never written to storage, URLs or logs.
-4. The app calls the Sheets API (`spreadsheets.get`, metadata fields only) for the
-   configured spreadsheet, drops hidden worksheets, and shows the rest in their
-   spreadsheet order. A card opens `#/roadmaps/<sheetId>`.
+4. The app makes two Sheets API reads of the configured spreadsheet: its tab list
+   (`spreadsheets.get`, tab properties only), then the values of the tab with the lowest
+   index, the roadmap index (`spreadsheets.values.get`, cells as displayed). It shows one
+   card per roadmap the index lists, in row order. A card opens `#/roadmaps/<id>`, where
+   the id is the public site's address for that roadmap (`ProductA` → `producta`).
 5. When the token expires the app says so and offers **Reconnect**. **Disconnect**
    revokes the token and clears all loaded data.
 
 There is no backend, no client secret and no refresh token. What a user can see is decided
 entirely by Google: see [Security and data access](#security-and-data-access).
+
+## Spreadsheet format
+
+The spreadsheet is shared with the public site, so its format is a contract with it
+([ADR-009](docs/adr/ADR-009-roadmap-list-from-the-first-tab.md)). The **first tab**,
+whatever it is called and even when hidden, is the roadmap index: row 1 is the header and
+each other row is one roadmap. Its `Sheet` column (required) names the tab holding that
+roadmap's items; `Enabled` (exactly `Yes`), `Title`, `Category`, `Family`, `Status label`,
+`Last updated`, `Colour`, `Vision`, `Service description` and `Product Lead` are read
+when present, with `(cy)` columns for Welsh. Every other tab is a roadmap's items, not read
+yet.
+
+- The rules, and how the editor differs from the public site on mistakes, are in
+  [the roadmap index analysis](docs/analysis/roadmaps-tab-format.md).
+- An example spreadsheet, with steps to import it into a test spreadsheet of your own, is in
+  [`tests/fixtures/sheets/`](tests/fixtures/sheets/README.md).
+- A list that can't be read (no tabs, an empty first tab, or no `Sheet` column) shows a
+  problem asking the spreadsheet owner to check it. A roadmap whose tab is missing, or a
+  mistake in one row, never hides the rest.
 
 ## Architecture
 
@@ -111,7 +134,7 @@ shared contract test (`describeRoadmapRepositoryContract`), so swapping data sou
 change to the composition root and nothing else. Auth works the same way: the UI uses the
 `AuthClient` port, and only `infrastructure/google-identity/` touches the `google` global.
 
-Routing uses hash history (`/roadmaps-editor/#/roadmaps/42`), so deep links survive a
+Routing uses hash history (`/roadmaps-editor/#/roadmaps/producta`), so deep links survive a
 reload on GitHub Pages without a 404 fallback (ADR-004).
 
 ## Technology choices
@@ -285,7 +308,8 @@ No GitHub secrets are needed: the public config is committed in `.env.production
 6. **Open** <https://collisdigital.github.io/roadmaps-editor/>, choose **Connect Google**,
    pick an account (a test user, if the app is External and in Testing) and allow access
    to Google Sheets.
-7. **See your roadmaps:** one card per visible worksheet of the configured spreadsheet.
+7. **See your roadmaps:** one card per roadmap the spreadsheet's first tab lists
+   ([Spreadsheet format](#spreadsheet-format)).
 
 ### Base path
 

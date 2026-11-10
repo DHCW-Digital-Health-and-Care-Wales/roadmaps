@@ -71,7 +71,7 @@ means, and the action if there is one. No apology, no joke, no exclamation mark.
 
 ```
 roadmaps.empty.title        No roadmaps yet
-roadmaps.empty.description  There are no visible roadmaps in the connected spreadsheet yet.
+roadmaps.empty.description  The connected spreadsheet doesn't list any roadmaps yet.
 ```
 
 Never promise future behaviour the product has to keep: "we'll let you know as

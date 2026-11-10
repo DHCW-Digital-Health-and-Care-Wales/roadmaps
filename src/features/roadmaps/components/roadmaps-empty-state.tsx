@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next"
 
 import { StatusPanel } from "./status-panel"
 
-/** Shown when the list loaded but there are no visible roadmaps. */
+/** Shown when the list loaded but the data source lists no roadmaps. */
 export function RoadmapsEmptyState() {
   const { t } = useTranslation()
   return (

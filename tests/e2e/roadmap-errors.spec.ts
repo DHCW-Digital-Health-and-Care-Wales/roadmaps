@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test"
 
+import { withRoadmapIndex } from "./fixtures/fake-sheets"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 /** Lets fake time pass until `locator` shows, so back-off between retries costs nothing. */
@@ -12,7 +13,7 @@ async function fastForwardUntilVisible(page: Page, locator: Locator) {
 
 test("a failed load can be retried", async ({ page, sheets }) => {
   // The first load and both automatic retries fail.
-  sheets.respondWith({ status: 500 }, { status: 500 }, { status: 500 })
+  sheets.failWith(500, 500, 500)
   await page.clock.install()
   await page.goto("./")
   await connect(page)
@@ -34,7 +35,7 @@ test("a permission error explains how to get access", async ({
   page,
   sheets,
 }) => {
-  sheets.respondWith({ status: 403 })
+  sheets.failWith(403)
   await page.goto("./")
   await connect(page)
 
@@ -54,7 +55,7 @@ test("a rejected token expires the session until reconnected", async ({
   gis,
   sheets,
 }) => {
-  sheets.respondWith({ status: 401 })
+  sheets.failWith(401)
   await page.goto("./")
   await connect(page)
 
@@ -68,9 +69,9 @@ test("a rejected token expires the session until reconnected", async ({
 
   await expect(roadmapCards(page)).toHaveCount(3)
   await expect(page.getByRole("status")).toHaveText("Google connected")
-  // A quiet re-grant, then the same request with the new token.
+  // A quiet re-grant, then the same load, both reads, with the new token.
   expect(gis.tokenRequests.map(({ prompt }) => prompt)).toEqual([undefined, ""])
-  expect(sheets.tokens).toEqual(["e2e-token-1", "e2e-token-2"])
+  expect(sheets.tokens).toEqual(["e2e-token-1", "e2e-token-2", "e2e-token-2"])
 })
 
 test("an expired token keeps the roadmaps on screen until reconnected", async ({
@@ -98,5 +99,54 @@ test("an expired token keeps the roadmaps on screen until reconnected", async ({
   await expect(alert).toBeHidden()
   await expect(roadmapCards(page)).toHaveCount(3)
   expect(gis.tokenRequests.map(({ prompt }) => prompt)).toEqual([undefined, ""])
-  expect(sheets.tokens).toEqual(["e2e-token-1", "e2e-token-2"])
+  expect(sheets.tokens).toEqual([
+    "e2e-token-1",
+    "e2e-token-1",
+    "e2e-token-2",
+    "e2e-token-2",
+  ])
+})
+
+const UNREADABLE_LIST =
+  "The list of roadmaps in the spreadsheet isn't in the expected format. Ask the spreadsheet owner to check it."
+
+test("a roadmap index with no Sheet column can't be read, and retrying can't help (S5)", async ({
+  page,
+  sheets,
+}) => {
+  sheets.spreadsheet = withRoadmapIndex([
+    ["Title", "Enabled"],
+    ["Product A roadmap", "Yes"],
+  ])
+  await page.goto("./")
+  await connect(page)
+
+  const panel = page.getByRole("alert").filter({
+    hasText: "Couldn't load your roadmaps",
+  })
+  await expect(panel).toContainText(UNREADABLE_LIST)
+  await expect(panel.getByRole("button")).toHaveCount(0)
+  expect(sheets.reads).toEqual(["metadata", "values"])
+})
+
+test("an empty roadmap index can't be read, in Welsh too (S5)", async ({
+  page,
+  sheets,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("roadmaps.language", "cy")
+  })
+  sheets.spreadsheet = withRoadmapIndex([])
+  await page.goto("./")
+  await page
+    .getByRole("main")
+    .getByRole("button", { name: "Cysylltu â Google" })
+    .click()
+
+  const panel = page.getByRole("alert")
+  await expect(panel).toContainText(
+    "Nid yw'r rhestr o fapiau trywydd yn y daenlen yn y fformat disgwyliedig. Gofynnwch i berchennog y daenlen ei gwirio.",
+  )
+  await expect(panel.getByRole("button")).toHaveCount(0)
+  await expect(roadmapCards(page)).toHaveCount(0)
 })

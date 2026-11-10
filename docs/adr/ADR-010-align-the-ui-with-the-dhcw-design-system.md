@@ -12,7 +12,9 @@ The editor is an internal DHCW tool, but it looks like a generic SaaS app: neutr
 greys, an indigo accent, Geist, and a focus ring of about 1.5:1. DHCW's design system
 (Sass, Nunjucks and a compiled stylesheet, no React) is built for public services. The
 options are set out in
-[the alignment analysis](../analysis/dhcw-design-system-alignment.md).
+[the alignment analysis](../analysis/dhcw-design-system-alignment.md). This replaces the
+_Visual direction_ bullet of [ADR-005](ADR-005-ui-stack-shadcn-base-ui-tailwind-v4.md)
+("clean SaaS, neutral palette, a single restrained accent").
 
 ## Decision
 
@@ -34,19 +36,27 @@ options are set out in
   - Lint (`eslint-plugin-better-tailwindcss` plus `no-restricted-syntax` blocks in
     `eslint.config.ts`) rejects:
     - unknown classes;
-    - bracket values for colour, type, radius, shadow or font;
+    - arbitrary values, in brackets or parentheses, for colour, type, radius, shadow or
+      font;
+    - opacity modifiers on colour utilities (`bg-foreground/20`): a tint or overlay is a
+      semantic token, so the contrast test sees it;
     - `dark:` colour overrides;
     - ad-hoc focus styles;
-    - colour properties in inline `style`;
+    - design properties in inline `style` (colour, font, size, weight, line height,
+      letter-spacing, radius, shadow), while layout properties stay allowed;
     - literal colours in SVG attributes;
     - primitives referenced outside `globals.css`.
+  - Class merging (`cn`) is configured with the custom text and shadow names, so it
+    never drops a type size as if it were a colour (tested).
   - _Exception:_ the one colour that comes from data, a roadmap's own colour
     (ADR-009), is set only by the roadmap swatch component, through a documented lint
     exception.
 - **Dark mode stays**, as our extension; DHCW has none. Its values are derived from DHCW
-  colours where they pass contrast. A Vitest contrast test checks every semantic
-  text/background pair (4.5:1) and every control, border and focus pair (3:1) in both
-  themes.
+  colours where they pass contrast. A Vitest contrast test checks, in both themes, every
+  semantic text/background pair (4.5:1) and every control boundary (`--input`) and focus
+  pair (3:1). Decorative separators (`--border`, DHCW's `#d8dde0`, about 1.4:1 on white)
+  are exempt, as WCAG 1.4.11 exempts them; a boundary someone needs in order to find a
+  control uses `--input`.
 - **Compact type scale:** DHCW's mobile sizes at every width. Body is 16/24, the h1 is
   32/38, and the smallest text is 14/20. DHCW's desktop sizes (19px body, 48px h1) are
   for public pages; a staff editor needs density.
@@ -54,6 +64,9 @@ options are set out in
   - _fill_, for buttons and links: yellow fill, dark text, a dark bottom bar;
   - _ring_, for cards, inputs and menus: a 3px yellow outline outside a 2px dark inner
     ring.
+- **Motion:** minimal, and stilled entirely under `prefers-reduced-motion`. This is
+  carried over from ADR-005's superseded bullet and held by the global rule in
+  `globals.css`.
 - **Branding:** Roboto, the DHCW logo and icon, and DHCW names in English and Welsh
   ("Digital Health and Care Wales" / "Iechyd a Gofal Digidol Cymru"). No NHS branding.
   - The logos are used with the owner's permission, given 2026-11-10. They are not

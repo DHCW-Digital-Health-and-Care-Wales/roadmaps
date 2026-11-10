@@ -96,6 +96,11 @@ STY-013 creates and owns `src/styles/globals.css` with three layers:
 Later stories add semantic tokens only, each with a pair in the contrast test, and never
 use a primitive outside `globals.css`.
 
+- `--border` is decorative and exempt from 3:1.
+- A boundary that people need in order to find a control uses `--input`, which is held
+  to 3:1.
+- A tint or overlay is its own token, never an opacity modifier (STY-014 S8).
+
 ### Type and focus utilities
 
 STY-013 defines:
@@ -105,7 +110,9 @@ STY-013 defines:
 - the focus utilities `focus-fill` (buttons and button-styled links), `focus-ring`
   (cards, inputs and menus) and `focus-link` (text links).
 
-From STY-014, they are the only way to set type size or focus styling.
+STY-013 configures `cn`'s class merge with these names and the semantic shadows, so
+merging never drops a type size as a colour. From STY-014, they are the only way to set
+type size or focus styling.
 
 ### The data colour exception
 

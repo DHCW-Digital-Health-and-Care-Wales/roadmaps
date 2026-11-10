@@ -74,9 +74,9 @@ auth failure on the start page
 **Given** the example roadmaps
 **When** the main page is shown, and a card is hovered and focused
 **Then** each card is a square, white, bordered DHCW card with an underlined link-colour
-title and a trailing chevron
+title, a trailing chevron and a 4px grey bottom bar at rest (DHCW's clickable card)
 
-- on hover, its border darkens and a 4px bottom bar appears;
+- on hover, its border darkens to the secondary border colour;
 - on focus, it shows `focus-ring`.
 
 **And** the decorative swatch, the link's name and description, the two-line title and
@@ -89,8 +89,8 @@ three-line summary are unchanged, and grid gaps follow DHCW's 16/20px gutter
 **Then**:
 
 - the inset text is a block with a thick left border;
-- the chip is a bordered 40px item with a navy icon square whose icon is hidden from
-  assistive tech;
+- the chip is a bordered 40px item with a link-blue (`--link`) icon square, as DHCW's
+  dashboard chip, whose icon is hidden from assistive tech;
 - the back link is a link, not `role=button`, with a left chevron.
 
 ### S6: Panels, menus, skeletons and toasts match

@@ -28,7 +28,8 @@ story comes back to the owner rather than shipping a weaker warning unasked.
   `alert-dialog`, Base UI).
 - The catalogues, the GIS fakes in `tests/e2e/fixtures` and `createFakeAuthClient`.
 - The toast rule in the `copywriter` skill's `references/patterns.md`.
-- ADR-003, amended for renewal.
+- ADR-003, amended for renewal; ADR-005, amended if Sonner is removed (its Decision
+  names `sonner` for toasts).
 
 ## Acceptance criteria
 
@@ -70,8 +71,9 @@ on, and the roadmaps stay on screen without a reload or a "connecting" flash
 
 **Given** the warning is shown
 **When** the renewal popup is closed or blocked, or the renewal is refused
-**Then** the current session continues until it expires, the reason is shown inline, and
-the expired-session flow with Reconnect takes over at expiry
+**Then** the dialog closes and the current session continues until it expires
+**And** the reason is shown as a callout at the top of the page in view until the next
+attempt or expiry, and the expired-session flow with Reconnect takes over at expiry
 
 ### S6: Dismissing or returning late
 
@@ -105,6 +107,13 @@ returning after expiry shows the expired state directly
   - This avoids a new state that every consumer of `AuthState` would have to handle.
   - It amends ADR-003's state machine; the current client accepts `connect()` only from
     `ready`, `expired` or `error`.
+  - A failed renewal is carried as an optional `lastError` on `connected`, typed
+    `AuthErrorCode` because a renewal can also be refused, so S5's callout has a source
+    without a new state.
+  - Today only `ready` and `expired` have a `lastError`, typed `AuthCancellationCode`.
+  - A successful renewal is silent: any "connected" confirmation must fire only on the
+    transition into `connected`, never on a renewed `connected → connected` snapshot.
+    `AuthNotifications` toasts on every new `connected` snapshot today.
 - **D3** (agent, 2026-11-10): the spike opens delivery.
   - What to check: with the real GIS in `pnpm dev` (`localhost:5173` is an authorised
     origin), does `requestAccessToken({ prompt: "" })` while a token is valid renew in

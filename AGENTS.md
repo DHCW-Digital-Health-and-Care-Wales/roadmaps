@@ -649,6 +649,5 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
   ADR-010 (which partly supersedes ADR-005's visual direction), and EPC-003 (STY-013–018).
   The UI ports the DHCW design system's tokens and patterns, pinned at v0.1.104, onto
   shadcn/Base UI, and never loads its CSS.
-  - STY-014 makes off-token styling a lint or test failure.
   - The dashboard sidebar is deferred to the first record that adds navigation
     (ADR-010 _Deferred_).

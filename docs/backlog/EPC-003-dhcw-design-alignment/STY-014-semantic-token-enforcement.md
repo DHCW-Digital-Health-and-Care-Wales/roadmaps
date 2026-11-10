@@ -35,14 +35,15 @@ and `src/styles/AGENTS.md`.
 **And** the semantic utilities (`bg-primary`, `text-body`, `text-status-warning-fg`,
 `shadow-control`) lint clean
 
-### S2: Bracket values for design properties are rejected
+### S2: Arbitrary values for design properties are rejected
 
 **Given** a component
-**When** it uses a bracket value for colour (`text-[#fff]`, `bg-[oklch(…)]`,
-`border-[color-mix(…)]`, `[color:red]`), type (`text-[13px]`, `leading-[…]`), radius,
-shadow or font
+**When** it uses an arbitrary value, in brackets or Tailwind v4's parentheses, for
+colour (`text-[#fff]`, `bg-[oklch(…)]`, `border-[color-mix(…)]`, `[color:red]`,
+`bg-(--x)`, `text-(color:--x)`), type (`text-[13px]`, `text-(length:--x)`,
+`leading-[…]`), radius, shadow or font
 **Then** `pnpm lint` fails, with a message naming the token to use
-**And** bracket values for layout (widths, grid templates) stay allowed
+**And** arbitrary values for layout (widths, grid templates) stay allowed
 
 ### S3: Theme and focus are never styled per component
 
@@ -51,15 +52,21 @@ shadow or font
 `focus-ring` or `focus-link` (`focus-visible:ring-2`, `focus:outline-primary`)
 **Then** `pnpm lint` fails
 
-### S4: Colour can't come in through the back door
+### S4: Design values can't come in through the back door
 
 **Given** a component
-**When** it sets a colour property in an inline `style` (`color`, `background*`,
-`border*Color`, `outlineColor`, `fill`, `stroke`, `boxShadow`, `caretColor`), puts a
-literal colour in an SVG `fill`, `stroke`, `color` or `stopColor` attribute, or
-references `var(--nhsw-…)` or `var(--app-dark-…)`
+**When** it:
+
+- sets a design property in an inline `style`: colour (`color`, `background*`,
+  `border*Color`, `outlineColor`, `fill`, `stroke`, `caretColor`), type (`font*`,
+  `lineHeight`, `letterSpacing`), radius (`borderRadius` and its corners) or shadow
+  (`boxShadow`, `textShadow`);
+- puts a literal colour in an SVG `fill`, `stroke`, `color` or `stopColor` attribute;
+- or references `var(--nhsw-…)` or `var(--app-dark-…)`;
+
 **Then** `pnpm lint` fails
-**And** inline `style` for layout stays allowed
+**And** inline `style` for layout (position, size, transform, grid placement) stays
+allowed
 
 ### S5: Stylesheet discipline is tested
 
@@ -68,7 +75,7 @@ references `var(--nhsw-…)` or `var(--app-dark-…)`
 **Then** it fails if:
 
 - a stylesheet other than `src/styles/globals.css` exists under `src/`;
-- another file declares custom properties or `@theme`;
+- another stylesheet declares custom properties or `@theme`;
 - an `@theme` colour isn't a `var()` reference to a semantic token.
 
 ### S6: The data colour is the one sanctioned exception
@@ -85,8 +92,18 @@ exceptions
 
 **Given** every file in `src/`, `components/ui` included
 **When** `pnpm lint`, `pnpm test`, `pnpm test:e2e` and the axe checks run
-**Then** they pass with no unknown or restricted class and no unlisted disable
+**Then** they pass with no unknown or restricted class, opacity-modified colour or
+unlisted disable
 **And** no accessible name, role or behaviour changes, and the `--brand` token is gone
+
+### S8: Tints are tokens, not opacity modifiers
+
+**Given** a component
+**When** it puts an opacity modifier on a colour utility (`bg-foreground/20`,
+`text-muted-foreground/60`, `ring-ring/50`, `border-foreground/10`)
+**Then** `pnpm lint` fails, with a message to use or add a semantic token
+**And** each tint the app needs is a semantic token with a pair in STY-013's contrast
+test, and opacity on a whole element (`opacity-50` for disabled) stays allowed
 
 ## Tests
 
@@ -94,6 +111,7 @@ exceptions
   fixture files and assert the expected messages. A rule that only exists in config
   isn't evidence.
 - S5 and S6 are Vitest tests beside STY-013's token tests.
+- S8's fixtures include each modifier form (`/20`, `/[0.2]`, `/(--x)`).
 
 ## Decisions
 
@@ -117,16 +135,21 @@ exceptions
 
 Audited at `22c3336`.
 
-- **Migration size.** 35 default `text-*` sizes and 10 default `shadow-*` uses in
-  non-test `src/**/*.tsx`. Count them with
-  `rg -no "\btext-(xs|sm|base|lg|xl|[2-9]xl)\b" src --glob '*.tsx' --glob '!*.test.*'`.
+- **Migration size**, in non-test `src/**/*.tsx`. STY-013 has already moved the type
+  classes.
+  - 9 default `shadow-*` uses:
+    `rg -no "\bshadow-[a-z0-9]+" src --glob '*.tsx' --glob '!*.test.*'`.
+  - 55 opacity-modified colour utilities, e.g. `text-muted-foreground/60` in the card,
+    `text-destructive/90` in `ui/alert`, `bg-background/80` in the header, and
+    `bg-input/30` and `bg-primary/80` in `ui/button`:
+    `rg -no "\b(bg|text|border|ring|fill|stroke|outline|divide|from|to|via|shadow|decoration|caret|accent|placeholder)-[a-z-]+/[0-9]+" src --glob '*.tsx' --glob '!*.test.*'`.
+  - `ui/sonner.tsx` sets `--normal-bg`-style custom properties inline for Sonner's
+    theme. That is a mapping onto semantic tokens, not a stylesheet. Keep it, pointing at
+    semantic tokens only, and say so in its header comment.
 - **Raw palette classes:** 9 outside `components/ui`, in `brand-mark`,
   `connection-status` and `roadmaps-error-state`.
 - **`--brand` uses:** `roadmap-icon` and `welcome-hero`; the hero also uses
   `color-mix` in a class.
-- **No `text-xs` after the lockdown.** DHCW's smallest size is 14px, so 12px text
-  disappears. `text-xs` is used in `button`, `badge` and `dropdown-menu` (ui), the
-  roadmap card's metadata and the start page. Map them to `text-body-xs`.
 - **Tailwind 4.3.5 keywords.** Check which of `bg-transparent`, `bg-current` and
   `bg-inherit` survive `--color-*: initial`. If a component needs a scrim, register a
   semantic `--overlay`.

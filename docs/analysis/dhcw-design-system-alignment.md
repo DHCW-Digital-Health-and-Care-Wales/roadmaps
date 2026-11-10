@@ -102,6 +102,39 @@ Take (a), in this order:
 Use DHCW's mobile type scale at every width for density. Keep dark mode as a tested
 extension, and defer the dashboard sidebar until there is navigation for it.
 
+These are the recommendations as presented to the owner, which decision 7 approved:
+
+- **Take as-is:**
+  - the yellow focus indicator;
+  - Roboto with its latin-ext subset;
+  - sentence case;
+  - the tag palette for statuses;
+  - the yellow skip link;
+  - the error-summary and form rules (they come with the roadmap editor);
+  - the back link.
+- **Adapt:**
+  - buttons: bold, with the 2px bottom shadow; a navy primary and a white secondary; a
+    40px default and a 32px size for dense toolbars;
+  - cards: square and white, a link-styled title, a chevron and the 4px bar;
+  - alert variants from the notification banner, warning callout and inset text;
+  - a navy header with the logo and the status as a chip;
+  - a plain start page in place of the hero;
+  - a "Beta" phase banner with a feedback link;
+  - a footer with the organisation and version.
+- **Don't adopt:**
+  - the 19px body and 48px h1;
+  - one question per page;
+  - full-width buttons in the header;
+  - a purple visited colour for in-app navigation (it stays for external links in body
+    text).
+- **Quality fixes:**
+  - the focus ring;
+  - `--input` at 3:1;
+  - removing `--brand` and gradient decoration;
+  - failures inline, not by toast;
+  - a session-expiry warning (spike first);
+  - a few screenshot regression tests.
+
 ## Decisions needed
 
 | #   | Decision                                                  | Recommended                               | Owner answer (2026-11-10)                                    |

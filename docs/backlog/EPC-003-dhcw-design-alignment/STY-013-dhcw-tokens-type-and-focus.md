@@ -12,8 +12,9 @@
 ## Summary
 
 Every screen takes on DHCW's colours, Roboto, its compact type scale, DHCW corner radius
-and its yellow focus indicator, in light and dark. Only the theme changes: components
-keep their structure, so the existing tests still hold. The new focus indicator also
+and its yellow focus indicator, in light and dark. The theme changes, and components'
+type and focus classes move to the new scale and utilities; their structure stays, so
+the existing tests still hold. The new focus indicator also
 fixes a faint focus ring that fails WCAG 1.4.11. Tests keep the copied values in step
 with the pinned DHCW release and check contrast in both themes. Not in it: lint
 enforcement (STY-014) and component restyling (STY-015).
@@ -21,8 +22,9 @@ enforcement (STY-014) and component restyling (STY-015).
 ## Scope
 
 `src/styles/` (tokens, type, radius and focus utilities, tests), the font dependency,
-and the focus classes on existing components and features, swapped for the new
-utilities. Docs: a "Design tokens" convention in root `AGENTS.md`, a new
+`lib/utils` (class-merge configuration), and every type and focus class in `src/`
+(`components/ui` included): headings, body and small text move to the new scale,
+negative letter-spacing goes, and focus classes become the new utilities. Docs: a "Design tokens" convention in root `AGENTS.md`, a new
 `src/styles/AGENTS.md`, and a README credit to DHCW.
 
 ## Acceptance criteria
@@ -40,8 +42,9 @@ DHCW's values (`#212b32`, `#4c6272`, `#005aa8`, `#d8dde0`, `#f0f4f5`, navy `#1b3
 **Given** the user has chosen the dark theme
 **When** any page is shown
 **Then** it uses the dark semantic tokens
-**And** every declared text pair passes 4.5:1 and every border, control and focus pair
-3:1, held by a test
+**And** in both themes every declared text pair passes 4.5:1, and every control boundary
+(`--input`) and focus pair 3:1, held by a test; decorative separators (`--border`) are
+exempt (ADR-010)
 
 ### S3: Roboto at the compact scale, in English and Welsh
 
@@ -76,6 +79,15 @@ letter-spacing
 **Given** the existing unit, component and E2E suites and the axe checks
 **When** they run
 **Then** they pass with no change to an accessible name, role or behaviour
+
+### S7: Merging classes keeps the type scale
+
+**Given** a component that combines a type token with a colour or another class through
+`cn`, e.g. `cn("text-body", "text-muted-foreground")` or a variant helper given a
+`className`
+**When** the classes are merged
+**Then** both survive, and two type tokens or two shadows resolve to the last one, held
+by a unit test
 
 ## Decisions
 
@@ -120,3 +132,17 @@ Audited at `22c3336`.
   that, with `focus-ring`.
 - **Font subsets.** `@fontsource-variable/roboto` covers Welsh only if the latin-ext
   subset is loaded.
+- **Class merging drops custom sizes.** `@/lib/utils` re-exports the `cn` package, a
+  tailwind-merge drop-in. Out of the box, `cn("text-body", "text-muted-foreground")`
+  returns only `text-muted-foreground`, because it reads `text-body` as a colour.
+  Configure it through its `cn/config` extension, adding the new text names to the
+  font-size group and the semantic shadows to the shadow group.
+- **The type migration.** Counted at `22c3336`:
+  - h1s are `text-lg` (StatusPanel), `text-xl sm:text-2xl` (detail), `text-2xl`
+    (roadmaps, not found) and `text-4xl sm:text-6xl` (start page);
+  - `text-xs` (12px) is in `button`, `badge`, `dropdown-menu`, the roadmap card and the
+    start page;
+  - `tracking-tight` and `tracking-tighter` are on headings.
+
+  `rg -no "\btext-(xs|sm|base|lg|xl|[2-9]xl)\b" src --glob '*.tsx' --glob '!*.test.*'`
+  finds 35.

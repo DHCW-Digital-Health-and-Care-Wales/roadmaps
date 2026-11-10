@@ -204,7 +204,7 @@ Audited at `22c3336`.
 - **S1, class maps** (agent): the plugin finds classes in `className`, `cn()`, `cva()`
   and the other helpers, but not in a plain object. Variables named `…Classes` are
   linted too, so the connection status's `dotColour` map is now `dotClasses`, as is the
-  `className` a variant helper takes (`buttonVariants({ className })`).
+  `className` (or `class`) a variant helper takes (`buttonVariants({ className })`).
 - **S3, scope** (agent): everywhere, a ring, outline or shadow under any focus variant
   (`focus-visible:ring-2`, `group-focus:outline-x`) is rejected. Outside `components/ui`,
   an element's own focus state (`focus:`, `focus-visible:`, `focus-within:`,
@@ -219,8 +219,8 @@ Audited at `22c3336`.
   `CSSProperties`, and a custom property in a style may only be a `var(--token)`, which
   is what `ui/sonner.tsx`'s mapping onto Sonner's variables is. A `style` attribute must
   hold an object literal, perhaps cast or chosen by a condition, and no spread, so lint
-  can read its properties; an SVG paint attribute may hold no colour string anywhere in
-  its expression. Arbitrary gradients (`bg-linear-[…]`) and arbitrary focus variants
+  can read its properties; an SVG paint attribute may hold no colour string in any value
+  its expression can take. Arbitrary gradients (`bg-linear-[…]`) and arbitrary focus variants
   (`[&:focus-visible]:bg-muted`) are rejected as well.
 - **Tests are exempt** (agent): `*.test.*` and `src/test/` assert on class names and call
   `cn` with Tailwind defaults on purpose; the fixture test proves they lint clean.

@@ -24,6 +24,7 @@ export const s1UnknownClasses = [
   cva("bg-sky-500"), // ✗ Unknown class detected: bg-sky-500
   cva("", { variants: { tone: { warm: "text-orange-700" } } }), // ✗ Unknown class detected: text-orange-700
   buttonVariants({ variant: "outline", className: "bg-red-500" }), // ✗ Unknown class detected: bg-red-500
+  buttonVariants({ class: "bg-red-600" }), // ✗ Unknown class detected: bg-red-600
   <a className={cn(buttonVariants({ className: "bg-stone-50" }))} />, // ✗ Unknown class detected: bg-stone-50
   buttonVariants({ variant: "ghost", size: "sm", className: "-ml-2.5 text-muted-foreground" }),
 ]
@@ -127,6 +128,7 @@ export const s4BackDoors = [
   <span style={base} />, // ✗ Write an inline style as an object literal
   <span style={{ ...base, width: 10 }} />, // ✗ without spreads
   <span style={active ? base : undefined} />, // ✗ Write an inline style as an object literal
+  <span style={active ? ({ "--x": "var(--y)" } as React.CSSProperties) : undefined} />,
   <span style={base as React.CSSProperties} />, // ✗ Write an inline style as an object literal
   <svg fill="#fff" />, // ✗ Literal colour in an SVG attribute
   <path stroke="red" />, // ✗ Literal colour in an SVG attribute
@@ -134,8 +136,14 @@ export const s4BackDoors = [
   <svg color={`#fff`} />, // ✗ Literal colour in an SVG attribute
   <svg fill={active ? "red" : "none"} />, // ✗ Literal colour in an SVG attribute
   <svg fill={active ? "currentColor" : "none"} stroke={`url(#${String(active)})`} />,
+  <svg fill={String(active) === "selected" ? "currentColor" : "none"} />,
+  <svg stroke={active && "#000"} />, // ✗ Literal colour in an SVG attribute
+  <svg fill={active ? "none" : active ? "none" : "red"} />, // ✗ Literal colour in an SVG attribute
   <svg fill={`#${"fff"}`} />, // ✗ Literal colour in an SVG attribute
   <span style={{ fontVariantNumeric: "tabular-nums", scrollbarColor: "red" }} />, // ✗ Design property in an inline style
+  <span style={{ fontVariantEmoji: "emoji" }} />, // ✗ Design property in an inline style
+  <span style={{ "font-synthesis-weight": "none" }} />, // ✗ Design property in an inline style
+  <div className="[font-variant-emoji:emoji]" />, // ✗ Arbitrary font-variant-emoji
   <svg fill="none" stroke="currentColor" />,
   <div className="bg-(--nhsw-link-colour)" />, // ✗ primitive outside globals.css
   <span style={{ "--x": "var(--app-dark-link)" } as React.CSSProperties} />, // ✗ primitive outside globals.css

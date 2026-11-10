@@ -31,7 +31,7 @@ const SIDES = ["top", "right", "bottom", "left", "block", "inline"].flatMap(
 )
 const CORNERS = ["top-left", "top-right", "bottom-right", "bottom-left"]
 const LOGICAL_CORNERS = ["start-start", "start-end", "end-start", "end-end"]
-/** CSS properties that carry a colour, type, radius or shadow. */
+/** CSS properties that carry a colour, type, radius or shadow, beside every `font-*`. */
 const DESIGN_PROPERTIES = [
   "color",
   "background",
@@ -59,27 +59,6 @@ const DESIGN_PROPERTIES = [
   "text-decoration",
   "text-decoration-color",
   "font",
-  "font-family",
-  "font-size",
-  "font-weight",
-  "font-style",
-  "font-stretch",
-  "font-variant",
-  ...[
-    "alternates",
-    "caps",
-    "east-asian",
-    "ligatures",
-    "numeric",
-    "position",
-  ].map((part) => `font-variant-${part}`),
-  "font-feature-settings",
-  "font-variation-settings",
-  "font-kerning",
-  "font-optical-sizing",
-  "font-palette",
-  "font-size-adjust",
-  "font-synthesis",
   "line-height",
   "letter-spacing",
   "box-shadow",
@@ -88,6 +67,15 @@ const DESIGN_PROPERTIES = [
 /** `background-color` as a style object key: `backgroundColor`. */
 const camelCase = (property: string) =>
   property.replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase())
+/** The design properties as regex alternatives, in CSS (kebab) and JavaScript case. */
+const CSS_PROPERTIES = [
+  ...DESIGN_PROPERTIES,
+  String.raw`font(?:-[a-z]+)+`,
+].join("|")
+const JS_PROPERTIES = [
+  ...DESIGN_PROPERTIES.map(camelCase),
+  String.raw`font[A-Z]\w*`,
+].join("|")
 
 const FOCUS_HINT =
   "use focus-visible:focus-fill (buttons), focus-ring (cards, inputs, menus) or focus-link (text links) (ADR-010)."
@@ -140,7 +128,7 @@ const RESTRICTIONS: Restriction[] = [
       "$1-* sets type by hand: line height and letter-spacing come with the type tokens (text-heading-*, text-body, text-body-xs) (ADR-010).",
   },
   {
-    pattern: String.raw`^(?:.*:)?!?\[(${DESIGN_PROPERTIES.join("|")}):`,
+    pattern: String.raw`^(?:.*:)?!?\[(${CSS_PROPERTIES}):`,
     message:
       "Arbitrary $1: use the semantic utility for it (a colour, type, radius or shadow token) (ADR-010).",
   },
@@ -196,7 +184,7 @@ const selectors = [
   {
     kind: "callee",
     name: String.raw`^\w+Variants$`,
-    match: [{ type: "objectValues", path: "^className$" }],
+    match: [{ type: "objectValues", path: "^(?:class|className)$" }],
   },
   {
     kind: "variable",
@@ -206,8 +194,8 @@ const selectors = [
 ]
 
 /** A design property as a style object key, in JavaScript or CSS case. */
-const STYLE_KEY = `/^(?:${DESIGN_PROPERTIES.map(camelCase).join("|")})$/`
-const STYLE_CSS_KEY = `/^(?:${DESIGN_PROPERTIES.join("|")})$/`
+const STYLE_KEY = `/^(?:${JS_PROPERTIES})$/`
+const STYLE_CSS_KEY = `/^(?:${CSS_PROPERTIES})$/`
 /** Where an object is a style: a `style` attribute, or typed as `CSSProperties`. */
 const STYLE_OBJECT = [
   'JSXAttribute[name.name="style"]',
@@ -223,8 +211,16 @@ const PAINT_KEYWORD = String.raw`/^(?:none|currentColor|inherit|transparent|url\
 const PAINT_ATTRIBUTE = String.raw`/^(?:fill|stroke|color|stopColor|stop-color|floodColor|flood-color|lightingColor|lighting-color)$/`
 const PRIMITIVE = String.raw`/--(?:nhsw|app-dark)-/`
 
-/** A `style` attribute's value. */
+/** A `style` attribute's value, and an object literal there, perhaps cast. */
 const STYLE_VALUE = 'JSXAttribute[name.name="style"] > JSXExpressionContainer'
+const STYLE_LITERAL = [
+  "ObjectExpression",
+  'TSAsExpression[expression.type="ObjectExpression"]',
+  'TSSatisfiesExpression[expression.type="ObjectExpression"]',
+].join(", ")
+/** A string an SVG paint attribute may not hold: a colour, not a keyword or `url(#…)`. */
+const PAINT_STRING = String.raw`:matches(Literal[raw=/^["']/]:not([value=${PAINT_KEYWORD}]), TemplateLiteral:not([quasis.0.value.raw=/^url\(#/]))`
+const PAINT_VALUE = `JSXAttribute[name.name=${PAINT_ATTRIBUTE}] > JSXExpressionContainer`
 const STYLE_MESSAGE =
   "Design property in an inline style: use a semantic utility class; inline styles are for layout only (ADR-010)."
 const STYLE_FORM_MESSAGE =
@@ -248,11 +244,11 @@ const backDoors = [
     message: STYLE_FORM_MESSAGE,
   },
   {
-    selector: `${STYLE_VALUE} > ConditionalExpression > :not(ObjectExpression, Identifier[name="undefined"]).consequent`,
+    selector: `${STYLE_VALUE} > ConditionalExpression > :not(${STYLE_LITERAL}, Identifier[name="undefined"]).consequent`,
     message: STYLE_FORM_MESSAGE,
   },
   {
-    selector: `${STYLE_VALUE} > ConditionalExpression > :not(ObjectExpression, Identifier[name="undefined"]).alternate`,
+    selector: `${STYLE_VALUE} > ConditionalExpression > :not(${STYLE_LITERAL}, Identifier[name="undefined"]).alternate`,
     message: STYLE_FORM_MESSAGE,
   },
   {
@@ -273,9 +269,12 @@ const backDoors = [
     message: PAINT_MESSAGE,
   },
   {
-    // Any string in the expression, `fill={active ? "red" : "none"}` too; a template
-    // may only reference a paint server, `url(#${id})`.
-    selector: String.raw`JSXAttribute[name.name=${PAINT_ATTRIBUTE}] > JSXExpressionContainer :matches(Literal[raw=/^["']/]:not([value=${PAINT_KEYWORD}]), TemplateLiteral:not([quasis.0.value.raw=/^url\(#/]))`,
+    selector: `${PAINT_VALUE} > ${PAINT_STRING}`,
+    message: PAINT_MESSAGE,
+  },
+  {
+    // A value a condition chooses, `fill={active ? "red" : "none"}`, but not its test.
+    selector: `${PAINT_VALUE} :matches(ConditionalExpression > ${PAINT_STRING}.consequent, ConditionalExpression > ${PAINT_STRING}.alternate, LogicalExpression > ${PAINT_STRING})`,
     message: PAINT_MESSAGE,
   },
   {

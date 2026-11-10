@@ -1,5 +1,6 @@
 // Deviates from upstream shadcn (ADR-010): imports cn from @/lib/utils;
-// text-body-xs for upstream's text-sm.
+// text-body-xs for upstream's text-sm; the destructive description is text-destructive,
+// not a 90% tint (lint rejects opacity modifiers).
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
@@ -11,7 +12,7 @@ const alertVariants = cva(
       variant: {
         default: "bg-card text-card-foreground",
         destructive:
-          "bg-card text-destructive *:data-[slot=alert-description]:text-destructive/90 *:[svg]:text-current",
+          "bg-card text-destructive *:data-[slot=alert-description]:text-destructive *:[svg]:text-current",
       },
     },
     defaultVariants: {

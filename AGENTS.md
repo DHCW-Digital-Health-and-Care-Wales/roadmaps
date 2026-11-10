@@ -52,7 +52,8 @@ src/
   styles/           Tailwind v4 entry CSS + theme tokens
 tests/e2e/          Playwright specs + fakes for GIS and the Sheets API
 tests/fixtures/     example data shared by unit and E2E tests; never live data
-build/              build-time helpers for vite/playwright config (GitHub Pages base path)
+build/              build-time helpers for vite/playwright/eslint config (GitHub Pages base
+                    path, the design-token lint rules and their fixtures)
 .github/            CI/CD workflow (verify, e2e, deploy to Pages), Dependabot (ADR-007),
                     PR template
 docs/               ADRs, backlog, glossary, analyses, runbooks (docs/AGENTS.md)
@@ -96,11 +97,11 @@ actionlint          # after editing .github/workflows (not a dependency; install
   system enforces parity. Copy is sentence case. Domain/infrastructure emit codes, not copy.
   `i18next/no-literal-string` rejects literal JSX text and literal `aria-label`/`title`/
   `alt`/`placeholder` attributes outside tests and `components/ui`.
-- Design tokens (ADR-010): style with the semantic tokens of `src/styles/globals.css`:
-  its theme colours, the `text-heading-*`/`text-body*` sizes, and for focus
-  `focus-visible:focus-fill` (buttons, button-styled links), `focus-ring` (cards, inputs,
-  menus) or `focus-link` (text links). Read `src/styles/AGENTS.md` before adding a token or
-  touching the DHCW pin.
+- Design tokens (ADR-010): style only with the semantic tokens of `src/styles/globals.css`.
+  For focus use `focus-visible:focus-fill` (buttons, button-styled links), `focus-ring`
+  (cards, inputs, menus) or `focus-link` (text links). When no token fits, add one per
+  `src/styles/AGENTS.md`, never an `eslint-disable`; read it too before touching the DHCW
+  pin.
 
 ## Working conventions
 
@@ -677,3 +678,31 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
     - Buttons transition into focus styles: read computed focus styles with
       `expect.poll` in E2E.
     - Sonner's unlayered CSS beats utilities; `globals.css` overrides its font and size.
+- **STY-014 Off-brand styling fails the build** — `globals.css` locks the theme (Tailwind's
+  colours, fonts, sizes, line heights, letter-spacing, radii and shadows removed), and
+  `eslint-plugin-better-tailwindcss` 4.10.0 (exact) plus `no-restricted-syntax` reject
+  everything else; the app, `components/ui` included, is migrated. `--brand` is gone.
+  - Where things live: `designTokenRules` in `build/design-token-lint.ts` (spread by
+    `eslint.config.ts`); its fixture test `build/design-token-lint.test.ts` lints
+    `build/fixtures/design-token-lint/*.tsx` as the `src/` path each names, marking each
+    expected report `// ✗ <message>`. `src/styles/stylesheets.test.ts` (one stylesheet,
+    `@theme` colours are tokens) and `src/styles/lint-exceptions.test.ts` (the swatch's
+    disable is the only one touching a design rule). New tokens `--primary-hover`,
+    `--secondary-hover`, `--popup-shadow` (`shadow-popup`).
+  - Decisions: tests (`*.test.*`, `src/test/`) are exempt; `components/ui` may colour a
+    menu item's focus highlight, nothing else may style an element's own focus beyond the
+    focus utilities and layout; `dark:hidden` stays allowed; class maps must be
+    variables named `…Classes` to be linted; a `style` attribute holds an object literal
+    (perhaps cast, or chosen by a condition), never a variable or spread. The record's
+    Delivery lists each migrated look.
+  - Gotchas:
+    - A shadow token named after a colour token is a colour: `shadow-popover` sets the
+      popover shadow's colour, so the popup shadow is `shadow-popup`.
+    - `prettier-plugin-tailwindcss` sorts unknown classes first, so class examples for
+      other projects in Markdown sort differently under the locked theme.
+    - Typed linting rejects a virtual file path, which is why the fixture test runs the
+      design blocks with the parser alone.
+    - In a scratch directory whose `node_modules` symlinks to the checkout's, run
+      binaries as `./node_modules/.bin/playwright`: `pnpm exec` there installs and prunes
+      the checkout's `node_modules` through the link. The same goes for reviewers in a
+      shared checkout: `pnpm exec eslint` relinks `node_modules`.

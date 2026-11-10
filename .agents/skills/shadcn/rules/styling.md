@@ -85,7 +85,7 @@ Use `className` for layout (e.g. `max-w-md`, `mx-auto`, `mt-4`), **not** for cha
 **Incorrect:**
 
 ```tsx
-<Card className="bg-blue-100 font-bold text-blue-900">
+<Card className="bg-blue-100 text-blue-900 font-bold">
   <CardContent>Dashboard</CardContent>
 </Card>
 ```

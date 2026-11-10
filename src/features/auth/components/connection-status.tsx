@@ -6,12 +6,13 @@ import { cn } from "@/lib/utils"
 
 import { useAuth } from "../use-auth"
 
-const dotColour = {
-  initializing: "bg-muted-foreground/40",
-  ready: "bg-muted-foreground/40",
-  connecting: "bg-amber-500 animate-pulse",
-  connected: "bg-emerald-500",
-  expired: "bg-amber-500",
+/** A dot in the status's colour, from DHCW's tag inks. */
+const dotClasses = {
+  initializing: "bg-muted-foreground",
+  ready: "bg-muted-foreground",
+  connecting: "animate-pulse bg-status-warning-fg",
+  connected: "bg-status-success-fg",
+  expired: "bg-status-warning-fg",
   error: "bg-destructive",
 } satisfies Record<AuthState["status"], string>
 
@@ -33,7 +34,7 @@ export function ConnectionStatus() {
     >
       <span
         aria-hidden="true"
-        className={cn("size-2 shrink-0 rounded-full", dotColour[status])}
+        className={cn("size-2 shrink-0 rounded-full", dotClasses[status])}
       />
       {t(`auth.status.${status}`)}
     </Badge>

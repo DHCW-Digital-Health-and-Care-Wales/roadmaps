@@ -8,6 +8,8 @@ import { defineConfig, globalIgnores } from "eslint/config"
 import globals from "globals"
 import tseslint from "typescript-eslint"
 
+import { designTokenRules } from "./build/design-token-lint.ts"
+
 /** Forbid imports of the given `src/` layers, via the `@/` alias or relative paths. */
 function layers(...names: string[]) {
   return names.map((name) => ({
@@ -62,6 +64,8 @@ export default defineConfig(
     "playwright-report",
     "test-results",
     "src/routeTree.gen.ts",
+    // Deliberately off-brand: linted by build/design-token-lint.test.ts.
+    "build/fixtures",
   ]),
   {
     files: ["**/*.{ts,tsx}"],
@@ -199,5 +203,7 @@ export default defineConfig(
       ),
     },
   },
+  // Off-brand styling fails lint (ADR-010): build/design-token-lint.ts.
+  ...designTokenRules,
   prettier,
 )

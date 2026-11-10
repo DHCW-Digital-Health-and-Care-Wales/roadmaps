@@ -14,7 +14,7 @@ export function AppHeader({ actions }: AppHeaderProps) {
   const { t } = useTranslation()
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/70 bg-background/80 backdrop-blur-md supports-backdrop-filter:bg-background/65">
+    <header className="sticky top-0 z-40 border-b border-border bg-background">
       <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 sm:gap-3 sm:px-6">
         <Link
           to="/"

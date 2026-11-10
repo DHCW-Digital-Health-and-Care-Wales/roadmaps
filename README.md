@@ -141,22 +141,22 @@ reload on GitHub Pages without a 404 fallback (ADR-004).
 
 ## Technology choices
 
-| Area           | Choice                                                                    | Notes                                                                                                           |
-| -------------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| Runtime        | Node.js 26 (Active LTS) in CI and `.nvmrc`; pnpm 12.18                    | `engines` also accepts Node 22.22+ and 24.15+. pnpm is pinned in `packageManager`.                              |
-| Build          | Vite 8.3, `@vitejs/plugin-react` 6                                        | Static output in `dist/`; base path per [deployment](#base-path); `react`/`vendor` chunks cache across deploys. |
-| UI             | React 19.3, TypeScript 6.0 (strict)                                       | TypeScript stays on 6.0 because typescript-eslint 8.x requires `typescript <6.1`.                               |
-| Routing        | TanStack Router 1.170, file-based, hash history                           | Route tree generated into `src/routeTree.gen.ts` (committed).                                                   |
-| Server state   | TanStack Query 5.107                                                      | Retries only retryable `AppError`s, twice; data is cleared on disconnect.                                       |
-| Components     | shadcn/ui 4 on Base UI 1.9, Tailwind CSS 4.3, lucide-react, sonner        | Base UI flavour, not Radix (ADR-005). Light/dark theme.                                                         |
-| Design         | DHCW design system tokens, Roboto (`@fontsource-variable`)                | Ported, never loaded (ADR-010); see [Design](#design). Dark theme is our extension.                             |
-| Validation     | Zod 4.6 (`zod/mini`)                                                      | Config, Sheets responses and GIS token responses are parsed at the boundary.                                    |
-| Auth           | Google Identity Services token model                                      | Types from `@types/google.accounts`; responses re-parsed with Zod because the typings are wrong.                |
-| i18n           | i18next 27 + react-i18next 18                                             | English and Welsh bundled; keys are typed.                                                                      |
-| Unit/component | Vitest 5.1, Testing Library, jsdom 31, MSW 3                              | MSW 3 uses `onUnhandledFrame` and `msw/http`.                                                                   |
-| E2E            | Playwright 1.64.1 (exact pin), `@axe-core/playwright`                     | Pinned exactly because each version needs its own Chromium build.                                               |
-| Lint/format    | ESLint 10 (typescript-eslint strict, `jsx-a11y-x`, `i18next`), Prettier 3 | `eslint-plugin-jsx-a11y` supports ESLint ≤ 9 only, so its maintained fork `eslint-plugin-jsx-a11y-x` is used.   |
-| CI/CD          | GitHub Actions → GitHub Pages                                             | One workflow; actions pinned to commit SHAs and kept current by Dependabot.                                     |
+| Area           | Choice                                                                                          | Notes                                                                                                                                                                         |
+| -------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Runtime        | Node.js 26 (Active LTS) in CI and `.nvmrc`; pnpm 12.18                                          | `engines` also accepts Node 22.22+ and 24.15+. pnpm is pinned in `packageManager`.                                                                                            |
+| Build          | Vite 8.3, `@vitejs/plugin-react` 6                                                              | Static output in `dist/`; base path per [deployment](#base-path); `react`/`vendor` chunks cache across deploys.                                                               |
+| UI             | React 19.3, TypeScript 6.0 (strict)                                                             | TypeScript stays on 6.0 because typescript-eslint 8.x requires `typescript <6.1`.                                                                                             |
+| Routing        | TanStack Router 1.170, file-based, hash history                                                 | Route tree generated into `src/routeTree.gen.ts` (committed).                                                                                                                 |
+| Server state   | TanStack Query 5.107                                                                            | Retries only retryable `AppError`s, twice; data is cleared on disconnect.                                                                                                     |
+| Components     | shadcn/ui 4 on Base UI 1.9, Tailwind CSS 4.3, lucide-react, sonner                              | Base UI flavour, not Radix (ADR-005). Light/dark theme.                                                                                                                       |
+| Design         | DHCW design system tokens, Roboto (`@fontsource-variable`)                                      | Ported, never loaded (ADR-010); see [Design](#design). Dark theme is our extension.                                                                                           |
+| Validation     | Zod 4.6 (`zod/mini`)                                                                            | Config, Sheets responses and GIS token responses are parsed at the boundary.                                                                                                  |
+| Auth           | Google Identity Services token model                                                            | Types from `@types/google.accounts`; responses re-parsed with Zod because the typings are wrong.                                                                              |
+| i18n           | i18next 27 + react-i18next 18                                                                   | English and Welsh bundled; keys are typed.                                                                                                                                    |
+| Unit/component | Vitest 5.1, Testing Library, jsdom 31, MSW 3                                                    | MSW 3 uses `onUnhandledFrame` and `msw/http`.                                                                                                                                 |
+| E2E            | Playwright 1.64.1 (exact pin), `@axe-core/playwright`                                           | Pinned exactly because each version needs its own Chromium build.                                                                                                             |
+| Lint/format    | ESLint 10 (typescript-eslint strict, `jsx-a11y-x`, `i18next`, `better-tailwindcss`), Prettier 3 | `eslint-plugin-jsx-a11y` supports ESLint ≤ 9 only, so its maintained fork `eslint-plugin-jsx-a11y-x` is used. `better-tailwindcss` reads the locked theme from `globals.css`. |
+| CI/CD          | GitHub Actions → GitHub Pages                                                                   | One workflow; actions pinned to commit SHAs and kept current by Dependabot.                                                                                                   |
 
 ## Getting started
 
@@ -246,7 +246,7 @@ Changes to origins can take from five minutes to a few hours to take effect.
 
 ```sh
 pnpm typecheck      # tsc -b over app, config and E2E projects
-pnpm lint           # ESLint, zero warnings allowed (includes layering and i18n rules)
+pnpm lint           # ESLint, zero warnings allowed (includes layering, i18n and design-token rules)
 pnpm format:check   # Prettier (pnpm format to fix)
 pnpm test           # Vitest unit + component tests; no network, no Google
 pnpm build          # production build into dist/
@@ -489,8 +489,9 @@ corner radius and yellow focus indicator are copied into `src/styles/globals.css
 release pinned in `package.json` (`dhcw-design-system`), and a test keeps them
 equal to it. Its stylesheet and templates are not loaded
 ([ADR-010](docs/adr/ADR-010-align-the-ui-with-the-dhcw-design-system.md)). The dark theme
-is ours, derived from DHCW's navies. Upgrading the pin is described in
-[`src/styles/AGENTS.md`](src/styles/AGENTS.md).
+is ours, derived from DHCW's navies. Tailwind's default colours, sizes, radii and shadows
+are removed, so `pnpm lint` fails on any style that isn't one of these tokens. Upgrading
+the pin is described in [`src/styles/AGENTS.md`](src/styles/AGENTS.md).
 
 ## Project documentation
 

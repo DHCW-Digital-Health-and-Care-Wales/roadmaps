@@ -1,3 +1,6 @@
+// Deviates from upstream shadcn: follows our ThemeProvider instead of next-themes
+// (ADR-005); its inline `--normal-*` properties map Sonner's theme onto semantic tokens
+// only, as `var(--token)`, which is all lint lets a style set (ADR-010).
 import { Toaster as Sonner, type ToasterProps } from "sonner"
 import { useTheme } from "@/components/theme/use-theme"
 import {
@@ -9,7 +12,6 @@ import {
 } from "lucide-react"
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  // Adapted from upstream: follows our ThemeProvider instead of next-themes (ADR-005).
   const { theme } = useTheme()
 
   return (

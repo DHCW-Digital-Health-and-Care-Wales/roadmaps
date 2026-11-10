@@ -1,4 +1,3 @@
-import { config as defaultConfig, type AppConfig } from "@/app/config"
 import {
   invalidateAuthScopedQueriesOnSessionEnd,
   removeAuthScopedQueries,
@@ -12,6 +11,7 @@ import {
 } from "@/infrastructure/google-sheets"
 import { createQueryClient } from "@/lib/query-client"
 
+import { config as defaultConfig, type AppConfig } from "./config"
 import type { AppServices } from "./providers"
 
 /**

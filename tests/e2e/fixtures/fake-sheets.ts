@@ -6,7 +6,7 @@ import type { FakeGis } from "./fake-gis"
 const SPREADSHEETS_URL = "https://sheets.googleapis.com/v4/spreadsheets"
 
 /** The partial-response mask the app must send, exactly. */
-export const METADATA_FIELDS = "sheets(properties(sheetId,title,index,hidden))"
+const METADATA_FIELDS = "sheets(properties(sheetId,title,index,hidden))"
 
 export interface Worksheet {
   sheetId: number

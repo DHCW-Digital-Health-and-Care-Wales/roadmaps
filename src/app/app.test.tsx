@@ -1,5 +1,5 @@
 import { createHashHistory } from "@tanstack/react-router"
-import { screen, within } from "@testing-library/react"
+import { screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { act } from "react"
 import { afterEach, describe, expect, it } from "vitest"
@@ -157,6 +157,29 @@ describe("header", () => {
     ).toBeInTheDocument()
   })
 
+  it("replaces the previous auth toast instead of stacking them", async () => {
+    const user = userEvent.setup()
+    await renderWithProviders()
+    const notifications = within(
+      screen.getByRole("region", { name: /Notifications/ }),
+    )
+
+    await user.click(main().getByRole("button", { name: "Connect Google" }))
+    expect(
+      await notifications.findByText("Connected to Google"),
+    ).toBeInTheDocument()
+    await user.click(header().getByRole("button", { name: "Disconnect" }))
+    expect(
+      await notifications.findByText("Disconnected from Google"),
+    ).toBeInTheDocument()
+    await flushToasts()
+
+    expect(notifications.getAllByRole("listitem")).toHaveLength(1)
+    expect(
+      notifications.queryByText("Connected to Google"),
+    ).not.toBeInTheDocument()
+  })
+
   it("toasts a failed connection, but not a closed popup", async () => {
     const { authClient } = await renderWithProviders({
       authState: { status: "connecting" },
@@ -273,5 +296,59 @@ describe("routes", () => {
 
     expect(screen.getByRole("main")).toHaveFocus()
     expect(router.state.location.pathname).toBe("/")
+  })
+
+  it("keeps focus in the content when Connect gives way to the roadmaps", async () => {
+    const user = userEvent.setup()
+    await renderWithProviders({ roadmaps: [{ id: "7", name: "Platform" }] })
+    main().getByRole("button", { name: "Connect Google" }).focus()
+
+    await user.keyboard("{Enter}")
+
+    expect(
+      await main().findByRole("link", { name: "Platform" }),
+    ).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByRole("main")).toHaveFocus()
+    })
+  })
+
+  it("leaves focus alone when the focused control stays", async () => {
+    const user = userEvent.setup()
+    await renderWithProviders({ roadmaps: [{ id: "7", name: "Platform" }] })
+    const headerConnect = header().getByRole("button", {
+      name: "Connect Google",
+    })
+    headerConnect.focus()
+
+    await user.keyboard("{Enter}")
+
+    expect(
+      await main().findByRole("link", { name: "Platform" }),
+    ).toBeInTheDocument()
+    // The same header button, now Disconnect.
+    expect(headerConnect).toHaveFocus()
+    expect(headerConnect).toHaveAccessibleName("Disconnect")
+  })
+
+  it("moves focus to the new page's content after navigating, not on first load", async () => {
+    const user = userEvent.setup()
+    await renderWithProviders({
+      authState: connected,
+      roadmaps: [{ id: "7", name: "Platform" }],
+    })
+    expect(screen.getByRole("main")).not.toHaveFocus()
+
+    await user.click(await main().findByRole("link", { name: "Platform" }))
+    expect(
+      await main().findByRole("heading", { level: 1, name: "Platform" }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole("main")).toHaveFocus()
+
+    await user.click(main().getByRole("link", { name: "Back to roadmaps" }))
+    expect(
+      await main().findByRole("heading", { level: 1, name: "Your Roadmaps" }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole("main")).toHaveFocus()
   })
 })

@@ -38,9 +38,10 @@ export interface RenderWithProvidersOptions {
 
 /**
  * Renders the whole app at `path` with the real providers and routes, and test doubles
- * for the outside world: a fake auth client (whose disconnect clears auth-scoped queries,
- * as in production, and whose session a 401 expires; expiry marks data stale), an in-memory repository and
- * memory history. Retries run without delay. Resolves once the route has rendered.
+ * for the outside world: a fake auth client, an in-memory repository and memory history.
+ * Resolves once the route has rendered. Wired like `composeApp`: a 401 expires the
+ * session, the end of a session marks auth-scoped data stale, and disconnecting removes
+ * it. Retries run without delay.
  */
 export async function renderWithProviders({
   path = "/",

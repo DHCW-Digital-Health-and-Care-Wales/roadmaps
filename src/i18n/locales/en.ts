@@ -8,6 +8,8 @@ import type { AppErrorKind } from "@/lib/errors"
 export const en = {
   common: {
     appName: "Product Roadmaps",
+    /** The header's name on narrow screens. */
+    shortAppName: "Roadmaps",
     loading: "Loading…",
     retry: "Retry",
   },

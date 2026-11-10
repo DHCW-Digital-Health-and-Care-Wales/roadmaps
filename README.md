@@ -108,21 +108,21 @@ reload on GitHub Pages without a 404 fallback (ADR-0004).
 
 ## Technology choices
 
-| Area           | Choice                                                                    | Notes                                                                                                         |
-| -------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| Runtime        | Node.js 26 (Active LTS) in CI and `.nvmrc`; pnpm 12.18                    | `engines` also accepts Node 22.22+ and 24.15+. pnpm is pinned in `packageManager`.                            |
-| Build          | Vite 8.3, `@vitejs/plugin-react` 6                                        | Static output in `dist/`; base path resolved per [deployment](#base-path).                                    |
-| UI             | React 19.3, TypeScript 6.0 (strict)                                       | TypeScript stays on 6.0 because typescript-eslint 8.x requires `typescript <6.1`.                             |
-| Routing        | TanStack Router 1.170, file-based, hash history                           | Route tree generated into `src/routeTree.gen.ts` (committed).                                                 |
-| Server state   | TanStack Query 5.107                                                      | Retries only retryable `AppError`s, twice; data is cleared on disconnect.                                     |
-| Components     | shadcn/ui 4 on Base UI 1.9, Tailwind CSS 4.3, lucide-react, sonner        | Base UI flavour, not Radix (ADR-0005). Light/dark theme.                                                      |
-| Validation     | Zod 4.6                                                                   | Config, Sheets responses and GIS token responses are parsed at the boundary.                                  |
-| Auth           | Google Identity Services token model                                      | Types from `@types/google.accounts`; responses re-parsed with Zod because the typings are wrong.              |
-| i18n           | i18next 27 + react-i18next 18                                             | English and Welsh bundled; keys are typed.                                                                    |
-| Unit/component | Vitest 5.1, Testing Library, jsdom 31, MSW 3                              | MSW 3 uses `onUnhandledFrame` and `msw/http`.                                                                 |
-| E2E            | Playwright 1.64.1 (exact pin), `@axe-core/playwright`                     | Pinned exactly because each version needs its own Chromium build.                                             |
-| Lint/format    | ESLint 10 (typescript-eslint strict, `jsx-a11y-x`, `i18next`), Prettier 3 | `eslint-plugin-jsx-a11y` supports ESLint ≤ 9 only, so its maintained fork `eslint-plugin-jsx-a11y-x` is used. |
-| CI/CD          | GitHub Actions → GitHub Pages                                             | One workflow; actions pinned to commit SHAs and kept current by Dependabot.                                   |
+| Area           | Choice                                                                    | Notes                                                                                                           |
+| -------------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Runtime        | Node.js 26 (Active LTS) in CI and `.nvmrc`; pnpm 12.18                    | `engines` also accepts Node 22.22+ and 24.15+. pnpm is pinned in `packageManager`.                              |
+| Build          | Vite 8.3, `@vitejs/plugin-react` 6                                        | Static output in `dist/`; base path per [deployment](#base-path); `react`/`vendor` chunks cache across deploys. |
+| UI             | React 19.3, TypeScript 6.0 (strict)                                       | TypeScript stays on 6.0 because typescript-eslint 8.x requires `typescript <6.1`.                               |
+| Routing        | TanStack Router 1.170, file-based, hash history                           | Route tree generated into `src/routeTree.gen.ts` (committed).                                                   |
+| Server state   | TanStack Query 5.107                                                      | Retries only retryable `AppError`s, twice; data is cleared on disconnect.                                       |
+| Components     | shadcn/ui 4 on Base UI 1.9, Tailwind CSS 4.3, lucide-react, sonner        | Base UI flavour, not Radix (ADR-0005). Light/dark theme.                                                        |
+| Validation     | Zod 4.6 (`zod/mini`)                                                      | Config, Sheets responses and GIS token responses are parsed at the boundary.                                    |
+| Auth           | Google Identity Services token model                                      | Types from `@types/google.accounts`; responses re-parsed with Zod because the typings are wrong.                |
+| i18n           | i18next 27 + react-i18next 18                                             | English and Welsh bundled; keys are typed.                                                                      |
+| Unit/component | Vitest 5.1, Testing Library, jsdom 31, MSW 3                              | MSW 3 uses `onUnhandledFrame` and `msw/http`.                                                                   |
+| E2E            | Playwright 1.64.1 (exact pin), `@axe-core/playwright`                     | Pinned exactly because each version needs its own Chromium build.                                               |
+| Lint/format    | ESLint 10 (typescript-eslint strict, `jsx-a11y-x`, `i18next`), Prettier 3 | `eslint-plugin-jsx-a11y` supports ESLint ≤ 9 only, so its maintained fork `eslint-plugin-jsx-a11y-x` is used.   |
+| CI/CD          | GitHub Actions → GitHub Pages                                             | One workflow; actions pinned to commit SHAs and kept current by Dependabot.                                     |
 
 ## Getting started
 
@@ -222,7 +222,8 @@ pnpm test:e2e       # builds, serves with vite preview on :4173, fakes GIS + She
 ```
 
 The E2E suite is hermetic: Google's script and the Sheets API are faked in the browser,
-and any request to another origin fails the test. It reuses a server already listening on
+and any request to another origin fails the test, as does an access token written to
+storage, cookies, the URL or the console at any point. It reuses a server already listening on
 port 4173 locally, so stop any stale `pnpm preview` first. Live Google integration can
 only be checked by hand (connect on the deployed site). See `tests/e2e/AGENTS.md` for the
 fixtures.
@@ -310,6 +311,7 @@ mismatch, rather than deploying a site whose assets 404. A fork deploys to
 | Symptom                                                                          | Cause and fix                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Google's popup shows **Error 400: origin_mismatch** or **redirect_uri_mismatch** | The page's origin is not in the OAuth client's Authorised JavaScript origins. Add the exact origin: scheme, host and port, no path, no trailing slash (`http://127.0.0.1:5173` and `http://localhost:5173` differ). Do not add redirect URIs; this flow doesn't use them. Wait a few minutes for the change to apply.                                                                                                                                                             |
+| Google's sign-in page says "to continue to" another app's name                   | The name comes from the OAuth client's Google Cloud project: _Google Auth Platform → Branding → App name_. Set it to "Product Roadmaps", or create a dedicated project for this app.                                                                                                                                                                                                                                                                                              |
 | Popup shows **Error 401: invalid_client** / "OAuth client was not found"         | `VITE_GOOGLE_CLIENT_ID` is wrong or the client was deleted. Check `.env.production` (or `.env.local` for `pnpm dev`) and rebuild.                                                                                                                                                                                                                                                                                                                                                 |
 | "Your browser blocked the Google window"                                         | The popup was blocked. Allow pop-ups for the site and choose Connect again.                                                                                                                                                                                                                                                                                                                                                                                                       |
 | "The Google window was closed before connecting finished"                        | The popup was closed before finishing. Connect again.                                                                                                                                                                                                                                                                                                                                                                                                                             |
@@ -337,6 +339,13 @@ mismatch, rather than deploying a site whose assets 404. A fork deploys to
 - **Tokens** live in memory only, expire after about an hour, and are revoked on
   Disconnect. The app requests no refresh tokens and never runs silent background
   re-authentication.
+- **No Content Security Policy yet.** GitHub Pages cannot send response headers, so a
+  CSP would be a `<meta http-equiv>` tag. It would have to allow at least
+  `https://accounts.google.com` (script, frame, style), `https://sheets.googleapis.com`
+  and `https://oauth2.googleapis.com` (connect), Sonner's injected styles, and the
+  theme script in `index.html` (by hash). Add it only together with a manual sign-in on
+  the deployed site, since the hermetic E2E suite cannot prove it leaves the real
+  Google flow working.
 - **The full `spreadsheets` scope is sensitive.** It is requested deliberately, for
   planned editing features (ADR-0003); it lets the app read and write _every_ spreadsheet
   the user can access, not just this one. Consequences depend on the audience and
@@ -425,9 +434,14 @@ and routes do not change.
    Google access tokens, pass `getAccessToken: authClient.getAccessToken`. If it has its
    own sign-in, write a new `AuthClient` adapter (the port is in `src/domain/auth/`) and
    swap it in the same place.
-5. **E2E.** Add a fake for the API to `tests/e2e/fixtures/` (the hermetic guard fails on
+5. **Copy.** A few strings name the spreadsheet or Google Sheets, because that is what
+   users must act on today: `landing.source`, `roadmaps.description`,
+   `roadmaps.empty.description`, `errors.forbidden`, `errors.not-found` and
+   `auth.errors.scope-not-granted`. Reword them in `en.ts` and `cy.ts`; no component
+   changes.
+6. **E2E.** Add a fake for the API to `tests/e2e/fixtures/` (the hermetic guard fails on
    any unfaked origin) and retire the Sheets fake when it is no longer used.
-6. **Deploy.** The API must allow CORS from the Pages origin with the `Authorization`
+7. **Deploy.** The API must allow CORS from the Pages origin with the `Authorization`
    header. Record the change in an ADR that amends ADR-0002, then delete
    `src/infrastructure/google-sheets/` once nothing uses it.
 

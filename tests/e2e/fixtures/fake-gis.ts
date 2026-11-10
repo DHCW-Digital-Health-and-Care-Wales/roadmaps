@@ -3,7 +3,7 @@ import type { Page } from "@playwright/test"
 
 import { appConfig, SHEETS_SCOPE } from "./app-config"
 
-export const GIS_SCRIPT_URL = "https://accounts.google.com/gsi/client"
+const GIS_SCRIPT_URL = "https://accounts.google.com/gsi/client"
 
 /** Google's usual access token lifetime, in seconds. */
 const TOKEN_LIFETIME_S = 3599
@@ -130,6 +130,11 @@ export class FakeGis {
   /** The token of the latest grant. */
   get latestToken(): string | undefined {
     return this.#issuedTokens.at(-1)
+  }
+
+  /** Every token granted so far, in order. */
+  get issuedTokens(): readonly string[] {
+    return this.#issuedTokens
   }
 
   /** Whether Google would accept the token: this fake issued it and it was not revoked. */

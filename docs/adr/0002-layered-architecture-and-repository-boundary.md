@@ -1,7 +1,8 @@
 # ADR-0002: Layered architecture and the roadmap repository boundary
 
 - Status: Accepted
-- Date: 2026-11-10 (amended in S02: optional abort `signal`, contract test)
+- Date: 2026-11-10 (amended in S02: optional abort `signal`, contract test; S03: the
+  `AuthClient` port in `domain/auth/`; S09: lint rules for `lib/`, `components/`, `i18n/`)
 
 ## Context
 
@@ -45,7 +46,8 @@ app/ (composition root) is the only module that imports concrete adapters.
   - `sheets-client.ts` — a small reusable client (`createSheetsClient({ fetch, baseUrl,
 getAccessToken })`) that performs authorised GETs with native `fetch`, maps HTTP/network
     failures to `AppError`, and returns `unknown` JSON for callers to validate.
-  - `sheets-schemas.ts` — Zod v4 schemas for the metadata response
+  - `sheets-schemas.ts` — Zod v4 schemas (`zod/mini`, the tree-shakable API, as everywhere
+    in the app) for the metadata response
     (`fields=sheets(properties(sheetId,title,index,hidden))`).
   - `google-sheets-roadmap-repository.ts` — implements `RoadmapRepository`: requests
     metadata, validates, drops hidden sheets, preserves API order, maps

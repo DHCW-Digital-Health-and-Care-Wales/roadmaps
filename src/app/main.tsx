@@ -2,9 +2,9 @@ import { RouterProvider } from "@tanstack/react-router"
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 
-import { composeApp } from "@/app/composition"
-import { AppProviders } from "@/app/providers"
-import { createAppRouter } from "@/app/router"
+import { composeApp } from "./composition"
+import { AppProviders } from "./providers"
+import { createAppRouter } from "./router"
 import "@/styles/globals.css"
 
 const rootElement = document.getElementById("root")

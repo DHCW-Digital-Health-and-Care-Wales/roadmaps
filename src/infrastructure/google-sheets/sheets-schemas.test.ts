@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { ZodError } from "zod"
+import { z } from "zod/mini"
 
 import { AppError } from "@/lib/errors"
 
@@ -76,7 +76,7 @@ describe("parseSpreadsheetMetadata", () => {
 
     expect(thrown).toBeInstanceOf(AppError)
     expect(thrown).toMatchObject({ kind: "invalid-response", retryable: false })
-    expect((thrown as AppError).cause).toBeInstanceOf(ZodError)
+    expect((thrown as AppError).cause).toBeInstanceOf(z.core.$ZodError)
   })
 })
 

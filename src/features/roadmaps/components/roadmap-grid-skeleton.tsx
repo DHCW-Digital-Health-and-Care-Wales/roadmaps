@@ -12,7 +12,7 @@ export function RoadmapGridSkeleton() {
   const { t } = useTranslation()
 
   return (
-    <div role="status" aria-busy="true">
+    <div role="status">
       <span className="sr-only">{t("roadmaps.loading")}</span>
       <ul aria-hidden="true" className={roadmapGridClassName}>
         {NAME_WIDTHS.map((width, index) => (

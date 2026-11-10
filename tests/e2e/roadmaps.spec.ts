@@ -17,6 +17,8 @@ test("connecting shows the visible roadmaps in spreadsheet order", async ({
   await expect(roadmapCards(page)).toHaveText(VISIBLE_TITLES)
   await expect(page.getByText("3 roadmaps")).toBeVisible()
   await expect(page.getByRole("status")).toHaveText("Google connected")
+  // Connect went with the welcome page; focus moved to the content, not the body.
+  await expect(page.getByRole("main")).toBeFocused()
   expect(gis.tokenRequests).toEqual([
     {
       clientId: expect.stringMatching(/\.apps\.googleusercontent\.com$/),
@@ -66,9 +68,11 @@ test("a card opens its roadmap, and Back returns to the list", async ({
     page.getByRole("heading", { level: 1, name: "Mobile app" }),
   ).toBeVisible()
   await expect(page.getByText("Roadmap details are coming soon.")).toBeVisible()
+  await expect(page.getByRole("main")).toBeFocused()
 
   await page.getByRole("link", { name: "Back to roadmaps" }).click()
   await expect(roadmapCards(page)).toHaveText(VISIBLE_TITLES)
+  await expect(page.getByRole("main")).toBeFocused()
   // The detail page and the list share one cached request.
   expect(sheets.tokens).toHaveLength(1)
 })

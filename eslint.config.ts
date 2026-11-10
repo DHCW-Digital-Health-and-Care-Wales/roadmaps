@@ -25,6 +25,17 @@ const frameworks = [
     group: ["@tanstack/**"],
     message: "Layering (ADR-0002): no TanStack here.",
   },
+  {
+    group: [
+      "i18next",
+      "react-i18next",
+      "sonner",
+      "lucide-react",
+      "@base-ui/**",
+    ],
+    message:
+      "Layering (ADR-0002, ADR-0008): no UI or copy here; emit codes, not text.",
+  },
 ]
 
 export default defineConfig(
@@ -100,6 +111,7 @@ export default defineConfig(
               "app",
               "routes",
               "components",
+              "i18n",
             ),
           ],
         },
@@ -114,7 +126,7 @@ export default defineConfig(
         {
           patterns: [
             ...frameworks,
-            ...layers("features", "app", "routes", "components"),
+            ...layers("features", "app", "routes", "components", "i18n"),
           ],
         },
       ],
@@ -147,6 +159,36 @@ export default defineConfig(
       "no-restricted-imports": [
         "error",
         { patterns: layers("infrastructure", "app", "routes") },
+      ],
+    },
+  },
+  {
+    // Shared building blocks sit below features, so they never reach back up.
+    files: ["src/components/**/*.{ts,tsx}", "src/i18n/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        { patterns: layers("infrastructure", "features", "app", "routes") },
+      ],
+    },
+  },
+  {
+    // Utilities everything else builds on, the domain included.
+    files: ["src/lib/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: layers(
+            "domain",
+            "infrastructure",
+            "features",
+            "app",
+            "routes",
+            "components",
+            "i18n",
+          ),
+        },
       ],
     },
   },

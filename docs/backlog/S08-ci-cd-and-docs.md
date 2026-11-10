@@ -17,6 +17,8 @@ Push-to-deploy on GitHub Pages and comprehensive documentation. See ADR-0007.
   `actions/configure-pages`, `actions/upload-pages-artifact`, `actions/deploy-pages` —
   verify current majors. Least-privilege permissions; `concurrency` for pages; CNAME from
   `vars.PAGES_CUSTOM_DOMAIN` when set. Validate YAML (e.g. `actionlint` if available).
+  _(As delivered, `verify` builds and uploads, `deploy` only deploys, and no `CNAME` is
+  written: see the delivery notes below and ADR-0007's S08 amendments.)_
 - `README.md` covering every item in the brief: overview, architecture (Mermaid diagram of
   layers + future adapter), tech choices, prerequisites, install, env config, Google Cloud
   setup (project, enable Sheets API, OAuth consent screen, OAuth client of type Web,

@@ -18,6 +18,24 @@ export default defineConfig({
   resolve: {
     tsconfigPaths: true,
   },
+  build: {
+    // Long-lived chunks: app code changes on every deploy, React and the other
+    // dependencies only when upgraded, so returning visitors re-download only the app.
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            {
+              name: "react",
+              test: /node_modules[\\/](?:react|react-dom|scheduler)[\\/]/,
+              priority: 2,
+            },
+            { name: "vendor", test: /node_modules[\\/]/, priority: 1 },
+          ],
+        },
+      },
+    },
+  },
   test: {
     environment: "jsdom",
     // Unit and component tests only; Playwright runs tests/e2e.

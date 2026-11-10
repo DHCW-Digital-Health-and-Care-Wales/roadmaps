@@ -65,7 +65,6 @@ function injectScript(timeoutMs: number): Promise<GoogleOAuth2> {
 
     script.src = GIS_SCRIPT_URL
     script.async = true
-    script.defer = true
     document.head.append(script)
   })
 }

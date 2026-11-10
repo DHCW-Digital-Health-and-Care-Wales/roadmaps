@@ -2,7 +2,7 @@ export const themes = ["light", "dark"] as const
 export type Theme = (typeof themes)[number]
 
 /** Light unless the user chose otherwise (ADR-0005). */
-export const defaultTheme: Theme = "light"
+const defaultTheme: Theme = "light"
 
 /** Also read by the no-flash script in `index.html`; keep the two in step. */
 export const THEME_STORAGE_KEY = "roadmaps.theme"

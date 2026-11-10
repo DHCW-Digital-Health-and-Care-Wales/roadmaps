@@ -11,6 +11,7 @@ type WelshPluralCategory = "zero" | "one" | "two" | "few" | "many" | "other"
 export const cy = {
   common: {
     appName: "Mapiau Trywydd Cynnyrch",
+    shortAppName: "Mapiau Trywydd",
     loading: "Wrthi'n llwytho…",
     retry: "Ceisio eto",
   },

@@ -2,6 +2,7 @@ import { test as base, expect, type Page } from "@playwright/test"
 
 import { FakeGis } from "./fake-gis"
 import { FakeSheets } from "./fake-sheets"
+import { recordPersistence, snapshotPersistence } from "./persistence-recorder"
 
 export { expect }
 
@@ -51,10 +52,18 @@ export const test = base.extend<Fakes>({
     async ({ page }, use) => {
       const gis = new FakeGis()
       await gis.install(page)
+      const persisted = await recordPersistence(page)
+
       await use(gis)
+
       expect
         .soft(gis.violations, "misuses of Google Identity Services")
         .toEqual([])
+      // Tokens live in memory only (ADR-0003): never in storage, the URL, cookies or logs.
+      const leaks = [...persisted, ...(await snapshotPersistence(page))].filter(
+        (text) => gis.issuedTokens.some((token) => text.includes(token)),
+      )
+      expect.soft(leaks, "access tokens outside memory").toEqual([])
     },
     { auto: true },
   ],

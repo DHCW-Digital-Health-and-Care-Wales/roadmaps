@@ -50,7 +50,6 @@ describe("loadGisScript", () => {
 
     const script = onlyGisScript()
     expect(script.async).toBe(true)
-    expect(script.defer).toBe(true)
     expect(script.parentElement).toBe(document.head)
 
     runGisScript(script)

@@ -1,4 +1,4 @@
-import { act, screen, within } from "@testing-library/react"
+import { act, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
@@ -234,6 +234,30 @@ describe("RoadmapsPage", () => {
 
     expect(authClient.connect).toHaveBeenCalledOnce()
     expect(await main().findByText("2 roadmaps")).toBeInTheDocument()
+  })
+
+  it("drops the expired alert as soon as it reconnects, while refetching", async () => {
+    const user = userEvent.setup()
+    const repository = scriptedRepository(
+      roadmaps,
+      new AppError("unauthenticated"),
+      "pending",
+    )
+    await renderWithProviders({ authState: connected, repository })
+    await main().findByText("3 roadmaps")
+    await user.click(main().getByRole("button", { name: "Refresh" }))
+    const alert = await main().findByRole("alert")
+
+    await user.click(within(alert).getByRole("button", { name: "Reconnect" }))
+
+    // The refetch is still pending, and the 401 it will replace is still the query's error.
+    expect(repository.listRoadmaps).toHaveBeenCalledTimes(3)
+    expect(main().queryByRole("alert")).not.toBeInTheDocument()
+    expect(cardNames()).toHaveLength(3)
+    // Reconnect went with the alert; focus stays in the content.
+    await waitFor(() => {
+      expect(screen.getByRole("main")).toHaveFocus()
+    })
   })
 
   it("refetches after reconnecting from a timed-out session, even if fresh", async () => {

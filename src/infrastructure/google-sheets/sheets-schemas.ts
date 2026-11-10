@@ -1,22 +1,23 @@
-import { z } from "zod"
+import { z } from "zod/mini"
 
 import { AppError } from "@/lib/errors"
 
 /** Response of `GET /{spreadsheetId}?fields=sheets(properties(sheetId,title,index,hidden))`. */
 const spreadsheetMetadataSchema = z.object({
   // Google omits `sheets` (and `false`/default-valued fields) rather than sending them.
-  sheets: z
-    .array(
+  sheets: z._default(
+    z.array(
       z.object({
         properties: z.object({
           sheetId: z.int(),
           title: z.string(),
-          index: z.int().optional(),
-          hidden: z.boolean().optional(),
+          index: z.optional(z.int()),
+          hidden: z.optional(z.boolean()),
         }),
       }),
-    )
-    .default([]),
+    ),
+    [],
+  ),
 })
 
 export type SpreadsheetMetadata = z.output<typeof spreadsheetMetadataSchema>
@@ -36,8 +37,8 @@ export function parseSpreadsheetMetadata(json: unknown): SpreadsheetMetadata {
 /** Google's JSON error envelope, read only for diagnostics. */
 const googleErrorBodySchema = z.object({
   error: z.object({
-    status: z.string().optional(),
-    message: z.string().optional(),
+    status: z.optional(z.string()),
+    message: z.optional(z.string()),
   }),
 })
 

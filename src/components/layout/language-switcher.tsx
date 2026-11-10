@@ -35,7 +35,9 @@ export function LanguageSwitcher() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant="ghost" />}>
+      <DropdownMenuTrigger
+        render={<Button variant="ghost" className="max-sm:w-8 max-sm:px-0" />}
+      >
         <LanguagesIcon aria-hidden="true" />
         {/* Accessible name "Language English": it includes the visible endonym. */}
         <span className="sr-only">{t("language.label")}</span>{" "}

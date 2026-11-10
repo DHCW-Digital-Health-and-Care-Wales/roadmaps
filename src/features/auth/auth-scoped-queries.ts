@@ -26,12 +26,16 @@ export function invalidateAuthScopedQueriesOnSessionEnd(
   let wasConnected = authClient.getSnapshot().status === "connected"
   return authClient.subscribe(() => {
     const connected = authClient.getSnapshot().status === "connected"
-    if (wasConnected && !connected) {
-      void queryClient.invalidateQueries({
-        queryKey: authScopedQueryKey,
-        refetchType: "none",
-      })
-    }
+    if (wasConnected && !connected) void markSessionDataStale(queryClient)
     wasConnected = connected
   })
+}
+
+async function markSessionDataStale(queryClient: QueryClient): Promise<void> {
+  const filters = { queryKey: authScopedQueryKey }
+  // Requests still carrying the old token are abandoned first (cached data is kept): a
+  // late success would mark the data fresh again, and a late 401 would expire the next
+  // session. Cancelling reverts their state, so it must precede the invalidation.
+  await queryClient.cancelQueries(filters)
+  await queryClient.invalidateQueries({ ...filters, refetchType: "none" })
 }

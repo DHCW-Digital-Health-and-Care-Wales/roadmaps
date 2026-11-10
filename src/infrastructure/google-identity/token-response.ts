@@ -1,4 +1,4 @@
-import { z } from "zod"
+import { z } from "zod/mini"
 
 import type { AuthFailureCode } from "@/domain/auth/auth-client"
 
@@ -6,10 +6,10 @@ import type { GoogleOAuth2, TokenResponse } from "./gis-types"
 
 // The token response is untrusted: GIS documents `expires_in` without a type (it is a
 // number at runtime, a string in `@types/google.accounts`), and fields go missing on error.
-const tokenErrorSchema = z.object({ error: z.string().min(1) })
+const tokenErrorSchema = z.object({ error: z.string().check(z.minLength(1)) })
 const tokenGrantSchema = z.object({
-  access_token: z.string().min(1),
-  expires_in: z.coerce.number().positive(),
+  access_token: z.string().check(z.minLength(1)),
+  expires_in: z.coerce.number().check(z.positive()),
 })
 
 export interface TokenGrant {

@@ -79,8 +79,8 @@ actionlint          # after editing .github/workflows (not a dependency; install
 2. Implement the story's scope only. If you must deviate from an ADR, update or supersede
    the ADR in the same change and say why.
 3. Use subagents where helpful (Haiku for mechanical edits, Sonnet for medium work).
-4. Before finishing: `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm build`
-   `pnpm test:e2e` must all pass.
+4. Before finishing, `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test &&
+pnpm build && pnpm test:e2e` must all pass.
 5. Get a code review from a **Sol** reviewer (Codex `gpt-6.1-sol`) via `delegate_task`
    (role `review`, mode `wait`, shared checkout). Address every comment — fix it, or record
    a reasoned rebuttal in the story file. Re-run the checks.
@@ -366,6 +366,7 @@ language? })` (`src/test/render-with-providers.tsx`) renders the real `AppProvid
     - The skip link prevents default and focuses `<main>`, because hash history owns the URL
       fragment.
     - The main JS chunk is ~580 kB, above Vite's warning threshold; consider chunking in S08/S09.
+      (Fixed in S09: `zod/mini` plus `react`/`vendor` chunks.)
 - **S06 Roadmaps feature** — list, states and detail page; shadcn `alert`, `empty`,
   `skeleton` added. New i18n keys: `roadmaps.refreshFailed`,
   `roadmaps.expired.{title,description}`.
@@ -471,3 +472,46 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
     check them while doing the manual real-GIS check. `.env.production`'s client must list
     `https://collisdigital.github.io` as an origin before the first deploy is usable.
     Pages must be enabled (Source: GitHub Actions) before the first push to `main`.
+- **S09 Final verification, polish and review** — all brief §14 criteria checked with
+  evidence in `docs/backlog/S09-final-verification.md`; whole-repo Sol review (3 findings,
+  all fixed). Backlog complete: S01–S09 Done.
+  - State: 264 unit/component tests, 31 E2E (also green under `/roadmaps-editor/`); build
+    has no warnings. JS is 654 kB min / 214 kB gzip in `react`, `vendor` and app chunks
+    (app ~48 kB), down from 717 / 234 kB with a 509 kB entry chunk.
+  - Changes:
+    - `zod/mini` everywhere: use `z.optional(x)`, `z._default(x, v)`,
+      `x.check(z.trim(), z.regex(…))`, `z.pipe(a, z.transform(…))`. Mini loads no locale,
+      so give messages explicitly.
+    - `react`/`vendor` chunk groups in `vite.config.ts` (ADR-0007 S09 amendment).
+    - Mobile header: `common.shortAppName`; the status badge is `max-sm:sr-only`;
+      `HeaderAuthButton` shows only Disconnect below `sm`. Every signed-out view must
+      therefore keep its own Connect/Reconnect.
+    - `AppShell` focus: focus goes to `<main>` after in-app navigation and when the
+      focused control inside `<main>` is removed.
+    - `useRoadmapsProblem` ignores a leftover `unauthenticated` error once connected.
+    - On session end, auth-scoped queries are cancelled, then invalidated (Sol). This
+      retires the S03 "late 401 after reconnect" gotcha.
+    - Stricter ESLint layer blocks: `lib/`, `components/`, `i18n/`, and no UI/copy
+      packages in domain/infrastructure.
+    - E2E token guard (`tests/e2e/fixtures/persistence-recorder.ts`).
+  - Live GIS (dev, real Google): the popup opens `accounts.google.com` with the right
+    `client_id` and `scope`. `localhost:5173` is an authorised origin.
+    `https://collisdigital.github.io` and `localhost:4173` get `origin_mismatch`. The
+    consent screen is branded "FHIR Host". Sign-in, token grant and a live Sheets call
+    were not verified.
+  - Gotchas:
+    - Screenshots against `pnpm dev` can't use `tests/e2e/fixtures/test.ts`: its hermetic
+      guard rejects Vite's HMR WebSocket. Use `FakeGis`/`FakeSheets` directly.
+    - StrictMode in dev aborts and repeats the first fetch, consuming a queued
+      `sheets.respondWith` reply. Route Sheets yourself, or use the preview build.
+    - `@typescript-eslint/unbound-method` flags saved prototype methods; `Reflect.get`
+      and `Reflect.apply` keep them typed without detaching.
+  - Recommended next steps:
+    1. Do the external steps in S09: OAuth origin, consent-screen name, Pages on a
+       private repo, push, then a manual live sign-in.
+    2. Per-view `document.title` (move title ownership out of `syncDocumentLanguage`).
+    3. A CSP `<meta>` validated against a real sign-in (README lists the origins).
+    4. Fluent Welsh review.
+    5. Dependabot for npm (actions only today), keeping Playwright pinned exactly with
+       its browser cache.
+    6. Then the roadmap detail feature, which will be the first real per-sheet read.

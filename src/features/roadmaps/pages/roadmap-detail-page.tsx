@@ -127,7 +127,7 @@ function RoadmapDetail({ roadmapId }: RoadmapDetailPageProps) {
   }
 
   return (
-    <div role="status" aria-busy="true" className="flex items-start gap-4">
+    <div role="status" className="flex items-start gap-4">
       <span className="sr-only">{t("common.loading")}</span>
       <Skeleton aria-hidden="true" className="size-12 shrink-0 rounded-xl" />
       <div aria-hidden="true" className="flex flex-1 flex-col gap-3 pt-1.5">

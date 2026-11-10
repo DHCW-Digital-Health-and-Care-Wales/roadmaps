@@ -18,8 +18,10 @@ End-to-end tests of the production build, with Google faked (ADR-0006). Run with
   is four worksheets, one hidden ("Platform", "Mobile app", "Data & analytics" visible, in
   that order). `sheets.tokens` lists each request's bearer token; `sheets.hold()` keeps
   replies pending until its returned `release()` is called.
-- Anything the real APIs would reject, and any request to another origin, fails the test
-  at teardown. Add a new external dependency to the fakes, not to the guard.
+- Anything the real APIs would reject, any request to another origin, and any issued
+  access token written to storage, cookies, the URL or the console at any point
+  (`fixtures/persistence-recorder.ts`) fail the test at teardown. Add a new external
+  dependency to the fakes, not to the guard.
 - No sleeps. For back-off or expiry, `page.clock.install()` before `goto`, then
   fast-forward. Navigate with relative URLs (`./`, `./#/roadmaps/42`) so a base path
   only changes `baseURL`.

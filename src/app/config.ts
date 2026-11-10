@@ -1,23 +1,25 @@
-import { z } from "zod"
+import { z } from "zod/mini"
 
-const envSchema = z
-  .object({
+const envSchema = z.pipe(
+  z.object({
     VITE_GOOGLE_CLIENT_ID: z
-      .string()
-      .trim()
-      .regex(
-        /^[\w-]+\.apps\.googleusercontent\.com$/,
-        "must be a Google OAuth client ID ending in .apps.googleusercontent.com",
+      .string("is required")
+      .check(
+        z.trim(),
+        z.regex(
+          /^[\w-]+\.apps\.googleusercontent\.com$/,
+          "must be a Google OAuth client ID ending in .apps.googleusercontent.com",
+        ),
       ),
     VITE_GOOGLE_SPREADSHEET_ID: z
-      .string()
-      .trim()
-      .regex(/^[\w-]+$/, "must be a Google spreadsheet ID"),
-  })
-  .transform((env) => ({
+      .string("is required")
+      .check(z.trim(), z.regex(/^[\w-]+$/, "must be a Google spreadsheet ID")),
+  }),
+  z.transform((env) => ({
     googleClientId: env.VITE_GOOGLE_CLIENT_ID,
     spreadsheetId: env.VITE_GOOGLE_SPREADSHEET_ID,
-  }))
+  })),
+)
 
 export type AppConfig = Readonly<z.output<typeof envSchema>>
 

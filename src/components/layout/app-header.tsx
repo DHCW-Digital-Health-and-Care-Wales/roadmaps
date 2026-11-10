@@ -15,19 +15,20 @@ export function AppHeader({ actions }: AppHeaderProps) {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/80 backdrop-blur-md supports-backdrop-filter:bg-background/65">
-      <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:px-6">
+      <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 sm:gap-3 sm:px-6">
         <Link
           to="/"
           aria-label={t("layout.home")}
-          className="-mx-1.5 flex items-center gap-2.5 rounded-lg px-1.5 py-1 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="-mx-1.5 flex min-w-0 items-center gap-2.5 rounded-lg px-1.5 py-1 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
         >
           <BrandMark />
-          {/* Below `sm` the name is hidden; the link's label still carries it. */}
-          <span className="text-[0.9375rem] font-semibold tracking-tight max-sm:hidden">
-            {t("common.appName")}
+          {/* Below `sm` a short name; the link's label carries the full one. */}
+          <span className="truncate text-sm font-semibold tracking-tight sm:text-[0.9375rem]">
+            <span className="sm:hidden">{t("common.shortAppName")}</span>
+            <span className="max-sm:hidden">{t("common.appName")}</span>
           </span>
         </Link>
-        <div className="ml-auto flex items-center gap-1 sm:gap-1.5">
+        <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-1.5">
           {actions}
         </div>
       </div>

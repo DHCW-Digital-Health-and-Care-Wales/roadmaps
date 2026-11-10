@@ -11,5 +11,8 @@ const SESSION_EXPIRED = new AppError("unauthenticated")
 export function useRoadmapsProblem(error: Error | null): AppError | null {
   const connected = useAuth().state.status === "connected"
   if (!connected) return SESSION_EXPIRED
-  return error ? toAppError(error) : null
+  const problem = error ? toAppError(error) : null
+  // A rejected token ends the session at once, so while connected such an error is left
+  // over from the previous session; the refetch after reconnecting replaces it.
+  return problem?.kind === "unauthenticated" ? null : problem
 }

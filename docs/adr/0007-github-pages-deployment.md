@@ -2,21 +2,22 @@
 
 - Status: Accepted
 - Date: 2026-11-10 (amended in S08: artifact built by Verify, base-path guard, no CNAME,
-  SHA-pinned actions, Node 26)
+  SHA-pinned actions, Node 26; S09: vendor chunks)
 
 ## Decision
 
 - GitHub Actions: one workflow file for CI (PRs + pushes to `main`): checkout, Node LTS,
   pnpm (via `pnpm/action-setup`, version from `packageManager`), `pnpm install
 --frozen-lockfile`, typecheck, lint, format check, unit tests, build, E2E. On pushes to
-  `main` only, a deploy job that `needs` the checks uploads the build with
-  `actions/configure-pages`, `actions/upload-pages-artifact`, `actions/deploy-pages`.
-  Permissions: `contents: read` globally; `pages: write`, `id-token: write` on the deploy
-  job. `concurrency: pages` (no cancel-in-progress for deploys).
-- Vite `base` resolution, in order: explicit `VITE_BASE_PATH`; else derived from
+  `main` only, `verify` also runs `actions/configure-pages` and
+  `actions/upload-pages-artifact`, and a `deploy` job that `needs` both check jobs runs
+  `actions/deploy-pages`. Permissions: `contents: read` globally; `pages: write`,
+  `id-token: write` on the deploy job only. `concurrency: pages` (no cancel-in-progress
+  for deploys). Details in the S08 amendments below.
+- Vite `base` resolution, in order: explicit `VITE_BASE_PATH`; else `/` if the
+  `PAGES_CUSTOM_DOMAIN` repository variable is set (a custom domain); else derived from
   `GITHUB_REPOSITORY` (`owner/owner.github.io` -> `/`, otherwise `/<repo>/`); else `/`.
-  A custom domain is supported by setting the `PAGES_CUSTOM_DOMAIN` repository variable,
-  which forces base `/` and writes `CNAME` into the artifact.
+  No `CNAME` file is written (see below).
 - Public config (`VITE_GOOGLE_CLIENT_ID`, `VITE_GOOGLE_SPREADSHEET_ID`) is committed in
   `.env.production` (public values, not secrets) with the same values in `.env.example`;
   validated at startup with Zod. `.env` / `.env.local` are git-ignored. No GitHub Secrets.
@@ -58,6 +59,17 @@
   maintained.
 - **Node**: CI uses `.nvmrc`, which tracks the Active LTS line (26 since 2026-10-28).
   `engines` still accepts 22.22+/24.15+ for local development.
+
+### S09 amendment
+
+- **Long-lived chunks**: `vite.config.ts` splits the build into `react` (React, ReactDOM,
+  scheduler), `vendor` (every other dependency) and the app's own chunks
+  (`build.rolldownOptions.output.codeSplitting.groups`; TanStack Router's
+  `autoCodeSplitting` already makes each route lazy). Pages serves assets with
+  content-hashed names, so a deploy that changes only app code costs returning visitors
+  about 48 kB of JavaScript instead of all ~650 kB, and no chunk reaches Vite's 500 kB warning.
+  The warning limit is not raised. Zod is imported as `zod/mini` (ADR-0002), which saved
+  about 63 kB.
 
 ## Consequences
 

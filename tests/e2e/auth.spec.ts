@@ -135,7 +135,7 @@ test("disconnecting revokes the token and forgets the roadmaps", async ({
 
   await expect(roadmapCards(page)).toHaveCount(0)
   await expect(
-    page.getByRole("heading", { level: 1, name: "Product Roadmaps" }),
+    page.getByRole("heading", { level: 1, name: "DHCW Roadmap Editor" }),
   ).toBeVisible()
   await expect(page.getByRole("status")).toHaveText("Not connected")
   await expect(toasts(page).getByText("Disconnected from Google")).toBeVisible()

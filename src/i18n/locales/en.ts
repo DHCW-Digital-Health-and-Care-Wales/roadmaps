@@ -7,7 +7,7 @@ import type { AppErrorKind } from "@/lib/errors"
  */
 export const en = {
   common: {
-    appName: "Product Roadmaps",
+    appName: "DHCW Roadmap Editor",
     /** The header's name on narrow screens. */
     shortAppName: "Roadmaps",
     loading: "Loading…",
@@ -15,11 +15,12 @@ export const en = {
   },
   layout: {
     skipToContent: "Skip to main content",
-    home: "Product Roadmaps home",
+    home: "DHCW Roadmap Editor home",
     notifications: "Notifications",
   },
   landing: {
-    tagline: "A simple way to explore and manage your product roadmaps.",
+    tagline:
+      "Keep your products' public roadmaps up to date: now, next and later.",
     source: "Your roadmaps are currently sourced from Google Sheets.",
     accessNote:
       "You'll need to connect Google so the app can load your roadmaps.",

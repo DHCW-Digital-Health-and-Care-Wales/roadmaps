@@ -25,9 +25,12 @@ async function chooseLanguage(page: Page, current: string, next: string) {
 
 async function expectWelsh(page: Page) {
   await expect(page.locator("html")).toHaveAttribute("lang", "cy")
-  await expect(page).toHaveTitle("Mapiau Trywydd Cynnyrch")
+  await expect(page).toHaveTitle("Golygydd Mapiau Trywydd IGDC")
   await expect(
-    page.getByRole("heading", { level: 1, name: "Mapiau Trywydd Cynnyrch" }),
+    page.getByRole("heading", {
+      level: 1,
+      name: "Golygydd Mapiau Trywydd IGDC",
+    }),
   ).toBeVisible()
   await expect(page.getByRole("status")).toHaveText("Heb gysylltu")
 }

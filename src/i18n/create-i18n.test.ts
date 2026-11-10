@@ -55,11 +55,11 @@ describe("syncDocumentLanguage", () => {
     const i18n = createI18n({ language: "cy" })
     stop = syncDocumentLanguage(i18n)
     expect(document.documentElement.lang).toBe("cy")
-    expect(document.title).toBe("Mapiau Trywydd Cynnyrch")
+    expect(document.title).toBe("Golygydd Mapiau Trywydd IGDC")
 
     await i18n.changeLanguage("en")
     expect(document.documentElement.lang).toBe("en")
-    expect(document.title).toBe("Product Roadmaps")
+    expect(document.title).toBe("DHCW Roadmap Editor")
   })
 
   it("stops syncing once stopped", async () => {

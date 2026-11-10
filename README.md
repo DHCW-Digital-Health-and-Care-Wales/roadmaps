@@ -2,10 +2,12 @@
 
 [![CI/CD](https://github.com/collisdigital/roadmaps-editor/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/collisdigital/roadmaps-editor/actions/workflows/ci.yml)
 
-An internal tool for Digital Health and Care Wales (DHCW): Product Leads use it to manage
-their public-facing Now / Next / Later roadmaps, writing each roadmap item's title,
-description, expected outcomes and tags. The item editor is being built; the
-[Product Lead persona](docs/backlog/personas/product-lead.md) describes who it is for.
+An internal tool for Digital Health and Care Wales (DHCW) staff: Product Leads use it to
+manage the public Now / Next / Later roadmaps of their products, writing each roadmap
+item's title, description, expected outcomes and tags. A separate app, the public site,
+reads the same data source and shows the published roadmaps. The item editor is being
+built; the [Product Lead persona](docs/backlog/personas/product-lead.md) describes who it
+is for.
 
 Today it is a static, frontend-only React app that lists roadmaps. You connect a Google
 account, the app reads one Google Spreadsheet's worksheet **metadata**, and each visible
@@ -183,7 +185,7 @@ OAuth client. These steps use the Google Cloud console's _Google Auth Platform_ 
 2. **Enable the Google Sheets API.** _APIs & Services → Library_, search for "Google
    Sheets API", then **Enable**. It must be the same project as the OAuth client.
 3. **Configure the consent screen.** _Google Auth Platform → Get started_ (or
-   _Branding_): app name "Product Roadmaps", user support email, developer contact email.
+   _Branding_): app name "DHCW Roadmap Editor", user support email, developer contact email.
    Then _Audience_:
    - **Internal**: only accounts in your Google Workspace organisation; no test-user list
      and no verification needed.
@@ -316,7 +318,7 @@ mismatch, rather than deploying a site whose assets 404. A fork deploys to
 | Symptom                                                                          | Cause and fix                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Google's popup shows **Error 400: origin_mismatch** or **redirect_uri_mismatch** | The page's origin is not in the OAuth client's Authorised JavaScript origins. Add the exact origin: scheme, host and port, no path, no trailing slash (`http://127.0.0.1:5173` and `http://localhost:5173` differ). Do not add redirect URIs; this flow doesn't use them. Wait a few minutes for the change to apply.                                                                                                                                                             |
-| Google's sign-in page says "to continue to" another app's name                   | The name comes from the OAuth client's Google Cloud project: _Google Auth Platform → Branding → App name_. Set it to "Product Roadmaps", or create a dedicated project for this app.                                                                                                                                                                                                                                                                                              |
+| Google's sign-in page says "to continue to" another app's name                   | The name comes from the OAuth client's Google Cloud project: _Google Auth Platform → Branding → App name_. Set it to "DHCW Roadmap Editor", or create a dedicated project for this app.                                                                                                                                                                                                                                                                                           |
 | Popup shows **Error 401: invalid_client** / "OAuth client was not found"         | `VITE_GOOGLE_CLIENT_ID` is wrong or the client was deleted. Check `.env.production` (or `.env.local` for `pnpm dev`) and rebuild.                                                                                                                                                                                                                                                                                                                                                 |
 | "Your browser blocked the Google window"                                         | The popup was blocked. Allow pop-ups for the site and choose Connect again.                                                                                                                                                                                                                                                                                                                                                                                                       |
 | "The Google window was closed before connecting finished"                        | The popup was closed before finishing. Connect again.                                                                                                                                                                                                                                                                                                                                                                                                                             |

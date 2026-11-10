@@ -10,18 +10,19 @@ type WelshPluralCategory = "zero" | "one" | "two" | "few" | "many" | "other"
  */
 export const cy = {
   common: {
-    appName: "Mapiau Trywydd Cynnyrch",
+    appName: "Golygydd Mapiau Trywydd IGDC",
     shortAppName: "Mapiau Trywydd",
     loading: "Wrthi'n llwytho…",
     retry: "Ceisio eto",
   },
   layout: {
     skipToContent: "Neidio i'r prif gynnwys",
-    home: "Hafan Mapiau Trywydd Cynnyrch",
+    home: "Hafan Golygydd Mapiau Trywydd IGDC",
     notifications: "Hysbysiadau",
   },
   landing: {
-    tagline: "Ffordd syml o archwilio a rheoli eich mapiau trywydd cynnyrch.",
+    tagline:
+      "Cadw mapiau trywydd cyhoeddus eich cynhyrchion yn gyfredol: nawr, nesaf a hwyrach.",
     source: "Ar hyn o bryd, daw eich mapiau trywydd o Google Sheets.",
     accessNote:
       "Bydd angen i chi gysylltu â Google er mwyn i'r ap lwytho eich mapiau trywydd.",

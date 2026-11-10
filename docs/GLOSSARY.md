@@ -10,14 +10,21 @@ product brief describes and the code does not have yet.
 ### People
 
 **Product Lead**:
-The person accountable for a DHCW product who manages that product's roadmaps in this
-tool; the primary user (`docs/backlog/personas/product-lead.md`).
+A DHCW member of staff who leads one or more products and manages their roadmaps in
+this tool; a product may have several. The primary user
+(`docs/backlog/personas/product-lead.md`).
 _Avoid_: Product owner, admin, editor
 
 **Public reader**:
-Anyone outside DHCW who reads a published roadmap. They never use this tool, but every
-roadmap item is written for them.
+Anyone who reads a roadmap on the public site: first health boards and Welsh Government
+stakeholders, then DHCW staff, then patients and the public. They never use this tool,
+but every roadmap item is written for them.
 _Avoid_: Customer, end user
+
+**Public site**:
+The separate app that reads the shared data source and shows published roadmaps to
+public readers. This tool never renders it.
+_Avoid_: Viewer, front end, website
 
 ### Roadmaps
 
@@ -46,8 +53,21 @@ _Avoid_: Deliverable, benefit, KPI
 
 **Tag** _(planned)_:
 A short label on a roadmap item for grouping and filtering, such as a theme or an
-audience.
+audience. Free text chosen by the Product Lead today; a shared list may follow.
 _Avoid_: Label, category, keyword
+
+**Pending edit** _(planned)_:
+A change to a roadmap or roadmap item that the Product Lead has made but not yet
+published; the public site does not show it.
+_Avoid_: Unsaved change, draft (drafts are a later feature)
+
+**Publish** _(planned)_:
+To write a roadmap's pending edits to the shared data source in one deliberate step,
+after which the public site shows them. The MVP has no review or draft step.
+_Avoid_: Save, sync, push, go live
+
+**Stale roadmap** _(planned)_:
+A roadmap not published for longer than the staleness threshold, suggested as six weeks.
 
 **Item card** _(planned)_:
 A roadmap item as shown on a roadmap; its size is the budget for the item's text.
@@ -67,8 +87,10 @@ confused with an item card.
 ### Data source
 
 **Data source**:
-Where roadmaps are read from, hidden behind the roadmap repository. Today it is one Google
-spreadsheet; a PostgreSQL-backed HTTP API is expected to replace it.
+Where roadmaps are read from and published to, hidden behind the roadmap repository,
+and shared with the public site, so its format is a contract between the two apps. Today
+it is one shared Google spreadsheet; a PostgreSQL-backed HTTP API is expected to replace
+it.
 _Avoid_: Backend, database
 
 **Roadmap repository**:

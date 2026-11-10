@@ -16,18 +16,19 @@ or sharpening an item's title, description and expected outcomes, tagging it.
 - Labels name the field in the glossary's words (title, description, expected
   outcome, tag); a hint says what good looks like in one sentence, for the
   public reader the item is written for.
-- Make the state of their work obvious: saved or not, and what the public will
-  see. A toast confirms what they just did and nothing else.
+- Make the state of their work obvious: which edits are pending and what
+  publishing will change. A toast confirms what they just did and nothing else:
+  "Published 3 changes to Patient app".
 - Don't narrate loading with personality. "Loading roadmaps…" is the whole
   message.
 
 ## Product Lead, blocked
 
 Something is wrong and they want it fixed: the session ended, the data source
-was unreachable, they have no access, a save failed.
+was unreachable, they have no access, a publish failed.
 
-- First say whether their work is safe. A failed save that kept their text says
-  so; one that lost it says exactly what to redo.
+- First say whether their pending edits are safe. A failed publish that kept them
+  says so; one that lost them says exactly what to redo.
 - State what happened in their terms, then the one thing to do, or who does it.
 - Separate the owners of a problem: the Product Lead (connection, pop-ups,
   clicking Reconnect), the data source (unreachable, rate limiting: "wait a
@@ -41,7 +42,7 @@ was unreachable, they have no access, a save failed.
 
 ## Product Lead, arriving
 
-Opening the tool before connecting. The landing page (`landing.*`) is their
+A member of DHCW staff opening the tool before connecting. The landing page (`landing.*`) is their
 whole picture.
 
 - Say what the tool is for, then the one step to start. Connecting is that
@@ -52,8 +53,9 @@ whole picture.
 
 ## Public reader
 
-Reads the published roadmap, never this tool, so no interface string is
-addressed to them. They shape the hints, examples and limits that guide what a
+Reads the public site, a separate app, and never this tool, so no interface
+string is addressed to them. Health boards and Welsh Government stakeholders
+come first, then DHCW staff, then patients and the public. They shape the hints, examples and limits that guide what a
 Product Lead writes: plain English and Welsh, outcomes before outputs, no
 internal jargon or unexplained acronyms, and nothing that only works on a card
 wider than a phone.

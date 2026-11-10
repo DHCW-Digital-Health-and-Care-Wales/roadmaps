@@ -8,8 +8,8 @@ moves to `_archive/`, where its row here still points.
 
 ## Personas
 
-- [Product Lead](personas/product-lead.md): manages their product's public Now / Next /
-  Later roadmap; the primary user. Its assumptions are still to be validated.
+- [Product Lead](personas/product-lead.md): manages the public Now / Next / Later roadmaps
+  of the products they lead; the primary user. Owner answers recorded 2026-11-10.
 
 ## Epics
 

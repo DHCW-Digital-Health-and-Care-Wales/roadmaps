@@ -7,14 +7,20 @@ then the ADRs in `docs/adr/`, `docs/GLOSSARY.md`, the Product Lead persona
 
 ## What this is
 
-An internal tool for Digital Health and Care Wales (DHCW). **Product Leads** use it to
-manage their own **public-facing roadmaps** in the Now / Next / Later format. Each
-**roadmap item** has a title, a description, expected outcomes, tags and other details
-where they help, and fits on one card no bigger than a phone screen. That card-sized
-budget sets the level of detail. The product is in English and Welsh (ADR-008).
+An internal tool for Digital Health and Care Wales (DHCW): only DHCW staff use it.
+**Product Leads** use it to manage the **public roadmaps** of the products they lead, in
+the Now / Next / Later format. Each **roadmap item** has a title, a description, expected
+outcomes, tags and other details where they help, and fits on one card no bigger than a
+phone screen. That size guides the level of detail; no limit is enforced yet. The
+interface is in English and Welsh (ADR-008); Welsh roadmap content is optional for now.
 
-Design for the Product Lead editing their roadmap; the connection to the data source is
-plumbing that should stay out of their way.
+The public never uses this app. A **separate app, the public site**, reads the same shared
+data source and shows the roadmaps publicly, so what a Product Lead publishes here goes
+public through it. The data source's format is therefore a contract with the public site:
+never change what is written, or how, without saying so in the record and its PR.
+
+Design for the Product Lead editing their roadmap (`docs/backlog/personas/product-lead.md`);
+the connection to the data source is plumbing that should stay out of their way.
 
 **Built so far** (the bootstrap epic): a static, frontend-only React SPA on GitHub Pages
 that connects a Google account (Google Identity Services, OAuth token model), reads
@@ -564,8 +570,8 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
       `.artifacts/playwright-cli/`.
     - The product is the DHCW Roadmap Editor for Product Leads (see "What this is").
       `docs/backlog/personas/product-lead.md` holds the primary persona and the
-      assumptions still to validate; the glossary marks item terms _(planned)_. The UI's
-      `common.appName` still says "Product Roadmaps".
+      owner's answers to its assumptions; the glossary marks item terms _(planned)_. The
+      product name is "DHCW Roadmap Editor" (cy "Golygydd Mapiau Trywydd IGDC").
     - DEF-001 fixed in the same PR: `roadmaps.title` is now "Your roadmaps" / "Eich mapiau
       trywydd". A product name (`common.appName`) keeps its capitals; other copy is
       sentence case.

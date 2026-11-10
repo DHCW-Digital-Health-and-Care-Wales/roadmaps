@@ -174,12 +174,16 @@ Do not spend findings on these; check only that the change does not evade them
   popup blocked. Trace the handler from the event, through wrappers such as
   `useAuth().connect` and `AuthButton`, to the GIS call.
 - **A Product Lead's work is never lost or misrepresented.** For a change that
-  edits roadmaps or roadmap items, trace a failed or rejected save, navigation
-  away with unsaved edits, two tabs or an expired session mid-edit, and a stale
-  read overwriting a newer save. Each ends with the text kept or the loss
-  stated, never silently dropped. Check that what the editor shows as saved is
-  what the data source holds, that text stays within the card budget the
-  record sets, and that both languages are kept.
+  edits roadmaps or roadmap items, trace a failed or partial publish,
+  navigation away with pending edits, two tabs or two Product Leads on one
+  roadmap, an expired session mid-edit, and a stale read overwriting a newer
+  publish. Each ends with the edits kept or the loss stated, never silently
+  dropped. Check that nothing reaches the data source before Publish, and that
+  what the editor shows as published is what the data source holds.
+- **The public site reads the same data.** The data source is shared with a
+  separate public-site app, so a change to what is written, its shape or its
+  location is a contract change: the record and PR must say so, and existing
+  rows written before the change must still read correctly in both apps.
 - **Server-state and caches (TanStack Query).** Query keys extend
   `authScopedQueryKey` (`roadmapKeys.all` does), so `disconnect()` drops them;
   a new authorised query outside that root survives a disconnect and leaks the

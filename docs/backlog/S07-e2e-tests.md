@@ -1,4 +1,4 @@
-# S06 — Playwright E2E with faked GIS and Sheets API
+# S07 — Playwright E2E with faked GIS and Sheets API
 
 ## Goal
 
@@ -22,7 +22,8 @@ Hermetic browser tests of the real production bundle, per ADR-0006.
 - Specs: landing renders; connect -> cards shown (hidden omitted, order kept);
   card click -> detail page (deep link + reload works with hash URL); failure -> retry ->
   success; permission error copy; expired (401) -> reconnect -> success; disconnect
-  clears cards; theme toggle; basic a11y smoke (optionally `@axe-core/playwright` if
+  clears cards; theme toggle; language switch to Cymraeg (copy and `<html lang>` change,
+  choice persists across reload); basic a11y smoke (optionally `@axe-core/playwright` if
   justified).
 - Ensure Playwright browsers install instructions (`pnpm exec playwright install --with-deps chromium`).
 

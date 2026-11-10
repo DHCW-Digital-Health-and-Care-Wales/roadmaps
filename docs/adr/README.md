@@ -12,3 +12,4 @@ supersede instead. Status is one of: Proposed, Accepted, Superseded by ADR-XXXX.
 | [0005](0005-ui-stack-shadcn-base-ui-tailwind-v4.md) | UI stack: shadcn/ui on Base UI with Tailwind CSS v4 | Accepted |
 | [0006](0006-testing-strategy.md) | Testing strategy | Accepted |
 | [0007](0007-github-pages-deployment.md) | Static deployment to GitHub Pages | Accepted |
+| [0008](0008-internationalisation-english-and-welsh.md) | Internationalisation: English and Welsh | Accepted |

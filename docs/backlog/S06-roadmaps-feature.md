@@ -1,4 +1,4 @@
-# S05 — Roadmaps feature: query hooks, list, states, detail page
+# S06 — Roadmaps feature: query hooks, list, states, detail page
 
 ## Goal
 
@@ -9,7 +9,7 @@ detail page.
 ## Scope
 
 - `src/features/roadmaps/hooks/roadmap-queries.ts` — query key factory
-  (`roadmapKeys.all/list()` under the auth-scoped root from S04) and `queryOptions` for
+  (`roadmapKeys.all/list()` under the auth-scoped root from S05) and `queryOptions` for
   the list.
 - `useRoadmaps()` — enabled only when auth state is `connected`; `staleTime` 60s; uses
   the repository from context; passes the abort signal if supported. On
@@ -32,6 +32,8 @@ detail page.
   cards stay visible while expired — they must be cleared on disconnect).
 - `pages/roadmap-detail-page.tsx` — name + "Roadmap details are coming soon.", back link;
   handles not-connected (prompt to connect), loading, unknown id (friendly not-found).
+- All copy via i18n (ADR-0008), English and Welsh; error copy keyed by `AppError.kind`;
+  use the pluralised roadmap count key from S04 if a count is shown.
 - An in-memory `RoadmapRepository` test double in `features/roadmaps/testing/`.
 
 ## Tests
@@ -39,7 +41,7 @@ detail page.
 - Loading skeletons, cards (order, names, links), empty state, permission error copy,
   reconnect flow (unauthenticated error -> Reconnect -> connect called), retry refetches,
   refresh refetches, query not executed while unauthenticated, cache cleared on disconnect,
-  detail page states.
+  detail page states, and at least one state rendered in Welsh.
 
 ## Acceptance criteria
 

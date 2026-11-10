@@ -21,7 +21,8 @@ A small, well-tested, framework-agnostic auth client on top of GIS, exposed to R
   - success: verify scope via `hasGrantedAllScopes`; store token + `expiresAt` in private
     memory; schedule expiry timer; state `connected`.
   - `error_callback` (`popup_closed`, `popup_failed_to_open`, `unknown`) and OAuth `error`
-    responses (`access_denied`, etc.) -> friendly state; cancellation returns to the
+    responses (`access_denied`, etc.) -> typed error **codes** (no English prose in state —
+    copy is localised in the UI per ADR-0008); cancellation returns to the
     previous non-connected state with a `lastError` note instead of a hard error.
   - `getAccessToken()` returns the token only while connected and unexpired.
   - `reportUnauthenticated()` -> `expired`.

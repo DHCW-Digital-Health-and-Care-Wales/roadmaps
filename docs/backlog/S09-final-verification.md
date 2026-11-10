@@ -1,4 +1,4 @@
-# S08 — Whole-repo verification, polish and final review
+# S09 — Whole-repo verification, polish and final review
 
 ## Goal
 
@@ -11,7 +11,8 @@ production-grade state.
   then every script including `pnpm test:e2e`.
 - Run `pnpm dev` and drive the app with Playwright (headless) to capture screenshots of:
   landing (light + dark, desktop + 375px mobile), connected roadmap grid (faked), loading
-  skeletons, error state, detail page. Inspect them and fix visual/UX issues.
+  skeletons, error state, detail page, and the landing + grid in Welsh (check for
+  overflow from longer Welsh strings). Inspect them and fix visual/UX issues.
 - With the **real** GIS script (no faking), click "Connect Google" and confirm a popup to
   `accounts.google.com` opens with the correct `client_id` and `scope`. Do not attempt to
   complete auth. Report honestly what was and was not verified.

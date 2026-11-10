@@ -21,7 +21,10 @@ needs an OAuth access token with scope `https://www.googleapis.com/auth/spreadsh
   - `AuthClient` interface: `getSnapshot()`, `subscribe()`, `connect()`, `disconnect()`,
     `getAccessToken()`, `reportUnauthenticated()` (called when an API returns 401).
   - `AuthState` discriminated union: `initializing` | `ready` (not connected) |
-    `connecting` | `connected` (with `expiresAt`) | `expired` | `error` (with message).
+    `connecting` | `connected` (with `expiresAt`) | `expired` | `error` (with a typed error
+    **code**, e.g. `script-load-failed`, `access-denied`, `scope-not-granted`,
+    `popup-closed`, `popup-blocked`, `unknown`; never English prose — copy is chosen by the
+    UI via i18n, see ADR-0008).
     The token itself is **not** part of the snapshot exposed to React.
   - `AuthProvider` + `useAuth()` bridge it to React via `useSyncExternalStore`.
 - `connect()` is only ever invoked from a user gesture (button click), so the popup is not
@@ -31,7 +34,7 @@ needs an OAuth access token with scope `https://www.googleapis.com/auth/spreadsh
   transition on API 401 via `reportUnauthenticated()`. The UI offers "Reconnect". No
   refresh tokens, no silent background re-auth loops.
 - Popup closed / failed to open (`error_callback`) -> back to previous non-connected state
-  with a gentle message; OAuth `error` responses -> `error` state with friendly copy.
+  with a `lastError` code; OAuth `error` responses -> `error` state with friendly copy.
   Also verify the granted scope with `google.accounts.oauth2.hasGrantedAllScopes`.
 - `disconnect()` revokes the token (`google.accounts.oauth2.revoke`), clears memory, and the
   app removes all auth-scoped query data (`queryClient.removeQueries`).

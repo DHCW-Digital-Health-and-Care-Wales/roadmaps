@@ -1,4 +1,4 @@
-# S07 — GitHub Actions CI/CD, Pages base path, README
+# S08 — GitHub Actions CI/CD, Pages base path, README
 
 ## Goal
 
@@ -28,7 +28,8 @@ Push-to-deploy on GitHub Pages and comprehensive documentation. See ADR-0007.
   404 spreadsheet, 429, unverified app warning, third-party cookies), repository
   abstraction explanation, how to add `ApiRoadmapRepository`, frontend-only nature and
   "Google Sheets permissions determine effective data access", note on full Sheets scope
-  verification requirements. Link ADRs and backlog.
+  verification requirements, internationalisation (English/Welsh, how to add a string or a
+  language, Welsh translations need review by a fluent speaker before public launch). Link ADRs and backlog.
 - Update `AGENTS.md` commands/structure if anything drifted.
 
 ## Acceptance criteria

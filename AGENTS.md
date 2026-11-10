@@ -27,6 +27,7 @@ src/
   components/ui/    shadcn/ui (Base UI) generated components — keep close to upstream
   components/layout app shell pieces shared across features
   lib/              small framework-agnostic utilities (errors, cn, query client factory)
+  i18n/             i18next setup, supported languages, en/cy catalogues (ADR-0008)
   styles/           Tailwind v4 entry CSS + theme tokens
 tests/e2e/          Playwright specs + fakes for GIS and the Sheets API
 ```
@@ -60,7 +61,9 @@ pnpm build && pnpm preview
 - Tests sit beside the code as `*.test.ts(x)`; E2E under `tests/e2e/`.
 - Add shadcn components with the shadcn CLI (`pnpm dlx shadcn@latest add <name>`), Base UI
   flavour — never hand-roll a competing primitive or pull in Radix.
-- User-facing copy is sentence case, plain English (en-GB spelling is fine in docs).
+- All user-facing copy (text, aria-labels, toasts, titles) goes through i18n (`t()`), in
+  English (`en`) and Welsh (`cy`) — see ADR-0008. A new key needs both languages; the type
+  system enforces parity. Copy is sentence case. Domain/infrastructure emit codes, not copy.
 
 ## Workflow for delivery agents
 
@@ -81,6 +84,7 @@ pnpm build && pnpm preview
 
 Newest last. Each entry: story id, what changed, decisions, gotchas for the next agent.
 
-- **Backlog/ADRs (orchestrator)** — Backlog S01–S08 and ADR-0001…0007 created. Branch
+- **Backlog/ADRs (orchestrator)** — Backlog S01–S09 and ADR-0001…0008 created
+  (i18n — English + Welsh — added as S04 at the user's request; later stories renumbered). Branch
   `feat/bootstrap`. Remote is `collisdigital/roadmaps-editor`, so the production origin is
   `https://collisdigital.github.io` and base path `/roadmaps-editor/`.

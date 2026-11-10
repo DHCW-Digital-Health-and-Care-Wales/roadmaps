@@ -2,11 +2,11 @@
 
 ## Goal
 
-Push-to-deploy on GitHub Pages and comprehensive documentation. See ADR-0007.
+Push-to-deploy on GitHub Pages and comprehensive documentation. See ADR-007.
 
 ## Scope
 
-- `vite.config.ts` base-path resolution per ADR-0007 in a small, unit-tested pure
+- `vite.config.ts` base-path resolution per ADR-007 in a small, unit-tested pure
   function (e.g. `build/resolve-base-path.ts`).
 - `.github/workflows/ci.yml` (name e.g. "CI/CD"): triggers `pull_request`, `push` to
   `main`, `workflow_dispatch`; jobs `verify` (typecheck, lint, format:check, test, build),
@@ -18,7 +18,7 @@ Push-to-deploy on GitHub Pages and comprehensive documentation. See ADR-0007.
   verify current majors. Least-privilege permissions; `concurrency` for pages; CNAME from
   `vars.PAGES_CUSTOM_DOMAIN` when set. Validate YAML (e.g. `actionlint` if available).
   _(As delivered, `verify` builds and uploads, `deploy` only deploys, and no `CNAME` is
-  written: see the delivery notes below and ADR-0007's STY-008 amendments.)_
+  written: see the delivery notes below and ADR-007's STY-008 amendments.)_
 - `README.md` covering every item in the brief: overview, architecture (Mermaid diagram of
   layers + future adapter), tech choices, prerequisites, install, env config, Google Cloud
   setup (project, enable Sheets API, OAuth consent screen, OAuth client of type Web,
@@ -54,7 +54,7 @@ Push-to-deploy on GitHub Pages and comprehensive documentation. See ADR-0007.
   `verify` builds and uploads, `deploy` only runs `deploy-pages`, so no project or
   third-party code runs with `pages: write`/`id-token: write`. `configure-pages`'
   `base_path` is used as a guard rather than a build input. No `CNAME` is written (GitHub
-  ignores it for Actions deployments). All recorded in ADR-0007's STY-008 amendments.
+  ignores it for Actions deployments). All recorded in ADR-007's STY-008 amendments.
 
 ## Review notes (Sol, gpt-6.1-sol)
 
@@ -64,6 +64,6 @@ Push-to-deploy on GitHub Pages and comprehensive documentation. See ADR-0007.
 2. Pending `main` runs can be replaced despite "never cancelled" wording — **docs fixed,
    behaviour kept**: `concurrency.queue: max` is rejected by actionlint 1.7.12 (a
    required check), and latest-wins is the right behaviour for deploys (the newest commit
-   deploys, in order). Workflow comment, README and ADR-0007 now say so.
+   deploys, in order). Workflow comment, README and ADR-007 now say so.
 3. README misdescribed browser-language detection — **fixed**: the first supported
    language in the browser's list wins.

@@ -1,4 +1,4 @@
-# ADR-0008: Internationalisation — English and Welsh
+# ADR-008: Internationalisation — English and Welsh
 
 - Status: Accepted
 - Date: 2026-11-10 (amended in STY-004: switcher location, document sync, catalogue type, lint)

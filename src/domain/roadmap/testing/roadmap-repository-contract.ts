@@ -22,7 +22,7 @@ const fixtures: readonly Roadmap[] = [
 ]
 
 /**
- * Behaviour every `RoadmapRepository` adapter must share (ADR-0002). Call it from the
+ * Behaviour every `RoadmapRepository` adapter must share (ADR-002). Call it from the
  * adapter's test file with a setup that seeds that adapter's data source.
  */
 export function describeRoadmapRepositoryContract(

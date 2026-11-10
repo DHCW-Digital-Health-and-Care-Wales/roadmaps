@@ -2,7 +2,7 @@
 
 ## Goal
 
-Hermetic browser tests of the real production bundle, per ADR-0006.
+Hermetic browser tests of the real production bundle, per ADR-006.
 
 ## Scope
 

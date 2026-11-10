@@ -9,7 +9,7 @@ spec or plan outside `docs/`.
 | Path                  | What goes in it                                                                    |
 | --------------------- | ---------------------------------------------------------------------------------- |
 | `GLOSSARY.md`         | The domain vocabulary (`.agents/skills/domain-modeling/GLOSSARY-FORMAT.md`)        |
-| `adr/`                | One decision per `NNNN-kebab-title.md`, indexed in `adr/README.md`                 |
+| `adr/`                | One decision per `ADR-<nnn>-<kebab-title>.md`, indexed in `adr/README.md`          |
 | `backlog/README.md`   | The index: epics with status, then standalone chores and defects                   |
 | `backlog/<epic>/`     | An epic `EPC-<nnn>-<kebab-title>/`: its `README.md` and live stories `STY-<nnn>-…` |
 | `backlog/chores/`     | Live chores `CHO-<nnn>-…`: work with no user-facing change                         |
@@ -20,7 +20,8 @@ spec or plan outside `docs/`.
 | `operations/`         | Runbooks and authoring policy for what a person or agent does by hand              |
 
 Put nothing else in the root of `docs/`. A record's ID is a prefix, a dash and
-three digits: `EPC` epic, `STY` story, `DEF` defect, `CHO` chore (e.g.
+three digits: `EPC` epic, `STY` story, `DEF` defect, `CHO` chore (ADRs
+match: `ADR-001`) (e.g.
 `STY-010`). Each prefix is one series across the whole backlog, never per
 epic, so a story keeps its ID if it moves epic: take the next free number across the live tree, `_archive/`
 and open PRs' files

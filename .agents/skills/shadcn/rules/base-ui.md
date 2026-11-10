@@ -1,6 +1,6 @@
 # Base UI
 
-This repository's primitives are on Base UI (ADR-0005), and the root `components.json` is the `base-nova` style, so `pnpm dlx shadcn@latest info` reads `base: base` and `add` fetches the Base UI variant into `src/components/ui/`. There is no Radix here: no `@radix-ui/*` import and no `asChild` prop. Where a generated file in `src/components/ui/` differs from the registry's, the generated file is what runs; keep it close to upstream.
+This repository's primitives are on Base UI (ADR-005), and the root `components.json` is the `base-nova` style, so `pnpm dlx shadcn@latest info` reads `base: base` and `add` fetches the Base UI variant into `src/components/ui/`. There is no Radix here: no `@radix-ui/*` import and no `asChild` prop. Where a generated file in `src/components/ui/` differs from the registry's, the generated file is what runs; keep it close to upstream.
 
 Select, ToggleGroup, Slider and Accordion are not installed here yet; their rules below are the registry's and apply once `pnpm dlx shadcn@latest add` brings them in.
 

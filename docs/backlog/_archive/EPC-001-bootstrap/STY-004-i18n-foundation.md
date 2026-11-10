@@ -2,13 +2,13 @@
 
 ## Goal
 
-A typed, tested i18n foundation (ADR-0008) that every later UI story builds on. All
+A typed, tested i18n foundation (ADR-008) that every later UI story builds on. All
 user-facing strings in code that already exists are moved into the catalogues.
 
 ## Scope
 
 - Install `i18next` and `react-i18next` (current majors; verify React 19 compatibility).
-- `src/i18n/` exactly as ADR-0008 describes: `languages.ts`, `locales/en.ts`,
+- `src/i18n/` exactly as ADR-008 describes: `languages.ts`, `locales/en.ts`,
   `locales/cy.ts` (typed against `en`), `create-i18n.ts`, `language-preference.ts`,
   `i18next.d.ts`, and a barrel if useful.
 - Seed the catalogues with the copy the brief already fixes, so STY-005 and STY-006 use it rather
@@ -87,7 +87,7 @@ user-facing strings in code that already exists are moved into the catalogues.
   `aria-label`/`aria-description`/`title`/`alt`/`placeholder`/`label`, while ignoring
   `className`, `role`, `lang`, `data-*` and so on. Tests and `components/ui` are exempt.
 - Welsh uses "map trywydd" for roadmap and "taenlen" for spreadsheet. It is
-  machine-assisted and needs review by a fluent speaker before launch (ADR-0008).
+  machine-assisted and needs review by a fluent speaker before launch (ADR-008).
 
 ## Review notes
 

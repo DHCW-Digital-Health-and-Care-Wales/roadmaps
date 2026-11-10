@@ -1,4 +1,4 @@
-# ADR-0002: Layered architecture and the roadmap repository boundary
+# ADR-002: Layered architecture and the roadmap repository boundary
 
 - Status: Accepted
 - Date: 2026-11-10 (amended in STY-002: optional abort `signal`, contract test; STY-003: the
@@ -23,7 +23,7 @@ app/ (composition root) is the only module that imports concrete adapters.
 ```
 
 - `domain/roadmap/roadmap.ts`: `interface Roadmap { id: string; name: string }`.
-- `domain/auth/auth-client.ts`: the `AuthClient` port and `AuthState` (ADR-0003), which
+- `domain/auth/auth-client.ts`: the `AuthClient` port and `AuthState` (ADR-003), which
   `infrastructure/google-identity/` implements. Ports live in `domain/` because
   infrastructure may not import `features/`.
 - `domain/roadmap/roadmap-repository.ts`:

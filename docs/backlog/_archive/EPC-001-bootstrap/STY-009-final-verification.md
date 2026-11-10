@@ -43,7 +43,7 @@ production-grade state.
       `codeSplitting.groups` for `react` and `vendor`, so app code (~48 kB) changes per deploy
       while React and vendor chunks stay cached. `autoCodeSplitting` was already on; the route
       chunks are small. `react-dom` is the production build (no dev code bundled). The warning
-      limit is unchanged. ADR-0007 has an STY-009 amendment.
+      limit is unchanged. ADR-007 has an STY-009 amendment.
 
   | JS (min / gzip)    | Before (d133fd2)                             | After                                                      |
   | ------------------ | -------------------------------------------- | ---------------------------------------------------------- |
@@ -175,8 +175,8 @@ Fixed:
   everything and `components/`/`i18n/` below features. Checked with planted violations.
 - No test proved tokens stay out of storage, URLs and logs: E2E guard added.
 - Auth toast replacement was untested: test added.
-- Docs: ADR-0007's Decision contradicted its STY-008 amendments (who uploads, CNAME,
-  base-path order); ADR-0002's amendment list was incomplete; AGENTS.md step 4 was
+- Docs: ADR-007's Decision contradicted its STY-008 amendments (who uploads, CNAME,
+  base-path order); ADR-002's amendment list was incomplete; AGENTS.md step 4 was
   garbled; STY-008's stale scope and STY-005's chunk note are annotated; README gains the CSP
   note, the consent-screen-name troubleshooting row and the copy step for an API swap.
 - Small: redundant `script.defer`, mixed alias/relative imports in `app/`, a garbled
@@ -197,7 +197,7 @@ Not changed, with reasons:
   exercised for real by E2E (401 → expired, disconnect clears data). A unit test would
   need GIS injection into `composeApp` for no extra confidence.
 - **HMR `dispose` in `composeApp`**: harmless; kept as STY-003 specified.
-- **`index` in the `fields` mask**: specified by ADR-0002; a few bytes.
+- **`index` in the `fields` mask**: specified by ADR-002; a few bytes.
 - **`sheets-client` `retryable: status === 429 || status >= 500`**: explicit beats
   relying on the `rate-limited` default.
 - **`@types/node` 22**: matches the oldest supported runtime in `engines`.

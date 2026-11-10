@@ -51,7 +51,7 @@ marked _(optional)_ when it would be empty.
 - **Epic**: <epic folder, e.g. EPC-002-roadmap-detail>
 - **Depends on**: STY-{nnn} (hard, must be on the default branch), STY-{nnn}
   (preferred order) | none
-- **Binding ADRs**: ADR-{nnnn} §<section>, ADR-{nnnn} | none
+- **Binding ADRs**: ADR-{nnn} §<section>, ADR-{nnn} | none
 - **Suggested model**: Opus | Sonnet | Haiku — <the reason, in a clause>
 - **Delivered**: <PR URL>
   _(add on delivery)_

@@ -27,7 +27,7 @@ shadcn CLI and `@playwright/cli`; revisions unrecorded). `implement-story`,
   numbered chat questions.
 - Domain modeling and architecture review use `docs/GLOSSARY.md` and the
   documentation conventions in `docs/AGENTS.md`.
-- The ADR helper describes this repository's four-digit ADRs and their
+- The ADR helper describes this repository's three-digit ADRs (`ADR-001`) and their
   lifecycle.
 - Backlog work points to the templates and status lifecycle in
   `docs/backlog/_templates/`; their formats are not copied into skills.

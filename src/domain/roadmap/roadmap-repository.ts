@@ -6,7 +6,7 @@ export interface ListRoadmapsOptions {
 }
 
 /**
- * The application's only view of where roadmaps come from (ADR-0002). Implementations
+ * The application's only view of where roadmaps come from (ADR-002). Implementations
  * reject with an `AppError` for every data-source failure, except cancellation via
  * `signal`, which rejects with the signal's abort reason.
  */

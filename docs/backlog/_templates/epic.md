@@ -27,7 +27,7 @@ waiting`). Agents read the rest: selection and orchestration read Stories
 - **Status**: Active | Done | Won't do — <one line>
 - **Progress**: <n> of <m> terminal; next selectable: STY-{nnn}; blocked on:
   <owner decision or prerequisite>
-- **Binding ADRs**: ADR-{nnnn}, ADR-{nnnn}
+- **Binding ADRs**: ADR-{nnn}, ADR-{nnn}
 
 ## Summary
 

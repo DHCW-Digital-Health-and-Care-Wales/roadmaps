@@ -2,7 +2,7 @@
 
 The shared vocabulary for viewing product roadmaps from a connected Google account.
 Interface copy speaks the user's words below; code speaks the same words, and data-source
-words stay inside infrastructure (ADR-0002).
+words stay inside infrastructure (ADR-002).
 
 ## Language
 

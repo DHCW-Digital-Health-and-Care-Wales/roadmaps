@@ -10,7 +10,7 @@ A static, frontend-only React SPA ("Product Roadmaps") hosted on GitHub Pages. U
 connect a Google account via Google Identity Services (OAuth token model); the app reads
 worksheet **metadata** from one Google Spreadsheet and shows each visible worksheet as a
 roadmap card. Google Sheets is a _temporary_ data source: it must be replaceable by a
-PostgreSQL-backed HTTP API without touching the presentation layer (see ADR-0002).
+PostgreSQL-backed HTTP API without touching the presentation layer (see ADR-002).
 
 ## Layering rules (non-negotiable)
 
@@ -28,13 +28,13 @@ src/
                     Only infrastructure/google-identity may use the `google` global.
   components/ui/    shadcn/ui (Base UI) generated components — keep close to upstream
   components/layout app shell pieces shared across features
-  components/theme  ThemeProvider, useTheme, ThemeToggle, stored preference (ADR-0005)
+  components/theme  ThemeProvider, useTheme, ThemeToggle, stored preference (ADR-005)
   lib/              small framework-agnostic utilities (errors, cn, query client factory)
-  i18n/             i18next setup, supported languages, en/cy catalogues (ADR-0008)
+  i18n/             i18next setup, supported languages, en/cy catalogues (ADR-008)
   styles/           Tailwind v4 entry CSS + theme tokens
 tests/e2e/          Playwright specs + fakes for GIS and the Sheets API
 build/              build-time helpers for vite/playwright config (GitHub Pages base path)
-.github/            CI/CD workflow (verify, e2e, deploy to Pages), Dependabot (ADR-0007),
+.github/            CI/CD workflow (verify, e2e, deploy to Pages), Dependabot (ADR-007),
                     PR template
 docs/               ADRs, backlog, glossary, analyses, runbooks (docs/AGENTS.md)
 .agents/skills/     agent skills, for every agent runtime
@@ -73,7 +73,7 @@ actionlint          # after editing .github/workflows (not a dependency; install
 - Add shadcn components with the shadcn CLI (`pnpm dlx shadcn@latest add <name>`), Base UI
   flavour — never hand-roll a competing primitive or pull in Radix.
 - All user-facing copy (text, aria-labels, toasts, titles) goes through i18n (`t()`), in
-  English (`en`) and Welsh (`cy`) — see ADR-0008. A new key needs both languages; the type
+  English (`en`) and Welsh (`cy`) — see ADR-008. A new key needs both languages; the type
   system enforces parity. Copy is sentence case. Domain/infrastructure emit codes, not copy.
   `i18next/no-literal-string` rejects literal JSX text and literal `aria-label`/`title`/
   `alt`/`placeholder` attributes outside tests and `components/ui`.
@@ -125,13 +125,13 @@ actionlint          # after editing .github/workflows (not a dependency; install
 
 Newest last. Each entry: story id, what changed, decisions, gotchas for the next agent.
 
-- **Backlog/ADRs (orchestrator)** — Backlog STY-001–STY-009 and ADR-0001…0008 created
+- **Backlog/ADRs (orchestrator)** — Backlog STY-001–STY-009 and ADR-001…008 created
   (i18n — English + Welsh — added as STY-004 at the user's request; later stories renumbered). Branch
   `feat/bootstrap`. Remote is `collisdigital/roadmaps-editor`, so the production origin is
   `https://collisdigital.github.io` and base path `/roadmaps-editor/`.
 - **STY-001 Tooling foundation** — Vite 8 + React 19 SPA scaffold: strict TS, Tailwind v4,
   shadcn/ui on Base UI (Button only), TanStack Router file routes with hash history,
-  ESLint flat config with ADR-0002 layer rules, Prettier, and Vitest + RTL + MSW.
+  ESLint flat config with ADR-002 layer rules, Prettier, and Vitest + RTL + MSW.
   - Versions (exact, from the lockfile): pnpm 12.18.0 (`packageManager`), Node
     `^22.22.2 || ^24.15.0 || >=26` (`.nvmrc` 22), react/react-dom 19.3.1, vite 8.3.6,
     @vitejs/plugin-react 6.2.1, typescript 6.0.3, typescript-eslint 8.72.1, eslint 10.14.0,
@@ -175,11 +175,11 @@ Newest last. Each entry: story id, what changed, decisions, gotchas for the next
     - Layer rules are `no-restricted-imports` blocks in `eslint.config.ts`. They match both
       `@/x` and relative `../x` imports. Features must NOT import `app/` or
       `routes/` (orchestrator correction: that would be a cycle; the repository context lives
-      in `features/roadmaps/`, see ADR-0002).
+      in `features/roadmaps/`, see ADR-002).
     - Placeholder copy in `src/routes/index.tsx` is English only, so STY-004 moves it into the
       catalogues.
 - **STY-002 Domain, errors, Google Sheets repository** — framework-free domain, `AppError`,
-  and the Sheets adapter. ADR-0002 amended (optional abort `signal`, contract test).
+  and the Sheets adapter. ADR-002 amended (optional abort `signal`, contract test).
   - Public API:
     - `@/domain/roadmap/roadmap`: `Roadmap { id; name }`.
     - `@/domain/roadmap/roadmap-repository`: `RoadmapRepository.listRoadmaps(options?:
@@ -189,7 +189,7 @@ ListRoadmapsOptions)` where `ListRoadmapsOptions = { signal?: AbortSignal }`. On
     - `@/lib/errors`: `AppError(kind, { message?, retryable?, status?, cause? })` with
       `kind: AppErrorKind`, `retryable` (defaults true only for `rate-limited`/`network`),
       `status?`; `isAppError`, `toAppError(unknown)` (non-`AppError` -> `unknown`).
-      `message` is developer diagnostics; UI copy must come from `kind` (ADR-0008).
+      `message` is developer diagnostics; UI copy must come from `kind` (ADR-008).
     - `@/infrastructure/google-sheets` (barrel, composition root only):
       `createSheetsClient({ getAccessToken, fetch?, baseUrl? })` and
       `new GoogleSheetsRoadmapRepository({ client, spreadsheetId })`, plus the
@@ -218,7 +218,7 @@ ListRoadmapsOptions)` where `ListRoadmapsOptions = { signal?: AbortSignal }`. On
     - The contract helper imports `vitest`. It lives under `testing/`, so production code
       must never import it.
 - **STY-003 Google Identity Services auth** — `AuthClient` port, GIS token-model adapter, React
-  bridge and test fake. ADR-0002/0003 amended: the port lives in `domain/auth/` (infrastructure
+  bridge and test fake. ADR-002/003 amended: the port lives in `domain/auth/` (infrastructure
   may not import `features/`), there is one token client per attempt, and the prompt policy is
   defined.
   - Public API:
@@ -285,7 +285,7 @@ onDisconnect: () => queryClient.removeQueries({ queryKey: authScopedQueryKey }) 
       `vi.setSystemTime`. The loader's memo is module state, so its tests use
       `vi.resetModules()` and a dynamic import.
 - **STY-004 i18n foundation** — i18next 27.0.1 + react-i18next 18.0.1, English and Welsh
-  catalogues, `LanguageSwitcher`, document sync, lint rule. ADR-0008 amended (switcher
+  catalogues, `LanguageSwitcher`, document sync, lint rule. ADR-008 amended (switcher
   location, `syncDocumentLanguage`, `Catalogue` type, lint config).
   - Where things live (`@/i18n` barrel): `createI18n({ language? })` (fresh instance, no
     globals), `syncDocumentLanguage(i18n, doc?)` (sets `<html lang>` + `document.title` now
@@ -461,7 +461,7 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
     - The header and page both have Connect/Reconnect buttons, and the header's connection
       badge is also `role=status`: scope locators to `main`/`banner`.
 - **STY-008 CI/CD, Pages base path, README** — `.github/workflows/ci.yml` ("CI/CD"),
-  `.github/dependabot.yml`, `build/resolve-base-path.ts`, full `README.md`. ADR-0007
+  `.github/dependabot.yml`, `build/resolve-base-path.ts`, full `README.md`. ADR-007
   amended (see its "STY-008 amendments"). `.nvmrc` is now 26 (Active LTS since 2026-10-28);
   `engines` unchanged.
   - Workflow: `verify` (typecheck, lint, format, test, build; on push to `main` also
@@ -501,7 +501,7 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
     - `zod/mini` everywhere: use `z.optional(x)`, `z._default(x, v)`,
       `x.check(z.trim(), z.regex(…))`, `z.pipe(a, z.transform(…))`. Mini loads no locale,
       so give messages explicitly.
-    - `react`/`vendor` chunk groups in `vite.config.ts` (ADR-0007 STY-009 amendment).
+    - `react`/`vendor` chunk groups in `vite.config.ts` (ADR-007 STY-009 amendment).
     - Mobile header: `common.shortAppName`; the status badge is `max-sm:sr-only`;
       `HeaderAuthButton` shows only Disconnect below `sm`. Every signed-out view must
       therefore keep its own Connect/Reconnect.

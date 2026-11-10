@@ -1,7 +1,7 @@
 export const themes = ["light", "dark"] as const
 export type Theme = (typeof themes)[number]
 
-/** Light unless the user chose otherwise (ADR-0005). */
+/** Light unless the user chose otherwise (ADR-005). */
 const defaultTheme: Theme = "light"
 
 /** Also read by the no-flash script in `index.html`; keep the two in step. */

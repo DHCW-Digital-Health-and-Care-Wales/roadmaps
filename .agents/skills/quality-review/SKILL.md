@@ -121,7 +121,7 @@ report in the conversation only.
      recipe choices, in class helpers and variant strings as well as JSX,
      checked against `src/components/ui/` (stay close to upstream shadcn on
      Base UI; added with the shadcn CLI, never a hand-rolled competing
-     primitive, never Radix), ADR-0005 and root `AGENTS.md`: theme tokens
+     primitive, never Radix), ADR-005 and root `AGENTS.md`: theme tokens
      (`--brand` used sparingly) over raw colours, `cn(buttonVariants())` for
      links styled as buttons, existing layout pieces (`AppShell`, `StatusPanel`,
      `RoadmapIcon`) over near-copies, sentence-case copy. Verify a suggested

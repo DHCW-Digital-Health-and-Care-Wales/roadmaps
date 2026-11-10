@@ -45,7 +45,7 @@ export interface RoadmapsErrorStateProps {
 }
 
 /**
- * Why roadmaps couldn't be loaded, in words chosen by the error's kind alone (ADR-0008),
+ * Why roadmaps couldn't be loaded, in words chosen by the error's kind alone (ADR-008),
  * with the one action that can help: Reconnect after the session expired, Retry when
  * trying again may work, otherwise none.
  */

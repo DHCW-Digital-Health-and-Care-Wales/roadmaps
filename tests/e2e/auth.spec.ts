@@ -31,7 +31,7 @@ const failures: {
     toast: true,
   },
   {
-    // No usable time is left after the 60 s safety margin (ADR-0003).
+    // No usable time is left after the 60 s safety margin (ADR-003).
     name: "the token is too short-lived",
     outcome: { type: "grant", expiresIn: 60 },
     status: "Connection failed",

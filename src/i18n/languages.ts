@@ -1,4 +1,4 @@
-/** Languages the UI is translated into (ADR-0008). Adding one is a data change. */
+/** Languages the UI is translated into (ADR-008). Adding one is a data change. */
 export const supportedLanguages = ["en", "cy"] as const
 
 export type Language = (typeof supportedLanguages)[number]

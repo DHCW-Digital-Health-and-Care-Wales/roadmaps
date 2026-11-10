@@ -6,8 +6,8 @@ one before writing the first of a new area.
 
 ## Naming and index
 
-- One decision per `docs/adr/{nnnn}-{kebab-title}.md`, four-digit number, with
-  a `# ADR-{nnnn}: {Title}` heading. The title names the decision
+- One decision per `docs/adr/ADR-{nnn}-{kebab-title}.md`, three-digit number, with
+  a `# ADR-{nnn}: {Title}` heading. The title names the decision
   ("Static deployment to GitHub Pages"), not a topic.
 - Scan `docs/adr/` for the highest number and increment it; never renumber.
 - Add the ADR to the table in `docs/adr/README.md` (link, title, status) in the
@@ -15,7 +15,7 @@ one before writing the first of a new area.
 
 ## Lifecycle
 
-Status is one of **Proposed**, **Accepted** or **Superseded by ADR-XXXX**.
+Status is one of **Proposed**, **Accepted** or **Superseded by ADR-XXX**.
 
 - A new ADR starts **Proposed** and becomes **Accepted** only on the owner's
   word (`docs/AGENTS.md`). Note which answer accepted it in the Status line.
@@ -29,7 +29,7 @@ Status is one of **Proposed**, **Accepted** or **Superseded by ADR-XXXX**.
 - A story that names an ADR as binding is selectable only once that ADR is
   Accepted.
 - A decision that is reversed or replaced gets a new ADR. Mark the old one
-  `Superseded by ADR-XXXX` and keep it, number and text intact. When the
+  `Superseded by ADR-XXX` and keep it, number and text intact. When the
   supersession is partial, both Status lines name the sections that still
   stand.
 - A Proposed ADR the owner declines is removed in the same change if nothing
@@ -40,8 +40,8 @@ Status is one of **Proposed**, **Accepted** or **Superseded by ADR-XXXX**.
 
 - **Amend in place** when a later story refines a decision without reversing
   it: add a `### {record ID} amendments` subsection (or a short bullet in
-  Decision) naming what changed, and note it in the `Date` line, as ADR-0007
-  and ADR-0008 do. Say which parts of the original still stand when it is not
+  Decision) naming what changed, and note it in the `Date` line, as ADR-007
+  and ADR-008 do. Say which parts of the original still stand when it is not
   obvious. An amendment that overturns the decision is a successor ADR, not an
   amendment.
 - Fix a typo, a broken link or a stale path in place without ceremony.
@@ -52,10 +52,10 @@ Status is one of **Proposed**, **Accepted** or **Superseded by ADR-XXXX**.
 ## Template
 
 Keep an ADR short: one decision, the reason, the cost. Omit Context when the
-decision explains itself, as ADR-0005 to ADR-0007 do.
+decision explains itself, as ADR-005 to ADR-007 do.
 
 ```md
-# ADR-{nnnn}: {The decision, as a title}
+# ADR-{nnn}: {The decision, as a title}
 
 - Status: Proposed
 - Date: YYYY-MM-DD
@@ -83,7 +83,7 @@ that must now change.}
 
 Status values and the `Date` line follow the existing files: `- Status:
 Accepted`, `- Date: 2026-11-10 (amended in {record ID}: …)`. A superseded ADR reads
-`- Status: Superseded by ADR-0012`; the successor's Context links back to it.
+`- Status: Superseded by ADR-012`; the successor's Context links back to it.
 
 ## When to offer an ADR
 

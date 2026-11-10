@@ -5,7 +5,7 @@ import { authScopedQueryKey } from "@/features/auth/auth-scoped-queries"
 
 /**
  * Query keys for roadmap data. They extend the auth-scoped root, so disconnecting drops
- * them (ADR-0003).
+ * them (ADR-003).
  */
 export const roadmapKeys = {
   all: [...authScopedQueryKey, "roadmaps"] as const,

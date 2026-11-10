@@ -72,7 +72,7 @@ message"; the absence of an instruction is the instruction.
 
 ## Keep the source out of the copy
 
-Google Sheets is a temporary data source (ADR-0002). Say "roadmaps" wherever you
+Google Sheets is a temporary data source (ADR-002). Say "roadmaps" wherever you
 can. Name the spreadsheet only where the reader can act on it (access denied,
 not found, the empty list), and keep those words in the few keys that need them,
 so replacing the source later is a copy change in a handful of places. Never
@@ -89,7 +89,7 @@ error, load error, empty state, loading, toast, status label, count — are in
 ## Working order
 
 1. Write the English first, in `src/i18n/locales/en.ts`. It is the source of
-   truth (ADR-0008). Keys are camelCase, grouped by feature. Map codes with
+   truth (ADR-008). Keys are camelCase, grouped by feature. Map codes with
    template keys (``t(`errors.${error.kind}`)``) so `satisfies Record<…>` makes
    a new kind without copy a type error.
 2. Add the Welsh to `src/i18n/locales/cy.ts` in the same change; `pnpm typecheck`
@@ -124,6 +124,6 @@ a string that must fit a 375px header needs a short form.
 
 ## The authority
 
-`docs/adr/0008-internationalisation-english-and-welsh.md` carries the mechanics
+`docs/adr/ADR-008-internationalisation-english-and-welsh.md` carries the mechanics
 and the reasoning behind them; `docs/GLOSSARY.md` the product vocabulary. When a
 rule here seems wrong, look there before bending it.

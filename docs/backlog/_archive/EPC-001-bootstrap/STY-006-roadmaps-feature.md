@@ -32,7 +32,7 @@ detail page.
   cards stay visible while expired — they must be cleared on disconnect).
 - `pages/roadmap-detail-page.tsx` — name + "Roadmap details are coming soon.", back link;
   handles not-connected (prompt to connect), loading, unknown id (friendly not-found).
-- All copy via i18n (ADR-0008), English and Welsh; error copy keyed by `AppError.kind`;
+- All copy via i18n (ADR-008), English and Welsh; error copy keyed by `AppError.kind`;
   use the pluralised roadmap count key from STY-004 if a count is shown.
 - An in-memory `RoadmapRepository` test double in `features/roadmaps/testing/`.
 

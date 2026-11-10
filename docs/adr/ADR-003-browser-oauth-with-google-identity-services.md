@@ -1,4 +1,4 @@
-# ADR-0003: Browser OAuth with Google Identity Services token model
+# ADR-003: Browser OAuth with Google Identity Services token model
 
 - Status: Accepted
 - Date: 2026-11-10 (amended in STY-003: port in `domain/auth/`, codes split, prompt policy)
@@ -23,13 +23,13 @@ needs an OAuth access token with scope `https://www.googleapis.com/auth/spreadsh
     that attempt, so a late response from an abandoned attempt cannot complete a newer one.
   - Only this folder may use the `google` global (ESLint `no-restricted-globals`).
 - `domain/auth/auth-client.ts` owns the app-level port, like `RoadmapRepository`
-  (STY-003 amendment: infrastructure implements it and must not import `features/`, ADR-0002):
+  (STY-003 amendment: infrastructure implements it and must not import `features/`, ADR-002):
   - `AuthClient` interface: `getSnapshot()`, `subscribe()`, `connect()`, `disconnect()`,
     `getAccessToken()`, `reportUnauthenticated()` (called when an API returns 401). Members
     are standalone functions, safe to pass detached.
   - `AuthState` discriminated union: `initializing` | `ready` (not connected) |
     `connecting` | `connected` (with `expiresAt`) | `expired` | `error`. Errors are typed
-    **codes**, never English prose — copy is chosen by the UI via i18n (ADR-0008):
+    **codes**, never English prose — copy is chosen by the UI via i18n (ADR-008):
     - `error` carries a failure code: `script-load-failed`, `access-denied`,
       `scope-not-granted` or `unknown`.
     - `ready` and `expired` may carry a `lastError` cancellation code (`popup-closed`,

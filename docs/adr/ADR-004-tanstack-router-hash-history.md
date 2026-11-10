@@ -1,4 +1,4 @@
-# ADR-0004: TanStack Router with file-based routes and hash history
+# ADR-004: TanStack Router with file-based routes and hash history
 
 - Status: Accepted
 - Date: 2026-11-10

@@ -9,7 +9,7 @@ import {
 } from "lucide-react"
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  // Adapted from upstream: follows our ThemeProvider instead of next-themes (ADR-0005).
+  // Adapted from upstream: follows our ThemeProvider instead of next-themes (ADR-005).
   const { theme } = useTheme()
 
   return (

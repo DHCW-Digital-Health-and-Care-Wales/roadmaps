@@ -12,18 +12,18 @@ import tseslint from "typescript-eslint"
 function layers(...names: string[]) {
   return names.map((name) => ({
     regex: String.raw`^(?:@/|(?:\.\.?/)+)${name}(?:/|$)`,
-    message: `Layering (ADR-0002): this layer must not import from "${name}".`,
+    message: `Layering (ADR-002): this layer must not import from "${name}".`,
   }))
 }
 
 const frameworks = [
   {
     group: ["react", "react/**", "react-dom", "react-dom/**"],
-    message: "Layering (ADR-0002): no React here.",
+    message: "Layering (ADR-002): no React here.",
   },
   {
     group: ["@tanstack/**"],
-    message: "Layering (ADR-0002): no TanStack here.",
+    message: "Layering (ADR-002): no TanStack here.",
   },
   {
     group: [
@@ -34,7 +34,7 @@ const frameworks = [
       "@base-ui/**",
     ],
     message:
-      "Layering (ADR-0002, ADR-0008): no UI or copy here; emit codes, not text.",
+      "Layering (ADR-002, ADR-008): no UI or copy here; emit codes, not text.",
   },
 ]
 
@@ -72,7 +72,7 @@ export default defineConfig(
     },
   },
   {
-    // All copy comes from the i18n catalogues (ADR-0008): no literal JSX text or literal
+    // All copy comes from the i18n catalogues (ADR-008): no literal JSX text or literal
     // user-facing attributes. Tests and generated shadcn components are exempt.
     files: ["src/**/*.tsx"],
     ignores: ["src/**/*.test.tsx", "src/test/**", "src/components/ui/**"],
@@ -133,7 +133,7 @@ export default defineConfig(
     },
   },
   {
-    // Only the Google Identity Services adapter may touch the `google` global (ADR-0003).
+    // Only the Google Identity Services adapter may touch the `google` global (ADR-003).
     files: ["src/**/*.{ts,tsx}"],
     ignores: ["src/infrastructure/google-identity/**"],
     rules: {
@@ -146,7 +146,7 @@ export default defineConfig(
             {
               name: "google",
               message:
-                "Only src/infrastructure/google-identity may use the Google Identity Services global (ADR-0003).",
+                "Only src/infrastructure/google-identity may use the Google Identity Services global (ADR-003).",
             },
           ],
         },

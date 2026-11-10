@@ -2,7 +2,7 @@ import type { AuthErrorCode, AuthState } from "@/domain/auth/auth-client"
 import type { AppErrorKind } from "@/lib/errors"
 
 /**
- * English copy: the source of truth for every message key (ADR-0008). Other catalogues
+ * English copy: the source of truth for every message key (ADR-008). Other catalogues
  * are typed against this shape. Keys are camelCase; plural keys carry CLDR suffixes.
  */
 export const en = {

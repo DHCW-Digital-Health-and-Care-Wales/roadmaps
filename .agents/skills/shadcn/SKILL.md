@@ -6,9 +6,9 @@ user-invocable: false
 
 # shadcn/ui
 
-For this repository, the generated components in `src/components/ui/` (root `components.json`, style `base-nova`, primitives from Base UI per ADR-0005) define the component contract. Add components with `pnpm dlx shadcn@latest add <name>` and keep them close to upstream: edit a generated file only for a reason the diff makes obvious (`sonner.tsx` reads our `useTheme` instead of `next-themes`). Apply the upstream guidance below only where it matches what is installed; check the installed set before reaching for a component.
+For this repository, the generated components in `src/components/ui/` (root `components.json`, style `base-nova`, primitives from Base UI per ADR-005) define the component contract. Add components with `pnpm dlx shadcn@latest add <name>` and keep them close to upstream: edit a generated file only for a reason the diff makes obvious (`sonner.tsx` reads our `useTheme` instead of `next-themes`). Apply the upstream guidance below only where it matches what is installed; check the installed set before reaching for a component.
 
-Installed today: `Alert` (`AlertTitle`, `AlertDescription`, `AlertAction`), `Badge`, `Button`, `DropdownMenu` (and its parts), `Empty` (`EmptyHeader`, `EmptyMedia`, `EmptyTitle`, `EmptyDescription`, `EmptyContent`), `Skeleton`, `Toaster` (sonner). Anything else (Card, Dialog, Field, Select, Tabs …) is a `shadcn add` away and arrives with its own rules. User-facing copy in any component goes through `t()` in English and Welsh (ADR-0008); `components/ui` itself carries no copy.
+Installed today: `Alert` (`AlertTitle`, `AlertDescription`, `AlertAction`), `Badge`, `Button`, `DropdownMenu` (and its parts), `Empty` (`EmptyHeader`, `EmptyMedia`, `EmptyTitle`, `EmptyDescription`, `EmptyContent`), `Skeleton`, `Toaster` (sonner). Anything else (Card, Dialog, Field, Select, Tabs …) is a `shadcn add` away and arrives with its own rules. User-facing copy in any component goes through `t()` in English and Welsh (ADR-008); `components/ui` itself carries no copy.
 
 A framework for building ui, components and design systems. Components are added as source code to the user's project via the CLI.
 

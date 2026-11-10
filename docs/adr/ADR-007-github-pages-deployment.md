@@ -1,4 +1,4 @@
-# ADR-0007: Static deployment to GitHub Pages
+# ADR-007: Static deployment to GitHub Pages
 
 - Status: Accepted
 - Date: 2026-11-10 (amended in STY-008: artifact built by Verify, base-path guard, no CNAME,
@@ -68,7 +68,7 @@
   `autoCodeSplitting` already makes each route lazy). Pages serves assets with
   content-hashed names, so a deploy that changes only app code costs returning visitors
   about 48 kB of JavaScript instead of all ~650 kB, and no chunk reaches Vite's 500 kB warning.
-  The warning limit is not raised. Zod is imported as `zod/mini` (ADR-0002), which saved
+  The warning limit is not raised. Zod is imported as `zod/mini` (ADR-002), which saved
   about 63 kB.
 
 ## Consequences

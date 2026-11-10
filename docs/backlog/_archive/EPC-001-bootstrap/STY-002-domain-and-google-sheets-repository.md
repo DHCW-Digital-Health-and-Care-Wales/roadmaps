@@ -3,11 +3,11 @@
 ## Goal
 
 Framework-free domain + a robust Google Sheets adapter that turns spreadsheet metadata into
-`Roadmap[]`, with exhaustive unit/integration tests. See ADR-0002.
+`Roadmap[]`, with exhaustive unit/integration tests. See ADR-002.
 
 ## Scope
 
-- `src/domain/roadmap/roadmap.ts`, `roadmap-repository.ts` exactly as ADR-0002.
+- `src/domain/roadmap/roadmap.ts`, `roadmap-repository.ts` exactly as ADR-002.
 - `src/lib/errors.ts`: `AppError` (extends `Error`, `kind`, `retryable`, optional `cause`,
   optional `status`), `isAppError`, and `toAppError(unknown)` normaliser. No UI copy here.
 - `src/infrastructure/google-sheets/`:
@@ -30,7 +30,7 @@ RoadmapRepository` (constructor takes `{ client, spreadsheetId }`), requests
   - `index.ts` barrel exporting only what the composition root needs.
 - Accept an optional `AbortSignal` path through if it fits cleanly (TanStack Query passes
   one); keep the domain interface as specified — an optional `{ signal }` options param on
-  `listRoadmaps` is acceptable only if documented in ADR-0002.
+  `listRoadmaps` is acceptable only if documented in ADR-002.
 
 ## Tests (Vitest + MSW)
 

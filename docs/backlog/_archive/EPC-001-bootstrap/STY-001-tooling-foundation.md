@@ -18,11 +18,11 @@ Base UI, ESLint, Prettier, Vitest + RTL + MSW harness — ready for feature work
 - shadcn/ui initialised for **Base UI** (`components.json`, `src/lib/utils.ts` `cn`).
   Use the shadcn CLI's current Base UI path (verify against shadcn docs). Add only `button`
   now (more components are added by the stories that use them).
-- TanStack Router Vite plugin wired (ADR-0004) with a minimal `src/routes/__root.tsx` and
+- TanStack Router Vite plugin wired (ADR-004) with a minimal `src/routes/__root.tsx` and
   `src/routes/index.tsx` placeholder, `src/app/main.tsx`, `src/app/router.tsx` with hash
   history; `routeTree.gen.ts` committed and excluded from lint/format.
 - ESLint flat config: typescript-eslint (type-aware, strict), react-hooks, react-refresh,
-  jsx-a11y (if compatible), import-direction rules per ADR-0002 using
+  jsx-a11y (if compatible), import-direction rules per ADR-002 using
   `no-restricted-imports` (domain must not import react/@tanstack/infrastructure/features;
   infrastructure must not import react/@tanstack/features/app; features must not import
   infrastructure). Prettier (+ `prettier-plugin-tailwindcss`), `eslint-config-prettier`.

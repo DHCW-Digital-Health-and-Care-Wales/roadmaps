@@ -84,6 +84,6 @@ checked against Reproduce: it closes that sequence rather than narrowing it._
 - **D2** (owner, 2026-11-10, <source: grilling Q / PR comment / triage>):
   Won't fix. <Why: accepted behaviour, cost against harm, superseded by a
   platform change.> Reopen if <the trigger, e.g. a user reports it, or the
-  library changes its behaviour>. <Where any residue is recorded: ADR-nnnn,
+  library changes its behaviour>. <Where any residue is recorded: ADR-nnn,
   a guide line, a test that pins the accepted behaviour.>
 ```

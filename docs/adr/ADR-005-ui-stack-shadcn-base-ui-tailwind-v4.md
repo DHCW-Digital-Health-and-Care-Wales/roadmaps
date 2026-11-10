@@ -1,4 +1,4 @@
-# ADR-0005: UI stack — shadcn/ui on Base UI with Tailwind CSS v4
+# ADR-005: UI stack — shadcn/ui on Base UI with Tailwind CSS v4
 
 - Status: Accepted
 - Date: 2026-11-10

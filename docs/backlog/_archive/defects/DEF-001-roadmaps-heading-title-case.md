@@ -5,7 +5,7 @@
 - **Area**: i18n (en + cy) + E2E
 - **Epic**: standalone
 - **Depends on**: none
-- **Binding ADRs**: ADR-0008
+- **Binding ADRs**: ADR-008
 - **Suggested model**: Haiku — a two-string change plus the tests that assert it
 - **Delivered**: https://github.com/collisdigital/roadmaps-editor/pull/2
 

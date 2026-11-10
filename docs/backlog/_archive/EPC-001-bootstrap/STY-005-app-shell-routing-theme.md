@@ -24,8 +24,8 @@ unauthenticated welcome state, and the route skeleton.
   STY-005). Typed params.
 - i18n: lift the STY-004 i18n wiring into `app/composition.ts` (create the instance) and
   `app/providers.tsx` (`I18nextProvider`); place the `LanguageSwitcher` in the header next
-  to the theme toggle. All copy (incl. aria-labels and toasts) via `t()` (ADR-0008).
-- Theme: `ThemeProvider` per ADR-0005 + `ThemeToggle` (accessible label, Lucide sun/moon),
+  to the theme toggle. All copy (incl. aria-labels and toasts) via `t()` (ADR-008).
+- Theme: `ThemeProvider` per ADR-005 + `ThemeToggle` (accessible label, Lucide sun/moon),
   no-flash inline script in `index.html`.
 - Layout: `components/layout/app-shell.tsx`, `app-header.tsx`; header shows
   "Product Roadmaps" with a Lucide roadmap-ish icon (e.g. `Map`/`Milestone`/`Route`),

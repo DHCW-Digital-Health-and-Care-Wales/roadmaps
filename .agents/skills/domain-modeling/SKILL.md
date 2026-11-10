@@ -11,7 +11,7 @@ Actively build and sharpen the project's domain model as you design. This is the
 
 Read `docs/AGENTS.md` before creating or changing documentation. The shared
 vocabulary is `docs/GLOSSARY.md`; decisions live in
-`docs/adr/{nnnn}-{kebab-title}.md`. Read the Accepted ADRs for the area before
+`docs/adr/ADR-{nnn}-{kebab-title}.md`. Read the Accepted ADRs for the area before
 proposing a change. Use [ADR-FORMAT.md](ADR-FORMAT.md) for this repository's
 ADR shape and lifecycle.
 

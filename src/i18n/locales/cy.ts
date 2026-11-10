@@ -5,7 +5,7 @@ import type { en } from "./en"
 type WelshPluralCategory = "zero" | "one" | "two" | "few" | "many" | "other"
 
 /**
- * Welsh copy (ADR-0008). Machine-assisted: a fluent Welsh speaker must review it before a
+ * Welsh copy (ADR-008). Machine-assisted: a fluent Welsh speaker must review it before a
  * public launch. Typed against `en`, so a missing or extra key fails type checking.
  */
 export const cy = {

@@ -20,5 +20,5 @@ export const appConfig = {
   spreadsheetId: required("VITE_GOOGLE_SPREADSHEET_ID"),
 } as const
 
-/** The OAuth scope the app must request (ADR-0003). */
+/** The OAuth scope the app must request (ADR-003). */
 export const SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets"

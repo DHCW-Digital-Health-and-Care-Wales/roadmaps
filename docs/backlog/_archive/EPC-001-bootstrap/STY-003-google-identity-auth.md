@@ -3,13 +3,13 @@
 ## Goal
 
 A small, well-tested, framework-agnostic auth client on top of GIS, exposed to React via an
-`AuthProvider`/`useAuth` — see ADR-0003 for the full design.
+`AuthProvider`/`useAuth` — see ADR-003 for the full design.
 
 ## Scope
 
 - `src/domain/auth/auth-client.ts` — `AuthClient` interface + `AuthState` union. (Moved
   from `features/auth/` during delivery: infrastructure implements the port and may not
-  import `features/`; see the ADR-0002/0003 amendments.)
+  import `features/`; see the ADR-002/003 amendments.)
 - `src/infrastructure/google-identity/load-gis-script.ts` — memoised loader
   (`https://accounts.google.com/gsi/client`, `async`, `defer`), resolves when
   `window.google?.accounts?.oauth2` exists, rejects on error/timeout, resets memo on failure.
@@ -26,7 +26,7 @@ A small, well-tested, framework-agnostic auth client on top of GIS, exposed to R
     memory; schedule expiry timer; state `connected`.
   - `error_callback` (`popup_closed`, `popup_failed_to_open`, `unknown`) and OAuth `error`
     responses (`access_denied`, etc.) -> typed error **codes** (no English prose in state —
-    copy is localised in the UI per ADR-0008); cancellation returns to the
+    copy is localised in the UI per ADR-008); cancellation returns to the
     previous non-connected state with a `lastError` note instead of a hard error.
   - `getAccessToken()` returns the token only while connected and unexpired.
   - `reportUnauthenticated()` -> `expired`.
@@ -64,8 +64,8 @@ Header/landing UI (STY-004), query cache clearing wiring (STY-004/STY-005 compos
 ## Delivery notes
 
 - `AuthClient`/`AuthState` live in `src/domain/auth/auth-client.ts`, not `features/auth/`:
-  infrastructure implements the port and may not import `features/` (ADR-0002). ADR-0002 and
-  ADR-0003 are amended.
+  infrastructure implements the port and may not import `features/` (ADR-002). ADR-002 and
+  ADR-003 are amended.
 - The token client is created **per attempt**, synchronously inside `connect()`, not once on
   init (see review finding 1). GIS is still loaded on init, so the popup opens within the
   click.

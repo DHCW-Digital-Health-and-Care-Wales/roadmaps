@@ -9,7 +9,7 @@ import {
 } from "./theme-preference"
 
 /**
- * Owns the light/dark theme (ADR-0005). `index.html` applies the stored theme before
+ * Owns the light/dark theme (ADR-005). `index.html` applies the stored theme before
  * first paint; this keeps the document in step with later changes and remembers them.
  */
 export function ThemeProvider({ children }: { children: ReactNode }) {

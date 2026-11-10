@@ -117,7 +117,7 @@ Do not spend findings on these; check only that the change does not evade them
   decision (a Sheets response with no `sheets`, a hidden sheet, a zero-length
   title, an id that is not an integer); preserve intentional status and error
   mappings.
-- **Layer and repository boundary (ADR-0002).** UI, hooks and tests-of-UI speak
+- **Layer and repository boundary (ADR-002).** UI, hooks and tests-of-UI speak
   `Roadmap`, `RoadmapRepository`, `AuthClient` and `AppError`, never
   spreadsheets, worksheets, ranges, `sheetId`, Google response types or
   statuses. The domain stays framework-free; `app/composition.ts` is the only
@@ -129,7 +129,7 @@ Do not spend findings on these; check only that the change does not evade them
   or hooks. A shortcut that lets a feature reach an adapter, or a Google
   detail leak into `Roadmap`, is a finding even where lint passes (a re-export
   or a barrel that sidesteps the rule).
-- **Secrets and tokens (ADR-0003).** The access token stays in memory: trace it
+- **Secrets and tokens (ADR-003).** The access token stays in memory: trace it
   from `getAccessToken()` to the request header and confirm it never reaches
   `localStorage`/`sessionStorage`/IndexedDB/cookies, a URL or hash, query keys
   or cached data, React state or context, an `AppError.message`/`cause`, a log
@@ -158,7 +158,7 @@ Do not spend findings on these; check only that the change does not evade them
   state the API refuses, or a list that omits rows the user expects, is a
   defect; a control hidden for a state the API accepts is a defect only where
   the requirements have the UI offer it.
-- **Auth state machine and session end (ADR-0003).** Follow every transition
+- **Auth state machine and session end (ADR-003).** Follow every transition
   the change touches: `connect()` from `ready`/`expired`/`error`, abandoned and
   late attempts (each attempt settles once; callbacks of any other attempt are
   ignored), `disconnect()` during `connecting`, the expiry timer firing 60 s
@@ -198,7 +198,7 @@ Do not spend findings on these; check only that the change does not evade them
   pending action outlives the read that opened it, a refetch, expiry or route
   change must neither unmount it, swap the record it acts on, nor leave its
   copy stale.
-- **Routing and Pages (ADR-0004, ADR-0007).** Routes use hash history, so deep
+- **Routing and Pages (ADR-004, ADR-007).** Routes use hash history, so deep
   links are `#/roadmaps/<id>`; the router, `Link`s and E2E use relative URLs,
   never an absolute `/path` that ignores the base. The build base path comes
   from `resolveBasePath` (`/roadmaps-editor/` in CI, `/` locally); assets,
@@ -210,7 +210,7 @@ Do not spend findings on these; check only that the change does not evade them
   not-found state, not a crash), that links keep working on reload, and that
   workflow changes keep least-privilege permissions, pinned action SHAs and a
   deploy only from `main` (`actionlint` clean).
-- **Localisation and copy (ADR-0008).** UI copy comes from catalogue keys
+- **Localisation and copy (ADR-008).** UI copy comes from catalogue keys
   mapped from codes (``t(`errors.${error.kind}`)``,
   ``t(`auth.status.${state.status}`)``); domain and infrastructure emit codes,
   never prose, and `AppError.message` is diagnostics, never rendered. Check
@@ -247,7 +247,7 @@ Do not spend findings on these; check only that the change does not evade them
   with Google only as far as they were written to: a new Sheets or GIS call
   needs the fake extended, and the live behavior stays unverified (README's
   manual check).
-- **Tests (ADR-0006).** Vitest and Playwright specs exercise the failure path
+- **Tests (ADR-006).** Vitest and Playwright specs exercise the failure path
   through real contracts and fail before a behavioral fix. Component tests go
   through `renderWithProviders` (real `AppProviders`, fake `AuthClient`,
   in-memory repository) and query by role and name, scoped to `main`/`banner`;
@@ -264,9 +264,9 @@ Read each where the diff reaches it; this skill does not restate them.
 
 - Root `AGENTS.md`: _Layering rules_, _Conventions_, and the _Handoff log_
   (public APIs, state machines, E2E hooks and per-story gotchas).
-- `docs/adr/`: 0002 layers and the repository/`AuthClient` ports, 0003 OAuth
-  token model and session lifecycle, 0004 hash-history routing, 0005 UI stack,
-  0006 testing strategy, 0007 Pages deployment and base path, 0008
+- `docs/adr/`: 002 layers and the repository/`AuthClient` ports, 003 OAuth
+  token model and session lifecycle, 004 hash-history routing, 005 UI stack,
+  006 testing strategy, 007 Pages deployment and base path, 008
   internationalisation. A deviation updates or supersedes the ADR in the same
   change.
 - `tests/e2e/AGENTS.md`: fixture API, hermetic guard and conventions.

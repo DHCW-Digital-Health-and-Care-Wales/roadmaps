@@ -1,6 +1,6 @@
 # tests/e2e — Playwright
 
-End-to-end tests of the production build, with Google faked (ADR-0006). Run with
+End-to-end tests of the production build, with Google faked (ADR-006). Run with
 `pnpm test:e2e`; install the browser once with
 `pnpm exec playwright install --with-deps chromium`.
 

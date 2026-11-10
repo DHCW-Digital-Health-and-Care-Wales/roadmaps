@@ -1,4 +1,4 @@
-# ADR-0006: Testing strategy
+# ADR-006: Testing strategy
 
 - Status: Accepted
 - Date: 2026-11-10

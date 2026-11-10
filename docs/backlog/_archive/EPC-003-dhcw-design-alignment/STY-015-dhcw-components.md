@@ -7,7 +7,7 @@
 - **Depends on**: STY-014 (hard)
 - **Binding ADRs**: ADR-010, ADR-005, ADR-009 §"Which roadmaps, in what order"
 - **Suggested model**: Sonnet — restyling on settled tokens, with screenshots
-- **Delivered**: _(PR URL, added when the PR is open)_
+- **Delivered**: https://github.com/collisdigital/roadmaps-editor/pull/16
 
 ## Summary
 

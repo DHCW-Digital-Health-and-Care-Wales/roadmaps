@@ -126,6 +126,22 @@ six categories: `_zero`, `_one`, `_two`, `_few`, `_many`, `_other`, with the nou
 mutated after _dau_ (see `roadmaps.count_two` in `cy.ts`). Always call
 `t("roadmaps.count", { count })`.
 
+A count with a second figure nests the parts' own plural keys, so neither is
+concatenated in code:
+
+```
+roadmaps.countWithUnpublished   $t(roadmaps.count, …), $t(roadmaps.unpublishedCount, …)
+                                → "3 roadmaps, 1 not published"
+```
+
+## Card badge and facts
+
+**Shape:** a badge is a short noun phrase for a state the reader must not miss
+("Not published"), never colour alone; a fact line is a label and its value in one key
+(`roadmaps.card.productLead`: "Product lead: {{name}}"), shown only when the roadmap has
+it, so no card carries an empty label. A date is written out from the catalogue's month
+names (`formatCalendarDate`), never numerically.
+
 ## Accessible names
 
 `aria-label`, `title` and `alt` are copy too, and go through `t()`. Describe the

@@ -7,7 +7,7 @@ import { roadmapGridClassName } from "./roadmap-grid"
 /** Varied widths, so the placeholder reads as names rather than a pattern. */
 const NAME_WIDTHS = ["w-3/5", "w-2/5", "w-1/2", "w-2/3", "w-1/3", "w-3/5"]
 
-/** Placeholder cards with the real cards' geometry, announced once as loading. */
+/** Placeholder cards shaped like the real cards, announced once as loading. */
 export function RoadmapGridSkeleton() {
   const { t } = useTranslation()
 
@@ -19,10 +19,15 @@ export function RoadmapGridSkeleton() {
           <li
             // Static placeholders: the index is a stable key.
             key={index}
-            className="flex min-h-18 items-center gap-3.5 rounded-xl border bg-card p-4 shadow-xs"
+            className="flex min-h-18 items-stretch gap-3.5 rounded-xl border bg-card p-4 shadow-xs"
           >
-            <Skeleton className="size-10 shrink-0 rounded-lg" />
-            <Skeleton className={`h-4 ${width}`} />
+            <Skeleton className="w-1.5 shrink-0 rounded-full" />
+            <div className="flex flex-1 flex-col gap-2.5">
+              <Skeleton className={`h-4 ${width}`} />
+              <Skeleton className="h-3 w-1/3" />
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-4/5" />
+            </div>
           </li>
         ))}
       </ul>

@@ -124,4 +124,4 @@ public site.
 ## Outcome
 
 Decided in [ADR-009](../adr/ADR-009-roadmap-list-from-the-first-tab.md) and delivered by
-[EPC-002](../backlog/EPC-002-roadmap-list-from-roadmaps-tab/README.md).
+[EPC-002](../backlog/_archive/EPC-002-roadmap-list-from-roadmaps-tab/README.md).

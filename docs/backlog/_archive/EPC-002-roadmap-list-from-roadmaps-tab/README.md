@@ -1,7 +1,7 @@
 # EPC-002: Roadmap list from the roadmap index — list the roadmaps the public site lists, not the worksheets
 
-- **Status**: Active — owner decisions recorded 2026-11-10; STY-010 merged; STY-011 delivered, awaiting merge
-- **Progress**: 2 of 3 terminal; next selectable: STY-012 once STY-011's PR merges; blocked on: that merge
+- **Status**: Done — every story delivered; STY-010 and STY-011 merged, STY-012 in its PR, which awaits the owner's merge
+- **Progress**: 3 of 3 terminal
 - **Binding ADRs**: ADR-009, ADR-002, ADR-008
 
 ## Summary
@@ -62,7 +62,7 @@ it, STY-011 fills it from the data source, STY-012 shows it.
 
 ### Example data only
 
-Tests, the E2E fake and screenshots use only [the example data](../../../tests/fixtures/sheets/README.md)
+Tests, the E2E fake and screenshots use only [the example data](../../../../tests/fixtures/sheets/README.md)
 or inline rows, never the live spreadsheet; its README holds the rule and the examples.
 
 ### Copy
@@ -80,11 +80,11 @@ cell contents. Nothing shows them in this epic.
 
 ## Stories
 
-| ID      | Story                                                                                                                                               | Area                    | Depends on | State                |
-| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- | ---------- | -------------------- |
-| STY-010 | [A roadmap carries its list information](../_archive/EPC-002-roadmap-list-from-roadmaps-tab/STY-010-roadmap-domain-model-and-list-parser.md)        | Domain + Infrastructure | —          | ✅                   |
-| STY-011 | [The list shows the roadmaps the public site lists](../_archive/EPC-002-roadmap-list-from-roadmaps-tab/STY-011-read-roadmap-list-from-first-tab.md) | Infrastructure + E2E    | STY-010    | ✅ (PR awaits merge) |
-| STY-012 | [Roadmap cards show each roadmap's information](STY-012-roadmap-cards-show-information.md)                                                          | Features/UI + i18n      | STY-011    |                      |
+| ID      | Story                                                                                            | Area                    | Depends on | State                |
+| ------- | ------------------------------------------------------------------------------------------------ | ----------------------- | ---------- | -------------------- |
+| STY-010 | [A roadmap carries its list information](STY-010-roadmap-domain-model-and-list-parser.md)        | Domain + Infrastructure | —          | ✅                   |
+| STY-011 | [The list shows the roadmaps the public site lists](STY-011-read-roadmap-list-from-first-tab.md) | Infrastructure + E2E    | STY-010    | ✅                   |
+| STY-012 | [Roadmap cards show each roadmap's information](STY-012-roadmap-cards-show-information.md)       | Features/UI + i18n      | STY-011    | ✅ (PR awaits merge) |
 
 ## Sequencing
 
@@ -118,7 +118,7 @@ None.
 
 ## Related
 
-- [The roadmap index format the public site uses](../../analysis/roadmaps-tab-format.md)
+- [The roadmap index format the public site uses](../../../analysis/roadmaps-tab-format.md)
   (Outcome: ADR-009 and this epic)
 - ADR-009, ADR-002, ADR-008
 - `tests/fixtures/sheets/README.md`

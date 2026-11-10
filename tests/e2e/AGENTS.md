@@ -16,12 +16,16 @@ End-to-end tests of the production build, with Google faked (ADR-006). Run with
 - `sheets` (`fixtures/fake-sheets.ts`) answers the two reads of a list load: the tab list
   (`spreadsheets.get`) and the first tab's values; reading any other tab is a violation.
   `sheets.spreadsheet` holds its tabs, by default `EXAMPLE_SPREADSHEET`, the example CSVs
-  of `tests/fixtures/sheets/` (cards "Product A roadmap", "Product B roadmap", "Product C
-  roadmap"); assign `withRoadmapIndex(rows)` to change the list, building rows from
-  `EXAMPLE_INDEX_ROWS` or inline. `sheets.failWith(...statuses)` fails the next requests,
+  of `tests/fixtures/sheets/` (cards "Product B roadmap", "Product A roadmap", "Product C
+  roadmap", the order the page groups them in); assign `withRoadmapIndex(rows)` to change the
+  list, building rows from `EXAMPLE_INDEX_ROWS` or `roadmapRow({ Sheet, Title, … })` (cells by
+  header name). `sheets.failWith(...statuses)` fails the next requests,
   either read. `sheets.reads` lists the reads (`metadata`, `values`) and `sheets.tokens`
   each request's bearer token, so one load is two entries; `sheets.hold()` keeps replies
   pending until its returned `release()` is called.
+- `roadmapCards(page)` is every card's link, across the family groups (several lists). A
+  link holds only the title, so `toHaveText([...])` checks order and count, and a card's other
+  content is asserted on its list item (`getByRole("listitem").filter({ has: link })`).
 - Anything the real APIs would reject, any request to another origin, and any issued
   access token written to storage, cookies, the URL or the console at any point
   (`fixtures/persistence-recorder.ts`) fail the test at teardown. Add a new external

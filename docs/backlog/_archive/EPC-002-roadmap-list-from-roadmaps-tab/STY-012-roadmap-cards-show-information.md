@@ -1,6 +1,6 @@
 # STY-012: Roadmap cards show each roadmap's information, grouped by product family
 
-- **Status**: Proposed — waits for STY-011 on the default branch
+- **Status**: Done — delivered in its PR, which awaits the owner's merge
 - **Type**: Feature + Copy
 - **Area**: Features/UI + i18n (en + cy) + E2E
 - **Epic**: EPC-002-roadmap-list-from-roadmaps-tab
@@ -8,6 +8,7 @@
 - **Binding ADRs**: ADR-009 §"What a roadmap is", §"Which roadmaps, in what order";
   ADR-005; ADR-008
 - **Suggested model**: Sonnet — presentation work on a settled model; screenshots needed
+- **Delivered**: https://github.com/collisdigital/roadmaps-editor/pull/7
 
 ## Summary
 
@@ -149,6 +150,82 @@ Screenshots: main page at 1280px and 375px, light and dark, English and Welsh.
   as written on its first roadmap in index order; its Welsh name is that roadmap's Welsh,
   else the first member's with Welsh. The group sorts by that name. Holds in S8.
 
+- **D12** (agent, 2026-11-10, copywriter): category names are written as the public site
+  writes them ("GP & Community Services"), not in sentence case, with its Welsh from the
+  analysis: a Product Lead recognises the six fixed names from the public site, as they do
+  a product name. Easily reversed in `roadmaps.categories`.
+
 ## Out of scope
 
 As EPC-002 Out of scope, plus filtering or grouping by category (D4).
+
+## Delivery
+
+### Departures
+
+- **S2, how the card is built** (agent): axe's `label-content-name-mismatch` (WCAG 2.5.3)
+  rejects a link named by `aria-labelledby` while it holds more visible text than the
+  name. So the link is the title alone, stretched over the whole card with `::after`, and
+  the rest of the card is a sibling that is `aria-hidden` and referenced by the link's
+  `aria-describedby`, one id per part present, so a screen reader pauses between them. A
+  roadmap with only a title has no `aria-describedby`. Component tests therefore look at the
+  card (the list item), not the link, for what the card shows.
+- **S2, the date** (agent): the month names are catalogue copy (`common.months`) and
+  `formatCalendarDate(date, t)` (`@/i18n`) writes "1 October 2026" / "1 Hydref 2026" from
+  them, because Playwright's Chromium has no Welsh locale data (`Intl` falls back to
+  English there), so a browser-supplied date could not be tested in Welsh.
+- **S1, category casing** is D12. The group heading for roadmaps with no family is
+  "No product family" / "Dim teulu cynnyrch" (D5, D7).
+- **S10, one count key**: `roadmaps.countWithUnpublished` nests `roadmaps.count` and
+  `roadmaps.unpublishedCount`, so each part keeps its own plural forms (Welsh has all six
+  of both); `unpublishedCount_zero` exists only because the Welsh catalogue must spell all
+  six forms and is never shown.
+- **S7, long free text** (agent, from review): a long status label, family, title or
+  product lead wraps within its card (`wrap-anywhere`, a one-column grid with
+  `minmax(0, 1fr)`) instead of widening the page at 375px; an E2E case holds it.
+- **Loading** (agent): the skeleton's placeholder cards now have the new card's shape, so
+  the page does not jump when roadmaps arrive.
+- **Shared code** (agent): the parser's `fold` moved to `@/lib/text` (`foldText`), as
+  grouping uses it for D5; the parser's header matching is unchanged.
+- **E2E** (agent): groups are several lists, so `roadmapCards` still counts every card
+  link but a card's content is asserted on its list item (`card(page, name)` in
+  `roadmaps.spec.ts`), and order and count with `toHaveText([...])`. `roadmapRow(cells)` in
+  `fake-sheets.ts` builds an index row by header name. The existing test "an expired token
+  keeps the roadmaps on screen until reconnected" asserted the reload's tokens straight
+  after the cached cards, which were already visible; it now polls for the two reads
+  (a race, failing intermittently once the cards were taller).
+- **Test order**: the grouping tests were written before the module, but I did not observe
+  them failing first; their discrimination was not shown by a red run. The component and
+  E2E tests followed the code.
+
+### Contract for dependents
+
+- `groupRoadmaps(roadmaps, language): RoadmapGroup[]` (`features/roadmaps/group-roadmaps.ts`,
+  `{ key, family: LocalisedText | null, roadmaps }`): families by `Intl.Collator(language,
+{ numeric: true })` of their localised name, the no-family group last (`family: null`),
+  titles by localised title, ties in data order; `<RoadmapGroups>` shows a heading per
+  group (`h2`, naming its list), or no heading for the one no-family group.
+- `<RoadmapCard>`: the link's name is the title; the colour is `<RoadmapSwatch>` (only a
+  `#rrggbb` value reaches a style, else a theme colour). The detail page is unchanged.
+- E2E hooks (en): `h2` headings "Medicines & Diagnostics", "Single Record", "No product
+  family"; each group a `list` named by its heading; a card is the `listitem` holding the
+  link; count "3 roadmaps, 1 not published".
+- Welsh strings added or changed, for a fluent review (machine-assisted): `common.months`
+  and `common.date`; `roadmaps.categories.*`, `roadmaps.card.*`, `roadmaps.noFamily`,
+  `roadmaps.unpublishedCount_*`, `roadmaps.countWithUnpublished`. "Arweinydd cynnyrch",
+  "teulu cynnyrch" and "Heb ei gyhoeddi" in particular.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                                     |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `group-roadmaps.test.ts` (`groups by family…`, `never uses data-source order`); `roadmaps-page.test.tsx` (`shows families in name order…`); `roadmaps.spec.ts` (`connecting shows the roadmaps…grouped by family (S1)`, `cards sit under…`) |
+| S2       | `roadmap-card.test.tsx` (`shows the title, category…`, `names the link by the title alone…`); `format-calendar-date.test.ts`; `roadmaps.spec.ts` (`cards sit under…`)                                                                       |
+| S3       | `roadmap-card.test.tsx` (`shows only what exists…`); rows lining up is by the grid (`auto-rows-fr`, footer `mt-auto`), seen in the after screenshots                                                                                        |
+| S4       | `roadmap-card.test.tsx` (`badges a roadmap the public can't see…`); `roadmaps.spec.ts`                                                                                                                                                      |
+| S5       | `roadmap-card.test.tsx` (`is Welsh in Cymraeg…`); `roadmaps.spec.ts` (`the cards show Welsh content and copy in Cymraeg (S5)`)                                                                                                              |
+| S6       | `roadmap-card.test.tsx` (`RoadmapCard colour (S6)`); `accessibility.spec.ts` (`roadmaps with very light, very dark and no colours (S6)`, both themes, WCAG 2.2 AA)                                                                          |
+| S7       | the existing `roadmaps-page.test.tsx` state tests and `roadmap-errors.spec.ts`, unchanged and passing; screenshots of every state at 1280px and 375px                                                                                       |
+| S8       | `group-roadmaps.test.ts` (`groups spellings that differ…`, `names a merged group…`, `re-sorts…`, `is one group…`); `roadmaps-page.test.tsx` (`grouping by product family`); `roadmaps.spec.ts` (`a language switch re-sorts… (S8)`)         |
+| S9       | `group-roadmaps.test.ts` (`sorts an unpublished roadmap like any other (S9)`)                                                                                                                                                               |
+| S10      | `roadmaps-page.test.tsx` (`the count of roadmaps not published`, English and Welsh plurals); `roadmaps.spec.ts`                                                                                                                             |

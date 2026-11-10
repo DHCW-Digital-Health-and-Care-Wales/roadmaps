@@ -40,10 +40,11 @@ function main() {
   return within(screen.getByRole("main"))
 }
 
+/** The cards' titles in page order (each link's tooltip is its title). */
 function cardNames() {
-  return within(main().getByRole("list"))
+  return main()
     .getAllByRole("link")
-    .map((link) => link.textContent)
+    .map((link) => link.getAttribute("title"))
 }
 
 describe("RoadmapsPage", () => {
@@ -84,6 +85,157 @@ describe("RoadmapsPage", () => {
     expect(repository.listRoadmaps.mock.calls[0]?.[0]?.signal).toBeInstanceOf(
       AbortSignal,
     )
+  })
+
+  describe("grouping by product family", () => {
+    const family = (en: string, cy = "") => ({ en, cy })
+    const example: Roadmap[] = [
+      createTestRoadmap("producta", "Product A roadmap", {
+        family: family("Single Record"),
+      }),
+      createTestRoadmap("productb", "Product B roadmap", {
+        title: { en: "Product B roadmap", cy: "Trywydd Cynnyrch B" },
+        family: family(
+          "Medicines & Diagnostics",
+          "Meddyginiaethau a Diagnosteg",
+        ),
+      }),
+      createTestRoadmap("productc", "Product C roadmap", { published: false }),
+    ]
+
+    /** Each heading with the titles of the list it names, in page order. */
+    function groups() {
+      return main()
+        .getAllByRole("heading", { level: 2 })
+        .map((heading) => ({
+          heading: heading.textContent,
+          titles: within(
+            main().getByRole("list", { name: heading.textContent }),
+          )
+            .getAllByRole("link")
+            .map((link) => link.getAttribute("title")),
+        }))
+    }
+
+    it("shows families in name order, then the roadmaps with no family under their own heading (S1)", async () => {
+      await renderWithProviders({ authState: connected, roadmaps: example })
+
+      expect(await main().findByText(/^3 roadmaps/)).toBeInTheDocument()
+      expect(groups()).toEqual([
+        { heading: "Medicines & Diagnostics", titles: ["Product B roadmap"] },
+        { heading: "Single Record", titles: ["Product A roadmap"] },
+        { heading: "No product family", titles: ["Product C roadmap"] },
+      ])
+    })
+
+    it("re-sorts the groups and titles when the language changes, naming families in Welsh (S8)", async () => {
+      await renderWithProviders({
+        authState: connected,
+        roadmaps: example,
+        language: "cy",
+      })
+
+      expect(await main().findByText(/^3 map trywydd/)).toBeInTheDocument()
+      expect(groups()).toEqual([
+        {
+          heading: "Meddyginiaethau a Diagnosteg",
+          titles: ["Trywydd Cynnyrch B"],
+        },
+        { heading: "Single Record", titles: ["Product A roadmap"] },
+        { heading: "Dim teulu cynnyrch", titles: ["Product C roadmap"] },
+      ])
+    })
+
+    it("shows one list and no heading when no roadmap has a family (S8)", async () => {
+      await renderWithProviders({
+        authState: connected,
+        roadmaps: [
+          createTestRoadmap("b", "Beta"),
+          createTestRoadmap("a", "Alpha"),
+        ],
+      })
+
+      expect(await main().findByText("2 roadmaps")).toBeInTheDocument()
+      expect(
+        main().queryByRole("heading", { level: 2 }),
+      ).not.toBeInTheDocument()
+      expect(main().getAllByRole("list")).toHaveLength(1)
+      expect(cardNames()).toEqual(["Alpha", "Beta"])
+    })
+  })
+
+  describe("the count of roadmaps not published", () => {
+    const withUnpublished = [
+      ...roadmaps.slice(0, 2),
+      createTestRoadmap("productc", "Product C roadmap", { published: false }),
+    ]
+
+    it("says how many are not published, and only when some are (S10)", async () => {
+      await renderWithProviders({
+        authState: connected,
+        roadmaps: withUnpublished,
+      })
+      expect(
+        await main().findByText("3 roadmaps, 1 not published"),
+      ).toBeInTheDocument()
+    })
+
+    it("only counts the roadmaps when all are published (S10)", async () => {
+      await renderWithProviders({ authState: connected, roadmaps })
+      expect(await main().findByText("3 roadmaps")).toBeInTheDocument()
+      expect(main().queryByText(/not published/)).not.toBeInTheDocument()
+    })
+
+    it.each([
+      [1, 1, "1 roadmap, 1 not published"],
+      [2, 2, "2 roadmaps, 2 not published"],
+    ])(
+      "uses the right plurals in English for %i roadmaps, %i not published (S10)",
+      async (total, unpublished, expected) => {
+        await renderWithProviders({
+          authState: connected,
+          roadmaps: Array.from({ length: total }, (_, index) =>
+            createTestRoadmap(`r${String(index)}`, `Roadmap ${String(index)}`, {
+              published: index >= unpublished,
+            }),
+          ),
+        })
+        expect(await main().findByText(expected)).toBeInTheDocument()
+      },
+    )
+
+    it.each([
+      [1, 1, "1 map trywydd, 1 heb ei gyhoeddi"],
+      [2, 1, "2 fap trywydd, 1 heb ei gyhoeddi"],
+      [3, 2, "3 map trywydd, 2 heb eu cyhoeddi"],
+      [4, 3, "4 o fapiau trywydd, 3 heb eu cyhoeddi"],
+      [7, 6, "7 o fapiau trywydd, 6 heb eu cyhoeddi"],
+      [6, 6, "6 map trywydd, 6 heb eu cyhoeddi"],
+      [12, 12, "12 o fapiau trywydd, 12 heb eu cyhoeddi"],
+    ])(
+      "uses the right plurals in Welsh for %i roadmaps, %i not published (S10)",
+      async (total, unpublished, expected) => {
+        await renderWithProviders({
+          authState: connected,
+          language: "cy",
+          roadmaps: Array.from({ length: total }, (_, index) =>
+            createTestRoadmap(`r${String(index)}`, `Roadmap ${String(index)}`, {
+              published: index >= unpublished,
+            }),
+          ),
+        })
+        expect(await main().findByText(expected)).toBeInTheDocument()
+      },
+    )
+
+    it("says only the count in Welsh when all are published (S10)", async () => {
+      await renderWithProviders({
+        authState: connected,
+        roadmaps,
+        language: "cy",
+      })
+      expect(await main().findByText("3 map trywydd")).toBeInTheDocument()
+    })
   })
 
   it("keeps a long name whole for assistive tech and the tooltip", async () => {
@@ -381,7 +533,8 @@ describe("RoadmapsPage", () => {
     })
 
     expect(await main().findByText("2 fap trywydd")).toBeInTheDocument()
-    expect(cardNames()).toEqual(["Trywydd Cynnyrch A", "Product B roadmap"])
+    // Titles sort as people read them in Welsh: the English title first here.
+    expect(cardNames()).toEqual(["Product B roadmap", "Trywydd Cynnyrch A"])
     expect(
       main().getByRole("link", { name: "Trywydd Cynnyrch A" }),
     ).toHaveAttribute("title", "Trywydd Cynnyrch A")

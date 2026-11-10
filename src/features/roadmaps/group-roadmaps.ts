@@ -1,0 +1,76 @@
+import type {
+  ContentLanguage,
+  LocalisedText,
+} from "@/domain/roadmap/localised-text"
+import { localise } from "@/domain/roadmap/localised-text"
+import type { Roadmap } from "@/domain/roadmap/roadmap"
+import { foldText } from "@/lib/text"
+
+/** Roadmaps of one product family, in title order. */
+export interface RoadmapGroup {
+  /** Unique among the groups of one list. */
+  key: string
+  /** The family; `null` for the roadmaps with no family. */
+  family: LocalisedText | null
+  roadmaps: Roadmap[]
+}
+
+/** The key of the group for roadmaps with no family; family keys are never empty. */
+const NO_FAMILY_KEY = ""
+
+/**
+ * Families match ignoring case, accents, spaces and punctuation, so a typo in spacing
+ * does not split a family (ADR-009). Unlike the parser's header matching, which is ASCII,
+ * letters and digits of any script count, so family names in other scripts stay apart; a
+ * name with none (only punctuation) is matched by its trimmed text instead.
+ */
+function familyKey(family: LocalisedText): string {
+  const folded = foldText(family.en)
+  return folded.replace(/[^\p{L}\p{N}]/gu, "") || folded.trim() || "?"
+}
+
+/**
+ * Arranges the roadmaps as the main page shows them (ADR-009): grouped by product
+ * family, families in name order and roadmaps by title within each, then the roadmaps
+ * with no family. Order is as people read `language`: accents fold in, numbers sort by
+ * value. A family spelt several ways is one group, named as its first roadmap in `roadmaps`
+ * spells it, with that roadmap's Welsh name or else the first one's that has one.
+ * Publication does not affect order. Ties keep the order of `roadmaps`.
+ */
+export function groupRoadmaps(
+  roadmaps: readonly Roadmap[],
+  language: ContentLanguage,
+): RoadmapGroup[] {
+  const collator = new Intl.Collator(language, { numeric: true })
+  const compare = (a: string, b: string) => collator.compare(a, b)
+
+  const groups = new Map<string, RoadmapGroup>()
+  for (const roadmap of roadmaps) {
+    const key = roadmap.family ? familyKey(roadmap.family) : NO_FAMILY_KEY
+    const group = groups.get(key)
+    if (!group) {
+      groups.set(key, { key, family: roadmap.family, roadmaps: [roadmap] })
+      continue
+    }
+    group.roadmaps.push(roadmap)
+    if (group.family?.cy === "" && roadmap.family) {
+      group.family = { en: group.family.en, cy: roadmap.family.cy }
+    }
+  }
+
+  const familyName = ({ family }: RoadmapGroup) =>
+    family ? localise(family, language) : ""
+  const noFamily = groups.get(NO_FAMILY_KEY)
+  groups.delete(NO_FAMILY_KEY)
+
+  const sorted = [...groups.values()].sort((a, b) =>
+    compare(familyName(a), familyName(b)),
+  )
+  if (noFamily) sorted.push(noFamily)
+  for (const group of sorted) {
+    group.roadmaps.sort((a, b) =>
+      compare(localise(a.title, language), localise(b.title, language)),
+    )
+  }
+  return sorted
+}

@@ -74,26 +74,26 @@ A roadmap not published for longer than the staleness threshold, suggested as si
 A roadmap item as shown on a roadmap; its size is the budget for the item's text.
 
 **Roadmap list**:
-The roadmaps available to the user, in the order the data source gives them; from EPC-002,
-grouped by product family and sorted by title.
+The roadmaps available to the user, grouped by product family (families in name order,
+then the roadmaps with no family) and sorted by title within each group.
 _Avoid_: Dashboard, workspace
 
-**Published roadmap** _(planned)_:
+**Published roadmap**:
 A roadmap the public site shows. A roadmap that is not published is still listed here,
 marked "Not published" (ADR-009).
 _Avoid_: Enabled, live, public roadmap
 
-**Category** _(planned)_:
+**Category**:
 One of six fixed areas of care a roadmap belongs to, such as "GP & Community Services",
 shared with the public site; a roadmap may have none.
 _Avoid_: Group, section, tag
 
-**Product family** _(planned)_:
+**Product family**:
 An optional name grouping related products, such as "Single Record". The roadmap list
 groups roadmaps under their family.
 _Avoid_: Programme, portfolio
 
-**Status label** _(planned)_:
+**Status label**:
 Free text describing a product's stage, such as "Beta", shown as a badge.
 _Avoid_: Phase (an item's tag on the public site), state
 

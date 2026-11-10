@@ -13,6 +13,7 @@ import {
   type RoadmapCategory,
 } from "@/domain/roadmap/roadmap-category"
 import { AppError } from "@/lib/errors"
+import { foldText } from "@/lib/text"
 
 /** A mistake in the roadmap index, as data for a later sheet-health view (no prose). */
 export interface RoadmapIndexProblem {
@@ -107,16 +108,12 @@ export const CATEGORY_SHEET_VALUES: Readonly<Record<RoadmapCategory, string>> =
     "national-systems-data": "National Systems & Data",
   }
 
-/** Lower case, accents removed: `Ŵ` folds to `w`. */
-const fold = (value: string) =>
-  value.normalize("NFKD").replace(/\p{M}/gu, "").toLowerCase()
-
 /** Headers and categories match ignoring case, accents, spaces and punctuation. */
-const matchKey = (value: string) => fold(value).replace(/[^a-z0-9]/g, "")
+const matchKey = (value: string) => foldText(value).replace(/[^a-z0-9]/g, "")
 
 /** The public site's URL slug: `Product A` becomes `product-a`. */
 const slugify = (value: string) =>
-  fold(value)
+  foldText(value)
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
 

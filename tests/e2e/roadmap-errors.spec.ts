@@ -99,6 +99,8 @@ test("an expired token keeps the roadmaps on screen until reconnected", async ({
   await expect(alert).toBeHidden()
   await expect(roadmapCards(page)).toHaveCount(3)
   expect(gis.tokenRequests.map(({ prompt }) => prompt)).toEqual([undefined, ""])
+  // The cached cards stay on screen, so wait for the reload's two reads.
+  await expect.poll(() => sheets.tokens.length).toBe(4)
   expect(sheets.tokens).toEqual([
     "e2e-token-1",
     "e2e-token-1",

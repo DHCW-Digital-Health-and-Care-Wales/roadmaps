@@ -23,7 +23,7 @@ export const s1UnknownClasses = [
   <div className={cn({ "border-slate-200": true })} />, // ✗ Unknown class detected: border-slate-200
   cva("bg-sky-500"), // ✗ Unknown class detected: bg-sky-500
   cva("", { variants: { tone: { warm: "text-orange-700" } } }), // ✗ Unknown class detected: text-orange-700
-  buttonVariants({ variant: "outline", className: "bg-red-500" }), // ✗ Unknown class detected: bg-red-500
+  buttonVariants({ variant: "secondary", className: "bg-red-500" }), // ✗ Unknown class detected: bg-red-500
   buttonVariants({ class: "bg-red-600" }), // ✗ Unknown class detected: bg-red-600
   <a className={cn(buttonVariants({ className: "bg-stone-50" }))} />, // ✗ Unknown class detected: bg-stone-50
   buttonVariants({ variant: "ghost", size: "sm", className: "-ml-2.5 text-muted-foreground" }),

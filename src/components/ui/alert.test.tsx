@@ -58,6 +58,9 @@ describe("Alert", () => {
       screen.getByRole("heading", { level: 2, name: "Couldn't load" }),
     ).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Couldn't load" })).toHaveClass(
+      "text-heading-m",
+    )
   })
 
   it("sets each variant's icon colour instead of forcing the text colour", () => {

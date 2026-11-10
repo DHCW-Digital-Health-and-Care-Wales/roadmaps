@@ -15,6 +15,8 @@ export function ThemeToggle() {
     <Button
       variant="ghost"
       size="icon"
+      // The narrow header's buttons are all 32px, so the brand keeps its name.
+      className="max-sm:size-8"
       aria-label={t(isDark ? "theme.switchToLight" : "theme.switchToDark")}
       onClick={() => {
         setTheme(isDark ? "light" : "dark")

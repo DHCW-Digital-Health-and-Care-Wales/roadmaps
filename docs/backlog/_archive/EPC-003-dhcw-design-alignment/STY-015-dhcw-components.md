@@ -185,6 +185,19 @@ after:inset-0`). Focus shows on the card through `has-focus-visible`. The link's
 - **S6** (agent): empty, not-found and skeleton corners are 4px (`rounded-lg`, the radius
   token); the menu's items are 4px with the keyboard focus `focus-fill` (D5); the toast
   already used `--radius`.
+- **S3, panel title** (agent): an alert's title is `text-body-xs` bold, except as a heading
+  (a failure that is a page's only content), where it is `text-heading-m`, as the status
+  panel's was, so the detail page's `h1` is not 14px.
+- **S6, panels** (agent): `StatusPanel`'s border is solid, not upstream's dashed `Empty`
+  border: a square DHCW card edge.
+- **S1, busy buttons** (agent): Connect and Reconnect stay focusable while connecting, so
+  they now show DHCW's half-opacity disabled look where they were fully opaque.
+- **S7, narrow header** (agent): the default button is 40px, which squeezed the brand in
+  Welsh at 375px ("Mapiau Tryw…"), so below `sm` the header's own buttons (language, theme,
+  Disconnect) stay 32px, as before.
+- **Docs** (agent): D5 amends ADR-010's Focus bullet, the root Conventions line, the lint
+  hint, the epic's contract and the `globals.css` comment; the shadcn skill's example and a
+  lint fixture no longer name the removed `outline` variant.
 - **D4, D5**: settled in Decisions. The deleted `RoadmapIcon` had no other user.
 - **First child's work**: the delivery was resumed after the first child was killed for host
   memory; its uncommitted work was reviewed and kept. Not test-first: the component tests

@@ -48,7 +48,7 @@ This applies to all trigger and close components: `DialogTrigger`, `SheetTrigger
 In this repository `Button` is Base UI's `Button` with the registry's variants (`src/components/ui/button.tsx`), so it takes `render` like any Base UI part.
 
 ```tsx
-<DropdownMenuTrigger render={<Button variant="outline" />}>
+<DropdownMenuTrigger render={<Button variant="secondary" />}>
   Menu
 </DropdownMenuTrigger>
 ```
@@ -73,10 +73,10 @@ When a registry component's `render` changes a Base UI part to a non-button (`<a
 </PopoverTrigger>
 ```
 
-This repository's `Button` _is_ a Base UI part, so `<Button render={<Link />} nativeButton={false}>` adds `role="button"` to the link. For a link that looks like a button, style the router `<Link>` with `cn(buttonVariants({ variant: "outline" }))` instead; keep `cn`, or the variant's `border-transparent` beats the outline border.
+This repository's `Button` _is_ a Base UI part, so `<Button render={<Link />} nativeButton={false}>` adds `role="button"` to the link. For a link that looks like a button, style the router `<Link>` with `cn(buttonVariants({ variant: "secondary" }))` instead; keep `cn`, or the variant's `border-transparent` beats the secondary border.
 
 ```tsx
-<Link to="/" className={cn(buttonVariants({ variant: "outline" }))}>
+<Link to="/" className={cn(buttonVariants({ variant: "secondary" }))}>
   {t("roadmaps.detail.back")}
 </Link>
 ```

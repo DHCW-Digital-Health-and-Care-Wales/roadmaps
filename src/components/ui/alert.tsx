@@ -67,7 +67,11 @@ function AlertTitle({
   return (
     <Title
       data-slot="alert-title"
-      className={cn("text-body-xs font-bold", className)}
+      className={cn(
+        // A heading (a notice that is a page's only content) is DHCW's callout heading.
+        Title === "div" ? "text-body-xs font-bold" : "text-heading-m",
+        className,
+      )}
       {...props}
     />
   )

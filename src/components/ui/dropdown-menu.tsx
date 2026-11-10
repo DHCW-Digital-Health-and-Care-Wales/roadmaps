@@ -5,7 +5,9 @@
 // button, rather than ringing it; the items have 4px corners, and no child forces
 // `accent-foreground` onto the fill. Tokens replace upstream's tints and shadows (lint
 // rejects opacity modifiers and `dark:` overrides): popups are ring-border with
-// shadow-popup, and a focused destructive item is the danger status.
+// shadow-popup, and a focused destructive item is the danger status. A submenu trigger
+// keeps upstream's open-state `bg-accent`, which would sort after (and hide) the fill on a
+// focused open trigger: no submenu exists yet, so decide it when the first one does.
 import * as React from "react"
 import { Menu as MenuPrimitive } from "@base-ui/react/menu"
 import { cn } from "@/lib/utils"

@@ -346,7 +346,7 @@
   box-shadow: 0 2px 0 var(--focus-foreground);
 }
 
-/* Cards, inputs and menus: a 3px yellow outline outside a 2px dark inner ring
+/* Cards, inputs and toasts: a 3px yellow outline outside a 2px dark inner ring
    (DHCW src/foundations/_input-base.scss, src/utilities/_focus-ring.scss). */
 @utility focus-ring {
   outline: 3px solid var(--focus);

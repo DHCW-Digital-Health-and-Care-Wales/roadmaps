@@ -10,5 +10,14 @@ import { AuthButton } from "./auth-button"
  */
 export function HeaderAuthButton() {
   const connected = useAuth().state.status === "connected"
-  return <AuthButton className={cn("sm:ml-1", !connected && "max-sm:hidden")} />
+  return (
+    <AuthButton
+      className={cn(
+        "sm:ml-1",
+        // 32px below `sm`, as the header's other buttons, so the brand keeps its name.
+        "max-sm:h-8 max-sm:px-3 max-sm:text-body-xs",
+        !connected && "max-sm:hidden",
+      )}
+    />
+  )
 }

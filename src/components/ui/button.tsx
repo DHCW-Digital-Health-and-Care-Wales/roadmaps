@@ -7,8 +7,9 @@
 // and the xs/lg sizes are gone, so a group is always 40px (`default`) or 32px (`sm`).
 // focus-visible:focus-fill for upstream's ring, and no `dark:` overrides, which would beat
 // the focus fill in the dark theme. Hovers are --primary-hover, --muted and
-// --destructive-hover (the fill is --destructive-fill, as --destructive is the text red); aria-invalid shows only the destructive border. Pressed moves the
-// button 1px, as DHCW's; DHCW's darker pressed fill is not ported.
+// --destructive-hover (the fill is --destructive-fill, as --destructive is the text red);
+// aria-invalid shows only the destructive border. Pressed moves the button 1px, as DHCW's;
+// DHCW's darker pressed fill is not ported.
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"

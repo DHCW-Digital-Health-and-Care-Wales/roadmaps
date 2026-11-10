@@ -7,7 +7,7 @@ import { resolveBasePath } from "./build/resolve-base-path.ts"
 
 // https://vite.dev/config/
 export default defineConfig({
-  // GitHub Pages project sites live under /<repo>/ (ADR-0007).
+  // GitHub Pages project sites live under /<repo>/ (ADR-007).
   base: resolveBasePath(process.env),
   plugins: [
     // Must come before the React plugin (TanStack Router docs).

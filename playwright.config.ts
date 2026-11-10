@@ -10,7 +10,7 @@ const ci = Boolean(process.env.CI)
 
 /**
  * E2E tests run against the production build served by `vite preview`, with Google
- * faked in the browser (ADR-0006, `tests/e2e/fixtures`).
+ * faked in the browser (ADR-006, `tests/e2e/fixtures`).
  */
 export default defineConfig({
   testDir: "tests/e2e",

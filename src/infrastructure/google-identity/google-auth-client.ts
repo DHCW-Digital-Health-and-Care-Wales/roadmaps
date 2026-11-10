@@ -43,7 +43,7 @@ interface Attempt {
 }
 
 /**
- * `AuthClient` on the Google Identity Services token model (ADR-0003). It starts loading
+ * `AuthClient` on the Google Identity Services token model (ADR-003). It starts loading
  * GIS immediately, so `connect()` can open the consent popup synchronously inside the
  * user's click.
  */

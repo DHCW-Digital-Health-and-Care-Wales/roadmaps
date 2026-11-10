@@ -23,7 +23,7 @@ export function useRoadmaps() {
 }
 
 /**
- * One roadmap, derived from the list (ADR-0002: no single-roadmap repository call yet).
+ * One roadmap, derived from the list (ADR-002: no single-roadmap repository call yet).
  * `data` is `null` once the list has loaded without a roadmap with this id.
  */
 export function useRoadmap(roadmapId: string) {

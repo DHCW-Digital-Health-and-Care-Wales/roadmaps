@@ -1,15 +1,33 @@
-# AGENTS.md — Product Roadmaps
+# AGENTS.md — DHCW Roadmap Editor
 
 Instructions for AI agents (and humans) working in this repository. Read this first,
-then the ADRs in `docs/adr/` and the story you are working on in `docs/backlog/`.
+then the ADRs in `docs/adr/`, `docs/GLOSSARY.md`, the Product Lead persona
+(`docs/backlog/personas/product-lead.md`), and the record you are working on in
+`docs/backlog/`.
 
 ## What this is
 
-A static, frontend-only React SPA ("Product Roadmaps") hosted on GitHub Pages. Users
-connect a Google account via Google Identity Services (OAuth token model); the app reads
+An internal tool for Digital Health and Care Wales (DHCW): only DHCW staff use it.
+**Product Leads** use it to manage the **public roadmaps** of the products they lead, in
+the Now / Next / Later format. Each **roadmap item** has a title, a description, expected
+outcomes, tags and other details where they help, and fits on one card no bigger than a
+phone screen. That size guides the level of detail; no limit is enforced yet. The
+interface is in English and Welsh (ADR-008); Welsh roadmap content is optional for now.
+
+The public never uses this app. A **separate app, the public site**, reads the same shared
+data source and shows the roadmaps publicly, so what a Product Lead publishes here goes
+public through it. The data source's format is therefore a contract with the public site:
+never change what is written, or how, without saying so in the record and its PR.
+
+Design for the Product Lead editing their roadmap (`docs/backlog/personas/product-lead.md`);
+the connection to the data source is plumbing that should stay out of their way.
+
+**Built so far** (the bootstrap epic): a static, frontend-only React SPA on GitHub Pages
+that connects a Google account (Google Identity Services, OAuth token model), reads
 worksheet **metadata** from one Google Spreadsheet and shows each visible worksheet as a
-roadmap card. Google Sheets is a _temporary_ data source: it must be replaceable by a
-PostgreSQL-backed HTTP API without touching the presentation layer (see ADR-0002).
+roadmap card. Roadmap items and editing are next. Google Sheets is a _temporary_ data
+source: it must be replaceable by a PostgreSQL-backed HTTP API without touching the
+presentation layer (ADR-002).
 
 ## Layering rules (non-negotiable)
 
@@ -27,13 +45,17 @@ src/
                     Only infrastructure/google-identity may use the `google` global.
   components/ui/    shadcn/ui (Base UI) generated components — keep close to upstream
   components/layout app shell pieces shared across features
-  components/theme  ThemeProvider, useTheme, ThemeToggle, stored preference (ADR-0005)
+  components/theme  ThemeProvider, useTheme, ThemeToggle, stored preference (ADR-005)
   lib/              small framework-agnostic utilities (errors, cn, query client factory)
-  i18n/             i18next setup, supported languages, en/cy catalogues (ADR-0008)
+  i18n/             i18next setup, supported languages, en/cy catalogues (ADR-008)
   styles/           Tailwind v4 entry CSS + theme tokens
 tests/e2e/          Playwright specs + fakes for GIS and the Sheets API
 build/              build-time helpers for vite/playwright config (GitHub Pages base path)
-.github/            CI/CD workflow (verify, e2e, deploy to Pages) + Dependabot (ADR-0007)
+.github/            CI/CD workflow (verify, e2e, deploy to Pages), Dependabot (ADR-007),
+                    PR template
+docs/               ADRs, backlog, glossary, analyses, runbooks (docs/AGENTS.md)
+.agents/skills/     agent skills, for every agent runtime
+.claude/            Claude reviewer/worker agents, session hook, skills symlink
 ```
 
 - UI code must never mention spreadsheets, sheets, worksheets, cell ranges, or Google
@@ -68,51 +90,65 @@ actionlint          # after editing .github/workflows (not a dependency; install
 - Add shadcn components with the shadcn CLI (`pnpm dlx shadcn@latest add <name>`), Base UI
   flavour — never hand-roll a competing primitive or pull in Radix.
 - All user-facing copy (text, aria-labels, toasts, titles) goes through i18n (`t()`), in
-  English (`en`) and Welsh (`cy`) — see ADR-0008. A new key needs both languages; the type
+  English (`en`) and Welsh (`cy`) — see ADR-008. A new key needs both languages; the type
   system enforces parity. Copy is sentence case. Domain/infrastructure emit codes, not copy.
   `i18next/no-literal-string` rejects literal JSX text and literal `aria-label`/`title`/
   `alt`/`placeholder` attributes outside tests and `components/ui`.
 
+## Working conventions
+
+- Before inspecting or changing an area, read each `AGENTS.md` along its directory
+  ancestry, and those of affected callers and tests. `AGENTS.md` is the guide for every
+  agent; a `CLAUDE.md` beside it only imports it (`@AGENTS.md`), so add that file with
+  each new nested guide. The closest guide governs its scope; explicit user instructions
+  take precedence.
+- Continue within the user's authorized scope; ask only for a decision or access that
+  blocks useful work.
+- Use the existing isolated checkout; create a worktree only when asked, and preserve
+  unrelated work. Worktrees share one host: stop a process by its PID or port, never with
+  a pattern kill such as `pkill -f vite`, which also stops other worktrees' servers.
+- Within a task's scope, prefer the cleaner structure (refactor, rename, extract shared
+  code) over the smallest diff; effort is not a reason to choose a lesser design.
+- Leave each file you touch tidier than you found it, keeping incidental repairs
+  proportional and within touched files. Record any other actionable finding in the
+  backlog (`docs/AGENTS.md`); a PR note alone is not a record.
+
 ## Workflow for delivery agents
 
-1. Read `AGENTS.md`, relevant ADRs, your story, and the **Handoff log** below.
-2. Implement the story's scope only. If you must deviate from an ADR, update or supersede
-   the ADR in the same change and say why.
-3. Use subagents where helpful (Haiku for mechanical edits, Sonnet for medium work).
-4. Before finishing, `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test &&
-pnpm build && pnpm test:e2e` must all pass.
-5. Get a code review from a **Sol** reviewer (Codex `gpt-6.1-sol`) via `delegate_task`
-   (role `review`, mode `wait`, shared checkout). Address every comment — fix it, or record
-   a reasoned rebuttal in the story file. Re-run the checks.
-6. **Screenshots (any story that changes visible UI)**: once the work is final, after the
-   review fixes, capture PNG screenshots of every screen or state you built or changed.
-   Use headless Playwright (Chromium is installed in `~/.cache/ms-playwright`) against
-   `pnpm dev`. Fake Google with `page.route`, by serving a stub
-   `https://accounts.google.com/gsi/client` and fulfilling
-   `https://sheets.googleapis.com/**`; reuse `tests/e2e` fakes once they exist. Cover
-   desktop (1280px) and mobile (375px), and light and dark mode where relevant. Show
-   Welsh where copy changed. Save them to
-   `/home/t3code/roadmaps-editor/.artifacts/screenshots/<story-id>/` with descriptive
-   names, e.g. `landing-desktop-light-en.png`. `.artifacts/` is git-ignored, so add it to
-   `.gitignore` if missing. Open each screenshot yourself and fix anything that looks
-   wrong before reporting. List every screenshot's **absolute path** in your final reply,
-   so the orchestrator can show them to the user for review. Keep capture scripts in your
-   scratchpad, not in the repo, unless they are proper E2E tests.
-7. Tick the story's acceptance criteria, append a Handoff log entry, update nested
-   `AGENTS.md` files if you introduced a new area, and commit on the current branch with a
-   conventional commit message (`feat(scope): …`). Do not push.
+- Deliver a story, defect or chore (including "implement the next logical story from
+  epic X") with `.agents/skills/implement-story/SKILL.md`, and several with
+  `.agents/skills/orchestrate/SKILL.md`. Any other change that ends in a PR follows
+  implement-story's steps 3–6 unasked. Read its `references/delegation.md` before
+  delegating any work.
+- Before a PR is raised, every change gets two independent correctness reviews
+  (`code-review`: Opus and Sol, Codex `gpt-6.1-sol`) and one quality review
+  (`quality-review`: Sonnet), in the rounds `delegation.md` sets. A docs-only PR takes
+  the correctness reviews alone; a report-only run-summary PR takes none.
+- A PR is raised and left for the owner; babysit or merge it only when asked.
+- Any change to visible UI publishes before/after screenshots
+  (`references/screenshots.md`).
+- Every delivery appends an entry to the Handoff log below.
+- Records, ADRs and analyses follow `docs/AGENTS.md`; domain terms follow
+  `docs/GLOSSARY.md`. Invoke the `copywriter` skill before writing user-facing copy.
+- Skills live in `.agents/skills/`, which Copilot and Codex read; `.claude/skills` is a
+  symlink to it for Claude Code. If a skill is missing from your runtime's catalogue,
+  read its `SKILL.md` and follow it.
+  Agent roles in `.claude/agents/` are briefs for fresh workers.
+- Before editing these instructions, a skill or an agent, read
+  `.agents/skills/writing-for-agents/SKILL.md` and
+  `docs/operations/authoring-agent-instructions.md`.
 
 ## Handoff log
 
 Newest last. Each entry: story id, what changed, decisions, gotchas for the next agent.
 
-- **Backlog/ADRs (orchestrator)** — Backlog S01–S09 and ADR-0001…0008 created
-  (i18n — English + Welsh — added as S04 at the user's request; later stories renumbered). Branch
+- **Backlog/ADRs (orchestrator)** — Backlog STY-001–STY-009 and ADR-001…008 created
+  (i18n — English + Welsh — added as STY-004 at the user's request; later stories renumbered). Branch
   `feat/bootstrap`. Remote is `collisdigital/roadmaps-editor`, so the production origin is
   `https://collisdigital.github.io` and base path `/roadmaps-editor/`.
-- **S01 Tooling foundation** — Vite 8 + React 19 SPA scaffold: strict TS, Tailwind v4,
+- **STY-001 Tooling foundation** — Vite 8 + React 19 SPA scaffold: strict TS, Tailwind v4,
   shadcn/ui on Base UI (Button only), TanStack Router file routes with hash history,
-  ESLint flat config with ADR-0002 layer rules, Prettier, and Vitest + RTL + MSW.
+  ESLint flat config with ADR-002 layer rules, Prettier, and Vitest + RTL + MSW.
   - Versions (exact, from the lockfile): pnpm 12.18.0 (`packageManager`), Node
     `^22.22.2 || ^24.15.0 || >=26` (`.nvmrc` 22), react/react-dom 19.3.1, vite 8.3.6,
     @vitejs/plugin-react 6.2.1, typescript 6.0.3, typescript-eslint 8.72.1, eslint 10.14.0,
@@ -156,11 +192,11 @@ Newest last. Each entry: story id, what changed, decisions, gotchas for the next
     - Layer rules are `no-restricted-imports` blocks in `eslint.config.ts`. They match both
       `@/x` and relative `../x` imports. Features must NOT import `app/` or
       `routes/` (orchestrator correction: that would be a cycle; the repository context lives
-      in `features/roadmaps/`, see ADR-0002).
-    - Placeholder copy in `src/routes/index.tsx` is English only, so S04 moves it into the
+      in `features/roadmaps/`, see ADR-002).
+    - Placeholder copy in `src/routes/index.tsx` is English only, so STY-004 moves it into the
       catalogues.
-- **S02 Domain, errors, Google Sheets repository** — framework-free domain, `AppError`,
-  and the Sheets adapter. ADR-0002 amended (optional abort `signal`, contract test).
+- **STY-002 Domain, errors, Google Sheets repository** — framework-free domain, `AppError`,
+  and the Sheets adapter. ADR-002 amended (optional abort `signal`, contract test).
   - Public API:
     - `@/domain/roadmap/roadmap`: `Roadmap { id; name }`.
     - `@/domain/roadmap/roadmap-repository`: `RoadmapRepository.listRoadmaps(options?:
@@ -170,7 +206,7 @@ ListRoadmapsOptions)` where `ListRoadmapsOptions = { signal?: AbortSignal }`. On
     - `@/lib/errors`: `AppError(kind, { message?, retryable?, status?, cause? })` with
       `kind: AppErrorKind`, `retryable` (defaults true only for `rate-limited`/`network`),
       `status?`; `isAppError`, `toAppError(unknown)` (non-`AppError` -> `unknown`).
-      `message` is developer diagnostics; UI copy must come from `kind` (ADR-0008).
+      `message` is developer diagnostics; UI copy must come from `kind` (ADR-008).
     - `@/infrastructure/google-sheets` (barrel, composition root only):
       `createSheetsClient({ getAccessToken, fetch?, baseUrl? })` and
       `new GoogleSheetsRoadmapRepository({ client, spreadsheetId })`, plus the
@@ -187,19 +223,19 @@ ListRoadmapsOptions)` where `ListRoadmapsOptions = { signal?: AbortSignal }`. On
       stripped. Hidden sheets are dropped and response order is kept, with no name-based
       filtering.
     - The default `fetch` is resolved at call time, so MSW's patched global is used.
-  - Gotchas for S03 and later:
+  - Gotchas for STY-003 and later:
     - Inject auth as `getAccessToken: () => authClient.getAccessToken()`. It is read
       synchronously on every request, and a `null` or empty token rejects as
-      `unauthenticated` without a request. S03's `AuthClient.getAccessToken()` should
+      `unauthenticated` without a request. STY-003's `AuthClient.getAccessToken()` should
       return `string | null`.
-    - S06 must call `reportUnauthenticated()` on a `kind === "unauthenticated"` error.
-    - S06's in-memory test double should run `describeRoadmapRepositoryContract`. It must
+    - STY-006 must call `reportUnauthenticated()` on a `kind === "unauthenticated"` error.
+    - STY-006's in-memory test double should run `describeRoadmapRepositoryContract`. It must
       honour `signal` (`signal?.throwIfAborted()`) and reject with `AppError`s. Contract
       fixture ids are numeric strings.
     - The contract helper imports `vitest`. It lives under `testing/`, so production code
       must never import it.
-- **S03 Google Identity Services auth** — `AuthClient` port, GIS token-model adapter, React
-  bridge and test fake. ADR-0002/0003 amended: the port lives in `domain/auth/` (infrastructure
+- **STY-003 Google Identity Services auth** — `AuthClient` port, GIS token-model adapter, React
+  bridge and test fake. ADR-002/003 amended: the port lives in `domain/auth/` (infrastructure
   may not import `features/`), there is one token client per attempt, and the prompt policy is
   defined.
   - Public API:
@@ -236,11 +272,11 @@ getAccessToken(): string | null, reportUnauthenticated }`. Its members are funct
       again once `ready`.
     - Prompt: `''` when reconnecting from `expired`, `consent` after `scope-not-granted`,
       otherwise GIS's default.
-  - S04 i18n: error codes needing `auth.errors.*` copy are `script-load-failed`,
+  - STY-004 i18n: error codes needing `auth.errors.*` copy are `script-load-failed`,
     `access-denied`, `scope-not-granted`, `unknown`, `popup-closed` and `popup-blocked`. The
     statuses are `initializing`, `ready`, `connecting`, `connected`, `expired` and `error`.
     There is no prose in state.
-  - S05 wiring (`app/composition.ts`):
+  - STY-005 wiring (`app/composition.ts`):
     `createGoogleAuthClient({ clientId: config.googleClientId, scopes: [SHEETS_SCOPE],
 onDisconnect: () => queryClient.removeQueries({ queryKey: authScopedQueryKey }) })`, then
     `createSheetsClient({ getAccessToken: authClient.getAccessToken })`, and
@@ -250,9 +286,9 @@ onDisconnect: () => queryClient.removeQueries({ queryKey: authScopedQueryKey }) 
     - Call `connect()` directly in the click handler, with no `await` before it, or the
       popup is blocked.
     - `onDisconnect` exists only on the Google client. The fake's `disconnect` does not clear
-      queries, so S05's test utility must wire that itself if it tests clearing.
+      queries, so STY-005's test utility must wire that itself if it tests clearing.
     - `getAccessToken()` returns `null` once `expiresAt` passes, even before the timer
-      fires. The resulting `unauthenticated` error should make S06 call
+      fires. The resulting `unauthenticated` error should make STY-006 call
       `reportUnauthenticated()`.
     - `reportUnauthenticated()` cannot tell which token a 401 was for. A 401 from a request
       sent before a reconnect, arriving after it, would expire the new session (unlikely,
@@ -265,8 +301,8 @@ onDisconnect: () => queryClient.removeQueries({ queryKey: authScopedQueryKey }) 
     - Tests: `vi.waitFor` advances fake timers, so pin the clock afterwards with
       `vi.setSystemTime`. The loader's memo is module state, so its tests use
       `vi.resetModules()` and a dynamic import.
-- **S04 i18n foundation** — i18next 27.0.1 + react-i18next 18.0.1, English and Welsh
-  catalogues, `LanguageSwitcher`, document sync, lint rule. ADR-0008 amended (switcher
+- **STY-004 i18n foundation** — i18next 27.0.1 + react-i18next 18.0.1, English and Welsh
+  catalogues, `LanguageSwitcher`, document sync, lint rule. ADR-008 amended (switcher
   location, `syncDocumentLanguage`, `Catalogue` type, lint config).
   - Where things live (`@/i18n` barrel): `createI18n({ language? })` (fresh instance, no
     globals), `syncDocumentLanguage(i18n, doc?)` (sets `<html lang>` + `document.title` now
@@ -278,7 +314,7 @@ onDisconnect: () => queryClient.removeQueries({ queryKey: authScopedQueryKey }) 
     keys: `foo_one`/`foo_other` (optional `foo_zero`) in English; Welsh needs all six of
     `foo_zero/one/two/few/many/other`. Call `t("foo", { count })`; `count` is required by
     the types. Use `{{count, number}}` for locale number formatting.
-  - Seeded keys for S05/S06: `common.{appName,loading,retry}`, `layout.{skipToContent,home}`,
+  - Seeded keys for STY-005/STY-006: `common.{appName,loading,retry}`, `layout.{skipToContent,home}`,
     `landing.{tagline,source,accessNote}`, `auth.{connect,reconnect,disconnect}`,
     `auth.status.<AuthState status>`, `auth.errors.<AuthErrorCode>`,
     `auth.notifications.{connected,disconnected}` (toasts), `roadmaps.{title,description}`,
@@ -288,7 +324,7 @@ onDisconnect: () => queryClient.removeQueries({ queryKey: authScopedQueryKey }) 
     `language.label`. Map codes with template keys, e.g. ``t(`errors.${error.kind}`)`` and
     ``t(`auth.status.${state.status}`)`` — `satisfies Record<…>` in `en.ts` makes a new kind
     or status without copy a type error.
-  - S05 wiring: move `const i18n = createI18n({ language: resolveLanguage() })` and
+  - STY-005 wiring: move `const i18n = createI18n({ language: resolveLanguage() })` and
     `syncDocumentLanguage(i18n)` from `src/app/main.tsx` into `app/composition.ts`; move
     `<I18nextProvider i18n={i18n}>` into `app/providers.tsx` (outermost, so toasts and the
     router see it). Move `<LanguageSwitcher />` (`@/components/layout/language-switcher`)
@@ -297,12 +333,12 @@ onDisconnect: () => queryClient.removeQueries({ queryKey: authScopedQueryKey }) 
     always sets the app name.
   - Tests: `renderWithI18n(ui, { language? })` in `src/test/render-with-i18n.tsx` returns
     RTL's result plus `i18n` (fresh English instance by default; pass `language: "cy"`).
-    S05's `render-with-providers` should build on `createI18n` the same way. Tests that
+    STY-005's `render-with-providers` should build on `createI18n` the same way. Tests that
     call `syncDocumentLanguage` or switch language must stop syncing and restore
     `document.title`, `<html lang>` and `localStorage` in teardown.
   - Gotchas:
     - Welsh is machine-assisted ("map trywydd" = roadmap, "taenlen" = spreadsheet); a
-      fluent speaker must review it before launch. S08's README should track that.
+      fluent speaker must review it before launch. STY-008's README should track that.
     - The switcher selects via each radio item's `onClick`, not the group's
       `onValueChange`, because Base UI does not fire that for the checked item and
       re-selecting must still persist the choice.
@@ -310,7 +346,7 @@ onDisconnect: () => queryClient.removeQueries({ queryKey: authScopedQueryKey }) 
       then the endonym (`max-sm:sr-only` on mobile, so the name never changes). Keep the
       space node; without it the name is "LanguageEnglish".
     - `.ts` files are not covered by the literal-string lint rule; keep copy out of them.
-- **S05 Composition root, routing, app shell, theme, auth UI** — TanStack Query 5.107.1 and
+- **STY-005 Composition root, routing, app shell, theme, auth UI** — TanStack Query 5.107.1 and
   sonner 2.0.8 added (shadcn `badge`, `sonner`; `next-themes` removed: `ui/sonner.tsx` reads
   our `useTheme`). New i18n keys: `layout.notifications`, `roadmaps.detail.title`,
   `theme.switchToDark/switchToLight` (replaced `theme.toggle`).
@@ -324,12 +360,12 @@ roadmapRepository }`; it also starts `syncDocumentLanguage` and wires the auth c
     `RoadmapRepositoryProvider` → children, plus `<AuthNotifications />` and `<Toaster />`.
   - Query client: `createQueryClient()` in `lib/query-client.ts` (staleTime 60 s, no refetch on
     focus, `shouldRetryQuery`: only retryable `AppError`s, at most 2 retries). No `QueryCache`
-    hooks yet; S06 adds the `unauthenticated` → `reportUnauthenticated()` handling.
+    hooks yet; STY-006 adds the `unauthenticated` → `reportUnauthenticated()` handling.
   - Auth-scoped data: `authScopedQueryKey = ["auth-scoped"]` and
-    `removeAuthScopedQueries(queryClient)` in `features/auth/auth-scoped-queries.ts`. S06's
+    `removeAuthScopedQueries(queryClient)` in `features/auth/auth-scoped-queries.ts`. STY-006's
     `roadmapKeys.all` must start with `...authScopedQueryKey` so disconnect clears it.
   - Repository: `RoadmapRepositoryProvider` / `useRoadmapRepository()` in
-    `features/roadmaps/roadmap-repository-context.tsx`. Test double (already done for S06):
+    `features/roadmaps/roadmap-repository-context.tsx`. Test double (already done for STY-006):
     `createInMemoryRoadmapRepository(roadmaps | AppError)` in `features/roadmaps/testing/`,
     which runs the repository contract.
   - UI: `components/layout/{app-shell,app-header,brand-mark,not-found-page}.tsx` (the shell takes
@@ -352,12 +388,12 @@ language? })` (`src/test/render-with-providers.tsx`) renders the real `AppProvid
     RTL's result plus `authClient`, `queryClient`, `router`, `i18n`. Scope queries with
     `within(screen.getByRole("banner"|"main"))`, because header and hero both have "Connect
     Google".
-  - S06 plug-in: put the list under the heading in `features/roadmaps/pages/roadmaps-page.tsx`
+  - STY-006 plug-in: put the list under the heading in `features/roadmaps/pages/roadmaps-page.tsx`
     (rendered by `HomePage` when connected); revisit `HomePage` for `expired` if cached cards
     should stay with a reconnect prompt. In the detail route, read `Route.useParams()` and pass
     `roadmapId` to `RoadmapDetailPage`; replace `roadmaps.detail.title` with the roadmap name.
   - Gotchas:
-    - Links styled as buttons use `cn(buttonVariants())` on `<Link>` (S06: without `cn`,
+    - Links styled as buttons use `cn(buttonVariants())` on `<Link>` (STY-006: without `cn`,
       `border-transparent` beats the outline variant's border). Base UI's
       `<Button render={<Link/>} nativeButton={false}>` adds `role="button"`.
     - Sonner's store is global and replays active toasts into a new `Toaster`; `setup.ts`
@@ -365,9 +401,9 @@ language? })` (`src/test/render-with-providers.tsx`) renders the real `AppProvid
       timer first (see `flushToasts` in `app/app.test.tsx`).
     - The skip link prevents default and focuses `<main>`, because hash history owns the URL
       fragment.
-    - The main JS chunk is ~580 kB, above Vite's warning threshold; consider chunking in S08/S09.
-      (Fixed in S09: `zod/mini` plus `react`/`vendor` chunks.)
-- **S06 Roadmaps feature** — list, states and detail page; shadcn `alert`, `empty`,
+    - The main JS chunk is ~580 kB, above Vite's warning threshold; consider chunking in STY-008/STY-009.
+      (Fixed in STY-009: `zod/mini` plus `react`/`vendor` chunks.)
+- **STY-006 Roadmaps feature** — list, states and detail page; shadcn `alert`, `empty`,
   `skeleton` added. New i18n keys: `roadmaps.refreshFailed`,
   `roadmaps.expired.{title,description}`.
   - Hooks (`features/roadmaps/hooks/`): `roadmapKeys.all/list()` (under
@@ -390,13 +426,13 @@ language? })` (`src/test/render-with-providers.tsx`) renders the real `AppProvid
     `aria-busy` while fetching and disabled (focusable) unless connected. Shared pieces:
     `StatusPanel` (Empty-based, `titleAs` h1/h2), `RoadmapIcon`, `ReconnectButton`
     (`features/auth/components`). The detail route passes `Route.useParams().roadmapId`.
-  - S07 E2E hooks (stable accessible names, en): heading "Your Roadmaps"; cards are links
+  - STY-007 E2E hooks (stable accessible names, en): heading "Your roadmaps"; cards are links
     named by the roadmap name inside `main`'s only `list`, `href` `#/roadmaps/<sheetId>`;
     count text "N roadmaps"; buttons "Refresh", "Retry", "Reconnect" (inside the alert;
     the header has another "Reconnect"); alert titles "Couldn't load your roadmaps",
     "Couldn't refresh your roadmaps", "Your session has expired"; empty "No roadmaps yet";
     detail h1 = roadmap name, "Roadmap not found", "Back to roadmaps". Welsh: "Eich
-    Mapiau Trywydd", "Adnewyddu", "2 fap trywydd".
+    mapiau trywydd", "Adnewyddu", "2 fap trywydd".
   - Gotchas:
     - A 5xx/network error is retried twice with back-off (~3 s) before the error shows;
       E2E should wait accordingly (or answer 403 for a fast failure).
@@ -404,7 +440,7 @@ language? })` (`src/test/render-with-providers.tsx`) renders the real `AppProvid
       `disabled:` styles don't apply; Refresh adds `data-disabled:opacity-50`.
     - shadcn's `Alert` forces icon colour with `*:[svg]:text-current`; override with `!`.
     - TanStack Query v5.107 deprecates `fetchQuery`; tests use `queryClient.query()`.
-- **S07 Playwright E2E** — `@playwright/test` 1.64.1 (pinned exactly: it must match the
+- **STY-007 Playwright E2E** — `@playwright/test` 1.64.1 (pinned exactly: it must match the
   installed Chromium revision, 1248) and `@axe-core/playwright` 4.14.0. No app bugs found.
   See `tests/e2e/AGENTS.md` for the fixture API and conventions.
   - Running: `pnpm test:e2e` (`playwright.config.ts`). Its `webServer` runs
@@ -422,14 +458,14 @@ language? })` (`src/test/render-with-providers.tsx`) renders the real `AppProvid
     the test; service workers are blocked; uncaught page errors fail the test. The fakes
     record misuses (wrong client ID/scope, `requestAccessToken` outside a user gesture, wrong
     path/`fields`/token on Sheets) as violations that fail the test at teardown.
-  - S08 CI: `pnpm install --frozen-lockfile`, then cache `~/.cache/ms-playwright` keyed on
+  - STY-008 CI: `pnpm install --frozen-lockfile`, then cache `~/.cache/ms-playwright` keyed on
     the `@playwright/test` version from the lockfile; on a miss run `pnpm exec playwright
 install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chromium`.
     `CI=true` turns on `forbidOnly`, 2 retries (trace on first retry), and the `github` +
     `list` + `html` reporters. Upload `playwright-report/` (and `test-results/` for traces
     and failure screenshots) with `if: ${{ !cancelled() }}`. The job needs no build step of
     its own: the webServer builds.
-  - S08 base path: specs only navigate relative to `baseURL` (`./`, `./#/roadmaps/42`).
+  - STY-008 base path: specs only navigate relative to `baseURL` (`./`, `./#/roadmaps/42`).
     When the build gets base `/roadmaps-editor/`, set `use.baseURL` and `webServer.url`
     to `http://localhost:4173/roadmaps-editor/` from the same resolver (trailing slash
     kept), or build the E2E bundle with base `/`.
@@ -441,9 +477,9 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
       flush Sonner's timer.
     - The header and page both have Connect/Reconnect buttons, and the header's connection
       badge is also `role=status`: scope locators to `main`/`banner`.
-- **S08 CI/CD, Pages base path, README** — `.github/workflows/ci.yml` ("CI/CD"),
-  `.github/dependabot.yml`, `build/resolve-base-path.ts`, full `README.md`. ADR-0007
-  amended (see its "S08 amendments"). `.nvmrc` is now 26 (Active LTS since 2026-10-28);
+- **STY-008 CI/CD, Pages base path, README** — `.github/workflows/ci.yml` ("CI/CD"),
+  `.github/dependabot.yml`, `build/resolve-base-path.ts`, full `README.md`. ADR-007
+  amended (see its "STY-008 amendments"). `.nvmrc` is now 26 (Active LTS since 2026-10-28);
   `engines` unchanged.
   - Workflow: `verify` (typecheck, lint, format, test, build; on push to `main` also
     configure-pages → base-path guard → upload-pages-artifact) ∥ `e2e` (Playwright, browser
@@ -468,13 +504,13 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
       self-switches to `packageManager`'s version).
     - Vite gives `.env.production` priority over `.env.local` for builds; local build
       overrides go in `.env.production.local`.
-  - S09: the README's Google Cloud steps are unverified against a live console session;
+  - STY-009: the README's Google Cloud steps are unverified against a live console session;
     check them while doing the manual real-GIS check. `.env.production`'s client must list
     `https://collisdigital.github.io` as an origin before the first deploy is usable.
     Pages must be enabled (Source: GitHub Actions) before the first push to `main`.
-- **S09 Final verification, polish and review** — all brief §14 criteria checked with
-  evidence in `docs/backlog/S09-final-verification.md`; whole-repo Sol review (3 findings,
-  all fixed). Backlog complete: S01–S09 Done.
+- **STY-009 Final verification, polish and review** — all brief §14 criteria checked with
+  evidence in `docs/backlog/_archive/EPC-001-bootstrap/STY-009-final-verification.md`; whole-repo Sol review (3 findings,
+  all fixed). Backlog complete: STY-001–STY-009 Done.
   - State: 264 unit/component tests, 31 E2E (also green under `/roadmaps-editor/`); build
     has no warnings. JS is 654 kB min / 214 kB gzip in `react`, `vendor` and app chunks
     (app ~48 kB), down from 717 / 234 kB with a 509 kB entry chunk.
@@ -482,7 +518,7 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
     - `zod/mini` everywhere: use `z.optional(x)`, `z._default(x, v)`,
       `x.check(z.trim(), z.regex(…))`, `z.pipe(a, z.transform(…))`. Mini loads no locale,
       so give messages explicitly.
-    - `react`/`vendor` chunk groups in `vite.config.ts` (ADR-0007 S09 amendment).
+    - `react`/`vendor` chunk groups in `vite.config.ts` (ADR-007 STY-009 amendment).
     - Mobile header: `common.shortAppName`; the status badge is `max-sm:sr-only`;
       `HeaderAuthButton` shows only Disconnect below `sm`. Every signed-out view must
       therefore keep its own Connect/Reconnect.
@@ -490,7 +526,7 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
       focused control inside `<main>` is removed.
     - `useRoadmapsProblem` ignores a leftover `unauthenticated` error once connected.
     - On session end, auth-scoped queries are cancelled, then invalidated (Sol). This
-      retires the S03 "late 401 after reconnect" gotcha.
+      retires the STY-003 "late 401 after reconnect" gotcha.
     - Stricter ESLint layer blocks: `lib/`, `components/`, `i18n/`, and no UI/copy
       packages in domain/infrastructure.
     - E2E token guard (`tests/e2e/fixtures/persistence-recorder.ts`).
@@ -507,7 +543,7 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
     - `@typescript-eslint/unbound-method` flags saved prototype methods; `Reflect.get`
       and `Reflect.apply` keep them typed without detaching.
   - Recommended next steps:
-    1. Do the external steps in S09: OAuth origin, consent-screen name, Pages on a
+    1. Do the external steps in STY-009: OAuth origin, consent-screen name, Pages on a
        private repo, push, then a manual live sign-in.
     2. Per-view `document.title` (move title ownership out of `syncDocumentLanguage`).
     3. A CSP `<meta>` validated against a real sign-in (README lists the origins).
@@ -515,3 +551,27 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
     5. Dependabot for npm (actions only today), keeping Playwright pinned exactly with
        its browser cache.
     6. Then the roadmap detail feature, which will be the first real per-sheet read.
+- **Agent skills and delivery process (no record)** — `.agents/skills/` (implement-story,
+  orchestrate, retro, code-review, quality-review, copywriter, domain-modeling,
+  ux-prototypes, shadcn, playwright-cli, writing-for-agents, grilling, codebase-design,
+  improve-codebase-architecture), `.claude/agents/`, a SessionStart hook, the PR template,
+  `docs/GLOSSARY.md`, `docs/AGENTS.md`, backlog templates and the epic/archive layout.
+  - Decisions: Opus + Sol correctness and Sonnet quality reviews on every PR (docs-only:
+    correctness alone; report-only: none); PRs
+    are left open, with babysitting and merging as separate opt-ins; guidance names
+    runtime capabilities, never tools; bootstrap stories archived unchanged
+    apart from their IDs. Record IDs are `EPC-`/`STY-`/`DEF-`/`CHO-` plus three digits
+    (`docs/AGENTS.md`); the old `S01`–`S09` and `D01` are now `STY-001`–`STY-009` and
+    `DEF-001`.
+  - Gotchas:
+    - `node --test <dir>` fails on Node 22; pass the glob
+      (`node --test '.agents/skills/*/scripts/*.test.mjs'`).
+    - `playwright-cli` is not a dependency: `pnpm dlx @playwright/cli@0.1.24`, output in
+      `.artifacts/playwright-cli/`.
+    - The product is the DHCW Roadmap Editor for Product Leads (see "What this is").
+      `docs/backlog/personas/product-lead.md` holds the primary persona and the
+      owner's answers to its assumptions; the glossary marks item terms _(planned)_. The
+      product name is "DHCW Roadmap Editor" (cy "Golygydd Mapiau Trywydd IGDC").
+    - DEF-001 fixed in the same PR: `roadmaps.title` is now "Your roadmaps" / "Eich mapiau
+      trywydd". A product name (`common.appName`) keeps its capitals; other copy is
+      sentence case.

@@ -6,7 +6,7 @@ const SHEETS_API_BASE_URL = "https://sheets.googleapis.com/v4/spreadsheets"
 
 /**
  * The OAuth scope the access token needs. Full (read/write) access is deliberate, for the
- * planned editing features (ADR-0003).
+ * planned editing features (ADR-003).
  */
 export const SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets"
 

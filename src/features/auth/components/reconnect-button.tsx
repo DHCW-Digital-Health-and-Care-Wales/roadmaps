@@ -25,7 +25,7 @@ export function ReconnectButton({ className }: ReconnectButtonProps) {
       disabled={busy}
       focusableWhenDisabled
       aria-busy={busy}
-      // Synchronous inside the click, or the browser blocks the sign-in popup (ADR-0003).
+      // Synchronous inside the click, or the browser blocks the sign-in popup (ADR-003).
       onClick={connect}
     >
       {busy && (

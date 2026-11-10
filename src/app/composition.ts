@@ -15,7 +15,7 @@ import { config as defaultConfig, type AppConfig } from "./config"
 import type { AppServices } from "./providers"
 
 /**
- * The composition root (ADR-0002): the only place that picks concrete adapters. Swapping
+ * The composition root (ADR-002): the only place that picks concrete adapters. Swapping
  * Google Sheets for another data source changes this function and nothing else. Call it
  * once at startup, so Google's script starts loading before the first click.
  */
@@ -24,7 +24,7 @@ export function composeApp(config: AppConfig = defaultConfig): AppServices {
   syncDocumentLanguage(i18n)
 
   const queryClient = createQueryClient({
-    // A rejected token expires the session (ADR-0003). `authClient` is assigned below,
+    // A rejected token expires the session (ADR-003). `authClient` is assigned below,
     // before any query can run.
     onUnauthenticated: () => {
       authClient.reportUnauthenticated()
@@ -33,7 +33,7 @@ export function composeApp(config: AppConfig = defaultConfig): AppServices {
   const authClient = createGoogleAuthClient({
     clientId: config.googleClientId,
     scopes: [SHEETS_SCOPE],
-    // Data fetched with the session must not outlive it (ADR-0003).
+    // Data fetched with the session must not outlive it (ADR-003).
     onDisconnect: () => {
       removeAuthScopedQueries(queryClient)
     },

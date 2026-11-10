@@ -58,7 +58,7 @@ describe("LanguageSwitcher", () => {
       screen.getByRole("button", { name: "Iaith Cymraeg" }),
     ).toBeInTheDocument()
     expect(document.documentElement.lang).toBe("cy")
-    expect(document.title).toBe("Mapiau Trywydd Cynnyrch")
+    expect(document.title).toBe("Golygydd Mapiau Trywydd IGDC")
     expect(localStorage.getItem("roadmaps.language")).toBe("cy")
   })
 

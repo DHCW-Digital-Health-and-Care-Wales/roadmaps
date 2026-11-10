@@ -5,23 +5,24 @@ import type { en } from "./en"
 type WelshPluralCategory = "zero" | "one" | "two" | "few" | "many" | "other"
 
 /**
- * Welsh copy (ADR-0008). Machine-assisted: a fluent Welsh speaker must review it before a
+ * Welsh copy (ADR-008). Machine-assisted: a fluent Welsh speaker must review it before a
  * public launch. Typed against `en`, so a missing or extra key fails type checking.
  */
 export const cy = {
   common: {
-    appName: "Mapiau Trywydd Cynnyrch",
+    appName: "Golygydd Mapiau Trywydd IGDC",
     shortAppName: "Mapiau Trywydd",
     loading: "Wrthi'n llwytho…",
     retry: "Ceisio eto",
   },
   layout: {
     skipToContent: "Neidio i'r prif gynnwys",
-    home: "Hafan Mapiau Trywydd Cynnyrch",
+    home: "Hafan Golygydd Mapiau Trywydd IGDC",
     notifications: "Hysbysiadau",
   },
   landing: {
-    tagline: "Ffordd syml o archwilio a rheoli eich mapiau trywydd cynnyrch.",
+    tagline:
+      "Cadw mapiau trywydd cyhoeddus eich cynhyrchion yn gyfredol: nawr, nesaf a hwyrach.",
     source: "Ar hyn o bryd, daw eich mapiau trywydd o Google Sheets.",
     accessNote:
       "Bydd angen i chi gysylltu â Google er mwyn i'r ap lwytho eich mapiau trywydd.",
@@ -57,7 +58,7 @@ export const cy = {
     },
   },
   roadmaps: {
-    title: "Eich Mapiau Trywydd",
+    title: "Eich mapiau trywydd",
     description: "Y mapiau trywydd sydd ar gael yn y daenlen gysylltiedig.",
     refresh: "Adnewyddu",
     loading: "Wrthi'n llwytho mapiau trywydd…",

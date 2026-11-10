@@ -1,5 +1,5 @@
 # CI for pull requests and main; deploys main to GitHub Pages once every check passes
-# (ADR-0007). Actions are pinned to commit SHAs; Dependabot keeps them current.
+# (ADR-007). Actions are pinned to commit SHAs; Dependabot keeps them current.
 name: CI/CD
 
 on:

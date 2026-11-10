@@ -10,7 +10,7 @@ export interface CreateI18nOptions {
 }
 
 /**
- * A fresh, initialised i18next instance with both catalogues bundled (ADR-0008). Nothing
+ * A fresh, initialised i18next instance with both catalogues bundled (ADR-008). Nothing
  * global is touched, so tests can create isolated instances.
  */
 export function createI18n({

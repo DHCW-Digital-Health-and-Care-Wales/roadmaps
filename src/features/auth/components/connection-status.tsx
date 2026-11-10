@@ -17,7 +17,7 @@ const dotColour = {
 
 /**
  * A live badge naming the connection state. It never names the user: a token proves
- * access, not identity (ADR-0003). Below `sm` it is visually hidden, but still announced:
+ * access, not identity (ADR-003). Below `sm` it is visually hidden, but still announced:
  * the narrow header has no room for it, and the auth action on screen (Disconnect, or the
  * page's Connect or Reconnect) shows the state.
  */

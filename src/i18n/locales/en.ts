@@ -2,12 +2,12 @@ import type { AuthErrorCode, AuthState } from "@/domain/auth/auth-client"
 import type { AppErrorKind } from "@/lib/errors"
 
 /**
- * English copy: the source of truth for every message key (ADR-0008). Other catalogues
+ * English copy: the source of truth for every message key (ADR-008). Other catalogues
  * are typed against this shape. Keys are camelCase; plural keys carry CLDR suffixes.
  */
 export const en = {
   common: {
-    appName: "Product Roadmaps",
+    appName: "DHCW Roadmap Editor",
     /** The header's name on narrow screens. */
     shortAppName: "Roadmaps",
     loading: "Loading…",
@@ -15,11 +15,12 @@ export const en = {
   },
   layout: {
     skipToContent: "Skip to main content",
-    home: "Product Roadmaps home",
+    home: "DHCW Roadmap Editor home",
     notifications: "Notifications",
   },
   landing: {
-    tagline: "A simple way to explore and manage your product roadmaps.",
+    tagline:
+      "Keep your products' public roadmaps up to date: now, next and later.",
     source: "Your roadmaps are currently sourced from Google Sheets.",
     accessNote:
       "You'll need to connect Google so the app can load your roadmaps.",
@@ -56,7 +57,7 @@ export const en = {
     },
   },
   roadmaps: {
-    title: "Your Roadmaps",
+    title: "Your roadmaps",
     description: "Roadmaps available in the connected spreadsheet.",
     refresh: "Refresh",
     loading: "Loading roadmaps…",

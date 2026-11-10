@@ -78,7 +78,7 @@ test("an expired token keeps the roadmaps on screen until reconnected", async ({
   gis,
   sheets,
 }) => {
-  // Usable for one minute: the app stops 60 s before Google's expiry (ADR-0003).
+  // Usable for one minute: the app stops 60 s before Google's expiry (ADR-003).
   gis.respondWith({ type: "grant", expiresIn: 120 })
   await page.clock.install()
   await page.goto("./")

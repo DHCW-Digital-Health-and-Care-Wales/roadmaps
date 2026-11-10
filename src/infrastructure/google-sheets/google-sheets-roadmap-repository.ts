@@ -7,7 +7,7 @@ import type {
 import type { SheetsClient } from "./sheets-client"
 import { parseSpreadsheetMetadata } from "./sheets-schemas"
 
-/** Partial-response mask: only the worksheet metadata we map (ADR-0002). */
+/** Partial-response mask: only the worksheet metadata we map (ADR-002). */
 const SPREADSHEET_METADATA_FIELDS =
   "sheets(properties(sheetId,title,index,hidden))"
 

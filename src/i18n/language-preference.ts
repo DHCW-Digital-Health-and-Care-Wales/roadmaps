@@ -17,7 +17,7 @@ export interface LanguagePreferenceOptions {
 }
 
 /**
- * The language to start in (ADR-0008): an explicit stored choice, else the first browser
+ * The language to start in (ADR-008): an explicit stored choice, else the first browser
  * language we support (any `cy-*` gives `cy`), else English.
  */
 export function resolveLanguage(

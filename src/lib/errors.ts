@@ -1,6 +1,6 @@
 /**
- * Transport-agnostic failure categories (ADR-0002). The UI picks localised copy from the
- * kind alone (ADR-0008), so `message` is developer diagnostics only — never UI copy.
+ * Transport-agnostic failure categories (ADR-002). The UI picks localised copy from the
+ * kind alone (ADR-008), so `message` is developer diagnostics only — never UI copy.
  */
 export type AppErrorKind =
   | "unauthenticated"

@@ -22,3 +22,6 @@ test-results
 !.vscode/extensions.json
 .idea
 .DS_Store
+
+# Agent tooling output
+.playwright-cli

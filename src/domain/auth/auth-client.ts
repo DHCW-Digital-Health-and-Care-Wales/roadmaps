@@ -7,12 +7,12 @@ export type AuthCancellationCode = "popup-closed" | "popup-blocked"
 
 /**
  * Every auth error code. These are codes, never copy: the UI picks localised text for
- * each one (ADR-0008).
+ * each one (ADR-008).
  */
 export type AuthErrorCode = AuthFailureCode | AuthCancellationCode
 
 /**
- * The authorisation session as the UI sees it (ADR-0003). It proves access, not identity,
+ * The authorisation session as the UI sees it (ADR-003). It proves access, not identity,
  * and never contains the access token.
  */
 export type AuthState =

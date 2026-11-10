@@ -35,11 +35,11 @@ describe("landing page", () => {
     await renderWithProviders()
 
     expect(
-      main().getByRole("heading", { level: 1, name: "Product Roadmaps" }),
+      main().getByRole("heading", { level: 1, name: "DHCW Roadmap Editor" }),
     ).toBeInTheDocument()
     expect(
       main().getByText(
-        "A simple way to explore and manage your product roadmaps.",
+        "Keep your products' public roadmaps up to date: now, next and later.",
       ),
     ).toBeInTheDocument()
     expect(
@@ -63,7 +63,7 @@ describe("landing page", () => {
 
     expect(authClient.connect).toHaveBeenCalledOnce()
     expect(
-      await screen.findByRole("heading", { level: 1, name: "Your Roadmaps" }),
+      await screen.findByRole("heading", { level: 1, name: "Your roadmaps" }),
     ).toBeInTheDocument()
     expect(await screen.findByText("Connected to Google")).toBeInTheDocument()
   })
@@ -98,7 +98,7 @@ describe("landing page", () => {
     expect(
       main().getByRole("heading", {
         level: 1,
-        name: "Mapiau Trywydd Cynnyrch",
+        name: "Golygydd Mapiau Trywydd IGDC",
       }),
     ).toBeInTheDocument()
     expect(
@@ -223,7 +223,7 @@ describe("header", () => {
     await renderWithProviders({ path: "/roadmaps/7" })
 
     expect(
-      header().getByRole("link", { name: "Product Roadmaps home" }),
+      header().getByRole("link", { name: "DHCW Roadmap Editor home" }),
     ).toHaveAttribute("href", "/")
   })
 })
@@ -347,7 +347,7 @@ describe("routes", () => {
 
     await user.click(main().getByRole("link", { name: "Back to roadmaps" }))
     expect(
-      await main().findByRole("heading", { level: 1, name: "Your Roadmaps" }),
+      await main().findByRole("heading", { level: 1, name: "Your roadmaps" }),
     ).toBeInTheDocument()
     expect(screen.getByRole("main")).toHaveFocus()
   })

@@ -21,7 +21,7 @@ export function RoadmapRepositoryProvider({
   )
 }
 
-/** The data source for roadmaps, without knowing which one it is (ADR-0002). */
+/** The data source for roadmaps, without knowing which one it is (ADR-002). */
 // eslint-disable-next-line react-refresh/only-export-components -- context and its hook belong together
 export function useRoadmapRepository(): RoadmapRepository {
   const repository = use(RoadmapRepositoryContext)

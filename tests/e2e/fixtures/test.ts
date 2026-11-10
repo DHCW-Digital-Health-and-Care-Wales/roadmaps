@@ -59,7 +59,7 @@ export const test = base.extend<Fakes>({
       expect
         .soft(gis.violations, "misuses of Google Identity Services")
         .toEqual([])
-      // Tokens live in memory only (ADR-0003): never in storage, the URL, cookies or logs.
+      // Tokens live in memory only (ADR-003): never in storage, the URL, cookies or logs.
       const leaks = [...persisted, ...(await snapshotPersistence(page))].filter(
         (text) => gis.issuedTokens.some((token) => text.includes(token)),
       )

@@ -1,4 +1,4 @@
-/** The environment variables that decide where the app is served (ADR-0007). */
+/** The environment variables that decide where the app is served (ADR-007). */
 export interface BasePathEnv {
   /** Explicit override, e.g. `/preview/`. Wins over everything else. */
   readonly VITE_BASE_PATH?: string | undefined

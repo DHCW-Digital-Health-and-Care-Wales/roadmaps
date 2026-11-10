@@ -6,10 +6,10 @@ test("the landing page introduces the app and offers to connect", async ({
 }) => {
   await page.goto("./")
 
-  await expect(page).toHaveTitle("Product Roadmaps")
+  await expect(page).toHaveTitle("DHCW Roadmap Editor")
   await expect(page.locator("html")).toHaveAttribute("lang", "en")
   await expect(
-    page.getByRole("heading", { level: 1, name: "Product Roadmaps" }),
+    page.getByRole("heading", { level: 1, name: "DHCW Roadmap Editor" }),
   ).toBeVisible()
   await expect(
     page.getByText("Your roadmaps are currently sourced from Google Sheets."),
@@ -34,6 +34,6 @@ test("an unknown page offers a way home", async ({ page }) => {
 
   await expect(page).toHaveURL(/#\/$/)
   await expect(
-    page.getByRole("heading", { level: 1, name: "Product Roadmaps" }),
+    page.getByRole("heading", { level: 1, name: "DHCW Roadmap Editor" }),
   ).toBeVisible()
 })

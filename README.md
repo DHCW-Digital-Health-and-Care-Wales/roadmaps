@@ -1,8 +1,15 @@
-# Product Roadmaps
+# DHCW Roadmap Editor
 
 [![CI/CD](https://github.com/collisdigital/roadmaps-editor/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/collisdigital/roadmaps-editor/actions/workflows/ci.yml)
 
-A static, frontend-only React app for browsing product roadmaps. You connect a Google
+An internal tool for Digital Health and Care Wales (DHCW) staff: Product Leads use it to
+manage the public Now / Next / Later roadmaps of their products, writing each roadmap
+item's title, description, expected outcomes and tags. A separate app, the public site,
+reads the same data source and shows the published roadmaps. The item editor is being
+built; the [Product Lead persona](docs/backlog/personas/product-lead.md) describes who it
+is for.
+
+Today it is a static, frontend-only React app that lists roadmaps. You connect a Google
 account, the app reads one Google Spreadsheet's worksheet **metadata**, and each visible
 worksheet appears as a roadmap card. It runs entirely in the browser and is hosted on
 GitHub Pages: **<https://collisdigital.github.io/roadmaps-editor/>**.
@@ -46,7 +53,7 @@ entirely by Google: see [Security and data access](#security-and-data-access).
 
 ## Architecture
 
-The code is layered with one-way dependencies (ADR-0002); ESLint enforces the import
+The code is layered with one-way dependencies (ADR-002); ESLint enforces the import
 rules. `app/` is the composition root and the only place that knows about Google.
 
 ```mermaid
@@ -104,7 +111,7 @@ change to the composition root and nothing else. Auth works the same way: the UI
 `AuthClient` port, and only `infrastructure/google-identity/` touches the `google` global.
 
 Routing uses hash history (`/roadmaps-editor/#/roadmaps/42`), so deep links survive a
-reload on GitHub Pages without a 404 fallback (ADR-0004).
+reload on GitHub Pages without a 404 fallback (ADR-004).
 
 ## Technology choices
 
@@ -115,7 +122,7 @@ reload on GitHub Pages without a 404 fallback (ADR-0004).
 | UI             | React 19.3, TypeScript 6.0 (strict)                                       | TypeScript stays on 6.0 because typescript-eslint 8.x requires `typescript <6.1`.                               |
 | Routing        | TanStack Router 1.170, file-based, hash history                           | Route tree generated into `src/routeTree.gen.ts` (committed).                                                   |
 | Server state   | TanStack Query 5.107                                                      | Retries only retryable `AppError`s, twice; data is cleared on disconnect.                                       |
-| Components     | shadcn/ui 4 on Base UI 1.9, Tailwind CSS 4.3, lucide-react, sonner        | Base UI flavour, not Radix (ADR-0005). Light/dark theme.                                                        |
+| Components     | shadcn/ui 4 on Base UI 1.9, Tailwind CSS 4.3, lucide-react, sonner        | Base UI flavour, not Radix (ADR-005). Light/dark theme.                                                         |
 | Validation     | Zod 4.6 (`zod/mini`)                                                      | Config, Sheets responses and GIS token responses are parsed at the boundary.                                    |
 | Auth           | Google Identity Services token model                                      | Types from `@types/google.accounts`; responses re-parsed with Zod because the typings are wrong.                |
 | i18n           | i18next 27 + react-i18next 18                                             | English and Welsh bundled; keys are typed.                                                                      |
@@ -178,7 +185,7 @@ OAuth client. These steps use the Google Cloud console's _Google Auth Platform_ 
 2. **Enable the Google Sheets API.** _APIs & Services → Library_, search for "Google
    Sheets API", then **Enable**. It must be the same project as the OAuth client.
 3. **Configure the consent screen.** _Google Auth Platform → Get started_ (or
-   _Branding_): app name "Product Roadmaps", user support email, developer contact email.
+   _Branding_): app name "DHCW Roadmap Editor", user support email, developer contact email.
    Then _Audience_:
    - **Internal**: only accounts in your Google Workspace organisation; no test-user list
      and no verification needed.
@@ -311,7 +318,7 @@ mismatch, rather than deploying a site whose assets 404. A fork deploys to
 | Symptom                                                                          | Cause and fix                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Google's popup shows **Error 400: origin_mismatch** or **redirect_uri_mismatch** | The page's origin is not in the OAuth client's Authorised JavaScript origins. Add the exact origin: scheme, host and port, no path, no trailing slash (`http://127.0.0.1:5173` and `http://localhost:5173` differ). Do not add redirect URIs; this flow doesn't use them. Wait a few minutes for the change to apply.                                                                                                                                                             |
-| Google's sign-in page says "to continue to" another app's name                   | The name comes from the OAuth client's Google Cloud project: _Google Auth Platform → Branding → App name_. Set it to "Product Roadmaps", or create a dedicated project for this app.                                                                                                                                                                                                                                                                                              |
+| Google's sign-in page says "to continue to" another app's name                   | The name comes from the OAuth client's Google Cloud project: _Google Auth Platform → Branding → App name_. Set it to "DHCW Roadmap Editor", or create a dedicated project for this app.                                                                                                                                                                                                                                                                                           |
 | Popup shows **Error 401: invalid_client** / "OAuth client was not found"         | `VITE_GOOGLE_CLIENT_ID` is wrong or the client was deleted. Check `.env.production` (or `.env.local` for `pnpm dev`) and rebuild.                                                                                                                                                                                                                                                                                                                                                 |
 | "Your browser blocked the Google window"                                         | The popup was blocked. Allow pop-ups for the site and choose Connect again.                                                                                                                                                                                                                                                                                                                                                                                                       |
 | "The Google window was closed before connecting finished"                        | The popup was closed before finishing. Connect again.                                                                                                                                                                                                                                                                                                                                                                                                                             |
@@ -347,7 +354,7 @@ mismatch, rather than deploying a site whose assets 404. A fork deploys to
   the deployed site, since the hermetic E2E suite cannot prove it leaves the real
   Google flow working.
 - **The full `spreadsheets` scope is sensitive.** It is requested deliberately, for
-  planned editing features (ADR-0003); it lets the app read and write _every_ spreadsheet
+  planned editing features (ADR-003); it lets the app read and write _every_ spreadsheet
   the user can access, not just this one. Consequences depend on the audience and
   publishing status:
   - _Internal_ (Workspace): no Google verification, but a Workspace admin may need to
@@ -391,7 +398,7 @@ error codes), never copy.
 3. Register it in `resources` in `src/i18n/create-i18n.ts`.
 4. Add a component or E2E test that renders it.
 
-See ADR-0008 for the details.
+See ADR-008 for the details.
 
 ## Replacing Google Sheets with an HTTP API
 
@@ -442,7 +449,7 @@ and routes do not change.
 6. **E2E.** Add a fake for the API to `tests/e2e/fixtures/` (the hermetic guard fails on
    any unfaked origin) and retire the Sheets fake when it is no longer used.
 7. **Deploy.** The API must allow CORS from the Pages origin with the `Authorization`
-   header. Record the change in an ADR that amends ADR-0002, then delete
+   header. Record the change in an ADR that amends ADR-002, then delete
    `src/infrastructure/google-sheets/` once nothing uses it.
 
 ## Project documentation
@@ -451,11 +458,13 @@ and routes do not change.
   read this before changing code. [`tests/e2e/AGENTS.md`](tests/e2e/AGENTS.md) covers the
   E2E fixtures.
 - [`docs/adr/`](docs/adr/README.md): architecture decision records:
-  [0002 layering and repository](docs/adr/0002-layered-architecture-and-repository-boundary.md),
-  [0003 GIS auth](docs/adr/0003-browser-oauth-with-google-identity-services.md),
-  [0004 routing](docs/adr/0004-tanstack-router-hash-history.md),
-  [0005 UI stack](docs/adr/0005-ui-stack-shadcn-base-ui-tailwind-v4.md),
-  [0006 testing](docs/adr/0006-testing-strategy.md),
-  [0007 deployment](docs/adr/0007-github-pages-deployment.md),
-  [0008 i18n](docs/adr/0008-internationalisation-english-and-welsh.md).
-- [`docs/backlog/`](docs/backlog/README.md): the stories this repository was built from.
+  [ADR-002 layering and repository](docs/adr/ADR-002-layered-architecture-and-repository-boundary.md),
+  [ADR-003 GIS auth](docs/adr/ADR-003-browser-oauth-with-google-identity-services.md),
+  [ADR-004 routing](docs/adr/ADR-004-tanstack-router-hash-history.md),
+  [ADR-005 UI stack](docs/adr/ADR-005-ui-stack-shadcn-base-ui-tailwind-v4.md),
+  [ADR-006 testing](docs/adr/ADR-006-testing-strategy.md),
+  [ADR-007 deployment](docs/adr/ADR-007-github-pages-deployment.md),
+  [ADR-008 i18n](docs/adr/ADR-008-internationalisation-english-and-welsh.md).
+- [`docs/backlog/`](docs/backlog/README.md): epics, stories, defects and chores; the bootstrap
+  epic this repository was built from is in `docs/backlog/_archive/EPC-001-bootstrap/`.
+- [`docs/GLOSSARY.md`](docs/GLOSSARY.md): the shared domain vocabulary.

@@ -2,7 +2,8 @@
 
 - Status: Accepted
 - Date: 2026-11-10 (amended in STY-002: optional abort `signal`, contract test; STY-003: the
-  `AuthClient` port in `domain/auth/`; STY-009: lint rules for `lib/`, `components/`, `i18n/`)
+  `AuthClient` port in `domain/auth/`; STY-009: lint rules for `lib/`, `components/`, `i18n/`; ADR-009: the `Roadmap`
+  shape and the roadmap list's source, applied by EPC-002)
 
 ## Context
 

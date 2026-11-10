@@ -1,8 +1,8 @@
 # Delivery run: EPC-002 roadmap list from the roadmap index
 
 - Run key: 2026-11-10-epc-002-roadmap-list
-- Captured at (UTC): 2026-11-10T15:40Z
-- Started / stopped (UTC): 2026-11-10T13:14Z / 2026-11-10T15:40Z
+- Captured at (UTC): 2026-11-10T15:31Z
+- Started / stopped (UTC): 2026-11-10T13:14Z / 2026-11-10T15:31Z
 - Workflow revision: 16632d3 at the start. Mid-run changes: 41a9270 (STY-011's retro,
   `screenshots.md`) was on `main` before STY-012 started.
 - Scope and policy: STY-010, STY-011 and STY-012 in dependency order. Merging was not
@@ -22,10 +22,11 @@
 - Type / risk: story; domain port change and untrusted-data parser.
 - PR / assessed head / outcome: [#4](https://github.com/collisdigital/roadmaps-editor/pull/4),
   ee005ab, merged by the owner as 1ebb643.
-- Models: delivery Opus (high, escalated from the record's tier for the parser);
+- Models: delivery Opus (high, the record's tier);
   correctness Opus and Sol (`gpt-6.1-sol`, high); quality Sonnet.
 - Timing: delivery 24 min (13:15–13:39), round-1 reviews 5 min; retro 1 min.
-- Reviews: 3 reviewer tasks, one round each; accepted findings: 3 quality nits; declined 0.
+- Reviews: 3 reviewer tasks, one round each; accepted: 3 quality nits and one glossary hand-off from Opus;
+  declined 0.
 - Escapes: none observed.
 - Rework: no fix workers; fixes pushed by the delivery agent before the PR.
 - Recovery: none.
@@ -89,7 +90,9 @@
   although the trailer follows the model that runs (`brief.md` already says so); a retro
   review brief asked reviewers for a merge check that writes objects, which the
   read-only reviewer rule forbids. Each happened once.
-- Follow-up work: STY-012's deferrals in its retro (a `grid-cols-1` comment after #7
-  merges); fluent Welsh review of the new copy.
+- Follow-up work: no backlog record. The fluent Welsh review is tracked in the README's
+  Welsh note. STY-012's retro deferred one comment to #7: `roadmap-grid.tsx`'s
+  `grid-cols-1` keeps long words from widening the grid at phone width, and a later
+  tidy-up could remove it unknowingly.
 - Next comparison: delivery time and review findings for presentation stories on
   Sonnet against adapter stories on Opus.

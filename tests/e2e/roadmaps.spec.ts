@@ -39,7 +39,7 @@ test("connecting shows the roadmaps the roadmap index lists, grouped by family (
     page.getByRole("heading", { level: 1, name: "Your roadmaps" }),
   ).toBeVisible()
   // Every listed roadmap, Product C (not published) too; no card for any tab.
-  await expect(roadmapCards(page)).toContainText(EXAMPLE_TITLES)
+  await expect(roadmapCards(page)).toHaveText(EXAMPLE_TITLES)
   await expect(page.getByText("3 roadmaps, 1 not published")).toBeVisible()
   await expect(page.getByRole("status")).toHaveText("Google connected")
   // Connect went with the welcome page; focus moved to the content, not the body.
@@ -73,12 +73,12 @@ test("a roadmap index with no roadmaps shows the empty state (S5)", async ({
 test("Refresh loads the latest roadmaps", async ({ page, sheets }) => {
   await page.goto("./")
   await connect(page)
-  await expect(roadmapCards(page)).toContainText(EXAMPLE_TITLES)
+  await expect(roadmapCards(page)).toHaveText(EXAMPLE_TITLES)
 
   sheets.spreadsheet = withRoadmapIndex([HEADER, PRODUCT_B])
   await page.getByRole("button", { name: "Refresh" }).click()
 
-  await expect(roadmapCards(page)).toContainText(["Product B roadmap"])
+  await expect(roadmapCards(page)).toHaveText(["Product B roadmap"])
   await expect(page.getByText("1 roadmap", { exact: true })).toBeVisible()
   expect(sheets.reads).toEqual(["metadata", "values", "metadata", "values"])
 })
@@ -99,7 +99,7 @@ test("a card opens the address of its public page, and Back returns to the list 
   await expect(page.getByRole("main")).toBeFocused()
 
   await page.getByRole("link", { name: "Back to roadmaps" }).click()
-  await expect(roadmapCards(page)).toContainText(EXAMPLE_TITLES)
+  await expect(roadmapCards(page)).toHaveText(EXAMPLE_TITLES)
   await expect(page.getByRole("main")).toBeFocused()
   // The detail page and the list share one cached load.
   expect(sheets.reads).toEqual(["metadata", "values"])
@@ -241,7 +241,7 @@ test("a language switch re-sorts the groups and titles (S8)", async ({
   ])
   await expect(
     main.getByRole("list", { name: "Single Record" }).getByRole("link"),
-  ).toContainText(["éclair", "Product 10 roadmap", "Zebra"])
+  ).toHaveText(["éclair", "Product 10 roadmap", "Zebra"])
 
   await page.getByRole("button", { name: "Language English" }).click()
   await page.getByRole("menuitemradio", { name: "Cymraeg" }).click()

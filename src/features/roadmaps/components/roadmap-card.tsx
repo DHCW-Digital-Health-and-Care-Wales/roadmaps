@@ -31,22 +31,21 @@ export function RoadmapCard({ roadmap }: RoadmapCardProps) {
     roadmap.serviceDescription && localise(roadmap.serviceDescription, language)
   const updated =
     roadmap.lastUpdated === null
-      ? undefined
-      : formatCalendarDate(roadmap.lastUpdated, t)
-  const hasHeader =
-    roadmap.category !== null || status !== null || !roadmap.published
-  const hasFooter = roadmap.productLead !== null || updated !== undefined
-  // Each part is its own description, so a screen reader pauses between them.
-  const describedBy = (
-    [
-      ["category", roadmap.category !== null],
-      ["status", status !== null],
-      ["notPublished", !roadmap.published],
-      ["summary", summary !== null],
-      ["productLead", roadmap.productLead !== null],
-      ["updated", updated !== undefined],
-    ] as const
-  )
+      ? null
+      : (formatCalendarDate(roadmap.lastUpdated, t) ?? null)
+  // Which parts the roadmap has. Each is its own description, so a screen reader pauses
+  // between them; the keys are the suffixes of the ids the JSX gives the parts.
+  const has = {
+    category: roadmap.category !== null,
+    status: status !== null,
+    notPublished: !roadmap.published,
+    summary: summary !== null,
+    productLead: roadmap.productLead !== null,
+    updated: updated !== null,
+  }
+  const hasHeader = has.category || has.status || has.notPublished
+  const hasFooter = has.productLead || has.updated
+  const describedBy = Object.entries(has)
     .filter(([, present]) => present)
     .map(([part]) => `${id}-${part}`)
 
@@ -71,12 +70,12 @@ export function RoadmapCard({ roadmap }: RoadmapCardProps) {
         <div aria-hidden="true" className="flex flex-1 flex-col gap-2">
           {hasHeader && (
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-muted-foreground">
-              {roadmap.category && (
+              {roadmap.category !== null && (
                 <span id={`${id}-category`}>
                   {t(`roadmaps.categories.${roadmap.category}`)}
                 </span>
               )}
-              {status && (
+              {status !== null && (
                 <Badge id={`${id}-status`} variant="secondary">
                   {status}
                 </Badge>
@@ -89,7 +88,7 @@ export function RoadmapCard({ roadmap }: RoadmapCardProps) {
               )}
             </div>
           )}
-          {summary && (
+          {summary !== null && (
             <p
               id={`${id}-summary`}
               className="line-clamp-3 text-sm text-pretty text-muted-foreground"
@@ -99,14 +98,14 @@ export function RoadmapCard({ roadmap }: RoadmapCardProps) {
           )}
           {hasFooter && (
             <div className="mt-auto flex flex-col gap-0.5 pt-1 text-xs text-muted-foreground">
-              {roadmap.productLead && (
+              {roadmap.productLead !== null && (
                 <span id={`${id}-productLead`} className="wrap-break-word">
                   {t("roadmaps.card.productLead", {
                     name: roadmap.productLead,
                   })}
                 </span>
               )}
-              {updated !== undefined && (
+              {updated !== null && (
                 <span id={`${id}-updated`}>
                   {t("roadmaps.card.updated", { date: updated })}
                 </span>

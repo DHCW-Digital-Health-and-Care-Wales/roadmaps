@@ -8,9 +8,9 @@ import {
 } from "./fixtures/fake-sheets"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
-/** WCAG 2.2 A and AA rules. */
 const [header = []] = EXAMPLE_INDEX_ROWS
 
+/** WCAG 2.2 A and AA rules. */
 const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]
 
 type Theme = "light" | "dark"

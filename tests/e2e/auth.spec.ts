@@ -153,7 +153,7 @@ test("disconnecting revokes the token and forgets the roadmaps", async ({
   ).toBeVisible()
   await expect(roadmapCards(page)).toHaveCount(0)
   release()
-  await expect(roadmapCards(page)).toContainText(["Product B roadmap"])
+  await expect(roadmapCards(page)).toHaveText(["Product B roadmap"])
   expect(sheets.tokens).toEqual([
     "e2e-token-1",
     "e2e-token-1",

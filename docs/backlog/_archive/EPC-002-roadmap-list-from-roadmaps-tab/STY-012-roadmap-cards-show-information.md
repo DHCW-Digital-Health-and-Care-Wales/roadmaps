@@ -186,7 +186,7 @@ As EPC-002 Out of scope, plus filtering or grouping by category (D4).
   grouping uses it for D5; the parser's header matching is unchanged.
 - **E2E** (agent): groups are several lists, so `roadmapCards` still counts every card
   link but a card's content is asserted on its list item (`card(page, name)` in
-  `roadmaps.spec.ts`), and order with `toContainText([...])`. `roadmapRow(cells)` in
+  `roadmaps.spec.ts`), and order and count with `toHaveText([...])`. `roadmapRow(cells)` in
   `fake-sheets.ts` builds an index row by header name. The existing test "an expired token
   keeps the roadmaps on screen until reconnected" asserted the reload's tokens straight
   after the cached cards, which were already visible; it now polls for the two reads

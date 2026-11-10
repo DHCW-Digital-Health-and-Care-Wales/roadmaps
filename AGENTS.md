@@ -26,8 +26,9 @@ the connection to the data source is plumbing that should stay out of their way.
 GitHub Pages that connects a Google account (Google Identity Services, OAuth token model),
 reads the **roadmap index**, the first tab of one Google Spreadsheet, as the public site
 does (ADR-009), and shows each roadmap it lists as a card with its information, grouped
-by product family. Roadmap items and editing are next. Google Sheets is a _temporary_ data source: it must be replaceable by a
-PostgreSQL-backed HTTP API without touching the presentation layer (ADR-002).
+by product family. Roadmap items and editing are next. Google Sheets is a _temporary_ data
+source: it must be replaceable by a PostgreSQL-backed HTTP API without touching the
+presentation layer (ADR-002).
 
 ## Layering rules (non-negotiable)
 

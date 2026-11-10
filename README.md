@@ -47,7 +47,8 @@ The UI is available in English and Welsh (Cymraeg).
 4. The app makes two Sheets API reads of the configured spreadsheet: its tab list
    (`spreadsheets.get`, tab properties only), then the values of the tab with the lowest
    index, the roadmap index (`spreadsheets.values.get`, cells as displayed). It shows one
-   card per roadmap the index lists, in row order. A card opens `#/roadmaps/<id>`, where
+   card per roadmap the index lists, grouped by product family and sorted by title
+   (ADR-009). A card opens `#/roadmaps/<id>`, where
    the id is the public site's address for that roadmap (`ProductA` → `producta`).
 5. When the token expires the app says so and offers **Reconnect**. **Disconnect**
    revokes the token and clears all loaded data.

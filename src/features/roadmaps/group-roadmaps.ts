@@ -20,7 +20,9 @@ const NO_FAMILY_KEY = ""
 
 /**
  * Families match ignoring case, accents, spaces and punctuation, so a typo in spacing
- * does not split a family (ADR-009).
+ * does not split a family (ADR-009). Unlike the parser's header matching, which is ASCII,
+ * letters and digits of any script count, so family names in other scripts stay apart; a
+ * name with none (only punctuation) is matched by its trimmed text instead.
  */
 function familyKey(family: LocalisedText): string {
   const folded = foldText(family.en)

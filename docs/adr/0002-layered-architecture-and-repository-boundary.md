@@ -41,7 +41,9 @@ getAccessToken })`) that performs authorised GETs with native `fetch`, maps HTTP
     `String(sheetId)` -> `id`, `title` -> `name`. No name-based filtering (e.g. "Template").
 - The repository receives an access-token provider function, never React state. It is
   provided to React through a tiny context (`RoadmapRepositoryProvider` /
-  `useRoadmapRepository`) created in `app/`.
+  `useRoadmapRepository`) that lives in `features/roadmaps/`; `app/` creates the concrete
+  repository and passes it to the provider. Dependencies point inward only: `app/` may
+  import features, but features never import `app/` (that would be a cycle).
 
 ## Consequences
 

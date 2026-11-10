@@ -104,7 +104,7 @@ export default defineConfig(
     rules: {
       "no-restricted-imports": [
         "error",
-        { patterns: layers("infrastructure") },
+        { patterns: layers("infrastructure", "app", "routes") },
       ],
     },
   },

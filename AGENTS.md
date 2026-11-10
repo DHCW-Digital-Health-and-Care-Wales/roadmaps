@@ -146,7 +146,8 @@ Newest last. Each entry: story id, what changed, decisions, gotchas for the next
     - `react-refresh/only-export-components` is off for `src/routes` and
       `src/components/ui`.
     - Layer rules are `no-restricted-imports` blocks in `eslint.config.ts`. They match both
-      `@/x` and relative `../x` imports. Features may import `app/`, because ADR-0002
-      places `useRoadmapRepository` there.
+      `@/x` and relative `../x` imports. Features must NOT import `app/` or
+      `routes/` (orchestrator correction: that would be a cycle; the repository context lives
+      in `features/roadmaps/`, see ADR-0002).
     - Placeholder copy in `src/routes/index.tsx` is English only, so S04 moves it into the
       catalogues.

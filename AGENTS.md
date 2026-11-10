@@ -1,7 +1,8 @@
 # AGENTS.md — Product Roadmaps
 
 Instructions for AI agents (and humans) working in this repository. Read this first,
-then the ADRs in `docs/adr/` and the story you are working on in `docs/backlog/`.
+then the ADRs in `docs/adr/`, `docs/GLOSSARY.md`, and the record you are working on in
+`docs/backlog/`.
 
 ## What this is
 
@@ -33,7 +34,10 @@ src/
   styles/           Tailwind v4 entry CSS + theme tokens
 tests/e2e/          Playwright specs + fakes for GIS and the Sheets API
 build/              build-time helpers for vite/playwright config (GitHub Pages base path)
-.github/            CI/CD workflow (verify, e2e, deploy to Pages) + Dependabot (ADR-0007)
+.github/            CI/CD workflow (verify, e2e, deploy to Pages), Dependabot (ADR-0007),
+                    PR template
+docs/               ADRs, backlog, glossary, analyses, runbooks (docs/AGENTS.md)
+.claude/            agent skills, reviewer/worker agents, session hook
 ```
 
 - UI code must never mention spreadsheets, sheets, worksheets, cell ranges, or Google
@@ -73,34 +77,46 @@ actionlint          # after editing .github/workflows (not a dependency; install
   `i18next/no-literal-string` rejects literal JSX text and literal `aria-label`/`title`/
   `alt`/`placeholder` attributes outside tests and `components/ui`.
 
+## Working conventions
+
+- Before inspecting or changing an area, read each `AGENTS.md` along its directory
+  ancestry, and those of affected callers and tests. `AGENTS.md` is the guide for every
+  agent; a `CLAUDE.md` beside it only imports it (`@AGENTS.md`), so add that file with
+  each new nested guide. The closest guide governs its scope; explicit user instructions
+  take precedence.
+- Continue within the user's authorized scope; ask only for a decision or access that
+  blocks useful work.
+- Use the existing isolated checkout; create a worktree only when asked, and preserve
+  unrelated work. Worktrees share one host: stop a process by its PID or port, never with
+  a pattern kill such as `pkill -f vite`, which also stops other worktrees' servers.
+- Within a task's scope, prefer the cleaner structure (refactor, rename, extract shared
+  code) over the smallest diff; effort is not a reason to choose a lesser design.
+- Leave each file you touch tidier than you found it, keeping incidental repairs
+  proportional and within touched files. Record any other actionable finding in the
+  backlog (`docs/AGENTS.md`); a PR note alone is not a record.
+
 ## Workflow for delivery agents
 
-1. Read `AGENTS.md`, relevant ADRs, your story, and the **Handoff log** below.
-2. Implement the story's scope only. If you must deviate from an ADR, update or supersede
-   the ADR in the same change and say why.
-3. Use subagents where helpful (Haiku for mechanical edits, Sonnet for medium work).
-4. Before finishing, `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test &&
-pnpm build && pnpm test:e2e` must all pass.
-5. Get a code review from a **Sol** reviewer (Codex `gpt-6.1-sol`) via `delegate_task`
-   (role `review`, mode `wait`, shared checkout). Address every comment — fix it, or record
-   a reasoned rebuttal in the story file. Re-run the checks.
-6. **Screenshots (any story that changes visible UI)**: once the work is final, after the
-   review fixes, capture PNG screenshots of every screen or state you built or changed.
-   Use headless Playwright (Chromium is installed in `~/.cache/ms-playwright`) against
-   `pnpm dev`. Fake Google with `page.route`, by serving a stub
-   `https://accounts.google.com/gsi/client` and fulfilling
-   `https://sheets.googleapis.com/**`; reuse `tests/e2e` fakes once they exist. Cover
-   desktop (1280px) and mobile (375px), and light and dark mode where relevant. Show
-   Welsh where copy changed. Save them to
-   `/home/t3code/roadmaps-editor/.artifacts/screenshots/<story-id>/` with descriptive
-   names, e.g. `landing-desktop-light-en.png`. `.artifacts/` is git-ignored, so add it to
-   `.gitignore` if missing. Open each screenshot yourself and fix anything that looks
-   wrong before reporting. List every screenshot's **absolute path** in your final reply,
-   so the orchestrator can show them to the user for review. Keep capture scripts in your
-   scratchpad, not in the repo, unless they are proper E2E tests.
-7. Tick the story's acceptance criteria, append a Handoff log entry, update nested
-   `AGENTS.md` files if you introduced a new area, and commit on the current branch with a
-   conventional commit message (`feat(scope): …`). Do not push.
+- Deliver a story, defect or chore (including "implement the next logical story from
+  epic X") with `.claude/skills/implement-story/SKILL.md`, and several with
+  `.claude/skills/orchestrate/SKILL.md`. Any other change that ends in a PR follows
+  implement-story's steps 3–6 unasked. Read its `references/delegation.md` before
+  delegating any work.
+- Before a PR is raised, every change gets two independent correctness reviews
+  (`code-review`: Opus and Sol, Codex `gpt-6.1-sol`) and one quality review
+  (`quality-review`: Sonnet), in the rounds `delegation.md` sets.
+- A PR is raised and left for the owner; babysit or merge it only when asked.
+- Any change to visible UI publishes before/after screenshots
+  (`references/screenshots.md`).
+- Every delivery appends an entry to the Handoff log below.
+- Records, ADRs and analyses follow `docs/AGENTS.md`; domain terms follow
+  `docs/GLOSSARY.md`. Invoke the `copywriter` skill before writing user-facing copy.
+- Skills live in `.claude/skills/`; `.agents/skills` exposes the same files to Codex. If
+  a skill is missing from your runtime's catalogue, read its `SKILL.md` and follow it.
+  Agent roles in `.claude/agents/` are briefs for fresh workers.
+- Before editing these instructions, a skill or an agent, read
+  `.claude/skills/writing-for-agents/SKILL.md` and
+  `docs/operations/authoring-agent-instructions.md`.
 
 ## Handoff log
 
@@ -473,7 +489,7 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
     `https://collisdigital.github.io` as an origin before the first deploy is usable.
     Pages must be enabled (Source: GitHub Actions) before the first push to `main`.
 - **S09 Final verification, polish and review** — all brief §14 criteria checked with
-  evidence in `docs/backlog/S09-final-verification.md`; whole-repo Sol review (3 findings,
+  evidence in `docs/backlog/_archive/bootstrap/S09-final-verification.md`; whole-repo Sol review (3 findings,
   all fixed). Backlog complete: S01–S09 Done.
   - State: 264 unit/component tests, 31 E2E (also green under `/roadmaps-editor/`); build
     has no warnings. JS is 654 kB min / 214 kB gzip in `react`, `vendor` and app chunks

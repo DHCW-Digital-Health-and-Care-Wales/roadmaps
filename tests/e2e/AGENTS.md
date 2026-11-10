@@ -25,3 +25,6 @@ End-to-end tests of the production build, with Google faked (ADR-0006). Run with
 - No sleeps. For back-off or expiry, `page.clock.install()` before `goto`, then
   fast-forward. Navigate with relative URLs (`./`, `./#/roadmaps/42`) so a base path
   only changes `baseURL`.
+- Specs assert English copy from `src/i18n/locales/en.ts`. Before pushing a change to a
+  control's text or accessible name, grep `tests/e2e` for the old text and run every spec
+  that reaches the control, or the whole suite when the control is in the shell.

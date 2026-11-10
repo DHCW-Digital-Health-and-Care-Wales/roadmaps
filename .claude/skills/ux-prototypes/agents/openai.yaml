@@ -1,0 +1,5 @@
+interface:
+  display_name: "UX Prototypes"
+  short_description: "Alternative UX designs per journey, desktop and phone"
+policy:
+  allow_implicit_invocation: true

@@ -645,3 +645,10 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
       key; `skipOnVariables` stops a product lead's name from being read as nesting.
     - A language change re-sorts groups and titles (the collator is per language); Welsh
       names fall back to English per roadmap, so a group sorts by the name shown.
+- **EPC-003 planning (orchestrator)** — `docs/analysis/dhcw-design-system-alignment.md`,
+  ADR-010 (which partly supersedes ADR-005's visual direction), and EPC-003 (STY-013–018).
+  The UI ports the DHCW design system's tokens and patterns, pinned at v0.1.104, onto
+  shadcn/Base UI, and never loads its CSS.
+  - STY-014 makes off-token styling a lint or test failure.
+  - The dashboard sidebar is deferred to the first record that adds navigation
+    (ADR-010 _Deferred_).

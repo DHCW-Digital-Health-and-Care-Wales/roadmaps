@@ -1,6 +1,7 @@
 # ADR-005: UI stack — shadcn/ui on Base UI with Tailwind CSS v4
 
-- Status: Accepted
+- Status: Accepted; the _Visual direction_ bullet is superseded by ADR-010, and the rest
+  stands
 - Date: 2026-11-10
 
 ## Decision
@@ -14,7 +15,7 @@
 - Theme: light by default; a small `ThemeProvider` toggles the `dark` class on
   `<html>`, persists the preference (non-sensitive) in `localStorage`, and an inline
   script in `index.html` avoids a flash of the wrong theme.
-- Visual direction: clean SaaS, neutral palette, a single restrained accent, subtle
+- Visual direction (superseded by ADR-010): clean SaaS, neutral palette, a single restrained accent, subtle
   borders, visible focus rings, responsive grid, minimal animation (respect
   `prefers-reduced-motion`).
 

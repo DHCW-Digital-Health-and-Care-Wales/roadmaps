@@ -80,3 +80,40 @@ test("the review page styles its own chrome and leaves a design's markup alone",
     await rm(scratch, { recursive: true, force: true })
   }
 })
+
+test("a complete HTML design keeps the styles in its head, scoped to it", async () => {
+  const scratch = await mkdtemp(
+    path.join(os.tmpdir(), "ux-prototype-assemble-"),
+  )
+  try {
+    await writeFile(
+      path.join(scratch, "a.html"),
+      '<!doctype html><html><head><style>.probe { color: rgb(1, 2, 3) }</style></head><body><p class="probe">Roadmaps</p></body></html>',
+    )
+    await writeFile(
+      path.join(scratch, "manifest.json"),
+      JSON.stringify({
+        title: "Fixture",
+        intro: "Intro",
+        journeys: [
+          {
+            title: "One",
+            brief: "Brief",
+            designs: [{ title: "A", file: "a.html" }],
+          },
+        ],
+      }),
+    )
+    const out = path.join(scratch, "page.html")
+    await run(process.execPath, [
+      path.join(here, "assemble.mjs"),
+      path.join(scratch, "manifest.json"),
+      out,
+    ])
+    const html = await readFile(out, "utf8")
+    assert.match(html, /#d1 \.probe\s*\{\s*color: rgb\(1, 2, 3\)/)
+    assert.match(html, /<p class="probe">Roadmaps<\/p>/)
+  } finally {
+    await rm(scratch, { recursive: true, force: true })
+  }
+})

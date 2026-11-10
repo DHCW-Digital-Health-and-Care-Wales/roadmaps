@@ -112,9 +112,7 @@ Carry forward what earlier items learned, for example:
   `.claude/skills/implement-story/references/pr-watch.md`. Name the run's
   merge or stacking policy here.
 - **Retro**: one retro per item, with the same independent review lanes and
-  the same PR policy (open by default). Where its PR is babysat, apply
-  `pr-watch.md`'s supplementary bot-review policy; keep bot limitations
-  distinct from passing independent reviews.
+  the same PR policy (open by default).
 - **Branch**: push only to `<designated branch>`, cut from the base the Task
   names. After a merge, reset it per `pr-watch.md` "Merge". Finish on that
   branch with the tree clean.

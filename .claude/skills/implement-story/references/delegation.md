@@ -96,7 +96,9 @@ notifications, use this lifecycle at every nesting level:
 
 Without asynchronous delegation, run reviewers in the foreground and wait for
 them. Never poll a running delegate, sleep, or set scheduled check-ins as a
-workaround for a missing notification.
+workaround for a missing notification. The fallback wake `orchestrate` defines
+is not a check-in: it guards one stalled wait and is removed when it fires or
+the wait ends.
 
 A worker is **terminal** only when the runtime shows it neither running nor
 waiting on children of its own, whatever its last message or a `failed` label
@@ -114,15 +116,16 @@ pass.
 
 - **Lanes**: _correctness_, with two reviewers (Opus and Sol), each following
   `code-review`; _quality_, with one reviewer (Sonnet) following
-  `quality-review`. Each reviewer is its own track for re-checks. A docs-only
-  PR, one that changes only Markdown under `docs/`, `.claude/` or an
-  `AGENTS.md`/`CLAUDE.md` (an agent definition under `.claude/agents/` is
-  config, not docs), takes the correctness lane alone. Its brief adds the
-  record sweep (`docs/AGENTS.md`) and, for an instruction file,
+  `quality-review`. Each reviewer is its own track for re-checks. Every PR
+  the workflow raises takes all three reviewers, docs-only and retro PRs
+  included. A docs-only PR, one that changes only Markdown under `docs/`,
+  `.claude/` or an `AGENTS.md`/`CLAUDE.md` (an agent definition under
+  `.claude/agents/` is config, not docs), adds to each brief the record sweep
+  (`docs/AGENTS.md`) and, for an instruction file,
   `.claude/skills/writing-for-agents/SKILL.md` and
   `docs/operations/authoring-agent-instructions.md`, whose recur bar and
-  replace-or-sharpen rule the reviewer applies to every added line. Its cap is
-  round 1 and one re-check per reviewer.
+  replace-or-sharpen rule the reviewers apply to every added line. Its cap is
+  round 1 and one re-check per reviewer, with no final fresh pass.
 - **Round 1**: the three reviewers, fresh and concurrent, briefed as the
   Worker contract sets.
 - **Round 2, the re-check**: only for a reviewer whose round 1 found anything

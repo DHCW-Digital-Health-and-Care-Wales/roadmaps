@@ -29,9 +29,8 @@ validation. Preserve runner exit status when redirecting output. Capture
 verbose logs in a temporary path and summarize the evidence.
 
 `pnpm test:e2e` builds and serves the app on port 4173 and reuses a server
-already listening there locally: stop a stale `pnpm preview` first, by PID or
-`fuser -k 4173/tcp`. Several worktrees share this host, so never stop
-processes with a pattern kill such as `pkill -f vite`.
+already listening there locally: stop a stale `pnpm preview` first
+(`fuser -k 4173/tcp`).
 
 Run a suite you will wait for in the foreground with a long enough command
 timeout. To work alongside a suite, start it in the background and make sure

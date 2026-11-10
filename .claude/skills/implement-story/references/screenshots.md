@@ -24,7 +24,7 @@ proper E2E tests.
 
 Cover desktop (1280 px) and phone (375 px), light and dark mode where relevant,
 and Welsh (`cy`) where copy changed. Save captures under
-`/home/t3code/roadmaps-editor/.artifacts/screenshots/<record-id>/` (git-ignored)
+`.artifacts/screenshots/<record-id>/` at the root of your checkout (git-ignored)
 with descriptive names, e.g. `s1-roadmaps-desktop-dark-en-after.png`. Open each
 one yourself and fix anything that looks wrong before publishing.
 

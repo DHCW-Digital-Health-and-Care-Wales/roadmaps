@@ -60,10 +60,11 @@ stateDiagram-v2
   owner's decision. Never use Superseded to mean Won't fix.
 - **Partial delivery is not Done.** A scenario the owner drops or moves is a
   Decisions entry, not a departure, and the story can then be Done.
-- **Done moves with the PR.** The PR that delivers a record sets Done, fills
-  `Delivered`, and moves the file to `_archive/` and marks its epic row. The
-  link is the PR's; `Delivered` says whether it has merged, and dependents
-  wait for the required behaviour on the default branch.
+- **Done moves with the PR.** The PR that delivers a record sets Done, moves
+  the file to `_archive/` and marks its epic row. `Delivered` is filled with
+  the PR's URL and `open` in a commit pushed once the PR exists; whoever merges
+  or closes it later updates the note. Dependents wait for the required
+  behaviour on the default branch, not for the note.
 - **Reopening** a Won't fix / Won't do: move the file back to the live tree,
   set Proposed or Needs grilling, and add a Decisions entry citing the
   trigger. The ID is kept.

@@ -44,14 +44,19 @@ function scope(css, id) {
     .join("\n")
 }
 
+const STYLE = /<style[^>]*>([\s\S]*?)<\/style>/g
+
 function fragmentParts(source) {
   const dc = source.match(/<x-dc>([\s\S]*)<\/x-dc>/)
-  let body = dc
-    ? dc[1]
-    : (source.match(/<body[^>]*>([\s\S]*)<\/body>/)?.[1] ?? source)
-  const styles = []
+  const page = dc ? null : source.match(/<body[^>]*>([\s\S]*)<\/body>/)
+  let body = dc ? dc[1] : (page?.[1] ?? source)
+  // A complete document keeps its styles in <head>, outside the body taken.
+  const head = page
+    ? (source.match(/<head[^>]*>([\s\S]*?)<\/head>/)?.[1] ?? "")
+    : ""
+  const styles = [...head.matchAll(STYLE)].map((m) => m[1])
   body = body
-    .replace(/<style[^>]*>([\s\S]*?)<\/style>/g, (_, css) => {
+    .replace(STYLE, (_, css) => {
       styles.push(css)
       return ""
     })

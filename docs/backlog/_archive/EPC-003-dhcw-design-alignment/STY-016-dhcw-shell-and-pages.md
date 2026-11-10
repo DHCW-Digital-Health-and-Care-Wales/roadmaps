@@ -184,8 +184,12 @@ Audited at `22c3336`.
   `header` (transparent, white text, the chips' border, a lighter hover), used by the
   language and theme buttons and the header's auth action (`AuthButton variant="header"`).
   The home link takes `focus-ring` rather than `focus-fill`: a yellow fill would hide the
-  white logo. The status chip wraps the tag in a bordered box; below `sm` the whole chip is
-  visually hidden, still a live `status`.
+  white logo. The status chip wraps the tag in a bordered box. Review found the full logo, the
+  service name and every control do not fit between 640px and 900px (in Cymraeg the name
+  was cut to nothing at 640px), so the chip is visually hidden below `lg` and the language
+  button shows only its icon below `md` (both stay announced: a live `status`, and the
+  accessible name "Language English"). `shell.spec.ts` checks the name untruncated from
+  375px to 1024px.
 - **S3** (agent): the feedback address travels as `AppInfo` (`components/layout/app-info`,
   built by `composeApp` from `config.feedbackUrl` and `__APP_VERSION__`, supplied by
   `AppProviders`), so the layout components stay below `app/`. The link opens in a new tab
@@ -203,6 +207,8 @@ Audited at `22c3336`.
 - **S7** (agent): the favicon is the DHCW icon in white on a navy tile, so it reads on light
   and dark browser chrome; the skip link is DHCW's yellow with bold text, at the container's
   left edge.
+- **S1, shared link style** (agent): `textLinkClasses` (`components/layout`) is the one text
+  link style, used by the back link, the not-found link and the banner's feedback link.
 - **D6** (agent): the first run of the 375px Cymraeg check failed (the short name needed 8px
   more): the home link's `-ml-1` (aligning the logo with the page edge) and tighter gaps
   below `sm` fix it. Tests came after the code, as the checks are of layout and copy.

@@ -28,7 +28,8 @@ export interface AppProvidersProps {
 
 /**
  * Every app-wide provider, outermost first: i18n (so everything below, toasts included,
- * is translated), theme, query cache, auth, the roadmap data source, then the app's own details (version, feedback address).
+ * is translated), theme, query cache, auth, the roadmap data source, then the app's own details
+ * (version, feedback address).
  */
 export function AppProviders({ services, children }: AppProvidersProps) {
   return (

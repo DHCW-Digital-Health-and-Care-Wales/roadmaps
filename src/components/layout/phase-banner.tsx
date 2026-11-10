@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge"
 
 import { useAppInfo } from "./app-info"
 import { PageContainer } from "./page-container"
+import { textLinkClasses } from "./text-link-classes"
 
 /**
  * DHCW's phase banner: a tag naming the service's phase and a sentence inviting
@@ -27,7 +28,7 @@ export function PhaseBanner() {
                 href={feedbackUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-link underline outline-none hover:text-link-hover hover:no-underline focus-visible:focus-link"
+                className={textLinkClasses}
               >
                 {t("layout.phase.feedback")}
                 <span className="sr-only">

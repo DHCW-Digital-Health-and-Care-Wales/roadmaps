@@ -1,6 +1,9 @@
 import { z } from "zod/mini"
 
-/** A feedback address is a web page people can leave the app for, so only https. */
+/**
+ * A feedback address is a web page people leave the app for, so only https, and never one
+ * with credentials in it.
+ */
 function isHttpsUrl(value: string): boolean {
   try {
     const url = new URL(value)
@@ -12,15 +15,15 @@ function isHttpsUrl(value: string): boolean {
   }
 }
 
-/** Optional: unset or blank means no feedback link. Anything else must be https. */
+/** An unset or blank variable means "none". */
+const blankToUndefined = z.transform((value: string | undefined) => {
+  const trimmed = value?.trim()
+  return trimmed === "" ? undefined : trimmed
+})
+
+/** Optional: blank means no feedback link; anything else must be an https address. */
 const feedbackUrlSchema = z.pipe(
-  z.pipe(
-    z.optional(z.string()),
-    z.transform((value) => {
-      const trimmed = value?.trim()
-      return trimmed === "" ? undefined : trimmed
-    }),
-  ),
+  z.pipe(z.optional(z.string()), blankToUndefined),
   z.optional(
     z
       .string()

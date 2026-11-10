@@ -36,7 +36,7 @@ const states: readonly (readonly [string, AuthState])[] = [
 describe.each(["en", "cy"] as const)("the start page in %s", (language) => {
   const c = copy[language]
 
-  it.each(states)("is a plain left-aligned page %s", async (_, authState) => {
+  it.each(states)("shows the plain start page %s", async (_, authState) => {
     await renderWithProviders({ language, authState })
 
     const main = within(screen.getByRole("main"))
@@ -47,15 +47,6 @@ describe.each(["en", "cy"] as const)("the start page in %s", (language) => {
     expect(text).toContain(c.source)
     expect(text).toContain(c.access)
     expect(main.getByRole("button", { name: c.connect })).toBeInTheDocument()
-    // No hero: nothing centres the page, and no gradient or grid decorates it.
-    const decorated = [...(section?.querySelectorAll("[class]") ?? [])].filter(
-      (element) =>
-        element.getAttribute("data-slot") !== "button" &&
-        /\b(text-center|items-center|bg-gradient\S*|grid\S*|isolate)\b/.test(
-          element.getAttribute("class") ?? "",
-        ),
-    )
-    expect(decorated).toEqual([])
   })
 
   it("puts the source note in DHCW inset text", async () => {

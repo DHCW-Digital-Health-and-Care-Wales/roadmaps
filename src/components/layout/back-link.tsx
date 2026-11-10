@@ -4,6 +4,8 @@ import type { ComponentProps, ReactNode } from "react"
 
 import { cn } from "@/lib/utils"
 
+import { textLinkClasses } from "./text-link-classes"
+
 /**
  * DHCW's back link: a text link with a left chevron, for going up one level. It is a
  * real link (not a button-styled one, so it keeps its link role) and takes the router
@@ -18,7 +20,8 @@ export function BackLink({
     <Link
       data-slot="back-link"
       className={cn(
-        "inline-flex items-center gap-1 text-body-xs text-link underline outline-none hover:text-link-hover hover:no-underline focus-visible:focus-link",
+        "inline-flex items-center gap-1 text-body-xs",
+        textLinkClasses,
         className,
       )}
       {...props}

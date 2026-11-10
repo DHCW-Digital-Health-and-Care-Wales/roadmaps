@@ -61,16 +61,19 @@ for (const language of ["en", "cy"] as const) {
       expect(box?.width ?? 0).toBeGreaterThan((box?.height ?? 0) * 2)
       await expect(banner.getByRole("link", { name: c.home })).toBeVisible()
 
-      const order = await banner.evaluate((header) =>
-        [...header.querySelectorAll("a, [role=status], button")].map(
-          (element) =>
-            element.getAttribute("role") ??
-            element.tagName.toLowerCase() + element.textContent,
-        ),
+      // Not sticky: it scrolls away with the page (D4).
+      await expect(banner).toHaveCSS("position", "static")
+
+      // Left to right: the home link, the status chip, then the three buttons.
+      const xs = await Promise.all(
+        [
+          banner.getByRole("link", { name: c.home }),
+          banner.getByRole("status"),
+          ...[0, 1, 2].map((index) => banner.getByRole("button").nth(index)),
+        ].map(async (locator) => (await locator.boundingBox())?.x ?? NaN),
       )
-      expect(order[0]).toMatch(/^a/)
-      expect(order[1]).toBe("status")
-      expect(order).toHaveLength(5)
+      expect(xs).toEqual([...xs].sort((a, b) => a - b))
+      expect(new Set(xs).size).toBe(5)
     })
 
     test("the narrow header keeps its rules at 375px (S2, D6)", async ({
@@ -108,6 +111,32 @@ for (const language of ["en", "cy"] as const) {
       expect(scrollWidth).toBeLessThanOrEqual(clientWidth)
       expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0)
     })
+
+    for (const width of [375, 640, 768, 900, 1024]) {
+      test(`the service name shows untruncated at ${String(width)}px (S1, D6)`, async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width, height: 800 })
+        await page.goto("./")
+        await page
+          .getByRole("main")
+          .getByRole("button", { name: c.connect })
+          .click()
+        await expect(roadmapCards(page)).toHaveCount(3)
+
+        const name = page
+          .getByRole("banner")
+          .getByRole("link", { name: c.home })
+          .locator("span")
+          .first()
+        const [scrollWidth, clientWidth] = await name.evaluate((element) => [
+          element.scrollWidth,
+          element.clientWidth,
+        ])
+        expect(scrollWidth).toBeLessThanOrEqual(clientWidth)
+        expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0)
+      })
+    }
 
     test("the footer names DHCW and the version (S4)", async ({ page }) => {
       await page.goto("./")

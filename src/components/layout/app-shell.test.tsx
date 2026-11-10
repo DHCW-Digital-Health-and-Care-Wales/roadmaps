@@ -85,12 +85,6 @@ describe.each(["en", "cy"] as const)("the shell in %s", (language) => {
       expect(follows(language_ as Node, theme)).toBe(true)
       expect(follows(theme as Node, auth)).toBe(true)
     })
-
-    it("is not sticky", async () => {
-      await renderWithProviders({ language, appInfo })
-
-      expect(screen.getByRole("banner").className).not.toMatch(/sticky|fixed/)
-    })
   })
 
   describe("phase banner", () => {

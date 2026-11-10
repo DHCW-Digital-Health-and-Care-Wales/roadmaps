@@ -742,14 +742,16 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
     `GITHUB_SHA` is set) feeds `__APP_VERSION__` through `vite.config.ts`. `ci.yml` is unchanged.
   - Tokens: `--header`, `--header-foreground`, `--header-hover`, `--header-border` (navy in both
     themes). Copy: `common.headerName` ("Roadmap Editor"; the logo says DHCW), `layout.logoAlt`,
-    `layout.phase.*`, `layout.footer.*`. The Welsh is machine-assisted and needs a fluent review.
+    `layout.phase.*`, `layout.footer.*`. `textLinkClasses` is the one text-link style. The Welsh is machine-assisted and needs a fluent review.
   - Decisions: the full logo (`nhsw-logo.svg`, the record's file) is DHCW's bilingual lockup and
     includes the NHS Wales mark, which ADR-010 says to leave out: the owner confirms at review.
     The home link keeps its full accessible name; its focus is the ring, as a yellow fill would
     hide the white logo. The favicon is the white icon on a navy tile.
   - Gotchas:
-    - The header's width at 375px in Cymraeg is tight: `shell.spec.ts` checks the short name
-      is not truncated (D6). A wider control or name below `sm` breaks it.
+    - The header's width is tight in Cymraeg from 375px to `lg`: `shell.spec.ts` checks the
+      service name is not truncated at 375, 640, 768, 900 and 1024px (D6). The status chip is
+      visually hidden below `lg` and the language endonym below `md` for that reason; a wider
+      control or name breaks it.
     - A new top-level control for the header takes `variant="header"`; the default buttons
       are navy and vanish on the band.
     - Vitest and `vite build` read `GITHUB_SHA`: a component test must not assert a literal

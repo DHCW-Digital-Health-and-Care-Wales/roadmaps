@@ -32,6 +32,8 @@ src/
   i18n/             i18next setup, supported languages, en/cy catalogues (ADR-0008)
   styles/           Tailwind v4 entry CSS + theme tokens
 tests/e2e/          Playwright specs + fakes for GIS and the Sheets API
+build/              build-time helpers for vite/playwright config (GitHub Pages base path)
+.github/            CI/CD workflow (verify, e2e, deploy to Pages) + Dependabot (ADR-0007)
 ```
 
 - UI code must never mention spreadsheets, sheets, worksheets, cell ranges, or Google
@@ -54,6 +56,7 @@ pnpm test           # Vitest unit + component (no network, no Google)
 pnpm exec playwright install --with-deps chromium   # once per @playwright/test version
 pnpm test:e2e       # Playwright: builds, serves with vite preview, fakes GIS + Sheets
 pnpm build && pnpm preview
+actionlint          # after editing .github/workflows (not a dependency; install ad hoc)
 ```
 
 ## Conventions
@@ -437,3 +440,34 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
       flush Sonner's timer.
     - The header and page both have Connect/Reconnect buttons, and the header's connection
       badge is also `role=status`: scope locators to `main`/`banner`.
+- **S08 CI/CD, Pages base path, README** — `.github/workflows/ci.yml` ("CI/CD"),
+  `.github/dependabot.yml`, `build/resolve-base-path.ts`, full `README.md`. ADR-0007
+  amended (see its "S08 amendments"). `.nvmrc` is now 26 (Active LTS since 2026-10-28);
+  `engines` unchanged.
+  - Workflow: `verify` (typecheck, lint, format, test, build; on push to `main` also
+    configure-pages → base-path guard → upload-pages-artifact) ∥ `e2e` (Playwright, browser
+    cache keyed on its version, report artifact) → `deploy` (push to `main` only; just
+    `deploy-pages`, no checkout/install). Permissions: top `contents: read`; `verify` +
+    `pages: read`; `deploy` only `pages: write` + `id-token: write`. Actions are pinned to
+    commit SHAs with the version in a comment; Dependabot bumps them monthly. The Pages
+    artifact is named per attempt and passed to `deploy` via `needs.verify.outputs`.
+  - Base path: `resolveBasePath(process.env)` in `vite.config.ts` **and**
+    `playwright.config.ts`: `VITE_BASE_PATH` > `PAGES_CUSTOM_DOMAIN` (→ `/`) >
+    `GITHUB_REPOSITORY` (`owner.github.io` repo → `/`, else `/<repo>/`) > `/`. Blank = unset.
+    CI always has `GITHUB_REPOSITORY`, so CI E2E runs under `/roadmaps-editor/`; locally
+    `/`. `vite preview` reads `base` from the config too, so preview a base-path build with
+    the same env. No `CNAME` (ignored for Actions deployments).
+  - Lint workflows with actionlint (download the release binary; not a dependency).
+    Version 1.7.12 rejects `concurrency.queue`.
+  - Gotchas:
+    - `pkill -f "vite preview"` does not match the preview process (`vite.js preview`) and
+      `pkill -f` with a pattern in your own command line kills your shell; kill by PID or
+      `fuser -k 4173/tcp`.
+    - Node 25+ ships without Corepack; README tells users to install pnpm globally (it
+      self-switches to `packageManager`'s version).
+    - Vite gives `.env.production` priority over `.env.local` for builds; local build
+      overrides go in `.env.production.local`.
+  - S09: the README's Google Cloud steps are unverified against a live console session;
+    check them while doing the manual real-GIS check. `.env.production`'s client must list
+    `https://collisdigital.github.io` as an origin before the first deploy is usable.
+    Pages must be enabled (Source: GitHub Actions) before the first push to `main`.

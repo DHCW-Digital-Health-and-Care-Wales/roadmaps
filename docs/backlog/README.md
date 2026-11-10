@@ -12,7 +12,7 @@ Stories are delivered **sequentially**, each by a fresh delivery agent, on branc
 | [S05](S05-app-shell-routing-theme.md)             | Composition root, routing, app shell, theme, auth UI                           | S04        | Done   |
 | [S06](S06-roadmaps-feature.md)                    | Roadmaps feature: query hooks, list, states, detail page                       | S05        | Done   |
 | [S07](S07-e2e-tests.md)                           | Playwright E2E with faked GIS and Sheets API                                   | S06        | Done   |
-| [S08](S08-ci-cd-and-docs.md)                      | GitHub Actions CI/CD, Pages base path, README                                  | S07        | Todo   |
+| [S08](S08-ci-cd-and-docs.md)                      | GitHub Actions CI/CD, Pages base path, README                                  | S07        | Done   |
 | [S09](S09-final-verification.md)                  | Whole-repo verification, polish and final review                               | S08        | Todo   |
 
 Definition of done (every story): scope implemented; acceptance criteria ticked;

@@ -34,7 +34,34 @@ Push-to-deploy on GitHub Pages and comprehensive documentation. See ADR-0007.
 
 ## Acceptance criteria
 
-- [ ] Base-path function tested for project pages, user pages, custom domain, override.
-- [ ] Workflow lints clean; build with `GITHUB_REPOSITORY=collisdigital/roadmaps-editor`
+- [x] Base-path function tested for project pages, user pages, custom domain, override.
+- [x] Workflow lints clean; build with `GITHUB_REPOSITORY=collisdigital/roadmaps-editor`
       produces asset URLs under `/roadmaps-editor/`.
-- [ ] All checks green.
+- [x] All checks green.
+
+## Delivery notes
+
+- Evidence: `build/resolve-base-path.test.ts` (15 cases: project, user/org site
+  case-insensitive, custom domain, override and normalisation, blank values, malformed
+  input). actionlint 1.7.12 (+ shellcheck 0.11.0) clean. `GITHUB_REPOSITORY=collisdigital/roadmaps-editor pnpm build`
+  emits `/roadmaps-editor/assets/…` for JS, CSS, fonts and the favicon; headless Chromium
+  against `vite preview` at `http://localhost:4173/roadmaps-editor/` loaded all 7 assets
+  from the base with no 4xx, and the full E2E suite (31) passed under that base on Node 26
+  with `CI=true`.
+- Deviation from the scope's deploy-job order (configure-pages → build → upload → deploy):
+  `verify` builds and uploads, `deploy` only runs `deploy-pages`, so no project or
+  third-party code runs with `pages: write`/`id-token: write`. `configure-pages`'
+  `base_path` is used as a guard rather than a build input. No `CNAME` is written (GitHub
+  ignores it for Actions deployments). All recorded in ADR-0007's S08 amendments.
+
+## Review notes (Sol, gpt-6.1-sol)
+
+1. Pages artifacts collide across re-runs (`deploy-pages` rejects duplicate names) —
+   **fixed**: the artifact is named `github-pages-attempt-<n>` and `deploy` reads the name
+   from a `verify` job output, so re-running only failed jobs works too.
+2. Pending `main` runs can be replaced despite "never cancelled" wording — **docs fixed,
+   behaviour kept**: `concurrency.queue: max` is rejected by actionlint 1.7.12 (a
+   required check), and latest-wins is the right behaviour for deploys (the newest commit
+   deploys, in order). Workflow comment, README and ADR-0007 now say so.
+3. README misdescribed browser-language detection — **fixed**: the first supported
+   language in the browser's list wins.

@@ -1,7 +1,11 @@
 import { defineConfig, devices } from "@playwright/test"
 
+import { resolveBasePath } from "./build/resolve-base-path.ts"
+
 const PORT = 4173
-const baseURL = `http://localhost:${String(PORT)}/`
+// `vite preview` serves the build under its base path (in CI, /<repo>/), so the specs
+// navigate relative to it.
+const baseURL = `http://localhost:${String(PORT)}${resolveBasePath(process.env)}`
 const ci = Boolean(process.env.CI)
 
 /**

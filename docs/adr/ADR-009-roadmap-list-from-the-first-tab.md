@@ -105,6 +105,7 @@ The editor keeps the list usable where the public site fails its whole sync:
 | Two rows with the same slug      | sync fails if both enabled | the enabled row kept (else the first), the others skipped |
 | A slug with no letters or digits | sync fails if enabled      | row skipped                                               |
 | `Sheet` names no existing tab    | sync fails if enabled      | roadmap kept                                              |
+| Colour `#rgb`                    | sync fails if enabled      | expanded to `#rrggbb`                                     |
 | No `Enabled` column              | nothing published          | every roadmap listed as not published                     |
 | No roadmap enabled               | sync fails                 | listed as not published                                   |
 

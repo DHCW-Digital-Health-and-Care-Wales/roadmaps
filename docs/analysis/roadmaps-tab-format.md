@@ -72,8 +72,10 @@ Categories, in the public site's display order, with Welsh names from its `conte
 - The sync **fails as a whole**, leaving the previous site live, when the index has no
   `Sheet` column, or no roadmap is enabled, or, **among enabled rows only** (disabled rows
   are dropped first): a slug has no letters or digits, two rows share a slug, or a `Sheet`
-  names no tab. A disabled row may therefore share a slug with an enabled one. Every other problem is a warning in the CI run
-  summary.
+  names no tab, a colour is `#rgb` (it passes `safeColour`, then fails the snapshot
+  schema, which wants six digits), or the named roadmap tab lacks a `Title` or `Horizon`
+  column. A disabled row may therefore share a slug with an enabled one. Every other
+  problem is a warning in the CI run summary.
 
 ### Roadmap tabs
 

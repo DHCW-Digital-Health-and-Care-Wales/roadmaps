@@ -119,6 +119,8 @@ existing suites, unchanged in what they assert.
 - **D4** (agent, 2026-11-10, Opus review): S2's header variants are alternative
   spellings, each tested in its own header; the duplicate case puts two spellings of one
   column in the same header.
+- **D5** (agent, 2026-11-10, Sol review): `#ABC` is expanded as S3 says and also recorded
+  as a problem, since the public site's sync fails on a three-digit colour (ADR-009).
 
 ## Starting point
 

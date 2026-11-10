@@ -34,6 +34,8 @@ and `src/styles/AGENTS.md`.
 **Then** `pnpm lint` reports it as an unknown class, naming the file and line
 **And** the semantic utilities (`bg-primary`, `text-body`, `text-status-warning-fg`,
 `shadow-control`) lint clean
+**And** the primary fill used as a text colour (`text-primary`, `decoration-primary`,
+under any variant) is reported, while `text-primary-foreground` lints clean
 
 ### S2: Arbitrary values for design properties are rejected
 
@@ -134,6 +136,14 @@ test, and opacity on a whole element (`opacity-50` for disabled) stays allowed
   icon uses (`roadmap-icon`, the start page's source icon) to `--link`, because the dark
   `--primary` is a fill that fails as text. Its only use left is the start page's
   `color-mix` glow, so removing `--brand` means removing or tokenising that glow.
+- **D6** (agent, 2026-11-10, from STY-013's retrospective): S1 rejects the primary as
+  text. The dark `--primary` (`#32598a`) is a fill that fails 4.5:1 on navy, and no
+  contrast pair tests it as text, so only lint can stop it. STY-013's first review round
+  missed five such uses: `text-primary` in the `link` variants of `ui/button` and
+  `ui/badge` and in `ui/empty`'s hovered link (`[&>a:hover]:text-primary`), and
+  `text-brand`, its alias, in `roadmap-icon` and the start page's source icon. shadcn's
+  upstream components use `text-primary` the same way, so each `shadcn add` (STY-015)
+  brings it back.
 
 ## Starting point
 

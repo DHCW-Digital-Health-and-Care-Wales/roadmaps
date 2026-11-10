@@ -33,7 +33,13 @@ export function LanguageSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        render={<Button variant="ghost" className="max-sm:w-8 max-sm:px-0" />}
+        render={
+          <Button
+            variant="ghost"
+            // 32px below `sm`, as the header's other buttons, so the brand keeps its name.
+            className="max-sm:h-8 max-sm:w-8 max-sm:px-0"
+          />
+        }
       >
         <LanguagesIcon aria-hidden="true" />
         {/* Accessible name "Language English": it includes the visible endonym. */}

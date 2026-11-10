@@ -47,6 +47,22 @@ describe("RoadmapDetailPage", () => {
     ).toHaveAttribute("href", "/")
   })
 
+  it("goes back by a real link with a decorative chevron, not a button (STY-015 S5)", async () => {
+    await renderWithProviders({
+      path: "/roadmaps/productb",
+      authState: connected,
+      roadmaps,
+    })
+
+    const back = await main().findByRole("link", { name: "Back to roadmaps" })
+    expect(back).toHaveAttribute("data-slot", "back-link")
+    expect(back).not.toHaveAttribute("role")
+    expect(back.querySelector("svg")).toHaveAttribute("aria-hidden", "true")
+    expect(
+      main().queryByRole("button", { name: "Back to roadmaps" }),
+    ).toBeNull()
+  })
+
   it("opens from its card", async () => {
     const user = userEvent.setup()
     const { router } = await renderWithProviders({

@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router"
-import { ArrowLeftIcon, LockKeyholeIcon, MapPinOffIcon } from "lucide-react"
+import { LockKeyholeIcon, MapPinOffIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
+import { BackLink } from "@/components/layout/back-link"
 import { buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { localise } from "@/domain/roadmap/localised-text"
@@ -10,7 +11,6 @@ import { useAuth } from "@/features/auth/use-auth"
 import { useLanguage } from "@/i18n"
 import { cn } from "@/lib/utils"
 
-import { RoadmapIcon } from "../components/roadmap-icon"
 import { RoadmapsErrorState } from "../components/roadmaps-error-state"
 import { StatusPanel } from "../components/status-panel"
 import { useRoadmap } from "../hooks/use-roadmaps"
@@ -29,20 +29,7 @@ export function RoadmapDetailPage({ roadmapId }: RoadmapDetailPageProps) {
 
   return (
     <section className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
-      {/* Link semantics with button styling (Base UI's `render` would add role=button). */}
-      <Link
-        to="/"
-        className={cn(
-          buttonVariants({
-            variant: "ghost",
-            size: "sm",
-            className: "-ml-2.5 text-muted-foreground",
-          }),
-        )}
-      >
-        <ArrowLeftIcon data-icon="inline-start" aria-hidden="true" />
-        {t("roadmaps.detail.back")}
-      </Link>
+      <BackLink to="/">{t("roadmaps.detail.back")}</BackLink>
       <div className="mt-6">
         <RoadmapDetail roadmapId={roadmapId} />
       </div>
@@ -72,16 +59,13 @@ function RoadmapDetail({ roadmapId }: RoadmapDetailPageProps) {
             retrying={isFetching}
           />
         )}
-        <div className="flex items-start gap-4">
-          <RoadmapIcon className="size-12 rounded-xl [&_svg]:size-6" />
-          <div className="min-w-0 flex-1 pt-0.5">
-            <h1 className="text-heading-xl text-pretty wrap-break-word">
-              {localise(roadmap.title, language)}
-            </h1>
-            <p className="mt-1.5 text-muted-foreground">
-              {t("roadmaps.detail.comingSoon")}
-            </p>
-          </div>
+        <div className="min-w-0">
+          <h1 className="text-heading-xl text-pretty wrap-break-word">
+            {localise(roadmap.title, language)}
+          </h1>
+          <p className="mt-1.5 text-muted-foreground">
+            {t("roadmaps.detail.comingSoon")}
+          </p>
         </div>
       </div>
     )
@@ -96,7 +80,7 @@ function RoadmapDetail({ roadmapId }: RoadmapDetailPageProps) {
         titleAs="h1"
         description={t("roadmaps.detail.notFoundDescription")}
         action={
-          <Link to="/" className={cn(buttonVariants({ variant: "outline" }))}>
+          <Link to="/" className={cn(buttonVariants({ variant: "secondary" }))}>
             {t("roadmaps.detail.back")}
           </Link>
         }
@@ -130,10 +114,9 @@ function RoadmapDetail({ roadmapId }: RoadmapDetailPageProps) {
   }
 
   return (
-    <div role="status" className="flex items-start gap-4">
+    <div role="status">
       <span className="sr-only">{t("common.loading")}</span>
-      <Skeleton aria-hidden="true" className="size-12 shrink-0 rounded-xl" />
-      <div aria-hidden="true" className="flex flex-1 flex-col gap-3 pt-1.5">
+      <div aria-hidden="true" className="flex flex-col gap-3 pt-1.5">
         <Skeleton className="h-6 w-64 max-w-full" />
         <Skeleton className="h-4 w-80 max-w-full" />
       </div>

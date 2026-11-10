@@ -29,6 +29,10 @@ const TEXT_PAIRS: readonly (readonly [
   ["muted-foreground", "card"],
   ["muted-foreground", "popover"],
   ["accent-foreground", "accent"],
+  ["destructive-foreground", "destructive-fill"],
+  ["destructive-foreground", "destructive-hover"],
+  ["background", "link"],
+  ["background", "link-hover"],
   ["destructive", "background"],
   ["destructive", "card"],
   ["destructive", "muted"],
@@ -54,7 +58,14 @@ const TEXT_PAIRS: readonly (readonly [
 const SURFACES = ["background", "card", "popover", "muted"] as const
 
 /** What `focus-fill` replaces: the fills of buttons and button-styled links. */
-const FILLS = ["primary", "secondary", "muted", "accent", "background"] as const
+const FILLS = [
+  "primary",
+  "secondary",
+  "muted",
+  "accent",
+  "background",
+  "destructive-fill",
+] as const
 
 const TEXT_MINIMUM = 4.5
 const NON_TEXT_MINIMUM = 3

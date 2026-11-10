@@ -58,9 +58,7 @@ export function RoadmapsPage() {
             </p>
           )}
           <Button
-            variant="outline"
-            // Focusable while disabled, so `disabled:` styles don't apply.
-            className="data-disabled:opacity-50"
+            variant="secondary"
             disabled={!connected || isFetching}
             focusableWhenDisabled
             aria-busy={isFetching}

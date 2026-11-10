@@ -78,7 +78,7 @@ const JS_PROPERTIES = [
 ].join("|")
 
 const FOCUS_HINT =
-  "use focus-visible:focus-fill (buttons), focus-ring (cards, inputs, menus) or focus-link (text links) (ADR-010)."
+  "use focus-visible:focus-fill (buttons, menu items), focus-ring (cards, inputs, toasts) or focus-link (text links) (ADR-010)."
 
 interface Restriction {
   pattern: string

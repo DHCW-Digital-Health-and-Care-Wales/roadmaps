@@ -76,6 +76,23 @@ describe("RoadmapCard", () => {
     expect(inCard.queryByText("Single Record")).not.toBeInTheDocument()
   })
 
+  it("is DHCW's clickable card: square, barred, with an underlined link title and a decorative chevron (STY-015 S4)", async () => {
+    const main = await renderCards([productA])
+
+    const link = await main.findByRole("link", { name: "Product A roadmap" })
+    const card = link.parentElement?.parentElement
+    expect(card).toHaveClass("border", "shadow-card-bar", "hover:border-input")
+    expect(card?.className).not.toMatch(/rounded/)
+    expect(card).toHaveClass("has-focus-visible:focus-ring")
+    expect(link).toHaveClass("underline", "text-link", "after:inset-0")
+    const chevron = card?.querySelector("svg")?.parentElement
+    expect(chevron).toHaveAttribute("aria-hidden", "true")
+    expect(chevron).toHaveClass("bg-link", "rounded-full")
+    expect(within(cardOf(link)).getByText("Beta")).toHaveClass(
+      "bg-status-neutral-bg",
+    )
+  })
+
   it("names the link by the title alone, the rest being its description (S2)", async () => {
     const main = await renderCards([productA])
 

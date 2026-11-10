@@ -11,8 +11,13 @@ export const TEXT_TOKENS = [
   "body-xs",
 ] as const
 
-/** The semantic shadows `globals.css` defines (`shadow-control`, `shadow-popup`). */
-export const SHADOW_TOKENS = ["control", "popup"] as const
+/** The semantic shadows `globals.css` defines (`shadow-control`, `shadow-popup`, …). */
+export const SHADOW_TOKENS = [
+  "control",
+  "control-edge",
+  "card-bar",
+  "popup",
+] as const
 
 /** DHCW's focus indicators, the `@utility` blocks in `globals.css`. */
 export const FOCUS_UTILITIES = [

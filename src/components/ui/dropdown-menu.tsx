@@ -1,8 +1,13 @@
 // Deviates from upstream shadcn (ADR-010): imports cn from @/lib/utils;
 // text-body-xs for upstream's text sizes (no letter-spacing), and
-// focus-visible:focus-ring on items. Tokens replace upstream's tints and shadows (lint
+// focus-visible:focus-fill on items (STY-015 D5): the pointer highlights an item with the
+// muted surface (`focus:bg-accent`) and the keyboard fills it yellow, as a DHCW link or
+// button, rather than ringing it; the items have 4px corners, and no child forces
+// `accent-foreground` onto the fill. Tokens replace upstream's tints and shadows (lint
 // rejects opacity modifiers and `dark:` overrides): popups are ring-border with
-// shadow-popup, and a focused destructive item is the danger status.
+// shadow-popup, and a focused destructive item is the danger status. A submenu trigger
+// keeps upstream's open-state `bg-accent`, which would sort after (and hide) the fill on a
+// focused open trigger: no submenu exists yet, so decide it when the first one does.
 import * as React from "react"
 import { Menu as MenuPrimitive } from "@base-ui/react/menu"
 import { cn } from "@/lib/utils"
@@ -93,7 +98,7 @@ function DropdownMenuItem({
       data-inset={inset}
       data-variant={variant}
       className={cn(
-        "group/dropdown-menu-item relative flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-body-xs outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground focus-visible:focus-ring data-inset:pl-7 data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-status-danger-bg data-[variant=destructive]:focus:text-status-danger-fg data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 data-[variant=destructive]:*:[svg]:text-destructive",
+        "group/dropdown-menu-item relative flex cursor-default items-center gap-1.5 rounded-lg px-1.5 py-1 text-body-xs outline-hidden select-none focus:bg-accent focus:text-accent-foreground focus-visible:focus-fill data-inset:pl-7 data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-status-danger-bg data-[variant=destructive]:focus:text-status-danger-fg data-[variant=destructive]:focus-visible:focus-fill data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 data-[variant=destructive]:*:[svg]:text-destructive",
         className,
       )}
       {...props}
@@ -118,7 +123,7 @@ function DropdownMenuSubTrigger({
       data-slot="dropdown-menu-sub-trigger"
       data-inset={inset}
       className={cn(
-        "flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-body-xs outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground focus-visible:focus-ring data-inset:pl-7 data-popup-open:bg-accent data-popup-open:text-accent-foreground data-open:bg-accent data-open:text-accent-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "flex cursor-default items-center gap-1.5 rounded-lg px-1.5 py-1 text-body-xs outline-hidden select-none focus:bg-accent focus:text-accent-foreground focus-visible:focus-fill data-inset:pl-7 data-popup-open:bg-accent data-popup-open:text-accent-foreground data-open:bg-accent data-open:text-accent-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className,
       )}
       {...props}
@@ -167,7 +172,7 @@ function DropdownMenuCheckboxItem({
       data-slot="dropdown-menu-checkbox-item"
       data-inset={inset}
       className={cn(
-        "relative flex cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-body-xs outline-hidden select-none focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground focus-visible:focus-ring data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "relative flex cursor-default items-center gap-1.5 rounded-lg py-1 pr-8 pl-1.5 text-body-xs outline-hidden select-none focus:bg-accent focus:text-accent-foreground focus-visible:focus-fill data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className,
       )}
       checked={checked}
@@ -208,7 +213,7 @@ function DropdownMenuRadioItem({
       data-slot="dropdown-menu-radio-item"
       data-inset={inset}
       className={cn(
-        "relative flex cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-body-xs outline-hidden select-none focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground focus-visible:focus-ring data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "relative flex cursor-default items-center gap-1.5 rounded-lg py-1 pr-8 pl-1.5 text-body-xs outline-hidden select-none focus:bg-accent focus:text-accent-foreground focus-visible:focus-fill data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className,
       )}
       {...props}
@@ -247,7 +252,7 @@ function DropdownMenuShortcut({
     <span
       data-slot="dropdown-menu-shortcut"
       className={cn(
-        "ml-auto text-body-xs text-muted-foreground group-focus/dropdown-menu-item:text-accent-foreground",
+        "ml-auto text-body-xs text-muted-foreground group-focus-visible/dropdown-menu-item:text-focus-foreground",
         className,
       )}
       {...props}

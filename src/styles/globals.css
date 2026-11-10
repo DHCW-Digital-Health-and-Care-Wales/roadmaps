@@ -30,6 +30,7 @@
   --nhsw-primary-button-shadow: #0e1b2f; /* $nhswales-primary-button-shadow */
   --nhsw-colour-button-primary-hover: #32598a; /* $nhsw-colour-button-primary-hover */
   --nhsw-delete-button: #d5281b; /* $nhswales-delete-button */
+  --nhsw-colour-button-delete-hover: #902419; /* $nhsw-colour-button-delete-hover */
   --nhsw-page-background-white: #ffffff; /* $nhswales-page-background-white */
   --nhsw-page-background-grey: #f0f4f5; /* $nhswales-page-background-grey */
   --nhsw-page-background-blue: #1b365d; /* $nhswales-page-background-blue */
@@ -117,6 +118,12 @@
   --accent: var(--nhsw-page-background-grey);
   --accent-foreground: var(--nhsw-primary-text-colour);
   --destructive: var(--nhsw-delete-button);
+  /* The solid red button: DHCW's warning button, the same in both themes. `--destructive`
+     is text and icons; in dark it is lightened to read on navy, which would barely
+     change when the button turns yellow on focus. */
+  --destructive-fill: var(--nhsw-delete-button);
+  --destructive-foreground: var(--nhsw-exceptional-text-colour);
+  --destructive-hover: var(--nhsw-colour-button-delete-hover);
   /* Decorative separators, exempt from 3:1 (ADR-010). A boundary someone needs to find
      a control is `--input`. */
   --border: var(--nhsw-grey-border-colour);
@@ -254,6 +261,10 @@
   --text-body-xs--line-height: var(--nhsw-line-height-body-extra-small);
 
   --shadow-control: 0 2px 0 var(--control-shadow);
+  /* The bar under a secondary button: its own border colour (DHCW's secondary). */
+  --shadow-control-edge: 0 2px 0 var(--input);
+  /* The grey bar under a clickable card (DHCW's `.nhsw-card` with a title link). */
+  --shadow-card-bar: 0 4px 0 var(--border);
   --shadow-popup: var(--popup-shadow);
 
   --color-background: var(--background);
@@ -273,6 +284,9 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-fill: var(--destructive-fill);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-hover: var(--destructive-hover);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -332,7 +346,7 @@
   box-shadow: 0 2px 0 var(--focus-foreground);
 }
 
-/* Cards, inputs and menus: a 3px yellow outline outside a 2px dark inner ring
+/* Cards, inputs and toasts: a 3px yellow outline outside a 2px dark inner ring
    (DHCW src/foundations/_input-base.scss, src/utilities/_focus-ring.scss). */
 @utility focus-ring {
   outline: 3px solid var(--focus);

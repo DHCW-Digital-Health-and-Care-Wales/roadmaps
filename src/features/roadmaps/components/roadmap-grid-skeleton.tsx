@@ -19,7 +19,7 @@ export function RoadmapGridSkeleton() {
           <li
             // Static placeholders: the index is a stable key.
             key={index}
-            className="flex min-h-18 items-stretch gap-3.5 rounded-xl border bg-card p-4"
+            className="flex min-h-18 items-stretch gap-3.5 border bg-card p-4 shadow-card-bar"
           >
             <Skeleton className="w-1.5 shrink-0 rounded-full" />
             <div className="flex flex-1 flex-col gap-2.5">

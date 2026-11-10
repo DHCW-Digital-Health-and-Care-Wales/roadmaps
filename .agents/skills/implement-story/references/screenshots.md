@@ -20,7 +20,9 @@ the dev server: its hermetic guard rejects Vite's HMR WebSocket. StrictMode in
 dev aborts and repeats the first fetch, consuming a queued Sheets reply, so
 route Sheets yourself or capture against `pnpm build && pnpm preview`. Keep
 capture scripts in a scratch directory, not in the repository, unless they are
-proper E2E tests.
+proper E2E tests. A scratch Playwright spec that imports the repository's
+fixtures loads only once that directory holds a `package.json` of
+`{"type":"module"}` and a `node_modules` symlink to the checkout's.
 
 Cover desktop (1280 px) and phone (375 px), light and dark mode where relevant,
 and Welsh (`cy`) where copy changed. Save captures under
@@ -39,7 +41,9 @@ screen or state with no predecessor has no baseline and is published as new;
 a changed entry point to it gets its own before/after pair. If capture is
 impossible, record the missing baseline and blocker; never reconstruct it from
 an already edited UI or label an after capture as before. Do not reset the
-checkout merely to obtain a baseline.
+checkout merely to obtain a baseline: build the base revision in scratch
+instead (`git archive <base> | tar -x`, with `node_modules` symlinked and
+`.env.local` copied).
 
 After the review fixes, capture the matching after states with comparable
 viewport, data and navigation. Publish every pair and every new capture in the

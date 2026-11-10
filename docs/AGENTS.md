@@ -8,7 +8,7 @@ spec or plan outside `docs/`.
 
 | Path                  | What goes in it                                                              |
 | --------------------- | ---------------------------------------------------------------------------- |
-| `GLOSSARY.md`         | The domain vocabulary (`.claude/skills/domain-modeling/GLOSSARY-FORMAT.md`)  |
+| `GLOSSARY.md`         | The domain vocabulary (`.agents/skills/domain-modeling/GLOSSARY-FORMAT.md`)  |
 | `adr/`                | One decision per `NNNN-kebab-title.md`, indexed in `adr/README.md`           |
 | `backlog/README.md`   | The index: epics with status, then standalone chores and defects             |
 | `backlog/<epic>/`     | An epic's `README.md` and its live stories `S<nn>-<kebab-title>.md`          |
@@ -71,7 +71,7 @@ analysis gains an _Outcome_ section saying where. A delivery run summary under
 
 ## ADRs
 
-- Follow `.claude/skills/domain-modeling/ADR-FORMAT.md` for an ADR's naming,
+- Follow `.agents/skills/domain-modeling/ADR-FORMAT.md` for an ADR's naming,
   shape, status lifecycle, supersession, in-place amendment and when a
   Proposed one may be built on.
 - Record an ADR as Accepted only on the owner's word: match each decision to an

@@ -6,9 +6,9 @@ description: Investigate or fix actionable PR findings as a bounded worker while
 Handle only the substantive investigation or fix in the parent's brief. Read its
 handoff and verify the PR's expected head before editing; report head drift.
 Follow the bounded worker contract in
-`.claude/skills/implement-story/references/pr-watch.md`. Return dispositions,
+`.agents/skills/implement-story/references/pr-watch.md`. Return dispositions,
 changed paths, verification, reviewed/pushed head and remaining work; link
 pushes to the session immediately where the runtime supports it. The top-level
 parent owns notifications and readiness decisions. Never watch a PR or wait for
 future PR events. Start independent reviewers only when the brief authorizes
-them, using `.claude/skills/implement-story/references/delegation.md`.
+them, using `.agents/skills/implement-story/references/delegation.md`.

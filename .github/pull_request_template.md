@@ -35,7 +35,7 @@ cites: its scenarios and viewport, then the screen, state, theme and language.
 A before/after pair sits side by side in a two-column table; a new screen or
 state is one full-width image, its caption ending "· new". Reference local
 files; gh --attach uploads them
-(.claude/skills/implement-story/references/screenshots.md).
+(.agents/skills/implement-story/references/screenshots.md).
 -->
 
 **S1 · desktop · <screen> · <state> · light · en**

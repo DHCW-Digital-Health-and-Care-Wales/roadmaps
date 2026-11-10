@@ -37,7 +37,8 @@ build/              build-time helpers for vite/playwright config (GitHub Pages 
 .github/            CI/CD workflow (verify, e2e, deploy to Pages), Dependabot (ADR-0007),
                     PR template
 docs/               ADRs, backlog, glossary, analyses, runbooks (docs/AGENTS.md)
-.claude/            agent skills, reviewer/worker agents, session hook
+.agents/skills/     agent skills, for every agent runtime
+.claude/            Claude reviewer/worker agents, session hook, skills symlink
 ```
 
 - UI code must never mention spreadsheets, sheets, worksheets, cell ranges, or Google
@@ -98,8 +99,8 @@ actionlint          # after editing .github/workflows (not a dependency; install
 ## Workflow for delivery agents
 
 - Deliver a story, defect or chore (including "implement the next logical story from
-  epic X") with `.claude/skills/implement-story/SKILL.md`, and several with
-  `.claude/skills/orchestrate/SKILL.md`. Any other change that ends in a PR follows
+  epic X") with `.agents/skills/implement-story/SKILL.md`, and several with
+  `.agents/skills/orchestrate/SKILL.md`. Any other change that ends in a PR follows
   implement-story's steps 3–6 unasked. Read its `references/delegation.md` before
   delegating any work.
 - Before a PR is raised, every change gets two independent correctness reviews
@@ -111,11 +112,12 @@ actionlint          # after editing .github/workflows (not a dependency; install
 - Every delivery appends an entry to the Handoff log below.
 - Records, ADRs and analyses follow `docs/AGENTS.md`; domain terms follow
   `docs/GLOSSARY.md`. Invoke the `copywriter` skill before writing user-facing copy.
-- Skills live in `.claude/skills/`; `.agents/skills` exposes the same files to Codex. If
-  a skill is missing from your runtime's catalogue, read its `SKILL.md` and follow it.
+- Skills live in `.agents/skills/`, which Copilot and Codex read; `.claude/skills` is a
+  symlink to it for Claude Code. If a skill is missing from your runtime's catalogue,
+  read its `SKILL.md` and follow it.
   Agent roles in `.claude/agents/` are briefs for fresh workers.
 - Before editing these instructions, a skill or an agent, read
-  `.claude/skills/writing-for-agents/SKILL.md` and
+  `.agents/skills/writing-for-agents/SKILL.md` and
   `docs/operations/authoring-agent-instructions.md`.
 
 ## Handoff log
@@ -531,7 +533,7 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
     5. Dependabot for npm (actions only today), keeping Playwright pinned exactly with
        its browser cache.
     6. Then the roadmap detail feature, which will be the first real per-sheet read.
-- **Agent skills and delivery process (no record)** — `.claude/skills/` (implement-story,
+- **Agent skills and delivery process (no record)** — `.agents/skills/` (implement-story,
   orchestrate, retro, code-review, quality-review, copywriter, domain-modeling,
   ux-prototypes, shadcn, playwright-cli, writing-for-agents, grilling, codebase-design,
   improve-codebase-architecture), `.claude/agents/`, a SessionStart hook, the PR template,
@@ -541,7 +543,7 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
     runtime capabilities, never tools; bootstrap stories archived unchanged.
   - Gotchas:
     - `node --test <dir>` fails on Node 22; pass the glob
-      (`node --test '.claude/skills/*/scripts/*.test.mjs'`).
+      (`node --test '.agents/skills/*/scripts/*.test.mjs'`).
     - `playwright-cli` is not a dependency: `pnpm dlx @playwright/cli@0.1.24`, output in
       `.artifacts/playwright-cli/`.
     - `roadmaps.title` ("Your Roadmaps") breaks the sentence-case rule and is asserted

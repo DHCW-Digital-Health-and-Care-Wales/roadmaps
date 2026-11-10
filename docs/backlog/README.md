@@ -2,7 +2,7 @@
 
 The index of the work the project knows about. New records start from
 `_templates/`, statuses follow `_templates/status-lifecycle.md`, and delivery
-follows `.claude/skills/implement-story/SKILL.md`: one record, one reviewed PR.
+follows `.agents/skills/implement-story/SKILL.md`: one record, one reviewed PR.
 `docs/AGENTS.md` has the layout and ID rules. A record in a terminal status
 moves to `_archive/`, where its row here still points.
 

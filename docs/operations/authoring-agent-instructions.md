@@ -3,7 +3,7 @@
 Read the `writing-for-agents` skill before changing agent guides or skills.
 This policy governs `AGENTS.md` (and the `CLAUDE.md` that only imports it),
 agent definitions under `.claude/agents/` and skill instructions under
-`.claude/skills/`. Nothing checks it mechanically: review judges it.
+`.agents/skills/`. Nothing checks it mechanically: review judges it.
 
 Root guides are read at onboarding; nested guides and skills are read when
 their scope or trigger applies. Each extra line consumes attention on every
@@ -122,7 +122,7 @@ between "needed now" and "needed sometimes" belongs in a skill's
 
 Use a skill directory containing `SKILL.md`, with its invocation metadata in
 that file's frontmatter. Keep one authoritative skill source under
-`.claude/skills/`; the `.agents/skills` link for other tools points to it
+`.agents/skills/`; the `.claude/skills` link for Claude Code points to it
 rather than copying it. Read the writing skill's mechanics reference for
 invocation choices. Describe actual trigger branches and capability needs, and
 use model identifiers only when the current runtime provides them.

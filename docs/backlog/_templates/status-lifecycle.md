@@ -79,4 +79,4 @@ epic moves to `_archive/{epic}/`.
 
 ## ADRs
 
-`.claude/skills/domain-modeling/ADR-FORMAT.md` owns an ADR's lifecycle.
+`.agents/skills/domain-modeling/ADR-FORMAT.md` owns an ADR's lifecycle.

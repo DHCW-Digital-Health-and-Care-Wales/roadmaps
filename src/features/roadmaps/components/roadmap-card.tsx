@@ -62,7 +62,7 @@ export function RoadmapCard({ roadmap }: RoadmapCardProps) {
           aria-describedby={
             describedBy.length > 0 ? describedBy.join(" ") : undefined
           }
-          className="line-clamp-2 leading-snug font-medium wrap-break-word outline-none after:absolute after:inset-0 after:rounded-xl"
+          className="line-clamp-2 leading-snug font-medium wrap-anywhere outline-none after:absolute after:inset-0 after:rounded-xl"
         >
           {title}
         </Link>
@@ -76,7 +76,12 @@ export function RoadmapCard({ roadmap }: RoadmapCardProps) {
                 </span>
               )}
               {status !== null && (
-                <Badge id={`${id}-status`} variant="secondary">
+                <Badge
+                  id={`${id}-status`}
+                  variant="secondary"
+                  // Free text of any length: wrap within the card, not past it.
+                  className="h-auto max-w-full min-w-0 py-0.5 text-start wrap-anywhere whitespace-normal"
+                >
                   {status}
                 </Badge>
               )}
@@ -99,7 +104,7 @@ export function RoadmapCard({ roadmap }: RoadmapCardProps) {
           {hasFooter && (
             <div className="mt-auto flex flex-col gap-0.5 pt-1 text-xs text-muted-foreground">
               {roadmap.productLead !== null && (
-                <span id={`${id}-productLead`} className="wrap-break-word">
+                <span id={`${id}-productLead`} className="wrap-anywhere">
                   {t("roadmaps.card.productLead", {
                     name: roadmap.productLead,
                   })}

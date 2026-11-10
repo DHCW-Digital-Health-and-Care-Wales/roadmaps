@@ -180,6 +180,9 @@ As EPC-002 Out of scope, plus filtering or grouping by category (D4).
   `roadmaps.unpublishedCount`, so each part keeps its own plural forms (Welsh has all six
   of both); `unpublishedCount_zero` exists only because the Welsh catalogue must spell all
   six forms and is never shown.
+- **S7, long free text** (agent, from review): a long status label, family, title or
+  product lead wraps within its card (`wrap-anywhere`, a one-column grid with
+  `minmax(0, 1fr)`) instead of widening the page at 375px; an E2E case holds it.
 - **Loading** (agent): the skeleton's placeholder cards now have the new card's shape, so
   the page does not jump when roadmaps arrive.
 - **Shared code** (agent): the parser's `fold` moved to `@/lib/text` (`foldText`), as

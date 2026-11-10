@@ -4,7 +4,7 @@ import { RoadmapCard } from "./roadmap-card"
 
 /** Shared by the grid and its skeleton, so loading does not shift the layout. */
 export const roadmapGridClassName =
-  "grid gap-3 sm:auto-rows-fr sm:grid-cols-2 lg:grid-cols-3"
+  "grid grid-cols-1 gap-3 sm:auto-rows-fr sm:grid-cols-2 lg:grid-cols-3"
 
 export interface RoadmapGridProps {
   roadmaps: readonly Roadmap[]

@@ -38,7 +38,7 @@ export function RoadmapGroups({ roadmaps }: RoadmapGroupsProps) {
           <div key={key} className="flex flex-col gap-3">
             <h2
               id={id}
-              className="text-base font-semibold tracking-tight wrap-break-word"
+              className="text-base font-semibold tracking-tight wrap-anywhere"
             >
               {family ? localise(family, language) : t("roadmaps.noFamily")}
             </h2>

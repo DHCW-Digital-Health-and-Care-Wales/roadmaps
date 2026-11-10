@@ -251,3 +251,47 @@ test("a language switch re-sorts the groups and titles (S8)", async ({
     "Teulu Ysgol",
   ])
 })
+
+test.describe("on a phone", () => {
+  test.use({ viewport: { width: 375, height: 800 } })
+
+  test("long free text wraps within its card, with no horizontal scroll (S7)", async ({
+    page,
+    sheets,
+  }) => {
+    sheets.spreadsheet = withRoadmapIndex([
+      HEADER,
+      roadmapRow({
+        Sheet: "long",
+        Enabled: "No",
+        Title: "A roadmap with a very long title that goes on and on and on",
+        Family: "A family name that is long enough to need more than one line",
+        "Status label":
+          "In private beta with selected health boards and partner organisations",
+        "Service description": "Words ".repeat(80),
+        "Product Lead": "Alexandria Montgomery-Featherstonehaugh and Sam Evans",
+      }),
+      roadmapRow({
+        Sheet: "unbroken",
+        Enabled: "Yes",
+        Title: "Unbroken",
+        "Status label": "Supercalifragilisticexpialidocious".repeat(3),
+      }),
+    ])
+    await page.goto("./")
+    await connect(page)
+    await expect(roadmapCards(page)).toHaveCount(2)
+
+    const overflow = await page.evaluate(
+      () =>
+        document.documentElement.scrollWidth -
+        document.documentElement.clientWidth,
+    )
+    expect(overflow).toBeLessThanOrEqual(0)
+    const [badge, box] = await Promise.all([
+      page.getByText(/^In private beta/).boundingBox(),
+      card(page, "A roadmap with a very long title").boundingBox(),
+    ])
+    expect(badge?.width).toBeLessThanOrEqual(box?.width ?? 0)
+  })
+})

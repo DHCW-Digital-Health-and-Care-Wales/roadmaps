@@ -96,6 +96,11 @@ actionlint          # after editing .github/workflows (not a dependency; install
   system enforces parity. Copy is sentence case. Domain/infrastructure emit codes, not copy.
   `i18next/no-literal-string` rejects literal JSX text and literal `aria-label`/`title`/
   `alt`/`placeholder` attributes outside tests and `components/ui`.
+- Design tokens (ADR-010): style with the semantic tokens of `src/styles/globals.css`:
+  its theme colours, the `text-heading-*`/`text-body*` sizes, and for focus
+  `focus-visible:focus-fill` (buttons, button-styled links), `focus-ring` (cards, inputs,
+  menus) or `focus-link` (text links). Read `src/styles/AGENTS.md` before adding a token or
+  touching the DHCW pin.
 
 ## Working conventions
 
@@ -652,3 +657,23 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
   shadcn/Base UI, and never loads its CSS.
   - The dashboard sidebar is deferred to the first record that adds navigation
     (ADR-010 _Deferred_).
+- **STY-013 DHCW colours, type and focus** — `globals.css` rewritten in ADR-010's three
+  tiers (`--nhsw-*` copied from the pinned DHCW release, `--app-dark-*`, semantic tokens),
+  Roboto (`@fontsource-variable/roboto`, Geist removed), DHCW's mobile type scale as
+  `text-heading-*`/`text-body*`, 4px radius, and the `focus-fill`/`focus-ring`/`focus-link`
+  utilities. `dhcw-design-system` is an exact GitHub-tag devDependency read by
+  `src/styles/tokens.test.ts` (drift, literal colours); `contrast.test.ts` checks both
+  themes. `cn` is configured in `@/lib/utils` and lint rejects the bare package. New
+  `src/styles/AGENTS.md` (tokens, pin upgrade); README Design section.
+  - Decisions: the dark theme is DHCW's navies (page `#0e1b2f`, surface `#13233c`) with
+    DHCW's mid blue `#32598a` as the primary fill (a pale one barely changes when it turns
+    yellow on focus) and the tag palette inverted. `--primary` is a fill, never text:
+    text and icons in link blue use `--link`; status tokens are DHCW's tags; the
+    status panel title is `text-heading-m` at either heading level.
+  - Gotchas:
+    - Vitest empties stylesheets, even `?raw`, unless `test.css.include` lists them
+      (`vite.config.ts`).
+    - Focus utilities: see `src/styles/AGENTS.md` (a `dark:` background hides the fill).
+    - Buttons transition into focus styles: read computed focus styles with
+      `expect.poll` in E2E.
+    - Sonner's unlayered CSS beats utilities; `globals.css` overrides its font and size.

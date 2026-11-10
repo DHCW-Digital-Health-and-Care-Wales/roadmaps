@@ -45,6 +45,14 @@ export default defineConfig({
       "tests/fixtures/**/*.test.ts",
     ],
     setupFiles: ["./src/test/setup.ts"],
+    // Vitest empties the stylesheets it doesn't process, `?raw` imports included; the
+    // token tests read the text of ours and of the pinned DHCW release's Sass.
+    css: {
+      include: [
+        /src\/styles\/globals\.css/,
+        /node_modules\/dhcw-design-system\/src\/.+\.scss/,
+      ],
+    },
     // Hermetic placeholder config so modules importing `@/app/config` load in tests.
     env: {
       VITE_GOOGLE_CLIENT_ID: "test-client-id.apps.googleusercontent.com",

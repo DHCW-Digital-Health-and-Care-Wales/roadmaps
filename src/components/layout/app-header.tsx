@@ -19,11 +19,11 @@ export function AppHeader({ actions }: AppHeaderProps) {
         <Link
           to="/"
           aria-label={t("layout.home")}
-          className="-mx-1.5 flex min-w-0 items-center gap-2.5 rounded-lg px-1.5 py-1 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="-mx-1.5 flex min-w-0 items-center gap-2.5 rounded-lg px-1.5 py-1 outline-none focus-visible:focus-fill"
         >
           <BrandMark />
           {/* Below `sm` a short name; the link's label carries the full one. */}
-          <span className="truncate text-sm font-semibold tracking-tight sm:text-[0.9375rem]">
+          <span className="truncate text-body font-semibold">
             <span className="sm:hidden">{t("common.shortAppName")}</span>
             <span className="max-sm:hidden">{t("common.appName")}</span>
           </span>

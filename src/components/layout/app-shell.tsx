@@ -69,7 +69,7 @@ export function AppShell({ headerActions, children }: AppShellProps) {
     <div className="flex min-h-svh flex-col">
       <a
         href={`#${MAIN_ID}`}
-        className="sr-only z-50 rounded-lg border bg-background text-sm font-medium shadow-md ring-3 ring-ring/50 focus:not-sr-only focus:fixed focus:top-2.5 focus:left-3 focus:px-3 focus:py-2"
+        className="sr-only z-50 rounded-lg text-body-xs font-medium focus:not-sr-only focus:fixed focus:top-2.5 focus:left-3 focus:focus-fill focus:px-3 focus:py-2"
         onClick={(event) => {
           // Hash history owns the URL fragment, so move focus without navigating.
           event.preventDefault()

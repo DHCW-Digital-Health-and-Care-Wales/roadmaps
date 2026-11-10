@@ -121,6 +121,10 @@ horizontally at 375px
   link already makes the whole card the target.
 - **D4** (agent, 2026-11-10): `RoadmapIcon`'s indigo tile goes. If the detail page's
   header reads worse without an icon, use a neutral glyph; record which.
+- **D5** (agent, 2026-11-10, from STY-013's delivery): STY-013 S4 gives menu items
+  `focus-ring` (a 3px yellow outline outside a dark inner ring), and that is what
+  `ui/dropdown-menu.tsx` has; S6 here asks for `focus-fill`. Settle it when restyling the
+  menu: switch the items to `focus-fill`, or keep the ring and record why.
 
 ## Starting point
 

@@ -39,7 +39,7 @@ export function RoadmapsPage() {
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex flex-col gap-1.5">
-          <h1 id={TITLE_ID} className="text-2xl font-semibold tracking-tight">
+          <h1 id={TITLE_ID} className="text-heading-xl">
             {t("roadmaps.title")}
           </h1>
           <p className="text-pretty text-muted-foreground">
@@ -48,7 +48,7 @@ export function RoadmapsPage() {
         </div>
         <div className="flex shrink-0 items-center gap-3">
           {roadmaps && roadmaps.length > 0 && (
-            <p className="text-sm text-muted-foreground tabular-nums">
+            <p className="text-body-xs text-muted-foreground tabular-nums">
               {unpublished > 0
                 ? t("roadmaps.countWithUnpublished", {
                     total: roadmaps.length,

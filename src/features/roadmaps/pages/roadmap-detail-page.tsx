@@ -75,7 +75,7 @@ function RoadmapDetail({ roadmapId }: RoadmapDetailPageProps) {
         <div className="flex items-start gap-4">
           <RoadmapIcon className="size-12 rounded-xl [&_svg]:size-6" />
           <div className="min-w-0 flex-1 pt-0.5">
-            <h1 className="text-xl font-semibold tracking-tight text-pretty wrap-break-word sm:text-2xl">
+            <h1 className="text-heading-xl text-pretty wrap-break-word">
               {localise(roadmap.title, language)}
             </h1>
             <p className="mt-1.5 text-muted-foreground">

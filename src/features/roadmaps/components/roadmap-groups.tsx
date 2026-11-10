@@ -36,10 +36,7 @@ export function RoadmapGroups({ roadmaps }: RoadmapGroupsProps) {
         const id = `${headingId}-${String(index)}`
         return (
           <div key={key} className="flex flex-col gap-3">
-            <h2
-              id={id}
-              className="text-base font-semibold tracking-tight wrap-anywhere"
-            >
+            <h2 id={id} className="text-heading-s wrap-anywhere">
               {family ? localise(family, language) : t("roadmaps.noFamily")}
             </h2>
             <RoadmapGrid roadmaps={members} labelledBy={id} />

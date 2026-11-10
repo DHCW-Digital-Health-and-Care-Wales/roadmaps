@@ -1,5 +1,8 @@
+// Deviates from upstream shadcn (ADR-010): imports cn from @/lib/utils;
+// text-body-xs for upstream's text-sm (no letter-spacing); a hovered link is --link-hover,
+// as --primary is a fill only.
 import { cva, type VariantProps } from "class-variance-authority"
-import { cn } from "cn"
+import { cn } from "@/lib/utils"
 
 function Empty({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -58,10 +61,7 @@ function EmptyTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="empty-title"
-      className={cn(
-        "font-heading text-sm font-medium tracking-tight",
-        className,
-      )}
+      className={cn("font-heading text-body-xs font-medium", className)}
       {...props}
     />
   )
@@ -72,7 +72,7 @@ function EmptyDescription({ className, ...props }: React.ComponentProps<"p">) {
     <div
       data-slot="empty-description"
       className={cn(
-        "text-sm/relaxed text-muted-foreground [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary",
+        "text-body-xs text-muted-foreground [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-link-hover",
         className,
       )}
       {...props}
@@ -85,7 +85,7 @@ function EmptyContent({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="empty-content"
       className={cn(
-        "flex w-full max-w-sm min-w-0 flex-col items-center gap-2.5 text-sm text-balance",
+        "flex w-full max-w-sm min-w-0 flex-col items-center gap-2.5 text-body-xs text-balance",
         className,
       )}
       {...props}

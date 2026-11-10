@@ -692,8 +692,9 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
   - Decisions: tests (`*.test.*`, `src/test/`) are exempt; `components/ui` may colour a
     menu item's focus highlight, nothing else may style an element's own focus beyond the
     focus utilities and layout; `dark:hidden` stays allowed; class maps must be
-    variables named `…Classes` to be linted. The record's Delivery lists each migrated
-    look.
+    variables named `…Classes` to be linted; a `style` attribute holds an object literal
+    (perhaps cast, or chosen by a condition), never a variable or spread. The record's
+    Delivery lists each migrated look.
   - Gotchas:
     - A shadow token named after a colour token is a colour: `shadow-popover` sets the
       popover shadow's colour, so the popup shadow is `shadow-popup`.
@@ -703,4 +704,5 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
       design blocks with the parser alone.
     - In a scratch directory whose `node_modules` symlinks to the checkout's, run
       binaries as `./node_modules/.bin/playwright`: `pnpm exec` there installs and prunes
-      the checkout's `node_modules` through the link.
+      the checkout's `node_modules` through the link. The same goes for reviewers in a
+      shared checkout: `pnpm exec eslint` relinks `node_modules`.

@@ -56,7 +56,7 @@ export const en = {
     },
   },
   roadmaps: {
-    title: "Your Roadmaps",
+    title: "Your roadmaps",
     description: "Roadmaps available in the connected spreadsheet.",
     refresh: "Refresh",
     loading: "Loading roadmaps…",

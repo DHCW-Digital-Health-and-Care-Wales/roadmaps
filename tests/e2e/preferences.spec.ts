@@ -47,7 +47,7 @@ test("switching to Cymraeg translates the app, and the choice persists", async (
     .getByRole("button", { name: "Cysylltu â Google" })
     .click()
   await expect(
-    page.getByRole("heading", { level: 1, name: "Eich Mapiau Trywydd" }),
+    page.getByRole("heading", { level: 1, name: "Eich mapiau trywydd" }),
   ).toBeVisible()
   await expect(roadmapCards(page)).toHaveCount(3)
   await expect(page.getByText("3 map trywydd")).toBeVisible()
@@ -55,7 +55,7 @@ test("switching to Cymraeg translates the app, and the choice persists", async (
   await chooseLanguage(page, "Iaith Cymraeg", "English")
   await expect(page.locator("html")).toHaveAttribute("lang", "en")
   await expect(
-    page.getByRole("heading", { level: 1, name: "Your Roadmaps" }),
+    page.getByRole("heading", { level: 1, name: "Your roadmaps" }),
   ).toBeVisible()
 })
 

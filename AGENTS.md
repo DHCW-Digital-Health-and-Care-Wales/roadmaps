@@ -409,13 +409,13 @@ language? })` (`src/test/render-with-providers.tsx`) renders the real `AppProvid
     `aria-busy` while fetching and disabled (focusable) unless connected. Shared pieces:
     `StatusPanel` (Empty-based, `titleAs` h1/h2), `RoadmapIcon`, `ReconnectButton`
     (`features/auth/components`). The detail route passes `Route.useParams().roadmapId`.
-  - S07 E2E hooks (stable accessible names, en): heading "Your Roadmaps"; cards are links
+  - S07 E2E hooks (stable accessible names, en): heading "Your roadmaps"; cards are links
     named by the roadmap name inside `main`'s only `list`, `href` `#/roadmaps/<sheetId>`;
     count text "N roadmaps"; buttons "Refresh", "Retry", "Reconnect" (inside the alert;
     the header has another "Reconnect"); alert titles "Couldn't load your roadmaps",
     "Couldn't refresh your roadmaps", "Your session has expired"; empty "No roadmaps yet";
     detail h1 = roadmap name, "Roadmap not found", "Back to roadmaps". Welsh: "Eich
-    Mapiau Trywydd", "Adnewyddu", "2 fap trywydd".
+    mapiau trywydd", "Adnewyddu", "2 fap trywydd".
   - Gotchas:
     - A 5xx/network error is retried twice with back-off (~3 s) before the error shows;
       E2E should wait accordingly (or answer 403 for a fast failure).
@@ -548,5 +548,6 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
       (`node --test '.agents/skills/*/scripts/*.test.mjs'`).
     - `playwright-cli` is not a dependency: `pnpm dlx @playwright/cli@0.1.24`, output in
       `.artifacts/playwright-cli/`.
-    - `roadmaps.title` ("Your Roadmaps") breaks the sentence-case rule and is asserted
-      by E2E specs; D01 records it.
+    - D01 fixed in the same PR: `roadmaps.title` is now "Your roadmaps" / "Eich mapiau
+      trywydd". A product name (`common.appName`) keeps its capitals; other copy is
+      sentence case.

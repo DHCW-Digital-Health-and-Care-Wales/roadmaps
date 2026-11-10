@@ -63,7 +63,7 @@ describe("landing page", () => {
 
     expect(authClient.connect).toHaveBeenCalledOnce()
     expect(
-      await screen.findByRole("heading", { level: 1, name: "Your Roadmaps" }),
+      await screen.findByRole("heading", { level: 1, name: "Your roadmaps" }),
     ).toBeInTheDocument()
     expect(await screen.findByText("Connected to Google")).toBeInTheDocument()
   })
@@ -347,7 +347,7 @@ describe("routes", () => {
 
     await user.click(main().getByRole("link", { name: "Back to roadmaps" }))
     expect(
-      await main().findByRole("heading", { level: 1, name: "Your Roadmaps" }),
+      await main().findByRole("heading", { level: 1, name: "Your roadmaps" }),
     ).toBeInTheDocument()
     expect(screen.getByRole("main")).toHaveFocus()
   })

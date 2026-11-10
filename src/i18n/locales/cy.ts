@@ -57,7 +57,7 @@ export const cy = {
     },
   },
   roadmaps: {
-    title: "Eich Mapiau Trywydd",
+    title: "Eich mapiau trywydd",
     description: "Y mapiau trywydd sydd ar gael yn y daenlen gysylltiedig.",
     refresh: "Adnewyddu",
     loading: "Wrthi'n llwytho mapiau trywydd…",

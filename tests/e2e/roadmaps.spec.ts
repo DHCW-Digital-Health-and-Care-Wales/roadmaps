@@ -11,7 +11,7 @@ test("connecting shows the visible roadmaps in spreadsheet order", async ({
   await connect(page)
 
   await expect(
-    page.getByRole("heading", { level: 1, name: "Your Roadmaps" }),
+    page.getByRole("heading", { level: 1, name: "Your roadmaps" }),
   ).toBeVisible()
   // The hidden worksheet is left out; the others keep the spreadsheet's order.
   await expect(roadmapCards(page)).toHaveText(VISIBLE_TITLES)

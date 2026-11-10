@@ -65,7 +65,7 @@ describe("RoadmapsPage", () => {
     await renderWithProviders({ authState: connected, repository })
 
     expect(
-      main().getByRole("heading", { level: 1, name: "Your Roadmaps" }),
+      main().getByRole("heading", { level: 1, name: "Your roadmaps" }),
     ).toBeInTheDocument()
     expect(
       main().getByText("Roadmaps available in the connected spreadsheet."),
@@ -295,7 +295,7 @@ describe("RoadmapsPage", () => {
     const reconnect = main().getByRole("button", { name: "Reconnect" })
     expect(reconnect).toHaveAttribute("aria-busy", "true")
     expect(
-      main().getByRole("heading", { level: 1, name: "Your Roadmaps" }),
+      main().getByRole("heading", { level: 1, name: "Your roadmaps" }),
     ).toBeInTheDocument()
   })
 
@@ -327,7 +327,7 @@ describe("RoadmapsPage", () => {
     })
 
     expect(
-      main().getByRole("heading", { level: 1, name: "Eich Mapiau Trywydd" }),
+      main().getByRole("heading", { level: 1, name: "Eich mapiau trywydd" }),
     ).toBeInTheDocument()
     expect(await main().findByText("2 fap trywydd")).toBeInTheDocument()
     expect(main().getByRole("button", { name: "Adnewyddu" })).toBeEnabled()

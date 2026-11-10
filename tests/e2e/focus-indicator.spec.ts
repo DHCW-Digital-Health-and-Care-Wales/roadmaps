@@ -204,6 +204,10 @@ for (const theme of THEMES) {
       await tabTo(page, language, "Shift+Tab")
       await expectIndicator(language, colours, "fill")
       await page.keyboard.press("Enter")
+      // The menu opens on the checked item; arrow keys before that are lost.
+      await expect(
+        page.getByRole("menuitemradio", { name: "English" }),
+      ).toBeFocused()
       const welsh = page.getByRole("menuitemradio", { name: "Cymraeg" })
       await page.keyboard.press("ArrowDown")
       await expect(welsh).toBeFocused()

@@ -1,4 +1,4 @@
-// Deviates from upstream shadcn (ADR-010, STY-013): imports cn from @/lib/utils;
+// Deviates from upstream shadcn (ADR-010): imports cn from @/lib/utils;
 // text-body-xs for upstream's text-sm (no letter-spacing).
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"

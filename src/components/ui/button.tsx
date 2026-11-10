@@ -1,4 +1,4 @@
-// Deviates from upstream shadcn (ADR-010, STY-013): imports cn from @/lib/utils;
+// Deviates from upstream shadcn (ADR-010): imports cn from @/lib/utils;
 // text-body-xs for upstream's text sizes, focus-visible:focus-fill for its ring, and no
 // `dark:` background overrides, which would beat the focus fill in the dark theme.
 import { Button as ButtonPrimitive } from "@base-ui/react/button"

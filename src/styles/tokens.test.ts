@@ -34,14 +34,16 @@ function normalise(value: string): string {
   return value.replace(/\s+/g, "").toLowerCase()
 }
 
-/** A Sass variable's value in `text`, following `$a: $b` aliases within the file. */
+/**
+ * A Sass variable's value in `text`: its last assignment, which is the one Sass uses,
+ * following `$a: $b` aliases within the file.
+ */
 function sassVariable(text: string, name: string): string | undefined {
   const escaped = name.replace(/[$-]/g, "\\$&")
-  const match = new RegExp(
-    String.raw`^\s*${escaped}\s*:\s*(.+?)\s*;`,
-    "m",
-  ).exec(text)
-  const value = match?.[1]?.replace(/\s*!default$/, "")
+  const pattern = new RegExp(String.raw`^\s*${escaped}\s*:\s*(.+?)\s*;`, "gm")
+  const value = [...text.matchAll(pattern)]
+    .at(-1)?.[1]
+    ?.replace(/\s*!default$/, "")
   return value?.startsWith("$") ? sassVariable(text, value) : value
 }
 
@@ -115,6 +117,8 @@ describe("DHCW primitives (S5)", () => {
     expect(blockProperty(text, "&--no-such-tag", "color")).toBeUndefined()
     const colours = dhcwSources["src/tokens/_colours.scss"] ?? ""
     expect(sassVariable(colours, "$nhsw-colour-input-border")).toBe("#4c6272")
+    // `_colours.scss` assigns `$nhswales-focus-colour` twice; Sass keeps the last.
+    expect(sassVariable("$a: #111;\n$b: $a;\n$a: #222;\n", "$b")).toBe("#222")
   })
 })
 

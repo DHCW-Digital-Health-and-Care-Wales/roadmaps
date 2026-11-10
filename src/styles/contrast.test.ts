@@ -4,9 +4,12 @@ import css from "./globals.css?raw"
 import { readStylesheet } from "./testing/stylesheet"
 
 /**
- * WCAG contrast of the semantic tokens, in both themes (ADR-010, STY-013 S2, S4): every
- * text pair 4.5:1 (1.4.3), every control boundary and focus indicator 3:1 (1.4.11).
- * `--border` is decorative and exempt. A new semantic token adds its pairs here.
+ * WCAG contrast of the semantic tokens, in both themes (ADR-010): every text pair 4.5:1
+ * (1.4.3), every control boundary and focus indicator 3:1 (1.4.11). `--border` is
+ * decorative and exempt. `--primary` is a fill, never text: text on it is
+ * `--primary-foreground`, and links use `--link`. A new semantic token adds its pairs here.
+ * Opacity-modified colours (`bg-destructive/10`) are not tokens, so they are out of reach
+ * until token enforcement turns each tint into one.
  */
 
 const TEXT_PAIRS: readonly (readonly [
@@ -18,8 +21,6 @@ const TEXT_PAIRS: readonly (readonly [
   ["card-foreground", "card"],
   ["popover-foreground", "popover"],
   ["primary-foreground", "primary"],
-  ["primary", "background"],
-  ["primary", "card"],
   ["secondary-foreground", "secondary"],
   ["muted-foreground", "muted"],
   ["muted-foreground", "background"],
@@ -47,6 +48,9 @@ const TEXT_PAIRS: readonly (readonly [
 
 /** Where controls and their focus indicators sit. */
 const SURFACES = ["background", "card", "popover", "muted"] as const
+
+/** What `focus-fill` replaces: the fills of buttons and button-styled links. */
+const FILLS = ["primary", "secondary", "muted", "accent", "background"] as const
 
 const TEXT_MINIMUM = 4.5
 const NON_TEXT_MINIMUM = 3
@@ -120,6 +124,19 @@ describe("contrast", () => {
           ratio("focus-foreground", surface),
         )
         expect(best).toBeGreaterThanOrEqual(NON_TEXT_MINIMUM)
+      },
+    )
+
+    // Focus must change the control visibly, not by hue alone: its fill turns yellow at
+    // 3:1 from what it was, or the dark bar under it shows against the page.
+    it.each(FILLS)(
+      "focusing a %s control changes it by at least 3:1",
+      (fill) => {
+        const change = Math.max(
+          ratio("focus", fill),
+          ratio("focus-foreground", "background"),
+        )
+        expect(change).toBeGreaterThanOrEqual(NON_TEXT_MINIMUM)
       },
     )
 

@@ -665,16 +665,14 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
   `src/styles/tokens.test.ts` (drift, literal colours); `contrast.test.ts` checks both
   themes. `cn` is configured in `@/lib/utils` and lint rejects the bare package. New
   `src/styles/AGENTS.md` (tokens, pin upgrade); README Design section.
-  - Decisions: the dark theme is DHCW's navies (page `#0e1b2f`, surface `#13233c`) with a
-    pale-blue primary and the tag palette inverted; status tokens are DHCW's tags; the
+  - Decisions: the dark theme is DHCW's navies (page `#0e1b2f`, surface `#13233c`) with
+    DHCW's mid blue `#32598a` as the primary fill (a pale one barely changes when it turns
+    yellow on focus) and the tag palette inverted; `--primary` is a fill, never text; status tokens are DHCW's tags; the
     status panel title is `text-heading-m` at either heading level.
   - Gotchas:
     - Vitest empties stylesheets, even `?raw`, unless `test.css.include` lists them
       (`vite.config.ts`).
-    - Focus utilities are the style alone: apply them through a variant. A `dark:` or
-      `aria-*:` background on the same element sorts later and hides the fill.
+    - Focus utilities: see `src/styles/AGENTS.md` (a `dark:` background hides the fill).
     - Buttons transition into focus styles: read computed focus styles with
       `expect.poll` in E2E.
     - Sonner's unlayered CSS beats utilities; `globals.css` overrides its font and size.
-    - `getByRole("listitem").filter({ has })` needs an inner locator that doesn't start at
-      `main` (`roadmapCards` does): use `getByRole("link", { name })`.

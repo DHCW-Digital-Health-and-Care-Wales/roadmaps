@@ -174,6 +174,12 @@ Audited at `22c3336`.
   hid the yellow fill in the dark theme (Refresh, Disconnect). They are removed, so those
   buttons use their light-theme tokens in dark too. The other `dark:` classes stay for
   STY-014.
+- **S2/S4, the dark primary** (agent, from review): the dark theme's primary fill is
+  DHCW's mid blue `#32598a` with white text, not a pale blue: a pale fill turning yellow
+  on focus changes by about 1.1:1, by hue alone, and the dark bar under it does not show
+  on navy. The contrast test now requires every fill `focus-fill` replaces to change by
+  3:1, or the bar to show on the page. `--primary` is therefore a fill only, never text
+  (it is 2.4:1 on the dark page); links use `--link`, and its two text pairs went.
 - **S4, the recipes** (agent): `focus-fill` is DHCW's button recipe (a 2px bar); the skip
   link uses it too, until STY-016 gives it DHCW's skip-link style (a 4px bar). `focus-link`
   is defined for text links, of which the app has none yet. The global `outline-ring/50`
@@ -190,6 +196,8 @@ Audited at `22c3336`.
 - **S7, `cn` everywhere** (agent): the shadcn files imported the bare `cn` package, which
   is unconfigured; they now import `@/lib/utils`, and `no-restricted-imports` rejects
   `from "cn"` in `src/`, so a regenerated component fails lint until changed.
+- **S5, Sass semantics** (agent, from review): the drift test reads a variable's last
+  assignment, as Sass does; `_colours.scss` assigns `$nhswales-focus-colour` twice.
 - **Test order**: the `cn` tests went red before `createCn` was configured. The token and
   contrast tests followed `globals.css`; their discrimination was shown by mutation (an
   edited primitive, a literal in a semantic token, a missing reference, a dark link of
@@ -213,7 +221,7 @@ Audited at `22c3336`.
 - Focus utilities are the style alone, applied with a variant: `focus-visible:focus-fill`
   (buttons, badges, header link), `has-focus-visible:focus-ring` (the card),
   `focus-visible:focus-ring` (menu items, per S4). STY-015 S6 asks for `focus-fill` on the
-  menu's items; that story decides between the two.
+  menu's items; its D5 records the difference for that story to settle.
 - STY-014: the theme is not locked yet; opacity modifiers, raw palette classes and the
   remaining `dark:` overrides (card hover border, `aria-invalid`, destructive menu item,
   error-state icon, brand-mark ring) are untouched.
@@ -225,7 +233,7 @@ Audited at `22c3336`.
 | Scenario | Held by                                                                                                                                                                                    |
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | S1       | `tokens.test.ts` (each primitive equals the pinned value; semantic tokens are `var()`s of them); after screenshots of every page, light                                                    |
-| S2       | `contrast.test.ts` (30 text pairs, `--input` and the focus indicator on four surfaces, both themes); after screenshots, dark                                                               |
+| S2       | `contrast.test.ts` (28 text pairs, `--input` and the focus indicator on four surfaces, the focus change of five fills, both themes); after screenshots, dark                               |
 | S3       | `typography.spec.ts` (`text uses DHCW's compact scale at 1280px` and `375px`; `Welsh ŵ and ŷ render in Roboto, served by the app`)                                                         |
 | S4       | `focus-indicator.spec.ts` (`every control shows DHCW's focus indicator`, light and dark: skip link, header link, language button, menu item, Refresh, card, Back link); `contrast.test.ts` |
 | S5       | `tokens.test.ts` (`DHCW primitives (S5)`, `token tiers (ADR-010)`)                                                                                                                         |

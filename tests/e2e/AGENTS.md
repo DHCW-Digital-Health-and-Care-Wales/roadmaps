@@ -25,7 +25,9 @@ End-to-end tests of the production build, with Google faked (ADR-006). Run with
   pending until its returned `release()` is called.
 - `roadmapCards(page)` is every card's link, across the family groups (several lists). A
   link holds only the title, so `toHaveText([...])` checks order and count, and a card's other
-  content is asserted on its list item (`getByRole("listitem").filter({ has: link })`).
+  content is asserted on its list item (`getByRole("listitem").filter({ has: link })`, with
+  `link` a page-level `getByRole("link", { name })`: `roadmapCards` starts at `main`, which
+  is not inside the item, so it matches nothing there).
 - Anything the real APIs would reject, any request to another origin, and any issued
   access token written to storage, cookies, the URL or the console at any point
   (`fixtures/persistence-recorder.ts`) fail the test at teardown. Add a new external

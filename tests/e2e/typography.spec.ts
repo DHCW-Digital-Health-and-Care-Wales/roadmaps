@@ -7,7 +7,7 @@ import {
 } from "./fixtures/fake-sheets"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
-// DHCW's mobile type scale at every width (ADR-010, STY-013 S3).
+// DHCW's mobile type scale at every width (ADR-010).
 const WIDTHS = [1280, 375] as const
 
 /** The computed type of an element, as `size/line-height weight letter-spacing`. */

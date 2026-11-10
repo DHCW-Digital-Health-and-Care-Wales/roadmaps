@@ -32,5 +32,4 @@ loaded (ADR-010). Its header comment names the three tiers; `tokens.test.ts` and
    copy those it should.
 4. Re-run the contrast test: a changed DHCW colour can break a dark pair, which an
    `--app-dark-*` value then fixes.
-5. Update the version in the README's Design section, and publish before/after
-   screenshots if the look changed.
+5. Publish before/after screenshots if the look changed.

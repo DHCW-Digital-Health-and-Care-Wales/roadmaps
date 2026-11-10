@@ -2,7 +2,7 @@ import type { Locator, Page } from "@playwright/test"
 
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
-// DHCW's yellow focus indicator (ADR-010, STY-013 S4). Its contrast in both themes is
+// DHCW's yellow focus indicator (ADR-010). Its contrast in both themes is
 // held by src/styles/contrast.test.ts; this checks each control actually shows it.
 const YELLOW = "rgb(255, 235, 59)"
 const DARK = "rgb(33, 43, 50)"

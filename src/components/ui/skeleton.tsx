@@ -1,4 +1,4 @@
-// Deviates from upstream shadcn (ADR-010, STY-013): imports cn from @/lib/utils.
+// Deviates from upstream shadcn (ADR-010): imports cn from @/lib/utils.
 import { cn } from "@/lib/utils"
 
 function Skeleton({ className, ...props }: React.ComponentProps<"div">) {

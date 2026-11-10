@@ -118,7 +118,7 @@
   --input: var(--nhsw-secondary-border-colour);
   --ring: var(--focus);
   --radius: var(--nhsw-border-radius);
-  /* An alias until STY-014 removes its uses (STY-013 D5). */
+  /* An alias of the primary, until token enforcement removes its uses. */
   --brand: var(--primary);
 
   --link: var(--nhsw-link-colour);
@@ -145,7 +145,7 @@
   --status-danger-fg: var(--nhsw-tag-red-ink);
   --status-danger-border: var(--nhsw-tag-red-ink);
 
-  /* Reserved for the deferred dashboard shell: DHCW's navy navigation (STY-013 D4). */
+  /* Reserved for the deferred dashboard shell: DHCW's navy navigation. */
   --sidebar: var(--nhsw-page-background-blue);
   --sidebar-foreground: var(--nhsw-exceptional-text-colour);
   --sidebar-primary: var(--nhsw-exceptional-text-colour);
@@ -165,8 +165,9 @@
   --card-foreground: var(--nhsw-page-background-grey);
   --popover: var(--app-dark-surface);
   --popover-foreground: var(--nhsw-page-background-grey);
-  --primary: var(--nhsw-tag-blue-background);
-  --primary-foreground: var(--nhsw-page-background-blue);
+  /* A mid blue, not a pale one: a pale fill turning yellow on focus barely changes. */
+  --primary: var(--nhsw-colour-button-primary-hover);
+  --primary-foreground: var(--nhsw-exceptional-text-colour);
   --secondary: var(--nhsw-page-background-blue);
   --secondary-foreground: var(--nhsw-page-background-grey);
   --muted: var(--nhsw-page-background-blue);

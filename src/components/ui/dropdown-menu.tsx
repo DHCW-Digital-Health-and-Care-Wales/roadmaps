@@ -1,4 +1,4 @@
-// Deviates from upstream shadcn (ADR-010, STY-013): imports cn from @/lib/utils;
+// Deviates from upstream shadcn (ADR-010): imports cn from @/lib/utils;
 // text-body-xs for upstream's text sizes (no letter-spacing), and
 // focus-visible:focus-ring on items.
 import * as React from "react"

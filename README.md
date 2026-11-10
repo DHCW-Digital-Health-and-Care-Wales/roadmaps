@@ -149,7 +149,7 @@ reload on GitHub Pages without a 404 fallback (ADR-004).
 | Routing        | TanStack Router 1.170, file-based, hash history                           | Route tree generated into `src/routeTree.gen.ts` (committed).                                                   |
 | Server state   | TanStack Query 5.107                                                      | Retries only retryable `AppError`s, twice; data is cleared on disconnect.                                       |
 | Components     | shadcn/ui 4 on Base UI 1.9, Tailwind CSS 4.3, lucide-react, sonner        | Base UI flavour, not Radix (ADR-005). Light/dark theme.                                                         |
-| Design         | DHCW design system v0.1.104 tokens, Roboto (`@fontsource-variable`)       | Ported, never loaded (ADR-010); see [Design](#design). Dark theme is our extension.                             |
+| Design         | DHCW design system tokens, Roboto (`@fontsource-variable`)                | Ported, never loaded (ADR-010); see [Design](#design). Dark theme is our extension.                             |
 | Validation     | Zod 4.6 (`zod/mini`)                                                      | Config, Sheets responses and GIS token responses are parsed at the boundary.                                    |
 | Auth           | Google Identity Services token model                                      | Types from `@types/google.accounts`; responses re-parsed with Zod because the typings are wrong.                |
 | i18n           | i18next 27 + react-i18next 18                                             | English and Welsh bundled; keys are typed.                                                                      |
@@ -486,7 +486,7 @@ The look follows the
 [Digital Health and Care Wales design system](https://github.com/DHCW-Digital-Health-and-Care-Wales/dhcw-design-system)
 (© Digital Health and Care Wales; code MIT, guidance OGL v3.0). Its colours, type scale,
 corner radius and yellow focus indicator are copied into `src/styles/globals.css` from the
-release pinned in `package.json` (`dhcw-design-system`, v0.1.104), and a test keeps them
+release pinned in `package.json` (`dhcw-design-system`), and a test keeps them
 equal to it. Its stylesheet and templates are not loaded
 ([ADR-010](docs/adr/ADR-010-align-the-ui-with-the-dhcw-design-system.md)). The dark theme
 is ours, derived from DHCW's navies. Upgrading the pin is described in

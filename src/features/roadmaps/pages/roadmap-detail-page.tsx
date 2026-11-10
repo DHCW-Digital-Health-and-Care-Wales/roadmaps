@@ -87,7 +87,7 @@ function RoadmapDetail({ roadmapId }: RoadmapDetailPageProps) {
     )
   }
 
-  // Missing from a list that is current: it really is gone (or hidden).
+  // Missing from a list that is current: it really is gone (no longer listed).
   if (roadmap === null && !problem) {
     return (
       <StatusPanel

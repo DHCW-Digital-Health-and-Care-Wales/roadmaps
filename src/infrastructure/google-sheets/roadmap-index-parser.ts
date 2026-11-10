@@ -93,7 +93,10 @@ const WELSH_COLUMNS: readonly TextColumn[] = [
   "Service description",
 ]
 
-/** How the public site's `Category` values are spelled (its `CATEGORY_SHEET_VALUES`). */
+/**
+ * How the public site's `Category` values are spelled (its `CATEGORY_SHEET_VALUES`).
+ * Exported for tests that write roadmap index rows.
+ */
 export const CATEGORY_SHEET_VALUES: Readonly<Record<RoadmapCategory, string>> =
   {
     "public-health-apps": "Public Health & Apps",

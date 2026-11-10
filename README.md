@@ -134,7 +134,7 @@ shared contract test (`describeRoadmapRepositoryContract`), so swapping data sou
 change to the composition root and nothing else. Auth works the same way: the UI uses the
 `AuthClient` port, and only `infrastructure/google-identity/` touches the `google` global.
 
-Routing uses hash history (`/roadmaps-editor/#/roadmaps/42`), so deep links survive a
+Routing uses hash history (`/roadmaps-editor/#/roadmaps/producta`), so deep links survive a
 reload on GitHub Pages without a 404 fallback (ADR-004).
 
 ## Technology choices

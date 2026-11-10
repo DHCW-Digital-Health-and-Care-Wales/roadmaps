@@ -54,8 +54,8 @@ focus indicator
 
 **Given** a 375px viewport in Cymraeg, connected
 **When** the header is shown
-**Then** it shows the icon, the short name and only Disconnect, with the status visually
-hidden but still announced, and nothing scrolls horizontally
+**Then** it shows the icon, the short name in full (not truncated) and only Disconnect,
+with the status visually hidden but still announced, and nothing scrolls horizontally
 
 ### S3: A phase banner invites feedback
 
@@ -152,3 +152,6 @@ Audited at `22c3336`.
   `copywriter` skill. The document title and the home link's name keep the full name.
 - **Mobile rules.** S2 is STY-009's mobile header rule: every signed-out view keeps its
   own Connect or Reconnect, because the narrow header shows only Disconnect.
+  Below `sm` the header's buttons are 32px (`header-auth-button`, `language-switcher`,
+  `theme-toggle`): with STY-015's 40px buttons, "Mapiau Trywydd" truncated at 375px.
+  Adding the icon takes more width, so check S2 in Welsh, connected, at 375px.

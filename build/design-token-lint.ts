@@ -18,8 +18,76 @@ const VARIANTS = String.raw`^(?:.*:)?!?-?`
 const COLOUR = String.raw`(?:bg|text|border(?:-[xytrblse]|-[bi][se])?|divide|outline|ring(?:-offset)?|inset-ring|(?:inset-|drop-|text-)?shadow|fill|stroke|from|via|to|decoration|caret|accent|placeholder)`
 /** A variant on the element's own focus state, or on a group's, peer's or child's. */
 const FOCUS_VARIANT = String.raw`(?:[\w-]*-)?focus(?:-visible|-within)?(?:/[\w-]+)?:`
+/** An arbitrary variant whose selector holds a focus state: `[&:focus-visible]:`. */
+const ARBITRARY_FOCUS_VARIANT = String.raw`(?:[\w-]*-)?\[\S*?:focus\S*?\]:`
+/** Utilities that set how something looks, rather than where it sits. */
+const LOOK = String.raw`(?:${COLOUR}|underline|no-underline|font|rounded|opacity)(?:-|!?$)`
+
+const SIDES = ["top", "right", "bottom", "left", "block", "inline"].flatMap(
+  (side) =>
+    side === "block" || side === "inline"
+      ? [side, `${side}-start`, `${side}-end`]
+      : [side],
+)
+const CORNERS = ["top-left", "top-right", "bottom-right", "bottom-left"]
+const LOGICAL_CORNERS = ["start-start", "start-end", "end-start", "end-end"]
 /** CSS properties that carry a colour, type, radius or shadow. */
-const DESIGN_PROPERTY = String.raw`color|background(?:-color|-image)?|border(?:-(?:top|right|bottom|left|block|inline)(?:-(?:start|end))?)?(?:-color)?|border(?:-[a-z]+)*-radius|outline(?:-color)?|fill|stroke|stop-color|caret-color|accent-color|text-decoration(?:-color)?|font(?:-[a-z]+)?|line-height|letter-spacing|box-shadow|text-shadow`
+const DESIGN_PROPERTIES = [
+  "color",
+  "background",
+  "background-color",
+  "background-image",
+  "border",
+  "border-color",
+  ...SIDES.flatMap((side) => [`border-${side}`, `border-${side}-color`]),
+  "border-radius",
+  ...[...CORNERS, ...LOGICAL_CORNERS].map(
+    (corner) => `border-${corner}-radius`,
+  ),
+  "outline",
+  "outline-color",
+  "fill",
+  "stroke",
+  "stop-color",
+  "flood-color",
+  "lighting-color",
+  "column-rule-color",
+  "text-emphasis-color",
+  "scrollbar-color",
+  "caret-color",
+  "accent-color",
+  "text-decoration",
+  "text-decoration-color",
+  "font",
+  "font-family",
+  "font-size",
+  "font-weight",
+  "font-style",
+  "font-stretch",
+  "font-variant",
+  ...[
+    "alternates",
+    "caps",
+    "east-asian",
+    "ligatures",
+    "numeric",
+    "position",
+  ].map((part) => `font-variant-${part}`),
+  "font-feature-settings",
+  "font-variation-settings",
+  "font-kerning",
+  "font-optical-sizing",
+  "font-palette",
+  "font-size-adjust",
+  "font-synthesis",
+  "line-height",
+  "letter-spacing",
+  "box-shadow",
+  "text-shadow",
+]
+/** `background-color` as a style object key: `backgroundColor`. */
+const camelCase = (property: string) =>
+  property.replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase())
 
 const FOCUS_HINT =
   "use focus-visible:focus-fill (buttons), focus-ring (cards, inputs, menus) or focus-link (text links) (ADR-010)."
@@ -32,7 +100,7 @@ interface Restriction {
 /** Class restrictions for every module; the first that matches a class reports it. */
 const RESTRICTIONS: Restriction[] = [
   {
-    pattern: String.raw`${VARIANTS}(text|decoration)-primary(?:/\S*)?!?$`,
+    pattern: String.raw`${VARIANTS}(text|decoration)-primary(?:-hover)?(?:/\S*)?!?$`,
     message:
       "$1-primary uses the primary fill as text, which fails contrast in the dark theme: use $1-link for link-blue text, or text-foreground (ADR-010).",
   },
@@ -45,6 +113,11 @@ const RESTRICTIONS: Restriction[] = [
     pattern: String.raw`${VARIANTS}((?:inset-|drop-|text-)?shadow)-[\[(]`,
     message:
       "Arbitrary $1 value: use a semantic shadow (shadow-control, shadow-popup) (ADR-010).",
+  },
+  {
+    pattern: String.raw`${VARIANTS}bg-(?:linear|radial|conic)(?:-[\w-]+?)?-[\[(]`,
+    message:
+      "Arbitrary gradient: build it from semantic colours (bg-linear-to-r from-muted to-card) (ADR-010).",
   },
   {
     pattern: String.raw`${VARIANTS}(${COLOUR})-[\[(]`,
@@ -67,7 +140,7 @@ const RESTRICTIONS: Restriction[] = [
       "$1-* sets type by hand: line height and letter-spacing come with the type tokens (text-heading-*, text-body, text-body-xs) (ADR-010).",
   },
   {
-    pattern: String.raw`^(?:.*:)?!?\[(${DESIGN_PROPERTY}):`,
+    pattern: String.raw`^(?:.*:)?!?\[(${DESIGN_PROPERTIES.join("|")}):`,
     message:
       "Arbitrary $1: use the semantic utility for it (a colour, type, radius or shadow token) (ADR-010).",
   },
@@ -95,6 +168,11 @@ const RESTRICTIONS: Restriction[] = [
     pattern: String.raw`^(?:.*:)?${FOCUS_VARIANT}(?:.*:)?!?-?(?:ring|inset-ring|outline|shadow)(?:-|!?$)`,
     message: `Ad-hoc focus style: ${FOCUS_HINT}`,
   },
+  {
+    // Sorts after the focus utilities, so it would replace their fill or ring.
+    pattern: String.raw`^(?:.*:)?${ARBITRARY_FOCUS_VARIANT}(?:.*:)?!?-?${LOOK}`,
+    message: `Ad-hoc focus style: ${FOCUS_HINT}`,
+  },
 ]
 
 /**
@@ -104,16 +182,22 @@ const RESTRICTIONS: Restriction[] = [
  * group's focus may restyle a child (a card's chevron).
  */
 const OWN_FOCUS_RESTRICTION: Restriction = {
-  pattern: String.raw`^(?:.*:)?(?:has-|not-)?focus(?:-visible|-within)?:(?:.*:)?!?-?(?:${COLOUR}|underline|no-underline|font|rounded|opacity)(?:-|!?$)`,
+  pattern: String.raw`^(?:.*:)?(?:has-|not-)?focus(?:-visible|-within)?:(?:.*:)?!?-?${LOOK}`,
   message: `Only a focus utility styles focus here: ${FOCUS_HINT}`,
 }
 
 /**
  * Class lists are linted where the plugin finds them by default (`className`, `cn()`,
- * `cva()` …) and in variables named `…Classes`, e.g. a map from state to classes.
+ * `cva()` …), in the `className` a cva helper takes (`buttonVariants({ className })`),
+ * and in variables named `…Classes`, e.g. a map from state to classes.
  */
 const selectors = [
   ...getDefaultSelectors(),
+  {
+    kind: "callee",
+    name: String.raw`^\w+Variants$`,
+    match: [{ type: "objectValues", path: "^className$" }],
+  },
   {
     kind: "variable",
     name: String.raw`^\w*[cC]lasses$`,
@@ -121,10 +205,9 @@ const selectors = [
   },
 ]
 
-/** JavaScript names of the inline-style properties `DESIGN_PROPERTY` lists. */
-const STYLE_KEY = String.raw`/^(?:color|background(?:Color|Image)?|border(?:Top|Right|Bottom|Left|Block|Inline)?(?:Start|End)?(?:Color)?|border\w*Radius|outline(?:Color)?|fill|stroke|stopColor|caretColor|accentColor|textDecoration(?:Color)?|font\w*|lineHeight|letterSpacing|boxShadow|textShadow)$/`
-/** The same properties written in CSS (kebab) case, as a string key. */
-const STYLE_CSS_KEY = String.raw`/^(?:${DESIGN_PROPERTY})$/`
+/** A design property as a style object key, in JavaScript or CSS case. */
+const STYLE_KEY = `/^(?:${DESIGN_PROPERTIES.map(camelCase).join("|")})$/`
+const STYLE_CSS_KEY = `/^(?:${DESIGN_PROPERTIES.join("|")})$/`
 /** Where an object is a style: a `style` attribute, or typed as `CSSProperties`. */
 const STYLE_OBJECT = [
   'JSXAttribute[name.name="style"]',
@@ -140,17 +223,45 @@ const PAINT_KEYWORD = String.raw`/^(?:none|currentColor|inherit|transparent|url\
 const PAINT_ATTRIBUTE = String.raw`/^(?:fill|stroke|color|stopColor|stop-color|floodColor|flood-color|lightingColor|lighting-color)$/`
 const PRIMITIVE = String.raw`/--(?:nhsw|app-dark)-/`
 
+/** A `style` attribute's value. */
+const STYLE_VALUE = 'JSXAttribute[name.name="style"] > JSXExpressionContainer'
+const STYLE_MESSAGE =
+  "Design property in an inline style: use a semantic utility class; inline styles are for layout only (ADR-010)."
+const STYLE_FORM_MESSAGE =
+  "Write an inline style as an object literal in its style attribute, without spreads, so lint can check its properties (ADR-010)."
+const PAINT_MESSAGE =
+  "Literal colour in an SVG attribute: use currentColor with a semantic text-* class (ADR-010)."
+
 /** `no-restricted-syntax`: design values that bypass classes (S4). */
 const backDoors = [
   {
     selector: `:matches(${STYLE_OBJECT}) Property[key.name=${STYLE_KEY}]`,
-    message:
-      "Design property in an inline style: use a semantic utility class; inline styles are for layout only (ADR-010).",
+    message: STYLE_MESSAGE,
   },
   {
     selector: `:matches(${STYLE_OBJECT}) Property[key.value=${STYLE_CSS_KEY}]`,
-    message:
-      "Design property in an inline style: use a semantic utility class; inline styles are for layout only (ADR-010).",
+    message: STYLE_MESSAGE,
+  },
+  // A style lint can read: an object literal, perhaps cast or chosen by a condition.
+  {
+    selector: `${STYLE_VALUE} > :not(ObjectExpression, ConditionalExpression, TSAsExpression, TSSatisfiesExpression)`,
+    message: STYLE_FORM_MESSAGE,
+  },
+  {
+    selector: `${STYLE_VALUE} > ConditionalExpression > :not(ObjectExpression, Identifier[name="undefined"]).consequent`,
+    message: STYLE_FORM_MESSAGE,
+  },
+  {
+    selector: `${STYLE_VALUE} > ConditionalExpression > :not(ObjectExpression, Identifier[name="undefined"]).alternate`,
+    message: STYLE_FORM_MESSAGE,
+  },
+  {
+    selector: `${STYLE_VALUE} > :matches(TSAsExpression, TSSatisfiesExpression) > :not(ObjectExpression).expression`,
+    message: STYLE_FORM_MESSAGE,
+  },
+  {
+    selector: `:matches(${STYLE_OBJECT}) SpreadElement`,
+    message: STYLE_FORM_MESSAGE,
   },
   {
     selector: String.raw`:matches(${STYLE_OBJECT}) Property[key.value=/^--/]:not([value.value=/^var\(--[\w-]+\)$/])`,
@@ -159,13 +270,13 @@ const backDoors = [
   },
   {
     selector: `JSXAttribute[name.name=${PAINT_ATTRIBUTE}] > Literal:not([value=${PAINT_KEYWORD}])`,
-    message:
-      "Literal colour in an SVG attribute: use currentColor with a semantic text-* class (ADR-010).",
+    message: PAINT_MESSAGE,
   },
   {
-    selector: `JSXAttribute[name.name=${PAINT_ATTRIBUTE}] > JSXExpressionContainer > :matches(Literal:not([value=${PAINT_KEYWORD}]), TemplateLiteral)`,
-    message:
-      "Literal colour in an SVG attribute: use currentColor with a semantic text-* class (ADR-010).",
+    // Any string in the expression, `fill={active ? "red" : "none"}` too; a template
+    // may only reference a paint server, `url(#${id})`.
+    selector: String.raw`JSXAttribute[name.name=${PAINT_ATTRIBUTE}] > JSXExpressionContainer :matches(Literal[raw=/^["']/]:not([value=${PAINT_KEYWORD}]), TemplateLiteral:not([quasis.0.value.raw=/^url\(#/]))`,
+    message: PAINT_MESSAGE,
   },
   {
     selector: `:matches(Literal[value=${PRIMITIVE}], TemplateElement[value.raw=${PRIMITIVE}])`,

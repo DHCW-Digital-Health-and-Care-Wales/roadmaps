@@ -20,7 +20,8 @@ export function RoadmapSwatch({ colour }: RoadmapSwatchProps) {
     <span
       aria-hidden="true"
       className={cn(
-        "w-1.5 shrink-0 self-stretch rounded-full",
+        // The edge keeps a colour close to the card's in view.
+        "w-1.5 shrink-0 self-stretch rounded-full ring-1 ring-border ring-inset",
         // Without a colour of its own, the strip is a decorative neutral.
         !own && "bg-border",
       )}

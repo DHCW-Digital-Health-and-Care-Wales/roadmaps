@@ -8,6 +8,7 @@ export const sharedComponent = [
   <div className="focus-visible:focus-ring" />,
   <div className="focus-visible:ring-3" />, // ✗ Ad-hoc focus style
   <div className="focus:outline-ring" />, // ✗ Ad-hoc focus style
+  <div className="focus-visible:focus-fill [&:focus-visible]:bg-muted" />, // ✗ Ad-hoc focus style
   <div className="dark:aria-invalid:border-destructive" />, // ✗ dark: colour override
   <div className="bg-neutral-900" />, // ✗ Unknown class detected: bg-neutral-900
   cva("", { variants: { variant: { link: "text-primary" } } }), // ✗ use text-link

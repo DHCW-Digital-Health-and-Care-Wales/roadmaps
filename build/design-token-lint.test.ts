@@ -59,7 +59,9 @@ const fixtures = readdirSync(FIXTURES).filter((name) => name.endsWith(".tsx"))
 
 describe("design token lint rules (ADR-010)", () => {
   it("has fixtures to prove them", () => {
-    expect(fixtures).toEqual(["feature.tsx", "shared-component.tsx"])
+    expect(fixtures).toEqual(
+      expect.arrayContaining(["feature.tsx", "shared-component.tsx"]),
+    )
   })
 
   describe.each(fixtures)("%s", (name) => {

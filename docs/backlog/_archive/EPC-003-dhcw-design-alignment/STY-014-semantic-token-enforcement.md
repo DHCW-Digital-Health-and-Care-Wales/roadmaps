@@ -203,7 +203,8 @@ Audited at `22c3336`.
   height and letter-spacing come with the type tokens.
 - **S1, class maps** (agent): the plugin finds classes in `className`, `cn()`, `cva()`
   and the other helpers, but not in a plain object. Variables named `…Classes` are
-  linted too, so the connection status's `dotColour` map is now `dotClasses`.
+  linted too, so the connection status's `dotColour` map is now `dotClasses`, as is the
+  `className` a variant helper takes (`buttonVariants({ className })`).
 - **S3, scope** (agent): everywhere, a ring, outline or shadow under any focus variant
   (`focus-visible:ring-2`, `group-focus:outline-x`) is rejected. Outside `components/ui`,
   an element's own focus state (`focus:`, `focus-visible:`, `focus-within:`,
@@ -216,17 +217,23 @@ Audited at `22c3336`.
 - **S2/S4, more back doors** (agent): an arbitrary custom property in a class
   (`[--primary:red]`) is rejected. The inline-style rule also covers objects typed
   `CSSProperties`, and a custom property in a style may only be a `var(--token)`, which
-  is what `ui/sonner.tsx`'s mapping onto Sonner's variables is.
+  is what `ui/sonner.tsx`'s mapping onto Sonner's variables is. A `style` attribute must
+  hold an object literal, perhaps cast or chosen by a condition, and no spread, so lint
+  can read its properties; an SVG paint attribute may hold no colour string anywhere in
+  its expression. Arbitrary gradients (`bg-linear-[…]`) and arbitrary focus variants
+  (`[&:focus-visible]:bg-muted`) are rejected as well.
 - **Tests are exempt** (agent): `*.test.*` and `src/test/` assert on class names and call
   `cn` with Tailwind defaults on purpose; the fixture test proves they lint clean.
 - **S6, what counts** (agent): `lint-exceptions.test.ts` reports any inline directive that
   can switch off a design rule (`eslint-disable`, `-line`, `-next-line`, an `/* eslint */`
-  rule override, or a blanket disable naming no rule), not only the swatch's form.
+  rule override, or a blanket disable naming no rule), not only the swatch's form. It
+  reads comments with ESLint's parser, so a multiline override counts in full and a
+  comment-like string does not.
 - **S7, the migration** (agent), each a change the lockdown or a rule forces:
   - tints became tokens: new `--primary-hover` (DHCW's button hover, `#32598a`; in dark
     the two blues swap) and `--secondary-hover` (DHCW's grey tag tint; in dark DHCW's
     mid blue) for the button and badge hovers; destructive tints became the danger status
-    tokens (inverted on hover); the swatch placeholder is `bg-border`; the start page's
+    tokens (inverted on hover); the swatch placeholder is `bg-border` and its edge `ring-border`; the start page's
     error notice is the danger status; muted and card tints are the solid tokens; the
     roadmap icon is DHCW's blue tag (`status-info`);
   - shadows: DHCW's cards and buttons are flat, so the card, start-page chip, Connect

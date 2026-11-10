@@ -107,11 +107,11 @@
   --popover: var(--nhsw-page-background-white);
   --popover-foreground: var(--nhsw-primary-text-colour);
   --primary: var(--nhsw-primary-button);
-  --primary-hover: var(--nhsw-colour-button-primary-hover);
   --primary-foreground: var(--nhsw-exceptional-text-colour);
+  --primary-hover: var(--nhsw-colour-button-primary-hover);
   --secondary: var(--nhsw-page-background-grey);
-  --secondary-hover: var(--nhsw-tag-grey-background);
   --secondary-foreground: var(--nhsw-primary-text-colour);
+  --secondary-hover: var(--nhsw-tag-grey-background);
   --muted: var(--nhsw-page-background-grey);
   --muted-foreground: var(--nhsw-secondary-text-colour);
   --accent: var(--nhsw-page-background-grey);
@@ -172,12 +172,12 @@
   --popover-foreground: var(--nhsw-page-background-grey);
   /* A mid blue, not a pale one: a pale fill turning yellow on focus barely changes. */
   --primary: var(--nhsw-colour-button-primary-hover);
+  --primary-foreground: var(--nhsw-exceptional-text-colour);
   /* Hover darkens, as the light theme's lightens: the two blues swap. */
   --primary-hover: var(--nhsw-primary-button);
-  --primary-foreground: var(--nhsw-exceptional-text-colour);
   --secondary: var(--nhsw-page-background-blue);
-  --secondary-hover: var(--nhsw-colour-button-primary-hover);
   --secondary-foreground: var(--nhsw-page-background-grey);
+  --secondary-hover: var(--nhsw-colour-button-primary-hover);
   --muted: var(--nhsw-page-background-blue);
   --muted-foreground: var(--nhsw-colour-choice-hover-ring);
   --accent: var(--nhsw-page-background-blue);
@@ -263,11 +263,11 @@
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
-  --color-primary-hover: var(--primary-hover);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
   --color-secondary: var(--secondary);
-  --color-secondary-hover: var(--secondary-hover);
   --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary-hover: var(--secondary-hover);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);

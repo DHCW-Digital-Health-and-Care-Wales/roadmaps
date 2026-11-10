@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest"
 
-import css from "./globals.css?raw"
 import { readStylesheet } from "./testing/stylesheet"
 
 /**
- * Every stylesheet under `src/`, as text. `vite.config.ts` lists these extensions under
- * `test.css.include`, or Vitest would read each as empty.
+ * Every stylesheet under `src/`, as text. Vitest reads a stylesheet as empty unless
+ * `vite.config.ts` lists its extension under `test.css.include`, so a glob extension
+ * missing there reads as empty and fails "reads every stylesheet as text".
  */
 const stylesheets = import.meta.glob<string>(
   "/src/**/*.{css,scss,sass,less,styl,stylus,pcss,postcss}",
@@ -13,19 +13,18 @@ const stylesheets = import.meta.glob<string>(
 )
 
 const GLOBALS = "/src/styles/globals.css"
+const css = stylesheets[GLOBALS] ?? ""
 
 describe("stylesheet discipline (ADR-010)", () => {
   it("keeps the whole theme in globals.css, the only stylesheet", () => {
     expect(Object.keys(stylesheets)).toEqual([GLOBALS])
-    expect(stylesheets[GLOBALS]).toBe(css)
   })
 
-  it("declares custom properties and @theme nowhere else", () => {
-    const others = Object.entries(stylesheets)
-      .filter(([path]) => path !== GLOBALS)
-      .filter(([, text]) => /--[\w-]+\s*:|@theme\b/.test(text))
+  it("reads every stylesheet as text", () => {
+    const empty = Object.entries(stylesheets)
+      .filter(([, text]) => text.trim() === "")
       .map(([path]) => path)
-    expect(others).toEqual([])
+    expect(empty).toEqual([])
   })
 
   it("makes every @theme colour a var() of a semantic token", () => {

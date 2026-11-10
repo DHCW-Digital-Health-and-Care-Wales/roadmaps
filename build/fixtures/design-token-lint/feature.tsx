@@ -1,8 +1,13 @@
 // @lint-as src/features/fixture/fixture.tsx
 // Each line ending `// ✗ <text>` must be reported with a message containing <text>;
-// every other line must lint clean. Not app code: never imported or built.
+// every other line must lint clean, so keep each case on one line. Not app code: never
+// imported or built.
 import { cva } from "class-variance-authority"
 import { cn } from "@/lib/utils"
+
+const buttonVariants = cva("")
+const active = true
+const base = {}
 
 export const s1UnknownClasses = [
   <div className="bg-red-500" />, // ✗ Unknown class detected: bg-red-500
@@ -18,6 +23,9 @@ export const s1UnknownClasses = [
   <div className={cn({ "border-slate-200": true })} />, // ✗ Unknown class detected: border-slate-200
   cva("bg-sky-500"), // ✗ Unknown class detected: bg-sky-500
   cva("", { variants: { tone: { warm: "text-orange-700" } } }), // ✗ Unknown class detected: text-orange-700
+  buttonVariants({ variant: "outline", className: "bg-red-500" }), // ✗ Unknown class detected: bg-red-500
+  <a className={cn(buttonVariants({ className: "bg-stone-50" }))} />, // ✗ Unknown class detected: bg-stone-50
+  buttonVariants({ variant: "ghost", size: "sm", className: "-ml-2.5 text-muted-foreground" }),
 ]
 
 export const stateClasses = {
@@ -38,6 +46,8 @@ export const s1PrimaryAsText = [
   <div className="hover:text-primary" />, // ✗ use text-link
   <div className="[&>a:hover]:text-primary" />, // ✗ use text-link
   <div className="decoration-primary" />, // ✗ use decoration-link
+  <div className="hover:text-primary-hover" />, // ✗ use text-link
+  <a className={cn(buttonVariants({ className: "text-primary" }))} />, // ✗ use text-link
   <div className="text-primary-foreground" />,
 ]
 
@@ -63,6 +73,10 @@ export const s2ArbitraryValues = [
   <div className="shadow-[0_1px_2px_black]" />, // ✗ Arbitrary shadow value
   <div className="drop-shadow-(--x)" />, // ✗ Arbitrary drop-shadow value
   <div className="font-[Comic_Sans_MS]" />, // ✗ Arbitrary font
+  <div className="bg-linear-[to_right,red_1px,transparent_1px]" />, // ✗ Arbitrary gradient
+  <div className="bg-radial-[at_50%_0%,color-mix(in_oklch,red,transparent)]" />, // ✗ Arbitrary gradient
+  <div className="bg-conic-(--x)" />, // ✗ Arbitrary gradient
+  <div className="bg-linear-to-r from-muted to-card" />,
   <div className={cn("text-[13px]")} />, // ✗ Arbitrary text value
   <div className="max-h-(--available-height) w-[37rem] min-w-[96px] grid-cols-[auto_1fr]" />,
   <div className="bg-size-[56px_56px] transition-[border-color,box-shadow]" />,
@@ -77,6 +91,11 @@ export const s3DarkAndFocus = [
   <button className="focus-visible:bg-muted" />, // ✗ Only a focus utility styles focus here
   <button className="has-focus-visible:border-input" />, // ✗ Only a focus utility styles focus here
   <div className="group-focus-visible:ring-1" />, // ✗ Ad-hoc focus style
+  <button className="focus-visible:focus-fill [&:focus-visible]:bg-muted" />, // ✗ Ad-hoc focus style
+  <button className="[&:focus]:ring-2" />, // ✗ Ad-hoc focus style
+  <div className="[&:has(:focus-visible)]:outline-ring" />, // ✗ Ad-hoc focus style
+  <div className="group-[:focus]:text-link" />, // ✗ Ad-hoc focus style
+  <button className={cn(buttonVariants({ className: "focus-visible:ring-2" }))} />, // ✗ Only a focus utility styles focus here
   <button className="focus-visible:focus-fill" />,
   <div className="has-focus-visible:focus-ring" />,
   <a className="focus-visible:focus-link" />,
@@ -104,10 +123,19 @@ export const s4BackDoors = [
   <span style={{ "--x": "red" } as React.CSSProperties} />, // ✗ may only map onto a semantic token
   <span style={{ "--normal-bg": "var(--popover)" } as React.CSSProperties} />,
   <span style={{ position: "absolute", width: 10, transform: "none", gridColumn: 2 }} />,
+  <span style={active ? { width: 10 } : undefined} />,
+  <span style={base} />, // ✗ Write an inline style as an object literal
+  <span style={{ ...base, width: 10 }} />, // ✗ without spreads
+  <span style={active ? base : undefined} />, // ✗ Write an inline style as an object literal
+  <span style={base as React.CSSProperties} />, // ✗ Write an inline style as an object literal
   <svg fill="#fff" />, // ✗ Literal colour in an SVG attribute
   <path stroke="red" />, // ✗ Literal colour in an SVG attribute
   <stop stopColor={"#000"} />, // ✗ Literal colour in an SVG attribute
   <svg color={`#fff`} />, // ✗ Literal colour in an SVG attribute
+  <svg fill={active ? "red" : "none"} />, // ✗ Literal colour in an SVG attribute
+  <svg fill={active ? "currentColor" : "none"} stroke={`url(#${String(active)})`} />,
+  <svg fill={`#${"fff"}`} />, // ✗ Literal colour in an SVG attribute
+  <span style={{ fontVariantNumeric: "tabular-nums", scrollbarColor: "red" }} />, // ✗ Design property in an inline style
   <svg fill="none" stroke="currentColor" />,
   <div className="bg-(--nhsw-link-colour)" />, // ✗ primitive outside globals.css
   <span style={{ "--x": "var(--app-dark-link)" } as React.CSSProperties} />, // ✗ primitive outside globals.css

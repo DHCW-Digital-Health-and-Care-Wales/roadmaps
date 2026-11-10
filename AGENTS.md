@@ -97,11 +97,11 @@ actionlint          # after editing .github/workflows (not a dependency; install
   system enforces parity. Copy is sentence case. Domain/infrastructure emit codes, not copy.
   `i18next/no-literal-string` rejects literal JSX text and literal `aria-label`/`title`/
   `alt`/`placeholder` attributes outside tests and `components/ui`.
-- Design tokens (ADR-010): style only with the semantic tokens of `src/styles/globals.css`;
-  the theme is locked and lint rejects anything else. For focus use
-  `focus-visible:focus-fill` (buttons, button-styled links), `focus-ring` (cards, inputs,
-  menus) or `focus-link` (text links). When no token fits, add one per
-  `src/styles/AGENTS.md`, never an `eslint-disable`.
+- Design tokens (ADR-010): style only with the semantic tokens of `src/styles/globals.css`.
+  For focus use `focus-visible:focus-fill` (buttons, button-styled links), `focus-ring`
+  (cards, inputs, menus) or `focus-link` (text links). When no token fits, add one per
+  `src/styles/AGENTS.md`, never an `eslint-disable`; read it too before touching the DHCW
+  pin.
 
 ## Working conventions
 

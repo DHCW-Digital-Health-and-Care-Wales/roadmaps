@@ -32,7 +32,14 @@ export function createFakeAuthClient(
     getSnapshot: store.getSnapshot,
     subscribe: store.subscribe,
     setState: store.setSnapshot,
-    getAccessToken: () => (isConnected() ? FAKE_ACCESS_TOKEN : null),
+    // Mirrors the real client: no token once `expiresAt` has passed, even before the
+    // snapshot moves to `expired`.
+    getAccessToken: () => {
+      const state = store.getSnapshot()
+      return state.status === "connected" && Date.now() < state.expiresAt
+        ? FAKE_ACCESS_TOKEN
+        : null
+    },
     connect: vi.fn(() => {
       store.setSnapshot({
         status: "connected",

@@ -94,7 +94,8 @@ only data tests may use; nothing from the live spreadsheet is stored in this rep
    record a problem, so the list still loads; (b) fail the whole list, as the public site
    does.
 3. **Arrangement on the main page**: (a) grouped by category, as the public site does;
-   (b) one list in row order; (c) one list sorted by title, with the category as a label.
+   (b) one list in row order; (c) one list sorted by title, with the category as a label;
+   (d) grouped by product family, then roadmaps with no family (raised by the owner).
 4. **`Product Lead`**: (a) one free-text value, as the public site shows it; (b) split
    into a list of names.
 5. **Scope**: (a) main page only; (b) also show the roadmap's full information on its
@@ -111,14 +112,14 @@ public site.
 
 ## Decisions needed
 
-| #   | Decision                                     | Recommended | Owner answer (2026-11-10, grilling round 1) |
-| --- | -------------------------------------------- | ----------- | ------------------------------------------- |
-| 1   | Which roadmaps are listed                    | (a)         | (a) show every row, badge unpublished       |
-| 2   | Fatal sheet mistakes                         | (a)         | (a) keep listing                            |
-| 3   | Main page arrangement                        | (a)         | **(c) one list sorted by title**            |
-| 4   | `Product Lead`                               | (a)         | (a) show as written                         |
-| 5   | Scope                                        | (a)         | (a) main page only                          |
-| 6   | Reading the list and other technical choices | (a)         | Left to the agent                           |
+| #   | Decision                                     | Recommended | Owner answer (2026-11-10, grilling round 1)            |
+| --- | -------------------------------------------- | ----------- | ------------------------------------------------------ |
+| 1   | Which roadmaps are listed                    | (a)         | (a) show every row, badge unpublished                  |
+| 2   | Fatal sheet mistakes                         | (a)         | (a) keep listing                                       |
+| 3   | Main page arrangement                        | (a)         | **(d) grouped by family** (round 2; round 1 chose (c)) |
+| 4   | `Product Lead`                               | (a)         | (a) show as written                                    |
+| 5   | Scope                                        | (a)         | (a) main page only                                     |
+| 6   | Reading the list and other technical choices | (a)         | Left to the agent                                      |
 
 ## Outcome
 

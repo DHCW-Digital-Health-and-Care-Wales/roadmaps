@@ -11,7 +11,8 @@ visible worksheet becomes a roadmap card named after its tab, so the list includ
 list tab itself and any scratch tab. The public site reads the first tab instead, where
 each row is one roadmap with its title, publication state, category, family, status,
 product lead, date and descriptions. This epic makes the editor read that row list and
-show each roadmap's information on its card, in one list sorted by title, with
+show each roadmap's information on its card, grouped by product family and sorted by
+title, with
 unpublished roadmaps badged. The only interactions stay the same: connect, refresh and
 open a card. The detail page keeps its placeholder, and roadmap items are not read.
 
@@ -103,8 +104,8 @@ cards plain, and STY-012 changes what the cards show.
   Product Leads ask how to fix a mistake.
 - **"My roadmaps"**: `productLead` is free text, never split (analysis decision 4), and
   the app does not know who the user is.
-- **Grouping by category** as the public site does: the owner chose one sorted list
-  (analysis decision 3).
+- **Grouping by category** as the public site does: the owner chose groups by product
+  family instead (analysis decision 3, round 2).
 
 ## Defects
 

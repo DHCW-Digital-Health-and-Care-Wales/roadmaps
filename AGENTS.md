@@ -584,5 +584,6 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
   - Gotchas: never commit, screenshot or log live-spreadsheet data; use only
     `tests/fixtures/sheets/` or inline rows. Unpublished roadmaps are listed, badged. Ids
     become the public site's slugs (`producta`). `Product Lead` is one free-text cell with
-    no Welsh, never split. The main page is one list sorted by title, not grouped by
+    no Welsh, never split. The main page groups by product family (then roadmaps with no family), sorted by
+    title, not grouped by
     category (owner). The glossary marks the terms that change with EPC-002.

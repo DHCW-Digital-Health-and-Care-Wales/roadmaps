@@ -76,7 +76,7 @@ A roadmap item as shown on a roadmap; its size is the budget for the item's text
 
 **Roadmap list**:
 The roadmaps available to the user, in the order the data source gives them; from EPC-002,
-one list sorted by title.
+grouped by product family and sorted by title.
 _Avoid_: Dashboard, workspace
 
 **Published roadmap** _(planned)_:
@@ -90,8 +90,8 @@ shared with the public site; a roadmap may have none.
 _Avoid_: Group, section, tag
 
 **Product family** _(planned)_:
-An optional name grouping related products, such as "Single Record", shown before a
-roadmap's title.
+An optional name grouping related products, such as "Single Record". The roadmap list
+groups roadmaps under their family.
 _Avoid_: Programme, portfolio
 
 **Status label** _(planned)_:

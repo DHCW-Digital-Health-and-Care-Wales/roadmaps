@@ -1,6 +1,7 @@
 # ADR-009: The roadmap list comes from the first tab of the connected spreadsheet
 
-- Status: Accepted — owner, 2026-11-10, grilling round 1 (analysis decisions 1–5); the
+- Status: Accepted — owner, 2026-11-10, grilling round 1 (analysis decisions 1–5;
+  decision 3 revised in round 2); the
   technical choices (decision 6) were left to the agent by the owner in the same round
 - Date: 2026-11-10
 - Amends: ADR-002 (the `Roadmap` shape, and what the Google adapter reads)
@@ -72,9 +73,11 @@ interface Roadmap {
 
 - **Every listed row is a roadmap, published or not** (owner, decision 1). `published` is
   `true` only for an `Enabled` of exactly `Yes`; the UI badges the others.
-- **The repository returns the rows in order**; the main page shows **one list sorted by
-  localised title** with the category as a label on each card (owner, decision 3). The
-  public site's grouping by category is not used.
+- **The repository returns the rows in order**; the main page **groups roadmaps by
+  product family**, families in localised name order and roadmaps by localised title
+  within each, then the roadmaps with no family, by title (owner, decision 3, round 2).
+  The category is a label on each card; the public site's grouping by category is not
+  used. Families match ignoring case, accents, spaces and punctuation (agent).
 
 ### Reading the list (agent, decision 6)
 

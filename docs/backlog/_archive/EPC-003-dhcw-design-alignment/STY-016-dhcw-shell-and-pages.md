@@ -190,6 +190,8 @@ Audited at `22c3336`.
   button shows only its icon below `md` (both stay announced: a live `status`, and the
   accessible name "Language English"). `shell.spec.ts` checks the name untruncated from
   375px to 1024px.
+- **S1, shared link style** (agent): `textLinkClasses` (`components/layout`) is the one text
+  link style, used by the back link, the not-found link and the banner's feedback link.
 - **S3** (agent): the feedback address travels as `AppInfo` (`components/layout/app-info`,
   built by `composeApp` from `config.feedbackUrl` and `__APP_VERSION__`, supplied by
   `AppProviders`), so the layout components stay below `app/`. The link opens in a new tab
@@ -207,8 +209,6 @@ Audited at `22c3336`.
 - **S7** (agent): the favicon is the DHCW icon in white on a navy tile, so it reads on light
   and dark browser chrome; the skip link is DHCW's yellow with bold text, at the container's
   left edge.
-- **S1, shared link style** (agent): `textLinkClasses` (`components/layout`) is the one text
-  link style, used by the back link, the not-found link and the banner's feedback link.
 - **D6** (agent): the first run of the 375px Cymraeg check failed (the short name needed 8px
   more): the home link's `-ml-1` (aligning the logo with the page edge) and tighter gaps
   below `sm` fix it. Tests came after the code, as the checks are of layout and copy.

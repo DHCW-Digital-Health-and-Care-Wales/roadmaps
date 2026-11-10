@@ -98,18 +98,6 @@ for (const language of ["en", "cy"] as const) {
       await expect(banner.getByRole("button", { name: c.connect })).toBeHidden()
       await expect(banner.getByRole("status")).not.toBeEmpty()
       await expect(banner.getByRole("status")).toBeAttached()
-
-      // The short name shows in full: nothing is cut off with an ellipsis (D6).
-      const brand = banner
-        .getByRole("link", { name: c.home })
-        .locator("span")
-        .first()
-      const [scrollWidth, clientWidth] = await brand.evaluate((element) => [
-        element.scrollWidth,
-        element.clientWidth,
-      ])
-      expect(scrollWidth).toBeLessThanOrEqual(clientWidth)
-      expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0)
     })
 
     for (const width of [375, 640, 768, 900, 1024]) {

@@ -742,7 +742,8 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
     `GITHUB_SHA` is set) feeds `__APP_VERSION__` through `vite.config.ts`. `ci.yml` is unchanged.
   - Tokens: `--header`, `--header-foreground`, `--header-hover`, `--header-border` (navy in both
     themes). Copy: `common.headerName` ("Roadmap Editor"; the logo says DHCW), `layout.logoAlt`,
-    `layout.phase.*`, `layout.footer.*`. `textLinkClasses` is the one text-link style. The Welsh is machine-assisted and needs a fluent review.
+    `layout.phase.*`, `layout.footer.*`. `textLinkClasses` is the one text-link style. The Welsh
+    is machine-assisted and needs a fluent review.
   - Decisions: the full logo (`nhsw-logo.svg`, the record's file) is DHCW's bilingual lockup and
     includes the NHS Wales mark, which ADR-010 says to leave out: the owner confirms at review.
     The home link keeps its full accessible name; its focus is the ring, as a yellow fill would

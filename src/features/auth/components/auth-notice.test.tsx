@@ -263,6 +263,10 @@ describe("the page notice (S2: confirmations)", () => {
     )
     expect(main().queryByRole("note")).not.toBeInTheDocument()
 
+    // Coming back to the list does not bring it back.
+    await act(() => router.navigate({ to: "/" }))
+    expect(main().queryByRole("note")).not.toBeInTheDocument()
+
     act(() => {
       authClient.setState({ status: "expired" })
     })

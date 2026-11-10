@@ -83,25 +83,31 @@ export function useAuthNotice(): {
   const { state } = useAuth()
   const pathname = useLocation({ select: (location) => location.pathname })
   const [seen, setSeen] = useState(state)
+  const [seenPathname, setSeenPathname] = useState(pathname)
   const [version, setVersion] = useState(0)
   const [confirmation, setConfirmation] = useState<{
     readonly state: AuthState
-    readonly pathname: string
     readonly code: Confirmation
   } | null>(null)
   const [dismissed, setDismissed] = useState<AuthState | null>(null)
 
+  // Derived from the previous render (React's "storing information from previous
+  // renders" pattern), so each transition and each page change is seen once, with no
+  // effect.
   if (seen !== state) {
-    // Derived from the previous render's state (React's "storing information from
-    // previous renders" pattern), so each transition is seen once, with no effect.
     setSeen(state)
     setVersion(version + 1)
     const code = confirmationOf(seen, state)
-    setConfirmation(code ? { state, pathname, code } : null)
+    setConfirmation(code ? { state, code } : null)
+  }
+  if (seenPathname !== pathname) {
+    // Moving on to another page ends a confirmation for good, even on the way back.
+    setSeenPathname(pathname)
+    setConfirmation(null)
   }
 
   const confirmed =
-    confirmation?.state === state && confirmation.pathname === pathname
+    confirmation?.state === state
       ? ({ kind: "confirmed", code: confirmation.code } as const)
       : null
   const notice = dismissed === state ? null : (failureIn(state) ?? confirmed)

@@ -2,7 +2,8 @@
 
 - Status: Accepted
 - Date: 2026-11-10 (amended in STY-002: optional abort `signal`, contract test; STY-003: the
-  `AuthClient` port in `domain/auth/`; STY-009: lint rules for `lib/`, `components/`, `i18n/`)
+  `AuthClient` port in `domain/auth/`; STY-009: lint rules for `lib/`, `components/`, `i18n/`; ADR-009: the `Roadmap`
+  shape and the roadmap list's source, see below)
 
 ## Context
 
@@ -57,6 +58,14 @@ getAccessToken })`) that performs authorised GETs with native `fetch`, maps HTTP
   `useRoadmapRepository`) that lives in `features/roadmaps/`; `app/` creates the concrete
   repository and passes it to the provider. Dependencies point inward only: `app/` may
   import features, but features never import `app/` (that would be a cycle).
+
+### ADR-009 amendments
+
+ADR-009 supersedes two parts of this decision once EPC-002 delivers it: the
+`Roadmap { id; name }` shape (now ADR-009's `Roadmap`, with a slug `id`), and the Google
+adapter's mapping of each visible worksheet to a roadmap (it now reads the first
+worksheet's rows, and adds the `invalid-data` kind). The layering, the repository
+boundary, `listRoadmaps` with its `signal`, the contract test and `AppError` stand.
 
 ## Consequences
 

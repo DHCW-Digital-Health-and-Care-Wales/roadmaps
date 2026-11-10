@@ -50,6 +50,7 @@ src/
   i18n/             i18next setup, supported languages, en/cy catalogues (ADR-008)
   styles/           Tailwind v4 entry CSS + theme tokens
 tests/e2e/          Playwright specs + fakes for GIS and the Sheets API
+tests/fixtures/     example data shared by unit and E2E tests; never live data
 build/              build-time helpers for vite/playwright config (GitHub Pages base path)
 .github/            CI/CD workflow (verify, e2e, deploy to Pages), Dependabot (ADR-007),
                     PR template
@@ -575,3 +576,6 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
     - DEF-001 fixed in the same PR: `roadmaps.title` is now "Your roadmaps" / "Eich mapiau
       trywydd". A product name (`common.appName`) keeps its capitals; other copy is
       sentence case.
+- **EPC-002 planning (orchestrator)** — `docs/analysis/roadmaps-tab-format.md`, ADR-009
+  and EPC-002 (STY-010–012): roadmaps come from the first worksheet's rows, as on DHCW's
+  public site. Tests use only the example data in `tests/fixtures/sheets/` (its README) or inline rows.

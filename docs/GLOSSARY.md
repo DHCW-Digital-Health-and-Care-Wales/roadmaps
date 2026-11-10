@@ -12,7 +12,8 @@ product brief describes and the code does not have yet.
 **Product Lead**:
 A DHCW member of staff who leads one or more products and manages their roadmaps in
 this tool; a product may have several. The primary user
-(`docs/backlog/personas/product-lead.md`).
+(`docs/backlog/personas/product-lead.md`). A roadmap names its product leads as free
+text _(planned)_; the app does not know which Product Lead is using it.
 _Avoid_: Product owner, admin, editor
 
 **Public reader**:
@@ -30,8 +31,9 @@ _Avoid_: Viewer, front end, website
 
 **Roadmap**:
 A product's public plan, in the Now / Next / Later format, managed by its Product Lead.
-Each roadmap is one visible worksheet of the connected spreadsheet today, but its
-identity is opaque and outlives the data source.
+Each roadmap is one visible worksheet of the connected spreadsheet today; from EPC-002 it
+is one row of the **roadmap index** (ADR-009). Its identity is the short name the
+public site uses in its address, and outlives the data source.
 _Avoid_: Sheet, worksheet, tab, board
 
 **Horizon** _(planned)_:
@@ -73,8 +75,28 @@ A roadmap not published for longer than the staleness threshold, suggested as si
 A roadmap item as shown on a roadmap; its size is the budget for the item's text.
 
 **Roadmap list**:
-The roadmaps available to the user, in the order the data source gives them.
+The roadmaps available to the user, in the order the data source gives them; from EPC-002,
+grouped by product family and sorted by title.
 _Avoid_: Dashboard, workspace
+
+**Published roadmap** _(planned)_:
+A roadmap the public site shows. A roadmap that is not published is still listed here,
+marked "Not published" (ADR-009).
+_Avoid_: Enabled, live, public roadmap
+
+**Category** _(planned)_:
+One of six fixed areas of care a roadmap belongs to, such as "GP & Community Services",
+shared with the public site; a roadmap may have none.
+_Avoid_: Group, section, tag
+
+**Product family** _(planned)_:
+An optional name grouping related products, such as "Single Record". The roadmap list
+groups roadmaps under their family.
+_Avoid_: Programme, portfolio
+
+**Status label** _(planned)_:
+Free text describing a product's stage, such as "Beta", shown as a badge.
+_Avoid_: Phase (an item's tag on the public site), state
 
 **Roadmap detail**:
 The page for one roadmap, reached from its card or by deep link.
@@ -103,9 +125,16 @@ The one Google spreadsheet, fixed by configuration, that the data source reads. 
 infrastructure and setup documentation use this term.
 _Avoid_: Workbook, file
 
+**Roadmap index** _(planned)_:
+The first worksheet of the connected spreadsheet, one row per roadmap, which the editor
+and the public site both read (ADR-009). Only infrastructure and setup documentation use
+this term.
+_Avoid_: Roadmap list (the roadmaps shown to the user), roadmaps tab
+
 **Worksheet**:
-A tab of the connected spreadsheet. Each visible worksheet is a roadmap; a hidden
-worksheet is not shown. Only infrastructure uses this term.
+A tab of the connected spreadsheet. Each visible worksheet is a roadmap today; from
+EPC-002 the first worksheet is the **roadmap index** and each other holds one roadmap's
+items (ADR-009). Only infrastructure uses this term.
 _Avoid_: Sheet (ambiguous with spreadsheet)
 
 ### Connection

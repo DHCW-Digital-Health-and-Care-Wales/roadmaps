@@ -1,7 +1,7 @@
 # EPC-003: DHCW design alignment — a DHCW staff tool that still looks like generic SaaS
 
-- **Status**: Active — planned 2026-11-10 from the owner's answers in the alignment analysis; STY-013 to STY-016 delivered and merged; STY-017 delivered in its PR, which awaits merge
-- **Progress**: 5 of 6 terminal (STY-017 awaits merge); next selectable: STY-018 once STY-017 merges; blocked on: nothing
+- **Status**: Active — planned 2026-11-10 from the owner's answers in the alignment analysis; STY-013 to STY-017 delivered and merged; STY-018 in progress
+- **Progress**: 5 of 6 terminal; STY-018 in progress; blocked on: nothing
 - **Binding ADRs**: ADR-010, ADR-005, ADR-008, ADR-009
 
 ## Summary
@@ -73,7 +73,7 @@ reconnect. The roadmap editor would lose the user's flow mid-edit.
 5. The shell, logo, phase banner, footer and pages follow DHCW's staff layout, minus the
    sidebar (F1).
 6. Failures are shown inline and persist; the session warns before it ends (F5, F6).
-7. Screenshot tests hold the result (F1–F4).
+7. Aria snapshots and computed-style checks hold the result, with no pixel comparison (F1–F4).
 8. **Unchanged:**
    - the layering rules (ADR-002), the data read, query keys and routes;
    - every list, detail, error, expired and refresh state's behaviour;
@@ -146,7 +146,7 @@ changes. Use only the example data in `tests/fixtures/sheets/`.
 | STY-015 | [Shared components look like DHCW's](../_archive/EPC-003-dhcw-design-alignment/STY-015-dhcw-components.md)                                                        | Features/UI                                        | STY-014    | ✅    |
 | STY-016 | [The shell and pages are a DHCW staff service](../_archive/EPC-003-dhcw-design-alignment/STY-016-dhcw-shell-and-pages.md)                                         | Features/UI + i18n + E2E                           | STY-015    | ✅    |
 | STY-017 | [Failures stay on screen, and staff are warned before their session ends](../_archive/EPC-003-dhcw-design-alignment/STY-017-notifications-and-session-warning.md) | Domain + Infrastructure + Features/UI + i18n + E2E | STY-015    | ✅    |
-| STY-018 | [Screenshot tests hold the DHCW look](STY-018-visual-regression.md)                                                                                               | E2E + CI/CD                                        | STY-016    |       |
+| STY-018 | [Tests hold the DHCW look without screenshots](STY-018-dhcw-look-checks.md)                                                                                       | E2E + CI/CD                                        | STY-016    |       |
 
 ## Sequencing
 
@@ -162,7 +162,7 @@ flowchart LR
   STY-014 must land before the restyling so it is built under the rules.
 - STY-017 needs STY-015's alert variants. It can run beside STY-016 but touches the
   start page, so prefer it after.
-- STY-018 goes last, so its baselines capture the finished look.
+- STY-018 goes last, so its checks run against the finished look.
 
 ## Out of scope
 

@@ -118,7 +118,8 @@ actionlint          # after editing .github/workflows (not a dependency; install
 
 - Deliver a story, defect or chore (including "implement the next logical story from
   epic X") with `.agents/skills/implement-story/SKILL.md`, and several with
-  `.agents/skills/orchestrate/SKILL.md`. Any other change that ends in a PR follows
+  `.agents/skills/orchestrate/SKILL.md`; asking for an orchestrated delivery is asking
+  for a new top-level session per item. Any other change that ends in a PR follows
   implement-story's steps 3–6 unasked. Read its `references/delegation.md` before
   delegating any work.
 - Before a PR is raised, every change gets two independent correctness reviews

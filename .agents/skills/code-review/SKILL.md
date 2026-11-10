@@ -48,9 +48,12 @@ not post, change code, merge or message other people as part of reviewing.
    (the records guide): do the records agree with the code and each other, and
    is a status or acceptance claim true? Invent no other risk.
 5. **Verify plausible findings** with a concrete trigger and an observed or
-   code-derived failure path. Run a focused test (`pnpm exec vitest related
---run <files>`), minimal reproduction or computed-style check when useful,
-   outputs and caches under `/tmp`; never run a command that changes state (a
+   code-derived failure path. Run a focused test, minimal reproduction or
+   computed-style check when useful, outputs and caches under `/tmp`:
+   `./node_modules/.bin/vitest related --run <files> --no-cache --fsModuleCachePath /tmp/<dir>`.
+   Run binaries from `./node_modules/.bin/`, never through pnpm (`pnpm exec`
+   or a `pnpm <script>`), which can reinstall the checkout's `node_modules`
+   under the agent that shares it. Never run a command that changes state (a
    commit, a push, a deploy, a merge). Passing tests are evidence, not proof;
    never claim a check you only read.
 6. **Filter.** Report defects the change introduces or materially exposes, tied
@@ -97,6 +100,15 @@ Do not spend findings on these; check only that the change does not evade them
   `src/**/*.tsx` (not tests, `src/test/`, `components/ui/`). It does **not**
   cover `.ts` files, props other than those attributes, template strings, or
   strings built in hooks, so copy can still slip through.
+- **Design tokens** (`build/design-token-lint.ts`, ADR-010): Tailwind's
+  colours, type, radii and shadows, arbitrary design values, opacity tints,
+  `dark:` colours, ad-hoc focus styles and design properties in inline styles
+  or SVG paint attributes, in `src/**` (not tests). It reads classes only
+  where the plugin looks by default (`className`, `cn()`, `cva()` …), in a
+  `…Variants({ className })` call and in variables named `…Classes`, and
+  styles only in a `style` attribute (which must hold an object literal) or
+  an object typed `CSSProperties`. A class string held anywhere else, or a
+  style object under another prop, is unchecked.
 - `@typescript-eslint` strict-type-checked rules (no `any`, unsafe calls,
   floating promises, `unbound-method`), React Hooks rules and `jsx-a11y`
   basics. Catalogue parity is a `pnpm typecheck` error (`cy.ts` is

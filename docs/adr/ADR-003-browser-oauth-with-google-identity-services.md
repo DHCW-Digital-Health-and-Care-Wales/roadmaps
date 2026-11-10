@@ -1,7 +1,8 @@
 # ADR-003: Browser OAuth with Google Identity Services token model
 
 - Status: Accepted
-- Date: 2026-11-10 (amended in STY-003: port in `domain/auth/`, codes split, prompt policy)
+- Date: 2026-11-10 (amended in STY-003: port in `domain/auth/`, codes split, prompt policy;
+  in STY-017: renewal from `connected`, the clock check on returning to the tab)
 
 ## Context
 
@@ -61,8 +62,31 @@ needs an OAuth access token with scope `https://www.googleapis.com/auth/spreadsh
 - We never claim to know who the user is: the token proves authorisation, not identity.
   The header shows "Google connected", not a name or email.
 
+### STY-017 amendments
+
+- **Renewal.** `connect()` is also accepted from `connected`, as a `connected → connected`
+  transition, so no consumer of `AuthState` handles a new state (STY-017 D2):
+  - It asks with `prompt: ''`. STY-017's spike against the real Google (D3) showed this
+    renews a still-valid token in one click: a popup flashes and closes itself, with no
+    consent screen for an account that has consented.
+  - The session stays `connected`, token and timer included, while Google answers; there
+    is no `connecting` state, so the page never flashes or reloads.
+  - Success replaces the token and the expiry timer and publishes a new `connected` with a
+    later `expiresAt`. The old token is not revoked: that would end the new grant too.
+  - Any failure or cancellation keeps the session until its `expiresAt` and records an
+    optional `lastError` (an `AuthErrorCode`) on `connected`.
+  - Only one renewal runs at a time. Expiry, a 401 or `disconnect()` abandons a renewal
+    still in progress, and its late callbacks are ignored.
+  - It is still only ever started from a click ("Stay connected" in the session warning),
+    so the "no silent background re-auth" rule above stands.
+- **Returning to the tab.** The client also re-checks the clock on `visibilitychange` and
+  expires a session whose `expiresAt` has passed. Timers are throttled in background tabs
+  and paused while the device sleeps, so the expiry timer can fire late.
+
 ## Consequences
 
-- Users re-consent roughly hourly when the token expires; acceptable for this phase.
+- Users renew roughly hourly, in one click, from the warning two minutes before the
+  session ends (STY-017); otherwise they reconnect after it ends. Both are acceptable for
+  this phase.
 - The full spreadsheets scope is sensitive and may require Google OAuth verification for
   external, published apps (documented in README).

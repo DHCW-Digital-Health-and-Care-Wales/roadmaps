@@ -62,7 +62,7 @@ _Visual direction_ bullet of [ADR-005](ADR-005-ui-stack-shadcn-base-ui-tailwind-
   for public pages; a staff editor needs density.
 - **Focus:** DHCW's yellow indicator everywhere, as shared utilities:
   - _fill_, for buttons, links and menu items: yellow fill, dark text, a dark bottom bar;
-  - _ring_, for cards, inputs and toasts: a 3px yellow outline outside a 2px dark inner
+  - _ring_, for cards and inputs: a 3px yellow outline outside a 2px dark inner
     ring.
 
   Amended by STY-015 (D5): menu items take the fill, as a DHCW link or button does, not

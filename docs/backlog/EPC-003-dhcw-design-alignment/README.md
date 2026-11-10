@@ -1,7 +1,7 @@
 # EPC-003: DHCW design alignment — a DHCW staff tool that still looks like generic SaaS
 
-- **Status**: Active — planned 2026-11-10 from the owner's answers in the alignment analysis; STY-013, STY-014 and STY-015 delivered and merged; STY-016 delivered in its PR, which awaits merge
-- **Progress**: 4 of 6 terminal (STY-016 awaits merge); next selectable: STY-017; STY-018 once STY-016 merges; blocked on: nothing
+- **Status**: Active — planned 2026-11-10 from the owner's answers in the alignment analysis; STY-013 to STY-016 delivered and merged; STY-017 delivered in its PR, which awaits merge
+- **Progress**: 5 of 6 terminal (STY-017 awaits merge); next selectable: STY-018 once STY-017 merges; blocked on: nothing
 - **Binding ADRs**: ADR-010, ADR-005, ADR-008, ADR-009
 
 ## Summary
@@ -139,14 +139,14 @@ changes. Use only the example data in `tests/fixtures/sheets/`.
 
 ## Stories
 
-| ID      | Story                                                                                                                                    | Area                                               | Depends on | State |
-| ------- | ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | ---------- | ----- |
-| STY-013 | [The app uses DHCW's colours, type and focus indicator](../_archive/EPC-003-dhcw-design-alignment/STY-013-dhcw-tokens-type-and-focus.md) | Features/UI + Docs                                 | —          | ✅    |
-| STY-014 | [Off-brand styling fails the build](../_archive/EPC-003-dhcw-design-alignment/STY-014-semantic-token-enforcement.md)                     | Features/UI + CI/CD                                | STY-013    | ✅    |
-| STY-015 | [Shared components look like DHCW's](../_archive/EPC-003-dhcw-design-alignment/STY-015-dhcw-components.md)                               | Features/UI                                        | STY-014    | ✅    |
-| STY-016 | [The shell and pages are a DHCW staff service](../_archive/EPC-003-dhcw-design-alignment/STY-016-dhcw-shell-and-pages.md)                | Features/UI + i18n + E2E                           | STY-015    | ✅    |
-| STY-017 | [Failures stay on screen, and staff are warned before their session ends](STY-017-notifications-and-session-warning.md)                  | Domain + Infrastructure + Features/UI + i18n + E2E | STY-015    |       |
-| STY-018 | [Screenshot tests hold the DHCW look](STY-018-visual-regression.md)                                                                      | E2E + CI/CD                                        | STY-016    |       |
+| ID      | Story                                                                                                                                                             | Area                                               | Depends on | State |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | ---------- | ----- |
+| STY-013 | [The app uses DHCW's colours, type and focus indicator](../_archive/EPC-003-dhcw-design-alignment/STY-013-dhcw-tokens-type-and-focus.md)                          | Features/UI + Docs                                 | —          | ✅    |
+| STY-014 | [Off-brand styling fails the build](../_archive/EPC-003-dhcw-design-alignment/STY-014-semantic-token-enforcement.md)                                              | Features/UI + CI/CD                                | STY-013    | ✅    |
+| STY-015 | [Shared components look like DHCW's](../_archive/EPC-003-dhcw-design-alignment/STY-015-dhcw-components.md)                                                        | Features/UI                                        | STY-014    | ✅    |
+| STY-016 | [The shell and pages are a DHCW staff service](../_archive/EPC-003-dhcw-design-alignment/STY-016-dhcw-shell-and-pages.md)                                         | Features/UI + i18n + E2E                           | STY-015    | ✅    |
+| STY-017 | [Failures stay on screen, and staff are warned before their session ends](../_archive/EPC-003-dhcw-design-alignment/STY-017-notifications-and-session-warning.md) | Domain + Infrastructure + Features/UI + i18n + E2E | STY-015    | ✅    |
+| STY-018 | [Screenshot tests hold the DHCW look](STY-018-visual-regression.md)                                                                                               | E2E + CI/CD                                        | STY-016    |       |
 
 ## Sequencing
 

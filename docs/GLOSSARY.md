@@ -166,6 +166,16 @@ _Avoid_: Logged out, timed out
 **Reconnect**:
 To connect again after an expired session, usually without a fresh consent screen.
 
+**Renew**:
+To extend a session before it ends, in one click ("Stay connected"), without a consent
+screen. The roadmaps on screen stay; a renewal that fails leaves the session to expire.
+_Avoid_: Refresh (the app holds no refresh token), extend
+
+**Session warning**:
+The dialog two minutes before a session ends, counting down and offering to renew the
+session or disconnect.
+_Avoid_: Timeout, logout warning
+
 **Access token**:
 The short-lived credential that lets the app read the data source during a session. It
 lives in memory only and is never stored, logged or put in a URL.

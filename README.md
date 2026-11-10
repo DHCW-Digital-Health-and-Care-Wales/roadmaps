@@ -148,7 +148,7 @@ reload on GitHub Pages without a 404 fallback (ADR-004).
 | UI             | React 19.3, TypeScript 6.0 (strict)                                                             | TypeScript stays on 6.0 because typescript-eslint 8.x requires `typescript <6.1`.                                                                                             |
 | Routing        | TanStack Router 1.170, file-based, hash history                                                 | Route tree generated into `src/routeTree.gen.ts` (committed).                                                                                                                 |
 | Server state   | TanStack Query 5.107                                                                            | Retries only retryable `AppError`s, twice; data is cleared on disconnect.                                                                                                     |
-| Components     | shadcn/ui 4 on Base UI 1.9, Tailwind CSS 4.3, lucide-react, sonner                              | Base UI flavour, not Radix (ADR-005). Light/dark theme.                                                                                                                       |
+| Components     | shadcn/ui 4 on Base UI 1.9, Tailwind CSS 4.3, lucide-react                                      | Base UI flavour, not Radix (ADR-005). Light/dark theme.                                                                                                                       |
 | Design         | DHCW design system tokens, Roboto (`@fontsource-variable`)                                      | Ported, never loaded (ADR-010); see [Design](#design). Dark theme is our extension.                                                                                           |
 | Validation     | Zod 4.6 (`zod/mini`)                                                                            | Config, Sheets responses and GIS token responses are parsed at the boundary.                                                                                                  |
 | Auth           | Google Identity Services token model                                                            | Types from `@types/google.accounts`; responses re-parsed with Zod because the typings are wrong.                                                                              |
@@ -378,13 +378,13 @@ mismatch, rather than deploying a site whose assets 404. A fork deploys to
 - **Public configuration.** The client ID and spreadsheet ID ship in the JavaScript
   bundle. That is by design: neither grants access on its own.
 - **Tokens** live in memory only, expire after about an hour, and are revoked on
-  Disconnect. The app requests no refresh tokens and never runs silent background
-  re-authentication.
+  Disconnect. Two minutes before a session ends, a warning offers "Stay connected", which
+  renews it in one click. The app requests no refresh tokens and never runs silent
+  background re-authentication: renewal only ever starts from that click.
 - **No Content Security Policy yet.** GitHub Pages cannot send response headers, so a
   CSP would be a `<meta http-equiv>` tag. It would have to allow at least
   `https://accounts.google.com` (script, frame, style), `https://sheets.googleapis.com`
-  and `https://oauth2.googleapis.com` (connect), Sonner's injected styles, and the
-  theme script in `index.html` (by hash). Add it only together with a manual sign-in on
+  and `https://oauth2.googleapis.com` (connect), and the theme script in `index.html` (by hash). Add it only together with a manual sign-in on
   the deployed site, since the hermetic E2E suite cannot prove it leaves the real
   Google flow working.
 - **The full `spreadsheets` scope is sensitive.** It is requested deliberately, for

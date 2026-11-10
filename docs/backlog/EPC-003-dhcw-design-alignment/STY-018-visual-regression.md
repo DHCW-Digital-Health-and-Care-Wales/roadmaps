@@ -67,6 +67,10 @@ utilities, held by an assertion on the focus tokens
   platform-suffixed, because local and CI runs are both Linux. Confirm this before
   relying on it; if they differ, generate baselines in CI only and record that as a
   departure.
+- **D3** (agent, 2026-11-10, from STY-017): STY-017 shipped the session warning
+  (`alertdialog` "Your session is about to end", reached with `page.clock`; see
+  `tests/e2e/session-warning.spec.ts`), so S1's last item applies. Failures are now page
+  notices at the top of `main`, not toasts.
 
 ## Starting point
 

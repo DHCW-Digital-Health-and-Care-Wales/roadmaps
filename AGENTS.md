@@ -93,14 +93,14 @@ actionlint          # after editing .github/workflows (not a dependency; install
 - Tests sit beside the code as `*.test.ts(x)`; E2E under `tests/e2e/`.
 - Add shadcn components with the shadcn CLI (`pnpm dlx shadcn@latest add <name>`), Base UI
   flavour — never hand-roll a competing primitive or pull in Radix.
-- All user-facing copy (text, aria-labels, toasts, titles) goes through i18n (`t()`), in
+- All user-facing copy (text, aria-labels, notices, titles) goes through i18n (`t()`), in
   English (`en`) and Welsh (`cy`) — see ADR-008. A new key needs both languages; the type
   system enforces parity. Copy is sentence case. Domain/infrastructure emit codes, not copy.
   `i18next/no-literal-string` rejects literal JSX text and literal `aria-label`/`title`/
   `alt`/`placeholder` attributes outside tests and `components/ui`.
 - Design tokens (ADR-010): style only with the semantic tokens of `src/styles/globals.css`.
   For focus use `focus-visible:focus-fill` (buttons, button-styled links, menu items),
-  `focus-ring` (cards, inputs, toasts) or `focus-link` (text links). When no token fits, add one per
+  `focus-ring` (cards, inputs) or `focus-link` (text links). When no token fits, add one per
   `src/styles/AGENTS.md`, never an `eslint-disable`; read it too before touching the DHCW
   pin.
 
@@ -760,3 +760,31 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
       version; pass `appInfo`.
     - The logo is an imported asset (`?url` through Vite, under the base path); the favicon is
       `public/favicon.svg`, which index.html references and Vite rewrites to the base path.
+- **STY-017 Failures stay on screen; a warning before the session ends** — no toasts:
+  Sonner, `ui/sonner.tsx`, `AuthNotifications` and `layout.notifications` are gone (ADR-005
+  amended). Connect, disconnect and renewal outcomes are one page notice above every page's
+  content; two minutes before a session ends, DHCW's timeout dialog offers "Stay connected"
+  (a one-click renewal, proven against the real Google in the record's D5) and "Disconnect".
+  ADR-003 amended (renewal, the clock check on returning to the tab).
+  - Where things live: `useAuthNotice`/`AuthNotice` (`features/auth`, composed in
+    `routes/__root.tsx` above `<Outlet />`), `useSessionWarning` (`SESSION_WARNING_MS`) and
+    `SessionWarning` (mounted in `AppProviders`), `AlertDialog` (`components/ui`, restyled as
+    DHCW's timeout dialog on the new `--overlay` token), `formatDuration(seconds, t)`
+    (`@/i18n`, `common.duration.*` plurals). Copy: `common.close`, `auth.notice.dismiss`,
+    `auth.renewal.*`, `auth.sessionWarning.*`; the Welsh is machine-assisted.
+  - Decisions: `connect()` from `connected` renews with `prompt: ''`, staying `connected`
+    (no `connecting`, no reload) and ending in a new snapshot with a later `expiresAt` or a
+    `lastError`; expiry, a 401 or Disconnect abandons a pending renewal. A failure notice is
+    `role="alert"` (a closed popup and confirmations are notes); confirmations clear on the
+    next state change or page. The copywriter's "Page notice" pattern is the rule for future
+    "saved"/"published" confirmations.
+  - Gotchas:
+    - A renewal is a new `connected` snapshot: code that reacts to "became connected" must
+      compare the previous status (`useAuthNotice` does), or a renewal reads as a connect.
+    - The warning is modal: while it is open, role queries outside it find nothing. A test
+      grant of about 180 s or less opens it at once (`tests/e2e/AGENTS.md`).
+    - Component tests on Vitest fake timers cannot use `user-event`: RTL's async wrapper
+      waits on a timer only Jest's fake timers run. Use `fireEvent`, render first on real
+      timers (the router and queries settle on them), then `vi.useFakeTimers` and
+      `advance(0)` (`session-warning.test.tsx`).
+    - Base UI moves focus into the dialog on a real animation frame: `vi.waitFor` it.

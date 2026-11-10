@@ -1,6 +1,6 @@
 ---
 name: copywriter
-description: Write or change user-facing copy in this product — roadmap and roadmap item screens, field labels and hints, saving, empty states, errors, toasts, aria-labels, page titles, and the connection states — in English or Welsh. Use whenever a task adds or edits a string in `src/i18n/locales/en.ts` or `cy.ts`, reviews copy, or asks whether wording is on-voice. Carries the product's voice, the per-reader tone, and the judgement rules that `pnpm typecheck` and `pnpm lint` cannot make.
+description: Write or change user-facing copy in this product — roadmap and roadmap item screens, field labels and hints, saving, empty states, errors, notices, aria-labels, page titles, and the connection states — in English or Welsh. Use whenever a task adds or edits a string in `src/i18n/locales/en.ts` or `cy.ts`, reviews copy, or asks whether wording is on-voice. Carries the product's voice, the per-reader tone, and the judgement rules that `pnpm typecheck` and `pnpm lint` cannot make.
 user-invocable: true
 ---
 
@@ -99,8 +99,8 @@ Google message: the domain and infrastructure layers emit codes (`AppError.kind`
 ## Shapes to copy
 
 Canonical patterns for each surface built so far — connect prompt, expired
-session, access error, load error, empty state, loading, toast, status label,
-count — are in `references/patterns.md`; add a pattern there when the item
+session, access error, load error, empty state, loading, page notice, timeout
+warning, status label, count — are in `references/patterns.md`; add a pattern there when the item
 editor sets one (field hint, pending edits, publish confirmation). Start from the shape rather than from a blank line.
 
 ## Working order
@@ -128,8 +128,8 @@ editor sets one (field hint, pending edits, publish confirmation). Start from th
 
 ## Where a budget bites
 
-No script enforces length, so these are yours to hold: a **toast** is one
-sentence, about 80 characters; an **alert or empty-state title** is a short
+No script enforces length, so these are yours to hold: a **page notice** is
+one sentence, about 80 characters; an **alert or empty-state title** is a short
 phrase (about 40) and its **description** at most two sentences; a **button** is
 a verb or a verb and its object. A **field hint** is one short sentence. No
 character limit is enforced on roadmap items yet; when one is, show it, not

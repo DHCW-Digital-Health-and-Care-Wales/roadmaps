@@ -145,7 +145,7 @@ Do not spend findings on these; check only that the change does not evade them
   from `getAccessToken()` to the request header and confirm it never reaches
   `localStorage`/`sessionStorage`/IndexedDB/cookies, a URL or hash, query keys
   or cached data, React state or context, an `AppError.message`/`cause`, a log
-  or a toast. `AuthState` carries codes and `expiresAt`, not the token. Only
+  or a page notice. `AuthState` carries codes and `expiresAt`, not the token. Only
   non-sensitive preferences (language, theme) are stored. Check new
   `console.*`, error serialisation and `JSON.stringify` of anything holding a
   request. New Sheets/GIS scopes widen the consent screen: they need an ADR
@@ -254,7 +254,7 @@ Do not spend findings on these; check only that the change does not evade them
   computed-style or visual evidence. Hold UI to WCAG 2.2 AA: accessible names
   that contain their visible text (the language switcher's "Language English"
   keeps a space node), native structure and landmarks, live regions (`role=status`
-  and `role=alert` usage, toasts), `aria-busy`, focus order and visible focus,
+  and `role=alert` usage, page notices, the session warning's announcements), `aria-busy`, focus order and visible focus,
   focus management in `AppShell` (focus moves to `<main>` after in-app
   navigation, and when the focused control inside `<main>` is removed; the skip
   link focuses `<main>` because hash history owns the fragment), menu and dialog

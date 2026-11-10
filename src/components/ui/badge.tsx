@@ -1,6 +1,7 @@
 // Deviates from upstream shadcn (ADR-010): imports cn from @/lib/utils;
 // text-body-xs for upstream's text-xs, focus-visible:focus-fill for its ring, and no
-// `dark:` background overrides, which would beat the focus fill in the dark theme.
+// `dark:` background overrides, which would beat the focus fill in the dark theme; the
+// link variant is --link, as --primary is a fill only.
 import { mergeProps } from "@base-ui/react/merge-props"
 import { useRender } from "@base-ui/react/use-render"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -19,7 +20,7 @@ const badgeVariants = cva(
         outline:
           "border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground",
         ghost: "hover:bg-muted hover:text-muted-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+        link: "text-link underline-offset-4 hover:underline",
       },
     },
     defaultVariants: {

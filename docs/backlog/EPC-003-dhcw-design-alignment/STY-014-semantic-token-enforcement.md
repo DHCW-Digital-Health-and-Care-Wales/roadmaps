@@ -130,6 +130,10 @@ test, and opacity on a whole element (`opacity-50` for disabled) stays allowed
 - **D4** (agent, 2026-11-10): radius keeps shadcn's `--radius`-derived steps, over a
   DHCW-only set, so generated components stay close to upstream. Bracket radii are
   banned.
+- **D5** (agent, 2026-11-10, from STY-013's delivery): STY-013 moved `--brand`'s text and
+  icon uses (`roadmap-icon`, the start page's source icon) to `--link`, because the dark
+  `--primary` is a fill that fails as text. Its only use left is the start page's
+  `color-mix` glow, so removing `--brand` means removing or tokenising that glow.
 
 ## Starting point
 

@@ -118,7 +118,8 @@
   --input: var(--nhsw-secondary-border-colour);
   --ring: var(--focus);
   --radius: var(--nhsw-border-radius);
-  /* An alias of the primary, until token enforcement removes its uses. */
+  /* An alias of the primary for the start page's decorative glow, until token
+     enforcement removes it. */
   --brand: var(--primary);
 
   --link: var(--nhsw-link-colour);

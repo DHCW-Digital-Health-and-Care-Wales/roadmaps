@@ -52,7 +52,7 @@ export function WelcomeHero() {
         <p className="inline-flex max-w-full items-center gap-2 rounded-2xl border bg-background/70 px-3 py-1.5 text-left text-body-xs text-muted-foreground shadow-xs backdrop-blur-sm sm:rounded-full sm:py-1">
           <TableIcon
             aria-hidden="true"
-            className="size-3.5 shrink-0 text-brand"
+            className="size-3.5 shrink-0 text-link"
           />
           <span className="text-pretty">{t("landing.source")}</span>
         </p>

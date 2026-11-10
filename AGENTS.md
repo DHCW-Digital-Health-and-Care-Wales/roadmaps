@@ -667,7 +667,8 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
   `src/styles/AGENTS.md` (tokens, pin upgrade); README Design section.
   - Decisions: the dark theme is DHCW's navies (page `#0e1b2f`, surface `#13233c`) with
     DHCW's mid blue `#32598a` as the primary fill (a pale one barely changes when it turns
-    yellow on focus) and the tag palette inverted; `--primary` is a fill, never text; status tokens are DHCW's tags; the
+    yellow on focus) and the tag palette inverted. `--primary` is a fill, never text:
+    text and icons in link blue use `--link`; status tokens are DHCW's tags; the
     status panel title is `text-heading-m` at either heading level.
   - Gotchas:
     - Vitest empties stylesheets, even `?raw`, unless `test.css.include` lists them

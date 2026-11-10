@@ -1,6 +1,7 @@
 // Deviates from upstream shadcn (ADR-010): imports cn from @/lib/utils;
 // text-body-xs for upstream's text sizes, focus-visible:focus-fill for its ring, and no
-// `dark:` background overrides, which would beat the focus fill in the dark theme.
+// `dark:` background overrides, which would beat the focus fill in the dark theme; the
+// link variant is --link, as --primary is a fill only.
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
@@ -19,7 +20,7 @@ const buttonVariants = cva(
           "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground",
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20",
-        link: "text-primary underline-offset-4 hover:underline",
+        link: "text-link underline-offset-4 hover:underline",
       },
       size: {
         default:

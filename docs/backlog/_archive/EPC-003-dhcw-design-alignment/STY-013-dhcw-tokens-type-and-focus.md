@@ -179,7 +179,10 @@ Audited at `22c3336`.
   on focus changes by about 1.1:1, by hue alone, and the dark bar under it does not show
   on navy. The contrast test now requires every fill `focus-fill` replaces to change by
   3:1, or the bar to show on the page. `--primary` is therefore a fill only, never text
-  (it is 2.4:1 on the dark page); links use `--link`, and its two text pairs went.
+  (it is 2.4:1 on the dark page); links use `--link`, and its two text pairs went. So the
+  `link` variants of the button and badge, the empty state's hovered link (`--link-hover`),
+  the roadmap icon and the start page's source icon moved from `text-primary`/`text-brand`
+  to `--link`. `--brand`'s only use left is the start page's decorative glow.
 - **S4, the recipes** (agent): `focus-fill` is DHCW's button recipe (a 2px bar); the skip
   link uses it too, until STY-016 gives it DHCW's skip-link style (a 4px bar). `focus-link`
   is defined for text links, of which the app has none yet. The global `outline-ring/50`
@@ -212,7 +215,7 @@ Audited at `22c3336`.
   `--focus-foreground`, `--control-shadow` (utility `shadow-control`, DHCW's 2px button
   bar) and `--status-{neutral,info,success,warning,danger}-{bg,fg,border}` from DHCW's grey,
   blue, green, yellow and red tags (inverted in dark). `--ring` is `--focus`; `--brand` is
-  `--primary` until STY-014; `--sidebar-*` is DHCW's navy navigation (D4); `--chart-*` is
+  `--primary` until STY-014, used only by the start page's glow; `--sidebar-*` is DHCW's navy navigation (D4); `--chart-*` is
   gone. `--radius` is DHCW's 4px, with shadcn's derived steps.
 - Primitives are named after their DHCW source (`--nhsw-primary-text-colour`,
   `--nhsw-tag-blue-ink`); `--app-dark-*` holds three values (surface, link, destructive).

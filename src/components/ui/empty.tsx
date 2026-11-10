@@ -1,5 +1,6 @@
 // Deviates from upstream shadcn (ADR-010): imports cn from @/lib/utils;
-// text-body-xs for upstream's text-sm (no letter-spacing).
+// text-body-xs for upstream's text-sm (no letter-spacing); a hovered link is --link-hover,
+// as --primary is a fill only.
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
@@ -71,7 +72,7 @@ function EmptyDescription({ className, ...props }: React.ComponentProps<"p">) {
     <div
       data-slot="empty-description"
       className={cn(
-        "text-body-xs text-muted-foreground [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary",
+        "text-body-xs text-muted-foreground [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-link-hover",
         className,
       )}
       {...props}

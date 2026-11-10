@@ -2,7 +2,7 @@
 
 - Status: Accepted; the _Visual direction_ bullet is superseded by ADR-010, and the rest
   stands
-- Date: 2026-11-10
+- Date: 2026-11-10 (amended in STY-017: no toasts)
 
 ## Decision
 
@@ -10,8 +10,12 @@
   `@theme`, CSS variables) in `src/styles/globals.css`. No `tailwind.config.js`.
 - shadcn/ui initialised with the **Base UI** primitive library (`@base-ui/react`), not
   Radix. Components are added via the shadcn CLI into `src/components/ui/`.
-- Icons: `lucide-react`. Toasts: `sonner` (shadcn `sonner` component, adapted to our own
-  theme provider rather than adding `next-themes`).
+- Icons: `lucide-react`. No toasts (amended in STY-017): the app announces outcomes with
+  a callout at the top of the page (the `Alert` component), as DHCW's notification
+  banner does, and `sonner` was removed with its last toast. A failure stays until the
+  next attempt or a dismissal; a confirmation clears itself after a short dwell, paused
+  while it is hovered or focused. The rule for copy is the copywriter skill's "Page
+  notice" pattern.
 - Theme: light by default; a small `ThemeProvider` toggles the `dark` class on
   `<html>`, persists the preference (non-sensitive) in `localStorage`, and an inline
   script in `index.html` avoids a flash of the wrong theme.

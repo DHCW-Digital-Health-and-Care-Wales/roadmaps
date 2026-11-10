@@ -33,6 +33,11 @@ const alertVariants = cva(
   },
 )
 
+/** The names of the alert variants, for tables that map a notice to one. */
+export type AlertVariant = NonNullable<
+  VariantProps<typeof alertVariants>["variant"]
+>
+
 function Alert({
   className,
   variant,

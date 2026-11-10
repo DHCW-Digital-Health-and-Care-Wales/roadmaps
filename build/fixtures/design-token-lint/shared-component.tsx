@@ -13,5 +13,4 @@ export const sharedComponent = [
   <div className="bg-neutral-900" />, // ✗ Unknown class detected: bg-neutral-900
   cva("", { variants: { variant: { link: "text-primary" } } }), // ✗ use text-link
   cva("", { variants: { size: { xs: "rounded-[min(var(--radius-md),10px)]" } } }), // ✗ Arbitrary radius
-  <div className="toaster cn-toast group" />,
 ]

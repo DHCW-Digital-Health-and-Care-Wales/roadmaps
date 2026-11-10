@@ -1,5 +1,6 @@
 export { createI18n, syncDocumentLanguage } from "./create-i18n"
 export { formatCalendarDate } from "./format-calendar-date"
+export { formatDuration } from "./format-duration"
 export { resolveLanguage, storeLanguagePreference } from "./language-preference"
 export {
   defaultLanguage,

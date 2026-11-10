@@ -1,29 +1,23 @@
-import type { Page } from "@playwright/test"
-
 import type { TokenOutcome } from "./fixtures/fake-gis"
 import { EXAMPLE_INDEX_ROWS, withRoadmapIndex } from "./fixtures/fake-sheets"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 const [HEADER = [], , PRODUCT_B = []] = EXAMPLE_INDEX_ROWS
 
-function toasts(page: Page) {
-  return page.getByRole("region", { name: /^Notifications/ })
-}
-
 const failures: {
   name: string
   outcome: TokenOutcome
   status: string
   notice: string
-  /** Absence is checked precisely in src/app/app.test.tsx, where Sonner can be flushed. */
-  toast: boolean
+  /** The callout's role: an alert, unless the user closed the popup themselves. */
+  role: "alert" | "note"
 }[] = [
   {
     name: "access is denied",
     outcome: { type: "access-denied" },
     status: "Connection failed",
     notice: "Access wasn't granted, so your roadmaps can't be loaded.",
-    toast: true,
+    role: "alert",
   },
   {
     name: "the Sheets scope is not granted",
@@ -31,7 +25,7 @@ const failures: {
     status: "Connection failed",
     notice:
       "Access to Google Sheets is needed to load your roadmaps. Connect again and allow it.",
-    toast: true,
+    role: "alert",
   },
   {
     // No usable time is left after the 60 s safety margin (ADR-003).
@@ -40,7 +34,7 @@ const failures: {
     status: "Connection failed",
     notice:
       "Something went wrong while connecting to Google. Please try again.",
-    toast: true,
+    role: "alert",
   },
   {
     name: "the popup is blocked",
@@ -48,39 +42,115 @@ const failures: {
     status: "Not connected",
     notice:
       "Your browser blocked the Google window. Allow pop-ups for this site and try again.",
-    toast: true,
+    role: "alert",
   },
   {
     name: "the popup is closed",
     outcome: { type: "popup-closed" },
     status: "Not connected",
     notice: "The Google window was closed before connecting finished.",
-    // The user closed it on purpose: the notice is enough.
-    toast: false,
+    role: "note",
   },
 ]
 
-for (const { name, outcome, status, notice, toast } of failures) {
-  test(`connecting fails gracefully when ${name}`, async ({
-    page,
-    gis,
-    sheets,
-  }) => {
-    gis.respondWith(outcome)
-    await page.goto("./")
-    await connect(page)
+for (const { name, outcome, status, notice, role } of failures) {
+  for (const from of ["the start page", "the header"] as const) {
+    test(`connecting from ${from} fails gracefully when ${name}`, async ({
+      page,
+      gis,
+      sheets,
+    }) => {
+      gis.respondWith(outcome)
+      await page.goto("./")
+      const button =
+        from === "the header"
+          ? page
+              .getByRole("banner")
+              .getByRole("button", { name: "Connect Google" })
+          : page
+              .getByRole("main")
+              .getByRole("button", { name: "Connect Google" })
+      await button.click()
 
-    const main = page.getByRole("main")
-    await expect(page.getByRole("status")).toHaveText(status)
-    await expect(main.getByText(notice)).toBeVisible()
-    if (toast) await expect(toasts(page).getByText(notice)).toBeVisible()
-    expect(sheets.tokens).toEqual([])
+      // The reason stays on the page in view, above its heading; no toast.
+      const main = page.getByRole("main")
+      await expect(page.getByRole("status")).toHaveText(status)
+      const callout = main.getByRole(role)
+      await expect(callout).toHaveText(notice)
+      await expect(
+        page.getByRole("region", { name: /^Notifications/ }),
+      ).toHaveCount(0)
+      expect(sheets.tokens).toEqual([])
 
-    // Trying again works.
-    await connect(page)
-    await expect(roadmapCards(page)).toHaveCount(3)
-  })
+      // It stays until dismissed.
+      await callout.getByRole("button", { name: "Dismiss message" }).click()
+      await expect(main.getByText(notice)).toHaveCount(0)
+      await expect(main).toBeFocused()
+
+      // Trying again works.
+      await button.click()
+      await expect(roadmapCards(page)).toHaveCount(3)
+    })
+  }
 }
+
+test("a failed reconnect from the header shows why over the expired roadmaps", async ({
+  page,
+  gis,
+}) => {
+  await page.clock.install()
+  await page.goto("./")
+  await connect(page)
+  await expect(roadmapCards(page)).toHaveCount(3)
+  await page.clock.fastForward("01:00:00")
+  const main = page.getByRole("main")
+  await expect(main.getByText("Your session has expired")).toBeVisible()
+
+  gis.respondWith({ type: "popup-blocked" })
+  await page
+    .getByRole("banner")
+    .getByRole("button", { name: "Reconnect" })
+    .click()
+
+  await expect(
+    main
+      .getByRole("alert")
+      .filter({ hasText: "Your browser blocked the Google window." }),
+  ).toBeVisible()
+  await expect(roadmapCards(page)).toHaveCount(3)
+})
+
+/** A confirmation's dwell before it clears itself (`CONFIRMATION_DWELL_MS`). */
+const CONFIRMATION_DWELL_MS = 8_000
+
+test("a confirmation clears itself; a failure stays", async ({ page, gis }) => {
+  await page.clock.install()
+  await page.goto("./")
+  await connect(page)
+  const main = page.getByRole("main")
+  const confirmation = main.getByRole("note")
+  await expect(confirmation).toHaveText("Connected to Google")
+
+  await page.clock.fastForward(CONFIRMATION_DWELL_MS)
+  await expect(confirmation).toHaveCount(0)
+  // The header keeps the state.
+  await expect(page.getByRole("banner").getByRole("status")).toHaveText(
+    "Google connected",
+  )
+
+  await page
+    .getByRole("banner")
+    .getByRole("button", { name: "Disconnect" })
+    .click()
+  gis.respondWith({ type: "access-denied" })
+  await connect(page)
+  const failure = main.getByRole("alert")
+  await expect(failure).toHaveText(
+    "Access wasn't granted, so your roadmaps can't be loaded.",
+  )
+  await page.clock.fastForward(10 * CONFIRMATION_DWELL_MS)
+  await expect(failure).toBeVisible()
+})
 
 test("after a partial grant, connecting again asks for consent", async ({
   page,
@@ -141,7 +211,9 @@ test("disconnecting revokes the token and forgets the roadmaps", async ({
     page.getByRole("heading", { level: 1, name: "DHCW Roadmap Editor" }),
   ).toBeVisible()
   await expect(page.getByRole("status")).toHaveText("Not connected")
-  await expect(toasts(page).getByText("Disconnected from Google")).toBeVisible()
+  await expect(page.getByRole("main").getByRole("note")).toHaveText(
+    "Disconnected from Google",
+  )
   expect(gis.revokedTokens).toEqual(["e2e-token-1"])
 
   // Nothing was kept: connecting again loads afresh, showing no old roadmaps meanwhile.

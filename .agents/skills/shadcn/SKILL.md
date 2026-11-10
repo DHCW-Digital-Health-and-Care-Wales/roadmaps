@@ -6,9 +6,9 @@ user-invocable: false
 
 # shadcn/ui
 
-For this repository, the generated components in `src/components/ui/` (root `components.json`, style `base-nova`, primitives from Base UI per ADR-005) define the component contract. Add components with `pnpm dlx shadcn@latest add <name>` and keep them close to upstream: edit a generated file only for a reason the diff makes obvious (`sonner.tsx` reads our `useTheme` instead of `next-themes`). Apply the upstream guidance below only where it matches what is installed; check the installed set before reaching for a component.
+For this repository, the generated components in `src/components/ui/` (root `components.json`, style `base-nova`, primitives from Base UI per ADR-005) define the component contract. Add components with `pnpm dlx shadcn@latest add <name>` and keep them close to upstream: edit a generated file only for a reason the diff makes obvious, and say why in its header comment (ADR-010). Apply the upstream guidance below only where it matches what is installed; check the installed set before reaching for a component.
 
-Installed today: `Alert` (`AlertTitle`, `AlertDescription`, `AlertAction`), `Badge`, `Button`, `DropdownMenu` (and its parts), `Empty` (`EmptyHeader`, `EmptyMedia`, `EmptyTitle`, `EmptyDescription`, `EmptyContent`), `Skeleton`, `Toaster` (sonner). Anything else (Card, Dialog, Field, Select, Tabs …) is a `shadcn add` away and arrives with its own rules. User-facing copy in any component goes through `t()` in English and Welsh (ADR-008); `components/ui` itself carries no copy.
+Installed today: `Alert` (`AlertTitle`, `AlertDescription`, `AlertAction`), `Badge`, `Button`, `DropdownMenu` (and its parts), `Empty` (`EmptyHeader`, `EmptyMedia`, `EmptyTitle`, `EmptyDescription`, `EmptyContent`), `Skeleton`, `AlertDialog` (and its parts). Anything else (Card, Dialog, Field, Select, Tabs …) is a `shadcn add` away and arrives with its own rules. User-facing copy in any component goes through `t()` in English and Welsh (ADR-008); `components/ui` itself carries no copy.
 
 A framework for building ui, components and design systems. Components are added as source code to the user's project via the CLI.
 
@@ -67,7 +67,7 @@ These rules are **always enforced**. Each links to a file with Incorrect/Correct
 - **Use existing components before custom markup.** Check if a component exists before writing a styled `div`.
 - **Callouts use `Alert`.** Don't build custom styled divs.
 - **Empty states use `Empty`.** Don't build custom empty state markup.
-- **Toast via `toast` from `sonner`** (`toast.success`, `toast.error`). The `<Toaster />` is `src/components/ui/sonner.tsx`, mounted once in `src/app/providers.tsx`; toast text comes from `t()`.
+- **No toasts** (ADR-005): an outcome is an `Alert` at the top of the page in view, as `AuthNotice` (`src/features/auth/components/auth-notice.tsx`) shows.
 - **Use `Separator`** instead of `<hr>` or `<div className="border-t">`.
 - **Use `Skeleton`** for loading placeholders. No custom `animate-pulse` divs.
 - **Use `Badge`** instead of custom styled spans.
@@ -131,7 +131,7 @@ These are the most common patterns that differentiate correct shadcn/ui code. Fo
 | Data display               | `Table`, `Card`, `Badge`, `Avatar`                                                                  |
 | Navigation                 | `Sidebar`, `NavigationMenu`, `Breadcrumb`, `Tabs`, `Pagination`                                     |
 | Overlays                   | `Dialog` (modal), `Sheet` (side panel), `Drawer` (bottom sheet), `AlertDialog` (confirmation)       |
-| Feedback                   | `toast` (`sonner`), `Alert`, `Progress`, `Skeleton`, `Spinner`                                      |
+| Feedback                   | `Alert`, `Progress`, `Skeleton`, `Spinner`                                                          |
 | Command palette            | `Command` inside `Dialog`                                                                           |
 | Charts                     | `Chart` (wraps Recharts)                                                                            |
 | Layout                     | `Card`, `Separator`, `Resizable`, `ScrollArea`, `Accordion`, `Collapsible`                          |
@@ -236,7 +236,7 @@ npx shadcn@latest view @shadcn/button
 ## Detailed References
 
 - [rules/forms.md](./rules/forms.md) — FieldGroup, Field, InputGroup, ToggleGroup, FieldSet, validation states
-- [rules/composition.md](./rules/composition.md) — Groups, overlays, Card, Tabs, Avatar, Alert, Empty, Toast, Separator, Skeleton, Badge, Button loading
+- [rules/composition.md](./rules/composition.md) — Groups, overlays, Card, Tabs, Avatar, Alert, Empty, no toasts, Separator, Skeleton, Badge, Button loading
 - [rules/icons.md](./rules/icons.md) — data-icon, icon sizing, passing icons as objects
 - [rules/styling.md](./rules/styling.md) — Semantic colors, variants, className, spacing, size, truncate, dark mode, cn(), z-index
 - [rules/base-ui.md](./rules/base-ui.md) — `render`, Select, ToggleGroup, Slider, Accordion

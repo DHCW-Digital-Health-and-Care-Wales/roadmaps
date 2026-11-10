@@ -15,6 +15,23 @@ export const cy = {
     shortAppName: "Mapiau Trywydd",
     loading: "Wrthi'n llwytho…",
     retry: "Ceisio eto",
+    close: "Cau",
+    duration: {
+      minutes_zero: "{{count, number}} munud",
+      minutes_one: "{{count, number}} munud",
+      minutes_two: "{{count, number}} funud",
+      minutes_few: "{{count, number}} munud",
+      minutes_many: "{{count, number}} munud",
+      minutes_other: "{{count, number}} munud",
+      seconds_zero: "{{count, number}} eiliad",
+      seconds_one: "{{count, number}} eiliad",
+      seconds_two: "{{count, number}} eiliad",
+      seconds_few: "{{count, number}} eiliad",
+      seconds_many: "{{count, number}} eiliad",
+      seconds_other: "{{count, number}} eiliad",
+      minutesAndSeconds:
+        '$t(common.duration.minutes, {"count": {{minutes}} }), $t(common.duration.seconds, {"count": {{seconds}} })',
+    },
     date: "{{day}} {{month}} {{year}}",
     months: {
       january: "Ionawr",
@@ -34,7 +51,6 @@ export const cy = {
   layout: {
     skipToContent: "Neidio i'r prif gynnwys",
     home: "Hafan Golygydd Mapiau Trywydd IGDC",
-    notifications: "Hysbysiadau",
     logoAlt: "Iechyd a Gofal Digidol Cymru",
     phase: {
       tag: "Beta",
@@ -82,6 +98,20 @@ export const cy = {
     notifications: {
       connected: "Wedi cysylltu â Google",
       disconnected: "Wedi datgysylltu o Google",
+    },
+    notice: {
+      dismiss: "Cau'r neges",
+    },
+    renewal: {
+      failed: "Doedd dim modd cadw eich cysylltiad",
+      reconnectLater:
+        "Bydd angen i chi ailgysylltu pan ddaw eich sesiwn i ben.",
+    },
+    sessionWarning: {
+      title: "Mae eich sesiwn ar fin dod i ben",
+      endsIn: "Bydd eich sesiwn yn dod i ben ymhen {{remaining}}.",
+      afterwards: "Ar ôl hynny, bydd angen i chi ailgysylltu.",
+      stayConnected: "Aros yn gysylltiedig",
     },
   },
   roadmaps: {

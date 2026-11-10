@@ -1,5 +1,7 @@
 import type {
+  AuthCancellationCode,
   AuthClient,
+  AuthErrorCode,
   AuthFailureCode,
   AuthState,
 } from "@/domain/auth/auth-client"
@@ -36,10 +38,13 @@ export interface GoogleAuthClient extends AuthClient {
   readonly dispose: () => void
 }
 
-/** One consent attempt. Its identity tells its Google callbacks apart from stale ones. */
+/**
+ * One consent attempt. Its identity tells its Google callbacks apart from stale ones.
+ * `connect` starts from `ready` or `error`, `reconnect` from `expired` (and stays there if
+ * abandoned), and `renew` from `connected`, which it never leaves.
+ */
 interface Attempt {
-  /** Where the attempt returns if abandoned: a reconnect stays `expired`. */
-  readonly resumeStatus: "ready" | "expired"
+  readonly kind: "connect" | "reconnect" | "renew"
 }
 
 /**
@@ -57,7 +62,7 @@ export function createGoogleAuthClient({
   let gis: GoogleOAuth2 | undefined
   let accessToken: string | null = null
   let expiryTimer: ReturnType<typeof setTimeout> | undefined
-  /** The attempt in progress while `connecting`. */
+  /** The attempt in progress: while `connecting`, or renewing while `connected`. */
   let attempt: Attempt | undefined
   let disposed = false
 
@@ -67,6 +72,33 @@ export function createGoogleAuthClient({
   }
   function fail(error: AuthFailureCode): void {
     setState({ status: "error", error })
+  }
+
+  /** A renewal that didn't succeed: the session carries on until it expires. */
+  function keepSession(lastError: AuthErrorCode): void {
+    const current = state()
+    if (current.status !== "connected") return
+    setState({ status: "connected", expiresAt: current.expiresAt, lastError })
+  }
+
+  /** Settles a failed attempt: a renewal keeps its session, others move to `error`. */
+  function settleFailure(pending: Attempt, error: AuthFailureCode): void {
+    if (pending.kind === "renew") keepSession(error)
+    else fail(error)
+  }
+
+  /** Settles an abandoned attempt: back where it started, noting why. */
+  function settleCancellation(
+    pending: Attempt,
+    lastError: AuthCancellationCode,
+  ): void {
+    if (pending.kind === "renew") keepSession(lastError)
+    else {
+      setState({
+        status: pending.kind === "reconnect" ? "expired" : "ready",
+        lastError,
+      })
+    }
   }
 
   /** Settles `pending` if it is still the attempt in progress; false for stale callbacks. */
@@ -104,15 +136,18 @@ export function createGoogleAuthClient({
 
     const outcome = readTokenResponse(oauth2, response, scopes)
     if (typeof outcome === "string") {
-      fail(outcome)
+      settleFailure(pending, outcome)
       return
     }
     const usableMs = outcome.lifetimeMs - EXPIRY_SKEW_MS
     if (usableMs <= 0) {
-      fail("unknown")
+      settleFailure(pending, "unknown")
       return
     }
 
+    // A renewal replaces the session's token and timer. The old token is not revoked:
+    // that would end the grant the new token belongs to.
+    clearSession()
     accessToken = outcome.accessToken
     expiryTimer = setTimeout(expire, usableMs)
     setState({ status: "connected", expiresAt: Date.now() + usableMs })
@@ -125,22 +160,36 @@ export function createGoogleAuthClient({
     if (!claim(pending)) return
     switch (type) {
       case "popup_closed":
-        setState({ status: pending.resumeStatus, lastError: "popup-closed" })
+        settleCancellation(pending, "popup-closed")
         break
       case "popup_failed_to_open":
-        setState({ status: pending.resumeStatus, lastError: "popup-blocked" })
+        settleCancellation(pending, "popup-blocked")
         break
       default:
-        fail("unknown")
+        settleFailure(pending, "unknown")
     }
   }
 
   function expire(): void {
     if (state().status !== "connected") return
+    // A renewal still waiting on Google is abandoned with the session it was renewing.
+    attempt = undefined
     clearSession()
     setState({ status: "expired" })
   }
 
+  /**
+   * Timers are throttled in background tabs and paused while the device sleeps, so the
+   * expiry timer can fire late. Coming back to the tab checks the clock instead.
+   */
+  function expireIfDue(): void {
+    const current = state()
+    if (current.status === "connected" && Date.now() >= current.expiresAt) {
+      expire()
+    }
+  }
+
+  document.addEventListener("visibilitychange", expireIfDue)
   void initialize()
 
   return {
@@ -153,7 +202,8 @@ export function createGoogleAuthClient({
         disposed ||
         current.status === "initializing" ||
         current.status === "connecting" ||
-        current.status === "connected"
+        // One renewal at a time.
+        (current.status === "connected" && attempt)
       ) {
         return
       }
@@ -166,10 +216,16 @@ export function createGoogleAuthClient({
       }
 
       const pending: Attempt = {
-        resumeStatus: current.status === "expired" ? "expired" : "ready",
+        kind:
+          current.status === "connected"
+            ? "renew"
+            : current.status === "expired"
+              ? "reconnect"
+              : "connect",
       }
       attempt = pending
-      setState({ status: "connecting" })
+      // A renewal keeps the session (and its roadmaps) on screen while Google answers.
+      if (pending.kind !== "renew") setState({ status: "connecting" })
       try {
         // A token client per attempt binds Google's callbacks to that attempt, so a late
         // response from an abandoned one cannot complete this one. Creating it is
@@ -187,7 +243,7 @@ export function createGoogleAuthClient({
           })
           .requestAccessToken(promptFor(current))
       } catch {
-        if (claim(pending)) fail("unknown")
+        if (claim(pending)) settleFailure(pending, "unknown")
       }
     },
 
@@ -223,16 +279,21 @@ export function createGoogleAuthClient({
       disposed = true
       attempt = undefined
       clearSession()
+      document.removeEventListener("visibilitychange", expireIfDue)
     },
   }
 }
 
 /**
- * The GIS `prompt` for an attempt: a quiet re-grant after expiry, forced consent after a
- * partial grant (re-prompting needs it), and the default account chooser otherwise.
+ * The GIS `prompt` for an attempt: a quiet re-grant to renew or after expiry, forced
+ * consent after a partial grant (re-prompting needs it), and the default account chooser
+ * otherwise. A quiet re-grant for an account that has consented opens a popup that closes
+ * itself, with nothing to click (ADR-003, renewal).
  */
 function promptFor(state: AuthState): OverridableTokenClientConfig | undefined {
-  if (state.status === "expired") return { prompt: "" }
+  if (state.status === "connected" || state.status === "expired") {
+    return { prompt: "" }
+  }
   if (state.status === "error" && state.error === "scope-not-granted") {
     return { prompt: "consent" }
   }

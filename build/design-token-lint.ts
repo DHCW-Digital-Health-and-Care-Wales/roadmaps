@@ -78,7 +78,7 @@ const JS_PROPERTIES = [
 ].join("|")
 
 const FOCUS_HINT =
-  "use focus-visible:focus-fill (buttons, menu items), focus-ring (cards, inputs, toasts) or focus-link (text links) (ADR-010)."
+  "use focus-visible:focus-fill (buttons, menu items), focus-ring (cards, inputs) or focus-link (text links) (ADR-010)."
 
 interface Restriction {
   pattern: string
@@ -302,11 +302,7 @@ export const designTokenRules: Linter.Config[] = [
       },
     },
     rules: {
-      // Sonner's marker classes, which no stylesheet styles.
-      "better-tailwindcss/no-unknown-classes": [
-        "error",
-        { ignore: ["^toaster$", "^cn-toast$"] },
-      ],
+      "better-tailwindcss/no-unknown-classes": "error",
       "better-tailwindcss/no-restricted-classes": restrictedClasses(),
       "no-restricted-syntax": ["error", ...backDoors],
     },

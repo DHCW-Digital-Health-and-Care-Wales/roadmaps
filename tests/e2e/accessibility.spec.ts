@@ -92,6 +92,31 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expectNoAxeViolations(page, theme)
     })
 
+    test("session warning, then a failed renewal", async ({ page, gis }) => {
+      await page.clock.install()
+      await page.goto("./")
+      await connect(page)
+      await expect(roadmapCards(page)).toHaveCount(3)
+      // Two minutes before the session ends: the fake's 3599 s grant less 60 s and 120 s.
+      await page.clock.fastForward((3599 - 60 - 120) * 1000)
+      const warning = page.getByRole("alertdialog")
+      await expect(warning).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+
+      gis.respondWith({ type: "popup-blocked" })
+      await warning.getByRole("button", { name: "Stay connected" }).click()
+      await expect(page.getByRole("main").getByRole("alert")).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+    })
+
+    test("connection failure callout", async ({ page, gis }) => {
+      gis.respondWith({ type: "access-denied" })
+      await page.goto("./")
+      await connect(page)
+      await expect(page.getByRole("main").getByRole("alert")).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+    })
+
     test("load error", async ({ page, sheets }) => {
       sheets.failWith(403)
       await page.goto("./")

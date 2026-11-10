@@ -14,11 +14,6 @@ const connected: AuthState = {
   expiresAt: Date.now() + 3_600_000,
 }
 
-/** Sonner renders queued toasts on a timer; let it run before asserting absence. */
-async function flushToasts() {
-  await act(() => new Promise((resolve) => setTimeout(resolve, 50)))
-}
-
 function header() {
   return within(screen.getByRole("banner"))
 }
@@ -56,7 +51,7 @@ describe("landing page", () => {
     expect(main().getByRole("button", { name: "Connect Google" })).toBeEnabled()
   })
 
-  it("connects from the start page, toasts once and shows the roadmaps slot", async () => {
+  it("connects from the start page, confirms it and shows the roadmaps", async () => {
     const user = userEvent.setup()
     const { authClient } = await renderWithProviders()
 
@@ -66,7 +61,7 @@ describe("landing page", () => {
     expect(
       await screen.findByRole("heading", { level: 1, name: "Your roadmaps" }),
     ).toBeInTheDocument()
-    expect(await screen.findByText("Connected to Google")).toBeInTheDocument()
+    expect(main().getByRole("note")).toHaveTextContent("Connected to Google")
   })
 
   it("waits, still focusable, while Google loads", async () => {
@@ -138,7 +133,7 @@ describe("header", () => {
     expect(header().getByRole("status")).toHaveTextContent("Connecting…")
   })
 
-  it("disconnects, clearing only auth-scoped queries, with one toast", async () => {
+  it("disconnects, clearing only auth-scoped queries, and confirms it", async () => {
     const user = userEvent.setup()
     const { authClient, queryClient } = await renderWithProviders({
       authState: connected,
@@ -153,35 +148,23 @@ describe("header", () => {
     expect(queryClient.getQueryData(scopedKey)).toBeUndefined()
     expect(queryClient.getQueryData(["public"])).toBe("kept")
     expect(header().getByRole("status")).toHaveTextContent("Not connected")
-    expect(
-      await screen.findByText("Disconnected from Google"),
-    ).toBeInTheDocument()
+    expect(main().getByRole("note")).toHaveTextContent(
+      "Disconnected from Google",
+    )
   })
 
-  it("replaces the previous auth toast instead of stacking them", async () => {
+  it("replaces the previous notice instead of stacking them", async () => {
     const user = userEvent.setup()
     await renderWithProviders()
-    const notifications = within(
-      screen.getByRole("region", { name: /Notifications/ }),
-    )
 
     await user.click(main().getByRole("button", { name: "Connect Google" }))
-    expect(
-      await notifications.findByText("Connected to Google"),
-    ).toBeInTheDocument()
     await user.click(header().getByRole("button", { name: "Disconnect" }))
-    expect(
-      await notifications.findByText("Disconnected from Google"),
-    ).toBeInTheDocument()
-    await flushToasts()
 
-    expect(notifications.getAllByRole("listitem")).toHaveLength(1)
-    expect(
-      notifications.queryByText("Connected to Google"),
-    ).not.toBeInTheDocument()
+    expect(main().getAllByRole("note")).toHaveLength(1)
+    expect(main().queryByText("Connected to Google")).not.toBeInTheDocument()
   })
 
-  it("toasts a failed connection, but not a closed popup", async () => {
+  it("announces a failed connection on the page, but not a closed popup", async () => {
     const { authClient } = await renderWithProviders({
       authState: { status: "connecting" },
     })
@@ -189,8 +172,7 @@ describe("header", () => {
     act(() => {
       authClient.setState({ status: "ready", lastError: "popup-closed" })
     })
-    await flushToasts()
-    expect(screen.queryByRole("listitem")).not.toBeInTheDocument()
+    expect(main().queryByRole("alert")).not.toBeInTheDocument()
 
     act(() => {
       authClient.setState({ status: "connecting" })
@@ -198,12 +180,9 @@ describe("header", () => {
     act(() => {
       authClient.setState({ status: "error", error: "access-denied" })
     })
-    const message = "Access wasn't granted, so your roadmaps can't be loaded."
-    expect(
-      await within(
-        screen.getByRole("region", { name: /Notifications/ }),
-      ).findByText(message),
-    ).toBeInTheDocument()
+    expect(main().getByRole("alert")).toHaveTextContent(
+      "Access wasn't granted, so your roadmaps can't be loaded.",
+    )
   })
 
   it("switches the language from the header", async () => {

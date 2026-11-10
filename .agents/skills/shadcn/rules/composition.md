@@ -5,7 +5,7 @@
 - Items always inside their Group component
 - Callouts use Alert
 - Empty states use Empty component
-- Toast notifications use the shared toast
+- Outcomes are page notices, not toasts
 - Choosing between overlay components
 - Dialog, Sheet, and Drawer always need a Title
 - Card structure
@@ -84,16 +84,9 @@ This applies to all group-based components:
 
 ---
 
-## Toast notifications use the shared toast
+## Outcomes are page notices, not toasts
 
-This repository's toast is `toast` from `sonner`. The `<Toaster />` is `src/components/ui/sonner.tsx` (it reads our `useTheme`), mounted once in `src/app/providers.tsx`. Toast text goes through `t()` (see `src/features/auth/components/auth-notifications.tsx`).
-
-```tsx
-import { toast } from "sonner"
-
-toast.success(t("auth.notifications.connected"), { id: "auth" })
-toast.error(t("auth.errors.popup-blocked"), { id: "auth" })
-```
+This repository has no toasts (ADR-005; DHCW has no toast pattern). An outcome — connected, a failure, later "saved" — is an `Alert` at the top of the page in view, persisting until the next attempt or a dismissal: see `src/features/auth/components/auth-notice.tsx`, composed in `src/routes/__root.tsx`. Its copy follows the copywriter skill's "Page notice" pattern.
 
 ---
 

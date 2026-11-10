@@ -33,7 +33,9 @@ End-to-end tests of the production build, with Google faked (ADR-006). Run with
   (`fixtures/persistence-recorder.ts`) fail the test at teardown. Add a new external
   dependency to the fakes, not to the guard.
 - No sleeps. For back-off or expiry, `page.clock.install()` before `goto`, then
-  fast-forward.
+  fast-forward. The session warning opens two minutes before a session's end (Google's
+  `expires_in` less 60 s) and, being modal, hides the rest of the page from role
+  queries: a grant shorter than about 180 s opens it at once.
 - `sheets.reads`, `sheets.tokens` and `gis.tokenRequests` fill as requests arrive: before a
   plain `expect` on one, await a state only those requests produce, or `expect.poll` it. A
   state already on screen before them, such as cached cards, proves nothing.

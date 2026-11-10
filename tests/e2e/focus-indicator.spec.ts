@@ -57,7 +57,7 @@ async function expectLink(locator: Locator) {
     })
 }
 
-/** Cards and toasts: a 3px yellow outline outside a 2px dark inner ring. */
+/** Cards: a 3px yellow outline outside a 2px dark inner ring. */
 async function expectRing(locator: Locator) {
   await expect
     .poll(() => focusStyle(locator))
@@ -91,15 +91,12 @@ for (const theme of ["light", "dark"] as const) {
     await expect(roadmapCards(page)).toHaveCount(3)
     await page.mouse.move(0, 0)
 
-    // The "Connected" toast: Alt+T moves focus to the notifications, Tab to the toast.
-    const toast = page
-      .getByRole("region", { name: /^Notifications/ })
-      .getByRole("listitem")
-    await expect(toast).toHaveText("Connected to Google")
-    await page.keyboard.press("Alt+KeyT")
-    await page.keyboard.press("Tab")
-    await expect(toast).toBeFocused()
-    await expectRing(toast)
+    // The "Connected" notice's dismiss button, first in the page.
+    const notice = main.getByRole("note")
+    await expect(notice).toHaveText("Connected to Google")
+    const dismiss = notice.getByRole("button", { name: "Dismiss message" })
+    await tabTo(page, dismiss)
+    await expectFill(dismiss)
 
     const language = banner.getByRole("button", { name: "Language English" })
     // Connecting moves focus to the main content; the header is behind it.

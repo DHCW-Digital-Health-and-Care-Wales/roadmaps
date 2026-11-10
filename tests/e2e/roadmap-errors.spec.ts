@@ -79,14 +79,15 @@ test("an expired token keeps the roadmaps on screen until reconnected", async ({
   gis,
   sheets,
 }) => {
-  // Usable for one minute: the app stops 60 s before Google's expiry (ADR-003).
-  gis.respondWith({ type: "grant", expiresIn: 120 })
+  // Usable for four minutes: the app stops 60 s before Google's expiry (ADR-003). The
+  // session warning opens on the way, at two minutes left, and closes as it ends.
+  gis.respondWith({ type: "grant", expiresIn: 300 })
   await page.clock.install()
   await page.goto("./")
   await connect(page)
   await expect(roadmapCards(page)).toHaveCount(3)
 
-  await page.clock.fastForward("01:00")
+  await page.clock.fastForward("04:00")
 
   const alert = page.getByRole("main").getByRole("alert")
   await expect(alert).toContainText("Your session has expired")

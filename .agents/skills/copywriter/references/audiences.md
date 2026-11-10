@@ -17,7 +17,7 @@ or sharpening an item's title, description and expected outcomes, tagging it.
   outcome, tag); a hint says what good looks like in one sentence, for the
   public reader the item is written for.
 - Make the state of their work obvious: which edits are pending and what
-  publishing will change. A toast confirms what they just did and nothing else:
+  publishing will change. A page notice confirms what they just did and nothing else:
   "Published 3 changes to Patient app".
 - Don't narrate loading with personality. "Loading roadmaps…" is the whole
   message.
@@ -63,7 +63,7 @@ wider than a phone.
 ## Welsh-language readers
 
 Everyone who selects Cymraeg, or whose browser asks for it, reads the whole
-product in Welsh, including toasts, aria-labels and the document title.
+product in Welsh, including notices, aria-labels and the document title.
 
 - The same plain voice: a translation that sounds like a form is not done.
   Address the reader directly and keep sentences short.
@@ -78,4 +78,4 @@ product in Welsh, including toasts, aria-labels and the document title.
 
 Most keys are read by more than one setting. When they are, write for the least
 technical reader who will see the string: everyone reads `errors.*`, and
-`auth.errors.*` appears in toasts and panels alike.
+`auth.errors.*` appears in page notices and panels alike.

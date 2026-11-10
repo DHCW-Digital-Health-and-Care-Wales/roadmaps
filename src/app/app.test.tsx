@@ -221,7 +221,7 @@ describe("header", () => {
   })
 
   it("links the product name to the home page", async () => {
-    await renderWithProviders({ path: "/roadmaps/7" })
+    await renderWithProviders({ path: "/roadmaps/producta" })
 
     expect(
       header().getByRole("link", { name: "DHCW Roadmap Editor home" }),
@@ -246,7 +246,7 @@ describe("routes", () => {
 
     it("keeps the route when the skip link moves focus", async () => {
       const user = userEvent.setup()
-      window.history.replaceState(null, "", "/#/roadmaps/7")
+      window.history.replaceState(null, "", "/#/roadmaps/producta")
       const { router } = await renderWithProviders({
         history: createHashHistory(),
       })
@@ -256,8 +256,8 @@ describe("routes", () => {
       )
 
       expect(screen.getByRole("main")).toHaveFocus()
-      expect(window.location.hash).toBe("#/roadmaps/7")
-      expect(router.state.location.pathname).toBe("/roadmaps/7")
+      expect(window.location.hash).toBe("#/roadmaps/producta")
+      expect(router.state.location.pathname).toBe("/roadmaps/producta")
     })
   })
 
@@ -275,14 +275,17 @@ describe("routes", () => {
 
   it("routes /roadmaps/$roadmapId to the roadmap detail page", async () => {
     const { router } = await renderWithProviders({
-      path: "/roadmaps/7",
+      path: "/roadmaps/producta",
       authState: connected,
-      roadmaps: [createTestRoadmap("7", "Platform")],
+      roadmaps: [createTestRoadmap("producta", "Product A roadmap")],
     })
 
-    expect(router.state.location.pathname).toBe("/roadmaps/7")
+    expect(router.state.location.pathname).toBe("/roadmaps/producta")
     expect(
-      await main().findByRole("heading", { level: 1, name: "Platform" }),
+      await main().findByRole("heading", {
+        level: 1,
+        name: "Product A roadmap",
+      }),
     ).toBeInTheDocument()
   })
 
@@ -302,14 +305,14 @@ describe("routes", () => {
   it("keeps focus in the content when Connect gives way to the roadmaps", async () => {
     const user = userEvent.setup()
     await renderWithProviders({
-      roadmaps: [createTestRoadmap("7", "Platform")],
+      roadmaps: [createTestRoadmap("producta", "Product A roadmap")],
     })
     main().getByRole("button", { name: "Connect Google" }).focus()
 
     await user.keyboard("{Enter}")
 
     expect(
-      await main().findByRole("link", { name: "Platform" }),
+      await main().findByRole("link", { name: "Product A roadmap" }),
     ).toBeInTheDocument()
     await waitFor(() => {
       expect(screen.getByRole("main")).toHaveFocus()
@@ -319,7 +322,7 @@ describe("routes", () => {
   it("leaves focus alone when the focused control stays", async () => {
     const user = userEvent.setup()
     await renderWithProviders({
-      roadmaps: [createTestRoadmap("7", "Platform")],
+      roadmaps: [createTestRoadmap("producta", "Product A roadmap")],
     })
     const headerConnect = header().getByRole("button", {
       name: "Connect Google",
@@ -329,7 +332,7 @@ describe("routes", () => {
     await user.keyboard("{Enter}")
 
     expect(
-      await main().findByRole("link", { name: "Platform" }),
+      await main().findByRole("link", { name: "Product A roadmap" }),
     ).toBeInTheDocument()
     // The same header button, now Disconnect.
     expect(headerConnect).toHaveFocus()
@@ -340,13 +343,18 @@ describe("routes", () => {
     const user = userEvent.setup()
     await renderWithProviders({
       authState: connected,
-      roadmaps: [createTestRoadmap("7", "Platform")],
+      roadmaps: [createTestRoadmap("producta", "Product A roadmap")],
     })
     expect(screen.getByRole("main")).not.toHaveFocus()
 
-    await user.click(await main().findByRole("link", { name: "Platform" }))
+    await user.click(
+      await main().findByRole("link", { name: "Product A roadmap" }),
+    )
     expect(
-      await main().findByRole("heading", { level: 1, name: "Platform" }),
+      await main().findByRole("heading", {
+        level: 1,
+        name: "Product A roadmap",
+      }),
     ).toBeInTheDocument()
     expect(screen.getByRole("main")).toHaveFocus()
 

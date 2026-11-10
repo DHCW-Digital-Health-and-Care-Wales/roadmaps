@@ -31,9 +31,8 @@ _Avoid_: Viewer, front end, website
 
 **Roadmap**:
 A product's public plan, in the Now / Next / Later format, managed by its Product Lead.
-Each roadmap is one visible worksheet of the connected spreadsheet today; from EPC-002 it
-is one row of the **roadmap index** (ADR-009). Its identity is the short name the
-public site uses in its address, and outlives the data source.
+Each roadmap is one row of the **roadmap index** (ADR-009). Its identity is the short
+name the public site uses in its address (`producta`), and outlives the data source.
 _Avoid_: Sheet, worksheet, tab, board
 
 **Horizon** _(planned)_:
@@ -125,16 +124,15 @@ The one Google spreadsheet, fixed by configuration, that the data source reads. 
 infrastructure and setup documentation use this term.
 _Avoid_: Workbook, file
 
-**Roadmap index** _(planned)_:
+**Roadmap index**:
 The first worksheet of the connected spreadsheet, one row per roadmap, which the editor
 and the public site both read (ADR-009). Only infrastructure and setup documentation use
 this term.
 _Avoid_: Roadmap list (the roadmaps shown to the user), roadmaps tab
 
 **Worksheet**:
-A tab of the connected spreadsheet. Each visible worksheet is a roadmap today; from
-EPC-002 the first worksheet is the **roadmap index** and each other holds one roadmap's
-items (ADR-009). Only infrastructure uses this term.
+A tab of the connected spreadsheet. The first worksheet is the **roadmap index**; each
+other holds one roadmap's items (ADR-009). Only infrastructure uses this term.
 _Avoid_: Sheet (ambiguous with spreadsheet)
 
 ### Connection

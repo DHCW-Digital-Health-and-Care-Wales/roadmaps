@@ -23,7 +23,7 @@ import { createI18n, type Language } from "@/i18n"
 import { createQueryClient } from "@/lib/query-client"
 
 export interface RenderWithProvidersOptions {
-  /** The initial route, e.g. `/roadmaps/7`. Defaults to `/`. */
+  /** The initial route, e.g. `/roadmaps/producta`. Defaults to `/`. */
   path?: string
   /** Replaces the memory history at `path`, e.g. with `createHashHistory()`. */
   history?: RouterHistory

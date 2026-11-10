@@ -8,9 +8,9 @@ import { createTestRoadmap } from "./test-roadmap"
 
 export interface RoadmapRepositoryContractSetup {
   /**
-   * Returns a repository whose data source holds exactly these visible roadmaps, in this
-   * order. Fixtures hold only what every adapter can represent today: numeric-string ids
-   * and published roadmaps with an English title and nothing else.
+   * Returns a repository whose data source holds exactly these roadmaps, in this order.
+   * Ids are URL-safe slugs (lower-case letters and digits, joined by single hyphens),
+   * which every adapter can store and give back unchanged.
    */
   withRoadmaps(roadmaps: readonly Roadmap[]): RoadmapRepository
   /** Returns a repository whose data source fails on every request. */
@@ -18,9 +18,24 @@ export interface RoadmapRepositoryContractSetup {
 }
 
 const fixtures: readonly Roadmap[] = [
-  createTestRoadmap("7", "Platform"),
-  createTestRoadmap("0", "Template"),
-  createTestRoadmap("1234567", "Mobile app — 2027"),
+  createTestRoadmap("producta", "Product A roadmap", {
+    category: "gp-community-services",
+    family: { en: "Single Record", cy: "" },
+    statusLabel: { en: "Beta", cy: "" },
+    productLead: "Alex Jones, Sam Evans",
+    lastUpdated: "2026-10-01",
+    colour: "#325083",
+    vision: { en: "Where Product A is heading.\nAnd why.", cy: "" },
+    serviceDescription: { en: "What Product A does.", cy: "" },
+  }),
+  createTestRoadmap("product-b-2027", "Product B — 2027", {
+    title: { en: "Product B — 2027", cy: "Cynnyrch B — 2027" },
+    family: {
+      en: "Medicines & Diagnostics",
+      cy: "Meddyginiaethau a Diagnosteg",
+    },
+  }),
+  createTestRoadmap("0", "Template", { published: false }),
 ]
 
 /**

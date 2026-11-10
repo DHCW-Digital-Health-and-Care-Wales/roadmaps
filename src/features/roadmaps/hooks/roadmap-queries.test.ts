@@ -20,7 +20,7 @@ describe("roadmapKeys", () => {
 
 describe("roadmapListQueryOptions", () => {
   it("loads the list from the repository", async () => {
-    const roadmaps = [createTestRoadmap("1", "Platform")]
+    const roadmaps = [createTestRoadmap("producta", "Product A roadmap")]
     const queryClient = new QueryClient()
 
     await expect(

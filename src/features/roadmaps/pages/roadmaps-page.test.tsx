@@ -17,9 +17,9 @@ const connected: AuthState = {
 }
 
 const roadmaps: Roadmap[] = [
-  createTestRoadmap("0", "Platform"),
-  createTestRoadmap("42", "Mobile app"),
-  createTestRoadmap("7", "Data"),
+  createTestRoadmap("producta", "Product A roadmap"),
+  createTestRoadmap("productb", "Product B roadmap"),
+  createTestRoadmap("productc", "Product C roadmap"),
 ]
 
 type Outcome = readonly Roadmap[] | AppError | "pending"
@@ -69,14 +69,17 @@ describe("RoadmapsPage", () => {
       main().getByRole("heading", { level: 1, name: "Your roadmaps" }),
     ).toBeInTheDocument()
     expect(
-      main().getByText("Roadmaps available in the connected spreadsheet."),
+      main().getByText("Every roadmap, published or not."),
     ).toBeInTheDocument()
     expect(await main().findByText("3 roadmaps")).toBeInTheDocument()
-    expect(cardNames()).toEqual(["Platform", "Mobile app", "Data"])
-    expect(main().getByRole("link", { name: "Mobile app" })).toHaveAttribute(
-      "href",
-      "/roadmaps/42",
-    )
+    expect(cardNames()).toEqual([
+      "Product A roadmap",
+      "Product B roadmap",
+      "Product C roadmap",
+    ])
+    expect(
+      main().getByRole("link", { name: "Product B roadmap" }),
+    ).toHaveAttribute("href", "/roadmaps/productb")
     // TanStack Query's abort signal reaches the repository.
     expect(repository.listRoadmaps.mock.calls[0]?.[0]?.signal).toBeInstanceOf(
       AbortSignal,
@@ -87,7 +90,7 @@ describe("RoadmapsPage", () => {
     const name = `Quarterly ${"very ".repeat(30)}long roadmap`
     await renderWithProviders({
       authState: connected,
-      roadmaps: [createTestRoadmap("1", name)],
+      roadmaps: [createTestRoadmap("long-roadmap", name)],
     })
 
     expect(await main().findByRole("link", { name })).toHaveAttribute(
@@ -104,7 +107,7 @@ describe("RoadmapsPage", () => {
     ).toBeInTheDocument()
     expect(
       main().getByText(
-        "There are no visible roadmaps in the connected spreadsheet yet.",
+        "The connected spreadsheet doesn't list any roadmaps yet.",
       ),
     ).toBeInTheDocument()
   })
@@ -186,7 +189,7 @@ describe("RoadmapsPage", () => {
     expect(refresh).toHaveAttribute("aria-busy", "true")
     expect(refresh).toHaveAttribute("aria-disabled", "true")
     // The cards loaded earlier stay while refreshing.
-    expect(cardNames()).toEqual(["Platform"])
+    expect(cardNames()).toEqual(["Product A roadmap"])
   })
 
   it("keeps the cards and explains a failed refresh", async () => {

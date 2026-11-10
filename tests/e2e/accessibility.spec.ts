@@ -48,16 +48,16 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
     })
 
     test("roadmap detail", async ({ page }) => {
-      await page.goto("./#/roadmaps/42")
+      await page.goto("./#/roadmaps/producta")
       await connect(page)
       await expect(
-        page.getByRole("heading", { level: 1, name: "Mobile app" }),
+        page.getByRole("heading", { level: 1, name: "Product A roadmap" }),
       ).toBeVisible()
       await expectNoAxeViolations(page, theme)
     })
 
     test("load error", async ({ page, sheets }) => {
-      sheets.respondWith({ status: 403 })
+      sheets.failWith(403)
       await page.goto("./")
       await connect(page)
       await expect(page.getByRole("alert")).toBeVisible()

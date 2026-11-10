@@ -576,6 +576,49 @@ describe("parseRoadmapIndex", () => {
     })
   })
 
+  describe("a roadmap whose tab is missing", () => {
+    it("keeps the roadmap and records its missing tab, matching tab titles exactly", () => {
+      const index = parseRoadmapIndex(
+        [
+          [...HEADER],
+          toRow({ Sheet: "ProductA", Enabled: "Yes" }),
+          toRow({ Sheet: "ProductB", Enabled: "Yes" }),
+          toRow({ Sheet: "productc", Enabled: "No" }),
+        ],
+        { tabTitles: ["Roadmaps", "ProductA", "ProductC"] },
+      )
+
+      expect(index.entries.map(({ roadmap }) => roadmap.id)).toEqual([
+        "producta",
+        "productb",
+        "productc",
+      ])
+      expect(index.problems).toEqual([
+        problem("missing-tab", { row: 3, column: "Sheet", value: "ProductB" }),
+        problem("missing-tab", { row: 4, column: "Sheet", value: "productc" }),
+      ])
+    })
+
+    it("does not check the tab of a skipped row", () => {
+      const index = parseRoadmapIndex(
+        [
+          [...HEADER],
+          toRow({ Sheet: "ProductA", Enabled: "Yes" }),
+          toRow({ Sheet: "PRODUCTA", Enabled: "No" }),
+        ],
+        { tabTitles: ["ProductA"] },
+      )
+
+      expect(index.problems.map(({ code }) => code)).toEqual(["duplicate-id"])
+    })
+
+    it("checks no tabs when it is not given the tab titles", () => {
+      const index = parseRows({ Sheet: "ProductA", Enabled: "Yes" })
+
+      expect(index.problems).toEqual([])
+    })
+  })
+
   describe("an unreadable list (S5)", () => {
     it.each([
       ["no rows", []],

@@ -22,10 +22,11 @@ never change what is written, or how, without saying so in the record and its PR
 Design for the Product Lead editing their roadmap (`docs/backlog/personas/product-lead.md`);
 the connection to the data source is plumbing that should stay out of their way.
 
-**Built so far** (the bootstrap epic): a static, frontend-only React SPA on GitHub Pages
-that connects a Google account (Google Identity Services, OAuth token model), reads
-worksheet **metadata** from one Google Spreadsheet and shows each visible worksheet as a
-roadmap card. Roadmap items and editing are next. Google Sheets is a _temporary_ data
+**Built so far** (the bootstrap epic, then EPC-002): a static, frontend-only React SPA on
+GitHub Pages that connects a Google account (Google Identity Services, OAuth token model),
+reads the **roadmap index**, the first tab of one Google Spreadsheet, as the public site
+does (ADR-009), and shows each roadmap it lists as a card. Roadmap items and editing are
+next. Google Sheets is a _temporary_ data
 source: it must be replaceable by a PostgreSQL-backed HTTP API without touching the
 presentation layer (ADR-002).
 
@@ -602,3 +603,21 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
       `import csv from "…/Roadmaps.csv?raw"`; Node code (the E2E fake) reads it from disk.
     - The parser expects `rows[0]` to be spreadsheet row 1; read the whole tab by title,
       not a range starting lower.
+- **STY-011 Roadmap list from the roadmap index** — the repository reads the tab list,
+  then the first tab's values, and lists the parsed roadmaps in row order; ids are the
+  public site's slugs (`#/roadmaps/producta`). The interim worksheet mapping is gone.
+  Copy changed: `roadmaps.description`, `roadmaps.empty.description`,
+  `roadmaps.detail.notFoundDescription` (Welsh machine-assisted; needs fluent review).
+  - Where things live: `parseSheetValues` (`sheets-schemas.ts`); the first tab and the
+    quoted range in `google-sheets-roadmap-repository.ts`. The parser's `tabTitles`
+    option records `missing-tab`. The record's Delivery lists the exact requests.
+  - Decisions: the first tab is the lowest `index` (missing = 0), hidden or not; no tabs
+    is `invalid-data` with no values read; problems stay inside the adapter.
+  - Gotchas:
+    - One list load is two Sheets requests, so `sheets.tokens` in E2E has two entries per
+      load; assert reads with `sheets.reads`. The fake fails any read of a tab other than
+      the first.
+    - Encode the quoted tab title with `encodeURIComponent` as one path segment; `'` stays
+      literal and is doubled inside the quotes.
+    - Tests use the example roadmaps (`producta`, `productb`, `productc`); `0` is the
+      unknown id.

@@ -13,7 +13,7 @@ export const roadmapKeys = {
 }
 
 /**
- * The visible roadmaps, in source order. `staleTime` and retries come from the query
+ * The listed roadmaps, in source order. `staleTime` and retries come from the query
  * client's defaults; TanStack Query's abort signal cancels superseded requests.
  */
 export function roadmapListQueryOptions(repository: RoadmapRepository) {

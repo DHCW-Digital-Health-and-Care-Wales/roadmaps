@@ -11,6 +11,6 @@ export interface ListRoadmapsOptions {
  * `signal`, which rejects with the signal's abort reason.
  */
 export interface RoadmapRepository {
-  /** Lists the visible roadmaps in the data source's own order. */
+  /** Lists every roadmap the data source holds, published or not, in its own order. */
   listRoadmaps(options?: ListRoadmapsOptions): Promise<Roadmap[]>
 }

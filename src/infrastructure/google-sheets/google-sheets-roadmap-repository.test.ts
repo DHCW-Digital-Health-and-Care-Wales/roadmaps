@@ -2,17 +2,78 @@ import { HttpResponse } from "msw"
 import { http } from "msw/http"
 import { describe, expect, it, vi } from "vitest"
 
+import type { Roadmap } from "@/domain/roadmap/roadmap"
 import { describeRoadmapRepositoryContract } from "@/domain/roadmap/testing/roadmap-repository-contract"
-import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { AppError } from "@/lib/errors"
 import { server } from "@/test/msw-server"
 
+import roadmapsCsv from "../../../tests/fixtures/sheets/Roadmaps.csv?raw"
+import { parseCsv } from "../../../tests/fixtures/sheets/parse-csv"
 import { GoogleSheetsRoadmapRepository } from "./google-sheets-roadmap-repository"
+import {
+  CATEGORY_SHEET_VALUES,
+  parseRoadmapIndex,
+} from "./roadmap-index-parser"
 import { createSheetsClient, type SheetsClient } from "./sheets-client"
 
 const SPREADSHEET_ID = "spreadsheet-1"
 const ENDPOINT = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}`
-const FIELDS = "sheets(properties(sheetId,title,index,hidden))"
+const VALUES_ENDPOINT = `${ENDPOINT}/values/*`
+const METADATA_FIELDS = "sheets(properties(sheetId,title,index,hidden))"
+const VALUES_PARAMS = [
+  ["majorDimension", "ROWS"],
+  ["valueRenderOption", "FORMATTED_VALUE"],
+  ["fields", "values"],
+]
+
+/** The example spreadsheet's roadmap index (`tests/fixtures/sheets/Roadmaps.csv`). */
+const EXAMPLE_ROWS = parseCsv(roadmapsCsv)
+
+interface Tab {
+  title: string
+  index?: number
+  hidden?: boolean
+}
+
+/** The example spreadsheet's tabs, the roadmap index first. */
+const EXAMPLE_TABS: readonly Tab[] = [
+  { title: "Roadmaps" },
+  { title: "ProductA", index: 1 },
+  { title: "ProductB", index: 2 },
+  { title: "ProductC", index: 3 },
+]
+
+/** The metadata response for these tabs: Google omits a `0` index and `false` hidden. */
+function metadataFor(tabs: readonly Tab[]) {
+  return {
+    sheets: tabs.map((tab, i) => ({ properties: { sheetId: i * 10, ...tab } })),
+  }
+}
+
+interface Spreadsheet {
+  tabs?: readonly Tab[]
+  /** The values response of whichever tab is read. */
+  values?: unknown
+}
+
+/** Serves both reads over HTTP; records each request. */
+function serveSpreadsheet({
+  tabs = EXAMPLE_TABS,
+  values = { values: EXAMPLE_ROWS },
+}: Spreadsheet = {}) {
+  const requests: Request[] = []
+  server.use(
+    http.get(ENDPOINT, ({ request }) => {
+      requests.push(request)
+      return HttpResponse.json(metadataFor(tabs))
+    }),
+    http.get(VALUES_ENDPOINT, ({ request }) => {
+      requests.push(request)
+      return HttpResponse.json(values as Record<string, unknown>)
+    }),
+  )
+  return requests
+}
 
 /** A repository over the real client, talking to MSW. */
 function httpRepository() {
@@ -22,9 +83,12 @@ function httpRepository() {
   })
 }
 
-/** A repository over a stub client that returns `json` for any request. */
-function stubRepository(json: unknown) {
-  const getJson = vi.fn<SheetsClient["getJson"]>(() => Promise.resolve(json))
+/** A repository over a stub client that answers the metadata, then the values read. */
+function stubRepository(metadata: unknown, values: unknown) {
+  const getJson = vi
+    .fn<SheetsClient["getJson"]>()
+    .mockResolvedValueOnce(metadata)
+    .mockResolvedValueOnce(values)
   const repository = new GoogleSheetsRoadmapRepository({
     client: { getJson },
     spreadsheetId: SPREADSHEET_ID,
@@ -32,17 +96,61 @@ function stubRepository(json: unknown) {
   return { repository, getJson }
 }
 
+/** The values path of the tab with this title, as Google expects it. */
+function valuesPath(title: string): string {
+  return `/v4/spreadsheets/${SPREADSHEET_ID}/values/${title}`
+}
+
+/** A roadmap index holding exactly these roadmaps, one row each, its tab named by the id. */
+function indexRowsFor(roadmaps: readonly Roadmap[]): string[][] {
+  const text = (value: { en: string; cy: string } | null) => [
+    value?.en ?? "",
+    value?.cy ?? "",
+  ]
+  return [
+    [
+      "Sheet",
+      "Enabled",
+      "Category",
+      "Product Lead",
+      "Last updated",
+      "Colour",
+      "Title",
+      "Title (cy)",
+      "Family",
+      "Family (cy)",
+      "Status label",
+      "Status label (cy)",
+      "Vision",
+      "Vision (cy)",
+      "Service description",
+      "Service description (cy)",
+    ],
+    ...roadmaps.map((roadmap) => [
+      roadmap.id,
+      roadmap.published ? "Yes" : "No",
+      roadmap.category ? CATEGORY_SHEET_VALUES[roadmap.category] : "",
+      roadmap.productLead ?? "",
+      roadmap.lastUpdated ?? "",
+      roadmap.colour ?? "",
+      ...text(roadmap.title),
+      ...text(roadmap.family),
+      ...text(roadmap.statusLabel),
+      ...text(roadmap.vision),
+      ...text(roadmap.serviceDescription),
+    ]),
+  ]
+}
+
 describeRoadmapRepositoryContract("GoogleSheetsRoadmapRepository", {
   withRoadmaps(roadmaps) {
-    server.use(
-      http.get(ENDPOINT, () =>
-        HttpResponse.json({
-          sheets: roadmaps.map(({ id, title }, index) => ({
-            properties: { sheetId: Number(id), title: title.en, index },
-          })),
-        }),
-      ),
-    )
+    serveSpreadsheet({
+      tabs: [
+        { title: "Roadmaps" },
+        ...roadmaps.map(({ id }, i) => ({ title: id, index: i + 1 })),
+      ],
+      values: { values: indexRowsFor(roadmaps) },
+    })
     return httpRepository()
   },
   failing() {
@@ -52,156 +160,282 @@ describeRoadmapRepositoryContract("GoogleSheetsRoadmapRepository", {
 })
 
 describe("GoogleSheetsRoadmapRepository", () => {
-  it("requests the spreadsheet's worksheet metadata with an exact field mask", async () => {
-    let request: Request | undefined
-    server.use(
-      http.get(ENDPOINT, (info) => {
-        request = info.request
-        return HttpResponse.json({})
-      }),
-    )
+  describe("what it reads", () => {
+    it("reads the tab list, then the first tab's formatted values, with exact parameters", async () => {
+      const requests = serveSpreadsheet()
 
-    await httpRepository().listRoadmaps()
+      await httpRepository().listRoadmaps()
 
-    const url = new URL(request?.url ?? "")
-    expect(url.origin + url.pathname).toBe(ENDPOINT)
-    expect([...url.searchParams]).toEqual([["fields", FIELDS]])
-    expect(request?.headers.get("Authorization")).toBe("Bearer token-123")
-  })
-
-  it("passes the abort signal to the client", async () => {
-    const { repository, getJson } = stubRepository({})
-    const { signal } = new AbortController()
-
-    await repository.listRoadmaps({ signal })
-
-    expect(getJson).toHaveBeenCalledWith(`/${SPREADSHEET_ID}`, {
-      searchParams: { fields: FIELDS },
-      signal,
-    })
-  })
-
-  it("maps sheetId to a string id (including 0) and the title to an English title", async () => {
-    const { repository } = stubRepository({
-      sheets: [
-        { properties: { sheetId: 0, title: "First", index: 0 } },
-        { properties: { sheetId: 2_147_483_647, title: "Big id", index: 1 } },
-      ],
+      const [metadata, values] = requests.map(({ url }) => new URL(url))
+      expect(requests).toHaveLength(2)
+      expect(metadata?.origin).toBe("https://sheets.googleapis.com")
+      expect(metadata?.pathname).toBe(`/v4/spreadsheets/${SPREADSHEET_ID}`)
+      expect([...(metadata?.searchParams ?? [])]).toEqual([
+        ["fields", METADATA_FIELDS],
+      ])
+      expect(values?.origin).toBe("https://sheets.googleapis.com")
+      expect(values?.pathname).toBe(valuesPath("'Roadmaps'"))
+      expect([...(values?.searchParams ?? [])]).toEqual(VALUES_PARAMS)
+      for (const request of requests) {
+        expect(request.headers.get("Authorization")).toBe("Bearer token-123")
+      }
     })
 
-    await expect(repository.listRoadmaps()).resolves.toStrictEqual([
-      createTestRoadmap("0", "First"),
-      createTestRoadmap("2147483647", "Big id"),
-    ])
-  })
+    it("passes the abort signal to both reads", async () => {
+      const { repository, getJson } = stubRepository(
+        metadataFor(EXAMPLE_TABS),
+        { values: EXAMPLE_ROWS },
+      )
+      const { signal } = new AbortController()
 
-  it("lists each worksheet as published, with nothing else known about it (until STY-011)", async () => {
-    const { repository } = stubRepository({
-      sheets: [{ properties: { sheetId: 7, title: "Platform", index: 0 } }],
-    })
+      await repository.listRoadmaps({ signal })
 
-    await expect(repository.listRoadmaps()).resolves.toStrictEqual([
-      {
-        id: "7",
-        title: { en: "Platform", cy: "" },
-        published: true,
-        category: null,
-        family: null,
-        statusLabel: null,
-        productLead: null,
-        lastUpdated: null,
-        colour: null,
-        vision: null,
-        serviceDescription: null,
-      },
-    ])
-  })
-
-  it("preserves response order rather than sorting by index or id", async () => {
-    const { repository } = stubRepository({
-      sheets: [
-        { properties: { sheetId: 5, title: "C", index: 2 } },
-        { properties: { sheetId: 1, title: "A", index: 0 } },
-        { properties: { sheetId: 3, title: "B", index: 1 } },
-      ],
-    })
-
-    const roadmaps = await repository.listRoadmaps()
-
-    expect(roadmaps.map(({ title }) => title.en)).toEqual(["C", "A", "B"])
-  })
-
-  it("excludes hidden worksheets but keeps explicitly visible ones", async () => {
-    const { repository } = stubRepository({
-      sheets: [
-        { properties: { sheetId: 1, title: "Visible" } },
-        { properties: { sheetId: 2, title: "Hidden", hidden: true } },
-        { properties: { sheetId: 3, title: "Shown", hidden: false } },
-      ],
-    })
-
-    const roadmaps = await repository.listRoadmaps()
-
-    expect(roadmaps.map(({ id }) => id)).toEqual(["1", "3"])
-  })
-
-  it("keeps worksheets regardless of their name", async () => {
-    const { repository } = stubRepository({
-      sheets: [
-        { properties: { sheetId: 1, title: "Template" } },
-        { properties: { sheetId: 2, title: "Roadmap template" } },
-        { properties: { sheetId: 3, title: "_config" } },
-      ],
-    })
-
-    const roadmaps = await repository.listRoadmaps()
-
-    expect(roadmaps.map(({ title }) => title.en)).toEqual([
-      "Template",
-      "Roadmap template",
-      "_config",
-    ])
-  })
-
-  it("rejects a malformed response as invalid-response", async () => {
-    const { repository } = stubRepository({
-      sheets: [{ properties: { title: "A" } }],
-    })
-
-    await expect(repository.listRoadmaps()).rejects.toMatchObject({
-      kind: "invalid-response",
-    })
-  })
-
-  it("propagates client failures unchanged", async () => {
-    const failure = new AppError("forbidden", { status: 403 })
-    const repository = new GoogleSheetsRoadmapRepository({
-      client: { getJson: () => Promise.reject(failure) },
-      spreadsheetId: SPREADSHEET_ID,
-    })
-
-    await expect(repository.listRoadmaps()).rejects.toBe(failure)
-  })
-
-  it("maps an HTTP permission failure end to end", async () => {
-    server.use(
-      http.get(ENDPOINT, () =>
-        HttpResponse.json(
+      expect(getJson.mock.calls).toEqual([
+        [
+          `/${SPREADSHEET_ID}`,
+          { searchParams: { fields: METADATA_FIELDS }, signal },
+        ],
+        [
+          `/${SPREADSHEET_ID}/values/'Roadmaps'`,
           {
-            error: {
-              code: 403,
-              status: "PERMISSION_DENIED",
-              message: "No access",
+            searchParams: {
+              majorDimension: "ROWS",
+              valueRenderOption: "FORMATTED_VALUE",
+              fields: "values",
             },
+            signal,
           },
-          { status: 403 },
-        ),
-      ),
+        ],
+      ])
+    })
+
+    it("does not start the second read once the load is cancelled (S6)", async () => {
+      const controller = new AbortController()
+      const reason = new DOMException("Superseded", "AbortError")
+      const requests: Request[] = []
+      server.use(
+        http.get(ENDPOINT, ({ request }) => {
+          requests.push(request)
+          controller.abort(reason)
+          return HttpResponse.json(metadataFor(EXAMPLE_TABS))
+        }),
+        http.get(VALUES_ENDPOINT, ({ request }) => {
+          requests.push(request)
+          return HttpResponse.json({ values: EXAMPLE_ROWS })
+        }),
+      )
+
+      await expect(
+        httpRepository().listRoadmaps({ signal: controller.signal }),
+      ).rejects.toBe(reason)
+      expect(requests).toHaveLength(1)
+    })
+  })
+
+  describe("the listed roadmaps (S1)", () => {
+    it("lists the example roadmap index's roadmaps in row order, published or not", async () => {
+      serveSpreadsheet()
+
+      const roadmaps = await httpRepository().listRoadmaps()
+
+      expect(
+        roadmaps.map(({ id, title, published }) => [id, title.en, published]),
+      ).toEqual([
+        ["producta", "Product A roadmap", true],
+        ["productb", "Product B roadmap", true],
+        ["productc", "Product C roadmap", false],
+      ])
+      expect(roadmaps).toStrictEqual(
+        parseRoadmapIndex(EXAMPLE_ROWS).entries.map(({ roadmap }) => roadmap),
+      )
+    })
+
+    it("lists no tab as a roadmap, not even the list's own", async () => {
+      serveSpreadsheet({
+        tabs: [{ title: "Roadmaps" }, { title: "Scratch", index: 1 }],
+        values: { values: [["Sheet", "Enabled"]] },
+      })
+
+      await expect(httpRepository().listRoadmaps()).resolves.toEqual([])
+    })
+  })
+
+  describe("which tab is the list (S3)", () => {
+    it("reads the tab with the lowest index, whatever the response order or its name", async () => {
+      const requests = serveSpreadsheet({
+        tabs: [
+          { title: "ProductA", index: 1 },
+          { title: "Index" },
+          { title: "ProductB", index: 2 },
+        ],
+      })
+
+      const roadmaps = await httpRepository().listRoadmaps()
+
+      expect(new URL(requests[1]?.url ?? "").pathname).toBe(
+        valuesPath("'Index'"),
+      )
+      expect(roadmaps).toHaveLength(3)
+    })
+
+    it("reads the first tab even when it is hidden", async () => {
+      const requests = serveSpreadsheet({
+        tabs: [
+          { title: "Index", index: 0, hidden: true },
+          { title: "ProductA", index: 1 },
+        ],
+      })
+
+      await httpRepository().listRoadmaps()
+
+      expect(new URL(requests[1]?.url ?? "").pathname).toBe(
+        valuesPath("'Index'"),
+      )
+    })
+
+    it.each([
+      ["a space", "Roadmap index", "'Roadmap%20index'"],
+      ["an apostrophe", "Dai's roadmaps", "'Dai''s%20roadmaps'"],
+      ["a slash and a hash", "Now/Next #1", "'Now%2FNext%20%231'"],
+    ])("quotes a tab title with %s", async (_, title, path) => {
+      const requests = serveSpreadsheet({ tabs: [{ title }] })
+
+      await httpRepository().listRoadmaps()
+
+      expect(new URL(requests[1]?.url ?? "").pathname).toBe(valuesPath(path))
+    })
+
+    it("fails with invalid-data, without reading values, when the spreadsheet has no tabs", async () => {
+      const requests = serveSpreadsheet({ tabs: [] })
+
+      await expect(httpRepository().listRoadmaps()).rejects.toMatchObject({
+        kind: "invalid-data",
+        retryable: false,
+      })
+      expect(requests).toHaveLength(1)
+    })
+  })
+
+  describe("a roadmap whose tab is missing (S4)", () => {
+    it("is listed like the others", async () => {
+      serveSpreadsheet({
+        tabs: [{ title: "Roadmaps" }, { title: "ProductA", index: 1 }],
+      })
+
+      const roadmaps = await httpRepository().listRoadmaps()
+
+      expect(roadmaps.map(({ id }) => id)).toEqual([
+        "producta",
+        "productb",
+        "productc",
+      ])
+    })
+  })
+
+  describe("an unreadable list (S5)", () => {
+    it.each([
+      ["an empty first tab", {}],
+      ["a first tab with no rows", { values: [] }],
+      [
+        "a header with no Sheet column",
+        {
+          values: [
+            ["Title", "Enabled"],
+            ["Product A roadmap", "Yes"],
+          ],
+        },
+      ],
+    ])("fails with invalid-data, not retryable, for %s", async (_, values) => {
+      serveSpreadsheet({ values })
+
+      await expect(httpRepository().listRoadmaps()).rejects.toMatchObject({
+        kind: "invalid-data",
+        retryable: false,
+      })
+    })
+
+    it("lists nothing, without failing, for a header with no rows", async () => {
+      serveSpreadsheet({ values: { values: [EXAMPLE_ROWS[0]] } })
+
+      await expect(httpRepository().listRoadmaps()).resolves.toEqual([])
+    })
+  })
+
+  describe("failures (S6)", () => {
+    const googleError = (status: number) =>
+      HttpResponse.json(
+        { error: { code: status, status: "ERROR", message: "Failed" } },
+        { status },
+      )
+
+    it.each([
+      [401, "unauthenticated", false],
+      [403, "forbidden", false],
+      [404, "not-found", false],
+      [429, "rate-limited", true],
+      [500, "unknown", true],
+      [503, "unknown", true],
+    ])(
+      "maps HTTP %i from either read to %s (retryable: %s)",
+      async (status, kind, retryable) => {
+        server.use(http.get(ENDPOINT, () => googleError(status)))
+        await expect(httpRepository().listRoadmaps()).rejects.toMatchObject({
+          kind,
+          retryable,
+          status,
+        })
+
+        serveSpreadsheet()
+        server.use(http.get(VALUES_ENDPOINT, () => googleError(status)))
+        await expect(httpRepository().listRoadmaps()).rejects.toMatchObject({
+          kind,
+          retryable,
+          status,
+        })
+      },
     )
 
-    await expect(httpRepository().listRoadmaps()).rejects.toMatchObject({
-      kind: "forbidden",
-      status: 403,
+    it("maps a network failure of either read to a retryable network error", async () => {
+      server.use(http.get(ENDPOINT, () => HttpResponse.error()))
+      await expect(httpRepository().listRoadmaps()).rejects.toMatchObject({
+        kind: "network",
+        retryable: true,
+      })
+
+      serveSpreadsheet()
+      server.use(http.get(VALUES_ENDPOINT, () => HttpResponse.error()))
+      await expect(httpRepository().listRoadmaps()).rejects.toMatchObject({
+        kind: "network",
+        retryable: true,
+      })
+    })
+
+    it.each([
+      [
+        "metadata",
+        { sheets: [{ properties: { title: "A" } }] },
+        { values: [] },
+      ],
+      ["values", metadataFor(EXAMPLE_TABS), { values: [["Sheet"], [7]] }],
+    ])(
+      "rejects a malformed %s response as invalid-response",
+      async (_, metadata, values) => {
+        const { repository } = stubRepository(metadata, values)
+
+        await expect(repository.listRoadmaps()).rejects.toMatchObject({
+          kind: "invalid-response",
+        })
+      },
+    )
+
+    it("propagates client failures unchanged", async () => {
+      const failure = new AppError("forbidden", { status: 403 })
+      const repository = new GoogleSheetsRoadmapRepository({
+        client: { getJson: () => Promise.reject(failure) },
+        spreadsheetId: SPREADSHEET_ID,
+      })
+
+      await expect(repository.listRoadmaps()).rejects.toBe(failure)
     })
   })
 })

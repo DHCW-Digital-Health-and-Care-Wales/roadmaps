@@ -58,7 +58,7 @@ export const en = {
   },
   roadmaps: {
     title: "Your roadmaps",
-    description: "Roadmaps available in the connected spreadsheet.",
+    description: "Every roadmap, published or not.",
     refresh: "Refresh",
     loading: "Loading roadmaps…",
     count_zero: "No roadmaps",
@@ -66,8 +66,7 @@ export const en = {
     count_other: "{{count, number}} roadmaps",
     empty: {
       title: "No roadmaps yet",
-      description:
-        "There are no visible roadmaps in the connected spreadsheet yet.",
+      description: "The connected spreadsheet doesn't list any roadmaps yet.",
     },
     loadFailed: "Couldn't load your roadmaps",
     refreshFailed: "Couldn't refresh your roadmaps",
@@ -81,8 +80,7 @@ export const en = {
       back: "Back to roadmaps",
       connectPrompt: "Connect Google to view this roadmap.",
       notFoundTitle: "Roadmap not found",
-      notFoundDescription:
-        "This roadmap doesn't exist or is no longer visible.",
+      notFoundDescription: "This roadmap doesn't exist or is no longer listed.",
     },
   },
   errors: {

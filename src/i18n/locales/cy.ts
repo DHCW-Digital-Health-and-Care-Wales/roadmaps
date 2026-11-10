@@ -59,7 +59,7 @@ export const cy = {
   },
   roadmaps: {
     title: "Eich mapiau trywydd",
-    description: "Y mapiau trywydd sydd ar gael yn y daenlen gysylltiedig.",
+    description: "Pob map trywydd, wedi'i gyhoeddi neu beidio.",
     refresh: "Adnewyddu",
     loading: "Wrthi'n llwytho mapiau trywydd…",
     // Small numerals take a singular noun, and "dau" (2) softens "map" to "fap";
@@ -73,7 +73,7 @@ export const cy = {
     empty: {
       title: "Dim mapiau trywydd eto",
       description:
-        "Does dim mapiau trywydd gweladwy yn y daenlen gysylltiedig eto.",
+        "Dydy'r daenlen gysylltiedig ddim yn rhestru unrhyw fapiau trywydd eto.",
     },
     loadFailed: "Doedd dim modd llwytho eich mapiau trywydd",
     refreshFailed: "Doedd dim modd adnewyddu eich mapiau trywydd",
@@ -89,7 +89,7 @@ export const cy = {
       connectPrompt: "Cysylltwch â Google i weld y map trywydd hwn.",
       notFoundTitle: "Heb ddod o hyd i'r map trywydd",
       notFoundDescription:
-        "Dydy'r map trywydd hwn ddim yn bodoli, neu dydy e ddim yn weladwy mwyach.",
+        "Dydy'r map trywydd hwn ddim yn bodoli, neu dydy e ddim wedi'i restru mwyach.",
     },
   },
   errors: {

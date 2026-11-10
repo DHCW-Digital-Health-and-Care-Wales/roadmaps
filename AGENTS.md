@@ -775,8 +775,9 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
   - Decisions: `connect()` from `connected` renews with `prompt: ''`, staying `connected`
     (no `connecting`, no reload) and ending in a new snapshot with a later `expiresAt` or a
     `lastError`; expiry, a 401 or Disconnect abandons a pending renewal. A failure notice is
-    `role="alert"` (a closed popup and confirmations are notes); confirmations clear on the
-    next state change or page. The copywriter's "Page notice" pattern is the rule for future
+    `role="alert"` (a closed popup and confirmations are notes) and stays until the next
+    attempt or a dismissal. A confirmation clears itself after `CONFIRMATION_DWELL_MS` (8 s;
+    `useNoticeDwell`, paused on hover and focus), and on the next state change or page. The copywriter's "Page notice" pattern is the rule for future
     "saved"/"published" confirmations.
   - Gotchas:
     - A renewal is a new `connected` snapshot: code that reacts to "became connected" must

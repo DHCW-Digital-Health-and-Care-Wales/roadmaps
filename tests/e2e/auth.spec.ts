@@ -120,6 +120,38 @@ test("a failed reconnect from the header shows why over the expired roadmaps", a
   await expect(roadmapCards(page)).toHaveCount(3)
 })
 
+/** A confirmation's dwell before it clears itself (`CONFIRMATION_DWELL_MS`). */
+const CONFIRMATION_DWELL_MS = 8_000
+
+test("a confirmation clears itself; a failure stays", async ({ page, gis }) => {
+  await page.clock.install()
+  await page.goto("./")
+  await connect(page)
+  const main = page.getByRole("main")
+  const confirmation = main.getByRole("note")
+  await expect(confirmation).toHaveText("Connected to Google")
+
+  await page.clock.fastForward(CONFIRMATION_DWELL_MS)
+  await expect(confirmation).toHaveCount(0)
+  // The header keeps the state.
+  await expect(page.getByRole("banner").getByRole("status")).toHaveText(
+    "Google connected",
+  )
+
+  await page
+    .getByRole("banner")
+    .getByRole("button", { name: "Disconnect" })
+    .click()
+  gis.respondWith({ type: "access-denied" })
+  await connect(page)
+  const failure = main.getByRole("alert")
+  await expect(failure).toHaveText(
+    "Access wasn't granted, so your roadmaps can't be loaded.",
+  )
+  await page.clock.fastForward(10 * CONFIRMATION_DWELL_MS)
+  await expect(failure).toBeVisible()
+})
+
 test("after a partial grant, connecting again asks for consent", async ({
   page,
   gis,

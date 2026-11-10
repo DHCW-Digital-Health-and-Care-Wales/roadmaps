@@ -159,6 +159,27 @@ describe("staying connected (S4)", () => {
     expect(dialog()).not.toBeInTheDocument()
   })
 
+  it("gives focus back to the page itself when that is where it was", async () => {
+    await renderSession(3 * MINUTE_MS)
+    const page = screen.getByRole("main")
+    page.focus()
+    advance(MINUTE_MS)
+    await vi.waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: "Stay connected" }),
+      ).toHaveFocus()
+    })
+
+    fireEvent.keyDown(screen.getByRole("button", { name: "Stay connected" }), {
+      key: "Escape",
+    })
+
+    await vi.waitFor(() => {
+      expect(dialog()).not.toBeInTheDocument()
+      expect(page).toHaveFocus()
+    })
+  })
+
   it("warns again before the renewed session ends", async () => {
     await renderSession(2 * MINUTE_MS)
 

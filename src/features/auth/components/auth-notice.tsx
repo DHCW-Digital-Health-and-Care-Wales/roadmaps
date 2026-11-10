@@ -19,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button"
 
 import { useAuthNotice, type AuthNotice as Notice } from "../use-auth-notice"
+import { useNoticeDwell } from "../use-notice-dwell"
 
 /** Each notice's callout: the one place a notice picks its look. */
 const looks = {
@@ -42,14 +43,27 @@ function announces(notice: Notice): boolean {
 
 /**
  * The outcome of connecting, disconnecting or staying connected, at the top of the page in
- * view, whichever page started it (no toasts: DHCW has none, and they vanish). It stays
- * until the next attempt, the session's end or a dismissal; a confirmation also clears on
- * the next page.
+ * view, whichever page started it (no toasts: DHCW has none). A failure stays until the
+ * next attempt, the session's end or a dismissal. A confirmation clears itself after a
+ * short dwell, paused while it is hovered or holds focus, and on the next page; the
+ * connection status in the header keeps the state.
  */
 export function AuthNotice() {
-  const { t } = useTranslation()
   const { notice, version, dismiss } = useAuthNotice()
   if (!notice) return null
+  // A new state is a new notice: remounting announces a repeated failure again, and gives
+  // a confirmation a dwell of its own.
+  return <NoticeCallout key={version} notice={notice} onDismiss={dismiss} />
+}
+
+interface NoticeCalloutProps {
+  notice: Notice
+  onDismiss: () => void
+}
+
+function NoticeCallout({ notice, onDismiss }: NoticeCalloutProps) {
+  const { t } = useTranslation()
+  const dwell = useNoticeDwell(notice.kind === "confirmed", onDismiss)
 
   const { variant, Icon } = looks[notice.kind]
   const text =
@@ -59,11 +73,10 @@ export function AuthNotice() {
 
   return (
     <Alert
-      // A new state is a new notice: remounting announces a repeated failure again.
-      key={version}
       role={announces(notice) ? "alert" : "note"}
       variant={variant}
       className="mb-6 max-w-2xl"
+      {...dwell}
     >
       <Icon aria-hidden="true" />
       <AlertContent>
@@ -86,7 +99,7 @@ export function AuthNotice() {
           variant="ghost"
           size="icon-sm"
           aria-label={t("auth.notice.dismiss")}
-          onClick={dismiss}
+          onClick={onDismiss}
         >
           <XIcon aria-hidden="true" />
         </Button>

@@ -92,8 +92,10 @@ auth.status.connecting  Connecting…
 **Shape:** one sentence, about 80 characters, confirming what the reader just
 did, or what blocked it, as a callout at the top of the page in view (DHCW's
 notification banner; there are no toasts). A failure stays until the next
-attempt or the reader dismisses it; a confirmation until the next change or
-page. A new notice replaces the old one.
+attempt or the reader dismisses it. A confirmation clears itself after a few
+seconds (waiting while it is hovered or focused), or sooner on the next change
+or page, so write it to be read at a glance; the header's status keeps the
+state. A new notice replaces the old one.
 
 ```
 auth.notifications.connected     Connected to Google

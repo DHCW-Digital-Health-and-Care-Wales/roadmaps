@@ -136,7 +136,8 @@ returning after expiry shows the expired state directly
   test helpers are removed. A failure lasts as long as the state that carries it (until
   the next attempt or expiry) or a dismissal; a confirmation until the next change of
   state or page, or a dismissal. Recorded in the copywriter's `references/patterns.md`
-  ("Page notice") and ADR-005.
+  ("Page notice") and ADR-005. _Amended by D9: a confirmation also clears itself after a
+  dwell._
 - **D7** (agent, 2026-11-10): a failure callout is `role="alert"`, now that no toast
   announces the reason; a closed popup (the user's own doing) and a confirmation (the
   connection status announces it) are `role="note"`. This replaces STY-015's `note` for
@@ -145,6 +146,17 @@ returning after expiry shows the expired state directly
   click that starts the renewal; the popup takes over, and the outcome is either a later
   `expiresAt` (silent) or S5's callout. Closing it any way (Stay connected, Disconnect,
   Escape, Close) ends the warning for that session; a renewed session warns again.
+- **D9** (owner, 2026-11-10, at PR review; amends D6): confirmations clear themselves;
+  failures and the session warning stay exactly as built. A confirmation ("Connected to
+  Google", "Disconnected from Google"; a renewal stays silent, D2) clears after a fixed
+  dwell of 8 s (`CONFIRMATION_DWELL_MS`), as well as on the next change of state or page
+  and on dismissal, which goes beyond D6's "until the next change". The dwell waits while
+  the pointer is over the notice or focus is inside it and starts again in full once both
+  leave, so nothing is removed from under someone reading or using it (the intent of WCAG
+  2.2.1 and 2.2.2). It stays a `note` (polite, not re-announced when it clears), and the
+  header's connection status keeps the persistent state. A newer notice replaces it; a
+  failure replacing it has no dwell; a confirmation replacing anything starts a full one.
+  There is still no toast component.
 
 ## Starting point
 
@@ -170,9 +182,10 @@ Audited at `22c3336`.
   view. On the start page it sits where STY-016 put the notice, above the heading.
 - **S1, the callout's role** (agent, D7): `alert`, not STY-015's `note`; a closed popup
   stays a `note`.
-- **S2** (agent, D6): confirmations are success callouts in the same place ("Connected to
-  Google", "Disconnected from Google", the existing copy). A confirmation also clears on
-  navigation, so it is not carried onto a roadmap's page.
+- **S2** (agent, D6; owner, D9): confirmations are success callouts in the same place
+  ("Connected to Google", "Disconnected from Google", the existing copy). A confirmation
+  clears itself after its dwell (D9) and on navigation, so it is not carried onto a
+  roadmap's page.
 - **S3, the Close control** (agent): the dialog has an icon-only Close button (accessible
   name "Close") as well as Escape; DHCW's timeout dialog has neither, only its "stay"
   button.
@@ -180,6 +193,9 @@ Audited at `22c3336`.
   grant of about 180 s or less) shows the warning as soon as it connects. Google grants
   3599 s, so only tests meet it; the one E2E test with a short grant now uses 300 s.
 - **S4** (agent, D8): the dialog closes on the click, before the renewal completes.
+- **S4, where focus returns** (agent): the warning gives focus back to exactly the element
+  that had it when it opened, often `<main>`; Base UI's own return focus would move on to
+  the first tabbable control inside it.
 - **S6, the clock** (agent): returning to a background tab re-reads the clock in two
   places: the GIS client expires a session whose `expiresAt` has passed (ADR-003
   amendment), and the warning recomputes the time left.
@@ -203,7 +219,9 @@ Audited at `22c3336`.
 - `AuthState` `connected` may carry `lastError?: AuthErrorCode` (a failed renewal);
   `connect()` from `connected` renews (ADR-003, STY-017 amendments). The fake auth client's
   `connect` renews too (an hour from now); simulate a failed renewal with `setState`.
-- `useAuthNotice()` / `<AuthNotice />` (`features/auth`): the page notice. A future
+- `useAuthNotice()` / `<AuthNotice />` (`features/auth`): the page notice;
+  `useNoticeDwell(active, onElapse)` and `CONFIRMATION_DWELL_MS` (`use-notice-dwell.ts`)
+  clear a confirmation, paused on hover and focus. A future
   "saved" or "published" confirmation joins it (or a sibling in the same slot), not a
   toast.
 - `useSessionWarning()` (`features/auth/use-session-warning.ts`, `SESSION_WARNING_MS` =
@@ -220,13 +238,13 @@ Audited at `22c3336`.
 
 ### Scenario evidence
 
-| Scenario | Held by                                                                                                                                                                                                                                                      |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| S1       | `src/features/auth/components/auth-notice.test.tsx` ("the page notice (S1…)"); `tests/e2e/auth.spec.ts` (`connecting from the start page/the header fails gracefully when …`, `a failed reconnect from the header shows why over the expired roadmaps`)      |
-| S2       | `auth-notice.test.tsx` ("the page notice (S2: confirmations)"); `src/app/app.test.tsx` (`replaces the previous notice instead of stacking them`); `tests/e2e/auth.spec.ts` (`disconnecting revokes the token…`); Sonner gone from `package.json`             |
-| S3       | `src/features/auth/components/session-warning.test.tsx` ("the session warning (S3)", the announcement cadence included); `tests/e2e/session-warning.spec.ts` (S3); `tests/e2e/accessibility.spec.ts` (`session warning, then a failed renewal`, both themes) |
-| S4       | `src/infrastructure/google-identity/google-auth-client.test.ts` ("renewal"); `session-warning.test.tsx` ("staying connected (S4)"); `tests/e2e/session-warning.spec.ts` (S4: the fake GIS's gesture check, `prompt: ""`, no new reads, no "Connecting…")     |
-| S5       | `google-auth-client.test.ts` (`keeps the session when …`, `still expires on time after a failed renewal`); `session-warning.test.tsx` (S5); `auth-notice.test.tsx` (S5); `tests/e2e/session-warning.spec.ts` (S5)                                            |
-| S6       | `google-auth-client.test.ts` ("returning to the tab"); `session-warning.test.tsx` ("dismissing, or returning late (S6)"); `tests/e2e/session-warning.spec.ts` (S6)                                                                                           |
-| S7       | `session-warning.test.tsx` ("the session warning in Welsh (S7)"); `auth-notice.test.tsx` (`is in Welsh (S7)…`); `src/i18n/format-duration.test.ts`                                                                                                           |
-| D3       | observed run: the owner's spike with the real GIS (D5)                                                                                                                                                                                                       |
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `src/features/auth/components/auth-notice.test.tsx` ("the page notice (S1…)"); `tests/e2e/auth.spec.ts` (`connecting from the start page/the header fails gracefully when …`, `a failed reconnect from the header shows why over the expired roadmaps`)                                                                                                                                                                                                 |
+| S2       | `auth-notice.test.tsx` ("the page notice (S2: confirmations)", and "(S2: confirmations clear themselves)": the dwell, pause on hover and on focus, replacement, a failure never clearing); `tests/e2e/auth.spec.ts` (`a confirmation clears itself; a failure stays`); `src/app/app.test.tsx` (`replaces the previous notice instead of stacking them`); `tests/e2e/auth.spec.ts` (`disconnecting revokes the token…`); Sonner gone from `package.json` |
+| S3       | `src/features/auth/components/session-warning.test.tsx` ("the session warning (S3)", the announcement cadence included); `tests/e2e/session-warning.spec.ts` (S3); `tests/e2e/accessibility.spec.ts` (`session warning, then a failed renewal`, both themes)                                                                                                                                                                                            |
+| S4       | `src/infrastructure/google-identity/google-auth-client.test.ts` ("renewal"); `session-warning.test.tsx` ("staying connected (S4)"); `tests/e2e/session-warning.spec.ts` (S4: the fake GIS's gesture check, `prompt: ""`, no new reads, no "Connecting…")                                                                                                                                                                                                |
+| S5       | `google-auth-client.test.ts` (`keeps the session when …`, `still expires on time after a failed renewal`); `session-warning.test.tsx` (S5); `auth-notice.test.tsx` (S5); `tests/e2e/session-warning.spec.ts` (S5)                                                                                                                                                                                                                                       |
+| S6       | `google-auth-client.test.ts` ("returning to the tab"); `session-warning.test.tsx` ("dismissing, or returning late (S6)"); `tests/e2e/session-warning.spec.ts` (S6)                                                                                                                                                                                                                                                                                      |
+| S7       | `session-warning.test.tsx` ("the session warning in Welsh (S7)"); `auth-notice.test.tsx` (`is in Welsh (S7)…`); `src/i18n/format-duration.test.ts`                                                                                                                                                                                                                                                                                                      |
+| D3       | observed run: the owner's spike with the real GIS (D5)                                                                                                                                                                                                                                                                                                                                                                                                  |

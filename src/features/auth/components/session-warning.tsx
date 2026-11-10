@@ -1,5 +1,5 @@
 import { XIcon } from "lucide-react"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import {
@@ -75,6 +75,7 @@ function SessionWarningContent({
 }: SessionWarningContentProps) {
   const { t } = useTranslation()
   const stay = useRef<HTMLButtonElement>(null)
+  useReturnFocus()
   // Opening reads the title and description, the time included, so nothing is announced
   // until the next moment. Then the time left as that moment was reached, which a
   // throttled background tab may reach late.
@@ -88,7 +89,7 @@ function SessionWarningContent({
   }
 
   return (
-    <AlertDialogContent initialFocus={stay}>
+    <AlertDialogContent initialFocus={stay} finalFocus={false}>
       <AlertDialogHeader className="pr-8">
         <AlertDialogTitle>{t("auth.sessionWarning.title")}</AlertDialogTitle>
         <AlertDialogDescription>
@@ -121,5 +122,25 @@ function SessionWarningContent({
         <XIcon aria-hidden="true" />
       </AlertDialogCancel>
     </AlertDialogContent>
+  )
+}
+
+/**
+ * Gives focus back to exactly the element that had it when the warning opened (often
+ * `<main>`, which `AppShell` focuses). Base UI's own return focus moves on to the first
+ * tabbable element inside it instead, which would land on a page's first control.
+ */
+function useReturnFocus() {
+  // Read while rendering the opening warning, before Base UI moves focus into it.
+  const [previous] = useState(() =>
+    document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null,
+  )
+  useEffect(
+    () => () => {
+      if (previous?.isConnected) previous.focus({ preventScroll: true })
+    },
+    [previous],
   )
 }

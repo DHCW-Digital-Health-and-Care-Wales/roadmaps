@@ -12,8 +12,10 @@
   Radix. Components are added via the shadcn CLI into `src/components/ui/`.
 - Icons: `lucide-react`. No toasts (amended in STY-017): the app announces outcomes with
   a callout at the top of the page (the `Alert` component), as DHCW's notification
-  banner does, and `sonner` was removed with its last toast. The rule for copy is the
-  copywriter skill's "Page notice" pattern.
+  banner does, and `sonner` was removed with its last toast. A failure stays until the
+  next attempt or a dismissal; a confirmation clears itself after a short dwell, paused
+  while it is hovered or focused. The rule for copy is the copywriter skill's "Page
+  notice" pattern.
 - Theme: light by default; a small `ThemeProvider` toggles the `dark` class on
   `<html>`, persists the preference (non-sensitive) in `localStorage`, and an inline
   script in `index.html` avoids a flash of the wrong theme.

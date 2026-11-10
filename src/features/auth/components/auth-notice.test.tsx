@@ -1,11 +1,13 @@
-import { screen, within } from "@testing-library/react"
+import { fireEvent, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { act } from "react"
-import { describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
 import type { AuthState } from "@/domain/auth/auth-client"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { renderWithProviders } from "@/test/render-with-providers"
+
+import { CONFIRMATION_DWELL_MS } from "../use-notice-dwell"
 
 const HOUR_MS = 60 * 60 * 1000
 const connected = (): Extract<AuthState, { status: "connected" }> => ({
@@ -271,5 +273,135 @@ describe("the page notice (S2: confirmations)", () => {
       authClient.setState({ status: "expired" })
     })
     expect(main().queryByRole("note")).not.toBeInTheDocument()
+  })
+})
+
+describe("the page notice (S2: confirmations clear themselves)", () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  /**
+   * Renders the start page, then (on fake timers) connects. Rendering happens on real
+   * timers, as the router loads on them; events are fired directly, since user-event's
+   * wrapper waits on a timer Vitest's fake timers never run.
+   */
+  async function renderConnected() {
+    const setup = await renderWithProviders({ roadmaps })
+    vi.useFakeTimers({ now: Date.now() })
+    act(() => {
+      setup.authClient.setState({ status: "connecting" })
+    })
+    act(() => {
+      setup.authClient.setState(connected())
+    })
+    expect(main().getByRole("note")).toHaveTextContent("Connected to Google")
+    return setup
+  }
+
+  function advance(ms: number) {
+    act(() => {
+      vi.advanceTimersByTime(ms)
+    })
+  }
+
+  function note() {
+    return main().queryByRole("note")
+  }
+
+  it("clears a confirmation after its dwell, leaving the status in the header", async () => {
+    await renderConnected()
+
+    advance(CONFIRMATION_DWELL_MS - 1)
+    expect(note()).toBeInTheDocument()
+    advance(1)
+
+    expect(note()).not.toBeInTheDocument()
+    expect(
+      within(screen.getByRole("banner")).getByRole("status"),
+    ).toHaveTextContent("Google connected")
+  })
+
+  it("waits while the pointer is over it, and starts again once it leaves", async () => {
+    await renderConnected()
+    const notice = main().getByRole("note")
+
+    fireEvent.pointerEnter(notice)
+    advance(3 * CONFIRMATION_DWELL_MS)
+    expect(note()).toBeInTheDocument()
+
+    fireEvent.pointerLeave(notice)
+    advance(CONFIRMATION_DWELL_MS - 1)
+    expect(note()).toBeInTheDocument()
+    advance(1)
+    expect(note()).not.toBeInTheDocument()
+  })
+
+  it("waits while focus is inside it, and starts again once focus leaves", async () => {
+    await renderConnected()
+    const dismiss = main().getByRole("button", { name: "Dismiss message" })
+
+    act(() => {
+      dismiss.focus()
+    })
+    advance(3 * CONFIRMATION_DWELL_MS)
+    expect(note()).toBeInTheDocument()
+
+    act(() => {
+      dismiss.blur()
+    })
+    advance(CONFIRMATION_DWELL_MS - 1)
+    expect(note()).toBeInTheDocument()
+    advance(1)
+    expect(note()).not.toBeInTheDocument()
+  })
+
+  it("gives a newer confirmation a full dwell of its own", async () => {
+    const { authClient } = await renderConnected()
+    advance(CONFIRMATION_DWELL_MS - 1_000)
+
+    act(() => {
+      authClient.setState({ status: "ready" })
+    })
+    expect(note()).toHaveTextContent("Disconnected from Google")
+    advance(CONFIRMATION_DWELL_MS - 1)
+    expect(note()).toBeInTheDocument()
+    advance(1)
+    expect(note()).not.toBeInTheDocument()
+  })
+
+  it("keeps its dwell through an unrelated re-render", async () => {
+    const { i18n } = await renderConnected()
+    advance(CONFIRMATION_DWELL_MS - 1_000)
+
+    await act(() => i18n.changeLanguage("cy"))
+    expect(note()).toHaveTextContent("Wedi cysylltu â Google")
+    advance(1_000)
+
+    expect(note()).not.toBeInTheDocument()
+  })
+
+  it("never clears a failure, even one that replaced a confirmation", async () => {
+    const { authClient } = await renderConnected()
+    advance(CONFIRMATION_DWELL_MS - 1_000)
+
+    act(() => {
+      authClient.setState({ status: "expired" })
+    })
+    act(() => {
+      authClient.setState({ status: "connecting" })
+    })
+    act(() => {
+      authClient.setState({ status: "expired", lastError: "popup-blocked" })
+    })
+    advance(10 * CONFIRMATION_DWELL_MS)
+
+    expect(
+      main()
+        .getAllByRole("alert")
+        .some((alert) =>
+          alert.textContent.includes("blocked the Google window"),
+        ),
+    ).toBe(true)
   })
 })

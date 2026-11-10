@@ -1,5 +1,5 @@
 import { useLocation } from "@tanstack/react-router"
-import { useState } from "react"
+import { useCallback, useState } from "react"
 
 import type {
   AuthCancellationCode,
@@ -67,8 +67,9 @@ function confirmationOf(
 
 /**
  * The notice for the top of the page in view, and how to dismiss it. A failure lasts as
- * long as the state that carries it; a confirmation until the next change of state or
- * page. Dismissing hides it until the state changes again.
+ * long as the state that carries it; a confirmation at most until the next change of state
+ * or page (`AuthNotice` also clears it after a dwell, `useNoticeDwell`). Dismissing hides
+ * it until the state changes again.
  */
 export function useAuthNotice(): {
   readonly notice: AuthNotice | null
@@ -111,11 +112,10 @@ export function useAuthNotice(): {
       ? ({ kind: "confirmed", code: confirmation.code } as const)
       : null
   const notice = dismissed === state ? null : (failureIn(state) ?? confirmed)
-  return {
-    notice,
-    version,
-    dismiss: () => {
-      setDismissed(state)
-    },
-  }
+  // Stable for a state, so a confirmation's dwell (which depends on it) does not restart
+  // when something else re-renders the notice.
+  const dismiss = useCallback(() => {
+    setDismissed(state)
+  }, [state])
+  return { notice, version, dismiss }
 }

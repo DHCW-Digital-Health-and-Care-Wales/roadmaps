@@ -13,13 +13,15 @@ warn_if_behind_default_branch() {
   # A shallow boundary hides HEAD's ancestors, so the count below would be wrong.
   [ "$(git rev-parse --is-shallow-repository 2>/dev/null)" = false ] || return 0
 
-  # Best effort and never interactive. The worst case is about 15 s on a dead network;
-  # without `timeout` (macOS), only the HTTPS low-speed limit bounds it.
-  local -a bound=()
-  command -v timeout >/dev/null && bound=(timeout 15)
-  GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND="ssh -o BatchMode=yes -o ConnectTimeout=10" \
-    ${bound[@]+"${bound[@]}"} git -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=10 \
-    fetch --quiet "$remote" "${default#"$remote"/}" </dev/null 2>/dev/null || true
+  # Best effort and never interactive: fetch only under `timeout` (at most 15 s, which
+  # also bounds credential helpers). Without it (stock macOS), compare against the refs
+  # last fetched. The user's own SSH command is kept, with batch mode added.
+  if command -v timeout >/dev/null; then
+    local ssh_cmd
+    ssh_cmd=${GIT_SSH_COMMAND:-$(git config core.sshCommand 2>/dev/null || echo ssh)}
+    GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND="$ssh_cmd -o BatchMode=yes -o ConnectTimeout=10" \
+      timeout 15 git fetch --quiet "$remote" "${default#"$remote"/}" </dev/null 2>/dev/null || true
+  fi
 
   behind=$(git rev-list --count "HEAD..$default" 2>/dev/null) || return 0
   [ "$behind" -gt 0 ] || return 0
@@ -30,10 +32,9 @@ warn_if_behind_default_branch() {
     [ "$track" = "[gone]" ]; then
     # Unrelated history, or a branch whose remote was deleted: starting again is the fix.
     echo "==> Warning: HEAD is not based on current $default (its history meets it only at the root, or its remote branch is gone). Start new work on a branch from $default."
-  elif git rev-parse --verify --quiet '@{upstream}' >/dev/null; then
-    echo "==> Note: this pushed branch is $behind commit(s) behind $default. Merge $default into it before publishing; never rebase a pushed branch."
   else
-    echo "==> Note: HEAD is $behind commit(s) behind $default. Rebase onto $default before publishing."
+    # Whether the branch was pushed can't be told reliably from here, so name both cases.
+    echo "==> Note: HEAD is $behind commit(s) behind $default. Before publishing, rebase onto it if this branch was never pushed; otherwise merge it in, and never force-push."
   fi
 }
 warn_if_behind_default_branch

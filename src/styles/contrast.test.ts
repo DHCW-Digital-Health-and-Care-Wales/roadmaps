@@ -8,8 +8,8 @@ import { readStylesheet } from "./testing/stylesheet"
  * (1.4.3), every control boundary and focus indicator 3:1 (1.4.11). `--border` is
  * decorative and exempt. `--primary` is a fill, never text: text on it is
  * `--primary-foreground`, and links use `--link`. A new semantic token adds its pairs here.
- * Opacity-modified colours (`bg-destructive/10`) are not tokens, so they are out of reach
- * until token enforcement turns each tint into one.
+ * Lint rejects opacity-modified colours (`bg-destructive/10`), so every tint the app
+ * shows is a token with its pairs here.
  */
 
 const TEXT_PAIRS: readonly (readonly [
@@ -21,7 +21,9 @@ const TEXT_PAIRS: readonly (readonly [
   ["card-foreground", "card"],
   ["popover-foreground", "popover"],
   ["primary-foreground", "primary"],
+  ["primary-foreground", "primary-hover"],
   ["secondary-foreground", "secondary"],
+  ["secondary-foreground", "secondary-hover"],
   ["muted-foreground", "muted"],
   ["muted-foreground", "background"],
   ["muted-foreground", "card"],
@@ -30,6 +32,7 @@ const TEXT_PAIRS: readonly (readonly [
   ["destructive", "background"],
   ["destructive", "card"],
   ["destructive", "muted"],
+  ["destructive", "popover"],
   ["link", "background"],
   ["link", "card"],
   ["link", "muted"],
@@ -40,6 +43,7 @@ const TEXT_PAIRS: readonly (readonly [
   ["status-info-fg", "status-info-bg"],
   ["status-success-fg", "status-success-bg"],
   ["status-warning-fg", "status-warning-bg"],
+  ["status-warning-fg", "card"],
   ["status-danger-fg", "status-danger-bg"],
   ["sidebar-foreground", "sidebar"],
   ["sidebar-primary-foreground", "sidebar-primary"],

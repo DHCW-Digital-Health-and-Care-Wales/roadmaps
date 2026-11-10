@@ -184,7 +184,8 @@ describe("RoadmapCard colour (S6)", () => {
     expect(own).toHaveTextContent("")
     const none = swatchOf(main.getByRole("link", { name: "Plain roadmap" }))
     expect(none.getAttribute("style")).toBeNull()
-    expect(none).toHaveClass("bg-muted-foreground/30")
+    // The placeholder is a theme token, not a tint (ADR-010).
+    expect(none).toHaveClass("bg-border")
   })
 
   it("never puts a colour that isn't #rrggbb into a style", async () => {

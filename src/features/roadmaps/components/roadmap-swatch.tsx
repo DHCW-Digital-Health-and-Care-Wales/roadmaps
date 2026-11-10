@@ -20,9 +20,11 @@ export function RoadmapSwatch({ colour }: RoadmapSwatchProps) {
     <span
       aria-hidden="true"
       className={cn(
-        "w-1.5 shrink-0 self-stretch rounded-full ring-1 ring-foreground/10 ring-inset",
-        !own && "bg-muted-foreground/30",
+        "w-1.5 shrink-0 self-stretch rounded-full",
+        // Without a colour of its own, the strip is a decorative neutral.
+        !own && "bg-border",
       )}
+      // eslint-disable-next-line no-restricted-syntax -- ADR-010's data-colour exception: the roadmap's own colour (ADR-009), checked above
       style={own ? { backgroundColor: colour } : undefined}
     />
   )

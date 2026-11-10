@@ -1,0 +1,129 @@
+// @lint-as src/features/fixture/fixture.tsx
+// Each line ending `// ✗ <text>` must be reported with a message containing <text>;
+// every other line must lint clean. Not app code: never imported or built.
+import { cva } from "class-variance-authority"
+import { cn } from "@/lib/utils"
+
+export const s1UnknownClasses = [
+  <div className="bg-red-500" />, // ✗ Unknown class detected: bg-red-500
+  <div className="text-sm" />, // ✗ Unknown class detected: text-sm
+  <div className="shadow-md" />, // ✗ Unknown class detected: shadow-md
+  <div className="bg-black/10" />, // ✗ Unknown class detected: bg-black/10
+  <div className="tracking-tight" />, // ✗ Unknown class detected: tracking-tight
+  <div className="font-mono" />, // ✗ Unknown class detected: font-mono
+  <div className="rounded-xs" />, // ✗ Unknown class detected: rounded-xs
+  <div className="text-white" />, // ✗ Unknown class detected: text-white
+  <div className="hover:bg-emerald-500" />, // ✗ Unknown class detected: hover:bg-emerald-500
+  <div className={cn("p-2", "bg-amber-500")} />, // ✗ Unknown class detected: bg-amber-500
+  <div className={cn({ "border-slate-200": true })} />, // ✗ Unknown class detected: border-slate-200
+  cva("bg-sky-500"), // ✗ Unknown class detected: bg-sky-500
+  cva("", { variants: { tone: { warm: "text-orange-700" } } }), // ✗ Unknown class detected: text-orange-700
+]
+
+export const stateClasses = {
+  idle: "bg-zinc-400", // ✗ Unknown class detected: bg-zinc-400
+  busy: "bg-status-warning-fg",
+}
+
+export const s1SemanticUtilities = [
+  <div className="bg-primary text-primary-foreground" />,
+  <div className="text-body text-status-warning-fg shadow-control" />,
+  <div className="font-heading text-heading-xl font-medium" />,
+  <div className="rounded-full rounded-md border-input bg-transparent" />,
+  <div className="shadow-popup ring-1 ring-border" />,
+]
+
+export const s1PrimaryAsText = [
+  <div className="text-primary" />, // ✗ text-primary uses the primary fill as text
+  <div className="hover:text-primary" />, // ✗ use text-link
+  <div className="[&>a:hover]:text-primary" />, // ✗ use text-link
+  <div className="decoration-primary" />, // ✗ use decoration-link
+  <div className="text-primary-foreground" />,
+]
+
+export const s2ArbitraryValues = [
+  <div className="text-[#fff]" />, // ✗ Arbitrary text value
+  <div className="text-[13px]" />, // ✗ Arbitrary text value
+  <div className="text-(length:--x)" />, // ✗ Arbitrary text value
+  <div className="text-(color:--x)" />, // ✗ Arbitrary text value
+  <div className="bg-[oklch(0.5_0.1_250)]" />, // ✗ Arbitrary bg value
+  <div className="bg-(--x)" />, // ✗ Arbitrary bg value
+  <div className="border-[color-mix(in_oklch,red,blue)]" />, // ✗ Arbitrary border value
+  <div className="ring-[#000]" />, // ✗ Arbitrary ring value
+  <div className="hover:fill-[red]" />, // ✗ Arbitrary fill value
+  <div className="[color:red]" />, // ✗ Arbitrary color
+  <div className="[background-color:red]" />, // ✗ Arbitrary background-color
+  <div className="[font-size:13px]" />, // ✗ Arbitrary font-size
+  <div className="[--primary:red]" />, // ✗ Custom properties are set in globals.css
+  <div className="leading-[1.1]" />, // ✗ leading-* sets type by hand
+  <div className="leading-6" />, // ✗ leading-* sets type by hand
+  <div className="tracking-[0.1em]" />, // ✗ tracking-* sets type by hand
+  <div className="rounded-[10px]" />, // ✗ Arbitrary radius
+  <div className="rounded-tl-(--x)" />, // ✗ Arbitrary radius
+  <div className="shadow-[0_1px_2px_black]" />, // ✗ Arbitrary shadow value
+  <div className="drop-shadow-(--x)" />, // ✗ Arbitrary drop-shadow value
+  <div className="font-[Comic_Sans_MS]" />, // ✗ Arbitrary font
+  <div className={cn("text-[13px]")} />, // ✗ Arbitrary text value
+  <div className="max-h-(--available-height) w-[37rem] min-w-[96px] grid-cols-[auto_1fr]" />,
+  <div className="bg-size-[56px_56px] transition-[border-color,box-shadow]" />,
+]
+
+export const s3DarkAndFocus = [
+  <div className="dark:bg-muted" />, // ✗ dark: colour override
+  <div className="dark:hover:border-border" />, // ✗ dark: colour override
+  <div className="[.dark_&]:bg-muted" />, // ✗ Theme selector in a class
+  <button className="focus-visible:ring-2" />, // ✗ Only a focus utility styles focus here
+  <button className="focus:outline-primary" />, // ✗ Only a focus utility styles focus here
+  <button className="focus-visible:bg-muted" />, // ✗ Only a focus utility styles focus here
+  <button className="has-focus-visible:border-input" />, // ✗ Only a focus utility styles focus here
+  <div className="group-focus-visible:ring-1" />, // ✗ Ad-hoc focus style
+  <button className="focus-visible:focus-fill" />,
+  <div className="has-focus-visible:focus-ring" />,
+  <a className="focus-visible:focus-link" />,
+  <a className="sr-only focus:not-sr-only focus:fixed focus:top-2.5 focus:focus-fill focus:px-3" />,
+  <div className="group-has-focus-visible:text-foreground dark:hidden" />,
+]
+
+export const s4BackDoors = [
+  <span style={{ color: "red" }} />, // ✗ Design property in an inline style
+  <span style={{ backgroundColor: "#fff" }} />, // ✗ Design property in an inline style
+  <span style={{ borderTopColor: "red" }} />, // ✗ Design property in an inline style
+  <span style={{ outlineColor: "red" }} />, // ✗ Design property in an inline style
+  <span style={{ fill: "red" }} />, // ✗ Design property in an inline style
+  <span style={{ stroke: "red" }} />, // ✗ Design property in an inline style
+  <span style={{ caretColor: "red" }} />, // ✗ Design property in an inline style
+  <span style={{ fontSize: 13 }} />, // ✗ Design property in an inline style
+  <span style={{ fontFamily: "serif" }} />, // ✗ Design property in an inline style
+  <span style={{ lineHeight: 1.2 }} />, // ✗ Design property in an inline style
+  <span style={{ letterSpacing: "1px" }} />, // ✗ Design property in an inline style
+  <span style={{ borderRadius: 4 }} />, // ✗ Design property in an inline style
+  <span style={{ borderBottomLeftRadius: 4 }} />, // ✗ Design property in an inline style
+  <span style={{ boxShadow: "none" }} />, // ✗ Design property in an inline style
+  <span style={{ textShadow: "none" }} />, // ✗ Design property in an inline style
+  <span style={{ "background-color": "red" }} />, // ✗ Design property in an inline style
+  <span style={{ "--x": "red" } as React.CSSProperties} />, // ✗ may only map onto a semantic token
+  <span style={{ "--normal-bg": "var(--popover)" } as React.CSSProperties} />,
+  <span style={{ position: "absolute", width: 10, transform: "none", gridColumn: 2 }} />,
+  <svg fill="#fff" />, // ✗ Literal colour in an SVG attribute
+  <path stroke="red" />, // ✗ Literal colour in an SVG attribute
+  <stop stopColor={"#000"} />, // ✗ Literal colour in an SVG attribute
+  <svg color={`#fff`} />, // ✗ Literal colour in an SVG attribute
+  <svg fill="none" stroke="currentColor" />,
+  <div className="bg-(--nhsw-link-colour)" />, // ✗ primitive outside globals.css
+  <span style={{ "--x": "var(--app-dark-link)" } as React.CSSProperties} />, // ✗ primitive outside globals.css
+]
+
+const layoutStyle: React.CSSProperties = { color: "red" } // ✗ Design property in an inline style
+export { layoutStyle }
+
+export const s8OpacityModifiers = [
+  <div className="bg-foreground/20" />, // ✗ Opacity modifier on a colour
+  <div className="text-muted-foreground/60" />, // ✗ Opacity modifier on a colour
+  <div className="ring-ring/50" />, // ✗ Opacity modifier on a colour
+  <div className="border-foreground/10" />, // ✗ Opacity modifier on a colour
+  <div className="bg-primary/[0.2]" />, // ✗ Opacity modifier on a colour
+  <div className="bg-primary/(--x)" />, // ✗ Opacity modifier on a colour
+  <div className="hover:bg-primary/80" />, // ✗ Opacity modifier on a colour
+  <div className={cn("aria-invalid:ring-destructive/20")} />, // ✗ Opacity modifier on a colour
+  <div className="group/button w-1/2 opacity-50 disabled:opacity-50" />,
+]

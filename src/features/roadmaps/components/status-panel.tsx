@@ -30,11 +30,11 @@ export function StatusPanel({
   role,
 }: StatusPanelProps) {
   return (
-    <Empty role={role} className="min-h-72 border bg-card/40 py-12">
+    <Empty role={role} className="min-h-72 border bg-card py-12">
       <EmptyHeader>
         <EmptyMedia
           aria-hidden="true"
-          className="size-12 rounded-xl border bg-muted/50 text-muted-foreground [&_svg]:size-5"
+          className="size-12 rounded-xl border bg-muted text-muted-foreground [&_svg]:size-5"
         >
           {icon}
         </EmptyMedia>

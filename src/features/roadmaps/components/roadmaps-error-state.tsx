@@ -110,7 +110,7 @@ export function RoadmapsErrorState({
       {/* `!`: the alert otherwise forces its icons to the text colour. */}
       <Icon
         aria-hidden="true"
-        className="mt-0.5 size-4 shrink-0 text-amber-600! dark:text-amber-400!"
+        className="mt-0.5 size-4 shrink-0 text-status-warning-fg!"
       />
       <div className="min-w-0 flex-1">
         <AlertTitle>{title}</AlertTitle>

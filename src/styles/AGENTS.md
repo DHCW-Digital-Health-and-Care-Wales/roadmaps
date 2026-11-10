@@ -10,16 +10,19 @@ loaded (ADR-010). Its header comment names the three tiers; `tokens.test.ts` and
   into the `@source` group of its file, with its reference as the trailing comment: the
   Sass variable (`$nhswales-link-colour`) or the block and property (`&--grey color`,
   `@mixin nhsw-button-base border-radius`). The drift test reads the value from there.
-- Give a new semantic token a `var()` of a primitive, in `:root` and, where it differs,
-  `.dark`, and add its text (4.5:1) or control and focus (3:1) pairs to
-  `contrast.test.ts`. Add an `--app-dark-*` primitive only when no DHCW colour passes on
-  navy.
+- Give a new semantic token, a tint or hover included (lint rejects opacity modifiers), a
+  `var()` of a primitive, in `:root` and, where it differs, `.dark`, and add its text
+  (4.5:1) or control and focus (3:1) pairs to `contrast.test.ts`. Add an `--app-dark-*`
+  primitive only when no DHCW colour passes on navy.
 - Apply a focus utility through a state variant (`focus-visible:focus-fill`,
-  `has-focus-visible:focus-ring`): it is the style alone. A `dark:` or `aria-*:`
-  background on the same element sorts after it and hides the fill, so a focusable
-  component carries none.
+  `has-focus-visible:focus-ring`): it is the style alone. An `aria-*:` background on the
+  same element sorts after it and hides the fill, so a focusable component carries none.
 - A new type, shadow or focus name also goes in `@/lib/utils`, so `cn` merges it as a size
-  rather than a colour.
+  rather than a colour. Never name a shadow after a colour token: `shadow-popover` already
+  sets the shadow's colour.
+- The design lint rules live in `build/design-token-lint.ts`; a changed rule changes a
+  line of `build/fixtures/design-token-lint/`, whose test proves each message. Their one
+  exception is `RoadmapSwatch`'s data colour, which `lint-exceptions.test.ts` lists.
 
 ## Upgrading the DHCW pin
 

@@ -1,6 +1,6 @@
 # STY-014: Off-brand styling fails the build
 
-- **Status**: Proposed — owner asked for lint rules enforcing semantic tokens, 2026-11-10
+- **Status**: Done — delivered in its PR, which awaits the owner's merge
 - **Type**: Refactor
 - **Area**: Features/UI + CI/CD
 - **Epic**: EPC-003-dhcw-design-alignment
@@ -180,3 +180,104 @@ Audited at `22c3336`.
 - **Tailwind 4.3.5 keywords.** Check which of `bg-transparent`, `bg-current` and
   `bg-inherit` survive `--color-*: initial`. If a component needs a scrim, register a
   semantic `--overlay`.
+
+## Delivery
+
+### Departures
+
+- **D2, the pin** (agent): `eslint-plugin-better-tailwindcss` is exactly `4.10.0`, not
+  the `4.11.0` of planning: pnpm's release-age policy resolved 4.10.0, as 4.11.0 was a
+  day old. Its peers accept ESLint 10.14 and Tailwind 4.3.5.
+- **Where the rules live** (agent): the design blocks are `designTokenRules` in
+  `build/design-token-lint.ts`, which `eslint.config.ts` spreads. Typed linting cannot
+  lint a fixture at a virtual `src/` path (the project service rejects a file it cannot
+  find), so the fixture test, `build/design-token-lint.test.ts`, runs those same blocks,
+  their `files` globs included, with the TypeScript parser alone. The fixtures sit in
+  `build/fixtures/design-token-lint/`, outside `src/`, and are left out of `eslint .`,
+  Prettier and `tsc`. Each names the path it is linted as and marks every line it
+  expects reported (`// ✗ <message>`); every other line must lint clean.
+- **S1, what the lockdown removes** (agent): `--color-*`, `--font-*`, `--text-*`,
+  `--leading-*`, `--tracking-*`, `--radius-*` and every shadow namespace. Font weights
+  stay. `bg-transparent`, `bg-current` and `bg-inherit` survive it (fixture). The numeric
+  `leading-6` survives too, so `leading-*` and `tracking-*` are restricted outright: line
+  height and letter-spacing come with the type tokens.
+- **S1, class maps** (agent): the plugin finds classes in `className`, `cn()`, `cva()`
+  and the other helpers, but not in a plain object. Variables named `…Classes` are
+  linted too, so the connection status's `dotColour` map is now `dotClasses`.
+- **S3, scope** (agent): everywhere, a ring, outline or shadow under any focus variant
+  (`focus-visible:ring-2`, `group-focus:outline-x`) is rejected. Outside `components/ui`,
+  an element's own focus state (`focus:`, `focus-visible:`, `focus-within:`,
+  `has-focus…:`) may set no colour, decoration, font, radius or opacity either, only a
+  focus utility; layout stays allowed, as the skip link moves on screen on focus.
+  `components/ui` may colour a highlighted menu item (`focus:bg-accent`), which Base UI
+  shows through focus, and a group's focus may restyle a child (the card's chevron).
+- **S3, `dark:`** (agent): `dark:` with a colour utility, and `.dark` in an arbitrary
+  variant, are rejected. `dark:hidden` stays allowed, for STY-016's logo variants.
+- **S2/S4, more back doors** (agent): an arbitrary custom property in a class
+  (`[--primary:red]`) is rejected. The inline-style rule also covers objects typed
+  `CSSProperties`, and a custom property in a style may only be a `var(--token)`, which
+  is what `ui/sonner.tsx`'s mapping onto Sonner's variables is.
+- **Tests are exempt** (agent): `*.test.*` and `src/test/` assert on class names and call
+  `cn` with Tailwind defaults on purpose; the fixture test proves they lint clean.
+- **S6, what counts** (agent): `lint-exceptions.test.ts` reports any inline directive that
+  can switch off a design rule (`eslint-disable`, `-line`, `-next-line`, an `/* eslint */`
+  rule override, or a blanket disable naming no rule), not only the swatch's form.
+- **S7, the migration** (agent), each a change the lockdown or a rule forces:
+  - tints became tokens: new `--primary-hover` (DHCW's button hover, `#32598a`; in dark
+    the two blues swap) and `--secondary-hover` (DHCW's grey tag tint; in dark DHCW's
+    mid blue) for the button and badge hovers; destructive tints became the danger status
+    tokens (inverted on hover); the swatch placeholder is `bg-border`; the start page's
+    error notice is the danger status; muted and card tints are the solid tokens; the
+    roadmap icon is DHCW's blue tag (`status-info`);
+  - shadows: DHCW's cards and buttons are flat, so the card, start-page chip, Connect
+    button, skeleton and brand mark lose their shadows; menus take `shadow-popup`, DHCW's
+    date picker dialog shadow (a new `--nhsw-*` primitive). It is not `shadow-popover`:
+    the theme already makes that the popover's shadow colour;
+  - the card's hover border is `border-input`, DHCW's clickable card hover (STY-013's
+    open `dark:hover` hand-off); the chevron's 60% tint went;
+  - the header is opaque `bg-background` with a full `border-border`, without blur;
+  - raw palette: the connection dots use the status inks, the stale-data alert's icon
+    `text-status-warning-fg`, the brand mark loses its ring;
+  - `components/ui`: bracket radii are `rounded-md` (the same 3.2px), `aria-invalid`
+    shows only the destructive border, the menu's popups are `ring-border`; each file's
+    header comment lists its deviations;
+  - `--brand` and the start page's glow went (D5), and with them its background grid,
+    an arbitrary colour gradient. STY-016's S5 already wants both gone.
+- **Formatting** (agent): `prettier-plugin-tailwindcss` sorts classes by the theme, and
+  sorts unknown ones first, so the lockdown reorders three class examples in two skill
+  documents (`shadcn/rules/styling.md`, `improve-codebase-architecture/HTML-REPORT.md`).
+- **S5, reading stylesheets** (agent): Vitest's `css.include` now lists every stylesheet
+  extension under `src/`, so a new one is read as text rather than emptied.
+- **Test order**: the rules and fixtures were written together, so the fixture test did
+  not go red first. Its discrimination was shown by mutation: removing the lockdown's
+  colour, text and shadow resets fails the ten unknown-class lines; an `@theme` colour
+  literal and stray `.css`/`.scss` stylesheets under `src/` fail the three stylesheet
+  tests; a second design-rule disable, and the swatch's reason without ADR-010, fail the
+  exception tests.
+
+### Contract for dependents
+
+- Tokens added: `--primary-hover`, `--secondary-hover` (`bg-primary-hover`,
+  `bg-secondary-hover`), `--popup-shadow` (`shadow-popup`, in `SHADOW_TOKENS`). `--brand`
+  and `bg-brand`/`text-brand` are gone.
+- Rules: `build/design-token-lint.ts`; a new rule or exception adds fixture lines.
+  `pnpm lint` reports a class with the token to use; inline styles are layout only.
+- A class map is a variable named `…Classes`, or lint can't see it.
+- `components/ui`: a regenerated shadcn file fails lint until its tints, shadows,
+  bracket radii and `dark:` classes become tokens; record each deviation in its header.
+- STY-015: the variants above are stopgaps, built on tokens, for its DHCW restyle; the
+  connection dots and the roadmap icon's tag tint are the pieces S2 replaces.
+- STY-016: the start page has no glow or grid left.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                 |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `build/design-token-lint.test.ts` (`feature.tsx`: `s1UnknownClasses`, `stateClasses`, `s1SemanticUtilities`, `s1PrimaryAsText`; `shared-component.tsx`) |
+| S2       | the same, `s2ArbitraryValues`, layout arbitrary values clean                                                                                            |
+| S3       | the same, `s3DarkAndFocus` and `shared-component.tsx`                                                                                                   |
+| S4       | the same, `s4BackDoors` and `layoutStyle`, layout inline styles clean                                                                                   |
+| S5       | `src/styles/stylesheets.test.ts`                                                                                                                        |
+| S6       | `src/styles/lint-exceptions.test.ts`; the swatch's directive in `roadmap-swatch.tsx`                                                                    |
+| S7       | `pnpm lint` clean over `src/`; unit, component, E2E (44, axe in both themes) and focus-indicator specs passing; before/after screenshots                |
+| S8       | the fixture test's `s8OpacityModifiers` (`/20`, `/[0.2]`, `/(--x)`); `contrast.test.ts` pairs for each new token                                        |

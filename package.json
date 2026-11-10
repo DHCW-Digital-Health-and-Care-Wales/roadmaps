@@ -55,6 +55,7 @@
     "dhcw-design-system": "github:DHCW-Digital-Health-and-Care-Wales/dhcw-design-system#v0.1.104",
     "eslint": "^10.14.0",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-better-tailwindcss": "4.10.0",
     "eslint-plugin-i18next": "^6.1.5",
     "eslint-plugin-jsx-a11y-x": "^0.2.0",
     "eslint-plugin-react-hooks": "^7.1.1",

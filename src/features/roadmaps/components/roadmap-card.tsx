@@ -50,7 +50,7 @@ export function RoadmapCard({ roadmap }: RoadmapCardProps) {
     .map(([part]) => `${id}-${part}`)
 
   return (
-    <div className="group relative flex h-full min-h-18 items-stretch gap-3.5 rounded-xl border bg-card p-4 text-card-foreground shadow-xs transition-[border-color,box-shadow] hover:border-foreground/20 hover:shadow-md has-focus-visible:focus-ring dark:hover:border-foreground/25">
+    <div className="group relative flex h-full min-h-18 items-stretch gap-3.5 rounded-xl border bg-card p-4 text-card-foreground transition-[border-color,box-shadow] hover:border-input has-focus-visible:focus-ring">
       <RoadmapSwatch colour={roadmap.colour} />
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         {/* The link is the title alone, stretched over the whole card, so its name is the
@@ -121,7 +121,7 @@ export function RoadmapCard({ roadmap }: RoadmapCardProps) {
       </div>
       <ChevronRightIcon
         aria-hidden="true"
-        className="mt-0.5 size-4 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground group-has-focus-visible:text-foreground"
+        className="mt-0.5 size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground group-has-focus-visible:text-foreground"
       />
     </div>
   )

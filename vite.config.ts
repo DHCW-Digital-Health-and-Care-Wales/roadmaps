@@ -46,10 +46,11 @@ export default defineConfig({
     ],
     setupFiles: ["./src/test/setup.ts"],
     // Vitest empties the stylesheets it doesn't process, `?raw` imports included; the
-    // token tests read the text of ours and of the pinned DHCW release's Sass.
+    // token tests read the text of every stylesheet in src/ and of the pinned DHCW
+    // release's Sass.
     css: {
       include: [
-        /src\/styles\/globals\.css/,
+        /\/src\/.+\.(?:css|scss|sass|less|styl|stylus|pcss|postcss)(?:\?|$)/,
         /node_modules\/dhcw-design-system\/src\/.+\.scss/,
       ],
     },

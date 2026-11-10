@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest"
 import type { AuthState } from "@/domain/auth/auth-client"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { RoadmapRepository } from "@/domain/roadmap/roadmap-repository"
+import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { AppError } from "@/lib/errors"
 import { renderWithProviders } from "@/test/render-with-providers"
 
@@ -16,9 +17,9 @@ const connected: AuthState = {
 }
 
 const roadmaps: Roadmap[] = [
-  { id: "0", name: "Platform" },
-  { id: "42", name: "Mobile app" },
-  { id: "7", name: "Data" },
+  createTestRoadmap("0", "Platform"),
+  createTestRoadmap("42", "Mobile app"),
+  createTestRoadmap("7", "Data"),
 ]
 
 type Outcome = readonly Roadmap[] | AppError | "pending"
@@ -86,7 +87,7 @@ describe("RoadmapsPage", () => {
     const name = `Quarterly ${"very ".repeat(30)}long roadmap`
     await renderWithProviders({
       authState: connected,
-      roadmaps: [{ id: "1", name }],
+      roadmaps: [createTestRoadmap("1", name)],
     })
 
     expect(await main().findByRole("link", { name })).toHaveAttribute(
@@ -123,6 +124,37 @@ describe("RoadmapsPage", () => {
       within(alert).queryByRole("button", { name: "Retry" }),
     ).not.toBeInTheDocument()
   })
+
+  it.each([
+    [
+      "en",
+      "Couldn't load your roadmaps",
+      "The list of roadmaps in the spreadsheet isn't in the expected format. Ask the spreadsheet owner to check it.",
+      "Retry",
+    ],
+    [
+      "cy",
+      "Doedd dim modd llwytho eich mapiau trywydd",
+      "Nid yw'r rhestr o fapiau trywydd yn y daenlen yn y fformat disgwyliedig. Gofynnwch i berchennog y daenlen ei gwirio.",
+      "Ceisio eto",
+    ],
+  ] as const)(
+    "asks for the list to be fixed when it can't be read (%s), without Retry",
+    async (language, title, description, retry) => {
+      await renderWithProviders({
+        authState: connected,
+        repository: scriptedRepository(new AppError("invalid-data")),
+        language,
+      })
+
+      const alert = await main().findByRole("alert")
+      expect(alert).toHaveTextContent(title)
+      expect(alert).toHaveTextContent(description)
+      expect(
+        within(alert).queryByRole("button", { name: retry }),
+      ).not.toBeInTheDocument()
+    },
+  )
 
   it("retries a retryable error on request", async () => {
     const user = userEvent.setup()
@@ -331,5 +363,24 @@ describe("RoadmapsPage", () => {
     ).toBeInTheDocument()
     expect(await main().findByText("2 fap trywydd")).toBeInTheDocument()
     expect(main().getByRole("button", { name: "Adnewyddu" })).toBeEnabled()
+  })
+
+  it("names each card by its Welsh title in Welsh, else its English one", async () => {
+    await renderWithProviders({
+      authState: connected,
+      roadmaps: [
+        createTestRoadmap("producta", "Product A roadmap", {
+          title: { en: "Product A roadmap", cy: "Trywydd Cynnyrch A" },
+        }),
+        createTestRoadmap("productb", "Product B roadmap"),
+      ],
+      language: "cy",
+    })
+
+    expect(await main().findByText("2 fap trywydd")).toBeInTheDocument()
+    expect(cardNames()).toEqual(["Trywydd Cynnyrch A", "Product B roadmap"])
+    expect(
+      main().getByRole("link", { name: "Trywydd Cynnyrch A" }),
+    ).toHaveAttribute("title", "Trywydd Cynnyrch A")
   })
 })

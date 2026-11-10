@@ -94,7 +94,8 @@ flowchart TD
 | `src/components/`, `src/lib/`, `src/i18n/` | shadcn/ui, app shell, theme; small utilities; i18n setup and catalogues    | —                                |
 | `build/`                                   | build-time helpers (the GitHub Pages base path)                            | —                                |
 
-**The repository abstraction.** The UI only ever sees `Roadmap { id, name }` and
+**The repository abstraction.** The UI only ever sees `Roadmap` (its id, its title in
+English and Welsh, and the rest of what the roadmap list holds about it; ADR-009) and
 `AppError` (a transport-neutral error with a `kind` such as `forbidden` or
 `rate-limited`). It gets data through one port:
 

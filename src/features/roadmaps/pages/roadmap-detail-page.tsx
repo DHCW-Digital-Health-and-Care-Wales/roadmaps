@@ -4,8 +4,10 @@ import { useTranslation } from "react-i18next"
 
 import { buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { localise } from "@/domain/roadmap/localised-text"
 import { AuthButton } from "@/features/auth/components/auth-button"
 import { useAuth } from "@/features/auth/use-auth"
+import { useLanguage } from "@/i18n"
 import { cn } from "@/lib/utils"
 
 import { RoadmapIcon } from "../components/roadmap-icon"
@@ -19,7 +21,7 @@ export interface RoadmapDetailPageProps {
 }
 
 /**
- * `/roadmaps/$roadmapId`: the roadmap's name (details come later), found in the cached
+ * `/roadmaps/$roadmapId`: the roadmap's title (details come later), found in the cached
  * or freshly loaded list. Handles not connected, loading, failure and unknown ids.
  */
 export function RoadmapDetailPage({ roadmapId }: RoadmapDetailPageProps) {
@@ -50,6 +52,7 @@ export function RoadmapDetailPage({ roadmapId }: RoadmapDetailPageProps) {
 
 function RoadmapDetail({ roadmapId }: RoadmapDetailPageProps) {
   const { t } = useTranslation()
+  const language = useLanguage()
   const connected = useAuth().state.status === "connected"
   const { data: roadmap, error, isFetching, refetch } = useRoadmap(roadmapId)
   const problem = useRoadmapsProblem(error)
@@ -73,7 +76,7 @@ function RoadmapDetail({ roadmapId }: RoadmapDetailPageProps) {
           <RoadmapIcon className="size-12 rounded-xl [&_svg]:size-6" />
           <div className="min-w-0 flex-1 pt-0.5">
             <h1 className="text-xl font-semibold tracking-tight text-pretty wrap-break-word sm:text-2xl">
-              {roadmap.name}
+              {localise(roadmap.title, language)}
             </h1>
             <p className="mt-1.5 text-muted-foreground">
               {t("roadmaps.detail.comingSoon")}

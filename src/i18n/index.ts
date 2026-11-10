@@ -7,3 +7,4 @@ export {
   supportedLanguages,
   type Language,
 } from "./languages"
+export { useLanguage } from "./use-language"

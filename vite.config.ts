@@ -39,7 +39,11 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     // Unit and component tests only; Playwright runs tests/e2e.
-    include: ["src/**/*.test.{ts,tsx}", "build/**/*.test.ts"],
+    include: [
+      "src/**/*.test.{ts,tsx}",
+      "build/**/*.test.ts",
+      "tests/fixtures/**/*.test.ts",
+    ],
     setupFiles: ["./src/test/setup.ts"],
     // Hermetic placeholder config so modules importing `@/app/config` load in tests.
     env: {

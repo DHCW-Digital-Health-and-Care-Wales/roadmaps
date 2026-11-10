@@ -29,5 +29,5 @@
     "noFallthroughCasesInSwitch": true,
     "erasableSyntaxOnly": true
   },
-  "include": ["src"]
+  "include": ["src", "tests/fixtures"]
 }

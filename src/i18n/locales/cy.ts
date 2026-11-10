@@ -103,6 +103,8 @@ export const cy = {
     network:
       "Methu cysylltu. Gwiriwch eich cysylltiad â'r rhyngrwyd a rhowch gynnig arall arni.",
     "invalid-response": "Roedd data'r mapiau trywydd mewn fformat annisgwyl.",
+    "invalid-data":
+      "Nid yw'r rhestr o fapiau trywydd yn y daenlen yn y fformat disgwyliedig. Gofynnwch i berchennog y daenlen ei gwirio.",
     unknown: "Aeth rhywbeth o'i le. Rhowch gynnig arall arni.",
   },
   notFound: {

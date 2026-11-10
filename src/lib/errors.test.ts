@@ -21,6 +21,7 @@ describe("AppError", () => {
     ["rate-limited", true],
     ["network", true],
     ["invalid-response", false],
+    ["invalid-data", false],
     ["unknown", false],
   ])("defaults %s to retryable=%s", (kind, retryable) => {
     expect(new AppError(kind).retryable).toBe(retryable)

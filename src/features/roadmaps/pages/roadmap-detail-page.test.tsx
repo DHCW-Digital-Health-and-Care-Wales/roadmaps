@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest"
 import type { AuthState } from "@/domain/auth/auth-client"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { RoadmapRepository } from "@/domain/roadmap/roadmap-repository"
+import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { AppError } from "@/lib/errors"
 import { renderWithProviders } from "@/test/render-with-providers"
 
@@ -16,8 +17,8 @@ const connected: AuthState = {
 }
 
 const roadmaps: Roadmap[] = [
-  { id: "0", name: "Platform" },
-  { id: "42", name: "Mobile app" },
+  createTestRoadmap("0", "Platform"),
+  createTestRoadmap("42", "Mobile app"),
 ]
 
 function main() {
@@ -212,6 +213,26 @@ describe("RoadmapDetailPage", () => {
     expect(
       await main().findByRole("heading", {
         name: "Heb ddod o hyd i'r map trywydd",
+      }),
+    ).toBeInTheDocument()
+  })
+
+  it("names the roadmap by its Welsh title in Welsh", async () => {
+    await renderWithProviders({
+      path: "/roadmaps/producta",
+      authState: connected,
+      roadmaps: [
+        createTestRoadmap("producta", "Product A roadmap", {
+          title: { en: "Product A roadmap", cy: "Trywydd Cynnyrch A" },
+        }),
+      ],
+      language: "cy",
+    })
+
+    expect(
+      await main().findByRole("heading", {
+        level: 1,
+        name: "Trywydd Cynnyrch A",
       }),
     ).toBeInTheDocument()
   })

@@ -16,7 +16,10 @@ export interface GoogleSheetsRoadmapRepositoryOptions {
   spreadsheetId: string
 }
 
-/** Each visible worksheet of one spreadsheet is a roadmap. */
+/**
+ * Each visible worksheet of one spreadsheet is a roadmap, titled by its tab and with
+ * nothing else known about it, until STY-011 reads the roadmap index instead (ADR-009).
+ */
 export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
   readonly #client: SheetsClient
   readonly #spreadsheetId: string
@@ -34,6 +37,22 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
     return parseSpreadsheetMetadata(json)
       .sheets.map(({ properties }) => properties)
       .filter(({ hidden }) => hidden !== true)
-      .map(({ sheetId, title }) => ({ id: String(sheetId), name: title }))
+      .map(({ sheetId, title }) => worksheetRoadmap(String(sheetId), title))
+  }
+}
+
+function worksheetRoadmap(id: string, title: string): Roadmap {
+  return {
+    id,
+    title: { en: title, cy: "" },
+    published: true,
+    category: null,
+    family: null,
+    statusLabel: null,
+    productLead: null,
+    lastUpdated: null,
+    colour: null,
+    vision: null,
+    serviceDescription: null,
   }
 }

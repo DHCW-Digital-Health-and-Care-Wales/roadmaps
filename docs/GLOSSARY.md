@@ -181,8 +181,10 @@ refetched after it is renewed.
 
 **Problem kind**:
 The category of a failure to read roadmaps (unauthenticated, forbidden, not found, rate
-limited, network, invalid response, unknown), from which the interface chooses its
-message and whether to offer Retry.
+limited, network, invalid response, invalid data, unknown), from which the interface
+chooses its message and whether to offer Retry. _Invalid data_ means the data source
+answered but its content is not in the agreed format, so the remedy is to fix it, not to
+retry (ADR-009).
 _Avoid_: Error code, status
 
 **Retryable problem**:

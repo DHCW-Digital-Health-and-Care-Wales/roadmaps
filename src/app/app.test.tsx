@@ -5,6 +5,7 @@ import { act } from "react"
 import { afterEach, describe, expect, it } from "vitest"
 
 import type { AuthState } from "@/domain/auth/auth-client"
+import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { authScopedQueryKey } from "@/features/auth/auth-scoped-queries"
 import { renderWithProviders } from "@/test/render-with-providers"
 
@@ -276,7 +277,7 @@ describe("routes", () => {
     const { router } = await renderWithProviders({
       path: "/roadmaps/7",
       authState: connected,
-      roadmaps: [{ id: "7", name: "Platform" }],
+      roadmaps: [createTestRoadmap("7", "Platform")],
     })
 
     expect(router.state.location.pathname).toBe("/roadmaps/7")
@@ -300,7 +301,9 @@ describe("routes", () => {
 
   it("keeps focus in the content when Connect gives way to the roadmaps", async () => {
     const user = userEvent.setup()
-    await renderWithProviders({ roadmaps: [{ id: "7", name: "Platform" }] })
+    await renderWithProviders({
+      roadmaps: [createTestRoadmap("7", "Platform")],
+    })
     main().getByRole("button", { name: "Connect Google" }).focus()
 
     await user.keyboard("{Enter}")
@@ -315,7 +318,9 @@ describe("routes", () => {
 
   it("leaves focus alone when the focused control stays", async () => {
     const user = userEvent.setup()
-    await renderWithProviders({ roadmaps: [{ id: "7", name: "Platform" }] })
+    await renderWithProviders({
+      roadmaps: [createTestRoadmap("7", "Platform")],
+    })
     const headerConnect = header().getByRole("button", {
       name: "Connect Google",
     })
@@ -335,7 +340,7 @@ describe("routes", () => {
     const user = userEvent.setup()
     await renderWithProviders({
       authState: connected,
-      roadmaps: [{ id: "7", name: "Platform" }],
+      roadmaps: [createTestRoadmap("7", "Platform")],
     })
     expect(screen.getByRole("main")).not.toHaveFocus()
 

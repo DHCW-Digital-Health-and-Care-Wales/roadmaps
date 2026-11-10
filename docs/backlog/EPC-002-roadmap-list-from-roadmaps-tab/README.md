@@ -1,7 +1,7 @@
 # EPC-002: Roadmap list from the roadmap index — list the roadmaps the public site lists, not the worksheets
 
-- **Status**: Active — owner decisions recorded 2026-11-10; no story started
-- **Progress**: 0 of 3 terminal; next selectable: STY-010; blocked on: nothing
+- **Status**: Active — owner decisions recorded 2026-11-10; STY-010 delivered, awaiting merge
+- **Progress**: 1 of 3 terminal; next selectable: STY-011 once STY-010's PR merges; blocked on: that merge
 - **Binding ADRs**: ADR-009, ADR-002, ADR-008
 
 ## Summary
@@ -80,11 +80,11 @@ cell contents. Nothing shows them in this epic.
 
 ## Stories
 
-| ID      | Story                                                                                            | Area                    | Depends on | State |
-| ------- | ------------------------------------------------------------------------------------------------ | ----------------------- | ---------- | ----- |
-| STY-010 | [A roadmap carries its list information](STY-010-roadmap-domain-model-and-list-parser.md)        | Domain + Infrastructure | —          |       |
-| STY-011 | [The list shows the roadmaps the public site lists](STY-011-read-roadmap-list-from-first-tab.md) | Infrastructure + E2E    | STY-010    |       |
-| STY-012 | [Roadmap cards show each roadmap's information](STY-012-roadmap-cards-show-information.md)       | Features/UI + i18n      | STY-011    |       |
+| ID      | Story                                                                                                                                        | Area                    | Depends on | State                |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- | ---------- | -------------------- |
+| STY-010 | [A roadmap carries its list information](../_archive/EPC-002-roadmap-list-from-roadmaps-tab/STY-010-roadmap-domain-model-and-list-parser.md) | Domain + Infrastructure | —          | ✅ (PR awaits merge) |
+| STY-011 | [The list shows the roadmaps the public site lists](STY-011-read-roadmap-list-from-first-tab.md)                                             | Infrastructure + E2E    | STY-010    |                      |
+| STY-012 | [Roadmap cards show each roadmap's information](STY-012-roadmap-cards-show-information.md)                                                   | Features/UI + i18n      | STY-011    |                      |
 
 ## Sequencing
 

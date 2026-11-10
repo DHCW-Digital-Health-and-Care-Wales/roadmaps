@@ -1,5 +1,6 @@
 import {
   FileQuestionIcon,
+  FileWarningIcon,
   FileXIcon,
   HourglassIcon,
   KeyRoundIcon,
@@ -26,6 +27,7 @@ const icons = {
   "rate-limited": HourglassIcon,
   network: WifiOffIcon,
   "invalid-response": FileXIcon,
+  "invalid-data": FileWarningIcon,
   unknown: TriangleAlertIcon,
 } satisfies Record<AppErrorKind, LucideIcon>
 

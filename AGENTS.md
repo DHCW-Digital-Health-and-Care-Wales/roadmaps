@@ -579,3 +579,26 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
 - **EPC-002 planning (orchestrator)** — `docs/analysis/roadmaps-tab-format.md`, ADR-009
   and EPC-002 (STY-010–012): roadmaps come from the first worksheet's rows, as on DHCW's
   public site. Tests use only the example data in `tests/fixtures/sheets/` (its README) or inline rows.
+- **STY-010 Roadmap domain model and roadmap index parser** — ADR-009's `Roadmap`
+  (`title: LocalisedText`, `published`, `category`, `family`, `statusLabel`,
+  `productLead`, `lastUpdated`, `colour`, `vision`, `serviceDescription`) replaces
+  `{ id, name }`; a pure parser reads the roadmap index's rows; new `AppError` kind
+  `invalid-data` with en/cy copy. Nothing visible changes: the repository still lists
+  worksheets (interim, removed by STY-011).
+  - Where things live: `localise`/`ContentLanguage` (`domain/roadmap/localised-text.ts`),
+    `ROADMAP_CATEGORIES` (`domain/roadmap/roadmap-category.ts`), `parseRoadmapIndex`
+    (`infrastructure/google-sheets/roadmap-index-parser.ts`, not in the barrel),
+    `createTestRoadmap(id, title, overrides?)` (`domain/roadmap/testing/test-roadmap.ts`),
+    `useLanguage()` (`@/i18n`), `parseCsv` (`tests/fixtures/sheets/parse-csv.ts`). The
+    record's Delivery lists the parser's contract and problem codes.
+  - Decisions: problems are `{ code, row, column, value }` with no prose, recorded only
+    for rows kept; `no-published-roadmap` is not recorded when `Enabled` is missing;
+    the public site's translation-quality warnings are not ported.
+  - Gotchas:
+    - Components show roadmap text with `localise(text, useLanguage())`, never
+      `text.en`, so Welsh appears when there is one.
+    - `tests/fixtures` is in `tsconfig.app.json` and Vitest's `include`, so its helpers
+      are type-checked and linted with `src`. Vitest reads a fixture CSV with
+      `import csv from "…/Roadmaps.csv?raw"`; Node code (the E2E fake) reads it from disk.
+    - The parser expects `rows[0]` to be spreadsheet row 1; read the whole tab by title,
+      not a range starting lower.

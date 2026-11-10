@@ -63,7 +63,40 @@ user-facing strings in code that already exists are moved into the catalogues.
 
 ## Acceptance criteria
 
-- [ ] No user-facing literal strings outside `src/i18n/locales/`, except
-      brand-independent symbols.
-- [ ] Missing a Welsh key fails `pnpm typecheck` (verify, then revert).
-- [ ] All checks green.
+- [x] No user-facing literal strings outside `src/i18n/locales/`, except
+      brand-independent symbols. Deliberate exceptions: the endonyms in
+      `src/i18n/languages.ts` (shown untranslated by design), and the static `<title>` and
+      meta description in `index.html` (the title is replaced at runtime by
+      `syncDocumentLanguage`). `i18next/no-literal-string` enforces this for JSX.
+- [x] Missing a Welsh key fails `pnpm typecheck` (verified, then reverted: a missing key
+      gives TS2741, an extra key TS2353, and a missing Welsh plural form such as
+      `count_two` TS2741).
+- [x] All checks green.
+
+## Implementation notes
+
+- i18next 27.0.1 and react-i18next 18.0.1 (React 19 supported: peer `react >= 18`). v27
+  defaults matter: `fallbackLng` is set explicitly to `en`, and `strictInterpolationChecks`
+  is on, so `t("roadmaps.count")` without `count` is a type error.
+- No `initReactI18next` and no `i18next-browser-languagedetector`: the instance reaches
+  React through `I18nextProvider` only.
+- `LanguageSwitcher` lives in `src/components/layout/` (an app-shell piece shared across
+  features; `src/i18n/` holds no React components).
+- Lint: `eslint-plugin-i18next` 6.1.5 works cleanly with the flat config. Mode `jsx-only`
+  with an attribute allowlist flags JSX text, `{"literal"}` children and literal
+  `aria-label`/`aria-description`/`title`/`alt`/`placeholder`/`label`, while ignoring
+  `className`, `role`, `lang`, `data-*` and so on. Tests and `components/ui` are exempt.
+- Welsh uses "map trywydd" for roadmap and "taenlen" for spreadsheet. It is
+  machine-assisted and needs review by a fluent speaker before launch (ADR-0008).
+
+## Review notes
+
+Sol review (Codex `gpt-6.1-sol`, high) of the working tree; both findings fixed:
+
+1. **P2 — re-selecting the active language did not persist the choice.** If Welsh came
+   from the browser, choosing "Cymraeg" returned early without storing it. Fixed: each
+   radio item's `onClick` stores the choice and only calls `changeLanguage` when it
+   differs (Base UI's `onValueChange` does not fire for the already-checked item). Tests
+   added for re-selection and for keyboard operation.
+2. **P3 — switcher tests left the Welsh document title behind.** Fixed: teardown restores
+   the original title and `<html lang>`, stops syncing and clears `localStorage`.

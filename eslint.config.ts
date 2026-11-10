@@ -1,6 +1,7 @@
 import js from "@eslint/js"
 import prettier from "eslint-config-prettier/flat"
 import jsxA11y from "eslint-plugin-jsx-a11y-x"
+import i18next from "eslint-plugin-i18next"
 import reactHooks from "eslint-plugin-react-hooks"
 import { reactRefresh } from "eslint-plugin-react-refresh"
 import { defineConfig, globalIgnores } from "eslint/config"
@@ -57,6 +58,26 @@ export default defineConfig(
     ],
     languageOptions: {
       globals: globals.browser,
+    },
+  },
+  {
+    // All copy comes from the i18n catalogues (ADR-0008): no literal JSX text or literal
+    // user-facing attributes. Tests and generated shadcn components are exempt.
+    files: ["src/**/*.tsx"],
+    ignores: ["src/**/*.test.tsx", "src/test/**", "src/components/ui/**"],
+    plugins: { i18next },
+    rules: {
+      "i18next/no-literal-string": [
+        "error",
+        {
+          mode: "jsx-only",
+          "jsx-attributes": {
+            include: [
+              "^(aria-label|aria-description|aria-roledescription|aria-valuetext|title|alt|placeholder|label)$",
+            ],
+          },
+        },
+      ],
     },
   },
   {

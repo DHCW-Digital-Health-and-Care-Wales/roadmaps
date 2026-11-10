@@ -65,6 +65,8 @@ pnpm build && pnpm preview
 - All user-facing copy (text, aria-labels, toasts, titles) goes through i18n (`t()`), in
   English (`en`) and Welsh (`cy`) — see ADR-0008. A new key needs both languages; the type
   system enforces parity. Copy is sentence case. Domain/infrastructure emit codes, not copy.
+  `i18next/no-literal-string` rejects literal JSX text and literal `aria-label`/`title`/
+  `alt`/`placeholder` attributes outside tests and `components/ui`.
 
 ## Workflow for delivery agents
 
@@ -258,3 +260,48 @@ onDisconnect: () => queryClient.removeQueries({ queryKey: authScopedQueryKey }) 
     - Tests: `vi.waitFor` advances fake timers, so pin the clock afterwards with
       `vi.setSystemTime`. The loader's memo is module state, so its tests use
       `vi.resetModules()` and a dynamic import.
+- **S04 i18n foundation** — i18next 27.0.1 + react-i18next 18.0.1, English and Welsh
+  catalogues, `LanguageSwitcher`, document sync, lint rule. ADR-0008 amended (switcher
+  location, `syncDocumentLanguage`, `Catalogue` type, lint config).
+  - Where things live (`@/i18n` barrel): `createI18n({ language? })` (fresh instance, no
+    globals), `syncDocumentLanguage(i18n, doc?)` (sets `<html lang>` + `document.title` now
+    and on every change; returns a stop function), `resolveLanguage()` (stored → browser
+    `cy-*` → `en`), `storeLanguagePreference(lang)` (key `roadmaps.language`),
+    `supportedLanguages`, `Language`, `isLanguage`, `languageEndonyms`. Catalogues:
+    `src/i18n/locales/en.ts` (source of truth) and `cy.ts` (typed with `satisfies Catalogue<…>`). `t()` keys are typed by `src/i18n/i18next.d.ts`.
+  - Adding a key: add it to `en.ts`, then `cy.ts` (typecheck fails until you do). Plural
+    keys: `foo_one`/`foo_other` (optional `foo_zero`) in English; Welsh needs all six of
+    `foo_zero/one/two/few/many/other`. Call `t("foo", { count })`; `count` is required by
+    the types. Use `{{count, number}}` for locale number formatting.
+  - Seeded keys for S05/S06: `common.{appName,loading,retry}`, `layout.{skipToContent,home}`,
+    `landing.{tagline,source,accessNote}`, `auth.{connect,reconnect,disconnect}`,
+    `auth.status.<AuthState status>`, `auth.errors.<AuthErrorCode>`,
+    `auth.notifications.{connected,disconnected}` (toasts), `roadmaps.{title,description}`,
+    `roadmaps.{refresh,loading,count,loadFailed}`, `roadmaps.empty.{title,description}`,
+    `roadmaps.detail.{comingSoon,back,connectPrompt,notFoundTitle,notFoundDescription}`,
+    `errors.<AppErrorKind>`, `notFound.{title,description,home}`, `theme.toggle`,
+    `language.label`. Map codes with template keys, e.g. ``t(`errors.${error.kind}`)`` and
+    ``t(`auth.status.${state.status}`)`` — `satisfies Record<…>` in `en.ts` makes a new kind
+    or status without copy a type error.
+  - S05 wiring: move `const i18n = createI18n({ language: resolveLanguage() })` and
+    `syncDocumentLanguage(i18n)` from `src/app/main.tsx` into `app/composition.ts`; move
+    `<I18nextProvider i18n={i18n}>` into `app/providers.tsx` (outermost, so toasts and the
+    router see it). Move `<LanguageSwitcher />` (`@/components/layout/language-switcher`)
+    from the placeholder `src/routes/index.tsx` into the header next to the theme toggle.
+    If routes later set per-page titles, change `syncDocumentLanguage`, which currently
+    always sets the app name.
+  - Tests: `renderWithI18n(ui, { language? })` in `src/test/render-with-i18n.tsx` returns
+    RTL's result plus `i18n` (fresh English instance by default; pass `language: "cy"`).
+    S05's `render-with-providers` should build on `createI18n` the same way. Tests that
+    call `syncDocumentLanguage` or switch language must stop syncing and restore
+    `document.title`, `<html lang>` and `localStorage` in teardown.
+  - Gotchas:
+    - Welsh is machine-assisted ("map trywydd" = roadmap, "taenlen" = spreadsheet); a
+      fluent speaker must review it before launch. S08's README should track that.
+    - The switcher selects via each radio item's `onClick`, not the group's
+      `onValueChange`, because Base UI does not fire that for the checked item and
+      re-selecting must still persist the choice.
+    - Its accessible name is "Language English": a `sr-only` label, a `{" "}` text node,
+      then the endonym (`max-sm:sr-only` on mobile, so the name never changes). Keep the
+      space node; without it the name is "LanguageEnglish".
+    - `.ts` files are not covered by the literal-string lint rule; keep copy out of them.

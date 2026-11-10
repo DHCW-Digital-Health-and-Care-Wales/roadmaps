@@ -105,7 +105,8 @@ actionlint          # after editing .github/workflows (not a dependency; install
   delegating any work.
 - Before a PR is raised, every change gets two independent correctness reviews
   (`code-review`: Opus and Sol, Codex `gpt-6.1-sol`) and one quality review
-  (`quality-review`: Sonnet), in the rounds `delegation.md` sets.
+  (`quality-review`: Sonnet), in the rounds `delegation.md` sets. A docs-only PR takes
+  the correctness reviews alone; a report-only run-summary PR takes none.
 - A PR is raised and left for the owner; babysit or merge it only when asked.
 - Any change to visible UI publishes before/after screenshots
   (`references/screenshots.md`).
@@ -538,7 +539,8 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
   ux-prototypes, shadcn, playwright-cli, writing-for-agents, grilling, codebase-design,
   improve-codebase-architecture), `.claude/agents/`, a SessionStart hook, the PR template,
   `docs/GLOSSARY.md`, `docs/AGENTS.md`, backlog templates and the epic/archive layout.
-  - Decisions: three reviewers on every PR (Opus + Sol correctness, Sonnet quality); PRs
+  - Decisions: Opus + Sol correctness and Sonnet quality reviews on every PR (docs-only:
+    correctness alone; report-only: none); PRs
     are left open, with babysitting and merging as separate opt-ins; guidance names
     runtime capabilities, never tools; bootstrap stories archived unchanged.
   - Gotchas:

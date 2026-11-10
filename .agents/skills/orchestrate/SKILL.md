@@ -270,7 +270,7 @@ valid.
 When justified, create one separate PR from the latest default branch using
 an available authorized checkout/branch. Preserve any open primary PR and
 follow the retro skill's independence rules; defer if safe separation is
-unavailable. Run applicable checks, review it in the three lanes
+unavailable. Run applicable checks, review it in the lanes
 `delegation.md` sets, link the PR where the runtime can, and leave it for the
 owner: orchestration retrospective PRs are not babysat or merged. At
 intermediate handoffs, keep the run summary as a checkpoint in the shared

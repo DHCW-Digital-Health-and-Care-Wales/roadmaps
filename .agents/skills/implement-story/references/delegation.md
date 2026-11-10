@@ -64,7 +64,7 @@ the Worker contract.
 
 ## Dispatch and completion
 
-Start the three reviewers of a round together so they run concurrently: a
+Start the reviewers of a round together so they run concurrently: a
 reviewer on your own provider through the runtime's native subagent tool with
 the model set explicitly (Opus, Sonnet), and one on another provider (Sol, or
 Opus and Sonnet when you run on Codex) through a cross-provider delegation tool.
@@ -116,17 +116,16 @@ pass.
 
 - **Lanes**: _correctness_, with two reviewers (Opus and Sol), each following
   `code-review`; _quality_, with one reviewer (Sonnet) following
-  `quality-review`. Each reviewer is its own track for re-checks. Every PR
-  the workflow raises takes all three reviewers, docs-only and retro PRs
-  included. A docs-only PR, one that changes only Markdown under `docs/`,
-  `.claude/` or an `AGENTS.md`/`CLAUDE.md` (an agent definition under
-  `.claude/agents/` is config, not docs), adds to each brief the record sweep
-  (`docs/AGENTS.md`) and, for an instruction file,
-  `.agents/skills/writing-for-agents/SKILL.md` and
-  `docs/operations/authoring-agent-instructions.md`, whose recur bar and
+  `quality-review`. Each reviewer is its own track for re-checks. A docs-only
+  PR, one that changes only Markdown under `docs/` or `.agents/skills/` or an
+  `AGENTS.md`/`CLAUDE.md` (an agent definition under `.claude/agents/` or a
+  skill's script is config or code, not docs), takes the correctness lane
+  alone (Opus and Sol). Its briefs add the record sweep (`docs/AGENTS.md`)
+  and, for an instruction file, `.agents/skills/writing-for-agents/SKILL.md`
+  and `docs/operations/authoring-agent-instructions.md`, whose recur bar and
   replace-or-sharpen rule the reviewers apply to every added line. Its cap is
   round 1 and one re-check per reviewer, with no final fresh pass.
-- **Round 1**: the three reviewers, fresh and concurrent, briefed as the
+- **Round 1**: the PR's reviewers, fresh and concurrent, briefed as the
   Worker contract sets.
 - **Round 2, the re-check**: only for a reviewer whose round 1 found anything
   above P3 (correctness) or a 🔴 or 🟡 (quality); a CI finding that arrives

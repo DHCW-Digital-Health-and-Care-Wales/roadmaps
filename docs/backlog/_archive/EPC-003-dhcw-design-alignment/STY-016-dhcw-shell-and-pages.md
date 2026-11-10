@@ -165,17 +165,18 @@ Audited at `22c3336`.
   link's accessible name, the document title and the start page's `h1` keep the full
   "DHCW Roadmap Editor" / "Golygydd Mapiau Trywydd IGDC", so the name always includes the
   service name. The footer's "dev" is the spec's word for a local build.
+- **D8** (owner, 2026-11-10, at PR review): keep DHCW's bilingual lockup (`nhsw-logo.svg`)
+  as the full logo, NHS Wales mark included. ADR-010's "No NHS branding" is amended to
+  allow the mark inside DHCW's own logo only.
 
 ## Delivery
 
 ### Departures
 
-- **S1, which logo is "full"** (agent, for the owner to confirm): the record names
+- **S1, which logo is "full"** (agent; settled by the owner as D8): the record names
   `nhsw-logo.svg` as the full logo. It is DHCW's bilingual lockup, which carries the "GIG
-  Cymru NHS Wales" mark beside the DHCW wordmark, while ADR-010 says "no NHS branding".
-  The owner's permission was for "the DHCW logo", so the record's file is used unchanged;
-  if the owner wants a lockup without the NHS Wales mark, DHCW's release has none, and
-  the header would use the icon alone.
+  Cymru NHS Wales" mark beside the DHCW wordmark, while ADR-010 said "no NHS branding".
+  The record's file is used unchanged, and the owner kept it at review.
 - **S1, the picture** (agent): the logo is one `<picture>` (the full logo `source` from
   40rem, the icon as the `img`), so assistive technology meets one image named for the
   organisation, not two. The home link keeps `aria-label` "DHCW Roadmap Editor home", which

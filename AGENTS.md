@@ -745,7 +745,8 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
     `layout.phase.*`, `layout.footer.*`. `textLinkClasses` is the one text-link style. The Welsh
     is machine-assisted and needs a fluent review.
   - Decisions: the full logo (`nhsw-logo.svg`, the record's file) is DHCW's bilingual lockup and
-    includes the NHS Wales mark, which ADR-010 says to leave out: the owner confirms at review.
+    includes the NHS Wales mark; the owner kept it (D8), and ADR-010 now allows the mark inside
+    DHCW's own logo only.
     The home link keeps its full accessible name; its focus is the ring, as a yellow fill would
     hide the white logo. The favicon is the white icon on a navy tile.
   - Gotchas:

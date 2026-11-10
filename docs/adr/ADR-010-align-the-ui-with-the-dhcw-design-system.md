@@ -4,7 +4,7 @@
   dark mode, compact type scale, logo permitted, sidebar deferred, enforce tokens, the
   other recommendations). Partly supersedes ADR-005: its _Visual direction_ bullet only;
   the rest of ADR-005 stands.
-- Date: 2026-11-10
+- Date: 2026-11-10 (amended in STY-015: menu-item focus; in STY-016: DHCW's logo lockup)
 
 ## Context
 
@@ -76,6 +76,9 @@ _Visual direction_ bullet of [ADR-005](ADR-005-ui-stack-shadcn-base-ui-tailwind-
   - The logos are used with the owner's permission, given 2026-11-10. They are not
     covered by DHCW's MIT or OGL licences; their provenance is recorded beside the
     assets.
+  - Amended by STY-016 (D8): the one exception is DHCW's own bilingual logo lockup,
+    which carries the "GIG Cymru NHS Wales" mark beside the DHCW wordmark. The header
+    uses it (`nhsw-logo.svg`) unchanged; nothing else adds NHS branding.
 - **Staff deviations from DHCW guidance:**
   - several fields per screen, not one question per page;
   - no full-width buttons in the header;

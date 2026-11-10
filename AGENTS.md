@@ -76,7 +76,21 @@ pnpm build && pnpm preview
 5. Get a code review from a **Sol** reviewer (Codex `gpt-6.1-sol`) via `delegate_task`
    (role `review`, mode `wait`, shared checkout). Address every comment — fix it, or record
    a reasoned rebuttal in the story file. Re-run the checks.
-6. Tick the story's acceptance criteria, append a Handoff log entry, update nested
+6. **Screenshots (any story that changes visible UI)**: once the work is final, after the
+   review fixes, capture PNG screenshots of every screen or state you built or changed.
+   Use headless Playwright (Chromium is installed in `~/.cache/ms-playwright`) against
+   `pnpm dev`. Fake Google with `page.route`, by serving a stub
+   `https://accounts.google.com/gsi/client` and fulfilling
+   `https://sheets.googleapis.com/**`; reuse `tests/e2e` fakes once they exist. Cover
+   desktop (1280px) and mobile (375px), and light and dark mode where relevant. Show
+   Welsh where copy changed. Save them to
+   `/home/t3code/roadmaps-editor/.artifacts/screenshots/<story-id>/` with descriptive
+   names, e.g. `landing-desktop-light-en.png`. `.artifacts/` is git-ignored, so add it to
+   `.gitignore` if missing. Open each screenshot yourself and fix anything that looks
+   wrong before reporting. List every screenshot's **absolute path** in your final reply,
+   so the orchestrator can show them to the user for review. Keep capture scripts in your
+   scratchpad, not in the repo, unless they are proper E2E tests.
+7. Tick the story's acceptance criteria, append a Handoff log entry, update nested
    `AGENTS.md` files if you introduced a new area, and commit on the current branch with a
    conventional commit message (`feat(scope): …`). Do not push.
 

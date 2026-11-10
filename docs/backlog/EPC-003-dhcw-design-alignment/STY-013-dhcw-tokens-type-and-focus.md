@@ -142,7 +142,11 @@ Audited at `22c3336`.
     (roadmaps, not found) and `text-4xl sm:text-6xl` (start page);
   - `text-xs` (12px) is in `button`, `badge`, `dropdown-menu`, the roadmap card and the
     start page;
-  - `tracking-tight` and `tracking-tighter` are on headings.
+  - `tracking-tight` and `tracking-tighter` are on headings, and `tracking-widest` is
+    on the menu shortcut (`ui/dropdown-menu`). All of them go, since the theme sets no
+    letter-spacing;
+  - arbitrary sizes: `text-[0.9375rem]` on the header name (`sm:`) and the start page,
+    and `text-[0.8rem]` in `ui/button`.
 
-  `rg -no "\btext-(xs|sm|base|lg|xl|[2-9]xl)\b" src --glob '*.tsx' --glob '!*.test.*'`
-  finds 35.
+  `rg -no "\btext-(xs|sm|base|lg|xl|[2-9]xl)\b|\btext-\[[^\]]+\]|\btracking-[a-z]+" src --glob '*.tsx' --glob '!*.test.*'`
+  finds them all (35 default sizes, 3 arbitrary sizes and 9 tracking classes).

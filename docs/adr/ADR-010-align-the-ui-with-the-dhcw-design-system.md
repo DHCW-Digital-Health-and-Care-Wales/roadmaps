@@ -42,7 +42,7 @@ _Visual direction_ bullet of [ADR-005](ADR-005-ui-stack-shadcn-base-ui-tailwind-
       semantic token, so the contrast test sees it;
     - `dark:` colour overrides;
     - ad-hoc focus styles;
-    - design properties in inline `style` (colour, font, size, weight, line height,
+    - design properties in inline `style` (colour, font family, size and weight, line height,
       letter-spacing, radius, shadow), while layout properties stay allowed;
     - literal colours in SVG attributes;
     - primitives referenced outside `globals.css`.

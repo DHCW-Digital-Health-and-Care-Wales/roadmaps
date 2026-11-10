@@ -136,13 +136,22 @@ test, and opacity on a whole element (`opacity-50` for disabled) stays allowed
 Audited at `22c3336`.
 
 - **Migration size**, in non-test `src/**/*.tsx`. STY-013 has already moved the type
-  classes.
+  and focus classes, including the `ring-ring/50` uses the count below includes.
   - 9 default `shadow-*` uses:
     `rg -no "\bshadow-[a-z0-9]+" src --glob '*.tsx' --glob '!*.test.*'`.
   - 55 opacity-modified colour utilities, e.g. `text-muted-foreground/60` in the card,
     `text-destructive/90` in `ui/alert`, `bg-background/80` in the header, and
     `bg-input/30` and `bg-primary/80` in `ui/button`:
     `rg -no "\b(bg|text|border|ring|fill|stroke|outline|divide|from|to|via|shadow|decoration|caret|accent|placeholder)-[a-z-]+/[0-9]+" src --glob '*.tsx' --glob '!*.test.*'`.
+  - 4 bracket radii in `ui/button`'s sizes (`rounded-[min(var(--radius-md),10px)]` and
+    `12px`), which the radius ban rejects. Use a token step:
+    `rg -no "\brounded[a-z-]*-\[[^\]]+\]" src --glob '*.tsx' --glob '!*.test.*'`.
+  - `roadmap-card.test.tsx` asserts the swatch placeholder's `bg-muted-foreground/30`.
+    When S8 turns it into a tint token, assert the token class and the absence of an
+    inline style instead.
+  - `ui/sonner.tsx` uses the marker classes `toaster` and `cn-toast`, which no stylesheet
+    defines. Configure them as ignored for the unknown-class rule (or remove them, if
+    STY-017 has removed Sonner).
   - `ui/sonner.tsx` sets `--normal-bg`-style custom properties inline for Sonner's
     theme. That is a mapping onto semantic tokens, not a stylesheet. Keep it, pointing at
     semantic tokens only, and say so in its header comment.

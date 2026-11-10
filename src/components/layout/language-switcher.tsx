@@ -12,20 +12,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
-  defaultLanguage,
-  isLanguage,
   languageEndonyms,
   storeLanguagePreference,
   supportedLanguages,
+  useLanguage,
   type Language,
 } from "@/i18n"
 
 /** Lists each language by its endonym; switching applies at once and is remembered. */
 export function LanguageSwitcher() {
   const { t, i18n } = useTranslation()
-  const current = isLanguage(i18n.resolvedLanguage)
-    ? i18n.resolvedLanguage
-    : defaultLanguage
+  const current = useLanguage()
 
   // Re-selecting the current language still records it as an explicit choice.
   const selectLanguage = (language: Language) => {

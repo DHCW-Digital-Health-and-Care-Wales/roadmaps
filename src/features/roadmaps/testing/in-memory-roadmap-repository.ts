@@ -14,7 +14,7 @@ export function createInMemoryRoadmapRepository(
       Promise.resolve().then(() => {
         signal?.throwIfAborted()
         if (source instanceof AppError) throw source
-        return source.map((roadmap) => ({ ...roadmap }))
+        return source.map((roadmap) => structuredClone(roadmap))
       }),
   }
 }

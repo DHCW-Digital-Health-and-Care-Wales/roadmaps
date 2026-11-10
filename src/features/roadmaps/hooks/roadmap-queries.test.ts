@@ -1,6 +1,7 @@
 import { QueryClient } from "@tanstack/react-query"
 import { describe, expect, it } from "vitest"
 
+import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { authScopedQueryKey } from "@/features/auth/auth-scoped-queries"
 
 import { createInMemoryRoadmapRepository } from "../testing/in-memory-roadmap-repository"
@@ -19,7 +20,7 @@ describe("roadmapKeys", () => {
 
 describe("roadmapListQueryOptions", () => {
   it("loads the list from the repository", async () => {
-    const roadmaps = [{ id: "1", name: "Platform" }]
+    const roadmaps = [createTestRoadmap("1", "Platform")]
     const queryClient = new QueryClient()
 
     await expect(

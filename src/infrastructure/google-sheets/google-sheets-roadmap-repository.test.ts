@@ -3,6 +3,7 @@ import { http } from "msw/http"
 import { describe, expect, it, vi } from "vitest"
 
 import { describeRoadmapRepositoryContract } from "@/domain/roadmap/testing/roadmap-repository-contract"
+import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { AppError } from "@/lib/errors"
 import { server } from "@/test/msw-server"
 
@@ -36,8 +37,8 @@ describeRoadmapRepositoryContract("GoogleSheetsRoadmapRepository", {
     server.use(
       http.get(ENDPOINT, () =>
         HttpResponse.json({
-          sheets: roadmaps.map(({ id, name }, index) => ({
-            properties: { sheetId: Number(id), title: name, index },
+          sheets: roadmaps.map(({ id, title }, index) => ({
+            properties: { sheetId: Number(id), title: title.en, index },
           })),
         }),
       ),
@@ -80,7 +81,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
     })
   })
 
-  it("maps sheetId to a string id (including 0) and title to name", async () => {
+  it("maps sheetId to a string id (including 0) and the title to an English title", async () => {
     const { repository } = stubRepository({
       sheets: [
         { properties: { sheetId: 0, title: "First", index: 0 } },
@@ -89,8 +90,30 @@ describe("GoogleSheetsRoadmapRepository", () => {
     })
 
     await expect(repository.listRoadmaps()).resolves.toStrictEqual([
-      { id: "0", name: "First" },
-      { id: "2147483647", name: "Big id" },
+      createTestRoadmap("0", "First"),
+      createTestRoadmap("2147483647", "Big id"),
+    ])
+  })
+
+  it("lists each worksheet as published, with nothing else known about it (until STY-011)", async () => {
+    const { repository } = stubRepository({
+      sheets: [{ properties: { sheetId: 7, title: "Platform", index: 0 } }],
+    })
+
+    await expect(repository.listRoadmaps()).resolves.toStrictEqual([
+      {
+        id: "7",
+        title: { en: "Platform", cy: "" },
+        published: true,
+        category: null,
+        family: null,
+        statusLabel: null,
+        productLead: null,
+        lastUpdated: null,
+        colour: null,
+        vision: null,
+        serviceDescription: null,
+      },
     ])
   })
 
@@ -105,7 +128,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
 
     const roadmaps = await repository.listRoadmaps()
 
-    expect(roadmaps.map(({ name }) => name)).toEqual(["C", "A", "B"])
+    expect(roadmaps.map(({ title }) => title.en)).toEqual(["C", "A", "B"])
   })
 
   it("excludes hidden worksheets but keeps explicitly visible ones", async () => {
@@ -133,7 +156,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
 
     const roadmaps = await repository.listRoadmaps()
 
-    expect(roadmaps.map(({ name }) => name)).toEqual([
+    expect(roadmaps.map(({ title }) => title.en)).toEqual([
       "Template",
       "Roadmap template",
       "_config",

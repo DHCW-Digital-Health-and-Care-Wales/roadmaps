@@ -8,7 +8,10 @@ export type AppErrorKind =
   | "not-found"
   | "rate-limited"
   | "network"
+  /** The data source's answer doesn't match its own API. */
   | "invalid-response"
+  /** The data source answered, but its content isn't in the agreed format (ADR-009). */
+  | "invalid-data"
   | "unknown"
 
 export interface AppErrorOptions {

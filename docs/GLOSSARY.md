@@ -13,7 +13,7 @@ product brief describes and the code does not have yet.
 A DHCW member of staff who leads one or more products and manages their roadmaps in
 this tool; a product may have several. The primary user
 (`docs/backlog/personas/product-lead.md`). A roadmap names its product leads as free
-text _(planned)_; the app does not know which Product Lead is using it.
+text; the app does not know which Product Lead is using it.
 _Avoid_: Product owner, admin, editor
 
 **Public reader**:
@@ -79,22 +79,22 @@ The roadmaps available to the user, in the order the data source gives them; fro
 grouped by product family and sorted by title.
 _Avoid_: Dashboard, workspace
 
-**Published roadmap** _(planned)_:
+**Published roadmap**:
 A roadmap the public site shows. A roadmap that is not published is still listed here,
 marked "Not published" (ADR-009).
 _Avoid_: Enabled, live, public roadmap
 
-**Category** _(planned)_:
+**Category**:
 One of six fixed areas of care a roadmap belongs to, such as "GP & Community Services",
 shared with the public site; a roadmap may have none.
 _Avoid_: Group, section, tag
 
-**Product family** _(planned)_:
+**Product family**:
 An optional name grouping related products, such as "Single Record". The roadmap list
 groups roadmaps under their family.
 _Avoid_: Programme, portfolio
 
-**Status label** _(planned)_:
+**Status label**:
 Free text describing a product's stage, such as "Beta", shown as a badge.
 _Avoid_: Phase (an item's tag on the public site), state
 
@@ -181,8 +181,10 @@ refetched after it is renewed.
 
 **Problem kind**:
 The category of a failure to read roadmaps (unauthenticated, forbidden, not found, rate
-limited, network, invalid response, unknown), from which the interface chooses its
-message and whether to offer Retry.
+limited, network, invalid response, invalid data, unknown), from which the interface
+chooses its message and whether to offer Retry. _Invalid data_ means the data source
+answered but its content is not in the agreed format, so the remedy is to fix it, not to
+retry (ADR-009).
 _Avoid_: Error code, status
 
 **Retryable problem**:

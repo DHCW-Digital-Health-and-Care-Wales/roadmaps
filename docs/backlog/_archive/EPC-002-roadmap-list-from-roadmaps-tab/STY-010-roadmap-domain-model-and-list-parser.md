@@ -1,6 +1,6 @@
 # STY-010: A roadmap carries its list information, and the roadmap index can be parsed
 
-- **Status**: Proposed — owner decisions in ADR-009; ready to select
+- **Status**: Done — delivered in its PR, which awaits the owner's merge
 - **Type**: Feature + Refactor
 - **Area**: Domain + Infrastructure + i18n (en + cy)
 - **Epic**: EPC-002-roadmap-list-from-roadmaps-tab
@@ -133,3 +133,79 @@ good model for the test CSV reader. The contract test's fixtures use numeric ids
 
 - Reading the list from the data source, and the missing-tab problem: STY-011.
 - Showing any new field: STY-012.
+
+## Delivery
+
+### Departures
+
+- **S3, S4, the problems recorded beyond the scenarios** (agent): the parser records a
+  `missing-column` problem for every column other than `Sheet` that has no header, as
+  the public site warns for each, and a `no-published-roadmap` problem when no roadmap
+  is published (ADR-009's "No roadmap enabled" mistake). The second is not recorded when
+  the `Enabled` column is missing, which already explains it, so S4's list without
+  `Enabled` still records exactly one problem. A header with no rows records
+  `no-published-roadmap` too: S5 asks only that it gives no roadmaps and no failure.
+- **S4, a row with a blank `Sheet`** is ignored without a problem, as the public site
+  ignores it and S4 counts it among "the blank rows".
+- **Value problems of a skipped row** (agent): a row skipped as a duplicate or for having
+  no id records only that; its other cells are not checked, so a bad colour on a skipped
+  draft records nothing.
+- **Welsh title with a blank English title** (agent): the English falls back to the
+  `Sheet` value and the Welsh is kept, with no problem, exactly as the public site's
+  `readText` does; S3's "Welsh with no English is dropped" applies to the other text
+  columns.
+- **Not ported** (agent): the public site's translation-quality warnings (a Welsh
+  placeholder, Welsh identical to the English, a large length gap) change nothing that
+  is read, so they are left to the sheet-health record (EPC-002 Out of scope).
+- **Paths** (agent): the parser is
+  `src/infrastructure/google-sheets/roadmap-index-parser.ts`; the CSV reader is
+  `tests/fixtures/sheets/parse-csv.ts`, so `tsconfig.app.json` includes
+  `tests/fixtures` and Vitest runs `tests/fixtures/**/*.test.ts`. The current
+  language reaches components through a new `useLanguage()` in `@/i18n`, which the
+  language switcher now uses too. The in-memory repository double deep-copies
+  (`structuredClone`) now that a roadmap holds nested text.
+- **Test order**: the parser, Welsh-title and `invalid-data` panel tests were written
+  first and failed (no parser; cards still read `name`); the CSV reader's own test was
+  written alongside it, as test code.
+
+### Contract for dependents
+
+- **Parser** (STY-011): `parseRoadmapIndex(rows: readonly (readonly string[])[])` from
+  `@/infrastructure/google-sheets/roadmap-index-parser` (not in the barrel). `rows[0]` is
+  spreadsheet row 1 and rows may be ragged, as the Sheets values API returns them.
+  Returns `{ entries: { roadmap, tabName }[], problems }`, entries in row order. Throws
+  `AppError("invalid-data")` (not retryable) for no rows or a header with no `Sheet`
+  column, so STY-011 passes `[]` when the values response has no `values`.
+- **Problems**: `RoadmapIndexProblem { code, row, column, value }`; `row` is the sheet
+  row (1 = header) or `null` for the whole list, `column` the header as written (or the
+  expected header when missing), `value` the trimmed cell. Codes: `missing-column`,
+  `duplicate-column`, `welsh-column-not-allowed`, `enabled-not-yes`, `unknown-category`,
+  `invalid-date`, `invalid-colour`, `short-colour`, `welsh-without-english`,
+  `invalid-id`, `duplicate-id`, `no-published-roadmap`. Nothing logs or shows them.
+  STY-011 adds its missing-tab problem beside these.
+- **Interim** (resolved by STY-011): `GoogleSheetsRoadmapRepository` still lists the
+  visible worksheets, each as `title.en` = tab name, `published: true`, everything else
+  `null` (`worksheetRoadmap`). The repository contract's fixtures are numeric ids built
+  with `createTestRoadmap(id, title, overrides?)`
+  (`src/domain/roadmap/testing/test-roadmap.ts`), whose defaults are that interim shape.
+- **Domain**: `localise(text, language)` and `ContentLanguage` in
+  `domain/roadmap/localised-text.ts`; `ROADMAP_CATEGORIES`/`RoadmapCategory` in
+  `domain/roadmap/roadmap-category.ts`. The sheet spellings of the categories live in
+  the parser; their display names are STY-012's catalogue copy.
+- **UI**: `useLanguage()` from `@/i18n`; the card and detail page show
+  `localise(roadmap.title, language)`. New copy: `errors.invalid-data` (en + cy), with
+  the `FileWarningIcon` in `RoadmapsErrorState` and no Retry.
+- **Fixtures**: `parseCsv(text)` in `tests/fixtures/sheets/parse-csv.ts` for STY-011's
+  E2E fake (Node reads the file; Vitest imports it with `?raw`).
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                              |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `src/infrastructure/google-sheets/roadmap-index-parser.test.ts` (`the example roadmap index (S1)`), from `Roadmaps.csv`                              |
+| S2       | same file, `headers (S2)`                                                                                                                            |
+| S3       | same file, `values (S3)`                                                                                                                             |
+| S4       | same file, `bad rows (S4)`                                                                                                                           |
+| S5       | same file, `an unreadable list (S5)`; `src/lib/errors.test.ts` (`defaults invalid-data to retryable=false`)                                          |
+| S6       | the existing suites, unchanged in what they assert; `roadmaps-page.test.tsx` and `roadmap-detail-page.test.tsx` (Welsh title tests); `pnpm test:e2e` |
+| S7       | `roadmap-index-parser.test.ts`, `rows with the same id (S7)`                                                                                         |

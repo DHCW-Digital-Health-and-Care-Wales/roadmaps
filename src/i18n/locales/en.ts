@@ -94,6 +94,8 @@ export const en = {
     "rate-limited": "Too many requests right now. Wait a moment and try again.",
     network: "Couldn't connect. Check your internet connection and try again.",
     "invalid-response": "The roadmap data was in an unexpected format.",
+    "invalid-data":
+      "The list of roadmaps in the spreadsheet isn't in the expected format. Ask the spreadsheet owner to check it.",
     unknown: "Something went wrong. Please try again.",
   } satisfies Record<AppErrorKind, string>,
   notFound: {

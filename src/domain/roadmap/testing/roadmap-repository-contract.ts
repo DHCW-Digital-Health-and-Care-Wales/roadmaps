@@ -4,11 +4,13 @@ import { isAppError } from "@/lib/errors"
 
 import type { Roadmap } from "../roadmap"
 import type { RoadmapRepository } from "../roadmap-repository"
+import { createTestRoadmap } from "./test-roadmap"
 
 export interface RoadmapRepositoryContractSetup {
   /**
    * Returns a repository whose data source holds exactly these visible roadmaps, in this
-   * order. Fixture ids are numeric strings so any data source can represent them.
+   * order. Fixtures hold only what every adapter can represent today: numeric-string ids
+   * and published roadmaps with an English title and nothing else.
    */
   withRoadmaps(roadmaps: readonly Roadmap[]): RoadmapRepository
   /** Returns a repository whose data source fails on every request. */
@@ -16,9 +18,9 @@ export interface RoadmapRepositoryContractSetup {
 }
 
 const fixtures: readonly Roadmap[] = [
-  { id: "7", name: "Platform" },
-  { id: "0", name: "Template" },
-  { id: "1234567", name: "Mobile app — 2027" },
+  createTestRoadmap("7", "Platform"),
+  createTestRoadmap("0", "Template"),
+  createTestRoadmap("1234567", "Mobile app — 2027"),
 ]
 
 /**
@@ -30,7 +32,7 @@ export function describeRoadmapRepositoryContract(
   setup: RoadmapRepositoryContractSetup,
 ): void {
   describe(`${adapterName} satisfies the RoadmapRepository contract`, () => {
-    it("lists every roadmap as plain { id, name } data in data-source order", async () => {
+    it("lists every roadmap as plain data in data-source order", async () => {
       const roadmaps = await setup.withRoadmaps(fixtures).listRoadmaps()
 
       expect(roadmaps).toStrictEqual(fixtures)

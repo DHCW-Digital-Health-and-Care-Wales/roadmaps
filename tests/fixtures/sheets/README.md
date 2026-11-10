@@ -22,6 +22,10 @@ screenshots use only these files or inline fakes.
 The roadmap tabs (`Product*.csv`) are not read by the app yet; they are kept for the future
 roadmap detail stories.
 
+`parse-csv.ts` reads a file's text into rows of cells, as the Sheets API returns a tab.
+Vitest tests import the text with `?raw` (`import csv from "…/Roadmaps.csv?raw"`); Node
+code reads it from disk.
+
 ## Keeping them in step
 
 If the public repository changes its sheet format, copy the new CSVs here, update the

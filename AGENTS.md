@@ -1,16 +1,27 @@
-# AGENTS.md — Product Roadmaps
+# AGENTS.md — DHCW Roadmap Editor
 
 Instructions for AI agents (and humans) working in this repository. Read this first,
-then the ADRs in `docs/adr/`, `docs/GLOSSARY.md`, and the record you are working on in
+then the ADRs in `docs/adr/`, `docs/GLOSSARY.md`, the Product Lead persona
+(`docs/backlog/personas/product-lead.md`), and the record you are working on in
 `docs/backlog/`.
 
 ## What this is
 
-A static, frontend-only React SPA ("Product Roadmaps") hosted on GitHub Pages. Users
-connect a Google account via Google Identity Services (OAuth token model); the app reads
+An internal tool for Digital Health and Care Wales (DHCW). **Product Leads** use it to
+manage their own **public-facing roadmaps** in the Now / Next / Later format. Each
+**roadmap item** has a title, a description, expected outcomes, tags and other details
+where they help, and fits on one card no bigger than a phone screen. That card-sized
+budget sets the level of detail. The product is in English and Welsh (ADR-008).
+
+Design for the Product Lead editing their roadmap; the connection to the data source is
+plumbing that should stay out of their way.
+
+**Built so far** (the bootstrap epic): a static, frontend-only React SPA on GitHub Pages
+that connects a Google account (Google Identity Services, OAuth token model), reads
 worksheet **metadata** from one Google Spreadsheet and shows each visible worksheet as a
-roadmap card. Google Sheets is a _temporary_ data source: it must be replaceable by a
-PostgreSQL-backed HTTP API without touching the presentation layer (see ADR-002).
+roadmap card. Roadmap items and editing are next. Google Sheets is a _temporary_ data
+source: it must be replaceable by a PostgreSQL-backed HTTP API without touching the
+presentation layer (ADR-002).
 
 ## Layering rules (non-negotiable)
 
@@ -551,6 +562,10 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
       (`node --test '.agents/skills/*/scripts/*.test.mjs'`).
     - `playwright-cli` is not a dependency: `pnpm dlx @playwright/cli@0.1.24`, output in
       `.artifacts/playwright-cli/`.
+    - The product is the DHCW Roadmap Editor for Product Leads (see "What this is").
+      `docs/backlog/personas/product-lead.md` holds the primary persona and the
+      assumptions still to validate; the glossary marks item terms _(planned)_. The UI's
+      `common.appName` still says "Product Roadmaps".
     - DEF-001 fixed in the same PR: `roadmaps.title` is now "Your roadmaps" / "Eich mapiau
       trywydd". A product name (`common.appName`) keeps its capitals; other copy is
       sentence case.

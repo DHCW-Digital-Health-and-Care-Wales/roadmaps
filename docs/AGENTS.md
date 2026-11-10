@@ -16,15 +16,15 @@ spec or plan outside `docs/`.
 | `backlog/defects/`    | Live defects `DEF-<nnn>-…`                                                         |
 | `backlog/_archive/`   | Terminal records, mirroring the live tree (`<epic>/`, `chores/`, `defects/`)       |
 | `backlog/_templates/` | Templates for every record type, and the status lifecycle                          |
+| `backlog/personas/`   | Who the product is for, one file per persona; read before UX, copy or a new story  |
 | `analysis/`           | Investigations written to reach a decision; `delivery-runs/` has run notes         |
 | `operations/`         | Runbooks and authoring policy for what a person or agent does by hand              |
 
 Put nothing else in the root of `docs/`. A record's ID is a prefix, a dash and
-three digits: `EPC` epic, `STY` story, `DEF` defect, `CHO` chore (ADRs
-match: `ADR-001`) (e.g.
-`STY-010`). Each prefix is one series across the whole backlog, never per
-epic, so a story keeps its ID if it moves epic: take the next free number across the live tree, `_archive/`
-and open PRs' files
+three digits: `EPC` epic, `STY` story, `DEF` defect, `CHO` chore (e.g.
+`STY-010`; ADRs match, as `ADR-001`). Each prefix is one series across the
+whole backlog, never per epic, so a story keeps its ID if it moves epic. Take
+the next free number across the live tree, `_archive/` and open PRs' files
 (`gh pr list --state open --limit 200 --json files --jq '.[].files[].path'`).
 
 ## Stories, chores, defects and epics

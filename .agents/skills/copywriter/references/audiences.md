@@ -1,51 +1,62 @@
 # Audience tone
 
-One voice, four settings. The pillars never change; the emphasis does. The
-product has no personas on file, so reason about the reader from
-`docs/GLOSSARY.md` and what the screen is for.
+One voice, several settings. The pillars never change; the emphasis does. The
+primary reader is the Product Lead (`docs/backlog/personas/product-lead.md`);
+read the persona, and the assumptions it lists, before writing for a new
+screen.
 
-## First visit, signed out
+## Product Lead, editing
 
-Somebody who has been sent a link or found the app and has not connected yet.
-The landing page (`landing.*`) is their whole picture.
+Managing their own roadmap: moving items between Now, Next and Later, writing
+or sharpening an item's title, description and expected outcomes, tagging it.
 
-- Say what the app does for them, then what connecting does: "A simple way to
-  explore and manage your product roadmaps." then "You'll need to connect Google
-  so the app can load your roadmaps."
-- Sell the outcome, never the mechanism. Not "OAuth consent", not "access
-  token", not "spreadsheets.readonly scope".
-- Say what the app will read once, in plain words. Never reassure with
-  compliance vocabulary; say exactly what is and is not touched.
-- One call to action. The button says what it does: "Connect Google".
-
-## Connected viewer
-
-Looking at their roadmaps, usually briefly, often on a phone.
-
-- Front-load the object: "No roadmaps yet", not "It looks like there may not be
-  any roadmaps yet".
-- Numbers and names, not adjectives: "2 roadmaps", the roadmap's own name.
-- Status is a label, not a sentence: "Google connected", "Session expired".
-- A toast confirms what the reader just did and nothing else: "Connected to
-  Google", "Disconnected from Google".
+- Front-load the object: "No items in Next", not "It looks like there may not
+  be any items here yet".
+- Numbers and names, not adjectives: "3 items", the roadmap's own name.
+- Labels name the field in the glossary's words (title, description, expected
+  outcome, tag); a hint says what good looks like in one sentence, for the
+  public reader the item is written for.
+- Make the state of their work obvious: saved or not, and what the public will
+  see. A toast confirms what they just did and nothing else.
 - Don't narrate loading with personality. "Loading roadmaps…" is the whole
   message.
 
-## Blocked viewer
+## Product Lead, blocked
 
-Something is wrong and they want it fixed: the session ended, Google was
-unreachable, they have no access to the spreadsheet, a pop-up was blocked.
+Something is wrong and they want it fixed: the session ended, the data source
+was unreachable, they have no access, a save failed.
 
+- First say whether their work is safe. A failed save that kept their text says
+  so; one that lost it says exactly what to redo.
 - State what happened in their terms, then the one thing to do, or who does it.
-- Separate the three owners of a problem: the reader (connection, pop-ups,
-  clicking Reconnect), Google (unreachable, rate limiting: "wait a moment and try
-  again"), and someone else (the spreadsheet owner grants access).
+- Separate the owners of a problem: the Product Lead (connection, pop-ups,
+  clicking Reconnect), the data source (unreachable, rate limiting: "wait a
+  moment and try again"), and someone else (whoever grants access).
 - Never imply fault. "Access wasn't granted", not "You denied access".
 - Offer Retry only where retrying can help, and Reconnect where only a new
   session can; copy for a retry-able error and a final one must differ
   accordingly.
 - Stay calm. A routine expiry is not a failure; an unexpected data format is the
-  app's problem, not the reader's.
+  app's problem, not theirs.
+
+## Product Lead, arriving
+
+Opening the tool before connecting. The landing page (`landing.*`) is their
+whole picture.
+
+- Say what the tool is for, then the one step to start. Connecting is that
+  step, not the subject: no "OAuth consent", "access token" or "scope".
+- Say what the app will read once, in plain words. Never reassure with
+  compliance vocabulary; say exactly what is and is not touched.
+- One call to action. The button says what it does: "Connect Google".
+
+## Public reader
+
+Reads the published roadmap, never this tool, so no interface string is
+addressed to them. They shape the hints, examples and limits that guide what a
+Product Lead writes: plain English and Welsh, outcomes before outputs, no
+internal jargon or unexplained acronyms, and nothing that only works on a card
+wider than a phone.
 
 ## Welsh-language readers
 

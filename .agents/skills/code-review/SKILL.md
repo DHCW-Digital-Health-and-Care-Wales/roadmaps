@@ -173,6 +173,13 @@ Do not spend findings on these; check only that the change does not evade them
   effect, `setState`-then-effect hop or prior async call before it gets the
   popup blocked. Trace the handler from the event, through wrappers such as
   `useAuth().connect` and `AuthButton`, to the GIS call.
+- **A Product Lead's work is never lost or misrepresented.** For a change that
+  edits roadmaps or roadmap items, trace a failed or rejected save, navigation
+  away with unsaved edits, two tabs or an expired session mid-edit, and a stale
+  read overwriting a newer save. Each ends with the text kept or the loss
+  stated, never silently dropped. Check that what the editor shows as saved is
+  what the data source holds, that text stays within the card budget the
+  record sets, and that both languages are kept.
 - **Server-state and caches (TanStack Query).** Query keys extend
   `authScopedQueryKey` (`roadmapKeys.all` does), so `disconnect()` drops them;
   a new authorised query outside that root survives a disconnect and leaks the

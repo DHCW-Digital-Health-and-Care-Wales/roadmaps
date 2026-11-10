@@ -6,6 +6,11 @@ follows `.agents/skills/implement-story/SKILL.md`: one record, one reviewed PR.
 `docs/AGENTS.md` has the layout and ID rules. A record in a terminal status
 moves to `_archive/`, where its row here still points.
 
+## Personas
+
+- [Product Lead](personas/product-lead.md): manages their product's public Now / Next /
+  Later roadmap; the primary user. Its assumptions are still to be validated.
+
 ## Epics
 
 | Epic                                                      | Summary                                                                                                             | Status |

@@ -1,8 +1,13 @@
-# Product Roadmaps
+# DHCW Roadmap Editor
 
 [![CI/CD](https://github.com/collisdigital/roadmaps-editor/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/collisdigital/roadmaps-editor/actions/workflows/ci.yml)
 
-A static, frontend-only React app for browsing product roadmaps. You connect a Google
+An internal tool for Digital Health and Care Wales (DHCW): Product Leads use it to manage
+their public-facing Now / Next / Later roadmaps, writing each roadmap item's title,
+description, expected outcomes and tags. The item editor is being built; the
+[Product Lead persona](docs/backlog/personas/product-lead.md) describes who it is for.
+
+Today it is a static, frontend-only React app that lists roadmaps. You connect a Google
 account, the app reads one Google Spreadsheet's worksheet **metadata**, and each visible
 worksheet appears as a roadmap card. It runs entirely in the browser and is hosted on
 GitHub Pages: **<https://collisdigital.github.io/roadmaps-editor/>**.

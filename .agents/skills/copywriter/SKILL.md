@@ -1,15 +1,18 @@
 ---
 name: copywriter
-description: Write or change user-facing copy in this product — connection and sign-in states, session expiry, access and loading errors, empty states, toasts, aria-labels, page titles — in English or Welsh. Use whenever a task adds or edits a string in `src/i18n/locales/en.ts` or `cy.ts`, reviews copy, or asks whether wording is on-voice. Carries the product's voice, the per-reader tone, and the judgement rules that `pnpm typecheck` and `pnpm lint` cannot make.
+description: Write or change user-facing copy in this product — roadmap and roadmap item screens, field labels and hints, saving, empty states, errors, toasts, aria-labels, page titles, and the connection states — in English or Welsh. Use whenever a task adds or edits a string in `src/i18n/locales/en.ts` or `cy.ts`, reviews copy, or asks whether wording is on-voice. Carries the product's voice, the per-reader tone, and the judgement rules that `pnpm typecheck` and `pnpm lint` cannot make.
 user-invocable: true
 ---
 
 # Copywriter
 
-The voice of a small web app read by people who want to look at their product
-roadmaps. They arrive, connect a Google account, see their roadmaps and leave.
-Most of the time the copy should be nearly invisible; it earns attention only
-when something needs doing or has gone wrong.
+The voice of an internal DHCW tool in which Product Leads manage their
+public-facing Now / Next / Later roadmaps (`docs/backlog/personas/product-lead.md`).
+They come to get a job done: move an item, sharpen its outcome, fix a tag. The
+interface copy should be nearly invisible, earning attention only when
+something needs a decision or has gone wrong. What the Product Lead writes is
+read by the public, so the interface also helps them write it well: field
+labels, hints and limits are copy too.
 
 **Two things carry the rules, and this is only one of them.** The type system
 and the linter hold the mechanics: `pnpm typecheck` fails on a missing or extra
@@ -32,12 +35,19 @@ reviewers (`quality-review`) are the only gate on it, so apply it deliberately.
 
 ## Who is reading
 
-| Reader                      | Emphasis                                                                                               |
-| --------------------------- | ------------------------------------------------------------------------------------------------------ |
-| **First visit, signed out** | What the app does and what connecting Google gives it, in one breath. No jargon about tokens           |
-| **Connected viewer**        | Efficient. Roadmap names and counts, not adjectives. Copy stays out of the way                         |
-| **Blocked viewer**          | Calm and specific about what is wrong and who can fix it: the reader, Google, or the spreadsheet owner |
-| **Welsh-language reader**   | The same voice, equally plain. A Welsh string longer or more formal than its English is not done       |
+- **Product Lead, editing**: the main reader. Efficient and exact; labels and
+  hints that help them write a good item within the card budget, and a clear
+  answer to "is this saved, and what will the public see?".
+- **Product Lead, blocked**: calm and specific about what is wrong, whether
+  their work is safe, and who can fix it: them, the data source, or someone
+  who grants access.
+- **Product Lead, arriving**: what the tool is for and the one step to start.
+  Connecting is a step, not the subject; no jargon about Google or tokens.
+- **Public reader**: never uses this tool, but reads every item a Product Lead
+  writes. Hints and examples steer that text towards plain, outcome-first
+  language.
+- **Welsh-language reader**: the same voice, equally plain. A Welsh string
+  longer or more formal than its English is not done.
 
 Full nuance: `references/audiences.md`. Product terms and their meanings:
 `docs/GLOSSARY.md`.
@@ -54,6 +64,9 @@ limits is the same thing in a safety jacket: turn it into an instruction.
 "Your session has expired" is a fact and a routine one: no "Oops", no "Error!",
 no red unless the reader lost something. One instruction, once — never stack
 "now", "immediately" and "please".
+Losing unsaved work and changing what the public sees are the real consequences
+in this product: say so plainly before they happen, and confirm afterwards what
+was saved.
 
 **3. Name the recourse.** If something is wrong for the reader, do they know who
 fixes it? Each failure has an owner, and the string names the one that is the
@@ -82,9 +95,10 @@ Google message: the domain and infrastructure layers emit codes (`AppError.kind`
 
 ## Shapes to copy
 
-Canonical patterns for each surface — connect prompt, expired session, access
-error, load error, empty state, loading, toast, status label, count — are in
-`references/patterns.md`. Start from the shape rather than from a blank line.
+Canonical patterns for each surface built so far — connect prompt, expired
+session, access error, load error, empty state, loading, toast, status label,
+count — are in `references/patterns.md`; add a pattern there when the item
+editor sets one (field hint, save state, what the public sees). Start from the shape rather than from a blank line.
 
 ## Working order
 
@@ -114,7 +128,8 @@ error, load error, empty state, loading, toast, status label, count — are in
 No script enforces length, so these are yours to hold: a **toast** is one
 sentence, about 80 characters; an **alert or empty-state title** is a short
 phrase (about 40) and its **description** at most two sentences; a **button** is
-a verb or a verb and its object. Sentence case everywhere, including titles and
+a verb or a verb and its object. A **field hint** is one short sentence; a
+**character limit** is shown, not only enforced. Sentence case everywhere, including titles and
 buttons, with the product name as the only capitalised proper noun. British
 English spelling.
 

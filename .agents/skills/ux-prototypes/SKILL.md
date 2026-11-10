@@ -19,10 +19,11 @@ Read these before drawing anything:
 
 - the epic or story, and its binding Accepted ADRs
 - `docs/GLOSSARY.md`
-- who the reader is, from the glossary and the product: people who view their
-  product roadmaps from a connected Google account, on a laptop or a phone,
-  in English or Welsh. There are no persona files; state in the inventory what
-  each journey assumes about its reader
+- who the reader is: the Product Lead persona
+  (`docs/backlog/personas/product-lead.md`), a DHCW Product Lead managing
+  their own public Now / Next / Later roadmap, in English or Welsh. State in
+  the inventory which of the persona's assumptions each journey relies on.
+  Keep connecting to Google out of the frames unless the journey is about it
 - the existing screens each journey touches, in `src/features/`,
   `src/components/layout/` and `src/routes/`, for navigation, page layout and
   the components a design would reuse (`src/components/ui/`)
@@ -37,11 +38,13 @@ such as belonging to a deferred epic.
 Write one sample-data sheet before drawing. It holds:
 
 - today's date
-- the cast: the invented people and roadmaps the screens show, such as a
-  viewer's name and the roadmap names ("Platform", "Mobile app")
-- every entity's state and dated history: when the viewer connected and when
-  the session expires, which worksheets are hidden, when a roadmap was added,
-  when the feature started
+- the cast: the invented Product Leads, roadmaps and roadmap items the screens
+  show: each roadmap's name, and each item's horizon (Now, Next, Later), title,
+  description, expected outcomes and tags, written as a real Product Lead
+  would for the public and no longer than one phone-sized card
+- every entity's state and dated history: when an item was added, moved or
+  last edited, what is saved and what is not, when the feature started, and
+  the connection state only where a journey shows it
 - every derived value a screen shows, such as a count, a connection status or
   a "last refreshed" time that follows from the history
 

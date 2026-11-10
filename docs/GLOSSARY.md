@@ -1,18 +1,56 @@
-# Product Roadmaps
+# DHCW Roadmap Editor
 
-The shared vocabulary for viewing product roadmaps from a connected Google account.
+The shared vocabulary for Product Leads managing their public-facing roadmaps.
 Interface copy speaks the user's words below; code speaks the same words, and data-source
-words stay inside infrastructure (ADR-002).
+words stay inside infrastructure (ADR-002). Terms marked _(planned)_ name things the
+product brief describes and the code does not have yet.
 
 ## Language
+
+### People
+
+**Product Lead**:
+The person accountable for a DHCW product who manages that product's roadmaps in this
+tool; the primary user (`docs/backlog/personas/product-lead.md`).
+_Avoid_: Product owner, admin, editor
+
+**Public reader**:
+Anyone outside DHCW who reads a published roadmap. They never use this tool, but every
+roadmap item is written for them.
+_Avoid_: Customer, end user
 
 ### Roadmaps
 
 **Roadmap**:
-A named plan for a product that the user can open. Each roadmap is one visible worksheet
-of the connected spreadsheet today, but its identity is opaque and outlives the data
-source.
+A product's public plan, in the Now / Next / Later format, managed by its Product Lead.
+Each roadmap is one visible worksheet of the connected spreadsheet today, but its
+identity is opaque and outlives the data source.
 _Avoid_: Sheet, worksheet, tab, board
+
+**Horizon** _(planned)_:
+One of a roadmap's three columns: **Now** (being worked on), **Next** (coming up) and
+**Later** (intended, further out). A roadmap item sits in exactly one horizon. Horizons
+are not dates.
+_Avoid_: Column, lane, quarter, phase
+
+**Roadmap item** _(planned)_:
+One piece of work on a roadmap: a title, a description, expected outcomes, tags and any
+other details that help a public reader. It fits on one card no bigger than a phone
+screen.
+_Avoid_: Ticket, task, feature, epic, story
+
+**Expected outcome** _(planned)_:
+The change a roadmap item should bring about for patients, staff or the public, in their
+terms rather than as an output delivered.
+_Avoid_: Deliverable, benefit, KPI
+
+**Tag** _(planned)_:
+A short label on a roadmap item for grouping and filtering, such as a theme or an
+audience.
+_Avoid_: Label, category, keyword
+
+**Item card** _(planned)_:
+A roadmap item as shown on a roadmap; its size is the budget for the item's text.
 
 **Roadmap list**:
 The roadmaps available to the user, in the order the data source gives them.
@@ -23,7 +61,8 @@ The page for one roadmap, reached from its card or by deep link.
 _Avoid_: Roadmap view, sheet page
 
 **Roadmap card**:
-A roadmap's entry in the roadmap list, which opens its roadmap detail.
+A roadmap's entry in the roadmap list, which opens its roadmap detail. Not to be
+confused with an item card.
 
 ### Data source
 
@@ -48,6 +87,9 @@ worksheet is not shown. Only infrastructure uses this term.
 _Avoid_: Sheet (ambiguous with spreadsheet)
 
 ### Connection
+
+Plumbing: these terms matter while Google is the data source, and copy keeps them out of
+the Product Lead's way.
 
 **Connection**:
 The user's authorisation for the app to read the data source on their behalf. It proves

@@ -49,10 +49,10 @@ not post, change code, merge or message other people as part of reviewing.
    is a status or acceptance claim true? Invent no other risk.
 5. **Verify plausible findings** with a concrete trigger and an observed or
    code-derived failure path. Run a focused test, minimal reproduction or
-   computed-style check when useful, outputs and caches under `/tmp`
-   (`./node_modules/.bin/vitest related --run <files> --no-cache`
-   `--fsModuleCachePath /tmp/<dir>`). Run binaries from `./node_modules/.bin/`,
-   never through `pnpm exec`, which can reinstall the checkout's `node_modules`
+   computed-style check when useful, outputs and caches under `/tmp`:
+   `./node_modules/.bin/vitest related --run <files> --no-cache --fsModuleCachePath /tmp/<dir>`.
+   Run binaries from `./node_modules/.bin/`, never through pnpm (`pnpm exec`
+   or a `pnpm <script>`), which can reinstall the checkout's `node_modules`
    under the agent that shares it. Never run a command that changes state (a
    commit, a push, a deploy, a merge). Passing tests are evidence, not proof;
    never claim a check you only read.
@@ -106,8 +106,9 @@ Do not spend findings on these; check only that the change does not evade them
   or SVG paint attributes, in `src/**` (not tests). It reads classes only
   where the plugin looks by default (`className`, `cn()`, `cva()` …), in a
   `…Variants({ className })` call and in variables named `…Classes`, and
-  styles only as object literals in the `style` attribute. A class string held anywhere else is unchecked; a new
-  design-rule disable fails `src/styles/lint-exceptions.test.ts`.
+  styles only in a `style` attribute (which must hold an object literal) or
+  an object typed `CSSProperties`. A class string held anywhere else, or a
+  style object under another prop, is unchecked.
 - `@typescript-eslint` strict-type-checked rules (no `any`, unsafe calls,
   floating promises, `unbound-method`), React Hooks rules and `jsx-a11y`
   basics. Catalogue parity is a `pnpm typecheck` error (`cy.ts` is

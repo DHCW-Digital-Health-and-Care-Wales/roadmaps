@@ -54,8 +54,8 @@ focus indicator
 
 **Given** a 375px viewport in Cymraeg, connected
 **When** the header is shown
-**Then** it shows the icon, the short name in full (not truncated) and only Disconnect,
-with the status visually hidden but still announced, and nothing scrolls horizontally
+**Then** it shows the icon, the short name and only Disconnect, with the status visually
+hidden but still announced, and nothing scrolls horizontally
 
 ### S3: A phase banner invites feedback
 
@@ -138,6 +138,11 @@ content without changing the address
   (`VITE_FEEDBACK_URL`), not hard-coded.
   - The repository may be private, and DHCW may want a form instead.
   - Unset, the banner shows without a link, so nothing blocks delivery.
+- **D6** (agent, 2026-11-10, from STY-015's retrospective): S2's short name shows
+  untruncated. STY-015's 40px buttons cut "Mapiau Trywydd" to "Mapiau Tryw…" at 375px
+  (fixed by keeping the header's buttons 32px), and the icon takes more width. jsdom does
+  no layout, so this check runs in Playwright at 375px in Cymraeg while connected: the
+  brand's `scrollWidth` does not exceed its `clientWidth`.
 
 ## Starting point
 
@@ -152,6 +157,5 @@ Audited at `22c3336`.
   `copywriter` skill. The document title and the home link's name keep the full name.
 - **Mobile rules.** S2 is STY-009's mobile header rule: every signed-out view keeps its
   own Connect or Reconnect, because the narrow header shows only Disconnect.
-  Below `sm` the header's buttons are 32px (`header-auth-button`, `language-switcher`,
-  `theme-toggle`): with STY-015's 40px buttons, "Mapiau Trywydd" truncated at 375px.
-  Adding the icon takes more width, so check S2 in Welsh, connected, at 375px.
+  Below `sm` the header's buttons stay 32px (`header-auth-button`, `language-switcher`,
+  `theme-toggle`) so the short name fits (D6).

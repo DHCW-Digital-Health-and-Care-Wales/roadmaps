@@ -43,8 +43,10 @@ impossible, record the missing baseline and blocker; never reconstruct it from
 an already edited UI or label an after capture as before. Do not reset the
 checkout merely to obtain a baseline: extract the base revision into a scratch
 directory (`git archive <base> | tar -x -C <scratch-dir>`), symlink its
-`node_modules` to the checkout's, and capture it with `pnpm build && pnpm
-preview --port <free port> --strictPort` run there (4173 belongs to E2E).
+`node_modules` to the checkout's, copy the checkout's ignored `.env*.local`
+files so both builds and the fakes share one config, and capture it with
+`pnpm build && pnpm preview --port <free port> --strictPort` run there (4173
+belongs to E2E).
 
 After the review fixes, capture the matching after states with comparable
 viewport, data and navigation. Publish every pair and every new capture in the

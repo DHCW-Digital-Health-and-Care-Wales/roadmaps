@@ -16,25 +16,22 @@ export interface StatusPanelProps {
   description: string
   /** Buttons or links, e.g. Retry. */
   action?: ReactNode
-  /** `alert` announces a failure as it appears. */
-  role?: "alert"
 }
 
-/** A calm, centred message in place of content: empty, failed, not found or locked. */
+/** A calm, centred message in place of content: empty, not found or locked. */
 export function StatusPanel({
   icon,
   title,
   titleAs: Title = "h2",
   description,
   action,
-  role,
 }: StatusPanelProps) {
   return (
-    <Empty role={role} className="min-h-72 border bg-card py-12">
+    <Empty className="min-h-72 border border-solid bg-card py-12">
       <EmptyHeader>
         <EmptyMedia
           aria-hidden="true"
-          className="size-12 rounded-xl border bg-muted text-muted-foreground [&_svg]:size-5"
+          className="size-12 rounded-lg border bg-muted text-muted-foreground [&_svg]:size-5"
         >
           {icon}
         </EmptyMedia>

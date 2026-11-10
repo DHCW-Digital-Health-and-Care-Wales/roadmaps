@@ -15,8 +15,10 @@ export interface RoadmapCardProps {
 }
 
 /**
- * A roadmap as a card; the whole card is one link to its detail page. The link is named
- * by the title alone; what else the card shows is its description for screen readers.
+ * A roadmap as DHCW's clickable card: square, bordered, with a grey bar under it, an
+ * underlined link-blue title and a chevron. The whole card is one link to its detail page.
+ * The link is named by the title alone; what else the card shows is its description for
+ * screen readers.
  * Only what the roadmap has is shown, no empty labels. Long titles wrap to two lines and
  * the summary to three; the link's tooltip keeps the full title.
  */
@@ -50,7 +52,7 @@ export function RoadmapCard({ roadmap }: RoadmapCardProps) {
     .map(([part]) => `${id}-${part}`)
 
   return (
-    <div className="group relative flex h-full min-h-18 items-stretch gap-3.5 rounded-xl border bg-card p-4 text-card-foreground transition-[border-color,box-shadow] hover:border-input has-focus-visible:focus-ring">
+    <div className="group relative flex h-full min-h-18 items-stretch gap-3.5 border bg-card p-4 text-card-foreground shadow-card-bar hover:border-input has-focus-visible:focus-ring">
       <RoadmapSwatch colour={roadmap.colour} />
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         {/* The link is the title alone, stretched over the whole card, so its name is the
@@ -62,7 +64,7 @@ export function RoadmapCard({ roadmap }: RoadmapCardProps) {
           aria-describedby={
             describedBy.length > 0 ? describedBy.join(" ") : undefined
           }
-          className="line-clamp-2 font-medium wrap-anywhere outline-none after:absolute after:inset-0 after:rounded-xl"
+          className="line-clamp-2 text-heading-xs wrap-anywhere text-link underline outline-none after:absolute after:inset-0 hover:text-link-hover hover:no-underline"
         >
           {title}
         </Link>
@@ -76,12 +78,7 @@ export function RoadmapCard({ roadmap }: RoadmapCardProps) {
                 </span>
               )}
               {status !== null && (
-                <Badge
-                  id={`${id}-status`}
-                  variant="secondary"
-                  // Free text of any length: wrap within the card, not past it.
-                  className="h-auto max-w-full min-w-0 py-0.5 text-start wrap-anywhere whitespace-normal"
-                >
+                <Badge id={`${id}-status`} variant="neutral">
                   {status}
                 </Badge>
               )}
@@ -119,10 +116,13 @@ export function RoadmapCard({ roadmap }: RoadmapCardProps) {
           )}
         </div>
       </div>
-      <ChevronRightIcon
+      {/* DHCW's chevron: a link-blue circle, which turns with the title on hover. */}
+      <span
         aria-hidden="true"
-        className="mt-0.5 size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground group-has-focus-visible:text-foreground"
-      />
+        className="flex size-6 shrink-0 items-center justify-center rounded-full bg-link text-background group-hover:bg-link-hover"
+      >
+        <ChevronRightIcon className="size-4" />
+      </span>
     </div>
   )
 }

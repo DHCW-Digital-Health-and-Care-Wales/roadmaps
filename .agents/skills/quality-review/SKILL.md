@@ -122,9 +122,9 @@ report in the conversation only.
      checked against `src/components/ui/` (stay close to upstream shadcn on
      Base UI; added with the shadcn CLI, never a hand-rolled competing
      primitive, never Radix), ADR-005 and root `AGENTS.md`: theme tokens
-     (`--brand` used sparingly) over raw colours, `cn(buttonVariants())` for
+     (ADR-010) over raw colours, `cn(buttonVariants())` for
      links styled as buttons, existing layout pieces (`AppShell`, `StatusPanel`,
-     `RoadmapIcon`) over near-copies, sentence-case copy. Verify a suggested
+     `BackLink`) over near-copies, sentence-case copy. Verify a suggested
      token, variant or hook exists before recommending it; demand no
      speculative alias or hook.
    - **Left in a touched file.** A violation the change's touched files

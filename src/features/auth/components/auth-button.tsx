@@ -19,7 +19,7 @@ export function AuthButton({ className }: AuthButtonProps) {
 
   if (state.status === "connected") {
     return (
-      <Button variant="outline" className={className} onClick={disconnect}>
+      <Button variant="secondary" className={className} onClick={disconnect}>
         {t("auth.disconnect")}
       </Button>
     )

@@ -1,41 +1,37 @@
-// Deviates from upstream shadcn (ADR-010): imports cn from @/lib/utils;
-// text-body-xs for upstream's text sizes, focus-visible:focus-fill for its ring, and no
-// `dark:` overrides, which would beat the focus fill in the dark theme; the link
-// variant is --link, as --primary is a fill only. Tokens replace upstream's tints
-// (lint rejects opacity modifiers and arbitrary values): hovers are --primary-hover and
-// --secondary-hover, destructive is the danger status (inverted on hover), aria-invalid
-// shows only the destructive border, and the small sizes' bracket radii are rounded-md.
+// Deviates from upstream shadcn (ADR-010): imports cn from @/lib/utils. The look is
+// DHCW's button (src/foundations/_button-base.scss, src/components/actions/_button.scss at
+// the pinned release): bold text, 4px corners, a 2px bottom bar (`shadow-control`), and
+// half opacity with no bar when disabled, including a button that stays focusable
+// (`data-disabled`). Variants: `default` (primary), `secondary` (white, grey border and bar),
+// `destructive` (DHCW's solid red warning button) and `ghost`; upstream's `outline`, `link`
+// and the xs/lg sizes are gone, so a group is always 40px (`default`) or 32px (`sm`).
+// focus-visible:focus-fill for upstream's ring, and no `dark:` overrides, which would beat
+// the focus fill in the dark theme. Hovers are --primary-hover, --muted and
+// --destructive-hover (the fill is --destructive-fill, as --destructive is the text red); aria-invalid shows only the destructive border. Pressed moves the
+// button 1px, as DHCW's; DHCW's darker pressed fill is not ported.
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-body-xs font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:focus-fill active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent font-bold whitespace-nowrap transition-all outline-none select-none focus-visible:focus-fill active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none aria-invalid:border-destructive data-disabled:pointer-events-none data-disabled:opacity-50 data-disabled:shadow-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary-hover",
-        outline:
-          "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground",
+        default:
+          "border-primary bg-primary text-primary-foreground shadow-control hover:bg-primary-hover",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary-hover aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
-        ghost:
-          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground",
+          "border-input bg-background text-foreground shadow-control-edge hover:bg-muted",
         destructive:
-          "bg-status-danger-bg text-status-danger-fg hover:bg-status-danger-fg hover:text-status-danger-bg",
-        link: "text-link underline-offset-4 hover:underline",
+          "border-destructive-fill bg-destructive-fill text-destructive-foreground shadow-control hover:border-destructive-hover hover:bg-destructive-hover",
+        ghost: "text-foreground hover:bg-muted aria-expanded:bg-muted",
       },
       size: {
         default:
-          "h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
-        xs: "h-6 gap-1 rounded-md px-2 text-body-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-7 gap-1 rounded-md px-2.5 text-body-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
-        lg: "h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
-        icon: "size-8",
-        "icon-xs":
-          "size-6 rounded-md in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
-        "icon-sm": "size-7 rounded-md in-data-[slot=button-group]:rounded-lg",
-        "icon-lg": "size-9",
+          "h-10 gap-2 px-4 text-body has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3",
+        sm: "h-8 gap-1.5 px-3 text-body-xs has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 [&_svg:not([class*='size-'])]:size-3.5",
+        icon: "size-10",
+        "icon-sm": "size-8",
       },
     },
     defaultVariants: {

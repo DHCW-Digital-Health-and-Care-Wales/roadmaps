@@ -33,7 +33,7 @@ export function LanguageSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        render={<Button variant="ghost" className="max-sm:w-8 max-sm:px-0" />}
+        render={<Button variant="ghost" className="max-sm:w-10 max-sm:px-0" />}
       >
         <LanguagesIcon aria-hidden="true" />
         {/* Accessible name "Language English": it includes the visible endonym. */}

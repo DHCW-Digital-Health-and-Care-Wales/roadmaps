@@ -13,12 +13,16 @@ import {
 } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import {
+  Alert,
+  AlertAction,
+  AlertContent,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { ReconnectButton } from "@/features/auth/components/reconnect-button"
 import type { AppError, AppErrorKind } from "@/lib/errors"
-
-import { StatusPanel } from "./status-panel"
 
 const icons = {
   unauthenticated: KeyRoundIcon,
@@ -42,14 +46,16 @@ export interface RoadmapsErrorStateProps {
   onRetry: () => void
   /** A refetch is in flight. */
   retrying: boolean
-  /** The panel title's heading level. */
+  /** The panel title's heading level (a `panel`'s title is a heading; an `alert`'s is not). */
   titleAs?: "h1" | "h2" | undefined
 }
 
 /**
  * Why roadmaps couldn't be loaded, in words chosen by the error's kind alone (ADR-008),
  * with the one action that can help: Reconnect after the session expired, Retry when
- * trying again may work, otherwise none.
+ * trying again may work, otherwise none. A failure with nothing loaded is a `destructive`
+ * notice; an expired session, or any problem above roadmaps loaded earlier (which may be
+ * out of date), is a `warning`.
  */
 export function RoadmapsErrorState({
   error,
@@ -71,7 +77,7 @@ export function RoadmapsErrorState({
     <ReconnectButton />
   ) : error.retryable ? (
     <Button
-      variant="outline"
+      variant="secondary"
       size="sm"
       disabled={retrying}
       focusableWhenDisabled
@@ -92,35 +98,16 @@ export function RoadmapsErrorState({
   ) : null
 
   const Icon = icons[error.kind]
-  if (variant === "panel") {
-    return (
-      <StatusPanel
-        role="alert"
-        icon={<Icon />}
-        title={title}
-        titleAs={titleAs}
-        description={description}
-        action={action}
-      />
-    )
-  }
-
   return (
-    <Alert className="flex items-start gap-3 px-4 py-3 max-sm:flex-wrap">
-      {/* `!`: the alert otherwise forces its icons to the text colour. */}
-      <Icon
-        aria-hidden="true"
-        className="mt-0.5 size-4 shrink-0 text-status-warning-fg!"
-      />
-      <div className="min-w-0 flex-1">
-        <AlertTitle>{title}</AlertTitle>
+    <Alert variant={expired || variant === "alert" ? "warning" : "destructive"}>
+      <Icon aria-hidden="true" />
+      <AlertContent>
+        <AlertTitle as={variant === "panel" ? (titleAs ?? "h2") : "div"}>
+          {title}
+        </AlertTitle>
         <AlertDescription>{description}</AlertDescription>
-      </div>
-      {action && (
-        <div className="shrink-0 self-center max-sm:w-full max-sm:pl-7">
-          {action}
-        </div>
-      )}
+      </AlertContent>
+      {action && <AlertAction>{action}</AlertAction>}
     </Alert>
   )
 }

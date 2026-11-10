@@ -433,7 +433,7 @@ language? })` (`src/test/render-with-providers.tsx`) renders the real `AppProvid
     retryable, Reconnect for an expired session); error or expiry with data → the same
     component as `variant="alert"` above the grid. No toasts for query errors. Refresh is
     `aria-busy` while fetching and disabled (focusable) unless connected. Shared pieces:
-    `StatusPanel` (Empty-based, `titleAs` h1/h2), `RoadmapIcon`, `ReconnectButton`
+    `StatusPanel` (Empty-based, `titleAs` h1/h2), `ReconnectButton`
     (`features/auth/components`). The detail route passes `Route.useParams().roadmapId`.
   - STY-007 E2E hooks (stable accessible names, en): heading "Your roadmaps"; cards are links
     named by the roadmap name inside `main`'s only `list`, `href` `#/roadmaps/<sheetId>`;
@@ -706,3 +706,24 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
       binaries as `./node_modules/.bin/playwright`: `pnpm exec` there installs and prunes
       the checkout's `node_modules` through the link. The same goes for reviewers in a
       shared checkout: `pnpm exec eslint` relinks `node_modules`.
+- **STY-015 Shared components look like DHCW's** — buttons, tags, notices, cards, panels
+  and menus are DHCW's, on STY-013's tokens and under STY-014's lint (no new exception);
+  `InsetText`, `ContextChip` and `BackLink` (`components/layout/`) are ready for STY-016's
+  shell. The detail page lost `RoadmapIcon` (D4) and menu items take `focus-fill` (D5).
+  - Where things live: `Button` has `default`/`secondary`/`destructive`/`ghost` at
+    `default` (40px) or `sm` (32px), no `outline`/`link`/`xs`/`lg`. `Badge` is DHCW's tag
+    (`neutral`/`info`/`success`/`warning`/`danger`/`outline`, `TagVariant`); a status maps
+    to a variant in one typed table (`connection-status.tsx`). `Alert` is a flex row of icon,
+    `AlertContent`, `AlertAction`, with `info`/`success`/`warning`/`destructive`, `role`
+    (default `alert`, `note` for what a status has announced) and `AlertTitle as="h1"|"h2"`.
+    The roadmaps error state is a `destructive` alert when nothing loaded, `warning` for an
+    expired session or above cards.
+  - Tokens: `--destructive-fill`/`-foreground`/`-hover` (the red button, the same in both
+    themes; `--destructive` stays text), `shadow-control-edge`, `shadow-card-bar`.
+  - Gotchas:
+    - `data-disabled:` (Base UI's focusable-while-disabled) is in the button's base, so a
+      caller adds nothing for it.
+    - A card is still a `li` with a stretched title link and `aria-hidden` details; the
+      new chevron is a decorative circle in the card's `div`, not in the link.
+    - The start page's notice is `role="note"`, since the connection status already
+      announces the failure.

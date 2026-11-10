@@ -1,7 +1,7 @@
 # EPC-003: DHCW design alignment — a DHCW staff tool that still looks like generic SaaS
 
-- **Status**: Active — planned 2026-11-10 from the owner's answers in the alignment analysis; STY-013 delivered (PR #12, merged); STY-014 delivered, awaiting merge
-- **Progress**: 2 of 6 terminal; next selectable: STY-015 once STY-014's PR merges; blocked on: that merge
+- **Status**: Active — planned 2026-11-10 from the owner's answers in the alignment analysis; STY-013 and STY-014 delivered and merged; STY-015 delivered, awaiting merge
+- **Progress**: 3 of 6 terminal (STY-015's PR awaits merge); next selectable: STY-016 and STY-017 once it merges; blocked on: that merge
 - **Binding ADRs**: ADR-010, ADR-005, ADR-008, ADR-009
 
 ## Summary
@@ -142,8 +142,8 @@ changes. Use only the example data in `tests/fixtures/sheets/`.
 | ID      | Story                                                                                                                                    | Area                                               | Depends on | State                |
 | ------- | ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | ---------- | -------------------- |
 | STY-013 | [The app uses DHCW's colours, type and focus indicator](../_archive/EPC-003-dhcw-design-alignment/STY-013-dhcw-tokens-type-and-focus.md) | Features/UI + Docs                                 | —          | ✅                   |
-| STY-014 | [Off-brand styling fails the build](../_archive/EPC-003-dhcw-design-alignment/STY-014-semantic-token-enforcement.md)                     | Features/UI + CI/CD                                | STY-013    | ✅ (PR awaits merge) |
-| STY-015 | [Shared components look like DHCW's](STY-015-dhcw-components.md)                                                                         | Features/UI                                        | STY-014    |                      |
+| STY-014 | [Off-brand styling fails the build](../_archive/EPC-003-dhcw-design-alignment/STY-014-semantic-token-enforcement.md)                     | Features/UI + CI/CD                                | STY-013    | ✅                   |
+| STY-015 | [Shared components look like DHCW's](../_archive/EPC-003-dhcw-design-alignment/STY-015-dhcw-components.md)                               | Features/UI                                        | STY-014    | ✅ (PR awaits merge) |
 | STY-016 | [The shell and pages are a DHCW staff service](STY-016-dhcw-shell-and-pages.md)                                                          | Features/UI + i18n + E2E                           | STY-015    |                      |
 | STY-017 | [Failures stay on screen, and staff are warned before their session ends](STY-017-notifications-and-session-warning.md)                  | Domain + Infrastructure + Features/UI + i18n + E2E | STY-015    |                      |
 | STY-018 | [Screenshot tests hold the DHCW look](STY-018-visual-regression.md)                                                                      | E2E + CI/CD                                        | STY-016    |                      |

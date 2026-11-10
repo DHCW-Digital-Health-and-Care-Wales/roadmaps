@@ -1,41 +1,45 @@
-// Deviates from upstream shadcn (ADR-010): imports cn from @/lib/utils;
-// text-body-xs for upstream's text-xs, focus-visible:focus-fill for its ring, and no
-// `dark:` overrides, which would beat the focus fill in the dark theme; the link
-// variant is --link, as --primary is a fill only. Tokens replace upstream's tints (lint
-// rejects opacity modifiers): hovers are --primary-hover and --secondary-hover,
-// destructive is the danger status (inverted on hover), and aria-invalid shows only
-// the destructive border.
+// Deviates from upstream shadcn (ADR-010): this is DHCW's tag (src/components/content/
+// _tag.scss at the pinned release), not a rounded badge: square, 14px bold, a 1px border in
+// its ink colour, and wrapping text, as a status label is free text. Variants are DHCW's
+// tag palette as status tokens (neutral, info, success, warning, danger) and `outline`
+// (DHCW's white tag). A tag is a label: it has no hover or focus styles and never looks
+// clickable. Imports cn from @/lib/utils.
 import { mergeProps } from "@base-ui/react/merge-props"
 import { useRender } from "@base-ui/react/use-render"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
-  "group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-4xl border border-transparent px-2 py-0.5 text-body-xs font-medium whitespace-nowrap transition-all focus-visible:focus-fill has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive [&>svg]:pointer-events-none [&>svg]:size-3!",
+  "inline-flex w-fit max-w-full shrink-0 items-center justify-center gap-1 border px-2 py-0.5 text-center text-body-xs font-bold wrap-anywhere [&>svg]:pointer-events-none [&>svg]:size-3.5 [&>svg]:shrink-0",
   {
     variants: {
       variant: {
-        default:
-          "bg-primary text-primary-foreground [a]:hover:bg-primary-hover",
-        secondary:
-          "bg-secondary text-secondary-foreground [a]:hover:bg-secondary-hover",
-        destructive:
-          "bg-status-danger-bg text-status-danger-fg [a]:hover:bg-status-danger-fg [a]:hover:text-status-danger-bg",
-        outline:
-          "border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground",
-        ghost: "hover:bg-muted hover:text-muted-foreground",
-        link: "text-link underline-offset-4 hover:underline",
+        neutral:
+          "border-status-neutral-border bg-status-neutral-bg text-status-neutral-fg",
+        info: "border-status-info-border bg-status-info-bg text-status-info-fg",
+        success:
+          "border-status-success-border bg-status-success-bg text-status-success-fg",
+        warning:
+          "border-status-warning-border bg-status-warning-bg text-status-warning-fg",
+        danger:
+          "border-status-danger-border bg-status-danger-bg text-status-danger-fg",
+        outline: "border-foreground bg-background text-foreground",
       },
     },
     defaultVariants: {
-      variant: "default",
+      variant: "neutral",
     },
   },
 )
 
+/** The names of the tag variants, for tables that map a state to one. */
+export type TagVariant = NonNullable<
+  VariantProps<typeof badgeVariants>["variant"]
+>
+
 function Badge({
   className,
-  variant = "default",
+  variant = "neutral",
   render,
   ...props
 }: useRender.ComponentProps<"span"> & VariantProps<typeof badgeVariants>) {

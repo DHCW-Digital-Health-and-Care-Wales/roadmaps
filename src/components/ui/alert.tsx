@@ -1,22 +1,34 @@
-// Deviates from upstream shadcn (ADR-010): imports cn from @/lib/utils;
-// text-body-xs for upstream's text-sm; the destructive description is text-destructive,
-// not a 90% tint (lint rejects opacity modifiers).
+// Deviates from upstream shadcn (ADR-010): imports cn from @/lib/utils; text-body-xs for
+// upstream's text-sm. The look follows DHCW's callouts at the pinned release: `info` and
+// `success` are the notification banner (a 4px border in the status ink, not DHCW's 6px
+// with a header band), `warning` is the warning callout (DHCW's yellow border on a pale
+// yellow body) and `destructive` is the error summary (a 4px red border). The layout is a
+// flex row, not upstream's grid: an icon, an `AlertContent` holding the title and
+// description, and an `AlertAction` that wraps below on a phone. `AlertTitle` can render as
+// a heading (`as`), for a notice that is a page's only content. Each variant sets its own
+// icon colour, so nothing forces `currentColor` on a feature's icon. `role` defaults to
+// `alert` and can be `note` for a notice that must not interrupt (the status badge has
+// already announced it).
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const alertVariants = cva(
-  "group/alert relative grid w-full gap-0.5 rounded-lg border px-2.5 py-2 text-left text-body-xs has-data-[slot=alert-action]:relative has-data-[slot=alert-action]:pr-18 has-[>svg]:grid-cols-[auto_1fr] has-[>svg]:gap-x-2 *:[svg]:row-span-2 *:[svg]:translate-y-0.5 *:[svg]:text-current *:[svg:not([class*='size-'])]:size-4",
+  "group/alert relative flex w-full items-start gap-3 border-4 px-4 py-3 text-left text-body-xs max-sm:flex-wrap [&>svg]:mt-0.5 [&>svg]:size-4 [&>svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-card text-card-foreground",
+        info: "border-status-info-border bg-card text-card-foreground [&>svg]:text-status-info-fg",
+        success:
+          "border-status-success-border bg-card text-card-foreground [&>svg]:text-status-success-fg",
+        warning:
+          "border-focus bg-status-warning-bg text-status-warning-fg [&>svg]:text-status-warning-fg",
         destructive:
-          "bg-card text-destructive *:data-[slot=alert-description]:text-destructive *:[svg]:text-current",
+          "border-destructive bg-card text-card-foreground **:data-[slot=alert-title]:text-destructive [&>svg]:text-destructive",
       },
     },
     defaultVariants: {
-      variant: "default",
+      variant: "info",
     },
   },
 )
@@ -24,26 +36,38 @@ const alertVariants = cva(
 function Alert({
   className,
   variant,
+  role = "alert",
   ...props
 }: React.ComponentProps<"div"> & VariantProps<typeof alertVariants>) {
   return (
     <div
       data-slot="alert"
-      role="alert"
+      role={role}
       className={cn(alertVariants({ variant }), className)}
       {...props}
     />
   )
 }
 
-function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
+function AlertContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
+      data-slot="alert-content"
+      className={cn("min-w-0 flex-1", className)}
+      {...props}
+    />
+  )
+}
+
+function AlertTitle({
+  as: Title = "div",
+  className,
+  ...props
+}: React.ComponentProps<"div"> & { as?: "div" | "h1" | "h2" }) {
+  return (
+    <Title
       data-slot="alert-title"
-      className={cn(
-        "font-medium group-has-[>svg]/alert:col-start-2 [&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground",
-        className,
-      )}
+      className={cn("text-body-xs font-bold", className)}
       {...props}
     />
   )
@@ -57,7 +81,7 @@ function AlertDescription({
     <div
       data-slot="alert-description"
       className={cn(
-        "text-body-xs text-balance text-muted-foreground md:text-pretty [&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground [&_p:not(:last-child)]:mb-4",
+        "text-body-xs text-pretty [&_a]:underline [&_a]:underline-offset-3 [&_p:not(:last-child)]:mb-4",
         className,
       )}
       {...props}
@@ -69,10 +93,13 @@ function AlertAction({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="alert-action"
-      className={cn("absolute top-2 right-2", className)}
+      className={cn(
+        "shrink-0 self-center max-sm:w-full max-sm:pl-7",
+        className,
+      )}
       {...props}
     />
   )
 }
 
-export { Alert, AlertTitle, AlertDescription, AlertAction }
+export { Alert, AlertContent, AlertTitle, AlertDescription, AlertAction }

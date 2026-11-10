@@ -45,7 +45,19 @@ async function expectFill(locator: Locator) {
     })
 }
 
-/** Cards and menus: a 3px yellow outline outside a 2px dark inner ring. */
+/** Text links: yellow fill, dark text, a 4px dark bar under every line. */
+async function expectLink(locator: Locator) {
+  await expect(locator).toBeFocused()
+  await expect
+    .poll(() => focusStyle(locator))
+    .toMatchObject({
+      background: YELLOW,
+      color: DARK,
+      shadow: `${DARK} 0px 4px 0px 0px`,
+    })
+}
+
+/** Cards and toasts: a 3px yellow outline outside a 2px dark inner ring. */
 async function expectRing(locator: Locator) {
   await expect
     .poll(() => focusStyle(locator))
@@ -96,7 +108,8 @@ for (const theme of ["light", "dark"] as const) {
     const welsh = page.getByRole("menuitemradio", { name: "Cymraeg" })
     await page.keyboard.press("ArrowDown")
     await expect(welsh).toBeFocused()
-    await expectRing(welsh)
+    // Menu items take the fill, as a DHCW link or button does (STY-015 D5).
+    await expectFill(welsh)
     await page.keyboard.press("Escape")
 
     const refresh = main.getByRole("button", { name: "Refresh" })
@@ -114,6 +127,6 @@ for (const theme of ["light", "dark"] as const) {
     await page.keyboard.press("Enter")
     const back = main.getByRole("link", { name: "Back to roadmaps" })
     await tabTo(page, back)
-    await expectFill(back)
+    await expectLink(back)
   })
 }

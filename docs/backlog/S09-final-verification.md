@@ -26,3 +26,14 @@ production-grade state.
 
 - [ ] Every item in the brief's §14 is checked off in this file with evidence.
 - [ ] Screenshots saved under the scratch area referenced in the handoff (not committed).
+
+## Orchestrator notes carried forward (from S05 screenshot review)
+
+- At 375px the header hides the product name and shrinks the connection status to a bare
+  dot, while the header **and** hero both show "Connect Google". Consider keeping a short
+  product name visible on mobile and avoiding the duplicated primary CTA on the welcome
+  state (e.g. hide the header auth button on mobile while the hero CTA is on screen),
+  without losing an accessible status label.
+- Main JS chunk is ~580 kB (Vite warning). Investigate: TanStack Router
+  `autoCodeSplitting`, lazy-loading the detail route, and checking for accidentally bundled
+  dev-only code. Fix the cause rather than raising `chunkSizeWarningLimit`.

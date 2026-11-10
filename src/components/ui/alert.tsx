@@ -5,7 +5,7 @@
 // yellow body) and `destructive` is the error summary (a 4px red border). The layout is a
 // flex row, not upstream's grid: an icon, an `AlertContent` holding the title and
 // description, and an `AlertAction` that wraps below on a phone. `AlertTitle` can render as
-// a heading (`as`), for a notice that is a page's only content. Each variant sets its own
+// a heading (`as`, then at `text-heading-m`), for a notice that is a page's only content. Each variant sets its own
 // icon colour, so nothing forces `currentColor` on a feature's icon. `role` defaults to
 // `alert` and can be `note` for a notice that must not interrupt (the status badge has
 // already announced it).

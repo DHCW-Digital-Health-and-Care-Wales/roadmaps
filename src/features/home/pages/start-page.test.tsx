@@ -64,7 +64,7 @@ describe.each(["en", "cy"] as const)("the start page in %s", (language) => {
     })
 
     const main = within(screen.getByRole("main"))
-    const notice = main.getByRole("note")
+    const notice = main.getByRole("alert")
     expect(notice).toHaveTextContent(c.denied)
     expect(
       notice.compareDocumentPosition(main.getByRole("heading", { level: 1 })) &
@@ -75,8 +75,8 @@ describe.each(["en", "cy"] as const)("the start page in %s", (language) => {
   it("shows no notice when there is nothing to say", async () => {
     await renderWithProviders({ language })
 
-    expect(
-      within(screen.getByRole("main")).queryByRole("note"),
-    ).not.toBeInTheDocument()
+    const main = within(screen.getByRole("main"))
+    expect(main.queryByRole("note")).not.toBeInTheDocument()
+    expect(main.queryByRole("alert")).not.toBeInTheDocument()
   })
 })

@@ -202,7 +202,7 @@ describe("createGoogleAuthClient", () => {
       )
     })
 
-    it("does nothing while initializing, connecting or connected", async () => {
+    it("does nothing while initializing or connecting", async () => {
       const { client, gis } = createClient()
       client.connect()
       expect(client.getSnapshot()).toEqual({ status: "initializing" })
@@ -213,11 +213,7 @@ describe("createGoogleAuthClient", () => {
       client.connect()
       client.connect()
       expect(gis.requestAccessToken).toHaveBeenCalledTimes(1)
-
-      gis.grant()
-      client.connect()
-      expect(gis.requestAccessToken).toHaveBeenCalledTimes(1)
-      expect(client.getSnapshot().status).toBe("connected")
+      expect(client.getSnapshot().status).toBe("connecting")
     })
 
     it("connects when all scopes are granted, keeping the token out of the state", async () => {
@@ -493,6 +489,220 @@ describe("createGoogleAuthClient", () => {
       gis.grant()
       expect(client.getSnapshot().status).toBe("connected")
       expect(client.getAccessToken()).toBe(TOKEN)
+    })
+  })
+
+  describe("renewal", () => {
+    const RENEWED_TOKEN = "ya29.renewed-token"
+    /** Ten minutes in, the renewed session's app expiry. */
+    const RENEWED_AT = NOW + 10 * 60_000
+    const RENEWED_EXPIRES_AT = RENEWED_AT + LIFETIME_S * 1000 - EXPIRY_SKEW_MS
+
+    function grantRenewal(gis: ReturnType<typeof createFakeGis>) {
+      gis.respond({
+        access_token: RENEWED_TOKEN,
+        expires_in: LIFETIME_S,
+        scope: SCOPE,
+      })
+    }
+
+    it("renews a connected session quietly, without passing through connecting", async () => {
+      const { client, gis } = await createConnectedClient()
+      const states = recordStates(client)
+      vi.advanceTimersByTime(RENEWED_AT - NOW)
+
+      client.connect()
+      expect(gis.oauth2.initTokenClient).toHaveBeenCalledTimes(2)
+      expect(gis.requestAccessToken).toHaveBeenLastCalledWith({ prompt: "" })
+      // The session carries on, token and all, while Google answers.
+      expect(states).toEqual([])
+      expect(client.getAccessToken()).toBe(TOKEN)
+
+      grantRenewal(gis)
+      expect(states).toEqual([
+        { status: "connected", expiresAt: RENEWED_EXPIRES_AT },
+      ])
+      expect(client.getAccessToken()).toBe(RENEWED_TOKEN)
+      expect(gis.oauth2.revoke).not.toHaveBeenCalled()
+    })
+
+    it("moves the expiry timer to the renewed session's expiry", async () => {
+      const { client, gis } = await createConnectedClient()
+      vi.advanceTimersByTime(RENEWED_AT - NOW)
+      client.connect()
+      grantRenewal(gis)
+
+      vi.advanceTimersByTime(EXPIRES_AT - RENEWED_AT)
+      expect(client.getSnapshot().status).toBe("connected")
+
+      vi.advanceTimersByTime(RENEWED_EXPIRES_AT - EXPIRES_AT)
+      expect(client.getSnapshot()).toEqual({ status: "expired" })
+    })
+
+    it.each([
+      ["popup_closed", "popup-closed"],
+      ["popup_failed_to_open", "popup-blocked"],
+      ["unknown", "unknown"],
+    ] as const)(
+      "keeps the session when the renewal popup reports %s",
+      async (type, lastError) => {
+        const { client, gis } = await createConnectedClient()
+
+        client.connect()
+        gis.failPopup(type)
+
+        expect(client.getSnapshot()).toEqual({
+          status: "connected",
+          expiresAt: EXPIRES_AT,
+          lastError,
+        })
+        expect(client.getAccessToken()).toBe(TOKEN)
+      },
+    )
+
+    it.each<[string, TokenResponseInput, string]>([
+      ["refused", { error: "access_denied" }, "access-denied"],
+      [
+        "granted without the scope",
+        { access_token: RENEWED_TOKEN, expires_in: LIFETIME_S, scope: "" },
+        "scope-not-granted",
+      ],
+      ["unreadable", { access_token: RENEWED_TOKEN }, "unknown"],
+    ])(
+      "keeps the session when the renewal is %s",
+      async (_name, response, lastError) => {
+        const { client, gis } = await createConnectedClient()
+        gis.oauth2.hasGrantedAllScopes.mockImplementation(
+          (granted) => granted.scope === SCOPE,
+        )
+
+        client.connect()
+        gis.respond(response)
+
+        expect(client.getSnapshot()).toEqual({
+          status: "connected",
+          expiresAt: EXPIRES_AT,
+          lastError,
+        })
+        expect(client.getAccessToken()).toBe(TOKEN)
+        expect(gis.oauth2.revoke).not.toHaveBeenCalled()
+      },
+    )
+
+    it("keeps the session if GIS throws when renewing", async () => {
+      const { client, gis } = await createConnectedClient()
+      gis.requestAccessToken.mockImplementationOnce(() => {
+        throw new Error("GIS exploded")
+      })
+
+      client.connect()
+
+      expect(client.getSnapshot()).toEqual({
+        status: "connected",
+        expiresAt: EXPIRES_AT,
+        lastError: "unknown",
+      })
+    })
+
+    it("still expires on time after a failed renewal", async () => {
+      const { client, gis } = await createConnectedClient()
+      client.connect()
+      gis.failPopup("popup_closed")
+
+      vi.advanceTimersByTime(EXPIRES_AT - NOW)
+
+      expect(client.getSnapshot()).toEqual({ status: "expired" })
+      expect(client.getAccessToken()).toBeNull()
+    })
+
+    it("clears an earlier renewal's error when a renewal succeeds", async () => {
+      const { client, gis } = await createConnectedClient()
+      client.connect()
+      gis.failPopup("popup_failed_to_open")
+      vi.advanceTimersByTime(RENEWED_AT - NOW)
+
+      client.connect()
+      expect(gis.requestAccessToken).toHaveBeenLastCalledWith({ prompt: "" })
+      grantRenewal(gis)
+
+      expect(client.getSnapshot()).toEqual({
+        status: "connected",
+        expiresAt: RENEWED_EXPIRES_AT,
+      })
+    })
+
+    it("ignores connect() while a renewal is in progress", async () => {
+      const { client, gis } = await createConnectedClient()
+
+      client.connect()
+      client.connect()
+
+      expect(gis.requestAccessToken).toHaveBeenCalledTimes(2)
+    })
+
+    it("abandons a renewal still in progress when the session expires", async () => {
+      const { client, gis } = await createConnectedClient()
+      client.connect()
+
+      vi.advanceTimersByTime(EXPIRES_AT - NOW)
+      grantRenewal(gis)
+
+      expect(client.getSnapshot()).toEqual({ status: "expired" })
+      expect(client.getAccessToken()).toBeNull()
+    })
+
+    it("abandons a renewal still in progress on disconnect", async () => {
+      const { client, gis } = await createConnectedClient()
+      client.connect()
+
+      client.disconnect()
+      grantRenewal(gis)
+
+      expect(client.getSnapshot()).toEqual({ status: "ready" })
+      expect(client.getAccessToken()).toBeNull()
+      expect(gis.oauth2.revoke).toHaveBeenCalledExactlyOnceWith(
+        TOKEN,
+        expect.any(Function),
+      )
+    })
+  })
+
+  describe("returning to the tab", () => {
+    function returnToTab() {
+      document.dispatchEvent(new Event("visibilitychange"))
+    }
+
+    it("expires at once when the clock passed expiry while the timer was held back", async () => {
+      const { client } = await createConnectedClient()
+
+      // The device slept: the clock moved on, the timer did not fire.
+      vi.setSystemTime(EXPIRES_AT)
+      returnToTab()
+
+      expect(client.getSnapshot()).toEqual({ status: "expired" })
+    })
+
+    it("keeps a session that has time left", async () => {
+      const { client } = await createConnectedClient()
+      const connected = client.getSnapshot()
+
+      vi.setSystemTime(EXPIRES_AT - 1)
+      returnToTab()
+
+      expect(client.getSnapshot()).toBe(connected)
+    })
+
+    it("stops listening once disposed", async () => {
+      const { client } = await createConnectedClient()
+      const remove = vi.spyOn(document, "removeEventListener")
+
+      client.dispose()
+
+      expect(remove).toHaveBeenCalledWith(
+        "visibilitychange",
+        expect.any(Function),
+      )
+      remove.mockRestore()
     })
   })
 

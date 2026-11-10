@@ -65,6 +65,14 @@
   /* @source src/components/forms/_date-picker.scss */
   --nhsw-date-picker-dialog-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* .nhsw-date-picker__dialog box-shadow */
 
+  /* @source src/components/content/_timeout-modal.scss */
+  --nhsw-timeout-modal-backdrop: rgba(
+    11,
+    12,
+    12,
+    0.6
+  ); /* &::backdrop background-color */
+
   /* @source src/tokens/_typography.scss */
   --nhsw-font-family-base:
     Roboto, Arial, sans-serif; /* $nhsw-font-family-base */
@@ -139,6 +147,9 @@
   --control-shadow: var(--nhsw-primary-button-shadow);
   /* Lifts a menu or other popup off the page, as DHCW's date picker dialog. */
   --popup-shadow: var(--nhsw-date-picker-dialog-shadow);
+  /* Dims the page behind a modal dialog, as DHCW's timeout dialog; the same in both
+     themes. Decorative, so it has no contrast pair. */
+  --overlay: var(--nhsw-timeout-modal-backdrop);
 
   /* DHCW's tag tints and inks. */
   --status-neutral-bg: var(--nhsw-tag-grey-background);
@@ -297,6 +308,7 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-overlay: var(--overlay);
   --color-link: var(--link);
   --color-link-hover: var(--link-hover);
   --color-focus: var(--focus);
@@ -357,7 +369,7 @@
   box-shadow: 0 2px 0 var(--focus-foreground);
 }
 
-/* Cards, inputs and toasts: a 3px yellow outline outside a 2px dark inner ring
+/* Cards and inputs: a 3px yellow outline outside a 2px dark inner ring
    (DHCW src/foundations/_input-base.scss, src/utilities/_focus-ring.scss). */
 @utility focus-ring {
   outline: 3px solid var(--focus);
@@ -392,23 +404,7 @@
   }
 }
 
-/*
- * Sonner injects its stylesheet unlayered, with its own font stack, a 13px size and a
- * faint focus shadow, so utilities on its toasts lose. These match its selectors with
- * one more `:root`. A toast takes focus from the keyboard (Alt+T, then Tab).
- */
-:root [data-sonner-toaster] {
-  font-family: var(--font-sans);
-}
-:root [data-sonner-toast][data-styled="true"] {
-  font-size: var(--nhsw-font-size-body-extra-small);
-  line-height: var(--nhsw-line-height-body-extra-small);
-}
-:root [data-sonner-toast]:focus-visible {
-  @apply focus-ring;
-}
-
-/* Respect reduced motion everywhere, including generated components and toasts. */
+/* Respect reduced motion everywhere, including generated components and dialogs. */
 @media (prefers-reduced-motion: reduce) {
   *,
   ::before,

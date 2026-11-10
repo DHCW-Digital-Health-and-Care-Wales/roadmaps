@@ -10,7 +10,7 @@ const ONE_HOUR_MS = 60 * 60 * 1000
 export interface FakeAuthClient extends AuthClient {
   /** Moves the fake to any state and notifies subscribers. */
   readonly setState: (state: AuthState) => void
-  /** Moves to `connected` (an hour from now). */
+  /** Moves to `connected` (an hour from now), renewing a `connected` session too. */
   readonly connect: Mock<() => void>
   /** Moves to `ready`, then calls `onDisconnect`. */
   readonly disconnect: Mock<() => void>

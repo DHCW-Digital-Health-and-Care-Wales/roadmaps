@@ -1,15 +1,14 @@
 import { QueryClientProvider, type QueryClient } from "@tanstack/react-query"
 import type { i18n } from "i18next"
 import type { ReactNode } from "react"
-import { I18nextProvider, useTranslation } from "react-i18next"
+import { I18nextProvider } from "react-i18next"
 
 import { AppInfoProvider, type AppInfo } from "@/components/layout/app-info"
 import { ThemeProvider } from "@/components/theme/theme-provider"
-import { Toaster } from "@/components/ui/sonner"
 import type { AuthClient } from "@/domain/auth/auth-client"
 import type { RoadmapRepository } from "@/domain/roadmap/roadmap-repository"
 import { AuthProvider } from "@/features/auth/auth-provider"
-import { AuthNotifications } from "@/features/auth/components/auth-notifications"
+import { SessionWarning } from "@/features/auth/components/session-warning"
 import { RoadmapRepositoryProvider } from "@/features/roadmaps/roadmap-repository-context"
 
 /** What the providers need: built by `composeApp()`, or by tests with fakes. */
@@ -27,9 +26,10 @@ export interface AppProvidersProps {
 }
 
 /**
- * Every app-wide provider, outermost first: i18n (so everything below, toasts included,
- * is translated), theme, query cache, auth, the roadmap data source, then the app's own details
- * (version, feedback address).
+ * Every app-wide provider, outermost first: i18n (so everything below, the session warning
+ * included, is translated), theme, query cache, auth, the roadmap data source, then the
+ * app's own details (version, feedback address). The session warning is a dialog over
+ * whichever page is open.
  */
 export function AppProviders({ services, children }: AppProvidersProps) {
   return (
@@ -41,17 +41,11 @@ export function AppProviders({ services, children }: AppProvidersProps) {
               <AppInfoProvider info={services.appInfo}>
                 {children}
               </AppInfoProvider>
-              <AuthNotifications />
-              <Notifications />
+              <SessionWarning />
             </RoadmapRepositoryProvider>
           </AuthProvider>
         </QueryClientProvider>
       </ThemeProvider>
     </I18nextProvider>
   )
-}
-
-function Notifications() {
-  const { t } = useTranslation()
-  return <Toaster containerAriaLabel={t("layout.notifications")} />
 }

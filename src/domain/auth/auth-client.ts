@@ -23,6 +23,8 @@ export type AuthState =
       readonly status: "connected"
       /** Epoch ms after which the token is no longer used (shortly before Google's expiry). */
       readonly expiresAt: number
+      /** Why the latest renewal didn't succeed. The session still runs until `expiresAt`. */
+      readonly lastError?: AuthErrorCode
     }
   | { readonly status: "expired"; readonly lastError?: AuthCancellationCode }
   | { readonly status: "error"; readonly error: AuthFailureCode }
@@ -37,8 +39,10 @@ export interface AuthClient {
   /** Registers a change listener and returns its unsubscribe function. */
   readonly subscribe: (listener: () => void) => () => void
   /**
-   * Starts the consent flow from `ready`, `expired` or `error`. Call it synchronously from
-   * a user gesture, or the browser may block the popup.
+   * Starts the consent flow from `ready`, `expired` or `error`, or renews a `connected`
+   * session: a renewal stays `connected` throughout and ends in a new `connected` snapshot,
+   * with a later `expiresAt` or a `lastError`. Call it synchronously from a user gesture,
+   * or the browser may block the popup.
    */
   readonly connect: () => void
   /** Ends the session: revokes access where possible and forgets the token. */

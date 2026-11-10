@@ -18,6 +18,16 @@ export const en = {
     shortAppName: "Roadmaps",
     loading: "Loading…",
     retry: "Retry",
+    close: "Close",
+    /** A time left, e.g. "1 minute and 49 seconds". */
+    duration: {
+      minutes_one: "{{count, number}} minute",
+      minutes_other: "{{count, number}} minutes",
+      seconds_one: "{{count, number}} second",
+      seconds_other: "{{count, number}} seconds",
+      minutesAndSeconds:
+        '$t(common.duration.minutes, {"count": {{minutes}} }) and $t(common.duration.seconds, {"count": {{seconds}} })',
+    },
     /** A calendar date written out, e.g. "1 October 2026". */
     date: "{{day}} {{month}} {{year}}",
     months: {
@@ -38,7 +48,6 @@ export const en = {
   layout: {
     skipToContent: "Skip to main content",
     home: "DHCW Roadmap Editor home",
-    notifications: "Notifications",
     /** The DHCW logo's alternative text: the organisation's name. */
     logoAlt: "Digital Health and Care Wales",
     phase: {
@@ -85,9 +94,27 @@ export const en = {
       "popup-blocked":
         "Your browser blocked the Google window. Allow pop-ups for this site and try again.",
     } satisfies Record<AuthErrorCode, string>,
+    /** Confirmations, shown as a notice at the top of the page (no toasts). */
     notifications: {
       connected: "Connected to Google",
       disconnected: "Disconnected from Google",
+    },
+    notice: {
+      /** The notice's close button, read by assistive technology. */
+      dismiss: "Dismiss message",
+    },
+    /** A failed "Stay connected": the reason (`auth.errors.*`) goes between the two. */
+    renewal: {
+      failed: "Couldn't keep you connected",
+      reconnectLater: "You'll need to reconnect when your session ends.",
+    },
+    /** The warning two minutes before the session ends. */
+    sessionWarning: {
+      title: "Your session is about to end",
+      /** Shown with a live countdown, and announced each minute and at 30 seconds. */
+      endsIn: "Your session ends in {{remaining}}.",
+      afterwards: "After that, you'll need to reconnect.",
+      stayConnected: "Stay connected",
     },
   },
   roadmaps: {

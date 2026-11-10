@@ -151,3 +151,42 @@ Newest last. Each entry: story id, what changed, decisions, gotchas for the next
       in `features/roadmaps/`, see ADR-0002).
     - Placeholder copy in `src/routes/index.tsx` is English only, so S04 moves it into the
       catalogues.
+- **S02 Domain, errors, Google Sheets repository** — framework-free domain, `AppError`,
+  and the Sheets adapter. ADR-0002 amended (optional abort `signal`, contract test).
+  - Public API:
+    - `@/domain/roadmap/roadmap`: `Roadmap { id; name }`.
+    - `@/domain/roadmap/roadmap-repository`: `RoadmapRepository.listRoadmaps(options?:
+ListRoadmapsOptions)` where `ListRoadmapsOptions = { signal?: AbortSignal }`. On abort
+      it rejects with `signal.reason` (not an `AppError`); every other failure is an
+      `AppError`.
+    - `@/lib/errors`: `AppError(kind, { message?, retryable?, status?, cause? })` with
+      `kind: AppErrorKind`, `retryable` (defaults true only for `rate-limited`/`network`),
+      `status?`; `isAppError`, `toAppError(unknown)` (non-`AppError` -> `unknown`).
+      `message` is developer diagnostics; UI copy must come from `kind` (ADR-0008).
+    - `@/infrastructure/google-sheets` (barrel, composition root only):
+      `createSheetsClient({ getAccessToken, fetch?, baseUrl? })` and
+      `new GoogleSheetsRoadmapRepository({ client, spreadsheetId })`, plus the
+      `AccessTokenProvider = () => string | null` type.
+    - `@/domain/roadmap/testing/roadmap-repository-contract`:
+      `describeRoadmapRepositoryContract(name, { withRoadmaps(roadmaps), failing() })`.
+  - Decisions:
+    - HTTP mapping: 401 -> `unauthenticated`, 403 -> `forbidden`, 404 -> `not-found`, 429 ->
+      `rate-limited`, 5xx -> retryable `unknown`, other statuses -> non-retryable `unknown`.
+      Fetch rejections and body-stream failures -> `network`; unparsable JSON ->
+      `invalid-response`. Google's `error.status`/`message` goes into `AppError.message`
+      only, for diagnostics.
+    - Zod: `sheets` defaults to `[]`; `sheetId` must be an integer; unknown fields are
+      stripped. Hidden sheets are dropped and response order is kept, with no name-based
+      filtering.
+    - The default `fetch` is resolved at call time, so MSW's patched global is used.
+  - Gotchas for S03 and later:
+    - Inject auth as `getAccessToken: () => authClient.getAccessToken()`. It is read
+      synchronously on every request, and a `null` or empty token rejects as
+      `unauthenticated` without a request. S03's `AuthClient.getAccessToken()` should
+      return `string | null`.
+    - S06 must call `reportUnauthenticated()` on a `kind === "unauthenticated"` error.
+    - S06's in-memory test double should run `describeRoadmapRepositoryContract`. It must
+      honour `signal` (`signal?.throwIfAborted()`) and reject with `AppError`s. Contract
+      fixture ids are numeric strings.
+    - The contract helper imports `vitest`. It lives under `testing/`, so production code
+      must never import it.

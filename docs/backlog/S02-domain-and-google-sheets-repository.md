@@ -45,5 +45,19 @@ RoadmapRepository` (constructor takes `{ client, spreadsheetId }`), requests
 
 ## Acceptance criteria
 
-- [ ] No React/TanStack/Google imports in `domain/`; no React/TanStack in `infrastructure/`.
-- [ ] All tests above exist and pass; lint/typecheck/build green.
+- [x] No React/TanStack/Google imports in `domain/`; no React/TanStack in `infrastructure/`.
+- [x] All tests above exist and pass; lint/typecheck/build green.
+
+## Review notes
+
+Sol review (Codex `gpt-6.1-sol`, high) — no blockers; both findings fixed:
+
+1. **Body-read transport failures were reported as `invalid-response` (not retryable).**
+   Fixed: the client reads the body as text inside the transport `try` (a stream failure
+   becomes a retryable `network` error) and only `JSON.parse` failures become
+   `invalid-response`. Test: erroring response stream.
+2. **Cancellation was only honoured on failure paths** (an aborted call without a token
+   rejected as `unauthenticated`; a fetch ignoring the signal could still resolve).
+   Fixed: `getJson` wraps the request in `try/finally` with `signal?.throwIfAborted()`, so
+   an aborted signal always rejects with its reason. Tests: aborted without a token, and
+   aborted before a success / error response is read (custom reason identity).

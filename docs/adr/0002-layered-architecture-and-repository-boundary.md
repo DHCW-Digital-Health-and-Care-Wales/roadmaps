@@ -1,7 +1,7 @@
 # ADR-0002: Layered architecture and the roadmap repository boundary
 
 - Status: Accepted
-- Date: 2026-11-10
+- Date: 2026-11-10 (amended in S02: optional abort `signal`, contract test)
 
 ## Context
 
@@ -22,9 +22,17 @@ app/ (composition root) is the only module that imports concrete adapters.
 ```
 
 - `domain/roadmap/roadmap.ts`: `interface Roadmap { id: string; name: string }`.
-- `domain/roadmap/roadmap-repository.ts`: `interface RoadmapRepository { listRoadmaps(): Promise<Roadmap[]> }`.
-  The detail view derives a single roadmap from the list (TanStack Query `select`) — we do
-  not add `getRoadmap` until a real need exists.
+- `domain/roadmap/roadmap-repository.ts`:
+  `interface RoadmapRepository { listRoadmaps(options?: { signal?: AbortSignal }): Promise<Roadmap[]> }`.
+  The optional `signal` (a web-platform type, not a framework one) lets TanStack Query
+  cancel superseded requests; on abort an implementation rejects with the signal's
+  reason, otherwise every failure is an `AppError`. The detail view derives a single
+  roadmap from the list (TanStack Query `select`) — we do not add `getRoadmap` until a
+  real need exists.
+- `domain/roadmap/testing/roadmap-repository-contract.ts`:
+  `describeRoadmapRepositoryContract(name, setup)` is the shared behavioural test every
+  adapter (and in-memory test double) runs, so a future `ApiRoadmapRepository` proves
+  parity with the Google adapter.
 - `lib/errors.ts` defines a transport-agnostic `AppError` with a discriminated `kind`
   (`unauthenticated` | `forbidden` | `not-found` | `rate-limited` | `network` |
   `invalid-response` | `unknown`) plus a `retryable` flag. Adapters translate their

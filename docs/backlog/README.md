@@ -6,7 +6,7 @@ Stories are delivered **sequentially**, each by a fresh delivery agent, on branc
 | ID                                                | Story                                                                          | Depends on | Status |
 | ------------------------------------------------- | ------------------------------------------------------------------------------ | ---------- | ------ |
 | [S01](S01-tooling-foundation.md)                  | Tooling foundation (Vite, TS, Tailwind v4, shadcn/Base UI, lint, test harness) | —          | Done   |
-| [S02](S02-domain-and-google-sheets-repository.md) | Domain model, error model, Google Sheets client & repository                   | S01        | Todo   |
+| [S02](S02-domain-and-google-sheets-repository.md) | Domain model, error model, Google Sheets client & repository                   | S01        | Done   |
 | [S03](S03-google-identity-auth.md)                | Google Identity Services auth abstraction                                      | S01, S02   | Todo   |
 | [S04](S04-i18n-foundation.md)                     | Internationalisation foundation (English and Welsh)                            | S03        | Todo   |
 | [S05](S05-app-shell-routing-theme.md)             | Composition root, routing, app shell, theme, auth UI                           | S04        | Todo   |

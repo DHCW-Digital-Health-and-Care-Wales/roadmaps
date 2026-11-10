@@ -1,2 +1,6 @@
 export { GoogleSheetsRoadmapRepository } from "./google-sheets-roadmap-repository"
-export { createSheetsClient, type AccessTokenProvider } from "./sheets-client"
+export {
+  createSheetsClient,
+  SHEETS_SCOPE,
+  type AccessTokenProvider,
+} from "./sheets-client"

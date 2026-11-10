@@ -22,6 +22,9 @@ app/ (composition root) is the only module that imports concrete adapters.
 ```
 
 - `domain/roadmap/roadmap.ts`: `interface Roadmap { id: string; name: string }`.
+- `domain/auth/auth-client.ts`: the `AuthClient` port and `AuthState` (ADR-0003), which
+  `infrastructure/google-identity/` implements. Ports live in `domain/` because
+  infrastructure may not import `features/`.
 - `domain/roadmap/roadmap-repository.ts`:
   `interface RoadmapRepository { listRoadmaps(options?: { signal?: AbortSignal }): Promise<Roadmap[]> }`.
   The optional `signal` (a web-platform type, not a framework one) lets TanStack Query

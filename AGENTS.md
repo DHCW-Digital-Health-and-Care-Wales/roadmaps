@@ -18,12 +18,13 @@ src/
   app/              composition root, providers, router — the ONLY place that wires
                     concrete implementations (Google adapters) to abstractions
   routes/           TanStack Router file-based route modules — thin; delegate to feature pages
-  domain/           framework-free types & interfaces (Roadmap, RoadmapRepository).
+  domain/           framework-free types & interfaces (Roadmap, RoadmapRepository, AuthClient).
                     Imports nothing from React, TanStack, Google, or infrastructure.
   features/<name>/  application state (hooks), components, pages for one feature.
                     Depends on domain + lib + components. Never on infrastructure.
   infrastructure/   adapters to the outside world (Google Sheets, Google Identity Services).
                     Depends on domain + lib. Never on React, TanStack Query, or features.
+                    Only infrastructure/google-identity may use the `google` global.
   components/ui/    shadcn/ui (Base UI) generated components — keep close to upstream
   components/layout app shell pieces shared across features
   lib/              small framework-agnostic utilities (errors, cn, query client factory)
@@ -190,3 +191,70 @@ ListRoadmapsOptions)` where `ListRoadmapsOptions = { signal?: AbortSignal }`. On
       fixture ids are numeric strings.
     - The contract helper imports `vitest`. It lives under `testing/`, so production code
       must never import it.
+- **S03 Google Identity Services auth** — `AuthClient` port, GIS token-model adapter, React
+  bridge and test fake. ADR-0002/0003 amended: the port lives in `domain/auth/` (infrastructure
+  may not import `features/`), there is one token client per attempt, and the prompt policy is
+  defined.
+  - Public API:
+    - `@/domain/auth/auth-client`: `AuthClient { getSnapshot, subscribe, connect, disconnect,
+getAccessToken(): string | null, reportUnauthenticated }`. Its members are function
+      properties, safe to pass detached. Also `AuthState`, `AuthFailureCode`,
+      `AuthCancellationCode` and `AuthErrorCode`.
+    - `@/infrastructure/google-identity` (composition root only):
+      `createGoogleAuthClient({ clientId, scopes, loadScript?, onDisconnect? })` returns a
+      `GoogleAuthClient`, which is an `AuthClient` plus `dispose()`.
+    - `@/infrastructure/google-sheets`: adds `SHEETS_SCOPE` (full spreadsheets scope).
+    - `@/features/auth/auth-provider`: `<AuthProvider client={…}>`.
+      `@/features/auth/use-auth`: `useAuth()` returns
+      `{ state, connect, disconnect, reportUnauthenticated }`. The result is memoised per
+      state, actions are stable, and it throws outside the provider.
+    - `@/features/auth/testing/fake-auth-client` (test-only, imports vitest):
+      `createFakeAuthClient(initial = { status: "ready" })`. Its spies apply happy-path
+      transitions: `connect` → `connected` (1 h), `disconnect` → `ready`,
+      `reportUnauthenticated` → `expired`. `setState(any)` reaches every other state, and
+      `getAccessToken()` returns `FAKE_ACCESS_TOKEN` while connected.
+    - `@/lib/external-store`: `createExternalStore(initial)` with `getSnapshot`, `subscribe`
+      and `setSnapshot`; the snapshot identity only changes on change.
+  - State machine:
+    - Startup: `initializing` → `ready`, or `error(script-load-failed)`.
+    - `connect()` from `ready`, `expired` or `error` → `connecting`, which ends in one of:
+      - `connected { expiresAt }`;
+      - `error(access-denied | scope-not-granted | unknown)`;
+      - back to `ready`/`expired` with `lastError: popup-closed | popup-blocked`.
+    - `connected` → `expired` when the timer fires (60 s before Google's expiry) or on
+      `reportUnauthenticated()`.
+    - `disconnect()` from `connecting`, `connected` or `expired` → `ready`. It revokes a held
+      token, then calls `onDisconnect`.
+    - From `error(script-load-failed)`, `connect()` only retries the load; the user clicks
+      again once `ready`.
+    - Prompt: `''` when reconnecting from `expired`, `consent` after `scope-not-granted`,
+      otherwise GIS's default.
+  - S04 i18n: error codes needing `auth.errors.*` copy are `script-load-failed`,
+    `access-denied`, `scope-not-granted`, `unknown`, `popup-closed` and `popup-blocked`. The
+    statuses are `initializing`, `ready`, `connecting`, `connected`, `expired` and `error`.
+    There is no prose in state.
+  - S05 wiring (`app/composition.ts`):
+    `createGoogleAuthClient({ clientId: config.googleClientId, scopes: [SHEETS_SCOPE],
+onDisconnect: () => queryClient.removeQueries({ queryKey: authScopedQueryKey }) })`, then
+    `createSheetsClient({ getAccessToken: authClient.getAccessToken })`, and
+    `import.meta.hot?.dispose(() => authClient.dispose())`. Create it at startup so GIS loads
+    early.
+  - Gotchas:
+    - Call `connect()` directly in the click handler, with no `await` before it, or the
+      popup is blocked.
+    - `onDisconnect` exists only on the Google client. The fake's `disconnect` does not clear
+      queries, so S05's test utility must wire that itself if it tests clearing.
+    - `getAccessToken()` returns `null` once `expiresAt` passes, even before the timer
+      fires. The resulting `unauthenticated` error should make S06 call
+      `reportUnauthenticated()`.
+    - `reportUnauthenticated()` cannot tell which token a 401 was for. A 401 from a request
+      sent before a reconnect, arriving after it, would expire the new session (unlikely,
+      since a reconnect takes a popup round-trip).
+    - `@types/google.accounts` (0.0.18) enters only through
+      `infrastructure/google-identity/gis-types.ts`. Its `TokenResponse` is wrong (every field
+      required, `expires_in: string`), so responses are parsed with Zod in
+      `token-response.ts`. ESLint forbids the `google` global (including `window.google`)
+      everywhere else; type-only references are not linted.
+    - Tests: `vi.waitFor` advances fake timers, so pin the clock afterwards with
+      `vi.setSystemTime`. The loader's memo is module state, so its tests use
+      `vi.resetModules()` and a dynamic import.

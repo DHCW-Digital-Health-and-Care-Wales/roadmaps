@@ -4,6 +4,12 @@ import { describeGoogleError } from "./sheets-schemas"
 
 const SHEETS_API_BASE_URL = "https://sheets.googleapis.com/v4/spreadsheets"
 
+/**
+ * The OAuth scope the access token needs. Full (read/write) access is deliberate, for the
+ * planned editing features (ADR-0003).
+ */
+export const SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets"
+
 /** Returns the current OAuth access token, or `null` when not connected. */
 export type AccessTokenProvider = () => string | null
 

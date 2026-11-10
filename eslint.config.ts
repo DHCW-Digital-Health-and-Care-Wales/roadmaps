@@ -100,6 +100,27 @@ export default defineConfig(
     },
   },
   {
+    // Only the Google Identity Services adapter may touch the `google` global (ADR-0003).
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/infrastructure/google-identity/**"],
+    rules: {
+      "no-restricted-globals": [
+        "error",
+        {
+          // Also catches `window.google` and `globalThis.google`.
+          checkGlobalObject: true,
+          globals: [
+            {
+              name: "google",
+              message:
+                "Only src/infrastructure/google-identity may use the Google Identity Services global (ADR-0003).",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ["src/features/**/*.{ts,tsx}"],
     rules: {
       "no-restricted-imports": [

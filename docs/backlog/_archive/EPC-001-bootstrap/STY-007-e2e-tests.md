@@ -1,4 +1,4 @@
-# S07 — Playwright E2E with faked GIS and Sheets API
+# STY-007 — Playwright E2E with faked GIS and Sheets API
 
 ## Goal
 
@@ -48,16 +48,16 @@ Sol review (Codex `gpt-6.1-sol`, high) of the uncommitted change:
 3. **No short-lived grant scenario** — fixed. The expiry test now uses a 120 s grant
    (60 s usable) and fake time, and a 60 s grant (no usable time) is in the auth failure
    table (fails as "Connection failed" with no Sheets request).
-4. **S08's base path (`/roadmaps-editor/`) will break `baseURL`/`webServer.url`** —
-   deferred to S08, which owns base-path resolution (it does not exist yet). Specs only
-   use relative URLs (`./`, `./#/roadmaps/42`), so S08 changes only `baseURL` in
+4. **STY-008's base path (`/roadmaps-editor/`) will break `baseURL`/`webServer.url`** —
+   deferred to STY-008, which owns base-path resolution (it does not exist yet). Specs only
+   use relative URLs (`./`, `./#/roadmaps/42`), so STY-008 changes only `baseURL` in
    `playwright.config.ts` (from the same resolver, trailing slash kept) or builds the E2E
-   bundle with base `/`. Recorded in the S07 handoff.
+   bundle with base `/`. Recorded in the STY-007 handoff.
 5. **"No toast" assertion for a closed popup could pass vacuously** — fixed by removing
    it. Absence is asserted precisely in `src/app/app.test.tsx`, where Sonner's timer is
    flushed; E2E keeps only positive toast assertions.
 6. **Browser install not documented outside the backlog** — `pnpm exec playwright install
---with-deps chromium` added to `AGENTS.md` Commands; the README is S08's.
+--with-deps chromium` added to `AGENTS.md` Commands; the README is STY-008's.
 
 Not shared with unit-test fakes: the Vitest GIS fake (`google-auth-client.test.ts`) is a
 `vi.fn`-based object in jsdom, while the E2E fake is a script served into a real browser

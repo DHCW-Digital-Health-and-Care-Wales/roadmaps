@@ -459,5 +459,5 @@ and routes do not change.
   [0007 deployment](docs/adr/0007-github-pages-deployment.md),
   [0008 i18n](docs/adr/0008-internationalisation-english-and-welsh.md).
 - [`docs/backlog/`](docs/backlog/README.md): epics, stories, defects and chores; the bootstrap
-  epic this repository was built from is in `docs/backlog/_archive/bootstrap/`.
+  epic this repository was built from is in `docs/backlog/_archive/EPC-001-bootstrap/`.
 - [`docs/GLOSSARY.md`](docs/GLOSSARY.md): the shared domain vocabulary.

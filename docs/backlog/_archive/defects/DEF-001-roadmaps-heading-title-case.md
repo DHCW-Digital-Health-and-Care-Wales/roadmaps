@@ -1,4 +1,4 @@
-# D01: The roadmaps heading is in Title Case, against the sentence-case rule
+# DEF-001: The roadmaps heading is in Title Case, against the sentence-case rule
 
 - **Status**: Done — fixed in the agent-skills PR at the owner's request
 - **Severity**: Low — a style inconsistency on the main screen, in both languages

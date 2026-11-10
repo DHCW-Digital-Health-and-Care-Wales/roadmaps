@@ -1,4 +1,4 @@
-# S06 — Roadmaps feature: query hooks, list, states, detail page
+# STY-006 — Roadmaps feature: query hooks, list, states, detail page
 
 ## Goal
 
@@ -9,7 +9,7 @@ detail page.
 ## Scope
 
 - `src/features/roadmaps/hooks/roadmap-queries.ts` — query key factory
-  (`roadmapKeys.all/list()` under the auth-scoped root from S05) and `queryOptions` for
+  (`roadmapKeys.all/list()` under the auth-scoped root from STY-005) and `queryOptions` for
   the list.
 - `useRoadmaps()` — enabled only when auth state is `connected`; `staleTime` 60s; uses
   the repository from context; passes the abort signal if supported. On
@@ -33,7 +33,7 @@ detail page.
 - `pages/roadmap-detail-page.tsx` — name + "Roadmap details are coming soon.", back link;
   handles not-connected (prompt to connect), loading, unknown id (friendly not-found).
 - All copy via i18n (ADR-0008), English and Welsh; error copy keyed by `AppError.kind`;
-  use the pluralised roadmap count key from S04 if a count is shown.
+  use the pluralised roadmap count key from STY-004 if a count is shown.
 - An in-memory `RoadmapRepository` test double in `features/roadmaps/testing/`.
 
 ## Tests

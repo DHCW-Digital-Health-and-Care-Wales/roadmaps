@@ -8,20 +8,20 @@ moves to `_archive/`, where its row here still points.
 
 ## Epics
 
-| Epic                                      | Summary                                                                                                     | Status |
-| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------ |
-| [bootstrap](_archive/bootstrap/README.md) | S01–S09: tooling, domain, Google auth and Sheets, i18n, app shell, roadmaps, E2E, CI/CD, final verification | Done   |
+| Epic                                                      | Summary                                                                                                             | Status |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------ |
+| [EPC-001 Bootstrap](_archive/EPC-001-bootstrap/README.md) | STY-001–STY-009: tooling, domain, Google auth and Sheets, i18n, app shell, roadmaps, E2E, CI/CD, final verification | Done   |
 
 ## Chores
 
-_None yet._ Live chores sit in `chores/`; list each here as `C<nn>` with its
+_None yet._ Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its
 Status token.
 
 ## Defects
 
-| ID                                                         | Defect                                | Status |
-| ---------------------------------------------------------- | ------------------------------------- | ------ |
-| [D01](_archive/defects/D01-roadmaps-heading-title-case.md) | The roadmaps heading is in Title Case | Done   |
+| ID                                                                 | Defect                                | Status |
+| ------------------------------------------------------------------ | ------------------------------------- | ------ |
+| [DEF-001](_archive/defects/DEF-001-roadmaps-heading-title-case.md) | The roadmaps heading is in Title Case | Done   |
 
 A defect found during delivery is recorded in `defects/` with
 Status `Needs triage` and listed here until the owner triages it.

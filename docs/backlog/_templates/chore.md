@@ -1,6 +1,6 @@
 # Chore template
 
-- **File**: `docs/backlog/chores/C{nn}-{kebab-title}.md`; terminal statuses
+- **File**: `docs/backlog/chores/CHO-{nnn}-{kebab-title}.md`; terminal statuses
   (Done, Won't do, Superseded) move to `docs/backlog/_archive/chores/`.
 - The common rules of `story.md` apply.
 - **A chore is work with no user-facing change**: a refactor, a dependency or
@@ -13,13 +13,13 @@
 
 ---
 
-# C{nn}: <the state the chore leaves behind>
+# CHO-{nnn}: <the state the chore leaves behind>
 
 - **Status**: Proposed — <one line>
 - **Type**: Chore | Refactor | Docs (`+` to combine)
 - **Area**: Domain | Infrastructure | Features/UI | Routing | i18n (en + cy) |
   E2E | CI/CD | Docs (`+` to combine)
-- **Epic**: <epic directory name> | standalone
+- **Epic**: <epic folder, e.g. EPC-002-roadmap-detail> | standalone
 - **Depends on**: none
 - **Binding ADRs**: none
 - **Suggested model**: Opus | Sonnet | Haiku — <the reason>

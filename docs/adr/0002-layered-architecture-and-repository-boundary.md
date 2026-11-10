@@ -1,8 +1,8 @@
 # ADR-0002: Layered architecture and the roadmap repository boundary
 
 - Status: Accepted
-- Date: 2026-11-10 (amended in S02: optional abort `signal`, contract test; S03: the
-  `AuthClient` port in `domain/auth/`; S09: lint rules for `lib/`, `components/`, `i18n/`)
+- Date: 2026-11-10 (amended in STY-002: optional abort `signal`, contract test; STY-003: the
+  `AuthClient` port in `domain/auth/`; STY-009: lint rules for `lib/`, `components/`, `i18n/`)
 
 ## Context
 

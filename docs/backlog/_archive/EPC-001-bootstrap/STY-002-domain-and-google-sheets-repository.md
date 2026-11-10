@@ -1,4 +1,4 @@
-# S02 — Domain model, error model, Google Sheets client & repository
+# STY-002 — Domain model, error model, Google Sheets client & repository
 
 ## Goal
 

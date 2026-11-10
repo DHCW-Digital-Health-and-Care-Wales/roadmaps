@@ -1,4 +1,4 @@
-# S08 — GitHub Actions CI/CD, Pages base path, README
+# STY-008 — GitHub Actions CI/CD, Pages base path, README
 
 ## Goal
 
@@ -18,7 +18,7 @@ Push-to-deploy on GitHub Pages and comprehensive documentation. See ADR-0007.
   verify current majors. Least-privilege permissions; `concurrency` for pages; CNAME from
   `vars.PAGES_CUSTOM_DOMAIN` when set. Validate YAML (e.g. `actionlint` if available).
   _(As delivered, `verify` builds and uploads, `deploy` only deploys, and no `CNAME` is
-  written: see the delivery notes below and ADR-0007's S08 amendments.)_
+  written: see the delivery notes below and ADR-0007's STY-008 amendments.)_
 - `README.md` covering every item in the brief: overview, architecture (Mermaid diagram of
   layers + future adapter), tech choices, prerequisites, install, env config, Google Cloud
   setup (project, enable Sheets API, OAuth consent screen, OAuth client of type Web,
@@ -54,7 +54,7 @@ Push-to-deploy on GitHub Pages and comprehensive documentation. See ADR-0007.
   `verify` builds and uploads, `deploy` only runs `deploy-pages`, so no project or
   third-party code runs with `pages: write`/`id-token: write`. `configure-pages`'
   `base_path` is used as a guard rather than a build input. No `CNAME` is written (GitHub
-  ignores it for Actions deployments). All recorded in ADR-0007's S08 amendments.
+  ignores it for Actions deployments). All recorded in ADR-0007's STY-008 amendments.
 
 ## Review notes (Sol, gpt-6.1-sol)
 

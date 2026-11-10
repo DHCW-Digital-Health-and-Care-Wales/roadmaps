@@ -1,4 +1,4 @@
-# S01 — Tooling foundation
+# STY-001 — Tooling foundation
 
 ## Goal
 
@@ -37,13 +37,13 @@ Base UI, ESLint, Prettier, Vitest + RTL + MSW harness — ready for feature work
   `.gitignore` covers `.env`, `.env.local`, `.env.*.local`, `dist`, `playwright-report`,
   `test-results`.
 - Scripts: `dev`, `build` (`tsc -b`/typecheck is separate), `preview`, `typecheck`, `lint`,
-  `format`, `format:check`, `test`, `test:watch`, `test:e2e` (placeholder wired in S06 — may
+  `format`, `format:check`, `test`, `test:watch`, `test:e2e` (placeholder wired in STY-006 — may
   be omitted until then).
 - `index.html` with proper title, meta description, favicon (simple SVG roadmap glyph).
 
 ## Out of scope
 
-Feature code, auth, data fetching, CI workflow, README (S07).
+Feature code, auth, data fetching, CI workflow, README (STY-007).
 
 ## Acceptance criteria
 

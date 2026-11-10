@@ -1,7 +1,8 @@
 # Epic template
 
-- **File**: `docs/backlog/{epic}/README.md`; its live stories beside it
-  (`S{nn}-{kebab-title}.md`), terminal ones in `docs/backlog/_archive/{epic}/`.
+- **File**: `docs/backlog/{epic}/README.md`, where `{epic}` is
+  `EPC-{nnn}-{kebab-title}` (IDs as in `story.md`); its live stories beside it
+  (`STY-{nnn}-{kebab-title}.md`), terminal ones in `docs/backlog/_archive/{epic}/`.
   When every row is terminal the epic's `README.md` moves to `_archive/{epic}/`
   too, and its row in `docs/backlog/README.md` points there.
 - **Readers**: the owner reads the top block (to `## Owner decisions
@@ -21,10 +22,10 @@ waiting`). Agents read the rest: selection and orchestration read Stories
 
 ---
 
-# Epic: <name> — <the tension, in a phrase>
+# EPC-{nnn}: <name> — <the tension, in a phrase>
 
 - **Status**: Active | Done | Won't do — <one line>
-- **Progress**: <n> of <m> terminal; next selectable: S{nn}; blocked on:
+- **Progress**: <n> of <m> terminal; next selectable: STY-{nnn}; blocked on:
   <owner decision or prerequisite>
 - **Binding ADRs**: ADR-{nnnn}, ADR-{nnnn}
 
@@ -39,8 +40,8 @@ _Every open owner question across the epic and its records, one line each,
 linking the record that holds the options. "None." when empty. This is the
 orchestrator's stop list._
 
-- [S{nn} Q2](S{nn}-x.md#open-questions) — <question in a clause>
-- [D{nn}](../defects/D{nn}-x.md) — Needs triage
+- [STY-{nnn} Q2](STY-{nnn}-x.md#open-questions) — <question in a clause>
+- [DEF-{nnn}](../defects/DEF-{nnn}-x.md) — Needs triage
 
 ## Findings
 
@@ -69,14 +70,14 @@ catalogue ownership. A story cites the item rather than copying it. Use stable
 
 ## Stories
 
-| ID    | Story                                    | Area        | Depends on | State      |
-| ----- | ---------------------------------------- | ----------- | ---------- | ---------- |
-| S{nn} | [<title>](S{nn}-x.md)                    | Domain      | —          |            |
-| S{nn} | [<title>](../_archive/{epic}/S{nn}-x.md) | Features/UI | S{nn}      | ✅         |
-| S{nn} | [<title>](../_archive/{epic}/S{nn}-y.md) | Features/UI | —          | ✗ Won't do |
+| ID        | Story                                        | Area        | Depends on | State      |
+| --------- | -------------------------------------------- | ----------- | ---------- | ---------- |
+| STY-{nnn} | [<title>](STY-{nnn}-x.md)                    | Domain      | —          |            |
+| STY-{nnn} | [<title>](../_archive/{epic}/STY-{nnn}-x.md) | Features/UI | STY-{nnn}  | ✅         |
+| STY-{nnn} | [<title>](../_archive/{epic}/STY-{nnn}-y.md) | Features/UI | —          | ✗ Won't do |
 
 _State is blank for live rows, ✅ for Done, `✗ Won't do` / `✗ Superseded by
-S{nn}` for the others. A story's own `Depends on` is canonical; this column
+STY-{nnn}` for the others. A story's own `Depends on` is canonical; this column
 mirrors its hard dependencies. Size each story for one agent in one context;
 the Suggested model is in each record, not repeated here._
 

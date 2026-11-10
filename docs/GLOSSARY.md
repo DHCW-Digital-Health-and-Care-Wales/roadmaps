@@ -117,7 +117,8 @@ A language's name in that language ("English", "Cymraeg"), used by the language 
 ### Delivery
 
 **Record**:
-A backlog item: a story (`S<nn>`), a defect (`D<nn>`) or a chore (`C<nn>`).
+A backlog item: a story (`STY-<nnn>`), a defect (`DEF-<nnn>`) or a chore (`CHO-<nnn>`),
+filed under an epic (`EPC-<nnn>`) or standalone.
 _Avoid_: Ticket, issue, task
 
 **Story**:

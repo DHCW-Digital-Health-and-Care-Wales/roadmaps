@@ -1,7 +1,7 @@
 # ADR-0003: Browser OAuth with Google Identity Services token model
 
 - Status: Accepted
-- Date: 2026-11-10 (amended in S03: port in `domain/auth/`, codes split, prompt policy)
+- Date: 2026-11-10 (amended in STY-003: port in `domain/auth/`, codes split, prompt policy)
 
 ## Context
 
@@ -23,7 +23,7 @@ needs an OAuth access token with scope `https://www.googleapis.com/auth/spreadsh
     that attempt, so a late response from an abandoned attempt cannot complete a newer one.
   - Only this folder may use the `google` global (ESLint `no-restricted-globals`).
 - `domain/auth/auth-client.ts` owns the app-level port, like `RoadmapRepository`
-  (S03 amendment: infrastructure implements it and must not import `features/`, ADR-0002):
+  (STY-003 amendment: infrastructure implements it and must not import `features/`, ADR-0002):
   - `AuthClient` interface: `getSnapshot()`, `subscribe()`, `connect()`, `disconnect()`,
     `getAccessToken()`, `reportUnauthenticated()` (called when an API returns 401). Members
     are standalone functions, safe to pass detached.

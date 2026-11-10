@@ -1,8 +1,8 @@
 # ADR-0007: Static deployment to GitHub Pages
 
 - Status: Accepted
-- Date: 2026-11-10 (amended in S08: artifact built by Verify, base-path guard, no CNAME,
-  SHA-pinned actions, Node 26; S09: vendor chunks)
+- Date: 2026-11-10 (amended in STY-008: artifact built by Verify, base-path guard, no CNAME,
+  SHA-pinned actions, Node 26; STY-009: vendor chunks)
 
 ## Decision
 
@@ -13,7 +13,7 @@
   `actions/upload-pages-artifact`, and a `deploy` job that `needs` both check jobs runs
   `actions/deploy-pages`. Permissions: `contents: read` globally; `pages: write`,
   `id-token: write` on the deploy job only. `concurrency: pages` (no cancel-in-progress
-  for deploys). Details in the S08 amendments below.
+  for deploys). Details in the STY-008 amendments below.
 - Vite `base` resolution, in order: explicit `VITE_BASE_PATH`; else `/` if the
   `PAGES_CUSTOM_DOMAIN` repository variable is set (a custom domain); else derived from
   `GITHUB_REPOSITORY` (`owner/owner.github.io` -> `/`, otherwise `/<repo>/`); else `/`.
@@ -22,7 +22,7 @@
   `.env.production` (public values, not secrets) with the same values in `.env.example`;
   validated at startup with Zod. `.env` / `.env.local` are git-ignored. No GitHub Secrets.
 
-### S08 amendments
+### STY-008 amendments
 
 - **Who builds the artifact**: `verify` builds, and on pushes to `main` it also runs
   `configure-pages` and `upload-pages-artifact`. `deploy` only runs `deploy-pages`: no
@@ -60,7 +60,7 @@
 - **Node**: CI uses `.nvmrc`, which tracks the Active LTS line (26 since 2026-10-28).
   `engines` still accepts 22.22+/24.15+ for local development.
 
-### S09 amendment
+### STY-009 amendment
 
 - **Long-lived chunks**: `vite.config.ts` splits the build into `react` (React, ReactDOM,
   scheduler), `vendor` (every other dependency) and the app's own chunks

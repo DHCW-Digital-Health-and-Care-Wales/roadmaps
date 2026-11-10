@@ -30,7 +30,7 @@ not post, change code, merge or message other people as part of reviewing.
    `git show <sha>:<path>`. A bad ref is a scope error; an empty scope is
    "nothing to review", not a pass.
 2. **Find the requirements.** Read the user's instructions and the linked
-   story, defect or chore (`docs/backlog/`, ids `S<nn>`, `D<nn>`, `C<nn>`) with
+   story, defect or chore (`docs/backlog/`, ids `STY-<nnn>`, `DEF-<nnn>`, `CHO-<nnn>`) with
    its acceptance criteria, the PR body and the binding ADRs in `docs/adr/`,
    following commit and PR references. Read the `AGENTS.md` along each changed
    path's directory ancestry (root `AGENTS.md`, `tests/e2e/AGENTS.md`,

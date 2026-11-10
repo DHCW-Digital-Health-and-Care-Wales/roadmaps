@@ -1,6 +1,6 @@
 # Defect template
 
-- **File**: `docs/backlog/defects/D{nn}-{kebab-title}.md`; terminal statuses
+- **File**: `docs/backlog/defects/DEF-{nnn}-{kebab-title}.md`; terminal statuses
   (Done, Won't fix, Superseded) move to `docs/backlog/_archive/defects/`.
 - The common rules of `story.md` apply (owner reads the top block only; write
   what the code cannot say; never rewrite the claim; IDs; statuses in
@@ -14,14 +14,14 @@
 
 ---
 
-# D{nn}: <what goes wrong, for whom>
+# DEF-{nnn}: <what goes wrong, for whom>
 
-- **Status**: Needs triage — found by <S{nn} delivery | retro | PR #nnn
+- **Status**: Needs triage — found by <STY-{nnn} delivery | retro | PR #nnn
   review>
 - **Severity**: High | Medium | Low — <the consequence, in a clause>
 - **Area**: Domain | Infrastructure | Features/UI | Routing | i18n (en + cy) |
   E2E | CI/CD | Docs (`+` to combine)
-- **Epic**: <epic directory name> | standalone
+- **Epic**: <epic folder, e.g. EPC-002-roadmap-detail> | standalone
 - **Depends on**: none
 - **Binding ADRs**: none
 - **Suggested model**: Opus | Sonnet | Haiku — <the reason>

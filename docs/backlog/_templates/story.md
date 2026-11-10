@@ -1,11 +1,13 @@
 # Story template
 
-- **File**: `docs/backlog/{epic}/S{nn}-{kebab-title}.md`, beside its epic's
+- **File**: `docs/backlog/{epic}/STY-{nnn}-{kebab-title}.md`, beside its epic's
   `README.md`. A story always belongs to an epic; a single story is a
   one-story epic. On a terminal status (Done, Won't do, Superseded) move it to
   `docs/backlog/_archive/{epic}/`.
-- **ID**: `S{nn}` story, `D{nn}` defect (`defect.md`), `C{nn}` chore
-  (`chore.md`): two digits, one series per prefix across the whole backlog.
+- **ID**: `STY-{nnn}` story, `DEF-{nnn}` defect (`defect.md`), `CHO-{nnn}` chore
+  (`chore.md`), `EPC-{nnn}` epic (`epic.md`): three digits, one series per
+  prefix across the whole backlog. Scenarios (`S1`) and decisions (`D1`) are
+  numbered within their record, so they never look like a record ID.
   Take the next free number across the live tree, `_archive/` and open PRs'
   files, since a PR's title may not name its records:
   `gh pr list --state open --limit 200 --json files --jq '.[].files[].path'`.
@@ -29,7 +31,7 @@
 - **A Placeholder** has the top block, then `## Why this is a placeholder`
   (the decision or trigger that promotes it) and `## Rough shape of the work`,
   labelled as not acceptance criteria.
-- **A legacy record** (the bootstrap stories in `_archive/bootstrap/`) keeps
+- **A legacy record** (the bootstrap stories in `_archive/EPC-001-bootstrap/`) keeps
   its Goal, Scope, Tests, Acceptance criteria, Decisions and review notes; read
   Scope and Acceptance criteria as the claim, and Decisions and review notes as
   Decisions plus Delivery.
@@ -39,15 +41,15 @@ marked _(optional)_ when it would be empty.
 
 ---
 
-# S{nn}: <the outcome, in the reader's language>
+# STY-{nnn}: <the outcome, in the reader's language>
 
 - **Status**: Proposed — <one line: what is left, who decided what, or what
   promotes it>
 - **Type**: Feature | Refactor | Copy | Docs (`+` to combine)
 - **Area**: Domain | Infrastructure | Features/UI | Routing | i18n (en + cy) |
   E2E | CI/CD | Docs (`+` to combine)
-- **Epic**: <epic directory name>
-- **Depends on**: S{nn} (hard, must be on the default branch), S{nn}
+- **Epic**: <epic folder, e.g. EPC-002-roadmap-detail>
+- **Depends on**: STY-{nnn} (hard, must be on the default branch), STY-{nnn}
   (preferred order) | none
 - **Binding ADRs**: ADR-{nnnn} §<section>, ADR-{nnnn} | none
 - **Suggested model**: Opus | Sonnet | Haiku — <the reason, in a clause>

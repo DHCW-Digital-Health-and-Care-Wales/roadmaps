@@ -2,7 +2,7 @@
 
 The first word(s) of a record's Status line is one token from the table for
 its type. Text after an em dash is a one-line note. Selection reads the token
-only. The bootstrap stories in `_archive/bootstrap/` keep their legacy
+only. The bootstrap stories in `_archive/EPC-001-bootstrap/` keep their legacy
 statuses and are not rewritten.
 
 ## Stories, chores and defects

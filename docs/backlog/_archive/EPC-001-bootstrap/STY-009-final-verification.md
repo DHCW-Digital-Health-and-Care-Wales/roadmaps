@@ -1,4 +1,4 @@
-# S09 — Whole-repo verification, polish and final review
+# STY-009 — Whole-repo verification, polish and final review
 
 ## Goal
 
@@ -25,9 +25,9 @@ production-grade state.
 ## Acceptance criteria
 
 - [x] Every item in the brief's §14 is checked off in this file with evidence (below).
-- [x] Screenshots saved under `.artifacts/screenshots/S09/` (git-ignored, not committed).
+- [x] Screenshots saved under `.artifacts/screenshots/STY-009/` (git-ignored, not committed).
 
-## Orchestrator notes carried forward (from S05 screenshot review)
+## Orchestrator notes carried forward (from STY-005 screenshot review)
 
 - [x] **Mobile header.** Below `sm` the header now shows the brand mark plus a short
       product name (`common.shortAppName`: "Roadmaps" / "Mapiau Trywydd"; the link's
@@ -43,7 +43,7 @@ production-grade state.
       `codeSplitting.groups` for `react` and `vendor`, so app code (~48 kB) changes per deploy
       while React and vendor chunks stay cached. `autoCodeSplitting` was already on; the route
       chunks are small. `react-dom` is the production build (no dev code bundled). The warning
-      limit is unchanged. ADR-0007 has an S09 amendment.
+      limit is unchanged. ADR-0007 has an STY-009 amendment.
 
   | JS (min / gzip)    | Before (d133fd2)                             | After                                                      |
   | ------------------ | -------------------------------------------- | ---------------------------------------------------------- |
@@ -118,7 +118,7 @@ Commands were run from a clean state (`rm -rf node_modules dist && pnpm install
 - [x] **React components do not depend on Google Sheets response types**: no
       `features/`, `components/`, `routes/` or `app/` file references `gis-types`,
       `sheets-schemas`, `TokenResponse` or `google.*`; ESLint layer rules enforce it, and
-      were tightened in S09.
+      were tightened in STY-009.
 - [x] **Google Sheets repository is replaceable**: `describeRoadmapRepositoryContract`
       is run by both the Google adapter and the in-memory double; README "Replacing Google
       Sheets with an HTTP API" lists the steps (now including the copy that names the
@@ -175,9 +175,9 @@ Fixed:
   everything and `components/`/`i18n/` below features. Checked with planted violations.
 - No test proved tokens stay out of storage, URLs and logs: E2E guard added.
 - Auth toast replacement was untested: test added.
-- Docs: ADR-0007's Decision contradicted its S08 amendments (who uploads, CNAME,
+- Docs: ADR-0007's Decision contradicted its STY-008 amendments (who uploads, CNAME,
   base-path order); ADR-0002's amendment list was incomplete; AGENTS.md step 4 was
-  garbled; S08's stale scope and S05's chunk note are annotated; README gains the CSP
+  garbled; STY-008's stale scope and STY-005's chunk note are annotated; README gains the CSP
   note, the consent-screen-name troubleshooting row and the copy step for an API swap.
 - Small: redundant `script.defer`, mixed alias/relative imports in `app/`, a garbled
   doc comment in `render-with-providers`, unused exports (`defaultTheme`, two E2E
@@ -189,20 +189,20 @@ Not changed, with reasons:
   what users must act on today (get the spreadsheet shared). It lives only in the
   catalogues, so a data-source swap is a catalogue change; README step 5 lists the keys.
   "Your Roadmaps" and "Roadmaps available in the connected spreadsheet." are copy fixed
-  by the brief (S04), so the sentence-case rule yields to it.
+  by the brief (STY-004), so the sentence-case rule yields to it.
 - **Per-view `document.title`**: the title always names the app. The visible `h1` and the
   new focus handling identify each view; per-view titles need `syncDocumentLanguage` to
   stop owning the title. Recommended next step, not a defect for two views.
 - **`composeApp` has no unit test**: its wiring is mirrored in `renderWithProviders` and
   exercised for real by E2E (401 → expired, disconnect clears data). A unit test would
   need GIS injection into `composeApp` for no extra confidence.
-- **HMR `dispose` in `composeApp`**: harmless; kept as S03 specified.
+- **HMR `dispose` in `composeApp`**: harmless; kept as STY-003 specified.
 - **`index` in the `fields` mask**: specified by ADR-0002; a few bytes.
 - **`sheets-client` `retryable: status === 429 || status >= 500`**: explicit beats
   relying on the `rate-limited` default.
 - **`@types/node` 22**: matches the oldest supported runtime in `engines`.
 - **Duplicate toast and hero notice for a failed connect; header badge announcing state
-  changes; `ReconnectButton` vs `AuthButton`**: deliberate S05/S06 behaviour (the toast
+  changes; `ReconnectButton` vs `AuthButton`**: deliberate STY-005/STY-006 behaviour (the toast
   is the app-wide channel; Reconnect keeps its label while busy); low value to change.
 - **No CSP**: see README "Security and data access"; it can only be validated against a
   real sign-in.
@@ -217,7 +217,7 @@ No Blocker or High findings. All three findings fixed:
    `invalidateAuthScopedQueriesOnSessionEnd` now cancels auth-scoped queries (reverting
    them, cached data kept) and then invalidates; the order matters, because the revert
    would otherwise reset the flag. Regression test "abandons a request in flight…"
-   fails on the old code. This also retires S03's "late 401 after reconnect" gotcha.
+   fails on the old code. This also retires STY-003's "late 401 after reconnect" gotcha.
 2. **Medium: focus lost when an auth transition removes the focused control** (hero
    Connect, Reconnect in alerts). Fixed by `AppShell`'s focus rescue (a
    `MutationObserver` on `<main>`: when the focused element there is removed and focus
@@ -234,7 +234,7 @@ tests, build, 31 E2E (and 31 E2E under `/roadmaps-editor/`).
 
 ## Screenshots
 
-`.artifacts/screenshots/S09/`: `landing-{desktop,mobile}-{light,dark}-en`,
+`.artifacts/screenshots/STY-009/`: `landing-{desktop,mobile}-{light,dark}-en`,
 `landing-{desktop,mobile}-light-cy`, `landing-narrow320-light-{en,cy}`,
 `grid-desktop-{light,dark}-en`, `grid-desktop-light-en-toast`, `grid-desktop-light-cy`,
 `grid-mobile-{light,dark}-en`, `grid-mobile-light-cy`, `grid-narrow320-light-{en,cy}`,

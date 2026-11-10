@@ -1,7 +1,7 @@
 # ADR-0008: Internationalisation — English and Welsh
 
 - Status: Accepted
-- Date: 2026-11-10 (amended in S04: switcher location, document sync, catalogue type, lint)
+- Date: 2026-11-10 (amended in STY-004: switcher location, document sync, catalogue type, lint)
 
 ## Context
 
@@ -42,7 +42,7 @@ and English-only pluralisation are not acceptable.
   accessible label. It lives in `components/layout/language-switcher.tsx` (an app-shell
   piece, not a feature), built on the shadcn `dropdown-menu` with a radio group. Its
   accessible name is "Language English" (a visually hidden label plus the visible
-  endonym), so it contains the visible text. S05 places it in the header.
+  endonym), so it contains the visible text. STY-005 places it in the header.
 - **Rule**: every user-facing string, including aria-labels, toasts, error copy and the
   page title, comes from the catalogues. The domain and infrastructure layers emit no
   copy. UI maps `AppError.kind` to an `errors.*` key; `en.ts` uses

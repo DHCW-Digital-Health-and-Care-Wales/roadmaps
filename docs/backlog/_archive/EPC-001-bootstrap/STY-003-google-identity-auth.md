@@ -1,4 +1,4 @@
-# S03 — Google Identity Services auth abstraction
+# STY-003 — Google Identity Services auth abstraction
 
 ## Goal
 
@@ -51,7 +51,7 @@ A small, well-tested, framework-agnostic auth client on top of GIS, exposed to R
 
 ## Out of scope
 
-Header/landing UI (S04), query cache clearing wiring (S04/S05 composition).
+Header/landing UI (STY-004), query cache clearing wiring (STY-004/STY-005 composition).
 
 ## Acceptance criteria
 

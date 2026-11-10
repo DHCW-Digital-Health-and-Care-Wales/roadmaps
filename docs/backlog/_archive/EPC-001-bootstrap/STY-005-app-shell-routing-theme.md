@@ -1,4 +1,4 @@
-# S05 — Composition root, routing, app shell, theme, auth UI
+# STY-005 — Composition root, routing, app shell, theme, auth UI
 
 ## Goal
 
@@ -21,8 +21,8 @@ unauthenticated welcome state, and the route skeleton.
 - `src/app/providers.tsx` — Theme, QueryClient, Auth, Repository providers, `Toaster`.
 - Routes (`src/routes/`): `__root.tsx` (AppShell + `<Outlet/>` + not-found component),
   `index.tsx` (home page), `roadmaps.$roadmapId.tsx` (placeholder page — real content in
-  S05). Typed params.
-- i18n: lift the S04 i18n wiring into `app/composition.ts` (create the instance) and
+  STY-005). Typed params.
+- i18n: lift the STY-004 i18n wiring into `app/composition.ts` (create the instance) and
   `app/providers.tsx` (`I18nextProvider`); place the `LanguageSwitcher` in the header next
   to the theme toggle. All copy (incl. aria-labels and toasts) via `t()` (ADR-0008).
 - Theme: `ThemeProvider` per ADR-0005 + `ThemeToggle` (accessible label, Lucide sun/moon),
@@ -36,7 +36,7 @@ unauthenticated welcome state, and the route skeleton.
   "A simple way to explore and manage your product roadmaps.", explanation that roadmaps
   are currently sourced from Google Sheets, prominent "Connect Google" button, note that
   access is required to load the roadmaps. When connected the page renders a slot for the
-  roadmap list (implemented in S06; a minimal placeholder is fine now).
+  roadmap list (implemented in STY-006; a minimal placeholder is fine now).
 - shadcn components added as needed via CLI (e.g. `card`, `badge`, `sonner`, `skeleton`,
   `separator`, `dropdown-menu` only if used). Sonner adapted to our ThemeProvider.
 - Sonner usage: one toast on successful connect, one on disconnect, error toast for
@@ -63,7 +63,7 @@ unauthenticated welcome state, and the route skeleton.
 
 ## Review notes
 
-Sol review (Codex `gpt-6.1-sol`, high) of the uncommitted S05 changes:
+Sol review (Codex `gpt-6.1-sol`, high) of the uncommitted STY-005 changes:
 
 1. **Major — closing the popup toasted "Disconnected from Google".** `connecting → ready
 { lastError: "popup-closed" }` matched the disconnect branch. Fixed: the disconnect toast
@@ -77,7 +77,7 @@ Sol review (Codex `gpt-6.1-sol`, high) of the uncommitted S05 changes:
    hash).
 
 No other findings (composition, provider order, cache clearing, theme, layering, i18n,
-accessibility, S06 seams). Found while screenshotting: the focused skip link lost its padding
+accessibility, STY-006 seams). Found while screenshotting: the focused skip link lost its padding
 (`not-sr-only` resets it); fixed with `focus:px-3 focus:py-2`.
 
 Decisions worth knowing:
@@ -86,6 +86,6 @@ Decisions worth knowing:
   failures also toast (per scope). On the landing page that is briefly both; the toast is
   transient, and the inline notice explains startup failures (`script-load-failed`), which
   never toast.
-- Expired sessions currently show the hero with "Reconnect". S06 decides whether `/` keeps
+- Expired sessions currently show the hero with "Reconnect". STY-006 decides whether `/` keeps
   the roadmaps section (with a reconnect prompt) while expired.
-- The production bundle's main chunk is ~580 kB (Vite warns at 500 kB). Left for S08/S09.
+- The production bundle's main chunk is ~580 kB (Vite warns at 500 kB). Left for STY-008/STY-009.

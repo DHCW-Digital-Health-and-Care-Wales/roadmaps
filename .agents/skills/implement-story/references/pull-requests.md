@@ -15,7 +15,7 @@
 3. Write the PR body to a temporary file from
    `.github/pull_request_template.md`, following its comments. The title is a
    conventional commit subject naming the record, e.g.
-   `feat(roadmaps): S10 show each roadmap's owner`.
+   `feat(roadmaps): STY-010 show each roadmap's owner`.
 4. Push the existing task branch without force-pushing. Do not create a
    duplicate if a PR already exists. Create the PR with
    `gh pr create --base <base branch> --head <branch> --title '<title>' --body-file <body-file>`,

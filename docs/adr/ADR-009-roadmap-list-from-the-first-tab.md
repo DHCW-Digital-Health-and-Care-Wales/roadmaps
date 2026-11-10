@@ -64,7 +64,9 @@ interface Roadmap {
   are catalogue copy (`ADR-008`).
 - **The sheet colour is decorative only**: a swatch or border, never text or the
   background behind text, with a theme token when `null`. Sheet colours therefore cannot
-  break contrast in either theme.
+  break contrast in either theme. Each card shows its own roadmap's colour for now; the
+  owner plans to set colour per family instead (round 3), a format change for a later
+  record.
 - **The id is the public site's slug** of the `Sheet` value (`producta`), so a roadmap's
   editor address (`#/roadmaps/producta`) matches its public page. It replaces the numeric
   worksheet id; no address using that was ever published.

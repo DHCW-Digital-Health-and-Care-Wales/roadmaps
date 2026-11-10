@@ -106,6 +106,13 @@ cards plain, and STY-012 changes what the cards show.
   the app does not know who the user is.
 - **Grouping by category** as the public site does: the owner chose groups by product
   family instead (analysis decision 3, round 2).
+- **Family-wide colours**: the owner plans a feature where every roadmap in a family has
+  the family's colour, and Product Leads no longer set one per roadmap (STY-012 D9). It
+  changes the shared data source's format, a contract with the public site, so it needs
+  its own record agreed with the public site's owners. Until then each card shows its
+  roadmap's own colour.
+- **Stale roadmaps** (persona A7): the hand-typed `Last updated` date can't be trusted to
+  judge six weeks; comes once publishing records when a roadmap changed (STY-012 D10).
 
 ## Defects
 

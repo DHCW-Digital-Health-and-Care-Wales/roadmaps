@@ -96,9 +96,25 @@ falling back to English ones
 **And** when no roadmap has a family, the page shows one list by title with no group
 heading
 
+### S9: Unpublished roadmaps sort like any other (owner, round 3)
+
+**Given** a family holding "Alpha" (not published) and "Beta" (published)
+**When** the main page is shown
+**Then** "Alpha" comes before "Beta", carrying its "Not published" badge
+**And** enabling "Alpha" on the public site changes only its badge, not its place
+
+### S10: The count says how many are not published (owner, round 3)
+
+**Given** the example roadmaps (three, one not published), and a list where every roadmap
+is published
+**When** the main page is shown in English and in Welsh
+**Then** the first says the equivalent of "3 roadmaps, 1 not published" and the second
+only "3 roadmaps", with correct plurals in both languages
+
 ## Tests
 
-Grouping and sorting (S1, S8) are unit tests. S2–S5 are component tests. S1, S5 and S6 also run in Playwright
+Grouping and sorting (S1, S8, S9) are unit tests; S10's plurals are component tests in
+both languages. S2–S5 are component tests. S1, S5 and S6 also run in Playwright
 against the example data, since the language switch and axe need the real page.
 Screenshots: main page at 1280px and 375px, light and dark, English and Welsh.
 
@@ -118,10 +134,25 @@ Screenshots: main page at 1280px and 375px, light and dark, English and Welsh.
 - **D5** (agent, 2026-11-10): roadmaps with no family get their own group heading
   (copywriter to name it) when other groups exist, so every card sits under a heading;
   families match ignoring case, accents, spaces and punctuation, like the public site's
-  other values, so a typo in spacing doesn't split a family. Easily reversed.
+  other values, so a typo in spacing doesn't split a family. Easily reversed. The
+  heading was confirmed by the owner in D7.
+- **D6** (owner, 2026-11-10, grilling round 3 Q1): unpublished roadmaps sort by title
+  with the rest, badged, over published-first. Adds S9.
+- **D7** (owner, 2026-11-10, grilling round 3 Q3): roadmaps with no family sit under a
+  heading when family groups exist, none otherwise. Holds in S1, S8.
+- **D8** (owner, 2026-11-10, grilling round 3 Q2): the count mentions unpublished
+  roadmaps, and only when there are any. Adds S10.
+- **D9** (owner, 2026-11-10, grilling round 3 Q4): each card shows its own roadmap's
+  colour for now (S6). A later feature will give every roadmap in a family one colour,
+  set by the family; see EPC-002 Out of scope.
+- **D10** (owner, 2026-11-10, grilling round 3 Q5–Q6): the detail page keeps only the
+  title (confirms D3), and no stale marker yet. Out of scope below.
 
 ## Out of scope
 
 - The detail page showing vision and the full service description: the roadmap detail
   epic (EPC-002 Out of scope).
 - Filtering, or grouping by category: not asked for (D4).
+- A stale-roadmap marker (six weeks, persona A7): waits until publishing records a real
+  date rather than the hand-typed one (D10).
+- Family-wide colours: a later record (D9; EPC-002 Out of scope).

@@ -9,6 +9,11 @@ import type { AppErrorKind } from "@/lib/errors"
 export const en = {
   common: {
     appName: "DHCW Roadmap Editor",
+    /**
+     * The header's name beside the DHCW logo, which already says "DHCW"; the document
+     * title and the home link keep the full `appName`.
+     */
+    headerName: "Roadmap Editor",
     /** The header's name on narrow screens. */
     shortAppName: "Roadmaps",
     loading: "Loading…",
@@ -34,6 +39,18 @@ export const en = {
     skipToContent: "Skip to main content",
     home: "DHCW Roadmap Editor home",
     notifications: "Notifications",
+    /** The DHCW logo's alternative text: the organisation's name. */
+    logoAlt: "Digital Health and Care Wales",
+    phase: {
+      tag: "Beta",
+      text: "This is a new service. Your feedback will help us improve it.",
+      feedback: "Give feedback",
+      opensInNewTab: "(opens in a new tab)",
+    },
+    footer: {
+      copyright: "© Digital Health and Care Wales",
+      version: "Version {{version}}",
+    },
   },
   landing: {
     tagline:

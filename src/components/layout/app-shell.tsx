@@ -2,7 +2,10 @@ import { useLocation } from "@tanstack/react-router"
 import { useEffect, useRef, type ReactNode, type RefObject } from "react"
 import { useTranslation } from "react-i18next"
 
+import { AppFooter } from "./app-footer"
 import { AppHeader } from "./app-header"
+import { PageContainer } from "./page-container"
+import { PhaseBanner } from "./phase-banner"
 
 export interface AppShellProps {
   /** Header controls, composed by the root route. */
@@ -58,7 +61,15 @@ function useRescueFocus(target: RefObject<HTMLElement | null>) {
   }, [target])
 }
 
-/** Page frame: skip link, sticky header and the main landmark, which keeps focus. */
+/**
+ * Page frame: skip link, DHCW header, phase banner, the main landmark (which keeps focus)
+ * and footer. Every page sits in DHCW's wide container with its main-wrapper spacing, so a
+ * page renders its content only.
+ *
+ * There is no sidebar yet. The dashboard shell, with the roadmaps in its navigation and the
+ * header's chips in its top bar, comes with the first record that adds a second top-level
+ * destination or the roadmap editor: see ADR-010, "Deferred: the dashboard shell".
+ */
 export function AppShell({ headerActions, children }: AppShellProps) {
   const { t } = useTranslation()
   const main = useRef<HTMLElement>(null)
@@ -69,7 +80,7 @@ export function AppShell({ headerActions, children }: AppShellProps) {
     <div className="flex min-h-svh flex-col">
       <a
         href={`#${MAIN_ID}`}
-        className="sr-only z-50 rounded-lg text-body-xs font-medium focus:not-sr-only focus:fixed focus:top-2.5 focus:left-3 focus:focus-fill focus:px-3 focus:py-2"
+        className="sr-only z-50 rounded-lg text-body-xs font-bold focus:not-sr-only focus:fixed focus:top-2 focus:left-4 focus:focus-fill focus:px-3 focus:py-2 md:focus:left-10"
         onClick={(event) => {
           // Hash history owns the URL fragment, so move focus without navigating.
           event.preventDefault()
@@ -79,14 +90,18 @@ export function AppShell({ headerActions, children }: AppShellProps) {
         {t("layout.skipToContent")}
       </a>
       <AppHeader actions={headerActions} />
+      <PhaseBanner />
       <main
         ref={main}
         id={MAIN_ID}
         tabIndex={-1}
         className="flex flex-1 flex-col outline-none"
       >
-        {children}
+        <PageContainer className="flex flex-1 flex-col pt-6 pb-8 sm:pt-8">
+          {children}
+        </PageContainer>
       </main>
+      <AppFooter />
     </div>
   )
 }

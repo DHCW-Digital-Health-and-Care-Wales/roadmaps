@@ -49,6 +49,8 @@ const TEXT_PAIRS: readonly (readonly [
   ["status-warning-fg", "status-warning-bg"],
   ["status-warning-fg", "card"],
   ["status-danger-fg", "status-danger-bg"],
+  ["header-foreground", "header"],
+  ["header-foreground", "header-hover"],
   ["sidebar-foreground", "sidebar"],
   ["sidebar-primary-foreground", "sidebar-primary"],
   ["sidebar-accent-foreground", "sidebar-accent"],
@@ -154,6 +156,15 @@ describe("contrast", () => {
         expect(change).toBeGreaterThanOrEqual(NON_TEXT_MINIMUM)
       },
     )
+
+    // The header is navy in both themes: its chip and button borders are controls, and
+    // the focus indicator's yellow part is what shows on it.
+    it("the header's borders and focus indicator are at least 3:1 on it", () => {
+      expect(ratio("header-border", "header")).toBeGreaterThanOrEqual(
+        NON_TEXT_MINIMUM,
+      )
+      expect(ratio("focus", "header")).toBeGreaterThanOrEqual(NON_TEXT_MINIMUM)
+    })
 
     it("keeps the focus indicator's two parts 3:1 apart", () => {
       expect(ratio("focus", "focus-foreground")).toBeGreaterThanOrEqual(

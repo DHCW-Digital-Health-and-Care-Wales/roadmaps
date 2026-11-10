@@ -48,5 +48,10 @@ export function composeApp(config: AppConfig = defaultConfig): AppServices {
     spreadsheetId: config.spreadsheetId,
   })
 
-  return { i18n, queryClient, authClient, roadmapRepository }
+  const appInfo = {
+    version: __APP_VERSION__,
+    feedbackUrl: config.feedbackUrl,
+  }
+
+  return { i18n, queryClient, authClient, roadmapRepository, appInfo }
 }

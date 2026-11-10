@@ -7,19 +7,25 @@ import { useAuth } from "../use-auth"
 
 export interface AuthButtonProps {
   className?: string
+  /** Pass `header` on the navy header band; elsewhere the button picks its own look. */
+  variant?: "header"
 }
 
 /**
  * The one auth action for the current state: Connect, Reconnect after expiry, or
  * Disconnect. It waits (busy, still focusable) while sign-in loads or its popup is open.
  */
-export function AuthButton({ className }: AuthButtonProps) {
+export function AuthButton({ className, variant }: AuthButtonProps) {
   const { t } = useTranslation()
   const { state, connect, disconnect } = useAuth()
 
   if (state.status === "connected") {
     return (
-      <Button variant="secondary" className={className} onClick={disconnect}>
+      <Button
+        variant={variant ?? "secondary"}
+        className={className}
+        onClick={disconnect}
+      >
         {t("auth.disconnect")}
       </Button>
     )
@@ -28,6 +34,7 @@ export function AuthButton({ className }: AuthButtonProps) {
   const busy = state.status === "initializing" || state.status === "connecting"
   return (
     <Button
+      variant={variant ?? "default"}
       className={className}
       disabled={busy}
       focusableWhenDisabled

@@ -35,17 +35,17 @@ export function LanguageSwitcher() {
       <DropdownMenuTrigger
         render={
           <Button
-            variant="ghost"
+            variant="header"
             // 32px below `sm`, as the header's other buttons, so the brand keeps its name.
-            className="max-sm:h-8 max-sm:w-8 max-sm:px-0"
+            className="max-md:w-10 max-md:px-0 max-sm:h-8 max-sm:w-8"
           />
         }
       >
         <LanguagesIcon aria-hidden="true" />
         {/* Accessible name "Language English": it includes the visible endonym. */}
         <span className="sr-only">{t("language.label")}</span>{" "}
-        {/* Below `sm` the endonym is visually hidden but stays in the accessible name. */}
-        <span lang={current} className="max-sm:sr-only">
+        {/* Below `md` the endonym is visually hidden but stays in the accessible name. */}
+        <span lang={current} className="max-md:sr-only">
           {languageEndonyms[current]}
         </span>
       </DropdownMenuTrigger>

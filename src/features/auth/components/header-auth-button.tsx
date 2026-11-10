@@ -12,6 +12,7 @@ export function HeaderAuthButton() {
   const connected = useAuth().state.status === "connected"
   return (
     <AuthButton
+      variant="header"
       className={cn(
         "sm:ml-1",
         // 32px below `sm`, as the header's other buttons, so the brand keeps its name.

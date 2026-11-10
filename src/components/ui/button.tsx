@@ -3,7 +3,8 @@
 // the pinned release): bold text, 4px corners, a 2px bottom bar (`shadow-control`), and
 // half opacity with no bar when disabled, including a button that stays focusable
 // (`data-disabled`). Variants: `default` (primary), `secondary` (white, grey border and bar),
-// `destructive` (DHCW's solid red warning button) and `ghost`; upstream's `outline`, `link`
+// `destructive` (DHCW's solid red warning button), `ghost` and `header` (white on the navy
+// header band, with the chips' border and a lighter hover); upstream's `outline`, `link`
 // and the xs/lg sizes are gone, so a group is always 40px (`default`) or 32px (`sm`).
 // focus-visible:focus-fill for upstream's ring, and no `dark:` overrides, which would beat
 // the focus fill in the dark theme. Hovers are --primary-hover, --muted and
@@ -26,6 +27,8 @@ const buttonVariants = cva(
         destructive:
           "border-destructive-fill bg-destructive-fill text-destructive-foreground shadow-control hover:border-destructive-hover hover:bg-destructive-hover",
         ghost: "text-foreground hover:bg-muted aria-expanded:bg-muted",
+        header:
+          "border-header-border text-header-foreground hover:bg-header-hover aria-expanded:bg-header-hover",
       },
       size: {
         default:

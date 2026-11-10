@@ -1,7 +1,6 @@
 # STY-016: The shell and pages are a DHCW staff service
 
-- **Status**: Proposed — owner gave logo permission and approved the recommended shell,
-  2026-11-10
+- **Status**: Done — delivered in its PR, which awaits merge
 - **Type**: Feature + Copy
 - **Area**: Features/UI + i18n (en + cy) + E2E
 - **Epic**: EPC-003-dhcw-design-alignment
@@ -10,6 +9,7 @@
   ADR-008
 - **Suggested model**: Sonnet — layout and copy on settled components, with screenshots
   in both languages
+- **Delivered**: https://github.com/collisdigital/roadmaps-editor/pull/18
 
 ## Summary
 
@@ -159,3 +159,82 @@ Audited at `22c3336`.
   own Connect or Reconnect, because the narrow header shows only Disconnect.
   Below `sm` the header's buttons stay 32px (`header-auth-button`, `language-switcher`,
   `theme-toggle`) so the short name fits (D6).
+- **D7** (agent, 2026-11-10, copy): the header's visible name beside the logo is
+  "Roadmap Editor" / "Golygydd Mapiau Trywydd" (`common.headerName`), since the logo already
+  says DHCW/IGDC. Below `sm` the short names stay ("Roadmaps" / "Mapiau Trywydd"). The home
+  link's accessible name, the document title and the start page's `h1` keep the full
+  "DHCW Roadmap Editor" / "Golygydd Mapiau Trywydd IGDC", so the name always includes the
+  service name. The footer's "dev" is the spec's word for a local build.
+- **D8** (owner, 2026-11-10, at PR review): keep DHCW's bilingual lockup (`nhsw-logo.svg`)
+  as the full logo, NHS Wales mark included. ADR-010's "No NHS branding" is amended to
+  allow the mark inside DHCW's own logo only.
+
+## Delivery
+
+### Departures
+
+- **S1, which logo is "full"** (agent; settled by the owner as D8): the record names
+  `nhsw-logo.svg` as the full logo. It is DHCW's bilingual lockup, which carries the "GIG
+  Cymru NHS Wales" mark beside the DHCW wordmark, while ADR-010 said "no NHS branding".
+  The record's file is used unchanged, and the owner kept it at review.
+- **S1, the picture** (agent): the logo is one `<picture>` (the full logo `source` from
+  40rem, the icon as the `img`), so assistive technology meets one image named for the
+  organisation, not two. The home link keeps `aria-label` "DHCW Roadmap Editor home", which
+  overrides the image's name inside the link; the alt text is the image's own name.
+- **S1, the controls** (agent): the navy band needs its own button look, so `Button` gains
+  `header` (transparent, white text, the chips' border, a lighter hover), used by the
+  language and theme buttons and the header's auth action (`AuthButton variant="header"`).
+  The home link takes `focus-ring` rather than `focus-fill`: a yellow fill would hide the
+  white logo. The status chip wraps the tag in a bordered box. Review found the full logo, the
+  service name and every control do not fit between 640px and 900px (in Cymraeg the name
+  was cut to nothing at 640px), so the chip is visually hidden below `lg` and the language
+  button shows only its icon below `md` (both stay announced: a live `status`, and the
+  accessible name "Language English"). `shell.spec.ts` checks the name untruncated from
+  375px to 1024px.
+- **S1, shared link style** (agent): `textLinkClasses` (`components/layout`) is the one text
+  link style, used by the back link, the not-found link and the banner's feedback link.
+- **S3** (agent): the feedback address travels as `AppInfo` (`components/layout/app-info`,
+  built by `composeApp` from `config.feedbackUrl` and `__APP_VERSION__`, supplied by
+  `AppProviders`), so the layout components stay below `app/`. The link opens in a new tab
+  (leaving the app would end the in-memory session) and says so to screen readers.
+- **S4, the version** (agent): `build/resolve-build-version.ts` returns `dev` without
+  `GITHUB_SHA`, else `<package version>+<short sha>`; `vite.config.ts` defines
+  `__APP_VERSION__` from it. `ci.yml` needs no change: Actions already sets `GITHUB_SHA`.
+- **S5** (agent): the start page is now `StartPage` (`features/home/pages/start-page.tsx`)
+  in place of `WelcomeHero`, and the lock icon on the access note is gone. `ContextChip`
+  (STY-015) lost its only user to the inset note, so it is deleted with its test, as is the
+  hand-drawn `BrandMark`.
+- **S6** (agent): `AppShell` owns DHCW's container (`PageContainer`: 1200px, 16px margins,
+  40px from `md`) and main-wrapper spacing (24px, 32px from `sm`, above; 32px below), so
+  pages render content only. The not-found page is left aligned with a text link.
+- **S7** (agent): the favicon is the DHCW icon in white on a navy tile, so it reads on light
+  and dark browser chrome; the skip link is DHCW's yellow with bold text, at the container's
+  left edge.
+- **D6** (agent): the first run of the 375px Cymraeg check failed (the short name needed 8px
+  more): the home link's `-ml-1` (aligning the logo with the page edge) and tighter gaps
+  below `sm` fix it. Tests came after the code, as the checks are of layout and copy.
+
+### Contract for dependents
+
+- A page renders its content only; `AppShell` supplies the container, spacing, banner and
+  footer. A signed-out view keeps its own Connect or Reconnect (the narrow header shows
+  only Disconnect).
+- Tokens added: `--header`, `--header-foreground`, `--header-hover`, `--header-border`
+  (and their utilities), with pairs in `contrast.test.ts`. No lint exception was added.
+- `AppInfo` (`useAppInfo()`) carries the version and the feedback address; tests pass it to
+  `renderWithProviders({ appInfo })`. `VITE_FEEDBACK_URL` is optional and must be `https`.
+- STY-017's failures use `Alert` above the page's `h1`, as the start page's notice does.
+  STY-018's baselines capture this shell.
+- The logo assets and the favicon are described in `src/assets/dhcw/README.md`.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                   |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `layout/app-shell.test.tsx` (logo alt, home link name, control order, both languages); `shell.spec.ts` (navy, logo, order); axe in both themes            |
+| S2       | `shell.spec.ts`: at 375px in Cymraeg, connected, the icon, the short name untruncated and only Disconnect, the status attached, no horizontal scroll (D6) |
+| S3       | `app-shell.test.tsx` (link only with an address, new tab); `config.test.ts` (https only); `shell.spec.ts` (banner, no link when unset)                    |
+| S4       | `build/resolve-build-version.test.ts`; `app-shell.test.tsx`; `shell.spec.ts` (footer); a CI-style build showed `0.0.0+0123456` in the bundle              |
+| S5       | `home/pages/start-page.test.tsx` (every signed-out state, both languages: notice first, inset note, no hero)                                              |
+| S6       | `shell.spec.ts` (left edges at 80px/16px and a 1200px container; no overflow); `app.test.tsx` (not-found link, not a button)                              |
+| S7       | `shell.spec.ts` (skip link, favicon); `focus-indicator.spec.ts` (the home link's ring)                                                                    |

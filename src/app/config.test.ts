@@ -44,3 +44,35 @@ describe("parseConfig", () => {
     )
   })
 })
+
+describe("parseConfig, feedback address", () => {
+  it("is optional: unset or blank means no link", () => {
+    expect(parseConfig(validEnv).feedbackUrl).toBeUndefined()
+    expect(
+      parseConfig({ ...validEnv, VITE_FEEDBACK_URL: "  " }).feedbackUrl,
+    ).toBeUndefined()
+  })
+
+  it("accepts an https address, trimmed", () => {
+    expect(
+      parseConfig({
+        ...validEnv,
+        VITE_FEEDBACK_URL: " https://forms.example.org/roadmaps?src=app ",
+      }).feedbackUrl,
+    ).toBe("https://forms.example.org/roadmaps?src=app")
+  })
+
+  it.each([
+    "http://example.org/feedback",
+    "mailto:team@example.org",
+    "javascript:alert(1)",
+    "//example.org/feedback",
+    "example.org/feedback",
+    "https://user:secret@example.org/feedback",
+    "not a url",
+  ])("rejects %s, which is not an https address", (value) => {
+    expect(() =>
+      parseConfig({ ...validEnv, VITE_FEEDBACK_URL: value }),
+    ).toThrow(/Invalid app configuration[\s\S]*VITE_FEEDBACK_URL/)
+  })
+})

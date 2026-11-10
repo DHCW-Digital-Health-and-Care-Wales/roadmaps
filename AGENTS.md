@@ -44,6 +44,7 @@ src/
   infrastructure/   adapters to the outside world (Google Sheets, Google Identity Services).
                     Depends on domain + lib. Never on React, TanStack Query, or features.
                     Only infrastructure/google-identity may use the `google` global.
+  assets/dhcw/      the DHCW logo and icon, used with permission (provenance in its README)
   components/ui/    shadcn/ui (Base UI) generated components — keep close to upstream
   components/layout app shell pieces shared across features
   components/theme  ThemeProvider, useTheme, ThemeToggle, stored preference (ADR-005)
@@ -727,3 +728,35 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
       new chevron is a decorative circle in the card's `div`, not in the link.
     - The start page's notice is `role="note"`, since the connection status already
       announces the failure.
+- **STY-016 The shell and pages are a DHCW staff service** — a navy header with the DHCW logo,
+  a "Beta" phase banner, a footer with the version, DHCW's container and spacing, a plain
+  start page, the DHCW skip link and favicon. No lint exception, no ADR change.
+  - Where things live (`components/layout`): `AppShell` (skip link, `AppHeader`, `PhaseBanner`,
+    `main` in a `PageContainer`, `AppFooter`; a page renders content only; a comment points at
+    ADR-010's deferred sidebar), `AppInfoProvider`/`useAppInfo` (`{ version, feedbackUrl? }`,
+    built by `composeApp`, passed to tests as `renderWithProviders({ appInfo })`). The start page
+    is `features/home/pages/start-page.tsx` (`StartPage`, was `WelcomeHero`). `ContextChip` and
+    `BrandMark` are gone. `Button` has a `header` variant; `AuthButton` takes `variant="header"`.
+  - Config and build: `VITE_FEEDBACK_URL` (optional, https only, in `app/config.ts`);
+    `build/resolve-build-version.ts` (`dev` locally, `<package version>+<short sha>` when
+    `GITHUB_SHA` is set) feeds `__APP_VERSION__` through `vite.config.ts`. `ci.yml` is unchanged.
+  - Tokens: `--header`, `--header-foreground`, `--header-hover`, `--header-border` (navy in both
+    themes). Copy: `common.headerName` ("Roadmap Editor"; the logo says DHCW), `layout.logoAlt`,
+    `layout.phase.*`, `layout.footer.*`. `textLinkClasses` is the one text-link style. The Welsh
+    is machine-assisted and needs a fluent review.
+  - Decisions: the full logo (`nhsw-logo.svg`, the record's file) is DHCW's bilingual lockup and
+    includes the NHS Wales mark; the owner kept it (D8), and ADR-010 now allows the mark inside
+    DHCW's own logo only.
+    The home link keeps its full accessible name; its focus is the ring, as a yellow fill would
+    hide the white logo. The favicon is the white icon on a navy tile.
+  - Gotchas:
+    - The header's width is tight in Cymraeg from 375px to `lg`: `shell.spec.ts` checks the
+      service name is not truncated at 375, 640, 768, 900 and 1024px (D6). The status chip is
+      visually hidden below `lg` and the language endonym below `md` for that reason; a wider
+      control or name breaks it.
+    - A new top-level control for the header takes `variant="header"`; the default buttons
+      are navy and vanish on the band.
+    - Vitest and `vite build` read `GITHUB_SHA`: a component test must not assert a literal
+      version; pass `appInfo`.
+    - The logo is an imported asset (`?url` through Vite, under the base path); the favicon is
+      `public/favicon.svg`, which index.html references and Vite rewrites to the base path.

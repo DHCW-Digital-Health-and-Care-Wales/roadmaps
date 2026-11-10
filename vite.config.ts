@@ -1,14 +1,25 @@
+import { readFileSync } from "node:fs"
+
 import tailwindcss from "@tailwindcss/vite"
 import { tanstackRouter } from "@tanstack/router-plugin/vite"
 import react from "@vitejs/plugin-react"
 import { defineConfig } from "vitest/config"
 
 import { resolveBasePath } from "./build/resolve-base-path.ts"
+import { resolveBuildVersion } from "./build/resolve-build-version.ts"
+
+const { version } = JSON.parse(
+  readFileSync(new URL("./package.json", import.meta.url), "utf8"),
+) as { version: string }
 
 // https://vite.dev/config/
 export default defineConfig({
   // GitHub Pages project sites live under /<repo>/ (ADR-007).
   base: resolveBasePath(process.env),
+  // The footer's version: the package version and commit of a CI build, "dev" locally.
+  define: {
+    __APP_VERSION__: JSON.stringify(resolveBuildVersion(version, process.env)),
+  },
   plugins: [
     // Must come before the React plugin (TanStack Router docs).
     tanstackRouter({ target: "react", autoCodeSplitting: true }),

@@ -56,7 +56,7 @@ describe("landing page", () => {
     expect(main().getByRole("button", { name: "Connect Google" })).toBeEnabled()
   })
 
-  it("connects from the hero, toasts once and shows the roadmaps slot", async () => {
+  it("connects from the start page, toasts once and shows the roadmaps slot", async () => {
     const user = userEvent.setup()
     const { authClient } = await renderWithProviders()
 
@@ -270,6 +270,8 @@ describe("routes", () => {
     expect(
       main().getByRole("link", { name: "Go to the home page" }),
     ).toHaveAttribute("href", "/")
+    // A link home, not a button.
+    expect(main().queryByRole("button")).not.toBeInTheDocument()
     expect(screen.getByRole("banner")).toBeInTheDocument()
   })
 

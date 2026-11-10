@@ -33,7 +33,8 @@
 - Human interventions: 0.
 - Bot status at readiness: not babysat.
 - Retro: no-op, with evidence.
-- Evidence limits: usage unknown.
+- Evidence limits: partial usage, Claude reviewers only, as reported subagent tokens:
+  Opus 109k, Sonnet 57k. Delivery, retro and Sol usage unknown.
 
 ### STY-011 The roadmap list shows the roadmaps the public site lists
 
@@ -54,7 +55,8 @@
 - Retro: [#6](https://github.com/collisdigital/roadmaps-editor/pull/6), merged as 41a9270.
   Docs only; Opus round 1 (P2, P3) and re-check (P3), Sol round 1 (P2) and re-check; all
   fixed.
-- Evidence limits: usage unknown.
+- Evidence limits: partial usage, Claude reviewers only, as reported subagent tokens:
+  Opus 95k, Sonnet 53k; retro #6 Opus 45k and 32k. Delivery, retro and Sol usage unknown.
 
 ### STY-012 Roadmap cards show each roadmap's information, grouped by product family
 
@@ -66,7 +68,8 @@
   retro 5 min to its PR.
 - Reviews: 6 reviewer tasks. Opus round 1 (P3); Sol round 1 (P2: long text overflowed
   the card at 375 px), re-check and a final fresh pass, both clean; Sonnet round 1
-  (2 🟡, 5 💭), re-check clean. All accepted; declined 0.
+  (2 🟡, 5 💭), re-check clean, with one optional nit. Accepted: everything but that
+  nit, declined as readable as is.
 - Escapes: none observed. The Codex GitHub bot finished at cbcbac4 with no findings.
 - Rework: none beyond pre-PR fixes.
 - Recovery: none.
@@ -75,7 +78,7 @@
 - Retro: [#8](https://github.com/collisdigital/roadmaps-editor/pull/8), open. Adds one
   E2E rule (wait for a request's own effect before asserting a fake's request log).
   Opus round 1 (3 P3) and re-check clean; Sol round 1 clean.
-- Evidence limits: usage unknown.
+- Evidence limits: usage unknown; the delivery report quoted no reviewer token counts.
 
 ## Learnings and next evaluation
 

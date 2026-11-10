@@ -8,7 +8,7 @@
 - **Binding ADRs**: ADR-010, ADR-005, ADR-008
 - **Suggested model**: Opus — token design and a derived dark palette, with contrast
   judgement in both themes
-- **Delivered**: _(the PR, linked once it opens)_
+- **Delivered**: https://github.com/collisdigital/roadmaps-editor/pull/12
 
 ## Summary
 

@@ -1,0 +1,69 @@
+import type { Page } from "@playwright/test"
+
+import { expect, roadmapCards, test } from "./fixtures/test"
+
+test("the theme toggle switches to dark, and the choice persists", async ({
+  page,
+}) => {
+  const html = page.locator("html")
+  await page.goto("./")
+  await expect(html).not.toHaveClass(/\bdark\b/)
+
+  await page.getByRole("button", { name: "Switch to dark theme" }).click()
+
+  await expect(html).toHaveClass(/\bdark\b/)
+  await page.reload()
+  await expect(html).toHaveClass(/\bdark\b/)
+  await page.getByRole("button", { name: "Switch to light theme" }).click()
+  await expect(html).not.toHaveClass(/\bdark\b/)
+})
+
+async function chooseLanguage(page: Page, current: string, next: string) {
+  await page.getByRole("button", { name: current }).click()
+  await page.getByRole("menuitemradio", { name: next }).click()
+}
+
+async function expectWelsh(page: Page) {
+  await expect(page.locator("html")).toHaveAttribute("lang", "cy")
+  await expect(page).toHaveTitle("Mapiau Trywydd Cynnyrch")
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Mapiau Trywydd Cynnyrch" }),
+  ).toBeVisible()
+  await expect(page.getByRole("status")).toHaveText("Heb gysylltu")
+}
+
+test("switching to Cymraeg translates the app, and the choice persists", async ({
+  page,
+}) => {
+  await page.goto("./")
+  await chooseLanguage(page, "Language English", "Cymraeg")
+  await expectWelsh(page)
+
+  await page.reload()
+  await expectWelsh(page)
+
+  await page
+    .getByRole("main")
+    .getByRole("button", { name: "Cysylltu â Google" })
+    .click()
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Eich Mapiau Trywydd" }),
+  ).toBeVisible()
+  await expect(roadmapCards(page)).toHaveCount(3)
+  await expect(page.getByText("3 map trywydd")).toBeVisible()
+
+  await chooseLanguage(page, "Iaith Cymraeg", "English")
+  await expect(page.locator("html")).toHaveAttribute("lang", "en")
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Your Roadmaps" }),
+  ).toBeVisible()
+})
+
+test.describe("with a Welsh browser", () => {
+  test.use({ locale: "cy-GB" })
+
+  test("the app starts in Cymraeg", async ({ page }) => {
+    await page.goto("./")
+    await expectWelsh(page)
+  })
+})

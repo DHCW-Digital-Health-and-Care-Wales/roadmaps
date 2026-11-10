@@ -51,7 +51,8 @@ pnpm typecheck
 pnpm lint
 pnpm format:check   # pnpm format to fix
 pnpm test           # Vitest unit + component (no network, no Google)
-pnpm test:e2e       # Playwright, fully mocked GIS + Sheets
+pnpm exec playwright install --with-deps chromium   # once per @playwright/test version
+pnpm test:e2e       # Playwright: builds, serves with vite preview, fakes GIS + Sheets
 pnpm build && pnpm preview
 ```
 
@@ -76,7 +77,7 @@ pnpm build && pnpm preview
    the ADR in the same change and say why.
 3. Use subagents where helpful (Haiku for mechanical edits, Sonnet for medium work).
 4. Before finishing: `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm build`
-   (plus `pnpm test:e2e` once it exists) must all pass.
+   `pnpm test:e2e` must all pass.
 5. Get a code review from a **Sol** reviewer (Codex `gpt-6.1-sol`) via `delegate_task`
    (role `review`, mode `wait`, shared checkout). Address every comment — fix it, or record
    a reasoned rebuttal in the story file. Re-run the checks.
@@ -399,3 +400,40 @@ language? })` (`src/test/render-with-providers.tsx`) renders the real `AppProvid
       `disabled:` styles don't apply; Refresh adds `data-disabled:opacity-50`.
     - shadcn's `Alert` forces icon colour with `*:[svg]:text-current`; override with `!`.
     - TanStack Query v5.107 deprecates `fetchQuery`; tests use `queryClient.query()`.
+- **S07 Playwright E2E** — `@playwright/test` 1.64.1 (pinned exactly: it must match the
+  installed Chromium revision, 1248) and `@axe-core/playwright` 4.14.0. No app bugs found.
+  See `tests/e2e/AGENTS.md` for the fixture API and conventions.
+  - Running: `pnpm test:e2e` (`playwright.config.ts`). Its `webServer` runs
+    `pnpm build && pnpm preview --port 4173 --strictPort`; locally it reuses a server already
+    on 4173 (stop a stale `pnpm preview`), never on CI. 31 tests, ~13 s locally, 4 workers.
+    The build reads `.env.production` (and `.env.local`, as `vite build` does); the fakes
+    read the same values with Vite's `loadEnv`.
+  - Specs: `landing`, `roadmaps` (order, hidden sheet, empty, Refresh, card → detail,
+    deep link + reload, not found), `roadmap-errors` (5xx → Retry, 403 copy, 401 → expired →
+    Reconnect, token expiry), `auth` (denied, scope not granted, 60 s grant, popup
+    blocked/closed, consent re-prompt, script load failure, disconnect), `preferences`
+    (theme, Cymraeg + reload, Welsh browser locale), `accessibility` (axe, WCAG 2.2 AA,
+    light and dark).
+  - Hermetic: a context-level guard aborts every other origin (HTTP and WebSocket) and fails
+    the test; service workers are blocked; uncaught page errors fail the test. The fakes
+    record misuses (wrong client ID/scope, `requestAccessToken` outside a user gesture, wrong
+    path/`fields`/token on Sheets) as violations that fail the test at teardown.
+  - S08 CI: `pnpm install --frozen-lockfile`, then cache `~/.cache/ms-playwright` keyed on
+    the `@playwright/test` version from the lockfile; on a miss run `pnpm exec playwright
+install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chromium`.
+    `CI=true` turns on `forbidOnly`, 2 retries (trace on first retry), and the `github` +
+    `list` + `html` reporters. Upload `playwright-report/` (and `test-results/` for traces
+    and failure screenshots) with `if: ${{ !cancelled() }}`. The job needs no build step of
+    its own: the webServer builds.
+  - S08 base path: specs only navigate relative to `baseURL` (`./`, `./#/roadmaps/42`).
+    When the build gets base `/roadmaps-editor/`, set `use.baseURL` and `webServer.url`
+    to `http://localhost:4173/roadmaps-editor/` from the same resolver (trailing slash
+    kept), or build the E2E bundle with base `/`.
+  - Gotchas:
+    - `page.evaluate` runs with a user gesture, so it cannot test the popup-gesture check.
+    - Retryable failures (5xx, 429, network) back off ~3 s before the error shows; use
+      `page.clock.install()` before `goto` and fast-forward (see `roadmap-errors.spec.ts`).
+    - Sonner toasts: assert presence in E2E; assert absence in component tests, which can
+      flush Sonner's timer.
+    - The header and page both have Connect/Reconnect buttons, and the header's connection
+      badge is also `role=status`: scope locators to `main`/`banner`.

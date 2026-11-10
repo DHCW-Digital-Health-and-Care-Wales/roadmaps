@@ -2,7 +2,8 @@
   "files": [],
   "references": [
     { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.node.json" }
+    { "path": "./tsconfig.node.json" },
+    { "path": "./tests/e2e" }
   ],
   // Mirrors tsconfig.app.json: the shadcn CLI resolves the `@/*` alias from this file.
   "compilerOptions": {

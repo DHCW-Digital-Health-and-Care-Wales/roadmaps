@@ -1,7 +1,7 @@
 # EPC-003: DHCW design alignment — a DHCW staff tool that still looks like generic SaaS
 
-- **Status**: Active — planned 2026-11-10 from the owner's answers in the alignment analysis; STY-013 to STY-017 delivered and merged; STY-018 in progress
-- **Progress**: 5 of 6 terminal; STY-018 in progress; blocked on: nothing
+- **Status**: Done — planned 2026-11-10 from the owner's answers in the alignment analysis; every story delivered; STY-013 to STY-017 merged, STY-018 in its PR, which awaits the owner's merge
+- **Progress**: 6 of 6 terminal
 - **Binding ADRs**: ADR-010, ADR-005, ADR-008, ADR-009
 
 ## Summary
@@ -27,7 +27,7 @@ None.
 ## Findings
 
 Audited at `22c3336` on 2026-11-10; the evidence and searches are in
-[the alignment analysis](../../analysis/dhcw-design-system-alignment.md#where-the-editor-falls-short-today).
+[the alignment analysis](../../../analysis/dhcw-design-system-alignment.md#where-the-editor-falls-short-today).
 
 ### F1 — Off-brand look
 
@@ -139,14 +139,14 @@ changes. Use only the example data in `tests/fixtures/sheets/`.
 
 ## Stories
 
-| ID      | Story                                                                                                                                                             | Area                                               | Depends on | State |
-| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | ---------- | ----- |
-| STY-013 | [The app uses DHCW's colours, type and focus indicator](../_archive/EPC-003-dhcw-design-alignment/STY-013-dhcw-tokens-type-and-focus.md)                          | Features/UI + Docs                                 | —          | ✅    |
-| STY-014 | [Off-brand styling fails the build](../_archive/EPC-003-dhcw-design-alignment/STY-014-semantic-token-enforcement.md)                                              | Features/UI + CI/CD                                | STY-013    | ✅    |
-| STY-015 | [Shared components look like DHCW's](../_archive/EPC-003-dhcw-design-alignment/STY-015-dhcw-components.md)                                                        | Features/UI                                        | STY-014    | ✅    |
-| STY-016 | [The shell and pages are a DHCW staff service](../_archive/EPC-003-dhcw-design-alignment/STY-016-dhcw-shell-and-pages.md)                                         | Features/UI + i18n + E2E                           | STY-015    | ✅    |
-| STY-017 | [Failures stay on screen, and staff are warned before their session ends](../_archive/EPC-003-dhcw-design-alignment/STY-017-notifications-and-session-warning.md) | Domain + Infrastructure + Features/UI + i18n + E2E | STY-015    | ✅    |
-| STY-018 | [Tests hold the DHCW look without screenshots](STY-018-dhcw-look-checks.md)                                                                                       | E2E + CI/CD                                        | STY-016    |       |
+| ID      | Story                                                                                                                   | Area                                               | Depends on | State                |
+| ------- | ----------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | ---------- | -------------------- |
+| STY-013 | [The app uses DHCW's colours, type and focus indicator](STY-013-dhcw-tokens-type-and-focus.md)                          | Features/UI + Docs                                 | —          | ✅                   |
+| STY-014 | [Off-brand styling fails the build](STY-014-semantic-token-enforcement.md)                                              | Features/UI + CI/CD                                | STY-013    | ✅                   |
+| STY-015 | [Shared components look like DHCW's](STY-015-dhcw-components.md)                                                        | Features/UI                                        | STY-014    | ✅                   |
+| STY-016 | [The shell and pages are a DHCW staff service](STY-016-dhcw-shell-and-pages.md)                                         | Features/UI + i18n + E2E                           | STY-015    | ✅                   |
+| STY-017 | [Failures stay on screen, and staff are warned before their session ends](STY-017-notifications-and-session-warning.md) | Domain + Infrastructure + Features/UI + i18n + E2E | STY-015    | ✅                   |
+| STY-018 | [Tests hold the DHCW look without screenshots](STY-018-dhcw-look-checks.md)                                             | E2E + CI/CD                                        | STY-016    | ✅ (PR awaits merge) |
 
 ## Sequencing
 
@@ -186,7 +186,7 @@ None.
 
 ## Related
 
-- [Aligning the editor with the DHCW design system](../../analysis/dhcw-design-system-alignment.md)
+- [Aligning the editor with the DHCW design system](../../../analysis/dhcw-design-system-alignment.md)
   (Outcome: ADR-010 and this epic)
 - ADR-010, ADR-005, ADR-008, ADR-009
 - [DHCW design system v0.1.104](https://github.com/DHCW-Digital-Health-and-Care-Wales/dhcw-design-system/tree/v0.1.104)

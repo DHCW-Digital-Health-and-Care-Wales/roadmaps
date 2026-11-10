@@ -153,4 +153,4 @@ These are the recommendations as presented to the owner, which decision 7 approv
 ## Outcome
 
 Decided in [ADR-010](../adr/ADR-010-align-the-ui-with-the-dhcw-design-system.md) and
-planned as [EPC-003](../backlog/EPC-003-dhcw-design-alignment/README.md).
+planned as [EPC-003](../backlog/_archive/EPC-003-dhcw-design-alignment/README.md).

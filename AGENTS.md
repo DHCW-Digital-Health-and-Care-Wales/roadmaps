@@ -790,3 +790,26 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
       timers (the router and queries settle on them), then `vi.useFakeTimers` and
       `advance(0)` (`session-warning.test.tsx`).
     - Base UI moves focus into the dialog on a real animation frame: `vi.waitFor` it.
+- **STY-018 Tests hold the DHCW look without screenshots** — the owner dropped pixel
+  baselines as fragile (D1); the look is held by aria snapshots, computed styles read
+  against the tokens, focus tours and a layout guard. Closes EPC-003 (archived). No app
+  code changed.
+  - Where things live (`tests/e2e`): `structure.spec.ts` (+ `structure.spec.ts-snapshots/`,
+    17 YAML files; English throughout, Cymraeg for the start and main pages),
+    `styles.spec.ts`, `focus-indicator.spec.ts` (tours of every tab stop, both themes),
+    `shell.spec.ts` (widths 375 to 1280), `fixtures/look.ts` (`tokenColour`, `tokenValue`,
+    `useTheme`, `useLanguage`). The update step is in `tests/e2e/AGENTS.md`.
+  - Decisions: aria matching is exact (`children: "deep-equal"` in `playwright.config.ts`);
+    footer never snapshotted (its version moves); a style test reads the token from the
+    stylesheet, never a copied colour; `.prettierignore` skips the generated YAML.
+  - Gotchas:
+    - CI serves under `/roadmaps-editor/`, so `/url:` lines would differ: `expectStructure`
+      points links at the site root before each snapshot. Run the suite once with
+      `GITHUB_REPOSITORY=collisdigital/roadmaps-editor` after changing it.
+    - `--font-sans` is inlined by Tailwind and not a custom property; the font check uses
+      `--nhsw-font-family-base`.
+    - A tab tour starts wherever focus is: after Connect it is on `<main>`, so the tour
+      keeps pressing Tab past the end of the page, where focus leaves, until it has seen
+      every stop. A menu opened with Enter needs its first item focused before an arrow key.
+    - The "Connected" notice stays while `page.clock` is installed and not moved: install
+      it first in any test that snapshots or tours the main page.

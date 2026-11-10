@@ -39,6 +39,16 @@ End-to-end tests of the production build, with Google faked (ADR-006). Run with
   state already on screen before them, such as cached cards, proves nothing.
 - Navigate with relative URLs (`./`, `./#/roadmaps/producta`) so a base path only changes
   `baseURL`.
+- The shell (`shell.spec.ts`): `banner` is the navy header, holding the home link named
+  "DHCW Roadmap Editor home" (visible text "Roadmap Editor"; below `sm` "Roadmaps"), the logo
+  `img` named "Digital Health and Care Wales" (the icon below `sm`), the connection
+  `status` chip, the language and theme buttons and the auth button. The home link takes
+  the focus ring, not the fill, as the white logo would vanish on yellow. The phase banner
+  (tag "Beta") sits between the header and `main`; its feedback link exists only when the
+  build has `VITE_FEEDBACK_URL`, which the committed config does not. `contentinfo` is the
+  footer ("© Digital Health and Care Wales", "Version dev" locally, `x.y.z+sha` on CI). Pages
+  sit in a 1200px container with 16px (phone) or 40px margins; the not-found page offers a
+  text link, "Go to the home page", not a button.
 - Specs assert English copy from `src/i18n/locales/en.ts`. Before pushing a change to a
   control's text or accessible name, grep `tests/e2e` for the old text and run every spec
   that reaches the control, or the whole suite when the control is in the shell.

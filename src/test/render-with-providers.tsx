@@ -7,6 +7,7 @@ import { act, render, type RenderResult } from "@testing-library/react"
 
 import { AppProviders } from "@/app/providers"
 import { createAppRouter } from "@/app/router"
+import type { AppInfo } from "@/components/layout/app-info"
 import type { AuthState } from "@/domain/auth/auth-client"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { RoadmapRepository } from "@/domain/roadmap/roadmap-repository"
@@ -32,6 +33,8 @@ export interface RenderWithProvidersOptions {
   /** Roadmaps in the in-memory repository; ignored when `repository` is given. */
   roadmaps?: readonly Roadmap[]
   repository?: RoadmapRepository
+  /** The shell's version and feedback address. Defaults to version `test`, no address. */
+  appInfo?: AppInfo
   /** Defaults to English. */
   language?: Language
 }
@@ -49,6 +52,7 @@ export async function renderWithProviders({
   authState,
   roadmaps,
   repository = createInMemoryRoadmapRepository(roadmaps),
+  appInfo = { version: "test" },
   language,
 }: RenderWithProvidersOptions = {}): Promise<
   RenderResult & {
@@ -85,6 +89,7 @@ export async function renderWithProviders({
         queryClient,
         authClient,
         roadmapRepository: repository,
+        appInfo,
       }}
     >
       <RouterProvider router={router} />

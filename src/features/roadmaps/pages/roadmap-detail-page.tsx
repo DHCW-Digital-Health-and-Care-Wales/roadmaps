@@ -28,7 +28,7 @@ export function RoadmapDetailPage({ roadmapId }: RoadmapDetailPageProps) {
   const { t } = useTranslation()
 
   return (
-    <section className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
+    <section>
       <BackLink to="/">{t("roadmaps.detail.back")}</BackLink>
       <div className="mt-6">
         <RoadmapDetail roadmapId={roadmapId} />

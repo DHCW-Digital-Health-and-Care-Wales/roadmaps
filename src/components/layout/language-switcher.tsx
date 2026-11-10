@@ -35,7 +35,7 @@ export function LanguageSwitcher() {
       <DropdownMenuTrigger
         render={
           <Button
-            variant="ghost"
+            variant="header"
             // 32px below `sm`, as the header's other buttons, so the brand keeps its name.
             className="max-sm:h-8 max-sm:w-8 max-sm:px-0"
           />

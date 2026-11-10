@@ -117,7 +117,7 @@ flowchart TD
 | `src/routes/`                              | thin TanStack Router file routes                                           | features                         |
 | `src/app/`                                 | config, composition root, providers, router                                | everything                       |
 | `src/components/`, `src/lib/`, `src/i18n/` | shadcn/ui, app shell, theme; small utilities; i18n setup and catalogues    | —                                |
-| `build/`                                   | build-time helpers (the GitHub Pages base path)                            | —                                |
+| `build/`                                   | build-time helpers (the GitHub Pages base path, the footer version)        | —                                |
 
 **The repository abstraction.** The UI only ever sees `Roadmap` (its id, its title in
 English and Welsh, and the rest of what the roadmap list holds about it; ADR-009) and
@@ -192,9 +192,15 @@ variable.
 | ---------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
 | `VITE_GOOGLE_CLIENT_ID`      | OAuth client ID (`….apps.googleusercontent.com`)                                  | `.env.production` (committed, used by builds); `.env.local` for `pnpm dev` |
 | `VITE_GOOGLE_SPREADSHEET_ID` | The spreadsheet to read: the `<ID>` in `docs.google.com/spreadsheets/d/<ID>/edit` | same                                                                       |
+| `VITE_FEEDBACK_URL`          | Optional `https://` address for the phase banner's feedback link; none when unset | `.env.production` or `.env.local`                                          |
 | `VITE_BASE_PATH`             | Optional build-time override of the URL base path, e.g. `/preview/`               | shell / CI                                                                 |
 | `PAGES_CUSTOM_DOMAIN`        | Custom Pages domain; forces base path `/`                                         | GitHub repository variable                                                 |
 | `GITHUB_REPOSITORY`          | `owner/repo`; derives the base path                                               | set automatically by GitHub Actions                                        |
+
+A `VITE_FEEDBACK_URL` that is not `https` stops the app, like any other bad value; leave it
+blank (or out) and the banner invites feedback without a link. The footer shows the app's
+version: the package version and short commit of a CI build (`0.0.0+a1b2c3d`), or `dev` for a
+local one (`build/resolve-build-version.ts`).
 
 `.env.example` and `.env.production` hold the same values. Vite gives
 `.env.production` priority over `.env.local` when building, so to build with other values
@@ -492,6 +498,11 @@ equal to it. Its stylesheet and templates are not loaded
 is ours, derived from DHCW's navies. Tailwind's default colours, sizes, radii and shadows
 are removed, so `pnpm lint` fails on any style that isn't one of these tokens. Upgrading
 the pin is described in [`src/styles/AGENTS.md`](src/styles/AGENTS.md).
+
+**The DHCW logo and icon** (`src/assets/dhcw/`, and the favicon derived from the icon) are
+not covered by DHCW's MIT or OGL licences. They are used with DHCW's permission, given by
+the product owner on 2026-11-10; their source and the pinned commit are in
+[`src/assets/dhcw/README.md`](src/assets/dhcw/README.md). Do not reuse them outside this app.
 
 ## Project documentation
 

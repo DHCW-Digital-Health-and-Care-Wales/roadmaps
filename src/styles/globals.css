@@ -157,6 +157,13 @@
   --status-danger-fg: var(--nhsw-tag-red-ink);
   --status-danger-border: var(--nhsw-tag-red-ink);
 
+  /* The navy header band, the same in both themes (STY-016 D4): DHCW's page-background
+     blue, with white text and the chips' grey border. Its controls hover a step lighter. */
+  --header: var(--nhsw-page-background-blue);
+  --header-foreground: var(--nhsw-exceptional-text-colour);
+  --header-hover: var(--nhsw-colour-button-primary-hover);
+  --header-border: var(--nhsw-grey-border-colour);
+
   /* Reserved for the deferred dashboard shell: DHCW's navy navigation. */
   --sidebar: var(--nhsw-page-background-blue);
   --sidebar-foreground: var(--nhsw-exceptional-text-colour);
@@ -309,6 +316,10 @@
   --color-status-danger-bg: var(--status-danger-bg);
   --color-status-danger-fg: var(--status-danger-fg);
   --color-status-danger-border: var(--status-danger-border);
+  --color-header: var(--header);
+  --color-header-foreground: var(--header-foreground);
+  --color-header-hover: var(--header-hover);
+  --color-header-border: var(--header-border);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);

@@ -33,10 +33,7 @@ export function RoadmapsPage() {
   }
 
   return (
-    <section
-      aria-labelledby={TITLE_ID}
-      className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-14"
-    >
+    <section aria-labelledby={TITLE_ID}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex flex-col gap-1.5">
           <h1 id={TITLE_ID} className="text-heading-xl">

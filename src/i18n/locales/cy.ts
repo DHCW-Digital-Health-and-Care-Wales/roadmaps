@@ -11,6 +11,7 @@ type WelshPluralCategory = "zero" | "one" | "two" | "few" | "many" | "other"
 export const cy = {
   common: {
     appName: "Golygydd Mapiau Trywydd IGDC",
+    headerName: "Golygydd Mapiau Trywydd",
     shortAppName: "Mapiau Trywydd",
     loading: "Wrthi'n llwytho…",
     retry: "Ceisio eto",
@@ -34,6 +35,17 @@ export const cy = {
     skipToContent: "Neidio i'r prif gynnwys",
     home: "Hafan Golygydd Mapiau Trywydd IGDC",
     notifications: "Hysbysiadau",
+    logoAlt: "Iechyd a Gofal Digidol Cymru",
+    phase: {
+      tag: "Beta",
+      text: "Mae hwn yn wasanaeth newydd. Bydd eich adborth yn ein helpu i'w wella.",
+      feedback: "Rhoi adborth",
+      opensInNewTab: "(yn agor mewn tab newydd)",
+    },
+    footer: {
+      copyright: "© Iechyd a Gofal Digidol Cymru",
+      version: "Fersiwn {{version}}",
+    },
   },
   landing: {
     tagline:

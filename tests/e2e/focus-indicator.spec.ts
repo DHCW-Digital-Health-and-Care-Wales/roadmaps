@@ -83,8 +83,9 @@ for (const theme of ["light", "dark"] as const) {
 
     await page.keyboard.press("Tab")
     await expectFill(page.getByRole("link", { name: "Skip to main content" }))
+    // The home link holds the white logo on navy, so it takes the ring, not the fill.
     await tabTo(page, banner.getByRole("link"))
-    await expectFill(banner.getByRole("link"))
+    await expectRing(banner.getByRole("link"))
 
     await connect(page)
     await expect(roadmapCards(page)).toHaveCount(3)

@@ -4,7 +4,7 @@ import type { AuthState } from "@/domain/auth/auth-client"
 import { useAuth } from "@/features/auth/use-auth"
 import { RoadmapsPage } from "@/features/roadmaps/pages/roadmaps-page"
 
-import { WelcomeHero } from "../components/welcome-hero"
+import { StartPage } from "./start-page"
 
 /** Connected, or expired: the roadmaps stay put with a Reconnect prompt. */
 function hasSession(status: AuthState["status"]): boolean {
@@ -12,9 +12,9 @@ function hasSession(status: AuthState["status"]): boolean {
 }
 
 /**
- * `/`: the roadmaps while there is a session (live or expired), otherwise the welcome
- * hero with Connect. While connecting, it keeps whichever view started the attempt, so
- * reconnecting from the roadmaps does not flash the hero.
+ * `/`: the roadmaps while there is a session (live or expired), otherwise the start
+ * page with Connect. While connecting, it keeps whichever view started the attempt, so
+ * reconnecting from the roadmaps does not flash the start page.
  */
 export function HomePage() {
   const { status } = useAuth().state
@@ -26,5 +26,5 @@ export function HomePage() {
   }
 
   const roadmaps = status === "connecting" ? showRoadmaps : hasSession(status)
-  return roadmaps ? <RoadmapsPage /> : <WelcomeHero />
+  return roadmaps ? <RoadmapsPage /> : <StartPage />
 }

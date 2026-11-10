@@ -3,6 +3,7 @@ import type { i18n } from "i18next"
 import type { ReactNode } from "react"
 import { I18nextProvider, useTranslation } from "react-i18next"
 
+import { AppInfoProvider, type AppInfo } from "@/components/layout/app-info"
 import { ThemeProvider } from "@/components/theme/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
 import type { AuthClient } from "@/domain/auth/auth-client"
@@ -17,6 +18,7 @@ export interface AppServices {
   readonly queryClient: QueryClient
   readonly authClient: AuthClient
   readonly roadmapRepository: RoadmapRepository
+  readonly appInfo: AppInfo
 }
 
 export interface AppProvidersProps {
@@ -26,7 +28,7 @@ export interface AppProvidersProps {
 
 /**
  * Every app-wide provider, outermost first: i18n (so everything below, toasts included,
- * is translated), theme, query cache, auth, then the roadmap data source.
+ * is translated), theme, query cache, auth, the roadmap data source, then the app's own details (version, feedback address).
  */
 export function AppProviders({ services, children }: AppProvidersProps) {
   return (
@@ -35,7 +37,9 @@ export function AppProviders({ services, children }: AppProvidersProps) {
         <QueryClientProvider client={services.queryClient}>
           <AuthProvider client={services.authClient}>
             <RoadmapRepositoryProvider repository={services.roadmapRepository}>
-              {children}
+              <AppInfoProvider info={services.appInfo}>
+                {children}
+              </AppInfoProvider>
               <AuthNotifications />
               <Notifications />
             </RoadmapRepositoryProvider>

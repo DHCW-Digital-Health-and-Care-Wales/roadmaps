@@ -131,7 +131,7 @@ returning after expiry shows the expired state directly
 Audited at `22c3336`.
 
 - **Toasts.** `AuthNotifications` toasts: connected; disconnected; an `error` reached
-  from `connecting`; and `popup-blocked`. `WelcomeHero` shows errors and `lastError`
+  from `connecting`; and `popup-blocked`. `StartPage` shows errors and `lastError`
   inline, but only on the start page.
 - **E2E.** The `auth.spec.ts` failures table asserts toasts with a `toast` flag.
 - **Popup gesture.** `connect()` must run synchronously in the click handler or the

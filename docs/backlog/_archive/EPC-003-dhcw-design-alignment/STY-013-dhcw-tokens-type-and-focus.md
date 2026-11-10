@@ -1,6 +1,6 @@
 # STY-013: The app uses DHCW's colours, type and focus indicator
 
-- **Status**: Proposed — owner answers recorded in the alignment analysis, 2026-11-10
+- **Status**: Done — delivered in its PR, which awaits the owner's merge
 - **Type**: Feature + Refactor + Docs
 - **Area**: Features/UI + Docs
 - **Epic**: EPC-003-dhcw-design-alignment
@@ -8,6 +8,7 @@
 - **Binding ADRs**: ADR-010, ADR-005, ADR-008
 - **Suggested model**: Opus — token design and a derived dark palette, with contrast
   judgement in both themes
+- **Delivered**: _(the PR, linked once it opens)_
 
 ## Summary
 
@@ -150,3 +151,83 @@ Audited at `22c3336`.
 
   `rg -no "\btext-(xs|sm|base|lg|xl|[2-9]xl)\b|\btext-\[[^\]]+\]|\btracking-[a-z]+" src --glob '*.tsx' --glob '!*.test.*'`
   finds them all (35 default sizes, 3 arbitrary sizes and 9 tracking classes).
+
+## Delivery
+
+### Departures
+
+- **D3, the pin** (agent): `dhcw-design-system` is the exact tag
+  `github:DHCW-Digital-Health-and-Care-Wales/dhcw-design-system#v0.1.104`, which pnpm
+  installed with the frozen lockfile and release-age policy as they are. The tag points at
+  DHCW's release commit `cc48fdb` ("chore(release): v0.1.104"), not the `bc52697` the
+  analysis cites; their `src/` trees are identical (`diff -r`). The lockfile pins the
+  tarball by commit and integrity.
+- **S5, reading the sources** (agent): Vitest empties every stylesheet it doesn't process,
+  `?raw` imports included, so `vite.config.ts` lists `globals.css` and the pinned release's
+  `.scss` under `test.css.include`; the tests read both as text.
+- **S1, what else changed colour** (agent): the header's brand mark was a raw
+  `bg-neutral-900 text-indigo-300` tile, the one indigo left on screen once `--brand` is an
+  alias (D5); it now uses `bg-primary text-primary-foreground`. The favicon's indigo
+  stays until STY-016 replaces the icon.
+- **S4, `dark:` overrides** (agent): the button's `outline`, `ghost` and `destructive`
+  variants and the badge's set `dark:` backgrounds, which sort after `focus-visible:` and
+  hid the yellow fill in the dark theme (Refresh, Disconnect). They are removed, so those
+  buttons use their light-theme tokens in dark too. The other `dark:` classes stay for
+  STY-014.
+- **S4, the recipes** (agent): `focus-fill` is DHCW's button recipe (a 2px bar); the skip
+  link uses it too, until STY-016 gives it DHCW's skip-link style (a 4px bar). `focus-link`
+  is defined for text links, of which the app has none yet. The global `outline-ring/50`
+  is gone: anything focusable that names no utility keeps the browser's two-tone ring.
+- **S3, the scale** (agent): page `h1`s are `text-heading-xl`; the status panel's title,
+  an `h1` on the detail page's not-found and locked states, is `text-heading-m` at either
+  level, as a 32px heading would crowd the panel. Family headings are `text-heading-s`,
+  the start page's tagline `text-heading-m font-normal` (DHCW's lede). Every `text-xs`
+  (12px) became `text-body-xs` (14px), DHCW's smallest; the card title drops
+  `leading-snug` for the body's 24px. Headings are bold (700) from the token, so their
+  `font-semibold` went.
+- **S3, toasts** (agent): Sonner injects its stylesheet unlayered with its own font stack
+  and 13px, which no utility can beat, so `globals.css` overrides both on its selectors.
+- **S7, `cn` everywhere** (agent): the shadcn files imported the bare `cn` package, which
+  is unconfigured; they now import `@/lib/utils`, and `no-restricted-imports` rejects
+  `from "cn"` in `src/`, so a regenerated component fails lint until changed.
+- **Test order**: the `cn` tests went red before `createCn` was configured. The token and
+  contrast tests followed `globals.css`; their discrimination was shown by mutation (an
+  edited primitive, a literal in a semantic token, a missing reference, a dark link of
+  `#005aa8`, `--input` of `#d8dde0`, a light `--focus-foreground`), not by a first red
+  run. The E2E specs followed the code.
+
+### Contract for dependents
+
+- Tokens (all in `globals.css`): shadcn's names plus `--link`, `--link-hover`, `--focus`,
+  `--focus-foreground`, `--control-shadow` (utility `shadow-control`, DHCW's 2px button
+  bar) and `--status-{neutral,info,success,warning,danger}-{bg,fg,border}` from DHCW's grey,
+  blue, green, yellow and red tags (inverted in dark). `--ring` is `--focus`; `--brand` is
+  `--primary` until STY-014; `--sidebar-*` is DHCW's navy navigation (D4); `--chart-*` is
+  gone. `--radius` is DHCW's 4px, with shadcn's derived steps.
+- Primitives are named after their DHCW source (`--nhsw-primary-text-colour`,
+  `--nhsw-tag-blue-ink`); `--app-dark-*` holds three values (surface, link, destructive).
+- Type: `text-heading-{xl,l,m,s,xs}` (32/38, 27/33, 22/29, 19/27, 16/24, bold) and
+  `text-body` (16/24), `text-body-xs` (14/20); the body is 16/24 Roboto. `@/lib/utils`
+  exports `TEXT_TOKENS`, `SHADOW_TOKENS` and `FOCUS_UTILITIES`, which `cn` merges by and
+  `tokens.test.ts` holds equal to the stylesheet.
+- Focus utilities are the style alone, applied with a variant: `focus-visible:focus-fill`
+  (buttons, badges, header link), `has-focus-visible:focus-ring` (the card),
+  `focus-visible:focus-ring` (menu items, per S4). STY-015 S6 asks for `focus-fill` on the
+  menu's items; that story decides between the two.
+- STY-014: the theme is not locked yet; opacity modifiers, raw palette classes and the
+  remaining `dark:` overrides (card hover border, `aria-invalid`, destructive menu item,
+  error-state icon, brand-mark ring) are untouched.
+- E2E: `tests/e2e/typography.spec.ts` (computed sizes, rendered font via CDP) and
+  `tests/e2e/focus-indicator.spec.ts` (computed focus styles, both themes).
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                    |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| S1       | `tokens.test.ts` (each primitive equals the pinned value; semantic tokens are `var()`s of them); after screenshots of every page, light                                                    |
+| S2       | `contrast.test.ts` (30 text pairs, `--input` and the focus indicator on four surfaces, both themes); after screenshots, dark                                                               |
+| S3       | `typography.spec.ts` (`text uses DHCW's compact scale at 1280px` and `375px`; `Welsh ŵ and ŷ render in Roboto, served by the app`)                                                         |
+| S4       | `focus-indicator.spec.ts` (`every control shows DHCW's focus indicator`, light and dark: skip link, header link, language button, menu item, Refresh, card, Back link); `contrast.test.ts` |
+| S5       | `tokens.test.ts` (`DHCW primitives (S5)`, `token tiers (ADR-010)`)                                                                                                                         |
+| S6       | the existing unit, component, E2E and axe suites, unchanged and passing                                                                                                                    |
+| S7       | `src/lib/utils.test.ts`                                                                                                                                                                    |

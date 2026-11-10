@@ -38,7 +38,7 @@ export function StatusPanel({
         >
           {icon}
         </EmptyMedia>
-        <Title className="text-lg font-semibold tracking-tight">{title}</Title>
+        <Title className="text-heading-m">{title}</Title>
         <EmptyDescription className="text-pretty">
           {description}
         </EmptyDescription>

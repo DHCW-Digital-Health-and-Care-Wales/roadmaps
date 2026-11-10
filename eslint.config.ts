@@ -16,6 +16,23 @@ function layers(...names: string[]) {
   }))
 }
 
+/**
+ * Every module merges classes with `@/lib/utils`' `cn`, which knows the theme's type and
+ * shadow names (ADR-010). shadcn's CLI writes `import { cn } from "cn"`; change it.
+ */
+const unconfiguredCn = {
+  name: "cn",
+  message:
+    'Import cn from "@/lib/utils": the bare package drops type tokens such as text-body as colours.',
+}
+
+/** `no-restricted-imports` with the given patterns, always forbidding the bare `cn`. */
+function restrictedImports(
+  patterns: unknown[] = [],
+): ["error", { paths: (typeof unconfiguredCn)[]; patterns: unknown[] }] {
+  return ["error", { paths: [unconfiguredCn], patterns }]
+}
+
 const frameworks = [
   {
     group: ["react", "react/**", "react-dom", "react-dom/**"],
@@ -98,38 +115,33 @@ export default defineConfig(
     rules: { "react-refresh/only-export-components": "off" },
   },
   {
+    // Later blocks set the rule again for their layer, so each keeps `unconfiguredCn`.
+    files: ["src/**/*.{ts,tsx}"],
+    rules: { "no-restricted-imports": restrictedImports() },
+  },
+  {
     files: ["src/domain/**/*.{ts,tsx}"],
     rules: {
-      "no-restricted-imports": [
-        "error",
-        {
-          patterns: [
-            ...frameworks,
-            ...layers(
-              "infrastructure",
-              "features",
-              "app",
-              "routes",
-              "components",
-              "i18n",
-            ),
-          ],
-        },
-      ],
+      "no-restricted-imports": restrictedImports([
+        ...frameworks,
+        ...layers(
+          "infrastructure",
+          "features",
+          "app",
+          "routes",
+          "components",
+          "i18n",
+        ),
+      ]),
     },
   },
   {
     files: ["src/infrastructure/**/*.{ts,tsx}"],
     rules: {
-      "no-restricted-imports": [
-        "error",
-        {
-          patterns: [
-            ...frameworks,
-            ...layers("features", "app", "routes", "components", "i18n"),
-          ],
-        },
-      ],
+      "no-restricted-imports": restrictedImports([
+        ...frameworks,
+        ...layers("features", "app", "routes", "components", "i18n"),
+      ]),
     },
   },
   {
@@ -156,40 +168,35 @@ export default defineConfig(
   {
     files: ["src/features/**/*.{ts,tsx}"],
     rules: {
-      "no-restricted-imports": [
-        "error",
-        { patterns: layers("infrastructure", "app", "routes") },
-      ],
+      "no-restricted-imports": restrictedImports(
+        layers("infrastructure", "app", "routes"),
+      ),
     },
   },
   {
     // Shared building blocks sit below features, so they never reach back up.
     files: ["src/components/**/*.{ts,tsx}", "src/i18n/**/*.{ts,tsx}"],
     rules: {
-      "no-restricted-imports": [
-        "error",
-        { patterns: layers("infrastructure", "features", "app", "routes") },
-      ],
+      "no-restricted-imports": restrictedImports(
+        layers("infrastructure", "features", "app", "routes"),
+      ),
     },
   },
   {
     // Utilities everything else builds on, the domain included.
     files: ["src/lib/**/*.{ts,tsx}"],
     rules: {
-      "no-restricted-imports": [
-        "error",
-        {
-          patterns: layers(
-            "domain",
-            "infrastructure",
-            "features",
-            "app",
-            "routes",
-            "components",
-            "i18n",
-          ),
-        },
-      ],
+      "no-restricted-imports": restrictedImports(
+        layers(
+          "domain",
+          "infrastructure",
+          "features",
+          "app",
+          "routes",
+          "components",
+          "i18n",
+        ),
+      ),
     },
   },
   prettier,

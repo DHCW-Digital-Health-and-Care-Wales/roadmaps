@@ -14,9 +14,7 @@ export function NotFoundPage() {
       <span className="flex size-12 items-center justify-center rounded-xl border bg-muted/50 text-muted-foreground">
         <CompassIcon aria-hidden="true" className="size-5" />
       </span>
-      <h1 className="mt-6 text-2xl font-semibold tracking-tight">
-        {t("notFound.title")}
-      </h1>
+      <h1 className="mt-6 text-heading-xl">{t("notFound.title")}</h1>
       <p className="mt-2 text-pretty text-muted-foreground">
         {t("notFound.description")}
       </p>

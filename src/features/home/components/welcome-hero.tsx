@@ -49,7 +49,7 @@ export function WelcomeHero() {
       />
 
       <div className="mx-auto flex w-full max-w-3xl flex-col items-center px-4 pt-14 pb-16 text-center sm:px-6 sm:pt-24 sm:pb-24">
-        <p className="inline-flex max-w-full items-center gap-2 rounded-2xl border bg-background/70 px-3 py-1.5 text-left text-xs text-muted-foreground shadow-xs backdrop-blur-sm sm:rounded-full sm:py-1 sm:text-sm">
+        <p className="inline-flex max-w-full items-center gap-2 rounded-2xl border bg-background/70 px-3 py-1.5 text-left text-body-xs text-muted-foreground shadow-xs backdrop-blur-sm sm:rounded-full sm:py-1">
           <TableIcon
             aria-hidden="true"
             className="size-3.5 shrink-0 text-brand"
@@ -57,19 +57,16 @@ export function WelcomeHero() {
           <span className="text-pretty">{t("landing.source")}</span>
         </p>
 
-        <h1
-          id={TITLE_ID}
-          className="mt-6 text-4xl font-semibold tracking-tighter text-balance sm:text-6xl"
-        >
+        <h1 id={TITLE_ID} className="mt-6 text-heading-xl text-balance">
           {t("common.appName")}
         </h1>
-        <p className="mt-4 max-w-xl text-lg text-pretty text-muted-foreground sm:text-xl">
+        <p className="mt-4 max-w-xl text-heading-m font-normal text-pretty text-muted-foreground">
           {t("landing.tagline")}
         </p>
 
         <div className="mt-9 flex w-full flex-col items-center gap-4">
-          <AuthButton className="h-11 w-full gap-2 rounded-xl px-6 text-[0.9375rem] shadow-sm sm:w-auto" />
-          <p className="max-w-md text-sm text-pretty text-muted-foreground">
+          <AuthButton className="h-11 w-full gap-2 rounded-xl px-6 text-body shadow-sm sm:w-auto" />
+          <p className="max-w-md text-body-xs text-pretty text-muted-foreground">
             <LockKeyholeIcon
               aria-hidden="true"
               className="mr-1.5 inline size-3.5 -translate-y-px align-middle"
@@ -82,8 +79,8 @@ export function WelcomeHero() {
           <p
             className={
               notice.tone === "error"
-                ? "mt-8 flex max-w-md items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-left text-sm text-destructive"
-                : "mt-8 flex max-w-md items-start gap-2 rounded-xl border bg-muted/50 px-4 py-3 text-left text-sm text-muted-foreground"
+                ? "mt-8 flex max-w-md items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-left text-body-xs text-destructive"
+                : "mt-8 flex max-w-md items-start gap-2 rounded-xl border bg-muted/50 px-4 py-3 text-left text-body-xs text-muted-foreground"
             }
           >
             {notice.tone === "error" ? (

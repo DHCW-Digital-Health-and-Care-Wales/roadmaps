@@ -50,7 +50,7 @@ export function RoadmapCard({ roadmap }: RoadmapCardProps) {
     .map(([part]) => `${id}-${part}`)
 
   return (
-    <div className="group relative flex h-full min-h-18 items-stretch gap-3.5 rounded-xl border bg-card p-4 text-card-foreground shadow-xs transition-[border-color,box-shadow] hover:border-foreground/20 hover:shadow-md has-focus-visible:border-ring has-focus-visible:ring-3 has-focus-visible:ring-ring/50 dark:hover:border-foreground/25">
+    <div className="group relative flex h-full min-h-18 items-stretch gap-3.5 rounded-xl border bg-card p-4 text-card-foreground shadow-xs transition-[border-color,box-shadow] hover:border-foreground/20 hover:shadow-md has-focus-visible:focus-ring dark:hover:border-foreground/25">
       <RoadmapSwatch colour={roadmap.colour} />
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         {/* The link is the title alone, stretched over the whole card, so its name is the
@@ -62,14 +62,14 @@ export function RoadmapCard({ roadmap }: RoadmapCardProps) {
           aria-describedby={
             describedBy.length > 0 ? describedBy.join(" ") : undefined
           }
-          className="line-clamp-2 leading-snug font-medium wrap-anywhere outline-none after:absolute after:inset-0 after:rounded-xl"
+          className="line-clamp-2 font-medium wrap-anywhere outline-none after:absolute after:inset-0 after:rounded-xl"
         >
           {title}
         </Link>
         {/* Read as the link's description, not a second time as content. */}
         <div aria-hidden="true" className="flex flex-1 flex-col gap-2">
           {hasHeader && (
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-body-xs text-muted-foreground">
               {roadmap.category !== null && (
                 <span id={`${id}-category`}>
                   {t(`roadmaps.categories.${roadmap.category}`)}
@@ -96,13 +96,13 @@ export function RoadmapCard({ roadmap }: RoadmapCardProps) {
           {summary !== null && (
             <p
               id={`${id}-summary`}
-              className="line-clamp-3 text-sm text-pretty text-muted-foreground"
+              className="line-clamp-3 text-body-xs text-pretty text-muted-foreground"
             >
               {summary}
             </p>
           )}
           {hasFooter && (
-            <div className="mt-auto flex flex-col gap-0.5 pt-1 text-xs text-muted-foreground">
+            <div className="mt-auto flex flex-col gap-0.5 pt-1 text-body-xs text-muted-foreground">
               {roadmap.productLead !== null && (
                 <span id={`${id}-productLead`} className="wrap-anywhere">
                   {t("roadmaps.card.productLead", {

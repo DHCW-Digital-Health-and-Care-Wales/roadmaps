@@ -1,45 +1,280 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
+/* Every subset, latin-ext included (Welsh ŵ and ŷ); each is fetched only when used. */
+@import "@fontsource-variable/roboto";
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * Three tiers (ADR-010; src/styles/AGENTS.md):
+ *   1. `--nhsw-*` primitives, copied from the DHCW design system at the pinned release
+ *      (package.json `dhcw-design-system`). Each cites its source; tokens.test.ts holds
+ *      every value equal to it.
+ *   2. `--app-dark-*` primitives: our own dark-theme values, where DHCW has none.
+ *   3. Semantic tokens: shadcn's names plus our own. Each is a `var()` of a primitive or
+ *      another token, never a literal colour (tested). Components use only these, and
+ *      contrast.test.ts checks their pairs in both themes.
+ */
+
+/* Tier 1: DHCW primitives. `@source` names the file; each line's comment names the
+   Sass variable (`$name`) or the block and property the value is copied from. */
+:root {
+  /* @source src/tokens/_colours.scss */
+  --nhsw-primary-text-colour: #212b32; /* $nhswales-primary-text-colour */
+  --nhsw-secondary-text-colour: #4c6272; /* $nhswales-secondary-text-colour */
+  --nhsw-exceptional-text-colour: #ffffff; /* $nhswales-exceptional-text-colour */
+  --nhsw-link-colour: #005aa8; /* $nhswales-link-colour */
+  --nhsw-link-hover-colour: #7c2855; /* $nhswales-link-hover-colour */
+  --nhsw-primary-button: #1b365d; /* $nhswales-primary-button */
+  --nhsw-primary-button-shadow: #0e1b2f; /* $nhswales-primary-button-shadow */
+  --nhsw-colour-button-primary-hover: #32598a; /* $nhsw-colour-button-primary-hover */
+  --nhsw-delete-button: #d5281b; /* $nhswales-delete-button */
+  --nhsw-page-background-white: #ffffff; /* $nhswales-page-background-white */
+  --nhsw-page-background-grey: #f0f4f5; /* $nhswales-page-background-grey */
+  --nhsw-page-background-blue: #1b365d; /* $nhswales-page-background-blue */
+  --nhsw-secondary-border-colour: #4c6272; /* $nhswales-secondary-border-colour */
+  --nhsw-grey-border-colour: #d8dde0; /* $nhswales-grey-border-colour */
+  --nhsw-colour-choice-hover-ring: #afb8bf; /* $nhsw-colour-choice-hover-ring */
+  --nhsw-focus-colour: #ffeb3b; /* $nhswales-focus-colour */
+  --nhsw-focus-text-colour: #212b32; /* $nhswales-focus-text-colour */
+
+  /* @source src/components/content/_tag.scss */
+  --nhsw-tag-grey-background: #dbe0e3; /* &--grey background-color */
+  --nhsw-tag-grey-ink: #354550; /* &--grey color */
+  --nhsw-tag-blue-background: #ccdff1; /* &--blue background-color */
+  --nhsw-tag-blue-ink: #004281; /* &--blue color */
+  --nhsw-tag-green-background: #cce5d8; /* &--green background-color */
+  --nhsw-tag-green-ink: #004c23; /* &--green color */
+  --nhsw-tag-yellow-background: #fff59d; /* &--yellow background-color */
+  --nhsw-tag-yellow-ink: #4d4712; /* &--yellow color */
+  --nhsw-tag-red-background: #f7d4d1; /* &--red background-color */
+  --nhsw-tag-red-ink: #6b140e; /* &--red color */
+  --nhsw-tag-pink-background: #efd3e3; /* &--pink background-color */
+
+  /* @source src/components/site/_dashboard.scss */
+  --nhsw-dashboard-nav-active: #0056b3; /* $nhsw-dashboard-nav-active */
+  --nhsw-dashboard-nav-divider: rgba(
+    255,
+    255,
+    255,
+    0.2
+  ); /* $nhsw-dashboard-nav-divider */
+
+  /* @source src/tokens/_typography.scss */
+  --nhsw-font-family-base:
+    Roboto, Arial, sans-serif; /* $nhsw-font-family-base */
+  --nhsw-font-weight-bold: 700; /* $nhsw-font-weight-bold */
+  --nhsw-font-size-h1-mobile: 2rem; /* $nhsw-font-size-h1-mobile */
+  --nhsw-line-height-h1-mobile: 2.375rem; /* $nhsw-line-height-h1-mobile */
+  --nhsw-font-size-h2-mobile: 1.6875rem; /* $nhsw-font-size-h2-mobile */
+  --nhsw-line-height-h2-mobile: 2.0625rem; /* $nhsw-line-height-h2-mobile */
+  --nhsw-font-size-h3-mobile: 1.375rem; /* $nhsw-font-size-h3-mobile */
+  --nhsw-line-height-h3-mobile: 1.8125rem; /* $nhsw-line-height-h3-mobile */
+  --nhsw-font-size-h4-mobile: 1.1875rem; /* $nhsw-font-size-h4-mobile */
+  --nhsw-line-height-h4-mobile: 1.6875rem; /* $nhsw-line-height-h4-mobile */
+  --nhsw-font-size-h5-mobile: 1rem; /* $nhsw-font-size-h5-mobile */
+  --nhsw-line-height-h5-mobile: 1.5rem; /* $nhsw-line-height-h5-mobile */
+  --nhsw-font-size-body-mobile: 1rem; /* $nhsw-font-size-body-mobile */
+  --nhsw-line-height-body-mobile: 1.5rem; /* $nhsw-line-height-body-mobile */
+  --nhsw-font-size-body-extra-small: 0.875rem; /* $nhsw-font-size-body-extra-small */
+  --nhsw-line-height-body-extra-small: 1.25rem; /* $nhsw-line-height-body-extra-small */
+
+  /* @source src/foundations/_button-base.scss */
+  --nhsw-border-radius: 4px; /* @mixin nhsw-button-base border-radius */
+}
+
+/* Tier 2: our dark-theme values, where no DHCW colour passes contrast on the dark page. */
+:root {
+  /* Cards and menus, a step above the page (DHCW's darkest navy). */
+  --app-dark-surface: #13233c;
+  /* DHCW's link blue, lightened to read on navy. */
+  --app-dark-link: #8ab8e6;
+  /* DHCW's delete red, lightened to read on navy. */
+  --app-dark-destructive: #f0857a;
+}
+
+/* Tier 3: semantic tokens, light theme (the default; ADR-005). */
+:root {
+  color-scheme: light;
+  --background: var(--nhsw-page-background-white);
+  --foreground: var(--nhsw-primary-text-colour);
+  --card: var(--nhsw-page-background-white);
+  --card-foreground: var(--nhsw-primary-text-colour);
+  --popover: var(--nhsw-page-background-white);
+  --popover-foreground: var(--nhsw-primary-text-colour);
+  --primary: var(--nhsw-primary-button);
+  --primary-foreground: var(--nhsw-exceptional-text-colour);
+  --secondary: var(--nhsw-page-background-grey);
+  --secondary-foreground: var(--nhsw-primary-text-colour);
+  --muted: var(--nhsw-page-background-grey);
+  --muted-foreground: var(--nhsw-secondary-text-colour);
+  --accent: var(--nhsw-page-background-grey);
+  --accent-foreground: var(--nhsw-primary-text-colour);
+  --destructive: var(--nhsw-delete-button);
+  /* Decorative separators, exempt from 3:1 (ADR-010). A boundary someone needs to find
+     a control is `--input`. */
+  --border: var(--nhsw-grey-border-colour);
+  --input: var(--nhsw-secondary-border-colour);
+  --ring: var(--focus);
+  --radius: var(--nhsw-border-radius);
+  /* An alias until STY-014 removes its uses (STY-013 D5). */
+  --brand: var(--primary);
+
+  --link: var(--nhsw-link-colour);
+  --link-hover: var(--nhsw-link-hover-colour);
+  --focus: var(--nhsw-focus-colour);
+  --focus-foreground: var(--nhsw-focus-text-colour);
+  /* The 2px bar under a DHCW button. */
+  --control-shadow: var(--nhsw-primary-button-shadow);
+
+  /* DHCW's tag tints and inks. */
+  --status-neutral-bg: var(--nhsw-tag-grey-background);
+  --status-neutral-fg: var(--nhsw-tag-grey-ink);
+  --status-neutral-border: var(--nhsw-tag-grey-ink);
+  --status-info-bg: var(--nhsw-tag-blue-background);
+  --status-info-fg: var(--nhsw-tag-blue-ink);
+  --status-info-border: var(--nhsw-tag-blue-ink);
+  --status-success-bg: var(--nhsw-tag-green-background);
+  --status-success-fg: var(--nhsw-tag-green-ink);
+  --status-success-border: var(--nhsw-tag-green-ink);
+  --status-warning-bg: var(--nhsw-tag-yellow-background);
+  --status-warning-fg: var(--nhsw-tag-yellow-ink);
+  --status-warning-border: var(--nhsw-tag-yellow-ink);
+  --status-danger-bg: var(--nhsw-tag-red-background);
+  --status-danger-fg: var(--nhsw-tag-red-ink);
+  --status-danger-border: var(--nhsw-tag-red-ink);
+
+  /* Reserved for the deferred dashboard shell: DHCW's navy navigation (STY-013 D4). */
+  --sidebar: var(--nhsw-page-background-blue);
+  --sidebar-foreground: var(--nhsw-exceptional-text-colour);
+  --sidebar-primary: var(--nhsw-exceptional-text-colour);
+  --sidebar-primary-foreground: var(--nhsw-page-background-blue);
+  --sidebar-accent: var(--nhsw-dashboard-nav-active);
+  --sidebar-accent-foreground: var(--nhsw-exceptional-text-colour);
+  --sidebar-border: var(--nhsw-dashboard-nav-divider);
+  --sidebar-ring: var(--focus);
+}
+
+/* Tier 3, dark theme: our extension (DHCW has none), derived from DHCW's navies. */
+.dark {
+  color-scheme: dark;
+  --background: var(--nhsw-primary-button-shadow);
+  --foreground: var(--nhsw-page-background-grey);
+  --card: var(--app-dark-surface);
+  --card-foreground: var(--nhsw-page-background-grey);
+  --popover: var(--app-dark-surface);
+  --popover-foreground: var(--nhsw-page-background-grey);
+  --primary: var(--nhsw-tag-blue-background);
+  --primary-foreground: var(--nhsw-page-background-blue);
+  --secondary: var(--nhsw-page-background-blue);
+  --secondary-foreground: var(--nhsw-page-background-grey);
+  --muted: var(--nhsw-page-background-blue);
+  --muted-foreground: var(--nhsw-colour-choice-hover-ring);
+  --accent: var(--nhsw-page-background-blue);
+  --accent-foreground: var(--nhsw-page-background-grey);
+  --destructive: var(--app-dark-destructive);
+  --border: var(--nhsw-secondary-border-colour);
+  --input: var(--nhsw-colour-choice-hover-ring);
+
+  --link: var(--app-dark-link);
+  --link-hover: var(--nhsw-tag-pink-background);
+  /* `--focus` and `--focus-foreground` keep their light values: on navy, the yellow
+     part of the indicator is the one that contrasts. */
+  --control-shadow: var(--nhsw-secondary-border-colour);
+
+  /* The tag palette inverted: tints on inks. */
+  --status-neutral-bg: var(--nhsw-tag-grey-ink);
+  --status-neutral-fg: var(--nhsw-tag-grey-background);
+  --status-neutral-border: var(--nhsw-tag-grey-background);
+  --status-info-bg: var(--nhsw-tag-blue-ink);
+  --status-info-fg: var(--nhsw-tag-blue-background);
+  --status-info-border: var(--nhsw-tag-blue-background);
+  --status-success-bg: var(--nhsw-tag-green-ink);
+  --status-success-fg: var(--nhsw-tag-green-background);
+  --status-success-border: var(--nhsw-tag-green-background);
+  --status-warning-bg: var(--nhsw-tag-yellow-ink);
+  --status-warning-fg: var(--nhsw-tag-yellow-background);
+  --status-warning-border: var(--nhsw-tag-yellow-background);
+  --status-danger-bg: var(--nhsw-tag-red-ink);
+  --status-danger-fg: var(--nhsw-tag-red-background);
+  --status-danger-border: var(--nhsw-tag-red-background);
+}
+
 @theme inline {
+  --font-sans: "Roboto Variable", var(--nhsw-font-family-base);
   --font-heading: var(--font-sans);
-  --font-sans: "Geist Variable", sans-serif;
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-brand: var(--brand);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --color-foreground: var(--foreground);
+
+  /* DHCW's mobile type scale at every width (ADR-010). Headings are bold. */
+  --text-heading-xl: var(--nhsw-font-size-h1-mobile);
+  --text-heading-xl--line-height: var(--nhsw-line-height-h1-mobile);
+  --text-heading-xl--font-weight: var(--nhsw-font-weight-bold);
+  --text-heading-l: var(--nhsw-font-size-h2-mobile);
+  --text-heading-l--line-height: var(--nhsw-line-height-h2-mobile);
+  --text-heading-l--font-weight: var(--nhsw-font-weight-bold);
+  --text-heading-m: var(--nhsw-font-size-h3-mobile);
+  --text-heading-m--line-height: var(--nhsw-line-height-h3-mobile);
+  --text-heading-m--font-weight: var(--nhsw-font-weight-bold);
+  --text-heading-s: var(--nhsw-font-size-h4-mobile);
+  --text-heading-s--line-height: var(--nhsw-line-height-h4-mobile);
+  --text-heading-s--font-weight: var(--nhsw-font-weight-bold);
+  --text-heading-xs: var(--nhsw-font-size-h5-mobile);
+  --text-heading-xs--line-height: var(--nhsw-line-height-h5-mobile);
+  --text-heading-xs--font-weight: var(--nhsw-font-weight-bold);
+  --text-body: var(--nhsw-font-size-body-mobile);
+  --text-body--line-height: var(--nhsw-line-height-body-mobile);
+  --text-body-xs: var(--nhsw-font-size-body-extra-small);
+  --text-body-xs--line-height: var(--nhsw-line-height-body-extra-small);
+
+  --shadow-control: 0 2px 0 var(--control-shadow);
+
   --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-brand: var(--brand);
+  --color-link: var(--link);
+  --color-link-hover: var(--link-hover);
+  --color-focus: var(--focus);
+  --color-focus-foreground: var(--focus-foreground);
+  --color-status-neutral-bg: var(--status-neutral-bg);
+  --color-status-neutral-fg: var(--status-neutral-fg);
+  --color-status-neutral-border: var(--status-neutral-border);
+  --color-status-info-bg: var(--status-info-bg);
+  --color-status-info-fg: var(--status-info-fg);
+  --color-status-info-border: var(--status-info-border);
+  --color-status-success-bg: var(--status-success-bg);
+  --color-status-success-fg: var(--status-success-fg);
+  --color-status-success-border: var(--status-success-border);
+  --color-status-warning-bg: var(--status-warning-bg);
+  --color-status-warning-fg: var(--status-warning-fg);
+  --color-status-warning-border: var(--status-warning-border);
+  --color-status-danger-bg: var(--status-danger-bg);
+  --color-status-danger-fg: var(--status-danger-fg);
+  --color-status-danger-border: var(--status-danger-border);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -49,90 +284,70 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-:root {
-  color-scheme: light;
-  /* The single restrained accent (ADR-005), used sparingly. */
-  --brand: oklch(0.511 0.262 276.966);
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+/*
+ * DHCW's focus indicator, the only focus styles (ADR-010). Each is the style alone:
+ * apply it with a state variant, e.g. `focus-visible:focus-fill` or, for a card whose
+ * stretched link takes focus, `has-focus-visible:focus-ring`. A transparent outline
+ * keeps an indicator in forced-colours mode, where backgrounds and shadows are dropped.
+ */
+
+/* Buttons and button-styled links: yellow fill, dark text, dark bottom bar
+   (DHCW src/foundations/_button-base.scss). */
+@utility focus-fill {
+  outline: 3px solid transparent;
+  outline-offset: 0;
+  border-color: transparent;
+  background-color: var(--focus);
+  color: var(--focus-foreground);
+  text-decoration: none;
+  box-shadow: 0 2px 0 var(--focus-foreground);
 }
 
-.dark {
-  color-scheme: dark;
-  --brand: oklch(0.673 0.182 276.935);
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+/* Cards, inputs and menus: a 3px yellow outline outside a 2px dark inner ring
+   (DHCW src/foundations/_input-base.scss, src/utilities/_focus-ring.scss). */
+@utility focus-ring {
+  outline: 3px solid var(--focus);
+  outline-offset: 0;
+  border-color: var(--focus-foreground);
+  box-shadow: inset 0 0 0 2px var(--focus-foreground);
+}
+
+/* Text links: yellow fill, dark text, a 4px dark bar under every line
+   (DHCW src/utilities/_focus-ring.scss, src/components/site/_side-nav.scss). */
+@utility focus-link {
+  outline: 3px solid transparent;
+  outline-offset: 0;
+  background-color: var(--focus);
+  color: var(--focus-foreground);
+  text-decoration: none;
+  box-shadow: 0 4px 0 var(--focus-foreground);
+  box-decoration-break: clone;
 }
 
 @layer base {
+  /* No global outline colour: anything focusable that names no focus utility keeps the
+     browser's own two-tone ring rather than a faint one. */
   * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
+    @apply border-border;
   }
   html {
     @apply font-sans;
   }
+  body {
+    @apply bg-background text-body text-foreground;
+  }
+}
+
+/*
+ * Sonner injects its stylesheet unlayered, with its own font stack and a 13px size, so
+ * utilities on its toasts lose. These match its selectors with one more `:root`.
+ */
+:root [data-sonner-toaster] {
+  font-family: var(--font-sans);
+}
+:root [data-sonner-toast][data-styled="true"] {
+  font-size: var(--nhsw-font-size-body-extra-small);
+  line-height: var(--nhsw-line-height-body-extra-small);
 }
 
 /* Respect reduced motion everywhere, including generated components and toasts. */

@@ -19,5 +19,9 @@ Status token.
 
 ## Defects
 
-_None yet._ A defect found during delivery is recorded in `defects/` with
+| ID                                                | Defect                                | Status       |
+| ------------------------------------------------- | ------------------------------------- | ------------ |
+| [D01](defects/D01-roadmaps-heading-title-case.md) | The roadmaps heading is in Title Case | Needs triage |
+
+A defect found during delivery is recorded in `defects/` with
 Status `Needs triage` and listed here until the owner triages it.

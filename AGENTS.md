@@ -531,3 +531,18 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
     5. Dependabot for npm (actions only today), keeping Playwright pinned exactly with
        its browser cache.
     6. Then the roadmap detail feature, which will be the first real per-sheet read.
+- **Agent skills and delivery process (no record)** — `.claude/skills/` (implement-story,
+  orchestrate, retro, code-review, quality-review, copywriter, domain-modeling,
+  ux-prototypes, shadcn, playwright-cli, writing-for-agents, grilling, codebase-design,
+  improve-codebase-architecture), `.claude/agents/`, a SessionStart hook, the PR template,
+  `docs/GLOSSARY.md`, `docs/AGENTS.md`, backlog templates and the epic/archive layout.
+  - Decisions: three reviewers on every PR (Opus + Sol correctness, Sonnet quality); PRs
+    are left open, with babysitting and merging as separate opt-ins; guidance names
+    runtime capabilities, never tools; bootstrap stories archived unchanged.
+  - Gotchas:
+    - `node --test <dir>` fails on Node 22; pass the glob
+      (`node --test '.claude/skills/*/scripts/*.test.mjs'`).
+    - `playwright-cli` is not a dependency: `pnpm dlx @playwright/cli@0.1.24`, output in
+      `.artifacts/playwright-cli/`.
+    - `roadmaps.title` ("Your Roadmaps") breaks the sentence-case rule and is asserted
+      by E2E specs; D01 records it.

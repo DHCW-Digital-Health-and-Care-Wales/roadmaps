@@ -128,7 +128,8 @@ function SessionWarningContent({
 /**
  * Gives focus back to exactly the element that had it when the warning opened (often
  * `<main>`, which `AppShell` focuses). Base UI's own return focus moves on to the first
- * tabbable element inside it instead, which would land on a page's first control.
+ * tabbable element inside it instead, which would land on a page's first control. It
+ * relies on `SessionWarningContent` mounting afresh for each opening.
  */
 function useReturnFocus() {
   // Read while rendering the opening warning, before Base UI moves focus into it.

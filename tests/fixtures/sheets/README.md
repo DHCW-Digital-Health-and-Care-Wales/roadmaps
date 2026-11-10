@@ -3,20 +3,21 @@
 These CSVs are the **layout** of the roadmap spreadsheet, filled with **fake example data**.
 They are copied unchanged from the `sheets/` folder of
 [DHCW-Digital-Health-and-Care-Wales/product-roadmaps](https://github.com/DHCW-Digital-Health-and-Care-Wales/product-roadmaps/tree/main/sheets)
-(MIT licence, © 2026 Digital Health and Care Wales; commit `50e67f9`), the public site that
+(MIT licence, © 2026 Digital Health and Care Wales, kept in [`LICENSE`](LICENSE); commit
+`50e67f9`), the public site that
 publishes the same spreadsheet. The format is analysed in
-[the roadmap list analysis](../../../docs/analysis/roadmaps-tab-format.md)
+[the roadmap index analysis](../../../docs/analysis/roadmaps-tab-format.md)
 and decided in [ADR-009](../../../docs/adr/ADR-009-roadmap-list-from-the-first-tab.md).
 
 **Never put data from the live spreadsheet in this repository.** Unit tests, E2E fakes and
 screenshots use only these files or inline fakes.
 
-| File           | Tab name   | What it shows                                                                                                                                                       |
-| -------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Roadmaps.csv` | `Roadmaps` | The roadmap list (first tab): `Enabled` Yes/No, a blank category, both date formats, colours, blank optional cells, a `Product Lead` on two rows, Welsh for one row |
-| `ProductA.csv` | `ProductA` | A roadmap tab with every `Horizon` value, phases, labels, nested details, organisations and `(cy)` columns                                                          |
-| `ProductB.csv` | `ProductB` | A smaller roadmap tab with empty horizons and cards without organisations                                                                                           |
-| `ProductC.csv` | `ProductC` | The tab of a roadmap whose `Enabled` is `No`                                                                                                                        |
+| File           | Tab name   | What it shows                                                                                                                                                        |
+| -------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Roadmaps.csv` | `Roadmaps` | The roadmap index (first tab): `Enabled` Yes/No, a blank category, both date formats, colours, blank optional cells, a `Product Lead` on two rows, Welsh for one row |
+| `ProductA.csv` | `ProductA` | A roadmap tab with every `Horizon` value, phases, labels, nested details, organisations and `(cy)` columns                                                           |
+| `ProductB.csv` | `ProductB` | A smaller roadmap tab with empty horizons and cards without organisations                                                                                            |
+| `ProductC.csv` | `ProductC` | The tab of a roadmap whose `Enabled` is `No`                                                                                                                         |
 
 The roadmap tabs (`Product*.csv`) are not read by the app yet; they are kept for the future
 roadmap detail stories.

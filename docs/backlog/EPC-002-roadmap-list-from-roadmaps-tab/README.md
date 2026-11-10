@@ -28,8 +28,8 @@ Audited at `16632d3` on 2026-11-10.
 
 `GoogleSheetsRoadmapRepository.listRoadmaps` maps each visible worksheet of the metadata
 response to `{ id: String(sheetId), name: title }`. Against the real layout that lists
-the first tab itself (one card named "Roadmaps") and the tab of every roadmap whether
-enabled or not, and misses every title, since a tab name is not a title. Reproduce:
+the index tab itself (one card named "Roadmaps") and any scratch tab, names every roadmap
+by its tab rather than its title, and drops a roadmap whose tab is hidden. Reproduce:
 `rg -n "hidden !== true" src/infrastructure`.
 
 ### F2 — A roadmap carries only a name
@@ -46,7 +46,7 @@ real layout. `tests/fixtures/sheets/` now holds the public site's fake example C
 
 ## Design
 
-1. The data source's first tab is the roadmap list, read as ADR-009 sets out (F1).
+1. The data source's first tab is the roadmap index, read as ADR-009 sets out (F1).
 2. `Roadmap` becomes the ADR-009 shape; every consumer of `name` moves to the localised
    title (F2).
 3. Tests and the E2E fake use only `tests/fixtures/sheets/` or inline rows (F3).
@@ -62,10 +62,8 @@ it, STY-011 fills it from the data source, STY-012 shows it.
 
 ### Example data only
 
-Never commit, screenshot or log data from the live spreadsheet. Tests, the E2E fake and
-screenshots use `tests/fixtures/sheets/` (see its README) or inline rows. The example
-roadmaps are Product A (published, every field, a product lead), Product B (published, no
-category, Welsh text, `DD/MM/YYYY` date) and Product C (not published, a product lead).
+Tests, the E2E fake and screenshots use only [the example data](../../../tests/fixtures/sheets/README.md)
+or inline rows, never the live spreadsheet; its README holds the rule and the examples.
 
 ### Copy
 

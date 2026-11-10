@@ -12,7 +12,7 @@
 ## Summary
 
 After connecting, the roadmap list shows one card per roadmap in the data source's
-roadmap list, titled as the public site titles it, including roadmaps not yet published,
+roadmap index, titled as the public site titles it, including roadmaps not yet published,
 instead of one card per worksheet. Each card opens a detail address that matches the
 roadmap's public page (`#/roadmaps/producta`). The cards stay as plain as today; showing
 the rest of each roadmap's information is STY-012.
@@ -25,8 +25,9 @@ the rest of each roadmap's information is STY-012.
 - The repository contract and the in-memory double move to slug ids and full roadmaps.
 - `tests/e2e/`: the fake serves the example CSVs for both reads and rejects any other
   read; specs move to the example roadmaps.
-- README: a short "Spreadsheet format" section pointing at the analysis and the fixtures,
-  replacing any statement that worksheets are roadmaps. Copy that says the same (for
+- README: a short "Spreadsheet format" section pointing at the analysis and the fixtures.
+  Every statement that worksheets are roadmaps is corrected, including root `AGENTS.md`
+  "What this is" and `tests/e2e/AGENTS.md`. Copy that says the same (for
   example `roadmaps.description`) is checked with the `copywriter` skill.
 
 ## Acceptance criteria

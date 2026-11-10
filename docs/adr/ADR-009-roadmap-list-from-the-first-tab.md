@@ -1,17 +1,17 @@
 # ADR-009: The roadmap list comes from the first tab of the connected spreadsheet
 
-- Status: Accepted — owner, 2026-11-10, grilling round 1 (analysis decisions 1–5;
-  decision 3 revised in round 2); the
-  technical choices (decision 6) were left to the agent by the owner in the same round
+- Status: Accepted — owner, 2026-11-10: grilling round 1 (analysis decisions 1–5), round 2
+  (decision 3 revised: groups by product family) and round 3 (colour per card); the
+  technical choices (decision 6) were left to the agent in round 1. Partly supersedes
+  ADR-002 (its `Roadmap` shape and adapter mapping; see ADR-002's ADR-009 amendments).
 - Date: 2026-11-10
-- Amends: ADR-002 (the `Roadmap` shape, and what the Google adapter reads)
 
 ## Context
 
 The editor lists every visible worksheet as a roadmap (STY-002). The public site, which
 reads the same spreadsheet, does not: its first tab lists the roadmaps, one row each, and
 each row's `Sheet` cell names the tab holding that roadmap's items. The format is set out
-in [the roadmap list analysis](../analysis/roadmaps-tab-format.md). The data source's
+in [the roadmap index analysis](../analysis/roadmaps-tab-format.md). The data source's
 format is a contract with the public site, so the editor must read it the same way.
 
 ## Decision
@@ -66,7 +66,8 @@ interface Roadmap {
   background behind text, with a theme token when `null`. Sheet colours therefore cannot
   break contrast in either theme. Each card shows its own roadmap's colour for now; the
   owner plans to set colour per family instead (round 3), a format change for a later
-  record.
+  record. A missing colour uses a theme token, not the public site's `#325083`, so it
+  suits both themes.
 - **The id is the public site's slug** of the `Sheet` value (`producta`), so a roadmap's
   editor address (`#/roadmaps/producta`) matches its public page. It replaces the numeric
   worksheet id; no address using that was ever published.
@@ -99,15 +100,17 @@ interface Roadmap {
 
 The editor keeps the list usable where the public site fails its whole sync:
 
-| Mistake                          | Public site       | Editor                                |
-| -------------------------------- | ----------------- | ------------------------------------- |
-| Two rows with the same slug      | sync fails        | first row kept, later ones skipped    |
-| A slug with no letters or digits | sync fails        | row skipped                           |
-| `Sheet` names no existing tab    | sync fails        | roadmap kept                          |
-| No `Enabled` column              | nothing published | every roadmap listed as not published |
-| No roadmap enabled               | sync fails        | listed as not published               |
+| Mistake                          | Public site                | Editor                                                    |
+| -------------------------------- | -------------------------- | --------------------------------------------------------- |
+| Two rows with the same slug      | sync fails if both enabled | the enabled row kept (else the first), the others skipped |
+| A slug with no letters or digits | sync fails if enabled      | row skipped                                               |
+| `Sheet` names no existing tab    | sync fails if enabled      | roadmap kept                                              |
+| No `Enabled` column              | nothing published          | every roadmap listed as not published                     |
+| No roadmap enabled               | sync fails                 | listed as not published                                   |
 
-Each is recorded as a problem. The list fails only when it cannot be read at all: the
+Disabled rows never fail the public site's sync, so a disabled draft may share a slug
+with the live row; keeping the enabled row means the editor shows, at that address, the
+roadmap the public sees. Each mistake is recorded as a problem. The list fails only when it cannot be read at all: the
 spreadsheet has no tabs, the first tab is empty, or its header has no `Sheet` column.
 That raises a new `AppError` kind, **`invalid-data`** (not retryable): the data source
 answered as expected, but its content is not in the agreed format, so the remedy is to
@@ -120,7 +123,8 @@ API's own schema.
   the missing-tab check.
 - The parser duplicates the public site's rules. A change to the format updates the
   analysis, this ADR, `tests/fixtures/sheets/` and the parser together.
-- The glossary's **Roadmap** and **Roadmap list** entries change when EPC-002 is
-  delivered; ADR-002's "each visible worksheet is a roadmap" is amended by this ADR.
+- The glossary's **Roadmap**, **Roadmap list** and **Worksheet** entries change when
+  EPC-002 is delivered; ADR-002's `Roadmap { id; name }` and worksheet mapping are
+  superseded by this ADR.
 - Problems are collected but not shown; a sheet-health view is a later record.
 - Delivered by [EPC-002](../backlog/EPC-002-roadmap-list-from-roadmaps-tab/README.md).

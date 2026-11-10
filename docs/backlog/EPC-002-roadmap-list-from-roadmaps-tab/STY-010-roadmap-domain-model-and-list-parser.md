@@ -1,4 +1,4 @@
-# STY-010: A roadmap carries its list information, and the roadmap list can be parsed
+# STY-010: A roadmap carries its list information, and the roadmap index can be parsed
 
 - **Status**: Proposed — owner decisions in ADR-009; ready to select
 - **Type**: Feature + Refactor
@@ -27,15 +27,18 @@ changes yet.
   problems and each roadmap's tab name; no I/O. The current worksheet repository maps to
   the new shape as an interim (`title.en` = tab name, `published: true`, the rest `null`).
 - `features/`: every use of `name` reads the localised title in the current language.
-- `lib/errors` + `i18n/`: the `invalid-data` kind and its copy.
-- A test-only CSV reader for `tests/fixtures/sheets/`, which STY-011's E2E fake reuses.
+- `lib/errors` + `i18n/`: the `invalid-data` kind and its final copy in English and Welsh
+  (with the `copywriter` skill), since the catalogue types require it; STY-011 S5 is the
+  first place a user sees it.
+- A test-only CSV reader for `tests/fixtures/sheets/` that STY-011's E2E fake reuses;
+  Vitest tests load the CSVs with Vite `?raw` imports, since `src` has no Node types.
 
 ## Acceptance criteria
 
 ### S1: The example list parses to the three example roadmaps
 
 **Given** the rows of `tests/fixtures/sheets/Roadmaps.csv`
-**When** the roadmap list is parsed
+**When** the roadmap index is parsed
 **Then** it returns `producta`, `productb` and `productc`, in row order, with their tab
 names
 **And** Product A has category `gp-community-services`, family "Single Record", status
@@ -48,7 +51,7 @@ status and service description
 
 **Given** headers such as `STATUS LABEL`, `Status-label`, `product lead`,
 `Title (Welsh)`, `Title - Cymraeg` and an unknown `Notes`
-**When** the list is parsed
+**When** the index is parsed
 **Then** each maps to its column, and `Notes` is ignored
 **And** a second header for the same column, or a Welsh header for a column without Welsh
 (`Colour (cy)`, `Product Lead (cy)`), is ignored and recorded as a problem
@@ -59,7 +62,7 @@ status and service description
 `yes` and blank, category spellings like ` gp & community services`, an unknown category,
 dates `31/02/2026` and `1 Oct 2026`, colours `#ABC`, `red` and `url(x)`, and Welsh with no
 English
-**When** the list is parsed
+**When** the index is parsed
 **Then** cells are trimmed; a blank title falls back to the `Sheet` value; only `Yes`
 publishes; category spellings match and an unknown one becomes no category; impossible
 or other-format dates become no date; `#ABC` becomes `#aabbcc` and the others no colour;
@@ -71,7 +74,7 @@ each recorded as a problem with its row; `No` and blanks are not
 
 **Given** a blank row, a row with a blank `Sheet`, two rows whose `Sheet` values give the
 same id (`Product A`, `product-a`) and a row whose `Sheet` is `---`
-**When** the list is parsed
+**When** the index is parsed
 **Then** the blank rows are ignored, the first `Product A` row is kept, and the duplicate
 and `---` rows are skipped, each recorded as a problem
 **And** a list with no `Enabled` column lists every roadmap as not published, recording
@@ -92,9 +95,16 @@ one problem
 **And** every existing unit, component and E2E test passes against the new `Roadmap`
 shape
 
+### S7: A published row wins over a draft with the same id (D3)
+
+**Given** a row `Product A` with `Enabled` `No` above a row `product-a` with `Yes`
+**When** the index is parsed
+**Then** `producta` is the second row's roadmap, published
+**And** the first row is skipped and recorded as a duplicate
+
 ## Tests
 
-S1–S5 are unit tests of the parser (S1 from the fixture file, the rest inline). S6 is the
+S1–S5 and S7 are unit tests of the parser (S1 from the fixture file, the rest inline). S6 is the
 existing suites, unchanged in what they assert.
 
 ## Decisions
@@ -103,13 +113,17 @@ existing suites, unchanged in what they assert.
   never split. Changes: S1, S2.
 - **D2** (agent, 2026-11-10): the interim worksheet mapping over a parser-only story with
   no domain change, so STY-011 swaps only the data source.
+- **D3** (agent, 2026-11-10, Opus review): among rows sharing an id, the enabled row is
+  kept (else the first), matching the public site, which drops disabled rows before its
+  duplicate check (ADR-009). Clarifies "the first" in S4; adds S7.
+- **D4** (agent, 2026-11-10, Opus review): S2's header variants are alternative
+  spellings, each tested in its own header; the duplicate case puts two spellings of one
+  column in the same header.
 
 ## Starting point
 
-Audited at `16632d3`. The public site's rules are in its `scripts/parse-roadmap.ts`
-(`parseRoadmapList`, `readHeader`, `readTable`, `toIsoDate`, `safeColour`,
-`parseCategory`, `isEnabled`) and `src/lib/text.ts` (`fold`) at `50e67f9`; the analysis
-summarises them. Port the behaviour, not the code. Its 31-line `scripts/csv.ts` is a
+Audited at `16632d3`. The public site's rules are in its `scripts/parse-roadmap.ts` and
+`src/lib/text.ts` at `50e67f9`; the analysis summarises them. Port the behaviour, not the code. Its 31-line `scripts/csv.ts` is a
 good model for the test CSV reader. The contract test's fixtures use numeric ids today.
 
 ## Out of scope

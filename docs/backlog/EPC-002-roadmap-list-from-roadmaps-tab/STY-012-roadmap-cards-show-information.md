@@ -101,7 +101,7 @@ heading
 **Given** a family holding "Alpha" (not published) and "Beta" (published)
 **When** the main page is shown
 **Then** "Alpha" comes before "Beta", carrying its "Not published" badge
-**And** enabling "Alpha" on the public site changes only its badge, not its place
+**And** publishing "Alpha" changes only its badge, not its place
 
 ### S10: The count says how many are not published (owner, round 3)
 
@@ -134,8 +134,7 @@ Screenshots: main page at 1280px and 375px, light and dark, English and Welsh.
 - **D5** (agent, 2026-11-10): roadmaps with no family get their own group heading
   (copywriter to name it) when other groups exist, so every card sits under a heading;
   families match ignoring case, accents, spaces and punctuation, like the public site's
-  other values, so a typo in spacing doesn't split a family. Easily reversed. The
-  heading was confirmed by the owner in D7.
+  other values, so a typo in spacing doesn't split a family. Easily reversed.
 - **D6** (owner, 2026-11-10, grilling round 3 Q1): unpublished roadmaps sort by title
   with the rest, badged, over published-first. Adds S9.
 - **D7** (owner, 2026-11-10, grilling round 3 Q3): roadmaps with no family sit under a
@@ -143,16 +142,13 @@ Screenshots: main page at 1280px and 375px, light and dark, English and Welsh.
 - **D8** (owner, 2026-11-10, grilling round 3 Q2): the count mentions unpublished
   roadmaps, and only when there are any. Adds S10.
 - **D9** (owner, 2026-11-10, grilling round 3 Q4): each card shows its own roadmap's
-  colour for now (S6). A later feature will give every roadmap in a family one colour,
-  set by the family; see EPC-002 Out of scope.
+  colour for now (S6); family-wide colours are in EPC-002 Out of scope.
 - **D10** (owner, 2026-11-10, grilling round 3 Q5–Q6): the detail page keeps only the
-  title (confirms D3), and no stale marker yet. Out of scope below.
+  title (confirms D3), and no stale marker yet.
+- **D11** (agent, 2026-11-10, Opus review): a merged family group is named by the family
+  as written on its first roadmap in index order; its Welsh name is that roadmap's Welsh,
+  else the first member's with Welsh. The group sorts by that name. Holds in S8.
 
 ## Out of scope
 
-- The detail page showing vision and the full service description: the roadmap detail
-  epic (EPC-002 Out of scope).
-- Filtering, or grouping by category: not asked for (D4).
-- A stale-roadmap marker (six weeks, persona A7): waits until publishing records a real
-  date rather than the hand-typed one (D10).
-- Family-wide colours: a later record (D9; EPC-002 Out of scope).
+As EPC-002 Out of scope, plus filtering or grouping by category (D4).

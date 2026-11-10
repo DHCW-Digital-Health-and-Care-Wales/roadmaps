@@ -29,6 +29,7 @@ user-facing strings in code that already exists are moved into the catalogues.
   Include at least one pluralised key, such as a roadmap count like "3 roadmaps", with
   Welsh plural forms, to prove plurals end to end. Welsh must be good-quality Welsh with
   correct mutations, e.g. "Cysylltu â Google".
+
 - `LanguageSwitcher` component. Choose and document its location: `src/i18n/` is
   infrastructure-like, so a component probably belongs in `components/layout/` or
   `features/i18n/components/`. Add the shadcn Base UI component it needs via the CLI. It

@@ -47,9 +47,34 @@ Feature code, auth, data fetching, CI workflow, README (S07).
 
 ## Acceptance criteria
 
-- [ ] `pnpm install`, `pnpm dev`, `pnpm build`, `pnpm typecheck`, `pnpm lint`,
+- [x] `pnpm install`, `pnpm dev`, `pnpm build`, `pnpm typecheck`, `pnpm lint`,
       `pnpm format:check`, `pnpm test` all succeed (at least one real test, e.g. config parsing).
-- [ ] A Button from `@/components/ui/button` renders on the placeholder page and is
+- [x] A Button from `@/components/ui/button` renders on the placeholder page and is
       built on `@base-ui/react` (no `@radix-ui/*` in the dependency tree).
-- [ ] Layer import restrictions demonstrably fail lint when violated (verify, then revert).
-- [ ] Handoff entry lists exact chosen versions and any compatibility notes.
+- [x] Layer import restrictions demonstrably fail lint when violated (verify, then revert).
+- [x] Handoff entry lists exact chosen versions and any compatibility notes.
+
+## Review notes
+
+Sol review (Codex `gpt-6.1-sol`, high effort) of the working tree: no blockers; all
+checks, tests and import-restriction probes passed. Findings and resolutions:
+
+1. **Major: `engines.node` too broad** (`>=22.12.0` admitted Node versions that ESLint 10,
+   jsdom 31 and native `eslint.config.ts` loading do not support). Fixed: now
+   `^22.22.2 || ^24.15.0 || >=26.0.0` (jsdom's range, the strictest in the tree).
+2. **Minor: config validation never ran at startup.** Fixed: `src/app/main.tsx` imports
+   `@/app/config`, so an invalid environment throws a clear error before rendering.
+3. **Minor: `.artifacts/` not git-ignored.** Fixed: added to `.gitignore`.
+4. **Minor: handoff entry and ticked acceptance criteria missing.** Fixed in this commit.
+
+Deviations from the story text, for the record:
+
+- MSW 3 renamed `onUnhandledRequest` to `onUnhandledFrame`. `src/test/setup.ts` uses
+  `onUnhandledFrame: "error"`, with the same behaviour. A harness test proves that an
+  unhandled request rejects.
+- The `@/*` alias is declared in `tsconfig.app.json` and also in the root `tsconfig.json`,
+  because the shadcn CLI reads only the root file. Vite resolves it with
+  `resolve.tsconfigPaths: true`, so there is no separate `resolve.alias`.
+- `eslint-plugin-jsx-a11y` (6.10.2) supports only ESLint up to 9 and has not been updated
+  since 2024. We use its maintained fork, `eslint-plugin-jsx-a11y-x`, which supports
+  ESLint 10.

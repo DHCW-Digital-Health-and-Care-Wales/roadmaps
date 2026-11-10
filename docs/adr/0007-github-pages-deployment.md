@@ -7,7 +7,7 @@
 
 - GitHub Actions: one workflow file for CI (PRs + pushes to `main`): checkout, Node LTS,
   pnpm (via `pnpm/action-setup`, version from `packageManager`), `pnpm install
-  --frozen-lockfile`, typecheck, lint, format check, unit tests, build, E2E. On pushes to
+--frozen-lockfile`, typecheck, lint, format check, unit tests, build, E2E. On pushes to
   `main` only, a deploy job that `needs` the checks uploads the build with
   `actions/configure-pages`, `actions/upload-pages-artifact`, `actions/deploy-pages`.
   Permissions: `contents: read` globally; `pages: write`, `id-token: write` on the deploy

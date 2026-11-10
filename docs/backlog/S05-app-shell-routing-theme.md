@@ -17,7 +17,7 @@ unauthenticated welcome state, and the route skeleton.
   for auth-scoped keys (define a single `authScopedQueryKey` root, e.g. `['session']`
   or similar, in features — not in the composition root, to avoid magic strings).
 - `src/features/roadmaps/roadmap-repository-context.tsx` — `RoadmapRepositoryProvider`
-  + `useRoadmapRepository()`.
+  - `useRoadmapRepository()`.
 - `src/app/providers.tsx` — Theme, QueryClient, Auth, Repository providers, `Toaster`.
 - Routes (`src/routes/`): `__root.tsx` (AppShell + `<Outlet/>` + not-found component),
   `index.tsx` (home page), `roadmaps.$roadmapId.tsx` (placeholder page — real content in

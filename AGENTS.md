@@ -102,3 +102,51 @@ Newest last. Each entry: story id, what changed, decisions, gotchas for the next
   (i18n — English + Welsh — added as S04 at the user's request; later stories renumbered). Branch
   `feat/bootstrap`. Remote is `collisdigital/roadmaps-editor`, so the production origin is
   `https://collisdigital.github.io` and base path `/roadmaps-editor/`.
+- **S01 Tooling foundation** — Vite 8 + React 19 SPA scaffold: strict TS, Tailwind v4,
+  shadcn/ui on Base UI (Button only), TanStack Router file routes with hash history,
+  ESLint flat config with ADR-0002 layer rules, Prettier, and Vitest + RTL + MSW.
+  - Versions (exact, from the lockfile): pnpm 12.18.0 (`packageManager`), Node
+    `^22.22.2 || ^24.15.0 || >=26` (`.nvmrc` 22), react/react-dom 19.3.1, vite 8.3.6,
+    @vitejs/plugin-react 6.2.1, typescript 6.0.3, typescript-eslint 8.72.1, eslint 10.14.0,
+    @eslint/js 10.0.1, eslint-plugin-react-hooks 7.1.1, eslint-plugin-react-refresh 0.5.7,
+    eslint-plugin-jsx-a11y-x 0.2.0, eslint-config-prettier 10.1.8, prettier 3.9.10,
+    prettier-plugin-tailwindcss 0.8.1, tailwindcss and @tailwindcss/vite 4.3.5, shadcn 4.23.0
+    (style `base-nova`, neutral), @base-ui/react 1.9.0, cn 0.5.2, class-variance-authority
+    0.7.1, lucide-react 1.70.0, tw-animate-css 1.4.0, @fontsource-variable/geist 5.3.0,
+    @tanstack/react-router 1.170.46, @tanstack/router-plugin 1.169.0, zod 4.6.7, vitest
+    5.1.0, jsdom 31.0.0, msw 3.0.4, @testing-library/react 16.3.3, dom 10.4.2, user-event
+    14.6.8, jest-dom 7.0.1. TanStack Query is not installed yet; add it in the story that
+    first uses it.
+  - Compatibility:
+    - TypeScript is 6.0, not 7.0, because typescript-eslint 8.x requires
+      `typescript <6.1.0`.
+    - `eslint-plugin-jsx-a11y` supports only ESLint up to 9, so we use its maintained fork,
+      `eslint-plugin-jsx-a11y-x`.
+    - pnpm 12's release-age policy can resolve a just-published patch one version back.
+      This is expected.
+    - `pnpm install` may print "Agent skills awaiting approval" for TanStack packages. It
+      is harmless; do not approve it.
+  - Gotchas:
+    - **Dev needs `.env.local`.** Run `cp .env.example .env.local`. `vite dev` does not
+      load `.env.production`, and `main.tsx` imports `@/app/config`, which throws if the
+      config is missing.
+    - Vitest supplies placeholder env values through `test.env` in `vite.config.ts`.
+    - MSW 3 uses `onUnhandledFrame`, not `onUnhandledRequest`, and imports `http` from
+      `msw/http`. Tests register handlers with `server.use()` from `@/test/msw-server`;
+      unhandled requests fail.
+    - Tests import `describe`, `it` and `expect` from `vitest` explicitly. There are no
+      globals; `setup.ts` runs RTL `cleanup` and stubs `window.scrollTo` for the router.
+    - The `@/*` alias lives in both tsconfig files, because the shadcn CLI reads only the
+      root one. Vite resolves it through `resolve.tsconfigPaths`.
+    - shadcn's button imports `cn` from the `cn` package (upstream). `@/lib/utils`
+      re-exports it.
+    - The router plugin generates `src/routeTree.gen.ts` on `dev`/`build`. Commit it after
+      adding routes. Files in `src/routes/` become routes, so put tests elsewhere, e.g.
+      `src/app/router.test.tsx`.
+    - `react-refresh/only-export-components` is off for `src/routes` and
+      `src/components/ui`.
+    - Layer rules are `no-restricted-imports` blocks in `eslint.config.ts`. They match both
+      `@/x` and relative `../x` imports. Features may import `app/`, because ADR-0002
+      places `useRoadmapRepository` there.
+    - Placeholder copy in `src/routes/index.tsx` is English only, so S04 moves it into the
+      catalogues.

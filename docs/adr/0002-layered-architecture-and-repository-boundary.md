@@ -32,7 +32,7 @@ app/ (composition root) is the only module that imports concrete adapters.
   adapter maps HTTP statuses to the same kinds.
 - `infrastructure/google-sheets/`:
   - `sheets-client.ts` — a small reusable client (`createSheetsClient({ fetch, baseUrl,
-    getAccessToken })`) that performs authorised GETs with native `fetch`, maps HTTP/network
+getAccessToken })`) that performs authorised GETs with native `fetch`, maps HTTP/network
     failures to `AppError`, and returns `unknown` JSON for callers to validate.
   - `sheets-schemas.ts` — Zod v4 schemas for the metadata response
     (`fields=sheets(properties(sheetId,title,index,hidden))`).

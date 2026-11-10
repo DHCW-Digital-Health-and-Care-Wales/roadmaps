@@ -23,7 +23,7 @@ Framework-free domain + a robust Google Sheets adapter that turns spreadsheet me
     `{ sheets?: Array<{ properties: { sheetId, title, index?, hidden? } }> }`. Missing
     `sheets` = empty spreadsheet. Malformed -> `AppError('invalid-response')`.
   - `google-sheets-roadmap-repository.ts` — `class GoogleSheetsRoadmapRepository implements
-    RoadmapRepository` (constructor takes `{ client, spreadsheetId }`), requests
+RoadmapRepository` (constructor takes `{ client, spreadsheetId }`), requests
     `GET /{spreadsheetId}?fields=sheets(properties(sheetId,title,index,hidden))`,
     validates, excludes `hidden: true`, preserves response order, maps
     `id: String(sheetId)`, `name: title`. No name-based filtering.

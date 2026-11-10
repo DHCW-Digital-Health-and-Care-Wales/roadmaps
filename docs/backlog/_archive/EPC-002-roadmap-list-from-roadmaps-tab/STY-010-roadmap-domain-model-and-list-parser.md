@@ -9,6 +9,7 @@
   list"; ADR-002; ADR-008
 - **Suggested model**: Opus — a pure parser with many edge cases that must match another
   repository's rules
+- **Delivered**: https://github.com/collisdigital/roadmaps-editor/pull/4
 
 ## Summary
 

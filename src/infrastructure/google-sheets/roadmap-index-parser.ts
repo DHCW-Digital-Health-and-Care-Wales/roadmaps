@@ -1,11 +1,3 @@
-import type { LocalisedText } from "@/domain/roadmap/localised-text"
-import type { Roadmap } from "@/domain/roadmap/roadmap"
-import {
-  ROADMAP_CATEGORIES,
-  type RoadmapCategory,
-} from "@/domain/roadmap/roadmap-category"
-import { AppError } from "@/lib/errors"
-
 /**
  * Reads the roadmap index, the first worksheet, the way the public site reads it
  * (ADR-009, `docs/analysis/roadmaps-tab-format.md`): row 1 is the header, every other
@@ -13,6 +5,14 @@ import { AppError } from "@/lib/errors"
  * roadmap's items. Mistakes the public site would fail its sync on are recorded as
  * problems and the list stays usable.
  */
+
+import type { LocalisedText } from "@/domain/roadmap/localised-text"
+import type { Roadmap } from "@/domain/roadmap/roadmap"
+import {
+  ROADMAP_CATEGORIES,
+  type RoadmapCategory,
+} from "@/domain/roadmap/roadmap-category"
+import { AppError } from "@/lib/errors"
 
 /** A mistake in the roadmap index, as data for a later sheet-health view (no prose). */
 export interface RoadmapIndexProblem {

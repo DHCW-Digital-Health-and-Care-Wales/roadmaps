@@ -602,4 +602,3 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
       `import csv from "…/Roadmaps.csv?raw"`; Node code (the E2E fake) reads it from disk.
     - The parser expects `rows[0]` to be spreadsheet row 1; read the whole tab by title,
       not a range starting lower.
-    - Welsh `errors.invalid-data` is machine-assisted, like the rest.

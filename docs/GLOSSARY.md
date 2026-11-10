@@ -13,7 +13,7 @@ product brief describes and the code does not have yet.
 A DHCW member of staff who leads one or more products and manages their roadmaps in
 this tool; a product may have several. The primary user
 (`docs/backlog/personas/product-lead.md`). A roadmap names its product leads as free
-text; the app does not know which Product Lead is using it.
+text _(planned)_; the app does not know which Product Lead is using it.
 _Avoid_: Product owner, admin, editor
 
 **Public reader**:
@@ -79,22 +79,22 @@ The roadmaps available to the user, in the order the data source gives them; fro
 grouped by product family and sorted by title.
 _Avoid_: Dashboard, workspace
 
-**Published roadmap**:
+**Published roadmap** _(planned)_:
 A roadmap the public site shows. A roadmap that is not published is still listed here,
 marked "Not published" (ADR-009).
 _Avoid_: Enabled, live, public roadmap
 
-**Category**:
+**Category** _(planned)_:
 One of six fixed areas of care a roadmap belongs to, such as "GP & Community Services",
 shared with the public site; a roadmap may have none.
 _Avoid_: Group, section, tag
 
-**Product family**:
+**Product family** _(planned)_:
 An optional name grouping related products, such as "Single Record". The roadmap list
 groups roadmaps under their family.
 _Avoid_: Programme, portfolio
 
-**Status label**:
+**Status label** _(planned)_:
 Free text describing a product's stage, such as "Beta", shown as a badge.
 _Avoid_: Phase (an item's tag on the public site), state
 

@@ -191,8 +191,10 @@ Audited at `22c3336`.
   (12px) became `text-body-xs` (14px), DHCW's smallest; the card title drops
   `leading-snug` for the body's 24px. Headings are bold (700) from the token, so their
   `font-semibold` went.
-- **S3, toasts** (agent): Sonner injects its stylesheet unlayered with its own font stack
-  and 13px, which no utility can beat, so `globals.css` overrides both on its selectors.
+- **S3/S4, toasts** (agent; focus from review): Sonner injects its stylesheet unlayered
+  with its own font stack, 13px and a faint focus shadow, which no utility can beat, so
+  `globals.css` overrides all three on its selectors; a toast, reached with Alt+T and Tab,
+  shows `focus-ring`.
 - **S7, `cn` everywhere** (agent): the shadcn files imported the bare `cn` package, which
   is unconfigured; they now import `@/lib/utils`, and `no-restricted-imports` rejects
   `from "cn"` in `src/`, so a regenerated component fails lint until changed.
@@ -230,12 +232,12 @@ Audited at `22c3336`.
 
 ### Scenario evidence
 
-| Scenario | Held by                                                                                                                                                                                    |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| S1       | `tokens.test.ts` (each primitive equals the pinned value; semantic tokens are `var()`s of them); after screenshots of every page, light                                                    |
-| S2       | `contrast.test.ts` (28 text pairs, `--input` and the focus indicator on four surfaces, the focus change of five fills, both themes); after screenshots, dark                               |
-| S3       | `typography.spec.ts` (`text uses DHCW's compact scale at 1280px` and `375px`; `Welsh ŵ and ŷ render in Roboto, served by the app`)                                                         |
-| S4       | `focus-indicator.spec.ts` (`every control shows DHCW's focus indicator`, light and dark: skip link, header link, language button, menu item, Refresh, card, Back link); `contrast.test.ts` |
-| S5       | `tokens.test.ts` (`DHCW primitives (S5)`, `token tiers (ADR-010)`)                                                                                                                         |
-| S6       | the existing unit, component, E2E and axe suites, unchanged and passing                                                                                                                    |
-| S7       | `src/lib/utils.test.ts`                                                                                                                                                                    |
+| Scenario | Held by                                                                                                                                                                                           |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `tokens.test.ts` (each primitive equals the pinned value; semantic tokens are `var()`s of them); after screenshots of every page, light                                                           |
+| S2       | `contrast.test.ts` (28 text pairs, `--input` and the focus indicator on four surfaces, the focus change of five fills, both themes); after screenshots, dark                                      |
+| S3       | `typography.spec.ts` (`text uses DHCW's compact scale at 1280px` and `375px`; `Welsh ŵ and ŷ render in Roboto, served by the app`)                                                                |
+| S4       | `focus-indicator.spec.ts` (`every control shows DHCW's focus indicator`, light and dark: skip link, header link, toast, language button, menu item, Refresh, card, Back link); `contrast.test.ts` |
+| S5       | `tokens.test.ts` (`DHCW primitives (S5)`, `token tiers (ADR-010)`)                                                                                                                                |
+| S6       | the existing unit, component, E2E and axe suites, unchanged and passing                                                                                                                           |
+| S7       | `src/lib/utils.test.ts`                                                                                                                                                                           |

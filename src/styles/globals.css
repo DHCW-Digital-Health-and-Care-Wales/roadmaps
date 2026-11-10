@@ -340,8 +340,9 @@
 }
 
 /*
- * Sonner injects its stylesheet unlayered, with its own font stack and a 13px size, so
- * utilities on its toasts lose. These match its selectors with one more `:root`.
+ * Sonner injects its stylesheet unlayered, with its own font stack, a 13px size and a
+ * faint focus shadow, so utilities on its toasts lose. These match its selectors with
+ * one more `:root`. A toast takes focus from the keyboard (Alt+T, then Tab).
  */
 :root [data-sonner-toaster] {
   font-family: var(--font-sans);
@@ -349,6 +350,9 @@
 :root [data-sonner-toast][data-styled="true"] {
   font-size: var(--nhsw-font-size-body-extra-small);
   line-height: var(--nhsw-line-height-body-extra-small);
+}
+:root [data-sonner-toast]:focus-visible {
+  @apply focus-ring;
 }
 
 /* Respect reduced motion everywhere, including generated components and toasts. */

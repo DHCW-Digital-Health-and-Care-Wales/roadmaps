@@ -78,6 +78,16 @@ for (const theme of ["light", "dark"] as const) {
     await expect(roadmapCards(page)).toHaveCount(3)
     await page.mouse.move(0, 0)
 
+    // The "Connected" toast: Alt+T moves focus to the notifications, Tab to the toast.
+    const toast = page
+      .getByRole("region", { name: /^Notifications/ })
+      .getByRole("listitem")
+    await expect(toast).toHaveText("Connected to Google")
+    await page.keyboard.press("Alt+KeyT")
+    await page.keyboard.press("Tab")
+    await expect(toast).toBeFocused()
+    await expectRing(toast)
+
     const language = banner.getByRole("button", { name: "Language English" })
     // Connecting moves focus to the main content; the header is behind it.
     await tabTo(page, language, "Shift+Tab")

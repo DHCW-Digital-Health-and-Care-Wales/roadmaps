@@ -72,11 +72,18 @@ function confirmationOf(
  */
 export function useAuthNotice(): {
   readonly notice: AuthNotice | null
+  /**
+   * Changes with every new state, so a notice can remount and be announced again when
+   * the same failure repeats: Google may report a blocked popup inside the click, before
+   * `connecting` is ever rendered.
+   */
+  readonly version: number
   readonly dismiss: () => void
 } {
   const { state } = useAuth()
   const pathname = useLocation({ select: (location) => location.pathname })
   const [seen, setSeen] = useState(state)
+  const [version, setVersion] = useState(0)
   const [confirmation, setConfirmation] = useState<{
     readonly state: AuthState
     readonly pathname: string
@@ -88,6 +95,7 @@ export function useAuthNotice(): {
     // Derived from the previous render's state (React's "storing information from
     // previous renders" pattern), so each transition is seen once, with no effect.
     setSeen(state)
+    setVersion(version + 1)
     const code = confirmationOf(seen, state)
     setConfirmation(code ? { state, pathname, code } : null)
   }
@@ -99,6 +107,7 @@ export function useAuthNotice(): {
   const notice = dismissed === state ? null : (failureIn(state) ?? confirmed)
   return {
     notice,
+    version,
     dismiss: () => {
       setDismissed(state)
     },

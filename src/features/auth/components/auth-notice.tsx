@@ -48,7 +48,7 @@ function announces(notice: Notice): boolean {
  */
 export function AuthNotice() {
   const { t } = useTranslation()
-  const { notice, dismiss } = useAuthNotice()
+  const { notice, version, dismiss } = useAuthNotice()
   if (!notice) return null
 
   const { variant, Icon } = looks[notice.kind]
@@ -59,6 +59,8 @@ export function AuthNotice() {
 
   return (
     <Alert
+      // A new state is a new notice: remounting announces a repeated failure again.
+      key={version}
       role={announces(notice) ? "alert" : "note"}
       variant={variant}
       className="mb-6 max-w-2xl"

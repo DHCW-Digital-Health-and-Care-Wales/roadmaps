@@ -384,9 +384,9 @@ mismatch, rather than deploying a site whose assets 404. A fork deploys to
 - **No Content Security Policy yet.** GitHub Pages cannot send response headers, so a
   CSP would be a `<meta http-equiv>` tag. It would have to allow at least
   `https://accounts.google.com` (script, frame, style), `https://sheets.googleapis.com`
-  and `https://oauth2.googleapis.com` (connect), and the theme script in `index.html` (by hash). Add it only together with a manual sign-in on
-  the deployed site, since the hermetic E2E suite cannot prove it leaves the real
-  Google flow working.
+  and `https://oauth2.googleapis.com` (connect), and the theme script in `index.html`
+  (by hash). Add it only together with a manual sign-in on the deployed site, since the
+  hermetic E2E suite cannot prove it leaves the real Google flow working.
 - **The full `spreadsheets` scope is sensitive.** It is requested deliberately, for
   planned editing features (ADR-003); it lets the app read and write _every_ spreadsheet
   the user can access, not just this one. Consequences depend on the audience and

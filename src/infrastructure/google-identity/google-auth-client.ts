@@ -288,7 +288,7 @@ export function createGoogleAuthClient({
  * The GIS `prompt` for an attempt: a quiet re-grant to renew or after expiry, forced
  * consent after a partial grant (re-prompting needs it), and the default account chooser
  * otherwise. A quiet re-grant for an account that has consented opens a popup that closes
- * itself, with nothing to click (STY-017's spike against the real Google).
+ * itself, with nothing to click (ADR-003, renewal).
  */
 function promptFor(state: AuthState): OverridableTokenClientConfig | undefined {
   if (state.status === "connected" || state.status === "expired") {

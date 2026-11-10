@@ -45,13 +45,7 @@ const frameworks = [
     message: "Layering (ADR-002): no TanStack here.",
   },
   {
-    group: [
-      "i18next",
-      "react-i18next",
-      "sonner",
-      "lucide-react",
-      "@base-ui/**",
-    ],
+    group: ["i18next", "react-i18next", "lucide-react", "@base-ui/**"],
     message:
       "Layering (ADR-002, ADR-008): no UI or copy here; emit codes, not text.",
   },

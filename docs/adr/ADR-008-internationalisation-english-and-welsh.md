@@ -43,7 +43,7 @@ and English-only pluralisation are not acceptable.
   piece, not a feature), built on the shadcn `dropdown-menu` with a radio group. Its
   accessible name is "Language English" (a visually hidden label plus the visible
   endonym), so it contains the visible text. STY-005 places it in the header.
-- **Rule**: every user-facing string, including aria-labels, toasts, error copy and the
+- **Rule**: every user-facing string, including aria-labels, page notices, error copy and the
   page title, comes from the catalogues. The domain and infrastructure layers emit no
   copy. UI maps `AppError.kind` to an `errors.*` key; `en.ts` uses
   `satisfies Record<AppErrorKind, string>` (and likewise for auth statuses and codes), so a

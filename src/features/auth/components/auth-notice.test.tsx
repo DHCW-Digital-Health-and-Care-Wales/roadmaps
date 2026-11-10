@@ -99,6 +99,24 @@ describe("the page notice (S1: failures stay on screen)", () => {
     ).toBeInTheDocument()
   })
 
+  it("is announced again when the same failure happens again", async () => {
+    const { authClient } = await renderWithProviders({
+      authState: { status: "ready", lastError: "popup-blocked" },
+    })
+    const first = main().getByRole("alert")
+
+    // Google may report a blocked popup inside the click, so React never renders the
+    // attempt's `connecting` state in between.
+    act(() => {
+      authClient.setState({ status: "connecting" })
+      authClient.setState({ status: "ready", lastError: "popup-blocked" })
+    })
+
+    const second = main().getByRole("alert")
+    expect(second).toHaveTextContent(first.textContent)
+    expect(second).not.toBe(first)
+  })
+
   it("stays until the next attempt", async () => {
     const { authClient } = await renderWithProviders({
       authState: { status: "error", error: "access-denied" },

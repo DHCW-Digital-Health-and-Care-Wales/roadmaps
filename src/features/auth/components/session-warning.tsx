@@ -75,9 +75,17 @@ function SessionWarningContent({
 }: SessionWarningContentProps) {
   const { t } = useTranslation()
   const stay = useRef<HTMLButtonElement>(null)
-  // Opening reads the title and description, the time included; announce later moments.
-  const [openedAt] = useState(() => announcedAt(secondsLeft))
+  // Opening reads the title and description, the time included, so nothing is announced
+  // until the next moment. Then the time left as that moment was reached, which a
+  // throttled background tab may reach late.
   const moment = announcedAt(secondsLeft)
+  const [announced, setAnnounced] = useState<{
+    readonly moment: number
+    readonly secondsLeft: number | null
+  }>({ moment, secondsLeft: null })
+  if (announced.moment !== moment) {
+    setAnnounced({ moment, secondsLeft })
+  }
 
   return (
     <AlertDialogContent initialFocus={stay}>
@@ -91,9 +99,9 @@ function SessionWarningContent({
         </AlertDialogDescription>
       </AlertDialogHeader>
       <p role="status" className="sr-only">
-        {moment < openedAt &&
+        {announced.secondsLeft !== null &&
           t("auth.sessionWarning.endsIn", {
-            remaining: formatDuration(moment, t),
+            remaining: formatDuration(announced.secondsLeft, t),
           })}
       </p>
       <AlertDialogFooter>

@@ -183,6 +183,14 @@ Audited at `22c3336`.
 - **S6, the clock** (agent): returning to a background tab re-reads the clock in two
   places: the GIS client expires a session whose `expiresAt` has passed (ADR-003
   amendment), and the warning recomputes the time left.
+- **S3, a moment reached late** (agent, from review): the live region announces the time
+  left as each moment (a whole minute, then 30 s) is reached, so a throttled background
+  tab that reaches one late announces the real time, not the moment's.
+- **S1, a repeated failure** (agent, from review): each new auth state remounts the
+  notice, so the same failure reported again (Google may report a blocked popup inside
+  the click) is announced again.
+- **S7, the Welsh countdown** (agent, from review): minutes and seconds are joined by a
+  comma ("1 munud, 49 eiliad"), since "a"/"ac" depends on how the number is read aloud.
 - **New token** (agent): `--overlay` (DHCW's timeout backdrop,
   `--nhsw-timeout-modal-backdrop`) dims the page behind the dialog; it is decorative, so
   it has no contrast pair.

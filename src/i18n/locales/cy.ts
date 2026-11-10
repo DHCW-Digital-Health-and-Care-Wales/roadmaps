@@ -30,7 +30,7 @@ export const cy = {
       seconds_many: "{{count, number}} eiliad",
       seconds_other: "{{count, number}} eiliad",
       minutesAndSeconds:
-        '$t(common.duration.minutes, {"count": {{minutes}} }) a $t(common.duration.seconds, {"count": {{seconds}} })',
+        '$t(common.duration.minutes, {"count": {{minutes}} }), $t(common.duration.seconds, {"count": {{seconds}} })',
     },
     date: "{{day}} {{month}} {{year}}",
     months: {

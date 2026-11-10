@@ -110,6 +110,21 @@ describe("the session warning (S3)", () => {
     expect(announcement()).toBe("Your session ends in 30 seconds.")
   })
 
+  it("announces the real time left when a background tab reaches a moment late", async () => {
+    const { session } = await renderSession(2 * MINUTE_MS)
+    expect(announcement()).toBe("")
+
+    // Throttled in the background: the next tick lands well after the 30-second moment.
+    vi.setSystemTime(session.expiresAt - 25_000)
+    act(() => {
+      document.dispatchEvent(new Event("visibilitychange"))
+    })
+
+    expect(announcement()).toBe("Your session ends in 25 seconds.")
+    advance(5_000)
+    expect(announcement()).toBe("Your session ends in 25 seconds.")
+  })
+
   it("closes when the session ends", async () => {
     const { authClient } = await renderSession(30_000)
     expect(dialog()).toBeInTheDocument()
@@ -267,7 +282,7 @@ describe("the session warning in Welsh (S7)", () => {
     ).toBeInTheDocument()
 
     advance(11_000)
-    expect(open).toHaveTextContent("1 munud a 49 eiliad")
+    expect(open).toHaveTextContent("1 munud, 49 eiliad")
     advance(49_000)
     expect(within(open).getByRole("status")).toHaveTextContent(
       "Bydd eich sesiwn yn dod i ben ymhen 1 munud.",

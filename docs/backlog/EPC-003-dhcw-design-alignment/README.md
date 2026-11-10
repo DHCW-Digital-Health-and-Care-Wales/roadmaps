@@ -108,7 +108,7 @@ STY-013 defines:
 - the text tokens `text-heading-xl`, `-l`, `-m`, `-s` and `-xs`, `text-body` and
   `text-body-xs`;
 - the focus utilities `focus-fill` (buttons and button-styled links), `focus-ring`
-  (cards, inputs and toasts; menu items take `focus-fill`, STY-015 D5) and `focus-link` (text links).
+  (cards and inputs; menu items take `focus-fill`, STY-015 D5) and `focus-link` (text links).
 
 STY-013 configures `cn`'s class merge with these names and the semantic shadows, so
 merging never drops a type size as a colour. From STY-014, they are the only way to set

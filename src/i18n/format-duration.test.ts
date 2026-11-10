@@ -20,7 +20,9 @@ describe("formatDuration", () => {
 
   it("writes minutes and seconds out in Welsh, mutating after two", () => {
     const { t } = createI18n({ language: "cy" })
-    expect(formatDuration(109, t)).toBe("1 munud a 49 eiliad")
+    // A comma, not "a"/"ac", which would depend on how the number is read aloud.
+    expect(formatDuration(109, t)).toBe("1 munud, 49 eiliad")
+    expect(formatDuration(68, t)).toBe("1 munud, 8 eiliad")
     expect(formatDuration(120, t)).toBe("2 funud")
     expect(formatDuration(30, t)).toBe("30 eiliad")
   })

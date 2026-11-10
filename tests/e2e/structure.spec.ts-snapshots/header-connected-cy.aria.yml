@@ -1,0 +1,9 @@
+- banner:
+  - link "Hafan Golygydd Mapiau Trywydd IGDC":
+    - /url: /#/
+    - img "Iechyd a Gofal Digidol Cymru"
+    - text: ""
+  - status: Wedi cysylltu â Google
+  - button "Iaith Cymraeg"
+  - button "Newid i'r thema dywyll"
+  - button "Datgysylltu"

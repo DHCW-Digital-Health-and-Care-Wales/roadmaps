@@ -1,0 +1,10 @@
+- main:
+  - alert:
+    - text: Access wasn't granted, so your roadmaps can't be loaded.
+    - button "Dismiss message"
+  - region "DHCW Roadmap Editor":
+    - heading "DHCW Roadmap Editor" [level=1]
+    - paragraph: "Keep your products' public roadmaps up to date: now, next and later."
+    - text: Your roadmaps are currently sourced from Google Sheets.
+    - button "Connect Google"
+    - paragraph: You'll need to connect Google so the app can load your roadmaps.

@@ -1,0 +1,7 @@
+- alertdialog "Your session is about to end":
+  - heading "Your session is about to end" [level=2]
+  - paragraph: /Your session ends in 1 minute and \d+ seconds\. After that, you'll need to reconnect\./
+  - status
+  - button "Stay connected"
+  - button "Disconnect"
+  - button "Close"

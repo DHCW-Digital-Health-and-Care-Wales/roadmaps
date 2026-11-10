@@ -1,0 +1,10 @@
+- main:
+  - alert:
+    - text: Ni roddwyd mynediad, felly does dim modd llwytho eich mapiau trywydd.
+    - button "Cau'r neges"
+  - region "Golygydd Mapiau Trywydd IGDC":
+    - heading "Golygydd Mapiau Trywydd IGDC" [level=1]
+    - paragraph: "Cadw mapiau trywydd cyhoeddus eich cynhyrchion yn gyfredol: nawr, nesaf a hwyrach."
+    - text: Ar hyn o bryd, daw eich mapiau trywydd o Google Sheets.
+    - button "Cysylltu â Google"
+    - paragraph: Bydd angen i chi gysylltu â Google er mwyn i'r ap lwytho eich mapiau trywydd.

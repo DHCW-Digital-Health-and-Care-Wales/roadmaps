@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test"
 
+import { useLanguage } from "./fixtures/look"
 import { expect, roadmapCards, test } from "./fixtures/test"
 
 // The DHCW staff-service shell (STY-016): navy header with the logo, phase banner, footer,
@@ -24,12 +25,6 @@ const copy = {
     copyright: "© Iechyd a Gofal Digidol Cymru",
   },
 } as const
-
-async function useLanguage(page: Page, language: "en" | "cy") {
-  await page.addInitScript((value) => {
-    localStorage.setItem("roadmaps.language", value)
-  }, language)
-}
 
 const horizontalOverflow = (page: Page) =>
   page.evaluate(
@@ -100,12 +95,16 @@ for (const language of ["en", "cy"] as const) {
       await expect(banner.getByRole("status")).toBeAttached()
     })
 
-    for (const width of [375, 640, 768, 900, 1024]) {
-      test(`the service name shows untruncated at ${String(width)}px (S1, D6)`, async ({
+    for (const width of [375, 640, 768, 900, 1024, 1280]) {
+      test(`the service name shows untruncated and neither page scrolls sideways at ${String(width)}px (S1, D6; STY-018 S4)`, async ({
         page,
       }) => {
         await page.setViewportSize({ width, height: 800 })
         await page.goto("./")
+        await expect(
+          page.getByRole("main").getByRole("button", { name: c.connect }),
+        ).toBeVisible()
+        expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0)
         await page
           .getByRole("main")
           .getByRole("button", { name: c.connect })

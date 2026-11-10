@@ -1,0 +1,5 @@
+- menu "Language English":
+  - group "Language":
+    - group:
+      - menuitemradio "English" [checked]
+      - menuitemradio "Cymraeg"

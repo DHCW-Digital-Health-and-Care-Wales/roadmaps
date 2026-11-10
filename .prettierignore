@@ -1,3 +1,5 @@
 pnpm-lock.yaml
 src/routeTree.gen.ts
 build/fixtures
+# Playwright writes aria snapshots in its own format (tests/e2e/AGENTS.md)
+tests/e2e/*-snapshots

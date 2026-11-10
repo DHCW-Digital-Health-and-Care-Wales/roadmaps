@@ -1,0 +1,24 @@
+- main:
+  - note:
+    - text: Wedi cysylltu â Google
+    - button "Cau'r neges"
+  - region "Eich mapiau trywydd":
+    - heading "Eich mapiau trywydd" [level=1]
+    - paragraph: Pob map trywydd, wedi'i gyhoeddi neu beidio.
+    - paragraph: 3 map trywydd, 1 heb ei gyhoeddi
+    - button "Adnewyddu"
+    - heading "Meddyginiaethau a Diagnosteg" [level=2]
+    - list "Meddyginiaethau a Diagnosteg":
+      - listitem:
+        - link "Trywydd Cynnyrch B":
+          - /url: /#/roadmaps/productb
+    - heading "Single Record" [level=2]
+    - list "Single Record":
+      - listitem:
+        - link "Product A roadmap":
+          - /url: /#/roadmaps/producta
+    - heading "Dim teulu cynnyrch" [level=2]
+    - list "Dim teulu cynnyrch":
+      - listitem:
+        - link "Product C roadmap":
+          - /url: /#/roadmaps/productc

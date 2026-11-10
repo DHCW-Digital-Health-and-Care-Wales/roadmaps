@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { useAuth } from "@/features/auth/use-auth"
 import { cn } from "@/lib/utils"
 
-import { RoadmapGrid } from "../components/roadmap-grid"
+import { RoadmapGroups } from "../components/roadmap-groups"
 import { RoadmapGridSkeleton } from "../components/roadmap-grid-skeleton"
 import { RoadmapsEmptyState } from "../components/roadmaps-empty-state"
 import { RoadmapsErrorState } from "../components/roadmaps-error-state"
@@ -23,6 +23,9 @@ export function RoadmapsPage() {
   const { t } = useTranslation()
   const connected = useAuth().state.status === "connected"
   const { data: roadmaps, error, isFetching, refetch } = useRoadmaps()
+
+  const unpublished =
+    roadmaps?.filter(({ published }) => !published).length ?? 0
 
   const problem = useRoadmapsProblem(error)
   const reload = () => {
@@ -46,7 +49,12 @@ export function RoadmapsPage() {
         <div className="flex shrink-0 items-center gap-3">
           {roadmaps && roadmaps.length > 0 && (
             <p className="text-sm text-muted-foreground tabular-nums">
-              {t("roadmaps.count", { count: roadmaps.length })}
+              {unpublished > 0
+                ? t("roadmaps.countWithUnpublished", {
+                    total: roadmaps.length,
+                    unpublished,
+                  })
+                : t("roadmaps.count", { count: roadmaps.length })}
             </p>
           )}
           <Button
@@ -80,7 +88,7 @@ export function RoadmapsPage() {
               />
             )}
             {roadmaps.length > 0 ? (
-              <RoadmapGrid roadmaps={roadmaps} />
+              <RoadmapGroups roadmaps={roadmaps} />
             ) : (
               <RoadmapsEmptyState />
             )}

@@ -51,6 +51,19 @@ export const EXAMPLE_SPREADSHEET: readonly FakeTab[] = [
   { title: "ProductC", rows: readCsv("ProductC.csv") },
 ]
 
+/**
+ * One row of the roadmap index, in the example header's column order, from the cells to
+ * set by header name (the rest blank): `roadmapRow({ Sheet: "x", Colour: "#ffffff" })`.
+ */
+export function roadmapRow(cells: Readonly<Record<string, string>>): string[] {
+  const [header = []] = EXAMPLE_INDEX_ROWS
+  const unknown = Object.keys(cells).filter((name) => !header.includes(name))
+  if (unknown.length > 0) {
+    throw new Error(`Not columns of the example index: ${unknown.join(", ")}`)
+  }
+  return header.map((name) => cells[name] ?? "")
+}
+
 /** The example spreadsheet with its roadmap index's rows replaced. */
 export function withRoadmapIndex(
   rows: readonly (readonly string[])[],

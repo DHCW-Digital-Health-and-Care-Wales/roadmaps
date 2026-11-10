@@ -1,9 +1,16 @@
 import AxeBuilder from "@axe-core/playwright"
 import type { Page } from "@playwright/test"
 
+import {
+  EXAMPLE_INDEX_ROWS,
+  roadmapRow,
+  withRoadmapIndex,
+} from "./fixtures/fake-sheets"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 /** WCAG 2.2 A and AA rules. */
+const [header = []] = EXAMPLE_INDEX_ROWS
+
 const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]
 
 type Theme = "light" | "dark"
@@ -41,6 +48,35 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
     })
 
     test("roadmaps", async ({ page }) => {
+      await page.goto("./")
+      await connect(page)
+      await expect(roadmapCards(page)).toHaveCount(3)
+      await expectNoAxeViolations(page, theme)
+    })
+
+    test("roadmaps with very light, very dark and no colours (S6)", async ({
+      page,
+      sheets,
+    }) => {
+      const row = (sheet: string, colour: string) =>
+        roadmapRow({
+          Sheet: sheet,
+          Enabled: "Yes",
+          Title: `Roadmap ${sheet}`,
+          Category: "Urgent & Emergency Care",
+          Family: "Colours",
+          "Status label": "Beta",
+          "Last updated": "2026-10-01",
+          Colour: colour,
+          "Service description": "What it does and who it helps.",
+          "Product Lead": "Alex Jones",
+        })
+      sheets.spreadsheet = withRoadmapIndex([
+        header,
+        row("light", "#ffffff"),
+        row("dark", "#000000"),
+        row("none", ""),
+      ])
       await page.goto("./")
       await connect(page)
       await expect(roadmapCards(page)).toHaveCount(3)

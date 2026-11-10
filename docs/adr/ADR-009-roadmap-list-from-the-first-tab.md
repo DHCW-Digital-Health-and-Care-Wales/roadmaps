@@ -128,4 +128,4 @@ API's own schema.
   EPC-002 is delivered; ADR-002's `Roadmap { id; name }` and worksheet mapping are
   superseded by this ADR.
 - Problems are collected but not shown; a sheet-health view is a later record.
-- Delivered by [EPC-002](../backlog/EPC-002-roadmap-list-from-roadmaps-tab/README.md).
+- Delivered by [EPC-002](../backlog/_archive/EPC-002-roadmap-list-from-roadmaps-tab/README.md).

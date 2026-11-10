@@ -1,16 +1,33 @@
-import { EXAMPLE_INDEX_ROWS, withRoadmapIndex } from "./fixtures/fake-sheets"
+import type { Page } from "@playwright/test"
+
+import {
+  EXAMPLE_INDEX_ROWS,
+  roadmapRow,
+  withRoadmapIndex,
+} from "./fixtures/fake-sheets"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
-/** The example roadmap index's titles, in row order, published or not. */
+/**
+ * The example roadmaps' titles as the page lists them: grouped by family (Medicines &
+ * Diagnostics, Single Record), then the roadmap with no family; Product C is not published.
+ */
 const EXAMPLE_TITLES = [
-  "Product A roadmap",
   "Product B roadmap",
+  "Product A roadmap",
   "Product C roadmap",
 ]
 
 const [HEADER = [], , PRODUCT_B = []] = EXAMPLE_INDEX_ROWS
 
-test("connecting shows the roadmaps the roadmap index lists, in its order (S1)", async ({
+/** A card, with what it shows besides its link: the list item of the link named `name`. */
+function card(page: Page, name: string) {
+  return page
+    .getByRole("main")
+    .getByRole("listitem")
+    .filter({ has: page.getByRole("link", { name }) })
+}
+
+test("connecting shows the roadmaps the roadmap index lists, grouped by family (S1)", async ({
   page,
   gis,
   sheets,
@@ -22,8 +39,8 @@ test("connecting shows the roadmaps the roadmap index lists, in its order (S1)",
     page.getByRole("heading", { level: 1, name: "Your roadmaps" }),
   ).toBeVisible()
   // Every listed roadmap, Product C (not published) too; no card for any tab.
-  await expect(roadmapCards(page)).toHaveText(EXAMPLE_TITLES)
-  await expect(page.getByText("3 roadmaps")).toBeVisible()
+  await expect(roadmapCards(page)).toContainText(EXAMPLE_TITLES)
+  await expect(page.getByText("3 roadmaps, 1 not published")).toBeVisible()
   await expect(page.getByRole("status")).toHaveText("Google connected")
   // Connect went with the welcome page; focus moved to the content, not the body.
   await expect(page.getByRole("main")).toBeFocused()
@@ -56,12 +73,12 @@ test("a roadmap index with no roadmaps shows the empty state (S5)", async ({
 test("Refresh loads the latest roadmaps", async ({ page, sheets }) => {
   await page.goto("./")
   await connect(page)
-  await expect(roadmapCards(page)).toHaveText(EXAMPLE_TITLES)
+  await expect(roadmapCards(page)).toContainText(EXAMPLE_TITLES)
 
   sheets.spreadsheet = withRoadmapIndex([HEADER, PRODUCT_B])
   await page.getByRole("button", { name: "Refresh" }).click()
 
-  await expect(roadmapCards(page)).toHaveText(["Product B roadmap"])
+  await expect(roadmapCards(page)).toContainText(["Product B roadmap"])
   await expect(page.getByText("1 roadmap", { exact: true })).toBeVisible()
   expect(sheets.reads).toEqual(["metadata", "values", "metadata", "values"])
 })
@@ -82,7 +99,7 @@ test("a card opens the address of its public page, and Back returns to the list 
   await expect(page.getByRole("main")).toBeFocused()
 
   await page.getByRole("link", { name: "Back to roadmaps" }).click()
-  await expect(roadmapCards(page)).toHaveText(EXAMPLE_TITLES)
+  await expect(roadmapCards(page)).toContainText(EXAMPLE_TITLES)
   await expect(page.getByRole("main")).toBeFocused()
   // The detail page and the list share one cached load.
   expect(sheets.reads).toEqual(["metadata", "values"])
@@ -120,4 +137,117 @@ test("a worksheet id is not a roadmap address (S2)", async ({ page }) => {
   await expect(
     page.getByRole("heading", { level: 1, name: "Roadmap not found" }),
   ).toBeVisible()
+})
+
+test("cards sit under their product family, each showing the roadmap's information (S1, S2, S4)", async ({
+  page,
+}) => {
+  await page.goto("./")
+  await connect(page)
+  await expect(roadmapCards(page)).toHaveCount(3)
+
+  const main = page.getByRole("main")
+  await expect(main.getByRole("heading", { level: 2 })).toHaveText([
+    "Medicines & Diagnostics",
+    "Single Record",
+    "No product family",
+  ])
+  const single = main.getByRole("list", { name: "Single Record" })
+  await expect(single.getByRole("link")).toHaveCount(1)
+
+  const productA = card(page, "Product A roadmap")
+  await expect(productA).toContainText("GP & Community Services")
+  await expect(productA).toContainText("Beta")
+  await expect(productA).toContainText("Product lead: Alex Jones")
+  await expect(productA).toContainText("Updated 1 October 2026")
+  await expect(productA).not.toContainText("Not published")
+
+  const productC = card(page, "Product C roadmap")
+  await expect(productC).toContainText("Not published")
+  await expect(productC).toContainText("Product lead: Sam Evans")
+  // Product B has no category and no product lead: nothing is shown in their place.
+  await expect(card(page, "Product B roadmap")).not.toContainText(/lead|other/i)
+})
+
+test("the cards show Welsh content and copy in Cymraeg (S5)", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("roadmaps.language", "cy")
+  })
+  await page.goto("./")
+  await page
+    .getByRole("main")
+    .getByRole("button", { name: "Cysylltu â Google" })
+    .click()
+
+  const main = page.getByRole("main")
+  await expect(main.getByRole("heading", { level: 2 })).toHaveText([
+    "Meddyginiaethau a Diagnosteg",
+    "Single Record",
+    "Dim teulu cynnyrch",
+  ])
+  await expect(main.getByText("3 map trywydd, 1 heb ei gyhoeddi")).toBeVisible()
+  const productB = card(page, "Trywydd Cynnyrch B")
+  await expect(productB).toContainText("Alffa")
+  await expect(productB).toContainText("Diweddarwyd 15 Medi 2026")
+  await expect(card(page, "Product A roadmap")).toContainText(
+    "Arweinydd cynnyrch: Alex Jones",
+  )
+  await expect(card(page, "Product C roadmap")).toContainText("Heb ei gyhoeddi")
+})
+
+test("a language switch re-sorts the groups and titles (S8)", async ({
+  page,
+  sheets,
+}) => {
+  sheets.spreadsheet = withRoadmapIndex([
+    HEADER,
+    roadmapRow({
+      Sheet: "one",
+      Enabled: "Yes",
+      Title: "Zebra",
+      Family: "Single Record",
+    }),
+    roadmapRow({
+      Sheet: "two",
+      Enabled: "Yes",
+      Title: "éclair",
+      Family: " single record",
+    }),
+    roadmapRow({
+      Sheet: "three",
+      Enabled: "Yes",
+      Title: "Product 10 roadmap",
+      Family: "Single Récord",
+    }),
+    roadmapRow({
+      Sheet: "four",
+      Enabled: "Yes",
+      Title: "Alpha",
+      "Title (cy)": "Ysgol",
+      Family: "Alpha family",
+      "Family (cy)": "Teulu Ysgol",
+    }),
+  ])
+  await page.goto("./")
+  await connect(page)
+
+  const main = page.getByRole("main")
+  // Three spellings are one family; titles sort as people read them.
+  await expect(main.getByRole("heading", { level: 2 })).toHaveText([
+    "Alpha family",
+    "Single Record",
+  ])
+  await expect(
+    main.getByRole("list", { name: "Single Record" }).getByRole("link"),
+  ).toContainText(["éclair", "Product 10 roadmap", "Zebra"])
+
+  await page.getByRole("button", { name: "Language English" }).click()
+  await page.getByRole("menuitemradio", { name: "Cymraeg" }).click()
+
+  await expect(main.getByRole("heading", { level: 2 })).toHaveText([
+    "Single Record",
+    "Teulu Ysgol",
+  ])
 })

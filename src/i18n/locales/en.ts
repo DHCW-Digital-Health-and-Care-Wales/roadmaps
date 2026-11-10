@@ -1,4 +1,5 @@
 import type { AuthErrorCode, AuthState } from "@/domain/auth/auth-client"
+import type { RoadmapCategory } from "@/domain/roadmap/roadmap-category"
 import type { AppErrorKind } from "@/lib/errors"
 
 /**
@@ -12,6 +13,22 @@ export const en = {
     shortAppName: "Roadmaps",
     loading: "Loading…",
     retry: "Retry",
+    /** A calendar date written out, e.g. "1 October 2026". */
+    date: "{{day}} {{month}} {{year}}",
+    months: {
+      january: "January",
+      february: "February",
+      march: "March",
+      april: "April",
+      may: "May",
+      june: "June",
+      july: "July",
+      august: "August",
+      september: "September",
+      october: "October",
+      november: "November",
+      december: "December",
+    },
   },
   layout: {
     skipToContent: "Skip to main content",
@@ -64,6 +81,27 @@ export const en = {
     count_zero: "No roadmaps",
     count_one: "{{count, number}} roadmap",
     count_other: "{{count, number}} roadmaps",
+    unpublishedCount_one: "{{count, number}} not published",
+    unpublishedCount_other: "{{count, number}} not published",
+    // "3 roadmaps, 1 not published": the nested keys keep each part's plural forms.
+    countWithUnpublished:
+      '$t(roadmaps.count, {"count": {{total}} }), $t(roadmaps.unpublishedCount, {"count": {{unpublished}} })',
+    /** The heading over the roadmaps in no product family, when others have one. */
+    noFamily: "No product family",
+    /** The public site's category names, as its landing page writes them. */
+    categories: {
+      "public-health-apps": "Public Health & Apps",
+      "gp-community-services": "GP & Community Services",
+      "tests-scans-results": "Tests, Scans & Results",
+      "urgent-emergency-care": "Urgent & Emergency Care",
+      "hospital-specialist-care": "Hospital & Specialist Care",
+      "national-systems-data": "National Systems & Data",
+    } satisfies Record<RoadmapCategory, string>,
+    card: {
+      productLead: "Product lead: {{name}}",
+      updated: "Updated {{date}}",
+      notPublished: "Not published",
+    },
     empty: {
       title: "No roadmaps yet",
       description: "The connected spreadsheet doesn't list any roadmaps yet.",

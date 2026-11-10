@@ -25,8 +25,8 @@ the connection to the data source is plumbing that should stay out of their way.
 **Built so far** (the bootstrap epic, then EPC-002): a static, frontend-only React SPA on
 GitHub Pages that connects a Google account (Google Identity Services, OAuth token model),
 reads the **roadmap index**, the first tab of one Google Spreadsheet, as the public site
-does (ADR-009), and shows each roadmap it lists as a card. Roadmap items and editing are
-next. Google Sheets is a _temporary_ data source: it must be replaceable by a
+does (ADR-009), and shows each roadmap it lists as a card with its information, grouped
+by product family. Roadmap items and editing are next. Google Sheets is a _temporary_ data source: it must be replaceable by a
 PostgreSQL-backed HTTP API without touching the presentation layer (ADR-002).
 
 ## Layering rules (non-negotiable)
@@ -620,3 +620,27 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
       literal and is doubled inside the quotes.
     - Tests use the example roadmaps (`producta`, `productb`, `productc`); `0` is the
       unknown id.
+- **STY-012 Roadmap cards show each roadmap's information, grouped by product family** —
+  the main page groups roadmaps by family and each card shows the roadmap's colour swatch,
+  title, category, status, summary, product lead, last-updated date and a "Not published"
+  badge; the count says how many are not published. Closes EPC-002 (archived).
+  - Where things live (`features/roadmaps`): `groupRoadmaps(roadmaps, language)`
+    (`group-roadmaps.ts`; families and titles by `Intl.Collator(language, { numeric: true })`,
+    families matched ignoring case, accents, spaces and punctuation, no-family group last),
+    `RoadmapGroups`, `RoadmapCard`, `RoadmapSwatch` (only `#rrggbb` reaches a style).
+    `formatCalendarDate(date, t)` (`@/i18n`) and `foldText` (`@/lib/text`, moved out of the
+    parser). New copy: `roadmaps.{categories,card,noFamily,unpublishedCount,countWithUnpublished}`
+    and `common.{date,months}`; the Welsh is machine-assisted and needs a fluent review.
+  - Decisions: category names are the public site's, in its casing (D12); the detail page
+    still shows only the title.
+  - Gotchas:
+    - A card is a `li` holding the link (the title alone, stretched over the card with
+      `::after`) and `aria-hidden` details the link's `aria-describedby` points at. axe
+      (WCAG 2.5.3) rejects a link whose name leaves out visible text, so do not put the
+      details inside the link. Assert a card's content on its `li`.
+    - Dates take month names from the catalogues: Playwright's Chromium has no Welsh
+      `Intl` data, so `Intl.DateTimeFormat("cy")` silently gives English there.
+    - i18next nesting (`$t(key, {"count": {{n}} })`) keeps each part's plural forms in one
+      key; `skipOnVariables` stops a product lead's name from being read as nesting.
+    - A language change re-sorts groups and titles (the collator is per language); Welsh
+      names fall back to English per roadmap, so a group sorts by the name shown.

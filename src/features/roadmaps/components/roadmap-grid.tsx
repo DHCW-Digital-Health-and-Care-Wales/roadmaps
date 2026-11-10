@@ -8,12 +8,14 @@ export const roadmapGridClassName =
 
 export interface RoadmapGridProps {
   roadmaps: readonly Roadmap[]
+  /** The id of the heading naming this list, when it has one. */
+  labelledBy?: string
 }
 
 /** The roadmaps as a responsive list of cards (one, two, then three columns). */
-export function RoadmapGrid({ roadmaps }: RoadmapGridProps) {
+export function RoadmapGrid({ roadmaps, labelledBy }: RoadmapGridProps) {
   return (
-    <ul className={roadmapGridClassName}>
+    <ul aria-labelledby={labelledBy} className={roadmapGridClassName}>
       {roadmaps.map((roadmap) => (
         <li key={roadmap.id}>
           <RoadmapCard roadmap={roadmap} />

@@ -45,6 +45,44 @@ detail page.
 
 ## Acceptance criteria
 
-- [ ] No Google/Sheets terminology anywhere under `features/` or `routes/`.
-- [ ] No `fetch` and no `useEffect` data fetching in features.
-- [ ] All checks green.
+- [x] No Google/Sheets terminology anywhere under `features/` or `routes/` (code; copy lives in
+      the catalogues).
+- [x] No `fetch` and no `useEffect` data fetching in features.
+- [x] All checks green.
+
+## Decisions
+
+- **401 → expired, in one place**: a `QueryCache` `onError` in `createQueryClient` calls an
+  `onUnauthenticated` option once per failed query (after retries, which never apply to
+  that kind); the composition root wires it to `authClient.reportUnauthenticated()`. It
+  covers every current and future query, runs per query rather than per observer, and
+  needs no effect. Rejected: a `queryFn` wrapper (couples every query to auth) and a
+  `useEffect` on `error` (one call per mounted observer).
+- **Expired session**: `/` keeps the roadmaps (not the hero) with an inline alert and
+  Reconnect; cards loaded earlier stay visible; Refresh is disabled until connected. Data
+  is only removed on disconnect. While `connecting`, `HomePage` keeps whichever view
+  started the attempt (derived state during render), so reconnecting never flashes the
+  hero. `invalidateAuthScopedQueriesOnSessionEnd` marks auth-scoped data stale when a
+  session ends without a disconnect, so reconnecting always refetches, even within
+  `staleTime` (a failed query is already invalidated by TanStack Query).
+- **No toasts for query errors**: errors render inline. Without data, a panel; with data
+  (failed refresh or background refetch), a compact alert above the cards. This covers
+  every refetch path, and nothing has to tell a manual refresh apart from others.
+- **`useRefreshRoadmaps` not added**: `useRoadmaps().refetch` backs Refresh and Retry.
+- **Detail page**: `useRoadmap(id)` uses `select` on the list query (`null` = loaded, no
+  such id). A cached roadmap stays visible with the same alert when expired or a refetch
+  failed; "not found" is only claimed from a list that is current.
+- **Cards**: `MapIcon` (the header brand mark already uses `ChartGanttIcon`), two-line
+  clamp with the full name as the link text and `title`; equal row heights from `sm`.
+
+## Review notes (Sol, `gpt-6.1-sol`)
+
+1. Major — the detail page hid expiry and refetch failures behind cached data, and could
+   report "not found" from a stale list. **Fixed**: shared `useRoadmapsProblem`, alert over
+   cached content, not-found only without a problem; three tests added.
+2. Minor — timer expiry within `staleTime` then Reconnect did not refetch. **Fixed**:
+   `invalidateAuthScopedQueriesOnSessionEnd` (wired in the composition root and
+   `renderWithProviders`), with unit and page tests.
+
+No other findings (keys, abort, disconnect clearing, retries, `select` stability, layering,
+a11y, i18n, duplication).

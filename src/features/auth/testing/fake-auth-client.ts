@@ -19,7 +19,7 @@ export interface FakeAuthClient extends AuthClient {
 }
 
 export interface FakeAuthClientOptions {
-  /** Called after `disconnect()`, like the Google client's option of the same name. */
+  /** Called after `disconnect()`, like the real client's option of the same name. */
   onDisconnect?: (() => void) | undefined
 }
 

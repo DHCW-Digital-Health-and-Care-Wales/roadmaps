@@ -10,7 +10,10 @@ import { createAppRouter } from "@/app/router"
 import type { AuthState } from "@/domain/auth/auth-client"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { RoadmapRepository } from "@/domain/roadmap/roadmap-repository"
-import { removeAuthScopedQueries } from "@/features/auth/auth-scoped-queries"
+import {
+  invalidateAuthScopedQueriesOnSessionEnd,
+  removeAuthScopedQueries,
+} from "@/features/auth/auth-scoped-queries"
 import {
   createFakeAuthClient,
   type FakeAuthClient,
@@ -36,8 +39,8 @@ export interface RenderWithProvidersOptions {
 /**
  * Renders the whole app at `path` with the real providers and routes, and test doubles
  * for the outside world: a fake auth client (whose disconnect clears auth-scoped queries,
- * as in production), an in-memory repository and memory history. Resolves once the
- * route has rendered.
+ * as in production, and whose session a 401 expires; expiry marks data stale), an in-memory repository and
+ * memory history. Retries run without delay. Resolves once the route has rendered.
  */
 export async function renderWithProviders({
   path = "/",
@@ -55,11 +58,21 @@ export async function renderWithProviders({
   }
 > {
   const i18n = createI18n({ language })
-  const queryClient = createQueryClient()
+  // Wired like the composition root: a 401 expires the session, disconnect drops data.
+  const queryClient = createQueryClient({
+    onUnauthenticated: () => {
+      authClient.reportUnauthenticated()
+    },
+  })
   const authClient = createFakeAuthClient(authState, {
     onDisconnect: () => {
       removeAuthScopedQueries(queryClient)
     },
+  })
+  invalidateAuthScopedQueriesOnSessionEnd(authClient, queryClient)
+  // Keep retry semantics, without waiting for the back-off.
+  queryClient.setDefaultOptions({
+    queries: { ...queryClient.getDefaultOptions().queries, retryDelay: 0 },
   })
   const router = createAppRouter(history)
 

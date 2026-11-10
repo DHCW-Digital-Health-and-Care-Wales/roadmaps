@@ -3,6 +3,7 @@ import { CompassIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { buttonVariants } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 /** Rendered by the root route for any unknown path. */
 export function NotFoundPage() {
@@ -21,7 +22,9 @@ export function NotFoundPage() {
       </p>
       <Link
         to="/"
-        className={buttonVariants({ variant: "outline", className: "mt-8" })}
+        className={cn(
+          buttonVariants({ variant: "outline", className: "mt-8" }),
+        )}
       >
         {t("notFound.home")}
       </Link>

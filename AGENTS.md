@@ -353,7 +353,8 @@ language? })` (`src/test/render-with-providers.tsx`) renders the real `AppProvid
     should stay with a reconnect prompt. In the detail route, read `Route.useParams()` and pass
     `roadmapId` to `RoadmapDetailPage`; replace `roadmaps.detail.title` with the roadmap name.
   - Gotchas:
-    - Links styled as buttons use `buttonVariants()` on `<Link>`. Base UI's
+    - Links styled as buttons use `cn(buttonVariants())` on `<Link>` (S06: without `cn`,
+      `border-transparent` beats the outline variant's border). Base UI's
       `<Button render={<Link/>} nativeButton={false}>` adds `role="button"`.
     - Sonner's store is global and replays active toasts into a new `Toaster`; `setup.ts`
       dismisses them after each test. To assert a toast did _not_ appear, flush Sonner's
@@ -361,3 +362,40 @@ language? })` (`src/test/render-with-providers.tsx`) renders the real `AppProvid
     - The skip link prevents default and focuses `<main>`, because hash history owns the URL
       fragment.
     - The main JS chunk is ~580 kB, above Vite's warning threshold; consider chunking in S08/S09.
+- **S06 Roadmaps feature** — list, states and detail page; shadcn `alert`, `empty`,
+  `skeleton` added. New i18n keys: `roadmaps.refreshFailed`,
+  `roadmaps.expired.{title,description}`.
+  - Hooks (`features/roadmaps/hooks/`): `roadmapKeys.all/list()` (under
+    `authScopedQueryKey`) and `roadmapListQueryOptions(repository)` (passes the abort
+    `signal`; `staleTime`/retries from the client defaults) in `roadmap-queries.ts`;
+    `useRoadmaps()` and `useRoadmap(id)` (`select`; `data` is `null` for an unknown id) in
+    `use-roadmaps.ts`, both `enabled` only while `connected`; `useRoadmapsProblem(error)`
+    returns an `AppError` for an expired session (until reconnected) or the query error.
+  - 401 wiring: `createQueryClient({ onUnauthenticated })` (`QueryCache.onError`), wired by
+    `composeApp` to `authClient.reportUnauthenticated()`. `composeApp` also calls
+    `invalidateAuthScopedQueriesOnSessionEnd(authClient, queryClient)`
+    (`features/auth/auth-scoped-queries.ts`) so Reconnect always refetches.
+    `renderWithProviders` wires both the same way and sets `retryDelay: 0`.
+  - UI states: `/` shows `RoadmapsPage` while `connected` or `expired` (and while
+    `connecting` from those). Loading → `RoadmapGridSkeleton` (`role=status`, "Loading
+    roadmaps…"); empty → `RoadmapsEmptyState`; error without data →
+    `RoadmapsErrorState variant="panel"` (`role=alert`, kind-specific icon, Retry only if
+    retryable, Reconnect for an expired session); error or expiry with data → the same
+    component as `variant="alert"` above the grid. No toasts for query errors. Refresh is
+    `aria-busy` while fetching and disabled (focusable) unless connected. Shared pieces:
+    `StatusPanel` (Empty-based, `titleAs` h1/h2), `RoadmapIcon`, `ReconnectButton`
+    (`features/auth/components`). The detail route passes `Route.useParams().roadmapId`.
+  - S07 E2E hooks (stable accessible names, en): heading "Your Roadmaps"; cards are links
+    named by the roadmap name inside `main`'s only `list`, `href` `#/roadmaps/<sheetId>`;
+    count text "N roadmaps"; buttons "Refresh", "Retry", "Reconnect" (inside the alert;
+    the header has another "Reconnect"); alert titles "Couldn't load your roadmaps",
+    "Couldn't refresh your roadmaps", "Your session has expired"; empty "No roadmaps yet";
+    detail h1 = roadmap name, "Roadmap not found", "Back to roadmaps". Welsh: "Eich
+    Mapiau Trywydd", "Adnewyddu", "2 fap trywydd".
+  - Gotchas:
+    - A 5xx/network error is retried twice with back-off (~3 s) before the error shows;
+      E2E should wait accordingly (or answer 403 for a fast failure).
+    - Base UI's `focusableWhenDisabled` sets `data-disabled`, not `:disabled`, so
+      `disabled:` styles don't apply; Refresh adds `data-disabled:opacity-50`.
+    - shadcn's `Alert` forces icon colour with `*:[svg]:text-current`; override with `!`.
+    - TanStack Query v5.107 deprecates `fetchQuery`; tests use `queryClient.query()`.

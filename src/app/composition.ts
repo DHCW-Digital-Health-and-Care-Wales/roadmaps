@@ -1,5 +1,8 @@
 import { config as defaultConfig, type AppConfig } from "@/app/config"
-import { removeAuthScopedQueries } from "@/features/auth/auth-scoped-queries"
+import {
+  invalidateAuthScopedQueriesOnSessionEnd,
+  removeAuthScopedQueries,
+} from "@/features/auth/auth-scoped-queries"
 import { createI18n, resolveLanguage, syncDocumentLanguage } from "@/i18n"
 import { createGoogleAuthClient } from "@/infrastructure/google-identity"
 import {
@@ -20,7 +23,13 @@ export function composeApp(config: AppConfig = defaultConfig): AppServices {
   const i18n = createI18n({ language: resolveLanguage() })
   syncDocumentLanguage(i18n)
 
-  const queryClient = createQueryClient()
+  const queryClient = createQueryClient({
+    // A rejected token expires the session (ADR-0003). `authClient` is assigned below,
+    // before any query can run.
+    onUnauthenticated: () => {
+      authClient.reportUnauthenticated()
+    },
+  })
   const authClient = createGoogleAuthClient({
     clientId: config.googleClientId,
     scopes: [SHEETS_SCOPE],
@@ -29,6 +38,7 @@ export function composeApp(config: AppConfig = defaultConfig): AppServices {
       removeAuthScopedQueries(queryClient)
     },
   })
+  invalidateAuthScopedQueriesOnSessionEnd(authClient, queryClient)
   import.meta.hot?.dispose(() => {
     authClient.dispose()
   })

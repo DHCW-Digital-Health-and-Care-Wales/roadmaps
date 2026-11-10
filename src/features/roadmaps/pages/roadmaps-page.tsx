@@ -1,21 +1,100 @@
+import { RefreshCwIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
+
+import { Button } from "@/components/ui/button"
+import { useAuth } from "@/features/auth/use-auth"
+import { cn } from "@/lib/utils"
+
+import { RoadmapGrid } from "../components/roadmap-grid"
+import { RoadmapGridSkeleton } from "../components/roadmap-grid-skeleton"
+import { RoadmapsEmptyState } from "../components/roadmaps-empty-state"
+import { RoadmapsErrorState } from "../components/roadmaps-error-state"
+import { useRoadmaps } from "../hooks/use-roadmaps"
+import { useRoadmapsProblem } from "../hooks/use-roadmaps-problem"
 
 const TITLE_ID = "roadmaps-title"
 
-/** The connected home page. S06 adds the roadmap list below the heading. */
+/**
+ * The home page once there is (or was) a session: the roadmaps with loading, empty,
+ * error and expired states. While expired, roadmaps loaded earlier stay visible under a
+ * Reconnect prompt, and nothing refetches until the user reconnects.
+ */
 export function RoadmapsPage() {
   const { t } = useTranslation()
+  const connected = useAuth().state.status === "connected"
+  const { data: roadmaps, error, isFetching, refetch } = useRoadmaps()
+
+  const problem = useRoadmapsProblem(error)
+  const reload = () => {
+    void refetch()
+  }
 
   return (
     <section
       aria-labelledby={TITLE_ID}
       className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-14"
     >
-      <div className="flex flex-col gap-1.5">
-        <h1 id={TITLE_ID} className="text-2xl font-semibold tracking-tight">
-          {t("roadmaps.title")}
-        </h1>
-        <p className="text-muted-foreground">{t("roadmaps.description")}</p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex flex-col gap-1.5">
+          <h1 id={TITLE_ID} className="text-2xl font-semibold tracking-tight">
+            {t("roadmaps.title")}
+          </h1>
+          <p className="text-pretty text-muted-foreground">
+            {t("roadmaps.description")}
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-3">
+          {roadmaps && roadmaps.length > 0 && (
+            <p className="text-sm text-muted-foreground tabular-nums">
+              {t("roadmaps.count", { count: roadmaps.length })}
+            </p>
+          )}
+          <Button
+            variant="outline"
+            // Focusable while disabled, so `disabled:` styles don't apply.
+            className="data-disabled:opacity-50"
+            disabled={!connected || isFetching}
+            focusableWhenDisabled
+            aria-busy={isFetching}
+            onClick={reload}
+          >
+            <RefreshCwIcon
+              data-icon="inline-start"
+              aria-hidden="true"
+              className={cn(isFetching && "animate-spin")}
+            />
+            {t("roadmaps.refresh")}
+          </Button>
+        </div>
+      </div>
+
+      <div className="mt-8 flex flex-col gap-4">
+        {roadmaps ? (
+          <>
+            {problem && (
+              <RoadmapsErrorState
+                variant="alert"
+                error={problem}
+                onRetry={reload}
+                retrying={isFetching}
+              />
+            )}
+            {roadmaps.length > 0 ? (
+              <RoadmapGrid roadmaps={roadmaps} />
+            ) : (
+              <RoadmapsEmptyState />
+            )}
+          </>
+        ) : problem ? (
+          <RoadmapsErrorState
+            variant="panel"
+            error={problem}
+            onRetry={reload}
+            retrying={isFetching}
+          />
+        ) : (
+          <RoadmapGridSkeleton />
+        )}
       </div>
     </section>
   )

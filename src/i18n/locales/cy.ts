@@ -74,6 +74,12 @@ export const cy = {
         "Does dim mapiau trywydd gweladwy yn y daenlen gysylltiedig eto.",
     },
     loadFailed: "Doedd dim modd llwytho eich mapiau trywydd",
+    refreshFailed: "Doedd dim modd adnewyddu eich mapiau trywydd",
+    expired: {
+      title: "Mae eich sesiwn wedi dod i ben",
+      description:
+        "Ailgysylltwch â Google i lwytho eich mapiau trywydd diweddaraf.",
+    },
     detail: {
       title: "Map trywydd",
       comingSoon: "Bydd manylion y map trywydd ar gael cyn bo hir.",

@@ -86,7 +86,6 @@ describe("landing page", () => {
       { status: "ready", lastError: "popup-closed" },
       "The Google window was closed before connecting finished.",
     ],
-    [{ status: "expired" }, "Your session has expired. Reconnect to continue."],
   ])("explains why it is not connected (%j)", async (authState, notice) => {
     await renderWithProviders({ authState })
 
@@ -250,29 +249,16 @@ describe("routes", () => {
     expect(screen.getByRole("banner")).toBeInTheDocument()
   })
 
-  it("renders the roadmap detail placeholder with a typed id route", async () => {
+  it("routes /roadmaps/$roadmapId to the roadmap detail page", async () => {
     const { router } = await renderWithProviders({
       path: "/roadmaps/7",
       authState: connected,
+      roadmaps: [{ id: "7", name: "Platform" }],
     })
 
     expect(router.state.location.pathname).toBe("/roadmaps/7")
     expect(
-      main().getByText("Roadmap details are coming soon."),
-    ).toBeInTheDocument()
-    expect(
-      main().getByRole("link", { name: "Back to roadmaps" }),
-    ).toHaveAttribute("href", "/")
-  })
-
-  it("asks to connect on the detail page when not connected", async () => {
-    await renderWithProviders({ path: "/roadmaps/7" })
-
-    expect(
-      main().getByText("Connect Google to view this roadmap."),
-    ).toBeInTheDocument()
-    expect(
-      main().getByRole("button", { name: "Connect Google" }),
+      await main().findByRole("heading", { level: 1, name: "Platform" }),
     ).toBeInTheDocument()
   })
 

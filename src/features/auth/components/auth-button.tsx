@@ -11,7 +11,7 @@ export interface AuthButtonProps {
 
 /**
  * The one auth action for the current state: Connect, Reconnect after expiry, or
- * Disconnect. It waits (busy, still focusable) while Google loads or a popup is open.
+ * Disconnect. It waits (busy, still focusable) while sign-in loads or its popup is open.
  */
 export function AuthButton({ className }: AuthButtonProps) {
   const { t } = useTranslation()
@@ -32,7 +32,7 @@ export function AuthButton({ className }: AuthButtonProps) {
       disabled={busy}
       focusableWhenDisabled
       aria-busy={busy}
-      // Synchronous inside the click, or the browser blocks Google's popup (ADR-0003).
+      // Synchronous inside the click, or the browser blocks the sign-in popup (ADR-0003).
       onClick={connect}
     >
       {busy && (

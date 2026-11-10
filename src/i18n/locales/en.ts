@@ -67,6 +67,11 @@ export const en = {
         "There are no visible roadmaps in the connected spreadsheet yet.",
     },
     loadFailed: "Couldn't load your roadmaps",
+    refreshFailed: "Couldn't refresh your roadmaps",
+    expired: {
+      title: "Your session has expired",
+      description: "Reconnect to Google to load your latest roadmaps.",
+    },
     detail: {
       title: "Roadmap",
       comingSoon: "Roadmap details are coming soon.",

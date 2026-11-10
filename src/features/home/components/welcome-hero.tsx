@@ -2,7 +2,7 @@ import {
   CircleAlertIcon,
   InfoIcon,
   LockKeyholeIcon,
-  SheetIcon,
+  TableIcon,
 } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
@@ -19,15 +19,8 @@ function useNotice(state: AuthState) {
     case "error":
       return { tone: "error", text: t(`auth.errors.${state.error}`) } as const
     case "ready":
-    case "expired":
-      if (state.lastError) {
-        return {
-          tone: "info",
-          text: t(`auth.errors.${state.lastError}`),
-        } as const
-      }
-      return state.status === "expired"
-        ? ({ tone: "info", text: t("errors.unauthenticated") } as const)
+      return state.lastError
+        ? ({ tone: "info", text: t(`auth.errors.${state.lastError}`) } as const)
         : null
     default:
       return null
@@ -57,7 +50,7 @@ export function WelcomeHero() {
 
       <div className="mx-auto flex w-full max-w-3xl flex-col items-center px-4 pt-14 pb-16 text-center sm:px-6 sm:pt-24 sm:pb-24">
         <p className="inline-flex max-w-full items-center gap-2 rounded-2xl border bg-background/70 px-3 py-1.5 text-left text-xs text-muted-foreground shadow-xs backdrop-blur-sm sm:rounded-full sm:py-1 sm:text-sm">
-          <SheetIcon
+          <TableIcon
             aria-hidden="true"
             className="size-3.5 shrink-0 text-brand"
           />

@@ -27,10 +27,12 @@ End-to-end tests of the production build, with Google faked (ADR-006). Run with
   (`fixtures/persistence-recorder.ts`) fail the test at teardown. Add a new external
   dependency to the fakes, not to the guard.
 - No sleeps. For back-off or expiry, `page.clock.install()` before `goto`, then
-  fast-forward. The recorders (`sheets.reads`, `sheets.tokens`, `gis.tokenRequests`) fill as
-  requests arrive: before a plain `expect` on one, await a state only those requests
-  produce, or `expect.poll` it. Cards still on screen from the cache prove nothing. Navigate with relative URLs (`./`, `./#/roadmaps/producta`) so a base path
-  only changes `baseURL`.
+  fast-forward.
+- `sheets.reads`, `sheets.tokens` and `gis.tokenRequests` fill as requests arrive: before a
+  plain `expect` on one, await a state only those requests produce, or `expect.poll` it. A
+  state already on screen before them, such as cached cards, proves nothing.
+- Navigate with relative URLs (`./`, `./#/roadmaps/producta`) so a base path only changes
+  `baseURL`.
 - Specs assert English copy from `src/i18n/locales/en.ts`. Before pushing a change to a
   control's text or accessible name, grep `tests/e2e` for the old text and run every spec
   that reaches the control, or the whole suite when the control is in the shell.

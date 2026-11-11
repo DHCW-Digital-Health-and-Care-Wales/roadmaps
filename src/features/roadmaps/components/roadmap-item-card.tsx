@@ -14,6 +14,16 @@ export interface RoadmapItemCardProps {
   item: RoadmapItem
 }
 
+/** Each field's label, in the order a card shows the fields. */
+const fieldLabels = {
+  phase: "roadmaps.items.fields.phase",
+  description: "roadmaps.items.fields.description",
+  expectedOutcome: "roadmaps.items.fields.expectedOutcome",
+  tags: "roadmaps.items.fields.tags",
+  organisations: "roadmaps.items.fields.organisations",
+  details: "roadmaps.items.fields.details",
+} as const
+
 /**
  * A roadmap item as plain text (ADR-011): its title as a heading, then each field it has
  * under a label, with no empty labels. Text keeps its line breaks; an unplaced item says
@@ -73,15 +83,6 @@ export function RoadmapItemCard({ item }: RoadmapItemCardProps) {
     </li>
   )
 }
-
-const fieldLabels = {
-  phase: "roadmaps.items.fields.phase",
-  description: "roadmaps.items.fields.description",
-  expectedOutcome: "roadmaps.items.fields.expectedOutcome",
-  tags: "roadmaps.items.fields.tags",
-  organisations: "roadmaps.items.fields.organisations",
-  details: "roadmaps.items.fields.details",
-} as const
 
 function DetailList({
   nodes,

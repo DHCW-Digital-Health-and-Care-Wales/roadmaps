@@ -7,7 +7,6 @@ import { buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { localise } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
-import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { AuthButton } from "@/features/auth/components/auth-button"
 import { useAuth } from "@/features/auth/use-auth"
 import { useLanguage } from "@/i18n"
@@ -19,7 +18,7 @@ import { RefreshButton } from "../components/refresh-button"
 import { RoadmapItems, RoadmapItemsSkeleton } from "../components/roadmap-items"
 import { RoadmapsErrorState } from "../components/roadmaps-error-state"
 import { StatusPanel } from "../components/status-panel"
-import { useRoadmapItems } from "../hooks/use-roadmap-items"
+import { isRoadmapGone, useRoadmapItems } from "../hooks/use-roadmap-items"
 import { useRoadmap } from "../hooks/use-roadmaps"
 import { useRoadmapsProblem } from "../hooks/use-roadmaps-problem"
 
@@ -138,13 +137,10 @@ function RoadmapView({
   refetchList,
 }: RoadmapViewProps) {
   const language = useLanguage()
+  // The same query the items area reads, for the page's Refresh.
   const items = useRoadmapItems(roadmap.id)
-  const itemsProblem = useRoadmapsProblem(items.error)
   const retryList = () => {
     void refetchList()
-  }
-  const retryItems = () => {
-    void items.refetch()
   }
   const refresh = () => {
     void Promise.all([refetchList(), items.refetch()])
@@ -177,49 +173,42 @@ function RoadmapView({
           </div>
         </div>
       </div>
-      <RoadmapItemsArea
-        items={items.data}
-        problem={itemsProblem}
-        retrying={items.isFetching}
-        onRetry={retryItems}
-        listFetching={listFetching}
-      />
+      <RoadmapItemsArea roadmapId={roadmap.id} listFetching={listFetching} />
     </div>
   )
 }
 
 interface RoadmapItemsAreaProps {
-  items: readonly RoadmapItem[] | undefined
-  problem: AppError | null
-  retrying: boolean
-  onRetry: () => void
+  roadmapId: string
+  /** The roadmap list is being read, as it is again once the roadmap is gone (D11). */
   listFetching: boolean
 }
 
-/** The items, or what stands in for them while they are read or can't be. */
-function RoadmapItemsArea({
-  items,
-  problem,
-  retrying,
-  onRetry,
-  listFetching,
-}: RoadmapItemsAreaProps) {
-  // An expired session is the list's alert to show, once, above the title.
-  const shown = problem?.kind === "unauthenticated" ? null : problem
-  // Not found: the roadmap left the list, which is read again (D11), and its page then
-  // says so; until then the items area shows the read, and afterwards nothing.
-  const gone = shown?.kind === "not-found"
+/**
+ * The roadmap's items, or what stands in for them while they are read or can't be. An
+ * expired session is the list's alert to show, once, above the title, with Reconnect;
+ * the items read earlier stay.
+ */
+function RoadmapItemsArea({ roadmapId, listFetching }: RoadmapItemsAreaProps) {
+  const { data: items, error, isFetching, refetch } = useRoadmapItems(roadmapId)
+  const problem = useRoadmapsProblem(error)
+  const expired = problem?.kind === "unauthenticated"
+  // The list is read again and the page then says the roadmap is not found.
+  const gone = isRoadmapGone(problem)
+  const retry = () => {
+    void refetch()
+  }
 
   if (items) {
     return (
       <div className="flex flex-col gap-6">
-        {shown && !gone && (
+        {problem && !expired && !gone && (
           <RoadmapsErrorState
             variant="alert"
             subject="items"
-            error={shown}
-            onRetry={onRetry}
-            retrying={retrying}
+            error={problem}
+            onRetry={retry}
+            retrying={isFetching}
           />
         )}
         <RoadmapItems items={items} />
@@ -227,18 +216,17 @@ function RoadmapItemsArea({
     )
   }
   if (gone) return listFetching ? <RoadmapItemsSkeleton /> : null
-  if (shown) {
+  if (expired) return null
+  if (problem) {
     return (
       <RoadmapsErrorState
         variant="panel"
         subject="items"
-        error={shown}
-        onRetry={onRetry}
-        retrying={retrying}
+        error={problem}
+        onRetry={retry}
+        retrying={isFetching}
       />
     )
   }
-  // Not connected with nothing read: the list's alert asks to reconnect.
-  if (problem) return null
   return <RoadmapItemsSkeleton />
 }

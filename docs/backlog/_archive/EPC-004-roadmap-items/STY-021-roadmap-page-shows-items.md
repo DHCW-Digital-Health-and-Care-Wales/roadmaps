@@ -247,7 +247,9 @@ need before/after screenshots (`implement-story` `references/screenshots.md`).
   `subject: "roadmaps" | "items"`, which picks the titles and, for `invalid-data`, the
   items' own description.
 - **D11 lives in `useRoadmapItems`** (agent): a `not-found` items read invalidates the
-  roadmap list. While that re-read runs the items area shows its loading placeholder; if
+  roadmap list (`isRoadmapGone` is the one test of it, used by the page too), once the
+  read has settled and without cancelling a list read already under way, so a page with
+  two users of the hook, or a revisit with the failure cached, reads the list once. While that re-read runs the items area shows its loading placeholder; if
   the list still lists the roadmap afterwards (a race the adapter cannot produce, as it
   reads the same index), the area shows nothing rather than the spreadsheet-not-found copy.
 - **States the criteria leave open** (agent): with items shown, a failed Refresh of the
@@ -306,6 +308,6 @@ need before/after screenshots (`implement-story` `references/screenshots.md`).
 - **S15**: "the Not published badge (S15)" block, in English and Welsh.
 - **S16**: "says a roadmap removed since the list loaded is not found" (list read twice,
   no spreadsheet copy); `use-roadmap-items.test.tsx` D11 pair.
-- Runs at the head before review: typecheck, lint and format clean; 829 unit tests;
+- Runs at the head before review: typecheck, lint and format clean; 826 unit tests;
   118 E2E tests, and the structure, roadmap page and roadmaps specs under
   `GITHUB_REPOSITORY=collisdigital/roadmaps-editor` (33).

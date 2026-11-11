@@ -3,7 +3,8 @@
  * `docs/analysis/roadmap-tab-format.md`): row 1 is the header, and every other
  * non-blank row with a title is one roadmap item, in row order. Unlike the public site,
  * an item with no recognised horizon is kept, unplaced, so the Product Lead can fix it;
- * every other mistake the public site warns about is recorded as a problem.
+ * every other mistake the public site warns about, bar its translation-quality
+ * warnings, is recorded as a problem.
  */
 
 import type { LocalisedText } from "@/domain/roadmap/localised-text"
@@ -66,11 +67,22 @@ const OPTIONAL_COLUMNS = [
 ] as const
 
 type Column = "Title" | (typeof OPTIONAL_COLUMNS)[number]
-type TextColumn = Exclude<Column, "Horizon" | "Organisations">
+
+/** The columns that may have a Welsh version, such as `Title (cy)`. */
+const WELSH_COLUMNS = [
+  "Title",
+  "Description",
+  "Outcome",
+  "Phase",
+  "Labels",
+  "Details",
+] as const satisfies readonly Column[]
+
+type TextColumn = (typeof WELSH_COLUMNS)[number]
 
 const readHeader = headerReader<Column, TextColumn>(
   ["Title", ...OPTIONAL_COLUMNS],
-  ["Title", "Description", "Outcome", "Phase", "Labels", "Details"],
+  WELSH_COLUMNS,
 )
 
 type Header = SheetHeader<Column, TextColumn>

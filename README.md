@@ -76,9 +76,9 @@ is never read.
 - An example spreadsheet, with steps to import it into a test spreadsheet of your own, is in
   [`tests/fixtures/sheets/`](tests/fixtures/sheets/README.md).
 - A list that can't be read (no tabs, an empty first tab, or no `Sheet` column) shows a
-  problem asking the spreadsheet owner to check it. A roadmap whose tab is missing, or a
-  mistake in one row, never hides the rest. A roadmap whose tab is missing, or has no
-  `Title` column, fails to read its items alone; the list is unaffected.
+  problem asking the spreadsheet owner to check it. A mistake in one row never hides the
+  rest. A roadmap whose tab is missing, empty or has no `Title` column is still listed, but
+  its own items can't be read.
 
 ## Architecture
 

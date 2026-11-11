@@ -179,7 +179,8 @@ RepositoryReadOptions): Promise<RoadmapItem[]>` (`@/domain/roadmap/roadmap-repos
 - **Query layer** (`features/roadmaps/hooks`): `roadmapKeys.items(roadmapId)` (under
   `roadmapKeys.all`, so disconnect removes it and a session end invalidates it),
   `roadmapItemsQueryOptions(repository, roadmapId)`, and `useRoadmapItems(roadmapId)`
-  (`use-roadmap-items.ts`), `enabled` only while connected. Nothing calls the hook yet.
+  (`use-roadmap-items.ts`), `enabled` only while connected through `useEnabledWhileConnected(options)`
+  (`enabled-while-connected.ts`), which the list uses too. Nothing calls the hook yet.
 - **Tests**: `createInMemoryRoadmapRepository(roadmaps | AppError, items?:
 InMemoryRoadmapItems)`; `renderWithProviders({ roadmapItems })` and
   `renderHookWithProviders(hook, { roadmapItems, … })` (`src/test/render-with-providers.tsx`).

@@ -31,7 +31,7 @@ export interface GoogleSheetsRoadmapRepositoryOptions {
   spreadsheetId: string
 }
 
-/** The roadmap index as read, with the titles of the spreadsheet's tabs. */
+/** The roadmap index as read, with every tab's title, hidden or not, to match exactly. */
 interface IndexRead {
   index: RoadmapIndex
   tabTitles: ReadonlySet<string>

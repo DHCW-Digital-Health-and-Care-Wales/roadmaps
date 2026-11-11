@@ -42,9 +42,11 @@ export function createInMemoryRoadmapRepository(
             message: `No roadmap has the id ${roadmapId}`,
           })
         }
-        const held = Object.hasOwn(items, roadmapId) ? items[roadmapId] : []
+        const held = Object.hasOwn(items, roadmapId)
+          ? (items[roadmapId] ?? [])
+          : []
         if (held instanceof AppError) throw held
-        return (held ?? []).map((item) => structuredClone(item))
+        return held.map((item) => structuredClone(item))
       }),
   }
 }

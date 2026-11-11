@@ -1,5 +1,6 @@
 import type { AuthErrorCode, AuthState } from "@/domain/auth/auth-client"
 import type { RoadmapCategory } from "@/domain/roadmap/roadmap-category"
+import type { RoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 import type { AppErrorKind } from "@/lib/errors"
 
 /**
@@ -144,8 +145,9 @@ export const en = {
     card: {
       productLead: "Product lead: {{name}}",
       updated: "Updated {{date}}",
-      notPublished: "Not published",
     },
+    /** A roadmap's badge, on its card and its page. */
+    notPublished: "Not published",
     empty: {
       title: "No roadmaps yet",
       description: "The connected spreadsheet doesn't list any roadmaps yet.",
@@ -158,11 +160,51 @@ export const en = {
     },
     detail: {
       title: "Roadmap",
-      comingSoon: "Roadmap details are coming soon.",
       back: "Back to roadmaps",
       connectPrompt: "Connect Google to view this roadmap.",
       notFoundTitle: "Roadmap not found",
       notFoundDescription: "This roadmap doesn't exist or is no longer listed.",
+    },
+    /** A roadmap's items, on its page. */
+    items: {
+      loading: "Loading roadmap items…",
+      loadFailed: "Couldn't load this roadmap's items",
+      refreshFailed: "Couldn't refresh this roadmap's items",
+      /** In place of `errors.invalid-data`, which is about the roadmap list. */
+      invalidData:
+        "This roadmap's items aren't in the expected format in the spreadsheet. Ask the spreadsheet owner to check them.",
+      empty: {
+        title: "No items yet",
+        description: "This roadmap doesn't have any items yet.",
+      },
+      /** Under a horizon or section heading that has no items. */
+      noneInPlacement: "No items",
+      /** The headings, worded as the values a Product Lead types (D10). */
+      placements: {
+        "recently-delivered": "Recently delivered",
+        now: "Now",
+        next: "Next",
+        later: "Later",
+        "delivered-this-year": "Delivered this year",
+        "not-doing": "Not doing",
+      } satisfies Record<RoadmapPlacement, string>,
+      /** The group of items with no recognised horizon, which the public site leaves out. */
+      unplaced: {
+        title: "Not on the public roadmap",
+        description:
+          "These items need a horizon before the public site shows them.",
+        /** `horizon` is the text as written in the item's horizon. */
+        unknownHorizon: "Horizon “{{horizon}}” isn't recognised",
+        noHorizon: "No horizon",
+      },
+      fields: {
+        phase: "Phase",
+        description: "Description",
+        expectedOutcome: "Expected outcome",
+        tags: "Tags",
+        organisations: "Organisations",
+        details: "Details",
+      },
     },
   },
   errors: {

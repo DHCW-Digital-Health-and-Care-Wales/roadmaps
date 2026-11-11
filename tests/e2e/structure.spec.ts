@@ -125,7 +125,10 @@ test("a roadmap's detail page", async ({ page }) => {
   await connect(page)
   await holdConnectedNotice(page)
   await expect(
-    page.getByRole("heading", { level: 1, name: "Product A roadmap" }),
+    page.getByRole("heading", {
+      level: 3,
+      name: "Example card with every column",
+    }),
   ).toBeVisible()
 
   await expectStructure(page.getByRole("main"), "detail.aria.yml")

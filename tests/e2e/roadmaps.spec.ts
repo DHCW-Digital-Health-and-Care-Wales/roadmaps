@@ -101,14 +101,22 @@ test("a card opens the address of its public page, and Back returns to the list 
   await expect(
     page.getByRole("heading", { level: 1, name: "Product A roadmap" }),
   ).toBeVisible()
-  await expect(page.getByText("Roadmap details are coming soon.")).toBeVisible()
+  await expect(
+    page.getByRole("heading", { level: 2, name: "Now" }),
+  ).toBeVisible()
   await expect(page.getByRole("main")).toBeFocused()
 
   await page.getByRole("link", { name: "Back to roadmaps" }).click()
   await expect(roadmapCards(page)).toHaveText(EXAMPLE_TITLES)
   await expect(page.getByRole("main")).toBeFocused()
-  // The detail page and the list share one cached load.
-  expect(sheets.reads).toEqual(["metadata", "values:Roadmaps"])
+  // The detail page and the list share one cached load; only the items were read anew.
+  expect(sheets.reads).toEqual([
+    "metadata",
+    "values:Roadmaps",
+    "metadata",
+    "values:Roadmaps",
+    "values:ProductA",
+  ])
 })
 
 test("a deep link survives a reload (S2)", async ({ page, gis }) => {

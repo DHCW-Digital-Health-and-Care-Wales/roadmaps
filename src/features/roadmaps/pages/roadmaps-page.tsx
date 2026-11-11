@@ -1,10 +1,6 @@
-import { RefreshCwIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
-import { Button } from "@/components/ui/button"
-import { useAuth } from "@/features/auth/use-auth"
-import { cn } from "@/lib/utils"
-
+import { RefreshButton } from "../components/refresh-button"
 import { RoadmapGroups } from "../components/roadmap-groups"
 import { RoadmapGridSkeleton } from "../components/roadmap-grid-skeleton"
 import { RoadmapsEmptyState } from "../components/roadmaps-empty-state"
@@ -21,7 +17,6 @@ const TITLE_ID = "roadmaps-title"
  */
 export function RoadmapsPage() {
   const { t } = useTranslation()
-  const connected = useAuth().state.status === "connected"
   const { data: roadmaps, error, isFetching, refetch } = useRoadmaps()
 
   const unpublished =
@@ -54,20 +49,7 @@ export function RoadmapsPage() {
                 : t("roadmaps.count", { count: roadmaps.length })}
             </p>
           )}
-          <Button
-            variant="secondary"
-            disabled={!connected || isFetching}
-            focusableWhenDisabled
-            aria-busy={isFetching}
-            onClick={reload}
-          >
-            <RefreshCwIcon
-              data-icon="inline-start"
-              aria-hidden="true"
-              className={cn(isFetching && "animate-spin")}
-            />
-            {t("roadmaps.refresh")}
-          </Button>
+          <RefreshButton fetching={isFetching} onRefresh={reload} />
         </div>
       </div>
 

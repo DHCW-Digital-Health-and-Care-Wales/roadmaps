@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router"
-import { ChevronRightIcon, EyeOffIcon } from "lucide-react"
+import { ChevronRightIcon } from "lucide-react"
 import { useId } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -8,6 +8,7 @@ import { localise } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import { formatCalendarDate, useLanguage } from "@/i18n"
 
+import { NotPublishedBadge } from "./not-published-badge"
 import { RoadmapSwatch } from "./roadmap-swatch"
 
 export interface RoadmapCardProps {
@@ -83,10 +84,7 @@ export function RoadmapCard({ roadmap }: RoadmapCardProps) {
                 </Badge>
               )}
               {!roadmap.published && (
-                <Badge id={`${id}-notPublished`} variant="outline">
-                  <EyeOffIcon data-icon="inline-start" aria-hidden="true" />
-                  {t("roadmaps.card.notPublished")}
-                </Badge>
+                <NotPublishedBadge id={`${id}-notPublished`} />
               )}
             </div>
           )}

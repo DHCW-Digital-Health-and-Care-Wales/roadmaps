@@ -159,4 +159,4 @@ also settled what the analysis did not ask: an unplaced item shows its horizon a
 written; organisations show as their standard codes, unknown ones dropped (ADR-011
 Options 5 and 6); and the roadmap page's Refresh, "Not published" badge, flagged-group
 position, empty state and headings (EPC-004 STY-021 Decisions).
-Delivered by [EPC-004](../backlog/EPC-004-roadmap-items/README.md).
+Delivered by [EPC-004](../backlog/_archive/EPC-004-roadmap-items/README.md).

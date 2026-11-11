@@ -5,4 +5,106 @@
   - link "Back to roadmaps":
     - /url: /#/
   - heading "Product A roadmap" [level=1]
-  - paragraph: Roadmap details are coming soon.
+  - button "Refresh"
+  - heading "Recently delivered" [level=2]
+  - list "Recently delivered":
+    - listitem:
+      - heading "Recently shipped work" [level=3]
+      - term: Description
+      - definition: Something we shipped in the last few weeks.
+      - term: Expected outcome
+      - definition: What users can do now.
+      - term: Organisations
+      - definition: SBUHB
+  - heading "Now" [level=2]
+  - list "Now":
+    - listitem:
+      - heading "Example card with every column" [level=3]
+      - term: Phase
+      - definition: Beta
+      - term: Description
+      - definition: What this work is. Keep it to a sentence or two.
+      - term: Expected outcome
+      - definition: What changes for users when it is done.
+      - term: Tags
+      - definition: Service X, Service Y
+      - term: Organisations
+      - definition: CAVUHB, SBUHB
+      - term: Details
+      - definition:
+        - list:
+          - listitem:
+            - text: First bullet point
+            - list:
+              - listitem:
+                - text: Start a line with "-" to nest it under the line above
+                - list:
+                  - listitem: Use two dashes to nest it again
+          - listitem: Another top-level bullet point
+    - listitem:
+      - heading "Minimal card" [level=3]
+      - term: Description
+      - definition: Only Title and Horizon are required; everything else is optional.
+    - listitem:
+      - heading "Card awaiting release" [level=3]
+      - term: Description
+      - definition: Work that is finished and waiting to go live.
+      - term: Expected outcome
+      - definition: Users get the change as soon as it is deployed.
+      - term: Tags
+      - definition: Service X
+      - term: Organisations
+      - definition: National
+  - heading "Next" [level=2]
+  - list "Next":
+    - listitem:
+      - heading "Card being explored" [level=3]
+      - term: Phase
+      - definition: Alpha
+      - term: Description
+      - definition: Work we expect to pick up soon.
+      - term: Expected outcome
+      - definition: What we hope this will achieve.
+      - term: Organisations
+      - definition: BCUHB, HDUHB
+  - heading "Later" [level=2]
+  - list "Later":
+    - listitem:
+      - heading "Discovery card" [level=3]
+      - term: Phase
+      - definition: Discovery
+      - term: Description
+      - definition: The Phase column is a free-text tag shown above the title.
+      - term: Expected outcome
+      - definition: A clear understanding of the problem.
+      - term: Organisations
+      - definition: CAVUHB
+    - listitem:
+      - heading "Longer-term idea" [level=3]
+      - term: Description
+      - definition: Direction we expect to take as we learn more.
+      - term: Tags
+      - definition: Service Y, Service Z
+      - term: Organisations
+      - definition: National
+  - heading "Delivered this year" [level=2]
+  - list "Delivered this year":
+    - listitem:
+      - heading "Earlier delivery this year" [level=3]
+      - term: Phase
+      - definition: Live
+      - term: Description
+      - definition: Something we delivered earlier in the year.
+      - term: Organisations
+      - definition: National
+      - term: Details
+      - definition:
+        - list:
+          - listitem: What it included
+          - listitem: Another thing it included
+  - heading "Not doing" [level=2]
+  - list "Not doing":
+    - listitem:
+      - heading "Something we are not doing" [level=3]
+      - term: Description
+      - definition: Explain why this is out of scope for now.

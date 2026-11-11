@@ -66,9 +66,9 @@ const titleKeys = {
 /**
  * Why roadmaps, or a roadmap's items, couldn't be loaded, in words chosen by the error's
  * kind alone (ADR-008), with the one action that can help: Reconnect after the session
- * expired, Retry when trying again may work, otherwise none. A failure with nothing loaded is a `destructive`
- * notice; an expired session, or any problem above roadmaps loaded earlier (which may be
- * out of date), is a `warning`.
+ * expired, Retry when trying again may work, otherwise none. A failure with nothing
+ * loaded is a `destructive` notice; an expired session, or any problem above roadmaps
+ * loaded earlier (which may be out of date), is a `warning`.
  */
 export function RoadmapsErrorState({
   error,

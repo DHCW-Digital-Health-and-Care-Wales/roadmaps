@@ -1,7 +1,11 @@
 import type { Locator, Page } from "@playwright/test"
 
 import { EXAMPLE_INDEX_ROWS, withRoadmapIndex } from "./fixtures/fake-sheets"
-import { type Language, useLanguage } from "./fixtures/look"
+import {
+  holdConnectedNotice,
+  type Language,
+  useLanguage,
+} from "./fixtures/look"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 // The structure of the key screens, held as aria snapshots in
@@ -22,12 +26,6 @@ function snapshotName(screen: string, language: Language) {
   return `${screen}${language === "en" ? "" : "-cy"}.aria.yml`
 }
 
-test.beforeEach(async ({ page }) => {
-  // Fixed time: the "Connected" notice stays until the clock moves, and a countdown
-  // reads the same every run.
-  await page.clock.install()
-})
-
 /**
  * Holds a screen's structure against its snapshot. Links carry the deployment's base path
  * (`/roadmaps-editor/` in CI, `/` locally), so they are first pointed at the site root:
@@ -45,6 +43,12 @@ async function expectStructure(locator: Locator, name: string) {
 async function connectTo(page: Page, language: Language) {
   await page.goto("./")
   await connect(page, CONNECT[language])
+}
+
+/** Connects and keeps the "Connected" notice, which each such screen shows, on screen. */
+async function connectAndHold(page: Page, language: Language) {
+  await connectTo(page, language)
+  await holdConnectedNotice(page)
 }
 
 for (const language of ["en", "cy"] as const) {
@@ -73,7 +77,7 @@ for (const language of ["en", "cy"] as const) {
     })
 
     test("main page, roadmaps", async ({ page }) => {
-      await connectTo(page, language)
+      await connectAndHold(page, language)
       await expect(roadmapCards(page)).toHaveCount(3)
 
       await expectStructure(
@@ -84,7 +88,7 @@ for (const language of ["en", "cy"] as const) {
 
     test("main page, no roadmaps", async ({ page, sheets }) => {
       sheets.spreadsheet = withRoadmapIndex([HEADER])
-      await connectTo(page, language)
+      await connectAndHold(page, language)
       const main = page.getByRole("main")
       await expect(main.getByRole("heading", { level: 2 })).toBeVisible()
 
@@ -94,7 +98,7 @@ for (const language of ["en", "cy"] as const) {
     test("main page, a failed load", async ({ page, sheets }) => {
       // 403 is not retried, so no back-off to wait out.
       sheets.failWith(403)
-      await connectTo(page, language)
+      await connectAndHold(page, language)
       const main = page.getByRole("main")
       await expect(main.getByRole("alert")).toBeVisible()
 
@@ -104,6 +108,7 @@ for (const language of ["en", "cy"] as const) {
     test("main page, expired with roadmaps", async ({ page, gis }) => {
       // Usable for four minutes (the app stops 60 s before Google's expiry).
       gis.respondWith({ type: "grant", expiresIn: 300 })
+      await page.clock.install()
       await connectTo(page, language)
       await expect(roadmapCards(page)).toHaveCount(3)
       await page.clock.fastForward("04:00")
@@ -118,6 +123,7 @@ for (const language of ["en", "cy"] as const) {
 test("a roadmap's detail page", async ({ page }) => {
   await page.goto("./#/roadmaps/producta")
   await connect(page)
+  await holdConnectedNotice(page)
   await expect(
     page.getByRole("heading", { level: 1, name: "Product A roadmap" }),
   ).toBeVisible()
@@ -143,13 +149,17 @@ test("the language menu, open", async ({ page }) => {
   await expectStructure(menu, "language-menu.aria.yml")
 })
 
-test("the session warning", async ({ page }) => {
+test("the session warning", async ({ page, gis }) => {
+  // A grant of `expiresIn` seconds ends the session a minute early; the warning opens two
+  // minutes before that, and 30 s into it the countdown reads "1 minute and N seconds"
+  // however long the test takes.
+  const expiresIn = 600
+  gis.respondWith({ type: "grant", expiresIn })
+  await page.clock.install()
   await page.goto("./")
   await connect(page)
   await expect(roadmapCards(page)).toHaveCount(3)
-  // The fake's 3599 s grant less the app's 60 s margin, less the two minutes' warning, and
-  // 30 s into it: the countdown reads "1 minute and N seconds" however long the test takes.
-  await page.clock.fastForward((3599 - 60 - 120 + 30) * 1000)
+  await page.clock.fastForward((expiresIn - 60 - 120 + 30) * 1000)
   const warning = page.getByRole("alertdialog")
   await expect(warning).toBeVisible()
 
@@ -162,6 +172,7 @@ test.describe("the shell", () => {
     const header = page.getByRole("banner")
     await expect(header.getByRole("status")).toHaveText("Not connected")
     await expectStructure(header, "header.aria.yml")
+    // The phase banner is no landmark, so it has no role to find it by.
     await expectStructure(
       page.locator("[data-slot=phase-banner]"),
       "phase-banner.aria.yml",

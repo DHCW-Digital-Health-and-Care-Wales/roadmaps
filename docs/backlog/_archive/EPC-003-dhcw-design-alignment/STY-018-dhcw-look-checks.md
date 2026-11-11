@@ -106,6 +106,11 @@ Audited at `22c3336`, then re-read at `215c0c1`.
 - **S1, base path** (agent): links are pointed at the site root just before a snapshot
   (`expectStructure`), because CI serves the app under `/roadmaps-editor/` and the `/url:`
   lines would differ. One snapshot serves a local and a CI build.
+- **S1, fixed time** (agent, from review): `page.clock.install()` runs in real time, so it
+  does not fix time. Only the expiry and the session-warning screens install it, to move
+  the clock; the "Connected" notice, which clears after eight seconds, is held by
+  hovering it (`holdConnectedNotice`). No other screen shows anything that depends on the
+  time.
 - **S1, the countdown** (agent): the warning is snapshotted 30 s into its two minutes, so
   its text is "1 minute and N seconds" however long the test takes; Playwright writes the
   `\d+` pattern itself and rewrites it the same way on an update.
@@ -113,6 +118,9 @@ Audited at `22c3336`, then re-read at `215c0c1`.
   followed by `--nhsw-font-family-base`, since Tailwind inlines `--font-sans` and never
   emits it as a custom property. The check also covers the header's, page's and primary
   button's text colours, beside the five backgrounds and colours the scenario names.
+- **S2, shell.spec.ts** (agent, from review): its navy header and yellow skip-link checks
+  read `--header` and `--focus` instead of colour literals; the language and theme
+  set-up in other specs uses `useLanguage` and `useTheme`.
 - **S3, the existing focus spec** (agent): `focus-indicator.spec.ts` kept its targeted
   tour (skip link, logo, dismiss, menu, card, back link) but reads the yellow and the dark
   from `--focus` and `--focus-foreground` instead of colour literals, and gained the
@@ -140,7 +148,7 @@ language)`, `tokenColour(page, "--token")` (the resolved `rgb(…)` of a semanti
 
 | Scenario | Held by                                                                                                                                                                                               |
 | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1       | `tests/e2e/structure.spec.ts` (every test; 17 snapshots in `structure.spec.ts-snapshots/`)                                                                                                            |
+| S1       | `tests/e2e/structure.spec.ts` (every test; 20 snapshots in `structure.spec.ts-snapshots/`)                                                                                                            |
 | S2       | `tests/e2e/styles.spec.ts` (both themes: header, page, primary button, font; a text link)                                                                                                             |
 | S3       | `tests/e2e/focus-indicator.spec.ts` (`every control on the start page / main page shows DHCW's focus indicator`, both themes; the targeted `each kind of control shows the indicator it is meant to`) |
 | S4       | `tests/e2e/shell.spec.ts` (`the service name shows untruncated and neither page scrolls sideways at Npx`, 375 to 1280, English and Cymraeg)                                                           |

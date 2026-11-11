@@ -51,3 +51,13 @@ export function tokenValue(page: Page, token: `--${string}`): Promise<string> {
     return value
   }, token)
 }
+
+/**
+ * Keeps the "Connected" notice on screen by hovering it. It clears itself after eight
+ * seconds (`CONFIRMATION_DWELL_MS`) unless the pointer is over it or focus is inside, and
+ * `page.clock` does not stop that: an installed clock still runs in real time. Call it
+ * straight after connecting, before a snapshot or a tour that includes the notice.
+ */
+export async function holdConnectedNotice(page: Page) {
+  await page.getByRole("main").getByRole("note").hover()
+}

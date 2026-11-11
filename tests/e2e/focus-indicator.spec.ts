@@ -1,6 +1,11 @@
 import type { Locator, Page } from "@playwright/test"
 
-import { THEMES, tokenColour, useTheme } from "./fixtures/look"
+import {
+  holdConnectedNotice,
+  THEMES,
+  tokenColour,
+  useTheme,
+} from "./fixtures/look"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 // DHCW's yellow focus indicator (ADR-010). Its contrast in both themes is held by
@@ -141,8 +146,6 @@ for (const theme of THEMES) {
   test.describe(`${theme} theme`, () => {
     test.beforeEach(async ({ page }) => {
       await useTheme(page, theme)
-      // The "Connected" notice stays while the clock stands still: a fixed tab order.
-      await page.clock.install()
     })
 
     test("every control on the start page shows DHCW's focus indicator", async ({
@@ -161,8 +164,9 @@ for (const theme of THEMES) {
     }) => {
       await page.goto("./")
       await connect(page)
+      // Held, so the tour's stops include the notice's dismiss button however long it takes.
+      await holdConnectedNotice(page)
       await expect(roadmapCards(page)).toHaveCount(3)
-      await expect(page.getByRole("main").getByRole("note")).toBeVisible()
 
       await expectEveryStopShowsAnIndicator(page)
     })
@@ -190,7 +194,8 @@ for (const theme of THEMES) {
 
       await connect(page)
       await expect(roadmapCards(page)).toHaveCount(3)
-      await page.mouse.move(0, 0)
+      // Held, away from the cards, so no card is hovered either.
+      await holdConnectedNotice(page)
 
       // The "Connected" notice's dismiss button, first in the page.
       const notice = main.getByRole("note")

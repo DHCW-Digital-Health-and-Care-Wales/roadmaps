@@ -5,6 +5,7 @@ import {
   roadmapRow,
   withRoadmapIndex,
 } from "./fixtures/fake-sheets"
+import { useLanguage } from "./fixtures/look"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 // DHCW's mobile type scale at every width (ADR-010).
@@ -88,9 +89,7 @@ test("Welsh ŵ and ŷ render in Roboto, served by the app", async ({
   page.on("request", (request) => {
     if (request.resourceType() === "font") fontRequests.push(request.url())
   })
-  await page.addInitScript(() => {
-    localStorage.setItem("roadmaps.language", "cy")
-  })
+  await useLanguage(page, "cy")
 
   await page.goto("./")
   await page

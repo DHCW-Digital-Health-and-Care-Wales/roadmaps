@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test"
 
 import { withRoadmapIndex } from "./fixtures/fake-sheets"
+import { useLanguage } from "./fixtures/look"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 /** Lets fake time pass until `locator` shows, so back-off between retries costs nothing. */
@@ -136,9 +137,7 @@ test("an empty roadmap index can't be read, in Welsh too (S5)", async ({
   page,
   sheets,
 }) => {
-  await page.addInitScript(() => {
-    localStorage.setItem("roadmaps.language", "cy")
-  })
+  await useLanguage(page, "cy")
   sheets.spreadsheet = withRoadmapIndex([])
   await page.goto("./")
   await page

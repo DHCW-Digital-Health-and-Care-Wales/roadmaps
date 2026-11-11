@@ -795,7 +795,8 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
   against the tokens, focus tours and a layout guard. Closes EPC-003 (archived). No app
   code changed.
   - Where things live (`tests/e2e`): `structure.spec.ts` (+ `structure.spec.ts-snapshots/`,
-    17 YAML files; English throughout, Cymraeg for the start and main pages),
+    one YAML file per screen; English throughout, Cymraeg for the start and main pages and
+    the connected header),
     `styles.spec.ts`, `focus-indicator.spec.ts` (tours of every tab stop, both themes),
     `shell.spec.ts` (widths 375 to 1280), `fixtures/look.ts` (`tokenColour`, `tokenValue`,
     `useTheme`, `useLanguage`). The update step is in `tests/e2e/AGENTS.md`.
@@ -811,5 +812,6 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
     - A tab tour starts wherever focus is: after Connect it is on `<main>`, so the tour
       keeps pressing Tab past the end of the page, where focus leaves, until it has seen
       every stop. A menu opened with Enter needs its first item focused before an arrow key.
-    - The "Connected" notice stays while `page.clock` is installed and not moved: install
-      it first in any test that snapshots or tours the main page.
+    - `page.clock.install()` runs time normally (Playwright resumes it on install), so the
+      "Connected" notice still clears after eight real seconds: hover it with
+      `holdConnectedNotice` in any test that snapshots or tours the main page.

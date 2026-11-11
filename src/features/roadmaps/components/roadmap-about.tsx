@@ -1,9 +1,12 @@
-import { useId, type ReactNode } from "react"
+import { useId } from "react"
 import { useTranslation } from "react-i18next"
 
 import { localise } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import { useLanguage } from "@/i18n"
+
+type AboutField =
+  "statusLabel" | "productLead" | "vision" | "serviceDescription"
 
 export interface RoadmapAboutProps {
   roadmap: Roadmap
@@ -19,35 +22,25 @@ export function RoadmapAbout({ roadmap }: RoadmapAboutProps) {
   const language = useLanguage()
   const headingId = useId()
 
-  const fields: { key: string; label: string; value: ReactNode }[] = []
-  if (roadmap.statusLabel) {
-    fields.push({
+  const fields = [
+    {
       key: "statusLabel",
-      label: t("roadmaps.about.fields.statusLabel"),
-      value: localise(roadmap.statusLabel, language),
-    })
-  }
-  if (roadmap.productLead) {
-    fields.push({
-      key: "productLead",
-      label: t("roadmaps.about.fields.productLead"),
-      value: roadmap.productLead,
-    })
-  }
-  if (roadmap.vision) {
-    fields.push({
+      value: roadmap.statusLabel && localise(roadmap.statusLabel, language),
+    },
+    { key: "productLead", value: roadmap.productLead },
+    {
       key: "vision",
-      label: t("roadmaps.about.fields.vision"),
-      value: localise(roadmap.vision, language),
-    })
-  }
-  if (roadmap.serviceDescription) {
-    fields.push({
+      value: roadmap.vision && localise(roadmap.vision, language),
+    },
+    {
       key: "serviceDescription",
-      label: t("roadmaps.about.fields.serviceDescription"),
-      value: localise(roadmap.serviceDescription, language),
-    })
-  }
+      value:
+        roadmap.serviceDescription &&
+        localise(roadmap.serviceDescription, language),
+    },
+  ].filter((field): field is { key: AboutField; value: string } =>
+    Boolean(field.value),
+  )
 
   return (
     <section aria-labelledby={headingId} className="flex flex-col gap-3">
@@ -56,9 +49,9 @@ export function RoadmapAbout({ roadmap }: RoadmapAboutProps) {
       </h2>
       {fields.length > 0 ? (
         <dl className="flex max-w-prose flex-col gap-3">
-          {fields.map(({ key, label, value }) => (
+          {fields.map(({ key, value }) => (
             <div key={key} className="flex flex-col gap-0.5">
-              <dt className="font-bold">{label}</dt>
+              <dt className="font-bold">{t(`roadmaps.about.fields.${key}`)}</dt>
               <dd className="wrap-break-word whitespace-pre-line">{value}</dd>
             </div>
           ))}

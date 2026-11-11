@@ -128,8 +128,8 @@ interface RoadmapViewProps {
 
 /**
  * A listed roadmap: its title, a Not published badge when it is not public (D8), a
- * Refresh for the roadmap and its items (D7), what it is about, then its items. The title stays whatever
- * happens to the items.
+ * Refresh for the roadmap and its items (D7), what it is about, then its items. The
+ * title stays whatever happens to the items.
  */
 function RoadmapView({
   roadmap,

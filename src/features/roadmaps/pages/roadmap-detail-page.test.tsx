@@ -181,6 +181,7 @@ describe("RoadmapDetailPage", () => {
         listRoadmaps: () => new Promise<never>(() => undefined),
       },
     })
+    expect(main().getByRole("status")).toHaveTextContent("Loading…")
     expect(main().queryByRole("region")).toBeNull()
   })
 

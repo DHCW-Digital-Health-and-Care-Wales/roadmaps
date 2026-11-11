@@ -12,8 +12,8 @@ product brief describes and the code does not have yet.
 **Product Lead**:
 A DHCW member of staff who leads one or more products and manages their roadmaps in
 this tool; a product may have several. The primary user
-(`docs/backlog/personas/product-lead.md`). A roadmap names its product leads as free
-text _(planned)_; the app does not know which Product Lead is using it.
+(`docs/backlog/personas/product-lead.md`). A roadmap names its product lead as free
+text; the app does not know which Product Lead is using it.
 _Avoid_: Product owner, admin, editor
 
 **Public reader**:
@@ -85,18 +85,33 @@ _Avoid_: Health board (only some are), customer
 
 **Pending edit** _(planned)_:
 A change to a roadmap or roadmap item that the Product Lead has made but not yet
-published; the public site does not show it.
+published or saved; the public site does not show it. It is kept in this browser tab,
+in memory, with the value it was edited from, through an expired session, Reconnect
+and, if the Product Lead chooses, Disconnect. It is lost on closing the tab, after
+asking (ADR-012).
 _Avoid_: Unsaved change, draft (drafts are a later feature)
 
 **Publish** _(planned)_:
-To write a roadmap's pending edits to the shared data source in one deliberate step,
-after which the public site shows them. The MVP has no review or draft step.
-_Avoid_: Save, sync, push, go live
+To write a published roadmap's pending edits to the shared data source in one deliberate
+step, all or none, after which the public site shows them from its next nightly update.
+The MVP has no review or draft step (ADR-012).
+_Avoid_: Save (for a published roadmap), sync, push, go live
+
+**Save** _(planned)_:
+To write the pending edits of a roadmap that is not published: the same step as
+publishing, but nothing becomes public (ADR-012).
+_Avoid_: Publish (for a roadmap that is not published), store
+
+**Conflict** _(planned)_:
+A field a co-lead changed in the data source, to a different value, after the Product
+Lead loaded the field they have edited. Publishing stops until, for each conflict, the
+Product Lead keeps their change or uses the co-lead's (ADR-012).
+_Avoid_: Clash, merge conflict
 
 **Stale roadmap** _(planned)_:
 A roadmap not published for longer than the staleness threshold, suggested as six weeks.
 
-**Item card** _(planned)_:
+**Item card**:
 A roadmap item as shown on a roadmap; its size is the budget for the item's text.
 
 **Roadmap list**:
@@ -163,14 +178,20 @@ worksheet it names holds one roadmap's items, found by header rather than positi
 Only infrastructure uses this term.
 _Avoid_: Sheet (ambiguous with spreadsheet)
 
+**Item ID** _(planned)_:
+The column of a roadmap's worksheet holding each roadmap item's identity, which the
+editor adds and fills when it publishes and never shows (ADR-012). Only infrastructure
+and setup documentation use this term.
+_Avoid_: Row number, key
+
 ### Connection
 
 Plumbing: these terms matter while Google is the data source, and copy keeps them out of
 the Product Lead's way.
 
 **Connection**:
-The user's authorisation for the app to read the data source on their behalf. It proves
-access, not identity: the app never knows who the user is.
+The user's authorisation for the app to read and write the data source on their
+behalf. It proves access, not identity: the app never knows who the user is.
 _Avoid_: Login, sign-in, account
 
 **Connect**:
@@ -179,7 +200,8 @@ _Avoid_: Log in, sign in
 
 **Disconnect**:
 To end the session, revoking access where possible and forgetting every roadmap read
-under it.
+under it. With pending edits it asks first: keep them for the next connection, discard
+them, or cancel (ADR-012).
 _Avoid_: Log out, sign out
 
 **Session**:
@@ -205,13 +227,14 @@ session or disconnect.
 _Avoid_: Timeout, logout warning
 
 **Access token**:
-The short-lived credential that lets the app read the data source during a session. It
-lives in memory only and is never stored, logged or put in a URL.
+The short-lived credential that lets the app read and write the data source during a
+session. It lives in memory only and is never stored, logged or put in a URL.
 _Avoid_: Session token, key
 
 **Auth-scoped data**:
 Anything read under a session, which is cleared when the session is disconnected and
-refetched after it is renewed.
+refetched after it is renewed. Pending edits are not auth-scoped data: Disconnect keeps
+or discards them as the Product Lead chooses (ADR-012).
 
 ### Problems
 

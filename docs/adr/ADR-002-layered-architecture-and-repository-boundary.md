@@ -3,8 +3,8 @@
 - Status: Accepted
 - Date: 2026-11-10 (amended in STY-002: optional abort `signal`, contract test; STY-003: the
   `AuthClient` port in `domain/auth/`; STY-009: lint rules for `lib/`, `components/`, `i18n/`; ADR-009: the `Roadmap`
-  shape and the roadmap list's source; ADR-011: `listRoadmapItems`, delivered in STY-020; see
-  below)
+  shape and the roadmap list's source; ADR-011: `listRoadmapItems`, delivered in STY-020; ADR-012: a
+  write call, for STY-023; see below)
 
 ## Context
 
@@ -78,6 +78,15 @@ roadmap's items can't be read; every other failure, and cancellation, behaves as
 `listRoadmaps`'s. Both calls take `RepositoryReadOptions`. The contract test covers it,
 seeding items per roadmap. "No `getRoadmap`" stands: the detail still derives the roadmap
 from the list.
+
+### ADR-012 amendment
+
+The repository gains its first write (EPC-005 STY-023): one call that publishes a
+roadmap's pending edits, each field with the value it was edited from, and resolves to
+"published" or to the conflicts and missing items or roadmap that stopped it
+(ADR-012 §"The repository call"). A conflict is an outcome, not an `AppError`; every
+other failure rejects as the reads do. The contract test covers it. Interface code still
+never sees a row, column or cell.
 
 ## Consequences
 

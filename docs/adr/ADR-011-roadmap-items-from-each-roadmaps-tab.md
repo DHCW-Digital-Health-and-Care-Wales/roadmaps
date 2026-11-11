@@ -3,7 +3,7 @@
 - Status: Accepted — owner, 2026-11-10: analysis decisions 1–4, then grilling rounds 1
   and 2 (Options 1–6 below). Amends ADR-002 (a second repository call) and extends
   ADR-009.
-- Date: 2026-11-10
+- Date: 2026-11-10 (amended by ADR-012: item identity; see below)
 
 ## Context
 
@@ -87,6 +87,15 @@ interface RoadmapItem {
 - **Items have no id yet** (Option 4). The slice keys them by position. The
   first editing record decides identity, since saving to the right row while a co-lead
   edits (persona A12) depends on it. No tab, row or column reaches the domain.
+
+### ADR-012 amendment
+
+Item identity is decided (Option 4's deferral ends): `RoadmapItem` gains
+`id: string | null`, read from an `Item ID` column by header. Publishing gives every kept
+row without one an ID, and a later row repeating an earlier row's ID gets `id: null` and
+a `duplicate-item-id` problem (EPC-005 STY-022). The rest of this decision stands:
+`Item ID` is one more column read by header, and the `Template` tab is still never read
+or written.
 
 ### Reading the items
 
@@ -181,5 +190,5 @@ A roadmap-tab failure affects that roadmap's detail only; the roadmap list is un
   amendment when STY-020 delivers it.
 - The parser duplicates more of the public site's rules; a format change updates both
   analyses, ADR-009, this ADR, `tests/fixtures/sheets/` and the parsers together.
-- Item identity, editing and publishing are left to later records.
+- Item identity, editing and publishing are left to later records: ADR-012.
 - Delivered by [EPC-004](../backlog/_archive/EPC-004-roadmap-items/README.md).

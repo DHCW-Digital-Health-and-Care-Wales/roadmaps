@@ -22,11 +22,12 @@ never change what is written, or how, without saying so in the record and its PR
 Design for the Product Lead editing their roadmap (`docs/backlog/personas/product-lead.md`);
 the connection to the data source is plumbing that should stay out of their way.
 
-**Built so far** (the bootstrap epic, then EPC-002): a static, frontend-only React SPA on
+**Built so far** (the bootstrap epic, then EPC-002 to EPC-004): a static, frontend-only React SPA on
 GitHub Pages that connects a Google account (Google Identity Services, OAuth token model),
 reads the **roadmap index**, the first tab of one Google Spreadsheet, as the public site
 does (ADR-009), and shows each roadmap it lists as a card with its information, grouped
-by product family. Roadmap items and editing are next. Google Sheets is a _temporary_ data
+by product family, and each roadmap's items on its page (EPC-004). Editing is next
+(EPC-005). Google Sheets is a _temporary_ data
 source: it must be replaceable by a PostgreSQL-backed HTTP API without touching the
 presentation layer (ADR-002).
 
@@ -890,3 +891,10 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
       run axe on `main` until it is fixed.
     - `detail.aria.yml` holds every Product A item: a field or copy change on a card
       rewrites it (`--update-snapshots`, then review).
+- **EPC-005 planning (orchestrator)** — ADR-012 (amends ADR-002 and ADR-011), EPC-005
+  (STY-022–026) and EPC-006 (STY-027, needs grilling), after grilling Q1–Q31. A thin
+  slice of editing: the roadmap's and each item's English text, pending in memory until
+  one all-or-nothing publish per roadmap ("Save" when not published), refused on a
+  field-level conflict. Items gain an `Item ID` column, the editor's first change to the
+  data source's format; the owner updates the `Template` tab and the public site's README.
+  Family waits for EPC-006 (family and colour are set per roadmap but belong together).

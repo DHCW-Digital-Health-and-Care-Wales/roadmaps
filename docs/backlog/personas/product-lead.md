@@ -4,7 +4,7 @@
   Editor to manage the public roadmaps of the products they lead.
 - **Status**: Accepted — the owner answered A1–A13 on 2026-11-10; A6 is deferred until
   after the MVP. Still to check with real Product Leads.
-- **Last updated**: 2026-11-10.
+- **Last updated**: 2026-11-11 (format ownership answered; EPC-005).
 
 Read this before designing a story, a UX prototype or copy. Each owner answer is cited
 by its number under [Owner answers](#owner-answers); the rest comes from the brief.
@@ -77,7 +77,9 @@ Behaviours, not screens:
   that never goes straight to live, come later (A9, A10).
 - Know which edits are pending, and what publishing will change, before they publish.
 - Be told, not overwritten, when a co-lead has changed the same roadmap (A12).
-- Never lose pending edits to a closed tab or an expired session.
+- Never lose pending edits to a closed tab or an expired session. EPC-005 meets the
+  expired session in full and the closed tab only by asking first: edits stay in memory
+  (ADR-012), and keeping them across a reload waits for drafts (A9, A10).
 - Do the small jobs (check, move, fix a typo) on a phone; long writing happens on the
   desktop (A2).
 
@@ -146,5 +148,11 @@ Given by the owner on 2026-11-10; still to be checked with real Product Leads.
 ## Open questions
 
 - A6: who, if anyone, must approve an item before it is published?
-- How the editor and the public site agree the data source's format, and who owns a
-  change to it.
+
+## Answered questions
+
+- **How the editor and the public site agree the data source's format, and who owns a
+  change to it** (owner, 2026-11-11, EPC-005 grilling Q14, Q28): the owner owns it. The
+  editor adds only the `Item ID` column and any missing column it must write, never
+  touches the `Template` tab, and each record that changes what is written says so; the
+  owner updates the `Template` tab and the public site's documentation (ADR-012).

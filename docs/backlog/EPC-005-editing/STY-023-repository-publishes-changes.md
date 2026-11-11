@@ -57,14 +57,17 @@ the matching `AppError`, as reads map statuses
 **When** it is published
 **Then** the cell holds that exact string, not a formula, number, date or boolean
 **And** clearing an optional field writes an empty cell
+**And** a value with spaces or a line break at its ends is written trimmed
 
 ### S4: Items are found by ID wherever their row moved
 
 **Given** an item edited while on row 4, and a co-lead has since inserted a row above it
 **When** the change is published
 **Then** the item's new row is written, found by its `Item ID`
-**And** if a co-lead has copied the row, so its ID is on two rows, the item is reported
-as not found and nothing is written (ADR-012 Option 13)
+**And** if a co-lead has copied the row, so its ID is on two rows, the change is written
+to the first of them while it holds the loaded content, and the same write gives the
+copy a new ID; if the first no longer holds it, the item is reported as not found and
+nothing is written (ADR-012 Option 13)
 
 ### S5: An item without an ID is found only if unchanged
 
@@ -136,7 +139,8 @@ path, a `Template` write, a formula value, a write to a Welsh column)
 **When** the adapter re-reads the roadmap once
 **Then** the outcome is "published" if every written cell holds its new value, and the
 call rejects with `network` if none does
-**And** if that re-read fails as well, the outcome is "unconfirmed"
+**And** the outcome is "unconfirmed" if only some do (a co-lead changed one meanwhile),
+or if that re-read fails as well
 **And** an item without an ID whose position holds its loaded content with the pending
 edits applied is still found, so a publish repeated after an unconfirmed write is not
 reported as a missing item
@@ -171,10 +175,11 @@ fixture-level spec.
   exercises S6 and S7. ADR-011 asks a format change to update the fixtures; this is the
   stated exception.
 - **D9** (agent, 2026-11-11, from Opus review): an ID on two rows, and a write whose
-  result never arrives, are decided by ADR-012 (Option 13, "A write whose result never
-  arrives"), applying Q16 and Q30's rule: nothing is published to an item the editor
-  cannot tell apart, and nothing is reported as published or failed until it is known
-  → S4, S12.
+  result never arrives, are decided by ADR-012 (Options 6 and 13, "A write whose result
+  never arrives"), applying Q13, Q16 and Q30: the first row with an ID is the item while
+  it holds what was loaded, and nothing is reported as published or failed until it is
+  known → S4, S12. Values are trimmed on confirm so a written value reads back equal
+  → S3.
 
 ## Starting point
 

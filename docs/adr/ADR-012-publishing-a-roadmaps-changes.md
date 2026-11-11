@@ -38,7 +38,9 @@ first.
 - A required field is not blank after trimming. Every other field may be cleared. No
   length limit.
 - Text is written as text: a value that looks like a number, a date or a formula
-  (`42`, `1/2`, `=SUM(A1)`) is stored as the string typed, never parsed.
+  (`42`, `1/2`, `=SUM(A1)`) is stored as the string typed, never parsed. A confirmed
+  value is trimmed at its ends, as the parsers read every cell, so a value compares
+  equal to itself once written.
 
 ### Pending edits and publishing
 
@@ -86,9 +88,11 @@ edits were made on.
 
 - The roadmap's index row is found by its id (the slug of its `Sheet` cell), with
   ADR-009's rule for a repeated slug.
-- An item with an ID is found by its ID, and only if no other kept row holds that ID:
-  a row copied with its ID cannot be told from the original, so an ID on more than one
-  row is treated as not found (Option 13). An item that had none when loaded is found
+- An item with an ID is found by its ID. When a co-lead has copied the row, so the ID
+  is on more than one kept row, the first of them is the item, as the parser reads it
+  (Option 6), but only if it still holds the loaded content (or that content with the
+  pending edits applied); otherwise the item is not found (Option 13). The same write
+  gives the later rows new IDs. An item that had none when loaded is found
   at its position among the kept items, and only if that item still holds exactly the
   content that was loaded, or that content with its pending edits applied (a publish
   whose result never arrived; Option 11).
@@ -102,7 +106,8 @@ edits were made on.
   their value beside the current one, chooses "Keep mine" or "Use theirs", and
   publishes again (Option 12).
 - **An item or roadmap that can no longer be found publishes nothing** (Option 13, Q30):
-  an item whose ID is gone or on more than one row, an item without an ID whose
+  an item whose ID is gone (or whose first row of a repeated ID no longer holds what was
+  loaded), an item without an ID whose
   position no longer holds the loaded content, or a roadmap whose index row is gone. The Product Lead is told which,
   their pending edits to it are discarded, and the rest stay for the next publish.
 - **A missing column is added** (Q28): when a field being written, or `Item ID`, has no
@@ -118,8 +123,9 @@ edits were made on.
   call waits for its answer.
 - A write that fails with no HTTP answer (a network failure) may still have been
   applied. The adapter re-reads the roadmap once: every written cell holding its new
-  value means published, none means not written (`network`, edits kept). When that
-  re-read fails too, the outcome is **unconfirmed**: the edits are kept, and the page
+  value means published, none means not written (`network`, edits kept), and any other
+  result (a co-lead changed one of those cells meanwhile) or a failed re-read is
+  **unconfirmed**: the edits are kept, and the page
   says the changes may have been published and asks the Product Lead to refresh before
   anything else, which drops whatever was written (above).
 - A publish is never retried automatically.
@@ -207,9 +213,9 @@ Nothing checks permission in advance.
       published. _Sam's edit to an item whose row a co-lead moved before IDs existed
       is reported as "changed since you opened it"; Sam redoes it on the current item._
     - (b) A side-by-side conflict. Lost: with no ID there is no "theirs" to compare to.
-    - Extended by the agent at review, owner to confirm in the PR: an ID on more than one
-      row (a row copied with its ID) is the same case, as the copy cannot be told from
-      the original.
+    - Applied at review to a row copied with its ID (Option 6's "first row keeps it"):
+      the first row is the item only while it holds what was loaded; otherwise this
+      option applies.
 14. **Permission** (Q9)
     - ✅ (a) Edit for everyone; a refused publish keeps the edits and explains.
     - (b) Check access first. Lost: another Google API and scope.

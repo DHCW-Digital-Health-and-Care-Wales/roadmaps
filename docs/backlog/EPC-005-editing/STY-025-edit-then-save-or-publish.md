@@ -61,6 +61,7 @@ its Edit button
 **Then** the form stays open with an error message linked to the field, and nothing is
 kept
 **And** other fields may be cleared; there is no length limit
+**And** every value is kept trimmed at its ends
 
 ### S5: The roadmap's own text is edited the same way
 

@@ -1,6 +1,6 @@
 # STY-020: The repository reads a roadmap's items from the tab its index row names
 
-- **Status**: Proposed — selectable once STY-019 is on `main`
+- **Status**: Done — delivered in its PR, which awaits the owner's merge
 - **Type**: Feature
 - **Area**: Domain + Infrastructure + Features/UI + E2E
 - **Epic**: EPC-004-roadmap-items
@@ -10,6 +10,7 @@
 - **Suggested model**: Opus — a new repository contract across the adapter, the
   in-memory double, the query layer and the E2E fake, with failure modes to get exactly
   right
+- **Delivered**: _PR link added once raised_
 
 ## Summary
 
@@ -143,3 +144,71 @@ takes `roadmaps | AppError`: both need a way to seed items per roadmap.
 - Showing items, and the item-specific copy for `invalid-data`: STY-021.
 - Reading the `Template` tab: never (epic).
 - A cache of id → tab, or a batched read: only if the three reads prove slow (ADR-011).
+
+## Delivery
+
+### Departures
+
+- **Options type renamed** (agent): `ListRoadmapsOptions` is now `RepositoryReadOptions`,
+  taken by both calls, as ADR-011 gives the items call the same `{ signal? }`.
+- **Shared index read** (agent): `#readRoadmapIndex` returns `{ index, tabTitles }`
+  (the record's first suggestion) and both values reads go through one `#readTab(title)`,
+  so the roadmap's tab is read with exactly the list's parameters, quoting and signal.
+- **In-memory double fails per roadmap** (agent): `createInMemoryRoadmapRepository(roadmaps,
+items?)` takes items by roadmap id, each entry a list or an `AppError` its read rejects
+  with, so STY-021 can show a roadmap whose items fail while the list loads.
+- **Hook test utility** (agent): `renderWithProviders` was split into
+  `createTestServices` (private) and a new `renderHookWithProviders(hook, options)`,
+  both wired like `composeApp`; S7 is tested through the hook with it. Both take a new
+  `roadmapItems` option.
+- **Test order**: the contract's six item cases were written first and failed on both
+  adapters (no method), as did the hook suite (no hook). The adapter's S1–S6 tests were
+  written after its implementation; that they discriminate was checked by disabling the
+  tab-exists check (two S4/S5 tests fail).
+- **S8 at unit level** (agent): a detail-page test spies on `listRoadmapItems` and asserts
+  it is never called; the existing E2E `sheets.reads` assertions on the detail page
+  (`["metadata", "values:Roadmaps"]`) hold the same at E2E level.
+
+### Contract for dependents
+
+- **Repository**: `RoadmapRepository.listRoadmapItems(roadmapId, options?:
+RepositoryReadOptions): Promise<RoadmapItem[]>` (`@/domain/roadmap/roadmap-repository`).
+  Unknown id → `AppError("not-found")`; tab missing, empty or with no `Title` column →
+  `AppError("invalid-data")`; both not retryable. Other failures and cancellation as the
+  list's. The adapter's problems are dropped inside it.
+- **Query layer** (`features/roadmaps/hooks`): `roadmapKeys.items(roadmapId)` (under
+  `roadmapKeys.all`, so disconnect removes it and a session end invalidates it),
+  `roadmapItemsQueryOptions(repository, roadmapId)`, and `useRoadmapItems(roadmapId)`
+  (`use-roadmap-items.ts`), `enabled` only while connected. Nothing calls the hook yet.
+- **Tests**: `createInMemoryRoadmapRepository(roadmaps | AppError, items?:
+InMemoryRoadmapItems)`; `renderWithProviders({ roadmapItems })` and
+  `renderHookWithProviders(hook, { roadmapItems, … })` (`src/test/render-with-providers.tsx`).
+  The contract's `withRoadmaps(roadmaps, items?)` seeds items per roadmap (`RoadmapItemsById`).
+- **E2E fake**: `sheets` serves every tab of `sheets.spreadsheet` by exact quoted title;
+  a tab that does not exist is a 400 and a violation. `sheets.reads` entries are
+  `"metadata"` or `` `values:${title}` ``, so a roadmap's items are
+  `["metadata", "values:Roadmaps", "values:ProductA"]`.
+
+### Scenario evidence
+
+- **S1**: `google-sheets-roadmap-repository.test.ts` "reads the tab list, the index, then
+  the roadmap's own tab…" (nine items equal to `parseRoadmapTab(ProductA.csv)`, the three
+  paths in order, exact parameters and bearer token) and "passes the abort signal to all
+  three reads"; the contract's "lists a roadmap's items…" on both adapters.
+- **S2**: "reads an unpublished roadmap's items too" (`productc`, one item, no
+  organisations).
+- **S3**: "fails with not-found, not retryable, … after reading only the list" (two
+  requests); contract "rejects with a not-found AppError" on both adapters.
+- **S4**: "a missing or unreadable tab" block: missing tab → `invalid-data`, two requests;
+  no `Title` column → `invalid-data`; an empty tab → `invalid-data`; the list still has
+  both roadmaps.
+- **S5**: `Product's "B" & co` read as `'Product''s%20%22B%22%20%26%20co'`; a `producta`
+  tab does not match `ProductA` (`invalid-data`, two requests).
+- **S6**: 401/403/429/500/503 and a network error on each of the three reads map as the
+  list's (18 cases); mid-read abort rejects with the reason and starts no third read;
+  contract cancellation on both adapters; `use-roadmap-items.test.tsx` "expires the
+  session on a 401".
+- **S7**: `use-roadmap-items.test.tsx`: no request while not connected; disconnect removes
+  the cached items; reconnecting fetches them again.
+- **S8**: `roadmap-detail-page.test.tsx` "does not read the roadmap's items yet"; full
+  suites: typecheck, lint, format pass; 797 unit/component tests; 108 E2E.

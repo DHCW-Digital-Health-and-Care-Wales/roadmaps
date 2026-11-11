@@ -3,7 +3,8 @@
 - Status: Accepted
 - Date: 2026-11-10 (amended in STY-002: optional abort `signal`, contract test; STY-003: the
   `AuthClient` port in `domain/auth/`; STY-009: lint rules for `lib/`, `components/`, `i18n/`; ADR-009: the `Roadmap`
-  shape and the roadmap list's source, see below)
+  shape and the roadmap list's source; ADR-011: `listRoadmapItems`, delivered in STY-020; see
+  below)
 
 ## Context
 
@@ -66,6 +67,17 @@ ADR-009 supersedes two parts of this decision once EPC-002 delivers it: the
 adapter's mapping of each visible worksheet to a roadmap (it now reads the first
 worksheet's rows, and adds the `invalid-data` kind). The layering, the repository
 boundary, `listRoadmaps` with its `signal`, the contract test and `AppError` stand.
+
+### ADR-011 amendment
+
+The repository gains a second call (STY-020):
+`listRoadmapItems(roadmapId, options?: { signal?: AbortSignal }): Promise<RoadmapItem[]>`,
+a roadmap's items in source order, published or not. It rejects with
+`AppError('not-found')` for an id no roadmap has, and `AppError('invalid-data')` when that
+roadmap's items can't be read; every other failure, and cancellation, behaves as
+`listRoadmaps`'s. Both calls take `RepositoryReadOptions`. The contract test covers it,
+seeding items per roadmap. "No `getRoadmap`" stands: the detail still derives the roadmap
+from the list.
 
 ## Consequences
 

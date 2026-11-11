@@ -10,6 +10,8 @@ import { authScopedQueryKey } from "@/features/auth/auth-scoped-queries"
 export const roadmapKeys = {
   all: [...authScopedQueryKey, "roadmaps"] as const,
   list: () => [...roadmapKeys.all, "list"] as const,
+  items: (roadmapId: string) =>
+    [...roadmapKeys.all, "items", roadmapId] as const,
 }
 
 /**
@@ -20,5 +22,16 @@ export function roadmapListQueryOptions(repository: RoadmapRepository) {
   return queryOptions({
     queryKey: roadmapKeys.list(),
     queryFn: ({ signal }) => repository.listRoadmaps({ signal }),
+  })
+}
+
+/** One roadmap's items, in source order; defaults as for the list. */
+export function roadmapItemsQueryOptions(
+  repository: RoadmapRepository,
+  roadmapId: string,
+) {
+  return queryOptions({
+    queryKey: roadmapKeys.items(roadmapId),
+    queryFn: ({ signal }) => repository.listRoadmapItems(roadmapId, { signal }),
   })
 }

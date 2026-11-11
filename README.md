@@ -65,16 +65,20 @@ whatever it is called and even when hidden, is the roadmap index: row 1 is the h
 each other row is one roadmap. Its `Sheet` column (required) names the tab holding that
 roadmap's items; `Enabled` (exactly `Yes`), `Title`, `Category`, `Family`, `Status label`,
 `Last updated`, `Colour`, `Vision`, `Service description` and `Product Lead` are read
-when present, with `(cy)` columns for Welsh. Every other tab is a roadmap's items, not read
-yet.
+when present, with `(cy)` columns for Welsh. The tab a row's `Sheet` names holds that
+roadmap's items, one per row, its columns found by their row-1 header in any order
+([ADR-011](docs/adr/ADR-011-roadmap-items-from-each-roadmaps-tab.md)); the `Template` tab
+is never read.
 
 - The rules, and how the editor differs from the public site on mistakes, are in
-  [the roadmap index analysis](docs/analysis/roadmaps-tab-format.md).
+  [the roadmap index analysis](docs/analysis/roadmaps-tab-format.md) and
+  [the roadmap tab analysis](docs/analysis/roadmap-tab-format.md).
 - An example spreadsheet, with steps to import it into a test spreadsheet of your own, is in
   [`tests/fixtures/sheets/`](tests/fixtures/sheets/README.md).
 - A list that can't be read (no tabs, an empty first tab, or no `Sheet` column) shows a
   problem asking the spreadsheet owner to check it. A roadmap whose tab is missing, or a
-  mistake in one row, never hides the rest.
+  mistake in one row, never hides the rest. A roadmap whose tab is missing, or has no
+  `Title` column, fails to read its items alone; the list is unaffected.
 
 ## Architecture
 

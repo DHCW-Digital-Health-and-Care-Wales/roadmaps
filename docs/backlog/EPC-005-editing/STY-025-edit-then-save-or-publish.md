@@ -25,6 +25,8 @@ with a plain message.
 `features/` (the pending-edit store, forms, tags, the publish flow and its notices, the
 leave warning and Disconnect's question), `routes/` only if a page needs it, `i18n/` (all new
 copy, through the `copywriter` skill). It calls STY-023's call and nothing else new.
+The README's "How it works" (Disconnect "clears all loaded data") gains the kept
+changes.
 
 ## Acceptance criteria
 
@@ -126,8 +128,8 @@ Reconnect they can publish them
 ### S13: A refused or failed publish keeps the changes
 
 **Given** pending changes
-**When** the write is refused (403), or fails (network or 5xx, after the client's
-retries)
+**When** the write is refused (403), or fails (network or 5xx; a publish is never
+retried automatically)
 **Then** a failure message stays on screen saying why (for 403, that this account may not
 change this roadmap), every change is kept, and they can try again
 
@@ -168,10 +170,20 @@ never writes Welsh)
 scrolling
 **And** axe passes and the focus tour reaches each new control, light and dark
 
+### S18: A publish whose result is unknown (STY-023 S12)
+
+**Given** pending changes, and the publish outcome is "unconfirmed"
+**When** the page shows it
+**Then** a message stays on screen saying the changes may have been published and to
+refresh the roadmap before anything else; every change is kept
+**And** after Refresh, a change the roadmap already holds is no longer pending, so
+"Discard all" never hides a change that was published
+
 ## Tests
 
 The store and the session paths (S2, S6, S7, S12, S14) are unit and component tests with
-the fake auth client and the in-memory repository. S10, S11, S13, S14 and S8 (the
+the fake auth client and the in-memory repository; S18 uses a repository double that
+answers "unconfirmed". S10, S11, S13, S14 and S8 (the
 `beforeunload` listener) also run in Playwright against the fake GIS and Sheets, with
 `sheets.writes` asserted; S17 extends the accessibility, focus and structure specs.
 

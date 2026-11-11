@@ -5,7 +5,7 @@
 - **Type**: Feature
 - **Area**: TBD after grilling (likely Domain + Infrastructure + Features/UI + i18n)
 - **Epic**: EPC-006-product-families-and-colours
-- **Depends on**: EPC-005 (preferred order: it builds the write path this reuses)
+- **Depends on**: STY-023 (preferred order: it builds the write path this reuses)
 - **Binding ADRs**: ADR-009, ADR-012
 - **Suggested model**: Opus — it changes the data source's contract with the public site
 
@@ -16,6 +16,18 @@ spellings or two colours. A Product Lead, or whoever owns families, should defin
 family and its colour once, and a roadmap should only choose its family. This may change
 what the public site reads, so the owner decides the shape first. It may also be the
 place for other fields that belong centrally rather than to one roadmap.
+
+## Acceptance criteria
+
+_Completed once the open questions are answered; this scenario holds whichever way
+they go._
+
+### S1: A family has one name and one colour
+
+**Given** two roadmaps the Product Lead puts in the same family
+**When** the list and the public site show them
+**Then** both show the same family name and the same colour
+**And** nobody had to type the colour twice
 
 ## Open questions
 

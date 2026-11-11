@@ -1,7 +1,8 @@
 # ADR-012: A roadmap's pending edits are published together, by item ID, and refused on a conflict
 
 - Status: Accepted — owner, 2026-11-11: grilling rounds 1–3 and Q28–Q30 of the Editing
-  epic (Options 1–15 below). Amends ADR-002 (a write call) and ADR-011 (item identity);
+  epic (Options 1–15 below); the unconfirmed write and a duplicated ID were added from
+  review, applying those answers. Amends ADR-002 (a write call) and ADR-011 (item identity);
   extends ADR-009 (the editor writes to the roadmap index).
 - Date: 2026-11-11
 
@@ -85,9 +86,14 @@ edits were made on.
 
 - The roadmap's index row is found by its id (the slug of its `Sheet` cell), with
   ADR-009's rule for a repeated slug.
-- An item with an ID is found by its ID. An item that had none when loaded is found at
-  its position among the kept items, and only if that item still holds exactly the
-  content that was loaded (Option 11).
+- An item with an ID is found by its ID, and only if no other kept row holds that ID:
+  a row copied with its ID cannot be told from the original, so an ID on more than one
+  row is treated as not found (Option 13). An item that had none when loaded is found
+  at its position among the kept items, and only if that item still holds exactly the
+  content that was loaded, or that content with its pending edits applied (a publish
+  whose result never arrived; Option 11).
+- **A pending field the re-read already holds is no longer pending**: publishing skips
+  it and Refresh drops it, whoever wrote the value.
 - **A field is in conflict when its current value differs from both its base value and
   the pending value** (Option 12). A field a co-lead changed that the Product Lead did not
   edit is not a conflict, and is not overwritten. A co-lead's change to the same value is
@@ -96,8 +102,8 @@ edits were made on.
   their value beside the current one, chooses "Keep mine" or "Use theirs", and
   publishes again (Option 12).
 - **An item or roadmap that can no longer be found publishes nothing** (Option 13, Q30):
-  an item whose ID is gone, an item without an ID whose position no longer holds the
-  loaded content, or a roadmap whose index row is gone. The Product Lead is told which,
+  an item whose ID is gone or on more than one row, an item without an ID whose
+  position no longer holds the loaded content, or a roadmap whose index row is gone. The Product Lead is told which,
   their pending edits to it are discarded, and the rest stay for the next publish.
 - **A missing column is added** (Q28): when a field being written, or `Item ID`, has no
   column in the re-read header, publishing appends one after the last column any row
@@ -105,6 +111,18 @@ edits were made on.
   `Phase`…), growing the grid first when needed. Nothing else in the header moves.
 - A roadmap whose tab or index row cannot be read at publish (ADR-011's
   `invalid-data`) publishes nothing and keeps its pending edits.
+
+### A write whose result never arrives
+
+- The abort signal stops the re-reads, never the write: once the write is sent, the
+  call waits for its answer.
+- A write that fails with no HTTP answer (a network failure) may still have been
+  applied. The adapter re-reads the roadmap once: every written cell holding its new
+  value means published, none means not written (`network`, edits kept). When that
+  re-read fails too, the outcome is **unconfirmed**: the edits are kept, and the page
+  says the changes may have been published and asks the Product Lead to refresh before
+  anything else, which drops whatever was written (above).
+- A publish is never retried automatically.
 
 ### The repository call (amends ADR-002)
 
@@ -115,10 +133,11 @@ publishRoadmapChanges(
   roadmapId: string,
   changes: RoadmapChanges, // the roadmap's text and each item's, each field with its base value
   options?: RepositoryReadOptions,
-): Promise<PublishOutcome> // published, or the conflicts and the items or roadmap not found
+): Promise<PublishOutcome> // published, unconfirmed, or the conflicts and the items or roadmap not found
 ```
 
-A conflict or a missing item is an outcome the page acts on, not an `AppError`; every
+A conflict, a missing item or an unconfirmed write is an outcome the page acts on, not
+an `AppError`; every
 other failure rejects with an `AppError` as reads do (a 403 is `forbidden`, a 401
 `unauthenticated`). The contract test covers it against the in-memory double and the
 Google adapter. Interface code never sees a row, a column or a cell.
@@ -188,6 +207,9 @@ Nothing checks permission in advance.
       published. _Sam's edit to an item whose row a co-lead moved before IDs existed
       is reported as "changed since you opened it"; Sam redoes it on the current item._
     - (b) A side-by-side conflict. Lost: with no ID there is no "theirs" to compare to.
+    - Extended by the agent at review, owner to confirm in the PR: an ID on more than one
+      row (a row copied with its ID) is the same case, as the copy cannot be told from
+      the original.
 14. **Permission** (Q9)
     - ✅ (a) Edit for everyone; a refused publish keeps the edits and explains.
     - (b) Check access first. Lost: another Google API and scope.

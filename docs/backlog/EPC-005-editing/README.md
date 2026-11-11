@@ -109,16 +109,17 @@ its outcome and records them in its Delivery; STY-025 and STY-026 build on that 
 
 ### Session paths
 
-| Path                                       | Pending edits                                                                |
-| ------------------------------------------ | ---------------------------------------------------------------------------- |
-| Navigating between pages                   | kept                                                                         |
-| Refresh on either page                     | kept, shown over the re-read text; bases unchanged                           |
-| Session expires, or a 401 during a publish | kept; publishing waits for Reconnect                                         |
-| Renewal ("Stay connected")                 | kept                                                                         |
-| Disconnect (header or session warning)     | asks first when any roadmap has pending edits: keep, discard or cancel (Q29) |
-| Reload or close the tab                    | the browser asks first; then lost                                            |
-| Language or theme change                   | kept                                                                         |
-| The roadmap disappears from the list       | discarded, and the page says so (STY-026)                                    |
+| Path                                       | Pending edits                                                                                     |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| Navigating between pages                   | kept                                                                                              |
+| Refresh on either page                     | kept, shown over the re-read text; bases unchanged; a change the re-read already holds is dropped |
+| A publish whose result never arrives       | kept; the page asks for a Refresh, which drops what was written (STY-023, STY-025)                |
+| Session expires, or a 401 during a publish | kept; publishing waits for Reconnect                                                              |
+| Renewal ("Stay connected")                 | kept                                                                                              |
+| Disconnect (header or session warning)     | asks first when any roadmap has pending edits: keep, discard or cancel (Q29)                      |
+| Reload or close the tab                    | the browser asks first; then lost                                                                 |
+| Language or theme change                   | kept                                                                                              |
+| The roadmap disappears from the list       | discarded, and the page says so (STY-026)                                                         |
 
 ### Copy
 

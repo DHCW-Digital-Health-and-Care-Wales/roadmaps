@@ -26,7 +26,10 @@ can prove a publish end to end.
 `infrastructure/google-sheets/` (a write method on the client, the adapter's publish, the
 tab list read gains each tab's grid size), the in-memory double and the repository
 contract, a `features/roadmaps/` mutation hook (not yet used), and the E2E fake. The
-README's spreadsheet format section gains `Item ID` and what the editor writes.
+README's spreadsheet format section and `docs/analysis/roadmap-tab-format.md` (its "A
+row has no id column") gain `Item ID` and what the editor writes; ADR-011's other
+format-change duties are met by ADR-012 and STY-022's parser, and `tests/fixtures/sheets/`
+stays the public site's copy, without `Item ID` (D8).
 
 ## Acceptance criteria
 
@@ -36,7 +39,8 @@ README's spreadsheet format section gains `Item ID` and what the editor writes.
 titles and phases, every base equal to the current value
 **When** the changes are published
 **Then** the outcome is "published", and re-reading shows exactly those values
-**And** no other cell changed: Welsh cells, `Last updated`, tags, organisations, details,
+**And** no other cell changed apart from the `Item ID` column and IDs S6 and S7 add:
+Welsh cells, `Last updated`, tags, organisations, details,
 other roadmaps' rows and the `Template` tab are byte-for-byte the same
 
 ### S2: One request, all or nothing
@@ -59,6 +63,8 @@ the matching `AppError`, as reads map statuses
 **Given** an item edited while on row 4, and a co-lead has since inserted a row above it
 **When** the change is published
 **Then** the item's new row is written, found by its `Item ID`
+**And** if a co-lead has copied the row, so its ID is on two rows, the item is reported
+as not found and nothing is written (ADR-012 Option 13)
 
 ### S5: An item without an ID is found only if unchanged
 
@@ -112,7 +118,8 @@ does
 **When** the changes are published
 **Then** the call rejects with `forbidden` or `unauthenticated`, nothing is retried
 automatically, and nothing is written
-**And** an aborted call rejects with the signal's reason
+**And** a call aborted before the write is sent rejects with the signal's reason; once
+the write is sent, abort no longer applies and the call waits for the answer
 
 ### S11: The E2E fake accepts the write
 
@@ -123,10 +130,21 @@ records it (`sheets.writes`)
 **And** it records a violation for a request outside the agreed shape (another method or
 path, a `Template` write, a formula value, a write to a Welsh column)
 
+### S12: A write whose result never arrives is checked
+
+**Given** the `batchUpdate` fails with no HTTP answer (a network failure)
+**When** the adapter re-reads the roadmap once
+**Then** the outcome is "published" if every written cell holds its new value, and the
+call rejects with `network` if none does
+**And** if that re-read fails as well, the outcome is "unconfirmed"
+**And** an item without an ID whose position holds its loaded content with the pending
+edits applied is still found, so a publish repeated after an unconfirmed write is not
+reported as a missing item
+
 ## Tests
 
-S1–S10 run in the repository contract (in-memory double and Google adapter against MSW),
-plus adapter tests for the exact request (S2, S3, S7). S11 is proved by an E2E test that
+S1–S10 and S12 run in the repository contract (in-memory double and Google adapter against MSW),
+plus adapter tests for the exact request (S2, S3, S7) and the network failures (S12). S11 is proved by an E2E test that
 publishes from the page in STY-025; this story adds a fake unit test or a minimal
 fixture-level spec.
 
@@ -146,8 +164,17 @@ fixture-level spec.
 - **D6** (agent, 2026-11-11): `updateCells` with `userEnteredValue.stringValue` over
   `values.batchUpdate` with `RAW`, because only `spreadsheets.batchUpdate` also carries
   `appendDimension` and is atomic across both tabs (S2, S3, S7).
-- **D7** (agent, 2026-11-11): a conflict and a not-found are outcomes, not `AppError`s, so
-  the page can show both without a catch (ADR-012).
+- **D7** (agent, 2026-11-11): a conflict, a not-found and an unconfirmed write are
+  outcomes, not `AppError`s, so the page can show each without a catch (ADR-012).
+- **D8** (agent, 2026-11-11, from Opus review): the example data stays a copy of the
+  public site's files, so it has no `Item ID`; the first publish in a test adds it, which
+  exercises S6 and S7. ADR-011 asks a format change to update the fixtures; this is the
+  stated exception.
+- **D9** (agent, 2026-11-11, from Opus review): an ID on two rows, and a write whose
+  result never arrives, are decided by ADR-012 (Option 13, "A write whose result never
+  arrives"), applying Q16 and Q30's rule: nothing is published to an item the editor
+  cannot tell apart, and nothing is reported as published or failed until it is known
+  → S4, S12.
 
 ## Starting point
 

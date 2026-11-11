@@ -42,15 +42,33 @@ elsewhere changes its contract.
 
 _Set by STY-027's grilling._
 
+## Shared assumptions and contracts
+
+### The write path
+
+Writing to the data source reuses EPC-005's publish call and its rules (ADR-012): a
+re-read before the write, nothing written on a conflict, the `Template` tab never
+written. A change to what the public site reads is said in the record and its PR.
+
 ## Stories
 
 | ID      | Story                                                                                   | Area | Depends on | State |
 | ------- | --------------------------------------------------------------------------------------- | ---- | ---------- | ----- |
-| STY-027 | [Families and their colours are managed in one place](STY-027-families-in-one-place.md) | TBD  | EPC-005    |       |
+| STY-027 | [Families and their colours are managed in one place](STY-027-families-in-one-place.md) | TBD  | —          |       |
+
+## Sequencing
+
+STY-027 is grilled first; it may split into stories once the answers set its shape.
+Preferred after EPC-005's STY-023, whose write path it reuses; not a hard prerequisite,
+as the questions can be settled before.
 
 ## Out of scope
 
 - Editing a roadmap's text and items: [EPC-005](../EPC-005-editing/README.md).
+
+## Defects
+
+None.
 
 ## Related
 

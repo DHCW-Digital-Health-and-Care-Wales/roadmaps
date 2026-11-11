@@ -83,7 +83,7 @@ Vale University Health Board, or **All Wales** for national work; shared with th
 site, which filters by it (ADR-011).
 _Avoid_: Health board (only some are), customer
 
-**Pending edit**:
+**Pending edit** _(planned)_:
 A change to a roadmap or roadmap item that the Product Lead has made but not yet
 published or saved; the public site does not show it. It is kept in this browser tab,
 in memory, with the value it was edited from, through an expired session, Reconnect
@@ -91,18 +91,18 @@ and, if the Product Lead chooses, Disconnect. It is lost on closing the tab, aft
 asking (ADR-012).
 _Avoid_: Unsaved change, draft (drafts are a later feature)
 
-**Publish**:
+**Publish** _(planned)_:
 To write a published roadmap's pending edits to the shared data source in one deliberate
 step, all or none, after which the public site shows them from its next nightly update.
 The MVP has no review or draft step (ADR-012).
 _Avoid_: Save (for a published roadmap), sync, push, go live
 
-**Save**:
+**Save** _(planned)_:
 To write the pending edits of a roadmap that is not published: the same step as
 publishing, but nothing becomes public (ADR-012).
 _Avoid_: Publish (for a roadmap that is not published), store
 
-**Conflict**:
+**Conflict** _(planned)_:
 A field a co-lead changed in the data source, to a different value, after the Product
 Lead loaded the field they have edited. Publishing stops until, for each conflict, the
 Product Lead keeps their change or uses the co-lead's (ADR-012).
@@ -178,7 +178,7 @@ worksheet it names holds one roadmap's items, found by header rather than positi
 Only infrastructure uses this term.
 _Avoid_: Sheet (ambiguous with spreadsheet)
 
-**Item ID**:
+**Item ID** _(planned)_:
 The column of a roadmap's worksheet holding each roadmap item's identity, which the
 editor adds and fills when it publishes and never shows (ADR-012). Only infrastructure
 and setup documentation use this term.
@@ -233,7 +233,8 @@ _Avoid_: Session token, key
 
 **Auth-scoped data**:
 Anything read under a session, which is cleared when the session is disconnected and
-refetched after it is renewed.
+refetched after it is renewed. Pending edits are not auth-scoped data: Disconnect keeps
+or discards them as the Product Lead chooses (ADR-012).
 
 ### Problems
 

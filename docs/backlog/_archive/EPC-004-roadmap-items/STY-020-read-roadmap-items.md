@@ -10,7 +10,7 @@
 - **Suggested model**: Opus — a new repository contract across the adapter, the
   in-memory double, the query layer and the E2E fake, with failure modes to get exactly
   right
-- **Delivered**: _PR link added once raised_
+- **Delivered**: [PR #24](https://github.com/collisdigital/roadmaps-editor/pull/24)
 
 ## Summary
 

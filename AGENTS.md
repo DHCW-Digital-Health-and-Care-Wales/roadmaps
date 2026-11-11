@@ -898,3 +898,15 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
   field-level conflict. Items gain an `Item ID` column, the editor's first change to the
   data source's format; the owner updates the `Template` tab and the public site's README.
   Family waits for EPC-006 (family and colour are set per roadmap but belong together).
+- **STY-022 Each roadmap item keeps an identity** — `RoadmapItem.id: string | null`, read from
+  an `Item ID` column; nothing visible changes and nothing is written (STY-023 writes IDs).
+  - Where things live: `parseRoadmapTab` (`infrastructure/google-sheets/roadmap-tab-parser.ts`)
+    now returns `{ items, rows, problems }`; `rows[i]` is `items[i]`'s spreadsheet row, for
+    the adapter only. New problem code `duplicate-item-id`. `createTestRoadmapItem` has `id: null`.
+  - Decisions: the column is found by header like the others and its absence is no
+    problem; IDs are trimmed and compared exactly, not folded; the first kept row keeps a
+    repeated ID; a row with only an ID is `missing-title`, and its ID is not counted.
+  - Gotchas:
+    - `Item ID` counts as a column read, so a row holding only an ID is not blank (it records
+      `missing-title`); the adapter's `listRoadmapItems` still returns items alone.
+    - The fixtures have no `Item ID` column; a test needing IDs writes them inline.

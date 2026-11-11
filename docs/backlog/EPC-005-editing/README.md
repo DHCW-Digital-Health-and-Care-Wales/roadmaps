@@ -2,7 +2,7 @@
 
 - **Status**: Active — planned 2026-11-11 after grilling; a thin slice to prove that edits
   reach the data source safely; richer editing follows
-- **Progress**: 0 of 5 terminal; next selectable: STY-022 or STY-024; blocked on: nothing
+- **Progress**: 1 of 5 terminal (STY-022 awaits merge); next selectable: STY-023 or STY-024; blocked on: nothing
 - **Binding ADRs**: ADR-012, ADR-011, ADR-009, ADR-002, ADR-003, ADR-008, ADR-010
 
 ## Summary
@@ -138,13 +138,13 @@ writes them inline or publishes first.
 
 ## Stories
 
-| ID      | Story                                                                                   | Area                                     | Depends on       | State |
-| ------- | --------------------------------------------------------------------------------------- | ---------------------------------------- | ---------------- | ----- |
-| STY-022 | [Each roadmap item keeps an identity](STY-022-items-keep-an-identity.md)                | Domain + Infrastructure                  | —                |       |
-| STY-023 | [The repository publishes a roadmap's changes](STY-023-repository-publishes-changes.md) | Domain + Infrastructure + Features + E2E | STY-022          |       |
-| STY-024 | [A roadmap's page shows what the roadmap is about](STY-024-about-this-roadmap.md)       | Features/UI + i18n (en + cy) + E2E       | —                |       |
-| STY-025 | [A Product Lead edits a roadmap and publishes it](STY-025-edit-then-save-or-publish.md) | Features/UI + i18n (en + cy) + E2E       | STY-023, STY-024 |       |
-| STY-026 | [A co-lead's change is shown, not overwritten](STY-026-co-lead-conflicts.md)            | Features/UI + i18n (en + cy) + E2E       | STY-025          |       |
+| ID      | Story                                                                                                | Area                                     | Depends on       | State                |
+| ------- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------- | ---------------- | -------------------- |
+| STY-022 | [Each roadmap item keeps an identity](../_archive/EPC-005-editing/STY-022-items-keep-an-identity.md) | Domain + Infrastructure                  | —                | ✅ (PR awaits merge) |
+| STY-023 | [The repository publishes a roadmap's changes](STY-023-repository-publishes-changes.md)              | Domain + Infrastructure + Features + E2E | STY-022          |                      |
+| STY-024 | [A roadmap's page shows what the roadmap is about](STY-024-about-this-roadmap.md)                    | Features/UI + i18n (en + cy) + E2E       | —                |                      |
+| STY-025 | [A Product Lead edits a roadmap and publishes it](STY-025-edit-then-save-or-publish.md)              | Features/UI + i18n (en + cy) + E2E       | STY-023, STY-024 |                      |
+| STY-026 | [A co-lead's change is shown, not overwritten](STY-026-co-lead-conflicts.md)                         | Features/UI + i18n (en + cy) + E2E       | STY-025          |                      |
 
 ## Sequencing
 

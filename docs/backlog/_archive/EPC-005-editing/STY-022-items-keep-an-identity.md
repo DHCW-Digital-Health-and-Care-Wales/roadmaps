@@ -1,10 +1,9 @@
 # STY-022: Each roadmap item keeps an identity
 
-- **Status**: Proposed — owner decisions settled in the Editing epic's grilling
-  (2026-11-11); selectable now
+- **Status**: Done — delivered in its PR, which awaits the owner's merge
 - **Type**: Feature
 - **Area**: Domain + Infrastructure
-- **Epic**: EPC-005-editing
+- **Epic**: [EPC-005-editing](../../EPC-005-editing/README.md)
 - **Depends on**: none
 - **Binding ADRs**: ADR-012 §"Item identity", ADR-011, ADR-002
 - **Suggested model**: Sonnet — a parser and model change along ADR-012's settled rules,
@@ -103,3 +102,31 @@ built. `createTestRoadmapItem` builds items for features' tests; it gains `id` (
 - Writing IDs, and adding the column: STY-023.
 - Keying the page's items by ID: STY-025, if it needs it.
 - Showing a duplicate ID to anyone: a later sheet-health record.
+
+## Delivery
+
+### Departures
+
+None. The row list is `RoadmapTab.rows`, a number array in step with `items` (D4).
+
+### Contract for dependents
+
+- **Domain**: `RoadmapItem.id: string | null` (`@/domain/roadmap/roadmap-item`);
+  `createTestRoadmapItem` defaults it to `null`.
+- **Parser** (`parseRoadmapTab`): `RoadmapTab = { items, rows, problems }`, where
+  `rows[i]` is the spreadsheet row (1 is the header) of `items[i]`. `Item ID` is a header
+  column like the rest (`matchKey`, any position, first header wins) with no
+  `missing-column` and no Welsh version. The ID is trimmed and compared exactly; the
+  first kept row with an ID keeps it, a later repeat has `id: null` and records
+  `duplicate-item-id` (row, header as written, value). A row with only an ID is not
+  blank, so it is `missing-title` and its ID is not counted. The adapter still returns
+  `.items` only and writes nothing.
+- **Tests**: the repository contract's "Every field" item has `id: "k7q2xw"`; the Google
+  adapter's test writes an `Item ID` column in `tabRowsFor`. Fixtures have no such column.
+
+### Scenario evidence
+
+- **S1–S5**: `roadmap-tab-parser.test.ts` "item IDs" (header by position, trimmed; no
+  column or blank cell; duplicate; ID-only row; rows 2, 4, 5), and the example tab's
+  first item with `id: null` and no problems.
+- **S6**: no `features/` or E2E file changed; the unchanged unit suite and E2E suite pass.

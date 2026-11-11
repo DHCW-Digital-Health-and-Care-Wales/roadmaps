@@ -208,12 +208,14 @@ function tabRowsFor(items: readonly RoadmapItem[]): string[][] {
   ]
   return [
     [
+      "Item ID",
       ...textHeaders,
       ...textHeaders.map((header) => `${header} (cy)`),
       "Horizon",
       "Organisations",
     ],
     ...items.map((item) => [
+      item.id ?? "",
       ...language("en")(item),
       ...language("cy")(item),
       item.placement ?? item.writtenHorizon ?? "",

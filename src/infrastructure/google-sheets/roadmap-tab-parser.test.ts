@@ -81,6 +81,7 @@ describe("parseRoadmapTab", () => {
 
     it("reads every column of the first item", () => {
       expect(tab.items[0]).toEqual({
+        id: null,
         title: {
           en: "Example card with every column",
           cy: "Cerdyn enghreifftiol gyda phob colofn",
@@ -296,6 +297,72 @@ describe("parseRoadmapTab", () => {
     })
   })
 
+  describe("item IDs (S1 to S5, STY-022)", () => {
+    const ID_HEADER = ["Item ID", ...HEADER]
+    const withIds = (...rows: (Cells & { "Item ID"?: string })[]) =>
+      parseRoadmapTab([
+        ID_HEADER,
+        ...rows.map((cells) =>
+          ID_HEADER.map(
+            (column) => (cells as Record<string, string>)[column] ?? "",
+          ),
+        ),
+      ])
+
+    it("reads the ID by header, wherever the column is, trimmed", () => {
+      const tab = parseUnder(
+        [...HEADER.slice(0, 3), "  item id ", ...HEADER.slice(3)],
+        { Title: "First", Horizon: "Now", "  item id ": "  k7q2xw " } as Cells,
+      )
+      expect(tab.items[0]?.id).toBe("k7q2xw")
+      expect(tab.items[0]?.title.en).toBe("First")
+      expect(tab.problems).toEqual([])
+    })
+
+    it("gives an item with no column, or a blank cell, no ID and records nothing", () => {
+      expect(parseRows({ Title: "A", Horizon: "Now" }).items[0]?.id).toBeNull()
+      const tab = withIds({ Title: "B", Horizon: "Now" })
+      expect(tab.items[0]?.id).toBeNull()
+      expect(tab.problems).toEqual([])
+    })
+
+    it("leaves a repeated ID with the first row", () => {
+      const tab = withIds(
+        { "Item ID": "k7q2xw", Title: "First", Horizon: "Now" },
+        { "Item ID": "k7q2xw", Title: "Second", Horizon: "Now" },
+      )
+      expect(tab.items.map((item) => item.id)).toEqual(["k7q2xw", null])
+      expect(tab.problems).toEqual([
+        problem("duplicate-item-id", {
+          row: 3,
+          column: "Item ID",
+          value: "k7q2xw",
+        }),
+      ])
+    })
+
+    it("treats a row with only an ID as having no title, and does not count its ID", () => {
+      const tab = withIds(
+        { "Item ID": "k7q2xw" },
+        { "Item ID": "k7q2xw", Title: "Kept", Horizon: "Now" },
+      )
+      expect(tab.items.map((item) => item.id)).toEqual(["k7q2xw"])
+      expect(tab.problems).toEqual([
+        problem("missing-title", { row: 2, column: "Title", value: "" }),
+      ])
+    })
+
+    it("returns the spreadsheet row of each kept item", () => {
+      const tab = parseRows(
+        { Title: "A", Horizon: "Now" },
+        {},
+        { Title: "B", Horizon: "Now" },
+        { Title: "C", Horizon: "Now" },
+      )
+      expect(tab.rows).toEqual([2, 4, 5])
+    })
+  })
+
   describe("skipped rows (S4)", () => {
     it("skips a blank row silently and a row with no English title with a problem", () => {
       const tab = parseRows(
@@ -313,7 +380,7 @@ describe("parseRoadmapTab", () => {
 
     it("treats a row of spaces, or shorter than the header, as blank", () => {
       const tab = parseRoadmapTab([[...HEADER], ["  ", " "], []])
-      expect(tab).toEqual({ items: [], problems: [] })
+      expect(tab).toEqual({ items: [], rows: [], problems: [] })
     })
   })
 
@@ -522,6 +589,7 @@ describe("parseRoadmapTab", () => {
     it("gives no items and no failure for a header alone", () => {
       expect(parseRoadmapTab([[...HEADER]])).toEqual({
         items: [],
+        rows: [],
         problems: [],
       })
     })

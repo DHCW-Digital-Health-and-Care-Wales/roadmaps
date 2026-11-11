@@ -51,6 +51,7 @@ const itemFixtures = {
   producta: [
     {
       ...createTestRoadmapItem("Every field"),
+      id: "k7q2xw",
       title: { en: "Every field", cy: "Pob maes" },
       placement: "recently-delivered",
       description: { en: "What it is.\nIn two lines.", cy: "Beth ydyw." },

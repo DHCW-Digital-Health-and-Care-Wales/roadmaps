@@ -55,7 +55,7 @@ State these policies, using the user's instructions where supplied:
   Top-level orchestrator sessions run Sonnet (`claude-sonnet-5-5`), or the
   runtime's nearest standard-tier model, at medium effort, because delegated
   agents do the heavy work; a session started on another model says so and
-  launches its successors on this one. Hand judgement-heavy
+  launches its successors on the orchestrator model. Hand judgement-heavy
   orchestrator work (the orchestration retro's edits to agent instructions,
   investigating a hard failure) to a delegated agent on a fitting model. A
   delivery agent takes its record's Suggested model as a tier hint; use

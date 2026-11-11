@@ -815,3 +815,10 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
     - `page.clock.install()` runs time normally (Playwright resumes it on install), so the
       "Connected" notice still clears after eight real seconds: hover it with
       `holdConnectedNotice` in any test that snapshots or tours the main page.
+- **EPC-004 planning (orchestrator)** — `docs/analysis/roadmap-tab-format.md`, ADR-011
+  and EPC-004 (STY-019–021): each roadmap's items come from the tab its index
+  row names, columns found by header, never position; the `Template` tab (second) is the
+  public site's columns and is never read. Owner answers: all six placements shown in
+  order, unplaced items shown flagged with their horizon as written, every field modelled
+  and shown as plain text, organisations as standard codes. ADR-011 accepted after
+  grilling (errors per roadmap, three reads per roadmap, no item identity yet).

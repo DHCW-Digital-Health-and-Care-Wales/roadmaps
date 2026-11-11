@@ -20,8 +20,9 @@ screenshots use only these files or inline fakes.
 | `ProductC.csv` | `ProductC` | The tab of a roadmap whose `Enabled` is `No`                                                                                                                         |
 
 The E2E Sheets fake (`tests/e2e/fixtures/fake-sheets.ts`) serves all four files as the
-example spreadsheet. The app reads only `Roadmaps`; the roadmap tabs (`Product*.csv`) are
-kept for the future roadmap detail stories.
+example spreadsheet. The app reads only `Roadmaps` today; EPC-004 reads the roadmap tabs (`Product*.csv`) for
+each roadmap's items. The live spreadsheet's second tab, `Template`, has the same columns
+as `ProductA.csv` and is never read, so it has no file here.
 
 `parse-csv.ts` reads a file's text into rows of cells, as the Sheets API returns a tab.
 Vitest tests import the text with `?raw` (`import csv from "…/Roadmaps.csv?raw"`); Node

@@ -217,7 +217,9 @@ the list via `useRoadmap`, not found, connect prompt, list errors, expired alert
 items section sits under the title inside its `roadmap` branch. `RoadmapsErrorState`
 takes an `AppError` and copies `errors.<kind>`, whose `invalid-data` text names the
 roadmap list. `RoadmapsPage` has the Refresh button and `RoadmapCard` the "Not
-published" badge to reuse. Visible UI changes
+published" badge to reuse. STY-018 (merged after this record was written) snapshots the page's accessibility tree
+in `tests/e2e/structure.spec.ts-snapshots/detail.aria.yml`: regenerate it on purpose as
+`tests/e2e/AGENTS.md` says, and review the new tree. Visible UI changes
 need before/after screenshots (`implement-story` `references/screenshots.md`).
 
 ## Out of scope

@@ -59,7 +59,8 @@ it after the publish
 ### S5: A removed item is reported
 
 **Given** pending changes to an item a co-lead has deleted (its ID is gone), or to an item
-without an ID whose position no longer holds its loaded text (Q30)
+without an ID whose position holds neither its loaded text nor that text with the
+pending changes applied (Q30, STY-023 S12)
 **When** they publish
 **Then** nothing is written, a message names the item by its loaded title, its pending
 changes are discarded

@@ -74,8 +74,9 @@ nothing is written (ADR-012 Option 13)
 **Given** an item loaded without an ID at position 3 among the kept items
 **When** the change is published and position 3 still holds exactly the loaded content
 **Then** that row is written
-**And** if position 3 holds anything else, the item is reported as not found and nothing
-is written (ADR-012 Option 13)
+**And** if position 3 holds anything other than the loaded content, or that content with
+the pending edits applied (S12), the item is reported as not found and nothing is
+written (ADR-012 Option 13)
 
 ### S6: IDs are assigned on every publish
 

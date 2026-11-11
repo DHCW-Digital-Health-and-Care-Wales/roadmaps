@@ -108,7 +108,8 @@ edits were made on.
 - **An item or roadmap that can no longer be found publishes nothing** (Option 13, Q30):
   an item whose ID is gone (or whose first row of a repeated ID no longer holds what was
   loaded), an item without an ID whose
-  position no longer holds the loaded content, or a roadmap whose index row is gone. The Product Lead is told which,
+  position holds neither the loaded content nor that content with the pending edits
+  applied, or a roadmap whose index row is gone. The Product Lead is told which,
   their pending edits to it are discarded, and the rest stay for the next publish.
 - **A missing column is added** (Q28): when a field being written, or `Item ID`, has no
   column in the re-read header, publishing appends one after the last column any row

@@ -35,49 +35,49 @@ Each roadmap is one row of the **roadmap index** (ADR-009). Its identity is the 
 name the public site uses in its address (`producta`), and outlives the data source.
 _Avoid_: Sheet, worksheet, tab, board
 
-**Horizon** _(planned)_:
+**Horizon**:
 One of a roadmap's three columns: **Now** (being worked on), **Next** (coming up) and
 **Later** (intended, further out). Horizons are not dates.
 _Avoid_: Column, lane, quarter, phase
 
-**Section** _(planned)_:
+**Section**:
 One of three groups shown around the horizons, shared with the public site: **Recently
 delivered**, **Delivered this year** and **Not doing** (ADR-011).
 _Avoid_: Horizon, status
 
-**Placement** _(planned)_:
+**Placement**:
 Where a roadmap item appears: one of the three horizons or one of the three sections.
 A roadmap item has at most one; an item with none is an **unplaced item** (ADR-011).
 Code and records use the word; interface copy names the horizon or section itself.
 _Avoid_: Column, lane, status
 
-**Unplaced item** _(planned)_:
+**Unplaced item**:
 A roadmap item with no recognised horizon or section, which the public site does not
 show. The editor shows it, flagged, so the Product Lead can place it (ADR-011).
 _Avoid_: Draft, hidden item
 
-**Roadmap item** _(planned)_:
+**Roadmap item**:
 One piece of work on a roadmap: a title, a description, expected outcomes, tags and any
 other details that help a public reader. It fits on one card no bigger than a phone
 screen.
 _Avoid_: Ticket, task, feature, epic, story
 
-**Expected outcome** _(planned)_:
+**Expected outcome**:
 The change a roadmap item should bring about for patients, staff or the public, in their
 terms rather than as an output delivered.
 _Avoid_: Deliverable, benefit, KPI
 
-**Tag** _(planned)_:
+**Tag**:
 A short label on a roadmap item for grouping and filtering, such as a theme or an
 audience. Free text chosen by the Product Lead today; a shared list may follow.
 _Avoid_: Label, category, keyword
 
-**Phase** _(planned)_:
+**Phase**:
 A free-text word shown above a roadmap item's title, such as "Discovery" or "Beta",
 saying what stage the work is at. Not a roadmap's status label.
 _Avoid_: Stage, status
 
-**Organisation** _(planned)_:
+**Organisation**:
 One of twelve fixed NHS Wales bodies a roadmap item's work is for, such as Cardiff and
 Vale University Health Board, or **All Wales** for national work; shared with the public
 site, which filters by it (ADR-011).

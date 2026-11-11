@@ -1,6 +1,6 @@
 # STY-019: A roadmap item carries everything its row holds, and a roadmap's tab can be parsed
 
-- **Status**: Proposed — selectable; ADR-011 accepted 2026-11-10
+- **Status**: Done — delivered in its PR, which awaits the owner's merge
 - **Type**: Feature + Refactor
 - **Area**: Domain + Infrastructure
 - **Epic**: EPC-004-roadmap-items
@@ -9,6 +9,7 @@
   a roadmap tab"; ADR-009 (header matching); ADR-002
 - **Suggested model**: Opus — a pure parser with many edge cases that must match another
   repository's rules, plus a behaviour-preserving extraction from the index parser
+- **Delivered**: [PR #23](https://github.com/collisdigital/roadmaps-editor/pull/23)
 
 ## Summary
 
@@ -166,3 +167,68 @@ ported (as STY-010 decided for the index). The index parser's header handling is
 - Reading a tab from the data source and the missing-tab failure: STY-020.
 - Showing any item: STY-021.
 - Item identity: the first editing record (ADR-011).
+
+## Delivery
+
+### Departures
+
+- **Problems recorded beyond the scenarios** (agent): as the public site warns for each,
+  a missing optional column records `missing-column` once (S3's `Horizon` and S6's
+  optional columns use the same code), and a blank and an unknown horizon are separate
+  codes, `missing-horizon` and `unknown-horizon`, both with the row, the `Horizon`
+  header and the value as written (`""` when blank). A missing `Horizon` column records
+  no per-row horizon problem, as S3 asks.
+- **S4, which rows are blank** (agent): a row is blank, and skipped with no problem, when
+  every column the header reads is blank, unknown columns such as `Notes` included and
+  ignored columns (repeats, a Welsh `Horizon`) not, exactly as the public site's
+  `readTable`. A row with only a Welsh title records one `missing-title`, not also
+  `welsh-without-english`.
+- **Not ported** (agent): the public site's translation-quality warnings, as STY-010
+  decided for the index (record's Starting point).
+- **Shared header reader** (agent): `headerReader(columns, welshColumns)` in
+  `sheet-header.ts` makes each parser's reader; `matchKey` lives there too, and the
+  problem shape and log are `SheetProblem<Code>`/`ProblemLog<Code>` in
+  `sheet-problem-log.ts`. `RoadmapIndexProblem` is now an alias of
+  `SheetProblem<RoadmapIndexProblemCode>`, the same shape, and its codes are unchanged.
+  The header reader also reports `readIndexes`, every column read, for the blank-row
+  check; the index parser does not use it (its blank rule is a blank `Sheet`).
+- **Organisations and horizons match by id** (agent): the public site keys each sheet
+  value (`National`, `CAVUHB`, `Recently delivered`) with the header rule; every one
+  folds to its id's key, so the parser keys the ids themselves and keeps no spelling
+  table.
+- **Test order**: the parser suite was written first and failed (no module); the index
+  suite ran green against the extracted reader before the tab parser existed.
+
+### Contract for dependents
+
+- **Parser** (STY-020): `parseRoadmapTab(rows: readonly (readonly string[])[])` from
+  `@/infrastructure/google-sheets/roadmap-tab-parser` (not in the barrel). `rows[0]` is
+  spreadsheet row 1, rows may be ragged. Returns `{ items, problems }`, items in row
+  order. Throws `AppError("invalid-data")` (not retryable) for no rows or a header with no
+  `Title` column, so STY-020 passes `[]` when a values response has no `values`. A header
+  alone gives no items and no failure.
+- **Problems**: `RoadmapTabProblem { code, row, column, value }`, as the index's. Codes:
+  `missing-column`, `duplicate-column`, `welsh-column-not-allowed`, `missing-title`,
+  `missing-horizon`, `unknown-horizon`, `unknown-organisation`, `welsh-count-mismatch`
+  (column is the Welsh header, value the whole Welsh cell), `welsh-without-english`.
+  Nothing logs or shows them.
+- **Domain**: `RoadmapItem`, `RoadmapItemDetail` (`domain/roadmap/roadmap-item.ts`),
+  `ROADMAP_PLACEMENTS`/`ROADMAP_HORIZONS`/`RoadmapPlacement`
+  (`roadmap-placement.ts`), `ORGANISATIONS`/`Organisation` (`organisation.ts`), as
+  ADR-011. Test builder: `createTestRoadmapItem(title, overrides?)`
+  (`domain/roadmap/testing/test-roadmap-item.ts`): placed `now`, everything else empty.
+- **Header reader**: `headerReader`, `matchKey`, `HeaderProblemCode` (`sheet-header.ts`)
+  and `ProblemLog`/`SheetProblem` (`sheet-problem-log.ts`), for any later tab parser.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                        |
+| -------- | -------------------------------------------------------------------------------------------------------------- |
+| S1       | `src/infrastructure/google-sheets/roadmap-tab-parser.test.ts` (`the example roadmap tab (S1)`), `ProductA.csv` |
+| S2       | same file, `headers (S2)`                                                                                      |
+| S3, S9   | same file, `horizons (S3, S9)`                                                                                 |
+| S4       | same file, `skipped rows (S4)`                                                                                 |
+| S5, S10  | same file, `tags, organisations and details (S5, S10)`                                                         |
+| S6       | same file, `optional text (S6)`                                                                                |
+| S7       | same file, `an unreadable tab (S7)`                                                                            |
+| S8       | `src/infrastructure/google-sheets/roadmap-index-parser.test.ts`, unchanged and passing                         |

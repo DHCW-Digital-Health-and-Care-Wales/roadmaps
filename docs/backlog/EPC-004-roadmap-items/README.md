@@ -1,7 +1,7 @@
 # EPC-004: Roadmap items — a roadmap's page shows its items, read as the public site reads them
 
 - **Status**: Active — planned 2026-11-10; a thin slice to iterate on
-- **Progress**: 0 of 3 terminal; next selectable: STY-019; blocked on: nothing
+- **Progress**: 1 of 3 terminal; next selectable: STY-020 once STY-019's PR merges; blocked on: nothing
 - **Binding ADRs**: ADR-011, ADR-009, ADR-002, ADR-008, ADR-010
 
 ## Summary
@@ -116,11 +116,11 @@ tab, row or column; it speaks horizon, roadmap item, tag and expected outcome
 
 ## Stories
 
-| ID      | Story                                                                                           | Area                               | Depends on | State |
-| ------- | ----------------------------------------------------------------------------------------------- | ---------------------------------- | ---------- | ----- |
-| STY-019 | [A roadmap item carries everything its row holds](STY-019-roadmap-item-model-and-tab-parser.md) | Domain + Infrastructure            | —          |       |
-| STY-020 | [The repository reads a roadmap's items](STY-020-read-roadmap-items.md)                         | Domain + Infrastructure + E2E      | STY-019    |       |
-| STY-021 | [A roadmap's page shows its items](STY-021-roadmap-page-shows-items.md)                         | Features/UI + i18n (en + cy) + E2E | STY-020    |       |
+| ID      | Story                                                                                                                             | Area                               | Depends on | State                |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ---------- | -------------------- |
+| STY-019 | [A roadmap item carries everything its row holds](../_archive/EPC-004-roadmap-items/STY-019-roadmap-item-model-and-tab-parser.md) | Domain + Infrastructure            | —          | ✅ (PR awaits merge) |
+| STY-020 | [The repository reads a roadmap's items](STY-020-read-roadmap-items.md)                                                           | Domain + Infrastructure + E2E      | STY-019    |                      |
+| STY-021 | [A roadmap's page shows its items](STY-021-roadmap-page-shows-items.md)                                                           | Features/UI + i18n (en + cy) + E2E | STY-020    |                      |
 
 ## Sequencing
 

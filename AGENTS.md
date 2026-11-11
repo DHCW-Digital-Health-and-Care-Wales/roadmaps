@@ -822,3 +822,23 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
   order, unplaced items shown flagged with their horizon as written, every field modelled
   and shown as plain text, organisations as standard codes. ADR-011 accepted after
   grilling (errors per roadmap, three reads per roadmap, no item identity yet).
+- **STY-019 Roadmap item model and roadmap tab parser** — ADR-011's `RoadmapItem`,
+  placements and organisations in `domain/roadmap/`, and a pure `parseRoadmapTab(rows)`
+  (`infrastructure/google-sheets/roadmap-tab-parser.ts`, not in the barrel) returning
+  items in row order plus problem codes. Nothing visible changes and nothing reads a
+  roadmap's tab yet (STY-020). The glossary's item terms lost _(planned)_.
+  - Where things live: `headerReader(columns, welshColumns)` and `matchKey`
+    (`sheet-header.ts`) serve both parsers; `ProblemLog<Code>`/`SheetProblem<Code>`
+    (`sheet-problem-log.ts`); `createTestRoadmapItem(title, overrides?)`
+    (`domain/roadmap/testing/test-roadmap-item.ts`, placed `now`). The record's Delivery
+    lists the problem codes.
+  - Decisions: blank and unknown horizons are `missing-horizon`/`unknown-horizon`, the
+    item kept with `placement: null` and `writtenHorizon` as written; a missing
+    `Horizon` column records one `missing-column`, nothing per row. Horizons and
+    organisations match their ids with `matchKey`, with no spelling table.
+  - Gotchas:
+    - A row is blank when every column the header reads (unknown ones included) is
+      blank: `SheetHeader.readIndexes`. The index parser still skips on a blank `Sheet`.
+    - Welsh tags and details pair with the English by position before blanks are
+      dropped; a count mismatch drops all that cell's Welsh. A Welsh detail keeps a
+      dash that does not nest (`-5 gradd`).

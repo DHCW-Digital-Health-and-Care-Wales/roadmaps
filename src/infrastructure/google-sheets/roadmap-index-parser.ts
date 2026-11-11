@@ -15,24 +15,22 @@ import {
 import { AppError } from "@/lib/errors"
 import { foldText } from "@/lib/text"
 
+import {
+  headerReader,
+  matchKey,
+  type HeaderCell,
+  type HeaderProblemCode,
+  type SheetHeader,
+} from "./sheet-header"
+import { ProblemLog, type SheetProblem } from "./sheet-problem-log"
+
 /** A mistake in the roadmap index, as data for a later sheet-health view (no prose). */
-export interface RoadmapIndexProblem {
-  code: RoadmapIndexProblemCode
-  /** The spreadsheet row, 1 being the header; `null` for a problem of the whole list. */
-  row: number | null
-  /** The header as written, or the expected header when it is missing. */
-  column: string | null
-  /** The cell's trimmed value. */
-  value: string | null
-}
+export type RoadmapIndexProblem = SheetProblem<RoadmapIndexProblemCode>
 
 export type RoadmapIndexProblemCode =
+  | HeaderProblemCode
   /** A column other than `Sheet` has no header. */
   | "missing-column"
-  /** A second header for a column already read; the column is ignored. */
-  | "duplicate-column"
-  /** A Welsh header for a column with no Welsh; the column is ignored. */
-  | "welsh-column-not-allowed"
   /** `Enabled` is neither exactly `Yes`, `No` nor blank; not published. */
   | "enabled-not-yes"
   /** A category not in the list; read as no category. */
@@ -108,23 +106,15 @@ export const CATEGORY_SHEET_VALUES: Readonly<Record<RoadmapCategory, string>> =
     "national-systems-data": "National Systems & Data",
   }
 
-/** Headers and categories match ignoring case, accents, spaces and punctuation. */
-const matchKey = (value: string) => foldText(value).replace(/[^a-z0-9]/g, "")
-
 /** The public site's URL slug: `Product A` becomes `product-a`. */
 const slugify = (value: string) =>
   foldText(value)
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
 
-/** `Title (cy)`, `Title(CY)`, `Title - Cymraeg`, `Title (Welsh)`, `Title_cym`. */
-const WELSH_HEADER = /^(.+?)[\s([\-_]+(?:cy|cym|cymraeg|welsh)[\s)\]]*$/i
-
-const COLUMNS_BY_KEY = new Map<string, Column>(
-  (["Sheet", ...OPTIONAL_COLUMNS] as const).map((column) => [
-    matchKey(column),
-    column,
-  ]),
+const readHeader = headerReader<Column, TextColumn>(
+  ["Sheet", ...OPTIONAL_COLUMNS],
+  WELSH_COLUMNS,
 )
 
 const CATEGORIES_BY_KEY = new Map<string, RoadmapCategory>(
@@ -134,16 +124,8 @@ const CATEGORIES_BY_KEY = new Map<string, RoadmapCategory>(
   ]),
 )
 
-/** Where each column's cells are, and their headers as written. */
-interface Header {
-  english: Map<Column, Cell>
-  welsh: Map<TextColumn, Cell>
-}
-
-interface Cell {
-  index: number
-  header: string
-}
+type Header = SheetHeader<Column, TextColumn>
+type IndexProblemLog = ProblemLog<RoadmapIndexProblemCode>
 
 /** One spreadsheet row, trimmed, read through the header. */
 interface IndexRow {
@@ -153,22 +135,6 @@ interface IndexRow {
   id: string
   read(column: Column): string
   readWelsh(column: TextColumn): string
-}
-
-class ProblemLog {
-  readonly #problems: RoadmapIndexProblem[] = []
-
-  record(
-    code: RoadmapIndexProblemCode,
-    { row = null, column = null, value = null }: Partial<RoadmapIndexProblem>,
-  ): void {
-    this.#problems.push({ code, row, column, value })
-  }
-
-  /** Problems of the whole list first, then by row; ties keep their order. */
-  sorted(): RoadmapIndexProblem[] {
-    return this.#problems.toSorted((a, b) => (a.row ?? 0) - (b.row ?? 0))
-  }
 }
 
 export interface ParseRoadmapIndexOptions {
@@ -195,7 +161,7 @@ export function parseRoadmapIndex(
       message: "The roadmap index is empty",
     })
   }
-  const problems = new ProblemLog()
+  const problems = new ProblemLog<RoadmapIndexProblemCode>()
   const header = readHeader(headerRow, problems)
   if (!header.english.has("Sheet")) {
     throw new AppError("invalid-data", {
@@ -229,57 +195,13 @@ export function parseRoadmapIndex(
   return { entries, problems: problems.sorted() }
 }
 
-/** Maps headers to columns; the first header of a column wins (ADR-009). */
-function readHeader(cells: readonly string[], problems: ProblemLog): Header {
-  const header: Header = { english: new Map(), welsh: new Map() }
-  const seen = new Set<string>()
-  cells.forEach((written, index) => {
-    const cell = { index, header: written.trim() }
-    const welshBase = WELSH_HEADER.exec(cell.header)?.[1]
-    if (welshBase !== undefined) {
-      const column = COLUMNS_BY_KEY.get(matchKey(welshBase))
-      const textColumn = WELSH_COLUMNS.find((name) => name === column)
-      if (textColumn === undefined) {
-        problems.record("welsh-column-not-allowed", {
-          row: 1,
-          column: cell.header,
-        })
-        return
-      }
-      if (!claim(seen, `${textColumn}:cy`, cell, problems)) return
-      header.welsh.set(textColumn, cell)
-      return
-    }
-    const key = matchKey(cell.header)
-    if (key === "" || !claim(seen, key, cell, problems)) return
-    const column = COLUMNS_BY_KEY.get(key)
-    if (column !== undefined) header.english.set(column, cell)
-  })
-  return header
-}
-
-/** Claims a column for this header, or records the header as a repeat. */
-function claim(
-  seen: Set<string>,
-  key: string,
-  cell: Cell,
-  problems: ProblemLog,
-): boolean {
-  if (!seen.has(key)) {
-    seen.add(key)
-    return true
-  }
-  problems.record("duplicate-column", { row: 1, column: cell.header })
-  return false
-}
-
 /** Reads one row, or returns `null` for a row to ignore: blank, or a blank `Sheet`. */
 function toIndexRow(
   header: Header,
   cells: readonly string[],
   row: number,
 ): IndexRow | null {
-  const cellAt = (cell: Cell | undefined) =>
+  const cellAt = (cell: HeaderCell | undefined) =>
     cell === undefined ? "" : (cells[cell.index] ?? "").trim()
   const read = (column: Column) => cellAt(header.english.get(column))
   const sheet = read("Sheet")
@@ -301,7 +223,7 @@ function toIndexRow(
 function keepOneRowPerId(
   rows: readonly IndexRow[],
   header: Header,
-  problems: ProblemLog,
+  problems: IndexProblemLog,
 ): IndexRow[] {
   const column = header.english.get("Sheet")?.header ?? null
   const skip = (code: RoadmapIndexProblemCode, { row, sheet }: IndexRow) => {
@@ -332,7 +254,7 @@ function recordMissingTabs(
   rows: readonly IndexRow[],
   tabTitles: ReadonlySet<string>,
   header: Header,
-  problems: ProblemLog,
+  problems: IndexProblemLog,
 ): void {
   const column = header.english.get("Sheet")?.header ?? null
   for (const { row, sheet } of rows) {
@@ -348,13 +270,13 @@ const isPublished = (indexRow: IndexRow) => indexRow.read("Enabled") === "Yes"
 function toEntry(
   indexRow: IndexRow,
   header: Header,
-  problems: ProblemLog,
+  problems: IndexProblemLog,
 ): RoadmapIndexEntry {
   const { row, sheet, id } = indexRow
   /** Records a problem with a cell of this row. */
   const recordCell = (
     code: RoadmapIndexProblemCode,
-    cell: Cell | undefined,
+    cell: HeaderCell | undefined,
     value: string,
   ) => {
     problems.record(code, { row, column: cell?.header ?? null, value })

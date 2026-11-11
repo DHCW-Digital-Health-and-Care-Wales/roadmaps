@@ -3,16 +3,25 @@ import { describe, expect, it } from "vitest"
 import { isAppError } from "@/lib/errors"
 
 import type { Roadmap } from "../roadmap"
+import type { RoadmapItem } from "../roadmap-item"
 import type { RoadmapRepository } from "../roadmap-repository"
 import { createTestRoadmap } from "./test-roadmap"
+import { createTestRoadmapItem } from "./test-roadmap-item"
+
+/** Each roadmap's items by roadmap id; a roadmap with no entry has none. */
+export type RoadmapItemsById = Readonly<Record<string, readonly RoadmapItem[]>>
 
 export interface RoadmapRepositoryContractSetup {
   /**
    * Returns a repository whose data source holds exactly these roadmaps, in this order.
    * Ids are URL-safe slugs (lower-case letters and digits, joined by single hyphens),
-   * which every adapter can store and give back unchanged.
+   * which every adapter can store and give back unchanged. `items` gives roadmaps their
+   * items, in order.
    */
-  withRoadmaps(roadmaps: readonly Roadmap[]): RoadmapRepository
+  withRoadmaps(
+    roadmaps: readonly Roadmap[],
+    items?: RoadmapItemsById,
+  ): RoadmapRepository
   /** Returns a repository whose data source fails on every request. */
   failing(): RoadmapRepository
 }
@@ -37,6 +46,35 @@ const fixtures: readonly Roadmap[] = [
   }),
   createTestRoadmap("0", "Template", { published: false }),
 ]
+
+const itemFixtures = {
+  producta: [
+    {
+      ...createTestRoadmapItem("Every field"),
+      title: { en: "Every field", cy: "Pob maes" },
+      placement: "recently-delivered",
+      description: { en: "What it is.\nIn two lines.", cy: "Beth ydyw." },
+      expectedOutcome: { en: "What changes.", cy: "" },
+      phase: { en: "Beta", cy: "Beta" },
+      tags: [
+        { en: "Service X", cy: "Gwasanaeth X" },
+        { en: "Service Y", cy: "Gwasanaeth Y" },
+      ],
+      organisations: ["national", "cavuhb", "sbuhb"],
+      details: [
+        { text: { en: "First", cy: "Cyntaf" }, level: 0 },
+        { text: { en: "Nested", cy: "Nythu" }, level: 1 },
+        { text: { en: "Deeper", cy: "Dyfnach" }, level: 2 },
+      ],
+    },
+    createTestRoadmapItem("Later work", { placement: "later" }),
+    createTestRoadmapItem("Unplaced work", {
+      placement: null,
+      writtenHorizon: "Soon",
+    }),
+  ],
+  "0": [createTestRoadmapItem("Template work", { placement: "not-doing" })],
+} as const satisfies RoadmapItemsById
 
 /**
  * Behaviour every `RoadmapRepository` adapter must share (ADR-002). Call it from the
@@ -82,6 +120,61 @@ export function describeRoadmapRepositoryContract(
         setup
           .withRoadmaps(fixtures)
           .listRoadmaps({ signal: AbortSignal.abort(reason) }),
+      ).rejects.toBe(reason)
+    })
+
+    it("lists a roadmap's items as plain data in data-source order", async () => {
+      const repository = setup.withRoadmaps(fixtures, itemFixtures)
+
+      expect(await repository.listRoadmapItems("producta")).toStrictEqual(
+        itemFixtures.producta,
+      )
+      expect(await repository.listRoadmapItems("0")).toStrictEqual(
+        itemFixtures["0"],
+      )
+    })
+
+    it("lists no items for a roadmap that has none", async () => {
+      await expect(
+        setup
+          .withRoadmaps(fixtures, itemFixtures)
+          .listRoadmapItems("product-b-2027"),
+      ).resolves.toEqual([])
+    })
+
+    it("returns new items on every call", async () => {
+      const repository = setup.withRoadmaps(fixtures, itemFixtures)
+
+      const first = await repository.listRoadmapItems("producta")
+      first.pop()
+
+      expect(await repository.listRoadmapItems("producta")).toStrictEqual(
+        itemFixtures.producta,
+      )
+    })
+
+    it("rejects with a not-found AppError, not retryable, for an unknown id", async () => {
+      await expect(
+        setup.withRoadmaps(fixtures, itemFixtures).listRoadmapItems("unknown"),
+      ).rejects.toMatchObject({ kind: "not-found", retryable: false })
+    })
+
+    it("rejects items with an AppError when the data source fails", async () => {
+      const error: unknown = await setup
+        .failing()
+        .listRoadmapItems("producta")
+        .catch((reason: unknown) => reason)
+
+      expect(isAppError(error)).toBe(true)
+    })
+
+    it("rejects items with the abort reason when the signal is already aborted", async () => {
+      const reason = new DOMException("Cancelled by test", "AbortError")
+
+      await expect(
+        setup
+          .withRoadmaps(fixtures, itemFixtures)
+          .listRoadmapItems("producta", { signal: AbortSignal.abort(reason) }),
       ).rejects.toBe(reason)
     })
   })

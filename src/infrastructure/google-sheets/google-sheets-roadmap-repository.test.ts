@@ -2,11 +2,16 @@ import { HttpResponse } from "msw"
 import { http } from "msw/http"
 import { describe, expect, it, vi } from "vitest"
 
+import type { LocalisedText } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
+import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { describeRoadmapRepositoryContract } from "@/domain/roadmap/testing/roadmap-repository-contract"
 import { AppError } from "@/lib/errors"
 import { server } from "@/test/msw-server"
 
+import productACsv from "../../../tests/fixtures/sheets/ProductA.csv?raw"
+import productBCsv from "../../../tests/fixtures/sheets/ProductB.csv?raw"
+import productCCsv from "../../../tests/fixtures/sheets/ProductC.csv?raw"
 import roadmapsCsv from "../../../tests/fixtures/sheets/Roadmaps.csv?raw"
 import { parseCsv } from "../../../tests/fixtures/sheets/parse-csv"
 import { GoogleSheetsRoadmapRepository } from "./google-sheets-roadmap-repository"
@@ -14,6 +19,7 @@ import {
   CATEGORY_SHEET_VALUES,
   parseRoadmapIndex,
 } from "./roadmap-index-parser"
+import { parseRoadmapTab } from "./roadmap-tab-parser"
 import { createSheetsClient, type SheetsClient } from "./sheets-client"
 
 const SPREADSHEET_ID = "spreadsheet-1"
@@ -28,6 +34,13 @@ const VALUES_PARAMS = [
 
 /** The example spreadsheet's roadmap index (`tests/fixtures/sheets/Roadmaps.csv`). */
 const EXAMPLE_ROWS = parseCsv(roadmapsCsv)
+
+/** The example spreadsheet's roadmap tabs' rows, by tab title. */
+const EXAMPLE_TAB_ROWS: Readonly<Record<string, string[][]>> = {
+  ProductA: parseCsv(productACsv),
+  ProductB: parseCsv(productBCsv),
+  ProductC: parseCsv(productCCsv),
+}
 
 interface Tab {
   title: string
@@ -52,14 +65,22 @@ function metadataFor(tabs: readonly Tab[]) {
 
 interface Spreadsheet {
   tabs?: readonly Tab[]
-  /** The values response of whichever tab is read. */
+  /** The values response of any tab `tabValues` leaves out: the roadmap index's. */
   values?: unknown
+  /** The values response of each roadmap tab, by tab title. */
+  tabValues?: Readonly<Record<string, unknown>>
 }
 
-/** Serves both reads over HTTP; records each request. */
+/** Serves every read over HTTP; records each request. */
 function serveSpreadsheet({
   tabs = EXAMPLE_TABS,
   values = { values: EXAMPLE_ROWS },
+  tabValues = Object.fromEntries(
+    Object.entries(EXAMPLE_TAB_ROWS).map(([title, rows]) => [
+      title,
+      { values: rows },
+    ]),
+  ),
 }: Spreadsheet = {}) {
   const requests: Request[] = []
   server.use(
@@ -69,10 +90,22 @@ function serveSpreadsheet({
     }),
     http.get(VALUES_ENDPOINT, ({ request }) => {
       requests.push(request)
-      return HttpResponse.json(values as Record<string, unknown>)
+      const title = tabTitleOf(request)
+      const response = Object.hasOwn(tabValues, title)
+        ? tabValues[title]
+        : values
+      return HttpResponse.json(response as Record<string, unknown>)
     }),
   )
   return requests
+}
+
+/** The title of the tab a values request reads, unquoted. */
+function tabTitleOf(request: Request): string {
+  const range = decodeURIComponent(
+    new URL(request.url).pathname.split("/values/")[1] ?? "",
+  )
+  return range.slice(1, -1).replaceAll("''", "'")
 }
 
 /** A repository over the real client, talking to MSW. */
@@ -83,12 +116,12 @@ function httpRepository() {
   })
 }
 
-/** A repository over a stub client that answers the metadata, then the values read. */
-function stubRepository(metadata: unknown, values: unknown) {
+/** A repository over a stub client that answers each read in turn. */
+function stubRepository(metadata: unknown, ...values: unknown[]) {
   const getJson = vi
     .fn<SheetsClient["getJson"]>()
     .mockResolvedValueOnce(metadata)
-    .mockResolvedValueOnce(values)
+  for (const response of values) getJson.mockResolvedValueOnce(response)
   const repository = new GoogleSheetsRoadmapRepository({
     client: { getJson },
     spreadsheetId: SPREADSHEET_ID,
@@ -142,14 +175,64 @@ function indexRowsFor(roadmaps: readonly Roadmap[]): string[][] {
   ]
 }
 
+/** The English, then the Welsh, of each text column of a roadmap tab. */
+const ITEM_TEXT_COLUMNS = [
+  ["Title", (item: RoadmapItem) => item.title],
+  ["Description", (item: RoadmapItem) => item.description],
+  ["Outcome", (item: RoadmapItem) => item.expectedOutcome],
+  ["Phase", (item: RoadmapItem) => item.phase],
+] as const
+
+/** A roadmap tab holding exactly these items, one row each, in the public site's format. */
+function tabRowsFor(items: readonly RoadmapItem[]): string[][] {
+  /** Entries joined by `separator`, or blank when every entry is. */
+  const join = (entries: readonly string[], separator: string) =>
+    entries.every((entry) => entry === "") ? "" : entries.join(separator)
+  const nest = (level: number, text: string) =>
+    level === 0 ? text : `${"-".repeat(level)} ${text}`
+  const language = (lang: keyof LocalisedText) => (item: RoadmapItem) => [
+    ...ITEM_TEXT_COLUMNS.map(([, read]) => read(item)?.[lang] ?? ""),
+    join(
+      item.tags.map((tag) => tag[lang]),
+      ", ",
+    ),
+    join(
+      item.details.map(({ text, level }) => nest(level, text[lang])),
+      "\n",
+    ),
+  ]
+  const textHeaders = [
+    ...ITEM_TEXT_COLUMNS.map(([header]) => header),
+    "Labels",
+    "Details",
+  ]
+  return [
+    [
+      ...textHeaders,
+      ...textHeaders.map((header) => `${header} (cy)`),
+      "Horizon",
+      "Organisations",
+    ],
+    ...items.map((item) => [
+      ...language("en")(item),
+      ...language("cy")(item),
+      item.placement ?? item.writtenHorizon ?? "",
+      item.organisations.map((code) => code.toUpperCase()).join(", "),
+    ]),
+  ]
+}
+
 describeRoadmapRepositoryContract("GoogleSheetsRoadmapRepository", {
-  withRoadmaps(roadmaps) {
+  withRoadmaps(roadmaps, items = {}) {
     serveSpreadsheet({
       tabs: [
         { title: "Roadmaps" },
         ...roadmaps.map(({ id }, i) => ({ title: id, index: i + 1 })),
       ],
       values: { values: indexRowsFor(roadmaps) },
+      tabValues: Object.fromEntries(
+        roadmaps.map(({ id }) => [id, { values: tabRowsFor(items[id] ?? []) }]),
+      ),
     })
     return httpRepository()
   },
@@ -436,6 +519,242 @@ describe("GoogleSheetsRoadmapRepository", () => {
       })
 
       await expect(repository.listRoadmaps()).rejects.toBe(failure)
+    })
+  })
+  describe("a roadmap's items", () => {
+    const itemsOf = (roadmapId: string, signal?: AbortSignal) =>
+      httpRepository().listRoadmapItems(roadmapId, { signal })
+
+    it("reads the tab list, the index, then the roadmap's own tab, with the list's parameters and token (S1)", async () => {
+      const requests = serveSpreadsheet()
+
+      const items = await itemsOf("producta")
+
+      expect(items).toHaveLength(9)
+      expect(items).toStrictEqual(
+        parseRoadmapTab(EXAMPLE_TAB_ROWS.ProductA ?? []).items,
+      )
+      const urls = requests.map(({ url }) => new URL(url))
+      expect(urls.map(({ pathname }) => pathname)).toEqual([
+        `/v4/spreadsheets/${SPREADSHEET_ID}`,
+        valuesPath("'Roadmaps'"),
+        valuesPath("'ProductA'"),
+      ])
+      expect([...(urls[0]?.searchParams ?? [])]).toEqual([
+        ["fields", METADATA_FIELDS],
+      ])
+      for (const url of urls.slice(1)) {
+        expect([...url.searchParams]).toEqual(VALUES_PARAMS)
+      }
+      for (const request of requests) {
+        expect(request.headers.get("Authorization")).toBe("Bearer token-123")
+      }
+    })
+
+    it("passes the abort signal to all three reads", async () => {
+      const { repository, getJson } = stubRepository(
+        metadataFor(EXAMPLE_TABS),
+        { values: EXAMPLE_ROWS },
+        { values: EXAMPLE_TAB_ROWS.ProductB },
+      )
+      const { signal } = new AbortController()
+
+      await repository.listRoadmapItems("productb", { signal })
+
+      expect(
+        getJson.mock.calls.map(([path, options]) => [path, options?.signal]),
+      ).toEqual([
+        [`/${SPREADSHEET_ID}`, signal],
+        [`/${SPREADSHEET_ID}/values/'Roadmaps'`, signal],
+        [`/${SPREADSHEET_ID}/values/'ProductB'`, signal],
+      ])
+    })
+
+    it("reads an unpublished roadmap's items too (S2)", async () => {
+      serveSpreadsheet()
+
+      const items = await itemsOf("productc")
+
+      expect(items).toHaveLength(1)
+      expect(items[0]?.organisations).toEqual([])
+    })
+
+    it("fails with not-found, not retryable, for an id the index does not list, after reading only the list (S3)", async () => {
+      const requests = serveSpreadsheet()
+
+      await expect(itemsOf("0")).rejects.toMatchObject({
+        kind: "not-found",
+        retryable: false,
+      })
+      expect(requests).toHaveLength(2)
+    })
+
+    describe("a missing or unreadable tab (S4)", () => {
+      // ProductA's tab has no Title column; ProductB's tab does not exist.
+      const brokenSpreadsheet = () =>
+        serveSpreadsheet({
+          tabs: [{ title: "Roadmaps" }, { title: "ProductA", index: 1 }],
+          values: { values: EXAMPLE_ROWS.slice(0, 3) },
+          tabValues: { ProductA: { values: [["Horizon"], ["Now"]] } },
+        })
+
+      it("fails with invalid-data, not retryable, without requesting a tab that does not exist", async () => {
+        const requests = brokenSpreadsheet()
+
+        await expect(itemsOf("productb")).rejects.toMatchObject({
+          kind: "invalid-data",
+          retryable: false,
+        })
+        expect(requests).toHaveLength(2)
+      })
+
+      it("fails with invalid-data, not retryable, for a tab with no Title column", async () => {
+        brokenSpreadsheet()
+
+        await expect(itemsOf("producta")).rejects.toMatchObject({
+          kind: "invalid-data",
+          retryable: false,
+        })
+      })
+
+      it("fails with invalid-data for an empty tab", async () => {
+        serveSpreadsheet({ tabValues: { ProductA: {} } })
+
+        await expect(itemsOf("producta")).rejects.toMatchObject({
+          kind: "invalid-data",
+        })
+      })
+
+      it("still lists both roadmaps", async () => {
+        brokenSpreadsheet()
+
+        const roadmaps = await httpRepository().listRoadmaps()
+
+        expect(roadmaps.map(({ id }) => id)).toEqual(["producta", "productb"])
+      })
+    })
+
+    describe("which tab (S5)", () => {
+      it("reads a tab whose title needs quoting, the quote doubled, as one encoded segment", async () => {
+        const title = `Product's "B" & co`
+        const [header = []] = EXAMPLE_ROWS
+        const requests = serveSpreadsheet({
+          tabs: [{ title: "Roadmaps" }, { title, index: 1 }],
+          values: {
+            values: [
+              header,
+              header.map((name) => (name === "Sheet" ? title : "")),
+            ],
+          },
+          tabValues: { [title]: { values: EXAMPLE_TAB_ROWS.ProductC } },
+        })
+        const [roadmap] = await httpRepository().listRoadmaps()
+
+        const items = await itemsOf(roadmap?.id ?? "")
+
+        expect(items).toHaveLength(1)
+        expect(new URL(requests.at(-1)?.url ?? "").pathname).toBe(
+          valuesPath("'Product''s%20%22B%22%20%26%20co'"),
+        )
+      })
+
+      it("does not match a tab whose title differs only in case", async () => {
+        const requests = serveSpreadsheet({
+          tabs: [{ title: "Roadmaps" }, { title: "producta", index: 1 }],
+        })
+
+        await expect(itemsOf("producta")).rejects.toMatchObject({
+          kind: "invalid-data",
+        })
+        expect(requests).toHaveLength(2)
+      })
+    })
+
+    describe("failures and cancellation (S6)", () => {
+      const googleError = (status: number) =>
+        HttpResponse.json(
+          { error: { code: status, status: "ERROR", message: "Failed" } },
+          { status },
+        )
+      /** Serves the example spreadsheet with the read at `position` (0–2) failing. */
+      const failingRead = (position: number, failure: () => Response) => {
+        serveSpreadsheet()
+        if (position === 0) {
+          server.use(http.get(ENDPOINT, failure))
+        } else {
+          const title = position === 1 ? "Roadmaps" : "ProductA"
+          server.use(
+            http.get(VALUES_ENDPOINT, ({ request }) =>
+              tabTitleOf(request) === title ? failure() : undefined,
+            ),
+          )
+        }
+      }
+      const reads = [
+        ["the tab list", 0],
+        ["the index", 1],
+        ["the roadmap's tab", 2],
+      ] as const
+
+      describe.each(reads)("when %s fails", (_, position) => {
+        it.each([
+          [401, "unauthenticated", false],
+          [403, "forbidden", false],
+          [429, "rate-limited", true],
+          [500, "unknown", true],
+          [503, "unknown", true],
+        ])(
+          "maps HTTP %i to %s (retryable: %s), as the list does",
+          async (status, kind, retryable) => {
+            failingRead(position, () => googleError(status))
+
+            await expect(itemsOf("producta")).rejects.toMatchObject({
+              kind,
+              retryable,
+              status,
+            })
+          },
+        )
+
+        it("maps a network failure to a retryable network error", async () => {
+          failingRead(position, () => HttpResponse.error())
+
+          await expect(itemsOf("producta")).rejects.toMatchObject({
+            kind: "network",
+            retryable: true,
+          })
+        })
+      })
+
+      it("rejects with the abort reason, reading no further, when cancelled mid-read", async () => {
+        const controller = new AbortController()
+        const reason = new DOMException("Superseded", "AbortError")
+        const requests = serveSpreadsheet()
+        server.use(
+          http.get(VALUES_ENDPOINT, ({ request }) => {
+            requests.push(request)
+            controller.abort(reason)
+            return HttpResponse.json({ values: EXAMPLE_ROWS })
+          }),
+        )
+
+        await expect(itemsOf("producta", controller.signal)).rejects.toBe(
+          reason,
+        )
+        expect(requests).toHaveLength(2)
+      })
+
+      it("rejects a malformed roadmap tab response as invalid-response", async () => {
+        const { repository } = stubRepository(
+          metadataFor(EXAMPLE_TABS),
+          { values: EXAMPLE_ROWS },
+          { values: [["Title"], [7]] },
+        )
+
+        await expect(
+          repository.listRoadmapItems("producta"),
+        ).rejects.toMatchObject({ kind: "invalid-response" })
+      })
     })
   })
 })

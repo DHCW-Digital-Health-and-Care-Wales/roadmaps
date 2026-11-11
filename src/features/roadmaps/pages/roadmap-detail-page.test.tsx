@@ -47,6 +47,20 @@ describe("RoadmapDetailPage", () => {
     ).toHaveAttribute("href", "/")
   })
 
+  it("does not read the roadmap's items yet (STY-020 S8)", async () => {
+    const repository = createInMemoryRoadmapRepository(roadmaps)
+    const listRoadmapItems = vi.spyOn(repository, "listRoadmapItems")
+    await renderWithProviders({
+      path: "/roadmaps/productb",
+      authState: connected,
+      repository,
+    })
+
+    await main().findByRole("heading", { level: 1, name: "Product B roadmap" })
+
+    expect(listRoadmapItems).not.toHaveBeenCalled()
+  })
+
   it("goes back by a real link with a decorative chevron, not a button (STY-015 S5)", async () => {
     await renderWithProviders({
       path: "/roadmaps/productb",
@@ -87,7 +101,10 @@ describe("RoadmapDetailPage", () => {
     await renderWithProviders({
       path: "/roadmaps/productb",
       authState: connected,
-      repository: { listRoadmaps: () => new Promise<never>(() => undefined) },
+      repository: {
+        ...createInMemoryRoadmapRepository(roadmaps),
+        listRoadmaps: () => new Promise<never>(() => undefined),
+      },
     })
 
     expect(main().getByRole("status")).toHaveTextContent("Loading…")
@@ -178,7 +195,7 @@ describe("RoadmapDetailPage", () => {
         .mockRejectedValue(new AppError("forbidden"))
       const result = await renderWithProviders({
         authState: connected,
-        repository: { listRoadmaps },
+        repository: { ...createInMemoryRoadmapRepository(), listRoadmaps },
       })
       await main().findByText("2 roadmaps")
       await user.click(main().getByRole("button", { name: "Refresh" }))

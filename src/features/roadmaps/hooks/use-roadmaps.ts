@@ -2,19 +2,16 @@ import { useQuery } from "@tanstack/react-query"
 import { useCallback } from "react"
 
 import type { Roadmap } from "@/domain/roadmap/roadmap"
-import { useAuth } from "@/features/auth/use-auth"
 
 import { useRoadmapRepository } from "../roadmap-repository-context"
+import { useEnabledWhileConnected } from "./enabled-while-connected"
 import { roadmapListQueryOptions } from "./roadmap-queries"
 
-/**
- * The list query's options, fetching only while connected. Cached data stays readable
- * while the session is expired; disconnecting removes it.
- */
+/** The list query's options, fetching only while connected. */
 function useRoadmapListOptions() {
-  const repository = useRoadmapRepository()
-  const connected = useAuth().state.status === "connected"
-  return { ...roadmapListQueryOptions(repository), enabled: connected }
+  return useEnabledWhileConnected(
+    roadmapListQueryOptions(useRoadmapRepository()),
+  )
 }
 
 /** The user's roadmaps. `refetch()` backs the Refresh and Retry buttons. */

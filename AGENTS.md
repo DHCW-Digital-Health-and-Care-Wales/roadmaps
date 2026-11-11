@@ -842,3 +842,28 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
     - Welsh tags and details pair with the English by position before blanks are
       dropped; a count mismatch drops all that cell's Welsh. A Welsh detail keeps a
       dash that does not nest (`-5 gradd`).
+- **STY-020 The repository reads a roadmap's items** — `listRoadmapItems(roadmapId, options?)`
+  on `RoadmapRepository` (ADR-002 amended): the adapter re-reads the tab list and the index, then the
+  tab the roadmap's index row names, published or not, and parses it with STY-019's parser.
+  `useRoadmapItems(roadmapId)` exposes it; nothing calls it yet (STY-021). Nothing visible
+  changed.
+  - Where things live: `RepositoryReadOptions` (was `ListRoadmapsOptions`);
+    `roadmapKeys.items(id)`, `roadmapItemsQueryOptions` (`hooks/roadmap-queries.ts`),
+    `useRoadmapItems` (`hooks/use-roadmap-items.ts`), `useEnabledWhileConnected`
+    (`hooks/enabled-while-connected.ts`, the shared fetch-only-while-connected rule a new
+    roadmap query uses too); `#readRoadmapIndex` returns
+    `{ index, tabTitles }` and `#readTab(title)` does every values read.
+  - Decisions: unknown id → `not-found`; tab missing (exact title match), empty or with no
+    `Title` → `invalid-data`; neither retryable. The missing tab is never requested.
+  - Tests: `createInMemoryRoadmapRepository(roadmaps, items?)` takes items per id, each a
+    list or an `AppError` that roadmap's read rejects with; `renderWithProviders` and the
+    new `renderHookWithProviders(hook, options)` take `roadmapItems`. The contract's
+    `withRoadmaps(roadmaps, items?)` seeds items; the Google adapter's test writes them as
+    tab rows (`tabRowsFor`).
+  - Gotchas:
+    - The E2E fake serves any existing tab; `sheets.reads` entries are now `metadata` or
+      `values:<tab title>`, so assert a list load as `["metadata", "values:Roadmaps"]` and
+      a roadmap's items as those plus `values:ProductA`. Reading a tab that does not exist
+      is a violation.
+    - A roadmap page costs three sequential requests once STY-021 calls the hook; a 5xx
+      on any is retried twice, as the list is.

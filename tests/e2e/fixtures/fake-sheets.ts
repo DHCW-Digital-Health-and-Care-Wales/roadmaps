@@ -13,7 +13,7 @@ const SPREADSHEETS_URL = "https://sheets.googleapis.com/v4/spreadsheets"
 /** The partial-response mask of the tab list read, exactly. */
 const METADATA_FIELDS = "sheets(properties(sheetId,title,index,hidden))"
 
-/** The query of the roadmap index read, exactly (ADR-009). */
+/** The query of every values read, exactly (ADR-009, ADR-011). */
 const VALUES_QUERY: Readonly<Record<string, string>> = {
   majorDimension: "ROWS",
   valueRenderOption: "FORMATTED_VALUE",
@@ -27,8 +27,12 @@ export interface FakeTab {
   rows: readonly (readonly string[])[]
 }
 
-/** The reads the app makes, in order: the tab list, then the first tab's values. */
-export type SheetsRead = "metadata" | "values"
+/**
+ * A read the app makes: the tab list (`metadata`), or the values of the tab with this
+ * title (`values:Roadmaps`). A list load is the tab list, then the first tab's values;
+ * a roadmap's items add its own tab's values (ADR-011).
+ */
+export type SheetsRead = "metadata" | `values:${string}`
 
 const FIXTURES = path.resolve(import.meta.dirname, "../../fixtures/sheets")
 
@@ -72,6 +76,9 @@ export function withRoadmapIndex(
   return [{ title: index?.title ?? "Roadmaps", rows }, ...tabs]
 }
 
+/** A request the fake answers: the tab list, or one tab's values. */
+type Read = { kind: "metadata" } | { kind: "values"; tab: FakeTab }
+
 /** Google's canonical status names, for its JSON error envelope. */
 const STATUS_NAMES: Readonly<Record<number, string>> = {
   400: "INVALID_ARGUMENT",
@@ -84,10 +91,10 @@ const STATUS_NAMES: Readonly<Record<number, string>> = {
 }
 
 /**
- * The Google Sheets API, faked: answers the two reads of the configured spreadsheet the
- * app makes, the tab list and the first tab's values, and checks every request the way
- * the real API would (path, query, bearer token). Reading any other tab is a violation
- * too: the app reads only the roadmap index.
+ * The Google Sheets API, faked: answers the configured spreadsheet's tab list and any of
+ * its tabs' values, and checks every request the way the real API would (path, query,
+ * bearer token). Reading a tab that does not exist is a violation too: the app checks
+ * the tab list first.
  */
 export class FakeSheets {
   /** The bearer token of every request, in order (`null` without one). */
@@ -107,7 +114,7 @@ export class FakeSheets {
     this.#gis = gis
   }
 
-  /** Fails the next requests, either read, with these HTTP statuses, one each. */
+  /** Fails the next requests, whichever read, with these HTTP statuses, one each. */
   failWith(...statuses: number[]): void {
     this.#failures.push(...statuses)
   }
@@ -136,11 +143,11 @@ export class FakeSheets {
     this.tokens.push(token)
 
     const read = this.#readOf(request.method(), url)
-    if (typeof read !== "string") {
+    if ("status" in read) {
       return this.#reject(route, read.status, read.detail)
     }
     const query =
-      read === "metadata" ? { fields: METADATA_FIELDS } : VALUES_QUERY
+      read.kind === "metadata" ? { fields: METADATA_FIELDS } : VALUES_QUERY
     if (!hasQuery(url, query)) {
       return this.#reject(route, 400, `query ${url.search}`)
     }
@@ -149,12 +156,14 @@ export class FakeSheets {
     }
 
     await this.#held
-    this.reads.push(read)
+    this.reads.push(
+      read.kind === "metadata" ? "metadata" : `values:${read.tab.title}`,
+    )
     const failure = this.#failures.shift()
     if (failure !== undefined) {
       return fulfil(route, failure, errorBody(failure))
     }
-    if (read === "metadata") {
+    if (read.kind === "metadata") {
       return fulfil(route, 200, {
         // The `fields` mask: only these properties. Google omits `0` and `false`.
         sheets: this.spreadsheet.map(({ title, hidden }, index) => ({
@@ -167,28 +176,30 @@ export class FakeSheets {
         })),
       })
     }
-    const rows = trimRows(this.spreadsheet[0]?.rows ?? [])
+    const rows = trimRows(read.tab.rows)
     // Google omits `values` for a tab with no cells.
     return fulfil(route, 200, rows.length > 0 ? { values: rows } : {})
   }
 
   /** Which read a request is, or how the real API (or the app's contract) rejects it. */
-  #readOf(
-    method: string,
-    url: URL,
-  ): SheetsRead | { status: number; detail: string } {
+  #readOf(method: string, url: URL): Read | { status: number; detail: string } {
     const spreadsheetPath = `/v4/spreadsheets/${appConfig.spreadsheetId}`
     const valuesPrefix = `${spreadsheetPath}/values/`
-    if (method === "GET" && url.pathname === spreadsheetPath) return "metadata"
+    if (method === "GET" && url.pathname === spreadsheetPath) {
+      return { kind: "metadata" }
+    }
     if (method !== "GET" || !url.pathname.startsWith(valuesPrefix)) {
       return { status: 404, detail: `${method} ${url.pathname}` }
     }
     const range = decodeURIComponent(url.pathname.slice(valuesPrefix.length))
-    const first = this.spreadsheet[0]?.title
-    if (first === undefined || range !== `'${first.replaceAll("'", "''")}'`) {
-      return { status: 400, detail: `values of ${range}, not the first tab` }
+    // A whole tab, its title quoted with any quote doubled, as one path segment.
+    const tab = this.spreadsheet.find(
+      ({ title }) => range === `'${title.replaceAll("'", "''")}'`,
+    )
+    if (tab === undefined) {
+      return { status: 400, detail: `values of ${range}, not a tab` }
     }
-    return "values"
+    return { kind: "values", tab }
   }
 
   #reject(route: Route, status: number, detail: string): Promise<void> {

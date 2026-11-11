@@ -33,7 +33,11 @@ function scriptedRepository(...outcomes: Outcome[]) {
     if (outcome instanceof AppError) return Promise.reject(outcome)
     return Promise.resolve(outcome ? [...outcome] : [])
   })
-  return { listRoadmaps }
+  // The page never reads items.
+  const listRoadmapItems = vi.fn<RoadmapRepository["listRoadmapItems"]>(() =>
+    Promise.resolve([]),
+  )
+  return { listRoadmaps, listRoadmapItems }
 }
 
 function main() {

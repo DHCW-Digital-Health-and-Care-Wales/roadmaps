@@ -53,7 +53,7 @@ test("connecting shows the roadmaps the roadmap index lists, grouped by family (
     },
   ])
   // The tab list, then the first tab's values, both with the granted token.
-  expect(sheets.reads).toEqual(["metadata", "values"])
+  expect(sheets.reads).toEqual(["metadata", "values:Roadmaps"])
   expect(sheets.tokens).toEqual([gis.latestToken, gis.latestToken])
 })
 
@@ -81,7 +81,12 @@ test("Refresh loads the latest roadmaps", async ({ page, sheets }) => {
 
   await expect(roadmapCards(page)).toHaveText(["Product B roadmap"])
   await expect(page.getByText("1 roadmap", { exact: true })).toBeVisible()
-  expect(sheets.reads).toEqual(["metadata", "values", "metadata", "values"])
+  expect(sheets.reads).toEqual([
+    "metadata",
+    "values:Roadmaps",
+    "metadata",
+    "values:Roadmaps",
+  ])
 })
 
 test("a card opens the address of its public page, and Back returns to the list (S2)", async ({
@@ -103,7 +108,7 @@ test("a card opens the address of its public page, and Back returns to the list 
   await expect(roadmapCards(page)).toHaveText(EXAMPLE_TITLES)
   await expect(page.getByRole("main")).toBeFocused()
   // The detail page and the list share one cached load.
-  expect(sheets.reads).toEqual(["metadata", "values"])
+  expect(sheets.reads).toEqual(["metadata", "values:Roadmaps"])
 })
 
 test("a deep link survives a reload (S2)", async ({ page, gis }) => {

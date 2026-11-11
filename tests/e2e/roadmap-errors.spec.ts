@@ -130,7 +130,7 @@ test("a roadmap index with no Sheet column can't be read, and retrying can't hel
   })
   await expect(panel).toContainText(UNREADABLE_LIST)
   await expect(panel.getByRole("button")).toHaveCount(0)
-  expect(sheets.reads).toEqual(["metadata", "values"])
+  expect(sheets.reads).toEqual(["metadata", "values:Roadmaps"])
 })
 
 test("an empty roadmap index can't be read, in Welsh too (S5)", async ({

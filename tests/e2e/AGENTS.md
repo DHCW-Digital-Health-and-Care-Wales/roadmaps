@@ -13,15 +13,20 @@ End-to-end tests of the production build, with Google faked (ADR-006). Run with
   is empty. Grants issue `e2e-token-1`, `e2e-token-2`, … Inspect `gis.tokenRequests`
   (`clientId`, `scope`, `prompt`) and `gis.revokedTokens`. `gis.scriptAvailable = false`
   makes the script fail to load.
-- `sheets` (`fixtures/fake-sheets.ts`) answers the two reads of a list load: the tab list
-  (`spreadsheets.get`) and the first tab's values; reading any other tab is a violation.
+- `sheets` (`fixtures/fake-sheets.ts`) answers the tab list (`spreadsheets.get`) and the
+  values of any of its tabs: a list load reads the tab list and the first tab, a roadmap's
+  items the same two and then its own tab
+  ([ADR-011](../../docs/adr/ADR-011-roadmap-items-from-each-roadmaps-tab.md),
+  [the roadmap tab analysis](../../docs/analysis/roadmap-tab-format.md)); reading a tab
+  that does not exist is a violation.
   `sheets.spreadsheet` holds its tabs, by default `EXAMPLE_SPREADSHEET`, the example CSVs
   of `tests/fixtures/sheets/` (cards "Product B roadmap", "Product A roadmap", "Product C
   roadmap", the order the page groups them in); assign `withRoadmapIndex(rows)` to change the
   list, building rows from `EXAMPLE_INDEX_ROWS` or `roadmapRow({ Sheet, Title, … })` (cells by
   header name). `sheets.failWith(...statuses)` fails the next requests,
-  either read. `sheets.reads` lists the reads (`metadata`, `values`) and `sheets.tokens`
-  each request's bearer token, so one load is two entries; `sheets.hold()` keeps replies
+  whichever read. `sheets.reads` lists the reads (`metadata`, then `values:<tab title>`,
+  such as `values:Roadmaps`) and `sheets.tokens` each request's bearer token, so one list
+  load is two entries; `sheets.hold()` keeps replies
   pending until its returned `release()` is called.
 - `roadmapCards(page)` is every card's link, across the family groups (several lists). A
   link holds only the title, so `toHaveText([...])` checks order and count, and a card's other

@@ -51,10 +51,15 @@ State these policies, using the user's instructions where supplied:
   thread, each item runs in a fresh orchestrator session started at the
   previous item's handoff, before the outgoing orchestrator runs its
   retrospective (step 6). Otherwise the queue continues in this session.
-- **Models**: inspect the runtime's available providers and models. Treat
-  Suggested model as a tier hint; use stronger reasoning for auth and token
-  handling, the `RoadmapRepository`/`AuthClient` ports and untrusted-data
-  parsing. Reviews follow the delegation reference's lanes (correctness: Opus
+- **Models**: inspect the runtime's available providers and models.
+  Top-level orchestrator sessions run Sonnet (`claude-sonnet-5-5`) at medium
+  effort, because delegated agents do the heavy work; hand judgement-heavy
+  orchestrator work (the orchestration retro's edits to agent instructions,
+  investigating a hard failure) to a delegated agent on a fitting model. A
+  delivery agent takes its record's Suggested model as a tier hint; use
+  stronger reasoning for auth and token handling, the
+  `RoadmapRepository`/`AuthClient` ports and untrusted-data parsing. Reviews
+  follow the delegation reference's lanes (correctness: Opus
   `claude-opus-5-5` and Sol, Codex `gpt-6.1-sol`; quality: Sonnet
   `claude-sonnet-5-5`), with correctness at least as strong as the delivery
   agent. Pass provider-specific settings through the delegation tool's
@@ -197,9 +202,10 @@ policy permits it and the runtime can start a new top-level session:
    delivery. Withhold the launch if the queue is blocked, finished or stopped.
 3. Start the new top-level session bound to the same checkout and designated
    branch, titled with the next item's ID/title, with the message
-   `/orchestrate resume <absolute run-handoff path>`. Pass the queue's agreed
-   provider/model/options, or let it inherit when none was specified. Never
-   silently switch models. Confirm the new session's checkout binding and
+   `/orchestrate resume <absolute run-handoff path>`. Set its model and
+   effort explicitly to the orchestrator model of step 1, or the one the user
+   named for the queue's orchestrators, never inherited from the outgoing
+   session. Confirm the new session's checkout binding and
    give the user its link. After an error or a lost reply, look for a
    session it created before retrying, and record its ID/link to avoid
    duplicates.

@@ -16,6 +16,11 @@ export default defineConfig({
   testDir: "tests/e2e",
   fullyParallel: true,
   forbidOnly: ci,
+  expect: {
+    // Aria snapshots (tests/e2e/structure.spec.ts) must match exactly: by default an
+    // element added to a screen would still match the committed snapshot.
+    toMatchAriaSnapshot: { children: "deep-equal" },
+  },
   retries: ci ? 2 : 0,
   reporter: ci
     ? [["github"], ["list"], ["html", { open: "never" }]]

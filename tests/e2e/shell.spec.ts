@@ -1,12 +1,10 @@
 import type { Page } from "@playwright/test"
 
+import { tokenColour, useLanguage } from "./fixtures/look"
 import { expect, roadmapCards, test } from "./fixtures/test"
 
 // The DHCW staff-service shell (STY-016): navy header with the logo, phase banner, footer,
 // DHCW's container and the skip link.
-
-const NAVY = "rgb(27, 54, 93)"
-const YELLOW = "rgb(255, 235, 59)"
 
 const copy = {
   en: {
@@ -24,12 +22,6 @@ const copy = {
     copyright: "© Iechyd a Gofal Digidol Cymru",
   },
 } as const
-
-async function useLanguage(page: Page, language: "en" | "cy") {
-  await page.addInitScript((value) => {
-    localStorage.setItem("roadmaps.language", value)
-  }, language)
-}
 
 const horizontalOverflow = (page: Page) =>
   page.evaluate(
@@ -53,7 +45,10 @@ for (const language of ["en", "cy"] as const) {
       await page.goto("./")
       const banner = page.getByRole("banner")
 
-      await expect(banner).toHaveCSS("background-color", NAVY)
+      await expect(banner).toHaveCSS(
+        "background-color",
+        await tokenColour(page, "--header"),
+      )
       const logo = banner.getByRole("img", { name: c.logo })
       await expect(logo).toBeVisible()
       // The full logo is wide; the icon is square.
@@ -100,12 +95,16 @@ for (const language of ["en", "cy"] as const) {
       await expect(banner.getByRole("status")).toBeAttached()
     })
 
-    for (const width of [375, 640, 768, 900, 1024]) {
-      test(`the service name shows untruncated at ${String(width)}px (S1, D6)`, async ({
+    for (const width of [375, 640, 768, 900, 1024, 1280]) {
+      test(`the service name shows untruncated and neither page scrolls sideways at ${String(width)}px (S1, D6; STY-018 S4)`, async ({
         page,
       }) => {
         await page.setViewportSize({ width, height: 800 })
         await page.goto("./")
+        await expect(
+          page.getByRole("main").getByRole("button", { name: c.connect }),
+        ).toBeVisible()
+        expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0)
         await page
           .getByRole("main")
           .getByRole("button", { name: c.connect })
@@ -222,7 +221,10 @@ test("a DHCW skip link appears on the first Tab and moves focus to the content (
   await page.keyboard.press("Tab")
   await expect(skip).toBeFocused()
   await expect(skip).toBeInViewport()
-  await expect(skip).toHaveCSS("background-color", YELLOW)
+  await expect(skip).toHaveCSS(
+    "background-color",
+    await tokenColour(page, "--focus"),
+  )
 
   await page.keyboard.press("Enter")
   await expect(page.getByRole("main")).toBeFocused()

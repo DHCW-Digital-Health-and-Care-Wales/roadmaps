@@ -1,0 +1,10 @@
+- main:
+  - note:
+    - text: Wedi cysylltu â Google
+    - button "Cau'r neges"
+  - region "Eich mapiau trywydd":
+    - heading "Eich mapiau trywydd" [level=1]
+    - paragraph: Pob map trywydd, wedi'i gyhoeddi neu beidio.
+    - button "Adnewyddu"
+    - heading "Dim mapiau trywydd eto" [level=2]
+    - text: Dydy'r daenlen gysylltiedig ddim yn rhestru unrhyw fapiau trywydd eto.

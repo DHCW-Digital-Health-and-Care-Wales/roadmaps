@@ -44,3 +44,25 @@ End-to-end tests of the production build, with Google faked (ADR-006). Run with
 - Specs assert English copy from `src/i18n/locales/en.ts`. Before pushing a change to a
   control's text or accessible name, grep `tests/e2e` for the old text and run every spec
   that reaches the control, or the whole suite when the control is in the shell.
+
+## Look checks
+
+The DHCW look is held without screenshots, so there is no pixel baseline to regenerate.
+
+- Each key screen is compared with an aria snapshot in `structure.spec.ts-snapshots/`, and
+  matching is exact (`children: "deep-equal"` in `playwright.config.ts`): an element
+  added to or removed from a screen fails. After changing a screen's structure on
+  purpose, run `pnpm test:e2e structure.spec.ts --update-snapshots`, which rewrites only
+  the snapshots that differ (`=all` rewrites every one), then review the YAML diff and
+  commit it with the change.
+- Snapshot a `main`, header, menu or dialog, never the footer, whose version differs from
+  build to build. Playwright writes a regex where a number moves, such as the session
+  warning's countdown.
+- `page.clock.install()` does not stop time: it runs in real time until moved. The
+  "Connected" notice clears itself after eight seconds, so a test that snapshots or tabs
+  past it calls `holdConnectedNotice(page)` right after connecting.
+- Compare a computed style with the semantic token it should come from, read by
+  `tokenColour(page, "--token")` (`fixtures/look.ts`), never a copied colour.
+- The focus tours press Tab through every tab stop and need each to match `focus-fill`,
+  `focus-ring` or `focus-link`: a new kind of control uses one of them, or the check gains
+  a utility.

@@ -6,6 +6,7 @@ import {
   roadmapRow,
   withRoadmapIndex,
 } from "./fixtures/fake-sheets"
+import { useTheme } from "./fixtures/look"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 const [header = []] = EXAMPLE_INDEX_ROWS
@@ -36,9 +37,7 @@ test.use({ reducedMotion: "reduce" })
 for (const theme of ["light", "dark"] satisfies Theme[]) {
   test.describe(`${theme} theme`, () => {
     test.beforeEach(async ({ page }) => {
-      await page.addInitScript((value) => {
-        localStorage.setItem("roadmaps.theme", value)
-      }, theme)
+      await useTheme(page, theme)
     })
 
     test("landing page", async ({ page }) => {

@@ -1,0 +1,9 @@
+- banner:
+  - link "DHCW Roadmap Editor home":
+    - /url: /#/
+    - img "Digital Health and Care Wales"
+    - text: ""
+  - status: Not connected
+  - button "Language English"
+  - button "Switch to dark theme"
+  - button "Connect Google"

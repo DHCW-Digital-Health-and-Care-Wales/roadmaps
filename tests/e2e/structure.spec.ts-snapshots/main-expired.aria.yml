@@ -1,0 +1,24 @@
+- main:
+  - region "Your roadmaps":
+    - heading "Your roadmaps" [level=1]
+    - paragraph: Every roadmap, published or not.
+    - paragraph: 3 roadmaps, 1 not published
+    - button "Refresh" [disabled]
+    - alert:
+      - text: Your session has expired Reconnect to Google to load your latest roadmaps.
+      - button "Reconnect"
+    - heading "Medicines & Diagnostics" [level=2]
+    - list "Medicines & Diagnostics":
+      - listitem:
+        - link "Product B roadmap":
+          - /url: /#/roadmaps/productb
+    - heading "Single Record" [level=2]
+    - list "Single Record":
+      - listitem:
+        - link "Product A roadmap":
+          - /url: /#/roadmaps/producta
+    - heading "No product family" [level=2]
+    - list "No product family":
+      - listitem:
+        - link "Product C roadmap":
+          - /url: /#/roadmaps/productc

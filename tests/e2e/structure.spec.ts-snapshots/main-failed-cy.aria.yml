@@ -1,0 +1,11 @@
+- main:
+  - note:
+    - text: Wedi cysylltu â Google
+    - button "Cau'r neges"
+  - region "Eich mapiau trywydd":
+    - heading "Eich mapiau trywydd" [level=1]
+    - paragraph: Pob map trywydd, wedi'i gyhoeddi neu beidio.
+    - button "Adnewyddu"
+    - alert:
+      - heading "Doedd dim modd llwytho eich mapiau trywydd" [level=2]
+      - text: Nid oes gennych fynediad at y daenlen hon. Gofynnwch i berchennog y daenlen am fynediad.

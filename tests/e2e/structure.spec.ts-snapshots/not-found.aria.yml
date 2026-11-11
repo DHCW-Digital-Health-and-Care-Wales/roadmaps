@@ -1,0 +1,6 @@
+- main:
+  - heading "Page not found" [level=1]
+  - paragraph: The page you're looking for doesn't exist.
+  - paragraph:
+    - link "Go to the home page":
+      - /url: /#/

@@ -85,10 +85,13 @@ export function roadmapCards(page: Page) {
   return page.getByRole("main").getByRole("list").getByRole("link")
 }
 
-/** Clicks the page's own Connect button (the header has another). */
-export async function connect(page: Page): Promise<void> {
-  await page
-    .getByRole("main")
-    .getByRole("button", { name: "Connect Google" })
-    .click()
+/**
+ * Clicks the page's own Connect button (the header has another); `name` is its text in
+ * the page's language.
+ */
+export async function connect(
+  page: Page,
+  name = "Connect Google",
+): Promise<void> {
+  await page.getByRole("main").getByRole("button", { name }).click()
 }

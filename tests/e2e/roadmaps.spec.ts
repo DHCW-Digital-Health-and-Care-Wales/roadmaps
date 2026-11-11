@@ -5,6 +5,7 @@ import {
   roadmapRow,
   withRoadmapIndex,
 } from "./fixtures/fake-sheets"
+import { useLanguage } from "./fixtures/look"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 /**
@@ -172,9 +173,7 @@ test("cards sit under their product family, each showing the roadmap's informati
 test("the cards show Welsh content and copy in Cymraeg (S5)", async ({
   page,
 }) => {
-  await page.addInitScript(() => {
-    localStorage.setItem("roadmaps.language", "cy")
-  })
+  await useLanguage(page, "cy")
   await page.goto("./")
   await page
     .getByRole("main")

@@ -97,7 +97,10 @@ Take (a), in this order:
 3. components;
 4. shell and pages;
 5. notifications and the session warning;
-6. visual regression.
+6. look checks (aria snapshots and computed styles; no pixel comparison).
+
+   _Note, 2026-11-10: the owner dropped pixel baselines as fragile, so STY-018 checks
+   structure and computed styles instead (its D1)._
 
 Use DHCW's mobile type scale at every width for density. Keep dark mode as a tested
 extension, and defer the dashboard sidebar until there is navigation for it.
@@ -133,7 +136,7 @@ These are the recommendations as presented to the owner, which decision 7 approv
   - removing `--brand` and gradient decoration;
   - failures inline, not by toast;
   - a session-expiry warning (spike first);
-  - a few screenshot regression tests.
+  - a few look checks (aria snapshots and computed styles).
 
 ## Decisions needed
 
@@ -150,4 +153,4 @@ These are the recommendations as presented to the owner, which decision 7 approv
 ## Outcome
 
 Decided in [ADR-010](../adr/ADR-010-align-the-ui-with-the-dhcw-design-system.md) and
-planned as [EPC-003](../backlog/EPC-003-dhcw-design-alignment/README.md).
+planned as [EPC-003](../backlog/_archive/EPC-003-dhcw-design-alignment/README.md).

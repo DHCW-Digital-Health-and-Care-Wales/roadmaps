@@ -282,6 +282,7 @@ describe("parseRoadmapIndex", () => {
 
       expect(index.entries[0]).toEqual({
         tabName: "ProductA",
+        row: 2,
         roadmap: createTestRoadmap("producta", "Product A roadmap", {
           vision: { en: "Line one\nLine two", cy: "" },
           productLead: "Alex Jones",
@@ -473,6 +474,20 @@ describe("parseRoadmapIndex", () => {
     })
   })
 
+  it("returns where each English column is, found by header", () => {
+    const index = parseRoadmapIndex([
+      ["Vision (cy)", " sheet ", "Vision", "Title"],
+      ["", "ProductA"],
+    ])
+    expect(index.columns).toEqual(
+      new Map([
+        ["Sheet", 1],
+        ["Vision", 2],
+        ["Title", 3],
+      ]),
+    )
+  })
+
   describe("bad rows (S4)", () => {
     it("ignores blank rows, short or not, and rows with a blank Sheet", () => {
       const index = parseRoadmapIndex([
@@ -486,6 +501,7 @@ describe("parseRoadmapIndex", () => {
       expect(index.entries).toEqual([
         {
           tabName: "ProductA",
+          row: 5,
           roadmap: createTestRoadmap("producta", "ProductA"),
         },
       ])
@@ -662,6 +678,7 @@ describe("parseRoadmapIndex", () => {
       expect(index.entries).toEqual([
         {
           tabName: "product-a",
+          row: 3,
           roadmap: createTestRoadmap("product-a", "Live"),
         },
       ])

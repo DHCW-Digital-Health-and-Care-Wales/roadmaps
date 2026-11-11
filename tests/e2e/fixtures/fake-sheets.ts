@@ -3,6 +3,10 @@ import path from "node:path"
 
 import type { Page, Route } from "@playwright/test"
 
+import {
+  applyBatchUpdate,
+  type GridTab,
+} from "../../fixtures/sheets/apply-batch-update"
 import { parseCsv } from "../../fixtures/sheets/parse-csv"
 
 import { appConfig } from "./app-config"
@@ -11,7 +15,8 @@ import type { FakeGis } from "./fake-gis"
 const SPREADSHEETS_URL = "https://sheets.googleapis.com/v4/spreadsheets"
 
 /** The partial-response mask of the tab list read, exactly. */
-const METADATA_FIELDS = "sheets(properties(sheetId,title,index,hidden))"
+const METADATA_FIELDS =
+  "sheets(properties(sheetId,title,index,hidden,gridProperties(rowCount,columnCount)))"
 
 /** The query of every values read, exactly (ADR-009, ADR-011). */
 const VALUES_QUERY: Readonly<Record<string, string>> = {
@@ -20,11 +25,16 @@ const VALUES_QUERY: Readonly<Record<string, string>> = {
   fields: "values",
 }
 
-/** One tab of the fake spreadsheet: its title, whether it is hidden, and its cells. */
+/**
+ * One tab of the fake spreadsheet: its title, whether it is hidden, its cells, and its
+ * grid's size, by default just large enough for its cells.
+ */
 export interface FakeTab {
   title: string
   hidden?: boolean
   rows: readonly (readonly string[])[]
+  rowCount?: number
+  columnCount?: number
 }
 
 /**
@@ -76,8 +86,11 @@ export function withRoadmapIndex(
   return [{ title: index?.title ?? "Roadmaps", rows }, ...tabs]
 }
 
-/** A request the fake answers: the tab list, or one tab's values. */
-type Read = { kind: "metadata" } | { kind: "values"; tab: FakeTab }
+/** A request the fake answers: the tab list, one tab's values, or a write (STY-023). */
+type SheetsRequest =
+  | { kind: "metadata" }
+  | { kind: "values"; tab: FakeTab }
+  | { kind: "batchUpdate" }
 
 /** Google's canonical status names, for its JSON error envelope. */
 const STATUS_NAMES: Readonly<Record<number, string>> = {
@@ -92,15 +105,19 @@ const STATUS_NAMES: Readonly<Record<number, string>> = {
 
 /**
  * The Google Sheets API, faked: answers the configured spreadsheet's tab list and any of
- * its tabs' values, and checks every request the way the real API would (path, query,
- * bearer token). Reading a tab that does not exist is a violation too: the app checks
- * the tab list first.
+ * its tabs' values, applies a `batchUpdate` all or nothing, and checks every request the
+ * way the real API would (method, path, query, bearer token). Reading a tab that does not
+ * exist is a violation too, as the app checks the tab list first, and so is a write the
+ * editor must never make (`applyBatchUpdate`: `Template`, Welsh, `Last updated`, a value
+ * other than text, an unchanged cell).
  */
 export class FakeSheets {
   /** The bearer token of every request, in order (`null` without one). */
   readonly tokens: (string | null)[] = []
   /** The reads answered or failed, in order. */
   readonly reads: SheetsRead[] = []
+  /** The body of every `batchUpdate` applied, in order. */
+  readonly writes: unknown[] = []
   /** Requests the real API would reject; the fixture fails the test if there are any. */
   readonly violations: string[] = []
   /** What the spreadsheet holds; replace it to change what later reads see. */
@@ -114,7 +131,7 @@ export class FakeSheets {
     this.#gis = gis
   }
 
-  /** Fails the next requests, whichever read, with these HTTP statuses, one each. */
+  /** Fails the next requests, read or write, with these HTTP statuses, one each. */
   failWith(...statuses: number[]): void {
     this.#failures.push(...statuses)
   }
@@ -142,12 +159,15 @@ export class FakeSheets {
     const token = /^Bearer (\S+)$/.exec(authorization ?? "")?.[1] ?? null
     this.tokens.push(token)
 
-    const read = this.#readOf(request.method(), url)
+    const read = this.#requestOf(request.method(), url)
     if ("status" in read) {
       return this.#reject(route, read.status, read.detail)
     }
-    const query =
-      read.kind === "metadata" ? { fields: METADATA_FIELDS } : VALUES_QUERY
+    const query = {
+      metadata: { fields: METADATA_FIELDS },
+      values: VALUES_QUERY,
+      batchUpdate: {},
+    }[read.kind]
     if (!hasQuery(url, query)) {
       return this.#reject(route, 400, `query ${url.search}`)
     }
@@ -156,24 +176,32 @@ export class FakeSheets {
     }
 
     await this.#held
-    this.reads.push(
-      read.kind === "metadata" ? "metadata" : `values:${read.tab.title}`,
-    )
+    if (read.kind !== "batchUpdate") {
+      this.reads.push(
+        read.kind === "metadata" ? "metadata" : `values:${read.tab.title}`,
+      )
+    }
     const failure = this.#failures.shift()
     if (failure !== undefined) {
       return fulfil(route, failure, errorBody(failure))
     }
+    if (read.kind === "batchUpdate") {
+      return this.#write(route, request.postDataJSON())
+    }
     if (read.kind === "metadata") {
       return fulfil(route, 200, {
         // The `fields` mask: only these properties. Google omits `0` and `false`.
-        sheets: this.spreadsheet.map(({ title, hidden }, index) => ({
-          properties: {
-            sheetId: index * 1_000,
-            title,
-            ...(index > 0 && { index }),
-            ...(hidden && { hidden }),
-          },
-        })),
+        sheets: this.#grids().map(
+          ({ sheetId, title, rowCount, columnCount }, index) => ({
+            properties: {
+              sheetId,
+              title,
+              ...(index > 0 && { index }),
+              ...(this.spreadsheet[index]?.hidden && { hidden: true }),
+              gridProperties: { rowCount, columnCount },
+            },
+          }),
+        ),
       })
     }
     const rows = trimRows(read.tab.rows)
@@ -181,12 +209,59 @@ export class FakeSheets {
     return fulfil(route, 200, rows.length > 0 ? { values: rows } : {})
   }
 
-  /** Which read a request is, or how the real API (or the app's contract) rejects it. */
-  #readOf(method: string, url: URL): Read | { status: number; detail: string } {
+  /** Applies a `batchUpdate` all or nothing, as Google does, recording what it must not hold. */
+  #write(route: Route, body: unknown): Promise<void> {
+    const result = applyBatchUpdate(this.#grids(), body)
+    this.violations.push(...result.violations)
+    if ("error" in result) {
+      this.violations.push(`batchUpdate rejected: ${result.error}`)
+      return fulfil(route, 400, errorBody(400))
+    }
+    this.writes.push(body)
+    this.spreadsheet = result.tabs.map(
+      ({ title, rows, rowCount, columnCount }, index) => ({
+        title,
+        ...(this.spreadsheet[index]?.hidden && { hidden: true }),
+        rows,
+        rowCount,
+        columnCount,
+      }),
+    )
+    return fulfil(route, 200, {
+      spreadsheetId: appConfig.spreadsheetId,
+      replies: [],
+    })
+  }
+
+  /** The spreadsheet's tabs as grids a write addresses, by `sheetId`. */
+  #grids(): GridTab[] {
+    return this.spreadsheet.map(
+      ({ title, rows, rowCount, columnCount }, i) => ({
+        title,
+        sheetId: i * 1_000,
+        rows: rows.map((row) => [...row]),
+        rowCount: rowCount ?? Math.max(1, rows.length),
+        columnCount:
+          columnCount ?? Math.max(1, ...rows.map((row) => row.length)),
+      }),
+    )
+  }
+
+  /** Which request this is, or how the real API (or the app's contract) rejects it. */
+  #requestOf(
+    method: string,
+    url: URL,
+  ): SheetsRequest | { status: number; detail: string } {
     const spreadsheetPath = `/v4/spreadsheets/${appConfig.spreadsheetId}`
     const valuesPrefix = `${spreadsheetPath}/values/`
     if (method === "GET" && url.pathname === spreadsheetPath) {
       return { kind: "metadata" }
+    }
+    if (
+      method === "POST" &&
+      url.pathname === `${spreadsheetPath}:batchUpdate`
+    ) {
+      return { kind: "batchUpdate" }
     }
     if (method !== "GET" || !url.pathname.startsWith(valuesPrefix)) {
       return { status: 404, detail: `${method} ${url.pathname}` }

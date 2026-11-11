@@ -1,3 +1,4 @@
+import type { QueryClient } from "@tanstack/react-query"
 import { describe, expect, it, vi } from "vitest"
 
 import { AppError } from "./errors"
@@ -33,16 +34,30 @@ describe("createQueryClient", () => {
   })
 })
 
-describe("createQueryClient onUnauthenticated", () => {
-  async function failWith(error: Error) {
-    const onUnauthenticated = vi.fn()
-    await createQueryClient({ onUnauthenticated })
-      .query({
+describe.each([
+  [
+    "a query",
+    (client: QueryClient, error: Error) =>
+      client.query({
         queryKey: ["scoped"],
         queryFn: () => Promise.reject(error),
         retry: false,
-      })
-      .catch(() => undefined)
+      }),
+  ],
+  [
+    "a mutation",
+    (client: QueryClient, error: Error) =>
+      client
+        .getMutationCache()
+        .build(client, { mutationFn: () => Promise.reject(error) })
+        .execute(undefined),
+  ],
+])("createQueryClient onUnauthenticated, for %s", (_name, run) => {
+  async function failWith(error: Error) {
+    const onUnauthenticated = vi.fn()
+    await run(createQueryClient({ onUnauthenticated }), error).catch(
+      () => undefined,
+    )
     return onUnauthenticated
   }
 

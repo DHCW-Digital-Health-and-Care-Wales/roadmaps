@@ -1,4 +1,5 @@
 import type { Roadmap } from "./roadmap"
+import type { PublishOutcome, RoadmapChanges } from "./roadmap-changes"
 import type { RoadmapItem } from "./roadmap-item"
 
 export interface RepositoryReadOptions {
@@ -23,4 +24,17 @@ export interface RoadmapRepository {
     roadmapId: string,
     options?: RepositoryReadOptions,
   ): Promise<RoadmapItem[]>
+  /**
+   * Publishes one roadmap's pending changes, all or nothing (ADR-012): re-reads the
+   * roadmap, then writes every changed field and an ID for each item without one, unless
+   * a co-lead's change conflicts or something edited is gone. Rejects with
+   * `AppError('invalid-data')` when the roadmap's items can't be read, as
+   * `listRoadmapItems` does, and never retries. `signal` cancels only the reads: once the
+   * write is sent, the call waits for its answer.
+   */
+  publishRoadmapChanges(
+    roadmapId: string,
+    changes: RoadmapChanges,
+    options?: RepositoryReadOptions,
+  ): Promise<PublishOutcome>
 }

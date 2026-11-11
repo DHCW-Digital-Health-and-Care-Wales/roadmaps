@@ -1,11 +1,15 @@
 import { HttpResponse } from "msw"
 import { http } from "msw/http"
-import { describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
 import type { LocalisedText } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
-import { describeRoadmapRepositoryContract } from "@/domain/roadmap/testing/roadmap-repository-contract"
+import {
+  CO_LEAD_VALUE,
+  type ContractOptions,
+  describeRoadmapRepositoryContract,
+} from "@/domain/roadmap/testing/roadmap-repository-contract"
 import { AppError } from "@/lib/errors"
 import { server } from "@/test/msw-server"
 
@@ -13,6 +17,11 @@ import productACsv from "../../../tests/fixtures/sheets/ProductA.csv?raw"
 import productBCsv from "../../../tests/fixtures/sheets/ProductB.csv?raw"
 import productCCsv from "../../../tests/fixtures/sheets/ProductC.csv?raw"
 import roadmapsCsv from "../../../tests/fixtures/sheets/Roadmaps.csv?raw"
+import {
+  applyBatchUpdate,
+  type BatchUpdateBody,
+  type GridTab,
+} from "../../../tests/fixtures/sheets/apply-batch-update"
 import { parseCsv } from "../../../tests/fixtures/sheets/parse-csv"
 import { GoogleSheetsRoadmapRepository } from "./google-sheets-roadmap-repository"
 import {
@@ -25,7 +34,12 @@ import { createSheetsClient, type SheetsClient } from "./sheets-client"
 const SPREADSHEET_ID = "spreadsheet-1"
 const ENDPOINT = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}`
 const VALUES_ENDPOINT = `${ENDPOINT}/values/*`
-const METADATA_FIELDS = "sheets(properties(sheetId,title,index,hidden))"
+// A RegExp, as MSW would read `:batchUpdate` in a path as a parameter.
+const BATCH_UPDATE_ENDPOINT = new RegExp(
+  `^${ENDPOINT.replaceAll(".", "\\.")}:batchUpdate$`,
+)
+const METADATA_FIELDS =
+  "sheets(properties(sheetId,title,index,hidden,gridProperties(rowCount,columnCount)))"
 const VALUES_PARAMS = [
   ["majorDimension", "ROWS"],
   ["valueRenderOption", "FORMATTED_VALUE"],
@@ -109,9 +123,9 @@ function tabTitleOf(request: Request): string {
 }
 
 /** A repository over the real client, talking to MSW. */
-function httpRepository() {
+function httpRepository(getAccessToken = (): string | null => "token-123") {
   return new GoogleSheetsRoadmapRepository({
-    client: createSheetsClient({ getAccessToken: () => "token-123" }),
+    client: createSheetsClient({ getAccessToken }),
     spreadsheetId: SPREADSHEET_ID,
   })
 }
@@ -123,7 +137,7 @@ function stubRepository(metadata: unknown, ...values: unknown[]) {
     .mockResolvedValueOnce(metadata)
   for (const response of values) getJson.mockResolvedValueOnce(response)
   const repository = new GoogleSheetsRoadmapRepository({
-    client: { getJson },
+    client: { getJson, postJson: vi.fn<SheetsClient["postJson"]>() },
     spreadsheetId: SPREADSHEET_ID,
   })
   return { repository, getJson }
@@ -224,18 +238,136 @@ function tabRowsFor(items: readonly RoadmapItem[]): string[][] {
   ]
 }
 
+/** What the batchUpdate fake recorded that the editor must never write (STY-023 S11). */
+const writeViolations: string[] = []
+
+afterEach(() => {
+  const violations = writeViolations.splice(0)
+  expect(violations).toEqual([])
+})
+
+/** A tab as the stateful fake holds it: its rows and grid, and its place in the tab list. */
+type FakeTab = GridTab & { index?: number }
+
+/** A tab whose grid is exactly as wide and tall as its rows. */
+function gridTab(
+  title: string,
+  rows: string[][],
+  sheetId: number,
+  index?: number,
+): FakeTab {
+  return {
+    title,
+    sheetId,
+    rows,
+    rowCount: Math.max(1, rows.length),
+    columnCount: Math.max(1, ...rows.map((row) => row.length)),
+    ...(index === undefined ? {} : { index }),
+  }
+}
+
+/** Rows as the values API answers them: trailing blank cells and rows dropped. */
+function trimRows(rows: readonly (readonly string[])[]): string[][] {
+  const trimmed = rows.map((row) => {
+    let end = row.length
+    while (end > 0 && row[end - 1] === "") end--
+    return row.slice(0, end)
+  })
+  while (trimmed.length > 0 && trimmed.at(-1)?.length === 0) trimmed.pop()
+  return trimmed
+}
+
+/**
+ * Serves a spreadsheet that publishing changes, as Google does: reads give the tabs as
+ * they now are and a `batchUpdate` applies all or nothing (`applyBatchUpdate`).
+ */
+function serveStatefulSpreadsheet(
+  initial: readonly FakeTab[],
+  { write }: Pick<ContractOptions, "write"> = {},
+) {
+  let tabs: FakeTab[] = [...initial]
+  let readsFail = false
+  const requests: Request[] = []
+  const bodies: unknown[] = []
+  server.use(
+    http.get(ENDPOINT, ({ request }) => {
+      requests.push(request)
+      if (readsFail) return HttpResponse.json({}, { status: 500 })
+      return HttpResponse.json({
+        sheets: tabs.map(
+          ({ sheetId, title, index, rowCount, columnCount }) => ({
+            properties: {
+              sheetId,
+              title,
+              ...(index ? { index } : {}),
+              gridProperties: { rowCount, columnCount },
+            },
+          }),
+        ),
+      })
+    }),
+    http.get(VALUES_ENDPOINT, ({ request }) => {
+      requests.push(request)
+      if (readsFail) return HttpResponse.json({}, { status: 500 })
+      const tab = tabs.find(({ title }) => title === tabTitleOf(request))
+      if (tab === undefined) return HttpResponse.json({}, { status: 400 })
+      return HttpResponse.json({ values: trimRows(tab.rows) })
+    }),
+    http.post(BATCH_UPDATE_ENDPOINT, async ({ request }) => {
+      requests.push(request)
+      const body: unknown = await request.json()
+      bodies.push(body)
+      if (write !== undefined && "fails" in write) {
+        const status = write.fails === "forbidden" ? 403 : 401
+        return HttpResponse.json({}, { status })
+      }
+      if (write?.lost === "not-applied") return HttpResponse.error()
+      const result = applyBatchUpdate(tabs, body)
+      writeViolations.push(...result.violations)
+      if ("error" in result) return HttpResponse.json({}, { status: 400 })
+      tabs = result.tabs.map((tab, i) => ({ ...tabs[i], ...tab }))
+      if (write === undefined) return HttpResponse.json({})
+      if (write.lost === "partly-applied") overwriteFirstValue(tabs, body)
+      if (write.lost === "reread-fails") readsFail = true
+      return HttpResponse.error()
+    }),
+  )
+  return {
+    requests,
+    /** Each `batchUpdate` body sent. */
+    bodies,
+    /** The tabs as they now are. */
+    tabs: () => tabs,
+  }
+}
+
+/** A co-lead's change, after the write, to the first value it wrote below a header. */
+function overwriteFirstValue(tabs: readonly FakeTab[], body: unknown) {
+  const { requests } = body as BatchUpdateBody
+  for (const request of requests) {
+    if (!("updateCells" in request)) continue
+    const { sheetId, rowIndex, columnIndex } = request.updateCells.start
+    const row = tabs.find((tab) => tab.sheetId === sheetId)?.rows[rowIndex]
+    if (rowIndex > 0 && row !== undefined) {
+      row[columnIndex] = CO_LEAD_VALUE
+      return
+    }
+  }
+}
+
 describeRoadmapRepositoryContract("GoogleSheetsRoadmapRepository", {
-  withRoadmaps(roadmaps, items = {}) {
-    serveSpreadsheet({
-      tabs: [
-        { title: "Roadmaps" },
-        ...roadmaps.map(({ id }, i) => ({ title: id, index: i + 1 })),
+  withRoadmaps(roadmaps, items = {}, { write, unreadableItems = [] } = {}) {
+    serveStatefulSpreadsheet(
+      [
+        gridTab("Roadmaps", indexRowsFor(roadmaps), 0),
+        ...roadmaps.flatMap(({ id }, i) =>
+          unreadableItems.includes(id)
+            ? []
+            : [gridTab(id, tabRowsFor(items[id] ?? []), (i + 1) * 10, i + 1)],
+        ),
       ],
-      values: { values: indexRowsFor(roadmaps) },
-      tabValues: Object.fromEntries(
-        roadmaps.map(({ id }) => [id, { values: tabRowsFor(items[id] ?? []) }]),
-      ),
-    })
+      { write },
+    )
     return httpRepository()
   },
   failing() {
@@ -516,7 +648,10 @@ describe("GoogleSheetsRoadmapRepository", () => {
     it("propagates client failures unchanged", async () => {
       const failure = new AppError("forbidden", { status: 403 })
       const repository = new GoogleSheetsRoadmapRepository({
-        client: { getJson: () => Promise.reject(failure) },
+        client: {
+          getJson: () => Promise.reject(failure),
+          postJson: () => Promise.reject(failure),
+        },
         spreadsheetId: SPREADSHEET_ID,
       })
 
@@ -756,6 +891,288 @@ describe("GoogleSheetsRoadmapRepository", () => {
         await expect(
           repository.listRoadmapItems("producta"),
         ).rejects.toMatchObject({ kind: "invalid-response" })
+      })
+    })
+  })
+
+  describe("publishing a roadmap's changes", () => {
+    /** The example spreadsheet as the stateful fake holds it, with its `Template` tab. */
+    const exampleTabs = (): FakeTab[] => [
+      gridTab("Roadmaps", EXAMPLE_ROWS, 0),
+      gridTab("ProductA", EXAMPLE_TAB_ROWS.ProductA ?? [], 10, 1),
+      gridTab("Template", [["Title", "Item ID", "Horizon"]], 20, 2),
+    ]
+
+    /** Every cell that differs between two spreadsheets, as `tab!R1C1 value`. */
+    function changedCells(
+      before: readonly FakeTab[],
+      after: readonly FakeTab[],
+    ): string[] {
+      return after.flatMap((tab, t) => {
+        const old = before[t]?.rows ?? []
+        return tab.rows.flatMap((row, r) =>
+          row.flatMap((value, c) =>
+            (old[r]?.[c] ?? "") === value
+              ? []
+              : [`${tab.title}!R${String(r + 1)}C${String(c + 1)} ${value}`],
+          ),
+        )
+      })
+    }
+
+    const titleChange = {
+      roadmap: { title: { base: "Product A roadmap", value: "Product A" } },
+      items: [],
+    }
+
+    it("sends one batchUpdate after the three reads, as JSON with the token (S2)", async () => {
+      const spreadsheet = serveStatefulSpreadsheet(exampleTabs())
+
+      await expect(
+        httpRepository().publishRoadmapChanges("producta", titleChange),
+      ).resolves.toEqual({ status: "published" })
+
+      const [, , , write, ...rest] = spreadsheet.requests
+      expect(rest).toEqual([])
+      expect(write?.method).toBe("POST")
+      expect(write?.url).toBe(`${ENDPOINT}:batchUpdate`)
+      expect(write?.headers.get("authorization")).toBe("Bearer token-123")
+      expect(write?.headers.get("content-type")).toBe("application/json")
+      expect(
+        spreadsheet.requests.slice(0, 3).map(({ method }) => method),
+      ).toEqual(["GET", "GET", "GET"])
+    })
+
+    it("writes only the changed cell, an Item ID column and every item's ID, leaving all else as it was (S1, S6, S7)", async () => {
+      const before = exampleTabs()
+      const spreadsheet = serveStatefulSpreadsheet(before)
+
+      await httpRepository().publishRoadmapChanges("producta", titleChange)
+
+      const changes = changedCells(before, spreadsheet.tabs())
+      expect(changes).toEqual([
+        "Roadmaps!R2C3 Product A",
+        "ProductA!R1C15 Item ID",
+        ...Array.from(
+          { length: 9 },
+          (_, i) =>
+            expect.stringMatching(
+              new RegExp(`^ProductA!R${String(i + 2)}C15 \\S+$`),
+            ) as string,
+        ),
+      ])
+      const ids = changes.slice(2).map((change) => change.split(" ")[1])
+      expect(new Set(ids).size).toBe(9)
+      expect(spreadsheet.tabs()[1]).toMatchObject({ columnCount: 15 })
+      const { requests } = spreadsheet.bodies[0] as BatchUpdateBody
+      expect(requests).toHaveLength(12)
+      expect(requests.slice(0, 3)).toMatchObject([
+        {
+          updateCells: {
+            start: { sheetId: 0, rowIndex: 1, columnIndex: 2 },
+            rows: [
+              {
+                values: [{ userEnteredValue: { stringValue: "Product A" } }],
+              },
+            ],
+            fields: "userEnteredValue",
+          },
+        },
+        {
+          appendDimension: { sheetId: 10, dimension: "COLUMNS", length: 1 },
+        },
+        {
+          updateCells: {
+            start: { sheetId: 10, rowIndex: 0, columnIndex: 14 },
+            rows: [
+              { values: [{ userEnteredValue: { stringValue: "Item ID" } }] },
+            ],
+          },
+        },
+      ])
+    })
+
+    it("sends every value as text and a cleared field as an empty cell (S3)", async () => {
+      const spreadsheet = serveStatefulSpreadsheet(exampleTabs())
+      const [item] = await httpRepository().listRoadmapItems("producta")
+      if (item === undefined) throw new Error("Product A has items")
+
+      await httpRepository().publishRoadmapChanges("producta", {
+        roadmap: { statusLabel: { base: "Beta", value: "=SUM(A1)" } },
+        items: [
+          {
+            item,
+            position: 0,
+            fields: {
+              phase: { base: item.phase?.en ?? "", value: " 42 " },
+              expectedOutcome: {
+                base: item.expectedOutcome?.en ?? "",
+                value: "",
+              },
+            },
+          },
+        ],
+      })
+
+      const { requests } = spreadsheet.bodies[0] as BatchUpdateBody
+      const values = requests.flatMap((request) =>
+        "updateCells" in request
+          ? request.updateCells.rows.flatMap(({ values }) => values)
+          : [],
+      )
+      expect(values).toContainEqual({
+        userEnteredValue: { stringValue: "=SUM(A1)" },
+      })
+      expect(values).toContainEqual({ userEnteredValue: { stringValue: "42" } })
+      expect(values).toContainEqual({})
+      expect(spreadsheet.tabs()[1]?.rows[1]?.[2]).toBe("")
+    })
+
+    describe("a missing column (S7)", () => {
+      it("goes after the last used column, inside a grid wide enough for it", async () => {
+        const rows = EXAMPLE_ROWS.map((row) => [
+          ...row.slice(0, 8),
+          ...row.slice(9),
+        ])
+        const index = { ...gridTab("Roadmaps", rows, 0), columnCount: 26 }
+        const before = [index, ...exampleTabs().slice(1)]
+        const spreadsheet = serveStatefulSpreadsheet(before)
+
+        await httpRepository().publishRoadmapChanges("producta", {
+          roadmap: { vision: { base: "", value: "Where we are heading" } },
+          items: [],
+        })
+
+        expect(
+          changedCells(before, spreadsheet.tabs()).filter((change) =>
+            change.startsWith("Roadmaps!"),
+          ),
+        ).toEqual([
+          "Roadmaps!R1C15 Vision",
+          "Roadmaps!R2C15 Where we are heading",
+        ])
+        expect(spreadsheet.tabs()[0]?.columnCount).toBe(26)
+        const { requests } = spreadsheet.bodies[0] as BatchUpdateBody
+        expect(
+          requests.filter(
+            (request) =>
+              "appendDimension" in request &&
+              request.appendDimension.sheetId === 0,
+          ),
+        ).toEqual([])
+      })
+
+      it("grows a grid that ends at the last used column, in the same request", async () => {
+        const [header = [], ...body] = EXAMPLE_TAB_ROWS.ProductB ?? []
+        const phase = header.indexOf("Phase")
+        const withoutPhase = [header, ...body].map((row) =>
+          row.filter((_, c) => c !== phase),
+        )
+        const before = [
+          gridTab("Roadmaps", EXAMPLE_ROWS, 0),
+          gridTab("ProductB", withoutPhase, 10, 1),
+        ]
+        const spreadsheet = serveStatefulSpreadsheet(before)
+        const [item] = await httpRepository().listRoadmapItems("productb")
+        if (item === undefined) throw new Error("Product B has items")
+
+        await httpRepository().publishRoadmapChanges("productb", {
+          roadmap: {},
+          items: [
+            {
+              item,
+              position: 0,
+              fields: { phase: { base: "", value: "Beta" } },
+            },
+          ],
+        })
+
+        expect(changedCells(before, spreadsheet.tabs())).toEqual([
+          "ProductB!R1C8 Phase",
+          "ProductB!R1C9 Item ID",
+          "ProductB!R2C8 Beta",
+          ...body.map(
+            (_, i) =>
+              expect.stringMatching(
+                new RegExp(`^ProductB!R${String(i + 2)}C9 \\S+$`),
+              ) as string,
+          ),
+        ])
+        expect(spreadsheet.tabs()[1]?.columnCount).toBe(9)
+        const { requests } = spreadsheet.bodies[0] as BatchUpdateBody
+        expect(requests[0]).toEqual({
+          appendDimension: { sheetId: 10, dimension: "COLUMNS", length: 2 },
+        })
+      })
+    })
+
+    describe("failures and cancellation (S10)", () => {
+      it("rejects with unauthenticated, writing nothing, when the session ends before the write", async () => {
+        const spreadsheet = serveStatefulSpreadsheet(exampleTabs())
+        let reads = 0
+        const repository = httpRepository(() =>
+          ++reads <= 3 ? "token-123" : null,
+        )
+
+        await expect(
+          repository.publishRoadmapChanges("producta", titleChange),
+        ).rejects.toMatchObject({ kind: "unauthenticated" })
+        expect(spreadsheet.bodies).toEqual([])
+      })
+
+      it("rejects with the abort reason, writing nothing, when cancelled during the reads", async () => {
+        const controller = new AbortController()
+        const reason = new DOMException("Left the page", "AbortError")
+        const spreadsheet = serveStatefulSpreadsheet(exampleTabs())
+        server.use(
+          http.get(VALUES_ENDPOINT, ({ request }) => {
+            // Returns nothing, so the stateful fake answers.
+            if (tabTitleOf(request) === "ProductA") controller.abort(reason)
+          }),
+        )
+
+        await expect(
+          httpRepository().publishRoadmapChanges("producta", titleChange, {
+            signal: controller.signal,
+          }),
+        ).rejects.toBe(reason)
+        expect(spreadsheet.bodies).toEqual([])
+      })
+
+      it("publishes regardless once the write is sent, as it can't be taken back", async () => {
+        const controller = new AbortController()
+        const spreadsheet = serveStatefulSpreadsheet(exampleTabs())
+        server.use(
+          http.post(BATCH_UPDATE_ENDPOINT, () => {
+            controller.abort()
+          }),
+        )
+
+        await expect(
+          httpRepository().publishRoadmapChanges("producta", titleChange, {
+            signal: controller.signal,
+          }),
+        ).resolves.toEqual({ status: "published" })
+        expect(spreadsheet.tabs()[0]?.rows[1]?.[2]).toBe("Product A")
+      })
+
+      it("does not retry a failed write", async () => {
+        const spreadsheet = serveStatefulSpreadsheet(exampleTabs())
+        let writes = 0
+        server.use(
+          http.post(BATCH_UPDATE_ENDPOINT, () => {
+            writes++
+            return HttpResponse.json({}, { status: 503 })
+          }),
+        )
+
+        await expect(
+          httpRepository().publishRoadmapChanges("producta", titleChange),
+        ).rejects.toMatchObject({ kind: "unknown", status: 503 })
+        expect(writes).toBe(1)
+        expect(
+          spreadsheet.requests.filter(({ method }) => method === "GET"),
+        ).toHaveLength(3)
       })
     })
   })

@@ -33,11 +33,14 @@ function scriptedRepository(...outcomes: Outcome[]) {
     if (outcome instanceof AppError) return Promise.reject(outcome)
     return Promise.resolve(outcome ? [...outcome] : [])
   })
-  // The page never reads items.
+  // The page never reads items or publishes.
   const listRoadmapItems = vi.fn<RoadmapRepository["listRoadmapItems"]>(() =>
     Promise.resolve([]),
   )
-  return { listRoadmaps, listRoadmapItems }
+  const publishRoadmapChanges = vi.fn<
+    RoadmapRepository["publishRoadmapChanges"]
+  >(() => Promise.resolve({ status: "published" }))
+  return { listRoadmaps, listRoadmapItems, publishRoadmapChanges }
 }
 
 function main() {

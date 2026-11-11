@@ -223,4 +223,59 @@ describe("createSheetsClient", () => {
 
     await expect(pending).rejects.toBe(reason)
   })
+
+  describe("postJson", () => {
+    const BATCH = `${ENDPOINT}:batchUpdate`
+
+    it("sends an authorised JSON POST of the body and ignores the answer", async () => {
+      let request: Request | undefined
+      let sent: unknown
+      server.use(
+        http.post(BATCH, async (info) => {
+          request = info.request
+          sent = await info.request.json()
+          return HttpResponse.text("not json")
+        }),
+      )
+
+      await expect(
+        connectedClient().postJson("/sheet-1:batchUpdate", { requests: [] }),
+      ).resolves.toBeUndefined()
+
+      expect(request?.method).toBe("POST")
+      expect(request?.headers.get("Authorization")).toBe("Bearer token-123")
+      expect(request?.headers.get("Content-Type")).toBe("application/json")
+      expect(sent).toEqual({ requests: [] })
+    })
+
+    it("fails as unauthenticated without a request when there is no token", async () => {
+      const fetch = vi.fn<typeof globalThis.fetch>()
+      const client = createSheetsClient({ getAccessToken: () => null, fetch })
+
+      await expect(
+        client.postJson("/sheet-1:batchUpdate", {}),
+      ).rejects.toMatchObject({ kind: "unauthenticated" })
+      expect(fetch).not.toHaveBeenCalled()
+    })
+
+    it.each<[number, AppErrorKind]>([
+      [401, "unauthenticated"],
+      [403, "forbidden"],
+      [500, "unknown"],
+    ])("maps HTTP %i to %s", async (status, kind) => {
+      server.use(http.post(BATCH, () => HttpResponse.json({}, { status })))
+
+      await expect(
+        connectedClient().postJson("/sheet-1:batchUpdate", {}),
+      ).rejects.toMatchObject({ kind, status })
+    })
+
+    it("maps a lost answer to a network error", async () => {
+      server.use(http.post(BATCH, () => HttpResponse.error()))
+
+      await expect(
+        connectedClient().postJson("/sheet-1:batchUpdate", {}),
+      ).rejects.toMatchObject({ kind: "network" })
+    })
+  })
 })

@@ -32,6 +32,12 @@ export interface SheetsClient {
    * Rejects with an `AppError`, or with the abort reason once `signal` has aborted.
    */
   getJson(path: string, options?: GetJsonOptions): Promise<unknown>
+  /**
+   * Performs an authorised POST of `body`, as JSON, to `baseUrl + path`, ignoring the
+   * answer's body. Rejects with an `AppError` as `getJson` does; it takes no signal, as
+   * a write once sent must be waited for (ADR-012).
+   */
+  postJson(path: string, body: unknown): Promise<void>
 }
 
 export function createSheetsClient({
@@ -41,17 +47,40 @@ export function createSheetsClient({
 }: SheetsClientOptions): SheetsClient {
   const doFetch = fetchImpl ?? ((input, init) => globalThis.fetch(input, init))
 
-  async function request(
-    path: string,
-    { searchParams = {}, signal }: GetJsonOptions,
-  ): Promise<unknown> {
+  /** The bearer authorisation header, or throws `AppError('unauthenticated')`. */
+  function authorization(): string {
     const token = getAccessToken()
     if (!token) {
       throw new AppError("unauthenticated", {
         message: "No Google access token available",
       })
     }
+    return `Bearer ${token}`
+  }
 
+  /** Sends a request, mapping a failure or an HTTP error to an `AppError`. */
+  async function send(url: URL, init: RequestInit): Promise<Response> {
+    try {
+      const response = await doFetch(url, init)
+      if (!response.ok) throw await toHttpError(response)
+      return response
+    } catch (error) {
+      if (isAppError(error)) throw error
+      throw new AppError("network", {
+        message: "Google Sheets request did not complete",
+        cause: error,
+      })
+    }
+  }
+
+  async function request(
+    path: string,
+    { searchParams = {}, signal }: GetJsonOptions,
+  ): Promise<unknown> {
+    const headers = {
+      Accept: "application/json",
+      Authorization: authorization(),
+    }
     const url = new URL(baseUrl + path)
     for (const [name, value] of Object.entries(searchParams)) {
       url.searchParams.set(name, value)
@@ -59,15 +88,11 @@ export function createSheetsClient({
 
     let text: string
     try {
-      const response = await doFetch(url, {
+      const response = await send(url, {
         method: "GET",
-        headers: {
-          Accept: "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers,
         signal: signal ?? null,
       })
-      if (!response.ok) throw await toHttpError(response)
       text = await response.text()
     } catch (error) {
       if (isAppError(error)) throw error
@@ -95,6 +120,18 @@ export function createSheetsClient({
         // Cancellation overrides any outcome: reject with the caller's abort reason.
         options.signal?.throwIfAborted()
       }
+    },
+    async postJson(path, body) {
+      const headers = {
+        Accept: "application/json",
+        Authorization: authorization(),
+        "Content-Type": "application/json",
+      }
+      await send(new URL(baseUrl + path), {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+      })
     },
   }
 }

@@ -679,7 +679,11 @@ describe("RoadmapDetailPage items", () => {
     await renderWithProviders({
       path: "/roadmaps/producta",
       authState: connected,
-      repository: { listRoadmaps, listRoadmapItems },
+      repository: {
+        listRoadmaps,
+        listRoadmapItems,
+        publishRoadmapChanges: vi.fn(),
+      },
     })
 
     expect(

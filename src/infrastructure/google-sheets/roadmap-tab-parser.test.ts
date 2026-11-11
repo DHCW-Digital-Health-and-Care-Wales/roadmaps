@@ -361,6 +361,19 @@ describe("parseRoadmapTab", () => {
       )
       expect(tab.rows).toEqual([2, 4, 5])
     })
+
+    it("returns where each English column is, found by header", () => {
+      const tab = parseUnder(["Outcome", "Title (cy)", " title ", "Item ID"], {
+        " title ": "A",
+      } as Cells)
+      expect(tab.columns).toEqual(
+        new Map([
+          ["Title", 2],
+          ["Item ID", 3],
+          ["Outcome", 0],
+        ]),
+      )
+    })
   })
 
   describe("skipped rows (S4)", () => {
@@ -380,7 +393,7 @@ describe("parseRoadmapTab", () => {
 
     it("treats a row of spaces, or shorter than the header, as blank", () => {
       const tab = parseRoadmapTab([[...HEADER], ["  ", " "], []])
-      expect(tab).toEqual({ items: [], rows: [], problems: [] })
+      expect(tab).toMatchObject({ items: [], rows: [], problems: [] })
     })
   })
 
@@ -587,7 +600,7 @@ describe("parseRoadmapTab", () => {
     })
 
     it("gives no items and no failure for a header alone", () => {
-      expect(parseRoadmapTab([[...HEADER]])).toEqual({
+      expect(parseRoadmapTab([[...HEADER]])).toMatchObject({
         items: [],
         rows: [],
         problems: [],

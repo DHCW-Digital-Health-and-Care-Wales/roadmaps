@@ -7,8 +7,17 @@ import { AppError } from "@/lib/errors"
 import { createInMemoryRoadmapRepository } from "./in-memory-roadmap-repository"
 
 describeRoadmapRepositoryContract("createInMemoryRoadmapRepository", {
-  withRoadmaps: (roadmaps, items) =>
-    createInMemoryRoadmapRepository(roadmaps, items),
+  withRoadmaps: (roadmaps, items = {}, { write, unreadableItems = [] } = {}) =>
+    createInMemoryRoadmapRepository(
+      roadmaps,
+      {
+        ...items,
+        ...Object.fromEntries(
+          unreadableItems.map((id) => [id, new AppError("invalid-data")]),
+        ),
+      },
+      { write },
+    ),
   failing: () => createInMemoryRoadmapRepository(new AppError("network")),
 })
 

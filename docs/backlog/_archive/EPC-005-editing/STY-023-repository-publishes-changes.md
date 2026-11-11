@@ -1,10 +1,9 @@
 # STY-023: The repository publishes a roadmap's changes
 
-- **Status**: Proposed — owner decisions settled in the Editing epic's grilling
-  (2026-11-11); waits for STY-022
+- **Status**: Done — delivered in its PR, which awaits the owner's merge
 - **Type**: Feature
 - **Area**: Domain + Infrastructure + Features + E2E
-- **Epic**: EPC-005-editing
+- **Epic**: [EPC-005-editing](../../EPC-005-editing/README.md)
 - **Depends on**: STY-022 (hard)
 - **Binding ADRs**: ADR-012 §"Finding what to write" and §"The repository call",
   ADR-002, ADR-009, ADR-011, ADR-003
@@ -200,3 +199,111 @@ Audited at `8479405`:
 
 - Any screen: STY-025 and STY-026.
 - Writing Welsh, tags, organisations, details or placement: later records.
+
+## Delivery
+
+### Departures
+
+- **No change, no write.** D3's "IDs on any publish" applies to a publish that writes:
+  when every pending value already equals the current one (an item's no-op changes are
+  skipped), the outcome is `published` and no request is sent, so an unchanged roadmap
+  never gains IDs from a Save that changed nothing.
+- **S11** is met by a fake unit test (`tests/fixtures/sheets/apply-batch-update.test.ts`)
+  and a fixture-level spec (`tests/e2e/sheets-writes.spec.ts`) that sends the write from
+  the page; the publish from a screen is STY-025's.
+
+### Contract for dependents
+
+- **Domain** (`@/domain/roadmap/roadmap-changes`): `RoadmapChanges = { roadmap, items }`;
+  `roadmap` maps `EDITABLE_ROADMAP_FIELDS` (`title`, `statusLabel`, `productLead`,
+  `vision`, `serviceDescription`) and each `ItemChanges = { item, position, fields }`
+  maps `EDITABLE_ITEM_FIELDS` (`title`, `description`, `expectedOutcome`, `phase`) to a
+  `FieldChange = { base, value }`, both strings, `""` for none. `item` is the item as
+  loaded and `position` its 0-based place among the loaded items. `base` is the value
+  when the field was first edited (STY-025's store keeps it); a blank `title` value
+  throws `AppError('unknown')`, so the screen must not send one.
+- **Port**: `RoadmapRepository.publishRoadmapChanges(roadmapId, changes, { signal }?)`
+  resolves a `PublishOutcome`:
+  - `{ status: "published" }`, also when nothing differed;
+  - `{ status: "refused", conflicts: FieldConflict[], missingItems: ItemChanges[] }`
+    (nothing written); a `FieldConflict` is `{ subject: "roadmap", field }` or
+    `{ subject: "item", item: ItemChanges, field }` plus `base`, `pending` (trimmed) and
+    `current`; `missingItems` are the very `ItemChanges` objects passed in;
+  - `{ status: "roadmap-not-found" }` (nothing written);
+  - `{ status: "unconfirmed" }` (the answer was lost and one re-read could not settle
+    it; the changes may be written).
+
+  It rejects with `AppError`s as reads do (`invalid-data` for an unreadable tab,
+  `forbidden`, `unauthenticated`, `network` when a lost write is found not applied) and
+  with the signal's reason when aborted before the write is sent.
+
+- **Rules** (`planRoadmapPublish`, `@/domain/roadmap/publish-plan`, shared by both
+  repositories): values are trimmed; a field is written when its trimmed value differs
+  from the current one; it conflicts when the current value differs from both its base
+  and the value; an item is found by `item.id` (the first row holding it; when the ID
+  is repeated, only while that row holds the loaded content) or, with no ID, at
+  `position` while it holds the loaded content, either check also accepting that content
+  with the pending values applied (S12); a change whose trimmed value equals its base is
+  ignored, and an item with no other change is skipped; every kept
+  item without an ID (or with a repeated one) gets a new `createItemId()` (8 characters,
+  a consonant first, no vowels, `0` or `1`), unique among every ID in the tab.
+- **Hook**: `usePublishRoadmapChanges(roadmapId)` (`features/roadmaps/hooks/`) is a
+  `useMutation` with `retry: false` whose `onSettled` re-reads the list and the
+  roadmap's items, so they are fresh when `mutateAsync` settles. `createQueryClient`'s
+  `onUnauthenticated` now hears mutations too (a `MutationCache`).
+- **Google adapter**: three reads as `listRoadmapItems` (the metadata mask now asks for
+  `gridProperties(rowCount,columnCount)`), then one `POST
+…/spreadsheets/{id}:batchUpdate` through the client's new `postJson`: an
+  `appendDimension` (`COLUMNS`) per tab short of columns, then one `updateCells` per cell
+  with `userEnteredValue.stringValue` (empty object to clear) and
+  `fields: "userEnteredValue"`. Columns are found by header (`columnIndexes`); a missing
+  one goes after the last column any row uses, its English header written in row 1, in
+  the order first needed. The write takes no abort signal.
+- **E2E fake**: `sheets.writes` holds each `batchUpdate` body, applied through
+  `tests/fixtures/sheets/apply-batch-update.ts`, which records a violation for a write
+  to `Template`, a Welsh column, `Last updated`, an unchanged cell, a non-string value,
+  other `fields` or added rows; any other method or path is a violation too.
+- **Data-source format**: the editor writes the cells above and nothing else (README
+  §"Spreadsheet format", `docs/analysis/roadmap-tab-format.md`).
+
+### Scenario evidence
+
+The repository contract (`src/domain/roadmap/testing/roadmap-repository-contract.ts`,
+"publishing a roadmap's changes") runs every case below against the in-memory double and
+the Google adapter (MSW, stateful fake applying writes with `applyBatchUpdate`).
+
+- **S1**: "writes the changed English only, keeping Welsh and every other field"; the
+  adapter's "writes only the changed cell, an Item ID column and every item's ID,
+  leaving all else as it was" compares every tab cell for cell.
+- **S2**: adapter "sends one batchUpdate after the three reads, as JSON with the token";
+  contract "rejects with a forbidden/unauthenticated AppError when the write is refused,
+  writing nothing"; `sheets-client.test.ts` `postJson` status mapping.
+- **S3**: contract "writes values exactly as typed, trimmed, and clears a field set to
+  blank" (`=SUM(A1)`, `42`, `1/2`, `TRUE`); adapter "sends every value as text and a
+  cleared field as an empty cell".
+- **S4**: contract "finds an item by its ID after its row has moved", "writes to the
+  first row of a copied ID and gives the copy its own", "refuses an item whose copied
+  ID's first row no longer holds what was loaded".
+- **S5**: contract "finds an item without an ID at its position while it holds what was
+  loaded", "treats an item already holding the pending values as published".
+- **S6**: contract "gives every item without an ID a new one, all different";
+  `item-id.test.ts` (alphabet, length, uniform sampling).
+- **S7**: adapter "a missing column (S7)": after the last used column inside a wide
+  grid, and growing a grid that ends there, in the same request.
+- **S8**: contract "refuses a field a co-lead changed, writing nothing", "publishes a
+  field a co-lead set to the same value, and keeps fields not edited";
+  `publish-plan.test.ts`.
+- **S9**: contract "refuses an edited item that is no longer there", "says a roadmap
+  that is no longer listed is not found", "rejects with invalid-data when the roadmap's
+  items cannot be read".
+- **S10**: contract 403/401 rejections and "rejects with the abort reason when the
+  signal is already aborted, writing nothing"; adapter "failures and cancellation
+  (S10)": session ended before the write, cancelled during the reads, published
+  regardless once sent, no retry; `use-publish-roadmap-changes.test.tsx` (no retry, a
+  401 expires the session); `query-client.test.ts` (mutations report
+  `unauthenticated`).
+- **S11**: `apply-batch-update.test.ts` (applies in order, rejects a bad body whole,
+  each violation) and `tests/e2e/sheets-writes.spec.ts` (a write is applied, recorded
+  and shown after Refresh; violations recorded).
+- **S12**: contract "when the write's answer is lost": published, `network`,
+  unconfirmed on some, unconfirmed when the re-read fails.

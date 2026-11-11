@@ -11,10 +11,15 @@ export interface RoadmapItemDetail {
 
 /**
  * One piece of work on a roadmap (ADR-011). Optional text is `null` when it has no
- * English; text keeps its line breaks. Items have no identity yet: a roadmap's items are
- * in the order its data source holds them.
+ * English; text keeps its line breaks. A roadmap's items are in the order its data source
+ * holds them (ADR-012).
  */
 export interface RoadmapItem {
+  /**
+   * Its identity within its roadmap, never shown; `null` until the data source gives it
+   * one (a row with no ID yet, or a repeat of an earlier row's).
+   */
+  id: string | null
   /** Its English is never empty. */
   title: LocalisedText
   /** `null` for an unplaced item: no recognised horizon, so the public site skips it. */

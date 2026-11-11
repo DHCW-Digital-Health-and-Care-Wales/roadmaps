@@ -35,6 +35,8 @@ export type RoadmapTabProblemCode =
   | HeaderProblemCode
   /** A column other than `Title` has no header. */
   | "missing-column"
+  /** An `Item ID` already on an earlier kept row; the later item has no ID. */
+  | "duplicate-item-id"
   /** A row with no English title; skipped. */
   | "missing-title"
   /** A blank `Horizon`; the item is kept unplaced. */
@@ -51,6 +53,8 @@ export type RoadmapTabProblemCode =
 export interface RoadmapTab {
   /** In row order. */
   items: RoadmapItem[]
+  /** The spreadsheet row (1 is the header) each of `items` came from, in step with it. */
+  rows: number[]
   /** In row order, problems of the whole tab first. */
   problems: RoadmapTabProblem[]
 }
@@ -66,7 +70,8 @@ const OPTIONAL_COLUMNS = [
   "Details",
 ] as const
 
-type Column = "Title" | (typeof OPTIONAL_COLUMNS)[number]
+// Every tab predates it, so a missing `Item ID` column is not a problem.
+type Column = "Title" | "Item ID" | (typeof OPTIONAL_COLUMNS)[number]
 
 /** The columns that may have a Welsh version, such as `Title (cy)`. */
 const WELSH_COLUMNS = [
@@ -81,7 +86,7 @@ const WELSH_COLUMNS = [
 type TextColumn = (typeof WELSH_COLUMNS)[number]
 
 const readHeader = headerReader<Column, TextColumn>(
-  ["Title", ...OPTIONAL_COLUMNS],
+  ["Title", "Item ID", ...OPTIONAL_COLUMNS],
   WELSH_COLUMNS,
 )
 
@@ -124,11 +129,18 @@ export function parseRoadmapTab(
     }
   }
 
-  const items = bodyRows.flatMap((cells, i) => {
-    const item = toItem(new ItemRow(header, cells, i + 2, problems))
-    return item ? [item] : []
+  const seenIds = new Set<string>()
+  const items: RoadmapItem[] = []
+  const itemRows: number[] = []
+  bodyRows.forEach((cells, i) => {
+    const row = new ItemRow(header, cells, i + 2, problems)
+    const item = toItem(row, seenIds)
+    if (item) {
+      items.push(item)
+      itemRows.push(row.row)
+    }
   })
-  return { items, problems: problems.sorted() }
+  return { items, rows: itemRows, problems: problems.sorted() }
 }
 
 /** One spreadsheet row, trimmed, read through the header. */
@@ -200,7 +212,7 @@ class ItemRow {
 }
 
 /** Reads one row's item, or returns `null` for a blank row or one with no title. */
-function toItem(row: ItemRow): RoadmapItem | null {
+function toItem(row: ItemRow, seenIds: Set<string>): RoadmapItem | null {
   if (row.isBlank) return null
   const title = row.read("Title")
   if (title === "") {
@@ -208,6 +220,7 @@ function toItem(row: ItemRow): RoadmapItem | null {
     return null
   }
   return {
+    id: readId(row, seenIds),
     title: { en: title, cy: row.readWelsh("Title") },
     ...readPlacement(row),
     description: readText(row, "Description"),
@@ -217,6 +230,21 @@ function toItem(row: ItemRow): RoadmapItem | null {
     organisations: readOrganisations(row),
     details: readDetails(row),
   }
+}
+
+/**
+ * The row's ID, compared exactly: it is a machine-made token. A repeat of an earlier kept
+ * row's ID is recorded and left out, so the first row keeps it.
+ */
+function readId(row: ItemRow, seenIds: Set<string>): string | null {
+  const id = row.read("Item ID")
+  if (id === "") return null
+  if (seenIds.has(id)) {
+    row.record("duplicate-item-id", "Item ID", id)
+    return null
+  }
+  seenIds.add(id)
+  return id
 }
 
 /** An unrecognised horizon leaves the item unplaced, keeping what was written. */

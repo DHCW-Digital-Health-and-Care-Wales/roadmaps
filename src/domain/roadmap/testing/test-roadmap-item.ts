@@ -1,7 +1,7 @@
 import type { RoadmapItem } from "../roadmap-item"
 
 /**
- * A roadmap item for tests (test code only): placed `now`, with an English title and
+ * A roadmap item for tests (test code only): placed `now`, with no ID, with an English title and
  * nothing else unless `overrides` adds it.
  */
 export function createTestRoadmapItem(
@@ -9,6 +9,7 @@ export function createTestRoadmapItem(
   overrides: Partial<Omit<RoadmapItem, "title">> = {},
 ): RoadmapItem {
   return {
+    id: null,
     title: { en: title, cy: "" },
     placement: "now",
     writtenHorizon: null,

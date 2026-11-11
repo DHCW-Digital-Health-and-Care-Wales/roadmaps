@@ -178,9 +178,10 @@ worksheet it names holds one roadmap's items, found by header rather than positi
 Only infrastructure uses this term.
 _Avoid_: Sheet (ambiguous with spreadsheet)
 
-**Item ID** _(planned)_:
+**Item ID**:
 The column of a roadmap's worksheet holding each roadmap item's identity, which the
-editor adds and fills when it publishes and never shows (ADR-012). Only infrastructure
+editor reads (an item without one has none) and will add and fill when it publishes, and
+never shows (ADR-012). Only infrastructure
 and setup documentation use this term.
 _Avoid_: Row number, key
 

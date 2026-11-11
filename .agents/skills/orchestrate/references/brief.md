@@ -97,7 +97,8 @@ Carry forward what earlier items learned, for example:
   `git fetch --prune` comes before reusing the branch name;
 - that `pnpm test:e2e` builds and serves on port 4173 and reuses a server
   already there locally, so a stale `pnpm preview` must be stopped first;
-- that it keeps the `delegation.md` handoff record current at
+- that it creates the `delegation.md` handoff record when its branch is
+  cut, before the first heavy command, and keeps it current at
   `<run-folder>/progress/<ITEM>-handoff.md`, in place of that file's
   `/tmp/roadmaps-<record-id>-handoff.md`, so it can be resumed after a usage
   limit or by a later orchestrator session.

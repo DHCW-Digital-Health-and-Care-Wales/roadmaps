@@ -30,7 +30,9 @@ bypasses selection, not prerequisite checks.
 Check `git status`, branch, default branch and existing local changes. Reuse the
 isolated checkout. Fetch the default branch without resetting or discarding
 work; create a descriptive branch from it if the checkout is clean and no
-existing task branch is intended. Preserve local work when choosing a base.
+existing task branch is intended, and start the handoff record of
+`references/delegation.md` as soon as it exists. Preserve local work when
+choosing a base.
 Test read-only GitHub access before assuming credentials are missing. Check for
 existing open PRs for candidate IDs when the API is available.
 

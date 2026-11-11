@@ -3,6 +3,8 @@ import type { Locator, Page } from "@playwright/test"
 import { EXAMPLE_SPREADSHEET, type FakeTab } from "./fixtures/fake-sheets"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
+const ABOUT_HEADING = "About this roadmap"
+
 const PLACEMENT_HEADINGS = [
   "Recently delivered",
   "Now",
@@ -74,9 +76,18 @@ async function openProductA(page: Page) {
 /** What S1 and S2 describe for Product A's example tab. */
 async function expectProductA(page: Page) {
   const main = page.getByRole("main")
-  await expect(main.getByRole("heading", { level: 2 })).toHaveText(
-    PLACEMENT_HEADINGS,
-  )
+  await expect(main.getByRole("heading", { level: 2 })).toHaveText([
+    ABOUT_HEADING,
+    ...PLACEMENT_HEADINGS,
+  ])
+  const about = main.getByRole("region", { name: ABOUT_HEADING })
+  await expect(about.getByRole("term")).toHaveText([
+    "Status",
+    "Product lead",
+    "Vision",
+    "Service description",
+  ])
+  await expect(about.getByRole("definition").first()).toHaveText("Beta")
   await expect(titlesUnder(page, "Now")).toHaveText([
     "Example card with every column",
     "Minimal card",
@@ -175,6 +186,7 @@ test("items with no recognised horizon are shown first, flagged (S4, S13)", asyn
 
   const main = page.getByRole("main")
   await expect(main.getByRole("heading", { level: 2 })).toHaveText([
+    ABOUT_HEADING,
     "Not on the public roadmap",
     ...PLACEMENT_HEADINGS,
   ])

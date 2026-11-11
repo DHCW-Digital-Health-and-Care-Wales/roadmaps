@@ -1,10 +1,9 @@
 # STY-024: A roadmap's page shows what the roadmap is about
 
-- **Status**: Proposed — owner decisions settled in the Editing epic's grilling
-  (2026-11-11); selectable now
+- **Status**: Done — delivered in its PR, which awaits the owner's merge
 - **Type**: Feature
 - **Area**: Features/UI + i18n (en + cy) + E2E
-- **Epic**: EPC-005-editing
+- **Epic**: [EPC-005-editing](../../EPC-005-editing/README.md)
 - **Depends on**: none
 - **Binding ADRs**: ADR-009, ADR-008, ADR-010
 - **Suggested model**: Sonnet — a read-only block from data already loaded, on existing
@@ -85,3 +84,32 @@ S1–S3 are component tests; S4 extends the detail page's tests; S5 updates
 
 - Editing: STY-025.
 - Family and colour: EPC-006.
+
+## Delivery
+
+### Departures
+
+None.
+
+### Contract for dependents
+
+- **Component**: `RoadmapAbout({ roadmap })` (`features/roadmaps/components/roadmap-about.tsx`),
+  rendered by `RoadmapView` between the title block and the items area, so it appears
+  exactly when the title does. STY-025's Edit goes in this section.
+- **Markup**: a `<section>` labelled by its `h2` ("About this roadmap"), then a `dl` of
+  the fields present, in order: status label, product lead, vision, service description.
+  A field that is null or blank leaves no label; with none, one line says there is
+  nothing about the roadmap yet. Text goes through `localise` per field; the product
+  lead is shown as written; line breaks are kept with `whitespace-pre-line`. It has no
+  controls, so the tab order is unchanged.
+- **Copy**: `roadmaps.about.{title,empty,fields.*}`. The Welsh is machine-assisted and
+  needs a fluent review.
+- **Tests**: the page's `h2`s now start with "About this roadmap"; `detail.aria.yml`
+  gained the region.
+
+### Scenario evidence
+
+- **S1–S3**: `roadmap-about.test.tsx`; `roadmap-page.spec.ts` (Product A's labels).
+- **S4**: `roadmap-detail-page.test.tsx` (loading, failed, expired).
+- **S5**: `structure.spec.ts` (`detail.aria.yml`) and the accessibility spec's roadmap
+  page checks.

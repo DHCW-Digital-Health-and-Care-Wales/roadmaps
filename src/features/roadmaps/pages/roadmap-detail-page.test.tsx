@@ -167,6 +167,31 @@ describe("RoadmapDetailPage", () => {
     expect(
       main().getByRole("heading", { level: 1, name: "Product B roadmap" }),
     ).toBeInTheDocument()
+    expect(
+      main().getByRole("region", { name: "About this roadmap" }),
+    ).toBeInTheDocument()
+  })
+
+  it("shows no about block while the list loads", async () => {
+    await renderWithProviders({
+      path: "/roadmaps/productb",
+      authState: connected,
+      repository: {
+        ...createInMemoryRoadmapRepository(roadmaps),
+        listRoadmaps: () => new Promise<never>(() => undefined),
+      },
+    })
+    expect(main().queryByRole("region")).toBeNull()
+  })
+
+  it("shows no about block when the list failed", async () => {
+    await renderWithProviders({
+      path: "/roadmaps/productb",
+      authState: connected,
+      repository: createInMemoryRoadmapRepository(new AppError("not-found")),
+    })
+    await main().findByRole("alert")
+    expect(main().queryByRole("region")).toBeNull()
   })
 
   describe("after a failed refresh", () => {

@@ -17,6 +17,9 @@ import {
   type InMemoryRoadmapItems,
 } from "../testing/in-memory-roadmap-repository"
 
+// The roadmap's own text comes first, above the items.
+const ABOUT_HEADING = "About this roadmap"
+
 const connected: AuthState = {
   status: "connected",
   expiresAt: Date.now() + 3_600_000,
@@ -190,7 +193,7 @@ describe("RoadmapDetailPage items", () => {
       main()
         .getAllByRole("heading", { level: 2 })
         .map((heading) => heading.textContent),
-    ).toEqual(PLACEMENT_HEADINGS)
+    ).toEqual([ABOUT_HEADING, ...PLACEMENT_HEADINGS])
     expect(titlesUnder("Now")).toEqual([
       "Example card with every column",
       "Minimal card",
@@ -252,7 +255,7 @@ describe("RoadmapDetailPage items", () => {
       main()
         .getAllByRole("heading", { level: 2 })
         .map((heading) => heading.textContent),
-    ).toEqual(PLACEMENT_HEADINGS)
+    ).toEqual([ABOUT_HEADING, ...PLACEMENT_HEADINGS])
     for (const empty of ["Recently delivered", "Not doing"]) {
       const heading = main().getByRole("heading", { level: 2, name: empty })
       expect(heading.nextElementSibling).toHaveTextContent("No items")
@@ -270,6 +273,7 @@ describe("RoadmapDetailPage items", () => {
       .getAllByRole("heading", { level: 2 })
       .map((heading) => heading.textContent)
     expect(headings).toEqual([
+      ABOUT_HEADING,
       "Not on the public roadmap",
       ...PLACEMENT_HEADINGS,
     ])
@@ -314,6 +318,7 @@ describe("RoadmapDetailPage items", () => {
         .getAllByRole("heading", { level: 2 })
         .map((heading) => heading.textContent),
     ).toEqual([
+      "Ynglŷn â'r map trywydd hwn",
       "Wedi'u cyflawni'n ddiweddar",
       "Nawr",
       "Nesaf",

@@ -147,8 +147,8 @@ export const cy = {
     card: {
       productLead: "Arweinydd cynnyrch: {{name}}",
       updated: "Diweddarwyd {{date}}",
-      notPublished: "Heb ei gyhoeddi",
     },
+    notPublished: "Heb ei gyhoeddi",
     empty: {
       title: "Dim mapiau trywydd eto",
       description:
@@ -163,12 +163,47 @@ export const cy = {
     },
     detail: {
       title: "Map trywydd",
-      comingSoon: "Bydd manylion y map trywydd ar gael cyn bo hir.",
       back: "Yn ôl i'r mapiau trywydd",
       connectPrompt: "Cysylltwch â Google i weld y map trywydd hwn.",
       notFoundTitle: "Heb ddod o hyd i'r map trywydd",
       notFoundDescription:
         "Dydy'r map trywydd hwn ddim yn bodoli, neu dydy e ddim wedi'i restru mwyach.",
+    },
+    items: {
+      loading: "Wrthi'n llwytho eitemau'r map trywydd…",
+      loadFailed: "Doedd dim modd llwytho eitemau'r map trywydd hwn",
+      refreshFailed: "Doedd dim modd adnewyddu eitemau'r map trywydd hwn",
+      invalidData:
+        "Dydy eitemau'r map trywydd hwn ddim yn y fformat disgwyliedig yn y daenlen. Gofynnwch i berchennog y daenlen eu gwirio.",
+      empty: {
+        title: "Dim eitemau eto",
+        description: "Does dim eitemau ar y map trywydd hwn eto.",
+      },
+      noneInPlacement: "Dim eitemau",
+      // Nawr, Nesaf and Hwyrach are the public site's Welsh headings.
+      placements: {
+        "recently-delivered": "Wedi'u cyflawni'n ddiweddar",
+        now: "Nawr",
+        next: "Nesaf",
+        later: "Hwyrach",
+        "delivered-this-year": "Wedi'u cyflawni eleni",
+        "not-doing": "Ddim yn bwrw ymlaen",
+      },
+      unplaced: {
+        title: "Ddim ar y map trywydd cyhoeddus",
+        description:
+          "Mae angen gorwel ar yr eitemau hyn cyn i'r wefan gyhoeddus eu dangos.",
+        unknownHorizon: "Dydy'r gorwel “{{horizon}}” ddim yn cael ei adnabod",
+        noHorizon: "Dim gorwel",
+      },
+      fields: {
+        phase: "Cam",
+        description: "Disgrifiad",
+        expectedOutcome: "Canlyniad disgwyliedig",
+        tags: "Tagiau",
+        organisations: "Sefydliadau",
+        details: "Manylion",
+      },
     },
   },
   errors: {

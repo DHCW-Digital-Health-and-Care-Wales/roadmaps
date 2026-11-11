@@ -867,3 +867,26 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
       is a violation.
     - A roadmap page costs three sequential requests once STY-021 calls the hook; a 5xx
       on any is retried twice, as the list is.
+- **STY-021 A roadmap's page shows its items** — under the title (with a "Not published"
+  badge and its own Refresh) come the unplaced items, flagged, then the six placements in
+  the public site's order, each item as plain text in a card; loading, empty, per-roadmap
+  failure and removed-roadmap states. Closes EPC-004 (archived). DEF-002 recorded.
+  - Where things live (`features/roadmaps`): `groupRoadmapItems` (items keyed by
+    `position` until they have identity), `nestItemDetails`, `organisationCodes` (the
+    codes are not catalogue copy), `RoadmapItems`/`RoadmapItemsSkeleton`,
+    `RoadmapItemCard`, `NotPublishedBadge` (key now `roadmaps.notPublished`),
+    `RefreshButton` (both pages). `RoadmapsErrorState` takes `subject: "items"`. The page's
+    items area is `RoadmapView`/`RoadmapItemsArea` in `roadmap-detail-page.tsx`, mounted
+    only once the roadmap is listed, so an unknown id reads no items.
+  - Decisions: a `not-found` items read invalidates the list in `useRoadmapItems` (D11);
+    an expired session shows only the list's alert, keeping cached items; copy is
+    `roadmaps.items.*` (Welsh machine-assisted; Nawr, Nesaf, Hwyrach are the public site's).
+  - Gotchas:
+    - Opening a roadmap from the list costs three reads (`sheets.reads` gains
+      `metadata`, `values:Roadmaps`, `values:<tab>`); its Refresh re-reads list and items.
+    - The title comes from the list before the items: wait for an item heading
+      ("Example card with every column") before axe, a snapshot or a tour.
+    - axe at 375px fails the header's home link in English (DEF-002); the phone checks
+      run axe on `main` until it is fixed.
+    - `detail.aria.yml` holds every Product A item: a field or copy change on a card
+      rewrites it (`--update-snapshots`, then review).

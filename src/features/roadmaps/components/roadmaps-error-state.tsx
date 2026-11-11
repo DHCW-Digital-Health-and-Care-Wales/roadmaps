@@ -48,10 +48,23 @@ export interface RoadmapsErrorStateProps {
   retrying: boolean
   /** The panel title's heading level (a `panel`'s title is a heading; an `alert`'s is not). */
   titleAs?: "h1" | "h2" | undefined
+  /** What couldn't be read: the roadmap list (the default) or one roadmap's items. */
+  subject?: "roadmaps" | "items"
 }
 
+const titleKeys = {
+  roadmaps: {
+    panel: "roadmaps.loadFailed",
+    alert: "roadmaps.refreshFailed",
+  },
+  items: {
+    panel: "roadmaps.items.loadFailed",
+    alert: "roadmaps.items.refreshFailed",
+  },
+} as const
+
 /**
- * Why roadmaps couldn't be loaded, in words chosen by the error's kind alone (ADR-008),
+ * Why roadmaps, or a roadmap's items, couldn't be loaded, in words chosen by the error's kind alone (ADR-008),
  * with the one action that can help: Reconnect after the session expired, Retry when
  * trying again may work, otherwise none. A failure with nothing loaded is a `destructive`
  * notice; an expired session, or any problem above roadmaps loaded earlier (which may be
@@ -63,15 +76,19 @@ export function RoadmapsErrorState({
   onRetry,
   retrying,
   titleAs,
+  subject = "roadmaps",
 }: RoadmapsErrorStateProps) {
   const { t } = useTranslation()
   const expired = error.kind === "unauthenticated"
   const title = expired
     ? t("roadmaps.expired.title")
-    : t(variant === "panel" ? "roadmaps.loadFailed" : "roadmaps.refreshFailed")
+    : t(titleKeys[subject][variant])
+  // `errors.invalid-data` is about the roadmap list; a roadmap's items have their own.
   const description = expired
     ? t("roadmaps.expired.description")
-    : t(`errors.${error.kind}`)
+    : subject === "items" && error.kind === "invalid-data"
+      ? t("roadmaps.items.invalidData")
+      : t(`errors.${error.kind}`)
 
   const action = expired ? (
     <ReconnectButton />

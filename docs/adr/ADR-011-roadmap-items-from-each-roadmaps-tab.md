@@ -182,4 +182,4 @@ A roadmap-tab failure affects that roadmap's detail only; the roadmap list is un
 - The parser duplicates more of the public site's rules; a format change updates both
   analyses, ADR-009, this ADR, `tests/fixtures/sheets/` and the parsers together.
 - Item identity, editing and publishing are left to later records.
-- Delivered by [EPC-004](../backlog/EPC-004-roadmap-items/README.md).
+- Delivered by [EPC-004](../backlog/_archive/EPC-004-roadmap-items/README.md).

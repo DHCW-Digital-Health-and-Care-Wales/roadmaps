@@ -6,7 +6,7 @@ import {
   roadmapRow,
   withRoadmapIndex,
 } from "./fixtures/fake-sheets"
-import { useTheme } from "./fixtures/look"
+import { useLanguage, useTheme } from "./fixtures/look"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 const [header = []] = EXAMPLE_INDEX_ROWS
@@ -16,14 +16,18 @@ const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]
 
 type Theme = "light" | "dark"
 
-async function expectNoAxeViolations(page: Page, theme: Theme) {
+async function expectNoAxeViolations(
+  page: Page,
+  theme: Theme,
+  { only }: { only?: string } = {},
+) {
   const html = page.locator("html")
   await (theme === "dark"
     ? expect(html).toHaveClass(/\bdark\b/)
     : expect(html).not.toHaveClass(/\bdark\b/))
-  const { violations } = await new AxeBuilder({ page })
-    .withTags(WCAG_TAGS)
-    .analyze()
+  let builder = new AxeBuilder({ page }).withTags(WCAG_TAGS)
+  if (only) builder = builder.include(only)
+  const { violations } = await builder.analyze()
   const summary = violations.map(({ id, nodes }) => ({
     id,
     targets: nodes.map(({ target }) => target.join(" ")),
@@ -85,11 +89,54 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
     test("roadmap detail", async ({ page }) => {
       await page.goto("./#/roadmaps/producta")
       await connect(page)
+      // The title comes from the list before the items arrive: wait for an item.
       await expect(
-        page.getByRole("heading", { level: 1, name: "Product A roadmap" }),
+        page.getByRole("heading", {
+          level: 3,
+          name: "Example card with every column",
+        }),
       ).toBeVisible()
       await expectNoAxeViolations(page, theme)
     })
+
+    for (const [language, connectName, itemTitle] of [
+      ["en", "Connect Google", "Example card with every column"],
+      ["cy", "Cysylltu â Google", "Cerdyn enghreifftiol gyda phob colofn"],
+    ] as const) {
+      test(`a roadmap's page on a phone in ${language} (STY-021 S11)`, async ({
+        page,
+      }) => {
+        await useLanguage(page, language)
+        await page.setViewportSize({ width: 375, height: 800 })
+        await page.goto("./#/roadmaps/producta")
+        await connect(page, connectName)
+        await expect(
+          page.getByRole("heading", { level: 3, name: itemTitle }),
+        ).toBeVisible()
+
+        const overflow = await page.evaluate(
+          () =>
+            document.documentElement.scrollWidth -
+            document.documentElement.clientWidth,
+        )
+        expect(overflow).toBe(0)
+        const levels = await page
+          .getByRole("main")
+          .getByRole("heading")
+          .evaluateAll((headings) =>
+            headings.map((heading) => Number(heading.tagName.slice(1))),
+          )
+        expect(levels[0]).toBe(1)
+        // Each heading is at most one level below the one before it.
+        expect(
+          levels.filter((level, index) => level - (levels[index - 1] ?? 0) > 1),
+        ).toEqual([])
+        expect(new Set(levels)).toEqual(new Set([1, 2, 3]))
+        // The page's own content: the narrow header's home link fails 2.5.3 in English
+        // on every page (DEF-002).
+        await expectNoAxeViolations(page, theme, { only: "main" })
+      })
+    }
 
     test("session warning, then a failed renewal", async ({ page, gis }) => {
       await page.clock.install()

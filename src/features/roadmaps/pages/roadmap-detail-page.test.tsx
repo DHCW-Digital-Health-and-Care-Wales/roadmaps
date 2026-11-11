@@ -40,25 +40,8 @@ describe("RoadmapDetailPage", () => {
       }),
     ).toBeInTheDocument()
     expect(
-      main().getByText("Roadmap details are coming soon."),
-    ).toBeInTheDocument()
-    expect(
       main().getByRole("link", { name: "Back to roadmaps" }),
     ).toHaveAttribute("href", "/")
-  })
-
-  it("does not read the roadmap's items yet (STY-020 S8)", async () => {
-    const repository = createInMemoryRoadmapRepository(roadmaps)
-    const listRoadmapItems = vi.spyOn(repository, "listRoadmapItems")
-    await renderWithProviders({
-      path: "/roadmaps/productb",
-      authState: connected,
-      repository,
-    })
-
-    await main().findByRole("heading", { level: 1, name: "Product B roadmap" })
-
-    expect(listRoadmapItems).not.toHaveBeenCalled()
   })
 
   it("goes back by a real link with a decorative chevron, not a button (STY-015 S5)", async () => {

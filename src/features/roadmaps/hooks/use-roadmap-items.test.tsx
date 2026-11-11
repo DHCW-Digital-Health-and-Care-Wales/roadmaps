@@ -8,7 +8,7 @@ import { createInMemoryRoadmapRepository } from "@/features/roadmaps/testing/in-
 import { AppError } from "@/lib/errors"
 import { renderHookWithProviders } from "@/test/render-with-providers"
 
-import { roadmapKeys } from "./roadmap-queries"
+import { roadmapKeys, roadmapListQueryOptions } from "./roadmap-queries"
 import { useRoadmapItems } from "./use-roadmap-items"
 
 const connected: AuthState = {
@@ -117,5 +117,40 @@ describe("useRoadmapItems", () => {
     await waitFor(() => {
       expect(result.current.error).toMatchObject({ kind: "not-found" })
     })
+  })
+
+  it("reads the roadmap list again when the roadmap is not found (STY-021 D11)", async () => {
+    const repository = createInMemoryRoadmapRepository(roadmaps)
+    const listRoadmaps = vi.spyOn(repository, "listRoadmaps")
+    const { queryClient } = renderHookWithProviders(
+      () => useRoadmapItems("unknown"),
+      { authState: connected, repository },
+    )
+    await queryClient.query(roadmapListQueryOptions(repository))
+    expect(listRoadmaps).toHaveBeenCalledOnce()
+
+    await waitFor(() => {
+      expect(queryClient.getQueryState(roadmapKeys.list())?.isInvalidated).toBe(
+        true,
+      )
+    })
+  })
+
+  it("leaves the roadmap list alone when the items fail otherwise", async () => {
+    const repository = createInMemoryRoadmapRepository(roadmaps, {
+      producta: new AppError("invalid-data"),
+    })
+    const { result, queryClient } = renderHookWithProviders(
+      () => useRoadmapItems("producta"),
+      { authState: connected, repository },
+    )
+    await queryClient.query(roadmapListQueryOptions(repository))
+
+    await waitFor(() => {
+      expect(result.current.error).toMatchObject({ kind: "invalid-data" })
+    })
+    expect(queryClient.getQueryState(roadmapKeys.list())?.isInvalidated).toBe(
+      false,
+    )
   })
 })

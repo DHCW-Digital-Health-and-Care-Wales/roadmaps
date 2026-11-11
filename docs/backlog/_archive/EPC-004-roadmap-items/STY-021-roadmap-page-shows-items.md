@@ -1,6 +1,6 @@
 # STY-021: A roadmap's page shows its items under Now, Next, Later and the other sections
 
-- **Status**: Proposed — selectable once STY-020 is on `main`
+- **Status**: Done — delivered in its PR, which awaits the owner's merge
 - **Type**: Feature + Copy
 - **Area**: Features/UI + i18n (en + cy) + E2E
 - **Epic**: EPC-004-roadmap-items
@@ -8,6 +8,7 @@
 - **Binding ADRs**: ADR-011, ADR-008, ADR-010, ADR-002
 - **Suggested model**: Opus — many page states, new copy in two languages, E2E specs and
   screenshots in one context (Sonnet review)
+- **Delivered**: _(PR link added once raised)_
 
 ## Summary
 
@@ -229,3 +230,82 @@ need before/after screenshots (`implement-story` `references/screenshots.md`).
   organisation names or filters, horizon definitions: later iterations.
 - The roadmap's own vision, service description and product lead on its page: a later
   record (EPC-004 Out of scope).
+
+## Delivery
+
+### Departures
+
+- **S11's phone axe run covers `main` only** (agent): at 375px in English the header's
+  home link fails WCAG 2.5.3 on every page, which predates this story and is recorded as
+  [DEF-002](../../defects/DEF-002-header-home-link-name-on-phones.md). The roadmap page's
+  whole-page axe runs stay at desktop width in both themes; S11's overflow, heading and
+  `main` axe checks run at 375px in both themes and languages, in
+  `accessibility.spec.ts` beside them rather than in the new spec.
+- **Shared pieces** (agent): the "Not published" badge is `NotPublishedBadge`, its key
+  moved from `roadmaps.card.notPublished` to `roadmaps.notPublished`, and the home page's
+  Refresh is `RefreshButton`; both pages use them. `RoadmapsErrorState` takes
+  `subject: "roadmaps" | "items"`, which picks the titles and, for `invalid-data`, the
+  items' own description.
+- **D11 lives in `useRoadmapItems`** (agent): a `not-found` items read invalidates the
+  roadmap list. While that re-read runs the items area shows its loading placeholder; if
+  the list still lists the roadmap afterwards (a race the adapter cannot produce, as it
+  reads the same index), the area shows nothing rather than the spreadsheet-not-found copy.
+- **States the criteria leave open** (agent): with items shown, a failed Refresh of the
+  items is a warning alert, "Couldn't refresh this roadmap's items", above them, as the
+  home page does for the list; with no items read and no session, the items area is empty
+  under the list's expired-session alert, which already offers Reconnect.
+- **Test order**: the grouping and detail-nesting suites and the page's 21 item tests were
+  written first and seen failing (missing modules, then 21 red); the D11 hook test was
+  written after its code and shown to discriminate by disabling the invalidation (it and
+  S16 fail). The Playwright specs followed the working page.
+
+### Contract for dependents
+
+- `features/roadmaps`: `groupRoadmapItems(items)` (`group-roadmap-items.ts`;
+  `{ unplaced, placements }`, each entry `{ item, position }`, position being the key
+  while items have no identity), `nestItemDetails(details)` (`nest-item-details.ts`),
+  `organisationCodes` (`organisation-codes.ts`), `RoadmapItems`/`RoadmapItemsSkeleton`
+  (`components/roadmap-items.tsx`), `RoadmapItemCard` (an `li`), `NotPublishedBadge`,
+  `RefreshButton`.
+- Copy: `roadmaps.items.*` (placements, fields, unplaced group, empty, loading, failures,
+  `invalidData`) and `roadmaps.notPublished`; `roadmaps.detail.comingSoon` is gone. The
+  Welsh is machine-assisted; "Nawr", "Nesaf" and "Hwyrach" are the public site's.
+- E2E: `tests/e2e/roadmap-page.spec.ts`; `detail.aria.yml` now holds Product A's items.
+
+### Scenario evidence
+
+- **S1**: `roadmap-detail-page-items.test.tsx` "shows the items under the six
+  placements, in order"; `roadmap-page.spec.ts` "a roadmap's items appear under its six
+  placements" (also its five reads: the list's two, then the items' three).
+- **S2, S12**: "shows every field as plain text…" (labels, `whitespace-pre-line` with the
+  `\n` kept, "Service X, Service Y", "CAVUHB, SBUHB", "National", the nested details
+  outline, the minimal card's only label); the E2E S1 test checks the same terms and
+  definitions. `organisationCodes` follows `ORGANISATIONS` order from the model.
+- **S3**: "says so under a placement with no items" (Product B's shape).
+- **S4, S13**: "shows unplaced items first, flagged…", "has no unplaced group…"; E2E
+  "items with no recognised horizon are shown first, flagged".
+- **S5**: "shows Welsh where an item has it…" (Welsh headings and labels, Welsh tags and
+  details, "Cerdyn darganfod", "Darganfod", "Minimal card" in English, codes unchanged).
+- **S6**: "says a roadmap with no items has none…".
+- **S7**: "keeps the title while the items load" (`role=status` "Loading roadmap items…").
+- **S8**: the "when the items can't be read" block: network with Retry, `forbidden`
+  without, `invalid-data` with the items' own copy, the home list unaffected; E2E
+  "a retryable failure stays on this roadmap, with Retry" (500 ×3 on fake time) and
+  "a tab with no title column…".
+- **S9**: "keeps the items, with Reconnect, once the session expires" (one alert), "shows
+  the items after connecting from a deep link", "still says an unknown roadmap is not
+  found, reading no items"; the existing deep-link and not-found E2E tests pass.
+- **S10**: E2E "columns in a different order read the same" (`Horizon` first, the
+  middle reversed, `Title` last) runs S1 and S2's checks.
+- **S11**: `accessibility.spec.ts` "a roadmap's page on a phone in en/cy" in both themes
+  (no horizontal overflow, headings 1→2→3 with none skipped, axe on `main`), and
+  "roadmap detail" now waits for an item before the whole-page axe run.
+- **S14**: "Refresh (S14)" block: both reads again and the item moves, busy while
+  reading, `aria-disabled` but focusable when expired, the home Refresh reads no items;
+  E2E "Refresh reads the roadmap and its items again".
+- **S15**: "the Not published badge (S15)" block, in English and Welsh.
+- **S16**: "says a roadmap removed since the list loaded is not found" (list read twice,
+  no spreadsheet copy); `use-roadmap-items.test.tsx` D11 pair.
+- Runs at the head before review: typecheck, lint and format clean; 829 unit tests;
+  118 E2E tests, and the structure, roadmap page and roadmaps specs under
+  `GITHUB_REPOSITORY=collisdigital/roadmaps-editor` (33).

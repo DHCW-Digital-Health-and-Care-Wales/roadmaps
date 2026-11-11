@@ -18,7 +18,7 @@ moves to `_archive/`, where its row here still points.
 | [EPC-001 Bootstrap](_archive/EPC-001-bootstrap/README.md)                                                | STY-001–STY-009: tooling, domain, Google auth and Sheets, i18n, app shell, roadmaps, E2E, CI/CD, final verification                                                            | Done   |
 | [EPC-002 Roadmap list from the roadmap index](_archive/EPC-002-roadmap-list-from-roadmaps-tab/README.md) | STY-010–STY-012: list the roadmaps the public site lists, with their information, grouped by family                                                                            | Done   |
 | [EPC-003 DHCW design alignment](_archive/EPC-003-dhcw-design-alignment/README.md)                        | STY-013–STY-018: DHCW tokens, type and focus; lint-enforced tokens; DHCW components, shell and logo; on-screen failures and a session warning; look checks without screenshots | Done   |
-| [EPC-004 Roadmap items](EPC-004-roadmap-items/README.md)                                                 | STY-019–STY-021: model a roadmap item from every column, read a roadmap's items by header, and show them on its page under the six placements                                  | Active |
+| [EPC-004 Roadmap items](_archive/EPC-004-roadmap-items/README.md)                                        | STY-019–STY-021: model a roadmap item from every column, read a roadmap's items by header, and show them on its page under the six placements                                  | Done   |
 
 ## Chores
 
@@ -27,9 +27,10 @@ Status token.
 
 ## Defects
 
-| ID                                                                 | Defect                                | Status |
-| ------------------------------------------------------------------ | ------------------------------------- | ------ |
-| [DEF-001](_archive/defects/DEF-001-roadmaps-heading-title-case.md) | The roadmaps heading is in Title Case | Done   |
+| ID                                                                 | Defect                                                                | Status       |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------- | ------------ |
+| [DEF-001](_archive/defects/DEF-001-roadmaps-heading-title-case.md) | The roadmaps heading is in Title Case                                 | Done         |
+| [DEF-002](defects/DEF-002-header-home-link-name-on-phones.md)      | On a phone, the header's home link is named without the word it shows | Needs triage |
 
 A defect found during delivery is recorded in `defects/` with
 Status `Needs triage` and listed here until the owner triages it.

@@ -203,7 +203,9 @@ h1, which comes from the list before the items arrive: it must wait for an item 
 - **D11** (agent, 2026-11-10, Opus review): a `not-found` items read refetches the
   roadmap list, so the page falls through to the existing "Roadmap not found" state, over
   item-specific copy, because the roadmap really is gone and the shared `errors.not-found`
-  text names the spreadsheet. Adds S16.
+  text names the spreadsheet. Adds S16. If the list re-read fails too (the spreadsheet
+  itself is gone), the list's own error shows under the title and the items area adds
+  nothing.
 - **D12** (agent, 2026-11-10, Sonnet review): S14 and S15 stay in this story, over a
   fourth story, since both reuse home-page pieces on the page this story builds; the
   Suggested model moves to Opus for the size.

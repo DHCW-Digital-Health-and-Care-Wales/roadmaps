@@ -30,7 +30,10 @@ the list. Nothing visible changes yet: STY-021 shows the items.
   `roadmapKeys.all` and a `useRoadmapItems(roadmapId)` hook, fetching only while
   connected.
 - `tests/e2e/fixtures/`: the Sheets fake serves every tab of its spreadsheet.
-- ADR-002 gains an ADR-011 amendment recording the new call.
+- ADR-002 gains an ADR-011 amendment recording the new call. The README's "Spreadsheet
+  format" ("Every other tab is a roadmap's items, not read yet") and the `sheets` entry of
+  `tests/e2e/AGENTS.md` ("reading any other tab is a violation") change to match, linking
+  the roadmap tab analysis and ADR-011.
 
 ## Acceptance criteria
 
@@ -113,20 +116,26 @@ existing E2E suite green (S8).
   list and the index on every items call, over remembering tabs from the last list read,
   which would be stale after a rename and empty after a reload.
 - **D2** (agent, 2026-11-10): an id the index does not list is `not-found` (S3), over
-  `invalid-data`, because the data is well formed; the roadmap is simply not there,
-  which is what the roadmap page already says for an unknown id.
+  `invalid-data`, because the data is well formed; the roadmap is simply not there. The
+  page shows it as STY-021 D11 sets (Opus review).
 - **D3** (agent, 2026-11-10): the tab is matched to the `Sheet` value exactly, as the
   index parser's `missing-tab` problem already does (S5), so an editor-visible problem
   and a failed read always agree.
 
 ## Starting point
 
-Audited at `0f9f09e`. `GoogleSheetsRoadmapRepository.#readRoadmapIndex` already reads the
-tab list and the index and returns `RoadmapIndexEntry { roadmap, tabName }`; reuse it.
+Audited at `0f9f09e`; re-checked at `215c0c1`. `GoogleSheetsRoadmapRepository.#readRoadmapIndex`
+already reads the tab list and the index and returns `{ entries, problems }`, entries
+being `RoadmapIndexEntry { roadmap, tabName }`; reuse it, but it does not return the tab
+titles it read, which S4's "never requested" check needs: return them from the shared
+read too (or say on each entry whether its tab exists).
 `quoteTabTitle` and `SHEET_VALUES_PARAMS` are the list's. The E2E fake answers 400 for
 any tab but the first (`rg -n "not the first tab" tests/e2e`) and documents itself as
 reading only the index; its `EXAMPLE_SPREADSHEET` already holds the three roadmap tabs.
-The contract's `withRoadmaps(roadmaps)` seeds roadmaps only, and the in-memory double
+The fake logs reads as `"metadata" | "values"` (`SheetsRead`), so it cannot show which
+tab S1 read: extend the log with the tab. `tests/fixtures/sheets/ProductC.csv` says "this
+tab is never read"; the CSVs are copied unchanged from the public site, so leave that text
+alone. The contract's `withRoadmaps(roadmaps)` seeds roadmaps only, and the in-memory double
 takes `roadmaps | AppError`: both need a way to seed items per roadmap.
 
 ## Out of scope

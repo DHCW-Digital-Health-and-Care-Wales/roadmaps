@@ -114,6 +114,15 @@ has no placement and "" as written, and the third is placed `now` with no writte
 horizon
 **And** in a tab with no `Horizon` column every item's horizon as written is ""
 
+### S10: A blank middle entry keeps tags and details paired (Sonnet review)
+
+**Given** tags `A,,B` with Welsh `Y,,Z`, and details with a blank middle line in both
+languages
+**When** the tab is parsed
+**Then** the tags are "A" (Welsh "Y") and "B" (Welsh "Z"), and the details likewise keep
+their Welsh, with no mismatch recorded: blank entries keep their place while pairing and
+are dropped afterwards
+
 ## Tests
 
 All scenarios are unit tests of the parser: S1 from the fixture file, the rest inline
@@ -136,12 +145,16 @@ existing suite.
 - **D6** (owner, 2026-11-10, grilling rounds 1–2, ADR-011 Options 1–4 and 6): ADR-011
   accepted. Organisations are stored as the known twelve, unknown codes dropped and
   recorded, as S5 says; the page shows them as standard codes (STY-021).
+- **D7** (agent, 2026-11-10, Sonnet review): the domain fields are `tags` and
+  `expectedOutcome`, the glossary's terms, over the sheet's `labels` and `outcome`
+  (ADR-011); the parser alone knows the `Labels` and `Outcome` headers. Adds S10, since
+  pairing before dropping blanks is easy to port wrongly.
 
 ## Starting point
 
-Audited at `0f9f09e`. The public site's rules are in `scripts/parse-roadmap.ts` at
+Audited at `0f9f09e`; re-checked at `215c0c1`. The public site's rules are in `scripts/parse-roadmap.ts` at
 `50e67f9` (`parseRoadmap`, `toItem`, `parseLabels`, `parseDetails`, `pairLists`,
-`stripWelshDashes`, `parseOrganisations`); the analysis summarises them. Port the
+`stripWelshDashes`, `splitEntries`, `orBlank`, `parseOrganisations`); the analysis summarises them. Port the
 behaviour, not the code: its warnings are prose and it throws on a missing required
 column, where ADR-011 keeps `Horizon` optional. Its translation-quality warnings are not
 ported (as STY-010 decided for the index). The index parser's header handling is in

@@ -6,8 +6,10 @@ They are copied unchanged from the `sheets/` folder of
 (MIT licence, © 2026 Digital Health and Care Wales, kept in [`LICENSE`](LICENSE); commit
 `50e67f9`), the public site that
 publishes the same spreadsheet. The format is analysed in
-[the roadmap index analysis](../../../docs/analysis/roadmaps-tab-format.md)
-and decided in [ADR-009](../../../docs/adr/ADR-009-roadmap-list-from-the-first-tab.md).
+[the roadmap index analysis](../../../docs/analysis/roadmaps-tab-format.md) and
+[the roadmap tab analysis](../../../docs/analysis/roadmap-tab-format.md), and decided in
+[ADR-009](../../../docs/adr/ADR-009-roadmap-list-from-the-first-tab.md) and
+[ADR-011](../../../docs/adr/ADR-011-roadmap-items-from-each-roadmaps-tab.md).
 
 **Never put data from the live spreadsheet in this repository.** Unit tests, E2E fakes and
 screenshots use only these files or inline fakes.

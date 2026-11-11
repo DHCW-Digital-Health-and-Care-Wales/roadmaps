@@ -22,7 +22,7 @@ answers are STY-021's Decisions.
 
 ## Findings
 
-Audited at `0f9f09e` on 2026-11-10.
+Audited at `0f9f09e` on 2026-11-10; re-checked at `215c0c1` (after STY-017), unchanged.
 
 ### F1 — The roadmap page has nothing to show
 
@@ -82,8 +82,9 @@ through the repository, STY-021 shows it.
 ### Columns by header, never by position
 
 The owner's rule: a roadmap tab's columns may be in any order, so a column is found only
-by its row-1 header. Every test that reads a tab includes at least one header in a
-different order from the Template's.
+by its row-1 header. The parser's suite (STY-019 S2) and the page's E2E (STY-021 S10)
+each read a tab whose header is in a different order from the Template's; tests built on
+the fixture CSVs keep the fixtures' order.
 
 ### The Template tab is never read
 

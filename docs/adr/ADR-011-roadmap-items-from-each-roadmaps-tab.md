@@ -59,14 +59,16 @@ interface RoadmapItem {
   placement: RoadmapPlacement | null // null: blank or unrecognised; the public site skips it
   writtenHorizon: string | null // when unplaced, the horizon as written ("" if blank); else null
   description: LocalisedText | null
-  outcome: LocalisedText | null // the expected outcome
+  expectedOutcome: LocalisedText | null // the `Outcome` column
   phase: LocalisedText | null
-  labels: LocalisedText[] // the item's tags, in cell order, no repeated English
+  tags: LocalisedText[] // the `Labels` column, in cell order, no repeated English
   organisations: Organisation[] // in ORGANISATIONS order, no repeats
   details: RoadmapItemDetail[]
 }
 ```
 
+- Fields take the glossary's names (`tags`, `expectedOutcome`); the sheet's `Labels` and
+  `Outcome` headers stay inside the parser.
 - Optional text is `null` when its English is blank, lists are `[]` when empty, as for
   `Roadmap` (ADR-009). Text keeps its line breaks; paragraphs and bullets are
   presentation.

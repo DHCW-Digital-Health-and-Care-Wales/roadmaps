@@ -6,8 +6,8 @@
 - **Epic**: EPC-004-roadmap-items
 - **Depends on**: STY-020 (hard)
 - **Binding ADRs**: ADR-011, ADR-008, ADR-010, ADR-002
-- **Suggested model**: Sonnet — a page built from existing components and states on a
-  ready hook; the copy goes through the copywriter skill
+- **Suggested model**: Opus — many page states, new copy in two languages, E2E specs and
+  screenshots in one context (Sonnet review)
 
 ## Summary
 
@@ -47,7 +47,7 @@ heading: three under Now, one under Next, two under Later and one under each sec
 **When** the Product Lead reads "Example card with every column"
 **Then** it shows its phase "Beta", its description, its expected outcome, its tags
 "Service X" and "Service Y", its organisations by full name ("Cardiff and Vale
-University Health Board", "Swansea Bay University Health Board") and its four details
+University Health Board", "Swansea Bay University Health Board"; changed by D6) and its four details
 as a nested list
 **And** "Minimal card" shows only its title and description, with no empty labels
 **And** line breaks in a cell show as line breaks
@@ -70,7 +70,7 @@ roadmap until they are given a horizon, before the six placements
 
 **Given** the interface in Cymraeg
 **When** Product A's page loads
-**Then** headings, labels and organisation names are in Welsh; an item's title, phase,
+**Then** headings, labels and organisation names (changed by D6) are in Welsh; an item's title, phase,
 description, outcome, tags and details show their Welsh where it exists ("Cerdyn
 darganfod", "Darganfod") and English where it does not ("Minimal card")
 
@@ -155,13 +155,23 @@ as the home page's is
 title
 **And** Product A's page shows no badge
 
+### S16: A roadmap removed since the list loaded is not found (Opus review)
+
+**Given** the cached roadmap list still shows Product A, and its row has since left the
+roadmap index
+**When** the Product Lead opens Product A and its items read fails as not found
+**Then** the page reads the roadmap list again and shows "Roadmap not found", not a
+message about the spreadsheet
+
 ## Tests
 
-S1–S9 and S12–S15 are component tests with the providers' test utility and the in-memory
+S1–S9 and S12–S16 are component tests with the providers' test utility and the in-memory
 repository; the page has many states and the in-memory double reaches each one. S1, S4,
 S8 (one retryable and `invalid-data`), S10, S11 and S14 are also Playwright specs against the
 fake Sheets: S10 because column order is a data-source property, S11 because layout and
-axe need a real browser. The existing accessibility spec covers the page in both themes.
+axe need a real browser. The existing accessibility spec covers the page in both themes, but waits only for the
+h1, which comes from the list before the items arrive: it must wait for an item heading
+(e.g. "Example card with every column") before axe runs, as S11's heading check must.
 
 ## Decisions
 
@@ -190,10 +200,17 @@ axe need a real browser. The existing accessibility spec covers the page in both
 - **D10** (owner, 2026-11-10, grilling round 1): section headings are the values a
   Product Lead types (Recently delivered, Delivered this year, Not doing), not the public
   site's longer headings; the copywriter may polish them.
+- **D11** (agent, 2026-11-10, Opus review): a `not-found` items read refetches the
+  roadmap list, so the page falls through to the existing "Roadmap not found" state, over
+  item-specific copy, because the roadmap really is gone and the shared `errors.not-found`
+  text names the spreadsheet. Adds S16.
+- **D12** (agent, 2026-11-10, Sonnet review): S14 and S15 stay in this story, over a
+  fourth story, since both reuse home-page pieces on the page this story builds; the
+  Suggested model moves to Opus for the size.
 
 ## Starting point
 
-Audited at `0f9f09e`. `RoadmapDetailPage` already handles the list's states (title from
+Audited at `0f9f09e`; re-checked at `215c0c1` (STY-017 left the page alone). `RoadmapDetailPage` already handles the list's states (title from
 the list via `useRoadmap`, not found, connect prompt, list errors, expired alert); the
 items section sits under the title inside its `roadmap` branch. `RoadmapsErrorState`
 takes an `AppError` and copies `errors.<kind>`, whose `invalid-data` text names the

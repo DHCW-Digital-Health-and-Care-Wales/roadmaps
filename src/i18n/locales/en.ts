@@ -165,6 +165,17 @@ export const en = {
       notFoundTitle: "Roadmap not found",
       notFoundDescription: "This roadmap doesn't exist or is no longer listed.",
     },
+    /** The roadmap's own text, on its page. */
+    about: {
+      title: "About this roadmap",
+      empty: "There's nothing about this roadmap yet.",
+      fields: {
+        statusLabel: "Status",
+        productLead: "Product lead",
+        vision: "Vision",
+        serviceDescription: "Service description",
+      },
+    },
     /** A roadmap's items, on its page. */
     items: {
       loading: "Loading roadmap items…",

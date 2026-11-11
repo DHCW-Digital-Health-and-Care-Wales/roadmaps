@@ -169,6 +169,16 @@ export const cy = {
       notFoundDescription:
         "Dydy'r map trywydd hwn ddim yn bodoli, neu dydy e ddim wedi'i restru mwyach.",
     },
+    about: {
+      title: "Ynglŷn â'r map trywydd hwn",
+      empty: "Does dim byd am y map trywydd hwn eto.",
+      fields: {
+        statusLabel: "Statws",
+        productLead: "Arweinydd cynnyrch",
+        vision: "Gweledigaeth",
+        serviceDescription: "Disgrifiad o'r gwasanaeth",
+      },
+    },
     items: {
       loading: "Wrthi'n llwytho eitemau'r map trywydd…",
       loadFailed: "Doedd dim modd llwytho eitemau'r map trywydd hwn",

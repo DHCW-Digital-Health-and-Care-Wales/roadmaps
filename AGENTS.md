@@ -910,3 +910,16 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
     - `Item ID` counts as a column read, so a row holding only an ID is not blank (it records
       `missing-title`); the adapter's `listRoadmapItems` still returns items alone.
     - The fixtures have no `Item ID` column; a test needing IDs writes them inline.
+- **STY-024 A roadmap's page shows what the roadmap is about** — a read-only "About this
+  roadmap" section between the title and the items: status label, product lead, vision and
+  service description. No new read and no domain change.
+  - Where things live: `RoadmapAbout` (`features/roadmaps/components/roadmap-about.tsx`),
+    rendered by `RoadmapView`, so it shows exactly when the title does. Copy is
+    `roadmaps.about.*`; the Welsh is machine-assisted and needs a fluent review.
+  - Decisions: empty fields leave no label; none at all shows one line (STY-025's Edit
+    goes in the section); `localise` per field, the lead as written; line breaks by
+    `whitespace-pre-line`; no new tokens or lint exceptions.
+  - Gotchas:
+    - The page's first `h2` is now "About this roadmap", ahead of the placements: tests
+      that list the `h2`s start with it, and `detail.aria.yml` holds the region.
+    - Product B has no vision and no lead, a handy fixture for left-out fields.

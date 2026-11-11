@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils"
 
 import { NotPublishedBadge } from "../components/not-published-badge"
 import { RefreshButton } from "../components/refresh-button"
+import { RoadmapAbout } from "../components/roadmap-about"
 import { RoadmapItems, RoadmapItemsSkeleton } from "../components/roadmap-items"
 import { RoadmapsErrorState } from "../components/roadmaps-error-state"
 import { StatusPanel } from "../components/status-panel"
@@ -127,8 +128,8 @@ interface RoadmapViewProps {
 
 /**
  * A listed roadmap: its title, a Not published badge when it is not public (D8), a
- * Refresh for the roadmap and its items (D7), then its items. The title stays whatever
- * happens to the items.
+ * Refresh for the roadmap and its items (D7), what it is about, then its items. The
+ * title stays whatever happens to the items.
  */
 function RoadmapView({
   roadmap,
@@ -173,6 +174,7 @@ function RoadmapView({
           </div>
         </div>
       </div>
+      <RoadmapAbout roadmap={roadmap} />
       <RoadmapItemsArea roadmapId={roadmap.id} listFetching={listFetching} />
     </div>
   )

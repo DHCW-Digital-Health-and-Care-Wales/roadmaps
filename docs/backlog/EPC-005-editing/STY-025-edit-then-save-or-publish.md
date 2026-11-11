@@ -206,6 +206,9 @@ answers "unconfirmed". S10, S11, S13, S14 and S8 (the
 - **D8** (owner, 2026-11-11, grilling Q31): the item form's confirm button is not
   "Save" (which names the step on an unpublished roadmap); the copywriter picks the
   label → S2.
+- **D9** (owner, 2026-11-11, grilling Q33, Q34): an unconfirmed publish keeps every
+  change and asks for a refresh, which drops what the roadmap already holds; values are
+  trimmed at their ends on confirm (ADR-012 Options 16, 17) → S4, S18.
 
 ## Starting point
 

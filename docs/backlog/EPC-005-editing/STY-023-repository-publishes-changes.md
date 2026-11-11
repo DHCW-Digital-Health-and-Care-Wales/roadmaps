@@ -175,12 +175,11 @@ fixture-level spec.
   public site's files, so it has no `Item ID`; the first publish in a test adds it, which
   exercises S6 and S7. ADR-011 asks a format change to update the fixtures; this is the
   stated exception.
-- **D9** (agent, 2026-11-11, from Opus review): an ID on two rows, and a write whose
-  result never arrives, are decided by ADR-012 (Options 6 and 13, "A write whose result
-  never arrives"), applying Q13, Q16 and Q30: the first row with an ID is the item while
-  it holds what was loaded, and nothing is reported as published or failed until it is
-  known → S4, S12. Values are trimmed on confirm so a written value reads back equal
-  → S3.
+- **D9** (owner, 2026-11-11, grilling Q32, Q33, Q34, raised in review): the first row
+  with a copied ID is the item while it holds what was loaded, and the copy gets a new
+  ID; a write whose answer is lost is re-read once and is published, `network` or
+  unconfirmed; values are trimmed on confirm so a written value reads back equal
+  (ADR-012 Options 16, 17) → S3, S4, S12.
 
 ## Starting point
 

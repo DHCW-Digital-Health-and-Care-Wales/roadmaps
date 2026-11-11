@@ -19,8 +19,8 @@ deleting or moving items, tags, organisations, details, Welsh and drafts come la
 
 ## Owner decisions waiting
 
-None. The owner settled the product decisions in grilling rounds 1–3 and Q28–Q31
-(2026-11-11) and accepted ADR-012; each story's Decisions cite the answers it rests on.
+None. The owner settled the product decisions in grilling rounds 1–3, Q28–Q31 and
+Q32–Q34 (2026-11-11) and accepted ADR-012; each story's Decisions cite the answers it rests on.
 The owner's own step outside this repository: add `Item ID` to the spreadsheet's
 `Template` tab and to the public site's README (ADR-012 Option 7).
 

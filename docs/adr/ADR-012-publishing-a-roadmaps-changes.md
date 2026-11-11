@@ -1,8 +1,8 @@
 # ADR-012: A roadmap's pending edits are published together, by item ID, and refused on a conflict
 
-- Status: Accepted — owner, 2026-11-11: grilling rounds 1–3 and Q28–Q30 of the Editing
-  epic (Options 1–15 below); the unconfirmed write and a duplicated ID were added from
-  review, applying those answers. Amends ADR-002 (a write call) and ADR-011 (item identity);
+- Status: Accepted — owner, 2026-11-11: grilling rounds 1–3, Q28–Q30 and Q32–Q34 of
+  the Editing epic (Options 1–17 below); Q32–Q34 settled what review raised (a copied
+  ID, a write whose result never arrives, trimming). Amends ADR-002 (a write call) and ADR-011 (item identity);
   extends ADR-009 (the editor writes to the roadmap index).
 - Date: 2026-11-11
 
@@ -40,7 +40,7 @@ first.
 - Text is written as text: a value that looks like a number, a date or a formula
   (`42`, `1/2`, `=SUM(A1)`) is stored as the string typed, never parsed. A confirmed
   value is trimmed at its ends, as the parsers read every cell, so a value compares
-  equal to itself once written.
+  equal to itself once written (Option 17).
 
 ### Pending edits and publishing
 
@@ -91,11 +91,11 @@ edits were made on.
 - An item with an ID is found by its ID. When a co-lead has copied the row, so the ID
   is on more than one kept row, the first of them is the item, as the parser reads it
   (Option 6), but only if it still holds the loaded content (or that content with the
-  pending edits applied); otherwise the item is not found (Option 13). The same write
+  pending edits applied); otherwise the item is not found (Options 13, 16). The same write
   gives the later rows new IDs. An item that had none when loaded is found
   at its position among the kept items, and only if that item still holds exactly the
   content that was loaded, or that content with its pending edits applied (a publish
-  whose result never arrived; Option 11).
+  whose result never arrived; Options 11, 16).
 - **A pending field the re-read already holds is no longer pending**: publishing skips
   it and Refresh drops it, whoever wrote the value.
 - **A field is in conflict when its current value differs from both its base value and
@@ -118,7 +118,7 @@ edits were made on.
 - A roadmap whose tab or index row cannot be read at publish (ADR-011's
   `invalid-data`) publishes nothing and keeps its pending edits.
 
-### A write whose result never arrives
+### A write whose result never arrives (Option 16)
 
 - The abort signal stops the re-reads, never the write: once the write is sent, the
   call waits for its answer.
@@ -214,9 +214,7 @@ Nothing checks permission in advance.
       published. _Sam's edit to an item whose row a co-lead moved before IDs existed
       is reported as "changed since you opened it"; Sam redoes it on the current item._
     - (b) A side-by-side conflict. Lost: with no ID there is no "theirs" to compare to.
-    - Applied at review to a row copied with its ID (Option 6's "first row keeps it"):
-      the first row is the item only while it holds what was loaded; otherwise this
-      option applies.
+    - A row copied with its ID: see Option 16 (Q32).
 14. **Permission** (Q9)
     - ✅ (a) Edit for everyone; a refused publish keeps the edits and explains.
     - (b) Check access first. Lost: another Google API and scope.
@@ -226,6 +224,28 @@ Nothing checks permission in advance.
     - ✅ (b) Ask: keep, discard or cancel. _Sam disconnects with two unpublished item
       changes, chooses Keep, connects after lunch and publishes them._
     - (c) Discard without asking. Lost: work, silently.
+16. **A copied ID and a write whose answer is lost** (Q32, Q33, raised in review)
+    - ✅ (a) A row copied with its ID: the first row with the ID is the item while it
+      holds what was loaded (Option 6's "first row keeps it"), and the same write gives
+      the copy a new ID; otherwise Option 13 applies. _Sam copies "Single sign-on"; Alex
+      publishes an edit to the original, and the copy gets its own ID._ The owner
+      expects Product Leads to stop editing the sheet once the editor is ready, so this
+      should become rare.
+    - (b) Any repeated ID is not found. Lost: the item cannot be edited until someone
+      fixes the sheet by hand.
+    - (c) Ask which row is the item. Lost: a new screen for a rare case.
+    - ✅ (a) A lost answer: re-read once; all written is published, none is `network`,
+      anything else is unconfirmed, which asks for a refresh that drops whatever the
+      sheet already holds. _Alex publishes on a train, the connection drops, and the
+      page says the changes may have been published._
+    - (b) Always "not published", edits kept. Lost: "Discard all" can hide a change
+      that went public.
+    - (c) Retry automatically. Lost: a second write over a co-lead's change.
+17. **Spaces and line breaks at a value's ends** (Q34, raised in review)
+    - ✅ (a) Trimmed when the field is confirmed, as every cell is read. _Alex pastes
+      an outcome ending in a blank line; the blank line is not written._
+    - (b) Kept as typed. Lost: the value never reads back equal, a false conflict with
+      the Product Lead's own edit.
 
 ## Consequences
 

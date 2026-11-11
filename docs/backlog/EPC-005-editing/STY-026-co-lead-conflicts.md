@@ -92,8 +92,9 @@ S7 extends the accessibility, focus and structure specs.
 
 - **D1** (owner, 2026-11-11, grilling Q15, Q16): field-level conflicts; nothing published
   until each is resolved by "Keep mine" or "Use theirs" side by side → S1–S3.
-- **D2** (owner, 2026-11-11, grilling Q16, Q30): a deleted item, or an unmatched item
-  without an ID, is reported and its changes discarded → S5.
+- **D2** (owner, 2026-11-11, grilling Q16, Q30, Q32): a deleted item, an unmatched item
+  without an ID, or a copied ID whose first row no longer holds what was loaded, is
+  reported and its changes discarded → S5.
 - **D3** (agent, 2026-11-11): "Keep mine" rebases the pending change onto the current
   value, so the next publish's conflict check passes for that field and still catches a
   later co-lead change (S3).

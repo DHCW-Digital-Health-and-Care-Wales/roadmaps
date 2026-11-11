@@ -8,7 +8,7 @@
 - **Binding ADRs**: ADR-011, ADR-008, ADR-010, ADR-002
 - **Suggested model**: Opus — many page states, new copy in two languages, E2E specs and
   screenshots in one context (Sonnet review)
-- **Delivered**: _(PR link added once raised)_
+- **Delivered**: [PR #25](https://github.com/collisdigital/roadmaps-editor/pull/25)
 
 ## Summary
 

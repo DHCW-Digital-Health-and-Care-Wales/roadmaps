@@ -890,3 +890,10 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
       run axe on `main` until it is fixed.
     - `detail.aria.yml` holds every Product A item: a field or copy change on a card
       rewrites it (`--update-snapshots`, then review).
+- **EPC-005 planning (orchestrator)** — ADR-012 (amends ADR-002 and ADR-011), EPC-005
+  (STY-022–026) and EPC-006 (STY-027, needs grilling), after grilling Q1–Q31. A thin
+  slice of editing: the roadmap's and each item's English text, pending in memory until
+  one all-or-nothing publish per roadmap ("Save" when not published), refused on a
+  field-level conflict. Items gain an `Item ID` column, the editor's first change to the
+  data source's format; the owner updates the `Template` tab and the public site's README.
+  Family waits for EPC-006 (family and colour are set per roadmap but belong together).

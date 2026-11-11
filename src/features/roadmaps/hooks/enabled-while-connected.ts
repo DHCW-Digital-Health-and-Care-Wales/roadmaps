@@ -1,8 +1,9 @@
 import { useAuth } from "@/features/auth/use-auth"
 
 /**
- * These query options, fetching only while connected. Cached data stays readable while
- * the session is expired; disconnecting removes it, as all roadmap data is auth-scoped.
+ * Adds `enabled` to these query options, true only while connected. Cached data stays
+ * readable while the session is expired; disconnecting removes it, as all roadmap data
+ * is auth-scoped.
  */
 export function useEnabledWhileConnected<Options extends object>(
   options: Options,

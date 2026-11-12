@@ -47,7 +47,10 @@ const roadmaps: Roadmap[] = [
   }),
 ]
 
-type Lists = { families?: Family[] | null; categories?: Category[] | null }
+interface Lists {
+  families?: Family[] | null
+  categories?: Category[] | null
+}
 
 function repositoryWith(lists: Lists = {}) {
   return createInMemoryRoadmapRepository(
@@ -76,6 +79,17 @@ async function renderPage(repository: InMemoryRoadmapRepository) {
   return { user, form }
 }
 
+type Form = Awaited<ReturnType<typeof renderPage>>["form"]
+
+/** The select named `name`, once its list is read. */
+async function select(form: Form, name: string) {
+  const control = await form.findByRole("combobox", { name })
+  await vi.waitFor(() => {
+    expect(control).toBeEnabled()
+  })
+  return control
+}
+
 function optionsOf(select: HTMLElement) {
   return within(select)
     .getAllByRole("option")
@@ -88,7 +102,7 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
     const write = vi.spyOn(repository, "publishRoadmapChanges")
     const { user, form } = await renderPage(repository)
 
-    const family = await form.findByRole("combobox", { name: "Family" })
+    const family = await select(form, "Family")
     expect(family).toHaveValue(records.id)
     expect(optionsOf(family)).toEqual([
       "No family",
@@ -110,7 +124,7 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
   it("offers the categories in the list's order after No category; nothing can be typed (S3)", async () => {
     const { user, form } = await renderPage(repositoryWith())
 
-    const category = await form.findByRole("combobox", { name: "Category" })
+    const category = await select(form, "Category")
     expect(optionsOf(category)).toEqual([
       "No category",
       "Patient records",
@@ -128,10 +142,7 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
     const repository = repositoryWith()
     const { user, form } = await renderPage(repository)
 
-    await user.selectOptions(
-      await form.findByRole("combobox", { name: "Family" }),
-      medicines.id,
-    )
+    await user.selectOptions(await select(form, "Family"), medicines.id)
     await user.click(form.getByRole("button", { name: "Done" }))
     await user.click(main().getByRole("button", { name: "Publish changes" }))
     await user.click(
@@ -148,10 +159,33 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
     ).toBeInTheDocument()
   })
 
+  it("holds the family at its value while the list is read", async () => {
+    const repository = repositoryWith()
+    let release: () => void = () => undefined
+    const listed = repository.listFamilies.bind(repository)
+    vi.spyOn(repository, "listFamilies").mockImplementation(
+      (options) =>
+        new Promise((resolve) => {
+          release = () => {
+            resolve(listed(options))
+          }
+        }),
+    )
+    const { form } = await renderPage(repository)
+
+    const family = form.getByRole("combobox", { name: "Family" })
+    expect(family).toBeDisabled()
+    expect(optionsOf(family)).toEqual(["Single Record"])
+    release()
+    await vi.waitFor(() => {
+      expect(family).toBeEnabled()
+    })
+  })
+
   it("shows the family read-only, saying why, when there's no family list (S6)", async () => {
     const { form } = await renderPage(repositoryWith({ families: null }))
 
-    await form.findByRole("combobox", { name: "Category" })
+    await select(form, "Category")
     expect(form.queryByRole("combobox", { name: "Family" })).toBeNull()
     expect(form.getByText("Single Record")).toBeInTheDocument()
     expect(
@@ -162,10 +196,7 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
   it("shows a co-lead's move to another family by name (S5)", async () => {
     const repository = repositoryWith()
     const { user, form } = await renderPage(repository)
-    await user.selectOptions(
-      await form.findByRole("combobox", { name: "Family" }),
-      "No family",
-    )
+    await user.selectOptions(await select(form, "Family"), "No family")
     await user.click(form.getByRole("button", { name: "Done" }))
     repository.coLead((list) => {
       const roadmap = list.find(({ id }) => id === "producta")

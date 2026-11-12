@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next"
 
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import {
+  isChoiceField,
   ROADMAP_TEXT_FIELDS,
   roadmapValue,
   type RoadmapTextField,
@@ -49,9 +50,12 @@ export function EditableRoadmapAbout({ roadmap }: EditableRoadmapAboutProps) {
   const changes = useRoadmapChanges(roadmap.id)
   const undoable = !awaitingRefresh(usePendingChanges(), roadmap.id)
   const mode = useEditMode<{ read: Roadmap; shown: Roadmap }>()
-  const choices = useRoadmapChoices()
+  const changedFields = changedRoadmapFields(changes)
+  const choices = useRoadmapChoices(
+    mode.editing || changedFields.some(isChoiceField),
+  )
   const shown = applyRoadmapChanges(roadmap, changes, choices.lists)
-  const changed = changedRoadmapFields(changes).length > 0
+  const changed = changedFields.length > 0
 
   // A field's edit is made from the roadmap as the form opened on it.
   const done = (values: RoadmapValues) => {

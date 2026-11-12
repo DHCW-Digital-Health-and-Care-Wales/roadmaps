@@ -32,6 +32,8 @@ export interface EditFormField<F extends string> {
   multiline: boolean
   /** Chosen from these, in this order, instead of typed (STY-028). */
   options?: readonly EditFormOption[]
+  /** Held at its value, as while its options are read. */
+  disabled?: boolean
   /** Shown as `text`, not edited, with a notice of why (STY-028 S6). */
   fixed?: { text: string; notice: string }
 }
@@ -144,6 +146,7 @@ export function EditForm<F extends string>({
                 <NativeSelect
                   id={controlId}
                   value={values[field.name]}
+                  disabled={field.disabled}
                   onChange={(event) => {
                     change(event.target.value)
                   }}

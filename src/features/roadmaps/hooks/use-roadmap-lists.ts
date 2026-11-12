@@ -20,19 +20,40 @@ export interface RoadmapLists {
   categories: readonly Category[] | null | undefined
 }
 
-/** The family and category lists, fetched only while connected, like the roadmaps. */
-export function useRoadmapLists() {
+/** Whether each list is being read for the first time. */
+export type RoadmapListsReading = Readonly<Record<keyof RoadmapLists, boolean>>
+
+/**
+ * The family and category lists, fetched while connected and only once `needed`, so a
+ * roadmap's page spends no reads on them until a choice is made or shown. Refetching
+ * reads them again only once needed.
+ */
+export function useRoadmapLists(needed: boolean) {
   const repository = useRoadmapRepository()
-  const families = useQuery(
-    useEnabledWhileConnected(familyListQueryOptions(repository)),
+  const familyOptions = useEnabledWhileConnected(
+    familyListQueryOptions(repository),
   )
-  const categories = useQuery(
-    useEnabledWhileConnected(categoryListQueryOptions(repository)),
+  const categoryOptions = useEnabledWhileConnected(
+    categoryListQueryOptions(repository),
   )
+  const families = useQuery({
+    ...familyOptions,
+    enabled: familyOptions.enabled && needed,
+  })
+  const categories = useQuery({
+    ...categoryOptions,
+    enabled: categoryOptions.enabled && needed,
+  })
   const lists: RoadmapLists = {
     families: families.data,
     categories: categories.data,
   }
-  const refetch = () => Promise.all([families.refetch(), categories.refetch()])
-  return { lists, refetch }
+  const reading: RoadmapListsReading = {
+    families: families.isFetching && families.data === undefined,
+    categories: categories.isFetching && categories.data === undefined,
+  }
+  const refetch = async () => {
+    if (needed) await Promise.all([families.refetch(), categories.refetch()])
+  }
+  return { lists, reading, refetch }
 }

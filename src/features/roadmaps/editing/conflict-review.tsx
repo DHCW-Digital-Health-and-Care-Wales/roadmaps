@@ -51,7 +51,12 @@ export function ConflictReview({
 }: ConflictReviewProps) {
   const { t } = useTranslation()
   const language = useLanguage()
-  const { describe } = useRoadmapChoices()
+  const { describe } = useRoadmapChoices(
+    open.some(
+      ({ conflict }) =>
+        conflict.subject === "roadmap" && isChoiceField(conflict.field),
+    ),
+  )
   const deciding = open.length > 0
   const shown = (conflict: FieldConflict, value: string) =>
     conflict.subject === "roadmap" && isChoiceField(conflict.field)

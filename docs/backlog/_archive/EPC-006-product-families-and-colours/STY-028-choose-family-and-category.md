@@ -119,7 +119,9 @@ public site (README, _What the editor writes_). A publish now also writes, in th
   doesn't have (a family deleted meanwhile) rejects as `invalid-data`, writing nothing.
   So does any choice, "No family" or "No category" included, while its list tab is
   missing at publish: without the list the row's value can't be told from none, so a
-  pending "No family" would otherwise be dropped unwritten.
+  pending "No family" would otherwise be dropped unwritten. For the same reason a read that
+  names a family or category it can't link (its list missing) doesn't settle a pending
+  "No family" or "No category"; only a read with no name does.
 - **S4 never overwrites an ID.** An ID cell already holding any ID, even one the list
   doesn't have, is left alone; a field chosen in the same publish writes its own ID.
   An ID column is never appended only to stay blank.
@@ -138,8 +140,14 @@ public site (README, _What the editor writes_). A publish now also writes, in th
   closes for good once a publish links the row's IDs (S4).
 - **Conflicts name the choice (S5).** The base is the ID, so a rename is no conflict,
   and the review shows each side by its list name, "No family" or "No category" for
-  none. When a refusal shows a co-lead's current values, a choice field keeps the
-  roadmap's own read (`withCurrentRoadmapText` patches text fields only).
+  none. When a refusal shows a co-lead's current values before the roadmap is read
+  again, a family or category is shown as the cached list names it, or as none, so "Use
+  theirs" shows theirs even if that read fails; one the cached list doesn't have keeps
+  the roadmap's own read.
+- **Known gap: a pending choice deleted from its list.** If a pending family or category
+  is deleted from its list before publishing, the page still shows the name it was
+  chosen with, and the publish is refused as `invalid-data`, writing nothing. Showing it
+  as not listed is left for a later change.
 - **Tests.** The publish plan, adapter, contract and fake's tests were written with each
   slice and run red where the code was new; the page tests and Playwright specs
   followed working code.
@@ -196,10 +204,13 @@ public site (README, _What the editor writes_). A publish now also writes, in th
 - **S5**: `publish-plan.test.ts` "writes the chosen IDs over a family renamed since"
   and "refuses over a family a co-lead chose since"; contract "refuses a family a
   co-lead moved, by its ID, writing nothing"; page "shows a co-lead's move to another
-  family by name"; e2e "a co-lead's move to another family is shown by name, nothing
-  written" The departure above: a row linked by name only is refused over a rename.
+  family by name" and "shows their family and category after Use theirs, even if the
+  roadmap couldn't be read again"; e2e "a co-lead's move to another family is shown by
+  name, nothing written". The departure above: a row linked by name only is refused
+  over a rename.
 - **S6**: page "shows the Family (Category) read-only, saying why, when there's no
   families (categories) list" (`it.each`) and "holds the family at its value while the
   list is read"; e2e "is shown read-only, saying why, when its list is missing"; the
   structure snapshot `edit-roadmap-form.aria.yml` (no lists in the example spreadsheet).
-  Page "reads the lists again on Refresh while About is open".
+  Page "reads the lists again on Refresh while About is open". `pending-changes.test.ts` "keeps No family or category pending
+  while a read names one it can't link".

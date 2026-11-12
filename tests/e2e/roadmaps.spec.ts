@@ -426,9 +426,7 @@ test("a family and category read their Welsh names from the lists (STY-027 S5)",
   await expect(productA).toContainText(
     "Meddygon Teulu a Gwasanaethau Cymunedol",
   )
-  await expect(productA).toContainText(
-    "Ddim yn cyfateb i'w deulu na'i gategori",
-  )
+  await expect(productA).toContainText("Yn wahanol i'w deulu neu gategori")
   await expect(card(page, "Product D roadmap")).toContainText(
     "Teulu heb ei restru",
   )

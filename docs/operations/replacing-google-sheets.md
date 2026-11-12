@@ -16,6 +16,12 @@ doc comments first, since they are the contract.
      - `listRoadmaps` maps each roadmap to the domain's `Roadmap` (ADR-009), in the
        API's order, with ids that are URL-safe slugs;
      - `listRoadmapItems` returns one roadmap's items as `RoadmapItem`s (ADR-011);
+     - `listFamilies` and `listCategories` return the family and category tables, in
+       their order, as `Family` and `Category` (ADR-013); `listRoadmaps` links each
+       roadmap to them by `familyId` and `categoryId`, taking the family's name and
+       colour and the category's name. With keys, nothing is out of step:
+       `outOfStep` and `familyNotListed` stay `false`, and a missing table is `null`
+       only if the API can lack one;
      - `publishRoadmapChanges` writes one roadmap's changes all or nothing and refuses
        on a co-lead's change (ADR-012). `planRoadmapPublish` and `heldWrites`
        (`src/domain/roadmap/publish-plan.ts`) are the rules both current repositories
@@ -26,8 +32,9 @@ doc comments first, since they are the contract.
    (`src/domain/roadmap/testing/roadmap-repository-contract.ts`) against an MSW fake of
    the API, then add tests for each status mapping. `withRoadmaps(roadmaps, items?,
 options?)` seeds the fake with roadmaps, their items, and how a publish's write
-   behaves (`ContractWrite`: fails, or its answer is lost) or whose items cannot be
-   read (`unreadableItems`); `failing()` fails every
+   behaves (`ContractWrite`: fails, or its answer is lost), whose items cannot be
+   read (`unreadableItems`), and the `families` and `categories` lists (by default those
+   the roadmaps link to; `null` for none); `failing()` fails every
    request. The Google adapter's test is the worked example.
 3. **Config.** Add e.g. `VITE_ROADMAPS_API_URL` to the Zod schema in
    `src/app/config.ts`, `.env.example` and `.env.production`.

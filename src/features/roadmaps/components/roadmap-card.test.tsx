@@ -205,7 +205,7 @@ describe("RoadmapCard", () => {
     )
 
     expect(
-      main.getByText("Ddim yn cyfateb i'w deulu na'i gategori"),
+      main.getByText("Yn wahanol i'w deulu neu gategori"),
     ).toBeInTheDocument()
     expect(main.getByText("Teulu heb ei restru")).toBeInTheDocument()
   })

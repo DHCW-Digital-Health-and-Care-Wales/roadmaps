@@ -700,7 +700,7 @@ describe("RoadmapDetailPage items", () => {
       language: "cy",
     })
     expect(
-      await main().findByText("Ddim yn cyfateb i'w deulu na'i gategori"),
+      await main().findByText("Yn wahanol i'w deulu neu gategori"),
     ).toBeInTheDocument()
     expect(main().getByText("Teulu heb ei restru")).toBeInTheDocument()
   })

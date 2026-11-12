@@ -1,8 +1,9 @@
 # EPC-006: Product families and colours — managed in one place
 
 - **Status**: Active — grilled in rounds 1–4 (2026-11-12); ADR-013 accepted
-- **Progress**: 0 of 4 terminal; next selectable: STY-027; blocked on: nothing (the
-  owner's tabs are needed only to check against the real sheet)
+- **Progress**: 1 of 4 terminal (STY-027 awaits merge); next selectable: STY-028,
+  STY-029, STY-030 once STY-027 merges; blocked on: nothing (the owner's tabs are
+  needed only to check against the real sheet)
 - **Binding ADRs**: ADR-013, ADR-009, ADR-012
 
 ## Summary
@@ -82,12 +83,12 @@ written. A change to what the public site reads is said in the record and its PR
 
 ## Stories
 
-| ID      | Story                                                                                           | Area                          | Depends on | State |
-| ------- | ----------------------------------------------------------------------------------------------- | ----------------------------- | ---------- | ----- |
-| STY-027 | [Families and their colours are managed in one place](STY-027-families-in-one-place.md)         | Domain + Infra + UI           | —          |       |
-| STY-028 | [A Product Lead chooses a roadmap's family and category](STY-028-choose-family-and-category.md) | Domain + Infra + UI           | STY-027    |       |
-| STY-029 | [Anyone connected adds, renames and recolours a family](STY-029-manage-families.md)             | Domain + Infra + UI + Routing | STY-027    |       |
-| STY-030 | [A roadmap out of step with its family is made to match](STY-030-make-it-match.md)              | Infra + UI                    | STY-027    |       |
+| ID      | Story                                                                                                                                    | Area                          | Depends on | State                |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- | ---------- | -------------------- |
+| STY-027 | [Families and their colours are managed in one place](../_archive/EPC-006-product-families-and-colours/STY-027-families-in-one-place.md) | Domain + Infra + UI           | —          | ✅ (PR awaits merge) |
+| STY-028 | [A Product Lead chooses a roadmap's family and category](STY-028-choose-family-and-category.md)                                          | Domain + Infra + UI           | STY-027    |                      |
+| STY-029 | [Anyone connected adds, renames and recolours a family](STY-029-manage-families.md)                                                      | Domain + Infra + UI + Routing | STY-027    |                      |
+| STY-030 | [A roadmap out of step with its family is made to match](STY-030-make-it-match.md)                                                       | Infra + UI                    | STY-027    |                      |
 
 ## Sequencing
 

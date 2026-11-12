@@ -136,7 +136,7 @@ export const cy = {
       '$t(roadmaps.count, {"count": {{total}} }), $t(roadmaps.unpublishedCount, {"count": {{unpublished}} })',
     noFamily: "Dim teulu cynnyrch",
     lists: {
-      outOfStep: "Ddim yn cyfateb i'w deulu na'i gategori",
+      outOfStep: "Yn wahanol i'w deulu neu gategori",
       familyNotListed: "Teulu heb ei restru",
     },
     card: {

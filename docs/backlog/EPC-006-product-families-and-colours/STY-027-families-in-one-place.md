@@ -74,8 +74,9 @@ of step with the family list, in English and Welsh
 **When** the list loads
 **Then** it groups and colours roadmaps from their own cells, as before this story, with
 no out-of-step flags for families
-**And** when the `Categories` tab is missing, a roadmap's category shows its row's
-`Category` text in both languages, unchecked, with no out-of-step flags for categories
+**And** when the `Categories` tab is missing, a row's `Category` is matched against the
+public site's six spellings as before this story, shown in English in both languages (an
+unknown value is no category, S10), with no out-of-step flags for categories
 **And** the list still loads; the problem is recorded as other sheet mistakes are
 (ADR-009)
 
@@ -122,10 +123,11 @@ is today and as the public site lists it under "Other roadmaps"
   names it, flagged → adds S8.
 - **D4** (owner, 2026-11-12, round 4 Q3): a roadmap with no family keeps its own colour,
   read-only → adds S9.
-- **D5** (agent, 2026-11-12, review): with the `Categories` tab missing, the row's own
-  `Category` text shows in both languages (S6), over keeping the catalogue's six as a
-  fallback, because the owner asked for minimal handling and a second copy of the list
-  is what this epic removes. A category not in the list is no category (S10), as today.
+- **D5** (agent, 2026-11-12, review): with the `Categories` tab missing, the parser's
+  six public-site spellings stay as the fallback, in English only (S6), so the list
+  behaves as before as ADR-013 says, while the catalogue's Welsh names go; showing the
+  raw cell text was rejected, as it labels a value the public site files under "Other
+  roadmaps". A category not in the list is no category (S10), as today.
 - **D6** (agent, 2026-11-12, review): S1's "and the public site" holds only once the
   rows are written, so this story holds S1 for the editor's list; the public site's half
   is held by STY-028 S2, STY-029 S4 and STY-030 S1, which write the copied cells.

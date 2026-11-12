@@ -19,6 +19,9 @@ not done.
 - the reviewers `delegation.md` sets have passed the latest head, or the last
   reviewed head differs from it only by fixes that _Review rounds_ exempts
   from review and the PR body's Review record lists, with no open P0/P1;
+- every review bot has finished: the Codex bot keeps a 👀 reaction on the PR
+  description while it reviews, often after the checks pass, then replaces it
+  with 👍 when it finds nothing or posts a review with its findings;
 - every review, review comment or issue comment that raises a finding or asks
   a question is resolved, either fixed and pushed or answered on its thread
   with the reason.
@@ -93,6 +96,7 @@ gh pr checks <n>
 gh api --paginate repos/<owner>/<repo>/pulls/<n>/reviews
 gh api --paginate repos/<owner>/<repo>/pulls/<n>/comments
 gh api --paginate repos/<owner>/<repo>/issues/<n>/comments
+gh api repos/<owner>/<repo>/issues/<n>/reactions
 ```
 
 ## Each event or observation

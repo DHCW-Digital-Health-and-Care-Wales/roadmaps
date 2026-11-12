@@ -5,7 +5,10 @@ import { describe, expect, it, vi } from "vitest"
 import type { AuthState } from "@/domain/auth/auth-client"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
-import type { RoadmapRepository } from "@/domain/roadmap/roadmap-repository"
+import type {
+  RepositoryReadOptions,
+  RoadmapRepository,
+} from "@/domain/roadmap/roadmap-repository"
 import type { ContractWrite } from "@/domain/roadmap/testing/contract-write"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
@@ -728,6 +731,49 @@ describe("Publishing a roadmap's changes (STY-025)", () => {
     await vi.waitFor(() => {
       expect(refresh).not.toHaveAttribute("aria-busy", "true")
     })
+    expect(
+      main().getByText("Your changes may have been published"),
+    ).toBeInTheDocument()
+  })
+
+  it("keeps saying a write may have landed when the session ends during Refresh (S18)", async () => {
+    const repository = createInMemoryRoadmapRepository(roadmaps, roadmapItems, {
+      write: { lost: "partly-applied" },
+    })
+    const { user, authClient } = await renderPage({ repository })
+    await editTitle(user, "First item", "First, edited")
+    await editTitle(user, "Second item", "Second, edited")
+    await publish(user)
+    expect(await main().findByRole("alert")).toHaveTextContent(
+      "Your changes may have been published",
+    )
+    // Reads that never answer, until the session's end cancels them.
+    const hang = (options?: RepositoryReadOptions) =>
+      new Promise<never>((_, reject) => {
+        options?.signal?.addEventListener("abort", () => {
+          reject(new Error("Aborted"))
+        })
+      })
+    vi.spyOn(repository, "listRoadmaps").mockImplementation(hang)
+    vi.spyOn(repository, "listRoadmapItems").mockImplementation((_, options) =>
+      hang(options),
+    )
+
+    const refresh = main().getByRole("button", { name: "Refresh" })
+    await user.click(refresh)
+    await vi.waitFor(() => {
+      expect(refresh).toHaveAttribute("aria-busy", "true")
+    })
+    act(() => {
+      authClient.setState({ status: "expired" })
+    })
+
+    await vi.waitFor(() => {
+      expect(refresh).not.toHaveAttribute("aria-busy", "true")
+    })
+    // Let Refresh's cancelled reads settle before looking.
+    await act(() => new Promise((resolve) => setTimeout(resolve, 50)))
+    // The session's own alert shows too.
     expect(
       main().getByText("Your changes may have been published"),
     ).toBeInTheDocument()

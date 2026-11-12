@@ -125,12 +125,18 @@ function RoadmapDetail({ roadmapId }: RoadmapDetailPageProps) {
   )
 }
 
+/** What a refetch reports, enough to tell whether it read anything new. */
+interface RefreshRead {
+  readonly isSuccess: boolean
+  readonly dataUpdatedAt: number
+}
+
 interface RoadmapViewProps {
   roadmap: Roadmap
   /** Why the list the roadmap came from may be out of date, if it may. */
   listProblem: AppError | null
   listFetching: boolean
-  refetchList: () => Promise<{ readonly isError: boolean }>
+  refetchList: () => Promise<RefreshRead>
 }
 
 /**
@@ -154,10 +160,15 @@ function RoadmapView({
     void refetchList()
   }
   const refresh = async () => {
+    const startedAt = Date.now()
     const reads = await Promise.all([refetchList(), items.refetch()])
-    if (reads.some((read) => read.isError)) return
     // A notice asking for a Refresh has been heeded once both reads came back (S15,
-    // S18); until then what the publish came to is still unknown.
+    // S18); until then what the publish came to is still unknown. A read cancelled at
+    // the session's end comes back with the cached data and no error, so only data
+    // read since Refresh began counts.
+    const answered = (read: RefreshRead) =>
+      read.isSuccess && read.dataUpdatedAt >= startedAt
+    if (!reads.every(answered)) return
     const kind = store.getSnapshot().notices.get(roadmap.id)?.kind
     if (kind === "unconfirmed" || kind === "refused") {
       store.clearNotice(roadmap.id)

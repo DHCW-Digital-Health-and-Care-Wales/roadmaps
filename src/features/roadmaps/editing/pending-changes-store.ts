@@ -6,10 +6,15 @@
  */
 
 import type { Roadmap } from "@/domain/roadmap/roadmap"
-import type { RoadmapChanges } from "@/domain/roadmap/roadmap-changes"
+import type {
+  FieldConflict,
+  RoadmapChanges,
+} from "@/domain/roadmap/roadmap-changes"
+import type { LocalisedText } from "@/domain/roadmap/localised-text"
 import type { AppErrorKind } from "@/lib/errors"
 import { createExternalStore } from "@/lib/external-store"
 
+import { openConflicts } from "./conflicts"
 import { countChanges, NO_CHANGES } from "./pending-changes"
 
 /** "save" for a roadmap that is not published, whose changes go nowhere public. */
@@ -25,8 +30,16 @@ export type PublishNotice = { action: PublishAction } & (
   | { kind: "published" }
   /** The answer was lost: the changes may be in the data source (ADR-012 Option 16). */
   | { kind: "unconfirmed" }
-  /** A co-lead changed what was edited, or an edited item is gone. */
-  | { kind: "refused" }
+  /**
+   * Nothing was written: a co-lead changed what was edited (`conflicts`, those still to
+   * decide in the review), or edited items are gone (`removed`, their loaded titles;
+   * their changes are already discarded). Gone once nothing is left of either.
+   */
+  | {
+      kind: "refused"
+      conflicts: readonly FieldConflict[]
+      removed: readonly LocalisedText[]
+    }
   | { kind: "failed"; error: AppErrorKind }
 )
 
@@ -34,6 +47,11 @@ export interface PendingChangesSnapshot {
   readonly changes: ReadonlyMap<string, RoadmapChanges>
   readonly publishing: ReadonlySet<string>
   readonly notices: ReadonlyMap<string, PublishNotice>
+  /**
+   * Roadmaps found gone from the list while they had changes, which were discarded
+   * (S6): until a list holds them again, their page says so.
+   */
+  readonly removed: ReadonlySet<string>
 }
 
 /**
@@ -61,23 +79,35 @@ export interface PendingChangesStore {
   readonly discardAll: () => void
   /** Marks a publish as under way: `false`, and nothing changes, when one already is. */
   readonly startPublish: (roadmapId: string) => boolean
-  /** Ends a publish and records what it came to. */
-  readonly finishPublish: (roadmapId: string, notice: PublishNotice) => void
+  /** Ends a publish and records what it came to, if its page should say. */
+  readonly finishPublish: (
+    roadmapId: string,
+    notice: PublishNotice | null,
+  ) => void
   readonly clearNotice: (roadmapId: string) => void
   /** Forgets every roadmap's notice, as Disconnect does. */
   readonly clearNotices: () => void
+  /** Discards the changes of a roadmap gone from the list, and remembers it gone. */
+  readonly removeRoadmap: (roadmapId: string) => void
+  /** Forgets that these roadmaps were gone, now a list holds them again. */
+  readonly restoreRoadmaps: (roadmapIds: Iterable<string>) => void
 }
 
 const EMPTY: PendingChangesSnapshot = {
   changes: new Map(),
   publishing: new Set(),
   notices: new Map(),
+  removed: new Set(),
 }
 
 export function createPendingChangesStore(): PendingChangesStore {
   const store = createExternalStore(EMPTY)
   const patch = (next: Partial<PendingChangesSnapshot>) => {
-    store.setSnapshot({ ...store.getSnapshot(), ...next })
+    const snapshot = { ...store.getSnapshot(), ...next }
+    store.setSnapshot({
+      ...snapshot,
+      notices: retireDecided(snapshot.notices, snapshot.changes),
+    })
   }
 
   return {
@@ -119,10 +149,9 @@ export function createPendingChangesStore(): PendingChangesStore {
       const { publishing, notices } = store.getSnapshot()
       const stillPublishing = new Set(publishing)
       stillPublishing.delete(roadmapId)
-      patch({
-        publishing: stillPublishing,
-        notices: new Map(notices).set(roadmapId, notice),
-      })
+      const updated = new Map(notices)
+      if (notice) updated.set(roadmapId, notice)
+      patch({ publishing: stillPublishing, notices: updated })
     },
     clearNotice(roadmapId) {
       const { notices } = store.getSnapshot()
@@ -134,5 +163,56 @@ export function createPendingChangesStore(): PendingChangesStore {
     clearNotices() {
       if (store.getSnapshot().notices.size > 0) patch({ notices: new Map() })
     },
+    removeRoadmap(roadmapId) {
+      const { changes, notices, removed } = store.getSnapshot()
+      if (!changes.has(roadmapId)) return
+      const remaining = new Map(changes)
+      remaining.delete(roadmapId)
+      const otherNotices = new Map(notices)
+      otherNotices.delete(roadmapId)
+      patch({
+        changes: remaining,
+        notices: otherNotices,
+        removed: new Set([...removed, roadmapId]),
+      })
+    },
+    restoreRoadmaps(roadmapIds) {
+      const { removed } = store.getSnapshot()
+      const back = [...roadmapIds].filter((id) => removed.has(id))
+      if (back.length === 0) return
+      patch({
+        removed: new Set([...removed].filter((id) => !back.includes(id))),
+      })
+    },
   }
+}
+
+/**
+ * `notices` without each refusal's conflicts that are decided, however (a decision in the
+ * review, Undo, a discard or a read), so a later edit of the field cannot reopen one; a
+ * refusal left with nothing to say is gone. `notices` itself when nothing changes. What
+ * is still open is `openConflicts`' rule, which the review shows by too.
+ */
+function retireDecided(
+  notices: ReadonlyMap<string, PublishNotice>,
+  changes: ReadonlyMap<string, RoadmapChanges>,
+): ReadonlyMap<string, PublishNotice> {
+  let retired: Map<string, PublishNotice> | undefined
+  for (const [roadmapId, notice] of notices) {
+    if (notice.kind !== "refused") continue
+    const open = new Set(
+      openConflicts(notice.conflicts, changes.get(roadmapId)).map(
+        ({ conflict }) => conflict,
+      ),
+    )
+    if (open.size === notice.conflicts.length) continue
+    retired ??= new Map(notices)
+    const conflicts = notice.conflicts.filter((each) => open.has(each))
+    if (conflicts.length === 0 && notice.removed.length === 0) {
+      retired.delete(roadmapId)
+    } else {
+      retired.set(roadmapId, { ...notice, conflicts })
+    }
+  }
+  return retired ?? notices
 }

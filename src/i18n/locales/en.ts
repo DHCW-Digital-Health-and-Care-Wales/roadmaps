@@ -167,6 +167,9 @@ export const en = {
       connectPrompt: "Connect Google to view this roadmap.",
       notFoundTitle: "Roadmap not found",
       notFoundDescription: "This roadmap doesn't exist or is no longer listed.",
+      /** In place of `notFoundDescription` once pending changes were lost with it. */
+      removedDescription:
+        "This roadmap was removed from the list, so your changes to it couldn't be kept.",
     },
     /** The roadmap's own text, on its page. */
     about: {
@@ -292,12 +295,36 @@ export const en = {
           publish: "Couldn't publish your changes",
           save: "Couldn't save your changes",
         },
-        /** After every failure: nothing pending is lost. */
+        /** After a failed publish or save: nothing pending is lost. */
         kept: "Your changes are kept in this tab.",
+        /** A publish stopped by someone else's changes, reviewed field by field. */
         refused: {
-          title: "Someone else has changed this roadmap",
-          description:
-            "Nothing was written. Refresh this roadmap and review your changes before you try again.",
+          /** While any field is still to decide. */
+          title: "Someone else has changed text you edited",
+          /** Once every field is decided, while removed items are still reported. */
+          partialTitle: "Some changes couldn't be kept",
+          nothing: {
+            publish: "Nothing was published.",
+            save: "Nothing was saved.",
+          },
+          choose: {
+            publish: "Choose which text to keep for each, then publish again.",
+            save: "Choose which text to keep for each, then save again.",
+          },
+          /** A field to decide: "First item: Title", or "About this roadmap: Vision". */
+          target: "{{subject}}: {{field}}",
+          yours: "Your change",
+          theirs: "Current text",
+          /** In place of a value that is blank. */
+          empty: "No text",
+          /** Followed by the field, for assistive technology. */
+          keepMine: "Keep mine",
+          /** Followed by the field, for assistive technology. */
+          useTheirs: "Use theirs",
+          /** `title` is the item's title as it was loaded. */
+          removed:
+            "Someone else has removed or changed “{{title}}”, so your changes to it couldn't be kept.",
+          otherKept: "Your other changes are kept in this tab.",
         },
         unconfirmed: {
           title: {

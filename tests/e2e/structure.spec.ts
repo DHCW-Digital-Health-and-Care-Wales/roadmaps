@@ -213,6 +213,28 @@ test.describe("editing a roadmap (STY-025)", () => {
     await expectStructure(alert, "edit-publish-failed.aria.yml")
   })
 
+  test("a co-lead's change to review, and an item that couldn't be kept (STY-026)", async ({
+    page,
+    sheets,
+  }) => {
+    const main = await openWithAChange(page)
+    await main.getByRole("button", { name: "Edit About this roadmap" }).click()
+    await main.getByRole("textbox", { name: "Vision" }).fill("My vision.")
+    await main.getByRole("button", { name: "Done" }).click()
+    sheets.coLead("Roadmaps", "ProductA", "Vision", "Their vision.")
+    // The edited item has no ID yet, so a new title leaves it unmatched.
+    sheets.coLead("ProductA", ITEM, "Title", "Their card")
+    await main.getByRole("button", { name: "Publish changes" }).click()
+    await page
+      .getByRole("alertdialog")
+      .getByRole("button", { name: "Publish changes" })
+      .click()
+    const review = main.getByRole("alert")
+    await expect(review).toBeFocused()
+
+    await expectStructure(review, "edit-conflict-review.aria.yml")
+  })
+
   test("Disconnect's question, then the start page's waiting note", async ({
     page,
   }) => {

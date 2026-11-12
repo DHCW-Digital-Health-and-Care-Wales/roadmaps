@@ -13,7 +13,8 @@ import type { PublishNotice } from "./pending-changes-store"
 
 export interface PublishOutcomeNoticeProps {
   ref: RefObject<HTMLDivElement | null>
-  notice: PublishNotice
+  /** A refused publish is `ConflictReview`'s. */
+  notice: Exclude<PublishNotice, { kind: "refused" }>
   onDismiss: () => void
 }
 
@@ -55,16 +56,6 @@ export function PublishOutcomeNotice({
           title: t(`roadmaps.publish.notice.failed.${action}`),
           lines: [
             t(`roadmaps.publish.errors.${notice.error}`),
-            t("roadmaps.publish.notice.kept"),
-          ],
-        } as const
-      case "refused":
-        return {
-          variant: "warning",
-          Icon: TriangleAlertIcon,
-          title: t("roadmaps.publish.notice.refused.title"),
-          lines: [
-            t("roadmaps.publish.notice.refused.description"),
             t("roadmaps.publish.notice.kept"),
           ],
         } as const

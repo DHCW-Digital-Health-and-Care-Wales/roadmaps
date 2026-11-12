@@ -207,6 +207,65 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expectNoAxeViolations(page, theme)
     })
 
+    test("a co-lead's change to review, in Cymraeg on a phone, by keyboard (STY-026)", async ({
+      page,
+      sheets,
+    }) => {
+      await useLanguage(page, "cy")
+      await page.setViewportSize({ width: 375, height: 800 })
+      await page.goto("./#/roadmaps/producta")
+      await connect(page, "Cysylltu â Google")
+      const main = page.getByRole("main")
+      const about = "Ynglŷn â'r map trywydd hwn"
+      await main.getByRole("button", { name: `Golygu ${about}` }).click()
+      await main
+        .getByRole("textbox", { name: "Gweledigaeth (Saesneg)" })
+        .fill("My vision.")
+      await main.getByRole("button", { name: "Gorffen" }).click()
+      sheets.coLead("Roadmaps", "ProductA", "Vision", "Their vision.")
+      await main.getByRole("button", { name: "Cyhoeddi'r newidiadau" }).click()
+      await page
+        .getByRole("alertdialog")
+        .getByRole("button", { name: "Cyhoeddi'r newidiadau" })
+        .click()
+
+      const review = main.getByRole("alert")
+      await expect(review).toBeFocused()
+      await expect(review).toContainText(
+        "Mae rhywun arall wedi newid testun a olygoch chi",
+      )
+      // The two values are told apart by their labels, not by colour.
+      await expect(review.getByRole("term")).toHaveText([
+        "Eich newid",
+        "Testun presennol",
+      ])
+      await expect(review.getByRole("definition")).toHaveText([
+        "My vision.",
+        "Their vision.",
+      ])
+      const overflow = await page.evaluate(
+        () =>
+          document.documentElement.scrollWidth -
+          document.documentElement.clientWidth,
+      )
+      expect(overflow).toBe(0)
+      // The narrow header's home link fails 2.5.3 in English only (DEF-002), but the
+      // review is the page's own content.
+      await expectNoAxeViolations(page, theme, { only: "main" })
+
+      await page.keyboard.press("Tab")
+      await expect(
+        review.getByRole("button", {
+          name: `Cadw fy un i ${about}: Gweledigaeth (Saesneg)`,
+        }),
+      ).toBeFocused()
+      await page.keyboard.press("Enter")
+      await expect(
+        main.getByRole("button", { name: "Cyhoeddi'r newidiadau" }),
+      ).toBeFocused()
+      await expect(review).toHaveCount(0)
+    })
+
     test("session warning, then a failed renewal", async ({ page, gis }) => {
       await page.clock.install()
       await page.goto("./")

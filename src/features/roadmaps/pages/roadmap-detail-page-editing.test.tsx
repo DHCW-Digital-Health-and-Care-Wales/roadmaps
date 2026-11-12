@@ -19,6 +19,7 @@ import { renderWithProviders } from "@/test/render-with-providers"
 import {
   createInMemoryRoadmapRepository,
   type InMemoryRoadmapItems,
+  type InMemoryRoadmapRepository,
 } from "../testing/in-memory-roadmap-repository"
 
 const connected: AuthState = {
@@ -694,24 +695,6 @@ describe("Publishing a roadmap's changes (STY-025)", () => {
     ).toHaveAttribute("aria-disabled", "true")
   })
 
-  it("says someone else has changed the roadmap when the write is refused (S15)", async () => {
-    const repository = createInMemoryRoadmapRepository(roadmaps, roadmapItems)
-    vi.spyOn(repository, "publishRoadmapChanges").mockResolvedValue({
-      status: "refused",
-      conflicts: [],
-      missingItems: [],
-    })
-    const { user } = await renderPage({ repository })
-    await editTitle(user, "First item", "First, edited")
-
-    await publish(user)
-
-    const notice = await main().findByRole("alert")
-    expect(notice).toHaveTextContent("Someone else has changed this roadmap")
-    expect(notice).toHaveTextContent("Nothing was written.")
-    expect(main().getByText("1 unpublished change")).toBeInTheDocument()
-  })
-
   it("says an unconfirmed write may have landed; Refresh clears the notice and drops what was written (S18)", async () => {
     const { user } = await renderPage({ write: { lost: "partly-applied" } })
     await editTitle(user, "First item", "First, edited")
@@ -953,5 +936,397 @@ describe("Leaving the tab with pending changes (S8)", () => {
       main().getByRole("button", { name: "Undo changes First, edited" }),
     )
     expect(leave()).toBe(false)
+  })
+})
+
+describe("A co-lead's changes (STY-026)", () => {
+  function coLeadRepository(items: InMemoryRoadmapItems = roadmapItems) {
+    return createInMemoryRoadmapRepository(roadmaps, items)
+  }
+
+  /** The co-lead's changes to Product A's vision and its first item's title. */
+  function changeBoth(repository: InMemoryRoadmapRepository) {
+    repository.coLead((list, itemsOf) => {
+      const roadmap = list.find(({ id }) => id === "producta")
+      const [item] = itemsOf("producta")
+      if (!roadmap || !item) throw new Error("No Product A")
+      roadmap.vision = { en: "Their vision.", cy: "" }
+      item.title = { ...item.title, en: "First, theirs" }
+    })
+  }
+
+  /** Every later read of the roadmap and its items fails. */
+  function failReads(repository: InMemoryRoadmapRepository) {
+    vi.spyOn(repository, "listRoadmaps").mockRejectedValue(
+      new AppError("forbidden"),
+    )
+    vi.spyOn(repository, "listRoadmapItems").mockRejectedValue(
+      new AppError("forbidden"),
+    )
+  }
+
+  async function editVision(user: User, to: string) {
+    await user.click(
+      main().getByRole("button", { name: "Edit About this roadmap" }),
+    )
+    const vision = main().getByRole("textbox", { name: "Vision" })
+    await user.clear(vision)
+    await user.type(vision, to)
+    await user.click(main().getByRole("button", { name: "Done" }))
+  }
+
+  /** The review, once the publish it follows has ended. */
+  async function review() {
+    const notice = await main().findByRole("alert")
+    await vi.waitFor(() => {
+      expect(notice).toHaveFocus()
+    })
+    return notice
+  }
+
+  it("writes nothing and shows each field a co-lead changed, theirs beside yours (S1)", async () => {
+    const repository = coLeadRepository()
+    const write = vi.spyOn(repository, "publishRoadmapChanges")
+    const { user } = await renderPage({ repository })
+    await editTitle(user, "First item", "First, mine")
+    await editVision(user, "My vision.")
+    changeBoth(repository)
+
+    await publish(user)
+
+    const notice = await review()
+    expect(notice).toHaveTextContent("Someone else has changed text you edited")
+    expect(notice).toHaveTextContent(
+      /Nothing was published\.Choose which text to keep for each, then publish again\./,
+    )
+    const conflicts = within(notice)
+      .getAllByRole("listitem")
+      .map((each) => within(each))
+    expect(
+      conflicts.map(
+        (each) => each.getByText(/: /, { selector: "p" }).textContent,
+      ),
+    ).toEqual(["About this roadmap: Vision", "First, mine: Title"])
+    const [vision, title] = conflicts
+    expect(
+      vision?.getAllByRole("definition").map((each) => each.textContent),
+    ).toEqual(["My vision.", "Their vision."])
+    expect(title?.getAllByRole("term").map((each) => each.textContent)).toEqual(
+      ["Your change", "Current text"],
+    )
+    expect(
+      title?.getAllByRole("definition").map((each) => each.textContent),
+    ).toEqual(["First, mine", "First, theirs"])
+    expect(
+      within(notice).getByRole("button", {
+        name: "Keep mine First, mine: Title",
+      }),
+    ).toBeInTheDocument()
+    expect(
+      within(notice).getByRole("button", {
+        name: "Use theirs About this roadmap: Vision",
+      }),
+    ).toBeInTheDocument()
+    expect(
+      within(notice).queryByRole("button", { name: "Dismiss message" }),
+    ).toBeNull()
+    expect(write).toHaveBeenCalledTimes(1)
+    expect(main().getByText("2 unpublished changes")).toBeInTheDocument()
+    expect(
+      main().getByRole("button", { name: "Publish changes" }),
+    ).toHaveAttribute("aria-disabled", "true")
+  })
+
+  it("keeps mine or uses theirs, field by field, moving focus on to the next and then to Publish (S2, S3)", async () => {
+    const repository = coLeadRepository()
+    const { user } = await renderPage({ repository })
+    await editTitle(user, "First item", "First, mine")
+    await editVision(user, "My vision.")
+    changeBoth(repository)
+    await publish(user)
+    const notice = await review()
+
+    await user.click(
+      within(notice).getByRole("button", {
+        name: "Keep mine About this roadmap: Vision",
+      }),
+    )
+    expect(
+      within(notice).getByRole("button", {
+        name: "Keep mine First, mine: Title",
+      }),
+    ).toHaveFocus()
+    await user.click(
+      within(notice).getByRole("button", {
+        name: "Use theirs First, mine: Title",
+      }),
+    )
+
+    const action = main().getByRole("button", { name: "Publish changes" })
+    expect(action).toHaveFocus()
+    expect(action).toHaveAttribute("aria-disabled", "false")
+    expect(main().queryByRole("alert")).toBeNull()
+    expect(card("First, theirs").queryByText("Changed")).toBeNull()
+    expect(main().getByText("1 unpublished change")).toBeInTheDocument()
+    expect(main().getByText("My vision.")).toBeInTheDocument()
+
+    await publish(user)
+    expect(await main().findByText(/^Changes published\./)).toBeInTheDocument()
+    expect(main().getByText("My vision.")).toBeInTheDocument()
+    expect(main().queryByText(/unpublished change/)).toBeNull()
+  })
+
+  it("shows their text after Use theirs, even if the roadmap couldn't be read again (S2)", async () => {
+    const repository = coLeadRepository()
+    const { user } = await renderPage({ repository })
+    await editTitle(user, "First item", "First, mine")
+    await editVision(user, "My vision.")
+    changeBoth(repository)
+    failReads(repository)
+
+    await publish(user)
+
+    expect(
+      await main().findByText("Couldn't refresh your roadmaps"),
+    ).toBeInTheDocument()
+    const notice = main()
+      .getAllByRole("alert")
+      .find((each) => each.textContent.includes("Someone else"))
+    if (!notice) throw new Error("No review")
+    for (const name of [
+      "Use theirs About this roadmap: Vision",
+      "Use theirs First, mine: Title",
+    ]) {
+      await user.click(within(notice).getByRole("button", { name }))
+    }
+
+    expect(main().getByText("Their vision.")).toBeInTheDocument()
+    expect(
+      main().getByRole("heading", { level: 3, name: "First, theirs" }),
+    ).toBeInTheDocument()
+    expect(main().queryByText(/unpublished change/)).toBeNull()
+    expect(
+      main().getByText("Couldn't refresh your roadmaps"),
+    ).toBeInTheDocument()
+  })
+
+  it("shows the text the publish found after Use theirs, not a co-lead's earlier text (S2)", async () => {
+    const repository = coLeadRepository()
+    const { user } = await renderPage({ repository })
+    await editTitle(user, "First item", "First, mine")
+    await editVision(user, "My vision.")
+    changeBoth(repository)
+    const refresh = main().getByRole("button", { name: "Refresh" })
+    await user.click(refresh)
+    await vi.waitFor(() => {
+      expect(refresh).not.toHaveAttribute("aria-busy", "true")
+    })
+    repository.coLead((list, itemsOf) => {
+      const roadmap = list.find(({ id }) => id === "producta")
+      const [item] = itemsOf("producta")
+      if (!roadmap || !item) throw new Error("No Product A")
+      roadmap.vision = { en: "Their later vision.", cy: "" }
+      item.title = { ...item.title, en: "First, theirs later" }
+    })
+    failReads(repository)
+
+    await publish(user)
+    await main().findByText("Couldn't refresh your roadmaps")
+    const notice = main()
+      .getAllByRole("alert")
+      .find((each) => each.textContent.includes("Someone else"))
+    if (!notice) throw new Error("No review")
+    for (const name of [
+      "Use theirs About this roadmap: Vision",
+      "Use theirs First, mine: Title",
+    ]) {
+      await user.click(within(notice).getByRole("button", { name }))
+    }
+
+    expect(main().getByText("Their later vision.")).toBeInTheDocument()
+    expect(
+      main().getByRole("heading", { level: 3, name: "First, theirs later" }),
+    ).toBeInTheDocument()
+  })
+
+  it("does not reopen a decided conflict when the field is edited again (S2)", async () => {
+    const repository = coLeadRepository()
+    const { user } = await renderPage({ repository })
+    await editVision(user, "My vision.")
+    changeBoth(repository)
+    await publish(user)
+    await user.click(
+      within(await review()).getByRole("button", {
+        name: "Use theirs About this roadmap: Vision",
+      }),
+    )
+    repository.coLead((list) => {
+      const roadmap = list.find(({ id }) => id === "producta")
+      if (roadmap) roadmap.vision = { en: "Their second vision.", cy: "" }
+    })
+    await user.click(main().getByRole("button", { name: "Refresh" }))
+    await main().findByText("Their second vision.")
+
+    await editVision(user, "My later vision.")
+
+    expect(main().queryByRole("alert")).toBeNull()
+    expect(
+      main().getByRole("button", { name: "Publish changes" }),
+    ).toHaveAttribute("aria-disabled", "false")
+    await publish(user)
+    expect(await main().findByText(/^Changes published\./)).toBeInTheDocument()
+    expect(main().getByText("My later vision.")).toBeInTheDocument()
+  })
+
+  it("stops again for a co-lead's change made after Keep mine (S3)", async () => {
+    const repository = coLeadRepository()
+    const { user } = await renderPage({ repository })
+    await editVision(user, "My vision.")
+    changeBoth(repository)
+    await publish(user)
+    await user.click(
+      within(await review()).getByRole("button", {
+        name: "Keep mine About this roadmap: Vision",
+      }),
+    )
+    repository.coLead((list) => {
+      const roadmap = list.find(({ id }) => id === "producta")
+      if (roadmap) roadmap.vision = { en: "Their second vision.", cy: "" }
+    })
+
+    await publish(user)
+
+    const notice = await review()
+    expect(
+      within(notice)
+        .getAllByRole("definition")
+        .map((each) => each.textContent),
+    ).toEqual(["My vision.", "Their second vision."])
+  })
+
+  it("publishes over a co-lead's change to a field not edited, and shows it after (S4)", async () => {
+    const repository = coLeadRepository()
+    const { user } = await renderPage({ repository })
+    await editTitle(user, "Second item", "Second, mine")
+    changeBoth(repository)
+
+    await publish(user)
+
+    expect(await main().findByText(/^Changes published\./)).toBeInTheDocument()
+    expect(main().getByText("Their vision.")).toBeInTheDocument()
+    expect(
+      main().getByRole("heading", { level: 3, name: "First, theirs" }),
+    ).toBeInTheDocument()
+    expect(
+      main().getByRole("heading", { level: 3, name: "Second, mine" }),
+    ).toBeInTheDocument()
+  })
+
+  it("discards the changes to items a co-lead removed, naming each, and keeps the rest (S5)", async () => {
+    const repository = coLeadRepository({
+      producta: [first, second, createTestRoadmapItem("No ID item")],
+    })
+    const { user } = await renderPage({ repository, waitFor: "No ID item" })
+    await editTitle(user, "First item", "First, mine")
+    await editTitle(user, "Second item", "Second, mine")
+    await editTitle(user, "No ID item", "No ID, mine")
+    repository.coLead((_, itemsOf) => {
+      // The second item is deleted, so the third moves into its place.
+      itemsOf("producta").splice(1, 1)
+    })
+
+    await publish(user)
+
+    const notice = await review()
+    expect(notice).toHaveTextContent("Some changes couldn't be kept")
+    expect(notice).toHaveTextContent("Nothing was published.")
+    expect(notice).toHaveTextContent(
+      "Someone else has removed or changed “Second item”, so your changes to it couldn't be kept.",
+    )
+    expect(notice).toHaveTextContent(
+      "Someone else has removed or changed “No ID item”, so your changes to it couldn't be kept.",
+    )
+    expect(notice).toHaveTextContent("Your other changes are kept in this tab.")
+    expect(main().getByText("1 unpublished change")).toBeInTheDocument()
+    expect(card("No ID item").queryByText("Changed")).toBeNull()
+
+    await user.click(
+      within(notice).getByRole("button", { name: "Dismiss message" }),
+    )
+    await publish(user)
+    expect(await main().findByText(/^Changes published\./)).toBeInTheDocument()
+    expect(
+      main().getByRole("heading", { level: 3, name: "First, mine" }),
+    ).toBeInTheDocument()
+  })
+
+  it.each([
+    ["a publish", (user: User) => publish(user)],
+    [
+      "a Refresh",
+      (user: User) =>
+        user.click(main().getByRole("button", { name: "Refresh" })),
+    ],
+  ])(
+    "discards the changes to a roadmap removed from the list, found by %s (S6)",
+    async (_, find) => {
+      const repository = coLeadRepository()
+      const { user } = await renderPage({ repository })
+      await editTitle(user, "First item", "First, mine")
+      repository.coLead((list) => {
+        list.splice(
+          list.findIndex(({ id }) => id === "producta"),
+          1,
+        )
+      })
+
+      await find(user)
+
+      expect(
+        await main().findByRole("heading", {
+          level: 1,
+          name: "Roadmap not found",
+        }),
+      ).toBeInTheDocument()
+      expect(
+        main().getByText(
+          "This roadmap was removed from the list, so your changes to it couldn't be kept.",
+        ),
+      ).toBeInTheDocument()
+      const [back] = main().getAllByRole("link", { name: "Back to roadmaps" })
+      if (!back) throw new Error("No link back")
+      await user.click(back)
+      await main().findByRole("link", { name: "Product B roadmap" })
+      expect(main().queryByText("Unpublished changes")).toBeNull()
+    },
+  )
+
+  it("says a roadmap a publish found removed is gone, even if the list couldn't be read again (S6)", async () => {
+    const repository = coLeadRepository()
+    const { user } = await renderPage({ repository })
+    await editTitle(user, "First item", "First, mine")
+    repository.coLead((list) => {
+      list.splice(
+        list.findIndex(({ id }) => id === "producta"),
+        1,
+      )
+    })
+    vi.spyOn(repository, "listRoadmaps").mockRejectedValue(
+      new AppError("forbidden"),
+    )
+
+    await publish(user)
+
+    expect(
+      await main().findByRole("heading", {
+        level: 1,
+        name: "Roadmap not found",
+      }),
+    ).toBeInTheDocument()
+    expect(
+      main().getByText(
+        "This roadmap was removed from the list, so your changes to it couldn't be kept.",
+      ),
+    ).toBeInTheDocument()
   })
 })

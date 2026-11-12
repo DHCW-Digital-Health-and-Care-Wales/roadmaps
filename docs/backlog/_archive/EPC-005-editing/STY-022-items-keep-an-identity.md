@@ -3,7 +3,7 @@
 - **Status**: Done — delivered in its PR, which awaits the owner's merge
 - **Type**: Feature
 - **Area**: Domain + Infrastructure
-- **Epic**: [EPC-005-editing](../../EPC-005-editing/README.md)
+- **Epic**: [EPC-005-editing](README.md)
 - **Depends on**: none
 - **Binding ADRs**: ADR-012 §"Item identity", ADR-011, ADR-002
 - **Suggested model**: Sonnet — a parser and model change along ADR-012's settled rules,

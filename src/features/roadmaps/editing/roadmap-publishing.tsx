@@ -5,8 +5,11 @@ import { useTranslation } from "react-i18next"
 import { InsetText } from "@/components/layout/inset-text"
 import { Button } from "@/components/ui/button"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
+import type { FieldConflict } from "@/domain/roadmap/roadmap-changes"
 import { useAuth } from "@/features/auth/use-auth"
 
+import { ConflictReview } from "./conflict-review"
+import { keepMine, openConflicts, takeTheirs } from "./conflicts"
 import { DiscardDialog } from "./discard-dialog"
 import { countChanges, NO_CHANGES } from "./pending-changes"
 import {
@@ -16,6 +19,7 @@ import {
 import { awaitingRefresh, publishAction } from "./pending-changes-store"
 import { PublishDialog } from "./publish-dialog"
 import { PublishOutcomeNotice } from "./publish-outcome-notice"
+import { useDecisionFocus } from "./use-decision-focus"
 import { usePublish } from "./use-publish"
 
 export interface RoadmapPublishingProps {
@@ -27,7 +31,8 @@ export interface RoadmapPublishingProps {
  * Under a roadmap's title: what its last publish came to, and, while changes are
  * pending, how many there are with Publish (or Save, S11) and Discard all (STY-025 S2,
  * S6, S9–S15, S18). Publishing asks first, listing what changes; it is unavailable,
- * though focusable, unless connected.
+ * though focusable, unless connected and until every field someone else changed is
+ * decided in the review (STY-026).
  */
 export function RoadmapPublishing({ roadmap }: RoadmapPublishingProps) {
   const { t } = useTranslation()
@@ -46,6 +51,10 @@ export function RoadmapPublishing({ roadmap }: RoadmapPublishingProps) {
   const action = publishAction(roadmap)
   // Discarding before a Refresh could hide changes an unconfirmed publish wrote (S18).
   const discardable = !publishing && !awaitingRefresh(snapshot, roadmap.id)
+  // The store keeps a refusal only while it has something to say.
+  const refused = outcome?.kind === "refused" ? outcome : null
+  const open = refused ? openConflicts(refused.conflicts, changes) : []
+  const reviewing = open.length > 0
 
   // A confirmation is for the page it was given on (the copywriter's page notice).
   useEffect(
@@ -56,6 +65,18 @@ export function RoadmapPublishing({ roadmap }: RoadmapPublishingProps) {
     },
     [store, roadmap.id],
   )
+
+  // Once every field is decided, focus goes to Publish, or to the review while it still
+  // names removed items; with neither left, the shell moves it to the page.
+  const publishButton = useRef<HTMLButtonElement>(null)
+  const focus = useDecisionFocus(
+    open,
+    () => publishButton.current ?? notice.current,
+  )
+  const decide = (resolve: typeof keepMine) => (conflict: FieldConflict) => {
+    focus.decided(conflict)
+    store.update(roadmap.id, (pending) => resolve(pending, conflict))
+  }
 
   // Once a publish ends the dialog, focus goes to the notice saying what it came to.
   const focusNoticeOnClose = useRef(false)
@@ -69,7 +90,22 @@ export function RoadmapPublishing({ roadmap }: RoadmapPublishingProps) {
 
   return (
     <>
-      {outcome && (
+      {refused && (
+        <ConflictReview
+          ref={notice}
+          action={action}
+          open={open}
+          removed={refused.removed}
+          hasPendingChanges={count > 0}
+          keepMineRef={focus.keepMineRef}
+          onKeepMine={decide(keepMine)}
+          onUseTheirs={decide(takeTheirs)}
+          onDismiss={() => {
+            store.clearNotice(roadmap.id)
+          }}
+        />
+      )}
+      {outcome && outcome.kind !== "refused" && (
         <PublishOutcomeNotice
           // Each publish's notice is new: announced again, with a dwell of its own.
           key={`${outcome.kind}-${String(publishing)}`}
@@ -90,7 +126,8 @@ export function RoadmapPublishing({ roadmap }: RoadmapPublishingProps) {
           </p>
           <div className="flex flex-wrap gap-3">
             <Button
-              disabled={!connected || publishing}
+              ref={publishButton}
+              disabled={!connected || publishing || reviewing}
               focusableWhenDisabled
               aria-busy={publishing}
               onClick={() => {

@@ -64,7 +64,7 @@ as the questions can be settled before.
 
 ## Out of scope
 
-- Editing a roadmap's text and items: [EPC-005](../EPC-005-editing/README.md).
+- Editing a roadmap's text and items: [EPC-005](../_archive/EPC-005-editing/README.md).
 
 ## Defects
 

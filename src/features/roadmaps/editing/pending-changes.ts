@@ -68,7 +68,7 @@ function isEmpty(fields: object): boolean {
 }
 
 /** Whether two entries edit the same item: by its ID, or by its place with none. */
-function sameTarget(a: ItemChanges, b: ItemChanges): boolean {
+export function sameTarget(a: ItemChanges, b: ItemChanges): boolean {
   return a.item.id !== null || b.item.id !== null
     ? a.item.id === b.item.id
     : a.position === b.position

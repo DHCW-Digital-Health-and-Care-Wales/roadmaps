@@ -22,13 +22,14 @@ never change what is written, or how, without saying so in the record and its PR
 Design for the Product Lead editing their roadmap (`docs/backlog/personas/product-lead.md`);
 the connection to the data source is plumbing that should stay out of their way.
 
-**Built so far** (the bootstrap epic, then EPC-002 to EPC-004): a static, frontend-only React SPA on
+**Built so far** (the bootstrap epic, then EPC-002 to EPC-005): a static, frontend-only React SPA on
 GitHub Pages that connects a Google account (Google Identity Services, OAuth token model),
 reads the **roadmap index**, the first tab of one Google Spreadsheet, as the public site
 does (ADR-009), and shows each roadmap it lists as a card with its information, grouped
-by product family, and each roadmap's items on its page (EPC-004). Editing is under
-way (EPC-005): a Product Lead edits a roadmap's and its items' English in place and
-publishes (or saves) every pending change at once. Google Sheets is a _temporary_ data
+by product family, and each roadmap's items on its page (EPC-004). A Product Lead
+edits a roadmap's and its items' English in place and publishes (or saves) every
+pending change at once; a co-lead's change to the same text is shown beside theirs,
+never overwritten (EPC-005). Google Sheets is a _temporary_ data
 source: it must be replaceable by a PostgreSQL-backed HTTP API without touching the
 presentation layer (ADR-002).
 
@@ -1009,3 +1010,33 @@ waiting}.*`; the Welsh is machine-assisted. The record's Delivery is STY-026's c
     - After an `unconfirmed` publish, `awaitingRefresh` disables Undo and Discard all and
       the notice has no dismiss until Refresh reads both list and items. The in-memory
       repository's `reread-fails` write now fails item reads as well as list reads.
+- **STY-026 A co-lead's change is shown, not overwritten** — a refused publish opens a
+  review above the publish bar: each field a co-lead changed shows "Your change" beside
+  "Current text" with "Keep mine" / "Use theirs", and items a co-lead removed are named
+  and their changes dropped; a roadmap gone from the list loses its changes and its page
+  says so. Closes EPC-005 (archived). No new read or write; the data source is unchanged.
+  - Where things live (`features/roadmaps/editing/`): `conflicts.ts` (`openConflicts`,
+    `keepMine`, `takeTheirs`, `discardItems`, all pure), `ConflictReview`
+    (`conflict-review.tsx`, rendered by `RoadmapPublishing`); the store's `refused`
+    notice is `{ conflicts, removed }`, plus `removeRoadmap`, `restoreRoadmaps` and the
+    snapshot's `removed` set. Copy is `roadmaps.publish.notice.refused.*` and
+    `roadmaps.detail.removedDescription`; the Welsh is machine-assisted.
+  - Decisions: an open conflict is derived (pending field whose base is not the co-lead's
+    text), never stored, so Undo or a read closes it, and the store then drops it from
+    the refusal so it cannot reopen; a refusal writes the co-lead's text into the cached
+    roadmap and items before the re-read (`usePublishRoadmapChanges`'s `currentText`),
+    unless a read landed after the publish began, so a newer read wins; Keep mine
+    re-bases onto their text (D3); Publish is disabled while a conflict is open; Refresh no longer clears a
+    review, only an `unconfirmed` notice; removed items and roadmaps take no decision
+    (`discardItems` also finds an entry edited again mid-publish by its loaded item).
+  - Gotchas:
+    - Only an item with an ID can conflict: a co-lead's change to an item without one
+      makes it a removed item. E2E tests publish once first (`publishOnce`) to give every
+      item an ID.
+    - Simulate a co-lead with `sheets.coLead(tab, key, header, value | null)` in E2E
+      and `repository.coLead(edit)` on the in-memory double (`InMemoryRoadmapRepository`).
+    - The review takes focus when the publish dialog closes on a refusal; after each
+      decision a layout effect (`useDecisionFocus`) moves focus to the next "Keep mine",
+      then to Publish; tests assert `toHaveFocus` there.
+    - English field labels are bare ("Vision") while the Welsh add "(Saesneg)", so the
+      review's target names differ in shape between the languages (from STY-025).

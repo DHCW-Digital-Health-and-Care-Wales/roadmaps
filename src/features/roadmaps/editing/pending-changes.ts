@@ -17,6 +17,7 @@ import {
   type ItemChanges,
   itemText,
   type RoadmapChanges,
+  type RoadmapChoiceField,
   roadmapValue,
   UNLISTED_FAMILY,
 } from "@/domain/roadmap/roadmap-changes"
@@ -193,18 +194,31 @@ export function matchItemChanges(
 
 /**
  * `changes` after a fresh read of the roadmap's own text: each field it already holds is
- * dropped; bases stay as they were. `changes` itself when nothing is dropped.
+ * dropped; bases stay as they were. `changes` itself when nothing is dropped. A family or
+ * category read with no ID but a name, as a row reads while its list is missing, is not
+ * known to be none, so "No family" or "No category" stays pending.
  */
 export function reconcileRoadmap(
   changes: RoadmapChanges,
   roadmap: Roadmap,
 ): RoadmapChanges {
   const roadmapFields = dropHeld(changes.roadmap, (field) =>
-    roadmapValue(roadmap, field),
+    isChoiceField(field) && roadmapValue(roadmap, field) === ""
+      ? noChoiceHeld(roadmap, field)
+      : roadmapValue(roadmap, field),
   )
   return roadmapFields === changes.roadmap
     ? changes
     : { ...changes, roadmap: roadmapFields }
+}
+
+/** `""` if the roadmap holds no `field`, `undefined` if it names one the read can't link. */
+function noChoiceHeld(
+  roadmap: Roadmap,
+  field: RoadmapChoiceField,
+): string | undefined {
+  const name = field === "familyId" ? roadmap.family : roadmap.category
+  return name === null ? "" : undefined
 }
 
 /**

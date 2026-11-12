@@ -204,6 +204,29 @@ describe("reconcile", () => {
     expect(reconcileRoadmap(changes, roadmap)).toBe(changes)
   })
 
+  it("keeps No family or category pending while a read names one it can't link", () => {
+    const linked = {
+      ...roadmap,
+      family: { en: "Single Record", cy: "Cofnod Sengl" },
+      familyId: "fc29g5b9",
+      category: { en: "Clinical", cy: "" },
+      categoryId: "khzpchkh",
+    }
+    const changes = editRoadmap(NO_CHANGES, linked, {
+      familyId: "",
+      categoryId: "",
+    })
+    const listsMissing = { ...linked, familyId: null, categoryId: null }
+    const cleared = {
+      ...listsMissing,
+      family: null,
+      category: null,
+    }
+
+    expect(reconcileRoadmap(changes, listsMissing)).toBe(changes)
+    expect(reconcileRoadmap(changes, cleared).roadmap).toEqual({})
+  })
+
   it("follows an item to its new place, drops held fields and keeps an item not found", () => {
     let changes = editItem(NO_CHANGES, undefined, first, 0, {
       title: "One",

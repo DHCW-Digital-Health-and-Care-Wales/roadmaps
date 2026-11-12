@@ -8,6 +8,7 @@ import type { Family } from "@/domain/roadmap/family"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
+import { AppError } from "@/lib/errors"
 import { renderWithProviders } from "@/test/render-with-providers"
 
 import {
@@ -258,5 +259,52 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
         .getAllByRole("definition")
         .map((each) => each.textContent),
     ).toEqual(["No family", "Medicines & Diagnostics"])
+  })
+
+  it("shows their family and category after Use theirs, even if the roadmap couldn't be read again (S5)", async () => {
+    const repository = repositoryWith()
+    const { user, form } = await renderPage(repository)
+    await user.selectOptions(await select(form, "Family"), "No family")
+    await user.selectOptions(await select(form, "Category"), "No category")
+    await user.click(form.getByRole("button", { name: "Done" }))
+    repository.coLead((list) => {
+      const roadmap = list.find(({ id }) => id === "producta")
+      if (!roadmap) throw new Error("No Product A")
+      Object.assign(roadmap, {
+        familyId: medicines.id,
+        family: medicines.name,
+        colour: medicines.colour,
+        categoryId: "b2tqsxzm",
+        category: { en: "Patient records", cy: "Cofnodion cleifion" },
+      })
+    })
+    vi.spyOn(repository, "listRoadmaps").mockRejectedValue(
+      new AppError("forbidden"),
+    )
+
+    await user.click(main().getByRole("button", { name: "Publish changes" }))
+    await user.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", {
+        name: "Publish changes",
+      }),
+    )
+    await main().findByText("Couldn't refresh your roadmaps")
+    const notice = main()
+      .getAllByRole("alert")
+      .find((each) => each.textContent.includes("Someone else"))
+    if (!notice) throw new Error("No review")
+    for (const name of ["Family", "Category"]) {
+      await user.click(
+        within(notice).getByRole("button", {
+          name: `Use theirs About this roadmap: ${name}`,
+        }),
+      )
+    }
+
+    expect(
+      main().getByText("Family: Medicines & Diagnostics"),
+    ).toBeInTheDocument()
+    expect(main().getByText("Category: Patient records")).toBeInTheDocument()
+    expect(main().queryByText(/unpublished change/)).toBeNull()
   })
 })

@@ -19,14 +19,6 @@ not done.
 - the reviewers `delegation.md` sets have passed the latest head, or the last
   reviewed head differs from it only by fixes that _Review rounds_ exempts
   from review and the PR body's Review record lists, with no open P0/P1;
-- every review bot has finished. The Codex bot reviews the head the PR opened
-  on (again only on `@codex review`, `@codex security review` or when a draft
-  is marked ready). Its summary issue comment's `codex-review-state` shows it
-  done when `code_review`, and `security_review` unless its status is null,
-  each read `"status":"completed"` with `commit_sha` on the head at its last
-  trigger; any findings come as a review. A finish with no findings sends no
-  PR event, so if only the bot is still pending, tell the user and stop, as
-  step 3 does without notifications;
 - every review, review comment or issue comment that raises a finding or asks
   a question is resolved, either fixed and pushed or answered on its thread
   with the reason.

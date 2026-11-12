@@ -18,7 +18,8 @@ import { roadmapKeys } from "./roadmap-queries"
 /**
  * The roadmap and its items as read, showing the text a refusal found (STY-026), in each
  * field no read during the publish changed from `since`, as read when it began; a field
- * one did change keeps that read's text, as it may be newer (DEF-003).
+ * one did change keeps that read's text, as it may be newer (DEF-003). With nothing
+ * cached when it began, `since` is `undefined` and the read is shown as it is.
  */
 export interface CurrentText {
   roadmap: (

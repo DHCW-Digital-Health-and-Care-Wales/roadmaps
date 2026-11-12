@@ -187,7 +187,8 @@ function currentOf(conflict: FieldConflict): FieldChange {
  * `roadmap` showing the English `conflicts` found a co-lead wrote to its own text, in
  * each field that holds what it did in `since`, the roadmap as read when the publish
  * began. A field a read during the publish changed is left as that read found it, as it
- * may be newer than the publish's (DEF-003).
+ * may be newer than the publish's (DEF-003). With nothing read when it began, `since` is
+ * `undefined` and nothing is patched.
  */
 export function withCurrentRoadmapText(
   roadmap: Roadmap,
@@ -210,7 +211,7 @@ export function withCurrentRoadmapText(
 /**
  * `items` showing the English `conflicts` found a co-lead wrote to them, in each field
  * that holds what it did in `since`, the items as read when the publish began, as
- * `withCurrentRoadmapText` does.
+ * `withCurrentRoadmapText` does; an item not in `since` is left as it is.
  */
 export function withCurrentItemText(
   items: readonly RoadmapItem[],
@@ -224,12 +225,7 @@ export function withCurrentItemText(
     roadmap: {},
     items: itemConflicts.map((conflict) => conflict.item),
   }
-  const before = new Map(
-    [...matchItemChanges(since ?? [], conflicted)].map(([index, entry]) => [
-      entry,
-      since?.[index],
-    ]),
-  )
+  const before = itemsByEntry(since ?? [], conflicted)
   const matched = matchItemChanges(items, conflicted)
   return items.map((item, index) => {
     const entry = matched.get(index)
@@ -246,4 +242,20 @@ export function withCurrentItemText(
     )
     return applyItemChanges(item, { ...entry, fields })
   })
+}
+
+/**
+ * Each entry of `changes` with the item of `items` it matches. `matchItemChanges` keeps
+ * the entry objects, so an entry looks up the same edit's item in another read.
+ */
+function itemsByEntry(
+  items: readonly RoadmapItem[],
+  changes: RoadmapChanges,
+): ReadonlyMap<ItemChanges, RoadmapItem> {
+  return new Map(
+    [...matchItemChanges(items, changes)].flatMap(([index, entry]) => {
+      const item = items[index]
+      return item ? [[entry, item] as const] : []
+    }),
+  )
 }

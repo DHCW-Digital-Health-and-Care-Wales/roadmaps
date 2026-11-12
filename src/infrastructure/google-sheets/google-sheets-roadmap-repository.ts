@@ -166,6 +166,12 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
   ): Promise<PublishOutcome> {
     const read = await this.#readRoadmap(roadmapId, { signal })
     if (read === null) return { status: "roadmap-not-found" }
+    // Never written, even as the index (ADR-012).
+    if (read.indexTab.properties.title === TEMPLATE_TAB) {
+      throw new AppError("invalid-data", {
+        message: `The roadmap index is the ${TEMPLATE_TAB} tab`,
+      })
+    }
     const plan = planRoadmapPublish(changes, snapshotOf(read))
     if (plan.kind === "settled") return plan.outcome
     signal?.throwIfAborted()

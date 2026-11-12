@@ -89,8 +89,9 @@ It never writes any other cell: no Welsh `(cy)` cell, `Last updated`, `Enabled`,
 `Sheet`, `Category`, `Family`, `Colour`, `Horizon`, `Labels`, `Organisations` or
 `Details`, no other roadmap's row or tab, nothing in the `Template` tab, and no cell
 whose value has not changed. A roadmap whose `Sheet` names the `Template` tab or the
-roadmap index itself can't be read or published. A field a co-lead has changed since it was loaded, or an
-item or roadmap since removed, refuses the whole publish.
+roadmap index itself can't be read or published, and nothing is published while the
+roadmap index is itself named `Template`. A field a co-lead has changed since it was
+loaded, or an item or roadmap since removed, refuses the whole publish.
 
 - The rules, and how the editor differs from the public site on mistakes, are in
   [the roadmap index analysis](docs/analysis/roadmaps-tab-format.md) and

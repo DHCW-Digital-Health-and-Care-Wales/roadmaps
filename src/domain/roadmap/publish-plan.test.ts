@@ -117,6 +117,49 @@ describe("planRoadmapPublish", () => {
     },
   )
 
+  it.each([
+    [
+      "clears English whose Welsh the read then leaves out",
+      "Before",
+      "Cyn",
+      "",
+    ],
+    ["adds English to Welsh the loaded read left out", "", "", "After"],
+  ])(
+    "finds an item at its position that %s",
+    (_, loadedEnglish, loadedWelsh, value) => {
+      const description = (en: string, cy: string) =>
+        en === "" ? null : { en, cy }
+      const loaded = createTestRoadmapItem("A", {
+        description: description(loadedEnglish, loadedWelsh),
+      })
+      // As the tab reads once written: the Welsh cell is never touched.
+      const written = createTestRoadmapItem("A", {
+        description: description(value, "Cyn"),
+      })
+
+      const plan = planRoadmapPublish(
+        {
+          roadmap: {},
+          items: [
+            {
+              item: loaded,
+              position: 0,
+              fields: { description: { base: loadedEnglish, value } },
+            },
+          ],
+        },
+        snapshotOf([written]),
+        idsOf("newidaaa"),
+      )
+
+      expect(plan).toEqual({
+        kind: "settled",
+        outcome: { status: "published" },
+      })
+    },
+  )
+
   it("rejects a blank title, which the editor never sends", () => {
     let error: unknown
     try {
@@ -177,6 +220,10 @@ describe("heldWrites", () => {
     })
 
     expect(heldWrites(itemWrites, snapshotOf([alreadyLive]))).toBe("none")
+  })
+
+  it("can't tell when a written item's row is still there but no longer read", () => {
+    expect(heldWrites(writes, snapshotOf([], ["newidaaa"]))).toBe("some")
   })
 
   it("can't tell when the roadmap is no longer listed", () => {

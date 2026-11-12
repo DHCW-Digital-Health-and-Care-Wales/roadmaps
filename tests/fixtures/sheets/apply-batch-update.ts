@@ -49,7 +49,7 @@ export type BatchUpdateResult =
  */
 const WELSH_HEADER = /^(.+?)[\s([\-_]+(?:cy|cym|cymraeg|welsh)[\s)\]]*$/i
 
-/** The tab the editor never writes (ADR-012). */
+/** The tab the editor never writes (ADR-012), kept apart from the adapter's like `WELSH_HEADER`. */
 const TEMPLATE_TAB = "Template"
 
 /** The index column the editor never writes (STY-023 D5). */

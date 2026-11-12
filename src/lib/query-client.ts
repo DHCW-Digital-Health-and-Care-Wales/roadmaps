@@ -23,21 +23,42 @@ export interface QueryClientOptions {
    * session.
    */
   onUnauthenticated?: (() => void) | undefined
+  /**
+   * The current session's identity, compared with `===`. A mutation's `unauthenticated`
+   * error is reported only while the session it started in is still current: writes are
+   * never cancelled when a session ends, so one sent before a reconnect can fail after it,
+   * and must not expire the new session. Queries need no check: the end of a session
+   * cancels them. Without it, every mutation's 401 is reported.
+   */
+  currentSession?: (() => unknown) | undefined
 }
 
 /** The app's TanStack Query client, created once by the composition root (and per test). */
 export function createQueryClient({
   onUnauthenticated,
+  currentSession,
 }: QueryClientOptions = {}): QueryClient {
-  const onError = (error: unknown) => {
-    if (isAppError(error) && error.kind === "unauthenticated") {
-      onUnauthenticated?.()
-    }
-  }
+  const isUnauthenticated = (error: unknown) =>
+    isAppError(error) && error.kind === "unauthenticated"
+  const mutationSessions = new WeakMap<object, unknown>()
   return new QueryClient({
     // One place for every query and mutation, current and future, rather than per hook.
-    queryCache: new QueryCache({ onError }),
-    mutationCache: new MutationCache({ onError }),
+    queryCache: new QueryCache({
+      onError: (error) => {
+        if (isUnauthenticated(error)) onUnauthenticated?.()
+      },
+    }),
+    mutationCache: new MutationCache({
+      onMutate: (_variables, mutation) => {
+        mutationSessions.set(mutation, currentSession?.())
+      },
+      onError: (error, _variables, _result, mutation) => {
+        const session = mutationSessions.get(mutation)
+        if (isUnauthenticated(error) && session === currentSession?.()) {
+          onUnauthenticated?.()
+        }
+      },
+    }),
     defaultOptions: {
       queries: {
         staleTime: 60_000,

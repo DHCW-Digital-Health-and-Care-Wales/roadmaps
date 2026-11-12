@@ -74,3 +74,43 @@ describe.each([
     expect(await failWith(error)).not.toHaveBeenCalled()
   })
 })
+
+describe("createQueryClient onUnauthenticated, for a mutation and its session", () => {
+  /** Starts a mutation in session `"a"`, moves to `after`, then fails with a 401. */
+  async function lateFailure(after: string) {
+    const onUnauthenticated = vi.fn()
+    let session = "a"
+    let reject: ((error: Error) => void) | undefined
+    const client = createQueryClient({
+      onUnauthenticated,
+      currentSession: () => session,
+    })
+    const running = client
+      .getMutationCache()
+      .build(client, {
+        mutationFn: () =>
+          new Promise((_resolve, fail: (error: Error) => void) => {
+            reject = fail
+          }),
+      })
+      .execute(undefined)
+    // The request is sent: the mutation function is waiting for its answer.
+    const answer = await vi.waitFor(() => {
+      if (reject === undefined) throw new Error("Not sent yet")
+      return reject
+    })
+
+    session = after
+    answer(new AppError("unauthenticated"))
+    await expect(running).rejects.toMatchObject({ kind: "unauthenticated" })
+    return onUnauthenticated
+  }
+
+  it("reports a 401 while the session it started in is current", async () => {
+    expect(await lateFailure("a")).toHaveBeenCalledOnce()
+  })
+
+  it("ignores a 401 that arrives after the session changed", async () => {
+    expect(await lateFailure("b")).not.toHaveBeenCalled()
+  })
+})

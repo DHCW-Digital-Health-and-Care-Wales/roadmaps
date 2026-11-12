@@ -424,6 +424,30 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
       })
     })
 
+    it("treats a repeated publish that clears translated English as published (S5, S12)", async () => {
+      const translated = {
+        ...laterWork,
+        description: { en: "Before", cy: "Cyn" },
+      }
+      const repository = setup.withRoadmaps(fixtures, {
+        producta: [everyField, translated],
+      })
+      const clear = {
+        roadmap: {},
+        items: [edit(translated, 1, { description: change("Before", "") })],
+      }
+      await repository.publishRoadmapChanges("producta", clear)
+      const [, cleared] = await repository.listRoadmapItems("producta")
+
+      const outcome = await repository.publishRoadmapChanges("producta", clear)
+
+      expect(outcome).toEqual({ status: "published" })
+      expect(cleared).toMatchObject({
+        title: laterWork.title,
+        description: null,
+      })
+    })
+
     it("gives every item without an ID a new one, all different (S6)", async () => {
       const repository = setup.withRoadmaps(fixtures, {
         producta: [laterWork, unplacedWork, laterWork],

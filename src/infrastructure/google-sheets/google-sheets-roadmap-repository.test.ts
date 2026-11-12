@@ -1150,6 +1150,20 @@ describe("GoogleSheetsRoadmapRepository", () => {
         },
       )
 
+      it("fails with invalid-data, writing nothing, when the index is the Template tab", async () => {
+        const [indexTab, ...rest] = exampleTabs()
+        if (indexTab === undefined) throw new Error("The example has an index")
+        const spreadsheet = serveStatefulSpreadsheet([
+          { ...indexTab, title: "Template" },
+          ...rest.filter(({ title }) => title !== "Template"),
+        ])
+
+        await expect(
+          httpRepository().publishRoadmapChanges("producta", titleChange),
+        ).rejects.toMatchObject({ kind: "invalid-data", retryable: false })
+        expect(spreadsheet.bodies).toEqual([])
+      })
+
       it("gives no new ID that a skipped row already holds", async () => {
         const spreadsheet = serveStatefulSpreadsheet([
           gridTab("Roadmaps", EXAMPLE_ROWS, 0),

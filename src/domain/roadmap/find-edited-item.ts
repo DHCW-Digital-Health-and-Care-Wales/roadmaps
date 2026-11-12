@@ -52,19 +52,35 @@ const CONTENT_KEYS = Object.keys(CONTENT) as (keyof typeof CONTENT)[]
 
 /**
  * Whether `current` holds `loaded`'s content, with `edited` fields' English replaced;
- * their Welsh must still be `loaded`'s.
+ * their Welsh must still be `loaded`'s where both reads show it.
  */
 function sameContent(
   current: RoadmapItem,
   loaded: RoadmapItem,
   edited: ReadonlyMap<EditableItemField, string>,
 ): boolean {
-  return CONTENT_KEYS.every((key) =>
-    isEditable(key) && edited.has(key)
-      ? itemText(current, key) === edited.get(key) &&
-        itemWelsh(current, key) === itemWelsh(loaded, key)
-      : sameValue(current[key], loaded[key]),
-  )
+  return CONTENT_KEYS.every((key) => {
+    if (!isEditable(key)) return sameValue(current[key], loaded[key])
+    const value = edited.get(key)
+    if (value === undefined) return sameValue(current[key], loaded[key])
+    return (
+      itemText(current, key) === value &&
+      (!welshShown(loaded, key, value) ||
+        itemWelsh(current, key) === itemWelsh(loaded, key))
+    )
+  })
+}
+
+/**
+ * Whether a field's Welsh is known both as loaded and as edited to `value`: a read
+ * leaves out the Welsh of a field with no English.
+ */
+function welshShown(
+  loaded: RoadmapItem,
+  field: EditableItemField,
+  value: string,
+): boolean {
+  return value !== "" && itemText(loaded, field) !== ""
 }
 
 function isEditable(key: string): key is EditableItemField {

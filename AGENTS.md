@@ -942,10 +942,16 @@ options?)` re-reads the roadmap, refuses per field on a co-lead's change or a re
     the adapter's MSW fake and the E2E fake).
   - Decisions: no write when nothing differs (so no IDs either); a blank title throws
     `AppError('unknown')`; the write takes no abort signal; a lost answer is re-read once
-    (published, `network` or `unconfirmed`), finding each written item by its ID; a
-    roadmap whose `Sheet` names `Template` or the index is `invalid-data`; a mutation's 401 expires the session through
-    the query client's new `MutationCache`; the hook re-reads list and items in
-    `onSettled`.
+    (published, `network` or `unconfirmed`), finding each written item by its ID; the
+    hook re-reads list and items in `onSettled`.
+  - Publishing never writes `Template`: a roadmap whose `Sheet` names `Template` or the
+    index is `invalid-data` (read or publish), and so is publishing when the index tab
+    itself is named `Template`.
+  - A mutation's 401 expires the session through the query client's new
+    `MutationCache`, but only while the session it started in is current
+    (`currentSession`, wired to `currentAuthSession(authClient)`): writes are never
+    cancelled at session end, unlike queries, so a late 401 must not expire a newer
+    session.
   - Gotchas:
     - The metadata mask now includes `gridProperties(rowCount,columnCount)`; a test
       asserting the `fields` parameter must use the new mask.

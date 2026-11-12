@@ -141,9 +141,12 @@ export function planRoadmapPublish(
   }
   const ids = newIds(snapshot, createId)
   const newIdAt = new Map(ids.map(({ index, id }) => [index, id]))
-  const idAt = (index: number) =>
-    // Every item has an ID or is given one.
-    snapshot.items[index]?.id ?? newIdAt.get(index) ?? ""
+  const idAt = (index: number) => {
+    const id = snapshot.items[index]?.id ?? newIdAt.get(index)
+    if (id === undefined)
+      throw new Error("Every item has an ID or is given one")
+    return id
+  }
   return {
     kind: "write",
     writes: {
@@ -173,10 +176,14 @@ export function heldWrites(
       const item = withId(id)
       return item !== undefined && itemText(item, field) === value
     }),
-    ...writes.ids.map(({ id }) => withId(id) !== undefined),
+    ...writes.ids.map(({ id }) => snapshot.takenIds.has(id)),
   ]
-  if (held.every(Boolean)) return "all"
-  return held.some(Boolean) ? "some" : "none"
+  // A row the read skips (its title cleared since) may still hold an item's write.
+  const unread = writes.items.some(
+    ({ id }) => withId(id) === undefined && snapshot.takenIds.has(id),
+  )
+  if (!unread && held.every(Boolean)) return "all"
+  return unread || held.some(Boolean) ? "some" : "none"
 }
 
 /** A change's trimmed value with its base, or `null` when it changes nothing. */

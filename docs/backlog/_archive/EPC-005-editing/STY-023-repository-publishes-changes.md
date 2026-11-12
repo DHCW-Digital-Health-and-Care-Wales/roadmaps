@@ -233,8 +233,9 @@ Audited at `8479405`:
   - `{ status: "unconfirmed" }` (the answer was lost and one re-read could not settle
     it; the changes may be written).
 
-  It rejects with `AppError`s as reads do (`invalid-data` for an unreadable tab, or a
-  roadmap whose `Sheet` names `Template` or the roadmap index itself,
+  It rejects with `AppError`s as reads do (`invalid-data` for an unreadable tab, a
+  roadmap whose `Sheet` names `Template` or the roadmap index itself, or an index tab
+  named `Template`,
   `forbidden`, `unauthenticated`, `network` when a lost write is found not applied) and
   with the signal's reason when aborted before the write is sent.
 
@@ -244,17 +245,22 @@ Audited at `8479405`:
   and the value; an item is found by `item.id` (the first row holding it; when the ID
   is repeated, only while that row holds the loaded content) or, with no ID, at
   `position` while it holds the loaded content, Welsh included, either check also
-  accepting that content with the pending English applied (S12) (`findEditedItem`,
-  `find-edited-item.ts`); a change whose trimmed value equals its base is
+  accepting that content with the pending English applied (S12; `findEditedItem`,
+  `find-edited-item.ts`), where an edited field's Welsh is compared only when the
+  loaded and pending English both show it (a blank English cell reads as no field,
+  Welsh and all); a change whose trimmed value equals its base is
   ignored, and an item with no other change is skipped; every kept
   item without an ID (or with a repeated one) gets a new `createItemId()` (8 characters,
   a consonant first, no vowels, `0` or `1`), unique among every ID in the tab. A lost
   write's re-read (`heldWrites`) finds each written item by the ID it holds once
-  written, never by its place, as rows may have moved.
+  written, never by its place, as rows may have moved; an item no longer read whose
+  ID is still in the tab (its title cleared since) makes the outcome `unconfirmed`.
 - **Hook**: `usePublishRoadmapChanges(roadmapId)` (`features/roadmaps/hooks/`) is a
   `useMutation` with `retry: false` whose `onSettled` re-reads the list and the
   roadmap's items, so they are fresh when `mutateAsync` settles. `createQueryClient`'s
-  `onUnauthenticated` now hears mutations too (a `MutationCache`).
+  `onUnauthenticated` now hears mutations too (a `MutationCache`), only while the
+  session a mutation started in is current (`currentSession`; ADR-003 amended): a write is
+  never cancelled at session end, so its late 401 must not expire a newer session.
 - **Google adapter**: three reads as `listRoadmapItems` (the metadata mask now asks for
   `gridProperties(rowCount,columnCount)`), then one `POST
 …/spreadsheets/{id}:batchUpdate` through the client's new `postJson`: an

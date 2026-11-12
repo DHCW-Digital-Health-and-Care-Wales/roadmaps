@@ -13,7 +13,6 @@ import { useLanguage } from "@/i18n"
 
 import { RoadmapItemCard } from "../components/roadmap-item-card"
 import { EditControls } from "./edit-controls"
-import { useEditMode } from "./use-edit-mode"
 import { EditForm } from "./edit-form"
 import { editFormFields } from "./edit-form-fields"
 import {
@@ -24,6 +23,7 @@ import {
   type ItemValues,
 } from "./pending-changes"
 import { usePendingChangesStore } from "./pending-changes-context"
+import { useEditMode } from "./use-edit-mode"
 
 /** Fields that hold paragraphs; the others are one line unless they already break. */
 const multilineItemFields: ReadonlySet<EditableItemField> = new Set([
@@ -58,21 +58,22 @@ export function EditableItemCard({
   const language = useLanguage()
   const store = usePendingChangesStore()
   const headingId = useId()
-  const mode = useEditMode<RoadmapItem>()
+  const mode = useEditMode<{ read: RoadmapItem; shown: RoadmapItem }>()
   const shown = applyItemChanges(item, entry)
   const title = localise(shown.title, language)
 
   // Each change finds the item's entry afresh, so an edit never builds on a stale one;
   // a field's edit is made from the item as the form opened on it.
   const done = (values: ItemValues) => {
-    const opened = mode.opened ?? item
+    const opened = mode.opened ?? { read: item, shown }
     store.update(roadmapId, (changes) =>
       editItem(
         changes,
         matchItemChanges(items, changes).get(position),
-        opened,
+        opened.read,
         position,
         values,
+        { shown: opened.shown, latest: item },
       ),
     )
     mode.close()
@@ -114,7 +115,7 @@ export function EditableItemCard({
             changed={entry !== undefined}
             editButton={mode.editButton}
             onEdit={() => {
-              mode.open(item)
+              mode.open({ read: item, shown })
             }}
             onUndo={undo}
           />

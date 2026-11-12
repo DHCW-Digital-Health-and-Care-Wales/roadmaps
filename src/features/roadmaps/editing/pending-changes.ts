@@ -74,24 +74,52 @@ function sameTarget(a: ItemChanges, b: ItemChanges): boolean {
     : a.position === b.position
 }
 
-/** `changes` with the roadmap's own text edited to `values`. */
+/**
+ * What a form has seen since it opened: the record as it showed it then (`shown`, pending
+ * English applied) and the `latest` read. A field the latest read holds as the form showed it (the
+ * Product Lead's own publish landed while it was open) is edited from that read, not from
+ * the older one the form opened on, so the next publish is not refused over it.
+ */
+export interface SinceOpened<T> {
+  readonly shown: T
+  readonly latest: T
+}
+
+/** The text `field` is edited from: as `opened`, unless `since` re-bases it. */
+function originOf<T, F>(
+  text: (record: T, field: F) => string,
+  opened: T,
+  since: SinceOpened<T> | undefined,
+): (field: F) => string {
+  return (field) => {
+    const read = text(opened, field)
+    if (!since) return read
+    const latest = text(since.latest, field)
+    return latest.trim() === text(since.shown, field).trim() ? latest : read
+  }
+}
+
+/** `changes` with the roadmap's own text, as `roadmap` read it, edited to `values`. */
 export function editRoadmap(
   changes: RoadmapChanges,
   roadmap: Roadmap,
   values: RoadmapValues,
+  since?: SinceOpened<Roadmap>,
 ): RoadmapChanges {
   return {
     ...changes,
-    roadmap: editFields(changes.roadmap, values, (field) =>
-      roadmapText(roadmap, field),
+    roadmap: editFields(
+      changes.roadmap,
+      values,
+      originOf(roadmapText, roadmap, since),
     ),
   }
 }
 
 /**
  * `changes` with an item edited to `values`: `previous` is the item's entry (from
- * {@link matchItemChanges}), `item` the item as the form opened on it and `position`
- * where it is now. An entry keeps the item as first loaded, which a publish checks it by.
+ * {@link matchItemChanges}), `item` the item as the form opened on it, `position` where
+ * it is now and `since` what the form has seen since. An entry keeps the item as first loaded, which a publish checks it by.
  */
 export function editItem(
   changes: RoadmapChanges,
@@ -99,9 +127,12 @@ export function editItem(
   item: RoadmapItem,
   position: number,
   values: ItemValues,
+  since?: SinceOpened<RoadmapItem>,
 ): RoadmapChanges {
-  const fields = editFields(previous?.fields ?? {}, values, (field) =>
-    itemText(item, field),
+  const fields = editFields(
+    previous?.fields ?? {},
+    values,
+    originOf(itemText, item, since),
   )
   const others = changes.items.filter((entry) => entry !== previous)
   if (isEmpty(fields)) return { ...changes, items: others }

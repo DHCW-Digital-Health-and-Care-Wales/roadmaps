@@ -56,6 +56,42 @@ describe("editRoadmap", () => {
       editRoadmap(twice, reread, { title: "Co-lead's title" }).roadmap,
     ).toEqual({})
   })
+  it("edits from the Product Lead's own publish, landed while the form was open", () => {
+    const pending = editRoadmap(NO_CHANGES, roadmap, { vision: "Published" })
+    const shown = applyRoadmapChanges(roadmap, pending)
+    const settled = settlePublished(pending, pending)
+    const published = createTestRoadmap("producta", "Product A", {
+      vision: { en: "Published", cy: "Gweledigaeth" },
+    })
+
+    const changes = editRoadmap(
+      settled,
+      roadmap,
+      { vision: "Again" },
+      { shown, latest: published },
+    )
+
+    expect(changes.roadmap).toEqual({
+      vision: { base: "Published", value: "Again" },
+    })
+  })
+
+  it("still edits from what the form opened on when a co-lead changed it since", () => {
+    const coLead = createTestRoadmap("producta", "Product A", {
+      vision: { en: "Co-lead's vision", cy: "Gweledigaeth" },
+    })
+
+    const changes = editRoadmap(
+      NO_CHANGES,
+      roadmap,
+      { vision: "Mine" },
+      { shown: roadmap, latest: coLead },
+    )
+
+    expect(changes.roadmap).toEqual({
+      vision: { base: "A vision", value: "Mine" },
+    })
+  })
 })
 
 describe("editItem", () => {
@@ -113,6 +149,29 @@ describe("editItem", () => {
     if (!firstEntry) throw new Error("expected an entry")
 
     expect(undoItem(both, firstEntry).items).toEqual([both.items[1]])
+  })
+
+  it("edits an item from the Product Lead's own publish, landed while its form was open", () => {
+    const pending = editItem(NO_CHANGES, undefined, first, 0, {
+      description: "Published",
+    })
+    const [entry] = pending.items
+    const shown = applyItemChanges(first, entry)
+    const settled = settlePublished(pending, pending)
+    const published = { ...first, description: { en: "Published", cy: "" } }
+
+    const changes = editItem(
+      settled,
+      undefined,
+      first,
+      0,
+      { description: "Again" },
+      { shown, latest: published },
+    )
+
+    expect(changes.items[0]?.fields).toEqual({
+      description: { base: "Published", value: "Again" },
+    })
   })
 })
 

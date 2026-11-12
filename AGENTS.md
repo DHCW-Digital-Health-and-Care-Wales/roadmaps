@@ -56,7 +56,8 @@ Rules no lint catches:
 - `pnpm test:e2e` builds and serves on port 4173, reusing a server already there
   locally; install the browser once per Playwright version with
   `pnpm exec playwright install --with-deps chromium`.
-- Before a PR, run the full gate in implement-story's `references/validation.md`.
+- Before a PR, run the checks implement-story's `references/validation.md` sets
+  for the kind of change.
 - In a shared checkout, or a scratch directory whose `node_modules` links to it, run
   binaries as `./node_modules/.bin/<tool>`: `pnpm exec` there can reinstall and prune
   the shared `node_modules`.

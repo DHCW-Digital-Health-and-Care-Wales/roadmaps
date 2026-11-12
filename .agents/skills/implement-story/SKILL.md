@@ -143,9 +143,9 @@ its narrowest home by the ladder in
 implementation and verification are complete, set Status `Done`, move the
 record to `docs/backlog/_archive/<epic>/` and mark its epic row, noting that it
 is delivered in this PR and awaits merge. When that closes the epic, sweep its
-`delivery-notes.md` as `docs/AGENTS.md` says before archiving the epic. A record delivered in part or handed
-back blocked returns to `Proposed` (or `Needs grilling`), with a Decisions entry
-naming what remains. Commit only intended files with a conventional commit
+`delivery-notes.md` as `docs/AGENTS.md` says before archiving the epic. A
+record delivered in part or handed back blocked returns to `Proposed` (or
+`Needs grilling`), with a Decisions entry naming what remains. Commit only intended files with a conventional commit
 message (`feat(scope): …`); preserve unrelated work and generated outputs
 (commit `src/routeTree.gen.ts` when routes change).
 

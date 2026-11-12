@@ -4,7 +4,7 @@ Read the `writing-for-agents` skill before changing agent guides or skills.
 This policy governs `AGENTS.md` (and the `CLAUDE.md` that only imports it),
 agent definitions under `.claude/agents/` and skill instructions under
 `.agents/skills/`. `build/agent-guides.test.ts` checks the root guide's size
-and that no `AGENTS.md` outside `docs/` cites a record ID; review judges the
+and that no `AGENTS.md` outside the top-level `docs/` cites a record ID; review judges the
 rest.
 
 Root guides are read at onboarding; nested guides and skills are read when

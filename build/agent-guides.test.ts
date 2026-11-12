@@ -12,8 +12,9 @@ import { describe, expect, it } from "vitest"
 const ROOT = join(import.meta.dirname, "..")
 const ROOT_GUIDE_WORD_BUDGET = 1200
 
-/** `docs/` defines the record ID format, so its guide is exempt. */
-const SKIPPED_DIRECTORIES = new Set(["node_modules", "docs", "dist"])
+const SKIPPED_DIRECTORIES = new Set(["node_modules", "dist"])
+/** The top-level `docs/` defines the record ID format, so its guide is exempt. */
+const RECORDS_GUIDE_DIRECTORY = join(ROOT, "docs")
 
 const RECORD_ID = /\b(?:STY|DEF|CHO|EPC)-\d{3}\b/g
 
@@ -26,7 +27,9 @@ function findGuides(directory: string): string[] {
     const path = join(directory, entry.name)
     if (entry.isDirectory()) {
       const skipped =
-        entry.name.startsWith(".") || SKIPPED_DIRECTORIES.has(entry.name)
+        entry.name.startsWith(".") ||
+        SKIPPED_DIRECTORIES.has(entry.name) ||
+        path === RECORDS_GUIDE_DIRECTORY
       return skipped ? [] : findGuides(path)
     }
     return entry.name === "AGENTS.md" ? [relative(ROOT, path)] : []

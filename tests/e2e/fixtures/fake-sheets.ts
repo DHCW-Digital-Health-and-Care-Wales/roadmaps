@@ -136,6 +136,30 @@ export class FakeSheets {
     this.#failures.push(...statuses)
   }
 
+  /**
+   * A co-lead's edit straight to the spreadsheet, seen by later reads: the cell under
+   * `header` in the row of `tab` whose first cell is `key` (an item's title, or a
+   * roadmap's `Sheet`), or that whole row deleted when `value` is `null` (STY-026).
+   */
+  coLead(tab: string, key: string, header: string, value: string | null): void {
+    this.spreadsheet = this.spreadsheet.map((sheet) => {
+      if (sheet.title !== tab) return sheet
+      const column = sheet.rows[0]?.indexOf(header) ?? -1
+      if (column < 0) throw new Error(`No ${header} column in ${tab}`)
+      if (!sheet.rows.some((row) => row[0] === key)) {
+        throw new Error(`No ${key} row in ${tab}`)
+      }
+      return {
+        ...sheet,
+        rows: sheet.rows.flatMap((row) => {
+          if (row[0] !== key) return [row]
+          if (value === null) return []
+          return [row.map((cell, i) => (i === column ? value : cell))]
+        }),
+      }
+    })
+  }
+
   /** Holds back replies until the returned `release` is called, to observe loading. */
   hold(): () => void {
     let resolve: () => void = () => undefined

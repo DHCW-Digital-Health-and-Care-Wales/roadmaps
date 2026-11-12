@@ -97,7 +97,8 @@ export function PendingChangesProvider({
 /**
  * After each successful read of the roadmap list or of a roadmap's items, drops from the
  * pending edits whatever the data source already holds, and moves each item's edits to
- * where its item now is. Returns the unsubscribe.
+ * where its item now is. A roadmap gone from the list loses its edits (STY-026 S6).
+ * Returns the unsubscribe.
  */
 function reconcileOnRead(
   queryClient: QueryClient,
@@ -108,10 +109,13 @@ function reconcileOnRead(
     const { queryKey: key } = event.query as Query
     if (isKey(key, roadmapKeys.list())) {
       const roadmaps = event.action.data as unknown as readonly Roadmap[]
-      for (const id of store.getSnapshot().changes.keys()) {
+      store.restoreRoadmaps(roadmaps.map((each) => each.id))
+      for (const id of [...store.getSnapshot().changes.keys()]) {
         const roadmap = roadmaps.find((each) => each.id === id)
         if (roadmap) {
           store.update(id, (changes) => reconcileRoadmap(changes, roadmap))
+        } else {
+          store.removeRoadmap(id)
         }
       }
       return

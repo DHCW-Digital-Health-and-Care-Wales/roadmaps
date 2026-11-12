@@ -3,7 +3,7 @@
 - **Status**: Done — delivered in its PR, which awaits the owner's merge
 - **Type**: Feature
 - **Area**: Domain + Infrastructure + Features + E2E
-- **Epic**: [EPC-005-editing](../../EPC-005-editing/README.md)
+- **Epic**: [EPC-005-editing](README.md)
 - **Depends on**: STY-022 (hard)
 - **Binding ADRs**: ADR-012 §"Finding what to write" and §"The repository call",
   ADR-002, ADR-009, ADR-011, ADR-003

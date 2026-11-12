@@ -1,8 +1,9 @@
 # EPC-005: Editing — a Product Lead changes a roadmap's text and publishes it to the spreadsheet
 
-- **Status**: Active — planned 2026-11-11 after grilling; a thin slice to prove that edits
-  reach the data source safely; richer editing follows
-- **Progress**: 4 of 5 terminal (STY-025 awaits merge; STY-023 merged, #30; STY-024 merged, #29; STY-022 merged, #28); next selectable: STY-026 once STY-025 merges; blocked on: STY-025's merge
+- **Status**: Done — planned 2026-11-11 after grilling; a thin slice to prove that edits
+  reach the data source safely; every story delivered, STY-022 to STY-025 merged, STY-026
+  in its PR, which awaits the owner's merge; richer editing follows
+- **Progress**: 5 of 5 terminal
 - **Binding ADRs**: ADR-012, ADR-011, ADR-009, ADR-002, ADR-003, ADR-008, ADR-010
 
 ## Summary
@@ -138,13 +139,13 @@ writes them inline or publishes first.
 
 ## Stories
 
-| ID      | Story                                                                                                               | Area                                     | Depends on       | State                |
-| ------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | ---------------- | -------------------- |
-| STY-022 | [Each roadmap item keeps an identity](../_archive/EPC-005-editing/STY-022-items-keep-an-identity.md)                | Domain + Infrastructure                  | —                | ✅ (merged, #28)     |
-| STY-023 | [The repository publishes a roadmap's changes](../_archive/EPC-005-editing/STY-023-repository-publishes-changes.md) | Domain + Infrastructure + Features + E2E | STY-022          | ✅ (merged, #30)     |
-| STY-024 | [A roadmap's page shows what the roadmap is about](../_archive/EPC-005-editing/STY-024-about-this-roadmap.md)       | Features/UI + i18n (en + cy) + E2E       | —                | ✅ (merged, #29)     |
-| STY-025 | [A Product Lead edits a roadmap and publishes it](../_archive/EPC-005-editing/STY-025-edit-then-save-or-publish.md) | Features/UI + i18n (en + cy) + E2E       | STY-023, STY-024 | ✅ (PR awaits merge) |
-| STY-026 | [A co-lead's change is shown, not overwritten](STY-026-co-lead-conflicts.md)                                        | Features/UI + i18n (en + cy) + E2E       | STY-025          |                      |
+| ID      | Story                                                                                   | Area                                     | Depends on       | State                |
+| ------- | --------------------------------------------------------------------------------------- | ---------------------------------------- | ---------------- | -------------------- |
+| STY-022 | [Each roadmap item keeps an identity](STY-022-items-keep-an-identity.md)                | Domain + Infrastructure                  | —                | ✅ (merged, #28)     |
+| STY-023 | [The repository publishes a roadmap's changes](STY-023-repository-publishes-changes.md) | Domain + Infrastructure + Features + E2E | STY-022          | ✅ (merged, #30)     |
+| STY-024 | [A roadmap's page shows what the roadmap is about](STY-024-about-this-roadmap.md)       | Features/UI + i18n (en + cy) + E2E       | —                | ✅ (merged, #29)     |
+| STY-025 | [A Product Lead edits a roadmap and publishes it](STY-025-edit-then-save-or-publish.md) | Features/UI + i18n (en + cy) + E2E       | STY-023, STY-024 | ✅ (merged, #31)     |
+| STY-026 | [A co-lead's change is shown, not overwritten](STY-026-co-lead-conflicts.md)            | Features/UI + i18n (en + cy) + E2E       | STY-025          | ✅ (PR awaits merge) |
 
 ## Sequencing
 
@@ -168,7 +169,7 @@ message and keeps the edits.
   editing records; moving needs placement editing.
 - **Tags, organisations and details**: structured fields with their own editors.
 - **Welsh content** (ADR-012 Option 3): a later record, which may add Welsh columns.
-- **Family and colour**: [EPC-006](../EPC-006-product-families-and-colours/README.md),
+- **Family and colour**: [EPC-006](../../EPC-006-product-families-and-colours/README.md),
   since they are set per roadmap but belong together.
 - **Category, published, `Last updated`**: later records; staleness (A7) owns
   `Last updated`.
@@ -186,9 +187,9 @@ None.
 ## Related
 
 - ADR-012 (this epic's decisions), ADR-011, ADR-009, ADR-002, ADR-003
-- [The roadmap tab format](../../analysis/roadmap-tab-format.md),
-  [the roadmap index format](../../analysis/roadmaps-tab-format.md)
-- [EPC-004 Roadmap items](../_archive/EPC-004-roadmap-items/README.md) (archived), whose
+- [The roadmap tab format](../../../analysis/roadmap-tab-format.md),
+  [the roadmap index format](../../../analysis/roadmaps-tab-format.md)
+- [EPC-004 Roadmap items](../EPC-004-roadmap-items/README.md) (archived), whose
   item model and reads this epic writes back
-- [EPC-006 Product families and colours](../EPC-006-product-families-and-colours/README.md)
-- The persona's needs: [Product Lead](../personas/product-lead.md) A9, A10, A12
+- [EPC-006 Product families and colours](../../EPC-006-product-families-and-colours/README.md)
+- The persona's needs: [Product Lead](../../personas/product-lead.md) A9, A10, A12

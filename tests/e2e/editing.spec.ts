@@ -1,10 +1,12 @@
 import type { Page } from "@playwright/test"
 
+import { EXAMPLE_INDEX_ROWS, withRoadmapIndex } from "./fixtures/fake-sheets"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 /**
  * A Product Lead edits a roadmap's English and publishes it, or saves it when the roadmap
  * is not published (STY-025), against the fake Sheets API: one `batchUpdate` per publish.
+ * A co-lead's change made meanwhile is shown, never overwritten (STY-026).
  */
 
 const ITEM = "Example card with every column"
@@ -234,4 +236,155 @@ test("edits an unplaced item on a phone, every form and dialog fitting the width
     .click()
   await expect(page.getByRole("alertdialog")).toBeVisible()
   expect(await overflow()).toBe(0)
+})
+
+/** Publishes a first edit, so every item has an ID a later publish can find it by. */
+async function publishOnce(page: Page) {
+  await editTitle(page, "Minimal card", "A minimal card")
+  await confirmPublish(page, "Publish")
+  await expect(
+    page.getByRole("main").getByText(/^Changes published\./),
+  ).toBeVisible()
+}
+
+/** Edits the roadmap's English vision through "About this roadmap". */
+async function editVision(page: Page, to: string) {
+  const main = page.getByRole("main")
+  await main.getByRole("button", { name: "Edit About this roadmap" }).click()
+  await main.getByRole("textbox", { name: "Vision" }).fill(to)
+  await main.getByRole("button", { name: "Done" }).click()
+  await expect(main.getByText(to)).toBeVisible()
+}
+
+test.describe("a co-lead's change (STY-026)", () => {
+  test("is shown beside yours, nothing written, until each field is decided (S1, S2)", async ({
+    page,
+    sheets,
+  }) => {
+    await openRoadmap(page, "producta", ITEM)
+    await publishOnce(page)
+    await editTitle(page, ITEM, "My first card")
+    await editVision(page, "My vision.")
+    sheets.coLead("ProductA", ITEM, "Title", "Their first card")
+    sheets.coLead("Roadmaps", "ProductA", "Vision", "Their vision.")
+
+    await confirmPublish(page, "Publish")
+
+    const review = page.getByRole("main").getByRole("alert")
+    await expect(review).toBeFocused()
+    await expect(review).toContainText(
+      "Someone else has changed text you edited",
+    )
+    await expect(review).toContainText("Nothing was published.")
+    await expect(review.getByRole("listitem")).toHaveCount(2)
+    await expect(review.getByRole("listitem").first()).toContainText(
+      /About this roadmap: Vision.*Your change.*My vision\..*Current text.*Their vision\./,
+    )
+    expect(sheets.writes).toHaveLength(1)
+    await expect(
+      page.getByRole("main").getByRole("button", { name: "Publish changes" }),
+    ).toHaveAttribute("aria-disabled", "true")
+
+    await review
+      .getByRole("button", { name: "Keep mine About this roadmap: Vision" })
+      .click()
+    await expect(
+      review.getByRole("button", { name: "Keep mine My first card: Title" }),
+    ).toBeFocused()
+    await review
+      .getByRole("button", { name: "Use theirs My first card: Title" })
+      .click()
+    const action = page
+      .getByRole("main")
+      .getByRole("button", { name: "Publish changes" })
+    await expect(action).toBeFocused()
+    await expect(review).toHaveCount(0)
+
+    await confirmPublish(page, "Publish")
+
+    await expect(
+      page.getByRole("main").getByText(/^Changes published\./),
+    ).toBeVisible()
+    expect(sheets.writes).toHaveLength(2)
+    const productA = sheets.spreadsheet.find(
+      ({ title }) => title === "ProductA",
+    )
+    expect(productA?.rows[1]?.[0]).toBe("Their first card")
+    await expect(
+      page.getByRole("heading", { level: 3, name: "Their first card" }),
+    ).toBeVisible()
+    await expect(page.getByRole("main").getByText("My vision.")).toBeVisible()
+  })
+
+  test("removing an item discards only the changes to it, naming it (S5)", async ({
+    page,
+    sheets,
+  }) => {
+    await openRoadmap(page, "producta", ITEM)
+    await publishOnce(page)
+    await editTitle(page, ITEM, "My first card")
+    await editTitle(page, "Discovery card", "My discovery card")
+    sheets.coLead("ProductA", "Discovery card", "Title", null)
+
+    await confirmPublish(page, "Publish")
+
+    const review = page.getByRole("main").getByRole("alert")
+    await expect(review).toBeFocused()
+    await expect(review).toContainText("Some changes couldn't be kept")
+    await expect(review).toContainText(
+      "Someone else has removed or changed “Discovery card”, so your changes to it couldn't be kept.",
+    )
+    expect(sheets.writes).toHaveLength(1)
+    await expect(
+      page.getByRole("main").getByText("1 unpublished change"),
+    ).toBeVisible()
+
+    await review.getByRole("button", { name: "Dismiss message" }).click()
+    await confirmPublish(page, "Publish")
+    await expect(
+      page.getByRole("main").getByText(/^Changes published\./),
+    ).toBeVisible()
+    await expect(
+      page.getByRole("heading", { level: 3, name: "My first card" }),
+    ).toBeVisible()
+  })
+
+  test("removing the roadmap from the list discards its changes and says so (S6)", async ({
+    page,
+    sheets,
+  }) => {
+    await openRoadmap(page, "producta", ITEM)
+    await editTitle(page, ITEM, "My first card")
+    sheets.spreadsheet = withRoadmapIndex(
+      EXAMPLE_INDEX_ROWS.filter(([sheet]) => sheet !== "ProductA"),
+    )
+
+    await confirmPublish(page, "Publish")
+
+    await expect(
+      page
+        .getByRole("main")
+        .getByRole("heading", { level: 1, name: "Roadmap not found" }),
+    ).toBeVisible()
+    await expect(
+      page
+        .getByRole("main")
+        .getByText(
+          "This roadmap was removed from the list, so your changes to it couldn't be kept.",
+        ),
+    ).toBeVisible()
+    expect(sheets.writes).toEqual([])
+    await page
+      .getByRole("main")
+      .getByRole("link", { name: "Back to roadmaps" })
+      .first()
+      .click()
+    await expect(roadmapCards(page)).toHaveText([
+      "Product B roadmap",
+      "Product C roadmap",
+    ])
+    await expect(
+      page.getByRole("main").getByText("Unpublished changes"),
+    ).toHaveCount(0)
+  })
 })

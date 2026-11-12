@@ -56,11 +56,14 @@ describe("createPendingChangesStore", () => {
   it("clears a roadmap's notice when its next publish starts", () => {
     const store = createPendingChangesStore()
     store.startPublish("producta")
-    store.finishPublish("producta", { kind: "refused", action: "save" })
-    expect(store.getSnapshot().notices.get("producta")).toEqual({
+    const refused = {
       kind: "refused",
       action: "save",
-    })
+      conflicts: [],
+      removed: [],
+    } as const
+    store.finishPublish("producta", refused)
+    expect(store.getSnapshot().notices.get("producta")).toEqual(refused)
 
     store.startPublish("producta")
     expect(store.getSnapshot().notices.has("producta")).toBe(false)
@@ -83,5 +86,37 @@ describe("createPendingChangesStore", () => {
 
     store.clearNotices()
     expect(store.getSnapshot().notices.size).toBe(0)
+  })
+
+  it("ends a publish with no notice when it has nothing to say", () => {
+    const store = createPendingChangesStore()
+    store.startPublish("producta")
+    store.finishPublish("producta", null)
+
+    expect(store.getSnapshot().publishing.size).toBe(0)
+    expect(store.getSnapshot().notices.size).toBe(0)
+  })
+
+  it("forgets a removed roadmap's changes and notice, remembering it was removed until listed again", () => {
+    const store = createPendingChangesStore()
+    store.update("producta", () => retitled)
+    store.startPublish("producta")
+    store.finishPublish("producta", { kind: "unconfirmed", action: "publish" })
+    store.removeRoadmap("productb")
+    expect(store.getSnapshot().removed.size).toBe(0)
+
+    store.removeRoadmap("producta")
+    expect(store.getSnapshot().changes.size).toBe(0)
+    expect(store.getSnapshot().notices.size).toBe(0)
+    expect(store.getSnapshot().removed).toEqual(new Set(["producta"]))
+
+    const listener = vi.fn()
+    store.subscribe(listener)
+    store.removeRoadmap("producta")
+    store.restoreRoadmaps(["productb"])
+    expect(listener).not.toHaveBeenCalled()
+
+    store.restoreRoadmaps(["productb", "producta"])
+    expect(store.getSnapshot().removed.size).toBe(0)
   })
 })

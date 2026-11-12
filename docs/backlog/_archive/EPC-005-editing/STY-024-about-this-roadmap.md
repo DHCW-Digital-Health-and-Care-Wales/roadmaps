@@ -3,7 +3,7 @@
 - **Status**: Done — delivered in its PR, which awaits the owner's merge
 - **Type**: Feature
 - **Area**: Features/UI + i18n (en + cy) + E2E
-- **Epic**: [EPC-005-editing](../../EPC-005-editing/README.md)
+- **Epic**: [EPC-005-editing](README.md)
 - **Depends on**: none
 - **Binding ADRs**: ADR-009, ADR-008, ADR-010
 - **Suggested model**: Sonnet — a read-only block from data already loaded, on existing

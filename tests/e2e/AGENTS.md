@@ -23,8 +23,9 @@ End-to-end tests of the production build, with Google faked (ADR-006). Run with
   of `tests/fixtures/sheets/` (cards "Product B roadmap", "Product A roadmap", "Product C
   roadmap", the order the page groups them in); assign `withRoadmapIndex(rows)` to change the
   list, building rows from `EXAMPLE_INDEX_ROWS` or `roadmapRow({ Sheet, Title, … })` (cells by
-  header name). `sheets.failWith(...statuses)` fails the next requests,
-  whichever read. `sheets.reads` lists the reads (`metadata`, then `values:<tab title>`,
+  header name). `sheets.coLead(tab, key, header, value)` plays a co-lead editing a cell
+  (or, with `null`, deleting the row) between the app's reads (STY-026).
+  `sheets.failWith(...statuses)` fails the next requests, whichever read. `sheets.reads` lists the reads (`metadata`, then `values:<tab title>`,
   such as `values:Roadmaps`) and `sheets.tokens` each request's bearer token, so one list
   load is two entries; `sheets.hold()` keeps replies
   pending until its returned `release()` is called.

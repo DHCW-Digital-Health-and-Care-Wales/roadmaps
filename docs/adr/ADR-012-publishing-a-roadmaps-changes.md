@@ -269,4 +269,4 @@ Nothing checks permission in advance.
   the E2E fake accepts writes and records them.
 - ADR-002 and ADR-011 carry an ADR-012 amendment; ADR-009's reading rules are
   unchanged and now also locate the index row to write.
-- Delivered by [EPC-005](../backlog/EPC-005-editing/README.md).
+- Delivered by [EPC-005](../backlog/_archive/EPC-005-editing/README.md).

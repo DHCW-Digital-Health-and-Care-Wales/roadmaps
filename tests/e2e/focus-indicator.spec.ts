@@ -199,6 +199,36 @@ for (const theme of THEMES) {
       await expectEveryStopShowsAnIndicator(page)
     })
 
+    test("every control in a co-lead's review shows DHCW's focus indicator (STY-026)", async ({
+      page,
+      sheets,
+    }) => {
+      await page.goto("./#/roadmaps/producta")
+      await connect(page)
+      const main = page.getByRole("main")
+      await expect(
+        main.getByRole("heading", { level: 3, name: "Minimal card" }),
+      ).toBeVisible()
+      await main
+        .getByRole("note")
+        .getByRole("button", { name: "Dismiss message" })
+        .click()
+      await main
+        .getByRole("button", { name: "Edit About this roadmap" })
+        .click()
+      await main.getByRole("textbox", { name: "Vision" }).fill("My vision.")
+      await main.getByRole("button", { name: "Done" }).click()
+      sheets.coLead("Roadmaps", "ProductA", "Vision", "Their vision.")
+      await main.getByRole("button", { name: "Publish changes" }).click()
+      await page
+        .getByRole("alertdialog")
+        .getByRole("button", { name: "Publish changes" })
+        .click()
+      await expect(main.getByRole("alert")).toBeFocused()
+
+      await expectEveryStopShowsAnIndicator(page)
+    })
+
     test("each kind of control shows the indicator it is meant to", async ({
       page,
     }) => {

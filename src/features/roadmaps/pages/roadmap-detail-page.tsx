@@ -22,6 +22,7 @@ import { ChangedTag } from "../editing/edit-controls"
 import { EditableRoadmapAbout } from "../editing/editable-roadmap-about"
 import { applyRoadmapChanges } from "../editing/pending-changes"
 import {
+  usePendingChanges,
   usePendingChangesStore,
   useRoadmapChanges,
 } from "../editing/pending-changes-context"
@@ -57,6 +58,8 @@ function RoadmapDetail({ roadmapId }: RoadmapDetailPageProps) {
   const connected = useAuth().state.status === "connected"
   const { data: roadmap, error, isFetching, refetch } = useRoadmap(roadmapId)
   const problem = useRoadmapsProblem(error)
+  // Its pending changes went with it (STY-026 S6).
+  const removed = usePendingChanges().removed.has(roadmapId)
   const retry = () => {
     void refetch()
   }
@@ -79,7 +82,11 @@ function RoadmapDetail({ roadmapId }: RoadmapDetailPageProps) {
         icon={<MapPinOffIcon />}
         title={t("roadmaps.detail.notFoundTitle")}
         titleAs="h1"
-        description={t("roadmaps.detail.notFoundDescription")}
+        description={t(
+          removed
+            ? "roadmaps.detail.removedDescription"
+            : "roadmaps.detail.notFoundDescription",
+        )}
         action={
           <Link to="/" className={cn(buttonVariants({ variant: "secondary" }))}>
             {t("roadmaps.detail.back")}
@@ -162,15 +169,14 @@ function RoadmapView({
   const refresh = async () => {
     const startedAt = Date.now()
     const reads = await Promise.all([refetchList(), items.refetch()])
-    // A notice asking for a Refresh has been heeded once both reads came back (S15,
-    // S18); until then what the publish came to is still unknown. A read cancelled at
-    // the session's end comes back with the cached data and no error, so only data
-    // read since Refresh began counts.
+    // A notice asking for a Refresh has been heeded once both reads came back (S18);
+    // until then what the publish came to is still unknown. A read cancelled at the
+    // session's end comes back with the cached data and no error, so only data read
+    // since Refresh began counts. A conflict review stays until each field is decided.
     const answered = (read: RefreshRead) =>
       read.isSuccess && read.dataUpdatedAt >= startedAt
     if (!reads.every(answered)) return
-    const kind = store.getSnapshot().notices.get(roadmap.id)?.kind
-    if (kind === "unconfirmed" || kind === "refused") {
+    if (store.getSnapshot().notices.get(roadmap.id)?.kind === "unconfirmed") {
       store.clearNotice(roadmap.id)
     }
   }

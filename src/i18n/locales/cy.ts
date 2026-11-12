@@ -167,6 +167,8 @@ export const cy = {
       notFoundTitle: "Heb ddod o hyd i'r map trywydd",
       notFoundDescription:
         "Dydy'r map trywydd hwn ddim yn bodoli, neu dydy e ddim wedi'i restru mwyach.",
+      removedDescription:
+        "Cafodd y map trywydd hwn ei dynnu o'r rhestr, felly doedd dim modd cadw eich newidiadau iddo.",
     },
     about: {
       title: "Ynglŷn â'r map trywydd hwn",
@@ -287,9 +289,26 @@ export const cy = {
         },
         kept: "Mae eich newidiadau wedi'u cadw yn y tab hwn.",
         refused: {
-          title: "Mae rhywun arall wedi newid y map trywydd hwn",
-          description:
-            "Ni chafodd dim ei ysgrifennu. Adnewyddwch y map trywydd hwn ac adolygwch eich newidiadau cyn rhoi cynnig arall arni.",
+          title: "Mae rhywun arall wedi newid testun a olygoch chi",
+          partialTitle: "Doedd dim modd cadw rhai newidiadau",
+          nothing: {
+            publish: "Chafodd dim byd ei gyhoeddi.",
+            save: "Chafodd dim byd ei gadw.",
+          },
+          choose: {
+            publish:
+              "Dewiswch pa destun i'w gadw ar gyfer pob un, yna cyhoeddwch eto.",
+            save: "Dewiswch pa destun i'w gadw ar gyfer pob un, yna cadwch eto.",
+          },
+          target: "{{subject}}: {{field}}",
+          yours: "Eich newid",
+          theirs: "Testun presennol",
+          empty: "Dim testun",
+          keepMine: "Cadw fy un i",
+          useTheirs: "Defnyddio'u testun nhw",
+          removed:
+            "Mae rhywun arall wedi tynnu neu newid “{{title}}”, felly doedd dim modd cadw eich newidiadau iddo.",
+          otherKept: "Mae eich newidiadau eraill wedi'u cadw yn y tab hwn.",
         },
         unconfirmed: {
           title: {

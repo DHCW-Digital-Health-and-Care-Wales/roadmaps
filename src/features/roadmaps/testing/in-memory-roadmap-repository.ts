@@ -31,6 +31,19 @@ export interface InMemoryRoadmapRepositoryOptions {
   write?: ContractWrite | undefined
 }
 
+export interface InMemoryRoadmapRepository extends RoadmapRepository {
+  /**
+   * A co-lead's change in the data source, which later calls read: `edit` may change
+   * the roadmaps listed, and the items of any roadmap that has some, in place.
+   */
+  readonly coLead: (
+    edit: (
+      roadmaps: Roadmap[],
+      itemsOf: (roadmapId: string) => RoadmapItem[],
+    ) => void,
+  ) => void
+}
+
 /**
  * A `RoadmapRepository` holding roadmaps and their items in memory (test code only).
  * Pass an `AppError` instead of roadmaps to make every call fail with it. A publish
@@ -40,7 +53,7 @@ export function createInMemoryRoadmapRepository(
   source: readonly Roadmap[] | AppError = [],
   items: InMemoryRoadmapItems = {},
   { write }: InMemoryRoadmapRepositoryOptions = {},
-): RoadmapRepository {
+): InMemoryRoadmapRepository {
   const roadmaps =
     source instanceof AppError ? source : structuredClone([...source])
   const held = new Map(
@@ -121,6 +134,10 @@ export function createInMemoryRoadmapRepository(
   }
 
   return {
+    coLead(edit) {
+      if (roadmaps instanceof AppError) throw roadmaps
+      edit(roadmaps, storedItems)
+    },
     listRoadmaps: ({ signal } = {}) =>
       respond(signal, (list) => {
         if (rereadFails) throw new AppError("network")

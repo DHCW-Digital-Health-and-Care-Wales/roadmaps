@@ -153,9 +153,6 @@ public site (README, _What the editor writes_). A publish now also writes, in th
   is deleted from its list before publishing, the page still shows the name it was
   chosen with, and the publish is refused as `invalid-data`, writing nothing. Showing it
   as not listed is [CHO-002](../../chores/CHO-002-show-a-deleted-pending-choice-as-not-listed.md).
-- **Known gap: a pending "No category" without the Categories tab.** A read with the tab
-  missing gives no category for a name that isn't a public-site spelling, so it settles a
-  pending "No category" unwritten: [DEF-004](../../defects/DEF-004-pending-no-category-dropped-without-categories-tab.md).
 - **Tests.** The publish plan, adapter, contract and fake's tests were written with each
   slice and run red where the code was new; the page tests and Playwright specs
   followed working code.

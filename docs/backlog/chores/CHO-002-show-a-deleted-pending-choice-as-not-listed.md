@@ -26,9 +26,10 @@ chooses again.
 ## Measurement
 
 _At commit `6459466`._ Found by review, not measured in use. It needs a family or
-category deleted from its list while a choice of it is pending, which STY-029 (manage
-families) makes possible from the editor. Before starting, check whether STY-029 or
-STY-030 has changed how a deleted family is shown; if it has, close this or narrow it.
+category deleted from its list while a choice of it is pending; the editor deletes
+neither (ADR-013), so only an edit to the spreadsheet itself does. Before starting, check
+whether a later story has changed how a deleted family is shown; if it has, close this
+or narrow it.
 
 ## Acceptance criteria
 

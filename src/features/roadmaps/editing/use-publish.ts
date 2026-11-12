@@ -1,16 +1,10 @@
-import {
-  useQueryClient,
-  type QueryClient,
-  type QueryKey,
-} from "@tanstack/react-query"
-
 import type { Roadmap } from "@/domain/roadmap/roadmap"
-import type { FieldConflict } from "@/domain/roadmap/roadmap-changes"
-import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { toAppError } from "@/lib/errors"
 
-import { roadmapKeys } from "../hooks/roadmap-queries"
-import { usePublishRoadmapChanges } from "../hooks/use-publish-roadmap-changes"
+import {
+  usePublishRoadmapChanges,
+  type CurrentText,
+} from "../hooks/use-publish-roadmap-changes"
 import {
   discardItems,
   withCurrentItemText,
@@ -19,6 +13,11 @@ import {
 import { countChanges, settlePublished } from "./pending-changes"
 import { usePendingChangesStore } from "./pending-changes-context"
 import { publishAction, type PublishNotice } from "./pending-changes-store"
+
+const CURRENT_TEXT: CurrentText = {
+  roadmap: withCurrentRoadmapText,
+  items: withCurrentItemText,
+}
 
 /**
  * Publishes (or saves) the roadmap's pending changes, once: never while a publish of the
@@ -31,11 +30,8 @@ import { publishAction, type PublishNotice } from "./pending-changes-store"
  */
 export function usePublish(roadmap: Roadmap): () => Promise<void> {
   const store = usePendingChangesStore()
-  const queryClient = useQueryClient()
   const { mutateAsync } = usePublishRoadmapChanges(roadmap.id, {
-    onRefused: (conflicts) => {
-      showCurrentText(queryClient, roadmap.id, conflicts)
-    },
+    currentText: CURRENT_TEXT,
   })
   const action = publishAction(roadmap)
 
@@ -77,47 +73,4 @@ export function usePublish(roadmap: Roadmap): () => Promise<void> {
     }
     store.finishPublish(roadmap.id, notice)
   }
-}
-
-/**
- * Shows the text a refusal found a co-lead wrote, before the roadmap and its items are
- * read again, so "Use theirs" shows theirs even if that read fails (S2). The data keeps
- * its age, so it is read again as soon as it would have been.
- */
-function showCurrentText(
-  queryClient: QueryClient,
-  roadmapId: string,
-  conflicts: readonly FieldConflict[],
-) {
-  if (conflicts.some((conflict) => conflict.subject === "roadmap")) {
-    patchQueryData<readonly Roadmap[]>(
-      queryClient,
-      roadmapKeys.list(),
-      (roadmaps) =>
-        roadmaps.map((each) =>
-          each.id === roadmapId
-            ? withCurrentRoadmapText(each, conflicts)
-            : each,
-        ),
-    )
-  }
-  if (conflicts.some((conflict) => conflict.subject === "item")) {
-    patchQueryData<readonly RoadmapItem[]>(
-      queryClient,
-      roadmapKeys.items(roadmapId),
-      (items) => withCurrentItemText(items, conflicts),
-    )
-  }
-}
-
-function patchQueryData<T>(
-  queryClient: QueryClient,
-  key: QueryKey,
-  patch: (data: T) => T,
-) {
-  const state = queryClient.getQueryState<T>(key)
-  if (state?.data === undefined) return
-  queryClient.setQueryData<T>(key, patch(state.data), {
-    updatedAt: state.dataUpdatedAt,
-  })
 }

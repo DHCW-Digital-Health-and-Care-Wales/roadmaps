@@ -8,6 +8,7 @@ import type {
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 
+import { editItem } from "./pending-changes"
 import {
   discardItems,
   keepMine,
@@ -18,7 +19,10 @@ import {
 } from "./conflicts"
 
 const first: ItemChanges = {
-  item: createTestRoadmapItem("First", { id: "first" }),
+  item: createTestRoadmapItem("First", {
+    id: "first",
+    description: { en: "Loaded", cy: "" },
+  }),
   position: 0,
   fields: {
     description: { base: "Loaded", value: "Mine" },
@@ -169,6 +173,29 @@ describe("discardItems", () => {
     expect(discardItems(pending, [first, unidentified]).items).toEqual([second])
     expect(discardItems(pending, [])).toBe(pending)
   })
+
+  it("drops an unidentified item edited again while it was being published", () => {
+    const sent: ItemChanges = {
+      item: createTestRoadmapItem("Third"),
+      position: 2,
+      fields: { title: { base: "Third", value: "Third, mine" } },
+    }
+    const other: ItemChanges = {
+      item: createTestRoadmapItem("Fourth"),
+      position: 3,
+      fields: { title: { base: "Fourth", value: "Fourth, mine" } },
+    }
+    const edited = editItem(
+      { roadmap: {}, items: [sent, other] },
+      sent,
+      sent.item,
+      2,
+      { title: "Third, mine", description: "Added while publishing" },
+    )
+
+    expect(edited.items).not.toContain(sent)
+    expect(discardItems(edited, [sent]).items).toEqual([other])
+  })
 })
 
 describe("withCurrentRoadmapText", () => {
@@ -185,6 +212,14 @@ describe("withCurrentRoadmapText", () => {
       ...roadmap,
       vision: { en: "Their vision", cy: "Gweledigaeth" },
     })
+  })
+
+  it("leaves a field read again since the publish was checked", () => {
+    const roadmap = createTestRoadmap("producta", "Product A", {
+      vision: { en: "Their later vision", cy: "" },
+    })
+
+    expect(withCurrentRoadmapText(roadmap, [visionConflict])).toEqual(roadmap)
   })
 })
 
@@ -209,5 +244,19 @@ describe("withCurrentItemText", () => {
     ])
     expect(shown[0]?.description?.en).toBe("Theirs")
     expect(shown[2]).toBe(items[2])
+  })
+
+  it("leaves a field read again since the publish was checked", () => {
+    const reread = { ...first.item, title: { en: "First, later", cy: "" } }
+    const [shown] = withCurrentItemText(
+      [reread],
+      [
+        conflictOn(first, "title", "First, theirs"),
+        conflictOn(first, "description", "Theirs"),
+      ],
+    )
+
+    expect(shown?.title.en).toBe("First, later")
+    expect(shown?.description?.en).toBe("Theirs")
   })
 })

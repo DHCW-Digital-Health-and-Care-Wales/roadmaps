@@ -109,11 +109,11 @@ S7 extends the accessibility, focus and structure specs.
 
 - **The review** (`features/roadmaps/editing/conflict-review.tsx`, `ConflictReview`)
   replaces STY-025's refused notice. It is a warning `DismissibleNotice` with
-  `role="alert"` that takes focus when the publish dialog closes on a refusal. Its title is "Someone else has
-  changed text you edited", or "Some changes couldn't be kept" when only removed items
-  are left. Then come "Nothing was published." ("saved" on an unpublished roadmap) and
-  "Choose which text to keep for each, then publish again." Each open conflict is a list
-  item:
+  `role="alert"` that takes focus when the publish dialog closes on a refusal. Its title
+  is "Someone else has changed text you edited", or "Some changes couldn't be kept" when
+  only removed items are left. Then come "Nothing was published." ("saved" on an
+  unpublished roadmap) and "Choose which text to keep for each, then publish again."
+  Each open conflict is a list item:
   - its target, "About this roadmap: Vision" or "<item title>: Title";
   - a description list of "Your change" and "Current text", with "No text" in italics
     for an empty value;
@@ -122,8 +122,9 @@ S7 extends the accessibility, focus and structure specs.
   Each removed item has a sentence naming its loaded title, then "Your other changes are
   kept in this tab." The roadmap's conflicts come first, then items by position, each in
   editing order. Dismiss is offered only once no conflict is open. A decision moves focus
-  to the next conflict's "Keep mine", then to Publish (`useDecisionFocus`). Once every conflict is decided and
-  no item was removed, the review goes away. Publish is disabled while a conflict is open.
+  to the next conflict's "Keep mine", then to Publish (`useDecisionFocus`). Once every
+  conflict is decided and no item was removed, the review goes away, and focus falls
+  back to the page. Publish is disabled while a conflict is open.
 
 - **The rules** (`editing/conflicts.ts`, pure): `openConflicts(conflicts, changes)`
   lists each conflict whose field is still pending with a base other than the co-lead's
@@ -131,19 +132,22 @@ S7 extends the accessibility, focus and structure specs.
   from the co-lead's text, or a read that finds the field already holding the change
   each close one. `keepMine` re-bases the pending change onto the co-lead's text (D3).
   `takeTheirs` drops it. `discardItems` drops the entries of a refusal's `missingItems`,
-  matched as sent, or by ID once a read has moved them.
+  matched by the item they were loaded with (which an edit made while publishing
+  keeps), or by ID once a read has moved them.
 - **The store** (`pending-changes-store.ts`): a `refused` notice carries `conflicts`
   and `removed` (the loaded titles). Every change to the store drops the conflicts no
   longer open, and then the notice if nothing is left, so a later edit of a decided
-  field cannot reopen its conflict against text a co-lead has since replaced. `finishPublish(id, notice | null)` gains the
-  `null` case. The new `removeRoadmap(id)` drops the roadmap's changes and notice and
-  records it in the snapshot's `removed` set. The new `restoreRoadmaps(ids)` takes a
-  listed roadmap back out of `removed`.
+  field cannot reopen its conflict against text a co-lead has since replaced.
+  `finishPublish(id, notice | null)` gains the `null` case. The new `removeRoadmap(id)`
+  drops the roadmap's changes and notice and records it in the snapshot's `removed`
+  set. The new `restoreRoadmaps(ids)` takes a listed roadmap back out of `removed`.
 - **Publishing** (`use-publish.ts`): before the re-read, a refusal writes the
   co-lead's text it found into the loaded roadmap and items (`withCurrentRoadmapText`,
-  `withCurrentItemText`, through `usePublishRoadmapChanges`'s `onRefused`), keeping
-  their age, so "Use theirs" shows their text even if that read fails. `refused` then
-  discards the removed items' changes and sets the review's notice. `roadmap-not-found` calls `removeRoadmap` and shows no notice,
+  `withCurrentItemText`, passed as `usePublishRoadmapChanges`'s `currentText`), keeping
+  their age, so "Use theirs" shows their text even if that read fails. Only a field
+  still holding the text the publish was checked against is written, so a newer read
+  is never overwritten. `refused` then discards the removed items' changes and sets the
+  review's notice. `roadmap-not-found` calls `removeRoadmap` and shows no notice,
   because the page says so instead.
 - **Reads** (`pending-changes-provider.tsx`): each successful list read restores the
   roadmaps it lists, reconciles them, and calls `removeRoadmap` for any pending roadmap

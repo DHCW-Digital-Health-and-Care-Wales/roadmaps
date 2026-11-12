@@ -9,6 +9,8 @@
 import {
   EDITABLE_ITEM_FIELDS,
   EDITABLE_ROADMAP_FIELDS,
+  itemText,
+  roadmapText,
   type FieldChange,
   type FieldConflict,
   type ItemChanges,
@@ -159,7 +161,8 @@ export function takeTheirs(
 
 /**
  * `changes` without the entries of `missing`, items a publish could no longer find: each
- * as sent, or, once a read has moved it, by its ID.
+ * by the item it was loaded with, which edits made while publishing keep, or, once a
+ * read has moved it, by its ID.
  */
 export function discardItems(
   changes: RoadmapChanges,
@@ -168,7 +171,7 @@ export function discardItems(
   const gone = (entry: ItemChanges) =>
     missing.some(
       (each) =>
-        each === entry ||
+        each.item === entry.item ||
         (each.item.id !== null && each.item.id === entry.item.id),
     )
   const items = changes.items.filter((entry) => !gone(entry))
@@ -180,14 +183,19 @@ function currentOf(conflict: FieldConflict): FieldChange {
   return { base: conflict.base, value: conflict.current }
 }
 
-/** `roadmap` showing the English `conflicts` found a co-lead wrote to its own text. */
+/**
+ * `roadmap` showing the English `conflicts` found a co-lead wrote to its own text, in each
+ * field still holding the text the publish was checked against: a field read again since
+ * already holds what a co-lead wrote, perhaps later still.
+ */
 export function withCurrentRoadmapText(
   roadmap: Roadmap,
   conflicts: readonly FieldConflict[],
 ): Roadmap {
   const fields = Object.fromEntries(
     conflicts.flatMap((conflict) =>
-      conflict.subject === "roadmap"
+      conflict.subject === "roadmap" &&
+      roadmapText(roadmap, conflict.field) === conflict.base
         ? [[conflict.field, currentOf(conflict)]]
         : [],
     ),
@@ -196,8 +204,8 @@ export function withCurrentRoadmapText(
 }
 
 /**
- * `items`, as they were read before the publish `conflicts` came from, showing the
- * English those conflicts found a co-lead wrote to them.
+ * `items` showing the English `conflicts` found a co-lead wrote to them, in each field
+ * still holding the text the publish was checked against, as `withCurrentRoadmapText`.
  */
 export function withCurrentItemText(
   items: readonly RoadmapItem[],
@@ -215,7 +223,11 @@ export function withCurrentItemText(
     if (!entry) return item
     const fields = Object.fromEntries(
       itemConflicts
-        .filter((conflict) => sameTarget(conflict.item, entry))
+        .filter(
+          (conflict) =>
+            sameTarget(conflict.item, entry) &&
+            itemText(item, conflict.field) === conflict.base,
+        )
         .map((conflict) => [conflict.field, currentOf(conflict)]),
     )
     return applyItemChanges(item, { ...entry, fields })

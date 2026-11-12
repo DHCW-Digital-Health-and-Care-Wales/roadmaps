@@ -190,7 +190,8 @@ export function createPendingChangesStore(): PendingChangesStore {
 /**
  * `notices` without each refusal's conflicts that are decided, however (a decision in the
  * review, Undo, a discard or a read), so a later edit of the field cannot reopen one; a
- * refusal left with nothing to say is gone. `notices` itself when nothing changes.
+ * refusal left with nothing to say is gone. `notices` itself when nothing changes. What
+ * is still open is `openConflicts`' rule, which the review shows by too.
  */
 function retireDecided(
   notices: ReadonlyMap<string, PublishNotice>,

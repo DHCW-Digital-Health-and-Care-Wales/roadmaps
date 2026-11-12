@@ -66,8 +66,8 @@ export function RoadmapPublishing({ roadmap }: RoadmapPublishingProps) {
     [store, roadmap.id],
   )
 
-  // Once every field is decided, focus goes to Publish, or to the notice if nothing is
-  // left to publish.
+  // Once every field is decided, focus goes to Publish, or to the review while it still
+  // names removed items; with neither left, the shell moves it to the page.
   const publishButton = useRef<HTMLButtonElement>(null)
   const focus = useDecisionFocus(
     open,

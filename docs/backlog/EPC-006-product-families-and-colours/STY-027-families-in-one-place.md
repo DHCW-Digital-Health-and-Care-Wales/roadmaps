@@ -126,6 +126,9 @@ is today and as the public site lists it under "Other roadmaps"
   `Category` text shows in both languages (S6), over keeping the catalogue's six as a
   fallback, because the owner asked for minimal handling and a second copy of the list
   is what this epic removes. A category not in the list is no category (S10), as today.
+- **D6** (agent, 2026-11-12, review): S1's "and the public site" holds only once the
+  rows are written, so this story holds S1 for the editor's list; the public site's half
+  is held by STY-028 S2, STY-029 S4 and STY-030 S1, which write the copied cells.
 
 ## Starting point
 

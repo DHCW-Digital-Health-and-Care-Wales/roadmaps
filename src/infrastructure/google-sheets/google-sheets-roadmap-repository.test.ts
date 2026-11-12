@@ -1317,6 +1317,23 @@ describe("GoogleSheetsRoadmapRepository", () => {
         expect(spreadsheet.tabs()[0]?.rows[1]?.[7]).toBe("#325083")
       })
 
+      it("writes no blank over a trailing cell Google leaves out of the row", async () => {
+        const before = listTabs()
+        const spreadsheet = serveStatefulSpreadsheet(before)
+
+        await httpRepository().publishRoadmapChanges("producta", {
+          roadmap: { familyId: { base: "fc29g5b9", value: "" } },
+          items: [],
+        })
+
+        // Family (cy), column 13, is a trailing blank the row's array leaves out.
+        expect(indexChanges(before, spreadsheet.tabs())).toEqual([
+          "Roadmaps!R1C16 Category ID",
+          "Roadmaps!R2C5 ",
+          "Roadmaps!R2C16 khzpchkh",
+        ])
+      })
+
       it("writes the chosen category's ID and English name, and blanks both for none (S3)", async () => {
         const before = listTabs(withIds("fc29g5b9", "khzpchkh"))
         const spreadsheet = serveStatefulSpreadsheet(before)

@@ -388,7 +388,13 @@ function quoteTabTitle(title: string): string {
 }
 
 /** The roadmap as the publish plan needs it. */
-function snapshotOf({ entry, items, itemTab }: RoadmapRead): RoadmapSnapshot {
+function snapshotOf({
+  entry,
+  items,
+  itemTab,
+  families,
+  categories,
+}: RoadmapRead): RoadmapSnapshot {
   const idColumn = items.columns.get("Item ID")
   return {
     roadmap: entry.roadmap,
@@ -407,6 +413,10 @@ function snapshotOf({ entry, items, itemTab }: RoadmapRead): RoadmapSnapshot {
             return id === "" ? [] : [id]
           }),
     ),
+    missingLists: new Set([
+      ...(families === null ? (["familyId"] as const) : []),
+      ...(categories === null ? (["categoryId"] as const) : []),
+    ]),
   }
 }
 
@@ -499,8 +509,7 @@ class IndexRowWriter {
   }
 
   #write(column: RoadmapIndexWriteColumn, value: string): void {
-    const at = this.#read.index.columns.get(column)
-    if (at === undefined ? value === "" : this.#cells[at] === value) return
+    if (this.#cell(column) === value) return
     this.#index.write(this.#read.entry.row, column, value)
   }
 

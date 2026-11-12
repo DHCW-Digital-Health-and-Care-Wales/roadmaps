@@ -24,6 +24,7 @@ function snapshotOf(
     items,
     repeatedIds: new Set(),
     takenIds: new Set([...takenIds, ...items.flatMap(({ id }) => id ?? [])]),
+    missingLists: new Set(),
   }
 }
 
@@ -245,6 +246,20 @@ describe("planRoadmapPublish", () => {
       })
     })
   })
+
+  it.each(["familyId", "categoryId"] as const)(
+    "rejects a %s chosen while its list is missing, even No family or category",
+    (field) => {
+      const snapshot = { ...snapshotOf([]), missingLists: new Set([field]) }
+
+      expect(() =>
+        planRoadmapPublish(
+          { roadmap: { [field]: { base: "fc29g5b9", value: "" } }, items: [] },
+          snapshot,
+        ),
+      ).toThrow(expect.objectContaining({ kind: "invalid-data" }))
+    },
+  )
 
   it("rejects a blank title, which the editor never sends", () => {
     let error: unknown

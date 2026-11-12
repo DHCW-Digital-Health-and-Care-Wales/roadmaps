@@ -243,6 +243,7 @@ describe("reconcile", () => {
       items: [copy, { ...loaded, id: null }],
       repeatedIds: new Set(["sharedid"]),
       takenIds: new Set(["sharedid"]),
+      missingLists: new Set(),
     })
     expect(plan).toMatchObject({
       kind: "settled",

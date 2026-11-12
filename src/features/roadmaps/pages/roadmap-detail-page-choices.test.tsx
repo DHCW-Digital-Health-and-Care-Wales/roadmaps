@@ -121,6 +121,27 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
     expect(write).not.toHaveBeenCalled()
   })
 
+  it("reads the lists again on Refresh while About is open", async () => {
+    const repository = repositoryWith()
+    const { user, form } = await renderPage(repository)
+    await select(form, "Family")
+    const workforce: Family = {
+      id: "x7k2m9qp",
+      name: { en: "Workforce", cy: "Gweithlu" },
+      colour: "#5f3d8a",
+    }
+    vi.spyOn(repository, "listFamilies").mockResolvedValue([
+      ...families,
+      workforce,
+    ])
+
+    await user.click(main().getByRole("button", { name: "Refresh" }))
+
+    await vi.waitFor(async () => {
+      expect(optionsOf(await select(form, "Family"))).toContain("Workforce")
+    })
+  })
+
   it("offers the categories in the list's order after No category; nothing can be typed (S3)", async () => {
     const { user, form } = await renderPage(repositoryWith())
 

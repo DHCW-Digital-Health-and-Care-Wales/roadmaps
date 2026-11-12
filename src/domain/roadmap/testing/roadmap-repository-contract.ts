@@ -703,6 +703,26 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
         expect(await repository.listRoadmaps()).toStrictEqual(roadmaps)
       })
 
+      it.each([
+        ["family", { families: null }, { familyId: change("fc29g5b9", "") }],
+        [
+          "category",
+          { categories: null },
+          { categoryId: change("khzpchkh", "") },
+        ],
+      ] as const)(
+        "rejects with invalid-data, writing nothing, for no %s while its list is missing",
+        async (_, options, roadmap) => {
+          const repository = setup.withRoadmaps(fixtures, itemFixtures, options)
+          const before = await repository.listRoadmaps()
+
+          await expect(
+            repository.publishRoadmapChanges("producta", roadmapOnly(roadmap)),
+          ).rejects.toMatchObject({ kind: "invalid-data" })
+          expect(await repository.listRoadmaps()).toStrictEqual(before)
+        },
+      )
+
       it("rejects with invalid-data, writing nothing, for a choice no longer listed", async () => {
         const repository = setup.withRoadmaps(fixtures, itemFixtures)
 

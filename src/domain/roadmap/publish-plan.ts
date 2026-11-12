@@ -16,10 +16,12 @@ import {
   type EditableRoadmapField,
   type FieldChange,
   type FieldConflict,
+  isChoiceField,
   type ItemChanges,
   itemText,
   type PublishOutcome,
   type RoadmapChanges,
+  type RoadmapChoiceField,
   roadmapValue,
 } from "./roadmap-changes"
 import type { RoadmapItem } from "./roadmap-item"
@@ -33,6 +35,11 @@ export interface RoadmapSnapshot {
   repeatedIds: ReadonlySet<string>
   /** Every ID the roadmap's rows hold, kept or not: a new ID is none of these. */
   takenIds: ReadonlySet<string>
+  /**
+   * The family or category whose list the data source doesn't have: the row's value
+   * for it can't be told from none, so no choice of it is published (ADR-013).
+   */
+  missingLists: ReadonlySet<RoadmapChoiceField>
 }
 
 /**
@@ -62,7 +69,8 @@ const REQUIRED_FIELDS: ReadonlySet<string> = new Set(["title"])
  * Decides what publishing `changes` over `snapshot` (`null`: the roadmap is no longer
  * listed) writes: each pending value that differs from the current one, unless a
  * co-lead changed it too, plus an ID for every item without one. Values are trimmed.
- * Throws `AppError('unknown')` for a blank title, which callers never send.
+ * Throws `AppError('unknown')` for a blank title, which callers never send, and
+ * `AppError('invalid-data')` for a family or category chosen while its list is missing.
  */
 export function planRoadmapPublish(
   changes: RoadmapChanges,
@@ -80,6 +88,11 @@ export function planRoadmapPublish(
   for (const field of EDITABLE_ROADMAP_FIELDS) {
     const pending = pendingValue(field, changes.roadmap[field])
     if (pending === null) continue
+    if (isChoiceField(field) && snapshot.missingLists.has(field)) {
+      throw new AppError("invalid-data", {
+        message: `The ${field} can't be published without its list`,
+      })
+    }
     const current = roadmapValue(snapshot.roadmap, field)
     if (current === pending.value) continue
     if (current !== pending.base) {

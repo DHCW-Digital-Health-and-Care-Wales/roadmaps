@@ -118,6 +118,10 @@ export function createInMemoryRoadmapRepository(
         ),
       ),
       takenIds: new Set(stored.flatMap(({ id }) => (id === null ? [] : [id]))),
+      missingLists: new Set([
+        ...(lists.families === null ? (["familyId"] as const) : []),
+        ...(lists.categories === null ? (["categoryId"] as const) : []),
+      ]),
     }
   }
 
@@ -134,19 +138,25 @@ export function createInMemoryRoadmapRepository(
 
   const apply = (roadmap: Roadmap, writes: PublishWrites) => {
     const stored = storedItems(roadmap.id)
-    // Looked up first, so an unlisted choice fails the publish before anything is written.
-    const families = writes.roadmap.map(({ field, value }) =>
-      field === "familyId" ? listed(lists.families, value) : null,
-    )
-    const categories = writes.roadmap.map(({ field, value }) =>
-      field === "categoryId" ? listed(lists.categories, value) : null,
-    )
-    for (const [i, { field, value }] of writes.roadmap.entries()) {
-      if (field === "familyId") setFamily(roadmap, families[i] ?? null)
-      else if (field === "categoryId")
-        setCategory(roadmap, categories[i] ?? null)
-      else setRoadmapText(roadmap, field, value)
-    }
+    // Each resolved first, so an unlisted choice fails the publish before anything is written.
+    const setters = writes.roadmap.map(({ field, value }) => {
+      if (field === "familyId") {
+        const family = listed(lists.families, value)
+        return () => {
+          setFamily(roadmap, family)
+        }
+      }
+      if (field === "categoryId") {
+        const category = listed(lists.categories, value)
+        return () => {
+          setCategory(roadmap, category)
+        }
+      }
+      return () => {
+        setRoadmapText(roadmap, field, value)
+      }
+    })
+    for (const set of setters) set()
     for (const { index, field, value } of writes.items) {
       const item = stored[index]
       if (item) setItemText(item, field, value)

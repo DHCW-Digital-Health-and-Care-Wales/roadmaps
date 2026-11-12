@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 
 import type { Category } from "@/domain/roadmap/category"
 import type { Family } from "@/domain/roadmap/family"
@@ -25,11 +25,13 @@ export type RoadmapListsReading = Readonly<Record<keyof RoadmapLists, boolean>>
 
 /**
  * The family and category lists, fetched while connected and only once `needed`, so a
- * roadmap's page spends no reads on them until a choice is made or shown. Refetching
- * reads them again only once needed.
+ * roadmap's page spends no reads on them until a choice is made or shown: this is the
+ * only gate on those reads (ADR-011). Refetching reads them again for every part of
+ * the page that needs them now, and for none if none does.
  */
 export function useRoadmapLists(needed: boolean) {
   const repository = useRoadmapRepository()
+  const queryClient = useQueryClient()
   const familyOptions = useEnabledWhileConnected(
     familyListQueryOptions(repository),
   )
@@ -52,8 +54,10 @@ export function useRoadmapLists(needed: boolean) {
     families: families.isFetching && families.data === undefined,
     categories: categories.isFetching && categories.data === undefined,
   }
-  const refetch = async () => {
-    if (needed) await Promise.all([families.refetch(), categories.refetch()])
-  }
+  const refetch = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: familyOptions.queryKey }),
+      queryClient.invalidateQueries({ queryKey: categoryOptions.queryKey }),
+    ])
   return { lists, reading, refetch }
 }

@@ -8,7 +8,12 @@ import dhcwLogo from "@/assets/dhcw/nhsw-logo.svg"
 import { PageContainer } from "./page-container"
 
 export interface AppHeaderProps {
-  /** Controls on the right: status, preferences and the auth action. */
+  /**
+   * Controls on the right: status, preferences and the auth action. A button here takes
+   * `variant="header"` (the default navy vanishes on the band). The row is tight in
+   * Cymraeg from 375px to `lg`, which `tests/e2e/shell.spec.ts` guards: a wider control
+   * truncates the service name.
+   */
   actions: ReactNode
 }
 

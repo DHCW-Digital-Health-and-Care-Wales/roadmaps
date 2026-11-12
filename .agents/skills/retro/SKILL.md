@@ -1,6 +1,6 @@
 ---
 name: retro
-description: Run a retrospective once a delivered PR is raised (or merged, when merging was requested, or blocked), or on explicit request, and implement improvements to future coding runs in one separate PR. Retrospective PRs follow the same PR policy as the primary (left open for the owner unless merging was requested) and get no retrospective of their own.
+description: Run a retrospective after a delivered PR is raised, merged or blocked, or on request, and implement improvements to future agent runs in one separate PR, which gets no retrospective of its own.
 ---
 
 # Session retrospective
@@ -45,14 +45,10 @@ Trace each piece of friction to its cause, checking these categories:
   sharpen a general lens, a class of defect that recurs across many kinds of
   diff; one review's miss is evidence for a lens, never a check of its own.
 - **Agent guides**: would a rule have prevented the friction? Give it the
-  first home that holds it: a failing check (above), a comment at the one code
-  site, `docs/backlog/<epic-slug>/delivery-notes.md` for a rule that holds
-  only while that epic is in delivery, then the `AGENTS.md` along the changed
-  path's directory ancestry only for a rule that passes the authoring guide's
-  recur bar, replacing or sharpening a line there. A one-off gotcha for the
-  next agent belongs in the root `AGENTS.md` Handoff log entry, which delivery
-  already writes. Most retros end with no guide edit. Delete any guide line
-  the session showed stale, wrong or ignored.
+  first rung that holds it on the authoring guide's _Where it goes_ ladder; a
+  guide line must pass its recur bar and replace or sharpen a line there. Most
+  retros end with no guide edit. Delete any guide line the session showed
+  stale, wrong or ignored.
 - **Tool economy**: were tool calls expensive or noisy (large dumps, repeated
   polling, work a cheaper delegated worker should have done)?
 - **No-ops**: which instructions did not change the agent's behaviour?

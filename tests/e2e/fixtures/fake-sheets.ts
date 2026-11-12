@@ -86,7 +86,7 @@ export function withRoadmapIndex(
   return [{ title: index?.title ?? "Roadmaps", rows }, ...tabs]
 }
 
-/** A request the fake answers: the tab list, one tab's values, or a write (STY-023). */
+/** A request the fake answers: the tab list, one tab's values, or a write. */
 type SheetsRequest =
   | { kind: "metadata" }
   | { kind: "values"; tab: FakeTab }
@@ -139,7 +139,7 @@ export class FakeSheets {
   /**
    * A co-lead's edit straight to the spreadsheet, seen by later reads: the cell under
    * `header` in the row of `tab` whose first cell is `key` (an item's title, or a
-   * roadmap's `Sheet`), or that whole row deleted when `value` is `null` (STY-026).
+   * roadmap's `Sheet`), or that whole row deleted when `value` is `null`.
    */
   coLead(tab: string, key: string, header: string, value: string | null): void {
     this.spreadsheet = this.spreadsheet.map((sheet) => {

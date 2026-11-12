@@ -6,19 +6,19 @@ spec or plan outside `docs/`.
 
 ## Layout
 
-| Path                  | What goes in it                                                                    |
-| --------------------- | ---------------------------------------------------------------------------------- |
-| `GLOSSARY.md`         | The domain vocabulary (`.agents/skills/domain-modeling/GLOSSARY-FORMAT.md`)        |
-| `adr/`                | One decision per `ADR-<nnn>-<kebab-title>.md`, indexed in `adr/README.md`          |
-| `backlog/README.md`   | The index: epics with status, then standalone chores and defects                   |
-| `backlog/<epic>/`     | An epic `EPC-<nnn>-<kebab-title>/`: its `README.md` and live stories `STY-<nnn>-…` |
-| `backlog/chores/`     | Live chores `CHO-<nnn>-…`: work with no user-facing change                         |
-| `backlog/defects/`    | Live defects `DEF-<nnn>-…`                                                         |
-| `backlog/_archive/`   | Terminal records, mirroring the live tree (`<epic>/`, `chores/`, `defects/`)       |
-| `backlog/_templates/` | Templates for every record type, and the status lifecycle                          |
-| `backlog/personas/`   | Who the product is for, one file per persona; read before UX, copy or a new story  |
-| `analysis/`           | Investigations written to reach a decision; `delivery-runs/` has run notes         |
-| `operations/`         | Runbooks and authoring policy for what a person or agent does by hand              |
+| Path                  | What goes in it                                                                                  |
+| --------------------- | ------------------------------------------------------------------------------------------------ |
+| `GLOSSARY.md`         | The domain vocabulary (`.agents/skills/domain-modeling/GLOSSARY-FORMAT.md`)                      |
+| `adr/`                | One decision per `ADR-<nnn>-<kebab-title>.md`, indexed in `adr/README.md`                        |
+| `backlog/README.md`   | The index: epics with status, then standalone chores and defects                                 |
+| `backlog/<epic>/`     | An epic `EPC-<nnn>-<kebab-title>/`: `README.md`, `delivery-notes.md`, live stories `STY-<nnn>-…` |
+| `backlog/chores/`     | Live chores `CHO-<nnn>-…`: work with no user-facing change                                       |
+| `backlog/defects/`    | Live defects `DEF-<nnn>-…`                                                                       |
+| `backlog/_archive/`   | Terminal records, mirroring the live tree (`<epic>/`, `chores/`, `defects/`)                     |
+| `backlog/_templates/` | Templates for every record type, and the status lifecycle                                        |
+| `backlog/personas/`   | Who the product is for, one file per persona; read before UX, copy or a new story                |
+| `analysis/`           | Investigations written to reach a decision; `delivery-runs/` has run notes                       |
+| `operations/`         | Runbooks and authoring policy for what a person or agent does by hand                            |
 
 Put nothing else in the root of `docs/`. A record's ID is a prefix, a dash and
 three digits: `EPC` epic, `STY` story, `DEF` defect, `CHO` chore (e.g.
@@ -58,10 +58,15 @@ the next free number across the live tree, `_archive/` and open PRs' files
 - A finding a delivery declines to fix, where the owner may later pay the cost,
   becomes a chore with Status `Proposed`. An improvement idea nobody has
   accepted becomes a record with Status `Needs grilling`.
-- An epic in delivery may keep `delivery-notes.md` beside its `README.md` for
-  rules and gotchas that hold only until it is delivered. It moves to
-  `_archive/` with the epic; a note that proves repo-wide moves to its guide
-  or code site.
+- **`delivery-notes.md`** beside an epic's `README.md` carries what only
+  agents working on that epic need: a gotcha the next story will hit, a check
+  its reviewers make, a fixture or seam its stories share. The first delivery
+  with such a note creates it; every delivery agent and reviewer on the epic
+  reads it. Keep each note a short bullet, current, not a story's history
+  (that is the record's Delivery and its PR). When the epic closes, move each
+  note that holds repo-wide to its narrowest home
+  (`docs/operations/authoring-agent-instructions.md`, _Where it goes_), then
+  archive the file with the epic, in the delivery that archives it.
 - The bootstrap stories in `_archive/EPC-001-bootstrap/` predate the templates and keep
   their legacy format.
 

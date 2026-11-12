@@ -63,7 +63,7 @@ jobs:
         run: |
           expected="${PAGES_BASE_PATH}/assets/"
           if ! grep -qF "src=\"${expected}" dist/index.html; then
-            echo "::error title=Base path mismatch::GitHub Pages serves this site from '${PAGES_BASE_PATH}/', but the build does not load its assets from '${expected}'. For a custom domain, set the PAGES_CUSTOM_DOMAIN repository variable (see README)."
+            echo "::error title=Base path mismatch::GitHub Pages serves this site from '${PAGES_BASE_PATH}/', but the build does not load its assets from '${expected}'. For a custom domain, set the PAGES_CUSTOM_DOMAIN repository variable (see docs/operations/github-pages-deployment.md)."
             exit 1
           fi
       # Named per attempt: deploy-pages refuses to choose between same-named artifacts,

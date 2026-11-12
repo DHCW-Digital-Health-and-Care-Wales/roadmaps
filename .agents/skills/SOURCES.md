@@ -6,15 +6,14 @@ These skills and their reference files are imported from this revision and
 formatted with the repository's Prettier configuration. The upstream MIT
 license is preserved in `mattpocock-LICENSE`.
 
-| Skill                           | Source directory                                                    |
-| ------------------------------- | ------------------------------------------------------------------- |
-| `codebase-design`               | `skills/engineering/codebase-design`                                |
-| `domain-modeling`               | `skills/engineering/domain-modeling`                                |
-| `improve-codebase-architecture` | `skills/engineering/improve-codebase-architecture`                  |
-| `retro`                         | `skills/engineering/retro`                                          |
-| `writing-for-agents`            | `skills/productivity/writing-for-agents`                            |
-| `grilling`                      | `skills/productivity/grilling`                                      |
-| `grill-me`                      | `skills/productivity/grill-me` (compatibility alias for `grilling`) |
+| Skill                           | Source directory                                   |
+| ------------------------------- | -------------------------------------------------- |
+| `codebase-design`               | `skills/engineering/codebase-design`               |
+| `domain-modeling`               | `skills/engineering/domain-modeling`               |
+| `improve-codebase-architecture` | `skills/engineering/improve-codebase-architecture` |
+| `retro`                         | `skills/engineering/retro`                         |
+| `writing-for-agents`            | `skills/productivity/writing-for-agents`           |
+| `grilling`                      | `skills/productivity/grilling`                     |
 
 `shadcn` and `playwright-cli` come from their tools' own distributions (the
 shadcn CLI and `@playwright/cli`; revisions unrecorded). `implement-story`,

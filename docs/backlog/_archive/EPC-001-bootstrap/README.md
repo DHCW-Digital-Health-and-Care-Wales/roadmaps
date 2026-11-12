@@ -6,8 +6,9 @@ The first build of Product Roadmaps: a static React SPA on GitHub Pages that con
 Google account and lists the roadmaps in one spreadsheet. Its stories were delivered
 sequentially, one commit each, before the current one-record-per-PR process; they keep
 their original format, except that their IDs were renamed from `S01`–`S09` to
-`STY-001`–`STY-009` when the backlog adopted prefixed IDs. The root `AGENTS.md` Handoff log records each story's contract for
-later work.
+`STY-001`–`STY-009` when the backlog adopted prefixed IDs. The root `AGENTS.md` Handoff log recorded each story's contract for
+later work; it was retired in favour of code comments, ADRs and runbooks, and survives
+in history (`git show c2f75db:AGENTS.md`).
 
 ## Stories
 

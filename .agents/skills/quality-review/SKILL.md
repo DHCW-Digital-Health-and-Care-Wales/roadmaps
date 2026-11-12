@@ -1,6 +1,6 @@
 ---
 name: quality-review
-description: Review a diff, branch or PR for code quality, not correctness — layering, naming, readability, duplication, maintainability and conformance to this repository's AGENTS.md guides and ADRs. Use for a "quality review", "clean code review" or "maintainability review", and before raising a PR in the lanes implement-story's delegation reference sets. Not for bugs — that is /code-review.
+description: Review a diff, branch or PR for code quality, not correctness — layering, naming, readability, duplication, maintainability and conformance to this repository's AGENTS.md guides and ADRs. Use for a quality, clean-code or maintainability review, and before raising a PR. Bugs belong to code-review.
 user-invocable: true
 ---
 
@@ -41,7 +41,8 @@ report in the conversation only.
 1. **Diff and rules.** Pin the scope as `code-review`'s _Pin the scope_ step
    does, on the same snapshot. Read the root `AGENTS.md` and the `AGENTS.md`
    along each changed path's directory ancestry (`tests/e2e/AGENTS.md`,
-   `docs/AGENTS.md`), plus the binding ADRs; cite the rule by file and line,
+   `docs/AGENTS.md`), the epic's `delivery-notes.md` when the change belongs
+   to an epic, and the binding ADRs; cite the rule by file and line,
    never from memory. A docs-only diff is reviewed against `docs/AGENTS.md`
    (the records guide). Repo rules outrank generic advice.
 2. **Context.** Open the story, defect or chore (`docs/backlog/`) the change
@@ -83,7 +84,7 @@ report in the conversation only.
    - **Dead or false text.** No-op assignments, unused parameters, exports or
      branches, suppressions with no reason, comments that went stale,
      including "left for S0n" or "TODO" after the story closed. Beyond the
-     diff: README, ADRs, `AGENTS.md` guides, the Handoff log, workflows,
+     diff: README, ADRs, `AGENTS.md` guides, `delivery-notes.md`, workflows,
      scripts and config that a changed command, key, route or default now
      makes false; grep for the old form.
    - **Inconsistent failure.** A helper returning `null` where its sibling
@@ -106,8 +107,9 @@ report in the conversation only.
      file must pass `docs/operations/authoring-agent-instructions.md`'s test
      and recur bar (and the `writing-for-agents` skill), and replace or sharpen
      an existing line, or its commit or PR body says why the file grows. Flag
-     an incident narrative or story id used as the reason for a rule; the
-     Handoff log is where per-delivery history belongs.
+     an incident narrative or record ID used as the reason for a rule:
+     per-delivery history belongs in the record's Delivery and the PR, an
+     epic-only rule in the epic's `delivery-notes.md`.
    - **Change shape.** Scope the story does not reflect (name it so the story
      is updated); a mechanical rename mixed into logic; unrelated refactors;
      generated files (`routeTree.gen.ts`, lockfile) changed without their

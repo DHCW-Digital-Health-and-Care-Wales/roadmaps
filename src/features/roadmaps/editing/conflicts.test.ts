@@ -203,15 +203,44 @@ describe("withCurrentRoadmapText", () => {
     const roadmap = createTestRoadmap("producta", "Product A", {
       vision: { en: "A vision", cy: "Gweledigaeth" },
     })
-    const shown = withCurrentRoadmapText(roadmap, [
-      visionConflict,
-      conflictOn(first, "title", "First, theirs"),
-    ])
+    const shown = withCurrentRoadmapText(
+      roadmap,
+      [visionConflict, conflictOn(first, "title", "First, theirs")],
+      roadmap,
+    )
 
     expect(shown).toEqual({
       ...roadmap,
       vision: { en: "Their vision", cy: "Gweledigaeth" },
     })
+  })
+
+  it("shows it over text no read during the publish changed, though not the text edited from", () => {
+    const roadmap = createTestRoadmap("producta", "Product A", {
+      vision: { en: "Their earlier vision", cy: "" },
+    })
+
+    expect(
+      withCurrentRoadmapText(roadmap, [visionConflict], { ...roadmap }).vision
+        ?.en,
+    ).toBe("Their vision")
+  })
+
+  it("leaves a field a read during the publish changed, as that read may be newer", () => {
+    const before = createTestRoadmap("producta", "Product A", {
+      vision: { en: "A vision", cy: "" },
+    })
+    const roadmap = {
+      ...before,
+      vision: { en: "Their later vision", cy: "" },
+    }
+
+    expect(withCurrentRoadmapText(roadmap, [visionConflict], before)).toBe(
+      roadmap,
+    )
+    expect(withCurrentRoadmapText(roadmap, [visionConflict], undefined)).toBe(
+      roadmap,
+    )
   })
 })
 
@@ -222,12 +251,16 @@ describe("withCurrentItemText", () => {
       second.item,
       createTestRoadmapItem("Third", { id: "third" }),
     ]
-    const shown = withCurrentItemText(items, [
-      visionConflict,
-      conflictOn(second, "title", "Second, theirs"),
-      conflictOn(first, "title", "First, theirs"),
-      conflictOn(first, "description", "Theirs"),
-    ])
+    const shown = withCurrentItemText(
+      items,
+      [
+        visionConflict,
+        conflictOn(second, "title", "Second, theirs"),
+        conflictOn(first, "title", "First, theirs"),
+        conflictOn(first, "description", "Theirs"),
+      ],
+      items,
+    )
 
     expect(shown.map(({ title }) => title.en)).toEqual([
       "First, theirs",
@@ -236,5 +269,28 @@ describe("withCurrentItemText", () => {
     ])
     expect(shown[0]?.description?.en).toBe("Theirs")
     expect(shown[2]).toBe(items[2])
+  })
+
+  it("leaves a field a read during the publish changed, as that read may be newer", () => {
+    const items = [
+      {
+        ...first.item,
+        title: { ...first.item.title, en: "First, theirs later" },
+      },
+      second.item,
+    ]
+    const shown = withCurrentItemText(
+      items,
+      [
+        conflictOn(first, "title", "First, theirs"),
+        conflictOn(first, "description", "Theirs"),
+        conflictOn(second, "title", "Second, theirs"),
+      ],
+      [first.item],
+    )
+
+    expect(shown[0]?.title.en).toBe("First, theirs later")
+    expect(shown[0]?.description?.en).toBe("Theirs")
+    expect(shown[1]).toBe(items[1])
   })
 })

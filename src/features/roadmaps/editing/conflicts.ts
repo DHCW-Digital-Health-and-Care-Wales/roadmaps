@@ -13,6 +13,8 @@ import {
   type FieldConflict,
   type ItemChanges,
   type RoadmapChanges,
+  itemText,
+  roadmapText,
 } from "@/domain/roadmap/roadmap-changes"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
@@ -181,14 +183,24 @@ function currentOf(conflict: FieldConflict): FieldChange {
   return { base: conflict.base, value: conflict.current }
 }
 
-/** `roadmap` showing the English `conflicts` found a co-lead wrote to its own text. */
+/**
+ * `roadmap` showing the English `conflicts` found a co-lead wrote to its own text, in
+ * each field that holds what it did in `since`, the roadmap as read when the publish
+ * began. A field a read during the publish changed is left as that read found it, as it
+ * may be newer than the publish's (DEF-003). With nothing read when it began, `since` is
+ * `undefined` and nothing is patched.
+ */
 export function withCurrentRoadmapText(
   roadmap: Roadmap,
   conflicts: readonly FieldConflict[],
+  since: Roadmap | undefined,
 ): Roadmap {
   const fields = Object.fromEntries(
     conflicts.flatMap((conflict) =>
-      conflict.subject === "roadmap"
+      conflict.subject === "roadmap" &&
+      since &&
+      roadmapText(roadmap, conflict.field) ===
+        roadmapText(since, conflict.field)
         ? [[conflict.field, currentOf(conflict)]]
         : [],
     ),
@@ -196,26 +208,54 @@ export function withCurrentRoadmapText(
   return applyRoadmapChanges(roadmap, { roadmap: fields, items: [] })
 }
 
-/** `items` showing the English `conflicts` found a co-lead wrote to them. */
+/**
+ * `items` showing the English `conflicts` found a co-lead wrote to them, in each field
+ * that holds what it did in `since`, the items as read when the publish began, as
+ * `withCurrentRoadmapText` does; an item not in `since` is left as it is.
+ */
 export function withCurrentItemText(
   items: readonly RoadmapItem[],
   conflicts: readonly FieldConflict[],
+  since: readonly RoadmapItem[] | undefined,
 ): RoadmapItem[] {
   const itemConflicts = conflicts.flatMap((conflict) =>
     conflict.subject === "item" ? [conflict] : [],
   )
-  const matched = matchItemChanges(items, {
+  const conflicted: RoadmapChanges = {
     roadmap: {},
     items: itemConflicts.map((conflict) => conflict.item),
-  })
+  }
+  const before = itemsByEntry(since ?? [], conflicted)
+  const matched = matchItemChanges(items, conflicted)
   return items.map((item, index) => {
     const entry = matched.get(index)
-    if (!entry) return item
+    const was = entry && before.get(entry)
+    if (!entry || !was) return item
     const fields = Object.fromEntries(
       itemConflicts
-        .filter((conflict) => sameTarget(conflict.item, entry))
+        .filter(
+          (conflict) =>
+            sameTarget(conflict.item, entry) &&
+            itemText(item, conflict.field) === itemText(was, conflict.field),
+        )
         .map((conflict) => [conflict.field, currentOf(conflict)]),
     )
     return applyItemChanges(item, { ...entry, fields })
   })
+}
+
+/**
+ * Each entry of `changes` with the item of `items` it matches. `matchItemChanges` keeps
+ * the entry objects, so an entry looks up the same edit's item in another read.
+ */
+function itemsByEntry(
+  items: readonly RoadmapItem[],
+  changes: RoadmapChanges,
+): ReadonlyMap<ItemChanges, RoadmapItem> {
+  return new Map(
+    [...matchItemChanges(items, changes)].flatMap(([index, entry]) => {
+      const item = items[index]
+      return item ? [[entry, item] as const] : []
+    }),
+  )
 }

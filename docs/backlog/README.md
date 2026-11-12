@@ -29,10 +29,11 @@ Status token.
 
 ## Defects
 
-| ID                                                                 | Defect                                                                | Status       |
-| ------------------------------------------------------------------ | --------------------------------------------------------------------- | ------------ |
-| [DEF-001](_archive/defects/DEF-001-roadmaps-heading-title-case.md) | The roadmaps heading is in Title Case                                 | Done         |
-| [DEF-002](defects/DEF-002-header-home-link-name-on-phones.md)      | On a phone, the header's home link is named without the word it shows | Needs triage |
+| ID                                                                                          | Defect                                                                                         | Status                           |
+| ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | -------------------------------- |
+| [DEF-001](_archive/defects/DEF-001-roadmaps-heading-title-case.md)                          | The roadmaps heading is in Title Case                                                          | Done                             |
+| [DEF-002](defects/DEF-002-header-home-link-name-on-phones.md)                               | On a phone, the header's home link is named without the word it shows                          | Needs triage                     |
+| [DEF-003](_archive/defects/DEF-003-refusal-shows-stale-text-or-restores-removed-roadmap.md) | After a refused publish, "Use theirs" can show older text, and a removed roadmap can come back | Done — in its PR, awaiting merge |
 
 A defect found during delivery is recorded in `defects/` with
 Status `Needs triage` and listed here until the owner triages it.

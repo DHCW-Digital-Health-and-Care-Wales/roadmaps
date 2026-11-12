@@ -1040,3 +1040,15 @@ waiting}.*`; the Welsh is machine-assisted. The record's Delivery is STY-026's c
       then to Publish; tests assert `toHaveFocus` there.
     - English field labels are bare ("Vision") while the Welsh add "(Saesneg)", so the
       review's target names differ in shape between the languages (from STY-025).
+- **DEF-003 A refusal's text: per field, and never a read** — from PR #32's two Codex
+  comments, after it merged. A refusal's patch now applies each co-lead's text only to a
+  field that no read during the publish changed. It compares against the cache that
+  `usePublishRoadmapChanges` snapshots in `onMutate`, not timestamps. Restoring removed
+  roadmaps ignores `manual` (`setQueryData`) list updates.
+  - Where things live: `withCurrentRoadmapText`/`withCurrentItemText(…, since)`
+    (`editing/conflicts.ts`); `reconcileOnRead` (`pending-changes-provider.tsx`).
+  - Gotchas:
+    - `setQueryData` dispatches a `success` action (with `manual: true`), so a
+      query-cache listener that means "a read happened" must skip it.
+    - When a read landed does not say whether it is newer than a publish's own read;
+      compare values instead.

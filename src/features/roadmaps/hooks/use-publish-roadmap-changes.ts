@@ -15,21 +15,36 @@ import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { useRoadmapRepository } from "../roadmap-repository-context"
 import { roadmapKeys } from "./roadmap-queries"
 
-/** The roadmap and its items as read, showing the text a refusal found (STY-026). */
+/**
+ * The roadmap and its items as read, showing the text a refusal found (STY-026), in each
+ * field no read during the publish changed from `since`, as read when it began; a field
+ * one did change keeps that read's text, as it may be newer (DEF-003). With nothing
+ * cached when it began, `since` is `undefined` and the read is shown as it is.
+ */
 export interface CurrentText {
-  roadmap: (roadmap: Roadmap, conflicts: readonly FieldConflict[]) => Roadmap
+  roadmap: (
+    roadmap: Roadmap,
+    conflicts: readonly FieldConflict[],
+    since: Roadmap | undefined,
+  ) => Roadmap
   items: (
     items: readonly RoadmapItem[],
     conflicts: readonly FieldConflict[],
+    since: readonly RoadmapItem[] | undefined,
   ) => RoadmapItem[]
+}
+
+/** The roadmap list and the roadmap's items as cached when a publish began. */
+interface ReadBefore {
+  roadmaps: readonly Roadmap[] | undefined
+  items: readonly RoadmapItem[] | undefined
 }
 
 /**
  * Publishes one roadmap's changes (ADR-012). A publish is never retried; whatever its
  * result, the roadmap and its items are read again before it settles, so the page shows
  * what the data source now holds. A refusal first shows the text it found by
- * `currentText`, so the page shows it even if that read fails, unless a read since the
- * publish began already shows something at least as new.
+ * `currentText`, so the page shows it even if that read fails.
  */
 export function usePublishRoadmapChanges(
   roadmapId: string,
@@ -41,14 +56,17 @@ export function usePublishRoadmapChanges(
     mutationFn: (changes: RoadmapChanges) =>
       repository.publishRoadmapChanges(roadmapId, changes),
     retry: false,
-    onMutate: () => ({ startedAt: Date.now() }),
-    onSuccess: (outcome, _changes, { startedAt }) => {
+    onMutate: (): ReadBefore => ({
+      roadmaps: queryClient.getQueryData(roadmapKeys.list()),
+      items: queryClient.getQueryData(roadmapKeys.items(roadmapId)),
+    }),
+    onSuccess: (outcome, _changes, before) => {
       if (outcome.status === "refused" && currentText) {
         showCurrentText(queryClient, {
           roadmapId,
           conflicts: outcome.conflicts,
           currentText,
-          readBefore: startedAt,
+          before,
         })
       }
     },
@@ -63,9 +81,8 @@ export function usePublishRoadmapChanges(
 }
 
 /**
- * Writes the text a refusal found into the roadmap and its items, where they were last
- * read before `readBefore`, when the publish began. The data keeps its age, so it is
- * read again as soon as it would have been.
+ * Writes the text a refusal found into the roadmap and its items as last read. The data
+ * keeps its age, so it is read again as soon as it would have been.
  */
 function showCurrentText(
   queryClient: QueryClient,
@@ -73,22 +90,24 @@ function showCurrentText(
     roadmapId,
     conflicts,
     currentText,
-    readBefore,
+    before,
   }: {
     roadmapId: string
     conflicts: readonly FieldConflict[]
     currentText: CurrentText
-    readBefore: number
+    before: ReadBefore
   },
 ) {
   if (conflicts.some((conflict) => conflict.subject === "roadmap")) {
+    const since = before.roadmaps?.find((each) => each.id === roadmapId)
     patchQueryData<readonly Roadmap[]>(
       queryClient,
       roadmapKeys.list(),
-      readBefore,
       (roadmaps) =>
         roadmaps.map((each) =>
-          each.id === roadmapId ? currentText.roadmap(each, conflicts) : each,
+          each.id === roadmapId
+            ? currentText.roadmap(each, conflicts, since)
+            : each,
         ),
     )
   }
@@ -96,8 +115,7 @@ function showCurrentText(
     patchQueryData<readonly RoadmapItem[]>(
       queryClient,
       roadmapKeys.items(roadmapId),
-      readBefore,
-      (items) => currentText.items(items, conflicts),
+      (items) => currentText.items(items, conflicts, before.items),
     )
   }
 }
@@ -105,11 +123,10 @@ function showCurrentText(
 function patchQueryData<T>(
   queryClient: QueryClient,
   key: QueryKey,
-  readBefore: number,
   patch: (data: T) => T,
 ) {
   const state = queryClient.getQueryState<T>(key)
-  if (state?.data === undefined || state.dataUpdatedAt > readBefore) return
+  if (state?.data === undefined) return
   queryClient.setQueryData<T>(key, patch(state.data), {
     updatedAt: state.dataUpdatedAt,
   })

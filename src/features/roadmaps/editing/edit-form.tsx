@@ -11,7 +11,18 @@ import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Textarea } from "@/components/ui/textarea"
+
+import { RoadmapSwatch } from "../components/roadmap-swatch"
+
+/** One choice of a field chosen from a list. */
+export interface EditFormOption {
+  value: string
+  label: string
+  /** Its colour, shown beside the field while it is chosen; `null` for none. */
+  colour?: string | null
+}
 
 /** One field of an edit form, in the order the form shows it. */
 export interface EditFormField<F extends string> {
@@ -19,6 +30,10 @@ export interface EditFormField<F extends string> {
   label: string
   /** A text area, for text with line breaks; otherwise one line. */
   multiline: boolean
+  /** Chosen from these, in this order, instead of typed (STY-028). */
+  options?: readonly EditFormOption[]
+  /** Shown as `text`, not edited, with a notice of why (STY-028 S6). */
+  fixed?: { text: string; notice: string }
 }
 
 export interface EditFormProps<F extends string> {
@@ -39,7 +54,8 @@ export interface EditFormProps<F extends string> {
 
 /**
  * The form an item or the roadmap's own text turns into for editing (STY-025 S1, S4,
- * S5): a labelled field each, "Done" to keep the values pending and Cancel (or Escape)
+ * S5): a labelled field each, typed or chosen from a list (STY-028), or shown read-only
+ * when it can't be changed, then "Done" to keep the values pending and Cancel (or Escape)
  * to leave them. The title is required: confirming without one keeps the form open with
  * an error linked to it. Writes nothing; the caller keeps the values pending.
  */
@@ -100,10 +116,52 @@ export function EditForm<F extends string>({
       {fields.map((field, index) => {
         const isTitle = index === 0
         const invalid = isTitle && titleMissing
+        const controlId = `${id}-${field.name}`
+        const change = (value: string) => {
+          setValues((current) => ({ ...current, [field.name]: value }))
+        }
+        if (field.fixed) {
+          return (
+            <div key={field.name} className="flex flex-col gap-1.5">
+              <p className="font-bold">{field.label}</p>
+              <p>{field.fixed.text}</p>
+              <p className="text-muted-foreground">{field.fixed.notice}</p>
+            </div>
+          )
+        }
+        if (field.options) {
+          const chosen = field.options.find(
+            ({ value }) => value === values[field.name],
+          )
+          const coloured = field.options.some(
+            ({ colour }) => colour !== undefined,
+          )
+          return (
+            <div key={field.name} className="flex flex-col gap-1.5">
+              <Label htmlFor={controlId}>{field.label}</Label>
+              <div className="flex items-stretch gap-2.5">
+                {coloured && <RoadmapSwatch colour={chosen?.colour ?? null} />}
+                <NativeSelect
+                  id={controlId}
+                  value={values[field.name]}
+                  onChange={(event) => {
+                    change(event.target.value)
+                  }}
+                >
+                  {field.options.map((option) => (
+                    <NativeSelectOption key={option.value} value={option.value}>
+                      {option.label}
+                    </NativeSelectOption>
+                  ))}
+                </NativeSelect>
+              </div>
+            </div>
+          )
+        }
         const Control = field.multiline ? Textarea : Input
         return (
           <div key={field.name} className="flex flex-col gap-1.5">
-            <Label htmlFor={`${id}-${field.name}`}>{field.label}</Label>
+            <Label htmlFor={controlId}>{field.label}</Label>
             {invalid && (
               <p id={errorId} className="font-bold text-destructive">
                 <span className="sr-only">
@@ -114,15 +172,12 @@ export function EditForm<F extends string>({
             )}
             <Control
               ref={isTitle ? titleRef : undefined}
-              id={`${id}-${field.name}`}
+              id={controlId}
               value={values[field.name]}
               aria-invalid={invalid || undefined}
               aria-describedby={invalid ? errorId : undefined}
               onChange={(event) => {
-                setValues((current) => ({
-                  ...current,
-                  [field.name]: event.target.value,
-                }))
+                change(event.target.value)
               }}
             />
           </div>

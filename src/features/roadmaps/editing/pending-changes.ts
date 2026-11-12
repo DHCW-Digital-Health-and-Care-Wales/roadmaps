@@ -16,9 +16,12 @@ import {
   type ItemChanges,
   itemText,
   type RoadmapChanges,
-  roadmapText,
+  roadmapValue,
+  UNLISTED_FAMILY,
 } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
+
+import type { RoadmapLists } from "../hooks/use-roadmap-lists"
 
 /** A form's values, as typed: kept trimmed. */
 export type RoadmapValues = Partial<Record<EditableRoadmapField, string>>
@@ -111,7 +114,7 @@ export function editRoadmap(
     roadmap: editFields(
       changes.roadmap,
       values,
-      originOf(roadmapText, roadmap, since),
+      originOf(roadmapValue, roadmap, since),
     ),
   }
 }
@@ -196,7 +199,7 @@ export function reconcileRoadmap(
   roadmap: Roadmap,
 ): RoadmapChanges {
   const roadmapFields = dropHeld(changes.roadmap, (field) =>
-    roadmapText(roadmap, field),
+    roadmapValue(roadmap, field),
   )
   return roadmapFields === changes.roadmap
     ? changes
@@ -322,15 +325,23 @@ function withEnglish(
   return { en: change.value, cy: text?.cy ?? "" }
 }
 
-/** The roadmap as it will read once its pending English is published. */
+/**
+ * The roadmap as it will read once its pending English, family and category are
+ * published: a chosen family or category as `lists` names it (and colours it), or with
+ * only its ID until they are read; none for no family or category, the colour kept
+ * (STY-028 S1, S2).
+ */
 export function applyRoadmapChanges(
   roadmap: Roadmap,
   changes: RoadmapChanges | undefined,
+  lists?: RoadmapLists,
 ): Roadmap {
   const fields = changes?.roadmap
   if (!fields || isEmpty(fields)) return roadmap
   return {
     ...roadmap,
+    ...chosenFamily(fields.familyId, lists?.families),
+    ...chosenCategory(fields.categoryId, lists?.categories),
     title: withEnglish(roadmap.title, fields.title) ?? roadmap.title,
     statusLabel: withEnglish(roadmap.statusLabel, fields.statusLabel),
     productLead: fields.productLead
@@ -341,6 +352,37 @@ export function applyRoadmapChanges(
       roadmap.serviceDescription,
       fields.serviceDescription,
     ),
+  }
+}
+
+/** The family fields of a roadmap showing `change`, a pending choice of family. */
+function chosenFamily(
+  change: FieldChange | undefined,
+  families: RoadmapLists["families"],
+): Partial<Roadmap> {
+  if (!change || change.value === UNLISTED_FAMILY) return {}
+  if (change.value === "") {
+    return { familyId: null, family: null, familyNotListed: false }
+  }
+  const family = families?.find(({ id }) => id === change.value)
+  return {
+    familyId: change.value,
+    familyNotListed: false,
+    ...(family && { family: family.name, colour: family.colour }),
+  }
+}
+
+/** The category fields of a roadmap showing `change`, a pending choice of category. */
+function chosenCategory(
+  change: FieldChange | undefined,
+  categories: RoadmapLists["categories"],
+): Partial<Roadmap> {
+  if (!change) return {}
+  if (change.value === "") return { categoryId: null, category: null }
+  const category = categories?.find(({ id }) => id === change.value)
+  return {
+    categoryId: change.value,
+    ...(category && { category: category.name }),
   }
 }
 

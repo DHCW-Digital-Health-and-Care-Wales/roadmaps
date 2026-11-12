@@ -4,13 +4,17 @@ import { useTranslation } from "react-i18next"
 
 import { DismissibleNotice } from "@/components/layout/dismissible-notice"
 import { Button } from "@/components/ui/button"
-import type { FieldConflict } from "@/domain/roadmap/roadmap-changes"
+import {
+  type FieldConflict,
+  isChoiceField,
+} from "@/domain/roadmap/roadmap-changes"
 import { localise, type LocalisedText } from "@/domain/roadmap/localised-text"
 import { useLanguage } from "@/i18n"
 
 import type { OpenConflict } from "./conflicts"
 import type { PublishAction } from "./pending-changes-store"
 import type { DecisionFocus } from "./use-decision-focus"
+import { useRoadmapChoices } from "./use-roadmap-choices"
 
 export interface ConflictReviewProps {
   ref: RefObject<HTMLDivElement | null>
@@ -30,8 +34,8 @@ export interface ConflictReviewProps {
 
 /**
  * A publish someone else's changes stopped (STY-026): each field they changed that the
- * Product Lead also changed, their text beside the current text, to keep or give up one
- * by one; then what was lost with removed items. Nothing was written, so it cannot be
+ * Product Lead also changed, their text beside the current text (a family or category
+ * by its name), to keep or give up one by one; then what was lost with removed items. Nothing was written, so it cannot be
  * dismissed until every field is decided.
  */
 export function ConflictReview({
@@ -47,7 +51,12 @@ export function ConflictReview({
 }: ConflictReviewProps) {
   const { t } = useTranslation()
   const language = useLanguage()
+  const { describe } = useRoadmapChoices()
   const deciding = open.length > 0
+  const shown = (conflict: FieldConflict, value: string) =>
+    conflict.subject === "roadmap" && isChoiceField(conflict.field)
+      ? describe(conflict.field, value)
+      : value
 
   return (
     <DismissibleNotice
@@ -88,11 +97,11 @@ export function ConflictReview({
                   <dl className="grid gap-3 sm:grid-cols-2">
                     <ConflictValue
                       label={t("roadmaps.publish.notice.refused.yours")}
-                      value={yours}
+                      value={shown(conflict, yours)}
                     />
                     <ConflictValue
                       label={t("roadmaps.publish.notice.refused.theirs")}
-                      value={conflict.current}
+                      value={shown(conflict, conflict.current)}
                     />
                   </dl>
                   <div className="flex flex-wrap gap-3">

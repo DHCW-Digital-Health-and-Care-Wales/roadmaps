@@ -13,8 +13,9 @@ import {
   type FieldConflict,
   type ItemChanges,
   type RoadmapChanges,
+  isChoiceField,
   itemText,
-  roadmapText,
+  roadmapValue,
 } from "@/domain/roadmap/roadmap-changes"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
@@ -188,7 +189,8 @@ function currentOf(conflict: FieldConflict): FieldChange {
  * each field that holds what it did in `since`, the roadmap as read when the publish
  * began. A field a read during the publish changed is left as that read found it, as it
  * may be newer than the publish's (DEF-003). With nothing read when it began, `since` is
- * `undefined` and nothing is patched.
+ * `undefined` and nothing is patched. A family or category is not patched: the conflict
+ * holds only its ID, not the names and colour a read gives it (STY-028).
  */
 export function withCurrentRoadmapText(
   roadmap: Roadmap,
@@ -198,9 +200,10 @@ export function withCurrentRoadmapText(
   const fields = Object.fromEntries(
     conflicts.flatMap((conflict) =>
       conflict.subject === "roadmap" &&
+      !isChoiceField(conflict.field) &&
       since &&
-      roadmapText(roadmap, conflict.field) ===
-        roadmapText(since, conflict.field)
+      roadmapValue(roadmap, conflict.field) ===
+        roadmapValue(since, conflict.field)
         ? [[conflict.field, currentOf(conflict)]]
         : [],
     ),

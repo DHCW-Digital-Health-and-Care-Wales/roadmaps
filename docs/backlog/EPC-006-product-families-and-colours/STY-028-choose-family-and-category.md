@@ -1,6 +1,6 @@
 # STY-028: A Product Lead chooses a roadmap's family and category
 
-- **Status**: Proposed — grilled in EPC-006 rounds 1–4 (2026-11-12)
+- **Status**: In progress — feat/sty-028-choose-family-and-category
 - **Type**: Feature
 - **Area**: Domain + Infrastructure + Features/UI + i18n (en + cy)
 - **Epic**: EPC-006-product-families-and-colours

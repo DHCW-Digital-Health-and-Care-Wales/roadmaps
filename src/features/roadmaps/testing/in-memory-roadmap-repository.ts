@@ -9,7 +9,7 @@ import {
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type {
   EditableItemField,
-  EditableRoadmapField,
+  RoadmapTextField,
 } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import type { RoadmapRepository } from "@/domain/roadmap/roadmap-repository"
@@ -121,10 +121,31 @@ export function createInMemoryRoadmapRepository(
     }
   }
 
+  /** As the Google adapter copies a chosen family or category from its list (ADR-013). */
+  const listed = <T extends { id: string }>(
+    list: readonly T[] | null,
+    id: string,
+  ): T | null => {
+    if (id === "") return null
+    const found = list?.find((each) => each.id === id)
+    if (found === undefined) throw new AppError("invalid-data")
+    return found
+  }
+
   const apply = (roadmap: Roadmap, writes: PublishWrites) => {
     const stored = storedItems(roadmap.id)
-    for (const { field, value } of writes.roadmap) {
-      setRoadmapText(roadmap, field, value)
+    // Looked up first, so an unlisted choice fails the publish before anything is written.
+    const families = writes.roadmap.map(({ field, value }) =>
+      field === "familyId" ? listed(lists.families, value) : null,
+    )
+    const categories = writes.roadmap.map(({ field, value }) =>
+      field === "categoryId" ? listed(lists.categories, value) : null,
+    )
+    for (const [i, { field, value }] of writes.roadmap.entries()) {
+      if (field === "familyId") setFamily(roadmap, families[i] ?? null)
+      else if (field === "categoryId")
+        setCategory(roadmap, categories[i] ?? null)
+      else setRoadmapText(roadmap, field, value)
     }
     for (const { index, field, value } of writes.items) {
       const item = stored[index]
@@ -140,7 +161,11 @@ export function createInMemoryRoadmapRepository(
   const overwriteFirst = (roadmap: Roadmap, writes: PublishWrites) => {
     const [first] = writes.roadmap
     if (first !== undefined) {
-      setRoadmapText(roadmap, first.field, CO_LEAD_VALUE)
+      if (first.field === "familyId" || first.field === "categoryId") {
+        roadmap[first.field] = CO_LEAD_VALUE
+      } else {
+        setRoadmapText(roadmap, first.field, CO_LEAD_VALUE)
+      }
       return
     }
     const [firstItem] = writes.items
@@ -218,10 +243,27 @@ function readItems(stored: readonly RoadmapItem[]): RoadmapItem[] {
   })
 }
 
+/**
+ * Sets a roadmap's family as a later read gives it: the family's names and colour, or,
+ * for none, no family and the colour left as it was.
+ */
+function setFamily(roadmap: Roadmap, family: Family | null): void {
+  roadmap.familyId = family?.id ?? null
+  roadmap.family = family ? { ...family.name } : null
+  roadmap.familyNotListed = false
+  if (family) roadmap.colour = family.colour
+}
+
+/** Sets a roadmap's category as a later read gives it. */
+function setCategory(roadmap: Roadmap, category: Category | null): void {
+  roadmap.categoryId = category?.id ?? null
+  roadmap.category = category ? { ...category.name } : null
+}
+
 /** Sets a roadmap's English as a later read gives it: blank optional text is none. */
 function setRoadmapText(
   roadmap: Roadmap,
-  field: EditableRoadmapField,
+  field: RoadmapTextField,
   value: string,
 ): void {
   switch (field) {

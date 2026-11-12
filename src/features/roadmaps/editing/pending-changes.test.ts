@@ -332,4 +332,54 @@ describe("apply", () => {
       cy: "Hen",
     })
   })
+
+  describe("a chosen family or category (STY-028 S1)", () => {
+    const singleRecord = createTestRoadmap("producta", "Product A", {
+      family: { en: "Single Record", cy: "Cofnod Sengl" },
+      familyId: "fc29g5b9",
+      colour: "#12a3c9",
+      category: { en: "GP & Community Services", cy: "Meddygon Teulu" },
+      categoryId: "khzpchkh",
+    })
+    const lists = {
+      families: [
+        {
+          id: "vdkxj63m",
+          name: { en: "Medicines & Diagnostics", cy: "Meddyginiaethau" },
+          colour: "#006747",
+        },
+      ],
+      categories: [{ id: "w7vrv5kn", name: { en: "Tests", cy: "Profion" } }],
+    }
+
+    it("shows a chosen family and category as the lists name them, with the family's colour", () => {
+      const changes = editRoadmap(NO_CHANGES, singleRecord, {
+        familyId: "vdkxj63m",
+        categoryId: "w7vrv5kn",
+      })
+
+      expect(applyRoadmapChanges(singleRecord, changes, lists)).toMatchObject({
+        family: { en: "Medicines & Diagnostics", cy: "Meddyginiaethau" },
+        familyId: "vdkxj63m",
+        colour: "#006747",
+        category: { en: "Tests", cy: "Profion" },
+        categoryId: "w7vrv5kn",
+      })
+    })
+
+    it("shows no family or category for none, keeping the colour", () => {
+      const changes = editRoadmap(NO_CHANGES, singleRecord, {
+        familyId: "",
+        categoryId: "",
+      })
+
+      expect(applyRoadmapChanges(singleRecord, changes, lists)).toMatchObject({
+        family: null,
+        familyId: null,
+        colour: "#12a3c9",
+        category: null,
+        categoryId: null,
+      })
+    })
+  })
 })

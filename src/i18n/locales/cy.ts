@@ -233,6 +233,15 @@ export const cy = {
         productLead: "Arweinydd cynnyrch",
         vision: "Gweledigaeth (Saesneg)",
         serviceDescription: "Disgrifiad o'r gwasanaeth (Saesneg)",
+        familyId: "Teulu",
+        categoryId: "Categori",
+      },
+      noFamily: "Dim teulu",
+      noCategory: "Dim categori",
+      familyNotListed: "{{name}} (heb ei restru)",
+      choiceUnavailable: {
+        familyId: "Does dim modd newid y teulu ar hyn o bryd.",
+        categoryId: "Does dim modd newid y categori ar hyn o bryd.",
       },
     },
     publish: {

@@ -88,6 +88,50 @@ describe("createPendingChangesStore", () => {
     expect(store.getSnapshot().notices.size).toBe(0)
   })
 
+  it("forgets each decided conflict of a refusal, then the refusal, so none reopens", () => {
+    const store = createPendingChangesStore()
+    store.update("producta", () => retitled)
+    const conflict = {
+      subject: "roadmap",
+      field: "title",
+      base: "Product A",
+      pending: "Product A2",
+      current: "Product A, theirs",
+    } as const
+    const gone = { en: "Gone", cy: "" }
+    store.startPublish("producta")
+    store.finishPublish("producta", {
+      kind: "refused",
+      action: "publish",
+      conflicts: [conflict],
+      removed: [gone],
+    })
+
+    store.update("producta", () => NO_CHANGES)
+    expect(store.getSnapshot().notices.get("producta")).toEqual({
+      kind: "refused",
+      action: "publish",
+      conflicts: [],
+      removed: [gone],
+    })
+    store.update("producta", () =>
+      editRoadmap(NO_CHANGES, roadmap, { title: "Product A3" }),
+    )
+    expect(store.getSnapshot().notices.get("producta")).toMatchObject({
+      conflicts: [],
+    })
+
+    store.startPublish("producta")
+    store.finishPublish("producta", {
+      kind: "refused",
+      action: "publish",
+      conflicts: [{ ...conflict, pending: "Product A3" }],
+      removed: [],
+    })
+    store.update("producta", () => NO_CHANGES)
+    expect(store.getSnapshot().notices.has("producta")).toBe(false)
+  })
+
   it("ends a publish with no notice when it has nothing to say", () => {
     const store = createPendingChangesStore()
     store.startPublish("producta")

@@ -64,7 +64,7 @@ function RoadmapDetail({ roadmapId }: RoadmapDetailPageProps) {
     void refetch()
   }
 
-  if (roadmap) {
+  if (roadmap && !removed) {
     return (
       <RoadmapView
         roadmap={roadmap}
@@ -75,8 +75,9 @@ function RoadmapDetail({ roadmapId }: RoadmapDetailPageProps) {
     )
   }
 
-  // Missing from a list that is current: it really is gone (no longer listed).
-  if (roadmap === null && !problem) {
+  // Missing from a list that is current, or found gone by a publish (even if the list
+  // could not be read again after it): it really is gone.
+  if ((roadmap === null && !problem) || removed) {
     return (
       <StatusPanel
         icon={<MapPinOffIcon />}

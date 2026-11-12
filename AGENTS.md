@@ -1022,7 +1022,9 @@ waiting}.*`; the Welsh is machine-assisted. The record's Delivery is STY-026's c
     snapshot's `removed` set. Copy is `roadmaps.publish.notice.refused.*` and
     `roadmaps.detail.removedDescription`; the Welsh is machine-assisted.
   - Decisions: an open conflict is derived (pending field whose base is not the co-lead's
-    text), never stored, so Undo or a read closes it; Keep mine re-bases onto their text
+    text), never stored, so Undo or a read closes it, and the store then drops it from
+    the refusal so it cannot reopen; a refusal writes the co-lead's text into the cached
+    roadmap and items before the re-read (`onRefused`); Keep mine re-bases onto their text
     (D3); Publish is disabled while a conflict is open; Refresh no longer clears a
     review, only an `unconfirmed` notice; removed items and roadmaps take no decision.
   - Gotchas:
@@ -1031,7 +1033,8 @@ waiting}.*`; the Welsh is machine-assisted. The record's Delivery is STY-026's c
       item an ID.
     - Simulate a co-lead with `sheets.coLead(tab, key, header, value | null)` in E2E
       and `repository.coLead(edit)` on the in-memory double (`InMemoryRoadmapRepository`).
-    - The review takes focus in a layout effect when it appears, and each decision moves
-      focus to the next "Keep mine", then to Publish; tests assert `toHaveFocus` there.
+    - The review takes focus when the publish dialog closes on a refusal; after each
+      decision a layout effect (`useDecisionFocus`) moves focus to the next "Keep mine",
+      then to Publish; tests assert `toHaveFocus` there.
     - English field labels are bare ("Vision") while the Welsh add "(Saesneg)", so the
       review's target names differ in shape between the languages (from STY-025).

@@ -14,9 +14,15 @@ import {
   type ItemChanges,
   type RoadmapChanges,
 } from "@/domain/roadmap/roadmap-changes"
+import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 
-import { applyItemChanges, sameTarget } from "./pending-changes"
+import {
+  applyItemChanges,
+  applyRoadmapChanges,
+  matchItemChanges,
+  sameTarget,
+} from "./pending-changes"
 
 /** A conflict still to decide, as the review shows it. */
 export interface OpenConflict {
@@ -28,6 +34,9 @@ export interface OpenConflict {
   /** Tells conflicts apart, for React. */
   readonly key: string
 }
+
+/** Where the roadmap's own text sorts among the edited items: before them all. */
+const ROADMAP_FIRST = -1
 
 /** The pending change `conflict` is about, and the item entry holding it, if any. */
 function pendingOf(
@@ -58,7 +67,7 @@ export function openConflicts(
       if (conflict.subject === "roadmap") {
         return [
           {
-            at: -1,
+            at: ROADMAP_FIRST,
             fieldAt: EDITABLE_ROADMAP_FIELDS.indexOf(conflict.field),
             open: {
               conflict,
@@ -71,6 +80,7 @@ export function openConflicts(
       }
       // A pending item change is always in an entry.
       if (!entry) return []
+      // An item without an ID yet is told apart by its place.
       const target = entry.item.id ?? `at-${String(entry.position)}`
       return [
         {
@@ -163,4 +173,51 @@ export function discardItems(
     )
   const items = changes.items.filter((entry) => !gone(entry))
   return items.length === changes.items.length ? changes : { ...changes, items }
+}
+
+/** What `conflict` found its field holds, as a change from its base. */
+function currentOf(conflict: FieldConflict): FieldChange {
+  return { base: conflict.base, value: conflict.current }
+}
+
+/** `roadmap` showing the English `conflicts` found a co-lead wrote to its own text. */
+export function withCurrentRoadmapText(
+  roadmap: Roadmap,
+  conflicts: readonly FieldConflict[],
+): Roadmap {
+  const fields = Object.fromEntries(
+    conflicts.flatMap((conflict) =>
+      conflict.subject === "roadmap"
+        ? [[conflict.field, currentOf(conflict)]]
+        : [],
+    ),
+  )
+  return applyRoadmapChanges(roadmap, { roadmap: fields, items: [] })
+}
+
+/**
+ * `items`, as they were read before the publish `conflicts` came from, showing the
+ * English those conflicts found a co-lead wrote to them.
+ */
+export function withCurrentItemText(
+  items: readonly RoadmapItem[],
+  conflicts: readonly FieldConflict[],
+): RoadmapItem[] {
+  const itemConflicts = conflicts.flatMap((conflict) =>
+    conflict.subject === "item" ? [conflict] : [],
+  )
+  const matched = matchItemChanges(items, {
+    roadmap: {},
+    items: itemConflicts.map((conflict) => conflict.item),
+  })
+  return items.map((item, index) => {
+    const entry = matched.get(index)
+    if (!entry) return item
+    const fields = Object.fromEntries(
+      itemConflicts
+        .filter((conflict) => sameTarget(conflict.item, entry))
+        .map((conflict) => [conflict.field, currentOf(conflict)]),
+    )
+    return applyItemChanges(item, { ...entry, fields })
+  })
 }

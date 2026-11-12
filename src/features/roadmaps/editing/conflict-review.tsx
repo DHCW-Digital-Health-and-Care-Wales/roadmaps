@@ -10,6 +10,7 @@ import { useLanguage } from "@/i18n"
 
 import type { OpenConflict } from "./conflicts"
 import type { PublishAction } from "./pending-changes-store"
+import type { DecisionFocus } from "./use-decision-focus"
 
 export interface ConflictReviewProps {
   ref: RefObject<HTMLDivElement | null>
@@ -19,11 +20,11 @@ export interface ConflictReviewProps {
   /** The loaded titles of the edited items that are gone. */
   removed: readonly LocalisedText[]
   /** Whether any change is still pending. */
-  othersKept: boolean
-  /** Each conflict's Keep mine button, by its key, to move focus between them. */
-  keepMineButtons: RefObject<Map<string, HTMLButtonElement>>
-  onKeepMine: (conflict: FieldConflict, index: number) => void
-  onUseTheirs: (conflict: FieldConflict, index: number) => void
+  hasPendingChanges: boolean
+  /** The ref for each conflict's Keep mine button, by its key. */
+  keepMineRef: DecisionFocus["keepMineRef"]
+  onKeepMine: (conflict: FieldConflict) => void
+  onUseTheirs: (conflict: FieldConflict) => void
   onDismiss: () => void
 }
 
@@ -38,8 +39,8 @@ export function ConflictReview({
   action,
   open,
   removed,
-  othersKept,
-  keepMineButtons,
+  hasPendingChanges,
+  keepMineRef,
   onKeepMine,
   onUseTheirs,
   onDismiss,
@@ -68,7 +69,7 @@ export function ConflictReview({
         <>
           <p>{t(`roadmaps.publish.notice.refused.choose.${action}`)}</p>
           <ul className="mb-4 flex flex-col gap-4">
-            {open.map(({ conflict, yours, item, key }, index) => {
+            {open.map(({ conflict, yours, item, key }) => {
               const target = t("roadmaps.publish.notice.refused.target", {
                 subject: item
                   ? localise(item.title, language)
@@ -97,12 +98,9 @@ export function ConflictReview({
                   <div className="flex flex-wrap gap-3">
                     <Button
                       size="sm"
-                      ref={(button) => {
-                        if (button) keepMineButtons.current.set(key, button)
-                        else keepMineButtons.current.delete(key)
-                      }}
+                      ref={keepMineRef(key)}
                       onClick={() => {
-                        onKeepMine(conflict, index)
+                        onKeepMine(conflict)
                       }}
                     >
                       {t("roadmaps.publish.notice.refused.keepMine")}{" "}
@@ -112,7 +110,7 @@ export function ConflictReview({
                       size="sm"
                       variant="secondary"
                       onClick={() => {
-                        onUseTheirs(conflict, index)
+                        onUseTheirs(conflict)
                       }}
                     >
                       {t("roadmaps.publish.notice.refused.useTheirs")}{" "}
@@ -133,7 +131,7 @@ export function ConflictReview({
           })}
         </p>
       ))}
-      {removed.length > 0 && othersKept && (
+      {removed.length > 0 && hasPendingChanges && (
         <p>{t("roadmaps.publish.notice.refused.otherKept")}</p>
       )}
     </DismissibleNotice>

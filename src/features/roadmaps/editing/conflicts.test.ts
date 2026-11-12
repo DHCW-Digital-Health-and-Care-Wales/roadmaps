@@ -5,9 +5,17 @@ import type {
   ItemChanges,
   RoadmapChanges,
 } from "@/domain/roadmap/roadmap-changes"
+import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 
-import { discardItems, keepMine, openConflicts, takeTheirs } from "./conflicts"
+import {
+  discardItems,
+  keepMine,
+  openConflicts,
+  takeTheirs,
+  withCurrentItemText,
+  withCurrentRoadmapText,
+} from "./conflicts"
 
 const first: ItemChanges = {
   item: createTestRoadmapItem("First", { id: "first" }),
@@ -160,5 +168,46 @@ describe("discardItems", () => {
 
     expect(discardItems(pending, [first, unidentified]).items).toEqual([second])
     expect(discardItems(pending, [])).toBe(pending)
+  })
+})
+
+describe("withCurrentRoadmapText", () => {
+  it("shows the roadmap's text a co-lead wrote, in English only", () => {
+    const roadmap = createTestRoadmap("producta", "Product A", {
+      vision: { en: "A vision", cy: "Gweledigaeth" },
+    })
+    const shown = withCurrentRoadmapText(roadmap, [
+      visionConflict,
+      conflictOn(first, "title", "First, theirs"),
+    ])
+
+    expect(shown).toEqual({
+      ...roadmap,
+      vision: { en: "Their vision", cy: "Gweledigaeth" },
+    })
+  })
+})
+
+describe("withCurrentItemText", () => {
+  it("shows each item's text a co-lead wrote, finding it as the publish sent it", () => {
+    const items = [
+      first.item,
+      second.item,
+      createTestRoadmapItem("Third", { id: "third" }),
+    ]
+    const shown = withCurrentItemText(items, [
+      visionConflict,
+      conflictOn(second, "title", "Second, theirs"),
+      conflictOn(first, "title", "First, theirs"),
+      conflictOn(first, "description", "Theirs"),
+    ])
+
+    expect(shown.map(({ title }) => title.en)).toEqual([
+      "First, theirs",
+      "Second, theirs",
+      "Third",
+    ])
+    expect(shown[0]?.description?.en).toBe("Theirs")
+    expect(shown[2]).toBe(items[2])
   })
 })

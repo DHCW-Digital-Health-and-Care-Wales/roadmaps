@@ -1066,6 +1066,74 @@ describe("A co-lead's changes (STY-026)", () => {
     expect(main().queryByText(/unpublished change/)).toBeNull()
   })
 
+  it("shows their text after Use theirs, even if the roadmap couldn't be read again (S2)", async () => {
+    const repository = coLeadRepository()
+    const { user } = await renderPage({ repository })
+    await editTitle(user, "First item", "First, mine")
+    await editVision(user, "My vision.")
+    changeBoth(repository)
+    vi.spyOn(repository, "listRoadmaps").mockRejectedValue(
+      new AppError("forbidden"),
+    )
+    vi.spyOn(repository, "listRoadmapItems").mockRejectedValue(
+      new AppError("forbidden"),
+    )
+
+    await publish(user)
+
+    expect(
+      await main().findByText("Couldn't refresh your roadmaps"),
+    ).toBeInTheDocument()
+    const notice = main()
+      .getAllByRole("alert")
+      .find((each) => each.textContent.includes("Someone else"))
+    if (!notice) throw new Error("No review")
+    for (const name of [
+      "Use theirs About this roadmap: Vision",
+      "Use theirs First, mine: Title",
+    ]) {
+      await user.click(within(notice).getByRole("button", { name }))
+    }
+
+    expect(main().getByText("Their vision.")).toBeInTheDocument()
+    expect(
+      main().getByRole("heading", { level: 3, name: "First, theirs" }),
+    ).toBeInTheDocument()
+    expect(main().queryByText(/unpublished change/)).toBeNull()
+    expect(
+      main().getByText("Couldn't refresh your roadmaps"),
+    ).toBeInTheDocument()
+  })
+
+  it("does not reopen a decided conflict when the field is edited again (S2)", async () => {
+    const repository = coLeadRepository()
+    const { user } = await renderPage({ repository })
+    await editVision(user, "My vision.")
+    changeBoth(repository)
+    await publish(user)
+    await user.click(
+      within(await review()).getByRole("button", {
+        name: "Use theirs About this roadmap: Vision",
+      }),
+    )
+    repository.coLead((list) => {
+      const roadmap = list.find(({ id }) => id === "producta")
+      if (roadmap) roadmap.vision = { en: "Their second vision.", cy: "" }
+    })
+    await user.click(main().getByRole("button", { name: "Refresh" }))
+    await main().findByText("Their second vision.")
+
+    await editVision(user, "My later vision.")
+
+    expect(main().queryByRole("alert")).toBeNull()
+    expect(
+      main().getByRole("button", { name: "Publish changes" }),
+    ).toHaveAttribute("aria-disabled", "false")
+    await publish(user)
+    expect(await main().findByText(/^Changes published\./)).toBeInTheDocument()
+    expect(main().getByText("My later vision.")).toBeInTheDocument()
+  })
+
   it("stops again for a co-lead's change made after Keep mine (S3)", async () => {
     const repository = coLeadRepository()
     const { user } = await renderPage({ repository })
@@ -1188,4 +1256,33 @@ describe("A co-lead's changes (STY-026)", () => {
       expect(main().queryByText("Unpublished changes")).toBeNull()
     },
   )
+
+  it("says a roadmap a publish found removed is gone, even if the list couldn't be read again (S6)", async () => {
+    const repository = coLeadRepository()
+    const { user } = await renderPage({ repository })
+    await editTitle(user, "First item", "First, mine")
+    repository.coLead((list) => {
+      list.splice(
+        list.findIndex(({ id }) => id === "producta"),
+        1,
+      )
+    })
+    vi.spyOn(repository, "listRoadmaps").mockRejectedValue(
+      new AppError("forbidden"),
+    )
+
+    await publish(user)
+
+    expect(
+      await main().findByRole("heading", {
+        level: 1,
+        name: "Roadmap not found",
+      }),
+    ).toBeInTheDocument()
+    expect(
+      main().getByText(
+        "This roadmap was removed from the list, so your changes to it couldn't be kept.",
+      ),
+    ).toBeInTheDocument()
+  })
 })

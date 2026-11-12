@@ -1,5 +1,5 @@
 import { UploadIcon } from "lucide-react"
-import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { InsetText } from "@/components/layout/inset-text"
@@ -19,6 +19,7 @@ import {
 import { awaitingRefresh, publishAction } from "./pending-changes-store"
 import { PublishDialog } from "./publish-dialog"
 import { PublishOutcomeNotice } from "./publish-outcome-notice"
+import { useDecisionFocus } from "./use-decision-focus"
 import { usePublish } from "./use-publish"
 
 export interface RoadmapPublishingProps {
@@ -50,6 +51,7 @@ export function RoadmapPublishing({ roadmap }: RoadmapPublishingProps) {
   const action = publishAction(roadmap)
   // Discarding before a Refresh could hide changes an unconfirmed publish wrote (S18).
   const discardable = !publishing && !awaitingRefresh(snapshot, roadmap.id)
+  // The store keeps a refusal only while it has something to say.
   const refused = outcome?.kind === "refused" ? outcome : null
   const open = refused ? openConflicts(refused.conflicts, changes) : []
   const reviewing = open.length > 0
@@ -64,29 +66,15 @@ export function RoadmapPublishing({ roadmap }: RoadmapPublishingProps) {
     [store, roadmap.id],
   )
 
-  // Once a field is decided, focus goes to the next one still to decide, then to
-  // Publish, or to the notice if nothing is left to publish.
+  // Once every field is decided, focus goes to Publish, or to the notice if nothing is
+  // left to publish.
   const publishButton = useRef<HTMLButtonElement>(null)
-  const keepMineButtons = useRef(new Map<string, HTMLButtonElement>())
-  const decided = useRef<number | null>(null)
-  const openKeys = open.map(({ key }) => key).join(" ")
-  useLayoutEffect(() => {
-    const index = decided.current
-    if (index === null) return
-    decided.current = null
-    const keys = openKeys === "" ? [] : openKeys.split(" ")
-    const next = keys[Math.min(index, keys.length - 1)]
-    const target = next
-      ? keepMineButtons.current.get(next)
-      : (publishButton.current ?? notice.current)
-    target?.focus()
-  }, [openKeys])
-  const decide = (
-    resolve: typeof keepMine,
-    conflict: FieldConflict,
-    index: number,
-  ) => {
-    decided.current = index
+  const focus = useDecisionFocus(
+    open,
+    () => publishButton.current ?? notice.current,
+  )
+  const decide = (resolve: typeof keepMine) => (conflict: FieldConflict) => {
+    focus.decided(conflict)
     store.update(roadmap.id, (pending) => resolve(pending, conflict))
   }
 
@@ -102,20 +90,16 @@ export function RoadmapPublishing({ roadmap }: RoadmapPublishingProps) {
 
   return (
     <>
-      {refused && (reviewing || refused.removed.length > 0) && (
+      {refused && (
         <ConflictReview
           ref={notice}
           action={action}
           open={open}
           removed={refused.removed}
-          othersKept={count > 0}
-          keepMineButtons={keepMineButtons}
-          onKeepMine={(conflict, index) => {
-            decide(keepMine, conflict, index)
-          }}
-          onUseTheirs={(conflict, index) => {
-            decide(takeTheirs, conflict, index)
-          }}
+          hasPendingChanges={count > 0}
+          keepMineRef={focus.keepMineRef}
+          onKeepMine={decide(keepMine)}
+          onUseTheirs={decide(takeTheirs)}
           onDismiss={() => {
             store.clearNotice(roadmap.id)
           }}

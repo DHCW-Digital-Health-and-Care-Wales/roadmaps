@@ -295,7 +295,7 @@ export const en = {
           publish: "Couldn't publish your changes",
           save: "Couldn't save your changes",
         },
-        /** After every failure: nothing pending is lost. */
+        /** After a failed publish or save: nothing pending is lost. */
         kept: "Your changes are kept in this tab.",
         /** A publish stopped by someone else's changes, reviewed field by field. */
         refused: {

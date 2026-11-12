@@ -14,6 +14,7 @@ import type { LocalisedText } from "@/domain/roadmap/localised-text"
 import type { AppErrorKind } from "@/lib/errors"
 import { createExternalStore } from "@/lib/external-store"
 
+import { openConflicts } from "./conflicts"
 import { countChanges, NO_CHANGES } from "./pending-changes"
 
 /** "save" for a roadmap that is not published, whose changes go nowhere public. */
@@ -30,9 +31,9 @@ export type PublishNotice = { action: PublishAction } & (
   /** The answer was lost: the changes may be in the data source (ADR-012 Option 16). */
   | { kind: "unconfirmed" }
   /**
-   * Nothing was written: a co-lead changed what was edited (`conflicts`, each decided in
-   * the review), or edited items are gone (`removed`, their loaded titles; their
-   * changes are already discarded).
+   * Nothing was written: a co-lead changed what was edited (`conflicts`, those still to
+   * decide in the review), or edited items are gone (`removed`, their loaded titles;
+   * their changes are already discarded). Gone once nothing is left of either.
    */
   | {
       kind: "refused"
@@ -102,7 +103,11 @@ const EMPTY: PendingChangesSnapshot = {
 export function createPendingChangesStore(): PendingChangesStore {
   const store = createExternalStore(EMPTY)
   const patch = (next: Partial<PendingChangesSnapshot>) => {
-    store.setSnapshot({ ...store.getSnapshot(), ...next })
+    const snapshot = { ...store.getSnapshot(), ...next }
+    store.setSnapshot({
+      ...snapshot,
+      notices: retireDecided(snapshot.notices, snapshot.changes),
+    })
   }
 
   return {
@@ -180,4 +185,33 @@ export function createPendingChangesStore(): PendingChangesStore {
       })
     },
   }
+}
+
+/**
+ * `notices` without each refusal's conflicts that are decided, however (a decision in the
+ * review, Undo, a discard or a read), so a later edit of the field cannot reopen one; a
+ * refusal left with nothing to say is gone. `notices` itself when nothing changes.
+ */
+function retireDecided(
+  notices: ReadonlyMap<string, PublishNotice>,
+  changes: ReadonlyMap<string, RoadmapChanges>,
+): ReadonlyMap<string, PublishNotice> {
+  let retired: Map<string, PublishNotice> | undefined
+  for (const [roadmapId, notice] of notices) {
+    if (notice.kind !== "refused") continue
+    const open = new Set(
+      openConflicts(notice.conflicts, changes.get(roadmapId)).map(
+        ({ conflict }) => conflict,
+      ),
+    )
+    if (open.size === notice.conflicts.length) continue
+    retired ??= new Map(notices)
+    const conflicts = notice.conflicts.filter((each) => open.has(each))
+    if (conflicts.length === 0 && notice.removed.length === 0) {
+      retired.delete(roadmapId)
+    } else {
+      retired.set(roadmapId, { ...notice, conflicts })
+    }
+  }
+  return retired ?? notices
 }

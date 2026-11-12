@@ -191,10 +191,8 @@ branch/base/head, owned files, decisions, verification results and log paths,
 the screenshot manifest, review dispositions per reviewer and round, PR URL,
 the PR policy (left open, or babysit/merge requested), last inspected head,
 retro state, blockers and the next concrete command. Never include
-credentials. Create it when the branch is cut, before the first heavy
-command, and update it at phase boundaries and before compaction or an
-interruption. Save each reviewer's returned report verbatim beside it, so a
-replacement can resume if this session dies.
+credentials. Update it at phase boundaries and before compaction or an
+interruption.
 
 On resume, re-read applicable rules and revalidate the git and PR head.
 Retain this record and decisions; discard transient search output and resolved

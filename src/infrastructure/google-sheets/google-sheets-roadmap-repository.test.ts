@@ -1241,6 +1241,132 @@ describe("GoogleSheetsRoadmapRepository", () => {
       })
     })
 
+    describe("a family or category (STY-028)", () => {
+      const FAMILY_ROWS = [
+        ["ID", "Name", "Name (cy)", "Colour"],
+        ["fc29g5b9", "Single Record", "Cofnod Sengl", "#12a3c9"],
+        [
+          "vdkxj63m",
+          "Medicines & Diagnostics",
+          "Meddyginiaethau a Diagnosteg",
+          "#006747",
+        ],
+      ]
+      const CATEGORY_ROWS = [
+        ["ID", "Name", "Name (cy)"],
+        ["khzpchkh", "GP & Community Services", "Meddygon Teulu"],
+        ["w7vrv5kn", "Tests, Scans & Results", "Profion"],
+      ]
+      /** The example spreadsheet, its index's columns given by header, with both lists. */
+      const listTabs = (index: string[][] = EXAMPLE_ROWS): FakeTab[] => [
+        gridTab("Roadmaps", index, 0),
+        gridTab("ProductA", EXAMPLE_TAB_ROWS.ProductA ?? [], 10, 1),
+        gridTab("Families", FAMILY_ROWS, 30, 2),
+        gridTab("Categories", CATEGORY_ROWS, 40, 3),
+      ]
+      /** The example index with Family ID and Category ID columns holding these. */
+      const withIds = (familyId: string, categoryId: string) =>
+        EXAMPLE_ROWS.map((row, r) =>
+          r === 0
+            ? [...row, "Family ID", "Category ID"]
+            : r === 1
+              ? [...row, familyId, categoryId]
+              : row,
+        )
+      const indexChanges = (before: FakeTab[], after: FakeTab[]) =>
+        changedCells(before, after).filter((change) =>
+          change.startsWith("Roadmaps!"),
+        )
+
+      it("writes the chosen family's ID, names and colour, appending the ID columns (S2, S4)", async () => {
+        const before = listTabs()
+        const spreadsheet = serveStatefulSpreadsheet(before)
+
+        await expect(
+          httpRepository().publishRoadmapChanges("producta", {
+            roadmap: { familyId: { base: "fc29g5b9", value: "vdkxj63m" } },
+            items: [],
+          }),
+        ).resolves.toEqual({ status: "published" })
+
+        expect(indexChanges(before, spreadsheet.tabs())).toEqual([
+          "Roadmaps!R1C16 Family ID",
+          "Roadmaps!R1C17 Category ID",
+          "Roadmaps!R2C5 Medicines & Diagnostics",
+          "Roadmaps!R2C8 #006747",
+          "Roadmaps!R2C13 Meddyginiaethau a Diagnosteg",
+          "Roadmaps!R2C16 vdkxj63m",
+          "Roadmaps!R2C17 khzpchkh",
+        ])
+        expect(spreadsheet.bodies).toHaveLength(1)
+      })
+
+      it("blanks the family's ID and names for no family, leaving its colour (S2)", async () => {
+        const before = listTabs(withIds("fc29g5b9", "khzpchkh"))
+        const spreadsheet = serveStatefulSpreadsheet(before)
+
+        await httpRepository().publishRoadmapChanges("producta", {
+          roadmap: { familyId: { base: "fc29g5b9", value: "" } },
+          items: [],
+        })
+
+        expect(indexChanges(before, spreadsheet.tabs())).toEqual([
+          "Roadmaps!R2C5 ",
+          "Roadmaps!R2C16 ",
+        ])
+        expect(spreadsheet.tabs()[0]?.rows[1]?.[7]).toBe("#325083")
+      })
+
+      it("writes the chosen category's ID and English name, and blanks both for none (S3)", async () => {
+        const before = listTabs(withIds("fc29g5b9", "khzpchkh"))
+        const spreadsheet = serveStatefulSpreadsheet(before)
+
+        await httpRepository().publishRoadmapChanges("producta", {
+          roadmap: { categoryId: { base: "khzpchkh", value: "w7vrv5kn" } },
+          items: [],
+        })
+        const chosen = spreadsheet.tabs()
+        await httpRepository().publishRoadmapChanges("producta", {
+          roadmap: { categoryId: { base: "w7vrv5kn", value: "" } },
+          items: [],
+        })
+
+        expect(indexChanges(before, chosen)).toEqual([
+          "Roadmaps!R2C4 Tests, Scans & Results",
+          "Roadmaps!R2C17 w7vrv5kn",
+        ])
+        expect(indexChanges(chosen, spreadsheet.tabs())).toEqual([
+          "Roadmaps!R2C4 ",
+          "Roadmaps!R2C17 ",
+        ])
+      })
+
+      it("adds only a missing ID to a row linked by name, on any publish that writes (S4)", async () => {
+        const index = withIds("", "unknown1")
+        const before = listTabs(index)
+        const spreadsheet = serveStatefulSpreadsheet(before)
+
+        await httpRepository().publishRoadmapChanges("producta", titleChange)
+
+        expect(indexChanges(before, spreadsheet.tabs())).toEqual([
+          "Roadmaps!R2C3 Product A",
+          "Roadmaps!R2C16 fc29g5b9",
+        ])
+      })
+
+      it("fails with invalid-data, writing nothing, for a family no longer listed", async () => {
+        const spreadsheet = serveStatefulSpreadsheet(listTabs())
+
+        await expect(
+          httpRepository().publishRoadmapChanges("producta", {
+            roadmap: { familyId: { base: "fc29g5b9", value: "gone0000" } },
+            items: [],
+          }),
+        ).rejects.toMatchObject({ kind: "invalid-data" })
+        expect(spreadsheet.bodies).toEqual([])
+      })
+    })
+
     describe("which tabs it writes (S1)", () => {
       /**
        * The example spreadsheet, with its family and category lists, and Product A's

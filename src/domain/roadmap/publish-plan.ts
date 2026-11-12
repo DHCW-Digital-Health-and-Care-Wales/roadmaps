@@ -20,7 +20,7 @@ import {
   itemText,
   type PublishOutcome,
   type RoadmapChanges,
-  roadmapText,
+  roadmapValue,
 } from "./roadmap-changes"
 import type { RoadmapItem } from "./roadmap-item"
 
@@ -80,7 +80,7 @@ export function planRoadmapPublish(
   for (const field of EDITABLE_ROADMAP_FIELDS) {
     const pending = pendingValue(field, changes.roadmap[field])
     if (pending === null) continue
-    const current = roadmapText(snapshot.roadmap, field)
+    const current = roadmapValue(snapshot.roadmap, field)
     if (current === pending.value) continue
     if (current !== pending.base) {
       conflicts.push({
@@ -170,7 +170,7 @@ export function heldWrites(
   const withId = (id: string) => snapshot.items.find((item) => item.id === id)
   const held = [
     ...writes.roadmap.map(
-      ({ field, value }) => roadmapText(snapshot.roadmap, field) === value,
+      ({ field, value }) => roadmapValue(snapshot.roadmap, field) === value,
     ),
     ...writes.items.map(({ id, field, value }) => {
       const item = withId(id)

@@ -2,7 +2,7 @@ import type { Roadmap } from "./roadmap"
 import type { RoadmapItem } from "./roadmap-item"
 
 /** The roadmap's own text a Product Lead may edit, in English only (ADR-012). */
-export const EDITABLE_ROADMAP_FIELDS = [
+export const ROADMAP_TEXT_FIELDS = [
   "title",
   "statusLabel",
   "productLead",
@@ -10,7 +10,38 @@ export const EDITABLE_ROADMAP_FIELDS = [
   "serviceDescription",
 ] as const satisfies readonly (keyof Roadmap)[]
 
+export type RoadmapTextField = (typeof ROADMAP_TEXT_FIELDS)[number]
+
+/**
+ * The roadmap's family and category, chosen from their lists by ID, `""` for none
+ * (ADR-013): the ID is the base a conflict is found by, so a rename is none.
+ */
+export const ROADMAP_CHOICE_FIELDS = [
+  "familyId",
+  "categoryId",
+] as const satisfies readonly (keyof Roadmap)[]
+
+export type RoadmapChoiceField = (typeof ROADMAP_CHOICE_FIELDS)[number]
+
+/** Every roadmap field a Product Lead may edit, in the form's order. */
+export const EDITABLE_ROADMAP_FIELDS = [
+  ...ROADMAP_TEXT_FIELDS,
+  ...ROADMAP_CHOICE_FIELDS,
+] as const
+
 export type EditableRoadmapField = (typeof EDITABLE_ROADMAP_FIELDS)[number]
+
+/**
+ * A family's value when its row names one the family list doesn't have (STY-027 S8):
+ * never an ID, so choosing "No family" over it is an edit.
+ */
+export const UNLISTED_FAMILY = "(unlisted)"
+
+export function isChoiceField(
+  field: EditableRoadmapField,
+): field is RoadmapChoiceField {
+  return (ROADMAP_CHOICE_FIELDS as readonly string[]).includes(field)
+}
 
 /** An item's text a Product Lead may edit, in English only (ADR-012). */
 export const EDITABLE_ITEM_FIELDS = [
@@ -22,8 +53,11 @@ export const EDITABLE_ITEM_FIELDS = [
 
 export type EditableItemField = (typeof EDITABLE_ITEM_FIELDS)[number]
 
-/** The roadmap's English for `field`, `""` for none. */
-export function roadmapText(
+/**
+ * The roadmap's value for `field`, `""` for none: its English for text, an ID for a
+ * family or category, or `UNLISTED_FAMILY`.
+ */
+export function roadmapValue(
   roadmap: Roadmap,
   field: EditableRoadmapField,
 ): string {
@@ -32,6 +66,12 @@ export function roadmapText(
       return roadmap.title.en
     case "productLead":
       return roadmap.productLead ?? ""
+    case "familyId":
+      return (
+        roadmap.familyId ?? (roadmap.familyNotListed ? UNLISTED_FAMILY : "")
+      )
+    case "categoryId":
+      return roadmap.categoryId ?? ""
     default:
       return roadmap[field]?.en ?? ""
   }
@@ -47,11 +87,11 @@ export function itemWelsh(item: RoadmapItem, field: EditableItemField): string {
   return field === "title" ? item.title.cy : (item[field]?.cy ?? "")
 }
 
-/** A field's pending English, with the English it was first edited from. */
+/** A field's pending value, with the value it was first edited from. */
 export interface FieldChange {
   /** The value when the field was first edited; `""` for none. */
   base: string
-  /** The value to publish, as typed; `""` clears an optional field. */
+  /** The value to publish, as typed or chosen; `""` clears an optional field. */
   value: string
 }
 
@@ -64,7 +104,7 @@ export interface ItemChanges {
   fields: Partial<Record<EditableItemField, FieldChange>>
 }
 
-/** Every pending change to one roadmap: its own text and its items' (ADR-012). */
+/** Every pending change to one roadmap: its own fields and its items' (ADR-012). */
 export interface RoadmapChanges {
   roadmap: Partial<Record<EditableRoadmapField, FieldChange>>
   items: readonly ItemChanges[]

@@ -1,6 +1,6 @@
 ---
 name: copywriter
-description: Write or change user-facing copy in this product — roadmap and roadmap item screens, field labels and hints, saving, empty states, errors, notices, aria-labels, page titles, and the connection states — in English or Welsh. Use whenever a task adds or edits a string in `src/i18n/locales/en.ts` or `cy.ts`, reviews copy, or asks whether wording is on-voice. Carries the product's voice, the per-reader tone, and the judgement rules that `pnpm typecheck` and `pnpm lint` cannot make.
+description: The product's voice and copy rules, in English and Welsh. Use whenever a task adds or edits a string in `src/i18n/locales/en.ts` or `cy.ts`, reviews copy, or asks whether wording is on-voice.
 user-invocable: true
 ---
 

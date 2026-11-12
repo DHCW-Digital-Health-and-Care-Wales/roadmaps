@@ -1,6 +1,6 @@
 ---
 name: retro
-description: Run a retrospective once a delivered PR is raised (or merged, when merging was requested, or blocked), or on explicit request, and implement improvements to future coding runs in one separate PR. Retrospective PRs follow the same PR policy as the primary (left open for the owner unless merging was requested) and get no retrospective of their own.
+description: Run a retrospective after a delivered PR is raised, merged or blocked, or on request, and implement improvements to future agent runs in one separate PR, which gets no retrospective of its own.
 ---
 
 # Session retrospective
@@ -49,9 +49,9 @@ Trace each piece of friction to its cause, checking these categories:
   site, `docs/backlog/<epic-slug>/delivery-notes.md` for a rule that holds
   only while that epic is in delivery, then the `AGENTS.md` along the changed
   path's directory ancestry only for a rule that passes the authoring guide's
-  recur bar, replacing or sharpening a line there. A one-off gotcha for the
-  next agent belongs in the root `AGENTS.md` Handoff log entry, which delivery
-  already writes. Most retros end with no guide edit. Delete any guide line
+  recur bar, replacing or sharpening a line there. A rule the root `AGENTS.md`
+  cannot fit within its word budget moves a line down to its narrowest home
+  rather than displacing a live one. Most retros end with no guide edit. Delete any guide line
   the session showed stale, wrong or ignored.
 - **Tool economy**: were tool calls expensive or noisy (large dumps, repeated
   polling, work a cheaper delegated worker should have done)?

@@ -123,6 +123,7 @@ settings, manual steps, rollback. -->
 ### Story record
 
 <!-- Where the departures and the contract for dependent work are recorded:
-the record's Delivery section and the root AGENTS.md Handoff log entry. -->
+the record's Delivery section, and the epic's delivery-notes.md for anything
+only that epic's later stories need. -->
 
 </details>

@@ -75,9 +75,8 @@ grows far beyond the rest, it is delivered separately and reported.
 ## Reviews
 
 Point to the review rounds and fresh reviewer briefs in
-`.agents/skills/implement-story/references/delegation.md`: correctness by
-Opus (`code-reviewer`) and Sol (Codex `gpt-6.1-sol`), quality by Sonnet
-(`quality-reviewer`). Name the provider, model and settings per lane, and any
+`.agents/skills/implement-story/references/delegation.md`. Name the provider,
+model and settings of each of its lanes, and any
 trial the user set. Name any recurring miss from earlier items for the
 reviewers to check, such as a token reaching storage, a URL or a log, copy
 missing its Welsh string, or an untrusted response not parsed with Zod.

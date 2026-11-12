@@ -6,8 +6,7 @@
    full SHA. Record the merge-base with it and the implementation head.
    Confirm the worktree is clean after committing the intended changes;
    include untracked files deliberately if reviewing before the commit. Every reviewer gets the same snapshot.
-2. Dispatch the reviewers `delegation.md` sets (Opus and Sol for correctness,
-   Sonnet for quality), each reading its skill. Store their reports
+2. Dispatch the reviewers `delegation.md` sets, each reading its skill. Store their reports
    independently. Resolve every actionable finding or record its
    evidence-backed disposition in the PR. An unresolved P0/P1 from either
    correctness reviewer blocks a passing correctness verdict. Re-review the

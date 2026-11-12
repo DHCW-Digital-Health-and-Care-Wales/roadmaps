@@ -127,8 +127,8 @@ _What a reader would expect here and will not find, each with where it lives
 
 _Written by the delivering agent before the PR is reviewed; read by the
 reviewer, the next story and the retro. Verification commands and counts
-belong in the PR, not here. The root `AGENTS.md` Handoff log entry is separate
-and carries the gotchas for the next agent._
+belong in the PR, not here. A gotcha the epic's next story will hit goes in its
+`delivery-notes.md` (`docs/AGENTS.md`)._
 
 ### Departures
 

@@ -1,6 +1,6 @@
 ---
 name: implement-story
-description: Implement a named backlog item (story, defect or chore) or select the next logical story from an epic, then validate, review independently (two correctness reviewers and one quality reviewer), raise a PR and run one separate retrospective. PRs are left open for the owner unless the user asks for them to be babysat and merged. Steps 3–6 also deliver any other change that ends in a PR.
+description: Deliver a named backlog story, defect or chore, or the next logical story of an epic, through validation, independent review, a PR and one retrospective. Steps 3–6 also deliver any other change that ends in a PR.
 ---
 
 # Deliver a story
@@ -64,8 +64,8 @@ At the beginning of the delivery session, identify the UI the work will change
 and capture its before screenshots per `references/screenshots.md`, before any
 implementation edit. Read the record in full, its epic's `delivery-notes.md`
 when there is one, its binding ADRs, the Product Lead persona
-(`docs/backlog/personas/product-lead.md`) when it changes what users see, the
-root `AGENTS.md` Handoff log entries for the areas it touches, and the `AGENTS.md` along each affected path. Trace
+(`docs/backlog/personas/product-lead.md`) when it changes what users see, and
+the `AGENTS.md` along each affected path. Trace
 the record's assumptions against the actual code and test contracts. Record
 routine name, path or implementation drift and the chosen correction in its
 Delivery section's Departures; preserve the original acceptance criteria.
@@ -137,9 +137,11 @@ failures. Keep passed, skipped and unrun checks distinct. Fix environment
 failures where possible; never weaken checks or disable assertions to finish.
 
 Write the record's Delivery section (departures, the contract for dependents,
-each scenario's evidence), tick its acceptance criteria and append an entry to
-the root `AGENTS.md` Handoff log: what changed, decisions, gotchas for the next
-agent. Update a nested `AGENTS.md` if you introduced a new area. When
+each scenario's evidence) and tick its acceptance criteria. Give each learning
+its narrowest home: a check or lint rule, a comment at the code site, the
+`AGENTS.md` nearest the code (a new one for a new area), or, when it holds
+only for this epic, its `delivery-notes.md` (`docs/AGENTS.md`). The root
+`AGENTS.md` takes only a rule every session needs. When
 implementation and verification are complete, set Status `Done`, move the
 record to `docs/backlog/_archive/<epic>/` and mark its epic row, noting that it
 is delivered in this PR and awaits merge. A record delivered in part or handed
@@ -155,11 +157,9 @@ PR and explicit outstanding checks, never a claimed pass or completed story.
 ## 4. Review and open the PR
 
 Read `references/pull-requests.md`. Pin the base and head SHAs and dispatch
-**a separate reviewer with fresh context per review**: two correctness
-reviewers following `code-review` (Opus, the `code-reviewer` agent, and Sol,
-Codex `gpt-6.1-sol`) and one quality reviewer following `quality-review`
-(Sonnet, the `quality-reviewer` agent); `references/delegation.md` sets the
-lanes, rounds and how to start each. Supply requirements and evidence, not
+**a separate reviewer with fresh context per review**, following `code-review`
+or `quality-review` in the lanes, rounds and runtimes `references/delegation.md`
+sets. Supply requirements and evidence, not
 the implementer's self-assessment. Reviewers inspect their own relevant
 callers and rules; they do not edit or switch the shared checkout. Keep their
 reports separate. Resolve findings, fixing each wherever it recurs rather than

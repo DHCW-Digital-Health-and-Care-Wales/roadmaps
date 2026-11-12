@@ -80,7 +80,12 @@ export const test = base.extend<Fakes>({
   ],
 })
 
-/** The roadmap cards on the page, in order. */
+/**
+ * Every roadmap card's link, in order, across the family groups. A link holds only the
+ * title, so `toHaveText([...])` checks order and count. Assert a card's other content on
+ * its list item, `page.getByRole("listitem").filter({ has: link })` with `link` a
+ * page-level `getByRole("link", { name })`: these links start at `main`, outside the item.
+ */
 export function roadmapCards(page: Page) {
   return page.getByRole("main").getByRole("list").getByRole("link")
 }

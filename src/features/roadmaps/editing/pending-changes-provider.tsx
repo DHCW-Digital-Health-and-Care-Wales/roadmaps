@@ -110,6 +110,7 @@ function reconcileOnRead(
     const { queryKey: key } = event.query as Query
     if (isKey(key, roadmapKeys.list())) {
       const roadmaps = event.action.data as unknown as readonly Roadmap[]
+      // `setQueryData` dispatches `success` too, with `manual`: it is no read.
       if (!event.action.manual) {
         store.restoreRoadmaps(roadmaps.map((each) => each.id))
       }

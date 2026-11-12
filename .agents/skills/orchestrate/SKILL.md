@@ -1,6 +1,6 @@
 ---
 name: orchestrate
-description: Orchestrate delivery of several backlog items (an epic, or chosen stories, defects and chores) through one fresh delegated agent per item, in sequence, with a fresh top-level orchestrator session per item where the runtime allows, each to a raised, reviewed PR left for the owner unless the user authorizes merging. Use for "orchestrate the delivery of …". A single item uses implement-story instead.
+description: Orchestrate delivery of several backlog items (an epic, or chosen stories, defects and chores), one fresh delegated agent and reviewed PR per item, in sequence. Use for "orchestrate the delivery of …"; a single item uses implement-story.
 ---
 
 # Orchestrate delivery
@@ -59,10 +59,8 @@ State these policies, using the user's instructions where supplied:
   orchestrator work (the orchestration retro's edits to agent instructions,
   investigating a hard failure) to a delegated agent on a fitting model. A
   delivery agent takes its record's Suggested model as a tier hint. Reviews
-  follow the delegation reference's lanes (correctness: Opus
-  `claude-opus-5-5` and Sol, Codex `gpt-6.1-sol`; quality: Sonnet
-  `claude-sonnet-5-5`), with correctness at least as strong as the delivery
-  agent. Pass provider-specific settings through the delegation tool's
+  run in the delegation reference's lanes, with correctness at least as
+  strong as the delivery agent. Pass provider-specific settings through the delegation tool's
   supported options; report unavailable selections rather than substituting.
   A user's model instruction covers the items it named: copy its words into
   the handoff, and an item added later takes its Suggested model unless the

@@ -3,7 +3,8 @@
 Read the `writing-for-agents` skill before changing agent guides or skills.
 This policy governs `AGENTS.md` (and the `CLAUDE.md` that only imports it),
 agent definitions under `.claude/agents/` and skill instructions under
-`.agents/skills/`. Nothing checks it mechanically: review judges it.
+`.agents/skills/`. `build/agent-guides.test.ts` checks the root guide's size
+and that no guide cites a record ID; review judges the rest.
 
 Root guides are read at onboarding; nested guides and skills are read when
 their scope or trigger applies. Each extra line consumes attention on every
@@ -43,15 +44,16 @@ belongs in a comment at that site, where the next agent to touch it reads it.
 - **Incident post-mortems.** What one PR or review got wrong goes where it lives: a
   check, or a comment at the site. The PR body records the story.
 - **Rules that hold only while one epic is in delivery**, such as an interim
-  reader to avoid until a later story replaces it. They go in that epic's
-  `docs/backlog/{epic}/delivery-notes.md`.
+  reader to avoid until a later story replaces it, or a check its reviewers
+  make. They go in that epic's `docs/backlog/{epic}/delivery-notes.md`
+  (`docs/AGENTS.md`).
+- **A delivery's history**: what changed, its decisions, its evidence. That is
+  the record's Delivery section and its PR.
 - **Story, chore and defect IDs, and provenance stamps** such as
   "(owner, 2026-11-10)". Each records a delivery or a decision's history, not
   a rule; cite the ADR behind a rule instead, and state an owner decision as
   the rule itself. A rule that makes sense only with the story open is not yet
-  written well enough. The root `AGENTS.md` Handoff log is the deliberate
-  exception: it is a record, and the IDs are its point. Do not copy its
-  entries' content into rules elsewhere.
+  written well enough.
 - **Rules a check already enforces** with a clear message — the layer
   restrictions in `eslint.config.ts`, the `i18next/no-literal-string` rule,
   the type error for a catalogue key missing in `cy`. The failure teaches the
@@ -111,12 +113,15 @@ conditional navigation avoids loading unrelated rules.
 ## Length
 
 Keep each guide and each `SKILL.md` as short as it can be while still stopping
-the mistake it exists for. The root `AGENTS.md` is read on every task, so a
-new line there displaces an old one: delete a stale or narrow rule, or move it
-to its code site. When a new rule is needed and nothing in the file should go,
-ask the owner, giving the rule and why no line can make way. A guide split
-between "needed now" and "needed sometimes" belongs in a skill's
-`references/` files, loaded on demand.
+the mistake it exists for. The root `AGENTS.md` is read on every task, twice
+in runtimes that also load `CLAUDE.md`, so it has a budget of 1,200 words,
+enforced by `build/agent-guides.test.ts`. To make room, move a line down to its
+narrowest home (a check, a code comment, a nested guide, a skill reference, an
+epic's `delivery-notes.md`), or delete one only when it is stale or a no-op;
+never cut a live rule to fit. When nothing can move, ask the owner, giving the
+rule and why no line can make way; raising the budget is their call. Material
+only some tasks need belongs behind a pointer, in a nested guide or a skill's
+`references/` files.
 
 ## Skill metadata
 
@@ -129,8 +134,8 @@ use model identifiers only when the current runtime provides them.
 
 ## Review
 
-No script checks these rules. A reviewer reads a changed guide, skill or agent
+Beyond the test's checks, a reviewer reads a changed guide, skill or agent
 definition against this file: is each line a rule rather than a record, does
-it recur, does it sit at the narrowest scope, and does it cite a story ID, a
-provenance stamp or a path that no longer exists? Delivery narrative, size
-and scope are judgement calls, so they stay the author's and the reviewer's.
+it recur, does it sit at the narrowest scope, and does it cite a provenance
+stamp or a path that no longer exists? Narrative and scope are judgement
+calls, so they stay the author's and the reviewer's.

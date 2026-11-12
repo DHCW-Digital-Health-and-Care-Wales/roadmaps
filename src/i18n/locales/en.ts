@@ -139,6 +139,8 @@ export const en = {
     lists: {
       outOfStep: "Doesn't match its family or category",
       familyNotListed: "Family isn't listed",
+      family: "Family: {{name}}",
+      category: "Category: {{name}}",
     },
     card: {
       productLead: "Product lead: {{name}}",

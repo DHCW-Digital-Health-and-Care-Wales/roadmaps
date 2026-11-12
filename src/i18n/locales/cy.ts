@@ -138,6 +138,8 @@ export const cy = {
     lists: {
       outOfStep: "Yn wahanol i'w deulu neu gategori",
       familyNotListed: "Teulu heb ei restru",
+      family: "Teulu: {{name}}",
+      category: "Categori: {{name}}",
     },
     card: {
       productLead: "Arweinydd cynnyrch: {{name}}",

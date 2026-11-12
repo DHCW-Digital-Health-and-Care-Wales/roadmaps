@@ -25,7 +25,6 @@ import {
   FAMILIES_TAB,
   parseCategories,
   parseFamilies,
-  type ListTab,
 } from "./list-tab-parser"
 import {
   parseRoadmapIndex,
@@ -61,6 +60,8 @@ const SHEET_VALUES_PARAMS = {
 
 /** The public site's tab of permitted columns: never read or written (ADR-011, ADR-012). */
 const TEMPLATE_TAB = "Template"
+/** The tabs a roadmap's index row may never name as its items. */
+const NOT_ITEM_TABS = new Set([TEMPLATE_TAB, FAMILIES_TAB, CATEGORIES_TAB])
 
 /** The roadmap index's column each editable roadmap field is written to (ADR-012). */
 const ROADMAP_COLUMNS: Readonly<
@@ -101,11 +102,10 @@ interface TabList {
 }
 
 /** The roadmap index as read, linked to the family and category lists (ADR-013). */
-interface IndexRead extends TabList {
+interface IndexRead {
+  tabs: TabList["tabs"]
   index: RoadmapIndex
   indexTab: TabRows
-  families: ListTab<Family>
-  categories: ListTab<Category>
 }
 
 /** One roadmap as read: its index row and its tab, parsed and as displayed. */
@@ -273,10 +273,10 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
         message: `Roadmap ${roadmapId} names a tab that does not exist`,
       })
     }
-    // Neither is a roadmap's items, and neither may be written as one (ADR-011, ADR-012).
+    // None is a roadmap's items, and none may be written as one (ADR-011 to ADR-013).
     if (
-      entry.tabName === TEMPLATE_TAB ||
-      properties.sheetId === indexRead.first.sheetId
+      NOT_ITEM_TABS.has(entry.tabName) ||
+      properties.sheetId === indexRead.indexTab.properties.sheetId
     ) {
       throw new AppError("invalid-data", {
         message: `Roadmap ${roadmapId} names the ${entry.tabName} tab`,
@@ -302,18 +302,14 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
       this.#readListTab(tabList, FAMILIES_TAB, options),
       this.#readListTab(tabList, CATEGORIES_TAB, options),
     ])
-    const families = parseFamilies(familyRows)
-    const categories = parseCategories(categoryRows)
     return {
-      ...tabList,
+      tabs: tabList.tabs,
       index: parseRoadmapIndex(rows, {
         tabTitles: new Set(tabList.tabs.keys()),
-        families: families.list,
-        categories: categories.list,
+        families: parseFamilies(familyRows).list,
+        categories: parseCategories(categoryRows).list,
       }),
       indexTab: { properties: tabList.first, rows },
-      families,
-      categories,
     }
   }
 

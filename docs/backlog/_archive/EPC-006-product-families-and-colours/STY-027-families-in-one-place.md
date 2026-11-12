@@ -156,7 +156,9 @@ reuses that fold rather than a second one.
   category or both carries one warning badge, "Doesn't match its family or category",
   on its card and beside its page's title; one whose family isn't listed (S8) carries
   "Family isn't listed". Both are badges, like Not published, rather than a sentence,
-  to fit the card.
+  to fit the card. The roadmap's page also shows the family, with its colour, and the
+  category, as "Family: …" and "Category: …" under the title; the card shows the
+  category and the colour, its group heading the family.
 - **What counts as out of step (S4).** Only the copied cells: a trimmed `Family`,
   `Family (cy)` or `Category` that differs from the list's name exactly (case
   included), or a `Colour` that differs in lower case, a `#rgb` colour included. A
@@ -197,9 +199,15 @@ categories })` seeds them (default: those the roadmaps link to; `null` for none)
   names, shared with `groupRoadmaps`.
 - **UI**: `ListMismatchBadges` (`features/roadmaps/components/list-mismatch-badges.tsx`)
   shows the two flags; STY-030's fix can sit beside it. Copy is `roadmaps.lists.*`.
-- **Welsh to review**: `roadmaps.lists.outOfStep` ("Ddim yn cyfateb i'w deulu na'i
-  gategori") and `roadmaps.lists.familyNotListed` ("Teulu heb ei restru") are
-  machine-assisted.
+- **UI**: `RoadmapFamilyLine` (`features/roadmaps/components/roadmap-family-line.tsx`)
+  shows a roadmap's family, with its colour, and its category under its page's title.
+- **Item tabs**: a roadmap whose index row names the `Families` or `Categories` tab is
+  refused as `invalid-data`, as one naming `Template` or the index is, so neither list
+  is ever read or written as items.
+- **Welsh to review**: `roadmaps.lists.outOfStep` ("Yn wahanol i'w deulu neu
+  gategori"), `roadmaps.lists.familyNotListed` ("Teulu heb ei restru"),
+  `roadmaps.lists.family` ("Teulu: {{name}}") and `roadmaps.lists.category`
+  ("Categori: {{name}}") are machine-assisted.
 
 ### Scenario evidence
 
@@ -215,7 +223,9 @@ categories })` seeds them (default: those the roadmaps link to; `null` for none)
 - **S4**: index parser "shows a row whose cells match …, not flagged" and the
   `it.each` of each differing cell; `roadmap-card.test.tsx` "flags a roadmap out of
   step …" and "flags in Welsh"; `roadmap-detail-page-items.test.tsx` "badges a roadmap
-  out of step with its lists beside its title, in English and Welsh"; the e2e spec.
+  out of step with its lists beside its title, and shows the lists' values, in English
+  and Welsh" and "shows no family line …"; the e2e spec (badge, family and category on
+  Product A's page).
 - **S5**: contract "lists the families and categories as plain data in data-source
   order"; card test "is Welsh in Cymraeg" (category from `Name (cy)`); e2e "a family and
   category read their Welsh names from the lists".

@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils"
 import { ListMismatchBadges } from "../components/list-mismatch-badges"
 import { NotPublishedBadge } from "../components/not-published-badge"
 import { RefreshButton } from "../components/refresh-button"
+import { RoadmapFamilyLine } from "../components/roadmap-family-line"
 import { RoadmapItems, RoadmapItemsSkeleton } from "../components/roadmap-items"
 import { RoadmapsErrorState } from "../components/roadmaps-error-state"
 import { StatusPanel } from "../components/status-panel"
@@ -151,8 +152,8 @@ interface RoadmapViewProps {
 /**
  * A listed roadmap: its title, a Not published badge when it is not public (D8), a badge
  * when it is out of step with the family or category list (STY-027 S4, S8), a
- * Refresh for the roadmap and its items (D7), its pending changes with Publish, what it
- * is about, then its items, each showing its pending English (STY-025). The title stays
+ * Refresh for the roadmap and its items (D7), its family and category, its pending
+ * changes with Publish, what it is about, then its items, each showing its pending English (STY-025). The title stays
  * whatever happens to the items.
  */
 function RoadmapView({
@@ -214,6 +215,7 @@ function RoadmapView({
             />
           </div>
         </div>
+        <RoadmapFamilyLine roadmap={roadmap} />
         <RoadmapPublishing roadmap={roadmap} />
       </div>
       <EditableRoadmapAbout roadmap={roadmap} />

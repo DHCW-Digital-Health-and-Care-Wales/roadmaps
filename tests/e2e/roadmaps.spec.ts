@@ -401,6 +401,11 @@ test("families and categories come from their lists, flagging a roadmap out of s
   await expect(
     main.getByText("Doesn't match its family or category"),
   ).toBeVisible()
+  // The lists' values, which the row's cells differ from (S4).
+  await expect(main.getByText("Family: Single Record")).toBeVisible()
+  await expect(
+    main.getByText("Category: GP & Community Services"),
+  ).toBeVisible()
 })
 
 test("a family and category read their Welsh names from the lists (STY-027 S5)", async ({

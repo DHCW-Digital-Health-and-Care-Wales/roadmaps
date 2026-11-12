@@ -1242,19 +1242,29 @@ describe("GoogleSheetsRoadmapRepository", () => {
     })
 
     describe("which tabs it writes (S1)", () => {
-      /** The example spreadsheet with Product A's index row naming `sheet`. */
+      /**
+       * The example spreadsheet, with its family and category lists, and Product A's
+       * index row naming `sheet`.
+       */
       function naming(sheet: string): FakeTab[] {
         const [indexTab, ...rest] = exampleTabs()
         if (indexTab === undefined) throw new Error("The example has an index")
         const rows = indexTab.rows.map((row, r) =>
           r === 1 ? [sheet, ...row.slice(1)] : row,
         )
-        return [{ ...indexTab, rows }, ...rest]
+        return [
+          { ...indexTab, rows },
+          ...rest,
+          gridTab("Families", [["ID", "Name", "Colour"]], 70),
+          gridTab("Categories", [["ID", "Name"]], 71),
+        ]
       }
 
       it.each([
         ["Template", "template"],
         ["Roadmaps", "roadmaps"],
+        ["Families", "families"],
+        ["Categories", "categories"],
       ])(
         "fails with invalid-data, writing nothing, for a roadmap whose tab is %s",
         async (sheet, roadmapId) => {
@@ -1268,7 +1278,10 @@ describe("GoogleSheetsRoadmapRepository", () => {
           ).rejects.toMatchObject({ kind: "invalid-data", retryable: false })
           await expect(
             httpRepository().listRoadmapItems(roadmapId),
-          ).rejects.toMatchObject({ kind: "invalid-data" })
+          ).rejects.toMatchObject({
+            kind: "invalid-data",
+            message: `Roadmap ${roadmapId} names the ${sheet} tab`,
+          })
           expect(spreadsheet.bodies).toEqual([])
         },
       )

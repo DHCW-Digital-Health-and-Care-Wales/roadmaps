@@ -668,9 +668,11 @@ describe("RoadmapDetailPage items", () => {
     })
   })
 
-  it("badges a roadmap out of step with its lists beside its title, in English and Welsh (STY-027 S4, S8)", async () => {
+  it("badges a roadmap out of step with its lists beside its title, and shows the lists' values, in English and Welsh (STY-027 S4, S8)", async () => {
     const flagged = [
       createTestRoadmap("producta", "Product A roadmap", {
+        family: { en: "Single Record", cy: "Cofnod Sengl" },
+        category: { en: "Clinical", cy: "Clinigol" },
         outOfStep: true,
         familyNotListed: true,
       }),
@@ -690,6 +692,8 @@ describe("RoadmapDetailPage items", () => {
     expect(title.parentElement).toHaveTextContent(
       /^Product A roadmapDoesn't match its family or categoryFamily isn't listed$/,
     )
+    expect(main().getByText("Family: Single Record")).toBeInTheDocument()
+    expect(main().getByText("Category: Clinical")).toBeInTheDocument()
     unmount()
 
     await renderWithProviders({
@@ -703,6 +707,21 @@ describe("RoadmapDetailPage items", () => {
       await main().findByText("Yn wahanol i'w deulu neu gategori"),
     ).toBeInTheDocument()
     expect(main().getByText("Teulu heb ei restru")).toBeInTheDocument()
+    expect(main().getByText("Teulu: Cofnod Sengl")).toBeInTheDocument()
+    expect(main().getByText("Categori: Clinigol")).toBeInTheDocument()
+  })
+
+  it("shows no family line for a roadmap with neither a family nor a category (STY-027 S4)", async () => {
+    await renderWithProviders({
+      path: "/roadmaps/producta",
+      authState: connected,
+      roadmaps,
+      roadmapItems: { producta: productAItems },
+    })
+
+    await main().findByRole("heading", { level: 1, name: "Product A roadmap" })
+    expect(main().queryByText(/^Family: /)).not.toBeInTheDocument()
+    expect(main().queryByText(/^Category: /)).not.toBeInTheDocument()
   })
 
   it("says a roadmap removed since the list loaded is not found (S16)", async () => {

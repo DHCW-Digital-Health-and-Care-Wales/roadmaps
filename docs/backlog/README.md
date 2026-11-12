@@ -24,8 +24,11 @@ moves to `_archive/`, where its row here still points.
 
 ## Chores
 
-_None yet._ Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its
-Status token.
+| ID                                                                 | Chore                                                                                                             | Status   |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- | -------- |
+| [CHO-001](chores/CHO-001-carry-linked-name-with-pending-choice.md) | Carry the linked name with each pending family/category choice, so renames before first publish are not conflicts | Proposed |
+
+Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status token.
 
 ## Defects
 

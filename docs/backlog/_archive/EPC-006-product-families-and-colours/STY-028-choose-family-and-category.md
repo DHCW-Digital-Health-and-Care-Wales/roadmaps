@@ -76,6 +76,9 @@ changed right now
 - **D3** (owner, 2026-11-12, round 3 Q2): unlinked rows gain their IDs at their next
   publish → S4.
 - **D4** (owner, 2026-11-12, round 4 Q4): "No category" is offered → S3.
+- **D5** (owner, 2026-11-12, PR review): accepted S5 holding only for a row linked by ID;
+  a name-linked row renamed before its first publish gets a conflict that Keep mine
+  resolves. Carrying the linked name is [CHO-001](../../chores/CHO-001-carry-linked-name-with-pending-choice.md).
 
 ## Out of scope
 
@@ -130,7 +133,7 @@ public site (README, _What the editor writes_). A publish now also writes, in th
   have (STY-027 S8) offers "Single Recrod (not listed)" after "No family"; keeping it
   changes nothing. An unlisted category reads as none (STY-027 S10), so its select shows
   "No category", and keeping that changes nothing.
-- **S5 holds for a row linked by ID; owner to accept.** A row linked to its family or
+- **S5 holds for a row linked by ID; owner accepted (2026-11-12, D5).** A row linked to its family or
   category only by name (no `Family ID` or `Category ID` yet, as every row is until its
   first publish under this story, S4) is refused if that family or category is renamed
   in its list between the choice and the publish: the re-read row's name no longer
@@ -138,7 +141,8 @@ public site (README, _What the editor writes_). A publish now also writes, in th
   review shows "Family isn't listed" (or "No category") as current, and "Keep mine"
   publishes the choice. Telling a rename from a co-lead's move for such a row would
   need the name the row was linked by carried with every pending choice; the window
-  closes for good once a publish links the row's IDs (S4).
+  closes for good once a publish links the row's IDs (S4). Carrying the name is
+  [CHO-001](../../chores/CHO-001-carry-linked-name-with-pending-choice.md).
 - **Conflicts name the choice (S5).** The base is the ID, so a rename is no conflict,
   and the review shows each side by its list name, "No family" or "No category" for
   none. When a refusal shows a co-lead's current values before the roadmap is read

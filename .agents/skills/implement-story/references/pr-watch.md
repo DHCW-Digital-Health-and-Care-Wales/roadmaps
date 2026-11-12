@@ -110,7 +110,7 @@ authorized only for this PR workflow.
 
 ## Merge
 
-Re-read the latest head, its checks and the comments just before merging;
+Re-read the current PR state (above) just before merging;
 anything new reopens the done check. Squash-merge pinned to that inspected head,
 so a concurrent push makes the merge fail rather than land unreviewed:
 `gh pr merge <n> --squash --match-head-commit <head-sha>`. Confirm the PR reads

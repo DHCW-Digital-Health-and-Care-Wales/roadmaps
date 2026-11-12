@@ -638,6 +638,107 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
       ])
     })
 
+    describe("a family or category (STY-028)", () => {
+      const medicines = {
+        family: {
+          en: "Medicines & Diagnostics",
+          cy: "Meddyginiaethau a Diagnosteg",
+        },
+        familyId: "vdkxj63m",
+        colour: "#006747",
+      }
+
+      it("copies a chosen family's names and colour from its list, and blanks no category (S2, S3)", async () => {
+        const repository = setup.withRoadmaps(fixtures, itemFixtures)
+
+        const outcome = await repository.publishRoadmapChanges(
+          "producta",
+          roadmapOnly({
+            familyId: change("fc29g5b9", "vdkxj63m"),
+            categoryId: change("khzpchkh", ""),
+          }),
+        )
+
+        expect(outcome).toEqual({ status: "published" })
+        expect(await repository.listRoadmaps()).toStrictEqual(
+          productA({ ...medicines, category: null, categoryId: null }),
+        )
+      })
+
+      it("leaves the colour for no family (S2)", async () => {
+        const repository = setup.withRoadmaps(fixtures, itemFixtures)
+
+        await repository.publishRoadmapChanges(
+          "producta",
+          roadmapOnly({ familyId: change("fc29g5b9", "") }),
+        )
+
+        expect(await repository.listRoadmaps()).toStrictEqual(
+          productA({ family: null, familyId: null }),
+        )
+      })
+
+      it("refuses a family a co-lead moved, by its ID, writing nothing (S5)", async () => {
+        const roadmaps = productA(medicines)
+        const repository = setup.withRoadmaps(roadmaps, itemFixtures)
+
+        const outcome = await repository.publishRoadmapChanges(
+          "producta",
+          roadmapOnly({ familyId: change("fc29g5b9", "") }),
+        )
+
+        expect(outcome).toEqual({
+          status: "refused",
+          conflicts: [
+            {
+              subject: "roadmap",
+              field: "familyId",
+              base: "fc29g5b9",
+              pending: "",
+              current: "vdkxj63m",
+            },
+          ],
+          missingItems: [],
+        })
+        expect(await repository.listRoadmaps()).toStrictEqual(roadmaps)
+      })
+
+      it.each([
+        ["family", { families: null }, { familyId: change("fc29g5b9", "") }],
+        [
+          "category",
+          { categories: null },
+          { categoryId: change("khzpchkh", "") },
+        ],
+      ] as const)(
+        "rejects with invalid-data, writing nothing, for no %s while its list is missing",
+        async (_, options, roadmap) => {
+          const repository = setup.withRoadmaps(fixtures, itemFixtures, options)
+          const before = await repository.listRoadmaps()
+
+          await expect(
+            repository.publishRoadmapChanges("producta", roadmapOnly(roadmap)),
+          ).rejects.toMatchObject({ kind: "invalid-data" })
+          expect(await repository.listRoadmaps()).toStrictEqual(before)
+        },
+      )
+
+      it("rejects with invalid-data, writing nothing, for a choice no longer listed", async () => {
+        const repository = setup.withRoadmaps(fixtures, itemFixtures)
+
+        await expect(
+          repository.publishRoadmapChanges(
+            "producta",
+            roadmapOnly({
+              statusLabel: change("Beta", "Live"),
+              categoryId: change("khzpchkh", "gone0000"),
+            }),
+          ),
+        ).rejects.toMatchObject({ kind: "invalid-data" })
+        expect(await repository.listRoadmaps()).toStrictEqual(fixtures)
+      })
+    })
+
     it("refuses an edited item that is no longer there (S9)", async () => {
       const repository = setup.withRoadmaps(fixtures, {
         producta: [laterWork],

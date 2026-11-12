@@ -139,4 +139,18 @@ describe("applyBatchUpdate", () => {
       expect.stringContaining(violation) as string,
     ])
   })
+
+  it("allows Family (cy), the family's Welsh name copied from its list (ADR-013)", () => {
+    const tab = {
+      ...index(),
+      rows: [["Sheet", "Family - Cymraeg"], ["ProductA"]],
+      columnCount: 2,
+    }
+
+    const result = applyBatchUpdate([tab], {
+      requests: [cell(0, 1, 1, "Cofnod Sengl")],
+    })
+
+    expect(result.violations).toEqual([])
+  })
 })

@@ -22,7 +22,10 @@ import { RoadmapsErrorState } from "../components/roadmaps-error-state"
 import { StatusPanel } from "../components/status-panel"
 import { ChangedTag } from "../editing/edit-controls"
 import { EditableRoadmapAbout } from "../editing/editable-roadmap-about"
-import { applyRoadmapChanges } from "../editing/pending-changes"
+import {
+  applyRoadmapChanges,
+  hasChoiceChange,
+} from "../editing/pending-changes"
 import {
   usePendingChanges,
   usePendingChangesStore,
@@ -30,6 +33,7 @@ import {
 } from "../editing/pending-changes-context"
 import { RoadmapPublishing } from "../editing/roadmap-publishing"
 import { isRoadmapGone, useRoadmapItems } from "../hooks/use-roadmap-items"
+import { useRoadmapLists } from "../hooks/use-roadmap-lists"
 import { useRoadmap } from "../hooks/use-roadmaps"
 import { useRoadmapsProblem } from "../hooks/use-roadmaps-problem"
 
@@ -152,7 +156,8 @@ interface RoadmapViewProps {
 /**
  * A listed roadmap: its title, a Not published badge when it is not public (D8), a badge
  * when it is out of step with the family or category list (STY-027 S4, S8), a Refresh
- * for the roadmap and its items (D7), its family and category, its pending changes with
+ * for the roadmap, its items and the lists (D7), its family and category as they will
+ * be published (STY-028 S1), its pending changes with
  * Publish, what it is about, then its items, each showing its pending English
  * (STY-025). The title stays whatever happens to the items.
  */
@@ -165,13 +170,18 @@ function RoadmapView({
   const language = useLanguage()
   const store = usePendingChangesStore()
   const changes = useRoadmapChanges(roadmap.id)
-  // The same query the items area reads, for the page's Refresh.
+  // The same queries the items area and the form read, for the page's Refresh.
   const items = useRoadmapItems(roadmap.id)
+  const lists = useRoadmapLists(hasChoiceChange(changes))
+  const shown = applyRoadmapChanges(roadmap, changes, lists.lists)
   const retryList = () => {
     void refetchList()
   }
   const refresh = async () => {
     const startedAt = Date.now()
+    // The lists, where any part of the page needs them, are read again whatever the
+    // roadmap's reads come to.
+    void lists.refetch()
     const reads = await Promise.all([refetchList(), items.refetch()])
     // A notice asking for a Refresh has been heeded once both reads came back (S18);
     // until then what the publish came to is still unknown. A read cancelled at the
@@ -200,7 +210,7 @@ function RoadmapView({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
             <h1 className="text-heading-xl text-pretty wrap-break-word">
-              {localise(applyRoadmapChanges(roadmap, changes).title, language)}
+              {localise(shown.title, language)}
             </h1>
             {!roadmap.published && <NotPublishedBadge />}
             <ListMismatchBadges roadmap={roadmap} />
@@ -215,7 +225,7 @@ function RoadmapView({
             />
           </div>
         </div>
-        <RoadmapFamilyLine roadmap={roadmap} />
+        <RoadmapFamilyLine roadmap={shown} />
         <RoadmapPublishing roadmap={roadmap} />
       </div>
       <EditableRoadmapAbout roadmap={roadmap} />

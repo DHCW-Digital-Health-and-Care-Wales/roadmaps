@@ -204,6 +204,29 @@ describe("reconcile", () => {
     expect(reconcileRoadmap(changes, roadmap)).toBe(changes)
   })
 
+  it("keeps No family or category pending while a read names one it can't link", () => {
+    const linked = {
+      ...roadmap,
+      family: { en: "Single Record", cy: "Cofnod Sengl" },
+      familyId: "fc29g5b9",
+      category: { en: "Clinical", cy: "" },
+      categoryId: "khzpchkh",
+    }
+    const changes = editRoadmap(NO_CHANGES, linked, {
+      familyId: "",
+      categoryId: "",
+    })
+    const listsMissing = { ...linked, familyId: null, categoryId: null }
+    const cleared = {
+      ...listsMissing,
+      family: null,
+      category: null,
+    }
+
+    expect(reconcileRoadmap(changes, listsMissing)).toBe(changes)
+    expect(reconcileRoadmap(changes, cleared).roadmap).toEqual({})
+  })
+
   it("follows an item to its new place, drops held fields and keeps an item not found", () => {
     let changes = editItem(NO_CHANGES, undefined, first, 0, {
       title: "One",
@@ -243,6 +266,7 @@ describe("reconcile", () => {
       items: [copy, { ...loaded, id: null }],
       repeatedIds: new Set(["sharedid"]),
       takenIds: new Set(["sharedid"]),
+      missingLists: new Set(),
     })
     expect(plan).toMatchObject({
       kind: "settled",
@@ -330,6 +354,56 @@ describe("apply", () => {
     expect(applyItemChanges(item, edited.items[0]).description).toEqual({
       en: "New",
       cy: "Hen",
+    })
+  })
+
+  describe("a chosen family or category (STY-028 S1)", () => {
+    const singleRecord = createTestRoadmap("producta", "Product A", {
+      family: { en: "Single Record", cy: "Cofnod Sengl" },
+      familyId: "fc29g5b9",
+      colour: "#12a3c9",
+      category: { en: "GP & Community Services", cy: "Meddygon Teulu" },
+      categoryId: "khzpchkh",
+    })
+    const lists = {
+      families: [
+        {
+          id: "vdkxj63m",
+          name: { en: "Medicines & Diagnostics", cy: "Meddyginiaethau" },
+          colour: "#006747",
+        },
+      ],
+      categories: [{ id: "w7vrv5kn", name: { en: "Tests", cy: "Profion" } }],
+    }
+
+    it("shows a chosen family and category as the lists name them, with the family's colour", () => {
+      const changes = editRoadmap(NO_CHANGES, singleRecord, {
+        familyId: "vdkxj63m",
+        categoryId: "w7vrv5kn",
+      })
+
+      expect(applyRoadmapChanges(singleRecord, changes, lists)).toMatchObject({
+        family: { en: "Medicines & Diagnostics", cy: "Meddyginiaethau" },
+        familyId: "vdkxj63m",
+        colour: "#006747",
+        category: { en: "Tests", cy: "Profion" },
+        categoryId: "w7vrv5kn",
+      })
+    })
+
+    it("shows no family or category for none, keeping the colour", () => {
+      const changes = editRoadmap(NO_CHANGES, singleRecord, {
+        familyId: "",
+        categoryId: "",
+      })
+
+      expect(applyRoadmapChanges(singleRecord, changes, lists)).toMatchObject({
+        family: null,
+        familyId: null,
+        colour: "#12a3c9",
+        category: null,
+        categoryId: null,
+      })
     })
   })
 })

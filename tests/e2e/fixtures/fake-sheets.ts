@@ -66,6 +66,38 @@ export const EXAMPLE_SPREADSHEET: readonly FakeTab[] = [
 ]
 
 /**
+ * A family and a category list (ADR-013), to add to a spreadsheet: Product A's and B's
+ * families, and two categories, the first Product A's.
+ */
+export const EXAMPLE_LISTS: readonly FakeTab[] = [
+  {
+    title: "Families",
+    rows: [
+      ["ID", "Name", "Name (cy)", "Colour"],
+      ["fc29g5b9", "Single Record", "Cofnod Sengl", "#12a3c9"],
+      [
+        "vdkxj63m",
+        "Medicines & Diagnostics",
+        "Meddyginiaethau a Diagnosteg",
+        "#006747",
+      ],
+    ],
+  },
+  {
+    title: "Categories",
+    rows: [
+      ["ID", "Name", "Name (cy)"],
+      [
+        "khzpchkh",
+        "GP & Community Services",
+        "Meddygon Teulu a Gwasanaethau Cymunedol",
+      ],
+      ["w7vrv5kn", "Tests, Scans & Results", "Profion, Sganiau a Chanlyniadau"],
+    ],
+  },
+]
+
+/**
  * One row of the roadmap index, in the example header's column order, from the cells to
  * set by header name (the rest blank): `roadmapRow({ Sheet: "x", Colour: "#ffffff" })`.
  */

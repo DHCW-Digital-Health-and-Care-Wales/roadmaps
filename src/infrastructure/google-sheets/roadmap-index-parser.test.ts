@@ -494,9 +494,9 @@ describe("parseRoadmapIndex", () => {
     })
   })
 
-  it("returns where each English column is, found by header", () => {
+  it("returns where each English column is, and Family (cy), found by header", () => {
     const index = parseRoadmapIndex([
-      ["Vision (cy)", " sheet ", "Vision", "Title"],
+      ["Vision (cy)", " sheet ", "Vision", "Title", "family - cymraeg"],
       ["", "ProductA"],
     ])
     expect(index.columns).toEqual(
@@ -504,6 +504,7 @@ describe("parseRoadmapIndex", () => {
         ["Sheet", 1],
         ["Vision", 2],
         ["Title", 3],
+        ["Family (cy)", 4],
       ]),
     )
   })

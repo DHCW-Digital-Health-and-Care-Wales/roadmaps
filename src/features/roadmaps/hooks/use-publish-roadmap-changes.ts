@@ -14,18 +14,21 @@ import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 
 import { useRoadmapRepository } from "../roadmap-repository-context"
 import { roadmapKeys } from "./roadmap-queries"
+import type { RoadmapLists } from "./use-roadmap-lists"
 
 /**
  * The roadmap and its items as read, showing the text a refusal found (STY-026), in each
  * field no read during the publish changed from `since`, as read when it began; a field
  * one did change keeps that read's text, as it may be newer (DEF-003). With nothing
- * cached when it began, `since` is `undefined` and the read is shown as it is.
+ * cached when it began, `since` is `undefined` and the read is shown as it is. A family
+ * or category is named from `lists`, as cached.
  */
 export interface CurrentText {
   roadmap: (
     roadmap: Roadmap,
     conflicts: readonly FieldConflict[],
     since: Roadmap | undefined,
+    lists: RoadmapLists,
   ) => Roadmap
   items: (
     items: readonly RoadmapItem[],
@@ -100,13 +103,17 @@ function showCurrentText(
 ) {
   if (conflicts.some((conflict) => conflict.subject === "roadmap")) {
     const since = before.roadmaps?.find((each) => each.id === roadmapId)
+    const lists: RoadmapLists = {
+      families: queryClient.getQueryData(roadmapKeys.families()),
+      categories: queryClient.getQueryData(roadmapKeys.categories()),
+    }
     patchQueryData<readonly Roadmap[]>(
       queryClient,
       roadmapKeys.list(),
       (roadmaps) =>
         roadmaps.map((each) =>
           each.id === roadmapId
-            ? currentText.roadmap(each, conflicts, since)
+            ? currentText.roadmap(each, conflicts, since, lists)
             : each,
         ),
     )

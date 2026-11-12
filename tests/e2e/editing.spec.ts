@@ -1,12 +1,19 @@
 import type { Page } from "@playwright/test"
 
-import { EXAMPLE_INDEX_ROWS, withRoadmapIndex } from "./fixtures/fake-sheets"
+import {
+  EXAMPLE_INDEX_ROWS,
+  EXAMPLE_LISTS,
+  EXAMPLE_SPREADSHEET,
+  type FakeTab,
+  withRoadmapIndex,
+} from "./fixtures/fake-sheets"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 /**
  * A Product Lead edits a roadmap's English and publishes it, or saves it when the roadmap
  * is not published (STY-025), against the fake Sheets API: one `batchUpdate` per publish.
- * A co-lead's change made meanwhile is shown, never overwritten (STY-026).
+ * A co-lead's change made meanwhile is shown, never overwritten (STY-026). A family and
+ * category are chosen from their lists (STY-028).
  */
 
 const ITEM = "Example card with every column"
@@ -386,5 +393,163 @@ test.describe("a co-lead's change (STY-026)", () => {
     await expect(
       page.getByRole("main").getByText("Unpublished changes"),
     ).toHaveCount(0)
+  })
+})
+
+test.describe("a family and category (STY-028)", () => {
+  /** The roadmap index's row for `sheet`, by header. */
+  function indexRow(tabs: readonly FakeTab[], sheet: string) {
+    const index = tabs.find(({ title }) => title === "Roadmaps")
+    const [header = [], ...rows] = index?.rows ?? []
+    const row = rows.find((cells) => cells[0] === sheet) ?? []
+    return Object.fromEntries(header.map((name, i) => [name, row[i] ?? ""]))
+  }
+
+  async function editAbout(page: Page) {
+    const main = page.getByRole("main")
+    await main.getByRole("button", { name: "Edit About this roadmap" }).click()
+    return main.getByRole("form", { name: "About this roadmap" })
+  }
+
+  test.beforeEach(({ sheets }) => {
+    sheets.spreadsheet = [...EXAMPLE_SPREADSHEET, ...EXAMPLE_LISTS]
+  })
+
+  test("is chosen from the lists, pending in its colour, then published with its IDs (S1, S2, S3)", async ({
+    page,
+    sheets,
+  }) => {
+    await openRoadmap(page, "producta", ITEM)
+    const form = await editAbout(page)
+    const category = form.getByRole("combobox", { name: "Category" })
+    await expect(category.getByRole("option")).toHaveText([
+      "No category",
+      "GP & Community Services",
+      "Tests, Scans & Results",
+    ])
+    await form
+      .getByRole("combobox", { name: "Family" })
+      .selectOption("Medicines & Diagnostics")
+    await category.selectOption("Tests, Scans & Results")
+    await form.getByRole("button", { name: "Done" }).click()
+
+    const main = page.getByRole("main")
+    const line = main.getByText("Family: Medicines & Diagnostics")
+    await expect(line).toBeVisible()
+    await expect(line.locator("xpath=../..").locator("span[style]")).toHaveCSS(
+      "background-color",
+      "rgb(0, 103, 71)",
+    )
+    await expect(
+      main.getByText("Category: Tests, Scans & Results"),
+    ).toBeVisible()
+    await expect(main.getByText("2 unpublished changes")).toBeVisible()
+    expect(sheets.writes).toEqual([])
+
+    await confirmPublish(page, "Publish")
+
+    await expect(main.getByText(/^Changes published\./)).toBeVisible()
+    expect(sheets.writes).toHaveLength(1)
+    expect(indexRow(sheets.spreadsheet, "ProductA")).toMatchObject({
+      Family: "Medicines & Diagnostics",
+      "Family (cy)": "Meddyginiaethau a Diagnosteg",
+      Colour: "#006747",
+      "Family ID": "vdkxj63m",
+      Category: "Tests, Scans & Results",
+      "Category ID": "w7vrv5kn",
+    })
+    await expect(line).toBeVisible()
+  })
+
+  test("No family blanks its names, keeping the colour (S2)", async ({
+    page,
+    sheets,
+  }) => {
+    await openRoadmap(page, "productb", "Building the core service")
+    const form = await editAbout(page)
+    await form
+      .getByRole("combobox", { name: "Family" })
+      .selectOption("No family")
+    await form.getByRole("button", { name: "Done" }).click()
+
+    await confirmPublish(page, "Publish")
+
+    await expect(
+      page.getByRole("main").getByText(/^Changes published\./),
+    ).toBeVisible()
+    const row = indexRow(sheets.spreadsheet, "ProductB")
+    expect(row).toMatchObject({
+      Family: "",
+      "Family (cy)": "",
+      Colour: "#006747",
+    })
+    // No ID column is added only to stay blank.
+    expect(row).not.toHaveProperty("Family ID")
+  })
+
+  test("any publish links a family and category named, not yet by ID (S4)", async ({
+    page,
+    sheets,
+  }) => {
+    await openRoadmap(page, "producta", ITEM)
+    await editVision(page, "A sharper vision.")
+
+    await confirmPublish(page, "Publish")
+
+    await expect(
+      page.getByRole("main").getByText(/^Changes published\./),
+    ).toBeVisible()
+    expect(indexRow(sheets.spreadsheet, "ProductA")).toMatchObject({
+      Vision: "A sharper vision.",
+      Family: "Single Record",
+      Colour: "#325083",
+      "Family ID": "fc29g5b9",
+      Category: "GP & Community Services",
+      "Category ID": "khzpchkh",
+    })
+    expect(indexRow(sheets.spreadsheet, "ProductB")).toMatchObject({
+      "Family ID": "",
+    })
+  })
+
+  test("a co-lead's move to another family is shown by name, nothing written (S5)", async ({
+    page,
+    sheets,
+  }) => {
+    await openRoadmap(page, "producta", ITEM)
+    const form = await editAbout(page)
+    await form
+      .getByRole("combobox", { name: "Family" })
+      .selectOption("No family")
+    await form.getByRole("button", { name: "Done" }).click()
+    sheets.coLead("Roadmaps", "ProductA", "Family", "Medicines & Diagnostics")
+
+    await confirmPublish(page, "Publish")
+
+    const review = page.getByRole("main").getByRole("alert")
+    await expect(review).toBeFocused()
+    await expect(review.getByRole("listitem")).toContainText(
+      /About this roadmap: Family.*Your change.*No family.*Current text.*Medicines & Diagnostics/,
+    )
+    expect(sheets.writes).toHaveLength(0)
+  })
+
+  test("is shown read-only, saying why, when its list is missing (S6)", async ({
+    page,
+    sheets,
+  }) => {
+    sheets.spreadsheet = [
+      ...EXAMPLE_SPREADSHEET,
+      ...EXAMPLE_LISTS.filter(({ title }) => title !== "Families"),
+    ]
+    await openRoadmap(page, "producta", ITEM)
+    const form = await editAbout(page)
+
+    await expect(form.getByRole("combobox", { name: "Category" })).toBeVisible()
+    await expect(form.getByRole("combobox", { name: "Family" })).toHaveCount(0)
+    await expect(form.getByText("Single Record")).toBeVisible()
+    await expect(
+      form.getByText("The family can't be changed right now."),
+    ).toBeVisible()
   })
 })

@@ -3,6 +3,8 @@ import type { Page } from "@playwright/test"
 
 import {
   EXAMPLE_INDEX_ROWS,
+  EXAMPLE_LISTS,
+  EXAMPLE_SPREADSHEET,
   roadmapRow,
   withRoadmapIndex,
 } from "./fixtures/fake-sheets"
@@ -174,6 +176,28 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
 
       await dialog.getByRole("button", { name: "Publish changes" }).click()
       await expect(main.getByText(/Changes published/)).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+    })
+
+    test("choosing a family, then its pending colour (STY-028)", async ({
+      page,
+      sheets,
+    }) => {
+      sheets.spreadsheet = [...EXAMPLE_SPREADSHEET, ...EXAMPLE_LISTS]
+      await page.goto("./#/roadmaps/producta")
+      await connect(page)
+      const main = page.getByRole("main")
+      await main
+        .getByRole("button", { name: "Edit About this roadmap" })
+        .click()
+      const family = main.getByRole("combobox", { name: "Family" })
+      await family.selectOption("Medicines & Diagnostics")
+      await expectNoAxeViolations(page, theme)
+
+      await main.getByRole("form").getByRole("button", { name: "Done" }).click()
+      await expect(
+        main.getByText("Family: Medicines & Diagnostics"),
+      ).toBeVisible()
       await expectNoAxeViolations(page, theme)
     })
 

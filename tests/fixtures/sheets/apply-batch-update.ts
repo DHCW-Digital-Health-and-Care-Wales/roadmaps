@@ -49,6 +49,9 @@ export type BatchUpdateResult =
  */
 const WELSH_HEADER = /^(.+?)[\s([\-_]+(?:cy|cym|cymraeg|welsh)[\s)\]]*$/i
 
+/** The one Welsh column the editor writes: the family's name, copied from its list (ADR-013). */
+const FAMILY_WELSH = /^family$/i
+
 /** The tab the editor never writes (ADR-012), kept apart from the adapter's like `WELSH_HEADER`. */
 const TEMPLATE_TAB = "Template"
 
@@ -59,8 +62,8 @@ const LAST_UPDATED_HEADER = /^\s*last\s+updated\s*$/i
  * Applies a `batchUpdate` body to `tabs`, all or nothing as Google does: a request it
  * can't apply rejects the whole body and changes nothing. Beyond what Google rejects, it
  * records as violations what the editor must never write (STY-023 S11): the `Template`
- * tab, anything but a plain string or a cleared cell, a Welsh column, `Last updated`,
- * an unchanged cell.
+ * tab, anything but a plain string or a cleared cell, a Welsh column but `Family (cy)`,
+ * `Last updated`, an unchanged cell.
  */
 export function applyBatchUpdate(
   tabs: readonly GridTab[],
@@ -124,7 +127,8 @@ export function applyBatchUpdate(
         if (tab.title === TEMPLATE_TAB) violations.push(`${where} in Template`)
         const header = tab.rows[0]?.[columnIndex] ?? ""
         const column = rowIndex === 0 ? value : header
-        if (WELSH_HEADER.test(column)) {
+        const welsh = WELSH_HEADER.exec(column)?.[1]?.trim()
+        if (welsh !== undefined && !FAMILY_WELSH.test(welsh)) {
           violations.push(`${where} in a Welsh column`)
         }
         if (LAST_UPDATED_HEADER.test(column)) {

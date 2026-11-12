@@ -2,9 +2,9 @@ import { useTranslation } from "react-i18next"
 
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import {
-  EDITABLE_ROADMAP_FIELDS,
-  roadmapText,
-  type EditableRoadmapField,
+  ROADMAP_TEXT_FIELDS,
+  roadmapValue,
+  type RoadmapTextField,
 } from "@/domain/roadmap/roadmap-changes"
 
 import { RoadmapAbout } from "../components/roadmap-about"
@@ -14,6 +14,7 @@ import { editFormFields } from "./edit-form-fields"
 import {
   applyRoadmapChanges,
   changedRoadmapFields,
+  hasChoiceChange,
   editRoadmap,
   undoRoadmap,
   type RoadmapValues,
@@ -25,9 +26,10 @@ import {
 } from "./pending-changes-context"
 import { awaitingRefresh } from "./pending-changes-store"
 import { useEditMode } from "./use-edit-mode"
+import { useRoadmapChoices } from "./use-roadmap-choices"
 
 /** Fields that hold paragraphs; the others are one line unless they already break. */
-const multilineRoadmapFields: ReadonlySet<EditableRoadmapField> = new Set([
+const multilineRoadmapFields: ReadonlySet<RoadmapTextField> = new Set([
   "vision",
   "serviceDescription",
 ])
@@ -39,7 +41,8 @@ export interface EditableRoadmapAboutProps {
 
 /**
  * What the roadmap is about, with its pending English shown and tagged, and an Edit for
- * its title, status, product lead, vision and service description (STY-025 S5).
+ * its title, status, product lead, vision and service description (STY-025 S5), and its
+ * family and category, chosen from the lists (STY-028).
  */
 export function EditableRoadmapAbout({ roadmap }: EditableRoadmapAboutProps) {
   const { t } = useTranslation()
@@ -47,8 +50,10 @@ export function EditableRoadmapAbout({ roadmap }: EditableRoadmapAboutProps) {
   const changes = useRoadmapChanges(roadmap.id)
   const undoable = !awaitingRefresh(usePendingChanges(), roadmap.id)
   const mode = useEditMode<{ read: Roadmap; shown: Roadmap }>()
-  const shown = applyRoadmapChanges(roadmap, changes)
-  const changed = changedRoadmapFields(changes).length > 0
+  const changedFields = changedRoadmapFields(changes)
+  const choices = useRoadmapChoices(mode.editing || hasChoiceChange(changes))
+  const shown = applyRoadmapChanges(roadmap, changes, choices.lists)
+  const changed = changedFields.length > 0
 
   // A field's edit is made from the roadmap as the form opened on it.
   const done = (values: RoadmapValues) => {
@@ -67,12 +72,13 @@ export function EditableRoadmapAbout({ roadmap }: EditableRoadmapAboutProps) {
     mode.refocus()
   }
 
-  const { fields, initial } = editFormFields(
-    EDITABLE_ROADMAP_FIELDS,
-    (field) => roadmapText(shown, field),
+  const text = editFormFields(
+    ROADMAP_TEXT_FIELDS,
+    (field) => roadmapValue(shown, field),
     (field) => t(`roadmaps.edit.roadmapFields.${field}`),
     multilineRoadmapFields,
   )
+  const chosen = choices.fields(shown)
 
   return (
     <RoadmapAbout
@@ -81,8 +87,8 @@ export function EditableRoadmapAbout({ roadmap }: EditableRoadmapAboutProps) {
         mode.editing
           ? (headingId) => (
               <EditForm
-                fields={fields}
-                initial={initial}
+                fields={[...text.fields, ...chosen.fields]}
+                initial={{ ...text.initial, ...chosen.initial }}
                 labelledBy={headingId}
                 onDone={done}
                 onCancel={mode.close}

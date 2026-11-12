@@ -69,8 +69,8 @@ export interface RoadmapIndexEntry {
 export interface RoadmapIndex {
   /** In row order. */
   entries: RoadmapIndexEntry[]
-  /** The 0-based place of each English column the header has, to write to. */
-  columns: ReadonlyMap<RoadmapIndexColumn, number>
+  /** The 0-based place of each column the header has that may be written to. */
+  columns: ReadonlyMap<RoadmapIndexWriteColumn, number>
   /** In row order, problems of the whole list first. */
   problems: RoadmapIndexProblem[]
 }
@@ -94,6 +94,14 @@ const EDITOR_COLUMNS = ["Family ID", "Category ID"] as const
 
 export type RoadmapIndexColumn =
   "Sheet" | (typeof OPTIONAL_COLUMNS)[number] | (typeof EDITOR_COLUMNS)[number]
+
+export const FAMILY_WELSH = "Family (cy)"
+
+/**
+ * A column a publish may write: an English one, or the family's Welsh name, copied from
+ * the family list (ADR-013), the one Welsh column ever written.
+ */
+export type RoadmapIndexWriteColumn = RoadmapIndexColumn | typeof FAMILY_WELSH
 type Column = RoadmapIndexColumn
 type TextColumn =
   "Title" | "Family" | "Status label" | "Vision" | "Service description"
@@ -232,9 +240,13 @@ export function parseRoadmapIndex(
   ) {
     problems.record("no-published-roadmap", {})
   }
+  const familyWelsh = header.welsh.get("Family")
   return {
     entries,
-    columns: columnIndexes(header),
+    columns: new Map<RoadmapIndexWriteColumn, number>([
+      ...columnIndexes(header),
+      ...(familyWelsh ? [[FAMILY_WELSH, familyWelsh.index] as const] : []),
+    ]),
     problems: problems.sorted(),
   }
 }

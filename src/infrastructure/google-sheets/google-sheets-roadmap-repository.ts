@@ -9,9 +9,9 @@ import {
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type {
   EditableItemField,
-  EditableRoadmapField,
   PublishOutcome,
   RoadmapChanges,
+  RoadmapTextField,
 } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import type {
@@ -27,10 +27,11 @@ import {
   parseFamilies,
 } from "./list-tab-parser"
 import {
+  FAMILY_WELSH,
   parseRoadmapIndex,
   type RoadmapIndex,
-  type RoadmapIndexColumn,
   type RoadmapIndexEntry,
+  type RoadmapIndexWriteColumn,
 } from "./roadmap-index-parser"
 import {
   parseRoadmapTab,
@@ -63,9 +64,9 @@ const TEMPLATE_TAB = "Template"
 /** The tabs a roadmap's index row may never name as its items. */
 const NOT_ITEM_TABS = new Set([TEMPLATE_TAB, FAMILIES_TAB, CATEGORIES_TAB])
 
-/** The roadmap index's column each editable roadmap field is written to (ADR-012). */
+/** The roadmap index's column each roadmap text field is written to (ADR-012). */
 const ROADMAP_COLUMNS: Readonly<
-  Record<EditableRoadmapField, RoadmapIndexColumn>
+  Record<RoadmapTextField, RoadmapIndexWriteColumn>
 > = {
   title: "Title",
   statusLabel: "Status label",
@@ -106,6 +107,9 @@ interface IndexRead {
   tabs: TabList["tabs"]
   index: RoadmapIndex
   indexTab: TabRows
+  /** `null` without a usable list. */
+  families: Family[] | null
+  categories: Category[] | null
 }
 
 /** One roadmap as read: its index row and its tab, parsed and as displayed. */
@@ -302,14 +306,18 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
       this.#readListTab(tabList, FAMILIES_TAB, options),
       this.#readListTab(tabList, CATEGORIES_TAB, options),
     ])
+    const families = parseFamilies(familyRows).list
+    const categories = parseCategories(categoryRows).list
     return {
       tabs: tabList.tabs,
       index: parseRoadmapIndex(rows, {
         tabTitles: new Set(tabList.tabs.keys()),
-        families: parseFamilies(familyRows).list,
-        categories: parseCategories(categoryRows).list,
+        families,
+        categories,
       }),
       indexTab: { properties: tabList.first, rows },
+      families,
+      categories,
     }
   }
 
@@ -380,7 +388,13 @@ function quoteTabTitle(title: string): string {
 }
 
 /** The roadmap as the publish plan needs it. */
-function snapshotOf({ entry, items, itemTab }: RoadmapRead): RoadmapSnapshot {
+function snapshotOf({
+  entry,
+  items,
+  itemTab,
+  families,
+  categories,
+}: RoadmapRead): RoadmapSnapshot {
   const idColumn = items.columns.get("Item ID")
   return {
     roadmap: entry.roadmap,
@@ -399,15 +413,30 @@ function snapshotOf({ entry, items, itemTab }: RoadmapRead): RoadmapSnapshot {
             return id === "" ? [] : [id]
           }),
     ),
+    missingLists: new Set([
+      ...(families === null ? (["familyId"] as const) : []),
+      ...(categories === null ? (["categoryId"] as const) : []),
+    ]),
   }
 }
 
 /** The requests that make `writes`: growing grids first, then headers, then cells. */
 function batchRequests(read: RoadmapRead, writes: PublishWrites) {
   const index = new TabWriter(read.indexTab, read.index.columns)
+  const indexRow = new IndexRowWriter(read, index)
   for (const { field, value } of writes.roadmap) {
-    index.write(read.entry.row, ROADMAP_COLUMNS[field], value)
+    switch (field) {
+      case "familyId":
+        indexRow.writeFamily(value)
+        break
+      case "categoryId":
+        indexRow.writeCategory(value)
+        break
+      default:
+        index.write(read.entry.row, ROADMAP_COLUMNS[field], value)
+    }
   }
+  indexRow.linkIds(writes)
   const tab = new TabWriter(read.itemTab, read.items.columns)
   const rowOf = (i: number) => {
     const row = read.items.rows[i]
@@ -422,6 +451,90 @@ function batchRequests(read: RoadmapRead, writes: PublishWrites) {
     tab.write(rowOf(i), "Item ID", id)
   }
   return [...index.requests(), ...tab.requests()]
+}
+
+/**
+ * Writes the roadmap's index row's family and category cells, copied from the lists as
+ * re-read for the publish (ADR-013), each only when it changes: a cell already holding
+ * its value, or a blank for a column the header lacks, is left alone.
+ */
+class IndexRowWriter {
+  readonly #read: RoadmapRead
+  readonly #index: TabWriter<RoadmapIndexWriteColumn>
+  readonly #cells: readonly string[]
+
+  constructor(read: RoadmapRead, index: TabWriter<RoadmapIndexWriteColumn>) {
+    this.#read = read
+    this.#index = index
+    this.#cells = read.indexTab.rows[read.entry.row - 1] ?? []
+  }
+
+  /**
+   * `Family ID`, `Family`, `Family (cy)` and `Colour` from the chosen family; `""` (no
+   * family) blanks all but `Colour`, which is never written without a family.
+   */
+  writeFamily(id: string): void {
+    const family = id === "" ? null : listed(this.#read.families, id, "family")
+    this.#write("Family ID", id)
+    this.#write("Family", family?.name.en ?? "")
+    this.#write(FAMILY_WELSH, family?.name.cy ?? "")
+    if (family) this.#write("Colour", family.colour)
+  }
+
+  /** `Category ID` and `Category`, the category's English name; `""` blanks both. */
+  writeCategory(id: string): void {
+    const category =
+      id === "" ? null : listed(this.#read.categories, id, "category")
+    this.#write("Category ID", id)
+    this.#write("Category", category?.name.en ?? "")
+  }
+
+  /**
+   * The ID of the family and category the row is linked to by name, where its ID cell is
+   * blank and `writes` doesn't choose another (STY-028 S4).
+   */
+  linkIds({ roadmap }: PublishWrites): void {
+    const { familyId, categoryId } = this.#read.entry.roadmap
+    const chosen = new Set(roadmap.map(({ field }) => field))
+    if (familyId !== null && !chosen.has("familyId")) {
+      this.#link("Family ID", familyId)
+    }
+    if (categoryId !== null && !chosen.has("categoryId")) {
+      this.#link("Category ID", categoryId)
+    }
+  }
+
+  #link(column: "Family ID" | "Category ID", id: string): void {
+    if (this.#cell(column).trim() === "") this.#write(column, id)
+  }
+
+  #write(column: RoadmapIndexWriteColumn, value: string): void {
+    if (this.#cell(column) === value) return
+    this.#index.write(this.#read.entry.row, column, value)
+  }
+
+  #cell(column: RoadmapIndexWriteColumn): string {
+    const at = this.#read.index.columns.get(column)
+    return at === undefined ? "" : (this.#cells[at] ?? "")
+  }
+}
+
+/**
+ * The list's entry with this ID. Throws `AppError('invalid-data')` when the list, as
+ * re-read for the publish, has none: removed since it was chosen, or no list at all.
+ */
+function listed<T extends { id: string }>(
+  list: readonly T[] | null,
+  id: string,
+  what: string,
+): T {
+  const found = list?.find((each) => each.id === id)
+  if (found === undefined) {
+    throw new AppError("invalid-data", {
+      message: `The ${what} list has no ${id}`,
+    })
+  }
+  return found
 }
 
 /**

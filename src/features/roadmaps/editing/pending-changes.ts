@@ -13,12 +13,17 @@ import {
   type EditableItemField,
   type EditableRoadmapField,
   type FieldChange,
+  isChoiceField,
   type ItemChanges,
   itemText,
   type RoadmapChanges,
-  roadmapText,
+  type RoadmapChoiceField,
+  roadmapValue,
+  UNLISTED_FAMILY,
 } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
+
+import type { RoadmapLists } from "../hooks/use-roadmap-lists"
 
 /** A form's values, as typed: kept trimmed. */
 export type RoadmapValues = Partial<Record<EditableRoadmapField, string>>
@@ -111,7 +116,7 @@ export function editRoadmap(
     roadmap: editFields(
       changes.roadmap,
       values,
-      originOf(roadmapText, roadmap, since),
+      originOf(roadmapValue, roadmap, since),
     ),
   }
 }
@@ -189,18 +194,31 @@ export function matchItemChanges(
 
 /**
  * `changes` after a fresh read of the roadmap's own text: each field it already holds is
- * dropped; bases stay as they were. `changes` itself when nothing is dropped.
+ * dropped; bases stay as they were. `changes` itself when nothing is dropped. A family or
+ * category read with no ID but a name, as a row reads while its list is missing, is not
+ * known to be none, so "No family" or "No category" stays pending.
  */
 export function reconcileRoadmap(
   changes: RoadmapChanges,
   roadmap: Roadmap,
 ): RoadmapChanges {
   const roadmapFields = dropHeld(changes.roadmap, (field) =>
-    roadmapText(roadmap, field),
+    isChoiceField(field) && roadmapValue(roadmap, field) === ""
+      ? noChoiceHeld(roadmap, field)
+      : roadmapValue(roadmap, field),
   )
   return roadmapFields === changes.roadmap
     ? changes
     : { ...changes, roadmap: roadmapFields }
+}
+
+/** `""` if the roadmap holds no `field`, `undefined` if it names one the read can't link. */
+function noChoiceHeld(
+  roadmap: Roadmap,
+  field: RoadmapChoiceField,
+): string | undefined {
+  const name = field === "familyId" ? roadmap.family : roadmap.category
+  return name === null ? "" : undefined
 }
 
 /**
@@ -322,15 +340,23 @@ function withEnglish(
   return { en: change.value, cy: text?.cy ?? "" }
 }
 
-/** The roadmap as it will read once its pending English is published. */
+/**
+ * The roadmap as it will read once its pending English, family and category are
+ * published: a chosen family or category as `lists` names it (and colours it), or with
+ * only its ID until they are read; none for no family or category, the colour kept
+ * (STY-028 S1, S2).
+ */
 export function applyRoadmapChanges(
   roadmap: Roadmap,
   changes: RoadmapChanges | undefined,
+  lists?: RoadmapLists,
 ): Roadmap {
   const fields = changes?.roadmap
   if (!fields || isEmpty(fields)) return roadmap
   return {
     ...roadmap,
+    ...chosenFamily(fields.familyId, lists?.families),
+    ...chosenCategory(fields.categoryId, lists?.categories),
     title: withEnglish(roadmap.title, fields.title) ?? roadmap.title,
     statusLabel: withEnglish(roadmap.statusLabel, fields.statusLabel),
     productLead: fields.productLead
@@ -341,6 +367,37 @@ export function applyRoadmapChanges(
       roadmap.serviceDescription,
       fields.serviceDescription,
     ),
+  }
+}
+
+/** The family fields of a roadmap showing `change`, a pending choice of family. */
+function chosenFamily(
+  change: FieldChange | undefined,
+  families: RoadmapLists["families"],
+): Partial<Roadmap> {
+  if (!change || change.value === UNLISTED_FAMILY) return {}
+  if (change.value === "") {
+    return { familyId: null, family: null, familyNotListed: false }
+  }
+  const family = families?.find(({ id }) => id === change.value)
+  return {
+    familyId: change.value,
+    familyNotListed: false,
+    ...(family && { family: family.name, colour: family.colour }),
+  }
+}
+
+/** The category fields of a roadmap showing `change`, a pending choice of category. */
+function chosenCategory(
+  change: FieldChange | undefined,
+  categories: RoadmapLists["categories"],
+): Partial<Roadmap> {
+  if (!change) return {}
+  if (change.value === "") return { categoryId: null, category: null }
+  const category = categories?.find(({ id }) => id === change.value)
+  return {
+    categoryId: change.value,
+    ...(category && { category: category.name }),
   }
 }
 
@@ -365,6 +422,14 @@ export function changedRoadmapFields(
   changes: RoadmapChanges | undefined,
 ): EditableRoadmapField[] {
   return EDITABLE_ROADMAP_FIELDS.filter((field) => changes?.roadmap[field])
+}
+
+/**
+ * Whether a family or category is pending, so the lists are needed to show it by name
+ * and colour.
+ */
+export function hasChoiceChange(changes: RoadmapChanges | undefined): boolean {
+  return changedRoadmapFields(changes).some(isChoiceField)
 }
 
 /** A part of the roadmap with pending changes, and which of its fields they are. */

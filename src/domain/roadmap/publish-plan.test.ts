@@ -8,6 +8,7 @@ import {
   type PublishWrites,
   type RoadmapSnapshot,
 } from "./publish-plan"
+import { UNLISTED_FAMILY } from "./roadmap-changes"
 import type { RoadmapItem } from "./roadmap-item"
 import { createTestRoadmap } from "./testing/test-roadmap"
 import { createTestRoadmapItem } from "./testing/test-roadmap-item"
@@ -23,6 +24,7 @@ function snapshotOf(
     items,
     repeatedIds: new Set(),
     takenIds: new Set([...takenIds, ...items.flatMap(({ id }) => id ?? [])]),
+    missingLists: new Set(),
   }
 }
 
@@ -157,6 +159,105 @@ describe("planRoadmapPublish", () => {
         kind: "settled",
         outcome: { status: "published" },
       })
+    },
+  )
+
+  describe("a family or category, decided by its ID (STY-028 S5)", () => {
+    const inFamily = (familyId: string, name: string) => ({
+      ...snapshotOf([]),
+      roadmap: createTestRoadmap("producta", "Product A", {
+        familyId,
+        family: { en: name, cy: "" },
+        categoryId: "khzpchkh",
+        category: { en: "GP & Community Services", cy: "" },
+      }),
+    })
+    const moveToMedicines = {
+      roadmap: {
+        familyId: { base: "fc29g5b9", value: "vdkxj63m" },
+        categoryId: { base: "khzpchkh", value: "" },
+      },
+      items: [],
+    }
+
+    it("writes the chosen IDs over a family renamed since", () => {
+      const plan = planRoadmapPublish(
+        moveToMedicines,
+        inFamily("fc29g5b9", "Single Record (renamed)"),
+      )
+
+      expect(plan).toEqual({
+        kind: "write",
+        writes: {
+          roadmap: [
+            { field: "familyId", value: "vdkxj63m" },
+            { field: "categoryId", value: "" },
+          ],
+          items: [],
+          ids: [],
+        },
+      })
+    })
+
+    it("refuses over a family a co-lead chose since", () => {
+      const plan = planRoadmapPublish(
+        moveToMedicines,
+        inFamily("x7k2m9qp", "Workforce"),
+      )
+
+      expect(plan).toEqual({
+        kind: "settled",
+        outcome: {
+          status: "refused",
+          conflicts: [
+            {
+              subject: "roadmap",
+              field: "familyId",
+              base: "fc29g5b9",
+              pending: "vdkxj63m",
+              current: "x7k2m9qp",
+            },
+          ],
+          missingItems: [],
+        },
+      })
+    })
+
+    it("writes No family over a family the list doesn't have", () => {
+      const snapshot = {
+        ...snapshotOf([]),
+        roadmap: createTestRoadmap("productd", "Product D", {
+          family: { en: "Single Recrod", cy: "" },
+          familyNotListed: true,
+        }),
+      }
+
+      const plan = planRoadmapPublish(
+        {
+          roadmap: { familyId: { base: UNLISTED_FAMILY, value: "" } },
+          items: [],
+        },
+        snapshot,
+      )
+
+      expect(plan).toMatchObject({
+        kind: "write",
+        writes: { roadmap: [{ field: "familyId", value: "" }] },
+      })
+    })
+  })
+
+  it.each(["familyId", "categoryId"] as const)(
+    "rejects a %s chosen while its list is missing, even No family or category",
+    (field) => {
+      const snapshot = { ...snapshotOf([]), missingLists: new Set([field]) }
+
+      expect(() =>
+        planRoadmapPublish(
+          { roadmap: { [field]: { base: "fc29g5b9", value: "" } }, items: [] },
+          snapshot,
+        ),
+      ).toThrow(expect.objectContaining({ kind: "invalid-data" }))
     },
   )
 

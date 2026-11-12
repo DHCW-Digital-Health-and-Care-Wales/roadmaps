@@ -13,12 +13,15 @@ import {
   type FieldConflict,
   type ItemChanges,
   type RoadmapChanges,
+  type RoadmapChoiceField,
+  isChoiceField,
   itemText,
-  roadmapText,
+  roadmapValue,
 } from "@/domain/roadmap/roadmap-changes"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 
+import type { RoadmapLists } from "../hooks/use-roadmap-lists"
 import {
   applyItemChanges,
   applyRoadmapChanges,
@@ -184,28 +187,43 @@ function currentOf(conflict: FieldConflict): FieldChange {
 }
 
 /**
- * `roadmap` showing the English `conflicts` found a co-lead wrote to its own text, in
- * each field that holds what it did in `since`, the roadmap as read when the publish
- * began. A field a read during the publish changed is left as that read found it, as it
- * may be newer than the publish's (DEF-003). With nothing read when it began, `since` is
- * `undefined` and nothing is patched.
+ * `roadmap` showing what `conflicts` found a co-lead wrote to its own text, family and
+ * category, in each field that holds what it did in `since`, the roadmap as read when
+ * the publish began. A field a read during the publish changed is left as that read
+ * found it, as it may be newer than the publish's (DEF-003). With nothing read when it
+ * began, `since` is `undefined` and nothing is patched. The conflict holds a family or
+ * category only by its ID, so one is patched only to none or to one `lists` names
+ * (STY-028).
  */
 export function withCurrentRoadmapText(
   roadmap: Roadmap,
   conflicts: readonly FieldConflict[],
   since: Roadmap | undefined,
+  lists: RoadmapLists = { families: undefined, categories: undefined },
 ): Roadmap {
   const fields = Object.fromEntries(
     conflicts.flatMap((conflict) =>
       conflict.subject === "roadmap" &&
       since &&
-      roadmapText(roadmap, conflict.field) ===
-        roadmapText(since, conflict.field)
+      roadmapValue(roadmap, conflict.field) ===
+        roadmapValue(since, conflict.field) &&
+      (!isChoiceField(conflict.field) ||
+        isNamed(conflict.field, conflict.current, lists))
         ? [[conflict.field, currentOf(conflict)]]
         : [],
     ),
   )
-  return applyRoadmapChanges(roadmap, { roadmap: fields, items: [] })
+  return applyRoadmapChanges(roadmap, { roadmap: fields, items: [] }, lists)
+}
+
+/** Whether `value` is none, or a family or category `lists` names. */
+function isNamed(
+  field: RoadmapChoiceField,
+  value: string,
+  lists: RoadmapLists,
+): boolean {
+  const list = field === "familyId" ? lists.families : lists.categories
+  return value === "" || (list?.some(({ id }) => id === value) ?? false)
 }
 
 /**

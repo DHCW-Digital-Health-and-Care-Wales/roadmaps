@@ -2,6 +2,7 @@ import type { AuthErrorCode, AuthState } from "@/domain/auth/auth-client"
 import type {
   EditableItemField,
   EditableRoadmapField,
+  RoadmapChoiceField,
 } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 import type { AppErrorKind } from "@/lib/errors"
@@ -246,7 +247,19 @@ export const en = {
         productLead: "Product lead",
         vision: "Vision",
         serviceDescription: "Service description",
+        familyId: "Family",
+        categoryId: "Category",
       } satisfies Record<EditableRoadmapField, string>,
+      /** The choices that leave a roadmap in no family or category (STY-028). */
+      noFamily: "No family",
+      noCategory: "No category",
+      /** A family the roadmap's row names that the family list doesn't have. */
+      familyNotListed: "{{name}} (not listed)",
+      /** In place of a choice, when its list can't be read (STY-028 S6). */
+      choiceUnavailable: {
+        familyId: "The family can't be changed right now.",
+        categoryId: "The category can't be changed right now.",
+      } satisfies Record<RoadmapChoiceField, string>,
     },
     /** Writing a roadmap's pending changes: "publish" if published, "save" if not. */
     publish: {

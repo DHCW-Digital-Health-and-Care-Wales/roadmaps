@@ -104,7 +104,7 @@ need the owner's tabs only for a check against the real sheet; tests use the fak
 
 ## Defects
 
-None.
+- [DEF-004](../defects/DEF-004-pending-no-category-dropped-when-category-unlisted.md): a pending "No category" is dropped, unwritten, once the roadmap's category leaves its list (Needs triage)
 
 ## Related
 

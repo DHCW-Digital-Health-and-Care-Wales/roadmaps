@@ -19,9 +19,12 @@ not done.
 - the reviewers `delegation.md` sets have passed the latest head, or the last
   reviewed head differs from it only by fixes that _Review rounds_ exempts
   from review and the PR body's Review record lists, with no open P0/P1;
-- every review bot has finished: the Codex bot keeps a 👀 reaction on the PR
-  description while it reviews, often after the checks pass, then replaces it
-  with 👍 when it finds nothing or posts a review with its findings;
+- every review bot has finished. The Codex bot reviews the head the PR opened
+  on (again only on `@codex review` or when a draft is marked ready); its
+  summary issue comment's `codex-review-state` reads `"status":"completed"`
+  once done, with any findings posted as a review. A finish with no findings
+  sends no PR event, so if only the bot is still pending, tell the user and
+  stop, as step 3 does without notifications;
 - every review, review comment or issue comment that raises a finding or asks
   a question is resolved, either fixed and pushed or answered on its thread
   with the reason.
@@ -96,7 +99,6 @@ gh pr checks <n>
 gh api --paginate repos/<owner>/<repo>/pulls/<n>/reviews
 gh api --paginate repos/<owner>/<repo>/pulls/<n>/comments
 gh api --paginate repos/<owner>/<repo>/issues/<n>/comments
-gh api repos/<owner>/<repo>/issues/<n>/reactions
 ```
 
 ## Each event or observation
@@ -114,7 +116,7 @@ authorized only for this PR workflow.
 
 ## Merge
 
-Re-read the latest head, its checks and the comments just before merging;
+Re-read the current PR state (above) just before merging;
 anything new reopens the done check. Squash-merge pinned to that inspected head,
 so a concurrent push makes the merge fail rather than land unreviewed:
 `gh pr merge <n> --squash --match-head-commit <head-sha>`. Confirm the PR reads

@@ -83,7 +83,7 @@ Vale University Health Board, or **All Wales** for national work; shared with th
 site, which filters by it (ADR-011).
 _Avoid_: Health board (only some are), customer
 
-**Pending edit** _(planned)_:
+**Pending edit**:
 A change to a roadmap or roadmap item that the Product Lead has made but not yet
 published or saved; the public site does not show it. It is kept in this browser tab,
 in memory, with the value it was edited from, through an expired session, Reconnect
@@ -91,13 +91,13 @@ and, if the Product Lead chooses, Disconnect. It is lost on closing the tab, aft
 asking (ADR-012).
 _Avoid_: Unsaved change, draft (drafts are a later feature)
 
-**Publish** _(planned)_:
+**Publish**:
 To write a published roadmap's pending edits to the shared data source in one deliberate
 step, all or none, after which the public site shows them from its next nightly update.
 The MVP has no review or draft step (ADR-012).
 _Avoid_: Save (for a published roadmap), sync, push, go live
 
-**Save** _(planned)_:
+**Save**:
 To write the pending edits of a roadmap that is not published: the same step as
 publishing, but nothing becomes public (ADR-012).
 _Avoid_: Publish (for a roadmap that is not published), store

@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { formatDuration } from "@/i18n"
 
+import { useRequestDisconnect } from "../disconnect-request"
 import { useAuth } from "../use-auth"
 import { useSessionWarning } from "../use-session-warning"
 
@@ -34,7 +35,8 @@ function announcedAt(secondsLeft: number): number {
  */
 export function SessionWarning() {
   const { open, secondsLeft, close } = useSessionWarning()
-  const { connect, disconnect } = useAuth()
+  const { connect } = useAuth()
+  const disconnect = useRequestDisconnect()
 
   return (
     <AlertDialog
@@ -52,8 +54,9 @@ export function SessionWarning() {
             close()
           }}
           onDisconnect={() => {
-            disconnect()
+            // Closed first: Disconnect may ask a question in a dialog of its own.
             close()
+            disconnect()
           }}
         />
       )}

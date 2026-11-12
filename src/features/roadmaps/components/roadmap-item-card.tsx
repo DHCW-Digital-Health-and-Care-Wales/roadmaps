@@ -12,6 +12,15 @@ import { organisationCodes } from "../organisation-codes"
 
 export interface RoadmapItemCardProps {
   item: RoadmapItem
+  /** For a form that names the card by its title. */
+  headingId?: string
+  /**
+   * A form editing the item's text, shown in place of that text; what it does not edit
+   * stays on show.
+   */
+  form?: ReactNode
+  /** Controls at the foot of the card, such as Edit. */
+  actions?: ReactNode
 }
 
 /** Each field's label, in the order a card shows the fields. */
@@ -29,7 +38,12 @@ const fieldLabels = {
  * under a label, with no empty labels. Text keeps its line breaks; an unplaced item says
  * what is wrong with its horizon. A list item, for a list of items.
  */
-export function RoadmapItemCard({ item }: RoadmapItemCardProps) {
+export function RoadmapItemCard({
+  item,
+  headingId,
+  form,
+  actions,
+}: RoadmapItemCardProps) {
   const { t } = useTranslation()
   const language = useLanguage()
   const text = (value: LocalisedText) => localise(value, language)
@@ -38,9 +52,14 @@ export function RoadmapItemCard({ item }: RoadmapItemCardProps) {
   const add = (key: keyof typeof fieldLabels, value: ReactNode) => {
     fields.push({ key, label: t(fieldLabels[key]), value })
   }
-  if (item.phase) add("phase", text(item.phase))
-  if (item.description) add("description", text(item.description))
-  if (item.expectedOutcome) add("expectedOutcome", text(item.expectedOutcome))
+  // A form in their place edits these.
+  if (!form) {
+    if (item.phase) add("phase", text(item.phase))
+    if (item.description) add("description", text(item.description))
+    if (item.expectedOutcome) {
+      add("expectedOutcome", text(item.expectedOutcome))
+    }
+  }
   if (item.tags.length > 0) add("tags", item.tags.map(text).join(", "))
   if (item.organisations.length > 0) {
     add(
@@ -57,7 +76,10 @@ export function RoadmapItemCard({ item }: RoadmapItemCardProps) {
 
   return (
     <li className="flex flex-col gap-3 border bg-card p-4 text-card-foreground shadow-card-bar">
-      <h3 className="text-heading-xs wrap-break-word whitespace-pre-line">
+      <h3
+        id={headingId}
+        className="text-heading-xs wrap-break-word whitespace-pre-line"
+      >
         {text(item.title)}
       </h3>
       {item.writtenHorizon !== null && (
@@ -70,6 +92,7 @@ export function RoadmapItemCard({ item }: RoadmapItemCardProps) {
               })}
         </Badge>
       )}
+      {form}
       {fields.length > 0 && (
         <dl className="flex flex-col gap-2.5 text-body-xs">
           {fields.map(({ key, label, value }) => (
@@ -80,6 +103,7 @@ export function RoadmapItemCard({ item }: RoadmapItemCardProps) {
           ))}
         </dl>
       )}
+      {actions && <div className="mt-auto pt-1">{actions}</div>}
     </li>
   )
 }

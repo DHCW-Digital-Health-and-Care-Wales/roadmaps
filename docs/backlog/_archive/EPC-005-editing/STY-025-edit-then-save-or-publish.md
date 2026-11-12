@@ -1,7 +1,6 @@
 # STY-025: A Product Lead edits a roadmap and publishes it
 
-- **Status**: Proposed — owner decisions settled in the Editing epic's grilling
-  (2026-11-11); waits for STY-023 and STY-024
+- **Status**: Done — delivered in its PR, which awaits the owner's merge
 - **Type**: Feature
 - **Area**: Features/UI + i18n (en + cy) + E2E
 - **Epic**: EPC-005-editing
@@ -228,3 +227,88 @@ Audited at `8479405`:
 - Resolving conflicts side by side, and a roadmap removed meanwhile: STY-026.
 - Adding, deleting or moving items; tags, organisations, details; Welsh: later records.
 - Keeping pending changes across a reload (browser storage, drafts): later.
+
+## Delivery
+
+### Departures
+
+- S14's "the start page says changes are waiting" is on the start page only, as written;
+  the roadmap pages, which a disconnected Product Lead reaches by link, show the usual
+  connect prompt.
+- S15 and a roadmap removed meanwhile (`roadmap-not-found`) both keep every change: the
+  first says someone else has changed the roadmap, the second gives the "no longer listed"
+  failure. STY-026 replaces both.
+
+### Contract for STY-026
+
+- **Store** (`features/roadmaps/editing/`): `createPendingChangesStore()`
+  (`pending-changes-store.ts`), one per app, made by `PendingChangesProvider`, which
+  `AppProviders` mounts inside `AuthProvider` and outside the routes, so Disconnect's
+  query clearing never touches it. Its snapshot is `{ changes, publishing, notices }`:
+  `changes` maps a roadmap id to STY-023's `RoadmapChanges` (only roadmaps with a pending
+  field), `publishing` holds roadmaps whose publish is under way, and `notices` holds
+  each roadmap's last `PublishNotice` (`published`, `unconfirmed`, `refused`, or `failed`
+  with an `AppErrorKind`, each with `action: "publish" | "save"`). Read it with
+  `usePendingChanges()` or `useRoadmapChanges(roadmapId)`; write through `update(id,
+edit)` with the pure functions of `pending-changes.ts`.
+- **Rules** (`pending-changes.ts`): each `FieldChange` keeps `base`, the text first
+  edited from, which a later Refresh never moves; an edit equal to its base or to the
+  current text is no edit. `matchItemChanges(items, changes)` finds each entry's item
+  with STY-023's `findEditedItem`; an entry that matches nothing stays pending and shows
+  nowhere (STY-026 shows it). `reconcileRoadmap`/`reconcileItems` run after every
+  successful list or items read and drop each field the data source already holds;
+  `settlePublished(changes, sent)` drops what a publish sent, keeping edits made
+  meanwhile.
+- **Publishing**: `usePublish(roadmap)` sends the roadmap's changes once
+  (`startPublish` refuses a second while one is under way; the mutation never retries)
+  and records the outcome as the roadmap's notice. `RoadmapPublishing({ roadmap })`
+  shows the bar, the dialogs and the notice; a `refused` notice is where STY-026's
+  side-by-side review starts.
+- **Disconnect**: `useRequestDisconnect()` (`features/auth/disconnect-request.ts`) is
+  what `AuthButton` and `SessionWarning` call; the editing provider supplies it and asks
+  keep / discard / cancel while any roadmap has a change; without a provider it
+  disconnects at once.
+- **Leave warning**: a `beforeunload` listener, registered only while any change is
+  pending.
+- **Copy**: `common.cancel`, `roadmaps.edit.*`, `roadmaps.publish.*` (the list card's
+  marker is `roadmaps.publish.marker.*`), `roadmaps.disconnect.*` and
+  `roadmaps.waiting.*`.
+
+### Scenario evidence
+
+Component tests are in `features/roadmaps/pages/roadmap-detail-page-editing.test.tsx`
+(28), with the rules in `editing/pending-changes.test.ts` and
+`editing/pending-changes-store.test.ts`; Playwright tests are in
+`tests/e2e/editing.spec.ts`.
+
+- **S1–S4**: "turns an item's card into a form…", "keeps a confirmed change pending…",
+  "requires a title…"; the form's structure is in `edit-item-form-error.aria.yml`.
+- **S5**: "edits the roadmap's five fields…" and "tags only the block…";
+  `edit-roadmap-form.aria.yml`.
+- **S6**: "undoes one item's changes, and discards all only after asking".
+- **S7**: "keeps them across pages and Refresh, marking the roadmap's card"; the store's
+  reconcile tests.
+- **S8**: "asks only while changes are pending" (component and E2E, through
+  `page.close({ runBeforeUnload: true })`).
+- **S9–S11**: component tests for the dialog, the busy controls and Save; E2E S10 and S11
+  assert one `sheets.writes` entry and the spreadsheet's new cell.
+- **S12**: "keeps them, and holds Publish, while the session has expired", "expires the
+  session on a 401…", "keeps them when a renewal…".
+- **S13**: E2E with a 403 (the alert is focused, nothing written, the change kept), plus
+  component tests for each failure.
+- **S14**: four component tests and the E2E keep-then-connect path;
+  `edit-disconnect-question.aria.yml`, `edit-start-waiting.aria.yml`.
+- **S15**: "says someone else has changed the roadmap when the write is refused".
+- **S16**: "labels the fields as the English in Welsh, and shows the Welsh tagged".
+- **S17**: "edits an unplaced item like any other"; E2E at 375px (no horizontal
+  overflow), plus `accessibility.spec.ts` and `focus-indicator.spec.ts`, light and dark.
+- **S18**: "says an unconfirmed write may have landed; Refresh clears the notice and
+  drops what was written".
+
+### Welsh for review
+
+Every new `cy` string is machine-assisted and needs a fluent review: `common.cancel`
+("Canslo"), `roadmaps.edit.*` (for example "Golygu", "Gorffen", "Dadwneud y
+newidiadau", "Wedi newid", and field labels ending "(Saesneg)"), `roadmaps.publish.*`
+("Cyhoeddi'r newidiadau", "Cadw'r newidiadau", "Gwaredu'r cyfan" and the notices),
+`roadmaps.disconnect.*` ("Cadw eich newidiadau?") and `roadmaps.waiting.*`.

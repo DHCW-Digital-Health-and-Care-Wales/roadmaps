@@ -1,0 +1,75 @@
+import { describe, expect, it, vi } from "vitest"
+
+import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
+
+import { editRoadmap, NO_CHANGES } from "./pending-changes"
+import { createPendingChangesStore } from "./pending-changes-store"
+
+const roadmap = createTestRoadmap("producta", "Product A")
+const retitled = editRoadmap(NO_CHANGES, roadmap, { title: "Product A2" })
+
+describe("createPendingChangesStore", () => {
+  it("keeps a roadmap's changes until an edit leaves none, then forgets the roadmap", () => {
+    const store = createPendingChangesStore()
+    store.update("producta", () => retitled)
+    expect(store.getSnapshot().changes.get("producta")).toBe(retitled)
+
+    store.update("producta", (changes) =>
+      editRoadmap(changes, roadmap, { title: "Product A" }),
+    )
+    expect(store.getSnapshot().changes.has("producta")).toBe(false)
+  })
+
+  it("does not notify when an update changes nothing", () => {
+    const store = createPendingChangesStore()
+    const listener = vi.fn()
+    store.subscribe(listener)
+    store.update("producta", (changes) => changes)
+    store.discardAll()
+    store.clearNotices()
+    expect(listener).not.toHaveBeenCalled()
+  })
+
+  it("refuses a second publish of a roadmap while one is under way", () => {
+    const store = createPendingChangesStore()
+    expect(store.startPublish("producta")).toBe(true)
+    expect(store.startPublish("producta")).toBe(false)
+    expect(store.startPublish("productb")).toBe(true)
+
+    store.finishPublish("producta", { kind: "published", action: "publish" })
+    expect(store.getSnapshot().publishing).toEqual(new Set(["productb"]))
+    expect(store.startPublish("producta")).toBe(true)
+  })
+
+  it("clears a roadmap's notice when its next publish starts", () => {
+    const store = createPendingChangesStore()
+    store.startPublish("producta")
+    store.finishPublish("producta", { kind: "refused", action: "save" })
+    expect(store.getSnapshot().notices.get("producta")).toEqual({
+      kind: "refused",
+      action: "save",
+    })
+
+    store.startPublish("producta")
+    expect(store.getSnapshot().notices.has("producta")).toBe(false)
+  })
+
+  it("discards every roadmap's changes but keeps its notices; clears notices apart", () => {
+    const store = createPendingChangesStore()
+    store.update("producta", () => retitled)
+    store.update("productb", () => retitled)
+    store.startPublish("productc")
+    store.finishPublish("productc", {
+      kind: "failed",
+      error: "network",
+      action: "publish",
+    })
+
+    store.discardAll()
+    expect(store.getSnapshot().changes.size).toBe(0)
+    expect(store.getSnapshot().notices.size).toBe(1)
+
+    store.clearNotices()
+    expect(store.getSnapshot().notices.size).toBe(0)
+  })
+})

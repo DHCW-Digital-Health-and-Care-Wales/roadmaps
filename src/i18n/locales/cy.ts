@@ -15,6 +15,7 @@ export const cy = {
     shortAppName: "Mapiau Trywydd",
     loading: "Wrthi'n llwytho…",
     retry: "Ceisio eto",
+    cancel: "Canslo",
     close: "Cau",
     duration: {
       minutes_zero: "{{count, number}} munud",
@@ -214,6 +215,136 @@ export const cy = {
         organisations: "Sefydliadau",
         details: "Manylion",
       },
+    },
+    edit: {
+      edit: "Golygu",
+      done: "Gorffen",
+      undo: "Dadwneud y newidiadau",
+      changed: "Wedi newid",
+      titleRequired: "Rhowch deitl",
+      errorPrefix: "Gwall:",
+      itemFields: {
+        title: "Teitl (Saesneg)",
+        description: "Disgrifiad (Saesneg)",
+        expectedOutcome: "Canlyniad disgwyliedig (Saesneg)",
+        phase: "Cam (Saesneg)",
+      },
+      roadmapFields: {
+        title: "Teitl (Saesneg)",
+        statusLabel: "Statws (Saesneg)",
+        productLead: "Arweinydd cynnyrch",
+        vision: "Gweledigaeth (Saesneg)",
+        serviceDescription: "Disgrifiad o'r gwasanaeth (Saesneg)",
+      },
+    },
+    publish: {
+      pending: {
+        publish_zero: "Dim newidiadau heb eu cyhoeddi",
+        publish_one: "{{count, number}} newid heb ei gyhoeddi",
+        publish_two: "{{count, number}} newid heb eu cyhoeddi",
+        publish_few: "{{count, number}} newid heb eu cyhoeddi",
+        publish_many: "{{count, number}} newid heb eu cyhoeddi",
+        publish_other: "{{count, number}} o newidiadau heb eu cyhoeddi",
+        save_zero: "Dim newidiadau i'w cadw",
+        save_one: "{{count, number}} newid i'w gadw",
+        save_two: "{{count, number}} newid i'w cadw",
+        save_few: "{{count, number}} newid i'w cadw",
+        save_many: "{{count, number}} newid i'w cadw",
+        save_other: "{{count, number}} o newidiadau i'w cadw",
+      },
+      marker: {
+        publish: "Newidiadau heb eu cyhoeddi",
+        save: "Newidiadau i'w cadw",
+      },
+      action: {
+        publish: "Cyhoeddi'r newidiadau",
+        save: "Cadw'r newidiadau",
+      },
+      discardAll: "Gwaredu'r cyfan",
+      discard: {
+        title: "Gwaredu pob newid i'r map trywydd hwn?",
+        description:
+          "Bydd pob newid rydych chi wedi'i wneud yma yn cael ei golli. Does dim modd dadwneud hyn.",
+        confirm: "Gwaredu pob newid",
+      },
+      dialog: {
+        title: {
+          publish: "Cyhoeddi'r newidiadau hyn?",
+          save: "Cadw'r newidiadau hyn?",
+        },
+        note: {
+          publish:
+            "Bydd y wefan gyhoeddus yn eu dangos ar ôl ei diweddariad nesaf dros nos.",
+          save: "Dydy'r map trywydd hwn ddim wedi'i gyhoeddi, felly fydd dim byd yn gyhoeddus.",
+        },
+        changes: "Beth sy'n newid",
+      },
+      notice: {
+        published:
+          "Newidiadau wedi'u cyhoeddi. Bydd y wefan gyhoeddus yn eu dangos ar ôl ei diweddariad nesaf dros nos.",
+        saved: "Newidiadau wedi'u cadw",
+        failed: {
+          publish: "Doedd dim modd cyhoeddi eich newidiadau",
+          save: "Doedd dim modd cadw eich newidiadau",
+        },
+        kept: "Mae eich newidiadau wedi'u cadw yn y tab hwn.",
+        refused: {
+          title: "Mae rhywun arall wedi newid y map trywydd hwn",
+          description:
+            "Ni chafodd dim ei ysgrifennu. Adnewyddwch y map trywydd hwn ac adolygwch eich newidiadau cyn rhoi cynnig arall arni.",
+        },
+        unconfirmed: {
+          title: {
+            publish: "Efallai bod eich newidiadau wedi'u cyhoeddi",
+            save: "Efallai bod eich newidiadau wedi'u cadw",
+          },
+          description:
+            "Cafodd yr ateb ei golli. Adnewyddwch y map trywydd hwn cyn gwneud unrhyw beth arall.",
+        },
+      },
+      errors: {
+        unauthenticated:
+          "Mae eich sesiwn wedi dod i ben. Ailgysylltwch, yna rhowch gynnig arall arni.",
+        forbidden:
+          "Does gan y cyfrif Google hwn ddim hawl i newid y map trywydd hwn. Gofynnwch i berchennog y daenlen am fynediad golygu.",
+        "not-found": "Dydy'r map trywydd hwn ddim wedi'i restru mwyach.",
+        "rate-limited":
+          "Mae gormod o geisiadau ar hyn o bryd. Arhoswch funud a rhowch gynnig arall arni.",
+        network:
+          "Methu cysylltu. Gwiriwch eich cysylltiad â'r rhyngrwyd a rhowch gynnig arall arni.",
+        "invalid-response": "Roedd yr ateb mewn fformat annisgwyl.",
+        "invalid-data":
+          "Dydy'r map trywydd hwn ddim yn y fformat disgwyliedig yn y daenlen. Gofynnwch i berchennog y daenlen ei wirio.",
+        unknown: "Aeth rhywbeth o'i le. Rhowch gynnig arall arni.",
+      },
+    },
+    disconnect: {
+      title: "Cadw eich newidiadau?",
+      description_zero:
+        "Rydych chi wedi newid {{count, number}} map trywydd heb eu cyhoeddi na'u cadw. Cadwch y newidiadau yn y tab hwn ar gyfer pan fyddwch chi'n cysylltu eto, neu gwaredwch nhw.",
+      description_one:
+        "Rydych chi wedi newid {{count, number}} map trywydd heb ei gyhoeddi na'i gadw. Cadwch y newidiadau yn y tab hwn ar gyfer pan fyddwch chi'n cysylltu eto, neu gwaredwch nhw.",
+      description_two:
+        "Rydych chi wedi newid {{count, number}} fap trywydd heb eu cyhoeddi na'u cadw. Cadwch y newidiadau yn y tab hwn ar gyfer pan fyddwch chi'n cysylltu eto, neu gwaredwch nhw.",
+      description_few:
+        "Rydych chi wedi newid {{count, number}} map trywydd heb eu cyhoeddi na'u cadw. Cadwch y newidiadau yn y tab hwn ar gyfer pan fyddwch chi'n cysylltu eto, neu gwaredwch nhw.",
+      description_many:
+        "Rydych chi wedi newid {{count, number}} map trywydd heb eu cyhoeddi na'u cadw. Cadwch y newidiadau yn y tab hwn ar gyfer pan fyddwch chi'n cysylltu eto, neu gwaredwch nhw.",
+      description_other:
+        "Rydych chi wedi newid {{count, number}} o fapiau trywydd heb eu cyhoeddi na'u cadw. Cadwch y newidiadau yn y tab hwn ar gyfer pan fyddwch chi'n cysylltu eto, neu gwaredwch nhw.",
+      keep: "Cadw'r newidiadau a datgysylltu",
+      discard: "Gwaredu'r newidiadau a datgysylltu",
+    },
+    waiting: {
+      title_zero: "Dim newidiadau'n aros",
+      title_one: "Mae newidiadau i {{count, number}} map trywydd yn aros",
+      title_two: "Mae newidiadau i {{count, number}} fap trywydd yn aros",
+      title_few: "Mae newidiadau i {{count, number}} map trywydd yn aros",
+      title_many: "Mae newidiadau i {{count, number}} map trywydd yn aros",
+      title_other:
+        "Mae newidiadau i {{count, number}} o fapiau trywydd yn aros",
+      description:
+        "Cysylltwch â Google i'w cyhoeddi neu eu cadw. Bydd cau neu ail-lwytho'r tab hwn yn eu colli.",
     },
   },
   errors: {

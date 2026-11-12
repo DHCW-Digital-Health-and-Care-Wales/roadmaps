@@ -138,6 +138,75 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       })
     }
 
+    test("editing a roadmap, then publishing it (STY-025)", async ({
+      page,
+    }) => {
+      const item = "Example card with every column"
+      await page.goto("./#/roadmaps/producta")
+      await connect(page)
+      await expect(
+        page.getByRole("heading", { level: 3, name: item }),
+      ).toBeVisible()
+      const main = page.getByRole("main")
+
+      // A form open with a field in error.
+      await main.getByRole("button", { name: `Edit ${item}` }).click()
+      const form = main.getByRole("form", { name: item })
+      await form.getByRole("textbox", { name: "Title" }).fill("")
+      await form.getByRole("button", { name: "Done" }).click()
+      await expect(form.getByText("Enter a title")).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+
+      // A pending change: the marker, the publish bar and the roadmap's form.
+      await form.getByRole("textbox", { name: "Title" }).fill("A clearer card")
+      await form.getByRole("button", { name: "Done" }).click()
+      await main
+        .getByRole("button", { name: "Edit About this roadmap" })
+        .click()
+      await expect(main.getByRole("form")).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+      await main.getByRole("form").getByRole("button", { name: "Done" }).click()
+
+      await main.getByRole("button", { name: "Publish changes" }).click()
+      const dialog = page.getByRole("alertdialog")
+      await expect(dialog).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+
+      await dialog.getByRole("button", { name: "Publish changes" }).click()
+      await expect(main.getByText(/Changes published/)).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+    })
+
+    test("disconnecting with changes pending, then the waiting note (STY-025)", async ({
+      page,
+    }) => {
+      const item = "Example card with every column"
+      await page.goto("./#/roadmaps/producta")
+      await connect(page)
+      const main = page.getByRole("main")
+      await main.getByRole("button", { name: `Edit ${item}` }).click()
+      const form = main.getByRole("form", { name: item })
+      await form.getByRole("textbox", { name: "Title" }).fill("A clearer card")
+      await form.getByRole("button", { name: "Done" }).click()
+
+      await page
+        .getByRole("banner")
+        .getByRole("button", { name: "Disconnect" })
+        .click()
+      const question = page.getByRole("alertdialog")
+      await expect(question).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+
+      await question
+        .getByRole("button", { name: "Keep changes and disconnect" })
+        .click()
+      await main.getByRole("link", { name: "Back to roadmaps" }).click()
+      await expect(
+        main.getByText("Changes to 1 roadmap are waiting"),
+      ).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+    })
+
     test("session warning, then a failed renewal", async ({ page, gis }) => {
       await page.clock.install()
       await page.goto("./")

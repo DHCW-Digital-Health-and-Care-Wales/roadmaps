@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 
+import { useRequestDisconnect } from "../disconnect-request"
 import { useAuth } from "../use-auth"
 
 export interface AuthButtonProps {
@@ -13,11 +14,12 @@ export interface AuthButtonProps {
 
 /**
  * The one auth action for the current state: Connect, Reconnect after expiry, or
- * Disconnect. It waits (busy, still focusable) while sign-in loads or its popup is open.
+ * Disconnect (which may ask first). It waits (busy, still focusable) while sign-in loads or its popup is open.
  */
 export function AuthButton({ className, variant }: AuthButtonProps) {
   const { t } = useTranslation()
-  const { state, connect, disconnect } = useAuth()
+  const { state, connect } = useAuth()
+  const disconnect = useRequestDisconnect()
 
   if (state.status === "connected") {
     return (

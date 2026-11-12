@@ -171,6 +171,34 @@ for (const theme of THEMES) {
       await expectEveryStopShowsAnIndicator(page)
     })
 
+    test("every control on a roadmap's page while editing shows DHCW's focus indicator (STY-025)", async ({
+      page,
+    }) => {
+      const item = "Example card with every column"
+      await page.goto("./#/roadmaps/producta")
+      await connect(page)
+      const main = page.getByRole("main")
+      await expect(
+        main.getByRole("heading", { level: 3, name: item }),
+      ).toBeVisible()
+      // Dismissed, so the notice cannot clear itself partway through the tour.
+      await main
+        .getByRole("note")
+        .getByRole("button", { name: "Dismiss message" })
+        .click()
+      // One change pending (Undo and the publish bar), and a form open.
+      await main.getByRole("button", { name: `Edit ${item}` }).click()
+      const form = main.getByRole("form", { name: item })
+      await form.getByRole("textbox", { name: "Title" }).fill("A clearer card")
+      await form.getByRole("button", { name: "Done" }).click()
+      await main.getByRole("button", { name: "Edit Minimal card" }).click()
+      await expect(
+        main.getByRole("form", { name: "Minimal card" }),
+      ).toBeVisible()
+
+      await expectEveryStopShowsAnIndicator(page)
+    })
+
     test("each kind of control shows the indicator it is meant to", async ({
       page,
     }) => {

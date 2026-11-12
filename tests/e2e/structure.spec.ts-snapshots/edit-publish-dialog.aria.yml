@@ -1,0 +1,8 @@
+- alertdialog "Publish these changes?":
+  - heading "Publish these changes?" [level=2]
+  - paragraph: The public site shows them after its next nightly update.
+  - heading "What changes" [level=3]
+  - list:
+    - listitem: A clearer card Title
+  - button "Publish changes"
+  - button "Cancel"

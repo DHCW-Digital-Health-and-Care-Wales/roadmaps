@@ -1,0 +1,12 @@
+- form "A clearer card":
+  - text: Title
+  - paragraph: "Error: Enter a title"
+  - textbox "Title" [invalid]
+  - text: Description
+  - textbox "Description": What this work is. Keep it to a sentence or two.
+  - text: Expected outcome
+  - textbox "Expected outcome": What changes for users when it is done.
+  - text: Phase
+  - textbox "Phase": Beta
+  - button "Done"
+  - button "Cancel"

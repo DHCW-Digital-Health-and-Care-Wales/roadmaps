@@ -27,8 +27,8 @@ GitHub Pages that connects a Google account (Google Identity Services, OAuth tok
 reads the **roadmap index**, the first tab of one Google Spreadsheet, as the public site
 does (ADR-009), and shows each roadmap it lists as a card with its information, grouped
 by product family, and each roadmap's items on its page (EPC-004). Editing is under
-way (EPC-005): the repository can publish a roadmap's changes, though no screen calls it
-yet. Google Sheets is a _temporary_ data
+way (EPC-005): a Product Lead edits a roadmap's and its items' English in place and
+publishes (or saves) every pending change at once. Google Sheets is a _temporary_ data
 source: it must be replaceable by a PostgreSQL-backed HTTP API without touching the
 presentation layer (ADR-002).
 
@@ -962,3 +962,35 @@ options?)` re-reads the roadmap, refuses per field on a co-lead's change or a re
       next handler return `undefined`. A `:batchUpdate` path needs a RegExp matcher.
     - `ContractWrite`/`CO_LEAD_VALUE` live in `domain/roadmap/testing/contract-write.ts`,
       free of Vitest, so the in-memory double can import them.
+- **STY-025 A Product Lead edits a roadmap and publishes it** — Edit turns an item card or
+  "About this roadmap" into a form; confirmed changes stay pending, tagged "Changed", until
+  "Publish changes" ("Save changes" when not published) writes them after a check. Undo,
+  Discard all, a leave warning, and Disconnect's keep / discard / cancel question. shadcn
+  `input`, `textarea`, `label` added.
+  - Where things live (`features/roadmaps/editing/`): the pure rules
+    (`pending-changes.ts`: edit, undo, reconcile after a read, settle after a publish,
+    apply over loaded text), the store (`pending-changes-store.ts`, one per app, in memory),
+    `PendingChangesProvider` (in `AppProviders`, outside the query cache; reconciles on
+    every list or items read through the query cache's events; the `beforeunload`
+    listener; the Disconnect question), `usePublish`, `RoadmapPublishing` (bar, dialogs,
+    notices), `EditForm`, `EditableItemCard`, `EditableRoadmapAbout`.
+    `useRequestDisconnect()` (`features/auth/disconnect-request.ts`) is what every
+    Disconnect button calls. Copy: `common.cancel`, `roadmaps.{edit,publish,disconnect,
+waiting}.*`; the Welsh is machine-assisted. The record's Delivery is STY-026's contract.
+  - Decisions: the form confirms with "Done" (D8); a publish is one click, never retried,
+    never two at once; its outcome is a per-roadmap notice in the store, so it survives
+    leaving the page; the "waiting" note is on the start page only.
+  - Gotchas:
+    - Accessible-name computation drops a leading space inside a `sr-only` span: put a
+      `{" "}` text node before the span ("Edit Minimal card", not "EditMinimal card").
+    - Base UI's dialog `finalFocus` goes to the first tabbable child of a `tabIndex=-1`
+      target, so a notice lost focus to its dismiss button. `RoadmapPublishing` returns
+      focus itself: `returnFocus={() => !ref.current}`, then focuses the notice in
+      `onOpenChangeComplete(false)`.
+    - Playwright's `--update-snapshots` (default "changed") does not write a new aria
+      snapshot file: use `--update-snapshots=all` or run once without the flag
+      (`tests/e2e/AGENTS.md`), then check `git status`.
+    - E2E raises the leave warning with `page.close({ runBeforeUnload: true })` and
+      dismisses it in a `page.on("dialog")` handler (`tests/e2e/AGENTS.md`).
+    - Disconnect's notice clears on navigation, so a test reaching the start page's
+      waiting note goes "Back to roadmaps" after keeping.

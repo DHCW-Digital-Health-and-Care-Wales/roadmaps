@@ -8,6 +8,10 @@ import { localise } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import { formatCalendarDate, useLanguage } from "@/i18n"
 
+import { ChangedTag } from "../editing/edit-controls"
+import { countChanges } from "../editing/pending-changes"
+import { useRoadmapChanges } from "../editing/pending-changes-context"
+import { publishAction } from "../editing/use-publish"
 import { NotPublishedBadge } from "./not-published-badge"
 import { RoadmapSwatch } from "./roadmap-swatch"
 
@@ -20,13 +24,15 @@ export interface RoadmapCardProps {
  * underlined link-blue title and a chevron. The whole card is one link to its detail page.
  * The link is named by the title alone; what else the card shows is its description for
  * screen readers.
- * Only what the roadmap has is shown, no empty labels. Long titles wrap to two lines and
- * the summary to three; the link's tooltip keeps the full title.
+ * Only what the roadmap has is shown, no empty labels, and a marker while it has
+ * pending changes (STY-025 S7). Long titles wrap to two lines and the summary to three;
+ * the link's tooltip keeps the full title.
  */
 export function RoadmapCard({ roadmap }: RoadmapCardProps) {
   const { t } = useTranslation()
   const language = useLanguage()
   const id = useId()
+  const changed = countChanges(useRoadmapChanges(roadmap.id)) > 0
 
   const title = localise(roadmap.title, language)
   const status = roadmap.statusLabel && localise(roadmap.statusLabel, language)
@@ -42,11 +48,13 @@ export function RoadmapCard({ roadmap }: RoadmapCardProps) {
     category: roadmap.category !== null,
     status: status !== null,
     notPublished: !roadmap.published,
+    changes: changed,
     summary: summary !== null,
     productLead: roadmap.productLead !== null,
     updated: updated !== null,
   }
-  const hasHeader = has.category || has.status || has.notPublished
+  const hasHeader =
+    has.category || has.status || has.notPublished || has.changes
   const hasFooter = has.productLead || has.updated
   const describedBy = Object.entries(has)
     .filter(([, present]) => present)
@@ -85,6 +93,12 @@ export function RoadmapCard({ roadmap }: RoadmapCardProps) {
               )}
               {!roadmap.published && (
                 <NotPublishedBadge id={`${id}-notPublished`} />
+              )}
+              {changed && (
+                <ChangedTag
+                  id={`${id}-changes`}
+                  label={t(`roadmaps.publish.marker.${publishAction(roadmap)}`)}
+                />
               )}
             </div>
           )}

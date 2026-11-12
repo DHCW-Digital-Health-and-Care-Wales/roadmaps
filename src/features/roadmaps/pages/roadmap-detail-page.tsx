@@ -15,10 +15,17 @@ import { cn } from "@/lib/utils"
 
 import { NotPublishedBadge } from "../components/not-published-badge"
 import { RefreshButton } from "../components/refresh-button"
-import { RoadmapAbout } from "../components/roadmap-about"
 import { RoadmapItems, RoadmapItemsSkeleton } from "../components/roadmap-items"
 import { RoadmapsErrorState } from "../components/roadmaps-error-state"
 import { StatusPanel } from "../components/status-panel"
+import { ChangedTag } from "../editing/edit-controls"
+import { EditableRoadmapAbout } from "../editing/editable-roadmap-about"
+import { applyRoadmapChanges } from "../editing/pending-changes"
+import {
+  usePendingChangesStore,
+  useRoadmapChanges,
+} from "../editing/pending-changes-context"
+import { RoadmapPublishing } from "../editing/roadmap-publishing"
 import { isRoadmapGone, useRoadmapItems } from "../hooks/use-roadmap-items"
 import { useRoadmap } from "../hooks/use-roadmaps"
 import { useRoadmapsProblem } from "../hooks/use-roadmaps-problem"
@@ -128,8 +135,9 @@ interface RoadmapViewProps {
 
 /**
  * A listed roadmap: its title, a Not published badge when it is not public (D8), a
- * Refresh for the roadmap and its items (D7), what it is about, then its items. The
- * title stays whatever happens to the items.
+ * Refresh for the roadmap and its items (D7), its pending changes with Publish, what it
+ * is about, then its items, each showing its pending English (STY-025). The title stays
+ * whatever happens to the items.
  */
 function RoadmapView({
   roadmap,
@@ -138,12 +146,19 @@ function RoadmapView({
   refetchList,
 }: RoadmapViewProps) {
   const language = useLanguage()
+  const store = usePendingChangesStore()
+  const changes = useRoadmapChanges(roadmap.id)
   // The same query the items area reads, for the page's Refresh.
   const items = useRoadmapItems(roadmap.id)
   const retryList = () => {
     void refetchList()
   }
   const refresh = () => {
+    // A notice asking for a Refresh has been heeded (S15, S18).
+    const kind = store.getSnapshot().notices.get(roadmap.id)?.kind
+    if (kind === "unconfirmed" || kind === "refused") {
+      store.clearNotice(roadmap.id)
+    }
     void Promise.all([refetchList(), items.refetch()])
   }
 
@@ -162,9 +177,10 @@ function RoadmapView({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
             <h1 className="text-heading-xl text-pretty wrap-break-word">
-              {localise(roadmap.title, language)}
+              {localise(applyRoadmapChanges(roadmap, changes).title, language)}
             </h1>
             {!roadmap.published && <NotPublishedBadge />}
+            {changes?.roadmap.title && <ChangedTag />}
           </div>
           <div className="shrink-0">
             <RefreshButton
@@ -173,8 +189,9 @@ function RoadmapView({
             />
           </div>
         </div>
+        <RoadmapPublishing roadmap={roadmap} />
       </div>
-      <RoadmapAbout roadmap={roadmap} />
+      <EditableRoadmapAbout roadmap={roadmap} />
       <RoadmapItemsArea roadmapId={roadmap.id} listFetching={listFetching} />
     </div>
   )
@@ -213,7 +230,7 @@ function RoadmapItemsArea({ roadmapId, listFetching }: RoadmapItemsAreaProps) {
             retrying={isFetching}
           />
         )}
-        <RoadmapItems items={items} />
+        <RoadmapItems roadmapId={roadmapId} items={items} />
       </div>
     )
   }

@@ -1,19 +1,15 @@
 import { useId, useState } from "react"
 import { useTranslation } from "react-i18next"
 
-import {
-  checkFamilyInput,
-  type FamilyField,
-  type FamilyInput,
-  type FamilyInputProblems,
-} from "@/domain/roadmap/family-changes"
+import type { FamilyInput } from "@/domain/roadmap/family-changes"
 import type { Family } from "@/domain/roadmap/family"
 import { toAppError, type AppError } from "@/lib/errors"
 
-import { useFamilyChanges } from "../hooks/use-family-changes"
+import { useAddFamily } from "../hooks/use-family-changes"
 import { FamilyForm } from "./family-form"
 import type { FamilyNotice } from "./family-outcome-notice"
 import { FamilyWriteFailed } from "./family-write-failed"
+import { useFamilyInputCheck } from "./use-family-input-check"
 
 export interface AddFamilyFormProps {
   /** The family list as cached, which a new name must not match (S6). */
@@ -34,26 +30,15 @@ export function AddFamilyForm({
 }: AddFamilyFormProps) {
   const { t } = useTranslation()
   const titleId = useId()
-  const { add } = useFamilyChanges()
+  const add = useAddFamily()
+  const { problems, focusRequest, check, refuse } =
+    useFamilyInputCheck(families)
   const [values, setValues] = useState(EMPTY)
-  const [problems, setProblems] = useState<FamilyInputProblems>({})
-  const [focusRequest, setFocusRequest] = useState<{
-    field: FamilyField
-  } | null>(null)
   const [error, setError] = useState<AppError | null>(null)
 
-  const refuse = (found: FamilyInputProblems) => {
-    setProblems(found)
-    setFocusRequest({ field: found.name ? "name" : "colour" })
-  }
-
   const submit = () => {
-    const { input, problems: found } = checkFamilyInput(values, families)
-    if (found.name || found.colour) {
-      refuse(found)
-      return
-    }
-    setProblems({})
+    const input = check(values)
+    if (input === null) return
     setError(null)
     add.mutate(input, {
       onSuccess: (outcome) => {

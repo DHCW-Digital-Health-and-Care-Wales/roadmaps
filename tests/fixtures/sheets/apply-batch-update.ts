@@ -32,6 +32,13 @@ const requestSchema = z.union([
       fields: z.string(),
     }),
   }),
+  z.object({
+    appendCells: z.object({
+      sheetId: z.int(),
+      rows: z.array(z.object({ values: z._default(z.array(cellSchema), []) })),
+      fields: z.string(),
+    }),
+  }),
 ])
 const bodySchema = z.object({ requests: z.array(requestSchema) })
 
@@ -55,7 +62,7 @@ const FAMILY_WELSH = /^family$/i
 /** The tab the editor never writes (ADR-012), kept apart from the adapter's like `WELSH_HEADER`. */
 const TEMPLATE_TAB = "Template"
 
-/** The one tab the editor adds rows to: a new family's (STY-029). */
+/** The one tab the editor appends rows to: a new family's (STY-029). */
 const FAMILIES_TAB = "Families"
 
 /** The index column the editor never writes (STY-023 D5). */
@@ -66,7 +73,7 @@ const LAST_UPDATED_HEADER = /^\s*last\s+updated\s*$/i
  * can't apply rejects the whole body and changes nothing. Beyond what Google rejects, it
  * records as violations what the editor must never write (STY-023 S11): the `Template`
  * tab, anything but a plain string or a cleared cell, a Welsh column but `Family (cy)`,
- * `Last updated`, an unchanged cell, rows added to a tab but `Families`.
+ * `Last updated`, an unchanged cell, a row appended to a tab but `Families`.
  */
 export function applyBatchUpdate(
   tabs: readonly GridTab[],
@@ -93,14 +100,39 @@ export function applyBatchUpdate(
       }
       if (tab.title === TEMPLATE_TAB)
         violations.push("appendDimension on Template")
-      if (
-        dimension !== "COLUMNS" &&
-        !(dimension === "ROWS" && tab.title === FAMILIES_TAB)
-      ) {
-        violations.push(`appendDimension of ${dimension} on ${tab.title}`)
+      if (dimension !== "COLUMNS") {
+        violations.push(`appendDimension of ${dimension}, not COLUMNS`)
       }
       if (dimension === "ROWS") tab.rowCount += length
       else tab.columnCount += length
+      continue
+    }
+
+    if ("appendCells" in request) {
+      const { sheetId, rows, fields } = request.appendCells
+      const tab = tabOf(sheetId)
+      if (tab === undefined) {
+        return { error: `appendCells on ${String(sheetId)}`, violations }
+      }
+      if (tab.title !== FAMILIES_TAB) {
+        violations.push(`appendCells on ${tab.title}`)
+      }
+      if (fields !== "userEnteredValue") {
+        violations.push(`appendCells fields ${fields}, not userEnteredValue`)
+      }
+      // As Google does: after the last row any value uses, the grid growing to fit.
+      const after = tab.rows.findLastIndex((row) => row.some(Boolean)) + 1
+      tab.rows.length = Math.min(tab.rows.length, after)
+      tab.rowCount = Math.max(tab.rowCount, after + rows.length)
+      for (const [r, { values }] of rows.entries()) {
+        const row = values.map((cell) => cellValue(cell.userEnteredValue))
+        if (row.includes(null)) {
+          violations.push(
+            `${tab.title} row appended with ${JSON.stringify(values)}`,
+          )
+        }
+        tab.rows[after + r] = row.map((value) => value ?? "")
+      }
       continue
     }
 

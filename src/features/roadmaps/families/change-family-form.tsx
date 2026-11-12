@@ -2,12 +2,9 @@ import { useEffect, useId, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import {
-  checkFamilyInput,
   familyMembers,
   type FamilyConflict,
-  type FamilyField,
   type FamilyInput,
-  type FamilyInputProblems,
 } from "@/domain/roadmap/family-changes"
 import type { Family } from "@/domain/roadmap/family"
 import { localise } from "@/domain/roadmap/localised-text"
@@ -15,12 +12,13 @@ import type { Roadmap } from "@/domain/roadmap/roadmap"
 import { useLanguage } from "@/i18n"
 import { toAppError, type AppError } from "@/lib/errors"
 
-import { useFamilyChanges } from "../hooks/use-family-changes"
+import { useChangeFamily } from "../hooks/use-family-changes"
 import { FamilyChangeDialog } from "./family-change-dialog"
 import { FamilyConflictReview } from "./family-conflict-review"
 import { FamilyForm } from "./family-form"
 import type { FamilyNotice } from "./family-outcome-notice"
 import { FamilyWriteFailed } from "./family-write-failed"
+import { useFamilyInputCheck } from "./use-family-input-check"
 
 export interface ChangeFamilyFormProps {
   /** The family as cached when the form opened: the base each change is checked against. */
@@ -58,13 +56,11 @@ export function ChangeFamilyForm({
   const { t } = useTranslation()
   const language = useLanguage()
   const titleId = useId()
-  const { change } = useFamilyChanges()
+  const change = useChangeFamily()
+  const { problems, focusRequest, check, refuse, clearFocusRequest } =
+    useFamilyInputCheck(families, family.id)
   const [base, setBase] = useState(family)
   const [values, setValues] = useState(() => inputOf(family))
-  const [problems, setProblems] = useState<FamilyInputProblems>({})
-  const [focusRequest, setFocusRequest] = useState<{
-    field: FamilyField
-  } | null>(null)
   const [conflicts, setConflicts] = useState<readonly FamilyConflict[]>([])
   const [confirming, setConfirming] = useState<Confirming | null>(null)
   const [error, setError] = useState<AppError | null>(null)
@@ -82,27 +78,14 @@ export function ChangeFamilyForm({
   const confirm = (next: Confirming) => {
     setConfirming(next)
     setDialogShown(true)
-    setFocusRequest(null)
+    clearFocusRequest()
     setReviewRequest(null)
-  }
-
-  const refuse = (found: FamilyInputProblems) => {
-    setProblems(found)
-    setFocusRequest({ field: found.name ? "name" : "colour" })
   }
 
   /** The checked input's fields that differ from the base, or `null` when it has a problem. */
   const checkedChanges = (): Partial<FamilyInput> | null => {
-    const { input, problems: found } = checkFamilyInput(
-      values,
-      families,
-      family.id,
-    )
-    if (found.name || found.colour) {
-      refuse(found)
-      return null
-    }
-    setProblems({})
+    const input = check(values)
+    if (input === null) return null
     return {
       ...(input.name === base.name.en ? {} : { name: input.name }),
       ...(input.colour === base.colour ? {} : { colour: input.colour }),

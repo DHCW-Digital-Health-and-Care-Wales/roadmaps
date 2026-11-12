@@ -2,6 +2,7 @@ import type { Category } from "@/domain/roadmap/category"
 import type { Family } from "@/domain/roadmap/family"
 import {
   familyHeld,
+  familyMembers,
   planFamilyChange,
   planNewFamily,
   type FamilyEdit,
@@ -33,6 +34,7 @@ import {
   FAMILIES_TAB,
   parseCategories,
   parseFamilies,
+  type ListColumn,
   type ListTab,
 } from "./list-tab-parser"
 import {
@@ -136,19 +138,32 @@ interface RoadmapRead extends IndexRead {
   items: RoadmapTab
 }
 
+/** One cell's new value: plain text, or `{}` to leave it blank (ADR-012 D6). */
+interface CellData {
+  userEnteredValue?: { stringValue: string }
+}
+
 /** One `spreadsheets.batchUpdate` request (ADR-012 D6). */
 type BatchRequest =
   | {
       appendDimension: {
         sheetId: number
-        dimension: "COLUMNS" | "ROWS"
+        dimension: "COLUMNS"
         length: number
       }
     }
   | {
       updateCells: {
         start: { sheetId: number; rowIndex: number; columnIndex: number }
-        rows: [{ values: [{ userEnteredValue?: { stringValue: string } }] }]
+        rows: [{ values: [CellData] }]
+        fields: "userEnteredValue"
+      }
+    }
+  | {
+      /** Google adds the rows after the last row any value uses (STY-029). */
+      appendCells: {
+        sheetId: number
+        rows: [{ values: CellData[] }]
         fields: "userEnteredValue"
       }
     }
@@ -247,8 +262,9 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
   }
 
   /**
-   * Re-reads the `Families` tab, then writes the new family to the row after the last
-   * one any value uses, the grid growing to hold it, in one `batchUpdate`.
+   * Re-reads the `Families` tab, then appends the new family after the last row any
+   * value uses, in one `batchUpdate`. Google picks the row as it applies the write, so
+   * a co-lead's family added meanwhile is never overwritten.
    */
   async addFamily(
     input: FamilyInput,
@@ -262,12 +278,30 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
     if (plan.kind === "settled") return plan.outcome
     signal?.throwIfAborted()
 
-    const families = new TabWriter(tab, parsed.columns)
-    const row = tab.rows.length + 1
-    families.write(row, "ID", plan.family.id)
-    families.write(row, "Name", plan.family.name.en)
-    families.write(row, "Colour", plan.family.colour)
-    return this.#writeFamily(plan.family, families.requests())
+    const { family } = plan
+    const cells: Record<ListColumn, string> = {
+      ID: family.id,
+      Name: family.name.en,
+      Colour: family.colour,
+    }
+    const row: CellData[] = []
+    for (const [column, at] of parsed.columns) {
+      while (row.length < at) row.push({})
+      row[at] = textCell(cells[column])
+    }
+    return this.#writeFamily(
+      [
+        {
+          appendCells: {
+            sheetId: tab.properties.sheetId,
+            rows: [{ values: row }],
+            fields: "userEnteredValue",
+          },
+        },
+      ],
+      async () => familyHeld(family, await this.listFamilies()),
+      family,
+    )
   }
 
   /**
@@ -294,43 +328,44 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
     if (plan.kind === "settled") return plan.outcome
     signal?.throwIfAborted()
 
-    const { family, members } = plan
+    const { family } = plan
     const families = new TabWriter(tab, parsed.columns)
     const row = parsed.rows.get(family.id)
     const current = list.find(({ id }) => id === family.id)
-    // The plan finds the family in the list, so it has a row.
-    if (row === undefined || current === undefined)
-      throw new AppError("unknown")
+    if (row === undefined || current === undefined) {
+      throw new AppError("unknown", {
+        message: "A planned family has no row in its list",
+      })
+    }
     if (family.name.en !== current.name.en) {
       families.write(row, "Name", family.name.en)
     }
     if (family.colour !== current.colour) {
       families.write(row, "Colour", family.colour)
     }
-    const changed: IndexRead = {
-      ...read,
-      families: list.map((each) => (each.id === family.id ? family : each)),
-    }
-    const index = new TabWriter(read.indexTab, read.index.columns)
-    const memberIds = new Set(members.map(({ id }) => id))
-    for (const entry of read.index.entries) {
-      if (!memberIds.has(entry.roadmap.id)) continue
-      new IndexRowWriter(changed, entry, index).writeFamily(family.id)
-    }
-    return this.#writeFamily(family, [
-      ...families.requests(),
-      ...index.requests(),
-    ])
+    return this.#writeFamily(
+      [...families.requests(), ...memberRowWrites(read, family)],
+      // Held only when the family and every member's row hold it (S4).
+      async () => {
+        const again = await this.#readRoadmapIndex({})
+        return (
+          familyHeld(family, again.families) &&
+          memberRowWrites(again, family).length === 0
+        )
+      },
+      family,
+    )
   }
 
   /**
    * Sends a family's writes in one `batchUpdate`, if any. A write whose answer is lost
-   * is settled by re-reading the list: saved when it holds the family, else `lost` is
-   * rethrown.
+   * is settled by re-reading: saved when `held` finds every write in place, else the
+   * network error is rethrown.
    */
   async #writeFamily(
-    family: Family,
     requests: BatchRequest[],
+    held: () => Promise<boolean>,
+    family: Family,
   ): Promise<FamilyOutcome> {
     if (requests.length === 0) return { status: "saved", family }
     try {
@@ -339,11 +374,7 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
       })
     } catch (error) {
       if (!isAppError(error) || error.kind !== "network") throw error
-      const held = await this.listFamilies().then(
-        (families) => familyHeld(family, families),
-        () => false,
-      )
-      if (!held) throw error
+      if (!(await held().catch(() => false))) throw error
     }
     return { status: "saved", family }
   }
@@ -530,6 +561,31 @@ function usableFamilyTab(
   return { ...familyTab, list }
 }
 
+/**
+ * The index cells that copy `family` (STY-028's `writeFamily`) on each roadmap in it,
+ * as read, where they differ: none once a change to it is in place.
+ */
+function memberRowWrites(read: IndexRead, family: Family): BatchRequest[] {
+  const changed: IndexRead = {
+    ...read,
+    families:
+      read.families?.map((each) => (each.id === family.id ? family : each)) ??
+      null,
+  }
+  const index = new TabWriter(read.indexTab, read.index.columns)
+  const members = new Set(
+    familyMembers(
+      read.index.entries.map(({ roadmap }) => roadmap),
+      family.id,
+    ).map(({ id }) => id),
+  )
+  for (const entry of read.index.entries) {
+    if (!members.has(entry.roadmap.id)) continue
+    new IndexRowWriter(changed, entry, index).writeFamily(family.id)
+  }
+  return index.requests()
+}
+
 /** Every ID the tab's rows hold, listed or skipped, so a new one repeats none. */
 function idsIn({ rows }: TabRows, { columns }: ListTab<Family>): Set<string> {
   const at = columns.get("ID")
@@ -702,16 +758,13 @@ function listed<T extends { id: string }>(
 /**
  * Collects one tab's cell writes. A column the header lacks is added after the last
  * column any row uses, with its English header (ADR-012 Option 9), the grid growing
- * to hold it; no existing column moves. The grid grows rows to hold a row written below
- * it: a new family's (STY-029).
+ * to hold it; no existing column moves.
  */
 class TabWriter<Column extends string> {
   readonly #sheetId: number
   readonly #columnCount: number
-  readonly #rowCount: number
   readonly #columns: Map<Column, number>
   #width: number
-  #height: number
   readonly #headers: BatchRequest[] = []
   readonly #cells: BatchRequest[] = []
 
@@ -724,13 +777,10 @@ class TabWriter<Column extends string> {
     // Google drops trailing blank cells, so a row's length is where its last value ends.
     this.#width = Math.max(0, ...rows.map((row) => row.length))
     this.#columnCount = properties.gridProperties?.columnCount ?? this.#width
-    this.#height = rows.length
-    this.#rowCount = properties.gridProperties?.rowCount ?? this.#height
   }
 
   /** Writes `value` to `column` of spreadsheet row `row` (1 is the header). */
   write(row: number, column: Column, value: string): void {
-    this.#height = Math.max(this.#height, row)
     let columnIndex = this.#columns.get(column)
     if (columnIndex === undefined) {
       columnIndex = this.#width++
@@ -741,18 +791,22 @@ class TabWriter<Column extends string> {
   }
 
   requests(): BatchRequest[] {
+    const grow = this.#width - this.#columnCount
     return [
-      ...this.#grow("COLUMNS", this.#width - this.#columnCount),
-      ...this.#grow("ROWS", this.#height - this.#rowCount),
+      ...(grow > 0
+        ? [
+            {
+              appendDimension: {
+                sheetId: this.#sheetId,
+                dimension: "COLUMNS" as const,
+                length: grow,
+              },
+            },
+          ]
+        : []),
       ...this.#headers,
       ...this.#cells,
     ]
-  }
-
-  #grow(dimension: "COLUMNS" | "ROWS", length: number): BatchRequest[] {
-    return length > 0
-      ? [{ appendDimension: { sheetId: this.#sheetId, dimension, length } }]
-      : []
   }
 
   /** Sets one cell to `value` as plain text, never a formula or number (ADR-012 D6). */
@@ -760,15 +814,14 @@ class TabWriter<Column extends string> {
     return {
       updateCells: {
         start: { sheetId: this.#sheetId, rowIndex: row - 1, columnIndex },
-        rows: [
-          {
-            values: [
-              value === "" ? {} : { userEnteredValue: { stringValue: value } },
-            ],
-          },
-        ],
+        rows: [{ values: [textCell(value)] }],
         fields: "userEnteredValue",
       },
     }
   }
+}
+
+/** A cell set to `value` as plain text, never a formula or number (ADR-012 D6). */
+function textCell(value: string): CellData {
+  return value === "" ? {} : { userEnteredValue: { stringValue: value } }
 }

@@ -114,9 +114,9 @@ tab, at once after a re-read, in one all-or-nothing `batchUpdate`:
 
 - **Adding a family**: a new row after the last row in use, with an `ID` in the
   `Item ID` format, the `Name` (trimmed) and the `Colour` (lower case); `Name (cy)` is
-  left blank. When the grid is full, the same request appends one row to the
-  `Families` tab (`appendDimension`, the only tab it grows by rows). No roadmap's row
-  is written.
+  left blank. It is one `appendCells` request on the `Families` tab, so Google places
+  the row and a family a co-lead added since the read is kept (the only request that
+  grows a tab by rows). No roadmap's row is written.
 - **Renaming or recolouring**: the family's `Name` or `Colour`, whichever changed, and
   each member roadmap's index row, by STY-028's `IndexRowWriter.writeFamily`:
   `Family ID`, `Family`, `Family (cy)` (copied from `Name (cy)`) and `Colour`, the
@@ -151,9 +151,16 @@ tab, at once after a re-read, in one all-or-nothing `batchUpdate`:
   - An index row with no `Family ID` whose `Family` already matches a family's _new_
     name (a stray row, not a member before) is linked to it by name after the rename,
     without its ID being written until its next publish.
-  - A write whose answer is lost is settled by reading the list again; if that read
-    fails too, the network error shows, and a retry of an add that had in fact landed
-    is refused as name-taken, which is accurate.
+  - A write whose answer is lost is settled by reading again: an add when the family
+    is listed, a change only when the family and every member's row hold it. Otherwise,
+    or if that read fails too, the network error shows, and a retry of an add that had
+    in fact landed is refused as name-taken, which is accurate.
+  - An index row the editor skips (its `Sheet` is not a valid roadmap ID, or repeats an
+    earlier row's) is not rewritten by a rename, and keeps the old family name and
+    colour until it is fixed and published (README).
+  - While a family write is under way, Change and "Add a family" are disabled, and an
+    open form stays shown, with the list as it opened with, even if a refresh drops the
+    family, so its outcome is always reported.
   - A members-changed answer with no members left shows the zero copy and drops the
     public-site note.
 - **Tests.** The domain, contract and adapter tests were written with each slice and
@@ -163,18 +170,19 @@ tab, at once after a re-read, in one all-or-nothing `batchUpdate`:
 ### Contract for dependents
 
 - **Domain** (`@/domain/roadmap/family-changes`): `FamilyInput`, `FamilyEdit`
-  (`base`, `values`, `memberIds`), `FamilyConflict`, `FamilyOutcome` (`saved`,
+  (`family`, `changes`, `members`), `FamilyConflict`, `FamilyOutcome` (`saved`,
   `refused`, `members-changed`, `name-taken`, `family-not-found`), `checkFamilyInput`,
   `familyMembers`, `planNewFamily`, `planFamilyChange`, `familyHeld`.
 - **Port**: `RoadmapRepository.addFamily(input)` and `.changeFamily(edit)`, covered by
   the contract's `describeFamilyChanges`; the in-memory and Sheets adapters implement
   them.
-- **Sheets adapter**: `#writeFamily` sends a family write and settles a lost answer;
-  STY-030 can write one roadmap's row with `IndexRowWriter.writeFamily` as here.
-- **Hooks**: `useFamilyChanges()` (`features/roadmaps/hooks/use-family-changes.ts`)
-  gives `add` and `change` mutations that refresh the lists and the roadmap list.
-- **Test fakes**: `applyBatchUpdate` lets `appendDimension` grow the `Families` tab by
-  rows.
+- **Sheets adapter**: `#writeFamily(requests, held, family)` sends a family write and
+  settles a lost answer when `held` finds it applied; STY-030 can write one roadmap's row with `IndexRowWriter.writeFamily` as here.
+- **Hooks** (`features/roadmaps/hooks/use-family-changes.ts`): `useAddFamily()` and
+  `useChangeFamily()` refresh the lists and the roadmap list once settled;
+  `useFamilyWriting()` says one is under way.
+- **Test fakes**: `applyBatchUpdate` applies `appendCells` to the `Families` tab only,
+  after its last row with data, growing the grid.
 - **Welsh to review** (machine-assisted): `roadmaps.familiesLink` and every string under
   `roadmaps.families` in `src/i18n/locales/cy.ts`.
 
@@ -186,16 +194,18 @@ tab, at once after a re-read, in one all-or-nothing `batchUpdate`:
   `accessibility.spec.ts` "families, a family's form, then its confirmation".
 - **S2**: domain "gives a new family an ID no row holds, and a blank Welsh name";
   contract "adds it to the end of the list with a new ID and no Welsh name (S2)";
-  adapter "adds a row after the last, with an ID no row holds, growing the grid, after
-  two reads (S2)" and "adds a row inside a grid tall enough for it, without growing
-  it"; page "adds a family, and shows it without a reload (S2)"; e2e "adds a family as a
+  adapter "appends a row after the last, with an ID no row holds, after two reads (S2)"
+  and "keeps a family a co-lead added after the read, appending after it (S2)"; page "adds a family, and shows it without a reload (S2)"; e2e "adds a family as a
   new Families row, changing no roadmap (S2)".
 - **S3**: page "names each roadmap and marks the published ones before a change (S3,
   S9)"; e2e "confirms a rename naming each roadmap, …" (Cancel writes nothing).
 - **S4**: contract "renames and recolours it and every roadmap in it, keeping Welsh (S3,
   S9)"; adapter "writes the family's changed cells and its roadmaps' rows, linking each
-  by ID, in one batchUpdate (S4, S9)" and "writes only the field changed"; page "renames
-  a family and its roadmaps at once, keeping its Welsh name (S4, S9)"; e2e (one
+  by ID, in one batchUpdate (S4, S9)", "writes only the field changed" and "rethrows a
+  lost write's network error when the family holds the change but its roadmaps don't
+  (S4)"; page "renames a family and its roadmaps at once, keeping its Welsh name (S4,
+  S9)", "says the family is gone when a co-lead deleted it, though the list refreshes
+  first" and "offers no other form while a family write is under way"; e2e (one
   `batchUpdate`, Product A's and C's cells, Product B untouched).
 - **S5**: domain "refuses a field a co-lead changed since, showing each side" and "is
   no conflict when a co-lead made the same change"; contract "refuses a field a co-lead

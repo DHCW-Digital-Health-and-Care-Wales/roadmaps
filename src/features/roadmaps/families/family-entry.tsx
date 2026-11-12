@@ -17,6 +17,8 @@ export interface FamilyEntryProps {
   roadmaps: readonly Roadmap[]
   /** The id of its Change button, so focus can return to it. */
   changeId: string
+  /** While another family write is under way. */
+  disabled: boolean
   onChange: () => void
 }
 
@@ -25,6 +27,7 @@ export function FamilyEntry({
   family,
   roadmaps,
   changeId,
+  disabled,
   onChange,
 }: FamilyEntryProps) {
   const { t } = useTranslation()
@@ -49,6 +52,7 @@ export function FamilyEntry({
             id={changeId}
             variant="secondary"
             size="sm"
+            disabled={disabled}
             onClick={onChange}
           >
             {t("roadmaps.families.change")}{" "}

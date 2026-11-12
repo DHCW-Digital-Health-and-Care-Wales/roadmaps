@@ -315,7 +315,13 @@ function trimRows(rows: readonly (readonly string[])[]): string[][] {
  */
 function serveStatefulSpreadsheet(
   initial: readonly FakeTab[],
-  { write }: Pick<ContractOptions, "write"> = {},
+  {
+    write,
+    beforeWrite,
+  }: Pick<ContractOptions, "write"> & {
+    /** A co-lead's change, made after the reads and before the write lands. */
+    beforeWrite?: (tabs: FakeTab[]) => FakeTab[]
+  } = {},
 ) {
   let tabs: FakeTab[] = [...initial]
   let readsFail = false
@@ -354,6 +360,7 @@ function serveStatefulSpreadsheet(
         return HttpResponse.json({}, { status })
       }
       if (write?.lost === "not-applied") return HttpResponse.error()
+      if (beforeWrite) tabs = beforeWrite(tabs)
       const result = applyBatchUpdate(tabs, body)
       writeViolations.push(...result.violations)
       if ("error" in result) return HttpResponse.json({}, { status: 400 })
@@ -1576,7 +1583,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
       )
     }
 
-    it("adds a row after the last, with an ID no row holds, growing the grid, after two reads (S2)", async () => {
+    it("appends a row after the last, with an ID no row holds, after two reads (S2)", async () => {
       const before = familyTabs()
       const spreadsheet = serveStatefulSpreadsheet(before)
       nextItemIds.push("fc29g5b9", "skipped1", "newfamxx")
@@ -1601,11 +1608,21 @@ describe("GoogleSheetsRoadmapRepository", () => {
         {
           requests: [
             {
-              appendDimension: { sheetId: 30, dimension: "ROWS", length: 1 },
+              appendCells: {
+                sheetId: 30,
+                rows: [
+                  {
+                    values: [
+                      { userEnteredValue: { stringValue: "newfamxx" } },
+                      { userEnteredValue: { stringValue: "Screening" } },
+                      {},
+                      { userEnteredValue: { stringValue: "#00796b" } },
+                    ],
+                  },
+                ],
+                fields: "userEnteredValue",
+              },
             },
-            expect.anything(),
-            expect.anything(),
-            expect.anything(),
           ],
         },
       ])
@@ -1614,20 +1631,32 @@ describe("GoogleSheetsRoadmapRepository", () => {
       ).toHaveLength(2)
     })
 
-    it("adds a row inside a grid tall enough for it, without growing it", async () => {
-      const [index, families] = familyTabs()
-      if (index === undefined || families === undefined) throw new Error()
-      const spreadsheet = serveStatefulSpreadsheet([
-        index,
-        { ...families, rowCount: 10 },
-      ])
+    it("keeps a family a co-lead added after the read, appending after it (S2)", async () => {
+      const spreadsheet = serveStatefulSpreadsheet(familyTabs(), {
+        beforeWrite: (tabs) =>
+          tabs.map((tab) =>
+            tab.title === "Families"
+              ? {
+                  ...tab,
+                  rows: [
+                    ...tab.rows,
+                    ["colead01", "Screening Wales", "", "#123456"],
+                  ],
+                  rowCount: tab.rowCount + 1,
+                }
+              : tab,
+          ),
+      })
 
       await httpRepository().addFamily({ name: "Screening", colour: "#00796b" })
 
-      const [body] = spreadsheet.bodies as BatchUpdateBody[]
-      expect(
-        body?.requests.filter((request) => "appendDimension" in request),
-      ).toEqual([])
+      const families = spreadsheet
+        .tabs()
+        .find(({ title }) => title === "Families")
+      expect(families?.rows.slice(-2).map((row) => row[1])).toEqual([
+        "Screening Wales",
+        "Screening",
+      ])
     })
 
     it("writes the family's changed cells and its roadmaps' rows, linking each by ID, in one batchUpdate (S4, S9)", async () => {
@@ -1678,6 +1707,31 @@ describe("GoogleSheetsRoadmapRepository", () => {
         { kind: "invalid-data" },
       )
       expect(spreadsheet.bodies).toEqual([])
+    })
+
+    it("rethrows a lost write's network error when the family holds the change but its roadmaps don't (S4)", async () => {
+      const [index, families] = familyTabs()
+      if (index === undefined || families === undefined) throw new Error()
+      serveStatefulSpreadsheet(
+        [
+          index,
+          {
+            ...families,
+            rows: families.rows.map((row) =>
+              row[0] === "fc29g5b9" ? [...row.slice(0, 3), "#00796b"] : row,
+            ),
+          },
+        ],
+        { write: { lost: "not-applied" } },
+      )
+
+      await expect(
+        httpRepository().changeFamily({
+          family: singleRecord,
+          changes: { colour: "#00796b" },
+          members: ["producta"],
+        }),
+      ).rejects.toMatchObject({ kind: "network" })
     })
 
     it("rethrows a lost write's network error when the re-read fails", async () => {

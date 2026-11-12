@@ -341,6 +341,86 @@ describe("FamiliesPage (STY-029)", () => {
     expect(form.getByLabelText("Name")).toHaveValue("Dental")
   })
 
+  it("says the family is gone when a co-lead deleted it, though the list refreshes first", async () => {
+    const base = repositoryWith()
+    let written = false
+    let familiesReread = false
+    const roadmapsReread: { release?: () => void } = {}
+    const repository = repositoryWith({
+      changeFamily: () => {
+        written = true
+        return Promise.resolve({ status: "family-not-found" })
+      },
+      listFamilies: () => {
+        if (!written) return Promise.resolve(families)
+        familiesReread = true
+        return Promise.resolve([records])
+      },
+      listRoadmaps: (options) =>
+        written
+          ? new Promise((resolve) => {
+              roadmapsReread.release = () => {
+                resolve(base.listRoadmaps(options))
+              }
+            })
+          : base.listRoadmaps(options),
+    })
+    const { user } = await renderPage(repository)
+
+    await user.click(
+      await main().findByRole("button", { name: "Change Screening" }),
+    )
+    const form = within(main().getByRole("form", { name: "Change Screening" }))
+    await user.clear(form.getByLabelText("Colour"))
+    await user.type(form.getByLabelText("Colour"), "#00796b")
+    await user.click(form.getByRole("button", { name: "Save changes" }))
+    await waitFor(() => {
+      expect(familiesReread && roadmapsReread.release !== undefined).toBe(true)
+    })
+    expect(form.getByLabelText("Colour")).toHaveValue("#00796b")
+    roadmapsReread.release?.()
+
+    expect(await main().findByRole("alert")).toHaveTextContent(
+      "This family is no longer listed, so your change wasn't saved.",
+    )
+    expect(
+      main().queryByRole("button", { name: "Change Screening" }),
+    ).not.toBeInTheDocument()
+  })
+
+  it("offers no other form while a family write is under way", async () => {
+    const write: { resolve?: (outcome: FamilyOutcome) => void } = {}
+    const changeFamily = vi.fn<RoadmapRepository["changeFamily"]>(
+      () =>
+        new Promise((resolve) => {
+          write.resolve = resolve
+        }),
+    )
+    const { user } = await renderPage(repositoryWith({ changeFamily }))
+
+    await user.click(
+      await main().findByRole("button", { name: "Change Screening" }),
+    )
+    const form = within(main().getByRole("form", { name: "Change Screening" }))
+    await user.clear(form.getByLabelText("Colour"))
+    await user.type(form.getByLabelText("Colour"), "#00796b")
+    await user.click(form.getByRole("button", { name: "Save changes" }))
+
+    await waitFor(() => {
+      expect(
+        main().getByRole("button", { name: "Add a family" }),
+      ).toBeDisabled()
+    })
+    expect(
+      main().getByRole("button", { name: "Change Single Record" }),
+    ).toBeDisabled()
+    write.resolve?.({ status: "saved", family: screening })
+    expect(await main().findByRole("status")).toHaveTextContent(
+      "Screening changed",
+    )
+    expect(main().getByRole("button", { name: "Add a family" })).toBeEnabled()
+  })
+
   it("offers nothing to change without a family list (S7)", async () => {
     await renderPage(repositoryWith({}, { families: null }))
 

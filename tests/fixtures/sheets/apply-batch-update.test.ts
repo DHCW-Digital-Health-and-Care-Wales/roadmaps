@@ -127,10 +127,10 @@ describe("applyBatchUpdate", () => {
       "fields",
     ],
     [
-      "rows added to a tab but Families",
+      "added rows",
       [index()],
       { appendDimension: { sheetId: 0, dimension: "ROWS", length: 1 } },
-      "appendDimension of ROWS on Roadmaps",
+      "not COLUMNS",
     ],
   ])("records a write to %s as a violation", (_, tabs, request, violation) => {
     const result = applyBatchUpdate(tabs, { requests: [request] })
@@ -140,20 +140,37 @@ describe("applyBatchUpdate", () => {
     ])
   })
 
-  it("allows a row added to Families, for a new family (STY-029)", () => {
-    const families = {
+  it("appends a row to Families after the last row in use, growing the grid (STY-029)", () => {
+    const families: GridTab = {
       title: "Families",
       sheetId: 1,
-      rows: [["ID", "Name", "Colour"]],
-      rowCount: 1,
-      columnCount: 3,
+      rows: [
+        ["ID", "Name", "Name (cy)", "Colour"],
+        ["a1", "One", "", "#000000"],
+        [],
+      ],
+      rowCount: 2,
+      columnCount: 4,
     }
+    const append = (name: string) => ({
+      appendCells: {
+        sheetId: 1,
+        rows: [
+          {
+            values: [
+              { userEnteredValue: { stringValue: "b2" } },
+              { userEnteredValue: { stringValue: name } },
+              {},
+              { userEnteredValue: { stringValue: "#00796b" } },
+            ],
+          },
+        ],
+        fields: "userEnteredValue",
+      },
+    })
 
     const result = applyBatchUpdate([families], {
-      requests: [
-        { appendDimension: { sheetId: 1, dimension: "ROWS", length: 1 } },
-        cell(1, 1, 1, "Screening"),
-      ],
+      requests: [append("Two"), append("Three")],
     })
 
     expect(result).toEqual({
@@ -161,14 +178,32 @@ describe("applyBatchUpdate", () => {
         {
           ...families,
           rows: [
-            ["ID", "Name", "Colour"],
-            ["", "Screening"],
+            ["ID", "Name", "Name (cy)", "Colour"],
+            ["a1", "One", "", "#000000"],
+            ["b2", "Two", "", "#00796b"],
+            ["b2", "Three", "", "#00796b"],
           ],
-          rowCount: 2,
+          rowCount: 4,
         },
       ],
       violations: [],
     })
+  })
+
+  it("records a row appended to a tab but Families as a violation", () => {
+    const result = applyBatchUpdate([index()], {
+      requests: [
+        {
+          appendCells: {
+            sheetId: 0,
+            rows: [{ values: [{ userEnteredValue: { stringValue: "x" } }] }],
+            fields: "userEnteredValue",
+          },
+        },
+      ],
+    })
+
+    expect(result.violations).toEqual(["appendCells on Roadmaps"])
   })
 
   it("allows Family (cy), the family's Welsh name copied from its list (ADR-013)", () => {

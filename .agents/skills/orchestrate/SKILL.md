@@ -58,9 +58,7 @@ State these policies, using the user's instructions where supplied:
   launches its successors on the orchestrator model. Hand judgement-heavy
   orchestrator work (the orchestration retro's edits to agent instructions,
   investigating a hard failure) to a delegated agent on a fitting model. A
-  delivery agent takes its record's Suggested model as a tier hint; use
-  stronger reasoning for auth and token handling, the
-  `RoadmapRepository`/`AuthClient` ports and untrusted-data parsing. Reviews
+  delivery agent takes its record's Suggested model as a tier hint. Reviews
   follow the delegation reference's lanes (correctness: Opus
   `claude-opus-5-5` and Sol, Codex `gpt-6.1-sol`; quality: Sonnet
   `claude-sonnet-5-5`), with correctness at least as strong as the delivery

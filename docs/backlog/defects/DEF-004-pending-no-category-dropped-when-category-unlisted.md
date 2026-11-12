@@ -15,8 +15,8 @@
 ## Summary
 
 A Product Lead sets a roadmap to "No category" and leaves it pending. If the roadmap's
-current category is then removed or renamed in the Categories tab by hand, the next
-read shows the roadmap with no category, so the pending "No category" looks published
+current category is then removed from the Categories tab by hand (or renamed there,
+for a row with no `Category ID` yet), the next read shows the roadmap with no category, so the pending "No category" looks published
 and disappears. The spreadsheet still holds the old category, and the public site still
 groups the roadmap under it. A family in the same position keeps its name, so a pending
 "No family" stays. Workaround: choose "No category" again and publish.

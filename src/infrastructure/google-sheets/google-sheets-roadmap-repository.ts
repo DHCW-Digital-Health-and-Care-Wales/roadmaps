@@ -50,6 +50,9 @@ const SHEET_VALUES_PARAMS = {
   fields: "values",
 } as const
 
+/** The public site's tab of permitted columns: never read or written (ADR-011, ADR-012). */
+const TEMPLATE_TAB = "Template"
+
 /** The roadmap index's column each editable roadmap field is written to (ADR-012). */
 const ROADMAP_COLUMNS: Readonly<
   Record<EditableRoadmapField, RoadmapIndexColumn>
@@ -226,6 +229,15 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
         message: `Roadmap ${roadmapId} names a tab that does not exist`,
       })
     }
+    // Neither is a roadmap's items, and neither may be written as one (ADR-011, ADR-012).
+    if (
+      entry.tabName === TEMPLATE_TAB ||
+      properties.sheetId === indexRead.indexTab.properties.sheetId
+    ) {
+      throw new AppError("invalid-data", {
+        message: `Roadmap ${roadmapId} names the ${entry.tabName} tab`,
+      })
+    }
     const rows = await this.#readTab(entry.tabName, options)
     return {
       ...indexRead,
@@ -373,7 +385,7 @@ class TabWriter<Column extends string> {
   requests(): BatchRequest[] {
     const grow = this.#width - this.#columnCount
     return [
-      ...(grow > 0 && this.#headers.length > 0
+      ...(grow > 0
         ? [
             {
               appendDimension: {

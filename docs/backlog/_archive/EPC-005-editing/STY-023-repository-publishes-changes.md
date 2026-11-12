@@ -233,7 +233,8 @@ Audited at `8479405`:
   - `{ status: "unconfirmed" }` (the answer was lost and one re-read could not settle
     it; the changes may be written).
 
-  It rejects with `AppError`s as reads do (`invalid-data` for an unreadable tab,
+  It rejects with `AppError`s as reads do (`invalid-data` for an unreadable tab, or a
+  roadmap whose `Sheet` names `Template` or the roadmap index itself,
   `forbidden`, `unauthenticated`, `network` when a lost write is found not applied) and
   with the signal's reason when aborted before the write is sent.
 
@@ -242,11 +243,14 @@ Audited at `8479405`:
   from the current one; it conflicts when the current value differs from both its base
   and the value; an item is found by `item.id` (the first row holding it; when the ID
   is repeated, only while that row holds the loaded content) or, with no ID, at
-  `position` while it holds the loaded content, either check also accepting that content
-  with the pending values applied (S12); a change whose trimmed value equals its base is
+  `position` while it holds the loaded content, Welsh included, either check also
+  accepting that content with the pending English applied (S12) (`findEditedItem`,
+  `find-edited-item.ts`); a change whose trimmed value equals its base is
   ignored, and an item with no other change is skipped; every kept
   item without an ID (or with a repeated one) gets a new `createItemId()` (8 characters,
-  a consonant first, no vowels, `0` or `1`), unique among every ID in the tab.
+  a consonant first, no vowels, `0` or `1`), unique among every ID in the tab. A lost
+  write's re-read (`heldWrites`) finds each written item by the ID it holds once
+  written, never by its place, as rows may have moved.
 - **Hook**: `usePublishRoadmapChanges(roadmapId)` (`features/roadmaps/hooks/`) is a
   `useMutation` with `retry: false` whose `onSettled` re-reads the list and the
   roadmap's items, so they are fresh when `mutateAsync` settles. `createQueryClient`'s
@@ -283,11 +287,14 @@ the Google adapter (MSW, stateful fake applying writes with `applyBatchUpdate`).
   cleared field as an empty cell".
 - **S4**: contract "finds an item by its ID after its row has moved", "writes to the
   first row of a copied ID and gives the copy its own", "refuses an item whose copied
-  ID's first row no longer holds what was loaded".
+  ID's first row no longer holds what was loaded"; `publish-plan.test.ts` (a Welsh
+  difference refuses both an ID-less and a copied-ID item).
 - **S5**: contract "finds an item without an ID at its position while it holds what was
-  loaded", "treats an item already holding the pending values as published".
+  loaded", "refuses an item at its position whose Welsh differs, though its English is
+  the pending edit", "treats an item already holding the pending values as published".
 - **S6**: contract "gives every item without an ID a new one, all different";
-  `item-id.test.ts` (alphabet, length, uniform sampling).
+  `item-id.test.ts` (alphabet, length, uniform sampling); adapter "gives no new ID that a
+  skipped row already holds".
 - **S7**: adapter "a missing column (S7)": after the last used column inside a wide
   grid, and growing a grid that ends there, in the same request.
 - **S8**: contract "refuses a field a co-lead changed, writing nothing", "publishes a
@@ -306,4 +313,8 @@ the Google adapter (MSW, stateful fake applying writes with `applyBatchUpdate`).
   each violation) and `tests/e2e/sheets-writes.spec.ts` (a write is applied, recorded
   and shown after Refresh; violations recorded).
 - **S12**: contract "when the write's answer is lost": published, `network`,
-  unconfirmed on some, unconfirmed when the re-read fails.
+  unconfirmed on some, unconfirmed when the re-read fails; `publish-plan.test.ts`
+  `heldWrites` (an item found by its ID after rows moved; an item gone holds nothing,
+  even when another item now has its place).
+- **D5** (never `Template`): adapter "which tabs it writes (S1)": a roadmap whose tab is
+  `Template` or the index fails with `invalid-data` and sends no write.

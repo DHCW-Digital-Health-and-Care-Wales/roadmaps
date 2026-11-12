@@ -6,6 +6,7 @@
 
 import { AppError } from "@/lib/errors"
 
+import { findEditedItem } from "./find-edited-item"
 import { createItemId } from "./item-id"
 import type { Roadmap } from "./roadmap"
 import {
@@ -16,8 +17,10 @@ import {
   type FieldChange,
   type FieldConflict,
   type ItemChanges,
+  itemText,
   type PublishOutcome,
   type RoadmapChanges,
+  roadmapText,
 } from "./roadmap-changes"
 import type { RoadmapItem } from "./roadmap-item"
 
@@ -32,10 +35,18 @@ export interface RoadmapSnapshot {
   takenIds: ReadonlySet<string>
 }
 
-/** The values to write; item `index`es are into the snapshot's `items`. */
+/**
+ * The values to write; item `index`es are into the snapshot's `items`, and `id` is the
+ * ID the item holds once written, by which a later read finds it.
+ */
 export interface PublishWrites {
   roadmap: { field: EditableRoadmapField; value: string }[]
-  items: { index: number; field: EditableItemField; value: string }[]
+  items: {
+    index: number
+    id: string
+    field: EditableItemField
+    value: string
+  }[]
   /** New IDs, for items with none: they go with any other write (ADR-012 Option 6). */
   ids: { index: number; id: string }[]
 }
@@ -63,7 +74,8 @@ export function planRoadmapPublish(
   }
   const conflicts: FieldConflict[] = []
   const missingItems: ItemChanges[] = []
-  const writes: PublishWrites = { roadmap: [], items: [], ids: [] }
+  const roadmapWrites: PublishWrites["roadmap"] = []
+  const itemWrites: Omit<PublishWrites["items"][number], "id">[] = []
 
   for (const field of EDITABLE_ROADMAP_FIELDS) {
     const pending = pendingValue(field, changes.roadmap[field])
@@ -79,7 +91,7 @@ export function planRoadmapPublish(
         current,
       })
     } else {
-      writes.roadmap.push({ field, value: pending.value })
+      roadmapWrites.push({ field, value: pending.value })
     }
   }
 
@@ -89,7 +101,12 @@ export function planRoadmapPublish(
       return change === null ? [] : [{ field, ...change }]
     })
     if (pending.length === 0) continue
-    const index = findItem(snapshot, itemChanges, pending)
+    const index = findEditedItem(
+      snapshot.items,
+      snapshot.repeatedIds,
+      itemChanges,
+      pending,
+    )
     const current = snapshot.items[index]
     if (current === undefined) {
       missingItems.push(itemChanges)
@@ -108,7 +125,7 @@ export function planRoadmapPublish(
           current: currentValue,
         })
       } else {
-        writes.items.push({ index, field, value })
+        itemWrites.push({ index, field, value })
       }
     }
   }
@@ -119,54 +136,47 @@ export function planRoadmapPublish(
       outcome: { status: "refused", conflicts, missingItems },
     }
   }
-  if (writes.roadmap.length === 0 && writes.items.length === 0) {
+  if (roadmapWrites.length === 0 && itemWrites.length === 0) {
     return { kind: "settled", outcome: { status: "published" } }
   }
-  writes.ids = newIds(snapshot, createId)
-  return { kind: "write", writes }
+  const ids = newIds(snapshot, createId)
+  const newIdAt = new Map(ids.map(({ index, id }) => [index, id]))
+  const idAt = (index: number) =>
+    // Every item has an ID or is given one.
+    snapshot.items[index]?.id ?? newIdAt.get(index) ?? ""
+  return {
+    kind: "write",
+    writes: {
+      roadmap: roadmapWrites,
+      items: itemWrites.map((write) => ({ ...write, id: idAt(write.index) })),
+      ids,
+    },
+  }
 }
 
 /**
  * How many of `writes` the roadmap now holds (`null`: no longer listed, so unknown),
- * to settle a write whose answer was lost (ADR-012 Option 16).
+ * to settle a write whose answer was lost (ADR-012 Option 16). Items are found by the
+ * ID each holds once written, never by place, as rows may have moved since.
  */
 export function heldWrites(
   writes: PublishWrites,
   snapshot: RoadmapSnapshot | null,
 ): "all" | "none" | "some" {
   if (snapshot === null) return "some"
+  const withId = (id: string) => snapshot.items.find((item) => item.id === id)
   const held = [
     ...writes.roadmap.map(
       ({ field, value }) => roadmapText(snapshot.roadmap, field) === value,
     ),
-    ...writes.items.map(({ index, field, value }) => {
-      const item = snapshot.items[index]
+    ...writes.items.map(({ id, field, value }) => {
+      const item = withId(id)
       return item !== undefined && itemText(item, field) === value
     }),
-    ...writes.ids.map(({ index, id }) => snapshot.items[index]?.id === id),
+    ...writes.ids.map(({ id }) => withId(id) !== undefined),
   ]
   if (held.every(Boolean)) return "all"
   return held.some(Boolean) ? "some" : "none"
-}
-
-/** The roadmap's English for `field`, `""` for none. */
-export function roadmapText(
-  roadmap: Roadmap,
-  field: EditableRoadmapField,
-): string {
-  switch (field) {
-    case "title":
-      return roadmap.title.en
-    case "productLead":
-      return roadmap.productLead ?? ""
-    default:
-      return roadmap[field]?.en ?? ""
-  }
-}
-
-/** The item's English for `field`, `""` for none. */
-export function itemText(item: RoadmapItem, field: EditableItemField): string {
-  return field === "title" ? item.title.en : (item[field]?.en ?? "")
 }
 
 /** A change's trimmed value with its base, or `null` when it changes nothing. */
@@ -182,75 +192,6 @@ function pendingValue(
     })
   }
   return value === change.base ? null : { base: change.base, value }
-}
-
-/**
- * Where the edited item is now, or -1 (ADR-012): by its ID, the first row holding it,
- * which must still hold what was loaded when the ID is repeated; with no ID, at its
- * position, which must hold exactly what was loaded. Either may instead hold that
- * content with the pending values, written by a publish whose answer was lost.
- */
-function findItem(
-  snapshot: RoadmapSnapshot,
-  { item, position }: ItemChanges,
-  pending: readonly { field: EditableItemField; value: string }[],
-): number {
-  const index =
-    item.id === null
-      ? position
-      : snapshot.items.findIndex(({ id }) => id === item.id)
-  const current = snapshot.items[index]
-  if (current === undefined) return -1
-  if (item.id !== null && !snapshot.repeatedIds.has(item.id)) return index
-  const edited = new Map(pending.map(({ field, value }) => [field, value]))
-  return sameContent(current, item, new Map()) ||
-    sameContent(current, item, edited)
-    ? index
-    : -1
-}
-
-/** Every part of an item but its ID, so its content can be compared. */
-const CONTENT: Record<Exclude<keyof RoadmapItem, "id">, true> = {
-  title: true,
-  placement: true,
-  writtenHorizon: true,
-  description: true,
-  expectedOutcome: true,
-  phase: true,
-  tags: true,
-  organisations: true,
-  details: true,
-}
-const CONTENT_KEYS = Object.keys(CONTENT) as (keyof typeof CONTENT)[]
-
-/** Whether `current` holds `loaded`'s content, with `edited` fields' English replaced. */
-function sameContent(
-  current: RoadmapItem,
-  loaded: RoadmapItem,
-  edited: ReadonlyMap<EditableItemField, string>,
-): boolean {
-  return CONTENT_KEYS.every((key) =>
-    isEditable(key) && edited.has(key)
-      ? itemText(current, key) === edited.get(key)
-      : sameValue(current[key], loaded[key]),
-  )
-}
-
-function isEditable(key: string): key is EditableItemField {
-  return (EDITABLE_ITEM_FIELDS as readonly string[]).includes(key)
-}
-
-/** Deep equality of plain data: strings, numbers, booleans, `null`, arrays, objects. */
-function sameValue(a: unknown, b: unknown): boolean {
-  if (a === b) return true
-  if (typeof a !== "object" || typeof b !== "object" || !a || !b) return false
-  if (Array.isArray(a) !== Array.isArray(b)) return false
-  const aKeys = Object.keys(a)
-  const bKeys = Object.keys(b)
-  return (
-    aKeys.length === bKeys.length &&
-    aKeys.every((key) => sameValue(Reflect.get(a, key), Reflect.get(b, key)))
-  )
 }
 
 /** A new ID for every item without one, none repeating an ID the roadmap holds. */

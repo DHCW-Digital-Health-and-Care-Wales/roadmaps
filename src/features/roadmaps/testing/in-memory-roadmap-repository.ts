@@ -14,7 +14,7 @@ import type { RoadmapRepository } from "@/domain/roadmap/roadmap-repository"
 import {
   CO_LEAD_VALUE,
   type ContractWrite,
-} from "@/domain/roadmap/testing/roadmap-repository-contract"
+} from "@/domain/roadmap/testing/contract-write"
 import { AppError } from "@/lib/errors"
 
 /**
@@ -72,6 +72,7 @@ export function createInMemoryRoadmapRepository(
     return stored
   }
 
+  /** As the Google adapter's `snapshotOf` reads rows; the shared contract holds both. */
   const snapshotOf = (
     list: readonly Roadmap[],
     roadmapId: string,

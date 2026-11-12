@@ -5,8 +5,8 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import type { LocalisedText } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
+import { CO_LEAD_VALUE } from "@/domain/roadmap/testing/contract-write"
 import {
-  CO_LEAD_VALUE,
   type ContractOptions,
   describeRoadmapRepositoryContract,
 } from "@/domain/roadmap/testing/roadmap-repository-contract"
@@ -30,6 +30,17 @@ import {
 } from "./roadmap-index-parser"
 import { parseRoadmapTab } from "./roadmap-tab-parser"
 import { createSheetsClient, type SheetsClient } from "./sheets-client"
+
+/** IDs the next publishes are given, in turn, before random ones. */
+const nextItemIds = vi.hoisted((): string[] => [])
+vi.mock("@/domain/roadmap/item-id", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/domain/roadmap/item-id")>()
+  return {
+    ...actual,
+    createItemId: () => nextItemIds.shift() ?? actual.createItemId(),
+  }
+})
 
 const SPREADSHEET_ID = "spreadsheet-1"
 const ENDPOINT = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}`
@@ -242,6 +253,7 @@ function tabRowsFor(items: readonly RoadmapItem[]): string[][] {
 const writeViolations: string[] = []
 
 afterEach(() => {
+  nextItemIds.length = 0
   const violations = writeViolations.splice(0)
   expect(violations).toEqual([])
 })
@@ -1103,6 +1115,64 @@ describe("GoogleSheetsRoadmapRepository", () => {
         expect(requests[0]).toEqual({
           appendDimension: { sheetId: 10, dimension: "COLUMNS", length: 2 },
         })
+      })
+    })
+
+    describe("which tabs it writes (S1)", () => {
+      /** The example spreadsheet with Product A's index row naming `sheet`. */
+      function naming(sheet: string): FakeTab[] {
+        const [indexTab, ...rest] = exampleTabs()
+        if (indexTab === undefined) throw new Error("The example has an index")
+        const rows = indexTab.rows.map((row, r) =>
+          r === 1 ? [sheet, ...row.slice(1)] : row,
+        )
+        return [{ ...indexTab, rows }, ...rest]
+      }
+
+      it.each([
+        ["Template", "template"],
+        ["Roadmaps", "roadmaps"],
+      ])(
+        "fails with invalid-data, writing nothing, for a roadmap whose tab is %s",
+        async (sheet, roadmapId) => {
+          const spreadsheet = serveStatefulSpreadsheet(naming(sheet))
+
+          await expect(
+            httpRepository().publishRoadmapChanges(roadmapId, {
+              roadmap: { title: { base: "Product A roadmap", value: "New" } },
+              items: [],
+            }),
+          ).rejects.toMatchObject({ kind: "invalid-data", retryable: false })
+          await expect(
+            httpRepository().listRoadmapItems(roadmapId),
+          ).rejects.toMatchObject({ kind: "invalid-data" })
+          expect(spreadsheet.bodies).toEqual([])
+        },
+      )
+
+      it("gives no new ID that a skipped row already holds", async () => {
+        const spreadsheet = serveStatefulSpreadsheet([
+          gridTab("Roadmaps", EXAMPLE_ROWS, 0),
+          gridTab(
+            "ProductA",
+            [
+              ["Title", "Horizon", "Item ID"],
+              ["", "Now", "skipped2"],
+              ["Kept", "Now", ""],
+            ],
+            10,
+            1,
+          ),
+        ])
+        nextItemIds.push("skipped2", "fresh234")
+
+        await httpRepository().publishRoadmapChanges("producta", titleChange)
+
+        expect(spreadsheet.tabs()[1]?.rows.map((row) => row[2])).toEqual([
+          "Item ID",
+          "skipped2",
+          "fresh234",
+        ])
       })
     })
 

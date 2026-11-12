@@ -78,7 +78,8 @@ is never read. An optional `Item ID` column holds each item's identity
   `Vision` and `Service description`, and each item's `Title`, `Description`, `Outcome`
   and `Phase`, as plain text exactly as typed (trimmed; a formula, number, date or
   `TRUE` stays text), a cleared field as an empty cell;
-- an `Item ID` for every item row that has none, or repeats another row's: eight random
+- an `Item ID` for every item row it reads (one with a title) that has none, or repeats
+  another row's: eight random
   lower-case letters and digits starting with a letter, such as `k7q2xwbn`;
 - a column the roadmap needs but lacks (the `Item ID` column the first time, or an
   edited field's column), appended after the last column in use with the public site's
@@ -87,7 +88,8 @@ is never read. An optional `Item ID` column holds each item's identity
 It never writes any other cell: no Welsh `(cy)` cell, `Last updated`, `Enabled`,
 `Sheet`, `Category`, `Family`, `Colour`, `Horizon`, `Labels`, `Organisations` or
 `Details`, no other roadmap's row or tab, nothing in the `Template` tab, and no cell
-whose value has not changed. A field a co-lead has changed since it was loaded, or an
+whose value has not changed. A roadmap whose `Sheet` names the `Template` tab or the
+roadmap index itself can't be read or published. A field a co-lead has changed since it was loaded, or an
 item or roadmap since removed, refuses the whole publish.
 
 - The rules, and how the editor differs from the public site on mistakes, are in

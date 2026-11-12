@@ -10,25 +10,12 @@ import type {
 } from "../roadmap-changes"
 import type { RoadmapItem } from "../roadmap-item"
 import type { RoadmapRepository } from "../roadmap-repository"
+import { CO_LEAD_VALUE, type ContractWrite } from "./contract-write"
 import { createTestRoadmap } from "./test-roadmap"
 import { createTestRoadmapItem } from "./test-roadmap-item"
 
 /** Each roadmap's items by roadmap id; a roadmap with no entry has none. */
 export type RoadmapItemsById = Readonly<Record<string, readonly RoadmapItem[]>>
-
-/**
- * How a publish's write goes in the data source: it fails with an `AppError` of this
- * kind, writing nothing, or its answer is lost (a network failure) after it was applied,
- * not applied, applied and then partly overwritten by a co-lead (the first value it
- * wrote, roadmap text before items', becomes `CO_LEAD_VALUE`), or applied with every
- * read after it failing.
- */
-export type ContractWrite =
-  | { fails: "forbidden" | "unauthenticated" }
-  | { lost: "applied" | "not-applied" | "partly-applied" | "reread-fails" }
-
-/** What a co-lead writes over the first value of a `partly-applied` write. */
-export const CO_LEAD_VALUE = "Changed by a co-lead"
 
 export interface ContractOptions {
   /** Defaults to writes that succeed. */
@@ -411,6 +398,30 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
         everyField,
         written,
       ])
+    })
+
+    it("refuses an item at its position whose Welsh differs, though its English is the pending edit (S5)", async () => {
+      const other = {
+        ...laterWork,
+        title: { en: "Renamed", cy: "Rhywbeth arall" },
+      }
+      const repository = setup.withRoadmaps(fixtures, {
+        producta: [everyField, other],
+      })
+      const changes = edit(laterWork, 1, {
+        title: change("Later work", "Renamed"),
+      })
+
+      const outcome = await repository.publishRoadmapChanges("producta", {
+        roadmap: {},
+        items: [changes],
+      })
+
+      expect(outcome).toEqual({
+        status: "refused",
+        conflicts: [],
+        missingItems: [changes],
+      })
     })
 
     it("gives every item without an ID a new one, all different (S6)", async () => {

@@ -22,6 +22,31 @@ export const EDITABLE_ITEM_FIELDS = [
 
 export type EditableItemField = (typeof EDITABLE_ITEM_FIELDS)[number]
 
+/** The roadmap's English for `field`, `""` for none. */
+export function roadmapText(
+  roadmap: Roadmap,
+  field: EditableRoadmapField,
+): string {
+  switch (field) {
+    case "title":
+      return roadmap.title.en
+    case "productLead":
+      return roadmap.productLead ?? ""
+    default:
+      return roadmap[field]?.en ?? ""
+  }
+}
+
+/** The item's English for `field`, `""` for none. */
+export function itemText(item: RoadmapItem, field: EditableItemField): string {
+  return field === "title" ? item.title.en : (item[field]?.en ?? "")
+}
+
+/** The item's Welsh for `field`, `""` for none: never edited, so never written. */
+export function itemWelsh(item: RoadmapItem, field: EditableItemField): string {
+  return field === "title" ? item.title.cy : (item[field]?.cy ?? "")
+}
+
 /** A field's pending English, with the English it was first edited from. */
 export interface FieldChange {
   /** The value when the field was first edited; `""` for none. */

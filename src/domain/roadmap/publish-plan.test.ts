@@ -84,6 +84,39 @@ describe("planRoadmapPublish", () => {
     expect(plan).toEqual({ kind: "settled", outcome: { status: "published" } })
   })
 
+  it.each([
+    ["at its position", null, new Set<string>()],
+    ["by a copied ID", "copiedid", new Set(["copiedid"])],
+  ])(
+    "finds no item %s whose Welsh differs, though its English is the pending edit",
+    (_, id, repeatedIds) => {
+      const loaded = {
+        ...createTestRoadmapItem("A", { id }),
+        title: { en: "A", cy: "Cyntaf" },
+      }
+      const other = {
+        ...createTestRoadmapItem("B", { id }),
+        title: { en: "B", cy: "Arall" },
+      }
+      const changes = {
+        item: loaded,
+        position: 0,
+        fields: { title: { base: "A", value: "B" } },
+      }
+
+      const plan = planRoadmapPublish(
+        { roadmap: {}, items: [changes] },
+        { ...snapshotOf([other]), repeatedIds },
+        idsOf(),
+      )
+
+      expect(plan).toEqual({
+        kind: "settled",
+        outcome: { status: "refused", conflicts: [], missingItems: [changes] },
+      })
+    },
+  )
+
   it("rejects a blank title, which the editor never sends", () => {
     let error: unknown
     try {
@@ -102,7 +135,7 @@ describe("planRoadmapPublish", () => {
 describe("heldWrites", () => {
   const writes: PublishWrites = {
     roadmap: [{ field: "vision", value: "A vision" }],
-    items: [{ index: 0, field: "phase", value: "Live" }],
+    items: [{ index: 0, id: "newidaaa", field: "phase", value: "Live" }],
     ids: [{ index: 0, id: "newidaaa" }],
   }
   const before = createTestRoadmapItem("Item")
@@ -120,6 +153,30 @@ describe("heldWrites", () => {
     expect(
       heldWrites(writes, { ...snapshotOf([before]), roadmap: written }),
     ).toBe("some")
+  })
+
+  it("finds each written item by its ID, wherever its row has moved", () => {
+    const inserted = createTestRoadmapItem("Added by a co-lead")
+
+    expect(
+      heldWrites(writes, {
+        ...snapshotOf([inserted, after]),
+        roadmap: written,
+      }),
+    ).toBe("all")
+  })
+
+  it("holds nothing for an item that has gone, even if another item now has its place", () => {
+    const itemWrites: PublishWrites = {
+      roadmap: [],
+      items: [{ index: 0, id: "newidaaa", field: "phase", value: "Live" }],
+      ids: [{ index: 0, id: "newidaaa" }],
+    }
+    const alreadyLive = createTestRoadmapItem("Other", {
+      phase: { en: "Live", cy: "" },
+    })
+
+    expect(heldWrites(itemWrites, snapshotOf([alreadyLive]))).toBe("none")
   })
 
   it("can't tell when the roadmap is no longer listed", () => {

@@ -928,19 +928,22 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
   shared data source: `RoadmapRepository.publishRoadmapChanges(roadmapId, changes,
 options?)` re-reads the roadmap, refuses per field on a co-lead's change or a removed
   item or roadmap, and otherwise writes the changed English, an `Item ID` for every kept
-  item without one and any missing column in one `spreadsheets.batchUpdate`. No screen
+  item without one or repeating another row's, and any missing column in one
+  `spreadsheets.batchUpdate`. No screen
   calls it yet (STY-025). README and `docs/analysis/roadmap-tab-format.md` say exactly
   what the editor writes; the record's Delivery is the contract for STY-025/026.
   - Where things live: `RoadmapChanges`, `FieldChange`, `PublishOutcome`
     (`published`/`refused`/`roadmap-not-found`/`unconfirmed`), `FieldConflict`
     (`domain/roadmap/roadmap-changes.ts`); `planRoadmapPublish`/`heldWrites`
-    (`publish-plan.ts`, the rules both repositories share); `createItemId`
+    (`publish-plan.ts`, the rules both repositories share), `findEditedItem`
+    (`find-edited-item.ts`); `createItemId`
     (`item-id.ts`); the client's `postJson`; `usePublishRoadmapChanges(roadmapId)`
     (`features/roadmaps/hooks/`); `applyBatchUpdate` (`tests/fixtures/sheets/`, used by
     the adapter's MSW fake and the E2E fake).
   - Decisions: no write when nothing differs (so no IDs either); a blank title throws
     `AppError('unknown')`; the write takes no abort signal; a lost answer is re-read once
-    (published, `network` or `unconfirmed`); a mutation's 401 expires the session through
+    (published, `network` or `unconfirmed`), finding each written item by its ID; a
+    roadmap whose `Sheet` names `Template` or the index is `invalid-data`; a mutation's 401 expires the session through
     the query client's new `MutationCache`; the hook re-reads list and items in
     `onSettled`.
   - Gotchas:
@@ -951,7 +954,5 @@ options?)` re-reads the roadmap, refuses per field on a co-lead's change or a re
       unchanged cell, a non-string value or any other method as a violation.
     - MSW's `passthrough()` sends a request to the real network: to fall through to the
       next handler return `undefined`. A `:batchUpdate` path needs a RegExp matcher.
-    - TanStack notifies observers asynchronously: after `act`, read `result.current` in
-      `waitFor`, or read the cache with a typed `queryOptions(...).queryKey`.
-    - Playwright's `expect.stringContaining` must not be cast `as string` (tsc fails);
-      Vitest's asymmetric matchers need that cast for typed lint.
+    - `ContractWrite`/`CO_LEAD_VALUE` live in `domain/roadmap/testing/contract-write.ts`,
+      free of Vitest, so the in-memory double can import them.

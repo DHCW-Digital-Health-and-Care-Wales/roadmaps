@@ -20,7 +20,8 @@ export interface PublishOutcomeNoticeProps {
 /**
  * A publish's outcome as a page notice: a confirmation clears itself after a dwell; a
  * failure interrupts and stays until dismissed or the next attempt, saying the changes
- * are kept. Focus comes here when the publish dialog closes.
+ * are kept; an unconfirmed outcome cannot be dismissed, staying until a Refresh reads
+ * what was written (S18). Focus comes here when the publish dialog closes.
  */
 export function PublishOutcomeNotice({
   ref,
@@ -85,7 +86,7 @@ export function PublishOutcomeNotice({
       variant={content.variant}
       Icon={content.Icon}
       title={content.title}
-      onDismiss={onDismiss}
+      {...(notice.kind === "unconfirmed" ? {} : { onDismiss })}
       className="max-w-2xl outline-none focus-visible:focus-ring"
       {...dwell}
     >

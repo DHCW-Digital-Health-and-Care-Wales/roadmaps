@@ -242,7 +242,8 @@ Audited at `8479405`:
   loaded content. If a co-lead changes another field of such an item while an edit is
   pending, the edit no longer matches a card: it stays pending, shows nowhere, and a
   publish reports the item as removed (STY-026 shows it). The item's open form closes
-  when a read puts different content at its position.
+  when a read puts different content at its position, but stays open when a read only
+  gives the item its first ID, as a first publish does to every item.
 
 ### Contract for STY-026
 
@@ -277,7 +278,10 @@ edit)` with the pure functions of `pending-changes.ts`.
   shows the bar, `PublishDialog`, `DiscardDialog` and `PublishOutcomeNotice`; a
   `refused` notice is where STY-026's side-by-side review starts. Publishing, the
   dialog's confirm included, waits while the session is not connected. Refresh clears
-  an `unconfirmed` or `refused` notice only once both reads succeed.
+  an `unconfirmed` or `refused` notice only once both reads succeed. While a roadmap's
+  notice is `unconfirmed` (`awaitingRefresh(snapshot, id)`), nothing drops its changes:
+  Undo and Discard all are disabled and the notice cannot be dismissed, so a write that
+  may have landed is never hidden under the old text (S18).
 - **Disconnect**: `useRequestDisconnect()` (`features/auth/disconnect-request.ts`) is
   what `AuthButton` and `SessionWarning` call; the editing provider supplies it and asks
   keep / discard / cancel while any roadmap has a change; without a provider it
@@ -292,7 +296,7 @@ edit)` with the pure functions of `pending-changes.ts`.
 ### Scenario evidence
 
 Component tests are in `features/roadmaps/pages/roadmap-detail-page-editing.test.tsx`
-(32), with the rules in `editing/pending-changes.test.ts` and
+(35), with the rules in `editing/pending-changes.test.ts` and
 `editing/pending-changes-store.test.ts`; Playwright tests are in
 `tests/e2e/editing.spec.ts`.
 
@@ -303,7 +307,9 @@ Component tests are in `features/roadmaps/pages/roadmap-detail-page-editing.test
 - **S6**: "undoes one item's changes, and discards all only after asking".
 - **S7**: "keeps them across pages and Refresh, marking the roadmap's card", "leaves
   alone a co-lead's change, read while a form was open…", "closes the form of an item
-  without an ID…"; the reconcile tests, including a copied ID that became the first row.
+  without an ID…", "keeps another item's open form when publishing gives every item an
+  ID"; the reconcile tests, including a copied ID that became the first row; the card
+  keys in `components/item-card-keys.test.ts`.
 - **S8**: "asks only while changes are pending" (component and E2E, through
   `page.close({ runBeforeUnload: true })`).
 - **S9–S11**: component tests for the dialog, the busy controls and Save; E2E S10 and S11
@@ -321,7 +327,8 @@ Component tests are in `features/roadmaps/pages/roadmap-detail-page-editing.test
   overflow), plus `accessibility.spec.ts` and `focus-indicator.spec.ts`, light and dark.
 - **S18**: "says an unconfirmed write may have landed; Refresh clears the notice and
   drops what was written", "keeps saying a write may have landed while Refresh cannot
-  read the roadmap".
+  read the roadmap", "keeps saying … when the session ends during Refresh", "lets
+  nothing drop a change that may have been published until Refresh reads the roadmap".
 
 ### Welsh for review
 

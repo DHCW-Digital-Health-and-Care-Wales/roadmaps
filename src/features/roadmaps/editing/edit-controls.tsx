@@ -26,6 +26,8 @@ export interface EditControlsProps {
   /** What is edited, for assistive technology: "Edit First item". */
   subject: string
   changed: boolean
+  /** Whether "Undo changes" is available; it stays focusable when not. */
+  undoable: boolean
   editButton: RefObject<HTMLButtonElement | null>
   onEdit: () => void
   onUndo: () => void
@@ -35,6 +37,7 @@ export interface EditControlsProps {
 export function EditControls({
   subject,
   changed,
+  undoable,
   editButton,
   onEdit,
   onUndo,
@@ -45,7 +48,13 @@ export function EditControls({
       {changed && <ChangedTag />}
       <div className="flex flex-wrap gap-2 sm:ml-auto">
         {changed && (
-          <Button variant="secondary" size="sm" onClick={onUndo}>
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={!undoable}
+            focusableWhenDisabled
+            onClick={onUndo}
+          >
             <Undo2Icon data-icon="inline-start" aria-hidden="true" />
             {t("roadmaps.edit.undo")} <span className="sr-only">{subject}</span>
           </Button>

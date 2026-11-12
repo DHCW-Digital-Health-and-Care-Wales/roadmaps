@@ -13,6 +13,7 @@ import {
   groupRoadmapItems,
   type PositionedRoadmapItem,
 } from "../group-roadmap-items"
+import { useItemCardKeys } from "./item-card-keys"
 import { StatusPanel } from "./status-panel"
 
 /** One, two, then three columns of item cards, as the roadmap cards are laid out. */
@@ -119,18 +120,12 @@ function ItemList({
   entries,
   labelledBy,
 }: ItemListProps) {
+  const keys = useItemCardKeys(placed)
   return (
     <ul aria-labelledby={labelledBy} className={itemGridClassName}>
-      {placed.map(({ item, position }) => (
+      {placed.map(({ item, position }, index) => (
         <EditableItemCard
-          // An item keeps its card, and an open form, across a read that moves it. One
-          // without an ID is known only by where it is and what it holds, so its form
-          // closes when a read puts another item there or changes it (STY-025).
-          key={
-            item.id === null
-              ? `position:${String(position)}:${JSON.stringify(item)}`
-              : `id:${item.id}`
-          }
+          key={keys[index]}
           roadmapId={roadmapId}
           items={items}
           item={item}

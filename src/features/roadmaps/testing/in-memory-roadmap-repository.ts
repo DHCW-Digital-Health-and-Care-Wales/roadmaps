@@ -128,6 +128,7 @@ export function createInMemoryRoadmapRepository(
       }),
     listRoadmapItems: (roadmapId, { signal } = {}) =>
       respond(signal, (list) => {
+        if (rereadFails) throw new AppError("network")
         if (!list.some(({ id }) => id === roadmapId)) {
           throw new AppError("not-found", {
             message: `No roadmap has the id ${roadmapId}`,

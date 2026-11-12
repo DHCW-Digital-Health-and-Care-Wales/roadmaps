@@ -474,6 +474,26 @@ describe("Keeping a roadmap's changes (STY-025)", () => {
     expect(main().queryByText(/unpublished change/)).toBeNull()
   })
 
+  it("keeps another item's open form when publishing gives every item an ID", async () => {
+    const repository = createInMemoryRoadmapRepository(roadmaps, {
+      producta: [
+        createTestRoadmapItem("No ID one"),
+        createTestRoadmapItem("No ID two"),
+      ],
+    })
+    const { user } = await renderPage({ repository, waitFor: "No ID two" })
+    await editTitle(user, "No ID one", "One, edited")
+    await user.click(main().getByRole("button", { name: "Edit No ID two" }))
+    await user.type(main().getByRole("textbox", { name: "Phase" }), "Beta")
+
+    await publish(user)
+    await main().findByText(/^Changes published\./)
+
+    expect(main().getByRole("textbox", { name: "Phase" })).toHaveValue("Beta")
+    await user.click(main().getByRole("button", { name: "Done" }))
+    expect(main().getByText("1 unpublished change")).toBeInTheDocument()
+  })
+
   it("keeps them when a renewal gives a new session", async () => {
     const { user, authClient } = await renderPage()
     await editTitle(user, "First item", "First, edited")
@@ -734,6 +754,36 @@ describe("Publishing a roadmap's changes (STY-025)", () => {
     expect(
       main().getByText("Your changes may have been published"),
     ).toBeInTheDocument()
+  })
+
+  it("lets nothing drop a change that may have been published until Refresh reads the roadmap (S18)", async () => {
+    const { user } = await renderPage({ write: { lost: "reread-fails" } })
+    await editTitle(user, "First item", "First, edited")
+
+    await publish(user)
+    const notice = await vi.waitFor(() =>
+      main()
+        .getByText("Your changes may have been published")
+        .closest("[role]"),
+    )
+
+    expect(notice).not.toBeNull()
+    expect(
+      within(notice as HTMLElement).queryByRole("button", {
+        name: "Dismiss message",
+      }),
+    ).toBeNull()
+    // The dialog stays until the failing re-reads have given up.
+    const discard = await main().findByRole("button", { name: "Discard all" })
+    const undo = main().getByRole("button", {
+      name: "Undo changes First, edited",
+    })
+    expect(discard).toHaveAttribute("data-disabled")
+    expect(undo).toHaveAttribute("data-disabled")
+    await user.click(discard)
+    await user.click(undo)
+    expect(screen.queryByRole("alertdialog")).toBeNull()
+    expect(main().getByText("1 unpublished change")).toBeInTheDocument()
   })
 
   it("keeps saying a write may have landed when the session ends during Refresh (S18)", async () => {

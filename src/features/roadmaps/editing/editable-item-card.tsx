@@ -22,7 +22,11 @@ import {
   undoItem,
   type ItemValues,
 } from "./pending-changes"
-import { usePendingChangesStore } from "./pending-changes-context"
+import {
+  usePendingChanges,
+  usePendingChangesStore,
+} from "./pending-changes-context"
+import { awaitingRefresh } from "./pending-changes-store"
 import { useEditMode } from "./use-edit-mode"
 
 /** Fields that hold paragraphs; the others are one line unless they already break. */
@@ -57,6 +61,7 @@ export function EditableItemCard({
   const { t } = useTranslation()
   const language = useLanguage()
   const store = usePendingChangesStore()
+  const undoable = !awaitingRefresh(usePendingChanges(), roadmapId)
   const headingId = useId()
   const mode = useEditMode<{ read: RoadmapItem; shown: RoadmapItem }>()
   const shown = applyItemChanges(item, entry)
@@ -79,6 +84,7 @@ export function EditableItemCard({
     mode.close()
   }
   const undo = () => {
+    if (!undoable) return
     store.update(roadmapId, (changes) => {
       const current = matchItemChanges(items, changes).get(position)
       return current ? undoItem(changes, current) : changes
@@ -113,6 +119,7 @@ export function EditableItemCard({
           <EditControls
             subject={title}
             changed={entry !== undefined}
+            undoable={undoable}
             editButton={mode.editButton}
             onEdit={() => {
               mode.open({ read: item, shown })

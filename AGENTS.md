@@ -1002,3 +1002,10 @@ waiting}.*`; the Welsh is machine-assisted. The record's Delivery is STY-026's c
       dismisses it in a `page.on("dialog")` handler (`tests/e2e/AGENTS.md`).
     - Disconnect's notice clears on navigation, so a test reaching the start page's
       waiting note goes "Back to roadmaps" after keeping.
+    - An item card's key is not simply its ID: `useItemCardKeys`
+      (`components/item-card-keys.ts`) lets an item given its first ID keep its
+      positional key, so a first publish (which gives every item an ID) does not unmount
+      another item's open form.
+    - After an `unconfirmed` publish, `awaitingRefresh` disables Undo and Discard all and
+      the notice has no dismiss until Refresh reads both list and items. The in-memory
+      repository's `reread-fails` write now fails item reads as well as list reads.

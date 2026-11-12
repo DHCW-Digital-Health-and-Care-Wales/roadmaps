@@ -13,7 +13,7 @@ import {
   usePendingChanges,
   usePendingChangesStore,
 } from "./pending-changes-context"
-import { publishAction } from "./pending-changes-store"
+import { awaitingRefresh, publishAction } from "./pending-changes-store"
 import { PublishDialog } from "./publish-dialog"
 import { PublishOutcomeNotice } from "./publish-outcome-notice"
 import { usePublish } from "./use-publish"
@@ -44,6 +44,8 @@ export function RoadmapPublishing({ roadmap }: RoadmapPublishingProps) {
   const publishing = snapshot.publishing.has(roadmap.id)
   const outcome = snapshot.notices.get(roadmap.id)
   const action = publishAction(roadmap)
+  // Discarding before a Refresh could hide changes an unconfirmed publish wrote (S18).
+  const discardable = !publishing && !awaitingRefresh(snapshot, roadmap.id)
 
   // A confirmation is for the page it was given on (the copywriter's page notice).
   useEffect(
@@ -101,7 +103,7 @@ export function RoadmapPublishing({ roadmap }: RoadmapPublishingProps) {
             </Button>
             <Button
               variant="secondary"
-              disabled={publishing}
+              disabled={!discardable}
               focusableWhenDisabled
               onClick={() => {
                 setDiscarding(true)
@@ -130,7 +132,7 @@ export function RoadmapPublishing({ roadmap }: RoadmapPublishingProps) {
       <DiscardDialog
         open={discarding}
         onDiscard={() => {
-          store.discard(roadmap.id)
+          if (discardable) store.discard(roadmap.id)
           setDiscarding(false)
         }}
         onCancel={() => {

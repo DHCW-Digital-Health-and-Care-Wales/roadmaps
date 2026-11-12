@@ -36,6 +36,18 @@ export interface PendingChangesSnapshot {
   readonly notices: ReadonlyMap<string, PublishNotice>
 }
 
+/**
+ * Whether a roadmap's last publish may have written its changes unseen, until a Refresh
+ * reads what it holds (S18): its changes cannot be undone or discarded until then, or
+ * the page would show the text from before a publish that landed.
+ */
+export function awaitingRefresh(
+  snapshot: PendingChangesSnapshot,
+  roadmapId: string,
+): boolean {
+  return snapshot.notices.get(roadmapId)?.kind === "unconfirmed"
+}
+
 export interface PendingChangesStore {
   readonly getSnapshot: () => PendingChangesSnapshot
   readonly subscribe: (listener: () => void) => () => void

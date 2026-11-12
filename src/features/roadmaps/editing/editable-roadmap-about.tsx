@@ -19,9 +19,11 @@ import {
   type RoadmapValues,
 } from "./pending-changes"
 import {
-  useRoadmapChanges,
+  usePendingChanges,
   usePendingChangesStore,
+  useRoadmapChanges,
 } from "./pending-changes-context"
+import { awaitingRefresh } from "./pending-changes-store"
 import { useEditMode } from "./use-edit-mode"
 
 /** Fields that hold paragraphs; the others are one line unless they already break. */
@@ -43,6 +45,7 @@ export function EditableRoadmapAbout({ roadmap }: EditableRoadmapAboutProps) {
   const { t } = useTranslation()
   const store = usePendingChangesStore()
   const changes = useRoadmapChanges(roadmap.id)
+  const undoable = !awaitingRefresh(usePendingChanges(), roadmap.id)
   const mode = useEditMode<{ read: Roadmap; shown: Roadmap }>()
   const shown = applyRoadmapChanges(roadmap, changes)
   const changed = changedRoadmapFields(changes).length > 0
@@ -59,6 +62,7 @@ export function EditableRoadmapAbout({ roadmap }: EditableRoadmapAboutProps) {
     mode.close()
   }
   const undo = () => {
+    if (!undoable) return
     store.update(roadmap.id, undoRoadmap)
     mode.refocus()
   }
@@ -91,6 +95,7 @@ export function EditableRoadmapAbout({ roadmap }: EditableRoadmapAboutProps) {
           <EditControls
             subject={t("roadmaps.about.title")}
             changed={changed}
+            undoable={undoable}
             editButton={mode.editButton}
             onEdit={() => {
               mode.open({ read: roadmap, shown })

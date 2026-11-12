@@ -1,3 +1,5 @@
+import type { Category } from "@/domain/roadmap/category"
+import type { Family } from "@/domain/roadmap/family"
 import {
   heldWrites,
   planRoadmapPublish,
@@ -18,6 +20,12 @@ import type {
 } from "@/domain/roadmap/roadmap-repository"
 import { AppError, isAppError } from "@/lib/errors"
 
+import {
+  CATEGORIES_TAB,
+  FAMILIES_TAB,
+  parseCategories,
+  parseFamilies,
+} from "./list-tab-parser"
 import {
   parseRoadmapIndex,
   type RoadmapIndex,
@@ -52,6 +60,8 @@ const SHEET_VALUES_PARAMS = {
 
 /** The public site's tab of permitted columns: never read or written (ADR-011, ADR-012). */
 const TEMPLATE_TAB = "Template"
+/** The tabs a roadmap's index row may never name as its items. */
+const NOT_ITEM_TABS = new Set([TEMPLATE_TAB, FAMILIES_TAB, CATEGORIES_TAB])
 
 /** The roadmap index's column each editable roadmap field is written to (ADR-012). */
 const ROADMAP_COLUMNS: Readonly<
@@ -85,11 +95,17 @@ interface TabRows {
   rows: string[][]
 }
 
-/** The roadmap index as read, with every tab by its exact title, hidden or not. */
+/** Every tab by its exact title, hidden or not, and the first: the roadmap index. */
+interface TabList {
+  tabs: ReadonlyMap<string, TabProperties>
+  first: TabProperties
+}
+
+/** The roadmap index as read, linked to the family and category lists (ADR-013). */
 interface IndexRead {
+  tabs: TabList["tabs"]
   index: RoadmapIndex
   indexTab: TabRows
-  tabs: ReadonlyMap<string, TabProperties>
 }
 
 /** One roadmap as read: its index row and its tab, parsed and as displayed. */
@@ -118,9 +134,11 @@ type BatchRequest =
 
 /**
  * The roadmaps one spreadsheet lists in its roadmap index, its first tab, as the public
- * site reads them (ADR-009): two reads, the tab list and then that tab's values. A
- * roadmap's items take a third, of the tab its index row names (ADR-011). A publish
- * makes those three reads, then one all-or-nothing `batchUpdate` (ADR-012).
+ * site reads them (ADR-009): the tab list, then that tab's values, read with the
+ * `Families` and `Categories` tabs that link each roadmap to its family and category
+ * (ADR-013). A roadmap's items take one more read, of the tab its index row names
+ * (ADR-011). A publish makes those reads, then one all-or-nothing `batchUpdate`
+ * (ADR-012).
  */
 export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
   readonly #client: SheetsClient
@@ -134,6 +152,26 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
   async listRoadmaps(options: RepositoryReadOptions = {}): Promise<Roadmap[]> {
     const { index } = await this.#readRoadmapIndex(options)
     return index.entries.map(({ roadmap }) => roadmap)
+  }
+
+  /** Reads the tab list, then the `Families` tab; `null` without a usable one. */
+  async listFamilies(
+    options: RepositoryReadOptions = {},
+  ): Promise<Family[] | null> {
+    const tabList = await this.#readTabList(options)
+    return parseFamilies(
+      await this.#readListTab(tabList, FAMILIES_TAB, options),
+    ).list
+  }
+
+  /** Reads the tab list, then the `Categories` tab; `null` without a usable one. */
+  async listCategories(
+    options: RepositoryReadOptions = {},
+  ): Promise<Category[] | null> {
+    const tabList = await this.#readTabList(options)
+    return parseCategories(
+      await this.#readListTab(tabList, CATEGORIES_TAB, options),
+    ).list
   }
 
   /**
@@ -235,9 +273,9 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
         message: `Roadmap ${roadmapId} names a tab that does not exist`,
       })
     }
-    // Neither is a roadmap's items, and neither may be written as one (ADR-011, ADR-012).
+    // None is a roadmap's items, and none may be written as one (ADR-011 to ADR-013).
     if (
-      entry.tabName === TEMPLATE_TAB ||
+      NOT_ITEM_TABS.has(entry.tabName) ||
       properties.sheetId === indexRead.indexTab.properties.sheetId
     ) {
       throw new AppError("invalid-data", {
@@ -253,24 +291,57 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
     }
   }
 
-  /** The parsed roadmap index, with its problems (not shown yet; ADR-009). */
+  /**
+   * The parsed roadmap index, linked to the family and category lists, read alongside
+   * it. Its problems and theirs are not shown yet (ADR-009).
+   */
   async #readRoadmapIndex(options: RepositoryReadOptions): Promise<IndexRead> {
+    const tabList = await this.#readTabList(options)
+    const [rows, familyRows, categoryRows] = await Promise.all([
+      this.#readTab(tabList.first.title, options),
+      this.#readListTab(tabList, FAMILIES_TAB, options),
+      this.#readListTab(tabList, CATEGORIES_TAB, options),
+    ])
+    return {
+      tabs: tabList.tabs,
+      index: parseRoadmapIndex(rows, {
+        tabTitles: new Set(tabList.tabs.keys()),
+        families: parseFamilies(familyRows).list,
+        categories: parseCategories(categoryRows).list,
+      }),
+      indexTab: { properties: tabList.first, rows },
+    }
+  }
+
+  async #readTabList({ signal }: RepositoryReadOptions): Promise<TabList> {
     const { sheets } = parseSpreadsheetMetadata(
       await this.#client.getJson(this.#spreadsheetPath, {
         searchParams: { fields: SPREADSHEET_METADATA_FIELDS },
-        signal: options.signal,
+        signal,
       }),
     )
-    const tabs = new Map(
-      sheets.map(({ properties }) => [properties.title, properties]),
-    )
-    const properties = firstTab(sheets)
-    const rows = await this.#readTab(properties.title, options)
     return {
-      index: parseRoadmapIndex(rows, { tabTitles: new Set(tabs.keys()) }),
-      indexTab: { properties, rows },
-      tabs,
+      tabs: new Map(
+        sheets.map(({ properties }) => [properties.title, properties]),
+      ),
+      first: firstTab(sheets),
     }
+  }
+
+  /**
+   * The rows of the list tab with exactly this title, or `null` when there is none: the
+   * roadmap index is never a list (ADR-013).
+   */
+  async #readListTab(
+    { tabs, first }: TabList,
+    title: string,
+    options: RepositoryReadOptions,
+  ): Promise<string[][] | null> {
+    const properties = tabs.get(title)
+    if (properties === undefined || properties.sheetId === first.sheetId) {
+      return null
+    }
+    return this.#readTab(title, options)
   }
 
   /** Every row of the tab with this title, as displayed. */

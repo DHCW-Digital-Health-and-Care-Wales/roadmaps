@@ -39,11 +39,11 @@ The UI is available in English and Welsh (Cymraeg).
    an account and allows access to Google Sheets.
 3. GIS returns a short-lived access token (about an hour). It stays in memory only: it is
    never written to storage, URLs or logs.
-4. The app makes two Sheets API reads of the configured spreadsheet: its tab list
-   (`spreadsheets.get`, tab properties only), then the values of the tab with the lowest
-   index, the roadmap index (`spreadsheets.values.get`, cells as displayed). It shows one
-   card per roadmap the index lists, grouped by product family and sorted by title
-   (ADR-009). A card opens `#/roadmaps/<id>`, where
+4. The app reads the configured spreadsheet's tab list (`spreadsheets.get`, tab
+   properties only), then, together, the values of the tab with the lowest index, the
+   roadmap index, and of the `Families` and `Categories` tabs when they exist
+   (`spreadsheets.values.get`, cells as displayed). It shows one card per roadmap the
+   index lists, grouped by product family and sorted by title (ADR-009, ADR-013). A card opens `#/roadmaps/<id>`, where
    the id is the public site's address for that roadmap (`ProductA` → `producta`).
 5. On a roadmap's page, **Edit** turns the roadmap's text or an item into a form for its
    English. Changes stay pending in this tab, in memory only, until **Publish changes**
@@ -69,6 +69,20 @@ roadmap's items, one per row, its columns found by their row-1 header in any ord
 ([ADR-011](docs/adr/ADR-011-roadmap-items-from-each-roadmaps-tab.md)); the `Template` tab
 is never read. An optional `Item ID` column holds each item's identity
 ([ADR-012](docs/adr/ADR-012-publishing-a-roadmaps-changes.md)); the public site ignores it.
+
+**Families and categories** are defined once, in a `Families` tab (`ID`, `Name`,
+`Name (cy)`, `Colour`) and a `Categories` tab (`ID`, `Name`, `Name (cy)`), neither of
+them first, which the owner sets up by hand
+([the runbook](docs/operations/families-and-categories-tabs.md),
+[ADR-013](docs/adr/ADR-013-families-and-categories-defined-once.md)); the public site
+ignores both. A roadmap is linked to its family and category by the index's optional
+`Family ID` and `Category ID` columns, or by its `Family` and `Category` cells, folded,
+when it has no ID. A linked roadmap shows the list's name and colour; one whose own
+cells differ is flagged as out of step, and one whose family is not in the list keeps
+its own cells, flagged. Without the `Families` tab, roadmaps are grouped and coloured
+from their own cells; without the `Categories` tab, a `Category` is one of the public
+site's six spellings, shown in English. The editor does not yet write either tab or
+either ID column.
 
 **What the editor writes.** Publishing a roadmap writes, in one all-or-nothing
 `spreadsheets.batchUpdate`, only:

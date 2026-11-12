@@ -1,5 +1,4 @@
 import type { AuthErrorCode, AuthState } from "@/domain/auth/auth-client"
-import type { RoadmapCategory } from "@/domain/roadmap/roadmap-category"
 import type {
   EditableItemField,
   EditableRoadmapField,
@@ -136,15 +135,13 @@ export const en = {
       '$t(roadmaps.count, {"count": {{total}} }), $t(roadmaps.unpublishedCount, {"count": {{unpublished}} })',
     /** The heading over the roadmaps in no product family, when others have one. */
     noFamily: "No product family",
-    /** The public site's category names, as its landing page writes them. */
-    categories: {
-      "public-health-apps": "Public Health & Apps",
-      "gp-community-services": "GP & Community Services",
-      "tests-scans-results": "Tests, Scans & Results",
-      "urgent-emergency-care": "Urgent & Emergency Care",
-      "hospital-specialist-care": "Hospital & Specialist Care",
-      "national-systems-data": "National Systems & Data",
-    } satisfies Record<RoadmapCategory, string>,
+    /** A roadmap whose own family or category differs from the lists' (STY-027 S4, S8). */
+    lists: {
+      outOfStep: "Doesn't match its family or category",
+      familyNotListed: "Family isn't listed",
+      family: "Family: {{name}}",
+      category: "Category: {{name}}",
+    },
     card: {
       productLead: "Product lead: {{name}}",
       updated: "Updated {{date}}",

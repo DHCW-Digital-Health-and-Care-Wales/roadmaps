@@ -1,3 +1,5 @@
+import type { Category } from "./category"
+import type { Family } from "./family"
 import type { Roadmap } from "./roadmap"
 import type { PublishOutcome, RoadmapChanges } from "./roadmap-changes"
 import type { RoadmapItem } from "./roadmap-item"
@@ -15,6 +17,16 @@ export interface RepositoryReadOptions {
 export interface RoadmapRepository {
   /** Lists every roadmap the data source holds, published or not, in its own order. */
   listRoadmaps(options?: RepositoryReadOptions): Promise<Roadmap[]>
+  /**
+   * Lists the product families, in the list's order (ADR-013); `null` when the data
+   * source has no usable family list, so families can't be managed or chosen.
+   */
+  listFamilies(options?: RepositoryReadOptions): Promise<Family[] | null>
+  /**
+   * Lists the categories, in the list's order (ADR-013); `null` when the data source has
+   * no usable category list, so categories can't be chosen.
+   */
+  listCategories(options?: RepositoryReadOptions): Promise<Category[] | null>
   /**
    * Lists one roadmap's items, published or not, in its own order (ADR-011). Rejects
    * with `AppError('not-found')` when no roadmap has the id, and with

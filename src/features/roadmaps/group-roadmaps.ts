@@ -4,7 +4,7 @@ import type {
 } from "@/domain/roadmap/localised-text"
 import { localise } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
-import { foldText } from "@/lib/text"
+import { nameKey } from "@/lib/text"
 
 /** Roadmaps of one product family, in title order. */
 export interface RoadmapGroup {
@@ -18,16 +18,8 @@ export interface RoadmapGroup {
 /** The key of the group for roadmaps with no family; family keys are never empty. */
 const NO_FAMILY_KEY = ""
 
-/**
- * Families match ignoring case, accents, spaces and punctuation, so a typo in spacing
- * does not split a family (ADR-009). Unlike the parser's header matching, which is ASCII,
- * letters and digits of any script count, so family names in other scripts stay apart; a
- * name with none (only punctuation) is matched by its trimmed text instead.
- */
-function familyKey(family: LocalisedText): string {
-  const folded = foldText(family.en)
-  return folded.replace(/[^\p{L}\p{N}]/gu, "") || folded.trim() || "?"
-}
+/** A family's key: its English name as names match (ADR-013), never empty. */
+const familyKey = (family: LocalisedText) => nameKey(family.en) || "?"
 
 /**
  * Arranges the roadmaps as the main page shows them (ADR-009): grouped by product

@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest"
 
 import { isAppError } from "@/lib/errors"
 
+import type { Category } from "../category"
+import type { Family } from "../family"
 import type { Roadmap } from "../roadmap"
 import type {
   FieldChange,
@@ -11,6 +13,7 @@ import type {
 import type { RoadmapItem } from "../roadmap-item"
 import type { RoadmapRepository } from "../roadmap-repository"
 import { CO_LEAD_VALUE, type ContractWrite } from "./contract-write"
+import { categoriesOf, familiesOf } from "./linked-lists"
 import { createTestRoadmap } from "./test-roadmap"
 import { createTestRoadmapItem } from "./test-roadmap-item"
 
@@ -22,6 +25,10 @@ export interface ContractOptions {
   write?: ContractWrite | undefined
   /** Roadmaps whose items cannot be read: their tab is missing or invalid. */
   unreadableItems?: readonly string[] | undefined
+  /** Defaults to the families the roadmaps are linked to; `null`: no family list. */
+  families?: readonly Family[] | null | undefined
+  /** Defaults to the categories the roadmaps are linked to; `null`: no category list. */
+  categories?: readonly Category[] | null | undefined
 }
 
 export interface RoadmapRepositoryContractSetup {
@@ -30,7 +37,8 @@ export interface RoadmapRepositoryContractSetup {
    * Ids are URL-safe slugs (lower-case letters and digits, joined by single hyphens),
    * which every adapter can store and give back unchanged. `items` gives roadmaps their
    * items, in order; items may repeat an ID, as copied rows do. Publishing changes what
-   * the repository later reads.
+   * the repository later reads. A roadmap linked to a family or category is in step
+   * with it: `familiesOf` and `categoriesOf` give the lists, unless `options` does.
    */
   withRoadmaps(
     roadmaps: readonly Roadmap[],
@@ -43,8 +51,13 @@ export interface RoadmapRepositoryContractSetup {
 
 const fixtures: readonly Roadmap[] = [
   createTestRoadmap("producta", "Product A roadmap", {
-    category: "gp-community-services",
+    category: {
+      en: "GP & Community Services",
+      cy: "Meddygon Teulu a Gwasanaethau Cymunedol",
+    },
+    categoryId: "khzpchkh",
     family: { en: "Single Record", cy: "" },
+    familyId: "fc29g5b9",
     statusLabel: { en: "Beta", cy: "" },
     productLead: "Alex Jones, Sam Evans",
     lastUpdated: "2026-10-01",
@@ -58,6 +71,8 @@ const fixtures: readonly Roadmap[] = [
       en: "Medicines & Diagnostics",
       cy: "Meddyginiaethau a Diagnosteg",
     },
+    familyId: "vdkxj63m",
+    colour: "#006747",
   }),
   createTestRoadmap("0", "Template", { published: false }),
 ]
@@ -163,6 +178,83 @@ export function describeRoadmapRepositoryContract(
           .withRoadmaps(fixtures)
           .listRoadmaps({ signal: AbortSignal.abort(reason) }),
       ).rejects.toBe(reason)
+    })
+
+    it("lists the families and categories as plain data in data-source order", async () => {
+      const families: Family[] = [
+        {
+          id: "vdkxj63m",
+          name: { en: "Medicines", cy: "" },
+          colour: "#006747",
+        },
+        {
+          id: "fc29g5b9",
+          name: { en: "Single Record", cy: "Cofnod Sengl" },
+          colour: "#12a3c9",
+        },
+      ]
+      const categories: Category[] = [
+        {
+          id: "khzpchkh",
+          name: { en: "GP & Community Services", cy: "Meddygon Teulu" },
+        },
+      ]
+      const repository = setup.withRoadmaps([], {}, { families, categories })
+
+      expect(await repository.listFamilies()).toStrictEqual(families)
+      expect(await repository.listCategories()).toStrictEqual(categories)
+      expect(await setup.withRoadmaps(fixtures).listFamilies()).toStrictEqual(
+        familiesOf(fixtures),
+      )
+    })
+
+    it("lists no families or categories when the data source has no lists", async () => {
+      const ownCells = createTestRoadmap("producta", "Product A roadmap", {
+        family: { en: "Single record", cy: "" },
+        colour: "#325083",
+      })
+      const repository = setup.withRoadmaps(
+        [ownCells],
+        {},
+        {
+          families: null,
+          categories: null,
+        },
+      )
+
+      expect(await repository.listFamilies()).toBeNull()
+      expect(await repository.listCategories()).toBeNull()
+      expect(await repository.listRoadmaps()).toStrictEqual([ownCells])
+    })
+
+    it("returns new lists on every call", async () => {
+      const repository = setup.withRoadmaps(fixtures)
+
+      const families = await repository.listFamilies()
+      families?.pop()
+      const categories = await repository.listCategories()
+      categories?.pop()
+
+      expect(await repository.listFamilies()).toStrictEqual(
+        familiesOf(fixtures),
+      )
+      expect(await repository.listCategories()).toStrictEqual(
+        categoriesOf(fixtures),
+      )
+    })
+
+    it("rejects lists with an AppError when the data source fails, or with the abort reason", async () => {
+      const failing = setup.failing()
+      for (const read of [failing.listFamilies(), failing.listCategories()]) {
+        expect(isAppError(await read.catch((reason: unknown) => reason))).toBe(
+          true,
+        )
+      }
+      const reason = new DOMException("Cancelled by test", "AbortError")
+      const signal = AbortSignal.abort(reason)
+      const repository = setup.withRoadmaps(fixtures)
+      await expect(repository.listFamilies({ signal })).rejects.toBe(reason)
+      await expect(repository.listCategories({ signal })).rejects.toBe(reason)
     })
 
     it("lists a roadmap's items as plain data in data-source order", async () => {

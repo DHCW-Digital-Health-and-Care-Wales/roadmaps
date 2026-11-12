@@ -1,3 +1,5 @@
+import type { Category } from "@/domain/roadmap/category"
+import type { Family } from "@/domain/roadmap/family"
 import {
   heldWrites,
   planRoadmapPublish,
@@ -15,6 +17,7 @@ import {
   CO_LEAD_VALUE,
   type ContractWrite,
 } from "@/domain/roadmap/testing/contract-write"
+import { categoriesOf, familiesOf } from "@/domain/roadmap/testing/linked-lists"
 import { AppError } from "@/lib/errors"
 
 /**
@@ -29,6 +32,10 @@ export type InMemoryRoadmapItems = Readonly<
 export interface InMemoryRoadmapRepositoryOptions {
   /** How a publish's write goes; defaults to writes that succeed. */
   write?: ContractWrite | undefined
+  /** Defaults to the families the roadmaps are linked to; `null`: no family list. */
+  families?: readonly Family[] | null | undefined
+  /** Defaults to the categories the roadmaps are linked to; `null`: no category list. */
+  categories?: readonly Category[] | null | undefined
 }
 
 export interface InMemoryRoadmapRepository extends RoadmapRepository {
@@ -52,10 +59,18 @@ export interface InMemoryRoadmapRepository extends RoadmapRepository {
 export function createInMemoryRoadmapRepository(
   source: readonly Roadmap[] | AppError = [],
   items: InMemoryRoadmapItems = {},
-  { write }: InMemoryRoadmapRepositoryOptions = {},
+  {
+    write,
+    families = source instanceof AppError ? [] : familiesOf(source),
+    categories = source instanceof AppError ? [] : categoriesOf(source),
+  }: InMemoryRoadmapRepositoryOptions = {},
 ): InMemoryRoadmapRepository {
   const roadmaps =
     source instanceof AppError ? source : structuredClone([...source])
+  const lists = {
+    families: cloneList(families),
+    categories: cloneList(categories),
+  }
   const held = new Map(
     Object.entries(items).map(([id, value]) => [
       id,
@@ -143,6 +158,10 @@ export function createInMemoryRoadmapRepository(
         if (rereadFails) throw new AppError("network")
         return list.map((roadmap) => structuredClone(roadmap))
       }),
+    listFamilies: ({ signal } = {}) =>
+      respond(signal, () => cloneList(lists.families)),
+    listCategories: ({ signal } = {}) =>
+      respond(signal, () => cloneList(lists.categories)),
     listRoadmapItems: (roadmapId, { signal } = {}) =>
       respond(signal, (list) => {
         if (rereadFails) throw new AppError("network")
@@ -229,4 +248,8 @@ function setItemText(
   } else {
     item[field] = value === "" ? null : { en: value, cy: item[field]?.cy ?? "" }
   }
+}
+
+function cloneList<T>(list: readonly T[] | null): T[] | null {
+  return list?.map((entry) => structuredClone(entry)) ?? null
 }

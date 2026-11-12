@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest"
 
+import type { Category } from "@/domain/roadmap/category"
+import type { Family } from "@/domain/roadmap/family"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { isAppError } from "@/lib/errors"
 
@@ -7,6 +9,7 @@ import roadmapsCsv from "../../../tests/fixtures/sheets/Roadmaps.csv?raw"
 import { parseCsv } from "../../../tests/fixtures/sheets/parse-csv"
 import {
   parseRoadmapIndex,
+  type RoadmapIndex,
   type RoadmapIndexProblem,
 } from "./roadmap-index-parser"
 
@@ -78,8 +81,12 @@ describe("parseRoadmapIndex", () => {
         id: "producta",
         title: { en: "Product A roadmap", cy: "" },
         published: true,
-        category: "gp-community-services",
+        category: { en: "GP & Community Services", cy: "" },
+        categoryId: null,
         family: { en: "Single Record", cy: "" },
+        familyId: null,
+        outOfStep: false,
+        familyNotListed: false,
         statusLabel: { en: "Beta", cy: "" },
         productLead: "Alex Jones",
         lastUpdated: "2026-10-01",
@@ -101,10 +108,14 @@ describe("parseRoadmapIndex", () => {
         title: { en: "Product B roadmap", cy: "Trywydd Cynnyrch B" },
         published: true,
         category: null,
+        categoryId: null,
         family: {
           en: "Medicines & Diagnostics",
           cy: "Meddyginiaethau a Diagnosteg",
         },
+        familyId: null,
+        outOfStep: false,
+        familyNotListed: false,
         statusLabel: { en: "Alpha", cy: "Alffa" },
         productLead: null,
         lastUpdated: "2026-09-15",
@@ -122,8 +133,12 @@ describe("parseRoadmapIndex", () => {
         id: "productc",
         title: { en: "Product C roadmap", cy: "" },
         published: false,
-        category: "tests-scans-results",
+        category: { en: "Tests, Scans & Results", cy: "" },
+        categoryId: null,
         family: null,
+        familyId: null,
+        outOfStep: false,
+        familyNotListed: false,
         statusLabel: { en: "Alpha", cy: "" },
         productLead: "Sam Evans",
         lastUpdated: "2026-10-01",
@@ -342,20 +357,25 @@ describe("parseRoadmapIndex", () => {
     })
 
     it.each([
-      ["Public Health & Apps", "public-health-apps"],
-      ["GP & Community Services", "gp-community-services"],
-      [" gp & community services", "gp-community-services"],
-      ["Tests, Scans & Results", "tests-scans-results"],
-      ["Urgent & Emergency Care", "urgent-emergency-care"],
-      ["Hospital & Specialist Care", "hospital-specialist-care"],
+      ["Public Health & Apps", "Public Health & Apps"],
+      ["GP & Community Services", "GP & Community Services"],
+      [" gp & community services", "GP & Community Services"],
+      ["Tests, Scans & Results", "Tests, Scans & Results"],
+      ["Urgent & Emergency Care", "Urgent & Emergency Care"],
+      ["Hospital & Specialist Care", "Hospital & Specialist Care"],
       ["NATIONAL SYSTEMS AND DATA", null],
-      ["National Systems & Data", "national-systems-data"],
-      ["national-systems-data", "national-systems-data"],
-    ])("reads the category %j as %j", (value, category) => {
-      const index = parseRows({ Sheet: "A", Enabled: "Yes", Category: value })
+      ["National Systems & Data", "National Systems & Data"],
+      ["national-systems-data", "National Systems & Data"],
+    ])(
+      "with no category list, reads the category %j as the public site's %j, in English only (S6)",
+      (value, name) => {
+        const index = parseRows({ Sheet: "A", Enabled: "Yes", Category: value })
 
-      expect(index.entries[0]?.roadmap.category).toBe(category)
-    })
+        expect(index.entries[0]?.roadmap.category).toStrictEqual(
+          name === null ? null : { en: name, cy: "" },
+        )
+      },
+    )
 
     it("reads an unknown category as none, recording it, and a blank one as none", () => {
       const index = parseRows(
@@ -720,6 +740,245 @@ describe("parseRoadmapIndex", () => {
         problem("no-published-roadmap", {}),
         problem("duplicate-id", { row: 3, column: "Sheet", value: "productA" }),
       ])
+    })
+  })
+
+  describe("the family and category lists (ADR-013)", () => {
+    const SINGLE_RECORD = {
+      id: "fc29g5b9",
+      name: { en: "Single Record", cy: "Cofnod Sengl" },
+      colour: "#12a3c9",
+    }
+    const MEDICINES = {
+      id: "vdkxj63m",
+      name: { en: "Medicines & Diagnostics", cy: "" },
+      colour: "#006747",
+    }
+    const GP = {
+      id: "khzpchkh",
+      name: { en: "GP & Community Services", cy: "Meddygon Teulu" },
+    }
+    const TESTS = {
+      id: "w7vrv5kn",
+      name: { en: "Tests, Scans & Results", cy: "Profion" },
+    }
+    const LIST_HEADER = [
+      "Sheet",
+      "Enabled",
+      "Family ID",
+      "Family",
+      "Family (cy)",
+      "Colour",
+      "Category ID",
+      "Category",
+    ] as const
+    type ListCells = Partial<Record<(typeof LIST_HEADER)[number], string>>
+
+    /** Parses published rows under a header with the editor's ID columns. */
+    function parseWithLists(
+      rows: ListCells[],
+      {
+        families = [SINGLE_RECORD, MEDICINES],
+        categories = [GP, TESTS],
+      }: {
+        families?: Family[] | null
+        categories?: Category[] | null
+      } = {},
+    ) {
+      const toRow = (cells: ListCells, i: number) =>
+        LIST_HEADER.map((column) => {
+          if (column === "Sheet") return `R${String(i)}`
+          if (column === "Enabled") return "Yes"
+          return cells[column] ?? ""
+        })
+      const index = parseRoadmapIndex([[...LIST_HEADER], ...rows.map(toRow)], {
+        families,
+        categories,
+      })
+      // The columns this header leaves out are not what these tests are about.
+      return {
+        ...index,
+        problems: index.problems.filter(
+          ({ code }) => code !== "missing-column",
+        ),
+      }
+    }
+
+    /** The family and category fields of each roadmap. */
+    const linksOf = (index: RoadmapIndex) =>
+      index.entries.map(({ roadmap }) => ({
+        family: roadmap.family,
+        familyId: roadmap.familyId,
+        colour: roadmap.colour,
+        category: roadmap.category,
+        categoryId: roadmap.categoryId,
+        outOfStep: roadmap.outOfStep,
+        familyNotListed: roadmap.familyNotListed,
+      }))
+
+    const IN_STEP: ListCells = {
+      "Family ID": SINGLE_RECORD.id,
+      Family: "Single Record",
+      "Family (cy)": "Cofnod Sengl",
+      Colour: "#12A3C9",
+      "Category ID": GP.id,
+      Category: "GP & Community Services",
+    }
+    const LINKED = {
+      family: SINGLE_RECORD.name,
+      familyId: SINGLE_RECORD.id,
+      colour: SINGLE_RECORD.colour,
+      category: GP.name,
+      categoryId: GP.id,
+      outOfStep: false,
+      familyNotListed: false,
+    }
+
+    it("shows a row whose cells match its family and category, not flagged (S4)", () => {
+      const index = parseWithLists([IN_STEP])
+
+      expect(linksOf(index)).toStrictEqual([LINKED])
+      expect(index.problems).toStrictEqual([])
+    })
+
+    it("shows the family's name and colour over the row's own, flagged (S2, S4)", () => {
+      const index = parseWithLists([
+        { Family: "Single record", Colour: "#325083" },
+      ])
+
+      expect(linksOf(index)).toStrictEqual([
+        { ...LINKED, category: null, categoryId: null, outOfStep: true },
+      ])
+    })
+
+    it.each<[string, ListCells]>([
+      ["Family", { Family: "Single record" }],
+      ["Family (cy)", { "Family (cy)": "" }],
+      ["Colour", { Colour: "#325083" }],
+      ["Colour, written short", { Colour: "#abc" }],
+      ["Category", { Category: "gp community services" }],
+    ])("flags a row whose %s differs from the list (S4)", (_, cells) => {
+      const [roadmap] = linksOf(parseWithLists([{ ...IN_STEP, ...cells }]))
+
+      expect(roadmap).toStrictEqual({ ...LINKED, outOfStep: true })
+    })
+
+    it("links by ID over the name, and by folded name when there is no ID (S3)", () => {
+      const index = parseWithLists([
+        {
+          "Family ID": SINGLE_RECORD.id,
+          Family: "Medicines & Diagnostics",
+          "Category ID": TESTS.id,
+          Category: "GP & Community Services",
+        },
+        { Family: "single-record", Category: "TESTS SCANS RESULTS" },
+      ])
+
+      expect(
+        linksOf(index).map(({ familyId, categoryId }) => [
+          familyId,
+          categoryId,
+        ]),
+      ).toStrictEqual([
+        [SINGLE_RECORD.id, TESTS.id],
+        [SINGLE_RECORD.id, TESTS.id],
+      ])
+      expect(index.problems).toStrictEqual([])
+    })
+
+    it("links by name when the ID is not in the list, recording the ID", () => {
+      const index = parseWithLists([
+        { ...IN_STEP, "Family ID": "zzzzzzzz", "Category ID": "yyyyyyyy" },
+      ])
+
+      expect(linksOf(index)).toStrictEqual([LINKED])
+      expect(index.problems).toStrictEqual([
+        problem("unknown-family-id", {
+          row: 2,
+          column: "Family ID",
+          value: "zzzzzzzz",
+        }),
+        problem("unknown-category-id", {
+          row: 2,
+          column: "Category ID",
+          value: "yyyyyyyy",
+        }),
+      ])
+    })
+
+    it("keeps a family the list doesn't have as the row names it, flagged and recorded (S8)", () => {
+      const index = parseWithLists([
+        { Family: "Single Recrod", "Family (cy)": "Cofnod", Colour: "#325083" },
+      ])
+
+      expect(linksOf(index)).toStrictEqual([
+        {
+          family: { en: "Single Recrod", cy: "Cofnod" },
+          familyId: null,
+          colour: "#325083",
+          category: null,
+          categoryId: null,
+          outOfStep: false,
+          familyNotListed: true,
+        },
+      ])
+      expect(index.problems).toStrictEqual([
+        problem("unknown-family", {
+          row: 2,
+          column: "Family",
+          value: "Single Recrod",
+        }),
+      ])
+    })
+
+    it("keeps the own colour of a roadmap with no family, not flagged (S9)", () => {
+      const [roadmap] = linksOf(parseWithLists([{ Colour: "#7B2D8E" }]))
+
+      expect(roadmap).toMatchObject({
+        family: null,
+        colour: "#7b2d8e",
+        outOfStep: false,
+        familyNotListed: false,
+      })
+    })
+
+    it("reads a category the list doesn't have as none, recording it (S10)", () => {
+      const index = parseWithLists([
+        { Category: "Public Health & Apps" },
+        { Category: "" },
+      ])
+
+      expect(linksOf(index).map(({ category }) => category)).toStrictEqual([
+        null,
+        null,
+      ])
+      expect(index.problems).toStrictEqual([
+        problem("unknown-category", {
+          row: 2,
+          column: "Category",
+          value: "Public Health & Apps",
+        }),
+      ])
+    })
+
+    it("with no lists, reads the row's own cells, with no flags (S6)", () => {
+      const index = parseWithLists(
+        [{ ...IN_STEP, Family: "Single record", Colour: "#325083" }],
+        { families: null, categories: null },
+      )
+
+      expect(linksOf(index)).toStrictEqual([
+        {
+          family: { en: "Single record", cy: "Cofnod Sengl" },
+          familyId: null,
+          colour: "#325083",
+          category: { en: "GP & Community Services", cy: "" },
+          categoryId: null,
+          outOfStep: false,
+          familyNotListed: false,
+        },
+      ])
+      expect(index.problems).toStrictEqual([])
     })
   })
 })

@@ -135,13 +135,11 @@ export const cy = {
     countWithUnpublished:
       '$t(roadmaps.count, {"count": {{total}} }), $t(roadmaps.unpublishedCount, {"count": {{unpublished}} })',
     noFamily: "Dim teulu cynnyrch",
-    categories: {
-      "public-health-apps": "Iechyd y Cyhoedd ac Apiau",
-      "gp-community-services": "Meddygon Teulu a Gwasanaethau Cymunedol",
-      "tests-scans-results": "Profion, Sganiau a Chanlyniadau",
-      "urgent-emergency-care": "Gofal Brys ac Argyfwng",
-      "hospital-specialist-care": "Gofal Ysbyty ac Arbenigol",
-      "national-systems-data": "Systemau a Data Cenedlaethol",
+    lists: {
+      outOfStep: "Yn wahanol i'w deulu neu gategori",
+      familyNotListed: "Teulu heb ei restru",
+      family: "Teulu: {{name}}",
+      category: "Categori: {{name}}",
     },
     card: {
       productLead: "Arweinydd cynnyrch: {{name}}",

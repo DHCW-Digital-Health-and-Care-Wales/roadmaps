@@ -3,17 +3,16 @@
  * (ADR-009, `docs/analysis/roadmaps-tab-format.md`): row 1 is the header, every other
  * non-blank row is one roadmap, and its `Sheet` cell names the worksheet holding the
  * roadmap's items. Mistakes the public site would fail its sync on are recorded as
- * problems and the list stays usable.
+ * problems and the list stays usable. A row's family and category are linked to the
+ * family and category lists, whose values are shown (ADR-013).
  */
 
+import type { Category } from "@/domain/roadmap/category"
+import type { Family } from "@/domain/roadmap/family"
 import type { LocalisedText } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
-import {
-  ROADMAP_CATEGORIES,
-  type RoadmapCategory,
-} from "@/domain/roadmap/roadmap-category"
 import { AppError } from "@/lib/errors"
-import { foldText } from "@/lib/text"
+import { foldText, nameKey } from "@/lib/text"
 
 import {
   columnIndexes,
@@ -36,6 +35,12 @@ export type RoadmapIndexProblemCode =
   | "enabled-not-yes"
   /** A category not in the list; read as no category. */
   | "unknown-category"
+  /** A `Category ID` not in the list; the row is linked by its `Category`. */
+  | "unknown-category-id"
+  /** A family not in the list; shown as the row names it (STY-027 S8). */
+  | "unknown-family"
+  /** A `Family ID` not in the list; the row is linked by its `Family`. */
+  | "unknown-family-id"
   /** Not a real `YYYY-MM-DD` or `DD/MM/YYYY` date; read as no date. */
   | "invalid-date"
   /** Not a `#rgb` or `#rrggbb` colour; read as no colour. */
@@ -84,7 +89,11 @@ const OPTIONAL_COLUMNS = [
   "Product Lead",
 ] as const
 
-export type RoadmapIndexColumn = "Sheet" | (typeof OPTIONAL_COLUMNS)[number]
+/** The editor's own columns, which the public site ignores: none is a mistake to miss. */
+const EDITOR_COLUMNS = ["Family ID", "Category ID"] as const
+
+export type RoadmapIndexColumn =
+  "Sheet" | (typeof OPTIONAL_COLUMNS)[number] | (typeof EDITOR_COLUMNS)[number]
 type Column = RoadmapIndexColumn
 type TextColumn =
   "Title" | "Family" | "Status label" | "Vision" | "Service description"
@@ -99,18 +108,17 @@ const WELSH_COLUMNS: readonly TextColumn[] = [
 ]
 
 /**
- * How the public site's `Category` values are spelled (its `CATEGORY_SHEET_VALUES`).
- * Exported for tests that write roadmap index rows.
+ * How the public site's `Category` values are spelled (its `CATEGORY_SHEET_VALUES`),
+ * read when there is no category list (STY-027 D5).
  */
-export const CATEGORY_SHEET_VALUES: Readonly<Record<RoadmapCategory, string>> =
-  {
-    "public-health-apps": "Public Health & Apps",
-    "gp-community-services": "GP & Community Services",
-    "tests-scans-results": "Tests, Scans & Results",
-    "urgent-emergency-care": "Urgent & Emergency Care",
-    "hospital-specialist-care": "Hospital & Specialist Care",
-    "national-systems-data": "National Systems & Data",
-  }
+const PUBLIC_SITE_CATEGORIES = [
+  "Public Health & Apps",
+  "GP & Community Services",
+  "Tests, Scans & Results",
+  "Urgent & Emergency Care",
+  "Hospital & Specialist Care",
+  "National Systems & Data",
+]
 
 /** The public site's URL slug: `Product A` becomes `product-a`. */
 const slugify = (value: string) =>
@@ -119,15 +127,12 @@ const slugify = (value: string) =>
     .replace(/^-+|-+$/g, "")
 
 const readHeader = headerReader<Column, TextColumn>(
-  ["Sheet", ...OPTIONAL_COLUMNS],
+  ["Sheet", ...OPTIONAL_COLUMNS, ...EDITOR_COLUMNS],
   WELSH_COLUMNS,
 )
 
-const CATEGORIES_BY_KEY = new Map<string, RoadmapCategory>(
-  ROADMAP_CATEGORIES.map((category) => [
-    matchKey(CATEGORY_SHEET_VALUES[category]),
-    category,
-  ]),
+const PUBLIC_SITE_CATEGORIES_BY_KEY = new Map(
+  PUBLIC_SITE_CATEGORIES.map((name) => [matchKey(name), name]),
 )
 
 type Header = SheetHeader<Column, TextColumn>
@@ -149,6 +154,31 @@ export interface ParseRoadmapIndexOptions {
    * of them exactly records `missing-tab`.
    */
   tabTitles?: Iterable<string> | undefined
+  /** The family list; without one, a row's family is its own cells (ADR-013). */
+  families?: readonly Family[] | null | undefined
+  /** The category list; without one, a row's category is a public-site spelling. */
+  categories?: readonly Category[] | null | undefined
+}
+
+/** A list, found by ID or by name as names match. */
+interface Lookup<T> {
+  byId: ReadonlyMap<string, T>
+  byName: ReadonlyMap<string, T>
+}
+
+function lookupOf<T extends { id: string; name: LocalisedText }>(
+  list: readonly T[] | null | undefined,
+): Lookup<T> | null {
+  if (list == null) return null
+  return {
+    byId: new Map(list.map((item) => [item.id, item])),
+    byName: new Map(list.map((item) => [nameKey(item.name.en), item])),
+  }
+}
+
+interface Lookups {
+  families: Lookup<Family> | null
+  categories: Lookup<Category> | null
 }
 
 /**
@@ -159,7 +189,7 @@ export interface ParseRoadmapIndexOptions {
  */
 export function parseRoadmapIndex(
   rows: readonly (readonly string[])[],
-  { tabTitles }: ParseRoadmapIndexOptions = {},
+  { tabTitles, families, categories }: ParseRoadmapIndexOptions = {},
 ): RoadmapIndex {
   const [headerRow, ...bodyRows] = rows
   if (headerRow === undefined) {
@@ -188,8 +218,12 @@ export function parseRoadmapIndex(
   if (tabTitles !== undefined) {
     recordMissingTabs(keptRows, new Set(tabTitles), header, problems)
   }
+  const lookups = {
+    families: lookupOf(families),
+    categories: lookupOf(categories),
+  }
   const entries = keptRows.map((indexRow) =>
-    toEntry(indexRow, header, problems),
+    toEntry(indexRow, header, lookups, problems),
   )
 
   if (
@@ -280,6 +314,7 @@ const isPublished = (indexRow: IndexRow) => indexRow.read("Enabled") === "Yes"
 function toEntry(
   indexRow: IndexRow,
   header: Header,
+  lookups: Lookups,
   problems: IndexProblemLog,
 ): RoadmapIndexEntry {
   const { row, sheet, id } = indexRow
@@ -325,6 +360,73 @@ function toEntry(
     recordCell("enabled-not-yes", header.english.get("Enabled"), enabled)
   }
 
+  /**
+   * The listed family or category the row names: by its ID column, else by name. An
+   * unknown ID is recorded.
+   */
+  const link = <T>(
+    lookup: Lookup<T>,
+    idColumn: "Family ID" | "Category ID",
+    name: string,
+    unknownId: RoadmapIndexProblemCode,
+  ): T | null => {
+    const id = indexRow.read(idColumn)
+    const byId = id === "" ? undefined : lookup.byId.get(id)
+    if (id !== "" && byId === undefined) {
+      recordCell(unknownId, header.english.get(idColumn), id)
+    }
+    return (
+      byId ?? (name === "" ? null : (lookup.byName.get(nameKey(name)) ?? null))
+    )
+  }
+
+  const ownFamily = text("Family")
+  const ownColour = parsed("Colour", parseColour)
+  const family =
+    lookups.families &&
+    link(
+      lookups.families,
+      "Family ID",
+      ownFamily?.en ?? "",
+      "unknown-family-id",
+    )
+  const familyNotListed =
+    lookups.families !== null && family === null && ownFamily !== null
+  if (familyNotListed) {
+    recordCell("unknown-family", header.english.get("Family"), ownFamily.en)
+  }
+  const familyOutOfStep =
+    family !== null &&
+    (indexRow.read("Family") !== family.name.en ||
+      indexRow.readWelsh("Family") !== family.name.cy ||
+      indexRow.read("Colour").toLowerCase() !== family.colour)
+
+  const ownCategory = indexRow.read("Category")
+  let category: LocalisedText | null = null
+  let categoryId: string | null = null
+  let categoryOutOfStep = false
+  if (lookups.categories === null) {
+    category = parsed("Category", parsePublicSiteCategory)
+  } else {
+    const listed = link(
+      lookups.categories,
+      "Category ID",
+      ownCategory,
+      "unknown-category-id",
+    )
+    if (listed !== null) {
+      category = listed.name
+      categoryId = listed.id
+      categoryOutOfStep = ownCategory !== listed.name.en
+    } else if (ownCategory !== "") {
+      recordCell(
+        "unknown-category",
+        header.english.get("Category"),
+        ownCategory,
+      )
+    }
+  }
+
   return {
     tabName: sheet,
     row,
@@ -333,23 +435,28 @@ function toEntry(
       // `sheet` is never blank, so neither is the title.
       title: text("Title", sheet) ?? { en: sheet, cy: "" },
       published: enabled === "Yes",
-      category: parsed("Category", parseCategory),
-      family: text("Family"),
+      category,
+      categoryId,
+      family: family?.name ?? ownFamily,
+      familyId: family?.id ?? null,
+      outOfStep: familyOutOfStep || categoryOutOfStep,
+      familyNotListed,
       statusLabel: text("Status label"),
       productLead: indexRow.read("Product Lead") || null,
       lastUpdated: parsed("Last updated", parseDate),
-      colour: parsed("Colour", parseColour),
+      colour: family?.colour ?? ownColour,
       vision: text("Vision"),
       serviceDescription: text("Service description"),
     },
   }
 }
 
-function parseCategory(value: string) {
-  const category = CATEGORIES_BY_KEY.get(matchKey(value))
-  return category === undefined
+/** One of the public site's spellings, in English only (STY-027 D5). */
+function parsePublicSiteCategory(value: string) {
+  const name = PUBLIC_SITE_CATEGORIES_BY_KEY.get(matchKey(value))
+  return name === undefined
     ? { value: null, problem: "unknown-category" as const }
-    : { value: category }
+    : { value: { en: name, cy: "" } }
 }
 
 const ISO_DATE = /^(?<year>\d{4})-(?<month>\d{1,2})-(?<day>\d{1,2})$/

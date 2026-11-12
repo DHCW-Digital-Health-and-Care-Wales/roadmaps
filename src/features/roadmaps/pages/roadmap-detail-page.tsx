@@ -15,10 +15,17 @@ import { cn } from "@/lib/utils"
 
 import { NotPublishedBadge } from "../components/not-published-badge"
 import { RefreshButton } from "../components/refresh-button"
-import { RoadmapAbout } from "../components/roadmap-about"
 import { RoadmapItems, RoadmapItemsSkeleton } from "../components/roadmap-items"
 import { RoadmapsErrorState } from "../components/roadmaps-error-state"
 import { StatusPanel } from "../components/status-panel"
+import { ChangedTag } from "../editing/edit-controls"
+import { EditableRoadmapAbout } from "../editing/editable-roadmap-about"
+import { applyRoadmapChanges } from "../editing/pending-changes"
+import {
+  usePendingChangesStore,
+  useRoadmapChanges,
+} from "../editing/pending-changes-context"
+import { RoadmapPublishing } from "../editing/roadmap-publishing"
 import { isRoadmapGone, useRoadmapItems } from "../hooks/use-roadmap-items"
 import { useRoadmap } from "../hooks/use-roadmaps"
 import { useRoadmapsProblem } from "../hooks/use-roadmaps-problem"
@@ -118,18 +125,25 @@ function RoadmapDetail({ roadmapId }: RoadmapDetailPageProps) {
   )
 }
 
+/** What a refetch reports, enough to tell whether it read anything new. */
+interface RefreshRead {
+  readonly isSuccess: boolean
+  readonly dataUpdatedAt: number
+}
+
 interface RoadmapViewProps {
   roadmap: Roadmap
   /** Why the list the roadmap came from may be out of date, if it may. */
   listProblem: AppError | null
   listFetching: boolean
-  refetchList: () => Promise<unknown>
+  refetchList: () => Promise<RefreshRead>
 }
 
 /**
  * A listed roadmap: its title, a Not published badge when it is not public (D8), a
- * Refresh for the roadmap and its items (D7), what it is about, then its items. The
- * title stays whatever happens to the items.
+ * Refresh for the roadmap and its items (D7), its pending changes with Publish, what it
+ * is about, then its items, each showing its pending English (STY-025). The title stays
+ * whatever happens to the items.
  */
 function RoadmapView({
   roadmap,
@@ -138,13 +152,27 @@ function RoadmapView({
   refetchList,
 }: RoadmapViewProps) {
   const language = useLanguage()
+  const store = usePendingChangesStore()
+  const changes = useRoadmapChanges(roadmap.id)
   // The same query the items area reads, for the page's Refresh.
   const items = useRoadmapItems(roadmap.id)
   const retryList = () => {
     void refetchList()
   }
-  const refresh = () => {
-    void Promise.all([refetchList(), items.refetch()])
+  const refresh = async () => {
+    const startedAt = Date.now()
+    const reads = await Promise.all([refetchList(), items.refetch()])
+    // A notice asking for a Refresh has been heeded once both reads came back (S15,
+    // S18); until then what the publish came to is still unknown. A read cancelled at
+    // the session's end comes back with the cached data and no error, so only data
+    // read since Refresh began counts.
+    const answered = (read: RefreshRead) =>
+      read.isSuccess && read.dataUpdatedAt >= startedAt
+    if (!reads.every(answered)) return
+    const kind = store.getSnapshot().notices.get(roadmap.id)?.kind
+    if (kind === "unconfirmed" || kind === "refused") {
+      store.clearNotice(roadmap.id)
+    }
   }
 
   return (
@@ -162,19 +190,23 @@ function RoadmapView({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
             <h1 className="text-heading-xl text-pretty wrap-break-word">
-              {localise(roadmap.title, language)}
+              {localise(applyRoadmapChanges(roadmap, changes).title, language)}
             </h1>
             {!roadmap.published && <NotPublishedBadge />}
+            {changes?.roadmap.title && <ChangedTag />}
           </div>
           <div className="shrink-0">
             <RefreshButton
               fetching={listFetching || items.isFetching}
-              onRefresh={refresh}
+              onRefresh={() => {
+                void refresh()
+              }}
             />
           </div>
         </div>
+        <RoadmapPublishing roadmap={roadmap} />
       </div>
-      <RoadmapAbout roadmap={roadmap} />
+      <EditableRoadmapAbout roadmap={roadmap} />
       <RoadmapItemsArea roadmapId={roadmap.id} listFetching={listFetching} />
     </div>
   )
@@ -213,7 +245,7 @@ function RoadmapItemsArea({ roadmapId, listFetching }: RoadmapItemsAreaProps) {
             retrying={isFetching}
           />
         )}
-        <RoadmapItems items={items} />
+        <RoadmapItems roadmapId={roadmapId} items={items} />
       </div>
     )
   }

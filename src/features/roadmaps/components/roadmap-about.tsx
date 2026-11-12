@@ -1,4 +1,4 @@
-import { useId } from "react"
+import { useId, type ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
 import { localise } from "@/domain/roadmap/localised-text"
@@ -10,6 +10,13 @@ type AboutField =
 
 export interface RoadmapAboutProps {
   roadmap: Roadmap
+  /**
+   * A form editing the roadmap's text, given the heading's id to be named by, shown in
+   * place of the fields.
+   */
+  form?: ((headingId: string) => ReactNode) | undefined
+  /** Controls at the foot of the section, such as Edit. */
+  actions?: ReactNode | undefined
 }
 
 /**
@@ -17,7 +24,7 @@ export interface RoadmapAboutProps {
  * service description, each under a label and only when it has one. Text keeps its line
  * breaks. A roadmap with none says so, so editing has a place to start.
  */
-export function RoadmapAbout({ roadmap }: RoadmapAboutProps) {
+export function RoadmapAbout({ roadmap, form, actions }: RoadmapAboutProps) {
   const { t } = useTranslation()
   const language = useLanguage()
   const headingId = useId()
@@ -47,7 +54,9 @@ export function RoadmapAbout({ roadmap }: RoadmapAboutProps) {
       <h2 id={headingId} className="text-heading-m">
         {t("roadmaps.about.title")}
       </h2>
-      {fields.length > 0 ? (
+      {form ? (
+        <div className="max-w-prose">{form(headingId)}</div>
+      ) : fields.length > 0 ? (
         <dl className="flex max-w-prose flex-col gap-3">
           {fields.map(({ key, value }) => (
             <div key={key} className="flex flex-col gap-0.5">
@@ -59,6 +68,7 @@ export function RoadmapAbout({ roadmap }: RoadmapAboutProps) {
       ) : (
         <p className="text-muted-foreground">{t("roadmaps.about.empty")}</p>
       )}
+      {actions && <div className="max-w-prose">{actions}</div>}
     </section>
   )
 }

@@ -1,0 +1,5 @@
+- alert:
+  - text: Couldn't publish your changes
+  - paragraph: This Google account isn't allowed to change this roadmap. Ask the spreadsheet owner for edit access.
+  - paragraph: Your changes are kept in this tab.
+  - button "Dismiss message"

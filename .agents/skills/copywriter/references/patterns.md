@@ -110,9 +110,45 @@ auth.renewal.failed          Couldn't keep you connected
 auth.renewal.reconnectLater  You'll need to reconnect when your session ends.
 ```
 
-Future "saved" and "published" confirmations take this shape. A query error
-the page already shows needs no notice. Say it once, where the reader is
-looking.
+A publish's outcome takes this shape: a confirmation says what happened and when
+the public sees it; a failure names the step, says why, then that nothing was lost.
+
+```
+roadmaps.publish.notice.published   Changes published. The public site shows them after its next nightly update.
+roadmaps.publish.notice.failed.publish  Couldn't publish your changes
+roadmaps.publish.notice.kept        Your changes are kept in this tab.
+```
+
+A query error the page already shows needs no notice. Say it once, where the
+reader is looking.
+
+## Edit form
+
+**Shape:** Edit's accessible name adds what is edited ("Edit Minimal card", the
+subject in a `sr-only` span after a `{" "}` text node). Labels are the glossary's
+field names; in Welsh each says it is the English ("Teitl (Saesneg)"). The confirm
+button is **Done**, never "Save", which names the write on a roadmap that is not
+published; Cancel leaves the form. A required field's error is an instruction:
+`roadmaps.edit.titleRequired` "Enter a title". What holds a pending change is tagged
+"Changed"; Undo is "Undo changes" plus its subject.
+
+## Publish and save
+
+**Shape:** "Publish changes" on a published roadmap, "Save changes" on one that is
+not; the count beside it matches ("2 unpublished changes", "1 change to save"). The
+check is a question title naming the step ("Publish these changes?"), then what
+follows for the public (the nightly note, or "nothing will be public"), then "What
+changes": each subject by name with its changed fields. Its confirm button repeats
+the step.
+
+## Destructive question
+
+**Shape:** a question title naming what is lost ("Discard all changes to this
+roadmap?"), one line saying it cannot be undone, and a confirm button that repeats
+the verb and its object ("Discard all changes"); Cancel is always there. When the
+reader chose another action that would lose work, the question offers the safe way
+first: Disconnect with changes pending asks "Keep your changes?" with "Keep changes
+and disconnect", then "Discard changes and disconnect", then Cancel.
 
 ## Timeout warning
 

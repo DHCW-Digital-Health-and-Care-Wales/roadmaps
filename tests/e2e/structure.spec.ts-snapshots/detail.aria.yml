@@ -16,6 +16,7 @@
     - definition: A short, ambitious statement of where Product A is heading. Leave blank to show a general intro sentence instead.
     - term: Service description
     - definition: What Product A does and who it helps. Also used as the summary on the landing page card.
+    - button "Edit About this roadmap"
   - heading "Recently delivered" [level=2]
   - list "Recently delivered":
     - listitem:
@@ -26,6 +27,7 @@
       - definition: What users can do now.
       - term: Organisations
       - definition: SBUHB
+      - button "Edit Recently shipped work"
   - heading "Now" [level=2]
   - list "Now":
     - listitem:
@@ -51,10 +53,12 @@
                 - list:
                   - listitem: Use two dashes to nest it again
           - listitem: Another top-level bullet point
+      - button "Edit Example card with every column"
     - listitem:
       - heading "Minimal card" [level=3]
       - term: Description
       - definition: Only Title and Horizon are required; everything else is optional.
+      - button "Edit Minimal card"
     - listitem:
       - heading "Card awaiting release" [level=3]
       - term: Description
@@ -65,6 +69,7 @@
       - definition: Service X
       - term: Organisations
       - definition: National
+      - button "Edit Card awaiting release"
   - heading "Next" [level=2]
   - list "Next":
     - listitem:
@@ -77,6 +82,7 @@
       - definition: What we hope this will achieve.
       - term: Organisations
       - definition: BCUHB, HDUHB
+      - button "Edit Card being explored"
   - heading "Later" [level=2]
   - list "Later":
     - listitem:
@@ -89,6 +95,7 @@
       - definition: A clear understanding of the problem.
       - term: Organisations
       - definition: CAVUHB
+      - button "Edit Discovery card"
     - listitem:
       - heading "Longer-term idea" [level=3]
       - term: Description
@@ -97,6 +104,7 @@
       - definition: Service Y, Service Z
       - term: Organisations
       - definition: National
+      - button "Edit Longer-term idea"
   - heading "Delivered this year" [level=2]
   - list "Delivered this year":
     - listitem:
@@ -112,9 +120,11 @@
         - list:
           - listitem: What it included
           - listitem: Another thing it included
+      - button "Edit Earlier delivery this year"
   - heading "Not doing" [level=2]
   - list "Not doing":
     - listitem:
       - heading "Something we are not doing" [level=3]
       - term: Description
       - definition: Explain why this is out of scope for now.
+      - button "Edit Something we are not doing"

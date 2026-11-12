@@ -3,13 +3,17 @@ import { useId, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 
 import { Skeleton } from "@/components/ui/skeleton"
+import type { ItemChanges } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 
+import { EditableItemCard } from "../editing/editable-item-card"
+import { matchItemChanges } from "../editing/pending-changes"
+import { useRoadmapChanges } from "../editing/pending-changes-context"
 import {
   groupRoadmapItems,
   type PositionedRoadmapItem,
 } from "../group-roadmap-items"
-import { RoadmapItemCard } from "./roadmap-item-card"
+import { useItemCardKeys } from "./item-card-keys"
 import { StatusPanel } from "./status-panel"
 
 /** One, two, then three columns of item cards, as the roadmap cards are laid out. */
@@ -17,20 +21,39 @@ const itemGridClassName =
   "grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3"
 
 export interface RoadmapItemsProps {
+  roadmapId: string
   items: readonly RoadmapItem[]
 }
 
 /**
  * A roadmap's items: those the public site leaves out first, flagged (D4), then all six
  * placements in the public site's order, each under its heading, saying when it has
- * none (D1). A roadmap with no items has one empty state instead (D5).
+ * none (D1). A roadmap with no items has one empty state instead (D5). Each item can be
+ * edited, and shows its pending changes (STY-025).
  */
-export function RoadmapItems({ items }: RoadmapItemsProps) {
+export function RoadmapItems({ roadmapId, items }: RoadmapItemsProps) {
   const { t } = useTranslation()
   const headingId = useId()
   const { unplaced, placements } = useMemo(
     () => groupRoadmapItems(items),
     [items],
+  )
+  const changes = useRoadmapChanges(roadmapId)
+  const entries = useMemo(
+    () => matchItemChanges(items, changes),
+    [items, changes],
+  )
+  const list = (
+    placed: readonly PositionedRoadmapItem[],
+    labelledBy: string,
+  ) => (
+    <ItemList
+      roadmapId={roadmapId}
+      items={items}
+      placed={placed}
+      entries={entries}
+      labelledBy={labelledBy}
+    />
   )
 
   if (items.length === 0) {
@@ -58,7 +81,7 @@ export function RoadmapItems({ items }: RoadmapItemsProps) {
           <p className="text-pretty">
             {t("roadmaps.items.unplaced.description")}
           </p>
-          <ItemList items={unplaced} labelledBy={unplacedId} />
+          {list(unplaced, unplacedId)}
         </div>
       )}
       {placements.map(({ placement, items: placed }) => {
@@ -69,7 +92,7 @@ export function RoadmapItems({ items }: RoadmapItemsProps) {
               {t(`roadmaps.items.placements.${placement}`)}
             </h2>
             {placed.length > 0 ? (
-              <ItemList items={placed} labelledBy={id} />
+              list(placed, id)
             ) : (
               <p className="text-muted-foreground">
                 {t("roadmaps.items.noneInPlacement")}
@@ -82,17 +105,33 @@ export function RoadmapItems({ items }: RoadmapItemsProps) {
   )
 }
 
-function ItemList({
-  items,
-  labelledBy,
-}: {
-  items: readonly PositionedRoadmapItem[]
+interface ItemListProps {
+  roadmapId: string
+  items: readonly RoadmapItem[]
+  placed: readonly PositionedRoadmapItem[]
+  entries: ReadonlyMap<number, ItemChanges>
   labelledBy: string
-}) {
+}
+
+function ItemList({
+  roadmapId,
+  items,
+  placed,
+  entries,
+  labelledBy,
+}: ItemListProps) {
+  const keys = useItemCardKeys(placed)
   return (
     <ul aria-labelledby={labelledBy} className={itemGridClassName}>
-      {items.map(({ item, position }) => (
-        <RoadmapItemCard key={position} item={item} />
+      {placed.map(({ item, position }, index) => (
+        <EditableItemCard
+          key={keys[index]}
+          roadmapId={roadmapId}
+          items={items}
+          item={item}
+          position={position}
+          entry={entries.get(position)}
+        />
       ))}
     </ul>
   )

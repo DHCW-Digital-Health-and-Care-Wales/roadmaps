@@ -1,0 +1,6 @@
+- alertdialog "Keep your changes?":
+  - heading "Keep your changes?" [level=2]
+  - paragraph: You've changed 1 roadmap without publishing or saving it. Keep the changes in this tab for when you connect again, or discard them.
+  - button "Keep changes and disconnect"
+  - button "Discard changes and disconnect"
+  - button "Cancel"

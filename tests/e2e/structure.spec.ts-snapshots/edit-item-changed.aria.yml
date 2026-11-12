@@ -1,0 +1,26 @@
+- listitem:
+  - heading "A clearer card" [level=3]
+  - term: Phase
+  - definition: Beta
+  - term: Description
+  - definition: What this work is. Keep it to a sentence or two.
+  - term: Expected outcome
+  - definition: What changes for users when it is done.
+  - term: Tags
+  - definition: Service X, Service Y
+  - term: Organisations
+  - definition: CAVUHB, SBUHB
+  - term: Details
+  - definition:
+    - list:
+      - listitem:
+        - text: First bullet point
+        - list:
+          - listitem:
+            - text: Start a line with "-" to nest it under the line above
+            - list:
+              - listitem: Use two dashes to nest it again
+      - listitem: Another top-level bullet point
+  - text: Changed
+  - button "Undo changes A clearer card"
+  - button "Edit A clearer card"

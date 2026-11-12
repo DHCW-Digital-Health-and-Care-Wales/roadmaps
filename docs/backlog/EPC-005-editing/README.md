@@ -2,7 +2,7 @@
 
 - **Status**: Active — planned 2026-11-11 after grilling; a thin slice to prove that edits
   reach the data source safely; richer editing follows
-- **Progress**: 3 of 5 terminal (STY-023 awaits merge; STY-024 merged, #29; STY-022 merged, #28); next selectable: STY-025; blocked on: nothing
+- **Progress**: 4 of 5 terminal (STY-025 awaits merge; STY-023 merged, #30; STY-024 merged, #29; STY-022 merged, #28); next selectable: STY-026 once STY-025 merges; blocked on: STY-025's merge
 - **Binding ADRs**: ADR-012, ADR-011, ADR-009, ADR-002, ADR-003, ADR-008, ADR-010
 
 ## Summary
@@ -141,9 +141,9 @@ writes them inline or publishes first.
 | ID      | Story                                                                                                               | Area                                     | Depends on       | State                |
 | ------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | ---------------- | -------------------- |
 | STY-022 | [Each roadmap item keeps an identity](../_archive/EPC-005-editing/STY-022-items-keep-an-identity.md)                | Domain + Infrastructure                  | —                | ✅ (merged, #28)     |
-| STY-023 | [The repository publishes a roadmap's changes](../_archive/EPC-005-editing/STY-023-repository-publishes-changes.md) | Domain + Infrastructure + Features + E2E | STY-022          | ✅ (PR awaits merge) |
+| STY-023 | [The repository publishes a roadmap's changes](../_archive/EPC-005-editing/STY-023-repository-publishes-changes.md) | Domain + Infrastructure + Features + E2E | STY-022          | ✅ (merged, #30)     |
 | STY-024 | [A roadmap's page shows what the roadmap is about](../_archive/EPC-005-editing/STY-024-about-this-roadmap.md)       | Features/UI + i18n (en + cy) + E2E       | —                | ✅ (merged, #29)     |
-| STY-025 | [A Product Lead edits a roadmap and publishes it](STY-025-edit-then-save-or-publish.md)                             | Features/UI + i18n (en + cy) + E2E       | STY-023, STY-024 |                      |
+| STY-025 | [A Product Lead edits a roadmap and publishes it](../_archive/EPC-005-editing/STY-025-edit-then-save-or-publish.md) | Features/UI + i18n (en + cy) + E2E       | STY-023, STY-024 | ✅ (PR awaits merge) |
 | STY-026 | [A co-lead's change is shown, not overwritten](STY-026-co-lead-conflicts.md)                                        | Features/UI + i18n (en + cy) + E2E       | STY-025          |                      |
 
 ## Sequencing

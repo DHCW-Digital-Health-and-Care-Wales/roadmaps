@@ -51,8 +51,13 @@ The UI is available in English and Welsh (Cymraeg).
    card per roadmap the index lists, grouped by product family and sorted by title
    (ADR-009). A card opens `#/roadmaps/<id>`, where
    the id is the public site's address for that roadmap (`ProductA` → `producta`).
-5. When the token expires the app says so and offers **Reconnect**. **Disconnect**
-   revokes the token and clears all loaded data.
+5. On a roadmap's page, **Edit** turns the roadmap's text or an item into a form for its
+   English. Changes stay pending in this tab, in memory only, until **Publish changes**
+   (or **Save changes** on a roadmap that is not published) writes them all at once, after
+   a check of what changes. Closing or reloading the tab with changes pending asks first.
+6. When the token expires the app says so and offers **Reconnect**; pending changes are
+   kept. **Disconnect** revokes the token and clears all loaded data; with changes
+   pending, it first asks whether to keep them for the next connection or discard them.
 
 There is no backend, no client secret and no refresh token. What a user can see is decided
 entirely by Google: see [Security and data access](#security-and-data-access).

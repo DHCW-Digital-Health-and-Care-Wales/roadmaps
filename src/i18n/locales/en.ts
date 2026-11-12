@@ -1,5 +1,9 @@
 import type { AuthErrorCode, AuthState } from "@/domain/auth/auth-client"
 import type { RoadmapCategory } from "@/domain/roadmap/roadmap-category"
+import type {
+  EditableItemField,
+  EditableRoadmapField,
+} from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 import type { AppErrorKind } from "@/lib/errors"
 
@@ -20,6 +24,9 @@ export const en = {
     loading: "Loading…",
     retry: "Retry",
     close: "Close",
+    cancel: "Cancel",
+    /** A page notice's close button, read by assistive technology. */
+    dismiss: "Dismiss message",
     /** A time left, e.g. "1 minute and 49 seconds". */
     duration: {
       minutes_one: "{{count, number}} minute",
@@ -99,10 +106,6 @@ export const en = {
     notifications: {
       connected: "Connected to Google",
       disconnected: "Disconnected from Google",
-    },
-    notice: {
-      /** The notice's close button, read by assistive technology. */
-      dismiss: "Dismiss message",
     },
     /** A failed "Stay connected": the reason (`auth.errors.*`) goes between the two. */
     renewal: {
@@ -216,6 +219,127 @@ export const en = {
         organisations: "Organisations",
         details: "Details",
       },
+    },
+    /** Editing a roadmap's English text, kept pending until published or saved. */
+    edit: {
+      /** Followed by what is edited, for assistive technology: "Edit First item". */
+      edit: "Edit",
+      /** Confirms a form: not "Save", which names the write on an unpublished roadmap. */
+      done: "Done",
+      /** Followed by what is undone, for assistive technology. */
+      undo: "Undo changes",
+      /** The tag on whatever holds a pending change. */
+      changed: "Changed",
+      titleRequired: "Enter a title",
+      /** Read before an error message by assistive technology. */
+      errorPrefix: "Error:",
+      /** Each label says the field is the English, in Welsh (Welsh is not edited yet). */
+      itemFields: {
+        title: "Title",
+        description: "Description",
+        expectedOutcome: "Expected outcome",
+        phase: "Phase",
+      } satisfies Record<EditableItemField, string>,
+      roadmapFields: {
+        title: "Title",
+        statusLabel: "Status",
+        productLead: "Product lead",
+        vision: "Vision",
+        serviceDescription: "Service description",
+      } satisfies Record<EditableRoadmapField, string>,
+    },
+    /** Writing a roadmap's pending changes: "publish" if published, "save" if not. */
+    publish: {
+      pending: {
+        publish_one: "{{count, number}} unpublished change",
+        publish_other: "{{count, number}} unpublished changes",
+        save_one: "{{count, number}} change to save",
+        save_other: "{{count, number}} changes to save",
+      },
+      /** On a roadmap's card in the list. */
+      marker: {
+        publish: "Unpublished changes",
+        save: "Changes to save",
+      },
+      action: {
+        publish: "Publish changes",
+        save: "Save changes",
+      },
+      discardAll: "Discard all",
+      discard: {
+        title: "Discard all changes to this roadmap?",
+        description:
+          "Every change you've made here will be lost. This can't be undone.",
+        confirm: "Discard all changes",
+      },
+      dialog: {
+        title: {
+          publish: "Publish these changes?",
+          save: "Save these changes?",
+        },
+        note: {
+          publish: "The public site shows them after its next nightly update.",
+          save: "This roadmap isn't published, so nothing will be public.",
+        },
+        /** Lists what changes, by roadmap section or item title. */
+        changes: "What changes",
+      },
+      notice: {
+        published:
+          "Changes published. The public site shows them after its next nightly update.",
+        saved: "Changes saved",
+        failed: {
+          publish: "Couldn't publish your changes",
+          save: "Couldn't save your changes",
+        },
+        /** After every failure: nothing pending is lost. */
+        kept: "Your changes are kept in this tab.",
+        refused: {
+          title: "Someone else has changed this roadmap",
+          description:
+            "Nothing was written. Refresh this roadmap and review your changes before you try again.",
+        },
+        unconfirmed: {
+          title: {
+            publish: "Your changes may have been published",
+            save: "Your changes may have been saved",
+          },
+          description:
+            "The answer was lost. Refresh this roadmap before you do anything else.",
+        },
+      },
+      /** Why a publish failed, in place of `errors.*`, which are about reading. */
+      errors: {
+        unauthenticated: "Your session has expired. Reconnect, then try again.",
+        forbidden:
+          "This Google account isn't allowed to change this roadmap. Ask the spreadsheet owner for edit access.",
+        "not-found": "This roadmap is no longer listed.",
+        "rate-limited":
+          "Too many requests right now. Wait a moment and try again.",
+        network:
+          "Couldn't connect. Check your internet connection and try again.",
+        "invalid-response": "The answer was in an unexpected format.",
+        "invalid-data":
+          "This roadmap isn't in the expected format in the spreadsheet. Ask the spreadsheet owner to check it.",
+        unknown: "Something went wrong. Please try again.",
+      } satisfies Record<AppErrorKind, string>,
+    },
+    /** Asked on Disconnect while changes are pending. */
+    disconnect: {
+      title: "Keep your changes?",
+      description_one:
+        "You've changed {{count, number}} roadmap without publishing or saving it. Keep the changes in this tab for when you connect again, or discard them.",
+      description_other:
+        "You've changed {{count, number}} roadmaps without publishing or saving them. Keep the changes in this tab for when you connect again, or discard them.",
+      keep: "Keep changes and disconnect",
+      discard: "Discard changes and disconnect",
+    },
+    /** On the start page, after Disconnect kept changes. */
+    waiting: {
+      title_one: "Changes to {{count, number}} roadmap are waiting",
+      title_other: "Changes to {{count, number}} roadmaps are waiting",
+      description:
+        "Connect Google to publish or save them. Closing or reloading this tab loses them.",
     },
   },
   errors: {

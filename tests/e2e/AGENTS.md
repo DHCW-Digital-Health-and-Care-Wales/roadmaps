@@ -53,6 +53,9 @@ End-to-end tests of the production build, with Google faked (ADR-006). Run with
   state already on screen before them, such as cached cards, proves nothing.
 - Navigate with relative URLs (`./`, `./#/roadmaps/producta`) so a base path only changes
   `baseURL`.
+- The leave warning is a `beforeunload` dialog: `page.close({ runBeforeUnload: true })`
+  raises it, and dismissing it in a `page.on("dialog")` handler keeps the page open
+  (`editing.spec.ts`). A reload with no `beforeunload` listener raises no dialog.
 - Specs assert English copy from `src/i18n/locales/en.ts`. Before pushing a change to a
   control's text or accessible name, grep `tests/e2e` for the old text and run every spec
   that reaches the control, or the whole suite when the control is in the shell.
@@ -66,10 +69,12 @@ The DHCW look is held without screenshots, so there is no pixel baseline to rege
   added to or removed from a screen fails. After changing a screen's structure on
   purpose, run `pnpm test:e2e structure.spec.ts --update-snapshots`, which rewrites only
   the snapshots that differ (`=all` rewrites every one), then review the YAML diff and
-  commit it with the change.
-- Snapshot a `main`, header, menu or dialog, never the footer, whose version differs from
-  build to build. Playwright writes a regex where a number moves, such as the session
-  warning's countdown.
+  commit it with the change. That run passes a new snapshot without writing it: write
+  new ones with `--update-snapshots=all` (or a run without the flag, which writes and
+  fails), and check `git status` lists them.
+- Snapshot a `main`, header, menu, dialog, form or notice, never the footer, whose
+  version differs from build to build. Playwright writes a regex where a number moves,
+  such as the session warning's countdown.
 - `page.clock.install()` does not stop time: it runs in real time until moved. The
   "Connected" notice clears itself after eight seconds, so a test that snapshots or tabs
   past it calls `holdConnectedNotice(page)` right after connecting.

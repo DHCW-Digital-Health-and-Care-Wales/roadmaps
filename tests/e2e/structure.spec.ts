@@ -134,6 +134,108 @@ test("a roadmap's detail page", async ({ page }) => {
   await expectStructure(page.getByRole("main"), "detail.aria.yml")
 })
 
+test.describe("editing a roadmap (STY-025)", () => {
+  const ITEM = "Example card with every column"
+
+  /** Opens Product A with its "Connected" notice dismissed, then edits the item's title. */
+  async function openWithAChange(page: Page) {
+    await page.goto("./#/roadmaps/producta")
+    await connect(page)
+    const main = page.getByRole("main")
+    await expect(
+      main.getByRole("heading", { level: 3, name: ITEM }),
+    ).toBeVisible()
+    await main
+      .getByRole("note")
+      .getByRole("button", { name: "Dismiss message" })
+      .click()
+    await main.getByRole("button", { name: `Edit ${ITEM}` }).click()
+    const form = main.getByRole("form", { name: ITEM })
+    await form.getByRole("textbox", { name: "Title" }).fill("A clearer card")
+    await form.getByRole("button", { name: "Done" }).click()
+    return main
+  }
+
+  test("the forms, a changed card and the publish bar", async ({ page }) => {
+    const main = await openWithAChange(page)
+    const card = main
+      .getByRole("listitem")
+      .filter({ has: page.getByRole("heading", { name: "A clearer card" }) })
+    await expectStructure(card, "edit-item-changed.aria.yml")
+    await expectStructure(
+      main
+        .getByRole("status")
+        .filter({ hasText: "1 unpublished change" })
+        .locator(".."),
+      "edit-publish-bar.aria.yml",
+    )
+
+    await main.getByRole("button", { name: "Edit A clearer card" }).click()
+    const itemForm = main.getByRole("form", { name: "A clearer card" })
+    await itemForm.getByRole("textbox", { name: "Title" }).fill("")
+    await itemForm.getByRole("button", { name: "Done" }).click()
+    await expect(itemForm.getByText("Enter a title")).toBeVisible()
+    await expectStructure(itemForm, "edit-item-form-error.aria.yml")
+    await itemForm.getByRole("button", { name: "Cancel" }).click()
+
+    await main.getByRole("button", { name: "Edit About this roadmap" }).click()
+    await expectStructure(main.getByRole("form"), "edit-roadmap-form.aria.yml")
+  })
+
+  test("the publish dialog, then the published notice", async ({ page }) => {
+    const main = await openWithAChange(page)
+    await main.getByRole("button", { name: "Publish changes" }).click()
+    const dialog = page.getByRole("alertdialog")
+    await expect(dialog).toBeVisible()
+    await expectStructure(dialog, "edit-publish-dialog.aria.yml")
+
+    await dialog.getByRole("button", { name: "Publish changes" }).click()
+    const notice = main
+      .getByRole("status")
+      .filter({ hasText: "Changes published" })
+    await expect(notice).toBeVisible()
+    // Hovered, so it does not clear itself before the snapshot.
+    await notice.hover()
+    await expectStructure(notice, "edit-published.aria.yml")
+  })
+
+  test("a failed publish", async ({ page, sheets }) => {
+    const main = await openWithAChange(page)
+    sheets.failWith(403)
+    await main.getByRole("button", { name: "Publish changes" }).click()
+    await page
+      .getByRole("alertdialog")
+      .getByRole("button", { name: "Publish changes" })
+      .click()
+    const alert = main.getByRole("alert")
+    await expect(alert).toBeVisible()
+
+    await expectStructure(alert, "edit-publish-failed.aria.yml")
+  })
+
+  test("Disconnect's question, then the start page's waiting note", async ({
+    page,
+  }) => {
+    const main = await openWithAChange(page)
+    await page
+      .getByRole("banner")
+      .getByRole("button", { name: "Disconnect" })
+      .click()
+    const question = page.getByRole("alertdialog")
+    await expect(question).toBeVisible()
+    await expectStructure(question, "edit-disconnect-question.aria.yml")
+
+    await question
+      .getByRole("button", { name: "Keep changes and disconnect" })
+      .click()
+    await main.getByRole("link", { name: "Back to roadmaps" }).click()
+    await expect(
+      main.getByText("Changes to 1 roadmap are waiting"),
+    ).toBeVisible()
+    await expectStructure(main, "edit-start-waiting.aria.yml")
+  })
+})
+
 test("the not-found page", async ({ page }) => {
   await page.goto("./#/nowhere")
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(

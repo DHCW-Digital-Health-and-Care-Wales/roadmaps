@@ -4,7 +4,8 @@
   (decision 3 revised: groups by product family) and round 3 (colour per card); the
   technical choices (decision 6) were left to the agent in round 1. Partly supersedes
   ADR-002 (its `Roadmap` shape and adapter mapping; see ADR-002's ADR-009 amendments).
-- Date: 2026-11-10
+- Date: 2026-11-10 (amended in ADR-013: category names and family colour come from their
+  lists)
 
 ## Context
 
@@ -117,6 +118,13 @@ That raises a new `AppError` kind, **`invalid-data`** (not retryable): the data 
 answered as expected, but its content is not in the agreed format, so the remedy is to
 fix the list, not to retry. `invalid-response` stays for answers that don't match the
 API's own schema.
+
+### ADR-013 amendments
+
+- A category's id and names come from the `Categories` tab, no longer the catalogue;
+  the six values stay fixed until the public site reads the tab.
+- A roadmap in a family shows the family's name and colour from the `Families` tab, as
+  the colour bullet above anticipated; a roadmap with no family keeps its own colour.
 
 ## Consequences
 

@@ -126,13 +126,20 @@ _Avoid_: Enabled, live, public roadmap
 
 **Category**:
 One of six fixed areas of care a roadmap belongs to, such as "GP & Community Services",
-shared with the public site; a roadmap may have none.
+shared with the public site and defined once in the category list; a roadmap may have
+none.
 _Avoid_: Group, section, tag
 
 **Product family**:
-An optional name grouping related products, such as "Single Record". The roadmap list
-groups roadmaps under their family.
+A named group of related products with one colour, such as "Single Record", defined once
+in the family list. A roadmap belongs to at most one, and the roadmap list groups
+roadmaps under it.
 _Avoid_: Programme, portfolio
+
+**Out of step**:
+A roadmap whose own copy of its family or category differs from the family or category
+list, as after a hand edit to the data source.
+_Avoid_: Drift, mismatch
 
 **Status label**:
 Free text describing a product's stage, such as "Beta", shown as a badge.

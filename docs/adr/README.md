@@ -17,3 +17,4 @@ supersede instead. Status is one of: Proposed, Accepted, Superseded by ADR-XXX.
 | [ADR-010](ADR-010-align-the-ui-with-the-dhcw-design-system.md)     | Align the UI with the DHCW design system by porting its tokens                          | Accepted                                          |
 | [ADR-011](ADR-011-roadmap-items-from-each-roadmaps-tab.md)         | A roadmap's items come from the tab its index row names, read by header                 | Accepted                                          |
 | [ADR-012](ADR-012-publishing-a-roadmaps-changes.md)                | A roadmap's pending edits are published together, by item ID, and refused on a conflict | Accepted                                          |
+| [ADR-013](ADR-013-families-and-categories-defined-once.md)         | Product families and categories are defined once, in their own tabs, and copied to rows | Accepted                                          |

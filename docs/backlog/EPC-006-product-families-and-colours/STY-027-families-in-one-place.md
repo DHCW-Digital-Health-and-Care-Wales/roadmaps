@@ -1,26 +1,31 @@
 # STY-027: Families and their colours are managed in one place
 
-- **Status**: Needs grilling — the owner asked for this record (EPC-005 grilling Q11);
-  where families live and who changes them are open
-- **Type**: Feature
-- **Area**: TBD after grilling (likely Domain + Infrastructure + Features/UI + i18n)
+- **Status**: Proposed — grilled in EPC-006 rounds 1–4 (2026-11-12)
+- **Type**: Feature + Docs
+- **Area**: Domain + Infrastructure + Features/UI + i18n (en + cy) + Docs
 - **Epic**: EPC-006-product-families-and-colours
-- **Depends on**: STY-023 (preferred order: it builds the write path this reuses)
-- **Binding ADRs**: ADR-009, ADR-012
-- **Suggested model**: Opus — it changes the data source's contract with the public site
+- **Depends on**: none (EPC-005's write path is on the default branch)
+- **Binding ADRs**: ADR-013, ADR-009, ADR-002
+- **Suggested model**: Opus — it adds two reads to the repository port and changes what
+  a category is
 
 ## Summary
 
-Today each roadmap names its own family and colour, so one family can appear under two
-spellings or two colours. A Product Lead, or whoever owns families, should define each
-family and its colour once, and a roadmap should only choose its family. This may change
-what the public site reads, so the owner decides the shape first. It may also be the
-place for other fields that belong centrally rather than to one roadmap.
+The roadmap list takes each family's name and colour, and each category's name, from
+the new `Families` and `Categories` tabs instead of every roadmap's own cells, so one
+family shows one way. A roadmap whose cells disagree with its family or category is
+flagged as out of step. This story only reads: choosing a family (STY-028), managing
+families (STY-029) and fixing a flagged roadmap (STY-030) build on it.
+
+## Scope
+
+Domain types for a family and a category, with their IDs; repository reads for both
+lists; the tab parsers; linking each roadmap to its family and category by ID, or by
+folded name when the row has none; the list and cards drawn from the lists; the
+out-of-step flag; the missing-tab fallback; the owner's runbook and the replacement
+guide.
 
 ## Acceptance criteria
-
-_Completed once the open questions are answered; this scenario holds whichever way
-they go._
 
 ### S1: A family has one name and one colour
 
@@ -29,46 +34,115 @@ they go._
 **Then** both show the same family name and the same colour
 **And** nobody had to type the colour twice
 
-## Open questions
+### S2: The list shows the family from the Families tab (round 1 Q2)
 
-- **Q1**: Where is a family and its colour defined?
-  Example: Single Record is navy; a Product Lead puts a new roadmap in Single Record and
-  it is navy without anyone typing a colour.
-  - (a) A new families tab in the same spreadsheet, one row per family with its English
-    and Welsh names and colour (recommended) — the editor writes it; the public site
-    must learn to read it, or the editor keeps every roadmap's `Family` and `Colour`
-    cells in step with it.
-  - (b) Keep per-row cells, and the editor makes them agree: choosing a family sets the
-    colour from the family's other roadmaps — no format change; the sheet can still
-    disagree when edited by hand.
-  - (c) A fixed list in the app's code — no data change; a new family needs a release.
-- **Q2**: Who may add, rename or recolour a family?
-  Example: a Product Lead renames "Medicines & Diagnostics", and every roadmap in it
-  moves with it.
-  - (a) Anyone connected, with a confirmation naming every roadmap affected
-    (recommended) — matches ADR-012's "Edit for everyone"; risk of one lead changing
-    another's grouping.
-  - (b) Only a named group (a central admin) — needs a notion of roles the app lacks.
-- **Q3**: What happens to the per-roadmap `Family` and `Colour` cells the public site
-  reads?
-  - (a) The editor keeps writing them, copied from the family, until the public site
-    reads the families tab (recommended) — no break for the public site; two sources
-    for a while.
-  - (b) They are dropped once the public site reads the families tab — one source; the
-    two apps must ship together.
-- **Q4**: What is done about roadmaps that disagree today?
-  - (a) The editor lists the disagreements and lets someone pick one name and colour per
-    family (recommended) — a one-off clean-up screen.
-  - (b) The first roadmap in the list wins silently — fast; hides a choice someone made.
-- **Q5**: Which other fields are central rather than per roadmap?
-  Example: category names are the public site's fixed list; a Product Lead cannot invent
-  one.
-  - (a) Family and colour only, for now (recommended) — category stays read-only as in
-    EPC-005.
-  - (b) Category too — the list moves into the data source.
+**Given** Single Record is `#12a3c9` in the `Families` tab, and one of its roadmaps has
+`Single record ` and `#325083` in its own cells
+**When** the Product Lead opens the roadmap list
+**Then** the roadmap is grouped under "Single Record" with a `#12a3c9` swatch, beside
+the family's other roadmaps
+
+### S3: A row is linked by ID, or by name until it has one (round 3 Q2)
+
+**Given** one row with a `Family ID` naming Single Record but `Family` reading
+`Medicines & Diagnostics`, and another with no `Family ID` and `Family` reading
+`single-record`
+**When** the list loads
+**Then** both are in Single Record: the ID wins over the name, and a name is matched
+ignoring case, accents, spaces and punctuation
+**And** the same holds for `Category ID` and `Category`
+
+### S4: A roadmap out of step is flagged (round 2 Q4)
+
+**Given** a roadmap linked to Single Record whose `Family`, `Family (cy)` or `Colour`
+differs from the family's `Name`, `Name (cy)` or `Colour`, or whose `Category` differs
+from its category's `Name`
+**When** the list or the roadmap's page shows it
+**Then** it shows the family's and category's values, with a notice that its row is out
+of step with the family list, in English and Welsh
+**And** a roadmap whose cells match shows no notice
+
+### S5: Category names come from the Categories tab (round 2 Q1)
+
+**Given** the `Categories` tab names a category in English and Welsh
+**When** a roadmap in it is shown in English, then in Welsh
+**Then** its category reads the tab's `Name`, then `Name (cy)` (English where blank)
+
+### S6: A missing tab falls back (round 3 Q4)
+
+**Given** the `Families` tab is missing, or lacks an `ID`, `Name` or `Colour` column
+**When** the list loads
+**Then** it groups and colours roadmaps from their own cells, as before this story, with
+no out-of-step flags for families
+**And** when the `Categories` tab is missing, a row's `Category` is matched against the
+public site's six spellings as before this story, shown in English in both languages (an
+unknown value is no category, S10), with no out-of-step flags for categories
+**And** the list still loads; the problem is recorded as other sheet mistakes are
+(ADR-009)
+
+### S7: A bad row in a list is skipped, not fatal
+
+**Given** a `Families` row with a blank `ID` or `Name`, an ID or a folded name already
+on an earlier row, or a colour that is not `#rrggbb`
+**When** the list loads
+**Then** that row is not a family (the earlier row keeps the ID or name), a problem is
+recorded, and every other family loads
+
+### S8: A family the list doesn't have keeps its own name, flagged (round 4 Q2)
+
+**Given** a row whose `Family` reads `Single Recrod`, with no `Family ID`, and no listed
+family of that folded name
+**When** the list loads
+**Then** the roadmap is grouped under `Single Recrod` in its own colour, as before this
+story, with a notice that its family is not in the family list
+
+### S9: A roadmap with no family keeps its own colour (round 4 Q3)
+
+**Given** a roadmap with no family and `#7b2d8e` in its `Colour` cell
+**When** it is shown
+**Then** its swatch is `#7b2d8e`, it is not flagged, and the editor offers no way to
+change the colour
+
+### S10: A category the list doesn't have is no category
+
+**Given** a row whose `Category` matches no listed category by ID or folded name
+**When** the list loads
+**Then** the roadmap shows no category and the problem is recorded, as an unknown category
+is today and as the public site lists it under "Other roadmaps"
 
 ## Decisions
 
 - **D1** (owner, 2026-11-11, EPC-005 grilling Q11): family is not editable in EPC-005,
   because family and colour belong together and the sheet sets each per roadmap → this
   record.
+- **D2** (owner, 2026-11-12, EPC-006 grilling rounds 1–3): families and categories live in
+  their own tabs with IDs in the `Item ID` format; the public site is unchanged and
+  reads the copied cells; the owner builds the tabs by hand → ADR-013, adds S2–S7; the
+  write paths moved to STY-028, STY-029 and STY-030.
+- **D3** (owner, 2026-11-12, round 4 Q2): a family not in the list is shown as its row
+  names it, flagged → adds S8.
+- **D4** (owner, 2026-11-12, round 4 Q3): a roadmap with no family keeps its own colour,
+  read-only → adds S9.
+- **D5** (agent, 2026-11-12, review): with the `Categories` tab missing, the parser's
+  six public-site spellings stay as the fallback, in English only (S6), so the list
+  behaves as before as ADR-013 says, while the catalogue's Welsh names go; showing the
+  raw cell text was rejected, as it labels a value the public site files under "Other
+  roadmaps". A category not in the list is no category (S10), as today.
+- **D6** (agent, 2026-11-12, review): S1's "and the public site" holds only once the
+  rows are written, so this story holds S1 for the editor's list; the public site's half
+  is held by STY-028 S2, STY-029 S4 and STY-030 S1, which write the copied cells.
+
+## Starting point
+
+Audited at `8891af0`. `Roadmap.category` is the public site's slug
+(`public-health-apps`) with its names in the i18n catalogue
+(`roadmaps.categories.*`); S5 replaces that with the category from the tab, so the
+catalogue entries go. `groupRoadmaps` already folds family names; S3's name matching
+reuses that fold rather than a second one.
+
+## Out of scope
+
+- Choosing a roadmap's family or category: STY-028.
+- Adding, renaming or recolouring a family: STY-029.
+- Rewriting an out-of-step row: STY-030.
+- The public site reading the tabs: a change in its own repository, not planned.

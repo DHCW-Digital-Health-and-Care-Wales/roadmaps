@@ -13,6 +13,7 @@ import {
   type EditableItemField,
   type EditableRoadmapField,
   type FieldChange,
+  isChoiceField,
   type ItemChanges,
   itemText,
   type RoadmapChanges,
@@ -407,6 +408,14 @@ export function changedRoadmapFields(
   changes: RoadmapChanges | undefined,
 ): EditableRoadmapField[] {
   return EDITABLE_ROADMAP_FIELDS.filter((field) => changes?.roadmap[field])
+}
+
+/**
+ * Whether a family or category is pending, so the lists are needed to show it by name
+ * and colour.
+ */
+export function hasChoiceChange(changes: RoadmapChanges | undefined): boolean {
+  return changedRoadmapFields(changes).some(isChoiceField)
 }
 
 /** A part of the roadmap with pending changes, and which of its fields they are. */

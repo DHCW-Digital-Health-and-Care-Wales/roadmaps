@@ -7,7 +7,6 @@ import { buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { localise } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
-import { isChoiceField } from "@/domain/roadmap/roadmap-changes"
 import { AuthButton } from "@/features/auth/components/auth-button"
 import { useAuth } from "@/features/auth/use-auth"
 import { useLanguage } from "@/i18n"
@@ -25,7 +24,7 @@ import { ChangedTag } from "../editing/edit-controls"
 import { EditableRoadmapAbout } from "../editing/editable-roadmap-about"
 import {
   applyRoadmapChanges,
-  changedRoadmapFields,
+  hasChoiceChange,
 } from "../editing/pending-changes"
 import {
   usePendingChanges,
@@ -173,16 +172,15 @@ function RoadmapView({
   const changes = useRoadmapChanges(roadmap.id)
   // The same queries the items area and the form read, for the page's Refresh.
   const items = useRoadmapItems(roadmap.id)
-  const lists = useRoadmapLists(
-    changedRoadmapFields(changes).some(isChoiceField),
-  )
+  const lists = useRoadmapLists(hasChoiceChange(changes))
   const shown = applyRoadmapChanges(roadmap, changes, lists.lists)
   const retryList = () => {
     void refetchList()
   }
   const refresh = async () => {
     const startedAt = Date.now()
-    // The lists, once needed, are read again whatever the roadmap's reads come to.
+    // The lists, where any part of the page needs them, are read again whatever the
+    // roadmap's reads come to.
     void lists.refetch()
     const reads = await Promise.all([refetchList(), items.refetch()])
     // A notice asking for a Refresh has been heeded once both reads came back (S18);

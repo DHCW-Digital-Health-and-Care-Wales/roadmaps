@@ -95,12 +95,13 @@ const EDITOR_COLUMNS = ["Family ID", "Category ID"] as const
 export type RoadmapIndexColumn =
   "Sheet" | (typeof OPTIONAL_COLUMNS)[number] | (typeof EDITOR_COLUMNS)[number]
 
+export const FAMILY_WELSH = "Family (cy)"
+
 /**
  * A column a publish may write: an English one, or the family's Welsh name, copied from
  * the family list (ADR-013), the one Welsh column ever written.
  */
 export type RoadmapIndexWriteColumn = RoadmapIndexColumn | typeof FAMILY_WELSH
-export const FAMILY_WELSH = "Family (cy)"
 type Column = RoadmapIndexColumn
 type TextColumn =
   "Title" | "Family" | "Status label" | "Vision" | "Service description"

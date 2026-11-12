@@ -35,8 +35,8 @@ export interface ConflictReviewProps {
 /**
  * A publish someone else's changes stopped (STY-026): each field they changed that the
  * Product Lead also changed, their text beside the current text (a family or category
- * by its name), to keep or give up one by one; then what was lost with removed items. Nothing was written, so it cannot be
- * dismissed until every field is decided.
+ * by its name), to keep or give up one by one; then what was lost with removed items.
+ * Nothing was written, so it cannot be dismissed until every field is decided.
  */
 export function ConflictReview({
   ref,

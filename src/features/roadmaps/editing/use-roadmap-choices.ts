@@ -72,65 +72,64 @@ export function useRoadmapChoices(needed: boolean) {
     })),
   ]
 
+  /** What the form needs to show `field` of `shown`: its options once its list is read. */
+  const choiceOf = (shown: Roadmap, field: RoadmapChoiceField) =>
+    field === "familyId"
+      ? {
+          options: lists.families && familyOptions(shown, lists.families),
+          beingRead: reading.families,
+          name: shown.family,
+          none: t("roadmaps.edit.noFamily"),
+          colour: { colour: shown.colour },
+        }
+      : {
+          options: lists.categories && categoryOptions(lists.categories),
+          beingRead: reading.categories,
+          name: shown.category,
+          none: t("roadmaps.edit.noCategory"),
+          colour: {},
+        }
+
   /**
-   * The family and category fields of the form editing `shown`, each chosen from its
-   * list (held at its value while the list is first read), or shown read-only while its
-   * list can't be read (S6), and their values as the form opens.
+   * `field` of the form editing `shown`: chosen from its list, held at its value while
+   * the list is first read, or shown read-only while its list can't be read (S6).
    */
-  const fields = (shown: Roadmap) => {
-    const nameOf = (field: RoadmapChoiceField) => {
-      const name = field === "familyId" ? shown.family : shown.category
-      return name
-        ? localise(name, language)
-        : t(
-            field === "familyId"
-              ? "roadmaps.edit.noFamily"
-              : "roadmaps.edit.noCategory",
-          )
+  const fieldOf = (
+    shown: Roadmap,
+    field: RoadmapChoiceField,
+  ): EditFormField<RoadmapChoiceField> => {
+    const label = t(`roadmaps.edit.roadmapFields.${field}`)
+    const { options, beingRead, name, none, colour } = choiceOf(shown, field)
+    if (options) return { name: field, label, multiline: false, options }
+    const text = name ? localise(name, language) : none
+    if (beingRead) {
+      const value = roadmapValue(shown, field)
+      return {
+        name: field,
+        label,
+        multiline: false,
+        options: [{ value, label: text, ...colour }],
+        disabled: true,
+      }
     }
     return {
-      fields: ROADMAP_CHOICE_FIELDS.map(
-        (field): EditFormField<RoadmapChoiceField> => {
-          const label = t(`roadmaps.edit.roadmapFields.${field}`)
-          const options =
-            field === "familyId"
-              ? lists.families && familyOptions(shown, lists.families)
-              : lists.categories && categoryOptions(lists.categories)
-          if (options) return { name: field, label, multiline: false, options }
-          const value = roadmapValue(shown, field)
-          return reading[field === "familyId" ? "families" : "categories"]
-            ? {
-                name: field,
-                label,
-                multiline: false,
-                options: [
-                  {
-                    value,
-                    label: nameOf(field),
-                    ...(field === "familyId" ? { colour: shown.colour } : {}),
-                  },
-                ],
-                disabled: true,
-              }
-            : {
-                name: field,
-                label,
-                multiline: false,
-                fixed: {
-                  text: nameOf(field),
-                  notice: t(`roadmaps.edit.choiceUnavailable.${field}`),
-                },
-              }
-        },
-      ),
-      initial: Object.fromEntries(
-        ROADMAP_CHOICE_FIELDS.map((field) => [
-          field,
-          roadmapValue(shown, field),
-        ]),
-      ) as Record<RoadmapChoiceField, string>,
+      name: field,
+      label,
+      multiline: false,
+      fixed: {
+        text,
+        notice: t(`roadmaps.edit.choiceUnavailable.${field}`),
+      },
     }
   }
+
+  /** The family and category fields of the form editing `shown`, and their values. */
+  const fields = (shown: Roadmap) => ({
+    fields: ROADMAP_CHOICE_FIELDS.map((field) => fieldOf(shown, field)),
+    initial: Object.fromEntries(
+      ROADMAP_CHOICE_FIELDS.map((field) => [field, roadmapValue(shown, field)]),
+    ) as Record<RoadmapChoiceField, string>,
+  })
 
   return { lists, refetch, describe, fields }
 }

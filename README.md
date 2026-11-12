@@ -94,17 +94,29 @@ either ID column.
 - an `Item ID` for every item row it reads (one with a title) that has none, or repeats
   another row's: eight random
   lower-case letters and digits starting with a letter, such as `k7q2xwbn`;
-- a column the roadmap needs but lacks (the `Item ID` column the first time, or an
-  edited field's column), appended after the last column in use with the public site's
-  English header, the grid widened in the same request.
+- a chosen family: the index row's `Family ID`, `Family`, `Family (cy)` and `Colour`,
+  copied from the `Families` tab as read at publish (`Colour` lower case, as
+  `#006747`); "No family" blanks `Family ID`, `Family` and `Family (cy)` and leaves
+  `Colour`;
+- a chosen category: the row's `Category ID` and `Category` (the `Categories` tab's
+  English `Name`); "No category" blanks both;
+- on any publish, the `Family ID` or `Category ID` of a row with none whose name links
+  it to a listed family or category, never changing an ID already there;
+- a column the roadmap needs but lacks (the `Item ID` column the first time, the
+  `Family ID` or `Category ID` column, or an edited field's column), appended after the
+  last column in use with the public site's English header, the grid widened in the
+  same request.
 
-It never writes any other cell: no Welsh `(cy)` cell, `Last updated`, `Enabled`,
-`Sheet`, `Category`, `Family`, `Colour`, `Horizon`, `Labels`, `Organisations` or
-`Details`, no other roadmap's row or tab, nothing in the `Template` tab, and no cell
-whose value has not changed. A roadmap whose `Sheet` names the `Template` tab or the
+It never writes any other cell: no Welsh `(cy)` cell other than `Family (cy)`,
+`Last updated`, `Enabled`, `Sheet`, `Horizon`, `Labels`, `Organisations` or `Details`,
+no `Family`, `Category` or `Colour` cell but those above, no other roadmap's row or
+tab, nothing in the `Template`, `Families` or `Categories` tab, and no cell whose
+value has not changed. A roadmap whose `Sheet` names the `Template` tab or the
 roadmap index itself can't be read or published, and nothing is published while the
 roadmap index is itself named `Template`. A field a co-lead has changed since it was
-loaded, or an item or roadmap since removed, refuses the whole publish.
+loaded (a family or category by its ID, so a rename is no change), or an item or
+roadmap since removed, refuses the whole publish. A family or category ID the list
+doesn't have refuses it too.
 
 - The rules, and how the editor differs from the public site on mistakes, are in
   [the roadmap index analysis](docs/analysis/roadmaps-tab-format.md) and

@@ -182,16 +182,32 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
     })
   })
 
-  it("shows the family read-only, saying why, when there's no family list (S6)", async () => {
-    const { form } = await renderPage(repositoryWith({ families: null }))
+  it.each([
+    {
+      missing: "families",
+      field: "Family",
+      other: "Category",
+      name: "Single Record",
+      notice: "The family can't be changed right now.",
+    },
+    {
+      missing: "categories",
+      field: "Category",
+      other: "Family",
+      name: "Clinical systems",
+      notice: "The category can't be changed right now.",
+    },
+  ] as const)(
+    "shows the $field read-only, saying why, when there's no $missing list (S6)",
+    async ({ missing, field, other, name, notice }) => {
+      const { form } = await renderPage(repositoryWith({ [missing]: null }))
 
-    await select(form, "Category")
-    expect(form.queryByRole("combobox", { name: "Family" })).toBeNull()
-    expect(form.getByText("Single Record")).toBeInTheDocument()
-    expect(
-      form.getByText("The family can't be changed right now."),
-    ).toBeInTheDocument()
-  })
+      await select(form, other)
+      expect(form.queryByRole("combobox", { name: field })).toBeNull()
+      expect(form.getByText(name)).toBeInTheDocument()
+      expect(form.getByText(notice)).toBeInTheDocument()
+    },
+  )
 
   it("shows a co-lead's move to another family by name (S5)", async () => {
     const repository = repositoryWith()

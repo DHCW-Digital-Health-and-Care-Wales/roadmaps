@@ -1301,6 +1301,51 @@ describe("A co-lead's changes (STY-026)", () => {
     },
   )
 
+  it("keeps a removed roadmap removed when another roadmap's refusal shows its text (DEF-003)", async () => {
+    const repository = coLeadRepository()
+    const { user, router } = await renderPage({ repository })
+    await editTitle(user, "First item", "First, mine")
+    repository.coLead((list) => {
+      list.splice(
+        list.findIndex(({ id }) => id === "producta"),
+        1,
+      )
+    })
+    vi.spyOn(repository, "listRoadmaps").mockRejectedValue(
+      new AppError("forbidden"),
+    )
+    await publish(user)
+    await main().findByRole("heading", { level: 1, name: "Roadmap not found" })
+
+    await act(() =>
+      router.navigate({
+        to: "/roadmaps/$roadmapId",
+        params: { roadmapId: "productb" },
+      }),
+    )
+    await main().findByRole("heading", { level: 3, name: "Product B item" })
+    await editVision(user, "My vision.")
+    repository.coLead((list) => {
+      const roadmap = list.find(({ id }) => id === "productb")
+      if (!roadmap) throw new Error("No Product B")
+      roadmap.vision = { en: "Their vision.", cy: "" }
+    })
+    await publish(user)
+    await main().findByText("Someone else has changed text you edited")
+
+    await act(() =>
+      router.navigate({
+        to: "/roadmaps/$roadmapId",
+        params: { roadmapId: "producta" },
+      }),
+    )
+    expect(
+      await main().findByText(
+        "This roadmap was removed from the list, so your changes to it couldn't be kept.",
+      ),
+    ).toBeInTheDocument()
+  })
+
   it("says a roadmap a publish found removed is gone, even if the list couldn't be read again (S6)", async () => {
     const repository = coLeadRepository()
     const { user } = await renderPage({ repository })

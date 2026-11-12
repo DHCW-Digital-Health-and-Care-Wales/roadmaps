@@ -116,7 +116,8 @@ roadmap index itself can't be read or published, and nothing is published while 
 roadmap index is itself named `Template`. A field a co-lead has changed since it was
 loaded (a family or category by its ID, so a rename is no change), or an item or
 roadmap since removed, refuses the whole publish. A family or category ID the list
-doesn't have refuses it too.
+doesn't have refuses it too, as does any family or category choice, "No family" or "No
+category" included, while its list tab is missing.
 
 - The rules, and how the editor differs from the public site on mistakes, are in
   [the roadmap index analysis](docs/analysis/roadmaps-tab-format.md) and

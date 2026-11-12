@@ -25,7 +25,10 @@ doc comments first, since they are the contract.
      - `publishRoadmapChanges` writes one roadmap's changes all or nothing and refuses
        on a co-lead's change (ADR-012). `planRoadmapPublish` and `heldWrites`
        (`src/domain/roadmap/publish-plan.ts`) are the rules both current repositories
-       share; reuse them unless the API enforces them itself;
+       share; reuse them unless the API enforces them itself. A chosen `familyId` or
+       `categoryId` is resolved from the API's own tables, and an ID they don't hold,
+       or one chosen while its table is missing, is rejected with `invalid-data`
+       (STY-028);
    - an `index.ts` barrel. The existing ESLint rules already keep this folder away from
      React, TanStack and features.
 2. **Contract test.** In `api-roadmap-repository.test.ts`, run the shared contract

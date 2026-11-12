@@ -110,13 +110,16 @@ public site (README, _What the editor writes_). A publish now also writes, in th
 - **The lists are read only once needed**: while "About this roadmap" is open, while a
   family or category choice is pending, or while a conflict over one is shown. A
   roadmap's page otherwise spends no reads on them (ADR-011's budget), and Refresh
-  reads them again only once needed. While a list is first read, its select is held,
-  disabled, at its value.
+  reads them again for whichever of these needs them. While a list is first read, its
+  select is held, disabled, at its value.
 - **A list that can't be read is treated as missing (S6).** A list tab missing, or a
   failed read, shows the field read-only: its name and "The family (category) can't be
   changed right now."
 - **A choice no longer listed refuses the publish.** A chosen ID the re-read list
   doesn't have (a family deleted meanwhile) rejects as `invalid-data`, writing nothing.
+  So does any choice, "No family" or "No category" included, while its list tab is
+  missing at publish: without the list the row's value can't be told from none, so a
+  pending "No family" would otherwise be dropped unwritten.
 - **S4 never overwrites an ID.** An ID cell already holding any ID, even one the list
   doesn't have, is left alone; a field chosen in the same publish writes its own ID.
   An ID column is never appended only to stay blank.
@@ -124,6 +127,15 @@ public site (README, _What the editor writes_). A publish now also writes, in th
   have (STY-027 S8) offers "Single Recrod (not listed)" after "No family"; keeping it
   changes nothing. An unlisted category reads as none (STY-027 S10), so its select shows
   "No category", and keeping that changes nothing.
+- **S5 holds for a row linked by ID; owner to accept.** A row linked to its family or
+  category only by name (no `Family ID` or `Category ID` yet, as every row is until its
+  first publish under this story, S4) is refused if that family or category is renamed
+  in its list between the choice and the publish: the re-read row's name no longer
+  links it, and a pending change keeps only the ID, not the name it was linked by. The
+  review shows "Family isn't listed" (or "No category") as current, and "Keep mine"
+  publishes the choice. Telling a rename from a co-lead's move for such a row would
+  need the name the row was linked by carried with every pending choice; the window
+  closes for good once a publish links the row's IDs (S4).
 - **Conflicts name the choice (S5).** The base is the ID, so a rename is no conflict,
   and the review shows each side by its list name, "No family" or "No category" for
   none. When a refusal shows a co-lead's current values, a choice field keeps the
@@ -170,7 +182,10 @@ public site (README, _What the editor writes_). A publish now also writes, in th
   contract "copies a chosen family's names and colour from its list, …" and "leaves the
   colour for no family"; page "publishes the chosen family, and shows it as read
   again"; e2e (one `batchUpdate`, Product A's cells) and "No family blanks its names,
-  keeping the colour".
+  keeping the colour". Publish-plan "rejects a %s chosen while its list is missing,
+  even No family or category" and contract "rejects with invalid-data, writing nothing,
+  for no %s while its list is missing"; adapter "writes no blank over a trailing cell
+  Google leaves out of the row".
 - **S3**: adapter "writes the chosen category's ID and English name, and blanks both
   for none"; page "offers the categories in the list's order after No category;
   nothing can be typed"; e2e (options in tab order, `Category` and `Category ID`).
@@ -182,8 +197,9 @@ public site (README, _What the editor writes_). A publish now also writes, in th
   and "refuses over a family a co-lead chose since"; contract "refuses a family a
   co-lead moved, by its ID, writing nothing"; page "shows a co-lead's move to another
   family by name"; e2e "a co-lead's move to another family is shown by name, nothing
-  written".
+  written" The departure above: a row linked by name only is refused over a rename.
 - **S6**: page "shows the Family (Category) read-only, saying why, when there's no
   families (categories) list" (`it.each`) and "holds the family at its value while the
   list is read"; e2e "is shown read-only, saying why, when its list is missing"; the
   structure snapshot `edit-roadmap-form.aria.yml` (no lists in the example spreadsheet).
+  Page "reads the lists again on Refresh while About is open".

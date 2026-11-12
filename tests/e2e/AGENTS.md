@@ -28,6 +28,13 @@ End-to-end tests of the production build, with Google faked (ADR-006). Run with
   such as `values:Roadmaps`) and `sheets.tokens` each request's bearer token, so one list
   load is two entries; `sheets.hold()` keeps replies
   pending until its returned `release()` is called.
+  A publish is one `spreadsheets.batchUpdate` (STY-023): the fake applies it all or
+  nothing through `tests/fixtures/sheets/apply-batch-update.ts`, so `sheets.spreadsheet`
+  and later reads hold the new values (tab `sheetId`s are its index × 1000, grids as
+  large as the rows unless a tab sets `rowCount`/`columnCount`), and records each body in
+  `sheets.writes` (not in `reads`). A write the editor must never make (`Template`, a
+  Welsh column, `Last updated`, a value other than text, an unchanged cell) or any other
+  method or path is a violation; `failWith` fails a write too, writing nothing.
 - `roadmapCards(page)` is every card's link, across the family groups (several lists). A
   link holds only the title, so `toHaveText([...])` checks order and count, and a card's other
   content is asserted on its list item (`getByRole("listitem").filter({ has: link })`, with

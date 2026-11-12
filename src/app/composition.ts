@@ -1,4 +1,5 @@
 import {
+  currentAuthSession,
   invalidateAuthScopedQueriesOnSessionEnd,
   removeAuthScopedQueries,
 } from "@/features/auth/auth-scoped-queries"
@@ -24,11 +25,12 @@ export function composeApp(config: AppConfig = defaultConfig): AppServices {
   syncDocumentLanguage(i18n)
 
   const queryClient = createQueryClient({
-    // A rejected token expires the session (ADR-003). `authClient` is assigned below,
-    // before any query can run.
+    // A rejected token expires the session it was sent in (ADR-003). `authClient` is
+    // assigned below, before any query can run.
     onUnauthenticated: () => {
       authClient.reportUnauthenticated()
     },
+    currentSession: () => currentAuthSession(authClient),
   })
   const authClient = createGoogleAuthClient({
     clientId: config.googleClientId,

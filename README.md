@@ -68,7 +68,30 @@ roadmap's items; `Enabled` (exactly `Yes`), `Title`, `Category`, `Family`, `Stat
 when present, with `(cy)` columns for Welsh. The tab a row's `Sheet` names holds that
 roadmap's items, one per row, its columns found by their row-1 header in any order
 ([ADR-011](docs/adr/ADR-011-roadmap-items-from-each-roadmaps-tab.md)); the `Template` tab
-is never read.
+is never read. An optional `Item ID` column holds each item's identity
+([ADR-012](docs/adr/ADR-012-publishing-a-roadmaps-changes.md)); the public site ignores it.
+
+**What the editor writes.** Publishing a roadmap writes, in one all-or-nothing
+`spreadsheets.batchUpdate`, only:
+
+- each changed English field: the index row's `Title`, `Status label`, `Product Lead`,
+  `Vision` and `Service description`, and each item's `Title`, `Description`, `Outcome`
+  and `Phase`, as plain text exactly as typed (trimmed; a formula, number, date or
+  `TRUE` stays text), a cleared field as an empty cell;
+- an `Item ID` for every item row it reads (one with a title) that has none, or repeats
+  another row's: eight random
+  lower-case letters and digits starting with a letter, such as `k7q2xwbn`;
+- a column the roadmap needs but lacks (the `Item ID` column the first time, or an
+  edited field's column), appended after the last column in use with the public site's
+  English header, the grid widened in the same request.
+
+It never writes any other cell: no Welsh `(cy)` cell, `Last updated`, `Enabled`,
+`Sheet`, `Category`, `Family`, `Colour`, `Horizon`, `Labels`, `Organisations` or
+`Details`, no other roadmap's row or tab, nothing in the `Template` tab, and no cell
+whose value has not changed. A roadmap whose `Sheet` names the `Template` tab or the
+roadmap index itself can't be read or published, and nothing is published while the
+roadmap index is itself named `Template`. A field a co-lead has changed since it was
+loaded, or an item or roadmap since removed, refuses the whole publish.
 
 - The rules, and how the editor differs from the public site on mistakes, are in
   [the roadmap index analysis](docs/analysis/roadmaps-tab-format.md) and
@@ -391,8 +414,9 @@ mismatch, rather than deploying a site whose assets 404. A fork deploys to
   and `https://oauth2.googleapis.com` (connect), and the theme script in `index.html`
   (by hash). Add it only together with a manual sign-in on the deployed site, since the
   hermetic E2E suite cannot prove it leaves the real Google flow working.
-- **The full `spreadsheets` scope is sensitive.** It is requested deliberately, for
-  planned editing features (ADR-003); it lets the app read and write _every_ spreadsheet
+- **The full `spreadsheets` scope is sensitive.** It is requested deliberately, because
+  the editor writes a roadmap's changes back (ADR-003, ADR-012;
+  [what it writes](#spreadsheet-format)); it lets the app read and write _every_ spreadsheet
   the user can access, not just this one. Consequences depend on the audience and
   publishing status:
   - _Internal_ (Workspace): no Google verification, but a Workspace admin may need to

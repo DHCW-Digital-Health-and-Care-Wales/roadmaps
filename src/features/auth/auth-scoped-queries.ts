@@ -15,6 +15,17 @@ export function removeAuthScopedQueries(queryClient: QueryClient): void {
 }
 
 /**
+ * The session's identity, for the query client's `currentSession`: each connect or
+ * renewal (a new token) gives a new one, and there is none while not connected.
+ */
+export function currentAuthSession(
+  authClient: Pick<AuthClient, "getSnapshot">,
+): number | null {
+  const snapshot = authClient.getSnapshot()
+  return snapshot.status === "connected" ? snapshot.expiresAt : null
+}
+
+/**
  * When a session ends without a disconnect (it expired), keeps its data on screen but
  * marks it stale, so reconnecting refetches it even within `staleTime`. Returns the
  * unsubscribe function. Wired once, next to `removeAuthScopedQueries`.

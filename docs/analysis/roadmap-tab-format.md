@@ -100,6 +100,23 @@ A row has no id column. The public site needs none: it rebuilds the page from th
 on every sync. Editing will need one (to save a change to the right row while a co-lead
 edits the same roadmap, persona A12), but showing items does not.
 
+_Since EPC-005 ([ADR-012](../adr/ADR-012-publishing-a-roadmaps-changes.md)):_ the
+editor reads an optional `Item ID` column, found by header like the others, and the
+public site ignores it. Publishing a roadmap's changes (STY-023) is the editor's only
+write, one all-or-nothing `spreadsheets.batchUpdate` holding only:
+
+- the changed English fields (the index row's `Title`, `Status label`, `Product Lead`,
+  `Vision`, `Service description`; an item's `Title`, `Description`, `Outcome`,
+  `Phase`), as text exactly as typed and trimmed, a cleared field as an empty cell;
+- a new ID (eight random lower-case letters and digits, such as `k7q2xwbn`) in every
+  kept item row with none or with a repeated one;
+- a missing column (`Item ID`, or an edited field's), appended after the last column in
+  use with the public site's English header, the grid widened in the same request.
+
+It never writes `(cy)` cells, `Last updated`, other columns, unchanged cells, another
+roadmap's rows or the `Template` tab. The example data in `tests/fixtures/sheets/` stays
+the public site's copy, without `Item ID` (STY-023 D8).
+
 ### Example data
 
 `tests/fixtures/sheets/ProductA.csv`, `ProductB.csv` and `ProductC.csv` are roadmap tabs

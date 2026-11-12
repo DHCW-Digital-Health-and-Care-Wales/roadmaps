@@ -2,7 +2,10 @@ import { z } from "zod/mini"
 
 import { AppError } from "@/lib/errors"
 
-/** Response of `GET /{spreadsheetId}?fields=sheets(properties(sheetId,title,index,hidden))`. */
+/**
+ * Response of `GET /{spreadsheetId}?fields=sheets(properties(sheetId,title,index,hidden,
+ * gridProperties(rowCount,columnCount)))`.
+ */
 const spreadsheetMetadataSchema = z.object({
   // Google omits `sheets` (and `false`/default-valued fields) rather than sending them.
   sheets: z._default(
@@ -13,6 +16,13 @@ const spreadsheetMetadataSchema = z.object({
           title: z.string(),
           index: z.optional(z.int()),
           hidden: z.optional(z.boolean()),
+          // The grid's size, so a write can grow it first; absent for a non-grid sheet.
+          gridProperties: z.optional(
+            z.object({
+              rowCount: z.optional(z.int()),
+              columnCount: z.optional(z.int()),
+            }),
+          ),
         }),
       }),
     ),

@@ -19,7 +19,12 @@ describe("parseSpreadsheetMetadata", () => {
             sheetId: 0,
             title: "Roadmap",
             index: 0,
-            gridProperties: {},
+            gridProperties: {
+              rowCount: 1000,
+              columnCount: 26,
+              frozenRowCount: 1,
+            },
+            tabColor: {},
           },
           protectedRanges: [],
         },
@@ -30,7 +35,14 @@ describe("parseSpreadsheetMetadata", () => {
 
     expect(metadata).toStrictEqual({
       sheets: [
-        { properties: { sheetId: 0, title: "Roadmap", index: 0 } },
+        {
+          properties: {
+            sheetId: 0,
+            title: "Roadmap",
+            index: 0,
+            gridProperties: { rowCount: 1000, columnCount: 26 },
+          },
+        },
         { properties: { sheetId: 9, title: "Old", index: 1, hidden: true } },
         { properties: { sheetId: 3, title: "Minimal" } },
       ],

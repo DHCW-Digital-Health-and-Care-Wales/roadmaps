@@ -26,8 +26,9 @@ the connection to the data source is plumbing that should stay out of their way.
 GitHub Pages that connects a Google account (Google Identity Services, OAuth token model),
 reads the **roadmap index**, the first tab of one Google Spreadsheet, as the public site
 does (ADR-009), and shows each roadmap it lists as a card with its information, grouped
-by product family, and each roadmap's items on its page (EPC-004). Editing is next
-(EPC-005). Google Sheets is a _temporary_ data
+by product family, and each roadmap's items on its page (EPC-004). Editing is under
+way (EPC-005): the repository can publish a roadmap's changes, though no screen calls it
+yet. Google Sheets is a _temporary_ data
 source: it must be replaceable by a PostgreSQL-backed HTTP API without touching the
 presentation layer (ADR-002).
 
@@ -923,3 +924,41 @@ install --with-deps chromium`, on a hit `pnpm exec playwright install-deps chrom
     - The page's first `h2` is now "About this roadmap", ahead of the placements: tests
       that list the `h2`s start with it, and `detail.aria.yml` holds the region.
     - Product B has no vision and no lead, a handy fixture for left-out fields.
+- **STY-023 The repository publishes a roadmap's changes** — the app's first write to the
+  shared data source: `RoadmapRepository.publishRoadmapChanges(roadmapId, changes,
+options?)` re-reads the roadmap, refuses per field on a co-lead's change or a removed
+  item or roadmap, and otherwise writes the changed English, an `Item ID` for every kept
+  item without one or repeating another row's, and any missing column in one
+  `spreadsheets.batchUpdate`. No screen
+  calls it yet (STY-025). README and `docs/analysis/roadmap-tab-format.md` say exactly
+  what the editor writes; the record's Delivery is the contract for STY-025/026.
+  - Where things live: `RoadmapChanges`, `FieldChange`, `PublishOutcome`
+    (`published`/`refused`/`roadmap-not-found`/`unconfirmed`), `FieldConflict`
+    (`domain/roadmap/roadmap-changes.ts`); `planRoadmapPublish`/`heldWrites`
+    (`publish-plan.ts`, the rules both repositories share), `findEditedItem`
+    (`find-edited-item.ts`); `createItemId`
+    (`item-id.ts`); the client's `postJson`; `usePublishRoadmapChanges(roadmapId)`
+    (`features/roadmaps/hooks/`); `applyBatchUpdate` (`tests/fixtures/sheets/`, used by
+    the adapter's MSW fake and the E2E fake).
+  - Decisions: no write when nothing differs (so no IDs either); a blank title throws
+    `AppError('unknown')`; the write takes no abort signal; a lost answer is re-read once
+    (published, `network` or `unconfirmed`), finding each written item by its ID; the
+    hook re-reads list and items in `onSettled`.
+  - Publishing never writes `Template`: a roadmap whose `Sheet` names `Template` or the
+    index is `invalid-data` (read or publish), and so is publishing when the index tab
+    itself is named `Template`.
+  - A mutation's 401 expires the session through the query client's new
+    `MutationCache`, but only while the session it started in is current
+    (`currentSession`, wired to `currentAuthSession(authClient)`): writes are never
+    cancelled at session end, unlike queries, so a late 401 must not expire a newer
+    session.
+  - Gotchas:
+    - The metadata mask now includes `gridProperties(rowCount,columnCount)`; a test
+      asserting the `fields` parameter must use the new mask.
+    - E2E: `sheets.writes` holds each `batchUpdate` body, separate from `sheets.reads`;
+      the fake records a write to `Template`, a `(cy)` column, `Last updated` or an
+      unchanged cell, a non-string value or any other method as a violation.
+    - MSW's `passthrough()` sends a request to the real network: to fall through to the
+      next handler return `undefined`. A `:batchUpdate` path needs a RegExp matcher.
+    - `ContractWrite`/`CO_LEAD_VALUE` live in `domain/roadmap/testing/contract-write.ts`,
+      free of Vitest, so the in-memory double can import them.

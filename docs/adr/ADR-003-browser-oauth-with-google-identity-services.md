@@ -83,6 +83,14 @@ needs an OAuth access token with scope `https://www.googleapis.com/auth/spreadsh
   expires a session whose `expiresAt` has passed. Timers are throttled in background tabs
   and paused while the device sleeps, so the expiry timer can fire late.
 
+### STY-023 amendments
+
+- **A late 401 from a write.** A write is never cancelled when its session ends, unlike
+  a read, so its 401 can arrive after a reconnect or renewal. It expires the session only
+  while the session it was sent in is still current: the query client remembers each
+  mutation's session (`currentSession`, the connected `expiresAt`) and ignores the 401
+  otherwise.
+
 ## Consequences
 
 - Users renew roughly hourly, in one click, from the warning two minutes before the

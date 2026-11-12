@@ -101,3 +101,12 @@ export function headerReader<Column extends string, WelshColumn extends Column>(
     return { english, welsh, readIndexes }
   }
 }
+
+/** Where each English column of `header` is, 0-based. */
+export function columnIndexes<Column extends string>({
+  english,
+}: {
+  english: ReadonlyMap<Column, HeaderCell>
+}): ReadonlyMap<Column, number> {
+  return new Map([...english].map(([column, { index }]) => [column, index]))
+}

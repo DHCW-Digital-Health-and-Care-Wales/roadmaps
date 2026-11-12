@@ -20,6 +20,7 @@ import {
 import { AppError } from "@/lib/errors"
 
 import {
+  columnIndexes,
   headerReader,
   matchKey,
   type HeaderCell,
@@ -55,6 +56,8 @@ export interface RoadmapTab {
   items: RoadmapItem[]
   /** The spreadsheet row (1 is the header) each of `items` came from, in step with it. */
   rows: number[]
+  /** The 0-based place of each English column the header has, to write to. */
+  columns: ReadonlyMap<RoadmapTabColumn, number>
   /** In row order, problems of the whole tab first. */
   problems: RoadmapTabProblem[]
 }
@@ -71,7 +74,9 @@ const OPTIONAL_COLUMNS = [
 ] as const
 
 // Every tab predates it, so a missing `Item ID` column is not a problem.
-type Column = "Title" | "Item ID" | (typeof OPTIONAL_COLUMNS)[number]
+export type RoadmapTabColumn =
+  "Title" | "Item ID" | (typeof OPTIONAL_COLUMNS)[number]
+type Column = RoadmapTabColumn
 
 /** The columns that may have a Welsh version, such as `Title (cy)`. */
 const WELSH_COLUMNS = [
@@ -140,7 +145,12 @@ export function parseRoadmapTab(
       itemRows.push(row.row)
     }
   })
-  return { items, rows: itemRows, problems: problems.sorted() }
+  return {
+    items,
+    rows: itemRows,
+    columns: columnIndexes(header),
+    problems: problems.sorted(),
+  }
 }
 
 /** One spreadsheet row, trimmed, read through the header. */

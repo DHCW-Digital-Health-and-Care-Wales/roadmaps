@@ -19,6 +19,7 @@ import type { AuthState } from "@/domain/auth/auth-client"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { RoadmapRepository } from "@/domain/roadmap/roadmap-repository"
 import {
+  currentAuthSession,
   invalidateAuthScopedQueriesOnSessionEnd,
   removeAuthScopedQueries,
 } from "@/features/auth/auth-scoped-queries"
@@ -82,6 +83,7 @@ function createTestServices({
     onUnauthenticated: () => {
       authClient.reportUnauthenticated()
     },
+    currentSession: () => currentAuthSession(authClient),
   })
   const authClient = createFakeAuthClient(authState, {
     onDisconnect: () => {

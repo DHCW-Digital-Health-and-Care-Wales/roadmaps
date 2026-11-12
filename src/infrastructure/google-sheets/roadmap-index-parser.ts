@@ -16,6 +16,7 @@ import { AppError } from "@/lib/errors"
 import { foldText } from "@/lib/text"
 
 import {
+  columnIndexes,
   headerReader,
   matchKey,
   type HeaderCell,
@@ -56,11 +57,15 @@ export interface RoadmapIndexEntry {
   roadmap: Roadmap
   /** The worksheet holding the roadmap's items: its `Sheet` value, trimmed. */
   tabName: string
+  /** The spreadsheet row it came from (1 is the header), to write it back. */
+  row: number
 }
 
 export interface RoadmapIndex {
   /** In row order. */
   entries: RoadmapIndexEntry[]
+  /** The 0-based place of each English column the header has, to write to. */
+  columns: ReadonlyMap<RoadmapIndexColumn, number>
   /** In row order, problems of the whole list first. */
   problems: RoadmapIndexProblem[]
 }
@@ -79,7 +84,8 @@ const OPTIONAL_COLUMNS = [
   "Product Lead",
 ] as const
 
-type Column = "Sheet" | (typeof OPTIONAL_COLUMNS)[number]
+export type RoadmapIndexColumn = "Sheet" | (typeof OPTIONAL_COLUMNS)[number]
+type Column = RoadmapIndexColumn
 type TextColumn =
   "Title" | "Family" | "Status label" | "Vision" | "Service description"
 
@@ -192,7 +198,11 @@ export function parseRoadmapIndex(
   ) {
     problems.record("no-published-roadmap", {})
   }
-  return { entries, problems: problems.sorted() }
+  return {
+    entries,
+    columns: columnIndexes(header),
+    problems: problems.sorted(),
+  }
 }
 
 /** Reads one row, or returns `null` for a row to ignore: blank, or a blank `Sheet`. */
@@ -317,6 +327,7 @@ function toEntry(
 
   return {
     tabName: sheet,
+    row,
     roadmap: {
       id,
       // `sheet` is never blank, so neither is the title.

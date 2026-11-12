@@ -213,14 +213,6 @@ describe("withCurrentRoadmapText", () => {
       vision: { en: "Their vision", cy: "Gweledigaeth" },
     })
   })
-
-  it("leaves a field read again since the publish was checked", () => {
-    const roadmap = createTestRoadmap("producta", "Product A", {
-      vision: { en: "Their later vision", cy: "" },
-    })
-
-    expect(withCurrentRoadmapText(roadmap, [visionConflict])).toEqual(roadmap)
-  })
 })
 
 describe("withCurrentItemText", () => {
@@ -244,19 +236,5 @@ describe("withCurrentItemText", () => {
     ])
     expect(shown[0]?.description?.en).toBe("Theirs")
     expect(shown[2]).toBe(items[2])
-  })
-
-  it("leaves a field read again since the publish was checked", () => {
-    const reread = { ...first.item, title: { en: "First, later", cy: "" } }
-    const [shown] = withCurrentItemText(
-      [reread],
-      [
-        conflictOn(first, "title", "First, theirs"),
-        conflictOn(first, "description", "Theirs"),
-      ],
-    )
-
-    expect(shown?.title.en).toBe("First, later")
-    expect(shown?.description?.en).toBe("Theirs")
   })
 })

@@ -28,7 +28,8 @@ export interface CurrentText {
  * Publishes one roadmap's changes (ADR-012). A publish is never retried; whatever its
  * result, the roadmap and its items are read again before it settles, so the page shows
  * what the data source now holds. A refusal first shows the text it found by
- * `currentText`, so the page shows it even if that read fails.
+ * `currentText`, so the page shows it even if that read fails, unless a read since the
+ * publish began already shows something at least as new.
  */
 export function usePublishRoadmapChanges(
   roadmapId: string,
@@ -40,9 +41,15 @@ export function usePublishRoadmapChanges(
     mutationFn: (changes: RoadmapChanges) =>
       repository.publishRoadmapChanges(roadmapId, changes),
     retry: false,
-    onSuccess: (outcome) => {
+    onMutate: () => ({ startedAt: Date.now() }),
+    onSuccess: (outcome, _changes, { startedAt }) => {
       if (outcome.status === "refused" && currentText) {
-        showCurrentText(queryClient, roadmapId, outcome.conflicts, currentText)
+        showCurrentText(queryClient, {
+          roadmapId,
+          conflicts: outcome.conflicts,
+          currentText,
+          readBefore: startedAt,
+        })
       }
     },
     onSettled: () =>
@@ -56,19 +63,29 @@ export function usePublishRoadmapChanges(
 }
 
 /**
- * Writes the text a refusal found into the roadmap and its items as read. The data keeps
- * its age, so it is read again as soon as it would have been.
+ * Writes the text a refusal found into the roadmap and its items, where they were last
+ * read before `readBefore`, when the publish began. The data keeps its age, so it is
+ * read again as soon as it would have been.
  */
 function showCurrentText(
   queryClient: QueryClient,
-  roadmapId: string,
-  conflicts: readonly FieldConflict[],
-  currentText: CurrentText,
+  {
+    roadmapId,
+    conflicts,
+    currentText,
+    readBefore,
+  }: {
+    roadmapId: string
+    conflicts: readonly FieldConflict[]
+    currentText: CurrentText
+    readBefore: number
+  },
 ) {
   if (conflicts.some((conflict) => conflict.subject === "roadmap")) {
     patchQueryData<readonly Roadmap[]>(
       queryClient,
       roadmapKeys.list(),
+      readBefore,
       (roadmaps) =>
         roadmaps.map((each) =>
           each.id === roadmapId ? currentText.roadmap(each, conflicts) : each,
@@ -79,6 +96,7 @@ function showCurrentText(
     patchQueryData<readonly RoadmapItem[]>(
       queryClient,
       roadmapKeys.items(roadmapId),
+      readBefore,
       (items) => currentText.items(items, conflicts),
     )
   }
@@ -87,10 +105,11 @@ function showCurrentText(
 function patchQueryData<T>(
   queryClient: QueryClient,
   key: QueryKey,
+  readBefore: number,
   patch: (data: T) => T,
 ) {
   const state = queryClient.getQueryState<T>(key)
-  if (state?.data === undefined) return
+  if (state?.data === undefined || state.dataUpdatedAt > readBefore) return
   queryClient.setQueryData<T>(key, patch(state.data), {
     updatedAt: state.dataUpdatedAt,
   })

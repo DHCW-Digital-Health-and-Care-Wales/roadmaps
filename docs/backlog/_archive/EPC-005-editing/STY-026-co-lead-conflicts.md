@@ -144,9 +144,9 @@ S7 extends the accessibility, focus and structure specs.
 - **Publishing** (`use-publish.ts`): before the re-read, a refusal writes the
   co-lead's text it found into the loaded roadmap and items (`withCurrentRoadmapText`,
   `withCurrentItemText`, passed as `usePublishRoadmapChanges`'s `currentText`), keeping
-  their age, so "Use theirs" shows their text even if that read fails. Only a field
-  still holding the text the publish was checked against is written, so a newer read
-  is never overwritten. `refused` then discards the removed items' changes and sets the
+  their age, so "Use theirs" shows their text even if that read fails. A list or items
+  read that landed after the publish began is left as it is, so a newer read is never
+  overwritten; a co-lead's text read before it is replaced by what the publish found. `refused` then discards the removed items' changes and sets the
   review's notice. `roadmap-not-found` calls `removeRoadmap` and shows no notice,
   because the page says so instead.
 - **Reads** (`pending-changes-provider.tsx`): each successful list read restores the

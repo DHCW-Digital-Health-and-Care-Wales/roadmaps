@@ -955,6 +955,16 @@ describe("A co-lead's changes (STY-026)", () => {
     })
   }
 
+  /** Every later read of the roadmap and its items fails. */
+  function failReads(repository: InMemoryRoadmapRepository) {
+    vi.spyOn(repository, "listRoadmaps").mockRejectedValue(
+      new AppError("forbidden"),
+    )
+    vi.spyOn(repository, "listRoadmapItems").mockRejectedValue(
+      new AppError("forbidden"),
+    )
+  }
+
   async function editVision(user: User, to: string) {
     await user.click(
       main().getByRole("button", { name: "Edit About this roadmap" }),
@@ -1072,12 +1082,7 @@ describe("A co-lead's changes (STY-026)", () => {
     await editTitle(user, "First item", "First, mine")
     await editVision(user, "My vision.")
     changeBoth(repository)
-    vi.spyOn(repository, "listRoadmaps").mockRejectedValue(
-      new AppError("forbidden"),
-    )
-    vi.spyOn(repository, "listRoadmapItems").mockRejectedValue(
-      new AppError("forbidden"),
-    )
+    failReads(repository)
 
     await publish(user)
 
@@ -1102,6 +1107,45 @@ describe("A co-lead's changes (STY-026)", () => {
     expect(main().queryByText(/unpublished change/)).toBeNull()
     expect(
       main().getByText("Couldn't refresh your roadmaps"),
+    ).toBeInTheDocument()
+  })
+
+  it("shows the text the publish found after Use theirs, not a co-lead's earlier text (S2)", async () => {
+    const repository = coLeadRepository()
+    const { user } = await renderPage({ repository })
+    await editTitle(user, "First item", "First, mine")
+    await editVision(user, "My vision.")
+    changeBoth(repository)
+    const refresh = main().getByRole("button", { name: "Refresh" })
+    await user.click(refresh)
+    await vi.waitFor(() => {
+      expect(refresh).not.toHaveAttribute("aria-busy", "true")
+    })
+    repository.coLead((list, itemsOf) => {
+      const roadmap = list.find(({ id }) => id === "producta")
+      const [item] = itemsOf("producta")
+      if (!roadmap || !item) throw new Error("No Product A")
+      roadmap.vision = { en: "Their later vision.", cy: "" }
+      item.title = { ...item.title, en: "First, theirs later" }
+    })
+    failReads(repository)
+
+    await publish(user)
+    await main().findByText("Couldn't refresh your roadmaps")
+    const notice = main()
+      .getAllByRole("alert")
+      .find((each) => each.textContent.includes("Someone else"))
+    if (!notice) throw new Error("No review")
+    for (const name of [
+      "Use theirs About this roadmap: Vision",
+      "Use theirs First, mine: Title",
+    ]) {
+      await user.click(within(notice).getByRole("button", { name }))
+    }
+
+    expect(main().getByText("Their later vision.")).toBeInTheDocument()
+    expect(
+      main().getByRole("heading", { level: 3, name: "First, theirs later" }),
     ).toBeInTheDocument()
   })
 

@@ -1025,9 +1025,8 @@ waiting}.*`; the Welsh is machine-assisted. The record's Delivery is STY-026's c
     text), never stored, so Undo or a read closes it, and the store then drops it from
     the refusal so it cannot reopen; a refusal writes the co-lead's text into the cached
     roadmap and items before the re-read (`usePublishRoadmapChanges`'s `currentText`),
-    in each field still holding the checked base, so a newer read wins; Keep mine
-    re-bases onto their text
-    (D3); Publish is disabled while a conflict is open; Refresh no longer clears a
+    unless a read landed after the publish began, so a newer read wins; Keep mine
+    re-bases onto their text (D3); Publish is disabled while a conflict is open; Refresh no longer clears a
     review, only an `unconfirmed` notice; removed items and roadmaps take no decision
     (`discardItems` also finds an entry edited again mid-publish by its loaded item).
   - Gotchas:

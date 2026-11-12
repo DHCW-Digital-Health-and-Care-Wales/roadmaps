@@ -4,7 +4,8 @@
   the Editing epic (Options 1–17 below); Q32–Q34 settled what review raised (a copied
   ID, a write whose result never arrives, trimming). Amends ADR-002 (a write call) and ADR-011 (item identity);
   extends ADR-009 (the editor writes to the roadmap index).
-- Date: 2026-11-11
+- Date: 2026-11-11 (amended in ADR-013: family and category become choosable; `Family (cy)`
+  is copied)
 
 ## Context
 
@@ -154,6 +155,15 @@ Google adapter. Interface code never sees a row, a column or a cell.
 Edit shows to everyone connected. A publish the data source refuses (`forbidden`)
 keeps the pending edits and says the connected account may not change this roadmap.
 Nothing checks permission in advance.
+
+### ADR-013 amendments
+
+- A roadmap's family and category become pending edits, chosen from lists, and
+  publishing writes the copied `Family`, `Family (cy)`, `Colour` and `Category` cells
+  and the `Family ID` and `Category ID` columns (ADR-013). Colour stays read-only on
+  its own.
+- `Family (cy)` is written as a copy of the family's Welsh name, never typed; every
+  other Welsh cell stays unwritten.
 
 ## Options (owner's choice marked ✅, 2026-11-11)
 

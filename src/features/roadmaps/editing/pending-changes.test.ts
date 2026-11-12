@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 
+import { planRoadmapPublish } from "@/domain/roadmap/publish-plan"
 import type { RoadmapChanges } from "@/domain/roadmap/roadmap-changes"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
@@ -7,6 +8,7 @@ import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-ite
 import {
   applyItemChanges,
   applyRoadmapChanges,
+  changedParts,
   countChanges,
   editItem,
   editRoadmap,
@@ -85,6 +87,25 @@ describe("editItem", () => {
     ).toEqual([])
   })
 
+  it("takes each base from the item the form opened on, keeping the item first loaded", () => {
+    const opened = { ...first, phase: { en: "Alpha", cy: "" } }
+    const once = editItem(NO_CHANGES, undefined, opened, 0, { title: "One" })
+    const reread = { ...opened, phase: { en: "Co-lead's phase", cy: "" } }
+
+    const twice = editItem(once, once.items[0], reread, 0, { phase: "Beta" })
+
+    expect(twice.items).toEqual([
+      {
+        item: opened,
+        position: 0,
+        fields: {
+          title: { base: "First", value: "One" },
+          phase: { base: "Co-lead's phase", value: "Beta" },
+        },
+      },
+    ])
+  })
+
   it("undoes one item without touching another", () => {
     const one = editItem(NO_CHANGES, undefined, first, 0, { title: "One" })
     const both = editItem(one, undefined, second, 1, { title: "Two" })
@@ -144,10 +165,35 @@ describe("reconcile", () => {
       changes.items[1],
     ])
   })
+
+  it("keeps the content first loaded, so a copy that became the first row is refused", () => {
+    const loaded = createTestRoadmapItem("Shared", { id: "sharedid" })
+    const changes = editItem(NO_CHANGES, undefined, loaded, 0, {
+      title: "Mine",
+    })
+    const copy = {
+      ...loaded,
+      description: { en: "A co-lead's copy", cy: "" },
+    }
+
+    const reconciled = reconcileItems(changes, [copy])
+    expect(reconciled).toBe(changes)
+
+    const plan = planRoadmapPublish(reconciled, {
+      roadmap,
+      items: [copy, { ...loaded, id: null }],
+      repeatedIds: new Set(["sharedid"]),
+      takenIds: new Set(["sharedid"]),
+    })
+    expect(plan).toMatchObject({
+      kind: "settled",
+      outcome: { status: "refused" },
+    })
+  })
 })
 
 describe("settlePublished", () => {
-  it("removes what was sent and keeps edits made since", () => {
+  it("removes what was sent and keeps edits made since, based on what was sent", () => {
     const sent = editItem(
       editRoadmap(NO_CHANGES, roadmap, { title: "Sent", vision: "Sent" }),
       undefined,
@@ -167,12 +213,38 @@ describe("settlePublished", () => {
     const settled = settlePublished(since, sent)
 
     expect(settled.roadmap).toEqual({
-      vision: { base: "A vision", value: "Later" },
+      vision: { base: "Sent", value: "Later" },
     })
     expect(settled.items.map(({ fields }) => fields)).toEqual([
       { phase: { base: "", value: "Later" } },
     ])
+    expect(settled.items[0]?.item.title.en).toBe("Sent")
     expect(countChanges(settlePublished(sent, sent))).toBe(0)
+  })
+})
+
+describe("changedParts", () => {
+  it("lists the roadmap's own fields, then each item in its order as it will read", () => {
+    let changes = editRoadmap(NO_CHANGES, roadmap, { vision: "New" })
+    changes = editItem(changes, undefined, second, 1, { phase: "Beta" })
+    changes = editItem(changes, undefined, first, 0, { title: "One" })
+
+    expect(changedParts(changes)).toEqual([
+      { kind: "roadmap", fields: ["vision"] },
+      {
+        kind: "item",
+        position: 0,
+        item: { ...first, title: { en: "One", cy: "" } },
+        fields: ["title"],
+      },
+      {
+        kind: "item",
+        position: 1,
+        item: { ...second, phase: { en: "Beta", cy: "" } },
+        fields: ["phase"],
+      },
+    ])
+    expect(changedParts(NO_CHANGES)).toEqual([])
   })
 })
 

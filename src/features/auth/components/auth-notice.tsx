@@ -3,20 +3,12 @@ import {
   CircleCheckIcon,
   InfoIcon,
   TriangleAlertIcon,
-  XIcon,
   type LucideIcon,
 } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
-import {
-  Alert,
-  AlertAction,
-  AlertContent,
-  AlertDescription,
-  AlertTitle,
-  type AlertVariant,
-} from "@/components/ui/alert"
-import { Button } from "@/components/ui/button"
+import { DismissibleNotice } from "@/components/layout/dismissible-notice"
+import type { AlertVariant } from "@/components/ui/alert"
 
 import { useAuthNotice, type AuthNotice as Notice } from "../use-auth-notice"
 import { useNoticeDwell } from "../use-notice-dwell"
@@ -72,38 +64,25 @@ function NoticeCallout({ notice, onDismiss }: NoticeCalloutProps) {
       : t(`auth.errors.${notice.code}`)
 
   return (
-    <Alert
+    <DismissibleNotice
       role={announces(notice) ? "alert" : "note"}
       variant={variant}
+      Icon={Icon}
+      title={
+        notice.kind === "renewal-failed" ? t("auth.renewal.failed") : undefined
+      }
+      onDismiss={onDismiss}
       className="mb-6 max-w-2xl"
       {...dwell}
     >
-      <Icon aria-hidden="true" />
-      <AlertContent>
-        {notice.kind === "renewal-failed" && (
-          <AlertTitle>{t("auth.renewal.failed")}</AlertTitle>
-        )}
-        <AlertDescription>
-          {notice.kind === "renewal-failed" ? (
-            <>
-              <p>{text}</p>
-              <p>{t("auth.renewal.reconnectLater")}</p>
-            </>
-          ) : (
-            text
-          )}
-        </AlertDescription>
-      </AlertContent>
-      <AlertAction className="-my-1.5 -mr-2 self-start max-sm:w-auto max-sm:pl-0">
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label={t("auth.notice.dismiss")}
-          onClick={onDismiss}
-        >
-          <XIcon aria-hidden="true" />
-        </Button>
-      </AlertAction>
-    </Alert>
+      {notice.kind === "renewal-failed" ? (
+        <>
+          <p>{text}</p>
+          <p>{t("auth.renewal.reconnectLater")}</p>
+        </>
+      ) : (
+        text
+      )}
+    </DismissibleNotice>
   )
 }

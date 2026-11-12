@@ -67,7 +67,6 @@ function card(title: string) {
   return within(item)
 }
 
-/** The list card of the roadmap named `title`, on the main page. */
 /** The row holding a heading and its "Changed" tag. */
 function titleRow(heading: HTMLElement) {
   const row = heading.parentElement
@@ -75,6 +74,7 @@ function titleRow(heading: HTMLElement) {
   return row
 }
 
+/** The list card of the roadmap named `title`, on the main page. */
 function listCard(title: string) {
   const link = main().getByRole("link", { name: title })
   const item = link.closest("li")
@@ -418,6 +418,59 @@ describe("Keeping a roadmap's changes (STY-025)", () => {
     expect(main().getByText("1 unpublished change")).toBeInTheDocument()
   })
 
+  it("leaves alone a co-lead's change, read while a form was open, to a field it did not change", async () => {
+    const repository = createInMemoryRoadmapRepository(roadmaps, roadmapItems)
+    const { user } = await renderPage({ repository })
+    await user.click(
+      main().getByRole("button", { name: "Edit About this roadmap" }),
+    )
+    await user.type(main().getByRole("textbox", { name: "Title" }), " v2")
+
+    const read = vi
+      .spyOn(repository, "listRoadmaps")
+      .mockResolvedValue(
+        roadmaps.map((roadmap) =>
+          roadmap.id === "producta"
+            ? { ...roadmap, vision: { en: "A co-lead's vision.", cy: "" } }
+            : roadmap,
+        ),
+      )
+    await user.click(main().getByRole("button", { name: "Refresh" }))
+    await vi.waitFor(() => {
+      expect(read).toHaveBeenCalled()
+    })
+    await user.click(main().getByRole("button", { name: "Done" }))
+
+    expect(main().getByText("1 unpublished change")).toBeInTheDocument()
+    expect(await main().findByText("A co-lead's vision.")).toBeInTheDocument()
+  })
+
+  it("closes the form of an item without an ID when a read puts another item in its place", async () => {
+    const repository = createInMemoryRoadmapRepository(roadmaps, {
+      producta: [
+        createTestRoadmapItem("No ID one"),
+        createTestRoadmapItem("No ID two"),
+      ],
+    })
+    const { user } = await renderPage({ repository, waitFor: "No ID two" })
+    await user.click(main().getByRole("button", { name: "Edit No ID one" }))
+    await user.type(main().getByRole("textbox", { name: "Phase" }), "Beta")
+
+    vi.spyOn(repository, "listRoadmapItems").mockResolvedValue([
+      createTestRoadmapItem("Inserted by a co-lead"),
+      createTestRoadmapItem("No ID one"),
+      createTestRoadmapItem("No ID two"),
+    ])
+    await user.click(main().getByRole("button", { name: "Refresh" }))
+
+    await main().findByRole("heading", {
+      level: 3,
+      name: "Inserted by a co-lead",
+    })
+    expect(main().queryByRole("form")).toBeNull()
+    expect(main().queryByText(/unpublished change/)).toBeNull()
+  })
+
   it("keeps them when a renewal gives a new session", async () => {
     const { user, authClient } = await renderPage()
     await editTitle(user, "First item", "First, edited")
@@ -652,7 +705,52 @@ describe("Publishing a roadmap's changes (STY-025)", () => {
 
     await user.click(main().getByRole("button", { name: "Refresh" }))
 
-    expect(main().queryByRole("alert")).toBeNull()
+    await vi.waitFor(() => {
+      expect(main().queryByRole("alert")).toBeNull()
+    })
+  })
+
+  it("keeps saying a write may have landed while Refresh cannot read the roadmap (S18)", async () => {
+    const { user } = await renderPage({ write: { lost: "reread-fails" } })
+    await editTitle(user, "First item", "First, edited")
+
+    await publish(user)
+    // The dialog stays until the failing re-reads have given up.
+    await vi.waitFor(() => {
+      expect(
+        main().getByText("Your changes may have been published"),
+      ).toBeInTheDocument()
+    })
+
+    const refresh = main().getByRole("button", { name: "Refresh" })
+    await user.click(refresh)
+
+    await vi.waitFor(() => {
+      expect(refresh).not.toHaveAttribute("aria-busy", "true")
+    })
+    expect(
+      main().getByText("Your changes may have been published"),
+    ).toBeInTheDocument()
+  })
+
+  it("cannot publish from an open dialog once the session has expired (S12)", async () => {
+    const repository = createInMemoryRoadmapRepository(roadmaps, roadmapItems)
+    const write = vi.spyOn(repository, "publishRoadmapChanges")
+    const { user, authClient } = await renderPage({ repository })
+    await editTitle(user, "First item", "First, edited")
+    await user.click(main().getByRole("button", { name: "Publish changes" }))
+
+    act(() => {
+      authClient.setState({ status: "expired" })
+    })
+
+    const confirm = within(screen.getByRole("alertdialog")).getByRole(
+      "button",
+      { name: "Publish changes" },
+    )
+    expect(confirm).toHaveAttribute("aria-disabled", "true")
+    await user.click(confirm)
+    expect(write).not.toHaveBeenCalled()
   })
 })
 

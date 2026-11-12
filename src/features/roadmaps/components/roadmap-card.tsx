@@ -11,7 +11,7 @@ import { formatCalendarDate, useLanguage } from "@/i18n"
 import { ChangedTag } from "../editing/edit-controls"
 import { countChanges } from "../editing/pending-changes"
 import { useRoadmapChanges } from "../editing/pending-changes-context"
-import { publishAction } from "../editing/use-publish"
+import { publishAction } from "../editing/pending-changes-store"
 import { NotPublishedBadge } from "./not-published-badge"
 import { RoadmapSwatch } from "./roadmap-swatch"
 

@@ -25,6 +25,8 @@ export const en = {
     retry: "Retry",
     close: "Close",
     cancel: "Cancel",
+    /** A page notice's close button, read by assistive technology. */
+    dismiss: "Dismiss message",
     /** A time left, e.g. "1 minute and 49 seconds". */
     duration: {
       minutes_one: "{{count, number}} minute",
@@ -104,10 +106,6 @@ export const en = {
     notifications: {
       connected: "Connected to Google",
       disconnected: "Disconnected from Google",
-    },
-    notice: {
-      /** The notice's close button, read by assistive technology. */
-      dismiss: "Dismiss message",
     },
     /** A failed "Stay connected": the reason (`auth.errors.*`) goes between the two. */
     renewal: {

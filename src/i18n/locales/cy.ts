@@ -17,6 +17,7 @@ export const cy = {
     retry: "Ceisio eto",
     cancel: "Canslo",
     close: "Cau",
+    dismiss: "Cau'r neges",
     duration: {
       minutes_zero: "{{count, number}} munud",
       minutes_one: "{{count, number}} munud",
@@ -99,9 +100,6 @@ export const cy = {
     notifications: {
       connected: "Wedi cysylltu â Google",
       disconnected: "Wedi datgysylltu o Google",
-    },
-    notice: {
-      dismiss: "Cau'r neges",
     },
     renewal: {
       failed: "Doedd dim modd cadw eich cysylltiad",

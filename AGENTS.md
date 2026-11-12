@@ -972,8 +972,12 @@ options?)` re-reads the roadmap, refuses per field on a co-lead's change or a re
     apply over loaded text), the store (`pending-changes-store.ts`, one per app, in memory),
     `PendingChangesProvider` (in `AppProviders`, outside the query cache; reconciles on
     every list or items read through the query cache's events; the `beforeunload`
-    listener; the Disconnect question), `usePublish`, `RoadmapPublishing` (bar, dialogs,
-    notices), `EditForm`, `EditableItemCard`, `EditableRoadmapAbout`.
+    listener; the Disconnect question), `usePublish`, `RoadmapPublishing` (the bar, with
+    `PublishDialog`, `DiscardDialog`, `PublishOutcomeNotice`), `EditForm` (Done sends only
+    changed fields), `editFormFields`, `useEditMode<T>` (holds the value the form opened
+    on, the edit's base), `EditableItemCard`, `EditableRoadmapAbout`. Shared:
+    `DismissibleNotice` (`components/layout`, also the auth notice; copy `common.dismiss`)
+    and `InsetText`'s `tone`.
     `useRequestDisconnect()` (`features/auth/disconnect-request.ts`) is what every
     Disconnect button calls. Copy: `common.cancel`, `roadmaps.{edit,publish,disconnect,
 waiting}.*`; the Welsh is machine-assisted. The record's Delivery is STY-026's contract.
@@ -985,8 +989,11 @@ waiting}.*`; the Welsh is machine-assisted. The record's Delivery is STY-026's c
       `{" "}` text node before the span ("Edit Minimal card", not "EditMinimal card").
     - Base UI's dialog `finalFocus` goes to the first tabbable child of a `tabIndex=-1`
       target, so a notice lost focus to its dismiss button. `RoadmapPublishing` returns
-      focus itself: `returnFocus={() => !ref.current}`, then focuses the notice in
-      `onOpenChangeComplete(false)`.
+      focus itself: `PublishDialog` takes `returnFocus={() => !ref.current}`, then the
+      notice is focused in `onOpenChangeComplete(false)`.
+    - A form's base is what it opened on, not the latest read: compare against
+      `useEditMode`'s `opened`, never the refreshed record, or a co-lead's change is
+      written back.
     - Playwright's `--update-snapshots` (default "changed") does not write a new aria
       snapshot file: use `--update-snapshots=all` or run once without the flag
       (`tests/e2e/AGENTS.md`), then check `git status`.

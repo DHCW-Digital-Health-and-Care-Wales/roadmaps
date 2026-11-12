@@ -20,11 +20,23 @@ describe("createPendingChangesStore", () => {
     expect(store.getSnapshot().changes.has("producta")).toBe(false)
   })
 
+  it("discards one roadmap's changes and leaves another's", () => {
+    const store = createPendingChangesStore()
+    store.update("producta", () => retitled)
+    store.update("productb", () => retitled)
+
+    store.discard("producta")
+    store.discard("productc")
+
+    expect([...store.getSnapshot().changes.keys()]).toEqual(["productb"])
+  })
+
   it("does not notify when an update changes nothing", () => {
     const store = createPendingChangesStore()
     const listener = vi.fn()
     store.subscribe(listener)
     store.update("producta", (changes) => changes)
+    store.discard("producta")
     store.discardAll()
     store.clearNotices()
     expect(listener).not.toHaveBeenCalled()

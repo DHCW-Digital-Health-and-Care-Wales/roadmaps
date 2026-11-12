@@ -130,7 +130,7 @@ interface RoadmapViewProps {
   /** Why the list the roadmap came from may be out of date, if it may. */
   listProblem: AppError | null
   listFetching: boolean
-  refetchList: () => Promise<unknown>
+  refetchList: () => Promise<{ readonly isError: boolean }>
 }
 
 /**
@@ -153,13 +153,15 @@ function RoadmapView({
   const retryList = () => {
     void refetchList()
   }
-  const refresh = () => {
-    // A notice asking for a Refresh has been heeded (S15, S18).
+  const refresh = async () => {
+    const reads = await Promise.all([refetchList(), items.refetch()])
+    if (reads.some((read) => read.isError)) return
+    // A notice asking for a Refresh has been heeded once both reads came back (S15,
+    // S18); until then what the publish came to is still unknown.
     const kind = store.getSnapshot().notices.get(roadmap.id)?.kind
     if (kind === "unconfirmed" || kind === "refused") {
       store.clearNotice(roadmap.id)
     }
-    void Promise.all([refetchList(), items.refetch()])
   }
 
   return (
@@ -185,7 +187,9 @@ function RoadmapView({
           <div className="shrink-0">
             <RefreshButton
               fetching={listFetching || items.isFetching}
-              onRefresh={refresh}
+              onRefresh={() => {
+                void refresh()
+              }}
             />
           </div>
         </div>

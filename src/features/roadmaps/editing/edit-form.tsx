@@ -28,8 +28,12 @@ export interface EditFormProps<F extends string> {
   initial: Record<F, string>
   /** The id of the heading naming what is edited. */
   labelledBy: string
-  /** Confirms the form, with each value trimmed at its ends. */
-  onDone: (values: Record<F, string>) => void
+  /**
+   * Confirms the form, with each value changed from `initial` (trimmed at its ends, as
+   * the comparison is): a field left as it opened is no edit, whatever has been read
+   * since.
+   */
+  onDone: (values: Partial<Record<F, string>>) => void
   onCancel: () => void
 }
 
@@ -48,6 +52,7 @@ export function EditForm<F extends string>({
 }: EditFormProps<F>) {
   const { t } = useTranslation()
   const id = useId()
+  const [opened] = useState(initial)
   const [values, setValues] = useState(initial)
   const [titleMissing, setTitleMissing] = useState(false)
   const titleRef = useRef<HTMLInputElement & HTMLTextAreaElement>(null)
@@ -68,7 +73,13 @@ export function EditForm<F extends string>({
       titleRef.current?.focus()
       return
     }
-    onDone(trimmed)
+    onDone(
+      Object.fromEntries(
+        fields.flatMap(({ name }) =>
+          trimmed[name] === opened[name].trim() ? [] : [[name, trimmed[name]]],
+        ),
+      ) as Partial<Record<F, string>>,
+    )
   }
   const escape = (event: KeyboardEvent<HTMLFormElement>) => {
     if (event.key !== "Escape") return

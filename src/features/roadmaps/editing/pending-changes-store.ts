@@ -5,6 +5,7 @@
  * asks first). Not auth-scoped: Disconnect keeps it unless the Product Lead discards.
  */
 
+import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { RoadmapChanges } from "@/domain/roadmap/roadmap-changes"
 import type { AppErrorKind } from "@/lib/errors"
 import { createExternalStore } from "@/lib/external-store"
@@ -13,6 +14,11 @@ import { countChanges, NO_CHANGES } from "./pending-changes"
 
 /** "save" for a roadmap that is not published, whose changes go nowhere public. */
 export type PublishAction = "publish" | "save"
+
+/** What publishing `roadmap` is called (S11). */
+export function publishAction(roadmap: Roadmap): PublishAction {
+  return roadmap.published ? "publish" : "save"
+}
 
 /** What the last publish of a roadmap came to, as its page says it. */
 export type PublishNotice = { action: PublishAction } & (
@@ -38,6 +44,8 @@ export interface PendingChangesStore {
     roadmapId: string,
     edit: (changes: RoadmapChanges) => RoadmapChanges,
   ) => void
+  /** Forgets a roadmap's changes. */
+  readonly discard: (roadmapId: string) => void
   readonly discardAll: () => void
   /** Marks a publish as under way: `false`, and nothing changes, when one already is. */
   readonly startPublish: (roadmapId: string) => boolean
@@ -73,6 +81,13 @@ export function createPendingChangesStore(): PendingChangesStore {
       if (emptied) updated.delete(roadmapId)
       else updated.set(roadmapId, next)
       patch({ changes: updated })
+    },
+    discard(roadmapId) {
+      const { changes } = store.getSnapshot()
+      if (!changes.has(roadmapId)) return
+      const remaining = new Map(changes)
+      remaining.delete(roadmapId)
+      patch({ changes: remaining })
     },
     discardAll() {
       if (store.getSnapshot().changes.size > 0) patch({ changes: new Map() })

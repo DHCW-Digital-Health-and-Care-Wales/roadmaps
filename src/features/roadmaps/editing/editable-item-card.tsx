@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next"
 import {
   EDITABLE_ITEM_FIELDS,
   itemText,
+  type EditableItemField,
   type ItemChanges,
 } from "@/domain/roadmap/roadmap-changes"
 import { localise } from "@/domain/roadmap/localised-text"
@@ -13,7 +14,8 @@ import { useLanguage } from "@/i18n"
 import { RoadmapItemCard } from "../components/roadmap-item-card"
 import { EditControls } from "./edit-controls"
 import { useEditMode } from "./use-edit-mode"
-import { EditForm, type EditFormField } from "./edit-form"
+import { EditForm } from "./edit-form"
+import { editFormFields } from "./edit-form-fields"
 import {
   applyItemChanges,
   editItem,
@@ -24,7 +26,10 @@ import {
 import { usePendingChangesStore } from "./pending-changes-context"
 
 /** Fields that hold paragraphs; the others are one line unless they already break. */
-const multilineItemFields = new Set(["description", "expectedOutcome"])
+const multilineItemFields: ReadonlySet<EditableItemField> = new Set([
+  "description",
+  "expectedOutcome",
+])
 
 export interface EditableItemCardProps {
   roadmapId: string
@@ -53,17 +58,19 @@ export function EditableItemCard({
   const language = useLanguage()
   const store = usePendingChangesStore()
   const headingId = useId()
-  const mode = useEditMode()
+  const mode = useEditMode<RoadmapItem>()
   const shown = applyItemChanges(item, entry)
   const title = localise(shown.title, language)
 
-  // Each change finds the item's entry afresh, so an edit never builds on a stale one.
+  // Each change finds the item's entry afresh, so an edit never builds on a stale one;
+  // a field's edit is made from the item as the form opened on it.
   const done = (values: ItemValues) => {
+    const opened = mode.opened ?? item
     store.update(roadmapId, (changes) =>
       editItem(
         changes,
         matchItemChanges(items, changes).get(position),
-        item,
+        opened,
         position,
         values,
       ),
@@ -78,16 +85,12 @@ export function EditableItemCard({
     mode.refocus()
   }
 
-  const initial = Object.fromEntries(
-    EDITABLE_ITEM_FIELDS.map((field) => [field, itemText(shown, field)]),
-  ) as Record<(typeof EDITABLE_ITEM_FIELDS)[number], string>
-  const fields: EditFormField<(typeof EDITABLE_ITEM_FIELDS)[number]>[] =
-    EDITABLE_ITEM_FIELDS.map((field) => ({
-      name: field,
-      label: t(`roadmaps.edit.itemFields.${field}`),
-      multiline:
-        multilineItemFields.has(field) || initial[field].includes("\n"),
-    }))
+  const { fields, initial } = editFormFields(
+    EDITABLE_ITEM_FIELDS,
+    (field) => itemText(shown, field),
+    (field) => t(`roadmaps.edit.itemFields.${field}`),
+    multilineItemFields,
+  )
 
   return (
     <RoadmapItemCard
@@ -110,7 +113,9 @@ export function EditableItemCard({
             subject={title}
             changed={entry !== undefined}
             editButton={mode.editButton}
-            onEdit={mode.open}
+            onEdit={() => {
+              mode.open(item)
+            }}
             onUndo={undo}
           />
         )

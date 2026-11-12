@@ -90,7 +90,8 @@ export function editRoadmap(
 
 /**
  * `changes` with an item edited to `values`: `previous` is the item's entry (from
- * {@link matchItemChanges}), `item` and `position` where the item is now.
+ * {@link matchItemChanges}), `item` the item as the form opened on it and `position`
+ * where it is now. An entry keeps the item as first loaded, which a publish checks it by.
  */
 export function editItem(
   changes: RoadmapChanges,
@@ -103,10 +104,9 @@ export function editItem(
     itemText(item, field),
   )
   const others = changes.items.filter((entry) => entry !== previous)
-  return {
-    ...changes,
-    items: isEmpty(fields) ? others : [...others, { item, position, fields }],
-  }
+  if (isEmpty(fields)) return { ...changes, items: others }
+  const loaded = previous?.item ?? item
+  return { ...changes, items: [...others, { item: loaded, position, fields }] }
 }
 
 /** `changes` without the roadmap's own text's. */
@@ -174,8 +174,10 @@ export function reconcileRoadmap(
 
 /**
  * `changes` after a fresh read of the roadmap's items: each entry found follows its item
- * to the read, without the fields the item already holds; an entry not found is kept as
- * it was. Bases stay as they were.
+ * to its place in the read, without the fields the item already holds; an entry not
+ * found is kept as it was. Bases stay as they were, and so does the content an entry
+ * was loaded with, which a publish checks a repeated ID by (ADR-012): the entry only
+ * takes the item's ID if it had none, and the text of each field it drops.
  */
 export function reconcileItems(
   changes: RoadmapChanges,
@@ -188,36 +190,81 @@ export function reconcileItems(
       index,
     ]),
   )
-  return {
-    ...changes,
-    items: changes.items.flatMap((entry): ItemChanges[] => {
-      const position = indexOf.get(entry)
-      const item = position === undefined ? undefined : items[position]
-      if (position === undefined || item === undefined) return [entry]
-      const fields = dropHeld(entry.fields, (field) => itemText(item, field))
-      return isEmpty(fields) ? [] : [{ item, position, fields }]
-    }),
-  }
+  const reconciled = changes.items.flatMap((entry): ItemChanges[] => {
+    const position = indexOf.get(entry)
+    const read = position === undefined ? undefined : items[position]
+    if (position === undefined || read === undefined) return [entry]
+    const fields = dropHeld(entry.fields, (field) => itemText(read, field))
+    if (isEmpty(fields)) return []
+    const id = entry.item.id ?? read.id
+    if (
+      fields === entry.fields &&
+      position === entry.position &&
+      id === entry.item.id
+    ) {
+      return [entry]
+    }
+    const item = changedItemFields(entry)
+      .filter((field) => !(field in fields))
+      .reduce((loaded, field) => withFieldOf(loaded, read, field), {
+        ...entry.item,
+        id,
+      })
+    return [{ item, position, fields }]
+  })
+  return reconciled.length === changes.items.length &&
+    reconciled.every((entry, index) => entry === changes.items[index])
+    ? changes
+    : { ...changes, items: reconciled }
+}
+
+/** `item` with `from`'s `field`, English and Welsh. */
+function withFieldOf(
+  item: RoadmapItem,
+  from: RoadmapItem,
+  field: EditableItemField,
+): RoadmapItem {
+  return { ...item, [field]: from[field] }
+}
+
+/**
+ * `fields` once `sent` is published: each edit still as it was sent is gone; one edited
+ * again since it was sent keeps its value, now from the published text.
+ */
+function settleFields<F extends string>(
+  fields: FieldChanges<F>,
+  sent: FieldChanges<F>,
+): FieldChanges<F> {
+  return Object.fromEntries(
+    (Object.entries(fields) as [F, FieldChange][]).flatMap(
+      ([field, change]) => {
+        const published = sent[field]?.value
+        if (published === undefined) return [[field, change]]
+        if (published === change.value) return []
+        return [[field, { base: published, value: change.value }]]
+      },
+    ),
+  ) as FieldChanges<F>
 }
 
 /**
  * `changes` once `sent` is published: each edit still as it was sent is gone, and any
- * made meanwhile is kept.
+ * made meanwhile is kept, edited from what was published.
  */
 export function settlePublished(
   changes: RoadmapChanges,
   sent: RoadmapChanges,
 ): RoadmapChanges {
   return {
-    roadmap: dropHeld(changes.roadmap, (field) => sent.roadmap[field]?.value),
+    roadmap: settleFields(changes.roadmap, sent.roadmap),
     items: changes.items.flatMap((entry) => {
       const sentEntry = sent.items.find((each) => sameTarget(each, entry))
       if (!sentEntry) return [entry]
-      const fields = dropHeld(
-        entry.fields,
-        (field) => sentEntry.fields[field]?.value,
-      )
-      return isEmpty(fields) ? [] : [{ ...entry, fields }]
+      const fields = settleFields(entry.fields, sentEntry.fields)
+      if (isEmpty(fields)) return []
+      return [
+        { ...entry, item: applyItemChanges(entry.item, sentEntry), fields },
+      ]
     }),
   }
 }
@@ -287,6 +334,38 @@ export function changedRoadmapFields(
   changes: RoadmapChanges | undefined,
 ): EditableRoadmapField[] {
   return EDITABLE_ROADMAP_FIELDS.filter((field) => changes?.roadmap[field])
+}
+
+/** A part of the roadmap with pending changes, and which of its fields they are. */
+export type ChangedPart =
+  | { readonly kind: "roadmap"; readonly fields: EditableRoadmapField[] }
+  | {
+      readonly kind: "item"
+      readonly position: number
+      /** The item as it will read once published. */
+      readonly item: RoadmapItem
+      readonly fields: EditableItemField[]
+    }
+
+/** What a publish changes: the roadmap's own text first, then items in their order. */
+export function changedParts(changes: RoadmapChanges): ChangedPart[] {
+  const roadmapFields = changedRoadmapFields(changes)
+  return [
+    ...(roadmapFields.length > 0
+      ? [{ kind: "roadmap", fields: roadmapFields } as const]
+      : []),
+    ...[...changes.items]
+      .sort((a, b) => a.position - b.position)
+      .map(
+        (entry) =>
+          ({
+            kind: "item",
+            position: entry.position,
+            item: applyItemChanges(entry.item, entry),
+            fields: changedItemFields(entry),
+          }) as const,
+      ),
+  ]
 }
 
 /** An item's fields that are pending, in the form's order. */

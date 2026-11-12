@@ -4,12 +4,7 @@ import { toAppError } from "@/lib/errors"
 import { usePublishRoadmapChanges } from "../hooks/use-publish-roadmap-changes"
 import { countChanges, settlePublished } from "./pending-changes"
 import { usePendingChangesStore } from "./pending-changes-context"
-import type { PublishAction, PublishNotice } from "./pending-changes-store"
-
-/** "save" for a roadmap that is not published, whose changes go nowhere public (S11). */
-export function publishAction(roadmap: Roadmap): PublishAction {
-  return roadmap.published ? "publish" : "save"
-}
+import { publishAction, type PublishNotice } from "./pending-changes-store"
 
 /**
  * Publishes (or saves) the roadmap's pending changes, once: never while a publish of the

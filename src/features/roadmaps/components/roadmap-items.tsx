@@ -9,7 +9,6 @@ import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { EditableItemCard } from "../editing/editable-item-card"
 import { matchItemChanges } from "../editing/pending-changes"
 import { useRoadmapChanges } from "../editing/pending-changes-context"
-
 import {
   groupRoadmapItems,
   type PositionedRoadmapItem,
@@ -124,9 +123,13 @@ function ItemList({
     <ul aria-labelledby={labelledBy} className={itemGridClassName}>
       {placed.map(({ item, position }) => (
         <EditableItemCard
-          // An item keeps its card, and an open form, across a read that moves it.
+          // An item keeps its card, and an open form, across a read that moves it. One
+          // without an ID is known only by where it is and what it holds, so its form
+          // closes when a read puts another item there or changes it (STY-025).
           key={
-            item.id === null ? `position:${String(position)}` : `id:${item.id}`
+            item.id === null
+              ? `position:${String(position)}:${JSON.stringify(item)}`
+              : `id:${item.id}`
           }
           roadmapId={roadmapId}
           items={items}

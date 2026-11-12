@@ -238,6 +238,11 @@ Audited at `8479405`:
 - S15 and a roadmap removed meanwhile (`roadmap-not-found`) both keep every change: the
   first says someone else has changed the roadmap, the second gives the "no longer listed"
   failure. STY-026 replaces both.
+- An item without an ID is found again, as ADR-012 says, by its position and exactly its
+  loaded content. If a co-lead changes another field of such an item while an edit is
+  pending, the edit no longer matches a card: it stays pending, shows nowhere, and a
+  publish reports the item as removed (STY-026 shows it). The item's open form closes
+  when a read puts different content at its position.
 
 ### Contract for STY-026
 
@@ -251,33 +256,41 @@ Audited at `8479405`:
   with an `AppErrorKind`, each with `action: "publish" | "save"`). Read it with
   `usePendingChanges()` or `useRoadmapChanges(roadmapId)`; write through `update(id,
 edit)` with the pure functions of `pending-changes.ts`.
-- **Rules** (`pending-changes.ts`): each `FieldChange` keeps `base`, the text first
-  edited from, which a later Refresh never moves; an edit equal to its base or to the
-  current text is no edit. `matchItemChanges(items, changes)` finds each entry's item
+- **Rules** (`pending-changes.ts`): each `FieldChange` keeps `base`, the text the form
+  opened on (not the text read when Done is pressed), which a later Refresh never moves;
+  a form's Done sends only the fields its Product Lead changed, so a co-lead's change to
+  another field, read while the form was open, is never written back. An edit equal to
+  its base or to the current text is no edit. `matchItemChanges(items, changes)` finds each entry's item
   with STY-023's `findEditedItem`; an entry that matches nothing stays pending and shows
   nowhere (STY-026 shows it). `reconcileRoadmap`/`reconcileItems` run after every
-  successful list or items read and drop each field the data source already holds;
-  `settlePublished(changes, sent)` drops what a publish sent, keeping edits made
-  meanwhile.
+  successful list or items read and drop each field the data source already holds; an
+  entry keeps the item content first loaded (only its ID may be filled in), so a copied
+  row's ID never moves the check to the copy. `settlePublished(changes, sent)` drops what
+  a publish sent, keeping edits made meanwhile, each re-based on the text sent.
+  `changedParts(changes)` lists what changes, roadmap first, then items by position.
 - **Publishing**: `usePublish(roadmap)` sends the roadmap's changes once
   (`startPublish` refuses a second while one is under way; the mutation never retries)
-  and records the outcome as the roadmap's notice. `RoadmapPublishing({ roadmap })`
-  shows the bar, the dialogs and the notice; a `refused` notice is where STY-026's
-  side-by-side review starts.
+  and records the outcome as the roadmap's notice; `publishAction(roadmap)` (in the
+  store module) says whether that is "publish" or "save". `RoadmapPublishing({ roadmap })`
+  shows the bar, `PublishDialog`, `DiscardDialog` and `PublishOutcomeNotice`; a
+  `refused` notice is where STY-026's side-by-side review starts. Publishing, the
+  dialog's confirm included, waits while the session is not connected. Refresh clears
+  an `unconfirmed` or `refused` notice only once both reads succeed.
 - **Disconnect**: `useRequestDisconnect()` (`features/auth/disconnect-request.ts`) is
   what `AuthButton` and `SessionWarning` call; the editing provider supplies it and asks
   keep / discard / cancel while any roadmap has a change; without a provider it
   disconnects at once.
 - **Leave warning**: a `beforeunload` listener, registered only while any change is
   pending.
-- **Copy**: `common.cancel`, `roadmaps.edit.*`, `roadmaps.publish.*` (the list card's
+- **Copy**: `common.cancel`, `common.dismiss` (was `auth.notice.dismiss`, now shared by
+  every dismissible notice through `DismissibleNotice`), `roadmaps.edit.*`, `roadmaps.publish.*` (the list card's
   marker is `roadmaps.publish.marker.*`), `roadmaps.disconnect.*` and
   `roadmaps.waiting.*`.
 
 ### Scenario evidence
 
 Component tests are in `features/roadmaps/pages/roadmap-detail-page-editing.test.tsx`
-(28), with the rules in `editing/pending-changes.test.ts` and
+(32), with the rules in `editing/pending-changes.test.ts` and
 `editing/pending-changes-store.test.ts`; Playwright tests are in
 `tests/e2e/editing.spec.ts`.
 
@@ -286,13 +299,15 @@ Component tests are in `features/roadmaps/pages/roadmap-detail-page-editing.test
 - **S5**: "edits the roadmap's five fields…" and "tags only the block…";
   `edit-roadmap-form.aria.yml`.
 - **S6**: "undoes one item's changes, and discards all only after asking".
-- **S7**: "keeps them across pages and Refresh, marking the roadmap's card"; the store's
-  reconcile tests.
+- **S7**: "keeps them across pages and Refresh, marking the roadmap's card", "leaves
+  alone a co-lead's change, read while a form was open…", "closes the form of an item
+  without an ID…"; the reconcile tests, including a copied ID that became the first row.
 - **S8**: "asks only while changes are pending" (component and E2E, through
   `page.close({ runBeforeUnload: true })`).
 - **S9–S11**: component tests for the dialog, the busy controls and Save; E2E S10 and S11
   assert one `sheets.writes` entry and the spreadsheet's new cell.
-- **S12**: "keeps them, and holds Publish, while the session has expired", "expires the
+- **S12**: "keeps them, and holds Publish, while the session has expired", "cannot
+  publish from an open dialog once the session has expired", "expires the
   session on a 401…", "keeps them when a renewal…".
 - **S13**: E2E with a 403 (the alert is focused, nothing written, the change kept), plus
   component tests for each failure.
@@ -303,12 +318,13 @@ Component tests are in `features/roadmaps/pages/roadmap-detail-page-editing.test
 - **S17**: "edits an unplaced item like any other"; E2E at 375px (no horizontal
   overflow), plus `accessibility.spec.ts` and `focus-indicator.spec.ts`, light and dark.
 - **S18**: "says an unconfirmed write may have landed; Refresh clears the notice and
-  drops what was written".
+  drops what was written", "keeps saying a write may have landed while Refresh cannot
+  read the roadmap".
 
 ### Welsh for review
 
 Every new `cy` string is machine-assisted and needs a fluent review: `common.cancel`
-("Canslo"), `roadmaps.edit.*` (for example "Golygu", "Gorffen", "Dadwneud y
+("Canslo"), `common.dismiss` ("Cau'r neges"), `roadmaps.edit.*` (for example "Golygu", "Gorffen", "Dadwneud y
 newidiadau", "Wedi newid", and field labels ending "(Saesneg)"), `roadmaps.publish.*`
 ("Cyhoeddi'r newidiadau", "Cadw'r newidiadau", "Gwaredu'r cyfan" and the notices),
 `roadmaps.disconnect.*` ("Cadw eich newidiadau?") and `roadmaps.waiting.*`.

@@ -14,7 +14,8 @@ export interface AuthButtonProps {
 
 /**
  * The one auth action for the current state: Connect, Reconnect after expiry, or
- * Disconnect (which may ask first). It waits (busy, still focusable) while sign-in loads or its popup is open.
+ * Disconnect (which may ask first). It waits (busy, still focusable) while sign-in
+ * loads or its popup is open.
  */
 export function AuthButton({ className, variant }: AuthButtonProps) {
   const { t } = useTranslation()

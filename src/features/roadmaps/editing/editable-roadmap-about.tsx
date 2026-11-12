@@ -10,7 +10,8 @@ import {
 import { RoadmapAbout } from "../components/roadmap-about"
 import { EditControls } from "./edit-controls"
 import { useEditMode } from "./use-edit-mode"
-import { EditForm, type EditFormField } from "./edit-form"
+import { EditForm } from "./edit-form"
+import { editFormFields } from "./edit-form-fields"
 import {
   applyRoadmapChanges,
   changedRoadmapFields,
@@ -24,7 +25,10 @@ import {
 } from "./pending-changes-context"
 
 /** Fields that hold paragraphs; the others are one line unless they already break. */
-const multilineRoadmapFields = new Set(["vision", "serviceDescription"])
+const multilineRoadmapFields: ReadonlySet<EditableRoadmapField> = new Set([
+  "vision",
+  "serviceDescription",
+])
 
 export interface EditableRoadmapAboutProps {
   /** The roadmap as last read. */
@@ -39,12 +43,14 @@ export function EditableRoadmapAbout({ roadmap }: EditableRoadmapAboutProps) {
   const { t } = useTranslation()
   const store = usePendingChangesStore()
   const changes = useRoadmapChanges(roadmap.id)
-  const mode = useEditMode()
+  const mode = useEditMode<Roadmap>()
   const shown = applyRoadmapChanges(roadmap, changes)
   const changed = changedRoadmapFields(changes).length > 0
 
+  // A field's edit is made from the roadmap as the form opened on it.
   const done = (values: RoadmapValues) => {
-    store.update(roadmap.id, (current) => editRoadmap(current, roadmap, values))
+    const opened = mode.opened ?? roadmap
+    store.update(roadmap.id, (current) => editRoadmap(current, opened, values))
     mode.close()
   }
   const undo = () => {
@@ -52,16 +58,12 @@ export function EditableRoadmapAbout({ roadmap }: EditableRoadmapAboutProps) {
     mode.refocus()
   }
 
-  const initial = Object.fromEntries(
-    EDITABLE_ROADMAP_FIELDS.map((field) => [field, roadmapText(shown, field)]),
-  ) as Record<EditableRoadmapField, string>
-  const fields: EditFormField<EditableRoadmapField>[] =
-    EDITABLE_ROADMAP_FIELDS.map((field) => ({
-      name: field,
-      label: t(`roadmaps.edit.roadmapFields.${field}`),
-      multiline:
-        multilineRoadmapFields.has(field) || initial[field].includes("\n"),
-    }))
+  const { fields, initial } = editFormFields(
+    EDITABLE_ROADMAP_FIELDS,
+    (field) => roadmapText(shown, field),
+    (field) => t(`roadmaps.edit.roadmapFields.${field}`),
+    multilineRoadmapFields,
+  )
 
   return (
     <RoadmapAbout
@@ -85,7 +87,9 @@ export function EditableRoadmapAbout({ roadmap }: EditableRoadmapAboutProps) {
             subject={t("roadmaps.about.title")}
             changed={changed}
             editButton={mode.editButton}
-            onEdit={mode.open}
+            onEdit={() => {
+              mode.open(roadmap)
+            }}
             onUndo={undo}
           />
         )

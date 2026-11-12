@@ -297,7 +297,8 @@ the Google adapter (MSW, stateful fake applying writes with `applyBatchUpdate`).
   difference refuses both an ID-less and a copied-ID item).
 - **S5**: contract "finds an item without an ID at its position while it holds what was
   loaded", "refuses an item at its position whose Welsh differs, though its English is
-  the pending edit", "treats an item already holding the pending values as published".
+  the pending edit", "treats an item already holding the pending values as published",
+  "treats a repeated publish that clears translated English as published".
 - **S6**: contract "gives every item without an ID a new one, all different";
   `item-id.test.ts` (alphabet, length, uniform sampling); adapter "gives no new ID that a
   skipped row already holds".
@@ -314,13 +315,15 @@ the Google adapter (MSW, stateful fake applying writes with `applyBatchUpdate`).
   (S10)": session ended before the write, cancelled during the reads, published
   regardless once sent, no retry; `use-publish-roadmap-changes.test.tsx` (no retry, a
   401 expires the session); `query-client.test.ts` (mutations report
-  `unauthenticated`).
+  `unauthenticated`, but not once the session they started in has ended).
 - **S11**: `apply-batch-update.test.ts` (applies in order, rejects a bad body whole,
   each violation) and `tests/e2e/sheets-writes.spec.ts` (a write is applied, recorded
   and shown after Refresh; violations recorded).
 - **S12**: contract "when the write's answer is lost": published, `network`,
   unconfirmed on some, unconfirmed when the re-read fails; `publish-plan.test.ts`
   `heldWrites` (an item found by its ID after rows moved; an item gone holds nothing,
-  even when another item now has its place).
+  even when another item now has its place; an item no longer read whose written ID
+  is still in the tab holds some).
 - **D5** (never `Template`): adapter "which tabs it writes (S1)": a roadmap whose tab is
-  `Template` or the index fails with `invalid-data` and sends no write.
+  `Template` or the index, or whose index tab is named `Template`, fails with
+  `invalid-data` and sends no write.

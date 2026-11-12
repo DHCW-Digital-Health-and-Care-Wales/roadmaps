@@ -125,6 +125,8 @@ Apply every general lens below, then read each area's lenses the diff reaches:
   mutation.
 - `references/ui.md`: a route, a component, copy, styles or the base path.
 
+General lenses:
+
 - **Every path to an invariant.** For each invariant the change relies on or
   alters (a layer boundary, the auth-scoped key root, the `enabled` gate, the
   token-in-memory rule, a feature's error mapping), enumerate every path that

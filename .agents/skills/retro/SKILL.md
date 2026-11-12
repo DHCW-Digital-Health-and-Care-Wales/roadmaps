@@ -45,14 +45,10 @@ Trace each piece of friction to its cause, checking these categories:
   sharpen a general lens, a class of defect that recurs across many kinds of
   diff; one review's miss is evidence for a lens, never a check of its own.
 - **Agent guides**: would a rule have prevented the friction? Give it the
-  first home that holds it: a failing check (above), a comment at the one code
-  site, `docs/backlog/<epic-slug>/delivery-notes.md` for a rule that holds
-  only while that epic is in delivery, then the `AGENTS.md` along the changed
-  path's directory ancestry only for a rule that passes the authoring guide's
-  recur bar, replacing or sharpening a line there. A rule the root `AGENTS.md`
-  cannot fit within its word budget moves a line down to its narrowest home
-  rather than displacing a live one. Most retros end with no guide edit. Delete any guide line
-  the session showed stale, wrong or ignored.
+  first rung that holds it on the authoring guide's _Where it goes_ ladder; a
+  guide line must pass its recur bar and replace or sharpen a line there. Most
+  retros end with no guide edit. Delete any guide line the session showed
+  stale, wrong or ignored.
 - **Tool economy**: were tool calls expensive or noisy (large dumps, repeated
   polling, work a cheaper delegated worker should have done)?
 - **No-ops**: which instructions did not change the agent's behaviour?

@@ -4,7 +4,8 @@ Read the `writing-for-agents` skill before changing agent guides or skills.
 This policy governs `AGENTS.md` (and the `CLAUDE.md` that only imports it),
 agent definitions under `.claude/agents/` and skill instructions under
 `.agents/skills/`. `build/agent-guides.test.ts` checks the root guide's size
-and that no guide cites a record ID; review judges the rest.
+and that no `AGENTS.md` outside `docs/` cites a record ID; review judges the
+rest.
 
 Root guides are read at onboarding; nested guides and skills are read when
 their scope or trigger applies. Each extra line consumes attention on every
@@ -90,11 +91,23 @@ the code is.
 
 ## Where it goes
 
-The narrowest scope that covers it: a rule about the E2E fakes belongs in
-`tests/e2e/AGENTS.md`, not the root guide. Put a rule in the root only when it
-applies across most of `src/`. Read the `AGENTS.md` along each changed path's
-directory ancestry, including referenced cross-area conventions; explicit
-conditional navigation avoids loading unrelated rules.
+This ladder is the one list of homes; skills, templates and the budget test
+point here. Give a learning the first rung that holds it:
+
+1. **A failing check** (a type, a lint rule, a test) when the slip is
+   mechanical; its failure teaches the rule when it applies.
+2. **A comment at the code site** when it matters to whoever touches that code.
+3. **The epic's `delivery-notes.md`** when it holds only while that epic is in
+   delivery (`docs/AGENTS.md`).
+4. **A skill or one of its references** when it governs one workflow, such as a
+   review lens or a copy rule.
+5. **The `AGENTS.md` nearest the code** that covers it: a rule about the E2E
+   fakes belongs in `tests/e2e/AGENTS.md`. The root guide takes only a rule
+   that applies across most work.
+
+Read the `AGENTS.md` along each changed path's directory ancestry, including
+referenced cross-area conventions; explicit conditional navigation avoids
+loading unrelated rules.
 
 ## How to write it
 
@@ -116,8 +129,7 @@ Keep each guide and each `SKILL.md` as short as it can be while still stopping
 the mistake it exists for. The root `AGENTS.md` is read on every task, twice
 in runtimes that also load `CLAUDE.md`, so it has a budget of 1,200 words,
 enforced by `build/agent-guides.test.ts`. To make room, move a line down to its
-narrowest home (a check, a code comment, a nested guide, a skill reference, an
-epic's `delivery-notes.md`), or delete one only when it is stale or a no-op;
+narrowest home (_Where it goes_), or delete one only when it is stale or a no-op;
 never cut a live rule to fit. When nothing can move, ask the owner, giving the
 rule and why no line can make way; raising the budget is their call. Material
 only some tasks need belongs behind a pointer, in a nested guide or a skill's

@@ -6,19 +6,19 @@ spec or plan outside `docs/`.
 
 ## Layout
 
-| Path                  | What goes in it                                                                    |
-| --------------------- | ---------------------------------------------------------------------------------- |
-| `GLOSSARY.md`         | The domain vocabulary (`.agents/skills/domain-modeling/GLOSSARY-FORMAT.md`)        |
-| `adr/`                | One decision per `ADR-<nnn>-<kebab-title>.md`, indexed in `adr/README.md`          |
-| `backlog/README.md`   | The index: epics with status, then standalone chores and defects                   |
-| `backlog/<epic>/`     | An epic `EPC-<nnn>-<kebab-title>/`: its `README.md` and live stories `STY-<nnn>-…` |
-| `backlog/chores/`     | Live chores `CHO-<nnn>-…`: work with no user-facing change                         |
-| `backlog/defects/`    | Live defects `DEF-<nnn>-…`                                                         |
-| `backlog/_archive/`   | Terminal records, mirroring the live tree (`<epic>/`, `chores/`, `defects/`)       |
-| `backlog/_templates/` | Templates for every record type, and the status lifecycle                          |
-| `backlog/personas/`   | Who the product is for, one file per persona; read before UX, copy or a new story  |
-| `analysis/`           | Investigations written to reach a decision; `delivery-runs/` has run notes         |
-| `operations/`         | Runbooks and authoring policy for what a person or agent does by hand              |
+| Path                  | What goes in it                                                                                  |
+| --------------------- | ------------------------------------------------------------------------------------------------ |
+| `GLOSSARY.md`         | The domain vocabulary (`.agents/skills/domain-modeling/GLOSSARY-FORMAT.md`)                      |
+| `adr/`                | One decision per `ADR-<nnn>-<kebab-title>.md`, indexed in `adr/README.md`                        |
+| `backlog/README.md`   | The index: epics with status, then standalone chores and defects                                 |
+| `backlog/<epic>/`     | An epic `EPC-<nnn>-<kebab-title>/`: `README.md`, `delivery-notes.md`, live stories `STY-<nnn>-…` |
+| `backlog/chores/`     | Live chores `CHO-<nnn>-…`: work with no user-facing change                                       |
+| `backlog/defects/`    | Live defects `DEF-<nnn>-…`                                                                       |
+| `backlog/_archive/`   | Terminal records, mirroring the live tree (`<epic>/`, `chores/`, `defects/`)                     |
+| `backlog/_templates/` | Templates for every record type, and the status lifecycle                                        |
+| `backlog/personas/`   | Who the product is for, one file per persona; read before UX, copy or a new story                |
+| `analysis/`           | Investigations written to reach a decision; `delivery-runs/` has run notes                       |
+| `operations/`         | Runbooks and authoring policy for what a person or agent does by hand                            |
 
 Put nothing else in the root of `docs/`. A record's ID is a prefix, a dash and
 three digits: `EPC` epic, `STY` story, `DEF` defect, `CHO` chore (e.g.
@@ -64,8 +64,9 @@ the next free number across the live tree, `_archive/` and open PRs' files
   with such a note creates it; every delivery agent and reviewer on the epic
   reads it. Keep each note a short bullet, current, not a story's history
   (that is the record's Delivery and its PR). When the epic closes, move each
-  note that holds repo-wide to its narrowest home (a check, a code comment, a
-  nested `AGENTS.md`, a skill), then archive the file with the epic.
+  note that holds repo-wide to its narrowest home
+  (`docs/operations/authoring-agent-instructions.md`, _Where it goes_), then
+  archive the file with the epic, in the delivery that archives it.
 - The bootstrap stories in `_archive/EPC-001-bootstrap/` predate the templates and keep
   their legacy format.
 

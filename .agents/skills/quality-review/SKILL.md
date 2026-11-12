@@ -41,7 +41,8 @@ report in the conversation only.
 1. **Diff and rules.** Pin the scope as `code-review`'s _Pin the scope_ step
    does, on the same snapshot. Read the root `AGENTS.md` and the `AGENTS.md`
    along each changed path's directory ancestry (`tests/e2e/AGENTS.md`,
-   `docs/AGENTS.md`), plus the binding ADRs; cite the rule by file and line,
+   `docs/AGENTS.md`), the epic's `delivery-notes.md` when the change belongs
+   to an epic, and the binding ADRs; cite the rule by file and line,
    never from memory. A docs-only diff is reviewed against `docs/AGENTS.md`
    (the records guide). Repo rules outrank generic advice.
 2. **Context.** Open the story, defect or chore (`docs/backlog/`) the change

@@ -2,7 +2,8 @@
 
 Rules for every agent in this repository. Then read `docs/GLOSSARY.md` for domain
 terms, the ADRs in `docs/adr/` that bind the area you change, and the `AGENTS.md`
-along each changed path.
+along the directory ancestry of each path you change and of its affected callers and
+tests.
 
 ## What this is
 
@@ -55,8 +56,7 @@ Rules no lint catches:
 - `pnpm test:e2e` builds and serves on port 4173, reusing a server already there
   locally; install the browser once per Playwright version with
   `pnpm exec playwright install --with-deps chromium`.
-- Before a PR: `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test`, plus
-  `pnpm test:e2e` when behaviour, copy or the look changes.
+- Before a PR, run the full gate in implement-story's `references/validation.md`.
 - In a shared checkout, or a scratch directory whose `node_modules` links to it, run
   binaries as `./node_modules/.bin/<tool>`: `pnpm exec` there can reinstall and prune
   the shared `node_modules`.
@@ -86,29 +86,27 @@ Rules no lint catches:
 
 ## Working conventions
 
-- Read the `AGENTS.md` along each path's directory ancestry before changing it, and
-  those of affected callers and tests. A `CLAUDE.md` beside each guide only imports it
-  (`@AGENTS.md`); add one with each new nested guide.
+- A `CLAUDE.md` beside each guide only imports it (`@AGENTS.md`); add one with each
+  new nested guide.
 - Use the existing isolated checkout and preserve unrelated work; create a worktree
   only when asked.
 - Within a task's scope, prefer the cleaner structure (refactor, rename, extract) over
   the smallest diff. Leave each touched file tidier, in proportion; record any other
   actionable finding in the backlog (`docs/AGENTS.md`), since a PR note is not a record.
-- Continue within the user's authorised scope; ask only for a decision or access that
-  blocks useful work.
 
 ## Delivery
 
 - Deliver a story, defect or chore with the `implement-story` skill, several with
   `orchestrate`; any other change that ends in a PR follows implement-story's steps 3–6.
-  Its `references/delegation.md` sets the review lanes and rounds every PR takes.
+  Read its `references/delegation.md` before delegating any work; it sets the review
+  lanes and rounds each PR takes.
 - A PR is raised and left for the owner; babysit or merge it only when asked.
 - A change to visible UI publishes before/after screenshots (implement-story's
   `references/screenshots.md`).
-- What a delivery learned goes to its narrowest home: a failing check, a comment at the
-  code site, the record's Delivery section, the epic's `delivery-notes.md` while the
-  epic is in delivery, or a nested guide. This file holds only rules that recur across
-  most work.
+- What a delivery learned goes to its narrowest home, by the ladder in
+  `docs/operations/authoring-agent-instructions.md` (_Where it goes_); its history goes
+  in the record's Delivery section. This file holds only rules that recur across most
+  work.
 - Records, ADRs and analyses follow `docs/AGENTS.md`. Before editing an agent guide, a
   skill or an agent definition, read the `writing-for-agents` skill and
   `docs/operations/authoring-agent-instructions.md`.

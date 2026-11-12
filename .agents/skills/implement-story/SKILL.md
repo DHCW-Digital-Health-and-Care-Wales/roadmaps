@@ -138,13 +138,12 @@ failures where possible; never weaken checks or disable assertions to finish.
 
 Write the record's Delivery section (departures, the contract for dependents,
 each scenario's evidence) and tick its acceptance criteria. Give each learning
-its narrowest home: a check or lint rule, a comment at the code site, the
-`AGENTS.md` nearest the code (a new one for a new area), or, when it holds
-only for this epic, its `delivery-notes.md` (`docs/AGENTS.md`). The root
-`AGENTS.md` takes only a rule every session needs. When
+its narrowest home by the ladder in
+`docs/operations/authoring-agent-instructions.md` (_Where it goes_). When
 implementation and verification are complete, set Status `Done`, move the
 record to `docs/backlog/_archive/<epic>/` and mark its epic row, noting that it
-is delivered in this PR and awaits merge. A record delivered in part or handed
+is delivered in this PR and awaits merge. When that closes the epic, sweep its
+`delivery-notes.md` as `docs/AGENTS.md` says before archiving the epic. A record delivered in part or handed
 back blocked returns to `Proposed` (or `Needs grilling`), with a Decisions entry
 naming what remains. Commit only intended files with a conventional commit
 message (`feat(scope): …`); preserve unrelated work and generated outputs

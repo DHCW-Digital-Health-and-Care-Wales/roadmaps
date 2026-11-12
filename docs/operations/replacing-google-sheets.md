@@ -26,7 +26,8 @@ doc comments first, since they are the contract.
    (`src/domain/roadmap/testing/roadmap-repository-contract.ts`) against an MSW fake of
    the API, then add tests for each status mapping. `withRoadmaps(roadmaps, items?,
 options?)` seeds the fake with roadmaps, their items, and how a publish's write
-   behaves (`ContractWrite`: fails, or its answer is lost); `failing()` fails every
+   behaves (`ContractWrite`: fails, or its answer is lost) or whose items cannot be
+   read (`unreadableItems`); `failing()` fails every
    request. The Google adapter's test is the worked example.
 3. **Config.** Add e.g. `VITE_ROADMAPS_API_URL` to the Zod schema in
    `src/app/config.ts`, `.env.example` and `.env.production`.

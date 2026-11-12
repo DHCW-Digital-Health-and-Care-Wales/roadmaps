@@ -12,6 +12,7 @@ import { ChangedTag } from "../editing/edit-controls"
 import { countChanges } from "../editing/pending-changes"
 import { useRoadmapChanges } from "../editing/pending-changes-context"
 import { publishAction } from "../editing/pending-changes-store"
+import { ListMismatchBadges } from "./list-mismatch-badges"
 import { NotPublishedBadge } from "./not-published-badge"
 import { RoadmapSwatch } from "./roadmap-swatch"
 
@@ -24,8 +25,9 @@ export interface RoadmapCardProps {
  * underlined link-blue title and a chevron. The whole card is one link to its detail page.
  * The link is named by the title alone; what else the card shows is its description for
  * screen readers.
- * Only what the roadmap has is shown, no empty labels, and a marker while it has
- * pending changes (STY-025 S7). Long titles wrap to two lines and the summary to three;
+ * Only what the roadmap has is shown, no empty labels, a badge while it is out of step
+ * with the family or category list (STY-027 S4, S8), and a marker while it has pending
+ * changes (STY-025 S7). Long titles wrap to two lines and the summary to three;
  * the link's tooltip keeps the full title.
  */
 export function RoadmapCard({ roadmap }: RoadmapCardProps) {
@@ -35,6 +37,7 @@ export function RoadmapCard({ roadmap }: RoadmapCardProps) {
   const changed = countChanges(useRoadmapChanges(roadmap.id)) > 0
 
   const title = localise(roadmap.title, language)
+  const category = roadmap.category && localise(roadmap.category, language)
   const status = roadmap.statusLabel && localise(roadmap.statusLabel, language)
   const summary =
     roadmap.serviceDescription && localise(roadmap.serviceDescription, language)
@@ -45,8 +48,10 @@ export function RoadmapCard({ roadmap }: RoadmapCardProps) {
   // Which parts the roadmap has. Each is its own description, so a screen reader pauses
   // between them; the keys are the suffixes of the ids the JSX gives the parts.
   const has = {
-    category: roadmap.category !== null,
+    category: category !== null,
     status: status !== null,
+    outOfStep: roadmap.outOfStep,
+    familyNotListed: roadmap.familyNotListed,
     notPublished: !roadmap.published,
     changes: changed,
     summary: summary !== null,
@@ -54,7 +59,12 @@ export function RoadmapCard({ roadmap }: RoadmapCardProps) {
     updated: updated !== null,
   }
   const hasHeader =
-    has.category || has.status || has.notPublished || has.changes
+    has.category ||
+    has.status ||
+    has.outOfStep ||
+    has.familyNotListed ||
+    has.notPublished ||
+    has.changes
   const hasFooter = has.productLead || has.updated
   const describedBy = Object.entries(has)
     .filter(([, present]) => present)
@@ -81,16 +91,15 @@ export function RoadmapCard({ roadmap }: RoadmapCardProps) {
         <div aria-hidden="true" className="flex flex-1 flex-col gap-2">
           {hasHeader && (
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-body-xs text-muted-foreground">
-              {roadmap.category !== null && (
-                <span id={`${id}-category`}>
-                  {t(`roadmaps.categories.${roadmap.category}`)}
-                </span>
+              {category !== null && (
+                <span id={`${id}-category`}>{category}</span>
               )}
               {status !== null && (
                 <Badge id={`${id}-status`} variant="neutral">
                   {status}
                 </Badge>
               )}
+              <ListMismatchBadges roadmap={roadmap} id={id} />
               {!roadmap.published && (
                 <NotPublishedBadge id={`${id}-notPublished`} />
               )}

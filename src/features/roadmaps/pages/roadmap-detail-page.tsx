@@ -13,6 +13,7 @@ import { useLanguage } from "@/i18n"
 import type { AppError } from "@/lib/errors"
 import { cn } from "@/lib/utils"
 
+import { ListMismatchBadges } from "../components/list-mismatch-badges"
 import { NotPublishedBadge } from "../components/not-published-badge"
 import { RefreshButton } from "../components/refresh-button"
 import { RoadmapItems, RoadmapItemsSkeleton } from "../components/roadmap-items"
@@ -148,7 +149,8 @@ interface RoadmapViewProps {
 }
 
 /**
- * A listed roadmap: its title, a Not published badge when it is not public (D8), a
+ * A listed roadmap: its title, a Not published badge when it is not public (D8), a badge
+ * when it is out of step with the family or category list (STY-027 S4, S8), a
  * Refresh for the roadmap and its items (D7), its pending changes with Publish, what it
  * is about, then its items, each showing its pending English (STY-025). The title stays
  * whatever happens to the items.
@@ -200,6 +202,7 @@ function RoadmapView({
               {localise(applyRoadmapChanges(roadmap, changes).title, language)}
             </h1>
             {!roadmap.published && <NotPublishedBadge />}
+            <ListMismatchBadges roadmap={roadmap} />
             {changes?.roadmap.title && <ChangedTag />}
           </div>
           <div className="shrink-0">

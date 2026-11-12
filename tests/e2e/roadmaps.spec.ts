@@ -307,3 +307,129 @@ test.describe("on a phone", () => {
     expect(badge?.width).toBeLessThanOrEqual(box?.width ?? 0)
   })
 })
+
+/**
+ * The example spreadsheet with a family and a category list (ADR-013), and a fourth
+ * roadmap whose family the list doesn't have. Product A's own colour and empty Welsh
+ * family differ from Single Record's, so it is out of step; Product B's cells match.
+ */
+function withLists() {
+  return [
+    ...withRoadmapIndex([
+      ...EXAMPLE_INDEX_ROWS,
+      roadmapRow({
+        Sheet: "ProductD",
+        Enabled: "Yes",
+        Title: "Product D roadmap",
+        Family: "Single Recrod",
+      }),
+    ]),
+    {
+      title: "Families",
+      rows: [
+        ["ID", "Name", "Name (cy)", "Colour"],
+        ["fc29g5b9", "Single Record", "Cofnod Sengl", "#12a3c9"],
+        [
+          "vdkxj63m",
+          "Medicines & Diagnostics",
+          "Meddyginiaethau a Diagnosteg",
+          "#006747",
+        ],
+      ],
+    },
+    {
+      title: "Categories",
+      rows: [
+        ["ID", "Name", "Name (cy)"],
+        [
+          "khzpchkh",
+          "GP & Community Services",
+          "Meddygon Teulu a Gwasanaethau Cymunedol",
+        ],
+        [
+          "w7vrv5kn",
+          "Tests, Scans & Results",
+          "Profion, Sganiau a Chanlyniadau",
+        ],
+      ],
+    },
+  ]
+}
+
+test("families and categories come from their lists, flagging a roadmap out of step with them (STY-027 S2, S4, S5, S8)", async ({
+  page,
+  sheets,
+}) => {
+  sheets.spreadsheet = withLists()
+  await page.goto("./")
+  await connect(page)
+
+  const main = page.getByRole("main")
+  await expect(main.getByRole("heading", { level: 2 })).toHaveText([
+    "Medicines & Diagnostics",
+    "Single Record",
+    "Single Recrod",
+    "No product family",
+  ])
+  expect([...sheets.reads].sort()).toEqual(
+    [
+      "metadata",
+      "values:Categories",
+      "values:Families",
+      "values:Roadmaps",
+    ].sort(),
+  )
+
+  const productA = card(page, "Product A roadmap")
+  await expect(productA).toContainText("Doesn't match its family or category")
+  // The family's colour, not the row's own.
+  await expect(productA.locator("span[style]")).toHaveCSS(
+    "background-color",
+    "rgb(18, 163, 201)",
+  )
+  await expect(card(page, "Product D roadmap")).toContainText(
+    "Family isn't listed",
+  )
+  for (const name of ["Product B roadmap", "Product C roadmap"]) {
+    await expect(card(page, name)).not.toContainText(/match|listed/)
+  }
+
+  await productA.getByRole("link").click()
+  await expect(
+    main.getByRole("heading", { level: 1, name: "Product A roadmap" }),
+  ).toBeVisible()
+  await expect(
+    main.getByText("Doesn't match its family or category"),
+  ).toBeVisible()
+})
+
+test("a family and category read their Welsh names from the lists (STY-027 S5)", async ({
+  page,
+  sheets,
+}) => {
+  sheets.spreadsheet = withLists()
+  await useLanguage(page, "cy")
+  await page.goto("./")
+  await page
+    .getByRole("main")
+    .getByRole("button", { name: "Cysylltu â Google" })
+    .click()
+
+  const main = page.getByRole("main")
+  await expect(main.getByRole("heading", { level: 2 })).toHaveText([
+    "Cofnod Sengl",
+    "Meddyginiaethau a Diagnosteg",
+    "Single Recrod",
+    "Dim teulu cynnyrch",
+  ])
+  const productA = card(page, "Product A roadmap")
+  await expect(productA).toContainText(
+    "Meddygon Teulu a Gwasanaethau Cymunedol",
+  )
+  await expect(productA).toContainText(
+    "Ddim yn cyfateb i'w deulu na'i gategori",
+  )
+  await expect(card(page, "Product D roadmap")).toContainText(
+    "Teulu heb ei restru",
+  )
+})

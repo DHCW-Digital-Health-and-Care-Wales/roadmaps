@@ -13,7 +13,10 @@ const connected: AuthState = {
 
 /** The example roadmaps (`tests/fixtures/sheets/Roadmaps.csv`) as the app reads them. */
 const productA = createTestRoadmap("producta", "Product A roadmap", {
-  category: "gp-community-services",
+  category: {
+    en: "GP & Community Services",
+    cy: "Meddygon Teulu a Gwasanaethau Cymunedol",
+  },
   family: { en: "Single Record", cy: "" },
   statusLabel: { en: "Beta", cy: "" },
   productLead: "Alex Jones",
@@ -37,7 +40,10 @@ const productB = createTestRoadmap("productb", "Product B roadmap", {
 })
 const productC = createTestRoadmap("productc", "Product C roadmap", {
   published: false,
-  category: "tests-scans-results",
+  category: {
+    en: "Tests, Scans & Results",
+    cy: "Profion, Sganiau a Chanlyniadau",
+  },
   statusLabel: { en: "Alpha", cy: "" },
   productLead: "Sam Evans",
   lastUpdated: "2026-10-01",
@@ -167,6 +173,41 @@ describe("RoadmapCard", () => {
     expect(
       within(cardOf(c)).getByText("Profion, Sganiau a Chanlyniadau"),
     ).toBeInTheDocument()
+  })
+
+  it("flags a roadmap out of step with its family or category, or whose family isn't listed, and no other (STY-027 S4, S8)", async () => {
+    const main = await renderCards([
+      { ...productA, outOfStep: true },
+      { ...productB, familyNotListed: true },
+      productC,
+    ])
+
+    const a = main.getByRole("link", { name: "Product A roadmap" })
+    expect(a).toHaveAccessibleDescription(
+      "GP & Community Services Beta Doesn't match its family or category " +
+        "What Product A does and who it helps. Product lead: Alex Jones Updated 1 October 2026",
+    )
+    const b = main.getByRole("link", { name: "Product B roadmap" })
+    expect(
+      within(cardOf(b)).getByText("Family isn't listed"),
+    ).toBeInTheDocument()
+    const c = main.getByRole("link", { name: "Product C roadmap" })
+    expect(cardOf(c)).not.toHaveTextContent(/match|listed/)
+  })
+
+  it("flags in Welsh in Cymraeg (STY-027 S4, S8)", async () => {
+    const main = await renderCards(
+      [
+        { ...productA, outOfStep: true },
+        { ...productB, familyNotListed: true },
+      ],
+      "cy",
+    )
+
+    expect(
+      main.getByText("Ddim yn cyfateb i'w deulu na'i gategori"),
+    ).toBeInTheDocument()
+    expect(main.getByText("Teulu heb ei restru")).toBeInTheDocument()
   })
 
   it("shows a product lead's name as written, even with markup or nesting syntax in it", async () => {

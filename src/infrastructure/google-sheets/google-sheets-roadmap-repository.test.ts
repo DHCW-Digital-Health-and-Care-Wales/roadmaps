@@ -2,10 +2,13 @@ import { HttpResponse } from "msw"
 import { http } from "msw/http"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
+import type { Category } from "@/domain/roadmap/category"
+import type { Family } from "@/domain/roadmap/family"
 import type { LocalisedText } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { CO_LEAD_VALUE } from "@/domain/roadmap/testing/contract-write"
+import { categoriesOf, familiesOf } from "@/domain/roadmap/testing/linked-lists"
 import {
   type ContractOptions,
   describeRoadmapRepositoryContract,
@@ -24,10 +27,7 @@ import {
 } from "../../../tests/fixtures/sheets/apply-batch-update"
 import { parseCsv } from "../../../tests/fixtures/sheets/parse-csv"
 import { GoogleSheetsRoadmapRepository } from "./google-sheets-roadmap-repository"
-import {
-  CATEGORY_SHEET_VALUES,
-  parseRoadmapIndex,
-} from "./roadmap-index-parser"
+import { parseRoadmapIndex } from "./roadmap-index-parser"
 import { parseRoadmapTab } from "./roadmap-tab-parser"
 import { createSheetsClient, type SheetsClient } from "./sheets-client"
 
@@ -183,11 +183,13 @@ function indexRowsFor(roadmaps: readonly Roadmap[]): string[][] {
       "Vision (cy)",
       "Service description",
       "Service description (cy)",
+      "Family ID",
+      "Category ID",
     ],
     ...roadmaps.map((roadmap) => [
       roadmap.id,
       roadmap.published ? "Yes" : "No",
-      roadmap.category ? CATEGORY_SHEET_VALUES[roadmap.category] : "",
+      roadmap.category?.en ?? "",
       roadmap.productLead ?? "",
       roadmap.lastUpdated ?? "",
       roadmap.colour ?? "",
@@ -196,7 +198,25 @@ function indexRowsFor(roadmaps: readonly Roadmap[]): string[][] {
       ...text(roadmap.statusLabel),
       ...text(roadmap.vision),
       ...text(roadmap.serviceDescription),
+      roadmap.familyId ?? "",
+      roadmap.categoryId ?? "",
     ]),
+  ]
+}
+
+/** A `Families` tab holding exactly these families (ADR-013). */
+function familyRowsFor(families: readonly Family[]): string[][] {
+  return [
+    ["ID", "Name", "Name (cy)", "Colour"],
+    ...families.map(({ id, name, colour }) => [id, name.en, name.cy, colour]),
+  ]
+}
+
+/** A `Categories` tab holding exactly these categories (ADR-013). */
+function categoryRowsFor(categories: readonly Category[]): string[][] {
+  return [
+    ["ID", "Name", "Name (cy)"],
+    ...categories.map(({ id, name }) => [id, name.en, name.cy]),
   ]
 }
 
@@ -368,7 +388,17 @@ function overwriteFirstValue(tabs: readonly FakeTab[], body: unknown) {
 }
 
 describeRoadmapRepositoryContract("GoogleSheetsRoadmapRepository", {
-  withRoadmaps(roadmaps, items = {}, { write, unreadableItems = [] } = {}) {
+  withRoadmaps(
+    roadmaps,
+    items = {},
+    {
+      write,
+      unreadableItems = [],
+      families = familiesOf(roadmaps),
+      categories = categoriesOf(roadmaps),
+    } = {},
+  ) {
+    const lastIndex = roadmaps.length
     serveStatefulSpreadsheet(
       [
         gridTab("Roadmaps", indexRowsFor(roadmaps), 0),
@@ -377,6 +407,19 @@ describeRoadmapRepositoryContract("GoogleSheetsRoadmapRepository", {
             ? []
             : [gridTab(id, tabRowsFor(items[id] ?? []), (i + 1) * 10, i + 1)],
         ),
+        ...(families === null
+          ? []
+          : [gridTab("Families", familyRowsFor(families), 1, lastIndex + 1)]),
+        ...(categories === null
+          ? []
+          : [
+              gridTab(
+                "Categories",
+                categoryRowsFor(categories),
+                2,
+                lastIndex + 2,
+              ),
+            ]),
       ],
       { write },
     )
@@ -458,6 +501,86 @@ describe("GoogleSheetsRoadmapRepository", () => {
         httpRepository().listRoadmaps({ signal: controller.signal }),
       ).rejects.toBe(reason)
       expect(requests).toHaveLength(1)
+    })
+  })
+
+  describe("the family and category lists (STY-027)", () => {
+    const LIST_TABS: readonly Tab[] = [
+      ...EXAMPLE_TABS,
+      { title: "Families", index: 4 },
+      { title: "Categories", index: 5, hidden: true },
+    ]
+    const FAMILY_ROWS = [
+      ["ID", "Name", "Name (cy)", "Colour"],
+      ["fc29g5b9", "Single Record", "Cofnod Sengl", "#12A3C9"],
+    ]
+    const CATEGORY_ROWS = [
+      ["ID", "Name", "Name (cy)"],
+      ["khzpchkh", "GP & Community Services", "Meddygon Teulu"],
+    ]
+    const serveLists = (tabs = LIST_TABS) =>
+      serveSpreadsheet({
+        tabs,
+        tabValues: {
+          Families: { values: FAMILY_ROWS },
+          Categories: { values: CATEGORY_ROWS },
+        },
+      })
+
+    it("reads both list tabs alongside the index, and links each roadmap to them (S2, S5)", async () => {
+      const requests = serveLists()
+
+      const [productA] = await httpRepository().listRoadmaps()
+
+      expect(requests.map((request) => tabTitleOf(request)).sort()).toEqual(
+        ["", "Categories", "Families", "Roadmaps"].sort(),
+      )
+      for (const request of requests.slice(1)) {
+        expect([...new URL(request.url).searchParams]).toEqual(VALUES_PARAMS)
+      }
+      expect(productA).toMatchObject({
+        family: { en: "Single Record", cy: "Cofnod Sengl" },
+        familyId: "fc29g5b9",
+        colour: "#12a3c9",
+        category: { en: "GP & Community Services", cy: "Meddygon Teulu" },
+        categoryId: "khzpchkh",
+        outOfStep: true,
+      })
+    })
+
+    it("lists each from the tab list and its own tab only", async () => {
+      const requests = serveLists()
+
+      await expect(httpRepository().listFamilies()).resolves.toStrictEqual([
+        {
+          id: "fc29g5b9",
+          name: { en: "Single Record", cy: "Cofnod Sengl" },
+          colour: "#12a3c9",
+        },
+      ])
+      await expect(httpRepository().listCategories()).resolves.toStrictEqual([
+        {
+          id: "khzpchkh",
+          name: { en: "GP & Community Services", cy: "Meddygon Teulu" },
+        },
+      ])
+      expect(requests.map((request) => tabTitleOf(request))).toEqual([
+        "",
+        "Families",
+        "",
+        "Categories",
+      ])
+    })
+
+    it("reads no list from a missing tab, or from the first tab (S6)", async () => {
+      const requests = serveLists([
+        { title: "Families" },
+        ...EXAMPLE_TABS.slice(1),
+      ])
+
+      await expect(httpRepository().listFamilies()).resolves.toBeNull()
+      await expect(httpRepository().listCategories()).resolves.toBeNull()
+      expect(requests.map((request) => tabTitleOf(request))).toEqual(["", ""])
     })
   })
 

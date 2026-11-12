@@ -668,6 +668,43 @@ describe("RoadmapDetailPage items", () => {
     })
   })
 
+  it("badges a roadmap out of step with its lists beside its title, in English and Welsh (STY-027 S4, S8)", async () => {
+    const flagged = [
+      createTestRoadmap("producta", "Product A roadmap", {
+        outOfStep: true,
+        familyNotListed: true,
+      }),
+      ...roadmaps.slice(1),
+    ]
+    const { unmount } = await renderWithProviders({
+      path: "/roadmaps/producta",
+      authState: connected,
+      roadmaps: flagged,
+      roadmapItems: { producta: productAItems },
+    })
+
+    const title = await main().findByRole("heading", {
+      level: 1,
+      name: "Product A roadmap",
+    })
+    expect(title.parentElement).toHaveTextContent(
+      /^Product A roadmapDoesn't match its family or categoryFamily isn't listed$/,
+    )
+    unmount()
+
+    await renderWithProviders({
+      path: "/roadmaps/producta",
+      authState: connected,
+      roadmaps: flagged,
+      roadmapItems: { producta: productAItems },
+      language: "cy",
+    })
+    expect(
+      await main().findByText("Ddim yn cyfateb i'w deulu na'i gategori"),
+    ).toBeInTheDocument()
+    expect(main().getByText("Teulu heb ei restru")).toBeInTheDocument()
+  })
+
   it("says a roadmap removed since the list loaded is not found (S16)", async () => {
     const listRoadmaps = vi
       .fn<RoadmapRepository["listRoadmaps"]>()
@@ -683,6 +720,8 @@ describe("RoadmapDetailPage items", () => {
         listRoadmaps,
         listRoadmapItems,
         publishRoadmapChanges: vi.fn(),
+        listFamilies: vi.fn(),
+        listCategories: vi.fn(),
       },
     })
 

@@ -993,7 +993,8 @@ waiting}.*`; the Welsh is machine-assisted. The record's Delivery is STY-026's c
       notice is focused in `onOpenChangeComplete(false)`.
     - A form's base is what it opened on, not the latest read: compare against
       `useEditMode`'s `opened`, never the refreshed record, or a co-lead's change is
-      written back.
+      written back. The one exception is a field whose latest read holds what the form
+      showed (the Product Lead's own publish): pass `{ shown, latest }` as `since`.
     - Playwright's `--update-snapshots` (default "changed") does not write a new aria
       snapshot file: use `--update-snapshots=all` or run once without the flag
       (`tests/e2e/AGENTS.md`), then check `git status`.

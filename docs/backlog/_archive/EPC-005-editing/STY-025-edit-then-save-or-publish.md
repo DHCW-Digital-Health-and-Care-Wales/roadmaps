@@ -257,7 +257,9 @@ Audited at `8479405`:
   `usePendingChanges()` or `useRoadmapChanges(roadmapId)`; write through `update(id,
 edit)` with the pure functions of `pending-changes.ts`.
 - **Rules** (`pending-changes.ts`): each `FieldChange` keeps `base`, the text the form
-  opened on (not the text read when Done is pressed), which a later Refresh never moves;
+  opened on (not the text read when Done is pressed), which a later Refresh never moves,
+  unless the latest read holds what the form showed for that field (the Product Lead's
+  own publish, landed while the form was open: `SinceOpened`), when it is that read;
   a form's Done sends only the fields its Product Lead changed, so a co-lead's change to
   another field, read while the form was open, is never written back. An edit equal to
   its base or to the current text is no edit. `matchItemChanges(items, changes)` finds each entry's item

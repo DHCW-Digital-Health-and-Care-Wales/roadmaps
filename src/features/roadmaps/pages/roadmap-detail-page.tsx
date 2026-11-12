@@ -151,10 +151,10 @@ interface RoadmapViewProps {
 
 /**
  * A listed roadmap: its title, a Not published badge when it is not public (D8), a badge
- * when it is out of step with the family or category list (STY-027 S4, S8), a
- * Refresh for the roadmap and its items (D7), its family and category, its pending
- * changes with Publish, what it is about, then its items, each showing its pending English (STY-025). The title stays
- * whatever happens to the items.
+ * when it is out of step with the family or category list (STY-027 S4, S8), a Refresh
+ * for the roadmap and its items (D7), its family and category, its pending changes with
+ * Publish, what it is about, then its items, each showing its pending English
+ * (STY-025). The title stays whatever happens to the items.
  */
 function RoadmapView({
   roadmap,

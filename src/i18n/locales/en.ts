@@ -134,6 +134,8 @@ export const en = {
     // "3 roadmaps, 1 not published": the nested keys keep each part's plural forms.
     countWithUnpublished:
       '$t(roadmaps.count, {"count": {{total}} }), $t(roadmaps.unpublishedCount, {"count": {{unpublished}} })',
+    /** The link to the families and categories page. */
+    familiesLink: "Families and categories",
     /** The heading over the roadmaps in no product family, when others have one. */
     noFamily: "No product family",
     /** A roadmap whose own family or category differs from the lists' (STY-027 S4, S8). */
@@ -360,6 +362,101 @@ export const en = {
           "This roadmap isn't in the expected format in the spreadsheet. Ask the spreadsheet owner to check it.",
         unknown: "Something went wrong. Please try again.",
       } satisfies Record<AppErrorKind, string>,
+    },
+    /** The page listing the families and categories (STY-029), linked from the list. */
+    families: {
+      title: "Families and categories",
+      description:
+        "The product families and categories that group your roadmaps.",
+      connectPrompt: "Connect Google to view the families and categories.",
+      loading: "Loading families and categories…",
+      loadFailed: "Couldn't load the families and categories",
+      refreshFailed: "Couldn't refresh the families and categories",
+      heading: "Families",
+      /** Under a family's name. */
+      welshName: "Welsh: {{name}}",
+      noWelshName: "No Welsh name",
+      noRoadmaps: "No roadmaps",
+      /** Beside a published roadmap, in the confirmation. */
+      published: "Published",
+      /** Followed by the family's name, for assistive technology. */
+      change: "Change",
+      add: "Add a family",
+      /** In place of the families and Add, without a usable list (S7). */
+      unavailable: {
+        title: "Families can't be changed right now",
+        description:
+          "The spreadsheet's Families tab is missing or isn't in the expected format. Ask the spreadsheet owner to check it.",
+      },
+      form: {
+        changeTitle: "Change {{name}}",
+        name: "Name",
+        colour: "Colour",
+        colourHint: "A hex colour, like #00796b.",
+        add: "Add family",
+        save: "Save changes",
+        errors: {
+          blank: "Enter a name",
+          taken: "Another family has this name",
+          invalid: "Enter a colour like #00796b",
+        },
+      },
+      /** Asked before a change that rewrites roadmaps (S3). */
+      confirm: {
+        title: "Change {{name}} on its roadmaps?",
+        roadmaps_zero: "It has no roadmaps now.",
+        roadmaps_one: "This changes {{count, number}} roadmap:",
+        roadmaps_other: "This changes all {{count, number}} roadmaps:",
+        public:
+          "Published roadmaps show the change on the public site after its next nightly update.",
+        notPublic: "None of them is published, so nothing will be public.",
+        /** When a re-read found different roadmaps in the family (S8). */
+        membersChanged:
+          "The roadmaps in this family have changed. Check them again.",
+        action: "Change family",
+      },
+      /** A change stopped by someone else's (S5). */
+      refused: {
+        title: "Someone else has changed this family",
+        description:
+          "Nothing was saved. Choose which to keep for each, then save again.",
+        yours: "Your change",
+        theirs: "Current value",
+        keepMine: "Keep mine",
+        useTheirs: "Use theirs",
+      },
+      notice: {
+        added: "{{name}} added",
+        changed: "{{name}} changed",
+        changedPublic:
+          "{{name}} changed. The public site shows it after its next nightly update.",
+        gone: "This family is no longer listed, so your change wasn't saved.",
+        failed: {
+          add: "Couldn't add the family",
+          change: "Couldn't change the family",
+        },
+      },
+      /** Why adding or changing a family failed. */
+      errors: {
+        unauthenticated: "Your session has expired. Reconnect, then try again.",
+        forbidden:
+          "This Google account isn't allowed to change families. Ask the spreadsheet owner for edit access.",
+        "not-found":
+          "The spreadsheet couldn't be found. Check that it still exists.",
+        "rate-limited":
+          "Too many requests right now. Wait a moment and try again.",
+        network:
+          "Couldn't connect. Check your internet connection and try again.",
+        "invalid-response": "The answer was in an unexpected format.",
+        "invalid-data":
+          "The family list isn't in the expected format in the spreadsheet. Ask the spreadsheet owner to check it.",
+        unknown: "Something went wrong. Please try again.",
+      } satisfies Record<AppErrorKind, string>,
+      categories: {
+        heading: "Categories",
+        description: "Categories can't be changed here yet.",
+        none: "No categories are listed.",
+      },
     },
     /** Asked on Disconnect while changes are pending. */
     disconnect: {

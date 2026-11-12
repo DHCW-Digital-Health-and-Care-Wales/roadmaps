@@ -55,6 +55,9 @@ const FAMILY_WELSH = /^family$/i
 /** The tab the editor never writes (ADR-012), kept apart from the adapter's like `WELSH_HEADER`. */
 const TEMPLATE_TAB = "Template"
 
+/** The one tab the editor adds rows to: a new family's (STY-029). */
+const FAMILIES_TAB = "Families"
+
 /** The index column the editor never writes (STY-023 D5). */
 const LAST_UPDATED_HEADER = /^\s*last\s+updated\s*$/i
 
@@ -63,7 +66,7 @@ const LAST_UPDATED_HEADER = /^\s*last\s+updated\s*$/i
  * can't apply rejects the whole body and changes nothing. Beyond what Google rejects, it
  * records as violations what the editor must never write (STY-023 S11): the `Template`
  * tab, anything but a plain string or a cleared cell, a Welsh column but `Family (cy)`,
- * `Last updated`, an unchanged cell.
+ * `Last updated`, an unchanged cell, rows added to a tab but `Families`.
  */
 export function applyBatchUpdate(
   tabs: readonly GridTab[],
@@ -90,8 +93,11 @@ export function applyBatchUpdate(
       }
       if (tab.title === TEMPLATE_TAB)
         violations.push("appendDimension on Template")
-      if (dimension !== "COLUMNS") {
-        violations.push(`appendDimension of ${dimension}, not COLUMNS`)
+      if (
+        dimension !== "COLUMNS" &&
+        !(dimension === "ROWS" && tab.title === FAMILIES_TAB)
+      ) {
+        violations.push(`appendDimension of ${dimension} on ${tab.title}`)
       }
       if (dimension === "ROWS") tab.rowCount += length
       else tab.columnCount += length

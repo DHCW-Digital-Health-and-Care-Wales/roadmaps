@@ -127,10 +127,10 @@ describe("applyBatchUpdate", () => {
       "fields",
     ],
     [
-      "added rows",
+      "rows added to a tab but Families",
       [index()],
       { appendDimension: { sheetId: 0, dimension: "ROWS", length: 1 } },
-      "not COLUMNS",
+      "appendDimension of ROWS on Roadmaps",
     ],
   ])("records a write to %s as a violation", (_, tabs, request, violation) => {
     const result = applyBatchUpdate(tabs, { requests: [request] })
@@ -138,6 +138,37 @@ describe("applyBatchUpdate", () => {
     expect(result.violations).toEqual([
       expect.stringContaining(violation) as string,
     ])
+  })
+
+  it("allows a row added to Families, for a new family (STY-029)", () => {
+    const families = {
+      title: "Families",
+      sheetId: 1,
+      rows: [["ID", "Name", "Colour"]],
+      rowCount: 1,
+      columnCount: 3,
+    }
+
+    const result = applyBatchUpdate([families], {
+      requests: [
+        { appendDimension: { sheetId: 1, dimension: "ROWS", length: 1 } },
+        cell(1, 1, 1, "Screening"),
+      ],
+    })
+
+    expect(result).toEqual({
+      tabs: [
+        {
+          ...families,
+          rows: [
+            ["ID", "Name", "Colour"],
+            ["", "Screening"],
+          ],
+          rowCount: 2,
+        },
+      ],
+      violations: [],
+    })
   })
 
   it("allows Family (cy), the family's Welsh name copied from its list (ADR-013)", () => {

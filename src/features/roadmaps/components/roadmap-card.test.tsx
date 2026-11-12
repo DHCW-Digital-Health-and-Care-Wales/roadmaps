@@ -53,7 +53,7 @@ const productC = createTestRoadmap("productc", "Product C roadmap", {
 async function renderCards(roadmaps: Roadmap[], language: "en" | "cy" = "en") {
   await renderWithProviders({ authState: connected, roadmaps, language })
   const main = within(screen.getByRole("main"))
-  await main.findAllByRole("link")
+  await main.findAllByRole("list")
   return main
 }
 

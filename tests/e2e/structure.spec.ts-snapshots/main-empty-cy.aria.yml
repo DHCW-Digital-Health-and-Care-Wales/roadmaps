@@ -5,6 +5,9 @@
   - region "Eich mapiau trywydd":
     - heading "Eich mapiau trywydd" [level=1]
     - paragraph: Pob map trywydd, wedi'i gyhoeddi neu beidio.
+    - paragraph:
+      - link "Teuluoedd a chategorïau":
+        - /url: /#/families
     - button "Adnewyddu"
     - heading "Dim mapiau trywydd eto" [level=2]
     - text: Dydy'r daenlen gysylltiedig ddim yn rhestru unrhyw fapiau trywydd eto.

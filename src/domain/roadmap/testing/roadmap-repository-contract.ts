@@ -4,6 +4,7 @@ import { isAppError } from "@/lib/errors"
 
 import type { Category } from "../category"
 import type { Family } from "../family"
+import type { FamilyEdit } from "../family-changes"
 import type { Roadmap } from "../roadmap"
 import type {
   FieldChange,
@@ -313,6 +314,7 @@ export function describeRoadmapRepositoryContract(
     })
 
     describePublishing(setup)
+    describeFamilyChanges(setup)
   })
 }
 
@@ -889,5 +891,268 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
         ).resolves.toEqual({ status: "unconfirmed" })
       })
     })
+  })
+}
+
+function describeFamilyChanges(setup: RoadmapRepositoryContractSetup): void {
+  const [singleRecord, medicines] = familiesOf(fixtures)
+  if (singleRecord === undefined || medicines === undefined) {
+    throw new Error("The fixtures need two families")
+  }
+  const productB = fixtures[1]
+  const recolour = (overrides: Partial<FamilyEdit> = {}): FamilyEdit => ({
+    family: medicines,
+    changes: { colour: "#00796b" },
+    members: ["product-b-2027"],
+    ...overrides,
+  })
+
+  describe("adding a family (STY-029)", () => {
+    it("adds it to the end of the list with a new ID and no Welsh name (S2)", async () => {
+      const repository = setup.withRoadmaps(fixtures)
+
+      const outcome = await repository.addFamily({
+        name: "Screening",
+        colour: "#00796b",
+      })
+
+      const added = {
+        id: expect.stringMatching(NEW_ID) as string,
+        name: { en: "Screening", cy: "" },
+        colour: "#00796b",
+      }
+      expect(outcome).toEqual({ status: "saved", family: added })
+      expect(await repository.listFamilies()).toEqual([
+        singleRecord,
+        medicines,
+        added,
+      ])
+      expect(await repository.listRoadmaps()).toStrictEqual(fixtures)
+    })
+
+    it("refuses a name another family has, folded, writing nothing (S6)", async () => {
+      const repository = setup.withRoadmaps(fixtures)
+
+      await expect(
+        repository.addFamily({ name: "single-record", colour: "#00796b" }),
+      ).resolves.toEqual({ status: "name-taken" })
+      expect(await repository.listFamilies()).toStrictEqual([
+        singleRecord,
+        medicines,
+      ])
+    })
+  })
+
+  describe("changing a family (STY-029)", () => {
+    it("renames and recolours it and every roadmap in it, keeping Welsh (S3, S9)", async () => {
+      const repository = setup.withRoadmaps(fixtures)
+      const changed = {
+        ...medicines,
+        name: { en: "Medicines", cy: medicines.name.cy },
+        colour: "#00796b",
+      }
+
+      const outcome = await repository.changeFamily(
+        recolour({ changes: { name: "Medicines", colour: "#00796b" } }),
+      )
+
+      expect(outcome).toEqual({ status: "saved", family: changed })
+      expect(await repository.listFamilies()).toStrictEqual([
+        singleRecord,
+        changed,
+      ])
+      expect(await repository.listRoadmaps()).toStrictEqual([
+        fixtures[0],
+        { ...productB, family: changed.name, colour: "#00796b" },
+        fixtures[2],
+      ])
+    })
+
+    it("changes a family no roadmap is in, alone", async () => {
+      const roadmaps = productA({ family: null, familyId: null })
+      const repository = setup.withRoadmaps(
+        roadmaps,
+        {},
+        {
+          families: [singleRecord, medicines],
+        },
+      )
+
+      await expect(
+        repository.changeFamily({
+          family: singleRecord,
+          changes: { name: "Shared Care Record" },
+          members: [],
+        }),
+      ).resolves.toMatchObject({ status: "saved" })
+      expect(await repository.listFamilies()).toStrictEqual([
+        { ...singleRecord, name: { en: "Shared Care Record", cy: "" } },
+        medicines,
+      ])
+      expect(await repository.listRoadmaps()).toStrictEqual(roadmaps)
+    })
+
+    it("refuses a field a co-lead changed, writing nothing (S5)", async () => {
+      const repository = setup.withRoadmaps(fixtures)
+      const loaded = { ...medicines, colour: "#ff0000" }
+
+      await expect(
+        repository.changeFamily(recolour({ family: loaded })),
+      ).resolves.toEqual({
+        status: "refused",
+        conflicts: [
+          {
+            field: "colour",
+            base: "#ff0000",
+            pending: "#00796b",
+            current: "#006747",
+          },
+        ],
+      })
+      expect(await repository.listRoadmaps()).toStrictEqual(fixtures)
+    })
+
+    it("gives the roadmaps in it now when they are not those confirmed, writing nothing (S8)", async () => {
+      const repository = setup.withRoadmaps(fixtures)
+
+      await expect(
+        repository.changeFamily(recolour({ members: ["producta"] })),
+      ).resolves.toEqual({ status: "members-changed", members: [productB] })
+      expect(await repository.listFamilies()).toStrictEqual([
+        singleRecord,
+        medicines,
+      ])
+    })
+
+    it("refuses a name another family has, folded, writing nothing (S6)", async () => {
+      const repository = setup.withRoadmaps(fixtures)
+
+      await expect(
+        repository.changeFamily(
+          recolour({ changes: { name: "SINGLE RECORD" } }),
+        ),
+      ).resolves.toEqual({ status: "name-taken" })
+      expect(await repository.listRoadmaps()).toStrictEqual(fixtures)
+    })
+
+    it("says a family no longer listed is not found", async () => {
+      const repository = setup.withRoadmaps(
+        fixtures,
+        {},
+        {
+          families: [singleRecord],
+        },
+      )
+
+      await expect(repository.changeFamily(recolour())).resolves.toEqual({
+        status: "family-not-found",
+      })
+    })
+  })
+
+  describe("adding or changing a family", () => {
+    const calls = [
+      [
+        "adding",
+        (repository: RoadmapRepository, signal?: AbortSignal) =>
+          repository.addFamily(
+            { name: "Screening", colour: "#00796b" },
+            { signal },
+          ),
+      ],
+      [
+        "changing",
+        (repository: RoadmapRepository, signal?: AbortSignal) =>
+          repository.changeFamily(recolour(), { signal }),
+      ],
+    ] as const
+
+    it.each(calls)(
+      "rejects %s with invalid-data while the list is missing (S7)",
+      async (_, call) => {
+        const repository = setup.withRoadmaps(fixtures, {}, { families: null })
+        const before = await repository.listRoadmaps()
+
+        await expect(call(repository)).rejects.toMatchObject({
+          kind: "invalid-data",
+        })
+        expect(await repository.listRoadmaps()).toStrictEqual(before)
+      },
+    )
+
+    it.each(calls)(
+      "rejects %s with a forbidden AppError when the write is refused, writing nothing",
+      async (_, call) => {
+        const repository = setup.withRoadmaps(
+          fixtures,
+          {},
+          {
+            write: { fails: "forbidden" },
+          },
+        )
+
+        await expect(call(repository)).rejects.toMatchObject({
+          kind: "forbidden",
+        })
+        expect(await repository.listFamilies()).toStrictEqual([
+          singleRecord,
+          medicines,
+        ])
+      },
+    )
+
+    it.each(calls)(
+      "rejects %s with the abort reason when the signal is already aborted",
+      async (_, call) => {
+        const repository = setup.withRoadmaps(fixtures)
+        const reason = new DOMException("Cancelled by test", "AbortError")
+
+        await expect(call(repository, AbortSignal.abort(reason))).rejects.toBe(
+          reason,
+        )
+        expect(await repository.listFamilies()).toStrictEqual([
+          singleRecord,
+          medicines,
+        ])
+      },
+    )
+
+    it.each(calls)(
+      "saves %s whose answer is lost when a re-read finds it",
+      async (_, call) => {
+        const repository = setup.withRoadmaps(
+          fixtures,
+          {},
+          {
+            write: { lost: "applied" },
+          },
+        )
+
+        await expect(call(repository)).resolves.toMatchObject({
+          status: "saved",
+        })
+      },
+    )
+
+    it.each(calls)(
+      "rejects %s whose answer is lost with a network AppError when a re-read finds none",
+      async (_, call) => {
+        const repository = setup.withRoadmaps(
+          fixtures,
+          {},
+          {
+            write: { lost: "not-applied" },
+          },
+        )
+
+        await expect(call(repository)).rejects.toMatchObject({
+          kind: "network",
+        })
+        expect(await repository.listFamilies()).toStrictEqual([
+          singleRecord,
+          medicines,
+        ])
+      },
+    )
   })
 }

@@ -2,6 +2,9 @@
   - region "Eich mapiau trywydd":
     - heading "Eich mapiau trywydd" [level=1]
     - paragraph: Pob map trywydd, wedi'i gyhoeddi neu beidio.
+    - paragraph:
+      - link "Teuluoedd a chategorïau":
+        - /url: /#/families
     - paragraph: 3 map trywydd, 1 heb ei gyhoeddi
     - button "Adnewyddu" [disabled]
     - alert:

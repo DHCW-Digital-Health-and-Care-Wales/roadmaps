@@ -1539,4 +1539,155 @@ describe("GoogleSheetsRoadmapRepository", () => {
       })
     })
   })
+
+  describe("adding or changing a family (STY-029)", () => {
+    const FAMILY_ROWS = [
+      ["ID", "Name", "Name (cy)", "Colour"],
+      ["fc29g5b9", "Single Record", "Cofnod Sengl", "#12A3C9"],
+      ["vdkxj63m", "Medicines & Diagnostics", "", "#006747"],
+      ["skipped1", "Bad colour", "", "teal"],
+    ]
+    /** The example index, as the first tab with this title, and the family list. */
+    const familyTabs = (indexTitle = "Roadmaps"): FakeTab[] => [
+      gridTab(indexTitle, EXAMPLE_ROWS, 0),
+      gridTab("Families", FAMILY_ROWS, 30, 1),
+    ]
+    const singleRecord = {
+      id: "fc29g5b9",
+      name: { en: "Single Record", cy: "Cofnod Sengl" },
+      colour: "#12a3c9",
+    }
+    const rename = {
+      family: singleRecord,
+      changes: { name: "Shared Care Record", colour: "#00796b" },
+      members: ["producta"],
+    }
+
+    /** Every cell that differs, as `tab!R1C1 value`. */
+    function changedCells(before: FakeTab[], after: FakeTab[]): string[] {
+      return after.flatMap((tab, t) =>
+        tab.rows.flatMap((row, r) =>
+          row.flatMap((value, c) =>
+            (before[t]?.rows[r]?.[c] ?? "") === value
+              ? []
+              : [`${tab.title}!R${String(r + 1)}C${String(c + 1)} ${value}`],
+          ),
+        ),
+      )
+    }
+
+    it("adds a row after the last, with an ID no row holds, growing the grid, after two reads (S2)", async () => {
+      const before = familyTabs()
+      const spreadsheet = serveStatefulSpreadsheet(before)
+      nextItemIds.push("fc29g5b9", "skipped1", "newfamxx")
+
+      await expect(
+        httpRepository().addFamily({ name: "Screening", colour: "#00796b" }),
+      ).resolves.toEqual({
+        status: "saved",
+        family: {
+          id: "newfamxx",
+          name: { en: "Screening", cy: "" },
+          colour: "#00796b",
+        },
+      })
+
+      expect(changedCells(before, spreadsheet.tabs())).toEqual([
+        "Families!R5C1 newfamxx",
+        "Families!R5C2 Screening",
+        "Families!R5C4 #00796b",
+      ])
+      expect(spreadsheet.bodies).toEqual([
+        {
+          requests: [
+            {
+              appendDimension: { sheetId: 30, dimension: "ROWS", length: 1 },
+            },
+            expect.anything(),
+            expect.anything(),
+            expect.anything(),
+          ],
+        },
+      ])
+      expect(
+        spreadsheet.requests.filter(({ method }) => method === "GET"),
+      ).toHaveLength(2)
+    })
+
+    it("adds a row inside a grid tall enough for it, without growing it", async () => {
+      const [index, families] = familyTabs()
+      if (index === undefined || families === undefined) throw new Error()
+      const spreadsheet = serveStatefulSpreadsheet([
+        index,
+        { ...families, rowCount: 10 },
+      ])
+
+      await httpRepository().addFamily({ name: "Screening", colour: "#00796b" })
+
+      const [body] = spreadsheet.bodies as BatchUpdateBody[]
+      expect(
+        body?.requests.filter((request) => "appendDimension" in request),
+      ).toEqual([])
+    })
+
+    it("writes the family's changed cells and its roadmaps' rows, linking each by ID, in one batchUpdate (S4, S9)", async () => {
+      const before = familyTabs()
+      const spreadsheet = serveStatefulSpreadsheet(before)
+
+      await expect(httpRepository().changeFamily(rename)).resolves.toEqual({
+        status: "saved",
+        family: {
+          ...singleRecord,
+          name: { en: "Shared Care Record", cy: "Cofnod Sengl" },
+          colour: "#00796b",
+        },
+      })
+
+      expect(changedCells(before, spreadsheet.tabs())).toEqual([
+        "Roadmaps!R1C16 Family ID",
+        "Roadmaps!R2C5 Shared Care Record",
+        "Roadmaps!R2C8 #00796b",
+        "Roadmaps!R2C13 Cofnod Sengl",
+        "Roadmaps!R2C16 fc29g5b9",
+        "Families!R2C2 Shared Care Record",
+        "Families!R2C4 #00796b",
+      ])
+      expect(spreadsheet.bodies).toHaveLength(1)
+    })
+
+    it("writes only the field changed", async () => {
+      const before = familyTabs()
+      const spreadsheet = serveStatefulSpreadsheet(before)
+
+      await httpRepository().changeFamily({
+        ...rename,
+        changes: { name: "Shared Care Record" },
+      })
+
+      expect(
+        changedCells(before, spreadsheet.tabs()).filter((change) =>
+          change.startsWith("Families!"),
+        ),
+      ).toEqual(["Families!R2C2 Shared Care Record"])
+    })
+
+    it("fails with invalid-data, writing nothing, when the index is the Template tab", async () => {
+      const spreadsheet = serveStatefulSpreadsheet(familyTabs("Template"))
+
+      await expect(httpRepository().changeFamily(rename)).rejects.toMatchObject(
+        { kind: "invalid-data" },
+      )
+      expect(spreadsheet.bodies).toEqual([])
+    })
+
+    it("rethrows a lost write's network error when the re-read fails", async () => {
+      serveStatefulSpreadsheet(familyTabs(), {
+        write: { lost: "reread-fails" },
+      })
+
+      await expect(httpRepository().changeFamily(rename)).rejects.toMatchObject(
+        { kind: "network" },
+      )
+    })
+  })
 })

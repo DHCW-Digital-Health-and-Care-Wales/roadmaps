@@ -2,6 +2,7 @@ import type { Page } from "@playwright/test"
 
 import {
   EXAMPLE_INDEX_ROWS,
+  EXAMPLE_LISTS,
   roadmapRow,
   withRoadmapIndex,
 } from "./fixtures/fake-sheets"
@@ -324,35 +325,7 @@ function withLists() {
         Family: "Single Recrod",
       }),
     ]),
-    {
-      title: "Families",
-      rows: [
-        ["ID", "Name", "Name (cy)", "Colour"],
-        ["fc29g5b9", "Single Record", "Cofnod Sengl", "#12a3c9"],
-        [
-          "vdkxj63m",
-          "Medicines & Diagnostics",
-          "Meddyginiaethau a Diagnosteg",
-          "#006747",
-        ],
-      ],
-    },
-    {
-      title: "Categories",
-      rows: [
-        ["ID", "Name", "Name (cy)"],
-        [
-          "khzpchkh",
-          "GP & Community Services",
-          "Meddygon Teulu a Gwasanaethau Cymunedol",
-        ],
-        [
-          "w7vrv5kn",
-          "Tests, Scans & Results",
-          "Profion, Sganiau a Chanlyniadau",
-        ],
-      ],
-    },
+    ...EXAMPLE_LISTS,
   ]
 }
 

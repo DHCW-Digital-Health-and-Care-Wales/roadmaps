@@ -9,5 +9,11 @@
   - textbox "Vision": A short, ambitious statement of where Product A is heading. Leave blank to show a general intro sentence instead.
   - text: Service description
   - textbox "Service description": What Product A does and who it helps. Also used as the summary on the landing page card.
+  - paragraph: Family
+  - paragraph: Single Record
+  - paragraph: The family can't be changed right now.
+  - paragraph: Category
+  - paragraph: GP & Community Services
+  - paragraph: The category can't be changed right now.
   - button "Done"
   - button "Cancel"

@@ -8,7 +8,7 @@
 - **Depends on**: none
 - **Binding ADRs**: ADR-012
 - **Suggested model**: Opus — a concurrency rule in the query cache
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/collisdigital/roadmaps-editor/pull/34
 
 ## Summary
 

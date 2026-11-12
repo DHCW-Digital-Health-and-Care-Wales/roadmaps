@@ -74,7 +74,8 @@ of step with the family list, in English and Welsh
 **When** the list loads
 **Then** it groups and colours roadmaps from their own cells, as before this story, with
 no out-of-step flags for families
-**And** the same holds for categories when the `Categories` tab is missing
+**And** when the `Categories` tab is missing, a roadmap's category shows its row's
+`Category` text in both languages, unchecked, with no out-of-step flags for categories
 **And** the list still loads; the problem is recorded as other sheet mistakes are
 (ADR-009)
 
@@ -101,6 +102,13 @@ story, with a notice that its family is not in the family list
 **Then** its swatch is `#7b2d8e`, it is not flagged, and the editor offers no way to
 change the colour
 
+### S10: A category the list doesn't have is no category
+
+**Given** a row whose `Category` matches no listed category by ID or folded name
+**When** the list loads
+**Then** the roadmap shows no category and the problem is recorded, as an unknown category
+is today and as the public site lists it under "Other roadmaps"
+
 ## Decisions
 
 - **D1** (owner, 2026-11-11, EPC-005 grilling Q11): family is not editable in EPC-005,
@@ -114,6 +122,10 @@ change the colour
   names it, flagged → adds S8.
 - **D4** (owner, 2026-11-12, round 4 Q3): a roadmap with no family keeps its own colour,
   read-only → adds S9.
+- **D5** (agent, 2026-11-12, review): with the `Categories` tab missing, the row's own
+  `Category` text shows in both languages (S6), over keeping the catalogue's six as a
+  fallback, because the owner asked for minimal handling and a second copy of the list
+  is what this epic removes. A category not in the list is no category (S10), as today.
 
 ## Starting point
 

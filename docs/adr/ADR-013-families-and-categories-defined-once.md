@@ -1,7 +1,8 @@
 # ADR-013: Product families and categories are defined once, in their own tabs, and copied to each roadmap's row
 
 - Status: Accepted — owner, 2026-11-12: EPC-006 grilling rounds 1–3, accepted in round
-  4 Q1; amends ADR-012 (what is editable, Welsh cells)
+  4 Q1; amends ADR-009 (category names, family colour) and ADR-012 (what is editable,
+  Welsh cells)
 - Date: 2026-11-12
 
 ## Context
@@ -64,5 +65,7 @@ their own and a roadmap points at them by key.
   cells. A hand edit puts a row out of step, which is flagged, not prevented.
 - What the editor writes to the shared spreadsheet grows: the new columns, the copied
   cells on a family change, and the `Families` tab (README, _What the editor writes_).
+- Amends ADR-009's category vocabulary (names from the tab, not the catalogue) and its
+  per-roadmap colour (from the family).
 - Amends ADR-012's "Family, category, colour … stay read-only" and its "Welsh cells are
   never written" for `Family (cy)`, which is copied, never typed.

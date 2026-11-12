@@ -83,8 +83,8 @@ re-read found
 
 **Given** Single Record has a `Name (cy)`
 **When** the Product Lead renames it to "Shared Care Record"
-**Then** `Name (cy)` and each member's `Family (cy)` keep the Welsh name they had, and the
-confirmation says nothing about Welsh
+**Then** `Name (cy)` is unchanged, each member's `Family (cy)` is written from it as S4
+writes it, and the confirmation says nothing about Welsh
 
 ## Decisions
 

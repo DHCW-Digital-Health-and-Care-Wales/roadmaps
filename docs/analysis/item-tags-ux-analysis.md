@@ -25,9 +25,10 @@ that drifts ("Patients", "patient", "Citizen").
 
 ## Journeys covered
 
-| Group               | Journeys                                                                                                  | Story   |
-| ------------------- | --------------------------------------------------------------------------------------------------------- | ------- |
-| Edit an item's tags | add a typed tag; add one the roadmap's other items carry; rename; remove; confirm or cancel; see the card | STY-037 |
+| Group                      | Journeys                                                                                                  | Story            |
+| -------------------------- | --------------------------------------------------------------------------------------------------------- | ---------------- |
+| Edit an item's tags        | add a typed tag; add one the roadmap's other items carry; rename; remove; confirm or cancel; see the card | STY-037          |
+| The Tags field in the form | open the form; open the tags editor; shut it; confirm the form; the same for Organisations                | STY-037, STY-038 |
 
 Each relies on the persona's A1 (short visits), A2 (desktop first, phone second), A8
 (free-text tags, a shared list later) and A12 (a co-lead may have tagged other items).
@@ -78,19 +79,36 @@ and no learned keys; and it behaves the same on the phone. Its cost is height. I
 trying it shows the form too long, the add-on is A's box for the item's own tags with
 B's always-visible buttons under it, not A's hidden list.
 
+## The Tags field in the item's edit form
+
+The form already holds six fields. In a desktop card it is about 1,400px tall, of which
+Organisations takes about 620px; open, editor B adds about 340px. The last figure on
+the prototype page is the whole form, with Tags and, at the owner's request,
+Organisations both opening on request: shut, the form is about 860px.
+
+| Design                                   | Idea                                                                                                                                                                                                                      | Strengths                                                                                                            | Risks                                                                                                                                                  |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Shut                                     | The field shows the item's tags on one line beside "Change tags" ("Add tags" when there are none). Choosing it opens editor B in place, with focus in "Add a tag"; "Close tags" shuts it. Done keeps the tags either way. | The form grows by one line for an item whose tags are right, which is most visits. The tags can be read at a glance. | One more press before the first change. The roadmap's other tags are out of sight until the field is opened.                                           |
+| Open                                     | The whole editor shows as the form opens, as Organisations does.                                                                                                                                                          | Nothing to find, and the roadmap's tags are in view at once.                                                         | The longest form: about a quarter more to scroll past on every edit, whatever is being edited.                                                         |
+| The item's tags open, the roadmap's shut | The rows and "Add a tag" always show; "Used elsewhere in this roadmap" shows only while Sam is adding.                                                                                                                    | Shorter than open, with rename and remove one press away.                                                            | The offer that nudges towards one spelling is hidden until Sam starts typing. A block that appears on focus moves the fields under it. Not prototyped. |
+
+**Recommendation**: **Shut**. Most visits to the form are for something other than tags,
+and the one line still says what the tags are.
+
 ## Decisions needed
 
-| Decision                                                                                               | Options                                                                                                                     | Where it is asked |
-| ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- | ----------------- |
-| Which editor is built                                                                                  | B (recommended), A, C or D                                                                                                  | STY-037 Q1        |
-| An item's Welsh tags when its tags are edited                                                          | read-only for such an item (recommended); each tag keeps its Welsh; cleared with a warning; left as they are                | STY-037 Q2        |
-| A typed tag takes the roadmap's spelling                                                               | yes, as prototyped (recommended); no                                                                                        | STY-037 Q3        |
-| If A: a new primitive                                                                                  | shadcn's Combobox (Base UI) joins `src/components/ui/`, with in-place rename built on it                                    | with Q1 (b)       |
-| If A: which key keeps typed text                                                                       | Enter takes the highlighted tag and a comma keeps what was typed, as prototyped; or Enter keeps what was typed              | with Q1 (b)       |
-| If B: Undo after a removal                                                                             | kept, as prototyped; or left to Cancel and "Undo changes"                                                                   | with Q1 (a)       |
-| If B: icons on a narrow row                                                                            | all rows switch together when any tag is too wide to sit beside worded buttons, as prototyped; or by the card's width alone | with Q1 (a)       |
-| If C: removing is unticking; tags ordered by ticking; the list alphabetical and not narrowed by typing | accepted as departures from STY-037 S1, S3 and S5                                                                           | with Q1 (c)       |
-| If D: no control per tag                                                                               | STY-037 S1 and S11 re-cut for a text field                                                                                  | with Q1 (d)       |
+| Decision                                                                                               | Options                                                                                                                     | Where it is asked                                      |
+| ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| Which editor is built                                                                                  | B (recommended), A, C or D                                                                                                  | decided: STY-037 D11                                   |
+| An item's Welsh tags when its tags are edited                                                          | read-only for such an item (recommended); each tag keeps its Welsh; cleared with a warning; left as they are                | STY-037 Q2                                             |
+| A typed tag takes the roadmap's spelling                                                               | yes, as prototyped (recommended); no                                                                                        | STY-037 Q3                                             |
+| If A: a new primitive                                                                                  | shadcn's Combobox (Base UI) joins `src/components/ui/`, with in-place rename built on it                                    | not built: STY-037 D11                                 |
+| If A: which key keeps typed text                                                                       | Enter takes the highlighted tag and a comma keeps what was typed, as prototyped; or Enter keeps what was typed              | not built: STY-037 D11                                 |
+| If B: Undo after a removal                                                                             | kept, as prototyped; or left to Cancel and "Undo changes"                                                                   | decided: kept, STY-037 D11                             |
+| If B: icons on a narrow row                                                                            | all rows switch together when any tag is too wide to sit beside worded buttons, as prototyped; or by the card's width alone | decided: as prototyped, STY-037 D10                    |
+| How the Tags field opens in the form                                                                   | shut, as prototyped (recommended); open; the item's tags open and the roadmap's shut                                        | decided: shut, STY-037 D13; Organisations too, STY-038 |
+| If C: removing is unticking; tags ordered by ticking; the list alphabetical and not narrowed by typing | accepted as departures from STY-037 S1, S3 and S5                                                                           | not built: STY-037 D11                                 |
+| If D: no control per tag                                                                               | STY-037 S1 and S11 re-cut for a text field                                                                                  | not built: STY-037 D11                                 |
 
 Reads and writes: every design reads only the roadmap's items already on the page,
 pending edits included. The write of the `Labels` cell is STY-037's own (S12); whether
@@ -103,7 +121,7 @@ pending edits included. The write of the `Labels` cell is STY-037's own (S12); w
 - A roadmap whose other items have no tags (STY-037 S10), and one with thirty or more,
   where B's block and C's list are longest.
 - Another item's pending tags among those offered (S3): the sample has none pending.
-- The field among the form's other fields, and the form at full page width.
+- The third way to open the field: the item's tags open and the roadmap's shut.
 - axe over the field's states (S11): the prototypes use native controls and a status
   region, and were tried by keyboard, not scanned.
 
@@ -121,3 +139,13 @@ pending edits included. The write of the `Labels` cell is STY-037's own (S12); w
   [EPC-009](../backlog/EPC-009-item-tags/README.md).
 - [`roadmap-tab-format.md`](roadmap-tab-format.md): the `Labels` column.
 - Persona: `docs/backlog/personas/product-lead.md`.
+
+## Outcome
+
+- **Which editor**: B, list and suggestions, with its row buttons as icons where words
+  would not fit, and Undo after a removal (owner, 2026-11-13; STY-037 D10 and D11,
+  scenarios S15–S18).
+- **How the field opens in the form**: shut, opening on request (owner, 2026-11-13;
+  STY-037 D13, scenario S19). The owner asked the same of Organisations, which is
+  STY-038.
+- The Welsh pairing and the spelling rule are still open: STY-037 Q2 and Q3.

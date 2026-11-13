@@ -1,7 +1,7 @@
 # STY-037: A Product Lead edits an item's tags
 
-- **Status**: Needs grilling — the owner chooses the editor from four prototypes (Q1)
-  and answers Q2 and Q3
+- **Status**: Needs grilling — the owner chose editor B, shut until asked for (D11, D13);
+  Q2 and Q3 wait
 - **Type**: Feature
 - **Area**: Domain + Infrastructure + Features/UI + i18n (en + cy) + E2E
 - **Epic**: [EPC-009-item-tags](README.md)
@@ -17,8 +17,8 @@ A Product Lead adds, renames and removes an item's tags in its edit form. While 
 the form offers the tags this roadmap's other items carry, most used first, so the same
 idea gets the same tag. The change is a pending edit, published with the rest. Tags stay
 free text: there is no shared list, and renaming a tag here changes this item only.
-Waiting on the owner: which of four prototyped editors to build, what happens to an
-item's Welsh tags, and whether a typed tag takes the spelling the roadmap already uses.
+The editor is design B of four prototyped, shut in the form until asked for. Waiting on
+the owner: an item's Welsh tags, and whether a typed tag takes the roadmap's spelling.
 
 ## Scope
 
@@ -27,8 +27,8 @@ The Tags field of the item's edit form (`features/`), tags as a pending item fie
 and Welsh. The tags offered come from the roadmap's items already on the page, so the
 field has no loading or failure state of its own.
 
-The scenarios below hold for whichever editor Q1 chooses; its answer adds the scenarios
-for that editor's own interactions. This story changes what the editor writes to the
+S1–S14 hold for any editor with a control per tag; S15–S18 are design B's own, which
+the owner chose (D11), and S19 is how the field opens in the form (D13). This story changes what the editor writes to the
 shared data source, a contract with the public site: the item's `Labels` cell (S12),
 and whatever Q2 decides for `Labels (cy)`.
 
@@ -149,28 +149,50 @@ pending change the data source already holds
 **When** Sam edits the tags of an item, one of them forty characters long
 **Then** nothing scrolls sideways, a long tag wraps, and every control can be reached
 
+### S15: Each tag is a row with its own controls (owner, D11)
+
+**Given** the Tags editor showing "Patients" and "Video consultations"
+**When** Sam chooses "Rename" on "Video consultations"
+**Then** its row becomes a field holding the name, with "Update" and "Cancel": Enter or
+"Update" keeps the new name, Escape or "Cancel" the old one
+**And** a name still being changed is kept when Sam confirms the form or uses another
+control of the field
+
+### S16: The row's buttons are icons where words would not fit (owner, D10)
+
+**Given** a card too narrow for one of the item's tags beside "Rename" and "Remove" in
+words
+**When** the Tags editor shows
+**Then** every row's buttons are icons, none drops under its tag, and each keeps its
+name ("Rename Patients")
+**And** where every tag fits beside the words, the buttons show words
+
+### S17: A removal can be undone (owner, D11)
+
+**Given** Sam has removed "Patients"
+**When** Sam chooses "Undo" beside "Removed “Patients”."
+**Then** "Patients" is back in its place
+
+### S18: The roadmap's other tags are buttons under the field for adding (owner, D11)
+
+**Given** the roadmap's other items carry tags the item lacks
+**When** the Tags editor shows
+**Then** they are listed under "Used elsewhere in this roadmap" as buttons; choosing
+one adds its tag and takes it from the list
+**And** typing in "Add a tag" narrows them, and the field says when none matches
+
+### S19: The field starts shut, and opens on request (owner, D13)
+
+**Given** an item tagged "Patients" and "Video consultations"
+**When** Sam opens its edit form
+**Then** the Tags field shows both tags on one line beside a button named "Change tags",
+and no editor; an item with no tags reads "No tags" beside "Add tags"
+**And** choosing the button shows the editor in place, with focus in "Add a tag"; the
+button, now "Close tags", shuts it, and the line shows the tags as changed
+**And** confirming the form keeps the tags whether the field is open or shut
+
 ## Open questions
 
-- **Q1**: Which editor is built? Try the four in
-  `docs/analysis/item-tags-ux-analysis/prototypes.html`; the analysis compares them.
-  S1–S14 are written for A and B, which differ in how a tag is added, renamed and
-  removed; C and D depart from them as their options say.
-  - (a) **B, list and suggestions** (recommended) — each tag is a row with Rename and
-    Remove, shown as icons where a row is too narrow for both (D10); the roadmap's other
-    tags are buttons under an "Add a tag" field. Built from the existing input, button
-    and tag; the longest form of the four. Adds scenarios for the row controls, their
-    icons and Undo.
-  - (b) **A, type-ahead box** — tags sit inside one box and a list opens under it as
-    Sam types. The shortest form; adds shadcn's Combobox, whose in-place rename is
-    ours to build, and the open list covers the form's buttons. Adds scenarios for the
-    list, its keys and Backspace.
-  - (c) **C, tick list** — every tag in the roadmap is a checkbox, as organisations
-    are. Shows the roadmap's whole vocabulary and its near-duplicates; grows with the
-    roadmap. Removing is unticking, an item's tags are ordered by ticking, and the list
-    is alphabetical and not narrowed by typing, so S1, S3 and S5 would be re-cut.
-  - (d) **D, one line of text** — a text field with commas, as in the spreadsheet,
-    with the other tags as buttons. The cheapest; it has no control per tag, so S1 and
-    S11 would be re-cut, and a rename can't be told from a removal and an addition.
 - **Q2**: What happens to an item's Welsh tags when its tags are edited? The data
   source pairs Welsh with English by position, so writing the English alone can show the
   wrong Welsh under a tag, or lose all of an item's Welsh tags (epic F3). No roadmap has
@@ -183,8 +205,8 @@ pending change the data source already holds
   - (b) **Each tag keeps its Welsh** — publishing also writes `Labels (cy)`: a removed
     tag's Welsh goes ("Gofalwyr" stays under "Carers"), a new tag gets a blank place, a
     renamed tag keeps its Welsh as ADR-012 leaves Welsh beside edited English. Amends
-    ADR-012's "English only"; the pending change carries pairs, and design D, or any
-    swap of one tag for another, cannot say which Welsh stays.
+    ADR-012's "English only"; the pending change carries pairs, and a swap of one tag
+    for another cannot say which Welsh stays.
   - (c) **The item's Welsh tags are cleared**, and the form says so first, as it does
     for an unknown organisation code — publishing blanks `Labels (cy)` for that item.
     Simple and never wrong, but translations are lost.
@@ -205,7 +227,7 @@ pending change the data source already holds
 - **D1** (owner, 2026-11-13, the request for this story): while adding a tag, the form
   suggests tags used elsewhere in the same roadmap → S3. Tags stay free text.
 - **D2** (owner, 2026-11-13, the request): prototypes of the tag component alone, to
-  try before choosing → Q1 and `docs/analysis/item-tags-ux-analysis.md`.
+  try before choosing → D11 and `docs/analysis/item-tags-ux-analysis.md`.
 - **D3** (agent, 2026-11-13): tags are edited in the item's edit form and kept pending
   on Done, over editing them on the card: as organisations are (STY-034 D1), with one
   pending model → S2, S9.
@@ -229,7 +251,16 @@ pending change the data source already holds
 - **D10** (owner, 2026-11-13, on trying the prototypes): in design B, where a row is
   too narrow for Rename and Remove beside the tag, they show as lucide icons, so they
   never drop under it. Prototyped: every row switches together, and each button keeps
-  its name. Q1 stays open until the owner confirms B.
+  its name → S16.
+- **D11** (owner, 2026-11-13, on trying the prototypes): which editor is built → B, list
+  and suggestions, as prototyped with D10's icons ("that looks good"). Answers Q1; adds
+  S15–S18. A, C and D are not built.
+- **D12** (agent, 2026-11-13): the card's read-only Tags line hides while its form is
+  open, as the Organisations line does (STY-034), over showing the tags twice.
+- **D13** (owner, 2026-11-13, on seeing the whole form prototyped): the Tags field is
+  not shown at full size as the form opens; it opens on request, as Organisations will
+  (STY-038). Changes: S1, whose controls show once the field is opened; adds S19. The
+  opening field is one piece for both stories (epic _A field that opens on request_).
 
 ## Starting point
 
@@ -243,6 +274,6 @@ library give.
 
 - A shared tag list, tags from other roadmaps, and renaming or merging a tag across a
   roadmap's items: EPC-009 _Out of scope_.
-- Reordering an item's tags: no design offers it; a new tag joins at the end.
+- Reordering an item's tags: design B does not offer it; a new tag joins at the end.
 - Editing a tag's Welsh: with Welsh content editing, a later record.
 - Details, and adding or deleting items: later editing records.

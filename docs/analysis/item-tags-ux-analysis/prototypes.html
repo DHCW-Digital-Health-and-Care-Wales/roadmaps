@@ -634,6 +634,45 @@
         color: var(--d-muted-fg);
       }
 
+      /* A field that opens on request, in the whole form. */
+      .t-line {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        overflow-wrap: anywhere;
+      }
+      .t-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .t-editor legend {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+      }
+      .d-card dl.all {
+        gap: 10px;
+      }
+      .d-card dl.all div {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .d-card dd {
+        white-space: pre-line;
+      }
+      textarea.d-input {
+        display: block;
+        resize: vertical;
+      }
+
       /* D: one line of text, read back as tags. */
       .d-preview {
         display: flex;
@@ -774,6 +813,22 @@
           be kept.
         </p>
         <div class="dhcw stage"><div class="d-card" id="pd-card"></div></div>
+      </figure>
+
+      <figure id="pe">
+        <div class="caption">
+          <figcaption><h2>B in the item's edit form</h2></figcaption>
+          <button type="button" class="again" data-again="pe">
+            Start again
+          </button>
+        </div>
+        <p class="idea">
+          The whole form, with Tags and Organisations shut: each says what it
+          holds on one line beside “Change”. Choosing it opens the field in
+          place, editor B for tags and the checkboxes for organisations, and
+          “Close” shuts it again. Done keeps both either way.
+        </p>
+        <div class="dhcw stage"><div class="d-card" id="pe-card"></div></div>
       </figure>
     </main>
 
@@ -1555,8 +1610,82 @@
             keepOpenRename()
             return addTags(tags, input.value).tags
           },
+          /** Keeps a name still being changed and adds text still in the field. */
+          settle: () => {
+            keepOpenRename()
+            if (clean(input.value) !== "") add(input.value)
+          },
           focus: () => input.focus(),
         }
+      }
+
+      // ---- A field that opens on request: one line of what it holds until asked for ----
+      /**
+       * `body` behind a line saying what the field holds. `read` gives that line's parts,
+       * none for an empty field; `settle` keeps what is half done as the field shuts;
+       * `focus` goes into the body as it opens. The button reads "Change", "Add" or
+       * "Close", then `object` for assistive technology: "Change tags".
+       */
+      function opensOnRequest({
+        id,
+        label,
+        object,
+        body,
+        read,
+        none,
+        settle,
+        focus,
+      }) {
+        let open = false
+        const line = h("div", { class: "t-line" })
+        const empty = h("p", { class: "d-hint" }, none)
+        const word = h("span")
+        const toggle = h(
+          "button",
+          {
+            type: "button",
+            class: "d-btn sec sm",
+            "aria-controls": `${id}-body`,
+            onclick: () => setOpen(!open),
+          },
+          word,
+          " ",
+          srOnly(object),
+        )
+        const region = h("div", { id: `${id}-body`, class: "t-editor" }, body)
+        function draw() {
+          const parts = read()
+          line.replaceChildren(...parts)
+          line.hidden = open || parts.length === 0
+          empty.hidden = open || parts.length > 0
+          region.hidden = !open
+          toggle.setAttribute("aria-expanded", String(open))
+          word.textContent = open
+            ? "Close"
+            : parts.length > 0
+              ? "Change"
+              : "Add"
+        }
+        function setOpen(next) {
+          if (!next) settle?.()
+          open = next
+          draw()
+          if (open) focus()
+        }
+        draw()
+        return h(
+          "div",
+          { class: "d-field" },
+          h(
+            "div",
+            { class: "t-head" },
+            h("p", { class: "d-label", id: `${id}-label` }, label),
+            toggle,
+          ),
+          empty,
+          line,
+          region,
+        )
       }
 
       // ---- C: tick list ----
@@ -1976,6 +2105,274 @@
       mount("pb", editorB)
       mount("pc", editorC)
       mount("pd", editorD)
+
+      // ---- The whole item, for the form that holds the Tags field among the rest ----
+      const ITEM = {
+        title: ITEM_TITLE,
+        description:
+          "Some follow-up appointments don't need a trip to hospital. Three specialties will offer a video call where the clinician and patient agree it suits.",
+        expectedOutcome:
+          "Patients who choose video save the journey, and fewer appointments are missed.",
+        phase: "Discovery",
+        placement: "Next",
+        organisations: ["CAVUHB", "SBUHB"],
+        tags: INITIAL,
+      }
+      const PLACEMENTS = [
+        "Recently delivered",
+        "Now",
+        "Next",
+        "Later",
+        "Delivered this year",
+        "Not doing",
+      ]
+      /** All Wales first, then by short name, as the form lists them. */
+      const ORGANISATIONS = [
+        ["National", "All Wales"],
+        ["ABUHB", "Aneurin Bevan"],
+        ["BCUHB", "Betsi Cadwaladr"],
+        ["CAVUHB", "Cardiff and Vale"],
+        ["CTMUHB", "Cwm Taf Morgannwg"],
+        ["HEIW", "Health Education and Improvement Wales"],
+        ["HDUHB", "Hywel Dda"],
+        ["PTHB", "Powys"],
+        ["PHW", "Public Health Wales"],
+        ["SBUHB", "Swansea Bay"],
+        ["VUNHST", "Velindre"],
+        ["WAST", "Welsh Ambulance"],
+      ]
+      const TEXT_FIELDS = [
+        ["title", "Title", false],
+        ["description", "Description", true],
+        ["expectedOutcome", "Expected outcome", true],
+        ["phase", "Phase", false],
+      ]
+
+      function mountWholeForm(id) {
+        const card = document.getElementById(`${id}-card`)
+        const title = () => h("h3", { id: `${id}-title` }, kept.title)
+        let kept = structuredClone(ITEM)
+
+        function showCard(focus) {
+          const changed = JSON.stringify(kept) !== JSON.stringify(ITEM)
+          const line = (label, text) =>
+            text !== "" &&
+            h("div", null, h("dt", null, label), h("dd", null, text))
+          const edit = h(
+            "button",
+            {
+              type: "button",
+              class: "d-btn sec",
+              onclick: () => showForm(true),
+            },
+            "Edit",
+            " ",
+            srOnly(kept.title),
+          )
+          const parts = [
+            title(),
+            changed && h("span", { class: "d-tag info" }, "Changed"),
+            h(
+              "dl",
+              { class: "all" },
+              line("Phase", kept.phase),
+              line("Description", kept.description),
+              line("Expected outcome", kept.expectedOutcome),
+              line("Tags", kept.tags.join(", ")),
+              line(
+                "Organisations",
+                ORGANISATIONS.filter(([code]) =>
+                  kept.organisations.includes(code),
+                )
+                  .map(([, name]) => name)
+                  .join(", "),
+              ),
+            ),
+            h(
+              "div",
+              { class: "d-actions" },
+              edit,
+              changed &&
+                h(
+                  "button",
+                  {
+                    type: "button",
+                    class: "d-btn sec",
+                    onclick: () => {
+                      kept = structuredClone(ITEM)
+                      showCard(true)
+                    },
+                  },
+                  "Undo changes",
+                  " ",
+                  srOnly(`to ${kept.title}`),
+                ),
+            ),
+          ]
+          card.replaceChildren(...parts.filter(Boolean))
+          if (focus) edit.focus()
+        }
+        function showForm(focus) {
+          const texts = TEXT_FIELDS.map(([name, label, multiline]) => {
+            const control = multiline
+              ? h("textarea", {
+                  id: `${id}-field-${name}`,
+                  class: "d-input",
+                  rows: 4,
+                })
+              : h("input", {
+                  id: `${id}-field-${name}`,
+                  class: "d-input",
+                  type: "text",
+                })
+            control.value = kept[name]
+            return {
+              name,
+              control,
+              element: h(
+                "div",
+                { class: "d-field" },
+                h("label", { class: "d-label", for: control.id }, label),
+                control,
+              ),
+            }
+          })
+          const placement = h(
+            "select",
+            { id: `${id}-placement`, class: "d-input" },
+            PLACEMENTS.map((name) =>
+              h("option", { selected: name === kept.placement }, name),
+            ),
+          )
+          const ticks = ORGANISATIONS.map(([code, name]) => ({
+            code,
+            name,
+            control: h("input", {
+              type: "checkbox",
+              class: "d-check",
+              checked: kept.organisations.includes(code),
+            }),
+          }))
+          const editor = editorB(`${id}-tags`, kept.tags)
+          const tagsField = opensOnRequest({
+            id: `${id}-tags`,
+            label: "Tags",
+            object: "tags",
+            body: editor.element,
+            read: () =>
+              editor.value().map((tag) => h("span", { class: "d-tag" }, tag)),
+            none: "No tags",
+            settle: editor.settle,
+            focus: editor.focus,
+          })
+          const organisationsField = opensOnRequest({
+            id: `${id}-organisations`,
+            label: "Organisations",
+            object: "organisations",
+            body: h(
+              "fieldset",
+              { class: "d-field" },
+              h("legend", null, "Organisations"),
+              h(
+                "ul",
+                { class: "c-rows" },
+                ticks.map(({ code, name, control }) =>
+                  h(
+                    "li",
+                    { class: "c-row" },
+                    h(
+                      "label",
+                      null,
+                      control,
+                      h("span", null, `${name} (${code})`),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // By short name on one line, as the card names them.
+            read: () => {
+              const names = ticks
+                .filter(({ control }) => control.checked)
+                .map(({ name }) => name)
+              return names.length > 0 ? [names.join(", ")] : []
+            },
+            none: "No organisations",
+            focus: () => ticks[0].control.focus(),
+          })
+          card.replaceChildren(
+            title(),
+            h(
+              "form",
+              {
+                class: "d-form",
+                "aria-labelledby": `${id}-title`,
+                novalidate: true,
+                onsubmit: (event) => {
+                  event.preventDefault()
+                  kept = {
+                    ...Object.fromEntries(
+                      texts.map(({ name, control }) => [
+                        name,
+                        // A blank title keeps the old one: the real form asks for one.
+                        control.value.trim() ||
+                          (name === "title" ? kept.title : ""),
+                      ]),
+                    ),
+                    placement: placement.value,
+                    organisations: ticks
+                      .filter(({ control }) => control.checked)
+                      .map(({ code }) => code),
+                    tags: editor.value(),
+                  }
+                  showCard(true)
+                },
+                onkeydown: (event) => {
+                  if (event.key !== "Escape" || event.defaultPrevented) return
+                  event.preventDefault()
+                  showCard(true)
+                },
+              },
+              texts.map(({ element }) => element),
+              h(
+                "div",
+                { class: "d-field" },
+                h(
+                  "label",
+                  { class: "d-label", for: placement.id },
+                  "Horizon or section",
+                ),
+                placement,
+              ),
+              tagsField,
+              organisationsField,
+              h(
+                "div",
+                { class: "d-actions" },
+                h("button", { type: "submit", class: "d-btn" }, "Done"),
+                h(
+                  "button",
+                  {
+                    type: "button",
+                    class: "d-btn sec",
+                    onclick: () => showCard(true),
+                  },
+                  "Cancel",
+                ),
+              ),
+            ),
+          )
+          if (focus) texts[0].control.focus()
+        }
+        document
+          .querySelector(`[data-again="${id}"]`)
+          .addEventListener("click", () => {
+            kept = structuredClone(ITEM)
+            showForm(false)
+          })
+        showForm(false)
+      }
+      mountWholeForm("pe")
 
       // ---- The page's own controls ----
       document

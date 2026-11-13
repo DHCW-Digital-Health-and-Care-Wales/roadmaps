@@ -1,8 +1,7 @@
 # EPC-009: Item tags — free text a Product Lead edits here, nudged towards the tags the roadmap already uses
 
-- **Status**: Active — one story, waiting for the owner to choose an editor and answer
-  two questions
-- **Progress**: 0 of 1 terminal; next selectable: none; blocked on: STY-037 Q1–Q3
+- **Status**: Active — two stories; STY-037 waits on two owner questions
+- **Progress**: 0 of 2 terminal; next selectable: STY-038; blocked on: STY-037 Q2–Q3
 - **Binding ADRs**: ADR-012, ADR-014, ADR-011, ADR-010, ADR-008, ADR-002
 
 ## Summary
@@ -12,13 +11,13 @@ spreadsheet to tag it. This epic makes tags editable in the item's edit form: ad
 rename and remove, pending until published like every other edit. While adding, the
 form offers the tags the roadmap's other items carry, so "Patients" is chosen rather
 than retyped as "patient". Tags stay free text. A shared list across roadmaps, and
-renaming a tag everywhere at once, stay out. Four editors are prototyped for the owner
-to try, and the choice among them is the main decision waiting.
+renaming a tag everywhere at once, stay out. Of four editors prototyped, the owner
+chose B: a row per tag, with the roadmap's other tags as buttons. Seeing it in the whole
+form, the owner asked for the form's two long fields to open on request: Tags, and
+Organisations in a second story.
 
 ## Owner decisions waiting
 
-- [STY-037 Q1](STY-037-edit-an-items-tags.md#open-questions) — which of the four
-  prototyped editors is built
 - [STY-037 Q2](STY-037-edit-an-items-tags.md#open-questions) — what happens to an
   item's Welsh tags when its tags are edited
 - [STY-037 Q3](STY-037-edit-an-items-tags.md#open-questions) — whether a typed tag
@@ -68,15 +67,25 @@ Every field is one string: typed, chosen from fixed options, ticked from fixed o
 (STY-034) or a date (`rg -n "many\?|options\?|date\?" src/features/roadmaps/editing/edit-form.tsx`).
 `src/components/ui/` has no combobox; `@base-ui/react` ships one with chips.
 
+### F6 — The edit form is long before tags join it
+
+In a desktop card the item's edit form is about 1,400px tall, and the twelve
+organisation checkboxes are about 620px of it, whatever the Product Lead came to change
+(measured on the whole-form prototype, at a 360px card). Open, the tags editor adds
+about 340px. With both shut the form is about 860px.
+
 ## Design
 
 1. An item's tags become a pending edit, made in its edit form and published with the
    roadmap's other edits (F1). STY-037.
 2. While adding, the form offers the tags the roadmap's other items carry (F2; owner,
    STY-037 D1). No list is stored: the offer is read off the items on the page.
-3. The editor's design is the owner's choice among four prototypes (F5; STY-037 Q1).
+3. The editor is design B of the four prototyped: a row per tag, and the roadmap's
+   other tags as buttons (F5; owner, STY-037 D11).
 4. What happens to an item's Welsh tags when its tags are edited is STY-037 Q2 (F3).
-5. **Unchanged:** tags are free text; the card's Tags line; ADR-012's per-roadmap,
+5. A field with many controls starts shut in the form and opens on request: Tags
+   (STY-037 S19) and Organisations (STY-038) (F6; owner, STY-037 D13, STY-038 D1).
+6. **Unchanged:** tags are free text; the card's Tags line; ADR-012's per-roadmap,
    all-or-nothing publish, its conflict review and Refresh rules; the reading rules of
    F3 and F4.
 
@@ -92,16 +101,29 @@ and says so in the PR, since the format is a contract with the public site.
 STY-037 amends ADR-012 in place (`### STY-037 amendments`) in its PR, citing its owner
 decisions: tags are no longer read-only, and Q2's answer if it writes a Welsh cell.
 
+### A field that opens on request
+
+One piece serves both stories; whichever is delivered first builds it in the edit form,
+and the other uses it. Shut, the field shows its label, one line saying what it holds
+(or that it holds nothing) and a button: "Change", or "Add" when empty, named with the
+field for assistive technology ("Change tags"). Open, the button reads "Close", says
+the field is open, and the field's controls show in place with focus on the first.
+Shutting keeps what was changed; confirming the form keeps it open or shut. A form
+always opens with the field shut.
+
 ## Stories
 
-| ID      | Story                                                                | Area                                       | Depends on | State |
-| ------- | -------------------------------------------------------------------- | ------------------------------------------ | ---------- | ----- |
-| STY-037 | [A Product Lead edits an item's tags](STY-037-edit-an-items-tags.md) | Domain + Infra + UI + i18n (en + cy) + E2E | —          |       |
+| ID      | Story                                                                                       | Area                                       | Depends on | State |
+| ------- | ------------------------------------------------------------------------------------------- | ------------------------------------------ | ---------- | ----- |
+| STY-037 | [A Product Lead edits an item's tags](STY-037-edit-an-items-tags.md)                        | Domain + Infra + UI + i18n (en + cy) + E2E | —          |       |
+| STY-038 | [The Organisations field opens on request](STY-038-organisations-field-opens-on-request.md) | UI + i18n (en + cy) + E2E                  | —          |       |
 
 ## Sequencing
 
-One story, selectable once Q1–Q3 are answered and it is set Proposed. It stays one
-change: the field, the pending change and the write are not useful apart.
+STY-038 is selectable now and needs nothing of STY-037. STY-037 is selectable once Q2
+and Q3 are answered and it is set Proposed; it stays one change, since the field, the
+pending change and the write are not useful apart. Either order works: the first
+delivered builds _A field that opens on request_.
 
 ## Out of scope
 
@@ -119,8 +141,7 @@ None.
 ## Related
 
 - [`docs/analysis/item-tags-ux-analysis.md`](../../analysis/item-tags-ux-analysis.md):
-  the four editors compared, with the prototypes to try. No Outcome yet: it waits for
-  STY-037 Q1.
+  the four editors compared, with the prototypes to try. Outcome: B (STY-037 D11).
 - `docs/analysis/roadmap-tab-format.md`: the `Labels` column and its Welsh pairing.
 - ADR-011 (the item model), ADR-012 (publishing), ADR-014 (the organisations precedent).
 - Persona: `docs/backlog/personas/product-lead.md` (_Tag items_, _Inconsistent tags_,

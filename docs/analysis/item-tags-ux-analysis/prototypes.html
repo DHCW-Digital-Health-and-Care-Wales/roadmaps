@@ -1478,10 +1478,13 @@
                     "data-key": key,
                     checked: has(tag),
                     onchange: (event) => {
+                      // Keeping an open rename may itself add or drop this tag, and says so.
+                      const renaming = editing !== null
                       keepOpenRename()
-                      if (event.target.checked) tags.push(tag)
-                      else tags = tags.filter((other) => keyOf(other) !== key)
-                      status.clear()
+                      if (!event.target.checked)
+                        tags = tags.filter((other) => keyOf(other) !== key)
+                      else if (!has(tag)) tags.push(tag)
+                      if (!renaming) status.clear()
                       draw(key)
                     },
                   }),

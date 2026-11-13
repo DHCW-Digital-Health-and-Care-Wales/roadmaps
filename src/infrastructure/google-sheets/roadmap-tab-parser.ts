@@ -18,6 +18,7 @@ import {
 } from "@/domain/roadmap/roadmap-placement"
 import { AppError } from "@/lib/errors"
 
+import { BUILT_IN_ORGANISATIONS } from "./built-in-organisations"
 import {
   columnIndexes,
   headerReader,
@@ -26,7 +27,6 @@ import {
   type HeaderProblemCode,
   type SheetHeader,
 } from "./sheet-header"
-import { BUILT_IN_ORGANISATIONS } from "./built-in-organisations"
 import { ProblemLog, type SheetProblem } from "./sheet-problem-log"
 
 /** A mistake in a roadmap tab, as data for a later sheet-health view (no prose). */
@@ -342,9 +342,9 @@ function readOrganisations(
     }
   }
   return {
-    organisationIds: BUILT_IN_ORGANISATIONS.map(({ id }) => id).filter((id) =>
+    organisationIds: BUILT_IN_ORGANISATIONS.filter(({ id }) =>
       found.has(id),
-    ),
+    ).map(({ id }) => id),
     unknownOrganisationCodes: [...unknown],
   }
 }

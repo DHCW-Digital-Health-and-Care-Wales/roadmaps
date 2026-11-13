@@ -7,7 +7,7 @@
 - **Depends on**: STY-027 (hard)
 - **Binding ADRs**: ADR-013, ADR-012
 - **Suggested model**: Sonnet — it reuses STY-027's flag and an existing write path
-- **Delivered**: (PR to be linked)
+- **Delivered**: [#48](https://github.com/collisdigital/roadmaps-editor/pull/48)
 
 ## Summary
 

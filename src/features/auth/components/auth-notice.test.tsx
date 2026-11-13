@@ -1,6 +1,5 @@
-import { fireEvent, screen, within } from "@testing-library/react"
+import { act, fireEvent, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { act } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import type { AuthState } from "@/domain/auth/auth-client"

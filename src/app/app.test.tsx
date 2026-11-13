@@ -1,7 +1,6 @@
 import { createHashHistory } from "@tanstack/react-router"
-import { screen, waitFor, within } from "@testing-library/react"
+import { act, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { act } from "react"
 import { afterEach, describe, expect, it } from "vitest"
 
 import type { AuthState } from "@/domain/auth/auth-client"

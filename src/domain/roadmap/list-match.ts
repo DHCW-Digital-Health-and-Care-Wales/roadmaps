@@ -33,7 +33,8 @@ export function canMatchLists(
 
 /**
  * Whether to write: the roadmap as re-read must be fixable and show what the Product
- * Lead saw, its family and category (names and colour) included (S4). Settled, writing
+ * Lead saw, its family and category (names and colour) and whether it is published
+ * included (S4): a roadmap published meanwhile is confirmed first (S2). Settled, writing
  * nothing, otherwise.
  */
 export function planListMatch(
@@ -54,6 +55,7 @@ export function planListMatch(
 
 function shownAlike(a: Roadmap, b: Roadmap): boolean {
   return (
+    a.published === b.published &&
     a.familyId === b.familyId &&
     a.family?.en === b.family?.en &&
     a.family?.cy === b.family?.cy &&

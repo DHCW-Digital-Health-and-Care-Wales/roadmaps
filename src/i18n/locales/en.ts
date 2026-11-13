@@ -146,6 +146,8 @@ export const en = {
       category: "Category: {{name}}",
       /** Fixing a roadmap whose copied family or category cells differ from the lists (STY-030). */
       match: {
+        /** Beside a family the list doesn't have, which "Make it match" can't fix (S3). */
+        chooseFamily: "Choose its family under About this roadmap.",
         action: "Make it match",
         confirm: {
           title: "Make {{title}} match its family and category?",
@@ -158,7 +160,7 @@ export const en = {
           matchedPublic:
             "{{title}} now matches its family and category. The public site shows it after its next nightly update.",
           changed:
-            "This roadmap changed while you were looking. Nothing was written. It's shown as it is now.",
+            "This roadmap changed while you were looking. Nothing was changed.",
           failed: "Couldn't make the roadmap match",
         },
         errors: {

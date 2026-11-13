@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react"
+import { act, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it } from "vitest"
 
@@ -31,14 +31,14 @@ async function renderPage(roadmap: Roadmap, write?: { fails: "forbidden" }) {
     { producta: [createTestRoadmapItem("First item")] },
     { write },
   )
-  await renderWithProviders({
+  const { authClient } = await renderWithProviders({
     path: "/roadmaps/producta",
     authState: connected,
     repository,
   })
   const main = within(screen.getByRole("main"))
   await main.findByRole("heading", { level: 3, name: "First item" })
-  return { user, main, repository }
+  return { user, main, repository, authClient }
 }
 
 describe("making a roadmap match its lists (STY-030)", () => {
@@ -94,13 +94,51 @@ describe("making a roadmap match its lists (STY-030)", () => {
     )
 
     expect(main.getByText("Family isn't listed")).toBeVisible()
+    expect(
+      main.getByText("Choose its family under About this roadmap."),
+    ).toBeVisible()
     expect(main.queryByRole("button", { name: /Make it match/ })).toBeNull()
+  })
+
+  it("is held while the session has expired, writing nothing", async () => {
+    const { user, main, authClient, repository } = await renderPage(
+      outOfStep({ published: false }),
+    )
+
+    act(() => {
+      authClient.setState({ status: "expired" })
+    })
+    const action = main.getByRole("button", { name: /Make it match/ })
+    expect(action).toHaveAttribute("aria-disabled", "true")
+    await user.click(action)
+
+    expect((await repository.listRoadmaps())[0]?.outOfStep).toBe(true)
   })
 
   it("is not offered for a roadmap in step", async () => {
     const { main } = await renderPage(outOfStep({ outOfStep: false }))
 
     expect(main.queryByRole("button", { name: /Make it match/ })).toBeNull()
+  })
+
+  it("asks first when an unpublished roadmap was published meanwhile (S2)", async () => {
+    const { user, main, repository } = await renderPage(
+      outOfStep({ published: false }),
+    )
+    repository.coLead((roadmaps) => {
+      const [roadmap] = roadmaps
+      if (roadmap) roadmap.published = true
+    })
+
+    await user.click(main.getByRole("button", { name: /Make it match/ }))
+
+    expect(
+      await main.findByText(/This roadmap changed while you were looking/),
+    ).toBeVisible()
+    expect((await repository.listRoadmaps())[0]?.outOfStep).toBe(true)
+
+    await user.click(main.getByRole("button", { name: /Make it match/ }))
+    expect(await screen.findByRole("alertdialog")).toBeVisible()
   })
 
   it("shows the roadmap as it now is when it changed meanwhile, writing nothing (S4)", async () => {

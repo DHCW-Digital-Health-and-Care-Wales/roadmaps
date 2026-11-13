@@ -3,7 +3,7 @@
 - **Status**: Done — delivered in its PR, which awaits the owner's merge
 - **Type**: Feature
 - **Area**: Infrastructure + Features/UI + i18n (en + cy)
-- **Epic**: EPC-006-product-families-and-colours
+- **Epic**: [EPC-006-product-families-and-colours](README.md)
 - **Depends on**: STY-027 (hard)
 - **Binding ADRs**: ADR-013, ADR-012
 - **Suggested model**: Sonnet — it reuses STY-027's flag and an existing write path
@@ -82,7 +82,15 @@ writes a chosen family). Nothing else is written.
   roadmap's family or category (ID, names, colour) differ from what the page showed, or
   the roadmap is no longer out of step or no longer fixable; a co-lead's edit to a
   copied cell that leaves it out of step is overwritten with the same list values the
-  Product Lead saw, so nothing they hadn't seen is lost.
+  Product Lead saw, so nothing they hadn't seen is lost. This leaves S4's "copied cells
+  changed" half unmet; [CHO-003](../../chores/CHO-003-refuse-make-it-match-on-a-copied-cell-change.md)
+  proposes carrying the row's own cells to close it, and the owner decides whether it is
+  worth the cost.
+- **S3's pointer.** The "Family isn't listed" badge stays; beside it the page says
+  "Choose its family under About this roadmap." where "Make it match" would have been.
+- **A roadmap published meanwhile** is refused like any other change (the page shows it as
+  now, and its confirmation comes first), so an unpublished roadmap never goes public
+  without S2's warning.
 - **A refused write** shows "This roadmap changed while you were looking…" and the roadmap
   list is re-read, so the page shows it as it now is.
 - **Pending edits** are untouched: the write is a separate mutation

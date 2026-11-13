@@ -4,6 +4,7 @@ import { canMatchLists, planListMatch } from "./list-match"
 import { createTestRoadmap } from "./testing/test-roadmap"
 
 const loaded = createTestRoadmap("producta", "Product A", {
+  published: false,
   family: { en: "Single Record", cy: "" },
   familyId: "fc29g5b9",
   colour: "#12a3c9",
@@ -48,6 +49,7 @@ describe("planListMatch", () => {
     ["its family was changed", { familyId: "vdkxj63m" }],
     ["its category was renamed", { category: { en: "Other", cy: "" } }],
     ["its category was changed", { categoryId: "w7vrv5kn" }],
+    ["it was published, so it is confirmed first (S2)", { published: true }],
   ])("writes nothing when %s since it loaded (S4)", (_, change) => {
     const current = { ...loaded, ...change }
 

@@ -1,5 +1,6 @@
 import { CircleAlertIcon, CircleCheckIcon, InfoIcon } from "lucide-react"
 import { useState } from "react"
+import type { TFunction } from "i18next"
 import { useTranslation } from "react-i18next"
 
 import { DismissibleNotice } from "@/components/layout/dismissible-notice"
@@ -16,6 +17,7 @@ import { Button } from "@/components/ui/button"
 import { canMatchLists, type MatchOutcome } from "@/domain/roadmap/list-match"
 import { localise } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
+import { useAuth } from "@/features/auth/use-auth"
 import { useLanguage } from "@/i18n"
 import { isAppError, type AppErrorKind } from "@/lib/errors"
 
@@ -30,6 +32,28 @@ type Notice =
   | { kind: "changed" }
   | { kind: "failed"; error: AppErrorKind }
 
+const noticeLook = {
+  matched: { variant: "success", Icon: CircleCheckIcon },
+  changed: { variant: "info", Icon: InfoIcon },
+  failed: { variant: "destructive", Icon: CircleAlertIcon },
+} as const
+
+function noticeText(notice: Notice, title: string, t: TFunction): string {
+  switch (notice.kind) {
+    case "failed":
+      return t(`roadmaps.lists.match.errors.${notice.error}`)
+    case "changed":
+      return t("roadmaps.lists.match.notice.changed")
+    case "matched":
+      return t(
+        notice.published
+          ? "roadmaps.lists.match.notice.matchedPublic"
+          : "roadmaps.lists.match.notice.matched",
+        { title },
+      )
+  }
+}
+
 /**
  * "Make it match" for a roadmap out of step with its family or category, and what it
  * came to (STY-030). A published roadmap is told the fix goes public at the next nightly
@@ -39,6 +63,7 @@ type Notice =
 export function MatchListsAction({ roadmap }: MatchListsActionProps) {
   const { t } = useTranslation()
   const language = useLanguage()
+  const connected = useAuth().state.status === "connected"
   const match = useMatchRoadmap()
   const [asking, setAsking] = useState(false)
   const [notice, setNotice] = useState<Notice | null>(null)
@@ -76,7 +101,7 @@ export function MatchListsAction({ roadmap }: MatchListsActionProps) {
         <div>
           <Button
             variant="secondary"
-            disabled={match.isPending}
+            disabled={!connected || match.isPending}
             focusableWhenDisabled
             aria-busy={match.isPending}
             onClick={choose}
@@ -87,23 +112,16 @@ export function MatchListsAction({ roadmap }: MatchListsActionProps) {
           </Button>
         </div>
       )}
+      {roadmap.familyNotListed && (
+        <p className="text-body-xs text-muted-foreground">
+          {t("roadmaps.lists.match.chooseFamily")}
+        </p>
+      )}
       {notice && (
         <DismissibleNotice
           role={notice.kind === "failed" ? "alert" : "status"}
-          variant={
-            notice.kind === "failed"
-              ? "destructive"
-              : notice.kind === "changed"
-                ? "info"
-                : "success"
-          }
-          Icon={
-            notice.kind === "failed"
-              ? CircleAlertIcon
-              : notice.kind === "changed"
-                ? InfoIcon
-                : CircleCheckIcon
-          }
+          variant={noticeLook[notice.kind].variant}
+          Icon={noticeLook[notice.kind].Icon}
           title={
             notice.kind === "failed"
               ? t("roadmaps.lists.match.notice.failed")
@@ -114,18 +132,7 @@ export function MatchListsAction({ roadmap }: MatchListsActionProps) {
           }}
           className="max-w-2xl"
         >
-          <p>
-            {notice.kind === "failed"
-              ? t(`roadmaps.lists.match.errors.${notice.error}`)
-              : notice.kind === "changed"
-                ? t("roadmaps.lists.match.notice.changed")
-                : t(
-                    notice.published
-                      ? "roadmaps.lists.match.notice.matchedPublic"
-                      : "roadmaps.lists.match.notice.matched",
-                    { title },
-                  )}
-          </p>
+          <p>{noticeText(notice, title, t)}</p>
         </DismissibleNotice>
       )}
       <AlertDialog

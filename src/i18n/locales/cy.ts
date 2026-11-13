@@ -142,6 +142,8 @@ export const cy = {
       family: "Teulu: {{name}}",
       category: "Categori: {{name}}",
       match: {
+        /** Beside a family the list doesn't have, which "Make it match" can't fix (S3). */
+        chooseFamily: "Dewiswch ei deulu o dan Ynglŷn â'r map trywydd hwn.",
         action: "Gwneud iddo gyfateb",
         confirm: {
           title: "Gwneud i {{title}} gyfateb i'w deulu a'i gategori?",
@@ -154,7 +156,7 @@ export const cy = {
           matchedPublic:
             "Mae {{title}} bellach yn cyfateb i'w deulu a'i gategori. Bydd y wefan gyhoeddus yn ei ddangos ar ôl ei diweddariad nesaf dros nos.",
           changed:
-            "Newidiodd y map trywydd hwn tra oeddech chi'n edrych. Chafodd dim byd ei ysgrifennu. Mae'n cael ei ddangos fel y mae nawr.",
+            "Newidiodd y map trywydd hwn tra oeddech chi'n edrych. Chafodd dim byd ei newid.",
           failed: "Doedd dim modd gwneud i'r map trywydd gyfateb",
         },
         errors: {

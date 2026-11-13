@@ -486,13 +486,68 @@
       .b-row:first-child {
         border-top: 1px solid var(--d-border);
       }
-      .b-row .b-actions {
+      .b-actions {
         display: flex;
         gap: 8px;
+      }
+      .b-row .b-actions {
         margin-left: auto;
       }
       .b-row .d-input {
         flex: 1 1 12ch;
+      }
+      /* Where a row is too narrow for a tag beside its worded buttons, the buttons
+         show icons instead, so they never drop under the tag. */
+      .b-ico {
+        display: none;
+      }
+      .b-ico svg {
+        display: block;
+        width: 16px;
+        height: 16px;
+      }
+      .b-rows.icons .b-ico {
+        display: inline-flex;
+      }
+      .b-rows.icons .b-txt {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+      }
+      .b-rows.icons .b-row {
+        flex-wrap: nowrap;
+      }
+      .b-rows.icons .d-tag,
+      .b-rows.icons .b-row .d-input {
+        flex: 0 1 auto;
+        min-width: 0;
+      }
+      .b-rows.icons .b-row .d-input {
+        flex-grow: 1;
+      }
+      .b-rows.icons .b-actions .d-btn {
+        flex: none;
+        width: 32px;
+        padding: 0;
+      }
+      /* Measures a tag and the worded buttons at their own widths, out of sight and
+         taking no room. */
+      .b-probe {
+        position: absolute;
+        visibility: hidden;
+        width: 0;
+        height: 0;
+        overflow: hidden;
+        display: flex;
+        white-space: nowrap;
+      }
+      .b-probe > * {
+        flex: none;
+        max-width: none;
       }
       .b-add {
         display: flex;
@@ -683,7 +738,8 @@
         </div>
         <p class="idea">
           Nothing opens or hides. Each tag has its own row with Rename and
-          Remove; the roadmap's other tags are buttons under the Add field,
+          Remove, which become icons when a row is too narrow for both beside
+          the tag; the roadmap's other tags are buttons under the Add field,
           narrowed as you type. A removal can be undone.
         </p>
         <div class="dhcw stage"><div class="d-card" id="pb-card"></div></div>
@@ -936,6 +992,35 @@
         })
         return edit
       }
+      /** The lucide icons a row's buttons can show, as their path data (lucide 1.70). */
+      const ICONS = {
+        pencil: [
+          "M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z",
+          "m15 5 4 4",
+        ],
+        trash: [
+          "M10 11v6",
+          "M14 11v6",
+          "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6",
+          "M3 6h18",
+          "M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2",
+        ],
+        check: ["M20 6 9 17l-5-5"],
+        x: ["M18 6 6 18", "m6 6 12 12"],
+      }
+      /**
+       * A button's word with its icon. Styles show one of the two: the word stays the
+       * button's name when only the icon shows.
+       */
+      function worded(icon, word) {
+        const drawn = h("span", { class: "b-ico", "aria-hidden": "true" })
+        drawn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[
+          icon
+        ]
+          .map((d) => `<path d="${d}"/>`)
+          .join("")}</svg>`
+        return [drawn, h("span", { class: "b-txt" }, word)]
+      }
       /** The buttons beside a name being changed, each named for its tag. */
       function renameButtons(tag, edit, finish) {
         return [
@@ -944,9 +1029,10 @@
             {
               type: "button",
               class: "d-btn sec sm",
+              "data-word": "Update",
               onclick: () => finish(edit.value),
             },
-            "Update",
+            worded("check", "Update"),
             " ",
             srOnly(tag),
           ),
@@ -955,9 +1041,10 @@
             {
               type: "button",
               class: "d-btn sec sm",
+              "data-word": "Cancel",
               onclick: () => finish(tag),
             },
-            "Cancel",
+            worded("x", "Cancel"),
             " ",
             srOnly(`renaming ${tag}`),
           ),
@@ -1234,7 +1321,23 @@
         /** The field of the name being changed, while one is. */
         let openEdit = null
         const status = statusLine()
-        const rows = h("ul", { "aria-label": "Tags on this item" })
+        const rows = h("ul", {
+          class: "b-rows",
+          "aria-label": "Tags on this item",
+        })
+        const probeTag = h("span", { class: "d-tag" })
+        const probeButtons = h(
+          "span",
+          { class: "b-actions" },
+          h("span", { class: "d-btn sec sm" }, "Rename"),
+          h("span", { class: "d-btn sec sm" }, "Remove"),
+        )
+        const probe = h(
+          "div",
+          { class: "b-probe", "aria-hidden": "true" },
+          probeTag,
+          probeButtons,
+        )
         const none = h("p", { class: "d-hint" }, "No tags")
         const input = h("input", {
           id: `${id}-input`,
@@ -1254,6 +1357,28 @@
         })
         const noMatch = h("p", { class: "d-hint" })
 
+        /**
+         * Shows the rows' buttons as icons when any tag is too wide to sit beside worded
+         * ones, so every row looks alike and none wraps. It measures each tag's own
+         * width, the one being renamed too, so opening a rename never changes the look.
+         */
+        function fit() {
+          const room = rows.clientWidth
+          if (room === 0) return
+          // Whole pixels, rounded up, plus the row's 8px gap.
+          const width = (element) =>
+            Math.ceil(element.getBoundingClientRect().width)
+          const buttons = width(probeButtons) + 8
+          const icons = tags.some((tag) => {
+            probeTag.textContent = tag
+            return width(probeTag) + buttons > room
+          })
+          rows.classList.toggle("icons", icons)
+          for (const button of rows.querySelectorAll("[data-word]")) {
+            if (icons) button.title = button.dataset.word
+            else button.removeAttribute("title")
+          }
+        }
         function drawRows() {
           none.hidden = tags.length > 0
           rows.hidden = tags.length === 0
@@ -1286,6 +1411,7 @@
                       type: "button",
                       class: "d-btn sec sm",
                       "data-rename": true,
+                      "data-word": "Rename",
                       onclick: () => {
                         keepOpenRename()
                         editing = tags.indexOf(tag)
@@ -1294,7 +1420,7 @@
                         openEdit.select()
                       },
                     },
-                    "Rename",
+                    worded("pencil", "Rename"),
                     " ",
                     srOnly(tag),
                   ),
@@ -1304,9 +1430,10 @@
                       type: "button",
                       class: "d-btn sec sm",
                       "data-remove": true,
+                      "data-word": "Remove",
                       onclick: () => remove(tag),
                     },
-                    "Remove",
+                    worded("trash", "Remove"),
                     " ",
                     srOnly(tag),
                   ),
@@ -1314,6 +1441,7 @@
               )
             }),
           )
+          fit()
         }
         function drawSuggestions() {
           const typed = clean(input.value)
@@ -1403,6 +1531,8 @@
 
         addOnKeys(input, add)
         input.addEventListener("input", drawSuggestions)
+        // The card's width decides the look, and is known only once the form is shown.
+        new ResizeObserver(fit).observe(rows)
 
         drawRows()
         drawSuggestions()
@@ -1413,6 +1543,7 @@
             h("legend", null, "Tags"),
             none,
             rows,
+            probe,
             h("label", { class: "d-sub", for: `${id}-input` }, "Add a tag"),
             addRow(input, add),
             status.element,

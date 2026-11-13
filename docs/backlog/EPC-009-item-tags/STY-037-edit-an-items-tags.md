@@ -156,9 +156,10 @@ pending change the data source already holds
   S1–S14 are written for A and B, which differ in how a tag is added, renamed and
   removed; C and D depart from them as their options say.
   - (a) **B, list and suggestions** (recommended) — each tag is a row with Rename and
-    Remove; the roadmap's other tags are buttons under an "Add a tag" field. Built from
-    the existing input, button and tag; the longest form of the four. Adds scenarios
-    for the row controls and Undo.
+    Remove, shown as icons where a row is too narrow for both (D10); the roadmap's other
+    tags are buttons under an "Add a tag" field. Built from the existing input, button
+    and tag; the longest form of the four. Adds scenarios for the row controls, their
+    icons and Undo.
   - (b) **A, type-ahead box** — tags sit inside one box and a list opens under it as
     Sam types. The shortest form; adds shadcn's Combobox, whose in-place rename is
     ours to build, and the open list covers the form's buttons. Adds scenarios for the
@@ -225,6 +226,10 @@ pending change the data source already holds
   alphabetical alone: the common tag is the likeliest and the one to converge on → S3.
 - **D9** (agent, 2026-11-13): no limit on the number or length of tags: ADR-012 sets
   none and the card budget is deferred (persona A11).
+- **D10** (owner, 2026-11-13, on trying the prototypes): in design B, where a row is
+  too narrow for Rename and Remove beside the tag, they show as lucide icons, so they
+  never drop under it. Prototyped: every row switches together, and each button keeps
+  its name. Q1 stays open until the owner confirms B.
 
 ## Starting point
 

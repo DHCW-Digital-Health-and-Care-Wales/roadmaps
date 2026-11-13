@@ -15,7 +15,7 @@ const TITLE_ID = "roadmaps-title"
 
 /**
  * The home page once there is (or was) a session: the roadmaps with loading, empty,
- * error and expired states, and a link to the families and categories (STY-029).
+ * error and expired states, and a link to the families, categories and organisations (STY-029).
  * While expired, roadmaps loaded earlier stay visible under a Reconnect prompt, and
  * nothing refetches until the user reconnects.
  */

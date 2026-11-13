@@ -506,8 +506,11 @@ describe("FamiliesPage (STY-029)", () => {
 })
 
 describe("FamiliesPage organisations (STY-033)", () => {
-  async function organisationsSection(language?: "en" | "cy") {
-    await renderPage(repositoryWith(), connected, language)
+  async function organisationsSection({
+    language,
+    repository = repositoryWith(),
+  }: { language?: "en" | "cy"; repository?: RoadmapRepository } = {}) {
+    await renderPage(repository, connected, language)
     const heading = await main().findByRole("heading", {
       level: 2,
       name: language === "cy" ? "Sefydliadau" : "Organisations",
@@ -542,7 +545,7 @@ describe("FamiliesPage organisations (STY-033)", () => {
   })
 
   it("shows the Welsh full names, sorted as Welsh (S3)", async () => {
-    const section = await organisationsSection("cy")
+    const section = await organisationsSection({ language: "cy" })
 
     expect(
       section.getAllByRole("listitem").map((item) => item.textContent),
@@ -558,15 +561,9 @@ describe("FamiliesPage organisations (STY-033)", () => {
   })
 
   it("says none are listed when the list is empty (S4)", async () => {
-    await renderPage(repositoryWith({}, {}, []))
-
-    const heading = await main().findByRole("heading", {
-      level: 2,
-      name: "Organisations",
+    const section = await organisationsSection({
+      repository: repositoryWith({}, {}, []),
     })
-    const region = heading.closest("section")
-    if (region === null) throw new Error("No organisations section")
-    const section = within(region)
     expect(
       section.getByText("No organisations are listed."),
     ).toBeInTheDocument()

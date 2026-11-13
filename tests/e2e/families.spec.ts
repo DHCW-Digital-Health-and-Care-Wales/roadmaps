@@ -9,7 +9,7 @@ import {
 import { connect, expect, test } from "./fixtures/test"
 
 /**
- * STY-029: the families and categories page, adding a family, and renaming or
+ * STY-029, STY-033: the families, categories and organisations page, adding a family, and renaming or
  * recolouring one with its roadmaps in one write.
  */
 

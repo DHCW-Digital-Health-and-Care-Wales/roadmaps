@@ -134,7 +134,7 @@ export const en = {
     // "3 roadmaps, 1 not published": the nested keys keep each part's plural forms.
     countWithUnpublished:
       '$t(roadmaps.count, {"count": {{total}} }), $t(roadmaps.unpublishedCount, {"count": {{unpublished}} })',
-    /** The link to the families and categories page. */
+    /** The link to the families, categories and organisations page. */
     familiesLink: "Families, categories and organisations",
     /** The heading over the roadmaps in no product family, when others have one. */
     noFamily: "No product family",
@@ -371,7 +371,7 @@ export const en = {
         unknown: "Something went wrong. Please try again.",
       } satisfies Record<AppErrorKind, string>,
     },
-    /** The page listing the families and categories (STY-029), linked from the list. */
+    /** The page listing the families, categories and organisations (STY-029, STY-033), linked from the list. */
     families: {
       title: "Families, categories and organisations",
       description:

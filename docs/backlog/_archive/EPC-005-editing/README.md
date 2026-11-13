@@ -169,7 +169,7 @@ message and keeps the edits.
   editing records; moving needs placement editing.
 - **Tags, organisations and details**: structured fields with their own editors.
 - **Welsh content** (ADR-012 Option 3): a later record, which may add Welsh columns.
-- **Family and colour**: [EPC-006](../../EPC-006-product-families-and-colours/README.md),
+- **Family and colour**: [EPC-006](../EPC-006-product-families-and-colours/README.md),
   since they are set per roadmap but belong together.
 - **Category, published, `Last updated`**: later records; staleness (A7) owns
   `Last updated`.
@@ -191,5 +191,5 @@ None.
   [the roadmap index format](../../../analysis/roadmaps-tab-format.md)
 - [EPC-004 Roadmap items](../EPC-004-roadmap-items/README.md) (archived), whose
   item model and reads this epic writes back
-- [EPC-006 Product families and colours](../../EPC-006-product-families-and-colours/README.md)
+- [EPC-006 Product families and colours](../EPC-006-product-families-and-colours/README.md)
 - The persona's needs: [Product Lead](../../personas/product-lead.md) A9, A10, A12

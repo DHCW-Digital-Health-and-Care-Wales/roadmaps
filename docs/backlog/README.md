@@ -20,7 +20,7 @@ moves to `_archive/`, where its row here still points.
 | [EPC-003 DHCW design alignment](_archive/EPC-003-dhcw-design-alignment/README.md)                        | STY-013–STY-018: DHCW tokens, type and focus; lint-enforced tokens; DHCW components, shell and logo; on-screen failures and a session warning; look checks without screenshots  | Done   |
 | [EPC-004 Roadmap items](_archive/EPC-004-roadmap-items/README.md)                                        | STY-019–STY-021: model a roadmap item from every column, read a roadmap's items by header, and show them on its page under the six placements                                   | Done   |
 | [EPC-005 Editing](_archive/EPC-005-editing/README.md)                                                    | STY-022–STY-026: item identity, a write that refuses on a co-lead's conflict, an "About this roadmap" block, editing in place with one publish per roadmap, and conflict review | Done   |
-| [EPC-006 Product families and colours](EPC-006-product-families-and-colours/README.md)                   | STY-027–STY-030: families and categories defined once in their own tabs, chosen per roadmap, managed in one page, out-of-step rows fixed; ready to deliver                      | Active |
+| [EPC-006 Product families and colours](_archive/EPC-006-product-families-and-colours/README.md)          | STY-027–STY-030: families and categories defined once in their own tabs, chosen per roadmap, managed in one page, out-of-step rows fixed                                        | Done   |
 | [EPC-007 Item placement and organisations](EPC-007-item-placement-and-organisations/README.md)           | STY-031–STY-034: move an item between horizons and sections; organisations served by the repository, listed, and chosen per item                                                | Active |
 
 ## Chores
@@ -29,6 +29,7 @@ moves to `_archive/`, where its row here still points.
 | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- | -------- |
 | [CHO-001](chores/CHO-001-carry-linked-name-with-pending-choice.md)       | Carry the linked name with each pending family/category choice, so renames before first publish are not conflicts | Proposed |
 | [CHO-002](chores/CHO-002-show-a-deleted-pending-choice-as-not-listed.md) | Show a pending family or category deleted from its list as not listed                                             | Proposed |
+| [CHO-004](chores/CHO-004-share-the-write-failure-copy.md)                | Share the eight-key write-failure copy between publishing, families and "Make it match"                           | Proposed |
 
 Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status token.
 

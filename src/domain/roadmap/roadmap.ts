@@ -1,5 +1,23 @@
 import type { LocalisedText } from "./localised-text"
 
+/** A roadmap's own copy of its family and category, as its row holds them (ADR-013). */
+export interface RoadmapCopiedCells {
+  family: LocalisedText | null
+  /** Lower-case `#rrggbb`, or `null` when blank or not a colour. */
+  colour: string | null
+  /** The category's English name as written, `""` for none. */
+  category: string
+}
+
+/** A roadmap's own copy of its family and category, as its row holds them (ADR-013). */
+export interface RoadmapCopiedCells {
+  family: LocalisedText | null
+  /** Lower-case `#rrggbb`, or `null` when blank or not a colour. */
+  colour: string | null
+  /** The category's English name as written, `""` for none. */
+  category: string
+}
+
 /**
  * A roadmap the user can open, with what the roadmap list holds about it (ADR-009).
  * Optional text is `null` when it has no English, so no screen renders an empty part.
@@ -22,6 +40,11 @@ export interface Roadmap {
   family: LocalisedText | null
   /** The listed family's id; `null` for a family not in the list, or no list. */
   familyId: string | null
+  /**
+   * What its row's own copied cells hold, as read, whatever the lists say: the base a
+   * "Make it match" is refused against when a co-lead edits one (STY-030 S4).
+   */
+  copied: RoadmapCopiedCells
   /**
    * Its row's copied family or category cells differ from the list's values, which are
    * the ones shown (ADR-013).

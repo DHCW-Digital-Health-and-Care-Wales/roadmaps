@@ -148,9 +148,9 @@ export function findPublishedStateRow(
 /**
  * The place among `rows` of the row that holds what `loaded` showed, from its own
  * cells: where its items are and every field but its published state and those with a
- * pending edit sent, which publishing settles (ADR-012). Of several, the first whose
- * published state is the one shown, so a disabled copy of a live row is never taken
- * for it, else the first; `-1` for none.
+ * pending edit sent, which publishing settles (ADR-012). Of several, the one the list
+ * kept when the page loaded it (ADR-009): for a published roadmap the first published,
+ * so a disabled copy of a live row is never taken for it; else the first. `-1` for none.
  */
 export function findLoadedRow(
   loaded: Roadmap,
@@ -161,11 +161,10 @@ export function findLoadedRow(
   const holding = rows.flatMap(({ roadmap }, i) =>
     holdsLoaded(loaded, roadmap, edited) ? [i] : [],
   )
-  return (
-    holding.find((i) => rows[i]?.roadmap.published === loaded.published) ??
-    holding[0] ??
-    -1
-  )
+  const kept = loaded.published
+    ? holding.find((i) => rows[i]?.roadmap.published)
+    : undefined
+  return kept ?? holding[0] ?? -1
 }
 
 /**

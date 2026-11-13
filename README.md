@@ -152,7 +152,8 @@ roadmap's index row's `Enabled` cell, as exactly `Yes` or `No` (any other value,
 `yes`, `TRUE` or blank, is overwritten), and the `Enabled` column, appended with its
 header, if the index has none (STY-035). The row written is one with the roadmap's ID,
 listed or not, that still holds what the page showed, its `Sheet` value included (of
-several, the first whose `Enabled` reads as the page showed it); nothing is written when
+several, the one the list kept: for a published roadmap the first enabled, else the
+first); nothing is written when
 none does, or when the cell already holds the value. Publishing a roadmap with
 pending edits ("Save and publish") writes them with `Enabled` in the same request, as a
 publish of them writes them, all or nothing. Publishing writes nothing while the row

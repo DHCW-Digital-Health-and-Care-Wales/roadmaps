@@ -189,6 +189,15 @@ export function describePublishedState(
       expect(await repository.listRoadmaps()).toStrictEqual([draft, other])
     })
 
+    it("counts a roadmap a co-lead published as published, though a draft copy of it remains (D9)", async () => {
+      const repository = setup.withRoadmaps([live], items, { twins: [draft] })
+
+      await expect(
+        repository.setRoadmapPublished(draft, publish),
+      ).resolves.toEqual({ status: "set" })
+      expect(await repository.listRoadmaps()).toStrictEqual([live])
+    })
+
     it("says a roadmap no longer listed is not found", async () => {
       const repository = setup.withRoadmaps([other])
 
@@ -357,6 +366,18 @@ export function describePublishedState(
         expect(await repository.listRoadmaps()).toStrictEqual([
           { ...live, vision: { en: "Clear", cy: "" }, statusLabel: null },
         ])
+      })
+
+      it("settles as set a publish with a draft copy below it", async () => {
+        const repository = setup.withRoadmaps([draft], items, {
+          twins: [draft],
+          write: { lost: "applied" },
+        })
+
+        await expect(
+          repository.setRoadmapPublished(draft, publish),
+        ).resolves.toEqual({ status: "set" })
+        expect(await repository.listRoadmaps()).toStrictEqual([live])
       })
 
       it("rejects with a network AppError when a re-read finds none of it", async () => {

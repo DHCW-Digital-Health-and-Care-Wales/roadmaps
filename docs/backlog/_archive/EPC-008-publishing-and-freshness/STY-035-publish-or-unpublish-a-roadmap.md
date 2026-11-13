@@ -201,9 +201,9 @@ when `Enabled` already holds the value asked.
   page showed (its own cells: `Sheet`, text with Welsh, product lead, `Last updated`,
   family and category IDs and the copied family, colour and category), apart from its
   published state and the fields with pending edits sent, which are left out whole.
-  Of several alike, it takes the first whose published state is the one shown, so a
-  disabled copy of the live row is never unpublished in its place; then the first. A
-  row moved or swapped is still found. None holding it settles as `changed`, writing
+  Of several alike, it takes the one the list kept (ADR-009): for a published roadmap
+  the first published, so a disabled copy of the live row is never unpublished in its
+  place; else the first. A row moved or swapped is still found. None holding it settles as `changed`, writing
   nothing, with the roadmap the list now keeps (`findPublishedStateRow`,
   `findLoadedRow`).
 - **"Save and publish" is refused as changed when a co-lead changed a field Sam did not
@@ -247,6 +247,10 @@ when `Enabled` already holds the value asked.
   the roadmap's items are read again after any change of state, as another row with
   the id may then be listed. Their tests were written after the fixes and shown to fail
   against the round-1 planner (6 of 6).
+- **Review round 2 fix** (Opus, P3, after the cap): of rows alike, the row is now the
+  one the list kept, not one whose state is the one shown, which took an untouched
+  draft copy when settling a lost publish, and refused a roadmap a co-lead had just
+  published as `id-taken` (D9). Two contract tests and a planner test hold it.
 - **Tests.** The repository contract (`published-state-contract.ts`) was written first
   and ran red on the in-memory double (24 failing: no `setRoadmapPublished`), then the
   double and the Sheets adapter made it pass. The domain planner (`published-state.ts`)
@@ -295,4 +299,4 @@ when `Enabled` already holds the value asked.
 | S8           | contract "rejects with a forbidden / unauthenticated AppError when the write is refused, writing nothing"; page test "says a refused write changed nothing, keeping pending edits"                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | S9           | page test "speaks Welsh throughout"; `pnpm typecheck` catalogue parity; Welsh capture `s1-roadmap-unpublished-desktop-light-cy-after.png`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | S10          | contract "settles a publish / an unpublish as set when a re-read finds it", "rejects with a network AppError when a re-read finds none of it", "is unconfirmed when a re-read finds only some of it / when the re-read fails"; `published-state.test.ts` (`heldPublishedState`); page test "asks for a refresh when the answer is lost and a re-read can't settle it"                                                                                                                                                                                                                                                                 |
-| Row identity | contract "writes the row the page loaded when another row now shares its id", "says the roadmap changed when its row now names another place for its items", "unpublishes the live row, not a disabled copy of it above", "settles as set an edit that fills or clears an optional field"; "says the roadmap changed when no row holds what was loaded", "counts a roadmap a co-lead already published as published, writing nothing"; Sheets D9 and D10 tests                                                                                                                                                                        |
+| Row identity | contract "writes the row the page loaded when another row now shares its id", "says the roadmap changed when its row now names another place for its items", "unpublishes the live row, not a disabled copy of it above", "settles as set an edit that fills or clears an optional field", "settles as set a publish with a draft copy below it", "counts a roadmap a co-lead published as published, though a draft copy of it remains"; "says the roadmap changed when no row holds what was loaded", "counts a roadmap a co-lead already published as published, writing nothing"; Sheets D9 and D10 tests                         |

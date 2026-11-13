@@ -107,7 +107,10 @@ export function createInMemoryRoadmapRepository(
   }: InMemoryRoadmapRepositoryOptions = {},
 ): InMemoryRoadmapRepository {
   const roadmaps =
-    source instanceof AppError ? source : structuredClone([...source])
+    source instanceof AppError
+      ? source
+      : // Each row cloned apart: a test may pass one roadmap twice, as a copied row.
+        source.map((row) => structuredClone(row))
   const lists = {
     families: cloneList(families),
     categories: cloneList(categories),

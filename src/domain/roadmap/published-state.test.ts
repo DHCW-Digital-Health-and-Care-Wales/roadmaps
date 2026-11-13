@@ -81,7 +81,7 @@ describe("findPublishedStateRow", () => {
     ).toMatchObject({ kind: "settled", outcome: { status: "changed" } })
   })
 
-  it("prefers, of rows alike, the one whose state is the one shown", () => {
+  it("takes, of rows alike, the one the list kept: the first published for a published roadmap", () => {
     const live = { ...loaded, published: true }
 
     expect(
@@ -90,6 +90,15 @@ describe("findPublishedStateRow", () => {
         row({ published: true }, true),
       ]),
     ).toEqual({ ...found, index: 1, check: false })
+  })
+
+  it("takes, of rows alike, the first for a roadmap not published, though a co-lead published it (D9)", () => {
+    expect(
+      findPublishedStateRow(loaded, { published: true }, [
+        row({ published: true }, true),
+        row({}, false),
+      ]),
+    ).toEqual({ kind: "settled", outcome: { status: "set" } })
   })
 
   it("gives the roadmap the list keeps when no row holds what was loaded", () => {

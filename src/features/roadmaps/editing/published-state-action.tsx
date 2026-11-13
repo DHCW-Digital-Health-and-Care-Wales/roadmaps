@@ -35,10 +35,10 @@ export function PublishedStateAction({
   const { available, pending } = state
   // The button offers what the roadmap's state now calls for; the dialog keeps what it
   // asked while it closes, though the state flips under it.
-  const action = state.publishing ? "publish" : "unpublish"
+  const liveVerb = state.publishing ? "publish" : "unpublish"
   const Icon = state.publishing ? GlobeIcon : EyeOffIcon
   const { publishing, count } = state.asked
-  const verb = publishing ? "publish" : "unpublish"
+  const askedVerb = publishing ? "publish" : "unpublish"
 
   return (
     <>
@@ -50,7 +50,7 @@ export function PublishedStateAction({
         onClick={state.ask}
       >
         <Icon data-icon="inline-start" aria-hidden="true" />
-        {t(`roadmaps.publishRoadmap.action.${action}`)}
+        {t(`roadmaps.publishRoadmap.action.${liveVerb}`)}
       </Button>
       <AlertDialog
         open={state.open}
@@ -61,10 +61,12 @@ export function PublishedStateAction({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {t(`roadmaps.publishRoadmap.confirm.title.${verb}`, { title })}
+              {t(`roadmaps.publishRoadmap.confirm.title.${askedVerb}`, {
+                title,
+              })}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {t(`roadmaps.publishRoadmap.confirm.note.${verb}`)}
+              {t(`roadmaps.publishRoadmap.confirm.note.${askedVerb}`)}
               {count > 0 && (
                 <>
                   {" "}
@@ -87,7 +89,7 @@ export function PublishedStateAction({
             >
               {publishing && count > 0
                 ? t("roadmaps.publishRoadmap.confirm.saveAndPublish")
-                : t(`roadmaps.publishRoadmap.action.${verb}`)}
+                : t(`roadmaps.publishRoadmap.action.${askedVerb}`)}
             </Button>
             <AlertDialogCancel disabled={pending}>
               {t("common.cancel")}

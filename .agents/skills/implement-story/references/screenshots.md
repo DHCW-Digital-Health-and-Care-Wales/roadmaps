@@ -36,8 +36,7 @@ theme.
 Cover desktop (1280 px) and phone (375 px), light and dark mode where relevant,
 and Welsh (`cy`) where copy changed. Save captures under
 `.artifacts/screenshots/<record-id>/` at the root of your checkout (git-ignored)
-with descriptive names, e.g. `s1-roadmaps-desktop-dark-en-after.png`. Open each
-one yourself and fix anything that looks wrong before publishing.
+with descriptive names, e.g. `s1-roadmaps-desktop-dark-en-after.png`.
 
 ## Before and after
 
@@ -60,6 +59,26 @@ belongs to E2E).
 After the review fixes, capture the matching after states with comparable
 viewport, data and navigation. Publish every pair and every new capture in the
 PR. A change no user sees needs no screenshots.
+
+## Read a risk-based sample
+
+Publish the full set, but read only the after captures a risk points at, and
+fix what looks wrong before publishing:
+
+- A copy-only change whose tests pass: read none.
+- A layout or behaviour change: read a mix of light and dark, desktop and
+  phone, on the screens most likely to break; read more once one shows a
+  problem.
+- Skip the Welsh twin of a screen you read, unless its longer copy may
+  overflow.
+- Read a before capture only to diagnose a capture problem.
+
+For layout-heavy UI, also start a fresh read-only subagent on an economy or
+standard model (Haiku or Sonnet) with the after captures' paths and this
+checklist: clipped or overflowing text, overlap, dark-mode contrast, visible
+focus, breakage at 375 px. It returns only the suspect filenames, each with a
+one-line reason; open those yourself. Skip it for a copy-only or small change.
+Report which captures you read, and why.
 
 ## Attach to the PR
 

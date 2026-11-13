@@ -90,6 +90,12 @@ Carry forward what earlier items learned, for example:
   needed;
 - how delegated work reports completion (notifications, or foreground
   waits), per `delegation.md`;
+- that each yield of a delivery child reaches its parent as a completion
+  notification, so the child's handoff marks the final hand-back (the PR or
+  a blocker) explicitly, and the parent checks the runtime's pending-child
+  state and that handoff before treating a notification as the hand-back;
+- for UI work, whether an economy-tier subagent is available for the
+  screenshot check, and the risk-based reading rule in `screenshots.md`;
 - the PR policy: left open for the owner by default; babysat and merged per
   `pr-watch.md` only when authorized;
 - that the merge method is squash, merged branches are deleted, and

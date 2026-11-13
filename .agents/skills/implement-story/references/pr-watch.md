@@ -58,9 +58,9 @@ watch a PR.
    their request. Never poll with sleeps, loops, `gh run watch`, `gh pr checks
 --watch` or scheduled wake-ups.
 4. Once the PR reads merged or closed, is blocked, or is handed back to the
-   user, remove any PR watch; a merge call that errors has not merged it.
-   Merge only when the Done conditions hold and the user authorized merging; a request to leave it open remains binding. A notification alone
-   never establishes readiness to merge.
+   user, remove any PR watch. Merge only when the Done conditions hold and the
+   user authorized merging; a request to leave it open remains binding. A
+   notification alone never establishes readiness to merge.
 
 ### Delegate actionable work
 

@@ -8,7 +8,7 @@
 - **Binding ADRs**: ADR-012 §Option 9, ADR-008, ADR-002
 - **Suggested model**: Opus — a date field through the pending-change model, publish
   plan and conflict review, and an amendment to ADR-012's Option 9
-- **Delivered**: (this PR)
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/58
 
 ## Summary
 

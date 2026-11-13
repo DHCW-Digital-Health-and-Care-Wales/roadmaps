@@ -2,7 +2,7 @@
 
 - **Status**: Done — grilled in rounds 1–4 (2026-11-13); every story delivered, STY-035
   merged ([#57](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/57)),
-  STY-036 in its PR, which awaits the owner's merge
+  STY-036 in [#58](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/58), which awaits the owner's merge
 - **Progress**: 2 of 2 terminal
 - **Binding ADRs**: ADR-012, ADR-009, ADR-002, ADR-008
 

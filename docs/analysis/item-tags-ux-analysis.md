@@ -34,7 +34,7 @@ Each relies on the persona's A1 (short visits), A2 (desktop first, phone second)
 (free-text tags, a shared list later) and A12 (a co-lead may have tagged other items).
 
 Excluded: publishing and conflict review, which list the item's tags on screens that
-exist (STY-037 S12, S13); the Welsh interface; an item with Welsh tags (STY-037 Q2).
+exist (STY-037 S12, S13); the Welsh interface; an item with Welsh tags (STY-037 S20).
 
 ## What every design shares
 
@@ -47,7 +47,7 @@ exist (STY-037 S12, S13); the Welsh interface; an item with Welsh tags (STY-037 
   typed or pasted is two tags. A new tag joins at the end.
 - **No tag twice** on an item, whatever its capitals: the field says the item has it.
 - **A typed tag takes the roadmap's spelling** where one differs only in capitals
-  ("clinic staff" becomes "Clinic staff"), and the field says so (STY-037 Q3 (a)).
+  ("clinic staff" becomes "Clinic staff"), and the field says so (STY-037 D15).
 - **A rename** keeps the tag's place and changes this item only; a rename to nothing
   leaves the tag as it was.
 - Text typed but not yet added, and a name still being changed, count when the form is
@@ -100,8 +100,8 @@ and the one line still says what the tags are.
 | Decision                                                                                               | Options                                                                                                                     | Where it is asked                                      |
 | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
 | Which editor is built                                                                                  | B (recommended), A, C or D                                                                                                  | decided: STY-037 D11                                   |
-| An item's Welsh tags when its tags are edited                                                          | read-only for such an item (recommended); each tag keeps its Welsh; cleared with a warning; left as they are                | STY-037 Q2                                             |
-| A typed tag takes the roadmap's spelling                                                               | yes, as prototyped (recommended); no                                                                                        | STY-037 Q3                                             |
+| An item's Welsh tags when its tags are edited                                                          | read-only for such an item (recommended); each tag keeps its Welsh; cleared with a warning; left as they are                | decided: read-only, STY-037 D14                        |
+| A typed tag takes the roadmap's spelling                                                               | yes, as prototyped (recommended); no                                                                                        | decided: yes, STY-037 D15                              |
 | If A: a new primitive                                                                                  | shadcn's Combobox (Base UI) joins `src/components/ui/`, with in-place rename built on it                                    | not built: STY-037 D11                                 |
 | If A: which key keeps typed text                                                                       | Enter takes the highlighted tag and a comma keeps what was typed, as prototyped; or Enter keeps what was typed              | not built: STY-037 D11                                 |
 | If B: Undo after a removal                                                                             | kept, as prototyped; or left to Cancel and "Undo changes"                                                                   | decided: kept, STY-037 D11                             |
@@ -111,12 +111,13 @@ and the one line still says what the tags are.
 | If D: no control per tag                                                                               | STY-037 S1 and S11 re-cut for a text field                                                                                  | not built: STY-037 D11                                 |
 
 Reads and writes: every design reads only the roadmap's items already on the page,
-pending edits included. The write of the `Labels` cell is STY-037's own (S12); whether
-`Labels (cy)` is written is Q2.
+pending edits included. The write of the `Labels` cell is STY-037's own (S12);
+`Labels (cy)` is never written (STY-037 D14).
 
 ## Not yet drawn
 
-- The Welsh interface, and an item with Welsh tags (Q2's notice or pairing).
+- The Welsh interface, and an item with Welsh tags, whose tags are read-only (STY-037
+  S20).
 - The publish dialog and the conflict review naming tags among changed fields.
 - A roadmap whose other items have no tags (STY-037 S10), and one with thirty or more,
   where B's block and C's list are longest.
@@ -148,4 +149,5 @@ pending edits included. The write of the `Labels` cell is STY-037's own (S12); w
 - **How the field opens in the form**: shut, opening on request (owner, 2026-11-13;
   STY-037 D13, scenario S19). The owner asked the same of Organisations, which is
   STY-038.
-- The Welsh pairing and the spelling rule are still open: STY-037 Q2 and Q3.
+- **An item's Welsh tags**: read-only in the form for now (owner; STY-037 D14, S20).
+- **Spelling**: a typed tag takes the roadmap's (owner; STY-037 D15, S21).

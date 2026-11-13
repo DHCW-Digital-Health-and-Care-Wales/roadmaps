@@ -1,11 +1,10 @@
 # STY-037: A Product Lead edits an item's tags
 
-- **Status**: Needs grilling — the owner chose editor B, shut until asked for (D11, D13);
-  Q2 and Q3 wait
+- **Status**: Proposed — the owner chose editor B and answered every question (D10–D15)
 - **Type**: Feature
 - **Area**: Domain + Infrastructure + Features/UI + i18n (en + cy) + E2E
 - **Epic**: [EPC-009-item-tags](README.md)
-- **Depends on**: none
+- **Depends on**: STY-038 (preferred order)
 - **Binding ADRs**: ADR-012 (this story amends _What is editable_), ADR-014, ADR-011,
   ADR-010, ADR-008
 - **Suggested model**: Opus — an ordered, open-ended field through the pending-change
@@ -17,8 +16,9 @@ A Product Lead adds, renames and removes an item's tags in its edit form. While 
 the form offers the tags this roadmap's other items carry, most used first, so the same
 idea gets the same tag. The change is a pending edit, published with the rest. Tags stay
 free text: there is no shared list, and renaming a tag here changes this item only.
-The editor is design B of four prototyped, shut in the form until asked for. Waiting on
-the owner: an item's Welsh tags, and whether a typed tag takes the roadmap's spelling.
+The editor is design B of four prototyped, shut in the form until asked for, and a
+typed tag takes the spelling the roadmap already uses. Not in it: an item that has Welsh
+tags keeps them read-only until Welsh content can be edited.
 
 ## Scope
 
@@ -28,9 +28,10 @@ and Welsh. The tags offered come from the roadmap's items already on the page, s
 field has no loading or failure state of its own.
 
 S1–S14 hold for any editor with a control per tag; S15–S18 are design B's own, which
-the owner chose (D11), and S19 is how the field opens in the form (D13). This story changes what the editor writes to the
-shared data source, a contract with the public site: the item's `Labels` cell (S12),
-and whatever Q2 decides for `Labels (cy)`.
+the owner chose (D11); S19 is how the field opens in the form (D13); S20 and S21 are
+the owner's answers on Welsh tags and spelling (D14, D15). This story changes what the
+editor writes to the shared data source, a contract with the public site: the item's
+`Labels` cell (S12). `Labels (cy)` is never written (S20).
 
 ## Acceptance criteria
 
@@ -191,36 +192,25 @@ and no editor; an item with no tags reads "No tags" beside "Add tags"
 button, now "Close tags", shuts it, and the line shows the tags as changed
 **And** confirming the form keeps the tags whether the field is open or shut
 
-## Open questions
+### S20: An item with Welsh tags keeps its tags read-only (owner, D14)
 
-- **Q2**: What happens to an item's Welsh tags when its tags are edited? The data
-  source pairs Welsh with English by position, so writing the English alone can show the
-  wrong Welsh under a tag, or lose all of an item's Welsh tags (epic F3). No roadmap has
-  Welsh content today (persona A4). Example: an item tagged "Patients, Carers" with
-  Welsh "Cleifion, Gofalwyr", from which Sam removes "Patients".
-  - (a) **Such an item's tags can't be edited here yet** (recommended) — the form
-    shows them read-only, saying they have Welsh versions. Nothing new is written;
-    today that is no item. Editing them arrives with Welsh content editing. Adds one
-    scenario.
-  - (b) **Each tag keeps its Welsh** — publishing also writes `Labels (cy)`: a removed
-    tag's Welsh goes ("Gofalwyr" stays under "Carers"), a new tag gets a blank place, a
-    renamed tag keeps its Welsh as ADR-012 leaves Welsh beside edited English. Amends
-    ADR-012's "English only"; the pending change carries pairs, and a swap of one tag
-    for another cannot say which Welsh stays.
-  - (c) **The item's Welsh tags are cleared**, and the form says so first, as it does
-    for an unknown organisation code — publishing blanks `Labels (cy)` for that item.
-    Simple and never wrong, but translations are lost.
-  - (d) **`Labels (cy)` is left as it is** — the build writes nothing extra. In the
-    example the counts then differ, so the public site drops both Welsh tags and shows
-    the English, and every read warns of the mismatch. Had Sam swapped "Patients" for
-    "Staff", the counts would match and "Cleifion" would show under "Staff".
-- **Q3**: Does a typed tag take the spelling the roadmap already uses? Example: other
-  items carry "Clinic staff" and Sam types "clinic staff".
-  - (a) **Yes** (recommended) — it is added as "Clinic staff", and the form says so.
-    Capitals stop drifting; a tag can't differ from another only in capitals. The
-    prototypes do this. Adds one scenario. "patient" beside "Patients" is still two
-    tags: only a shared list or a merge fixes that (epic _Out of scope_).
-  - (b) **No** — the tag is kept as typed; the offered tags are the only nudge.
+**Given** an item whose `Labels (cy)` cell holds anything, whether or not its entries
+pair with the English ("Patients, Carers" with "Cleifion, Gofalwyr", or with "Cleifion"
+alone)
+**When** Sam opens its edit form
+**Then** the Tags field shows the item's tags with no button to change them, and says
+they have Welsh versions and can't be changed here yet
+**And** the item's other fields are edited and published as before, with `Labels` and
+`Labels (cy)` left as they are
+
+### S21: A typed tag takes the roadmap's spelling (owner, D15)
+
+**Given** the roadmap's other items carry "Clinic staff"
+**When** Sam adds "clinic staff"
+**Then** "Clinic staff" is added, and the field says it was added as other items spell
+it
+**And** where other items spell one tag in several ways that differ only in capitals,
+the most used is taken
 
 ## Decisions
 
@@ -261,6 +251,16 @@ button, now "Close tags", shuts it, and the line shows the tags as changed
   not shown at full size as the form opens; it opens on request, as Organisations will
   (STY-038). Changes: S1, whose controls show once the field is opened; adds S19. The
   opening field is one piece for both stories (epic _A field that opens on request_).
+- **D14** (owner, 2026-11-13, question put in the session): what happens to an item's
+  Welsh tags when its tags are edited → such an item's tags are read-only in the form
+  for now; nothing new is written. Rejected: keeping each tag's Welsh, clearing the
+  Welsh with a warning, leaving the Welsh cell alone. Adds S20.
+- **D15** (owner, 2026-11-13, question put in the session): a typed tag takes the
+  spelling the roadmap already uses, and the field says so → S21. "patient" beside
+  "Patients" stays two tags.
+- **D16** (agent, 2026-11-13): S20 applies whenever the Welsh cell holds anything, a
+  count mismatch included, over only when Welsh shows: editing the English could bring
+  the counts level and pair the wrong Welsh. The repository must say so of an item.
 
 ## Starting point
 

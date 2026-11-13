@@ -23,8 +23,8 @@ kept pending, or what is written.
 
 The Organisations field of the item's edit form (`features/`) and its copy (`i18n/`).
 Nothing in `domain/` or `infrastructure/`: the field's value, the pending change and
-the write are STY-034's. The field that opens on request is shared with STY-037's Tags
-field (epic _A field that opens on request_).
+the write are STY-034's. This story builds the field that opens on request, which
+STY-037's Tags field then uses (epic _A field that opens on request_ and _Sequencing_).
 
 ## Acceptance criteria
 

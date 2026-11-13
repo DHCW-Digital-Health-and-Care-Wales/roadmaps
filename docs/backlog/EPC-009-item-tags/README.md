@@ -1,7 +1,8 @@
 # EPC-009: Item tags — free text a Product Lead edits here, nudged towards the tags the roadmap already uses
 
-- **Status**: Active — two stories; STY-037 waits on two owner questions
-- **Progress**: 0 of 2 terminal; next selectable: STY-038; blocked on: STY-037 Q2–Q3
+- **Status**: Active — two stories, both specified; no owner decision waits
+- **Progress**: 0 of 2 terminal; next selectable: STY-038, then STY-037; blocked on:
+  nothing
 - **Binding ADRs**: ADR-012, ADR-014, ADR-011, ADR-010, ADR-008, ADR-002
 
 ## Summary
@@ -18,10 +19,7 @@ Organisations in a second story.
 
 ## Owner decisions waiting
 
-- [STY-037 Q2](STY-037-edit-an-items-tags.md#open-questions) — what happens to an
-  item's Welsh tags when its tags are edited
-- [STY-037 Q3](STY-037-edit-an-items-tags.md#open-questions) — whether a typed tag
-  takes the spelling the roadmap already uses
+None.
 
 ## Findings
 
@@ -82,7 +80,8 @@ about 340px. With both shut the form is about 860px.
    STY-037 D1). No list is stored: the offer is read off the items on the page.
 3. The editor is design B of the four prototyped: a row per tag, and the roadmap's
    other tags as buttons (F5; owner, STY-037 D11).
-4. What happens to an item's Welsh tags when its tags are edited is STY-037 Q2 (F3).
+4. An item that has Welsh tags keeps its tags read-only in the form until Welsh content
+   can be edited, so no Welsh is ever mispaired or lost (F3; owner, STY-037 D14).
 5. A field with many controls starts shut in the form and opens on request: Tags
    (STY-037 S19) and Organisations (STY-038) (F6; owner, STY-037 D13, STY-038 D1).
 6. **Unchanged:** tags are free text; the card's Tags line; ADR-012's per-roadmap,
@@ -99,7 +98,7 @@ and says so in the PR, since the format is a contract with the public site.
 ### ADR-012 amendment
 
 STY-037 amends ADR-012 in place (`### STY-037 amendments`) in its PR, citing its owner
-decisions: tags are no longer read-only, and Q2's answer if it writes a Welsh cell.
+decisions: tags are no longer read-only, and no Welsh cell is written (D14).
 
 ### A field that opens on request
 
@@ -120,10 +119,10 @@ always opens with the field shut.
 
 ## Sequencing
 
-STY-038 is selectable now and needs nothing of STY-037. STY-037 is selectable once Q2
-and Q3 are answered and it is set Proposed; it stays one change, since the field, the
-pending change and the write are not useful apart. Either order works: the first
-delivered builds _A field that opens on request_.
+Both are selectable and neither needs the other. STY-038 goes first: it is the smaller,
+and builds _A field that opens on request_ on a field that exists, for STY-037 to use.
+STY-037 stays one change, since the field, the pending change and the write are not
+useful apart.
 
 ## Out of scope
 

@@ -210,6 +210,30 @@ describe("Moving an item (STY-031)", () => {
     ).toBeDisabled()
   })
 
+  it("keeps the none option, and its choice, in an open form after Refresh reads a co-lead's placing the item (S4)", async () => {
+    const { user, repository } = await renderPage()
+    const read = vi.spyOn(repository, "listRoadmapItems")
+    await user.click(main().getByRole("button", { name: "Edit Someday item" }))
+    repository.coLead((_list, itemsOf) => {
+      const someday = itemsOf("producta")[3]
+      if (someday) someday.placement = "now"
+    })
+
+    await user.click(main().getByRole("button", { name: "Refresh" }))
+    await vi.waitFor(() => {
+      expect(read).toHaveBeenCalled()
+    })
+    await read.mock.results[0]?.value
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    const form = within(main().getByRole("form", { name: "Someday item" }))
+    const choice = form.getByRole("combobox", { name: "Horizon or section" })
+    expect(choice).toHaveDisplayValue("Choose a horizon or section")
+    await user.click(form.getByRole("button", { name: "Done" }))
+    expect(titlesUnder("Now")).toContain("Someday item")
+    expect(main().queryByText("1 unpublished change")).toBeNull()
+  })
+
   it("is no change once moved back (S5)", async () => {
     const { user } = await renderPage()
     await moveWithMenu(user, "Online booking", "Now")

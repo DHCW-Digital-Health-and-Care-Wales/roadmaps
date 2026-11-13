@@ -166,13 +166,16 @@ export function EditableItemCard({
     (field) => t(`roadmaps.edit.itemFields.${field}`),
     multilineItemFields,
   )
+  // The form keeps the placement it opened on, so its options follow that one: a
+  // co-lead's placing the item since can't take the none option from the form's value.
+  const openedPlacement = (mode.opened?.shown ?? shown).placement
   const placementField: EditFormField<"placement"> = {
     name: "placement",
     label: t("roadmaps.edit.itemFields.placement"),
     multiline: false,
     options: [
       // An unplaced item starts on none, which can't be chosen again (S4).
-      ...(shown.placement === null
+      ...(openedPlacement === null
         ? [
             {
               value: "",

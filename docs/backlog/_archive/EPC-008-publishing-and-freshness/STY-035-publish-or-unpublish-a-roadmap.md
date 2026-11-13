@@ -8,7 +8,7 @@
 - **Binding ADRs**: ADR-012, ADR-009, ADR-002, ADR-008
 - **Suggested model**: Opus — a new repository write with fresh-read refusal checks,
   and a combined write with pending edits under ADR-012's conflict rules
-- **Delivered**: (PR link added once raised)
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/57
 
 ## Summary
 

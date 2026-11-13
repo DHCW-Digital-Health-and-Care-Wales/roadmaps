@@ -15,7 +15,7 @@ import type { RoadmapItem } from "../roadmap-item"
 import type { RoadmapRepository } from "../roadmap-repository"
 import { CO_LEAD_VALUE, type ContractWrite } from "./contract-write"
 import { categoriesOf, familiesOf } from "./linked-lists"
-import { createTestRoadmap } from "./test-roadmap"
+import { createTestRoadmap, inStep } from "./test-roadmap"
 import { createTestRoadmapItem } from "./test-roadmap-item"
 
 /** Each roadmap's items by roadmap id; a roadmap with no entry has none. */
@@ -131,7 +131,7 @@ function roadmapOnly(roadmap: RoadmapChanges["roadmap"]): RoadmapChanges {
 /** A roadmap fixture with these fields changed. */
 function productA(overrides: Partial<Roadmap>): Roadmap[] {
   const [first, ...rest] = fixtures
-  return first ? [{ ...first, ...overrides }, ...rest] : []
+  return first ? [inStep({ ...first, ...overrides }), ...rest] : []
 }
 
 /**
@@ -1056,6 +1056,7 @@ function describeFamilyChanges(setup: RoadmapRepositoryContractSetup): void {
     throw new Error("The fixtures need two families")
   }
   const productB = fixtures[1]
+  if (productB === undefined) throw new Error("The fixtures need Product B")
   const recolour = (overrides: Partial<FamilyEdit> = {}): FamilyEdit => ({
     family: medicines,
     changes: { colour: "#00796b" },
@@ -1119,7 +1120,7 @@ function describeFamilyChanges(setup: RoadmapRepositoryContractSetup): void {
       ])
       expect(await repository.listRoadmaps()).toStrictEqual([
         fixtures[0],
-        { ...productB, family: changed.name, colour: "#00796b" },
+        inStep({ ...productB, family: changed.name, colour: "#00796b" }),
         fixtures[2],
       ])
     })

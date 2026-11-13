@@ -11,6 +11,11 @@ const loaded = createTestRoadmap("producta", "Product A", {
   category: { en: "GP & Community Services", cy: "" },
   categoryId: "khzpchkh",
   outOfStep: true,
+  copied: {
+    family: { en: "Single Record", cy: "" },
+    colour: "#325083",
+    category: "GP & Community Services",
+  },
 })
 
 describe("canMatchLists", () => {
@@ -49,6 +54,24 @@ describe("planListMatch", () => {
     ["its family was changed", { familyId: "vdkxj63m" }],
     ["its category was renamed", { category: { en: "Other", cy: "" } }],
     ["its category was changed", { categoryId: "w7vrv5kn" }],
+    [
+      "a co-lead edited its row's own colour",
+      { copied: { ...loaded.copied, colour: "#ff0000" } },
+    ],
+    [
+      "a co-lead edited its row's own Welsh family",
+      {
+        copied: {
+          family: { en: "Single Record", cy: "Cofnod" },
+          colour: null,
+          category: "",
+        },
+      },
+    ],
+    [
+      "a co-lead edited its row's own category",
+      { copied: { ...loaded.copied, category: "Other" } },
+    ],
     ["it was published, so it is confirmed first (S2)", { published: true }],
   ])("writes nothing when %s since it loaded (S4)", (_, change) => {
     const current = { ...loaded, ...change }

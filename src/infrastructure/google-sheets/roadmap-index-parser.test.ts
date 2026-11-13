@@ -85,6 +85,11 @@ describe("parseRoadmapIndex", () => {
         categoryId: null,
         family: { en: "Single Record", cy: "" },
         familyId: null,
+        copied: {
+          family: { en: "Single Record", cy: "" },
+          colour: "#325083",
+          category: "GP & Community Services",
+        },
         outOfStep: false,
         familyNotListed: false,
         statusLabel: { en: "Beta", cy: "" },
@@ -114,6 +119,14 @@ describe("parseRoadmapIndex", () => {
           cy: "Meddyginiaethau a Diagnosteg",
         },
         familyId: null,
+        copied: {
+          family: {
+            en: "Medicines & Diagnostics",
+            cy: "Meddyginiaethau a Diagnosteg",
+          },
+          colour: "#006747",
+          category: "",
+        },
         outOfStep: false,
         familyNotListed: false,
         statusLabel: { en: "Alpha", cy: "Alffa" },
@@ -137,6 +150,11 @@ describe("parseRoadmapIndex", () => {
         categoryId: null,
         family: null,
         familyId: null,
+        copied: {
+          family: null,
+          colour: "#912b88",
+          category: "Tests, Scans & Results",
+        },
         outOfStep: false,
         familyNotListed: false,
         statusLabel: { en: "Alpha", cy: "" },

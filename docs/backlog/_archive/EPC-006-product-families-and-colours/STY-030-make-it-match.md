@@ -77,15 +77,13 @@ writes a chosen family). Nothing else is written.
   "Doesn't match" badge, not on the list's card. A published roadmap asks in an alert
   dialog first (S2); an unpublished one is written on the click, since S2 asks for a
   warning only about going public.
-- **"The row's copied cells changed" (S4) is not compared.** The page holds the roadmap as
-  shown (the lists' values), not the row's own cells. The write is refused when the
-  roadmap's family or category (ID, names, colour) differ from what the page showed, or
-  the roadmap is no longer out of step or no longer fixable; a co-lead's edit to a
-  copied cell that leaves it out of step is overwritten with the same list values the
-  Product Lead saw, so nothing they hadn't seen is lost. This leaves S4's "copied cells
-  changed" half unmet; [CHO-003](../../chores/CHO-003-refuse-make-it-match-on-a-copied-cell-change.md)
-  proposes carrying the row's own cells to close it, and the owner decides whether it is
-  worth the cost.
+- **`Roadmap.copied` carries the row's own cells (S4).** The page holds the roadmap as
+  shown (the lists' values), which two rows with different copied cells share, so
+  `Roadmap` gained `copied` (the row's `Family`, `Family (cy)`, `Colour` and `Category`
+  as read). The write is refused when these, the roadmap's family or category (ID, names,
+  colour) or whether it is published differ from what the page loaded, or the roadmap is
+  no longer out of step or no longer fixable. In the test double, a write sets `copied`
+  as the adapter does.
 - **S3's pointer.** The "Family isn't listed" badge stays; beside it the page says
   "Choose its family under About this roadmap." where "Make it match" would have been.
 - **A roadmap published meanwhile** is refused like any other change (the page shows it as
@@ -108,6 +106,9 @@ writes a chosen family). Nothing else is written.
   contract's `describeListMatch` (the not-out-of-step, not-found and no-list cases; the
   matched case is each adapter's own test, since an out-of-step row can't be built
   through `Roadmap` alone).
+- **`Roadmap.copied`** (`RoadmapCopiedCells`): the row's own `Family`, `Family (cy)`,
+  `Colour` and `Category` as read; `inStep` in `testing/test-roadmap.ts` derives it for
+  fixtures.
 - **Hook / UI**: `useMatchRoadmap()`, `MatchListsAction`.
 - **Welsh to review** (machine-assisted): every string under `roadmaps.lists.match` in
   `src/i18n/locales/cy.ts`.
@@ -121,7 +122,9 @@ writes a chosen family). Nothing else is written.
   confirm (S2)"; the same e2e (no write before the dialog's confirm).
 - **S3**: domain `canMatchLists` "false for a roadmap whose family is not listed"; page
   "is not offered for a family the list doesn't have (S3)"; the same e2e.
-- **S4**: domain `planListMatch` cases; contract "writes nothing when … changed since it
+- **S4**: domain `planListMatch` cases (family, category, a copied cell, published);
+  adapter "writes nothing when a co-lead edited one of the row's own copied cells
+  meanwhile, though it is still out of step (S4)"; contract "writes nothing when … changed since it
   loaded (S4)"; adapter "writes nothing when the roadmap is no longer out of step, or
   changed since it loaded (S4)"; page "shows the roadmap as it now is when it changed
   meanwhile". The pending-edits-stay-pending part rests on the separate mutation, not a

@@ -134,8 +134,8 @@ roadmap's index row's `Family ID`, `Family`, `Family (cy)`, `Colour`, `Category 
 `Category`, copied from the `Families` and `Categories` tabs as read, each only where it
 differs, and the `Family ID` or `Category ID` column if it is missing. It is offered
 only for a family in the list, writes nothing while the roadmap index is named
-`Template`, and a change since the page loaded to the roadmap's family or category,
-or to its being out of step or published, refuses the write; its pending edits stay
+`Template`, and a change since the page loaded to the roadmap's family or category, to its
+row's own copied cells, or to its being out of step or published, refuses the write; its pending edits stay
 pending.
 
 It never writes any other cell: no Welsh `(cy)` cell other than `Family (cy)`,

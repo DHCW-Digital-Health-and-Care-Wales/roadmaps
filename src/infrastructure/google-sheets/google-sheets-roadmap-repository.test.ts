@@ -1875,6 +1875,12 @@ describe("GoogleSheetsRoadmapRepository", () => {
       category: { en: "GP & Community Services", cy: "Meddygon Teulu" },
       categoryId: "khzpchkh",
       outOfStep: true,
+      // What the example row holds, whatever the lists say.
+      copied: {
+        family: { en: "Single Record", cy: "" },
+        colour: "#325083",
+        category: "GP & Community Services",
+      },
       ...overrides,
     })
 
@@ -1891,6 +1897,15 @@ describe("GoogleSheetsRoadmapRepository", () => {
         "Roadmaps!R2C13 Cofnod Sengl",
       ])
       expect(spreadsheet.bodies).toHaveLength(1)
+    })
+
+    it("writes nothing when a co-lead edited one of the row's own copied cells meanwhile, though it is still out of step (S4)", async () => {
+      const spreadsheet = serveStatefulSpreadsheet(tabs("#ff0000"))
+
+      await expect(
+        httpRepository().matchRoadmapToLists(loaded()),
+      ).resolves.toMatchObject({ status: "changed" })
+      expect(spreadsheet.bodies).toEqual([])
     })
 
     it("writes nothing when the roadmap is no longer out of step, or changed since it loaded (S4)", async () => {

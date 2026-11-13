@@ -1170,6 +1170,37 @@ describe("GoogleSheetsRoadmapRepository", () => {
       expect(spreadsheet.tabs()[1]?.rows[1]?.[2]).toBe("")
     })
 
+    it("writes a move as the public site's Horizon value, in that cell alone (STY-031 S6)", async () => {
+      const spreadsheet = serveStatefulSpreadsheet(exampleTabs())
+      const items = await httpRepository().listRoadmapItems("producta")
+      const later = items.findIndex(({ placement }) => placement === "later")
+      const item = items[later]
+      if (item === undefined) throw new Error("Product A has a Later item")
+      const before = spreadsheet.tabs()
+
+      await httpRepository().publishRoadmapChanges("producta", {
+        roadmap: {},
+        items: [
+          {
+            item,
+            position: later,
+            fields: {
+              placement: { base: "later", value: "recently-delivered" },
+            },
+          },
+        ],
+      })
+
+      const horizon = EXAMPLE_TAB_ROWS.ProductA?.[0]?.indexOf("Horizon") ?? -1
+      expect(
+        changedCells(before, spreadsheet.tabs()).filter(
+          (change) => !change.includes("C15 "),
+        ),
+      ).toEqual([
+        `ProductA!R${String(later + 2)}C${String(horizon + 1)} Recently delivered`,
+      ])
+    })
+
     describe("a missing column (S7)", () => {
       it("goes after the last used column, inside a grid wide enough for it", async () => {
         const rows = EXAMPLE_ROWS.map((row) => [

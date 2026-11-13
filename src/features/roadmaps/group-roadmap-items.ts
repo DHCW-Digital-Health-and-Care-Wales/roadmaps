@@ -20,16 +20,31 @@ export interface RoadmapItemGroups {
   placements: { placement: RoadmapPlacement; items: PositionedRoadmapItem[] }[]
 }
 
-/** A roadmap's items by placement, each group in row order. */
+/**
+ * A roadmap's items by placement, each group in row order: where `placementAt` puts
+ * each, its own placement unless a pending move says otherwise (STY-031).
+ */
 export function groupRoadmapItems(
   items: readonly RoadmapItem[],
+  placementAt: (
+    item: RoadmapItem,
+    position: number,
+  ) => RoadmapPlacement | null = (item) => item.placement,
 ): RoadmapItemGroups {
-  const positioned = items.map((item, position) => ({ item, position }))
+  const positioned = items.map((item, position) => ({
+    item,
+    position,
+    placement: placementAt(item, position),
+  }))
+  const at = (placement: RoadmapPlacement | null) =>
+    positioned.flatMap(({ placement: each, ...rest }) =>
+      each === placement ? [rest] : [],
+    )
   return {
-    unplaced: positioned.filter(({ item }) => item.placement === null),
+    unplaced: at(null),
     placements: ROADMAP_PLACEMENTS.map((placement) => ({
       placement,
-      items: positioned.filter(({ item }) => item.placement === placement),
+      items: at(placement),
     })),
   }
 }

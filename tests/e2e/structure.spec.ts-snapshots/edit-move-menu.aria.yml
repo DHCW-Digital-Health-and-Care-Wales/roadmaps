@@ -1,0 +1,7 @@
+- menu "Move A clearer card":
+  - group "Move to":
+    - menuitem "Recently delivered"
+    - menuitem "Next"
+    - menuitem "Later"
+    - menuitem "Delivered this year"
+    - menuitem "Not doing"

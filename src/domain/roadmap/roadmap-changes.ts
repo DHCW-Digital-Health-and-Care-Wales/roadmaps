@@ -44,14 +44,29 @@ export function isChoiceField(
 }
 
 /** An item's text a Product Lead may edit, in English only (ADR-012). */
-export const EDITABLE_ITEM_FIELDS = [
+export const ITEM_TEXT_FIELDS = [
   "title",
   "description",
   "expectedOutcome",
   "phase",
 ] as const satisfies readonly (keyof RoadmapItem)[]
 
+export type ItemTextField = (typeof ITEM_TEXT_FIELDS)[number]
+
+/**
+ * Every item field a Product Lead may edit, in the form's order: its text, then its
+ * placement, chosen by ID, `""` for none (ADR-014): the ID is the base a conflict is
+ * found by, and an unplaced item's is none, whatever its horizon says.
+ */
+export const EDITABLE_ITEM_FIELDS = [...ITEM_TEXT_FIELDS, "placement"] as const
+
 export type EditableItemField = (typeof EDITABLE_ITEM_FIELDS)[number]
+
+export function isItemTextField(
+  field: EditableItemField,
+): field is ItemTextField {
+  return (ITEM_TEXT_FIELDS as readonly string[]).includes(field)
+}
 
 /**
  * The roadmap's value for `field`, `""` for none: its English for text, an ID for a
@@ -77,13 +92,23 @@ export function roadmapValue(
   }
 }
 
-/** The item's English for `field`, `""` for none. */
-export function itemText(item: RoadmapItem, field: EditableItemField): string {
-  return field === "title" ? item.title.en : (item[field]?.en ?? "")
+/**
+ * The item's value for `field`, `""` for none: its English for text, or its placement's
+ * ID.
+ */
+export function itemValue(item: RoadmapItem, field: EditableItemField): string {
+  switch (field) {
+    case "title":
+      return item.title.en
+    case "placement":
+      return item.placement ?? ""
+    default:
+      return item[field]?.en ?? ""
+  }
 }
 
 /** The item's Welsh for `field`, `""` for none: never edited, so never written. */
-export function itemWelsh(item: RoadmapItem, field: EditableItemField): string {
+export function itemWelsh(item: RoadmapItem, field: ItemTextField): string {
   return field === "title" ? item.title.cy : (item[field]?.cy ?? "")
 }
 

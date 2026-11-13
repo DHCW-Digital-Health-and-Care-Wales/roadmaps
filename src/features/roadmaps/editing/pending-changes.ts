@@ -15,13 +15,14 @@ import {
   type FieldChange,
   isChoiceField,
   type ItemChanges,
-  itemText,
+  itemValue,
   type RoadmapChanges,
   type RoadmapChoiceField,
   roadmapValue,
   UNLISTED_FAMILY,
 } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
+import { isRoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 
 import type { RoadmapLists } from "../hooks/use-roadmap-lists"
 
@@ -137,7 +138,7 @@ export function editItem(
   const fields = editFields(
     previous?.fields ?? {},
     values,
-    originOf(itemText, item, since),
+    originOf(itemValue, item, since),
   )
   const others = changes.items.filter((entry) => entry !== previous)
   if (isEmpty(fields)) return { ...changes, items: others }
@@ -158,7 +159,7 @@ export function undoItem(
   return { ...changes, items: changes.items.filter((each) => each !== entry) }
 }
 
-/** An entry's pending English, as `findEditedItem` takes it. */
+/** An entry's pending values, as `findEditedItem` takes them. */
 function pendingValues(
   entry: ItemChanges,
 ): { field: EditableItemField; value: string }[] {
@@ -172,7 +173,7 @@ const NO_REPEATED_IDS: ReadonlySet<string> = new Set()
 
 /**
  * Which entry edits which of `items`, by index: an item with an ID by its ID, one with
- * none at its place holding what was loaded (or that with the pending English). An entry
+ * none at its place holding what was loaded (or that with the pending values). An entry
  * matching nothing is left out: its item was removed or changed by a co-lead (STY-026).
  */
 export function matchItemChanges(
@@ -226,7 +227,7 @@ function noChoiceHeld(
  * to its place in the read, without the fields the item already holds; an entry not
  * found is kept as it was. Bases stay as they were, and so does the content an entry
  * was loaded with, which a publish checks a repeated ID by (ADR-012): the entry only
- * takes the item's ID if it had none, and the text of each field it drops.
+ * takes the item's ID if it had none, and the value of each field it drops.
  */
 export function reconcileItems(
   changes: RoadmapChanges,
@@ -243,7 +244,7 @@ export function reconcileItems(
     const position = indexOf.get(entry)
     const read = position === undefined ? undefined : items[position]
     if (position === undefined || read === undefined) return [entry]
-    const fields = dropHeld(entry.fields, (field) => itemText(read, field))
+    const fields = dropHeld(entry.fields, (field) => itemValue(read, field))
     if (isEmpty(fields)) return []
     const id = entry.item.id ?? read.id
     if (
@@ -267,12 +268,19 @@ export function reconcileItems(
     : { ...changes, items: reconciled }
 }
 
-/** `item` with `from`'s `field`, English and Welsh. */
+/** `item` with `from`'s `field`: English and Welsh, or a placement with its horizon. */
 function withFieldOf(
   item: RoadmapItem,
   from: RoadmapItem,
   field: EditableItemField,
 ): RoadmapItem {
+  if (field === "placement") {
+    return {
+      ...item,
+      placement: from.placement,
+      writtenHorizon: from.writtenHorizon,
+    }
+  }
   return { ...item, [field]: from[field] }
 }
 
@@ -401,15 +409,21 @@ function chosenCategory(
   }
 }
 
-/** The item as it will read once its pending English is published. */
+/**
+ * The item as it will read once its pending English and placement are published: a
+ * placed item has no horizon as written (STY-031 S4).
+ */
 export function applyItemChanges(
   item: RoadmapItem,
   entry: ItemChanges | undefined,
 ): RoadmapItem {
   if (!entry) return item
   const { fields } = entry
+  const placement = fields.placement?.value
   return {
     ...item,
+    ...(placement !== undefined &&
+      isRoadmapPlacement(placement) && { placement, writtenHorizon: null }),
     title: withEnglish(item.title, fields.title) ?? item.title,
     description: withEnglish(item.description, fields.description),
     expectedOutcome: withEnglish(item.expectedOutcome, fields.expectedOutcome),

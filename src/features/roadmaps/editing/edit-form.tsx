@@ -22,6 +22,8 @@ export interface EditFormOption {
   label: string
   /** Its colour, shown beside the field while it is chosen; `null` for none. */
   colour?: string | null
+  /** Shown while the value is none, but never chosen (STY-031 S4). */
+  disabled?: boolean
 }
 
 /** One field of an edit form, in the order the form shows it. */
@@ -152,7 +154,11 @@ export function EditForm<F extends string>({
                   }}
                 >
                   {field.options.map((option) => (
-                    <NativeSelectOption key={option.value} value={option.value}>
+                    <NativeSelectOption
+                      key={option.value}
+                      value={option.value}
+                      disabled={option.disabled}
+                    >
                       {option.label}
                     </NativeSelectOption>
                   ))}

@@ -407,3 +407,66 @@ describe("apply", () => {
     })
   })
 })
+
+describe("a move (STY-031)", () => {
+  const unplaced = createTestRoadmapItem("Unplaced", {
+    id: "unplaced",
+    placement: null,
+    writtenHorizon: "Soon",
+  })
+
+  it("shows the item in its new placement, an unplaced one no longer flagged (S1, S4)", () => {
+    const moved = editItem(NO_CHANGES, undefined, unplaced, 0, {
+      placement: "later",
+    })
+
+    expect(moved.items[0]?.fields).toEqual({
+      placement: { base: "", value: "later" },
+    })
+    expect(applyItemChanges(unplaced, moved.items[0])).toEqual({
+      ...unplaced,
+      placement: "later",
+      writtenHorizon: null,
+    })
+    expect(countChanges(moved)).toBe(1)
+  })
+
+  it("is no change once moved back (S5)", () => {
+    const moved = editItem(NO_CHANGES, undefined, first, 0, {
+      placement: "later",
+    })
+
+    expect(
+      editItem(moved, moved.items[0], first, 0, { placement: "now" }),
+    ).toEqual(NO_CHANGES)
+  })
+
+  it("is dropped by a read that finds the item already there, which it then holds (S9)", () => {
+    const moved = editItem(NO_CHANGES, undefined, unplaced, 0, {
+      placement: "now",
+      title: "Placed",
+    })
+    const placed = {
+      ...unplaced,
+      placement: "now",
+      writtenHorizon: null,
+    } as const
+
+    expect(reconcileItems(moved, [placed]).items).toEqual([
+      {
+        item: placed,
+        position: 0,
+        fields: { title: { base: "Unplaced", value: "Placed" } },
+      },
+    ])
+  })
+
+  it("finds an item without an ID that a lost publish already moved", () => {
+    const moved = editItem(NO_CHANGES, undefined, second, 1, {
+      placement: "later",
+    })
+    const read = [first, { ...second, placement: "later" } as const]
+
+    expect(matchItemChanges(read, moved).get(1)).toBe(moved.items[0])
+  })
+})

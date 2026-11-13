@@ -23,6 +23,7 @@ import type {
   RoadmapTextField,
 } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
+import { isRoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 import type {
   RepositoryReadOptions,
   RoadmapRepository,
@@ -45,6 +46,7 @@ import {
   type RoadmapIndexWriteColumn,
 } from "./roadmap-index-parser"
 import {
+  HORIZON_VALUES,
   parseRoadmapTab,
   type RoadmapTab,
   type RoadmapTabColumn,
@@ -86,12 +88,13 @@ const ROADMAP_COLUMNS: Readonly<
   serviceDescription: "Service description",
 }
 
-/** The roadmap tab's column each editable item field is written to (ADR-012). */
+/** The roadmap tab's column each editable item field is written to (ADR-012, ADR-014). */
 const ITEM_COLUMNS: Readonly<Record<EditableItemField, RoadmapTabColumn>> = {
   title: "Title",
   description: "Description",
   expectedOutcome: "Outcome",
   phase: "Phase",
+  placement: "Horizon",
 }
 
 export interface GoogleSheetsRoadmapRepositoryOptions {
@@ -666,12 +669,20 @@ function batchRequests(read: RoadmapRead, writes: PublishWrites) {
     return row
   }
   for (const { index: i, field, value } of writes.items) {
-    tab.write(rowOf(i), ITEM_COLUMNS[field], value)
+    tab.write(rowOf(i), ITEM_COLUMNS[field], itemCell(field, value))
   }
   for (const { index: i, id } of writes.ids) {
     tab.write(rowOf(i), "Item ID", id)
   }
   return [...index.requests(), ...tab.requests()]
+}
+
+/** What an item's cell holds for `value`: a placement as its `Horizon` value. */
+function itemCell(field: EditableItemField, value: string): string {
+  if (field !== "placement") return value
+  // The plan publishes one of the six placements only.
+  if (!isRoadmapPlacement(value)) throw new AppError("unknown")
+  return HORIZON_VALUES[value]
 }
 
 /**

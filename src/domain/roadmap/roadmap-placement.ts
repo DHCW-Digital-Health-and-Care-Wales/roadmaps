@@ -20,3 +20,7 @@ export const ROADMAP_HORIZONS = [
   "next",
   "later",
 ] as const satisfies readonly RoadmapPlacement[]
+
+export function isRoadmapPlacement(value: string): value is RoadmapPlacement {
+  return (ROADMAP_PLACEMENTS as readonly string[]).includes(value)
+}

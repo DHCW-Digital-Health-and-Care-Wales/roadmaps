@@ -23,4 +23,5 @@
       - listitem: Another top-level bullet point
   - text: Changed
   - button "Undo changes A clearer card"
+  - button "Move A clearer card"
   - button "Edit A clearer card"

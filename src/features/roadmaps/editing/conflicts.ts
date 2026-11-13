@@ -15,7 +15,7 @@ import {
   type RoadmapChanges,
   type RoadmapChoiceField,
   isChoiceField,
-  itemText,
+  itemValue,
   roadmapValue,
 } from "@/domain/roadmap/roadmap-changes"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
@@ -254,7 +254,7 @@ export function withCurrentItemText(
         .filter(
           (conflict) =>
             sameTarget(conflict.item, entry) &&
-            itemText(item, conflict.field) === itemText(was, conflict.field),
+            itemValue(item, conflict.field) === itemValue(was, conflict.field),
         )
         .map((conflict) => [conflict.field, currentOf(conflict)]),
     )

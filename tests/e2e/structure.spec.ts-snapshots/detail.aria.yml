@@ -29,6 +29,7 @@
       - definition: What users can do now.
       - term: Organisations
       - definition: SBUHB
+      - button "Move Recently shipped work"
       - button "Edit Recently shipped work"
   - heading "Now" [level=2]
   - list "Now":
@@ -55,11 +56,13 @@
                 - list:
                   - listitem: Use two dashes to nest it again
           - listitem: Another top-level bullet point
+      - button "Move Example card with every column"
       - button "Edit Example card with every column"
     - listitem:
       - heading "Minimal card" [level=3]
       - term: Description
       - definition: Only Title and Horizon are required; everything else is optional.
+      - button "Move Minimal card"
       - button "Edit Minimal card"
     - listitem:
       - heading "Card awaiting release" [level=3]
@@ -71,6 +74,7 @@
       - definition: Service X
       - term: Organisations
       - definition: National
+      - button "Move Card awaiting release"
       - button "Edit Card awaiting release"
   - heading "Next" [level=2]
   - list "Next":
@@ -84,6 +88,7 @@
       - definition: What we hope this will achieve.
       - term: Organisations
       - definition: BCUHB, HDUHB
+      - button "Move Card being explored"
       - button "Edit Card being explored"
   - heading "Later" [level=2]
   - list "Later":
@@ -97,6 +102,7 @@
       - definition: A clear understanding of the problem.
       - term: Organisations
       - definition: CAVUHB
+      - button "Move Discovery card"
       - button "Edit Discovery card"
     - listitem:
       - heading "Longer-term idea" [level=3]
@@ -106,6 +112,7 @@
       - definition: Service Y, Service Z
       - term: Organisations
       - definition: National
+      - button "Move Longer-term idea"
       - button "Edit Longer-term idea"
   - heading "Delivered this year" [level=2]
   - list "Delivered this year":
@@ -122,6 +129,7 @@
         - list:
           - listitem: What it included
           - listitem: Another thing it included
+      - button "Move Earlier delivery this year"
       - button "Edit Earlier delivery this year"
   - heading "Not doing" [level=2]
   - list "Not doing":
@@ -129,4 +137,5 @@
       - heading "Something we are not doing" [level=3]
       - term: Description
       - definition: Explain why this is out of scope for now.
+      - button "Move Something we are not doing"
       - button "Edit Something we are not doing"

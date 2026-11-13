@@ -227,7 +227,11 @@ export const cy = {
         description: "Disgrifiad (Saesneg)",
         expectedOutcome: "Canlyniad disgwyliedig (Saesneg)",
         phase: "Cam (Saesneg)",
+        placement: "Gorwel neu adran",
       },
+      move: "Symud",
+      moveTo: "Symud i",
+      choosePlacement: "Dewiswch orwel neu adran",
       roadmapFields: {
         title: "Teitl (Saesneg)",
         statusLabel: "Statws (Saesneg)",

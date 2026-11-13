@@ -8,5 +8,13 @@
   - textbox "Expected outcome": What changes for users when it is done.
   - text: Phase
   - textbox "Phase": Beta
+  - text: Horizon or section
+  - combobox "Horizon or section":
+    - option "Recently delivered"
+    - option "Now" [selected]
+    - option "Next"
+    - option "Later"
+    - option "Delivered this year"
+    - option "Not doing"
   - button "Done"
   - button "Cancel"

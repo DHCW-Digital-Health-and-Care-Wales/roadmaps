@@ -1,13 +1,16 @@
 import { ListTodoIcon, TriangleAlertIcon } from "lucide-react"
-import { useId, useMemo } from "react"
+import { useId, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { Skeleton } from "@/components/ui/skeleton"
 import type { ItemChanges } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 
-import { EditableItemCard } from "../editing/editable-item-card"
-import { matchItemChanges } from "../editing/pending-changes"
+import {
+  type CardControl,
+  EditableItemCard,
+} from "../editing/editable-item-card"
+import { applyItemChanges, matchItemChanges } from "../editing/pending-changes"
 import { useRoadmapChanges } from "../editing/pending-changes-context"
 import {
   groupRoadmapItems,
@@ -29,19 +32,38 @@ export interface RoadmapItemsProps {
  * A roadmap's items: those the public site leaves out first, flagged (D4), then all six
  * placements in the public site's order, each under its heading, saying when it has
  * none (D1). A roadmap with no items has one empty state instead (D5). Each item can be
- * edited, and shows its pending changes (STY-025).
+ * edited and moved, and shows its pending changes, in its pending placement (STY-025,
+ * STY-031).
  */
 export function RoadmapItems({ roadmapId, items }: RoadmapItemsProps) {
   const { t } = useTranslation()
   const headingId = useId()
-  const { unplaced, placements } = useMemo(
-    () => groupRoadmapItems(items),
-    [items],
-  )
   const changes = useRoadmapChanges(roadmapId)
   const entries = useMemo(
     () => matchItemChanges(items, changes),
     [items, changes],
+  )
+  const { unplaced, placements } = useMemo(
+    () =>
+      groupRoadmapItems(
+        items,
+        (item, position) =>
+          applyItemChanges(item, entries.get(position)).placement,
+      ),
+    [items, entries],
+  )
+  // A moved item's card is a new one, in another list, so focus is handed to it here.
+  const [focus, setFocus] = useState<FocusRequest | null>(null)
+  const focusRequests = useMemo(
+    () => ({
+      request: (position: number, control: CardControl) => {
+        setFocus({ position, control })
+      },
+      met: () => {
+        setFocus(null)
+      },
+    }),
+    [],
   )
   const list = (
     placed: readonly PositionedRoadmapItem[],
@@ -53,6 +75,8 @@ export function RoadmapItems({ roadmapId, items }: RoadmapItemsProps) {
       placed={placed}
       entries={entries}
       labelledBy={labelledBy}
+      focus={focus}
+      focusRequests={focusRequests}
     />
   )
 
@@ -105,12 +129,23 @@ export function RoadmapItems({ roadmapId, items }: RoadmapItemsProps) {
   )
 }
 
+/** The control of the card at `position` that focus goes to as it next renders. */
+interface FocusRequest {
+  position: number
+  control: CardControl
+}
+
 interface ItemListProps {
   roadmapId: string
   items: readonly RoadmapItem[]
   placed: readonly PositionedRoadmapItem[]
   entries: ReadonlyMap<number, ItemChanges>
   labelledBy: string
+  focus: FocusRequest | null
+  focusRequests: {
+    request: (position: number, control: CardControl) => void
+    met: () => void
+  }
 }
 
 function ItemList({
@@ -119,6 +154,8 @@ function ItemList({
   placed,
   entries,
   labelledBy,
+  focus,
+  focusRequests,
 }: ItemListProps) {
   const keys = useItemCardKeys(placed)
   return (
@@ -131,6 +168,11 @@ function ItemList({
           item={item}
           position={position}
           entry={entries.get(position)}
+          focusRequest={
+            focus?.position === position ? focus.control : undefined
+          }
+          onFocusRequest={focusRequests.request}
+          onFocused={focusRequests.met}
         />
       ))}
     </ul>

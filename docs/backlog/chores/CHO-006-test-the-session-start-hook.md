@@ -1,10 +1,10 @@
 # CHO-006: The session-start hook's scenarios run as a test
 
-- **Status**: Proposed — once PR #55's hook is on `main`
+- **Status**: Proposed — ready: PR #55's hook is on `main` (`aecefbb`)
 - **Type**: Chore
 - **Area**: CI/CD
 - **Epic**: standalone
-- **Depends on**: PR #55 merged (hard): the test pins that hook's behaviour
+- **Depends on**: PR #55 (merged): the test pins that hook's behaviour
 - **Binding ADRs**: none
 - **Suggested model**: Sonnet — a bounded Vitest file that drives a shell script
   against throwaway git repositories

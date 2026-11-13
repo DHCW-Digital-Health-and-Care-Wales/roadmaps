@@ -122,7 +122,7 @@ async function expectProductA(page: Page) {
     "What this work is. Keep it to a sentence or two.",
     "What changes for users when it is done.",
     "Service X, Service Y",
-    "CAVUHB, SBUHB",
+    "Cardiff and Vale, Swansea Bay",
     /^First bullet point/,
   ])
   await expect(

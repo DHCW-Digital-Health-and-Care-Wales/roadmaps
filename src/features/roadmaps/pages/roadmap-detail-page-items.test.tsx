@@ -57,7 +57,7 @@ const everyColumn = welshTitled(
       { en: "Service X", cy: "Gwasanaeth X" },
       { en: "Service Y", cy: "Gwasanaeth Y" },
     ],
-    organisations: ["cavuhb", "sbuhb"],
+    organisationIds: ["cavuhb", "sbuhb"],
     details: [
       {
         text: { en: "First bullet point", cy: "Pwynt bwled cyntaf" },
@@ -83,7 +83,7 @@ const productAItems: RoadmapItem[] = [
     },
   }),
   createTestRoadmapItem("Card awaiting release", {
-    organisations: ["national"],
+    organisationIds: ["national"],
   }),
   createTestRoadmapItem("Card being explored", { placement: "next" }),
   welshTitled("Discovery card", "Cerdyn darganfod", {
@@ -227,7 +227,9 @@ describe("RoadmapDetailPage items", () => {
       "What changes for users when it is done.",
     )
     expect(field("Tags")).toHaveTextContent(/^Service X, Service Y$/)
-    expect(field("Organisations")).toHaveTextContent(/^CAVUHB, SBUHB$/)
+    expect(field("Organisations")).toHaveTextContent(
+      /^Cardiff and Vale, Swansea Bay$/,
+    )
 
     const details = field("Details")?.querySelector(":scope > ul")
     expect(details && outline(details)).toEqual([
@@ -243,7 +245,7 @@ describe("RoadmapDetailPage items", () => {
     ).toEqual(["Description"])
 
     expect(
-      within(itemOf("Card awaiting release")).getByText("National"),
+      within(itemOf("Card awaiting release")).getByText("All Wales"),
     ).toBeInTheDocument()
   })
 
@@ -331,7 +333,9 @@ describe("RoadmapDetailPage items", () => {
       item.getByText(label, { selector: "dt" }).nextElementSibling
     expect(field("Disgrifiad")).toHaveTextContent("Beth yw’r gwaith hwn.")
     expect(field("Tagiau")).toHaveTextContent("Gwasanaeth X, Gwasanaeth Y")
-    expect(field("Sefydliadau")).toHaveTextContent(/^CAVUHB, SBUHB$/)
+    expect(field("Sefydliadau")).toHaveTextContent(
+      /^Cardiff and Vale, Swansea Bay$/,
+    )
     expect(field("Manylion")).toHaveTextContent(
       "Another top-level bullet point",
     )
@@ -741,6 +745,7 @@ describe("RoadmapDetailPage items", () => {
         publishRoadmapChanges: vi.fn(),
         listFamilies: vi.fn(),
         listCategories: vi.fn(),
+        listOrganisations: vi.fn().mockResolvedValue([]),
         addFamily: vi.fn(),
         changeFamily: vi.fn(),
       },

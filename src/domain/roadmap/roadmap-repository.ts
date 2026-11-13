@@ -1,6 +1,7 @@
 import type { Category } from "./category"
 import type { Family } from "./family"
 import type { FamilyEdit, FamilyInput, FamilyOutcome } from "./family-changes"
+import type { Organisation } from "./organisation"
 import type { Roadmap } from "./roadmap"
 import type { PublishOutcome, RoadmapChanges } from "./roadmap-changes"
 import type { RoadmapItem } from "./roadmap-item"
@@ -28,6 +29,12 @@ export interface RoadmapRepository {
    * no usable category list, so categories can't be chosen.
    */
   listCategories(options?: RepositoryReadOptions): Promise<Category[] | null>
+  /**
+   * Lists the organisations (ADR-014), in no promised order: a screen sorts them, national
+   * ones first. Every id an item's `organisationIds` holds is in it. Rejects with an
+   * `AppError` when the list can't be read.
+   */
+  listOrganisations(options?: RepositoryReadOptions): Promise<Organisation[]>
   /**
    * Lists one roadmap's items, published or not, in its own order (ADR-011). Rejects
    * with `AppError('not-found')` when no roadmap has the id, and with

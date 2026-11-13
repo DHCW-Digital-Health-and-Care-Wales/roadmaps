@@ -8,7 +8,6 @@
  */
 
 import type { LocalisedText } from "@/domain/roadmap/localised-text"
-import { ORGANISATIONS, type Organisation } from "@/domain/roadmap/organisation"
 import type {
   RoadmapItem,
   RoadmapItemDetail,
@@ -27,6 +26,7 @@ import {
   type HeaderProblemCode,
   type SheetHeader,
 } from "./sheet-header"
+import { BUILT_IN_ORGANISATIONS } from "./built-in-organisations"
 import { ProblemLog, type SheetProblem } from "./sheet-problem-log"
 
 /** A mistake in a roadmap tab, as data for a later sheet-health view (no prose). */
@@ -119,9 +119,9 @@ const PLACEMENTS_BY_KEY = new Map<string, RoadmapPlacement>(
   ]),
 )
 
-/** Organisation codes match like headers: `C.A.V.U.H.B` is `cavuhb`. */
-const ORGANISATIONS_BY_KEY = new Map<string, Organisation>(
-  ORGANISATIONS.map((organisation) => [matchKey(organisation), organisation]),
+/** Organisation codes match like headers: `C.A.V.U.H.B` is the id `cavuhb`. */
+const ORGANISATION_IDS_BY_KEY = new Map<string, string>(
+  BUILT_IN_ORGANISATIONS.map(({ id, code }) => [matchKey(code), id]),
 )
 
 /**
@@ -253,7 +253,7 @@ function toItem(row: ItemRow, seenIds: Set<string>): RoadmapItem | null {
     expectedOutcome: readText(row, "Outcome"),
     phase: readText(row, "Phase"),
     tags: readTags(row),
-    organisations: readOrganisations(row),
+    ...readOrganisations(row),
     details: readDetails(row),
   }
 }
@@ -321,19 +321,32 @@ function readTags(row: ItemRow): LocalisedText[] {
   })
 }
 
-/** Comma or line separated codes, in `ORGANISATIONS` order; unknown codes left out. */
-function readOrganisations(row: ItemRow): Organisation[] {
-  const found = new Set<Organisation>()
+/**
+ * Comma or line separated codes. The ids of those the built-in list holds come in its
+ * order, however the cell orders them; an unknown code is recorded and kept as written
+ * (ADR-014).
+ */
+function readOrganisations(
+  row: ItemRow,
+): Pick<RoadmapItem, "organisationIds" | "unknownOrganisationCodes"> {
+  const found = new Set<string>()
+  const unknown = new Set<string>()
   for (const value of splitEntries(row.read("Organisations"), LIST_SEPARATOR)) {
     if (value === "") continue
-    const organisation = ORGANISATIONS_BY_KEY.get(matchKey(value))
-    if (organisation === undefined) {
+    const id = ORGANISATION_IDS_BY_KEY.get(matchKey(value))
+    if (id === undefined) {
       row.record("unknown-organisation", "Organisations", value)
+      unknown.add(value)
     } else {
-      found.add(organisation)
+      found.add(id)
     }
   }
-  return ORGANISATIONS.filter((organisation) => found.has(organisation))
+  return {
+    organisationIds: BUILT_IN_ORGANISATIONS.map(({ id }) => id).filter((id) =>
+      found.has(id),
+    ),
+    unknownOrganisationCodes: [...unknown],
+  }
 }
 
 /**

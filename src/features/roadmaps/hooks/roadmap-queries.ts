@@ -14,6 +14,7 @@ export const roadmapKeys = {
     [...roadmapKeys.all, "items", roadmapId] as const,
   families: () => [...roadmapKeys.all, "families"] as const,
   categories: () => [...roadmapKeys.all, "categories"] as const,
+  organisations: () => [...roadmapKeys.all, "organisations"] as const,
 }
 
 /**
@@ -51,5 +52,16 @@ export function categoryListQueryOptions(repository: RoadmapRepository) {
   return queryOptions({
     queryKey: roadmapKeys.categories(),
     queryFn: ({ signal }) => repository.listCategories({ signal }),
+  })
+}
+
+/**
+ * The organisation list, in no promised order (ADR-014): sort it with
+ * `sortOrganisations`. Defaults as for the list.
+ */
+export function organisationListQueryOptions(repository: RoadmapRepository) {
+  return queryOptions({
+    queryKey: roadmapKeys.organisations(),
+    queryFn: ({ signal }) => repository.listOrganisations({ signal }),
   })
 }

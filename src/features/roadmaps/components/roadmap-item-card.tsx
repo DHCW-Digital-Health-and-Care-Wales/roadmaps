@@ -4,14 +4,17 @@ import { useTranslation } from "react-i18next"
 
 import { Badge } from "@/components/ui/badge"
 import { localise, type LocalisedText } from "@/domain/roadmap/localised-text"
+import type { Organisation } from "@/domain/roadmap/organisation"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { useLanguage, type Language } from "@/i18n"
 
 import { nestItemDetails, type NestedItemDetail } from "../nest-item-details"
-import { organisationCodes } from "../organisation-codes"
+import { sortOrganisations } from "../sort-organisations"
 
 export interface RoadmapItemCardProps {
   item: RoadmapItem
+  /** The organisation list, which the item's `organisationIds` name (ADR-014). */
+  organisations: readonly Organisation[]
   /** For a form that names the card by its title. */
   headingId?: string
   /**
@@ -35,11 +38,13 @@ const fieldLabels = {
 
 /**
  * A roadmap item as plain text (ADR-011): its title as a heading, then each field it has
- * under a label, with no empty labels. Text keeps its line breaks; an unplaced item says
- * what is wrong with its horizon. A list item, for a list of items.
+ * under a label, with no empty labels. Text keeps its line breaks; its organisations
+ * show by short name, the national one first (ADR-014); an unplaced item says what is
+ * wrong with its horizon. A list item, for a list of items.
  */
 export function RoadmapItemCard({
   item,
+  organisations,
   headingId,
   form,
   actions,
@@ -61,10 +66,15 @@ export function RoadmapItemCard({
     }
   }
   if (item.tags.length > 0) add("tags", item.tags.map(text).join(", "))
-  if (item.organisations.length > 0) {
+  const named = organisations.filter(({ id }) =>
+    item.organisationIds.includes(id),
+  )
+  if (named.length > 0) {
     add(
       "organisations",
-      item.organisations.map((code) => organisationCodes[code]).join(", "),
+      sortOrganisations(named, ({ shortName }) => shortName, language)
+        .map(({ shortName }) => shortName)
+        .join(", "),
     )
   }
   if (item.details.length > 0) {

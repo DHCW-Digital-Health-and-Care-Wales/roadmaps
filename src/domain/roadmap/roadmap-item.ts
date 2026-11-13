@@ -1,5 +1,4 @@
 import type { LocalisedText } from "./localised-text"
-import type { Organisation } from "./organisation"
 import type { RoadmapPlacement } from "./roadmap-placement"
 
 /** One entry of a roadmap item's details. */
@@ -31,7 +30,16 @@ export interface RoadmapItem {
   phase: LocalisedText | null
   /** In the order written, no English repeated. */
   tags: LocalisedText[]
-  /** In `ORGANISATIONS` order, no repeats. */
-  organisations: Organisation[]
+  /**
+   * The ids of the organisations the work is for (ADR-014), no repeats, in no promised
+   * order: a screen sorts them. Only ids the organisation list holds.
+   */
+  organisationIds: string[]
+  /**
+   * The organisation codes the data source names that the list doesn't hold, as written,
+   * in the order written, no repeats: they are not shown, and the public site drops
+   * them too.
+   */
+  unknownOrganisationCodes: string[]
   details: RoadmapItemDetail[]
 }

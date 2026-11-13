@@ -15,7 +15,16 @@ doc comments first, since they are the contract.
    - `ApiRoadmapRepository implements RoadmapRepository`:
      - `listRoadmaps` maps each roadmap to the domain's `Roadmap` (ADR-009), in the
        API's order, with ids that are URL-safe slugs;
-     - `listRoadmapItems` returns one roadmap's items as `RoadmapItem`s (ADR-011);
+     - `listRoadmapItems` returns one roadmap's items as `RoadmapItem`s (ADR-011), each
+       naming its organisations by `organisationIds` (below);
+     - `listOrganisations` returns the organisations table as `Organisation`s (`id`,
+       `code`, `shortName`, `name` in English and Welsh, and a `national` column, true
+       for All Wales only), in any order: the screens sort them. Items link to it by
+       `organisationIds` through a join table (ADR-014). Every id an item holds is in
+       the list, so a code the list doesn't hold never reaches `organisationIds`; the
+       Sheets adapter keeps such codes as `unknownOrganisationCodes`, which the API can
+       leave empty. A list that can't be read rejects with an `AppError`, which a
+       roadmap's page shows as its load failure;
      - `listFamilies` and `listCategories` return the family and category tables, in
        their order, as `Family` and `Category` (ADR-013); `listRoadmaps` links each
        roadmap to them by `familyId` and `categoryId`, taking the family's name and

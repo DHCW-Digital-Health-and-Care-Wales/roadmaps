@@ -47,10 +47,13 @@ State these policies, using the user's instructions where supplied:
   unless the user authorizes fix-first.
 - **Stop**: after the queue, a named item, or a UTC time. At the stop point,
   start nothing new and let authorized in-progress work finish.
-- **Session handoffs**: if the runtime can start a new top-level session or
-  thread, each item runs in a fresh orchestrator session started at the
-  previous item's handoff, before the outgoing orchestrator runs its
-  retrospective (step 6). Otherwise the queue continues in this session.
+- **Session handoffs**: invoking this skill is the user's request for a new
+  top-level session or thread per item, overriding runtime guidance to start
+  one only when asked. When the runtime can start one, each item runs in a
+  fresh orchestrator session started at the previous item's handoff, before
+  the outgoing orchestrator runs its retrospective (step 6); a queue kept in
+  one session is a process miss. Only a runtime that cannot start one keeps
+  the queue in this session.
 - **Models**: inspect the runtime's available providers and models.
   Top-level orchestrator sessions run Sonnet (`claude-sonnet-5-5`), or the
   runtime's nearest standard-tier model, at medium effort, because delegated
@@ -92,8 +95,8 @@ to establish collection ownership and the run-summary destination.
 
 Before the first delegation, check what the runtime's delegation tools
 support: providers and models, async runs with completion notifications,
-shared or separate checkouts, scheduled wake-ups, PR linking and PR event
-notifications. Record each limitation in the run handoff. Keep task IDs and
+shared or separate checkouts, new top-level sessions, scheduled wake-ups, PR
+linking and PR event notifications. Record each limitation in the run handoff. Keep task IDs and
 links there. Completion notifications, where the runtime has them, supply the
 lifecycle; progress logs are evidence read at milestones, on a targeted user
 question or for the `owner-question` check below, not a polling mechanism. At
@@ -184,7 +187,8 @@ A current item's blocked outcome stops the queue as agreed in step 1.
 ### Hand off before the orchestration retrospective
 
 After the item report (step 4), if another eligible item remains, the stop
-policy permits it and the runtime can start a new top-level session:
+policy permits it and the runtime can start a new top-level session, hand off;
+the invocation authorizes the launch (step 1's session-handoff policy):
 
 1. Save the queue, policies, completed
    PR heads/outcomes, learnings, metrics, checkout path/branch and next item

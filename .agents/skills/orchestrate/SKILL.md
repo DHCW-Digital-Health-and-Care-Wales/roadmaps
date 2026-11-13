@@ -52,8 +52,8 @@ State these policies, using the user's instructions where supplied:
   one only when asked. When the runtime can start one, each item runs in a
   fresh orchestrator session started at the previous item's handoff, before
   the outgoing orchestrator runs its retrospective (step 6); a queue kept in
-  one session is a process miss. Only a runtime that cannot start one keeps
-  the queue in this session.
+  one session is a process miss. Only a runtime with no tool to start one
+  keeps the queue in this session.
 - **Models**: inspect the runtime's available providers and models.
   Top-level orchestrator sessions run Sonnet (`claude-sonnet-5-5`), or the
   runtime's nearest standard-tier model, at medium effort, because delegated
@@ -96,14 +96,14 @@ to establish collection ownership and the run-summary destination.
 Before the first delegation, check what the runtime's delegation tools
 support: providers and models, async runs with completion notifications,
 shared or separate checkouts, new top-level sessions, scheduled wake-ups, PR
-linking and PR event notifications. Record each limitation in the run handoff. Keep task IDs and
-links there. Completion notifications, where the runtime has them, supply the
-lifecycle; progress logs are evidence read at milestones, on a targeted user
-question or for the `owner-question` check below, not a polling mechanism. At
-the item boundary, follow the session-handoff procedure below. A new
-top-level session gets the durable run handoff; delivery and reviewer
-subagents are still started with the delegation tool, never as top-level
-sessions.
+linking and PR event notifications. Record each limitation in the run handoff.
+Keep task IDs and links there. Completion notifications, where the runtime has
+them, supply the lifecycle; progress logs are evidence read at milestones, on
+a targeted user question or for the `owner-question` check below, not a
+polling mechanism. At the item boundary, follow the session-handoff procedure
+below. A new top-level session gets the durable run handoff; delivery and
+reviewer subagents are still started with the delegation tool, never as
+top-level sessions.
 
 Completion: briefs and durable task state prepared, checkout ownership clear,
 and required capabilities confirmed or their limitations reported.
@@ -219,11 +219,11 @@ the invocation authorizes the launch (step 1's session-handoff policy):
    shared run records. Use a separately authorized checkout for retro edits,
    or save findings in its own scratch record and defer publication.
 
-If the runtime cannot start a new top-level session, continue the queue in
-this one: run the orchestration retro at the final stop only, and keep the
-run handoff current so a later session can resume. If a launch fails without
-creating a session, preserve the handoff and report the exact blocker and
-resume command. At the final item or stop point, skip the launch and use
+If the runtime has no tool to start a new top-level session, continue the
+queue in this one: run the orchestration retro at the final stop only, and
+keep the run handoff current so a later session can resume. If a launch fails
+without creating a session, preserve the handoff and report the exact blocker
+and resume command. At the final item or stop point, skip the launch and use
 step 5 instead.
 
 Completion per item: primary and retro raised and left open (the default),

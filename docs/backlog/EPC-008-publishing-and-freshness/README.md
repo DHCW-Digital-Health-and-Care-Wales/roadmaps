@@ -96,9 +96,9 @@ updates the glossary's _Publish_, _Save_ and _Published roadmap_ entries.
 
 ## Sequencing
 
-Either order works. STY-035 goes first: its "Save and publish" dialog is one of the
-places STY-036 offers "Mark as updated today" (STY-036 S6). If STY-036 lands first,
-STY-035 adds the tick box to its dialog instead.
+Either order works. STY-035 goes first: its "Publish roadmap" dialog, with or without
+unsaved edits, is one of the places STY-036 offers "Mark as updated today" (STY-036 S6,
+D10). If STY-036 lands first, STY-035 adds the tick box to its dialog instead.
 
 ## Out of scope
 

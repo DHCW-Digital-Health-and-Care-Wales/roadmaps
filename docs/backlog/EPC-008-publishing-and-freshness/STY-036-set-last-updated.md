@@ -63,11 +63,11 @@ with a message; the form can't be confirmed until it is fixed
 **When** Sam clears the field and publishes
 **Then** the `Last updated` cell is written empty, and the page and card show no date
 
-### S6: The publish dialog offers "Mark as updated today" (round 1 Q5, round 2 Q3)
+### S6: The publish dialog offers "Mark as updated today" (round 1 Q5, round 2 Q3, review round 1)
 
-**Given** Product A has pending edits and no pending date
-**When** Sam opens the dialog for "Publish changes", "Save changes" or STY-035's
-"Save and publish"
+**Given** Product A has no pending date
+**When** Sam opens the dialog for "Publish changes", "Save changes", or STY-035's
+"Publish roadmap" (with or without unsaved edits, so "Save and publish" too)
 **Then** it shows a "Mark as updated today" tick box, unticked
 **And** publishing with it ticked writes today's date in the same all-or-nothing write;
 unticked, `Last updated` is not written
@@ -129,9 +129,11 @@ journey against the Sheets fake.
 - **D9** (agent, 2026-11-13): "today", for "Today", the tick box and D3's limit, is the
   date in Europe/London, over the browser's local date, because DHCW works in Wales and
   a browser set to another zone would otherwise date the roadmap wrongly. S3, S4, S6.
+- **D10** (owner, 2026-11-13, asked after review round 1): the tick box on STY-035's
+  "Publish roadmap" with no unsaved edits → yes, offered there too; ticked, `Enabled`
+  and today's date go in one write. S6. Not on "Unpublish roadmap".
 
 ## Out of scope
 
 - Staleness (A7): a later record.
-- Setting the date when publishing or unpublishing the roadmap itself (STY-035's
-  action without pending edits): not asked for.
+- Setting the date when unpublishing a roadmap: not asked for.

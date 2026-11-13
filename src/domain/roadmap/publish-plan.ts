@@ -19,6 +19,8 @@ import {
   isChoiceField,
   type ItemChanges,
   itemValue,
+  organisationIdsOf,
+  organisationIdsValue,
   type PublishOutcome,
   type RoadmapChanges,
   type RoadmapChoiceField,
@@ -41,6 +43,8 @@ export interface RoadmapSnapshot {
    * for it can't be told from none, so no choice of it is published (ADR-013).
    */
   missingLists: ReadonlySet<RoadmapChoiceField>
+  /** The IDs the organisation list holds: only these can be chosen (ADR-014). */
+  organisationIds: ReadonlySet<string>
 }
 
 /**
@@ -70,7 +74,8 @@ const REQUIRED_FIELDS: ReadonlySet<string> = new Set(["title"])
  * Decides what publishing `changes` over `snapshot` (`null`: the roadmap is no longer
  * listed) writes: each pending value that differs from the current one, unless a
  * co-lead changed it too, plus an ID for every item without one. Values are trimmed.
- * Throws `AppError('unknown')` for a blank title or a placement that is none of the six,
+ * An item's organisations are compared as a set. Throws `AppError('unknown')` for a blank
+ * title, a placement that is none of the six or an organisation the list doesn't hold,
  * which callers never send, and `AppError('invalid-data')` for a family or category
  * chosen while its list is missing.
  */
@@ -88,7 +93,7 @@ export function planRoadmapPublish(
   const itemWrites: Omit<PublishWrites["items"][number], "id">[] = []
 
   for (const field of EDITABLE_ROADMAP_FIELDS) {
-    const pending = pendingValue(field, changes.roadmap[field])
+    const pending = pendingValue(field, changes.roadmap[field], snapshot)
     if (pending === null) continue
     if (isChoiceField(field) && snapshot.missingLists.has(field)) {
       throw new AppError("invalid-data", {
@@ -112,7 +117,7 @@ export function planRoadmapPublish(
 
   for (const itemChanges of changes.items) {
     const pending = EDITABLE_ITEM_FIELDS.flatMap((field) => {
-      const change = pendingValue(field, itemChanges.fields[field])
+      const change = pendingValue(field, itemChanges.fields[field], snapshot)
       return change === null ? [] : [{ field, ...change }]
     })
     if (pending.length === 0) continue
@@ -201,13 +206,20 @@ export function heldWrites(
   return unread || held.some(Boolean) ? "some" : "none"
 }
 
-/** A change's trimmed value with its base, or `null` when it changes nothing. */
+/**
+ * A change's trimmed value with its base, or `null` when it changes nothing: a set of
+ * organisations as `organisationIdsValue` gives it.
+ */
 function pendingValue(
   field: string,
   change: FieldChange | undefined,
+  snapshot: RoadmapSnapshot,
 ): { base: string; value: string } | null {
   if (change === undefined) return null
-  const value = change.value.trim()
+  const value =
+    field === "organisationIds"
+      ? listedOrganisationIdsValue(change.value, snapshot.organisationIds)
+      : change.value.trim()
   if (value === "" && REQUIRED_FIELDS.has(field)) {
     throw new AppError("unknown", {
       message: `A blank ${field} can't be published`,
@@ -219,6 +231,22 @@ function pendingValue(
     })
   }
   return value === change.base ? null : { base: change.base, value }
+}
+
+/** `value`'s organisations as one value, each of which the list must hold. */
+function listedOrganisationIdsValue(
+  value: string,
+  listed: ReadonlySet<string>,
+): string {
+  const ids = organisationIdsOf(value)
+    .map((id) => id.trim())
+    .filter((id) => id !== "")
+  if (!ids.every((id) => listed.has(id))) {
+    throw new AppError("unknown", {
+      message: "Only an organisation the list holds can be published",
+    })
+  }
+  return organisationIdsValue(ids)
 }
 
 /** A new ID for every item without one, none repeating an ID the roadmap holds. */

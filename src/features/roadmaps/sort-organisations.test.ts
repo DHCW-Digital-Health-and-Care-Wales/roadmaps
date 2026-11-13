@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import type { Organisation } from "@/domain/roadmap/organisation"
 import { TEST_ORGANISATIONS } from "@/domain/roadmap/testing/test-organisations"
 
-import { sortOrganisations } from "./sort-organisations"
+import { shortNamesOf, sortOrganisations } from "./sort-organisations"
 
 const organisation = (id: string, shortName: string): Organisation => ({
   id,
@@ -72,5 +72,14 @@ describe("sortOrganisations", () => {
     sortOrganisations(organisations, shortName, "en")
 
     expect(organisations).toEqual(TEST_ORGANISATIONS)
+  })
+})
+
+describe("shortNamesOf", () => {
+  it("names the listed organisations among `ids` by short name, sorted, and leaves out the rest", () => {
+    expect(
+      shortNamesOf(TEST_ORGANISATIONS, ["sbuhb", "gone", "national"], "en"),
+    ).toEqual(["All Wales", "Swansea Bay"])
+    expect(shortNamesOf(undefined, ["sbuhb"], "en")).toEqual([])
   })
 })

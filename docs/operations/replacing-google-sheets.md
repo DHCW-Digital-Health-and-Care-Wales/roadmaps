@@ -37,7 +37,9 @@ doc comments first, since they are the contract.
        share; reuse them unless the API enforces them itself. A chosen `familyId` or
        `categoryId` is resolved from the API's own tables, and an ID they don't hold,
        or one chosen while its table is missing, is rejected with `invalid-data`
-       (STY-028);
+       (STY-028). An item's chosen `organisationIds` replace its join rows as a set;
+       the snapshot's `organisationIds` are the organisations table's ids, and the plan
+       rejects any other with `unknown` (STY-034);
    - an `index.ts` barrel. The existing ESLint rules already keep this folder away from
      React, TanStack and features.
 2. **Contract test.** In `api-roadmap-repository.test.ts`, run the shared contract

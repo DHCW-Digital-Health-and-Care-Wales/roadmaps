@@ -3,7 +3,7 @@
 - **Status**: Done — delivered in its PR, which awaits the owner's merge
 - **Type**: Feature + Refactor + Docs
 - **Area**: Domain + Infrastructure + Features/UI + Docs
-- **Epic**: [EPC-007-item-placement-and-organisations](../../EPC-007-item-placement-and-organisations/README.md)
+- **Epic**: [EPC-007-item-placement-and-organisations](README.md)
 - **Depends on**: none; delivered after STY-031, in the owner's order (round 3 Q22)
 - **Binding ADRs**: ADR-014 §Organisations, ADR-011, ADR-002
 - **Suggested model**: Sonnet — a new list read beside the families and categories

@@ -19,3 +19,20 @@ export function sortOrganisations(
       collator.compare(label(a), label(b)),
   )
 }
+
+/**
+ * The short names of the organisations among `ids` that `organisations` holds, in the
+ * order every screen shows them; `[]` while the list is unread. Short names are English
+ * in both languages (ADR-014).
+ */
+export function shortNamesOf(
+  organisations: readonly Organisation[] | undefined,
+  ids: readonly string[],
+  language: ContentLanguage,
+): string[] {
+  return sortOrganisations(
+    (organisations ?? []).filter(({ id }) => ids.includes(id)),
+    ({ shortName }) => shortName,
+    language,
+  ).map(({ shortName }) => shortName)
+}

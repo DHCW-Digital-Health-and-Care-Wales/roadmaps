@@ -98,6 +98,10 @@ it writes the `Families` tab only as below.
   for the placement chosen (`Recently delivered`, `Now`, `Next`, `Later`,
   `Delivered this year` or `Not doing`), so the row keeps its place and the item
   shows in row order in its new placement; a move never blanks the cell;
+- an item whose organisations changed: its row's `Organisations` cell alone, as the
+  codes chosen, `National` first and then by code, separated by a comma and a space
+  (`National, SBUHB`), or an empty cell for none; only codes in the editor's list are
+  written, so a code it doesn't recognise goes from the cell then, and only then;
 - an `Item ID` for every item row it reads (one with a title) that has none, or repeats
   another row's: eight random
   lower-case letters and digits starting with a letter, such as `k7q2xwbn`;
@@ -111,8 +115,9 @@ it writes the `Families` tab only as below.
   it to a listed family or category, never changing an ID already there;
 - a column the roadmap needs but lacks (the `Item ID` column the first time, the
   `Family ID` or `Category ID` column, or an edited field's column, `Horizon` for a
-  move), appended after the last column in use with the public site's English
-  header, the grid widened in the same request.
+  move and `Organisations` for a choice of organisations), appended after the last
+  column in use with the public site's English header, the grid widened in the same
+  request.
 
 Adding, renaming or recolouring a family on the "Families, categories and organisations" page writes
 at once, after a re-read, in one all-or-nothing `spreadsheets.batchUpdate`, only:
@@ -142,9 +147,9 @@ row's own copied cells, or to its being out of step or published, refuses the wr
 pending.
 
 It never writes any other cell: no Welsh `(cy)` cell other than `Family (cy)`,
-`Last updated`, `Enabled`, `Sheet`, `Horizon`, `Labels`, `Organisations` or `Details`,
-no `Family`, `Category` or `Colour` cell but those above and "Make it match"'s, no
-roadmap's row or tab but
+`Last updated`, `Enabled`, `Sheet`, `Labels` or `Details`, no `Horizon` or
+`Organisations` cell but those above, no `Family`, `Category` or `Colour` cell but
+those above and "Make it match"'s, no roadmap's row or tab but
 those above, nothing in the `Template` or `Categories` tab, nothing in the `Families`
 tab but the family changes above, and no cell whose value has not changed. A roadmap
 whose `Sheet` names the `Template` tab or the roadmap index itself can't be read or

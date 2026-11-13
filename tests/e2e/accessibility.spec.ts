@@ -202,6 +202,30 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expectNoAxeViolations(page, theme)
     })
 
+    test("an item's organisations, with an unknown code named, then the changed card (STY-034)", async ({
+      page,
+      sheets,
+    }) => {
+      sheets.coLead(
+        "ProductA",
+        "Minimal card",
+        "Organisations",
+        "CAVUHB, CAVHB",
+      )
+      await page.goto("./#/roadmaps/producta")
+      await connect(page)
+      const main = page.getByRole("main")
+      await main.getByRole("button", { name: "Edit Minimal card" }).click()
+      const group = main.getByRole("group", { name: "Organisations" })
+      await expect(group.getByText(/CAVHB isn't recognised/)).toBeVisible()
+      await group.getByRole("checkbox", { name: "Powys (PTHB)" }).click()
+      await expectNoAxeViolations(page, theme)
+
+      await main.getByRole("form").getByRole("button", { name: "Done" }).click()
+      await expect(main.getByText("Cardiff and Vale, Powys")).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+    })
+
     test("choosing a family, then its pending colour (STY-028)", async ({
       page,
       sheets,

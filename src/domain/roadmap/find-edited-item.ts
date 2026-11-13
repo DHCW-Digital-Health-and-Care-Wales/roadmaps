@@ -55,8 +55,9 @@ const CONTENT_KEYS = Object.keys(CONTENT) as (keyof typeof CONTENT)[]
 
 /**
  * Whether `current` holds `loaded`'s content, with `edited` fields' values replaced: a
- * text field's Welsh must still be `loaded`'s where both reads show it, and a placed
- * item has no horizon as written.
+ * text field's Welsh must still be `loaded`'s where both reads show it, a placed item has
+ * no horizon as written, and an item whose organisations were written has no unknown
+ * codes, as only known ones are written (ADR-014).
  */
 function sameContent(
   current: RoadmapItem,
@@ -67,9 +68,17 @@ function sameContent(
     if (key === "writtenHorizon" && edited.has("placement")) {
       return current.writtenHorizon === null
     }
+    if (key === "unknownOrganisationCodes" && edited.has("organisationIds")) {
+      return current.unknownOrganisationCodes.length === 0
+    }
     if (!isEditable(key)) return sameValue(current[key], loaded[key])
     const value = edited.get(key)
-    if (value === undefined) return sameValue(current[key], loaded[key])
+    if (value === undefined) {
+      // A set of organisations is the same in any order (ADR-014).
+      return key === "organisationIds"
+        ? itemValue(current, key) === itemValue(loaded, key)
+        : sameValue(current[key], loaded[key])
+    }
     return (
       itemValue(current, key) === value &&
       (!isItemTextField(key) ||

@@ -6,6 +6,8 @@ import {
   itemValue,
   type ItemChanges,
   type ItemTextField,
+  organisationIdsOf,
+  organisationIdsValue,
 } from "@/domain/roadmap/roadmap-changes"
 import { localise } from "@/domain/roadmap/localised-text"
 import type { Organisation } from "@/domain/roadmap/organisation"
@@ -17,6 +19,7 @@ import {
 import { useLanguage } from "@/i18n"
 
 import { RoadmapItemCard } from "../components/roadmap-item-card"
+import { sortOrganisations } from "../sort-organisations"
 import { EditControls } from "./edit-controls"
 import { EditForm, type EditFormField } from "./edit-form"
 import { editFormFields } from "./edit-form-fields"
@@ -75,10 +78,11 @@ export interface EditableItemCardProps {
 export type CardControl = "edit" | "move"
 
 /**
- * An item's card with its pending English and placement shown and tagged, an Edit that
- * turns the card into a form for its title, description, expected outcome, phase and
- * placement (STY-025 S1–S4, S6; STY-031 S3), and a Move menu (STY-031 S1, S2). Its other
- * fields stay on show; nothing is written until the roadmap is published.
+ * An item's card with its pending English, placement and organisations shown and tagged,
+ * an Edit that turns the card into a form for its title, description, expected outcome,
+ * phase, placement (STY-025 S1–S4, S6; STY-031 S3) and organisations (STY-034 S1–S4),
+ * and a Move menu (STY-031 S1, S2). Its other fields stay on show; nothing is written
+ * until the roadmap is published.
  */
 export function EditableItemCard({
   roadmapId,
@@ -195,6 +199,29 @@ export function EditableItemCard({
     ],
   }
 
+  // Short names and codes stay English; the order is the card's (ADR-014).
+  const unknownCodes = (mode.opened?.read ?? item).unknownOrganisationCodes
+  const organisationsField: EditFormField<"organisationIds"> = {
+    name: "organisationIds",
+    label: t("roadmaps.edit.itemFields.organisationIds"),
+    multiline: false,
+    options: sortOrganisations(
+      organisations,
+      ({ shortName }) => shortName,
+      language,
+    ).map(({ id, code, shortName }) => ({
+      value: id,
+      label: t("roadmaps.edit.organisationChoice", { shortName, code }),
+    })),
+    many: { ofValue: organisationIdsOf, toValue: organisationIdsValue },
+    ...(unknownCodes.length > 0 && {
+      hint: t("roadmaps.edit.unknownOrganisations", {
+        count: unknownCodes.length,
+        codes: unknownCodes.join(", "),
+      }),
+    }),
+  }
+
   return (
     <RoadmapItemCard
       item={shown}
@@ -203,10 +230,11 @@ export function EditableItemCard({
       form={
         mode.editing ? (
           <EditForm
-            fields={[...text.fields, placementField]}
+            fields={[...text.fields, placementField, organisationsField]}
             initial={{
               ...text.initial,
               placement: itemValue(shown, "placement"),
+              organisationIds: itemValue(shown, "organisationIds"),
             }}
             labelledBy={headingId}
             onDone={done}

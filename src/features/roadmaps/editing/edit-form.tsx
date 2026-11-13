@@ -9,6 +9,7 @@ import {
 import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
@@ -34,6 +35,17 @@ export interface EditFormField<F extends string> {
   multiline: boolean
   /** Chosen from these, in this order, instead of typed (STY-028). */
   options?: readonly EditFormOption[]
+  /**
+   * With `options`, any number of them chosen, as checkboxes, instead of one (STY-034):
+   * the field's value holds the chosen ones' values as `ofValue` reads it and `toValue`
+   * writes it.
+   */
+  many?: {
+    ofValue: (value: string) => readonly string[]
+    toValue: (chosen: readonly string[]) => string
+  }
+  /** Said of a checkbox group as a whole, under its label (STY-034 S4). */
+  hint?: string
   /** Held at its value, as while its options are read. */
   disabled?: boolean
   /** Shown as `text`, not edited, with a notice of why (STY-028 S6). */
@@ -58,10 +70,11 @@ export interface EditFormProps<F extends string> {
 
 /**
  * The form an item or the roadmap's own text turns into for editing (STY-025 S1, S4,
- * S5): a labelled field each, typed or chosen from a list (STY-028), or shown read-only
- * when it can't be changed, then "Done" to keep the values pending and Cancel (or Escape)
- * to leave them. The title is required: confirming without one keeps the form open with
- * an error linked to it. Writes nothing; the caller keeps the values pending.
+ * S5): a labelled field each, typed, chosen from a list (STY-028) or ticked from one
+ * (STY-034), or shown read-only when it can't be changed, then "Done" to keep the
+ * values pending and Cancel (or Escape) to leave them. The title is required:
+ * confirming without one keeps the form open with an error linked to it. Writes
+ * nothing; the caller keeps the values pending.
  */
 export function EditForm<F extends string>({
   fields,
@@ -131,6 +144,52 @@ export function EditForm<F extends string>({
               <p>{field.fixed.text}</p>
               <p className="text-muted-foreground">{field.fixed.notice}</p>
             </div>
+          )
+        }
+        if (field.options && field.many) {
+          const { ofValue, toValue } = field.many
+          const ticked = new Set(ofValue(values[field.name]))
+          const hintId = `${controlId}-hint`
+          const toggle = (option: string, checked: boolean) => {
+            setValues((current) => {
+              const next = new Set(ofValue(current[field.name]))
+              if (checked) next.add(option)
+              else next.delete(option)
+              return { ...current, [field.name]: toValue([...next]) }
+            })
+          }
+          return (
+            <fieldset
+              key={field.name}
+              aria-describedby={field.hint ? hintId : undefined}
+              className="flex flex-col gap-2.5"
+            >
+              <legend className="mb-1.5 text-body font-bold">
+                {field.label}
+              </legend>
+              {field.hint && (
+                <p id={hintId} className="text-muted-foreground">
+                  {field.hint}
+                </p>
+              )}
+              {field.options.map((option) => (
+                <label
+                  key={option.value}
+                  className="flex min-h-10 cursor-pointer items-center gap-3"
+                >
+                  <Checkbox
+                    checked={ticked.has(option.value)}
+                    disabled={field.disabled}
+                    onCheckedChange={(checked) => {
+                      toggle(option.value, checked)
+                    }}
+                  />
+                  <span className="min-w-0 wrap-break-word">
+                    {option.label}
+                  </span>
+                </label>
+              ))}
+            </fieldset>
           )
         }
         if (field.options) {

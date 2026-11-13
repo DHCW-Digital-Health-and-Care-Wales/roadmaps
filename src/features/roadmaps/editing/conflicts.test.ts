@@ -7,9 +7,11 @@ import type {
 } from "@/domain/roadmap/roadmap-changes"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
+import { TEST_ORGANISATIONS } from "@/domain/roadmap/testing/test-organisations"
 
 import { editItem } from "./pending-changes"
 import {
+  describeOrganisations,
   discardItems,
   keepMine,
   openConflicts,
@@ -318,5 +320,23 @@ describe("withCurrentItemText", () => {
 
     expect(elsewhere).toEqual({ ...later, placement: "next" })
     expect(unplaced).toEqual({ ...later, placement: null, writtenHorizon: "" })
+  })
+})
+
+describe("describeOrganisations (STY-034 S7)", () => {
+  it("names a set by short name, as the card sorts them", () => {
+    expect(
+      describeOrganisations("national,sbuhb,cavuhb", TEST_ORGANISATIONS, "en"),
+    ).toBe("All Wales, Cardiff and Vale, Swansea Bay")
+    expect(describeOrganisations("", TEST_ORGANISATIONS, "en")).toBe("")
+  })
+
+  it("names an organisation by its id while the list doesn't hold it, never leaving a set blank", () => {
+    expect(describeOrganisations("cavuhb,pthb", TEST_ORGANISATIONS, "en")).toBe(
+      "Cardiff and Vale, pthb",
+    )
+    expect(describeOrganisations("cavuhb,sbuhb", undefined, "en")).toBe(
+      "cavuhb, sbuhb",
+    )
   })
 })

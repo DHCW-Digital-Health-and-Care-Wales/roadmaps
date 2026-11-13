@@ -92,14 +92,14 @@ At commit `a558b85` (PR #55's head):
 
 ### Scenario evidence
 
-| Scenario                 | Held by                                                                                                                                                         |
-| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1 behind (Note)         | `build/session-start-hook.test.ts` (`notes how far a checkout is behind the default branch`)                                                                    |
-| S1 upstream deleted      | `build/session-start-hook.test.ts` (`warns when the branch's upstream was deleted on the remote`)                                                               |
-| S1 unrelated history     | `build/session-start-hook.test.ts` (`warns when the branch's history is unrelated to the default branch`)                                                       |
-| S1 silent cases          | `build/session-start-hook.test.ts` (`is silent when the checkout is up to date`, `… in a shallow clone …`, `… no default branch recorded`)                      |
-| S1 stale worktree (Note) | `build/session-start-hook.test.ts` (`checks the session's worktree, not the directory it was launched in`)                                                      |
-| S1 `--prune` removed     | observed run: with `--prune` removed, under a global `fetch.prune=true` and `CLAUDE_CODE_REMOTE=true`, only the deleted-upstream case fails                     |
-| S1 discrimination        | observed runs: ignoring `cwd`, dropping the shallow guard or the unrelated-history test each fails only its own case                                            |
-| S2 install passes        | `build/session-start-hook.test.ts` (`installs dependencies and creates .env.local at the worktree root`)                                                        |
-| S2 install fails         | `build/session-start-hook.test.ts` (`names the install log when the install fails, and still creates .env.local`); an `exit 1` added after the warning fails it |
+| Scenario                 | Held by                                                                                                                                                                                                                     |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1 behind (Note)         | `build/session-start-hook.test.ts` (`notes how far a checkout is behind the default branch`)                                                                                                                                |
+| S1 upstream deleted      | `build/session-start-hook.test.ts` (`warns when the branch's upstream was deleted on the remote`)                                                                                                                           |
+| S1 unrelated history     | `build/session-start-hook.test.ts` (`warns when the branch's history is unrelated to the default branch`, `warns when the branch meets the default branch only at its root`)                                                |
+| S1 silent cases          | `build/session-start-hook.test.ts` (`is silent when the checkout is up to date`, `… in a shallow clone …`, `… no default branch recorded`)                                                                                  |
+| S1 stale worktree (Note) | `build/session-start-hook.test.ts` (`checks the session's worktree, not the directory it was launched in`)                                                                                                                  |
+| S1 `--prune` removed     | observed run: with `--prune` removed, under a global `fetch.prune=true` and `CLAUDE_CODE_REMOTE=true`, only the deleted-upstream case fails                                                                                 |
+| S1 discrimination        | observed runs: ignoring `cwd`, or dropping the shallow guard or the root-commit test, each fails only its own case; the empty-merge-base test alone moves no outcome, since the root-commit test also catches an empty base |
+| S2 install passes        | `build/session-start-hook.test.ts` (`installs dependencies and creates .env.local at the worktree root`)                                                                                                                    |
+| S2 install fails         | `build/session-start-hook.test.ts` (`names the install log when the install fails, and still creates .env.local`); an `exit 1` added after the warning fails it                                                             |

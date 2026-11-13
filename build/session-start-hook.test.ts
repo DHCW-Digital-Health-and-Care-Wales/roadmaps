@@ -177,6 +177,16 @@ describe("the session-start hook's behind-main check", () => {
     })
   })
 
+  it("warns when the branch meets the default branch only at its root", () => {
+    const work = clone(createOrigin(), "work")
+    git(work, "switch", "--quiet", "-c", "ancient", "HEAD~2")
+
+    expect(runHook({ projectDir: work })).toEqual({
+      status: 0,
+      stdout: WARNING_NOT_BASED,
+    })
+  })
+
   it("is silent when the checkout is up to date", () => {
     const work = clone(createOrigin(), "work")
 

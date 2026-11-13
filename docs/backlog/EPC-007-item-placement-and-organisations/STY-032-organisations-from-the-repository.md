@@ -42,7 +42,8 @@ names), with ids `national`, `abuhb`… as today, without a request
 **When** the roadmap is read
 **Then** the item's organisations are the id `cavuhb` only, matched as headers are
 **And** `CAVHB` is recorded as an unknown code, as today, and kept on the item as
-written for STY-034's warning (EPC-007 F4)
+written for STY-034's warning (EPC-007 F4); the card doesn't show it, as the public
+site doesn't
 
 ### S4: The screens follow the repository's list
 

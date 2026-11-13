@@ -38,7 +38,7 @@ them
 
 **Given** the Welsh interface
 **When** the section shows
-**Then** each full name is in Welsh ("Bwrdd Iechyd Prifysgol Caerdydd a'r Fro
+**Then** each full name is in Welsh ("Bwrdd Iechyd Prifysgol Caerdydd a’r Fro
 (CAVUHB)"), with the same codes, in the same order
 
 ### S4: No organisations
@@ -60,8 +60,8 @@ them
 - **D2** (owner, round 4 Q23): on the families and categories page, renamed, not a page
   of its own → S1, S2.
 - **D3** (owner, round 4 Q24): Welsh full names on the Welsh interface → S3.
-- **D4** (owner, round 4 Q25): All Wales first, then alphabetical; STY-032 D5 makes it
-  the list's order in both languages → S2, S3.
+- **D4** (owner, round 4 Q25): All Wales first, then alphabetical → S2. The Welsh page
+  keeps the English order by the agent's STY-032 D5, not this answer → S3.
 
 ## Starting point
 

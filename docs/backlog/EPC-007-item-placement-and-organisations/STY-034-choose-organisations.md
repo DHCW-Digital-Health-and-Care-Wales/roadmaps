@@ -51,7 +51,7 @@ are changed
 **And** publishing a changed choice writes known codes only; publishing other edits to
 the item, organisations untouched, leaves the cell as it is
 
-### S5: Publishing writes the codes (round 1 Q11)
+### S5: Publishing writes the codes
 
 **Given** a pending choice of Swansea Bay and All Wales
 **When** Sam publishes
@@ -91,6 +91,9 @@ conflict
 - **D6** (agent, 2026-11-13): an unknown code is removed only when the organisations
   are written, not on every write to the item, over clearing it at any publish: a
   publish changes only the fields the Product Lead changed (ADR-012) → S4.
+- **D7** (agent, 2026-11-13): the cell is written as codes separated by `, ` in the
+  list's order, over the order ticked: the format the parser and the public site already
+  read, and stable, so a re-save is no change → S5.
 
 ## Starting point
 

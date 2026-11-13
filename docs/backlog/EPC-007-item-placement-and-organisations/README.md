@@ -41,7 +41,7 @@ The persona's _Move items between horizons_ means a trip to the sheet today.
 `FieldChange` holds a `base` and `value` string, and the edit form offers a typed field
 or one choice from a list (`EditFormField.options`, STY-028). A set of organisations has
 no field type yet. The conflict review and publish dialog name a field by its catalogue
-label and show its value as text (`rg -n "itemFields" src/features/roadmaps/editing`).
+label, and the conflict review shows its values as text (`rg -n "itemFields" src/features/roadmaps/editing`).
 
 ### F3 — The organisation list is a constant in two layers
 
@@ -58,7 +58,7 @@ the cell from the item would drop it without a word.
 ### F5 — A roadmap may have no `Organisations` column
 
 The `ProductC` fixture's header has none (`docs/analysis/roadmap-tab-format.md`,
-_Fixtures_). ADR-012 already adds a missing column on publish.
+_Example data_). ADR-012 already adds a missing column on publish.
 
 ## Design
 
@@ -86,8 +86,8 @@ Placement and organisations join the item's editable fields, each one value for 
 edits, conflicts and Refresh (ADR-014): a placement compared as its id (none for an
 unplaced item), organisations as a set of ids. STY-031 extends the pending-change model
 for a field that is not free text; STY-034 builds on that extension, not a second one.
-The publish dialog and the conflict review name each new field by its catalogue label
-and show its value as the page does: a placement by its heading, organisations by short
+The publish dialog and the conflict review name each new field by its catalogue label;
+the conflict review shows its values as the page does: a placement by its heading, organisations by short
 names.
 
 ### The organisation list
@@ -127,10 +127,10 @@ flowchart LR
   STY-032 --> STY-033
 ```
 
-One at a time, in number order (round 3 Q22). STY-031 goes first as the persona's most
-frequent job; STY-032 has no hard need of it, so it may go first if STY-031 is blocked.
-STY-034 needs STY-031's extension of the pending-change model and STY-032's list.
-STY-033 is small and may run beside STY-034.
+One at a time, in number order (round 3 Q22): STY-031, STY-032, STY-033, STY-034.
+STY-032 has no hard need of STY-031, and STY-033 none of STY-034, but the owner chose
+this order. STY-034 needs STY-031's extension of the pending-change model and STY-032's
+list.
 
 ## Out of scope
 

@@ -37,8 +37,8 @@ database that replaces Sheets (ADR-002) will hold them as a table, linked to ite
 - **The repository serves the list** (round 2 Q13, round 3 Q19). `RoadmapRepository`
   gains `listOrganisations()`, returning each organisation's `id`, `code`, English
   `shortName` and `name` (English and Welsh), in display order: All Wales first, then
-  alphabetical by English name, the same order in both languages (round 2 Q16, round 3
-  Q21, round 4 Q25). Items carry `organisationIds`. Features read the list through a
+  alphabetical by English name (round 2 Q16, round 3 Q21, round 4 Q25). One order
+  serves both languages (agent, EPC-007 STY-032 D5), so a Welsh page is not re-sorted. Items carry `organisationIds`. Features read the list through a
   query, never a constant, and never sort it.
 - **In Sheets the list is built in** (Q13): the adapter returns the twelve, with today's
   ids (`cavuhb`) as keys, and maps an item's codes to ids as it reads. No
@@ -53,7 +53,7 @@ database that replaces Sheets (ADR-002) will hold them as a table, linked to ite
   Welsh (Q7); codes are the same in both languages.
 - **An item's organisations are a pending edit**, any mix, All Wales included (Q8).
   Publishing writes the cell as codes separated by `, ` in list order, or empty for
-  none. It writes known codes only: a code the list doesn't hold is dropped, and the form
+  none (agent, STY-034 D7). It writes known codes only: a code the list doesn't hold is dropped, and the form
   says so first (Q9). A missing `Organisations` column is added as ADR-012 adds one
   (Q10).
 - **One field for conflicts** (Q11): the set of ids, so a co-lead's reordering is no

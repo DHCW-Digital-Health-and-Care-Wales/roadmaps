@@ -37,7 +37,7 @@ note_if_behind_default_branch() {
 
   behind=$(git rev-list --count "HEAD..$default" 2>/dev/null) || return 0
   [ "$behind" -gt 0 ] || return 0
-  echo "==> Note: HEAD is $behind commit(s) behind $default. Before publishing, rebase onto it, even if the branch has an open PR (implement-story's references/pull-requests.md, \"Update a branch\"). If this branch's PR has already merged, start new work on a branch from $default instead."
+  echo "==> Note: HEAD is $behind commit(s) behind $default. If this branch's PR has already merged, start new work on a branch from $default. Otherwise rebase onto its base before publishing, even if its PR is open (implement-story's references/pull-requests.md, \"Update a branch\")."
 }
 note_if_behind_default_branch
 

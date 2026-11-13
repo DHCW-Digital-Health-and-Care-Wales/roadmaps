@@ -8,7 +8,7 @@
 - **Binding ADRs**: ADR-014 §Organisations, ADR-012, ADR-008
 - **Suggested model**: Opus — a set-valued field through the pending-change model,
   publish plan and conflict review, and a column the write may add
-- **Delivered**: (this PR)
+- **Delivered**: https://github.com/collisdigital/roadmaps-editor/pull/49
 
 ## Summary
 

@@ -8,6 +8,7 @@
 - **Binding ADRs**: ADR-014 §Placement, ADR-012, ADR-011, ADR-008
 - **Suggested model**: Opus — it extends the pending-change model, publish plan and
   conflict review for the first field that is not free text
+- **Delivered**: https://github.com/collisdigital/roadmaps-editor/pull/43
 
 ## Summary
 

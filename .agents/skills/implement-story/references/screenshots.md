@@ -22,7 +22,11 @@ route Sheets yourself or capture against `pnpm build && pnpm preview`. Keep
 capture scripts in a scratch directory, not in the repository, unless they are
 proper E2E tests. A scratch Playwright spec that imports the repository's
 fixtures loads only once that directory holds a `package.json` of
-`{"type":"module"}` and a `node_modules` symlink to the checkout's.
+`{"type":"module"}` and a `node_modules` symlink to the checkout's. Give its
+config `use: { actionTimeout: 5_000 }`: without it, a locator that matches
+nothing (a Welsh capture looking for an English name) waits out the whole test
+timeout. Send the run's output to a log file rather than through `tail`, so a
+run killed by a timeout still shows the step it stopped on.
 
 Cover desktop (1280 px) and phone (375 px), light and dark mode where relevant,
 and Welsh (`cy`) where copy changed. Save captures under

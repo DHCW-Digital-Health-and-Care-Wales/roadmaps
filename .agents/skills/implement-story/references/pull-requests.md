@@ -15,8 +15,15 @@
    `.github/pull_request_template.md`, following its comments. The title is a
    conventional commit subject naming the record, e.g.
    `feat(roadmaps): STY-010 show each roadmap's owner`.
-4. Push the existing task branch without force-pushing. Do not create a
-   duplicate if a PR already exists. Create the PR with
+4. Push the task branch. To bring it up to date with its base, even with its
+   PR open, rebase onto `origin/<base branch>` rather than merging the base
+   in, so its history stays linear; then re-run the verification and re-pin
+   the reviewers' SHAs (`delegation.md`). Push a rebased branch that was
+   pushed before with `git push --force-with-lease=<branch>:<last pushed SHA>`,
+   never a plain `--force`. The SHA is the head you last pushed (your
+   handoff), not a freshly fetched remote ref, so a push made since is refused
+   rather than overwritten. Do not create a duplicate if a PR already exists.
+   Create the PR with
    `gh pr create --base <base branch> --head <branch> --title '<title>' --body-file <body-file>`,
    adding one `--attach` per screenshot (`screenshots.md`), then read back the
    hosted image URLs. Link the PR to the session as the next call when the

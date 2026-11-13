@@ -44,7 +44,7 @@ reviewers write no report files. Do not relay raw search dumps or whole
 transcripts into the main context.
 
 Use a fresh reviewer with only the brief for each review. Rebase the branch
-onto the current base, re-run the verification, and only then pin the SHAs, or
+onto the current base (`pull-requests.md` step 4), re-run the verification, and only then pin the SHAs, or
 the base-to-head diff shows work that merged meanwhile as a revert. Include the
 user requirements and record, base/head SHAs, the diff command, relevant
 verification results, PR metadata the reviewer cannot fetch itself, and the
@@ -131,7 +131,10 @@ pass.
   above P3 (correctness) or a 🔴 or 🟡 (quality); a CI finding that arrives
   first joins it. Start a fresh reviewer on the same model. Supply its previous
   findings and how each was addressed, the head last reviewed, the new head and
-  the diff command between them. The re-checker confirms or reopens each
+  the diff command between them. A rebase since the last round moves the base
+  too: re-pin both SHAs and supply
+  `git range-diff <old base>..<old head> <new base>..<new head>`, since a diff
+  between the heads shows the base's new work as the fix. The re-checker confirms or reopens each
   finding and reviews the changed lines and the code they affect. A fix that
   answers only P3 or 💭 findings or wording gets no re-check: list it in the PR
   body's Review record.

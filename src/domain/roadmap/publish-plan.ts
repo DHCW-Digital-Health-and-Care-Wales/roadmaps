@@ -18,13 +18,14 @@ import {
   type FieldConflict,
   isChoiceField,
   type ItemChanges,
-  itemText,
+  itemValue,
   type PublishOutcome,
   type RoadmapChanges,
   type RoadmapChoiceField,
   roadmapValue,
 } from "./roadmap-changes"
 import type { RoadmapItem } from "./roadmap-item"
+import { isRoadmapPlacement } from "./roadmap-placement"
 
 /** A roadmap as just read, to publish over. */
 export interface RoadmapSnapshot {
@@ -69,8 +70,9 @@ const REQUIRED_FIELDS: ReadonlySet<string> = new Set(["title"])
  * Decides what publishing `changes` over `snapshot` (`null`: the roadmap is no longer
  * listed) writes: each pending value that differs from the current one, unless a
  * co-lead changed it too, plus an ID for every item without one. Values are trimmed.
- * Throws `AppError('unknown')` for a blank title, which callers never send, and
- * `AppError('invalid-data')` for a family or category chosen while its list is missing.
+ * Throws `AppError('unknown')` for a blank title or a placement that is none of the six,
+ * which callers never send, and `AppError('invalid-data')` for a family or category
+ * chosen while its list is missing.
  */
 export function planRoadmapPublish(
   changes: RoadmapChanges,
@@ -126,7 +128,7 @@ export function planRoadmapPublish(
       continue
     }
     for (const { field, base, value } of pending) {
-      const currentValue = itemText(current, field)
+      const currentValue = itemValue(current, field)
       if (currentValue === value) continue
       if (currentValue !== base) {
         conflicts.push({
@@ -187,7 +189,7 @@ export function heldWrites(
     ),
     ...writes.items.map(({ id, field, value }) => {
       const item = withId(id)
-      return item !== undefined && itemText(item, field) === value
+      return item !== undefined && itemValue(item, field) === value
     }),
     ...writes.ids.map(({ id }) => snapshot.takenIds.has(id)),
   ]
@@ -209,6 +211,11 @@ function pendingValue(
   if (value === "" && REQUIRED_FIELDS.has(field)) {
     throw new AppError("unknown", {
       message: `A blank ${field} can't be published`,
+    })
+  }
+  if (field === "placement" && !isRoadmapPlacement(value)) {
+    throw new AppError("unknown", {
+      message: "Only one of the six placements can be published",
     })
   }
   return value === change.base ? null : { base: change.base, value }

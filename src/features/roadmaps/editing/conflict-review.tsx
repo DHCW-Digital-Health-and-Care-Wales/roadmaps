@@ -9,6 +9,7 @@ import {
   isChoiceField,
 } from "@/domain/roadmap/roadmap-changes"
 import { localise, type LocalisedText } from "@/domain/roadmap/localised-text"
+import { isRoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 import { useLanguage } from "@/i18n"
 
 import type { OpenConflict } from "./conflicts"
@@ -35,8 +36,9 @@ export interface ConflictReviewProps {
 /**
  * A publish someone else's changes stopped (STY-026): each field they changed that the
  * Product Lead also changed, their text beside the current text (a family or category
- * by its name), to keep or give up one by one; then what was lost with removed items.
- * Nothing was written, so it cannot be dismissed until every field is decided.
+ * by its name, a placement by its heading), to keep or give up one by one; then what
+ * was lost with removed items. Nothing was written, so it cannot be dismissed until
+ * every field is decided.
  */
 export function ConflictReview({
   ref,
@@ -58,10 +60,17 @@ export function ConflictReview({
     ),
   )
   const deciding = open.length > 0
-  const shown = (conflict: FieldConflict, value: string) =>
-    conflict.subject === "roadmap" && isChoiceField(conflict.field)
-      ? describe(conflict.field, value)
-      : value
+  const shown = (conflict: FieldConflict, value: string) => {
+    if (conflict.subject === "roadmap" && isChoiceField(conflict.field)) {
+      return describe(conflict.field, value)
+    }
+    if (conflict.subject === "item" && conflict.field === "placement") {
+      return isRoadmapPlacement(value)
+        ? t(`roadmaps.items.placements.${value}`)
+        : t("roadmaps.items.unplaced.title")
+    }
+    return value
+  }
 
   return (
     <DismissibleNotice

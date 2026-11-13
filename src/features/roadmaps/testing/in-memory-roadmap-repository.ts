@@ -18,6 +18,7 @@ import type {
   RoadmapTextField,
 } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
+import { isRoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 import type { RoadmapRepository } from "@/domain/roadmap/roadmap-repository"
 import {
   CO_LEAD_VALUE,
@@ -165,7 +166,7 @@ export function createInMemoryRoadmapRepository(
     for (const set of setters) set()
     for (const { index, field, value } of writes.items) {
       const item = stored[index]
-      if (item) setItemText(item, field, value)
+      if (item) setItemValue(item, field, value)
     }
     for (const { index, id } of writes.ids) {
       const item = stored[index]
@@ -186,7 +187,7 @@ export function createInMemoryRoadmapRepository(
     }
     const [firstItem] = writes.items
     const item = firstItem && storedItems(roadmap.id)[firstItem.index]
-    if (firstItem && item) setItemText(item, firstItem.field, CO_LEAD_VALUE)
+    if (firstItem && item) setItemValue(item, firstItem.field, CO_LEAD_VALUE)
   }
 
   /**
@@ -339,13 +340,20 @@ function setRoadmapText(
   }
 }
 
-/** Sets an item's English as a later read gives it: blank optional text is none. */
-function setItemText(
+/**
+ * Sets an item's English or placement as a later read gives it: blank optional text is
+ * none, and a value no placement has leaves the item unplaced with it as its horizon.
+ */
+function setItemValue(
   item: RoadmapItem,
   field: EditableItemField,
   value: string,
 ): void {
-  if (field === "title") {
+  if (field === "placement") {
+    const placed = isRoadmapPlacement(value)
+    item.placement = placed ? value : null
+    item.writtenHorizon = placed ? null : value
+  } else if (field === "title") {
     item.title = { ...item.title, en: value }
   } else {
     item[field] = value === "" ? null : { en: value, cy: item[field]?.cy ?? "" }

@@ -261,6 +261,93 @@ describe("planRoadmapPublish", () => {
     },
   )
 
+  describe("a placement, decided by its id (STY-031)", () => {
+    const later = createTestRoadmapItem("Online booking", {
+      id: "bookingx",
+      placement: "later",
+    })
+    const unplaced = createTestRoadmapItem("Unplaced", {
+      id: "unplaced",
+      placement: null,
+      writtenHorizon: "Soon",
+    })
+    const move = (item: RoadmapItem, base: string, value: string) => ({
+      roadmap: {},
+      items: [{ item, position: 0, fields: { placement: { base, value } } }],
+    })
+
+    it("writes the item's new placement as its id", () => {
+      expect(
+        planRoadmapPublish(move(later, "later", "now"), snapshotOf([later])),
+      ).toEqual({
+        kind: "write",
+        writes: {
+          roadmap: [],
+          items: [
+            { index: 0, id: "bookingx", field: "placement", value: "now" },
+          ],
+          ids: [],
+        },
+      })
+    })
+
+    it("places an unplaced item, whose base is none, whatever its horizon now says", () => {
+      const respelt = { ...unplaced, writtenHorizon: "Sooner" }
+
+      const plan = planRoadmapPublish(
+        move(unplaced, "", "later"),
+        snapshotOf([respelt]),
+      )
+
+      expect(plan.kind === "write" && plan.writes.items).toEqual([
+        { index: 0, id: "unplaced", field: "placement", value: "later" },
+      ])
+    })
+
+    it("is a conflict when a co-lead moved it elsewhere, and none when to the same place", () => {
+      const intent = move(later, "later", "now")
+      const elsewhere = planRoadmapPublish(
+        intent,
+        snapshotOf([{ ...later, placement: "next" }]),
+      )
+      const same = planRoadmapPublish(
+        intent,
+        snapshotOf([{ ...later, placement: "now" }]),
+      )
+
+      expect(elsewhere).toEqual({
+        kind: "settled",
+        outcome: {
+          status: "refused",
+          conflicts: [
+            {
+              subject: "item",
+              item: intent.items[0],
+              field: "placement",
+              base: "later",
+              pending: "now",
+              current: "next",
+            },
+          ],
+          missingItems: [],
+        },
+      })
+      expect(same).toEqual({
+        kind: "settled",
+        outcome: { status: "published" },
+      })
+    })
+
+    it.each(["", "  ", "soon"])(
+      "rejects the placement %j, which the editor never sends",
+      (value) => {
+        expect(() =>
+          planRoadmapPublish(move(later, "later", value), snapshotOf([later])),
+        ).toThrow(expect.objectContaining({ kind: "unknown" }))
+      },
+    )
+  })
+
   it("rejects a blank title, which the editor never sends", () => {
     let error: unknown
     try {

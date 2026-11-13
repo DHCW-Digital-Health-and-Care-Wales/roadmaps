@@ -132,6 +132,15 @@ published; Cancel leaves the form. A required field's error is an instruction:
 `roadmaps.edit.titleRequired` "Enter a title". What holds a pending change is tagged
 "Changed"; Undo is "Undo changes" plus its subject.
 
+## Move menu
+
+**Shape:** a button that names its verb and, for assistive technology, its subject
+("Move Online booking"), opening a menu headed "Move to" that lists each other place by
+the heading the page shows it under, in page order. The edit form's choice is labelled
+"Horizon or section", with no "(Saesneg)" in Welsh since it is not English text; an
+unplaced item's choice starts on "Choose a horizon or section", which can't be chosen
+again.
+
 ## Publish and save
 
 **Shape:** "Publish changes" on a published roadmap, "Save changes" on one that is

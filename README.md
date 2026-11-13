@@ -91,6 +91,10 @@ it writes the `Families` tab only as below.
   `Vision` and `Service description`, and each item's `Title`, `Description`, `Outcome`
   and `Phase`, as plain text exactly as typed (trimmed; a formula, number, date or
   `TRUE` stays text), a cleared field as an empty cell;
+- a moved item: its row's `Horizon` cell alone, as the public site's English value
+  for the placement chosen (`Recently delivered`, `Now`, `Next`, `Later`,
+  `Delivered this year` or `Not doing`), so the row keeps its place and the item
+  shows in row order in its new placement; a move never blanks the cell;
 - an `Item ID` for every item row it reads (one with a title) that has none, or repeats
   another row's: eight random
   lower-case letters and digits starting with a letter, such as `k7q2xwbn`;
@@ -103,9 +107,9 @@ it writes the `Families` tab only as below.
 - on any publish, the `Family ID` or `Category ID` of a row with none whose name links
   it to a listed family or category, never changing an ID already there;
 - a column the roadmap needs but lacks (the `Item ID` column the first time, the
-  `Family ID` or `Category ID` column, or an edited field's column), appended after the
-  last column in use with the public site's English header, the grid widened in the
-  same request.
+  `Family ID` or `Category ID` column, or an edited field's column, `Horizon` for a
+  move), appended after the last column in use with the public site's English
+  header, the grid widened in the same request.
 
 Adding, renaming or recolouring a family on the "Families and categories" page writes
 at once, after a re-read, in one all-or-nothing `spreadsheets.batchUpdate`, only:

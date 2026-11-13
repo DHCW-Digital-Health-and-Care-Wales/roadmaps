@@ -640,6 +640,106 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
       ])
     })
 
+    describe("a placement (STY-031)", () => {
+      it("moves an item by its placement alone, keeping every row where it is (S6)", async () => {
+        const repository = setup.withRoadmaps(fixtures, itemFixtures)
+
+        const outcome = await repository.publishRoadmapChanges("producta", {
+          roadmap: {},
+          items: [
+            edit(laterWork, 1, {
+              placement: change("later", "recently-delivered"),
+            }),
+          ],
+        })
+
+        expect(outcome).toEqual({ status: "published" })
+        expect(await repository.listRoadmapItems("producta")).toStrictEqual([
+          everyField,
+          {
+            ...laterWork,
+            id: expect.stringMatching(NEW_ID) as string,
+            placement: "recently-delivered",
+          },
+          { ...unplacedWork, id: expect.stringMatching(NEW_ID) as string },
+        ])
+      })
+
+      it("places an unplaced item, so it no longer has a horizon as written (S4)", async () => {
+        const repository = setup.withRoadmaps(fixtures, itemFixtures)
+
+        await repository.publishRoadmapChanges("producta", {
+          roadmap: {},
+          items: [edit(unplacedWork, 2, { placement: change("", "later") })],
+        })
+
+        const items = await repository.listRoadmapItems("producta")
+        expect(items[2]).toStrictEqual({
+          ...unplacedWork,
+          id: expect.stringMatching(NEW_ID) as string,
+          placement: "later",
+          writtenHorizon: null,
+        })
+      })
+
+      it("refuses a co-lead's other move, writing nothing (S8)", async () => {
+        const movedElsewhere = { ...everyField, placement: "next" } as const
+        const repository = setup.withRoadmaps(fixtures, {
+          producta: [movedElsewhere],
+        })
+        const move = edit(everyField, 0, {
+          placement: change("recently-delivered", "now"),
+        })
+
+        const outcome = await repository.publishRoadmapChanges("producta", {
+          roadmap: {},
+          items: [move],
+        })
+
+        expect(outcome).toEqual({
+          status: "refused",
+          conflicts: [
+            {
+              subject: "item",
+              item: move,
+              field: "placement",
+              base: "recently-delivered",
+              pending: "now",
+              current: "next",
+            },
+          ],
+          missingItems: [],
+        })
+        expect(await repository.listRoadmapItems("producta")).toStrictEqual([
+          movedElsewhere,
+        ])
+      })
+
+      it("moves an item over a co-lead's change to another field, keeping it (S8)", async () => {
+        const described = {
+          ...everyField,
+          expectedOutcome: { en: "Theirs", cy: "" },
+        }
+        const repository = setup.withRoadmaps(fixtures, {
+          producta: [described],
+        })
+
+        const outcome = await repository.publishRoadmapChanges("producta", {
+          roadmap: {},
+          items: [
+            edit(everyField, 0, {
+              placement: change("recently-delivered", "now"),
+            }),
+          ],
+        })
+
+        expect(outcome).toEqual({ status: "published" })
+        expect(await repository.listRoadmapItems("producta")).toStrictEqual([
+          { ...described, placement: "now" },
+        ])
+      })
+    })
+
     describe("a family or category (STY-028)", () => {
       const medicines = {
         family: {

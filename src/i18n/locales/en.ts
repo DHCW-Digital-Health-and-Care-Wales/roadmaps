@@ -242,7 +242,15 @@ export const en = {
         description: "Description",
         expectedOutcome: "Expected outcome",
         phase: "Phase",
+        /** Not English text, so its Welsh label says nothing of English. */
+        placement: "Horizon or section",
       } satisfies Record<EditableItemField, string>,
+      /** Followed by the item's title, for assistive technology: "Move First item". */
+      move: "Move",
+      /** Heads the list of places an item can move to. */
+      moveTo: "Move to",
+      /** The form's placement choice for an unplaced item, until one is chosen. */
+      choosePlacement: "Choose a horizon or section",
       roadmapFields: {
         title: "Title",
         statusLabel: "Status",

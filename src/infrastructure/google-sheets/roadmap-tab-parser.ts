@@ -98,9 +98,25 @@ const readHeader = headerReader<Column, TextColumn>(
 type Header = SheetHeader<Column, TextColumn>
 type TabProblemLog = ProblemLog<RoadmapTabProblemCode>
 
+/**
+ * Each placement's `Horizon` value, as the public site writes it
+ * (`docs/analysis/roadmap-tab-format.md`, _Horizon values_): what a move writes (ADR-014).
+ */
+export const HORIZON_VALUES = {
+  "recently-delivered": "Recently delivered",
+  now: "Now",
+  next: "Next",
+  later: "Later",
+  "delivered-this-year": "Delivered this year",
+  "not-doing": "Not doing",
+} as const satisfies Record<RoadmapPlacement, string>
+
 /** `Horizon` values match like headers: `recently  delivered` is `recently-delivered`. */
 const PLACEMENTS_BY_KEY = new Map<string, RoadmapPlacement>(
-  ROADMAP_PLACEMENTS.map((placement) => [matchKey(placement), placement]),
+  ROADMAP_PLACEMENTS.map((placement) => [
+    matchKey(HORIZON_VALUES[placement]),
+    placement,
+  ]),
 )
 
 /** Organisation codes match like headers: `C.A.V.U.H.B` is `cavuhb`. */

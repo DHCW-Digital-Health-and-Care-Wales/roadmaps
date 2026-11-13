@@ -6,8 +6,10 @@
 import {
   EDITABLE_ITEM_FIELDS,
   type EditableItemField,
+  isItemTextField,
   type ItemChanges,
-  itemText,
+  type ItemTextField,
+  itemValue,
   itemWelsh,
 } from "./roadmap-changes"
 import type { RoadmapItem } from "./roadmap-item"
@@ -16,7 +18,7 @@ import type { RoadmapItem } from "./roadmap-item"
  * The edited item's index in `items`, or -1: by its ID, the first item holding it,
  * which must still hold what was loaded when `repeatedIds` has the ID; with no ID, at
  * its position, which must hold exactly what was loaded. Either may instead hold that
- * content with the pending English, written by a publish whose answer was lost.
+ * content with the pending values, written by a publish whose answer was lost.
  */
 export function findEditedItem(
   items: readonly RoadmapItem[],
@@ -51,8 +53,9 @@ const CONTENT: Record<Exclude<keyof RoadmapItem, "id">, true> = {
 const CONTENT_KEYS = Object.keys(CONTENT) as (keyof typeof CONTENT)[]
 
 /**
- * Whether `current` holds `loaded`'s content, with `edited` fields' English replaced;
- * their Welsh must still be `loaded`'s where both reads show it.
+ * Whether `current` holds `loaded`'s content, with `edited` fields' values replaced: a
+ * text field's Welsh must still be `loaded`'s where both reads show it, and a placed
+ * item has no horizon as written.
  */
 function sameContent(
   current: RoadmapItem,
@@ -60,12 +63,16 @@ function sameContent(
   edited: ReadonlyMap<EditableItemField, string>,
 ): boolean {
   return CONTENT_KEYS.every((key) => {
+    if (key === "writtenHorizon" && edited.has("placement")) {
+      return current.writtenHorizon === null
+    }
     if (!isEditable(key)) return sameValue(current[key], loaded[key])
     const value = edited.get(key)
     if (value === undefined) return sameValue(current[key], loaded[key])
     return (
-      itemText(current, key) === value &&
-      (!welshShown(loaded, key, value) ||
+      itemValue(current, key) === value &&
+      (!isItemTextField(key) ||
+        !welshShown(loaded, key, value) ||
         itemWelsh(current, key) === itemWelsh(loaded, key))
     )
   })
@@ -77,10 +84,10 @@ function sameContent(
  */
 function welshShown(
   loaded: RoadmapItem,
-  field: EditableItemField,
+  field: ItemTextField,
   value: string,
 ): boolean {
-  return value !== "" && itemText(loaded, field) !== ""
+  return value !== "" && itemValue(loaded, field) !== ""
 }
 
 function isEditable(key: string): key is EditableItemField {

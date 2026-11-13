@@ -13,7 +13,8 @@ import { connect, expect, roadmapCards, test } from "./fixtures/test"
  * A Product Lead edits a roadmap's English and publishes it, or saves it when the roadmap
  * is not published (STY-025), against the fake Sheets API: one `batchUpdate` per publish.
  * A co-lead's change made meanwhile is shown, never overwritten (STY-026). A family and
- * category are chosen from their lists (STY-028).
+ * category are chosen from their lists (STY-028). An item is moved to another placement,
+ * writing its `Horizon` cell alone (STY-031).
  */
 
 const ITEM = "Example card with every column"
@@ -551,5 +552,111 @@ test.describe("a family and category (STY-028)", () => {
     await expect(
       form.getByText("The family can't be changed right now."),
     ).toBeVisible()
+  })
+})
+
+test.describe("moving an item (STY-031)", () => {
+  /** The cards' titles under a horizon or section heading. */
+  function titlesUnder(page: Page, heading: string) {
+    return page
+      .getByRole("main")
+      .getByRole("list", { name: heading, exact: true })
+      .getByRole("heading", { level: 3 })
+  }
+
+  async function moveWithMenu(page: Page, title: string, to: string) {
+    await page
+      .getByRole("main")
+      .getByRole("button", { name: `Move ${title}` })
+      .click()
+    await page.getByRole("menuitem", { name: to, exact: true }).click()
+  }
+
+  test("moves an item from its card, pending, then publishes its Horizon cell alone (S1, S6)", async ({
+    page,
+    sheets,
+  }) => {
+    await openRoadmap(page, "producta", ITEM)
+    const before = sheets.spreadsheet
+
+    await moveWithMenu(page, "Discovery card", "Recently delivered")
+
+    await expect(titlesUnder(page, "Recently delivered")).toHaveText([
+      "Discovery card",
+      "Recently shipped work",
+    ])
+    await expect(
+      itemCard(page, "Discovery card").getByText("Changed"),
+    ).toBeVisible()
+    await expect(
+      page.getByRole("main").getByText("1 unpublished change"),
+    ).toBeVisible()
+    expect(sheets.writes).toEqual([])
+
+    await confirmPublish(page, "Publish")
+    await expect(
+      page.getByRole("main").getByText(/^Changes published\./),
+    ).toBeVisible()
+
+    const tab = (tabs: readonly FakeTab[]) =>
+      tabs.find(({ title }) => title === "ProductA")?.rows ?? []
+    const [header = [], ...rows] = tab(sheets.spreadsheet)
+    const itemId = header.indexOf("Item ID")
+    const changed = rows.flatMap((row, r) =>
+      row.flatMap((cell, c) =>
+        c === itemId || cell === (tab(before)[r + 1]?.[c] ?? "")
+          ? []
+          : [`${row[0] ?? ""}: ${header[c] ?? ""} = ${cell}`],
+      ),
+    )
+    expect(changed).toEqual(["Discovery card: Horizon = Recently delivered"])
+
+    await page.reload()
+    await connect(page)
+    await expect(titlesUnder(page, "Recently delivered")).toHaveText([
+      "Discovery card",
+      "Recently shipped work",
+    ])
+  })
+
+  test("a co-lead's other move is shown beside yours, by heading, nothing written (S8)", async ({
+    page,
+    sheets,
+  }) => {
+    await openRoadmap(page, "producta", ITEM)
+    await publishOnce(page)
+    await moveWithMenu(page, ITEM, "Next")
+    sheets.coLead("ProductA", ITEM, "Horizon", "Later")
+
+    await confirmPublish(page, "Publish")
+
+    const review = page.getByRole("main").getByRole("alert")
+    await expect(review).toBeFocused()
+    await expect(review.getByRole("listitem")).toContainText(
+      new RegExp(
+        `${ITEM}: Horizon or section.*Your change.*Next.*Current text.*Later`,
+      ),
+    )
+    expect(sheets.writes).toHaveLength(1)
+  })
+
+  test("moves by keyboard on a phone, focus staying on the moved card (S10)", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 375, height: 812 })
+    await openRoadmap(page, "producta", ITEM)
+    const move = page
+      .getByRole("main")
+      .getByRole("button", { name: "Move Discovery card" })
+
+    await move.focus()
+    await page.keyboard.press("Enter")
+    await expect(page.getByRole("menu")).toBeVisible()
+    await page.keyboard.press("ArrowDown")
+    await page.keyboard.press("Enter")
+
+    await expect(titlesUnder(page, "Now")).toContainText(["Discovery card"])
+    await expect(move).toBeFocused()
+    await expect(page.getByRole("menu")).toHaveCount(0)
   })
 })

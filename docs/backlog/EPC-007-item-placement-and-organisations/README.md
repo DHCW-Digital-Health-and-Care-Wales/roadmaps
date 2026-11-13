@@ -1,7 +1,8 @@
 # EPC-007: Item placement and organisations — moved and chosen, not retyped in the sheet
 
 - **Status**: Active — grilled in rounds 1–4 (2026-11-13); ADR-014 accepted
-- **Progress**: 0 of 4 terminal; next selectable: STY-031; blocked on: nothing
+- **Progress**: 1 of 4 terminal (STY-031 awaits merge); next selectable: STY-032;
+  blocked on: nothing
 - **Binding ADRs**: ADR-014, ADR-012, ADR-011, ADR-002, ADR-008
 
 ## Summary
@@ -32,8 +33,8 @@ Audited at `5546d47` on 2026-11-13.
 
 ### F1 — Placement and organisations are read-only
 
-`EDITABLE_ITEM_FIELDS` holds title, description, expected outcome and phase only
-(`rg -n "EDITABLE_ITEM_FIELDS =" -A6 src/domain`); ADR-012 keeps the rest read-only.
+At the audit, `EDITABLE_ITEM_FIELDS` held title, description, expected outcome and
+phase only; ADR-012 kept the rest read-only. STY-031 adds placement.
 The persona's _Move items between horizons_ means a trip to the sheet today.
 
 ### F2 — Every pending item field is free text
@@ -112,12 +113,12 @@ languages.
 
 ## Stories
 
-| ID      | Story                                                                                                 | Area                                       | Depends on       | State |
-| ------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------ | ---------------- | ----- |
-| STY-031 | [A Product Lead moves an item to another horizon](STY-031-move-an-item.md)                            | Domain + Infra + UI + i18n (en + cy) + E2E | —                |       |
-| STY-032 | [Organisations come from the repository, shown by name](STY-032-organisations-from-the-repository.md) | Domain + Infra + UI + Docs                 | —                |       |
-| STY-033 | [The organisations are listed with families and categories](STY-033-list-the-organisations.md)        | Features/UI + i18n (en + cy)               | STY-032          |       |
-| STY-034 | [A Product Lead chooses who an item's work is for](STY-034-choose-organisations.md)                   | Domain + Infra + UI + i18n (en + cy) + E2E | STY-031, STY-032 |       |
+| ID      | Story                                                                                                                           | Area                                       | Depends on       | State |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | ---------------- | ----- |
+| STY-031 | [A Product Lead moves an item to another horizon](../_archive/EPC-007-item-placement-and-organisations/STY-031-move-an-item.md) | Domain + Infra + UI + i18n (en + cy) + E2E | —                | ✅    |
+| STY-032 | [Organisations come from the repository, shown by name](STY-032-organisations-from-the-repository.md)                           | Domain + Infra + UI + Docs                 | —                |       |
+| STY-033 | [The organisations are listed with families and categories](STY-033-list-the-organisations.md)                                  | Features/UI + i18n (en + cy)               | STY-032          |       |
+| STY-034 | [A Product Lead chooses who an item's work is for](STY-034-choose-organisations.md)                                             | Domain + Infra + UI + i18n (en + cy) + E2E | STY-031, STY-032 |       |
 
 ## Sequencing
 

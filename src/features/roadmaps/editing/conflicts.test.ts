@@ -293,4 +293,30 @@ describe("withCurrentItemText", () => {
     expect(shown[0]?.description?.en).toBe("Theirs")
     expect(shown[1]).toBe(items[1])
   })
+
+  it("shows a co-lead's move, and an item they unplaced as having no horizon (STY-031 S8)", () => {
+    const later = createTestRoadmapItem("Later", {
+      id: "later",
+      placement: "later",
+    })
+    const moved: ItemChanges = {
+      item: later,
+      position: 0,
+      fields: { placement: { base: "later", value: "now" } },
+    }
+    const theirs = (current: string): FieldConflict => ({
+      subject: "item",
+      item: moved,
+      field: "placement",
+      base: "later",
+      pending: "now",
+      current,
+    })
+
+    const [elsewhere] = withCurrentItemText([later], [theirs("next")], [later])
+    const [unplaced] = withCurrentItemText([later], [theirs("")], [later])
+
+    expect(elsewhere).toEqual({ ...later, placement: "next" })
+    expect(unplaced).toEqual({ ...later, placement: null, writtenHorizon: "" })
+  })
 })

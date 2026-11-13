@@ -179,6 +179,29 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expectNoAxeViolations(page, theme)
     })
 
+    test("an item's Move menu, then the moved item and an unplaced item's form (STY-031)", async ({
+      page,
+      sheets,
+    }) => {
+      sheets.coLead("ProductA", "Minimal card", "Horizon", "Soon")
+      await page.goto("./#/roadmaps/producta")
+      await connect(page)
+      const main = page.getByRole("main")
+      await main.getByRole("button", { name: "Move Discovery card" }).click()
+      await expect(page.getByRole("menu")).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+
+      await page.getByRole("menuitem", { name: "Recently delivered" }).click()
+      await expect(page.getByRole("menu")).toHaveCount(0)
+      await expectNoAxeViolations(page, theme)
+
+      await main.getByRole("button", { name: "Edit Minimal card" }).click()
+      await expect(
+        main.getByRole("combobox", { name: "Horizon or section" }),
+      ).toHaveValue("")
+      await expectNoAxeViolations(page, theme)
+    })
+
     test("choosing a family, then its pending colour (STY-028)", async ({
       page,
       sheets,

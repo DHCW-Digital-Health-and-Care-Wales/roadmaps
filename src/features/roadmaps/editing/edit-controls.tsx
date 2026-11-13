@@ -1,5 +1,5 @@
 import { PencilIcon, PencilLineIcon, Undo2Icon } from "lucide-react"
-import type { RefObject } from "react"
+import type { ReactNode, RefObject } from "react"
 import { useTranslation } from "react-i18next"
 
 import { Badge } from "@/components/ui/badge"
@@ -29,16 +29,19 @@ export interface EditControlsProps {
   /** Whether "Undo changes" is available; it stays focusable when not. */
   undoable: boolean
   editButton: RefObject<HTMLButtonElement | null>
+  /** A control between Undo and Edit, such as an item's Move menu (STY-031). */
+  move?: ReactNode
   onEdit: () => void
   onUndo: () => void
 }
 
-/** "Changed", "Undo changes" while something is pending, and Edit. */
+/** "Changed", "Undo changes" while something is pending, then `move` and Edit. */
 export function EditControls({
   subject,
   changed,
   undoable,
   editButton,
+  move,
   onEdit,
   onUndo,
 }: EditControlsProps) {
@@ -59,6 +62,7 @@ export function EditControls({
             {t("roadmaps.edit.undo")} <span className="sr-only">{subject}</span>
           </Button>
         )}
+        {move}
         <Button ref={editButton} variant="secondary" size="sm" onClick={onEdit}>
           <PencilIcon data-icon="inline-start" aria-hidden="true" />
           {t("roadmaps.edit.edit")} <span className="sr-only">{subject}</span>

@@ -182,6 +182,15 @@ test.describe("editing a roadmap (STY-025)", () => {
     await expectStructure(main.getByRole("form"), "edit-roadmap-form.aria.yml")
   })
 
+  test("an item's Move menu (STY-031)", async ({ page }) => {
+    const main = await openWithAChange(page)
+    await main.getByRole("button", { name: "Move A clearer card" }).click()
+
+    const menu = page.getByRole("menu")
+    await expect(menu).toBeVisible()
+    await expectStructure(menu, "edit-move-menu.aria.yml")
+  })
+
   test("the publish dialog, then the published notice", async ({ page }) => {
     const main = await openWithAChange(page)
     await main.getByRole("button", { name: "Publish changes" }).click()

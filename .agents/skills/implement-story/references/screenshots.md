@@ -62,8 +62,8 @@ PR. A change no user sees needs no screenshots.
 
 ## Read a risk-based sample
 
-Publish the full set, but read only the after captures a risk points at, and
-fix what looks wrong before publishing:
+Once the after captures are taken, publish the full set, but read only the
+after captures a risk points at, and fix what looks wrong before publishing:
 
 - A copy-only change whose tests pass: read none.
 - A layout or behaviour change: read a mix of light and dark, desktop and
@@ -71,14 +71,16 @@ fix what looks wrong before publishing:
   problem.
 - Skip the Welsh twin of a screen you read, unless its longer copy may
   overflow.
-- Read a before capture only to diagnose a capture problem.
+- Read a before capture only to diagnose a problem in an after capture or in
+  the capture itself.
 
 For layout-heavy UI, also start a fresh read-only subagent on an economy or
 standard model (Haiku or Sonnet) with the after captures' paths and this
 checklist: clipped or overflowing text, overlap, dark-mode contrast, visible
 focus, breakage at 375 px. It returns only the suspect filenames, each with a
 one-line reason; open those yourself. Skip it for a copy-only or small change.
-Report which captures you read, and why.
+Record in the manifest which captures you read and why, and the checker's
+suspects.
 
 ## Attach to the PR
 

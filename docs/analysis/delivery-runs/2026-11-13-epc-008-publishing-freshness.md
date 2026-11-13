@@ -15,7 +15,7 @@
   Each item ran in its own top-level orchestrator thread. Stop after the queue.
 - Outcome: completed. Both stories merged, EPC-008 is closed and archived, and the
   orchestration retrospective is this record's PR. Pending for the owner: the test-first
-  decision, the fluent Welsh review and CHO-007's triage (see Learnings).
+  decision (CHO-008), the fluent Welsh review and CHO-007 (see Learnings).
 - Coverage:
   - Sources: the run's progress log, run handoff, shared brief, child handoffs, delivery and
     retro reports, the outgoing orchestrator's report, and PR and CI state on GitHub.
@@ -108,12 +108,14 @@
     crop artifact rather than a fault.
 - Avoidable cost:
   - Every interim yield looked like a completion, so each needed a pending-child and
-    handoff check before the orchestrator could tell it from a hand-back.
+    handoff check before the orchestrator could tell it from a hand-back. This record's PR
+    has the child's handoff mark its hand-back, and the brief carry the runtime fact.
   - The orchestrator reports that its fallback wake-up failed on the scheduling tool's
     schedule format, so the run relied on completion notifications alone. The run handoff
     still records the STY-036 wake as set, so it is not evidence that one existed. No
     notification was missed.
-  - STY-035's 14 "dark" after captures, 3 of them published in #57, render the light theme:
+  - STY-035's 14 "dark" after captures render the light theme, as do the 2 of them and the
+    1 dark before capture published in #57:
     the capture set the system colour scheme, which the app ignores. Its delivery read one
     and did not notice; the STY-036 retro verified one and found the cause. #59 fixed the
     guidance; #57's captures were not recaptured.
@@ -122,9 +124,9 @@
   layout-heavy UI. This record's PR adds it to `screenshots.md`, replacing "open each one
   yourself".
 - Follow-up work:
-  - Test-first: both stories, like about ten before them, wrote some tests after the code
-    and reported it as a departure. The owner decides whether to enforce or relax the rule;
-    no record is raised yet.
+  - [CHO-008](../../backlog/chores/CHO-008-settle-the-test-first-rule.md): both stories,
+    like ten before them, wrote some tests after the code and reported it as a departure.
+    The owner decides whether to enforce, relax or keep the rule.
   - Fluent Welsh review of both stories' new strings, tracked in the README's Welsh note.
   - [CHO-007](../../backlog/chores/CHO-007-rebase-an-open-date-form-after-marking-updated.md)
     waits for the owner.

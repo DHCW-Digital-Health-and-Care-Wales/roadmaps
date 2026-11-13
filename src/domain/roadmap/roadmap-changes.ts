@@ -56,9 +56,17 @@ export type ItemTextField = (typeof ITEM_TEXT_FIELDS)[number]
 /**
  * Every item field a Product Lead may edit, in the form's order: its text, then its
  * placement, chosen by ID, `""` for none (ADR-014): the ID is the base a conflict is
- * found by, and an unplaced item's is none, whatever its horizon says.
+ * found by, and an unplaced item's is none, whatever its horizon says. Then its
+ * organisations, a set of IDs as one value (`organisationIdsValue`), so a co-lead's
+ * reordering is no change and their other set is a conflict. A field that is not text
+ * needs its own case in `findEditedItem`, which compares every other part of an item,
+ * and in `applyItemChanges` and `withFieldOf` (`pending-changes.ts`).
  */
-export const EDITABLE_ITEM_FIELDS = [...ITEM_TEXT_FIELDS, "placement"] as const
+export const EDITABLE_ITEM_FIELDS = [
+  ...ITEM_TEXT_FIELDS,
+  "placement",
+  "organisationIds",
+] as const
 
 export type EditableItemField = (typeof EDITABLE_ITEM_FIELDS)[number]
 
@@ -93,8 +101,8 @@ export function roadmapValue(
 }
 
 /**
- * The item's value for `field`, `""` for none: its English for text, or its placement's
- * ID.
+ * The item's value for `field`, `""` for none: its English for text, its placement's
+ * ID, or its organisations' IDs as one value.
  */
 export function itemValue(item: RoadmapItem, field: EditableItemField): string {
   switch (field) {
@@ -102,9 +110,30 @@ export function itemValue(item: RoadmapItem, field: EditableItemField): string {
       return item.title.en
     case "placement":
       return item.placement ?? ""
+    case "organisationIds":
+      return organisationIdsValue(item.organisationIds)
     default:
       return item[field]?.en ?? ""
   }
+}
+
+/**
+ * A set of organisation IDs as one field value (ADR-014): no repeats, sorted and comma
+ * separated, so the same set is the same value however it was read or ticked; `""` for
+ * none.
+ */
+export function organisationIdsValue(ids: Iterable<string>): string {
+  return [...new Set(ids)].sort(byCodeUnit).join(",")
+}
+
+/** The IDs of an `organisationIdsValue`, as it orders them. */
+export function organisationIdsOf(value: string): string[] {
+  return value === "" ? [] : value.split(",")
+}
+
+function byCodeUnit(a: string, b: string): number {
+  if (a === b) return 0
+  return a < b ? -1 : 1
 }
 
 /** The item's Welsh for `field`, `""` for none: never edited, so never written. */

@@ -14,9 +14,10 @@ import {
   type RoadmapSnapshot,
 } from "@/domain/roadmap/publish-plan"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
-import type {
-  EditableItemField,
-  RoadmapTextField,
+import {
+  type EditableItemField,
+  organisationIdsOf,
+  type RoadmapTextField,
 } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { isRoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
@@ -68,7 +69,10 @@ export interface InMemoryRoadmapRepository extends RoadmapRepository {
 /**
  * A `RoadmapRepository` holding roadmaps and their items in memory (test code only).
  * Pass an `AppError` instead of roadmaps to make every call fail with it. A publish
- * changes what later calls read, by the same rules as the Google adapter (ADR-012).
+ * changes what later calls read, by the same rules as the Google adapter (ADR-012). It
+ * serves `TEST_ORGANISATIONS`; a hand-made double needs `listOrganisations` too, as a
+ * roadmap's items show only once the list is read, so a bare `vi.fn()` leaves the page
+ * loading.
  */
 export function createInMemoryRoadmapRepository(
   source: readonly Roadmap[] | AppError = [],
@@ -137,6 +141,11 @@ export function createInMemoryRoadmapRepository(
         ...(lists.families === null ? (["familyId"] as const) : []),
         ...(lists.categories === null ? (["categoryId"] as const) : []),
       ]),
+      organisationIds: new Set(
+        organisations instanceof AppError
+          ? []
+          : organisations.map(({ id }) => id),
+      ),
     }
   }
 
@@ -195,7 +204,14 @@ export function createInMemoryRoadmapRepository(
     }
     const [firstItem] = writes.items
     const item = firstItem && storedItems(roadmap.id)[firstItem.index]
-    if (firstItem && item) setItemValue(item, firstItem.field, CO_LEAD_VALUE)
+    if (!firstItem || !item) return
+    if (firstItem.field === "organisationIds") {
+      // As the Google adapter reads a cell a co-lead typed over: a code it doesn't know.
+      item.organisationIds = []
+      item.unknownOrganisationCodes = [CO_LEAD_VALUE]
+    } else {
+      setItemValue(item, firstItem.field, CO_LEAD_VALUE)
+    }
   }
 
   /**
@@ -354,8 +370,9 @@ function setRoadmapText(
 }
 
 /**
- * Sets an item's English or placement as a later read gives it: blank optional text is
- * none, and a value no placement has leaves the item unplaced with it as its horizon.
+ * Sets an item's English, placement or organisations as a later read gives it: blank
+ * optional text is none, a value no placement has leaves the item unplaced with it as
+ * its horizon, and written organisations hold known codes only.
  */
 function setItemValue(
   item: RoadmapItem,
@@ -366,6 +383,9 @@ function setItemValue(
     const placed = isRoadmapPlacement(value)
     item.placement = placed ? value : null
     item.writtenHorizon = placed ? null : value
+  } else if (field === "organisationIds") {
+    item.organisationIds = organisationIdsOf(value)
+    item.unknownOrganisationCodes = []
   } else if (field === "title") {
     item.title = { ...item.title, en: value }
   } else {

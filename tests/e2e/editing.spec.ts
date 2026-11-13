@@ -660,3 +660,120 @@ test.describe("moving an item (STY-031)", () => {
     await expect(page.getByRole("menu")).toHaveCount(0)
   })
 })
+
+test.describe("choosing an item's organisations (STY-034)", () => {
+  /** Ticks or unticks each named organisation in the item's form, then confirms it. */
+  async function toggleOrganisations(
+    page: Page,
+    title: string,
+    names: readonly string[],
+  ) {
+    const main = page.getByRole("main")
+    await main.getByRole("button", { name: `Edit ${title}` }).click()
+    const form = main.getByRole("form", { name: title })
+    const group = form.getByRole("group", { name: "Organisations" })
+    for (const name of names) {
+      await group.getByRole("checkbox", { name }).click()
+    }
+    await form.getByRole("button", { name: "Done" }).click()
+  }
+
+  /**
+   * Each cell of `title`'s tab that differs from `before`, as "item: column = value" or
+   * "header = column", leaving out the IDs every first publish writes.
+   */
+  function changedCells(
+    before: readonly FakeTab[],
+    after: readonly FakeTab[],
+    title: string,
+  ) {
+    const tab = (tabs: readonly FakeTab[]) =>
+      tabs.find((each) => each.title === title)?.rows ?? []
+    const [header = [], ...rows] = tab(after)
+    const itemId = header.indexOf("Item ID")
+    return [
+      ...header.flatMap((cell, c) =>
+        c === itemId || cell === (tab(before)[0]?.[c] ?? "")
+          ? []
+          : [`header = ${cell}`],
+      ),
+      ...rows.flatMap((row, r) =>
+        row.flatMap((cell, c) =>
+          c === itemId || cell === (tab(before)[r + 1]?.[c] ?? "")
+            ? []
+            : [`${row[0] ?? ""}: ${header[c] ?? ""} = ${cell}`],
+        ),
+      ),
+    ]
+  }
+
+  test("ticks organisations, pending, then publishes their codes in that cell alone (S1, S2, S5)", async ({
+    page,
+    sheets,
+  }) => {
+    await openRoadmap(page, "producta", ITEM)
+    const before = sheets.spreadsheet
+
+    await toggleOrganisations(page, ITEM, [
+      "All Wales (National)",
+      "Cardiff and Vale (CAVUHB)",
+    ])
+
+    await expect(
+      itemCard(page, ITEM).getByText("All Wales, Swansea Bay"),
+    ).toBeVisible()
+    await expect(itemCard(page, ITEM).getByText("Changed")).toBeVisible()
+    expect(sheets.writes).toEqual([])
+
+    await confirmPublish(page, "Publish")
+    await expect(
+      page.getByRole("main").getByText(/^Changes published\./),
+    ).toBeVisible()
+    expect(changedCells(before, sheets.spreadsheet, "ProductA")).toEqual([
+      `${ITEM}: Organisations = National, SBUHB`,
+    ])
+  })
+
+  test("adds an Organisations column to a roadmap with none (S6)", async ({
+    page,
+    sheets,
+  }) => {
+    await openRoadmap(page, "productc", "Unpublished work")
+    const before = sheets.spreadsheet
+
+    await toggleOrganisations(page, "Unpublished work", [
+      "Powys (PTHB)",
+      "Hywel Dda (HDUHB)",
+    ])
+    await confirmPublish(page, "Save")
+    await expect(
+      page.getByRole("main").getByText("Changes saved"),
+    ).toBeVisible()
+
+    expect(changedCells(before, sheets.spreadsheet, "ProductC")).toEqual([
+      "header = Organisations",
+      "Unpublished work: Organisations = HDUHB, PTHB",
+    ])
+  })
+
+  test("a co-lead's other choice is shown beside yours, by short name, nothing written (S7)", async ({
+    page,
+    sheets,
+  }) => {
+    await openRoadmap(page, "producta", ITEM)
+    await publishOnce(page)
+    await toggleOrganisations(page, ITEM, ["Powys (PTHB)"])
+    sheets.coLead("ProductA", ITEM, "Organisations", "sbuhb, WAST")
+
+    await confirmPublish(page, "Publish")
+
+    const review = page.getByRole("main").getByRole("alert")
+    await expect(review).toBeFocused()
+    await expect(review.getByRole("listitem")).toContainText(
+      new RegExp(
+        `${ITEM}: Organisations.*Your change.*Cardiff and Vale, Powys, Swansea Bay.*Current text.*Swansea Bay, Welsh Ambulance`,
+      ),
+    )
+    expect(sheets.writes).toHaveLength(1)
+  })
+})

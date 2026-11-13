@@ -228,7 +228,21 @@ export const cy = {
         expectedOutcome: "Canlyniad disgwyliedig (Saesneg)",
         phase: "Cam (Saesneg)",
         placement: "Gorwel neu adran",
+        organisationIds: "Sefydliadau",
       },
+      organisationChoice: "{{shortName}} ({{code}})",
+      unknownOrganisations_zero:
+        "Dydy {{codes}} ddim yn cael eu hadnabod. Bydd newid y sefydliadau yn eu tynnu.",
+      unknownOrganisations_one:
+        "Dydy {{codes}} ddim yn cael ei adnabod. Bydd newid y sefydliadau yn ei dynnu.",
+      unknownOrganisations_two:
+        "Dydy {{codes}} ddim yn cael eu hadnabod. Bydd newid y sefydliadau yn eu tynnu.",
+      unknownOrganisations_few:
+        "Dydy {{codes}} ddim yn cael eu hadnabod. Bydd newid y sefydliadau yn eu tynnu.",
+      unknownOrganisations_many:
+        "Dydy {{codes}} ddim yn cael eu hadnabod. Bydd newid y sefydliadau yn eu tynnu.",
+      unknownOrganisations_other:
+        "Dydy {{codes}} ddim yn cael eu hadnabod. Bydd newid y sefydliadau yn eu tynnu.",
       move: "Symud",
       moveTo: "Symud i",
       choosePlacement: "Dewiswch orwel neu adran",

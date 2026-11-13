@@ -25,6 +25,7 @@ function snapshotOf(
     repeatedIds: new Set(),
     takenIds: new Set([...takenIds, ...items.flatMap(({ id }) => id ?? [])]),
     missingLists: new Set(),
+    organisationIds: new Set(["national", "cavuhb", "sbuhb", "pthb"]),
   }
 }
 
@@ -346,6 +347,94 @@ describe("planRoadmapPublish", () => {
         ).toThrow(expect.objectContaining({ kind: "unknown" }))
       },
     )
+  })
+
+  describe("organisations, decided as a set of ids (STY-034)", () => {
+    const item = createTestRoadmapItem("Online booking", {
+      id: "bookingx",
+      organisationIds: ["cavuhb"],
+    })
+    const choose = (base: string, value: string) => ({
+      roadmap: {},
+      items: [
+        { item, position: 0, fields: { organisationIds: { base, value } } },
+      ],
+    })
+
+    it("writes the chosen set as sorted ids, or none", () => {
+      const chosen = planRoadmapPublish(
+        choose("cavuhb", "sbuhb,national"),
+        snapshotOf([item]),
+      )
+      const none = planRoadmapPublish(choose("cavuhb", ""), snapshotOf([item]))
+
+      expect(chosen.kind === "write" && chosen.writes.items).toEqual([
+        {
+          index: 0,
+          id: "bookingx",
+          field: "organisationIds",
+          value: "national,sbuhb",
+        },
+      ])
+      expect(none.kind === "write" && none.writes.items).toEqual([
+        { index: 0, id: "bookingx", field: "organisationIds", value: "" },
+      ])
+    })
+
+    it("is a conflict when a co-lead chose another set, and none when the same set in another order (S7)", () => {
+      const intent = choose("cavuhb", "cavuhb,sbuhb")
+      const other = planRoadmapPublish(
+        intent,
+        snapshotOf([{ ...item, organisationIds: ["pthb"] }]),
+      )
+      const same = planRoadmapPublish(
+        intent,
+        snapshotOf([{ ...item, organisationIds: ["sbuhb", "cavuhb"] }]),
+      )
+
+      expect(other).toEqual({
+        kind: "settled",
+        outcome: {
+          status: "refused",
+          conflicts: [
+            {
+              subject: "item",
+              item: intent.items[0],
+              field: "organisationIds",
+              base: "cavuhb",
+              pending: "cavuhb,sbuhb",
+              current: "pthb",
+            },
+          ],
+          missingItems: [],
+        },
+      })
+      expect(same).toEqual({
+        kind: "settled",
+        outcome: { status: "published" },
+      })
+    })
+
+    it("is no change when the pending set is the set as loaded, in another order", () => {
+      expect(
+        planRoadmapPublish(choose("cavuhb", " cavuhb "), snapshotOf([item])),
+      ).toEqual({ kind: "settled", outcome: { status: "published" } })
+      expect(
+        planRoadmapPublish(
+          choose("cavuhb,sbuhb", "sbuhb,cavuhb"),
+          snapshotOf([{ ...item, organisationIds: ["sbuhb", "cavuhb"] }]),
+        ),
+      ).toEqual({ kind: "settled", outcome: { status: "published" } })
+    })
+
+    it("rejects an organisation the list doesn't hold, which the editor never sends", () => {
+      expect(() =>
+        planRoadmapPublish(
+          choose("cavuhb", "cavuhb,cavhb"),
+          snapshotOf([item]),
+        ),
+      ).toThrow(expect.objectContaining({ kind: "unknown" }))
+    })
   })
 
   it("rejects a blank title, which the editor never sends", () => {

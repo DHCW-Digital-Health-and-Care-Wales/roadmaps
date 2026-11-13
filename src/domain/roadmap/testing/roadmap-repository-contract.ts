@@ -795,6 +795,142 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
       })
     })
 
+    describe("organisations (STY-034)", () => {
+      const forCardiff = {
+        ...laterWork,
+        id: "cardiffx",
+        organisationIds: ["cavuhb"],
+        unknownOrganisationCodes: ["CAVHB"],
+      }
+      /** An item's organisations as a set, whatever order the read gives them in. */
+      const organisationsOf = async (repository: RoadmapRepository) =>
+        (await repository.listRoadmapItems("producta")).map((item) => ({
+          ids: [...item.organisationIds].sort(),
+          unknown: item.unknownOrganisationCodes,
+        }))
+
+      it("writes a chosen set, known codes only, so an unknown code goes (S4, S5)", async () => {
+        const repository = setup.withRoadmaps(fixtures, {
+          producta: [forCardiff],
+        })
+
+        const outcome = await repository.publishRoadmapChanges("producta", {
+          roadmap: {},
+          items: [
+            edit(forCardiff, 0, {
+              organisationIds: change("cavuhb", "national,sbuhb"),
+            }),
+          ],
+        })
+
+        expect(outcome).toEqual({ status: "published" })
+        expect(await organisationsOf(repository)).toEqual([
+          { ids: ["national", "sbuhb"], unknown: [] },
+        ])
+      })
+
+      it("writes none chosen as no organisations (S5)", async () => {
+        const repository = setup.withRoadmaps(fixtures, {
+          producta: [forCardiff],
+        })
+
+        await repository.publishRoadmapChanges("producta", {
+          roadmap: {},
+          items: [
+            edit(forCardiff, 0, { organisationIds: change("cavuhb", "") }),
+          ],
+        })
+
+        expect(await organisationsOf(repository)).toEqual([
+          { ids: [], unknown: [] },
+        ])
+      })
+
+      it("keeps an unknown code when the item's other fields are published (S4)", async () => {
+        const repository = setup.withRoadmaps(fixtures, {
+          producta: [forCardiff],
+        })
+
+        await repository.publishRoadmapChanges("producta", {
+          roadmap: {},
+          items: [edit(forCardiff, 0, { phase: change("", "Beta") })],
+        })
+
+        expect(await organisationsOf(repository)).toEqual([
+          { ids: ["cavuhb"], unknown: ["CAVHB"] },
+        ])
+      })
+
+      const choice = edit(forCardiff, 0, {
+        organisationIds: change("cavuhb", "cavuhb,sbuhb"),
+      })
+
+      it("refuses a co-lead's other set, writing nothing (S7)", async () => {
+        const repository = setup.withRoadmaps(fixtures, {
+          producta: [{ ...forCardiff, organisationIds: ["pthb"] }],
+        })
+
+        const outcome = await repository.publishRoadmapChanges("producta", {
+          roadmap: {},
+          items: [choice],
+        })
+
+        expect(outcome).toEqual({
+          status: "refused",
+          conflicts: [
+            {
+              subject: "item",
+              item: choice,
+              field: "organisationIds",
+              base: "cavuhb",
+              pending: "cavuhb,sbuhb",
+              current: "pthb",
+            },
+          ],
+          missingItems: [],
+        })
+        expect(await organisationsOf(repository)).toEqual([
+          { ids: ["pthb"], unknown: ["CAVHB"] },
+        ])
+      })
+
+      it("takes a co-lead's same set, in another order, as published (S7)", async () => {
+        const repository = setup.withRoadmaps(fixtures, {
+          producta: [{ ...forCardiff, organisationIds: ["sbuhb", "cavuhb"] }],
+        })
+
+        const outcome = await repository.publishRoadmapChanges("producta", {
+          roadmap: {},
+          items: [choice],
+        })
+
+        expect(outcome).toEqual({ status: "published" })
+        expect(await organisationsOf(repository)).toEqual([
+          { ids: ["cavuhb", "sbuhb"], unknown: ["CAVHB"] },
+        ])
+      })
+
+      it("rejects an organisation the list doesn't hold, writing nothing", async () => {
+        const repository = setup.withRoadmaps(fixtures, {
+          producta: [forCardiff],
+        })
+
+        const publishing = repository.publishRoadmapChanges("producta", {
+          roadmap: {},
+          items: [
+            edit(forCardiff, 0, {
+              organisationIds: change("cavuhb", "cavuhb,cavhb"),
+            }),
+          ],
+        })
+
+        await expect(publishing).rejects.toMatchObject({ kind: "unknown" })
+        expect(await organisationsOf(repository)).toEqual([
+          { ids: ["cavuhb"], unknown: ["CAVHB"] },
+        ])
+      })
+    })
+
     describe("a family or category (STY-028)", () => {
       const medicines = {
         family: {

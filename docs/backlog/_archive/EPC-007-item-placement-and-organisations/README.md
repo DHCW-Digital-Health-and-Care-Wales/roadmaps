@@ -1,8 +1,8 @@
 # EPC-007: Item placement and organisations — moved and chosen, not retyped in the sheet
 
-- **Status**: Active — grilled in rounds 1–4 (2026-11-13); ADR-014 accepted
-- **Progress**: 3 of 4 terminal (STY-031, STY-032 and STY-033 await merge); next selectable:
-  STY-034; blocked on: nothing
+- **Status**: Done — grilled in rounds 1–4 (2026-11-13); ADR-014 accepted; every story
+  delivered, STY-031 to STY-033 merged, STY-034 in its PR, which awaits the owner's merge
+- **Progress**: 4 of 4 terminal
 - **Binding ADRs**: ADR-014, ADR-012, ADR-011, ADR-002, ADR-008
 
 ## Summary
@@ -114,12 +114,12 @@ languages.
 
 ## Stories
 
-| ID      | Story                                                                                                                                                      | Area                                       | Depends on       | State |
-| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | ---------------- | ----- |
-| STY-031 | [A Product Lead moves an item to another horizon](../_archive/EPC-007-item-placement-and-organisations/STY-031-move-an-item.md)                            | Domain + Infra + UI + i18n (en + cy) + E2E | —                | ✅    |
-| STY-032 | [Organisations come from the repository, shown by name](../_archive/EPC-007-item-placement-and-organisations/STY-032-organisations-from-the-repository.md) | Domain + Infra + UI + Docs                 | —                | ✅    |
-| STY-033 | [The organisations are listed with families and categories](../_archive/EPC-007-item-placement-and-organisations/STY-033-list-the-organisations.md)        | Features/UI + i18n (en + cy)               | STY-032          | ✅    |
-| STY-034 | [A Product Lead chooses who an item's work is for](STY-034-choose-organisations.md)                                                                        | Domain + Infra + UI + i18n (en + cy) + E2E | STY-031, STY-032 |       |
+| ID      | Story                                                                                                 | Area                                       | Depends on       | State |
+| ------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------ | ---------------- | ----- |
+| STY-031 | [A Product Lead moves an item to another horizon](STY-031-move-an-item.md)                            | Domain + Infra + UI + i18n (en + cy) + E2E | —                | ✅    |
+| STY-032 | [Organisations come from the repository, shown by name](STY-032-organisations-from-the-repository.md) | Domain + Infra + UI + Docs                 | —                | ✅    |
+| STY-033 | [The organisations are listed with families and categories](STY-033-list-the-organisations.md)        | Features/UI + i18n (en + cy)               | STY-032          | ✅    |
+| STY-034 | [A Product Lead chooses who an item's work is for](STY-034-choose-organisations.md)                   | Domain + Infra + UI + i18n (en + cy) + E2E | STY-031, STY-032 | ✅    |
 
 ## Sequencing
 
@@ -154,9 +154,9 @@ None.
 ## Related
 
 - ADR-014 (this epic's decisions); ADR-012, ADR-011, ADR-013 (the lists precedent)
-- [EPC-005 Editing](../_archive/EPC-005-editing/README.md), whose pending edits and
+- [EPC-005 Editing](../EPC-005-editing/README.md), whose pending edits and
   publish this epic extends
-- [EPC-006 Product families and colours](../EPC-006-product-families-and-colours/README.md),
+- [EPC-006 Product families and colours](../../EPC-006-product-families-and-colours/README.md),
   whose page STY-033 extends
-- [The roadmap tab format](../../analysis/roadmap-tab-format.md)
-- The persona: [Product Lead](../personas/product-lead.md), _Move items between horizons_
+- [The roadmap tab format](../../../analysis/roadmap-tab-format.md)
+- The persona: [Product Lead](../../personas/product-lead.md), _Move items between horizons_

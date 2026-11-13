@@ -3,7 +3,7 @@
 - **Status**: Done — delivered in its PR, which awaits the owner's merge
 - **Type**: Feature
 - **Area**: Features/UI + i18n (en + cy)
-- **Epic**: [EPC-007-item-placement-and-organisations](../../EPC-007-item-placement-and-organisations/README.md)
+- **Epic**: [EPC-007-item-placement-and-organisations](README.md)
 - **Depends on**: STY-032 (hard)
 - **Binding ADRs**: ADR-014 §Organisations, ADR-013, ADR-008
 - **Suggested model**: Sonnet — a read-only section beside the categories section

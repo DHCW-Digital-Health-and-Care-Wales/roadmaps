@@ -17,11 +17,12 @@ import {
   type RoadmapSnapshot,
 } from "@/domain/roadmap/publish-plan"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
-import type {
-  EditableItemField,
-  PublishOutcome,
-  RoadmapChanges,
-  RoadmapTextField,
+import {
+  type EditableItemField,
+  organisationIdsOf,
+  type PublishOutcome,
+  type RoadmapChanges,
+  type RoadmapTextField,
 } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { isRoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
@@ -97,6 +98,7 @@ const ITEM_COLUMNS: Readonly<Record<EditableItemField, RoadmapTabColumn>> = {
   expectedOutcome: "Outcome",
   phase: "Phase",
   placement: "Horizon",
+  organisationIds: "Organisations",
 }
 
 export interface GoogleSheetsRoadmapRepositoryOptions {
@@ -656,6 +658,7 @@ function snapshotOf({
       ...(families === null ? (["familyId"] as const) : []),
       ...(categories === null ? (["categoryId"] as const) : []),
     ]),
+    organisationIds: new Set(BUILT_IN_ORGANISATIONS.map(({ id }) => id)),
   }
 }
 
@@ -692,12 +695,37 @@ function batchRequests(read: RoadmapRead, writes: PublishWrites) {
   return [...index.requests(), ...tab.requests()]
 }
 
-/** What an item's cell holds for `value`: a placement as its `Horizon` value. */
+/**
+ * What an item's cell holds for `value`: a placement as its `Horizon` value, and
+ * organisations as their codes, national first, then by code, separated by `, `
+ * (ADR-014, STY-034 D7): known codes only, so an unknown one written there goes.
+ */
 function itemCell(field: EditableItemField, value: string): string {
-  if (field !== "placement") return value
-  // The plan publishes one of the six placements only.
-  if (!isRoadmapPlacement(value)) throw new AppError("unknown")
-  return HORIZON_VALUES[value]
+  switch (field) {
+    case "placement":
+      // The plan publishes one of the six placements only.
+      if (!isRoadmapPlacement(value)) throw new AppError("unknown")
+      return HORIZON_VALUES[value]
+    case "organisationIds":
+      return organisationCodes(organisationIdsOf(value))
+    default:
+      return value
+  }
+}
+
+/** The cell naming the organisations with `ids`, in the order the public site writes. */
+function organisationCodes(ids: readonly string[]): string {
+  const chosen = BUILT_IN_ORGANISATIONS.filter(({ id }) => ids.includes(id))
+  // The plan publishes organisations the list holds only.
+  if (chosen.length !== ids.length) throw new AppError("unknown")
+  return chosen
+    .sort(
+      (a, b) =>
+        Number(b.national) - Number(a.national) ||
+        a.code.localeCompare(b.code, "en"),
+    )
+    .map(({ code }) => code)
+    .join(", ")
 }
 
 /**

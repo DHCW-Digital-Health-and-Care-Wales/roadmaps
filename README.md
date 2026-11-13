@@ -95,6 +95,10 @@ it writes the `Families` tab only as below.
   for the placement chosen (`Recently delivered`, `Now`, `Next`, `Later`,
   `Delivered this year` or `Not doing`), so the row keeps its place and the item
   shows in row order in its new placement; a move never blanks the cell;
+- an item whose organisations changed: its row's `Organisations` cell alone, as the
+  codes chosen, `National` first and then by code, separated by a comma and a space
+  (`National, SBUHB`), or an empty cell for none; only codes in the editor's list are
+  written, so a code it doesn't recognise goes from the cell then, and only then;
 - an `Item ID` for every item row it reads (one with a title) that has none, or repeats
   another row's: eight random
   lower-case letters and digits starting with a letter, such as `k7q2xwbn`;
@@ -108,7 +112,7 @@ it writes the `Families` tab only as below.
   it to a listed family or category, never changing an ID already there;
 - a column the roadmap needs but lacks (the `Item ID` column the first time, the
   `Family ID` or `Category ID` column, or an edited field's column, `Horizon` for a
-  move), appended after the last column in use with the public site's English
+  move and `Organisations` for a choice of organisations), appended after the last column in use with the public site's English
   header, the grid widened in the same request.
 
 Adding, renaming or recolouring a family on the "Families, categories and organisations" page writes

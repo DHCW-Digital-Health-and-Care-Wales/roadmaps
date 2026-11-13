@@ -16,6 +16,7 @@ import {
   isChoiceField,
   type ItemChanges,
   itemValue,
+  organisationIdsOf,
   type RoadmapChanges,
   type RoadmapChoiceField,
   roadmapValue,
@@ -268,20 +269,31 @@ export function reconcileItems(
     : { ...changes, items: reconciled }
 }
 
-/** `item` with `from`'s `field`: English and Welsh, or a placement with its horizon. */
+/**
+ * `item` with `from`'s `field`: English and Welsh, a placement with its horizon, or
+ * organisations with their unknown codes.
+ */
 function withFieldOf(
   item: RoadmapItem,
   from: RoadmapItem,
   field: EditableItemField,
 ): RoadmapItem {
-  if (field === "placement") {
-    return {
-      ...item,
-      placement: from.placement,
-      writtenHorizon: from.writtenHorizon,
-    }
+  switch (field) {
+    case "placement":
+      return {
+        ...item,
+        placement: from.placement,
+        writtenHorizon: from.writtenHorizon,
+      }
+    case "organisationIds":
+      return {
+        ...item,
+        organisationIds: from.organisationIds,
+        unknownOrganisationCodes: from.unknownOrganisationCodes,
+      }
+    default:
+      return { ...item, [field]: from[field] }
   }
-  return { ...item, [field]: from[field] }
 }
 
 /**
@@ -410,8 +422,9 @@ function chosenCategory(
 }
 
 /**
- * The item as it will read once its pending English and placement are published: a
- * placed item has no horizon as written (STY-031 S4).
+ * The item as it will read once its pending English, placement and organisations are
+ * published: a placed item has no horizon as written (STY-031 S4), and chosen
+ * organisations no unknown codes (STY-034 S4).
  */
 export function applyItemChanges(
   item: RoadmapItem,
@@ -420,10 +433,15 @@ export function applyItemChanges(
   if (!entry) return item
   const { fields } = entry
   const placement = fields.placement?.value
+  const organisations = fields.organisationIds?.value
   return {
     ...item,
     ...(placement !== undefined &&
       isRoadmapPlacement(placement) && { placement, writtenHorizon: null }),
+    ...(organisations !== undefined && {
+      organisationIds: organisationIdsOf(organisations),
+      unknownOrganisationCodes: [],
+    }),
     title: withEnglish(item.title, fields.title) ?? item.title,
     description: withEnglish(item.description, fields.description),
     expectedOutcome: withEnglish(item.expectedOutcome, fields.expectedOutcome),

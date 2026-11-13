@@ -267,6 +267,7 @@ describe("reconcile", () => {
       repeatedIds: new Set(["sharedid"]),
       takenIds: new Set(["sharedid"]),
       missingLists: new Set(),
+      organisationIds: new Set(),
     })
     expect(plan).toMatchObject({
       kind: "settled",
@@ -468,5 +469,87 @@ describe("a move (STY-031)", () => {
     const read = [first, { ...second, placement: "later" } as const]
 
     expect(matchItemChanges(read, moved).get(1)).toBe(moved.items[0])
+  })
+})
+
+describe("a choice of organisations (STY-034)", () => {
+  const forCardiff = createTestRoadmapItem("For Cardiff", {
+    id: "cardiffx",
+    organisationIds: ["cavuhb"],
+    unknownOrganisationCodes: ["CAVHB"],
+  })
+
+  it("shows the chosen set, whose unknown codes go once published (S2, S4)", () => {
+    const chosen = editItem(NO_CHANGES, undefined, forCardiff, 0, {
+      organisationIds: "cavuhb,sbuhb",
+    })
+
+    expect(chosen.items[0]?.fields).toEqual({
+      organisationIds: { base: "cavuhb", value: "cavuhb,sbuhb" },
+    })
+    expect(applyItemChanges(forCardiff, chosen.items[0])).toEqual({
+      ...forCardiff,
+      organisationIds: ["cavuhb", "sbuhb"],
+      unknownOrganisationCodes: [],
+    })
+    expect(
+      changedParts(chosen).flatMap((part) =>
+        part.kind === "item" ? part.fields : [],
+      ),
+    ).toEqual(["organisationIds"])
+  })
+
+  it("is no change once the set is ticked back, and none chosen is a change (S3)", () => {
+    const chosen = editItem(NO_CHANGES, undefined, forCardiff, 0, {
+      organisationIds: "cavuhb,sbuhb",
+    })
+
+    expect(
+      editItem(chosen, chosen.items[0], forCardiff, 0, {
+        organisationIds: "cavuhb",
+      }),
+    ).toEqual(NO_CHANGES)
+    expect(
+      editItem(NO_CHANGES, undefined, forCardiff, 0, { organisationIds: "" })
+        .items[0]?.fields,
+    ).toEqual({ organisationIds: { base: "cavuhb", value: "" } })
+  })
+
+  it("is dropped by a read that finds a co-lead made the same choice, in any order (S8)", () => {
+    const chosen = editItem(NO_CHANGES, undefined, forCardiff, 0, {
+      organisationIds: "cavuhb,sbuhb",
+      title: "For Cardiff and Swansea",
+    })
+    const theirs = {
+      ...forCardiff,
+      organisationIds: ["sbuhb", "cavuhb"],
+      unknownOrganisationCodes: [],
+    }
+
+    expect(reconcileItems(chosen, [theirs]).items).toEqual([
+      {
+        item: theirs,
+        position: 0,
+        fields: {
+          title: { base: "For Cardiff", value: "For Cardiff and Swansea" },
+        },
+      },
+    ])
+  })
+
+  it("finds an item without an ID whose choice a lost publish already wrote", () => {
+    const loaded = { ...forCardiff, id: null }
+    const chosen = editItem(NO_CHANGES, undefined, loaded, 1, {
+      organisationIds: "national",
+    })
+    const written = {
+      ...loaded,
+      organisationIds: ["national"],
+      unknownOrganisationCodes: [],
+    }
+
+    expect(matchItemChanges([first, written], chosen).get(1)).toBe(
+      chosen.items[0],
+    )
   })
 })

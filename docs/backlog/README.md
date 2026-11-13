@@ -21,7 +21,7 @@ moves to `_archive/`, where its row here still points.
 | [EPC-004 Roadmap items](_archive/EPC-004-roadmap-items/README.md)                                        | STY-019–STY-021: model a roadmap item from every column, read a roadmap's items by header, and show them on its page under the six placements                                   | Done   |
 | [EPC-005 Editing](_archive/EPC-005-editing/README.md)                                                    | STY-022–STY-026: item identity, a write that refuses on a co-lead's conflict, an "About this roadmap" block, editing in place with one publish per roadmap, and conflict review | Done   |
 | [EPC-006 Product families and colours](EPC-006-product-families-and-colours/README.md)                   | STY-027–STY-030: families and categories defined once in their own tabs, chosen per roadmap, managed in one page, out-of-step rows fixed; ready to deliver                      | Active |
-| [EPC-007 Item placement and organisations](EPC-007-item-placement-and-organisations/README.md)           | STY-031–STY-034: move an item between horizons and sections; organisations served by the repository, listed, and chosen per item                                                | Active |
+| [EPC-007 Item placement and organisations](_archive/EPC-007-item-placement-and-organisations/README.md)  | STY-031–STY-034: move an item between horizons and sections; organisations served by the repository, listed, and chosen per item                                                | Done   |
 
 ## Chores
 

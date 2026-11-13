@@ -3,7 +3,7 @@
 - **Status**: Done — delivered in its PR, which awaits the owner's merge
 - **Type**: Feature
 - **Area**: Domain + Infrastructure + Features/UI + i18n (en + cy) + E2E
-- **Epic**: [EPC-007-item-placement-and-organisations](../../EPC-007-item-placement-and-organisations/README.md)
+- **Epic**: [EPC-007-item-placement-and-organisations](README.md)
 - **Depends on**: none
 - **Binding ADRs**: ADR-014 §Placement, ADR-012, ADR-011, ADR-008
 - **Suggested model**: Opus — it extends the pending-change model, publish plan and

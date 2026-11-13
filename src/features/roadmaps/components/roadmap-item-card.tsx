@@ -18,8 +18,8 @@ export interface RoadmapItemCardProps {
   /** For a form that names the card by its title. */
   headingId?: string
   /**
-   * A form editing the item's text, shown in place of that text; what it does not edit
-   * stays on show.
+   * A form editing the item's text and organisations, shown in place of them; what it
+   * does not edit stays on show.
    */
   form?: ReactNode
   /** Controls at the foot of the card, such as Edit. */
@@ -69,7 +69,7 @@ export function RoadmapItemCard({
   const named = organisations.filter(({ id }) =>
     item.organisationIds.includes(id),
   )
-  if (named.length > 0) {
+  if (named.length > 0 && !form) {
     add(
       "organisations",
       sortOrganisations(named, ({ shortName }) => shortName, language)

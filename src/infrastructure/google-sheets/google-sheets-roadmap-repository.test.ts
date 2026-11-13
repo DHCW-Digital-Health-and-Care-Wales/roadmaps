@@ -264,7 +264,10 @@ function tabRowsFor(items: readonly RoadmapItem[]): string[][] {
       ...language("en")(item),
       ...language("cy")(item),
       item.placement ?? item.writtenHorizon ?? "",
-      item.organisationIds.map((id) => id.toUpperCase()).join(", "),
+      [
+        ...item.organisationIds.map((id) => id.toUpperCase()),
+        ...item.unknownOrganisationCodes,
+      ].join(", "),
     ]),
   ]
 }
@@ -1234,6 +1237,106 @@ describe("GoogleSheetsRoadmapRepository", () => {
       ).toEqual([
         `ProductA!R${String(later + 2)}C${String(horizon + 1)} Recently delivered`,
       ])
+    })
+
+    describe("an item's organisations (STY-034)", () => {
+      const organisationsColumn = (rows: readonly string[][] | undefined) =>
+        (rows?.[0]?.indexOf("Organisations") ?? -1) + 1
+
+      /** Publishes a choice for the first item of the roadmap with `id`. */
+      async function choose(id: string, base: string, value: string) {
+        const [item] = await httpRepository().listRoadmapItems(id)
+        if (item === undefined) throw new Error(`${id} has an item`)
+        return httpRepository().publishRoadmapChanges(id, {
+          roadmap: {},
+          items: [
+            { item, position: 0, fields: { organisationIds: { base, value } } },
+          ],
+        })
+      }
+
+      it("writes the codes, national first then by code, in that cell alone (S5)", async () => {
+        const spreadsheet = serveStatefulSpreadsheet(exampleTabs())
+        const before = spreadsheet.tabs()
+
+        await choose("producta", "cavuhb,sbuhb", "national,sbuhb")
+
+        const column = organisationsColumn(EXAMPLE_TAB_ROWS.ProductA)
+        expect(
+          changedCells(before, spreadsheet.tabs()).filter(
+            (change) => !change.includes("C15 "),
+          ),
+        ).toEqual([`ProductA!R2C${String(column)} National, SBUHB`])
+      })
+
+      it("writes none chosen as an empty cell (S5)", async () => {
+        const spreadsheet = serveStatefulSpreadsheet(exampleTabs())
+
+        await choose("producta", "cavuhb,sbuhb", "")
+
+        const column = organisationsColumn(EXAMPLE_TAB_ROWS.ProductA)
+        expect(spreadsheet.tabs()[1]?.rows[1]?.[column - 1] ?? "").toBe("")
+      })
+
+      it("takes a co-lead's same set, respelt as `sbuhb,CAVUHB`, as no conflict and no write (S7)", async () => {
+        const tabs = exampleTabs()
+        const column = organisationsColumn(EXAMPLE_TAB_ROWS.ProductA)
+        const row = tabs[1]?.rows[1]
+        if (row === undefined) throw new Error("Product A has an item")
+        row[column - 1] = "CAVUHB"
+        const spreadsheet = serveStatefulSpreadsheet(tabs)
+        const [item] = await httpRepository().listRoadmapItems("producta")
+        if (item === undefined) throw new Error("Product A has an item")
+        row[column - 1] = "sbuhb,CAVUHB"
+
+        const outcome = await httpRepository().publishRoadmapChanges(
+          "producta",
+          {
+            roadmap: {},
+            items: [
+              {
+                item,
+                position: 0,
+                fields: {
+                  organisationIds: { base: "cavuhb", value: "cavuhb,sbuhb" },
+                },
+              },
+            ],
+          },
+        )
+
+        expect(outcome).toEqual({ status: "published" })
+        expect(spreadsheet.bodies).toEqual([])
+      })
+
+      it("adds an Organisations column to a tab with none, then writes the cell (S6)", async () => {
+        const productC = EXAMPLE_TAB_ROWS.ProductC ?? []
+        expect(productC[0]).not.toContain("Organisations")
+        const width = Math.max(...productC.map((row) => row.length))
+        const before = [
+          ...exampleTabs(),
+          gridTab(
+            "ProductC",
+            productC.map((row) => [...row]),
+            30,
+            3,
+          ),
+        ]
+        const spreadsheet = serveStatefulSpreadsheet(before)
+
+        await choose("productc", "", "pthb")
+
+        expect(
+          changedCells(before, spreadsheet.tabs()).filter((change) =>
+            change.startsWith("ProductC!"),
+          ),
+        ).toEqual(
+          expect.arrayContaining([
+            `ProductC!R1C${String(width + 1)} Organisations`,
+            `ProductC!R2C${String(width + 1)} PTHB`,
+          ]),
+        )
+      })
     })
 
     describe("a missing column (S7)", () => {

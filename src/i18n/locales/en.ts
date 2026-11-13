@@ -244,7 +244,19 @@ export const en = {
         phase: "Phase",
         /** Not English text, so its Welsh label says nothing of English. */
         placement: "Horizon or section",
+        /** Not English text either: short names and codes stay English. */
+        organisationIds: "Organisations",
       } satisfies Record<EditableItemField, string>,
+      /** One checkbox of the form's organisations: "Cardiff and Vale (CAVUHB)" (STY-034). */
+      organisationChoice: "{{shortName}} ({{code}})",
+      /**
+       * Codes the item names that the organisation list doesn't hold, comma separated
+       * ("CAVHB, Mars"): publishing a changed choice drops them (STY-034 S4).
+       */
+      unknownOrganisations_one:
+        "{{codes}} isn't recognised. Changing the organisations will remove it.",
+      unknownOrganisations_other:
+        "{{codes}} aren't recognised. Changing the organisations will remove them.",
       /** Followed by the item's title, for assistive technology: "Move First item". */
       move: "Move",
       /** Heads the list of places an item can move to. */

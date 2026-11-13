@@ -730,6 +730,30 @@ describe("parseRoadmapIndex", () => {
       ])
     })
 
+    it("gives every row with an id, skipped ones too, without their own problems (STY-035)", () => {
+      const index = parseRows(
+        { Sheet: "Product A", Enabled: "No", Title: "Draft", Colour: "#abc" },
+        { Sheet: "product-a", Enabled: "Yes", Title: "Live" },
+        { Sheet: "!!", Enabled: "Yes", Title: "No id" },
+      )
+
+      expect(index.everyEntry).toEqual([
+        {
+          tabName: "Product A",
+          row: 2,
+          roadmap: createTestRoadmap("product-a", "Draft", {
+            published: false,
+            colour: "#aabbcc",
+          }),
+        },
+        ...index.entries,
+      ])
+      expect(index.problems.map(({ code }) => code)).toEqual([
+        "duplicate-id",
+        "invalid-id",
+      ])
+    })
+
     it("keeps the first published row among several, recording the others", () => {
       const index = parseRows(
         { Sheet: "ProductA", Enabled: "No", Title: "Draft" },

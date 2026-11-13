@@ -15,6 +15,7 @@ import type { RoadmapItem } from "../roadmap-item"
 import type { RoadmapRepository } from "../roadmap-repository"
 import { CO_LEAD_VALUE, type ContractWrite } from "./contract-write"
 import { categoriesOf, familiesOf } from "./linked-lists"
+import { describePublishedState } from "./published-state-contract"
 import { createTestRoadmap, inStep } from "./test-roadmap"
 import { createTestRoadmapItem } from "./test-roadmap-item"
 
@@ -30,7 +31,22 @@ export interface ContractOptions {
   families?: readonly Family[] | null | undefined
   /** Defaults to the categories the roadmaps are linked to; `null`: no category list. */
   categories?: readonly Category[] | null | undefined
+  /**
+   * More rows of the roadmap index, after the roadmaps', each with a roadmap's id: a
+   * draft, or a co-lead's copy. The list keeps one roadmap per id, the first published,
+   * else the first (ADR-009).
+   */
+  twins?: readonly Roadmap[] | undefined
+  /**
+   * What would fail the public site's nightly sync were the roadmap published, by
+   * roadmap id (STY-035 S4); a missing tab is `unreadableItems`. A `short-colour`
+   * roadmap's colour is one a three-digit colour expands to, such as `#aabbcc`.
+   */
+  syncFaults?: Readonly<Record<string, readonly SyncFault[]>> | undefined
 }
+
+/** A mistake in the data source the public site's nightly sync fails on (STY-035). */
+export type SyncFault = "short-colour" | "no-title-column" | "no-horizon-column"
 
 export interface RoadmapRepositoryContractSetup {
   /**
@@ -371,6 +387,7 @@ export function describeRoadmapRepositoryContract(
     describePublishing(setup)
     describeFamilyChanges(setup)
     describeListMatch(setup)
+    describePublishedState(setup)
   })
 }
 

@@ -298,6 +298,83 @@ export const cy = {
         categoryId: "Does dim modd newid y categori ar hyn o bryd.",
       },
     },
+    /** Publishing or unpublishing a roadmap from its page, written at once (STY-035). */
+    publishRoadmap: {
+      action: {
+        publish: "Cyhoeddi'r map trywydd",
+        unpublish: "Dad-gyhoeddi'r map trywydd",
+      },
+      confirm: {
+        title: {
+          publish: "Cyhoeddi {{title}}?",
+          unpublish: "Dad-gyhoeddi {{title}}?",
+        },
+        note: {
+          publish:
+            "Bydd yn ymddangos ar y wefan gyhoeddus ar ôl ei diweddariad nesaf dros nos.",
+          unpublish:
+            "Bydd yn diflannu o'r wefan gyhoeddus ar ôl ei diweddariad nesaf dros nos.",
+        },
+        withChanges_zero:
+          "Bydd eich newidiadau heb eu cadw yn cael eu cyhoeddi gydag ef.",
+        withChanges_one:
+          "Bydd eich newid heb ei gadw yn cael ei gyhoeddi gydag ef.",
+        withChanges_two:
+          "Bydd eich {{count, number}} newid heb eu cadw yn cael eu cyhoeddi gydag ef.",
+        withChanges_few:
+          "Bydd eich {{count, number}} newid heb eu cadw yn cael eu cyhoeddi gydag ef.",
+        withChanges_many:
+          "Bydd eich {{count, number}} newid heb eu cadw yn cael eu cyhoeddi gydag ef.",
+        withChanges_other:
+          "Bydd eich {{count, number}} o newidiadau heb eu cadw yn cael eu cyhoeddi gydag ef.",
+        keepsChanges_zero:
+          "Bydd eich newidiadau heb eu cyhoeddi yn aros, i'w cadw wedyn.",
+        keepsChanges_one:
+          "Bydd eich newid heb ei gyhoeddi yn aros, i'w gadw wedyn.",
+        keepsChanges_two:
+          "Bydd eich {{count, number}} newid heb eu cyhoeddi yn aros, i'w cadw wedyn.",
+        keepsChanges_few:
+          "Bydd eich {{count, number}} newid heb eu cyhoeddi yn aros, i'w cadw wedyn.",
+        keepsChanges_many:
+          "Bydd eich {{count, number}} newid heb eu cyhoeddi yn aros, i'w cadw wedyn.",
+        keepsChanges_other:
+          "Bydd eich {{count, number}} o newidiadau heb eu cyhoeddi yn aros, i'w cadw wedyn.",
+        saveAndPublish: "Cadw a chyhoeddi",
+      },
+      notice: {
+        published:
+          "Mae {{title}} wedi'i gyhoeddi. Bydd y wefan gyhoeddus yn ei ddangos ar ôl ei diweddariad nesaf dros nos.",
+        savedAndPublished:
+          "Newidiadau wedi'u cadw a {{title}} wedi'i gyhoeddi. Bydd y wefan gyhoeddus yn ei ddangos ar ôl ei diweddariad nesaf dros nos.",
+        unpublished:
+          "Mae {{title}} wedi'i ddad-gyhoeddi. Bydd yn diflannu o'r wefan gyhoeddus ar ôl ei diweddariad nesaf dros nos.",
+        changed:
+          "Newidiodd y map trywydd hwn tra oeddech chi'n edrych. Chafodd dim byd ei newid.",
+        failed: {
+          publish: "Doedd dim modd cyhoeddi {{title}}",
+          unpublish: "Doedd dim modd dad-gyhoeddi {{title}}",
+        },
+        unconfirmed: {
+          publish: "Efallai bod {{title}} wedi'i gyhoeddi",
+          unpublish: "Efallai bod {{title}} wedi'i ddad-gyhoeddi",
+        },
+        refused: {
+          description:
+            "Byddai ei gyhoeddi yn atal y wefan gyhoeddus rhag diweddaru. Cywirwch y daenlen, yna cyhoeddwch eto.",
+          problems: {
+            itemsMissing:
+              "Does dim tab o'r enw “{{location}}”, yr enw yn ei gell Sheet.",
+            titleMissing: "Does gan y tab “{{location}}” ddim colofn Title.",
+            placementMissing:
+              "Does gan y tab “{{location}}” ddim colofn Horizon.",
+            shortColour:
+              "Mae gan ei liw {{colour}} 3 digid. Ysgrifennwch ef gyda 6, fel {{long}}.",
+            idTaken:
+              "Mae “{{title}}” wedi'i gyhoeddi gyda'r un cyfeiriad gwe. Dad-gyhoeddwch ef, neu newidiwch un o'u celloedd Sheet.",
+          },
+        },
+      },
+    },
     publish: {
       pending: {
         publish_zero: "Dim newidiadau heb eu cyhoeddi",

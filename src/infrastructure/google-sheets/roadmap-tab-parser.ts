@@ -169,6 +169,17 @@ export function parseRoadmapTab(
   }
 }
 
+/**
+ * The English columns a roadmap tab's header has, matched as `parseRoadmapTab` matches
+ * them, without failing on a missing `Title` column: none for an empty tab (STY-035).
+ */
+export function roadmapTabColumns(
+  rows: readonly (readonly string[])[],
+): ReadonlySet<RoadmapTabColumn> {
+  const [headerRow = []] = rows
+  return new Set(readHeader(headerRow, new ProblemLog()).english.keys())
+}
+
 /** One spreadsheet row, trimmed, read through the header. */
 class ItemRow {
   readonly #header: Header

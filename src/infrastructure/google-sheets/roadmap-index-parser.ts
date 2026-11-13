@@ -69,6 +69,11 @@ export interface RoadmapIndexEntry {
 export interface RoadmapIndex {
   /** In row order. */
   entries: RoadmapIndexEntry[]
+  /**
+   * Every row with an id, in row order: `entries`, and those skipped as sharing an id
+   * with one of them (`duplicate-id`), whose own problems are not recorded (STY-035).
+   */
+  everyEntry: RoadmapIndexEntry[]
   /** The 0-based place of each column the header has that may be written to. */
   columns: ReadonlyMap<RoadmapIndexWriteColumn, number>
   /** In row order, problems of the whole list first. */
@@ -222,16 +227,22 @@ export function parseRoadmapIndex(
     const row = toIndexRow(header, cells, i + 2)
     return row ? [row] : []
   })
-  const keptRows = keepOneRowPerId(indexRows, header, problems)
+  const { kept, withIds } = keepOneRowPerId(indexRows, header, problems)
   if (tabTitles !== undefined) {
-    recordMissingTabs(keptRows, new Set(tabTitles), header, problems)
+    recordMissingTabs(kept, new Set(tabTitles), header, problems)
   }
   const lookups = {
     families: lookupOf(families),
     categories: lookupOf(categories),
   }
-  const entries = keptRows.map((indexRow) =>
+  const entries = kept.map((indexRow) =>
     toEntry(indexRow, header, lookups, problems),
+  )
+  const keptEntries = new Map(kept.map((indexRow, i) => [indexRow, entries[i]]))
+  const everyEntry = withIds.map(
+    (indexRow) =>
+      keptEntries.get(indexRow) ??
+      toEntry(indexRow, header, lookups, new ProblemLog()),
   )
 
   if (
@@ -243,6 +254,7 @@ export function parseRoadmapIndex(
   const familyWelsh = header.welsh.get("Family")
   return {
     entries,
+    everyEntry,
     columns: new Map<RoadmapIndexWriteColumn, number>([
       ...columnIndexes(header),
       ...(familyWelsh ? [[FAMILY_WELSH, familyWelsh.index] as const] : []),
@@ -274,13 +286,14 @@ function toIndexRow(
 /**
  * Among rows sharing an id, keeps the first published one, else the first (ADR-009):
  * the public site drops unpublished rows before checking ids, so a draft may share
- * the live roadmap's id. Rows with no id, and the others sharing one, are skipped.
+ * the live roadmap's id. Rows with no id, and the others sharing one, are skipped:
+ * `withIds` holds every row but those with no id.
  */
 function keepOneRowPerId(
   rows: readonly IndexRow[],
   header: Header,
   problems: IndexProblemLog,
-): IndexRow[] {
+): { kept: IndexRow[]; withIds: IndexRow[] } {
   const column = header.english.get("Sheet")?.header ?? null
   const skip = (code: RoadmapIndexProblemCode, { row, sheet }: IndexRow) => {
     problems.record(code, { row, column, value: sheet })
@@ -298,11 +311,12 @@ function keepOneRowPerId(
       keptById.set(indexRow.id, indexRow)
     }
   }
-  return withIds.filter((indexRow) => {
+  const kept = withIds.filter((indexRow) => {
     if (keptById.get(indexRow.id) === indexRow) return true
     skip("duplicate-id", indexRow)
     return false
   })
+  return { kept, withIds }
 }
 
 /** A missing tab never fails the list (ADR-009): the roadmap is kept. */

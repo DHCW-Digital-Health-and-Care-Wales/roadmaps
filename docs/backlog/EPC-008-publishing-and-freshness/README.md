@@ -1,7 +1,8 @@
 # EPC-008: Publishing and freshness — whether a roadmap is public, and how current it says it is
 
 - **Status**: Active — grilled in rounds 1–4 (2026-11-13)
-- **Progress**: 0 of 2 terminal; next selectable: STY-035; blocked on: nothing
+- **Progress**: 1 of 2 terminal (STY-035 in its PR, which awaits the owner's merge);
+  next selectable: STY-036; blocked on: nothing
 - **Binding ADRs**: ADR-012, ADR-009, ADR-002, ADR-008
 
 ## Summary
@@ -89,10 +90,10 @@ updates the glossary's _Publish_, _Save_ and _Published roadmap_ entries.
 
 ## Stories
 
-| ID      | Story                                                                                          | Area                                       | Depends on | State |
-| ------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------ | ---------- | ----- |
-| STY-035 | [A Product Lead publishes or unpublishes a roadmap](STY-035-publish-or-unpublish-a-roadmap.md) | Domain + Infra + UI + i18n (en + cy) + E2E | —          |       |
-| STY-036 | [A Product Lead sets when a roadmap was last updated](STY-036-set-last-updated.md)             | Domain + Infra + UI + i18n (en + cy) + E2E | —          |       |
+| ID      | Story                                                                                                                                       | Area                                       | Depends on | State |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | ---------- | ----- |
+| STY-035 | [A Product Lead publishes or unpublishes a roadmap](../_archive/EPC-008-publishing-and-freshness/STY-035-publish-or-unpublish-a-roadmap.md) | Domain + Infra + UI + i18n (en + cy) + E2E | —          | ✅    |
+| STY-036 | [A Product Lead sets when a roadmap was last updated](STY-036-set-last-updated.md)                                                          | Domain + Infra + UI + i18n (en + cy) + E2E | —          |       |
 
 ## Sequencing
 

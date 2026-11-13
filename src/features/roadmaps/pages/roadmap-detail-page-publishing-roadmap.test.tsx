@@ -1,0 +1,349 @@
+import { act, screen, within } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
+import { describe, expect, it } from "vitest"
+
+import type { AuthState } from "@/domain/auth/auth-client"
+import type { Roadmap } from "@/domain/roadmap/roadmap"
+import type { ContractWrite } from "@/domain/roadmap/testing/contract-write"
+import type { SyncFault } from "@/domain/roadmap/testing/roadmap-repository-contract"
+import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
+import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
+import type { Language } from "@/i18n"
+import { renderWithProviders } from "@/test/render-with-providers"
+
+import { createInMemoryRoadmapRepository } from "../testing/in-memory-roadmap-repository"
+
+const connected: AuthState = {
+  status: "connected",
+  expiresAt: Date.now() + 3_600_000,
+}
+
+const draft = createTestRoadmap("producta", "Product A roadmap", {
+  published: false,
+  statusLabel: { en: "Beta", cy: "" },
+  colour: "#aabbcc",
+})
+const other = createTestRoadmap("productb", "Product B roadmap")
+const item = createTestRoadmapItem("First item", { id: "item-1" })
+
+interface Options {
+  roadmaps?: Roadmap[]
+  write?: ContractWrite
+  syncFaults?: Record<string, SyncFault[]>
+  language?: Language
+}
+
+async function renderPage({
+  roadmaps = [draft, other],
+  write,
+  syncFaults,
+  language,
+}: Options = {}) {
+  const user = userEvent.setup()
+  const repository = createInMemoryRoadmapRepository(
+    roadmaps,
+    { producta: [item] },
+    { write, syncFaults },
+  )
+  const rendered = await renderWithProviders({
+    path: "/roadmaps/producta",
+    authState: connected,
+    repository,
+    ...(language ? { language } : {}),
+  })
+  const main = within(screen.getByRole("main"))
+  await main.findByRole("heading", { level: 3 })
+  return { user, main, repository, ...rendered }
+}
+
+/** Chooses the action, then the dialog's button named `confirm`. */
+async function choose(
+  user: ReturnType<typeof userEvent.setup>,
+  action: string,
+  confirm = action,
+) {
+  await user.click(screen.getByRole("button", { name: action }))
+  const dialog = await screen.findByRole("alertdialog")
+  await user.click(within(dialog).getByRole("button", { name: confirm }))
+}
+
+/** Edits the roadmap's status label through the About form, leaving it pending. */
+async function editStatus(user: ReturnType<typeof userEvent.setup>) {
+  const main = within(screen.getByRole("main"))
+  await user.click(main.getByRole("button", { name: /^Edit About/ }))
+  const status = main.getByRole("textbox", { name: "Status" })
+  await user.clear(status)
+  await user.type(status, "Live")
+  await user.click(main.getByRole("button", { name: "Done" }))
+}
+
+describe("publishing or unpublishing a roadmap (STY-035)", () => {
+  it("offers Publish roadmap beside a roadmap not published (S1)", async () => {
+    const { main } = await renderPage()
+
+    expect(main.getByText("Not published")).toBeVisible()
+    expect(main.getByRole("button", { name: "Publish roadmap" })).toBeVisible()
+  })
+
+  it("offers Unpublish roadmap beside a published roadmap (S1)", async () => {
+    const { main } = await renderPage({
+      roadmaps: [{ ...draft, published: true }, other],
+    })
+
+    expect(main.queryByText("Not published")).toBeNull()
+    expect(
+      main.getByRole("button", { name: "Unpublish roadmap" }),
+    ).toBeVisible()
+  })
+
+  it("leaves the list with its badge and no such action (S1, D5)", async () => {
+    await renderWithProviders({
+      path: "/",
+      authState: connected,
+      repository: createInMemoryRoadmapRepository([draft, other]),
+    })
+    const main = within(screen.getByRole("main"))
+
+    expect(await main.findByText("Not published")).toBeVisible()
+    expect(main.queryByRole("button", { name: /publish roadmap/i })).toBeNull()
+  })
+
+  it("is unavailable while the session has expired, as Publish changes is (S1)", async () => {
+    const { user, authClient, repository } = await renderPage()
+
+    act(() => {
+      authClient.setState({ status: "expired" })
+    })
+    const action = screen.getByRole("button", { name: "Publish roadmap" })
+    expect(action).toHaveAttribute("aria-disabled", "true")
+    await user.click(action)
+
+    expect(screen.queryByRole("alertdialog")).toBeNull()
+    expect((await repository.listRoadmaps())[0]?.published).toBe(false)
+  })
+
+  it("asks first, writes nothing on Cancel, then publishes and says so (S2)", async () => {
+    const { user, main, repository } = await renderPage()
+
+    await user.click(main.getByRole("button", { name: "Publish roadmap" }))
+    const dialog = await screen.findByRole("alertdialog", {
+      name: "Publish Product A roadmap?",
+    })
+    expect(
+      within(dialog).getByText(
+        "It shows on the public site after its next nightly update.",
+      ),
+    ).toBeVisible()
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }))
+    expect((await repository.listRoadmaps())[0]?.published).toBe(false)
+
+    await choose(user, "Publish roadmap")
+
+    expect(
+      await main.findByText(
+        "Product A roadmap is published. The public site shows it after its next nightly update.",
+      ),
+    ).toBeVisible()
+    expect(main.queryByText("Not published")).toBeNull()
+    expect(
+      main.getByRole("button", { name: "Unpublish roadmap" }),
+    ).toBeVisible()
+    expect((await repository.listRoadmaps())[0]?.published).toBe(true)
+  })
+
+  it("unpublishes the only published roadmap after asking, unchecked (S3)", async () => {
+    const { user, main, repository } = await renderPage({
+      roadmaps: [{ ...draft, published: true }],
+      syncFaults: { producta: ["short-colour"] },
+    })
+
+    await user.click(main.getByRole("button", { name: "Unpublish roadmap" }))
+    expect(
+      within(
+        await screen.findByRole("alertdialog", {
+          name: "Unpublish Product A roadmap?",
+        }),
+      ).getByText("It leaves the public site after its next nightly update."),
+    ).toBeVisible()
+    await user.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", {
+        name: "Unpublish roadmap",
+      }),
+    )
+
+    expect(
+      await main.findByText(/^Product A roadmap is unpublished\./),
+    ).toBeVisible()
+    expect(main.getByText("Not published")).toBeVisible()
+    expect((await repository.listRoadmaps())[0]?.published).toBe(false)
+  })
+
+  it("refuses to publish a roadmap the public site's update would fail on, naming each problem (S4)", async () => {
+    const { user, main, repository } = await renderPage({
+      syncFaults: { producta: ["short-colour", "no-horizon-column"] },
+    })
+
+    await choose(user, "Publish roadmap")
+
+    const alert = await main.findByRole("alert")
+    expect(
+      within(alert).getByText("Couldn't publish Product A roadmap"),
+    ).toBeVisible()
+    expect(
+      within(alert).getByText(
+        "Publishing it would stop the public site updating. Fix the spreadsheet, then publish again.",
+      ),
+    ).toBeVisible()
+    expect(
+      within(alert).getByText("The “producta” tab has no Horizon column."),
+    ).toBeVisible()
+    expect(
+      within(alert).getByText(
+        "Its colour #abc has 3 digits. Write it with 6, like #aabbcc.",
+      ),
+    ).toBeVisible()
+    expect(main.getByText("Not published")).toBeVisible()
+    expect((await repository.listRoadmaps())[0]?.published).toBe(false)
+  })
+
+  it("offers Save and publish for a roadmap with unsaved edits, writing both (S5)", async () => {
+    const { user, main, repository } = await renderPage()
+    await editStatus(user)
+    expect(main.getByText("1 change to save")).toBeVisible()
+
+    await user.click(main.getByRole("button", { name: "Publish roadmap" }))
+    const dialog = await screen.findByRole("alertdialog")
+    expect(
+      within(dialog).getByText(/Your unsaved change goes public with it\./),
+    ).toBeVisible()
+    await user.click(
+      within(dialog).getByRole("button", { name: "Save and publish" }),
+    )
+
+    expect(
+      await main.findByText(/^Changes saved and Product A roadmap published\./),
+    ).toBeVisible()
+    expect(main.queryByText(/change to save|unpublished change/)).toBeNull()
+    expect((await repository.listRoadmaps())[0]).toMatchObject({
+      published: true,
+      statusLabel: { en: "Live", cy: "" },
+    })
+  })
+
+  it("publishes nothing on a co-lead's conflicting change, opening the review (S6)", async () => {
+    const { user, main, repository } = await renderPage()
+    await editStatus(user)
+    repository.coLead(([roadmap]) => {
+      if (roadmap) roadmap.statusLabel = { en: "Alpha", cy: "" }
+    })
+
+    await choose(user, "Publish roadmap", "Save and publish")
+
+    expect(
+      await main.findByText("Someone else has changed text you edited"),
+    ).toBeVisible()
+    expect(
+      main.getByRole("button", { name: "Publish roadmap" }),
+    ).toHaveAttribute("aria-disabled", "true")
+    expect((await repository.listRoadmaps())[0]?.published).toBe(false)
+
+    await user.click(main.getByRole("button", { name: /^Keep mine/ }))
+    expect(
+      main.getByRole("button", { name: "Publish roadmap" }),
+    ).toHaveAttribute("aria-disabled", "false")
+  })
+
+  it("leaves pending edits pending on unpublishing, the step then reading Save changes (S7)", async () => {
+    const { user, main, repository } = await renderPage({
+      roadmaps: [{ ...draft, published: true }],
+    })
+    await editStatus(user)
+    expect(main.getByText("1 unpublished change")).toBeVisible()
+
+    await user.click(main.getByRole("button", { name: "Unpublish roadmap" }))
+    expect(
+      within(await screen.findByRole("alertdialog")).getByText(
+        /Your unpublished change stays, to save later\./,
+      ),
+    ).toBeVisible()
+    await user.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", {
+        name: "Unpublish roadmap",
+      }),
+    )
+
+    expect(await main.findByText("1 change to save")).toBeVisible()
+    expect(main.getByRole("button", { name: "Save changes" })).toBeVisible()
+    expect((await repository.listRoadmaps())[0]).toMatchObject({
+      published: false,
+      statusLabel: { en: "Beta", cy: "" },
+    })
+  })
+
+  it("says a refused write changed nothing, keeping pending edits (S8)", async () => {
+    const { user, main, repository } = await renderPage({
+      write: { fails: "forbidden" },
+    })
+    await editStatus(user)
+
+    await choose(user, "Publish roadmap", "Save and publish")
+
+    const alert = await main.findByRole("alert")
+    expect(
+      within(alert).getByText("Couldn't publish Product A roadmap"),
+    ).toBeVisible()
+    expect(
+      within(alert).getByText(/isn't allowed to change this roadmap/),
+    ).toBeVisible()
+    expect(
+      within(alert).getByText("Your changes are kept in this tab."),
+    ).toBeVisible()
+    expect(main.getByText("Not published")).toBeVisible()
+    expect(main.getByText("1 change to save")).toBeVisible()
+    expect((await repository.listRoadmaps())[0]?.published).toBe(false)
+  })
+
+  it("asks for a refresh when the answer is lost and a re-read can't settle it (S10)", async () => {
+    const { user, main } = await renderPage({
+      write: { lost: "reread-fails" },
+    })
+
+    await choose(user, "Publish roadmap")
+
+    expect(
+      await main.findByText("Product A roadmap may have been published"),
+    ).toBeVisible()
+    expect(
+      main.getByText(
+        "The answer was lost. Refresh this roadmap before you do anything else.",
+      ),
+    ).toBeVisible()
+  })
+
+  it("speaks Welsh throughout (S9)", async () => {
+    const { user, main } = await renderPage({
+      language: "cy",
+      syncFaults: { producta: ["short-colour"] },
+    })
+
+    await user.click(
+      main.getByRole("button", { name: "Cyhoeddi'r map trywydd" }),
+    )
+    const dialog = await screen.findByRole("alertdialog", {
+      name: "Cyhoeddi Product A roadmap?",
+    })
+    await user.click(
+      within(dialog).getByRole("button", { name: "Cyhoeddi'r map trywydd" }),
+    )
+
+    const alert = await main.findByRole("alert")
+    expect(
+      within(alert).getByText("Doedd dim modd cyhoeddi Product A roadmap"),
+    ).toBeVisible()
+    expect(
+      within(alert).getByText(
+        "Mae gan ei liw #abc 3 digid. Ysgrifennwch ef gyda 6, fel #aabbcc.",
+      ),
+    ).toBeVisible()
+  })
+})

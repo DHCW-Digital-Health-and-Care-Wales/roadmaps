@@ -179,6 +179,35 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expectNoAxeViolations(page, theme)
     })
 
+    test("publishing a roadmap: its dialog, a refusal, then the published notice (STY-035)", async ({
+      page,
+      sheets,
+    }) => {
+      const rows = EXAMPLE_INDEX_ROWS.map((row) => [...row])
+      const productC = rows.find((row) => row[0] === "ProductC")
+      if (productC) productC[header.indexOf("Colour")] = "#9a8"
+      sheets.spreadsheet = withRoadmapIndex(rows)
+      await page.goto("./#/roadmaps/productc")
+      await connect(page)
+      const main = page.getByRole("main")
+
+      await main.getByRole("button", { name: "Publish roadmap" }).click()
+      const dialog = page.getByRole("alertdialog")
+      await expect(dialog).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+
+      await dialog.getByRole("button", { name: "Publish roadmap" }).click()
+      await expect(main.getByRole("alert")).toContainText("3 digits")
+      await expectNoAxeViolations(page, theme)
+
+      if (productC) productC[header.indexOf("Colour")] = "#99aa88"
+      sheets.spreadsheet = withRoadmapIndex(rows)
+      await main.getByRole("button", { name: "Publish roadmap" }).click()
+      await dialog.getByRole("button", { name: "Publish roadmap" }).click()
+      await expect(main.getByText(/is published\./)).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+    })
+
     test("an item's Move menu, then the moved item and an unplaced item's form (STY-031)", async ({
       page,
       sheets,

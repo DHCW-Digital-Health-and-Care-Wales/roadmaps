@@ -14,7 +14,8 @@ import { countChanges, settlePublished } from "./pending-changes"
 import { usePendingChangesStore } from "./pending-changes-context"
 import { publishAction, type PublishNotice } from "./pending-changes-store"
 
-const CURRENT_TEXT: CurrentText = {
+/** How a refusal shows the text it found, in the roadmap and its items as cached. */
+export const CURRENT_TEXT: CurrentText = {
   roadmap: withCurrentRoadmapText,
   items: withCurrentItemText,
 }

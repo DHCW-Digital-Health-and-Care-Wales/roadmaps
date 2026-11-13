@@ -14,6 +14,16 @@ import {
   type PublishWrites,
   type RoadmapSnapshot,
 } from "@/domain/roadmap/publish-plan"
+import {
+  findLoadedRow,
+  findPublishedStateRow,
+  heldPublishedState,
+  needsItems,
+  planPublishedStateWrite,
+  type PublishedStateOutcome,
+  type PublishedStateRow,
+  type PublishProblem,
+} from "@/domain/roadmap/published-state"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import {
   type EditableItemField,
@@ -29,6 +39,7 @@ import {
 } from "@/domain/roadmap/testing/contract-write"
 import { categoriesOf, familiesOf } from "@/domain/roadmap/testing/linked-lists"
 import { TEST_ORGANISATIONS } from "@/domain/roadmap/testing/test-organisations"
+import type { SyncFault } from "@/domain/roadmap/testing/roadmap-repository-contract"
 import { inStep } from "@/domain/roadmap/testing/test-roadmap"
 import { AppError } from "@/lib/errors"
 
@@ -53,12 +64,18 @@ export interface InMemoryRoadmapRepositoryOptions {
    * reading the list fail with it.
    */
   organisations?: readonly Organisation[] | AppError | undefined
+  /**
+   * What would fail the public site's sync were a roadmap published, by roadmap id
+   * (STY-035 S4); a roadmap whose items are an `AppError` has no tab. Without a title
+   * column its items can't be read.
+   */
+  syncFaults?: Readonly<Record<string, readonly SyncFault[]>> | undefined
 }
 
 export interface InMemoryRoadmapRepository extends RoadmapRepository {
   /**
    * A co-lead's change in the data source, which later calls read: `edit` may change
-   * the roadmaps listed, and the items of any roadmap that has some, in place.
+   * the roadmap index's rows, and the items of any roadmap that has some, in place.
    */
   readonly coLead: (
     edit: (
@@ -70,7 +87,9 @@ export interface InMemoryRoadmapRepository extends RoadmapRepository {
 
 /**
  * A `RoadmapRepository` holding roadmaps and their items in memory (test code only).
- * Pass an `AppError` instead of roadmaps to make every call fail with it. A publish
+ * `source` is the roadmap index's rows: several may share an id, a draft beside its
+ * live roadmap, and the list keeps one per id, as ADR-009 does. Pass an `AppError`
+ * instead of roadmaps to make every call fail with it. A publish
  * changes what later calls read, by the same rules as the Google adapter (ADR-012). It
  * serves `TEST_ORGANISATIONS`; a hand-made double needs `listOrganisations` too, as a
  * roadmap's items show only once the list is read, so a bare `vi.fn()` leaves the page
@@ -84,6 +103,7 @@ export function createInMemoryRoadmapRepository(
     families = source instanceof AppError ? [] : familiesOf(source),
     categories = source instanceof AppError ? [] : categoriesOf(source),
     organisations = TEST_ORGANISATIONS,
+    syncFaults = {},
   }: InMemoryRoadmapRepositoryOptions = {},
 ): InMemoryRoadmapRepository {
   const roadmaps =
@@ -102,6 +122,11 @@ export function createInMemoryRoadmapRepository(
     ]),
   )
   let rereadFails = false
+  /**
+   * A row's published state as written, where it isn't `Yes` or `No` by `published`:
+   * a co-lead's text over it (D9).
+   */
+  const writtenOver = new WeakMap<Roadmap, null>()
 
   /** Reads the roadmaps after a tick, as a real data source would, honouring `signal`. */
   const respond = <T>(
@@ -118,17 +143,16 @@ export function createInMemoryRoadmapRepository(
   const storedItems = (roadmapId: string): RoadmapItem[] => {
     const stored = held.get(roadmapId) ?? []
     if (stored instanceof AppError) throw stored
+    if (syncFaults[roadmapId]?.includes("no-title-column")) {
+      throw new AppError("invalid-data", { message: "No Title column" })
+    }
     return stored
   }
 
   /** As the Google adapter's `snapshotOf` reads rows; the shared contract holds both. */
-  const snapshotOf = (
-    list: readonly Roadmap[],
-    roadmapId: string,
-  ): RoadmapSnapshot | null => {
-    const roadmap = list.find(({ id }) => id === roadmapId)
+  const snapshotOf = (roadmap: Roadmap | undefined): RoadmapSnapshot | null => {
     if (roadmap === undefined) return null
-    const stored = storedItems(roadmapId)
+    const stored = storedItems(roadmap.id)
     const read = readItems(stored)
     return {
       roadmap,
@@ -193,6 +217,43 @@ export function createInMemoryRoadmapRepository(
     }
   }
 
+  /** A row as `findPublishedStateRow` reads it. */
+  const stateRow = (roadmap: Roadmap): PublishedStateRow => ({
+    roadmap,
+    written: writtenOver.has(roadmap) ? null : roadmap.published,
+  })
+
+  /** As the Google adapter finds what the public site's sync would fail on (S4). */
+  const problemsOf = (roadmap: Roadmap): PublishProblem[] => {
+    const location = roadmap.id
+    if (held.get(roadmap.id) instanceof AppError) {
+      return [{ code: "items-missing", location }]
+    }
+    const faults = syncFaults[roadmap.id] ?? []
+    return [
+      ...(faults.includes("no-title-column")
+        ? [{ code: "items-field-missing", location, field: "title" } as const]
+        : []),
+      ...(faults.includes("no-horizon-column")
+        ? [
+            {
+              code: "items-field-missing",
+              location,
+              field: "placement",
+            } as const,
+          ]
+        : []),
+      ...(faults.includes("short-colour")
+        ? [
+            {
+              code: "short-colour",
+              colour: shortColour(roadmap.copied.colour),
+            } as const,
+          ]
+        : []),
+    ]
+  }
+
   /** A co-lead's change to the first value written, after the write landed. */
   const overwriteFirst = (roadmap: Roadmap, writes: PublishWrites) => {
     const [first] = writes.roadmap
@@ -247,7 +308,7 @@ export function createInMemoryRoadmapRepository(
     listRoadmaps: ({ signal } = {}) =>
       respond(signal, (list) => {
         if (rereadFails) throw new AppError("network")
-        return list.map((roadmap) => structuredClone(roadmap))
+        return keptRows(list).map((roadmap) => structuredClone(roadmap))
       }),
     listFamilies: ({ signal } = {}) =>
       respond(signal, () => cloneList(lists.families)),
@@ -272,7 +333,7 @@ export function createInMemoryRoadmapRepository(
       }),
     publishRoadmapChanges: (roadmapId, changes, { signal } = {}) =>
       respond(signal, (list) => {
-        const snapshot = snapshotOf(list, roadmapId)
+        const snapshot = snapshotOf(kept(list, roadmapId))
         const plan = planRoadmapPublish(changes, snapshot)
         if (plan.kind === "settled") return plan.outcome
         // A plan to write is made only over a snapshot.
@@ -291,7 +352,7 @@ export function createInMemoryRoadmapRepository(
           rereadFails = true
           return { status: "unconfirmed" as const }
         }
-        switch (heldWrites(plan.writes, snapshotOf(list, roadmapId))) {
+        switch (heldWrites(plan.writes, snapshotOf(kept(list, roadmapId)))) {
           case "all":
             return { status: "published" as const }
           case "none":
@@ -324,7 +385,7 @@ export function createInMemoryRoadmapRepository(
     matchRoadmapToLists: (loaded, { signal } = {}) =>
       respond(signal, (list) => {
         familyList()
-        const current = list.find(({ id }) => id === loaded.id)
+        const current = kept(list, loaded.id)
         const plan = planListMatch(loaded, current)
         if (plan.kind === "settled") {
           return plan.outcome.status === "changed"
@@ -349,7 +410,83 @@ export function createInMemoryRoadmapRepository(
         if (rereadFails || current.outOfStep) throw new AppError("network")
         return { status: "matched" as const }
       }),
+    setRoadmapPublished: (loaded, change, { signal } = {}) =>
+      respond(signal, (list): PublishedStateOutcome => {
+        const rowsOf = () => list.filter(({ id }) => id === loaded.id)
+        const rows = rowsOf()
+        const found = findPublishedStateRow(loaded, change, rows.map(stateRow))
+        if (found.kind === "settled") return structuredClone(found.outcome)
+        const row = rows[found.index]
+        // The found row is one of those given.
+        if (row === undefined) throw new AppError("unknown")
+        const problems = found.check ? problemsOf(row) : []
+        const plan = planPublishedStateWrite(
+          found,
+          change,
+          problems,
+          needsItems(found, change, problems) ? snapshotOf(row) : null,
+        )
+        if (plan.kind === "settled") return plan.outcome
+        signal?.throwIfAborted()
+
+        if (write !== undefined && "fails" in write) {
+          throw new AppError(write.fails)
+        }
+        if (write?.lost !== "not-applied") {
+          if (plan.writeState) {
+            row.published = change.published
+            writtenOver.delete(row)
+          }
+          if (plan.writes) apply(row, plan.writes)
+        }
+        if (write === undefined) return { status: "set" }
+        if (write.lost === "partly-applied") {
+          // A co-lead's text over the state, the first value written.
+          if (plan.writeState) {
+            row.published = false
+            writtenOver.set(row, null)
+          } else if (plan.writes) overwriteFirst(row, plan.writes)
+        }
+        if (write.lost === "reread-fails") {
+          rereadFails = true
+          return { status: "unconfirmed" }
+        }
+        const again = rowsOf()
+        const at = again[findLoadedRow(loaded, change, again.map(stateRow))]
+        switch (
+          heldPublishedState(
+            change,
+            plan,
+            at && stateRow(at),
+            plan.writes ? snapshotOf(at) : null,
+          )
+        ) {
+          case "all":
+            return { status: "set" }
+          case "none":
+            throw new AppError("network")
+          case "some":
+            return { status: "unconfirmed" }
+        }
+      }),
   }
+}
+
+/** The rows the list keeps, in row order: per id, the first published, else the first. */
+function keptRows(rows: readonly Roadmap[]): Roadmap[] {
+  return rows.filter((row) => kept(rows, row.id) === row)
+}
+
+/** The row the list keeps for this id (ADR-009). */
+function kept(rows: readonly Roadmap[], id: string): Roadmap | undefined {
+  const withId = rows.filter((row) => row.id === id)
+  return withId.find(({ published }) => published) ?? withId[0]
+}
+
+/** `#aabbcc` as the three-digit colour it expands from, `#abc`. */
+function shortColour(colour: string | null): string {
+  const [, r = "", , g = "", , b = ""] = colour ?? ""
+  return `#${r}${g}${b}`
 }
 
 /** Items as a read gives them: a repeat of an earlier item's ID has no ID. */

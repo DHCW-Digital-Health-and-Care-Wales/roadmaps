@@ -320,6 +320,66 @@ export const en = {
       } satisfies Record<RoadmapChoiceField, string>,
     },
     /** Writing a roadmap's pending changes: "publish" if published, "save" if not. */
+    /** Publishing or unpublishing a roadmap from its page, written at once (STY-035). */
+    publishRoadmap: {
+      action: {
+        publish: "Publish roadmap",
+        unpublish: "Unpublish roadmap",
+      },
+      confirm: {
+        title: {
+          publish: "Publish {{title}}?",
+          unpublish: "Unpublish {{title}}?",
+        },
+        note: {
+          publish: "It shows on the public site after its next nightly update.",
+          unpublish: "It leaves the public site after its next nightly update.",
+        },
+        /** Publishing a roadmap with pending edits, which go with it (S5). */
+        withChanges_one: "Your unsaved change goes public with it.",
+        withChanges_other:
+          "Your {{count, number}} unsaved changes go public with it.",
+        /** Unpublishing a roadmap with pending edits, which stay pending (S7). */
+        keepsChanges_one: "Your unpublished change stays, to save later.",
+        keepsChanges_other:
+          "Your {{count, number}} unpublished changes stay, to save later.",
+        saveAndPublish: "Save and publish",
+      },
+      notice: {
+        published:
+          "{{title}} is published. The public site shows it after its next nightly update.",
+        savedAndPublished:
+          "Changes saved and {{title}} published. The public site shows it after its next nightly update.",
+        unpublished:
+          "{{title}} is unpublished. It leaves the public site after its next nightly update.",
+        changed:
+          "This roadmap changed while you were looking. Nothing was changed.",
+        failed: {
+          publish: "Couldn't publish {{title}}",
+          unpublish: "Couldn't unpublish {{title}}",
+        },
+        /** Followed by `roadmaps.publish.notice.unconfirmed.description`. */
+        unconfirmed: {
+          publish: "{{title}} may have been published",
+          unpublish: "{{title}} may have been unpublished",
+        },
+        /** Publishing refused, as the public site's nightly update would fail (S4). */
+        refused: {
+          description:
+            "Publishing it would stop the public site updating. Fix the spreadsheet, then publish again.",
+          problems: {
+            itemsMissing:
+              "No tab is called “{{location}}”, the name in its Sheet cell.",
+            titleMissing: "The “{{location}}” tab has no Title column.",
+            placementMissing: "The “{{location}}” tab has no Horizon column.",
+            shortColour:
+              "Its colour {{colour}} has 3 digits. Write it with 6, like {{long}}.",
+            idTaken:
+              "“{{title}}” is published with the same web address. Unpublish it, or change one of their Sheet cells.",
+          },
+        },
+      },
+    },
     publish: {
       pending: {
         publish_one: "{{count, number}} unpublished change",

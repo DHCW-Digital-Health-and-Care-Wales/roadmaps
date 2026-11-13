@@ -38,7 +38,7 @@ export interface CurrentText {
 }
 
 /** The roadmap list and the roadmap's items as cached when a publish began. */
-interface ReadBefore {
+export interface ReadBefore {
   roadmaps: readonly Roadmap[] | undefined
   items: readonly RoadmapItem[] | undefined
 }
@@ -59,10 +59,7 @@ export function usePublishRoadmapChanges(
     mutationFn: (changes: RoadmapChanges) =>
       repository.publishRoadmapChanges(roadmapId, changes),
     retry: false,
-    onMutate: (): ReadBefore => ({
-      roadmaps: queryClient.getQueryData(roadmapKeys.list()),
-      items: queryClient.getQueryData(roadmapKeys.items(roadmapId)),
-    }),
+    onMutate: () => readBefore(queryClient, roadmapId),
     onSuccess: (outcome, _changes, before) => {
       if (outcome.status === "refused" && currentText) {
         showCurrentText(queryClient, {
@@ -83,11 +80,22 @@ export function usePublishRoadmapChanges(
   })
 }
 
+/** The roadmap list and the roadmap's items as cached now, before a publish. */
+export function readBefore(
+  queryClient: QueryClient,
+  roadmapId: string,
+): ReadBefore {
+  return {
+    roadmaps: queryClient.getQueryData(roadmapKeys.list()),
+    items: queryClient.getQueryData(roadmapKeys.items(roadmapId)),
+  }
+}
+
 /**
  * Writes the text a refusal found into the roadmap and its items as last read. The data
  * keeps its age, so it is read again as soon as it would have been.
  */
-function showCurrentText(
+export function showCurrentText(
   queryClient: QueryClient,
   {
     roadmapId,
@@ -127,7 +135,7 @@ function showCurrentText(
   }
 }
 
-function patchQueryData<T>(
+export function patchQueryData<T>(
   queryClient: QueryClient,
   key: QueryKey,
   patch: (data: T) => T,

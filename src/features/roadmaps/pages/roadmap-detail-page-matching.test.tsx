@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest"
 
 import type { AuthState } from "@/domain/auth/auth-client"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
+import type { RepositoryReadOptions } from "@/domain/roadmap/roadmap-repository"
+import { AppError } from "@/lib/errors"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 import { renderWithProviders } from "@/test/render-with-providers"
@@ -156,6 +158,42 @@ describe("making a roadmap match its lists (STY-030)", () => {
       await main.findByText(/This roadmap changed while you were looking/),
     ).toBeVisible()
     expect((await repository.listRoadmaps())[0]?.outOfStep).toBe(true)
+  })
+
+  it("shows the roadmap the refusal returned even when the list can't be read again (S4)", async () => {
+    const user = userEvent.setup()
+    const inner = createInMemoryRoadmapRepository(
+      [outOfStep({ published: false })],
+      { producta: [createTestRoadmapItem("First item")] },
+    )
+    let listFails = false
+    const repository = {
+      ...inner,
+      listRoadmaps: (options?: RepositoryReadOptions) =>
+        listFails
+          ? Promise.reject(new AppError("network"))
+          : inner.listRoadmaps(options),
+      matchRoadmapToLists: async (loaded: Roadmap) => {
+        inner.coLead((roadmaps) => {
+          const [roadmap] = roadmaps
+          if (roadmap) roadmap.family = { en: "Shared Care Record", cy: "" }
+        })
+        const outcome = await inner.matchRoadmapToLists(loaded)
+        listFails = true
+        return outcome
+      },
+    }
+    await renderWithProviders({
+      path: "/roadmaps/producta",
+      authState: connected,
+      repository,
+    })
+    const main = within(screen.getByRole("main"))
+    await main.findByRole("heading", { level: 3, name: "First item" })
+
+    await user.click(main.getByRole("button", { name: /Make it match/ }))
+
+    expect(await main.findByText("Family: Shared Care Record")).toBeVisible()
   })
 
   it("says why it failed, keeping the button", async () => {

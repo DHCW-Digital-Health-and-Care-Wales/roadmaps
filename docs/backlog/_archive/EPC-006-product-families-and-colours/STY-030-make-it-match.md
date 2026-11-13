@@ -90,7 +90,8 @@ writes a chosen family). Nothing else is written.
   now, and its confirmation comes first), so an unpublished roadmap never goes public
   without S2's warning.
 - **A refused write** shows "This roadmap changed while you were looking…" and the roadmap
-  list is re-read, so the page shows it as it now is.
+  list is re-read; the roadmap the refusal returned is put in the cached list first, so the
+  page shows it as it now is even if that read fails.
 - **Pending edits** are untouched: the write is a separate mutation
   (`useMatchRoadmap`), and a later publish writes its own cells.
 - **Tests.** The domain tests (`list-match.test.ts`) and the component tests were written

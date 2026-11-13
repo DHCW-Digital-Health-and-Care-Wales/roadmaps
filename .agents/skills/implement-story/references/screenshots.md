@@ -28,7 +28,10 @@ without it, a locator that matches nothing (a Welsh capture looking for an
 English name) waits out the whole test timeout. Bound a run with
 `timeout -s INT <seconds>` and its output in a log file: interrupted, Playwright
 reports the test and the locator it was waiting on, where a killed run or a
-`tail` pipe shows nothing.
+`tail` pipe shows nothing. Start a dark capture with the stored theme, as
+`useTheme` in `tests/e2e/fixtures/look.ts` does: the app stays light until the
+user chooses dark (ADR-005), whatever the browser's colour scheme, so a context
+with `colorScheme: "dark"` alone captures the light theme.
 
 Cover desktop (1280 px) and phone (375 px), light and dark mode where relevant,
 and Welsh (`cy`) where copy changed. Save captures under

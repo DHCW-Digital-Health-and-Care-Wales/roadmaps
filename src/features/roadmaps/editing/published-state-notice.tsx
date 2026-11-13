@@ -13,10 +13,10 @@ import type { PublishProblem } from "@/domain/roadmap/published-state"
 import { useNoticeDwell } from "@/features/auth/use-notice-dwell"
 import { useLanguage, type Language } from "@/i18n"
 
-import type { PublishedStateNotice as Notice } from "./use-published-state"
+import type { PublishedStateOutcomeNotice } from "./use-published-state"
 
 export interface PublishedStateNoticeProps {
-  notice: Notice
+  notice: PublishedStateOutcomeNotice
   /** The roadmap's title, as shown. */
   title: string
   onDismiss: () => void
@@ -109,10 +109,10 @@ export function PublishedStateNotice({
       ))}
       {notice.kind === "unpublishable" && (
         <ul className="list-disc pl-5">
-          {notice.problems.map((problem) => {
-            const text = problemText(problem, t, language)
-            return <li key={text}>{text}</li>
-          })}
+          {notice.problems.map((problem, i) => (
+            // A list that never reorders: its place is its identity.
+            <li key={i}>{problemText(problem, t, language)}</li>
+          ))}
         </ul>
       )}
       {kept && <p>{t("roadmaps.publish.notice.kept")}</p>}

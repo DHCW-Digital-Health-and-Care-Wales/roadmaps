@@ -437,11 +437,6 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
   }
 
   /**
-   * Sends a family's writes in one `batchUpdate`, if any. A write whose answer is lost
-   * is settled by re-reading: saved when `held` finds every write in place, else the
-   * network error is rethrown.
-   */
-  /**
    * Re-reads the index and finds the row the page loaded among those with its id, reads
    * its tab when publishing it or its pending edits, checks what the public site's sync
    * would fail on, then writes its `Enabled` cell as exactly `Yes` or `No`, with any
@@ -545,6 +540,11 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
     }
   }
 
+  /**
+   * Sends a family's writes in one `batchUpdate`, if any. A write whose answer is lost
+   * is settled by re-reading: saved when `held` finds every write in place, else the
+   * network error is rethrown.
+   */
   async #writeFamily(
     requests: BatchRequest[],
     held: () => Promise<boolean>,

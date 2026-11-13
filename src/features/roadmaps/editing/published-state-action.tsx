@@ -33,6 +33,9 @@ export function PublishedStateAction({
 }: PublishedStateActionProps) {
   const { t } = useTranslation()
   const { available, pending } = state
+  // The button offers what the roadmap's state now calls for; the dialog keeps what it
+  // asked while it closes, though the state flips under it.
+  const action = state.publishing ? "publish" : "unpublish"
   const Icon = state.publishing ? GlobeIcon : EyeOffIcon
   const { publishing, count } = state.asked
   const verb = publishing ? "publish" : "unpublish"
@@ -47,9 +50,7 @@ export function PublishedStateAction({
         onClick={state.ask}
       >
         <Icon data-icon="inline-start" aria-hidden="true" />
-        {t(
-          `roadmaps.publishRoadmap.action.${state.publishing ? "publish" : "unpublish"}`,
-        )}
+        {t(`roadmaps.publishRoadmap.action.${action}`)}
       </Button>
       <AlertDialog
         open={state.open}

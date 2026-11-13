@@ -17,8 +17,8 @@ import {
  * is never retried. What it came to is put in the cached list at once, keeping the
  * list's age: the roadmap as asked once set, or as it now is once changed, so the page
  * shows it even if reading the list again fails; a refusal of pending edits shows the
- * text it found by `currentText`, as a publish of them does. The roadmap, and its items
- * when edits were sent, are read again once it settles, whatever its result.
+ * text it found by `currentText`, as a publish of them does. The roadmap and its items
+ * are read again once it settles, whatever its result.
  */
 export function useSetRoadmapPublished(
   loaded: Roadmap,
@@ -61,14 +61,13 @@ export function useSetRoadmapPublished(
           break
       }
     },
-    onSettled: (_outcome, _error, change) =>
+    // The items too: a change of state can change which row with the id is listed.
+    onSettled: () =>
       Promise.all([
         queryClient.invalidateQueries({ queryKey: roadmapKeys.list() }),
-        change.published && change.changes
-          ? queryClient.invalidateQueries({
-              queryKey: roadmapKeys.items(roadmapId),
-            })
-          : undefined,
+        queryClient.invalidateQueries({
+          queryKey: roadmapKeys.items(roadmapId),
+        }),
       ]),
   })
 }

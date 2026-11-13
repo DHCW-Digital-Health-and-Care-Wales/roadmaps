@@ -16,7 +16,7 @@ import { publishAction, type PublishNotice } from "./pending-changes-store"
 import { CURRENT_TEXT } from "./use-publish"
 
 /** What the last publish or unpublish of the roadmap came to, as its page says it. */
-export type PublishedStateNotice =
+export type PublishedStateOutcomeNotice =
   | { kind: "set"; published: boolean; withChanges: boolean }
   /** Nothing was written: the roadmap changed since it was shown. */
   | { kind: "changed" }
@@ -49,7 +49,7 @@ export interface PublishedState extends PublishedStateQuestion {
   ask: () => void
   cancel: () => void
   confirm: () => void
-  notice: PublishedStateNotice | null
+  notice: PublishedStateOutcomeNotice | null
   dismissNotice: () => void
 }
 
@@ -70,7 +70,7 @@ export function usePublishedState(roadmap: Roadmap): PublishedState {
   })
   const [open, setOpen] = useState(false)
   const [asked, setAsked] = useState<PublishedStateQuestion | null>(null)
-  const [notice, setNotice] = useState<PublishedStateNotice | null>(null)
+  const [notice, setNotice] = useState<PublishedStateOutcomeNotice | null>(null)
   // Stable, as a confirmation's dwell restarts when it changes.
   const dismissNotice = useCallback(() => {
     setNotice(null)
@@ -92,7 +92,7 @@ export function usePublishedState(roadmap: Roadmap): PublishedState {
     const kept = sent !== undefined
     const action = publishAction(roadmap)
     let stored: PublishNotice | null = null
-    let shown: PublishedStateNotice | null = null
+    let shown: PublishedStateOutcomeNotice | null = null
     try {
       const result = await mutateAsync(
         publishing ? { published: true, changes: sent } : { published: false },

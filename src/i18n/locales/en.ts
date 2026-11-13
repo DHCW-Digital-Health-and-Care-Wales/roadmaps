@@ -319,7 +319,6 @@ export const en = {
         categoryId: "The category can't be changed right now.",
       } satisfies Record<RoadmapChoiceField, string>,
     },
-    /** Writing a roadmap's pending changes: "publish" if published, "save" if not. */
     /** Publishing or unpublishing a roadmap from its page, written at once (STY-035). */
     publishRoadmap: {
       action: {
@@ -380,6 +379,7 @@ export const en = {
         },
       },
     },
+    /** Writing a roadmap's pending changes: "publish" if published, "save" if not. */
     publish: {
       pending: {
         publish_one: "{{count, number}} unpublished change",

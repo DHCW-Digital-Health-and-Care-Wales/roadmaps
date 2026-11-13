@@ -458,6 +458,7 @@ function toEntry(
     row,
     roadmap: {
       id,
+      itemsLocation: sheet,
       // `sheet` is never blank, so neither is the title.
       title: text("Title", sheet) ?? { en: sheet, cy: "" },
       published: enabled === "Yes",

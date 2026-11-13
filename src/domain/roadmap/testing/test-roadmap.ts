@@ -1,8 +1,8 @@
 import type { Roadmap } from "../roadmap"
 
 /**
- * A roadmap for tests (test code only): published, with an English title and nothing
- * else unless `overrides` adds it.
+ * A roadmap for tests (test code only): published, with an English title, its items
+ * kept under its id, and nothing else unless `overrides` adds it.
  */
 export function createTestRoadmap(
   id: string,
@@ -11,6 +11,7 @@ export function createTestRoadmap(
 ): Roadmap {
   const roadmap: Roadmap = {
     id,
+    itemsLocation: id,
     title: { en: title, cy: "" },
     published: true,
     category: null,

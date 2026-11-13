@@ -48,23 +48,48 @@ describe("findPublishedStateRow", () => {
     ).toEqual({ ...found, index: 1 })
   })
 
-  it("ignores an edited field's English, but not its Welsh", () => {
+  it("leaves an edited field out whole, its Welsh and its being blank too", () => {
     const changes = {
-      roadmap: { statusLabel: { base: "Beta", value: "Live" } },
+      roadmap: {
+        statusLabel: { base: "Beta", value: "Live" },
+        vision: { base: "", value: "Clear" },
+      },
       items: [],
     }
     const edited = { published: true, changes } as const
 
     expect(
       findPublishedStateRow(loaded, edited, [
-        row({ statusLabel: { en: "Alpha", cy: "Beta" } }),
+        row({
+          statusLabel: { en: "Alpha", cy: "Alffa" },
+          vision: { en: "Clear", cy: "" },
+        }),
       ]).kind,
     ).toBe("found")
     expect(
-      findPublishedStateRow(loaded, edited, [
+      findPublishedStateRow(loaded, { published: true }, [
         row({ statusLabel: { en: "Beta", cy: "Alffa" } }),
       ]),
     ).toMatchObject({ kind: "settled", outcome: { status: "changed" } })
+  })
+
+  it("never takes a row naming another place for its items, though its id is the same", () => {
+    expect(
+      findPublishedStateRow(loaded, { published: true }, [
+        row({ itemsLocation: "Product-A" }),
+      ]),
+    ).toMatchObject({ kind: "settled", outcome: { status: "changed" } })
+  })
+
+  it("prefers, of rows alike, the one whose state is the one shown", () => {
+    const live = { ...loaded, published: true }
+
+    expect(
+      findPublishedStateRow(live, { published: false }, [
+        row({}, false),
+        row({ published: true }, true),
+      ]),
+    ).toEqual({ ...found, index: 1, check: false })
   })
 
   it("gives the roadmap the list keeps when no row holds what was loaded", () => {

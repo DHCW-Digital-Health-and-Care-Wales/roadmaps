@@ -168,6 +168,27 @@ export function describePublishedState(
       expect(await repository.listRoadmaps()).toStrictEqual([theirs, other])
     })
 
+    it("says the roadmap changed when its row now names another place for its items", async () => {
+      const repository = setup.withRoadmaps([draft, other], items)
+      const elsewhere = { ...draft, itemsLocation: "product-a" }
+
+      await expect(
+        repository.setRoadmapPublished(elsewhere, publish),
+      ).resolves.toEqual({ status: "changed", roadmap: draft })
+      expect(await repository.listRoadmaps()).toStrictEqual([draft, other])
+    })
+
+    it("unpublishes the live row, not a disabled copy of it above (S3)", async () => {
+      const repository = setup.withRoadmaps([draft, other], items, {
+        twins: [live],
+      })
+
+      await expect(
+        repository.setRoadmapPublished(live, unpublish),
+      ).resolves.toEqual({ status: "set" })
+      expect(await repository.listRoadmaps()).toStrictEqual([draft, other])
+    })
+
     it("says a roadmap no longer listed is not found", async () => {
       const repository = setup.withRoadmaps([other])
 
@@ -315,6 +336,28 @@ export function describePublishedState(
           expect(await repository.listRoadmaps()).toStrictEqual(after)
         },
       )
+
+      it("settles as set an edit that fills or clears an optional field", async () => {
+        const repository = setup.withRoadmaps([draft], items, {
+          write: { lost: "applied" },
+        })
+
+        await expect(
+          repository.setRoadmapPublished(
+            draft,
+            saveAndPublish({
+              roadmap: {
+                vision: change("", "Clear"),
+                statusLabel: change("Beta", ""),
+              },
+              items: [],
+            }),
+          ),
+        ).resolves.toEqual({ status: "set" })
+        expect(await repository.listRoadmaps()).toStrictEqual([
+          { ...live, vision: { en: "Clear", cy: "" }, statusLabel: null },
+        ])
+      })
 
       it("rejects with a network AppError when a re-read finds none of it", async () => {
         const repository = setup.withRoadmaps([draft], items, {

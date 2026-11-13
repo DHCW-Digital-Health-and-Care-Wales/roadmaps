@@ -150,9 +150,10 @@ pending.
 confirmation and a re-read, in one all-or-nothing `spreadsheets.batchUpdate`, only that
 roadmap's index row's `Enabled` cell, as exactly `Yes` or `No` (any other value, such as
 `yes`, `TRUE` or blank, is overwritten), and the `Enabled` column, appended with its
-header, if the index has none (STY-035). The row written is the first with the
-roadmap's ID, listed or not, that still holds what the page showed; nothing is written
-when none does, or when the cell already holds the value. Publishing a roadmap with
+header, if the index has none (STY-035). The row written is one with the roadmap's ID,
+listed or not, that still holds what the page showed, its `Sheet` value included (of
+several, the first whose `Enabled` reads as the page showed it); nothing is written when
+none does, or when the cell already holds the value. Publishing a roadmap with
 pending edits ("Save and publish") writes them with `Enabled` in the same request, as a
 publish of them writes them, all or nothing. Publishing writes nothing while the row
 would fail the public site's nightly sync once enabled: its `Sheet` names no tab, the

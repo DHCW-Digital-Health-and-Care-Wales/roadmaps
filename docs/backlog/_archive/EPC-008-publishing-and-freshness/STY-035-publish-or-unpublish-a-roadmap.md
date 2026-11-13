@@ -195,13 +195,17 @@ when `Enabled` already holds the value asked.
 
 - **The row is found by what it holds, not by its row number** (agent): the page holds
   a `Roadmap`, never a row (ADR-002), so the Starting point's row hint is not carried.
-  The write takes the first index row with the roadmap's id, listed or skipped, that
-  holds every field the page showed (its own cells: text with Welsh, product lead,
-  `Last updated`, family and category IDs and the copied family, colour and category),
-  apart from its published state and the fields with pending edits sent. A row moved
-  or swapped is still found; two rows holding the same are the same roadmap to publish.
-  None holding it settles as `changed`, writing nothing, with the roadmap the list now
-  keeps (`findPublishedStateRow`, `findLoadedRow`).
+  `Roadmap` gains `itemsLocation`, where its items are kept (the `Sheet` value, never
+  shown), so the row must still hold the `Sheet` value the page loaded. The write takes
+  the index row with the roadmap's id, listed or skipped, that holds every field the
+  page showed (its own cells: `Sheet`, text with Welsh, product lead, `Last updated`,
+  family and category IDs and the copied family, colour and category), apart from its
+  published state and the fields with pending edits sent, which are left out whole.
+  Of several alike, it takes the first whose published state is the one shown, so a
+  disabled copy of the live row is never unpublished in its place; then the first. A
+  row moved or swapped is still found. None holding it settles as `changed`, writing
+  nothing, with the roadmap the list now keeps (`findPublishedStateRow`,
+  `findLoadedRow`).
 - **"Save and publish" is refused as changed when a co-lead changed a field Sam did not
   edit** (agent): the row must still hold what the page showed, a stricter rule than a
   publish of pending edits alone, which writes over such a change (ADR-012 Option 12).
@@ -237,6 +241,12 @@ when `Enabled` already holds the value asked.
   `#readItemTab` and `roadmapReadOf`; the three copies of the `Template` index check are
   one `writableIndex`; `indexCell` reads an index cell for both the family writer and
   the new checks.
+- **Review round 1 fixes** (Sol, Opus): the `Sheet` value is held (`itemsLocation`); an
+  edited field is left out of the match whole, so a lost answer that filled or cleared
+  an optional field settles as done; the row whose state the page showed is preferred;
+  the roadmap's items are read again after any change of state, as another row with
+  the id may then be listed. Their tests were written after the fixes and shown to fail
+  against the round-1 planner (6 of 6).
 - **Tests.** The repository contract (`published-state-contract.ts`) was written first
   and ran red on the in-memory double (24 failing: no `setRoadmapPublished`), then the
   double and the Sheets adapter made it pass. The domain planner (`published-state.ts`)
@@ -247,6 +257,9 @@ when `Enabled` already holds the value asked.
 
 ### Contract for dependents
 
+- **Domain** (`@/domain/roadmap/roadmap`): `Roadmap.itemsLocation` is where its items
+  are kept (the Sheets adapter's `Sheet` value; `createTestRoadmap` defaults it to the
+  id), compared to find a roadmap's row again, never shown.
 - **Domain** (`@/domain/roadmap/published-state`): `PublishedStateChange` is
   `{ published: true, changes? } | { published: false }`; STY-036's "Mark as updated
   today" adds its date to the publishing branch, and must leave `lastUpdated` out of
@@ -282,4 +295,4 @@ when `Enabled` already holds the value asked.
 | S8           | contract "rejects with a forbidden / unauthenticated AppError when the write is refused, writing nothing"; page test "says a refused write changed nothing, keeping pending edits"                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | S9           | page test "speaks Welsh throughout"; `pnpm typecheck` catalogue parity; Welsh capture `s1-roadmap-unpublished-desktop-light-cy-after.png`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | S10          | contract "settles a publish / an unpublish as set when a re-read finds it", "rejects with a network AppError when a re-read finds none of it", "is unconfirmed when a re-read finds only some of it / when the re-read fails"; `published-state.test.ts` (`heldPublishedState`); page test "asks for a refresh when the answer is lost and a re-read can't settle it"                                                                                                                                                                                                                                                                 |
-| Row identity | contract "writes the row the page loaded when another row now shares its id", "says the roadmap changed when no row holds what was loaded", "counts a roadmap a co-lead already published as published, writing nothing"; Sheets D9 and D10 tests                                                                                                                                                                                                                                                                                                                                                                                     |
+| Row identity | contract "writes the row the page loaded when another row now shares its id", "says the roadmap changed when its row now names another place for its items", "unpublishes the live row, not a disabled copy of it above", "settles as set an edit that fills or clears an optional field"; "says the roadmap changed when no row holds what was loaded", "counts a roadmap a co-lead already published as published, writing nothing"; Sheets D9 and D10 tests                                                                                                                                                                        |

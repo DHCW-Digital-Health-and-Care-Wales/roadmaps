@@ -187,9 +187,10 @@ Nothing checks permission in advance.
 - **Pending edits go with a publish, all or nothing** (D6, D7): "Save and publish"
   writes them and `Enabled` in one `batchUpdate`, by this ADR's rules, a conflict
   publishing nothing and opening the review. Unpublishing leaves them pending (D8).
-- The row written is the first with the roadmap's id, listed or not, that still holds
-  what the page showed, apart from fields with pending edits; none publishes nothing
-  ("changed"). A lost answer is settled by one re-read, as Option 16 settles a publish's.
+- The row written is one with the roadmap's id, listed or not, that still holds what
+  the page showed, its `Sheet` value included, apart from fields with pending edits (of
+  several, the first whose published state is the one shown); none publishes nothing
+  ("changed"). `Roadmap` gains `itemsLocation` to carry the `Sheet` value, never shown. A lost answer is settled by one re-read, as Option 16 settles a publish's.
   `RoadmapRepository` gains `setRoadmapPublished` (amends ADR-002).
 
 ## Options (owner's choice marked ✅, 2026-11-11)

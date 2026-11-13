@@ -146,9 +146,11 @@ export function findPublishedStateRow(
 }
 
 /**
- * The place among `rows` of the first that holds what `loaded` showed, from its own
- * cells: every field but its published state and those with a pending edit sent, whose
- * English a co-lead's change may conflict with (ADR-012); `-1` for none.
+ * The place among `rows` of the row that holds what `loaded` showed, from its own
+ * cells: where its items are and every field but its published state and those with a
+ * pending edit sent, which publishing settles (ADR-012). Of several, the first whose
+ * published state is the one shown, so a disabled copy of a live row is never taken
+ * for it, else the first; `-1` for none.
  */
 export function findLoadedRow(
   loaded: Roadmap,
@@ -156,7 +158,14 @@ export function findLoadedRow(
   rows: readonly PublishedStateRow[],
 ): number {
   const edited = editedFields(change)
-  return rows.findIndex(({ roadmap }) => holdsLoaded(loaded, roadmap, edited))
+  const holding = rows.flatMap(({ roadmap }, i) =>
+    holdsLoaded(loaded, roadmap, edited) ? [i] : [],
+  )
+  return (
+    holding.find((i) => rows[i]?.roadmap.published === loaded.published) ??
+    holding[0] ??
+    -1
+  )
 }
 
 /**
@@ -264,7 +273,10 @@ function hasChanges(change: PublishedStateChange): boolean {
   )
 }
 
-/** Whether `current` holds what `loaded` showed, but for its state and `edited`. */
+/**
+ * Whether `current` holds what `loaded` showed, but for its state and `edited`: an
+ * edited field is left out whole, Welsh too, as a conflict compares only its English.
+ */
 function holdsLoaded(
   loaded: Roadmap,
   current: Roadmap,
@@ -272,9 +284,7 @@ function holdsLoaded(
 ): boolean {
   const text = (
     field: "title" | "statusLabel" | "vision" | "serviceDescription",
-  ) =>
-    (edited.has(field) || loaded[field]?.en === current[field]?.en) &&
-    loaded[field]?.cy === current[field]?.cy
+  ) => edited.has(field) || sameText(loaded[field], current[field])
   const family =
     edited.has("familyId") ||
     (loaded.familyId === current.familyId &&
@@ -285,6 +295,7 @@ function holdsLoaded(
     (loaded.categoryId === current.categoryId &&
       loaded.copied.category === current.copied.category)
   return (
+    loaded.itemsLocation === current.itemsLocation &&
     text("title") &&
     text("statusLabel") &&
     text("vision") &&

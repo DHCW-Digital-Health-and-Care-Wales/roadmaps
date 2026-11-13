@@ -16,12 +16,16 @@ import {
   type RoadmapChoiceField,
   isChoiceField,
   itemValue,
+  organisationIdsOf,
   roadmapValue,
 } from "@/domain/roadmap/roadmap-changes"
+import type { ContentLanguage } from "@/domain/roadmap/localised-text"
+import type { Organisation } from "@/domain/roadmap/organisation"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 
 import type { RoadmapLists } from "../hooks/use-roadmap-lists"
+import { shortNamesOf } from "../sort-organisations"
 import {
   applyItemChanges,
   applyRoadmapChanges,
@@ -282,4 +286,23 @@ function itemsByEntry(
       return item ? [[entry, item] as const] : []
     }),
   )
+}
+
+/**
+ * A set of organisations, as a conflict holds it (`organisationIdsValue`), the way the
+ * review shows it: by short name, as the card sorts them, then by ID each organisation
+ * `organisations` doesn't hold, as while the list can't be read, so a set is never
+ * shown as empty when it isn't (STY-034 S7).
+ */
+export function describeOrganisations(
+  value: string,
+  organisations: readonly Organisation[] | undefined,
+  language: ContentLanguage,
+): string {
+  const ids = organisationIdsOf(value)
+  const listed = new Set(organisations?.map(({ id }) => id))
+  return [
+    ...shortNamesOf(organisations, ids, language),
+    ...ids.filter((id) => !listed.has(id)),
+  ].join(", ")
 }

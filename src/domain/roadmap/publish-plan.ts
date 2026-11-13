@@ -218,7 +218,7 @@ function pendingValue(
   if (change === undefined) return null
   const value =
     field === "organisationIds"
-      ? organisationsValue(change.value, snapshot.organisationIds)
+      ? listedOrganisationIdsValue(change.value, snapshot.organisationIds)
       : change.value.trim()
   if (value === "" && REQUIRED_FIELDS.has(field)) {
     throw new AppError("unknown", {
@@ -234,7 +234,7 @@ function pendingValue(
 }
 
 /** `value`'s organisations as one value, each of which the list must hold. */
-function organisationsValue(
+function listedOrganisationIdsValue(
   value: string,
   listed: ReadonlySet<string>,
 ): string {

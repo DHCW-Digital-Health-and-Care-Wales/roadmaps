@@ -537,6 +537,29 @@ describe("a choice of organisations (STY-034)", () => {
     ])
   })
 
+  it("keeps an edit made while a choice was published, whatever order the read gives the set in", () => {
+    const loaded = { ...forCardiff, id: null, unknownOrganisationCodes: [] }
+    const chosen = editItem(NO_CHANGES, undefined, loaded, 0, {
+      organisationIds: "phw,sbuhb",
+    })
+    const [sent] = chosen.items
+    const meanwhile = editItem(chosen, sent, loaded, 0, { title: "Renamed" })
+    const published = settlePublished(meanwhile, chosen)
+    // As the Google adapter reads it: the list's order, with the ID the publish wrote.
+    const read = {
+      ...loaded,
+      id: "newidxxx",
+      organisationIds: ["sbuhb", "phw"],
+    }
+
+    expect(matchItemChanges([read], published).size).toBe(1)
+    const [kept] = reconcileItems(published, [read]).items
+    expect(kept?.item.id).toBe("newidxxx")
+    expect(kept?.fields).toEqual({
+      title: { base: "For Cardiff", value: "Renamed" },
+    })
+  })
+
   it("finds an item without an ID whose choice a lost publish already wrote", () => {
     const loaded = { ...forCardiff, id: null }
     const chosen = editItem(NO_CHANGES, undefined, loaded, 1, {

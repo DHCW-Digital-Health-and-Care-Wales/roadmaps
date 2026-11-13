@@ -73,7 +73,12 @@ function sameContent(
     }
     if (!isEditable(key)) return sameValue(current[key], loaded[key])
     const value = edited.get(key)
-    if (value === undefined) return sameValue(current[key], loaded[key])
+    if (value === undefined) {
+      // A set of organisations is the same in any order (ADR-014).
+      return key === "organisationIds"
+        ? itemValue(current, key) === itemValue(loaded, key)
+        : sameValue(current[key], loaded[key])
+    }
     return (
       itemValue(current, key) === value &&
       (!isItemTextField(key) ||

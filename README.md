@@ -112,8 +112,9 @@ it writes the `Families` tab only as below.
   it to a listed family or category, never changing an ID already there;
 - a column the roadmap needs but lacks (the `Item ID` column the first time, the
   `Family ID` or `Category ID` column, or an edited field's column, `Horizon` for a
-  move and `Organisations` for a choice of organisations), appended after the last column in use with the public site's English
-  header, the grid widened in the same request.
+  move and `Organisations` for a choice of organisations), appended after the last
+  column in use with the public site's English header, the grid widened in the same
+  request.
 
 Adding, renaming or recolouring a family on the "Families, categories and organisations" page writes
 at once, after a re-read, in one all-or-nothing `spreadsheets.batchUpdate`, only:
@@ -133,8 +134,9 @@ at once, after a re-read, in one all-or-nothing `spreadsheets.batchUpdate`, only
   row's) is not rewritten, and keeps the old family name and colour.
 
 It never writes any other cell: no Welsh `(cy)` cell other than `Family (cy)`,
-`Last updated`, `Enabled`, `Sheet`, `Horizon`, `Labels`, `Organisations` or `Details`,
-no `Family`, `Category` or `Colour` cell but those above, no roadmap's row or tab but
+`Last updated`, `Enabled`, `Sheet`, `Labels` or `Details`, no `Horizon` or
+`Organisations` cell but those above, no `Family`, `Category` or `Colour` cell but
+those above, no roadmap's row or tab but
 those above, nothing in the `Template` or `Categories` tab, nothing in the `Families`
 tab but the family changes above, and no cell whose value has not changed. A roadmap
 whose `Sheet` names the `Template` tab or the roadmap index itself can't be read or

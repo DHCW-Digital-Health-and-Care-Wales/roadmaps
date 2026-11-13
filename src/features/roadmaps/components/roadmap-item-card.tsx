@@ -9,7 +9,7 @@ import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { useLanguage, type Language } from "@/i18n"
 
 import { nestItemDetails, type NestedItemDetail } from "../nest-item-details"
-import { sortOrganisations } from "../sort-organisations"
+import { shortNamesOf } from "../sort-organisations"
 
 export interface RoadmapItemCardProps {
   item: RoadmapItem
@@ -66,17 +66,8 @@ export function RoadmapItemCard({
     }
   }
   if (item.tags.length > 0) add("tags", item.tags.map(text).join(", "))
-  const named = organisations.filter(({ id }) =>
-    item.organisationIds.includes(id),
-  )
-  if (named.length > 0 && !form) {
-    add(
-      "organisations",
-      sortOrganisations(named, ({ shortName }) => shortName, language)
-        .map(({ shortName }) => shortName)
-        .join(", "),
-    )
-  }
+  const named = shortNamesOf(organisations, item.organisationIds, language)
+  if (named.length > 0 && !form) add("organisations", named.join(", "))
   if (item.details.length > 0) {
     add(
       "details",

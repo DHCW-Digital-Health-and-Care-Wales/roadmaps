@@ -36,15 +36,15 @@ export interface EditFormField<F extends string> {
   /** Chosen from these, in this order, instead of typed (STY-028). */
   options?: readonly EditFormOption[]
   /**
-   * Any number of `options` chosen, as checkboxes, instead of one (STY-034): the
-   * field's value holds the chosen ones' values as `ofValue` reads it and `toValue`
+   * With `options`, any number of them chosen, as checkboxes, instead of one (STY-034):
+   * the field's value holds the chosen ones' values as `ofValue` reads it and `toValue`
    * writes it.
    */
   many?: {
     ofValue: (value: string) => readonly string[]
     toValue: (chosen: readonly string[]) => string
   }
-  /** Said of the field as a whole, under its label (STY-034 S4). */
+  /** Said of a checkbox group as a whole, under its label (STY-034 S4). */
   hint?: string
   /** Held at its value, as while its options are read. */
   disabled?: boolean
@@ -71,9 +71,10 @@ export interface EditFormProps<F extends string> {
 /**
  * The form an item or the roadmap's own text turns into for editing (STY-025 S1, S4,
  * S5): a labelled field each, typed, chosen from a list (STY-028) or ticked from one
- * (STY-034), or shown read-only when it can't be changed, then "Done" to keep the values pending and Cancel (or Escape)
- * to leave them. The title is required: confirming without one keeps the form open with
- * an error linked to it. Writes nothing; the caller keeps the values pending.
+ * (STY-034), or shown read-only when it can't be changed, then "Done" to keep the
+ * values pending and Cancel (or Escape) to leave them. The title is required:
+ * confirming without one keeps the form open with an error linked to it. Writes
+ * nothing; the caller keeps the values pending.
  */
 export function EditForm<F extends string>({
   fields,

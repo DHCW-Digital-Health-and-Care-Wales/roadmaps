@@ -7,15 +7,13 @@ import { Button } from "@/components/ui/button"
 import {
   type FieldConflict,
   isChoiceField,
-  organisationIdsOf,
 } from "@/domain/roadmap/roadmap-changes"
 import { localise, type LocalisedText } from "@/domain/roadmap/localised-text"
 import { isRoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 import { useLanguage } from "@/i18n"
 
 import { useOrganisations } from "../hooks/use-organisations"
-import { sortOrganisations } from "../sort-organisations"
-import type { OpenConflict } from "./conflicts"
+import { describeOrganisations, type OpenConflict } from "./conflicts"
 import type { PublishAction } from "./pending-changes-store"
 import type { DecisionFocus } from "./use-decision-focus"
 import { useRoadmapChoices } from "./use-roadmap-choices"
@@ -39,8 +37,8 @@ export interface ConflictReviewProps {
 /**
  * A publish someone else's changes stopped (STY-026): each field they changed that the
  * Product Lead also changed, their text beside the current text (a family or category
- * by its name, a placement by its heading, organisations by short name, as the card
- * shows them), to keep or give up one by one; then what
+ * by its name, a placement by its heading, organisations as `describeOrganisations`
+ * names them), to keep or give up one by one; then what
  * was lost with removed items. Nothing was written, so it cannot be dismissed until
  * every field is decided.
  */
@@ -63,7 +61,7 @@ export function ConflictReview({
         conflict.subject === "roadmap" && isChoiceField(conflict.field),
     ),
   )
-  const { data: organisations = [] } = useOrganisations()
+  const { data: organisations } = useOrganisations()
   const deciding = open.length > 0
   const shown = (conflict: FieldConflict, value: string) => {
     if (conflict.subject === "roadmap" && isChoiceField(conflict.field)) {
@@ -75,14 +73,7 @@ export function ConflictReview({
         : t("roadmaps.items.unplaced.title")
     }
     if (conflict.subject === "item" && conflict.field === "organisationIds") {
-      const ids = organisationIdsOf(value)
-      return sortOrganisations(
-        organisations.filter(({ id }) => ids.includes(id)),
-        ({ shortName }) => shortName,
-        language,
-      )
-        .map(({ shortName }) => shortName)
-        .join(", ")
+      return describeOrganisations(value, organisations, language)
     }
     return value
   }

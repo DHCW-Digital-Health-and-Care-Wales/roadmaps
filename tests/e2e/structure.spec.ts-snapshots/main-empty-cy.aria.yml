@@ -6,7 +6,7 @@
     - heading "Eich mapiau trywydd" [level=1]
     - paragraph: Pob map trywydd, wedi'i gyhoeddi neu beidio.
     - paragraph:
-      - link "Teuluoedd a chategorïau":
+      - link "Teuluoedd, categorïau a sefydliadau":
         - /url: /#/families
     - button "Adnewyddu"
     - heading "Dim mapiau trywydd eto" [level=2]

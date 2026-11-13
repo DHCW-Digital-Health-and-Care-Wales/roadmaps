@@ -135,7 +135,7 @@ export const en = {
     countWithUnpublished:
       '$t(roadmaps.count, {"count": {{total}} }), $t(roadmaps.unpublishedCount, {"count": {{unpublished}} })',
     /** The link to the families and categories page. */
-    familiesLink: "Families and categories",
+    familiesLink: "Families, categories and organisations",
     /** The heading over the roadmaps in no product family, when others have one. */
     noFamily: "No product family",
     /** A roadmap whose own family or category differs from the lists' (STY-027 S4, S8). */
@@ -373,13 +373,15 @@ export const en = {
     },
     /** The page listing the families and categories (STY-029), linked from the list. */
     families: {
-      title: "Families and categories",
+      title: "Families, categories and organisations",
       description:
-        "The product families and categories that group your roadmaps.",
-      connectPrompt: "Connect Google to view the families and categories.",
-      loading: "Loading families and categories…",
-      loadFailed: "Couldn't load the families and categories",
-      refreshFailed: "Couldn't refresh the families and categories",
+        "The product families and categories that group your roadmaps, and the organisations your items can be for.",
+      connectPrompt:
+        "Connect Google to view the families, categories and organisations.",
+      loading: "Loading families, categories and organisations…",
+      loadFailed: "Couldn't load the families, categories and organisations",
+      refreshFailed:
+        "Couldn't refresh the families, categories and organisations",
       heading: "Families",
       /** Under a family's name. */
       welshName: "Welsh: {{name}}",
@@ -464,6 +466,13 @@ export const en = {
         heading: "Categories",
         description: "Categories can't be changed here yet.",
         none: "No categories are listed.",
+      },
+      /** The organisations, read-only (STY-033); each entry reads "Full name (CODE)". */
+      organisations: {
+        heading: "Organisations",
+        description: "Organisations can't be changed here yet.",
+        entry: "{{name}} ({{code}})",
+        none: "No organisations are listed.",
       },
     },
     /** Asked on Disconnect while changes are pending. */

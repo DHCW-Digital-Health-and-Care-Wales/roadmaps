@@ -135,7 +135,7 @@ export const cy = {
     countWithUnpublished:
       '$t(roadmaps.count, {"count": {{total}} }), $t(roadmaps.unpublishedCount, {"count": {{unpublished}} })',
     noFamily: "Dim teulu cynnyrch",
-    familiesLink: "Teuluoedd a chategorïau",
+    familiesLink: "Teuluoedd, categorïau a sefydliadau",
     lists: {
       outOfStep: "Yn wahanol i'w deulu neu gategori",
       familyNotListed: "Teulu heb ei restru",
@@ -348,13 +348,16 @@ export const cy = {
       },
     },
     families: {
-      title: "Teuluoedd a chategorïau",
+      title: "Teuluoedd, categorïau a sefydliadau",
       description:
-        "Y teuluoedd cynnyrch a'r categorïau sy'n grwpio eich mapiau trywydd.",
-      connectPrompt: "Cysylltwch â Google i weld y teuluoedd a'r categorïau.",
-      loading: "Wrthi'n llwytho teuluoedd a chategorïau…",
-      loadFailed: "Doedd dim modd llwytho'r teuluoedd a'r categorïau",
-      refreshFailed: "Doedd dim modd adnewyddu'r teuluoedd a'r categorïau",
+        "Y teuluoedd cynnyrch a'r categorïau sy'n grwpio eich mapiau trywydd, a'r sefydliadau y gall eich eitemau fod ar eu cyfer.",
+      connectPrompt:
+        "Cysylltwch â Google i weld y teuluoedd, y categorïau a'r sefydliadau.",
+      loading: "Wrthi'n llwytho teuluoedd, categorïau a sefydliadau…",
+      loadFailed:
+        "Doedd dim modd llwytho'r teuluoedd, y categorïau a'r sefydliadau",
+      refreshFailed:
+        "Doedd dim modd adnewyddu'r teuluoedd, y categorïau a'r sefydliadau",
       heading: "Teuluoedd",
       welshName: "Cymraeg: {{name}}",
       noWelshName: "Dim enw Cymraeg",
@@ -437,6 +440,12 @@ export const cy = {
         heading: "Categorïau",
         description: "Does dim modd newid categorïau yma eto.",
         none: "Does dim categorïau wedi'u rhestru.",
+      },
+      organisations: {
+        heading: "Sefydliadau",
+        description: "Does dim modd newid sefydliadau yma eto.",
+        entry: "{{name}} ({{code}})",
+        none: "Does dim sefydliadau wedi'u rhestru.",
       },
     },
     disconnect: {

@@ -23,7 +23,8 @@ sets the date unless asked. Showing stale roadmaps (A7) is not in it.
 `lastUpdated` joins the roadmap's editable fields (`domain/`), written by the publish
 plan (`infrastructure/`); the About block and form, the publish dialog and the
 conflict review (`features/`); copy in both catalogues; README _What the editor
-writes_; an ADR-012 amendment.
+writes_; an ADR-012 amendment; the line in `docs/analysis/roadmap-tab-format.md` that
+says the editor never writes `Last updated`.
 
 ## Acceptance criteria
 
@@ -103,8 +104,9 @@ format follow the browser's language (round 4 Q1)
 
 ## Tests
 
-S4's "today" depends on Europe/London, so test it with a fixed clock on both sides of
-midnight UTC. S8 needs an MSW test of the written cell; S2 and S6 need a Playwright
+S3 and S4's "today" is Europe/London's (D9), so test it with a fixed clock in British
+Summer Time just before midnight UTC (2026-07-01T23:30Z is already 2 July in London),
+where a UTC date would differ. S8 needs an MSW test of the written cell; S2 and S6 need a Playwright
 journey against the Sheets fake.
 
 ## Decisions
@@ -115,8 +117,7 @@ journey against the Sheets fake.
   only when the Product Lead asks. Supersedes STY-024 D2, which kept the date off the
   page. S1–S3, S6.
 - **D2** (owner, 2026-11-13, round 1 Q6): the format written → `YYYY-MM-DD`. S8.
-- **D3** (owner, 2026-11-13, round 1 Q7): dates allowed → none after today, in
-  Europe/London. S4.
+- **D3** (owner, 2026-11-13, round 1 Q7): dates allowed → none after today. S4.
 - **D4** (owner, 2026-11-13, round 1 Q8): clearing → allowed. S5.
 - **D5** (owner, 2026-11-13, round 2 Q3): the tick box on "Save changes" too → yes. S6.
 - **D6** (owner, 2026-11-13, round 2 Q4): tick box with a pending date → hidden. S7.
@@ -125,9 +126,12 @@ journey against the Sheets fake.
 - **D8** (owner, 2026-11-13, round 4 Q1): the input → the browser's native date input
   (`<input type="date">`), not a calendar component; its month names and format follow
   the browser's language. S2, S4, S10.
+- **D9** (agent, 2026-11-13): "today", for "Today", the tick box and D3's limit, is the
+  date in Europe/London, over the browser's local date, because DHCW works in Wales and
+  a browser set to another zone would otherwise date the roadmap wrongly. S3, S4, S6.
 
 ## Out of scope
 
-- Staleness (A7): a later EPC-008 story.
+- Staleness (A7): a later record.
 - Setting the date when publishing or unpublishing the roadmap itself (STY-035's
   action without pending edits): not asked for.

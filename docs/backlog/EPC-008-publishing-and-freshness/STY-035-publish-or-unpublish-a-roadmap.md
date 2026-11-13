@@ -24,7 +24,9 @@ live roadmap, are not in it.
 A repository write of one roadmap's published state that re-reads before it writes
 (`domain/` port, the Sheets adapter and the in-memory double); the action, its dialogs
 and notices on the roadmap's page (`features/`); copy in both catalogues; README
-_What the editor writes_; an ADR-012 amendment; glossary entries.
+_What the editor writes_; an ADR-012 amendment; the glossary's _Publish_, _Save_ and
+_Published roadmap_ entries ("Save and publish" makes _Save_'s "nothing becomes public"
+untrue).
 
 ## Acceptance criteria
 
@@ -59,13 +61,15 @@ editor makes no check of how many roadmaps stay published
 
 ### S4: Publishing is refused when the row would fail the sync (round 1 Q3)
 
-**Given** Product A's row, as re-read when Sam confirms, has any of: a `Sheet` that
-names no tab; a colour written `#rgb`; a roadmap tab without a `Title` or `Horizon`
-column; or another published row with the same slug (round 1 Q4)
-**When** Sam confirms "Publish roadmap"
+**Given** Product A's row, as re-read when Sam confirms and as it would read after the
+write (with any pending edits of S5 applied), has any of: a `Sheet` that names no tab;
+a colour written `#rgb`; a roadmap tab without a `Title` or `Horizon` column; or
+another published row with the same slug, such as one a co-lead published after Sam
+loaded the page (round 1 Q4)
+**When** Sam confirms "Publish roadmap" or "Save and publish"
 **Then** nothing is written, and the page says publishing was refused and names each
 problem in Product Lead terms, with what to fix in the spreadsheet
-**And** Product A stays not published
+**And** Product A stays not published, and any pending edits stay pending
 
 ### S5: Unsaved edits are offered with the publish (round 2 Q2, round 3 Q1)
 
@@ -91,13 +95,13 @@ the conflict review opens as it does for "Save changes" (ADR-012)
 **Then** only `Enabled` is written; the edit stays pending and the step now reads
 "Save changes"
 
-### S8: A failed write changes nothing
+### S8: A refused write changes nothing
 
-**Given** Sam confirms publishing or unpublishing
+**Given** Sam confirms publishing, unpublishing or "Save and publish"
 **When** the write is refused for permission, the session expires, or the data source
-can't be reached
-**Then** the page says so, as a refused publish of changes does, and the roadmap's
-published state is shown as it was
+can't be reached before the write is sent
+**Then** the page says so, as a refused publish of changes does; the roadmap's published
+state is shown as it was and any pending edits stay pending
 
 ### S9: Welsh
 
@@ -105,9 +109,17 @@ published state is shown as it was
 **When** Sam uses the action, its dialogs, refusals and notices
 **Then** every string is Welsh
 
+### S10: A write whose answer is lost is settled by a re-read
+
+**Given** Sam confirms publishing, unpublishing or "Save and publish"
+**When** the write is sent but its answer never arrives
+**Then** the editor re-reads once, as ADR-012 settles a lost publish: all of it written
+shows as done, none of it as S8, and anything else, or a re-read that fails, says the
+roadmap may have changed and asks Sam to refresh before doing more
+
 ## Tests
 
-S4's refusals and S5–S6's single write need repository contract tests on both
+S4's refusals (the co-lead race included), S5–S6's single write and S10 need repository contract tests on both
 implementations (`describeRoadmapRepositoryContract`) and MSW tests of the Sheets
 adapter; S2, S4 and S5 need a Playwright journey against the Sheets fake, since the
 list's badge and count must change after the write.
@@ -140,12 +152,20 @@ list's badge and count must change after the write.
 
 ## Starting point
 
-Audited at `220972a`. The parser keeps one row per slug, the published one first
-(ADR-009), and skips the others as `duplicate-id`, so the editor never shows a draft
-that shares the live roadmap's slug: S4's slug clash is reached only when a co-lead
-publishes a same-slug row after Sam loaded the page, which the fresh re-read catches.
-A row without a usable slug (`invalid-id`) is skipped and never shown. The tab checks
-need the roadmap tab's header row, which `listRoadmapItems` already reads.
+Audited at `220972a`.
+
+- The parser keeps one row per slug, the published one first (ADR-009), and skips the
+  others as `duplicate-id`, so the editor never shows a draft that shares the live
+  roadmap's slug. S4's clash is reached when a co-lead publishes a same-slug row after
+  Sam loaded the page. The re-read then keeps the co-lead's row for that slug, so a
+  write that finds its row by slug, as the adapter's `#readRoadmap` does, binds to the
+  wrong row and D9 would report it done. Find the row by the spreadsheet row the page
+  loaded (`RoadmapIndexEntry.row`) and its `Sheet` value, and count the clash over the
+  raw index rows, the parser's skipped ones included.
+- Reading the roadmap's items to check its tab does not work as is: `#readRoadmap`
+  throws `invalid-data` when `Sheet` names no tab, and `parseRoadmapTab` throws without
+  a `Title` column, which would surface as S8's failure, not S4's named refusal. The
+  check must catch both first.
 
 ## Out of scope
 

@@ -63,8 +63,8 @@ Set in grilling rounds 1–4 (2026-11-13); each story's Decisions cite the answe
    set after today, published with the rest; the publish dialog can also set it to
    today on request (F1). STY-036.
 4. **Unchanged:** ADR-012's per-roadmap, all-or-nothing publish of pending edits, its
-   conflict review and Refresh rules; publishing pending edits never sets `Last
-updated` unless the Product Lead asks; the list stays read-only.
+   conflict review and Refresh rules; publishing pending edits sets
+   `Last updated` only when the Product Lead asks; the list stays read-only.
 
 ## Shared assumptions and contracts
 
@@ -85,7 +85,7 @@ publish of pending edits; STY-036 makes `Last updated` editable and refines Opti
 
 "Publish roadmap" (make it public) sits beside "Publish changes" (write pending
 edits). STY-035 settles the copy with the `copywriter` skill in English and Welsh and
-updates the glossary's _Publish_ and _Published roadmap_ entries.
+updates the glossary's _Publish_, _Save_ and _Published roadmap_ entries.
 
 ## Stories
 
@@ -102,8 +102,8 @@ STY-035 adds the tick box to its dialog instead.
 
 ## Out of scope
 
-- **Staleness (A7)**: marking roadmaps not updated for six weeks. A later story in
-  this epic, once dates are being set.
+- **Staleness (A7)**: marking roadmaps not updated for six weeks. A later record,
+  once dates are being set.
 - **Swapping a draft for the live roadmap** (a second row sharing its slug): refused
   for now (STY-035 D4); a later draft feature.
 - **Publishing or unpublishing from the list**: the list keeps its badge only

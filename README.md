@@ -111,7 +111,7 @@ it writes the `Families` tab only as below.
   move), appended after the last column in use with the public site's English
   header, the grid widened in the same request.
 
-Adding, renaming or recolouring a family on the "Families and categories" page writes
+Adding, renaming or recolouring a family on the "Families, categories and organisations" page writes
 at once, after a re-read, in one all-or-nothing `spreadsheets.batchUpdate`, only:
 
 - to add a family: a new `Families` row after the last row in use, with an `ID` in the

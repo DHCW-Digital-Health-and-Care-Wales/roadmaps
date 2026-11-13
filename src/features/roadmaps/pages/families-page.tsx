@@ -12,11 +12,13 @@ import { RoadmapsErrorState } from "../components/roadmaps-error-state"
 import { StatusPanel } from "../components/status-panel"
 import { CategoriesSection } from "../families/categories-section"
 import { FamiliesSection } from "../families/families-section"
+import { OrganisationsSection } from "../families/organisations-section"
 import { useEnabledWhileConnected } from "../hooks/enabled-while-connected"
 import {
   categoryListQueryOptions,
   familyListQueryOptions,
 } from "../hooks/roadmap-queries"
+import { useOrganisations } from "../hooks/use-organisations"
 import { useRoadmaps } from "../hooks/use-roadmaps"
 import { useRoadmapsProblem } from "../hooks/use-roadmaps-problem"
 import { useRoadmapRepository } from "../roadmap-repository-context"
@@ -25,8 +27,8 @@ const TITLE_ID = "families-title"
 
 /**
  * `/families`: each family with its colour, names and roadmaps, which anyone connected
- * can add to, rename or recolour, and the categories, read-only (STY-029). Handles not
- * connected, loading and failure, as the roadmap list does.
+ * can add to, rename or recolour, and the categories and organisations, read-only
+ * (STY-029, STY-033). Handles not connected, loading and failure, as the roadmap list does.
  */
 export function FamiliesPage() {
   const { t } = useTranslation()
@@ -39,7 +41,8 @@ export function FamiliesPage() {
   const categories = useQuery(
     useEnabledWhileConnected(categoryListQueryOptions(repository)),
   )
-  const queries = [roadmaps, families, categories]
+  const organisations = useOrganisations()
+  const queries = [roadmaps, families, categories, organisations]
   const fetching = queries.some(({ isFetching }) => isFetching)
   const problem = useRoadmapsProblem(
     queries.find(({ error }) => error !== null)?.error ?? null,
@@ -52,7 +55,8 @@ export function FamiliesPage() {
     if (
       roadmaps.data !== undefined &&
       families.data !== undefined &&
-      categories.data !== undefined
+      categories.data !== undefined &&
+      organisations.data !== undefined
     ) {
       return (
         <>
@@ -71,6 +75,7 @@ export function FamiliesPage() {
             available={connected}
           />
           <CategoriesSection categories={categories.data} />
+          <OrganisationsSection organisations={organisations.data} />
         </>
       )
     }

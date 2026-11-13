@@ -10,5 +10,5 @@
 - `findEditedItem` compares every non-editable item part: a new editable field needs its
   own case there, and in `applyItemChanges` and `withFieldOf` (`pending-changes.ts`).
 - A repository mock or double needs `listOrganisations` (the in-memory double serves
-  `TEST_ORGANISATIONS`); a roadmap's items show only once the list is read, so a hand-made
+  `TEST_ORGANISATIONS`); a roadmap's items and the families page show only once the list is read, so a hand-made
   repository whose `listOrganisations` is a bare `vi.fn()` leaves its page loading.

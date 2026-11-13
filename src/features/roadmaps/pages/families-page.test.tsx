@@ -6,8 +6,10 @@ import type { AuthState } from "@/domain/auth/auth-client"
 import type { Category } from "@/domain/roadmap/category"
 import type { Family } from "@/domain/roadmap/family"
 import type { FamilyOutcome } from "@/domain/roadmap/family-changes"
+import type { Organisation } from "@/domain/roadmap/organisation"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { RoadmapRepository } from "@/domain/roadmap/roadmap-repository"
+import { TEST_ORGANISATIONS } from "@/domain/roadmap/testing/test-organisations"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { AppError } from "@/lib/errors"
 import { renderWithProviders } from "@/test/render-with-providers"
@@ -54,6 +56,7 @@ const roadmaps: Roadmap[] = [
 function repositoryWith(
   overrides: Partial<RoadmapRepository> = {},
   lists: { families?: Family[] | null } = {},
+  organisations: readonly Organisation[] = TEST_ORGANISATIONS,
 ) {
   return {
     ...createInMemoryRoadmapRepository(
@@ -62,6 +65,7 @@ function repositoryWith(
       {
         families,
         categories,
+        organisations,
         ...lists,
       },
     ),
@@ -76,9 +80,15 @@ function main() {
 async function renderPage(
   repository: RoadmapRepository = repositoryWith(),
   authState: AuthState = connected,
+  language: "en" | "cy" = "en",
 ) {
   const user = userEvent.setup()
-  await renderWithProviders({ path: "/families", authState, repository })
+  await renderWithProviders({
+    path: "/families",
+    authState,
+    repository,
+    language,
+  })
   return { user }
 }
 
@@ -469,7 +479,7 @@ describe("FamiliesPage (STY-029)", () => {
 
     expect(
       await main().findByText(
-        "Connect Google to view the families and categories.",
+        "Connect Google to view the families, categories and organisations.",
       ),
     ).toBeInTheDocument()
   })
@@ -481,14 +491,133 @@ describe("FamiliesPage (STY-029)", () => {
     }).then(() => ({ user: userEvent.setup() }))
 
     await user.click(
-      await main().findByRole("link", { name: "Families and categories" }),
+      await main().findByRole("link", {
+        name: "Families, categories and organisations",
+      }),
     )
 
     expect(
       await main().findByRole("heading", {
         level: 1,
-        name: "Families and categories",
+        name: "Families, categories and organisations",
       }),
+    ).toBeInTheDocument()
+  })
+})
+
+describe("FamiliesPage organisations (STY-033)", () => {
+  async function organisationsSection({
+    language,
+    repository = repositoryWith(),
+  }: { language?: "en" | "cy"; repository?: RoadmapRepository } = {}) {
+    await renderPage(repository, connected, language)
+    const heading = await main().findByRole("heading", {
+      level: 2,
+      name: language === "cy" ? "Sefydliadau" : "Organisations",
+    })
+    const section = heading.closest("section")
+    if (section === null) throw new Error("No organisations section")
+    return within(section)
+  }
+
+  it("lists each by full name and code, All Wales first, then by name, read-only (S2)", async () => {
+    const section = await organisationsSection()
+
+    expect(
+      section.getAllByRole("listitem").map((item) => item.textContent),
+    ).toEqual([
+      "All Wales (National)",
+      "Betsi Cadwaladr University Health Board (BCUHB)",
+      "Cardiff and Vale University Health Board (CAVUHB)",
+      "Health Education and Improvement Wales (HEIW)",
+      "Hywel Dda University Health Board (HDUHB)",
+      "Public Health Wales (PHW)",
+      "Swansea Bay University Health Board (SBUHB)",
+    ])
+    expect(section.getByText(/can't be changed here/)).toBeInTheDocument()
+    expect(section.queryByRole("button")).not.toBeInTheDocument()
+    expect(section.queryByRole("textbox")).not.toBeInTheDocument()
+    expect(section.queryByRole("checkbox")).not.toBeInTheDocument()
+    const headings = main()
+      .getAllByRole("heading", { level: 2 })
+      .map((heading) => heading.textContent)
+    expect(headings).toEqual(["Families", "Categories", "Organisations"])
+  })
+
+  it("shows the Welsh full names, sorted as Welsh (S3)", async () => {
+    const section = await organisationsSection({ language: "cy" })
+
+    expect(
+      section.getAllByRole("listitem").map((item) => item.textContent),
+    ).toEqual([
+      "Cymru gyfan (National)",
+      "Addysg a Gwella Iechyd Cymru (HEIW)",
+      "Bwrdd Iechyd Prifysgol Bae Abertawe (SBUHB)",
+      "Bwrdd Iechyd Prifysgol Betsi Cadwaladr (BCUHB)",
+      "Bwrdd Iechyd Prifysgol Caerdydd a’r Fro (CAVUHB)",
+      "Bwrdd Iechyd Prifysgol Hywel Dda (HDUHB)",
+      "Iechyd Cyhoeddus Cymru (PHW)",
+    ])
+  })
+
+  it("says none are listed when the list is empty (S4)", async () => {
+    const section = await organisationsSection({
+      repository: repositoryWith({}, {}, []),
+    })
+    expect(
+      section.getByText("No organisations are listed."),
+    ).toBeInTheDocument()
+    expect(section.queryByRole("listitem")).not.toBeInTheDocument()
+  })
+
+  it("shows the page's loading state until the organisations are read (S5)", async () => {
+    const base = repositoryWith()
+    const read: { release?: () => void } = {}
+    await renderPage(
+      repositoryWith({
+        listOrganisations: (options) =>
+          new Promise((resolve) => {
+            read.release = () => {
+              resolve(base.listOrganisations(options))
+            }
+          }),
+      }),
+    )
+
+    expect(await main().findByRole("status")).toHaveTextContent(
+      "Loading families, categories and organisations…",
+    )
+    expect(
+      main().queryByRole("heading", { level: 2, name: "Families" }),
+    ).not.toBeInTheDocument()
+    await waitFor(() => {
+      expect(read.release).toBeDefined()
+    })
+    read.release?.()
+    expect(
+      await main().findByRole("heading", { level: 2, name: "Organisations" }),
+    ).toBeInTheDocument()
+  })
+
+  it("shows the page's failure state, and Refresh reads again (S5)", async () => {
+    const base = repositoryWith()
+    let failing = true
+    const { user } = await renderPage(
+      repositoryWith({
+        listOrganisations: (options) =>
+          failing
+            ? Promise.reject(new AppError("network"))
+            : base.listOrganisations(options),
+      }),
+    )
+
+    expect(await main().findByRole("alert")).toHaveTextContent(
+      "Couldn't load the families, categories and organisations",
+    )
+    failing = false
+    await user.click(main().getByRole("button", { name: "Refresh" }))
+    expect(
+      await main().findByRole("heading", { level: 2, name: "Organisations" }),
     ).toBeInTheDocument()
   })
 })

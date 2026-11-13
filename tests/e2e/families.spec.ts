@@ -9,7 +9,7 @@ import {
 import { connect, expect, test } from "./fixtures/test"
 
 /**
- * STY-029: the families and categories page, adding a family, and renaming or
+ * STY-029, STY-033: the families, categories and organisations page, adding a family, and renaming or
  * recolouring one with its roadmaps in one write.
  */
 
@@ -45,10 +45,13 @@ async function openPage(page: Page) {
   await connect(page)
   await page
     .getByRole("main")
-    .getByRole("link", { name: "Families and categories" })
+    .getByRole("link", { name: "Families, categories and organisations" })
     .click()
   await expect(
-    page.getByRole("heading", { level: 1, name: "Families and categories" }),
+    page.getByRole("heading", {
+      level: 1,
+      name: "Families, categories and organisations",
+    }),
   ).toBeVisible()
   return page.getByRole("main")
 }
@@ -57,7 +60,7 @@ test.beforeEach(({ sheets }) => {
   sheets.spreadsheet = [...withRoadmapIndex(INDEX_ROWS), ...EXAMPLE_LISTS]
 })
 
-test("lists each family with its colour, names and roadmaps, and the categories read-only (S1)", async ({
+test("lists each family with its colour, names and roadmaps, and the categories and organisations read-only (S1)", async ({
   page,
 }) => {
   const main = await openPage(page)
@@ -82,6 +85,18 @@ test("lists each family with its colour, names and roadmaps, and the categories 
     "Tests, Scans & Results",
   ])
   await expect(categories.getByRole("button")).toHaveCount(0)
+
+  const organisations = main.getByRole("region", {
+    name: "Organisations",
+    exact: true,
+  })
+  const entries = organisations.getByRole("listitem")
+  await expect(entries).toHaveCount(12)
+  await expect(entries.first()).toHaveText("All Wales (National)")
+  await expect(entries.nth(1)).toHaveText(
+    "Aneurin Bevan University Health Board (ABUHB)",
+  )
+  await expect(organisations.getByRole("button")).toHaveCount(0)
 })
 
 test("adds a family as a new Families row, changing no roadmap (S2)", async ({

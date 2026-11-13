@@ -3,7 +3,7 @@
     - heading "Your roadmaps" [level=1]
     - paragraph: Every roadmap, published or not.
     - paragraph:
-      - link "Families and categories":
+      - link "Families, categories and organisations":
         - /url: /#/families
     - paragraph: 3 roadmaps, 1 not published
     - button "Refresh" [disabled]

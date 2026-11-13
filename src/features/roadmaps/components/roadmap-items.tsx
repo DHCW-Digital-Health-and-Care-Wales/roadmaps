@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { ItemChanges } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
+import type { RoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 
 import {
   type CardControl,
@@ -43,24 +44,39 @@ export function RoadmapItems({ roadmapId, items }: RoadmapItemsProps) {
     () => matchItemChanges(items, changes),
     [items, changes],
   )
+  // A card whose form is open stays where it opened, by `cardHoldKey`: moving it to
+  // another list would make it a new card, losing what the form holds.
+  const [held, setHeld] = useState<
+    ReadonlyMap<string, RoadmapPlacement | null>
+  >(new Map())
   const { unplaced, placements } = useMemo(
     () =>
-      groupRoadmapItems(
-        items,
-        (item, position) =>
-          applyItemChanges(item, entries.get(position)).placement,
-      ),
-    [items, entries],
+      groupRoadmapItems(items, (item, position) => {
+        const key = cardHoldKey(item, position)
+        return held.has(key)
+          ? (held.get(key) ?? null)
+          : applyItemChanges(item, entries.get(position)).placement
+      }),
+    [items, entries, held],
   )
   // A moved item's card is a new one, in another list, so focus is handed to it here.
   const [focus, setFocus] = useState<FocusRequest | null>(null)
-  const focusRequests = useMemo(
+  const cardHandlers = useMemo(
     () => ({
-      request: (position: number, control: CardControl) => {
+      requestFocus: (position: number, control: CardControl) => {
         setFocus({ position, control })
       },
-      met: () => {
+      focused: () => {
         setFocus(null)
+      },
+      hold: (key: string, placement: RoadmapPlacement | null | undefined) => {
+        setHeld((current) => {
+          if (current.get(key) === placement) return current
+          const next = new Map(current)
+          if (placement === undefined) next.delete(key)
+          else next.set(key, placement)
+          return next
+        })
       },
     }),
     [],
@@ -76,7 +92,7 @@ export function RoadmapItems({ roadmapId, items }: RoadmapItemsProps) {
       entries={entries}
       labelledBy={labelledBy}
       focus={focus}
-      focusRequests={focusRequests}
+      cardHandlers={cardHandlers}
     />
   )
 
@@ -142,10 +158,16 @@ interface ItemListProps {
   entries: ReadonlyMap<number, ItemChanges>
   labelledBy: string
   focus: FocusRequest | null
-  focusRequests: {
-    request: (position: number, control: CardControl) => void
-    met: () => void
+  cardHandlers: {
+    requestFocus: (position: number, control: CardControl) => void
+    focused: () => void
+    hold: (key: string, placement: RoadmapPlacement | null | undefined) => void
   }
+}
+
+/** Which item a held card shows: by its ID, or with none by its place. */
+function cardHoldKey(item: RoadmapItem, position: number): string {
+  return item.id ?? `at:${String(position)}`
 }
 
 function ItemList({
@@ -155,7 +177,7 @@ function ItemList({
   entries,
   labelledBy,
   focus,
-  focusRequests,
+  cardHandlers,
 }: ItemListProps) {
   const keys = useItemCardKeys(placed)
   return (
@@ -171,8 +193,10 @@ function ItemList({
           focusRequest={
             focus?.position === position ? focus.control : undefined
           }
-          onFocusRequest={focusRequests.request}
-          onFocused={focusRequests.met}
+          onFocusRequest={cardHandlers.requestFocus}
+          onFocused={cardHandlers.focused}
+          holdKey={cardHoldKey(item, position)}
+          onHold={cardHandlers.hold}
         />
       ))}
     </ul>

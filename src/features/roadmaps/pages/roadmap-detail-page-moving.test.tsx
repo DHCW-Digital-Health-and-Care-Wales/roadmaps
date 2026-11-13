@@ -320,6 +320,54 @@ describe("Moving an item (STY-031)", () => {
     expect(titlesUnder("Now")).not.toContain("Online booking")
   })
 
+  it("keeps an open form, and its card where it opened, when Use theirs moves the item, until Done (S8)", async () => {
+    const { user, repository } = await renderPage()
+    await moveWithMenu(user, "Online booking", "Now")
+    repository.coLead((_list, itemsOf) => {
+      const booking = itemsOf("producta")[1]
+      if (booking) booking.placement = "next"
+    })
+    await user.click(main().getByRole("button", { name: "Publish changes" }))
+    await user.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", {
+        name: "Publish changes",
+      }),
+    )
+    const review = await main().findByRole("alert")
+    await user.click(
+      main().getByRole("button", { name: "Edit Online booking" }),
+    )
+    const form = within(main().getByRole("form", { name: "Online booking" }))
+    await user.type(form.getByRole("textbox", { name: "Description" }), "Typed")
+
+    await user.click(
+      within(review).getByRole("button", {
+        name: "Use theirs Online booking: Horizon or section",
+      }),
+    )
+
+    expect(
+      within(main().getByRole("form", { name: "Online booking" })).getByRole(
+        "textbox",
+        { name: "Description" },
+      ),
+    ).toHaveValue("Typed")
+    expect(titlesUnder("Now")).toContain("Online booking")
+    await user.click(
+      within(main().getByRole("form", { name: "Online booking" })).getByRole(
+        "button",
+        { name: "Done" },
+      ),
+    )
+    expect(titlesUnder("Next")).toEqual(["Online booking"])
+    expect(within(card("Online booking")).getByText("Typed")).toBeVisible()
+    await vi.waitFor(() => {
+      expect(
+        main().getByRole("button", { name: "Edit Online booking" }),
+      ).toHaveFocus()
+    })
+  })
+
   it("moves by keyboard, naming the menu for the item, then focuses the moved item's card (S10)", async () => {
     const { user } = await renderPage()
     const button = main().getByRole("button", { name: "Move Online booking" })

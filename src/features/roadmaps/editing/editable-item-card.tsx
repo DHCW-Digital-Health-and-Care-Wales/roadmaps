@@ -58,6 +58,14 @@ export interface EditableItemCardProps {
   onFocusRequest: (position: number, control: CardControl) => void
   /** Called once a `focusRequest` has been met. */
   onFocused: () => void
+  /** Names the item to `onHold`. */
+  holdKey: string
+  /**
+   * Holds the card in the placement it showed as its form opened, while the form is
+   * open, so no change moves it to another list and loses the form; `undefined` lets it
+   * go.
+   */
+  onHold: (key: string, placement: RoadmapPlacement | null | undefined) => void
 }
 
 /** A control on an item's card that focus can return to. */
@@ -78,6 +86,8 @@ export function EditableItemCard({
   focusRequest,
   onFocusRequest,
   onFocused,
+  holdKey,
+  onHold,
 }: EditableItemCardProps) {
   const { t } = useTranslation()
   const language = useLanguage()
@@ -97,6 +107,15 @@ export function EditableItemCard({
     onFocused()
   }, [focusRequest, mode.editButton, onFocused])
 
+  const heldPlacement = mode.opened?.shown.placement
+  useLayoutEffect(() => {
+    if (heldPlacement === undefined) return
+    onHold(holdKey, heldPlacement)
+    return () => {
+      onHold(holdKey, undefined)
+    }
+  }, [heldPlacement, holdKey, onHold])
+
   // Each change finds the item's entry afresh, so an edit never builds on a stale one;
   // a field's edit is made from the item as the form opened on it.
   const done = (values: ItemValues) => {
@@ -111,6 +130,11 @@ export function EditableItemCard({
         { shown: opened.shown, latest: item },
       ),
     )
+    closeForm()
+  }
+  // Lets the card go in the same update, so focus follows it to the list it now shows in.
+  const closeForm = () => {
+    onHold(holdKey, undefined)
     mode.close()
     onFocusRequest(position, "edit")
   }
@@ -178,7 +202,7 @@ export function EditableItemCard({
             }}
             labelledBy={headingId}
             onDone={done}
-            onCancel={mode.close}
+            onCancel={closeForm}
           />
         ) : undefined
       }

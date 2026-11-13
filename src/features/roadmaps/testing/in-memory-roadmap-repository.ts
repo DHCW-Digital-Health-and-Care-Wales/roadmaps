@@ -1,3 +1,4 @@
+import { isCalendarDate } from "@/domain/roadmap/calendar-date"
 import type { Category } from "@/domain/roadmap/category"
 import type { Family } from "@/domain/roadmap/family"
 import {
@@ -24,7 +25,6 @@ import {
   type PublishedStateRow,
   type PublishProblem,
 } from "@/domain/roadmap/published-state"
-import { isCalendarDate } from "@/domain/roadmap/calendar-date"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import {
   type EditableItemField,

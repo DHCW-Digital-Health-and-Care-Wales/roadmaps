@@ -164,14 +164,14 @@ export interface FieldChange {
 /**
  * `changes` with the roadmap's `Last updated` set to `today`, `YYYY-MM-DD`, over
  * whatever it holds when published, never a conflict: the "Mark as updated today" tick
- * box (STY-036 S6, S9). With a date already pending, that date is published instead,
- * so `changes` is given back as it is (S7).
+ * box (STY-036 S6, S9). Unticked (`today` undefined), or with a date already pending,
+ * which is published instead (S7), `changes` is given back as it is.
  */
 export function markedUpdated(
   changes: RoadmapChanges,
-  today: string,
+  today: string | undefined,
 ): RoadmapChanges {
-  if (changes.roadmap.lastUpdated) return changes
+  if (today === undefined || changes.roadmap.lastUpdated) return changes
   return {
     ...changes,
     roadmap: {

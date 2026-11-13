@@ -133,6 +133,21 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
     expect(field).toHaveValue("2026-11-13")
   })
 
+  it("takes the new day for Today and the limit when the form is left open past midnight", async () => {
+    const { user } = await renderPage()
+    const field = await openForm(user)
+
+    // 00:01 on 14 November in Tokyo.
+    vi.setSystemTime(new Date("2026-11-13T15:01:00Z"))
+    pick(field, "2026-11-14")
+    await user.click(main().getByRole("button", { name: "Done" }))
+    expect(main().getByText("1 unpublished change")).toBeInTheDocument()
+
+    await openForm(user)
+    await user.click(main().getByRole("button", { name: "Today" }))
+    expect(main().getByLabelText("Last updated")).toHaveValue("2026-11-14")
+  })
+
   it("refuses a date after today with a message, until it is fixed (S4)", async () => {
     const { user } = await renderPage()
 

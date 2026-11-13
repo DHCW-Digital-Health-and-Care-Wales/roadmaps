@@ -192,12 +192,20 @@ header, as any edited field's is. ADR-012 gains _STY-036 amendments_ and
   Clear button (D8).
 - **The conflict review shows dates as the page does** ("10 November 2026"); its copy
   still calls the values "text", as for a family or category.
-- **"Today"** is `localToday()` in `src/lib/local-today.ts`, read when the form opens
-  and when a dialog is confirmed, with the CHO-005 comment.
+- **"Today"** is `localToday()` in `src/lib/local-today.ts`, with the CHO-005 comment,
+  read whenever it is needed: "Today", the form's check and the picker's limit as each
+  is used or drawn, and the tick box when a dialog is confirmed, so a form left open past
+  midnight takes the new day (review round 1, Sol P3).
+- **A date already held in another format is not rewritten** (agent, review round 1
+  Sol P2, declined): when the cell holds the same date as `DD/MM/YYYY` (`13/11/2026`),
+  a picked or ticked `2026-11-13` is no change, so nothing is written, as for any field
+  that already holds its value. The public site reads both formats; rewriting it would
+  carry the cell's own spelling into the domain (ADR-002).
 - **The Sheets fake** (`tests/fixtures/sheets/apply-batch-update.ts`) now accepts
   `Last updated` written as `YYYY-MM-DD` or blank, and still records any other value as
   a violation.
-- **Tests.** The planner tests (`publish-plan.test.ts`, `published-state.test.ts`), the
+- **Tests.** The midnight page test was written after its fix and shown to fail
+  against the round-1 form (1 of 1). The planner tests (`publish-plan.test.ts`, `published-state.test.ts`), the
   Sheets MSW tests, `localToday`'s test and the page tests
   (`roadmap-detail-page-last-updated.test.tsx`) ran red before the code that passes them.
   The contract cases (`roadmap-repository-contract.ts`, `published-state-contract.ts`)

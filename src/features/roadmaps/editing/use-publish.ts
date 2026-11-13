@@ -24,8 +24,9 @@ export const CURRENT_TEXT: CurrentText = {
 /**
  * Publishes (or saves) the roadmap's pending changes, once: never while a publish of the
  * roadmap is under way, never retried (S13). Given `today`, its date, the roadmap's
- * `Last updated` is set to it in the same write ("Mark as updated today", STY-036 S6). What it came to is the roadmap's notice;
- * on success the changes it sent are no longer pending, and any made meanwhile stay.
+ * `Last updated` is set to it in the same write ("Mark as updated today", STY-036 S6).
+ * What it came to is the roadmap's notice; on success the changes it sent are no longer
+ * pending, and any made meanwhile stay.
  * A refusal discards the changes to items that are gone and leaves each conflict to the
  * review, showing the co-lead's text even if the read after it fails; a roadmap gone
  * from the list loses its changes (STY-026).
@@ -47,9 +48,7 @@ export function usePublish(
     let notice: PublishNotice | null
     try {
       // Settles once the roadmap and its items are read again, or have failed to be.
-      const outcome = await mutateAsync(
-        today === undefined ? sent : markedUpdated(sent, today),
-      )
+      const outcome = await mutateAsync(markedUpdated(sent, today))
       switch (outcome.status) {
         case "published":
           store.update(roadmap.id, (changes) => settlePublished(changes, sent))

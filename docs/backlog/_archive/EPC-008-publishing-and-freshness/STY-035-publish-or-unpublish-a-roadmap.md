@@ -1,6 +1,6 @@
 # STY-035: A Product Lead publishes or unpublishes a roadmap
 
-- **Status**: Done — delivered in its PR, which awaits the owner's merge
+- **Status**: Done — merged in #57
 - **Type**: Feature
 - **Area**: Domain + Infrastructure + Features/UI + i18n (en + cy) + E2E
 - **Epic**: [EPC-008-publishing-and-freshness](README.md)

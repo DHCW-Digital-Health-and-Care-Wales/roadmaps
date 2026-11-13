@@ -2,8 +2,8 @@ import { useCallback, useState } from "react"
 
 import type { PublishProblem } from "@/domain/roadmap/published-state"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
-import { useAuth } from "@/features/auth/use-auth"
 import { markedUpdated } from "@/domain/roadmap/roadmap-changes"
+import { useAuth } from "@/features/auth/use-auth"
 import { toAppError, type AppErrorKind } from "@/lib/errors"
 import { localToday } from "@/lib/local-today"
 

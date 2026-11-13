@@ -78,8 +78,9 @@ const REQUIRED_FIELDS: ReadonlySet<string> = new Set(["title"])
  * An item's organisations are compared as a set, and a change made over whatever the
  * field holds (`FieldChange.overwrite`) is never a conflict. Throws `AppError('unknown')`
  * for a blank title, a placement that is none of the six, an organisation the list
- * doesn't hold or a `Last updated` that is no `YYYY-MM-DD` date, which callers never send, and `AppError('invalid-data')` for a family or category
- * chosen while its list is missing.
+ * doesn't hold or a `Last updated` that is no `YYYY-MM-DD` date, which callers never
+ * send, and `AppError('invalid-data')` for a family or category chosen while its list is
+ * missing.
  */
 export function planRoadmapPublish(
   changes: RoadmapChanges,

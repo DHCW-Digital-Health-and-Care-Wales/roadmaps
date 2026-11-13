@@ -53,9 +53,10 @@ export interface EditFormField<F extends string> {
   fixed?: { text: string; notice: string }
   /**
    * A calendar date, `YYYY-MM-DD` or `""` for none, in the browser's own date input
-   * (STY-036 D8): none after `today`, which "Today" fills in.
+   * (STY-036 D8): none after `today()`, which "Today" fills in. Read when it is needed,
+   * so a form left open past midnight takes the new day.
    */
-  date?: { today: string }
+  date?: { today: () => string }
 }
 
 /** Why a field keeps the form open: its message's key under `roadmaps.edit`. */
@@ -117,13 +118,13 @@ export function EditForm<F extends string>({
     ) as Record<F, string>
     const found = Object.fromEntries(
       fields.flatMap((field, index) => {
-        const error = fieldError(
-          field,
-          index === 0,
-          trimmed[field.name],
-          opened[field.name].trim(),
-          controls.current.get(field.name),
-        )
+        const error = fieldError(field, {
+          isTitle: index === 0,
+          value: trimmed[field.name],
+          opened: opened[field.name].trim(),
+          badInput:
+            controls.current.get(field.name)?.validity.badInput ?? false,
+        })
         return error ? [[field.name, error]] : []
       }),
     ) as Partial<Record<F, FieldError>>
@@ -280,7 +281,7 @@ export function EditForm<F extends string>({
                   ref={controlRef(field.name)}
                   id={controlId}
                   type="date"
-                  max={today}
+                  max={today()}
                   value={values[field.name]}
                   className="w-auto"
                   {...described}
@@ -292,7 +293,7 @@ export function EditForm<F extends string>({
                   type="button"
                   variant="secondary"
                   onClick={() => {
-                    change(today)
+                    change(today())
                   }}
                 >
                   {t("roadmaps.edit.today")}
@@ -335,17 +336,19 @@ export function EditForm<F extends string>({
  */
 function fieldError<F extends string>(
   field: EditFormField<F>,
-  isTitle: boolean,
-  value: string,
-  opened: string,
-  control: HTMLInputElement | HTMLTextAreaElement | undefined,
+  {
+    isTitle,
+    value,
+    opened,
+    badInput,
+  }: { isTitle: boolean; value: string; opened: string; badInput: boolean },
 ): FieldError | null {
   if (isTitle && value === "") return "titleRequired"
   if (!field.date) return null
-  if (control?.validity.badInput || (value !== "" && !isCalendarDate(value))) {
+  if (badInput || (value !== "" && !isCalendarDate(value))) {
     return "dateInvalid"
   }
   if (value === opened) return null
   // Both `YYYY-MM-DD`, so they compare as text.
-  return value > field.date.today ? "dateInFuture" : null
+  return value > field.date.today() ? "dateInFuture" : null
 }

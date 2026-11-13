@@ -85,7 +85,7 @@ export function EditableRoadmapAbout({ roadmap }: EditableRoadmapAboutProps) {
     name: "lastUpdated",
     label: t("roadmaps.edit.roadmapFields.lastUpdated"),
     multiline: false,
-    date: { today: localToday() },
+    date: { today: localToday },
   } as const
 
   return (

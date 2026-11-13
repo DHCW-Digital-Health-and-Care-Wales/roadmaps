@@ -91,10 +91,10 @@ updates the glossary's _Publish_, _Save_ and _Published roadmap_ entries.
 
 ## Stories
 
-| ID      | Story                                                                                          | Area                                       | Depends on | State |
-| ------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------ | ---------- | ----- |
-| STY-035 | [A Product Lead publishes or unpublishes a roadmap](STY-035-publish-or-unpublish-a-roadmap.md) | Domain + Infra + UI + i18n (en + cy) + E2E | —          | ✅    |
-| STY-036 | [A Product Lead sets when a roadmap was last updated](STY-036-set-last-updated.md)             | Domain + Infra + UI + i18n (en + cy) + E2E | —          | ✅    |
+| ID      | Story                                                                                          | Area                                       | Depends on                | State |
+| ------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------ | ------------------------- | ----- |
+| STY-035 | [A Product Lead publishes or unpublishes a roadmap](STY-035-publish-or-unpublish-a-roadmap.md) | Domain + Infra + UI + i18n (en + cy) + E2E | —                         | ✅    |
+| STY-036 | [A Product Lead sets when a roadmap was last updated](STY-036-set-last-updated.md)             | Domain + Infra + UI + i18n (en + cy) + E2E | STY-035 (preferred order) | ✅    |
 
 ## Sequencing
 

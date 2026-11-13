@@ -170,10 +170,10 @@ row with the same ID is enabled. Unpublishing is never checked, and leaves pendi
 edits pending.
 
 It never writes any other cell: no Welsh `(cy)` cell other than `Family (cy)`, no
-`Last updated` but as above, no `Sheet`, `Labels` or `Details`, no `Enabled` cell but the one above, no `Horizon` or
-`Organisations` cell but those above, no `Family`, `Category` or `Colour` cell but
-those above and "Make it match"'s, no roadmap's row or tab but
-those above, nothing in the `Template` or `Categories` tab, nothing in the `Families`
+`Last updated` but as above, no `Sheet`, `Labels` or `Details`, no `Enabled` cell but
+the one above, no `Horizon` or `Organisations` cell but those above, no `Family`,
+`Category` or `Colour` cell but those above and "Make it match"'s, no roadmap's row or
+tab but those above, nothing in the `Template` or `Categories` tab, nothing in the `Families`
 tab but the family changes above, and no cell whose value has not changed. A roadmap
 whose `Sheet` names the `Template` tab or the roadmap index itself can't be read or
 published, and nothing is published while the

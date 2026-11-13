@@ -39,9 +39,9 @@ export interface PublishDialogProps {
 /**
  * Asks before publishing, listing each changed part by name with its changed fields,
  * and when the public site shows them (S9), with "Mark as updated today" unless a date
- * is pending, which is published instead (STY-036 S6, S7). Cancel writes nothing; while the publish is
- * under way it cannot be closed, and while publishing is unavailable it cannot be
- * confirmed.
+ * is pending, which is published instead (STY-036 S6, S7). Cancel writes nothing; while
+ * the publish is under way it cannot be closed, and while publishing is unavailable it
+ * cannot be confirmed.
  */
 export function PublishDialog({
   open,

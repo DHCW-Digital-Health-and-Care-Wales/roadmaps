@@ -128,5 +128,7 @@ writes a chosen family). Nothing else is written.
   meanwhile, though it is still out of step (S4)"; contract "writes nothing when … changed since it
   loaded (S4)"; adapter "writes nothing when the roadmap is no longer out of step, or
   changed since it loaded (S4)"; page "shows the roadmap as it now is when it changed
-  meanwhile". The pending-edits-stay-pending part rests on the separate mutation, not a
+  meanwhile", "asks first when an unpublished roadmap was published meanwhile (S2)" and
+  "shows the roadmap the refusal returned even when the list can't be read again (S4)".
+  The pending-edits-stay-pending part rests on the separate mutation, not a
   test.

@@ -91,8 +91,11 @@ notifications, use this lifecycle at every nesting level:
 5. Treat failed, cancelled or interrupted workers, pending questions and
    approvals as unresolved work, never a passing review. Surface the exact
    blocker; route a child's question to the user. On a reported usage limit,
-   save its reset time (or unknown), pending tasks and next action, and resume
-   from that handoff. Completion grants no approval rights.
+   rerun a Sol review with the same brief on the GitHub Copilot provider's
+   `gpt-6.1-sol`, naming that provider in the PR's Review record; for any other
+   worker, or when Copilot is limited too, save its reset time (or unknown),
+   pending tasks and next action, and resume from that handoff. Completion
+   grants no approval rights.
 
 Without asynchronous delegation, run reviewers in the foreground and wait for
 them. Never poll a running delegate, sleep, or set scheduled check-ins as a

@@ -229,7 +229,8 @@ function isNamed(
 /**
  * `items` showing the English `conflicts` found a co-lead wrote to them, in each field
  * that holds what it did in `since`, the items as read when the publish began, as
- * `withCurrentRoadmapText` does; an item not in `since` is left as it is.
+ * `withCurrentRoadmapText` does; an item not in `since` is left as it is. An item a
+ * co-lead unplaced shows as having no horizon.
  */
 export function withCurrentItemText(
   items: readonly RoadmapItem[],
@@ -258,7 +259,12 @@ export function withCurrentItemText(
         )
         .map((conflict) => [conflict.field, currentOf(conflict)]),
     )
-    return applyItemChanges(item, { ...entry, fields })
+    const shown = applyItemChanges(item, { ...entry, fields })
+    // A co-lead may unplace an item, which no edit can; its horizon as written isn't
+    // known until the next read, so it shows as having none.
+    return fields.placement?.value === ""
+      ? { ...shown, placement: null, writtenHorizon: "" }
+      : shown
   })
 }
 

@@ -71,8 +71,8 @@ const REQUIRED_FIELDS: ReadonlySet<string> = new Set(["title"])
  * listed) writes: each pending value that differs from the current one, unless a
  * co-lead changed it too, plus an ID for every item without one. Values are trimmed.
  * Throws `AppError('unknown')` for a blank title or a placement that is none of the six,
- * which callers never send, and
- * `AppError('invalid-data')` for a family or category chosen while its list is missing.
+ * which callers never send, and `AppError('invalid-data')` for a family or category
+ * chosen while its list is missing.
  */
 export function planRoadmapPublish(
   changes: RoadmapChanges,

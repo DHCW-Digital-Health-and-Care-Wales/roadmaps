@@ -8,6 +8,7 @@ import type { RoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 import type { Language } from "@/i18n"
+import { AppError } from "@/lib/errors"
 import { renderWithProviders } from "@/test/render-with-providers"
 
 import {
@@ -269,6 +270,54 @@ describe("Moving an item (STY-031)", () => {
       }),
     )
     expect(titlesUnder("Next")).toEqual(["Online booking"])
+  })
+
+  it("shows an item a co-lead unplaced as unplaced after Use theirs, even if the roadmap couldn't be read again (S8)", async () => {
+    const { user, repository } = await renderPage()
+    await moveWithMenu(user, "Online booking", "Now")
+    repository.coLead((_list, itemsOf) => {
+      const booking = itemsOf("producta")[1]
+      if (!booking) return
+      booking.placement = null
+      booking.writtenHorizon = ""
+    })
+    vi.spyOn(repository, "listRoadmaps").mockRejectedValue(
+      new AppError("forbidden"),
+    )
+    vi.spyOn(repository, "listRoadmapItems").mockRejectedValue(
+      new AppError("forbidden"),
+    )
+
+    await user.click(main().getByRole("button", { name: "Publish changes" }))
+    await user.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", {
+        name: "Publish changes",
+      }),
+    )
+    expect(
+      await main().findByText("Couldn't refresh your roadmaps"),
+    ).toBeInTheDocument()
+    const review = main()
+      .getAllByRole("alert")
+      .find((each) => each.textContent.includes("Someone else"))
+    if (!review) throw new Error("No review")
+    expect(
+      within(review)
+        .getAllByRole("definition")
+        .map(({ textContent }) => textContent),
+    ).toEqual(["Now", "Not on the public roadmap"])
+    await user.click(
+      within(review).getByRole("button", {
+        name: "Use theirs Online booking: Horizon or section",
+      }),
+    )
+
+    expect(titlesUnder("Not on the public roadmap")).toEqual([
+      "Online booking",
+      "Someday item",
+    ])
+    expect(main().queryByRole("list", { name: "Now" })).not.toBeNull()
+    expect(titlesUnder("Now")).not.toContain("Online booking")
   })
 
   it("moves by keyboard, naming the menu for the item, then focuses the moved item's card (S10)", async () => {

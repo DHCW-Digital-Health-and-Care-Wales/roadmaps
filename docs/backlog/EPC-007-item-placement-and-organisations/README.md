@@ -33,8 +33,8 @@ Audited at `5546d47` on 2026-11-13.
 
 ### F1 — Placement and organisations are read-only
 
-`EDITABLE_ITEM_FIELDS` holds title, description, expected outcome and phase only
-(`rg -n "EDITABLE_ITEM_FIELDS =" -A6 src/domain`); ADR-012 keeps the rest read-only.
+At the audit, `EDITABLE_ITEM_FIELDS` held title, description, expected outcome and
+phase only; ADR-012 kept the rest read-only. STY-031 adds placement.
 The persona's _Move items between horizons_ means a trip to the sheet today.
 
 ### F2 — Every pending item field is free text

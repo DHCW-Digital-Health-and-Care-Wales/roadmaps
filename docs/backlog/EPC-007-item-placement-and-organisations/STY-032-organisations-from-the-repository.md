@@ -1,10 +1,10 @@
 # STY-032: Organisations come from the repository, shown by name
 
-- **Status**: Proposed — grilled in EPC-007 rounds 1–3 (2026-11-13)
+- **Status**: Proposed — grilled in EPC-007 rounds 1–4 (2026-11-13)
 - **Type**: Feature + Refactor + Docs
 - **Area**: Domain + Infrastructure + Features/UI + Docs
 - **Epic**: EPC-007-item-placement-and-organisations
-- **Depends on**: none (STY-031 preferred first)
+- **Depends on**: none; delivered after STY-031, in the owner's order (round 3 Q22)
 - **Binding ADRs**: ADR-014 §Organisations, ADR-011, ADR-002
 - **Suggested model**: Sonnet — a new list read beside the families and categories
   reads, and a type change through its callers
@@ -79,7 +79,7 @@ items link to it by `organisationIds` through a join table (ADR-014)
 - **D3** (owner, round 2 Q15, round 3 Q20, Q21): the card shows short names, comma
   separated, All Wales first then alphabetical → S1.
 - **D4** (agent, round 3 Q19 left to the agent): `Organisation { id, code, shortName,
-name }` on `RoadmapRepository`, items carrying `organisationIds`, over a separate
+name, national }` on `RoadmapRepository`, items carrying `organisationIds`, over a separate
   port or a fixed union, as it maps to a table and a join table with no rework → S2–S4.
 - **D5** (owner, 2026-11-13, round 4, after Q25, on the agent's advice): the screen
   sorts, national first then alphabetical by the label shown in the interface's
@@ -87,6 +87,10 @@ name }` on `RoadmapRepository`, items carrying `organisationIds`, over a separat
   S4. Replaces this record's first draft, where the repository served one order.
 - **D6** (agent): All Wales's full name is "All Wales" ("Cymru gyfan"), over the public
   site's "All Wales (national)", since STY-033 shows it beside its code, `National`.
+- **D7** (agent): one shared sort in `features/` serves the card, STY-033's list and
+  STY-034's checkboxes: national first, then an `Intl.Collator` in the interface's
+  language over the label that screen shows, as `group-roadmaps.ts` sorts roadmaps → S1,
+  S4.
 
 ## Starting point
 

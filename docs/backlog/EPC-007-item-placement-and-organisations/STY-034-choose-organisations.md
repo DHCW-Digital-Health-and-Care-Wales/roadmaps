@@ -1,6 +1,6 @@
 # STY-034: A Product Lead chooses who an item's work is for
 
-- **Status**: Proposed — grilled in EPC-007 rounds 1–3 (2026-11-13)
+- **Status**: Proposed — grilled in EPC-007 rounds 1–4 (2026-11-13)
 - **Type**: Feature
 - **Area**: Domain + Infrastructure + Features/UI + i18n (en + cy) + E2E
 - **Epic**: EPC-007-item-placement-and-organisations
@@ -99,7 +99,8 @@ conflict
 ## Starting point
 
 Audited at `5546d47`. STY-031 makes the first field that is not free text pending;
-build on its extension. STY-032 keeps an item's unknown codes as written. The edit form
+build on its extension. STY-032 keeps an item's unknown codes as written, and its shared sort (D7) orders the
+checkboxes. The edit form
 has a typed field and a single choice (`EditFormField.options`), no multiple choice.
 ADR-012 _A missing column is added_ gives the header (`Organisations`) and the place.
 

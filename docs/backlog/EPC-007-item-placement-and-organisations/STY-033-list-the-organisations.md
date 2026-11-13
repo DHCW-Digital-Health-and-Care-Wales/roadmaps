@@ -69,7 +69,8 @@ then "Addysg a Gwella Iechyd Cymru (HEIW)", then the "Bwrdd Iechyd…" names
 
 Audited at `5546d47`. The categories section (`families/categories-section.tsx`) and the
 page's combined loading over its queries (`families-page.tsx`) are the pattern; the page
-title and link keys are `roadmaps.families.title` and `familiesLink`.
+title and link keys are `roadmaps.families.title` and `familiesLink`. Order the list
+with STY-032's shared sort (D7).
 
 ## Out of scope
 

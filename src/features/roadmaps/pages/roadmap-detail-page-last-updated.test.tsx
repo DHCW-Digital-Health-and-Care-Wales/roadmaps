@@ -139,6 +139,8 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
 
     // 00:01 on 14 November in Tokyo.
     vi.setSystemTime(new Date("2026-11-13T15:01:00Z"))
+    fireEvent.focus(field)
+    expect(field).toHaveAttribute("max", "2026-11-14")
     pick(field, "2026-11-14")
     await user.click(main().getByRole("button", { name: "Done" }))
     expect(main().getByText("1 unpublished change")).toBeInTheDocument()

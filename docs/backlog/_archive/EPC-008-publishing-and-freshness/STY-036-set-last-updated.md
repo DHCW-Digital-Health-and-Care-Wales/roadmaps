@@ -193,9 +193,16 @@ header, as any edited field's is. ADR-012 gains _STY-036 amendments_ and
 - **The conflict review shows dates as the page does** ("10 November 2026"); its copy
   still calls the values "text", as for a family or category.
 - **"Today"** is `localToday()` in `src/lib/local-today.ts`, with the CHO-005 comment,
-  read whenever it is needed: "Today", the form's check and the picker's limit as each
-  is used or drawn, and the tick box when a dialog is confirmed, so a form left open past
-  midnight takes the new day (review round 1, Sol P3).
+  read whenever it is needed: "Today", the form's check on Done, the picker's limit each
+  time the form is drawn (and the date field drawing it again on focus), and the tick box
+  when a dialog is confirmed, so a form left open past midnight takes the new day (review
+  round 1 Sol P3, and the round 2 re-check's P3 on the picker's limit).
+- **An open About form doesn't take the tick box's own date as its own** (review final
+  fresh pass, Sol P2, declined): with the date changed in the form but not confirmed,
+  publishing other edits with "Mark as updated today" ticked, then confirming and
+  publishing the form, is refused, the review showing that date as "Current text".
+  Nothing is lost and "Keep mine" resolves it; recorded as
+  [CHO-007](../../chores/CHO-007-rebase-an-open-date-form-after-marking-updated.md).
 - **A date already held in another format is not rewritten** (agent, review round 1
   Sol P2, declined): when the cell holds the same date as `DD/MM/YYYY` (`13/11/2026`),
   a picked or ticked `2026-11-13` is no change, so nothing is written, as for any field

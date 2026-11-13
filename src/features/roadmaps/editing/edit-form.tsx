@@ -1,6 +1,7 @@
 import {
   useEffect,
   useId,
+  useReducer,
   useRef,
   useState,
   type SubmitEvent,
@@ -99,6 +100,8 @@ export function EditForm<F extends string>({
   const [opened] = useState(initial)
   const [values, setValues] = useState(initial)
   const [errors, setErrors] = useState<Partial<Record<F, FieldError>>>({})
+  // Draws the form again, so a date field's limit is today's when its picker opens.
+  const [, redraw] = useReducer((count: number) => count + 1, 0)
   const controls = useRef(new Map<F, HTMLInputElement | HTMLTextAreaElement>())
   const controlRef =
     (name: F) => (control: HTMLInputElement | HTMLTextAreaElement | null) => {
@@ -285,6 +288,7 @@ export function EditForm<F extends string>({
                   value={values[field.name]}
                   className="w-auto"
                   {...described}
+                  onFocus={redraw}
                   onChange={(event) => {
                     change(event.target.value)
                   }}

@@ -156,10 +156,12 @@ General lenses:
   3 s), duplicate submission and React StrictMode double effects (dev aborts and
   repeats the first fetch). Check effect dependencies, cleanup, and
   `useSyncExternalStore` snapshots (identity changes only on change; a
-  selector returning a fresh object each call loops). Where a dialog, menu or
-  pending action outlives the read that opened it, a refetch, expiry or route
-  change must neither unmount it, swap the record it acts on, nor leave its
-  copy stale.
+  selector returning a fresh object each call loops). Where a dialog, menu,
+  open form or pending action outlives the read that opened it, a refetch,
+  expiry or route change must neither unmount it, swap the record it acts on,
+  nor leave what it shows stale or at odds with what it will submit: derive a
+  control's options from the same read as its value, since a native `<select>`
+  shows its first option for a value it has no option for.
 - **Evidence covers less than its claim.** Where code or a test infers a fact
   from indirect evidence (a first fetch, a status badge, a fake that always
   grants, "all tests pass" when E2E was skipped, a Welsh string the author

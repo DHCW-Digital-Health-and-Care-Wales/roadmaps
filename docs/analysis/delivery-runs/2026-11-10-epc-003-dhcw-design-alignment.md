@@ -27,7 +27,7 @@ Delivery is the delivery child's start to its final hand-back. Reviews: P-levels
 ### STY-013 The app uses DHCW's colours, type and focus indicator
 
 - Type / risk: story; theme tokens across every screen, contrast, focus.
-- PR / assessed head / outcome: [#12](https://github.com/collisdigital/roadmaps-editor/pull/12),
+- PR / assessed head / outcome: [#12](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/12),
   892b9d1 (reviewed 8cb13dc, then a record-only commit), merged as 68fa98f.
 - Models: delivery Opus (high, Suggested); correctness Opus and Sol (`gpt-6.1-sol`, high); quality
   Sonnet; orchestrator Opus (high); retro Opus (medium).
@@ -42,14 +42,14 @@ Delivery is the delivery child's start to its final hand-back. Reviews: P-levels
 - Recovery: none.
 - Human interventions: 0.
 - Bot status at readiness: completed-old-head (8cb13dc; the later commit only records the PR).
-- Retro: [#13](https://github.com/collisdigital/roadmaps-editor/pull/13), merged as 15f7447. STY-014's
+- Retro: [#13](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/13), merged as 15f7447. STY-014's
   lint must reject the primary fill used as text.
 - Evidence limits: reviewer tokens only: Opus 154k; Sonnet 88k and 37k.
 
 ### STY-014 Off-brand styling fails the build
 
 - Type / risk: story; lint rules and theme lockdown across the whole app.
-- PR / assessed head / outcome: [#14](https://github.com/collisdigital/roadmaps-editor/pull/14),
+- PR / assessed head / outcome: [#14](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/14),
   66b1005 (reviewed 9f53155, then a Handoff-log commit listed in the Review record), merged as
   86a4138.
 - Models: delivery Opus (high, Suggested) for both children; reviews as STY-013; orchestrator Opus
@@ -68,7 +68,7 @@ Delivery is the delivery child's start to its final hand-back. Reviews: P-levels
   reports, saved the uncommitted diff and started a replacement from a resume brief.
 - Human interventions: 0.
 - Bot status at readiness: completed-current (66b1005).
-- Retro: [#15](https://github.com/collisdigital/roadmaps-editor/pull/15), merged as d970cc0.
+- Retro: [#15](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/15), merged as d970cc0.
   Reviewers stop relinking `node_modules` through pnpm in a shared checkout; code review lists the
   design-token lint and its blind spots.
 - Evidence limits: the killed child's usage unknown; reviewer tokens only for the re-checks: Opus 80k,
@@ -77,7 +77,7 @@ Delivery is the delivery child's start to its final hand-back. Reviews: P-levels
 ### STY-015 Shared components look like DHCW's
 
 - Type / risk: story; shared components, presentation.
-- PR / assessed head / outcome: [#16](https://github.com/collisdigital/roadmaps-editor/pull/16),
+- PR / assessed head / outcome: [#16](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/16),
   80e7437 (reviewed 7b581dc, then comment and record commits), merged as a5c120f.
 - Models: delivery Sonnet (high, Suggested) for both children; reviews as STY-013; orchestrator Opus
   (high); retro Opus (medium).
@@ -95,14 +95,14 @@ Delivery is the delivery child's start to its final hand-back. Reviews: P-levels
   reviewers ran narrow commands only, with no further kill.
 - Human interventions: 0.
 - Bot status at readiness: completed-old-head (3938675; later commits are comments and the record).
-- Retro: [#17](https://github.com/collisdigital/roadmaps-editor/pull/17), merged as dc20e53. STY-016
+- Retro: [#17](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/17), merged as dc20e53. STY-016
   checks the Welsh short name in full at 375px, in Playwright.
 - Evidence limits: the killed child's usage unknown; reviewer tokens: Opus 120k; Sonnet 92k and 50k.
 
 ### STY-016 The shell and pages are a DHCW staff service
 
 - Type / risk: story; app shell, copy (en + cy), branding (ADR-010).
-- PR / assessed head / outcome: [#18](https://github.com/collisdigital/roadmaps-editor/pull/18),
+- PR / assessed head / outcome: [#18](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/18),
   9717af7, merged as 0f9f09e.
 - Models: delivery Sonnet (high, Suggested); reviews as STY-013; orchestrator Opus (high); retro Opus
   (medium).
@@ -128,7 +128,7 @@ Delivery is the delivery child's start to its final hand-back. Reviews: P-levels
 ### STY-017 Failures stay on screen, and staff are warned before their session ends
 
 - Type / risk: story; auth state machine (renewal), modal dialog, copy (en + cy).
-- PR / assessed head / outcome: [#19](https://github.com/collisdigital/roadmaps-editor/pull/19),
+- PR / assessed head / outcome: [#19](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/19),
   1300b01 (reviewed 1190596, then a docs reflow), merged as 215c0c1.
 - Models: delivery Opus (high, Suggested); reviews as STY-013; orchestrator Sonnet (medium); retro
   Opus (medium).
@@ -155,7 +155,7 @@ Delivery is the delivery child's start to its final hand-back. Reviews: P-levels
 ### STY-018 Tests hold the DHCW look without screenshots
 
 - Type / risk: story; E2E test suite only, no app code.
-- PR / assessed head / outcome: [#20](https://github.com/collisdigital/roadmaps-editor/pull/20),
+- PR / assessed head / outcome: [#20](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/20),
   8f0db62 (reviewed 5b7fb4f, then a record-only commit), merged as c4eca0b.
 - Models: delivery Sonnet (high, Suggested); reviews as STY-013; orchestrator Sonnet (medium); retro
   Opus (medium).

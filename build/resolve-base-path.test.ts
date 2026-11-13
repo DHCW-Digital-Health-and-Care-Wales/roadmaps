@@ -9,19 +9,23 @@ describe("resolveBasePath", () => {
 
   it("serves a project site under the repository name", () => {
     expect(
-      resolveBasePath({ GITHUB_REPOSITORY: "collisdigital/roadmaps-editor" }),
+      resolveBasePath({
+        GITHUB_REPOSITORY: "DHCW-Digital-Health-and-Care-Wales/roadmaps-editor",
+      }),
     ).toBe("/roadmaps-editor/")
   })
 
   it("serves a user or organisation site at the root", () => {
     expect(
       resolveBasePath({
-        GITHUB_REPOSITORY: "collisdigital/collisdigital.github.io",
+        GITHUB_REPOSITORY:
+          "DHCW-Digital-Health-and-Care-Wales/DHCW-Digital-Health-and-Care-Wales.github.io",
       }),
     ).toBe("/")
     expect(
       resolveBasePath({
-        GITHUB_REPOSITORY: "CollisDigital/collisdigital.GitHub.io",
+        GITHUB_REPOSITORY:
+          "dhcw-digital-health-and-care-wales/dhcw-digital-health-and-care-wales.GitHub.io",
       }),
     ).toBe("/")
   })
@@ -29,7 +33,7 @@ describe("resolveBasePath", () => {
   it("serves a custom domain at the root", () => {
     expect(
       resolveBasePath({
-        GITHUB_REPOSITORY: "collisdigital/roadmaps-editor",
+        GITHUB_REPOSITORY: "DHCW-Digital-Health-and-Care-Wales/roadmaps-editor",
         PAGES_CUSTOM_DOMAIN: "roadmaps.example.com",
       }),
     ).toBe("/")
@@ -37,7 +41,7 @@ describe("resolveBasePath", () => {
 
   it("lets VITE_BASE_PATH override everything, normalising slashes", () => {
     const env = {
-      GITHUB_REPOSITORY: "collisdigital/roadmaps-editor",
+      GITHUB_REPOSITORY: "DHCW-Digital-Health-and-Care-Wales/roadmaps-editor",
       PAGES_CUSTOM_DOMAIN: "roadmaps.example.com",
     }
     expect(resolveBasePath({ ...env, VITE_BASE_PATH: "preview" })).toBe(
@@ -52,7 +56,7 @@ describe("resolveBasePath", () => {
       resolveBasePath({
         VITE_BASE_PATH: "",
         PAGES_CUSTOM_DOMAIN: " ",
-        GITHUB_REPOSITORY: "collisdigital/roadmaps-editor",
+        GITHUB_REPOSITORY: "DHCW-Digital-Health-and-Care-Wales/roadmaps-editor",
       }),
     ).toBe("/roadmaps-editor/")
   })

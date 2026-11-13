@@ -7,7 +7,7 @@
 - **Depends on**: STY-016 (hard), STY-017 (preferred order)
 - **Binding ADRs**: ADR-006, ADR-007, ADR-010
 - **Suggested model**: Sonnet — Playwright specs and deterministic setup
-- **Delivered**: https://github.com/collisdigital/roadmaps-editor/pull/20
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/20
 
 ## Summary
 

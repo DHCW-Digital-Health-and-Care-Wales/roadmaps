@@ -8,7 +8,7 @@
 - **Binding ADRs**: ADR-009 §"Reading the list", §"Mistakes in the list"; ADR-002
 - **Suggested model**: Sonnet — a second request and an E2E fake rework, following a
   settled design
-- **Delivered**: https://github.com/collisdigital/roadmaps-editor/pull/5
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/5
 
 ## Summary
 

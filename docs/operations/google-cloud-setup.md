@@ -30,9 +30,9 @@ OAuth client. These steps use the Google Cloud console's _Google Auth Platform_ 
      no trailing slash):
      - `http://localhost:5173` (`pnpm dev`)
      - `http://localhost:4173` (optional: `pnpm preview`)
-     - `https://collisdigital.github.io` (production; **not**
-       `https://collisdigital.github.io/roadmaps-editor`, which Google rejects as it has a
-       path)
+     - `https://dhcw-digital-health-and-care-wales.github.io` (production; **not**
+       `https://dhcw-digital-health-and-care-wales.github.io/roadmaps-editor`, which
+       Google rejects as it has a path)
    - **Authorised redirect URIs: leave empty.** The token model's popup returns the token
      to the opener page, so no redirect URI is involved; redirect URIs are only for the
      authorisation-code model's redirect mode.

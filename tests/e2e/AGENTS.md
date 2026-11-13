@@ -44,7 +44,8 @@ tours.
   YAML diff and commit it. That flag never writes a _new_ snapshot: use
   `--update-snapshots=all` and check `git status` lists it.
 - CI serves under `/roadmaps-editor/`: after changing the structure snapshots, run them
-  once with `GITHUB_REPOSITORY=collisdigital/roadmaps-editor`.
+  once with
+  `GITHUB_REPOSITORY=DHCW-Digital-Health-and-Care-Wales/roadmaps-editor`.
 - Snapshot a `main`, header, menu, dialog, form or notice, never the footer, whose
   version changes per build.
 - The "Connected" notice clears itself after eight seconds: a test that snapshots or

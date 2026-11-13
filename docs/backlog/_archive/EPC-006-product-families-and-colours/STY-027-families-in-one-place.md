@@ -8,7 +8,7 @@
 - **Binding ADRs**: ADR-013, ADR-009, ADR-002
 - **Suggested model**: Opus — it adds two reads to the repository port and changes what
   a category is
-- **Delivered**: https://github.com/collisdigital/roadmaps-editor/pull/38
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/38
 
 ## Summary
 

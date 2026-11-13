@@ -79,6 +79,8 @@ S1–S3 are component tests; S4 extends the detail page's tests; S5 updates
   stay where they are (the list card) and are not in the block.
 - **D3** (agent, 2026-11-11): the block lands before editing so the read-only layout and
   its snapshot change can be reviewed on their own, and to run beside STY-022.
+- **D4** (owner, 2026-11-13, EPC-008 grilling round 1 Q5): `Last updated` moves into
+  the block, shown and editable there → STY-036, which supersedes D2 for that field.
 
 ## Out of scope
 

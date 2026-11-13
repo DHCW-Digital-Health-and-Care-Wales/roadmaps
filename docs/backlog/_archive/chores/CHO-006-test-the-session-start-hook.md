@@ -1,6 +1,6 @@
 # CHO-006: The session-start hook's scenarios run as a test
 
-- **Status**: Proposed — ready: PR #55's hook is on `main` (`aecefbb`)
+- **Status**: Done — in its PR, awaiting merge
 - **Type**: Chore
 - **Area**: CI/CD
 - **Epic**: standalone
@@ -62,3 +62,44 @@ At commit `a558b85` (PR #55's head):
 ## Out of scope
 
 - macOS without `timeout`, and a real Claude Code web session: neither runs in CI.
+
+## Delivery
+
+### Departures
+
+- **Test order** (agent): the hook predates this chore, so no test went red
+  before code that passes it. Each case's discrimination was shown instead by
+  planting its defect in the hook and watching only that case fail (Scenario
+  evidence).
+- **Fetch-free setups** (agent): every case but the deleted upstream puts the
+  checkout behind with `git reset --hard HEAD~1`, or fetches for itself, so it
+  holds where the hook skips its fetch. The deleted-upstream case needs the
+  hook's own fetch, so it is skipped where neither `timeout` nor `gtimeout`
+  exists (stock macOS, out of scope).
+- **One added case** (agent): S2 also checks that an existing `.env.local` is
+  kept, a branch of the same `if` that S2's creation case covers the other side
+  of.
+
+### Contract for dependents
+
+- `build/session-start-hook.test.ts` asserts the hook's whole stdout, so a
+  change to a Note or Warning's wording updates its expected string there.
+- Its `isolatedEnv()` builds the hook's environment from scratch (PATH, HOME,
+  TMPDIR, `GIT_CONFIG_GLOBAL`, `GIT_CONFIG_NOSYSTEM`), so a variable the hook
+  comes to read must be passed in deliberately.
+- The test runs under the suite's jsdom environment: `src/test/setup.ts` needs
+  `window`, so a `// @vitest-environment node` file fails to load.
+
+### Scenario evidence
+
+| Scenario                 | Held by                                                                                                                                                         |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1 behind (Note)         | `build/session-start-hook.test.ts` (`notes how far a checkout is behind the default branch`)                                                                    |
+| S1 upstream deleted      | `build/session-start-hook.test.ts` (`warns when the branch's upstream was deleted on the remote`)                                                               |
+| S1 unrelated history     | `build/session-start-hook.test.ts` (`warns when the branch's history is unrelated to the default branch`)                                                       |
+| S1 silent cases          | `build/session-start-hook.test.ts` (`is silent when the checkout is up to date`, `… in a shallow clone …`, `… no default branch recorded`)                      |
+| S1 stale worktree (Note) | `build/session-start-hook.test.ts` (`checks the session's worktree, not the directory it was launched in`)                                                      |
+| S1 `--prune` removed     | observed run: with `--prune` removed, under a global `fetch.prune=true` and `CLAUDE_CODE_REMOTE=true`, only the deleted-upstream case fails                     |
+| S1 discrimination        | observed runs: ignoring `cwd`, dropping the shallow guard or the unrelated-history test each fails only its own case                                            |
+| S2 install passes        | `build/session-start-hook.test.ts` (`installs dependencies and creates .env.local at the worktree root`)                                                        |
+| S2 install fails         | `build/session-start-hook.test.ts` (`names the install log when the install fails, and still creates .env.local`); an `exit 1` added after the warning fails it |

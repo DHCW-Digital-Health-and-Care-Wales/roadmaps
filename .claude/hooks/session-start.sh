@@ -1,5 +1,6 @@
 #!/bin/bash
 set -euo pipefail
+# Each outcome below is held by build/session-start-hook.test.ts.
 
 # Work in the session's current checkout: CLAUDE_PROJECT_DIR stays at the launch
 # directory after the session enters a worktree, while the hook input's `cwd` follows it.

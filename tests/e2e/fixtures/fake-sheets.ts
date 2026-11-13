@@ -140,8 +140,8 @@ const STATUS_NAMES: Readonly<Record<number, string>> = {
  * its tabs' values, applies a `batchUpdate` all or nothing, and checks every request the
  * way the real API would (method, path, query, bearer token). Reading a tab that does not
  * exist is a violation too, as the app checks the tab list first, and so is a write the
- * editor must never make (`applyBatchUpdate`: `Template`, Welsh, `Last updated`, a value
- * other than text, an unchanged cell).
+ * editor must never make (`applyBatchUpdate`: `Template`, Welsh, `Last updated` but as
+ * `YYYY-MM-DD`, a value other than text, an unchanged cell).
  */
 export class FakeSheets {
   /** The bearer token of every request, in order (`null` without one). */

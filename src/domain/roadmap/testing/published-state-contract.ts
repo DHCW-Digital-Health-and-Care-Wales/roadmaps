@@ -2,7 +2,11 @@ import { describe, expect, it } from "vitest"
 
 import type { Family } from "../family"
 import type { PublishedStateChange } from "../published-state"
-import type { FieldChange, RoadmapChanges } from "../roadmap-changes"
+import {
+  type FieldChange,
+  markedUpdated,
+  type RoadmapChanges,
+} from "../roadmap-changes"
 import type { RoadmapRepositoryContractSetup } from "./roadmap-repository-contract"
 import { createTestRoadmap } from "./test-roadmap"
 import { createTestRoadmapItem } from "./test-roadmap-item"
@@ -28,6 +32,10 @@ function saveAndPublish(changes: RoadmapChanges): PublishedStateChange {
   return { published: true, changes }
 }
 
+/** Publishing with "Mark as updated today" ticked (STY-036 S6, D10). */
+const publishToday = (changes: RoadmapChanges = { roadmap: {}, items: [] }) =>
+  saveAndPublish(markedUpdated(changes, "2026-11-13"))
+
 const twoEdits: RoadmapChanges = {
   roadmap: { statusLabel: change("Beta", "Live") },
   items: [{ item, position: 0, fields: { phase: change("", "Alpha") } }],
@@ -50,6 +58,47 @@ export function describePublishedState(
       expect(await repository.listRoadmaps()).toStrictEqual([live, other])
       expect(await repository.listRoadmapItems("producta")).toStrictEqual([
         item,
+      ])
+    })
+
+    it("publishes a roadmap with today's date, ticked, over a co-lead's, in one write (STY-036 S6, S9)", async () => {
+      const theirs = { ...draft, lastUpdated: "2026-11-01" }
+      const repository = setup.withRoadmaps([theirs, other], items)
+
+      await expect(
+        repository.setRoadmapPublished(draft, publishToday()),
+      ).resolves.toEqual({ status: "set" })
+      expect(await repository.listRoadmaps()).toStrictEqual([
+        { ...live, lastUpdated: "2026-11-13" },
+        other,
+      ])
+    })
+
+    it("still writes today's date, ticked, on a roadmap a co-lead already published (STY-036 D10)", async () => {
+      const repository = setup.withRoadmaps([live, other], items)
+
+      await expect(
+        repository.setRoadmapPublished(draft, publishToday()),
+      ).resolves.toEqual({ status: "set" })
+      expect(await repository.listRoadmaps()).toStrictEqual([
+        { ...live, lastUpdated: "2026-11-13" },
+        other,
+      ])
+    })
+
+    it("saves and publishes pending edits with today's date, ticked (STY-036 S6)", async () => {
+      const repository = setup.withRoadmaps([draft, other], items)
+
+      await expect(
+        repository.setRoadmapPublished(draft, publishToday(twoEdits)),
+      ).resolves.toEqual({ status: "set" })
+      expect(await repository.listRoadmaps()).toStrictEqual([
+        {
+          ...live,
+          statusLabel: { en: "Live", cy: "" },
+          lastUpdated: "2026-11-13",
+        },
+        other,
       ])
     })
 

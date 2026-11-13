@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Textarea } from "@/components/ui/textarea"
+import { isCalendarDate } from "@/domain/roadmap/calendar-date"
 
 import { RoadmapSwatch } from "../components/roadmap-swatch"
 
@@ -50,7 +51,15 @@ export interface EditFormField<F extends string> {
   disabled?: boolean
   /** Shown as `text`, not edited, with a notice of why (STY-028 S6). */
   fixed?: { text: string; notice: string }
+  /**
+   * A calendar date, `YYYY-MM-DD` or `""` for none, in the browser's own date input
+   * (STY-036 D8): none after `today`, which "Today" fills in.
+   */
+  date?: { today: string }
 }
+
+/** Why a field keeps the form open: its message's key under `roadmaps.edit`. */
+type FieldError = "titleRequired" | "dateInFuture" | "dateInvalid"
 
 export interface EditFormProps<F extends string> {
   /** The fields, the first of which is the title: required, and focused on opening. */
@@ -70,11 +79,12 @@ export interface EditFormProps<F extends string> {
 
 /**
  * The form an item or the roadmap's own text turns into for editing (STY-025 S1, S4,
- * S5): a labelled field each, typed, chosen from a list (STY-028) or ticked from one
- * (STY-034), or shown read-only when it can't be changed, then "Done" to keep the
- * values pending and Cancel (or Escape) to leave them. The title is required:
- * confirming without one keeps the form open with an error linked to it. Writes
- * nothing; the caller keeps the values pending.
+ * S5): a labelled field each, typed, chosen from a list (STY-028), ticked from one
+ * (STY-034) or a date picked (STY-036), or shown read-only when it can't be changed,
+ * then "Done" to keep the values pending and Cancel (or Escape) to leave them. The title
+ * is required, and a date is a real one and not after today: confirming otherwise keeps
+ * the form open with an error linked to each field, focusing the first. Writes nothing;
+ * the caller keeps the values pending.
  */
 export function EditForm<F extends string>({
   fields,
@@ -87,13 +97,17 @@ export function EditForm<F extends string>({
   const id = useId()
   const [opened] = useState(initial)
   const [values, setValues] = useState(initial)
-  const [titleMissing, setTitleMissing] = useState(false)
-  const titleRef = useRef<HTMLInputElement & HTMLTextAreaElement>(null)
-  const [title] = fields
-  const errorId = `${id}-error`
+  const [errors, setErrors] = useState<Partial<Record<F, FieldError>>>({})
+  const controls = useRef(new Map<F, HTMLInputElement | HTMLTextAreaElement>())
+  const controlRef =
+    (name: F) => (control: HTMLInputElement | HTMLTextAreaElement | null) => {
+      if (control) controls.current.set(name, control)
+      else controls.current.delete(name)
+    }
 
+  // The title is the first control set, as the form opens.
   useEffect(() => {
-    titleRef.current?.focus()
+    controls.current.values().next().value?.focus()
   }, [])
 
   const submit = (event: SubmitEvent<HTMLFormElement>) => {
@@ -101,9 +115,22 @@ export function EditForm<F extends string>({
     const trimmed = Object.fromEntries(
       fields.map(({ name }) => [name, values[name].trim()]),
     ) as Record<F, string>
-    if (title && trimmed[title.name] === "") {
-      setTitleMissing(true)
-      titleRef.current?.focus()
+    const found = Object.fromEntries(
+      fields.flatMap((field, index) => {
+        const error = fieldError(
+          field,
+          index === 0,
+          trimmed[field.name],
+          opened[field.name].trim(),
+          controls.current.get(field.name),
+        )
+        return error ? [[field.name, error]] : []
+      }),
+    ) as Partial<Record<F, FieldError>>
+    setErrors(found)
+    const invalid = fields.find(({ name }) => found[name])
+    if (invalid) {
+      controls.current.get(invalid.name)?.focus()
       return
     }
     onDone(
@@ -130,9 +157,7 @@ export function EditForm<F extends string>({
       onKeyDown={escape}
       className="flex flex-col gap-4"
     >
-      {fields.map((field, index) => {
-        const isTitle = index === 0
-        const invalid = isTitle && titleMissing
+      {fields.map((field) => {
         const controlId = `${id}-${field.name}`
         const change = (value: string) => {
           setValues((current) => ({ ...current, [field.name]: value }))
@@ -226,24 +251,65 @@ export function EditForm<F extends string>({
             </div>
           )
         }
-        const Control = field.multiline ? Textarea : Input
-        return (
-          <div key={field.name} className="flex flex-col gap-1.5">
+        const error: FieldError | undefined = errors[field.name]
+        const errorId = `${controlId}-error`
+        const label = (
+          <>
             <Label htmlFor={controlId}>{field.label}</Label>
-            {invalid && (
+            {error && (
               <p id={errorId} className="font-bold text-destructive">
                 <span className="sr-only">
                   {t("roadmaps.edit.errorPrefix")}
                 </span>{" "}
-                {t("roadmaps.edit.titleRequired")}
+                {t(`roadmaps.edit.${error}`)}
               </p>
             )}
+          </>
+        )
+        const described = {
+          "aria-invalid": error ? true : undefined,
+          "aria-describedby": error ? errorId : undefined,
+        }
+        if (field.date) {
+          const { today } = field.date
+          return (
+            <div key={field.name} className="flex flex-col gap-1.5">
+              {label}
+              <div className="flex flex-wrap items-center gap-3">
+                <Input
+                  ref={controlRef(field.name)}
+                  id={controlId}
+                  type="date"
+                  max={today}
+                  value={values[field.name]}
+                  className="w-auto"
+                  {...described}
+                  onChange={(event) => {
+                    change(event.target.value)
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => {
+                    change(today)
+                  }}
+                >
+                  {t("roadmaps.edit.today")}
+                </Button>
+              </div>
+            </div>
+          )
+        }
+        const Control = field.multiline ? Textarea : Input
+        return (
+          <div key={field.name} className="flex flex-col gap-1.5">
+            {label}
             <Control
-              ref={isTitle ? titleRef : undefined}
+              ref={controlRef(field.name)}
               id={controlId}
               value={values[field.name]}
-              aria-invalid={invalid || undefined}
-              aria-describedby={invalid ? errorId : undefined}
+              {...described}
               onChange={(event) => {
                 change(event.target.value)
               }}
@@ -259,4 +325,27 @@ export function EditForm<F extends string>({
       </div>
     </form>
   )
+}
+
+/**
+ * What keeps `field` from being confirmed with `value`, trimmed: the title blank, or a
+ * date the browser couldn't read (a half-typed one reads as none), or a date changed
+ * from `opened` to one after today. A date left as it opened is no edit, so one already
+ * after today never holds up the other fields.
+ */
+function fieldError<F extends string>(
+  field: EditFormField<F>,
+  isTitle: boolean,
+  value: string,
+  opened: string,
+  control: HTMLInputElement | HTMLTextAreaElement | undefined,
+): FieldError | null {
+  if (isTitle && value === "") return "titleRequired"
+  if (!field.date) return null
+  if (control?.validity.badInput || (value !== "" && !isCalendarDate(value))) {
+    return "dateInvalid"
+  }
+  if (value === opened) return null
+  // Both `YYYY-MM-DD`, so they compare as text.
+  return value > field.date.today ? "dateInFuture" : null
 }

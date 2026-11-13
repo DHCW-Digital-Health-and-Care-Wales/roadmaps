@@ -6,6 +6,7 @@ import type { Category } from "@/domain/roadmap/category"
 import type { Family } from "@/domain/roadmap/family"
 import type { LocalisedText } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
+import { markedUpdated } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { CO_LEAD_VALUE } from "@/domain/roadmap/testing/contract-write"
 import { categoriesOf, familiesOf } from "@/domain/roadmap/testing/linked-lists"
@@ -1245,6 +1246,44 @@ describe("GoogleSheetsRoadmapRepository", () => {
       expect(spreadsheet.tabs()[1]?.rows[1]?.[2]).toBe("")
     })
 
+    it.each([
+      ["sets", "2026-11-13", "Roadmaps!R2C7 2026-11-13"],
+      ["clears", "", "Roadmaps!R2C7 "],
+    ])(
+      "%s Last updated as YYYY-MM-DD text, whatever format the cell held (STY-036 S5, S8)",
+      async (_case, value, cell) => {
+        const before = exampleTabs()
+        const index = before[0]?.rows[1]
+        if (index) index[6] = "01/10/2026"
+        const spreadsheet = serveStatefulSpreadsheet(before)
+
+        await expect(
+          httpRepository().publishRoadmapChanges("producta", {
+            roadmap: { lastUpdated: { base: "2026-10-01", value } },
+            items: [],
+          }),
+        ).resolves.toEqual({ status: "published" })
+
+        const { requests } = spreadsheet.bodies[0] as BatchUpdateBody
+        expect(requests[0]).toEqual({
+          updateCells: {
+            start: { sheetId: 0, rowIndex: 1, columnIndex: 6 },
+            rows: [
+              {
+                values: [
+                  value === ""
+                    ? {}
+                    : { userEnteredValue: { stringValue: value } },
+                ],
+              },
+            ],
+            fields: "userEnteredValue",
+          },
+        })
+        expect(changedCells(before, spreadsheet.tabs())[0]).toBe(cell)
+      },
+    )
+
     it("writes a move as the public site's Horizon value, in that cell alone (STY-031 S6)", async () => {
       const spreadsheet = serveStatefulSpreadsheet(exampleTabs())
       const items = await httpRepository().listRoadmapItems("producta")
@@ -2073,6 +2112,11 @@ describe("GoogleSheetsRoadmapRepository", () => {
       if (roadmap === undefined) throw new Error(`No ${id}`)
       return roadmap
     }
+    /** The `Item ID` column added to Product C's tab, and its one item's new ID. */
+    const productCItemId = [
+      "ProductC!R1C8 Item ID",
+      expect.stringMatching(/^ProductC!R2C8 \S+$/) as string,
+    ]
     /** Product C's `Enabled` cell (row 4, column 2) set to `value`. */
     const enabled = (value: string) => (rows: string[][]) => {
       const row = rows[3]
@@ -2140,6 +2184,45 @@ describe("GoogleSheetsRoadmapRepository", () => {
 
       expect(changedCells(before, spreadsheet.tabs())).toEqual([
         "Roadmaps!R4C2 No",
+      ])
+    })
+
+    it("writes Enabled and today's date, ticked, in one batchUpdate (STY-036 S6)", async () => {
+      const before = tabs()
+      const productC = await loadedFrom(before, "productc")
+      const spreadsheet = serveStatefulSpreadsheet(before)
+
+      await expect(
+        httpRepository().setRoadmapPublished(productC, {
+          published: true,
+          changes: markedUpdated({ roadmap: {}, items: [] }, "2026-11-13"),
+        }),
+      ).resolves.toEqual({ status: "set" })
+
+      // Each item without an ID gets one, as with any write of a publish (ADR-012).
+      expect(changedCells(before, spreadsheet.tabs())).toEqual([
+        "Roadmaps!R4C2 Yes",
+        "Roadmaps!R4C7 2026-11-13",
+        ...productCItemId,
+      ])
+      expect(spreadsheet.bodies).toHaveLength(1)
+    })
+
+    it("still writes today's date, ticked, when Enabled already reads Yes (STY-036 D10)", async () => {
+      const productC = await loadedFrom(tabs(), "productc")
+      const before = tabs(enabled("Yes"))
+      const spreadsheet = serveStatefulSpreadsheet(before)
+
+      await expect(
+        httpRepository().setRoadmapPublished(productC, {
+          published: true,
+          changes: markedUpdated({ roadmap: {}, items: [] }, "2026-11-13"),
+        }),
+      ).resolves.toEqual({ status: "set" })
+
+      expect(changedCells(before, spreadsheet.tabs())).toEqual([
+        "Roadmaps!R4C7 2026-11-13",
+        ...productCItemId,
       ])
     })
 

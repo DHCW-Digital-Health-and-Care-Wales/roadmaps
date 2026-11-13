@@ -6,6 +6,7 @@ import {
   roadmapValue,
   type RoadmapTextField,
 } from "@/domain/roadmap/roadmap-changes"
+import { localToday } from "@/lib/local-today"
 
 import { RoadmapAbout } from "../components/roadmap-about"
 import { EditControls } from "./edit-controls"
@@ -41,8 +42,9 @@ export interface EditableRoadmapAboutProps {
 
 /**
  * What the roadmap is about, with its pending English shown and tagged, and an Edit for
- * its title, status, product lead, vision and service description (STY-025 S5), and its
- * family and category, chosen from the lists (STY-028).
+ * its title, status, product lead, vision and service description (STY-025 S5), its
+ * family and category, chosen from the lists (STY-028), and when it was last updated,
+ * none after today (STY-036).
  */
 export function EditableRoadmapAbout({ roadmap }: EditableRoadmapAboutProps) {
   const { t } = useTranslation()
@@ -79,6 +81,12 @@ export function EditableRoadmapAbout({ roadmap }: EditableRoadmapAboutProps) {
     multilineRoadmapFields,
   )
   const chosen = choices.fields(shown)
+  const lastUpdated = {
+    name: "lastUpdated",
+    label: t("roadmaps.edit.roadmapFields.lastUpdated"),
+    multiline: false,
+    date: { today: localToday() },
+  } as const
 
   return (
     <RoadmapAbout
@@ -87,8 +95,12 @@ export function EditableRoadmapAbout({ roadmap }: EditableRoadmapAboutProps) {
         mode.editing
           ? (headingId) => (
               <EditForm
-                fields={[...text.fields, ...chosen.fields]}
-                initial={{ ...text.initial, ...chosen.initial }}
+                fields={[...text.fields, ...chosen.fields, lastUpdated]}
+                initial={{
+                  ...text.initial,
+                  ...chosen.initial,
+                  lastUpdated: roadmapValue(shown, "lastUpdated"),
+                }}
                 labelledBy={headingId}
                 onDone={done}
                 onCancel={mode.close}

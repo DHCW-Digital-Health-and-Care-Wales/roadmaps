@@ -86,8 +86,12 @@ async function expectProductA(page: Page) {
     "Product lead",
     "Vision",
     "Service description",
+    "Last updated",
   ])
   await expect(about.getByRole("definition").first()).toHaveText("Beta")
+  await expect(about.getByRole("definition").last()).toHaveText(
+    "1 October 2026",
+  )
   await expect(titlesUnder(page, "Now")).toHaveText([
     "Example card with every column",
     "Minimal card",

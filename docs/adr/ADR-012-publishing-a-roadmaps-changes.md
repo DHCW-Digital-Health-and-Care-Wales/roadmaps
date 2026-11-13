@@ -6,7 +6,8 @@
   extends ADR-009 (the editor writes to the roadmap index).
 - Date: 2026-11-11 (amended in ADR-013: family and category become choosable; `Family (cy)`
   is copied; amended in ADR-014: an item's placement and organisations become editable;
-  amended by STY-035: a roadmap's published state is written on its own)
+  amended by STY-035: a roadmap's published state is written on its own; amended by
+  STY-036: `Last updated` becomes editable, and publishing sets it only when asked)
 
 ## Context
 
@@ -31,7 +32,8 @@ first.
 - **A roadmap's own text**: title (required), status label, product lead, vision and
   service description (Option 1). Family, category, colour, `Last updated` and
   published stay read-only: family is tied to a colour the sheet sets separately, so it
-  waits for EPC-006.
+  waits for EPC-006. (The amendments below make family, category, published and
+  `Last updated` writable.)
 - **A roadmap item's text**: title (required), description, expected outcome and phase
   (Option 2), on every item, unplaced ones included. Tags, organisations, details,
   placement and Welsh stay read-only.
@@ -63,7 +65,8 @@ first.
 - **Each pending edit keeps its base value**: the field's value when it was loaded.
   Refresh re-reads the roadmap and keeps pending edits on top; the base stays the value
   first edited, so a refresh never hides a co-lead's change.
-- `Last updated` is not changed by publishing (Option 9).
+- `Last updated` is not changed by publishing (Option 9), unless the Product Lead asks
+  (_STY-036 amendments_).
 - The step is **Publish** on a published roadmap and **Save** on one that is not
   (Option 10): the same write, named for what it does there.
 
@@ -193,6 +196,22 @@ Nothing checks permission in advance.
   first); none publishes nothing ("changed"). `Roadmap` gains `itemsLocation` to carry
   the `Sheet` value, never shown. A lost answer is settled by one re-read, as Option 16
   settles a publish's. `RoadmapRepository` gains `setRoadmapPublished` (amends ADR-002).
+
+### STY-036 amendments
+
+- **`Last updated` becomes an editable roadmap field** (STY-036 D1): a pending edit from
+  the About form, set with the browser's own date input or "Today", or cleared (D4, D8),
+  published with the rest and refused on a co-lead's change as any field is (D7). No date
+  after today may be set (D3).
+- **Option 9 is refined: publishing sets `Last updated` only when asked** (D1, D5, D10):
+  "Publish changes", "Save changes" and "Publish roadmap" (with or without pending edits)
+  offer "Mark as updated today", unticked; ticked, today's date goes in the same
+  all-or-nothing write, over whatever the cell holds, never a conflict (D7), and is still
+  written when `Enabled` already reads `Yes`. A pending date hides the tick box and is
+  published instead (D6). Unpublishing never offers it.
+- **Written as `YYYY-MM-DD` text** (D2), whatever the cell held, or an empty cell when
+  cleared. "Today" is the browser's local date (D11); the future database API takes it
+  in UTC (CHO-005).
 
 ## Options (owner's choice marked ✅, 2026-11-11)
 

@@ -32,10 +32,11 @@ import {
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import {
   type EditableItemField,
+  type EditableRoadmapField,
   organisationIdsOf,
   type PublishOutcome,
   type RoadmapChanges,
-  type RoadmapTextField,
+  type RoadmapChoiceField,
 } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { isRoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
@@ -94,15 +95,22 @@ const TEMPLATE_TAB = "Template"
 /** The tabs a roadmap's index row may never name as its items. */
 const NOT_ITEM_TABS = new Set([TEMPLATE_TAB, FAMILIES_TAB, CATEGORIES_TAB])
 
-/** The roadmap index's column each roadmap text field is written to (ADR-012). */
+/**
+ * The roadmap index's column each roadmap field but a family or category is written to
+ * (ADR-012): its text, and its date as `YYYY-MM-DD` text (STY-036 D2).
+ */
 const ROADMAP_COLUMNS: Readonly<
-  Record<RoadmapTextField, RoadmapIndexWriteColumn>
+  Record<
+    Exclude<EditableRoadmapField, RoadmapChoiceField>,
+    RoadmapIndexWriteColumn
+  >
 > = {
   title: "Title",
   statusLabel: "Status label",
   productLead: "Product Lead",
   vision: "Vision",
   serviceDescription: "Service description",
+  lastUpdated: "Last updated",
 }
 
 /** The roadmap tab's column each editable item field is written to (ADR-012, ADR-014). */

@@ -6,10 +6,11 @@ import type { Category } from "../category"
 import type { Family } from "../family"
 import type { FamilyEdit } from "../family-changes"
 import type { Roadmap } from "../roadmap"
-import type {
-  FieldChange,
-  ItemChanges,
-  RoadmapChanges,
+import {
+  type FieldChange,
+  type ItemChanges,
+  markedUpdated,
+  type RoadmapChanges,
 } from "../roadmap-changes"
 import type { RoadmapItem } from "../roadmap-item"
 import type { RoadmapRepository } from "../roadmap-repository"
@@ -711,6 +712,79 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
         { ...coLeadItem, phase: { en: "Live", cy: "Beta" } },
         { ...laterWork, id: expect.stringMatching(NEW_ID) as string },
       ])
+    })
+
+    describe("Last updated (STY-036)", () => {
+      it.each([
+        ["sets", "2026-11-10", "2026-11-10"],
+        ["clears", "", null],
+      ] as const)(
+        "%s the date, keeping every other field (S2, S5)",
+        async (_case, value, read) => {
+          const repository = setup.withRoadmaps(fixtures, itemFixtures)
+
+          await expect(
+            repository.publishRoadmapChanges("producta", {
+              roadmap: { lastUpdated: change("2026-10-01", value) },
+              items: [],
+            }),
+          ).resolves.toEqual({ status: "published" })
+          expect(await repository.listRoadmaps()).toStrictEqual(
+            productA({ lastUpdated: read }),
+          )
+        },
+      )
+
+      it("refuses a date a co-lead changed, writing nothing (S9)", async () => {
+        const roadmaps = productA({ lastUpdated: "2026-11-01" })
+        const repository = setup.withRoadmaps(roadmaps, itemFixtures)
+
+        await expect(
+          repository.publishRoadmapChanges("producta", {
+            roadmap: { lastUpdated: change("2026-10-01", "2026-11-10") },
+            items: [],
+          }),
+        ).resolves.toEqual({
+          status: "refused",
+          conflicts: [
+            {
+              subject: "roadmap",
+              field: "lastUpdated",
+              base: "2026-10-01",
+              pending: "2026-11-10",
+              current: "2026-11-01",
+            },
+          ],
+          missingItems: [],
+        })
+        expect(await repository.listRoadmaps()).toStrictEqual(roadmaps)
+      })
+
+      it("writes today's date, ticked, over a co-lead's, beside the other edits (S6, S9)", async () => {
+        const repository = setup.withRoadmaps(
+          productA({ lastUpdated: "2026-11-01" }),
+          itemFixtures,
+        )
+
+        await expect(
+          repository.publishRoadmapChanges(
+            "producta",
+            markedUpdated(
+              {
+                roadmap: { statusLabel: change("Beta", "Live") },
+                items: [],
+              },
+              "2026-11-13",
+            ),
+          ),
+        ).resolves.toEqual({ status: "published" })
+        expect(await repository.listRoadmaps()).toStrictEqual(
+          productA({
+            statusLabel: { en: "Live", cy: "" },
+            lastUpdated: "2026-11-13",
+          }),
+        )
+      })
     })
 
     describe("a placement (STY-031)", () => {

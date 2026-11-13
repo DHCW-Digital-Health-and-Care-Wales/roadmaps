@@ -437,6 +437,97 @@ describe("planRoadmapPublish", () => {
     })
   })
 
+  describe("Last updated, a calendar date (STY-036)", () => {
+    const dated = { ...roadmap, lastUpdated: "2026-10-02" }
+    const date = (base: string, value: string, overwrite?: true) => ({
+      roadmap: {
+        lastUpdated: { base, value, ...(overwrite && { overwrite }) },
+      },
+      items: [],
+    })
+    const plan = (changes: ReturnType<typeof date>, current = dated) =>
+      planRoadmapPublish(changes, { ...snapshotOf([]), roadmap: current })
+
+    it.each([
+      ["sets", "2026-11-10"],
+      ["clears", ""],
+    ])("%s the date, as YYYY-MM-DD text (S2, S5, S8)", (_case, value) => {
+      expect(plan(date("2026-10-02", value))).toEqual({
+        kind: "write",
+        writes: {
+          roadmap: [{ field: "lastUpdated", value }],
+          items: [],
+          ids: [],
+        },
+      })
+    })
+
+    it("refuses a date a co-lead changed since it was edited (S9)", () => {
+      expect(
+        plan(date("2026-10-02", "2026-11-10"), {
+          ...roadmap,
+          lastUpdated: "2026-11-01",
+        }),
+      ).toEqual({
+        kind: "settled",
+        outcome: {
+          status: "refused",
+          conflicts: [
+            {
+              subject: "roadmap",
+              field: "lastUpdated",
+              base: "2026-10-02",
+              pending: "2026-11-10",
+              current: "2026-11-01",
+            },
+          ],
+          missingItems: [],
+        },
+      })
+    })
+
+    it("writes a date set over whatever it holds as never a conflict, as the tick box sets it (S6, S9)", () => {
+      expect(
+        plan(date("", "2026-11-13", true), {
+          ...roadmap,
+          lastUpdated: "2026-11-01",
+        }),
+      ).toEqual({
+        kind: "write",
+        writes: {
+          roadmap: [{ field: "lastUpdated", value: "2026-11-13" }],
+          items: [],
+          ids: [],
+        },
+      })
+    })
+
+    it("writes a date set over whatever it holds even when it was edited from it", () => {
+      expect(
+        plan(date("2026-11-13", "2026-11-13", true), {
+          ...roadmap,
+          lastUpdated: "2026-11-01",
+        }),
+      ).toMatchObject({ kind: "write" })
+    })
+
+    it("writes nothing when the date is already held", () => {
+      expect(plan(date("", "2026-10-02", true))).toEqual({
+        kind: "settled",
+        outcome: { status: "published" },
+      })
+    })
+
+    it.each(["13/11/2026", "2026-02-30", "2026-1-5", "today"])(
+      "rejects %s, which is no YYYY-MM-DD date and the editor never sends",
+      (value) => {
+        expect(() => plan(date("2026-10-02", value))).toThrow(
+          expect.objectContaining({ kind: "unknown" }),
+        )
+      },
+    )
+  })
+
   it("rejects a blank title, which the editor never sends", () => {
     let error: unknown
     try {

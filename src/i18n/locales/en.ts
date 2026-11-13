@@ -216,7 +216,10 @@ export const en = {
         productLead: "Product lead",
         vision: "Vision",
         serviceDescription: "Service description",
+        lastUpdated: "Last updated",
       },
+      /** In place of the date, for a roadmap with none (STY-036 S1). */
+      noDate: "No date",
     },
     /** A roadmap's items, on its page. */
     items: {
@@ -307,7 +310,14 @@ export const en = {
         serviceDescription: "Service description",
         familyId: "Family",
         categoryId: "Category",
+        lastUpdated: "Last updated",
       } satisfies Record<EditableRoadmapField, string>,
+      /** Fills a date field with today's date (STY-036 S3). */
+      today: "Today",
+      /** A date field holding a date after today (STY-036 S4). */
+      dateInFuture: "Enter today's date or an earlier one",
+      /** A date field the browser couldn't read as a date, such as one half typed. */
+      dateInvalid: "Enter a real date, or clear the field",
       /** The choices that leave a roadmap in no family or category (STY-028). */
       noFamily: "No family",
       noCategory: "No category",
@@ -415,6 +425,11 @@ export const en = {
         /** Lists what changes, by roadmap section or item title. */
         changes: "What changes",
       },
+      /**
+       * The tick box that sets the roadmap's `Last updated` to today in the same write,
+       * here and on "Publish roadmap" (STY-036 S6).
+       */
+      markUpdated: "Mark as updated today",
       notice: {
         published:
           "Changes published. The public site shows them after its next nightly update.",

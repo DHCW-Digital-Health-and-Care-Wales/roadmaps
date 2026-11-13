@@ -86,6 +86,16 @@ describe("applyBatchUpdate", () => {
     expect(result).toMatchObject({ error: expect.any(String) as string })
   })
 
+  it.each(["2026-11-13", undefined])(
+    "accepts Last updated written as a date or cleared, %j (STY-036 D2)",
+    (value) => {
+      expect(
+        applyBatchUpdate([index()], { requests: [cell(0, 1, 2, value)] })
+          .violations,
+      ).toEqual([])
+    },
+  )
+
   it("rejects a body it cannot read, as a violation", () => {
     const result = applyBatchUpdate([index()], { requests: [{ nope: {} }] })
 
@@ -102,7 +112,12 @@ describe("applyBatchUpdate", () => {
       cell(0, 0, 4, "Vision (cy)"),
       "Welsh column",
     ],
-    ["Last updated", [index()], cell(0, 1, 2, "2026-11-01"), "Last updated"],
+    [
+      "Last updated, but as YYYY-MM-DD",
+      [index()],
+      cell(0, 1, 2, "13/11/2026"),
+      "not YYYY-MM-DD",
+    ],
     ["an unchanged cell", [index()], cell(0, 1, 1, "Old title"), "unchanged"],
     [
       "a number",

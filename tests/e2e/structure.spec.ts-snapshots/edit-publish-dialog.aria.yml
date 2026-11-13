@@ -4,5 +4,7 @@
   - heading "What changes" [level=3]
   - list:
     - listitem: A clearer card Title
+  - checkbox "Mark as updated today"
+  - text: Mark as updated today
   - button "Publish changes"
   - button "Cancel"

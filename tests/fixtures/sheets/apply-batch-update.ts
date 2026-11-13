@@ -65,15 +65,17 @@ const TEMPLATE_TAB = "Template"
 /** The one tab the editor appends rows to: a new family's (STY-029). */
 const FAMILIES_TAB = "Families"
 
-/** The index column the editor never writes (STY-023 D5). */
+/** The index column the editor writes only as a `YYYY-MM-DD` date or blank (STY-036 D2). */
 const LAST_UPDATED_HEADER = /^\s*last\s+updated\s*$/i
+const LAST_UPDATED_VALUE = /^(\d{4}-\d{2}-\d{2})?$/
 
 /**
  * Applies a `batchUpdate` body to `tabs`, all or nothing as Google does: a request it
  * can't apply rejects the whole body and changes nothing. Beyond what Google rejects, it
  * records as violations what the editor must never write (STY-023 S11): the `Template`
  * tab, anything but a plain string or a cleared cell, a Welsh column but `Family (cy)`,
- * `Last updated`, an unchanged cell, a row appended to a tab but `Families`.
+ * `Last updated` but as `YYYY-MM-DD` or blank, an unchanged cell, a row appended to a tab
+ * but `Families`.
  */
 export function applyBatchUpdate(
   tabs: readonly GridTab[],
@@ -169,8 +171,12 @@ export function applyBatchUpdate(
         if (welsh !== undefined && !FAMILY_WELSH.test(welsh)) {
           violations.push(`${where} in a Welsh column`)
         }
-        if (LAST_UPDATED_HEADER.test(column)) {
-          violations.push(`${where} in Last updated`)
+        if (
+          rowIndex > 0 &&
+          LAST_UPDATED_HEADER.test(column) &&
+          !LAST_UPDATED_VALUE.test(value)
+        ) {
+          violations.push(`${where} in Last updated, not YYYY-MM-DD`)
         }
         while (tab.rows.length <= rowIndex) tab.rows.push([])
         // Never undefined: the rows were just padded to reach it.

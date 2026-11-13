@@ -1,4 +1,5 @@
 import type { Roadmap } from "@/domain/roadmap/roadmap"
+import { markedUpdated } from "@/domain/roadmap/roadmap-changes"
 import { toAppError } from "@/lib/errors"
 
 import {
@@ -22,28 +23,33 @@ export const CURRENT_TEXT: CurrentText = {
 
 /**
  * Publishes (or saves) the roadmap's pending changes, once: never while a publish of the
- * roadmap is under way, never retried (S13). What it came to is the roadmap's notice;
+ * roadmap is under way, never retried (S13). Given `today`, its date, the roadmap's
+ * `Last updated` is set to it in the same write ("Mark as updated today", STY-036 S6). What it came to is the roadmap's notice;
  * on success the changes it sent are no longer pending, and any made meanwhile stay.
  * A refusal discards the changes to items that are gone and leaves each conflict to the
  * review, showing the co-lead's text even if the read after it fails; a roadmap gone
  * from the list loses its changes (STY-026).
  * Works through the store alone, so leaving the page does not lose the outcome.
  */
-export function usePublish(roadmap: Roadmap): () => Promise<void> {
+export function usePublish(
+  roadmap: Roadmap,
+): (today?: string) => Promise<void> {
   const store = usePendingChangesStore()
   const { mutateAsync } = usePublishRoadmapChanges(roadmap.id, {
     currentText: CURRENT_TEXT,
   })
   const action = publishAction(roadmap)
 
-  return async () => {
+  return async (today) => {
     const sent = store.getSnapshot().changes.get(roadmap.id)
     if (!sent || countChanges(sent) === 0) return
     if (!store.startPublish(roadmap.id)) return
     let notice: PublishNotice | null
     try {
       // Settles once the roadmap and its items are read again, or have failed to be.
-      const outcome = await mutateAsync(sent)
+      const outcome = await mutateAsync(
+        today === undefined ? sent : markedUpdated(sent, today),
+      )
       switch (outcome.status) {
         case "published":
           store.update(roadmap.id, (changes) => settlePublished(changes, sent))

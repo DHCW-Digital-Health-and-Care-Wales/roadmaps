@@ -14,6 +14,7 @@ import { localise } from "@/domain/roadmap/localised-text"
 import type { RoadmapChanges } from "@/domain/roadmap/roadmap-changes"
 import { useLanguage } from "@/i18n"
 
+import { MarkUpdatedCheckbox } from "./mark-updated-checkbox"
 import { changedParts } from "./pending-changes"
 import type { PublishAction } from "./pending-changes-store"
 
@@ -24,6 +25,9 @@ export interface PublishDialogProps {
   publishing: boolean
   /** Whether publishing is available: only while connected (S12). */
   available: boolean
+  /** Whether "Mark as updated today" is ticked, offered unless a date is pending. */
+  markUpdated: boolean
+  onMarkUpdatedChange: (checked: boolean) => void
   /** Whether closing returns focus to the control that opened it. */
   returnFocus: () => boolean
   /** Called once the dialog has finished closing. */
@@ -34,7 +38,8 @@ export interface PublishDialogProps {
 
 /**
  * Asks before publishing, listing each changed part by name with its changed fields,
- * and when the public site shows them (S9). Cancel writes nothing; while the publish is
+ * and when the public site shows them (S9), with "Mark as updated today" unless a date
+ * is pending, which is published instead (STY-036 S6, S7). Cancel writes nothing; while the publish is
  * under way it cannot be closed, and while publishing is unavailable it cannot be
  * confirmed.
  */
@@ -44,6 +49,8 @@ export function PublishDialog({
   changes,
   publishing,
   available,
+  markUpdated,
+  onMarkUpdatedChange,
   returnFocus,
   onClosed,
   onConfirm,
@@ -104,6 +111,13 @@ export function PublishDialog({
             ))}
           </ul>
         </div>
+        {!changes.roadmap.lastUpdated && (
+          <MarkUpdatedCheckbox
+            checked={markUpdated}
+            disabled={publishing}
+            onCheckedChange={onMarkUpdatedChange}
+          />
+        )}
         <AlertDialogFooter>
           <Button
             disabled={publishing || !available}

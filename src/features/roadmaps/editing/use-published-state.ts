@@ -3,11 +3,13 @@ import { useCallback, useState } from "react"
 import type { PublishProblem } from "@/domain/roadmap/published-state"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import { useAuth } from "@/features/auth/use-auth"
+import { markedUpdated } from "@/domain/roadmap/roadmap-changes"
 import { toAppError, type AppErrorKind } from "@/lib/errors"
+import { localToday } from "@/lib/local-today"
 
 import { useSetRoadmapPublished } from "../hooks/use-set-roadmap-published"
 import { discardItems, openConflicts } from "./conflicts"
-import { countChanges, settlePublished } from "./pending-changes"
+import { countChanges, NO_CHANGES, settlePublished } from "./pending-changes"
 import {
   usePendingChanges,
   usePendingChangesStore,
@@ -37,6 +39,14 @@ export interface PublishedStateQuestion {
 export interface PublishedState extends PublishedStateQuestion {
   /** Whether the action can be chosen now. */
   available: boolean
+  /**
+   * Whether the dialog offers "Mark as updated today" (STY-036 D10): when publishing,
+   * unless a date is pending, which is published instead (S7).
+   */
+  offersMarkUpdated: boolean
+  /** Whether it is ticked: unticked each time the dialog opens. */
+  markUpdated: boolean
+  setMarkUpdated: (checked: boolean) => void
   /** Whether a write is under way. */
   pending: boolean
   /** Whether the dialog asking is open. */
@@ -58,6 +68,7 @@ export interface PublishedState extends PublishedStateQuestion {
  * written at once. Publishing sends the roadmap's pending edits with it, through the
  * pending-edit store as a publish of them goes, so a conflict opens its review and a
  * lost answer waits for a Refresh (S5, S6, S10); unpublishing leaves them pending (S7).
+ * Publishing can also set the roadmap's `Last updated` to today (STY-036 D10).
  * Unavailable unless connected, while a write of the roadmap is under way, and while a
  * conflict is still to decide.
  */
@@ -70,6 +81,7 @@ export function usePublishedState(roadmap: Roadmap): PublishedState {
   })
   const [open, setOpen] = useState(false)
   const [asked, setAsked] = useState<PublishedStateQuestion | null>(null)
+  const [markUpdated, setMarkUpdated] = useState(false)
   const [notice, setNotice] = useState<PublishedStateOutcomeNotice | null>(null)
   // Stable, as a confirmation's dwell restarts when it changes.
   const dismissNotice = useCallback(() => {
@@ -85,7 +97,10 @@ export function usePublishedState(roadmap: Roadmap): PublishedState {
     openConflicts(outcome.conflicts, changes).length > 0
   const pending = isPending || snapshot.publishing.has(roadmap.id)
 
-  const write = async ({ publishing }: PublishedStateQuestion) => {
+  const write = async (
+    { publishing }: PublishedStateQuestion,
+    today: string | undefined,
+  ) => {
     const now = store.getSnapshot().changes.get(roadmap.id)
     const sent = publishing && countChanges(now) > 0 ? now : undefined
     if (sent && !store.startPublish(roadmap.id)) return
@@ -95,7 +110,15 @@ export function usePublishedState(roadmap: Roadmap): PublishedState {
     let shown: PublishedStateOutcomeNotice | null = null
     try {
       const result = await mutateAsync(
-        publishing ? { published: true, changes: sent } : { published: false },
+        publishing
+          ? {
+              published: true,
+              changes:
+                today === undefined
+                  ? sent
+                  : markedUpdated(sent ?? NO_CHANGES, today),
+            }
+          : { published: false },
       )
       switch (result.status) {
         case "set":
@@ -146,11 +169,16 @@ export function usePublishedState(roadmap: Roadmap): PublishedState {
     publishing,
     count,
     available: connected && !pending && !reviewing,
+    offersMarkUpdated:
+      (asked ?? { publishing }).publishing && !changes?.roadmap.lastUpdated,
+    markUpdated,
+    setMarkUpdated,
     pending,
     open,
     asked: asked ?? { publishing, count },
     ask: () => {
       setAsked({ publishing, count })
+      setMarkUpdated(false)
       setOpen(true)
     },
     cancel: () => {
@@ -159,7 +187,8 @@ export function usePublishedState(roadmap: Roadmap): PublishedState {
     confirm: () => {
       if (!open || asked === null || !connected || pending) return
       setNotice(null)
-      void write(asked).finally(() => {
+      const today = asked.publishing && markUpdated ? localToday() : undefined
+      void write(asked, today).finally(() => {
         setOpen(false)
       })
     },

@@ -1,6 +1,7 @@
 import type { Category } from "./category"
 import type { Family } from "./family"
 import type { FamilyEdit, FamilyInput, FamilyOutcome } from "./family-changes"
+import type { MatchOutcome } from "./list-match"
 import type { Organisation } from "./organisation"
 import type { Roadmap } from "./roadmap"
 import type { PublishOutcome, RoadmapChanges } from "./roadmap-changes"
@@ -79,4 +80,16 @@ export interface RoadmapRepository {
     edit: FamilyEdit,
     options?: RepositoryReadOptions,
   ): Promise<FamilyOutcome>
+  /**
+   * Rewrites one roadmap's copied family and category cells from the lists (ADR-013,
+   * STY-030), in one write, apart from its pending edits. Re-reads the roadmap and the
+   * lists first, as `planListMatch` settles them against `loaded`, the roadmap as the
+   * page showed it. Rejects with `AppError('invalid-data')` when the data source has no
+   * usable family list; a write whose answer is lost is settled by a re-read, and
+   * `signal` cancels only the reads.
+   */
+  matchRoadmapToLists(
+    loaded: Roadmap,
+    options?: RepositoryReadOptions,
+  ): Promise<MatchOutcome>
 }

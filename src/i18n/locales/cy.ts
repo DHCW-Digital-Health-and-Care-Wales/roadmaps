@@ -141,6 +141,39 @@ export const cy = {
       familyNotListed: "Teulu heb ei restru",
       family: "Teulu: {{name}}",
       category: "Categori: {{name}}",
+      match: {
+        action: "Gwneud iddo gyfateb",
+        confirm: {
+          title: "Gwneud i {{title}} gyfateb i'w deulu a'i gategori?",
+          description:
+            "Mae'r map trywydd hwn wedi'i gyhoeddi. Bydd y wefan gyhoeddus yn dangos y newid ar ôl ei diweddariad nesaf dros nos.",
+          action: "Gwneud iddo gyfateb",
+        },
+        notice: {
+          matched: "Mae {{title}} bellach yn cyfateb i'w deulu a'i gategori",
+          matchedPublic:
+            "Mae {{title}} bellach yn cyfateb i'w deulu a'i gategori. Bydd y wefan gyhoeddus yn ei ddangos ar ôl ei diweddariad nesaf dros nos.",
+          changed:
+            "Newidiodd y map trywydd hwn tra oeddech chi'n edrych. Chafodd dim byd ei ysgrifennu. Mae'n cael ei ddangos fel y mae nawr.",
+          failed: "Doedd dim modd gwneud i'r map trywydd gyfateb",
+        },
+        errors: {
+          unauthenticated:
+            "Mae eich sesiwn wedi dod i ben. Ailgysylltwch, yna rhowch gynnig arall arni.",
+          forbidden:
+            "Does gan y cyfrif Google hwn ddim hawl i newid mapiau trywydd. Gofynnwch i berchennog y daenlen am fynediad golygu.",
+          "not-found":
+            "Doedd dim modd dod o hyd i'r daenlen. Gwiriwch ei bod yn dal i fodoli.",
+          "rate-limited":
+            "Mae gormod o geisiadau ar hyn o bryd. Arhoswch funud a rhowch gynnig arall arni.",
+          network:
+            "Methu cysylltu. Gwiriwch eich cysylltiad â'r rhyngrwyd a rhowch gynnig arall arni.",
+          "invalid-response": "Roedd yr ateb mewn fformat annisgwyl.",
+          "invalid-data":
+            "Dydy'r rhestr teuluoedd ddim yn y fformat disgwyliedig yn y daenlen. Gofynnwch i berchennog y daenlen ei gwirio.",
+          unknown: "Aeth rhywbeth o'i le. Rhowch gynnig arall arni.",
+        },
+      },
     },
     card: {
       productLead: "Arweinydd cynnyrch: {{name}}",

@@ -14,6 +14,7 @@ import type { AppError } from "@/lib/errors"
 import { cn } from "@/lib/utils"
 
 import { ListMismatchBadges } from "../components/list-mismatch-badges"
+import { MatchListsAction } from "../components/match-lists-action"
 import { NotPublishedBadge } from "../components/not-published-badge"
 import { RefreshButton } from "../components/refresh-button"
 import { RoadmapFamilyLine } from "../components/roadmap-family-line"
@@ -234,6 +235,7 @@ function RoadmapView({
           </div>
         </div>
         <RoadmapFamilyLine roadmap={shown} />
+        <MatchListsAction roadmap={roadmap} />
         <RoadmapPublishing roadmap={roadmap} />
       </div>
       <EditableRoadmapAbout roadmap={roadmap} />

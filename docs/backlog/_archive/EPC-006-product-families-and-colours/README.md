@@ -1,8 +1,7 @@
 # EPC-006: Product families and colours — managed in one place
 
-- **Status**: Active — grilled in rounds 1–4 (2026-11-12); ADR-013 accepted
-- **Progress**: 3 of 4 terminal (STY-029 awaits merge); next selectable: STY-030;
-  blocked on: nothing (the owner's tabs are needed only to check against the
+- **Status**: Done — grilled in rounds 1–4 (2026-11-12); ADR-013 accepted; STY-027 and STY-028 merged, STY-029 and STY-030 in their PRs, which await the owner's merge
+- **Progress**: 4 of 4 terminal (the owner's tabs are needed only to check against the
   real sheet)
 - **Binding ADRs**: ADR-013, ADR-009, ADR-012
 
@@ -20,7 +19,7 @@ values into the roadmap's row, so the public site keeps reading what it reads to
 ## Owner decisions waiting
 
 None. Owner step: add the tabs per
-[`families-and-categories-tabs.md`](../../operations/families-and-categories-tabs.md).
+[`families-and-categories-tabs.md`](../../../operations/families-and-categories-tabs.md).
 
 ## Findings
 
@@ -83,12 +82,12 @@ written. A change to what the public site reads is said in the record and its PR
 
 ## Stories
 
-| ID      | Story                                                                                                                                            | Area                          | Depends on | State                |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------- | ---------- | -------------------- |
-| STY-027 | [Families and their colours are managed in one place](../_archive/EPC-006-product-families-and-colours/STY-027-families-in-one-place.md)         | Domain + Infra + UI           | —          | ✅                   |
-| STY-028 | [A Product Lead chooses a roadmap's family and category](../_archive/EPC-006-product-families-and-colours/STY-028-choose-family-and-category.md) | Domain + Infra + UI           | STY-027    | ✅                   |
-| STY-029 | [Anyone connected adds, renames and recolours a family](../_archive/EPC-006-product-families-and-colours/STY-029-manage-families.md)             | Domain + Infra + UI + Routing | STY-027    | ✅ (PR awaits merge) |
-| STY-030 | [A roadmap out of step with its family is made to match](STY-030-make-it-match.md)                                                               | Infra + UI                    | STY-027    |                      |
+| ID      | Story                                                                                           | Area                          | Depends on | State                |
+| ------- | ----------------------------------------------------------------------------------------------- | ----------------------------- | ---------- | -------------------- |
+| STY-027 | [Families and their colours are managed in one place](STY-027-families-in-one-place.md)         | Domain + Infra + UI           | —          | ✅                   |
+| STY-028 | [A Product Lead chooses a roadmap's family and category](STY-028-choose-family-and-category.md) | Domain + Infra + UI           | STY-027    | ✅                   |
+| STY-029 | [Anyone connected adds, renames and recolours a family](STY-029-manage-families.md)             | Domain + Infra + UI + Routing | STY-027    | ✅ (PR awaits merge) |
+| STY-030 | [A roadmap out of step with its family is made to match](STY-030-make-it-match.md)              | Infra + UI                    | STY-027    | ✅ (PR awaits merge) |
 
 ## Sequencing
 
@@ -98,16 +97,16 @@ need the owner's tabs only for a check against the real sheet; tests use the fak
 
 ## Out of scope
 
-- Editing a roadmap's text and items: [EPC-005](../_archive/EPC-005-editing/README.md).
+- Editing a roadmap's text and items: [EPC-005](../EPC-005-editing/README.md).
 - The public site reading the tabs, and dropping the copied cells: its own repository.
 - Deleting a family, editing Welsh names, changing categories (ADR-013).
 
 ## Defects
 
-- [DEF-004](../defects/DEF-004-pending-no-category-dropped-when-category-unlisted.md): a pending "No category" is dropped, unwritten, once the roadmap's category leaves its list (Needs triage)
-- [DEF-005](../defects/DEF-005-about-form-shows-no-family-after-refresh.md): an open About form shows "No family" after Refresh reads a co-lead's family (Needs triage)
+- [DEF-004](../../defects/DEF-004-pending-no-category-dropped-when-category-unlisted.md): a pending "No category" is dropped, unwritten, once the roadmap's category leaves its list (Needs triage)
+- [DEF-005](../../defects/DEF-005-about-form-shows-no-family-after-refresh.md): an open About form shows "No family" after Refresh reads a co-lead's family (Needs triage)
 
 ## Related
 
 - ADR-013; ADR-009, ADR-012 Option 1 (why family was not editable)
-- [EPC-002](../_archive/EPC-002-roadmap-list-from-roadmaps-tab/README.md) (grouping by family)
+- [EPC-002](../EPC-002-roadmap-list-from-roadmaps-tab/README.md) (grouping by family)

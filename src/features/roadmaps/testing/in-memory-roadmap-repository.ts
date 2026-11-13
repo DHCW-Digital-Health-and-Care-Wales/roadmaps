@@ -6,6 +6,7 @@ import {
   planNewFamily,
   type FamilyOutcome,
 } from "@/domain/roadmap/family-changes"
+import { planListMatch } from "@/domain/roadmap/list-match"
 import type { Organisation } from "@/domain/roadmap/organisation"
 import {
   heldWrites,
@@ -302,6 +303,31 @@ export function createInMemoryRoadmapRepository(
           families[at] = structuredClone(family)
           for (const roadmap of members) setFamily(roadmap, family)
         })
+      }),
+    matchRoadmapToLists: (loaded, { signal } = {}) =>
+      respond(signal, (list) => {
+        familyList()
+        const current = list.find(({ id }) => id === loaded.id)
+        const plan = planListMatch(loaded, current)
+        if (plan.kind === "settled") {
+          return plan.outcome.status === "changed"
+            ? {
+                ...plan.outcome,
+                roadmap: structuredClone(plan.outcome.roadmap),
+              }
+            : plan.outcome
+        }
+        // A plan to write is made only over a listed roadmap.
+        if (current === undefined) throw new AppError("unknown")
+        if (write !== undefined && "fails" in write) {
+          throw new AppError(write.fails)
+        }
+        // Its shown values are the lists' already: matching clears the flag.
+        if (write?.lost !== "not-applied") current.outOfStep = false
+        if (write === undefined) return { status: "matched" as const }
+        if (write.lost === "reread-fails") rereadFails = true
+        if (rereadFails || current.outOfStep) throw new AppError("network")
+        return { status: "matched" as const }
       }),
   }
 }

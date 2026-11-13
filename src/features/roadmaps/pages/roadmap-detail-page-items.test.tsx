@@ -748,6 +748,7 @@ describe("RoadmapDetailPage items", () => {
         listOrganisations: vi.fn().mockResolvedValue([]),
         addFamily: vi.fn(),
         changeFamily: vi.fn(),
+        matchRoadmapToLists: vi.fn(),
       },
     })
 

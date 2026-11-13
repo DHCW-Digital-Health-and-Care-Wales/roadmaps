@@ -3,7 +3,7 @@
 - **Status**: Done — delivered in its PR, which awaits the owner's merge
 - **Type**: Feature
 - **Area**: Domain + Infrastructure + Features/UI + Routing + i18n (en + cy)
-- **Epic**: [EPC-006-product-families-and-colours](../../EPC-006-product-families-and-colours/README.md)
+- **Epic**: [EPC-006-product-families-and-colours](README.md)
 - **Depends on**: STY-027 (hard)
 - **Binding ADRs**: ADR-013, ADR-012
 - **Suggested model**: Opus — one atomic write across a tab and many roadmaps' rows, some

@@ -409,3 +409,44 @@ test("a family and category read their Welsh names from the lists (STY-027 S5)",
     "Teulu heb ei restru",
   )
 })
+
+test("makes a roadmap out of step match its lists, telling a published one first (STY-030 S1, S2, S3, S4)", async ({
+  page,
+  sheets,
+}) => {
+  sheets.spreadsheet = withLists()
+  await page.goto("./")
+  await connect(page)
+  const main = page.getByRole("main")
+
+  // Not fixable here: its family isn't in the list (S3).
+  await card(page, "Product D roadmap").getByRole("link").click()
+  await expect(
+    main.getByRole("heading", { level: 1, name: "Product D roadmap" }),
+  ).toBeVisible()
+  await expect(main.getByText("Family isn't listed")).toBeVisible()
+  await expect(main.getByRole("button", { name: /Make it match/ })).toHaveCount(
+    0,
+  )
+  await page.goBack()
+
+  await card(page, "Product A roadmap").getByRole("link").click()
+  await main.getByRole("button", { name: /Make it match/ }).click()
+  const dialog = page.getByRole("alertdialog")
+  await expect(dialog).toContainText("The public site shows the change after")
+  expect(sheets.writes).toEqual([])
+
+  await dialog.getByRole("button", { name: "Make it match" }).click()
+
+  await expect(main.getByRole("status")).toContainText(
+    "Product A roadmap now matches its family and category. The public site shows it after its next nightly update.",
+  )
+  await expect(
+    main.getByText("Doesn't match its family or category"),
+  ).toHaveCount(0)
+  expect(sheets.writes).toHaveLength(1)
+  const index = sheets.spreadsheet.find(({ title }) => title === "Roadmaps")
+  const [names = [], productA = []] = index?.rows ?? []
+  expect(productA[names.indexOf("Colour")]).toBe("#12a3c9")
+  expect(productA[names.indexOf("Family (cy)")]).toBe("Cofnod Sengl")
+})

@@ -144,6 +144,40 @@ export const en = {
       familyNotListed: "Family isn't listed",
       family: "Family: {{name}}",
       category: "Category: {{name}}",
+      /** Fixing a roadmap whose copied family or category cells differ from the lists (STY-030). */
+      match: {
+        action: "Make it match",
+        confirm: {
+          title: "Make {{title}} match its family and category?",
+          description:
+            "This roadmap is published. The public site shows the change after its next nightly update.",
+          action: "Make it match",
+        },
+        notice: {
+          matched: "{{title}} now matches its family and category",
+          matchedPublic:
+            "{{title}} now matches its family and category. The public site shows it after its next nightly update.",
+          changed:
+            "This roadmap changed while you were looking. Nothing was written. It's shown as it is now.",
+          failed: "Couldn't make the roadmap match",
+        },
+        errors: {
+          unauthenticated:
+            "Your session has expired. Reconnect, then try again.",
+          forbidden:
+            "This Google account isn't allowed to change roadmaps. Ask the spreadsheet owner for edit access.",
+          "not-found":
+            "The spreadsheet couldn't be found. Check that it still exists.",
+          "rate-limited":
+            "Too many requests right now. Wait a moment and try again.",
+          network:
+            "Couldn't connect. Check your internet connection and try again.",
+          "invalid-response": "The answer was in an unexpected format.",
+          "invalid-data":
+            "The family list isn't in the expected format in the spreadsheet. Ask the spreadsheet owner to check it.",
+          unknown: "Something went wrong. Please try again.",
+        } satisfies Record<AppErrorKind, string>,
+      },
     },
     card: {
       productLead: "Product lead: {{name}}",

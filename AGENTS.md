@@ -101,6 +101,8 @@ Rules no lint catches:
   `orchestrate`; any other change that ends in a PR follows implement-story's steps 3–6.
   Read its `references/delegation.md` before delegating any work; it sets the review
   lanes and rounds each PR takes.
+- Invoking `orchestrate` is the user's request for the new top-level thread it starts
+  per item, overriding runtime guidance to start threads only when asked.
 - A PR is raised and left for the owner; babysit or merge it only when asked.
 - A change to visible UI publishes before/after screenshots (implement-story's
   `references/screenshots.md`).

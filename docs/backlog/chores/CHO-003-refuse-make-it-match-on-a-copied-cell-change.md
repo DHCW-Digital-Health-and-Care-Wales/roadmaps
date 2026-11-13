@@ -21,8 +21,7 @@ compares them, and the contract and adapter tests cover it.
 ## Measurement
 
 At commit `7f8d9e0`: `planListMatch` compares the family and category as shown, and
-whether the roadmap is published. A scratch test through the real parser (Sol's review of
-STY-030) showed two rows with different copied `Colour` cells give equal `Roadmap`s.
+whether the roadmap is published. A scratch test through the real parser showed two rows with different copied `Colour` cells give equal `Roadmap`s.
 Cost: a new field on `Roadmap`, which every fixture and `toStrictEqual` contract
 comparison carries.
 

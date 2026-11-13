@@ -132,9 +132,10 @@ at once, after a re-read, in one all-or-nothing `spreadsheets.batchUpdate`, only
 at once, after a re-read, in one all-or-nothing `spreadsheets.batchUpdate`, only that
 roadmap's index row's `Family ID`, `Family`, `Family (cy)`, `Colour`, `Category ID` and
 `Category`, copied from the `Families` and `Categories` tabs as read, each only where it
-differs, the `Family ID` or `Category ID` column appended if missing. It is offered only for a family in the list, writes nothing while the roadmap
-index is named `Template`, and a change since the page loaded to the roadmap's family or
-category, or to its being out of step, refuses the write; its pending edits stay
+differs, and the `Family ID` or `Category ID` column if it is missing. It is offered
+only for a family in the list, writes nothing while the roadmap index is named
+`Template`, and a change since the page loaded to the roadmap's family or category,
+or to its being out of step or published, refuses the write; its pending edits stay
 pending.
 
 It never writes any other cell: no Welsh `(cy)` cell other than `Family (cy)`,

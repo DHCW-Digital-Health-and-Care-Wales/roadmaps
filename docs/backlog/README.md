@@ -30,6 +30,7 @@ moves to `_archive/`, where its row here still points.
 | [CHO-001](chores/CHO-001-carry-linked-name-with-pending-choice.md)        | Carry the linked name with each pending family/category choice, so renames before first publish are not conflicts | Proposed |
 | [CHO-002](chores/CHO-002-show-a-deleted-pending-choice-as-not-listed.md)  | Show a pending family or category deleted from its list as not listed                                             | Proposed |
 | [CHO-003](chores/CHO-003-refuse-make-it-match-on-a-copied-cell-change.md) | Make "Make it match" refuse a change to the row's own copied cells (STY-030 S4)                                   | Proposed |
+| [CHO-004](chores/CHO-004-share-the-write-failure-copy.md)                 | Share the eight-key write-failure copy between publishing, families and "Make it match"                           | Proposed |
 
 Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status token.
 

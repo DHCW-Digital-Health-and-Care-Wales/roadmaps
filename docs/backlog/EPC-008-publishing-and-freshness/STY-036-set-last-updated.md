@@ -26,7 +26,8 @@ plan (`infrastructure/`); STY-035's published-state write carries an optional
 double); the About block and form, the publish dialog and the
 conflict review (`features/`); copy in both catalogues; README _What the editor
 writes_; an ADR-012 amendment; the line in `docs/analysis/roadmap-tab-format.md` that
-says the editor never writes `Last updated`.
+says the editor never writes `Last updated`. Where "today" is worked out, a code comment
+names CHO-005: that date goes to the future database API in UTC (D11).
 
 ## Acceptance criteria
 
@@ -48,13 +49,13 @@ date input
 
 ### S3: "Today" fills today's date (round 1 Q5)
 
-**Given** the form, on 13 November 2026 in Europe/London
+**Given** the form, on 13 November 2026 by the browser's clock
 **When** Sam chooses "Today"
 **Then** the field holds 13 November 2026
 
 ### S4: No date after today (round 1 Q7)
 
-**Given** the form on 13 November 2026 in Europe/London
+**Given** the form on 13 November 2026 by the browser's clock
 **When** Sam enters 20 November 2026
 **Then** the picker offers no later date than today, and a typed later date is refused
 with a message; the form can't be confirmed until it is fixed
@@ -106,9 +107,9 @@ format follow the browser's language (round 4 Q1)
 
 ## Tests
 
-S3 and S4's "today" is Europe/London's (D9), so test it with a fixed clock in British
-Summer Time just before midnight UTC (2026-07-01T23:30Z is already 2 July in London),
-where a UTC date would differ. S8 needs an MSW test of the written cell; S2 and S6 need a Playwright
+S3 and S4's "today" is the browser's local date (D11), so test it with a fixed clock
+and a time zone other than UTC just after local midnight (in Europe/London,
+2026-07-01T23:30Z is already 2 July), where a UTC date would differ. S8 needs an MSW test of the written cell; S2 and S6 need a Playwright
 journey against the Sheets fake. D10 needs a contract test on both implementations, and
 an MSW test, of "Publish roadmap" with the box ticked, including a row whose `Enabled`
 already reads `Yes`, where the date is still written.
@@ -136,8 +137,13 @@ already reads `Yes`, where the date is still written.
 - **D10** (owner, 2026-11-13, asked after review round 1): the tick box on STY-035's
   "Publish roadmap" with no unsaved edits → yes, offered there too; ticked, `Enabled`
   and today's date go in one write. S6. Not on "Unpublish roadmap".
+- **D11** (owner, 2026-11-13, asked after review): "today", for "Today", the tick box
+  and D3's limit → the browser's local date, not Europe/London. Replaces D9. S3, S4,
+  S6. The code that works out "today" carries a comment naming CHO-005, which sends
+  the date to the future database API in UTC.
 
 ## Out of scope
 
 - Staleness (A7): a later record.
 - Setting the date when unpublishing a roadmap: not asked for.
+- Sending the date to the future database API in UTC: CHO-005.

@@ -26,11 +26,12 @@ moves to `_archive/`, where its row here still points.
 
 ## Chores
 
-| ID                                                                       | Chore                                                                                                             | Status   |
-| ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- | -------- |
-| [CHO-001](chores/CHO-001-carry-linked-name-with-pending-choice.md)       | Carry the linked name with each pending family/category choice, so renames before first publish are not conflicts | Proposed |
-| [CHO-002](chores/CHO-002-show-a-deleted-pending-choice-as-not-listed.md) | Show a pending family or category deleted from its list as not listed                                             | Proposed |
-| [CHO-004](chores/CHO-004-share-the-write-failure-copy.md)                | Share the eight-key write-failure copy between publishing, families and "Make it match"                           | Proposed |
+| ID                                                                       | Chore                                                                                                             | Status      |
+| ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- | ----------- |
+| [CHO-001](chores/CHO-001-carry-linked-name-with-pending-choice.md)       | Carry the linked name with each pending family/category choice, so renames before first publish are not conflicts | Proposed    |
+| [CHO-002](chores/CHO-002-show-a-deleted-pending-choice-as-not-listed.md) | Show a pending family or category deleted from its list as not listed                                             | Proposed    |
+| [CHO-004](chores/CHO-004-share-the-write-failure-copy.md)                | Share the eight-key write-failure copy between publishing, families and "Make it match"                           | Proposed    |
+| [CHO-005](chores/CHO-005-send-last-updated-to-the-api-in-utc.md)         | Send a roadmap's Last updated to the future database API in UTC, once it replaces Sheets                          | Placeholder |
 
 Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status token.
 

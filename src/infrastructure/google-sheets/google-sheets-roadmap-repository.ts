@@ -17,6 +17,18 @@ import {
   type PublishWrites,
   type RoadmapSnapshot,
 } from "@/domain/roadmap/publish-plan"
+import {
+  findLoadedRow,
+  findPublishedStateRow,
+  heldPublishedState,
+  needsItems,
+  planPublishedStateWrite,
+  type PublishedStateChange,
+  type PublishedStateOutcome,
+  type PublishedStateRow,
+  type PublishedStateWrite,
+  type PublishProblem,
+} from "@/domain/roadmap/published-state"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import {
   type EditableItemField,
@@ -52,6 +64,7 @@ import {
 import {
   HORIZON_VALUES,
   parseRoadmapTab,
+  roadmapTabColumns,
   type RoadmapTab,
   type RoadmapTabColumn,
 } from "./roadmap-tab-parser"
@@ -259,12 +272,7 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
   ): Promise<PublishOutcome> {
     const read = await this.#readRoadmap(roadmapId, { signal })
     if (read === null) return { status: "roadmap-not-found" }
-    // Never written, even as the index (ADR-012).
-    if (read.indexTab.properties.title === TEMPLATE_TAB) {
-      throw new AppError("invalid-data", {
-        message: `The roadmap index is the ${TEMPLATE_TAB} tab`,
-      })
-    }
+    writableIndex(read)
     const plan = planRoadmapPublish(changes, snapshotOf(read))
     if (plan.kind === "settled") return plan.outcome
     signal?.throwIfAborted()
@@ -336,12 +344,7 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
   ): Promise<FamilyOutcome> {
     const read = await this.#readRoadmapIndex({ signal })
     const { tab, parsed, list } = usableFamilyTab(read.familyTab)
-    // Never written, even as the index (ADR-012).
-    if (read.indexTab.properties.title === TEMPLATE_TAB) {
-      throw new AppError("invalid-data", {
-        message: `The roadmap index is the ${TEMPLATE_TAB} tab`,
-      })
-    }
+    writableIndex(read)
     const plan = planFamilyChange(edit, {
       families: list,
       roadmaps: read.index.entries.map(({ roadmap }) => roadmap),
@@ -398,12 +401,7 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
   ): Promise<MatchOutcome> {
     const read = await this.#readRoadmapIndex({ signal })
     usableFamilyTab(read.familyTab)
-    // Never written, even as the index (ADR-012).
-    if (read.indexTab.properties.title === TEMPLATE_TAB) {
-      throw new AppError("invalid-data", {
-        message: `The roadmap index is the ${TEMPLATE_TAB} tab`,
-      })
-    }
+    writableIndex(read)
     const entry = read.index.entries.find(
       ({ roadmap }) => roadmap.id === loaded.id,
     )
@@ -436,6 +434,110 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
       if (!held) throw error
     }
     return { status: "matched" }
+  }
+
+  /**
+   * Re-reads the index and finds the row the page loaded among those with its id, reads
+   * its tab when publishing it or its pending edits, checks what the public site's sync
+   * would fail on, then writes its `Enabled` cell as exactly `Yes` or `No`, with any
+   * pending edits, in one `batchUpdate` (STY-035). A missing `Enabled` column is added
+   * (D10). A write whose answer is lost is settled by one more read.
+   */
+  async setRoadmapPublished(
+    loaded: Roadmap,
+    change: PublishedStateChange,
+    { signal }: RepositoryReadOptions = {},
+  ): Promise<PublishedStateOutcome> {
+    const read = await this.#readRoadmapIndex({ signal })
+    writableIndex(read)
+    const entries = entriesWithId(read, loaded.id)
+    const found = findPublishedStateRow(
+      loaded,
+      change,
+      entries.map((entry) => stateRowOf(read, entry)),
+    )
+    if (found.kind === "settled") return found.outcome
+    const entry = entries[found.index]
+    // The found row is one of those given.
+    if (entry === undefined) throw new AppError("unknown")
+
+    const sendsChanges = change.published && change.changes !== undefined
+    const itemTab =
+      found.check || sendsChanges
+        ? await this.#readItemTab(read, entry, { signal })
+        : null
+    const problems = found.check ? syncProblems(read, entry, itemTab) : []
+    const roadmapRead = needsItems(found, change, problems)
+      ? roadmapReadOf(read, entry, itemTab)
+      : null
+    const plan = planPublishedStateWrite(
+      found,
+      change,
+      problems,
+      roadmapRead && snapshotOf(roadmapRead),
+    )
+    if (plan.kind === "settled") return plan.outcome
+    signal?.throwIfAborted()
+
+    const index = new TabWriter(read.indexTab, read.index.columns)
+    if (plan.writeState) {
+      index.write(entry.row, "Enabled", change.published ? "Yes" : "No")
+    }
+    try {
+      await this.#client.postJson(`${this.#spreadsheetPath}:batchUpdate`, {
+        requests:
+          roadmapRead && plan.writes
+            ? batchRequests(roadmapRead, plan.writes, index)
+            : index.requests(),
+      })
+    } catch (error) {
+      if (isAppError(error) && error.kind === "network") {
+        return this.#settleLostState(loaded, change, plan, error)
+      }
+      throw error
+    }
+    return { status: "set" }
+  }
+
+  /**
+   * Re-reads the index, and the row's tab when pending edits were sent, once after a
+   * write whose answer was lost: all of it held is set, none rethrows `lost`, and
+   * anything else, or a failed read, is unconfirmed (S10).
+   */
+  async #settleLostState(
+    loaded: Roadmap,
+    change: PublishedStateChange,
+    write: PublishedStateWrite,
+    lost: AppError,
+  ): Promise<PublishedStateOutcome> {
+    let held: ReturnType<typeof heldPublishedState>
+    try {
+      const read = await this.#readRoadmapIndex({})
+      const entries = entriesWithId(read, loaded.id)
+      const rows = entries.map((entry) => stateRowOf(read, entry))
+      const at = findLoadedRow(loaded, change, rows)
+      const entry = entries[at]
+      const roadmapRead =
+        entry && write.writes
+          ? roadmapReadOf(read, entry, await this.#readItemTab(read, entry, {}))
+          : null
+      held = heldPublishedState(
+        change,
+        write,
+        rows[at],
+        roadmapRead && snapshotOf(roadmapRead),
+      )
+    } catch {
+      return { status: "unconfirmed" }
+    }
+    switch (held) {
+      case "all":
+        return { status: "set" }
+      case "none":
+        throw lost
+      case "some":
+        return { status: "unconfirmed" }
+    }
   }
 
   /**
@@ -499,29 +601,34 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
       ({ roadmap }) => roadmap.id === roadmapId,
     )
     if (entry === undefined) return null
-    // Matched exactly, as the index's `missing-tab` problem is (STY-020 D3).
-    const properties = indexRead.tabs.get(entry.tabName)
-    if (properties === undefined) {
-      throw new AppError("invalid-data", {
-        message: `Roadmap ${roadmapId} names a tab that does not exist`,
-      })
-    }
-    // None is a roadmap's items, and none may be written as one (ADR-011 to ADR-013).
+    return roadmapReadOf(
+      indexRead,
+      entry,
+      await this.#readItemTab(indexRead, entry, options),
+    )
+  }
+
+  /**
+   * The tab the row names as its items, or `null` when there is none, matched exactly as
+   * the index's `missing-tab` problem is (STY-020 D3). Throws `AppError('invalid-data')`
+   * when it names a tab that is never a roadmap's items (ADR-011 to ADR-013).
+   */
+  async #readItemTab(
+    read: IndexRead,
+    entry: RoadmapIndexEntry,
+    options: RepositoryReadOptions,
+  ): Promise<TabRows | null> {
+    const properties = read.tabs.get(entry.tabName)
+    if (properties === undefined) return null
     if (
       NOT_ITEM_TABS.has(entry.tabName) ||
-      properties.sheetId === indexRead.indexTab.properties.sheetId
+      properties.sheetId === read.indexTab.properties.sheetId
     ) {
       throw new AppError("invalid-data", {
-        message: `Roadmap ${roadmapId} names the ${entry.tabName} tab`,
+        message: `Roadmap ${entry.roadmap.id} names the ${entry.tabName} tab`,
       })
     }
-    const rows = await this.#readTab(entry.tabName, options)
-    return {
-      ...indexRead,
-      entry,
-      itemTab: { properties, rows },
-      items: parseRoadmapTab(rows),
-    }
+    return { properties, rows: await this.#readTab(entry.tabName, options) }
   }
 
   /**
@@ -605,6 +712,93 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
       ),
     )
   }
+}
+
+/** Throws `AppError('invalid-data')` when the roadmap index is the `Template` tab (ADR-012). */
+function writableIndex(read: IndexRead): void {
+  if (read.indexTab.properties.title === TEMPLATE_TAB) {
+    throw new AppError("invalid-data", {
+      message: `The roadmap index is the ${TEMPLATE_TAB} tab`,
+    })
+  }
+}
+
+/**
+ * The roadmap with its items, from its row and the tab it names. Throws
+ * `AppError('invalid-data')` without the tab, or when its items can't be read.
+ */
+function roadmapReadOf(
+  read: IndexRead,
+  entry: RoadmapIndexEntry,
+  itemTab: TabRows | null,
+): RoadmapRead {
+  if (itemTab === null) {
+    throw new AppError("invalid-data", {
+      message: `Roadmap ${entry.roadmap.id} names a tab that does not exist`,
+    })
+  }
+  return { ...read, entry, itemTab, items: parseRoadmapTab(itemTab.rows) }
+}
+
+/** Every index row with this id, kept by the list or not, in row order. */
+function entriesWithId(read: IndexRead, id: string): RoadmapIndexEntry[] {
+  return read.index.everyEntry.filter(({ roadmap }) => roadmap.id === id)
+}
+
+/** The row as `findPublishedStateRow` reads it: its `Enabled` cell exactly (D9). */
+function stateRowOf(
+  read: IndexRead,
+  entry: RoadmapIndexEntry,
+): PublishedStateRow {
+  const enabled = indexCell(read, entry, "Enabled").trim()
+  return {
+    roadmap: entry.roadmap,
+    written: enabled === "Yes" ? true : enabled === "No" ? false : null,
+  }
+}
+
+/**
+ * What the public site's sync would fail on were the row enabled, apart from another
+ * enabled row with its id (STY-035 S4): a `Sheet` naming no tab, a tab without a
+ * `Title` or `Horizon` column, or a `#rgb` colour (`docs/analysis/roadmaps-tab-format.md`).
+ */
+function syncProblems(
+  read: IndexRead,
+  entry: RoadmapIndexEntry,
+  itemTab: TabRows | null,
+): PublishProblem[] {
+  const location = entry.tabName
+  const problems: PublishProblem[] = []
+  if (itemTab === null) {
+    problems.push({ code: "items-missing", location })
+  } else {
+    const columns = roadmapTabColumns(itemTab.rows)
+    if (!columns.has("Title")) {
+      problems.push({ code: "items-field-missing", location, field: "title" })
+    }
+    if (!columns.has("Horizon")) {
+      problems.push({
+        code: "items-field-missing",
+        location,
+        field: "placement",
+      })
+    }
+  }
+  const colour = indexCell(read, entry, "Colour").trim()
+  if (/^#[0-9a-f]{3}$/i.test(colour)) {
+    problems.push({ code: "short-colour", colour })
+  }
+  return problems
+}
+
+/** The row's cell in `column` as written, `""` for a column the header lacks. */
+function indexCell(
+  read: IndexRead,
+  entry: RoadmapIndexEntry,
+  column: RoadmapIndexWriteColumn,
+): string {
+  const at = read.index.columns.get(column)
+  return at === undefined ? "" : (read.indexTab.rows[entry.row - 1]?.[at] ?? "")
 }
 
 /**
@@ -714,9 +908,15 @@ function snapshotOf({
   }
 }
 
-/** The requests that make `writes`: growing grids first, then headers, then cells. */
-function batchRequests(read: RoadmapRead, writes: PublishWrites) {
-  const index = new TabWriter(read.indexTab, read.index.columns)
+/**
+ * The requests that make `writes`, after any `index` already holds: growing grids
+ * first, then headers, then cells.
+ */
+function batchRequests(
+  read: RoadmapRead,
+  writes: PublishWrites,
+  index = new TabWriter(read.indexTab, read.index.columns),
+) {
   const indexRow = new IndexRowWriter(read, read.entry, index)
   for (const { field, value } of writes.roadmap) {
     switch (field) {
@@ -789,7 +989,6 @@ class IndexRowWriter {
   readonly #read: IndexRead
   readonly #entry: RoadmapIndexEntry
   readonly #index: TabWriter<RoadmapIndexWriteColumn>
-  readonly #cells: readonly string[]
 
   constructor(
     read: IndexRead,
@@ -799,7 +998,6 @@ class IndexRowWriter {
     this.#read = read
     this.#entry = entry
     this.#index = index
-    this.#cells = read.indexTab.rows[entry.row - 1] ?? []
   }
 
   /**
@@ -847,8 +1045,7 @@ class IndexRowWriter {
   }
 
   #cell(column: RoadmapIndexWriteColumn): string {
-    const at = this.#read.index.columns.get(column)
-    return at === undefined ? "" : (this.#cells[at] ?? "")
+    return indexCell(this.#read, this.#entry, column)
   }
 }
 

@@ -3,6 +3,10 @@ import type { Family } from "./family"
 import type { FamilyEdit, FamilyInput, FamilyOutcome } from "./family-changes"
 import type { MatchOutcome } from "./list-match"
 import type { Organisation } from "./organisation"
+import type {
+  PublishedStateChange,
+  PublishedStateOutcome,
+} from "./published-state"
 import type { Roadmap } from "./roadmap"
 import type { PublishOutcome, RoadmapChanges } from "./roadmap-changes"
 import type { RoadmapItem } from "./roadmap-item"
@@ -92,4 +96,18 @@ export interface RoadmapRepository {
     loaded: Roadmap,
     options?: RepositoryReadOptions,
   ): Promise<MatchOutcome>
+  /**
+   * Publishes or unpublishes a roadmap at once (STY-035), apart from its pending edits,
+   * or with them when publishing, all or nothing as `publishRoadmapChanges` writes them.
+   * Re-reads every index row with `loaded`'s id first, as `findPublishedStateRow` finds
+   * the one the page showed, and refuses a publish the public site's sync would fail on
+   * (`planPublishedStateWrite`). Rejects with `AppError('invalid-data')` when pending
+   * edits are sent and the roadmap's items can't be read. A write whose answer is lost
+   * is settled by a re-read; `signal` cancels only the reads.
+   */
+  setRoadmapPublished(
+    loaded: Roadmap,
+    change: PublishedStateChange,
+    options?: RepositoryReadOptions,
+  ): Promise<PublishedStateOutcome>
 }

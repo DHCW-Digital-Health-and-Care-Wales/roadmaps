@@ -5,7 +5,11 @@ import { isAppError } from "@/lib/errors"
 
 import productACsv from "../../../tests/fixtures/sheets/ProductA.csv?raw"
 import { parseCsv } from "../../../tests/fixtures/sheets/parse-csv"
-import { parseRoadmapTab, type RoadmapTabProblem } from "./roadmap-tab-parser"
+import {
+  parseRoadmapTab,
+  roadmapTabColumns,
+  type RoadmapTabProblem,
+} from "./roadmap-tab-parser"
 
 /** Every column a roadmap tab has, in the Template's order. */
 const HEADER = [
@@ -626,5 +630,18 @@ describe("parseRoadmapTab", () => {
         problems: [],
       })
     })
+  })
+})
+
+describe("roadmapTabColumns (STY-035)", () => {
+  it("names the columns the header has, matched as the parser matches them", () => {
+    expect([
+      ...roadmapTabColumns([["  title ", "HORIZON", "Title (cy)", "Other"]]),
+    ]).toEqual(["Title", "Horizon"])
+  })
+
+  it("names none, without failing, for a tab with no Title column or no rows", () => {
+    expect([...roadmapTabColumns([["Name", "Horizon"]])]).toEqual(["Horizon"])
+    expect([...roadmapTabColumns([])]).toEqual([])
   })
 })

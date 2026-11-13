@@ -5,6 +5,7 @@
   - link "Back to roadmaps":
     - /url: /#/
   - heading "Product A roadmap" [level=1]
+  - button "Unpublish roadmap"
   - button "Refresh"
   - paragraph: "Family: Single Record"
   - paragraph: "Category: GP & Community Services"

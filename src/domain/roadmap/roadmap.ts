@@ -25,6 +25,11 @@ export interface RoadmapCopiedCells {
 export interface Roadmap {
   /** URL-safe and stable for a given data source. */
   id: string
+  /**
+   * Where its items are kept, as the data source names them; several roadmap rows may
+   * share an id but not this. Compared to find the roadmap again, never shown.
+   */
+  itemsLocation: string
   /** Its English is never empty. */
   title: LocalisedText
   /** Whether the public site shows it. */

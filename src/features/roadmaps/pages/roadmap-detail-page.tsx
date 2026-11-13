@@ -32,7 +32,10 @@ import {
   usePendingChangesStore,
   useRoadmapChanges,
 } from "../editing/pending-changes-context"
+import { PublishedStateAction } from "../editing/published-state-action"
+import { PublishedStateNotice } from "../editing/published-state-notice"
 import { RoadmapPublishing } from "../editing/roadmap-publishing"
+import { usePublishedState } from "../editing/use-published-state"
 import { useOrganisations } from "../hooks/use-organisations"
 import { isRoadmapGone, useRoadmapItems } from "../hooks/use-roadmap-items"
 import { useRoadmapLists } from "../hooks/use-roadmap-lists"
@@ -157,8 +160,9 @@ interface RoadmapViewProps {
 
 /**
  * A listed roadmap: its title, a Not published badge when it is not public (D8), a badge
- * when it is out of step with the family or category list (STY-027 S4, S8), a Refresh
- * for the roadmap, its items and the lists (D7), its family and category as they will
+ * when it is out of step with the family or category list (STY-027 S4, S8), Publish
+ * roadmap or Unpublish roadmap (STY-035) and a Refresh for the roadmap, its items and
+ * the lists (D7), its family and category as they will
  * be published (STY-028 S1), its pending changes with
  * Publish, what it is about, then its items, each showing its pending English
  * (STY-025). The title stays whatever happens to the items.
@@ -177,6 +181,8 @@ function RoadmapView({
   const organisations = useOrganisations()
   const lists = useRoadmapLists(hasChoiceChange(changes))
   const shown = applyRoadmapChanges(roadmap, changes, lists.lists)
+  const publishedState = usePublishedState(roadmap)
+  const title = localise(shown.title, language)
   const retryList = () => {
     void refetchList()
   }
@@ -217,13 +223,14 @@ function RoadmapView({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
             <h1 className="text-heading-xl text-pretty wrap-break-word">
-              {localise(shown.title, language)}
+              {title}
             </h1>
             {!roadmap.published && <NotPublishedBadge />}
             <ListMismatchBadges roadmap={roadmap} />
             {changes?.roadmap.title && <ChangedTag />}
           </div>
-          <div className="shrink-0">
+          <div className="flex shrink-0 flex-wrap gap-3">
+            <PublishedStateAction state={publishedState} title={title} />
             <RefreshButton
               fetching={
                 listFetching || items.isFetching || organisations.isFetching
@@ -236,6 +243,13 @@ function RoadmapView({
         </div>
         <RoadmapFamilyLine roadmap={shown} />
         <MatchListsAction roadmap={roadmap} />
+        {publishedState.notice && (
+          <PublishedStateNotice
+            notice={publishedState.notice}
+            title={title}
+            onDismiss={publishedState.dismissNotice}
+          />
+        )}
         <RoadmapPublishing roadmap={roadmap} />
       </div>
       <EditableRoadmapAbout roadmap={roadmap} />

@@ -146,8 +146,25 @@ only for a family in the list, writes nothing while the roadmap index is named
 row's own copied cells, or to its being out of step or published, refuses the write; its pending edits stay
 pending.
 
-It never writes any other cell: no Welsh `(cy)` cell other than `Family (cy)`,
-`Last updated`, `Enabled`, `Sheet`, `Labels` or `Details`, no `Horizon` or
+"Publish roadmap" and "Unpublish roadmap" on a roadmap's page write at once, after a
+confirmation and a re-read, in one all-or-nothing `spreadsheets.batchUpdate`, only that
+roadmap's index row's `Enabled` cell, as exactly `Yes` or `No` (any other value, such as
+`yes`, `TRUE` or blank, is overwritten), and the `Enabled` column, appended with its
+header, if the index has none (STY-035). The row written is one with the roadmap's ID,
+listed or not, that still holds what the page showed, its `Sheet` value included (of
+several, the one the list kept: for a published roadmap the first enabled, else the
+first); nothing is written when
+none does, or when the cell already holds the value. Publishing a roadmap with
+pending edits ("Save and publish") writes them with `Enabled` in the same request, as a
+publish of them writes them, all or nothing. Publishing writes nothing while the row
+would fail the public site's nightly sync once enabled: its `Sheet` names no tab, the
+tab has no `Title` or `Horizon` column (unless the same write adds `Horizon`), its
+`Colour` is `#rgb` (unless a family chosen in the same write replaces it), or another
+row with the same ID is enabled. Unpublishing is never checked, and leaves pending
+edits pending.
+
+It never writes any other cell: no Welsh `(cy)` cell other than `Family (cy)`, no
+`Last updated`, `Sheet`, `Labels` or `Details`, no `Enabled` cell but the one above, no `Horizon` or
 `Organisations` cell but those above, no `Family`, `Category` or `Colour` cell but
 those above and "Make it match"'s, no roadmap's row or tab but
 those above, nothing in the `Template` or `Categories` tab, nothing in the `Families`

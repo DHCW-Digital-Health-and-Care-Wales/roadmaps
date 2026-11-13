@@ -79,6 +79,7 @@ describe("parseRoadmapIndex", () => {
     it("reads everything the list holds about Product A", () => {
       expect(index.entries[0]?.roadmap).toEqual({
         id: "producta",
+        itemsLocation: "ProductA",
         title: { en: "Product A roadmap", cy: "" },
         published: true,
         category: { en: "GP & Community Services", cy: "" },
@@ -110,6 +111,7 @@ describe("parseRoadmapIndex", () => {
     it("reads Product B's Welsh, its UK date and its blank category and vision", () => {
       expect(index.entries[1]?.roadmap).toEqual({
         id: "productb",
+        itemsLocation: "ProductB",
         title: { en: "Product B roadmap", cy: "Trywydd Cynnyrch B" },
         published: true,
         category: null,
@@ -144,6 +146,7 @@ describe("parseRoadmapIndex", () => {
     it("reads Product C as not published", () => {
       expect(index.entries[2]?.roadmap).toEqual({
         id: "productc",
+        itemsLocation: "ProductC",
         title: { en: "Product C roadmap", cy: "" },
         published: false,
         category: { en: "Tests, Scans & Results", cy: "" },
@@ -229,7 +232,9 @@ describe("parseRoadmapIndex", () => {
       ])
 
       expect(index.entries[0]?.roadmap).toEqual(
-        createTestRoadmap("producta", "Product A roadmap"),
+        createTestRoadmap("producta", "Product A roadmap", {
+          itemsLocation: "ProductA",
+        }),
       )
       expect(index.problems).toEqual([])
     })
@@ -285,7 +290,9 @@ describe("parseRoadmapIndex", () => {
       ])
 
       expect(index.entries.map(({ roadmap }) => roadmap)).toEqual([
-        createTestRoadmap("producta", "ProductA"),
+        createTestRoadmap("producta", "ProductA", {
+          itemsLocation: "ProductA",
+        }),
       ])
       expect(index.problems).toEqual(
         [
@@ -317,6 +324,7 @@ describe("parseRoadmapIndex", () => {
         tabName: "ProductA",
         row: 2,
         roadmap: createTestRoadmap("producta", "Product A roadmap", {
+          itemsLocation: "ProductA",
           vision: { en: "Line one\nLine two", cy: "" },
           productLead: "Alex Jones",
         }),
@@ -506,7 +514,9 @@ describe("parseRoadmapIndex", () => {
       const index = parseRows({ Sheet: "ProductA", Enabled: "Yes" })
 
       expect(index.entries[0]?.roadmap).toEqual(
-        createTestRoadmap("producta", "ProductA"),
+        createTestRoadmap("producta", "ProductA", {
+          itemsLocation: "ProductA",
+        }),
       )
       expect(index.problems).toEqual([])
     })
@@ -541,7 +551,9 @@ describe("parseRoadmapIndex", () => {
         {
           tabName: "ProductA",
           row: 5,
-          roadmap: createTestRoadmap("producta", "ProductA"),
+          roadmap: createTestRoadmap("producta", "ProductA", {
+            itemsLocation: "ProductA",
+          }),
         },
       ])
       expect(index.problems).toEqual([])
@@ -727,6 +739,31 @@ describe("parseRoadmapIndex", () => {
           column: "Sheet",
           value: "Product A",
         }),
+      ])
+    })
+
+    it("gives every row with an id, skipped ones too, without their own problems (STY-035)", () => {
+      const index = parseRows(
+        { Sheet: "Product A", Enabled: "No", Title: "Draft", Colour: "#abc" },
+        { Sheet: "product-a", Enabled: "Yes", Title: "Live" },
+        { Sheet: "!!", Enabled: "Yes", Title: "No id" },
+      )
+
+      expect(index.everyEntry).toEqual([
+        {
+          tabName: "Product A",
+          row: 2,
+          roadmap: createTestRoadmap("product-a", "Draft", {
+            itemsLocation: "Product A",
+            published: false,
+            colour: "#aabbcc",
+          }),
+        },
+        ...index.entries,
+      ])
+      expect(index.problems.map(({ code }) => code)).toEqual([
+        "duplicate-id",
+        "invalid-id",
       ])
     })
 

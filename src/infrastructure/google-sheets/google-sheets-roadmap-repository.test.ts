@@ -420,16 +420,39 @@ describeRoadmapRepositoryContract("GoogleSheetsRoadmapRepository", {
       unreadableItems = [],
       families = familiesOf(roadmaps),
       categories = categoriesOf(roadmaps),
+      twins = [],
+      syncFaults = {},
     } = {},
   ) {
     const lastIndex = roadmaps.length
+    const indexRows = indexRowsFor([...roadmaps, ...twins])
+    const colourAt = indexRows[0]?.indexOf("Colour") ?? -1
+    for (const row of indexRows.slice(1)) {
+      const [id = ""] = row
+      // `#aabbcc` written as the `#abc` it expands from.
+      if (syncFaults[id]?.includes("short-colour")) {
+        const [, r, , g, , b] = row[colourAt] ?? ""
+        row[colourAt] = `#${r ?? ""}${g ?? ""}${b ?? ""}`
+      }
+    }
+    /** The roadmap's tab, its header without the columns its faults remove. */
+    const tabRows = (id: string) => {
+      const [header = [], ...rows] = tabRowsFor(items[id] ?? [])
+      const renamed: Readonly<Record<string, string>> = {
+        ...(syncFaults[id]?.includes("no-title-column") && { Title: "Name" }),
+        ...(syncFaults[id]?.includes("no-horizon-column") && {
+          Horizon: "When",
+        }),
+      }
+      return [header.map((cell) => renamed[cell] ?? cell), ...rows]
+    }
     serveStatefulSpreadsheet(
       [
-        gridTab("Roadmaps", indexRowsFor(roadmaps), 0),
+        gridTab("Roadmaps", indexRows, 0),
         ...roadmaps.flatMap(({ id }, i) =>
           unreadableItems.includes(id)
             ? []
-            : [gridTab(id, tabRowsFor(items[id] ?? []), (i + 1) * 10, i + 1)],
+            : [gridTab(id, tabRows(id), (i + 1) * 10, i + 1)],
         ),
         ...(families === null
           ? []
@@ -2029,6 +2052,141 @@ describe("GoogleSheetsRoadmapRepository", () => {
 
       await expect(
         httpRepository().matchRoadmapToLists(loaded()),
+      ).rejects.toMatchObject({ kind: "invalid-data" })
+      expect(spreadsheet.bodies).toEqual([])
+    })
+  })
+
+  describe("publishing or unpublishing a roadmap (STY-035)", () => {
+    /** The example spreadsheet, with its index's rows as `edit` leaves them. */
+    const tabs = (edit = (rows: string[][]) => rows): FakeTab[] => [
+      gridTab("Roadmaps", edit(EXAMPLE_ROWS.map((row) => [...row])), 0),
+      gridTab("ProductA", EXAMPLE_TAB_ROWS.ProductA ?? [], 10, 1),
+      gridTab("ProductC", EXAMPLE_TAB_ROWS.ProductC ?? [], 20, 2),
+    ]
+    /** The roadmap with this id as a page loads it from `before`. */
+    const loadedFrom = async (before: FakeTab[], id: string) => {
+      serveStatefulSpreadsheet(before)
+      const roadmap = (await httpRepository().listRoadmaps()).find(
+        (each) => each.id === id,
+      )
+      if (roadmap === undefined) throw new Error(`No ${id}`)
+      return roadmap
+    }
+    /** Product C's `Enabled` cell (row 4, column 2) set to `value`. */
+    const enabled = (value: string) => (rows: string[][]) => {
+      const row = rows[3]
+      if (row) row[1] = value
+      return rows
+    }
+
+    it("writes the row's Enabled cell as exactly Yes, alone, in one batchUpdate (S2)", async () => {
+      const before = tabs()
+      const productC = await loadedFrom(before, "productc")
+      const spreadsheet = serveStatefulSpreadsheet(before)
+
+      await expect(
+        httpRepository().setRoadmapPublished(productC, { published: true }),
+      ).resolves.toEqual({ status: "set" })
+
+      expect(changedCells(before, spreadsheet.tabs())).toEqual([
+        "Roadmaps!R4C2 Yes",
+      ])
+      expect(spreadsheet.bodies).toHaveLength(1)
+    })
+
+    it.each(["yes", "", "TRUE"])(
+      "overwrites an Enabled cell of %j with exactly Yes (D9)",
+      async (value) => {
+        const before = tabs(enabled(value))
+        const productC = await loadedFrom(before, "productc")
+        const spreadsheet = serveStatefulSpreadsheet(before)
+
+        await httpRepository().setRoadmapPublished(productC, {
+          published: true,
+        })
+
+        expect(changedCells(before, spreadsheet.tabs())).toEqual([
+          "Roadmaps!R4C2 Yes",
+        ])
+      },
+    )
+
+    it("unpublishes by writing exactly No, reading no roadmap's tab (S3)", async () => {
+      const before = tabs()
+      const productA = await loadedFrom(before, "producta")
+      const spreadsheet = serveStatefulSpreadsheet(before)
+
+      await expect(
+        httpRepository().setRoadmapPublished(productA, { published: false }),
+      ).resolves.toEqual({ status: "set" })
+
+      expect(changedCells(before, spreadsheet.tabs())).toEqual([
+        "Roadmaps!R2C2 No",
+      ])
+      expect(
+        spreadsheet.requests.map((request) => tabTitleOf(request)),
+      ).not.toContain("ProductA")
+    })
+
+    it("writes exactly No over a blank Enabled cell (D9)", async () => {
+      const before = tabs(enabled(""))
+      const productC = await loadedFrom(before, "productc")
+      const spreadsheet = serveStatefulSpreadsheet(before)
+
+      await httpRepository().setRoadmapPublished(productC, {
+        published: false,
+      })
+
+      expect(changedCells(before, spreadsheet.tabs())).toEqual([
+        "Roadmaps!R4C2 No",
+      ])
+    })
+
+    it("adds an Enabled column, headed, when the index has none (D10)", async () => {
+      const before = tabs((rows) => rows.map((row) => row.toSpliced(1, 1)))
+      const productC = await loadedFrom(before, "productc")
+      const spreadsheet = serveStatefulSpreadsheet(before)
+
+      await expect(
+        httpRepository().setRoadmapPublished(productC, { published: true }),
+      ).resolves.toEqual({ status: "set" })
+
+      expect(changedCells(before, spreadsheet.tabs())).toEqual([
+        "Roadmaps!R1C15 Enabled",
+        "Roadmaps!R4C15 Yes",
+      ])
+    })
+
+    it("refuses a three-digit colour however it is cased, naming it as written (S4)", async () => {
+      const before = tabs((rows) => {
+        const row = rows[3]
+        if (row) row[7] = "#9A8"
+        return rows
+      })
+      const productC = await loadedFrom(before, "productc")
+      const spreadsheet = serveStatefulSpreadsheet(before)
+
+      await expect(
+        httpRepository().setRoadmapPublished(productC, { published: true }),
+      ).resolves.toEqual({
+        status: "unpublishable",
+        problems: [{ code: "short-colour", colour: "#9A8" }],
+      })
+      expect(spreadsheet.bodies).toEqual([])
+    })
+
+    it("fails with invalid-data, writing nothing, when the index is the Template tab", async () => {
+      const before = tabs()
+      const productC = await loadedFrom(before, "productc")
+      const spreadsheet = serveStatefulSpreadsheet(
+        before.map((tab) =>
+          tab.title === "Roadmaps" ? { ...tab, title: "Template" } : tab,
+        ),
+      )
+
+      await expect(
+        httpRepository().setRoadmapPublished(productC, { published: true }),
       ).rejects.toMatchObject({ kind: "invalid-data" })
       expect(spreadsheet.bodies).toEqual([])
     })

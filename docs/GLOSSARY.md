@@ -97,13 +97,16 @@ _Avoid_: Unsaved change, draft (drafts are a later feature)
 
 **Publish**:
 To write a published roadmap's pending edits to the shared data source in one deliberate
-step, all or none, after which the public site shows them from its next nightly update.
-The MVP has no review or draft step (ADR-012).
-_Avoid_: Save (for a published roadmap), sync, push, go live
+step, all or none, after which the public site shows them from its next nightly update
+("Publish changes"). The MVP has no review or draft step (ADR-012). Also, to make a
+roadmap a published roadmap ("Publish roadmap"), taking any pending edits with it
+("Save and publish"); unpublishing takes it off the public site (STY-035).
+_Avoid_: Save (for a published roadmap), sync, push, go live, enable
 
 **Save**:
 To write the pending edits of a roadmap that is not published: the same step as
-publishing, but nothing becomes public (ADR-012).
+publishing, and nothing becomes public until the roadmap is published (ADR-012,
+STY-035).
 _Avoid_: Publish (for a roadmap that is not published), store
 
 **Conflict** _(planned)_:
@@ -125,7 +128,9 @@ _Avoid_: Dashboard, workspace
 
 **Published roadmap**:
 A roadmap the public site shows. A roadmap that is not published is still listed here,
-marked "Not published" (ADR-009).
+marked "Not published" (ADR-009). A Product Lead publishes or unpublishes it from its
+page, written at once; publishing is refused while the public site's nightly update
+would fail on it (STY-035).
 _Avoid_: Enabled, live, public roadmap
 
 **Category**:

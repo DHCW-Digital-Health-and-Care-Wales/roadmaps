@@ -1,0 +1,169 @@
+import { useCallback, useState } from "react"
+
+import type { PublishProblem } from "@/domain/roadmap/published-state"
+import type { Roadmap } from "@/domain/roadmap/roadmap"
+import { useAuth } from "@/features/auth/use-auth"
+import { toAppError, type AppErrorKind } from "@/lib/errors"
+
+import { useSetRoadmapPublished } from "../hooks/use-set-roadmap-published"
+import { discardItems, openConflicts } from "./conflicts"
+import { countChanges, settlePublished } from "./pending-changes"
+import {
+  usePendingChanges,
+  usePendingChangesStore,
+} from "./pending-changes-context"
+import { publishAction, type PublishNotice } from "./pending-changes-store"
+import { CURRENT_TEXT } from "./use-publish"
+
+/** What the last publish or unpublish of the roadmap came to, as its page says it. */
+export type PublishedStateOutcomeNotice =
+  | { kind: "set"; published: boolean; withChanges: boolean }
+  /** Nothing was written: the roadmap changed since it was shown. */
+  | { kind: "changed" }
+  /** Publishing was refused, as the public site's sync would fail (S4). */
+  | { kind: "unpublishable"; problems: PublishProblem[]; kept: boolean }
+  | { kind: "failed"; published: boolean; error: AppErrorKind; kept: boolean }
+  /** The answer was lost (S10); with pending edits sent, the store says so instead. */
+  | { kind: "unconfirmed"; published: boolean }
+
+/** What the action asks, as its dialog said it. */
+export interface PublishedStateQuestion {
+  /** Publish, the roadmap not being published, or unpublish. */
+  publishing: boolean
+  /** Pending edits that go with a publish, or stay with an unpublish. */
+  count: number
+}
+
+export interface PublishedState extends PublishedStateQuestion {
+  /** Whether the action can be chosen now. */
+  available: boolean
+  /** Whether a write is under way. */
+  pending: boolean
+  /** Whether the dialog asking is open. */
+  open: boolean
+  /**
+   * What the dialog asks: fixed when it opens, and kept while it closes, though the
+   * roadmap changes under it.
+   */
+  asked: PublishedStateQuestion
+  ask: () => void
+  cancel: () => void
+  confirm: () => void
+  notice: PublishedStateOutcomeNotice | null
+  dismissNotice: () => void
+}
+
+/**
+ * Publishing or unpublishing a roadmap from its page (STY-035): asked first, then
+ * written at once. Publishing sends the roadmap's pending edits with it, through the
+ * pending-edit store as a publish of them goes, so a conflict opens its review and a
+ * lost answer waits for a Refresh (S5, S6, S10); unpublishing leaves them pending (S7).
+ * Unavailable unless connected, while a write of the roadmap is under way, and while a
+ * conflict is still to decide.
+ */
+export function usePublishedState(roadmap: Roadmap): PublishedState {
+  const store = usePendingChangesStore()
+  const snapshot = usePendingChanges()
+  const connected = useAuth().state.status === "connected"
+  const { mutateAsync, isPending } = useSetRoadmapPublished(roadmap, {
+    currentText: CURRENT_TEXT,
+  })
+  const [open, setOpen] = useState(false)
+  const [asked, setAsked] = useState<PublishedStateQuestion | null>(null)
+  const [notice, setNotice] = useState<PublishedStateOutcomeNotice | null>(null)
+  // Stable, as a confirmation's dwell restarts when it changes.
+  const dismissNotice = useCallback(() => {
+    setNotice(null)
+  }, [])
+
+  const publishing = !roadmap.published
+  const changes = snapshot.changes.get(roadmap.id)
+  const count = countChanges(changes)
+  const outcome = snapshot.notices.get(roadmap.id)
+  const reviewing =
+    outcome?.kind === "refused" &&
+    openConflicts(outcome.conflicts, changes).length > 0
+  const pending = isPending || snapshot.publishing.has(roadmap.id)
+
+  const write = async ({ publishing }: PublishedStateQuestion) => {
+    const now = store.getSnapshot().changes.get(roadmap.id)
+    const sent = publishing && countChanges(now) > 0 ? now : undefined
+    if (sent && !store.startPublish(roadmap.id)) return
+    const kept = sent !== undefined
+    const action = publishAction(roadmap)
+    let stored: PublishNotice | null = null
+    let shown: PublishedStateOutcomeNotice | null = null
+    try {
+      const result = await mutateAsync(
+        publishing ? { published: true, changes: sent } : { published: false },
+      )
+      switch (result.status) {
+        case "set":
+          if (sent) {
+            store.update(roadmap.id, (later) => settlePublished(later, sent))
+          }
+          shown = { kind: "set", published: publishing, withChanges: kept }
+          break
+        case "unconfirmed":
+          if (sent) stored = { action, kind: "unconfirmed" }
+          else shown = { kind: "unconfirmed", published: publishing }
+          break
+        case "refused":
+          store.update(roadmap.id, (later) =>
+            discardItems(later, result.missingItems),
+          )
+          stored = {
+            action,
+            kind: "refused",
+            conflicts: result.conflicts,
+            removed: result.missingItems.map((entry) => entry.item.title),
+          }
+          break
+        case "roadmap-not-found":
+          // Its page says so in place of the roadmap, as a publish of its edits does.
+          if (sent) store.removeRoadmap(roadmap.id)
+          break
+        case "changed":
+          shown = { kind: "changed" }
+          break
+        case "unpublishable":
+          shown = { kind: "unpublishable", problems: result.problems, kept }
+          break
+      }
+    } catch (error) {
+      shown = {
+        kind: "failed",
+        published: publishing,
+        error: toAppError(error).kind,
+        kept,
+      }
+    }
+    if (sent) store.finishPublish(roadmap.id, stored)
+    setNotice(shown)
+  }
+
+  return {
+    publishing,
+    count,
+    available: connected && !pending && !reviewing,
+    pending,
+    open,
+    asked: asked ?? { publishing, count },
+    ask: () => {
+      setAsked({ publishing, count })
+      setOpen(true)
+    },
+    cancel: () => {
+      if (!pending) setOpen(false)
+    },
+    confirm: () => {
+      if (!open || asked === null || !connected || pending) return
+      setNotice(null)
+      void write(asked).finally(() => {
+        setOpen(false)
+      })
+    },
+    notice,
+    dismissNotice,
+  }
+}

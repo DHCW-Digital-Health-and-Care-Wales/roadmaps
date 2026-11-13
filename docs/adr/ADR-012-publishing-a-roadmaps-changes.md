@@ -5,7 +5,8 @@
   ID, a write whose result never arrives, trimming). Amends ADR-002 (a write call) and ADR-011 (item identity);
   extends ADR-009 (the editor writes to the roadmap index).
 - Date: 2026-11-11 (amended in ADR-013: family and category become choosable; `Family (cy)`
-  is copied; amended in ADR-014: an item's placement and organisations become editable)
+  is copied; amended in ADR-014: an item's placement and organisations become editable;
+  amended by STY-035: a roadmap's published state is written on its own)
 
 ## Context
 
@@ -171,6 +172,27 @@ Nothing checks permission in advance.
   conflicts; publishing writes its `Horizon` and `Organisations` cells, adding the
   `Organisations` column when missing (ADR-014). Tags, details and Welsh stay
   read-only.
+
+### STY-035 amendments
+
+- **A roadmap's published state becomes writable** outside a publish of pending edits
+  (STY-035 D1): "Publish roadmap" or "Unpublish roadmap" on its page writes its
+  `Enabled` cell at once, after a confirmation, as exactly `Yes` or `No` (D9). A missing
+  `Enabled` column is added, as a missing field column is (D10).
+- **Publishing is refused, naming each problem, when the row would fail the public
+  site's nightly sync** once enabled (D3, D4): a `Sheet` naming no tab, a tab without a
+  `Title` or `Horizon` column, a `#rgb` colour, or another enabled row with the same id.
+  The editor fixes none of them itself. Unpublishing is never checked, even for the last
+  published roadmap (D2).
+- **Pending edits go with a publish, all or nothing** (D6, D7): "Save and publish"
+  writes them and `Enabled` in one `batchUpdate`, by this ADR's rules, a conflict
+  publishing nothing and opening the review. Unpublishing leaves them pending (D8).
+- The row written is one with the roadmap's id, listed or not, that still holds what
+  the page showed, its `Sheet` value included, apart from fields with pending edits (of
+  several, the one ADR-009 kept: for a published roadmap the first published, else the
+  first); none publishes nothing ("changed"). `Roadmap` gains `itemsLocation` to carry
+  the `Sheet` value, never shown. A lost answer is settled by one re-read, as Option 16
+  settles a publish's. `RoadmapRepository` gains `setRoadmapPublished` (amends ADR-002).
 
 ## Options (owner's choice marked ✅, 2026-11-11)
 

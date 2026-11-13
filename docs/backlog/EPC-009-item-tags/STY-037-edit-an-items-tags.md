@@ -1,0 +1,243 @@
+# STY-037: A Product Lead edits an item's tags
+
+- **Status**: Needs grilling — the owner chooses the editor from four prototypes (Q1)
+  and answers Q2 and Q3
+- **Type**: Feature
+- **Area**: Domain + Infrastructure + Features/UI + i18n (en + cy) + E2E
+- **Epic**: [EPC-009-item-tags](README.md)
+- **Depends on**: none
+- **Binding ADRs**: ADR-012 (this story amends _What is editable_), ADR-011, ADR-010,
+  ADR-008
+- **Suggested model**: Opus — an ordered, open-ended field through the pending-change
+  model, publish plan and conflict review, and a new form control
+
+## Summary
+
+A Product Lead adds, renames and removes an item's tags in its edit form. While adding,
+the form offers the tags this roadmap's other items carry, most used first, so the same
+idea gets the same tag. The change is a pending edit, published with the rest. Tags stay
+free text: there is no shared list, and renaming a tag here changes this item only.
+Waiting on the owner: which of four prototyped editors to build, what happens to an
+item's Welsh tags, and whether a typed tag takes the spelling the roadmap already uses.
+
+## Scope
+
+The Tags field of the item's edit form (`features/`), tags as a pending item field
+(`domain/`), and the write of the item's tags (`infrastructure/`), with copy in English
+and Welsh. The tags offered come from the roadmap's items already on the page, so the
+field has no loading or failure state of its own.
+
+The scenarios below hold for whichever editor Q1 chooses; its answer adds the scenarios
+for that editor's own interactions. This story changes what the editor writes to the
+shared data source, a contract with the public site: the item's `Labels` cell (S12),
+and whatever Q2 decides for `Labels (cy)`.
+
+## Acceptance criteria
+
+### S1: The form shows the item's tags
+
+**Given** an item tagged "Patients" and "Video consultations"
+**When** Sam opens its edit form
+**Then** a "Tags" field shows both, in the order written, each with a way to rename it
+and a way to remove it, named for its tag ("Remove Patients")
+**And** on the Welsh interface the field's label and controls are Welsh, and the tags
+are the English ones
+
+### S2: An added tag is pending
+
+**Given** the form above
+**When** Sam adds "Carers" and confirms the form
+**Then** the card's Tags line reads "Patients, Video consultations, Carers", the card is
+tagged "Changed", and the publish dialog lists the item with tags among its changed
+fields
+**And** nothing is written until Sam publishes
+
+### S3: The roadmap's other tags are offered (owner, D1)
+
+**Given** the roadmap's other items carry "Patients" (three items), "Appointments"
+(two), "Clinic staff" (two) and "Waiting lists" (one)
+**When** Sam starts to add a tag to the item above
+**Then** "Appointments", "Clinic staff" and "Waiting lists" are offered in that order:
+most used first, then alphabetical, without "Patients", which the item has
+**And** typing "wai" leaves only "Waiting lists" offered, and choosing it adds it
+**And** another item's pending tags are offered as the page shows them, and no other
+roadmap's tags are
+
+### S4: No tag twice on an item
+
+**Given** the item has "Patients"
+**When** Sam adds "Patients" or "patients"
+**Then** no tag is added, and the form says the item already has "Patients"
+
+### S5: Removing a tag
+
+**Given** the form above
+**When** Sam removes "Patients" and confirms the form
+**Then** the card's Tags line reads "Video consultations", tagged "Changed"
+**And** while the form is open "Patients" is offered again, as other items carry it
+**And** an item with every tag removed has no Tags line on its card
+
+### S6: Renaming a tag changes this item only
+
+**Given** the form above
+**When** Sam renames "Video consultations" to "Video appointments" and confirms the form
+**Then** the card's Tags line reads "Patients, Video appointments": the tag keeps its
+place
+**And** no other item's tags change
+**And** renaming it to "Patients", which the item has, leaves "Patients" once
+
+### S7: A comma or a line break ends a tag
+
+**Given** the form
+**When** Sam types or pastes "Carers, Clinic staff"
+**Then** two tags are added, "Carers" and "Clinic staff", each trimmed at its ends
+**And** no tag ever holds a comma or a line break
+
+### S8: Text typed but not yet added counts
+
+**Given** Sam has typed "Carers" in the field without adding it
+**When** Sam confirms the form
+**Then** "Carers" is among the item's tags
+
+### S9: Cancel and Undo leave the tags as they were
+
+**Given** Sam has added and removed tags in the open form
+**When** Sam cancels the form
+**Then** the card shows the tags as they were, with no pending change
+**And** "Undo changes" on a card with a pending tag change shows the tags as read
+
+### S10: An item with no tags, and a roadmap with none to offer
+
+**Given** an item with no tags, on a roadmap whose other items have none
+**When** Sam opens its edit form
+**Then** the Tags field is empty and offers nothing, and Sam can still type a tag
+**And** on a roadmap whose other items have tags, the same item is offered all of them
+
+### S11: By keyboard and screen reader
+
+**Given** the form, used with a keyboard alone
+**When** Sam adds a tag, chooses an offered one, renames one and removes one
+**Then** each is done without a pointer, each control's name says its tag, and each
+addition, removal and refusal is announced
+**And** focus stays in the field: after a removal it is on the next tag's control, or
+on the control for adding when none is left
+**And** axe finds no WCAG 2.2 AA violation in the field's states, light and dark
+
+### S12: Publishing writes the tags
+
+**Given** a pending change of an item's tags to "Patients", "Video appointments" and
+"Carers"
+**When** Sam publishes
+**Then** the item's `Labels` cell reads `Patients, Video appointments, Carers`: the tags
+in order, separated by a comma and a space, as text; no tags writes an empty cell
+**And** for an item with no Welsh tags no other cell of its row is written, and a
+roadmap whose tab has no `Labels` column gains one as ADR-012 adds a column
+
+### S13: A co-lead's different tags are a conflict
+
+**Given** Sam's pending tags, and a co-lead has since changed the item's tags
+**When** Sam publishes
+**Then** nothing is written, and the conflict review shows Sam's tags beside the
+co-lead's, to keep or use
+**And** a co-lead's same tags in the same order are no conflict, and Refresh drops a
+pending change the data source already holds
+
+### S14: On a phone and in the narrowest card
+
+**Given** a screen 375px wide, or the narrowest item card (two across, about 294px)
+**When** Sam edits the tags of an item, one of them forty characters long
+**Then** nothing scrolls sideways, a long tag wraps, and every control can be reached
+
+## Open questions
+
+- **Q1**: Which editor is built? Try the four in
+  `docs/analysis/item-tags-ux-analysis/prototypes.html`; the analysis compares them.
+  Each follows S1–S14 and differs in how a tag is added, renamed and removed.
+  - (a) **B, list and suggestions** (recommended) — each tag is a row with Rename and
+    Remove; the roadmap's other tags are buttons under an "Add a tag" field. Built from
+    the existing input, button and tag; the longest form of the four. Adds scenarios
+    for the row controls and Undo.
+  - (b) **A, type-ahead box** — tags sit inside one box and a list opens under it as
+    Sam types. The shortest form; adds shadcn's Combobox, whose in-place rename is
+    ours to build, and the open list covers the form's buttons. Adds scenarios for the
+    list, its keys and Backspace.
+  - (c) **C, tick list** — every tag in the roadmap is a checkbox, as organisations
+    are. Shows the roadmap's whole vocabulary and its near-duplicates; grows with the
+    roadmap, and the order of an item's tags follows the ticking.
+  - (d) **D, one line of text** — a text field with commas, as in the spreadsheet,
+    with the other tags as buttons. The cheapest; it has no control per tag, so S1 and
+    S11 would be re-cut, and a rename can't be told from a removal and an addition.
+- **Q2**: What happens to an item's Welsh tags when its tags are edited? The data
+  source pairs Welsh with English by position, so writing the English alone can show the
+  wrong Welsh under a tag, or lose all of an item's Welsh tags (epic F3). No roadmap has
+  Welsh content today (persona A4). Example: an item tagged "Patients, Carers" with
+  Welsh "Cleifion, Gofalwyr", from which Sam removes "Patients".
+  - (a) **Such an item's tags can't be edited here yet** (recommended) — the form
+    shows them read-only, saying they have Welsh versions. Nothing new is written;
+    today that is no item. Editing them arrives with Welsh content editing. Adds one
+    scenario.
+  - (b) **Each tag keeps its Welsh** — publishing also writes `Labels (cy)`: a removed
+    tag's Welsh goes ("Gofalwyr" stays under "Carers"), a new tag gets a blank place, a
+    renamed tag keeps its Welsh as ADR-012 leaves Welsh beside edited English. Amends
+    ADR-012's "English only"; the pending change carries pairs, and D or any swap of
+    one tag for another cannot say which Welsh stays.
+  - (c) **The item's Welsh tags are cleared**, and the form says so first, as it does
+    for an unknown organisation code — publishing blanks `Labels (cy)` for that item.
+    Simple and never wrong, but translations are lost.
+  - (d) **`Labels (cy)` is left as it is** — the build writes nothing extra, and the
+    public site shows "Cleifion" under "Carers".
+- **Q3**: Does a typed tag take the spelling the roadmap already uses? Example: other
+  items carry "Clinic staff" and Sam types "clinic staff".
+  - (a) **Yes** (recommended) — it is added as "Clinic staff", and the form says so.
+    Capitals stop drifting; a tag can't differ from another only in capitals. The
+    prototypes do this. Adds one scenario. "patient" beside "Patients" is still two
+    tags: only a shared list or a merge fixes that (epic _Out of scope_).
+  - (b) **No** — the tag is kept as typed; the offered tags are the only nudge.
+
+## Decisions
+
+- **D1** (owner, 2026-11-13, the request for this story): while adding a tag, the form
+  suggests tags used elsewhere in the same roadmap → S3. Tags stay free text.
+- **D2** (owner, 2026-11-13, the request): prototypes of the tag component alone, to
+  try before choosing → Q1 and `docs/analysis/item-tags-ux-analysis.md`.
+- **D3** (agent, 2026-11-13): tags are edited in the item's edit form and kept pending
+  on Done, over editing them on the card: as organisations are (STY-034 D1), with one
+  pending model → S2, S9.
+- **D4** (agent, 2026-11-13): tags are one field for conflicts, compared as the ordered
+  list, over a set: tags show in the order written, and ADR-014 makes a multi-valued
+  field one field → S13.
+- **D5** (agent, 2026-11-13): the cell is written as the tags in order separated by
+  `, `, the format the parser and the public site read, so a tag holds no comma or line
+  break → S7, S12.
+- **D6** (agent, 2026-11-13): the editor adds no tag that repeats one on the item
+  ignoring capitals, over the parser's exact match: "Patients" beside "patients" on one
+  card is never meant. Tags already repeated that way in the data show as read → S4.
+- **D7** (agent, 2026-11-13): text typed but not added counts when the form is
+  confirmed, over dropping it: a lost tag costs more than an unintended one, which the
+  card shows at once → S8.
+- **D8** (agent, 2026-11-13): tags are offered most used first, then alphabetical,
+  counted over the items as the page shows them, pending edits included, over
+  alphabetical alone: the common tag is the likeliest and the one to converge on → S3.
+- **D9** (agent, 2026-11-13): no limit on the number or length of tags: ADR-012 sets
+  none and the card budget is deferred (persona A11).
+
+## Starting point
+
+Audited at `52850bf`.
+
+- `EditForm` holds every field as one string, and `many` covers only a choice among
+  fixed options (STY-034): an open list the Product Lead adds to is a new kind of field.
+- `RoadmapItem.tags` is `LocalisedText[]`; the parser pairs `Labels (cy)` with `Labels`
+  by position and only then drops blank and repeated English, so a tag's Welsh is found
+  by its place, not its text (`docs/analysis/roadmap-tab-format.md`, `Labels`).
+- The card shows tags as one line of text, in Welsh where an item has it, and keeps
+  showing it while the form is open; organisations hide theirs.
+- `@base-ui/react` 1.9 has a `combobox` with chips; `src/components/ui/` has none yet.
+
+## Out of scope
+
+- A shared tag list, tags from other roadmaps, and renaming or merging a tag across a
+  roadmap's items: EPC-009 _Out of scope_.
+- Reordering an item's tags: no design offers it; a new tag joins at the end.
+- Editing a tag's Welsh: with Welsh content editing, a later record.
+- Details, and adding or deleting items: later editing records.

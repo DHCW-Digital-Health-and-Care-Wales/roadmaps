@@ -23,6 +23,7 @@ moves to `_archive/`, where its row here still points.
 | [EPC-006 Product families and colours](_archive/EPC-006-product-families-and-colours/README.md)          | STY-027–STY-030: families and categories defined once in their own tabs, chosen per roadmap, managed in one page, out-of-step rows fixed                                        | Done   |
 | [EPC-007 Item placement and organisations](_archive/EPC-007-item-placement-and-organisations/README.md)  | STY-031–STY-034: move an item between horizons and sections; organisations served by the repository, listed, and chosen per item                                                | Done   |
 | [EPC-008 Publishing and freshness](_archive/EPC-008-publishing-and-freshness/README.md)                  | STY-035–STY-036: publish or unpublish a roadmap from its page, refused when the public sync would fail; set its Last updated date                                               | Done   |
+| [EPC-009 Item tags](EPC-009-item-tags/README.md)                                                         | STY-037: add, rename and remove an item's tags in its edit form, offered the tags the roadmap's other items carry; four editors prototyped for the owner to choose from         | Active |
 
 ## Chores
 
@@ -33,6 +34,7 @@ moves to `_archive/`, where its row here still points.
 | [CHO-004](chores/CHO-004-share-the-write-failure-copy.md)                   | Share the eight-key write-failure copy between publishing, families and "Make it match"                           | Proposed    |
 | [CHO-005](chores/CHO-005-send-last-updated-to-the-api-in-utc.md)            | Send a roadmap's Last updated to the future database API in UTC, once it replaces Sheets                          | Placeholder |
 | [CHO-007](chores/CHO-007-rebase-an-open-date-form-after-marking-updated.md) | An open About form takes a date its own "Mark as updated today" wrote as its own                                  | Proposed    |
+| [CHO-009](chores/CHO-009-prototype-styles-match-the-app.md)                 | The `ux-prototypes` stylesheet still draws shadcn's greys, not the app's DHCW look                                | Proposed    |
 
 Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status token.
 

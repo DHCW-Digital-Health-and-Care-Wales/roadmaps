@@ -152,15 +152,18 @@ tab, at once after a re-read, in one all-or-nothing `batchUpdate`:
     name (a stray row, not a member before) is linked to it by name after the rename,
     without its ID being written until its next publish.
   - A write whose answer is lost is settled by reading again: an add when the family
-    is listed, a change only when the family and every member's row hold it. Otherwise,
+    is listed, a change only when the family and the row of every roadmap it wrote
+    (by ID) hold it. Otherwise,
     or if that read fails too, the network error shows, and a retry of an add that had
     in fact landed is refused as name-taken, which is accurate.
   - An index row the editor skips (its `Sheet` is not a valid roadmap ID, or repeats an
     earlier row's) is not rewritten by a rename, and keeps the old family name and
     colour until it is fixed and published (README).
-  - While a family write is under way, Change and "Add a family" are disabled, and an
-    open form stays shown, with the list as it opened with, even if a refresh drops the
-    family, so its outcome is always reported.
+  - While a family write is under way, its fields are read-only and Change and "Add a
+    family" are disabled. An open form stays shown, with the list it opened with, even
+    if a refresh drops the family, so its outcome is always reported; if a refresh
+    finds no usable list, the S7 note shows, the form keeps what was typed and can't
+    save, and no other form opens.
   - A members-changed answer with no members left shows the zero copy and drops the
     public-site note.
 - **Tests.** The domain, contract and adapter tests were written with each slice and
@@ -203,9 +206,10 @@ tab, at once after a re-read, in one all-or-nothing `batchUpdate`:
   S9)"; adapter "writes the family's changed cells and its roadmaps' rows, linking each
   by ID, in one batchUpdate (S4, S9)", "writes only the field changed" and "rethrows a
   lost write's network error when the family holds the change but its roadmaps don't
-  (S4)"; page "renames a family and its roadmaps at once, keeping its Welsh name (S4,
+  (S4)" and "… when a co-lead's rename unlinked a roadmap it named (S4)"; page "renames a family and its roadmaps at once, keeping its Welsh name (S4,
   S9)", "says the family is gone when a co-lead deleted it, though the list refreshes
-  first" and "offers no other form while a family write is under way"; e2e (one
+  first" and "offers no other form while a family write is under way";
+  S7 also page "keeps an open form but offers no other when the family list goes (S7)"; e2e (one
   `batchUpdate`, Product A's and C's cells, Product B untouched).
 - **S5**: domain "refuses a field a co-lead changed since, showing each side" and "is
   no conflict when a co-lead made the same change"; contract "refuses a field a co-lead

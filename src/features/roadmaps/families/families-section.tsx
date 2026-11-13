@@ -52,7 +52,8 @@ export function FamiliesSection({
   // A request to move focus once a form closes: to a control by id, or to the notice.
   const [focusRequest, setFocusRequest] = useState<{ id: string } | null>(null)
   const noticeRef = useRef<HTMLDivElement>(null)
-  const writing = useFamilyWriting()
+  // No new form while a write is under way, or without a usable list (S7).
+  const locked = useFamilyWriting() || families === null
   const listed = families ?? editing?.families ?? null
   const shown =
     listed !== null &&
@@ -68,7 +69,7 @@ export function FamiliesSection({
   }, [focusRequest])
 
   const open = (next: NonNullable<Editing>) => {
-    if (writing) return
+    if (locked) return
     setNotice(null)
     setEditing(next)
   }
@@ -92,7 +93,7 @@ export function FamiliesSection({
           }}
         />
       )}
-      {shown === null ? (
+      {families === null && (
         <DismissibleNotice
           role="note"
           variant="warning"
@@ -102,7 +103,8 @@ export function FamiliesSection({
         >
           <p>{t("roadmaps.families.unavailable.description")}</p>
         </DismissibleNotice>
-      ) : (
+      )}
+      {shown !== null && (
         <>
           <ul className="flex flex-col gap-4">
             {shown.map((family) => (
@@ -116,7 +118,7 @@ export function FamiliesSection({
                     family={editing.family}
                     families={shown}
                     roadmaps={roadmaps}
-                    available={available}
+                    available={available && families !== null}
                     onDone={(done) => {
                       close(done, changeId(family))
                     }}
@@ -126,7 +128,7 @@ export function FamiliesSection({
                     family={family}
                     roadmaps={familyMembers(roadmaps, family.id)}
                     changeId={changeId(family)}
-                    disabled={writing}
+                    disabled={locked}
                     onChange={() => {
                       open({ kind: "change", family, families: shown })
                     }}
@@ -138,7 +140,7 @@ export function FamiliesSection({
           {editing?.kind === "add" ? (
             <AddFamilyForm
               families={shown}
-              available={available}
+              available={available && families !== null}
               onAdded={(done) => {
                 close(done, ADD_ID)
               }}
@@ -151,7 +153,7 @@ export function FamiliesSection({
               <Button
                 id={ADD_ID}
                 variant="secondary"
-                disabled={writing}
+                disabled={locked}
                 onClick={() => {
                   open({ kind: "add", families: shown })
                 }}

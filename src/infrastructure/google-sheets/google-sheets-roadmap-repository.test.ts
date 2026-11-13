@@ -359,8 +359,8 @@ function serveStatefulSpreadsheet(
         const status = write.fails === "forbidden" ? 403 : 401
         return HttpResponse.json({}, { status })
       }
-      if (write?.lost === "not-applied") return HttpResponse.error()
       if (beforeWrite) tabs = beforeWrite(tabs)
+      if (write?.lost === "not-applied") return HttpResponse.error()
       const result = applyBatchUpdate(tabs, body)
       writeViolations.push(...result.violations)
       if ("error" in result) return HttpResponse.json({}, { status: 400 })
@@ -1729,6 +1729,33 @@ describe("GoogleSheetsRoadmapRepository", () => {
         httpRepository().changeFamily({
           family: singleRecord,
           changes: { colour: "#00796b" },
+          members: ["producta"],
+        }),
+      ).rejects.toMatchObject({ kind: "network" })
+    })
+
+    it("rethrows a lost write's network error when a co-lead's rename unlinked a roadmap it named (S4)", async () => {
+      serveStatefulSpreadsheet(familyTabs(), {
+        write: { lost: "not-applied" },
+        beforeWrite: (tabs) =>
+          tabs.map((tab) =>
+            tab.title === "Families"
+              ? {
+                  ...tab,
+                  rows: tab.rows.map((row) =>
+                    row[0] === "fc29g5b9"
+                      ? [row[0], "Shared Care Record", ...row.slice(2)]
+                      : row,
+                  ),
+                }
+              : tab,
+          ),
+      })
+
+      await expect(
+        httpRepository().changeFamily({
+          family: singleRecord,
+          changes: { name: "Shared Care Record" },
           members: ["producta"],
         }),
       ).rejects.toMatchObject({ kind: "network" })

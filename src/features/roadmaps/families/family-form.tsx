@@ -102,6 +102,8 @@ export function FamilyForm({
             id={controlId}
             value={values[field]}
             autoComplete="off"
+            // What is being saved stays what the form shows.
+            readOnly={busy}
             spellCheck={field === "name"}
             className={field === "colour" ? "max-w-40" : undefined}
             aria-invalid={problem ? true : undefined}

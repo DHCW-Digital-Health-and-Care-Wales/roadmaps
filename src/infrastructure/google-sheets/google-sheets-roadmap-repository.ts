@@ -329,6 +329,10 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
     signal?.throwIfAborted()
 
     const { family } = plan
+    const memberIds = familyMembers(
+      read.index.entries.map(({ roadmap }) => roadmap),
+      family.id,
+    ).map(({ id }) => id)
     const families = new TabWriter(tab, parsed.columns)
     const row = parsed.rows.get(family.id)
     const current = list.find(({ id }) => id === family.id)
@@ -344,13 +348,18 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
       families.write(row, "Colour", family.colour)
     }
     return this.#writeFamily(
-      [...families.requests(), ...memberRowWrites(read, family)],
-      // Held only when the family and every member's row hold it (S4).
+      [...families.requests(), ...memberRowWrites(read, family, memberIds)],
+      // Held only when the family and the row of every roadmap written hold it (S4),
+      // those roadmaps by ID, as a co-lead's rename meanwhile can unlink one by name.
       async () => {
         const again = await this.#readRoadmapIndex({})
+        const listed = new Set(
+          again.index.entries.map(({ roadmap }) => roadmap.id),
+        )
         return (
           familyHeld(family, again.families) &&
-          memberRowWrites(again, family).length === 0
+          memberIds.every((id) => listed.has(id)) &&
+          memberRowWrites(again, family, memberIds).length === 0
         )
       },
       family,
@@ -565,7 +574,12 @@ function usableFamilyTab(
  * The index cells that copy `family` (STY-028's `writeFamily`) on each roadmap in it,
  * as read, where they differ: none once a change to it is in place.
  */
-function memberRowWrites(read: IndexRead, family: Family): BatchRequest[] {
+/** The writes copying `family` to the index rows of the roadmaps `memberIds` names. */
+function memberRowWrites(
+  read: IndexRead,
+  family: Family,
+  memberIds: readonly string[],
+): BatchRequest[] {
   const changed: IndexRead = {
     ...read,
     families:
@@ -573,12 +587,7 @@ function memberRowWrites(read: IndexRead, family: Family): BatchRequest[] {
       null,
   }
   const index = new TabWriter(read.indexTab, read.index.columns)
-  const members = new Set(
-    familyMembers(
-      read.index.entries.map(({ roadmap }) => roadmap),
-      family.id,
-    ).map(({ id }) => id),
-  )
+  const members = new Set(memberIds)
   for (const entry of read.index.entries) {
     if (!members.has(entry.roadmap.id)) continue
     new IndexRowWriter(changed, entry, index).writeFamily(family.id)

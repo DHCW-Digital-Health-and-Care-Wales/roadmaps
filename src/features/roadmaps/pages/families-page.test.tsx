@@ -414,11 +414,43 @@ describe("FamiliesPage (STY-029)", () => {
     expect(
       main().getByRole("button", { name: "Change Single Record" }),
     ).toBeDisabled()
+    await user.type(form.getByLabelText("Colour"), "ff")
+    expect(form.getByLabelText("Colour")).toHaveValue("#00796b")
     write.resolve?.({ status: "saved", family: screening })
     expect(await main().findByRole("status")).toHaveTextContent(
       "Screening changed",
     )
     expect(main().getByRole("button", { name: "Add a family" })).toBeEnabled()
+  })
+
+  it("keeps an open form but offers no other when the family list goes (S7)", async () => {
+    const base = repositoryWith()
+    let listGone = false
+    const { user } = await renderPage(
+      repositoryWith({
+        listFamilies: (options) =>
+          listGone ? Promise.resolve(null) : base.listFamilies(options),
+      }),
+    )
+
+    const form = await openChange(user)
+    await user.clear(form.getByLabelText("Colour"))
+    await user.type(form.getByLabelText("Colour"), "#00796b")
+    listGone = true
+    await user.click(main().getByRole("button", { name: "Refresh" }))
+
+    expect(
+      await main().findByText("Families can't be changed right now"),
+    ).toBeInTheDocument()
+    expect(form.getByLabelText("Colour")).toHaveValue("#00796b")
+    expect(form.getByRole("button", { name: "Save changes" })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    )
+    expect(
+      main().getByRole("button", { name: "Change Screening" }),
+    ).toBeDisabled()
+    expect(main().getByRole("button", { name: "Add a family" })).toBeDisabled()
   })
 
   it("offers nothing to change without a family list (S7)", async () => {

@@ -8,6 +8,7 @@
 - **Binding ADRs**: none
 - **Suggested model**: Sonnet — a bounded Vitest file that drives a shell script
   against throwaway git repositories
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/61
 
 ## Summary
 

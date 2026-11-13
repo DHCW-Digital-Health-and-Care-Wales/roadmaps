@@ -21,7 +21,9 @@ sets the date unless asked. Showing stale roadmaps (A7) is not in it.
 ## Scope
 
 `lastUpdated` joins the roadmap's editable fields (`domain/`), written by the publish
-plan (`infrastructure/`); the About block and form, the publish dialog and the
+plan (`infrastructure/`); STY-035's published-state write carries an optional
+`Last updated` of today for D10 (the port, the Sheets adapter and the in-memory
+double); the About block and form, the publish dialog and the
 conflict review (`features/`); copy in both catalogues; README _What the editor
 writes_; an ADR-012 amendment; the line in `docs/analysis/roadmap-tab-format.md` that
 says the editor never writes `Last updated`.
@@ -107,7 +109,9 @@ format follow the browser's language (round 4 Q1)
 S3 and S4's "today" is Europe/London's (D9), so test it with a fixed clock in British
 Summer Time just before midnight UTC (2026-07-01T23:30Z is already 2 July in London),
 where a UTC date would differ. S8 needs an MSW test of the written cell; S2 and S6 need a Playwright
-journey against the Sheets fake.
+journey against the Sheets fake. D10 needs a contract test on both implementations, and
+an MSW test, of "Publish roadmap" with the box ticked, including a row whose `Enabled`
+already reads `Yes`, where the date is still written.
 
 ## Decisions
 

@@ -143,8 +143,9 @@ list's badge and count must change after the write.
   nothing; the usual conflict review. S6.
 - **D8** (owner, 2026-11-13, round 3 Q2): pending edits when unpublishing → they stay
   pending. S7.
-- **D9** (agent, 2026-11-13): the write re-reads the row first; a cell that already
-  holds the value asked for counts as done, and any other value (`yes`, `TRUE`, blank)
+- **D9** (agent, 2026-11-13): the write re-reads the row first; it counts as done
+  without writing only when every cell asked for (with STY-036 D10, a date too)
+  already holds its value, and any other value (`yes`, `TRUE`, blank)
   is overwritten with exactly `Yes` or `No`, over refusing as a conflict, because the
   state is binary and the confirmation names it.
 - **D10** (agent, 2026-11-13): a roadmap index with no `Enabled` column gains one,

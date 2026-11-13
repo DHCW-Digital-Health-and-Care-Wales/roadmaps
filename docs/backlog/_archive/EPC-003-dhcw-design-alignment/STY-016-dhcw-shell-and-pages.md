@@ -9,7 +9,7 @@
   ADR-008
 - **Suggested model**: Sonnet — layout and copy on settled components, with screenshots
   in both languages
-- **Delivered**: https://github.com/collisdigital/roadmaps-editor/pull/18
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/18
 
 ## Summary
 

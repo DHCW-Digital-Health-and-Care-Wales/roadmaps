@@ -8,7 +8,7 @@
 - **Binding ADRs**: ADR-013, ADR-012
 - **Suggested model**: Opus — it extends the publish write with cells copied from another
   tab
-- **Delivered**: https://github.com/collisdigital/roadmaps-editor/pull/39
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/39
 
 ## Summary
 

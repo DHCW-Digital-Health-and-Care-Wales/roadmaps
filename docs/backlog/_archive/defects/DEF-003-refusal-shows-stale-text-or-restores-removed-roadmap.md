@@ -8,7 +8,7 @@
 - **Depends on**: none
 - **Binding ADRs**: ADR-012
 - **Suggested model**: Opus — a concurrency rule in the query cache
-- **Delivered**: https://github.com/collisdigital/roadmaps-editor/pull/34
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/34
 
 ## Summary
 
@@ -92,8 +92,8 @@ during the publish did change keeps that read's text
 ## Decisions
 
 - **D1** (owner, 2026-11-12, triage of the two Codex comments on PR #32,
-  [r4546034428](https://github.com/collisdigital/roadmaps-editor/pull/32#discussion_r4546034428)
-  and [r4546034433](https://github.com/collisdigital/roadmaps-editor/pull/32#discussion_r4546034433)):
+  [r4546034428](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/32#discussion_r4546034428)
+  and [r4546034433](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/32#discussion_r4546034433)):
   fix both, as a new PR.
 - **D2** (agent): the patch decides per field, against the cache as it was when the
   publish began.

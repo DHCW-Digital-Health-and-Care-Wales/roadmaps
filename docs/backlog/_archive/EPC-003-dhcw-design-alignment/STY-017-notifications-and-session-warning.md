@@ -8,7 +8,7 @@
 - **Binding ADRs**: ADR-003, ADR-010, ADR-008
 - **Suggested model**: Opus — it changes the auth state machine and the GIS adapter,
   where a misstep blocks the popup or loses the session
-- **Delivered**: https://github.com/collisdigital/roadmaps-editor/pull/19
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/19
 
 ## Summary
 

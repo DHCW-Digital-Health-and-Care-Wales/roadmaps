@@ -8,7 +8,7 @@
 - **Binding ADRs**: ADR-013, ADR-012
 - **Suggested model**: Opus — one atomic write across a tab and many roadmaps' rows, some
   of them published
-- **Delivered**: [#41](https://github.com/collisdigital/roadmaps-editor/pull/41)
+- **Delivered**: [#41](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/41)
 
 ## Summary
 

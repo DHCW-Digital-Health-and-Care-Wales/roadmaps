@@ -32,7 +32,8 @@ No GitHub secrets are needed: the public config is committed in `.env.production
 
 ## First deployment
 
-Done once for `collisdigital/roadmaps-editor`; repeat for a fork or a new repository.
+Done once for `DHCW-Digital-Health-and-Care-Wales/roadmaps-editor`; repeat for a fork or a
+new repository.
 
 1. **Create the repository** on GitHub. Make it public, or use a plan that supports
    Pages for private repositories.
@@ -43,12 +44,13 @@ Done once for `collisdigital/roadmaps-editor`; repeat for a fork or a new reposi
 4. **Watch the run:** _Actions → CI/CD_. When `deploy` finishes, the run summary shows the
    site URL. The `github-pages` environment only accepts deployments from `main` by
    default; keep that rule.
-5. **Add the origin in Google Cloud:** make sure `https://collisdigital.github.io` is in
-   the OAuth client's Authorised JavaScript origins (step 5 of
+5. **Add the origin in Google Cloud:** make sure
+   `https://dhcw-digital-health-and-care-wales.github.io` is in the OAuth client's
+   Authorised JavaScript origins (step 5 of
    [Google Cloud setup](google-cloud-setup.md#setup)).
-6. **Open** <https://collisdigital.github.io/roadmaps-editor/>, choose **Connect Google**,
-   pick an account (a test user, if the app is External and in Testing) and allow access
-   to Google Sheets.
+6. **Open** <https://dhcw-digital-health-and-care-wales.github.io/roadmaps-editor/>,
+   choose **Connect Google**, pick an account (a test user, if the app is External and in
+   Testing) and allow access to Google Sheets.
 7. **See your roadmaps:** one card per roadmap the spreadsheet's first tab lists
    ([Spreadsheet format](../../README.md#spreadsheet-format)).
 

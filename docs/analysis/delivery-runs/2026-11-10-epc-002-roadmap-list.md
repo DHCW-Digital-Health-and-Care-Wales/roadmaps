@@ -20,7 +20,7 @@
 ### STY-010 A roadmap carries its list information, and the roadmap index can be parsed
 
 - Type / risk: story; domain port change and untrusted-data parser.
-- PR / assessed head / outcome: [#4](https://github.com/collisdigital/roadmaps-editor/pull/4),
+- PR / assessed head / outcome: [#4](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/4),
   ee005ab, merged by the owner as 1ebb643.
 - Models: delivery Opus (high, the record's tier);
   correctness Opus and Sol (`gpt-6.1-sol`, high); quality Sonnet.
@@ -39,7 +39,7 @@
 ### STY-011 The roadmap list shows the roadmaps the public site lists
 
 - Type / risk: story; repository adapter and untrusted Sheets data.
-- PR / assessed head / outcome: [#5](https://github.com/collisdigital/roadmaps-editor/pull/5),
+- PR / assessed head / outcome: [#5](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/5),
   b0c21be, merged by the owner as 06e0f09.
 - Models: delivery Opus (high, escalated from Suggested Sonnet for the adapter); reviews
   as STY-010.
@@ -52,7 +52,7 @@
 - Human interventions: 1. The owner corrected the orchestrator for not starting a new
   top-level thread per item (see Learnings).
 - Bot status at readiness: not babysat.
-- Retro: [#6](https://github.com/collisdigital/roadmaps-editor/pull/6), merged as 41a9270.
+- Retro: [#6](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/6), merged as 41a9270.
   Docs only; Opus round 1 (P2, P3) and re-check (P3), Sol round 1 (P2) and re-check; all
   fixed.
 - Evidence limits: partial usage, Claude reviewers only, as reported subagent tokens:
@@ -61,7 +61,7 @@
 ### STY-012 Roadmap cards show each roadmap's information, grouped by product family
 
 - Type / risk: story; presentation, copy (en + cy), accessibility.
-- PR / assessed head / outcome: [#7](https://github.com/collisdigital/roadmaps-editor/pull/7),
+- PR / assessed head / outcome: [#7](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/7),
   8cf1316 (reviewed cbcbac4, then a record-only commit), open for the owner; CI passed.
 - Models: delivery Sonnet (high, the record's tier); reviews as STY-010.
 - Timing: delivery 37 min (14:47–15:24), reviews about 12 min including re-checks;
@@ -75,7 +75,7 @@
 - Recovery: none.
 - Human interventions: 0.
 - Bot status at readiness: completed-old-head (cbcbac4; the later commit only links the PR).
-- Retro: [#8](https://github.com/collisdigital/roadmaps-editor/pull/8), open. Adds one
+- Retro: [#8](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/8), open. Adds one
   E2E rule (wait for a request's own effect before asserting a fake's request log).
   Opus round 1 (3 P3) and re-check clean; Sol round 1 clean.
 - Evidence limits: usage unknown; the delivery report quoted no reviewer token counts.

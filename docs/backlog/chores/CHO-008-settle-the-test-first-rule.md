@@ -14,20 +14,19 @@
 
 implement-story step 3 asks for each behaviour's test to go red before the code that
 passes it, and for any other order to be reported as a departure. Deliveries report the
-departure, but it recurs: about a dozen stories wrote some unit, component or page tests
-after the code, often showing afterwards that the tests discriminate. The rule is being
-reported rather than kept, so the owner decides what it should be. Done: the step states
-the rule the owner chose, and later deliveries keep it or report a departure from that
-rule.
+departure, but it recurs: eleven stories wrote some unit, component or page tests
+after the code. The rule is reported rather than kept, so the owner decides what it
+should be. Done: the step states the chosen rule, and later deliveries keep it or report
+a departure from it.
 
 ## Measurement
 
 At commit `8a22019`, the Delivery sections of these archived stories record tests written
-after the code: STY-014, STY-015, STY-016, STY-017, STY-018, STY-020, STY-021, STY-027,
+after the code: STY-014, STY-015, STY-016, STY-017, STY-020, STY-021, STY-027,
 STY-030, STY-032, STY-035 and STY-036. The search was
 `rg -n -i "written after|after the code|test-first|red first|TDD" docs/backlog/_archive`;
-a hit counts when it reports a behaviour test written after its code. STY-018's hits are
-Playwright specs, which step 3 already allows to follow working code.
+a hit counts when it reports a unit, component or page test written after its code;
+Playwright specs, which step 3 lets follow working code, do not count.
 
 ## Acceptance criteria
 

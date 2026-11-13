@@ -125,7 +125,7 @@
   yourself".
 - Follow-up work:
   - [CHO-008](../../backlog/chores/CHO-008-settle-the-test-first-rule.md): both stories,
-    like ten before them, wrote some tests after the code and reported it as a departure.
+    like nine before them, wrote some tests after the code and reported it as a departure.
     The owner decides whether to enforce, relax or keep the rule.
   - Fluent Welsh review of both stories' new strings, tracked in the README's Welsh note.
   - [CHO-007](../../backlog/chores/CHO-007-rebase-an-open-date-form-after-marking-updated.md)

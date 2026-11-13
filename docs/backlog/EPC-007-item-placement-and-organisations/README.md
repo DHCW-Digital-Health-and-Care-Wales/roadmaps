@@ -69,8 +69,8 @@ cite the answers.
    or a choice in the form; publishing writes `Horizon` only, so the item keeps its row
    order (F1).
 2. Organisations become an editable item field, a set chosen from checkboxes (F1, F2).
-3. `listOrganisations()` on the repository serves the list in display order; items
-   carry `organisationIds`; no feature reads a constant (F3).
+3. `listOrganisations()` on the repository serves the list, flagging national ones;
+   items carry `organisationIds`; no feature reads a constant; the screen sorts (F3).
 4. A code the list doesn't hold is kept on the item as written, so the form can say it
    will be removed (F4).
 5. A missing `Organisations` column is added on publish, as ADR-012 adds one (F5).
@@ -93,8 +93,9 @@ names.
 ### The organisation list
 
 STY-032 owns the `Organisation` type, `listOrganisations()` and `organisationIds`;
-STY-033 and STY-034 read them through the repository's query. The list's order is the
-display order everywhere, and no feature sorts it.
+STY-033 and STY-034 read them through the repository's query. The repository promises
+no order: each screen shows national organisations first, then sorts by the label it
+shows in the interface's language (ADR-014), through one shared sort STY-032 provides.
 
 ### What the editor writes
 

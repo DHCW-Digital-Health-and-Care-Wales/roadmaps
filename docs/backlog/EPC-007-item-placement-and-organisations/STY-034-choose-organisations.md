@@ -12,7 +12,7 @@
 ## Summary
 
 A Product Lead ticks the organisations an item's work is for, in its edit form, from the
-list STY-032 serves: "Cardiff and Vale (CAVUHB)", All Wales first. The choice is a
+list STY-032 serves, as "Cardiff and Vale (CAVUHB)", All Wales first. The choice is a
 pending edit, published with the rest. A code in the sheet the list doesn't know is
 named in the form before publishing removes it. A roadmap with no `Organisations`
 column gains one when first published with a choice.
@@ -24,7 +24,8 @@ column gains one when first published with a choice.
 **Given** an item for Cardiff and Vale
 **When** Sam opens its edit form
 **Then** an "Organisations" group of checkboxes lists every organisation as its short
-name and code ("Cardiff and Vale (CAVUHB)"), in the list's order, Cardiff and Vale ticked
+name and code ("Cardiff and Vale (CAVUHB)"), All Wales first then alphabetical by short
+name, Cardiff and Vale ticked
 **And** on the Welsh interface the group's label is Welsh and the short names stay
 English
 
@@ -55,8 +56,8 @@ the item, organisations untouched, leaves the cell as it is
 
 **Given** a pending choice of Swansea Bay and All Wales
 **When** Sam publishes
-**Then** the item's `Organisations` cell reads `National, SBUHB`: codes in the list's
-order, separated by a comma and a space; none chosen writes an empty cell
+**Then** the item's `Organisations` cell reads `National, SBUHB`: national first, then
+by code, separated by a comma and a space; none chosen writes an empty cell
 
 ### S6: A missing column is added (round 1 Q10)
 
@@ -91,8 +92,8 @@ conflict
 - **D6** (agent, 2026-11-13): an unknown code is removed only when the organisations
   are written, not on every write to the item, over clearing it at any publish: a
   publish changes only the fields the Product Lead changed (ADR-012) → S4.
-- **D7** (agent, 2026-11-13): the cell is written as codes separated by `, ` in the
-  list's order, over the order ticked: the format the parser and the public site already
+- **D7** (agent, 2026-11-13): the cell is written as codes separated by `, `, national
+  first then by code, over the order ticked: the format the parser and the public site already
   read, and stable, so a re-save is no change → S5.
 
 ## Starting point

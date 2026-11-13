@@ -30,7 +30,7 @@ English and Welsh
 **When** it shows
 **Then** an "Organisations" section after Categories lists each as its full name and
 code, "Cardiff and Vale University Health Board (CAVUHB)", All Wales first ("All Wales
-(National)"), then the rest in the list's order
+(National)"), then alphabetical by full name
 **And** the section says they can't be changed here, and offers no control to change
 them
 
@@ -39,7 +39,8 @@ them
 **Given** the Welsh interface
 **When** the section shows
 **Then** each full name is in Welsh ("Bwrdd Iechyd Prifysgol Caerdydd a’r Fro
-(CAVUHB)"), with the same codes, in the same order
+(CAVUHB)"), with the same codes, sorted by the Welsh names: "Cymru gyfan (National)",
+then "Addysg a Gwella Iechyd Cymru (HEIW)", then the "Bwrdd Iechyd…" names
 
 ### S4: No organisations
 
@@ -60,8 +61,9 @@ them
 - **D2** (owner, round 4 Q23): on the families and categories page, renamed, not a page
   of its own → S1, S2.
 - **D3** (owner, round 4 Q24): Welsh full names on the Welsh interface → S3.
-- **D4** (owner, round 4 Q25): All Wales first, then alphabetical → S2. The Welsh page
-  keeps the English order by the agent's STY-032 D5, not this answer → S3.
+- **D4** (owner, round 4 Q25, and its follow-up): All Wales first, then alphabetical
+  by the full name shown, Welsh on the Welsh interface → S2, S3. The screen sorts
+  (STY-032 D5).
 
 ## Starting point
 

@@ -23,8 +23,8 @@ item's organisations is STY-034; listing them in full is STY-033.
 
 **Given** an item whose `Organisations` cell reads `SBUHB, National, CAVUHB`
 **When** its card shows
-**Then** it reads "All Wales, Cardiff and Vale, Swansea Bay": All Wales first, then
-alphabetical
+**Then** it reads "All Wales, Cardiff and Vale, Swansea Bay": the national one first,
+then alphabetical by short name
 **And** the Welsh interface shows the same English short names (round 1 Q7)
 
 ### S2: The repository serves the list (round 2 Q13, round 3 Q19)
@@ -32,7 +32,7 @@ alphabetical
 **Given** a connected Product Lead
 **When** the repository's organisation list is read
 **Then** it holds each organisation's id, code, short name and full name in English and
-Welsh, in display order: All Wales first, then alphabetical by English name
+Welsh, and whether it is national (All Wales only), in no promised order
 **And** the Sheets adapter returns its built-in twelve (round 2 Q14 names their short
 names), with ids `national`, `abuhb`… as today, without a request
 
@@ -47,9 +47,10 @@ site doesn't
 
 ### S4: The screens follow the repository's list
 
-**Given** a repository whose list holds a thirteenth organisation, or a different order
+**Given** a repository whose list holds a thirteenth organisation, and serves the list
+in another order
 **When** an item naming it shows
-**Then** the card shows its short name, in the list's order, with no code change in
+**Then** the card shows its short name in the same sorted place, with no code change in
 `features/`
 
 ### S5: The list's absence is a load failure
@@ -62,7 +63,8 @@ site doesn't
 
 **Given** `docs/operations/replacing-google-sheets.md`
 **When** this story is delivered
-**Then** it says `listOrganisations` returns the organisations table in its order, and
+**Then** it says `listOrganisations` returns the organisations table, with its `national`
+column, in any order, and
 items link to it by `organisationIds` through a join table (ADR-014)
 
 ## Decisions
@@ -75,13 +77,14 @@ items link to it by `organisationIds` through a join table (ADR-014)
   Velindre, Welsh Ambulance, Public Health Wales, Health Education and Improvement
   Wales → S2.
 - **D3** (owner, round 2 Q15, round 3 Q20, Q21): the card shows short names, comma
-  separated, in the list's order → S1.
+  separated, All Wales first then alphabetical → S1.
 - **D4** (agent, round 3 Q19 left to the agent): `Organisation { id, code, shortName,
 name }` on `RoadmapRepository`, items carrying `organisationIds`, over a separate
   port or a fixed union, as it maps to a table and a join table with no rework → S2–S4.
-- **D5** (agent): one order in both languages, set by the repository, over sorting by
-  the Welsh name on the Welsh interface: the owner asked for All Wales first then
-  alphabetical, and one order keeps card, form and page alike.
+- **D5** (owner, 2026-11-13, round 4, after Q25, on the agent's advice): the screen
+  sorts, national first then alphabetical by the label shown in the interface's
+  language; the repository flags national organisations and promises no order → S1, S2,
+  S4. Replaces this record's first draft, where the repository served one order.
 - **D6** (agent): All Wales's full name is "All Wales" ("Cymru gyfan"), over the public
   site's "All Wales (national)", since STY-033 shows it beside its code, `National`.
 

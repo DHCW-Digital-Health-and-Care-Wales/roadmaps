@@ -101,8 +101,8 @@ or written.
 ### ADR-014 amendment
 
 Organisations are no longer a domain vocabulary: the repository serves them as a list
-(`listOrganisations()`), items carry `organisationIds`, and the card shows short names in
-the list's order instead of codes (Option 6's choice ends). The Sheets adapter keeps the
+(`listOrganisations()`), items carry `organisationIds`, and the card shows short names,
+national first then alphabetical, instead of codes (Option 6's choice ends). The Sheets adapter keeps the
 twelve built in and still matches codes as headers, leaving out an unknown one; the item
 now keeps that code as written. Placements stay a domain vocabulary.
 

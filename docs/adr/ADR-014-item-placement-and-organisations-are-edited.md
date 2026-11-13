@@ -2,7 +2,8 @@
 
 - Status: Accepted — owner, 2026-11-13: EPC-007 grilling rounds 1–4 (Q1–Q25); Q19 left
   the shape of the organisation data to the agent, as "whichever needs less rework when
-  the database replaces Sheets". Amends ADR-011 (organisations as a fixed vocabulary,
+  the database replaces Sheets"; a follow-up to Q25 chose, on the agent's advice, that the
+  screen sorts the organisations. Amends ADR-011 (organisations as a fixed vocabulary,
   shown as codes) and ADR-012 (what is editable).
 - Date: 2026-11-13
 
@@ -36,10 +37,14 @@ database that replaces Sheets (ADR-002) will hold them as a table, linked to ite
 
 - **The repository serves the list** (round 2 Q13, round 3 Q19). `RoadmapRepository`
   gains `listOrganisations()`, returning each organisation's `id`, `code`, English
-  `shortName` and `name` (English and Welsh), in display order: All Wales first, then
-  alphabetical by English name (round 2 Q16, round 3 Q21, round 4 Q25). One order
-  serves both languages (agent, EPC-007 STY-032 D5), so a Welsh page is not re-sorted. Items carry `organisationIds`. Features read the list through a
-  query, never a constant, and never sort it.
+  `shortName`, `name` (English and Welsh) and `national` (true for All Wales), in no
+  promised order. Items carry `organisationIds`. Features read the list through a
+  query, never a constant.
+- **The screen sets the order** (round 4, after Q25): national organisations first, then
+  alphabetical by the label it shows, compared in the interface's language (round 2
+  Q16, round 3 Q21, round 4 Q24, Q25). The card and form sort English short names; the
+  families page sorts full names, Welsh on the Welsh interface. The order is
+  presentation, so the database and API need only the `national` column.
 - **In Sheets the list is built in** (Q13): the adapter returns the twelve, with today's
   ids (`cavuhb`) as keys, and maps an item's codes to ids as it reads. No
   `Organisations` tab: the owner chose to keep the list in code until the database.
@@ -52,8 +57,8 @@ database that replaces Sheets (ADR-002) will hold them as a table, linked to ite
   (CAVUHB)", in Welsh on the Welsh interface (round 4 Q23, Q24). Short names have no
   Welsh (Q7); codes are the same in both languages.
 - **An item's organisations are a pending edit**, any mix, All Wales included (Q8).
-  Publishing writes the cell as codes separated by `, ` in list order, or empty for
-  none (agent, STY-034 D7). It writes known codes only: a code the list doesn't hold is dropped, and the form
+  Publishing writes the cell as codes separated by `, `, national first and then by
+  code, or empty for none (agent, STY-034 D7). It writes known codes only: a code the list doesn't hold is dropped, and the form
   says so first (Q9). A missing `Organisations` column is added as ADR-012 adds one
   (Q10).
 - **One field for conflicts** (Q11): the set of ids, so a co-lead's reordering is no
@@ -65,6 +70,9 @@ database that replaces Sheets (ADR-002) will hold them as a table, linked to ite
   its own list, so a tab would govern the editor only; the list rarely changes.
 - A separate organisation repository port (Q19): ADR-013 put the families and
   categories lists on `RoadmapRepository`, and so does this.
+- The repository serving the display order (round 4, after Q25): alphabetical depends on
+  the label and language a screen shows, and Welsh sorts its digraphs (`ch`, `dd`, `ll`)
+  as letters, which only a locale-aware comparison in the interface gets right.
 - Moving a row to the top or bottom of its new placement (Q3): a row move is a harder
   write to make safe beside a co-lead, and no reorder exists yet to match.
 - Keeping unknown codes in the cell (Q9): the public site drops them anyway.

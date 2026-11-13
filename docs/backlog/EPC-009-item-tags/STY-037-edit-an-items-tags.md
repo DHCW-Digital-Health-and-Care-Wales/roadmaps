@@ -6,8 +6,8 @@
 - **Area**: Domain + Infrastructure + Features/UI + i18n (en + cy) + E2E
 - **Epic**: [EPC-009-item-tags](README.md)
 - **Depends on**: none
-- **Binding ADRs**: ADR-012 (this story amends _What is editable_), ADR-011, ADR-010,
-  ADR-008
+- **Binding ADRs**: ADR-012 (this story amends _What is editable_), ADR-014, ADR-011,
+  ADR-010, ADR-008
 - **Suggested model**: Opus — an ordered, open-ended field through the pending-change
   model, publish plan and conflict review, and a new form control
 
@@ -130,8 +130,9 @@ on the control for adding when none is left
 **When** Sam publishes
 **Then** the item's `Labels` cell reads `Patients, Video appointments, Carers`: the tags
 in order, separated by a comma and a space, as text; no tags writes an empty cell
-**And** for an item with no Welsh tags no other cell of its row is written, and a
-roadmap whose tab has no `Labels` column gains one as ADR-012 adds a column
+**And** for an item with no Welsh tags the change writes no other cell of its row (an
+`Item ID` the row lacks is still written, as on any publish), and a roadmap whose tab has
+no `Labels` column gains one as ADR-012 adds a column
 
 ### S13: A co-lead's different tags are a conflict
 
@@ -152,7 +153,8 @@ pending change the data source already holds
 
 - **Q1**: Which editor is built? Try the four in
   `docs/analysis/item-tags-ux-analysis/prototypes.html`; the analysis compares them.
-  Each follows S1–S14 and differs in how a tag is added, renamed and removed.
+  S1–S14 are written for A and B, which differ in how a tag is added, renamed and
+  removed; C and D depart from them as their options say.
   - (a) **B, list and suggestions** (recommended) — each tag is a row with Rename and
     Remove; the roadmap's other tags are buttons under an "Add a tag" field. Built from
     the existing input, button and tag; the longest form of the four. Adds scenarios
@@ -163,7 +165,8 @@ pending change the data source already holds
     list, its keys and Backspace.
   - (c) **C, tick list** — every tag in the roadmap is a checkbox, as organisations
     are. Shows the roadmap's whole vocabulary and its near-duplicates; grows with the
-    roadmap, and the order of an item's tags follows the ticking.
+    roadmap. Removing is unticking, an item's tags are ordered by ticking, and the list
+    is alphabetical and not narrowed by typing, so S1, S3 and S5 would be re-cut.
   - (d) **D, one line of text** — a text field with commas, as in the spreadsheet,
     with the other tags as buttons. The cheapest; it has no control per tag, so S1 and
     S11 would be re-cut, and a rename can't be told from a removal and an addition.
@@ -179,13 +182,15 @@ pending change the data source already holds
   - (b) **Each tag keeps its Welsh** — publishing also writes `Labels (cy)`: a removed
     tag's Welsh goes ("Gofalwyr" stays under "Carers"), a new tag gets a blank place, a
     renamed tag keeps its Welsh as ADR-012 leaves Welsh beside edited English. Amends
-    ADR-012's "English only"; the pending change carries pairs, and D or any swap of
-    one tag for another cannot say which Welsh stays.
+    ADR-012's "English only"; the pending change carries pairs, and design D, or any
+    swap of one tag for another, cannot say which Welsh stays.
   - (c) **The item's Welsh tags are cleared**, and the form says so first, as it does
     for an unknown organisation code — publishing blanks `Labels (cy)` for that item.
     Simple and never wrong, but translations are lost.
-  - (d) **`Labels (cy)` is left as it is** — the build writes nothing extra, and the
-    public site shows "Cleifion" under "Carers".
+  - (d) **`Labels (cy)` is left as it is** — the build writes nothing extra. In the
+    example the counts then differ, so the public site drops both Welsh tags and shows
+    the English, and every read warns of the mismatch. Had Sam swapped "Patients" for
+    "Staff", the counts would match and "Cleifion" would show under "Staff".
 - **Q3**: Does a typed tag take the spelling the roadmap already uses? Example: other
   items carry "Clinic staff" and Sam types "clinic staff".
   - (a) **Yes** (recommended) — it is added as "Clinic staff", and the form says so.
@@ -223,16 +228,11 @@ pending change the data source already holds
 
 ## Starting point
 
-Audited at `52850bf`.
+Audited at `52850bf`. Epic F3–F5 hold what the parser, the form and the component
+library give.
 
-- `EditForm` holds every field as one string, and `many` covers only a choice among
-  fixed options (STY-034): an open list the Product Lead adds to is a new kind of field.
-- `RoadmapItem.tags` is `LocalisedText[]`; the parser pairs `Labels (cy)` with `Labels`
-  by position and only then drops blank and repeated English, so a tag's Welsh is found
-  by its place, not its text (`docs/analysis/roadmap-tab-format.md`, `Labels`).
 - The card shows tags as one line of text, in Welsh where an item has it, and keeps
   showing it while the form is open; organisations hide theirs.
-- `@base-ui/react` 1.9 has a `combobox` with chips; `src/components/ui/` has none yet.
 
 ## Out of scope
 

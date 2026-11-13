@@ -106,9 +106,11 @@
         align-items: center;
         justify-content: space-between;
       }
-      .page figcaption {
+      .page figcaption h2 {
+        margin: 0;
         font-weight: 600;
         font-size: 17px;
+        line-height: 1.3;
       }
       .idea {
         font-size: 14px;
@@ -658,7 +660,7 @@
 
       <figure id="pa">
         <div class="caption">
-          <figcaption>A. Type-ahead box</figcaption>
+          <figcaption><h2>A. Type-ahead box</h2></figcaption>
           <button type="button" class="again" data-again="pa">
             Start again
           </button>
@@ -674,7 +676,7 @@
 
       <figure id="pb">
         <div class="caption">
-          <figcaption>B. List and suggestions</figcaption>
+          <figcaption><h2>B. List and suggestions</h2></figcaption>
           <button type="button" class="again" data-again="pb">
             Start again
           </button>
@@ -689,7 +691,7 @@
 
       <figure id="pc">
         <div class="caption">
-          <figcaption>C. Tick list</figcaption>
+          <figcaption><h2>C. Tick list</h2></figcaption>
           <button type="button" class="again" data-again="pc">
             Start again
           </button>
@@ -704,7 +706,7 @@
 
       <figure id="pd">
         <div class="caption">
-          <figcaption>D. One line of text</figcaption>
+          <figcaption><h2>D. One line of text</h2></figcaption>
           <button type="button" class="again" data-again="pd">
             Start again
           </button>
@@ -875,6 +877,93 @@
         }
       }
 
+      /** A paste that holds a comma or a line break adds every tag in it at once. */
+      function addOnPaste(input, add) {
+        input.addEventListener("paste", (event) => {
+          const pasted = event.clipboardData?.getData("text") ?? ""
+          if (!/[,\n]/.test(pasted)) return
+          event.preventDefault()
+          add(input.value + pasted)
+        })
+      }
+      /** A field for a new tag: a comma or Enter adds what is typed; Enter on nothing confirms the form. */
+      function addOnKeys(input, add) {
+        input.addEventListener("keydown", (event) => {
+          const typed = clean(input.value) !== ""
+          if (event.key === "," || (event.key === "Enter" && typed)) {
+            event.preventDefault()
+            if (typed) add(input.value)
+          }
+        })
+        addOnPaste(input, add)
+      }
+      /** The field for a new tag beside its Add button. */
+      function addRow(input, add) {
+        return h(
+          "div",
+          { class: "b-add" },
+          input,
+          h(
+            "button",
+            {
+              type: "button",
+              class: "d-btn sec",
+              onclick: () => {
+                if (clean(input.value) !== "") add(input.value)
+                input.focus()
+              },
+            },
+            "Add",
+          ),
+        )
+      }
+      /** A tag's name as a field: Enter keeps the new name, Escape the old one. */
+      function renameField(className, tag, finish) {
+        const edit = h("input", {
+          class: className,
+          type: "text",
+          value: tag,
+          "aria-label": `Rename ${tag}`,
+          onkeydown: (event) => {
+            if (event.key === "Enter") {
+              event.preventDefault()
+              finish(edit.value)
+            } else if (event.key === "Escape") {
+              event.preventDefault()
+              finish(tag)
+            }
+          },
+        })
+        return edit
+      }
+      /** The buttons beside a name being changed, each named for its tag. */
+      function renameButtons(tag, edit, finish) {
+        return [
+          h(
+            "button",
+            {
+              type: "button",
+              class: "d-btn sec sm",
+              onclick: () => finish(edit.value),
+            },
+            "Update",
+            " ",
+            srOnly(tag),
+          ),
+          h(
+            "button",
+            {
+              type: "button",
+              class: "d-btn sec sm",
+              onclick: () => finish(tag),
+            },
+            "Cancel",
+            " ",
+            srOnly(`renaming ${tag}`),
+          ),
+        ]
+      }
+
       // ---- A: type-ahead box ----
       function editorA(id, start) {
         let tags = [...start]
@@ -921,9 +1010,7 @@
 
         function findOptions() {
           const typed = clean(input.value)
-          const found = suggest(tags, typed)
-            .slice(0, 8)
-            .map(({ tag, count }) => ({ tag, count }))
+          const found = suggest(tags, typed).slice(0, 8)
           const known =
             ELSEWHERE.has(keyOf(typed)) ||
             tags.some((tag) => keyOf(tag) === keyOf(typed))
@@ -974,24 +1061,11 @@
           chips.replaceChildren(
             ...tags.map((tag, index) => {
               if (index === editing) {
-                const edit = h("input", {
-                  class: "a-chip-edit",
-                  type: "text",
-                  value: tag,
-                  size: Math.max(tag.length, 8),
-                  "aria-label": `Rename ${tag}`,
-                  onkeydown: (event) => {
-                    if (event.key === "Enter") {
-                      event.preventDefault()
-                      finishEdit(edit.value)
-                    } else if (event.key === "Escape") {
-                      event.preventDefault()
-                      finishEdit(tag)
-                    }
-                  },
-                  onblur: () => {
-                    if (editing === index) finishEdit(edit.value, false)
-                  },
+                const edit = renameField("a-chip-edit", tag, finishEdit)
+                edit.size = Math.max(tag.length, 8)
+                // Leaving the name keeps it, as there is no button to.
+                edit.addEventListener("blur", () => {
+                  if (editing === index) finishEdit(edit.value, false)
                 })
                 return h("li", null, edit)
               }
@@ -1067,7 +1141,10 @@
           drawList()
         }
         function choose(index) {
-          add(options[index].tag)
+          const { tag } = options[index]
+          const typed = clean(input.value)
+          // Typed in other capitals, the tag is said to be respelt, as a comma says it.
+          add(keyOf(typed) === keyOf(tag) ? typed : tag)
           input.focus()
         }
         function disarm() {
@@ -1124,12 +1201,7 @@
           active = clean(input.value) === "" ? -1 : 0
           drawList()
         })
-        input.addEventListener("paste", (event) => {
-          const pasted = event.clipboardData?.getData("text") ?? ""
-          if (!/[,\n]/.test(pasted)) return
-          event.preventDefault()
-          add(input.value + pasted)
-        })
+        addOnPaste(input, add)
         input.addEventListener("click", () => setOpen(true))
         input.addEventListener("blur", () => {
           disarm()
@@ -1159,6 +1231,8 @@
       function editorB(id, start) {
         let tags = [...start]
         let editing = -1
+        /** The field of the name being changed, while one is. */
+        let openEdit = null
         const status = statusLine()
         const rows = h("ul", { "aria-label": "Tags on this item" })
         const none = h("p", { class: "d-hint" }, "No tags")
@@ -1186,21 +1260,8 @@
           rows.replaceChildren(
             ...tags.map((tag, index) => {
               if (index === editing) {
-                const edit = h("input", {
-                  class: "d-input",
-                  type: "text",
-                  value: tag,
-                  "aria-label": `Rename ${tag}`,
-                  onkeydown: (event) => {
-                    if (event.key === "Enter") {
-                      event.preventDefault()
-                      finishEdit(edit.value)
-                    } else if (event.key === "Escape") {
-                      event.preventDefault()
-                      finishEdit(tag)
-                    }
-                  },
-                })
+                const edit = renameField("d-input", tag, finishEdit)
+                openEdit = edit
                 return h(
                   "li",
                   { class: "b-row" },
@@ -1208,24 +1269,7 @@
                   h(
                     "div",
                     { class: "b-actions" },
-                    h(
-                      "button",
-                      {
-                        type: "button",
-                        class: "d-btn sec sm",
-                        onclick: () => finishEdit(edit.value),
-                      },
-                      "Update",
-                    ),
-                    h(
-                      "button",
-                      {
-                        type: "button",
-                        class: "d-btn sec sm",
-                        onclick: () => finishEdit(tag),
-                      },
-                      "Cancel",
-                    ),
+                    renameButtons(tag, edit, finishEdit),
                   ),
                 )
               }
@@ -1243,11 +1287,11 @@
                       class: "d-btn sec sm",
                       "data-rename": true,
                       onclick: () => {
-                        editing = index
+                        keepOpenRename()
+                        editing = tags.indexOf(tag)
                         drawRows()
-                        const edit = rows.querySelector("input")
-                        edit.focus()
-                        edit.select()
+                        openEdit.focus()
+                        openEdit.select()
                       },
                     },
                     "Rename",
@@ -1260,7 +1304,7 @@
                       type: "button",
                       class: "d-btn sec sm",
                       "data-remove": true,
-                      onclick: () => remove(index),
+                      onclick: () => remove(tag),
                     },
                     "Remove",
                     " ",
@@ -1278,7 +1322,7 @@
           heading.hidden = !any
           chips.hidden = found.length === 0
           noMatch.hidden = !any || found.length > 0
-          noMatch.textContent = `No tag used elsewhere holds “${typed}”.`
+          noMatch.textContent = `No other tag matches “${typed}”.`
           chips.replaceChildren(
             ...found.map(({ tag, count }, index) =>
               h(
@@ -1302,7 +1346,7 @@
             ),
           )
         }
-        function finishEdit(text) {
+        function finishEdit(text, refocus = true) {
           const index = editing
           editing = -1
           const result = renameTag(tags, index, text)
@@ -1310,12 +1354,19 @@
           status.tell(result.notes)
           drawRows()
           drawSuggestions()
+          if (!refocus) return
           const renames = rows.querySelectorAll("[data-rename]")
           ;(renames[Math.min(index, renames.length - 1)] ?? input).focus()
         }
-        function remove(index) {
+        /** A name still being changed is kept when Sam moves on, as typed text is (D7). */
+        function keepOpenRename() {
+          if (editing !== -1) finishEdit(openEdit.value, false)
+        }
+        function remove(tag) {
+          keepOpenRename()
+          const index = tags.indexOf(tag)
+          if (index < 0) return
           const [removed] = tags.splice(index, 1)
-          editing = -1
           const undo = h(
             "button",
             {
@@ -1338,6 +1389,7 @@
           ;(removes[index] ?? input).focus()
         }
         function add(text) {
+          keepOpenRename()
           const result = addTags(tags, text)
           tags = result.tags
           input.value = ""
@@ -1349,20 +1401,8 @@
           drawSuggestions()
         }
 
-        input.addEventListener("keydown", (event) => {
-          const typed = clean(input.value) !== ""
-          if (event.key === "," || (event.key === "Enter" && typed)) {
-            event.preventDefault()
-            if (typed) add(input.value)
-          }
-        })
+        addOnKeys(input, add)
         input.addEventListener("input", drawSuggestions)
-        input.addEventListener("paste", (event) => {
-          const pasted = event.clipboardData?.getData("text") ?? ""
-          if (!/[,\n]/.test(pasted)) return
-          event.preventDefault()
-          add(input.value + pasted)
-        })
 
         drawRows()
         drawSuggestions()
@@ -1374,29 +1414,16 @@
             none,
             rows,
             h("label", { class: "d-sub", for: `${id}-input` }, "Add a tag"),
-            h(
-              "div",
-              { class: "b-add" },
-              input,
-              h(
-                "button",
-                {
-                  type: "button",
-                  class: "d-btn sec",
-                  onclick: () => {
-                    if (clean(input.value) !== "") add(input.value)
-                    input.focus()
-                  },
-                },
-                "Add",
-              ),
-            ),
+            addRow(input, add),
             status.element,
             heading,
             chips,
             noMatch,
           ),
-          value: () => addTags(tags, input.value).tags,
+          value: () => {
+            keepOpenRename()
+            return addTags(tags, input.value).tags
+          },
           focus: () => input.focus(),
         }
       }
@@ -1405,6 +1432,8 @@
       function editorC(id, start) {
         let tags = [...start]
         let editing = null
+        /** The field of the name being changed, while one is. */
+        let openEdit = null
         /** Every tag the list offers: this item's as it opened, the other items', then new ones. */
         const listed = new Map()
         const list = (tag) => listed.set(keyOf(tag), tag)
@@ -1427,43 +1456,14 @@
               const key = keyOf(tag)
               const count = ELSEWHERE.get(key)?.count ?? 0
               if (editing === key) {
-                const edit = h("input", {
-                  class: "d-input",
-                  type: "text",
-                  value: tag,
-                  "aria-label": `Rename ${tag}`,
-                  onkeydown: (event) => {
-                    if (event.key === "Enter") {
-                      event.preventDefault()
-                      finishEdit(tag, edit.value)
-                    } else if (event.key === "Escape") {
-                      event.preventDefault()
-                      finishEdit(tag, tag)
-                    }
-                  },
-                })
+                const finish = (text) => finishEdit(tag, text)
+                const edit = renameField("d-input", tag, finish)
+                openEdit = edit
                 return h(
                   "li",
                   { class: "c-row" },
                   edit,
-                  h(
-                    "button",
-                    {
-                      type: "button",
-                      class: "d-btn sec sm",
-                      onclick: () => finishEdit(tag, edit.value),
-                    },
-                    "Update",
-                  ),
-                  h(
-                    "button",
-                    {
-                      type: "button",
-                      class: "d-btn sec sm",
-                      onclick: () => finishEdit(tag, tag),
-                    },
-                    "Cancel",
-                  ),
+                  renameButtons(tag, edit, finish),
                 )
               }
               return h(
@@ -1478,6 +1478,7 @@
                     "data-key": key,
                     checked: has(tag),
                     onchange: (event) => {
+                      keepOpenRename()
                       if (event.target.checked) tags.push(tag)
                       else tags = tags.filter((other) => keyOf(other) !== key)
                       status.clear()
@@ -1503,11 +1504,11 @@
                       class: "d-btn sec sm",
                       "data-rename": key,
                       onclick: () => {
+                        keepOpenRename()
                         editing = key
                         draw()
-                        const edit = rows.querySelector("input[type=text]")
-                        edit.focus()
-                        edit.select()
+                        openEdit.focus()
+                        openEdit.select()
                       },
                     },
                     "Rename",
@@ -1520,7 +1521,12 @@
           if (focusKey)
             rows.querySelector(`[data-key="${CSS.escape(focusKey)}"]`)?.focus()
         }
-        function finishEdit(tag, text) {
+        /** A name still being changed is kept when Sam moves on, as typed text is (D7). */
+        function keepOpenRename() {
+          if (editing !== null)
+            finishEdit(listed.get(editing), openEdit.value, false)
+        }
+        function finishEdit(tag, text, refocus = true) {
           editing = null
           const index = tags.findIndex((other) => keyOf(other) === keyOf(tag))
           const result = renameTag(tags, index, text)
@@ -1531,6 +1537,7 @@
           for (const kept of tags) if (!listed.has(keyOf(kept))) list(kept)
           status.tell(result.notes)
           draw()
+          if (!refocus) return
           const to = renamed ? keyOf(tags[index] ?? tag) : keyOf(tag)
           ;(
             rows.querySelector(`[data-rename="${CSS.escape(to)}"]`) ??
@@ -1539,6 +1546,7 @@
           ).focus()
         }
         function add(text) {
+          keepOpenRename()
           const result = addTags(tags, text)
           tags = result.tags
           for (const tag of result.added) if (!listed.has(keyOf(tag))) list(tag)
@@ -1550,19 +1558,7 @@
           draw()
         }
 
-        input.addEventListener("keydown", (event) => {
-          const typed = clean(input.value) !== ""
-          if (event.key === "," || (event.key === "Enter" && typed)) {
-            event.preventDefault()
-            if (typed) add(input.value)
-          }
-        })
-        input.addEventListener("paste", (event) => {
-          const pasted = event.clipboardData?.getData("text") ?? ""
-          if (!/[,\n]/.test(pasted)) return
-          event.preventDefault()
-          add(input.value + pasted)
-        })
+        addOnKeys(input, add)
 
         draw()
         return {
@@ -1576,27 +1572,14 @@
               "Every tag in this roadmap. Tick the ones this item has.",
             ),
             rows,
-            h("label", { class: "d-sub", for: `${id}-input` }, "Add a new tag"),
-            h(
-              "div",
-              { class: "b-add" },
-              input,
-              h(
-                "button",
-                {
-                  type: "button",
-                  class: "d-btn sec",
-                  onclick: () => {
-                    if (clean(input.value) !== "") add(input.value)
-                    input.focus()
-                  },
-                },
-                "Add",
-              ),
-            ),
+            h("label", { class: "d-sub", for: `${id}-input` }, "Add a tag"),
+            addRow(input, add),
             status.element,
           ),
-          value: () => addTags(tags, input.value).tags,
+          value: () => {
+            keepOpenRename()
+            return addTags(tags, input.value).tags
+          },
           focus: () => rows.querySelector(".d-check")?.focus(),
         }
       }
@@ -1665,11 +1648,11 @@
             typed !== "" && !ELSEWHERE.has(keyOf(typed))
               ? suggest(rest, typed)
               : []
-          const found2 = finishing.length > 0 ? finishing : suggest(tags, "")
-          heading.hidden = found2.length === 0
-          chips.hidden = found2.length === 0
+          const offered = finishing.length > 0 ? finishing : suggest(tags, "")
+          heading.hidden = offered.length === 0
+          chips.hidden = offered.length === 0
           chips.replaceChildren(
-            ...found2.map(({ tag, count }) =>
+            ...offered.map(({ tag, count }) =>
               h(
                 "li",
                 null,
@@ -1706,6 +1689,22 @@
           )
         }
 
+        // A one-line field turns a pasted line break into a space, so each becomes a comma first.
+        input.addEventListener("paste", (event) => {
+          const pasted = event.clipboardData?.getData("text") ?? ""
+          if (!pasted.includes("\n")) return
+          event.preventDefault()
+          input.setRangeText(
+            pasted
+              .trim()
+              .split(/\s*\n\s*/)
+              .join(", "),
+            input.selectionStart,
+            input.selectionEnd,
+            "end",
+          )
+          draw()
+        })
         for (const type of ["input", "keyup", "click", "focus"])
           input.addEventListener(type, draw)
         draw()
@@ -1754,7 +1753,8 @@
             " ",
             srOnly(ITEM_TITLE),
           )
-          card.replaceChildren(
+          // The card's parts, without those a condition leaves out.
+          const parts = [
             title(),
             changed && h("span", { class: "d-tag info" }, "Changed"),
             kept.length > 0 &&
@@ -1784,7 +1784,8 @@
                   srOnly(`to ${ITEM_TITLE}`),
                 ),
             ),
-          )
+          ]
+          card.replaceChildren(...parts.filter(Boolean))
           if (focus) edit.focus()
         }
         function showForm(focus) {
@@ -1855,7 +1856,7 @@
             h("li", null, `${placement}: ${title} (${tags.join(", ")})`),
           ),
         )
-      function choose(attribute, apply) {
+      function bindToggle(attribute, apply) {
         const buttons = document.querySelectorAll(`[data-${attribute}]`)
         for (const button of buttons) {
           button.addEventListener("click", () => {
@@ -1865,11 +1866,11 @@
           })
         }
       }
-      choose("theme", (theme) => {
+      bindToggle("theme", (theme) => {
         for (const stage of document.querySelectorAll(".dhcw"))
           stage.classList.toggle("dark", theme === "dark")
       })
-      choose("width", (width) => {
+      bindToggle("width", (width) => {
         for (const stage of document.querySelectorAll(".dhcw"))
           stage.style.setProperty("--card-w", `${width}px`)
       })

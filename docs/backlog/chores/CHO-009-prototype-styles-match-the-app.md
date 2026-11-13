@@ -39,4 +39,5 @@ has no `--brand`. No analysis under `docs/analysis/` uses the stylesheet yet.
 
 ## Out of scope
 
-- A working-prototype mode for the skill, as STY-037's page is: a retro question.
+- A mode of the skill for working prototypes of one component, as STY-037's page is:
+  no record yet; the retrospective of STY-037's PR weighs it.

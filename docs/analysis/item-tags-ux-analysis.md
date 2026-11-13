@@ -40,7 +40,8 @@ exist (STY-037 S12, S13); the Welsh interface; an item with Welsh tags (STY-037 
 - It is the Tags field of the item's edit form. Done keeps the tags pending and shows
   the card with its "Changed" tag; Cancel and Escape leave them; nothing is written.
 - **Tags offered** are those the roadmap's other items carry and this item lacks, most
-  used first, then alphabetical. Typed text narrows them to the tags that hold it.
+  used first, then alphabetical. Typed text narrows them to the tags that hold it. C
+  departs: it lists every tag in the roadmap alphabetically, and typing narrows nothing.
 - **A typed tag** is trimmed. A comma or a line break ends it, so "Carers, Clinic staff"
   typed or pasted is two tags. A new tag joins at the end.
 - **No tag twice** on an item, whatever its capitals: the field says the item has it.
@@ -48,7 +49,8 @@ exist (STY-037 S12, S13); the Welsh interface; an item with Welsh tags (STY-037 
   ("clinic staff" becomes "Clinic staff"), and the field says so (STY-037 Q3 (a)).
 - **A rename** keeps the tag's place and changes this item only; a rename to nothing
   leaves the tag as it was.
-- Text typed but not yet added counts when the form is confirmed.
+- Text typed but not yet added, and a name still being changed, count when the form is
+  confirmed.
 - The app's look: its input, buttons, tag and focus styles, light and dark.
 
 The sample is one invented roadmap, Outpatient Booking, with seven items. The item
@@ -78,16 +80,16 @@ B's always-visible buttons under it, not A's hidden list.
 
 ## Decisions needed
 
-| Decision                                          | Options                                                                                                        | Where it is asked |
-| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------- |
-| Which editor is built                             | B (recommended), A, C or D                                                                                     | STY-037 Q1        |
-| An item's Welsh tags when its tags are edited     | read-only for such an item (recommended); each tag keeps its Welsh; cleared with a warning; left as they are   | STY-037 Q2        |
-| A typed tag takes the roadmap's spelling          | yes, as prototyped (recommended); no                                                                           | STY-037 Q3        |
-| If A: a new primitive                             | shadcn's Combobox (Base UI) joins `src/components/ui/`, with in-place rename built on it                       | with Q1 (b)       |
-| If A: which key keeps typed text                  | Enter takes the highlighted tag and a comma keeps what was typed, as prototyped; or Enter keeps what was typed | with Q1 (b)       |
-| If B: Undo after a removal                        | kept, as prototyped; or left to Cancel and "Undo changes"                                                      | with Q1 (a)       |
-| If C: removing is unticking, and order by ticking | accepted as departures from STY-037 S1 and S5                                                                  | with Q1 (c)       |
-| If D: no control per tag                          | STY-037 S1 and S11 re-cut for a text field                                                                     | with Q1 (d)       |
+| Decision                                                                                               | Options                                                                                                        | Where it is asked |
+| ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- | ----------------- |
+| Which editor is built                                                                                  | B (recommended), A, C or D                                                                                     | STY-037 Q1        |
+| An item's Welsh tags when its tags are edited                                                          | read-only for such an item (recommended); each tag keeps its Welsh; cleared with a warning; left as they are   | STY-037 Q2        |
+| A typed tag takes the roadmap's spelling                                                               | yes, as prototyped (recommended); no                                                                           | STY-037 Q3        |
+| If A: a new primitive                                                                                  | shadcn's Combobox (Base UI) joins `src/components/ui/`, with in-place rename built on it                       | with Q1 (b)       |
+| If A: which key keeps typed text                                                                       | Enter takes the highlighted tag and a comma keeps what was typed, as prototyped; or Enter keeps what was typed | with Q1 (b)       |
+| If B: Undo after a removal                                                                             | kept, as prototyped; or left to Cancel and "Undo changes"                                                      | with Q1 (a)       |
+| If C: removing is unticking; tags ordered by ticking; the list alphabetical and not narrowed by typing | accepted as departures from STY-037 S1, S3 and S5                                                              | with Q1 (c)       |
+| If D: no control per tag                                                                               | STY-037 S1 and S11 re-cut for a text field                                                                     | with Q1 (d)       |
 
 Reads and writes: every design reads only the roadmap's items already on the page,
 pending edits included. The write of the `Labels` cell is STY-037's own (S12); whether

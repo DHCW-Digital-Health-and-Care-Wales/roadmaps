@@ -3,7 +3,7 @@
 - **Status**: Active — one story, waiting for the owner to choose an editor and answer
   two questions
 - **Progress**: 0 of 1 terminal; next selectable: none; blocked on: STY-037 Q1–Q3
-- **Binding ADRs**: ADR-012, ADR-011, ADR-010, ADR-008, ADR-002
+- **Binding ADRs**: ADR-012, ADR-014, ADR-011, ADR-010, ADR-008, ADR-002
 
 ## Summary
 
@@ -75,7 +75,7 @@ Every field is one string: typed, chosen from fixed options, ticked from fixed o
 2. While adding, the form offers the tags the roadmap's other items carry (F2; owner,
    STY-037 D1). No list is stored: the offer is read off the items on the page.
 3. The editor's design is the owner's choice among four prototypes (F5; STY-037 Q1).
-4. An item's Welsh tags are never left mispaired: how is STY-037 Q2 (F3).
+4. What happens to an item's Welsh tags when its tags are edited is STY-037 Q2 (F3).
 5. **Unchanged:** tags are free text; the card's Tags line; ADR-012's per-roadmap,
    all-or-nothing publish, its conflict review and Refresh rules; the reading rules of
    F3 and F4.
@@ -91,11 +91,6 @@ and says so in the PR, since the format is a contract with the public site.
 
 STY-037 amends ADR-012 in place (`### STY-037 amendments`) in its PR, citing its owner
 decisions: tags are no longer read-only, and Q2's answer if it writes a Welsh cell.
-
-### Words
-
-"Tag", never "label" (the column's name) or "keyword" (`docs/GLOSSARY.md`). STY-037
-settles the field's copy with the `copywriter` skill, in English and Welsh.
 
 ## Stories
 

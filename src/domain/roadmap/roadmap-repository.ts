@@ -1,5 +1,6 @@
 import type { Category } from "./category"
 import type { Family } from "./family"
+import type { FamilyEdit, FamilyInput, FamilyOutcome } from "./family-changes"
 import type { Roadmap } from "./roadmap"
 import type { PublishOutcome, RoadmapChanges } from "./roadmap-changes"
 import type { RoadmapItem } from "./roadmap-item"
@@ -49,4 +50,26 @@ export interface RoadmapRepository {
     changes: RoadmapChanges,
     options?: RepositoryReadOptions,
   ): Promise<PublishOutcome>
+  /**
+   * Adds a family to the end of the family list (ADR-013), from input `checkFamilyInput`
+   * passed: a new ID, the English name and the colour, and no Welsh name. Re-reads the
+   * list first: `name-taken` when another family now has the name. Rejects with
+   * `AppError('invalid-data')` when the data source has no usable family list. A write
+   * whose answer is lost is settled by a re-read, as a publish's is; `signal` cancels
+   * only the reads.
+   */
+  addFamily(
+    input: FamilyInput,
+    options?: RepositoryReadOptions,
+  ): Promise<FamilyOutcome>
+  /**
+   * Renames or recolours a family and, in the same all-or-nothing write, every roadmap
+   * in it, whose family name and colour are copied from the list (ADR-013); the Welsh
+   * name is never changed. Re-reads the list and the roadmaps first, as `planFamilyChange`
+   * settles them. Rejects as `addFamily` does.
+   */
+  changeFamily(
+    edit: FamilyEdit,
+    options?: RepositoryReadOptions,
+  ): Promise<FamilyOutcome>
 }

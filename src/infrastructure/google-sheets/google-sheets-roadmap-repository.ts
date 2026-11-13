@@ -1,6 +1,15 @@
 import type { Category } from "@/domain/roadmap/category"
 import type { Family } from "@/domain/roadmap/family"
 import {
+  familyHeld,
+  familyMembers,
+  planFamilyChange,
+  planNewFamily,
+  type FamilyEdit,
+  type FamilyInput,
+  type FamilyOutcome,
+} from "@/domain/roadmap/family-changes"
+import {
   heldWrites,
   planRoadmapPublish,
   type PublishWrites,
@@ -25,6 +34,8 @@ import {
   FAMILIES_TAB,
   parseCategories,
   parseFamilies,
+  type ListColumn,
+  type ListTab,
 } from "./list-tab-parser"
 import {
   FAMILY_WELSH,
@@ -102,11 +113,19 @@ interface TabList {
   first: TabProperties
 }
 
+/** The `Families` tab as read, parsed and as displayed, to write a family to. */
+interface FamilyTab {
+  tab: TabRows
+  parsed: ListTab<Family>
+}
+
 /** The roadmap index as read, linked to the family and category lists (ADR-013). */
 interface IndexRead {
   tabs: TabList["tabs"]
   index: RoadmapIndex
   indexTab: TabRows
+  /** `null` when there is no `Families` tab. */
+  familyTab: FamilyTab | null
   /** `null` without a usable list. */
   families: Family[] | null
   categories: Category[] | null
@@ -117,6 +136,11 @@ interface RoadmapRead extends IndexRead {
   entry: RoadmapIndexEntry
   itemTab: TabRows
   items: RoadmapTab
+}
+
+/** One cell's new value: plain text, or `{}` to leave it blank (ADR-012 D6). */
+interface CellData {
+  userEnteredValue?: { stringValue: string }
 }
 
 /** One `spreadsheets.batchUpdate` request (ADR-012 D6). */
@@ -131,7 +155,15 @@ type BatchRequest =
   | {
       updateCells: {
         start: { sheetId: number; rowIndex: number; columnIndex: number }
-        rows: [{ values: [{ userEnteredValue?: { stringValue: string } }] }]
+        rows: [{ values: [CellData] }]
+        fields: "userEnteredValue"
+      }
+    }
+  | {
+      /** Google adds the rows after the last row any value uses (STY-029). */
+      appendCells: {
+        sheetId: number
+        rows: [{ values: CellData[] }]
         fields: "userEnteredValue"
       }
     }
@@ -142,7 +174,7 @@ type BatchRequest =
  * `Families` and `Categories` tabs that link each roadmap to its family and category
  * (ADR-013). A roadmap's items take one more read, of the tab its index row names
  * (ADR-011). A publish makes those reads, then one all-or-nothing `batchUpdate`
- * (ADR-012).
+ * (ADR-012); so does adding or changing a family (STY-029).
  */
 export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
   readonly #client: SheetsClient
@@ -163,9 +195,7 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
     options: RepositoryReadOptions = {},
   ): Promise<Family[] | null> {
     const tabList = await this.#readTabList(options)
-    return parseFamilies(
-      await this.#readListTab(tabList, FAMILIES_TAB, options),
-    ).list
+    return (await this.#readFamilyTab(tabList, options))?.parsed.list ?? null
   }
 
   /** Reads the tab list, then the `Categories` tab; `null` without a usable one. */
@@ -229,6 +259,133 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
       throw error
     }
     return { status: "published" }
+  }
+
+  /**
+   * Re-reads the `Families` tab, then appends the new family after the last row any
+   * value uses, in one `batchUpdate`. Google picks the row as it applies the write, so
+   * a co-lead's family added meanwhile is never overwritten.
+   */
+  async addFamily(
+    input: FamilyInput,
+    { signal }: RepositoryReadOptions = {},
+  ): Promise<FamilyOutcome> {
+    const tabList = await this.#readTabList({ signal })
+    const { tab, parsed, list } = usableFamilyTab(
+      await this.#readFamilyTab(tabList, { signal }),
+    )
+    const plan = planNewFamily(input, list, idsIn(tab, parsed))
+    if (plan.kind === "settled") return plan.outcome
+    signal?.throwIfAborted()
+
+    const { family } = plan
+    const cells: Record<ListColumn, string> = {
+      ID: family.id,
+      Name: family.name.en,
+      Colour: family.colour,
+    }
+    const row: CellData[] = []
+    for (const [column, at] of parsed.columns) {
+      while (row.length < at) row.push({})
+      row[at] = textCell(cells[column])
+    }
+    return this.#writeFamily(
+      [
+        {
+          appendCells: {
+            sheetId: tab.properties.sheetId,
+            rows: [{ values: row }],
+            fields: "userEnteredValue",
+          },
+        },
+      ],
+      async () => familyHeld(family, await this.listFamilies()),
+      family,
+    )
+  }
+
+  /**
+   * Re-reads the index and the lists as a publish does, then writes the family's
+   * changed cells in the `Families` tab and every member's index row, copied from the
+   * family as `writeFamily` copies a chosen one (STY-028), in one `batchUpdate`.
+   */
+  async changeFamily(
+    edit: FamilyEdit,
+    { signal }: RepositoryReadOptions = {},
+  ): Promise<FamilyOutcome> {
+    const read = await this.#readRoadmapIndex({ signal })
+    const { tab, parsed, list } = usableFamilyTab(read.familyTab)
+    // Never written, even as the index (ADR-012).
+    if (read.indexTab.properties.title === TEMPLATE_TAB) {
+      throw new AppError("invalid-data", {
+        message: `The roadmap index is the ${TEMPLATE_TAB} tab`,
+      })
+    }
+    const plan = planFamilyChange(edit, {
+      families: list,
+      roadmaps: read.index.entries.map(({ roadmap }) => roadmap),
+    })
+    if (plan.kind === "settled") return plan.outcome
+    signal?.throwIfAborted()
+
+    const { family } = plan
+    const memberIds = familyMembers(
+      read.index.entries.map(({ roadmap }) => roadmap),
+      family.id,
+    ).map(({ id }) => id)
+    const families = new TabWriter(tab, parsed.columns)
+    const row = parsed.rows.get(family.id)
+    const current = list.find(({ id }) => id === family.id)
+    if (row === undefined || current === undefined) {
+      throw new AppError("unknown", {
+        message: "A planned family has no row in its list",
+      })
+    }
+    if (family.name.en !== current.name.en) {
+      families.write(row, "Name", family.name.en)
+    }
+    if (family.colour !== current.colour) {
+      families.write(row, "Colour", family.colour)
+    }
+    return this.#writeFamily(
+      [...families.requests(), ...memberRowWrites(read, family, memberIds)],
+      // Held only when the family and the row of every roadmap written hold it (S4),
+      // those roadmaps by ID, as a co-lead's rename meanwhile can unlink one by name.
+      async () => {
+        const again = await this.#readRoadmapIndex({})
+        const listed = new Set(
+          again.index.entries.map(({ roadmap }) => roadmap.id),
+        )
+        return (
+          familyHeld(family, again.families) &&
+          memberIds.every((id) => listed.has(id)) &&
+          memberRowWrites(again, family, memberIds).length === 0
+        )
+      },
+      family,
+    )
+  }
+
+  /**
+   * Sends a family's writes in one `batchUpdate`, if any. A write whose answer is lost
+   * is settled by re-reading: saved when `held` finds every write in place, else the
+   * network error is rethrown.
+   */
+  async #writeFamily(
+    requests: BatchRequest[],
+    held: () => Promise<boolean>,
+    family: Family,
+  ): Promise<FamilyOutcome> {
+    if (requests.length === 0) return { status: "saved", family }
+    try {
+      await this.#client.postJson(`${this.#spreadsheetPath}:batchUpdate`, {
+        requests,
+      })
+    } catch (error) {
+      if (!isAppError(error) || error.kind !== "network") throw error
+      if (!(await held().catch(() => false))) throw error
+    }
+    return { status: "saved", family }
   }
 
   /**
@@ -301,12 +458,12 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
    */
   async #readRoadmapIndex(options: RepositoryReadOptions): Promise<IndexRead> {
     const tabList = await this.#readTabList(options)
-    const [rows, familyRows, categoryRows] = await Promise.all([
+    const [rows, familyTab, categoryRows] = await Promise.all([
       this.#readTab(tabList.first.title, options),
-      this.#readListTab(tabList, FAMILIES_TAB, options),
+      this.#readFamilyTab(tabList, options),
       this.#readListTab(tabList, CATEGORIES_TAB, options),
     ])
-    const families = parseFamilies(familyRows).list
+    const families = familyTab?.parsed.list ?? null
     const categories = parseCategories(categoryRows).list
     return {
       tabs: tabList.tabs,
@@ -316,9 +473,21 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
         categories,
       }),
       indexTab: { properties: tabList.first, rows },
+      familyTab,
       families,
       categories,
     }
+  }
+
+  /** The `Families` tab, read and parsed, or `null` when there is none. */
+  async #readFamilyTab(
+    tabList: TabList,
+    options: RepositoryReadOptions,
+  ): Promise<FamilyTab | null> {
+    const properties = tabList.tabs.get(FAMILIES_TAB)
+    const rows = await this.#readListTab(tabList, FAMILIES_TAB, options)
+    if (properties === undefined || rows === null) return null
+    return { tab: { properties, rows }, parsed: parseFamilies(rows) }
   }
 
   async #readTabList({ signal }: RepositoryReadOptions): Promise<TabList> {
@@ -387,6 +556,58 @@ function quoteTabTitle(title: string): string {
   return `'${title.replaceAll("'", "''")}'`
 }
 
+/**
+ * The `Families` tab and its list, to write to. Throws `AppError('invalid-data')`
+ * without a usable list (STY-029 S7).
+ */
+function usableFamilyTab(
+  familyTab: FamilyTab | null,
+): FamilyTab & { list: Family[] } {
+  const list = familyTab?.parsed.list
+  if (familyTab === null || list === undefined || list === null) {
+    throw new AppError("invalid-data", { message: "No usable family list" })
+  }
+  return { ...familyTab, list }
+}
+
+/**
+ * The index cells that copy `family` (STY-028's `writeFamily`) on each roadmap in it,
+ * as read, where they differ: none once a change to it is in place.
+ */
+/** The writes copying `family` to the index rows of the roadmaps `memberIds` names. */
+function memberRowWrites(
+  read: IndexRead,
+  family: Family,
+  memberIds: readonly string[],
+): BatchRequest[] {
+  const changed: IndexRead = {
+    ...read,
+    families:
+      read.families?.map((each) => (each.id === family.id ? family : each)) ??
+      null,
+  }
+  const index = new TabWriter(read.indexTab, read.index.columns)
+  const members = new Set(memberIds)
+  for (const entry of read.index.entries) {
+    if (!members.has(entry.roadmap.id)) continue
+    new IndexRowWriter(changed, entry, index).writeFamily(family.id)
+  }
+  return index.requests()
+}
+
+/** Every ID the tab's rows hold, listed or skipped, so a new one repeats none. */
+function idsIn({ rows }: TabRows, { columns }: ListTab<Family>): Set<string> {
+  const at = columns.get("ID")
+  return new Set(
+    at === undefined
+      ? []
+      : rows.slice(1).flatMap((row) => {
+          const id = row[at]?.trim() ?? ""
+          return id === "" ? [] : [id]
+        }),
+  )
+}
+
 /** The roadmap as the publish plan needs it. */
 function snapshotOf({
   entry,
@@ -423,7 +644,7 @@ function snapshotOf({
 /** The requests that make `writes`: growing grids first, then headers, then cells. */
 function batchRequests(read: RoadmapRead, writes: PublishWrites) {
   const index = new TabWriter(read.indexTab, read.index.columns)
-  const indexRow = new IndexRowWriter(read, index)
+  const indexRow = new IndexRowWriter(read, read.entry, index)
   for (const { field, value } of writes.roadmap) {
     switch (field) {
       case "familyId":
@@ -454,19 +675,25 @@ function batchRequests(read: RoadmapRead, writes: PublishWrites) {
 }
 
 /**
- * Writes the roadmap's index row's family and category cells, copied from the lists as
- * re-read for the publish (ADR-013), each only when it changes: a cell already holding
+ * Writes a roadmap's index row's family and category cells, copied from the lists as
+ * re-read for the write (ADR-013), each only when it changes: a cell already holding
  * its value, or a blank for a column the header lacks, is left alone.
  */
 class IndexRowWriter {
-  readonly #read: RoadmapRead
+  readonly #read: IndexRead
+  readonly #entry: RoadmapIndexEntry
   readonly #index: TabWriter<RoadmapIndexWriteColumn>
   readonly #cells: readonly string[]
 
-  constructor(read: RoadmapRead, index: TabWriter<RoadmapIndexWriteColumn>) {
+  constructor(
+    read: IndexRead,
+    entry: RoadmapIndexEntry,
+    index: TabWriter<RoadmapIndexWriteColumn>,
+  ) {
     this.#read = read
+    this.#entry = entry
     this.#index = index
-    this.#cells = read.indexTab.rows[read.entry.row - 1] ?? []
+    this.#cells = read.indexTab.rows[entry.row - 1] ?? []
   }
 
   /**
@@ -494,7 +721,7 @@ class IndexRowWriter {
    * blank and `writes` doesn't choose another (STY-028 S4).
    */
   linkIds({ roadmap }: PublishWrites): void {
-    const { familyId, categoryId } = this.#read.entry.roadmap
+    const { familyId, categoryId } = this.#entry.roadmap
     const chosen = new Set(roadmap.map(({ field }) => field))
     if (familyId !== null && !chosen.has("familyId")) {
       this.#link("Family ID", familyId)
@@ -510,7 +737,7 @@ class IndexRowWriter {
 
   #write(column: RoadmapIndexWriteColumn, value: string): void {
     if (this.#cell(column) === value) return
-    this.#index.write(this.#read.entry.row, column, value)
+    this.#index.write(this.#entry.row, column, value)
   }
 
   #cell(column: RoadmapIndexWriteColumn): string {
@@ -596,15 +823,14 @@ class TabWriter<Column extends string> {
     return {
       updateCells: {
         start: { sheetId: this.#sheetId, rowIndex: row - 1, columnIndex },
-        rows: [
-          {
-            values: [
-              value === "" ? {} : { userEnteredValue: { stringValue: value } },
-            ],
-          },
-        ],
+        rows: [{ values: [textCell(value)] }],
         fields: "userEnteredValue",
       },
     }
   }
+}
+
+/** A cell set to `value` as plain text, never a formula or number (ADR-012 D6). */
+function textCell(value: string): CellData {
+  return value === "" ? {} : { userEnteredValue: { stringValue: value } }
 }

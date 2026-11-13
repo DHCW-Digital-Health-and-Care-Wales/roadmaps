@@ -1,4 +1,7 @@
+import { Link } from "@tanstack/react-router"
 import { useTranslation } from "react-i18next"
+
+import { textLinkClasses } from "@/components/layout/text-link-classes"
 
 import { RefreshButton } from "../components/refresh-button"
 import { RoadmapGroups } from "../components/roadmap-groups"
@@ -12,8 +15,9 @@ const TITLE_ID = "roadmaps-title"
 
 /**
  * The home page once there is (or was) a session: the roadmaps with loading, empty,
- * error and expired states. While expired, roadmaps loaded earlier stay visible under a
- * Reconnect prompt, and nothing refetches until the user reconnects.
+ * error and expired states, and a link to the families and categories (STY-029).
+ * While expired, roadmaps loaded earlier stay visible under a Reconnect prompt, and
+ * nothing refetches until the user reconnects.
  */
 export function RoadmapsPage() {
   const { t } = useTranslation()
@@ -36,6 +40,11 @@ export function RoadmapsPage() {
           </h1>
           <p className="text-pretty text-muted-foreground">
             {t("roadmaps.description")}
+          </p>
+          <p>
+            <Link to="/families" className={textLinkClasses}>
+              {t("roadmaps.familiesLink")}
+            </Link>
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-3">

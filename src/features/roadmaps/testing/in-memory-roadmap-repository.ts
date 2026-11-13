@@ -1,6 +1,12 @@
 import type { Category } from "@/domain/roadmap/category"
 import type { Family } from "@/domain/roadmap/family"
 import {
+  familyHeld,
+  planFamilyChange,
+  planNewFamily,
+  type FamilyOutcome,
+} from "@/domain/roadmap/family-changes"
+import {
   heldWrites,
   planRoadmapPublish,
   type PublishWrites,
@@ -183,6 +189,29 @@ export function createInMemoryRoadmapRepository(
     if (firstItem && item) setItemText(item, firstItem.field, CO_LEAD_VALUE)
   }
 
+  /**
+   * Writes a family change as a `batchUpdate` would, by `write`: an unconfirmed lost
+   * write throws `network`, since a family change has no partial outcome.
+   */
+  const writeFamily = (family: Family, apply: () => void): FamilyOutcome => {
+    if (write !== undefined && "fails" in write) throw new AppError(write.fails)
+    if (write?.lost !== "not-applied") apply()
+    if (write === undefined) return { status: "saved", family }
+    if (write.lost === "reread-fails") rereadFails = true
+    if (rereadFails || !familyHeld(family, lists.families)) {
+      throw new AppError("network")
+    }
+    return { status: "saved", family }
+  }
+
+  /** The family list, or `invalid-data` without one, as the Google adapter refuses. */
+  const familyList = (): Family[] => {
+    if (lists.families === null) {
+      throw new AppError("invalid-data", { message: "No family list" })
+    }
+    return lists.families
+  }
+
   return {
     coLead(edit) {
       if (roadmaps instanceof AppError) throw roadmaps
@@ -238,6 +267,27 @@ export function createInMemoryRoadmapRepository(
           case "some":
             return { status: "unconfirmed" as const }
         }
+      }),
+    addFamily: (input, { signal } = {}) =>
+      respond(signal, () => {
+        const families = familyList()
+        const plan = planNewFamily(input, families)
+        if (plan.kind === "settled") return plan.outcome
+        return writeFamily(plan.family, () => {
+          families.push(structuredClone(plan.family))
+        })
+      }),
+    changeFamily: (edit, { signal } = {}) =>
+      respond(signal, (list) => {
+        const families = familyList()
+        const plan = planFamilyChange(edit, { families, roadmaps: list })
+        if (plan.kind === "settled") return plan.outcome
+        const { family, members } = plan
+        return writeFamily(family, () => {
+          const at = families.findIndex(({ id }) => id === family.id)
+          families[at] = structuredClone(family)
+          for (const roadmap of members) setFamily(roadmap, family)
+        })
       }),
   }
 }

@@ -81,8 +81,8 @@ when it has no ID. A linked roadmap shows the list's name and colour; one whose 
 cells differ is flagged as out of step, and one whose family is not in the list keeps
 its own cells, flagged. Without the `Families` tab, roadmaps are grouped and coloured
 from their own cells; without the `Categories` tab, a `Category` is one of the public
-site's six spellings, shown in English. The editor does not yet write either tab or
-either ID column.
+site's six spellings, shown in English. The editor never writes the `Categories` tab;
+it writes the `Families` tab only as below.
 
 **What the editor writes.** Publishing a roadmap writes, in one all-or-nothing
 `spreadsheets.batchUpdate`, only:
@@ -107,12 +107,30 @@ either ID column.
   last column in use with the public site's English header, the grid widened in the
   same request.
 
+Adding, renaming or recolouring a family on the "Families and categories" page writes
+at once, after a re-read, in one all-or-nothing `spreadsheets.batchUpdate`, only:
+
+- to add a family: a new `Families` row after the last row in use, with an `ID` in the
+  `Item ID` format, the `Name` as typed (trimmed) and the `Colour` in lower case, its
+  `Name (cy)` left blank, appended by Google so a family a co-lead added meanwhile is
+  kept;
+- to rename or recolour one: its `Families` row's `Name` or `Colour`, whichever changed,
+  and on the index row of each roadmap in the family (linked by ID, or by name if it
+  has no ID) its `Family ID`, `Family`, `Family (cy)` (copied from `Name (cy)`, which is
+  never written) and `Colour`, as a publish writes a chosen family; the `Family ID`
+  column is appended if missing. Nothing is written while the roadmap index is named
+  `Template`, and a co-lead's change to the family's name or colour, or to which
+  roadmaps are in it, since the page read it refuses the whole write. An index row the
+  editor doesn't list (its `Sheet` is not a valid roadmap ID, or repeats an earlier
+  row's) is not rewritten, and keeps the old family name and colour.
+
 It never writes any other cell: no Welsh `(cy)` cell other than `Family (cy)`,
 `Last updated`, `Enabled`, `Sheet`, `Horizon`, `Labels`, `Organisations` or `Details`,
-no `Family`, `Category` or `Colour` cell but those above, no other roadmap's row or
-tab, nothing in the `Template`, `Families` or `Categories` tab, and no cell whose
-value has not changed. A roadmap whose `Sheet` names the `Template` tab or the
-roadmap index itself can't be read or published, and nothing is published while the
+no `Family`, `Category` or `Colour` cell but those above, no roadmap's row or tab but
+those above, nothing in the `Template` or `Categories` tab, nothing in the `Families`
+tab but the family changes above, and no cell whose value has not changed. A roadmap
+whose `Sheet` names the `Template` tab or the roadmap index itself can't be read or
+published, and nothing is published while the
 roadmap index is itself named `Template`. A field a co-lead has changed since it was
 loaded (a family or category by its ID, so a rename is no change), or an item or
 roadmap since removed, refuses the whole publish. A family or category ID the list

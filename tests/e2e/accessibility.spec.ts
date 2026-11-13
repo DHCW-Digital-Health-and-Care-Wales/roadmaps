@@ -201,6 +201,34 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expectNoAxeViolations(page, theme)
     })
 
+    test("families, a family's form, then its confirmation (STY-029)", async ({
+      page,
+      sheets,
+    }) => {
+      sheets.spreadsheet = [...EXAMPLE_SPREADSHEET, ...EXAMPLE_LISTS]
+      await page.goto("./#/families")
+      await connect(page)
+      const main = page.getByRole("main")
+      const change = main.getByRole("button", { name: "Change Single Record" })
+      await expect(change).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+
+      await change.click()
+      const form = main.getByRole("form", { name: "Change Single Record" })
+      await form.getByRole("textbox", { name: "Name" }).fill("")
+      await form.getByRole("textbox", { name: "Colour" }).fill("#00796b")
+      await form.getByRole("button", { name: "Save changes" }).click()
+      await expect(form.getByText("Enter a name")).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+
+      await form
+        .getByRole("textbox", { name: "Name" })
+        .fill("Shared Care Record")
+      await form.getByRole("button", { name: "Save changes" }).click()
+      await expect(page.getByRole("alertdialog")).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+    })
+
     test("disconnecting with changes pending, then the waiting note (STY-025)", async ({
       page,
     }) => {

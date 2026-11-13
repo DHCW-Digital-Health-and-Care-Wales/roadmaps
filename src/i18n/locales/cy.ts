@@ -135,6 +135,7 @@ export const cy = {
     countWithUnpublished:
       '$t(roadmaps.count, {"count": {{total}} }), $t(roadmaps.unpublishedCount, {"count": {{unpublished}} })',
     noFamily: "Dim teulu cynnyrch",
+    familiesLink: "Teuluoedd a chategorïau",
     lists: {
       outOfStep: "Yn wahanol i'w deulu neu gategori",
       familyNotListed: "Teulu heb ei restru",
@@ -340,6 +341,98 @@ export const cy = {
         "invalid-data":
           "Dydy'r map trywydd hwn ddim yn y fformat disgwyliedig yn y daenlen. Gofynnwch i berchennog y daenlen ei wirio.",
         unknown: "Aeth rhywbeth o'i le. Rhowch gynnig arall arni.",
+      },
+    },
+    families: {
+      title: "Teuluoedd a chategorïau",
+      description:
+        "Y teuluoedd cynnyrch a'r categorïau sy'n grwpio eich mapiau trywydd.",
+      connectPrompt: "Cysylltwch â Google i weld y teuluoedd a'r categorïau.",
+      loading: "Wrthi'n llwytho teuluoedd a chategorïau…",
+      loadFailed: "Doedd dim modd llwytho'r teuluoedd a'r categorïau",
+      refreshFailed: "Doedd dim modd adnewyddu'r teuluoedd a'r categorïau",
+      heading: "Teuluoedd",
+      welshName: "Cymraeg: {{name}}",
+      noWelshName: "Dim enw Cymraeg",
+      noRoadmaps: "Dim mapiau trywydd",
+      published: "Wedi'i gyhoeddi",
+      change: "Newid",
+      add: "Ychwanegu teulu",
+      unavailable: {
+        title: "Does dim modd newid teuluoedd ar hyn o bryd",
+        description:
+          "Mae tab Families y daenlen ar goll neu ddim yn y fformat disgwyliedig. Gofynnwch i berchennog y daenlen ei wirio.",
+      },
+      form: {
+        changeTitle: "Newid {{name}}",
+        name: "Enw (Saesneg)",
+        colour: "Lliw",
+        colourHint: "Lliw hecs, fel #00796b.",
+        add: "Ychwanegu'r teulu",
+        save: "Cadw'r newidiadau",
+        errors: {
+          blank: "Rhowch enw",
+          taken: "Mae gan deulu arall yr enw hwn",
+          invalid: "Rhowch liw fel #00796b",
+        },
+      },
+      confirm: {
+        title: "Newid {{name}} ar ei fapiau trywydd?",
+        roadmaps_zero: "Does ganddo ddim mapiau trywydd nawr.",
+        roadmaps_one: "Mae hyn yn newid {{count, number}} map trywydd:",
+        roadmaps_two: "Mae hyn yn newid y ddau fap trywydd:",
+        roadmaps_few: "Mae hyn yn newid y {{count, number}} map trywydd:",
+        roadmaps_many: "Mae hyn yn newid y {{count, number}} map trywydd:",
+        roadmaps_other:
+          "Mae hyn yn newid pob un o'r {{count, number}} map trywydd:",
+        public:
+          "Bydd y mapiau trywydd sydd wedi'u cyhoeddi yn dangos y newid ar y wefan gyhoeddus ar ôl ei diweddariad nesaf dros nos.",
+        notPublic:
+          "Does dim un ohonyn nhw wedi'i gyhoeddi, felly fydd dim byd yn gyhoeddus.",
+        membersChanged:
+          "Mae'r mapiau trywydd yn y teulu hwn wedi newid. Gwiriwch nhw eto.",
+        action: "Newid y teulu",
+      },
+      refused: {
+        title: "Mae rhywun arall wedi newid y teulu hwn",
+        description:
+          "Chafodd dim byd ei gadw. Dewiswch pa un i'w gadw ar gyfer pob un, yna cadwch eto.",
+        yours: "Eich newid",
+        theirs: "Gwerth presennol",
+        keepMine: "Cadw fy un i",
+        useTheirs: "Defnyddio'u un nhw",
+      },
+      notice: {
+        added: "{{name}} wedi'i ychwanegu",
+        changed: "{{name}} wedi'i newid",
+        changedPublic:
+          "{{name}} wedi'i newid. Bydd y wefan gyhoeddus yn ei ddangos ar ôl ei diweddariad nesaf dros nos.",
+        gone: "Dydy'r teulu hwn ddim wedi'i restru mwyach, felly chafodd eich newid mo'i gadw.",
+        failed: {
+          add: "Doedd dim modd ychwanegu'r teulu",
+          change: "Doedd dim modd newid y teulu",
+        },
+      },
+      errors: {
+        unauthenticated:
+          "Mae eich sesiwn wedi dod i ben. Ailgysylltwch, yna rhowch gynnig arall arni.",
+        forbidden:
+          "Does gan y cyfrif Google hwn ddim hawl i newid teuluoedd. Gofynnwch i berchennog y daenlen am fynediad golygu.",
+        "not-found":
+          "Doedd dim modd dod o hyd i'r daenlen. Gwiriwch ei bod yn dal i fodoli.",
+        "rate-limited":
+          "Mae gormod o geisiadau ar hyn o bryd. Arhoswch funud a rhowch gynnig arall arni.",
+        network:
+          "Methu cysylltu. Gwiriwch eich cysylltiad â'r rhyngrwyd a rhowch gynnig arall arni.",
+        "invalid-response": "Roedd yr ateb mewn fformat annisgwyl.",
+        "invalid-data":
+          "Dydy'r rhestr teuluoedd ddim yn y fformat disgwyliedig yn y daenlen. Gofynnwch i berchennog y daenlen ei gwirio.",
+        unknown: "Aeth rhywbeth o'i le. Rhowch gynnig arall arni.",
+      },
+      categories: {
+        heading: "Categorïau",
+        description: "Does dim modd newid categorïau yma eto.",
+        none: "Does dim categorïau wedi'u rhestru.",
       },
     },
     disconnect: {

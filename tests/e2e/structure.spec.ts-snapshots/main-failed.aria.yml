@@ -5,6 +5,9 @@
   - region "Your roadmaps":
     - heading "Your roadmaps" [level=1]
     - paragraph: Every roadmap, published or not.
+    - paragraph:
+      - link "Families and categories":
+        - /url: /#/families
     - button "Refresh"
     - alert:
       - heading "Couldn't load your roadmaps" [level=2]

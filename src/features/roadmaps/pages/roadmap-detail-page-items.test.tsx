@@ -741,6 +741,8 @@ describe("RoadmapDetailPage items", () => {
         publishRoadmapChanges: vi.fn(),
         listFamilies: vi.fn(),
         listCategories: vi.fn(),
+        addFamily: vi.fn(),
+        changeFamily: vi.fn(),
       },
     })
 

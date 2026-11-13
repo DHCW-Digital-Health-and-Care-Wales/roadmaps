@@ -45,10 +45,14 @@ export interface ListTab<T> {
   list: T[] | null
   /** In row order, problems of the whole tab first. */
   problems: ListTabProblem[]
+  /** Each listed entry's spreadsheet row (1 is the header), by its ID. */
+  rows: ReadonlyMap<string, number>
+  /** Each column's index, for a list; none without one. */
+  columns: ReadonlyMap<ListColumn, number>
 }
 
 type Rows = readonly (readonly string[])[]
-type ListColumn = "ID" | "Name" | "Colour"
+export type ListColumn = "ID" | "Name" | "Colour"
 
 /** One kept row's cells, trimmed. */
 interface ListRow {
@@ -86,14 +90,14 @@ function parseListTab<T>(
   const problems = new ProblemLog<ListTabProblemCode>()
   if (rows === null) {
     problems.record("missing-tab", {})
-    return { list: null, problems: problems.sorted() }
+    return noList(problems)
   }
 
   const [headerRow = [], ...bodyRows] = rows
   const header = headerReader(columns, ["Name"])(headerRow, problems)
   const missing = columns.filter((column) => !header.english.has(column))
   for (const column of missing) problems.record("missing-column", { column })
-  if (missing.length > 0) return { list: null, problems: problems.sorted() }
+  if (missing.length > 0) return noList(problems)
   if (!header.welsh.has("Name")) {
     problems.record("missing-column", { column: "Name (cy)" })
   }
@@ -101,6 +105,7 @@ function parseListTab<T>(
   const ids = new Set<string>()
   const names = new Set<string>()
   const list: T[] = []
+  const rowsById = new Map<string, number>()
   /** The row's item, or `null` for a row to skip (recorded) or ignore (blank). */
   const readRow = (cells: readonly string[], row: number) => {
     const cellAt = (cell: HeaderCell | undefined) =>
@@ -136,6 +141,26 @@ function parseListTab<T>(
     ids.add(item.id)
     names.add(nameKey(item.name.en))
     list.push(item.value)
+    rowsById.set(item.id, i + 2)
   }
-  return { list, problems: problems.sorted() }
+  return {
+    list,
+    problems: problems.sorted(),
+    rows: rowsById,
+    columns: new Map(
+      columns.flatMap((column) => {
+        const cell = header.english.get(column)
+        return cell === undefined ? [] : [[column, cell.index] as const]
+      }),
+    ),
+  }
+}
+
+function noList(problems: ProblemLog<ListTabProblemCode>): ListTab<never> {
+  return {
+    list: null,
+    problems: problems.sorted(),
+    rows: new Map(),
+    columns: new Map(),
+  }
 }

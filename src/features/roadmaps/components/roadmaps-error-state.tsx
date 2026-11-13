@@ -48,8 +48,11 @@ export interface RoadmapsErrorStateProps {
   retrying: boolean
   /** The panel title's heading level (a `panel`'s title is a heading; an `alert`'s is not). */
   titleAs?: "h1" | "h2" | undefined
-  /** What couldn't be read: the roadmap list (the default) or one roadmap's items. */
-  subject?: "roadmaps" | "items"
+  /**
+   * What couldn't be read: the roadmap list (the default), one roadmap's items, or the
+   * roadmaps with the family and category lists.
+   */
+  subject?: "roadmaps" | "items" | "families"
 }
 
 const titleKeys = {
@@ -60,6 +63,10 @@ const titleKeys = {
   items: {
     panel: "roadmaps.items.loadFailed",
     alert: "roadmaps.items.refreshFailed",
+  },
+  families: {
+    panel: "roadmaps.families.loadFailed",
+    alert: "roadmaps.families.refreshFailed",
   },
 } as const
 

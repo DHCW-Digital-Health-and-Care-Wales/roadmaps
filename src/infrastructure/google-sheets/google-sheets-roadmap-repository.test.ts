@@ -315,7 +315,13 @@ function trimRows(rows: readonly (readonly string[])[]): string[][] {
  */
 function serveStatefulSpreadsheet(
   initial: readonly FakeTab[],
-  { write }: Pick<ContractOptions, "write"> = {},
+  {
+    write,
+    beforeWrite,
+  }: Pick<ContractOptions, "write"> & {
+    /** A co-lead's change, made after the reads and before the write lands. */
+    beforeWrite?: (tabs: FakeTab[]) => FakeTab[]
+  } = {},
 ) {
   let tabs: FakeTab[] = [...initial]
   let readsFail = false
@@ -353,6 +359,7 @@ function serveStatefulSpreadsheet(
         const status = write.fails === "forbidden" ? 403 : 401
         return HttpResponse.json({}, { status })
       }
+      if (beforeWrite) tabs = beforeWrite(tabs)
       if (write?.lost === "not-applied") return HttpResponse.error()
       const result = applyBatchUpdate(tabs, body)
       writeViolations.push(...result.violations)
@@ -1537,6 +1544,231 @@ describe("GoogleSheetsRoadmapRepository", () => {
           spreadsheet.requests.filter(({ method }) => method === "GET"),
         ).toHaveLength(3)
       })
+    })
+  })
+
+  describe("adding or changing a family (STY-029)", () => {
+    const FAMILY_ROWS = [
+      ["ID", "Name", "Name (cy)", "Colour"],
+      ["fc29g5b9", "Single Record", "Cofnod Sengl", "#12A3C9"],
+      ["vdkxj63m", "Medicines & Diagnostics", "", "#006747"],
+      ["skipped1", "Bad colour", "", "teal"],
+    ]
+    /** The example index, as the first tab with this title, and the family list. */
+    const familyTabs = (indexTitle = "Roadmaps"): FakeTab[] => [
+      gridTab(indexTitle, EXAMPLE_ROWS, 0),
+      gridTab("Families", FAMILY_ROWS, 30, 1),
+    ]
+    const singleRecord = {
+      id: "fc29g5b9",
+      name: { en: "Single Record", cy: "Cofnod Sengl" },
+      colour: "#12a3c9",
+    }
+    const rename = {
+      family: singleRecord,
+      changes: { name: "Shared Care Record", colour: "#00796b" },
+      members: ["producta"],
+    }
+
+    /** Every cell that differs, as `tab!R1C1 value`. */
+    function changedCells(before: FakeTab[], after: FakeTab[]): string[] {
+      return after.flatMap((tab, t) =>
+        tab.rows.flatMap((row, r) =>
+          row.flatMap((value, c) =>
+            (before[t]?.rows[r]?.[c] ?? "") === value
+              ? []
+              : [`${tab.title}!R${String(r + 1)}C${String(c + 1)} ${value}`],
+          ),
+        ),
+      )
+    }
+
+    it("appends a row after the last, with an ID no row holds, after two reads (S2)", async () => {
+      const before = familyTabs()
+      const spreadsheet = serveStatefulSpreadsheet(before)
+      nextItemIds.push("fc29g5b9", "skipped1", "newfamxx")
+
+      await expect(
+        httpRepository().addFamily({ name: "Screening", colour: "#00796b" }),
+      ).resolves.toEqual({
+        status: "saved",
+        family: {
+          id: "newfamxx",
+          name: { en: "Screening", cy: "" },
+          colour: "#00796b",
+        },
+      })
+
+      expect(changedCells(before, spreadsheet.tabs())).toEqual([
+        "Families!R5C1 newfamxx",
+        "Families!R5C2 Screening",
+        "Families!R5C4 #00796b",
+      ])
+      expect(spreadsheet.bodies).toEqual([
+        {
+          requests: [
+            {
+              appendCells: {
+                sheetId: 30,
+                rows: [
+                  {
+                    values: [
+                      { userEnteredValue: { stringValue: "newfamxx" } },
+                      { userEnteredValue: { stringValue: "Screening" } },
+                      {},
+                      { userEnteredValue: { stringValue: "#00796b" } },
+                    ],
+                  },
+                ],
+                fields: "userEnteredValue",
+              },
+            },
+          ],
+        },
+      ])
+      expect(
+        spreadsheet.requests.filter(({ method }) => method === "GET"),
+      ).toHaveLength(2)
+    })
+
+    it("keeps a family a co-lead added after the read, appending after it (S2)", async () => {
+      const spreadsheet = serveStatefulSpreadsheet(familyTabs(), {
+        beforeWrite: (tabs) =>
+          tabs.map((tab) =>
+            tab.title === "Families"
+              ? {
+                  ...tab,
+                  rows: [
+                    ...tab.rows,
+                    ["colead01", "Screening Wales", "", "#123456"],
+                  ],
+                  rowCount: tab.rowCount + 1,
+                }
+              : tab,
+          ),
+      })
+
+      await httpRepository().addFamily({ name: "Screening", colour: "#00796b" })
+
+      const families = spreadsheet
+        .tabs()
+        .find(({ title }) => title === "Families")
+      expect(families?.rows.slice(-2).map((row) => row[1])).toEqual([
+        "Screening Wales",
+        "Screening",
+      ])
+    })
+
+    it("writes the family's changed cells and its roadmaps' rows, linking each by ID, in one batchUpdate (S4, S9)", async () => {
+      const before = familyTabs()
+      const spreadsheet = serveStatefulSpreadsheet(before)
+
+      await expect(httpRepository().changeFamily(rename)).resolves.toEqual({
+        status: "saved",
+        family: {
+          ...singleRecord,
+          name: { en: "Shared Care Record", cy: "Cofnod Sengl" },
+          colour: "#00796b",
+        },
+      })
+
+      expect(changedCells(before, spreadsheet.tabs())).toEqual([
+        "Roadmaps!R1C16 Family ID",
+        "Roadmaps!R2C5 Shared Care Record",
+        "Roadmaps!R2C8 #00796b",
+        "Roadmaps!R2C13 Cofnod Sengl",
+        "Roadmaps!R2C16 fc29g5b9",
+        "Families!R2C2 Shared Care Record",
+        "Families!R2C4 #00796b",
+      ])
+      expect(spreadsheet.bodies).toHaveLength(1)
+    })
+
+    it("writes only the field changed", async () => {
+      const before = familyTabs()
+      const spreadsheet = serveStatefulSpreadsheet(before)
+
+      await httpRepository().changeFamily({
+        ...rename,
+        changes: { name: "Shared Care Record" },
+      })
+
+      expect(
+        changedCells(before, spreadsheet.tabs()).filter((change) =>
+          change.startsWith("Families!"),
+        ),
+      ).toEqual(["Families!R2C2 Shared Care Record"])
+    })
+
+    it("fails with invalid-data, writing nothing, when the index is the Template tab", async () => {
+      const spreadsheet = serveStatefulSpreadsheet(familyTabs("Template"))
+
+      await expect(httpRepository().changeFamily(rename)).rejects.toMatchObject(
+        { kind: "invalid-data" },
+      )
+      expect(spreadsheet.bodies).toEqual([])
+    })
+
+    it("rethrows a lost write's network error when the family holds the change but its roadmaps don't (S4)", async () => {
+      const [index, families] = familyTabs()
+      if (index === undefined || families === undefined) throw new Error()
+      serveStatefulSpreadsheet(
+        [
+          index,
+          {
+            ...families,
+            rows: families.rows.map((row) =>
+              row[0] === "fc29g5b9" ? [...row.slice(0, 3), "#00796b"] : row,
+            ),
+          },
+        ],
+        { write: { lost: "not-applied" } },
+      )
+
+      await expect(
+        httpRepository().changeFamily({
+          family: singleRecord,
+          changes: { colour: "#00796b" },
+          members: ["producta"],
+        }),
+      ).rejects.toMatchObject({ kind: "network" })
+    })
+
+    it("rethrows a lost write's network error when a co-lead's rename unlinked a roadmap it named (S4)", async () => {
+      serveStatefulSpreadsheet(familyTabs(), {
+        write: { lost: "not-applied" },
+        beforeWrite: (tabs) =>
+          tabs.map((tab) =>
+            tab.title === "Families"
+              ? {
+                  ...tab,
+                  rows: tab.rows.map((row) =>
+                    row[0] === "fc29g5b9"
+                      ? [row[0], "Shared Care Record", ...row.slice(2)]
+                      : row,
+                  ),
+                }
+              : tab,
+          ),
+      })
+
+      await expect(
+        httpRepository().changeFamily({
+          family: singleRecord,
+          changes: { name: "Shared Care Record" },
+          members: ["producta"],
+        }),
+      ).rejects.toMatchObject({ kind: "network" })
+    })
+
+    it("rethrows a lost write's network error when the re-read fails", async () => {
+      serveStatefulSpreadsheet(familyTabs(), {
+        write: { lost: "reread-fails" },
+      })
+
+      await expect(httpRepository().changeFamily(rename)).rejects.toMatchObject(
+        { kind: "network" },
+      )
     })
   })
 })

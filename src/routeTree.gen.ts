@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as FamiliesRouteImport } from './routes/families'
 import { Route as RoadmapsRoadmapIdRouteImport } from './routes/roadmaps.$roadmapId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FamiliesRoute = FamiliesRouteImport.update({
+  id: '/families',
+  path: '/families',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RoadmapsRoadmapIdRoute = RoadmapsRoadmapIdRouteImport.update({
@@ -25,27 +31,31 @@ const RoadmapsRoadmapIdRoute = RoadmapsRoadmapIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/families': typeof FamiliesRoute
   '/roadmaps/$roadmapId': typeof RoadmapsRoadmapIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/families': typeof FamiliesRoute
   '/roadmaps/$roadmapId': typeof RoadmapsRoadmapIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/families': typeof FamiliesRoute
   '/roadmaps/$roadmapId': typeof RoadmapsRoadmapIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/roadmaps/$roadmapId'
+  fullPaths: '/' | '/families' | '/roadmaps/$roadmapId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/roadmaps/$roadmapId'
-  id: '__root__' | '/' | '/roadmaps/$roadmapId'
+  to: '/' | '/families' | '/roadmaps/$roadmapId'
+  id: '__root__' | '/' | '/families' | '/roadmaps/$roadmapId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  FamiliesRoute: typeof FamiliesRoute
   RoadmapsRoadmapIdRoute: typeof RoadmapsRoadmapIdRoute
 }
 
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/families': {
+      id: '/families'
+      path: '/families'
+      fullPath: '/families'
+      preLoaderRoute: typeof FamiliesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/roadmaps/$roadmapId': {
@@ -70,6 +87,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  FamiliesRoute: FamiliesRoute,
   RoadmapsRoadmapIdRoute: RoadmapsRoadmapIdRoute,
 }
 export const routeTree = rootRouteImport

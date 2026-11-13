@@ -140,6 +140,72 @@ describe("applyBatchUpdate", () => {
     ])
   })
 
+  it("appends a row to Families after the last row in use, growing the grid (STY-029)", () => {
+    const families: GridTab = {
+      title: "Families",
+      sheetId: 1,
+      rows: [
+        ["ID", "Name", "Name (cy)", "Colour"],
+        ["a1", "One", "", "#000000"],
+        [],
+      ],
+      rowCount: 2,
+      columnCount: 4,
+    }
+    const append = (name: string) => ({
+      appendCells: {
+        sheetId: 1,
+        rows: [
+          {
+            values: [
+              { userEnteredValue: { stringValue: "b2" } },
+              { userEnteredValue: { stringValue: name } },
+              {},
+              { userEnteredValue: { stringValue: "#00796b" } },
+            ],
+          },
+        ],
+        fields: "userEnteredValue",
+      },
+    })
+
+    const result = applyBatchUpdate([families], {
+      requests: [append("Two"), append("Three")],
+    })
+
+    expect(result).toEqual({
+      tabs: [
+        {
+          ...families,
+          rows: [
+            ["ID", "Name", "Name (cy)", "Colour"],
+            ["a1", "One", "", "#000000"],
+            ["b2", "Two", "", "#00796b"],
+            ["b2", "Three", "", "#00796b"],
+          ],
+          rowCount: 4,
+        },
+      ],
+      violations: [],
+    })
+  })
+
+  it("records a row appended to a tab but Families as a violation", () => {
+    const result = applyBatchUpdate([index()], {
+      requests: [
+        {
+          appendCells: {
+            sheetId: 0,
+            rows: [{ values: [{ userEnteredValue: { stringValue: "x" } }] }],
+            fields: "userEnteredValue",
+          },
+        },
+      ],
+    })
+
+    expect(result.violations).toEqual(["appendCells on Roadmaps"])
+  })
+
   it("allows Family (cy), the family's Welsh name copied from its list (ADR-013)", () => {
     const tab = {
       ...index(),

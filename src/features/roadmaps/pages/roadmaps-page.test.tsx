@@ -46,6 +46,8 @@ function scriptedRepository(...outcomes: Outcome[]) {
     publishRoadmapChanges,
     listFamilies: vi.fn<RoadmapRepository["listFamilies"]>(),
     listCategories: vi.fn<RoadmapRepository["listCategories"]>(),
+    addFamily: vi.fn<RoadmapRepository["addFamily"]>(),
+    changeFamily: vi.fn<RoadmapRepository["changeFamily"]>(),
   }
 }
 
@@ -56,7 +58,8 @@ function main() {
 /** The cards' titles in page order (each link's tooltip is its title). */
 function cardNames() {
   return main()
-    .getAllByRole("link")
+    .getAllByRole("list")
+    .flatMap((list) => within(list).getAllByRole("link"))
     .map((link) => link.getAttribute("title"))
 }
 
@@ -68,7 +71,7 @@ describe("RoadmapsPage", () => {
     })
 
     expect(main().getByRole("status")).toHaveTextContent("Loading roadmaps…")
-    expect(main().queryByRole("link")).not.toBeInTheDocument()
+    expect(main().queryByRole("list")).not.toBeInTheDocument()
     expect(main().getByRole("button", { name: "Refresh" })).toHaveAttribute(
       "aria-busy",
       "true",

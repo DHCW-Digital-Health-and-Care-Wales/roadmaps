@@ -38,16 +38,33 @@ describe("parseFamilies", () => {
         },
       ],
       problems: [],
+      rows: new Map([
+        ["fc29g5b9", 2],
+        ["vdkxj63m", 3],
+      ]),
+      columns: new Map([
+        ["ID", 0],
+        ["Name", 1],
+        ["Colour", 3],
+      ]),
     })
   })
 
   it("finds columns by header, in any order and spelling, and ignores blank rows", () => {
-    const { list, problems } = parseFamilies([
+    const { list, problems, rows, columns } = parseFamilies([
       ["colour", "Name - Cymraeg", "id", "NAME"],
-      ["#12a3c9", "Cofnod Sengl", "fc29g5b9", "Single Record"],
       ["", "", "", ""],
       [],
+      ["#12a3c9", "Cofnod Sengl", "fc29g5b9", "Single Record"],
     ])
+    expect(rows).toStrictEqual(new Map([["fc29g5b9", 4]]))
+    expect(columns).toStrictEqual(
+      new Map([
+        ["ID", 2],
+        ["Name", 3],
+        ["Colour", 0],
+      ]),
+    )
     expect(list).toStrictEqual([
       {
         id: "fc29g5b9",
@@ -59,7 +76,7 @@ describe("parseFamilies", () => {
   })
 
   it("is no list when the tab is missing (S6)", () => {
-    expect(parseFamilies(null)).toStrictEqual({
+    expect(parseFamilies(null)).toMatchObject({
       list: null,
       problems: [problem("missing-tab", {})],
     })
@@ -69,7 +86,7 @@ describe("parseFamilies", () => {
     "is no list when the %s column is missing (S6)",
     (missing) => {
       const header = FAMILY_HEADER.filter((column) => column !== missing)
-      expect(parseFamilies([header, ["a", "b", "#000000"]])).toStrictEqual({
+      expect(parseFamilies([header, ["a", "b", "#000000"]])).toMatchObject({
         list: null,
         problems: [problem("missing-column", { column: missing })],
       })
@@ -143,12 +160,17 @@ describe("parseCategories", () => {
         },
       ],
       problems: [],
+      rows: new Map([["khzpchkh", 2]]),
+      columns: new Map([
+        ["ID", 0],
+        ["Name", 1],
+      ]),
     })
   })
 
   it("is no list when the tab is missing or lacks a column (S6)", () => {
     expect(parseCategories(null).list).toBeNull()
-    expect(parseCategories([["ID", "Name (cy)"]])).toStrictEqual({
+    expect(parseCategories([["ID", "Name (cy)"]])).toMatchObject({
       list: null,
       problems: [problem("missing-column", { column: "Name" })],
     })

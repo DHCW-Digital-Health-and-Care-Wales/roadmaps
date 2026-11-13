@@ -7,7 +7,7 @@
 - **Depends on**: STY-032 (hard)
 - **Binding ADRs**: ADR-014 §Organisations, ADR-013, ADR-008
 - **Suggested model**: Sonnet — a read-only section beside the categories section
-- **Delivered**: https://github.com/collisdigital/roadmaps-editor/pull/47
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/47
 
 ## Summary
 

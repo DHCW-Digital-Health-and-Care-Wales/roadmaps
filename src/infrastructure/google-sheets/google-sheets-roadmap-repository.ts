@@ -9,6 +9,7 @@ import {
   type FamilyInput,
   type FamilyOutcome,
 } from "@/domain/roadmap/family-changes"
+import { planListMatch, type MatchOutcome } from "@/domain/roadmap/list-match"
 import type { Organisation } from "@/domain/roadmap/organisation"
 import {
   heldWrites,
@@ -384,6 +385,57 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
       },
       family,
     )
+  }
+
+  /**
+   * Re-reads the index and the lists, then writes the roadmap's row's family and
+   * category cells from them, in one `batchUpdate` (STY-030). A write whose answer is
+   * lost is settled by one more read: matched when the roadmap is then in step.
+   */
+  async matchRoadmapToLists(
+    loaded: Roadmap,
+    { signal }: RepositoryReadOptions = {},
+  ): Promise<MatchOutcome> {
+    const read = await this.#readRoadmapIndex({ signal })
+    usableFamilyTab(read.familyTab)
+    // Never written, even as the index (ADR-012).
+    if (read.indexTab.properties.title === TEMPLATE_TAB) {
+      throw new AppError("invalid-data", {
+        message: `The roadmap index is the ${TEMPLATE_TAB} tab`,
+      })
+    }
+    const entry = read.index.entries.find(
+      ({ roadmap }) => roadmap.id === loaded.id,
+    )
+    const plan = planListMatch(loaded, entry?.roadmap)
+    if (plan.kind === "settled") return plan.outcome
+    // A plan to write is made only over a listed roadmap.
+    if (entry === undefined) throw new AppError("unknown")
+    signal?.throwIfAborted()
+
+    const index = new TabWriter(read.indexTab, read.index.columns)
+    const row = new IndexRowWriter(read, entry, index)
+    const { familyId, categoryId } = entry.roadmap
+    if (familyId !== null) row.writeFamily(familyId)
+    if (categoryId !== null) row.writeCategory(categoryId)
+    const requests = index.requests()
+    if (requests.length === 0) return { status: "matched" }
+
+    try {
+      await this.#client.postJson(`${this.#spreadsheetPath}:batchUpdate`, {
+        requests,
+      })
+    } catch (error) {
+      if (!isAppError(error) || error.kind !== "network") throw error
+      const held = await this.#readRoadmapIndex({}).then(
+        (again) =>
+          again.index.entries.find(({ roadmap }) => roadmap.id === loaded.id)
+            ?.roadmap.outOfStep === false,
+        () => false,
+      )
+      if (!held) throw error
+    }
+    return { status: "matched" }
   }
 
   /**

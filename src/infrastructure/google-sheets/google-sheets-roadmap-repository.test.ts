@@ -9,6 +9,7 @@ import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { CO_LEAD_VALUE } from "@/domain/roadmap/testing/contract-write"
 import { categoriesOf, familiesOf } from "@/domain/roadmap/testing/linked-lists"
+import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import {
   type ContractOptions,
   describeRoadmapRepositoryContract,
@@ -395,6 +396,19 @@ function overwriteFirstValue(tabs: readonly FakeTab[], body: unknown) {
       return
     }
   }
+}
+
+/** Every cell that differs, as `tab!R1C1 value`. */
+function changedCells(before: FakeTab[], after: FakeTab[]): string[] {
+  return after.flatMap((tab, t) =>
+    tab.rows.flatMap((row, r) =>
+      row.flatMap((value, c) =>
+        (before[t]?.rows[r]?.[c] ?? "") === value
+          ? []
+          : [`${tab.title}!R${String(r + 1)}C${String(c + 1)} ${value}`],
+      ),
+    ),
+  )
 }
 
 describeRoadmapRepositoryContract("GoogleSheetsRoadmapRepository", {
@@ -1739,19 +1753,6 @@ describe("GoogleSheetsRoadmapRepository", () => {
       members: ["producta"],
     }
 
-    /** Every cell that differs, as `tab!R1C1 value`. */
-    function changedCells(before: FakeTab[], after: FakeTab[]): string[] {
-      return after.flatMap((tab, t) =>
-        tab.rows.flatMap((row, r) =>
-          row.flatMap((value, c) =>
-            (before[t]?.rows[r]?.[c] ?? "") === value
-              ? []
-              : [`${tab.title}!R${String(r + 1)}C${String(c + 1)} ${value}`],
-          ),
-        ),
-      )
-    }
-
     it("appends a row after the last, with an ID no row holds, after two reads (S2)", async () => {
       const before = familyTabs()
       const spreadsheet = serveStatefulSpreadsheet(before)
@@ -1938,6 +1939,98 @@ describe("GoogleSheetsRoadmapRepository", () => {
       await expect(httpRepository().changeFamily(rename)).rejects.toMatchObject(
         { kind: "network" },
       )
+    })
+  })
+
+  describe("making a roadmap match its lists (STY-030)", () => {
+    const FAMILY_ROWS = [
+      ["ID", "Name", "Name (cy)", "Colour"],
+      ["fc29g5b9", "Single Record", "Cofnod Sengl", "#12a3c9"],
+    ]
+    const CATEGORY_ROWS = [
+      ["ID", "Name", "Name (cy)"],
+      ["khzpchkh", "GP & Community Services", "Meddygon Teulu"],
+    ]
+    /** The example index with these IDs and the colour it names, apart from the lists. */
+    const index = (colour: string) =>
+      EXAMPLE_ROWS.map((row, r) => {
+        const cells =
+          r === 0
+            ? [...row, "Family ID", "Category ID"]
+            : r === 1
+              ? [...row, "fc29g5b9", "khzpchkh"]
+              : row
+        return r === 1
+          ? cells.map((cell, c) => (c === 7 ? colour : cell))
+          : cells
+      })
+    const tabs = (colour = "#325083"): FakeTab[] => [
+      gridTab("Roadmaps", index(colour), 0),
+      gridTab("ProductA", EXAMPLE_TAB_ROWS.ProductA ?? [], 10, 1),
+      gridTab("Families", FAMILY_ROWS, 30, 2),
+      gridTab("Categories", CATEGORY_ROWS, 40, 3),
+    ]
+    const loaded = (overrides: Partial<Roadmap> = {}): Roadmap => ({
+      ...createTestRoadmap("producta", "Product A roadmap"),
+      family: { en: "Single Record", cy: "Cofnod Sengl" },
+      familyId: "fc29g5b9",
+      colour: "#12a3c9",
+      category: { en: "GP & Community Services", cy: "Meddygon Teulu" },
+      categoryId: "khzpchkh",
+      outOfStep: true,
+      // What the example row holds, whatever the lists say.
+      copied: {
+        family: { en: "Single Record", cy: "" },
+        colour: "#325083",
+        category: "GP & Community Services",
+      },
+      ...overrides,
+    })
+
+    it("writes the row's copied cells from the lists in one batchUpdate, nothing else (S1)", async () => {
+      const before = tabs()
+      const spreadsheet = serveStatefulSpreadsheet(before)
+
+      await expect(
+        httpRepository().matchRoadmapToLists(loaded()),
+      ).resolves.toEqual({ status: "matched" })
+
+      expect(changedCells(before, spreadsheet.tabs())).toEqual([
+        "Roadmaps!R2C8 #12a3c9",
+        "Roadmaps!R2C13 Cofnod Sengl",
+      ])
+      expect(spreadsheet.bodies).toHaveLength(1)
+    })
+
+    it("writes nothing when a co-lead edited one of the row's own copied cells meanwhile, though it is still out of step (S4)", async () => {
+      const spreadsheet = serveStatefulSpreadsheet(tabs("#ff0000"))
+
+      await expect(
+        httpRepository().matchRoadmapToLists(loaded()),
+      ).resolves.toMatchObject({ status: "changed" })
+      expect(spreadsheet.bodies).toEqual([])
+    })
+
+    it("writes nothing when the roadmap is no longer out of step, or changed since it loaded (S4)", async () => {
+      const spreadsheet = serveStatefulSpreadsheet(tabs("#12a3c9"))
+
+      await expect(
+        httpRepository().matchRoadmapToLists(loaded({ colour: "#ff0000" })),
+      ).resolves.toMatchObject({ status: "changed" })
+      expect(spreadsheet.bodies).toEqual([])
+    })
+
+    it("fails with invalid-data, writing nothing, when the index is the Template tab", async () => {
+      const spreadsheet = serveStatefulSpreadsheet(
+        tabs().map((tab) =>
+          tab.title === "Roadmaps" ? { ...tab, title: "Template" } : tab,
+        ),
+      )
+
+      await expect(
+        httpRepository().matchRoadmapToLists(loaded()),
+      ).rejects.toMatchObject({ kind: "invalid-data" })
+      expect(spreadsheet.bodies).toEqual([])
     })
   })
 })

@@ -9,7 +9,7 @@
   a roadmap tab"; ADR-009 (header matching); ADR-002
 - **Suggested model**: Opus — a pure parser with many edge cases that must match another
   repository's rules, plus a behaviour-preserving extraction from the index parser
-- **Delivered**: [PR #23](https://github.com/collisdigital/roadmaps-editor/pull/23)
+- **Delivered**: [PR #23](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/23)
 
 ## Summary
 

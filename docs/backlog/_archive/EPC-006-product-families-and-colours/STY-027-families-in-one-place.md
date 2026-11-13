@@ -3,12 +3,12 @@
 - **Status**: Done — delivered in its PR, which awaits the owner's merge
 - **Type**: Feature + Docs
 - **Area**: Domain + Infrastructure + Features/UI + i18n (en + cy) + Docs
-- **Epic**: [EPC-006-product-families-and-colours](../../EPC-006-product-families-and-colours/README.md)
+- **Epic**: [EPC-006-product-families-and-colours](README.md)
 - **Depends on**: none (EPC-005's write path is on the default branch)
 - **Binding ADRs**: ADR-013, ADR-009, ADR-002
 - **Suggested model**: Opus — it adds two reads to the repository port and changes what
   a category is
-- **Delivered**: https://github.com/collisdigital/roadmaps-editor/pull/38
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/38
 
 ## Summary
 

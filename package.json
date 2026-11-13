@@ -3,6 +3,11 @@
   "private": true,
   "version": "0.0.0",
   "description": "DHCW Roadmap Editor: Product Leads manage their public Now, Next, Later roadmaps.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor.git"
+  },
   "type": "module",
   "packageManager": "pnpm@12.18.0",
   "engines": {

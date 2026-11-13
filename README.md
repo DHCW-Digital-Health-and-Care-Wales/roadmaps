@@ -1,6 +1,6 @@
 # DHCW Roadmap Editor
 
-[![CI/CD](https://github.com/collisdigital/roadmaps-editor/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/collisdigital/roadmaps-editor/actions/workflows/ci.yml)
+[![CI/CD](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/actions/workflows/ci.yml)
 
 An internal tool for Digital Health and Care Wales (DHCW) staff: Product Leads use it to
 manage the public Now / Next / Later roadmaps of their products. A separate app, the
@@ -8,16 +8,19 @@ public site, reads the same data source and shows the published roadmaps. The
 [Product Lead persona](docs/backlog/personas/product-lead.md) describes who it is for.
 
 It is a static, frontend-only React app hosted on GitHub Pages:
-**<https://collisdigital.github.io/roadmaps-editor/>**. You connect a Google account; the
-app reads the **roadmap index** (the first tab) of one Google Spreadsheet and lists each
-roadmap as a card, published or not. A roadmap's page shows its items, and a Product
-Lead edits the roadmap's and its items' English and publishes every change at once; a
-co-lead's change to the same text is shown beside theirs, never overwritten.
+**<https://dhcw-digital-health-and-care-wales.github.io/roadmaps-editor/>**. You connect a
+Google account; the app reads the **roadmap index** (the first tab) of one Google
+Spreadsheet and lists each roadmap as a card, published or not. A roadmap's page shows
+its items, and a Product Lead edits the roadmap's and its items' English and publishes
+every change at once; a co-lead's change to the same text is shown beside theirs, never
+overwritten.
 
 Google Sheets is a _temporary_ data source: a PostgreSQL-backed HTTP API can replace it
 without touching the UI ([how](docs/operations/replacing-google-sheets.md)).
 
 The UI is available in English and Welsh (Cymraeg).
+
+Licensed under the [MIT License](LICENSE).
 
 ## Contents
 
@@ -133,10 +136,20 @@ at once, after a re-read, in one all-or-nothing `spreadsheets.batchUpdate`, only
   editor doesn't list (its `Sheet` is not a valid roadmap ID, or repeats an earlier
   row's) is not rewritten, and keeps the old family name and colour.
 
+"Make it match" on a roadmap flagged as out of step with its family or category writes
+at once, after a re-read, in one all-or-nothing `spreadsheets.batchUpdate`, only that
+roadmap's index row's `Family ID`, `Family`, `Family (cy)`, `Colour`, `Category ID` and
+`Category`, copied from the `Families` and `Categories` tabs as read, each only where it
+differs, and the `Family ID` or `Category ID` column if it is missing. It is offered
+only for a family in the list, writes nothing while the roadmap index is named
+`Template`, and a change since the page loaded to the roadmap's family or category, to its
+row's own copied cells, or to its being out of step or published, refuses the write; its pending edits stay
+pending.
+
 It never writes any other cell: no Welsh `(cy)` cell other than `Family (cy)`,
 `Last updated`, `Enabled`, `Sheet`, `Labels` or `Details`, no `Horizon` or
 `Organisations` cell but those above, no `Family`, `Category` or `Colour` cell but
-those above, no roadmap's row or tab but
+those above and "Make it match"'s, no roadmap's row or tab but
 those above, nothing in the `Template` or `Categories` tab, nothing in the `Families`
 tab but the family changes above, and no cell whose value has not changed. A roadmap
 whose `Sheet` names the `Template` tab or the roadmap index itself can't be read or
@@ -245,7 +258,7 @@ reload on GitHub Pages without a 404 fallback (ADR-004).
 ### Install and run
 
 ```sh
-git clone https://github.com/collisdigital/roadmaps-editor.git
+git clone https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor.git
 cd roadmaps-editor
 pnpm install --frozen-lockfile
 cp .env.example .env.local   # required: `pnpm dev` does not read .env.production

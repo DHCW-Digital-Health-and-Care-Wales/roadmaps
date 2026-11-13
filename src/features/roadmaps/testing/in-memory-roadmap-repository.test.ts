@@ -40,3 +40,47 @@ describe("createInMemoryRoadmapRepository", () => {
     await expect(repository.listRoadmapItems("productb")).resolves.toEqual([])
   })
 })
+
+describe("createInMemoryRoadmapRepository matching a roadmap to its lists (STY-030)", () => {
+  const outOfStep = createTestRoadmap("producta", "Product A", {
+    family: { en: "Single Record", cy: "" },
+    familyId: "fc29g5b9",
+    colour: "#12a3c9",
+    outOfStep: true,
+  })
+
+  it("clears the flag (S1)", async () => {
+    const repository = createInMemoryRoadmapRepository([outOfStep])
+
+    await expect(repository.matchRoadmapToLists(outOfStep)).resolves.toEqual({
+      status: "matched",
+    })
+    expect(await repository.listRoadmaps()).toEqual([
+      { ...outOfStep, outOfStep: false },
+    ])
+  })
+
+  it("settles a lost write by a re-read", async () => {
+    const applied = createInMemoryRoadmapRepository(
+      [outOfStep],
+      {},
+      {
+        write: { lost: "applied" },
+      },
+    )
+    const notApplied = createInMemoryRoadmapRepository(
+      [outOfStep],
+      {},
+      {
+        write: { lost: "not-applied" },
+      },
+    )
+
+    await expect(applied.matchRoadmapToLists(outOfStep)).resolves.toEqual({
+      status: "matched",
+    })
+    await expect(
+      notApplied.matchRoadmapToLists(outOfStep),
+    ).rejects.toMatchObject({ kind: "network" })
+  })
+})

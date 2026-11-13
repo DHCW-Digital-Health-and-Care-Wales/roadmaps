@@ -451,6 +451,7 @@ function toEntry(
       categoryId,
       family: family?.name ?? ownFamily,
       familyId: family?.id ?? null,
+      copied: { family: ownFamily, colour: ownColour, category: ownCategory },
       outOfStep: familyOutOfStep || categoryOutOfStep,
       familyNotListed,
       statusLabel: text("Status label"),

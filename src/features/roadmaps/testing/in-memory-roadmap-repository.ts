@@ -6,6 +6,7 @@ import {
   planNewFamily,
   type FamilyOutcome,
 } from "@/domain/roadmap/family-changes"
+import { planListMatch } from "@/domain/roadmap/list-match"
 import type { Organisation } from "@/domain/roadmap/organisation"
 import {
   heldWrites,
@@ -28,6 +29,7 @@ import {
 } from "@/domain/roadmap/testing/contract-write"
 import { categoriesOf, familiesOf } from "@/domain/roadmap/testing/linked-lists"
 import { TEST_ORGANISATIONS } from "@/domain/roadmap/testing/test-organisations"
+import { inStep } from "@/domain/roadmap/testing/test-roadmap"
 import { AppError } from "@/lib/errors"
 
 /**
@@ -319,6 +321,34 @@ export function createInMemoryRoadmapRepository(
           for (const roadmap of members) setFamily(roadmap, family)
         })
       }),
+    matchRoadmapToLists: (loaded, { signal } = {}) =>
+      respond(signal, (list) => {
+        familyList()
+        const current = list.find(({ id }) => id === loaded.id)
+        const plan = planListMatch(loaded, current)
+        if (plan.kind === "settled") {
+          return plan.outcome.status === "changed"
+            ? {
+                ...plan.outcome,
+                roadmap: structuredClone(plan.outcome.roadmap),
+              }
+            : plan.outcome
+        }
+        // A plan to write is made only over a listed roadmap.
+        if (current === undefined) throw new AppError("unknown")
+        if (write !== undefined && "fails" in write) {
+          throw new AppError(write.fails)
+        }
+        // Its shown values are the lists' already: matching clears the flag.
+        if (write?.lost !== "not-applied") {
+          current.outOfStep = false
+          current.copied = inStep(current).copied
+        }
+        if (write === undefined) return { status: "matched" as const }
+        if (write.lost === "reread-fails") rereadFails = true
+        if (rereadFails || current.outOfStep) throw new AppError("network")
+        return { status: "matched" as const }
+      }),
   }
 }
 
@@ -342,12 +372,16 @@ function setFamily(roadmap: Roadmap, family: Family | null): void {
   roadmap.family = family ? { ...family.name } : null
   roadmap.familyNotListed = false
   if (family) roadmap.colour = family.colour
+  // The row's copies are written with it (ADR-013).
+  roadmap.copied.family = roadmap.family
+  roadmap.copied.colour = roadmap.colour
 }
 
 /** Sets a roadmap's category as a later read gives it. */
 function setCategory(roadmap: Roadmap, category: Category | null): void {
   roadmap.categoryId = category?.id ?? null
   roadmap.category = category ? { ...category.name } : null
+  roadmap.copied.category = roadmap.category?.en ?? ""
 }
 
 /** Sets a roadmap's English as a later read gives it: blank optional text is none. */

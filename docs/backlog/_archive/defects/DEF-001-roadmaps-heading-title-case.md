@@ -7,7 +7,7 @@
 - **Depends on**: none
 - **Binding ADRs**: ADR-008
 - **Suggested model**: Haiku — a two-string change plus the tests that assert it
-- **Delivered**: https://github.com/collisdigital/roadmaps-editor/pull/2
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/2
 
 ## Summary
 

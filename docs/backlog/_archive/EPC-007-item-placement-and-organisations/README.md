@@ -156,7 +156,7 @@ None.
 - ADR-014 (this epic's decisions); ADR-012, ADR-011, ADR-013 (the lists precedent)
 - [EPC-005 Editing](../EPC-005-editing/README.md), whose pending edits and
   publish this epic extends
-- [EPC-006 Product families and colours](../../EPC-006-product-families-and-colours/README.md),
+- [EPC-006 Product families and colours](../EPC-006-product-families-and-colours/README.md),
   whose page STY-033 extends
 - [The roadmap tab format](../../../analysis/roadmap-tab-format.md)
 - The persona: [Product Lead](../../personas/product-lead.md), _Move items between horizons_

@@ -36,11 +36,11 @@ own cells, which the editor keeps in step.
 
 3. **Leave the roadmap index as it is.** Each row is linked to its family and category
    by name. A row whose family is spelt differently, or whose colour differs, shows as
-   out of step in the editor. Once the editor writes them (STY-028 to STY-030), each
-   row gains `Family ID` and `Category ID` at its roadmap's next publish, and an out of
-   step row gets a fix.
+   out of step in the editor. The editor (STY-028 to STY-030) gives each
+   row `Family ID` and `Category ID` at its roadmap's next publish, and fixes an out of
+   step row on request ("Make it match").
 
 4. **Do not rename or delete either tab.** If one goes missing, the editor lists
-   roadmaps as it did before families were managed. Once families and categories can
-   be changed (STY-028, STY-029), it also says they cannot be changed until the tab is
+   roadmaps as it did before families were managed. Where families and categories can be
+   changed (STY-028, STY-029), it also says they cannot be changed until the tab is
    back.

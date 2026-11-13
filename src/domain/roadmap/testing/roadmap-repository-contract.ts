@@ -15,7 +15,7 @@ import type { RoadmapItem } from "../roadmap-item"
 import type { RoadmapRepository } from "../roadmap-repository"
 import { CO_LEAD_VALUE, type ContractWrite } from "./contract-write"
 import { categoriesOf, familiesOf } from "./linked-lists"
-import { createTestRoadmap } from "./test-roadmap"
+import { createTestRoadmap, inStep } from "./test-roadmap"
 import { createTestRoadmapItem } from "./test-roadmap-item"
 
 /** Each roadmap's items by roadmap id; a roadmap with no entry has none. */
@@ -131,7 +131,7 @@ function roadmapOnly(roadmap: RoadmapChanges["roadmap"]): RoadmapChanges {
 /** A roadmap fixture with these fields changed. */
 function productA(overrides: Partial<Roadmap>): Roadmap[] {
   const [first, ...rest] = fixtures
-  return first ? [{ ...first, ...overrides }, ...rest] : []
+  return first ? [inStep({ ...first, ...overrides }), ...rest] : []
 }
 
 /**
@@ -370,6 +370,7 @@ export function describeRoadmapRepositoryContract(
 
     describePublishing(setup)
     describeFamilyChanges(setup)
+    describeListMatch(setup)
   })
 }
 
@@ -1191,6 +1192,7 @@ function describeFamilyChanges(setup: RoadmapRepositoryContractSetup): void {
     throw new Error("The fixtures need two families")
   }
   const productB = fixtures[1]
+  if (productB === undefined) throw new Error("The fixtures need Product B")
   const recolour = (overrides: Partial<FamilyEdit> = {}): FamilyEdit => ({
     family: medicines,
     changes: { colour: "#00796b" },
@@ -1254,7 +1256,7 @@ function describeFamilyChanges(setup: RoadmapRepositoryContractSetup): void {
       ])
       expect(await repository.listRoadmaps()).toStrictEqual([
         fixtures[0],
-        { ...productB, family: changed.name, colour: "#00796b" },
+        inStep({ ...productB, family: changed.name, colour: "#00796b" }),
         fixtures[2],
       ])
     })
@@ -1445,5 +1447,51 @@ function describeFamilyChanges(setup: RoadmapRepositoryContractSetup): void {
         ])
       },
     )
+  })
+}
+
+function describeListMatch(setup: RoadmapRepositoryContractSetup): void {
+  // In step, as every fixture is: a row out of step is built by each adapter's own tests.
+  const inStep = createTestRoadmap("producta", "Product A roadmap", {
+    family: { en: "Single Record", cy: "" },
+    familyId: "fc29g5b9",
+    colour: "#12a3c9",
+    category: { en: "GP & Community Services", cy: "" },
+    categoryId: "khzpchkh",
+  })
+  const other = createTestRoadmap("product-b-2027", "Product B", {
+    family: { en: "Medicines & Diagnostics", cy: "" },
+    familyId: "vdkxj63m",
+    colour: "#006747",
+  })
+  const roadmaps = [inStep, other]
+  const loaded = { ...inStep, colour: "#325083", outOfStep: true }
+
+  describe("making a roadmap match its lists (STY-030)", () => {
+    it("writes nothing when the roadmap is already in step, or changed since it loaded (S4)", async () => {
+      const repository = setup.withRoadmaps(roadmaps)
+
+      await expect(repository.matchRoadmapToLists(loaded)).resolves.toEqual({
+        status: "changed",
+        roadmap: inStep,
+      })
+      expect(await repository.listRoadmaps()).toStrictEqual(roadmaps)
+    })
+
+    it("says so when the roadmap is no longer listed", async () => {
+      const repository = setup.withRoadmaps([other])
+
+      await expect(repository.matchRoadmapToLists(loaded)).resolves.toEqual({
+        status: "roadmap-not-found",
+      })
+    })
+
+    it("fails with invalid-data when the family list is gone", async () => {
+      const repository = setup.withRoadmaps(roadmaps, {}, { families: null })
+
+      await expect(
+        repository.matchRoadmapToLists(loaded),
+      ).rejects.toMatchObject({ kind: "invalid-data" })
+    })
   })
 }

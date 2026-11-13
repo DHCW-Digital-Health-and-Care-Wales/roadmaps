@@ -8,7 +8,7 @@
 - **Binding ADRs**: ADR-014 §Organisations, ADR-011, ADR-002
 - **Suggested model**: Sonnet — a new list read beside the families and categories
   reads, and a type change through its callers
-- **Delivered**: https://github.com/collisdigital/roadmaps-editor/pull/46
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/46
 
 ## Summary
 

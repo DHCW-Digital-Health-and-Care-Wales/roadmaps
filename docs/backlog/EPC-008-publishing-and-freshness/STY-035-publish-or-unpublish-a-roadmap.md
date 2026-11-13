@@ -119,7 +119,7 @@ roadmap may have changed and asks Sam to refresh before doing more
 
 ## Tests
 
-S4's refusals (the co-lead race included), S5–S6's single write and S10 need repository contract tests on both
+S4's refusals (the co-lead race included), a loaded row a co-lead moved, S5–S6's single write and S10 need repository contract tests on both
 implementations (`describeRoadmapRepositoryContract`) and MSW tests of the Sheets
 adapter; S2, S4 and S5 need a Playwright journey against the Sheets fake, since the
 list's badge and count must change after the write.
@@ -161,8 +161,11 @@ Audited at `220972a`.
   Sam loaded the page. The re-read then keeps the co-lead's row for that slug, so a
   write that finds its row by slug, as the adapter's `#readRoadmap` does, binds to the
   wrong row and D9 would report it done. Find the row by the spreadsheet row the page
-  loaded (`RoadmapIndexEntry.row`) and its `Sheet` value, and count the clash over the
-  raw index rows, the parser's skipped ones included.
+  loaded (`RoadmapIndexEntry.row`), as a hint only: the row must still hold the `Sheet`
+  value and the other cells the page loaded, else the write is refused as changed since
+  Sam opened it, nothing written and edits kept, so two same-`Sheet` rows a co-lead
+  swaps are never confused. Count the clash over the raw index rows, the parser's
+  skipped ones included.
 - Reading the roadmap's items to check its tab does not work as is: `#readRoadmap`
   throws `invalid-data` when `Sheet` names no tab, and `parseRoadmapTab` throws without
   a `Title` column, which would surface as S8's failure, not S4's named refusal. The

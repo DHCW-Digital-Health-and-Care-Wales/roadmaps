@@ -1,7 +1,17 @@
 #!/bin/bash
 set -euo pipefail
 
-cd "$CLAUDE_PROJECT_DIR"
+# Work in the session's current checkout: CLAUDE_PROJECT_DIR stays at the launch
+# directory after the session enters a worktree, while the hook input's `cwd` follows it.
+hook_cwd=""
+if [ ! -t 0 ]; then
+  hook_cwd=$(node -e 'let s = ""
+process.stdin.on("data", (d) => (s += d)).on("end", () => {
+  try { process.stdout.write(JSON.parse(s).cwd ?? "") } catch {}
+})' 2>/dev/null) || hook_cwd=""
+fi
+cd "$(git -C "${hook_cwd:-$CLAUDE_PROJECT_DIR}" rev-parse --show-toplevel 2>/dev/null ||
+  echo "$CLAUDE_PROJECT_DIR")"
 
 # Warn when this checkout lacks commits of the remote default branch. A planning session
 # once ran on a worktree cut from a deleted, squash-merged branch and wrote its records in
@@ -36,7 +46,7 @@ warn_if_behind_default_branch() {
     # Unrelated history, or a branch whose remote was deleted: starting again is the fix.
     echo "==> Warning: HEAD is not based on current $default (its history meets it only at the root, or its remote branch is gone). Start new work on a branch from $default."
   else
-    echo "==> Note: HEAD is $behind commit(s) behind $default. Before publishing, rebase onto it, even if its PR is open (implement-story's references/pull-requests.md, step 4)."
+    echo "==> Note: HEAD is $behind commit(s) behind $default. Before publishing, rebase onto its base, even if its PR is open (implement-story's references/pull-requests.md, \"Update a branch\")."
   fi
 }
 warn_if_behind_default_branch
@@ -50,6 +60,7 @@ fi
 # rather than exit on it; the log keeps pnpm's progress lines out of context.
 install_log=$(mktemp "${TMPDIR:-/tmp}/pnpm-install.XXXXXX")
 if pnpm install --frozen-lockfile >"$install_log" 2>&1; then
+  rm -f "$install_log"
   echo "==> Installed dependencies."
 else
   echo "==> Warning: pnpm install --frozen-lockfile failed (log: $install_log). Fix it before running any check."

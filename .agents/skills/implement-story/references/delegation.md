@@ -44,9 +44,9 @@ reviewers write no report files. Do not relay raw search dumps or whole
 transcripts into the main context.
 
 Use a fresh reviewer with only the brief for each review. Rebase the branch
-onto the current base (`pull-requests.md` step 4), re-run the verification, and only then pin the SHAs, or
-the base-to-head diff shows work that merged meanwhile as a revert. Include the
-user requirements and record, base/head SHAs, the diff command, relevant
+onto the current base (`pull-requests.md`, _Update a branch_), re-run the
+verification, and only then pin the SHAs, or the base-to-head diff shows work
+that merged meanwhile as a revert. Include the user requirements and record, base/head SHAs, the diff command, relevant
 verification results, PR metadata the reviewer cannot fetch itself, and the
 authoritative skill path. Omit the implementation conversation and claimed
 verdict. A reviewer must inspect requirements and surrounding code before
@@ -134,10 +134,11 @@ pass.
   the diff command between them. A rebase since the last round moves the base
   too: re-pin both SHAs and supply
   `git range-diff <old base>..<old head> <new base>..<new head>`, since a diff
-  between the heads shows the base's new work as the fix. The re-checker confirms or reopens each
-  finding and reviews the changed lines and the code they affect. A fix that
-  answers only P3 or 💭 findings or wording gets no re-check: list it in the PR
-  body's Review record.
+  between the heads shows the base's new work as the fix. The re-checker
+  confirms or reopens each finding and reviews the changed lines and the code
+  they affect. A fix that answers only P3 or 💭 findings or wording, and a
+  rebase whose range-diff shows the branch's own commits unchanged, get no
+  re-check: list them in the PR body's Review record.
 - **Final fresh pass**: when a fix changes runtime behaviour (logic, data,
   auth or UI behaviour), not only wording, docs, tests or renames, start one
   fresh reviewer over the whole diff in the lane that owns that behaviour: Sol

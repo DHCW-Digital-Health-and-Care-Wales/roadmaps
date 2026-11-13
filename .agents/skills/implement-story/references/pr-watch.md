@@ -50,8 +50,8 @@ watch a PR.
 2. Read the current head, checks and existing comments. Handle routine status
    changes, clean CI completion and readiness decisions directly. Delegate
    substantive investigation or fixes using the bounded handoff below; finish
-   required branch updates (a rebase, per `pull-requests.md` step 4) and
-   pushes before waiting on PR events.
+   required branch updates (`pull-requests.md`, _Update a branch_) and pushes
+   before waiting on PR events.
 3. If required work still waits on checks or reviews and the runtime can
    notify you of PR events, register for them and end the turn; on
    notification, reconcile the current head and act per the sections below.

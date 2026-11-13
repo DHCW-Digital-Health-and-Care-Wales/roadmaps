@@ -22,16 +22,17 @@ moves to `_archive/`, where its row here still points.
 | [EPC-005 Editing](_archive/EPC-005-editing/README.md)                                                    | STY-022–STY-026: item identity, a write that refuses on a co-lead's conflict, an "About this roadmap" block, editing in place with one publish per roadmap, and conflict review | Done   |
 | [EPC-006 Product families and colours](_archive/EPC-006-product-families-and-colours/README.md)          | STY-027–STY-030: families and categories defined once in their own tabs, chosen per roadmap, managed in one page, out-of-step rows fixed                                        | Done   |
 | [EPC-007 Item placement and organisations](_archive/EPC-007-item-placement-and-organisations/README.md)  | STY-031–STY-034: move an item between horizons and sections; organisations served by the repository, listed, and chosen per item                                                | Done   |
-| [EPC-008 Publishing and freshness](EPC-008-publishing-and-freshness/README.md)                           | STY-035–STY-036: publish or unpublish a roadmap from its page, refused when the public sync would fail; set its Last updated date                                               | Active |
+| [EPC-008 Publishing and freshness](_archive/EPC-008-publishing-and-freshness/README.md)                  | STY-035–STY-036: publish or unpublish a roadmap from its page, refused when the public sync would fail; set its Last updated date                                               | Done   |
 
 ## Chores
 
-| ID                                                                       | Chore                                                                                                             | Status      |
-| ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- | ----------- |
-| [CHO-001](chores/CHO-001-carry-linked-name-with-pending-choice.md)       | Carry the linked name with each pending family/category choice, so renames before first publish are not conflicts | Proposed    |
-| [CHO-002](chores/CHO-002-show-a-deleted-pending-choice-as-not-listed.md) | Show a pending family or category deleted from its list as not listed                                             | Proposed    |
-| [CHO-004](chores/CHO-004-share-the-write-failure-copy.md)                | Share the eight-key write-failure copy between publishing, families and "Make it match"                           | Proposed    |
-| [CHO-005](chores/CHO-005-send-last-updated-to-the-api-in-utc.md)         | Send a roadmap's Last updated to the future database API in UTC, once it replaces Sheets                          | Placeholder |
+| ID                                                                          | Chore                                                                                                             | Status      |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ----------- |
+| [CHO-001](chores/CHO-001-carry-linked-name-with-pending-choice.md)          | Carry the linked name with each pending family/category choice, so renames before first publish are not conflicts | Proposed    |
+| [CHO-002](chores/CHO-002-show-a-deleted-pending-choice-as-not-listed.md)    | Show a pending family or category deleted from its list as not listed                                             | Proposed    |
+| [CHO-004](chores/CHO-004-share-the-write-failure-copy.md)                   | Share the eight-key write-failure copy between publishing, families and "Make it match"                           | Proposed    |
+| [CHO-005](chores/CHO-005-send-last-updated-to-the-api-in-utc.md)            | Send a roadmap's Last updated to the future database API in UTC, once it replaces Sheets                          | Placeholder |
+| [CHO-007](chores/CHO-007-rebase-an-open-date-form-after-marking-updated.md) | An open About form takes a date its own "Mark as updated today" wrote as its own                                  | Proposed    |
 
 Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status token.
 

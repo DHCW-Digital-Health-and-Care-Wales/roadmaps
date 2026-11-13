@@ -73,6 +73,47 @@ describe("findPublishedStateRow", () => {
     ).toMatchObject({ kind: "settled", outcome: { status: "changed" } })
   })
 
+  it("leaves Last updated out when it is set, so a co-lead's date is no change (STY-036)", () => {
+    const today = {
+      published: true,
+      changes: {
+        roadmap: {
+          lastUpdated: { base: "", value: "2026-11-13", overwrite: true },
+        },
+        items: [],
+      },
+    } as const
+
+    expect(
+      findPublishedStateRow(loaded, today, [
+        row({ lastUpdated: "2026-11-01" }),
+      ]),
+    ).toEqual(found)
+    expect(
+      findPublishedStateRow(loaded, { published: true }, [
+        row({ lastUpdated: "2026-11-01" }),
+      ]),
+    ).toMatchObject({ kind: "settled", outcome: { status: "changed" } })
+  })
+
+  it("still writes a date set on publishing a roadmap a co-lead already published (STY-036 D10)", () => {
+    const today = {
+      published: true,
+      changes: {
+        roadmap: {
+          lastUpdated: { base: "", value: "2026-11-13", overwrite: true },
+        },
+        items: [],
+      },
+    } as const
+
+    expect(findPublishedStateRow(loaded, today, [row({}, true)])).toEqual({
+      ...found,
+      writeState: false,
+      check: false,
+    })
+  })
+
   it("never takes a row naming another place for its items, though its id is the same", () => {
     expect(
       findPublishedStateRow(loaded, { published: true }, [
@@ -196,6 +237,24 @@ describe("heldPublishedState", () => {
     expect(heldPublishedState(change, write, row({}, true), null)).toBe("all")
     expect(heldPublishedState(change, write, row({}, false), null)).toBe("none")
     expect(heldPublishedState(change, write, undefined, null)).toBe("some")
+  })
+
+  it("counts a date set as one of the edits (STY-036)", () => {
+    const writes = {
+      roadmap: [{ field: "lastUpdated" as const, value: "2026-11-13" }],
+      items: [],
+      ids: [],
+    }
+    const held = (lastUpdated: string) =>
+      heldPublishedState(
+        { published: true },
+        { ...write, writes },
+        row({ lastUpdated }, true),
+        { ...snapshot, roadmap: { ...loaded, lastUpdated } },
+      )
+
+    expect(held("2026-11-13")).toBe("all")
+    expect(held("2026-11-01")).toBe("some")
   })
 
   it("is some when the state is held but the edits are not", () => {

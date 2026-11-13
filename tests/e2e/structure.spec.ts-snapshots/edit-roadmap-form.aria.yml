@@ -15,5 +15,8 @@
   - paragraph: Category
   - paragraph: GP & Community Services
   - paragraph: The category can't be changed right now.
+  - text: Last updated
+  - textbox "Last updated": 2026-10-01
+  - button "Today"
   - button "Done"
   - button "Cancel"

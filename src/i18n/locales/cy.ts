@@ -212,7 +212,9 @@ export const cy = {
         productLead: "Arweinydd cynnyrch",
         vision: "Gweledigaeth",
         serviceDescription: "Disgrifiad o'r gwasanaeth",
+        lastUpdated: "Diweddarwyd ddiwethaf",
       },
+      noDate: "Dim dyddiad",
     },
     items: {
       loading: "Wrthi'n llwytho eitemau'r map trywydd…",
@@ -289,7 +291,11 @@ export const cy = {
         serviceDescription: "Disgrifiad o'r gwasanaeth (Saesneg)",
         familyId: "Teulu",
         categoryId: "Categori",
+        lastUpdated: "Diweddarwyd ddiwethaf",
       },
+      today: "Heddiw",
+      dateInFuture: "Rhowch ddyddiad heddiw neu un cynharach",
+      dateInvalid: "Rhowch ddyddiad go iawn, neu cliriwch y maes",
       noFamily: "Dim teulu",
       noCategory: "Dim categori",
       familyNotListed: "{{name}} (heb ei restru)",
@@ -417,6 +423,7 @@ export const cy = {
         },
         changes: "Beth sy'n newid",
       },
+      markUpdated: "Nodi ei fod wedi'i ddiweddaru heddiw",
       notice: {
         published:
           "Newidiadau wedi'u cyhoeddi. Bydd y wefan gyhoeddus yn eu dangos ar ôl ei diweddariad nesaf dros nos.",

@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 
+import { MarkUpdatedCheckbox } from "./mark-updated-checkbox"
 import type { PublishedState } from "./use-published-state"
 
 export interface PublishedStateActionProps {
@@ -23,7 +24,8 @@ export interface PublishedStateActionProps {
 /**
  * "Publish roadmap" or "Unpublish roadmap" beside a roadmap's title, and the dialog
  * that asks first, saying when the public site shows the change and what happens to
- * pending edits: published with it ("Save and publish", S5) or left pending (S7).
+ * pending edits: published with it ("Save and publish", S5) or left pending (S7), and,
+ * when publishing, "Mark as updated today" (STY-036 D10).
  * Unavailable, though focusable, while it can't be chosen (S1); the dialog can't be
  * closed while the write is under way.
  */
@@ -80,6 +82,13 @@ export function PublishedStateAction({
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {state.offersMarkUpdated && (
+            <MarkUpdatedCheckbox
+              checked={state.markUpdated}
+              disabled={pending}
+              onCheckedChange={state.setMarkUpdated}
+            />
+          )}
           <AlertDialogFooter>
             <Button
               disabled={!available}

@@ -1,9 +1,9 @@
 # STY-035: A Product Lead publishes or unpublishes a roadmap
 
-- **Status**: Done — delivered in its PR, which awaits the owner's merge
+- **Status**: Done — merged in #57
 - **Type**: Feature
 - **Area**: Domain + Infrastructure + Features/UI + i18n (en + cy) + E2E
-- **Epic**: [EPC-008-publishing-and-freshness](../../EPC-008-publishing-and-freshness/README.md)
+- **Epic**: [EPC-008-publishing-and-freshness](README.md)
 - **Depends on**: none
 - **Binding ADRs**: ADR-012, ADR-009, ADR-002, ADR-008
 - **Suggested model**: Opus — a new repository write with fresh-read refusal checks,

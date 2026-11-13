@@ -11,6 +11,7 @@ const productA = createTestRoadmap("producta", "Product A roadmap", {
   productLead: "Alex Jones, Sam Evans",
   vision: { en: "First line\nSecond line", cy: "" },
   serviceDescription: { en: "What Product A does.", cy: "" },
+  lastUpdated: "2026-10-02",
 })
 
 function about() {
@@ -18,7 +19,7 @@ function about() {
 }
 
 describe("RoadmapAbout", () => {
-  it("shows each of the four fields under its label, keeping line breaks", () => {
+  it("shows each of the four fields under its label, keeping line breaks, then the date (STY-036 S1)", () => {
     renderWithI18n(<RoadmapAbout roadmap={productA} />)
 
     const region = about()
@@ -29,7 +30,13 @@ describe("RoadmapAbout", () => {
       within(region)
         .getAllByRole("term")
         .map((term) => term.textContent),
-    ).toEqual(["Status", "Product lead", "Vision", "Service description"])
+    ).toEqual([
+      "Status",
+      "Product lead",
+      "Vision",
+      "Service description",
+      "Last updated",
+    ])
     expect(
       within(region)
         .getAllByRole("definition")
@@ -39,6 +46,7 @@ describe("RoadmapAbout", () => {
       "Alex Jones, Sam Evans",
       "First line\nSecond line",
       "What Product A does.",
+      "2 October 2026",
     ])
     expect(within(region).getByText(/First line/)).toHaveClass(
       "whitespace-pre-line",
@@ -56,10 +64,10 @@ describe("RoadmapAbout", () => {
       within(about())
         .getAllByRole("term")
         .map((term) => term.textContent),
-    ).toEqual(["Status", "Service description"])
+    ).toEqual(["Status", "Service description", "Last updated"])
   })
 
-  it("says there is nothing yet when all four are empty", () => {
+  it("says there is nothing yet when all four are empty, and that it has no date (STY-036 S1)", () => {
     renderWithI18n(
       <RoadmapAbout
         roadmap={createTestRoadmap("producta", "Product A roadmap")}
@@ -69,7 +77,11 @@ describe("RoadmapAbout", () => {
     const region = about()
     expect(within(region).getByRole("heading", { level: 2 })).toBeVisible()
     expect(region).toHaveTextContent("There's nothing about this roadmap yet.")
-    expect(within(region).queryAllByRole("term")).toEqual([])
+    expect(
+      within(region)
+        .getAllByRole("definition")
+        .map((value) => value.textContent),
+    ).toEqual(["No date"])
   })
 
   it("is Welsh where the roadmap has Welsh, field by field, and shows the lead as written", () => {
@@ -96,6 +108,7 @@ describe("RoadmapAbout", () => {
       "Arweinydd cynnyrch",
       "Gweledigaeth",
       "Disgrifiad o'r gwasanaeth",
+      "Diweddarwyd ddiwethaf",
     ])
     expect(
       within(region)
@@ -106,6 +119,7 @@ describe("RoadmapAbout", () => {
       "Alex Jones, Sam Evans",
       "Gweledigaeth Gymraeg",
       "What Product A does.",
+      "2 Hydref 2026",
     ])
   })
 })

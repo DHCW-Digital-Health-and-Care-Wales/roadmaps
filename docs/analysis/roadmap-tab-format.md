@@ -113,8 +113,10 @@ write, one all-or-nothing `spreadsheets.batchUpdate` holding only:
 - a missing column (`Item ID`, or an edited field's), appended after the last column in
   use with the public site's English header, the grid widened in the same request.
 
-It never writes `(cy)` cells, `Last updated`, other columns, unchanged cells, another
-roadmap's rows or the `Template` tab. The example data in `tests/fixtures/sheets/` stays
+It never writes `(cy)` cells, other columns, unchanged cells, another roadmap's rows or
+the `Template` tab. Since STY-036 it writes `Last updated` (a changed date, or today's
+when "Mark as updated today" is ticked) as `YYYY-MM-DD` text, or empty; see the README's
+_What the editor writes_ for every write since. The example data in `tests/fixtures/sheets/` stays
 the public site's copy, without `Item ID` (STY-023 D8).
 
 ### Example data

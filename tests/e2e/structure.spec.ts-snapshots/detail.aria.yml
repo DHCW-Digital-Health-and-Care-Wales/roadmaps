@@ -19,6 +19,8 @@
     - definition: A short, ambitious statement of where Product A is heading. Leave blank to show a general intro sentence instead.
     - term: Service description
     - definition: What Product A does and who it helps. Also used as the summary on the landing page card.
+    - term: Last updated
+    - definition: 1 October 2026
     - button "Edit About this roadmap"
   - heading "Recently delivered" [level=2]
   - list "Recently delivered":

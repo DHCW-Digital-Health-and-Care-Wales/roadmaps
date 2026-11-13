@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { FieldConflict } from "@/domain/roadmap/roadmap-changes"
 import { useAuth } from "@/features/auth/use-auth"
+import { localToday } from "@/lib/local-today"
 
 import { ConflictReview } from "./conflict-review"
 import { keepMine, openConflicts, takeTheirs } from "./conflicts"
@@ -30,7 +31,8 @@ export interface RoadmapPublishingProps {
 /**
  * Under a roadmap's title: what its last publish came to, and, while changes are
  * pending, how many there are with Publish (or Save, S11) and Discard all (STY-025 S2,
- * S6, S9–S15, S18). Publishing asks first, listing what changes; it is unavailable,
+ * S6, S9–S15, S18). Publishing asks first, listing what changes and offering to mark the
+ * roadmap as updated today (STY-036 S6); it is unavailable,
  * though focusable, unless connected and until every field someone else changed is
  * decided in the review (STY-026).
  */
@@ -41,6 +43,7 @@ export function RoadmapPublishing({ roadmap }: RoadmapPublishingProps) {
   const connected = useAuth().state.status === "connected"
   const publish = usePublish(roadmap)
   const [confirming, setConfirming] = useState(false)
+  const [markUpdated, setMarkUpdated] = useState(false)
   const [discarding, setDiscarding] = useState(false)
   const notice = useRef<HTMLDivElement>(null)
 
@@ -83,7 +86,7 @@ export function RoadmapPublishing({ roadmap }: RoadmapPublishingProps) {
   const confirm = () => {
     if (!connected) return
     focusNoticeOnClose.current = true
-    void publish().finally(() => {
+    void publish(markUpdated ? localToday() : undefined).finally(() => {
       setConfirming(false)
     })
   }
@@ -132,6 +135,7 @@ export function RoadmapPublishing({ roadmap }: RoadmapPublishingProps) {
               aria-busy={publishing}
               onClick={() => {
                 focusNoticeOnClose.current = false
+                setMarkUpdated(false)
                 setConfirming(true)
               }}
             >
@@ -157,6 +161,8 @@ export function RoadmapPublishing({ roadmap }: RoadmapPublishingProps) {
         changes={changes ?? NO_CHANGES}
         publishing={publishing}
         available={connected}
+        markUpdated={markUpdated}
+        onMarkUpdatedChange={setMarkUpdated}
         returnFocus={() => !focusNoticeOnClose.current}
         onClosed={() => {
           if (focusNoticeOnClose.current) notice.current?.focus()

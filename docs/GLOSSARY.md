@@ -115,6 +115,13 @@ Lead loaded the field they have edited. Publishing stops until, for each conflic
 Product Lead keeps their change or uses the co-lead's (ADR-012).
 _Avoid_: Clash, merge conflict
 
+**Last updated**:
+The date a roadmap says it was last updated, which the public site shows. The Product
+Lead sets it as a pending edit, or marks it as today when publishing or saving ("Mark as
+updated today"); publishing changes it only then. It is never after today, by the
+Product Lead's own clock (STY-036).
+_Avoid_: Last modified, published date, last published
+
 **Stale roadmap** _(planned)_:
 A roadmap not published for longer than the staleness threshold, suggested as six weeks.
 

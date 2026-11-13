@@ -361,7 +361,7 @@ function withEnglish(
 }
 
 /**
- * The roadmap as it will read once its pending English, family and category are
+ * The roadmap as it will read once its pending English, family, category and date are
  * published: a chosen family or category as `lists` names it (and colours it), or with
  * only its ID until they are read; none for no family or category, the colour kept
  * (STY-028 S1, S2).
@@ -382,6 +382,9 @@ export function applyRoadmapChanges(
     productLead: fields.productLead
       ? fields.productLead.value || null
       : roadmap.productLead,
+    lastUpdated: fields.lastUpdated
+      ? fields.lastUpdated.value || null
+      : roadmap.lastUpdated,
     vision: withEnglish(roadmap.vision, fields.vision),
     serviceDescription: withEnglish(
       roadmap.serviceDescription,

@@ -86,12 +86,12 @@ test("records a write the editor must never make as a violation", async ({
 }) => {
   const token = gis.latestToken ?? ""
 
-  // `Last updated` is the index's seventh column.
+  // `Last updated` is the index's seventh column, written only as YYYY-MM-DD (STY-036).
   await sendFromPage(page, {
     method: "POST",
     path: ":batchUpdate",
     token,
-    body: { requests: [indexCell(1, 6, "2026-11-12")] },
+    body: { requests: [indexCell(1, 6, "12/11/2026")] },
   })
   // A formula is not text.
   await sendFromPage(page, {

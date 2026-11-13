@@ -98,6 +98,10 @@ it writes the `Families` tab only as below.
   for the placement chosen (`Recently delivered`, `Now`, `Next`, `Later`,
   `Delivered this year` or `Not doing`), so the row keeps its place and the item
   shows in row order in its new placement; a move never blanks the cell;
+- a changed `Last updated`: the index row's `Last updated` cell, as text `YYYY-MM-DD`
+  (`2026-11-13`) whatever format the cell held, or an empty cell when cleared; and,
+  when "Mark as updated today" is ticked (and no date is pending), today's date by the
+  Product Lead's browser, written over whatever the cell holds (STY-036);
 - an item whose organisations changed: its row's `Organisations` cell alone, as the
   codes chosen, `National` first and then by code, separated by a comma and a space
   (`National, SBUHB`), or an empty cell for none; only codes in the editor's list are
@@ -156,7 +160,9 @@ several, the one the list kept: for a published roadmap the first enabled, else 
 first); nothing is written when
 none does, or when the cell already holds the value. Publishing a roadmap with
 pending edits ("Save and publish") writes them with `Enabled` in the same request, as a
-publish of them writes them, all or nothing. Publishing writes nothing while the row
+publish of them writes them, all or nothing; with "Mark as updated today" ticked, the
+row's `Last updated` cell is set to today in that request too, as a publish of edits
+sets it, even when `Enabled` already reads `Yes`. Publishing writes nothing while the row
 would fail the public site's nightly sync once enabled: its `Sheet` names no tab, the
 tab has no `Title` or `Horizon` column (unless the same write adds `Horizon`), its
 `Colour` is `#rgb` (unless a family chosen in the same write replaces it), or another
@@ -164,10 +170,10 @@ row with the same ID is enabled. Unpublishing is never checked, and leaves pendi
 edits pending.
 
 It never writes any other cell: no Welsh `(cy)` cell other than `Family (cy)`, no
-`Last updated`, `Sheet`, `Labels` or `Details`, no `Enabled` cell but the one above, no `Horizon` or
-`Organisations` cell but those above, no `Family`, `Category` or `Colour` cell but
-those above and "Make it match"'s, no roadmap's row or tab but
-those above, nothing in the `Template` or `Categories` tab, nothing in the `Families`
+`Last updated` but as above, no `Sheet`, `Labels` or `Details`, no `Enabled` cell but
+the one above, no `Horizon` or `Organisations` cell but those above, no `Family`,
+`Category` or `Colour` cell but those above and "Make it match"'s, no roadmap's row or
+tab but those above, nothing in the `Template` or `Categories` tab, nothing in the `Families`
 tab but the family changes above, and no cell whose value has not changed. A roadmap
 whose `Sheet` names the `Template` tab or the roadmap index itself can't be read or
 published, and nothing is published while the

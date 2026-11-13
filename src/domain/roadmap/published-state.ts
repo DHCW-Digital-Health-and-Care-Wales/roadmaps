@@ -300,7 +300,7 @@ function holdsLoaded(
     text("vision") &&
     text("serviceDescription") &&
     (edited.has("productLead") || loaded.productLead === current.productLead) &&
-    loaded.lastUpdated === current.lastUpdated &&
+    (edited.has("lastUpdated") || loaded.lastUpdated === current.lastUpdated) &&
     family &&
     category
   )

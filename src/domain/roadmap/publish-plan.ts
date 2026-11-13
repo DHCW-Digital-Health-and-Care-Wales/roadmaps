@@ -6,6 +6,7 @@
 
 import { AppError } from "@/lib/errors"
 
+import { isCalendarDate } from "./calendar-date"
 import { findEditedItem } from "./find-edited-item"
 import { createItemId } from "./item-id"
 import type { Roadmap } from "./roadmap"
@@ -74,10 +75,12 @@ const REQUIRED_FIELDS: ReadonlySet<string> = new Set(["title"])
  * Decides what publishing `changes` over `snapshot` (`null`: the roadmap is no longer
  * listed) writes: each pending value that differs from the current one, unless a
  * co-lead changed it too, plus an ID for every item without one. Values are trimmed.
- * An item's organisations are compared as a set. Throws `AppError('unknown')` for a blank
- * title, a placement that is none of the six or an organisation the list doesn't hold,
- * which callers never send, and `AppError('invalid-data')` for a family or category
- * chosen while its list is missing.
+ * An item's organisations are compared as a set, and a change made over whatever the
+ * field holds (`FieldChange.overwrite`) is never a conflict. Throws `AppError('unknown')`
+ * for a blank title, a placement that is none of the six, an organisation the list
+ * doesn't hold or a `Last updated` that is no `YYYY-MM-DD` date, which callers never
+ * send, and `AppError('invalid-data')` for a family or category chosen while its list is
+ * missing.
  */
 export function planRoadmapPublish(
   changes: RoadmapChanges,
@@ -102,7 +105,7 @@ export function planRoadmapPublish(
     }
     const current = roadmapValue(snapshot.roadmap, field)
     if (current === pending.value) continue
-    if (current !== pending.base) {
+    if (current !== pending.base && !pending.overwrite) {
       conflicts.push({
         subject: "roadmap",
         field,
@@ -208,13 +211,14 @@ export function heldWrites(
 
 /**
  * A change's trimmed value with its base, or `null` when it changes nothing: a set of
- * organisations as `organisationIdsValue` gives it.
+ * organisations as `organisationIdsValue` gives it. One set over whatever the field
+ * holds is never nothing.
  */
 function pendingValue(
   field: string,
   change: FieldChange | undefined,
   snapshot: RoadmapSnapshot,
-): { base: string; value: string } | null {
+): { base: string; value: string; overwrite: boolean } | null {
   if (change === undefined) return null
   const value =
     field === "organisationIds"
@@ -230,7 +234,15 @@ function pendingValue(
       message: "Only one of the six placements can be published",
     })
   }
-  return value === change.base ? null : { base: change.base, value }
+  if (field === "lastUpdated" && value !== "" && !isCalendarDate(value)) {
+    throw new AppError("unknown", {
+      message: "Only a YYYY-MM-DD date can be published as Last updated",
+    })
+  }
+  const overwrite = change.overwrite === true
+  return value === change.base && !overwrite
+    ? null
+    : { base: change.base, value, overwrite }
 }
 
 /** `value`'s organisations as one value, each of which the list must hold. */

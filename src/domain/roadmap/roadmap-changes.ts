@@ -23,10 +23,15 @@ export const ROADMAP_CHOICE_FIELDS = [
 
 export type RoadmapChoiceField = (typeof ROADMAP_CHOICE_FIELDS)[number]
 
-/** Every roadmap field a Product Lead may edit, in the form's order. */
+/**
+ * Every roadmap field a Product Lead may edit, in the form's order: its text, its family
+ * and category, then the date it was last updated, `YYYY-MM-DD` or `""` for none
+ * (STY-036).
+ */
 export const EDITABLE_ROADMAP_FIELDS = [
   ...ROADMAP_TEXT_FIELDS,
   ...ROADMAP_CHOICE_FIELDS,
+  "lastUpdated",
 ] as const
 
 export type EditableRoadmapField = (typeof EDITABLE_ROADMAP_FIELDS)[number]
@@ -78,7 +83,7 @@ export function isItemTextField(
 
 /**
  * The roadmap's value for `field`, `""` for none: its English for text, an ID for a
- * family or category, or `UNLISTED_FAMILY`.
+ * family or category, or `UNLISTED_FAMILY`, or its date, `YYYY-MM-DD`.
  */
 export function roadmapValue(
   roadmap: Roadmap,
@@ -95,6 +100,8 @@ export function roadmapValue(
       )
     case "categoryId":
       return roadmap.categoryId ?? ""
+    case "lastUpdated":
+      return roadmap.lastUpdated ?? ""
     default:
       return roadmap[field]?.en ?? ""
   }
@@ -147,6 +154,31 @@ export interface FieldChange {
   base: string
   /** The value to publish, as typed or chosen; `""` clears an optional field. */
   value: string
+  /**
+   * Published over whatever the field then holds, `base` unused: never a conflict. Only
+   * `markedUpdated` sets it.
+   */
+  overwrite?: true
+}
+
+/**
+ * `changes` with the roadmap's `Last updated` set to `today`, `YYYY-MM-DD`, over
+ * whatever it holds when published, never a conflict: the "Mark as updated today" tick
+ * box (STY-036 S6, S9). Unticked (`today` undefined), or with a date already pending,
+ * which is published instead (S7), `changes` is given back as it is.
+ */
+export function markedUpdated(
+  changes: RoadmapChanges,
+  today: string | undefined,
+): RoadmapChanges {
+  if (today === undefined || changes.roadmap.lastUpdated) return changes
+  return {
+    ...changes,
+    roadmap: {
+      ...changes.roadmap,
+      lastUpdated: { base: "", value: today, overwrite: true },
+    },
+  }
 }
 
 /** One item's pending changes, with what is needed to find it again (ADR-012). */

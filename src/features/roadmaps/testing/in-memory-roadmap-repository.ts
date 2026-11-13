@@ -1,3 +1,4 @@
+import { isCalendarDate } from "@/domain/roadmap/calendar-date"
 import type { Category } from "@/domain/roadmap/category"
 import type { Family } from "@/domain/roadmap/family"
 import {
@@ -27,8 +28,9 @@ import {
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import {
   type EditableItemField,
+  type EditableRoadmapField,
   organisationIdsOf,
-  type RoadmapTextField,
+  type RoadmapChoiceField,
 } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { isRoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
@@ -524,10 +526,13 @@ function setCategory(roadmap: Roadmap, category: Category | null): void {
   roadmap.copied.category = roadmap.category?.en ?? ""
 }
 
-/** Sets a roadmap's English as a later read gives it: blank optional text is none. */
+/**
+ * Sets a roadmap's English or date as a later read gives it: blank optional text is
+ * none, and so is a date that is no `YYYY-MM-DD` date, such as a co-lead's text.
+ */
 function setRoadmapText(
   roadmap: Roadmap,
-  field: RoadmapTextField,
+  field: Exclude<EditableRoadmapField, RoadmapChoiceField>,
   value: string,
 ): void {
   switch (field) {
@@ -536,6 +541,9 @@ function setRoadmapText(
       return
     case "productLead":
       roadmap.productLead = value === "" ? null : value
+      return
+    case "lastUpdated":
+      roadmap.lastUpdated = isCalendarDate(value) ? value : null
       return
     default:
       roadmap[field] =

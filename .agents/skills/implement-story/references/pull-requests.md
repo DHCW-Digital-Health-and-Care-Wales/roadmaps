@@ -35,15 +35,19 @@
 Bring a branch up to date with its base by rebasing, even when its PR is
 open, so its history stays linear; never merge the base in.
 
-1. Read the branch's remote head before rebasing: your last push, or the PR's
-   `headRefOid` when you took the branch over. That is the lease.
+1. Read the branch's remote head before rebasing, the lease: your last push,
+   or the PR's `headRefOid` when you take the branch over. Make the local
+   branch contain it (`git merge-base --is-ancestor <lease> HEAD`), or the
+   push removes the commits it lacks: start a taken-over branch with
+   `git checkout -B <branch> <lease>`, and rebase your own work onto a lease
+   it lacks.
 2. Rebase onto `origin/<base branch>`. When a stacked prerequisite has been
    squash-merged, replay only your own commits:
    `git rebase --onto origin/<new base> <prerequisite's last head>`.
 3. Re-run the verification and re-pin the reviewers' SHAs (`delegation.md`).
 4. Push with `git push --force-with-lease=<branch>:<lease>`, never a plain
    `--force`, so a push made since you read the lease is refused rather than
-   overwritten. Read a refused push's new commits before rebasing again.
+   overwritten. After a refusal, start again at step 1.
 
 Git push access and GitHub API access are distinct. Test the specific
 operation before requesting configuration. A CLI login error or an unset raw

@@ -18,3 +18,4 @@ supersede instead. Status is one of: Proposed, Accepted, Superseded by ADR-XXX.
 | [ADR-011](ADR-011-roadmap-items-from-each-roadmaps-tab.md)         | A roadmap's items come from the tab its index row names, read by header                 | Accepted                                          |
 | [ADR-012](ADR-012-publishing-a-roadmaps-changes.md)                | A roadmap's pending edits are published together, by item ID, and refused on a conflict | Accepted                                          |
 | [ADR-013](ADR-013-families-and-categories-defined-once.md)         | Product families and categories are defined once, in their own tabs, and copied to rows | Accepted                                          |
+| [ADR-014](ADR-014-item-placement-and-organisations-are-edited.md)  | An item's placement and organisations are edited; the repository serves organisations   | Accepted                                          |

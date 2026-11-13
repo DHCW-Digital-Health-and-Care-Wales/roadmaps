@@ -48,7 +48,9 @@ _Avoid_: Horizon, status
 **Placement**:
 Where a roadmap item appears: one of the three horizons or one of the three sections.
 A roadmap item has at most one; an item with none is an **unplaced item** (ADR-011).
-Code and records use the word; interface copy names the horizon or section itself.
+A Product Lead moves an item by changing its placement, which never unplaces it
+(ADR-014). Code and records use the word; interface copy names the horizon or section
+itself.
 _Avoid_: Column, lane, status
 
 **Unplaced item**:
@@ -78,9 +80,11 @@ saying what stage the work is at. Not a roadmap's status label.
 _Avoid_: Stage, status
 
 **Organisation**:
-One of twelve fixed NHS Wales bodies a roadmap item's work is for, such as Cardiff and
-Vale University Health Board, or **All Wales** for national work; shared with the public
-site, which filters by it (ADR-011).
+One of the NHS Wales bodies a roadmap item's work is for, such as Cardiff and Vale
+University Health Board, or **All Wales** for national work; shared with the public
+site, which filters by it (ADR-011). Each has a code (`CAVUHB`), a short name (`Cardiff
+and Vale`) and a full name. The repository serves the list; in Sheets it is the built-in
+twelve (ADR-014).
 _Avoid_: Health board (only some are), customer
 
 **Pending edit**:

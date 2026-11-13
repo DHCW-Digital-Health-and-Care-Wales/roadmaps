@@ -5,7 +5,7 @@
   ID, a write whose result never arrives, trimming). Amends ADR-002 (a write call) and ADR-011 (item identity);
   extends ADR-009 (the editor writes to the roadmap index).
 - Date: 2026-11-11 (amended in ADR-013: family and category become choosable; `Family (cy)`
-  is copied)
+  is copied; amended in ADR-014: an item's placement and organisations become editable)
 
 ## Context
 
@@ -164,6 +164,13 @@ Nothing checks permission in advance.
   its own.
 - `Family (cy)` is written as a copy of the family's Welsh name, never typed; every
   other Welsh cell stays unwritten.
+
+### ADR-014 amendments
+
+- An item's placement and organisations become pending edits, each one field for
+  conflicts; publishing writes its `Horizon` and `Organisations` cells, adding the
+  `Organisations` column when missing (ADR-014). Tags, details and Welsh stay
+  read-only.
 
 ## Options (owner's choice marked ✅, 2026-11-11)
 

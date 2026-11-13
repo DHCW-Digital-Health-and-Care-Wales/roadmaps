@@ -3,7 +3,8 @@
 - Status: Accepted — owner, 2026-11-10: analysis decisions 1–4, then grilling rounds 1
   and 2 (Options 1–6 below). Amends ADR-002 (a second repository call) and extends
   ADR-009.
-- Date: 2026-11-10 (amended by ADR-012: item identity; see below)
+- Date: 2026-11-10 (amended by ADR-012: item identity; amended by ADR-014: organisations
+  come from the repository and show by short name; see below)
 
 ## Context
 
@@ -96,6 +97,14 @@ row without one an ID, and a later row repeating an earlier row's ID gets `id: n
 a `duplicate-item-id` problem (EPC-005 STY-022). The rest of this decision stands:
 `Item ID` is one more column read by header, and the `Template` tab is still never read
 or written.
+
+### ADR-014 amendment
+
+Organisations are no longer a domain vocabulary: the repository serves them as a list
+(`listOrganisations()`), items carry `organisationIds`, and the card shows short names,
+national first then alphabetical, instead of codes (Option 6's choice ends). The Sheets adapter keeps the
+twelve built in and still matches codes as headers, leaving out an unknown one; the item
+now keeps that code as written. Placements stay a domain vocabulary.
 
 ### Reading the items
 

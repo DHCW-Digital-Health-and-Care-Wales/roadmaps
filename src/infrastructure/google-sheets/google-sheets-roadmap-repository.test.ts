@@ -264,7 +264,7 @@ function tabRowsFor(items: readonly RoadmapItem[]): string[][] {
       ...language("en")(item),
       ...language("cy")(item),
       item.placement ?? item.writtenHorizon ?? "",
-      item.organisations.map((code) => code.toUpperCase()).join(", "),
+      item.organisationIds.map((id) => id.toUpperCase()).join(", "),
     ]),
   ]
 }
@@ -579,6 +579,41 @@ describe("GoogleSheetsRoadmapRepository", () => {
       ])
     })
 
+    it("serves the built-in twelve organisations, by short name, without a request (S2)", async () => {
+      const requests = serveLists()
+
+      const organisations = await httpRepository().listOrganisations()
+
+      expect(requests).toEqual([])
+      expect(
+        organisations.map(({ id, code, shortName }) => [id, code, shortName]),
+      ).toEqual([
+        ["national", "National", "All Wales"],
+        ["abuhb", "ABUHB", "Aneurin Bevan"],
+        ["bcuhb", "BCUHB", "Betsi Cadwaladr"],
+        ["cavuhb", "CAVUHB", "Cardiff and Vale"],
+        ["ctmuhb", "CTMUHB", "Cwm Taf Morgannwg"],
+        ["hduhb", "HDUHB", "Hywel Dda"],
+        ["pthb", "PTHB", "Powys"],
+        ["sbuhb", "SBUHB", "Swansea Bay"],
+        ["vunhst", "VUNHST", "Velindre"],
+        ["wast", "WAST", "Welsh Ambulance"],
+        ["phw", "PHW", "Public Health Wales"],
+        ["heiw", "HEIW", "Health Education and Improvement Wales"],
+      ])
+      expect(
+        organisations.filter(({ national }) => national).map(({ id }) => id),
+      ).toEqual(["national"])
+      expect(organisations[0]?.name).toEqual({
+        en: "All Wales",
+        cy: "Cymru gyfan",
+      })
+      expect(organisations[3]?.name).toEqual({
+        en: "Cardiff and Vale University Health Board",
+        cy: "Bwrdd Iechyd Prifysgol Caerdydd a’r Fro",
+      })
+    })
+
     it("reads no list from a missing tab, or from the first tab (S6)", async () => {
       const requests = serveLists([
         { title: "Families" },
@@ -855,7 +890,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
       const items = await itemsOf("productc")
 
       expect(items).toHaveLength(1)
-      expect(items[0]?.organisations).toEqual([])
+      expect(items[0]?.organisationIds).toEqual([])
     })
 
     it("fails with not-found, not retryable, for an id the index does not list, after reading only the list (S3)", async () => {

@@ -9,6 +9,7 @@ import {
   type FamilyInput,
   type FamilyOutcome,
 } from "@/domain/roadmap/family-changes"
+import type { Organisation } from "@/domain/roadmap/organisation"
 import {
   heldWrites,
   planRoadmapPublish,
@@ -30,6 +31,7 @@ import type {
 } from "@/domain/roadmap/roadmap-repository"
 import { AppError, isAppError } from "@/lib/errors"
 
+import { BUILT_IN_ORGANISATIONS } from "./built-in-organisations"
 import {
   CATEGORIES_TAB,
   FAMILIES_TAB,
@@ -209,6 +211,19 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
     return parseCategories(
       await this.#readListTab(tabList, CATEGORIES_TAB, options),
     ).list
+  }
+
+  /**
+   * The built-in twelve (ADR-014): the spreadsheet has no `Organisations` tab, so there
+   * is nothing to request.
+   */
+  listOrganisations(
+    options: RepositoryReadOptions = {},
+  ): Promise<Organisation[]> {
+    return Promise.resolve().then(() => {
+      options.signal?.throwIfAborted()
+      return structuredClone([...BUILT_IN_ORGANISATIONS])
+    })
   }
 
   /**

@@ -28,7 +28,7 @@
       - term: Expected outcome
       - definition: What users can do now.
       - term: Organisations
-      - definition: SBUHB
+      - definition: Swansea Bay
       - button "Move Recently shipped work"
       - button "Edit Recently shipped work"
   - heading "Now" [level=2]
@@ -44,7 +44,7 @@
       - term: Tags
       - definition: Service X, Service Y
       - term: Organisations
-      - definition: CAVUHB, SBUHB
+      - definition: Cardiff and Vale, Swansea Bay
       - term: Details
       - definition:
         - list:
@@ -73,7 +73,7 @@
       - term: Tags
       - definition: Service X
       - term: Organisations
-      - definition: National
+      - definition: All Wales
       - button "Move Card awaiting release"
       - button "Edit Card awaiting release"
   - heading "Next" [level=2]
@@ -87,7 +87,7 @@
       - term: Expected outcome
       - definition: What we hope this will achieve.
       - term: Organisations
-      - definition: BCUHB, HDUHB
+      - definition: Betsi Cadwaladr, Hywel Dda
       - button "Move Card being explored"
       - button "Edit Card being explored"
   - heading "Later" [level=2]
@@ -101,7 +101,7 @@
       - term: Expected outcome
       - definition: A clear understanding of the problem.
       - term: Organisations
-      - definition: CAVUHB
+      - definition: Cardiff and Vale
       - button "Move Discovery card"
       - button "Edit Discovery card"
     - listitem:
@@ -111,7 +111,7 @@
       - term: Tags
       - definition: Service Y, Service Z
       - term: Organisations
-      - definition: National
+      - definition: All Wales
       - button "Move Longer-term idea"
       - button "Edit Longer-term idea"
   - heading "Delivered this year" [level=2]
@@ -123,7 +123,7 @@
       - term: Description
       - definition: Something we delivered earlier in the year.
       - term: Organisations
-      - definition: National
+      - definition: All Wales
       - term: Details
       - definition:
         - list:

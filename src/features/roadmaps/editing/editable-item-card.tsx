@@ -8,6 +8,7 @@ import {
   type ItemTextField,
 } from "@/domain/roadmap/roadmap-changes"
 import { localise } from "@/domain/roadmap/localised-text"
+import type { Organisation } from "@/domain/roadmap/organisation"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import {
   ROADMAP_PLACEMENTS,
@@ -45,6 +46,8 @@ export interface EditableItemCardProps {
   /** The roadmap's items as last read, to find the item's pending changes by. */
   items: readonly RoadmapItem[]
   item: RoadmapItem
+  /** The organisation list the item's organisations are named from (ADR-014). */
+  organisations: readonly Organisation[]
   /** Its 0-based place in `items`. */
   position: number
   /** Its pending changes, if any. */
@@ -81,6 +84,7 @@ export function EditableItemCard({
   roadmapId,
   items,
   item,
+  organisations,
   position,
   entry,
   focusRequest,
@@ -194,6 +198,7 @@ export function EditableItemCard({
   return (
     <RoadmapItemCard
       item={shown}
+      organisations={organisations}
       headingId={headingId}
       form={
         mode.editing ? (

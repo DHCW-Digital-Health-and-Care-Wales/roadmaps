@@ -1,21 +1,19 @@
-/**
- * The NHS Wales bodies a roadmap item's work can be for, shared with the public site and
- * in its display order (ADR-011). Each is shown as its standard code, the same in both
- * languages.
- */
-export const ORGANISATIONS = [
-  "national",
-  "abuhb",
-  "bcuhb",
-  "cavuhb",
-  "ctmuhb",
-  "hduhb",
-  "pthb",
-  "sbuhb",
-  "vunhst",
-  "wast",
-  "phw",
-  "heiw",
-] as const
+import type { LocalisedText } from "./localised-text"
 
-export type Organisation = (typeof ORGANISATIONS)[number]
+/**
+ * An NHS Wales body a roadmap item's work can be for, or All Wales for national work,
+ * served by the repository's organisation list (ADR-014; shared with the public site,
+ * ADR-011).
+ */
+export interface Organisation {
+  /** Unique in the list, and never changes: items name their organisations by it. */
+  id: string
+  /** Its standard code, as a Product Lead types it: `CAVUHB`. The same in both languages. */
+  code: string
+  /** The name a card shows, in English in both languages: `Cardiff and Vale`. */
+  shortName: string
+  /** The full name: `Cardiff and Vale University Health Board`. */
+  name: LocalisedText
+  /** True for All Wales only, which screens show before the others. */
+  national: boolean
+}

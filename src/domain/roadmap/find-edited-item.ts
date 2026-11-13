@@ -47,7 +47,8 @@ const CONTENT: Record<Exclude<keyof RoadmapItem, "id">, true> = {
   expectedOutcome: true,
   phase: true,
   tags: true,
-  organisations: true,
+  organisationIds: true,
+  unknownOrganisationCodes: true,
   details: true,
 }
 const CONTENT_KEYS = Object.keys(CONTENT) as (keyof typeof CONTENT)[]

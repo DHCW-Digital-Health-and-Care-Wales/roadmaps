@@ -101,7 +101,8 @@ describe("parseRoadmapTab", () => {
           { en: "Service X", cy: "Gwasanaeth X" },
           { en: "Service Y", cy: "Gwasanaeth Y" },
         ],
-        organisations: ["cavuhb", "sbuhb"],
+        organisationIds: ["cavuhb", "sbuhb"],
+        unknownOrganisationCodes: [],
         details: [
           {
             level: 0,
@@ -216,7 +217,7 @@ describe("parseRoadmapTab", () => {
         ["An item", "Now", "PHW", "Nawr", "ICC"],
       ])
       expect(tab.items[0]).toEqual(
-        createTestRoadmapItem("An item", { organisations: ["phw"] }),
+        createTestRoadmapItem("An item", { organisationIds: ["phw"] }),
       )
       expect(tab.problems).toEqual(
         expect.arrayContaining([
@@ -433,17 +434,18 @@ describe("parseRoadmapTab", () => {
       expect(tab.problems).toEqual([])
     })
 
-    it("keeps known organisations in the fixed order, recording an unknown one", () => {
+    it("names known organisations by id in the built-in order, recording an unknown code and keeping it as written (S3)", () => {
       const tab = parseRows({
         Title: "An item",
         Horizon: "Now",
         Organisations: "sbuhb, National, CAVUHB, Mars",
       })
-      expect(tab.items[0]?.organisations).toEqual([
+      expect(tab.items[0]?.organisationIds).toEqual([
         "national",
         "cavuhb",
         "sbuhb",
       ])
+      expect(tab.items[0]?.unknownOrganisationCodes).toEqual(["Mars"])
       expect(tab.problems).toEqual([
         problem("unknown-organisation", {
           row: 2,
@@ -459,8 +461,26 @@ describe("parseRoadmapTab", () => {
         Horizon: "Now",
         Organisations: " heiw\nC.A.V.U.H.B,, cavuhb",
       })
-      expect(tab.items[0]?.organisations).toEqual(["cavuhb", "heiw"])
+      expect(tab.items[0]?.organisationIds).toEqual(["cavuhb", "heiw"])
+      expect(tab.items[0]?.unknownOrganisationCodes).toEqual([])
       expect(tab.problems).toEqual([])
+    })
+
+    it("holds `c.a.v.u.h.b` as cavuhb and `CAVHB` as an unknown code, kept as written (S3)", () => {
+      const tab = parseRows({
+        Title: "An item",
+        Horizon: "Now",
+        Organisations: "c.a.v.u.h.b, CAVHB",
+      })
+      expect(tab.items[0]?.organisationIds).toEqual(["cavuhb"])
+      expect(tab.items[0]?.unknownOrganisationCodes).toEqual(["CAVHB"])
+      expect(tab.problems).toEqual([
+        problem("unknown-organisation", {
+          row: 2,
+          column: "Organisations",
+          value: "CAVHB",
+        }),
+      ])
     })
 
     it("ignores Welsh details whose count differs", () => {

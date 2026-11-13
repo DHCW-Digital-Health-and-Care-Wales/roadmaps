@@ -6,6 +6,7 @@ import {
   planNewFamily,
   type FamilyOutcome,
 } from "@/domain/roadmap/family-changes"
+import type { Organisation } from "@/domain/roadmap/organisation"
 import {
   heldWrites,
   planRoadmapPublish,
@@ -25,6 +26,7 @@ import {
   type ContractWrite,
 } from "@/domain/roadmap/testing/contract-write"
 import { categoriesOf, familiesOf } from "@/domain/roadmap/testing/linked-lists"
+import { TEST_ORGANISATIONS } from "@/domain/roadmap/testing/test-organisations"
 import { AppError } from "@/lib/errors"
 
 /**
@@ -43,6 +45,11 @@ export interface InMemoryRoadmapRepositoryOptions {
   families?: readonly Family[] | null | undefined
   /** Defaults to the categories the roadmaps are linked to; `null`: no category list. */
   categories?: readonly Category[] | null | undefined
+  /**
+   * Defaults to `TEST_ORGANISATIONS`, served in the order given; an `AppError` makes
+   * reading the list fail with it.
+   */
+  organisations?: readonly Organisation[] | AppError | undefined
 }
 
 export interface InMemoryRoadmapRepository extends RoadmapRepository {
@@ -70,6 +77,7 @@ export function createInMemoryRoadmapRepository(
     write,
     families = source instanceof AppError ? [] : familiesOf(source),
     categories = source instanceof AppError ? [] : categoriesOf(source),
+    organisations = TEST_ORGANISATIONS,
   }: InMemoryRoadmapRepositoryOptions = {},
 ): InMemoryRoadmapRepository {
   const roadmaps =
@@ -227,6 +235,11 @@ export function createInMemoryRoadmapRepository(
       respond(signal, () => cloneList(lists.families)),
     listCategories: ({ signal } = {}) =>
       respond(signal, () => cloneList(lists.categories)),
+    listOrganisations: ({ signal } = {}) =>
+      respond(signal, () => {
+        if (organisations instanceof AppError) throw organisations
+        return structuredClone([...organisations])
+      }),
     listRoadmapItems: (roadmapId, { signal } = {}) =>
       respond(signal, (list) => {
         if (rereadFails) throw new AppError("network")

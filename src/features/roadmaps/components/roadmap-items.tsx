@@ -3,6 +3,7 @@ import { useId, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { Skeleton } from "@/components/ui/skeleton"
+import type { Organisation } from "@/domain/roadmap/organisation"
 import type { ItemChanges } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import type { RoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
@@ -27,6 +28,7 @@ const itemGridClassName =
 export interface RoadmapItemsProps {
   roadmapId: string
   items: readonly RoadmapItem[]
+  organisations: readonly Organisation[]
 }
 
 /**
@@ -36,7 +38,11 @@ export interface RoadmapItemsProps {
  * edited and moved, and shows its pending changes, in its pending placement (STY-025,
  * STY-031).
  */
-export function RoadmapItems({ roadmapId, items }: RoadmapItemsProps) {
+export function RoadmapItems({
+  roadmapId,
+  items,
+  organisations,
+}: RoadmapItemsProps) {
   const { t } = useTranslation()
   const headingId = useId()
   const changes = useRoadmapChanges(roadmapId)
@@ -88,6 +94,7 @@ export function RoadmapItems({ roadmapId, items }: RoadmapItemsProps) {
     <ItemList
       roadmapId={roadmapId}
       items={items}
+      organisations={organisations}
       placed={placed}
       entries={entries}
       labelledBy={labelledBy}
@@ -154,6 +161,7 @@ interface FocusRequest {
 interface ItemListProps {
   roadmapId: string
   items: readonly RoadmapItem[]
+  organisations: readonly Organisation[]
   placed: readonly PositionedRoadmapItem[]
   entries: ReadonlyMap<number, ItemChanges>
   labelledBy: string
@@ -173,6 +181,7 @@ function cardHoldKey(item: RoadmapItem, position: number): string {
 function ItemList({
   roadmapId,
   items,
+  organisations,
   placed,
   entries,
   labelledBy,
@@ -188,6 +197,7 @@ function ItemList({
           roadmapId={roadmapId}
           items={items}
           item={item}
+          organisations={organisations}
           position={position}
           entry={entries.get(position)}
           focusRequest={

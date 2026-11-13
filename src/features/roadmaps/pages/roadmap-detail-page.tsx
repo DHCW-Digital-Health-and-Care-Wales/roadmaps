@@ -32,6 +32,7 @@ import {
   useRoadmapChanges,
 } from "../editing/pending-changes-context"
 import { RoadmapPublishing } from "../editing/roadmap-publishing"
+import { useOrganisations } from "../hooks/use-organisations"
 import { isRoadmapGone, useRoadmapItems } from "../hooks/use-roadmap-items"
 import { useRoadmapLists } from "../hooks/use-roadmap-lists"
 import { useRoadmap } from "../hooks/use-roadmaps"
@@ -172,6 +173,7 @@ function RoadmapView({
   const changes = useRoadmapChanges(roadmap.id)
   // The same queries the items area and the form read, for the page's Refresh.
   const items = useRoadmapItems(roadmap.id)
+  const organisations = useOrganisations()
   const lists = useRoadmapLists(hasChoiceChange(changes))
   const shown = applyRoadmapChanges(roadmap, changes, lists.lists)
   const retryList = () => {
@@ -182,7 +184,11 @@ function RoadmapView({
     // The lists, where any part of the page needs them, are read again whatever the
     // roadmap's reads come to.
     void lists.refetch()
-    const reads = await Promise.all([refetchList(), items.refetch()])
+    const reads = await Promise.all([
+      refetchList(),
+      items.refetch(),
+      organisations.refetch(),
+    ])
     // A notice asking for a Refresh has been heeded once both reads came back (S18);
     // until then what the publish came to is still unknown. A read cancelled at the
     // session's end comes back with the cached data and no error, so only data read
@@ -218,7 +224,9 @@ function RoadmapView({
           </div>
           <div className="shrink-0">
             <RefreshButton
-              fetching={listFetching || items.isFetching}
+              fetching={
+                listFetching || items.isFetching || organisations.isFetching
+              }
               onRefresh={() => {
                 void refresh()
               }}
@@ -241,21 +249,29 @@ interface RoadmapItemsAreaProps {
 }
 
 /**
- * The roadmap's items, or what stands in for them while they are read or can't be. An
- * expired session is the list's alert to show, once, above the title, with Reconnect;
- * the items read earlier stay.
+ * The roadmap's items, or what stands in for them while they are read or can't be. The
+ * items show by the organisation list, so a read of either that can't be made is the
+ * items' failure (ADR-014). An expired session is the list's alert to show, once, above
+ * the title, with Reconnect; the items read earlier stay.
  */
 function RoadmapItemsArea({ roadmapId, listFetching }: RoadmapItemsAreaProps) {
-  const { data: items, error, isFetching, refetch } = useRoadmapItems(roadmapId)
+  const itemsRead = useRoadmapItems(roadmapId)
+  const organisationsRead = useOrganisations()
+  const { data: items } = itemsRead
+  const { data: organisations } = organisationsRead
+  const error = itemsRead.error ?? organisationsRead.error
+  const isFetching = itemsRead.isFetching || organisationsRead.isFetching
   const problem = useRoadmapsProblem(error)
   const expired = problem?.kind === "unauthenticated"
   // The list is read again and the page then says the roadmap is not found.
-  const gone = isRoadmapGone(problem)
+  const gone = isRoadmapGone(itemsRead.error)
   const retry = () => {
-    void refetch()
+    // Only the reads that failed: a good one has nothing to repeat.
+    if (itemsRead.error) void itemsRead.refetch()
+    if (organisationsRead.error) void organisationsRead.refetch()
   }
 
-  if (items) {
+  if (items && organisations) {
     return (
       <div className="flex flex-col gap-6">
         {problem && !expired && !gone && (
@@ -267,7 +283,11 @@ function RoadmapItemsArea({ roadmapId, listFetching }: RoadmapItemsAreaProps) {
             retrying={isFetching}
           />
         )}
-        <RoadmapItems roadmapId={roadmapId} items={items} />
+        <RoadmapItems
+          roadmapId={roadmapId}
+          items={items}
+          organisations={organisations}
+        />
       </div>
     )
   }

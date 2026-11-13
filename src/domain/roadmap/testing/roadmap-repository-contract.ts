@@ -92,7 +92,7 @@ const itemFixtures = {
         { en: "Service X", cy: "Gwasanaeth X" },
         { en: "Service Y", cy: "Gwasanaeth Y" },
       ],
-      organisations: ["national", "cavuhb", "sbuhb"],
+      organisationIds: ["national", "cavuhb", "sbuhb"],
       details: [
         { text: { en: "First", cy: "Cyntaf" }, level: 0 },
         { text: { en: "Nested", cy: "Nythu" }, level: 1 },
@@ -256,6 +256,61 @@ export function describeRoadmapRepositoryContract(
       const repository = setup.withRoadmaps(fixtures)
       await expect(repository.listFamilies({ signal })).rejects.toBe(reason)
       await expect(repository.listCategories({ signal })).rejects.toBe(reason)
+    })
+
+    it("lists the organisations as plain data, each with its id, code, names and whether it is national (S2)", async () => {
+      const repository = setup.withRoadmaps(fixtures, itemFixtures)
+
+      const organisations = await repository.listOrganisations()
+
+      expect(organisations.length).toBeGreaterThan(0)
+      expect(new Set(organisations.map(({ id }) => id)).size).toBe(
+        organisations.length,
+      )
+      for (const organisation of organisations) {
+        expect(organisation).toStrictEqual({
+          id: expect.stringMatching(/^[a-z0-9]+$/) as unknown,
+          code: expect.stringMatching(/\S/) as unknown,
+          shortName: expect.stringMatching(/\S/) as unknown,
+          name: {
+            en: expect.stringMatching(/\S/) as unknown,
+            cy: expect.any(String) as unknown,
+          },
+          national: expect.any(Boolean) as unknown,
+        })
+      }
+      expect(organisations.filter(({ national }) => national)).toHaveLength(1)
+      // A new array each call, so a screen can't change the list by sorting it.
+      organisations.pop()
+      expect(await repository.listOrganisations()).toHaveLength(
+        organisations.length + 1,
+      )
+    })
+
+    it("names, for every item, only organisations the list holds (S3)", async () => {
+      const repository = setup.withRoadmaps(fixtures, itemFixtures)
+
+      const listed = new Set(
+        (await repository.listOrganisations()).map(({ id }) => id),
+      )
+      const items = await repository.listRoadmapItems("producta")
+
+      expect(items[0]?.organisationIds).toEqual(
+        expect.arrayContaining(["national", "cavuhb", "sbuhb"]),
+      )
+      for (const { organisationIds } of items) {
+        for (const id of organisationIds) expect(listed).toContain(id)
+      }
+    })
+
+    it("rejects the organisation list with the abort reason when the signal is already aborted", async () => {
+      const reason = new DOMException("Cancelled by test", "AbortError")
+
+      await expect(
+        setup
+          .withRoadmaps(fixtures)
+          .listOrganisations({ signal: AbortSignal.abort(reason) }),
+      ).rejects.toBe(reason)
     })
 
     it("lists a roadmap's items as plain data in data-source order", async () => {

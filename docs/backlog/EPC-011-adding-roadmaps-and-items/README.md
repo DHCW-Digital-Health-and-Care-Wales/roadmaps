@@ -239,7 +239,8 @@ flowchart LR
   focus tour names text fields alike, so it can miss one.
 - [CHO-014](../chores/CHO-014-slim-the-e2e-suite.md): the E2E suite slimmed where a
   test holds only geometry or repeats a run, as the owner asked after CHO-011 cut the
-  add-a-roadmap journey to one run. Its `editing.spec.ts` rows wait for STY-044.
+  add-a-roadmap journey to one run. Its rows for the About and item-form tests wait
+  for STY-043 and STY-044, which re-point them at dialogs.
 - [`docs/analysis/add-a-roadmap-ux-analysis.md`](../../analysis/add-a-roadmap-ux-analysis.md):
   twelve mock-ups over four journeys. Outcome: a dialog for adding a roadmap, landing on
   the new roadmap; a dialog for adding an item; one panel on an empty roadmap.

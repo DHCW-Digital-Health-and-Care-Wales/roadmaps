@@ -27,22 +27,31 @@ const VALUES_QUERY: Readonly<Record<string, string>> = {
 
 /**
  * One tab of the fake spreadsheet: its title, whether it is hidden, its cells, and its
- * grid's size, by default just large enough for its cells.
+ * grid's size, by default just large enough for its cells. Its ID is its place among
+ * the tabs times a thousand, unless given, as a tab the app copied has.
  */
 export interface FakeTab {
   title: string
+  sheetId?: number
   hidden?: boolean
+  /** The rows frozen at the top; none unless given. */
+  frozenRowCount?: number
   rows: readonly (readonly string[])[]
   rowCount?: number
   columnCount?: number
 }
 
 /**
- * A read the app makes: the tab list (`metadata`), or the values of the tab with this
- * title (`values:Roadmaps`). A list load is the tab list, then the first tab's values;
- * a roadmap's items add its own tab's values (ADR-011).
+ * A read the app makes: the tab list (`metadata`), the values of the tab with this
+ * title (`values:Roadmaps`), or the header row alone of the `Template` tab
+ * (`header:Template`). A list load is the tab list, then the first tab's values; a
+ * roadmap's items add its own tab's values (ADR-011); adding a roadmap reads the index
+ * and the lists, then the `Template`'s header (STY-040).
  */
-export type SheetsRead = "metadata" | `values:${string}`
+export type SheetsRead = "metadata" | `values:${string}` | `header:${string}`
+
+/** The tab the app copies to start a roadmap, reading its header row alone (STY-040). */
+const TEMPLATE_TAB = "Template"
 
 const FIXTURES = path.resolve(import.meta.dirname, "../../fixtures/sheets")
 
@@ -56,13 +65,15 @@ export const EXAMPLE_INDEX_ROWS: readonly (readonly string[])[] =
 
 /**
  * The spreadsheet tests see unless they say otherwise: the example spreadsheet, its
- * roadmap index first and a tab per roadmap (`tests/fixtures/sheets/`).
+ * roadmap index first, a tab per roadmap, then the `Template` a new roadmap is copied
+ * from, its header frozen (`tests/fixtures/sheets/`).
  */
 export const EXAMPLE_SPREADSHEET: readonly FakeTab[] = [
   { title: "Roadmaps", rows: EXAMPLE_INDEX_ROWS },
   { title: "ProductA", rows: readCsv("ProductA.csv") },
   { title: "ProductB", rows: readCsv("ProductB.csv") },
   { title: "ProductC", rows: readCsv("ProductC.csv") },
+  { title: TEMPLATE_TAB, rows: readCsv("Template.csv"), frozenRowCount: 1 },
 ]
 
 /**
@@ -118,10 +129,10 @@ export function withRoadmapIndex(
   return [{ title: index?.title ?? "Roadmaps", rows }, ...tabs]
 }
 
-/** A request the fake answers: the tab list, one tab's values, or a write. */
+/** A request the fake answers: the tab list, one tab's values or header row, or a write. */
 type SheetsRequest =
   | { kind: "metadata" }
-  | { kind: "values"; tab: FakeTab }
+  | { kind: "values" | "header"; tab: FakeTab }
   | { kind: "batchUpdate" }
 
 /** Google's canonical status names, for its JSON error envelope. */
@@ -139,9 +150,11 @@ const STATUS_NAMES: Readonly<Record<number, string>> = {
  * The Google Sheets API, faked: answers the configured spreadsheet's tab list and any of
  * its tabs' values, applies a `batchUpdate` all or nothing, and checks every request the
  * way the real API would (method, path, query, bearer token). Reading a tab that does not
- * exist is a violation too, as the app checks the tab list first, and so is a write the
- * editor must never make (`applyBatchUpdate`: `Template`, Welsh, `Last updated` but as
- * `YYYY-MM-DD`, a value other than text, an unchanged cell).
+ * exist is a violation too, as the app checks the tab list first; so is reading the
+ * `Template` tab beyond its header row, or any other tab's header alone; and so is a
+ * write the editor must never make (`applyBatchUpdate`: the `Template` but as the source
+ * of a copy, Welsh, `Last updated` but as `YYYY-MM-DD`, a value other than text, an
+ * unchanged cell).
  */
 export class FakeSheets {
   /** The bearer token of every request, in order (`null` without one). */
@@ -222,6 +235,7 @@ export class FakeSheets {
     const query = {
       metadata: { fields: METADATA_FIELDS },
       values: VALUES_QUERY,
+      header: VALUES_QUERY,
       batchUpdate: {},
     }[read.kind]
     if (!hasQuery(url, query)) {
@@ -234,7 +248,9 @@ export class FakeSheets {
     await this.#held
     if (read.kind !== "batchUpdate") {
       this.reads.push(
-        read.kind === "metadata" ? "metadata" : `values:${read.tab.title}`,
+        read.kind === "metadata"
+          ? "metadata"
+          : `${read.kind}:${read.tab.title}`,
       )
     }
     const failure = this.#failures.shift()
@@ -248,19 +264,21 @@ export class FakeSheets {
       return fulfil(route, 200, {
         // The `fields` mask: only these properties. Google omits `0` and `false`.
         sheets: this.#grids().map(
-          ({ sheetId, title, rowCount, columnCount }, index) => ({
+          ({ sheetId, title, hidden, rowCount, columnCount }, index) => ({
             properties: {
               sheetId,
               title,
               ...(index > 0 && { index }),
-              ...(this.spreadsheet[index]?.hidden && { hidden: true }),
+              ...(hidden && { hidden }),
               gridProperties: { rowCount, columnCount },
             },
           }),
         ),
       })
     }
-    const rows = trimRows(read.tab.rows)
+    const rows = trimRows(
+      read.kind === "header" ? read.tab.rows.slice(0, 1) : read.tab.rows,
+    )
     // Google omits `values` for a tab with no cells.
     return fulfil(route, 200, rows.length > 0 ? { values: rows } : {})
   }
@@ -274,15 +292,7 @@ export class FakeSheets {
       return fulfil(route, 400, errorBody(400))
     }
     this.writes.push(body)
-    this.spreadsheet = result.tabs.map(
-      ({ title, rows, rowCount, columnCount }, index) => ({
-        title,
-        ...(this.spreadsheet[index]?.hidden && { hidden: true }),
-        rows,
-        rowCount,
-        columnCount,
-      }),
-    )
+    this.spreadsheet = result.tabs
     return fulfil(route, 200, {
       spreadsheetId: appConfig.spreadsheetId,
       replies: [],
@@ -292,9 +302,9 @@ export class FakeSheets {
   /** The spreadsheet's tabs as grids a write addresses, by `sheetId`. */
   #grids(): GridTab[] {
     return this.spreadsheet.map(
-      ({ title, rows, rowCount, columnCount }, i) => ({
-        title,
-        sheetId: i * 1_000,
+      ({ sheetId, rows, rowCount, columnCount, ...tab }, i) => ({
+        ...tab,
+        sheetId: sheetId ?? i * 1_000,
         rows: rows.map((row) => [...row]),
         rowCount: rowCount ?? Math.max(1, rows.length),
         columnCount:
@@ -323,14 +333,24 @@ export class FakeSheets {
       return { status: 404, detail: `${method} ${url.pathname}` }
     }
     const range = decodeURIComponent(url.pathname.slice(valuesPrefix.length))
-    // A whole tab, its title quoted with any quote doubled, as one path segment.
-    const tab = this.spreadsheet.find(
-      ({ title }) => range === `'${title.replaceAll("'", "''")}'`,
-    )
-    if (tab === undefined) {
-      return { status: 400, detail: `values of ${range}, not a tab` }
+    // A whole tab, its title quoted with any quote doubled, as one path segment; or,
+    // for the `Template` alone, its header row.
+    const tabs = this.spreadsheet.map((tab) => ({
+      tab,
+      quoted: `'${tab.title.replaceAll("'", "''")}'`,
+    }))
+    const header = tabs.find(({ quoted }) => range === `${quoted}!1:1`)
+    const whole = tabs.find(({ quoted }) => range === quoted)
+    const isTemplate = (header ?? whole)?.tab.title === TEMPLATE_TAB
+    // An index named `Template` is read whole, as any index is.
+    const isIndex = (header ?? whole)?.tab === this.spreadsheet[0]
+    if (header !== undefined && isTemplate && !isIndex) {
+      return { kind: "header", tab: header.tab }
     }
-    return { kind: "values", tab }
+    if (whole !== undefined && (!isTemplate || isIndex)) {
+      return { kind: "values", tab: whole.tab }
+    }
+    return { status: 400, detail: `values of ${range}, not a tab's to read` }
   }
 
   #reject(route: Route, status: number, detail: string): Promise<void> {

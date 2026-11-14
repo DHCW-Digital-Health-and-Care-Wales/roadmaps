@@ -9,6 +9,11 @@ import {
   type FamilyOutcome,
 } from "@/domain/roadmap/family-changes"
 import { planListMatch } from "@/domain/roadmap/list-match"
+import {
+  planNewRoadmap,
+  settleLostNewRoadmap,
+  type NewRoadmapOutcome,
+} from "@/domain/roadmap/new-roadmap"
 import type { Organisation } from "@/domain/roadmap/organisation"
 import {
   heldWrites,
@@ -74,6 +79,8 @@ export interface InMemoryRoadmapRepositoryOptions {
    * column its items can't be read.
    */
   syncFaults?: Readonly<Record<string, readonly SyncFault[]>> | undefined
+  /** Nothing usable to start a roadmap from: adding one fails (STY-040 S6). */
+  noTemplate?: boolean | undefined
 }
 
 export interface InMemoryRoadmapRepository extends RoadmapRepository {
@@ -108,6 +115,7 @@ export function createInMemoryRoadmapRepository(
     categories = source instanceof AppError ? [] : categoriesOf(source),
     organisations = TEST_ORGANISATIONS,
     syncFaults = {},
+    noTemplate = false,
   }: InMemoryRoadmapRepositoryOptions = {},
 ): InMemoryRoadmapRepository {
   const roadmaps =
@@ -367,6 +375,40 @@ export function createInMemoryRoadmapRepository(
           case "some":
             return { status: "unconfirmed" as const }
         }
+      }),
+    addRoadmap: (input, { signal } = {}) =>
+      respond(signal, (list): NewRoadmapOutcome => {
+        if (noTemplate) {
+          throw new AppError("invalid-data", { message: "No usable template" })
+        }
+        /** As the Google adapter reads them: its rows, and the names their items are under. */
+        const inUse = () => ({
+          roadmaps: list,
+          names: list.map(({ itemsLocation }) => itemsLocation),
+        })
+        const plan = planNewRoadmap(input, { ...inUse(), ...lists })
+        if (plan.kind === "settled") return plan.outcome
+        signal?.throwIfAborted()
+
+        if (write !== undefined && "fails" in write) {
+          throw new AppError(write.fails)
+        }
+        const row = structuredClone(plan.roadmap)
+        if (write?.lost !== "not-applied") list.push(row)
+        if (write === undefined) {
+          return { status: "added", roadmap: plan.roadmap }
+        }
+        if (write.lost === "reread-fails") {
+          rereadFails = true
+          return { status: "unconfirmed" }
+        }
+        const settled = settleLostNewRoadmap(
+          plan.roadmap,
+          list.includes(row),
+          inUse(),
+        )
+        if (settled === null) throw new AppError("network")
+        return settled
       }),
     addFamily: (input, { signal } = {}) =>
       respond(signal, () => {

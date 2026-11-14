@@ -11,8 +11,9 @@ import type { Category } from "@/domain/roadmap/category"
 import type { Family } from "@/domain/roadmap/family"
 import type { LocalisedText } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
+import { shortNameAddress } from "@/domain/roadmap/short-name"
 import { AppError } from "@/lib/errors"
-import { foldText, nameKey } from "@/lib/text"
+import { nameKey } from "@/lib/text"
 
 import {
   columnIndexes,
@@ -132,12 +133,6 @@ const PUBLIC_SITE_CATEGORIES = [
   "Hospital & Specialist Care",
   "National Systems & Data",
 ]
-
-/** The public site's URL slug: `Product A` becomes `product-a`. */
-const slugify = (value: string) =>
-  foldText(value)
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
 
 const readHeader = headerReader<Column, TextColumn>(
   ["Sheet", ...OPTIONAL_COLUMNS, ...EDITOR_COLUMNS],
@@ -277,7 +272,7 @@ function toIndexRow(
   return {
     row,
     sheet,
-    id: slugify(sheet),
+    id: shortNameAddress(sheet),
     read,
     readWelsh: (column) => cellAt(header.welsh.get(column)),
   }

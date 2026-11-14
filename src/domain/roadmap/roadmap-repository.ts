@@ -2,6 +2,7 @@ import type { Category } from "./category"
 import type { Family } from "./family"
 import type { FamilyEdit, FamilyInput, FamilyOutcome } from "./family-changes"
 import type { MatchOutcome } from "./list-match"
+import type { NewRoadmapInput, NewRoadmapOutcome } from "./new-roadmap"
 import type { Organisation } from "./organisation"
 import type {
   PublishedStateChange,
@@ -62,6 +63,20 @@ export interface RoadmapRepository {
     changes: RoadmapChanges,
     options?: RepositoryReadOptions,
   ): Promise<PublishOutcome>
+  /**
+   * Adds a roadmap (STY-040), from input `checkNewRoadmapInput` passed: its entry at
+   * the end of the roadmap list and an empty roadmap to hold its items, together or not
+   * at all, not published. Re-reads first, as `planNewRoadmap` settles it, and writes
+   * nothing when the short name is in use or a family or category chosen is no longer
+   * listed. Rejects with `AppError('invalid-data')` when the data source has nothing
+   * usable to start a roadmap from, and never retries. A write whose answer is lost is
+   * settled by one re-read that looks for this very write (`settleLostNewRoadmap`);
+   * `signal` cancels only the reads.
+   */
+  addRoadmap(
+    input: NewRoadmapInput,
+    options?: RepositoryReadOptions,
+  ): Promise<NewRoadmapOutcome>
   /**
    * Adds a family to the end of the family list (ADR-013), from input `checkFamilyInput`
    * passed: a new ID, the English name and the colour, and no Welsh name. Re-reads the

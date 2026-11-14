@@ -16,6 +16,7 @@ import type { RoadmapItem } from "../roadmap-item"
 import type { RoadmapRepository } from "../roadmap-repository"
 import { CO_LEAD_VALUE, type ContractWrite } from "./contract-write"
 import { categoriesOf, familiesOf } from "./linked-lists"
+import { describeNewRoadmap } from "./new-roadmap-contract"
 import { describePublishedState } from "./published-state-contract"
 import { createTestRoadmap, inStep } from "./test-roadmap"
 import { createTestRoadmapItem } from "./test-roadmap-item"
@@ -44,10 +45,18 @@ export interface ContractOptions {
    * roadmap's colour is one a three-digit colour expands to, such as `#aabbcc`.
    */
   syncFaults?: Readonly<Record<string, readonly SyncFault[]>> | undefined
+  /**
+   * What leaves the data source nothing usable to start a roadmap from (STY-040 S6);
+   * without one, a roadmap can be added.
+   */
+  templateFault?: TemplateFault | undefined
 }
 
 /** A mistake in the data source the public site's nightly sync fails on (STY-035). */
 export type SyncFault = "short-colour" | "no-title-column" | "no-horizon-column"
+
+/** Why the template a new roadmap is copied from can't be used (STY-040 S6). */
+export type TemplateFault = "missing" | "no-title-column" | "no-horizon-column"
 
 export interface RoadmapRepositoryContractSetup {
   /**
@@ -388,6 +397,7 @@ export function describeRoadmapRepositoryContract(
     })
 
     describePublishing(setup)
+    describeNewRoadmap(setup)
     describeFamilyChanges(setup)
     describeListMatch(setup)
     describePublishedState(setup)

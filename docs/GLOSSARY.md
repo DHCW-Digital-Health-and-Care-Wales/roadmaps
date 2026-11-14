@@ -31,9 +31,20 @@ _Avoid_: Viewer, front end, website
 
 **Roadmap**:
 A product's public plan, in the Now / Next / Later format, managed by its Product Lead.
-Each roadmap is one row of the **roadmap index** (ADR-009). Its identity is the short
-name the public site uses in its address (`producta`), and outlives the data source.
+Each roadmap is one row of the **roadmap index** (ADR-009). Its identity is its **short
+name**, which outlives the data source. A Product Lead adds one from the roadmap list;
+it is written at once and starts not published (STY-040).
 _Avoid_: Sheet, worksheet, tab, board
+
+**Short name**:
+The name a Product Lead gives a roadmap when adding it, such as "Community Nursing":
+the roadmap's identity, never changed in the editor. Its **address**, the end of the
+roadmap's address on the public site and here, is the short name in lower case with
+hyphens between its words (`community-nursing`); two short names with the same address
+are the same. It holds letters, numbers, spaces and hyphens only (STY-040). In the
+connected spreadsheet it is the `Sheet` value and the name of the roadmap's worksheet.
+An organisation's short name (`Cardiff and Vale`) is another thing.
+_Avoid_: Slug, ID, key, sheet name, tab name
 
 **Horizon**:
 One of a roadmap's three columns: **Now** (being worked on), **Next** (coming up) and
@@ -144,9 +155,9 @@ _Avoid_: Dashboard, workspace
 
 **Published roadmap**:
 A roadmap the public site shows. A roadmap that is not published is still listed here,
-marked "Not published" (ADR-009). A Product Lead publishes or unpublishes it from its
-page, written at once; publishing is refused while the public site's nightly update
-would fail on it (STY-035).
+marked "Not published" (ADR-009), and a roadmap added here starts that way (STY-040).
+A Product Lead publishes or unpublishes it from its page, written at once; publishing
+is refused while the public site's nightly update would fail on it (STY-035).
 _Avoid_: Enabled, live, public roadmap
 
 **Category**:
@@ -206,8 +217,9 @@ _Avoid_: Roadmap list (the roadmaps shown to the user), roadmaps tab
 **Worksheet**:
 A tab of the connected spreadsheet. The first worksheet is the **roadmap index**; each
 worksheet it names holds one roadmap's items, found by header rather than position. The
-`Template` worksheet shows the permitted columns and is never read (ADR-009, ADR-011).
-Only infrastructure uses this term.
+`Template` worksheet shows the permitted columns: the editor copies it to start a
+roadmap, reading its header row to check it, and never changes it (ADR-009, ADR-011,
+STY-040). Only infrastructure uses this term.
 _Avoid_: Sheet (ambiguous with spreadsheet)
 
 **Item ID**:

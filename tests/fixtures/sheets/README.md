@@ -1,7 +1,7 @@
 # Example spreadsheet (fake data)
 
 These CSVs are the **layout** of the roadmap spreadsheet, filled with **fake example data**.
-They are copied unchanged from the `sheets/` folder of
+All but `Template.csv` are copied unchanged from the `sheets/` folder of
 [DHCW-Digital-Health-and-Care-Wales/product-roadmaps](https://github.com/DHCW-Digital-Health-and-Care-Wales/product-roadmaps/tree/main/sheets)
 (MIT licence, © 2026 Digital Health and Care Wales, kept in [`LICENSE`](LICENSE); commit
 `50e67f9`), the public site that
@@ -20,11 +20,16 @@ screenshots use only these files or inline fakes.
 | `ProductA.csv` | `ProductA` | A roadmap tab with every `Horizon` value, phases, labels, nested details, organisations and `(cy)` columns                                                           |
 | `ProductB.csv` | `ProductB` | A smaller roadmap tab with empty horizons and cards without organisations                                                                                            |
 | `ProductC.csv` | `ProductC` | The tab of a roadmap whose `Enabled` is `No`                                                                                                                         |
+| `Template.csv` | `Template` | This repository's own stand-in for the live `Template` tab: `ProductA`'s header over two example rows, which the editor copies to start a roadmap (STY-040)          |
 
-The E2E Sheets fake (`tests/e2e/fixtures/fake-sheets.ts`) serves all four files as the
-example spreadsheet. The app reads only `Roadmaps` today; EPC-004 reads the roadmap tabs (`Product*.csv`) for
-each roadmap's items. The live spreadsheet's second tab, `Template`, has the same columns
-as `ProductA.csv` and is never read, so it has no file here.
+The E2E Sheets fake (`tests/e2e/fixtures/fake-sheets.ts`) serves all five files as the
+example spreadsheet: `Roadmaps` first, the roadmap tabs (`Product*.csv`), then `Template`.
+The live spreadsheet's second tab, `Template`, has the same columns as `ProductA.csv`;
+the editor reads its header row alone, to check it, and copies it to start a roadmap
+(ADR-011). `Template.csv` is not the live tab's content, which is never put here.
+
+`apply-batch-update.ts` applies a `spreadsheets.batchUpdate` body to tabs as Google does,
+for the Vitest and E2E fakes, and records what the editor must never write.
 
 `parse-csv.ts` reads a file's text into rows of cells, as the Sheets API returns a tab.
 Vitest tests import the text with `?raw` (`import csv from "…/Roadmaps.csv?raw"`); Node
@@ -44,6 +49,6 @@ as a realistic test spreadsheet.
 2. **File → Import → Upload** `Roadmaps.csv` with **Replace current sheet**, rename the tab
    `Roadmaps` and keep it first.
 3. Import each `Product*.csv` with **Insert new sheet(s)**, naming each tab exactly as the
-   `Sheet` column of `Roadmaps` does.
+   `Sheet` column of `Roadmaps` does, and `Template.csv` as `Template`, to add a roadmap.
 4. Put the spreadsheet's id in `.env.local` (`VITE_GOOGLE_SPREADSHEET_ID`) to try the app
    against it.

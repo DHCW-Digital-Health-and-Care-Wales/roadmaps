@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import type { Category } from "@/domain/roadmap/category"
 import type { Family } from "@/domain/roadmap/family"
 import type { LocalisedText } from "@/domain/roadmap/localised-text"
+import type { NewRoadmapInput } from "@/domain/roadmap/new-roadmap"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import { markedUpdated } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
@@ -127,12 +128,23 @@ function serveSpreadsheet({
   return requests
 }
 
-/** The title of the tab a values request reads, unquoted. */
-function tabTitleOf(request: Request): string {
-  const range = decodeURIComponent(
+/** A values request's range for a tab's header row alone, after its quoted title. */
+const HEADER_ROW = "!1:1"
+
+/** The range a values request reads, in A1 notation. */
+function rangeOf(request: Request): string {
+  return decodeURIComponent(
     new URL(request.url).pathname.split("/values/")[1] ?? "",
   )
-  return range.slice(1, -1).replaceAll("''", "'")
+}
+
+/** The title of the tab a values request reads, all of it or its header row, unquoted. */
+function tabTitleOf(request: Request): string {
+  const range = rangeOf(request)
+  const quoted = range.endsWith(HEADER_ROW)
+    ? range.slice(0, -HEADER_ROW.length)
+    : range
+  return quoted.slice(1, -1).replaceAll("''", "'")
 }
 
 /** A repository over the real client, talking to MSW. */
@@ -280,17 +292,22 @@ function tabRowsFor(items: readonly RoadmapItem[]): string[][] {
   ]
 }
 
-/** What the batchUpdate fake recorded that the editor must never write (STY-023 S11). */
-const writeViolations: string[] = []
+/**
+ * What the stateful fake recorded that the editor must never do: a write `applyBatchUpdate`
+ * refuses (STY-023 S11), or the `Template` tab read beyond its header row (STY-040 D1).
+ */
+const sheetViolations: string[] = []
 
 afterEach(() => {
   nextItemIds.length = 0
-  const violations = writeViolations.splice(0)
+  const violations = sheetViolations.splice(0)
   expect(violations).toEqual([])
 })
 
 /** A tab as the stateful fake holds it: its rows and grid, and its place in the tab list. */
 type FakeTab = GridTab & { index?: number }
+
+const TEMPLATE = "Template"
 
 /** A tab whose grid is exactly as wide and tall as its rows. */
 function gridTab(
@@ -306,6 +323,36 @@ function gridTab(
     rowCount: Math.max(1, rows.length),
     columnCount: Math.max(1, ...rows.map((row) => row.length)),
     ...(index === undefined ? {} : { index }),
+  }
+}
+
+/**
+ * A `Template` tab: a roadmap tab's header, its columns renamed as `renamed` says, over
+ * two example rows and two spare ones, the header frozen.
+ */
+function templateTab(
+  sheetId: number,
+  index: number,
+  renamed: Readonly<Record<string, string>> = {},
+): FakeTab {
+  const [header = []] = tabRowsFor([])
+  const example = (title: string) =>
+    header.map((column) =>
+      column === "Title" ? title : column === "Horizon" ? "Now" : "",
+    )
+  return {
+    ...gridTab(
+      TEMPLATE,
+      [
+        header.map((column) => renamed[column] ?? column),
+        example("An example item"),
+        example("Another example"),
+      ],
+      sheetId,
+      index,
+    ),
+    rowCount: 5,
+    frozenRowCount: 1,
   }
 }
 
@@ -344,11 +391,12 @@ function serveStatefulSpreadsheet(
       if (readsFail) return HttpResponse.json({}, { status: 500 })
       return HttpResponse.json({
         sheets: tabs.map(
-          ({ sheetId, title, index, rowCount, columnCount }) => ({
+          ({ sheetId, title, index, hidden, rowCount, columnCount }) => ({
             properties: {
               sheetId,
               title,
               ...(index ? { index } : {}),
+              ...(hidden ? { hidden } : {}),
               gridProperties: { rowCount, columnCount },
             },
           }),
@@ -360,7 +408,14 @@ function serveStatefulSpreadsheet(
       if (readsFail) return HttpResponse.json({}, { status: 500 })
       const tab = tabs.find(({ title }) => title === tabTitleOf(request))
       if (tab === undefined) return HttpResponse.json({}, { status: 400 })
-      return HttpResponse.json({ values: trimRows(tab.rows) })
+      const headerOnly = rangeOf(request).endsWith(HEADER_ROW)
+      // An index named `Template` is read whole, to refuse every write (ADR-012).
+      if (tab.title === TEMPLATE && tab.index && !headerOnly) {
+        sheetViolations.push("The Template tab read beyond its header row")
+      }
+      return HttpResponse.json({
+        values: trimRows(headerOnly ? tab.rows.slice(0, 1) : tab.rows),
+      })
     }),
     http.post(BATCH_UPDATE_ENDPOINT, async ({ request }) => {
       requests.push(request)
@@ -373,9 +428,14 @@ function serveStatefulSpreadsheet(
       if (beforeWrite) tabs = beforeWrite(tabs)
       if (write?.lost === "not-applied") return HttpResponse.error()
       const result = applyBatchUpdate(tabs, body)
-      writeViolations.push(...result.violations)
+      sheetViolations.push(...result.violations)
       if ("error" in result) return HttpResponse.json({}, { status: 400 })
-      tabs = result.tabs.map((tab, i) => ({ ...tabs[i], ...tab }))
+      const lastIndex = Math.max(0, ...tabs.map(({ index }) => index ?? 0))
+      tabs = result.tabs.map((tab) => {
+        const known = tabs.find(({ sheetId }) => sheetId === tab.sheetId)
+        // A tab the write copied goes after the last tab.
+        return known ? { ...known, ...tab } : { ...tab, index: lastIndex + 1 }
+      })
       if (write === undefined) return HttpResponse.json({})
       if (write.lost === "partly-applied") overwriteFirstValue(tabs, body)
       if (write.lost === "reread-fails") readsFail = true
@@ -395,7 +455,9 @@ function serveStatefulSpreadsheet(
 function overwriteFirstValue(tabs: readonly FakeTab[], body: unknown) {
   const { requests } = body as BatchUpdateBody
   for (const request of requests) {
-    if (!("updateCells" in request)) continue
+    if (!("updateCells" in request) || !("start" in request.updateCells)) {
+      continue
+    }
     const { sheetId, rowIndex, columnIndex } = request.updateCells.start
     const row = tabs.find((tab) => tab.sheetId === sheetId)?.rows[rowIndex]
     if (rowIndex > 0 && row !== undefined) {
@@ -429,6 +491,7 @@ describeRoadmapRepositoryContract("GoogleSheetsRoadmapRepository", {
       categories = categoriesOf(roadmaps),
       twins = [],
       syncFaults = {},
+      templateFault,
     } = {},
   ) {
     const lastIndex = roadmaps.length
@@ -473,6 +536,16 @@ describeRoadmapRepositoryContract("GoogleSheetsRoadmapRepository", {
                 2,
                 lastIndex + 2,
               ),
+            ]),
+        ...(templateFault === "missing"
+          ? []
+          : [
+              templateTab(3, lastIndex + 3, {
+                ...(templateFault === "no-title-column" && { Title: "Name" }),
+                ...(templateFault === "no-horizon-column" && {
+                  Horizon: "When",
+                }),
+              }),
             ]),
       ],
       { write },
@@ -1240,7 +1313,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
 
       const { requests } = spreadsheet.bodies[0] as BatchUpdateBody
       const values = requests.flatMap((request) =>
-        "updateCells" in request
+        "updateCells" in request && "rows" in request.updateCells
           ? request.updateCells.rows.flatMap(({ values }) => values)
           : [],
       )
@@ -2063,6 +2136,398 @@ describe("GoogleSheetsRoadmapRepository", () => {
         expect(
           spreadsheet.requests.filter(({ method }) => method === "GET"),
         ).toHaveLength(3)
+      })
+    })
+  })
+
+  describe("adding a roadmap (STY-040)", () => {
+    const FAMILY_ROWS = [
+      ["ID", "Name", "Name (cy)", "Colour"],
+      ["fc29g5b9", "Single Record", "Cofnod Sengl", "#12a3c9"],
+    ]
+    const CATEGORY_ROWS = [
+      ["ID", "Name", "Name (cy)"],
+      ["khzpchkh", "GP & Community Services", "Meddygon Teulu"],
+    ]
+    /**
+     * The example index, whose rows name `ProductB` and `ProductC`, tabs that are not
+     * there, with a hidden `Template`, the lists and a tab no roadmap lists.
+     */
+    const addingTabs = (): FakeTab[] => [
+      gridTab("Roadmaps", EXAMPLE_ROWS, 0),
+      gridTab("ProductA", EXAMPLE_TAB_ROWS.ProductA ?? [], 10, 1),
+      { ...templateTab(20, 2), hidden: true },
+      gridTab("Families", FAMILY_ROWS, 30, 3),
+      gridTab("Categories", CATEGORY_ROWS, 40, 4),
+      gridTab("Old notes", [["Anything"]], 50, 5),
+    ]
+    const input = (overrides: Partial<NewRoadmapInput> = {}) => ({
+      title: "Community Nursing roadmap",
+      shortName: "Community Nursing",
+      familyId: null,
+      categoryId: "khzpchkh",
+      productLead: "Sam Evans",
+      ...overrides,
+    })
+    const text = (stringValue: string) => ({
+      userEnteredValue: { stringValue },
+    })
+    /** The ID the write chose for its copy of the `Template`. */
+    const copyIdOf = (body: unknown): number => {
+      const [first] = (body as BatchUpdateBody).requests
+      if (first === undefined || !("duplicateSheet" in first)) {
+        throw new Error("The write copies the Template first")
+      }
+      return first.duplicateSheet.newSheetId
+    }
+    const tabNamed = (tabs: readonly FakeTab[], title: string) =>
+      tabs.find((tab) => tab.title === title)
+
+    it("copies the Template and appends the index row in one batchUpdate, after five reads (S2)", async () => {
+      const before = addingTabs()
+      const spreadsheet = serveStatefulSpreadsheet(before)
+
+      const outcome = await httpRepository().addRoadmap(input())
+
+      expect(outcome).toMatchObject({
+        status: "added",
+        roadmap: { id: "community-nursing", published: false },
+      })
+      expect(spreadsheet.bodies).toHaveLength(1)
+      const sheetId = copyIdOf(spreadsheet.bodies[0])
+      expect(before.map((tab) => tab.sheetId)).not.toContain(sheetId)
+      expect(spreadsheet.bodies[0]).toEqual({
+        requests: [
+          {
+            duplicateSheet: {
+              sourceSheetId: 20,
+              insertSheetIndex: 6,
+              newSheetId: sheetId,
+              newSheetName: "Community Nursing",
+            },
+          },
+          {
+            updateSheetProperties: {
+              properties: { sheetId, hidden: false },
+              fields: "hidden",
+            },
+          },
+          {
+            deleteDimension: {
+              range: { sheetId, dimension: "ROWS", startIndex: 2, endIndex: 5 },
+            },
+          },
+          {
+            updateCells: {
+              range: { sheetId, startRowIndex: 1, endRowIndex: 2 },
+              fields: "*",
+            },
+          },
+          { appendDimension: { sheetId: 0, dimension: "COLUMNS", length: 1 } },
+          {
+            updateCells: {
+              start: { sheetId: 0, rowIndex: 0, columnIndex: 15 },
+              rows: [{ values: [text("Category ID")] }],
+              fields: "userEnteredValue",
+            },
+          },
+          {
+            appendCells: {
+              sheetId: 0,
+              rows: [
+                {
+                  values: [
+                    text("Community Nursing"),
+                    text("No"),
+                    text("Community Nursing roadmap"),
+                    text("GP & Community Services"),
+                    ...Array.from({ length: 6 }, () => ({})),
+                    text("Sam Evans"),
+                    ...Array.from({ length: 4 }, () => ({})),
+                    text("khzpchkh"),
+                  ],
+                },
+              ],
+              fields: "userEnteredValue",
+            },
+          },
+        ],
+      })
+
+      const after = spreadsheet.tabs()
+      expect(after.at(-1)).toEqual({
+        title: "Community Nursing",
+        sheetId,
+        // Its header alone, over the one row Google keeps, emptied.
+        rows: [before[2]?.rows[0], []],
+        rowCount: 2,
+        columnCount: before[2]?.columnCount,
+        frozenRowCount: 1,
+        index: 6,
+      })
+      expect(tabNamed(after, TEMPLATE)).toEqual(before[2])
+      const gets = spreadsheet.requests.filter(({ method }) => method === "GET")
+      expect(gets.slice(1).map(rangeOf).sort()).toEqual([
+        "'Categories'",
+        "'Families'",
+        "'Roadmaps'",
+        "'Template'!1:1",
+      ])
+      expect(gets).toHaveLength(5)
+    })
+
+    it("writes a chosen family as a publish does, adding the column its ID needs (S2)", async () => {
+      const spreadsheet = serveStatefulSpreadsheet(addingTabs())
+      const repository = httpRepository()
+
+      const outcome = await repository.addRoadmap(
+        input({ familyId: "fc29g5b9", categoryId: null, productLead: "" }),
+      )
+
+      const [header, ...rows] = spreadsheet.tabs()[0]?.rows ?? []
+      expect(header?.[15]).toBe("Family ID")
+      expect(rows.at(-1)).toEqual([
+        "Community Nursing",
+        "No",
+        "Community Nursing roadmap",
+        "",
+        "Single Record",
+        "",
+        "",
+        "#12a3c9",
+        "",
+        "",
+        "",
+        "",
+        "Cofnod Sengl",
+        "",
+        "",
+        "fc29g5b9",
+      ])
+      const listed = (await repository.listRoadmaps()).at(-1)
+      expect(listed).toMatchObject({
+        family: { en: "Single Record", cy: "Cofnod Sengl" },
+        colour: "#12a3c9",
+        outOfStep: false,
+      })
+      expect(outcome).toStrictEqual({ status: "added", roadmap: listed })
+    })
+
+    it("keeps a row a co-lead added after the read, appending after it (S2)", async () => {
+      const spreadsheet = serveStatefulSpreadsheet(addingTabs(), {
+        beforeWrite: (tabs) =>
+          tabs.map((tab) =>
+            tab.title === "Roadmaps"
+              ? {
+                  ...tab,
+                  rows: [...tab.rows, ["ProductD", "No", "Product D roadmap"]],
+                  rowCount: tab.rowCount + 1,
+                }
+              : tab,
+          ),
+      })
+
+      await httpRepository().addRoadmap(input())
+
+      expect(
+        spreadsheet
+          .tabs()[0]
+          ?.rows.slice(-2)
+          .map(([sheet]) => sheet),
+      ).toEqual(["ProductD", "Community Nursing"])
+    })
+
+    it.each([
+      ["template", "the Template tab, in another letter case"],
+      ["FAMILIES", "the family list's tab"],
+      ["categories", "the category list's tab"],
+      ["roadmaps", "the roadmap index itself"],
+      ["old notes", "a tab no roadmap lists"],
+      ["PRODUCTB", "a published row whose tab is missing"],
+      ["Productc", "a row that is not published"],
+    ])("writes nothing for the short name %j: %s (S4)", async (shortName) => {
+      const spreadsheet = serveStatefulSpreadsheet(addingTabs())
+
+      await expect(
+        httpRepository().addRoadmap(input({ shortName })),
+      ).resolves.toEqual({ status: "short-name-taken" })
+      expect(spreadsheet.bodies).toEqual([])
+    })
+
+    it("writes nothing for a short name a row the list skips has (S4)", async () => {
+      const [index, ...rest] = addingTabs()
+      if (index === undefined) throw new Error("The example has an index")
+      const spreadsheet = serveStatefulSpreadsheet([
+        {
+          ...index,
+          // Two rows with one address: the list keeps the first.
+          rows: [
+            ...index.rows,
+            ["Pharmacy", "No", "Pharmacy roadmap"],
+            ["pharmacy", "No", "A copy"],
+          ],
+          rowCount: index.rowCount + 2,
+        },
+        ...rest,
+      ])
+
+      await expect(
+        httpRepository().addRoadmap(input({ shortName: "PHARMACY" })),
+      ).resolves.toEqual({ status: "short-name-taken" })
+      expect(spreadsheet.bodies).toEqual([])
+    })
+
+    it.each(["Families", "Categories"])(
+      "keeps the name %s for its list while the spreadsheet has no such tab (S4)",
+      async (shortName) => {
+        const spreadsheet = serveStatefulSpreadsheet(
+          addingTabs().filter(({ title }) => title !== shortName),
+        )
+
+        await expect(
+          httpRepository().addRoadmap(
+            input({ shortName, familyId: null, categoryId: null }),
+          ),
+        ).resolves.toEqual({ status: "short-name-taken" })
+        expect(spreadsheet.bodies).toEqual([])
+      },
+    )
+
+    it("fails with invalid-data, writing nothing, when the index is the Template tab (S6)", async () => {
+      const [, ...rest] = addingTabs()
+      const [header = [], ...rows] = EXAMPLE_ROWS
+      const spreadsheet = serveStatefulSpreadsheet([
+        // With the columns a template needs, so only its being the index refuses it.
+        gridTab(TEMPLATE, [[...header, "Horizon"], ...rows], 0),
+        ...rest.filter(({ title }) => title !== TEMPLATE),
+      ])
+
+      await expect(httpRepository().addRoadmap(input())).rejects.toMatchObject({
+        kind: "invalid-data",
+        message: "The roadmap index is the Template tab",
+        retryable: false,
+      })
+      expect(spreadsheet.bodies).toEqual([])
+    })
+
+    it("asks for nothing of a Template that is not there (S6)", async () => {
+      const spreadsheet = serveStatefulSpreadsheet(
+        addingTabs().filter(({ title }) => title !== TEMPLATE),
+      )
+
+      await expect(httpRepository().addRoadmap(input())).rejects.toMatchObject({
+        kind: "invalid-data",
+        message: "The spreadsheet has no Template tab to copy",
+      })
+      expect(spreadsheet.requests).toHaveLength(4)
+    })
+
+    it.each([
+      [401, "unauthenticated"],
+      [403, "forbidden"],
+      [429, "rate-limited"],
+    ])(
+      "rejects with the write's failure, HTTP %i as %s, sent once (S7)",
+      async (status, kind) => {
+        const spreadsheet = serveStatefulSpreadsheet(addingTabs())
+        let writes = 0
+        server.use(
+          http.post(BATCH_UPDATE_ENDPOINT, () => {
+            writes++
+            return HttpResponse.json({}, { status })
+          }),
+        )
+
+        await expect(
+          httpRepository().addRoadmap(input()),
+        ).rejects.toMatchObject({ kind, status })
+        expect(writes).toBe(1)
+        expect(
+          tabNamed(spreadsheet.tabs(), "Community Nursing"),
+        ).toBeUndefined()
+      },
+    )
+
+    it("rejects with the abort reason, writing nothing, when cancelled during the reads (S7)", async () => {
+      const controller = new AbortController()
+      const reason = new DOMException("Left the page", "AbortError")
+      const spreadsheet = serveStatefulSpreadsheet(addingTabs())
+      server.use(
+        http.get(VALUES_ENDPOINT, ({ request }) => {
+          // Returns nothing, so the stateful fake answers.
+          if (tabTitleOf(request) === TEMPLATE) controller.abort(reason)
+        }),
+      )
+
+      await expect(
+        httpRepository().addRoadmap(input(), { signal: controller.signal }),
+      ).rejects.toBe(reason)
+      expect(spreadsheet.bodies).toEqual([])
+    })
+
+    it("adds regardless once the write is sent, as it can't be taken back (S7)", async () => {
+      const controller = new AbortController()
+      const spreadsheet = serveStatefulSpreadsheet(addingTabs())
+      server.use(
+        http.post(BATCH_UPDATE_ENDPOINT, () => {
+          controller.abort()
+        }),
+      )
+
+      await expect(
+        httpRepository().addRoadmap(input(), { signal: controller.signal }),
+      ).resolves.toMatchObject({ status: "added" })
+      expect(tabNamed(spreadsheet.tabs(), "Community Nursing")).toBeDefined()
+    })
+
+    it("says the short name is in use when a co-lead added a roadmap with the same title and short name while the answer was lost (S7)", async () => {
+      const spreadsheet = serveStatefulSpreadsheet(addingTabs(), {
+        write: { lost: "not-applied" },
+        beforeWrite: (tabs) => [
+          ...tabs.map((tab) =>
+            tab.title === "Roadmaps"
+              ? {
+                  ...tab,
+                  rows: [
+                    ...tab.rows,
+                    [
+                      "Community Nursing",
+                      "No",
+                      "Community Nursing roadmap",
+                      "GP & Community Services",
+                      ...Array.from({ length: 6 }, () => ""),
+                      "Sam Evans",
+                    ],
+                  ],
+                  rowCount: tab.rowCount + 1,
+                }
+              : tab,
+          ),
+          gridTab("Community Nursing", [["Title", "Horizon"]], 99, 6),
+        ],
+      })
+
+      await expect(httpRepository().addRoadmap(input())).resolves.toEqual({
+        status: "short-name-taken",
+      })
+      expect(spreadsheet.bodies).toHaveLength(1)
+      expect(tabNamed(spreadsheet.tabs(), "Community Nursing")?.sheetId).toBe(
+        99,
+      )
+    })
+
+    it("says the roadmap may have been added when the re-read finds an index it can't read (S7)", async () => {
+      serveStatefulSpreadsheet(addingTabs(), {
+        write: { lost: "not-applied" },
+        // A co-lead empties the index as the write is sent.
+        beforeWrite: (tabs) =>
+          tabs.map((tab) =>
+            tab.title === "Roadmaps" ? { ...tab, rows: [] } : tab,
+          ),
+      })
+
+      await expect(httpRepository().addRoadmap(input())).resolves.toEqual({
+        status: "unconfirmed",
       })
     })
   })

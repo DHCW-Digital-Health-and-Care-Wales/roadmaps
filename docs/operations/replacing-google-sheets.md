@@ -44,6 +44,15 @@ doc comments first, since they are the contract.
        (STY-028). An item's chosen `organisationIds` replace its join rows as a set;
        the snapshot's `organisationIds` are the organisations table's ids, and the plan
        rejects any other with `unknown` (STY-034);
+     - `addRoadmap` adds a roadmap and its empty list of items together or not at
+       all, not published (STY-040). `planNewRoadmap` and `settleLostNewRoadmap`
+       (`src/domain/roadmap/new-roadmap.ts`) are the rules both current repositories
+       share; the short name is the roadmap's key, unique by its address
+       (`shortNameAddress`), and `names` are whatever else the API keeps under a name
+       (none, if roadmaps alone have one). The Sheets adapter copies a `Template` tab
+       and rejects with `invalid-data` without a usable one; an API that needs no
+       template never does. A lost answer is settled by something only that write
+       made, such as a key the client chose, never by the short name or the values;
    - an `index.ts` barrel. The existing ESLint rules already keep this folder away from
      React, TanStack and features.
 2. **Contract test.** In `api-roadmap-repository.test.ts`, run the shared contract
@@ -51,8 +60,9 @@ doc comments first, since they are the contract.
    the API, then add tests for each status mapping. `withRoadmaps(roadmaps, items?,
 options?)` seeds the fake with roadmaps, their items, and how a publish's write
    behaves (`ContractWrite`: fails, or its answer is lost), whose items cannot be
-   read (`unreadableItems`), and the `families` and `categories` lists (by default those
-   the roadmaps link to; `null` for none); `failing()` fails every
+   read (`unreadableItems`), the `families` and `categories` lists (by default those
+   the roadmaps link to; `null` for none), and what leaves nothing usable to start a
+   roadmap from (`templateFault`); `failing()` fails every
    request. The Google adapter's test is the worked example.
 3. **Config.** Add e.g. `VITE_ROADMAPS_API_URL` to the Zod schema in
    `src/app/config.ts`, `.env.example` and `.env.production`.

@@ -32,6 +32,9 @@ const spreadsheetMetadataSchema = z.object({
 
 export type SpreadsheetMetadata = z.output<typeof spreadsheetMetadataSchema>
 
+/** One tab's properties, as the tab list gives them. */
+export type TabProperties = SpreadsheetMetadata["sheets"][number]["properties"]
+
 /** Validates untrusted spreadsheet metadata, or throws `AppError('invalid-response')`. */
 export function parseSpreadsheetMetadata(json: unknown): SpreadsheetMetadata {
   const result = spreadsheetMetadataSchema.safeParse(json)

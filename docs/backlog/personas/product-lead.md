@@ -4,7 +4,8 @@
   Editor to manage the public roadmaps of the products they lead.
 - **Status**: Accepted — the owner answered A1–A13 on 2026-11-10; A6 is deferred until
   after the MVP. Still to check with real Product Leads.
-- **Last updated**: 2026-11-11 (format ownership answered; EPC-005).
+- **Last updated**: 2026-11-14 (format ownership: the editor adds a roadmap's row and
+  tab; EPC-011 STY-040).
 
 Read this before designing a story, a UX prototype or copy. Each owner answer is cited
 by its number under [Owner answers](#owner-answers); the rest comes from the brief.
@@ -152,7 +153,10 @@ Given by the owner on 2026-11-10; still to be checked with real Product Leads.
 ## Answered questions
 
 - **How the editor and the public site agree the data source's format, and who owns a
-  change to it** (owner, 2026-11-11, EPC-005 grilling Q14, Q28): the owner owns it. The
-  editor adds only the `Item ID` column and any missing column it must write, never
-  touches the `Template` tab, and each record that changes what is written says so; the
-  owner updates the `Template` tab and the public site's documentation (ADR-012).
+  change to it** (owner, 2026-11-11, EPC-005 grilling Q14, Q28; 2026-11-14, EPC-011
+  STY-040 D1): the owner owns it. The editor adds the `Item ID` column, any missing
+  column it must write and, since STY-040, a new roadmap's row in the roadmap index and
+  its tab, a copy of the `Template` tab. It reads the `Template` tab's header row to
+  check it and never changes the tab, and each record that changes what is written says
+  so; the owner updates the `Template` tab and the public site's documentation
+  (ADR-012).

@@ -47,6 +47,7 @@ function scriptedRepository(...outcomes: Outcome[]) {
     listFamilies: vi.fn<RoadmapRepository["listFamilies"]>(),
     listCategories: vi.fn<RoadmapRepository["listCategories"]>(),
     listOrganisations: vi.fn<RoadmapRepository["listOrganisations"]>(),
+    addRoadmap: vi.fn<RoadmapRepository["addRoadmap"]>(),
     addFamily: vi.fn<RoadmapRepository["addFamily"]>(),
     changeFamily: vi.fn<RoadmapRepository["changeFamily"]>(),
     matchRoadmapToLists: vi.fn<RoadmapRepository["matchRoadmapToLists"]>(),

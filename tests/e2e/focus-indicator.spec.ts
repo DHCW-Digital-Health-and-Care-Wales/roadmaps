@@ -1,6 +1,6 @@
 import type { Locator, Page } from "@playwright/test"
 
-import { EXAMPLE_LISTS, EXAMPLE_SPREADSHEET } from "./fixtures/fake-sheets"
+import { openAddRoadmapDialog } from "./fixtures/dialogs"
 import {
   holdConnectedNotice,
   THEMES,
@@ -102,22 +102,30 @@ async function tabTo(page: Page, target: Locator, key = "Tab") {
 }
 
 /**
+ * The tab stops `scope` offers, in the order of the page. A control taken out of the Tab
+ * order is no stop: the details outline keeps one of its text fields in it at a time
+ * (STY-039 S24).
+ */
+function tabStops(scope: Page | Locator) {
+  return scope
+    .locator(
+      ':is(a[href], button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]):not([tabindex="-1"])',
+    )
+    .filter({ visible: true })
+}
+
+/**
  * Tabs until every focusable element of the page has had focus, and expects each to show
  * one of the three indicators. The tab stops are those the page offers, found first, so a
  * control a tour never reaches fails the test too.
  */
 async function expectEveryStopShowsAnIndicator(page: Page) {
   const colours = await focusColours(page)
-  // A control taken out of the Tab order is no stop: the details outline keeps one of
-  // its text fields in it at a time (STY-039 S24).
-  const stops = page
-    .locator(
-      ':is(a[href], button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]):not([tabindex="-1"])',
-    )
-    .filter({ visible: true })
   const expected = new Set(
     await Promise.all(
-      (await stops.all()).map((stop) => stop.evaluate(describeElement)),
+      (await tabStops(page).all()).map((stop) =>
+        stop.evaluate(describeElement),
+      ),
     ),
   )
   expect(expected.size, "the page's tab stops").toBeGreaterThan(3)
@@ -143,6 +151,30 @@ async function expectEveryStopShowsAnIndicator(page: Page) {
     visited.add(stop)
   }
   expect([...visited].sort()).toEqual([...expected].sort())
+}
+
+/**
+ * Tours a form dialog from its first stop, where focus is as it opens: each stop in turn
+ * shows its indicator, the fill on a button and the ring on a field, and Tab from the
+ * last comes back to the first, since a dialog holds focus. The stops are those the
+ * dialog offers, found first, so a control added to its form is toured.
+ */
+async function expectDialogTour(page: Page, dialog: Locator) {
+  const colours = await focusColours(page)
+  const stops = await tabStops(dialog).all()
+  const [first] = stops
+  if (!first) throw new Error("The dialog has no tab stops")
+  expect(stops.length, "the dialog's tab stops").toBeGreaterThan(3)
+
+  for (const [index, stop] of stops.entries()) {
+    if (index > 0) await page.keyboard.press("Tab")
+    const isButton = await stop.evaluate(
+      (element) => element instanceof HTMLButtonElement,
+    )
+    await expectIndicator(stop, colours, isButton ? "fill" : "ring")
+  }
+  await page.keyboard.press("Tab")
+  await expect(first).toBeFocused()
 }
 
 for (const theme of THEMES) {
@@ -224,40 +256,9 @@ for (const theme of THEMES) {
       page,
       sheets,
     }) => {
-      sheets.spreadsheet = [...EXAMPLE_SPREADSHEET, ...EXAMPLE_LISTS]
-      await page.goto("./")
-      await connect(page)
-      await expect(roadmapCards(page)).toHaveCount(3)
-      await page
-        .getByRole("main")
-        .getByRole("button", { name: "Add a roadmap" })
-        .click()
-      const dialog = page.getByRole("dialog", { name: "Add a roadmap" })
-      await expect(
-        dialog.getByRole("combobox", { name: "Family" }),
-      ).toBeEnabled()
-      const colours = await focusColours(page)
+      const dialog = await openAddRoadmapDialog(page, { withListsIn: sheets })
 
-      // The dialog holds focus, so a tour of its stops comes back to the first.
-      const stops = [
-        dialog.getByRole("textbox", { name: "Title" }),
-        dialog.getByRole("textbox", { name: "Short name" }),
-        dialog.getByRole("combobox", { name: "Family" }),
-        dialog.getByRole("combobox", { name: "Category" }),
-        dialog.getByRole("textbox", { name: "Product lead" }),
-        dialog.getByRole("button", { name: "Add roadmap" }),
-        dialog.getByRole("button", { name: "Cancel" }),
-      ]
-      for (const [index, stop] of stops.entries()) {
-        if (index > 0) await page.keyboard.press("Tab")
-        await expectIndicator(
-          stop,
-          colours,
-          index < stops.length - 2 ? "ring" : "fill",
-        )
-      }
-      await page.keyboard.press("Tab")
-      await expect(stops[0] ?? dialog).toBeFocused()
+      await expectDialogTour(page, dialog)
     })
 
     test("every control in a co-lead's review shows DHCW's focus indicator (STY-026)", async ({

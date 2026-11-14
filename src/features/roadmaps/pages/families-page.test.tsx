@@ -3,17 +3,23 @@ import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
 import type { AuthState } from "@/domain/auth/auth-client"
-import type { Category } from "@/domain/roadmap/category"
 import type { Family } from "@/domain/roadmap/family"
 import type { FamilyOutcome } from "@/domain/roadmap/family-changes"
 import type { Organisation } from "@/domain/roadmap/organisation"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { RoadmapRepository } from "@/domain/roadmap/roadmap-repository"
+import {
+  MEDICINES_AND_DIAGNOSTICS,
+  SINGLE_RECORD,
+  TEST_CATEGORIES,
+  TEST_FAMILIES,
+} from "@/domain/roadmap/testing/test-lists"
 import { TEST_ORGANISATIONS } from "@/domain/roadmap/testing/test-organisations"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { AppError } from "@/lib/errors"
 import { renderWithProviders } from "@/test/render-with-providers"
 
+import { holdCall } from "../testing/held-call"
 import { createInMemoryRoadmapRepository } from "../testing/in-memory-roadmap-repository"
 
 const connected: AuthState = {
@@ -21,29 +27,12 @@ const connected: AuthState = {
   expiresAt: Date.now() + 3_600_000,
 }
 
-const records: Family = {
-  id: "fc29g5b9",
-  name: { en: "Single Record", cy: "Cofnod Sengl" },
-  colour: "#12a3c9",
-}
-const screening: Family = {
-  id: "vdkxj63m",
-  name: { en: "Screening", cy: "" },
-  colour: "#006747",
-}
-const families = [records, screening]
-
-const categories: Category[] = [
-  { id: "b2tqsxzm", name: { en: "Patient records", cy: "Cofnodion cleifion" } },
-  { id: "khzpchkh", name: { en: "Clinical systems", cy: "Systemau clinigol" } },
-]
-
 function member(id: string, title: string, published: boolean): Roadmap {
   return createTestRoadmap(id, title, {
     published,
-    familyId: records.id,
-    family: records.name,
-    colour: records.colour,
+    familyId: SINGLE_RECORD.id,
+    family: SINGLE_RECORD.name,
+    colour: SINGLE_RECORD.colour,
   })
 }
 
@@ -63,8 +52,8 @@ function repositoryWith(
       roadmaps,
       {},
       {
-        families,
-        categories,
+        families: TEST_FAMILIES,
+        categories: TEST_CATEGORIES,
         organisations,
         ...lists,
       },
@@ -127,7 +116,7 @@ describe("FamiliesPage (STY-029)", () => {
       within(list)
         .getAllByRole("listitem")
         .map((item) => item.textContent),
-    ).toEqual(["Patient records", "Clinical systems"])
+    ).toEqual(["GP & Community Services", "Tests, Scans & Results"])
     expect(within(list).queryByRole("button")).not.toBeInTheDocument()
   })
 
@@ -250,13 +239,13 @@ describe("FamiliesPage (STY-029)", () => {
         conflicts: [
           {
             field: "colour",
-            base: "#12a3c9",
+            base: SINGLE_RECORD.colour,
             pending: "#00796b",
             current: "#ff0000",
           },
         ],
       },
-      { status: "saved", family: { ...records, colour: "#ff0000" } },
+      { status: "saved", family: { ...SINGLE_RECORD, colour: "#ff0000" } },
     ]
     const changeFamily = vi.fn<RoadmapRepository["changeFamily"]>(() =>
       Promise.resolve(outcomes.shift() ?? { status: "family-not-found" }),
@@ -292,7 +281,7 @@ describe("FamiliesPage (STY-029)", () => {
 
     await main().findByRole("status")
     expect(changeFamily).toHaveBeenLastCalledWith({
-      family: { ...records, colour: "#ff0000" },
+      family: { ...SINGLE_RECORD, colour: "#ff0000" },
       changes: { name: "Records" },
       members: ["producta", "productb"],
     })
@@ -301,7 +290,7 @@ describe("FamiliesPage (STY-029)", () => {
   it("asks again with the roadmaps a re-read found (S8)", async () => {
     const outcomes: FamilyOutcome[] = [
       { status: "members-changed", members: roadmaps.slice(0, 1) },
-      { status: "saved", family: { ...records, colour: "#00796b" } },
+      { status: "saved", family: { ...SINGLE_RECORD, colour: "#00796b" } },
     ]
     const changeFamily = vi.fn<RoadmapRepository["changeFamily"]>(() =>
       Promise.resolve(outcomes.shift() ?? { status: "family-not-found" }),
@@ -355,46 +344,45 @@ describe("FamiliesPage (STY-029)", () => {
     const base = repositoryWith()
     let written = false
     let familiesReread = false
-    const roadmapsReread: { release?: () => void } = {}
+    const roadmapsReread = holdCall(base.listRoadmaps.bind(base))
     const repository = repositoryWith({
       changeFamily: () => {
         written = true
         return Promise.resolve({ status: "family-not-found" })
       },
       listFamilies: () => {
-        if (!written) return Promise.resolve(families)
+        if (!written) return Promise.resolve([...TEST_FAMILIES])
         familiesReread = true
-        return Promise.resolve([records])
+        return Promise.resolve([SINGLE_RECORD])
       },
       listRoadmaps: (options) =>
-        written
-          ? new Promise((resolve) => {
-              roadmapsReread.release = () => {
-                resolve(base.listRoadmaps(options))
-              }
-            })
-          : base.listRoadmaps(options),
+        written ? roadmapsReread.held(options) : base.listRoadmaps(options),
     })
     const { user } = await renderPage(repository)
 
     await user.click(
-      await main().findByRole("button", { name: "Change Screening" }),
+      await main().findByRole("button", {
+        name: "Change Medicines & Diagnostics",
+      }),
     )
-    const form = within(main().getByRole("form", { name: "Change Screening" }))
+    const form = within(
+      main().getByRole("form", { name: "Change Medicines & Diagnostics" }),
+    )
     await user.clear(form.getByLabelText("Colour"))
     await user.type(form.getByLabelText("Colour"), "#00796b")
     await user.click(form.getByRole("button", { name: "Save changes" }))
     await waitFor(() => {
-      expect(familiesReread && roadmapsReread.release !== undefined).toBe(true)
+      expect(familiesReread).toBe(true)
+      expect(roadmapsReread.held).toHaveBeenCalled()
     })
     expect(form.getByLabelText("Colour")).toHaveValue("#00796b")
-    roadmapsReread.release?.()
+    roadmapsReread.release()
 
     expect(await main().findByRole("alert")).toHaveTextContent(
       "This family is no longer listed, so your change wasn't saved.",
     )
     expect(
-      main().queryByRole("button", { name: "Change Screening" }),
+      main().queryByRole("button", { name: "Change Medicines & Diagnostics" }),
     ).not.toBeInTheDocument()
   })
 
@@ -409,9 +397,13 @@ describe("FamiliesPage (STY-029)", () => {
     const { user } = await renderPage(repositoryWith({ changeFamily }))
 
     await user.click(
-      await main().findByRole("button", { name: "Change Screening" }),
+      await main().findByRole("button", {
+        name: "Change Medicines & Diagnostics",
+      }),
     )
-    const form = within(main().getByRole("form", { name: "Change Screening" }))
+    const form = within(
+      main().getByRole("form", { name: "Change Medicines & Diagnostics" }),
+    )
     await user.clear(form.getByLabelText("Colour"))
     await user.type(form.getByLabelText("Colour"), "#00796b")
     await user.click(form.getByRole("button", { name: "Save changes" }))
@@ -426,9 +418,9 @@ describe("FamiliesPage (STY-029)", () => {
     ).toBeDisabled()
     await user.type(form.getByLabelText("Colour"), "ff")
     expect(form.getByLabelText("Colour")).toHaveValue("#00796b")
-    write.resolve?.({ status: "saved", family: screening })
+    write.resolve?.({ status: "saved", family: MEDICINES_AND_DIAGNOSTICS })
     expect(await main().findByRole("status")).toHaveTextContent(
-      "Screening changed",
+      "Medicines & Diagnostics changed",
     )
     expect(main().getByRole("button", { name: "Add a family" })).toBeEnabled()
   })
@@ -458,7 +450,7 @@ describe("FamiliesPage (STY-029)", () => {
       "true",
     )
     expect(
-      main().getByRole("button", { name: "Change Screening" }),
+      main().getByRole("button", { name: "Change Medicines & Diagnostics" }),
     ).toBeDisabled()
     expect(main().getByRole("button", { name: "Add a family" })).toBeDisabled()
   })
@@ -572,17 +564,8 @@ describe("FamiliesPage organisations (STY-033)", () => {
 
   it("shows the page's loading state until the organisations are read (S5)", async () => {
     const base = repositoryWith()
-    const read: { release?: () => void } = {}
-    await renderPage(
-      repositoryWith({
-        listOrganisations: (options) =>
-          new Promise((resolve) => {
-            read.release = () => {
-              resolve(base.listOrganisations(options))
-            }
-          }),
-      }),
-    )
+    const read = holdCall(base.listOrganisations.bind(base))
+    await renderPage(repositoryWith({ listOrganisations: read.held }))
 
     expect(await main().findByRole("status")).toHaveTextContent(
       "Loading families, categories and organisations…",
@@ -591,9 +574,9 @@ describe("FamiliesPage organisations (STY-033)", () => {
       main().queryByRole("heading", { level: 2, name: "Families" }),
     ).not.toBeInTheDocument()
     await waitFor(() => {
-      expect(read.release).toBeDefined()
+      expect(read.held).toHaveBeenCalled()
     })
-    read.release?.()
+    read.release()
     expect(
       await main().findByRole("heading", { level: 2, name: "Organisations" }),
     ).toBeInTheDocument()

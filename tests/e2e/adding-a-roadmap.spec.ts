@@ -1,9 +1,18 @@
 import type { Page } from "@playwright/test"
 
 import {
+  ADD_ROADMAP,
+  addRoadmapButtons,
+  addRoadmapDialog,
+  clickOutside,
+  openAddRoadmapDialog,
+  openDialog,
+} from "./fixtures/dialogs"
+import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
+import {
   EXAMPLE_INDEX_ROWS,
-  EXAMPLE_LISTS,
   EXAMPLE_SPREADSHEET,
+  EXAMPLE_SPREADSHEET_WITH_LISTS,
   withRoadmapIndex,
 } from "./fixtures/fake-sheets"
 import { THEMES, useLanguage, useTheme } from "./fixtures/look"
@@ -16,31 +25,7 @@ const VIEWPORTS = {
   phone: { width: 375, height: 812 },
 } as const
 
-/** The fake's grant (3599 s) less the app's 60 s margin: when the session ends. */
-const SESSION_MS = (3599 - 60) * 1000
-/** The session warning opens two minutes before the session ends. */
-const WARNING_MS = 2 * 60 * 1000
-
 const ADDED = "Community Nursing roadmap was added. It isn't published yet."
-
-function addDialog(page: Page) {
-  return page.getByRole("dialog", { name: "Add a roadmap" })
-}
-
-/** Connects, waits for the list and opens the dialog from the button beside Refresh. */
-async function openDialog(page: Page, roadmaps = 3) {
-  await page.goto("./")
-  await connect(page)
-  await expect(roadmapCards(page)).toHaveCount(roadmaps)
-  await page
-    .getByRole("main")
-    .getByRole("button", { name: "Add a roadmap" })
-    .first()
-    .click()
-  const dialog = addDialog(page)
-  await expect(dialog.getByRole("textbox", { name: "Title" })).toBeFocused()
-  return dialog
-}
 
 /** The new roadmap's page, once the dialog has gone. */
 async function expectNewRoadmapPage(page: Page) {
@@ -48,7 +33,7 @@ async function expectNewRoadmapPage(page: Page) {
   await expect(
     main.getByRole("heading", { level: 1, name: "Community Nursing roadmap" }),
   ).toBeVisible()
-  await expect(addDialog(page)).toBeHidden()
+  await expect(addRoadmapDialog(page)).toBeHidden()
   await expect(page).toHaveURL(/#\/roadmaps\/community-nursing$/)
   return main
 }
@@ -59,10 +44,9 @@ for (const theme of THEMES) {
       page,
       sheets,
     }) => {
-      sheets.spreadsheet = [...EXAMPLE_SPREADSHEET, ...EXAMPLE_LISTS]
       await page.setViewportSize(viewport)
       await useTheme(page, theme)
-      const dialog = await openDialog(page)
+      const dialog = await openAddRoadmapDialog(page, { withListsIn: sheets })
       // Modal: nothing behind it can be reached.
       await expect(page.getByRole("main")).toHaveCount(0)
 
@@ -171,11 +155,10 @@ test("the empty list offers Add a roadmap too, and lists the first roadmap (S1, 
   await expect(
     main.getByRole("heading", { name: "No roadmaps yet" }),
   ).toBeVisible()
-  const offers = main.getByRole("button", { name: "Add a roadmap" })
+  const offers = addRoadmapButtons(page)
   await expect(offers).toHaveCount(2)
 
-  await offers.last().click()
-  const dialog = addDialog(page)
+  const dialog = await openDialog(page, offers.last(), ADD_ROADMAP)
   // No family or category list in this spreadsheet: neither can be chosen.
   await expect(
     dialog.getByText("The family can't be changed right now."),
@@ -202,34 +185,29 @@ test("Add a roadmap is unavailable once the session has expired (S1)", async ({
   await page.goto("./")
   await connect(page)
   await expect(roadmapCards(page)).toHaveCount(3)
-  const main = page.getByRole("main")
-  await expect(
-    main.getByRole("button", { name: "Add a roadmap" }),
-  ).toBeEnabled()
+  const add = addRoadmapButtons(page)
+  await expect(add).toBeEnabled()
 
-  await page.clock.fastForward(SESSION_MS)
+  await page.clock.fastForward(sessionMs())
   await page.keyboard.press("Escape")
 
-  await expect(main.getByText("Your session has expired")).toBeVisible()
-  const add = main.getByRole("button", { name: "Add a roadmap" })
+  await expect(
+    page.getByRole("main").getByText("Your session has expired"),
+  ).toBeVisible()
   await expect(add).toHaveAttribute("aria-disabled", "true")
   await add.click({ force: true })
-  await expect(addDialog(page)).toBeHidden()
+  await expect(addRoadmapDialog(page)).toBeHidden()
 })
 
 test("Cancel and Escape close the dialog and drop what was typed; a click outside does nothing (S8)", async ({
   page,
 }) => {
-  const dialog = await openDialog(page)
+  const dialog = await openAddRoadmapDialog(page)
   const title = dialog.getByRole("textbox", { name: "Title" })
-  const open = page
-    .getByRole("main")
-    .getByRole("button", { name: "Add a roadmap" })
+  const open = addRoadmapButtons(page)
 
   await title.fill("Community Nursing roadmap")
-  // Above and beside the dialog, on the dimmed page.
-  await page.mouse.click(20, 20)
-  await page.mouse.click(1200, 600)
+  await clickOutside(page, dialog)
   await expect(dialog).toBeVisible()
   await expect(title).toHaveValue("Community Nursing roadmap")
 
@@ -253,7 +231,7 @@ test("a short name in use is said at its field, before sending and by the write 
   page,
   sheets,
 }) => {
-  const dialog = await openDialog(page)
+  const dialog = await openAddRoadmapDialog(page)
   const title = dialog.getByRole("textbox", { name: "Title" })
   const shortName = dialog.getByRole("textbox", { name: "Short name" })
   const add = dialog.getByRole("button", { name: "Add roadmap" })
@@ -294,7 +272,7 @@ test("a spreadsheet with no template says who can put it right, keeping what was
   sheets.spreadsheet = EXAMPLE_SPREADSHEET.filter(
     ({ title }) => title !== "Template",
   )
-  const dialog = await openDialog(page)
+  const dialog = await openAddRoadmapDialog(page)
   await dialog
     .getByRole("textbox", { name: "Title" })
     .fill("Community Nursing roadmap")
@@ -321,12 +299,12 @@ test.describe("an expired session (S11)", () => {
     gis,
   }) => {
     await page.clock.install()
-    const dialog = await openDialog(page)
+    const dialog = await openAddRoadmapDialog(page)
     const title = dialog.getByRole("textbox", { name: "Title" })
     await title.fill("Community Nursing roadmap")
 
     // The warning opens over the dialog; leaving it leaves the dialog as it was.
-    await page.clock.fastForward(SESSION_MS - WARNING_MS)
+    await page.clock.fastForward(sessionMs() - SESSION_WARNING_MS)
     const warning = page.getByRole("alertdialog", {
       name: "Your session is about to end",
     })
@@ -338,7 +316,7 @@ test.describe("an expired session (S11)", () => {
     await expect(dialog).toBeVisible()
     await expect(title).toHaveValue("Community Nursing roadmap")
 
-    await page.clock.fastForward(WARNING_MS)
+    await page.clock.fastForward(SESSION_WARNING_MS)
     const expired = dialog.getByRole("alert")
     await expect(expired).toContainText("Your session has expired")
     await expect(expired).toContainText(
@@ -365,7 +343,7 @@ test.describe("an expired session (S11)", () => {
     page,
     sheets,
   }) => {
-    const dialog = await openDialog(page)
+    const dialog = await openAddRoadmapDialog(page)
     await dialog
       .getByRole("textbox", { name: "Title" })
       .fill("Community Nursing roadmap")
@@ -393,15 +371,18 @@ test.describe("an expired session (S11)", () => {
 })
 
 test("adding a roadmap in Welsh (S10)", async ({ page, sheets }) => {
-  sheets.spreadsheet = [...EXAMPLE_SPREADSHEET, ...EXAMPLE_LISTS]
+  sheets.spreadsheet = EXAMPLE_SPREADSHEET_WITH_LISTS
   await useLanguage(page, "cy")
   await page.goto("./")
   await connect(page, "Cysylltu â Google")
   await expect(roadmapCards(page)).toHaveCount(3)
   const main = page.getByRole("main")
 
-  await main.getByRole("button", { name: "Ychwanegu map trywydd" }).click()
-  const dialog = page.getByRole("dialog", { name: "Ychwanegu map trywydd" })
+  const dialog = await openDialog(
+    page,
+    main.getByRole("button", { name: "Ychwanegu map trywydd" }),
+    { title: "Ychwanegu map trywydd", firstField: "Teitl (Saesneg)" },
+  )
   await dialog.getByRole("button", { name: "Ychwanegu'r map trywydd" }).click()
   await expect(dialog.getByText("Rhowch deitl")).toBeVisible()
   await expect(dialog.getByText("Rhowch enw byr")).toBeVisible()

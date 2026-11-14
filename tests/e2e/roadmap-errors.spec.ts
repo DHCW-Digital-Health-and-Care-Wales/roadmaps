@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test"
 
+import { sessionMs } from "./fixtures/fake-gis"
 import { withRoadmapIndex } from "./fixtures/fake-sheets"
 import { useLanguage } from "./fixtures/look"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
@@ -80,15 +81,16 @@ test("an expired token keeps the roadmaps on screen until reconnected", async ({
   gis,
   sheets,
 }) => {
-  // Usable for four minutes: the app stops 60 s before Google's expiry (ADR-003). The
-  // session warning opens on the way, at two minutes left, and closes as it ends.
-  gis.respondWith({ type: "grant", expiresIn: 300 })
+  // A short session. Its warning opens on the way, at two minutes left, and closes as
+  // it ends.
+  const expiresIn = 300
+  gis.respondWith({ type: "grant", expiresIn })
   await page.clock.install()
   await page.goto("./")
   await connect(page)
   await expect(roadmapCards(page)).toHaveCount(3)
 
-  await page.clock.fastForward("04:00")
+  await page.clock.fastForward(sessionMs(expiresIn))
 
   const alert = page.getByRole("main").getByRole("alert")
   await expect(alert).toContainText("Your session has expired")

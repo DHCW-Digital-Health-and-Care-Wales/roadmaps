@@ -8,6 +8,21 @@ const GIS_SCRIPT_URL = "https://accounts.google.com/gsi/client"
 /** Google's usual access token lifetime, in seconds. */
 const TOKEN_LIFETIME_S = 3599
 
+/** The app ends a session this long before Google's expiry (ADR-003), in seconds. */
+const EXPIRY_MARGIN_S = 60
+
+/** How long before a session ends its warning opens, in milliseconds. */
+export const SESSION_WARNING_MS = 2 * 60 * 1000
+
+/**
+ * How long a session lasts from the grant that starts it, in milliseconds: the grant's
+ * `expiresIn` seconds, by default the fake's own, less the app's margin. Move the clock
+ * by it to end a session, and by it less `SESSION_WARNING_MS` to open the warning.
+ */
+export function sessionMs(expiresIn = TOKEN_LIFETIME_S): number {
+  return (expiresIn - EXPIRY_MARGIN_S) * 1000
+}
+
 /** How the fake Google answers one `requestAccessToken()` call. */
 export type TokenOutcome =
   /** The user consents. `scope` defaults to the scopes the app asked for. */

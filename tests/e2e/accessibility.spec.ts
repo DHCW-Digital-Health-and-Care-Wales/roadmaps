@@ -1,10 +1,11 @@
 import AxeBuilder from "@axe-core/playwright"
 import type { Page } from "@playwright/test"
 
+import { openAddRoadmapDialog } from "./fixtures/dialogs"
+import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
 import {
   EXAMPLE_INDEX_ROWS,
-  EXAMPLE_LISTS,
-  EXAMPLE_SPREADSHEET,
+  EXAMPLE_SPREADSHEET_WITH_LISTS,
   roadmapRow,
   withRoadmapIndex,
   withTabItems,
@@ -463,7 +464,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       page,
       sheets,
     }) => {
-      sheets.spreadsheet = [...EXAMPLE_SPREADSHEET, ...EXAMPLE_LISTS]
+      sheets.spreadsheet = EXAMPLE_SPREADSHEET_WITH_LISTS
       await page.goto("./#/roadmaps/producta")
       await connect(page)
       const main = page.getByRole("main")
@@ -485,7 +486,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       page,
       sheets,
     }) => {
-      sheets.spreadsheet = [...EXAMPLE_SPREADSHEET, ...EXAMPLE_LISTS]
+      sheets.spreadsheet = EXAMPLE_SPREADSHEET_WITH_LISTS
       await page.goto("./#/families")
       await connect(page)
       const main = page.getByRole("main")
@@ -513,15 +514,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       page,
       sheets,
     }) => {
-      sheets.spreadsheet = [...EXAMPLE_SPREADSHEET, ...EXAMPLE_LISTS]
-      await page.goto("./")
-      await connect(page)
-      await expect(roadmapCards(page)).toHaveCount(3)
-      await page
-        .getByRole("main")
-        .getByRole("button", { name: "Add a roadmap" })
-        .click()
-      const dialog = page.getByRole("dialog", { name: "Add a roadmap" })
+      const dialog = await openAddRoadmapDialog(page, { withListsIn: sheets })
       const title = dialog.getByRole("textbox", { name: "Title" })
       const shortName = dialog.getByRole("textbox", { name: "Short name" })
       const add = dialog.getByRole("button", { name: "Add roadmap" })
@@ -531,10 +524,6 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
         expect(
           page.getByRole("button", { name: "Refresh", includeHidden: true }),
         ).not.toHaveAttribute("aria-disabled", "true")
-      await expect(title).toBeFocused()
-      await expect(
-        dialog.getByRole("combobox", { name: "Family" }),
-      ).toBeEnabled()
       await expectNoAxeViolations(page, theme)
 
       // Refused: a blank title, and a short name a tab already has.
@@ -675,8 +664,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await page.goto("./")
       await connect(page)
       await expect(roadmapCards(page)).toHaveCount(3)
-      // Two minutes before the session ends: the fake's 3599 s grant less 60 s and 120 s.
-      await page.clock.fastForward((3599 - 60 - 120) * 1000)
+      await page.clock.fastForward(sessionMs() - SESSION_WARNING_MS)
       const warning = page.getByRole("alertdialog")
       await expect(warning).toBeVisible()
       await expectNoAxeViolations(page, theme)

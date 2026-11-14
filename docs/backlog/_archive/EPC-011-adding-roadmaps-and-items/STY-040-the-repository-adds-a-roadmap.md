@@ -203,9 +203,13 @@ Audited at `400c90c`.
   whose header is frozen can't lose all its other rows. The copy keeps the first row
   under its header, cleared of its values, formatting and data validation (`updateCells`
   over the row with `fields: "*"`), so it holds nothing an example row held, and loses
-  the rest (`deleteDimension`). The same requests are sent whether or not the header is
-  frozen, which the tab list doesn't say. A `Template` of a header alone is only
-  copied; one with a single row under it has that row cleared.
+  the rest (`deleteDimension`). The same is sent whether or not the header is frozen. A
+  `Template` of a header alone is only copied; one with a single row under it has that
+  row cleared.
+- **S2: a copy of a `Template` with more rows frozen than its header has its header
+  alone frozen** (agent; review, Sol and Opus): otherwise the row kept would be frozen
+  too and the delete refused, failing every add. The tab list read now asks for each
+  tab's frozen rows (`gridProperties.frozenRowCount`) to tell.
 - **S2: the copy is unhidden only when the `Template` is hidden** (agent), by
   `updateSheetProperties`, as a copy of a tab that is shown needs nothing.
 - **S1: an accent typed as a mark of its own is joined to its letter** (agent): the
@@ -222,10 +226,17 @@ Audited at `400c90c`.
   (agent), the same outcome as one removed from its list.
 - **S6: the template is checked before the short name** (agent), so a spreadsheet that
   can't start a roadmap says so whatever was typed; a `Template` with no grid (a chart
-  sheet) is unusable too. One read more than a refusal needs: the `Template`'s header.
+  sheet) is unusable too, and is asked for nothing. One read more than a refusal
+  needs: the `Template`'s header.
 - **S7: the outcome that says the roadmap may have been added is `unconfirmed`**
   (agent), as a publish's is. The settling re-read is the index's (the tab list, the
   index and the two lists), since "in use" needs the rows as well as the tabs.
+- **A tab a co-lead names the same between the re-read and the write** (agent) makes
+  Google refuse the copy: the add rejects with `unknown`, nothing written, as any
+  refused write does, not with `short-name-taken`. The window is one request.
+- **One way to send a write** (agent; review, Sonnet): every write of the adapter, the
+  four older ones included, now goes through `#sendBatch`, which owns the single post
+  and what counts as a lost answer; each passes how it settles one.
 - **Input the check refuses throws** (agent): `planNewRoadmap` runs
   `checkNewRoadmapInput` itself and throws `AppError('unknown')` for a blank title or a
   short name S1 refuses, so neither repository can write one. A screen checks first.
@@ -261,8 +272,14 @@ Audited at `400c90c`.
   address, `SHORT_NAME_MAX_LENGTH` the limit, and `shortNameInUse(shortName, { roadmaps,
 names })` whether a list of roadmaps has its address (STY-041 D7 passes the cached
   list and no names).
-- **The in-memory double** takes `noTemplate: true` to reject with `invalid-data`, and
-  `write` (`ContractWrite`) to fail or lose the answer, as for a family.
+- **The in-memory double** takes `noStartingPoint: true` to reject with
+  `invalid-data`, `otherNames` for names that are in use by something other than a
+  roadmap, and `write` (`ContractWrite`) to fail or lose the answer, as for a family. It
+  keeps no name for itself: `Template`, `Families` and `Categories` are in use in the
+  Sheets adapter alone.
+- **Not exported for a screen yet**: `shortNameInUse` and `SHORT_NAME_MAX_LENGTH` have
+  no caller outside the domain until STY-041's dialog; if it uses neither, it stops
+  exporting them.
 - **The E2E Sheets fake**: the example spreadsheet ends with a `Template` tab
   (`tests/fixtures/sheets/Template.csv`, its header frozen); an add reads `metadata`,
   the index and the lists, then `header:Template`, and writes one `batchUpdate`. A
@@ -280,10 +297,10 @@ roadmap (STY-040)_; `template` is `template-tab.test.ts`; `fake` is
 | Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | S1       | rule (`checkShortName`, `shortNameAddress`); plan "refuses a blank title, and a short name the rule refuses"; `roadmap-index-parser.test.ts`, which reads each row's id by the same rule                                                                                                                                                                                                                                                                                                                                                       |
-| S2       | adapter "copies the Template and appends the index row in one batchUpdate, after five reads", "writes a chosen family as a publish does, adding the column its ID needs", "keeps a row a co-lead added after the read, appending after it"; template (`copyTemplateRequests`); contract "adds it to the end of the list…", "copies a chosen family, and trims what was typed"; fake "copies the Template after the last tab, shown, down to its header…"                                                                                       |
+| S2       | adapter "copies the Template and appends the index row in one batchUpdate, after five reads", "writes a chosen family as a publish does, adding the column its ID needs", "keeps a row a co-lead added after the read, appending after it"; "leaves the copy's header alone frozen when the Template freezes a row under it too"; template (`copyTemplateRequests`); contract "adds it to the end of the list…", "copies a chosen family, and trims what was typed"; fake "copies the Template after the last tab, shown, down to its header…" |
 | S3       | contract "allows another roadmap's title"; plan "allows another roadmap's title"                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| S4       | adapter "writes nothing for the short name …" (seven names), "writes nothing for a short name a row the list skips has", "keeps the name … for its list while the spreadsheet has no such tab"; contract "writes nothing for a short name in use"; plan (`shortNameInUse`); fake "records a roadmap's row appended without its tab as a violation"                                                                                                                                                                                             |
+| S4       | adapter "writes nothing for the short name …" (seven names), "writes nothing for a short name a row the list skips has", "keeps the name … for its list while the spreadsheet has no such tab"; contract "writes nothing for a short name in use", "writes nothing for a name the data source keeps something else under, in any letter case"; plan (`shortNameInUse`); fake "records a roadmap's row appended without its tab as a violation"                                                                                                 |
 | S5       | contract "writes nothing for a family or category no longer listed"; plan "settles a family or category the list no longer has", "…whose list has gone"                                                                                                                                                                                                                                                                                                                                                                                        |
-| S6       | contract "rejects with invalid-data, writing nothing, when its template is …" (three faults); adapter "fails with invalid-data, writing nothing, when the index is the Template tab", "asks for nothing of a Template that is not there"; template (`usableTemplate`)                                                                                                                                                                                                                                                                          |
+| S6       | contract "rejects with invalid-data, writing nothing, with nothing usable to start a roadmap from"; adapter "fails with invalid-data, writing nothing, when the index is the Template tab", "…when the Template's header has no Title column / no Horizon column", "asks for nothing of a Template that is not there", "…with no cells to read, a chart's tab"; template (`usableTemplate`)                                                                                                                                                    |
 | S7       | adapter "rejects with the write's failure, HTTP … sent once" (401, 403, 429), "rejects with the abort reason, writing nothing, when cancelled during the reads", "adds regardless once the write is sent…", "says the short name is in use when a co-lead added a roadmap with the same title and short name while the answer was lost", "says the roadmap may have been added when the re-read finds an index it can't read"; contract (forbidden, abort, lost and found, lost and not written, re-read fails); plan (`settleLostNewRoadmap`) |
 | S8       | contract, run by `google-sheets-roadmap-repository.test.ts` and `in-memory-roadmap-repository.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                         |

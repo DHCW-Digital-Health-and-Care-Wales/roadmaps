@@ -17,7 +17,8 @@ describeRoadmapRepositoryContract("createInMemoryRoadmapRepository", {
       categories,
       twins = [],
       syncFaults,
-      templateFault,
+      noStartingPoint,
+      otherNames,
     } = {},
   ) =>
     createInMemoryRoadmapRepository(
@@ -33,7 +34,8 @@ describeRoadmapRepositoryContract("createInMemoryRoadmapRepository", {
         families,
         categories,
         syncFaults,
-        noTemplate: templateFault !== undefined,
+        noStartingPoint,
+        otherNames,
       },
     ),
   failing: () => createInMemoryRoadmapRepository(new AppError("network")),

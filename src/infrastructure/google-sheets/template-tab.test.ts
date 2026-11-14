@@ -5,14 +5,36 @@ import { isAppError } from "@/lib/errors"
 import {
   copyTemplateRequests,
   newSheetId,
+  type TemplateTab,
   usableTemplate,
 } from "./template-tab"
 
-const properties = (rowCount?: number, hidden?: boolean) => ({
+const properties = (
+  rowCount?: number,
+  hidden?: boolean,
+  frozenRowCount?: number,
+) => ({
   sheetId: 20,
   title: "Template",
   ...(hidden === undefined ? {} : { hidden }),
-  ...(rowCount === undefined ? {} : { gridProperties: { rowCount } }),
+  ...(rowCount === undefined
+    ? {}
+    : {
+        gridProperties: {
+          rowCount,
+          ...(frozenRowCount === undefined ? {} : { frozenRowCount }),
+        },
+      }),
+})
+const template = (
+  rowCount: number,
+  overrides: Partial<TemplateTab> = {},
+): TemplateTab => ({
+  sheetId: 20,
+  rowCount,
+  frozenRowCount: 0,
+  hidden: false,
+  ...overrides,
 })
 const copy = { sheetId: 77, title: "Community Nursing", index: 4 }
 
@@ -21,15 +43,17 @@ const kinds = (requests: readonly object[]) =>
   requests.flatMap((request) => Object.keys(request))
 
 describe("usableTemplate (STY-040 S6)", () => {
-  it("is the tab's ID, its rows and whether it is hidden", () => {
-    expect(usableTemplate(properties(12, true), ["Title", "horizon"])).toEqual({
+  it("is the tab's ID, its rows, those frozen and whether it is hidden", () => {
+    expect(
+      usableTemplate(properties(12, true, 2), ["Title", "horizon"]),
+    ).toEqual({ sheetId: 20, rowCount: 12, frozenRowCount: 2, hidden: true })
+    // Google leaves out a count of no frozen rows, and a tab that is shown.
+    expect(usableTemplate(properties(1), ["Horizon", "Title"])).toEqual({
       sheetId: 20,
-      rowCount: 12,
-      hidden: true,
+      rowCount: 1,
+      frozenRowCount: 0,
+      hidden: false,
     })
-    expect(usableTemplate(properties(1), ["Horizon", "Title"]).hidden).toBe(
-      false,
-    )
   })
 
   it.each([
@@ -53,9 +77,7 @@ describe("usableTemplate (STY-040 S6)", () => {
 
 describe("copyTemplateRequests (STY-040 S2)", () => {
   it("copies a Template of a header alone, and nothing more", () => {
-    expect(
-      copyTemplateRequests({ sheetId: 20, rowCount: 1, hidden: false }, copy),
-    ).toEqual([
+    expect(copyTemplateRequests(template(1), copy)).toEqual([
       {
         duplicateSheet: {
           sourceSheetId: 20,
@@ -69,16 +91,14 @@ describe("copyTemplateRequests (STY-040 S2)", () => {
 
   it("clears the one row under the header, deleting none, when there is no other", () => {
     expect(
-      kinds(
-        copyTemplateRequests({ sheetId: 20, rowCount: 2, hidden: false }, copy),
-      ),
+      kinds(copyTemplateRequests(template(2, { frozenRowCount: 1 }), copy)),
     ).toEqual(["duplicateSheet", "updateCells"])
   })
 
   it("shows the copy of a hidden Template, deletes every row after the first under its header, and clears that one", () => {
     expect(
       copyTemplateRequests(
-        { sheetId: 20, rowCount: 12, hidden: true },
+        template(12, { hidden: true, frozenRowCount: 1 }),
         copy,
       ).slice(1),
     ).toEqual([
@@ -105,6 +125,26 @@ describe("copyTemplateRequests (STY-040 S2)", () => {
         },
       },
     ])
+  })
+
+  it("leaves the copy's header alone frozen, before deleting, when the Template freezes more rows", () => {
+    const requests = copyTemplateRequests(
+      template(12, { frozenRowCount: 3 }),
+      copy,
+    )
+
+    expect(kinds(requests)).toEqual([
+      "duplicateSheet",
+      "updateSheetProperties",
+      "deleteDimension",
+      "updateCells",
+    ])
+    expect(requests[1]).toEqual({
+      updateSheetProperties: {
+        properties: { sheetId: 77, gridProperties: { frozenRowCount: 1 } },
+        fields: "gridProperties.frozenRowCount",
+      },
+    })
   })
 })
 

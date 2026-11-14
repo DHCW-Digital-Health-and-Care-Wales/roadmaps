@@ -46,17 +46,19 @@ export interface ContractOptions {
    */
   syncFaults?: Readonly<Record<string, readonly SyncFault[]>> | undefined
   /**
-   * What leaves the data source nothing usable to start a roadmap from (STY-040 S6);
-   * without one, a roadmap can be added.
+   * The data source has nothing usable to start a roadmap from, so adding one rejects
+   * with `invalid-data` (STY-040 S6); by default a roadmap can be added.
    */
-  templateFault?: TemplateFault | undefined
+  noStartingPoint?: boolean | undefined
+  /**
+   * Names the data source keeps something else under, which no roadmap's short name
+   * may take, in any letter case (STY-040 S4).
+   */
+  otherNames?: readonly string[] | undefined
 }
 
 /** A mistake in the data source the public site's nightly sync fails on (STY-035). */
 export type SyncFault = "short-colour" | "no-title-column" | "no-horizon-column"
-
-/** Why the template a new roadmap is copied from can't be used (STY-040 S6). */
-export type TemplateFault = "missing" | "no-title-column" | "no-horizon-column"
 
 export interface RoadmapRepositoryContractSetup {
   /**

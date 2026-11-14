@@ -1,10 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import type { NewRoadmapInput } from "../new-roadmap"
-import type {
-  RoadmapRepositoryContractSetup,
-  TemplateFault,
-} from "./roadmap-repository-contract"
+import type { RoadmapRepositoryContractSetup } from "./roadmap-repository-contract"
 import { createTestRoadmap } from "./test-roadmap"
 
 const medicines = {
@@ -164,17 +161,31 @@ export function describeNewRoadmap(
       },
     )
 
-    it.each<TemplateFault>(["missing", "no-title-column", "no-horizon-column"])(
-      "rejects with invalid-data, writing nothing, when its template is %s (S6)",
-      async (templateFault) => {
-        const repository = setup.withRoadmaps(roadmaps, {}, { templateFault })
+    it("writes nothing for a name the data source keeps something else under, in any letter case (S4)", async () => {
+      const repository = setup.withRoadmaps(
+        roadmaps,
+        {},
+        { otherNames: ["Old notes"] },
+      )
 
-        await expect(repository.addRoadmap(input())).rejects.toMatchObject({
-          kind: "invalid-data",
-        })
-        expect(await repository.listRoadmaps()).toStrictEqual(roadmaps)
-      },
-    )
+      await expect(
+        repository.addRoadmap(input({ shortName: "old notes" })),
+      ).resolves.toEqual({ status: "short-name-taken" })
+      expect(await repository.listRoadmaps()).toStrictEqual(roadmaps)
+    })
+
+    it("rejects with invalid-data, writing nothing, with nothing usable to start a roadmap from (S6)", async () => {
+      const repository = setup.withRoadmaps(
+        roadmaps,
+        {},
+        { noStartingPoint: true },
+      )
+
+      await expect(repository.addRoadmap(input())).rejects.toMatchObject({
+        kind: "invalid-data",
+      })
+      expect(await repository.listRoadmaps()).toStrictEqual(roadmaps)
+    })
 
     it("rejects with a forbidden AppError when the write is refused, writing nothing (S7)", async () => {
       const repository = setup.withRoadmaps(

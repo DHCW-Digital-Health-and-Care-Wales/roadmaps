@@ -16,6 +16,8 @@ export interface TemplateTab {
   sheetId: number
   /** Every row of its grid, the header included. */
   rowCount: number
+  /** The rows frozen at its top. */
+  frozenRowCount: number
   hidden: boolean
 }
 
@@ -38,7 +40,7 @@ export function usableTemplate(
   properties: TabProperties | undefined,
   header: readonly string[],
 ): TemplateTab {
-  const rowCount = properties?.gridProperties?.rowCount
+  const { rowCount, frozenRowCount = 0 } = properties?.gridProperties ?? {}
   if (properties === undefined || rowCount === undefined) {
     throw new AppError("invalid-data", {
       message: `The spreadsheet has no ${TEMPLATE_TAB} tab to copy`,
@@ -53,6 +55,7 @@ export function usableTemplate(
   return {
     sheetId: properties.sheetId,
     rowCount,
+    frozenRowCount,
     hidden: properties.hidden === true,
   }
 }
@@ -61,7 +64,9 @@ export function usableTemplate(
  * The requests that copy the `Template` to a new roadmap's tab holding its header alone
  * (STY-040 S2): the copy, shown even when the `Template` is hidden, then every row under
  * the header deleted but the first, which is cleared instead, since Google keeps one row
- * that is not frozen in every tab. The `Template` itself is only the copy's source.
+ * that is not frozen in every tab. A copy with more rows frozen than its header has only
+ * its header frozen first, so that row is one. The `Template` itself is only the copy's
+ * source.
  */
 export function copyTemplateRequests(
   template: TemplateTab,
@@ -82,6 +87,19 @@ export function copyTemplateRequests(
             updateSheetProperties: {
               properties: { sheetId, hidden: false as const },
               fields: "hidden" as const,
+            },
+          },
+        ]
+      : []),
+    ...(template.frozenRowCount > 1
+      ? [
+          {
+            updateSheetProperties: {
+              properties: {
+                sheetId,
+                gridProperties: { frozenRowCount: 1 as const },
+              },
+              fields: "gridProperties.frozenRowCount" as const,
             },
           },
         ]

@@ -25,6 +25,7 @@ import productCCsv from "../../../tests/fixtures/sheets/ProductC.csv?raw"
 import roadmapsCsv from "../../../tests/fixtures/sheets/Roadmaps.csv?raw"
 import {
   applyBatchUpdate,
+  TEMPLATE_TAB,
   type BatchUpdateBody,
   type GridTab,
 } from "../../../tests/fixtures/sheets/apply-batch-update"
@@ -53,7 +54,7 @@ const BATCH_UPDATE_ENDPOINT = new RegExp(
   `^${ENDPOINT.replaceAll(".", "\\.")}:batchUpdate$`,
 )
 const METADATA_FIELDS =
-  "sheets(properties(sheetId,title,index,hidden,gridProperties(rowCount,columnCount)))"
+  "sheets(properties(sheetId,title,index,hidden,gridProperties(rowCount,columnCount,frozenRowCount)))"
 const VALUES_PARAMS = [
   ["majorDimension", "ROWS"],
   ["valueRenderOption", "FORMATTED_VALUE"],
@@ -307,8 +308,6 @@ afterEach(() => {
 /** A tab as the stateful fake holds it: its rows and grid, and its place in the tab list. */
 type FakeTab = GridTab & { index?: number }
 
-const TEMPLATE = "Template"
-
 /** A tab whose grid is exactly as wide and tall as its rows. */
 function gridTab(
   title: string,
@@ -342,7 +341,7 @@ function templateTab(
     )
   return {
     ...gridTab(
-      TEMPLATE,
+      TEMPLATE_TAB,
       [
         header.map((column) => renamed[column] ?? column),
         example("An example item"),
@@ -391,13 +390,25 @@ function serveStatefulSpreadsheet(
       if (readsFail) return HttpResponse.json({}, { status: 500 })
       return HttpResponse.json({
         sheets: tabs.map(
-          ({ sheetId, title, index, hidden, rowCount, columnCount }) => ({
+          ({
+            sheetId,
+            title,
+            index,
+            hidden,
+            rowCount,
+            columnCount,
+            frozenRowCount,
+          }) => ({
             properties: {
               sheetId,
               title,
               ...(index ? { index } : {}),
               ...(hidden ? { hidden } : {}),
-              gridProperties: { rowCount, columnCount },
+              gridProperties: {
+                rowCount,
+                columnCount,
+                ...(frozenRowCount ? { frozenRowCount } : {}),
+              },
             },
           }),
         ),
@@ -410,7 +421,7 @@ function serveStatefulSpreadsheet(
       if (tab === undefined) return HttpResponse.json({}, { status: 400 })
       const headerOnly = rangeOf(request).endsWith(HEADER_ROW)
       // An index named `Template` is read whole, to refuse every write (ADR-012).
-      if (tab.title === TEMPLATE && tab.index && !headerOnly) {
+      if (tab.title === TEMPLATE_TAB && tab.index && !headerOnly) {
         sheetViolations.push("The Template tab read beyond its header row")
       }
       return HttpResponse.json({
@@ -491,7 +502,8 @@ describeRoadmapRepositoryContract("GoogleSheetsRoadmapRepository", {
       categories = categoriesOf(roadmaps),
       twins = [],
       syncFaults = {},
-      templateFault,
+      noStartingPoint = false,
+      otherNames = [],
     } = {},
   ) {
     const lastIndex = roadmaps.length
@@ -537,16 +549,10 @@ describeRoadmapRepositoryContract("GoogleSheetsRoadmapRepository", {
                 lastIndex + 2,
               ),
             ]),
-        ...(templateFault === "missing"
-          ? []
-          : [
-              templateTab(3, lastIndex + 3, {
-                ...(templateFault === "no-title-column" && { Title: "Name" }),
-                ...(templateFault === "no-horizon-column" && {
-                  Horizon: "When",
-                }),
-              }),
-            ]),
+        ...(noStartingPoint ? [] : [templateTab(3, lastIndex + 3)]),
+        ...otherNames.map((name, i) =>
+          gridTab(name, [["Anything"]], 4 + i, lastIndex + 4 + i),
+        ),
       ],
       { write },
     )
@@ -2265,7 +2271,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
         frozenRowCount: 1,
         index: 6,
       })
-      expect(tabNamed(after, TEMPLATE)).toEqual(before[2])
+      expect(tabNamed(after, TEMPLATE_TAB)).toEqual(before[2])
       const gets = spreadsheet.requests.filter(({ method }) => method === "GET")
       expect(gets.slice(1).map(rangeOf).sort()).toEqual([
         "'Categories'",
@@ -2398,8 +2404,8 @@ describe("GoogleSheetsRoadmapRepository", () => {
       const [header = [], ...rows] = EXAMPLE_ROWS
       const spreadsheet = serveStatefulSpreadsheet([
         // With the columns a template needs, so only its being the index refuses it.
-        gridTab(TEMPLATE, [[...header, "Horizon"], ...rows], 0),
-        ...rest.filter(({ title }) => title !== TEMPLATE),
+        gridTab(TEMPLATE_TAB, [[...header, "Horizon"], ...rows], 0),
+        ...rest.filter(({ title }) => title !== TEMPLATE_TAB),
       ])
 
       await expect(httpRepository().addRoadmap(input())).rejects.toMatchObject({
@@ -2410,9 +2416,67 @@ describe("GoogleSheetsRoadmapRepository", () => {
       expect(spreadsheet.bodies).toEqual([])
     })
 
+    it.each([
+      ["no Title column", { Title: "Name" }],
+      ["no Horizon column", { Horizon: "When" }],
+    ])(
+      "fails with invalid-data, writing nothing, when the Template's header has %s (S6)",
+      async (_, renamed) => {
+        const spreadsheet = serveStatefulSpreadsheet(
+          addingTabs().map((tab) =>
+            tab.title === TEMPLATE_TAB ? templateTab(20, 2, renamed) : tab,
+          ),
+        )
+
+        await expect(
+          httpRepository().addRoadmap(input()),
+        ).rejects.toMatchObject({
+          kind: "invalid-data",
+          message: "The Template tab has no Title or no Horizon column",
+        })
+        expect(spreadsheet.bodies).toEqual([])
+      },
+    )
+
+    it("asks for nothing of a Template with no cells to read, a chart's tab (S6)", async () => {
+      // `metadataFor` gives no tab a grid.
+      const requests = serveSpreadsheet({
+        tabs: [...EXAMPLE_TABS, { title: TEMPLATE_TAB, index: 4 }],
+      })
+
+      await expect(httpRepository().addRoadmap(input())).rejects.toMatchObject({
+        kind: "invalid-data",
+        message: "The spreadsheet has no Template tab to copy",
+      })
+      expect(requests.map((request) => tabTitleOf(request))).not.toContain(
+        TEMPLATE_TAB,
+      )
+    })
+
+    it("leaves the copy's header alone frozen when the Template freezes a row under it too (S2)", async () => {
+      const before = addingTabs().map((tab) =>
+        tab.title === TEMPLATE_TAB ? { ...tab, frozenRowCount: 2 } : tab,
+      )
+      const spreadsheet = serveStatefulSpreadsheet(before)
+
+      await expect(httpRepository().addRoadmap(input())).resolves.toMatchObject(
+        { status: "added" },
+      )
+
+      const after = spreadsheet.tabs()
+      expect(after.at(-1)).toMatchObject({
+        title: "Community Nursing",
+        rows: [before[2]?.rows[0], []],
+        rowCount: 2,
+        frozenRowCount: 1,
+      })
+      expect(tabNamed(after, TEMPLATE_TAB)).toEqual(before[2])
+      expect(spreadsheet.bodies).toHaveLength(1)
+    })
+
     it("asks for nothing of a Template that is not there (S6)", async () => {
       const spreadsheet = serveStatefulSpreadsheet(
-        addingTabs().filter(({ title }) => title !== TEMPLATE),
+        addingTabs().filter(({ title }) => title !== TEMPLATE_TAB),
       )
 
       await expect(httpRepository().addRoadmap(input())).rejects.toMatchObject({
@@ -2455,7 +2519,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
       server.use(
         http.get(VALUES_ENDPOINT, ({ request }) => {
           // Returns nothing, so the stateful fake answers.
-          if (tabTitleOf(request) === TEMPLATE) controller.abort(reason)
+          if (tabTitleOf(request) === TEMPLATE_TAB) controller.abort(reason)
         }),
       )
 

@@ -95,10 +95,11 @@ import {
 
 /**
  * Partial-response mask: only the tab properties we use (ADR-002, ADR-009), with each
- * grid's size so a publish can grow it (ADR-012).
+ * grid's size so a publish can grow it (ADR-012), and its frozen rows so a copy of the
+ * `Template` can lose its rows (STY-040).
  */
 const SPREADSHEET_METADATA_FIELDS =
-  "sheets(properties(sheetId,title,index,hidden,gridProperties(rowCount,columnCount)))"
+  "sheets(properties(sheetId,title,index,hidden,gridProperties(rowCount,columnCount,frozenRowCount)))"
 
 /** Every cell as displayed, as the public site's CSV export reads it (ADR-009, ADR-011). */
 const SHEET_VALUES_PARAMS = {
@@ -272,17 +273,11 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
     if (plan.kind === "settled") return plan.outcome
     signal?.throwIfAborted()
 
-    try {
-      await this.#client.postJson(`${this.#spreadsheetPath}:batchUpdate`, {
-        requests: batchRequests(read, plan.writes),
-      })
-    } catch (error) {
-      if (isAppError(error) && error.kind === "network") {
-        return this.#settleLostWrite(roadmapId, plan.writes, error)
-      }
-      throw error
-    }
-    return { status: "published" }
+    return this.#sendBatch<PublishOutcome>(
+      batchRequests(read, plan.writes),
+      { status: "published" },
+      (lost) => this.#settleLostWrite(roadmapId, plan.writes, lost),
+    )
   }
 
   /**
@@ -312,24 +307,18 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
     )
     const index = new TabWriter(read.indexTab, read.index.columns)
     index.append(newIndexRow(read, roadmap))
-    try {
-      await this.#client.postJson(`${this.#spreadsheetPath}:batchUpdate`, {
-        requests: [
-          ...copyTemplateRequests(template, {
-            sheetId,
-            title: roadmap.itemsLocation,
-            index: read.tabs.size,
-          }),
-          ...index.requests(),
-        ],
-      })
-    } catch (error) {
-      if (isAppError(error) && error.kind === "network") {
-        return this.#settleLostRoadmap(roadmap, sheetId, error)
-      }
-      throw error
-    }
-    return { status: "added", roadmap }
+    return this.#sendBatch<NewRoadmapOutcome>(
+      [
+        ...copyTemplateRequests(template, {
+          sheetId,
+          title: roadmap.itemsLocation,
+          index: read.tabs.size,
+        }),
+        ...index.requests(),
+      ],
+      { status: "added", roadmap },
+      (lost) => this.#settleLostRoadmap(roadmap, sheetId, lost),
+    )
   }
 
   /**
@@ -475,23 +464,20 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
     if (familyId !== null) row.writeFamily(familyId)
     if (categoryId !== null) row.writeCategory(categoryId)
     const requests = index.requests()
-    if (requests.length === 0) return { status: "matched" }
+    const matched: MatchOutcome = { status: "matched" }
+    if (requests.length === 0) return matched
 
-    try {
-      await this.#client.postJson(`${this.#spreadsheetPath}:batchUpdate`, {
-        requests,
-      })
-    } catch (error) {
-      if (!isAppError(error) || error.kind !== "network") throw error
-      const held = await this.#readRoadmapIndex({}).then(
-        (again) =>
+    return this.#sendBatch(
+      requests,
+      matched,
+      whenHeld(matched, async () => {
+        const again = await this.#readRoadmapIndex({})
+        return (
           again.index.entries.find(({ roadmap }) => roadmap.id === loaded.id)
-            ?.roadmap.outOfStep === false,
-        () => false,
-      )
-      if (!held) throw error
-    }
-    return { status: "matched" }
+            ?.roadmap.outOfStep === false
+        )
+      }),
+    )
   }
 
   /**
@@ -541,20 +527,13 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
     if (plan.writeState) {
       index.write(entry.row, "Enabled", change.published ? "Yes" : "No")
     }
-    try {
-      await this.#client.postJson(`${this.#spreadsheetPath}:batchUpdate`, {
-        requests:
-          roadmapRead && plan.writes
-            ? batchRequests(roadmapRead, plan.writes, index)
-            : index.requests(),
-      })
-    } catch (error) {
-      if (isAppError(error) && error.kind === "network") {
-        return this.#settleLostState(loaded, change, plan, error)
-      }
-      throw error
-    }
-    return { status: "set" }
+    return this.#sendBatch<PublishedStateOutcome>(
+      roadmapRead && plan.writes
+        ? batchRequests(roadmapRead, plan.writes, index)
+        : index.requests(),
+      { status: "set" },
+      (lost) => this.#settleLostState(loaded, change, plan, lost),
+    )
   }
 
   /**
@@ -600,24 +579,41 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
 
   /**
    * Sends a family's writes in one `batchUpdate`, if any. A write whose answer is lost
-   * is settled by re-reading: saved when `held` finds every write in place, else the
-   * network error is rethrown.
+   * is saved when `held` finds every write in place (`whenHeld`).
    */
   async #writeFamily(
     requests: BatchRequest[],
     held: () => Promise<boolean>,
     family: Family,
   ): Promise<FamilyOutcome> {
-    if (requests.length === 0) return { status: "saved", family }
+    const saved: FamilyOutcome = { status: "saved", family }
+    if (requests.length === 0) return saved
+    return this.#sendBatch(requests, saved, whenHeld(saved, held))
+  }
+
+  /**
+   * Sends every write in one `batchUpdate`, which Google applies all or nothing, once
+   * and never again: `sent` is its outcome. A write with no HTTP answer may still have
+   * been applied (ADR-012 Option 16), so `settleLost` re-reads to give its outcome, or
+   * rethrows the failure it is given when nothing was written. Any other failure is
+   * thrown as it is.
+   */
+  async #sendBatch<Outcome>(
+    requests: BatchRequest[],
+    sent: Outcome,
+    settleLost: (lost: AppError) => Promise<Outcome>,
+  ): Promise<Outcome> {
     try {
       await this.#client.postJson(`${this.#spreadsheetPath}:batchUpdate`, {
         requests,
       })
     } catch (error) {
-      if (!isAppError(error) || error.kind !== "network") throw error
-      if (!(await held().catch(() => false))) throw error
+      if (isAppError(error) && error.kind === "network") {
+        return settleLost(error)
+      }
+      throw error
     }
-    return { status: "saved", family }
+    return sent
   }
 
   /**
@@ -767,8 +763,9 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
     options: RepositoryReadOptions,
   ): Promise<TemplateTab> {
     const properties = tabs.get(TEMPLATE_TAB)
+    // Nothing is asked of a tab that is not there, or has no cells to read.
     const [header = []] =
-      properties === undefined
+      properties?.gridProperties === undefined
         ? []
         : await this.#readRange(`${quoteTabTitle(TEMPLATE_TAB)}!1:1`, options)
     return usableTemplate(properties, header)
@@ -790,6 +787,18 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
         { searchParams: SHEET_VALUES_PARAMS, signal },
       ),
     )
+  }
+}
+
+/**
+ * How a write with no partial outcome settles a lost answer: `sent` when a re-read by
+ * `held` finds every write in place, else the failure is rethrown. A re-read that fails
+ * finds nothing.
+ */
+function whenHeld<Outcome>(sent: Outcome, held: () => Promise<boolean>) {
+  return async (lost: AppError): Promise<Outcome> => {
+    if (!(await held().catch(() => false))) throw lost
+    return sent
   }
 }
 

@@ -283,6 +283,9 @@ Nothing checks permission in advance.
   roadmap was added, as the row and the tab are one write; else its short name is in
   use, by another's roadmap, whatever that holds; else nothing was written (`network`).
   A failed re-read is unconfirmed. It is never retried.
+- The tab-list read gains each tab's frozen rows, beside its grid's size: a copy of a
+  `Template` that freezes more than its header is left with its header alone frozen, so
+  its other rows can go.
 - `RoadmapRepository` gains `addRoadmap` (amends ADR-002).
 
 ## Options (owner's choice marked ✅, 2026-11-11)

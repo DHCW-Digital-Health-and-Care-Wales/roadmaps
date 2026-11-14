@@ -4,7 +4,7 @@ import { AppError } from "@/lib/errors"
 
 /**
  * Response of `GET /{spreadsheetId}?fields=sheets(properties(sheetId,title,index,hidden,
- * gridProperties(rowCount,columnCount)))`.
+ * gridProperties(rowCount,columnCount,frozenRowCount)))`.
  */
 const spreadsheetMetadataSchema = z.object({
   // Google omits `sheets` (and `false`/default-valued fields) rather than sending them.
@@ -16,11 +16,13 @@ const spreadsheetMetadataSchema = z.object({
           title: z.string(),
           index: z.optional(z.int()),
           hidden: z.optional(z.boolean()),
-          // The grid's size, so a write can grow it first; absent for a non-grid sheet.
+          // The grid's size, so a write can grow it first, and the rows frozen at its
+          // top, which Google omits when there are none; absent for a non-grid sheet.
           gridProperties: z.optional(
             z.object({
               rowCount: z.optional(z.int()),
               columnCount: z.optional(z.int()),
+              frozenRowCount: z.optional(z.int()),
             }),
           ),
         }),

@@ -290,6 +290,12 @@ describe("applyBatchUpdate copying the Template for a new roadmap (STY-040)", ()
   const show = (sheetId = 77, hidden = false, fields = "hidden") => ({
     updateSheetProperties: { properties: { sheetId, hidden }, fields },
   })
+  const freeze = (frozenRowCount: number, sheetId = 77) => ({
+    updateSheetProperties: {
+      properties: { sheetId, gridProperties: { frozenRowCount } },
+      fields: "gridProperties.frozenRowCount",
+    },
+  })
   const deleteRows = (
     startIndex: number,
     endIndex: number,
@@ -355,6 +361,7 @@ describe("applyBatchUpdate copying the Template for a new roadmap (STY-040)", ()
     ["rows deleted beyond the grid", [copy(), deleteRows(2, 5)]],
     ["rows cleared beyond the grid", [copy(), clearRows(1, 5)]],
     ["a tab that is not there unhidden", [show(5)]],
+    ["every row of the copy frozen", [copy(), freeze(4)]],
   ])("rejects the whole body, as Google does, for %s", (_, requests) => {
     const result = applyBatchUpdate(tabs(), { requests })
 
@@ -399,7 +406,18 @@ describe("applyBatchUpdate copying the Template for a new roadmap (STY-040)", ()
       [copy(), deleteRows(1, 2, 77, "COLUMNS")],
       "not ROWS",
     ],
-    ["the copy hidden", [copy(), show(77, true)], "not hidden: false"],
+    ["the copy hidden", [copy(), show(77, true)], "hides Community Nursing"],
+    ["the copy's header unfrozen", [copy(), freeze(0)], "not its header alone"],
+    [
+      "the Template's frozen rows changed",
+      [freeze(1, 9)],
+      "not a tab this batchUpdate copied",
+    ],
+    [
+      "another property of the copy changed",
+      [copy(), show(77, false, "title")],
+      "not hidden or gridProperties.frozenRowCount",
+    ],
     [
       "a roadmap's row appended as published",
       [copy(), newRow("Yes")],
@@ -421,6 +439,33 @@ describe("applyBatchUpdate copying the Template for a new roadmap (STY-040)", ()
     expect(result.violations).toEqual([
       expect.stringContaining(violation) as string,
     ])
+  })
+
+  it("deletes every row but one under the header once the copy has its header alone frozen", () => {
+    const twoFrozen = { ...hiddenTemplate(), frozenRowCount: 2 }
+    const before = [roadmaps(), twoFrozen]
+    const start = copy({ insertSheetIndex: 2 })
+
+    expect(
+      applyBatchUpdate(before, { requests: [start, deleteRows(2, 4)] }),
+    ).toMatchObject({ error: expect.stringContaining("non-frozen") as string })
+    expect(
+      applyBatchUpdate(before, {
+        requests: [start, freeze(1), deleteRows(2, 4), clearRows(1, 2)],
+      }),
+    ).toMatchObject({
+      tabs: [
+        {},
+        { title: "Template", frozenRowCount: 2 },
+        {
+          title: "Community Nursing",
+          rows: [["Title", "Horizon"], []],
+          rowCount: 2,
+          frozenRowCount: 1,
+        },
+      ],
+      violations: [],
+    })
   })
 
   it("records a Welsh cell in an appended row as a violation", () => {

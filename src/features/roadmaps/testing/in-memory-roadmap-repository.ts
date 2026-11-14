@@ -80,7 +80,9 @@ export interface InMemoryRoadmapRepositoryOptions {
    */
   syncFaults?: Readonly<Record<string, readonly SyncFault[]>> | undefined
   /** Nothing usable to start a roadmap from: adding one fails (STY-040 S6). */
-  noTemplate?: boolean | undefined
+  noStartingPoint?: boolean | undefined
+  /** Names kept for something else, which no roadmap's short name may take (STY-040 S4). */
+  otherNames?: readonly string[] | undefined
 }
 
 export interface InMemoryRoadmapRepository extends RoadmapRepository {
@@ -115,7 +117,8 @@ export function createInMemoryRoadmapRepository(
     categories = source instanceof AppError ? [] : categoriesOf(source),
     organisations = TEST_ORGANISATIONS,
     syncFaults = {},
-    noTemplate = false,
+    noStartingPoint = false,
+    otherNames = [],
   }: InMemoryRoadmapRepositoryOptions = {},
 ): InMemoryRoadmapRepository {
   const roadmaps =
@@ -378,13 +381,18 @@ export function createInMemoryRoadmapRepository(
       }),
     addRoadmap: (input, { signal } = {}) =>
       respond(signal, (list): NewRoadmapOutcome => {
-        if (noTemplate) {
-          throw new AppError("invalid-data", { message: "No usable template" })
+        if (noStartingPoint) {
+          throw new AppError("invalid-data", {
+            message: "Nothing to start a roadmap from",
+          })
         }
-        /** As the Google adapter reads them: its rows, and the names their items are under. */
+        /** Every name in use: those its roadmaps' items are under, and those kept apart. */
         const inUse = () => ({
           roadmaps: list,
-          names: list.map(({ itemsLocation }) => itemsLocation),
+          names: [
+            ...list.map(({ itemsLocation }) => itemsLocation),
+            ...otherNames,
+          ],
         })
         const plan = planNewRoadmap(input, { ...inUse(), ...lists })
         if (plan.kind === "settled") return plan.outcome

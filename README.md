@@ -198,8 +198,9 @@ Adding a roadmap writes at once, after a re-read, in one all-or-nothing
   the `Template` is hidden, with every row after the first under its header deleted and
   that one row cleared of its values, formatting and data validation, so the tab holds
   the `Template`'s header row over one empty row (Google keeps one row that is not
-  frozen in every tab). It has the `Template`'s columns, and gains an `Item ID` column
-  at its first publish, as any roadmap's tab does;
+  frozen in every tab). Where the `Template` freezes more rows than its header, the
+  copy has its header alone frozen. It has the `Template`'s columns, and gains an
+  `Item ID` column at its first publish, as any roadmap's tab does;
 - a new row of the roadmap index after the last row in use, appended by Google so a
   row a co-lead added meanwhile is kept: `Sheet` (the short name), `Enabled` as exactly
   `No`, `Title`, and, where given, `Product Lead`, a chosen family's `Family ID`,

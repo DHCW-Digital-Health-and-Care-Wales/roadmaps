@@ -58,6 +58,12 @@ export type BatchRequest =
       }
     }
   | {
+      updateSheetProperties: {
+        properties: { sheetId: number; gridProperties: { frozenRowCount: 1 } }
+        fields: "gridProperties.frozenRowCount"
+      }
+    }
+  | {
       deleteDimension: {
         range: {
           sheetId: number

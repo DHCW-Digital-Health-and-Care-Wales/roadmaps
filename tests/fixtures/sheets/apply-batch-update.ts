@@ -15,13 +15,13 @@ export interface GridTab {
   frozenRowCount?: number
 }
 
-/** The `spreadsheets.batchUpdate` requests the editor sends (ADR-012, STY-023 D6, STY-040). */
 const cellSchema = z.object({
   userEnteredValue: z.optional(z.record(z.string(), z.unknown())),
 })
 const rowsSchema = z.array(
   z.object({ values: z._default(z.array(cellSchema), []) }),
 )
+/** The `spreadsheets.batchUpdate` requests the editor sends (ADR-012, STY-023 D6, STY-040). */
 const requestSchema = z.union([
   z.object({
     appendDimension: z.object({
@@ -69,7 +69,11 @@ const requestSchema = z.union([
   }),
   z.object({
     updateSheetProperties: z.object({
-      properties: z.object({ sheetId: z.int(), hidden: z.boolean() }),
+      properties: z.object({
+        sheetId: z.int(),
+        hidden: z.optional(z.boolean()),
+        gridProperties: z.optional(z.object({ frozenRowCount: z.int() })),
+      }),
       fields: z.string(),
     }),
   }),
@@ -111,9 +115,9 @@ const FAMILY_WELSH = /^family$/i
 
 /**
  * The tab the editor never changes (ADR-012) and copies to start a roadmap (STY-040),
- * kept apart from the adapter's like `WELSH_HEADER`.
+ * kept apart from the adapter's like `WELSH_HEADER`: the fakes and their tests share it.
  */
-const TEMPLATE_TAB = "Template"
+export const TEMPLATE_TAB = "Template"
 
 /** The tab, with the roadmap index, the editor appends rows to: a new family's (STY-029). */
 const FAMILIES_TAB = "Families"
@@ -137,8 +141,9 @@ const ENABLED_HEADER = /^\s*enabled\s*$/i
  * - a row appended to a tab but `Families` and the roadmap index, and one appended to
  *   the index that is published or names no tab the same body copied;
  * - a copy of a tab but `Template`, or placed anywhere but after the last tab;
- * - a tab unhidden, rows deleted or cells cleared but in a tab the same body copied, and
- *   its header row deleted or cleared.
+ * - a tab unhidden or its frozen rows changed, rows deleted or cells cleared, but in a
+ *   tab the same body copied; that tab hidden, its header row unfrozen, deleted or
+ *   cleared.
  */
 export function applyBatchUpdate(
   tabs: readonly GridTab[],
@@ -321,18 +326,40 @@ class Batch {
     this.#copies.add(newSheetId)
   }
 
+  /** The copy shown (`hidden`), or left with its header alone frozen. */
   #updateSheetProperties({
-    properties: { sheetId, hidden },
+    properties: { sheetId, hidden, gridProperties },
     fields,
   }: RequestOf<"updateSheetProperties">): void {
     const tab = this.#copy(sheetId, "updateSheetProperties")
-    if (fields !== "hidden" || hidden) {
-      this.violations.push(
-        `updateSheetProperties ${fields} of ${tab.title}, not hidden: false`,
-      )
+    if (fields === "hidden" && hidden !== undefined) {
+      if (hidden) {
+        this.violations.push(`updateSheetProperties hides ${tab.title}`)
+        tab.hidden = true
+      } else {
+        delete tab.hidden
+      }
+      return
     }
-    if (hidden) tab.hidden = true
-    else delete tab.hidden
+    if (fields === "gridProperties.frozenRowCount" && gridProperties) {
+      const { frozenRowCount } = gridProperties
+      // As Google refuses: a tab keeps at least one row that is not frozen.
+      if (frozenRowCount < 0 || frozenRowCount >= tab.rowCount) {
+        throw new Rejection(
+          `${tab.title} can't freeze ${String(frozenRowCount)} of its rows`,
+        )
+      }
+      if (frozenRowCount !== 1) {
+        this.violations.push(
+          `updateSheetProperties freezes ${String(frozenRowCount)} rows of ${tab.title}, not its header alone`,
+        )
+      }
+      tab.frozenRowCount = frozenRowCount
+      return
+    }
+    this.violations.push(
+      `updateSheetProperties ${fields} of ${tab.title}, not hidden or gridProperties.frozenRowCount`,
+    )
   }
 
   #deleteDimension({

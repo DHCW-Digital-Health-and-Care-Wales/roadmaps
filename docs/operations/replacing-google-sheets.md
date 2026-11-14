@@ -61,8 +61,10 @@ doc comments first, since they are the contract.
 options?)` seeds the fake with roadmaps, their items, and how a publish's write
    behaves (`ContractWrite`: fails, or its answer is lost), whose items cannot be
    read (`unreadableItems`), the `families` and `categories` lists (by default those
-   the roadmaps link to; `null` for none), and what leaves nothing usable to start a
-   roadmap from (`templateFault`); `failing()` fails every
+   the roadmaps link to; `null` for none), names kept for something other than a
+   roadmap (`otherNames`), and a data source with nothing to start a roadmap from
+   (`noStartingPoint`), which an API that needs no template fakes as whatever makes it
+   answer so; `failing()` fails every
    request. The Google adapter's test is the worked example.
 3. **Config.** Add e.g. `VITE_ROADMAPS_API_URL` to the Zod schema in
    `src/app/config.ts`, `.env.example` and `.env.production`.

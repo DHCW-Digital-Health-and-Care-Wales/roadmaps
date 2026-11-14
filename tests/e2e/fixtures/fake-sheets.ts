@@ -5,6 +5,7 @@ import type { Page, Route } from "@playwright/test"
 
 import {
   applyBatchUpdate,
+  TEMPLATE_TAB,
   type GridTab,
 } from "../../fixtures/sheets/apply-batch-update"
 import { parseCsv } from "../../fixtures/sheets/parse-csv"
@@ -16,7 +17,7 @@ const SPREADSHEETS_URL = "https://sheets.googleapis.com/v4/spreadsheets"
 
 /** The partial-response mask of the tab list read, exactly. */
 const METADATA_FIELDS =
-  "sheets(properties(sheetId,title,index,hidden,gridProperties(rowCount,columnCount)))"
+  "sheets(properties(sheetId,title,index,hidden,gridProperties(rowCount,columnCount,frozenRowCount)))"
 
 /** The query of every values read, exactly (ADR-009, ADR-011). */
 const VALUES_QUERY: Readonly<Record<string, string>> = {
@@ -49,9 +50,6 @@ export interface FakeTab {
  * and the lists, then the `Template`'s header (STY-040).
  */
 export type SheetsRead = "metadata" | `values:${string}` | `header:${string}`
-
-/** The tab the app copies to start a roadmap, reading its header row alone (STY-040). */
-const TEMPLATE_TAB = "Template"
 
 const FIXTURES = path.resolve(import.meta.dirname, "../../fixtures/sheets")
 
@@ -264,13 +262,20 @@ export class FakeSheets {
       return fulfil(route, 200, {
         // The `fields` mask: only these properties. Google omits `0` and `false`.
         sheets: this.#grids().map(
-          ({ sheetId, title, hidden, rowCount, columnCount }, index) => ({
+          (
+            { sheetId, title, hidden, rowCount, columnCount, frozenRowCount },
+            index,
+          ) => ({
             properties: {
               sheetId,
               title,
               ...(index > 0 && { index }),
               ...(hidden && { hidden }),
-              gridProperties: { rowCount, columnCount },
+              gridProperties: {
+                rowCount,
+                columnCount,
+                ...(frozenRowCount && { frozenRowCount }),
+              },
             },
           }),
         ),
@@ -334,21 +339,18 @@ export class FakeSheets {
     }
     const range = decodeURIComponent(url.pathname.slice(valuesPrefix.length))
     // A whole tab, its title quoted with any quote doubled, as one path segment; or,
-    // for the `Template` alone, its header row.
-    const tabs = this.spreadsheet.map((tab) => ({
-      tab,
-      quoted: `'${tab.title.replaceAll("'", "''")}'`,
-    }))
-    const header = tabs.find(({ quoted }) => range === `${quoted}!1:1`)
-    const whole = tabs.find(({ quoted }) => range === quoted)
-    const isTemplate = (header ?? whole)?.tab.title === TEMPLATE_TAB
-    // An index named `Template` is read whole, as any index is.
-    const isIndex = (header ?? whole)?.tab === this.spreadsheet[0]
-    if (header !== undefined && isTemplate && !isIndex) {
-      return { kind: "header", tab: header.tab }
-    }
-    if (whole !== undefined && (!isTemplate || isIndex)) {
-      return { kind: "values", tab: whole.tab }
+    // for the `Template` alone, its header row. An index named `Template` is read
+    // whole, as any index is.
+    const quoted = (tab: FakeTab) => `'${tab.title.replaceAll("'", "''")}'`
+    const headerOnly = (tab: FakeTab) =>
+      tab.title === TEMPLATE_TAB && tab !== this.spreadsheet[0]
+    for (const tab of this.spreadsheet) {
+      if (headerOnly(tab) && range === `${quoted(tab)}!1:1`) {
+        return { kind: "header", tab }
+      }
+      if (!headerOnly(tab) && range === quoted(tab)) {
+        return { kind: "values", tab }
+      }
     }
     return { status: 400, detail: `values of ${range}, not a tab's to read` }
   }

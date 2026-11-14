@@ -83,8 +83,9 @@ about 340px. With both shut the form is about 860px.
 5. A field with many controls starts shut in the form and opens on request: Tags
    (STY-037 S19) and Organisations (STY-038) (F6; owner, STY-037 D13, STY-038 D1).
 6. **Unchanged:** tags are free text; the card's Tags line; ADR-012's per-roadmap,
-   all-or-nothing publish, its conflict review and Refresh rules; the reading rules of
-   F3 and F4.
+   all-or-nothing publish and its Refresh rules; its conflict review, but for one new
+   conflict: Welsh tags written since the item was read (STY-037 S22, D17); the reading
+   rules of F3 and F4.
 
 ## Shared assumptions and contracts
 
@@ -96,7 +97,9 @@ and says so in the PR, since the format is a contract with the public site.
 ### ADR-012 amendment
 
 STY-037 amends ADR-012 in place (`### STY-037 amendments`) in its PR, citing its owner
-decisions: tags are no longer read-only, and no Welsh cell is written (D14).
+decisions: tags are no longer read-only; no Welsh cell is written (D14); and Welsh
+tags written since the item was read are a conflict that only dropping the tag change
+resolves (D17).
 
 ### A field that opens on request
 

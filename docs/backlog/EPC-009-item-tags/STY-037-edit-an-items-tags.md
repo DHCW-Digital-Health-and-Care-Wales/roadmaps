@@ -4,7 +4,7 @@
 - **Type**: Feature
 - **Area**: Domain + Infrastructure + Features/UI + i18n (en + cy) + E2E
 - **Epic**: [EPC-009-item-tags](README.md)
-- **Depends on**: STY-038 (hard: it builds the field that opens on request)
+- **Depends on**: STY-038 (hard, must be on the default branch)
 - **Binding ADRs**: ADR-012 (this story amends _What is editable_), ADR-014, ADR-011,
   ADR-010, ADR-008
 - **Suggested model**: Opus — an ordered, open-ended field through the pending-change
@@ -29,7 +29,8 @@ field has no loading or failure state of its own.
 
 S1–S14 hold for any editor with a control per tag; S15–S18 are design B's own, which
 the owner chose (D11); S19 is how the field opens in the form (D13); S20 and S21 are
-the owner's answers on Welsh tags and spelling (D14, D15). This story changes what the
+the owner's answers on Welsh tags and spelling (D14, D15); S22 is the agent's guard on
+the Welsh rule (D17). This story changes what the
 editor writes to the shared data source, a contract with the public site: the item's
 `Labels` cell (S12). `Labels (cy)` is never written (S20).
 
@@ -189,8 +190,9 @@ one adds its tag and takes it from the list
 **Then** the Tags field shows both tags on one line beside a button named "Change tags",
 and no editor; an item with no tags reads "No tags" beside "Add tags"
 **And** choosing the button shows the editor in place, with focus in "Add a tag"; the
-button, now "Close tags", shuts it, keeping a name still being changed and text typed
-but not yet added, and the line shows the tags as changed
+button, now "Close tags", shuts it, keeping a name still being changed and adding text
+typed but not yet added, as confirming the form does (S8), and the line shows the tags
+as changed
 **And** confirming the form keeps the tags whether the field is open or shut
 **And** the card's own Tags line does not show while the form is open
 
@@ -272,7 +274,7 @@ Welsh versions and can't be changed here: Sam's tag change can be dropped, not k
 - **D16** (agent, 2026-11-13): S20 applies whenever the Welsh cell holds anything, a
   count mismatch included, over only when Welsh shows: editing the English could bring
   the counts level and pair the wrong Welsh. The repository must say so of an item.
-- **D17** (agent, 2026-11-13, round 3 review): a publish that finds Welsh tags written
+- **D17** (agent, 2026-11-14, round 3 review): a publish that finds Welsh tags written
   since the item was read is refused as a conflict, over writing the English: D14 and
   D16 would otherwise fail to a co-lead or translator working meanwhile → S22.
 

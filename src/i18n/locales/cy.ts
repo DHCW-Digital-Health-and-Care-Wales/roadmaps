@@ -177,6 +177,61 @@ export const cy = {
         },
       },
     },
+    add: {
+      title: "Ychwanegu map trywydd",
+      submit: "Ychwanegu'r map trywydd",
+      shortName: "Enw byr",
+      titleHint: "Yr enw mae'r wefan gyhoeddus yn ei ddangos.",
+      addressHint:
+        "Bydd ei gyfeiriad cyhoeddus yn gorffen â “{{address}}”. Does dim modd ei newid yma wedyn.",
+      shortNameHint:
+        "Mae'n gorffen cyfeiriad cyhoeddus y map trywydd. Does dim modd ei newid yma wedyn.",
+      note: "Mae'n dechrau heb ei gyhoeddi, heb eitemau. Fydd y wefan gyhoeddus ddim yn ei ddangos nes i chi ei gyhoeddi.",
+      errors: {
+        shortName: {
+          blank: "Rhowch enw byr",
+          "invalid-character":
+            "Defnyddiwch lythrennau, rhifau, bylchau a chysylltnodau yn unig",
+          "too-long": "Defnyddiwch {{max, number}} nod neu lai",
+          "no-address": "Cynhwyswch lythyren o a i z, neu rif",
+          taken:
+            "Mae'r enw byr hwn yn cael ei ddefnyddio eisoes. Dewiswch un arall.",
+        },
+        notListed: {
+          familyId:
+            "Dydy'r teulu hwn ddim wedi'i restru mwyach. Dewiswch un arall.",
+          categoryId:
+            "Dydy'r categori hwn ddim wedi'i restru mwyach. Dewiswch un arall.",
+        },
+      },
+      expired:
+        "Ailgysylltwch â Google i ychwanegu'r map trywydd. Mae'r hyn rydych wedi'i deipio wedi'i gadw.",
+      failed: {
+        title: "Doedd dim modd ychwanegu'r map trywydd",
+        errors: {
+          unauthenticated:
+            "Daeth eich sesiwn i ben cyn iddo gael ei ychwanegu. Rhowch gynnig arall arni.",
+          forbidden:
+            "Does gan y cyfrif Google hwn ddim hawl i ychwanegu mapiau trywydd. Gofynnwch i berchennog y daenlen am fynediad golygu.",
+          "not-found":
+            "Doedd dim modd dod o hyd i'r daenlen. Gwiriwch ei bod yn dal i fodoli.",
+          "rate-limited":
+            "Mae gormod o geisiadau ar hyn o bryd. Arhoswch funud a rhowch gynnig arall arni.",
+          network:
+            "Methu cysylltu. Gwiriwch eich cysylltiad â'r rhyngrwyd a rhowch gynnig arall arni.",
+          "invalid-response": "Roedd yr ateb mewn fformat annisgwyl.",
+          "invalid-data":
+            "Mae'r templed ar gyfer mapiau trywydd newydd ar goll neu ddim yn y fformat disgwyliedig yn y daenlen. Gofynnwch i berchennog y daenlen ei wirio.",
+          unknown: "Aeth rhywbeth o'i le. Rhowch gynnig arall arni.",
+        },
+      },
+      unconfirmed: {
+        title: "Efallai bod y map trywydd wedi'i ychwanegu",
+        description:
+          "Cafodd yr ateb ei golli. Canslwch, yna adnewyddwch eich mapiau trywydd i wirio cyn ei ychwanegu eto.",
+      },
+      added: "Cafodd {{title}} ei ychwanegu. Dydy e ddim wedi'i gyhoeddi eto.",
+    },
     card: {
       productLead: "Arweinydd cynnyrch: {{name}}",
       updated: "Diweddarwyd {{date}}",

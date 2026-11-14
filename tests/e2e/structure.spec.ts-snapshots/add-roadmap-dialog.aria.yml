@@ -1,0 +1,26 @@
+- dialog "Add a roadmap":
+  - heading "Add a roadmap" [level=2]
+  - form "Add a roadmap":
+    - text: Title
+    - paragraph: The name the public site shows.
+    - paragraph: "Error: Enter a title"
+    - textbox "Title" [invalid]
+    - text: Short name
+    - paragraph: Its public address will end “producta”. It can't be changed here later.
+    - paragraph: "Error: This short name is already in use. Choose another."
+    - textbox "Short name" [invalid]: ProductA
+    - text: Family
+    - combobox "Family":
+      - option "No family" [selected]
+      - option "Single Record"
+      - option "Medicines & Diagnostics"
+    - text: Category
+    - combobox "Category":
+      - option "No category" [selected]
+      - option "GP & Community Services"
+      - option "Tests, Scans & Results"
+    - text: Product lead
+    - textbox "Product lead"
+    - paragraph: It starts not published, with no items. The public site doesn't show it until you publish it.
+    - button "Add roadmap"
+    - button "Cancel"

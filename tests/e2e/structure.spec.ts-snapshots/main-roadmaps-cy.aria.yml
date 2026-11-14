@@ -10,6 +10,7 @@
         - /url: /#/families
     - paragraph: 3 map trywydd, 1 heb ei gyhoeddi
     - button "Adnewyddu"
+    - button "Ychwanegu map trywydd"
     - heading "Meddyginiaethau a Diagnosteg" [level=2]
     - list "Meddyginiaethau a Diagnosteg":
       - listitem:

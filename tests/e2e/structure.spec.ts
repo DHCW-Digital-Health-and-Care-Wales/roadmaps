@@ -1,6 +1,11 @@
 import type { Locator, Page } from "@playwright/test"
 
-import { EXAMPLE_INDEX_ROWS, withRoadmapIndex } from "./fixtures/fake-sheets"
+import {
+  EXAMPLE_INDEX_ROWS,
+  EXAMPLE_LISTS,
+  EXAMPLE_SPREADSHEET,
+  withRoadmapIndex,
+} from "./fixtures/fake-sheets"
 import {
   holdConnectedNotice,
   type Language,
@@ -301,6 +306,27 @@ test.describe("editing a roadmap (STY-025)", () => {
     ).toBeVisible()
     await expectStructure(main, "edit-start-waiting.aria.yml")
   })
+})
+
+test("the Add a roadmap dialog, refused (STY-041)", async ({
+  page,
+  sheets,
+}) => {
+  sheets.spreadsheet = [...EXAMPLE_SPREADSHEET, ...EXAMPLE_LISTS]
+  await page.goto("./")
+  await connect(page)
+  await expect(roadmapCards(page)).toHaveCount(3)
+  await page
+    .getByRole("main")
+    .getByRole("button", { name: "Add a roadmap" })
+    .click()
+  const dialog = page.getByRole("dialog", { name: "Add a roadmap" })
+  await expect(dialog.getByRole("combobox", { name: "Family" })).toBeEnabled()
+  await dialog.getByRole("textbox", { name: "Short name" }).fill("ProductA")
+  await dialog.getByRole("button", { name: "Add roadmap" }).click()
+  await expect(dialog.getByText("Enter a title")).toBeVisible()
+
+  await expectStructure(dialog, "add-roadmap-dialog.aria.yml")
 })
 
 test("the not-found page", async ({ page }) => {

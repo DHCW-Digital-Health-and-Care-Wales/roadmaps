@@ -132,6 +132,23 @@ published; Cancel leaves the form. A required field's error is an instruction:
 `roadmaps.edit.titleRequired` "Enter a title". What holds a pending change is tagged
 "Changed"; Undo is "Undo changes" plus its subject.
 
+## Add dialog
+
+**Shape:** the button that opens it and its heading share their words ("Add a
+roadmap"); the confirm button names the write ("Add roadmap"), never "Done", since it
+writes at once. A hint says what a value is for, or what it settles for good. A field
+that can't be sent is an instruction at the field; a failed write is a notice above
+the buttons: the step, then why and who can put it right. One line under the fields
+says what adding makes public.
+
+```
+roadmaps.add.addressHint             Its public address will end “{{address}}”. It can't be changed here later.
+roadmaps.add.errors.shortName.taken  This short name is already in use. Choose another.
+roadmaps.add.failed.title            Couldn't add the roadmap
+roadmaps.add.note                    It starts not published, with no items. The public site doesn't show it until you publish it.
+roadmaps.add.added                   {{title}} was added. It isn't published yet.
+```
+
 ## Move menu
 
 **Shape:** a button that names its verb and, for assistive technology, its subject

@@ -32,6 +32,10 @@ lists the maps; a diff of their values shows which keys differ.
 
 ## Decisions
 
+- **D1** (agent, 2026-11-14, delivering STY-041): adding a roadmap brought a fifth
+  map, `roadmaps.add.failed.errors`, whose `unauthenticated`, `forbidden` and
+  `invalid-data` differ. The measurement's command lists it.
+
 ## Out of scope
 
 - Changing any message's wording.

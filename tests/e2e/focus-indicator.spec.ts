@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test"
 
+import { EXAMPLE_LISTS, EXAMPLE_SPREADSHEET } from "./fixtures/fake-sheets"
 import {
   holdConnectedNotice,
   THEMES,
@@ -217,6 +218,46 @@ for (const theme of THEMES) {
       await expect(details.getByRole("textbox").last()).toBeVisible()
 
       await expectEveryStopShowsAnIndicator(page)
+    })
+
+    test("every control in the Add a roadmap dialog shows DHCW's focus indicator (STY-041)", async ({
+      page,
+      sheets,
+    }) => {
+      sheets.spreadsheet = [...EXAMPLE_SPREADSHEET, ...EXAMPLE_LISTS]
+      await page.goto("./")
+      await connect(page)
+      await expect(roadmapCards(page)).toHaveCount(3)
+      await page
+        .getByRole("main")
+        .getByRole("button", { name: "Add a roadmap" })
+        .click()
+      const dialog = page.getByRole("dialog", { name: "Add a roadmap" })
+      await expect(
+        dialog.getByRole("combobox", { name: "Family" }),
+      ).toBeEnabled()
+      const colours = await focusColours(page)
+
+      // The dialog holds focus, so a tour of its stops comes back to the first.
+      const stops = [
+        dialog.getByRole("textbox", { name: "Title" }),
+        dialog.getByRole("textbox", { name: "Short name" }),
+        dialog.getByRole("combobox", { name: "Family" }),
+        dialog.getByRole("combobox", { name: "Category" }),
+        dialog.getByRole("textbox", { name: "Product lead" }),
+        dialog.getByRole("button", { name: "Add roadmap" }),
+        dialog.getByRole("button", { name: "Cancel" }),
+      ]
+      for (const [index, stop] of stops.entries()) {
+        if (index > 0) await page.keyboard.press("Tab")
+        await expectIndicator(
+          stop,
+          colours,
+          index < stops.length - 2 ? "ring" : "fill",
+        )
+      }
+      await page.keyboard.press("Tab")
+      await expect(stops[0] ?? dialog).toBeFocused()
     })
 
     test("every control in a co-lead's review shows DHCW's focus indicator (STY-026)", async ({

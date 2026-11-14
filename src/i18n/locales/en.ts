@@ -5,6 +5,7 @@ import type {
   RoadmapChoiceField,
 } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
+import type { ShortNameProblem } from "@/domain/roadmap/short-name"
 import type { AppErrorKind } from "@/lib/errors"
 
 /**
@@ -180,6 +181,66 @@ export const en = {
           unknown: "Something went wrong. Please try again.",
         } satisfies Record<AppErrorKind, string>,
       },
+    },
+    /** Adding a roadmap from the list, in the roadmap dialog (STY-041). */
+    add: {
+      /** The list's button, and the dialog's heading. */
+      title: "Add a roadmap",
+      submit: "Add roadmap",
+      shortName: "Short name",
+      titleHint: "The name the public site shows.",
+      /** Under the short name, while it gives an address (S3). */
+      addressHint:
+        "Its public address will end “{{address}}”. It can't be changed here later.",
+      /** In place of `addressHint`, until the short name gives an address. */
+      shortNameHint:
+        "It ends the roadmap's public address. It can't be changed here later.",
+      note: "It starts not published, with no items. The public site doesn't show it until you publish it.",
+      /** Why a field can't be sent, or was refused (S4, S6); a blank title is `roadmaps.edit.titleRequired`. */
+      errors: {
+        shortName: {
+          blank: "Enter a short name",
+          "invalid-character": "Use only letters, numbers, spaces and hyphens",
+          "too-long": "Use {{max, number}} characters or fewer",
+          "no-address": "Include a letter from a to z, or a number",
+          taken: "This short name is already in use. Choose another.",
+        } satisfies Record<ShortNameProblem | "taken", string>,
+        notListed: {
+          familyId: "This family is no longer listed. Choose another.",
+          categoryId: "This category is no longer listed. Choose another.",
+        } satisfies Record<RoadmapChoiceField, string>,
+      },
+      /** Under `roadmaps.expired.title`, in the dialog (S11). */
+      expired:
+        "Reconnect to Google to add the roadmap. What you've typed is kept.",
+      failed: {
+        title: "Couldn't add the roadmap",
+        /** Why, in place of `errors.*`, which are about reading (S7). */
+        errors: {
+          unauthenticated:
+            "Your session expired before it could be added. Try again.",
+          forbidden:
+            "This Google account isn't allowed to add roadmaps. Ask the spreadsheet owner for edit access.",
+          "not-found":
+            "The spreadsheet couldn't be found. Check that it still exists.",
+          "rate-limited":
+            "Too many requests right now. Wait a moment and try again.",
+          network:
+            "Couldn't connect. Check your internet connection and try again.",
+          "invalid-response": "The answer was in an unexpected format.",
+          "invalid-data":
+            "The template for new roadmaps is missing or isn't in the expected format in the spreadsheet. Ask the spreadsheet owner to check it.",
+          unknown: "Something went wrong. Please try again.",
+        } satisfies Record<AppErrorKind, string>,
+      },
+      /** The answer was lost, and a check couldn't settle it (S7). */
+      unconfirmed: {
+        title: "The roadmap may have been added",
+        description:
+          "The answer was lost. Cancel, then refresh your roadmaps to check before adding it again.",
+      },
+      /** On the new roadmap's page (S5). */
+      added: "{{title}} was added. It isn't published yet.",
     },
     card: {
       productLead: "Product lead: {{name}}",

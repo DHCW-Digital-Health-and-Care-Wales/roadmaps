@@ -13,8 +13,6 @@ import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Textarea } from "@/components/ui/textarea"
 import { isCalendarDate } from "@/domain/roadmap/calendar-date"
 import {
@@ -24,21 +22,13 @@ import {
 } from "@/domain/roadmap/item-details"
 import { tagsOf, tagsValue } from "@/domain/roadmap/roadmap-changes"
 
-import { RoadmapSwatch } from "../components/roadmap-swatch"
+import { FormField } from "../components/form-field"
+import { ChoiceField, type ChoiceOption } from "./choice-field"
 import { DetailsField } from "./details-field"
+import { FixedField } from "./fixed-field"
 import type { TagInUse } from "./item-tags"
 import { OpeningField } from "./opening-field"
 import { TagsField } from "./tags-field"
-
-/** One choice of a field chosen from a list. */
-export interface EditFormOption {
-  value: string
-  label: string
-  /** Its colour, shown beside the field while it is chosen; `null` for none. */
-  colour?: string | null
-  /** Shown while the value is none, but never chosen (STY-031 S4). */
-  disabled?: boolean
-}
 
 /** One field of an edit form, in the order the form shows it. */
 export interface EditFormField<F extends string> {
@@ -47,7 +37,7 @@ export interface EditFormField<F extends string> {
   /** A text area, for text with line breaks; otherwise one line. */
   multiline: boolean
   /** Chosen from these, in this order, instead of typed (STY-028). */
-  options?: readonly EditFormOption[]
+  options?: readonly ChoiceOption[]
   /**
    * With `options`, any number of them chosen, as checkboxes, instead of one (STY-034):
    * the field's value holds the chosen ones' values as `ofValue` reads it and `toValue`
@@ -203,15 +193,7 @@ export function EditForm<F extends string>({
         }
         if (field.fixed) {
           return (
-            <div key={field.name} className="flex flex-col gap-1.5">
-              <p className="font-bold">{field.label}</p>
-              {typeof field.fixed.text === "string" ? (
-                <p>{field.fixed.text}</p>
-              ) : (
-                field.fixed.text
-              )}
-              <p className="text-muted-foreground">{field.fixed.notice}</p>
-            </div>
+            <FixedField key={field.name} label={field.label} {...field.fixed} />
           )
         }
         if (field.options && field.many) {
@@ -292,104 +274,65 @@ export function EditForm<F extends string>({
           )
         }
         if (field.options) {
-          const chosen = field.options.find(
-            ({ value }) => value === values[field.name],
-          )
-          const coloured = field.options.some(
-            ({ colour }) => colour !== undefined,
-          )
           return (
-            <div key={field.name} className="flex flex-col gap-1.5">
-              <Label htmlFor={controlId}>{field.label}</Label>
-              <div className="flex items-stretch gap-2.5">
-                {coloured && <RoadmapSwatch colour={chosen?.colour ?? null} />}
-                <NativeSelect
-                  id={controlId}
-                  value={values[field.name]}
-                  disabled={field.disabled}
-                  onChange={(event) => {
-                    change(event.target.value)
-                  }}
-                >
-                  {field.options.map((option) => (
-                    <NativeSelectOption
-                      key={option.value}
-                      value={option.value}
-                      disabled={option.disabled}
-                    >
-                      {option.label}
-                    </NativeSelectOption>
-                  ))}
-                </NativeSelect>
-              </div>
-            </div>
+            <ChoiceField
+              key={field.name}
+              id={controlId}
+              label={field.label}
+              options={field.options}
+              value={values[field.name]}
+              disabled={field.disabled}
+              onChange={change}
+            />
           )
         }
         const error: FieldError | undefined = errors[field.name]
-        const errorId = `${controlId}-error`
-        const label = (
-          <>
-            <Label htmlFor={controlId}>{field.label}</Label>
-            {error && (
-              <p id={errorId} className="font-bold text-destructive">
-                <span className="sr-only">
-                  {t("roadmaps.edit.errorPrefix")}
-                </span>{" "}
-                {t(`roadmaps.edit.${error}`)}
-              </p>
-            )}
-          </>
-        )
-        const described = {
-          "aria-invalid": error ? true : undefined,
-          "aria-describedby": error ? errorId : undefined,
-        }
-        if (field.date) {
-          const { today } = field.date
-          return (
-            <div key={field.name} className="flex flex-col gap-1.5">
-              {label}
-              <div className="flex flex-wrap items-center gap-3">
-                <Input
+        const { date } = field
+        const Control = field.multiline ? Textarea : Input
+        return (
+          <FormField
+            key={field.name}
+            id={controlId}
+            label={field.label}
+            error={error && t(`roadmaps.edit.${error}`)}
+          >
+            {(control) =>
+              date ? (
+                <div className="flex flex-wrap items-center gap-3">
+                  <Input
+                    ref={controlRef(field.name)}
+                    type="date"
+                    max={date.today()}
+                    value={values[field.name]}
+                    className="w-auto"
+                    {...control}
+                    onFocus={redraw}
+                    onChange={(event) => {
+                      change(event.target.value)
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => {
+                      change(date.today())
+                    }}
+                  >
+                    {t("roadmaps.edit.today")}
+                  </Button>
+                </div>
+              ) : (
+                <Control
                   ref={controlRef(field.name)}
-                  id={controlId}
-                  type="date"
-                  max={today()}
                   value={values[field.name]}
-                  className="w-auto"
-                  {...described}
-                  onFocus={redraw}
+                  {...control}
                   onChange={(event) => {
                     change(event.target.value)
                   }}
                 />
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => {
-                    change(today())
-                  }}
-                >
-                  {t("roadmaps.edit.today")}
-                </Button>
-              </div>
-            </div>
-          )
-        }
-        const Control = field.multiline ? Textarea : Input
-        return (
-          <div key={field.name} className="flex flex-col gap-1.5">
-            {label}
-            <Control
-              ref={controlRef(field.name)}
-              id={controlId}
-              value={values[field.name]}
-              {...described}
-              onChange={(event) => {
-                change(event.target.value)
-              }}
-            />
-          </div>
+              )
+            }
+          </FormField>
         )
       })}
       <div className="flex flex-wrap gap-3">

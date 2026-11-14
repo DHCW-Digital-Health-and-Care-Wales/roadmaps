@@ -13,6 +13,7 @@ import { useLanguage } from "@/i18n"
 import type { AppError } from "@/lib/errors"
 import { cn } from "@/lib/utils"
 
+import { AddedRoadmapNotice } from "../components/added-roadmap-notice"
 import { ListMismatchBadges } from "../components/list-mismatch-badges"
 import { MatchListsAction } from "../components/match-lists-action"
 import { NotPublishedBadge } from "../components/not-published-badge"
@@ -36,6 +37,7 @@ import { PublishedStateAction } from "../editing/published-state-action"
 import { PublishedStateNotice } from "../editing/published-state-notice"
 import { RoadmapPublishing } from "../editing/roadmap-publishing"
 import { usePublishedState } from "../editing/use-published-state"
+import { useAddedRoadmapNotice } from "../hooks/use-added-roadmap"
 import { useOrganisations } from "../hooks/use-organisations"
 import { isRoadmapGone, useRoadmapItems } from "../hooks/use-roadmap-items"
 import { useRoadmapLists } from "../hooks/use-roadmap-lists"
@@ -159,13 +161,13 @@ interface RoadmapViewProps {
 }
 
 /**
- * A listed roadmap: its title, a Not published badge when it is not public (D8), a badge
- * when it is out of step with the family or category list (STY-027 S4, S8), Publish
- * roadmap or Unpublish roadmap (STY-035) and a Refresh for the roadmap, its items and
- * the lists (D7), its family and category as they will
- * be published (STY-028 S1), its pending changes with
- * Publish, what it is about, then its items, each showing its pending English
- * (STY-025). The title stays whatever happens to the items.
+ * A listed roadmap: a notice when it was just added (STY-041 S5), its title, a Not
+ * published badge when it is not public (D8), a badge when it is out of step with the
+ * family or category list (STY-027 S4, S8), Publish roadmap or Unpublish roadmap
+ * (STY-035) and a Refresh for the roadmap, its items and the lists (D7), its family and
+ * category as they will be published (STY-028 S1), its pending changes with Publish,
+ * what it is about, then its items, each showing its pending English (STY-025). The
+ * title stays whatever happens to the items.
  */
 function RoadmapView({
   roadmap,
@@ -182,6 +184,7 @@ function RoadmapView({
   const lists = useRoadmapLists(hasChoiceChange(changes))
   const shown = applyRoadmapChanges(roadmap, changes, lists.lists)
   const publishedState = usePublishedState(roadmap)
+  const addedNotice = useAddedRoadmapNotice(roadmap)
   const title = localise(shown.title, language)
   const retryList = () => {
     void refetchList()
@@ -243,6 +246,9 @@ function RoadmapView({
         </div>
         <RoadmapFamilyLine roadmap={shown} />
         <MatchListsAction roadmap={roadmap} />
+        {addedNotice.shown && (
+          <AddedRoadmapNotice title={title} onDismiss={addedNotice.dismiss} />
+        )}
         {publishedState.notice && (
           <PublishedStateNotice
             notice={publishedState.notice}

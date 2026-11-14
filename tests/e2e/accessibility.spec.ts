@@ -485,6 +485,78 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expectNoAxeViolations(page, theme)
     })
 
+    test("adding a roadmap: the dialog open, refused, failed and expired, then the new roadmap's notice (STY-041)", async ({
+      page,
+      sheets,
+    }) => {
+      sheets.spreadsheet = [...EXAMPLE_SPREADSHEET, ...EXAMPLE_LISTS]
+      await page.goto("./")
+      await connect(page)
+      await expect(roadmapCards(page)).toHaveCount(3)
+      await page
+        .getByRole("main")
+        .getByRole("button", { name: "Add a roadmap" })
+        .click()
+      const dialog = page.getByRole("dialog", { name: "Add a roadmap" })
+      const title = dialog.getByRole("textbox", { name: "Title" })
+      const shortName = dialog.getByRole("textbox", { name: "Short name" })
+      const add = dialog.getByRole("button", { name: "Add roadmap" })
+      // Every attempt reads the list again, behind the dialog: a check waits for
+      // that to end, or it reads Refresh's colours as they change.
+      const listRead = () =>
+        expect(
+          page.getByRole("button", { name: "Refresh", includeHidden: true }),
+        ).not.toHaveAttribute("aria-disabled", "true")
+      await expect(title).toBeFocused()
+      await expect(
+        dialog.getByRole("combobox", { name: "Family" }),
+      ).toBeEnabled()
+      await expectNoAxeViolations(page, theme)
+
+      // Refused: a blank title, and a short name a tab already has.
+      await shortName.fill("Families")
+      await add.click()
+      await expect(dialog.getByText("Enter a title")).toBeVisible()
+      await title.fill("Community Nursing roadmap")
+      await add.click()
+      await expect(
+        dialog.getByText("This short name is already in use. Choose another."),
+      ).toBeVisible()
+      await listRead()
+      await expectNoAxeViolations(page, theme)
+
+      // Failed, then expired with Reconnect in the dialog.
+      await shortName.fill("Community Nursing")
+      sheets.failWith(403)
+      await add.click()
+      await expect(dialog.getByRole("alert")).toContainText(
+        "Couldn't add the roadmap",
+      )
+      await listRead()
+      await expectNoAxeViolations(page, theme)
+      sheets.failWith(401)
+      await add.click()
+      await expect(dialog.getByRole("alert")).toContainText(
+        "Your session has expired",
+      )
+      await expectNoAxeViolations(page, theme)
+
+      await dialog.getByRole("button", { name: "Reconnect" }).click()
+      await expect(add).toBeEnabled()
+      await add.click()
+      const main = page.getByRole("main")
+      await expect(
+        main.getByText(
+          "Community Nursing roadmap was added. It isn't published yet.",
+        ),
+      ).toBeVisible()
+      await expect(
+        main.getByRole("heading", { name: "No items yet" }),
+      ).toBeVisible()
+      await listRead()
+      await expectNoAxeViolations(page, theme)
+    })
+
     test("disconnecting with changes pending, then the waiting note (STY-025)", async ({
       page,
     }) => {

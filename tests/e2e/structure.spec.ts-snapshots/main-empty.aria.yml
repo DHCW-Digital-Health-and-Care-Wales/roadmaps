@@ -9,5 +9,7 @@
       - link "Families, categories and organisations":
         - /url: /#/families
     - button "Refresh"
+    - button "Add a roadmap"
     - heading "No roadmaps yet" [level=2]
     - text: The connected spreadsheet doesn't list any roadmaps yet.
+    - button "Add a roadmap"

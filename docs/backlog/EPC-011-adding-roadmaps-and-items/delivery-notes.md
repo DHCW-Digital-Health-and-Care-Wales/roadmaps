@@ -10,3 +10,11 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   roadmap: the example spreadsheet ends with one, and `withRoadmapIndex` keeps it.
 - **Nothing here has met a real spreadsheet yet** (CHO-010): don't write copy or a
   scenario that promises what a copy of a protected `Template` does.
+- **A dialog's closing and focus rules are `FormDialog`'s**, and a form's fields are
+  `FormField`, `ChoiceField` and `FixedField`: STY-041's _Contract for dependents_
+  (archived) says how each is used. A new dialog passes its form to `FormDialog`; it
+  does not handle Escape, a click outside or focus itself.
+- **While a dialog is open, the page behind it is out of reach of role queries**, in
+  Vitest as in Playwright: wait for a heading of the page before reading `main`.
+- **`user.selectOptions` matches an option's text as HTML**, so a name with `&` never
+  matches: pass the option's element.

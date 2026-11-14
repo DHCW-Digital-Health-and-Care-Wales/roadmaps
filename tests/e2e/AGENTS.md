@@ -41,9 +41,10 @@ tours.
 - Each key screen has an aria snapshot in `structure.spec.ts-snapshots/`, matched
   exactly (`children: "deep-equal"`), so an element added or removed fails. After a
   deliberate change run `pnpm test:e2e structure.spec.ts --update-snapshots`, review the
-  YAML diff and commit it. That flag never writes a _new_ snapshot: use
+  YAML diff, put back each date the update turned into a pattern (`/1 October \d+/` for
+  `1 October 2026`) and commit it. That flag never writes a _new_ snapshot: use
   `--update-snapshots=all`, check `git status` lists it, and restore the others it
-  rewrote (it turns their dates into patterns) with `git checkout -- <file>`.
+  rewrote with `git checkout -- <file>`.
 - CI serves under `/roadmaps-editor/`: after changing the structure snapshots, run them
   once with
   `GITHUB_REPOSITORY=DHCW-Digital-Health-and-Care-Wales/roadmaps-editor`.

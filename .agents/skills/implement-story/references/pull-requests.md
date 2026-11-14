@@ -8,7 +8,10 @@
    include untracked files deliberately if reviewing before the commit. Every reviewer gets the same snapshot.
 2. Dispatch the reviewers `delegation.md` sets, each reading its skill. Store their reports
    independently. Resolve every actionable finding or record its
-   evidence-backed disposition in the PR. An unresolved P0/P1 from either
+   evidence-backed disposition in the PR. A reviewer's _Handed off_ items take
+   the same: fix one in scope, give one outside it a backlog record
+   (`docs/AGENTS.md`), or decline it with a one-line reason in the Review
+   record. An unresolved P0/P1 from either
    correctness reviewer blocks a passing correctness verdict. Re-review the
    final head after fixes, in the rounds `delegation.md` sets.
 3. Write the PR body to a temporary file from

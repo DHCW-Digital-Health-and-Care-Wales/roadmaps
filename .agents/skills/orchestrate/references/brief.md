@@ -28,7 +28,8 @@ model, such as Sol, needs a cross-provider delegation tool). It saves task IDs
 and pinned heads; where the runtime offers async delegation with completion
 notifications it ends its turn while reviews run and resumes on their
 completion, otherwise it waits in the foreground. A review yield keeps the assignment pending;
-the final handoff happens after the reviewed PR opens or a blocker is recorded.
+the final handoff happens after the reviewed PR opens or a blocker is recorded,
+and the child's handoff record marks it as the hand-back.
 
 Carry these environment facts into `brief-common.md`: complete briefs with
 no inherited conversation, shared read-only reviewer checkout, whether
@@ -90,6 +91,10 @@ Carry forward what earlier items learned, for example:
   needed;
 - how delegated work reports completion (notifications, or foreground
   waits), per `delegation.md`;
+- whether a delivery child's yield reaches its parent as a completion
+  notification that looks like its hand-back;
+- for UI work, whether an economy or standard subagent can run the screenshot
+  check `screenshots.md` sets;
 - the PR policy: left open for the owner by default; babysat and merged per
   `pr-watch.md` only when authorized;
 - that the merge method is squash, merged branches are deleted, and

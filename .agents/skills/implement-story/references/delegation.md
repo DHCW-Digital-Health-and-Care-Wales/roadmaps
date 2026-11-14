@@ -89,13 +89,16 @@ notifications, use this lifecycle at every nesting level:
    review is pending, yield again; continue once every required review has
    passed the required head.
 5. Treat failed, cancelled or interrupted workers, pending questions and
-   approvals as unresolved work, never a passing review. Surface the exact
-   blocker; route a child's question to the user. On a reported usage limit,
+   approvals, and any part of the pinned diff a reviewer reports unread, as
+   unresolved work, never a passing review. Surface the exact blocker; route
+   a child's question to the user. Give an unread part to a fresh reviewer in
+   the same lane, in the same round. On a reported usage limit,
    rerun a Sol review with the same brief on `gpt-6.1-sol` through the other
    provider that serves it (Codex or GitHub Copilot), naming that provider in
    the PR's Review record; for any other worker, or when both are limited, save
    its reset time (or unknown), pending tasks and next action, and resume from
-   that handoff. Completion grants no approval rights.
+   that handoff once the worker is terminal. Completion grants no approval
+   rights.
 
 Without asynchronous delegation, run reviewers in the foreground and wait for
 them. Never poll a running delegate, sleep, or set scheduled check-ins as a
@@ -103,10 +106,13 @@ workaround for a missing notification. The fallback wake `orchestrate` defines
 is not a check-in: it guards one stalled wait and is removed once that wait
 ends.
 
-A worker is **terminal** only when the runtime shows it neither running nor
-waiting on children of its own, whatever its last message or a `failed` label
-says. Cancel a superseded worker; replace one only once it is terminal or
-cancelled, so one checkout never has two writers.
+A worker is **terminal** only when the runtime's status for its task shows it
+neither running, nor waiting on children of its own, nor holding a pending
+run, whatever its last message or a `failed` notification says: a runtime
+that resumes a worker itself when a usage limit resets reports it failed
+until then. Read that status before replacing a worker. Cancel a superseded
+worker; replace one only once it is terminal or cancelled, so one checkout
+never has two writers.
 
 Every review or re-check is a new reviewer, briefed as "Review rounds" sets;
 never restart a finished reviewer by messaging it.

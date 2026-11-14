@@ -77,14 +77,16 @@ can't nest, the form says why
 **When** Sam changes “Rheumatology” to “Rheumatology and pain clinics” and confirms the
 form
 **Then** the card shows the new text at the same place and level
-**And** a detail whose text is cleared is removed
+**And** a detail whose text is cleared is removed, and the details nested under it
+move up a level, as when it is removed (S6, D20)
 
 ### S6: Removing a detail removes it alone
 
 **Given** the form above
 **When** Sam removes “First appointments stay in person” and confirms the form
 **Then** the card's Details list is the other three, tagged “Changed”
-**And** removing a detail never removes another with it
+**And** removing a detail never removes another with it: the details nested under it
+stay, one level up (D15)
 **And** an item with every detail removed has no Details on its card
 
 ### S7: The order is Sam's to change
@@ -109,6 +111,8 @@ trimmed at its ends
 **Then** the detail is nested a level deeper, as S3 allows, and its text does not hold
 the hyphen
 **And** no detail's text ever starts with a hyphen, however it was typed or pasted
+**And** hyphens and spaces before a detail's text are never kept: `- -5 degrees`,
+typed or pasted, is “5 degrees”, nested a level for each hyphen as S3 allows (D21)
 
 ### S10: Text typed but not yet kept counts
 
@@ -142,6 +146,9 @@ shown by its indent
 **And** each addition, move, removal and refusal is announced, and focus stays in the
 field: after a removal it is on a control of the next detail, or on the control for
 adding when none is left
+**And** in the editor chosen (D10), that is the text of the next detail, of the one
+before when the last was removed, or of the empty detail the list keeps when none is
+left (D19)
 **And** axe finds no WCAG 2.2 AA violation in the field's states, light and dark
 
 ### S14: Publishing writes the details
@@ -217,6 +224,9 @@ them: “Two” one level under “One”
 **And** confirming the form without a change is no pending edit, and writes nothing
 **And** once Sam changes them, the cell is written as S14 says, at the levels shown
 **And** a detail read deeper than the third level shows at the third in the field
+**And** a detail read with a hyphen after its nesting (`- -5 degrees` reads as
+“-5 degrees”, one level in) is no pending edit either; once Sam changes the details,
+it is written without that hyphen (D21)
 
 ### S21: Enter starts the next detail (owner, D10; agent, D16, D17)
 

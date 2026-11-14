@@ -723,6 +723,8 @@ An interpreter can join the call
       /** The hyphens and spaces before a line's text: never text, however written. */
       const leadOf = (line) => /^[\s-]*/.exec(line)[0]
       const hyphensIn = (lead) => lead.replace(/[^-]/g, "").length
+      /** A detail's text as kept: trimmed, with no hyphen or space before it. */
+      const textOf = (line) => clean(line.slice(leadOf(line).length))
 
       /**
        * Lines of text as details: each hyphen before a line's text nests it a level
@@ -730,11 +732,10 @@ An interpreter can join the call
        */
       function parseLines(text, base = 0) {
         return text.split(/\r?\n/).flatMap((line) => {
-          const lead = leadOf(line)
-          const detail = clean(line.slice(lead.length))
+          const detail = textOf(line)
           return detail === ""
             ? []
-            : [{ text: detail, level: base + hyphensIn(lead) }]
+            : [{ text: detail, level: base + hyphensIn(leadOf(line)) }]
         })
       }
 
@@ -1323,7 +1324,7 @@ An interpreter can join the call
           value: () => {
             let kept = plain(details).map((detail) => ({
               ...detail,
-              text: clean(detail.text),
+              text: textOf(detail.text),
             }))
             // A detail left with no text is removed as Remove removes it.
             for (let at = kept.length - 1; at >= 0; at -= 1)
@@ -1373,7 +1374,7 @@ An interpreter can join the call
           const { id: detailId, added } = editing
           const area = control("area", detailId)
           // A line break or hyphens at the start are not part of a detail's text.
-          const text = clean(area.value.replace(/^[\s-]+/, ""))
+          const text = textOf(area.value)
           editing = null
           if (text !== "") {
             details = details.map((detail) =>
@@ -1831,9 +1832,8 @@ An interpreter can join the call
           const found = []
           let above = null
           area.value.split("\n").forEach((line, index) => {
-            const [, hyphens, rest] = /^\s*(-*)(.*)$/.exec(line)
-            if (clean(rest) === "") return
-            const level = hyphens.length
+            if (textOf(line) === "") return
+            const level = hyphensIn(leadOf(line))
             if (above === null && level > 0) {
               found.push(
                 `Line ${index + 1} is the first, so it shows at the top level.`,

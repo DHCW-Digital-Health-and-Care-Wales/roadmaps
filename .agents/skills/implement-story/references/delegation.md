@@ -91,8 +91,8 @@ notifications, use this lifecycle at every nesting level:
 5. Treat failed, cancelled or interrupted workers, pending questions and
    approvals, and any part of the pinned diff a reviewer reports unread, as
    unresolved work, never a passing review. Surface the exact blocker; route
-   a child's question to the user. Give an unread part to a fresh reviewer in
-   the same lane, in the same round. On a reported usage limit,
+   a child's question to the user. Give an unread part to a fresh reviewer on
+   the same model, in the same round. On a reported usage limit,
    rerun a Sol review with the same brief on `gpt-6.1-sol` through the other
    provider that serves it (Codex or GitHub Copilot), naming that provider in
    the PR's Review record; for any other worker, or when both are limited, save

@@ -1,0 +1,2062 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Item details: editor prototypes</title>
+    <style>
+      /* The review page's own chrome. It sets no background, so it sits on whatever
+         shows it; each prototype draws inside a .dhcw stage that has its own. */
+      html,
+      body {
+        margin: 0;
+      }
+      .page {
+        max-width: 728px;
+        margin: 0 auto;
+        padding: 8px 0 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        font-family: var(--font-sans, system-ui, "Segoe UI", Arial, sans-serif);
+        font-size: 15px;
+        line-height: 1.5;
+      }
+      .page * {
+        box-sizing: border-box;
+      }
+      .page h1 {
+        margin: 0;
+        font-size: 20px;
+        line-height: 1.3;
+      }
+      .page p,
+      .page ol,
+      .page ul,
+      .page pre {
+        margin: 0;
+      }
+      .intro,
+      .page figure {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin: 0;
+        min-width: 0;
+      }
+      .page ol {
+        padding-left: 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .page summary {
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .try ol,
+      .world pre,
+      .cell pre {
+        margin-top: 8px;
+      }
+      .page pre {
+        font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+        font-size: 13px;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        border-left: 3px solid currentColor;
+        padding-left: 10px;
+      }
+      .cell {
+        font-size: 14px;
+      }
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 20px;
+        align-items: center;
+        font-size: 14px;
+      }
+      .controls > div {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      .seg {
+        display: inline-flex;
+        flex-wrap: wrap;
+        border: 1px solid currentColor;
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .seg button,
+      .again {
+        appearance: none;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        padding: 5px 10px;
+        cursor: pointer;
+      }
+      .seg button[aria-pressed="true"] {
+        background: #1b365d;
+        color: #fff;
+      }
+      .again {
+        border: 1px solid currentColor;
+        border-radius: 6px;
+        font-size: 13px;
+        padding: 3px 9px;
+      }
+      .caption {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .page figcaption h2 {
+        margin: 0;
+        font-weight: 600;
+        font-size: 17px;
+        line-height: 1.3;
+      }
+      .idea {
+        font-size: 14px;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      /* The editor's look: the semantic tokens of src/styles/globals.css, light and
+         dark, under their own names so they never meet the host page's. */
+      .dhcw {
+        --d-bg: #ffffff;
+        --d-card: #ffffff;
+        --d-fg: #212b32;
+        --d-muted: #f0f4f5;
+        --d-muted-fg: #4c6272;
+        --d-border: #d8dde0;
+        --d-input: #4c6272;
+        --d-primary: #1b365d;
+        --d-primary-fg: #ffffff;
+        --d-primary-hover: #32598a;
+        --d-control-shadow: #0e1b2f;
+        --d-focus: #ffeb3b;
+        --d-focus-fg: #212b32;
+        --d-info-bg: #ccdff1;
+        --d-info-fg: #004281;
+        --d-popup-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        color: var(--d-fg);
+        font-family: Roboto, Arial, sans-serif;
+        font-size: 16px;
+        line-height: 24px;
+      }
+      .dhcw.dark {
+        --d-bg: #0e1b2f;
+        --d-card: #13233c;
+        --d-fg: #f0f4f5;
+        --d-muted: #1b365d;
+        --d-muted-fg: #afb8bf;
+        --d-border: #4c6272;
+        --d-input: #afb8bf;
+        --d-primary: #32598a;
+        --d-primary-hover: #1b365d;
+        --d-control-shadow: #4c6272;
+        --d-info-bg: #004281;
+        --d-info-fg: #ccdff1;
+      }
+      .stage {
+        background: var(--d-bg);
+        padding: 16px;
+        border-radius: 8px;
+        border: 1px solid var(--d-border);
+        display: flex;
+        justify-content: center;
+      }
+      .d-card {
+        width: var(--card-w, 360px);
+        max-width: 100%;
+        min-width: 0;
+        border: 1px solid var(--d-border);
+        background: var(--d-card);
+        padding: 16px;
+        box-shadow: 0 4px 0 var(--d-border);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .d-card h3 {
+        margin: 0;
+        font-size: 16px;
+        line-height: 24px;
+        font-weight: 700;
+        overflow-wrap: break-word;
+      }
+      .d-card p,
+      .d-card ul,
+      .d-card dl,
+      .d-card dd {
+        margin: 0;
+      }
+      .d-card dl {
+        font-size: 14px;
+        line-height: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .d-card dt {
+        font-weight: 700;
+      }
+      .d-card dd {
+        overflow-wrap: break-word;
+      }
+      /* An item's details as the card shows them: one list, nested. */
+      .k-list {
+        list-style: disc;
+        padding-left: 20px;
+        font-size: 14px;
+        line-height: 20px;
+        overflow-wrap: break-word;
+      }
+      .k-list .k-list {
+        margin-top: 2px;
+      }
+      .d-form {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        margin: 0;
+      }
+      .d-field {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-width: 0;
+      }
+      .d-label {
+        font-weight: 700;
+      }
+      .d-sub {
+        font-size: 14px;
+        line-height: 20px;
+        font-weight: 700;
+      }
+      .d-hint,
+      .d-status,
+      .d-notes {
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--d-muted-fg);
+      }
+      .d-status {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      .d-status:empty,
+      .d-notes:empty {
+        display: none;
+      }
+      .d-notes {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .d-input {
+        width: 100%;
+        min-width: 0;
+        min-height: 40px;
+        border: 2px solid var(--d-input);
+        border-radius: 0;
+        background: var(--d-bg);
+        color: var(--d-fg);
+        padding: 6px 8px;
+        font: inherit;
+      }
+      textarea.d-input {
+        display: block;
+        resize: none;
+        overflow: hidden;
+      }
+      .d-input:focus-visible,
+      .o-text:focus-visible {
+        outline: 3px solid var(--d-focus);
+        outline-offset: 0;
+        border-color: var(--d-focus-fg);
+        box-shadow: inset 0 0 0 2px var(--d-focus-fg);
+      }
+      .d-btn {
+        appearance: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        height: 40px;
+        padding: 0 16px;
+        border: 1px solid var(--d-primary);
+        border-radius: 4px;
+        background: var(--d-primary);
+        color: var(--d-primary-fg);
+        font: inherit;
+        font-weight: 700;
+        white-space: nowrap;
+        box-shadow: 0 2px 0 var(--d-control-shadow);
+        cursor: pointer;
+      }
+      .d-btn:hover {
+        background: var(--d-primary-hover);
+      }
+      .d-btn.sec {
+        border-color: var(--d-input);
+        background: var(--d-bg);
+        color: var(--d-fg);
+        box-shadow: 0 2px 0 var(--d-input);
+      }
+      .d-btn.sec:hover {
+        background: var(--d-muted);
+      }
+      .d-btn.sm {
+        height: 32px;
+        padding: 0 12px;
+        font-size: 14px;
+        line-height: 20px;
+      }
+      .d-btn.ico {
+        flex: none;
+        width: 32px;
+        padding: 0;
+      }
+      .d-btn svg {
+        display: block;
+        flex: none;
+        width: 16px;
+        height: 16px;
+      }
+      .d-btn:active {
+        transform: translateY(1px);
+      }
+      /* A control that can't act just now stays in reach and says why when chosen. */
+      .d-btn[aria-disabled="true"],
+      .d-btn[aria-disabled="true"]:hover {
+        border-style: dashed;
+        background: var(--d-bg);
+        color: var(--d-muted-fg);
+        box-shadow: none;
+        cursor: default;
+      }
+      .d-btn:focus-visible,
+      .menu button:focus-visible {
+        outline: 3px solid transparent;
+        outline-offset: 0;
+        border-color: transparent;
+        background: var(--d-focus);
+        color: var(--d-focus-fg);
+        box-shadow: 0 2px 0 var(--d-focus-fg);
+      }
+      .d-tag {
+        display: inline-flex;
+        align-items: center;
+        width: fit-content;
+        max-width: 100%;
+        border: 1px solid var(--d-info-fg);
+        background: var(--d-info-bg);
+        color: var(--d-info-fg);
+        padding: 2px 8px;
+        font-size: 14px;
+        line-height: 20px;
+        font-weight: 700;
+      }
+      .d-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      /* A detail's bullet, in a row of an editor. */
+      .dot {
+        flex: none;
+        width: 16px;
+        height: 32px;
+        display: grid;
+        place-content: center;
+      }
+      .dot::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+
+      /* A: an outline, a field per detail, in one box. */
+      .o-list {
+        list-style: none;
+        padding: 4px;
+        border: 2px solid var(--d-input);
+        background: var(--d-bg);
+        display: flex;
+        flex-direction: column;
+      }
+      .o-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 2px;
+        padding-left: calc(var(--lvl) * 20px);
+      }
+      .o-row.current {
+        background: var(--d-muted);
+      }
+      .o-text {
+        flex: 1 1 0;
+        min-width: 0;
+        min-height: 32px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        padding: 4px 6px;
+        resize: none;
+        overflow: hidden;
+        display: block;
+      }
+      .o-bar,
+      .o-set {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+      .o-bar {
+        flex-wrap: wrap;
+      }
+      .o-bar .d-btn:not(.ico) {
+        padding: 0 8px;
+      }
+
+      /* B: a row per detail, with Edit and a menu. */
+      .r-list {
+        list-style: none;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .r-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 4px;
+        padding: 6px 0 6px calc(var(--lvl) * 20px);
+        border-bottom: 1px solid var(--d-border);
+      }
+      .r-row:first-child {
+        border-top: 1px solid var(--d-border);
+      }
+      .r-text {
+        flex: 1 1 0;
+        min-width: 0;
+        padding: 6px 0;
+        font-size: 14px;
+        line-height: 20px;
+        overflow-wrap: anywhere;
+      }
+      .r-actions {
+        position: relative;
+        flex: none;
+        display: flex;
+        gap: 8px;
+        margin-left: 4px;
+      }
+      .r-edit {
+        flex: 1 1 0;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .r-edit > div,
+      .r-add {
+        display: flex;
+        gap: 8px;
+      }
+      .menu {
+        position: absolute;
+        z-index: 5;
+        right: 0;
+        top: calc(100% + 4px);
+        width: 232px;
+        list-style: none;
+        padding: 4px 0;
+        background: var(--d-card);
+        border: 1px solid var(--d-input);
+        box-shadow: var(--d-popup-shadow);
+      }
+      .menu button {
+        appearance: none;
+        display: block;
+        width: 100%;
+        border: 0;
+        border-radius: 0;
+        background: none;
+        color: inherit;
+        font: inherit;
+        font-size: 14px;
+        line-height: 20px;
+        text-align: left;
+        padding: 8px 12px;
+        cursor: pointer;
+      }
+      .menu button:hover {
+        background: var(--d-muted);
+      }
+      .menu button[aria-disabled="true"] {
+        color: var(--d-muted-fg);
+        background: none;
+        cursor: default;
+      }
+      .menu .sep {
+        border-top: 1px solid var(--d-border);
+        margin: 4px 0;
+      }
+
+      /* C: one box of text, and how it will read. */
+      .c-tools {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .c-preview {
+        border: 1px solid var(--d-border);
+        padding: 8px 12px;
+      }
+      .c-none {
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--d-muted-fg);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <div class="intro">
+        <h1>Item details: three editors for a nested list</h1>
+        <p>
+          Each is the Details field of an item's edit form, in an item card as
+          wide as the roadmap page draws one. The public site shows an item's
+          details as a list under “What this covers”, nested up to three levels.
+          All three editors keep the same rules and would write the same text;
+          they differ in how a detail is written, nested, moved and removed.
+          Done keeps the details and shows the card; Edit opens the form again.
+        </p>
+        <div class="controls">
+          <div>
+            <span id="theme-label">Theme</span>
+            <span class="seg" role="group" aria-labelledby="theme-label">
+              <button type="button" data-theme="light" aria-pressed="true">
+                Light
+              </button>
+              <button type="button" data-theme="dark" aria-pressed="false">
+                Dark
+              </button>
+            </span>
+          </div>
+          <div>
+            <span id="width-label">Card width</span>
+            <span class="seg" role="group" aria-labelledby="width-label">
+              <button type="button" data-width="294" aria-pressed="false">
+                Narrowest 294
+              </button>
+              <button type="button" data-width="343" aria-pressed="false">
+                Phone 343
+              </button>
+              <button type="button" data-width="360" aria-pressed="true">
+                Desktop 360
+              </button>
+              <button type="button" data-width="461" aria-pressed="false">
+                Widest 461
+              </button>
+            </span>
+          </div>
+        </div>
+        <details class="try" open>
+          <summary>Things to try in each</summary>
+          <ol>
+            <li>Add “Adult clinics first”, nested under “Dermatology”.</li>
+            <li>
+              Add “A test call before the first video appointment” at the end,
+              at the top level.
+            </li>
+            <li>
+              Move “First appointments stay in person” above “A video call where
+              the clinician and patient agree it suits”.
+            </li>
+            <li>
+              Move “The patient can change to an appointment in person” out to
+              the top level.
+            </li>
+            <li>
+              Remove “Follow-up appointments in three specialties” and see where
+              the three under it go, then put it back.
+            </li>
+            <li>
+              Paste these three lines, as they would be copied from the
+              spreadsheet:
+              <pre>
+An interpreter can join the call
+- British Sign Language
+- Welsh and other languages</pre>
+            </li>
+            <li>Do all of it with the keyboard alone, then press Done.</li>
+            <li>Try it at the narrowest card width, and in the dark theme.</li>
+          </ol>
+        </details>
+        <details class="world">
+          <summary>
+            The sample item: “Offer video appointments where suitable”, on the
+            Outpatient Booking roadmap
+          </summary>
+          <pre id="world-cell"></pre>
+        </details>
+      </div>
+
+      <figure id="pa">
+        <div class="caption">
+          <figcaption><h2>A. Outline</h2></figcaption>
+          <button type="button" class="again" data-again="pa">
+            Start again
+          </button>
+        </div>
+        <p class="idea">
+          The list is written like a document. Every detail is its own line of
+          text: Enter starts the next one, and the buttons under the list nest,
+          move or remove the one being written. A hyphen typed at the start of a
+          detail nests it, as it does in the spreadsheet, and Backspace there
+          moves it back out.
+        </p>
+        <div class="dhcw stage"><div class="d-card" id="pa-card"></div></div>
+        <details class="cell">
+          <summary>What publishing would write for this item</summary>
+          <pre id="pa-cell"></pre>
+        </details>
+      </figure>
+
+      <figure id="pb">
+        <div class="caption">
+          <figcaption><h2>B. Rows with a menu</h2></figcaption>
+          <button type="button" class="again" data-again="pb">
+            Start again
+          </button>
+        </div>
+        <p class="idea">
+          The editor chosen for tags, carried over. Each detail is a row that
+          reads as the card does, with Edit and a menu: add a detail below or
+          nested under it, move it in, out, up or down, or remove it. A field
+          under the list adds a detail at the end. A removal can be undone.
+        </p>
+        <div class="dhcw stage"><div class="d-card" id="pb-card"></div></div>
+        <details class="cell">
+          <summary>What publishing would write for this item</summary>
+          <pre id="pb-cell"></pre>
+        </details>
+      </figure>
+
+      <figure id="pc">
+        <div class="caption">
+          <figcaption><h2>C. Text box and preview</h2></figcaption>
+          <button type="button" class="again" data-again="pc">
+            Start again
+          </button>
+        </div>
+        <p class="idea">
+          The details are one box of text, a line each, with a hyphen at the
+          start of a line to nest it, as in the spreadsheet. Two buttons add or
+          take away the hyphens of the lines selected. Under the box, the list
+          shows as it will read, with a note on any line that can't nest as
+          written.
+        </p>
+        <div class="dhcw stage"><div class="d-card" id="pc-card"></div></div>
+        <details class="cell">
+          <summary>What publishing would write for this item</summary>
+          <pre id="pc-cell"></pre>
+        </details>
+      </figure>
+    </main>
+
+    <script>
+      // The sample world: the item edited in the tag prototypes, with its details.
+      const ITEM_TITLE = "Offer video appointments where suitable"
+      const INITIAL = [
+        { text: "Follow-up appointments in three specialties", level: 0 },
+        { text: "Dermatology", level: 1 },
+        { text: "Rheumatology", level: 1 },
+        { text: "Diabetes", level: 1 },
+        {
+          text: "A video call where the clinician and patient agree it suits",
+          level: 0,
+        },
+        {
+          text: "The patient can change to an appointment in person",
+          level: 1,
+        },
+        { text: "First appointments stay in person", level: 0 },
+      ]
+
+      // ---- The rules every prototype shares ----
+      /** The deepest level: 0 is the top, so a list has three. */
+      const MAX_LEVEL = 2
+      const HINT = "The public site lists these under “What this covers”."
+      const clean = (text) => text.replace(/\s+/g, " ").trim()
+      /** The hyphens and spaces before a line's text: never text, however written. */
+      const leadOf = (line) => /^[\s-]*/.exec(line)[0]
+      const hyphensIn = (lead) => lead.replace(/[^-]/g, "").length
+      /** A detail's text as kept: trimmed, with no hyphen or space before it. */
+      const textOf = (line) => clean(line.slice(leadOf(line).length))
+
+      /**
+       * Lines of text as details: each hyphen before a line's text nests it a level
+       * deeper than `base`, and a blank line is none.
+       */
+      function parseLines(text, base = 0) {
+        return text.split(/\r?\n/).flatMap((line) => {
+          const detail = textOf(line)
+          return detail === ""
+            ? []
+            : [{ text: detail, level: base + hyphensIn(leadOf(line)) }]
+        })
+      }
+
+      /**
+       * Details at the levels they show at: each nests under the last one shallower
+       * than it, one level in, however many levels deeper it was written, and none
+       * deeper than the third.
+       */
+      function settle(details) {
+        const open = []
+        return details.map((detail) => {
+          while (open.length > 0 && open.at(-1) >= detail.level) open.pop()
+          const level = Math.min(open.length, MAX_LEVEL)
+          open.push(detail.level)
+          return { ...detail, level }
+        })
+      }
+
+      /** The details as text: a line each, a hyphen for each level it is nested. */
+      const toLines = (details) =>
+        details
+          .map(
+            ({ text, level }) =>
+              `${"-".repeat(level)}${level > 0 ? " " : ""}${text}`,
+          )
+          .join("\n")
+
+      const same = (a, b) => toLines(a) === toLines(b)
+
+      /** The index after the last detail nested under the one at `index`. */
+      function endOf(details, index) {
+        let end = index + 1
+        while (
+          end < details.length &&
+          details[end].level > details[index].level
+        )
+          end += 1
+        return end
+      }
+      const nestedUnder = (details, index) => endOf(details, index) - index - 1
+      /** The detail the one at `index` is nested under, or `null` at the top level. */
+      function parentOf(details, index) {
+        for (let at = index - 1; at >= 0; at -= 1)
+          if (details[at].level < details[index].level) return details[at]
+        return null
+      }
+      const canOut = (details, index) => details[index].level > 0
+      /** Why the detail at `index` can't nest deeper, or `null` when it can. */
+      function whyNotIn(details, index) {
+        if (index === 0)
+          return "The first detail has nothing above it to nest under."
+        if (details[index].level > details[index - 1].level)
+          return "It is already nested under the detail above."
+        const deepest = Math.max(
+          ...details
+            .slice(index, endOf(details, index))
+            .map(({ level }) => level),
+        )
+        return deepest >= MAX_LEVEL
+          ? "A list has three levels, so this can't go deeper."
+          : null
+      }
+      /** The detail at `index`, with those nested under it, moved a level in or out. */
+      const shifted = (details, index, by) =>
+        details.map((detail, at) =>
+          at >= index && at < endOf(details, index)
+            ? { ...detail, level: detail.level + by }
+            : detail,
+        )
+      /** The index of the detail before this one at its level, under the same detail. */
+      function previousAtLevel(details, index) {
+        for (let at = index - 1; at >= 0; at -= 1) {
+          if (details[at].level < details[index].level) return -1
+          if (details[at].level === details[index].level) return at
+        }
+        return -1
+      }
+      function nextAtLevel(details, index) {
+        const end = endOf(details, index)
+        return end < details.length &&
+          details[end].level === details[index].level
+          ? end
+          : -1
+      }
+      /** The detail at `index`, with those nested under it, moved before the one at `to`. */
+      function movedUp(details, index) {
+        const to = previousAtLevel(details, index)
+        const end = endOf(details, index)
+        return [
+          ...details.slice(0, to),
+          ...details.slice(index, end),
+          ...details.slice(to, index),
+          ...details.slice(end),
+        ]
+      }
+      const movedDown = (details, index) =>
+        movedUp(details, nextAtLevel(details, index))
+      /** Without the detail at `index`: those nested under it move up a level. */
+      const without = (details, index) =>
+        settle(shifted(details, index, -1).filter((_, at) => at !== index))
+
+      const quoted = (text) => `“${text}”`
+      /** Where a detail sits, for a status line and a control's name. */
+      function placeOf(details, index) {
+        const parent = parentOf(details, index)
+        return parent ? `under ${quoted(parent.text)}` : "at the top level"
+      }
+
+      // ---- Drawing ----
+      function h(name, props, ...children) {
+        const element = document.createElement(name)
+        for (const [key, value] of Object.entries(props ?? {})) {
+          if (value == null || value === false) continue
+          if (key === "class") element.className = value
+          else if (key.startsWith("on"))
+            element.addEventListener(key.slice(2), value)
+          else element.setAttribute(key, value === true ? "" : value)
+        }
+        for (const child of children.flat()) {
+          if (child == null || child === false) continue
+          element.append(child)
+        }
+        return element
+      }
+      const srOnly = (text) => h("span", { class: "sr-only" }, text)
+
+      /** The lucide icons the controls show (lucide 1.70). */
+      const ICONS = {
+        in: '<path d="M21 5H11"/><path d="M21 12H11"/><path d="M21 19H11"/><path d="m3 8 4 4-4 4"/>',
+        out: '<path d="M21 5H11"/><path d="M21 12H11"/><path d="M21 19H11"/><path d="m7 8-4 4 4 4"/>',
+        up: '<path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>',
+        down: '<path d="M12 5v14"/><path d="m19 12-7 7-7-7"/>',
+        trash:
+          '<path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+        pencil:
+          '<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/>',
+        more: '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>',
+      }
+      function icon(name) {
+        const drawn = h("span", { "aria-hidden": "true" })
+        drawn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]}</svg>`
+        return drawn
+      }
+
+      /** A status line: `quiet` messages reach a screen reader only. */
+      function statusLine() {
+        const element = h("div", { class: "d-status", role: "status" })
+        return {
+          element,
+          say(message, { quiet = false, action = null } = {}) {
+            element.className = quiet ? "d-status sr-only" : "d-status"
+            element.replaceChildren(h("span", null, message), action ?? "")
+          },
+          clear() {
+            element.replaceChildren()
+          },
+        }
+      }
+
+      /** A text area as tall as its text, and no taller. */
+      function grow(area) {
+        area.style.height = "auto"
+        area.style.height = `${area.scrollHeight + (area.offsetHeight - area.clientHeight)}px`
+      }
+      /** Keeps text areas as tall as their text when the card's width changes. */
+      function growWith(element, areas) {
+        let width = 0
+        new ResizeObserver(([entry]) => {
+          if (entry.contentRect.width === width) return
+          width = entry.contentRect.width
+          for (const area of areas()) grow(area)
+        }).observe(element)
+      }
+
+      /** An item's details as the nested list the card shows. */
+      function cardList(details) {
+        const top = h("ul", { class: "k-list" })
+        const open = []
+        for (const { text, level } of details) {
+          while (open.length > 0 && open.at(-1).level >= level) open.pop()
+          let list = top
+          if (open.length > 0) {
+            const parent = open.at(-1).item
+            list =
+              parent.querySelector(":scope > ul") ??
+              parent.appendChild(h("ul", { class: "k-list" }))
+          }
+          const item = h("li", null, text)
+          list.append(item)
+          open.push({ level, item })
+        }
+        return top
+      }
+
+      let made = 0
+      /** Each detail with an identity of its own, to find it again after a move. */
+      const identified = (details) =>
+        details.map((detail) => ({ ...detail, id: (made += 1) }))
+      const plain = (details) =>
+        details.map(({ text, level }) => ({ text, level }))
+
+      /** The field's label and hint, and the group they name. */
+      function field(id, ...children) {
+        return h(
+          "div",
+          {
+            class: "d-field",
+            role: "group",
+            "aria-labelledby": `${id}-label`,
+            "aria-describedby": `${id}-hint`,
+          },
+          h("span", { class: "d-label", id: `${id}-label` }, "Details"),
+          h("p", { class: "d-hint", id: `${id}-hint` }, HINT),
+          children,
+        )
+      }
+
+      // ---- A: outline ----
+      function editorA(id, start) {
+        const blank = () => identified([{ text: "", level: 0 }])
+        let details = identified(start)
+        if (details.length === 0) details = blank()
+        let current = details[0].id
+        /** Where the caret was in the current detail when focus last left it. */
+        let caret = 0
+        const fields = new Map()
+        const status = statusLine()
+        const list = h("ul", { class: "o-list" })
+
+        const indexOf = (detailId) =>
+          details.findIndex((detail) => detail.id === detailId)
+        const nameOf = (index) =>
+          `Detail ${index + 1} of ${details.length}, ${
+            details[index].level === 0
+              ? "top level"
+              : `nested ${placeOf(details, index)}`
+          }`
+        function rename() {
+          details.forEach((detail, index) =>
+            fields.get(detail.id)?.setAttribute("aria-label", nameOf(index)),
+          )
+        }
+        /** Marks the detail the buttons act on, the list's one stop for the Tab key. */
+        function select(detailId) {
+          current = detailId
+          for (const [key, area] of fields) {
+            area.tabIndex = key === current ? 0 : -1
+            area.parentElement.classList.toggle("current", key === current)
+          }
+          drawBar()
+        }
+
+        function draw(focus) {
+          fields.clear()
+          list.replaceChildren(
+            ...details.map((detail) => {
+              const area = h("textarea", {
+                class: "o-text",
+                rows: 1,
+                onfocus: () => {
+                  if (current !== detail.id) select(detail.id)
+                },
+                onblur: () => {
+                  if (current === detail.id) caret = area.selectionStart
+                },
+                oninput: () => typed(detail, area),
+                onkeydown: (event) => keyed(event, detail, area),
+                onpaste: (event) => pasted(event, detail, area),
+              })
+              area.value = detail.text
+              fields.set(detail.id, area)
+              return h(
+                "li",
+                { class: "o-row", style: `--lvl: ${detail.level}` },
+                h("span", { class: "dot", "aria-hidden": "true" }),
+                area,
+              )
+            }),
+          )
+          rename()
+          select(current)
+          for (const area of fields.values()) grow(area)
+          if (focus) place(focus.id, focus.caret)
+        }
+        function place(detailId, at) {
+          const area = fields.get(detailId)
+          area.focus()
+          area.setSelectionRange(at, at)
+        }
+
+        /** Applies a change of the list, then says it for a screen reader. */
+        function change(next, { focus, said, loud = false, action = null }) {
+          details = next
+          if (details.length === 0) details = blank()
+          if (indexOf(current) === -1) current = details[0].id
+          draw(focus)
+          if (said) status.say(said, { quiet: !loud, action })
+          else status.clear()
+        }
+        function moveIn(index, focus) {
+          const why = whyNotIn(details, index)
+          if (why) {
+            draw(focus)
+            status.say(why)
+            return
+          }
+          const next = shifted(details, index, 1)
+          change(next, { focus, said: `Moved in, ${placeOf(next, index)}.` })
+        }
+        function moveOut(index, focus) {
+          if (!canOut(details, index)) {
+            status.say("It is already at the top level.")
+            return
+          }
+          const next = shifted(details, index, -1)
+          change(next, { focus, said: `Moved out, ${placeOf(next, index)}.` })
+        }
+
+        function typed(detail, area) {
+          // Hyphens at the start nest the detail, as they do where it is written.
+          const lead = leadOf(area.value)
+          if (lead !== "") {
+            const at = Math.max(0, area.selectionStart - lead.length)
+            detail.text = area.value.slice(lead.length)
+            area.value = detail.text
+            area.setSelectionRange(at, at)
+            for (let step = 0; step < hyphensIn(lead); step += 1)
+              moveIn(indexOf(detail.id), { id: detail.id, caret: at })
+          } else {
+            detail.text = area.value
+            status.clear()
+          }
+          grow(fields.get(detail.id))
+          rename()
+          drawBar()
+        }
+
+        function keyed(event, detail, area) {
+          const index = indexOf(detail.id)
+          const atStart = area.selectionStart === 0 && area.selectionEnd === 0
+          if (event.key === "Enter") {
+            event.preventDefault()
+            if (clean(area.value) === "") {
+              // An empty nested detail steps back out, as a list does in a document.
+              if (detail.level > 0) moveOut(index, { id: detail.id, caret: 0 })
+              return
+            }
+            const before = area.value.slice(0, area.selectionStart)
+            const after = area.value.slice(area.selectionEnd).trimStart()
+            // At the end of a detail that has others nested, the new one joins them.
+            const joins = after === "" && nestedUnder(details, index) > 0
+            const [fresh] = identified([
+              { text: after, level: detail.level + (joins ? 1 : 0) },
+            ])
+            const next = details.map((other) =>
+              other.id === detail.id
+                ? { ...other, text: before.trimEnd() }
+                : other,
+            )
+            next.splice(index + 1, 0, fresh)
+            current = fresh.id
+            change(next, {
+              focus: { id: fresh.id, caret: 0 },
+              said: `New detail ${placeOf(next, index + 1)}.`,
+            })
+          } else if (event.key === "Backspace" && atStart) {
+            if (detail.level > 0) {
+              event.preventDefault()
+              moveOut(index, { id: detail.id, caret: 0 })
+            } else if (index > 0) {
+              // At the top level it joins the detail above.
+              event.preventDefault()
+              const above = details[index - 1]
+              const join = above.text.length
+              const next = details
+                .map((other) =>
+                  other.id === above.id
+                    ? { ...other, text: above.text + detail.text }
+                    : other,
+                )
+                .filter((other) => other.id !== detail.id)
+              current = above.id
+              change(settle(next), {
+                focus: { id: above.id, caret: join },
+                said:
+                  detail.text === ""
+                    ? "Removed the empty detail."
+                    : "Joined to the detail above.",
+              })
+            }
+          } else if (event.key === "ArrowUp" && atStart && index > 0) {
+            event.preventDefault()
+            const above = details[index - 1]
+            place(above.id, above.text.length)
+          } else if (
+            event.key === "ArrowDown" &&
+            area.selectionStart === area.value.length &&
+            index < details.length - 1
+          ) {
+            event.preventDefault()
+            place(details[index + 1].id, 0)
+          }
+        }
+
+        /** Pasted lines become details, nested by their hyphens under this one's level. */
+        function pasted(event, detail, area) {
+          const text = event.clipboardData?.getData("text") ?? ""
+          if (!/[\r\n]/.test(text)) return
+          event.preventDefault()
+          const lines = identified(parseLines(text, detail.level))
+          if (lines.length === 0) return
+          const index = indexOf(detail.id)
+          const next = [...details]
+          if (clean(area.value) === "") next.splice(index, 1, ...lines)
+          else next.splice(endOf(details, index), 0, ...lines)
+          const last = lines.at(-1)
+          current = last.id
+          change(settle(next), {
+            focus: { id: last.id, caret: last.text.length },
+            said: `Added ${lines.length} details.`,
+          })
+        }
+
+        function remove(index) {
+          const before = details
+          const removed = details[index]
+          const nested = nestedUnder(details, index)
+          const next = without(details, index)
+          current = (next[index] ?? next[index - 1])?.id ?? null
+          const undo = h(
+            "button",
+            {
+              type: "button",
+              class: "d-btn sec sm",
+              onclick: () => {
+                current = removed.id
+                change(before, {
+                  focus: { id: removed.id, caret: removed.text.length },
+                  said: `Put back ${quoted(removed.text)}.`,
+                })
+              },
+            },
+            "Undo",
+            " ",
+            srOnly(`removing ${removed.text}`),
+          )
+          change(next, {
+            said:
+              `Removed ${quoted(removed.text)}.` +
+              (nested === 0
+                ? ""
+                : nested === 1
+                  ? " The detail under it moved up a level."
+                  : ` The ${nested} details under it moved up a level.`),
+            loud: true,
+            action: undo,
+          })
+          // Focus goes to the detail now in its place, so a second press removes nothing.
+          place(current, 0)
+        }
+
+        // The buttons act on the detail last written in, and say why when they can't.
+        const ACTIONS = [
+          {
+            word: "Move out",
+            icon: "out",
+            why: (index) =>
+              canOut(details, index) ? null : "It is already at the top level.",
+            run: (index, focus) => moveOut(index, focus),
+          },
+          {
+            word: "Move in",
+            icon: "in",
+            why: (index) => whyNotIn(details, index),
+            run: (index, focus) => moveIn(index, focus),
+          },
+          {
+            word: "Move up",
+            icon: "up",
+            small: true,
+            why: (index) =>
+              previousAtLevel(details, index) === -1
+                ? "It is already the first at its level."
+                : null,
+            run: (index, focus) =>
+              change(movedUp(details, index), { focus, said: "Moved up." }),
+          },
+          {
+            word: "Move down",
+            icon: "down",
+            small: true,
+            why: (index) =>
+              nextAtLevel(details, index) === -1
+                ? "It is already the last at its level."
+                : null,
+            run: (index, focus) =>
+              change(movedDown(details, index), { focus, said: "Moved down." }),
+          },
+          {
+            word: "Remove",
+            icon: "trash",
+            small: true,
+            why: () =>
+              details.length === 1 && clean(details[0].text) === ""
+                ? "There is no detail to remove."
+                : null,
+            placesFocus: true,
+            run: (index) => remove(index),
+          },
+        ]
+        const buttons = ACTIONS.map((action) => {
+          const subject = srOnly("")
+          const button = h(
+            "button",
+            {
+              type: "button",
+              class: `d-btn sec sm${action.small ? " ico" : ""}`,
+              title: action.small ? action.word : null,
+              onclick: (event) => {
+                const index = indexOf(current)
+                const why = action.why(index)
+                // A pointer goes back to the text; a keyboard stays on the button.
+                const focus =
+                  event.detail > 0 ? { id: current, caret } : undefined
+                if (why) {
+                  status.say(why)
+                  if (focus) place(focus.id, focus.caret)
+                  return
+                }
+                action.run(index, focus)
+                if (!focus && !action.placesFocus) button.focus()
+              },
+            },
+            icon(action.icon),
+            action.small ? srOnly(action.word) : action.word,
+            " ",
+            subject,
+          )
+          return { action, button, subject }
+        })
+        function drawBar() {
+          const index = indexOf(current)
+          if (index === -1) return
+          for (const { action, button, subject } of buttons) {
+            subject.textContent = details[index].text || "the empty detail"
+            button.setAttribute(
+              "aria-disabled",
+              String(action.why(index) !== null),
+            )
+          }
+        }
+
+        const element = field(
+          id,
+          list,
+          h(
+            "div",
+            {
+              class: "o-bar",
+              role: "toolbar",
+              "aria-label": "The detail selected",
+            },
+            buttons
+              .filter(({ action }) => !action.small)
+              .map(({ button }) => button),
+            // The three shown as icons wrap together where the card is narrow.
+            h(
+              "span",
+              { class: "o-set" },
+              buttons
+                .filter(({ action }) => action.small)
+                .map(({ button }) => button),
+            ),
+          ),
+          h(
+            "p",
+            { class: "d-hint" },
+            "Press Enter for a new detail. To nest one, start it with a hyphen.",
+          ),
+          status.element,
+        )
+        growWith(list, () => fields.values())
+        draw()
+        return {
+          element,
+          value: () => {
+            let kept = plain(details).map((detail) => ({
+              ...detail,
+              text: textOf(detail.text),
+            }))
+            // A detail left with no text is removed as Remove removes it.
+            for (let at = kept.length - 1; at >= 0; at -= 1)
+              if (kept[at].text === "") kept = without(kept, at)
+            return settle(kept)
+          },
+          focus: () => place(current, fields.get(current).value.length),
+        }
+      }
+
+      // ---- B: rows with a menu ----
+      function editorB(id, start) {
+        let details = identified(start)
+        /** The detail whose text is being changed, and whether it was just added. */
+        let editing = null
+        let menuFor = null
+        const status = statusLine()
+        const list = h("ul", {
+          class: "r-list",
+          "aria-label": "Details of this item",
+        })
+        const adding = h("input", {
+          class: "d-input",
+          type: "text",
+          id: `${id}-add`,
+          onkeydown: (event) => {
+            if (event.key !== "Enter" || clean(adding.value) === "") return
+            event.preventDefault()
+            addTyped()
+          },
+          onpaste: (event) => {
+            const text = event.clipboardData?.getData("text") ?? ""
+            if (!/[\r\n]/.test(text)) return
+            event.preventDefault()
+            // One line of text can't hold the line breaks, so they are read here.
+            addTyped(adding.value + text)
+          },
+        })
+        const indexOf = (detailId) =>
+          details.findIndex((detail) => detail.id === detailId)
+        const control = (kind, detailId) =>
+          list.querySelector(`[data-${kind}="${detailId}"]`)
+
+        /** Keeps the text being changed, as choosing any other control does. */
+        function settleEdit() {
+          if (!editing) return
+          const { id: detailId, added } = editing
+          const area = control("area", detailId)
+          // A line break or hyphens at the start are not part of a detail's text.
+          const text = textOf(area.value)
+          editing = null
+          if (text !== "") {
+            details = details.map((detail) =>
+              detail.id === detailId ? { ...detail, text } : detail,
+            )
+          } else {
+            // Text cleared is a detail removed: those nested under it move up a level.
+            details = without(details, indexOf(detailId))
+          }
+        }
+        function cancelEdit() {
+          const { id: detailId, added, from } = editing
+          editing = null
+          if (added)
+            details = details.filter((detail) => detail.id !== detailId)
+          draw()
+          ;(control("more", added ? from : detailId) ?? adding).focus()
+        }
+        function finishEdit() {
+          const { id: detailId } = editing
+          settleEdit()
+          draw()
+          ;(control("more", detailId) ?? adding).focus()
+        }
+        function startEdit(detailId, added = false, from = null) {
+          editing = { id: detailId, added, from }
+          menuFor = null
+          status.clear()
+          draw()
+          const area = control("area", detailId)
+          area.focus()
+          area.setSelectionRange(area.value.length, area.value.length)
+        }
+
+        function addTyped(text = adding.value) {
+          settleEdit()
+          const lines = identified(parseLines(text))
+          adding.value = ""
+          if (lines.length === 0) return
+          details = settle([...details, ...lines])
+          draw()
+          status.say(
+            lines.length === 1
+              ? `Added ${quoted(lines[0].text)} at the end.`
+              : `Added ${lines.length} details at the end.`,
+            { quiet: true },
+          )
+        }
+        /** A new, empty detail after the one at `index` and all nested under it. */
+        function addAfter(index, deeper) {
+          const origin = details[index]
+          const [fresh] = identified([
+            { text: "", level: origin.level + (deeper ? 1 : 0) },
+          ])
+          details = [...details]
+          details.splice(endOf(details, index), 0, fresh)
+          startEdit(fresh.id, true, origin.id)
+        }
+        function move(index, next, said) {
+          const detailId = details[index].id
+          details = next
+          menuFor = null
+          draw()
+          control("more", detailId).focus()
+          status.say(said, { quiet: true })
+        }
+        function remove(index) {
+          const before = details
+          const removed = details[index]
+          const nested = nestedUnder(details, index)
+          details = without(details, index)
+          menuFor = null
+          draw()
+          const after = details[index] ?? details[index - 1]
+          ;(after ? control("more", after.id) : adding).focus()
+          status.say(
+            `Removed ${quoted(removed.text)}.` +
+              (nested === 0
+                ? ""
+                : nested === 1
+                  ? " The detail under it moved up a level."
+                  : ` The ${nested} details under it moved up a level.`),
+            {
+              action: h(
+                "button",
+                {
+                  type: "button",
+                  class: "d-btn sec sm",
+                  onclick: () => {
+                    details = before
+                    draw()
+                    control("more", removed.id).focus()
+                    status.say(`Put back ${quoted(removed.text)}.`, {
+                      quiet: true,
+                    })
+                  },
+                },
+                "Undo",
+                " ",
+                srOnly(`removing ${removed.text}`),
+              ),
+            },
+          )
+        }
+
+        /** The menu's choices for the detail at `index`; `why` says one can't be taken. */
+        function choices(index) {
+          const { level } = details[index]
+          return [
+            { word: "Add a detail below", run: () => addAfter(index, false) },
+            level < MAX_LEVEL && {
+              word: "Add a detail nested under this",
+              run: () => addAfter(index, true),
+            },
+            "sep",
+            {
+              word: "Move in",
+              why: whyNotIn(details, index),
+              run: () => {
+                const next = shifted(details, index, 1)
+                move(index, next, `Moved in, ${placeOf(next, index)}.`)
+              },
+            },
+            {
+              word: "Move out",
+              why: canOut(details, index)
+                ? null
+                : "It is already at the top level.",
+              run: () => {
+                const next = shifted(details, index, -1)
+                move(index, next, `Moved out, ${placeOf(next, index)}.`)
+              },
+            },
+            {
+              word: "Move up",
+              why:
+                previousAtLevel(details, index) === -1
+                  ? "It is already the first at its level."
+                  : null,
+              run: () => move(index, movedUp(details, index), "Moved up."),
+            },
+            {
+              word: "Move down",
+              why:
+                nextAtLevel(details, index) === -1
+                  ? "It is already the last at its level."
+                  : null,
+              run: () => move(index, movedDown(details, index), "Moved down."),
+            },
+            "sep",
+            { word: "Remove", run: () => remove(index) },
+          ].filter(Boolean)
+        }
+        function closeMenu(detailId) {
+          menuFor = null
+          draw()
+          control("more", detailId)?.focus()
+        }
+        function menu(index) {
+          const detail = details[index]
+          const items = () => [
+            ...popup.querySelectorAll('button:not([aria-disabled="true"])'),
+          ]
+          const popup = h(
+            "ul",
+            {
+              class: "menu",
+              role: "menu",
+              "aria-label": `More for ${detail.text}`,
+              onkeydown: (event) => {
+                const all = items()
+                const at = all.indexOf(document.activeElement)
+                if (event.key === "Escape") {
+                  // The menu takes Escape, so the form stays open.
+                  event.preventDefault()
+                  closeMenu(detail.id)
+                } else if (
+                  event.key === "ArrowDown" ||
+                  event.key === "ArrowUp"
+                ) {
+                  event.preventDefault()
+                  const step = event.key === "ArrowDown" ? 1 : -1
+                  all[(at + step + all.length) % all.length].focus()
+                } else if (event.key === "Home" || event.key === "End") {
+                  event.preventDefault()
+                  all.at(event.key === "Home" ? 0 : -1).focus()
+                } else if (event.key === "Tab") {
+                  // Tab leaves the menu, and goes on from its button.
+                  closeMenu(detail.id)
+                }
+              },
+            },
+            choices(index).map((choice) =>
+              choice === "sep"
+                ? h("li", { class: "sep", role: "separator" })
+                : h(
+                    "li",
+                    { role: "none" },
+                    h(
+                      "button",
+                      {
+                        type: "button",
+                        role: "menuitem",
+                        "aria-disabled": choice.why ? "true" : null,
+                        title: choice.why,
+                        onclick: () => {
+                          if (!choice.why) choice.run()
+                        },
+                      },
+                      choice.word,
+                    ),
+                  ),
+            ),
+          )
+          return popup
+        }
+
+        function row(detail, index) {
+          if (editing?.id === detail.id) {
+            const area = h("textarea", {
+              class: "d-input",
+              rows: 1,
+              "data-area": detail.id,
+              "aria-label": editing.added
+                ? `New detail ${placeOf(details, index)}`
+                : `Change ${detail.text}`,
+              onkeydown: (event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault()
+                  finishEdit()
+                } else if (event.key === "Escape") {
+                  // The field takes Escape, so the form stays open.
+                  event.preventDefault()
+                  cancelEdit()
+                }
+              },
+              oninput: () => grow(area),
+            })
+            area.value = detail.text
+            return h(
+              "li",
+              { class: "r-row", style: `--lvl: ${detail.level}` },
+              h("span", { class: "dot", "aria-hidden": "true" }),
+              h(
+                "div",
+                { class: "r-edit" },
+                area,
+                h(
+                  "div",
+                  null,
+                  h(
+                    "button",
+                    {
+                      type: "button",
+                      class: "d-btn sec sm",
+                      onclick: finishEdit,
+                    },
+                    editing.added ? "Add" : "Update",
+                    " ",
+                    srOnly(editing.added ? "the new detail" : detail.text),
+                  ),
+                  h(
+                    "button",
+                    {
+                      type: "button",
+                      class: "d-btn sec sm",
+                      onclick: cancelEdit,
+                    },
+                    "Cancel",
+                    " ",
+                    srOnly(
+                      editing.added
+                        ? "adding a detail"
+                        : `changing ${detail.text}`,
+                    ),
+                  ),
+                ),
+              ),
+            )
+          }
+          const open = menuFor === detail.id
+          return h(
+            "li",
+            { class: "r-row", style: `--lvl: ${detail.level}` },
+            h("span", { class: "dot", "aria-hidden": "true" }),
+            h("span", { class: "r-text" }, detail.text),
+            h(
+              "div",
+              { class: "r-actions" },
+              h(
+                "button",
+                {
+                  type: "button",
+                  class: "d-btn sec sm ico",
+                  title: "Edit",
+                  onclick: () => {
+                    settleEdit()
+                    startEdit(detail.id)
+                  },
+                },
+                icon("pencil"),
+                srOnly(`Edit ${detail.text}`),
+              ),
+              h(
+                "button",
+                {
+                  type: "button",
+                  class: "d-btn sec sm ico",
+                  title: "More",
+                  "data-more": detail.id,
+                  "aria-haspopup": "menu",
+                  "aria-expanded": String(open),
+                  onclick: () => {
+                    settleEdit()
+                    menuFor = open ? null : detail.id
+                    draw()
+                    if (open) control("more", detail.id).focus()
+                    else list.querySelector(".menu button").focus()
+                  },
+                },
+                icon("more"),
+                srOnly(`More for ${detail.text}`),
+              ),
+              open && menu(index),
+            ),
+          )
+        }
+        function draw() {
+          list.replaceChildren(...details.map(row))
+          list.hidden = details.length === 0
+          for (const area of list.querySelectorAll("textarea")) grow(area)
+        }
+        // A press anywhere else shuts the menu.
+        document.addEventListener("pointerdown", (event) => {
+          if (menuFor === null || event.target.closest?.(".r-actions")) return
+          menuFor = null
+          draw()
+        })
+
+        const element = field(
+          id,
+          list,
+          h(
+            "div",
+            { class: "d-field" },
+            h("label", { class: "d-sub", for: adding.id }, "Add a detail"),
+            h(
+              "div",
+              { class: "r-add" },
+              adding,
+              h(
+                "button",
+                {
+                  type: "button",
+                  class: "d-btn sec",
+                  onclick: () => {
+                    addTyped()
+                    adding.focus()
+                  },
+                },
+                "Add",
+                " ",
+                srOnly("detail"),
+              ),
+            ),
+          ),
+          status.element,
+        )
+        growWith(list, () => list.querySelectorAll("textarea"))
+        draw()
+        return {
+          element,
+          value: () => {
+            // Text still being changed, and text typed but not added, both count.
+            settleEdit()
+            return settle([...plain(details), ...parseLines(adding.value)])
+          },
+          focus: () => adding.focus(),
+        }
+      }
+
+      // ---- C: text box and preview ----
+      function editorC(id, start) {
+        const preview = h("div", { class: "c-preview" })
+        const notes = h("div", { class: "d-notes", role: "status" })
+        const area = h("textarea", {
+          class: "d-input",
+          id: `${id}-text`,
+          rows: 4,
+          "aria-describedby": `${id}-how`,
+          oninput: refresh,
+          onkeydown: (event) => {
+            if (event.key !== "Enter") return
+            // A new line starts nested as the line above is.
+            const { value, selectionStart: at, selectionEnd } = area
+            const from = value.lastIndexOf("\n", at - 1) + 1
+            const [, hyphens, rest] = /^(-*)\s*(.*)$/.exec(
+              value.slice(from, at),
+            )
+            if (hyphens === "") return
+            event.preventDefault()
+            // A line of hyphens alone steps back out instead.
+            const next =
+              rest === ""
+                ? value.slice(0, from) + value.slice(selectionEnd)
+                : `${value.slice(0, at)}\n${hyphens} ${value.slice(selectionEnd)}`
+            const caret = rest === "" ? from : at + hyphens.length + 2
+            area.value = next
+            area.setSelectionRange(caret, caret)
+            refresh()
+          },
+        })
+        area.value = toLines(start)
+
+        /** Adds a hyphen to each line selected, or takes one away. */
+        function shift(by) {
+          const { value, selectionStart, selectionEnd } = area
+          const from = value.lastIndexOf("\n", selectionStart - 1) + 1
+          // A selection that ends at the start of a line leaves that line alone.
+          const last =
+            selectionEnd > selectionStart && value[selectionEnd - 1] === "\n"
+              ? selectionEnd - 1
+              : selectionEnd
+          const found = value.indexOf("\n", last)
+          const to = found === -1 ? value.length : found
+          const lines = value
+            .slice(from, to)
+            .split("\n")
+            .map((line) => {
+              const [, hyphens, rest] = /^\s*(-*)\s*(.*)$/.exec(line)
+              if (rest === "") return line
+              const count = Math.max(
+                0,
+                Math.min(MAX_LEVEL, hyphens.length + by),
+              )
+              return `${"-".repeat(count)}${count > 0 ? " " : ""}${rest}`
+            })
+            .join("\n")
+          area.value = value.slice(0, from) + lines + value.slice(to)
+          area.focus()
+          if (selectionStart === selectionEnd) {
+            const at = Math.max(
+              from,
+              selectionStart + lines.length - (to - from),
+            )
+            area.setSelectionRange(at, at)
+          } else {
+            area.setSelectionRange(from, from + lines.length)
+          }
+          refresh()
+        }
+
+        /** What a line can't do as written, for each line that shows differently. */
+        function problems() {
+          const found = []
+          let above = null
+          area.value.split("\n").forEach((line, index) => {
+            if (textOf(line) === "") return
+            const level = hyphensIn(leadOf(line))
+            if (above === null && level > 0) {
+              found.push(
+                `Line ${index + 1} is the first, so it shows at the top level.`,
+              )
+            } else if (level > MAX_LEVEL) {
+              found.push(
+                `Line ${index + 1} has more than two hyphens. A list has three levels, so it shows at the third.`,
+              )
+            } else if (above !== null && level > above + 1) {
+              found.push(
+                `Line ${index + 1} skips a level, so it shows one level under the line above.`,
+              )
+            }
+            above = level
+          })
+          return found
+        }
+        function value() {
+          return settle(parseLines(area.value))
+        }
+        function refresh() {
+          grow(area)
+          const details = value()
+          preview.replaceChildren(
+            details.length > 0
+              ? cardList(details)
+              : h("p", { class: "c-none" }, "No details"),
+          )
+          const found = problems()
+          // Said again only when it changes, so typing is not read over.
+          if (found.join("\n") !== notes.dataset.said) {
+            notes.dataset.said = found.join("\n")
+            notes.replaceChildren(...found.map((text) => h("p", null, text)))
+          }
+        }
+
+        const element = h(
+          "div",
+          { class: "d-field" },
+          h("label", { class: "d-label", for: area.id }, "Details"),
+          h(
+            "p",
+            { class: "d-hint", id: `${id}-how` },
+            HINT,
+            " Write one on each line. To nest a line under the one above, start it with a hyphen; with two, it nests again.",
+          ),
+          area,
+          h(
+            "div",
+            { class: "c-tools" },
+            h(
+              "button",
+              {
+                type: "button",
+                class: "d-btn sec sm",
+                onclick: () => shift(-1),
+              },
+              icon("out"),
+              "Move out",
+              " ",
+              srOnly("the lines selected"),
+            ),
+            h(
+              "button",
+              {
+                type: "button",
+                class: "d-btn sec sm",
+                onclick: () => shift(1),
+              },
+              icon("in"),
+              "Move in",
+              " ",
+              srOnly("the lines selected"),
+            ),
+          ),
+          h(
+            "span",
+            { class: "d-sub", id: `${id}-shown` },
+            "How the list will read",
+          ),
+          preview,
+          notes,
+        )
+        preview.setAttribute("role", "group")
+        preview.setAttribute("aria-labelledby", `${id}-shown`)
+        growWith(area, () => [area])
+        refresh()
+        return { element, value, focus: () => area.focus() }
+      }
+
+      // ---- The item card that holds each editor ----
+      function mount(id, makeEditor) {
+        const card = document.getElementById(`${id}-card`)
+        const cell = document.getElementById(`${id}-cell`)
+        const title = () => h("h3", { id: `${id}-title` }, ITEM_TITLE)
+        let kept = INITIAL
+
+        function showCell() {
+          cell.textContent = kept.length > 0 ? toLines(kept) : "(an empty cell)"
+        }
+        function showCard(focus) {
+          const changed = !same(kept, INITIAL)
+          const edit = h(
+            "button",
+            {
+              type: "button",
+              class: "d-btn sec",
+              onclick: () => showForm(true),
+            },
+            "Edit",
+            " ",
+            srOnly(ITEM_TITLE),
+          )
+          const parts = [
+            title(),
+            changed && h("span", { class: "d-tag" }, "Changed"),
+            kept.length > 0 &&
+              h(
+                "dl",
+                null,
+                h("dt", null, "Details"),
+                h("dd", null, cardList(kept)),
+              ),
+            h(
+              "div",
+              { class: "d-actions" },
+              edit,
+              changed &&
+                h(
+                  "button",
+                  {
+                    type: "button",
+                    class: "d-btn sec",
+                    onclick: () => {
+                      kept = INITIAL
+                      showCard(true)
+                    },
+                  },
+                  "Undo changes",
+                  " ",
+                  srOnly(`to ${ITEM_TITLE}`),
+                ),
+            ),
+          ]
+          card.replaceChildren(...parts.filter(Boolean))
+          showCell()
+          if (focus) edit.focus()
+        }
+        function showForm(focus) {
+          const editor = makeEditor(id, kept)
+          card.replaceChildren(
+            title(),
+            h(
+              "form",
+              {
+                class: "d-form",
+                "aria-labelledby": `${id}-title`,
+                novalidate: true,
+                onsubmit: (event) => {
+                  event.preventDefault()
+                  kept = editor.value()
+                  showCard(true)
+                },
+                // Escape is Cancel, unless the field took it to close or leave something.
+                onkeydown: (event) => {
+                  if (event.key !== "Escape" || event.defaultPrevented) return
+                  event.preventDefault()
+                  showCard(true)
+                },
+              },
+              editor.element,
+              h(
+                "div",
+                { class: "d-actions" },
+                h("button", { type: "submit", class: "d-btn" }, "Done"),
+                h(
+                  "button",
+                  {
+                    type: "button",
+                    class: "d-btn sec",
+                    onclick: () => showCard(true),
+                  },
+                  "Cancel",
+                ),
+              ),
+            ),
+          )
+          showCell()
+          if (focus) editor.focus()
+        }
+        document
+          .querySelector(`[data-again="${id}"]`)
+          .addEventListener("click", () => {
+            kept = INITIAL
+            showForm(false)
+          })
+        showForm(false)
+      }
+
+      mount("pa", editorA)
+      mount("pb", editorB)
+      mount("pc", editorC)
+
+      // ---- The page's own controls ----
+      document.getElementById("world-cell").textContent = toLines(INITIAL)
+      function bindToggle(attribute, apply) {
+        const buttons = document.querySelectorAll(`[data-${attribute}]`)
+        for (const button of buttons) {
+          button.addEventListener("click", () => {
+            for (const other of buttons)
+              other.setAttribute("aria-pressed", String(other === button))
+            apply(button.dataset[attribute])
+          })
+        }
+      }
+      bindToggle("theme", (theme) => {
+        for (const stage of document.querySelectorAll(".dhcw"))
+          stage.classList.toggle("dark", theme === "dark")
+      })
+      bindToggle("width", (width) => {
+        for (const stage of document.querySelectorAll(".dhcw"))
+          stage.style.setProperty("--card-w", `${width}px`)
+      })
+    </script>
+  </body>
+</html>

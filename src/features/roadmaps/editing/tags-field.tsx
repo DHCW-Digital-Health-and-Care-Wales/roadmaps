@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils"
 
 import {
   addTags,
+  asOneName,
   endsATag,
   NO_DRAFT,
   offeredTags,
@@ -62,15 +63,18 @@ export function TagsField({ label, initial, inUse, onChange }: TagsFieldProps) {
   const { t } = useTranslation()
   const [tags, setTags] = useState(initial)
   const [draft, setDraft] = useState(NO_DRAFT)
+  // What shutting the field did not keep as typed, said until the tags next change.
+  const [shutNotes, setShutNotes] = useState<readonly TagNote[]>([])
   const apply = (nextTags: readonly string[], nextDraft: TagsDraft) => {
     setTags(nextTags)
     setDraft(nextDraft)
-    onChange(settleTags(nextTags, nextDraft, inUse))
+    setShutNotes([])
+    onChange(settleTags(nextTags, nextDraft, inUse).tags)
   }
   // What is half done is kept in the roadmap's spelling (S21), which another item's
   // tags, confirmed meanwhile, may have changed: the form is told what it now keeps.
   const keepInStep = useEffectEvent(() => {
-    if (draft !== NO_DRAFT) onChange(settleTags(tags, draft, inUse))
+    if (draft !== NO_DRAFT) onChange(settleTags(tags, draft, inUse).tags)
   })
   useEffect(() => {
     keepInStep()
@@ -82,12 +86,16 @@ export function TagsField({ label, initial, inUse, onChange }: TagsFieldProps) {
       subject={t("roadmaps.edit.tags.subject")}
       summary={tags.length > 0 ? <TagList tags={tags} /> : null}
       none={t("roadmaps.edit.tags.none")}
+      // Describes the button, which takes focus as the field shuts, so it is announced
+      // (S11): the editor's own status line goes with the editor.
+      hint={shutNotes.length > 0 ? notesText(shutNotes, t) : undefined}
       onShut={() => {
         // What confirming the form would keep, now shown as the field's tags.
         const settled = settleTags(tags, draft, inUse)
-        setTags(settled)
+        setTags(settled.tags)
         setDraft(NO_DRAFT)
-        onChange(settled)
+        setShutNotes(settled.notes)
+        onChange(settled.tags)
       }}
     >
       {(focusOnOpen) => (
@@ -267,6 +275,23 @@ function TagsEditor({
                         renaming: { index, name: event.target.value },
                       })
                     }}
+                    onPaste={(event) => {
+                      // A one-line field drops a pasted line break, joining the words
+                      // it parted: here it reads as a space, as a comma does (S7).
+                      const pasted = event.clipboardData.getData("text")
+                      if (!endsATag(pasted)) return
+                      event.preventDefault()
+                      onApply(tags, {
+                        ...draft,
+                        renaming: {
+                          index,
+                          name: withPasted(
+                            event.currentTarget,
+                            asOneName(pasted),
+                          ),
+                        },
+                      })
+                    }}
                     onKeyDown={(event) => {
                       if (event.key !== "Enter" && event.key !== "Escape") {
                         return
@@ -361,15 +386,7 @@ function TagsEditor({
               const pasted = event.clipboardData.getData("text")
               if (!endsATag(pasted)) return
               event.preventDefault()
-              // Pasted where the browser would have: over the selection, at the caret.
-              const { value, selectionStart, selectionEnd } =
-                event.currentTarget
-              const start = selectionStart ?? value.length
-              add(
-                value.slice(0, start) +
-                  pasted +
-                  value.slice(selectionEnd ?? start),
-              )
+              add(withPasted(event.currentTarget, pasted))
             }}
             onKeyDown={(event) => {
               // With nothing typed, Enter confirms the form, as in its other fields.
@@ -461,6 +478,22 @@ function TagsEditor({
   )
 }
 
+/** `input`'s text with `pasted` where the browser would put it: over the selection, at the caret. */
+function withPasted(input: HTMLInputElement, pasted: string): string {
+  const { value, selectionStart, selectionEnd } = input
+  const start = selectionStart ?? value.length
+  return value.slice(0, start) + pasted + value.slice(selectionEnd ?? start)
+}
+
+/** What the field says of tags not kept as typed. */
+function notesText(notes: readonly TagNote[], t: TFunction): string {
+  return notes
+    .map(({ kind, typed, tag }) =>
+      t(`roadmaps.edit.tags.notes.${kind}`, { typed, tag }),
+    )
+    .join(" ")
+}
+
 /** What the status line says for `message`. */
 function messageText(message: Message, t: TFunction): string {
   switch (message.kind) {
@@ -469,9 +502,7 @@ function messageText(message: Message, t: TFunction): string {
         ...(message.added.length > 0
           ? [t("roadmaps.edit.tags.added", { tags: message.added.join(", ") })]
           : []),
-        ...message.notes.map(({ kind, typed, tag }) =>
-          t(`roadmaps.edit.tags.notes.${kind}`, { typed, tag }),
-        ),
+        notesText(message.notes, t),
       ].join(" ")
     case "added":
       return t("roadmaps.edit.tags.added", { tags: message.tags.join(", ") })

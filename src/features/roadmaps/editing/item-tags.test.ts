@@ -191,14 +191,31 @@ describe("settleTags", () => {
         },
         inUse,
       ),
-    ).toEqual(["Patients", "Video appointments", "Carers"])
+    ).toEqual({ tags: ["Patients", "Video appointments", "Carers"], notes: [] })
+  })
+
+  it("says what was not kept as typed (S4, S21)", () => {
+    expect(
+      settleTags(
+        ["Patients", "Video consultations"],
+        { adding: "patients, clinic staff", renaming: null },
+        inUse,
+      ),
+    ).toEqual({
+      tags: ["Patients", "Video consultations", "Clinic staff"],
+      notes: [
+        { kind: "repeat", typed: "patients", tag: "Patients" },
+        { kind: "respelt", typed: "clinic staff", tag: "Clinic staff" },
+      ],
+    })
   })
 
   it("is the tags themselves with nothing half done", () => {
     const tags = ["Patients"]
 
-    expect(settleTags(tags, { adding: " ", renaming: null }, inUse)).toEqual(
+    expect(settleTags(tags, { adding: " ", renaming: null }, inUse)).toEqual({
       tags,
-    )
+      notes: [],
+    })
   })
 })

@@ -47,6 +47,11 @@ export function endsATag(text: string): boolean {
   return TAG_SEPARATOR.test(text)
 }
 
+/** `text` as one tag's name: a comma or a line break in it reads as a space (S7). */
+export function asOneName(text: string): string {
+  return text.split(TAG_SEPARATOR).join(" ")
+}
+
 const byName = (a: string, b: string) =>
   a.localeCompare(b, "en", { sensitivity: "base" })
 
@@ -147,9 +152,9 @@ export function addTags(
 
 /**
  * `tags` with the one at `index` renamed to `text` in its place (S6): a comma or a line
- * break in it reads as a space, and a blank or unchanged name keeps the old one. A name the item
- * has, whatever its capitals, drops the renamed tag, leaving that one once; any other
- * takes the spelling `inUse` has for it (S21).
+ * break in it reads as a space, and a blank or unchanged name keeps the old one. A name
+ * the item has, whatever its capitals, drops the renamed tag, leaving that one once; any
+ * other takes the spelling `inUse` has for it (S21).
  */
 export function renameTag(
   tags: readonly string[],
@@ -158,7 +163,7 @@ export function renameTag(
   inUse: readonly TagInUse[],
 ): { tags: readonly string[]; notes: TagNote[] } {
   const old = tags[index]
-  const typed = clean(text.split(TAG_SEPARATOR).join(" "))
+  const typed = clean(asOneName(text))
   // A name left as it was read keeps its white space too.
   if (old === undefined || typed === "" || text.trim() === old) {
     return { tags, notes: [] }
@@ -182,15 +187,18 @@ export function renameTag(
 
 /**
  * `tags` with what `draft` holds kept, as confirming the form or shutting the field
- * does: the name still being changed (S15), then the text typed but not yet added (S8).
+ * does: the name still being changed (S15), then the text typed but not yet added (S8),
+ * with what was not kept as typed.
  */
 export function settleTags(
   tags: readonly string[],
   { adding, renaming }: TagsDraft,
   inUse: readonly TagInUse[],
-): readonly string[] {
+): { tags: readonly string[]; notes: TagNote[] } {
   const renamed = renaming
-    ? renameTag(tags, renaming.index, renaming.name, inUse).tags
-    : tags
-  return clean(adding) === "" ? renamed : addTags(renamed, adding, inUse).tags
+    ? renameTag(tags, renaming.index, renaming.name, inUse)
+    : { tags, notes: [] }
+  if (clean(adding) === "") return renamed
+  const added = addTags(renamed.tags, adding, inUse)
+  return { tags: added.tags, notes: [...renamed.notes, ...added.notes] }
 }

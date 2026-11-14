@@ -795,6 +795,50 @@ describe("What the Tags field keeps (STY-037, review round 1)", () => {
     },
   )
 
+  it("takes a line break pasted into a name being changed as a space (S7)", async () => {
+    const { user } = await renderPage()
+    const { field } = await openTags(user, "Video clinics")
+    await user.click(
+      field.getByRole("button", { name: "Rename Video consultations" }),
+    )
+    const name = field.getByRole<HTMLInputElement>("textbox", {
+      name: "Rename Video consultations",
+    })
+
+    // The name is selected as its field opens, so the paste replaces it.
+    name.setSelectionRange(0, name.value.length)
+    await user.paste("Clinic\nvisits, by video")
+    await user.keyboard("{Enter}")
+
+    expect(rowsOf(field)).toEqual(["Patients", "Clinic visits by video"])
+  })
+
+  it("says, as the field is shut, that text typed but not added repeats a tag (S4, S11, S19)", async () => {
+    const { user } = await renderPage()
+    const { form, field } = await openTags(user, "Video clinics")
+    await user.type(
+      field.getByRole("textbox", { name: "Add a tag" }),
+      "patients",
+    )
+
+    await user.click(form.getByRole("button", { name: "Close tags" }))
+
+    const NOTE = "“Patients” is already on this item."
+    expect(form.getByText(NOTE)).toBeVisible()
+    // Focus is on the button, which the note describes, so it is announced.
+    const button = form.getByRole("button", { name: "Change tags" })
+    expect(button).toHaveFocus()
+    expect(button).toHaveAccessibleDescription(NOTE)
+    // Said once: the next change to the tags clears it.
+    await user.click(button)
+    await addTag(
+      user,
+      within(form.getByRole("group", { name: "Tags" })),
+      "Carers",
+    )
+    expect(form.queryByText(NOTE)).toBeNull()
+  })
+
   it("leaves a name opened for renaming, and not changed, as it was read", async () => {
     const spaced = [
       createTestRoadmapItem("Spaced", {
@@ -901,6 +945,32 @@ describe("An item with Welsh tags (STY-037 S20, S22)", () => {
 
     expect(main().queryByText("Changed")).toBeNull()
     expect(tagsLineOf("English only")).toBe("Patients")
+  })
+
+  it("shows the tags it keeps when an item's Welsh tags come and go while its form is open (S19)", async () => {
+    const { user, repository } = await renderPage({ shown: welshItems })
+    const { form, field } = await openTags(user, "English only")
+    await addTag(user, field, "Carers")
+    const welsh = (tags: RoadmapItem["tags"], hasWelshTags: boolean) => {
+      repository.coLead((_list, itemsOf) => {
+        const item = itemsOf("producta")[2]
+        if (item) Object.assign(item, { tags, hasWelshTags })
+      })
+    }
+
+    welsh([{ en: "Patients", cy: "Cleifion" }], true)
+    await user.click(main().getByRole("button", { name: "Refresh" }))
+    expect(await form.findByText(NOTICE)).toBeVisible()
+    welsh(tagged("Patients"), false)
+    await user.click(main().getByRole("button", { name: "Refresh" }))
+    expect(
+      await form.findByRole("button", { name: "Change tags" }),
+    ).toBeVisible()
+
+    // What the field shows is what Done keeps.
+    expect(form.getAllByRole("list")[0]).toHaveTextContent("PatientsCarers")
+    await done(user, form)
+    expect(tagsLineOf("English only")).toBe("Patients, Carers")
   })
 
   it("refuses a tag change to an item that has gained Welsh tags: it can be discarded, not kept (S22)", async () => {

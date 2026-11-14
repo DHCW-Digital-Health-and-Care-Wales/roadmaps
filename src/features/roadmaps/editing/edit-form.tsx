@@ -250,7 +250,8 @@ export function EditForm<F extends string>({
             <TagsField
               key={field.name}
               label={field.label}
-              initial={tagsOf(opened[field.name])}
+              // What the form holds, so a field drawn again shows what Done keeps.
+              initial={tagsOf(values[field.name])}
               inUse={field.tags.inUse}
               onChange={(tags) => {
                 change(tagsValue(tags))

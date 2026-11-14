@@ -84,6 +84,25 @@ describe("RoadmapAbout", () => {
     ).toEqual(["No date"])
   })
 
+  it("is a bordered panel with its controls beside the heading, ahead of the fields (STY-042 S1)", () => {
+    renderWithI18n(
+      <RoadmapAbout
+        roadmap={productA}
+        actions={<button type="button">Edit</button>}
+      />,
+    )
+
+    const region = about()
+    expect(region).toHaveClass("border", "bg-card")
+    const heading = within(region).getByRole("heading", { level: 2 })
+    const edit = within(region).getByRole("button", { name: "Edit" })
+    expect(heading.parentElement).toContainElement(edit)
+    const [firstLabel] = within(region).getAllByRole("term")
+    expect(firstLabel && edit.compareDocumentPosition(firstLabel)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    )
+  })
+
   it("is Welsh where the roadmap has Welsh, field by field, and shows the lead as written", () => {
     renderWithI18n(
       <RoadmapAbout

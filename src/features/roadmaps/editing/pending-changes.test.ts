@@ -14,6 +14,7 @@ import {
   editRoadmap,
   matchItemChanges,
   NO_CHANGES,
+  publishesNoItems,
   reconcileItems,
   reconcileRoadmap,
   settlePublished,
@@ -430,6 +431,21 @@ describe("a move (STY-031)", () => {
       writtenHorizon: null,
     })
     expect(countChanges(moved)).toBe(1)
+  })
+
+  it("leaves the public nothing to see until an item is in a horizon or section, counting a pending move (STY-042 S3)", () => {
+    const moved = editItem(NO_CHANGES, undefined, unplaced, 0, {
+      placement: "later",
+    })
+    const retitled = editItem(NO_CHANGES, undefined, unplaced, 0, {
+      title: "Still unplaced",
+    })
+
+    expect(publishesNoItems([], undefined)).toBe(true)
+    expect(publishesNoItems([unplaced], undefined)).toBe(true)
+    expect(publishesNoItems([unplaced], retitled)).toBe(true)
+    expect(publishesNoItems([unplaced], moved)).toBe(false)
+    expect(publishesNoItems([unplaced, first], undefined)).toBe(false)
   })
 
   it("is no change once moved back (S5)", () => {

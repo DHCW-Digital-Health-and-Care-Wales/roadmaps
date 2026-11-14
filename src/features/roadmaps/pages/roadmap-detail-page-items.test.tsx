@@ -347,21 +347,37 @@ describe("RoadmapDetailPage items", () => {
     ).toBeInTheDocument()
   })
 
-  it("says a roadmap with no items has none, instead of six empty groups (S6)", async () => {
+  it("says a roadmap with no items has none, instead of six empty groups, in a dashed panel with no icon (S6, STY-042 S2)", async () => {
     await renderRoadmap("producta", { producta: [] })
 
-    expect(
-      await main().findByRole("heading", { level: 2, name: "No items yet" }),
-    ).toBeInTheDocument()
-    expect(
-      main().getByText("This roadmap doesn't have any items yet."),
-    ).toBeInTheDocument()
+    const heading = await main().findByRole("heading", {
+      level: 2,
+      name: "No items yet",
+    })
+    const panel = heading.closest("[data-slot=empty]")
+    expect(panel).toHaveClass("border", "border-dashed")
+    expect(panel?.querySelector("svg")).toBeNull()
+    expect(panel).toHaveTextContent(
+      "Add its items in the spreadsheet for now. They show here after Refresh.",
+    )
     expect(
       main().getByRole("heading", { level: 1, name: "Product A roadmap" }),
     ).toBeInTheDocument()
     expect(
       main().queryByRole("heading", { name: "Now" }),
     ).not.toBeInTheDocument()
+  })
+
+  it("says so in Welsh (STY-042 S4)", async () => {
+    await renderRoadmap("producta", { producta: [] }, { language: "cy" })
+
+    const heading = await main().findByRole("heading", {
+      level: 2,
+      name: "Dim eitemau eto",
+    })
+    expect(heading.closest("[data-slot=empty]")).toHaveTextContent(
+      "Ychwanegwch ei eitemau yn y daenlen am y tro. Byddan nhw'n ymddangos yma ar ôl Adnewyddu.",
+    )
   })
 
   it("keeps the title while the items load (S7)", async () => {

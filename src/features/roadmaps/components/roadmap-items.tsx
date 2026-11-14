@@ -1,7 +1,8 @@
-import { ListTodoIcon, TriangleAlertIcon } from "lucide-react"
+import { TriangleAlertIcon } from "lucide-react"
 import { useId, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import { Empty, EmptyDescription, EmptyHeader } from "@/components/ui/empty"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Organisation } from "@/domain/roadmap/organisation"
 import type { ItemChanges } from "@/domain/roadmap/roadmap-changes"
@@ -19,7 +20,6 @@ import {
   type PositionedRoadmapItem,
 } from "../group-roadmap-items"
 import { useItemCardKeys } from "./item-card-keys"
-import { StatusPanel } from "./status-panel"
 
 /** One, two, then three columns of item cards, as the roadmap cards are laid out. */
 const itemGridClassName =
@@ -34,9 +34,9 @@ export interface RoadmapItemsProps {
 /**
  * A roadmap's items: those the public site leaves out first, flagged (D4), then all six
  * placements in the public site's order, each under its heading, saying when it has
- * none (D1). A roadmap with no items has one empty state instead (D5). Each item can be
- * edited and moved, and shows its pending changes, in its pending placement (STY-025,
- * STY-031).
+ * none (D1). A roadmap with no items has one dashed panel instead, saying where they
+ * are added (D5, STY-042 S2). Each item can be edited and moved, and shows its pending
+ * changes, in its pending placement (STY-025, STY-031).
  */
 export function RoadmapItems({
   roadmapId,
@@ -110,11 +110,14 @@ export function RoadmapItems({
 
   if (items.length === 0) {
     return (
-      <StatusPanel
-        icon={<ListTodoIcon />}
-        title={t("roadmaps.items.empty.title")}
-        description={t("roadmaps.items.empty.description")}
-      />
+      <Empty className="border">
+        <EmptyHeader>
+          <h2 className="text-heading-m">{t("roadmaps.items.empty.title")}</h2>
+          <EmptyDescription className="text-pretty">
+            {t("roadmaps.items.empty.description")}
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     )
   }
 

@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest"
 
 import type { AuthState } from "@/domain/auth/auth-client"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
+import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import type { ContractWrite } from "@/domain/roadmap/testing/contract-write"
 import type { SyncFault } from "@/domain/roadmap/testing/roadmap-repository-contract"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
@@ -25,9 +26,17 @@ const draft = createTestRoadmap("producta", "Product A roadmap", {
 })
 const other = createTestRoadmap("productb", "Product B roadmap")
 const item = createTestRoadmapItem("First item", { id: "item-1" })
+const unplaced = createTestRoadmapItem("Undecided work", {
+  id: "item-2",
+  placement: null,
+  writtenHorizon: "Soon",
+})
+
+const NO_ITEMS_LINE = "The public site will show it with no items."
 
 interface Options {
   roadmaps?: Roadmap[]
+  items?: RoadmapItem[]
   write?: ContractWrite
   syncFaults?: Record<string, SyncFault[]>
   language?: Language
@@ -35,6 +44,7 @@ interface Options {
 
 async function renderPage({
   roadmaps = [draft, other],
+  items = [item],
   write,
   syncFaults,
   language,
@@ -42,7 +52,7 @@ async function renderPage({
   const user = userEvent.setup()
   const repository = createInMemoryRoadmapRepository(
     roadmaps,
-    { producta: [item] },
+    { producta: items },
     { write, syncFaults },
   )
   const rendered = await renderWithProviders({
@@ -52,7 +62,12 @@ async function renderPage({
     ...(language ? { language } : {}),
   })
   const main = within(screen.getByRole("main"))
-  await main.findByRole("heading", { level: 3 })
+  await main.findAllByRole(
+    "heading",
+    items.length > 0
+      ? { level: 3 }
+      : { level: 2, name: /^(No items yet|Dim eitemau eto)$/ },
+  )
   return { user, main, repository, ...rendered }
 }
 
@@ -345,5 +360,101 @@ describe("publishing or unpublishing a roadmap (STY-035)", () => {
         "Mae gan ei liw #abc 3 digid. Ysgrifennwch ef gyda 6, fel #aabbcc.",
       ),
     ).toBeVisible()
+  })
+})
+
+describe("publishing a roadmap the public would see with no items (STY-042 S3)", () => {
+  /** Opens the dialog that "Publish roadmap" or "Unpublish roadmap" asks in. */
+  async function ask(
+    user: ReturnType<typeof userEvent.setup>,
+    action = "Publish roadmap",
+  ) {
+    await user.click(screen.getByRole("button", { name: action }))
+    return screen.findByRole("alertdialog")
+  }
+
+  it("says so for a roadmap with no items, which can still be published", async () => {
+    const { user, main, repository } = await renderPage({ items: [] })
+
+    const dialog = await ask(user)
+    expect(dialog).toHaveAccessibleDescription(
+      `It shows on the public site after its next nightly update. ${NO_ITEMS_LINE}`,
+    )
+    await user.click(
+      within(dialog).getByRole("button", { name: "Publish roadmap" }),
+    )
+
+    expect(
+      await main.findByText(/^Product A roadmap is published\./),
+    ).toBeVisible()
+    expect((await repository.listRoadmaps())[0]?.published).toBe(true)
+  })
+
+  it("says so when no item has a recognised horizon", async () => {
+    const { user } = await renderPage({ items: [unplaced] })
+
+    expect(await ask(user)).toHaveAccessibleDescription(
+      `It shows on the public site after its next nightly update. ${NO_ITEMS_LINE}`,
+    )
+  })
+
+  it("says so with edits to save, which still go with it", async () => {
+    const { user, main, repository } = await renderPage({ items: [] })
+    await editStatus(user)
+
+    const dialog = await ask(user)
+    expect(dialog).toHaveAccessibleDescription(
+      `It shows on the public site after its next nightly update. ${NO_ITEMS_LINE} Your unsaved change goes public with it.`,
+    )
+    await user.click(
+      within(dialog).getByRole("button", { name: "Save and publish" }),
+    )
+
+    expect(
+      await main.findByText(/^Changes saved and Product A roadmap published\./),
+    ).toBeVisible()
+    expect((await repository.listRoadmaps())[0]).toMatchObject({
+      published: true,
+      statusLabel: { en: "Live", cy: "" },
+    })
+  })
+
+  it("says nothing of it for an item in a horizon or section", async () => {
+    const { user } = await renderPage({ items: [unplaced, item] })
+
+    expect(await ask(user)).toHaveAccessibleDescription(
+      "It shows on the public site after its next nightly update.",
+    )
+  })
+
+  it("says nothing of it once a pending move puts an item in a horizon", async () => {
+    const { user, main } = await renderPage({ items: [unplaced] })
+    await user.click(main.getByRole("button", { name: "Move Undecided work" }))
+    await user.click(await screen.findByRole("menuitem", { name: "Later" }))
+
+    expect(await ask(user)).toHaveAccessibleDescription(
+      "It shows on the public site after its next nightly update. Your unsaved change goes public with it.",
+    )
+  })
+
+  it("never says so on Unpublish roadmap", async () => {
+    const { user } = await renderPage({
+      roadmaps: [{ ...draft, published: true }, other],
+      items: [],
+    })
+
+    expect(await ask(user, "Unpublish roadmap")).toHaveAccessibleDescription(
+      "It leaves the public site after its next nightly update.",
+    )
+  })
+
+  it("says so in Welsh (S4)", async () => {
+    const { user } = await renderPage({ items: [], language: "cy" })
+
+    expect(
+      await ask(user, "Cyhoeddi'r map trywydd"),
+    ).toHaveAccessibleDescription(
+      "Bydd yn ymddangos ar y wefan gyhoeddus ar ôl ei diweddariad nesaf dros nos. Bydd y wefan gyhoeddus yn ei ddangos heb eitemau.",
+    )
   })
 })

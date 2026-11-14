@@ -23,9 +23,10 @@ export interface PublishedStateActionProps {
 
 /**
  * "Publish roadmap" or "Unpublish roadmap" beside a roadmap's title, and the dialog
- * that asks first, saying when the public site shows the change and what happens to
- * pending edits: published with it ("Save and publish", S5) or left pending (S7), and,
- * when publishing, "Mark as updated today" (STY-036 D10).
+ * that asks first, saying when the public site shows the change, when it would show
+ * the roadmap with no items (STY-042 S3), and what happens to pending edits: published
+ * with it ("Save and publish", S5) or left pending (S7), and, when publishing, "Mark as
+ * updated today" (STY-036 D10).
  * Unavailable, though focusable, while it can't be chosen (S1); the dialog can't be
  * closed while the write is under way.
  */
@@ -39,8 +40,19 @@ export function PublishedStateAction({
   // asked while it closes, though the state flips under it.
   const liveVerb = state.publishing ? "publish" : "unpublish"
   const Icon = state.publishing ? GlobeIcon : EyeOffIcon
-  const { publishing, count } = state.asked
+  const { publishing, count, noItems } = state.asked
   const askedVerb = publishing ? "publish" : "unpublish"
+  const description = [
+    t(`roadmaps.publishRoadmap.confirm.note.${askedVerb}`),
+    noItems && t("roadmaps.publishRoadmap.confirm.noItems"),
+    count > 0 &&
+      t(
+        publishing
+          ? "roadmaps.publishRoadmap.confirm.withChanges"
+          : "roadmaps.publishRoadmap.confirm.keepsChanges",
+        { count },
+      ),
+  ]
 
   return (
     <>
@@ -68,18 +80,7 @@ export function PublishedStateAction({
               })}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {t(`roadmaps.publishRoadmap.confirm.note.${askedVerb}`)}
-              {count > 0 && (
-                <>
-                  {" "}
-                  {t(
-                    publishing
-                      ? "roadmaps.publishRoadmap.confirm.withChanges"
-                      : "roadmaps.publishRoadmap.confirm.keepsChanges",
-                    { count },
-                  )}
-                </>
-              )}
+              {description.filter(Boolean).join(" ")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           {state.offersMarkUpdated && (

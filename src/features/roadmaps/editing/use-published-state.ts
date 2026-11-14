@@ -7,9 +7,15 @@ import { useAuth } from "@/features/auth/use-auth"
 import { toAppError, type AppErrorKind } from "@/lib/errors"
 import { localToday } from "@/lib/local-today"
 
+import { useRoadmapItems } from "../hooks/use-roadmap-items"
 import { useSetRoadmapPublished } from "../hooks/use-set-roadmap-published"
 import { discardItems, openConflicts } from "./conflicts"
-import { countChanges, NO_CHANGES, settlePublished } from "./pending-changes"
+import {
+  countChanges,
+  NO_CHANGES,
+  publishesNoItems,
+  settlePublished,
+} from "./pending-changes"
 import {
   usePendingChanges,
   usePendingChangesStore,
@@ -34,6 +40,11 @@ export interface PublishedStateQuestion {
   publishing: boolean
   /** Pending edits that go with a publish, or stay with an unpublish. */
   count: number
+  /**
+   * Whether a publish leaves the public site none of the roadmap's items to show
+   * (STY-042 S3): known only once its items are read.
+   */
+  noItems: boolean
 }
 
 export interface PublishedState extends PublishedStateQuestion {
@@ -68,9 +79,10 @@ export interface PublishedState extends PublishedStateQuestion {
  * written at once. Publishing sends the roadmap's pending edits with it, through the
  * pending-edit store as a publish of them goes, so a conflict opens its review and a
  * lost answer waits for a Refresh (S5, S6, S10); unpublishing leaves them pending (S7).
- * Publishing can also set the roadmap's `Last updated` to today (STY-036 D10).
- * Unavailable unless connected, while a write of the roadmap is under way, and while a
- * conflict is still to decide.
+ * Publishing can also set the roadmap's `Last updated` to today (STY-036 D10), and is
+ * still allowed when the public would see no items, which the question says (STY-042
+ * D3). Unavailable unless connected, while a write of the roadmap is under way, and
+ * while a conflict is still to decide.
  */
 export function usePublishedState(roadmap: Roadmap): PublishedState {
   const store = usePendingChangesStore()
@@ -88,9 +100,15 @@ export function usePublishedState(roadmap: Roadmap): PublishedState {
     setNotice(null)
   }, [])
 
+  const { data: items } = useRoadmapItems(roadmap.id)
   const publishing = !roadmap.published
   const changes = snapshot.changes.get(roadmap.id)
-  const count = countChanges(changes)
+  const question: PublishedStateQuestion = {
+    publishing,
+    count: countChanges(changes),
+    noItems:
+      publishing && items !== undefined && publishesNoItems(items, changes),
+  }
   const outcome = snapshot.notices.get(roadmap.id)
   const reviewing =
     outcome?.kind === "refused" &&
@@ -166,18 +184,17 @@ export function usePublishedState(roadmap: Roadmap): PublishedState {
   }
 
   return {
-    publishing,
-    count,
+    ...question,
     available: connected && !pending && !reviewing,
     offersMarkUpdated:
-      (asked ?? { publishing }).publishing && !changes?.roadmap.lastUpdated,
+      (asked ?? question).publishing && !changes?.roadmap.lastUpdated,
     markUpdated,
     setMarkUpdated,
     pending,
     open,
-    asked: asked ?? { publishing, count },
+    asked: asked ?? question,
     ask: () => {
-      setAsked({ publishing, count })
+      setAsked(question)
       setMarkUpdated(false)
       setOpen(true)
     },

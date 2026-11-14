@@ -2,7 +2,11 @@ import type { Locator, Page } from "@playwright/test"
 
 import { openAddRoadmapDialog } from "./fixtures/dialogs"
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
-import { EXAMPLE_INDEX_ROWS, withRoadmapIndex } from "./fixtures/fake-sheets"
+import {
+  EXAMPLE_INDEX_ROWS,
+  EXAMPLE_SPREADSHEET_WITH_LISTS,
+  withRoadmapIndex,
+} from "./fixtures/fake-sheets"
 import {
   holdConnectedNotice,
   type Language,
@@ -310,7 +314,8 @@ test("the Add a roadmap dialog, refused (STY-041)", async ({
   page,
   sheets,
 }) => {
-  const dialog = await openAddRoadmapDialog(page, { withListsIn: sheets })
+  sheets.spreadsheet = EXAMPLE_SPREADSHEET_WITH_LISTS
+  const dialog = await openAddRoadmapDialog(page, { offersLists: true })
   await dialog.getByRole("textbox", { name: "Short name" }).fill("ProductA")
   await dialog.getByRole("button", { name: "Add roadmap" }).click()
   await expect(dialog.getByText("Enter a title")).toBeVisible()

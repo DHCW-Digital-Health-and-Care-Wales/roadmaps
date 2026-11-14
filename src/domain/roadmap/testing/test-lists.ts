@@ -2,8 +2,9 @@ import type { Category } from "../category"
 import type { Family } from "../family"
 
 // The family and category lists for tests (test code only), named as the example
-// spreadsheet names them (`tests/e2e/fixtures/fake-sheets.ts`). A test that needs a
-// list imports these; one that needs another family or category adds it to them.
+// spreadsheet names them (`tests/e2e/fixtures/fake-sheets.ts`), but for one family's
+// Welsh name. A test that needs a list imports these; one that needs another family or
+// category adds it to them.
 
 /** A family with a Welsh name. */
 export const SINGLE_RECORD: Family = {

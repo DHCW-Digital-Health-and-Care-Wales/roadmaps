@@ -1,6 +1,5 @@
 import type { Locator, Page } from "@playwright/test"
 
-import { EXAMPLE_SPREADSHEET_WITH_LISTS, type FakeSheets } from "./fake-sheets"
 import { connect, expect, roadmapCards } from "./test"
 
 // The form dialogs (EPC-011, _The dialogs_): how a spec opens one and clicks outside
@@ -62,20 +61,19 @@ export function addRoadmapDialog(page: Page): Locator {
 
 /**
  * Connects on the roadmap list, waits for its three roadmaps and opens "Add a roadmap"
- * from the button beside Refresh. With `withListsIn`, that fake's spreadsheet first
- * gains the example family and category lists, and the dialog is returned once it
- * offers both; without, the spreadsheet has neither list and the dialog says so.
+ * from the button beside Refresh. A spec whose spreadsheet has the family and category
+ * lists (`EXAMPLE_SPREADSHEET_WITH_LISTS`) passes `offersLists`, and gets the dialog
+ * once it offers both.
  */
 export async function openAddRoadmapDialog(
   page: Page,
-  { withListsIn }: { withListsIn?: FakeSheets } = {},
+  { offersLists = false } = {},
 ): Promise<Locator> {
-  if (withListsIn) withListsIn.spreadsheet = EXAMPLE_SPREADSHEET_WITH_LISTS
   await page.goto("./")
   await connect(page)
   await expect(roadmapCards(page)).toHaveCount(3)
   const dialog = await openDialog(page, addRoadmapButtons(page), ADD_ROADMAP)
-  if (withListsIn) {
+  if (offersLists) {
     for (const name of ["Family", "Category"]) {
       await expect(dialog.getByRole("combobox", { name })).toBeEnabled()
     }

@@ -514,7 +514,8 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       page,
       sheets,
     }) => {
-      const dialog = await openAddRoadmapDialog(page, { withListsIn: sheets })
+      sheets.spreadsheet = EXAMPLE_SPREADSHEET_WITH_LISTS
+      const dialog = await openAddRoadmapDialog(page, { offersLists: true })
       const title = dialog.getByRole("textbox", { name: "Title" })
       const shortName = dialog.getByRole("textbox", { name: "Short name" })
       const add = dialog.getByRole("button", { name: "Add roadmap" })

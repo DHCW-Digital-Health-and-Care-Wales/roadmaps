@@ -15,15 +15,10 @@ import {
   EXAMPLE_SPREADSHEET_WITH_LISTS,
   withRoadmapIndex,
 } from "./fixtures/fake-sheets"
-import { THEMES, useLanguage, useTheme } from "./fixtures/look"
+import { useLanguage } from "./fixtures/look"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 const [HEADER = []] = EXAMPLE_INDEX_ROWS
-
-const VIEWPORTS = {
-  desktop: { width: 1280, height: 900 },
-  phone: { width: 375, height: 812 },
-} as const
 
 const ADDED = "Community Nursing roadmap was added. It isn't published yet."
 
@@ -38,111 +33,86 @@ async function expectNewRoadmapPage(page: Page) {
   return main
 }
 
-for (const theme of THEMES) {
-  for (const [device, viewport] of Object.entries(VIEWPORTS)) {
-    test(`a Product Lead adds a roadmap and lands on its page (S1–S3, S5): ${theme} theme, ${device}`, async ({
-      page,
-      sheets,
-    }) => {
-      await page.setViewportSize(viewport)
-      await useTheme(page, theme)
-      const dialog = await openAddRoadmapDialog(page, { withListsIn: sheets })
-      // Modal: nothing behind it can be reached.
-      await expect(page.getByRole("main")).toHaveCount(0)
+test("a Product Lead adds a roadmap and lands on its page (S1–S3, S5)", async ({
+  page,
+  sheets,
+}) => {
+  sheets.spreadsheet = EXAMPLE_SPREADSHEET_WITH_LISTS
+  const dialog = await openAddRoadmapDialog(page, { offersLists: true })
+  // Modal: nothing behind it can be reached.
+  await expect(page.getByRole("main")).toHaveCount(0)
 
-      const box = await dialog.boundingBox()
-      if (!box) throw new Error("The dialog has no box")
-      if (device === "phone") {
-        // The width of the screen, from its foot.
-        expect(box.x).toBe(0)
-        expect(box.width).toBe(viewport.width)
-        expect(box.y + box.height).toBe(viewport.height)
-      } else {
-        expect(box.width).toBeLessThanOrEqual(512)
-        expect(box.x).toBeGreaterThan(0)
-      }
+  const shortName = dialog.getByRole("textbox", { name: "Short name" })
+  await dialog
+    .getByRole("textbox", { name: "Title" })
+    .fill("Community Nursing roadmap")
+  await expect(shortName).toHaveValue("Community Nursing")
+  await expect(
+    dialog.getByText(
+      "Its public address will end “community-nursing”. It can't be changed here later.",
+    ),
+  ).toBeVisible()
+  await expect(dialog.getByRole("combobox", { name: "Family" })).toHaveValue("")
+  await dialog
+    .getByRole("combobox", { name: "Family" })
+    .selectOption({ label: "Medicines & Diagnostics" })
+  await dialog
+    .getByRole("combobox", { name: "Category" })
+    .selectOption({ label: "GP & Community Services" })
+  await dialog.getByRole("textbox", { name: "Product lead" }).fill("Sam Evans")
+  await expect(
+    dialog.getByText(
+      "It starts not published, with no items. The public site doesn't show it until you publish it.",
+    ),
+  ).toBeVisible()
 
-      const shortName = dialog.getByRole("textbox", { name: "Short name" })
-      await dialog
-        .getByRole("textbox", { name: "Title" })
-        .fill("Community Nursing roadmap")
-      await expect(shortName).toHaveValue("Community Nursing")
-      await expect(
-        dialog.getByText(
-          "Its public address will end “community-nursing”. It can't be changed here later.",
-        ),
-      ).toBeVisible()
-      await expect(
-        dialog.getByRole("combobox", { name: "Family" }),
-      ).toHaveValue("")
-      await dialog
-        .getByRole("combobox", { name: "Family" })
-        .selectOption({ label: "Medicines & Diagnostics" })
-      await dialog
-        .getByRole("combobox", { name: "Category" })
-        .selectOption({ label: "GP & Community Services" })
-      await dialog
-        .getByRole("textbox", { name: "Product lead" })
-        .fill("Sam Evans")
-      await expect(
-        dialog.getByText(
-          "It starts not published, with no items. The public site doesn't show it until you publish it.",
-        ),
-      ).toBeVisible()
+  // Working: the fields are held, and the dialog stays, until the write answers.
+  const release = sheets.hold()
+  const add = dialog.getByRole("button", { name: "Add roadmap" })
+  await add.click()
+  await expect(add).toHaveAttribute("aria-busy", "true")
+  await expect(shortName).toHaveAttribute("readonly", "")
+  await expect(dialog.getByRole("button", { name: "Cancel" })).toBeDisabled()
+  await page.keyboard.press("Escape")
+  await expect(dialog).toBeVisible()
+  release()
 
-      // Working: the fields are held, and the dialog stays, until the write answers.
-      const release = sheets.hold()
-      const add = dialog.getByRole("button", { name: "Add roadmap" })
-      await add.click()
-      await expect(add).toHaveAttribute("aria-busy", "true")
-      await expect(shortName).toHaveAttribute("readonly", "")
-      await expect(
-        dialog.getByRole("button", { name: "Cancel" }),
-      ).toBeDisabled()
-      await page.keyboard.press("Escape")
-      await expect(dialog).toBeVisible()
-      release()
+  const main = await expectNewRoadmapPage(page)
+  await expect(main).toBeFocused()
+  await expect(main.getByText(ADDED)).toBeVisible()
+  await expect(main.getByText("Not published")).toBeVisible()
+  await expect(
+    main.getByRole("button", { name: "Publish roadmap" }),
+  ).toBeEnabled()
+  await expect(main.getByText("Family: Medicines & Diagnostics")).toBeVisible()
+  await expect(
+    main.getByText("Category: GP & Community Services"),
+  ).toBeVisible()
+  await expect(
+    main
+      .getByRole("region", { name: "About this roadmap" })
+      .getByText("Sam Evans"),
+  ).toBeVisible()
+  await expect(
+    main.getByRole("heading", { name: "No items yet" }),
+  ).toBeVisible()
+  // One write: the roadmap's entry and its empty roadmap together.
+  expect(sheets.writes).toHaveLength(1)
 
-      const main = await expectNewRoadmapPage(page)
-      await expect(main).toBeFocused()
-      await expect(main.getByText(ADDED)).toBeVisible()
-      await expect(main.getByText("Not published")).toBeVisible()
-      await expect(
-        main.getByRole("button", { name: "Publish roadmap" }),
-      ).toBeEnabled()
-      await expect(
-        main.getByText("Family: Medicines & Diagnostics"),
-      ).toBeVisible()
-      await expect(
-        main.getByText("Category: GP & Community Services"),
-      ).toBeVisible()
-      await expect(
-        main
-          .getByRole("region", { name: "About this roadmap" })
-          .getByText("Sam Evans"),
-      ).toBeVisible()
-      await expect(
-        main.getByRole("heading", { name: "No items yet" }),
-      ).toBeVisible()
-      // One write: the roadmap's entry and its empty roadmap together.
-      expect(sheets.writes).toHaveLength(1)
+  await main.getByRole("link", { name: "Back to roadmaps" }).click()
+  await expect(page.getByText("4 roadmaps, 2 not published")).toBeVisible()
+  await expect(
+    main
+      .getByRole("list", { name: "Medicines & Diagnostics" })
+      .getByRole("link", { name: "Community Nursing roadmap" }),
+  ).toBeVisible()
+  await expect(main.getByText(ADDED)).toBeHidden()
 
-      await main.getByRole("link", { name: "Back to roadmaps" }).click()
-      await expect(page.getByText("4 roadmaps, 2 not published")).toBeVisible()
-      await expect(
-        main
-          .getByRole("list", { name: "Medicines & Diagnostics" })
-          .getByRole("link", { name: "Community Nursing roadmap" }),
-      ).toBeVisible()
-      await expect(main.getByText(ADDED)).toBeHidden()
-
-      // Said once: going back to the roadmap's page says nothing.
-      await page.goBack()
-      await expectNewRoadmapPage(page)
-      await expect(main.getByText(ADDED)).toBeHidden()
-    })
-  }
-}
+  // Said once: going back to the roadmap's page says nothing.
+  await page.goBack()
+  await expectNewRoadmapPage(page)
+  await expect(main.getByText(ADDED)).toBeHidden()
+})
 
 test("the empty list offers Add a roadmap too, and lists the first roadmap (S1, S9)", async ({
   page,

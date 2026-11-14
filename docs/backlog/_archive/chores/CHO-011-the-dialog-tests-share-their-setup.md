@@ -80,7 +80,15 @@ name with `&` kept (`user.selectOptions` and `&`, in the epic's delivery notes)
   over `expectEveryStopShowsAnIndicator` given a scope. That helper accepts any of the
   three indicators and ends once each name has been seen; the tour it replaces held
   the ring on each field, the fill on each button and Tab's way back to the first
-  stop. Both find their stops with `tabStops`.
+  stop. The dialog's tour takes every control of the dialog as a stop, so one taken
+  out of the Tab order by mistake fails it, as the list did.
+- **D5** (owner, 2026-11-14, answering this delivery's question): the journey in
+  `adding-a-roadmap.spec.ts` ran in both themes, on a desktop and a phone, as STY-041
+  asked → run it once, keeping every assertion of behaviour and dropping the dialog's
+  geometry: the end-to-end suite is getting long, and geometry held by Playwright
+  adds little. Changes: the Measurement's _Smaller_ row is done in full, and no test
+  holds where the dialog sits on a phone. Slimming the rest of the suite is a chore
+  the owner will have recorded.
 
 ## Out of scope
 
@@ -91,18 +99,16 @@ name with `&` kept (`user.selectOptions` and `&`, in the epic's delivery notes)
 
 ### Departures
 
-- **The journey still runs in both themes, on a desktop and a phone** (Measurement,
-  _Smaller_). STY-041 asks for S1–S3 and S5 in both themes and at phone width, and its
-  Scenario evidence cites the four runs. Cutting them to one run and a test of the
-  dialog's geometry is the owner's call; nothing else in this chore rests on it.
-- **S2 covers three more clock moves**: the two specs that end a 300 s session and the
-  structure spec's 600 s one wrote their own sums ("04:00", `expiresIn - 60 - 120`).
-  They now ask `sessionMs(expiresIn)`.
+- **The journey runs once, and its geometry checks have gone** (D5). The dialog is
+  still opened in both themes by the accessibility spec and the focus tour.
+- **S2 covers four more clock moves**: the two specs that end a 300 s session, the
+  structure spec's 600 s one and the hour `auth.spec.ts` moved to end a session wrote
+  their own sums or lengths. They now ask `sessionMs(expiresIn)`.
 - **Three held reads share `holdCall` too**, in `families-page.test.tsx` (two) and
   `roadmap-detail-page-choices.test.tsx`, which this chore already changes: each was
   the same wrapper as the two held writes.
 - **`EXAMPLE_SPREADSHEET_WITH_LISTS`** (`tests/e2e/fixtures/fake-sheets.ts`) replaces
-  the spread written in five places, one of them in `editing.spec.ts`.
+  the spread each spec wrote, one of them in `editing.spec.ts`.
 - **Outside the three files S4 measures**, other tests still declare a family or a
   category: CHO-012.
 
@@ -115,9 +121,10 @@ name with `&` kept (`user.selectOptions` and `&`, in the epic's delivery notes)
   `ADD_ROADMAP`, and its own way in beside `openAddRoadmapDialog` when more than one
   spec opens it.
 - **"Add a roadmap"**: `openAddRoadmapDialog(page)` connects, waits for the list and
-  opens it. With `{ withListsIn: sheets }` the spreadsheet gains the example lists and
-  the dialog is returned once it offers both. `addRoadmapButtons(page)` and
-  `addRoadmapDialog(page)` find the buttons and the dialog without opening it.
+  opens it. A spec that sets `sheets.spreadsheet = EXAMPLE_SPREADSHEET_WITH_LISTS`
+  passes `{ offersLists: true }`, and gets the dialog once it offers both lists.
+  `addRoadmapButtons(page)` and `addRoadmapDialog(page)` find the buttons and the
+  dialog without opening it.
 - **A click outside**: `clickOutside(page, dialog)` clicks above and beside the
   dialog, from its box.
 - **Session times**: `sessionMs(expiresIn?)` and `SESSION_WARNING_MS`
@@ -125,8 +132,9 @@ name with `&` kept (`user.selectOptions` and `&`, in the epic's delivery notes)
   opens at `sessionMs() - SESSION_WARNING_MS`.
 - **A dialog's focus tour**: `expectDialogTour(page, dialog)`
   (`tests/e2e/focus-indicator.spec.ts`), called with the dialog open and focus in its
-  first field. A button shows the fill and anything else the ring: a dialog with a
-  text link in it needs the rule widened.
+  first field. A button shows the fill and anything else the ring, and every control
+  is a stop: a dialog with a text link in it, or with a control kept out of the Tab
+  order on purpose as the details outline keeps its fields, needs the rule widened.
 - **Families and categories (Vitest)**: `TEST_FAMILIES`, `TEST_CATEGORIES` and their
   members (`src/domain/roadmap/testing/test-lists.ts`). Three names have an `&`, so
   `user.selectOptions` takes the option's element or its value, never its text.
@@ -136,12 +144,12 @@ name with `&` kept (`user.selectOptions` and `&`, in the epic's delivery notes)
 
 ### Scenario evidence
 
-No test was added or removed: Vitest runs 1950 tests in 91 files and Playwright 244,
-as at `858be74`.
+No Vitest test was added or removed: 1950 tests in 91 files, as at `858be74`.
+Playwright runs 241 where it ran 244: the journey once, not four times (D5).
 
 | Scenario | Evidence                                                                                                                                                                                                                                                                                                                            |
 | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | S1       | `rg -n '"Add a roadmap"' tests/e2e --glob '*.ts'` finds only `fixtures/dialogs.ts`; `adding-a-roadmap`, `accessibility`, `focus-indicator` and `structure` open the dialog through it, and the `.first()` has gone                                                                                                                  |
-| S2       | `rg -n "3599" tests/e2e` finds only `TOKEN_LIFETIME_S` in `fixtures/fake-gis.ts`; no spec subtracts the 60 s margin or writes the two minutes                                                                                                                                                                                       |
-| S3       | `expectDialogTour` finds seven stops, the seven the list named (seen by asking it for 99); asked for the ring on every stop it fails at the first button                                                                                                                                                                            |
+| S2       | `rg -n "3599" tests/e2e` finds only `TOKEN_LIFETIME_S` in `fixtures/fake-gis.ts`; no spec subtracts the 60 s margin, writes the two minutes or moves the clock to a session's end by a length of its own                                                                                                                            |
+| S3       | `expectDialogTour` finds seven stops, the seven the list named (seen by asking it for 99); asked for the ring on every stop it fails at the first button; with "Product lead" given `tabindex="-1"` it fails there                                                                                                                  |
 | S4       | `rg -n "const families\|const categories" src --glob '*.test.tsx'` and `rg -n "new Promise<void>" src --glob '*.test.tsx'` find nothing; `roadmaps-page-adding.test.tsx` still chooses "GP & Community Services" and "Medicines & Diagnostics" by the option's element, and `families-page.test.tsx` now names a family with an `&` |

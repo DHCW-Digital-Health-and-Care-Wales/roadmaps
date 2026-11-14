@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test"
 
 import { openAddRoadmapDialog } from "./fixtures/dialogs"
+import { EXAMPLE_SPREADSHEET_WITH_LISTS } from "./fixtures/fake-sheets"
 import {
   holdConnectedNotice,
   THEMES,
@@ -101,6 +102,12 @@ async function tabTo(page: Page, target: Locator, key = "Tab") {
   throw new Error("Tabbing never reached the target")
 }
 
+/** The links and form controls a keyboard can use. */
+const CONTROLS =
+  "a[href], button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled)"
+
+const IN_TAB_ORDER = ':not([tabindex="-1"])'
+
 /**
  * The tab stops `scope` offers, in the order of the page. A control taken out of the Tab
  * order is no stop: the details outline keeps one of its text fields in it at a time
@@ -108,9 +115,7 @@ async function tabTo(page: Page, target: Locator, key = "Tab") {
  */
 function tabStops(scope: Page | Locator) {
   return scope
-    .locator(
-      ':is(a[href], button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]):not([tabindex="-1"])',
-    )
+    .locator(`:is(${CONTROLS}, [tabindex])${IN_TAB_ORDER}`)
     .filter({ visible: true })
 }
 
@@ -156,12 +161,16 @@ async function expectEveryStopShowsAnIndicator(page: Page) {
 /**
  * Tours a form dialog from its first stop, where focus is as it opens: each stop in turn
  * shows its indicator, the fill on a button and the ring on a field, and Tab from the
- * last comes back to the first, since a dialog holds focus. The stops are those the
- * dialog offers, found first, so a control added to its form is toured.
+ * last comes back to the first, since a dialog holds focus. The stops are the dialog's
+ * controls, found first, so one added to its form is toured, and one taken out of the
+ * Tab order fails the tour: unlike a page, a form dialog keeps every control in it.
  */
 async function expectDialogTour(page: Page, dialog: Locator) {
   const colours = await focusColours(page)
-  const stops = await tabStops(dialog).all()
+  const stops = await dialog
+    .locator(`:is(${CONTROLS}, [tabindex]${IN_TAB_ORDER})`)
+    .filter({ visible: true })
+    .all()
   const [first] = stops
   if (!first) throw new Error("The dialog has no tab stops")
   expect(stops.length, "the dialog's tab stops").toBeGreaterThan(3)
@@ -256,7 +265,8 @@ for (const theme of THEMES) {
       page,
       sheets,
     }) => {
-      const dialog = await openAddRoadmapDialog(page, { withListsIn: sheets })
+      sheets.spreadsheet = EXAMPLE_SPREADSHEET_WITH_LISTS
+      const dialog = await openAddRoadmapDialog(page, { offersLists: true })
 
       await expectDialogTour(page, dialog)
     })

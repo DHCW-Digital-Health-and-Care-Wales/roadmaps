@@ -8,6 +8,7 @@ import type { Family } from "@/domain/roadmap/family"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { RoadmapRepository } from "@/domain/roadmap/roadmap-repository"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
+import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 import { AppError } from "@/lib/errors"
 import { renderWithProviders } from "@/test/render-with-providers"
 
@@ -544,6 +545,43 @@ describe("adding a roadmap from the list (STY-041)", () => {
       const page = await findRoadmapPage("Patient Summary roadmap")
       expect(page.getByText(/was added/)).toBeInTheDocument()
       expect(page.queryByText("Roadmap not found")).not.toBeInTheDocument()
+    })
+
+    it("shows no items of a removed roadmap whose address the new one takes, though they were just read", async () => {
+      const repository = repositoryWith()
+      const listRoadmapItems = vi
+        .fn<RoadmapRepository["listRoadmapItems"]>()
+        .mockResolvedValueOnce([createTestRoadmapItem("Shared summary view")])
+        .mockResolvedValue([])
+      const { user } = await renderList({ ...repository, listRoadmapItems })
+      await user.click(
+        await main().findByRole("link", { name: "Patient Summary roadmap" }),
+      )
+      await main().findByRole("heading", { name: "Shared summary view" })
+      await user.click(main().getByRole("link", { name: "Back to roadmaps" }))
+      repository.coLead((rows) => {
+        rows.splice(
+          rows.findIndex(({ id }) => id === "patient-summary"),
+          1,
+        )
+      })
+      await user.click(await main().findByRole("button", { name: "Refresh" }))
+      await main().findByText("1 roadmap")
+
+      await openDialog(user)
+      await user.type(
+        dialog().getByRole("textbox", { name: "Title" }),
+        "Patient Summary roadmap",
+      )
+      await submit(user)
+
+      const page = await findRoadmapPage("Patient Summary roadmap")
+      expect(
+        await page.findByRole("heading", { name: "No items yet" }),
+      ).toBeInTheDocument()
+      expect(
+        page.queryByRole("heading", { name: "Shared summary view" }),
+      ).not.toBeInTheDocument()
     })
   })
 

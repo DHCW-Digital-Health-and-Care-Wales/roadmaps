@@ -17,8 +17,9 @@ const ADD_ROADMAP_KEY = ["add-roadmap"] as const
 /**
  * Adds a roadmap (STY-041), written at once and never retried. A roadmap added joins the
  * cached list at once, keeping the list's age, so its page opens without waiting for a
- * read. Whatever the write came to, the list is then read again; so are the family and
- * category lists once a choice was no longer listed.
+ * read; items read earlier under its address were a removed roadmap's, and are
+ * forgotten. Whatever the write came to, the list is then read again; so are the family
+ * and category lists once a choice was no longer listed.
  */
 export function useAddRoadmap() {
   const repository = useRoadmapRepository()
@@ -30,6 +31,7 @@ export function useAddRoadmap() {
     onSuccess: (outcome) => {
       if (outcome.status === "added") {
         const { roadmap } = outcome
+        queryClient.removeQueries({ queryKey: roadmapKeys.items(roadmap.id) })
         patchQueryData<readonly Roadmap[]>(
           queryClient,
           roadmapKeys.list(),

@@ -220,14 +220,17 @@ unavailable.
   nothing, and publishing the roadmap ends it for good.
 - **S5: a roadmap this tab had found removed opens when added again** (agent; review,
   Opus): the add tells the pending-edit store the roadmap is listed, as only a read did
-  (DEF-003), so its page doesn't say "removed" while the list is read again.
+  (DEF-003), so its page doesn't say "removed" while the list is read again. Items
+  this tab read under the address before the roadmap was removed are forgotten, so
+  the new roadmap shows none (review, Sol).
 - **S8: Escape pressed in the instant the session warning opens** (agent), before
   focus has reached the warning, is the dialog's Escape and closes it.
 - **Tests.** Written first and run red: `suggestShortName` and the whole of
   `roadmaps-page-adding.test.tsx` (32 cases, failing for want of the button). The
   Playwright specs followed working code. The five cases for the review's findings
   followed their fixes; run against the head before the fixes, each fails, which shows
-  they discriminate, not that they came first.
+  they discriminate, not that they came first. The case for the forgotten items was
+  written first and run red.
 
 ### Contract for dependents
 
@@ -287,7 +290,7 @@ unavailable.
 | S2       | page "asks a title and a short name, and offers a family, a category and a product lead"; e2e the journey, both themes, desktop and phone; structure `add-roadmap-dialog`                                                                                                                                                                                             |
 | S3       | `domain/roadmap/short-name.test.ts` (`suggestShortName`); page "the short name (S3)"; e2e the journey                                                                                                                                                                                                                                                                 |
 | S4       | page "a field that can't be sent (S4)" (six cases); e2e "a short name in use is said at its field, before sending and by the write"                                                                                                                                                                                                                                   |
-| S5       | page "adding (S5)" (seven cases); `hooks/use-add-roadmap.ts` through them; e2e the journey, which holds the write to see it working, then the new page, one write, and the list's card and counts                                                                                                                                                                     |
+| S5       | page "adding (S5)" (eight cases); `hooks/use-add-roadmap.ts` through them; e2e the journey, which holds the write to see it working, then the new page, one write, and the list's card and counts                                                                                                                                                                     |
 | S6       | page "a refusal from the write (S6)" (a co-lead's roadmap; a family and a category gone), "a choice the lists no longer offer (S6)" (a whole list gone; a list read again after a reconnect); e2e "a short name in use…" (a tab no roadmap lists)                                                                                                                     |
 | S7       | page "a write that failed (S7)" (no template, refused, unsent, rate limited, may have been applied, the next attempt); e2e "a spreadsheet with no template says who can put it right…"                                                                                                                                                                                |
 | S8       | page "closing (S8)" (Cancel, Escape); e2e "Cancel and Escape close the dialog and drop what was typed; a click outside does nothing"                                                                                                                                                                                                                                  |

@@ -27,3 +27,13 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   the next dialog's go there; `expectDialogTour` (`focus-indicator.spec.ts`) tours one.
   Vitest: the family and category lists are `domain/roadmap/testing/test-lists.ts`, and
   `holdCall` (`features/roadmaps/testing/held-call.ts`) holds a write or a read open.
+- **A dialog's Playwright journey runs once**, at the default size and theme: the
+  owner cut the add-a-roadmap journey from four runs to one and dropped its check of
+  where the dialog sits (CHO-011 D5), and the accessibility spec and the focus tour
+  already open a dialog in both themes. The epic's _The dialogs_ ("a story cites this
+  rule and tests it", of a dialog on a phone), STY-046's Tests note ("in both themes
+  and at phone width") and the phone in STY-043 S5, STY-044 S6 and STY-046 S9 predate
+  that, and the owner decided (2026-11-14) that the rule holds for the dialogs of
+  STY-043, STY-044 and STY-046: write the journey once, with no run per theme or
+  width and no check of where a dialog sits; where a story's scenario or note says
+  otherwise, this note governs, and the story's report says so.

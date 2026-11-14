@@ -4,7 +4,10 @@ import { detailText } from "@/domain/roadmap/item-details"
 
 import type { EditorLine, Refusal } from "./details-outline"
 
-/** What the editor says of a change; all but a refusal and a removal reach assistive technology only. */
+/**
+ * What the editor says of a change; all but a refusal, a removal and pasted lines held
+ * to three levels reach assistive technology only.
+ */
 export type DetailsMessage =
   | { readonly kind: "refused"; readonly why: Refusal }
   | {
@@ -13,7 +16,12 @@ export type DetailsMessage =
       readonly parent: string | null
     }
   | { readonly kind: "movedUp" | "movedDown" | "joined" | "removedEmpty" }
-  | { readonly kind: "added"; readonly count: number }
+  | {
+      readonly kind: "added"
+      readonly count: number
+      /** A pasted line asked for more than three levels, so shows at the third. */
+      readonly limited: boolean
+    }
   | {
       readonly kind: "removed"
       readonly detail: string
@@ -55,7 +63,12 @@ export function detailsMessageText(
             parent: detailName(message.parent, t),
           })
     case "added":
-      return t("roadmaps.edit.details.said.added", { count: message.count })
+      return [
+        t("roadmaps.edit.details.said.added", { count: message.count }),
+        ...(message.limited
+          ? [t("roadmaps.edit.details.refused.deepest")]
+          : []),
+      ].join(" ")
     case "removed":
       return [
         t("roadmaps.edit.details.said.removed", { detail: message.detail }),

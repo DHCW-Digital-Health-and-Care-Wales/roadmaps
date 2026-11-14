@@ -456,6 +456,17 @@ audited. This story's own:
   `localiseDetails` to its own module, the status line's messages to
   `details-messages.ts`, the outline's rules to `details-outline.ts`, and the value's
   details as an item holds them to one `englishDetails`.
+- **Review round 2 and final fresh pass fixes** (agent; Sol, 3 P2 and 1 P3, one found
+  by both). An unedited item's details are matched as the list the card shows, every
+  level of it and each text as read, so a copied row whose fourth level moved to the
+  third is not taken for the original: the round 1 fix compared the three levels the
+  field shows. Until it is first opened the field shows the details as the card listed
+  them when the form opened, and only while the form holds what it opened on, so a
+  field drawn again after Welsh details come and go, or a Refresh behind an unopened
+  field, shows what Done keeps. A move chosen with a pointer reads the caret before
+  the button acts, as a button pressed in Safari takes no focus from the text. Pasted
+  lines that ask for more than three levels say so: "Added 4 details. A list has three
+  levels, so this can't go deeper.", which shows.
 - **Epic close**: this closes EPC-010. It had no delivery notes.
 
 ### Contract for dependents
@@ -467,7 +478,8 @@ audited. This story's own:
   one from each the first time its details are changed here (D14).
 - **Domain**: `details` in `EDITABLE_ITEM_FIELDS`; `domain/roadmap/item-details.ts`
   (`DetailLine`, `detailsValue`, `detailsOf`, `englishDetails`, `settleDetails`,
-  `keptDetails`, `withoutDetail`, `parseDetailLines`, `MAX_DETAIL_LEVEL`); `RoadmapItem.hasWelshDetails`,
+  `shownLevels`, `keptDetails`, `withoutDetail`, `parseDetailLines`,
+  `MAX_DETAIL_LEVEL`); `RoadmapItem.hasWelshDetails`,
   which every `RoadmapRepository` must supply (the contract's "says an item has Welsh
   details even when none pairs with the English";
   `docs/operations/replacing-google-sheets.md`); `FieldConflict.gainedWelsh`, in place

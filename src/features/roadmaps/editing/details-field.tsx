@@ -57,11 +57,12 @@ export interface DetailsFieldProps {
   /** The item's details as the form opened, each at the level it shows at. */
   initial: readonly DetailLine[]
   /**
-   * The item's details as the card lists them, which the field shows until it is first
-   * opened (S17): a list read deeper than three levels shows at the third only then
-   * (D12).
+   * The item's details as the card listed them when the form opened, which the field
+   * shows until it is first opened (S17): a list read deeper than three levels shows at
+   * the third only then (D12). `null` once the form holds other details than it opened
+   * on, which the field then shows, however it is drawn again.
    */
-  asListed: readonly DetailLine[]
+  asListed: readonly DetailLine[] | null
   /**
    * Called with the details confirming the form would keep, whenever they change: those
    * written, a detail with no text left out (S5, S10).
@@ -93,7 +94,7 @@ export function DetailsField({
   const [lines, setLines] = useState(() => orBlank(initial.map(identify)))
   const [current, setCurrent] = useState(() => lines[0]?.id ?? 0)
   const [opened, setOpened] = useState(false)
-  const kept = opened ? keptDetails(lines) : asListed
+  const kept = opened || !asListed ? keptDetails(lines) : asListed
 
   return (
     <OpeningField
@@ -416,7 +417,7 @@ function DetailsEditor({
     change(
       result.lines,
       last.id,
-      { kind: "added", count: result.added },
+      { kind: "added", count: result.added, limited: result.limited },
       { id: last.id, caret: last.text.length },
     )
   }
@@ -485,7 +486,10 @@ function DetailsEditor({
 
   const message = said?.message
   const text = message ? detailsMessageText(message, t) : ""
-  const loud = message?.kind === "refused" || message?.kind === "removed"
+  const loud =
+    message?.kind === "refused" ||
+    message?.kind === "removed" ||
+    (message?.kind === "added" && message.limited)
 
   return (
     <>
@@ -553,6 +557,14 @@ function DetailsEditor({
         role="group"
         aria-label={t("roadmaps.edit.details.selected")}
         className="flex flex-wrap items-center gap-1.5"
+        // Not every browser moves focus to a button pressed with a pointer (Safari),
+        // so the text may never blur: the caret is read before the button acts (S23).
+        onPointerDown={() => {
+          const field = selected && fields.current.get(selected.id)
+          if (field && field === document.activeElement) {
+            caret.current = field.selectionStart
+          }
+        }}
       >
         {ACTIONS.filter(({ iconOnly }) => !iconOnly).map(actionButton)}
         {/* The three shown as icons wrap together where the card is narrow. */}

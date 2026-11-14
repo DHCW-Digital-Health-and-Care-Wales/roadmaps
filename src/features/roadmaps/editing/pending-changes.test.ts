@@ -824,3 +824,40 @@ describe("an item without an ID whose details a co-lead wrote another way (STY-0
     expect(matchItemChanges([first, welsh], retitled).size).toBe(0)
   })
 })
+
+describe("an item whose details read deeper than the third level (STY-039, review round 2)", () => {
+  const detailed = (...levels: number[]) =>
+    levels.map((level, index) => ({
+      text: { en: `Detail ${String(index + 1)}`, cy: "" },
+      level,
+    }))
+  const loaded = createTestRoadmapItem("Legacy", {
+    details: detailed(0, 1, 2, 3),
+  })
+  const retitled = editItem(NO_CHANGES, undefined, loaded, 1, { phase: "Beta" })
+
+  it("is not found in a row whose fourth level a co-lead moved to the third, though the field would show both alike", () => {
+    const moved = { ...loaded, details: detailed(0, 1, 2, 2) }
+
+    expect(matchItemChanges([first, moved], retitled).size).toBe(0)
+  })
+
+  it("is found in a row that shows the same list, written with other hyphens", () => {
+    const rewritten = { ...loaded, details: detailed(1, 2, 3, 4) }
+
+    expect(matchItemChanges([first, rewritten], retitled).get(1)).toBe(
+      retitled.items[0],
+    )
+  })
+
+  it("is not found once a detail's text reads otherwise, a hyphen after its nesting included", () => {
+    const hyphened = {
+      ...loaded,
+      details: loaded.details.map((detail, index) =>
+        index === 3 ? { ...detail, text: { en: "-Detail 4", cy: "" } } : detail,
+      ),
+    }
+
+    expect(matchItemChanges([first, hyphened], retitled).size).toBe(0)
+  })
+})

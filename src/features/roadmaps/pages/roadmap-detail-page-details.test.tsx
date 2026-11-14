@@ -1,5 +1,6 @@
 import {
   type BoundFunctions,
+  fireEvent,
   type queries,
   screen,
   within,
@@ -486,6 +487,20 @@ describe("Editing an item's details (STY-039)", () => {
     ])
   })
 
+  it("says a list has three levels when pasted lines ask for more (S3, S13)", async () => {
+    const { user } = await renderPage()
+    const { field } = await openDetails(user, "Bare")
+
+    await user.click(boxes(field)[0] as HTMLElement)
+    await user.paste("One\n- Two\n-- Three\n--- Four")
+
+    expect(written(field).at(-1)).toEqual(["Four", 2])
+    expect(status(field)).toBe(
+      "Added 4 details. A list has three levels, so this can't go deeper.",
+    )
+    expect(field.getByRole("status")).toBeVisible()
+  })
+
   it("puts pasted lines after a detail that holds text and those nested under it (D22)", async () => {
     const { user } = await renderPage()
     const { field } = await openDetails(user)
@@ -783,6 +798,25 @@ describe("Editing an item's details (STY-039)", () => {
     )
     expect(status(field)).toBe("It is already the first at its level.")
     expect(box(field, "Rheumatology")).toHaveFocus()
+  })
+
+  it("puts the caret back where it was after a pointer move that takes no focus from the text, as in Safari (S23)", async () => {
+    const { user } = await renderPage()
+    const { field } = await openDetails(user)
+    // The caret was last recorded at the end of another detail.
+    await caretIn(user, field, "Dermatology")
+    const rheumatology = await caretIn(user, field, "Rheumatology", 5)
+    const moveUp = field.getByRole("button", { name: "Move up Rheumatology" })
+
+    // Pressed with a pointer, the button taking no focus: the text never blurs.
+    fireEvent.pointerDown(moveUp)
+    fireEvent.click(moveUp, { detail: 1 })
+
+    expect(written(field)[1]).toEqual(["Rheumatology", 1])
+    await vi.waitFor(() => {
+      expect(rheumatology).toHaveFocus()
+    })
+    expect(rheumatology.selectionStart).toBe(5)
   })
 
   it("is one stop for the Tab key, in the detail last written in, and the arrows move between details at a detail's start and end (S24)", async () => {
@@ -1106,6 +1140,52 @@ describe("An item with Welsh details (STY-039 S18, S19)", () => {
     await done(user, form)
 
     expect(main().queryByText("Changed")).toBeNull()
+  })
+
+  it("shows what Done keeps when an item's Welsh details come and go while its form is open (S17)", async () => {
+    const { user, repository } = await renderPage({ shown: welshItems })
+    const { form, field } = await openDetails(user, "English only")
+    await caretIn(user, field, "Follow-up")
+    await user.keyboard(" and diabetes")
+    const welsh = (cy: string) => {
+      repository.coLead((_list, itemsOf) => {
+        const item = itemsOf("producta")[2]
+        if (!item) return
+        item.details = [{ text: { en: "Follow-up", cy }, level: 0 }]
+        item.hasWelshDetails = cy !== ""
+      })
+    }
+
+    welsh("Dilynol")
+    await user.click(main().getByRole("button", { name: "Refresh" }))
+    expect(await form.findByText(NOTICE)).toBeVisible()
+    welsh("")
+    await user.click(main().getByRole("button", { name: "Refresh" }))
+    await form.findByRole("button", { name: "Change details" })
+
+    expect(pairsOf(shutList(form))).toEqual([["Follow-up and diabetes", 0]])
+    await done(user, form)
+    expect(cardDetails("English only")).toEqual([["Follow-up and diabetes", 0]])
+  })
+
+  it("shows a field never opened as the form opened on it, whatever a Refresh reads since (S17)", async () => {
+    const { user, repository } = await renderPage({ shown: welshItems })
+    const form = await openForm(user, "English only")
+    repository.coLead((_list, itemsOf) => {
+      const [paired, , item] = itemsOf("producta")
+      if (item) item.details = detailed(["Their list", 0])
+      // Another card's title, to see the read has reached the page.
+      if (paired) paired.title = { en: "Paired, since read", cy: "" }
+    })
+
+    await user.click(main().getByRole("button", { name: "Refresh" }))
+    await main().findByRole("heading", { level: 3, name: "Paired, since read" })
+
+    expect(pairsOf(shutList(form))).toEqual([["Follow-up", 0]])
+    await user.click(form.getByRole("button", { name: "Change details" }))
+    expect(
+      within(form.getByRole("group", { name: "Details" })).getByRole("textbox"),
+    ).toHaveValue("Follow-up")
   })
 
   it("refuses a change of details to an item that has gained Welsh details: it can be discarded, not kept (S19)", async () => {

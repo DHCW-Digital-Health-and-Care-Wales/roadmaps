@@ -53,13 +53,24 @@ export function parseDetailLines(text: string, base = 0): DetailLine[] {
 export function settleDetails<T extends DetailLine>(
   details: readonly T[],
 ): T[] {
+  const shown = shownLevels(details.map(({ level }) => level))
+  return details.map((detail, index) => ({
+    ...detail,
+    level: Math.min(shown[index] ?? 0, MAX_DETAIL_LEVEL),
+  }))
+}
+
+/**
+ * The levels a list written at `levels` shows at on the card and the public site,
+ * however deep: each detail one level under the last one shallower than it.
+ */
+export function shownLevels(levels: readonly number[]): number[] {
   // The levels, as written, of the details the next one could nest under.
   const open: number[] = []
-  return details.map((detail) => {
-    while (open.length > 0 && (open.at(-1) ?? 0) >= detail.level) open.pop()
-    const level = Math.min(open.length, MAX_DETAIL_LEVEL)
-    open.push(detail.level)
-    return { ...detail, level }
+  return levels.map((level) => {
+    while (open.length > 0 && (open.at(-1) ?? 0) >= level) open.pop()
+    open.push(level)
+    return open.length - 1
   })
 }
 

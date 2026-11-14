@@ -299,8 +299,14 @@ export function EditableItemCard({
         name: "details",
         label: t("roadmaps.edit.itemFields.details"),
         multiline: false,
-        // English, as the field's own are: Welsh details are never changed here.
-        details: { asListed: localiseDetails(shown.details, "en") },
+        // As the form opened on them, as its value is; in English, as the field's
+        // own are: Welsh details are never changed here.
+        details: {
+          asListed: localiseDetails(
+            (mode.opened?.shown ?? shown).details,
+            "en",
+          ),
+        },
       }
 
   return (

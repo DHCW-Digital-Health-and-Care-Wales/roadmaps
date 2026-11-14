@@ -73,8 +73,8 @@ export interface EditFormField<F extends string> {
   /**
    * An item's details (STY-039), edited in a `DetailsField`, which opens on request:
    * the field's value holds them as `detailsValue` gives them, with a detail still
-   * being written kept. `asListed` are the details as the card lists them, shown until
-   * the field is first opened.
+   * being written kept. `asListed` are the details as the card listed them when the
+   * form opened, shown until the field is first opened or the form holds others.
    */
   details?: { asListed: readonly DetailLine[] }
   /** Held at its value, as while its options are read. */
@@ -280,7 +280,11 @@ export function EditForm<F extends string>({
               label={field.label}
               // What the form holds, so a field drawn again shows what Done keeps.
               initial={detailsOf(values[field.name])}
-              asListed={field.details.asListed}
+              asListed={
+                values[field.name] === opened[field.name]
+                  ? field.details.asListed
+                  : null
+              }
               onChange={(details) => {
                 change(detailsValue(details))
               }}

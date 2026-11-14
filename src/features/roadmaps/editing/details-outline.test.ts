@@ -226,6 +226,21 @@ describe("pasted lines (S8, D22)", () => {
     ])
   })
 
+  it("say when a line asked for more than three levels", () => {
+    const deep = pastedInto(
+      lines(["", 0]),
+      0,
+      "One\n- Two\n-- Three\n--- Four",
+      fresh,
+    )
+
+    expect(plain(deep?.lines ?? []).at(-1)).toEqual(["Four", 2])
+    expect(deep?.limited).toBe(true)
+    expect(
+      pastedInto(lines(["", 0]), 0, "One\n- Two\n-- Three", fresh)?.limited,
+    ).toBe(false)
+  })
+
   it("are none when every line is blank", () => {
     expect(pastedInto(LIST, 1, "\n \n", fresh)).toBeNull()
   })

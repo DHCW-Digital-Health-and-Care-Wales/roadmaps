@@ -3,6 +3,7 @@
  * write"), so a publish writes to that item or to none.
  */
 
+import { shownLevels } from "./item-details"
 import {
   EDITABLE_ITEM_FIELDS,
   type EditableItemField,
@@ -59,8 +60,8 @@ const CONTENT_KEYS = Object.keys(CONTENT) as (keyof typeof CONTENT)[]
  * Whether `current` holds `loaded`'s content, with `edited` fields' values replaced: a
  * text field's Welsh must still be `loaded`'s where both reads show it, a placed item has
  * no horizon as written, an item whose organisations were written has no unknown codes,
- * as only known ones are written (ADR-014), and details are compared as the list they
- * show as (STY-039).
+ * as only known ones are written (ADR-014), and unedited details are compared as the
+ * list the card shows (STY-039).
  */
 function sameContent(
   current: RoadmapItem,
@@ -81,13 +82,10 @@ function sameContent(
       if (key === "organisationIds") {
         return itemValue(current, key) === itemValue(loaded, key)
       }
-      // Details are the same as the list they show as, however their hyphens are
-      // written (STY-039 D4), with the Welsh they had.
+      // Details are the same as the list the card shows, however their hyphens are
+      // written (STY-039 D4): every level of it, not the three the field compares.
       if (key === "details") {
-        return (
-          itemValue(current, key) === itemValue(loaded, key) &&
-          sameValue(welshDetails(current), welshDetails(loaded))
-        )
+        return sameValue(shownDetails(current), shownDetails(loaded))
       }
       return sameValue(current[key], loaded[key])
     }
@@ -112,9 +110,10 @@ function welshShown(
   return value !== "" && itemValue(loaded, field) !== ""
 }
 
-/** The Welsh of each of an item's details, in order. */
-function welshDetails({ details }: RoadmapItem): string[] {
-  return details.map(({ text }) => text.cy)
+/** An item's details as the card shows them: each one's text, at the level it shows at. */
+function shownDetails({ details }: RoadmapItem): RoadmapItem["details"] {
+  const levels = shownLevels(details.map(({ level }) => level))
+  return details.map(({ text }, index) => ({ text, level: levels[index] ?? 0 }))
 }
 
 function isEditable(key: string): key is EditableItemField {

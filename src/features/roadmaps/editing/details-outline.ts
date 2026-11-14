@@ -12,6 +12,7 @@ import {
   parseDetailLines,
   settleDetails,
   shiftedDetails,
+  shownLevels,
   MAX_DETAIL_LEVEL,
 } from "@/domain/roadmap/item-details"
 
@@ -233,27 +234,32 @@ export function joinedToAbove<T extends DetailLine>(
  * `lines` with the lines of `text` pasted into the one at `index` (S8, D22), each made
  * by `fresh`: nested by their hyphens from its level, in its place when it has no text,
  * and otherwise after it and the details nested under it. `last` is the index of the
- * last one added; `null` when `text` holds no detail.
+ * last one added, and `limited` says a line asked for more than three levels, so shows
+ * at the third; `null` when `text` holds no detail.
  */
 export function pastedInto<T extends DetailLine>(
   lines: readonly T[],
   index: number,
   text: string,
   fresh: (line: DetailLine) => T,
-): { lines: T[]; added: number; last: number } | null {
+): { lines: T[]; added: number; last: number; limited: boolean } | null {
   const line = lines[index]
   if (!line) return null
   const pasted = parseDetailLines(text, line.level).map(fresh)
   if (pasted.length === 0) return null
   const blank = line.text.trim() === ""
   const at = blank ? index : endOfDetail(lines, index)
+  const next = [
+    ...lines.slice(0, at),
+    ...pasted,
+    ...lines.slice(blank ? index + 1 : at),
+  ]
   return {
-    lines: settleDetails([
-      ...lines.slice(0, at),
-      ...pasted,
-      ...lines.slice(blank ? index + 1 : at),
-    ]),
+    lines: settleDetails(next),
     added: pasted.length,
     last: at + pasted.length - 1,
+    limited: shownLevels(next.map(({ level }) => level)).some(
+      (level) => level > MAX_DETAIL_LEVEL,
+    ),
   }
 }

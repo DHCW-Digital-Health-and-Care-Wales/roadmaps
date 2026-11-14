@@ -6,6 +6,7 @@ import {
   englishDetails,
   parseDetailLines,
   settleDetails,
+  shownLevels,
   withoutDetail,
 } from "./item-details"
 import { itemValue } from "./roadmap-changes"
@@ -143,6 +144,12 @@ describe("settleDetails", () => {
         detail("f", 0),
       ]).map(({ level }) => level),
     ).toEqual([0, 1, 2, 2, 1, 0])
+  })
+})
+
+describe("shownLevels", () => {
+  it("gives the levels a list shows at, however deep, as the card nests them", () => {
+    expect(shownLevels([1, 3, 3, 7, 9, 2, 0])).toEqual([0, 1, 1, 2, 3, 1, 0])
   })
 })
 

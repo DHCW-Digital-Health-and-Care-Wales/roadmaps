@@ -1,4 +1,4 @@
-# STY-048: A Product Lead removes a published item
+# STY-049: A Product Lead removes a published item
 
 - **Status**: Needs grilling — the owner asked for the record on 2026-11-14 (STY-046
   grilling, items round 1 Q5); nothing is decided
@@ -12,9 +12,15 @@
 ## Summary
 
 A new item can be removed before it is published (STY-046). An item the data source
-already holds cannot: a Product Lead moves it to "Not doing" or deletes its row in the
+already holds cannot: a Product Lead moves it to "Not doing" or deletes it in the
 spreadsheet. This story would let them remove one from the editor. It is recorded so
 the gap is not lost; how a removal is confirmed and published is for the owner.
+
+## Scope
+
+A first outline, for the grilling to settle. A removal in a roadmap's pending changes, published by
+deleting the item's row, found by its ID; the card's control and its undone state;
+README _What the editor writes_ and an ADR-012 amendment.
 
 ## Open questions
 
@@ -32,9 +38,3 @@ the gap is not lost; how a removal is confirmed and published is for the owner.
   - (a) The confirmation mentions "Not doing" as the way to show a dropped item
     (recommended).
   - (b) No mention.
-
-## Rough shape of the work
-
-Not acceptance criteria. A removal in a roadmap's pending changes, published by
-deleting the item's row, found by its ID; the card's control and its undone state;
-README _What the editor writes_ and an ADR-012 amendment.

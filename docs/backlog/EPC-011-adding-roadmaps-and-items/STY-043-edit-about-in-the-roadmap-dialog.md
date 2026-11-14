@@ -61,28 +61,34 @@ open form as the in-place form does
 ### S4: Closing follows the epic's rule
 
 **Given** Sam has changed fields in the dialog
-**When** Sam chooses Cancel or presses Escape
-**Then** the dialog closes and the changes made in it are dropped, without asking;
-edits that were already pending stay
-**And** a click outside does nothing, an expired session keeps the dialog and its
-text, and focus returns to Edit as the dialog closes
+**When** Sam chooses Cancel, presses Escape or clicks outside it, or the session
+expires
+**Then** it behaves as the epic's _The dialogs_ sets; edits that were already pending
+stay, Done still works while expired, as the in-place form's does, and focus returns
+to Edit as the dialog closes
 
 ### S5: Welsh, phone and assistive technology
 
 **Given** the interface is in Welsh, the screen is a phone's, or Sam uses a keyboard
 or a screen reader
 **When** Sam edits About
-**Then** the dialog is in Welsh, fills the width from the foot of the screen and
-scrolls, is named by its heading, holds focus and links each message to its field;
-axe finds nothing in it
+**Then** the dialog is in Welsh, fits the phone as the epic's _The dialogs_ sets, is
+named by its heading, holds focus and links each message to its field; axe finds
+nothing in it
+
+## Tests
+
+S2 and S3 are held by the in-place form's existing component and Playwright tests,
+re-pointed at the dialog: none is dropped, and each rule S3 names keeps its test.
 
 ## Decisions
 
 - **D1** (owner, 2026-11-14, items round 3 Q1): About editing moves into a dialog in
   this epic, over leaving it in place (recommended) or a story for later.
 - **D2** (owner, round 4 Q1): it is the same dialog as "Add a roadmap", with fewer
-  fields when adding: the five essentials and the short name to add, every About
-  field and no short name to edit. Over the same fields in both, or two dialogs.
+  fields when adding: title, short name, product family, category and product lead
+  to add; every About field and no short name to edit. Over the same fields in both,
+  or two dialogs.
 - **D3** (agent): Done, not Save, confirms the form, as the in-place form does: Save
   names the write on an unpublished roadmap.
 

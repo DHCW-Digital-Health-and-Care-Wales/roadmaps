@@ -6,7 +6,7 @@
 - **Area**: Domain + Infrastructure + Docs
 - **Epic**: [EPC-011-adding-roadmaps-and-items](README.md)
 - **Depends on**: none
-- **Binding ADRs**: ADR-012, ADR-011, ADR-014, ADR-002
+- **Binding ADRs**: ADR-012, ADR-011, ADR-014, ADR-002, ADR-006
 - **Suggested model**: Opus — extends the all-or-nothing publish with rows that have
   no base to conflict on, and its lost-answer settlement
 
@@ -102,13 +102,15 @@ alone, with other edits, and with a missing column.
 
 ## Starting point
 
-Audited at `400c90c`. A pending change is found again by its item, as last loaded,
-and its position (`ItemChanges`), so `RoadmapChanges`, `matchItemChanges` and the
-publish plan (`publish-plan.ts`) have no place for an item that was never read; an
-item with a pending edit and no ID is found by position among the kept rows, which a
-row appended after the last cannot disturb.
+Audited at `400c90c`.
+
+- An item with a pending edit and no ID is found by its position among the kept rows
+  (ADR-012), which a row appended after the last cannot disturb.
+- The Sheets fake records a row appended to any tab but `Families` as a violation
+  (STY-023 S11, `tests/fixtures/sheets/apply-batch-update.ts`). The guard narrows to
+  allow a roadmap's own tab, and stays for every other.
 
 ## Out of scope
 
 - The dialog, the "New" tag and Remove: STY-046.
-- Removing a published item: STY-048. A place other than last: STY-049.
+- Removing a published item: STY-049. A place other than last: STY-050.

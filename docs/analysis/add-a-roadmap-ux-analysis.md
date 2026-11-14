@@ -17,8 +17,7 @@ A Product Lead with about 30 minutes a week for roadmaps (persona A1), mostly at
 desk, with a phone for small jobs (A2). Starting a roadmap happens a few times a year,
 at a desk, and is followed by writing: what the roadmap is about, then its first
 items. Adding one item to a roadmap that exists is a routine job on any visit. Today
-both are done in the shared spreadsheet (A3): a row typed into the roadmap list and a
-copy made of the template tab, then a row typed for each item.
+both are done by hand in the shared spreadsheet (A3).
 
 ## Journeys covered
 
@@ -26,7 +25,7 @@ copy made of the template tab, then a row typed for each item.
 | ------------------------- | ---------------------------------------------------------------------------------- | ---------------- |
 | 1. Start adding a roadmap | open the form; say what the roadmap is; see its public address; add or cancel      | STY-041          |
 | 2. Just after adding      | see that it was added and is not published; find it; see what to do next           | STY-041, STY-042 |
-| 3. Add an item            | open the form; write the item; choose its horizon; see it pending among the others | STY-046          |
+| 3. Add an item            | open the form; write the item; choose its horizon; see it pending among the others | STY-046, STY-047 |
 | 4. An empty roadmap       | see that a roadmap has no items; add its first                                     | STY-042, STY-046 |
 
 Each relies on A1 (short visits), A2 (desktop first), A9 and A10 (nothing is public
@@ -34,7 +33,7 @@ until a deliberate publish) and A12 (a co-lead may be working on the same data).
 
 Excluded: connecting to Google; publishing and its conflict review, which exist
 (EPC-005, EPC-008); the Welsh interface; removing a roadmap or an item and reordering
-items, which are recorded for later (STY-047 to STY-049).
+items, which are recorded for later (STY-048 to STY-050).
 
 ## What every design shares
 
@@ -45,7 +44,7 @@ items, which are recorded for later (STY-047 to STY-049).
   adding.
 - **A new item is a pending edit**: tagged "New", counted with the roadmap's
   unpublished changes, and written only when the roadmap is published or saved.
-- A title is the only text either form requires. English only.
+- A title is required in every form; the designs differ in what else is. English only.
 - The app's look: its header band, cards, buttons and badges.
 
 The sample is invented. On Saturday 14 November 2026, Sam Evans, who leads Outpatient
@@ -115,28 +114,28 @@ fields.
 
 ## Decisions needed
 
-| Decision                                                  | Options                                                                                           | Where it is asked, and decided               |
-| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| Where a roadmap is added, and how much is asked           | A (recommended), B or C                                                                           | decided: B, STY-041 D1                       |
-| Where the short name comes from                           | suggested and changeable (recommended); the whole title; squeezed like `ProductA`; always typed   | decided: suggested, STY-041 D2               |
-| What a short name may hold                                | letters, numbers, spaces and hyphens (recommended); anything a tab's name allows                  | decided: the four, STY-040 D8                |
-| When a new roadmap is written                             | at once (recommended); pending until saved                                                        | decided: at once, STY-040 D2                 |
-| Whether it starts published                               | never (recommended); a tick box; always                                                           | decided: never, STY-040 D3                   |
-| Where Sam is after adding                                 | A, B (recommended) or C                                                                           | decided: B, STY-041 D3                       |
-| A short name a tab already has                            | refused (recommended); the existing tab is listed                                                 | decided: refused, STY-040 D7                 |
-| No usable template                                        | refused, naming who fixes it (recommended); a plain tab is built                                  | decided: refused, STY-040 D4                 |
-| The copied template's example rows                        | deleted, as asked (recommended); emptied, keeping their formatting                                | decided: deleted, STY-040 D5                 |
-| Publishing a roadmap the public would see empty           | allowed, and the dialog says so (recommended); unchanged; refused                                 | decided: says so, STY-042 D3, D4             |
-| The same title as another roadmap                         | allowed (recommended); refused                                                                    | decided: allowed, STY-040 D6                 |
-| Closing a dialog that holds text                          | Cancel and Escape drop it, a click outside does nothing (recommended); ask first; all three close | decided: as recommended, STY-041 D5          |
-| Where an item is added, and how much is asked             | A (recommended), B or C                                                                           | decided: B, STY-046 D1                       |
-| When a new item is written                                | pending until published (recommended); at once                                                    | decided: pending, STY-045 D1                 |
-| Where a new item shows in its horizon                     | last (recommended); first; chosen                                                                 | decided: last, STY-045 D2                    |
-| Where a new item may be added                             | any horizon or section (recommended); the three horizons                                          | decided: any, STY-045 D3                     |
-| The horizon when the dialog opens                         | none chosen (recommended); Now; the last used                                                     | decided: none, STY-046 D4                    |
-| After "Add item"                                          | "Add and start another" as well (recommended); the dialog just closes                             | decided: both buttons, STY-046 D5            |
-| What an empty roadmap shows                               | A, B (recommended) or C                                                                           | decided: B, STY-046 D3                       |
-| Removing a roadmap, removing a published item, reordering | a record each for later (recommended); out of scope; in this epic                                 | decided: recorded, STY-047, STY-048, STY-049 |
+| Decision                                                  | Options                                                                                           | Where it is asked, and decided                            |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Where a roadmap is added, and how much is asked           | A (recommended), B or C                                                                           | decided: B, STY-041 D1                                    |
+| Where the short name comes from                           | suggested and changeable (recommended); the whole title; squeezed like `ProductA`; always typed   | decided: suggested, STY-041 D2                            |
+| What a short name may hold                                | letters, numbers, spaces and hyphens (recommended); anything a tab's name allows                  | decided: letters, numbers, spaces and hyphens, STY-040 D8 |
+| When a new roadmap is written                             | at once (recommended); pending until saved                                                        | decided: at once, STY-040 D2                              |
+| Whether it starts published                               | never (recommended); a tick box; always                                                           | decided: never, STY-040 D3                                |
+| Where Sam is after adding                                 | A, B (recommended) or C                                                                           | decided: B, STY-041 D3                                    |
+| A short name a tab already has                            | refused (recommended); the existing tab is listed                                                 | decided: refused, STY-040 D7                              |
+| No usable template                                        | refused, naming who fixes it (recommended); a plain tab is built                                  | decided: refused, STY-040 D4                              |
+| The copied template's example rows                        | deleted, as asked (recommended); emptied, keeping their formatting                                | decided: deleted, STY-040 D5                              |
+| Publishing a roadmap the public would see empty           | allowed, and the dialog says so (recommended); unchanged; refused                                 | decided: says so, STY-042 D3, D4                          |
+| The same title as another roadmap                         | allowed (recommended); refused                                                                    | decided: allowed, STY-040 D6                              |
+| Closing a dialog that holds text                          | Cancel and Escape drop it, a click outside does nothing (recommended); ask first; all three close | decided: as recommended, STY-041 D5                       |
+| Where an item is added, and how much is asked             | A (recommended), B or C                                                                           | decided: B, STY-046 D1                                    |
+| When a new item is written                                | pending until published (recommended); at once                                                    | decided: pending, STY-045 D1                              |
+| Where a new item shows in its horizon                     | last (recommended); first; chosen                                                                 | decided: last, STY-045 D2                                 |
+| Where a new item may be added                             | any horizon or section (recommended); the three horizons                                          | decided: any, STY-045 D3                                  |
+| The horizon when the dialog opens                         | none chosen (recommended); Now; the last used                                                     | decided: none, STY-046 D4                                 |
+| After "Add item"                                          | "Add and start another" as well (recommended); the dialog just closes                             | decided: both buttons, STY-046 D5                         |
+| What an empty roadmap shows                               | A, B (recommended) or C                                                                           | decided: B, STY-046 D3                                    |
+| Removing a roadmap, removing a published item, reordering | a record each for later (recommended); out of scope; in this epic                                 | decided: recorded, STY-048, STY-049, STY-050              |
 
 Reads and writes: adding a roadmap needs a write the repository does not have
 (STY-040), which copies the `Template` tab, never read until now (STY-040 D1). A new
@@ -153,7 +152,9 @@ journey 2 and 4 pages read only what the roadmap's page reads today.
 - "Add and start another", and the dialog's message that an item was added (STY-046
   S4).
 - The publish dialog listing a new item, and its line for a roadmap the public would
-  see empty (STY-046 S7, STY-042 S3).
+  see empty (STY-047 S1, STY-042 S3).
+- Reconnect inside the "Add a roadmap" dialog after the session expires (STY-041
+  S11).
 - The Welsh interface, dark mode, the loading and expired-session states, and keyboard
   focus and screen-reader names, which the stories' scenarios set.
 
@@ -168,7 +169,7 @@ journey 2 and 4 pages read only what the roadmap's page reads today.
 ## Related
 
 - [EPC-011](../backlog/EPC-011-adding-roadmaps-and-items/README.md) and its stories,
-  STY-040 to STY-049.
+  STY-040 to STY-050.
 - [`roadmaps-tab-format.md`](roadmaps-tab-format.md) and
   [`roadmap-tab-format.md`](roadmap-tab-format.md): the roadmap index, the roadmap tab
   and the `Template` tab.

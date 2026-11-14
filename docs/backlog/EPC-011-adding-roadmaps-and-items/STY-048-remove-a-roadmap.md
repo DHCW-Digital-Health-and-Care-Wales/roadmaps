@@ -1,4 +1,4 @@
-# STY-047: A Product Lead removes a roadmap
+# STY-048: A Product Lead removes a roadmap
 
 - **Status**: Needs grilling — the owner asked for the record on 2026-11-14 (STY-040
   grilling, round 1 Q10); nothing is decided
@@ -12,10 +12,16 @@
 ## Summary
 
 A roadmap added by mistake, or no longer wanted, can only be removed in the
-spreadsheet: its row in the roadmap list and its tab of items. This story would let a
+spreadsheet: its entry and its items. This story would let a
 Product Lead remove one from the editor. It is recorded so the gap left by adding
 roadmaps is not lost; what removing means, and whether anything is kept, is for the
 owner.
+
+## Scope
+
+A first outline, for the grilling to settle. A repository call that removes a roadmap after a re-read,
+refused when the roadmap has changed since the page read it; the action and its
+confirmation; README _What the editor writes_ and an ADR-012 amendment.
 
 ## Open questions
 
@@ -23,8 +29,8 @@ owner.
   Nursing", added by mistake with the wrong short name._
   - (a) Removes its entry and its items for good (recommended for a roadmap that was
     never published) — two things deleted in one write; nothing to restore from.
-  - (b) Removes its entry and keeps its items' tab — the roadmap leaves both apps;
-    a tab nothing lists is left in the spreadsheet.
+  - (b) Removes its entry and keeps its items — the roadmap leaves both apps; its
+    items stay in the spreadsheet, listed by nothing.
   - (c) Only hides it from the editor's list — nothing is deleted; needs a new
     stored state the public site must also ignore.
 - **Q2**: May a published roadmap be removed? _Sam chooses Remove on "Outpatient
@@ -41,9 +47,3 @@ owner.
 - **Q4**: Where is the action, and how is it confirmed?
   - (a) On the roadmap's page, confirmed by typing its title (recommended).
   - (b) On the roadmap's page, with a plain confirmation.
-
-## Rough shape of the work
-
-Not acceptance criteria. A repository call that removes a roadmap after a re-read,
-refused when the roadmap has changed since the page read it; the action and its
-confirmation; README _What the editor writes_ and an ADR-012 amendment.

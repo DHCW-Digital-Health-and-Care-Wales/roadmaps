@@ -32,7 +32,8 @@ catalogues. No change to the domain, the repository or what is written.
 **Given** any roadmap's page
 **When** it shows
 **Then** "About this roadmap" is a bordered panel, with Edit beside its heading, not
-at its foot, as design B of the prototypes' second journey draws it
+at its foot, as design B of the prototypes' second journey draws it: a change from
+today's page
 **And** the "Changed" tag, "Undo changes" and the in-place form keep working as they
 do, inside the panel
 
@@ -69,7 +70,8 @@ theme's tokens, and fit at 375px; axe finds nothing in them
   page. Read as applying to every roadmap's page, since the About block is one
   component (agent).
 - **D2** (owner, round 1 Q5): until adding an item is delivered (STY-046), the empty
-  panel points to the spreadsheet. STY-046 replaces the sentence with its button.
+  panel points to the spreadsheet. STY-046 replaces the sentence with its button and
+  takes its copy out of both catalogues.
 - **D3** (owner, round 1 Q6): publishing a roadmap the public would see empty is
   allowed and the dialog says so, over leaving the dialog as it is or refusing the
   publish.

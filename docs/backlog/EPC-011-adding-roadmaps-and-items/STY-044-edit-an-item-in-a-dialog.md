@@ -63,23 +63,37 @@ horizon
 tags, read-only fields and choices (STY-031, STY-034, STY-037, STY-039)
 **And** a Refresh while the dialog is open treats the open form as the card form does
 
+### S7: The dialog outlives a card that moves
+
+**Given** the dialog is open on an item in Next, with text typed
+**When** the roadmap is read again and now has that item in Now, so its card is a
+new one in another list
+**Then** the dialog stays open with everything typed, and Done or Cancel returns
+focus to the item's card where it now is
+
 ### S5: Closing follows the epic's rule
 
 **Given** Sam has changed fields in the dialog
-**When** Sam chooses Cancel or presses Escape
-**Then** the dialog closes and the changes made in it are dropped, without asking;
-edits that were already pending stay
-**And** a click outside does nothing, an expired session keeps the dialog and its
-text, and focus returns to the card's Edit
+**When** Sam chooses Cancel, presses Escape or clicks outside it, or the session
+expires
+**Then** it behaves as the epic's _The dialogs_ sets; edits that were already pending
+stay, Done still works while expired, as the card form's does, and focus returns to
+the card's Edit as the dialog closes
 
 ### S6: Welsh, phone and assistive technology
 
 **Given** the interface is in Welsh, the screen is a phone's, or Sam uses a keyboard
 or a screen reader
 **When** Sam edits an item
-**Then** the dialog is in Welsh, fills the width from the foot of the screen and
-scrolls with its buttons reachable, is named by its heading and holds focus; axe finds
-nothing in it, with each field shut and open
+**Then** the dialog is in Welsh, fits the phone as the epic's _The dialogs_ sets with
+its buttons reachable, is named by its heading and holds focus; axe finds nothing in
+it, with each field shut and open
+
+## Tests
+
+S3 and S4 are held by the card form's existing component and Playwright tests,
+re-pointed at the dialog: none is dropped, and each rule S4 names keeps its test. S7
+is new.
 
 ## Decisions
 
@@ -90,17 +104,19 @@ nothing in it, with each field shut and open
   over all open or open when they hold something.
 - **D3** (owner, items round 3 Q3, confirming the agent's choices): the dialog holds
   today's item form; nothing in what is written changes.
-- **D4** (agent): Move stays a menu on the card, and "Undo changes" a button on it;
-  only the form moves.
-- **D5** (agent): the dialog is built here in its editing form, before adding
-  (STY-046), so the move is proved against every existing item test first.
+- **D4** (agent): Move stays a menu on the card, and "Undo changes" a button on it,
+  over putting them in the dialog: only the form moves.
+- **D5** (agent): the dialog is built here in its editing form, over building it
+  first for adding (STY-046), so the move is proved against every existing item test.
+- **D6** (agent): the open dialog is held by the page, not by its card, over keeping
+  the card's hold: a card that moves lists is a new card, and a form inside it would
+  be lost. S7.
 
 ## Starting point
 
-Audited at `400c90c`. An open card form is held in its list while a pending change
-would move it (`held`, `cardHoldKey` and `onHold` in `roadmap-items.tsx` and
-`editable-item-card.tsx`), and focus is handed to a moved card by `FocusRequest`:
-with the form in a dialog the hold has no use, and the focus hand-over still does.
+Audited at `400c90c`. With the form out of the card, the hold that keeps an open
+card in its list (the epic's F5) has no use; the hand-over of focus to a moved card
+(`FocusRequest`) still does, and S7 depends on it.
 
 ## Out of scope
 

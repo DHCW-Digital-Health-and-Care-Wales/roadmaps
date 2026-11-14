@@ -6,7 +6,7 @@
 - **Area**: Features/UI + i18n (en + cy) + E2E
 - **Epic**: [EPC-011-adding-roadmaps-and-items](README.md)
 - **Depends on**: STY-040 (hard, must be on the default branch)
-- **Binding ADRs**: ADR-009, ADR-012, ADR-013, ADR-005, ADR-008, ADR-010
+- **Binding ADRs**: ADR-009, ADR-012, ADR-013, ADR-003, ADR-005, ADR-008, ADR-010
 - **Suggested model**: Opus — the app's first dialog form, whose closing and focus
   rules three later stories reuse, with six refusals to show at their fields
 
@@ -45,8 +45,7 @@ unavailable, as "Publish changes" is
 category and a product lead, each optional, with "No family" and "No category" chosen
 **And** it says the roadmap starts not published, with no items, and that the public
 site doesn't show it until it is published
-**And** focus is in the title; on a phone the dialog fills the width from the foot of
-the screen and scrolls
+**And** focus is in the title
 
 ### S3: The short name is suggested from the title (round 1 Q2)
 
@@ -99,17 +98,15 @@ in the expected format
 **Then** the dialog says the roadmap couldn't be added for that reason, and to ask
 the spreadsheet owner to check it, and keeps everything Sam typed
 **And** a refused, unsent or rate-limited write says what happened and who can put it
-right, as a family's failed write does; an expired session keeps the dialog and its
-text, with "Add roadmap" unavailable until Sam reconnects; a write that may have
-been applied says so and to refresh the list
+right, as a family's failed write does; a write that may have been applied says so
+and to refresh the list
 
 ### S8: Closing the dialog (round 3 Q2)
 
 **Given** Sam has typed into the dialog and no write is under way
-**When** Sam chooses Cancel or presses Escape
-**Then** the dialog closes, what was typed is dropped without asking, and focus
-returns to "Add a roadmap"
-**And** a click outside the dialog does nothing
+**When** Sam chooses Cancel, presses Escape or clicks outside it
+**Then** it behaves as the epic's _The dialogs_ sets, and focus returns to "Add a
+roadmap" as it closes
 
 ### S9: No family or category list to choose from
 
@@ -128,10 +125,20 @@ suggestion still drops only a final "roadmap" from an English title
 message to its field and announces the notice; axe finds nothing in its open and
 refused states
 
+### S11: Reconnecting from the dialog
+
+**Given** the session has expired while the dialog is open, before or after Sam chose
+"Add roadmap"
+**When** Sam looks at the dialog
+**Then** it says the session has expired and offers Reconnect inside the dialog, with
+"Add roadmap" unavailable; nothing behind the dialog can be reached
+**And** once Sam has reconnected, everything typed is still there and "Add roadmap"
+is available again
+
 ## Tests
 
-S1–S3, S5 and S8 need Playwright against the Sheets fake, in both themes and at phone
-width; S6 and S7 can be component tests against the in-memory double.
+S1–S3, S5, S8 and S11 need Playwright against the Sheets fake, in both themes and at
+phone width; S6 and S7 can be component tests against the in-memory double.
 
 ## Decisions
 
@@ -151,13 +158,18 @@ width; S6 and S7 can be component tests against the in-memory double.
   add; the empty list offers the action; a refusal is shown at its field.
 - **D7** (agent): the short name's address is checked against the list as cached
   before sending, and again by the write; over waiting for the write to refuse.
+- **D8** (agent): the dialog offers Reconnect itself while the session is expired,
+  since it is modal and the header's is out of reach behind it, and Cancel would drop
+  the text the owner asked to keep (D5); over closing the dialog to reconnect. S11.
 
 ## Starting point
 
-Audited at `400c90c`. `src/components/ui/` has `alert-dialog` and no `dialog`. The
-About form's family and category fields, with their unavailable state, come from
-`use-roadmap-choices.ts`; the family form (`family-form.tsx`) is the pattern for
-problems shown by field with focus moved to the first.
+Audited at `400c90c`. The About form's family and category fields, with their
+unavailable state, come from `use-roadmap-choices.ts`; the family form
+(`family-form.tsx`) is the pattern for problems shown by field with focus moved to
+the first. Reconnect must call `connect()` inside its own click (ADR-003), and no
+dialog offers it today: `family-change-dialog.tsx` only makes its button
+unavailable.
 
 ## Out of scope
 

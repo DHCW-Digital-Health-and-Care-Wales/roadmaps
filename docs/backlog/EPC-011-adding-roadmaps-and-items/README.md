@@ -1,33 +1,32 @@
 # EPC-011: Adding roadmaps and items — started here, not in the spreadsheet, in one dialog each
 
-- **Status**: Active — grilled with the owner on 2026-11-14; seven stories Proposed, three
+- **Status**: Active — grilled with the owner on 2026-11-14; eight stories Proposed, three
   recorded for later grilling
-- **Progress**: 0 of 10 terminal; next selectable: STY-040; blocked on: nothing
+- **Progress**: 0 of 11 terminal; next selectable: STY-040; blocked on: nothing
 - **Binding ADRs**: ADR-012, ADR-011, ADR-009, ADR-013, ADR-014, ADR-002, ADR-005, ADR-010,
   ADR-008
 
 ## Summary
 
 A Product Lead can edit everything about a roadmap and its items, but cannot start
-either: a new roadmap is a row typed into the roadmap index and a hand-made copy of the
-`Template` tab, and a new item is a row typed into that tab. This epic lets them add a
-roadmap from the roadmap list and add items on a roadmap's page. A new roadmap is
-written at once and starts not published; a new item is a pending edit, published with
-the rest. Both are added in a dialog, and the owner asked that editing converge on the
-same dialogs: one for a roadmap, adding or editing "About this roadmap", and one for an
-item, adding or editing it. The in-place edit forms go. Removing a roadmap, removing a
-published item and reordering items are recorded for later.
+either: both are begun by hand in the spreadsheet. This epic lets them add a roadmap
+from the roadmap list and add items on a roadmap's page. A new roadmap is written at
+once and starts not published; a new item is a pending edit, published with the rest.
+Both are added in a dialog, and the owner asked that editing converge on the same
+dialogs: one for a roadmap, adding it or editing "About this roadmap", and one for an
+item. The in-place edit forms go. Removing a roadmap, removing a published item and
+reordering items are recorded for later.
 
 ## Owner decisions waiting
 
-- [STY-047](STY-047-remove-a-roadmap.md#open-questions) — how a roadmap is removed, and
+- [STY-048](STY-048-remove-a-roadmap.md#open-questions) — how a roadmap is removed, and
   what happens to its items
-- [STY-048](STY-048-remove-a-published-item.md#open-questions) — whether removing an
+- [STY-049](STY-049-remove-a-published-item.md#open-questions) — whether removing an
   item is pending, and what "Not doing" is for
-- [STY-049](STY-049-reorder-items-in-a-horizon.md#open-questions) — how items are
+- [STY-050](STY-050-reorder-items-in-a-horizon.md#open-questions) — how items are
   reordered, and what is written
 
-None blocks STY-040 to STY-046.
+None blocks STY-040 to STY-047.
 
 ## Findings
 
@@ -100,9 +99,9 @@ therefore has one possible place without a new kind of write: after the last row
 5. A Product Lead adds an item from one "Add an item" button on the roadmap's page. The
    item is pending, tagged "New", until the roadmap is published or saved, when it is
    written after the roadmap's last item (F3, F6). STY-045 (the write), STY-046 (the
-   dialog).
+   dialog), STY-047 (the publish dialog).
 6. A roadmap with no items shows one panel with the button, and the publish dialog says
-   when the public would see a roadmap with no items (F4). STY-042, STY-046.
+   when the public would see a roadmap with no items (F4). STY-042, STY-046, STY-047.
 7. **Unchanged:** ADR-012's per-roadmap, all-or-nothing publish, its conflict rules and
    Refresh; what each field writes (README, _What the editor writes_); English only;
    Move on an item's card; who may edit (anyone connected, ADR-012 Option 14).
@@ -117,8 +116,12 @@ therefore has one possible place without a new kind of write: after the last row
   its adding form. Each pair is one component, not two.
 - **Closing** (owner): Cancel and Escape close a dialog and drop what was typed,
   without asking; a click outside it does nothing; an expired session keeps the dialog
-  and its text until the Product Lead reconnects. On a phone a dialog fills the width
-  from the foot of the screen and scrolls.
+  and its text. On a phone a dialog fills the width from the foot of the screen and
+  scrolls. A story cites this rule and tests it; it does not restate it.
+- **An expired session**: a dialog is modal, so nothing behind it can be reached. One
+  that writes at once (adding a roadmap) offers Reconnect inside itself (STY-041 S11);
+  one whose Done or "Add item" only keeps a pending edit still works while expired,
+  as the in-place forms do.
 - Focus goes to the dialog's first field as it opens and back to the control that
   opened it as it closes, unless a story says where else.
 
@@ -136,12 +139,29 @@ changes a write.
 ### ADR amendments
 
 - STY-040 amends ADR-009 (the editor adds a row to the roadmap index), ADR-011 (the
-  `Template` tab is copied to start a roadmap; it is still never changed, and never
-  read for its content), ADR-012 (Option 7 stands: never written; a new write at once)
+  `Template` tab is copied to start a roadmap, and its header is read to check it; its
+  rows are never read, and it is still never changed), ADR-012 (Option 7 stands:
+  never written; a new write at once), ADR-013 ("the editor never creates a tab"
+  becomes: it creates a roadmap's tab, and never the `Families` or `Categories` tab)
   and ADR-002 (a repository call that adds a roadmap), in place, citing its decisions.
   It updates the persona's answered question on format ownership to match.
 - STY-045 amends ADR-012 (a new item is a pending edit; how its row is written and
   settled) and ADR-011 if the item model changes.
+
+### Refactoring and code quality come first
+
+Owner, 2026-11-14: this epic reworks screens and components that exist (both edit
+forms, the roadmap page, the pending changes), so refactoring and code quality are a
+high priority for every story, ahead of the smallest diff. A story that moves a form
+deletes what it replaces in the same PR (the in-place forms, the card's hold), shares
+one component where the epic says one, and leaves no second path beside the new one.
+Reviewers hold each PR to this.
+
+### How the grilling is cited
+
+"Round n" is the grilling on adding a roadmap; "items round n" is the one on adding
+an item, which also settled the dialogs. Both were on 2026-11-14, and each story's
+Decisions cite the round and question an answer came from.
 
 ### Glossary
 
@@ -151,27 +171,30 @@ STY-040 adds **Short name** and brings **Roadmap**, **Published roadmap** and
 
 ## Stories
 
-| ID      | Story                                                                                                                         | Area                      | Depends on                | State |
-| ------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ------------------------- | ----- |
-| STY-040 | [The repository adds a roadmap](STY-040-the-repository-adds-a-roadmap.md)                                                     | Domain + Infra + Docs     | —                         |       |
-| STY-041 | [A Product Lead adds a roadmap](STY-041-add-a-roadmap.md)                                                                     | UI + i18n (en + cy) + E2E | STY-040                   |       |
-| STY-042 | [A roadmap's page shows About in a panel, and says when it is empty](STY-042-the-roadmap-page-about-panel-and-empty-state.md) | UI + i18n (en + cy) + E2E | —                         |       |
-| STY-043 | [“About this roadmap” is edited in the roadmap dialog](STY-043-edit-about-in-the-roadmap-dialog.md)                           | UI + i18n (en + cy) + E2E | STY-041                   |       |
-| STY-044 | [An item is edited in a dialog](STY-044-edit-an-item-in-a-dialog.md)                                                          | UI + i18n (en + cy) + E2E | STY-041                   |       |
-| STY-045 | [The repository publishes a new item](STY-045-the-repository-publishes-a-new-item.md)                                         | Domain + Infra + Docs     | —                         |       |
-| STY-046 | [A Product Lead adds an item](STY-046-add-an-item.md)                                                                         | UI + i18n (en + cy) + E2E | STY-042, STY-044, STY-045 |       |
-| STY-047 | [A Product Lead removes a roadmap](STY-047-remove-a-roadmap.md)                                                               | to be decided             | —                         |       |
-| STY-048 | [A Product Lead removes a published item](STY-048-remove-a-published-item.md)                                                 | to be decided             | —                         |       |
-| STY-049 | [A Product Lead reorders the items in a horizon](STY-049-reorder-items-in-a-horizon.md)                                       | to be decided             | —                         |       |
+| ID      | Story                                                                                                                         | Area                               | Depends on                | State |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ------------------------- | ----- |
+| STY-040 | [The repository adds a roadmap](STY-040-the-repository-adds-a-roadmap.md)                                                     | Domain + Infrastructure + Docs     | —                         |       |
+| STY-041 | [A Product Lead adds a roadmap](STY-041-add-a-roadmap.md)                                                                     | Features/UI + i18n (en + cy) + E2E | STY-040                   |       |
+| STY-042 | [A roadmap's page shows About in a panel, and says when it is empty](STY-042-the-roadmap-page-about-panel-and-empty-state.md) | Features/UI + i18n (en + cy) + E2E | —                         |       |
+| STY-043 | [“About this roadmap” is edited in the roadmap dialog](STY-043-edit-about-in-the-roadmap-dialog.md)                           | Features/UI + i18n (en + cy) + E2E | STY-041                   |       |
+| STY-044 | [An item is edited in a dialog](STY-044-edit-an-item-in-a-dialog.md)                                                          | Features/UI + i18n (en + cy) + E2E | STY-041                   |       |
+| STY-045 | [The repository publishes a new item](STY-045-the-repository-publishes-a-new-item.md)                                         | Domain + Infrastructure + Docs     | —                         |       |
+| STY-046 | [A Product Lead adds an item](STY-046-add-an-item.md)                                                                         | Features/UI + i18n (en + cy) + E2E | STY-042, STY-044, STY-045 |       |
+| STY-047 | [Publishing names the new items, and counts them](STY-047-a-new-item-in-the-publish-dialog.md)                                | Features/UI + i18n (en + cy) + E2E | STY-046                   |       |
+| STY-048 | [A Product Lead removes a roadmap](STY-048-remove-a-roadmap.md)                                                               | to be decided                      | —                         |       |
+| STY-049 | [A Product Lead removes a published item](STY-049-remove-a-published-item.md)                                                 | to be decided                      | —                         |       |
+| STY-050 | [A Product Lead reorders the items in a horizon](STY-050-reorder-items-in-a-horizon.md)                                       | to be decided                      | —                         |       |
 
 ## Sequencing
 
-Deliver in ID order, one at a time: STY-040 to STY-046. Each story is cut to fit one
+Deliver in ID order, one at a time: STY-040 to STY-047. Each story is cut to fit one
 agent's context (owner, 2026-11-14): a repository write is its own story, ahead of the
-screen that uses it. STY-042, STY-043, STY-044 and STY-046 all change the roadmap's
-page, so none runs beside another. STY-041 brings the dialog primitive that STY-043 and
-STY-044 need; STY-043 prefers STY-042 first, which puts Edit beside the About heading.
-STY-047 to STY-049 wait for grilling.
+screen that uses it, and keeps its contract documents, which must change with it.
+STY-042, STY-043, STY-044, STY-046 and STY-047 all change the roadmap's page, so none
+runs beside another. STY-041 brings the dialog primitive that STY-043 and STY-044
+need; STY-043 prefers STY-042 first, which puts Edit beside the About heading.
+STY-048 to STY-050 wait for grilling; when grilled, STY-048 follows STY-040 and
+STY-049 follows STY-046, by preference.
 
 ```mermaid
 flowchart LR
@@ -179,7 +202,7 @@ flowchart LR
   STY-041 --> STY-044 --> STY-046
   STY-042 --> STY-046
   STY-042 -.-> STY-043
-  STY-045 --> STY-046
+  STY-045 --> STY-046 --> STY-047
 ```
 
 ## Out of scope

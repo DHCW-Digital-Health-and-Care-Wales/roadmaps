@@ -1,4 +1,4 @@
-# STY-049: A Product Lead reorders the items in a horizon
+# STY-050: A Product Lead reorders the items in a horizon
 
 - **Status**: Needs grilling — the owner asked for the record on 2026-11-14 (STY-046
   grilling, items round 1 Q6); nothing is decided
@@ -11,12 +11,18 @@
 
 ## Summary
 
-Items show in a horizon in the order their rows have in the data source, here and on
-the public site. A move changes an item's horizon and leaves its row where it is, and
-a new item goes last (STY-045), so the order can only be changed in the spreadsheet.
+Items show in a horizon in the order they have in the data source, here and on the
+public site. A move changes an item's horizon and not its place in that order, and a
+new item goes last (STY-045), so the order can only be changed in the spreadsheet.
 This story would let a Product Lead put a horizon's items in the order they want. It
 is recorded so the gap is not lost; the interaction and what is written are for the
 owner.
+
+## Scope
+
+A first outline, for the grilling to settle. An order change in a roadmap's pending changes; the publish
+plan moving rows after its re-read; the Move menu's new choices; README _What the
+editor writes_ and an ADR-012 or ADR-014 amendment.
 
 ## Open questions
 
@@ -34,9 +40,3 @@ owner.
   - (a) Pending; a co-lead's different order of the same horizon is a conflict
     (recommended).
   - (b) Written at once.
-
-## Rough shape of the work
-
-Not acceptance criteria. An order change in a roadmap's pending changes; the publish
-plan moving rows after its re-read; the Move menu's new choices; README _What the
-editor writes_ and an ADR-012 or ADR-014 amendment.

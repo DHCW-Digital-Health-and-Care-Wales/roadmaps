@@ -75,8 +75,8 @@ State these policies, using the user's instructions where supplied:
 On resume, read the named run handoff first. Reconcile the checkout, item
 state, task IDs and pending PR work before dispatching anything. A child
 waiting for its reviewers is still active work: let its completion reach its
-parent. Replace an agent only once it is terminal, as the delegation
-reference defines it, or cancelled. Use its saved handoff, not a fresh start.
+parent. Replace an agent only once it is terminal or cancelled (step 3), from
+its saved handoff, not a fresh start.
 
 Completion: an ordered queue with prerequisite evidence, policies stated and
 blocking queue decisions resolved.
@@ -121,7 +121,7 @@ agent and `<run-folder>/progress/<ITEM>-handoff.md`.
    reviewer grandchildren, waits for them, fixes findings and opens the
    reviewed PR. The delegation reference owns reviewer re-check rounds.
 2. Save returned IDs/link and pending state. If the runtime can schedule a
-   wake-up for this session, set a fallback wake every 45 minutes, prompting a
+   wake-up for this session, set a fallback wake every 15 minutes, prompting a
    check of that child, and save its ID in `run-handoff.md`; it catches a
    completion notification that never arrives. After independent work is
    exhausted, end the turn; the child's completion resumes this session. A
@@ -140,6 +140,9 @@ agent and `<run-folder>/progress/<ITEM>-handoff.md`.
      next wake checks again.
    - Delete the fallback wake once the child's final hand-back reaches this
      session by either path. A yield's interim completion keeps it running.
+   - On a completion that reports the child failed, read its status from the
+     runtime before replacing it: `failed` is not yet terminal, as the
+     delegation reference defines it.
 3. On completion, verify the returned branch/head against the checkout and
    handoff, and distinct reviewer task IDs and pinned heads against the claimed
    passes. An early hand-back or mismatch is unfinished work to reconcile,

@@ -39,7 +39,8 @@ report in the conversation only.
 ## Working order
 
 1. **Diff and rules.** Pin the scope as `code-review`'s _Pin the scope_ step
-   does, on the same snapshot. Read the root `AGENTS.md` and the `AGENTS.md`
+   does, on the same snapshot, and read every changed line of it, test bodies
+   and both catalogues included. Read the root `AGENTS.md` and the `AGENTS.md`
    along each changed path's directory ancestry (`tests/e2e/AGENTS.md`,
    `docs/AGENTS.md`), the epic's `delivery-notes.md` when the change belongs
    to an epic, and the binding ADRs; cite the rule by file and line,
@@ -157,7 +158,7 @@ Never grade up to look thorough: three accurate findings beat twelve padded ones
 
 **Verdict:** <one or two sentences: overall shape, and whether anything must change before merge>
 
-**Read:** <the requirement record, area guides and neighbouring files opened beyond the diff, or what was unavailable>
+**Read:** <the requirement record, area guides and neighbouring files opened beyond the diff, or what was unavailable; then each changed file not read in full, which stays unreviewed>
 
 ### What's done well
 - <specific patterns worth repeating>

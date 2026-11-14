@@ -18,3 +18,6 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   Vitest as in Playwright: wait for a heading of the page before reading `main`.
 - **`user.selectOptions` matches an option's text as HTML**, so a name with `&` never
   matches: pass the option's element.
+- **A dialog's tests share their setup, not copy it** (CHO-011): opening the dialog,
+  the session times, the focus tour and the family and category fixtures are written
+  out per spec today. A story that tests another dialog shares what it would copy.

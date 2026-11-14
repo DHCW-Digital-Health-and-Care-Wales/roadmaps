@@ -33,5 +33,7 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   already open a dialog in both themes. The epic's _The dialogs_ ("a story cites this
   rule and tests it", of a dialog on a phone), STY-046's Tests note ("in both themes
   and at phone width") and the phone in STY-043 S5, STY-044 S6 and STY-046 S9 predate
-  that: ask the owner before adding a run per theme or width, or a check of where a
-  dialog sits.
+  that, and the owner decided (2026-11-14) that the rule holds for the dialogs of
+  STY-043, STY-044 and STY-046: write the journey once, with no run per theme or
+  width and no check of where a dialog sits; where a story's scenario or note says
+  otherwise, this note governs, and the story's report says so.

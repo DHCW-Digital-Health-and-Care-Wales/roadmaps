@@ -1,7 +1,8 @@
 # EPC-010: Item details — a nested list a Product Lead writes here, stored as hyphens at the start of a line
 
-- **Status**: Done — its one story, STY-039, is delivered in its PR, which awaits the
-  owner's merge
+- **Status**: Done — its one story, STY-039, is delivered in
+  [#69](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/69),
+  which awaits the owner's merge
 - **Progress**: 1 of 1 terminal
 - **Binding ADRs**: ADR-012, ADR-014, ADR-011, ADR-010, ADR-008, ADR-002
 

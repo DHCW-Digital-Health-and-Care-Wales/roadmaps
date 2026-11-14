@@ -10,6 +10,7 @@
   ADR-008
 - **Suggested model**: Opus — an ordered, nested field through the pending-change
   model, publish plan and conflict review, and a new form control with its own keys
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/69
 
 ## Summary
 

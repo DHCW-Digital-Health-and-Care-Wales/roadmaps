@@ -1,6 +1,6 @@
 # CHO-014: The E2E suite holds geometry, and repeats a run, only where that proves something
 
-- **Status**: Proposed — asked for by the owner (D1); measured here, no test changed yet
+- **Status**: Proposed — asked for by the owner (D1); measured here, no test changed yet; not to be selected until its measurements grow (D4)
 - **Type**: Refactor
 - **Area**: E2E (tests only)
 - **Epic**: standalone
@@ -128,6 +128,10 @@ repeat it, which is how STY-041's journey came to run four times
   or an overridden indicator shows in one theme alone, and the Vitest contrast test
   (ADR-010) holds only the tokens, not which token a component uses. The focus tours'
   dark half is put to the owner in S4, not assumed.
+- **D4** (owner, 2026-11-14): not worth selecting now, given the measured saving (at
+  most 5% of the suite's time; S4's focus-tour question is not decided either).
+  Revisit when the suite's run time, or the share of it that S1–S3 would remove,
+  grows; re-measure first (`## Measurement` is as at `697fcc5`).
 
 ## Out of scope
 

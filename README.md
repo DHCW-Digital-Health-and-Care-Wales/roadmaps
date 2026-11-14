@@ -127,9 +127,8 @@ it writes the `Families` tab only as below.
 - a column the roadmap needs but lacks (the `Item ID` column the first time, the
   `Family ID` or `Category ID` column, or an edited field's column, `Horizon` for a
   move, `Labels` for tags and `Organisations` for a choice of organisations), appended
-  after the last
-  column in use with the public site's English header, the grid widened in the same
-  request.
+  after the last column in use with the public site's English header, the grid widened
+  in the same request.
 
 Adding, renaming or recolouring a family on the "Families, categories and organisations" page writes
 at once, after a re-read, in one all-or-nothing `spreadsheets.batchUpdate`, only:
@@ -178,8 +177,8 @@ row with the same ID is enabled. Unpublishing is never checked, and leaves pendi
 edits pending.
 
 It never writes any other cell: no Welsh `(cy)` cell other than `Family (cy)`, no
-`Last updated` but as above, no `Sheet` or `Details`, no `Enabled` cell but
-the one above, no `Horizon`, `Labels` or `Organisations` cell but those above, no `Family`,
+`Last updated` but as above, no `Sheet` or `Details`, no `Enabled` cell but the one
+above, no `Horizon`, `Labels` or `Organisations` cell but those above, no `Family`,
 `Category` or `Colour` cell but those above and "Make it match"'s, no roadmap's row or
 tab but those above, nothing in the `Template` or `Categories` tab, nothing in the `Families`
 tab but the family changes above, and no cell whose value has not changed. A roadmap

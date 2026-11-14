@@ -89,7 +89,7 @@ export interface EditFormProps<F extends string> {
   /**
    * Confirms the form, with each value changed from `initial` (trimmed at its ends, as
    * the comparison is): a field left as it opened is no edit, whatever has been read
-   * since.
+   * since, and neither is one that is `fixed` when the form is confirmed.
    */
   onDone: (values: Partial<Record<F, string>>) => void
   onCancel: () => void
@@ -156,8 +156,11 @@ export function EditForm<F extends string>({
     }
     onDone(
       Object.fromEntries(
-        fields.flatMap(({ name }) =>
-          trimmed[name] === opened[name].trim() ? [] : [[name, trimmed[name]]],
+        // A field shown read-only is no edit, whatever it held before it was fixed.
+        fields.flatMap(({ name, fixed }) =>
+          fixed || trimmed[name] === opened[name].trim()
+            ? []
+            : [[name, trimmed[name]]],
         ),
       ) as Partial<Record<F, string>>,
     )

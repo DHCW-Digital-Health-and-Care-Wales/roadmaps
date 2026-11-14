@@ -731,6 +731,87 @@ describe("Editing an item's tags (STY-037)", () => {
   })
 })
 
+describe("What the Tags field keeps (STY-037, review round 1)", () => {
+  it("pastes a list over the text selected in Add a tag, and into text at the caret (S7)", async () => {
+    const { user } = await renderPage()
+    const { field } = await openTags(user, "New idea")
+    const input = field.getByRole<HTMLInputElement>("textbox", {
+      name: "Add a tag",
+    })
+
+    await user.type(input, "Wrong")
+    input.setSelectionRange(0, 5)
+    await user.paste("Carers, Clinic staff")
+    expect(rowsOf(field)).toEqual(["Carers", "Clinic staff"])
+
+    await user.type(input, "lists")
+    input.setSelectionRange(0, 0)
+    await user.paste("Appointments, Waiting ")
+    expect(rowsOf(field)).toEqual([
+      "Carers",
+      "Clinic staff",
+      "Appointments",
+      "Waiting lists",
+    ])
+  })
+
+  it("says what was added beside what was refused, when a list holds both (S11)", async () => {
+    const { user } = await renderPage()
+    const { field } = await openTags(user, "Video clinics")
+
+    await user.click(field.getByRole("textbox", { name: "Add a tag" }))
+    await user.paste("Carers, Patients")
+
+    expect(rowsOf(field)).toEqual(["Patients", "Video consultations", "Carers"])
+    expect(field.getByRole("status")).toHaveTextContent(
+      "Added Carers. “Patients” is already on this item.",
+    )
+  })
+
+  it.each(["shut", "open"])(
+    "keeps typed text in the spelling another item has taken since, the field %s when the form is confirmed (S19, S21)",
+    async (state) => {
+      const { user } = await renderPage()
+      const { form, field } = await openTags(user, "Video clinics")
+      await user.type(
+        field.getByRole("textbox", { name: "Add a tag" }),
+        "carers",
+      )
+      const other = await openTags(user, "New idea")
+      await addTag(user, other.field, "Carers")
+      await done(user, other.form)
+
+      if (state === "shut") {
+        await user.click(form.getByRole("button", { name: "Close tags" }))
+        expect(form.getAllByRole("list")[0]).toHaveTextContent(
+          "PatientsVideo consultationsCarers",
+        )
+      }
+      await done(user, form)
+
+      expect(tagsLineOf("Video clinics")).toBe(
+        "Patients, Video consultations, Carers",
+      )
+    },
+  )
+
+  it("leaves a name opened for renaming, and not changed, as it was read", async () => {
+    const spaced = [
+      createTestRoadmapItem("Spaced", {
+        id: "item-1",
+        tags: tagged("Clinic  staff"),
+      }),
+    ]
+    const { user } = await renderPage({ shown: spaced })
+    const { form, field } = await openTags(user, "Spaced")
+
+    await user.click(field.getByRole("button", { name: "Rename Clinic staff" }))
+    await done(user, form)
+
+    expect(main().queryByText("Changed")).toBeNull()
+  })
+})
+
 describe("An item with Welsh tags (STY-037 S20, S22)", () => {
   const NOTICE =
     "These tags have Welsh versions, so they can't be changed here yet."
@@ -800,6 +881,26 @@ describe("An item with Welsh tags (STY-037 S20, S22)", () => {
       tags: welshItems[0]?.tags,
       hasWelshTags: true,
     })
+  })
+
+  it("keeps no tag change made in a form whose item gains Welsh tags while it is open (S20)", async () => {
+    const { user, repository } = await renderPage({ shown: welshItems })
+    const { form, field } = await openTags(user, "English only")
+    await addTag(user, field, "Carers")
+    repository.coLead((_list, itemsOf) => {
+      const item = itemsOf("producta")[2]
+      if (!item) return
+      item.tags = [{ en: "Patients", cy: "Cleifion" }]
+      item.hasWelshTags = true
+    })
+
+    await user.click(main().getByRole("button", { name: "Refresh" }))
+    expect(await form.findByText(NOTICE)).toBeVisible()
+    expect(form.queryByRole("button", { name: /tags$/ })).toBeNull()
+    await done(user, form)
+
+    expect(main().queryByText("Changed")).toBeNull()
+    expect(tagsLineOf("English only")).toBe("Patients")
   })
 
   it("refuses a tag change to an item that has gained Welsh tags: it can be discarded, not kept (S22)", async () => {

@@ -4,6 +4,8 @@
  * functions over their names, which the form's Tags field applies.
  */
 
+import { TAG_SEPARATOR } from "@/domain/roadmap/roadmap-changes"
+
 /** A tag the roadmap's other items carry, and how many of them carry it. */
 export interface TagInUse {
   /** In the spelling most of them use. */
@@ -40,10 +42,7 @@ const keyOf = (tag: string) => tag.toLocaleLowerCase("en-GB")
 /** A tag as kept: trimmed at its ends, each run of white space one space. */
 const clean = (text: string) => text.replace(/\s+/g, " ").trim()
 
-/** A comma or a line break ends a tag (S7), so no tag holds either. */
-const TAG_SEPARATOR = /[,\n]/
-
-/** Whether `text` holds more than the one tag being typed. */
+/** Whether `text` holds more than the one tag being typed: a comma or a line break (S7). */
 export function endsATag(text: string): boolean {
   return TAG_SEPARATOR.test(text)
 }
@@ -148,7 +147,7 @@ export function addTags(
 
 /**
  * `tags` with the one at `index` renamed to `text` in its place (S6): a comma or a line
- * break in it reads as a space, and a blank name keeps the old one. A name the item
+ * break in it reads as a space, and a blank or unchanged name keeps the old one. A name the item
  * has, whatever its capitals, drops the renamed tag, leaving that one once; any other
  * takes the spelling `inUse` has for it (S21).
  */
@@ -159,8 +158,9 @@ export function renameTag(
   inUse: readonly TagInUse[],
 ): { tags: readonly string[]; notes: TagNote[] } {
   const old = tags[index]
-  const typed = clean(text.replace(/[,\n]/g, " "))
-  if (old === undefined || typed === "" || typed === old) {
+  const typed = clean(text.split(TAG_SEPARATOR).join(" "))
+  // A name left as it was read keeps its white space too.
+  if (old === undefined || typed === "" || text.trim() === old) {
     return { tags, notes: [] }
   }
   const tag = spelt(typed, inUse)

@@ -110,6 +110,14 @@ describe("addTags", () => {
     })
   })
 
+  it("says what was added and what was refused of one list (S11)", () => {
+    expect(addTags(["Patients"], "Carers, patients", [])).toEqual({
+      tags: ["Patients", "Carers"],
+      added: ["Carers"],
+      notes: [{ kind: "repeat", typed: "patients", tag: "Patients" }],
+    })
+  })
+
   it("adds nothing for blank text", () => {
     expect(addTags(["Patients"], " , ", inUse)).toEqual({
       tags: ["Patients"],
@@ -142,6 +150,15 @@ describe("renameTag", () => {
     expect(renameTag(tags, 1, "  ", inUse)).toEqual({ tags, notes: [] })
     expect(renameTag(tags, 1, "Video consultations", inUse)).toEqual({
       tags,
+      notes: [],
+    })
+  })
+
+  it("keeps a name left as it was read, white space and all", () => {
+    const spaced = ["Clinic  staff"]
+
+    expect(renameTag(spaced, 0, "Clinic  staff", inUse)).toEqual({
+      tags: spaced,
       notes: [],
     })
   })

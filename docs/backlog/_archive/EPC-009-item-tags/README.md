@@ -1,8 +1,8 @@
 # EPC-009: Item tags — free text a Product Lead edits here, nudged towards the tags the roadmap already uses
 
-- **Status**: Done — every story delivered: STY-038 merged
-  ([#65](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/65)),
-  STY-037 in its PR, which awaits the owner's merge
+- **Status**: Done — every story delivered: STY-038 in
+  [#65](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/65),
+  STY-037 in its own PR
 - **Progress**: 2 of 2 terminal
 - **Binding ADRs**: ADR-012, ADR-014, ADR-011, ADR-010, ADR-008, ADR-002
 

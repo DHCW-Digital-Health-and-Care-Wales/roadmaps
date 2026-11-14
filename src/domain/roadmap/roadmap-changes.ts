@@ -149,7 +149,7 @@ function byCodeUnit(a: string, b: string): number {
 }
 
 /** A comma or a line break ends a tag (STY-037 D5), so no tag holds either. */
-const TAG_SEPARATOR = /[,\n]/
+export const TAG_SEPARATOR = /[,\n]/
 
 /**
  * An item's English tags as one field value (STY-037 D4, D5): in order, separated by a

@@ -5,18 +5,19 @@ import {
   Trash2Icon,
   XIcon,
 } from "lucide-react"
+import type { TFunction } from "i18next"
 import {
+  useEffect,
+  useEffectEvent,
   useId,
   useLayoutEffect,
   useRef,
   useState,
-  type ComponentProps,
-  type ComponentType,
 } from "react"
 import { useTranslation } from "react-i18next"
 
 import { Badge } from "@/components/ui/badge"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
@@ -34,6 +35,8 @@ import {
 } from "./item-tags"
 import { OpeningField } from "./opening-field"
 import { TagList } from "./tag-list"
+import { RowButton, RowProbe } from "./tag-row-buttons"
+import { useRowIcons } from "./use-row-icons"
 
 export interface TagsFieldProps {
   label: string
@@ -64,6 +67,14 @@ export function TagsField({ label, initial, inUse, onChange }: TagsFieldProps) {
     setDraft(nextDraft)
     onChange(settleTags(nextTags, nextDraft, inUse))
   }
+  // What is half done is kept in the roadmap's spelling (S21), which another item's
+  // tags, confirmed meanwhile, may have changed: the form is told what it now keeps.
+  const keepInStep = useEffectEvent(() => {
+    if (draft !== NO_DRAFT) onChange(settleTags(tags, draft, inUse))
+  })
+  useEffect(() => {
+    keepInStep()
+  }, [inUse])
 
   return (
     <OpeningField
@@ -72,9 +83,11 @@ export function TagsField({ label, initial, inUse, onChange }: TagsFieldProps) {
       summary={tags.length > 0 ? <TagList tags={tags} /> : null}
       none={t("roadmaps.edit.tags.none")}
       onShut={() => {
-        // What the form already holds for the field, now shown as its tags.
-        setTags(settleTags(tags, draft, inUse))
+        // What confirming the form would keep, now shown as the field's tags.
+        const settled = settleTags(tags, draft, inUse)
+        setTags(settled)
         setDraft(NO_DRAFT)
+        onChange(settled)
       }}
     >
       {(focusOnOpen) => (
@@ -92,13 +105,15 @@ export function TagsField({ label, initial, inUse, onChange }: TagsFieldProps) {
 
 /** What the editor says of a change; `added` and `putBack` reach assistive technology only. */
 type Message =
-  | { readonly kind: "notes"; readonly notes: readonly TagNote[] }
+  | {
+      readonly kind: "notes"
+      readonly notes: readonly TagNote[]
+      /** Tags added by the same change, said first (S11). */
+      readonly added: readonly string[]
+    }
   | { readonly kind: "added"; readonly tags: readonly string[] }
   | { readonly kind: "removed"; readonly tag: string; readonly index: number }
   | { readonly kind: "putBack"; readonly tag: string }
-
-/** The gap between a row's tag and its buttons, in pixels (`gap-2`). */
-const ROW_GAP = 8
 
 interface TagsEditorProps {
   tags: readonly string[]
@@ -136,7 +151,7 @@ function TagsEditor({
   const rows = useRef<HTMLUListElement>(null)
   const offers = useRef<HTMLUListElement>(null)
   const renameField = useRef<HTMLInputElement>(null)
-  const icons = useIcons(rows, tags)
+  const icons = useRowIcons(rows, tags)
 
   // Focus is moved once the change that asked for it has been drawn.
   const focusNext = useRef<(() => void) | null>(null)
@@ -164,18 +179,18 @@ function TagsEditor({
     draft.renaming
       ? renameTag(tags, draft.renaming.index, draft.renaming.name, inUse).tags
       : tags
-  const sayNotes = (notes: readonly TagNote[]) => {
-    say(notes.length > 0 ? { kind: "notes", notes } : null)
+  const sayChange = (
+    notes: readonly TagNote[],
+    added: readonly string[] = [],
+  ) => {
+    if (notes.length > 0) say({ kind: "notes", notes, added })
+    else say(added.length > 0 ? { kind: "added", tags: added } : null)
   }
 
   const add = (text: string) => {
     const result = addTags(renamed(), text, inUse)
     onApply(result.tags, NO_DRAFT)
-    if (result.notes.length > 0) sayNotes(result.notes)
-    else
-      say(
-        result.added.length > 0 ? { kind: "added", tags: result.added } : null,
-      )
+    sayChange(result.notes, result.added)
   }
   const remove = (tag: string) => {
     const kept = renamed()
@@ -213,7 +228,7 @@ function TagsEditor({
       ? renameTag(tags, index, name, inUse)
       : { tags, notes: [] }
     onApply(result.tags, { ...draft, renaming: null })
-    sayNotes(result.notes)
+    sayChange(result.notes)
     focusControl(rows, "rename", index)
   }
 
@@ -346,7 +361,15 @@ function TagsEditor({
               const pasted = event.clipboardData.getData("text")
               if (!endsATag(pasted)) return
               event.preventDefault()
-              add(draft.adding + pasted)
+              // Pasted where the browser would have: over the selection, at the caret.
+              const { value, selectionStart, selectionEnd } =
+                event.currentTarget
+              const start = selectionStart ?? value.length
+              add(
+                value.slice(0, start) +
+                  pasted +
+                  value.slice(selectionEnd ?? start),
+              )
             }}
             onKeyDown={(event) => {
               // With nothing typed, Enter confirms the form, as in its other fields.
@@ -439,17 +462,17 @@ function TagsEditor({
 }
 
 /** What the status line says for `message`. */
-function messageText(
-  message: Message,
-  t: ReturnType<typeof useTranslation>["t"],
-): string {
+function messageText(message: Message, t: TFunction): string {
   switch (message.kind) {
     case "notes":
-      return message.notes
-        .map(({ kind, typed, tag }) =>
+      return [
+        ...(message.added.length > 0
+          ? [t("roadmaps.edit.tags.added", { tags: message.added.join(", ") })]
+          : []),
+        ...message.notes.map(({ kind, typed, tag }) =>
           t(`roadmaps.edit.tags.notes.${kind}`, { typed, tag }),
-        )
-        .join(" ")
+        ),
+      ].join(" ")
     case "added":
       return t("roadmaps.edit.tags.added", { tags: message.tags.join(", ") })
     case "removed":
@@ -457,100 +480,4 @@ function messageText(
     case "putBack":
       return t("roadmaps.edit.tags.putBack", { tag: message.tag })
   }
-}
-
-interface RowButtonProps extends ComponentProps<typeof Button> {
-  /** Shows `Icon` in place of `word`, which stays the button's name (S16). */
-  icons: boolean
-  Icon: ComponentType<{ "aria-hidden": "true" }>
-  word: string
-  /** Follows `word`, for assistive technology: the button's tag. */
-  subject: string
-}
-
-/** One of a tag row's buttons, in words, or as an icon where words would not fit. */
-function RowButton({ icons, Icon, word, subject, ...props }: RowButtonProps) {
-  return (
-    <Button
-      type="button"
-      variant="secondary"
-      size={icons ? "icon-sm" : "sm"}
-      title={icons ? word : undefined}
-      {...props}
-    >
-      {icons && <Icon aria-hidden="true" />}
-      <span className={cn(icons && "sr-only")}>{word}</span>{" "}
-      <span className="sr-only">{subject}</span>
-    </Button>
-  )
-}
-
-/**
- * Each tag at its own width, after a row's buttons in words, to measure whether they
- * fit side by side: never seen, and no part of the list for assistive technology.
- */
-function RowProbe({
-  tags,
-  words,
-}: {
-  tags: readonly string[]
-  words: readonly string[]
-}) {
-  return (
-    <li
-      role="presentation"
-      aria-hidden="true"
-      data-tag-probe=""
-      className="invisible absolute flex h-0 w-0 overflow-hidden whitespace-nowrap"
-    >
-      <span className="flex shrink-0 gap-2">
-        {words.map((word) => (
-          <span
-            key={word}
-            className={buttonVariants({ variant: "secondary", size: "sm" })}
-          >
-            {word}
-          </span>
-        ))}
-      </span>
-      {tags.map((tag) => (
-        <Badge key={tag} className="max-w-none whitespace-nowrap">
-          {tag}
-        </Badge>
-      ))}
-    </li>
-  )
-}
-
-/**
- * Whether the rows' buttons show as icons (S16, D10): when any tag, at its own width,
- * is too wide to sit beside the buttons in words, so every row looks alike and no
- * button drops under its tag. Measured from the list's `RowProbe` whenever the tags or
- * the list's width change; words where nothing can be measured.
- */
-function useIcons(
-  rows: { readonly current: HTMLUListElement | null },
-  tags: readonly string[],
-): boolean {
-  const [icons, setIcons] = useState(false)
-  useLayoutEffect(() => {
-    const list = rows.current
-    const probe = list?.querySelector("[data-tag-probe]")
-    if (!list || !probe || typeof ResizeObserver === "undefined") return
-    const fit = () => {
-      const room = list.clientWidth
-      if (room === 0) return
-      const [buttons = 0, ...names] = [...probe.children].map((part) =>
-        Math.ceil(part.getBoundingClientRect().width),
-      )
-      setIcons(names.some((name) => name + ROW_GAP + buttons > room))
-    }
-    fit()
-    const observer = new ResizeObserver(fit)
-    observer.observe(list)
-    return () => {
-      observer.disconnect()
-    }
-  }, [rows, tags])
-  return icons
 }

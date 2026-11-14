@@ -30,7 +30,8 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
 - **A dialog's Playwright journey runs once**, at the default size and theme: the
   owner cut the add-a-roadmap journey from four runs to one and dropped its check of
   where the dialog sits (CHO-011 D5), and the accessibility spec and the focus tour
-  already open a dialog in both themes. STY-046's Tests note ("in both themes and at
-  phone width") and the phone in STY-043 S5, STY-044 S6 and STY-046 S9 predate that:
-  ask the owner before adding a run per theme or width, or a check of where a dialog
-  sits.
+  already open a dialog in both themes. The epic's _The dialogs_ ("a story cites this
+  rule and tests it", of a dialog on a phone), STY-046's Tests note ("in both themes
+  and at phone width") and the phone in STY-043 S5, STY-044 S6 and STY-046 S9 predate
+  that: ask the owner before adding a run per theme or width, or a check of where a
+  dialog sits.

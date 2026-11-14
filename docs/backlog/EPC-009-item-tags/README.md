@@ -1,7 +1,8 @@
 # EPC-009: Item tags — free text a Product Lead edits here, nudged towards the tags the roadmap already uses
 
-- **Status**: Active — two stories, both specified; STY-038 delivered in its PR, which
-  awaits the owner's merge; no owner decision waits
+- **Status**: Active — two stories, both specified; STY-038 delivered in
+  [#65](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/65),
+  which awaits the owner's merge; no owner decision waits
 - **Progress**: 1 of 2 terminal; next selectable: STY-037, once STY-038 is on the
   default branch; blocked on: nothing
 - **Binding ADRs**: ADR-012, ADR-014, ADR-011, ADR-010, ADR-008, ADR-002

@@ -8,7 +8,7 @@
 - **Binding ADRs**: none
 - **Suggested model**: Sonnet — extractions inside test code, each with its call sites
   listed below; sharing the fixtures also means one set of names across three files
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/80
 
 ## Summary
 

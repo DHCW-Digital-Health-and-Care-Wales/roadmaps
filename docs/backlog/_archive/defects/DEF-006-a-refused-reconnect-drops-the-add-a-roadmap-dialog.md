@@ -1,6 +1,6 @@
 # DEF-006: A reconnect Google refuses drops the "Add a roadmap" dialog and what was typed
 
-- **Status**: Needs triage — found by STY-041's review (Sol, round 1)
+- **Status**: Won't fix — found by STY-041's review (Sol, round 1); closed by the owner on 2026-11-14 (D1)
 - **Severity**: Low — a Product Lead loses a title, a short name and up to three other
   values typed into the dialog, after declining Google's own request for access
 - **Area**: Features/UI
@@ -60,5 +60,9 @@ speaks only of reconnecting.
      what was typed once connected. Adds a place to keep an unsent roadmap.
 
 ## Decisions
+
+- **D1** (owner, 2026-11-14): Won't fix, option (a): keep today's rule. The loss is small
+  (a few typed values) and rare; reopen it as a new record if real users are seen
+  hitting it.
 
 ## Delivery _(add on delivery)_

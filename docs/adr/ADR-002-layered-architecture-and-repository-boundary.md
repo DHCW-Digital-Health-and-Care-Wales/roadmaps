@@ -4,7 +4,7 @@
 - Date: 2026-11-10 (amended in STY-002: optional abort `signal`, contract test; STY-003: the
   `AuthClient` port in `domain/auth/`; STY-009: lint rules for `lib/`, `components/`, `i18n/`; ADR-009: the `Roadmap`
   shape and the roadmap list's source; ADR-011: `listRoadmapItems`, delivered in STY-020; ADR-012: a
-  write call, for STY-023; see below)
+  write call, for STY-023; STY-040: a call that adds a roadmap; see below)
 
 ## Context
 
@@ -87,6 +87,19 @@ roadmap's pending edits, each field with the value it was edited from, and resol
 (ADR-012 §"The repository call"). A conflict is an outcome, not an `AppError`; every
 other failure rejects as the reads do. The contract test covers it. Interface code still
 never sees a row, column or cell.
+
+### STY-040 amendment
+
+The repository gains a call that adds a roadmap:
+`addRoadmap(input: NewRoadmapInput, options?: RepositoryReadOptions): Promise<NewRoadmapOutcome>`.
+The input is a title, a short name and, optionally, a family, a category and a product
+lead; the outcome is the roadmap added, as `listRoadmaps` then returns it, or that its
+short name is in use, that a family or category chosen is no longer listed, or that the
+write is unconfirmed. Each is an outcome a screen acts on, not an `AppError`; a data
+source with nothing usable to start a roadmap from rejects with `invalid-data`, and
+every other failure rejects as the reads do. The rules are the domain's
+(`domain/roadmap/short-name.ts`, `new-roadmap.ts`), shared by both repositories, and
+the contract test covers the call. The domain names no template, tab or row.
 
 ## Consequences
 

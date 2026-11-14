@@ -69,8 +69,9 @@ roadmap's items; `Enabled` (exactly `Yes`), `Title`, `Category`, `Family`, `Stat
 `Last updated`, `Colour`, `Vision`, `Service description` and `Product Lead` are read
 when present, with `(cy)` columns for Welsh. The tab a row's `Sheet` names holds that
 roadmap's items, one per row, its columns found by their row-1 header in any order
-([ADR-011](docs/adr/ADR-011-roadmap-items-from-each-roadmaps-tab.md)); the `Template` tab
-is never read. An optional `Item ID` column holds each item's identity
+([ADR-011](docs/adr/ADR-011-roadmap-items-from-each-roadmaps-tab.md)). The `Template` tab
+is copied to start a roadmap, after its header row is read to check it; its other rows
+are never read and it is never changed. An optional `Item ID` column holds each item's identity
 ([ADR-012](docs/adr/ADR-012-publishing-a-roadmaps-changes.md)); the public site ignores it.
 
 **Families and categories** are defined once, in a `Families` tab (`ID`, `Name`,
@@ -189,11 +190,45 @@ tab has no `Title` or `Horizon` column (unless the same write adds `Horizon`), i
 row with the same ID is enabled. Unpublishing is never checked, and leaves pending
 edits pending.
 
+Adding a roadmap writes at once, after a re-read, in one all-or-nothing
+`spreadsheets.batchUpdate`, only (STY-040):
+
+- a new tab named for the roadmap's short name, placed after the last tab: a copy of
+  the `Template` tab (`duplicateSheet`, with an ID the editor chooses), shown even when
+  the `Template` is hidden, with every row after the first under its header deleted and
+  that one row cleared of its values, formatting and data validation, so the tab holds
+  the `Template`'s header row over one empty row (Google keeps one row that is not
+  frozen in every tab). A `Template` that is a header row alone is only copied, so its
+  copy has that one row. Where the `Template` freezes more rows than its header, the
+  copy has its header alone frozen. It has the `Template`'s columns, and gains an
+  `Item ID` column at its first publish, as any roadmap's tab does;
+- a new row of the roadmap index after the last row in use, appended by Google so a
+  row a co-lead added meanwhile is kept: `Sheet` (the short name), `Enabled` as exactly
+  `No`, `Title`, and, where given, `Product Lead`, a chosen family's `Family ID`,
+  `Family`, `Family (cy)` and `Colour` and a chosen category's `Category ID` and
+  `Category`, as a publish writes them. Every value is text, trimmed, and every other
+  cell is left empty: `Last updated`, the status, the vision, the service description
+  and every other Welsh cell;
+- a column that row needs and the index lacks (`Enabled`, `Title`, `Product Lead`, or a
+  family or category column), appended with its header as a publish appends one.
+
+A short name holds letters (accented ones included), numbers, spaces and hyphens only,
+is at most 100 characters and has an address: the public site's slug of it, so
+`Community Nursing` is `community-nursing`. Nothing is written when a row of the index
+has the same address, published or not; when a tab has the same name in any letter
+case, whatever it holds; for the names `Template`, `Families` and `Categories`, whether
+or not those tabs exist; when a chosen family or category is no longer in its list;
+when there is no `Template` tab, or its header has no `Title` or no `Horizon` column; or
+while the roadmap index is itself named `Template`. A roadmap is never added published,
+and a tab the editor did not copy from the `Template` is never listed as a roadmap by
+this write.
+
 It never writes any other cell: no Welsh `(cy)` cell other than `Family (cy)`, no
-`Last updated` but as above, no `Sheet` or `Details`, no `Enabled` cell but the one
-above, no `Horizon`, `Labels` or `Organisations` cell but those above, no `Family`,
-`Category` or `Colour` cell but those above and "Make it match"'s, no roadmap's row or
-tab but those above, nothing in the `Template` or `Categories` tab, nothing in the `Families`
+`Last updated` but as above, no `Sheet` cell but a new roadmap's, no `Enabled` cell but
+those above, no `Horizon`, `Labels`, `Organisations` or `Details` cell but those above,
+no `Family`, `Category` or `Colour` cell but those above and "Make it match"'s, no
+roadmap's row or tab but those above, nothing in the `Template` tab, which is only
+copied, nothing in the `Categories` tab, nothing in the `Families`
 tab but the family changes above, and no cell whose value has not changed. A roadmap
 whose `Sheet` names the `Template` tab or the roadmap index itself can't be read or
 published, and nothing is published while the

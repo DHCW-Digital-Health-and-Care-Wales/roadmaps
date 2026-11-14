@@ -16,6 +16,7 @@ import type { RoadmapItem } from "../roadmap-item"
 import type { RoadmapRepository } from "../roadmap-repository"
 import { CO_LEAD_VALUE, type ContractWrite } from "./contract-write"
 import { categoriesOf, familiesOf } from "./linked-lists"
+import { describeNewRoadmap } from "./new-roadmap-contract"
 import { describePublishedState } from "./published-state-contract"
 import { createTestRoadmap, inStep } from "./test-roadmap"
 import { createTestRoadmapItem } from "./test-roadmap-item"
@@ -44,6 +45,16 @@ export interface ContractOptions {
    * roadmap's colour is one a three-digit colour expands to, such as `#aabbcc`.
    */
   syncFaults?: Readonly<Record<string, readonly SyncFault[]>> | undefined
+  /**
+   * The data source has nothing usable to start a roadmap from, so adding one rejects
+   * with `invalid-data` (STY-040 S6); by default a roadmap can be added.
+   */
+  noStartingPoint?: boolean | undefined
+  /**
+   * Names the data source keeps something else under, which no roadmap's short name
+   * may take, in any letter case (STY-040 S4).
+   */
+  otherNames?: readonly string[] | undefined
 }
 
 /** A mistake in the data source the public site's nightly sync fails on (STY-035). */
@@ -388,6 +399,7 @@ export function describeRoadmapRepositoryContract(
     })
 
     describePublishing(setup)
+    describeNewRoadmap(setup)
     describeFamilyChanges(setup)
     describeListMatch(setup)
     describePublishedState(setup)

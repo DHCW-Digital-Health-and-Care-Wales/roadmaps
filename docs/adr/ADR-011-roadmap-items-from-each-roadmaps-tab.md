@@ -6,7 +6,8 @@
 - Date: 2026-11-10 (amended by ADR-012: item identity; amended by ADR-014: organisations
   come from the repository and show by short name; see below; amended by STY-037, in
   ADR-012: an item says whether it has Welsh tags; amended by STY-039, in ADR-012: an
-  item says whether it has Welsh details)
+  item says whether it has Welsh details; amended by STY-040: the `Template` tab is
+  copied to start a roadmap, and its header is read to check it)
 
 ## Context
 
@@ -118,6 +119,17 @@ from the English leaves every detail's `cy` blank, so `details` alone can't say 
 the editor changes no details that have Welsh (ADR-012, _STY-039 amendments_). How a
 detail's text and level are read is unchanged: `level` is still the hyphens as written,
 and the levels a list shows at are worked out from them (`settleDetails`).
+
+### STY-040 amendment
+
+"The `Template` tab is a reference, never read" ends for one thing (owner, STY-040 D1):
+the editor copies the `Template` tab to start a roadmap, and first reads its header row,
+alone (`'Template'!1:1`), to check it has a `Title` and a `Horizon` column, without
+which the public site can't read the copy. Its other rows are never read, a roadmap's
+columns are still found by their own tab's header and never the `Template`'s, and the
+`Template` is still never changed (ADR-012 Option 7). A new roadmap's tab is that copy
+with every row but its header's emptied or deleted, so it has no items, and no `Item ID`
+column until its first publish (D10).
 
 ### Reading the items
 

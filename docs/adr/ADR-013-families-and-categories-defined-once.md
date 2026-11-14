@@ -3,7 +3,8 @@
 - Status: Accepted — owner, 2026-11-12: EPC-006 grilling rounds 1–3, accepted in round
   4 Q1; amends ADR-009 (category names, family colour) and ADR-012 (what is editable,
   Welsh cells)
-- Date: 2026-11-12
+- Date: 2026-11-12 (amended in STY-040: the editor creates a roadmap's tab, and still
+  never the `Families` or `Categories` tab)
 
 ## Context
 
@@ -53,6 +54,15 @@ their own and a roadmap points at them by key.
 - **A missing tab degrades, minimally** (round 3 Q4): the list behaves as before this
   ADR, and managing or choosing that list is unavailable with a short notice. The tabs
   are expected to exist; this covers a tab renamed or deleted by mistake.
+
+### STY-040 amendment
+
+"The editor never creates a tab" becomes: it creates a roadmap's tab, a copy of the
+`Template` tab, when a roadmap is added (STY-040 D1), and never the `Families` or
+`Categories` tab, which the owner still creates by hand. No roadmap may take either
+name, or `Template`'s, whether or not the tab exists. A family or category chosen for a
+new roadmap is copied to its row as a publish copies one, and one no longer in its list
+refuses the add.
 
 ## Consequences
 

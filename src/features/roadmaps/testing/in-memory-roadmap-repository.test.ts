@@ -17,6 +17,8 @@ describeRoadmapRepositoryContract("createInMemoryRoadmapRepository", {
       categories,
       twins = [],
       syncFaults,
+      noStartingPoint,
+      otherNames,
     } = {},
   ) =>
     createInMemoryRoadmapRepository(
@@ -27,7 +29,14 @@ describeRoadmapRepositoryContract("createInMemoryRoadmapRepository", {
           unreadableItems.map((id) => [id, new AppError("invalid-data")]),
         ),
       },
-      { write, families, categories, syncFaults },
+      {
+        write,
+        families,
+        categories,
+        syncFaults,
+        noStartingPoint,
+        otherNames,
+      },
     ),
   failing: () => createInMemoryRoadmapRepository(new AppError("network")),
 })

@@ -179,3 +179,8 @@ written; organisations show as their standard codes, unknown ones dropped (ADR-0
 Options 5 and 6); and the roadmap page's Refresh, "Not published" badge, flagged-group
 position, empty state and headings (EPC-004 STY-021 Decisions).
 Delivered by [EPC-004](../backlog/_archive/EPC-004-roadmap-items/README.md).
+
+Decision 4 was later refined (owner, 2026-11-14, EPC-011 STY-040 D1): the editor
+copies the `Template` tab to start a roadmap and reads its header row to check it. It
+still finds a roadmap's columns by that roadmap's own header, and never changes the
+`Template` (ADR-011, _STY-040 amendment_).

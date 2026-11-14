@@ -5,7 +5,7 @@
   technical choices (decision 6) were left to the agent in round 1. Partly supersedes
   ADR-002 (its `Roadmap` shape and adapter mapping; see ADR-002's ADR-009 amendments).
 - Date: 2026-11-10 (amended in ADR-013: category names and family colour come from their
-  lists)
+  lists; amended in STY-040: the editor adds a row to the roadmap index)
 
 ## Context
 
@@ -125,6 +125,20 @@ API's own schema.
   the six values stay fixed until the public site reads the tab.
 - A roadmap in a family shows the family's name and colour from the `Families` tab, as
   the colour bullet above anticipated; a roadmap with no family keeps its own colour.
+
+### STY-040 amendments
+
+- **The editor adds a row to the roadmap index** (STY-040 D1, D2): adding a roadmap
+  appends one, after the last row in use, with the tab it names, in one all-or-nothing
+  write. Until now a roadmap's row was only ever typed in the spreadsheet; a row that
+  lists a tab which already exists still is (D7).
+- **The `Sheet` value has a name: the roadmap's short name**, and its slug, the
+  roadmap's `id`, is its address (`shortNameAddress`, `domain/roadmap/short-name.ts`),
+  which the parser reads a row's id with. A short name the editor writes holds letters,
+  numbers, spaces and hyphens only and has an address (D8, D14); a row typed by hand is
+  read as before, whatever its `Sheet` holds.
+- **A roadmap added here starts not published** (D3): `Enabled` is written as exactly
+  `No`. Reading the list is unchanged.
 
 ## Consequences
 

@@ -9,7 +9,8 @@
   amended by STY-035: a roadmap's published state is written on its own; amended by
   STY-036: `Last updated` becomes editable, and publishing sets it only when asked;
   amended by STY-037: an item's tags become editable, unless it has Welsh ones;
-  amended by STY-039: an item's details become editable, unless it has Welsh ones)
+  amended by STY-039: an item's details become editable, unless it has Welsh ones;
+  amended by STY-040: adding a roadmap is a write at once, and copies the `Template` tab)
 
 ## Context
 
@@ -263,6 +264,29 @@ Nothing checks permission in advance.
 - **Welsh details written since the item was read are a conflict that can't be kept**
   (S19): the publish writes nothing, and the review offers only to discard the change
   of details (`FieldConflict.gainedWelsh`).
+
+### STY-040 amendments
+
+- **Option 7 stands: the `Template` tab is never written.** It is now the source of a
+  copy (STY-040 D1): adding a roadmap duplicates it, and every later request of that
+  write changes the copy alone. Its header row is read, to check it (ADR-011).
+- **Adding a roadmap is a new write at once, not a pending edit** (D2), as a family
+  change is (ADR-013): after a re-read, one `spreadsheets.batchUpdate` copies the
+  `Template` to a tab named for the roadmap and appends its row to the roadmap index,
+  together or not at all. It is refused, writing nothing, when the re-read finds the
+  short name in use or a chosen family or category no longer listed (D9), and rejects
+  with `invalid-data` without a usable `Template` (D4, D11). Values are written as text,
+  trimmed, as a publish writes them, and a family or category is copied as a publish
+  copies a chosen one.
+- **A lost answer is settled as Option 16 settles one, by what this write alone made**
+  (D13): one re-read; the tab with the ID the write chose for its copy is there, so the
+  roadmap was added, as the row and the tab are one write; else its short name is in
+  use, by another's roadmap, whatever that holds; else nothing was written (`network`).
+  A failed re-read is unconfirmed. It is never retried.
+- The tab-list read gains each tab's frozen rows, beside its grid's size: a copy of a
+  `Template` that freezes more than its header is left with its header alone frozen, so
+  its other rows can go.
+- `RoadmapRepository` gains `addRoadmap` (amends ADR-002).
 
 ## Options (owner's choice marked ✅, 2026-11-11)
 

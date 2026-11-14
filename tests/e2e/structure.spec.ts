@@ -184,6 +184,17 @@ test.describe("editing a roadmap (STY-025)", () => {
     await expectStructure(itemForm, "edit-item-form-organisations.aria.yml")
     await itemForm.getByRole("button", { name: "Cancel" }).click()
 
+    // An item's Tags field opened, one tag removed (STY-037).
+    await main.getByRole("button", { name: "Edit Longer-term idea" }).click()
+    const tagsForm = main.getByRole("form", { name: "Longer-term idea" })
+    await tagsForm.getByRole("button", { name: "Change tags" }).click()
+    await tagsForm.getByRole("button", { name: "Remove Service Y" }).click()
+    await expect(
+      tagsForm.getByRole("button", { name: "Remove Service Z" }),
+    ).toBeFocused()
+    await expectStructure(tagsForm, "edit-item-form-tags.aria.yml")
+    await tagsForm.getByRole("button", { name: "Cancel" }).click()
+
     await main.getByRole("button", { name: "Edit About this roadmap" }).click()
     await expectStructure(main.getByRole("form"), "edit-roadmap-form.aria.yml")
   })

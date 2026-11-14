@@ -26,6 +26,8 @@ import {
   type RoadmapChanges,
   type RoadmapChoiceField,
   roadmapValue,
+  tagsOf,
+  tagsValue,
 } from "./roadmap-changes"
 import type { RoadmapItem } from "./roadmap-item"
 import { isRoadmapPlacement } from "./roadmap-placement"
@@ -75,8 +77,9 @@ const REQUIRED_FIELDS: ReadonlySet<string> = new Set(["title"])
  * Decides what publishing `changes` over `snapshot` (`null`: the roadmap is no longer
  * listed) writes: each pending value that differs from the current one, unless a
  * co-lead changed it too, plus an ID for every item without one. Values are trimmed.
- * An item's organisations are compared as a set, and a change made over whatever the
- * field holds (`FieldChange.overwrite`) is never a conflict. Throws `AppError('unknown')`
+ * An item's organisations are compared as a set and its tags as the ordered list; tags
+ * are never written to an item that now has Welsh ones (STY-037 S22), and a change made
+ * over whatever the field holds (`FieldChange.overwrite`) is never a conflict. Throws `AppError('unknown')`
  * for a blank title, a placement that is none of the six, an organisation the list
  * doesn't hold or a `Last updated` that is no `YYYY-MM-DD` date, which callers never
  * send, and `AppError('invalid-data')` for a family or category chosen while its list is
@@ -138,7 +141,9 @@ export function planRoadmapPublish(
     for (const { field, base, value } of pending) {
       const currentValue = itemValue(current, field)
       if (currentValue === value) continue
-      if (currentValue !== base) {
+      // Writing the English alone could pair the wrong Welsh with a tag (STY-037 D16).
+      const welshTags = field === "tags" && current.hasWelshTags
+      if (currentValue !== base || welshTags) {
         conflicts.push({
           subject: "item",
           item: itemChanges,
@@ -146,6 +151,7 @@ export function planRoadmapPublish(
           base,
           pending: value,
           current: currentValue,
+          ...(welshTags && { welshTags }),
         })
       } else {
         itemWrites.push({ index, field, value })
@@ -211,8 +217,8 @@ export function heldWrites(
 
 /**
  * A change's trimmed value with its base, or `null` when it changes nothing: a set of
- * organisations as `organisationIdsValue` gives it. One set over whatever the field
- * holds is never nothing.
+ * organisations as `organisationIdsValue` gives it, and tags as `tagsValue` does. One
+ * set over whatever the field holds is never nothing.
  */
 function pendingValue(
   field: string,
@@ -223,7 +229,9 @@ function pendingValue(
   const value =
     field === "organisationIds"
       ? listedOrganisationIdsValue(change.value, snapshot.organisationIds)
-      : change.value.trim()
+      : field === "tags"
+        ? tagsValue(tagsOf(change.value))
+        : change.value.trim()
   if (value === "" && REQUIRED_FIELDS.has(field)) {
     throw new AppError("unknown", {
       message: `A blank ${field} can't be published`,

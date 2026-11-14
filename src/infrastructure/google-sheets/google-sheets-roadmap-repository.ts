@@ -37,6 +37,7 @@ import {
   type PublishOutcome,
   type RoadmapChanges,
   type RoadmapChoiceField,
+  tagsOf,
 } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { isRoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
@@ -113,13 +114,17 @@ const ROADMAP_COLUMNS: Readonly<
   lastUpdated: "Last updated",
 }
 
-/** The roadmap tab's column each editable item field is written to (ADR-012, ADR-014). */
+/**
+ * The roadmap tab's column each editable item field is written to (ADR-012, ADR-014,
+ * STY-037): the English one alone, so `Labels (cy)` is never written.
+ */
 const ITEM_COLUMNS: Readonly<Record<EditableItemField, RoadmapTabColumn>> = {
   title: "Title",
   description: "Description",
   expectedOutcome: "Outcome",
   phase: "Phase",
   placement: "Horizon",
+  tags: "Labels",
   organisationIds: "Organisations",
 }
 
@@ -956,7 +961,8 @@ function batchRequests(
 }
 
 /**
- * What an item's cell holds for `value`: a placement as its `Horizon` value, and
+ * What an item's cell holds for `value`: a placement as its `Horizon` value, tags in
+ * order separated by `, `, as the public site reads them (STY-037 D5), and
  * organisations as their codes, national first, then by code, separated by `, `
  * (ADR-014, STY-034 D7): known codes only, so an unknown one written there goes.
  */
@@ -966,6 +972,8 @@ function itemCell(field: EditableItemField, value: string): string {
       // The plan publishes one of the six placements only.
       if (!isRoadmapPlacement(value)) throw new AppError("unknown")
       return HORIZON_VALUES[value]
+    case "tags":
+      return tagsOf(value).join(", ")
     case "organisationIds":
       return organisationCodes(organisationIdsOf(value))
     default:

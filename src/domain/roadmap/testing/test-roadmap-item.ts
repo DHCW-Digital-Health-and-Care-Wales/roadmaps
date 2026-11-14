@@ -17,6 +17,7 @@ export function createTestRoadmapItem(
     expectedOutcome: null,
     phase: null,
     tags: [],
+    hasWelshTags: false,
     organisationIds: [],
     unknownOrganisationCodes: [],
     details: [],

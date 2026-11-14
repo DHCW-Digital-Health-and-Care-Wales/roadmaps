@@ -20,6 +20,7 @@ import {
   type RoadmapChanges,
   type RoadmapChoiceField,
   roadmapValue,
+  tagsOf,
   UNLISTED_FAMILY,
 } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
@@ -270,8 +271,8 @@ export function reconcileItems(
 }
 
 /**
- * `item` with `from`'s `field`: English and Welsh, a placement with its horizon, or
- * organisations with their unknown codes.
+ * `item` with `from`'s `field`: English and Welsh, a placement with its horizon, tags
+ * with whether they have Welsh, or organisations with their unknown codes.
  */
 function withFieldOf(
   item: RoadmapItem,
@@ -285,6 +286,8 @@ function withFieldOf(
         placement: from.placement,
         writtenHorizon: from.writtenHorizon,
       }
+    case "tags":
+      return { ...item, tags: from.tags, hasWelshTags: from.hasWelshTags }
     case "organisationIds":
       return {
         ...item,
@@ -425,9 +428,10 @@ function chosenCategory(
 }
 
 /**
- * The item as it will read once its pending English, placement and organisations are
- * published: a placed item has no horizon as written (STY-031 S4), and chosen
- * organisations no unknown codes (STY-034 S4).
+ * The item as it will read once its pending English, placement, tags and organisations
+ * are published: a placed item has no horizon as written (STY-031 S4), changed tags are
+ * English alone, as only an item with no Welsh ones has them changed (STY-037 S20), and
+ * chosen organisations have no unknown codes (STY-034 S4).
  */
 export function applyItemChanges(
   item: RoadmapItem,
@@ -436,11 +440,15 @@ export function applyItemChanges(
   if (!entry) return item
   const { fields } = entry
   const placement = fields.placement?.value
+  const tags = fields.tags?.value
   const organisations = fields.organisationIds?.value
   return {
     ...item,
     ...(placement !== undefined &&
       isRoadmapPlacement(placement) && { placement, writtenHorizon: null }),
+    ...(tags !== undefined && {
+      tags: tagsOf(tags).map((en) => ({ en, cy: "" })),
+    }),
     ...(organisations !== undefined && {
       organisationIds: organisationIdsOf(organisations),
       unknownOrganisationCodes: [],

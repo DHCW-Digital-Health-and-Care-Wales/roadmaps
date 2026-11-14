@@ -61,15 +61,18 @@ export type ItemTextField = (typeof ITEM_TEXT_FIELDS)[number]
 /**
  * Every item field a Product Lead may edit, in the form's order: its text, then its
  * placement, chosen by ID, `""` for none (ADR-014): the ID is the base a conflict is
- * found by, and an unplaced item's is none, whatever its horizon says. Then its
- * organisations, a set of IDs as one value (`organisationIdsValue`), so a co-lead's
- * reordering is no change and their other set is a conflict. A field that is not text
- * needs its own case in `findEditedItem`, which compares every other part of an item,
- * and in `applyItemChanges` and `withFieldOf` (`pending-changes.ts`).
+ * found by, and an unplaced item's is none, whatever its horizon says. Then its tags,
+ * the English ones in order as one value (`tagsValue`, STY-037), so a co-lead's
+ * reordering is a conflict. Then its organisations, a set of IDs as one value
+ * (`organisationIdsValue`), so a co-lead's reordering is no change and their other set
+ * is a conflict. A field that is not text needs its own case in `findEditedItem`, which
+ * compares every other part of an item, and in `applyItemChanges` and `withFieldOf`
+ * (`pending-changes.ts`).
  */
 export const EDITABLE_ITEM_FIELDS = [
   ...ITEM_TEXT_FIELDS,
   "placement",
+  "tags",
   "organisationIds",
 ] as const
 
@@ -109,7 +112,7 @@ export function roadmapValue(
 
 /**
  * The item's value for `field`, `""` for none: its English for text, its placement's
- * ID, or its organisations' IDs as one value.
+ * ID, its English tags as one value, or its organisations' IDs as one value.
  */
 export function itemValue(item: RoadmapItem, field: EditableItemField): string {
   switch (field) {
@@ -117,6 +120,8 @@ export function itemValue(item: RoadmapItem, field: EditableItemField): string {
       return item.title.en
     case "placement":
       return item.placement ?? ""
+    case "tags":
+      return tagsValue(item.tags.map(({ en }) => en))
     case "organisationIds":
       return organisationIdsValue(item.organisationIds)
     default:
@@ -141,6 +146,31 @@ export function organisationIdsOf(value: string): string[] {
 function byCodeUnit(a: string, b: string): number {
   if (a === b) return 0
   return a < b ? -1 : 1
+}
+
+/** A comma or a line break ends a tag (STY-037 D5), so no tag holds either. */
+const TAG_SEPARATOR = /[,\n]/
+
+/**
+ * An item's English tags as one field value (STY-037 D4, D5): in order, separated by a
+ * comma and a space, each trimmed, none blank or repeated exactly, as a read gives
+ * them; `""` for none. The order is part of the value, so a co-lead's reordering is a
+ * change.
+ */
+export function tagsValue(tags: Iterable<string>): string {
+  return tagsOf([...tags].join(",")).join(", ")
+}
+
+/** The tags of a `tagsValue`, in its order. */
+export function tagsOf(value: string): string[] {
+  return [
+    ...new Set(
+      value
+        .split(TAG_SEPARATOR)
+        .map((tag) => tag.trim())
+        .filter((tag) => tag !== ""),
+    ),
+  ]
 }
 
 /** The item's Welsh for `field`, `""` for none: never edited, so never written. */
@@ -198,7 +228,8 @@ export interface RoadmapChanges {
 
 /**
  * A field a co-lead changed since it was edited: its current value differs from both
- * its base and its pending value (ADR-012 Option 12).
+ * its base and its pending value (ADR-012 Option 12), or its `welshTags` say why it
+ * can't be written.
  */
 export type FieldConflict = (
   | { subject: "roadmap"; field: EditableRoadmapField }
@@ -208,6 +239,12 @@ export type FieldConflict = (
   /** The pending value, trimmed. */
   pending: string
   current: string
+  /**
+   * The item's tags have gained Welsh versions since it was read, so its pending tags
+   * can't be written whatever `current` holds (STY-037 S22): only giving the change up
+   * settles it.
+   */
+  welshTags?: true
 }
 
 /**

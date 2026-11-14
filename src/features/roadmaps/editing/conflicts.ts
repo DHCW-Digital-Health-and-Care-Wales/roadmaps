@@ -63,7 +63,8 @@ function pendingOf(
  * The conflicts of `conflicts` still open over `changes`, the roadmap's text first, then
  * items in their order: one is open while its field is pending and not yet edited from
  * the co-lead's text. Keep mine, Use theirs, undoing the edit or a read that finds the
- * field already holding it each close it.
+ * field already holding it each close it. Tags that have gained Welsh versions can't be
+ * kept (STY-037 S22), so theirs stays open until the tag change is given up.
  */
 export function openConflicts(
   conflicts: readonly FieldConflict[],
@@ -72,7 +73,8 @@ export function openConflicts(
   const open = conflicts.flatMap(
     (conflict): { at: number; fieldAt: number; open: OpenConflict }[] => {
       const { change, entry } = pendingOf(changes, conflict)
-      if (!change || change.base === conflict.current) return []
+      if (!change) return []
+      if (!conflict.welshTags && change.base === conflict.current) return []
       if (conflict.subject === "roadmap") {
         return [
           {
@@ -234,7 +236,8 @@ function isNamed(
  * `items` showing the English `conflicts` found a co-lead wrote to them, in each field
  * that holds what it did in `since`, the items as read when the publish began, as
  * `withCurrentRoadmapText` does; an item not in `since` is left as it is. An item a
- * co-lead unplaced shows as having no horizon.
+ * co-lead unplaced shows as having no horizon, and one whose tags gained Welsh versions
+ * as having them, so its form no longer changes its tags (STY-037 S20, S22).
  */
 export function withCurrentItemText(
   items: readonly RoadmapItem[],
@@ -254,16 +257,19 @@ export function withCurrentItemText(
     const entry = matched.get(index)
     const was = entry && before.get(entry)
     if (!entry || !was) return item
-    const fields = Object.fromEntries(
-      itemConflicts
-        .filter(
-          (conflict) =>
-            sameTarget(conflict.item, entry) &&
-            itemValue(item, conflict.field) === itemValue(was, conflict.field),
-        )
-        .map((conflict) => [conflict.field, currentOf(conflict)]),
+    const found = itemConflicts.filter(
+      (conflict) =>
+        sameTarget(conflict.item, entry) &&
+        itemValue(item, conflict.field) === itemValue(was, conflict.field),
     )
-    const shown = applyItemChanges(item, { ...entry, fields })
+    const fields = Object.fromEntries(
+      found.map((conflict) => [conflict.field, currentOf(conflict)]),
+    )
+    const shown = {
+      ...applyItemChanges(item, { ...entry, fields }),
+      // Which Welsh they are isn't known until the next read.
+      ...(found.some(({ welshTags }) => welshTags) && { hasWelshTags: true }),
+    }
     // A co-lead may unplace an item, which no edit can; its horizon as written isn't
     // known until the next read, so it shows as having none.
     return fields.placement?.value === ""

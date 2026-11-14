@@ -4,7 +4,8 @@
   and 2 (Options 1–6 below). Amends ADR-002 (a second repository call) and extends
   ADR-009.
 - Date: 2026-11-10 (amended by ADR-012: item identity; amended by ADR-014: organisations
-  come from the repository and show by short name; see below)
+  come from the repository and show by short name; see below; amended by STY-037, in
+  ADR-012: an item says whether it has Welsh tags)
 
 ## Context
 
@@ -63,6 +64,7 @@ interface RoadmapItem {
   expectedOutcome: LocalisedText | null // the `Outcome` column
   phase: LocalisedText | null
   tags: LocalisedText[] // the `Labels` column, in cell order, no repeated English
+  hasWelshTags: boolean // `Labels (cy)` holds anything, paired or not (STY-037, ADR-012)
   organisations: Organisation[] // in ORGANISATIONS order, no repeats
   details: RoadmapItemDetail[]
 }

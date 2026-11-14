@@ -283,6 +283,7 @@ export const en = {
         phase: "Phase",
         /** Not English text, so its Welsh label says nothing of English. */
         placement: "Horizon or section",
+        tags: "Tags",
         /** Not English text either: short names and codes stay English. */
         organisationIds: "Organisations",
       } satisfies Record<EditableItemField, string>,
@@ -302,6 +303,59 @@ export const en = {
         subject: "organisations",
         /** In place of the chosen organisations' names, when none is chosen. */
         none: "No organisations",
+      },
+      /** An item's Tags field (STY-037); tags themselves stay as typed, in English. */
+      tags: {
+        /** Follows the field's button, for assistive technology: "Change tags". */
+        subject: "tags",
+        /** In place of the item's tags, when it has none. */
+        none: "No tags",
+        /** Names the list of the item's tags, for assistive technology. */
+        onItem: "Tags on this item",
+        /** Each followed by its tag, for assistive technology: "Rename Patients". */
+        rename: "Rename",
+        remove: "Remove",
+        /** Names the field holding a tag's name while it is changed. */
+        renameField: "Rename {{tag}}",
+        /** Keeps the new name; followed by the tag, for assistive technology. */
+        update: "Update",
+        /** Keeps the old name: "Cancel renaming Patients", for assistive technology. */
+        cancelRename: "Cancel",
+        cancelRenameSubject: "renaming {{tag}}",
+        /** Labels the field for a new tag. */
+        add: "Add a tag",
+        /** The button beside it: "Add tag", for assistive technology. */
+        addButton: "Add",
+        addButtonSubject: "tag",
+        /** Heads the tags the roadmap's other items carry, each a button that adds it. */
+        elsewhere: "Used elsewhere in this roadmap",
+        /** One of them, for assistive technology; `count` is how many items carry it. */
+        offer_one: "Add {{tag}}, on {{count, number}} other item",
+        offer_other: "Add {{tag}}, on {{count, number}} other items",
+        /** In their place, when none holds what is typed in "Add a tag". */
+        noMatch: "No other tag matches “{{typed}}”.",
+        /** Announced; `tags` are comma separated. */
+        added: "Added {{tags}}.",
+        removed: "Removed “{{tag}}”.",
+        /** Beside `removed`: "Undo removing Patients", for assistive technology. */
+        undoRemove: "Undo",
+        undoRemoveSubject: "removing {{tag}}",
+        /** Announced once a removal is undone. */
+        putBack: "Put back “{{tag}}”.",
+        /** What the field says when a tag is not kept as typed. */
+        notes: {
+          /** `tag` is the item's own, which `typed` repeats, whatever its capitals. */
+          repeat: "“{{tag}}” is already on this item.",
+          /** A typed tag takes the roadmap's spelling (STY-037 S21). */
+          respelt: "Added as “{{tag}}”, as other items spell it.",
+          respeltRename: "Renamed to “{{tag}}”, as other items spell it.",
+          /** The tag `typed` was renamed to `tag`, which the item has (STY-037 S6). */
+          merged:
+            "“{{tag}}” is already on this item, so “{{typed}}” was removed.",
+        },
+        /** Under the tags of an item that has Welsh tags, in place of the button (S20). */
+        welshLocked:
+          "These tags have Welsh versions, so they can't be changed here yet.",
       },
       /**
        * The button of a field that opens on request (EPC-009): "Add" while the field
@@ -481,6 +535,14 @@ export const en = {
           keepMine: "Keep mine",
           /** Followed by the field, for assistive technology. */
           useTheirs: "Use theirs",
+          /**
+           * In place of the choice, for tags that gained Welsh versions after they were
+           * edited (STY-037 S22): the change can only be given up.
+           */
+          welshTags:
+            "These tags now have Welsh versions, so they can't be changed here yet.",
+          /** Followed by the field, for assistive technology. */
+          discardMine: "Discard my change",
           /** `title` is the item's title as it was loaded. */
           removed:
             "Someone else has removed or changed “{{title}}”, so your changes to it couldn't be kept.",

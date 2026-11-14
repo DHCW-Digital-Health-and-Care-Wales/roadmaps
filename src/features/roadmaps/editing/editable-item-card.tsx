@@ -1,4 +1,4 @@
-import { useId, useLayoutEffect, useRef } from "react"
+import { useId, useLayoutEffect, useMemo, useRef } from "react"
 import { useTranslation } from "react-i18next"
 
 import {
@@ -23,6 +23,7 @@ import { shortNamesOf, sortOrganisations } from "../sort-organisations"
 import { EditControls } from "./edit-controls"
 import { EditForm, type EditFormField } from "./edit-form"
 import { editFormFields } from "./edit-form-fields"
+import { tagsInUse } from "./item-tags"
 import { MoveMenu } from "./move-menu"
 import {
   applyItemChanges,
@@ -36,6 +37,7 @@ import {
   usePendingChangesStore,
 } from "./pending-changes-context"
 import { awaitingRefresh } from "./pending-changes-store"
+import { TagList } from "./tag-list"
 import { useEditMode } from "./use-edit-mode"
 
 /** Fields that hold paragraphs; the others are one line unless they already break. */
@@ -48,6 +50,11 @@ export interface EditableItemCardProps {
   roadmapId: string
   /** The roadmap's items as last read, to find the item's pending changes by. */
   items: readonly RoadmapItem[]
+  /**
+   * The roadmap's items as the page shows them, pending changes applied, in `items`'
+   * order: the others' tags are offered in the form (STY-037 S3).
+   */
+  shownItems: readonly RoadmapItem[]
   item: RoadmapItem
   /** The organisation list the item's organisations are named from (ADR-014). */
   organisations: readonly Organisation[]
@@ -78,15 +85,16 @@ export interface EditableItemCardProps {
 export type CardControl = "edit" | "move"
 
 /**
- * An item's card with its pending English, placement and organisations shown and tagged,
- * an Edit that turns the card into a form for its title, description, expected outcome,
- * phase, placement (STY-025 S1–S4, S6; STY-031 S3) and organisations (STY-034 S1–S4),
- * and a Move menu (STY-031 S1, S2). Its other fields stay on show; nothing is written
- * until the roadmap is published.
+ * An item's card with its pending English, placement, tags and organisations shown and
+ * tagged, an Edit that turns the card into a form for its title, description, expected
+ * outcome, phase, placement (STY-025 S1–S4, S6; STY-031 S3), tags (STY-037) and
+ * organisations (STY-034 S1–S4), and a Move menu (STY-031 S1, S2). Its other fields
+ * stay on show; nothing is written until the roadmap is published.
  */
 export function EditableItemCard({
   roadmapId,
   items,
+  shownItems,
   item,
   organisations,
   position,
@@ -199,6 +207,44 @@ export function EditableItemCard({
     ],
   }
 
+  // Tags stay English. The roadmap's other items' tags are counted only for a form.
+  const editing = mode.editing
+  const inUse = useMemo(
+    () =>
+      editing
+        ? tagsInUse(
+            shownItems
+              .filter((_, at) => at !== position)
+              .map(({ tags }) => tags.map(({ en }) => en)),
+          )
+        : [],
+    [editing, shownItems, position],
+  )
+  // Tags with Welsh versions are shown as the card shows them, not changed (S20).
+  const tagsField: EditFormField<"tags"> = item.hasWelshTags
+    ? {
+        name: "tags",
+        label: t("roadmaps.items.fields.tags"),
+        multiline: false,
+        fixed: {
+          text:
+            shown.tags.length > 0 ? (
+              <TagList
+                tags={shown.tags.map((tag) => localise(tag, language))}
+              />
+            ) : (
+              t("roadmaps.edit.tags.none")
+            ),
+          notice: t("roadmaps.edit.tags.welshLocked"),
+        },
+      }
+    : {
+        name: "tags",
+        label: t("roadmaps.edit.itemFields.tags"),
+        multiline: false,
+        tags: { inUse },
+      }
+
   // Short names and codes stay English; the order is the card's (ADR-014).
   const unknownCodes = (mode.opened?.read ?? item).unknownOrganisationCodes
   const organisationsField: EditFormField<"organisationIds"> = {
@@ -238,10 +284,16 @@ export function EditableItemCard({
       form={
         mode.editing ? (
           <EditForm
-            fields={[...text.fields, placementField, organisationsField]}
+            fields={[
+              ...text.fields,
+              placementField,
+              tagsField,
+              organisationsField,
+            ]}
             initial={{
               ...text.initial,
               placement: itemValue(shown, "placement"),
+              tags: itemValue(shown, "tags"),
               organisationIds: itemValue(shown, "organisationIds"),
             }}
             labelledBy={headingId}

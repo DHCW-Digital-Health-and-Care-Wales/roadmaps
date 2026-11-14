@@ -242,7 +242,9 @@ function tabRowsFor(items: readonly RoadmapItem[]): string[][] {
     join(
       item.tags.map((tag) => tag[lang]),
       ", ",
-    ),
+    ) ||
+      // Welsh tags that show nowhere: a cell that holds something all the same.
+      (lang === "cy" && item.hasWelshTags ? "-" : ""),
     join(
       item.details.map(({ text, level }) => nest(level, text[lang])),
       "\n",
@@ -1412,6 +1414,119 @@ describe("GoogleSheetsRoadmapRepository", () => {
             `ProductC!R2C${String(width + 1)} PTHB`,
           ]),
         )
+      })
+    })
+
+    describe("an item's tags (STY-037)", () => {
+      const column = (rows: readonly string[][] | undefined, header: string) =>
+        (rows?.[0]?.indexOf(header) ?? -1) + 1
+
+      /** Publishes tags for the item of the roadmap with `id` titled `title`. */
+      async function retag(
+        id: string,
+        title: string,
+        base: string,
+        value: string,
+      ) {
+        const items = await httpRepository().listRoadmapItems(id)
+        const position = items.findIndex((item) => item.title.en === title)
+        const item = items[position]
+        if (item === undefined) throw new Error(`${id} has no ${title}`)
+        return httpRepository().publishRoadmapChanges(id, {
+          roadmap: {},
+          items: [{ item, position, fields: { tags: { base, value } } }],
+        })
+      }
+
+      it("writes the tags in order, separated by a comma and a space, in the Labels cell alone (S12)", async () => {
+        const spreadsheet = serveStatefulSpreadsheet(exampleTabs())
+        const before = spreadsheet.tabs()
+
+        const outcome = await retag(
+          "producta",
+          "Longer-term idea",
+          "Service Y, Service Z",
+          "Service Y, Video appointments, Carers",
+        )
+
+        expect(outcome).toEqual({ status: "published" })
+        const labels = column(EXAMPLE_TAB_ROWS.ProductA, "Labels")
+        expect(
+          changedCells(before, spreadsheet.tabs()).filter(
+            (change) => !change.includes("C15 "),
+          ),
+        ).toEqual([
+          `ProductA!R7C${String(labels)} Service Y, Video appointments, Carers`,
+        ])
+      })
+
+      it("writes no tags as an empty cell (S12)", async () => {
+        const spreadsheet = serveStatefulSpreadsheet(exampleTabs())
+
+        await retag("producta", "Longer-term idea", "Service Y, Service Z", "")
+
+        const labels = column(EXAMPLE_TAB_ROWS.ProductA, "Labels")
+        expect(spreadsheet.tabs()[1]?.rows[6]?.[labels - 1] ?? "").toBe("")
+      })
+
+      it("adds a Labels column to a tab with none, then writes the cell (S12)", async () => {
+        const rows = [
+          ["Title", "Horizon"],
+          ["Unpublished work", "Now"],
+        ]
+        const before = [...exampleTabs(), gridTab("ProductC", rows, 30, 3)]
+        const spreadsheet = serveStatefulSpreadsheet(before)
+
+        await retag("productc", "Unpublished work", "", "Patients, Carers")
+
+        expect(
+          changedCells(before, spreadsheet.tabs()).filter((change) =>
+            change.startsWith("ProductC!"),
+          ),
+        ).toEqual(
+          expect.arrayContaining([
+            "ProductC!R1C3 Labels",
+            "ProductC!R2C3 Patients, Carers",
+          ]),
+        )
+      })
+
+      it("writes nothing over tags whose Welsh cell holds anything, a count that doesn't pair included (S22)", async () => {
+        const rows = [
+          ["Item ID", "Title", "Horizon", "Labels", "Labels (cy)"],
+          ["bookingx", "Unpublished work", "Now", "Patients, Carers", ""],
+        ]
+        const spreadsheet = serveStatefulSpreadsheet([
+          ...exampleTabs(),
+          gridTab("ProductC", rows, 30, 3),
+        ])
+        const [item] = await httpRepository().listRoadmapItems("productc")
+        if (item === undefined) throw new Error("Product C has an item")
+        // A co-lead's Welsh, one entry for two tags, after the item was read.
+        rows[1]?.splice(4, 1, "Cleifion")
+
+        const outcome = await httpRepository().publishRoadmapChanges(
+          "productc",
+          {
+            roadmap: {},
+            items: [
+              {
+                item,
+                position: 0,
+                fields: {
+                  tags: { base: "Patients, Carers", value: "Carers" },
+                },
+              },
+            ],
+          },
+        )
+
+        expect(item.hasWelshTags).toBe(false)
+        expect(outcome).toMatchObject({
+          status: "refused",
+          conflicts: [{ field: "tags", welshTags: true }],
+        })
+        expect(spreadsheet.bodies).toEqual([])
       })
     })
 

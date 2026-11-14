@@ -1,10 +1,9 @@
 # EPC-009: Item tags — free text a Product Lead edits here, nudged towards the tags the roadmap already uses
 
-- **Status**: Active — two stories, both specified; STY-038 delivered in
-  [#65](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/65),
-  which awaits the owner's merge; no owner decision waits
-- **Progress**: 1 of 2 terminal; next selectable: STY-037, once STY-038 is on the
-  default branch; blocked on: nothing
+- **Status**: Done — every story delivered: STY-038 merged
+  ([#65](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/65)),
+  STY-037 in its PR, which awaits the owner's merge
+- **Progress**: 2 of 2 terminal
 - **Binding ADRs**: ADR-012, ADR-014, ADR-011, ADR-010, ADR-008, ADR-002
 
 ## Summary
@@ -118,10 +117,10 @@ always opens with the field shut.
 
 ## Stories
 
-| ID      | Story                                                                                                                     | Area                                       | Depends on | State |
-| ------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | ---------- | ----- |
-| STY-037 | [A Product Lead edits an item's tags](STY-037-edit-an-items-tags.md)                                                      | Domain + Infra + UI + i18n (en + cy) + E2E | STY-038    |       |
-| STY-038 | [The Organisations field opens on request](../_archive/EPC-009-item-tags/STY-038-organisations-field-opens-on-request.md) | UI + i18n (en + cy) + E2E                  | —          | ✅    |
+| ID      | Story                                                                                       | Area                                       | Depends on | State |
+| ------- | ------------------------------------------------------------------------------------------- | ------------------------------------------ | ---------- | ----- |
+| STY-037 | [A Product Lead edits an item's tags](STY-037-edit-an-items-tags.md)                        | Domain + Infra + UI + i18n (en + cy) + E2E | STY-038    | ✅    |
+| STY-038 | [The Organisations field opens on request](STY-038-organisations-field-opens-on-request.md) | UI + i18n (en + cy) + E2E                  | —          | ✅    |
 
 ## Sequencing
 
@@ -144,7 +143,7 @@ None.
 
 ## Related
 
-- [`docs/analysis/item-tags-ux-analysis.md`](../../analysis/item-tags-ux-analysis.md):
+- [`docs/analysis/item-tags-ux-analysis.md`](../../../analysis/item-tags-ux-analysis.md):
   the four editors compared, with the prototypes to try. Outcome: B (STY-037 D11).
 - `docs/analysis/roadmap-tab-format.md`: the `Labels` column and its Welsh pairing.
 - ADR-011 (the item model), ADR-012 (publishing), ADR-014 (the organisations precedent).

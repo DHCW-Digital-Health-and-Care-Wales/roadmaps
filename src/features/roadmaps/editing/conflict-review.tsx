@@ -27,7 +27,7 @@ export interface ConflictReviewProps {
   removed: readonly LocalisedText[]
   /** Whether any change is still pending. */
   hasPendingChanges: boolean
-  /** The ref for each conflict's Keep mine button, by its key. */
+  /** The ref for each conflict's first button, Keep mine or its like, by its key. */
   keepMineRef: DecisionFocus["keepMineRef"]
   onKeepMine: (conflict: FieldConflict) => void
   onUseTheirs: (conflict: FieldConflict) => void
@@ -39,8 +39,9 @@ export interface ConflictReviewProps {
  * Product Lead also changed, their text beside the current text (a family or category
  * by its name, a placement by its heading, organisations as `describeOrganisations`
  * names them, a date as the page shows it), to keep or give up one by one; then what
- * was lost with removed items. Nothing was written, so it cannot be dismissed until
- * every field is decided.
+ * was lost with removed items. Tags that have gained Welsh versions can only be given
+ * up (STY-037 S22). Nothing was written, so it cannot be dismissed until every field is
+ * decided.
  */
 export function ConflictReview({
   ref,
@@ -63,6 +64,7 @@ export function ConflictReview({
   )
   const { data: organisations } = useOrganisations()
   const deciding = open.length > 0
+  const choosing = open.some(({ conflict }) => !conflict.welshTags)
   const shown = (conflict: FieldConflict, value: string) => {
     if (conflict.subject === "roadmap" && isChoiceField(conflict.field)) {
       return describe(conflict.field, value)
@@ -99,7 +101,9 @@ export function ConflictReview({
       <p>{t(`roadmaps.publish.notice.refused.nothing.${action}`)}</p>
       {deciding && (
         <>
-          <p>{t(`roadmaps.publish.notice.refused.choose.${action}`)}</p>
+          {choosing && (
+            <p>{t(`roadmaps.publish.notice.refused.choose.${action}`)}</p>
+          )}
           <ul className="mb-4 flex flex-col gap-4">
             {open.map(({ conflict, yours, item, key }) => {
               const target = t("roadmaps.publish.notice.refused.target", {
@@ -127,28 +131,47 @@ export function ConflictReview({
                       value={shown(conflict, conflict.current)}
                     />
                   </dl>
-                  <div className="flex flex-wrap gap-3">
-                    <Button
-                      size="sm"
-                      ref={keepMineRef(key)}
-                      onClick={() => {
-                        onKeepMine(conflict)
-                      }}
-                    >
-                      {t("roadmaps.publish.notice.refused.keepMine")}{" "}
-                      <span className="sr-only">{target}</span>
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => {
-                        onUseTheirs(conflict)
-                      }}
-                    >
-                      {t("roadmaps.publish.notice.refused.useTheirs")}{" "}
-                      <span className="sr-only">{target}</span>
-                    </Button>
-                  </div>
+                  {conflict.welshTags ? (
+                    <>
+                      <p>{t("roadmaps.publish.notice.refused.welshTags")}</p>
+                      <div>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          ref={keepMineRef(key)}
+                          onClick={() => {
+                            onUseTheirs(conflict)
+                          }}
+                        >
+                          {t("roadmaps.publish.notice.refused.discardMine")}{" "}
+                          <span className="sr-only">{target}</span>
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex flex-wrap gap-3">
+                      <Button
+                        size="sm"
+                        ref={keepMineRef(key)}
+                        onClick={() => {
+                          onKeepMine(conflict)
+                        }}
+                      >
+                        {t("roadmaps.publish.notice.refused.keepMine")}{" "}
+                        <span className="sr-only">{target}</span>
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => {
+                          onUseTheirs(conflict)
+                        }}
+                      >
+                        {t("roadmaps.publish.notice.refused.useTheirs")}{" "}
+                        <span className="sr-only">{target}</span>
+                      </Button>
+                    </div>
+                  )}
                 </li>
               )
             })}

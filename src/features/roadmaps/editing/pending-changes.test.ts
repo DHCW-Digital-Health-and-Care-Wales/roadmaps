@@ -576,3 +576,88 @@ describe("a choice of organisations (STY-034)", () => {
     )
   })
 })
+
+describe("a change of tags (STY-037)", () => {
+  const tagged = (...tags: string[]) => tags.map((en) => ({ en, cy: "" }))
+  const booking = createTestRoadmapItem("Online booking", {
+    id: "bookingx",
+    tags: tagged("Patients", "Video consultations"),
+  })
+  const BASE = "Patients, Video consultations"
+
+  it("shows the pending tags in order, in English alone, among the changed fields (S2, S6)", () => {
+    const retagged = editItem(NO_CHANGES, undefined, booking, 0, {
+      tags: "Patients, Video appointments, Carers",
+    })
+
+    expect(retagged.items[0]?.fields).toEqual({
+      tags: { base: BASE, value: "Patients, Video appointments, Carers" },
+    })
+    expect(applyItemChanges(booking, retagged.items[0])).toEqual({
+      ...booking,
+      tags: tagged("Patients", "Video appointments", "Carers"),
+    })
+    expect(
+      changedParts(retagged).flatMap((part) =>
+        part.kind === "item" ? part.fields : [],
+      ),
+    ).toEqual(["tags"])
+  })
+
+  it("is no change once the tags are as they were, and no tags is a change (S5, S9)", () => {
+    const retagged = editItem(NO_CHANGES, undefined, booking, 0, {
+      tags: "Patients",
+    })
+
+    expect(
+      editItem(retagged, retagged.items[0], booking, 0, { tags: BASE }),
+    ).toEqual(NO_CHANGES)
+    const none = editItem(NO_CHANGES, undefined, booking, 0, { tags: "" })
+    expect(none.items[0]?.fields).toEqual({ tags: { base: BASE, value: "" } })
+    expect(applyItemChanges(booking, none.items[0]).tags).toEqual([])
+  })
+
+  it("is dropped by a read that finds a co-lead wrote the same tags in the same order, and kept for another order (S13)", () => {
+    const retagged = editItem(NO_CHANGES, undefined, booking, 0, {
+      tags: "Patients, Carers",
+      title: "Booking online",
+    })
+    const same = { ...booking, tags: tagged("Patients", "Carers") }
+    const reordered = { ...booking, tags: tagged("Carers", "Patients") }
+
+    expect(reconcileItems(retagged, [same]).items).toEqual([
+      {
+        item: same,
+        position: 0,
+        fields: { title: { base: "Online booking", value: "Booking online" } },
+      },
+    ])
+    expect(reconcileItems(retagged, [reordered])).toBe(retagged)
+  })
+
+  it("takes the read's Welsh tags with the tags a read already holds", () => {
+    const retagged = editItem(NO_CHANGES, undefined, booking, 0, {
+      tags: "Patients",
+      title: "Booking online",
+    })
+    const theirs = {
+      ...booking,
+      tags: [{ en: "Patients", cy: "Cleifion" }],
+      hasWelshTags: true,
+    }
+
+    expect(reconcileItems(retagged, [theirs]).items[0]?.item).toEqual(theirs)
+  })
+
+  it("finds an item without an ID whose tags a lost publish already wrote", () => {
+    const loaded = { ...booking, id: null }
+    const retagged = editItem(NO_CHANGES, undefined, loaded, 1, {
+      tags: "Carers",
+    })
+    const written = { ...loaded, tags: tagged("Carers") }
+
+    expect(matchItemChanges([first, written], retagged).get(1)).toBe(
+      retagged.items[0],
+    )
+  })
+})

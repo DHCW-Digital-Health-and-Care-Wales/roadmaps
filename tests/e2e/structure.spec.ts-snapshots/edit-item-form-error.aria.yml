@@ -16,6 +16,11 @@
     - option "Later"
     - option "Delivered this year"
     - option "Not doing"
+  - paragraph: Tags
+  - list:
+    - listitem: Service X
+    - listitem: Service Y
+  - paragraph: These tags have Welsh versions, so they can't be changed here yet.
   - paragraph: Organisations
   - button "Change organisations"
   - text: Cardiff and Vale, Swansea Bay

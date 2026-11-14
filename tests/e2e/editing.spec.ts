@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test"
+import type { Locator, Page } from "@playwright/test"
 
 import {
   EXAMPLE_INDEX_ROWS,
@@ -16,7 +16,8 @@ import { connect, expect, roadmapCards, test } from "./fixtures/test"
  * A co-lead's change made meanwhile is shown, never overwritten (STY-026). A family and
  * category are chosen from their lists (STY-028). An item is moved to another placement,
  * writing its `Horizon` cell alone (STY-031). Its organisations are ticked in a field
- * that opens on request (STY-034, STY-038).
+ * that opens on request (STY-034, STY-038), and its tags are added, renamed and removed
+ * in another (STY-037).
  */
 
 const ITEM = "Example card with every column"
@@ -247,6 +248,35 @@ test("edits an unplaced item on a phone, every form and dialog fitting the width
   await expect(page.getByRole("alertdialog")).toBeVisible()
   expect(await overflow()).toBe(0)
 })
+
+/**
+ * Each cell of `title`'s tab that differs from `before`, as "item: column = value" or
+ * "header = column", leaving out the IDs every first publish writes.
+ */
+function changedCells(
+  before: readonly FakeTab[],
+  after: readonly FakeTab[],
+  title: string,
+) {
+  const tab = (tabs: readonly FakeTab[]) =>
+    tabs.find((each) => each.title === title)?.rows ?? []
+  const [header = [], ...rows] = tab(after)
+  const itemId = header.indexOf("Item ID")
+  return [
+    ...header.flatMap((cell, c) =>
+      c === itemId || cell === (tab(before)[0]?.[c] ?? "")
+        ? []
+        : [`header = ${cell}`],
+    ),
+    ...rows.flatMap((row, r) =>
+      row.flatMap((cell, c) =>
+        c === itemId || cell === (tab(before)[r + 1]?.[c] ?? "")
+          ? []
+          : [`${row[0] ?? ""}: ${header[c] ?? ""} = ${cell}`],
+      ),
+    ),
+  ]
+}
 
 /** Publishes a first edit, so every item has an ID a later publish can find it by. */
 async function publishOnce(page: Page) {
@@ -684,35 +714,6 @@ test.describe("choosing an item's organisations (STY-034)", () => {
     await form.getByRole("button", { name: "Done" }).click()
   }
 
-  /**
-   * Each cell of `title`'s tab that differs from `before`, as "item: column = value" or
-   * "header = column", leaving out the IDs every first publish writes.
-   */
-  function changedCells(
-    before: readonly FakeTab[],
-    after: readonly FakeTab[],
-    title: string,
-  ) {
-    const tab = (tabs: readonly FakeTab[]) =>
-      tabs.find((each) => each.title === title)?.rows ?? []
-    const [header = [], ...rows] = tab(after)
-    const itemId = header.indexOf("Item ID")
-    return [
-      ...header.flatMap((cell, c) =>
-        c === itemId || cell === (tab(before)[0]?.[c] ?? "")
-          ? []
-          : [`header = ${cell}`],
-      ),
-      ...rows.flatMap((row, r) =>
-        row.flatMap((cell, c) =>
-          c === itemId || cell === (tab(before)[r + 1]?.[c] ?? "")
-            ? []
-            : [`${row[0] ?? ""}: ${header[c] ?? ""} = ${cell}`],
-        ),
-      ),
-    ]
-  }
-
   test("ticks organisations, pending, then publishes their codes in that cell alone (S1, S2, S5)", async ({
     page,
     sheets,
@@ -980,5 +981,338 @@ test.describe("the Organisations field opens on request (STY-038)", () => {
     await expect(
       empty.getByRole("button", { name: "Ychwanegu sefydliadau" }),
     ).toBeVisible()
+  })
+})
+
+test.describe("editing an item's tags (STY-037)", () => {
+  /** An item with tags and no Welsh ones; the roadmap's other items carry Service X. */
+  const TAGGED = "Longer-term idea"
+
+  /** Opens the item's form and its Tags field: the form, and the field's group. */
+  async function openTags(page: Page, title: string) {
+    const main = page.getByRole("main")
+    await main.getByRole("button", { name: `Edit ${title}` }).click()
+    const form = main.getByRole("form", { name: title })
+    await form.getByRole("button", { name: /^(Change|Add) tags$/ }).click()
+    const field = form.getByRole("group", { name: "Tags" })
+    await expect(
+      field.getByRole("textbox", { name: "Add a tag" }),
+    ).toBeFocused()
+    return { form, field }
+  }
+
+  /** The tags the open field shows, in order. */
+  const rows = (field: Locator) =>
+    field.getByRole("list", { name: "Tags on this item" }).getByRole("listitem")
+
+  const sideways = (page: Page) =>
+    page.evaluate(
+      () =>
+        document.documentElement.scrollWidth -
+        document.documentElement.clientWidth,
+    )
+
+  test("starts shut, then adds, renames and removes tags, pending, and publishes the Labels cell alone (S2, S5, S6, S8, S12, S19)", async ({
+    page,
+    sheets,
+  }) => {
+    await openRoadmap(page, "producta", ITEM)
+    const before = sheets.spreadsheet
+    const main = page.getByRole("main")
+    await main.getByRole("button", { name: `Edit ${TAGGED}` }).click()
+    const form = main.getByRole("form", { name: TAGGED })
+
+    // Shut: the tags on one line, no editor, and no Tags line on the card (S19).
+    await expect(form.getByRole("list").first()).toHaveText(
+      "Service YService Z",
+    )
+    await expect(form.getByRole("textbox", { name: "Add a tag" })).toHaveCount(
+      0,
+    )
+    await expect(itemCard(page, TAGGED).getByRole("term")).toHaveCount(0)
+    await form.getByRole("button", { name: "Change tags" }).click()
+    const field = form.getByRole("group", { name: "Tags" })
+    await expect(
+      field.getByRole("textbox", { name: "Add a tag" }),
+    ).toBeFocused()
+
+    // The roadmap's other tags are offered, without the item's own (S3, S18).
+    await expect(
+      field
+        .getByRole("list", { name: "Used elsewhere in this roadmap" })
+        .getByRole("button"),
+    ).toHaveText(["Service X"])
+    await field
+      .getByRole("button", { name: "Add Service X, on 2 other items" })
+      .click()
+    await field.getByRole("button", { name: "Rename Service Z" }).click()
+    const name = field.getByRole("textbox", { name: "Rename Service Z" })
+    await expect(name).toBeFocused()
+    await name.fill("Video appointments")
+    await page.keyboard.press("Enter")
+    await expect(
+      field.getByRole("button", { name: "Rename Video appointments" }),
+    ).toBeFocused()
+    await field.getByRole("button", { name: "Remove Service Y" }).click()
+    await expect(field.getByRole("status")).toHaveText("Removed “Service Y”.")
+    await expect(rows(field)).toHaveText([/^Video appointments/, /^Service X/])
+    // Typed, not yet added: it counts when the form is confirmed (S8).
+    await field.getByRole("textbox", { name: "Add a tag" }).fill("Carers")
+    await form.getByRole("button", { name: "Done" }).click()
+
+    const card = itemCard(page, TAGGED)
+    await expect(
+      card.getByText("Video appointments, Service X, Carers"),
+    ).toBeVisible()
+    await expect(card.getByText("Changed")).toBeVisible()
+    expect(sheets.writes).toEqual([])
+
+    await main.getByRole("button", { name: "Publish changes" }).click()
+    const dialog = page.getByRole("alertdialog")
+    await expect(dialog.getByRole("listitem")).toContainText(
+      new RegExp(`${TAGGED}.*Tags`),
+    )
+    await dialog.getByRole("button", { name: "Publish changes" }).click()
+    await expect(main.getByText(/^Changes published\./)).toBeVisible()
+    expect(changedCells(before, sheets.spreadsheet, "ProductA")).toEqual([
+      `${TAGGED}: Labels = Video appointments, Service X, Carers`,
+    ])
+  })
+
+  test("adds a Labels column to a roadmap with none, and an empty cell for no tags (S12)", async ({
+    page,
+    sheets,
+  }) => {
+    sheets.spreadsheet = EXAMPLE_SPREADSHEET.map((tab) =>
+      tab.title === "ProductC"
+        ? {
+            ...tab,
+            rows: [
+              ["Title", "Horizon"],
+              ["Unpublished work", "Now"],
+            ],
+          }
+        : tab,
+    )
+    await openRoadmap(page, "productc", "Unpublished work")
+    const before = sheets.spreadsheet
+    const { form, field } = await openTags(page, "Unpublished work")
+    // No other item has a tag, so none is offered (S10).
+    await expect(field.getByText("Used elsewhere in this roadmap")).toHaveCount(
+      0,
+    )
+
+    await field
+      .getByRole("textbox", { name: "Add a tag" })
+      .fill("Patients, Carers")
+    await form.getByRole("button", { name: "Done" }).click()
+    await confirmPublish(page, "Save")
+    await expect(
+      page.getByRole("main").getByText("Changes saved"),
+    ).toBeVisible()
+
+    expect(changedCells(before, sheets.spreadsheet, "ProductC")).toEqual([
+      "header = Labels",
+      "Unpublished work: Labels = Patients, Carers",
+    ])
+
+    const again = await openTags(page, "Unpublished work")
+    await again.field.getByRole("button", { name: "Remove Patients" }).click()
+    await again.field.getByRole("button", { name: "Remove Carers" }).click()
+    await again.form.getByRole("button", { name: "Done" }).click()
+    await confirmPublish(page, "Save")
+    await expect.poll(() => sheets.writes.length).toBe(2)
+    expect(changedCells(before, sheets.spreadsheet, "ProductC")).toEqual([
+      "header = Labels",
+    ])
+  })
+
+  test("a co-lead's different tags are shown beside yours, nothing written (S13)", async ({
+    page,
+    sheets,
+  }) => {
+    await openRoadmap(page, "producta", ITEM)
+    await publishOnce(page)
+    const { form, field } = await openTags(page, TAGGED)
+    await field.getByRole("textbox", { name: "Add a tag" }).fill("Carers")
+    await form.getByRole("button", { name: "Done" }).click()
+    sheets.coLead("ProductA", TAGGED, "Labels", "Service Z, Service Y")
+
+    await confirmPublish(page, "Publish")
+
+    const review = page.getByRole("main").getByRole("alert")
+    await expect(review).toBeFocused()
+    await expect(review.getByRole("listitem")).toContainText(
+      new RegExp(
+        `${TAGGED}: Tags.*Your change.*Service Y, Service Z, Carers.*Current text.*Service Z, Service Y`,
+      ),
+    )
+    expect(sheets.writes).toHaveLength(1)
+  })
+
+  test("an item with Welsh tags shows them with no way to change them, and publishes its other fields alone (S20)", async ({
+    page,
+    sheets,
+  }) => {
+    await openRoadmap(page, "producta", ITEM)
+    const before = sheets.spreadsheet
+    const main = page.getByRole("main")
+    await main.getByRole("button", { name: `Edit ${ITEM}` }).click()
+    const form = main.getByRole("form", { name: ITEM })
+
+    await expect(form.getByText("Tags", { exact: true })).toBeVisible()
+    await expect(form.getByRole("list").first()).toHaveText(
+      "Service XService Y",
+    )
+    await expect(
+      form.getByText(
+        "These tags have Welsh versions, so they can't be changed here yet.",
+      ),
+    ).toBeVisible()
+    await expect(form.getByRole("button", { name: /tags$/ })).toHaveCount(0)
+
+    await form.getByRole("textbox", { name: "Phase" }).fill("Live")
+    await form.getByRole("button", { name: "Done" }).click()
+    await confirmPublish(page, "Publish")
+    await expect(main.getByText(/^Changes published\./)).toBeVisible()
+    expect(changedCells(before, sheets.spreadsheet, "ProductA")).toEqual([
+      `${ITEM}: Phase = Live`,
+    ])
+  })
+
+  test("Welsh tags written since the item was read stop the publish: the change can be discarded, not kept (S22)", async ({
+    page,
+    sheets,
+  }) => {
+    await openRoadmap(page, "producta", ITEM)
+    await publishOnce(page)
+    const { form, field } = await openTags(page, TAGGED)
+    await field.getByRole("textbox", { name: "Add a tag" }).fill("Carers")
+    await form.getByRole("button", { name: "Done" }).click()
+    // One Welsh entry for two tags: it pairs with none, and still stops the write.
+    sheets.coLead("ProductA", TAGGED, "Labels (cy)", "Gwasanaeth Y")
+
+    await confirmPublish(page, "Publish")
+
+    const main = page.getByRole("main")
+    const review = main.getByRole("alert")
+    await expect(review).toBeFocused()
+    const conflict = review.getByRole("listitem")
+    await expect(conflict).toContainText(`${TAGGED}: Tags`)
+    await expect(
+      conflict.getByText(
+        "These tags now have Welsh versions, so they can't be changed here yet.",
+      ),
+    ).toBeVisible()
+    await expect(conflict.getByRole("button")).toHaveText([
+      `Discard my change ${TAGGED}: Tags`,
+    ])
+    expect(sheets.writes).toHaveLength(1)
+
+    await conflict.getByRole("button", { name: /^Discard my change/ }).click()
+    await expect(review).toHaveCount(0)
+    await expect(main.getByText("Changed")).toHaveCount(0)
+    // Its tags are now shown, not changed (S20).
+    await main.getByRole("button", { name: `Edit ${TAGGED}` }).click()
+    await expect(
+      main
+        .getByRole("form", { name: TAGGED })
+        .getByRole("button", { name: /tags$/ }),
+    ).toHaveCount(0)
+    expect(sheets.writes).toHaveLength(1)
+  })
+
+  for (const { name, width } of [
+    { name: "on a phone", width: 375 },
+    // Two cards across, each about 294px wide.
+    { name: "in the narrowest card", width: 640 },
+  ]) {
+    test(`${name}, the rows' buttons are icons beside a long tag, which wraps, and nothing scrolls sideways (S14, S16)`, async ({
+      page,
+      sheets,
+    }) => {
+      const long = "A tag that runs to forty characters long"
+      sheets.coLead("ProductA", TAGGED, "Labels", `Service Y, ${long}`)
+      await page.setViewportSize({ width, height: 812 })
+      await openRoadmap(page, "producta", ITEM)
+      const { form, field } = await openTags(page, TAGGED)
+
+      const [short, wrapped] = await rows(field).all()
+      if (!short || !wrapped) throw new Error("The item has two tags")
+      for (const row of [short, wrapped]) {
+        const tag = await row.locator("span").first().boundingBox()
+        for (const button of await row.getByRole("button").all()) {
+          const box = await button.boundingBox()
+          // An icon, square, on its tag's row and inside the page.
+          expect(box?.width).toBe(box?.height)
+          expect(box?.y).toBeLessThan((tag?.y ?? 0) + (tag?.height ?? 0))
+          expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(width)
+        }
+      }
+      await expect(
+        wrapped.getByRole("button", { name: `Rename ${long}` }),
+      ).toBeVisible()
+      await expect(
+        short.getByRole("button", { name: "Remove Service Y" }),
+      ).toHaveAttribute("title", "Remove")
+      const [shortBox, wrappedBox] = await Promise.all([
+        short.locator("span").first().boundingBox(),
+        wrapped.locator("span").first().boundingBox(),
+      ])
+      expect(wrappedBox?.height).toBeGreaterThan(shortBox?.height ?? 0)
+      expect(await sideways(page)).toBe(0)
+
+      // A rename keeps the icons, and its field and buttons fit too.
+      await short.getByRole("button", { name: "Rename Service Y" }).click()
+      await expect(
+        field.getByRole("button", { name: "Update Service Y" }),
+      ).toHaveAttribute("title", "Update")
+      expect(await sideways(page)).toBe(0)
+      await page.keyboard.press("Escape")
+      await expect(form.getByRole("button", { name: "Done" })).toBeVisible()
+    })
+  }
+
+  test("the rows' buttons show words where every tag fits beside them (S16)", async ({
+    page,
+  }) => {
+    await openRoadmap(page, "producta", ITEM)
+    const { field } = await openTags(page, TAGGED)
+
+    const rename = field.getByRole("button", { name: "Rename Service Y" })
+    await expect(rename).toHaveText("Rename Service Y")
+    await expect(rename).not.toHaveAttribute("title")
+    await expect(rename.locator("svg")).toHaveCount(0)
+  })
+
+  test("is Welsh on the Welsh interface, the tags staying English (S1)", async ({
+    page,
+  }) => {
+    await useLanguage(page, "cy")
+    await page.goto("./#/roadmaps/producta")
+    await connect(page, "Cysylltu â Google")
+    const main = page.getByRole("main")
+    await main.getByRole("button", { name: `Golygu ${TAGGED}` }).click()
+    const form = main.getByRole("form", { name: TAGGED })
+
+    await form.getByRole("button", { name: "Newid tagiau" }).click()
+    const field = form.getByRole("group", { name: "Tagiau (Saesneg)" })
+    await expect(
+      field.getByRole("textbox", { name: "Ychwanegu tag" }),
+    ).toBeFocused()
+    await expect(
+      field.getByRole("button", { name: "Ailenwi Service Y" }),
+    ).toBeVisible()
+    await field.getByRole("button", { name: "Tynnu Service Y" }).click()
+    await expect(field.getByRole("status")).toHaveText("Tynnwyd “Service Y”.")
+    await expect(
+      field.getByRole("button", { name: "Dadwneud tynnu Service Y" }),
+    ).toBeVisible()
+    await expect(
+      field.getByRole("button", {
+        name: "Ychwanegu Service X, ar 2 eitem arall",
+      }),
+    ).toBeVisible()
+    await expect(form.getByRole("button", { name: "Cau tagiau" })).toBeVisible()
   })
 })

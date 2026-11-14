@@ -31,6 +31,12 @@ export interface RoadmapItem {
   /** In the order written, no English repeated. */
   tags: LocalisedText[]
   /**
+   * Whether the data source holds any Welsh for its tags, shown in `tags` or not: Welsh
+   * that can't be paired with the English is left out of them. While it does, the tags
+   * are not edited (STY-037 D14, D16).
+   */
+  hasWelshTags: boolean
+  /**
    * The ids of the organisations the work is for (ADR-014), no repeats, in no promised
    * order: a screen sorts them. Only ids the organisation list holds.
    */

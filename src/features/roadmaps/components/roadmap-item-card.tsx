@@ -18,8 +18,8 @@ export interface RoadmapItemCardProps {
   /** For a form that names the card by its title. */
   headingId?: string
   /**
-   * A form editing the item's text and organisations, shown in place of them; what it
-   * does not edit stays on show.
+   * A form editing the item's text, tags and organisations, shown in place of them;
+   * what it does not edit stays on show.
    */
   form?: ReactNode
   /** Controls at the foot of the card, such as Edit. */
@@ -57,17 +57,17 @@ export function RoadmapItemCard({
   const add = (key: keyof typeof fieldLabels, value: ReactNode) => {
     fields.push({ key, label: t(fieldLabels[key]), value })
   }
-  // A form in their place edits these.
+  // A form in their place edits these, or shows them itself.
   if (!form) {
     if (item.phase) add("phase", text(item.phase))
     if (item.description) add("description", text(item.description))
     if (item.expectedOutcome) {
       add("expectedOutcome", text(item.expectedOutcome))
     }
+    if (item.tags.length > 0) add("tags", item.tags.map(text).join(", "))
+    const named = shortNamesOf(organisations, item.organisationIds, language)
+    if (named.length > 0) add("organisations", named.join(", "))
   }
-  if (item.tags.length > 0) add("tags", item.tags.map(text).join(", "))
-  const named = shortNamesOf(organisations, item.organisationIds, language)
-  if (named.length > 0 && !form) add("organisations", named.join(", "))
   if (item.details.length > 0) {
     add(
       "details",

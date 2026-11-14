@@ -40,7 +40,9 @@ export interface OpeningFieldProps {
  * request_). Shut, as it always starts: its label, one line of what it holds and a
  * button, "Change", or "Add" while it holds nothing. Open: the button reads "Close" and
  * says the field is open, and the controls show in place, as a group named by the label,
- * with focus on the one the field names. Shutting puts focus on the button.
+ * with focus on the one the field names. Shutting puts focus on the button; the
+ * controls leave the page a frame later, once the Collapsible's animations end, so a
+ * component test awaits their removal.
  */
 export function OpeningField({
   label,

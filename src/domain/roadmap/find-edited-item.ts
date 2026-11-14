@@ -47,6 +47,7 @@ const CONTENT: Record<Exclude<keyof RoadmapItem, "id">, true> = {
   expectedOutcome: true,
   phase: true,
   tags: true,
+  hasWelshTags: true,
   organisationIds: true,
   unknownOrganisationCodes: true,
   details: true,

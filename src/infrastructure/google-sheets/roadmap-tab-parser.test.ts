@@ -105,6 +105,7 @@ describe("parseRoadmapTab", () => {
           { en: "Service X", cy: "Gwasanaeth X" },
           { en: "Service Y", cy: "Gwasanaeth Y" },
         ],
+        hasWelshTags: true,
         organisationIds: ["cavuhb", "sbuhb"],
         unknownOrganisationCodes: [],
         details: [
@@ -191,6 +192,7 @@ describe("parseRoadmapTab", () => {
           expectedOutcome: { en: "An outcome", cy: "" },
           phase: { en: "Discovery", cy: "Darganfod" },
           tags: [{ en: "A tag", cy: "Tag Cymraeg" }],
+          hasWelshTags: true,
         }),
       ])
     })
@@ -423,6 +425,41 @@ describe("parseRoadmapTab", () => {
       ])
     })
 
+    it.each([
+      [
+        "paired with the English",
+        "Patients, Carers",
+        "Cleifion, Gofalwyr",
+        true,
+      ],
+      ["of another count", "Patients, Carers", "Cleifion", true],
+      ["of dashes alone", "Patients", "-", true],
+      ["with no English", "", "Cleifion", true],
+      ["blank", "Patients", "  ", false],
+    ])(
+      "says whether an item has Welsh tags, shown or not: a Welsh cell %s (STY-037 D16)",
+      (_, labels, welsh, expected) => {
+        const tab = parseRows({
+          Title: "An item",
+          Horizon: "Now",
+          Labels: labels,
+          "Labels (cy)": welsh,
+        })
+
+        expect(tab.items[0]?.hasWelshTags).toBe(expected)
+      },
+    )
+
+    it("says an item has no Welsh tags in a tab with no Welsh tags column", () => {
+      const tab = parseUnder(headerWithout("Labels (cy)"), {
+        Title: "An item",
+        Horizon: "Now",
+        Labels: "Patients",
+      })
+
+      expect(tab.items[0]?.hasWelshTags).toBe(false)
+    })
+
     it("pairs tags by position, a `-` or blank Welsh tag showing the English", () => {
       const tab = parseRows({
         Title: "An item",
@@ -590,7 +627,9 @@ describe("parseRoadmapTab", () => {
         "Labels (cy)": "Tag",
         "Details (cy)": "Manylyn",
       })
-      expect(tab.items[0]).toEqual(createTestRoadmapItem("An item"))
+      expect(tab.items[0]).toEqual(
+        createTestRoadmapItem("An item", { hasWelshTags: true }),
+      )
       expect(tab.problems.map(({ code, column }) => [code, column])).toEqual([
         ["welsh-without-english", "Labels (cy)"],
         ["welsh-without-english", "Details (cy)"],

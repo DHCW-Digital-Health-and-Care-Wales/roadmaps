@@ -1,11 +1,7 @@
 import type { Page } from "@playwright/test"
 
+import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
-
-/** The fake's grant (3599 s) less the app's 60 s margin: when the session ends. */
-const SESSION_MS = (3599 - 60) * 1000
-/** The warning opens two minutes before the session ends. */
-const WARNING_MS = 2 * 60 * 1000
 
 /** Connects with a fake clock, loads the roadmaps, and reaches the warning. */
 async function reachWarning(page: Page) {
@@ -13,7 +9,7 @@ async function reachWarning(page: Page) {
   await page.goto("./")
   await connect(page)
   await expect(roadmapCards(page)).toHaveCount(3)
-  await page.clock.fastForward(SESSION_MS - WARNING_MS)
+  await page.clock.fastForward(sessionMs() - SESSION_WARNING_MS)
   const warning = page.getByRole("alertdialog", {
     name: "Your session is about to end",
   })
@@ -75,7 +71,7 @@ test("staying connected renews in one click and keeps the page (S4)", async ({
   await expect(page.getByRole("main").getByRole("note")).toHaveCount(0)
 
   // The old session's end passes; the renewed one carries on with its own token.
-  await page.clock.fastForward(WARNING_MS + 60_000)
+  await page.clock.fastForward(SESSION_WARNING_MS + 60_000)
   await expect(page.getByRole("banner").getByRole("status")).toHaveText(
     "Google connected",
   )
@@ -106,7 +102,7 @@ test("a blocked renewal shows why and the session runs out as before (S5)", asyn
     "Google connected",
   )
 
-  await page.clock.fastForward(WARNING_MS)
+  await page.clock.fastForward(SESSION_WARNING_MS)
   await expect(page.getByRole("banner").getByRole("status")).toHaveText(
     "Session expired",
   )
@@ -124,7 +120,7 @@ test("dismissing the warning leaves the session to run out (S6)", async ({
   await page.keyboard.press("Escape")
 
   await expect(warning).toBeHidden()
-  await page.clock.fastForward(WARNING_MS - 1_000)
+  await page.clock.fastForward(SESSION_WARNING_MS - 1_000)
   await expect(warning).toBeHidden()
   await expect(page.getByRole("banner").getByRole("status")).toHaveText(
     "Google connected",

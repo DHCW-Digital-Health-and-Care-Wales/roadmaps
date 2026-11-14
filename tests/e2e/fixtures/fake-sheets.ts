@@ -106,6 +106,12 @@ export const EXAMPLE_LISTS: readonly FakeTab[] = [
   },
 ]
 
+/** The example spreadsheet with both lists: what a test that chooses from them sees. */
+export const EXAMPLE_SPREADSHEET_WITH_LISTS: readonly FakeTab[] = [
+  ...EXAMPLE_SPREADSHEET,
+  ...EXAMPLE_LISTS,
+]
+
 /**
  * One row of the roadmap index, in the example header's column order, from the cells to
  * set by header name (the rest blank): `roadmapRow({ Sheet: "x", Colour: "#ffffff" })`.

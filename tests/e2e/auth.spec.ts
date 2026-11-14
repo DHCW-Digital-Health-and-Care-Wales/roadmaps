@@ -1,4 +1,4 @@
-import type { TokenOutcome } from "./fixtures/fake-gis"
+import { sessionMs, type TokenOutcome } from "./fixtures/fake-gis"
 import { EXAMPLE_INDEX_ROWS, withRoadmapIndex } from "./fixtures/fake-sheets"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
@@ -102,7 +102,7 @@ test("a failed reconnect from the header shows why over the expired roadmaps", a
   await page.goto("./")
   await connect(page)
   await expect(roadmapCards(page)).toHaveCount(3)
-  await page.clock.fastForward("01:00:00")
+  await page.clock.fastForward(sessionMs())
   const main = page.getByRole("main")
   await expect(main.getByText("Your session has expired")).toBeVisible()
 

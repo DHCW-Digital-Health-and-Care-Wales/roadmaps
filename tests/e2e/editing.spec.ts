@@ -4,6 +4,7 @@ import {
   EXAMPLE_INDEX_ROWS,
   EXAMPLE_LISTS,
   EXAMPLE_SPREADSHEET,
+  EXAMPLE_SPREADSHEET_WITH_LISTS,
   type FakeTab,
   withRoadmapIndex,
   withTabRows,
@@ -446,7 +447,7 @@ test.describe("a family and category (STY-028)", () => {
   }
 
   test.beforeEach(({ sheets }) => {
-    sheets.spreadsheet = [...EXAMPLE_SPREADSHEET, ...EXAMPLE_LISTS]
+    sheets.spreadsheet = EXAMPLE_SPREADSHEET_WITH_LISTS
   })
 
   test("is chosen from the lists, pending in its colour, then published with its IDs (S1, S2, S3)", async ({

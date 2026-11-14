@@ -229,8 +229,14 @@ flowchart LR
 - [CHO-010](../chores/CHO-010-check-adding-a-roadmap-against-a-real-spreadsheet.md): the
   checks of STY-040's write against a real test spreadsheet, which its delivery could
   not run.
-- [CHO-011](../chores/CHO-011-the-dialog-tests-share-their-setup.md): the test setup
-  STY-041 wrote out per spec, to share before STY-043, STY-044 and STY-046 copy it.
+- [CHO-011](../_archive/chores/CHO-011-the-dialog-tests-share-their-setup.md): the
+  test setup STY-041 wrote out per spec, shared before STY-043, STY-044 and STY-046
+  copy it. Done, in its PR, awaiting merge.
+- [CHO-012](../chores/CHO-012-the-other-tests-use-the-shared-fixtures.md): the
+  family and category lists other tests still declare, and the connected state every
+  page test declares.
+- [CHO-013](../chores/CHO-013-the-page-focus-tour-tells-its-stops-apart.md): the page
+  focus tour names text fields alike, so it can miss one.
 - [`docs/analysis/add-a-roadmap-ux-analysis.md`](../../analysis/add-a-roadmap-ux-analysis.md):
   twelve mock-ups over four journeys. Outcome: a dialog for adding a roadmap, landing on
   the new roadmap; a dialog for adding an item; one panel on an empty roadmap.

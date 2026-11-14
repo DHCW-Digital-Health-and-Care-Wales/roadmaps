@@ -1,9 +1,10 @@
 import type { Locator, Page } from "@playwright/test"
 
+import { openAddRoadmapDialog } from "./fixtures/dialogs"
+import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
 import {
   EXAMPLE_INDEX_ROWS,
-  EXAMPLE_LISTS,
-  EXAMPLE_SPREADSHEET,
+  EXAMPLE_SPREADSHEET_WITH_LISTS,
   withRoadmapIndex,
 } from "./fixtures/fake-sheets"
 import {
@@ -111,12 +112,13 @@ for (const language of ["en", "cy"] as const) {
     })
 
     test("main page, expired with roadmaps", async ({ page, gis }) => {
-      // Usable for four minutes (the app stops 60 s before Google's expiry).
-      gis.respondWith({ type: "grant", expiresIn: 300 })
+      // A short session.
+      const expiresIn = 300
+      gis.respondWith({ type: "grant", expiresIn })
       await page.clock.install()
       await connectTo(page, language)
       await expect(roadmapCards(page)).toHaveCount(3)
-      await page.clock.fastForward("04:00")
+      await page.clock.fastForward(sessionMs(expiresIn))
       const main = page.getByRole("main")
       await expect(main.getByRole("alert")).toBeVisible()
 
@@ -312,16 +314,8 @@ test("the Add a roadmap dialog, refused (STY-041)", async ({
   page,
   sheets,
 }) => {
-  sheets.spreadsheet = [...EXAMPLE_SPREADSHEET, ...EXAMPLE_LISTS]
-  await page.goto("./")
-  await connect(page)
-  await expect(roadmapCards(page)).toHaveCount(3)
-  await page
-    .getByRole("main")
-    .getByRole("button", { name: "Add a roadmap" })
-    .click()
-  const dialog = page.getByRole("dialog", { name: "Add a roadmap" })
-  await expect(dialog.getByRole("combobox", { name: "Family" })).toBeEnabled()
+  sheets.spreadsheet = EXAMPLE_SPREADSHEET_WITH_LISTS
+  const dialog = await openAddRoadmapDialog(page, { offersLists: true })
   await dialog.getByRole("textbox", { name: "Short name" }).fill("ProductA")
   await dialog.getByRole("button", { name: "Add roadmap" }).click()
   await expect(dialog.getByText("Enter a title")).toBeVisible()
@@ -348,8 +342,7 @@ test("the language menu, open", async ({ page }) => {
 })
 
 test("the session warning", async ({ page, gis }) => {
-  // A grant of `expiresIn` seconds ends the session a minute early; the warning opens two
-  // minutes before that, and 30 s into it the countdown reads "1 minute and N seconds"
+  // A short session: 30 s into its warning the countdown reads "1 minute and N seconds"
   // however long the test takes.
   const expiresIn = 600
   gis.respondWith({ type: "grant", expiresIn })
@@ -357,7 +350,9 @@ test("the session warning", async ({ page, gis }) => {
   await page.goto("./")
   await connect(page)
   await expect(roadmapCards(page)).toHaveCount(3)
-  await page.clock.fastForward((expiresIn - 60 - 120 + 30) * 1000)
+  await page.clock.fastForward(
+    sessionMs(expiresIn) - SESSION_WARNING_MS + 30_000,
+  )
   const warning = page.getByRole("alertdialog")
   await expect(warning).toBeVisible()
 

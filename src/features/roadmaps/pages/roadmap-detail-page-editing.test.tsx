@@ -16,6 +16,7 @@ import type { Language } from "@/i18n"
 import { AppError } from "@/lib/errors"
 import { renderWithProviders } from "@/test/render-with-providers"
 
+import { holdCall } from "../testing/held-call"
 import {
   createInMemoryRoadmapRepository,
   type InMemoryRoadmapItems,
@@ -552,18 +553,14 @@ describe("Publishing a roadmap's changes (STY-025)", () => {
 
   it("publishes once, busy until it ends, then confirms and shows the re-read text (S10)", async () => {
     const repository = createInMemoryRoadmapRepository(roadmaps, roadmapItems)
-    const real = repository.publishRoadmapChanges.bind(repository)
-    let release: (() => void) | undefined
-    const held = new Promise<void>((resolve) => {
-      release = resolve
+    const {
+      held: write,
+      release,
+      released,
+    } = holdCall(repository.publishRoadmapChanges.bind(repository))
+    const { user } = await renderPage({
+      repository: { ...repository, publishRoadmapChanges: write },
     })
-    const write = vi
-      .spyOn(repository, "publishRoadmapChanges")
-      .mockImplementation(async (...args) => {
-        await held
-        return real(...args)
-      })
-    const { user } = await renderPage({ repository })
     await editTitle(user, "First item", "First, edited")
 
     await publish(user)
@@ -576,8 +573,8 @@ describe("Publishing a roadmap's changes (STY-025)", () => {
     await user.keyboard("{Escape}")
     expect(screen.getByRole("alertdialog")).toBeInTheDocument()
     await act(async () => {
-      release?.()
-      await held
+      release()
+      await released
     })
 
     expect(

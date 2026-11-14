@@ -3,17 +3,24 @@ import userEvent, { type UserEvent } from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
 import type { AuthState } from "@/domain/auth/auth-client"
-import type { Category } from "@/domain/roadmap/category"
-import type { Family } from "@/domain/roadmap/family"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { RoadmapRepository } from "@/domain/roadmap/roadmap-repository"
+import {
+  GP_AND_COMMUNITY_SERVICES,
+  SINGLE_RECORD,
+  TEST_CATEGORIES,
+  TEST_FAMILIES,
+  TESTS_SCANS_AND_RESULTS,
+} from "@/domain/roadmap/testing/test-lists"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 import { AppError } from "@/lib/errors"
 import { renderWithProviders } from "@/test/render-with-providers"
 
+import { holdCall } from "../testing/held-call"
 import {
   createInMemoryRoadmapRepository,
+  type InMemoryRoadmapRepository,
   type InMemoryRoadmapRepositoryOptions,
 } from "../testing/in-memory-roadmap-repository"
 
@@ -22,28 +29,6 @@ const connected: AuthState = {
   expiresAt: Date.now() + 3_600_000,
 }
 
-const medicines: Family = {
-  id: "vdkxj63m",
-  name: { en: "Medicines & Diagnostics", cy: "Meddyginiaethau a Diagnosteg" },
-  colour: "#006747",
-}
-const records: Family = {
-  id: "fc29g5b9",
-  name: { en: "Single Record", cy: "Cofnod Sengl" },
-  colour: "#325083",
-}
-const families = [medicines, records]
-
-const community: Category = {
-  id: "b2tqsxzm",
-  name: { en: "GP & Community Services", cy: "Gwasanaethau Meddyg Teulu" },
-}
-const hospital: Category = {
-  id: "khzpchkh",
-  name: { en: "Hospital & Specialist Care", cy: "Gofal Ysbyty" },
-}
-const categories = [community, hospital]
-
 const roadmaps: Roadmap[] = [
   createTestRoadmap("outpatient-booking", "Outpatient Booking roadmap", {
     itemsLocation: "Outpatient Booking",
@@ -51,9 +36,9 @@ const roadmaps: Roadmap[] = [
   createTestRoadmap("patient-summary", "Patient Summary roadmap", {
     itemsLocation: "Patient Summary",
     published: false,
-    familyId: records.id,
-    family: records.name,
-    colour: records.colour,
+    familyId: SINGLE_RECORD.id,
+    family: SINGLE_RECORD.name,
+    colour: SINGLE_RECORD.colour,
   }),
 ]
 
@@ -64,23 +49,8 @@ function repositoryWith(
   return createInMemoryRoadmapRepository(
     listed,
     {},
-    { families, categories, ...options },
+    { families: TEST_FAMILIES, categories: TEST_CATEGORIES, ...options },
   )
-}
-
-/** `repository`, its add held until `release` is called. */
-function holdingAdd(repository: RoadmapRepository) {
-  let release: () => void = () => undefined
-  const held = new Promise<void>((resolve) => {
-    release = resolve
-  })
-  const addRoadmap = vi.fn<RoadmapRepository["addRoadmap"]>(
-    async (input, options) => {
-      await held
-      return repository.addRoadmap(input, options)
-    },
-  )
-  return { repository: { ...repository, addRoadmap }, addRoadmap, release }
 }
 
 function main() {
@@ -150,6 +120,20 @@ function submit(user: UserEvent) {
   return user.click(dialog().getByRole("button", { name: "Add roadmap" }))
 }
 
+/** A co-lead removes Patient Summary from the list, which this tab then reads again. */
+async function removePatientSummary(
+  user: UserEvent,
+  repository: InMemoryRoadmapRepository,
+) {
+  repository.coLead((rows) => {
+    rows.splice(
+      rows.findIndex(({ id }) => id === "patient-summary"),
+      1,
+    )
+  })
+  await user.click(await main().findByRole("button", { name: "Refresh" }))
+}
+
 describe("adding a roadmap from the list (STY-041)", () => {
   describe("the action (S1)", () => {
     it("sits with Refresh once the list has loaded", async () => {
@@ -209,7 +193,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
       within(family)
         .getAllByRole("option")
         .map((option) => option.textContent),
-    ).toEqual(["No family", "Medicines & Diagnostics", "Single Record"])
+    ).toEqual(["No family", "Single Record", "Medicines & Diagnostics"])
     const category = form.getByRole("combobox", { name: "Category" })
     expect(category).toHaveDisplayValue("No category")
     expect(category).not.toBeRequired()
@@ -344,8 +328,11 @@ describe("adding a roadmap from the list (STY-041)", () => {
 
   describe("adding (S5)", () => {
     it("shows it is working, holding the fields, until the write answers", async () => {
-      const { repository, addRoadmap, release } = holdingAdd(repositoryWith())
-      const { user } = await renderList(repository)
+      const repository = repositoryWith()
+      const { held: addRoadmap, release } = holdCall(
+        repository.addRoadmap.bind(repository),
+      )
+      const { user } = await renderList({ ...repository, addRoadmap })
       const form = await openDialog(user)
       await fillIn(user)
 
@@ -371,7 +358,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
         title: "Community Nursing roadmap",
         shortName: "Community Nursing",
         familyId: null,
-        categoryId: community.id,
+        categoryId: GP_AND_COMMUNITY_SERVICES.id,
         productLead: "Sam Evans",
       })
 
@@ -520,13 +507,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
       )
       await user.type(about.getByRole("textbox", { name: "Title" }), " draft")
       await user.click(about.getByRole("button", { name: "Done" }))
-      repository.coLead((rows) => {
-        rows.splice(
-          rows.findIndex(({ id }) => id === "patient-summary"),
-          1,
-        )
-      })
-      await user.click(main().getByRole("button", { name: "Refresh" }))
+      await removePatientSummary(user, repository)
       await main().findByText(
         "This roadmap was removed from the list, so your changes to it couldn't be kept.",
       )
@@ -559,13 +540,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
       )
       await main().findByRole("heading", { name: "Shared summary view" })
       await user.click(main().getByRole("link", { name: "Back to roadmaps" }))
-      repository.coLead((rows) => {
-        rows.splice(
-          rows.findIndex(({ id }) => id === "patient-summary"),
-          1,
-        )
-      })
-      await user.click(await main().findByRole("button", { name: "Refresh" }))
+      await removePatientSummary(user, repository)
       await main().findByText("1 roadmap")
 
       await openDialog(user)
@@ -623,12 +598,12 @@ describe("adding a roadmap from the list (STY-041)", () => {
       const inMemory = repositoryWith()
       const listFamilies = vi
         .fn<RoadmapRepository["listFamilies"]>()
-        .mockResolvedValueOnce(families)
-        .mockResolvedValue([records])
+        .mockResolvedValueOnce([...TEST_FAMILIES])
+        .mockResolvedValue([SINGLE_RECORD])
       const listCategories = vi
         .fn<RoadmapRepository["listCategories"]>()
-        .mockResolvedValueOnce(categories)
-        .mockResolvedValue([hospital])
+        .mockResolvedValueOnce([...TEST_CATEGORIES])
+        .mockResolvedValue([TESTS_SCANS_AND_RESULTS])
       const addRoadmap = vi
         .fn<RoadmapRepository["addRoadmap"]>()
         .mockResolvedValue({
@@ -671,7 +646,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
         within(category)
           .getAllByRole("option")
           .map((option) => option.textContent),
-      ).toEqual(["No category", "Hospital & Specialist Care"])
+      ).toEqual(["No category", "Tests, Scans & Results"])
       expect(form.getByRole("textbox", { name: "Title" })).toHaveValue(
         "Community Nursing roadmap",
       )
@@ -682,7 +657,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
     it("says so at a field whose whole list has gone, which takes focus in place of its select", async () => {
       const listFamilies = vi
         .fn<RoadmapRepository["listFamilies"]>()
-        .mockResolvedValueOnce(families)
+        .mockResolvedValueOnce([...TEST_FAMILIES])
         .mockResolvedValue(null)
       const addRoadmap = vi
         .fn<RoadmapRepository["addRoadmap"]>()
@@ -724,8 +699,8 @@ describe("adding a roadmap from the list (STY-041)", () => {
       const inMemory = repositoryWith()
       const listFamilies = vi
         .fn<RoadmapRepository["listFamilies"]>()
-        .mockResolvedValueOnce(families)
-        .mockResolvedValue([records])
+        .mockResolvedValueOnce([...TEST_FAMILIES])
+        .mockResolvedValue([SINGLE_RECORD])
       const addRoadmap = vi.spyOn(inMemory, "addRoadmap")
       const { user, authClient } = await renderList({
         ...inMemory,
@@ -760,7 +735,10 @@ describe("adding a roadmap from the list (STY-041)", () => {
       await submit(user)
       await findRoadmapPage()
       expect(addRoadmap).toHaveBeenCalledExactlyOnceWith(
-        expect.objectContaining({ familyId: null, categoryId: community.id }),
+        expect.objectContaining({
+          familyId: null,
+          categoryId: GP_AND_COMMUNITY_SERVICES.id,
+        }),
         // The hook passes no options.
       )
     })
@@ -922,7 +900,10 @@ describe("adding a roadmap from the list (STY-041)", () => {
 
       await findRoadmapPage()
       expect(addRoadmap).toHaveBeenCalledExactlyOnceWith(
-        expect.objectContaining({ familyId: null, categoryId: community.id }),
+        expect.objectContaining({
+          familyId: null,
+          categoryId: GP_AND_COMMUNITY_SERVICES.id,
+        }),
       )
     })
 

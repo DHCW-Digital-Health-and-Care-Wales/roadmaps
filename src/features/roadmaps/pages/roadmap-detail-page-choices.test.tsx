@@ -6,11 +6,20 @@ import type { AuthState } from "@/domain/auth/auth-client"
 import type { Category } from "@/domain/roadmap/category"
 import type { Family } from "@/domain/roadmap/family"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
+import {
+  GP_AND_COMMUNITY_SERVICES,
+  MEDICINES_AND_DIAGNOSTICS,
+  SINGLE_RECORD,
+  TEST_CATEGORIES,
+  TEST_FAMILIES,
+  TESTS_SCANS_AND_RESULTS,
+} from "@/domain/roadmap/testing/test-lists"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 import { AppError } from "@/lib/errors"
 import { renderWithProviders } from "@/test/render-with-providers"
 
+import { holdCall } from "../testing/held-call"
 import {
   createInMemoryRoadmapRepository,
   type InMemoryRoadmapRepository,
@@ -21,30 +30,13 @@ const connected: AuthState = {
   expiresAt: Date.now() + 3_600_000,
 }
 
-const records: Family = {
-  id: "fc29g5b9",
-  name: { en: "Single Record", cy: "Cofnod Sengl" },
-  colour: "#12a3c9",
-}
-const medicines: Family = {
-  id: "vdkxj63m",
-  name: { en: "Medicines & Diagnostics", cy: "Meddyginiaethau a Diagnosteg" },
-  colour: "#006747",
-}
-const families = [records, medicines]
-
-const categories: Category[] = [
-  { id: "b2tqsxzm", name: { en: "Patient records", cy: "Cofnodion cleifion" } },
-  { id: "khzpchkh", name: { en: "Clinical systems", cy: "Systemau clinigol" } },
-]
-
 const roadmaps: Roadmap[] = [
   createTestRoadmap("producta", "Product A roadmap", {
-    familyId: records.id,
-    family: records.name,
-    colour: records.colour,
-    categoryId: "khzpchkh",
-    category: { en: "Clinical systems", cy: "Systemau clinigol" },
+    familyId: SINGLE_RECORD.id,
+    family: SINGLE_RECORD.name,
+    colour: SINGLE_RECORD.colour,
+    categoryId: GP_AND_COMMUNITY_SERVICES.id,
+    category: GP_AND_COMMUNITY_SERVICES.name,
   }),
 ]
 
@@ -57,7 +49,7 @@ function repositoryWith(lists: Lists = {}) {
   return createInMemoryRoadmapRepository(
     roadmaps,
     { producta: [createTestRoadmapItem("First item")] },
-    { families, categories, ...lists },
+    { families: TEST_FAMILIES, categories: TEST_CATEGORIES, ...lists },
   )
 }
 
@@ -104,19 +96,19 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
     const { user, form } = await renderPage(repository)
 
     const family = await select(form, "Family")
-    expect(family).toHaveValue(records.id)
+    expect(family).toHaveValue(SINGLE_RECORD.id)
     expect(optionsOf(family)).toEqual([
       "No family",
       "Single Record",
       "Medicines & Diagnostics",
     ])
-    await user.selectOptions(family, medicines.id)
+    await user.selectOptions(family, MEDICINES_AND_DIAGNOSTICS.id)
     await user.click(form.getByRole("button", { name: "Done" }))
 
     const line = main().getByText("Family: Medicines & Diagnostics")
     // The family line's swatch sits before its text.
     expect(line.parentElement?.previousElementSibling).toHaveStyle({
-      backgroundColor: medicines.colour,
+      backgroundColor: MEDICINES_AND_DIAGNOSTICS.colour,
     })
     expect(main().getByText("1 unpublished change")).toBeInTheDocument()
     expect(write).not.toHaveBeenCalled()
@@ -132,7 +124,7 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
       colour: "#5f3d8a",
     }
     vi.spyOn(repository, "listFamilies").mockResolvedValue([
-      ...families,
+      ...TEST_FAMILIES,
       workforce,
     ])
 
@@ -149,8 +141,8 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
     const category = await select(form, "Category")
     expect(optionsOf(category)).toEqual([
       "No category",
-      "Patient records",
-      "Clinical systems",
+      "GP & Community Services",
+      "Tests, Scans & Results",
     ])
     expect(form.queryByRole("textbox", { name: "Category" })).toBeNull()
     await user.selectOptions(category, "No category")
@@ -164,7 +156,10 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
     const repository = repositoryWith()
     const { user, form } = await renderPage(repository)
 
-    await user.selectOptions(await select(form, "Family"), medicines.id)
+    await user.selectOptions(
+      await select(form, "Family"),
+      MEDICINES_AND_DIAGNOSTICS.id,
+    )
     await user.click(form.getByRole("button", { name: "Done" }))
     await user.click(main().getByRole("button", { name: "Publish changes" }))
     await user.click(
@@ -183,16 +178,8 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
 
   it("holds the family at its value while the list is read", async () => {
     const repository = repositoryWith()
-    let release: () => void = () => undefined
-    const listed = repository.listFamilies.bind(repository)
-    vi.spyOn(repository, "listFamilies").mockImplementation(
-      (options) =>
-        new Promise((resolve) => {
-          release = () => {
-            resolve(listed(options))
-          }
-        }),
-    )
+    const { held, release } = holdCall(repository.listFamilies.bind(repository))
+    vi.spyOn(repository, "listFamilies").mockImplementation(held)
     const { form } = await renderPage(repository)
 
     const family = form.getByRole("combobox", { name: "Family" })
@@ -216,7 +203,7 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
       missing: "categories",
       field: "Category",
       other: "Family",
-      name: "Clinical systems",
+      name: "GP & Community Services",
       notice: "The category can't be changed right now.",
     },
   ] as const)(
@@ -240,9 +227,9 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
       const roadmap = list.find(({ id }) => id === "producta")
       if (!roadmap) throw new Error("No Product A")
       Object.assign(roadmap, {
-        familyId: medicines.id,
-        family: medicines.name,
-        colour: medicines.colour,
+        familyId: MEDICINES_AND_DIAGNOSTICS.id,
+        family: MEDICINES_AND_DIAGNOSTICS.name,
+        colour: MEDICINES_AND_DIAGNOSTICS.colour,
       })
     })
 
@@ -271,11 +258,11 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
       const roadmap = list.find(({ id }) => id === "producta")
       if (!roadmap) throw new Error("No Product A")
       Object.assign(roadmap, {
-        familyId: medicines.id,
-        family: medicines.name,
-        colour: medicines.colour,
-        categoryId: "b2tqsxzm",
-        category: { en: "Patient records", cy: "Cofnodion cleifion" },
+        familyId: MEDICINES_AND_DIAGNOSTICS.id,
+        family: MEDICINES_AND_DIAGNOSTICS.name,
+        colour: MEDICINES_AND_DIAGNOSTICS.colour,
+        categoryId: TESTS_SCANS_AND_RESULTS.id,
+        category: TESTS_SCANS_AND_RESULTS.name,
       })
     })
     vi.spyOn(repository, "listRoadmaps").mockRejectedValue(
@@ -304,7 +291,9 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
     expect(
       main().getByText("Family: Medicines & Diagnostics"),
     ).toBeInTheDocument()
-    expect(main().getByText("Category: Patient records")).toBeInTheDocument()
+    expect(
+      main().getByText("Category: Tests, Scans & Results"),
+    ).toBeInTheDocument()
     expect(main().queryByText(/unpublished change/)).toBeNull()
   })
 })

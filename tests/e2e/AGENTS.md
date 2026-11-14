@@ -17,9 +17,11 @@ End-to-end tests of the production build, with Google faked (ADR-006).
   (`publishOnce` in `editing.spec.ts`) to give every item its ID, then calls
   `sheets.coLead`.
 - No sleeps. For back-off or expiry, `page.clock.install()` before `goto`, then
-  fast-forward; time still runs in real time until moved. The session warning opens two
-  minutes before a session ends (Google's `expires_in` less 60 s) and, being modal,
-  hides the page from role queries: a grant shorter than about 180 s opens it at once.
+  fast-forward; time still runs in real time until moved. Move the clock to a session's
+  end or its warning by `sessionMs()` and `SESSION_WARNING_MS` (`fixtures/fake-gis.ts`),
+  never a sum written in the spec. The warning opens two minutes before a session ends
+  and, being modal, hides the page from role queries: a grant shorter than about 180 s
+  opens it at once.
 - `page.evaluate` runs with a user gesture, so it cannot exercise the popup-gesture
   check.
 - `sheets.reads`, `sheets.tokens` and `gis.tokenRequests` fill as requests arrive: await

@@ -41,9 +41,9 @@ read that log before relying on it.
 
 A fix made between review rounds, before it is pushed, needs the tests of its
 changed files and their consumers (`pnpm exec vitest related --run <files>`),
-with `pnpm lint` and `pnpm typecheck`, plus the Playwright specs of any journey
-it changes; with those green, commit it and start the next round's reviewers.
-Every head you push gets the full gate first.
+with `pnpm lint`, `pnpm typecheck` and `pnpm format:check`, plus the Playwright
+specs of any journey it changes; with those green, commit it and start the next
+round's reviewers. Every head you push gets the full gate first.
 
 CI is the shared merge gate, and independent review covers requirements and
 judgement beyond deterministic checks. Never rely on one as a replacement for

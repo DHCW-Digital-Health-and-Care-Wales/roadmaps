@@ -237,6 +237,9 @@ flowchart LR
   page test declares.
 - [CHO-013](../chores/CHO-013-the-page-focus-tour-tells-its-stops-apart.md): the page
   focus tour names text fields alike, so it can miss one.
+- [CHO-014](../chores/CHO-014-slim-the-e2e-suite.md): the E2E suite slimmed where a
+  test holds only geometry or repeats a run, as the owner asked after CHO-011 cut the
+  add-a-roadmap journey to one run. Its `editing.spec.ts` rows wait for STY-044.
 - [`docs/analysis/add-a-roadmap-ux-analysis.md`](../../analysis/add-a-roadmap-ux-analysis.md):
   twelve mock-ups over four journeys. Outcome: a dialog for adding a roadmap, landing on
   the new roadmap; a dialog for adding an item; one panel on an empty roadmap.

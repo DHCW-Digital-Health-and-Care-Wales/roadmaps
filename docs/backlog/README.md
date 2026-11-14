@@ -42,6 +42,7 @@ moves to `_archive/`, where its row here still points.
 | [CHO-011](_archive/chores/CHO-011-the-dialog-tests-share-their-setup.md)       | The dialog tests share one way to open a dialog, one focus tour and one set of fixtures, before more dialogs copy them | Done — in its PR, awaiting merge |
 | [CHO-012](chores/CHO-012-the-other-tests-use-the-shared-fixtures.md)           | The other tests take their families, categories and connected state from the shared fixtures                           | Proposed                         |
 | [CHO-013](chores/CHO-013-the-page-focus-tour-tells-its-stops-apart.md)         | The page focus tour tells its stops apart, so it can't miss a text field                                               | Proposed                         |
+| [CHO-014](chores/CHO-014-slim-the-e2e-suite.md)                                | The E2E suite holds geometry, and repeats a run per theme, language or width, only where that proves something         | Proposed                         |
 
 Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status token.
 

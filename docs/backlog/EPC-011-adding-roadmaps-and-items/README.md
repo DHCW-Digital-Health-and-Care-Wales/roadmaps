@@ -220,9 +220,9 @@ flowchart LR
 
 ## Defects
 
-- [DEF-006](../defects/DEF-006-a-refused-reconnect-drops-the-add-a-roadmap-dialog.md):
+- [DEF-006](../_archive/defects/DEF-006-a-refused-reconnect-drops-the-add-a-roadmap-dialog.md):
   a reconnect Google refuses drops the "Add a roadmap" dialog and what was typed.
-  Needs triage.
+  Won't fix (owner, 2026-11-14): rare and a small loss; reopen on evidence from real users.
 
 ## Related
 

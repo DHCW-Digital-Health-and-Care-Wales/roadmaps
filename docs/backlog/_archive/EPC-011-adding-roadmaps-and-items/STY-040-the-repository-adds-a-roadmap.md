@@ -9,7 +9,7 @@
 - **Binding ADRs**: ADR-009, ADR-011, ADR-012, ADR-013, ADR-002, ADR-006
 - **Suggested model**: Opus — a new write that copies a tab and adds an index row in one
   all-or-nothing request, refused on a fresh read, with a lost answer settled
-- **Delivered**: _(the PR's URL, once it is open)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/73
 
 ## Summary
 

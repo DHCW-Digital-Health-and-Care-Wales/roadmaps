@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { isCalendarDate } from "@/domain/roadmap/calendar-date"
 
 import { RoadmapSwatch } from "../components/roadmap-swatch"
+import { OpeningField } from "./opening-field"
 
 /** One choice of a field chosen from a list. */
 export interface EditFormOption {
@@ -40,13 +41,18 @@ export interface EditFormField<F extends string> {
   /**
    * With `options`, any number of them chosen, as checkboxes, instead of one (STY-034):
    * the field's value holds the chosen ones' values as `ofValue` reads it and `toValue`
-   * writes it.
+   * writes it. The checkboxes open on request (STY-038): shut, the field shows
+   * `summary` of the chosen ones on one line, or `none` when that is empty, beside a
+   * button named with `subject` ("Change organisations").
    */
   many?: {
     ofValue: (value: string) => readonly string[]
     toValue: (chosen: readonly string[]) => string
+    summary: (chosen: readonly string[]) => string
+    none: string
+    subject: string
   }
-  /** Said of a checkbox group as a whole, under its label (STY-034 S4). */
+  /** Said of a checkbox group as a whole, under its label, shut or open (STY-038 S5). */
   hint?: string
   /** Held at its value, as while its options are read. */
   disabled?: boolean
@@ -81,12 +87,12 @@ export interface EditFormProps<F extends string> {
 
 /**
  * The form an item or the roadmap's own text turns into for editing (STY-025 S1, S4,
- * S5): a labelled field each, typed, chosen from a list (STY-028), ticked from one
- * (STY-034) or a date picked (STY-036), or shown read-only when it can't be changed,
- * then "Done" to keep the values pending and Cancel (or Escape) to leave them. The title
- * is required, and a date is a real one and not after today: confirming otherwise keeps
- * the form open with an error linked to each field, focusing the first. Writes nothing;
- * the caller keeps the values pending.
+ * S5): a labelled field each, typed, chosen from a list (STY-028), ticked from one that
+ * opens on request (STY-034, STY-038) or a date picked (STY-036), or shown read-only
+ * when it can't be changed, then "Done" to keep the values pending and Cancel (or
+ * Escape) to leave them. The title is required, and a date is a real one and not after
+ * today: confirming otherwise keeps the form open with an error linked to each field,
+ * focusing the first. Writes nothing; the caller keeps the values pending.
  */
 export function EditForm<F extends string>({
   fields,
@@ -176,9 +182,10 @@ export function EditForm<F extends string>({
           )
         }
         if (field.options && field.many) {
-          const { ofValue, toValue } = field.many
-          const ticked = new Set(ofValue(values[field.name]))
-          const hintId = `${controlId}-hint`
+          const { options } = field
+          const { ofValue, toValue, summary, none, subject } = field.many
+          const chosen = ofValue(values[field.name])
+          const ticked = new Set(chosen)
           const toggle = (option: string, checked: boolean) => {
             setValues((current) => {
               const next = new Set(ofValue(current[field.name]))
@@ -188,37 +195,35 @@ export function EditForm<F extends string>({
             })
           }
           return (
-            <fieldset
+            <OpeningField
               key={field.name}
-              aria-describedby={field.hint ? hintId : undefined}
-              className="flex flex-col gap-2.5"
+              label={field.label}
+              subject={subject}
+              summary={summary(chosen) || null}
+              none={none}
+              hint={field.hint}
             >
-              <legend className="mb-1.5 text-body font-bold">
-                {field.label}
-              </legend>
-              {field.hint && (
-                <p id={hintId} className="text-muted-foreground">
-                  {field.hint}
-                </p>
-              )}
-              {field.options.map((option) => (
-                <label
-                  key={option.value}
-                  className="flex min-h-10 cursor-pointer items-center gap-3"
-                >
-                  <Checkbox
-                    checked={ticked.has(option.value)}
-                    disabled={field.disabled}
-                    onCheckedChange={(checked) => {
-                      toggle(option.value, checked)
-                    }}
-                  />
-                  <span className="min-w-0 wrap-break-word">
-                    {option.label}
-                  </span>
-                </label>
-              ))}
-            </fieldset>
+              {(focusOnOpen) =>
+                options.map((option, index) => (
+                  <label
+                    key={option.value}
+                    className="flex min-h-10 cursor-pointer items-center gap-3"
+                  >
+                    <Checkbox
+                      ref={index === 0 ? focusOnOpen : undefined}
+                      checked={ticked.has(option.value)}
+                      disabled={field.disabled}
+                      onCheckedChange={(checked) => {
+                        toggle(option.value, checked)
+                      }}
+                    />
+                    <span className="min-w-0 wrap-break-word">
+                      {option.label}
+                    </span>
+                  </label>
+                ))
+              }
+            </OpeningField>
           )
         }
         if (field.options) {

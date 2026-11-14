@@ -31,6 +31,11 @@ const items: RoadmapItem[] = [
     organisationIds: ["cavuhb"],
     unknownOrganisationCodes: ["CAVHB"],
   }),
+  createTestRoadmapItem("Video clinics", {
+    id: "item-3",
+    organisationIds: ["sbuhb", "cavuhb"],
+  }),
+  createTestRoadmapItem("New idea", { id: "item-4" }),
 ]
 
 type User = ReturnType<typeof userEvent.setup>
@@ -70,10 +75,18 @@ async function renderPage({
   return { user, repository }
 }
 
-/** Opens the item's form and returns its Organisations group. */
-async function openOrganisations(user: User, title: string) {
+/** Opens the item's form, its Organisations field still shut (STY-038). */
+async function openForm(user: User, title: string) {
   await user.click(main().getByRole("button", { name: `Edit ${title}` }))
-  const form = within(main().getByRole("form", { name: title }))
+  return within(main().getByRole("form", { name: title }))
+}
+
+/** Opens the item's form and its Organisations field, and returns the field's group. */
+async function openOrganisations(user: User, title: string) {
+  const form = await openForm(user, title)
+  await user.click(
+    form.getByRole("button", { name: /^(Change|Add) organisations$/ }),
+  )
   return within(form.getByRole("group", { name: "Organisations" }))
 }
 
@@ -129,6 +142,7 @@ describe("Choosing an item's organisations (STY-034)", () => {
 
     await user.click(main().getByRole("button", { name: "Golygu Typo" }))
     const form = within(main().getByRole("form", { name: "Typo" }))
+    await user.click(form.getByRole("button", { name: "Newid sefydliadau" }))
     const group = within(form.getByRole("group", { name: "Sefydliadau" }))
     expect(
       group.getByRole("checkbox", { name: "Cardiff and Vale (CAVUHB)" }),
@@ -177,15 +191,15 @@ describe("Choosing an item's organisations (STY-034)", () => {
 
     await openOrganisations(user, "Typo")
 
-    const group = within(main().getByRole("form", { name: "Typo" })).getByRole(
-      "group",
-      { name: "Organisations" },
-    )
-    expect(group).toHaveAccessibleDescription(
+    // The notice sits above the group, where it shows while the field is shut (STY-038).
+    const form = within(main().getByRole("form", { name: "Typo" }))
+    expect(
+      form.getByRole("group", { name: "Organisations" }),
+    ).toHaveAccessibleDescription(
       "CAVHB isn't recognised. Changing the organisations will remove it.",
     )
     expect(
-      within(group).getByText(
+      form.getByText(
         "CAVHB isn't recognised. Changing the organisations will remove it.",
       ),
     ).toBeVisible()
@@ -202,10 +216,10 @@ describe("Choosing an item's organisations (STY-034)", () => {
       }),
     })
 
-    const group = await openOrganisations(user, "Typo")
+    await openOrganisations(user, "Typo")
 
     expect(
-      group.getByText(
+      main().getByText(
         "CAVHB, Mars, SBHB aren't recognised. Changing the organisations will remove them.",
       ),
     ).toBeVisible()
@@ -214,9 +228,9 @@ describe("Choosing an item's organisations (STY-034)", () => {
   it("says nothing of unknown codes for an item with none (S4)", async () => {
     const { user } = await renderPage()
 
-    const group = await openOrganisations(user, "Online booking")
+    await openOrganisations(user, "Online booking")
 
-    expect(group.queryByText(/isn't recognised/)).toBeNull()
+    expect(main().queryByText(/isn't recognised/)).toBeNull()
   })
 
   it("publishes the chosen set, dropping an unknown code, and leaves it on other edits (S4, S5)", async () => {
@@ -280,5 +294,273 @@ describe("Choosing an item's organisations (STY-034)", () => {
     expect(organisationsOf("Online booking")).toBe(
       "Cardiff and Vale, Swansea Bay",
     )
+  })
+})
+
+describe("The Organisations field opens on request (STY-038)", () => {
+  const NOTICE =
+    "CAVHB isn't recognised. Changing the organisations will remove it."
+
+  /** Whether anything on the page is pending. */
+  function pending() {
+    return (
+      main().queryByText("Changed") !== null ||
+      main().queryByRole("button", { name: "Publish changes" }) !== null
+    )
+  }
+
+  it("starts shut, naming the chosen by short name beside Change organisations, with no checkboxes (S1)", async () => {
+    const { user } = await renderPage()
+
+    const form = await openForm(user, "Video clinics")
+
+    expect(form.getByText("Organisations")).toBeVisible()
+    expect(form.getByText("Cardiff and Vale, Swansea Bay")).toBeVisible()
+    expect(
+      form.getByRole("button", { name: "Change organisations" }),
+    ).toHaveAttribute("aria-expanded", "false")
+    expect(form.queryAllByRole("checkbox")).toEqual([])
+    expect(form.queryByRole("group")).toBeNull()
+  })
+
+  it("names All Wales first, then the others alphabetically (S1)", async () => {
+    const { user } = await renderPage({
+      repository: createInMemoryRoadmapRepository(roadmaps, {
+        producta: [
+          createTestRoadmapItem("Typo", {
+            organisationIds: ["sbuhb", "national", "bcuhb"],
+          }),
+        ],
+      }),
+    })
+
+    const form = await openForm(user, "Typo")
+
+    expect(
+      form.getByText("All Wales, Betsi Cadwaladr, Swansea Bay"),
+    ).toBeVisible()
+  })
+
+  it("reads No organisations beside Add organisations for an item with none (S1)", async () => {
+    const { user } = await renderPage()
+
+    const form = await openForm(user, "New idea")
+
+    expect(form.getByText("No organisations")).toBeVisible()
+    expect(
+      form.getByRole("button", { name: "Add organisations" }),
+    ).toHaveAttribute("aria-expanded", "false")
+    expect(form.queryAllByRole("checkbox")).toEqual([])
+  })
+
+  it("opens the checkboxes in place, the item's ticked, focus on the first (S2)", async () => {
+    const { user } = await renderPage()
+    const form = await openForm(user, "Video clinics")
+
+    await user.click(form.getByRole("button", { name: "Change organisations" }))
+
+    const group = within(form.getByRole("group", { name: "Organisations" }))
+    const boxes = group.getAllByRole("checkbox")
+    expect(boxes).toHaveLength(7)
+    expect(boxes[0]).toHaveAccessibleName("All Wales (National)")
+    expect(boxes[0]).toHaveFocus()
+    expect(
+      group
+        .getAllByRole("checkbox", { checked: true })
+        .map((box) => box.closest("label")?.textContent),
+    ).toEqual(["Cardiff and Vale (CAVUHB)", "Swansea Bay (SBUHB)"])
+    expect(
+      form.getByRole("button", { name: "Close organisations" }),
+    ).toHaveAttribute("aria-expanded", "true")
+    // The label shows once, and the line of what is chosen gives way to the checkboxes.
+    expect(form.getAllByText("Organisations")).toHaveLength(1)
+    expect(form.queryByText("Cardiff and Vale, Swansea Bay")).toBeNull()
+  })
+
+  it("shuts keeping the ticks, focus on the button, nothing pending yet (S3)", async () => {
+    const { user } = await renderPage()
+    const group = await openOrganisations(user, "Video clinics")
+    await user.click(group.getByRole("checkbox", { name: "Hywel Dda (HDUHB)" }))
+    const form = within(main().getByRole("form", { name: "Video clinics" }))
+
+    await user.click(form.getByRole("button", { name: "Close organisations" }))
+
+    expect(
+      form.getByText("Cardiff and Vale, Hywel Dda, Swansea Bay"),
+    ).toBeVisible()
+    const button = form.getByRole("button", { name: "Change organisations" })
+    expect(button).toHaveFocus()
+    expect(button).toHaveAttribute("aria-expanded", "false")
+    await vi.waitFor(() => {
+      expect(form.queryAllByRole("checkbox")).toEqual([])
+    })
+    expect(pending()).toBe(false)
+  })
+
+  it("shows the ticks again when the field is opened a second time (S3)", async () => {
+    const { user } = await renderPage()
+    const group = await openOrganisations(user, "Video clinics")
+    await user.click(group.getByRole("checkbox", { name: "Hywel Dda (HDUHB)" }))
+    const form = within(main().getByRole("form", { name: "Video clinics" }))
+    await user.click(form.getByRole("button", { name: "Close organisations" }))
+
+    await user.click(form.getByRole("button", { name: "Change organisations" }))
+
+    expect(
+      form
+        .getAllByRole("checkbox", { checked: true })
+        .map((box) => box.closest("label")?.textContent),
+    ).toEqual([
+      "Cardiff and Vale (CAVUHB)",
+      "Hywel Dda (HDUHB)",
+      "Swansea Bay (SBUHB)",
+    ])
+  })
+
+  it.each(["open", "shut"] as const)(
+    "keeps the choice on Done with the field %s (S4)",
+    async (state) => {
+      const { user } = await renderPage()
+      const group = await openOrganisations(user, "Video clinics")
+      await user.click(
+        group.getByRole("checkbox", { name: "Hywel Dda (HDUHB)" }),
+      )
+      const form = within(main().getByRole("form", { name: "Video clinics" }))
+      if (state === "shut") {
+        await user.click(
+          form.getByRole("button", { name: "Close organisations" }),
+        )
+      }
+
+      await user.click(form.getByRole("button", { name: "Done" }))
+
+      expect(organisationsOf("Video clinics")).toBe(
+        "Cardiff and Vale, Hywel Dda, Swansea Bay",
+      )
+      expect(within(card("Video clinics")).getByText("Changed")).toBeVisible()
+    },
+  )
+
+  it("adds the first organisation of an item with none (S1, S4)", async () => {
+    const { user } = await renderPage()
+    const form = await openForm(user, "New idea")
+    await user.click(form.getByRole("button", { name: "Add organisations" }))
+    await user.click(
+      form.getByRole("checkbox", { name: "All Wales (National)" }),
+    )
+
+    await user.click(form.getByRole("button", { name: "Close organisations" }))
+
+    expect(form.getByText("All Wales")).toBeVisible()
+    expect(
+      form.getByRole("button", { name: "Change organisations" }),
+    ).toHaveFocus()
+    expect(form.queryByText("No organisations")).toBeNull()
+  })
+
+  it("names an unknown code while the field is shut, and open too (S5)", async () => {
+    const { user } = await renderPage()
+
+    const form = await openForm(user, "Typo")
+
+    expect(form.getByText(NOTICE)).toBeVisible()
+    expect(form.queryAllByRole("checkbox")).toEqual([])
+    const button = form.getByRole("button", { name: "Change organisations" })
+    expect(button).toHaveAccessibleDescription(NOTICE)
+
+    await user.click(button)
+
+    expect(form.getByText(NOTICE)).toBeVisible()
+    expect(
+      form.getByRole("group", { name: "Organisations" }),
+    ).toHaveAccessibleDescription(NOTICE)
+  })
+
+  it("leaves the choice on Cancel, and opens shut again (S6)", async () => {
+    const { user } = await renderPage()
+    const group = await openOrganisations(user, "Video clinics")
+    await user.click(group.getByRole("checkbox", { name: "Hywel Dda (HDUHB)" }))
+    await user.click(
+      within(main().getByRole("form", { name: "Video clinics" })).getByRole(
+        "button",
+        { name: "Cancel" },
+      ),
+    )
+    expect(organisationsOf("Video clinics")).toBe(
+      "Cardiff and Vale, Swansea Bay",
+    )
+    expect(pending()).toBe(false)
+
+    const form = await openForm(user, "Video clinics")
+
+    expect(form.getByText("Cardiff and Vale, Swansea Bay")).toBeVisible()
+    expect(form.queryAllByRole("checkbox")).toEqual([])
+    await user.click(form.getByRole("button", { name: "Change organisations" }))
+    expect(
+      form.getByRole("checkbox", { name: "Hywel Dda (HDUHB)" }),
+    ).not.toBeChecked()
+  })
+
+  it("opens shut again after Done, too (S6)", async () => {
+    const { user } = await renderPage()
+    await choose(user, "Video clinics", ["Hywel Dda (HDUHB)"])
+
+    const form = await openForm(user, "Video clinics")
+
+    expect(
+      form.getByText("Cardiff and Vale, Hywel Dda, Swansea Bay"),
+    ).toBeVisible()
+    expect(form.queryAllByRole("checkbox")).toEqual([])
+  })
+
+  it("opens, ticks and shuts by keyboard alone (S7)", async () => {
+    const { user } = await renderPage()
+    const form = await openForm(user, "Video clinics")
+    const button = () =>
+      form.getByRole("button", { name: /^(Change|Close) organisations$/ })
+
+    button().focus()
+    await user.keyboard("{Enter}")
+    expect(
+      form.getByRole("checkbox", { name: "All Wales (National)" }),
+    ).toHaveFocus()
+    await user.keyboard(" ")
+    expect(
+      form.getByRole("checkbox", { name: "All Wales (National)" }),
+    ).toBeChecked()
+    await user.tab({ shift: true })
+    expect(button()).toHaveFocus()
+    expect(button()).toHaveAccessibleName("Close organisations")
+    await user.keyboard("{Enter}")
+
+    expect(button()).toHaveFocus()
+    expect(button()).toHaveAccessibleName("Change organisations")
+    expect(
+      form.getByText("All Wales, Cardiff and Vale, Swansea Bay"),
+    ).toBeVisible()
+    // The form is still open: neither key confirmed or cancelled it.
+    expect(form.getByRole("button", { name: "Done" })).toBeVisible()
+  })
+
+  it("is Welsh on the Welsh interface, the short names staying English (S7)", async () => {
+    const { user } = await renderPage({ language: "cy" })
+
+    await user.click(
+      main().getByRole("button", { name: "Golygu Video clinics" }),
+    )
+    const form = within(main().getByRole("form", { name: "Video clinics" }))
+    expect(form.getByText("Sefydliadau")).toBeVisible()
+    expect(form.getByText("Cardiff and Vale, Swansea Bay")).toBeVisible()
+    await user.click(form.getByRole("button", { name: "Newid sefydliadau" }))
+    expect(form.getByRole("group", { name: "Sefydliadau" })).toBeVisible()
+    await user.click(form.getByRole("button", { name: "Cau sefydliadau" }))
+    await user.click(form.getByRole("button", { name: "Canslo" }))
+
+    await user.click(main().getByRole("button", { name: "Golygu New idea" }))
+    const empty = within(main().getByRole("form", { name: "New idea" }))
+    expect(empty.getByText("Dim sefydliadau")).toBeVisible()
+    expect(
+      empty.getByRole("button", { name: "Ychwanegu sefydliadau" }),
+    ).toBeVisible()
   })
 })

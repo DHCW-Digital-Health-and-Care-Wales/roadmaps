@@ -280,6 +280,15 @@ export const cy = {
         "Dydy {{codes}} ddim yn cael eu hadnabod. Bydd newid y sefydliadau yn eu tynnu.",
       unknownOrganisations_other:
         "Dydy {{codes}} ddim yn cael eu hadnabod. Bydd newid y sefydliadau yn eu tynnu.",
+      organisations: {
+        subject: "sefydliadau",
+        none: "Dim sefydliadau",
+      },
+      openingField: {
+        change: "Newid",
+        add: "Ychwanegu",
+        close: "Cau",
+      },
       move: "Symud",
       moveTo: "Symud i",
       choosePlacement: "Dewiswch orwel neu adran",

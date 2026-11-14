@@ -1,7 +1,9 @@
 # EPC-009: Item tags — free text a Product Lead edits here, nudged towards the tags the roadmap already uses
 
-- **Status**: Active — two stories, both specified; no owner decision waits
-- **Progress**: 0 of 2 terminal; next selectable: STY-038; blocked on: nothing
+- **Status**: Active — two stories, both specified; STY-038 delivered in its PR, which
+  awaits the owner's merge; no owner decision waits
+- **Progress**: 1 of 2 terminal; next selectable: STY-037, once STY-038 is on the
+  default branch; blocked on: nothing
 - **Binding ADRs**: ADR-012, ADR-014, ADR-011, ADR-010, ADR-008, ADR-002
 
 ## Summary
@@ -103,7 +105,8 @@ resolves (D17).
 
 ### A field that opens on request
 
-One piece serves both stories: STY-038 builds it in the edit form and STY-037 uses it.
+One piece serves both stories: STY-038 built it in the edit form, as `OpeningField`
+(its record's _Contract for dependents_), and STY-037 uses it.
 Shut, the field shows its label, one line saying what it holds
 (or that it holds nothing) and a button: "Change", or "Add" when empty, named with the
 field for assistive technology ("Change tags"). Open, the button reads "Close", says
@@ -114,10 +117,10 @@ always opens with the field shut.
 
 ## Stories
 
-| ID      | Story                                                                                       | Area                                       | Depends on | State |
-| ------- | ------------------------------------------------------------------------------------------- | ------------------------------------------ | ---------- | ----- |
-| STY-037 | [A Product Lead edits an item's tags](STY-037-edit-an-items-tags.md)                        | Domain + Infra + UI + i18n (en + cy) + E2E | STY-038    |       |
-| STY-038 | [The Organisations field opens on request](STY-038-organisations-field-opens-on-request.md) | UI + i18n (en + cy) + E2E                  | —          |       |
+| ID      | Story                                                                                                                     | Area                                       | Depends on | State |
+| ------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | ---------- | ----- |
+| STY-037 | [A Product Lead edits an item's tags](STY-037-edit-an-items-tags.md)                                                      | Domain + Infra + UI + i18n (en + cy) + E2E | STY-038    |       |
+| STY-038 | [The Organisations field opens on request](../_archive/EPC-009-item-tags/STY-038-organisations-field-opens-on-request.md) | UI + i18n (en + cy) + E2E                  | —          | ✅    |
 
 ## Sequencing
 

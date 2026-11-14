@@ -176,6 +176,12 @@ test.describe("editing a roadmap (STY-025)", () => {
     await itemForm.getByRole("button", { name: "Done" }).click()
     await expect(itemForm.getByText("Enter a title")).toBeVisible()
     await expectStructure(itemForm, "edit-item-form-error.aria.yml")
+    // Its Organisations field, shut in the form above, opened (STY-038).
+    await itemForm.getByRole("button", { name: "Change organisations" }).click()
+    await expect(
+      itemForm.getByRole("checkbox", { name: "All Wales (National)" }),
+    ).toBeFocused()
+    await expectStructure(itemForm, "edit-item-form-organisations.aria.yml")
     await itemForm.getByRole("button", { name: "Cancel" }).click()
 
     await main.getByRole("button", { name: "Edit About this roadmap" }).click()

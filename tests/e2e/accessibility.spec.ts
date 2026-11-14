@@ -231,7 +231,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expectNoAxeViolations(page, theme)
     })
 
-    test("an item's organisations, with an unknown code named, then the changed card (STY-034)", async ({
+    test("an item's organisations, shut then open with an unknown code named, then the changed card (STY-034, STY-038)", async ({
       page,
       sheets,
     }) => {
@@ -245,13 +245,42 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await connect(page)
       const main = page.getByRole("main")
       await main.getByRole("button", { name: "Edit Minimal card" }).click()
-      const group = main.getByRole("group", { name: "Organisations" })
-      await expect(group.getByText(/CAVHB isn't recognised/)).toBeVisible()
+      // The field starts shut, the unknown code named (STY-038 S5, S7).
+      const form = main.getByRole("form", { name: "Minimal card" })
+      await expect(form.getByText(/CAVHB isn't recognised/)).toBeVisible()
+      await expect(form.getByText("Cardiff and Vale")).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+
+      await form.getByRole("button", { name: "Change organisations" }).click()
+      const group = form.getByRole("group", { name: "Organisations" })
+      await expect(group).toHaveAccessibleDescription(/CAVHB isn't recognised/)
       await group.getByRole("checkbox", { name: "Powys (PTHB)" }).click()
       await expectNoAxeViolations(page, theme)
 
       await main.getByRole("form").getByRole("button", { name: "Done" }).click()
       await expect(main.getByText("Cardiff and Vale, Powys")).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+    })
+
+    test("an item with no organisations, its field shut then open (STY-038)", async ({
+      page,
+    }) => {
+      await page.goto("./#/roadmaps/producta")
+      await connect(page)
+      const main = page.getByRole("main")
+      await main
+        .getByRole("button", { name: "Edit Something we are not doing" })
+        .click()
+      const form = main.getByRole("form", {
+        name: "Something we are not doing",
+      })
+      await expect(form.getByText("No organisations")).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+
+      await form.getByRole("button", { name: "Add organisations" }).click()
+      await expect(
+        form.getByRole("checkbox", { name: "All Wales (National)" }),
+      ).toBeFocused()
       await expectNoAxeViolations(page, theme)
     })
 

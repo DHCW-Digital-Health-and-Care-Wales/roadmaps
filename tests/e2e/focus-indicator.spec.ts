@@ -106,6 +106,7 @@ async function tabTo(page: Page, target: Locator, key = "Tab") {
 const CONTROLS =
   "a[href], button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled)"
 
+/** Appended to a selector: leaves out what it matches that is out of the Tab order. */
 const IN_TAB_ORDER = ':not([tabindex="-1"])'
 
 /**
@@ -167,6 +168,7 @@ async function expectEveryStopShowsAnIndicator(page: Page) {
  */
 async function expectDialogTour(page: Page, dialog: Locator) {
   const colours = await focusColours(page)
+  // As `tabStops` finds them, but a control stays a stop whatever its `tabindex`.
   const stops = await dialog
     .locator(`:is(${CONTROLS}, [tabindex]${IN_TAB_ORDER})`)
     .filter({ visible: true })

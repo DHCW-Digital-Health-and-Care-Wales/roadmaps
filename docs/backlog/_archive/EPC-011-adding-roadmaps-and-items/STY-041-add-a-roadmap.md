@@ -162,6 +162,11 @@ phone width; S6 and S7 can be component tests against the in-memory double.
   since it is modal and the header's is out of reach behind it, and Cancel would drop
   the text the owner asked to keep (D5); over closing the dialog to reconnect. S11.
 
+- **D9** (owner, 2026-11-14, CHO-011 D5): the journey that held S1–S3 and S5 in both
+  themes, on a desktop and a phone, runs once, without the dialog's geometry: the
+  end-to-end suite is getting long. Changes: Tests, and the Playwright runs the
+  Scenario evidence cites for S1–S3 and S5.
+
 ## Starting point
 
 Audited at `400c90c`. The About form's family and category fields, with their

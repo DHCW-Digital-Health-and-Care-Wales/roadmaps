@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react"
+import { fireEvent, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
@@ -395,6 +395,25 @@ describe("The Organisations field opens on request (STY-038)", () => {
       expect(form.queryAllByRole("checkbox")).toEqual([])
     })
     expect(pending()).toBe(false)
+  })
+
+  it("moves focus to the button on shutting, where pressing a button does not focus it (S3)", async () => {
+    const { user } = await renderPage()
+    const group = await openOrganisations(user, "Video clinics")
+    expect(
+      group.getByRole("checkbox", { name: "All Wales (National)" }),
+    ).toHaveFocus()
+    const form = within(main().getByRole("form", { name: "Video clinics" }))
+
+    // A click that leaves focus where it was, as Safari's does on a button.
+    fireEvent.click(form.getByRole("button", { name: "Close organisations" }))
+
+    const button = form.getByRole("button", { name: "Change organisations" })
+    expect(button).toHaveFocus()
+    await vi.waitFor(() => {
+      expect(form.queryAllByRole("checkbox")).toEqual([])
+    })
+    expect(button).toHaveFocus()
   })
 
   it("shows the ticks again when the field is opened a second time (S3)", async () => {

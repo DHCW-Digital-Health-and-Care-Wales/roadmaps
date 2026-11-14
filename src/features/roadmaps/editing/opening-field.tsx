@@ -1,4 +1,4 @@
-import { useEffect, useId, useState, type ReactNode } from "react"
+import { useEffect, useId, useRef, useState, type ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
@@ -23,8 +23,9 @@ export interface OpeningFieldProps {
   hint?: string | undefined
   /**
    * The field's controls, drawn only while it is open; `focusOnOpen` is the `ref` of
-   * the one that takes focus as it opens. What they change is the caller's to hold, so
-   * shutting the field keeps it.
+   * the one that takes focus as it opens, which is whenever that control is first
+   * drawn, so give it to one that stays for as long as the field is open. What the
+   * controls change is the caller's to hold, so shutting the field keeps it.
    */
   children: (focusOnOpen: (control: HTMLElement | null) => void) => ReactNode
   /**
@@ -39,7 +40,7 @@ export interface OpeningFieldProps {
  * request_). Shut, as it always starts: its label, one line of what it holds and a
  * button, "Change", or "Add" while it holds nothing. Open: the button reads "Close" and
  * says the field is open, and the controls show in place, as a group named by the label,
- * with focus on the one the field names. Shutting leaves focus on the button.
+ * with focus on the one the field names. Shutting puts focus on the button.
  */
 export function OpeningField({
   label,
@@ -55,6 +56,7 @@ export function OpeningField({
   const labelId = `${id}-label`
   const hintId = hint ? `${id}-hint` : undefined
   const [open, setOpen] = useState(false)
+  const button = useRef<HTMLButtonElement>(null)
   // The control is drawn only while the field is open, so it arrives as the field opens.
   const [control, focusOnOpen] = useState<HTMLElement | null>(null)
   useEffect(() => {
@@ -66,7 +68,12 @@ export function OpeningField({
     <Collapsible
       open={open}
       onOpenChange={(opening) => {
-        if (!opening) onShut?.()
+        if (!opening) {
+          onShut?.()
+          // Not every browser focuses a button it is pressed with (Safari), and the
+          // control that held focus is about to go.
+          button.current?.focus()
+        }
         setOpen(opening)
       }}
       className="flex flex-col gap-1.5"
@@ -78,6 +85,7 @@ export function OpeningField({
         <CollapsibleTrigger
           render={
             <Button
+              ref={button}
               type="button"
               variant="secondary"
               size="sm"

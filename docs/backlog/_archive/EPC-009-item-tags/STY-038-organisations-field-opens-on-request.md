@@ -130,16 +130,20 @@ The working model is the last figure of
   a legend of its own: "Organisations" shows once, beside the button.
 - **S1: an item whose chosen organisations the list holds none of reads "No
   organisations"** (agent), as its card shows no Organisations line then.
-- **`OpeningField` takes `onShut`, which no field passes yet** (agent): STY-037's Tags
-  field shuts "adding text typed but not yet added" (its S19), which the piece cannot
-  do for it. Held by `opening-field.test.tsx`, on a field that is not Organisations.
+- **`OpeningField` takes `onShut`, which no field passes yet** (agent): an exception,
+  made on purpose, to root `AGENTS.md`'s "prefer deleting code to adding abstraction".
+  The epic has the piece serve both fields, and STY-037's Tags field shuts "adding text
+  typed but not yet added" (its S19), which the piece cannot do for it. Held by
+  `opening-field.test.tsx`, on a field that is not Organisations. STY-037 may reshape
+  it against its real caller.
 - **S3 and S4 tick Hywel Dda in the page tests** (agent), as STY-034's do: the test
   list has no Powys. The E2E specs tick Powys.
 - **Tests.** The page tests and `opening-field.test.tsx` were written first and run red
   (24 failing, and the missing module), then STY-034's own tests moved to the extra
-  press. The `onShut` test was written with its code and not seen red. Three STY-034
-  page tests now look for the notice in the form, not in the group. The Playwright
-  specs followed working code.
+  press. The `onShut` test was written with its code and not seen red. The review fix
+  for S3 (focus put on the button, for a browser that does not focus a button it is
+  pressed with) had its two tests first, run red. Three STY-034 page tests now look for
+  the notice in the form, not in the group. The Playwright specs followed working code.
 
 ### Contract for dependents
 
@@ -171,7 +175,7 @@ The working model is the last figure of
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | S1       | `roadmap-detail-page-choosing-organisations.test.tsx` ("starts shut, naming the chosen by short name beside Change organisations, with no checkboxes"; "names All Wales first, then the others alphabetically"; "reads No organisations beside Add organisations for an item with none"); `opening-field.test.tsx` ("starts shut…"; "says it holds nothing, beside a button to add"); e2e `editing.spec.ts` ("starts shut naming what is chosen, opens in place, and shuts keeping the ticks"; "an item with none reads No organisations beside Add…"); `structure.spec.ts` (`edit-item-form-error.aria.yml`)                                     |
 | S2       | page test "opens the checkboxes in place, the item's ticked, focus on the first"; `opening-field.test.tsx` ("opens in place: its controls in a group named by its label, focus on the one it names"); e2e as S1; `structure.spec.ts` (`edit-item-form-organisations.aria.yml`)                                                                                                                                                                                                                                                                                                                                                                    |
-| S3       | page tests "shuts keeping the ticks, focus on the button, nothing pending yet" and "shows the ticks again when the field is opened a second time"; `opening-field.test.tsx` ("shuts keeping what was changed, focus staying on its button"); e2e as S1 (no write, no publish bar)                                                                                                                                                                                                                                                                                                                                                                 |
+| S3       | page tests "shuts keeping the ticks, focus on the button, nothing pending yet", "moves focus to the button on shutting, where pressing a button does not focus it" and "shows the ticks again when the field is opened a second time"; `opening-field.test.tsx` ("shuts keeping what was changed, focus staying on its button"; "moves focus to its button on shutting, where pressing a button does not focus it"); e2e as S1 (no write, no publish bar)                                                                                                                                                                                         |
 | S4       | page tests "keeps the choice on Done with the field open" and "…shut", "adds the first organisation of an item with none"; e2e "Done keeps a choice made in a field shut again, and publishes it" (`CAVUHB, PTHB, SBUHB` written)                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | S5       | page test "names an unknown code while the field is shut, and open too" (the button and the group are described by it); `opening-field.test.tsx` ("says its hint shut and open, of its button and of its group"); e2e "…an unknown code is named while shut"                                                                                                                                                                                                                                                                                                                                                                                      |
 | S6       | page tests "leaves the choice on Cancel, and opens shut again" and "opens shut again after Done, too"; e2e "Cancel leaves the choice, and the form opens shut again"                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |

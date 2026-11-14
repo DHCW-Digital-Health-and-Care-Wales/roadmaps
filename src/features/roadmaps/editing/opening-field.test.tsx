@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from "@testing-library/react"
+import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { useState } from "react"
 import { describe, expect, it, vi } from "vitest"
@@ -147,6 +147,21 @@ describe("OpeningField (EPC-009, a field that opens on request)", () => {
       expect(screen.queryByRole("group")).toBeNull()
     })
     expect(submit).not.toHaveBeenCalled()
+  })
+
+  it("moves focus to its button on shutting, where pressing a button does not focus it", async () => {
+    const { user } = renderField({ initial: ["Ada"] })
+    await user.click(screen.getByRole("button", { name: "Change names" }))
+    expect(screen.getByRole("textbox", { name: "Add a name" })).toHaveFocus()
+
+    // A click that leaves focus where it was, as Safari's does on a button.
+    fireEvent.click(screen.getByRole("button", { name: "Close names" }))
+
+    expect(screen.getByRole("button", { name: "Change names" })).toHaveFocus()
+    await waitFor(() => {
+      expect(screen.queryByRole("group")).toBeNull()
+    })
+    expect(screen.getByRole("button", { name: "Change names" })).toHaveFocus()
   })
 
   it("tells the field it is being shut, so text typed but not yet added is kept", async () => {

@@ -42,7 +42,8 @@ tours.
   exactly (`children: "deep-equal"`), so an element added or removed fails. After a
   deliberate change run `pnpm test:e2e structure.spec.ts --update-snapshots`, review the
   YAML diff and commit it. That flag never writes a _new_ snapshot: use
-  `--update-snapshots=all` and check `git status` lists it.
+  `--update-snapshots=all`, check `git status` lists it, and restore the others it
+  rewrote (it turns their dates into patterns) with `git checkout -- <file>`.
 - CI serves under `/roadmaps-editor/`: after changing the structure snapshots, run them
   once with
   `GITHUB_REPOSITORY=DHCW-Digital-Health-and-Care-Wales/roadmaps-editor`.

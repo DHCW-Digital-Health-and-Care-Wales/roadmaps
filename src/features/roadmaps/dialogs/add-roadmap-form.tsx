@@ -49,6 +49,16 @@ export function AddRoadmapForm({
   const form = useNewRoadmapForm({ roadmaps, onAdded })
   const { values, problems, focusRequest, busy } = form
   const choices = useRoadmapChoices(true).fields(null)
+  // A list read again, as after a reconnect, may no longer offer what was chosen: the
+  // field says so, as when the write finds it gone, rather than send what it can't show.
+  const unoffered = choices.fields
+    .filter(
+      ({ name, options }) =>
+        values[name] !== "" &&
+        !options?.some(({ value }) => value === values[name]),
+    )
+    .map(({ name }) => name)
+  if (unoffered.length > 0) form.dropChoices(unoffered)
 
   const controls = useRef(new Map<RefusableField, HTMLElement>())
   const controlRef =
@@ -56,9 +66,14 @@ export function AddRoadmapForm({
       if (control) controls.current.set(field, control)
       else controls.current.delete(field)
     }
+  // Again once the field asked for is shown as it is, its list gone: the select that
+  // had focus went with the list.
+  const requestedIsFixed = choices.fields.some(
+    ({ name, fixed }) => name === focusRequest?.field && fixed !== undefined,
+  )
   useEffect(() => {
     if (focusRequest) controls.current.get(focusRequest.field)?.focus()
-  }, [focusRequest])
+  }, [focusRequest, requestedIsFixed])
 
   const submit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -124,8 +139,10 @@ export function AddRoadmapForm({
           />
         )}
       </FormField>
-      {choices.fields.map(({ name, label, options, disabled, fixed }) =>
-        options ? (
+      {choices.fields.map(({ name, label, options, disabled, fixed }) => {
+        const error =
+          problems[name] && t(`roadmaps.add.errors.notListed.${name}`)
+        return options ? (
           <ChoiceField
             key={name}
             ref={controlRef(name)}
@@ -134,15 +151,23 @@ export function AddRoadmapForm({
             options={options}
             value={values[name]}
             disabled={busy || disabled}
-            error={problems[name] && t(`roadmaps.add.errors.notListed.${name}`)}
+            error={error}
             onChange={(value) => {
               form.change(name, value)
             }}
           />
         ) : (
-          fixed && <FixedField key={name} label={label} {...fixed} />
-        ),
-      )}
+          fixed && (
+            <FixedField
+              key={name}
+              ref={controlRef(name)}
+              label={label}
+              {...fixed}
+              error={error}
+            />
+          )
+        )
+      })}
       <FormField
         id={`${id}-productLead`}
         label={t("roadmaps.edit.roadmapFields.productLead")}

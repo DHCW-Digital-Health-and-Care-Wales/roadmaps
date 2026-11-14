@@ -151,6 +151,11 @@ for (const theme of THEMES) {
           .getByRole("link", { name: "Community Nursing roadmap" }),
       ).toBeVisible()
       await expect(main.getByText(ADDED)).toBeHidden()
+
+      // Said once: going back to the roadmap's page says nothing.
+      await page.goBack()
+      await expectNewRoadmapPage(page)
+      await expect(main.getByText(ADDED)).toBeHidden()
     })
   }
 }

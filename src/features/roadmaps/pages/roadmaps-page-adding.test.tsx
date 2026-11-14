@@ -455,6 +455,96 @@ describe("adding a roadmap from the list (STY-041)", () => {
       await findRoadmapPage()
       expect(main().queryByText(/was added/)).not.toBeInTheDocument()
     })
+
+    it("says nothing on going back to the page, though the notice was never dismissed", async () => {
+      const { user, router } = await renderList()
+      await openDialog(user)
+      await fillIn(user)
+      await submit(user)
+      expect((await findRoadmapPage()).getByRole("status")).toHaveTextContent(
+        /was added/,
+      )
+
+      await user.click(main().getByRole("link", { name: "Back to roadmaps" }))
+      await main().findAllByRole("list")
+      act(() => {
+        router.history.back()
+      })
+
+      await findRoadmapPage()
+      expect(router.state.location.pathname).toBe("/roadmaps/community-nursing")
+      expect(main().queryByText(/was added/)).not.toBeInTheDocument()
+    })
+
+    it("ends the notice when the roadmap is published, for good", async () => {
+      const { user } = await renderList()
+      await openDialog(user)
+      await fillIn(user)
+      await submit(user)
+      await findRoadmapPage()
+
+      await user.click(main().getByRole("button", { name: "Publish roadmap" }))
+      await user.click(
+        within(screen.getByRole("alertdialog")).getByRole("button", {
+          name: "Publish roadmap",
+        }),
+      )
+      await user.click(
+        await main().findByRole("button", { name: "Unpublish roadmap" }),
+      )
+      await user.click(
+        within(screen.getByRole("alertdialog")).getByRole("button", {
+          name: "Unpublish roadmap",
+        }),
+      )
+
+      await main().findByRole("button", { name: "Publish roadmap" })
+      expect(main().getByText("Not published")).toBeInTheDocument()
+      expect(main().queryByText(/was added/)).not.toBeInTheDocument()
+    })
+
+    it("opens a roadmap this tab had found removed, added again, though the list can't be read again", async () => {
+      const repository = repositoryWith()
+      const listRoadmaps = vi.spyOn(repository, "listRoadmaps")
+      const { user } = await renderList(repository)
+      // A change pending on a roadmap a co-lead then removes: this tab remembers it gone.
+      await user.click(
+        await main().findByRole("link", { name: "Patient Summary roadmap" }),
+      )
+      await user.click(
+        await main().findByRole("button", { name: "Edit About this roadmap" }),
+      )
+      const about = within(
+        main().getByRole("form", { name: "About this roadmap" }),
+      )
+      await user.type(about.getByRole("textbox", { name: "Title" }), " draft")
+      await user.click(about.getByRole("button", { name: "Done" }))
+      repository.coLead((rows) => {
+        rows.splice(
+          rows.findIndex(({ id }) => id === "patient-summary"),
+          1,
+        )
+      })
+      await user.click(main().getByRole("button", { name: "Refresh" }))
+      await main().findByText(
+        "This roadmap was removed from the list, so your changes to it couldn't be kept.",
+      )
+      const [back] = main().getAllByRole("link", { name: "Back to roadmaps" })
+      if (!back) throw new Error("No way back to the list")
+      await user.click(back)
+      listRoadmaps.mockRejectedValue(new AppError("forbidden"))
+
+      await openDialog(user)
+      await user.type(
+        dialog().getByRole("textbox", { name: "Title" }),
+        "Patient Summary roadmap",
+      )
+      await submit(user)
+
+      const page = await findRoadmapPage("Patient Summary roadmap")
+      expect(page.getByText(/was added/)).toBeInTheDocument()
+      expect(page.queryByText("Roadmap not found")).not.toBeInTheDocument()
+    })
   })
 
   describe("a refusal from the write (S6)", () => {
@@ -546,6 +636,94 @@ describe("adding a roadmap from the list (STY-041)", () => {
       ).toEqual(["No category", "Hospital & Specialist Care"])
       expect(form.getByRole("textbox", { name: "Title" })).toHaveValue(
         "Community Nursing roadmap",
+      )
+    })
+  })
+
+  describe("a choice the lists no longer offer (S6)", () => {
+    it("says so at a field whose whole list has gone, which takes focus in place of its select", async () => {
+      const listFamilies = vi
+        .fn<RoadmapRepository["listFamilies"]>()
+        .mockResolvedValueOnce(families)
+        .mockResolvedValue(null)
+      const addRoadmap = vi
+        .fn<RoadmapRepository["addRoadmap"]>()
+        .mockResolvedValue({
+          status: "choice-not-listed",
+          fields: ["familyId"],
+        })
+      const { user } = await renderList({
+        ...repositoryWith(),
+        listFamilies,
+        addRoadmap,
+      })
+      const form = await openDialog(user)
+      await fillIn(user)
+      await choose(user, "Family", "Medicines & Diagnostics")
+
+      await submit(user)
+
+      const family = await form.findByRole("group", { name: "Family" })
+      await waitFor(() => {
+        expect(family).toHaveFocus()
+      })
+      expect(family).toHaveAccessibleDescription(
+        "Error: This family is no longer listed. Choose another.",
+      )
+      expect(within(family).getByText("No family")).toBeInTheDocument()
+      expect(
+        within(family).getByText("The family can't be changed right now."),
+      ).toBeInTheDocument()
+      expect(
+        form.queryByRole("combobox", { name: "Family" }),
+      ).not.toBeInTheDocument()
+      expect(
+        form.getByRole("combobox", { name: "Category" }),
+      ).toHaveDisplayValue("GP & Community Services")
+    })
+
+    it("puts a family a list read again no longer has back to none, saying so, and sends none", async () => {
+      const inMemory = repositoryWith()
+      const listFamilies = vi
+        .fn<RoadmapRepository["listFamilies"]>()
+        .mockResolvedValueOnce(families)
+        .mockResolvedValue([records])
+      const addRoadmap = vi.spyOn(inMemory, "addRoadmap")
+      const { user, authClient } = await renderList({
+        ...inMemory,
+        listFamilies,
+        addRoadmap,
+      })
+      const form = await openDialog(user)
+      await fillIn(user)
+      await choose(user, "Family", "Medicines & Diagnostics")
+
+      // The lists are read again once reconnected.
+      act(() => {
+        authClient.setState({ status: "expired" })
+      })
+      await user.click(form.getByRole("button", { name: "Reconnect" }))
+
+      const family = form.getByRole("combobox", { name: "Family" })
+      await waitFor(() => {
+        expect(family).toHaveAccessibleDescription(
+          "Error: This family is no longer listed. Choose another.",
+        )
+      })
+      expect(family).toHaveDisplayValue("No family")
+      expect(
+        within(family)
+          .getAllByRole("option")
+          .map((option) => option.textContent),
+      ).toEqual(["No family", "Single Record"])
+      expect(form.getByRole("textbox", { name: "Title" })).toHaveValue(
+        "Community Nursing roadmap",
+      )
+      await submit(user)
+      await findRoadmapPage()
+      expect(addRoadmap).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({ familyId: null, categoryId: community.id }),
+        // The hook passes no options.
       )
     })
   })

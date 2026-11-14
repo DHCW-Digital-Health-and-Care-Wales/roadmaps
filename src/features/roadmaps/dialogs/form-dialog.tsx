@@ -11,7 +11,10 @@ export interface FormDialogProps {
   open: boolean
   /** The heading, which names the dialog. */
   title: string
-  /** A write is under way: the dialog stays until it answers. */
+  /**
+   * A write is under way: the dialog stays until it answers. The form holds its own
+   * fields meanwhile, so both are told by the same write.
+   */
   busy?: boolean
   /** Cancel or Escape was chosen: the caller closes it, dropping what was typed. */
   onClose: () => void

@@ -26,11 +26,12 @@ export function RoadmapDialog({
   onClose,
 }: RoadmapDialogProps) {
   const { t } = useTranslation()
+  const busy = useAddingRoadmap()
   return (
     <FormDialog
       open={open}
       title={t("roadmaps.add.title")}
-      busy={useAddingRoadmap()}
+      busy={busy}
       onClose={onClose}
     >
       {(titleId) => (

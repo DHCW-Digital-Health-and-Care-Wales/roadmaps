@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "@tanstack/react-router"
-import { useCallback } from "react"
+import { useCallback, useEffect, useState } from "react"
 
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 
@@ -26,22 +26,33 @@ export function useOpenAddedRoadmap(): (roadmap: Roadmap) => void {
 }
 
 /**
- * Whether this page was opened by adding its roadmap and has yet to say so, and
- * `dismiss`, which forgets it, so the page says it once however it is come back to.
+ * Whether `roadmap`'s page says it was just added, and `dismiss`, which ends that. The
+ * page opened by adding it says so once: the history entry forgets the word as soon as
+ * the page has taken it, so going back to the page, or reloading it, says nothing; and
+ * publishing the roadmap ends a notice that says it isn't published.
  */
-export function useAddedRoadmap(): { added: boolean; dismiss: () => void } {
-  const added = useLocation({
+export function useAddedRoadmapNotice(roadmap: Roadmap): {
+  shown: boolean
+  dismiss: () => void
+} {
+  const told = useLocation({
     select: ({ state }) => state.roadmapAdded === true,
   })
   const navigate = useNavigate()
-  // Stable, as a notice's dwell starts again when it changes.
-  const dismiss = useCallback(() => {
+  const [shown, setShown] = useState(told)
+  if (shown && roadmap.published) setShown(false)
+  useEffect(() => {
+    if (!told) return
     void navigate({
       to: ".",
       replace: true,
       resetScroll: false,
       state: (state) => ({ ...state, roadmapAdded: false }),
     })
-  }, [navigate])
-  return { added, dismiss }
+  }, [told, navigate])
+  // Stable, as a notice's dwell starts again when it changes.
+  const dismiss = useCallback(() => {
+    setShown(false)
+  }, [])
+  return { shown, dismiss }
 }

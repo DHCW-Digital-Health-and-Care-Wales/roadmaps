@@ -22,7 +22,6 @@ import { RoadmapFamilyLine } from "../components/roadmap-family-line"
 import { RoadmapItems, RoadmapItemsSkeleton } from "../components/roadmap-items"
 import { RoadmapsErrorState } from "../components/roadmaps-error-state"
 import { StatusPanel } from "../components/status-panel"
-import { useAddedRoadmap } from "../dialogs/added-roadmap"
 import { ChangedTag } from "../editing/edit-controls"
 import { EditableRoadmapAbout } from "../editing/editable-roadmap-about"
 import {
@@ -38,6 +37,7 @@ import { PublishedStateAction } from "../editing/published-state-action"
 import { PublishedStateNotice } from "../editing/published-state-notice"
 import { RoadmapPublishing } from "../editing/roadmap-publishing"
 import { usePublishedState } from "../editing/use-published-state"
+import { useAddedRoadmapNotice } from "../hooks/use-added-roadmap"
 import { useOrganisations } from "../hooks/use-organisations"
 import { isRoadmapGone, useRoadmapItems } from "../hooks/use-roadmap-items"
 import { useRoadmapLists } from "../hooks/use-roadmap-lists"
@@ -162,13 +162,12 @@ interface RoadmapViewProps {
 
 /**
  * A listed roadmap: a notice when it was just added (STY-041 S5), its title, a Not
- * published badge when it is not public (D8), a badge
- * when it is out of step with the family or category list (STY-027 S4, S8), Publish
- * roadmap or Unpublish roadmap (STY-035) and a Refresh for the roadmap, its items and
- * the lists (D7), its family and category as they will
- * be published (STY-028 S1), its pending changes with
- * Publish, what it is about, then its items, each showing its pending English
- * (STY-025). The title stays whatever happens to the items.
+ * published badge when it is not public (D8), a badge when it is out of step with the
+ * family or category list (STY-027 S4, S8), Publish roadmap or Unpublish roadmap
+ * (STY-035) and a Refresh for the roadmap, its items and the lists (D7), its family and
+ * category as they will be published (STY-028 S1), its pending changes with Publish,
+ * what it is about, then its items, each showing its pending English (STY-025). The
+ * title stays whatever happens to the items.
  */
 function RoadmapView({
   roadmap,
@@ -185,7 +184,7 @@ function RoadmapView({
   const lists = useRoadmapLists(hasChoiceChange(changes))
   const shown = applyRoadmapChanges(roadmap, changes, lists.lists)
   const publishedState = usePublishedState(roadmap)
-  const added = useAddedRoadmap()
+  const addedNotice = useAddedRoadmapNotice(roadmap)
   const title = localise(shown.title, language)
   const retryList = () => {
     void refetchList()
@@ -247,9 +246,8 @@ function RoadmapView({
         </div>
         <RoadmapFamilyLine roadmap={shown} />
         <MatchListsAction roadmap={roadmap} />
-        {/* Only while it is true: publishing it at once ends the notice. */}
-        {added.added && !roadmap.published && (
-          <AddedRoadmapNotice title={title} onDismiss={added.dismiss} />
+        {addedNotice.shown && (
+          <AddedRoadmapNotice title={title} onDismiss={addedNotice.dismiss} />
         )}
         {publishedState.notice && (
           <PublishedStateNotice

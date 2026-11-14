@@ -12,6 +12,7 @@ import {
 } from "@/domain/roadmap/short-name"
 import { toAppError, type AppError } from "@/lib/errors"
 
+import { usePendingChangesStore } from "../editing/pending-changes-context"
 import { useAddRoadmap } from "../hooks/use-add-roadmap"
 
 /** What the form holds; a family or category is its ID, `""` for none. */
@@ -51,7 +52,8 @@ const EMPTY = { title: "", familyId: "", categoryId: "", productLead: "" }
  * a request to focus the first (S4, S6); and a write that failed (S7). Submitting checks
  * the fields, and the short name against `roadmaps`, the list as cached, before anything
  * is sent (D7); the write checks again. Whatever it answers but `added`, everything
- * typed is kept.
+ * typed is kept, but a family or category the lists no longer offer, which goes back to
+ * none with its field saying so (S6).
  */
 export function useNewRoadmapForm({
   roadmaps,
@@ -61,6 +63,7 @@ export function useNewRoadmapForm({
   onAdded: (roadmap: Roadmap) => void
 }) {
   const add = useAddRoadmap()
+  const store = usePendingChangesStore()
   const [typed, setTyped] = useState(EMPTY)
   // `null` until it is changed: it follows the title.
   const [shortName, setShortName] = useState<string | null>(null)
@@ -79,6 +82,15 @@ export function useNewRoadmapForm({
     setProblems(found)
     const first = REFUSABLE_FIELDS.find((field) => found[field])
     setFocusRequest(first ? { field: first } : null)
+  }
+
+  const dropChoices = (fields: readonly RoadmapChoiceField[]) => {
+    const each = <Value extends string>(value: Value) =>
+      Object.fromEntries(fields.map((field) => [field, value])) as Partial<
+        Record<RoadmapChoiceField, Value>
+      >
+    setTyped((current) => ({ ...current, ...each("") }))
+    setProblems((current) => ({ ...current, ...each("not-listed") }))
   }
 
   const submit = () => {
@@ -101,17 +113,19 @@ export function useNewRoadmapForm({
       onSuccess: (outcome) => {
         switch (outcome.status) {
           case "added":
+            // Written, so listed, whatever this tab found gone from the list before.
+            store.restoreRoadmaps([outcome.roadmap.id])
             onAdded(outcome.roadmap)
             break
           case "short-name-taken":
             refuse({ shortName: "taken" })
             break
           case "choice-not-listed": {
-            const gone = (value: string) =>
-              Object.fromEntries(outcome.fields.map((field) => [field, value]))
-            // The lists are being read again, and won't hold what was chosen.
-            setTyped((current) => ({ ...current, ...gone("") }))
-            refuse(gone("not-listed"))
+            dropChoices(outcome.fields)
+            const first = REFUSABLE_FIELDS.find((field) =>
+              (outcome.fields as readonly string[]).includes(field),
+            )
+            setFocusRequest(first ? { field: first } : null)
             break
           }
           case "unconfirmed":
@@ -131,6 +145,11 @@ export function useNewRoadmapForm({
       if (field === "shortName") setShortName(value)
       else setTyped((current) => ({ ...current, [field]: value }))
     },
+    /**
+     * Puts choices the lists no longer offer back to none, each field saying so: what
+     * the write found gone, or what a list read again no longer holds.
+     */
+    dropChoices,
     problems,
     focusRequest,
     failure,

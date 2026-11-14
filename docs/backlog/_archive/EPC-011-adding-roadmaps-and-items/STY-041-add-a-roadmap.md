@@ -194,7 +194,11 @@ unavailable.
   "chosen".
 - **S6: a family or category that has gone is put back to none** (agent), with its
   message at the field and the list read again, since the select can no longer show
-  it. Adding again without choosing adds the roadmap with none.
+  it. Adding again without choosing adds the roadmap with none. The same happens
+  without a write when a list read again, as after a reconnect, no longer has what was
+  chosen (review, Sol): the form never sends a choice it can't show. A field whose
+  whole list has gone shows the message with its "can't be changed" notice, and takes
+  focus as a group, having no control.
 - **S7: "refresh the list" is "Cancel, then refresh your roadmaps"** (agent): the
   dialog is modal, so Refresh is behind it. The list is also read again after every
   add, whatever it came to.
@@ -205,18 +209,25 @@ unavailable.
   blocked or closed, since the page's own notice is behind it. A write the session
   ended under is said once reconnected ("Your session expired before it could be
   added. Try again."), where the family form says nothing.
-- **S11: a reconnect Google refuses outright loses the dialog** (agent): access denied,
-  or sign-in failing to load, leaves the roadmap list for the start page, as it does
-  today, and the dialog and its text go with the list. Logged as an owner question in
-  the delivery run; no record, as nothing here decides it.
-- **S5: the notice is said once** (agent): it clears itself after the dwell or when
-  dismissed, and is not shown again on going back to the page. It goes when the
-  roadmap is published.
+- **S11: a reconnect Google refuses outright loses the dialog** (agent; review, Sol):
+  access denied, or sign-in failing to load, leaves the roadmap list for the start
+  page, as any failed connection has since the first sign-in story, and the dialog and
+  its text go with the list. Not changed here: what a failed connection shows is the
+  owner's to choose,
+  [DEF-006](../../defects/DEF-006-a-refused-reconnect-drops-the-add-a-roadmap-dialog.md).
+- **S5: the notice is said once** (agent; review, Opus): by the page as it opens, until
+  the dwell ends or it is dismissed. Going back to the page, or reloading it, says
+  nothing, and publishing the roadmap ends it for good.
+- **S5: a roadmap this tab had found removed opens when added again** (agent; review,
+  Opus): the add tells the pending-edit store the roadmap is listed, as only a read did
+  (DEF-003), so its page doesn't say "removed" while the list is read again.
 - **S8: Escape pressed in the instant the session warning opens** (agent), before
   focus has reached the warning, is the dialog's Escape and closes it.
 - **Tests.** Written first and run red: `suggestShortName` and the whole of
   `roadmaps-page-adding.test.tsx` (32 cases, failing for want of the button). The
-  Playwright specs followed working code.
+  Playwright specs followed working code. The five cases for the review's findings
+  followed their fixes; run against the head before the fixes, each fails, which shows
+  they discriminate, not that they came first.
 
 ### Contract for dependents
 
@@ -235,8 +246,9 @@ unavailable.
   `AddRoadmapForm`, with its state in `useNewRoadmapForm`; STY-043 gives it the
   editing form.
 - **Form fields**: `FormField` (`components/form-field.tsx`) is a label, a hint, a
-  message and a control tied together; `ChoiceField` and `FixedField` (`editing/`) are
-  the select chosen from a list and the field shown as it is. The family form, the
+  message (`FieldError`) and a control tied together; `ChoiceField` and `FixedField`
+  (`editing/`) are the select chosen from a list and the field shown as it is, which
+  takes an `error` and a `ref` for a form that refuses it. The family form, the
   edit form and the adding form all use them; `EditFormOption` is now `ChoiceOption`.
   `useRoadmapChoices(...).fields(null)` gives the family and category fields of a
   roadmap being added.
@@ -249,9 +261,9 @@ unavailable.
   list at once; the list is read again after every add, and the family and category
   lists after `choice-not-listed`.
 - **The landing notice** travels in the history entry's state (`roadmapAdded`,
-  `dialogs/added-roadmap.ts`): `useOpenAddedRoadmap()` opens the page and
-  `useAddedRoadmap()` reads and forgets it. It is in memory with the entry, never in
-  the URL.
+  `hooks/use-added-roadmap.ts`): `useOpenAddedRoadmap()` opens the page, and
+  `useAddedRoadmapNotice(roadmap)` takes the word, which the entry then forgets. It is
+  in memory with the entry, never in the URL.
 - **Copy**: `roadmaps.add.*` in both catalogues. `roadmaps.add.failed.errors` is a
   fifth map of write-failure messages
   ([CHO-004](../../chores/CHO-004-share-the-write-failure-copy.md)). The Welsh is
@@ -275,8 +287,8 @@ unavailable.
 | S2       | page "asks a title and a short name, and offers a family, a category and a product lead"; e2e the journey, both themes, desktop and phone; structure `add-roadmap-dialog`                                                                                                                                                                                             |
 | S3       | `domain/roadmap/short-name.test.ts` (`suggestShortName`); page "the short name (S3)"; e2e the journey                                                                                                                                                                                                                                                                 |
 | S4       | page "a field that can't be sent (S4)" (six cases); e2e "a short name in use is said at its field, before sending and by the write"                                                                                                                                                                                                                                   |
-| S5       | page "adding (S5)" (four cases); `hooks/use-add-roadmap.ts` through them; e2e the journey, which holds the write to see it working, then the new page, one write, and the list's card and counts                                                                                                                                                                      |
-| S6       | page "a refusal from the write (S6)" (a co-lead's roadmap; a family and a category gone); e2e "a short name in use…" (a tab no roadmap lists)                                                                                                                                                                                                                         |
+| S5       | page "adding (S5)" (seven cases); `hooks/use-add-roadmap.ts` through them; e2e the journey, which holds the write to see it working, then the new page, one write, and the list's card and counts                                                                                                                                                                     |
+| S6       | page "a refusal from the write (S6)" (a co-lead's roadmap; a family and a category gone), "a choice the lists no longer offer (S6)" (a whole list gone; a list read again after a reconnect); e2e "a short name in use…" (a tab no roadmap lists)                                                                                                                     |
 | S7       | page "a write that failed (S7)" (no template, refused, unsent, rate limited, may have been applied, the next attempt); e2e "a spreadsheet with no template says who can put it right…"                                                                                                                                                                                |
 | S8       | page "closing (S8)" (Cancel, Escape); e2e "Cancel and Escape close the dialog and drop what was typed; a click outside does nothing"                                                                                                                                                                                                                                  |
 | S9       | page "no list to choose from (S9)"; e2e "the empty list offers Add a roadmap too…"                                                                                                                                                                                                                                                                                    |

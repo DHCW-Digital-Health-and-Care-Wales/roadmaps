@@ -1,7 +1,8 @@
 import type { ReactNode } from "react"
-import { useTranslation } from "react-i18next"
 
 import { Label } from "@/components/ui/label"
+
+import { FieldError } from "./field-error"
 
 /** What a field's control takes to be named, described and marked by the field. */
 export interface FormFieldControl {
@@ -33,7 +34,6 @@ export function FormField({
   error,
   children,
 }: FormFieldProps) {
-  const { t } = useTranslation()
   const hintId = `${id}-hint`
   const errorId = `${id}-error`
   const describedBy = [hint ? hintId : null, error ? errorId : null].filter(
@@ -47,12 +47,7 @@ export function FormField({
           {hint}
         </p>
       )}
-      {error && (
-        <p id={errorId} className="font-bold text-destructive">
-          <span className="sr-only">{t("roadmaps.edit.errorPrefix")}</span>{" "}
-          {error}
-        </p>
-      )}
+      {error && <FieldError id={errorId}>{error}</FieldError>}
       {children({
         id,
         "aria-invalid": error ? true : undefined,

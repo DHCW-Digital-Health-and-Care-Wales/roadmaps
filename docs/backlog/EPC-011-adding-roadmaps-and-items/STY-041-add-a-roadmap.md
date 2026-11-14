@@ -16,9 +16,9 @@ A Product Lead starts a new roadmap from the roadmap list instead of the spreads
 "Add a roadmap" opens a dialog asking its title, a short name suggested from the title
 (the end of its public address), and optionally its product family, category and
 product lead. Adding writes it at once, not published, and the Product Lead lands on
-the new roadmap's page with a notice. A short name already in use, a family that has
-gone or a missing template is said at the dialog, which keeps what was typed. Adding
-items is STY-046; editing "About this roadmap" in this dialog is STY-043.
+the new roadmap's page with a notice. A short name already in use or a missing
+template is said at the dialog, which keeps what was typed. Adding items is STY-046;
+editing "About this roadmap" in this dialog is STY-043.
 
 ## Scope
 

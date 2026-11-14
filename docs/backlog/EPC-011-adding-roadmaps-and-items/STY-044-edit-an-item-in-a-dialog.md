@@ -63,14 +63,6 @@ horizon
 tags, read-only fields and choices (STY-031, STY-034, STY-037, STY-039)
 **And** a Refresh while the dialog is open treats the open form as the card form does
 
-### S7: The dialog outlives a card that moves
-
-**Given** the dialog is open on an item in Next, with text typed
-**When** the roadmap is read again and now has that item in Now, so its card is a
-new one in another list
-**Then** the dialog stays open with everything typed, and Done or Cancel returns
-focus to the item's card where it now is
-
 ### S5: Closing follows the epic's rule
 
 **Given** Sam has changed fields in the dialog
@@ -88,6 +80,14 @@ or a screen reader
 **Then** the dialog is in Welsh, fits the phone as the epic's _The dialogs_ sets with
 its buttons reachable, is named by its heading and holds focus; axe finds nothing in
 it, with each field shut and open
+
+### S7: The dialog outlives a card that moves
+
+**Given** the dialog is open on an item in Next, with text typed
+**When** the roadmap is read again and now has that item in Now, so its card is a
+new one in another list
+**Then** the dialog stays open with everything typed, and Done or Cancel returns
+focus to the item's card where it now is
 
 ## Tests
 

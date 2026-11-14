@@ -3,8 +3,8 @@
 - **Status**: Active — grilled with the owner on 2026-11-14; eight stories Proposed, three
   recorded for later grilling
 - **Progress**: 0 of 11 terminal; next selectable: STY-040; blocked on: nothing
-- **Binding ADRs**: ADR-012, ADR-011, ADR-009, ADR-013, ADR-014, ADR-002, ADR-005, ADR-010,
-  ADR-008
+- **Binding ADRs**: ADR-012, ADR-011, ADR-009, ADR-013, ADR-014, ADR-002, ADR-003, ADR-005,
+  ADR-006, ADR-010, ADR-008
 
 ## Summary
 
@@ -101,7 +101,7 @@ therefore has one possible place without a new kind of write: after the last row
    written after the roadmap's last item (F3, F6). STY-045 (the write), STY-046 (the
    dialog), STY-047 (the publish dialog).
 6. A roadmap with no items shows one panel with the button, and the publish dialog says
-   when the public would see a roadmap with no items (F4). STY-042, STY-046, STY-047.
+   when the public would see a roadmap with no items (F4). STY-042, STY-046.
 7. **Unchanged:** ADR-012's per-roadmap, all-or-nothing publish, its conflict rules and
    Refresh; what each field writes (README, _What the editor writes_); English only;
    Move on an item's card; who may edit (anyone connected, ADR-012 Option 14).
@@ -115,13 +115,13 @@ therefore has one possible place without a new kind of write: after the last row
   editing form; STY-044 builds the item dialog in its editing form and STY-046 gives it
   its adding form. Each pair is one component, not two.
 - **Closing** (owner): Cancel and Escape close a dialog and drop what was typed,
-  without asking; a click outside it does nothing; an expired session keeps the dialog
-  and its text. On a phone a dialog fills the width from the foot of the screen and
-  scrolls. A story cites this rule and tests it; it does not restate it.
-- **An expired session**: a dialog is modal, so nothing behind it can be reached. One
-  that writes at once (adding a roadmap) offers Reconnect inside itself (STY-041 S11);
-  one whose Done or "Add item" only keeps a pending edit still works while expired,
-  as the in-place forms do.
+  without asking; a click outside it does nothing. On a phone a dialog fills the
+  width from the foot of the screen and scrolls. A story cites this rule and tests
+  it; it does not restate it.
+- **An expired session** (owner) keeps the dialog and its text. A dialog is modal, so
+  nothing behind it can be reached: one that writes at once (adding a roadmap)
+  offers Reconnect inside itself (STY-041 S11); one whose Done or "Add item" only
+  keeps a pending edit still works while expired, as the in-place forms do.
 - Focus goes to the dialog's first field as it opens and back to the control that
   opened it as it closes, unless a story says where else.
 
@@ -180,7 +180,7 @@ STY-040 adds **Short name** and brings **Roadmap**, **Published roadmap** and
 | STY-044 | [An item is edited in a dialog](STY-044-edit-an-item-in-a-dialog.md)                                                          | Features/UI + i18n (en + cy) + E2E | STY-041                   |       |
 | STY-045 | [The repository publishes a new item](STY-045-the-repository-publishes-a-new-item.md)                                         | Domain + Infrastructure + Docs     | —                         |       |
 | STY-046 | [A Product Lead adds an item](STY-046-add-an-item.md)                                                                         | Features/UI + i18n (en + cy) + E2E | STY-042, STY-044, STY-045 |       |
-| STY-047 | [Publishing names the new items, and counts them](STY-047-a-new-item-in-the-publish-dialog.md)                                | Features/UI + i18n (en + cy) + E2E | STY-046                   |       |
+| STY-047 | [The publish dialog names the new items](STY-047-a-new-item-in-the-publish-dialog.md)                                         | Features/UI + i18n (en + cy) + E2E | STY-046                   |       |
 | STY-048 | [A Product Lead removes a roadmap](STY-048-remove-a-roadmap.md)                                                               | to be decided                      | —                         |       |
 | STY-049 | [A Product Lead removes a published item](STY-049-remove-a-published-item.md)                                                 | to be decided                      | —                         |       |
 | STY-050 | [A Product Lead reorders the items in a horizon](STY-050-reorder-items-in-a-horizon.md)                                       | to be decided                      | —                         |       |

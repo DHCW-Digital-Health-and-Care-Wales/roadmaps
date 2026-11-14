@@ -1,7 +1,7 @@
 # STY-043: “About this roadmap” is edited in the roadmap dialog
 
-- **Status**: Proposed — grilled with the owner on 2026-11-14 (items round 3 Q1, round 4
-  Q1)
+- **Status**: Proposed — grilled with the owner on 2026-11-14 (items round 3 Q1, items
+  round 4 Q1)
 - **Type**: Feature + Refactor
 - **Area**: Features/UI + i18n (en + cy) + E2E
 - **Epic**: [EPC-011-adding-roadmaps-and-items](README.md)
@@ -29,7 +29,7 @@ what is written.
 
 ## Acceptance criteria
 
-### S1: Edit opens the roadmap dialog (items round 3 Q1, round 4 Q1)
+### S1: Edit opens the roadmap dialog (items round 3 Q1, items round 4 Q1)
 
 **Given** Sam is on a roadmap's page
 **When** Sam chooses Edit on "About this roadmap"
@@ -85,7 +85,7 @@ re-pointed at the dialog: none is dropped, and each rule S3 names keeps its test
 
 - **D1** (owner, 2026-11-14, items round 3 Q1): About editing moves into a dialog in
   this epic, over leaving it in place (recommended) or a story for later.
-- **D2** (owner, round 4 Q1): it is the same dialog as "Add a roadmap", with fewer
+- **D2** (owner, items round 4 Q1): it is the same dialog as "Add a roadmap", with fewer
   fields when adding: title, short name, product family, category and product lead
   to add; every About field and no short name to edit. Over the same fields in both,
   or two dialogs.

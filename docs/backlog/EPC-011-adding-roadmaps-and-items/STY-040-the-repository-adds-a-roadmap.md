@@ -16,10 +16,10 @@ The roadmap repository can add a roadmap: given a title, a short name and option
 family, a category and a product lead, it writes a new entry in the roadmap list and
 an empty roadmap copied from the template, together or not at all, not published. It
 re-reads first and writes nothing when the short name is in use, a chosen family or
-category has gone, or the template is missing or unusable. No screen calls it yet:
-the dialog is STY-041. This story also records the change to the data source's
-contract with the public site: the editor now adds a roadmap's entry and its items'
-place, copied from the template, which it never changes.
+category has gone, or the template is unusable. No screen calls it yet: the dialog is
+STY-041. This story also records the change to the format the public site reads: the
+editor now adds a roadmap's row and tab, copied from the template, which it never
+changes.
 
 ## Scope
 
@@ -102,11 +102,11 @@ expired
 **Then** it rejects with the `AppError` a family's write gives for the same failure,
 and never retries; `signal` cancels only the reads
 **And** a write with no HTTP answer is settled by one re-read that looks for this
-write, not for the name: the tab with the ID this write chose for its copy, and an
-index row holding the values it sent. Both there is added, neither is `network`, and
-anything else is an outcome saying the roadmap may have been added
-**And** a roadmap a co-lead added with the same short name while the answer was lost
-is not taken for this one: the outcome says the short name is in use (S4)
+write, not for the name. The tab with the ID this write chose for its copy is there:
+added, since the row and the tab are one write. Otherwise the short name is now in
+use, even by a co-lead's roadmap with the same title and values: in use (S4).
+Otherwise: `network`
+**And** when that re-read fails too, the outcome says the roadmap may have been added
 
 ### S8: Both implementations keep the contract
 
@@ -119,14 +119,16 @@ and has no items by `listRoadmapItems`
 
 S2 and S4–S7 need the adapter against MSW, asserting the requests sent, and the
 Sheets fake applying them: a copied tab, its rows removed, and the appended row. S7
-needs the case where a co-lead takes the name while the answer is lost.
+needs the case where a co-lead adds a roadmap with the same title and short name
+while the answer is lost.
 
 ## Decisions
 
 - **D1** (owner, 2026-11-14, the request): a new roadmap is a row in the roadmap index
   and a copy of the `Template` tab, named for the roadmap, with every row but the
-  header deleted. The `Template` is copied and never changed; this ends "never read"
-  (ADR-011) for the copy alone.
+  header deleted. The `Template` is copied, and its header is read to check it (S6);
+  its rows are never read and it is never changed. This ends "never read" (ADR-011)
+  for that alone.
 - **D2** (owner, round 1 Q3): written at once, as a family is, over a pending roadmap
   saved later.
 - **D3** (owner, round 1 Q4): it always starts not published (`Enabled` `No`), over a
@@ -154,11 +156,12 @@ needs the case where a co-lead takes the name while the answer is lost.
   context): the write is this story and its screen STY-041, as STY-032 and STY-034
   split organisations. This replaces "one story for adding a roadmap", which round 3
   Q3 had confirmed.
-- **D13** (agent): a lost answer is settled by the copy's own ID and the row's
-  values, as a family's is by its ID (`familyHeld`), over the name alone, which a
-  co-lead's roadmap would satisfy. S7.
-- **D14** (agent): "a letter" is one whose address is not empty, so no roadmap is
-  written that the list would then skip; over any letter a tab's name allows.
+- **D13** (agent): a lost answer is settled by the copy's own ID, as a family's is by
+  its ID (`familyHeld`), over the name or the row's values, which a co-lead's roadmap
+  could match. S7.
+- **D14** (agent): a short name whose address would be empty is refused, so no
+  roadmap is written that the list would then skip; over allowing any name made of
+  letters.
 
 ## Starting point
 

@@ -116,6 +116,7 @@ const itemFixtures = {
         { text: { en: "Nested", cy: "Nythu" }, level: 1 },
         { text: { en: "Deeper", cy: "Dyfnach" }, level: 2 },
       ],
+      hasWelshDetails: true,
     },
     createTestRoadmapItem("Later work", { placement: "later" }),
     createTestRoadmapItem("Unplaced work", {
@@ -1158,7 +1159,7 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
               base: BASE,
               pending: "Patients, Carers",
               current: BASE,
-              welshTags: true,
+              gainedWelsh: true,
             },
           ],
           missingItems: [],
@@ -1182,6 +1183,187 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
           phase: { en: "Live", cy: "Beta" },
           tags: everyField.tags,
           hasWelshTags: true,
+        })
+      })
+    })
+
+    describe("details (STY-039)", () => {
+      const detailed = (...lines: [string, number][]) =>
+        lines.map(([en, level]) => ({ text: { en, cy: "" }, level }))
+      const video = {
+        ...laterWork,
+        id: "videoxxx",
+        details: detailed(["Follow-up appointments", 0], ["Dermatology", 1]),
+      }
+      const BASE = "Follow-up appointments\n- Dermatology"
+      const MINE =
+        "Follow-up appointments\n- Dermatology\n-- Adult clinics first\nIn person"
+      const redetail = (value: string) =>
+        edit(video, 0, { details: change(BASE, value) })
+      const detailsOf = async (repository: RoadmapRepository) =>
+        (await repository.listRoadmapItems("producta")).map(
+          ({ details, hasWelshDetails }) => ({ details, hasWelshDetails }),
+        )
+
+      it("writes the details in order, each at its level, in English alone, keeping the item's other fields (S14)", async () => {
+        const repository = setup.withRoadmaps(fixtures, {
+          producta: [video, everyField],
+        })
+
+        const outcome = await repository.publishRoadmapChanges("producta", {
+          roadmap: {},
+          items: [redetail(MINE)],
+        })
+
+        expect(outcome).toEqual({ status: "published" })
+        expect(await repository.listRoadmapItems("producta")).toStrictEqual([
+          {
+            ...video,
+            details: detailed(
+              ["Follow-up appointments", 0],
+              ["Dermatology", 1],
+              ["Adult clinics first", 2],
+              ["In person", 0],
+            ),
+          },
+          everyField,
+        ])
+      })
+
+      it("writes no details as none (S14)", async () => {
+        const repository = setup.withRoadmaps(fixtures, { producta: [video] })
+
+        await repository.publishRoadmapChanges("producta", {
+          roadmap: {},
+          items: [redetail("")],
+        })
+
+        expect(await detailsOf(repository)).toEqual([
+          { details: [], hasWelshDetails: false },
+        ])
+      })
+
+      it("refuses a co-lead's other details, writing nothing (S15)", async () => {
+        const theirs = detailed(["Follow-up appointments", 0], ["Diabetes", 1])
+        const repository = setup.withRoadmaps(fixtures, {
+          producta: [{ ...video, details: theirs }],
+        })
+        const mine = redetail(MINE)
+
+        const outcome = await repository.publishRoadmapChanges("producta", {
+          roadmap: {},
+          items: [mine],
+        })
+
+        expect(outcome).toEqual({
+          status: "refused",
+          conflicts: [
+            {
+              subject: "item",
+              item: mine,
+              field: "details",
+              base: BASE,
+              pending: MINE,
+              current: "Follow-up appointments\n- Diabetes",
+            },
+          ],
+          missingItems: [],
+        })
+        expect(await detailsOf(repository)).toEqual([
+          { details: theirs, hasWelshDetails: false },
+        ])
+      })
+
+      it("takes a co-lead's details that show as the same list as published, leaving them as written (S15, S20)", async () => {
+        // Every line a hyphen deeper than the editor writes it.
+        const theirs = detailed(
+          ["Follow-up appointments", 1],
+          ["Dermatology", 2],
+          ["Adult clinics first", 3],
+          ["In person", 1],
+        )
+        const repository = setup.withRoadmaps(fixtures, {
+          producta: [{ ...video, details: theirs }],
+        })
+
+        const outcome = await repository.publishRoadmapChanges("producta", {
+          roadmap: {},
+          items: [redetail(MINE)],
+        })
+
+        expect(outcome).toEqual({ status: "published" })
+        expect(await detailsOf(repository)).toEqual([
+          { details: theirs, hasWelshDetails: false },
+        ])
+      })
+
+      it("says an item has Welsh details even when none pairs with the English (S18)", async () => {
+        const unpaired = { ...video, hasWelshDetails: true }
+        const repository = setup.withRoadmaps(fixtures, {
+          producta: [unpaired],
+        })
+
+        expect(await repository.listRoadmapItems("producta")).toStrictEqual([
+          unpaired,
+        ])
+      })
+
+      it("refuses details for an item that has gained Welsh ones, writing nothing, though its English is as it was (S19)", async () => {
+        const withWelsh = {
+          ...video,
+          details: [
+            {
+              text: { en: "Follow-up appointments", cy: "Apwyntiadau dilynol" },
+              level: 0,
+            },
+            { text: { en: "Dermatology", cy: "Dermatoleg" }, level: 1 },
+          ],
+          hasWelshDetails: true,
+        }
+        const repository = setup.withRoadmaps(fixtures, {
+          producta: [withWelsh],
+        })
+        const mine = redetail(MINE)
+
+        const outcome = await repository.publishRoadmapChanges("producta", {
+          roadmap: {},
+          items: [mine],
+        })
+
+        expect(outcome).toEqual({
+          status: "refused",
+          conflicts: [
+            {
+              subject: "item",
+              item: mine,
+              field: "details",
+              base: BASE,
+              pending: MINE,
+              current: BASE,
+              gainedWelsh: true,
+            },
+          ],
+          missingItems: [],
+        })
+        expect(await repository.listRoadmapItems("producta")).toStrictEqual([
+          withWelsh,
+        ])
+      })
+
+      it("publishes the other fields of an item with Welsh details, leaving its details as they are (S18)", async () => {
+        const repository = setup.withRoadmaps(fixtures, itemFixtures)
+
+        const outcome = await repository.publishRoadmapChanges("producta", {
+          roadmap: {},
+          items: [edit(everyField, 0, { phase: change("Beta", "Live") })],
+        })
+
+        expect(outcome).toEqual({ status: "published" })
+        const [published] = await repository.listRoadmapItems("producta")
+        expect(published).toMatchObject({
+          phase: { en: "Live", cy: "Beta" },
+          details: everyField.details,
+          hasWelshDetails: true,
         })
       })
     })

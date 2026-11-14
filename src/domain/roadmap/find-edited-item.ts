@@ -3,6 +3,7 @@
  * write"), so a publish writes to that item or to none.
  */
 
+import { englishDetails, shownLevels } from "./item-details"
 import {
   EDITABLE_ITEM_FIELDS,
   type EditableItemField,
@@ -51,14 +52,16 @@ const CONTENT: Record<Exclude<keyof RoadmapItem, "id">, true> = {
   organisationIds: true,
   unknownOrganisationCodes: true,
   details: true,
+  hasWelshDetails: true,
 }
 const CONTENT_KEYS = Object.keys(CONTENT) as (keyof typeof CONTENT)[]
 
 /**
  * Whether `current` holds `loaded`'s content, with `edited` fields' values replaced: a
  * text field's Welsh must still be `loaded`'s where both reads show it, a placed item has
- * no horizon as written, and an item whose organisations were written has no unknown
- * codes, as only known ones are written (ADR-014).
+ * no horizon as written, an item whose organisations were written has no unknown codes,
+ * as only known ones are written (ADR-014), and details, edited or not, are compared as
+ * the list the card shows (STY-039).
  */
 function sameContent(
   current: RoadmapItem,
@@ -76,9 +79,19 @@ function sameContent(
     const value = edited.get(key)
     if (value === undefined) {
       // A set of organisations is the same in any order (ADR-014).
-      return key === "organisationIds"
-        ? itemValue(current, key) === itemValue(loaded, key)
-        : sameValue(current[key], loaded[key])
+      if (key === "organisationIds") {
+        return itemValue(current, key) === itemValue(loaded, key)
+      }
+      // Details are the same as the list the card shows, however their hyphens are
+      // written (STY-039 D4): every level of it, not the three the field compares.
+      if (key === "details") {
+        return sameValue(shownDetails(current), shownDetails(loaded))
+      }
+      return sameValue(current[key], loaded[key])
+    }
+    // Pending details too are held only by the list the card shows as them (STY-039).
+    if (key === "details") {
+      return sameValue(shownDetails(current), englishDetails(value))
     }
     return (
       itemValue(current, key) === value &&
@@ -99,6 +112,12 @@ function welshShown(
   value: string,
 ): boolean {
   return value !== "" && itemValue(loaded, field) !== ""
+}
+
+/** An item's details as the card shows them: each one's text, at the level it shows at. */
+function shownDetails({ details }: RoadmapItem): RoadmapItem["details"] {
+  const levels = shownLevels(details.map(({ level }) => level))
+  return details.map(({ text }, index) => ({ text, level: levels[index] ?? 0 }))
 }
 
 function isEditable(key: string): key is EditableItemField {

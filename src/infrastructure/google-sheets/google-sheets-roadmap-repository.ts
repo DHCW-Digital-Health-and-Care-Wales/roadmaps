@@ -1,5 +1,6 @@
 import type { Category } from "@/domain/roadmap/category"
 import type { Family } from "@/domain/roadmap/family"
+import { detailsOf, detailsValue } from "@/domain/roadmap/item-details"
 import {
   familyHeld,
   familyMembers,
@@ -116,7 +117,8 @@ const ROADMAP_COLUMNS: Readonly<
 
 /**
  * The roadmap tab's column each editable item field is written to (ADR-012, ADR-014,
- * STY-037): the English one alone, so `Labels (cy)` is never written.
+ * STY-037, STY-039): the English one alone, so `Labels (cy)` and `Details (cy)` are
+ * never written.
  */
 const ITEM_COLUMNS: Readonly<Record<EditableItemField, RoadmapTabColumn>> = {
   title: "Title",
@@ -126,6 +128,7 @@ const ITEM_COLUMNS: Readonly<Record<EditableItemField, RoadmapTabColumn>> = {
   placement: "Horizon",
   tags: "Labels",
   organisationIds: "Organisations",
+  details: "Details",
 }
 
 export interface GoogleSheetsRoadmapRepositoryOptions {
@@ -962,9 +965,10 @@ function batchRequests(
 
 /**
  * What an item's cell holds for `value`: a placement as its `Horizon` value, tags in
- * order separated by `, `, as the public site reads them (STY-037 D5), and
- * organisations as their codes, national first, then by code, separated by `, `
- * (ADR-014, STY-034 D7): known codes only, so an unknown one written there goes.
+ * order separated by `, `, as the public site reads them (STY-037 D5), organisations as
+ * their codes, national first, then by code, separated by `, ` (ADR-014, STY-034 D7):
+ * known codes only, so an unknown one written there goes; and details as
+ * `detailsValue` holds them, a line each (STY-039 S14).
  */
 function itemCell(field: EditableItemField, value: string): string {
   switch (field) {
@@ -976,6 +980,8 @@ function itemCell(field: EditableItemField, value: string): string {
       return tagsOf(value).join(", ")
     case "organisationIds":
       return organisationCodes(organisationIdsOf(value))
+    case "details":
+      return detailsValue(detailsOf(value))
     default:
       return value
   }

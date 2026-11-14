@@ -18,7 +18,9 @@ doc comments first, since they are the contract.
      - `listRoadmapItems` returns one roadmap's items as `RoadmapItem`s (ADR-011), each
        naming its organisations by `organisationIds` (below), and saying by
        `hasWelshTags` whether it holds any Welsh for its tags, paired with the English or
-       not: the editor changes no tags that have Welsh (STY-037);
+       not: the editor changes no tags that have Welsh (STY-037); `hasWelshDetails`
+       says the same of its details (STY-039), which are written as `detailsValue`
+       holds them, a line each at the level it shows at;
      - `listOrganisations` returns the organisations table as `Organisation`s (`id`,
        `code`, `shortName`, `name` in English and Welsh, and a `national` column, true
        for All Wales only), in any order: the screens sort them. Items link to it by

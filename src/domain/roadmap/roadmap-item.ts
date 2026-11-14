@@ -48,4 +48,10 @@ export interface RoadmapItem {
    */
   unknownOrganisationCodes: string[]
   details: RoadmapItemDetail[]
+  /**
+   * Whether the data source holds any Welsh for its details, shown in `details` or not,
+   * as `hasWelshTags` says of its tags. While it does, the details are not edited
+   * (STY-039 D8, D11).
+   */
+  hasWelshDetails: boolean
 }

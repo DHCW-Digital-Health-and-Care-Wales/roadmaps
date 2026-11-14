@@ -195,6 +195,25 @@ test.describe("editing a roadmap (STY-025)", () => {
     await expectStructure(tagsForm, "edit-item-form-tags.aria.yml")
     await tagsForm.getByRole("button", { name: "Cancel" }).click()
 
+    // An item's Details field opened, one detail nested and then removed (STY-039).
+    const detailed = "Earlier delivery this year"
+    await main.getByRole("button", { name: `Edit ${detailed}` }).click()
+    const detailsForm = main.getByRole("form", { name: detailed })
+    await detailsForm.getByRole("button", { name: "Change details" }).click()
+    await detailsForm.getByRole("textbox").last().click()
+    await detailsForm
+      .getByRole("button", { name: "Move in Another thing it included" })
+      .click()
+    await page.keyboard.press("End")
+    await page.keyboard.press("Enter")
+    await page.keyboard.type("A third")
+    await detailsForm.getByRole("button", { name: "Remove A third" }).click()
+    await expect(
+      detailsForm.getByRole("button", { name: "Undo removing A third" }),
+    ).toBeVisible()
+    await expectStructure(detailsForm, "edit-item-form-details.aria.yml")
+    await detailsForm.getByRole("button", { name: "Cancel" }).click()
+
     await main.getByRole("button", { name: "Edit About this roadmap" }).click()
     await expectStructure(main.getByRole("form"), "edit-roadmap-form.aria.yml")
   })

@@ -9,6 +9,7 @@
 import {
   EDITABLE_ITEM_FIELDS,
   EDITABLE_ROADMAP_FIELDS,
+  type EditableItemField,
   type FieldChange,
   type FieldConflict,
   type ItemChanges,
@@ -63,8 +64,9 @@ function pendingOf(
  * The conflicts of `conflicts` still open over `changes`, the roadmap's text first, then
  * items in their order: one is open while its field is pending and not yet edited from
  * the co-lead's text. Keep mine, Use theirs, undoing the edit or a read that finds the
- * field already holding it each close it. Tags that have gained Welsh versions can't be
- * kept (STY-037 S22), so theirs stays open until the tag change is given up.
+ * field already holding it each close it. Tags or details that have gained Welsh
+ * versions can't be kept (STY-037 S22, STY-039 S19), so theirs stays open until the
+ * change is given up.
  */
 export function openConflicts(
   conflicts: readonly FieldConflict[],
@@ -74,7 +76,7 @@ export function openConflicts(
     (conflict): { at: number; fieldAt: number; open: OpenConflict }[] => {
       const { change, entry } = pendingOf(changes, conflict)
       if (!change) return []
-      if (!conflict.welshTags && change.base === conflict.current) return []
+      if (!conflict.gainedWelsh && change.base === conflict.current) return []
       if (conflict.subject === "roadmap") {
         return [
           {
@@ -236,8 +238,9 @@ function isNamed(
  * `items` showing the English `conflicts` found a co-lead wrote to them, in each field
  * that holds what it did in `since`, the items as read when the publish began, as
  * `withCurrentRoadmapText` does; an item not in `since` is left as it is. An item a
- * co-lead unplaced shows as having no horizon, and one whose tags gained Welsh versions
- * as having them, so its form no longer changes its tags (STY-037 S20, S22).
+ * co-lead unplaced shows as having no horizon, and one whose tags or details gained
+ * Welsh versions as having them, so its form no longer changes them (STY-037 S20, S22;
+ * STY-039 S18, S19).
  */
 export function withCurrentItemText(
   items: readonly RoadmapItem[],
@@ -265,10 +268,13 @@ export function withCurrentItemText(
     const fields = Object.fromEntries(
       found.map((conflict) => [conflict.field, currentOf(conflict)]),
     )
+    const gained = (field: EditableItemField) =>
+      found.some((conflict) => conflict.field === field && conflict.gainedWelsh)
     const shown = {
       ...applyItemChanges(item, { ...entry, fields }),
       // Which Welsh they are isn't known until the next read.
-      ...(found.some(({ welshTags }) => welshTags) && { hasWelshTags: true }),
+      ...(gained("tags") && { hasWelshTags: true }),
+      ...(gained("details") && { hasWelshDetails: true }),
     }
     // A co-lead may unplace an item, which no edit can; its horizon as written isn't
     // known until the next read, so it shows as having none.

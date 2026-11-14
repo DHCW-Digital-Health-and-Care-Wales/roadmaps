@@ -286,6 +286,7 @@ export const en = {
         tags: "Tags",
         /** Not English text either: short names and codes stay English. */
         organisationIds: "Organisations",
+        details: "Details",
       } satisfies Record<EditableItemField, string>,
       /** One checkbox of the form's organisations: "Cardiff and Vale (CAVUHB)" (STY-034). */
       organisationChoice: "{{shortName}} ({{code}})",
@@ -356,6 +357,72 @@ export const en = {
         /** Under the tags of an item that has Welsh tags, in place of the button (S20). */
         welshLocked:
           "These tags have Welsh versions, so they can't be changed here yet.",
+      },
+      /** An item's Details field (STY-039); details themselves stay as typed, in English. */
+      details: {
+        /** Follows the field's button, for assistive technology: "Change details". */
+        subject: "details",
+        /** In place of the item's details, when it has none. */
+        none: "No details",
+        /** Under the field's label, shut or open. */
+        hint: "The public site lists these under “What this covers”.",
+        /** Under the open list. */
+        keys: "Press Enter for a new detail. To nest one, start it with a hyphen.",
+        /** Names a detail's text, for assistive technology: its place and level (S24). */
+        name: {
+          top: "Detail {{position}} of {{total}}, top level",
+          nested: "Detail {{position}} of {{total}}, nested under “{{parent}}”",
+        },
+        /** Names the buttons under the list, which act on the detail being written. */
+        selected: "The detail selected",
+        /** Each followed by that detail, for assistive technology: "Move in Dermatology". */
+        actions: {
+          moveOut: "Move out",
+          moveIn: "Move in",
+          moveUp: "Move up",
+          moveDown: "Move down",
+          remove: "Remove",
+        },
+        /** Follows a button's word when the detail has no text yet. */
+        emptySubject: "the empty detail",
+        /** Why a button can't act on the detail (S3, S23). */
+        refused: {
+          first: "The first detail has nothing above it to nest under.",
+          nested: "It is already nested under the detail above.",
+          deepest: "A list has three levels, so this can't go deeper.",
+          top: "It is already at the top level.",
+          firstAtLevel: "It is already the first at its level.",
+          lastAtLevel: "It is already the last at its level.",
+          nothing: "There is no detail to remove.",
+        },
+        /** Announced; `parent` is the detail it is now nested under. */
+        said: {
+          movedIn: "Moved in, under “{{parent}}”.",
+          movedOutTop: "Moved out, to the top level.",
+          movedOutUnder: "Moved out, under “{{parent}}”.",
+          newTop: "New detail at the top level.",
+          newUnder: "New detail under “{{parent}}”.",
+          movedUp: "Moved up.",
+          movedDown: "Moved down.",
+          joined: "Joined to the detail above.",
+          removedEmpty: "Removed the empty detail.",
+          /** Lines pasted, each a detail. */
+          added_one: "Added {{count, number}} detail.",
+          added_other: "Added {{count, number}} details.",
+          removed: "Removed “{{detail}}”.",
+          /** Follows `removed`, when details were nested under the one removed (S25). */
+          nestedMoved_one: "The detail under it moved up a level.",
+          nestedMoved_other:
+            "The {{count, number}} details under it moved up a level.",
+          /** Once a removal is undone. */
+          putBack: "Put back “{{detail}}”.",
+        },
+        /** Beside `removed`: "Undo removing Dermatology", for assistive technology. */
+        undoRemove: "Undo",
+        undoRemoveSubject: "removing {{detail}}",
+        /** Under the details of an item that has Welsh details, in place of the button (S18). */
+        welshLocked:
+          "These details have Welsh versions, so they can't be changed here yet.",
       },
       /**
        * The button of a field that opens on request (EPC-009): "Add" while the field
@@ -541,6 +608,9 @@ export const en = {
            */
           welshTags:
             "These tags now have Welsh versions, so they can't be changed here yet.",
+          /** The same, of an item's details (STY-039 S19). */
+          welshDetails:
+            "These details now have Welsh versions, so they can't be changed here yet.",
           /** Followed by the field, for assistive technology. */
           discardMine: "Discard my change",
           /** `title` is the item's title as it was loaded. */

@@ -661,3 +661,234 @@ describe("a change of tags (STY-037)", () => {
     )
   })
 })
+
+describe("a change of details (STY-039)", () => {
+  const detailed = (...lines: [string, number][]) =>
+    lines.map(([en, level]) => ({ text: { en, cy: "" }, level }))
+  const video = createTestRoadmapItem("Video appointments", {
+    id: "videoxxx",
+    details: detailed(["Follow-up appointments", 0], ["Dermatology", 1]),
+  })
+  const BASE = "Follow-up appointments\n- Dermatology"
+  const MINE = "Follow-up appointments\n- Dermatology\n-- Adult clinics first"
+
+  it("shows the pending details in order, each at its level, in English alone, among the changed fields (S2, S3)", () => {
+    const changed = editItem(NO_CHANGES, undefined, video, 0, { details: MINE })
+
+    expect(changed.items[0]?.fields).toEqual({
+      details: { base: BASE, value: MINE },
+    })
+    expect(applyItemChanges(video, changed.items[0])).toEqual({
+      ...video,
+      details: detailed(
+        ["Follow-up appointments", 0],
+        ["Dermatology", 1],
+        ["Adult clinics first", 2],
+      ),
+    })
+    expect(
+      changedParts(changed).flatMap((part) =>
+        part.kind === "item" ? part.fields : [],
+      ),
+    ).toEqual(["details"])
+  })
+
+  it("is no change once the details are as they were, and no details is a change (S6, S11)", () => {
+    const changed = editItem(NO_CHANGES, undefined, video, 0, { details: MINE })
+
+    expect(
+      editItem(changed, changed.items[0], video, 0, { details: BASE }),
+    ).toEqual(NO_CHANGES)
+    const none = editItem(NO_CHANGES, undefined, video, 0, { details: "" })
+    expect(none.items[0]?.fields).toEqual({
+      details: { base: BASE, value: "" },
+    })
+    expect(applyItemChanges(video, none.items[0]).details).toEqual([])
+  })
+
+  it("is no change for details written another way that show as the same list (S20)", () => {
+    const written = {
+      ...video,
+      details: detailed(["One", 1], ["Two", 3], ["-5 degrees", 1]),
+    }
+
+    expect(
+      editItem(NO_CHANGES, undefined, written, 0, {
+        details: "One\n- Two\n5 degrees",
+      }),
+    ).toEqual(NO_CHANGES)
+  })
+
+  it("is dropped by a read that finds a co-lead wrote the same list, however its hyphens, and kept for another (S15)", () => {
+    const changed = editItem(NO_CHANGES, undefined, video, 0, {
+      details: MINE,
+      title: "Video calls",
+    })
+    const same = {
+      ...video,
+      details: detailed(
+        ["Follow-up appointments", 1],
+        ["Dermatology", 2],
+        ["Adult clinics first", 3],
+      ),
+    }
+    const other = {
+      ...video,
+      details: detailed(["Follow-up appointments", 0], ["Diabetes", 1]),
+    }
+
+    expect(reconcileItems(changed, [same]).items).toEqual([
+      {
+        item: same,
+        position: 0,
+        fields: {
+          title: { base: "Video appointments", value: "Video calls" },
+        },
+      },
+    ])
+    expect(reconcileItems(changed, [other])).toBe(changed)
+  })
+
+  it("takes the read's Welsh details with the details a read already holds", () => {
+    const changed = editItem(NO_CHANGES, undefined, video, 0, {
+      details: "Follow-up appointments",
+      title: "Video calls",
+    })
+    const theirs = {
+      ...video,
+      details: [
+        {
+          text: { en: "Follow-up appointments", cy: "Apwyntiadau dilynol" },
+          level: 0,
+        },
+      ],
+      hasWelshDetails: true,
+    }
+
+    expect(reconcileItems(changed, [theirs]).items[0]?.item).toEqual(theirs)
+  })
+
+  it("finds an item without an ID whose details a lost publish already wrote", () => {
+    const loaded = { ...video, id: null }
+    const changed = editItem(NO_CHANGES, undefined, loaded, 1, {
+      details: "In person",
+    })
+    const written = { ...loaded, details: detailed(["In person", 0]) }
+
+    expect(matchItemChanges([first, written], changed).get(1)).toBe(
+      changed.items[0],
+    )
+  })
+})
+
+describe("an item without an ID whose details a co-lead wrote another way (STY-039 S15)", () => {
+  const detailed = (...lines: [string, number][]) =>
+    lines.map(([en, level]) => ({ text: { en, cy: "" }, level }))
+  const loaded = createTestRoadmapItem("Video appointments", {
+    details: detailed(["One", 0], ["Two", 1]),
+  })
+  // The same list, a hyphen on every line.
+  const rewritten = { ...loaded, details: detailed(["One", 1], ["Two", 2]) }
+
+  it("is still found, with a pending change of its details or of another field", () => {
+    const redetailed = editItem(NO_CHANGES, undefined, loaded, 1, {
+      details: "One\n- Two\nThree",
+    })
+    const retitled = editItem(NO_CHANGES, undefined, loaded, 1, {
+      title: "Video calls",
+    })
+
+    expect(matchItemChanges([first, rewritten], redetailed).get(1)).toBe(
+      redetailed.items[0],
+    )
+    expect(matchItemChanges([first, rewritten], retitled).get(1)).toBe(
+      retitled.items[0],
+    )
+  })
+
+  it("is not found once its details read as another list, or gain Welsh", () => {
+    const retitled = editItem(NO_CHANGES, undefined, loaded, 1, {
+      title: "Video calls",
+    })
+    const other = { ...loaded, details: detailed(["One", 0], ["Other", 1]) }
+    const welsh = {
+      ...loaded,
+      details: [
+        { text: { en: "One", cy: "Un" }, level: 0 },
+        { text: { en: "Two", cy: "Dau" }, level: 1 },
+      ],
+      hasWelshDetails: true,
+    }
+
+    expect(matchItemChanges([first, other], retitled).size).toBe(0)
+    expect(matchItemChanges([first, welsh], retitled).size).toBe(0)
+  })
+})
+
+describe("an item whose details read deeper than the third level (STY-039, review round 2)", () => {
+  const detailed = (...levels: number[]) =>
+    levels.map((level, index) => ({
+      text: { en: `Detail ${String(index + 1)}`, cy: "" },
+      level,
+    }))
+  const loaded = createTestRoadmapItem("Legacy", {
+    details: detailed(0, 1, 2, 3),
+  })
+  const retitled = editItem(NO_CHANGES, undefined, loaded, 1, { phase: "Beta" })
+
+  it("is not found in a row whose fourth level a co-lead moved to the third, though the field would show both alike", () => {
+    const moved = { ...loaded, details: detailed(0, 1, 2, 2) }
+
+    expect(matchItemChanges([first, moved], retitled).size).toBe(0)
+  })
+
+  it("is found in a row that shows the same list, written with other hyphens", () => {
+    const rewritten = { ...loaded, details: detailed(1, 2, 3, 4) }
+
+    expect(matchItemChanges([first, rewritten], retitled).get(1)).toBe(
+      retitled.items[0],
+    )
+  })
+
+  it("is not found once a detail's text reads otherwise, a hyphen after its nesting included", () => {
+    const hyphened = {
+      ...loaded,
+      details: loaded.details.map((detail, index) =>
+        index === 3 ? { ...detail, text: { en: "-Detail 4", cy: "" } } : detail,
+      ),
+    }
+
+    expect(matchItemChanges([first, hyphened], retitled).size).toBe(0)
+  })
+})
+
+describe("an item with pending details, found by its content (STY-039, after the review cap)", () => {
+  const detailed = (...levels: number[]) =>
+    levels.map((level, index) => ({
+      text: { en: `Detail ${String(index + 1)}`, cy: "" },
+      level,
+    }))
+  const loaded = createTestRoadmapItem("Legacy", { details: detailed(0, 1) })
+  const PENDING = "Detail 1\n- Detail 2\n-- Detail 3\n-- Detail 4"
+  const redetailed = editItem(NO_CHANGES, undefined, loaded, 1, {
+    details: PENDING,
+  })
+
+  it("is found in a row holding the pending details, however their hyphens are written", () => {
+    const written = { ...loaded, details: detailed(0, 1, 2, 2) }
+    const hyphened = { ...loaded, details: detailed(1, 2, 3, 3) }
+
+    expect(matchItemChanges([first, written], redetailed).get(1)).toBe(
+      redetailed.items[0],
+    )
+    expect(matchItemChanges([first, hyphened], redetailed).get(1)).toBe(
+      redetailed.items[0],
+    )
+  })
+
+  it("is not found in a row that shows a fourth level, though the field would show it as the pending list", () => {
+    const deeper = { ...loaded, details: detailed(0, 1, 2, 3) }
+
+    expect(matchItemChanges([first, deeper], redetailed).size).toBe(0)
+  })
+})

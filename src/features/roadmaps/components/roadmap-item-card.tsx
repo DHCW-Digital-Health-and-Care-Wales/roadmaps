@@ -6,10 +6,11 @@ import { Badge } from "@/components/ui/badge"
 import { localise, type LocalisedText } from "@/domain/roadmap/localised-text"
 import type { Organisation } from "@/domain/roadmap/organisation"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
-import { useLanguage, type Language } from "@/i18n"
+import { useLanguage } from "@/i18n"
 
-import { nestItemDetails, type NestedItemDetail } from "../nest-item-details"
+import { localiseDetails } from "../localise-details"
 import { shortNamesOf } from "../sort-organisations"
+import { DetailList } from "./detail-list"
 
 export interface RoadmapItemCardProps {
   item: RoadmapItem
@@ -18,8 +19,8 @@ export interface RoadmapItemCardProps {
   /** For a form that names the card by its title. */
   headingId?: string
   /**
-   * A form editing the item's text, tags and organisations, shown in place of them;
-   * what it does not edit stays on show.
+   * A form editing the item's text, tags, organisations and details, shown in place of
+   * them; what it does not edit stays on show.
    */
   form?: ReactNode
   /** Controls at the foot of the card, such as Edit. */
@@ -67,12 +68,12 @@ export function RoadmapItemCard({
     if (item.tags.length > 0) add("tags", item.tags.map(text).join(", "))
     const named = shortNamesOf(organisations, item.organisationIds, language)
     if (named.length > 0) add("organisations", named.join(", "))
-  }
-  if (item.details.length > 0) {
-    add(
-      "details",
-      <DetailList nodes={nestItemDetails(item.details)} language={language} />,
-    )
+    if (item.details.length > 0) {
+      add(
+        "details",
+        <DetailList details={localiseDetails(item.details, language)} />,
+      )
+    }
   }
 
   return (
@@ -106,27 +107,5 @@ export function RoadmapItemCard({
       )}
       {actions && <div className="mt-auto pt-1">{actions}</div>}
     </li>
-  )
-}
-
-function DetailList({
-  nodes,
-  language,
-}: {
-  nodes: readonly NestedItemDetail[]
-  language: Language
-}) {
-  return (
-    <ul className="list-disc pl-5 [&_ul]:mt-0.5">
-      {nodes.map(({ detail, children }, index) => (
-        // Details have no identity; their order is fixed for a render.
-        <li key={index}>
-          {localise(detail.text, language)}
-          {children.length > 0 && (
-            <DetailList nodes={children} language={language} />
-          )}
-        </li>
-      ))}
-    </ul>
   )
 }

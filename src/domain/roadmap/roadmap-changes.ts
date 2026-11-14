@@ -1,3 +1,4 @@
+import { detailsValue } from "./item-details"
 import type { Roadmap } from "./roadmap"
 import type { RoadmapItem } from "./roadmap-item"
 
@@ -65,7 +66,9 @@ export type ItemTextField = (typeof ITEM_TEXT_FIELDS)[number]
  * the English ones in order as one value (`tagsValue`, STY-037), so a co-lead's
  * reordering is a conflict. Then its organisations, a set of IDs as one value
  * (`organisationIdsValue`), so a co-lead's reordering is no change and their other set
- * is a conflict. A field that is not text needs its own case in `findEditedItem`, which
+ * is a conflict. Then its details, the English ones as the list they show as, as one
+ * value (`detailsValue`, STY-039), so a co-lead's other hyphens for the same list are no
+ * change. A field that is not text needs its own case in `findEditedItem`, which
  * compares every other part of an item, and in `applyItemChanges` and `withFieldOf`
  * (`pending-changes.ts`).
  */
@@ -74,6 +77,7 @@ export const EDITABLE_ITEM_FIELDS = [
   "placement",
   "tags",
   "organisationIds",
+  "details",
 ] as const
 
 export type EditableItemField = (typeof EDITABLE_ITEM_FIELDS)[number]
@@ -112,7 +116,8 @@ export function roadmapValue(
 
 /**
  * The item's value for `field`, `""` for none: its English for text, its placement's
- * ID, its English tags as one value, or its organisations' IDs as one value.
+ * ID, its English tags as one value, its organisations' IDs as one value, or its English
+ * details as one value.
  */
 export function itemValue(item: RoadmapItem, field: EditableItemField): string {
   switch (field) {
@@ -124,6 +129,10 @@ export function itemValue(item: RoadmapItem, field: EditableItemField): string {
       return tagsValue(item.tags.map(({ en }) => en))
     case "organisationIds":
       return organisationIdsValue(item.organisationIds)
+    case "details":
+      return detailsValue(
+        item.details.map(({ text, level }) => ({ text: text.en, level })),
+      )
     default:
       return item[field]?.en ?? ""
   }
@@ -228,8 +237,8 @@ export interface RoadmapChanges {
 
 /**
  * A field a co-lead changed since it was edited: its current value differs from both
- * its base and its pending value (ADR-012 Option 12), or its `welshTags` say why it
- * can't be written.
+ * its base and its pending value (ADR-012 Option 12), or one that has `gainedWelsh`,
+ * so it can't be written.
  */
 export type FieldConflict = (
   | { subject: "roadmap"; field: EditableRoadmapField }
@@ -240,11 +249,11 @@ export type FieldConflict = (
   pending: string
   current: string
   /**
-   * The item's tags have gained Welsh versions since it was read, so its pending tags
-   * can't be written whatever `current` holds (STY-037 S22): only giving the change up
-   * settles it.
+   * The item's tags, or its details, have gained Welsh versions since it was read, so
+   * the pending ones can't be written whatever `current` holds (STY-037 S22, STY-039
+   * S19): only giving the change up settles it.
    */
-  welshTags?: true
+  gainedWelsh?: true
 }
 
 /**

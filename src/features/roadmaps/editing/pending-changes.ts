@@ -5,6 +5,7 @@
  */
 
 import { findEditedItem } from "@/domain/roadmap/find-edited-item"
+import { englishDetails } from "@/domain/roadmap/item-details"
 import type { LocalisedText } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import {
@@ -272,7 +273,7 @@ export function reconcileItems(
 
 /**
  * `item` with `from`'s `field`: English and Welsh, a placement with its horizon, tags
- * with whether they have Welsh, or organisations with their unknown codes.
+ * or details with whether they have Welsh, or organisations with their unknown codes.
  */
 function withFieldOf(
   item: RoadmapItem,
@@ -293,6 +294,12 @@ function withFieldOf(
         ...item,
         organisationIds: from.organisationIds,
         unknownOrganisationCodes: from.unknownOrganisationCodes,
+      }
+    case "details":
+      return {
+        ...item,
+        details: from.details,
+        hasWelshDetails: from.hasWelshDetails,
       }
     default:
       return { ...item, [field]: from[field] }
@@ -428,10 +435,11 @@ function chosenCategory(
 }
 
 /**
- * The item as it will read once its pending English, placement, tags and organisations
- * are published: a placed item has no horizon as written (STY-031 S4), changed tags are
- * English alone, as only an item with no Welsh ones has them changed (STY-037 S20), and
- * chosen organisations have no unknown codes (STY-034 S4).
+ * The item as it will read once its pending English, placement, tags, organisations
+ * and details are published: a placed item has no horizon as written (STY-031 S4),
+ * changed tags and details are English alone, as only an item with no Welsh ones has
+ * them changed (STY-037 S20, STY-039 S18), and chosen organisations have no unknown
+ * codes (STY-034 S4).
  */
 export function applyItemChanges(
   item: RoadmapItem,
@@ -442,6 +450,7 @@ export function applyItemChanges(
   const placement = fields.placement?.value
   const tags = fields.tags?.value
   const organisations = fields.organisationIds?.value
+  const details = fields.details?.value
   return {
     ...item,
     ...(placement !== undefined &&
@@ -453,6 +462,7 @@ export function applyItemChanges(
       organisationIds: organisationIdsOf(organisations),
       unknownOrganisationCodes: [],
     }),
+    ...(details !== undefined && { details: englishDetails(details) }),
     title: withEnglish(item.title, fields.title) ?? item.title,
     description: withEnglish(item.description, fields.description),
     expectedOutcome: withEnglish(item.expectedOutcome, fields.expectedOutcome),

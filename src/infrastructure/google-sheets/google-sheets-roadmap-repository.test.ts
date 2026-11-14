@@ -245,10 +245,14 @@ function tabRowsFor(items: readonly RoadmapItem[]): string[][] {
     ) ||
       // Welsh tags that show nowhere: a cell that holds something all the same.
       (lang === "cy" && item.hasWelshTags ? "-" : ""),
-    join(
-      item.details.map(({ text, level }) => nest(level, text[lang])),
-      "\n",
-    ),
+    // No cell for details with no text in this language, whatever their nesting.
+    (item.details.every(({ text }) => text[lang] === "")
+      ? ""
+      : item.details
+          .map(({ text, level }) => nest(level, text[lang]))
+          .join("\n")) ||
+      // Welsh details that show nowhere, as for tags.
+      (lang === "cy" && item.hasWelshDetails ? "-" : ""),
   ]
   const textHeaders = [
     ...ITEM_TEXT_COLUMNS.map(([header]) => header),
@@ -1524,7 +1528,163 @@ describe("GoogleSheetsRoadmapRepository", () => {
         expect(item.hasWelshTags).toBe(false)
         expect(outcome).toMatchObject({
           status: "refused",
-          conflicts: [{ field: "tags", welshTags: true }],
+          conflicts: [{ field: "tags", gainedWelsh: true }],
+        })
+        expect(spreadsheet.bodies).toEqual([])
+      })
+    })
+
+    describe("an item's details (STY-039)", () => {
+      const column = (rows: readonly string[][] | undefined, header: string) =>
+        (rows?.[0]?.indexOf(header) ?? -1) + 1
+      const MINE = [
+        "Follow-up appointments in three specialties",
+        "- Dermatology",
+        "-- Adult clinics first",
+        "First appointments stay in person",
+      ].join("\n")
+
+      /** Publishes details for the item of the roadmap with `id` titled `title`. */
+      async function redetail(
+        id: string,
+        title: string,
+        base: string,
+        value: string,
+      ) {
+        const items = await httpRepository().listRoadmapItems(id)
+        const position = items.findIndex((item) => item.title.en === title)
+        const item = items[position]
+        if (item === undefined) throw new Error(`${id} has no ${title}`)
+        return httpRepository().publishRoadmapChanges(id, {
+          roadmap: {},
+          items: [{ item, position, fields: { details: { base, value } } }],
+        })
+      }
+
+      it("writes a line for each detail, a hyphen for each level and a space, as text in the Details cell alone (S14)", async () => {
+        const spreadsheet = serveStatefulSpreadsheet(exampleTabs())
+        const before = spreadsheet.tabs()
+
+        const outcome = await redetail("producta", "Longer-term idea", "", MINE)
+
+        expect(outcome).toEqual({ status: "published" })
+        const details = column(EXAMPLE_TAB_ROWS.ProductA, "Details")
+        expect(
+          changedCells(before, spreadsheet.tabs()).filter(
+            (change) => !change.includes("C15 "),
+          ),
+        ).toEqual([`ProductA!R7C${String(details)} ${MINE}`])
+        const { requests } = spreadsheet.bodies[0] as BatchUpdateBody
+        expect(JSON.stringify(requests)).toContain(
+          JSON.stringify({ userEnteredValue: { stringValue: MINE } }),
+        )
+      })
+
+      it("writes no details as an empty cell (S14)", async () => {
+        const spreadsheet = serveStatefulSpreadsheet(exampleTabs())
+
+        await redetail(
+          "producta",
+          "Earlier delivery this year",
+          "What it included\nAnother thing it included",
+          "",
+        )
+
+        const details = column(EXAMPLE_TAB_ROWS.ProductA, "Details")
+        expect(spreadsheet.tabs()[1]?.rows[8]?.[details - 1] ?? "").toBe("")
+      })
+
+      it("adds a Details column to a tab with none, then writes the cell (S14)", async () => {
+        const rows = [
+          ["Title", "Horizon"],
+          ["Unpublished work", "Now"],
+        ]
+        const before = [...exampleTabs(), gridTab("ProductC", rows, 30, 3)]
+        const spreadsheet = serveStatefulSpreadsheet(before)
+
+        await redetail("productc", "Unpublished work", "", "One\n- Two")
+
+        expect(
+          changedCells(before, spreadsheet.tabs()).filter((change) =>
+            change.startsWith("ProductC!"),
+          ),
+        ).toEqual(
+          expect.arrayContaining([
+            "ProductC!R1C3 Details",
+            "ProductC!R2C3 One\n- Two",
+          ]),
+        )
+      })
+
+      it("leaves a cell written another way as it is until the details change, then writes it at the levels shown (S20)", async () => {
+        const rows = [
+          ["Item ID", "Title", "Horizon", "Details"],
+          [
+            "videoxxx",
+            "Unpublished work",
+            "Now",
+            "- One\n--- Two\n- -5 degrees",
+          ],
+        ]
+        const spreadsheet = serveStatefulSpreadsheet([
+          ...exampleTabs(),
+          gridTab("ProductC", rows, 30, 3),
+        ])
+        const AS_SHOWN = "One\n- Two\n5 degrees"
+
+        const unchanged = await redetail(
+          "productc",
+          "Unpublished work",
+          AS_SHOWN,
+          AS_SHOWN,
+        )
+        expect(unchanged).toEqual({ status: "published" })
+        expect(spreadsheet.bodies).toEqual([])
+
+        await redetail(
+          "productc",
+          "Unpublished work",
+          AS_SHOWN,
+          `${AS_SHOWN}\n- Three`,
+        )
+
+        expect(spreadsheet.tabs().at(-1)?.rows[1]?.[3]).toBe(
+          "One\n- Two\n5 degrees\n- Three",
+        )
+      })
+
+      it("writes nothing over details whose Welsh cell holds anything, a count that doesn't pair included (S19)", async () => {
+        const rows = [
+          ["Item ID", "Title", "Horizon", "Details", "Details (cy)"],
+          ["videoxxx", "Unpublished work", "Now", "One\n- Two", ""],
+        ]
+        const spreadsheet = serveStatefulSpreadsheet([
+          ...exampleTabs(),
+          gridTab("ProductC", rows, 30, 3),
+        ])
+        const [item] = await httpRepository().listRoadmapItems("productc")
+        if (item === undefined) throw new Error("Product C has an item")
+        // A co-lead's Welsh, one line for two details, after the item was read.
+        rows[1]?.splice(4, 1, "Un")
+
+        const outcome = await httpRepository().publishRoadmapChanges(
+          "productc",
+          {
+            roadmap: {},
+            items: [
+              {
+                item,
+                position: 0,
+                fields: { details: { base: "One\n- Two", value: "One" } },
+              },
+            ],
+          },
+        )
+
+        expect(item.hasWelshDetails).toBe(false)
+        expect(outcome).toMatchObject({
+          status: "refused",
+          conflicts: [{ field: "details", gainedWelsh: true }],
         })
         expect(spreadsheet.bodies).toEqual([])
       })

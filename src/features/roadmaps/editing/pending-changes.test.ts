@@ -861,3 +861,34 @@ describe("an item whose details read deeper than the third level (STY-039, revie
     expect(matchItemChanges([first, hyphened], retitled).size).toBe(0)
   })
 })
+
+describe("an item with pending details, found by its content (STY-039, after the review cap)", () => {
+  const detailed = (...levels: number[]) =>
+    levels.map((level, index) => ({
+      text: { en: `Detail ${String(index + 1)}`, cy: "" },
+      level,
+    }))
+  const loaded = createTestRoadmapItem("Legacy", { details: detailed(0, 1) })
+  const PENDING = "Detail 1\n- Detail 2\n-- Detail 3\n-- Detail 4"
+  const redetailed = editItem(NO_CHANGES, undefined, loaded, 1, {
+    details: PENDING,
+  })
+
+  it("is found in a row holding the pending details, however their hyphens are written", () => {
+    const written = { ...loaded, details: detailed(0, 1, 2, 2) }
+    const hyphened = { ...loaded, details: detailed(1, 2, 3, 3) }
+
+    expect(matchItemChanges([first, written], redetailed).get(1)).toBe(
+      redetailed.items[0],
+    )
+    expect(matchItemChanges([first, hyphened], redetailed).get(1)).toBe(
+      redetailed.items[0],
+    )
+  })
+
+  it("is not found in a row that shows a fourth level, though the field would show it as the pending list", () => {
+    const deeper = { ...loaded, details: detailed(0, 1, 2, 3) }
+
+    expect(matchItemChanges([first, deeper], redetailed).size).toBe(0)
+  })
+})

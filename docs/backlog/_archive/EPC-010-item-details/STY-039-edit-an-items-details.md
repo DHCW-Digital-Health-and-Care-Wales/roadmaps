@@ -467,6 +467,10 @@ audited. This story's own:
   the button acts, as a button pressed in Safari takes no focus from the text. Pasted
   lines that ask for more than three levels say so: "Added 4 details. A list has three
   levels, so this can't go deeper.", which shows.
+- **After the review cap** (agent; Sol, 1 P2, taken as a should-fix). An item found by
+  its content with details pending is matched the same way: a row holds the pending
+  details only when the card would show it as that list, a fourth level not being the
+  third.
 - **Epic close**: this closes EPC-010. It had no delivery notes.
 
 ### Contract for dependents

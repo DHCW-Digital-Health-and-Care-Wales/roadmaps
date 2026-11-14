@@ -3,7 +3,7 @@
  * write"), so a publish writes to that item or to none.
  */
 
-import { shownLevels } from "./item-details"
+import { englishDetails, shownLevels } from "./item-details"
 import {
   EDITABLE_ITEM_FIELDS,
   type EditableItemField,
@@ -60,8 +60,8 @@ const CONTENT_KEYS = Object.keys(CONTENT) as (keyof typeof CONTENT)[]
  * Whether `current` holds `loaded`'s content, with `edited` fields' values replaced: a
  * text field's Welsh must still be `loaded`'s where both reads show it, a placed item has
  * no horizon as written, an item whose organisations were written has no unknown codes,
- * as only known ones are written (ADR-014), and unedited details are compared as the
- * list the card shows (STY-039).
+ * as only known ones are written (ADR-014), and details, edited or not, are compared as
+ * the list the card shows (STY-039).
  */
 function sameContent(
   current: RoadmapItem,
@@ -88,6 +88,10 @@ function sameContent(
         return sameValue(shownDetails(current), shownDetails(loaded))
       }
       return sameValue(current[key], loaded[key])
+    }
+    // Pending details too are held only by the list the card shows as them (STY-039).
+    if (key === "details") {
+      return sameValue(shownDetails(current), englishDetails(value))
     }
     return (
       itemValue(current, key) === value &&

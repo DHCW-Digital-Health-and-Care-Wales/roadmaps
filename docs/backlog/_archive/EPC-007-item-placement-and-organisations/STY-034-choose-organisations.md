@@ -96,6 +96,8 @@ conflict
 - **D7** (agent, 2026-11-13): the cell is written as codes separated by `, `, national
   first then by code, over the order ticked: the format the parser and the public site already
   read, and stable, so a re-save is no change → S5.
+- **D8** (owner, 2026-11-13, STY-038 D1): the checkboxes will show once the field is
+  opened, not as the form opens. Changes S1's "When", once STY-038 is delivered.
 
 ## Starting point
 

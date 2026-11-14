@@ -50,17 +50,18 @@ watch a PR.
 2. Read the current head, checks and existing comments. Handle routine status
    changes, clean CI completion and readiness decisions directly. Delegate
    substantive investigation or fixes using the bounded handoff below; finish
-   required branch updates and pushes before waiting on PR events.
+   required branch updates (`pull-requests.md`, _Update a branch_) and pushes
+   before waiting on PR events.
 3. If required work still waits on checks or reviews and the runtime can
    notify you of PR events, register for them and end the turn; on
    notification, reconcile the current head and act per the sections below.
    Without PR notifications, tell the user what is pending and stop; resume on
    their request. Never poll with sleeps, loops, `gh run watch`, `gh pr checks
 --watch` or scheduled wake-ups.
-4. When done, blocked, closed, or handing back to the user, remove any PR
-   watch. Merge only when the Done conditions hold and the user authorized
-   merging; a request to leave it open remains binding. A notification alone
-   never establishes readiness to merge.
+4. Once the PR reads merged or closed, is blocked, or is handed back to the
+   user, remove any PR watch. Merge only when the Done conditions hold and the
+   user authorized merging; a request to leave it open remains binding. A
+   notification alone never establishes readiness to merge.
 
 ### Delegate actionable work
 

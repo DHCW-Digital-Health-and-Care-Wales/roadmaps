@@ -1,0 +1,2431 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Item tags: editor prototypes</title>
+    <style>
+      /* The review page's own chrome. It sets no background, so it sits on whatever
+         shows it; each prototype draws inside a .dhcw stage that has its own. */
+      html,
+      body {
+        margin: 0;
+      }
+      .page {
+        max-width: 728px;
+        margin: 0 auto;
+        padding: 8px 0 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        font-family: var(--font-sans, system-ui, "Segoe UI", Arial, sans-serif);
+        font-size: 15px;
+        line-height: 1.5;
+      }
+      .page * {
+        box-sizing: border-box;
+      }
+      .page h1 {
+        margin: 0;
+        font-size: 20px;
+        line-height: 1.3;
+      }
+      .page p,
+      .page ol,
+      .page ul {
+        margin: 0;
+      }
+      .intro,
+      .page figure {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin: 0;
+        min-width: 0;
+      }
+      .page ol,
+      .world ul {
+        padding-left: 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .world summary,
+      .try summary {
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .world ul,
+      .try ol {
+        margin-top: 8px;
+      }
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 20px;
+        align-items: center;
+        font-size: 14px;
+      }
+      .controls > div {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      .seg {
+        display: inline-flex;
+        flex-wrap: wrap;
+        border: 1px solid currentColor;
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .seg button,
+      .again {
+        appearance: none;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        padding: 5px 10px;
+        cursor: pointer;
+      }
+      .seg button[aria-pressed="true"] {
+        background: #1b365d;
+        color: #fff;
+      }
+      .again {
+        border: 1px solid currentColor;
+        border-radius: 6px;
+        font-size: 13px;
+        padding: 3px 9px;
+      }
+      .caption {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .page figcaption h2 {
+        margin: 0;
+        font-weight: 600;
+        font-size: 17px;
+        line-height: 1.3;
+      }
+      .idea {
+        font-size: 14px;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      /* The editor's look: the semantic tokens of src/styles/globals.css, light and
+         dark, under their own names so they never meet the host page's. */
+      .dhcw {
+        --d-bg: #ffffff;
+        --d-card: #ffffff;
+        --d-fg: #212b32;
+        --d-muted: #f0f4f5;
+        --d-muted-fg: #4c6272;
+        --d-border: #d8dde0;
+        --d-input: #4c6272;
+        --d-primary: #1b365d;
+        --d-primary-fg: #ffffff;
+        --d-primary-hover: #32598a;
+        --d-control-shadow: #0e1b2f;
+        --d-focus: #ffeb3b;
+        --d-focus-fg: #212b32;
+        --d-tag-bg: #dbe0e3;
+        --d-tag-fg: #354550;
+        --d-info-bg: #ccdff1;
+        --d-info-fg: #004281;
+        --d-popup-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        color: var(--d-fg);
+        font-family: Roboto, Arial, sans-serif;
+        font-size: 16px;
+        line-height: 24px;
+      }
+      .dhcw.dark {
+        --d-bg: #0e1b2f;
+        --d-card: #13233c;
+        --d-fg: #f0f4f5;
+        --d-muted: #1b365d;
+        --d-muted-fg: #afb8bf;
+        --d-border: #4c6272;
+        --d-input: #afb8bf;
+        --d-primary: #32598a;
+        --d-primary-hover: #1b365d;
+        --d-control-shadow: #4c6272;
+        --d-tag-bg: #354550;
+        --d-tag-fg: #dbe0e3;
+        --d-info-bg: #004281;
+        --d-info-fg: #ccdff1;
+      }
+      .stage {
+        background: var(--d-bg);
+        padding: 16px;
+        border-radius: 8px;
+        border: 1px solid var(--d-border);
+        display: flex;
+        justify-content: center;
+      }
+      .d-card {
+        width: var(--card-w, 360px);
+        max-width: 100%;
+        min-width: 0;
+        border: 1px solid var(--d-border);
+        background: var(--d-card);
+        padding: 16px;
+        box-shadow: 0 4px 0 var(--d-border);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .d-card h3 {
+        margin: 0;
+        font-size: 16px;
+        line-height: 24px;
+        font-weight: 700;
+        overflow-wrap: break-word;
+      }
+      .d-card p,
+      .d-card ul,
+      .d-card dl,
+      .d-card dd {
+        margin: 0;
+      }
+      .d-card ul {
+        list-style: none;
+        padding: 0;
+      }
+      .d-card dl {
+        font-size: 14px;
+        line-height: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .d-card dt {
+        font-weight: 700;
+      }
+      .d-card dd {
+        overflow-wrap: break-word;
+      }
+      .d-form {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        margin: 0;
+      }
+      .d-field {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        border: 0;
+        padding: 0;
+        margin: 0;
+        min-width: 0;
+      }
+      .d-label,
+      .d-field legend {
+        font-weight: 700;
+        padding: 0;
+      }
+      .d-field legend {
+        margin-bottom: 8px;
+      }
+      .d-sub {
+        font-size: 14px;
+        line-height: 20px;
+        font-weight: 700;
+      }
+      .d-hint,
+      .d-status {
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--d-muted-fg);
+      }
+      .d-status {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      .d-status:empty {
+        display: none;
+      }
+      .d-input {
+        width: 100%;
+        min-width: 0;
+        min-height: 40px;
+        border: 2px solid var(--d-input);
+        border-radius: 0;
+        background: var(--d-bg);
+        color: var(--d-fg);
+        padding: 6px 8px;
+        font: inherit;
+      }
+      .d-input:focus-visible,
+      .d-check:focus-visible,
+      .a-box:focus-within {
+        outline: 3px solid var(--d-focus);
+        outline-offset: 0;
+        border-color: var(--d-focus-fg);
+        box-shadow: inset 0 0 0 2px var(--d-focus-fg);
+      }
+      .d-btn {
+        appearance: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 40px;
+        padding: 0 16px;
+        border: 1px solid var(--d-primary);
+        border-radius: 4px;
+        background: var(--d-primary);
+        color: var(--d-primary-fg);
+        font: inherit;
+        font-weight: 700;
+        white-space: nowrap;
+        box-shadow: 0 2px 0 var(--d-control-shadow);
+        cursor: pointer;
+      }
+      .d-btn:hover {
+        background: var(--d-primary-hover);
+      }
+      .d-btn.sec {
+        border-color: var(--d-input);
+        background: var(--d-bg);
+        color: var(--d-fg);
+        box-shadow: 0 2px 0 var(--d-input);
+      }
+      .d-btn.sec:hover {
+        background: var(--d-muted);
+      }
+      .d-btn.sm {
+        height: 32px;
+        padding: 0 12px;
+        font-size: 14px;
+        line-height: 20px;
+      }
+      .d-btn:active {
+        transform: translateY(1px);
+      }
+      .d-btn:focus-visible,
+      .sugg:focus-visible,
+      .a-chip button:focus-visible {
+        outline: 3px solid transparent;
+        outline-offset: 0;
+        border-color: transparent;
+        background: var(--d-focus);
+        color: var(--d-focus-fg);
+        box-shadow: 0 2px 0 var(--d-focus-fg);
+      }
+      .d-tag {
+        display: inline-flex;
+        align-items: center;
+        width: fit-content;
+        max-width: 100%;
+        border: 1px solid var(--d-tag-fg);
+        background: var(--d-tag-bg);
+        color: var(--d-tag-fg);
+        padding: 2px 8px;
+        font-size: 14px;
+        line-height: 20px;
+        font-weight: 700;
+        overflow-wrap: anywhere;
+      }
+      .d-tag.info {
+        border-color: var(--d-info-fg);
+        background: var(--d-info-bg);
+        color: var(--d-info-fg);
+      }
+      .d-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      /* A: tags inside one box, with a list that opens under it. */
+      .a-wrap {
+        position: relative;
+      }
+      .a-box {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+        min-height: 40px;
+        border: 2px solid var(--d-input);
+        background: var(--d-bg);
+        padding: 4px 6px;
+        cursor: text;
+      }
+      .a-chips {
+        display: contents;
+      }
+      .a-chip {
+        display: inline-flex;
+        max-width: 100%;
+        border: 1px solid var(--d-tag-fg);
+        background: var(--d-tag-bg);
+        color: var(--d-tag-fg);
+        font-size: 14px;
+        line-height: 20px;
+        font-weight: 700;
+      }
+      .a-chip.armed {
+        background: var(--d-focus);
+        color: var(--d-focus-fg);
+        border-color: var(--d-focus-fg);
+      }
+      .a-chip button {
+        appearance: none;
+        border: 0;
+        border-radius: 0;
+        background: none;
+        color: inherit;
+        font: inherit;
+        min-height: 28px;
+        padding: 4px 8px;
+        cursor: pointer;
+      }
+      .a-chip .chip-text {
+        text-align: left;
+        overflow-wrap: anywhere;
+      }
+      .a-chip .chip-x {
+        border-left: 1px solid currentColor;
+      }
+      .a-chip button:hover {
+        text-decoration: underline;
+      }
+      .a-chip-edit {
+        min-width: 8ch;
+        max-width: 100%;
+        min-height: 30px;
+        border: 2px solid var(--d-input);
+        border-radius: 0;
+        background: var(--d-bg);
+        color: var(--d-fg);
+        font: inherit;
+        font-size: 14px;
+        line-height: 20px;
+        padding: 2px 6px;
+      }
+      .a-input {
+        flex: 1 1 8ch;
+        min-width: 8ch;
+        min-height: 28px;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        padding: 2px;
+      }
+      .a-list {
+        position: absolute;
+        z-index: 5;
+        left: 0;
+        right: 0;
+        top: 100%;
+        margin-top: 4px !important;
+        padding: 4px 0 !important;
+        background: var(--d-card);
+        border: 1px solid var(--d-input);
+        box-shadow: var(--d-popup-shadow);
+        max-height: 264px;
+        overflow: auto;
+      }
+      .a-list li {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 8px 12px;
+        cursor: pointer;
+        overflow-wrap: anywhere;
+      }
+      .a-list li:hover {
+        background: var(--d-muted);
+      }
+      .a-list li.active {
+        background: var(--d-focus);
+        color: var(--d-focus-fg);
+        box-shadow: inset 0 -2px 0 var(--d-focus-fg);
+      }
+      .a-list .count {
+        flex: none;
+        font-size: 14px;
+        color: var(--d-muted-fg);
+      }
+      .a-list li.active .count {
+        color: inherit;
+      }
+
+      /* B: a row per tag, and the roadmap's other tags as buttons. */
+      .b-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--d-border);
+      }
+      .b-row:first-child {
+        border-top: 1px solid var(--d-border);
+      }
+      .b-actions {
+        display: flex;
+        gap: 8px;
+      }
+      .b-row .b-actions {
+        margin-left: auto;
+      }
+      /* A name being changed shrinks to stay beside its worded buttons in a narrow card. */
+      .b-row .d-input {
+        flex: 1 1 0;
+        min-width: 8ch;
+      }
+      /* Where a row is too narrow for a tag beside its worded buttons, the buttons
+         show icons instead, so they never drop under the tag. */
+      .b-ico {
+        display: none;
+      }
+      .b-ico svg {
+        display: block;
+        width: 16px;
+        height: 16px;
+      }
+      .b-rows.icons .b-ico {
+        display: inline-flex;
+      }
+      .b-rows.icons .b-txt {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+      }
+      .b-rows.icons .b-row {
+        flex-wrap: nowrap;
+      }
+      .b-rows.icons .d-tag,
+      .b-rows.icons .b-row .d-input {
+        flex: 0 1 auto;
+        min-width: 0;
+      }
+      .b-rows.icons .b-row .d-input {
+        flex-grow: 1;
+      }
+      .b-rows.icons .b-actions .d-btn {
+        flex: none;
+        width: 32px;
+        padding: 0;
+      }
+      /* Measures a tag and the worded buttons at their own widths, out of sight and
+         taking no room. */
+      .b-probe {
+        position: absolute;
+        visibility: hidden;
+        width: 0;
+        height: 0;
+        overflow: hidden;
+        display: flex;
+        white-space: nowrap;
+      }
+      .b-probe > * {
+        flex: none;
+        max-width: none;
+      }
+      .b-add {
+        display: flex;
+        gap: 8px;
+      }
+      .sugg-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .sugg {
+        appearance: none;
+        border: 1px dashed var(--d-input);
+        border-radius: 4px;
+        background: var(--d-bg);
+        color: var(--d-fg);
+        font: inherit;
+        font-size: 14px;
+        line-height: 20px;
+        font-weight: 700;
+        padding: 5px 10px;
+        text-align: left;
+        overflow-wrap: anywhere;
+        cursor: pointer;
+      }
+      .sugg:hover {
+        background: var(--d-muted);
+      }
+
+      /* C: every tag in the roadmap as a checkbox. */
+      .c-rows {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .c-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+      }
+      .c-row label {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 40px;
+        flex: 1 1 0;
+        min-width: 0;
+        cursor: pointer;
+      }
+      .c-row .d-input {
+        flex: 1 1 12ch;
+      }
+      .d-check {
+        appearance: none;
+        flex: none;
+        width: 40px;
+        height: 40px;
+        margin: 0;
+        border: 2px solid var(--d-input);
+        border-radius: 0;
+        background: var(--d-bg);
+        display: grid;
+        place-content: center;
+        cursor: pointer;
+      }
+      .d-check:checked::after {
+        content: "";
+        width: 10px;
+        height: 20px;
+        border: solid var(--d-fg);
+        border-width: 0 4px 4px 0;
+        transform: translateY(-3px) rotate(45deg);
+      }
+      .c-name {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
+      .c-count {
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--d-muted-fg);
+      }
+
+      /* A field that opens on request, in the whole form. */
+      .t-line {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        overflow-wrap: anywhere;
+      }
+      .t-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .t-editor legend {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+      }
+      .d-card dl.all {
+        gap: 10px;
+      }
+      .d-card dl.all div {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .d-card dd {
+        white-space: pre-line;
+      }
+      textarea.d-input {
+        display: block;
+        resize: vertical;
+      }
+
+      /* D: one line of text, read back as tags. */
+      .d-preview {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+      }
+      .d-notes {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--d-muted-fg);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <div class="intro">
+        <h1>Item tags: four editors, and the form that holds them</h1>
+        <p>
+          Each is the Tags field of an item's edit form, in an item card as wide
+          as the roadmap page draws one. All four keep the same rules (below)
+          and offer the tags this roadmap's other items carry. They differ in
+          how a tag is added, renamed and removed. Done keeps the tags and shows
+          the card; Edit opens the form again. The last figure is the whole edit
+          form, with editor B in it and Tags and Organisations opening on
+          request.
+        </p>
+        <div class="controls">
+          <div>
+            <span id="theme-label">Theme</span>
+            <span class="seg" role="group" aria-labelledby="theme-label">
+              <button type="button" data-theme="light" aria-pressed="true">
+                Light
+              </button>
+              <button type="button" data-theme="dark" aria-pressed="false">
+                Dark
+              </button>
+            </span>
+          </div>
+          <div>
+            <span id="width-label">Card width</span>
+            <span class="seg" role="group" aria-labelledby="width-label">
+              <button type="button" data-width="294" aria-pressed="false">
+                Narrowest 294
+              </button>
+              <button type="button" data-width="343" aria-pressed="false">
+                Phone 343
+              </button>
+              <button type="button" data-width="360" aria-pressed="true">
+                Desktop 360
+              </button>
+              <button type="button" data-width="461" aria-pressed="false">
+                Widest 461
+              </button>
+            </span>
+          </div>
+        </div>
+        <details class="try" open>
+          <summary>Things to try in each</summary>
+          <ol>
+            <li>Add “Appointments”, which two other items carry.</li>
+            <li>
+              Type <kbd>clinic staff</kbd> in lower case: it takes the spelling
+              other items use.
+            </li>
+            <li>Type <kbd>patients</kbd>: the item already has it.</li>
+            <li>Rename “Video consultations” to “Video appointments”.</li>
+            <li>Remove a tag, then put it back.</li>
+            <li>Paste <kbd>Carers, Welsh language</kbd>.</li>
+            <li>Do all of it with the keyboard alone, then press Done.</li>
+            <li>
+              In the last figure, open Tags or Organisations, change it, close
+              it, then press Done.
+            </li>
+          </ol>
+        </details>
+        <details class="world">
+          <summary>The sample roadmap: Outpatient Booking, seven items</summary>
+          <ul id="world-items"></ul>
+        </details>
+      </div>
+
+      <figure id="pa">
+        <div class="caption">
+          <figcaption><h2>A. Type-ahead box</h2></figcaption>
+          <button type="button" class="again" data-again="pa">
+            Start again
+          </button>
+        </div>
+        <p class="idea">
+          Tags sit inside one box. Typing opens a list of the roadmap's other
+          tags; Enter takes the highlighted one, a comma keeps exactly what was
+          typed. Select a tag's name to rename it; Backspace twice removes the
+          last.
+        </p>
+        <div class="dhcw stage"><div class="d-card" id="pa-card"></div></div>
+      </figure>
+
+      <figure id="pb">
+        <div class="caption">
+          <figcaption><h2>B. List and suggestions</h2></figcaption>
+          <button type="button" class="again" data-again="pb">
+            Start again
+          </button>
+        </div>
+        <p class="idea">
+          Nothing opens or hides. Each tag has its own row with Rename and
+          Remove, which become icons when a row is too narrow for both beside
+          the tag; the roadmap's other tags are buttons under the Add field,
+          narrowed as you type. A removal can be undone.
+        </p>
+        <div class="dhcw stage"><div class="d-card" id="pb-card"></div></div>
+      </figure>
+
+      <figure id="pc">
+        <div class="caption">
+          <figcaption><h2>C. Tick list</h2></figcaption>
+          <button type="button" class="again" data-again="pc">
+            Start again
+          </button>
+        </div>
+        <p class="idea">
+          Every tag in the roadmap is a checkbox, as organisations are, with how
+          many other items carry it. A new tag is typed below the list. A ticked
+          tag can be renamed for this item.
+        </p>
+        <div class="dhcw stage"><div class="d-card" id="pc-card"></div></div>
+      </figure>
+
+      <figure id="pd">
+        <div class="caption">
+          <figcaption><h2>D. One line of text</h2></figcaption>
+          <button type="button" class="again" data-again="pd">
+            Start again
+          </button>
+        </div>
+        <p class="idea">
+          The tags are one text field, separated by commas, as in the
+          spreadsheet. The roadmap's other tags are buttons that finish the tag
+          being typed or add one at the end; the line below reads back what will
+          be kept.
+        </p>
+        <div class="dhcw stage"><div class="d-card" id="pd-card"></div></div>
+      </figure>
+
+      <figure id="pe">
+        <div class="caption">
+          <figcaption><h2>B in the item's edit form</h2></figcaption>
+          <button type="button" class="again" data-again="pe">
+            Start again
+          </button>
+        </div>
+        <p class="idea">
+          The whole form, with Tags and Organisations shut: each says what it
+          holds on one line beside “Change”. Choosing it opens the field in
+          place, editor B for tags and the checkboxes for organisations, and
+          “Close” shuts it again. Done keeps both either way.
+        </p>
+        <div class="dhcw stage"><div class="d-card" id="pe-card"></div></div>
+      </figure>
+    </main>
+
+    <script>
+      // The sample world: one roadmap, the item being edited and the six others.
+      const ITEM_TITLE = "Offer video appointments where suitable"
+      const INITIAL = ["Patients", "Video consultations"]
+      const OTHERS = [
+        {
+          placement: "Now",
+          title: "Text reminders before an outpatient appointment",
+          tags: ["Patients", "Appointments"],
+        },
+        {
+          placement: "Now",
+          title: "Rebook online without phoning the clinic",
+          tags: ["Patients", "Self-service"],
+        },
+        {
+          placement: "Next",
+          title: "Clinic staff see cancellations as they happen",
+          tags: ["Clinic staff", "Appointments"],
+        },
+        {
+          placement: "Next",
+          title: "Reminders in Welsh",
+          tags: ["patient", "Welsh language"],
+        },
+        {
+          placement: "Later",
+          title: "Show patients their place on the waiting list",
+          tags: ["Patients", "Waiting lists"],
+        },
+        {
+          placement: "Later",
+          title: "Book community clinics the same way",
+          tags: ["Community care", "Clinic staff"],
+        },
+      ]
+
+      // ---- The rules every prototype shares ----
+      const keyOf = (text) => text.toLocaleLowerCase("en-GB")
+      const clean = (text) => text.replace(/\s+/g, " ").trim()
+      /** A comma or a line break ends a tag, so no tag holds either. */
+      const split = (text) => text.split(/[,\n]/).map(clean).filter(Boolean)
+      const byName = (a, b) => a.localeCompare(b, "en", { sensitivity: "base" })
+
+      /**
+       * Each tag the other items carry, by its lower-case form, with how many carry it.
+       * Spellings that differ only in capitals are one tag, in the most used spelling:
+       * the first met when two are used as often.
+       */
+      const ELSEWHERE = new Map()
+      for (const { tags } of OTHERS) {
+        for (const tag of tags) {
+          const entry = ELSEWHERE.get(keyOf(tag)) ?? {
+            tag,
+            count: 0,
+            spellings: new Map(),
+          }
+          entry.count += 1
+          entry.spellings.set(tag, (entry.spellings.get(tag) ?? 0) + 1)
+          if (entry.spellings.get(tag) > entry.spellings.get(entry.tag))
+            entry.tag = tag
+          ELSEWHERE.set(keyOf(tag), entry)
+        }
+      }
+      /** A typed tag takes the spelling other items use, where one differs only in case. */
+      const spelling = (text) => ELSEWHERE.get(keyOf(text))?.tag ?? text
+      const others = (count) =>
+        count === 1 ? "1 other item" : `${count} other items`
+
+      /** The other items' tags the item lacks that hold `query`: most used first, then A to Z. */
+      function suggest(tags, query) {
+        const have = new Set(tags.map(keyOf))
+        const wanted = keyOf(clean(query))
+        return [...ELSEWHERE.values()]
+          .filter(
+            ({ tag }) => !have.has(keyOf(tag)) && keyOf(tag).includes(wanted),
+          )
+          .sort((a, b) => b.count - a.count || byName(a.tag, b.tag))
+      }
+
+      /** `tags` with each tag of `text` added at the end, none repeated whatever its case. */
+      function addTags(tags, text) {
+        const next = [...tags]
+        const added = []
+        const notes = []
+        for (const typed of split(text)) {
+          const tag = spelling(typed)
+          const existing = next.find((other) => keyOf(other) === keyOf(tag))
+          if (existing !== undefined) {
+            notes.push({ kind: "repeat", typed, tag: existing })
+            continue
+          }
+          next.push(tag)
+          added.push(tag)
+          if (tag !== typed) notes.push({ kind: "respelt", typed, tag })
+        }
+        return { tags: next, added, notes }
+      }
+
+      /** `tags` with the one at `index` renamed in place; a name the item has drops it. */
+      function renameTag(tags, index, text) {
+        const typed = clean(text.replace(/[,\n]/g, " "))
+        if (typed === "" || typed === tags[index]) return { tags, notes: [] }
+        const tag = spelling(typed)
+        if (tag === tags[index]) return { tags, notes: [] }
+        const existing = tags.find(
+          (other, at) => at !== index && keyOf(other) === keyOf(tag),
+        )
+        if (existing !== undefined) {
+          return {
+            tags: tags.filter((_, at) => at !== index),
+            notes: [{ kind: "merged", typed: tags[index], tag: existing }],
+          }
+        }
+        const next = [...tags]
+        next[index] = tag
+        return {
+          tags: next,
+          notes: tag === typed ? [] : [{ kind: "respelt", typed, tag }],
+        }
+      }
+
+      const noteText = ({ kind, typed, tag }) =>
+        ({
+          repeat: `“${tag}” is already on this item.`,
+          respelt: `Added as “${tag}”, as other items spell it.`,
+          merged: `“${tag}” is already on this item, so “${typed}” was removed.`,
+        })[kind]
+
+      // ---- Drawing ----
+      function h(name, props, ...children) {
+        const element = document.createElement(name)
+        for (const [key, value] of Object.entries(props ?? {})) {
+          if (value == null || value === false) continue
+          if (key === "class") element.className = value
+          else if (key.startsWith("on"))
+            element.addEventListener(key.slice(2), value)
+          else element.setAttribute(key, value === true ? "" : value)
+        }
+        for (const child of children.flat()) {
+          if (child == null || child === false) continue
+          element.append(child)
+        }
+        return element
+      }
+      const srOnly = (text) => h("span", { class: "sr-only" }, text)
+
+      /** A status line: `quiet` messages reach a screen reader only. */
+      function statusLine() {
+        const element = h("div", { class: "d-status", role: "status" })
+        return {
+          element,
+          say(message, { quiet = false, action = null } = {}) {
+            element.className = quiet ? "d-status sr-only" : "d-status"
+            element.replaceChildren(h("span", null, message), action ?? "")
+          },
+          clear() {
+            element.replaceChildren()
+          },
+          tell(notes, quietly) {
+            if (notes.length > 0) this.say(notes.map(noteText).join(" "))
+            else if (quietly) this.say(quietly, { quiet: true })
+            else this.clear()
+          },
+        }
+      }
+
+      /** A paste that holds a comma or a line break adds every tag in it at once. */
+      function addOnPaste(input, add) {
+        input.addEventListener("paste", (event) => {
+          const pasted = event.clipboardData?.getData("text") ?? ""
+          if (!/[,\n]/.test(pasted)) return
+          event.preventDefault()
+          add(input.value + pasted)
+        })
+      }
+      /** A field for a new tag: a comma or Enter adds what is typed; Enter on nothing confirms the form. */
+      function addOnKeys(input, add) {
+        input.addEventListener("keydown", (event) => {
+          const typed = clean(input.value) !== ""
+          if (event.key === "," || (event.key === "Enter" && typed)) {
+            event.preventDefault()
+            if (typed) add(input.value)
+          }
+        })
+        addOnPaste(input, add)
+      }
+      /** The field for a new tag beside its Add button. */
+      function addRow(input, add) {
+        return h(
+          "div",
+          { class: "b-add" },
+          input,
+          h(
+            "button",
+            {
+              type: "button",
+              class: "d-btn sec",
+              onclick: () => {
+                if (clean(input.value) !== "") add(input.value)
+                input.focus()
+              },
+            },
+            "Add",
+          ),
+        )
+      }
+      /** A tag's name as a field: Enter keeps the new name, Escape the old one. */
+      function renameField(className, tag, finish) {
+        const edit = h("input", {
+          class: className,
+          type: "text",
+          value: tag,
+          "aria-label": `Rename ${tag}`,
+          onkeydown: (event) => {
+            if (event.key === "Enter") {
+              event.preventDefault()
+              finish(edit.value)
+            } else if (event.key === "Escape") {
+              event.preventDefault()
+              finish(tag)
+            }
+          },
+        })
+        return edit
+      }
+      /** The lucide icons a row's buttons can show, as their path data (lucide 1.70). */
+      const ICONS = {
+        pencil: [
+          "M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z",
+          "m15 5 4 4",
+        ],
+        trash: [
+          "M10 11v6",
+          "M14 11v6",
+          "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6",
+          "M3 6h18",
+          "M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2",
+        ],
+        check: ["M20 6 9 17l-5-5"],
+        x: ["M18 6 6 18", "m6 6 12 12"],
+      }
+      /**
+       * A button's word with its icon. Styles show one of the two: the word stays the
+       * button's name when only the icon shows.
+       */
+      function worded(icon, word) {
+        const drawn = h("span", { class: "b-ico", "aria-hidden": "true" })
+        drawn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[
+          icon
+        ]
+          .map((d) => `<path d="${d}"/>`)
+          .join("")}</svg>`
+        return [drawn, h("span", { class: "b-txt" }, word)]
+      }
+      /** The buttons beside a name being changed, each named for its tag. */
+      function renameButtons(tag, edit, finish) {
+        return [
+          h(
+            "button",
+            {
+              type: "button",
+              class: "d-btn sec sm",
+              "data-word": "Update",
+              onclick: () => finish(edit.value),
+            },
+            worded("check", "Update"),
+            " ",
+            srOnly(tag),
+          ),
+          h(
+            "button",
+            {
+              type: "button",
+              class: "d-btn sec sm",
+              "data-word": "Cancel",
+              onclick: () => finish(tag),
+            },
+            worded("x", "Cancel"),
+            " ",
+            srOnly(`renaming ${tag}`),
+          ),
+        ]
+      }
+
+      // ---- A: type-ahead box ----
+      function editorA(id, start) {
+        let tags = [...start]
+        let open = false
+        let active = -1
+        let armed = false
+        let editing = -1
+        let options = []
+        const status = statusLine()
+        const input = h("input", {
+          id: `${id}-input`,
+          class: "a-input",
+          type: "text",
+          role: "combobox",
+          "aria-autocomplete": "list",
+          "aria-expanded": "false",
+          "aria-controls": `${id}-list`,
+          "aria-describedby": `${id}-hint`,
+          autocomplete: "off",
+          autocapitalize: "off",
+        })
+        const chips = h("ul", { class: "a-chips", role: "list" })
+        const list = h("ul", {
+          id: `${id}-list`,
+          class: "a-list",
+          role: "listbox",
+          "aria-label": "Tags used elsewhere in this roadmap",
+          hidden: true,
+        })
+        const box = h(
+          "div",
+          {
+            class: "a-box",
+            onmousedown: (event) => {
+              if (event.target !== box) return
+              event.preventDefault()
+              input.focus()
+              setOpen(true)
+            },
+          },
+          chips,
+          input,
+        )
+
+        function findOptions() {
+          const typed = clean(input.value)
+          const found = suggest(tags, typed).slice(0, 8)
+          const known =
+            ELSEWHERE.has(keyOf(typed)) ||
+            tags.some((tag) => keyOf(tag) === keyOf(typed))
+          if (typed !== "" && !known) found.push({ tag: typed, count: null })
+          return found
+        }
+        function drawList() {
+          options = findOptions()
+          if (active >= options.length) active = options.length - 1
+          const shown = open && options.length > 0
+          list.hidden = !shown
+          input.setAttribute("aria-expanded", String(shown))
+          if (shown && active >= 0)
+            input.setAttribute(
+              "aria-activedescendant",
+              `${id}-option-${active}`,
+            )
+          else input.removeAttribute("aria-activedescendant")
+          list.replaceChildren(
+            ...options.map(({ tag, count }, index) =>
+              h(
+                "li",
+                {
+                  id: `${id}-option-${index}`,
+                  role: "option",
+                  class: index === active ? "active" : null,
+                  "aria-selected": String(index === active),
+                  onmousedown: (event) => event.preventDefault(),
+                  onclick: () => choose(index),
+                },
+                count === null
+                  ? h("span", null, `Add “${tag}”`)
+                  : [
+                      h("span", null, tag),
+                      h("span", { class: "count" }, others(count)),
+                    ],
+              ),
+            ),
+          )
+          list.querySelector(".active")?.scrollIntoView({ block: "nearest" })
+        }
+        function setOpen(next) {
+          open = next
+          if (!open) active = -1
+          drawList()
+        }
+        function drawChips() {
+          chips.replaceChildren(
+            ...tags.map((tag, index) => {
+              if (index === editing) {
+                const edit = renameField("a-chip-edit", tag, finishEdit)
+                edit.size = Math.max(tag.length, 8)
+                // Leaving the name keeps it, as there is no button to.
+                edit.addEventListener("blur", () => {
+                  if (editing === index) finishEdit(edit.value, false)
+                })
+                return h("li", null, edit)
+              }
+              return h(
+                "li",
+                {
+                  class:
+                    armed && index === tags.length - 1
+                      ? "a-chip armed"
+                      : "a-chip",
+                },
+                h(
+                  "button",
+                  {
+                    type: "button",
+                    class: "chip-text",
+                    "aria-label": `Rename ${tag}`,
+                    onclick: () => {
+                      editing = index
+                      drawChips()
+                      const edit = chips.querySelector(".a-chip-edit")
+                      edit.focus()
+                      edit.select()
+                    },
+                  },
+                  tag,
+                ),
+                h(
+                  "button",
+                  {
+                    type: "button",
+                    class: "chip-x",
+                    "aria-label": `Remove ${tag}`,
+                    onclick: () => remove(index),
+                  },
+                  "×",
+                ),
+              )
+            }),
+          )
+        }
+        function finishEdit(text, refocus = true) {
+          const index = editing
+          editing = -1
+          const result = renameTag(tags, index, text)
+          tags = result.tags
+          status.tell(result.notes)
+          drawChips()
+          drawList()
+          if (!refocus) return
+          const names = chips.querySelectorAll(".chip-text")
+          ;(names[Math.min(index, names.length - 1)] ?? input).focus()
+        }
+        function remove(index, toInput = false) {
+          const [removed] = tags.splice(index, 1)
+          armed = false
+          status.say(`Removed “${removed}”.`, { quiet: true })
+          drawChips()
+          drawList()
+          const removes = chips.querySelectorAll(".chip-x")
+          ;(toInput ? input : (removes[index] ?? input)).focus()
+        }
+        function add(text) {
+          const result = addTags(tags, text)
+          tags = result.tags
+          input.value = ""
+          active = -1
+          status.tell(
+            result.notes,
+            result.added.length > 0 && `Added ${result.added.join(", ")}.`,
+          )
+          drawChips()
+          drawList()
+        }
+        function choose(index) {
+          const { tag } = options[index]
+          const typed = clean(input.value)
+          // Typed in other capitals, the tag is said to be respelt, as a comma says it.
+          add(keyOf(typed) === keyOf(tag) ? typed : tag)
+          input.focus()
+        }
+        function disarm() {
+          if (!armed) return
+          armed = false
+          status.clear()
+          drawChips()
+        }
+
+        input.addEventListener("keydown", (event) => {
+          if (event.key !== "Backspace") disarm()
+          if (event.key === "ArrowDown") {
+            event.preventDefault()
+            if (!open) open = true
+            options = findOptions()
+            active = options.length === 0 ? -1 : (active + 1) % options.length
+            drawList()
+          } else if (event.key === "ArrowUp") {
+            event.preventDefault()
+            if (!open || options.length === 0) return
+            active = (active <= 0 ? options.length : active) - 1
+            drawList()
+          } else if (event.key === "Enter") {
+            if (open && active >= 0) {
+              event.preventDefault()
+              choose(active)
+            } else if (clean(input.value) !== "") {
+              event.preventDefault()
+              add(input.value)
+            }
+          } else if (event.key === ",") {
+            event.preventDefault()
+            if (clean(input.value) !== "") add(input.value)
+          } else if (event.key === "Escape") {
+            if (!open || options.length === 0) return
+            event.preventDefault()
+            setOpen(false)
+          } else if (event.key === "Backspace" && input.value === "") {
+            if (tags.length === 0) return
+            event.preventDefault()
+            if (armed) {
+              remove(tags.length - 1, true)
+              return
+            }
+            armed = true
+            status.say(
+              `Press Backspace again to remove “${tags[tags.length - 1]}”.`,
+            )
+            drawChips()
+          }
+        })
+        input.addEventListener("input", () => {
+          open = true
+          active = clean(input.value) === "" ? -1 : 0
+          drawList()
+        })
+        addOnPaste(input, add)
+        input.addEventListener("click", () => setOpen(true))
+        input.addEventListener("blur", () => {
+          disarm()
+          setOpen(false)
+        })
+
+        drawChips()
+        return {
+          element: h(
+            "div",
+            { class: "d-field" },
+            h("label", { class: "d-label", for: `${id}-input` }, "Tags"),
+            h(
+              "p",
+              { class: "d-hint", id: `${id}-hint` },
+              "Type a tag, then press Enter or a comma.",
+            ),
+            h("div", { class: "a-wrap" }, box, list),
+            status.element,
+          ),
+          value: () => addTags(tags, input.value).tags,
+          focus: () => input.focus(),
+        }
+      }
+
+      // ---- B: list and suggestions ----
+      function editorB(id, start) {
+        let tags = [...start]
+        let editing = -1
+        /** The field of the name being changed, while one is. */
+        let openEdit = null
+        const status = statusLine()
+        const rows = h("ul", {
+          class: "b-rows",
+          "aria-label": "Tags on this item",
+        })
+        const probeTag = h("span", { class: "d-tag" })
+        const probeButtons = h(
+          "span",
+          { class: "b-actions" },
+          h("span", { class: "d-btn sec sm" }, "Rename"),
+          h("span", { class: "d-btn sec sm" }, "Remove"),
+        )
+        const probe = h(
+          "div",
+          { class: "b-probe", "aria-hidden": "true" },
+          probeTag,
+          probeButtons,
+        )
+        const none = h("p", { class: "d-hint" }, "No tags")
+        const input = h("input", {
+          id: `${id}-input`,
+          class: "d-input",
+          type: "text",
+          autocomplete: "off",
+          autocapitalize: "off",
+        })
+        const heading = h(
+          "p",
+          { class: "d-sub", id: `${id}-elsewhere` },
+          "Used elsewhere in this roadmap",
+        )
+        const chips = h("ul", {
+          class: "sugg-list",
+          "aria-labelledby": `${id}-elsewhere`,
+        })
+        const noMatch = h("p", { class: "d-hint" })
+
+        /**
+         * Shows the rows' buttons as icons when any tag is too wide to sit beside worded
+         * ones, so every row looks alike and none wraps. It measures each tag's own
+         * width, the one being renamed too, so opening a rename never changes the look.
+         */
+        function fit() {
+          const room = rows.clientWidth
+          if (room === 0) return
+          // Whole pixels, rounded up, plus the row's 8px gap.
+          const width = (element) =>
+            Math.ceil(element.getBoundingClientRect().width)
+          const buttons = width(probeButtons) + 8
+          const icons = tags.some((tag) => {
+            probeTag.textContent = tag
+            return width(probeTag) + buttons > room
+          })
+          rows.classList.toggle("icons", icons)
+          for (const button of rows.querySelectorAll("[data-word]")) {
+            if (icons) button.title = button.dataset.word
+            else button.removeAttribute("title")
+          }
+        }
+        function drawRows() {
+          none.hidden = tags.length > 0
+          rows.hidden = tags.length === 0
+          rows.replaceChildren(
+            ...tags.map((tag, index) => {
+              if (index === editing) {
+                const edit = renameField("d-input", tag, finishEdit)
+                openEdit = edit
+                return h(
+                  "li",
+                  { class: "b-row" },
+                  edit,
+                  h(
+                    "div",
+                    { class: "b-actions" },
+                    renameButtons(tag, edit, finishEdit),
+                  ),
+                )
+              }
+              return h(
+                "li",
+                { class: "b-row" },
+                h("span", { class: "d-tag" }, tag),
+                h(
+                  "div",
+                  { class: "b-actions" },
+                  h(
+                    "button",
+                    {
+                      type: "button",
+                      class: "d-btn sec sm",
+                      "data-rename": true,
+                      "data-word": "Rename",
+                      onclick: () => {
+                        keepOpenRename()
+                        editing = tags.indexOf(tag)
+                        drawRows()
+                        openEdit.focus()
+                        openEdit.select()
+                      },
+                    },
+                    worded("pencil", "Rename"),
+                    " ",
+                    srOnly(tag),
+                  ),
+                  h(
+                    "button",
+                    {
+                      type: "button",
+                      class: "d-btn sec sm",
+                      "data-remove": true,
+                      "data-word": "Remove",
+                      onclick: () => remove(tag),
+                    },
+                    worded("trash", "Remove"),
+                    " ",
+                    srOnly(tag),
+                  ),
+                ),
+              )
+            }),
+          )
+          fit()
+        }
+        function drawSuggestions() {
+          const typed = clean(input.value)
+          const found = suggest(tags, typed)
+          const any = suggest(tags, "").length > 0
+          heading.hidden = !any
+          chips.hidden = found.length === 0
+          noMatch.hidden = !any || found.length > 0
+          noMatch.textContent = `No other tag matches “${typed}”.`
+          chips.replaceChildren(
+            ...found.map(({ tag, count }, index) =>
+              h(
+                "li",
+                null,
+                h(
+                  "button",
+                  {
+                    type: "button",
+                    class: "sugg",
+                    "aria-label": `Add ${tag}, on ${others(count)}`,
+                    onclick: () => {
+                      add(tag)
+                      const left = chips.querySelectorAll("button")
+                      ;(left[Math.min(index, left.length - 1)] ?? input).focus()
+                    },
+                  },
+                  `+ ${tag}`,
+                ),
+              ),
+            ),
+          )
+        }
+        function finishEdit(text, refocus = true) {
+          const index = editing
+          editing = -1
+          const result = renameTag(tags, index, text)
+          tags = result.tags
+          status.tell(result.notes)
+          drawRows()
+          drawSuggestions()
+          if (!refocus) return
+          const renames = rows.querySelectorAll("[data-rename]")
+          ;(renames[Math.min(index, renames.length - 1)] ?? input).focus()
+        }
+        /** A name still being changed is kept when Sam moves on, as typed text is (D7). */
+        function keepOpenRename() {
+          if (editing !== -1) finishEdit(openEdit.value, false)
+        }
+        function remove(tag) {
+          keepOpenRename()
+          const index = tags.indexOf(tag)
+          if (index < 0) return
+          const [removed] = tags.splice(index, 1)
+          const undo = h(
+            "button",
+            {
+              type: "button",
+              class: "d-btn sec sm",
+              onclick: () => {
+                tags.splice(Math.min(index, tags.length), 0, removed)
+                status.say(`Put back “${removed}”.`, { quiet: true })
+                drawRows()
+                drawSuggestions()
+                rows.querySelectorAll("[data-remove]")[index]?.focus()
+              },
+            },
+            "Undo",
+          )
+          status.say(`Removed “${removed}”.`, { action: undo })
+          drawRows()
+          drawSuggestions()
+          const removes = rows.querySelectorAll("[data-remove]")
+          ;(removes[index] ?? input).focus()
+        }
+        function add(text) {
+          keepOpenRename()
+          const result = addTags(tags, text)
+          tags = result.tags
+          input.value = ""
+          status.tell(
+            result.notes,
+            result.added.length > 0 && `Added ${result.added.join(", ")}.`,
+          )
+          drawRows()
+          drawSuggestions()
+        }
+
+        addOnKeys(input, add)
+        input.addEventListener("input", drawSuggestions)
+        // The card's width decides the look, and is known only once the form is shown.
+        new ResizeObserver(fit).observe(rows)
+
+        drawRows()
+        drawSuggestions()
+        return {
+          element: h(
+            "fieldset",
+            { class: "d-field" },
+            h("legend", null, "Tags"),
+            none,
+            rows,
+            probe,
+            h("label", { class: "d-sub", for: `${id}-input` }, "Add a tag"),
+            addRow(input, add),
+            status.element,
+            heading,
+            chips,
+            noMatch,
+          ),
+          value: () => {
+            keepOpenRename()
+            return addTags(tags, input.value).tags
+          },
+          /** Keeps a name still being changed and adds text still in the field. */
+          settle: () => {
+            keepOpenRename()
+            if (clean(input.value) !== "") add(input.value)
+          },
+          focus: () => input.focus(),
+        }
+      }
+
+      // ---- A field that opens on request: one line of what it holds until asked for ----
+      /**
+       * `body` behind a line saying what the field holds. `read` gives that line's parts,
+       * none for an empty field; `settle` keeps what is half done as the field shuts;
+       * `focus` goes into the body as it opens. The button reads "Change", "Add" or
+       * "Close", then `object` for assistive technology: "Change tags".
+       */
+      function opensOnRequest({
+        id,
+        label,
+        object,
+        body,
+        read,
+        none,
+        settle,
+        focus,
+      }) {
+        let open = false
+        const line = h("div", { class: "t-line" })
+        const empty = h("p", { class: "d-hint" }, none)
+        const word = h("span")
+        const toggle = h(
+          "button",
+          {
+            type: "button",
+            class: "d-btn sec sm",
+            "aria-controls": `${id}-body`,
+            onclick: () => setOpen(!open),
+          },
+          word,
+          " ",
+          srOnly(object),
+        )
+        const region = h("div", { id: `${id}-body`, class: "t-editor" }, body)
+        function draw() {
+          const parts = read()
+          line.replaceChildren(...parts)
+          line.hidden = open || parts.length === 0
+          empty.hidden = open || parts.length > 0
+          region.hidden = !open
+          toggle.setAttribute("aria-expanded", String(open))
+          word.textContent = open
+            ? "Close"
+            : parts.length > 0
+              ? "Change"
+              : "Add"
+        }
+        function setOpen(next) {
+          if (!next) settle?.()
+          open = next
+          draw()
+          if (open) focus()
+        }
+        draw()
+        return h(
+          "div",
+          { class: "d-field" },
+          h(
+            "div",
+            { class: "t-head" },
+            h("p", { class: "d-label" }, label),
+            toggle,
+          ),
+          empty,
+          line,
+          region,
+        )
+      }
+
+      // ---- C: tick list ----
+      function editorC(id, start) {
+        let tags = [...start]
+        let editing = null
+        /** The field of the name being changed, while one is. */
+        let openEdit = null
+        /** Every tag the list offers: this item's as it opened, the other items', then new ones. */
+        const listed = new Map()
+        const list = (tag) => listed.set(keyOf(tag), tag)
+        for (const { tag } of ELSEWHERE.values()) list(tag)
+        for (const tag of start) if (!listed.has(keyOf(tag))) list(tag)
+        const status = statusLine()
+        const rows = h("ul", { class: "c-rows" })
+        const input = h("input", {
+          id: `${id}-input`,
+          class: "d-input",
+          type: "text",
+          autocomplete: "off",
+          autocapitalize: "off",
+        })
+        const has = (tag) => tags.some((other) => keyOf(other) === keyOf(tag))
+
+        function draw(focusKey) {
+          rows.replaceChildren(
+            ...[...listed.values()].sort(byName).map((tag) => {
+              const key = keyOf(tag)
+              const count = ELSEWHERE.get(key)?.count ?? 0
+              if (editing === key) {
+                const finish = (text) => finishEdit(tag, text)
+                const edit = renameField("d-input", tag, finish)
+                openEdit = edit
+                return h(
+                  "li",
+                  { class: "c-row" },
+                  edit,
+                  renameButtons(tag, edit, finish),
+                )
+              }
+              return h(
+                "li",
+                { class: "c-row" },
+                h(
+                  "label",
+                  null,
+                  h("input", {
+                    type: "checkbox",
+                    class: "d-check",
+                    "data-key": key,
+                    checked: has(tag),
+                    onchange: (event) => {
+                      // Keeping an open rename may itself add or drop this tag, and says so.
+                      const renaming = editing !== null
+                      keepOpenRename()
+                      if (!event.target.checked)
+                        tags = tags.filter((other) => keyOf(other) !== key)
+                      else if (!has(tag)) tags.push(tag)
+                      if (!renaming) status.clear()
+                      draw(key)
+                    },
+                  }),
+                  h(
+                    "span",
+                    { class: "c-name" },
+                    h("span", null, tag),
+                    h(
+                      "span",
+                      { class: "c-count" },
+                      count > 0 ? `On ${others(count)}` : "Only on this item",
+                    ),
+                  ),
+                ),
+                has(tag) &&
+                  h(
+                    "button",
+                    {
+                      type: "button",
+                      class: "d-btn sec sm",
+                      "data-rename": key,
+                      onclick: () => {
+                        keepOpenRename()
+                        editing = key
+                        draw()
+                        openEdit.focus()
+                        openEdit.select()
+                      },
+                    },
+                    "Rename",
+                    " ",
+                    srOnly(tag),
+                  ),
+              )
+            }),
+          )
+          if (focusKey)
+            rows.querySelector(`[data-key="${CSS.escape(focusKey)}"]`)?.focus()
+        }
+        /** A name still being changed is kept when Sam moves on, as typed text is (D7). */
+        function keepOpenRename() {
+          if (editing !== null)
+            finishEdit(listed.get(editing), openEdit.value, false)
+        }
+        function finishEdit(tag, text, refocus = true) {
+          editing = null
+          const index = tags.findIndex((other) => keyOf(other) === keyOf(tag))
+          const result = renameTag(tags, index, text)
+          const renamed = result.tags !== tags
+          tags = result.tags
+          // A tag only this item carried goes from the list with its old name.
+          if (renamed && !ELSEWHERE.has(keyOf(tag))) listed.delete(keyOf(tag))
+          for (const kept of tags) if (!listed.has(keyOf(kept))) list(kept)
+          status.tell(result.notes)
+          draw()
+          if (!refocus) return
+          const to = renamed ? keyOf(tags[index] ?? tag) : keyOf(tag)
+          ;(
+            rows.querySelector(`[data-rename="${CSS.escape(to)}"]`) ??
+            rows.querySelector(`[data-key="${CSS.escape(keyOf(tag))}"]`) ??
+            input
+          ).focus()
+        }
+        function add(text) {
+          keepOpenRename()
+          const result = addTags(tags, text)
+          tags = result.tags
+          for (const tag of result.added) if (!listed.has(keyOf(tag))) list(tag)
+          input.value = ""
+          status.tell(
+            result.notes,
+            result.added.length > 0 && `Ticked ${result.added.join(", ")}.`,
+          )
+          draw()
+        }
+
+        addOnKeys(input, add)
+
+        draw()
+        return {
+          element: h(
+            "fieldset",
+            { class: "d-field", "aria-describedby": `${id}-hint` },
+            h("legend", null, "Tags"),
+            h(
+              "p",
+              { class: "d-hint", id: `${id}-hint` },
+              "Every tag in this roadmap. Tick the ones this item has.",
+            ),
+            rows,
+            h("label", { class: "d-sub", for: `${id}-input` }, "Add a tag"),
+            addRow(input, add),
+            status.element,
+          ),
+          value: () => {
+            keepOpenRename()
+            return addTags(tags, input.value).tags
+          },
+          focus: () => rows.querySelector(".d-check")?.focus(),
+        }
+      }
+
+      // ---- D: one line of text ----
+      function editorD(id, start) {
+        const input = h("input", {
+          id: `${id}-input`,
+          class: "d-input",
+          type: "text",
+          value: start.join(", "),
+          "aria-describedby": `${id}-hint`,
+          autocomplete: "off",
+          autocapitalize: "off",
+        })
+        const heading = h(
+          "p",
+          { class: "d-sub", id: `${id}-elsewhere` },
+          "Used elsewhere in this roadmap",
+        )
+        const chips = h("ul", {
+          class: "sugg-list",
+          "aria-labelledby": `${id}-elsewhere`,
+        })
+        const preview = h("ul", {
+          class: "d-preview",
+          "aria-labelledby": `${id}-kept`,
+        })
+        const none = h("p", { class: "d-hint" }, "No tags")
+        const notes = h("ul", { class: "d-notes", role: "status" })
+        const read = () => addTags([], input.value)
+
+        /** The tag the caret is in: where it starts and ends in the text, and what it holds. */
+        function segment() {
+          const text = input.value
+          const caret = input.selectionStart ?? text.length
+          const from = text.lastIndexOf(",", caret - 1) + 1
+          const comma = text.indexOf(",", caret)
+          const to = comma < 0 ? text.length : comma
+          return { from, to, typed: clean(text.slice(from, to)) }
+        }
+        function draw() {
+          const { tags, notes: found } = read()
+          none.hidden = tags.length > 0
+          preview.hidden = tags.length === 0
+          preview.replaceChildren(
+            ...tags.map((tag) => h("li", { class: "d-tag" }, tag)),
+          )
+          notes.replaceChildren(
+            ...found.map(({ kind, typed, tag }) =>
+              h(
+                "li",
+                null,
+                kind === "repeat"
+                  ? `“${typed}” repeats “${tag}”, so it is left out.`
+                  : `“${typed}” becomes “${tag}”, as other items spell it.`,
+              ),
+            ),
+          )
+          const { from, to, typed } = segment()
+          const rest = addTags(
+            [],
+            input.value.slice(0, from) + input.value.slice(to),
+          ).tags
+          const finishing =
+            typed !== "" && !ELSEWHERE.has(keyOf(typed))
+              ? suggest(rest, typed)
+              : []
+          const offered = finishing.length > 0 ? finishing : suggest(tags, "")
+          heading.hidden = offered.length === 0
+          chips.hidden = offered.length === 0
+          chips.replaceChildren(
+            ...offered.map(({ tag, count }) =>
+              h(
+                "li",
+                null,
+                h(
+                  "button",
+                  {
+                    type: "button",
+                    class: "sugg",
+                    "aria-label": `Add ${tag}, on ${others(count)}`,
+                    // Keeps the caret where it is, so the tag being typed is known.
+                    onmousedown: (event) => event.preventDefault(),
+                    onclick: () => {
+                      const text = input.value
+                      let caret
+                      if (finishing.length > 0) {
+                        const lead = from > 0 ? " " : ""
+                        input.value =
+                          text.slice(0, from) + lead + tag + text.slice(to)
+                        caret = from + lead.length + tag.length
+                      } else {
+                        const kept = text.replace(/[\s,]+$/, "")
+                        input.value = kept === "" ? tag : `${kept}, ${tag}`
+                        caret = input.value.length
+                      }
+                      input.focus()
+                      input.setSelectionRange(caret, caret)
+                      draw()
+                    },
+                  },
+                  `+ ${tag}`,
+                ),
+              ),
+            ),
+          )
+        }
+
+        // A one-line field turns a pasted line break into a space, so each becomes a comma first.
+        input.addEventListener("paste", (event) => {
+          const pasted = event.clipboardData?.getData("text") ?? ""
+          if (!pasted.includes("\n")) return
+          event.preventDefault()
+          input.setRangeText(
+            pasted
+              .trim()
+              .split(/\s*\n\s*/)
+              .join(", "),
+            input.selectionStart,
+            input.selectionEnd,
+            "end",
+          )
+          draw()
+        })
+        for (const type of ["input", "keyup", "click", "focus"])
+          input.addEventListener(type, draw)
+        draw()
+        return {
+          element: h(
+            "div",
+            { class: "d-field" },
+            h("label", { class: "d-label", for: `${id}-input` }, "Tags"),
+            h(
+              "p",
+              { class: "d-hint", id: `${id}-hint` },
+              "Separate tags with commas.",
+            ),
+            input,
+            heading,
+            chips,
+            h("p", { class: "d-sub", id: `${id}-kept` }, "This item's tags"),
+            none,
+            preview,
+            notes,
+          ),
+          value: () => read().tags,
+          focus: () => {
+            input.focus()
+            input.setSelectionRange(input.value.length, input.value.length)
+          },
+        }
+      }
+
+      // ---- The item card each prototype sits in: read, Edit, the form, Done ----
+      function mount(id, makeEditor) {
+        const card = document.getElementById(`${id}-card`)
+        const title = () => h("h3", { id: `${id}-title` }, ITEM_TITLE)
+        let kept = [...INITIAL]
+
+        function showCard(focus) {
+          const changed = kept.join("\n") !== INITIAL.join("\n")
+          const edit = h(
+            "button",
+            {
+              type: "button",
+              class: "d-btn sec",
+              onclick: () => showForm(true),
+            },
+            "Edit",
+            " ",
+            srOnly(ITEM_TITLE),
+          )
+          // The card's parts, without those a condition leaves out.
+          const parts = [
+            title(),
+            changed && h("span", { class: "d-tag info" }, "Changed"),
+            kept.length > 0 &&
+              h(
+                "dl",
+                null,
+                h("dt", null, "Tags"),
+                h("dd", null, kept.join(", ")),
+              ),
+            h(
+              "div",
+              { class: "d-actions" },
+              edit,
+              changed &&
+                h(
+                  "button",
+                  {
+                    type: "button",
+                    class: "d-btn sec",
+                    onclick: () => {
+                      kept = [...INITIAL]
+                      showCard(true)
+                    },
+                  },
+                  "Undo changes",
+                  " ",
+                  srOnly(`to ${ITEM_TITLE}`),
+                ),
+            ),
+          ]
+          card.replaceChildren(...parts.filter(Boolean))
+          if (focus) edit.focus()
+        }
+        function showForm(focus) {
+          const editor = makeEditor(id, kept)
+          card.replaceChildren(
+            title(),
+            h(
+              "form",
+              {
+                class: "d-form",
+                "aria-labelledby": `${id}-title`,
+                novalidate: true,
+                onsubmit: (event) => {
+                  event.preventDefault()
+                  kept = editor.value()
+                  showCard(true)
+                },
+                // Escape is Cancel, unless the field took it to close or leave something.
+                onkeydown: (event) => {
+                  if (event.key !== "Escape" || event.defaultPrevented) return
+                  event.preventDefault()
+                  showCard(true)
+                },
+              },
+              editor.element,
+              h(
+                "div",
+                { class: "d-actions" },
+                h("button", { type: "submit", class: "d-btn" }, "Done"),
+                h(
+                  "button",
+                  {
+                    type: "button",
+                    class: "d-btn sec",
+                    onclick: () => showCard(true),
+                  },
+                  "Cancel",
+                ),
+              ),
+            ),
+          )
+          if (focus) editor.focus()
+        }
+        document
+          .querySelector(`[data-again="${id}"]`)
+          .addEventListener("click", () => {
+            kept = [...INITIAL]
+            showForm(false)
+          })
+        showForm(false)
+      }
+
+      mount("pa", editorA)
+      mount("pb", editorB)
+      mount("pc", editorC)
+      mount("pd", editorD)
+
+      // ---- The whole item, for the form that holds the Tags field among the rest ----
+      const ITEM = {
+        title: ITEM_TITLE,
+        description:
+          "Some follow-up appointments don't need a trip to hospital. Three specialties will offer a video call where the clinician and patient agree it suits.",
+        expectedOutcome:
+          "Patients who choose video save the journey, and fewer appointments are missed.",
+        phase: "Discovery",
+        placement: "Next",
+        organisations: ["CAVUHB", "SBUHB"],
+        tags: INITIAL,
+      }
+      const PLACEMENTS = [
+        "Recently delivered",
+        "Now",
+        "Next",
+        "Later",
+        "Delivered this year",
+        "Not doing",
+      ]
+      /** All Wales first, then by short name, as the form lists them. */
+      const ORGANISATIONS = [
+        ["National", "All Wales"],
+        ["ABUHB", "Aneurin Bevan"],
+        ["BCUHB", "Betsi Cadwaladr"],
+        ["CAVUHB", "Cardiff and Vale"],
+        ["CTMUHB", "Cwm Taf Morgannwg"],
+        ["HEIW", "Health Education and Improvement Wales"],
+        ["HDUHB", "Hywel Dda"],
+        ["PTHB", "Powys"],
+        ["PHW", "Public Health Wales"],
+        ["SBUHB", "Swansea Bay"],
+        ["VUNHST", "Velindre"],
+        ["WAST", "Welsh Ambulance"],
+      ]
+      const TEXT_FIELDS = [
+        ["title", "Title", false],
+        ["description", "Description", true],
+        ["expectedOutcome", "Expected outcome", true],
+        ["phase", "Phase", false],
+      ]
+
+      // The card of `mount`, with a whole item in place of its tags: a copy on purpose,
+      // so the four editors' shell stays as simple as one field needs.
+      function mountWholeForm(id) {
+        const card = document.getElementById(`${id}-card`)
+        const title = () => h("h3", { id: `${id}-title` }, kept.title)
+        let kept = structuredClone(ITEM)
+
+        function showCard(focus) {
+          const changed = JSON.stringify(kept) !== JSON.stringify(ITEM)
+          const line = (label, text) =>
+            text !== "" &&
+            h("div", null, h("dt", null, label), h("dd", null, text))
+          const edit = h(
+            "button",
+            {
+              type: "button",
+              class: "d-btn sec",
+              onclick: () => showForm(true),
+            },
+            "Edit",
+            " ",
+            srOnly(kept.title),
+          )
+          const parts = [
+            title(),
+            changed && h("span", { class: "d-tag info" }, "Changed"),
+            h(
+              "dl",
+              { class: "all" },
+              line("Phase", kept.phase),
+              line("Description", kept.description),
+              line("Expected outcome", kept.expectedOutcome),
+              line("Tags", kept.tags.join(", ")),
+              line(
+                "Organisations",
+                ORGANISATIONS.filter(([code]) =>
+                  kept.organisations.includes(code),
+                )
+                  .map(([, name]) => name)
+                  .join(", "),
+              ),
+            ),
+            h(
+              "div",
+              { class: "d-actions" },
+              edit,
+              changed &&
+                h(
+                  "button",
+                  {
+                    type: "button",
+                    class: "d-btn sec",
+                    onclick: () => {
+                      kept = structuredClone(ITEM)
+                      showCard(true)
+                    },
+                  },
+                  "Undo changes",
+                  " ",
+                  srOnly(`to ${kept.title}`),
+                ),
+            ),
+          ]
+          card.replaceChildren(...parts.filter(Boolean))
+          if (focus) edit.focus()
+        }
+        function showForm(focus) {
+          const texts = TEXT_FIELDS.map(([name, label, multiline]) => {
+            const control = multiline
+              ? h("textarea", {
+                  id: `${id}-field-${name}`,
+                  class: "d-input",
+                  rows: 4,
+                })
+              : h("input", {
+                  id: `${id}-field-${name}`,
+                  class: "d-input",
+                  type: "text",
+                })
+            control.value = kept[name]
+            return {
+              name,
+              control,
+              element: h(
+                "div",
+                { class: "d-field" },
+                h("label", { class: "d-label", for: control.id }, label),
+                control,
+              ),
+            }
+          })
+          const placement = h(
+            "select",
+            { id: `${id}-placement`, class: "d-input" },
+            PLACEMENTS.map((name) =>
+              h("option", { selected: name === kept.placement }, name),
+            ),
+          )
+          const ticks = ORGANISATIONS.map(([code, name]) => ({
+            code,
+            name,
+            control: h("input", {
+              type: "checkbox",
+              class: "d-check",
+              checked: kept.organisations.includes(code),
+            }),
+          }))
+          const editor = editorB(`${id}-tags`, kept.tags)
+          const tagsField = opensOnRequest({
+            id: `${id}-tags`,
+            label: "Tags",
+            object: "tags",
+            body: editor.element,
+            read: () =>
+              editor.value().map((tag) => h("span", { class: "d-tag" }, tag)),
+            none: "No tags",
+            settle: editor.settle,
+            focus: editor.focus,
+          })
+          const organisationsField = opensOnRequest({
+            id: `${id}-organisations`,
+            label: "Organisations",
+            object: "organisations",
+            body: h(
+              "fieldset",
+              { class: "d-field" },
+              h("legend", null, "Organisations"),
+              h(
+                "ul",
+                { class: "c-rows" },
+                ticks.map(({ code, name, control }) =>
+                  h(
+                    "li",
+                    { class: "c-row" },
+                    h(
+                      "label",
+                      null,
+                      control,
+                      h("span", null, `${name} (${code})`),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // By short name on one line, as the card names them.
+            read: () => {
+              const names = ticks
+                .filter(({ control }) => control.checked)
+                .map(({ name }) => name)
+              return names.length > 0 ? [names.join(", ")] : []
+            },
+            none: "No organisations",
+            focus: () => ticks[0].control.focus(),
+          })
+          card.replaceChildren(
+            title(),
+            h(
+              "form",
+              {
+                class: "d-form",
+                "aria-labelledby": `${id}-title`,
+                novalidate: true,
+                onsubmit: (event) => {
+                  event.preventDefault()
+                  kept = {
+                    ...Object.fromEntries(
+                      texts.map(({ name, control }) => [
+                        name,
+                        // A blank title keeps the old one: the real form asks for one.
+                        control.value.trim() ||
+                          (name === "title" ? kept.title : ""),
+                      ]),
+                    ),
+                    placement: placement.value,
+                    organisations: ticks
+                      .filter(({ control }) => control.checked)
+                      .map(({ code }) => code),
+                    tags: editor.value(),
+                  }
+                  showCard(true)
+                },
+                onkeydown: (event) => {
+                  if (event.key !== "Escape" || event.defaultPrevented) return
+                  event.preventDefault()
+                  showCard(true)
+                },
+              },
+              texts.map(({ element }) => element),
+              h(
+                "div",
+                { class: "d-field" },
+                h(
+                  "label",
+                  { class: "d-label", for: placement.id },
+                  "Horizon or section",
+                ),
+                placement,
+              ),
+              tagsField,
+              organisationsField,
+              h(
+                "div",
+                { class: "d-actions" },
+                h("button", { type: "submit", class: "d-btn" }, "Done"),
+                h(
+                  "button",
+                  {
+                    type: "button",
+                    class: "d-btn sec",
+                    onclick: () => showCard(true),
+                  },
+                  "Cancel",
+                ),
+              ),
+            ),
+          )
+          if (focus) texts[0].control.focus()
+        }
+        document
+          .querySelector(`[data-again="${id}"]`)
+          .addEventListener("click", () => {
+            kept = structuredClone(ITEM)
+            showForm(false)
+          })
+        showForm(false)
+      }
+      mountWholeForm("pe")
+
+      // ---- The page's own controls ----
+      document
+        .getElementById("world-items")
+        .append(
+          h(
+            "li",
+            null,
+            `Next: ${ITEM_TITLE} (${INITIAL.join(", ")}), the item being edited`,
+          ),
+          ...OTHERS.map(({ placement, title, tags }) =>
+            h("li", null, `${placement}: ${title} (${tags.join(", ")})`),
+          ),
+        )
+      function bindToggle(attribute, apply) {
+        const buttons = document.querySelectorAll(`[data-${attribute}]`)
+        for (const button of buttons) {
+          button.addEventListener("click", () => {
+            for (const other of buttons)
+              other.setAttribute("aria-pressed", String(other === button))
+            apply(button.dataset[attribute])
+          })
+        }
+      }
+      bindToggle("theme", (theme) => {
+        for (const stage of document.querySelectorAll(".dhcw"))
+          stage.classList.toggle("dark", theme === "dark")
+      })
+      bindToggle("width", (width) => {
+        for (const stage of document.querySelectorAll(".dhcw"))
+          stage.style.setProperty("--card-w", `${width}px`)
+      })
+    </script>
+  </body>
+</html>

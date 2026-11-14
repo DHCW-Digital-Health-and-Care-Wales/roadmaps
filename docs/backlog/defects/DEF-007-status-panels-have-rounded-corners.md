@@ -42,14 +42,16 @@ Verified: `Empty` (`src/components/ui/empty.tsx`) carries `rounded-lg`, which is
 plain `border bg-card` boxes with no radius, and `roadmap-card.test.tsx` holds the
 card square. In the pinned `dhcw-design-system` (0.1.104), `_panel.scss`,
 `_summary-card.scss`, `_inset-text.scss` and `_timeout-modal.scss` set no corner radius
-and `cards/_card.scss` rounds only its icon; `_button-base.scss` sets 4px and
-`_input-base.scss` 0.
+and `cards/_card.scss` rounds only its icon and chevron circles; `_button-base.scss`
+sets 4px and `_input-base.scss` 0.
 
 - `rg -n 'rounded-(sm|md|lg|xl)' src --glob '!*.test.*'` — 20 matches in 10 files. Boxes
   that hold content: `src/components/ui/empty.tsx:12` (the status panel),
   `src/components/ui/alert-dialog.tsx:57` and `src/components/ui/dialog.tsx:69` (the
-  dialogs). The rest are controls, menus and their items, icon tiles, the skeleton and
-  focus targets.
+  dialogs). The header's connection status
+  (`src/features/auth/components/connection-status.tsx:30`) is a bordered box too, set
+  among the header's buttons. The rest are controls, menus and their items, icon tiles,
+  the skeleton, focus targets and two comments (`empty.tsx:3`, `skeleton.tsx:2`).
 
 ## Open questions
 

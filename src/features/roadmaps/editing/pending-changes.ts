@@ -348,6 +348,20 @@ export function settlePublished(
   }
 }
 
+/**
+ * Whether publishing `changes` leaves the public site nothing of `items` to show: none
+ * is in a horizon or section, counting a pending move (STY-042 D4).
+ */
+export function publishesNoItems(
+  items: readonly RoadmapItem[],
+  changes: RoadmapChanges | undefined,
+): boolean {
+  const entries = matchItemChanges(items, changes)
+  return items.every(
+    (item, at) => applyItemChanges(item, entries.get(at)).placement === null,
+  )
+}
+
 /** How many fields are pending: what the page counts as unpublished changes. */
 export function countChanges(changes: RoadmapChanges | undefined): number {
   if (!changes) return 0

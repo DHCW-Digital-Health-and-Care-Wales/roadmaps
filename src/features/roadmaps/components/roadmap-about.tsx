@@ -15,16 +15,16 @@ export interface RoadmapAboutProps {
    * place of the fields.
    */
   form?: ((headingId: string) => ReactNode) | undefined
-  /** Controls at the foot of the section, such as Edit. */
+  /** Controls beside the heading, such as Edit. */
   actions?: ReactNode | undefined
 }
 
 /**
- * What the roadmap is about (STY-024): its status label, product lead, vision and
- * service description, each under a label and only when it has one. Text keeps its line
- * breaks. A roadmap with none says so, so editing has a place to start. Then, always,
- * when it was last updated, as its list card shows the date, or that it has none
- * (STY-036 S1).
+ * What the roadmap is about (STY-024), in a panel with its controls beside the heading
+ * (STY-042 S1): its status label, product lead, vision and service description, each
+ * under a label and only when it has one. Text keeps its line breaks. A roadmap with
+ * none says so, so editing has a place to start. Then, always, when it was last
+ * updated, as its list card shows the date, or that it has none (STY-036 S1).
  */
 export function RoadmapAbout({ roadmap, form, actions }: RoadmapAboutProps) {
   const { t } = useTranslation()
@@ -56,10 +56,16 @@ export function RoadmapAbout({ roadmap, form, actions }: RoadmapAboutProps) {
       : formatCalendarDate(roadmap.lastUpdated, t)
 
   return (
-    <section aria-labelledby={headingId} className="flex flex-col gap-3">
-      <h2 id={headingId} className="text-heading-m">
-        {t("roadmaps.about.title")}
-      </h2>
+    <section
+      aria-labelledby={headingId}
+      className="flex flex-col gap-4 border bg-card p-4 text-card-foreground sm:p-6"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <h2 id={headingId} className="text-heading-m">
+          {t("roadmaps.about.title")}
+        </h2>
+        {actions}
+      </div>
       {form ? (
         <div className="max-w-prose">{form(headingId)}</div>
       ) : (
@@ -87,7 +93,6 @@ export function RoadmapAbout({ roadmap, form, actions }: RoadmapAboutProps) {
           </dl>
         </>
       )}
-      {actions && <div className="max-w-prose">{actions}</div>}
     </section>
   )
 }

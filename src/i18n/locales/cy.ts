@@ -279,7 +279,8 @@ export const cy = {
         "Dydy eitemau'r map trywydd hwn ddim yn y fformat disgwyliedig yn y daenlen. Gofynnwch i berchennog y daenlen eu gwirio.",
       empty: {
         title: "Dim eitemau eto",
-        description: "Does dim eitemau ar y map trywydd hwn eto.",
+        description:
+          "Ychwanegwch ei eitemau yn y daenlen am y tro. Byddan nhw'n ymddangos yma ar ôl Adnewyddu.",
       },
       noneInPlacement: "Dim eitemau",
       // Nawr, Nesaf and Hwyrach are the public site's Welsh headings.
@@ -488,6 +489,7 @@ export const cy = {
           unpublish:
             "Bydd yn diflannu o'r wefan gyhoeddus ar ôl ei diweddariad nesaf dros nos.",
         },
+        noItems: "Bydd y wefan gyhoeddus yn ei ddangos heb eitemau.",
         withChanges_zero:
           "Bydd eich newidiadau heb eu cadw yn cael eu cyhoeddi gydag ef.",
         withChanges_one:

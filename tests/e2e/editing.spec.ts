@@ -6,6 +6,7 @@ import {
   EXAMPLE_SPREADSHEET,
   type FakeTab,
   withRoadmapIndex,
+  withTabRows,
 } from "./fixtures/fake-sheets"
 import { useLanguage } from "./fixtures/look"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
@@ -1083,17 +1084,10 @@ test.describe("editing an item's tags (STY-037)", () => {
     page,
     sheets,
   }) => {
-    sheets.spreadsheet = EXAMPLE_SPREADSHEET.map((tab) =>
-      tab.title === "ProductC"
-        ? {
-            ...tab,
-            rows: [
-              ["Title", "Horizon"],
-              ["Unpublished work", "Now"],
-            ],
-          }
-        : tab,
-    )
+    sheets.spreadsheet = withTabRows("ProductC", [
+      ["Title", "Horizon"],
+      ["Unpublished work", "Now"],
+    ])
     await openRoadmap(page, "productc", "Unpublished work")
     const before = sheets.spreadsheet
     const { form, field } = await openTags(page, "Unpublished work")
@@ -1471,17 +1465,10 @@ test.describe("editing an item's details (STY-039)", () => {
     page,
     sheets,
   }) => {
-    sheets.spreadsheet = EXAMPLE_SPREADSHEET.map((tab) =>
-      tab.title === "ProductC"
-        ? {
-            ...tab,
-            rows: [
-              ["Title", "Horizon"],
-              ["Unpublished work", "Now"],
-            ],
-          }
-        : tab,
-    )
+    sheets.spreadsheet = withTabRows("ProductC", [
+      ["Title", "Horizon"],
+      ["Unpublished work", "Now"],
+    ])
     await openRoadmap(page, "productc", "Unpublished work")
     const before = sheets.spreadsheet
     const { form, field } = await openDetails(page, "Unpublished work")

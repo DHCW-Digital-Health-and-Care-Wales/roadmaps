@@ -290,9 +290,11 @@ export const en = {
       /** In place of `errors.invalid-data`, which is about the roadmap list. */
       invalidData:
         "This roadmap's items aren't in the expected format in the spreadsheet. Ask the spreadsheet owner to check them.",
+      /** A roadmap with none: where they are added, until they can be added here (D2). */
       empty: {
         title: "No items yet",
-        description: "This roadmap doesn't have any items yet.",
+        description:
+          "Add its items in the spreadsheet for now. They show here after Refresh.",
       },
       /** Under a horizon or section heading that has no items. */
       noneInPlacement: "No items",
@@ -543,6 +545,8 @@ export const en = {
           publish: "It shows on the public site after its next nightly update.",
           unpublish: "It leaves the public site after its next nightly update.",
         },
+        /** Publishing a roadmap with no item in a horizon or section (STY-042 S3). */
+        noItems: "The public site will show it with no items.",
         /** Publishing a roadmap with pending edits, which go with it (S5). */
         withChanges_one: "Your unsaved change goes public with it.",
         withChanges_other:

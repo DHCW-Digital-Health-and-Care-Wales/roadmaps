@@ -183,7 +183,7 @@ function RoadmapView({
   const organisations = useOrganisations()
   const lists = useRoadmapLists(hasChoiceChange(changes))
   const shown = applyRoadmapChanges(roadmap, changes, lists.lists)
-  const publishedState = usePublishedState(roadmap)
+  const publishedState = usePublishedState(roadmap, items.data)
   const addedNotice = useAddedRoadmapNotice(roadmap)
   const title = localise(shown.title, language)
   const retryList = () => {

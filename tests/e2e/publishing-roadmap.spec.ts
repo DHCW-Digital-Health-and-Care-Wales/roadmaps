@@ -1,6 +1,10 @@
 import type { Page } from "@playwright/test"
 
-import { EXAMPLE_INDEX_ROWS, withRoadmapIndex } from "./fixtures/fake-sheets"
+import {
+  EXAMPLE_INDEX_ROWS,
+  withRoadmapIndex,
+  withTabItems,
+} from "./fixtures/fake-sheets"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 /**
@@ -18,6 +22,8 @@ async function openProductC(page: Page) {
   ).toBeVisible()
   await expect(page.getByRole("heading", { level: 3 }).first()).toBeVisible()
 }
+
+const NO_ITEMS_LINE = "The public site will show it with no items."
 
 /** Chooses the action, then the dialog's button named `confirm`. */
 async function choose(page: Page, action: string, confirm = action) {
@@ -135,4 +141,67 @@ test("unpublishes a roadmap after asking (S3)", async ({ page, sheets }) => {
   ).toBeVisible()
   const [index] = sheets.spreadsheet
   expect(indexCell(index?.rows, "ProductA", "Enabled")).toBe("No")
+})
+
+test("says the public site will show a roadmap with no items, and still publishes it (STY-042 S3)", async ({
+  page,
+  sheets,
+}) => {
+  sheets.spreadsheet = withTabItems("ProductC")
+  await page.goto("./#/roadmaps/productc")
+  await connect(page)
+  const main = page.getByRole("main")
+  await expect(
+    main.getByRole("heading", { name: "No items yet" }),
+  ).toBeVisible()
+
+  await main.getByRole("button", { name: "Publish roadmap" }).click()
+  const dialog = page.getByRole("alertdialog")
+  await expect(dialog).toContainText(
+    `It shows on the public site after its next nightly update. ${NO_ITEMS_LINE}`,
+  )
+  await dialog.getByRole("button", { name: "Publish roadmap" }).click()
+
+  await expect(
+    main.getByText(/^Product C roadmap is published\./),
+  ).toBeVisible()
+  const [index] = sheets.spreadsheet
+  expect(indexCell(index?.rows, "ProductC", "Enabled")).toBe("Yes")
+
+  // Published, it can only be unpublished, which never says so.
+  await main.getByRole("button", { name: "Unpublish roadmap" }).click()
+  await expect(dialog).toContainText(
+    "It leaves the public site after its next nightly update.",
+  )
+  await expect(dialog).not.toContainText(NO_ITEMS_LINE)
+})
+
+test("says so while no item has a recognised horizon, until a pending move gives one (STY-042 S3)", async ({
+  page,
+  sheets,
+}) => {
+  sheets.spreadsheet = withTabItems("ProductC", ["Work coming soon", "Soon"])
+  await page.goto("./#/roadmaps/productc")
+  await connect(page)
+  const main = page.getByRole("main")
+  await expect(
+    main.getByRole("heading", { name: "Not on the public roadmap" }),
+  ).toBeVisible()
+
+  await main.getByRole("button", { name: "Publish roadmap" }).click()
+  const dialog = page.getByRole("alertdialog")
+  await expect(dialog).toContainText(NO_ITEMS_LINE)
+  await dialog.getByRole("button", { name: "Cancel" }).click()
+
+  await main.getByRole("button", { name: "Move Work coming soon" }).click()
+  await page.getByRole("menuitem", { name: "Next" }).click()
+  await main.getByRole("button", { name: "Publish roadmap" }).click()
+  await expect(dialog).toContainText("Your unsaved change goes public with it.")
+  await expect(dialog).not.toContainText(NO_ITEMS_LINE)
+  await dialog.getByRole("button", { name: "Save and publish" }).click()
+
+  await expect(
+    main.getByText(/^Changes saved and Product C roadmap published\./),
+  ).toBeVisible()
+  expect(sheets.writes).toHaveLength(1)
 })

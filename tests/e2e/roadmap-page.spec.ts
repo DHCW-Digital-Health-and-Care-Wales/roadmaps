@@ -1,6 +1,11 @@
 import type { Locator, Page } from "@playwright/test"
 
-import { EXAMPLE_SPREADSHEET, type FakeTab } from "./fixtures/fake-sheets"
+import {
+  EXAMPLE_SPREADSHEET,
+  withTabItems,
+  withTabRows,
+} from "./fixtures/fake-sheets"
+import { THEMES, tokenColour, useLanguage, useTheme } from "./fixtures/look"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 const ABOUT_HEADING = "About this roadmap"
@@ -17,13 +22,6 @@ const PLACEMENT_HEADINGS = [
 const [, productA] = EXAMPLE_SPREADSHEET
 const PRODUCT_A_ROWS = productA?.rows ?? []
 
-/** The example spreadsheet with Product A's tab holding these rows instead. */
-function withProductATab(rows: FakeTab["rows"]): FakeTab[] {
-  return EXAMPLE_SPREADSHEET.map((tab) =>
-    tab.title === "ProductA" ? { ...tab, rows } : tab,
-  )
-}
-
 /** Product A's rows with its columns in this header order (names from its header). */
 function reorderColumns(order: readonly string[]): string[][] {
   const [header = []] = PRODUCT_A_ROWS
@@ -32,19 +30,6 @@ function reorderColumns(order: readonly string[]): string[][] {
     throw new Error("The order must name every column of Product A's tab")
   }
   return PRODUCT_A_ROWS.map((row) => indexes.map((index) => row[index] ?? ""))
-}
-
-/** Product A's header, then rows of `Title` and `Horizon` (the rest blank). */
-function productARows(...rows: [title: string, horizon: string][]) {
-  const [header = []] = PRODUCT_A_ROWS
-  return [
-    header,
-    ...rows.map(([title, horizon]) =>
-      header.map((name) =>
-        name === "Title" ? title : name === "Horizon" ? horizon : "",
-      ),
-    ),
-  ]
 }
 
 /** The item titles in the list under the placement heading `name`. */
@@ -165,7 +150,8 @@ test("columns in a different order read the same (S10)", async ({
 }) => {
   const [header = []] = PRODUCT_A_ROWS
   const middle = header.filter((name) => name !== "Title" && name !== "Horizon")
-  sheets.spreadsheet = withProductATab(
+  sheets.spreadsheet = withTabRows(
+    "ProductA",
     reorderColumns(["Horizon", ...middle.reverse(), "Title"]),
   )
 
@@ -178,12 +164,11 @@ test("items with no recognised horizon are shown first, flagged (S4, S13)", asyn
   page,
   sheets,
 }) => {
-  sheets.spreadsheet = withProductATab(
-    productARows(
-      ["Placed work", "Now"],
-      ["Undecided work", ""],
-      ["Work coming soon", "Soon"],
-    ),
+  sheets.spreadsheet = withTabItems(
+    "ProductA",
+    ["Placed work", "Now"],
+    ["Undecided work", ""],
+    ["Work coming soon", "Soon"],
   )
 
   await openProductA(page)
@@ -214,16 +199,20 @@ test("Refresh reads the roadmap and its items again (S14)", async ({
   page,
   sheets,
 }) => {
-  sheets.spreadsheet = withProductATab(
-    productARows(["Placed work", "Now"], ["Work coming soon", "Soon"]),
+  sheets.spreadsheet = withTabItems(
+    "ProductA",
+    ["Placed work", "Now"],
+    ["Work coming soon", "Soon"],
   )
   await openProductA(page)
   await expect(titlesUnder(page, "Not on the public roadmap")).toHaveText([
     "Work coming soon",
   ])
 
-  sheets.spreadsheet = withProductATab(
-    productARows(["Placed work", "Now"], ["Work coming soon", "Next"]),
+  sheets.spreadsheet = withTabItems(
+    "ProductA",
+    ["Placed work", "Now"],
+    ["Work coming soon", "Next"],
   )
   await page.getByRole("main").getByRole("button", { name: "Refresh" }).click()
 
@@ -279,7 +268,7 @@ test.describe("when the items can't be read (S8)", () => {
     page,
     sheets,
   }) => {
-    sheets.spreadsheet = withProductATab([
+    sheets.spreadsheet = withTabRows("ProductA", [
       ["Description", "Horizon"],
       ["Work with no title column", "Now"],
     ])
@@ -296,4 +285,117 @@ test.describe("when the items can't be read (S8)", () => {
     await expect(roadmapCards(page)).toHaveCount(3)
     await expect(page.getByRole("alert")).toHaveCount(0)
   })
+})
+
+for (const theme of THEMES) {
+  test(`About is a bordered panel with Edit beside its heading, in the ${theme} theme (STY-042 S1, S4)`, async ({
+    page,
+  }) => {
+    await useTheme(page, theme)
+    await openProductA(page)
+    const about = page
+      .getByRole("main")
+      .getByRole("region", { name: ABOUT_HEADING })
+    const edit = about.getByRole("button", { name: `Edit ${ABOUT_HEADING}` })
+
+    await expect(about).toHaveCSS("border-top-style", "solid")
+    await expect(about).toHaveCSS(
+      "border-top-color",
+      await tokenColour(page, "--border"),
+    )
+    await expect(about).toHaveCSS(
+      "background-color",
+      await tokenColour(page, "--card"),
+    )
+    // Beside the heading, above the first field: not at the panel's foot.
+    const heading = await about.getByRole("heading").boundingBox()
+    const button = await edit.boundingBox()
+    const firstField = await about.getByRole("term").first().boundingBox()
+    if (!heading || !button || !firstField) throw new Error("Not laid out")
+    expect(button.x).toBeGreaterThan(heading.x + heading.width)
+    expect(button.y).toBeLessThan(heading.y + heading.height)
+    expect(button.y + button.height).toBeLessThanOrEqual(firstField.y)
+
+    // The form, then "Changed" and "Undo changes", stay inside the panel.
+    await edit.click()
+    const form = about.getByRole("form", { name: ABOUT_HEADING })
+    await form.getByRole("textbox", { name: "Product lead" }).fill("Sam Evans")
+    await form.getByRole("button", { name: "Done" }).click()
+    await expect(about.getByText("Changed", { exact: true })).toBeVisible()
+    await about
+      .getByRole("button", { name: `Undo changes ${ABOUT_HEADING}` })
+      .click()
+    await expect(about.getByText("Changed", { exact: true })).toBeHidden()
+    await expect(edit).toBeFocused()
+  })
+
+  test(`a roadmap with no items shows a compact dashed panel, in the ${theme} theme (STY-042 S2, S4)`, async ({
+    page,
+    sheets,
+  }) => {
+    await useTheme(page, theme)
+    sheets.spreadsheet = withTabItems("ProductA")
+    await openProductA(page)
+    const main = page.getByRole("main")
+    const panel = main.locator("[data-slot=empty]")
+
+    await expect(main.getByRole("heading", { level: 2 })).toHaveText([
+      ABOUT_HEADING,
+      "No items yet",
+    ])
+    await expect(
+      panel.getByRole("heading", { name: "No items yet" }),
+    ).toBeVisible()
+    await expect(
+      panel.getByText(
+        "Add its items in the spreadsheet for now. They show here after Refresh.",
+      ),
+    ).toBeVisible()
+    await expect(panel.locator("svg, img")).toHaveCount(0)
+    await expect(panel).toHaveCSS("border-top-style", "dashed")
+    await expect(panel).toHaveCSS(
+      "border-top-color",
+      await tokenColour(page, "--border"),
+    )
+    expect((await panel.boundingBox())?.height).toBeLessThan(160)
+
+    // As it says: items added in the spreadsheet show after Refresh.
+    sheets.spreadsheet = withTabItems("ProductA", ["First work", "Now"])
+    await main.getByRole("button", { name: "Refresh" }).click()
+    await expect(titlesUnder(page, "Now")).toHaveText(["First work"])
+    await expect(
+      main.getByRole("heading", { name: "No items yet" }),
+    ).toBeHidden()
+  })
+}
+
+test("an empty roadmap's page is in Welsh and fits a phone (STY-042 S4)", async ({
+  page,
+  sheets,
+}) => {
+  await useLanguage(page, "cy")
+  await page.setViewportSize({ width: 375, height: 800 })
+  sheets.spreadsheet = withTabItems("ProductA")
+  await page.goto("./#/roadmaps/producta")
+  await connect(page, "Cysylltu â Google")
+  const main = page.getByRole("main")
+
+  await expect(main.getByRole("heading", { level: 2 })).toHaveText([
+    "Ynglŷn â'r map trywydd hwn",
+    "Dim eitemau eto",
+  ])
+  await expect(
+    main.getByText(
+      "Ychwanegwch ei eitemau yn y daenlen am y tro. Byddan nhw'n ymddangos yma ar ôl Adnewyddu.",
+    ),
+  ).toBeVisible()
+  await expect(
+    main.getByRole("button", { name: "Golygu Ynglŷn â'r map trywydd hwn" }),
+  ).toBeVisible()
+  const overflow = await page.evaluate(
+    () =>
+      document.documentElement.scrollWidth -
+      document.documentElement.clientWidth,
+  )
+  expect(overflow).toBe(0)
 })

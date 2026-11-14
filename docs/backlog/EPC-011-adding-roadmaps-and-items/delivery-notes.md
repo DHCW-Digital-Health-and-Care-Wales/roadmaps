@@ -8,6 +8,9 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
 - **A hand-made repository double needs `addRoadmap`**: the typecheck names each one.
 - **An E2E spec that replaces `sheets.spreadsheet` keeps a `Template` tab** to add a
   roadmap: the example spreadsheet ends with one, and `withRoadmapIndex` keeps it.
+- **An E2E spec that needs a roadmap with other items, or none, uses `withTabItems`**
+  (`tests/e2e/fixtures/fake-sheets.ts`), or `withTabRows` for a tab's whole rows: it
+  does not map over `EXAMPLE_SPREADSHEET` itself.
 - **Nothing here has met a real spreadsheet yet** (CHO-010): don't write copy or a
   scenario that promises what a copy of a protected `Template` does.
 - **A dialog's closing and focus rules are `FormDialog`'s**, and a form's fields are

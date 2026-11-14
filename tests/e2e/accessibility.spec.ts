@@ -7,6 +7,7 @@ import {
   EXAMPLE_SPREADSHEET,
   roadmapRow,
   withRoadmapIndex,
+  withTabItems,
 } from "./fixtures/fake-sheets"
 import { useLanguage, useTheme } from "./fixtures/look"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
@@ -206,6 +207,29 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await dialog.getByRole("button", { name: "Publish roadmap" }).click()
       await expect(main.getByText(/is published\./)).toBeVisible()
       await expectNoAxeViolations(page, theme)
+    })
+
+    test("an empty roadmap on a phone in Cymraeg, then its publish dialog saying so (STY-042)", async ({
+      page,
+      sheets,
+    }) => {
+      await useLanguage(page, "cy")
+      await page.setViewportSize({ width: 375, height: 800 })
+      sheets.spreadsheet = withTabItems("ProductC")
+      await page.goto("./#/roadmaps/productc")
+      await connect(page, "Cysylltu â Google")
+      const main = page.getByRole("main")
+      await expect(
+        main.getByRole("heading", { name: "Dim eitemau eto" }),
+      ).toBeVisible()
+      await expectNoAxeViolations(page, theme, { only: "main" })
+
+      await main.getByRole("button", { name: "Cyhoeddi'r map trywydd" }).click()
+      const dialog = page.getByRole("alertdialog")
+      await expect(dialog).toContainText(
+        "Bydd y wefan gyhoeddus yn ei ddangos heb eitemau.",
+      )
+      await expectNoAxeViolations(page, theme, { only: "[role=alertdialog]" })
     })
 
     test("an item's Move menu, then the moved item and an unplaced item's form (STY-031)", async ({

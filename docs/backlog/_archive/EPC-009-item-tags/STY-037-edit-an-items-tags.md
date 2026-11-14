@@ -9,7 +9,7 @@
   ADR-010, ADR-008
 - **Suggested model**: Opus — an ordered, open-ended field through the pending-change
   model, publish plan and conflict review, and a new form control
-- **Delivered**: _added once the PR exists_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/67
 
 ## Summary
 

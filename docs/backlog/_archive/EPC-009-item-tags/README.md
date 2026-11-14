@@ -2,7 +2,7 @@
 
 - **Status**: Done — every story delivered: STY-038 in
   [#65](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/65),
-  STY-037 in its own PR
+  STY-037 in [#67](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/67)
 - **Progress**: 2 of 2 terminal
 - **Binding ADRs**: ADR-012, ADR-014, ADR-011, ADR-010, ADR-008, ADR-002
 

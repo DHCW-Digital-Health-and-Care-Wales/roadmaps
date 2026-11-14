@@ -1,13 +1,19 @@
 import { Link } from "@tanstack/react-router"
+import { PlusIcon } from "lucide-react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { textLinkClasses } from "@/components/layout/text-link-classes"
+import { Button } from "@/components/ui/button"
+import { useAuth } from "@/features/auth/use-auth"
 
 import { RefreshButton } from "../components/refresh-button"
 import { RoadmapGroups } from "../components/roadmap-groups"
 import { RoadmapGridSkeleton } from "../components/roadmap-grid-skeleton"
 import { RoadmapsEmptyState } from "../components/roadmaps-empty-state"
 import { RoadmapsErrorState } from "../components/roadmaps-error-state"
+import { useOpenAddedRoadmap } from "../dialogs/added-roadmap"
+import { RoadmapDialog } from "../dialogs/roadmap-dialog"
 import { useRoadmaps } from "../hooks/use-roadmaps"
 import { useRoadmapsProblem } from "../hooks/use-roadmaps-problem"
 
@@ -15,13 +21,18 @@ const TITLE_ID = "roadmaps-title"
 
 /**
  * The home page once there is (or was) a session: the roadmaps with loading, empty,
- * error and expired states, and a link to the families, categories and organisations (STY-029).
- * While expired, roadmaps loaded earlier stay visible under a Reconnect prompt, and
- * nothing refetches until the user reconnects.
+ * error and expired states, a link to the families, categories and organisations
+ * (STY-029), and "Add a roadmap" once the list has loaded, which opens the roadmap
+ * dialog and then the roadmap it added (STY-041). While expired, roadmaps loaded earlier
+ * stay visible under a Reconnect prompt, nothing refetches until the user reconnects,
+ * and nothing can be added.
  */
 export function RoadmapsPage() {
   const { t } = useTranslation()
   const { data: roadmaps, error, isFetching, refetch } = useRoadmaps()
+  const connected = useAuth().state.status === "connected"
+  const [adding, setAdding] = useState(false)
+  const openAdded = useOpenAddedRoadmap()
 
   const unpublished =
     roadmaps?.filter(({ published }) => !published).length ?? 0
@@ -30,11 +41,23 @@ export function RoadmapsPage() {
   const reload = () => {
     void refetch()
   }
+  const addButton = roadmaps && (
+    <Button
+      disabled={!connected}
+      focusableWhenDisabled
+      onClick={() => {
+        setAdding(true)
+      }}
+    >
+      <PlusIcon data-icon="inline-start" aria-hidden="true" />
+      {t("roadmaps.add.title")}
+    </Button>
+  )
 
   return (
     <section aria-labelledby={TITLE_ID}>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="flex flex-col gap-1.5 lg:shrink-0">
           <h1 id={TITLE_ID} className="text-heading-xl">
             {t("roadmaps.title")}
           </h1>
@@ -47,7 +70,8 @@ export function RoadmapsPage() {
             </Link>
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-3">
+        {/* Wraps before the page would scroll sideways: the Welsh is the longer. */}
+        <div className="flex flex-wrap items-center gap-3 lg:justify-end">
           {roadmaps && roadmaps.length > 0 && (
             <p className="text-body-xs text-muted-foreground tabular-nums">
               {unpublished > 0
@@ -59,6 +83,7 @@ export function RoadmapsPage() {
             </p>
           )}
           <RefreshButton fetching={isFetching} onRefresh={reload} />
+          {addButton}
         </div>
       </div>
 
@@ -76,7 +101,7 @@ export function RoadmapsPage() {
             {roadmaps.length > 0 ? (
               <RoadmapGroups roadmaps={roadmaps} />
             ) : (
-              <RoadmapsEmptyState />
+              <RoadmapsEmptyState action={addButton} />
             )}
           </>
         ) : problem ? (
@@ -90,6 +115,16 @@ export function RoadmapsPage() {
           <RoadmapGridSkeleton />
         )}
       </div>
+      {roadmaps && (
+        <RoadmapDialog
+          open={adding}
+          roadmaps={roadmaps}
+          onAdded={openAdded}
+          onClose={() => {
+            setAdding(false)
+          }}
+        />
+      )}
     </section>
   )
 }

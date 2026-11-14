@@ -10,6 +10,7 @@
         - /url: /#/families
     - paragraph: 3 roadmaps, 1 not published
     - button "Refresh"
+    - button "Add a roadmap"
     - heading "Medicines & Diagnostics" [level=2]
     - list "Medicines & Diagnostics":
       - listitem:

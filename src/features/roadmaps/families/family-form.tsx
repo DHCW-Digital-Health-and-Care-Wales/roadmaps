@@ -9,13 +9,13 @@ import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import type {
   FamilyField,
   FamilyInput,
   FamilyInputProblems,
 } from "@/domain/roadmap/family-changes"
 
+import { FormField } from "../components/form-field"
 import { RoadmapSwatch } from "../components/roadmap-swatch"
 
 export interface FamilyFormProps {
@@ -88,60 +88,41 @@ export function FamilyForm({
       className="flex max-w-md flex-col gap-4"
     >
       {FIELDS.map((field) => {
-        const controlId = `${id}-${field}`
-        const errorId = `${controlId}-error`
-        const hintId = `${controlId}-hint`
         const problem = problems[field]
-        const describedBy = [
-          field === "colour" ? hintId : null,
-          problem ? errorId : null,
-        ].filter((each) => each !== null)
-        const control = (
-          <Input
-            ref={field === "name" ? nameRef : colourRef}
-            id={controlId}
-            value={values[field]}
-            autoComplete="off"
-            // What is being saved stays what the form shows.
-            readOnly={busy}
-            spellCheck={field === "name"}
-            className={field === "colour" ? "max-w-40" : undefined}
-            aria-invalid={problem ? true : undefined}
-            aria-describedby={
-              describedBy.length > 0 ? describedBy.join(" ") : undefined
-            }
-            onChange={(event) => {
-              onChange({ ...values, [field]: event.target.value })
-            }}
-          />
-        )
         return (
-          <div key={field} className="flex flex-col gap-1.5">
-            <Label htmlFor={controlId}>
-              {t(`roadmaps.families.form.${field}`)}
-            </Label>
-            {field === "colour" && (
-              <p id={hintId} className="text-muted-foreground">
-                {t("roadmaps.families.form.colourHint")}
-              </p>
-            )}
-            {problem && (
-              <p id={errorId} className="font-bold text-destructive">
-                <span className="sr-only">
-                  {t("roadmaps.edit.errorPrefix")}
-                </span>{" "}
-                {t(`roadmaps.families.form.errors.${problem}`)}
-              </p>
-            )}
-            {field === "colour" ? (
-              <div className="flex items-stretch gap-2.5">
-                <RoadmapSwatch colour={values.colour.trim().toLowerCase()} />
-                {control}
-              </div>
-            ) : (
-              control
-            )}
-          </div>
+          <FormField
+            key={field}
+            id={`${id}-${field}`}
+            label={t(`roadmaps.families.form.${field}`)}
+            hint={field === "colour" && t("roadmaps.families.form.colourHint")}
+            error={problem && t(`roadmaps.families.form.errors.${problem}`)}
+          >
+            {(control) => {
+              const input = (
+                <Input
+                  ref={field === "name" ? nameRef : colourRef}
+                  value={values[field]}
+                  autoComplete="off"
+                  // What is being saved stays what the form shows.
+                  readOnly={busy}
+                  spellCheck={field === "name"}
+                  className={field === "colour" ? "max-w-40" : undefined}
+                  {...control}
+                  onChange={(event) => {
+                    onChange({ ...values, [field]: event.target.value })
+                  }}
+                />
+              )
+              return field === "colour" ? (
+                <div className="flex items-stretch gap-2.5">
+                  <RoadmapSwatch colour={values.colour.trim().toLowerCase()} />
+                  {input}
+                </div>
+              ) : (
+                input
+              )
+            }}
+          </FormField>
         )
       })}
       <div className="flex flex-wrap gap-3">

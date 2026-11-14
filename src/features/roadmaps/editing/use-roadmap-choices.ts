@@ -13,12 +13,14 @@ import {
 import { useLanguage } from "@/i18n"
 
 import { type RoadmapLists, useRoadmapLists } from "../hooks/use-roadmap-lists"
-import type { EditFormField, EditFormOption } from "./edit-form"
+import type { ChoiceOption } from "./choice-field"
+import type { EditFormField } from "./edit-form"
 
 /**
  * A roadmap's family and category as chosen from the lists (STY-028): the lists, the
  * form fields choosing them, and the name a chosen value shows as. The lists are read
- * only once `needed`.
+ * only once `needed`. The roadmap a form is for is `null` for one being added, which
+ * has neither yet.
  */
 export function useRoadmapChoices(needed: boolean) {
   const { t } = useTranslation()
@@ -39,11 +41,11 @@ export function useRoadmapChoices(needed: boolean) {
 
   /** "No family", then the row's unlisted family, then the list in its order. */
   const familyOptions = (
-    shown: Roadmap,
+    shown: Roadmap | null,
     families: readonly Family[],
-  ): EditFormOption[] => [
+  ): ChoiceOption[] => [
     { value: "", label: t("roadmaps.edit.noFamily"), colour: null },
-    ...(shown.familyNotListed && shown.family
+    ...(shown?.familyNotListed && shown.family
       ? [
           {
             value: UNLISTED_FAMILY,
@@ -62,9 +64,7 @@ export function useRoadmapChoices(needed: boolean) {
   ]
 
   /** "No category", then the list in its order. */
-  const categoryOptions = (
-    categories: readonly Category[],
-  ): EditFormOption[] => [
+  const categoryOptions = (categories: readonly Category[]): ChoiceOption[] => [
     { value: "", label: t("roadmaps.edit.noCategory") },
     ...categories.map(({ id, name }) => ({
       value: id,
@@ -73,19 +73,19 @@ export function useRoadmapChoices(needed: boolean) {
   ]
 
   /** What the form needs to show `field` of `shown`: its options once its list is read. */
-  const choiceOf = (shown: Roadmap, field: RoadmapChoiceField) =>
+  const choiceOf = (shown: Roadmap | null, field: RoadmapChoiceField) =>
     field === "familyId"
       ? {
           options: lists.families && familyOptions(shown, lists.families),
           beingRead: reading.families,
-          name: shown.family,
+          name: shown?.family ?? null,
           none: t("roadmaps.edit.noFamily"),
-          colour: { colour: shown.colour },
+          colour: { colour: shown?.colour ?? null },
         }
       : {
           options: lists.categories && categoryOptions(lists.categories),
           beingRead: reading.categories,
-          name: shown.category,
+          name: shown?.category ?? null,
           none: t("roadmaps.edit.noCategory"),
           colour: {},
         }
@@ -95,7 +95,7 @@ export function useRoadmapChoices(needed: boolean) {
    * the list is first read, or shown read-only while its list can't be read (S6).
    */
   const fieldOf = (
-    shown: Roadmap,
+    shown: Roadmap | null,
     field: RoadmapChoiceField,
   ): EditFormField<RoadmapChoiceField> => {
     const label = t(`roadmaps.edit.roadmapFields.${field}`)
@@ -103,7 +103,7 @@ export function useRoadmapChoices(needed: boolean) {
     if (options) return { name: field, label, multiline: false, options }
     const text = name ? localise(name, language) : none
     if (beingRead) {
-      const value = roadmapValue(shown, field)
+      const value = valueOf(shown, field)
       return {
         name: field,
         label,
@@ -124,14 +124,19 @@ export function useRoadmapChoices(needed: boolean) {
   }
 
   /** The family and category fields of the form editing `shown`, and their values. */
-  const fields = (shown: Roadmap) => ({
+  const fields = (shown: Roadmap | null) => ({
     fields: ROADMAP_CHOICE_FIELDS.map((field) => fieldOf(shown, field)),
     initial: Object.fromEntries(
-      ROADMAP_CHOICE_FIELDS.map((field) => [field, roadmapValue(shown, field)]),
+      ROADMAP_CHOICE_FIELDS.map((field) => [field, valueOf(shown, field)]),
     ) as Record<RoadmapChoiceField, string>,
   })
 
   return { lists, refetch, describe, fields }
+}
+
+/** The ID `shown` has chosen for `field`; `""` for none, as a roadmap being added has. */
+function valueOf(shown: Roadmap | null, field: RoadmapChoiceField): string {
+  return shown ? roadmapValue(shown, field) : ""
 }
 
 function listOf(lists: RoadmapLists, field: RoadmapChoiceField) {

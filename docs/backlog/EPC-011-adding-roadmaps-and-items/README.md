@@ -1,8 +1,8 @@
 # EPC-011: Adding roadmaps and items — started here, not in the spreadsheet, in one dialog each
 
-- **Status**: Active — grilled with the owner on 2026-11-14; STY-040 delivered, seven
-  stories Proposed, three recorded for later grilling
-- **Progress**: 1 of 11 terminal; next selectable: STY-041, once STY-040's PR is merged;
+- **Status**: Active — grilled with the owner on 2026-11-14; STY-040 and STY-041
+  delivered, six stories Proposed, three recorded for later grilling
+- **Progress**: 2 of 11 terminal; next selectable: STY-042, once STY-041's PR is merged;
   blocked on: nothing
 - **Binding ADRs**: ADR-012, ADR-011, ADR-009, ADR-013, ADR-014, ADR-002, ADR-003, ADR-005,
   ADR-006, ADR-010, ADR-008
@@ -175,7 +175,7 @@ STY-040 adds **Short name** and brings **Roadmap**, **Published roadmap** and
 | ID      | Story                                                                                                                         | Area                               | Depends on                | State |
 | ------- | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ------------------------- | ----- |
 | STY-040 | [The repository adds a roadmap](../_archive/EPC-011-adding-roadmaps-and-items/STY-040-the-repository-adds-a-roadmap.md)       | Domain + Infrastructure + Docs     | —                         | ✅    |
-| STY-041 | [A Product Lead adds a roadmap](STY-041-add-a-roadmap.md)                                                                     | Features/UI + i18n (en + cy) + E2E | STY-040                   |       |
+| STY-041 | [A Product Lead adds a roadmap](../_archive/EPC-011-adding-roadmaps-and-items/STY-041-add-a-roadmap.md)                       | Features/UI + i18n (en + cy) + E2E | STY-040                   | ✅    |
 | STY-042 | [A roadmap's page shows About in a panel, and says when it is empty](STY-042-the-roadmap-page-about-panel-and-empty-state.md) | Features/UI + i18n (en + cy) + E2E | —                         |       |
 | STY-043 | [“About this roadmap” is edited in the roadmap dialog](STY-043-edit-about-in-the-roadmap-dialog.md)                           | Features/UI + i18n (en + cy) + E2E | STY-041                   |       |
 | STY-044 | [An item is edited in a dialog](STY-044-edit-an-item-in-a-dialog.md)                                                          | Features/UI + i18n (en + cy) + E2E | STY-041                   |       |

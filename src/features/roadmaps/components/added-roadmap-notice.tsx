@@ -1,0 +1,36 @@
+import { CircleCheckIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
+
+import { DismissibleNotice } from "@/components/layout/dismissible-notice"
+import { useNoticeDwell } from "@/features/auth/use-notice-dwell"
+
+export interface AddedRoadmapNoticeProps {
+  /** The roadmap's title, as shown. */
+  title: string
+  /** Stable between renders: the dwell starts again when it changes. */
+  onDismiss: () => void
+}
+
+/**
+ * Says, on the page of a roadmap just added, that it was added and isn't published yet
+ * (STY-041 S5): a confirmation, which clears itself after a dwell.
+ */
+export function AddedRoadmapNotice({
+  title,
+  onDismiss,
+}: AddedRoadmapNoticeProps) {
+  const { t } = useTranslation()
+  const dwell = useNoticeDwell(true, onDismiss)
+  return (
+    <DismissibleNotice
+      role="status"
+      variant="success"
+      Icon={CircleCheckIcon}
+      onDismiss={onDismiss}
+      className="max-w-2xl"
+      {...dwell}
+    >
+      <p>{t("roadmaps.add.added", { title })}</p>
+    </DismissibleNotice>
+  )
+}

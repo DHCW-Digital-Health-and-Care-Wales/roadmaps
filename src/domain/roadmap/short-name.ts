@@ -12,7 +12,12 @@ export type ShortNameProblem =
   /** Its address would be empty: letters with no form in `a` to `z`, or none at all. */
   | "no-address"
 
-const PERMITTED = /^[\p{L}\p{N} -]+$/u
+/** What a short name can hold: letters, numbers, spaces and hyphens (STY-040 D8). */
+const PERMITTED_CHARACTER = String.raw`[\p{L}\p{N} -]`
+const PERMITTED = new RegExp(`^${PERMITTED_CHARACTER}+$`, "u")
+const NOT_PERMITTED = new RegExp(`(?!${PERMITTED_CHARACTER}).`, "gsu")
+/** A title's last word when it is "roadmap", which a short name leaves out. */
+const FINAL_ROADMAP = /\s+roadmap\s*$/i
 
 /**
  * A roadmap's address, on the public site and here: the public site's slug of its short
@@ -38,6 +43,28 @@ export function checkShortName(typed: string): {
   const shortName = typed.trim().normalize("NFC")
   const problem = problemWith(shortName)
   return problem === undefined ? { shortName } : { shortName, problem }
+}
+
+/**
+ * The short name suggested for a roadmap with this title (STY-041 S3): the title without
+ * a final "roadmap" (an English word, whatever the interface's language) and without
+ * anything a short name can't hold, cut to the longest it can be. It can still have no
+ * address, or be blank: `checkShortName` says so.
+ */
+export function suggestShortName(title: string): string {
+  const name = title
+    .normalize("NFC")
+    .replace(FINAL_ROADMAP, "")
+    .replace(NOT_PERMITTED, "")
+    .replace(/ {2,}/g, " ")
+    .trim()
+  let kept = ""
+  // By character, so a letter of two UTF-16 units is kept whole or not at all.
+  for (const character of name) {
+    if (kept.length + character.length > SHORT_NAME_MAX_LENGTH) break
+    kept += character
+  }
+  return kept.trimEnd()
 }
 
 function problemWith(shortName: string): ShortNameProblem | undefined {

@@ -3,7 +3,6 @@ import {
   FileWarningIcon,
   FileXIcon,
   HourglassIcon,
-  KeyRoundIcon,
   LoaderCircleIcon,
   LockKeyholeIcon,
   RotateCwIcon,
@@ -21,11 +20,11 @@ import {
   AlertTitle,
 } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { ReconnectButton } from "@/features/auth/components/reconnect-button"
 import type { AppError, AppErrorKind } from "@/lib/errors"
 
+import { SessionExpiredAlert } from "./session-expired-alert"
+
 const icons = {
-  unauthenticated: KeyRoundIcon,
   forbidden: LockKeyholeIcon,
   "not-found": FileQuestionIcon,
   "rate-limited": HourglassIcon,
@@ -33,7 +32,7 @@ const icons = {
   "invalid-response": FileXIcon,
   "invalid-data": FileWarningIcon,
   unknown: TriangleAlertIcon,
-} satisfies Record<AppErrorKind, LucideIcon>
+} satisfies Record<Exclude<AppErrorKind, "unauthenticated">, LucideIcon>
 
 export interface RoadmapsErrorStateProps {
   error: AppError
@@ -86,52 +85,54 @@ export function RoadmapsErrorState({
   subject = "roadmaps",
 }: RoadmapsErrorStateProps) {
   const { t } = useTranslation()
-  const expired = error.kind === "unauthenticated"
-  const title = expired
-    ? t("roadmaps.expired.title")
-    : t(titleKeys[subject][variant])
+  const titleElement = variant === "panel" ? (titleAs ?? "h2") : "div"
+  if (error.kind === "unauthenticated") {
+    return (
+      <SessionExpiredAlert titleAs={titleElement}>
+        {t("roadmaps.expired.description")}
+      </SessionExpiredAlert>
+    )
+  }
+
   // `errors.invalid-data` is about the roadmap list; a roadmap's items have their own.
-  const description = expired
-    ? t("roadmaps.expired.description")
-    : subject === "items" && error.kind === "invalid-data"
+  const description =
+    subject === "items" && error.kind === "invalid-data"
       ? t("roadmaps.items.invalidData")
       : t(`errors.${error.kind}`)
 
-  const action = expired ? (
-    <ReconnectButton />
-  ) : error.retryable ? (
-    <Button
-      variant="secondary"
-      size="sm"
-      disabled={retrying}
-      focusableWhenDisabled
-      aria-busy={retrying}
-      onClick={onRetry}
-    >
-      {retrying ? (
-        <LoaderCircleIcon
-          data-icon="inline-start"
-          aria-hidden="true"
-          className="animate-spin"
-        />
-      ) : (
-        <RotateCwIcon data-icon="inline-start" aria-hidden="true" />
-      )}
-      {t("common.retry")}
-    </Button>
-  ) : null
-
   const Icon = icons[error.kind]
   return (
-    <Alert variant={expired || variant === "alert" ? "warning" : "destructive"}>
+    <Alert variant={variant === "alert" ? "warning" : "destructive"}>
       <Icon aria-hidden="true" />
       <AlertContent>
-        <AlertTitle as={variant === "panel" ? (titleAs ?? "h2") : "div"}>
-          {title}
+        <AlertTitle as={titleElement}>
+          {t(titleKeys[subject][variant])}
         </AlertTitle>
         <AlertDescription>{description}</AlertDescription>
       </AlertContent>
-      {action && <AlertAction>{action}</AlertAction>}
+      {error.retryable && (
+        <AlertAction>
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={retrying}
+            focusableWhenDisabled
+            aria-busy={retrying}
+            onClick={onRetry}
+          >
+            {retrying ? (
+              <LoaderCircleIcon
+                data-icon="inline-start"
+                aria-hidden="true"
+                className="animate-spin"
+              />
+            ) : (
+              <RotateCwIcon data-icon="inline-start" aria-hidden="true" />
+            )}
+            {t("common.retry")}
+          </Button>
+        </AlertAction>
+      )}
     </Alert>
   )
 }

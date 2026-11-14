@@ -13,6 +13,7 @@ import { useLanguage } from "@/i18n"
 import type { AppError } from "@/lib/errors"
 import { cn } from "@/lib/utils"
 
+import { AddedRoadmapNotice } from "../components/added-roadmap-notice"
 import { ListMismatchBadges } from "../components/list-mismatch-badges"
 import { MatchListsAction } from "../components/match-lists-action"
 import { NotPublishedBadge } from "../components/not-published-badge"
@@ -21,6 +22,7 @@ import { RoadmapFamilyLine } from "../components/roadmap-family-line"
 import { RoadmapItems, RoadmapItemsSkeleton } from "../components/roadmap-items"
 import { RoadmapsErrorState } from "../components/roadmaps-error-state"
 import { StatusPanel } from "../components/status-panel"
+import { useAddedRoadmap } from "../dialogs/added-roadmap"
 import { ChangedTag } from "../editing/edit-controls"
 import { EditableRoadmapAbout } from "../editing/editable-roadmap-about"
 import {
@@ -159,7 +161,8 @@ interface RoadmapViewProps {
 }
 
 /**
- * A listed roadmap: its title, a Not published badge when it is not public (D8), a badge
+ * A listed roadmap: a notice when it was just added (STY-041 S5), its title, a Not
+ * published badge when it is not public (D8), a badge
  * when it is out of step with the family or category list (STY-027 S4, S8), Publish
  * roadmap or Unpublish roadmap (STY-035) and a Refresh for the roadmap, its items and
  * the lists (D7), its family and category as they will
@@ -182,6 +185,7 @@ function RoadmapView({
   const lists = useRoadmapLists(hasChoiceChange(changes))
   const shown = applyRoadmapChanges(roadmap, changes, lists.lists)
   const publishedState = usePublishedState(roadmap)
+  const added = useAddedRoadmap()
   const title = localise(shown.title, language)
   const retryList = () => {
     void refetchList()
@@ -243,6 +247,10 @@ function RoadmapView({
         </div>
         <RoadmapFamilyLine roadmap={shown} />
         <MatchListsAction roadmap={roadmap} />
+        {/* Only while it is true: publishing it at once ends the notice. */}
+        {added.added && !roadmap.published && (
+          <AddedRoadmapNotice title={title} onDismiss={added.dismiss} />
+        )}
         {publishedState.notice && (
           <PublishedStateNotice
             notice={publishedState.notice}

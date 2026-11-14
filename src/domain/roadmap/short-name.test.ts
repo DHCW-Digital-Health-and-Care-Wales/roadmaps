@@ -4,6 +4,7 @@ import {
   checkShortName,
   SHORT_NAME_MAX_LENGTH,
   shortNameAddress,
+  suggestShortName,
 } from "./short-name"
 
 describe("checkShortName (STY-040 S1)", () => {
@@ -69,6 +70,62 @@ describe("shortNameAddress (STY-040 S1)", () => {
   it("is the same for two short names that are the same", () => {
     expect(shortNameAddress("community nursing")).toBe(
       shortNameAddress("Community-Nursing"),
+    )
+  })
+})
+
+describe("suggestShortName (STY-041 S3)", () => {
+  it("drops a final “roadmap” from the title, in any letter case", () => {
+    expect(suggestShortName("Community Nursing roadmap")).toBe(
+      "Community Nursing",
+    )
+    expect(suggestShortName("  Outpatient Booking  Roadmap ")).toBe(
+      "Outpatient Booking",
+    )
+  })
+
+  it("keeps a “roadmap” that is not the last word, or is the only one", () => {
+    expect(suggestShortName("Roadmap for nursing")).toBe("Roadmap for nursing")
+    expect(suggestShortName("Roadmap")).toBe("Roadmap")
+    expect(suggestShortName("Nursingroadmap")).toBe("Nursingroadmap")
+  })
+
+  it("drops every character a short name can't hold, and the spaces left over", () => {
+    expect(suggestShortName("Community Nursing (Pilot) / 2027 roadmap")).toBe(
+      "Community Nursing Pilot 2027",
+    )
+    expect(suggestShortName("Ynys Môn: tests & scans")).toBe(
+      "Ynys Môn tests scans",
+    )
+    expect(suggestShortName("Follow-up care")).toBe("Follow-up care")
+  })
+
+  it("suggests nothing for a title with nothing a short name can hold", () => {
+    expect(suggestShortName("")).toBe("")
+    expect(suggestShortName(" (…) ")).toBe("")
+  })
+
+  it("suggests no more than a short name can hold", () => {
+    const suggested = suggestShortName(`${"Nursing ".repeat(20)}roadmap`)
+
+    expect(suggested).toBe(`${"Nursing ".repeat(12)}Nurs`)
+    expect(suggested).toHaveLength(SHORT_NAME_MAX_LENGTH)
+    expect(checkShortName(suggested)).toEqual({ shortName: suggested })
+  })
+
+  it.each([
+    "Community Nursing roadmap",
+    "Môn (typed with a mark of its own: Môn)",
+    "A/B testing — 2027!",
+    `${"😀".repeat(60)} emoji`,
+    // Cut where a letter of two UTF-16 units would be split.
+    `a${"𝒜".repeat(80)}`,
+  ])("suggests a name the rule allows, or none, for %j", (title) => {
+    const suggested = suggestShortName(title)
+
+    expect(checkShortName(suggested).shortName).toBe(suggested)
+    expect(["blank", "no-address", undefined]).toContain(
+      checkShortName(suggested).problem,
     )
   })
 })

@@ -9,5 +9,7 @@
       - link "Teuluoedd, categorïau a sefydliadau":
         - /url: /#/families
     - button "Adnewyddu"
+    - button "Ychwanegu map trywydd"
     - heading "Dim mapiau trywydd eto" [level=2]
     - text: Dydy'r daenlen gysylltiedig ddim yn rhestru unrhyw fapiau trywydd eto.
+    - button "Ychwanegu map trywydd"

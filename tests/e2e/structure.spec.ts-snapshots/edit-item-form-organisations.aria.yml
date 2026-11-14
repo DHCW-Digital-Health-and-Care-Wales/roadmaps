@@ -48,5 +48,16 @@
     - text: Velindre (VUNHST)
     - checkbox "Welsh Ambulance (WAST)"
     - text: Welsh Ambulance (WAST)
+  - paragraph: Details
+  - list:
+    - listitem:
+      - text: First bullet point
+      - list:
+        - listitem:
+          - text: Start a line with "-" to nest it under the line above
+          - list:
+            - listitem: Use two dashes to nest it again
+    - listitem: Another top-level bullet point
+  - paragraph: These details have Welsh versions, so they can't be changed here yet.
   - button "Done"
   - button "Cancel"

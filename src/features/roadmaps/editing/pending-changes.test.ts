@@ -661,3 +661,122 @@ describe("a change of tags (STY-037)", () => {
     )
   })
 })
+
+describe("a change of details (STY-039)", () => {
+  const detailed = (...lines: [string, number][]) =>
+    lines.map(([en, level]) => ({ text: { en, cy: "" }, level }))
+  const video = createTestRoadmapItem("Video appointments", {
+    id: "videoxxx",
+    details: detailed(["Follow-up appointments", 0], ["Dermatology", 1]),
+  })
+  const BASE = "Follow-up appointments\n- Dermatology"
+  const MINE = "Follow-up appointments\n- Dermatology\n-- Adult clinics first"
+
+  it("shows the pending details in order, each at its level, in English alone, among the changed fields (S2, S3)", () => {
+    const changed = editItem(NO_CHANGES, undefined, video, 0, { details: MINE })
+
+    expect(changed.items[0]?.fields).toEqual({
+      details: { base: BASE, value: MINE },
+    })
+    expect(applyItemChanges(video, changed.items[0])).toEqual({
+      ...video,
+      details: detailed(
+        ["Follow-up appointments", 0],
+        ["Dermatology", 1],
+        ["Adult clinics first", 2],
+      ),
+    })
+    expect(
+      changedParts(changed).flatMap((part) =>
+        part.kind === "item" ? part.fields : [],
+      ),
+    ).toEqual(["details"])
+  })
+
+  it("is no change once the details are as they were, and no details is a change (S6, S11)", () => {
+    const changed = editItem(NO_CHANGES, undefined, video, 0, { details: MINE })
+
+    expect(
+      editItem(changed, changed.items[0], video, 0, { details: BASE }),
+    ).toEqual(NO_CHANGES)
+    const none = editItem(NO_CHANGES, undefined, video, 0, { details: "" })
+    expect(none.items[0]?.fields).toEqual({
+      details: { base: BASE, value: "" },
+    })
+    expect(applyItemChanges(video, none.items[0]).details).toEqual([])
+  })
+
+  it("is no change for details written another way that show as the same list (S20)", () => {
+    const written = {
+      ...video,
+      details: detailed(["One", 1], ["Two", 3], ["-5 degrees", 1]),
+    }
+
+    expect(
+      editItem(NO_CHANGES, undefined, written, 0, {
+        details: "One\n- Two\n5 degrees",
+      }),
+    ).toEqual(NO_CHANGES)
+  })
+
+  it("is dropped by a read that finds a co-lead wrote the same list, however its hyphens, and kept for another (S15)", () => {
+    const changed = editItem(NO_CHANGES, undefined, video, 0, {
+      details: MINE,
+      title: "Video calls",
+    })
+    const same = {
+      ...video,
+      details: detailed(
+        ["Follow-up appointments", 1],
+        ["Dermatology", 2],
+        ["Adult clinics first", 3],
+      ),
+    }
+    const other = {
+      ...video,
+      details: detailed(["Follow-up appointments", 0], ["Diabetes", 1]),
+    }
+
+    expect(reconcileItems(changed, [same]).items).toEqual([
+      {
+        item: same,
+        position: 0,
+        fields: {
+          title: { base: "Video appointments", value: "Video calls" },
+        },
+      },
+    ])
+    expect(reconcileItems(changed, [other])).toBe(changed)
+  })
+
+  it("takes the read's Welsh details with the details a read already holds", () => {
+    const changed = editItem(NO_CHANGES, undefined, video, 0, {
+      details: "Follow-up appointments",
+      title: "Video calls",
+    })
+    const theirs = {
+      ...video,
+      details: [
+        {
+          text: { en: "Follow-up appointments", cy: "Apwyntiadau dilynol" },
+          level: 0,
+        },
+      ],
+      hasWelshDetails: true,
+    }
+
+    expect(reconcileItems(changed, [theirs]).items[0]?.item).toEqual(theirs)
+  })
+
+  it("finds an item without an ID whose details a lost publish already wrote", () => {
+    const loaded = { ...video, id: null }
+    const changed = editItem(NO_CHANGES, undefined, loaded, 1, {
+      details: "In person",
+    })
+    const written = { ...loaded, details: detailed(["In person", 0]) }
+
+    expect(matchItemChanges([first, written], changed).get(1)).toBe(
+      changed.items[0],
+    )
+  })
+})

@@ -4,7 +4,7 @@
 - **Question**: how should a Product Lead write, nest, reorder and remove an item's
   details, the nested list the public site shows under “What this covers”?
 - **Scope**: the Details field of an item's edit form, for
-  [STY-039](../backlog/EPC-010-item-details/STY-039-edit-an-items-details.md). Base
+  [STY-039](../backlog/_archive/EPC-010-item-details/STY-039-edit-an-items-details.md). Base
   `3d0029e`. Only documents and one prototype page were added; no application code.
 - **Prototypes**: [`item-details-ux-analysis/prototypes.html`](item-details-ux-analysis/prototypes.html),
   one self-contained page; open it in a browser. Nesting is something done, not seen,
@@ -133,8 +133,8 @@ Reads and writes: every design reads only the item's own details. The write of t
 
 ## Related
 
-- [STY-039](../backlog/EPC-010-item-details/STY-039-edit-an-items-details.md) and
-  [EPC-010](../backlog/EPC-010-item-details/README.md).
+- [STY-039](../backlog/_archive/EPC-010-item-details/STY-039-edit-an-items-details.md) and
+  [EPC-010](../backlog/_archive/EPC-010-item-details/README.md).
 - [`item-tags-ux-analysis.md`](item-tags-ux-analysis.md): the tag editors, whose
   design B is this analysis's B.
 - [`roadmap-tab-format.md`](roadmap-tab-format.md): the `Details` column.

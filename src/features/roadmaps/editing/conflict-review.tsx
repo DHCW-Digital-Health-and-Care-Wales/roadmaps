@@ -1,9 +1,10 @@
 import { TriangleAlertIcon } from "lucide-react"
-import type { RefObject } from "react"
+import type { ReactNode, RefObject } from "react"
 import { useTranslation } from "react-i18next"
 
 import { DismissibleNotice } from "@/components/layout/dismissible-notice"
 import { Button } from "@/components/ui/button"
+import { detailsOf } from "@/domain/roadmap/item-details"
 import {
   type FieldConflict,
   isChoiceField,
@@ -12,6 +13,7 @@ import { localise, type LocalisedText } from "@/domain/roadmap/localised-text"
 import { isRoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 import { formatCalendarDate, useLanguage } from "@/i18n"
 
+import { DetailList } from "../components/detail-list"
 import { useOrganisations } from "../hooks/use-organisations"
 import { describeOrganisations, type OpenConflict } from "./conflicts"
 import type { PublishAction } from "./pending-changes-store"
@@ -38,10 +40,10 @@ export interface ConflictReviewProps {
  * A publish someone else's changes stopped (STY-026): each field they changed that the
  * Product Lead also changed, their text beside the current text (a family or category
  * by its name, a placement by its heading, organisations as `describeOrganisations`
- * names them, a date as the page shows it), to keep or give up one by one; then what
- * was lost with removed items. Tags that have gained Welsh versions can only be given
- * up (STY-037 S22). Nothing was written, so it cannot be dismissed until every field is
- * decided.
+ * names them, a date as the page shows it, details as the nested list they will read
+ * as), to keep or give up one by one; then what was lost with removed items. Tags or
+ * details that have gained Welsh versions can only be given up (STY-037 S22, STY-039
+ * S19). Nothing was written, so it cannot be dismissed until every field is decided.
  */
 export function ConflictReview({
   ref,
@@ -64,8 +66,12 @@ export function ConflictReview({
   )
   const { data: organisations } = useOrganisations()
   const deciding = open.length > 0
-  const choosing = open.some(({ conflict }) => !conflict.welshTags)
-  const shown = (conflict: FieldConflict, value: string) => {
+  const choosing = open.some(({ conflict }) => !conflict.gainedWelsh)
+  const shown = (conflict: FieldConflict, value: string): ReactNode => {
+    if (conflict.subject === "item" && conflict.field === "details") {
+      // None reads "No text", as any other field does.
+      return value === "" ? "" : <DetailList details={detailsOf(value)} />
+    }
     if (conflict.subject === "roadmap" && isChoiceField(conflict.field)) {
       return describe(conflict.field, value)
     }
@@ -131,9 +137,15 @@ export function ConflictReview({
                       value={shown(conflict, conflict.current)}
                     />
                   </dl>
-                  {conflict.welshTags ? (
+                  {conflict.gainedWelsh ? (
                     <>
-                      <p>{t("roadmaps.publish.notice.refused.welshTags")}</p>
+                      <p>
+                        {t(
+                          conflict.field === "details"
+                            ? "roadmaps.publish.notice.refused.welshDetails"
+                            : "roadmaps.publish.notice.refused.welshTags",
+                        )}
+                      </p>
                       <div>
                         <Button
                           size="sm"
@@ -193,7 +205,7 @@ export function ConflictReview({
   )
 }
 
-function ConflictValue({ label, value }: { label: string; value: string }) {
+function ConflictValue({ label, value }: { label: string; value: ReactNode }) {
   const { t } = useTranslation()
   return (
     <div className="flex flex-col gap-1 border border-border bg-card p-3">

@@ -17,9 +17,11 @@ import { Label } from "@/components/ui/label"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Textarea } from "@/components/ui/textarea"
 import { isCalendarDate } from "@/domain/roadmap/calendar-date"
+import { detailsOf, detailsValue } from "@/domain/roadmap/item-details"
 import { tagsOf, tagsValue } from "@/domain/roadmap/roadmap-changes"
 
 import { RoadmapSwatch } from "../components/roadmap-swatch"
+import { DetailsField } from "./details-field"
 import type { TagInUse } from "./item-tags"
 import { OpeningField } from "./opening-field"
 import { TagsField } from "./tags-field"
@@ -64,6 +66,12 @@ export interface EditFormField<F extends string> {
    * the field kept. `inUse` are the tags the roadmap's other items carry, to offer.
    */
   tags?: { inUse: readonly TagInUse[] }
+  /**
+   * An item's details (STY-039), edited in a `DetailsField`, which opens on request:
+   * the field's value holds them as `detailsValue` gives them, with a detail still
+   * being written kept.
+   */
+  details?: true
   /** Held at its value, as while its options are read. */
   disabled?: boolean
   /** Shown as `text`, not edited, with a notice of why (STY-028 S6, STY-037 S20). */
@@ -98,8 +106,9 @@ export interface EditFormProps<F extends string> {
 /**
  * The form an item or the roadmap's own text turns into for editing (STY-025 S1, S4,
  * S5): a labelled field each, typed, chosen from a list (STY-028), ticked from one that
- * opens on request (STY-034, STY-038), tags added, renamed and removed (STY-037) or a
- * date picked (STY-036), or shown read-only when it can't be changed, then "Done" to
+ * opens on request (STY-034, STY-038), tags added, renamed and removed (STY-037),
+ * details written as an outline (STY-039) or a date picked (STY-036), or shown
+ * read-only when it can't be changed, then "Done" to
  * keep the values pending and Cancel (or Escape, unless a field has used it) to leave
  * them. The title is required, and a date is a real one and not after
  * today: confirming otherwise keeps the form open with an error linked to each field,
@@ -255,6 +264,19 @@ export function EditForm<F extends string>({
               inUse={field.tags.inUse}
               onChange={(tags) => {
                 change(tagsValue(tags))
+              }}
+            />
+          )
+        }
+        if (field.details) {
+          return (
+            <DetailsField
+              key={field.name}
+              label={field.label}
+              // What the form holds, so a field drawn again shows what Done keeps.
+              initial={detailsOf(values[field.name])}
+              onChange={(details) => {
+                change(detailsValue(details))
               }}
             />
           )

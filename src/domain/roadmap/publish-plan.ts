@@ -8,6 +8,7 @@ import { AppError } from "@/lib/errors"
 
 import { isCalendarDate } from "./calendar-date"
 import { findEditedItem } from "./find-edited-item"
+import { detailsOf, detailsValue } from "./item-details"
 import { createItemId } from "./item-id"
 import type { Roadmap } from "./roadmap"
 import {
@@ -77,9 +78,10 @@ const REQUIRED_FIELDS: ReadonlySet<string> = new Set(["title"])
  * Decides what publishing `changes` over `snapshot` (`null`: the roadmap is no longer
  * listed) writes: each pending value that differs from the current one, unless a
  * co-lead changed it too, plus an ID for every item without one. Values are trimmed.
- * An item's organisations are compared as a set and its tags as the ordered list; tags
- * are never written to an item that now has Welsh ones (STY-037 S22), and a change made
- * over whatever the field holds (`FieldChange.overwrite`) is never a conflict. Throws
+ * An item's organisations are compared as a set, its tags as the ordered list and its
+ * details as the list they show as; tags are never written to an item that now has
+ * Welsh ones, nor details (STY-037 S22, STY-039 S19), and a change made over whatever
+ * the field holds (`FieldChange.overwrite`) is never a conflict. Throws
  * `AppError('unknown')` for a blank title, a placement that is none of the six, an
  * organisation the list doesn't hold or a `Last updated` that is no `YYYY-MM-DD` date,
  * which callers never send, and `AppError('invalid-data')` for a family or category
@@ -141,9 +143,12 @@ export function planRoadmapPublish(
     for (const { field, base, value } of pending) {
       const currentValue = itemValue(current, field)
       if (currentValue === value) continue
-      // Writing the English alone could pair the wrong Welsh with a tag (STY-037 D16).
-      const welshTags = field === "tags" && current.hasWelshTags
-      if (currentValue !== base || welshTags) {
+      // Writing the English alone could pair the wrong Welsh with a tag or a detail
+      // (STY-037 D16, STY-039 D8).
+      const gainedWelsh =
+        (field === "tags" && current.hasWelshTags) ||
+        (field === "details" && current.hasWelshDetails)
+      if (currentValue !== base || gainedWelsh) {
         conflicts.push({
           subject: "item",
           item: itemChanges,
@@ -151,7 +156,7 @@ export function planRoadmapPublish(
           base,
           pending: value,
           current: currentValue,
-          ...(welshTags && { welshTags }),
+          ...(gainedWelsh && { gainedWelsh }),
         })
       } else {
         itemWrites.push({ index, field, value })
@@ -217,8 +222,8 @@ export function heldWrites(
 
 /**
  * A change's trimmed value with its base, or `null` when it changes nothing: a set of
- * organisations as `organisationIdsValue` gives it, and tags as `tagsValue` does. One
- * set over whatever the field holds is never nothing.
+ * organisations as `organisationIdsValue` gives it, tags as `tagsValue` does and details
+ * as `detailsValue` does. One set over whatever the field holds is never nothing.
  */
 function pendingValue(
   field: string,
@@ -231,7 +236,9 @@ function pendingValue(
       ? listedOrganisationIdsValue(change.value, snapshot.organisationIds)
       : field === "tags"
         ? tagsValue(tagsOf(change.value))
-        : change.value.trim()
+        : field === "details"
+          ? detailsValue(detailsOf(change.value))
+          : change.value.trim()
   if (value === "" && REQUIRED_FIELDS.has(field)) {
     throw new AppError("unknown", {
       message: `A blank ${field} can't be published`,

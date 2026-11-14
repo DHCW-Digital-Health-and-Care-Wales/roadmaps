@@ -8,7 +8,8 @@
   is copied; amended in ADR-014: an item's placement and organisations become editable;
   amended by STY-035: a roadmap's published state is written on its own; amended by
   STY-036: `Last updated` becomes editable, and publishing sets it only when asked;
-  amended by STY-037: an item's tags become editable, unless it has Welsh ones)
+  amended by STY-037: an item's tags become editable, unless it has Welsh ones;
+  amended by STY-039: an item's details become editable, unless it has Welsh ones)
 
 ## Context
 
@@ -37,7 +38,8 @@ first.
   `Last updated` writable.)
 - **A roadmap item's text**: title (required), description, expected outcome and phase
   (Option 2), on every item, unplaced ones included. Tags, organisations, details,
-  placement and Welsh stay read-only.
+  placement and Welsh stay read-only. (The amendments below make all but Welsh
+  editable.)
 - **English only** (Option 3): Welsh cells are never written, even when the English
   beside them changes.
 - A required field is not blank after trimming. Every other field may be cleared. No
@@ -232,8 +234,35 @@ Nothing checks permission in advance.
   nothing read as English alone.
 - **Welsh tags written since the item was read are a conflict that can't be kept**
   (D17): the publish writes nothing, whatever the English cell then holds, and the review
-  offers only to discard the tag change (`FieldConflict.welshTags`). Tags the cell
-  already holds are published without a write, as any field is.
+  offers only to discard the tag change (`FieldConflict.gainedWelsh`, which STY-039
+  renamed from `welshTags` when details took the same rule). Tags the cell already
+  holds are published without a write, as any field is.
+
+### STY-039 amendments
+
+- **An item's details become a pending edit** (STY-039 D1, D3; editor A, owner, D10):
+  written, nested to three levels (owner, D12), reordered and removed in its edit form.
+  This amends _What is editable_ and the STY-037 amendments, which kept details
+  read-only; Welsh still is.
+- **Details are one field for conflicts, compared as the list they show as** (D4, D18):
+  each detail's text, in order, at the level the form shows it, three at most. A cell
+  whose every line starts with a hyphen, or that skips a level, shows as the same list
+  as one written the editor's way, so it is no change and no conflict, and a co-lead
+  who only rewrites the hyphens changes nothing. Hyphens and spaces before a detail's
+  text are never part of it (D5, D21).
+- **Publishing writes the item's `Details` cell alone** (S14; owner, D14): a line for
+  each detail, in order, starting with a hyphen for each level it is nested and then a
+  space, a top-level line with neither, as text, or an empty cell for none, adding the
+  `Details` column when missing. A cell written another way is left as it is until its
+  details are changed, then written this way (S20).
+- **No Welsh cell is written, and details that have Welsh are not edited** (owner, D11;
+  D8): while an item's `Details (cy)` cell holds anything, paired with the English or
+  not, the form shows its details without a way to change them, as a Welsh line takes
+  its place and nesting from the English line in the same position. `RoadmapItem` gains
+  `hasWelshDetails` to say so (amends ADR-011).
+- **Welsh details written since the item was read are a conflict that can't be kept**
+  (S19): the publish writes nothing, and the review offers only to discard the change
+  of details (`FieldConflict.gainedWelsh`).
 
 ## Options (owner's choice marked ✅, 2026-11-11)
 

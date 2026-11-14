@@ -268,6 +268,8 @@ function toItem(row: ItemRow, seenIds: Set<string>): RoadmapItem | null {
     hasWelshTags: row.readWelsh("Labels") !== "",
     ...readOrganisations(row),
     details: readDetails(row),
+    // As for tags: whatever the Welsh cell holds (STY-039 D8).
+    hasWelshDetails: row.readWelsh("Details") !== "",
   }
 }
 

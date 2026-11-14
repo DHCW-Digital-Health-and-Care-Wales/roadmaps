@@ -24,7 +24,7 @@ moves to `_archive/`, where its row here still points.
 | [EPC-007 Item placement and organisations](_archive/EPC-007-item-placement-and-organisations/README.md)  | STY-031–STY-034: move an item between horizons and sections; organisations served by the repository, listed, and chosen per item                                                                                     | Done   |
 | [EPC-008 Publishing and freshness](_archive/EPC-008-publishing-and-freshness/README.md)                  | STY-035–STY-036: publish or unpublish a roadmap from its page, refused when the public sync would fail; set its Last updated date                                                                                    | Done   |
 | [EPC-009 Item tags](_archive/EPC-009-item-tags/README.md)                                                | STY-037–STY-038: add, rename and remove an item's tags in its edit form, offered the tags the roadmap's other items carry (editor B chosen from four prototypes); Tags and Organisations open on request in the form | Done   |
-| [EPC-010 Item details](EPC-010-item-details/README.md)                                                   | STY-039: write, nest, reorder and remove an item's details, the nested list the public site shows under “What this covers”, in its edit form (editor A, an outline, chosen from three prototypes)                    | Active |
+| [EPC-010 Item details](_archive/EPC-010-item-details/README.md)                                          | STY-039: write, nest, reorder and remove an item's details, the nested list the public site shows under “What this covers”, in its edit form (editor A, an outline, chosen from three prototypes)                    | Done   |
 
 ## Chores
 

@@ -525,7 +525,7 @@ describe("planRoadmapPublish", () => {
               base: BASE,
               pending: "Patients, Carers",
               current: BASE,
-              welshTags: true,
+              gainedWelsh: true,
             },
           ],
           missingItems: [],
@@ -555,6 +555,171 @@ describe("planRoadmapPublish", () => {
 
       expect(other.kind === "write" && other.writes.items).toEqual([
         { index: 0, id: "bookingx", field: "phase", value: "Beta" },
+      ])
+      expect(held).toEqual({
+        kind: "settled",
+        outcome: { status: "published" },
+      })
+    })
+  })
+
+  describe("details, decided as the list they show as (STY-039)", () => {
+    const detailed = (...lines: [string, number][]) =>
+      lines.map(([en, level]) => ({ text: { en, cy: "" }, level }))
+    const item = createTestRoadmapItem("Video appointments", {
+      id: "videoxxx",
+      details: detailed(["Follow-up appointments", 0], ["Dermatology", 1]),
+    })
+    const BASE = "Follow-up appointments\n- Dermatology"
+    const MINE = "Follow-up appointments\n- Dermatology\n-- Adult clinics first"
+    const redetail = (base: string, value: string) => ({
+      roadmap: {},
+      items: [{ item, position: 0, fields: { details: { base, value } } }],
+    })
+
+    it("writes the details as lines, a hyphen for each level shown and a space, or none (S14)", () => {
+      const changed = planRoadmapPublish(
+        redetail(
+          BASE,
+          "- Follow-up  appointments \n--- Dermatology\n\nIn person",
+        ),
+        snapshotOf([item]),
+      )
+      const none = planRoadmapPublish(redetail(BASE, ""), snapshotOf([item]))
+
+      expect(changed.kind === "write" && changed.writes.items).toEqual([
+        {
+          index: 0,
+          id: "videoxxx",
+          field: "details",
+          value: "Follow-up appointments\n- Dermatology\nIn person",
+        },
+      ])
+      expect(none.kind === "write" && none.writes.items).toEqual([
+        { index: 0, id: "videoxxx", field: "details", value: "" },
+      ])
+    })
+
+    it("is a conflict when a co-lead changed the list, and none for details that show as the same list (S15, D4)", () => {
+      const intent = redetail(BASE, MINE)
+      const theirs = planRoadmapPublish(
+        intent,
+        snapshotOf([
+          {
+            ...item,
+            details: detailed(
+              ["Follow-up appointments", 0],
+              ["Rheumatology", 1],
+            ),
+          },
+        ]),
+      )
+      // The same list, every line written a hyphen deeper.
+      const same = planRoadmapPublish(
+        intent,
+        snapshotOf([
+          {
+            ...item,
+            details: detailed(
+              ["Follow-up appointments", 1],
+              ["Dermatology", 2],
+              ["Adult clinics first", 3],
+            ),
+          },
+        ]),
+      )
+      // The base list, its hyphens rewritten: the pending details are still written.
+      const rewritten = planRoadmapPublish(
+        intent,
+        snapshotOf([
+          {
+            ...item,
+            details: detailed(
+              ["Follow-up appointments", 0],
+              ["Dermatology", 3],
+            ),
+          },
+        ]),
+      )
+
+      expect(theirs).toEqual({
+        kind: "settled",
+        outcome: {
+          status: "refused",
+          conflicts: [
+            {
+              subject: "item",
+              item: intent.items[0],
+              field: "details",
+              base: BASE,
+              pending: MINE,
+              current: "Follow-up appointments\n- Rheumatology",
+            },
+          ],
+          missingItems: [],
+        },
+      })
+      expect(same).toEqual({
+        kind: "settled",
+        outcome: { status: "published" },
+      })
+      expect(rewritten.kind === "write" && rewritten.writes.items).toEqual([
+        { index: 0, id: "videoxxx", field: "details", value: MINE },
+      ])
+    })
+
+    it("refuses, as a conflict that can't be kept, when the item's details have gained Welsh, even with the English as it was (S19)", () => {
+      const intent = redetail(BASE, MINE)
+
+      const plan = planRoadmapPublish(
+        intent,
+        snapshotOf([{ ...item, hasWelshDetails: true }]),
+      )
+
+      expect(plan).toEqual({
+        kind: "settled",
+        outcome: {
+          status: "refused",
+          conflicts: [
+            {
+              subject: "item",
+              item: intent.items[0],
+              field: "details",
+              base: BASE,
+              pending: MINE,
+              current: BASE,
+              gainedWelsh: true,
+            },
+          ],
+          missingItems: [],
+        },
+      })
+    })
+
+    it("writes the item's other fields beside Welsh details, and takes details already held as published (S18, S19)", () => {
+      const withWelsh = { ...item, hasWelshDetails: true }
+      const other = planRoadmapPublish(
+        {
+          roadmap: {},
+          items: [
+            {
+              item: withWelsh,
+              position: 0,
+              fields: { phase: { base: "", value: "Beta" } },
+            },
+          ],
+        },
+        snapshotOf([withWelsh]),
+      )
+      const held = planRoadmapPublish(
+        redetail(BASE, "Follow-up appointments"),
+        snapshotOf([
+          { ...withWelsh, details: detailed(["Follow-up appointments", 0]) },
+        ]),
+      )
+
+      expect(other.kind === "write" && other.writes.items).toEqual([
+        { index: 0, id: "videoxxx", field: "phase", value: "Beta" },
       ])
       expect(held).toEqual({
         kind: "settled",

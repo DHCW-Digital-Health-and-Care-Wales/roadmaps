@@ -267,6 +267,7 @@ export const cy = {
         placement: "Gorwel neu adran",
         tags: "Tagiau (Saesneg)",
         organisationIds: "Sefydliadau",
+        details: "Manylion (Saesneg)",
       },
       organisationChoice: "{{shortName}} ({{code}})",
       unknownOrganisations_zero:
@@ -322,6 +323,69 @@ export const cy = {
         },
         welshLocked:
           "Mae fersiynau Cymraeg o'r tagiau hyn, felly does dim modd eu newid yma eto.",
+      },
+      details: {
+        subject: "manylion",
+        none: "Dim manylion",
+        hint: "Mae'r wefan gyhoeddus yn rhestru'r rhain o dan “Beth mae hyn yn ei gynnwys”.",
+        keys: "Pwyswch Enter am fanylyn newydd. I nythu un, dechreuwch ef â chysylltnod.",
+        name: {
+          top: "Manylyn {{position}} o {{total}}, lefel uchaf",
+          nested:
+            "Manylyn {{position}} o {{total}}, wedi'i nythu o dan “{{parent}}”",
+        },
+        selected: "Y manylyn a ddewiswyd",
+        actions: {
+          moveOut: "Symud allan",
+          moveIn: "Symud i mewn",
+          moveUp: "Symud i fyny",
+          moveDown: "Symud i lawr",
+          remove: "Tynnu",
+        },
+        emptySubject: "y manylyn gwag",
+        refused: {
+          first: "Does dim byd uwchben y manylyn cyntaf iddo nythu oddi tano.",
+          nested: "Mae eisoes wedi'i nythu o dan y manylyn uwchben.",
+          deepest:
+            "Mae tair lefel i restr, felly all hwn ddim mynd yn ddyfnach.",
+          top: "Mae eisoes ar y lefel uchaf.",
+          firstAtLevel: "Mae eisoes yn gyntaf ar ei lefel.",
+          lastAtLevel: "Mae eisoes yn olaf ar ei lefel.",
+          nothing: "Does dim manylyn i'w dynnu.",
+        },
+        said: {
+          movedIn: "Symudwyd i mewn, o dan “{{parent}}”.",
+          movedOutTop: "Symudwyd allan, i'r lefel uchaf.",
+          movedOutUnder: "Symudwyd allan, o dan “{{parent}}”.",
+          newTop: "Manylyn newydd ar y lefel uchaf.",
+          newUnder: "Manylyn newydd o dan “{{parent}}”.",
+          movedUp: "Symudwyd i fyny.",
+          movedDown: "Symudwyd i lawr.",
+          joined: "Unwyd â'r manylyn uwchben.",
+          removedEmpty: "Tynnwyd y manylyn gwag.",
+          added_zero: "Ychwanegwyd {{count, number}} manylyn.",
+          added_one: "Ychwanegwyd {{count, number}} manylyn.",
+          added_two: "Ychwanegwyd {{count, number}} manylyn.",
+          added_few: "Ychwanegwyd {{count, number}} manylyn.",
+          added_many: "Ychwanegwyd {{count, number}} manylyn.",
+          added_other: "Ychwanegwyd {{count, number}} manylyn.",
+          removed: "Tynnwyd “{{detail}}”.",
+          nestedMoved_zero: "Symudodd y manylyn oddi tano i fyny un lefel.",
+          nestedMoved_one: "Symudodd y manylyn oddi tano i fyny un lefel.",
+          nestedMoved_two:
+            "Symudodd y {{count, number}} manylyn oddi tano i fyny un lefel.",
+          nestedMoved_few:
+            "Symudodd y {{count, number}} manylyn oddi tano i fyny un lefel.",
+          nestedMoved_many:
+            "Symudodd y {{count, number}} manylyn oddi tano i fyny un lefel.",
+          nestedMoved_other:
+            "Symudodd y {{count, number}} manylyn oddi tano i fyny un lefel.",
+          putBack: "Rhoddwyd “{{detail}}” yn ôl.",
+        },
+        undoRemove: "Dadwneud",
+        undoRemoveSubject: "tynnu {{detail}}",
+        welshLocked:
+          "Mae fersiynau Cymraeg o'r manylion hyn, felly does dim modd eu newid yma eto.",
       },
       openingField: {
         change: "Newid",
@@ -501,6 +565,8 @@ export const cy = {
           useTheirs: "Defnyddio'u testun nhw",
           welshTags:
             "Mae fersiynau Cymraeg o'r tagiau hyn erbyn hyn, felly does dim modd eu newid yma eto.",
+          welshDetails:
+            "Mae fersiynau Cymraeg o'r manylion hyn erbyn hyn, felly does dim modd eu newid yma eto.",
           discardMine: "Gwaredu fy newid",
           removed:
             "Mae rhywun arall wedi tynnu neu newid “{{title}}”, felly doedd dim modd cadw eich newidiadau iddo.",

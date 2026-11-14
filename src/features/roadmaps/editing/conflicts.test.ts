@@ -343,7 +343,7 @@ describe("Welsh tags written since an item was read (STY-037 S22)", () => {
     base: "Patients",
     pending: "Patients, Carers",
     current: "Patients",
-    welshTags: true,
+    gainedWelsh: true,
   }
   const pending: RoadmapChanges = { roadmap: {}, items: [retagged] }
 
@@ -364,6 +364,68 @@ describe("Welsh tags written since an item was read (STY-037 S22)", () => {
     const [shown] = withCurrentItemText([booking], [welshTags], [booking])
 
     expect(shown).toEqual({ ...booking, hasWelshTags: true })
+  })
+})
+
+describe("Welsh details written since an item was read (STY-039 S19)", () => {
+  const video = createTestRoadmapItem("Video appointments", {
+    id: "videoxxx",
+    details: [{ text: { en: "Follow-up appointments", cy: "" }, level: 0 }],
+  })
+  const redetailed: ItemChanges = {
+    item: video,
+    position: 0,
+    fields: {
+      details: {
+        base: "Follow-up appointments",
+        value: "Follow-up appointments\n- Dermatology",
+      },
+      title: { base: "Video appointments", value: "Video calls" },
+    },
+  }
+  const welshDetails: FieldConflict = {
+    subject: "item",
+    item: redetailed,
+    field: "details",
+    base: "Follow-up appointments",
+    pending: "Follow-up appointments\n- Dermatology",
+    current: "Follow-up appointments",
+    gainedWelsh: true,
+  }
+  const pending: RoadmapChanges = { roadmap: {}, items: [redetailed] }
+
+  it("stays open, though the English is as it was edited from, until the change of details is given up", () => {
+    expect(
+      openConflicts([welshDetails], pending).map(({ yours }) => yours),
+    ).toEqual(["Follow-up appointments\n- Dermatology"])
+
+    const dropped = takeTheirs(pending, welshDetails)
+
+    expect(dropped.items[0]?.fields).toEqual({
+      title: { base: "Video appointments", value: "Video calls" },
+    })
+    expect(openConflicts([welshDetails], dropped)).toEqual([])
+  })
+
+  it("shows the item as having Welsh details, so its form no longer changes them", () => {
+    const [shown] = withCurrentItemText([video], [welshDetails], [video])
+
+    expect(shown).toEqual({ ...video, hasWelshDetails: true })
+  })
+
+  it("shows a co-lead's details on the item, each at its level", () => {
+    const theirs: FieldConflict = {
+      ...welshDetails,
+      current: "Follow-up appointments\n- Diabetes",
+    }
+    delete theirs.gainedWelsh
+
+    const [shown] = withCurrentItemText([video], [theirs], [video])
+
+    expect(shown?.details).toEqual([
+      { text: { en: "Follow-up appointments", cy: "" }, level: 0 },
+      { text: { en: "Diabetes", cy: "" }, level: 1 },
+    ])
   })
 })
 

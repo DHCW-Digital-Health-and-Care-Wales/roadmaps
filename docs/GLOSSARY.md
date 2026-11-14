@@ -76,6 +76,13 @@ roadmap's other items carry; a shared list may follow. A comma or a line break e
 tag, so a tag holds neither.
 _Avoid_: Label, category, keyword
 
+**Detail**:
+One line of the list a roadmap item's card shows under "Details", and the public site
+under "What this covers". A detail is nested under the one above it or sits at the top
+level; a list has three levels. It is text on one line, which never starts with a
+hyphen: in the data source, hyphens at the start of a line are its nesting.
+_Avoid_: Bullet, point, sub-item
+
 **Phase**:
 A free-text word shown above a roadmap item's title, such as "Discovery" or "Beta",
 saying what stage the work is at. Not a roadmap's status label.

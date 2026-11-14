@@ -37,5 +37,9 @@
   - paragraph: Organisations
   - button "Change organisations"
   - text: All Wales
+  - paragraph: Details
+  - button "Add details"
+  - paragraph: The public site lists these under “What this covers”.
+  - paragraph: No details
   - button "Done"
   - button "Cancel"

@@ -1,3 +1,4 @@
+import { detailsOf } from "@/domain/roadmap/item-details"
 import { isCalendarDate } from "@/domain/roadmap/calendar-date"
 import type { Category } from "@/domain/roadmap/category"
 import type { Family } from "@/domain/roadmap/family"
@@ -553,10 +554,10 @@ function setRoadmapText(
 }
 
 /**
- * Sets an item's English, placement, tags or organisations as a later read gives it:
- * blank optional text is none, a value no placement has leaves the item unplaced with it
- * as its horizon, written tags are English alone, and written organisations hold known
- * codes only.
+ * Sets an item's English, placement, tags, organisations or details as a later read
+ * gives it: blank optional text is none, a value no placement has leaves the item
+ * unplaced with it as its horizon, written tags and details are English alone, and
+ * written organisations hold known codes only.
  */
 function setItemValue(
   item: RoadmapItem,
@@ -573,6 +574,12 @@ function setItemValue(
   } else if (field === "organisationIds") {
     item.organisationIds = organisationIdsOf(value)
     item.unknownOrganisationCodes = []
+  } else if (field === "details") {
+    // The plan writes details only to an item with no Welsh ones (STY-039 S19).
+    item.details = detailsOf(value).map(({ text, level }) => ({
+      text: { en: text, cy: "" },
+      level,
+    }))
   } else if (field === "title") {
     item.title = { ...item.title, en: value }
   } else {

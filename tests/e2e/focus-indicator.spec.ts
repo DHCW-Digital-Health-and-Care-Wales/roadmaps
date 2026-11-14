@@ -107,9 +107,11 @@ async function tabTo(page: Page, target: Locator, key = "Tab") {
  */
 async function expectEveryStopShowsAnIndicator(page: Page) {
   const colours = await focusColours(page)
+  // A control taken out of the Tab order is no stop: the details outline keeps one of
+  // its text fields in it at a time (STY-039 S24).
   const stops = page
     .locator(
-      'a[href], button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])',
+      ':is(a[href], button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]):not([tabindex="-1"])',
     )
     .filter({ visible: true })
   const expected = new Set(
@@ -206,6 +208,13 @@ for (const theme of THEMES) {
       await expect(
         tags.getByRole("textbox", { name: "Rename Service Y" }),
       ).toBeFocused()
+      // A third item's Details field opened, so the tour stops on the outline's one
+      // stop and the buttons under it (STY-039).
+      const detailed = "Earlier delivery this year"
+      await main.getByRole("button", { name: `Edit ${detailed}` }).click()
+      const details = main.getByRole("form", { name: detailed })
+      await details.getByRole("button", { name: "Change details" }).click()
+      await expect(details.getByRole("textbox").last()).toBeVisible()
 
       await expectEveryStopShowsAnIndicator(page)
     })

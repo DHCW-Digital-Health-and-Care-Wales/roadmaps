@@ -335,6 +335,84 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expectNoAxeViolations(page, theme)
     })
 
+    test("an item's details: shut, open, nested, a refusal, a removal with Undo, then the changed card (STY-039)", async ({
+      page,
+    }) => {
+      const title = "Earlier delivery this year"
+      await page.goto("./#/roadmaps/producta")
+      await connect(page)
+      const main = page.getByRole("main")
+      await main.getByRole("button", { name: `Edit ${title}` }).click()
+      const form = main.getByRole("form", { name: title })
+      await expect(
+        form.getByRole("button", { name: "Change details" }),
+      ).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+
+      await form.getByRole("button", { name: "Change details" }).click()
+      const field = form.getByRole("group", { name: "Details" })
+      await expect(field.getByRole("textbox").first()).toBeFocused()
+      await expectNoAxeViolations(page, theme)
+
+      // A third level, by a hyphen typed at the start of each new detail.
+      await page.keyboard.press("End")
+      await page.keyboard.press("Enter")
+      await page.keyboard.type("-Nested")
+      await page.keyboard.press("Enter")
+      await page.keyboard.type("-Third level")
+      await expect(
+        field.getByRole("textbox", {
+          name: "Detail 3 of 4, nested under “Nested”",
+        }),
+      ).toBeFocused()
+      await expectNoAxeViolations(page, theme)
+
+      // A refusal: `aria-disabled` holds Playwright back, not the button.
+      await field
+        .getByRole("button", { name: "Move in Third level" })
+        .click({ force: true })
+      await expect(field.getByRole("status")).toHaveText(
+        "It is already nested under the detail above.",
+      )
+      await expectNoAxeViolations(page, theme)
+
+      await field.getByRole("button", { name: "Remove Third level" }).click()
+      await expect(
+        field.getByRole("button", { name: "Undo removing Third level" }),
+      ).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+
+      await form.getByRole("button", { name: "Done" }).click()
+      await expect(main.getByText("Nested", { exact: true })).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+    })
+
+    test("an item with no details, and one whose Welsh details can't be changed (STY-039)", async ({
+      page,
+    }) => {
+      await page.goto("./#/roadmaps/producta")
+      await connect(page)
+      const main = page.getByRole("main")
+      await main.getByRole("button", { name: "Edit Minimal card" }).click()
+      const empty = main.getByRole("form", { name: "Minimal card" })
+      await expect(empty.getByText("No details")).toBeVisible()
+      await empty.getByRole("button", { name: "Add details" }).click()
+      await expect(
+        empty.getByRole("textbox", { name: "Detail 1 of 1, top level" }),
+      ).toBeFocused()
+      await expectNoAxeViolations(page, theme)
+      await empty.getByRole("button", { name: "Cancel" }).click()
+
+      const item = "Example card with every column"
+      await main.getByRole("button", { name: `Edit ${item}` }).click()
+      await expect(
+        main
+          .getByRole("form", { name: item })
+          .getByText(/^These details have Welsh versions/),
+      ).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+    })
+
     test("an item with no organisations, its field shut then open (STY-038)", async ({
       page,
     }) => {

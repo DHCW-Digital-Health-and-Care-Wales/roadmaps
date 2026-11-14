@@ -1,8 +1,8 @@
 # EPC-010: Item details — a nested list a Product Lead writes here, stored as hyphens at the start of a line
 
-- **Status**: Active — one story, STY-039, Proposed: the owner chose editor A, the
-  outline
-- **Progress**: 0 of 1 terminal; next selectable: STY-039; blocked on: nothing
+- **Status**: Done — its one story, STY-039, is delivered in its PR, which awaits the
+  owner's merge
+- **Progress**: 1 of 1 terminal
 - **Binding ADRs**: ADR-012, ADR-014, ADR-011, ADR-010, ADR-008, ADR-002
 
 ## Summary
@@ -135,7 +135,7 @@ STY-039 reuses (STY-037 _Contract for dependents_).
 
 | ID      | Story                                                                      | Area                                       | Depends on | State |
 | ------- | -------------------------------------------------------------------------- | ------------------------------------------ | ---------- | ----- |
-| STY-039 | [A Product Lead edits an item's details](STY-039-edit-an-items-details.md) | Domain + Infra + UI + i18n (en + cy) + E2E | STY-037    |       |
+| STY-039 | [A Product Lead edits an item's details](STY-039-edit-an-items-details.md) | Domain + Infra + UI + i18n (en + cy) + E2E | STY-037    | ✅    |
 
 ## Sequencing
 
@@ -158,10 +158,10 @@ None.
 
 ## Related
 
-- [`docs/analysis/item-details-ux-analysis.md`](../../analysis/item-details-ux-analysis.md):
+- [`docs/analysis/item-details-ux-analysis.md`](../../../analysis/item-details-ux-analysis.md):
   the three editors compared, with the prototypes to try. Outcome: A, the outline.
 - `docs/analysis/roadmap-tab-format.md`: the `Details` column and its Welsh pairing.
-- [EPC-009](../_archive/EPC-009-item-tags/README.md): item tags, whose field, form changes and
+- [EPC-009](../EPC-009-item-tags/README.md): item tags, whose field, form changes and
   Welsh rule this epic follows.
 - ADR-011 (the item model), ADR-012 (publishing), ADR-014 (the organisations precedent).
 - Persona: `docs/backlog/personas/product-lead.md` (_Add other details where

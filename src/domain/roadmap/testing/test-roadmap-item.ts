@@ -21,6 +21,7 @@ export function createTestRoadmapItem(
     organisationIds: [],
     unknownOrganisationCodes: [],
     details: [],
+    hasWelshDetails: false,
     ...overrides,
   }
 }

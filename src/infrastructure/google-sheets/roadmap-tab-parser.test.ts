@@ -135,6 +135,7 @@ describe("parseRoadmapTab", () => {
             },
           },
         ],
+        hasWelshDetails: true,
       })
     })
 
@@ -460,6 +461,36 @@ describe("parseRoadmapTab", () => {
       expect(tab.items[0]?.hasWelshTags).toBe(false)
     })
 
+    it.each([
+      ["that pairs with the English", "One\n- Two", "Un\n- Dau", true],
+      ["with another count of lines", "One\n- Two", "Un", true],
+      ["of hyphens alone", "One", "-", true],
+      ["with no English", "", "Un", true],
+      ["blank", "One", "  ", false],
+    ])(
+      "says whether an item has Welsh details, shown or not: a Welsh cell %s (STY-039 D8)",
+      (_, details, welsh, expected) => {
+        const tab = parseRows({
+          Title: "An item",
+          Horizon: "Now",
+          Details: details,
+          "Details (cy)": welsh,
+        })
+
+        expect(tab.items[0]?.hasWelshDetails).toBe(expected)
+      },
+    )
+
+    it("says an item has no Welsh details in a tab with no Welsh details column", () => {
+      const tab = parseUnder(headerWithout("Details (cy)"), {
+        Title: "An item",
+        Horizon: "Now",
+        Details: "One",
+      })
+
+      expect(tab.items[0]?.hasWelshDetails).toBe(false)
+    })
+
     it("pairs tags by position, a `-` or blank Welsh tag showing the English", () => {
       const tab = parseRows({
         Title: "An item",
@@ -628,7 +659,10 @@ describe("parseRoadmapTab", () => {
         "Details (cy)": "Manylyn",
       })
       expect(tab.items[0]).toEqual(
-        createTestRoadmapItem("An item", { hasWelshTags: true }),
+        createTestRoadmapItem("An item", {
+          hasWelshTags: true,
+          hasWelshDetails: true,
+        }),
       )
       expect(tab.problems.map(({ code, column }) => [code, column])).toEqual([
         ["welsh-without-english", "Labels (cy)"],

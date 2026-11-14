@@ -18,7 +18,9 @@ import {
 } from "@/domain/roadmap/roadmap-placement"
 import { useLanguage } from "@/i18n"
 
+import { DetailList } from "../components/detail-list"
 import { RoadmapItemCard } from "../components/roadmap-item-card"
+import { localiseDetails } from "../nest-item-details"
 import { shortNamesOf, sortOrganisations } from "../sort-organisations"
 import { EditControls } from "./edit-controls"
 import { EditForm, type EditFormField } from "./edit-form"
@@ -85,11 +87,12 @@ export interface EditableItemCardProps {
 export type CardControl = "edit" | "move"
 
 /**
- * An item's card with its pending English, placement, tags and organisations shown and
- * tagged, an Edit that turns the card into a form for its title, description, expected
- * outcome, phase, placement (STY-025 S1–S4, S6; STY-031 S3), tags (STY-037) and
- * organisations (STY-034 S1–S4), and a Move menu (STY-031 S1, S2). Its other fields
- * stay on show; nothing is written until the roadmap is published.
+ * An item's card with its pending English, placement, tags, organisations and details
+ * shown and tagged, an Edit that turns the card into a form for its title, description,
+ * expected outcome, phase, placement (STY-025 S1–S4, S6; STY-031 S3), tags (STY-037),
+ * organisations (STY-034 S1–S4) and details (STY-039), and a Move menu (STY-031 S1,
+ * S2). Its other fields stay on show; nothing is written until the roadmap is
+ * published.
  */
 export function EditableItemCard({
   roadmapId,
@@ -276,6 +279,29 @@ export function EditableItemCard({
     }),
   }
 
+  // Details with Welsh versions are shown as the card shows them, not changed (S18).
+  const detailsField: EditFormField<"details"> = item.hasWelshDetails
+    ? {
+        name: "details",
+        label: t("roadmaps.items.fields.details"),
+        multiline: false,
+        fixed: {
+          text:
+            shown.details.length > 0 ? (
+              <DetailList details={localiseDetails(shown.details, language)} />
+            ) : (
+              t("roadmaps.edit.details.none")
+            ),
+          notice: t("roadmaps.edit.details.welshLocked"),
+        },
+      }
+    : {
+        name: "details",
+        label: t("roadmaps.edit.itemFields.details"),
+        multiline: false,
+        details: true,
+      }
+
   return (
     <RoadmapItemCard
       item={shown}
@@ -289,12 +315,14 @@ export function EditableItemCard({
               placementField,
               tagsField,
               organisationsField,
+              detailsField,
             ]}
             initial={{
               ...text.initial,
               placement: itemValue(shown, "placement"),
               tags: itemValue(shown, "tags"),
               organisationIds: itemValue(shown, "organisationIds"),
+              details: itemValue(shown, "details"),
             }}
             labelledBy={headingId}
             onDone={done}

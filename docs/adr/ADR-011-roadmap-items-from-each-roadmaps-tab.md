@@ -5,7 +5,8 @@
   ADR-009.
 - Date: 2026-11-10 (amended by ADR-012: item identity; amended by ADR-014: organisations
   come from the repository and show by short name; see below; amended by STY-037, in
-  ADR-012: an item says whether it has Welsh tags)
+  ADR-012: an item says whether it has Welsh tags; amended by STY-039, in ADR-012: an
+  item says whether it has Welsh details)
 
 ## Context
 
@@ -67,6 +68,7 @@ interface RoadmapItem {
   hasWelshTags: boolean // `Labels (cy)` holds anything, paired or not (STY-037, ADR-012)
   organisations: Organisation[] // in ORGANISATIONS order, no repeats
   details: RoadmapItemDetail[]
+  hasWelshDetails: boolean // `Details (cy)` holds anything, paired or not (STY-039, ADR-012)
 }
 ```
 
@@ -107,6 +109,15 @@ Organisations are no longer a domain vocabulary: the repository serves them as a
 national first then alphabetical, instead of codes (Option 6's choice ends). The Sheets adapter keeps the
 twelve built in and still matches codes as headers, leaving out an unknown one; the item
 now keeps that code as written. Placements stay a domain vocabulary.
+
+### STY-039 amendment
+
+`RoadmapItem` gains `hasWelshDetails`: whether the item's `Details (cy)` cell holds
+anything, as `hasWelshTags` says of `Labels (cy)`. A count of Welsh lines that differs
+from the English leaves every detail's `cy` blank, so `details` alone can't say it, and
+the editor changes no details that have Welsh (ADR-012, _STY-039 amendments_). How a
+detail's text and level are read is unchanged: `level` is still the hyphens as written,
+and the levels a list shows at are worked out from them (`settleDetails`).
 
 ### Reading the items
 

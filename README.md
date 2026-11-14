@@ -113,6 +113,18 @@ it writes the `Families` tab only as below.
   with no tag, has neither cell written: its tags can't be changed in the editor, and a
   publish that finds Welsh written there since the item was read writes nothing
   (STY-037);
+- an item whose details changed: its row's `Details` cell alone, as text, a line for
+  each detail in order, starting with a hyphen for each level it is nested and then a
+  space, a top-level line with neither (`Follow-up appointments`, `- Dermatology`,
+  `-- Adult clinics first`), or an empty cell for none. A list has three levels, the
+  first line is at the top level and a line is at most one level deeper than the line
+  above; no detail holds a line break or starts with a hyphen or a space. A cell
+  written another way that shows as the same list (a hyphen on every line, a skipped
+  level) is left as it is until its details are changed here, and is then written this
+  way. `Details (cy)` is never written, and an item whose `Details (cy)` cell holds
+  anything, even Welsh that pairs with no detail, has neither cell written: its details
+  can't be changed in the editor, and a publish that finds Welsh written there since
+  the item was read writes nothing (STY-039);
 - an `Item ID` for every item row it reads (one with a title) that has none, or repeats
   another row's: eight random
   lower-case letters and digits starting with a letter, such as `k7q2xwbn`;
@@ -126,7 +138,8 @@ it writes the `Families` tab only as below.
   it to a listed family or category, never changing an ID already there;
 - a column the roadmap needs but lacks (the `Item ID` column the first time, the
   `Family ID` or `Category ID` column, or an edited field's column, `Horizon` for a
-  move, `Labels` for tags and `Organisations` for a choice of organisations), appended
+  move, `Labels` for tags, `Organisations` for a choice of organisations and `Details`
+  for details), appended
   after the last column in use with the public site's English header, the grid widened
   in the same request.
 

@@ -1,4 +1,4 @@
-import { act, screen, within } from "@testing-library/react"
+import { act, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it } from "vitest"
 
@@ -62,12 +62,10 @@ async function renderPage({
     ...(language ? { language } : {}),
   })
   const main = within(screen.getByRole("main"))
-  await main.findAllByRole(
-    "heading",
-    items.length > 0
-      ? { level: 3 }
-      : { level: 2, name: /^(No items yet|Dim eitemau eto)$/ },
-  )
+  // The items are read once a heading follows About's: a placement's, or "No items yet".
+  await waitFor(() => {
+    expect(main.getAllByRole("heading", { level: 2 }).length).toBeGreaterThan(1)
+  })
   return { user, main, repository, ...rendered }
 }
 

@@ -2,8 +2,8 @@ import type { Page } from "@playwright/test"
 
 import {
   EXAMPLE_INDEX_ROWS,
-  EXAMPLE_SPREADSHEET,
   withRoadmapIndex,
+  withTabItems,
 } from "./fixtures/fake-sheets"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
@@ -24,25 +24,6 @@ async function openProductC(page: Page) {
 }
 
 const NO_ITEMS_LINE = "The public site will show it with no items."
-
-/** The example spreadsheet with Product C's tab holding its header, then these rows. */
-function withProductCRows(...rows: [title: string, horizon: string][]) {
-  return EXAMPLE_SPREADSHEET.map((tab) => {
-    if (tab.title !== "ProductC") return tab
-    const [header = []] = tab.rows
-    return {
-      ...tab,
-      rows: [
-        header,
-        ...rows.map(([title, horizon]) =>
-          header.map((name) =>
-            name === "Title" ? title : name === "Horizon" ? horizon : "",
-          ),
-        ),
-      ],
-    }
-  })
-}
 
 /** Chooses the action, then the dialog's button named `confirm`. */
 async function choose(page: Page, action: string, confirm = action) {
@@ -166,7 +147,7 @@ test("says the public site will show a roadmap with no items, and still publishe
   page,
   sheets,
 }) => {
-  sheets.spreadsheet = withProductCRows()
+  sheets.spreadsheet = withTabItems("ProductC")
   await page.goto("./#/roadmaps/productc")
   await connect(page)
   const main = page.getByRole("main")
@@ -199,7 +180,7 @@ test("says so while no item has a recognised horizon, until a pending move gives
   page,
   sheets,
 }) => {
-  sheets.spreadsheet = withProductCRows(["Work coming soon", "Soon"])
+  sheets.spreadsheet = withTabItems("ProductC", ["Work coming soon", "Soon"])
   await page.goto("./#/roadmaps/productc")
   await connect(page)
   const main = page.getByRole("main")

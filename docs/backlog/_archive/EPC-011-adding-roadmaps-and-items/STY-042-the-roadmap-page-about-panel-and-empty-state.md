@@ -109,26 +109,31 @@ solid border and a minimum height, which the roadmap list, the families page and
 - **Tests.** Written first and run red: the rule (`publishesNoItems`), the About
   panel's layout, the empty panel and its Welsh, and five of the publish dialog's
   seven cases; the two that assert no line passed before the code, as they must. The
-  Playwright specs followed working code.
+  Playwright specs followed working code. The review's fixes changed no behaviour, so
+  they added no case.
 
 ### Contract for dependents
 
 - **The About panel** is `RoadmapAbout` (`components/roadmap-about.tsx`): `actions`
   now sit beside the heading. Its `form` prop still draws the in-place form inside the
   panel; STY-043 takes it out.
-- **The empty panel** is drawn in `RoadmapItems` (`components/roadmap-items.tsx`) with
-  the `Empty` primitive, which is dashed; `StatusPanel` is as it was for its other
-  users. Its sentence is `roadmaps.items.empty.description`, which STY-046 replaces
-  with its button (D2).
+- **The empty panel** is `StatusPanel` in its `compact` form
+  (`components/status-panel.tsx`): a dashed outline, no icon, no fill and no minimum
+  height. It takes an `action` as the full form does, which is as it was for its
+  other users. Its sentence is `roadmaps.items.empty.description`, which STY-046
+  replaces with its button (D2).
 - **The rule** is `publishesNoItems(items, changes)` (`editing/pending-changes.ts`):
   no item is in a horizon or section, counting a pending move. STY-046 S10 counts a
-  new item here. `usePublishedState` asks it of the items as read, and keeps the
-  answer in `PublishedStateQuestion.noItems`.
+  new item here. `usePublishedState(roadmap, items)` asks it of the items the page
+  has read, and keeps the answer in `PublishedStateQuestion.noItems`; the dialog
+  reads the question only from `asked`.
 - **Copy**: `roadmaps.publishRoadmap.confirm.noItems`, said between the nightly note
   and the line about pending edits. The Welsh of it and of
   `roadmaps.items.empty.description` is machine-assisted, as all of `cy.ts` is.
 - **E2E**: the panel is the region named "About this roadmap"; the empty panel is
-  found by its heading, "No items yet".
+  found by its heading, "No items yet". `withTabItems(tab, ...items)` and
+  `withTabRows(tab, rows)` (`tests/e2e/fixtures/fake-sheets.ts`) give the example
+  spreadsheet with one tab's items or rows replaced: no items for an empty roadmap.
 
 ### Scenario evidence
 
@@ -139,7 +144,7 @@ is `tests/e2e/roadmap-page.spec.ts`; `axe` is `tests/e2e/accessibility.spec.ts`.
 
 | Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1       | about "is a bordered panel with its controls beside the heading, ahead of the fields"; page "About is a bordered panel with Edit beside its heading" (both themes: the border and fill by their tokens, Edit level with the heading and above the first field, then the form, "Changed" and "Undo changes" inside the panel); `tests/e2e/structure.spec.ts` `detail`                                                                                        |
-| S2       | items "says a roadmap with no items has none, instead of six empty groups, in a dashed panel with no icon"; page "a roadmap with no items shows a compact dashed panel" (both themes: dashed, no icon, under 160px high, then the items after Refresh)                                                                                                                                                                                                      |
+| S1       | about "shows its controls beside the heading, ahead of the fields"; page "About is a bordered panel with Edit beside its heading" (both themes: the border and fill by their tokens, Edit level with the heading and above the first field, then the form, "Changed" and "Undo changes" inside the panel); `tests/e2e/structure.spec.ts` `detail`                                                                                                           |
+| S2       | items "says a roadmap with no items has none, instead of six empty groups, and where they are added"; page "a roadmap with no items shows a compact dashed panel" (both themes: dashed, no icon, under 160px high, then the items after Refresh)                                                                                                                                                                                                            |
 | S3       | `src/features/roadmaps/editing/pending-changes.test.ts` "leaves the public nothing to see until an item is in a horizon or section, counting a pending move"; publishing "publishing a roadmap the public would see with no items" (seven cases); `tests/e2e/publishing-roadmap.spec.ts` "says the public site will show a roadmap with no items, and still publishes it", "says so while no item has a recognised horizon, until a pending move gives one" |
 | S4       | items "says so in Welsh"; publishing "says so in Welsh"; page "an empty roadmap's page is in Welsh and fits a phone"; axe "an empty roadmap on a phone in Cymraeg, then its publish dialog saying so" and "a roadmap's page on a phone" (both themes)                                                                                                                                                                                                       |

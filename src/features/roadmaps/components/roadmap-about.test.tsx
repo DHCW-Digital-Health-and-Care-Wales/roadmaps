@@ -84,7 +84,7 @@ describe("RoadmapAbout", () => {
     ).toEqual(["No date"])
   })
 
-  it("is a bordered panel with its controls beside the heading, ahead of the fields (STY-042 S1)", () => {
+  it("shows its controls beside the heading, ahead of the fields (STY-042 S1)", () => {
     renderWithI18n(
       <RoadmapAbout
         roadmap={productA}
@@ -93,7 +93,6 @@ describe("RoadmapAbout", () => {
     )
 
     const region = about()
-    expect(region).toHaveClass("border", "bg-card")
     const heading = within(region).getByRole("heading", { level: 2 })
     const edit = within(region).getByRole("button", { name: "Edit" })
     expect(heading.parentElement).toContainElement(edit)

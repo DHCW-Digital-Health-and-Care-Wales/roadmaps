@@ -42,17 +42,20 @@ export function PublishedStateAction({
   const Icon = state.publishing ? GlobeIcon : EyeOffIcon
   const { publishing, count, noItems } = state.asked
   const askedVerb = publishing ? "publish" : "unpublish"
-  const description = [
+  const description: string[] = [
     t(`roadmaps.publishRoadmap.confirm.note.${askedVerb}`),
-    noItems && t("roadmaps.publishRoadmap.confirm.noItems"),
-    count > 0 &&
+  ]
+  if (noItems) description.push(t("roadmaps.publishRoadmap.confirm.noItems"))
+  if (count > 0) {
+    description.push(
       t(
         publishing
           ? "roadmaps.publishRoadmap.confirm.withChanges"
           : "roadmaps.publishRoadmap.confirm.keepsChanges",
         { count },
       ),
-  ]
+    )
+  }
 
   return (
     <>
@@ -80,7 +83,7 @@ export function PublishedStateAction({
               })}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {description.filter(Boolean).join(" ")}
+              {description.join(" ")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           {state.offersMarkUpdated && (

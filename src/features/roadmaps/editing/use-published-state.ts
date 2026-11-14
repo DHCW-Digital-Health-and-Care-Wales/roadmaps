@@ -2,12 +2,12 @@ import { useCallback, useState } from "react"
 
 import type { PublishProblem } from "@/domain/roadmap/published-state"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
+import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { markedUpdated } from "@/domain/roadmap/roadmap-changes"
 import { useAuth } from "@/features/auth/use-auth"
 import { toAppError, type AppErrorKind } from "@/lib/errors"
 import { localToday } from "@/lib/local-today"
 
-import { useRoadmapItems } from "../hooks/use-roadmap-items"
 import { useSetRoadmapPublished } from "../hooks/use-set-roadmap-published"
 import { discardItems, openConflicts } from "./conflicts"
 import {
@@ -42,12 +42,14 @@ export interface PublishedStateQuestion {
   count: number
   /**
    * Whether a publish leaves the public site none of the roadmap's items to show
-   * (STY-042 S3): known only once its items are read.
+   * (STY-042 S3): never while its items are not read.
    */
   noItems: boolean
 }
 
-export interface PublishedState extends PublishedStateQuestion {
+export interface PublishedState {
+  /** What the action now offers: publish, the roadmap not being published. */
+  publishing: boolean
   /** Whether the action can be chosen now. */
   available: boolean
   /**
@@ -79,12 +81,15 @@ export interface PublishedState extends PublishedStateQuestion {
  * written at once. Publishing sends the roadmap's pending edits with it, through the
  * pending-edit store as a publish of them goes, so a conflict opens its review and a
  * lost answer waits for a Refresh (S5, S6, S10); unpublishing leaves them pending (S7).
- * Publishing can also set the roadmap's `Last updated` to today (STY-036 D10), and is
- * still allowed when the public would see no items, which the question says (STY-042
- * D3). Unavailable unless connected, while a write of the roadmap is under way, and
- * while a conflict is still to decide.
+ * Publishing can also set the roadmap's `Last updated` to today (STY-036 D10). It is
+ * still allowed when the public would see no items, which the question then says, going
+ * by `items`, the roadmap's items once read (STY-042 D3). Unavailable unless connected,
+ * while a write of the roadmap is under way, and while a conflict is still to decide.
  */
-export function usePublishedState(roadmap: Roadmap): PublishedState {
+export function usePublishedState(
+  roadmap: Roadmap,
+  items: readonly RoadmapItem[] | undefined,
+): PublishedState {
   const store = usePendingChangesStore()
   const snapshot = usePendingChanges()
   const connected = useAuth().state.status === "connected"
@@ -100,7 +105,6 @@ export function usePublishedState(roadmap: Roadmap): PublishedState {
     setNotice(null)
   }, [])
 
-  const { data: items } = useRoadmapItems(roadmap.id)
   const publishing = !roadmap.published
   const changes = snapshot.changes.get(roadmap.id)
   const question: PublishedStateQuestion = {
@@ -184,7 +188,7 @@ export function usePublishedState(roadmap: Roadmap): PublishedState {
   }
 
   return {
-    ...question,
+    publishing,
     available: connected && !pending && !reviewing,
     offersMarkUpdated:
       (asked ?? question).publishing && !changes?.roadmap.lastUpdated,

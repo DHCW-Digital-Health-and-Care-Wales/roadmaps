@@ -127,6 +127,34 @@ export function withRoadmapIndex(
   return [{ title: index?.title ?? "Roadmaps", rows }, ...tabs]
 }
 
+/** The example spreadsheet with the rows of its tab named `title` replaced. */
+export function withTabRows(title: string, rows: FakeTab["rows"]): FakeTab[] {
+  return EXAMPLE_SPREADSHEET.map((tab) =>
+    tab.title === title ? { ...tab, rows } : tab,
+  )
+}
+
+/**
+ * The example spreadsheet with its roadmap tab named `title` holding its header, then
+ * a row for each of `items`, its `Title` and `Horizon` (the rest blank): with no
+ * items, a roadmap that has none.
+ */
+export function withTabItems(
+  title: string,
+  ...items: [title: string, horizon: string][]
+): FakeTab[] {
+  const [header = []] =
+    EXAMPLE_SPREADSHEET.find((tab) => tab.title === title)?.rows ?? []
+  return withTabRows(title, [
+    header,
+    ...items.map(([itemTitle, horizon]) =>
+      header.map((name) =>
+        name === "Title" ? itemTitle : name === "Horizon" ? horizon : "",
+      ),
+    ),
+  ])
+}
+
 /** A request the fake answers: the tab list, one tab's values or header row, or a write. */
 type SheetsRequest =
   | { kind: "metadata" }

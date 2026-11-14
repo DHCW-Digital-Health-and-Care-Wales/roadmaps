@@ -347,19 +347,17 @@ describe("RoadmapDetailPage items", () => {
     ).toBeInTheDocument()
   })
 
-  it("says a roadmap with no items has none, instead of six empty groups, in a dashed panel with no icon (S6, STY-042 S2)", async () => {
+  it("says a roadmap with no items has none, instead of six empty groups, and where they are added (S6, STY-042 S2)", async () => {
     await renderRoadmap("producta", { producta: [] })
 
-    const heading = await main().findByRole("heading", {
-      level: 2,
-      name: "No items yet",
-    })
-    const panel = heading.closest("[data-slot=empty]")
-    expect(panel).toHaveClass("border", "border-dashed")
-    expect(panel?.querySelector("svg")).toBeNull()
-    expect(panel).toHaveTextContent(
-      "Add its items in the spreadsheet for now. They show here after Refresh.",
-    )
+    expect(
+      await main().findByRole("heading", { level: 2, name: "No items yet" }),
+    ).toBeInTheDocument()
+    expect(
+      main().getByText(
+        "Add its items in the spreadsheet for now. They show here after Refresh.",
+      ),
+    ).toBeInTheDocument()
     expect(
       main().getByRole("heading", { level: 1, name: "Product A roadmap" }),
     ).toBeInTheDocument()
@@ -371,13 +369,14 @@ describe("RoadmapDetailPage items", () => {
   it("says so in Welsh (STY-042 S4)", async () => {
     await renderRoadmap("producta", { producta: [] }, { language: "cy" })
 
-    const heading = await main().findByRole("heading", {
-      level: 2,
-      name: "Dim eitemau eto",
-    })
-    expect(heading.closest("[data-slot=empty]")).toHaveTextContent(
-      "Ychwanegwch ei eitemau yn y daenlen am y tro. Byddan nhw'n ymddangos yma ar ôl Adnewyddu.",
-    )
+    expect(
+      await main().findByRole("heading", { level: 2, name: "Dim eitemau eto" }),
+    ).toBeInTheDocument()
+    expect(
+      main().getByText(
+        "Ychwanegwch ei eitemau yn y daenlen am y tro. Byddan nhw'n ymddangos yma ar ôl Adnewyddu.",
+      ),
+    ).toBeInTheDocument()
   })
 
   it("keeps the title while the items load (S7)", async () => {

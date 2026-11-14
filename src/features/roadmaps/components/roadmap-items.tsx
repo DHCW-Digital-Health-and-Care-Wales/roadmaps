@@ -2,7 +2,6 @@ import { TriangleAlertIcon } from "lucide-react"
 import { useId, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 
-import { Empty, EmptyDescription, EmptyHeader } from "@/components/ui/empty"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Organisation } from "@/domain/roadmap/organisation"
 import type { ItemChanges } from "@/domain/roadmap/roadmap-changes"
@@ -20,6 +19,7 @@ import {
   type PositionedRoadmapItem,
 } from "../group-roadmap-items"
 import { useItemCardKeys } from "./item-card-keys"
+import { StatusPanel } from "./status-panel"
 
 /** One, two, then three columns of item cards, as the roadmap cards are laid out. */
 const itemGridClassName =
@@ -110,14 +110,11 @@ export function RoadmapItems({
 
   if (items.length === 0) {
     return (
-      <Empty className="border">
-        <EmptyHeader>
-          <h2 className="text-heading-m">{t("roadmaps.items.empty.title")}</h2>
-          <EmptyDescription className="text-pretty">
-            {t("roadmaps.items.empty.description")}
-          </EmptyDescription>
-        </EmptyHeader>
-      </Empty>
+      <StatusPanel
+        compact
+        title={t("roadmaps.items.empty.title")}
+        description={t("roadmaps.items.empty.description")}
+      />
     )
   }
 

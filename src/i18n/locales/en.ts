@@ -290,7 +290,7 @@ export const en = {
       /** In place of `errors.invalid-data`, which is about the roadmap list. */
       invalidData:
         "This roadmap's items aren't in the expected format in the spreadsheet. Ask the spreadsheet owner to check them.",
-      /** Until an item can be added here, when its button takes the sentence's place. */
+      /** A roadmap with none: where they are added, until they can be added here (D2). */
       empty: {
         title: "No items yet",
         description:

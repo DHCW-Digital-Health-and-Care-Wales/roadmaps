@@ -7,6 +7,7 @@ import {
   EXAMPLE_SPREADSHEET,
   roadmapRow,
   withRoadmapIndex,
+  withTabItems,
 } from "./fixtures/fake-sheets"
 import { useLanguage, useTheme } from "./fixtures/look"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
@@ -214,9 +215,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
     }) => {
       await useLanguage(page, "cy")
       await page.setViewportSize({ width: 375, height: 800 })
-      sheets.spreadsheet = EXAMPLE_SPREADSHEET.map((tab) =>
-        tab.title === "ProductC" ? { ...tab, rows: tab.rows.slice(0, 1) } : tab,
-      )
+      sheets.spreadsheet = withTabItems("ProductC")
       await page.goto("./#/roadmaps/productc")
       await connect(page, "Cysylltu â Google")
       const main = page.getByRole("main")

@@ -16,31 +16,8 @@
     - option "Later"
     - option "Delivered this year"
     - option "Not doing"
-  - group "Organisations":
-    - text: ""
-    - checkbox "All Wales (National)"
-    - text: All Wales (National)
-    - checkbox "Aneurin Bevan (ABUHB)"
-    - text: Aneurin Bevan (ABUHB)
-    - checkbox "Betsi Cadwaladr (BCUHB)"
-    - text: Betsi Cadwaladr (BCUHB)
-    - checkbox "Cardiff and Vale (CAVUHB)" [checked]
-    - text: Cardiff and Vale (CAVUHB)
-    - checkbox "Cwm Taf Morgannwg (CTMUHB)"
-    - text: Cwm Taf Morgannwg (CTMUHB)
-    - checkbox "Health Education and Improvement Wales (HEIW)"
-    - text: Health Education and Improvement Wales (HEIW)
-    - checkbox "Hywel Dda (HDUHB)"
-    - text: Hywel Dda (HDUHB)
-    - checkbox "Powys (PTHB)"
-    - text: Powys (PTHB)
-    - checkbox "Public Health Wales (PHW)"
-    - text: Public Health Wales (PHW)
-    - checkbox "Swansea Bay (SBUHB)" [checked]
-    - text: Swansea Bay (SBUHB)
-    - checkbox "Velindre (VUNHST)"
-    - text: Velindre (VUNHST)
-    - checkbox "Welsh Ambulance (WAST)"
-    - text: Welsh Ambulance (WAST)
+  - paragraph: Organisations
+  - button "Change organisations"
+  - text: Cardiff and Vale, Swansea Bay
   - button "Done"
   - button "Cancel"

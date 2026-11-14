@@ -7,6 +7,7 @@ import {
   type FakeTab,
   withRoadmapIndex,
 } from "./fixtures/fake-sheets"
+import { useLanguage } from "./fixtures/look"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 /**
@@ -14,7 +15,8 @@ import { connect, expect, roadmapCards, test } from "./fixtures/test"
  * is not published (STY-025), against the fake Sheets API: one `batchUpdate` per publish.
  * A co-lead's change made meanwhile is shown, never overwritten (STY-026). A family and
  * category are chosen from their lists (STY-028). An item is moved to another placement,
- * writing its `Horizon` cell alone (STY-031).
+ * writing its `Horizon` cell alone (STY-031). Its organisations are ticked in a field
+ * that opens on request (STY-034, STY-038).
  */
 
 const ITEM = "Example card with every column"
@@ -671,6 +673,10 @@ test.describe("choosing an item's organisations (STY-034)", () => {
     const main = page.getByRole("main")
     await main.getByRole("button", { name: `Edit ${title}` }).click()
     const form = main.getByRole("form", { name: title })
+    // The field starts shut (STY-038): "Change", or "Add" for an item with none.
+    await form
+      .getByRole("button", { name: /^(Change|Add) organisations$/ })
+      .click()
     const group = form.getByRole("group", { name: "Organisations" })
     for (const name of names) {
       await group.getByRole("checkbox", { name }).click()
@@ -775,5 +781,204 @@ test.describe("choosing an item's organisations (STY-034)", () => {
       ),
     )
     expect(sheets.writes).toHaveLength(1)
+  })
+})
+
+test.describe("the Organisations field opens on request (STY-038)", () => {
+  /** Opens the item's form, its Organisations field still shut. */
+  async function openForm(page: Page, title: string) {
+    const main = page.getByRole("main")
+    await main.getByRole("button", { name: `Edit ${title}` }).click()
+    const form = main.getByRole("form", { name: title })
+    await expect(form).toBeVisible()
+    return form
+  }
+
+  test("starts shut naming what is chosen, opens in place, and shuts keeping the ticks (S1, S2, S3)", async ({
+    page,
+    sheets,
+  }) => {
+    await openRoadmap(page, "producta", ITEM)
+    const form = await openForm(page, ITEM)
+
+    await expect(form.getByText("Cardiff and Vale, Swansea Bay")).toBeVisible()
+    await expect(form.getByRole("checkbox")).toHaveCount(0)
+    const change = form.getByRole("button", { name: "Change organisations" })
+    await expect(change).toHaveAttribute("aria-expanded", "false")
+
+    await change.click()
+    const group = form.getByRole("group", { name: "Organisations" })
+    await expect(group.getByRole("checkbox")).toHaveCount(12)
+    await expect(
+      group.getByRole("checkbox", { name: "All Wales (National)" }),
+    ).toBeFocused()
+    await expect(group.getByRole("checkbox", { checked: true })).toHaveCount(2)
+    const close = form.getByRole("button", { name: "Close organisations" })
+    await expect(close).toHaveAttribute("aria-expanded", "true")
+    await expect(form.getByText("Cardiff and Vale, Swansea Bay")).toHaveCount(0)
+
+    await group.getByRole("checkbox", { name: "Powys (PTHB)" }).click()
+    await close.click()
+    await expect(
+      form.getByText("Cardiff and Vale, Powys, Swansea Bay"),
+    ).toBeVisible()
+    await expect(form.getByRole("checkbox")).toHaveCount(0)
+    await expect(change).toBeFocused()
+    // Nothing is pending until the form is confirmed.
+    await expect(
+      page.getByRole("main").getByRole("button", { name: "Publish changes" }),
+    ).toHaveCount(0)
+    expect(sheets.writes).toEqual([])
+  })
+
+  test("Done keeps a choice made in a field shut again, and publishes it (S4)", async ({
+    page,
+    sheets,
+  }) => {
+    await openRoadmap(page, "producta", ITEM)
+    const form = await openForm(page, ITEM)
+    await form.getByRole("button", { name: "Change organisations" }).click()
+    await form.getByRole("checkbox", { name: "Powys (PTHB)" }).click()
+    await form.getByRole("button", { name: "Close organisations" }).click()
+
+    await form.getByRole("button", { name: "Done" }).click()
+
+    await expect(
+      itemCard(page, ITEM).getByText("Cardiff and Vale, Powys, Swansea Bay"),
+    ).toBeVisible()
+    await expect(itemCard(page, ITEM).getByText("Changed")).toBeVisible()
+    await confirmPublish(page, "Publish")
+    await expect(
+      page.getByRole("main").getByText(/^Changes published\./),
+    ).toBeVisible()
+    const organisations = sheets.spreadsheet
+      .find(({ title }) => title === "ProductA")
+      ?.rows.find(([title]) => title === ITEM)?.[6]
+    expect(organisations).toBe("CAVUHB, PTHB, SBUHB")
+  })
+
+  test("an item with none reads No organisations beside Add, and an unknown code is named while shut (S1, S5)", async ({
+    page,
+    sheets,
+  }) => {
+    sheets.coLead("ProductA", "Minimal card", "Organisations", "CAVUHB, CAVHB")
+    await openRoadmap(page, "producta", ITEM)
+
+    const empty = await openForm(page, "Something we are not doing")
+    await expect(empty.getByText("No organisations")).toBeVisible()
+    await expect(
+      empty.getByRole("button", { name: "Add organisations" }),
+    ).toHaveAttribute("aria-expanded", "false")
+    await empty.getByRole("button", { name: "Cancel" }).click()
+
+    const typo = await openForm(page, "Minimal card")
+    const notice = typo.getByText(
+      "CAVHB isn't recognised. Changing the organisations will remove it.",
+    )
+    await expect(notice).toBeVisible()
+    await expect(
+      typo.getByText("Cardiff and Vale", { exact: true }),
+    ).toBeVisible()
+    await expect(typo.getByRole("checkbox")).toHaveCount(0)
+    await typo.getByRole("button", { name: "Change organisations" }).click()
+    await expect(notice).toBeVisible()
+    await expect(
+      typo.getByRole("group", { name: "Organisations" }),
+    ).toHaveAccessibleDescription(
+      "CAVHB isn't recognised. Changing the organisations will remove it.",
+    )
+  })
+
+  test("Cancel leaves the choice, and the form opens shut again (S6)", async ({
+    page,
+  }) => {
+    await openRoadmap(page, "producta", ITEM)
+    const form = await openForm(page, ITEM)
+    await form.getByRole("button", { name: "Change organisations" }).click()
+    await form.getByRole("checkbox", { name: "Powys (PTHB)" }).click()
+    await form.getByRole("button", { name: "Cancel" }).click()
+    await expect(
+      itemCard(page, ITEM).getByText("Cardiff and Vale, Swansea Bay"),
+    ).toBeVisible()
+
+    const again = await openForm(page, ITEM)
+
+    await expect(again.getByText("Cardiff and Vale, Swansea Bay")).toBeVisible()
+    await expect(again.getByRole("checkbox")).toHaveCount(0)
+    await again.getByRole("button", { name: "Change organisations" }).click()
+    await expect(
+      again.getByRole("checkbox", { name: "Powys (PTHB)" }),
+    ).not.toBeChecked()
+  })
+
+  test("opens, ticks and shuts by keyboard on a phone, nothing scrolling sideways (S7)", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 375, height: 812 })
+    await openRoadmap(page, "producta", ITEM)
+    const form = await openForm(page, ITEM)
+    const sideways = () =>
+      page.evaluate(
+        () =>
+          document.documentElement.scrollWidth -
+          document.documentElement.clientWidth,
+      )
+
+    await form.getByRole("combobox", { name: "Horizon or section" }).focus()
+    await page.keyboard.press("Tab")
+    const change = form.getByRole("button", { name: "Change organisations" })
+    await expect(change).toBeFocused()
+    expect(await sideways()).toBe(0)
+
+    await page.keyboard.press("Enter")
+    const first = form.getByRole("checkbox", { name: "All Wales (National)" })
+    await expect(first).toBeFocused()
+    await page.keyboard.press("Space")
+    await expect(first).toBeChecked()
+    expect(await sideways()).toBe(0)
+
+    await page.keyboard.press("Shift+Tab")
+    await expect(
+      form.getByRole("button", { name: "Close organisations" }),
+    ).toBeFocused()
+    await page.keyboard.press("Space")
+    await expect(change).toBeFocused()
+    await expect(
+      form.getByText("All Wales, Cardiff and Vale, Swansea Bay"),
+    ).toBeVisible()
+    // The form is still open: no key confirmed or cancelled it.
+    await expect(form.getByRole("button", { name: "Done" })).toBeVisible()
+  })
+
+  test("is Welsh on the Welsh interface, the short names staying English (S7)", async ({
+    page,
+  }) => {
+    await useLanguage(page, "cy")
+    await page.goto("./#/roadmaps/producta")
+    await connect(page, "Cysylltu â Google")
+    const main = page.getByRole("main")
+    const title = "Cerdyn enghreifftiol gyda phob colofn"
+    await main.getByRole("button", { name: `Golygu ${title}` }).click()
+    const form = main.getByRole("form", { name: title })
+
+    await expect(form.getByText("Sefydliadau", { exact: true })).toBeVisible()
+    await expect(form.getByText("Cardiff and Vale, Swansea Bay")).toBeVisible()
+    await form.getByRole("button", { name: "Newid sefydliadau" }).click()
+    await expect(
+      form
+        .getByRole("group", { name: "Sefydliadau" })
+        .getByRole("checkbox", { name: "Cardiff and Vale (CAVUHB)" }),
+    ).toBeChecked()
+    await form.getByRole("button", { name: "Cau sefydliadau" }).click()
+    await form.getByRole("button", { name: "Canslo" }).click()
+
+    await main
+      .getByRole("button", { name: "Golygu Something we are not doing" })
+      .click()
+    const empty = main.getByRole("form", { name: "Something we are not doing" })
+    await expect(empty.getByText("Dim sefydliadau")).toBeVisible()
+    await expect(
+      empty.getByRole("button", { name: "Ychwanegu sefydliadau" }),
+    ).toBeVisible()
   })
 })

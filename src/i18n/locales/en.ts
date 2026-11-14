@@ -296,6 +296,23 @@ export const en = {
         "{{codes}} isn't recognised. Changing the organisations will remove it.",
       unknownOrganisations_other:
         "{{codes}} aren't recognised. Changing the organisations will remove them.",
+      /** What a form's Organisations field adds to `openingField` (STY-038). */
+      organisations: {
+        /** Follows the field's button, for assistive technology: "Change organisations". */
+        subject: "organisations",
+        /** In place of the chosen organisations' names, when none is chosen. */
+        none: "No organisations",
+      },
+      /**
+       * The button of a field that opens on request (EPC-009): "Add" while the field
+       * holds nothing, "Close" while it is open. Followed by the field's subject, for
+       * assistive technology: "Change organisations".
+       */
+      openingField: {
+        change: "Change",
+        add: "Add",
+        close: "Close",
+      },
       /** Followed by the item's title, for assistive technology: "Move First item". */
       move: "Move",
       /** Heads the list of places an item can move to. */

@@ -192,9 +192,10 @@ for (const theme of THEMES) {
       await form.getByRole("textbox", { name: "Title" }).fill("A clearer card")
       await form.getByRole("button", { name: "Done" }).click()
       await main.getByRole("button", { name: "Edit Minimal card" }).click()
-      await expect(
-        main.getByRole("form", { name: "Minimal card" }),
-      ).toBeVisible()
+      // Its Organisations field opened, so the tour stops on each checkbox (STY-038).
+      const minimal = main.getByRole("form", { name: "Minimal card" })
+      await minimal.getByRole("button", { name: "Add organisations" }).click()
+      await expect(minimal.getByRole("checkbox")).toHaveCount(12)
 
       await expectEveryStopShowsAnIndicator(page)
     })

@@ -19,7 +19,7 @@ import {
 import { useLanguage } from "@/i18n"
 
 import { RoadmapItemCard } from "../components/roadmap-item-card"
-import { sortOrganisations } from "../sort-organisations"
+import { shortNamesOf, sortOrganisations } from "../sort-organisations"
 import { EditControls } from "./edit-controls"
 import { EditForm, type EditFormField } from "./edit-form"
 import { editFormFields } from "./edit-form-fields"
@@ -213,7 +213,15 @@ export function EditableItemCard({
       value: id,
       label: t("roadmaps.edit.organisationChoice", { shortName, code }),
     })),
-    many: { ofValue: organisationIdsOf, toValue: organisationIdsValue },
+    many: {
+      ofValue: organisationIdsOf,
+      toValue: organisationIdsValue,
+      // Named as the card names them, which this field stands in for (STY-038 D2).
+      summary: (chosen) =>
+        shortNamesOf(organisations, chosen, language).join(", "),
+      none: t("roadmaps.edit.organisations.none"),
+      subject: t("roadmaps.edit.organisations.subject"),
+    },
     ...(unknownCodes.length > 0 && {
       hint: t("roadmaps.edit.unknownOrganisations", {
         count: unknownCodes.length,

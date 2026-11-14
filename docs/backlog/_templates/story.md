@@ -116,9 +116,11 @@ rejected. Assumptions shared by the epic live in the epic._
 _Only facts that took investigation and that the implementer would otherwise
 re-derive wrongly: a hidden caller, a contract that looks different from what
 it is, a measurement. Name the commit (`audited at abc1234`). Do not list
-entry points an `rg` finds. Put a guess about what the real Google does to the
-owner as an Open question, to check by hand on a test spreadsheet
-(`docs/operations/google-cloud-setup.md`): delivery has only the fakes._
+entry points an `rg` finds. A guess about what the real Google does is an Open
+question for the owner, since delivery has only the fakes: check it by hand on
+a test spreadsheet (`docs/operations/google-cloud-setup.md`) and record the
+result here, or accept a build that holds either way and a chore for the
+check._
 
 ## Out of scope _(optional)_
 

@@ -10,7 +10,7 @@ import {
 import { cn } from "@/lib/utils"
 
 export interface StatusPanelProps {
-  /** Left out of a compact panel. */
+  /** Optional: the compact form passes none. */
   icon?: ReactNode
   title: string
   /** The title's heading level: `h1` when the panel is the whole page. */

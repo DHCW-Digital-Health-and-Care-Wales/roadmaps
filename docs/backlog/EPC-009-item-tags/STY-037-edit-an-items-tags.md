@@ -4,7 +4,7 @@
 - **Type**: Feature
 - **Area**: Domain + Infrastructure + Features/UI + i18n (en + cy) + E2E
 - **Epic**: [EPC-009-item-tags](README.md)
-- **Depends on**: STY-038 (preferred order)
+- **Depends on**: STY-038 (hard: it builds the field that opens on request)
 - **Binding ADRs**: ADR-012 (this story amends _What is editable_), ADR-014, ADR-011,
   ADR-010, ADR-008
 - **Suggested model**: Opus — an ordered, open-ended field through the pending-change
@@ -38,9 +38,9 @@ editor writes to the shared data source, a contract with the public site: the it
 ### S1: The form shows the item's tags
 
 **Given** an item tagged "Patients" and "Video consultations"
-**When** Sam opens its edit form
-**Then** a "Tags" field shows both, in the order written, each with a way to rename it
-and a way to remove it, named for its tag ("Remove Patients")
+**When** Sam opens its edit form and opens the Tags field
+**Then** the field shows both, in the order written, each with a way to rename it and a
+way to remove it, named for its tag ("Remove Patients")
 **And** on the Welsh interface the field's label and controls are Welsh, and the tags
 are the English ones
 
@@ -110,8 +110,8 @@ place
 ### S10: An item with no tags, and a roadmap with none to offer
 
 **Given** an item with no tags, on a roadmap whose other items have none
-**When** Sam opens its edit form
-**Then** the Tags field is empty and offers nothing, and Sam can still type a tag
+**When** Sam opens its edit form and opens the Tags field
+**Then** the field holds no tags and offers none, and Sam can still type a tag
 **And** on a roadmap whose other items have tags, the same item is offered all of them
 
 ### S11: By keyboard and screen reader
@@ -155,7 +155,7 @@ pending change the data source already holds
 **Given** the Tags editor showing "Patients" and "Video consultations"
 **When** Sam chooses "Rename" on "Video consultations"
 **Then** its row becomes a field holding the name, with "Update" and "Cancel": Enter or
-"Update" keeps the new name, Escape or "Cancel" the old one
+"Update" keeps the new name, Escape or "Cancel" the old one, and the form stays open
 **And** a name still being changed is kept when Sam confirms the form or uses another
 control of the field
 
@@ -189,8 +189,10 @@ one adds its tag and takes it from the list
 **Then** the Tags field shows both tags on one line beside a button named "Change tags",
 and no editor; an item with no tags reads "No tags" beside "Add tags"
 **And** choosing the button shows the editor in place, with focus in "Add a tag"; the
-button, now "Close tags", shuts it, and the line shows the tags as changed
+button, now "Close tags", shuts it, keeping a name still being changed and text typed
+but not yet added, and the line shows the tags as changed
 **And** confirming the form keeps the tags whether the field is open or shut
+**And** the card's own Tags line does not show while the form is open
 
 ### S20: An item with Welsh tags keeps its tags read-only (owner, D14)
 
@@ -209,8 +211,17 @@ they have Welsh versions and can't be changed here yet
 **When** Sam adds "clinic staff"
 **Then** "Clinic staff" is added, and the field says it was added as other items spell
 it
-**And** where other items spell one tag in several ways that differ only in capitals,
-the most used is taken
+**And** spellings that differ only in capitals are one tag when offered: counted
+together, and shown and added in the most used spelling, the first in the roadmap's
+order when two are used as often
+
+### S22: Welsh tags written since the item was read stop the publish (agent, D17)
+
+**Given** Sam's pending tag change to an item that had no Welsh tags, and a co-lead has
+since written some in its `Labels (cy)` cell
+**When** Sam publishes
+**Then** nothing is written, and the conflict review says the item's tags now have
+Welsh versions and can't be changed here: Sam's tag change can be dropped, not kept
 
 ## Decisions
 
@@ -243,24 +254,27 @@ the most used is taken
   never drop under it. Prototyped: every row switches together, and each button keeps
   its name → S16.
 - **D11** (owner, 2026-11-13, on trying the prototypes): which editor is built → B, list
-  and suggestions, as prototyped with D10's icons ("that looks good"). Answers Q1; adds
-  S15–S18. A, C and D are not built.
+  and suggestions, as prototyped with D10's icons ("that looks good"). Settles which
+  editor is built; adds S15–S18. A, C and D are not built.
 - **D12** (agent, 2026-11-13): the card's read-only Tags line hides while its form is
   open, as the Organisations line does (STY-034), over showing the tags twice.
 - **D13** (owner, 2026-11-13, on seeing the whole form prototyped): the Tags field is
   not shown at full size as the form opens; it opens on request, as Organisations will
-  (STY-038). Changes: S1, whose controls show once the field is opened; adds S19. The
+  (STY-038). Changes: S1 and S10, which open the field first; adds S19. The
   opening field is one piece for both stories (epic _A field that opens on request_).
-- **D14** (owner, 2026-11-13, question put in the session): what happens to an item's
+- **D14** (owner, 2026-11-13, asked in the session; analysis _Decisions needed_): what happens to an item's
   Welsh tags when its tags are edited → such an item's tags are read-only in the form
   for now; nothing new is written. Rejected: keeping each tag's Welsh, clearing the
   Welsh with a warning, leaving the Welsh cell alone. Adds S20.
-- **D15** (owner, 2026-11-13, question put in the session): a typed tag takes the
+- **D15** (owner, 2026-11-13, asked in the session; analysis _Decisions needed_): a typed tag takes the
   spelling the roadmap already uses, and the field says so → S21. "patient" beside
   "Patients" stays two tags.
 - **D16** (agent, 2026-11-13): S20 applies whenever the Welsh cell holds anything, a
   count mismatch included, over only when Welsh shows: editing the English could bring
   the counts level and pair the wrong Welsh. The repository must say so of an item.
+- **D17** (agent, 2026-11-13, round 3 review): a publish that finds Welsh tags written
+  since the item was read is refused as a conflict, over writing the English: D14 and
+  D16 would otherwise fail to a co-lead or translator working meanwhile → S22.
 
 ## Starting point
 
@@ -269,6 +283,11 @@ library give.
 
 - The card shows tags as one line of text, in Welsh where an item has it, and keeps
   showing it while the form is open; organisations hide theirs.
+- `EditForm` cancels on every Escape, one a field has already handled included: its
+  handler does not read `defaultPrevented`. A rename's Escape must not close the form
+  (S15).
+- When the Welsh and English counts differ the parser drops the Welsh, so
+  `RoadmapItem.tags` alone cannot say the Welsh cell holds anything (S20, D16).
 
 ## Out of scope
 

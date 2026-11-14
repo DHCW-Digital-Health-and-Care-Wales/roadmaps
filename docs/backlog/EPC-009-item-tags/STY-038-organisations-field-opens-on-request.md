@@ -104,11 +104,9 @@ and the short names stay English
 ## Starting point
 
 Audited at `52850bf`. `EditForm` draws a `many` field as an always-open `fieldset`.
-Tests and snapshots that expect the checkboxes as the form opens need the extra press:
-`rg -n 'name: "Organisations"' tests/e2e src` finds the E2E helper
-(`toggleOrganisations`), the axe spec and the page tests; the aria snapshot
-`edit-item-form-error.aria.yml` holds the group. The working model is the last figure
-of `docs/analysis/item-tags-ux-analysis/prototypes.html`.
+Tests and snapshots that expect the checkboxes as the form opens need the extra press.
+The working model is the last figure of
+`docs/analysis/item-tags-ux-analysis/prototypes.html`.
 
 ## Out of scope
 

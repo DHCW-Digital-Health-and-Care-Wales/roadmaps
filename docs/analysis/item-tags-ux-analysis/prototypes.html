@@ -493,8 +493,10 @@
       .b-row .b-actions {
         margin-left: auto;
       }
+      /* A name being changed shrinks to stay beside its worded buttons in a narrow card. */
       .b-row .d-input {
-        flex: 1 1 12ch;
+        flex: 1 1 0;
+        min-width: 8ch;
       }
       /* Where a row is too narrow for a tag beside its worded buttons, the buttons
          show icons instead, so they never drop under the tag. */
@@ -693,13 +695,15 @@
   <body>
     <main class="page">
       <div class="intro">
-        <h1>Item tags: four editors to try</h1>
+        <h1>Item tags: four editors, and the form that holds them</h1>
         <p>
           Each is the Tags field of an item's edit form, in an item card as wide
           as the roadmap page draws one. All four keep the same rules (below)
           and offer the tags this roadmap's other items carry. They differ in
           how a tag is added, renamed and removed. Done keeps the tags and shows
-          the card; Edit opens the form again.
+          the card; Edit opens the form again. The last figure is the whole edit
+          form, with editor B in it and Tags and Organisations opening on
+          request.
         </p>
         <div class="controls">
           <div>
@@ -744,6 +748,10 @@
             <li>Remove a tag, then put it back.</li>
             <li>Paste <kbd>Carers, Welsh language</kbd>.</li>
             <li>Do all of it with the keyboard alone, then press Done.</li>
+            <li>
+              In the last figure, open Tags or Organisations, change it, close
+              it, then press Done.
+            </li>
           </ol>
         </details>
         <details class="world">
@@ -876,12 +884,23 @@
       const split = (text) => text.split(/[,\n]/).map(clean).filter(Boolean)
       const byName = (a, b) => a.localeCompare(b, "en", { sensitivity: "base" })
 
-      /** Each tag the other items carry, by its lower-case form, with how many carry it. */
+      /**
+       * Each tag the other items carry, by its lower-case form, with how many carry it.
+       * Spellings that differ only in capitals are one tag, in the most used spelling:
+       * the first met when two are used as often.
+       */
       const ELSEWHERE = new Map()
       for (const { tags } of OTHERS) {
         for (const tag of tags) {
-          const entry = ELSEWHERE.get(keyOf(tag)) ?? { tag, count: 0 }
+          const entry = ELSEWHERE.get(keyOf(tag)) ?? {
+            tag,
+            count: 0,
+            spellings: new Map(),
+          }
           entry.count += 1
+          entry.spellings.set(tag, (entry.spellings.get(tag) ?? 0) + 1)
+          if (entry.spellings.get(tag) > entry.spellings.get(entry.tag))
+            entry.tag = tag
           ELSEWHERE.set(keyOf(tag), entry)
         }
       }
@@ -1679,7 +1698,7 @@
           h(
             "div",
             { class: "t-head" },
-            h("p", { class: "d-label", id: `${id}-label` }, label),
+            h("p", { class: "d-label" }, label),
             toggle,
           ),
           empty,
@@ -2148,6 +2167,8 @@
         ["phase", "Phase", false],
       ]
 
+      // The card of `mount`, with a whole item in place of its tags: a copy on purpose,
+      // so the four editors' shell stays as simple as one field needs.
       function mountWholeForm(id) {
         const card = document.getElementById(`${id}-card`)
         const title = () => h("h3", { id: `${id}-title` }, kept.title)

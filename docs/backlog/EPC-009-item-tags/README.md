@@ -1,8 +1,7 @@
 # EPC-009: Item tags — free text a Product Lead edits here, nudged towards the tags the roadmap already uses
 
 - **Status**: Active — two stories, both specified; no owner decision waits
-- **Progress**: 0 of 2 terminal; next selectable: STY-038, then STY-037; blocked on:
-  nothing
+- **Progress**: 0 of 2 terminal; next selectable: STY-038; blocked on: nothing
 - **Binding ADRs**: ADR-012, ADR-014, ADR-011, ADR-010, ADR-008, ADR-002
 
 ## Summary
@@ -12,10 +11,9 @@ spreadsheet to tag it. This epic makes tags editable in the item's edit form: ad
 rename and remove, pending until published like every other edit. While adding, the
 form offers the tags the roadmap's other items carry, so "Patients" is chosen rather
 than retyped as "patient". Tags stay free text. A shared list across roadmaps, and
-renaming a tag everywhere at once, stay out. Of four editors prototyped, the owner
-chose B: a row per tag, with the roadmap's other tags as buttons. Seeing it in the whole
-form, the owner asked for the form's two long fields to open on request: Tags, and
-Organisations in a second story.
+renaming a tag everywhere at once, stay out. The editor is a row per tag, with the
+roadmap's other tags as buttons. The form's two long fields, Tags and Organisations,
+open on request, so the form is shorter than it is today.
 
 ## Owner decisions waiting
 
@@ -102,11 +100,12 @@ decisions: tags are no longer read-only, and no Welsh cell is written (D14).
 
 ### A field that opens on request
 
-One piece serves both stories; whichever is delivered first builds it in the edit form,
-and the other uses it. Shut, the field shows its label, one line saying what it holds
+One piece serves both stories: STY-038 builds it in the edit form and STY-037 uses it.
+Shut, the field shows its label, one line saying what it holds
 (or that it holds nothing) and a button: "Change", or "Add" when empty, named with the
 field for assistive technology ("Change tags"). Open, the button reads "Close", says
-the field is open, and the field's controls show in place with focus on the first.
+the field is open, and the field's controls show in place, with focus on the control
+the field names: the first checkbox for Organisations, "Add a tag" for Tags.
 Shutting keeps what was changed; confirming the form keeps it open or shut. A form
 always opens with the field shut.
 
@@ -114,15 +113,14 @@ always opens with the field shut.
 
 | ID      | Story                                                                                       | Area                                       | Depends on | State |
 | ------- | ------------------------------------------------------------------------------------------- | ------------------------------------------ | ---------- | ----- |
-| STY-037 | [A Product Lead edits an item's tags](STY-037-edit-an-items-tags.md)                        | Domain + Infra + UI + i18n (en + cy) + E2E | —          |       |
+| STY-037 | [A Product Lead edits an item's tags](STY-037-edit-an-items-tags.md)                        | Domain + Infra + UI + i18n (en + cy) + E2E | STY-038    |       |
 | STY-038 | [The Organisations field opens on request](STY-038-organisations-field-opens-on-request.md) | UI + i18n (en + cy) + E2E                  | —          |       |
 
 ## Sequencing
 
-Both are selectable and neither needs the other. STY-038 goes first: it is the smaller,
-and builds _A field that opens on request_ on a field that exists, for STY-037 to use.
-STY-037 stays one change, since the field, the pending change and the write are not
-useful apart.
+STY-038 goes first: it is the smaller, and builds _A field that opens on request_ on a
+field that exists. STY-037 needs it on the default branch, and stays one change, since
+the field, the pending change and the write are not useful apart.
 
 ## Out of scope
 

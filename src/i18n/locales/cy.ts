@@ -265,6 +265,7 @@ export const cy = {
         expectedOutcome: "Canlyniad disgwyliedig (Saesneg)",
         phase: "Cam (Saesneg)",
         placement: "Gorwel neu adran",
+        tags: "Tagiau (Saesneg)",
         organisationIds: "Sefydliadau",
       },
       organisationChoice: "{{shortName}} ({{code}})",
@@ -283,6 +284,44 @@ export const cy = {
       organisations: {
         subject: "sefydliadau",
         none: "Dim sefydliadau",
+      },
+      tags: {
+        subject: "tagiau",
+        none: "Dim tagiau",
+        onItem: "Tagiau ar yr eitem hon",
+        rename: "Ailenwi",
+        remove: "Tynnu",
+        renameField: "Ailenwi {{tag}}",
+        update: "Diweddaru",
+        cancelRename: "Canslo",
+        cancelRenameSubject: "ailenwi {{tag}}",
+        add: "Ychwanegu tag",
+        addButton: "Ychwanegu",
+        addButtonSubject: "tag",
+        elsewhere: "Wedi'u defnyddio mewn mannau eraill yn y map trywydd hwn",
+        offer_zero: "Ychwanegu {{tag}}, ar {{count, number}} eitem arall",
+        offer_one: "Ychwanegu {{tag}}, ar {{count, number}} eitem arall",
+        offer_two: "Ychwanegu {{tag}}, ar {{count, number}} eitem arall",
+        offer_few: "Ychwanegu {{tag}}, ar {{count, number}} eitem arall",
+        offer_many: "Ychwanegu {{tag}}, ar {{count, number}} eitem arall",
+        offer_other: "Ychwanegu {{tag}}, ar {{count, number}} eitem arall",
+        noMatch: "Does dim tag arall yn cyfateb i “{{typed}}”.",
+        added: "Ychwanegwyd {{tags}}.",
+        removed: "Tynnwyd “{{tag}}”.",
+        undoRemove: "Dadwneud",
+        undoRemoveSubject: "tynnu {{tag}}",
+        putBack: "Rhoddwyd “{{tag}}” yn ôl.",
+        notes: {
+          repeat: "Mae “{{tag}}” eisoes ar yr eitem hon.",
+          respelt:
+            "Ychwanegwyd fel “{{tag}}”, fel mae eitemau eraill yn ei sillafu.",
+          respeltRename:
+            "Ailenwyd yn “{{tag}}”, fel mae eitemau eraill yn ei sillafu.",
+          merged:
+            "Mae “{{tag}}” eisoes ar yr eitem hon, felly tynnwyd “{{typed}}”.",
+        },
+        welshLocked:
+          "Mae fersiynau Cymraeg o'r tagiau hyn, felly does dim modd eu newid yma eto.",
       },
       openingField: {
         change: "Newid",
@@ -460,6 +499,9 @@ export const cy = {
           empty: "Dim testun",
           keepMine: "Cadw fy un i",
           useTheirs: "Defnyddio'u testun nhw",
+          welshTags:
+            "Mae fersiynau Cymraeg o'r tagiau hyn erbyn hyn, felly does dim modd eu newid yma eto.",
+          discardMine: "Gwaredu fy newid",
           removed:
             "Mae rhywun arall wedi tynnu neu newid “{{title}}”, felly doedd dim modd cadw eich newidiadau iddo.",
           otherKept: "Mae eich newidiadau eraill wedi'u cadw yn y tab hwn.",

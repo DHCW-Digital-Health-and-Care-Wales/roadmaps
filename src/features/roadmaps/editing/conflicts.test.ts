@@ -323,6 +323,50 @@ describe("withCurrentItemText", () => {
   })
 })
 
+describe("Welsh tags written since an item was read (STY-037 S22)", () => {
+  const booking = createTestRoadmapItem("Online booking", {
+    id: "bookingx",
+    tags: [{ en: "Patients", cy: "" }],
+  })
+  const retagged: ItemChanges = {
+    item: booking,
+    position: 0,
+    fields: {
+      tags: { base: "Patients", value: "Patients, Carers" },
+      title: { base: "Online booking", value: "Booking online" },
+    },
+  }
+  const welshTags: FieldConflict = {
+    subject: "item",
+    item: retagged,
+    field: "tags",
+    base: "Patients",
+    pending: "Patients, Carers",
+    current: "Patients",
+    welshTags: true,
+  }
+  const pending: RoadmapChanges = { roadmap: {}, items: [retagged] }
+
+  it("stays open, though the English is as it was edited from, until the tag change is given up", () => {
+    expect(
+      openConflicts([welshTags], pending).map(({ yours }) => yours),
+    ).toEqual(["Patients, Carers"])
+
+    const dropped = takeTheirs(pending, welshTags)
+
+    expect(dropped.items[0]?.fields).toEqual({
+      title: { base: "Online booking", value: "Booking online" },
+    })
+    expect(openConflicts([welshTags], dropped)).toEqual([])
+  })
+
+  it("shows the item as having Welsh tags, so its form no longer changes them", () => {
+    const [shown] = withCurrentItemText([booking], [welshTags], [booking])
+
+    expect(shown).toEqual({ ...booking, hasWelshTags: true })
+  })
+})
+
 describe("describeOrganisations (STY-034 S7)", () => {
   it("names a set by short name, as the card sorts them", () => {
     expect(

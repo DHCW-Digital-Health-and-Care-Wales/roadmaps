@@ -71,7 +71,9 @@ _Avoid_: Deliverable, benefit, KPI
 
 **Tag**:
 A short label on a roadmap item for grouping and filtering, such as a theme or an
-audience. Free text chosen by the Product Lead today; a shared list may follow.
+audience. Free text chosen by the Product Lead today, who is offered the tags the
+roadmap's other items carry; a shared list may follow. A comma or a line break ends a
+tag, so a tag holds neither.
 _Avoid_: Label, category, keyword
 
 **Phase**:

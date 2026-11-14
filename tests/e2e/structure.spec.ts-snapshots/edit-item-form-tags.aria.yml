@@ -1,0 +1,41 @@
+- form "Longer-term idea":
+  - text: Title
+  - textbox "Title": Longer-term idea
+  - text: Description
+  - textbox "Description": Direction we expect to take as we learn more.
+  - text: Expected outcome
+  - textbox "Expected outcome"
+  - text: Phase
+  - textbox "Phase"
+  - text: Horizon or section
+  - combobox "Horizon or section":
+    - option "Recently delivered"
+    - option "Now"
+    - option "Next"
+    - option "Later" [selected]
+    - option "Delivered this year"
+    - option "Not doing"
+  - paragraph: Tags
+  - button "Close tags" [expanded]
+  - group "Tags":
+    - list "Tags on this item":
+      - listitem:
+        - text: Service Z
+        - button "Rename Service Z"
+        - button "Remove Service Z"
+    - text: Add a tag
+    - textbox "Add a tag"
+    - button "Add tag"
+    - status: Removed “Service Y”.
+    - button "Undo removing Service Y"
+    - paragraph: Used elsewhere in this roadmap
+    - list "Used elsewhere in this roadmap":
+      - listitem:
+        - button "Add Service X, on 2 other items": Service X
+      - listitem:
+        - button "Add Service Y, on 1 other item": Service Y
+  - paragraph: Organisations
+  - button "Change organisations"
+  - text: All Wales
+  - button "Done"
+  - button "Cancel"

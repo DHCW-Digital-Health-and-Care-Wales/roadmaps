@@ -50,6 +50,10 @@ export function RoadmapItems({
     () => matchItemChanges(items, changes),
     [items, changes],
   )
+  const shownItems = useMemo(
+    () => items.map((item, at) => applyItemChanges(item, entries.get(at))),
+    [items, entries],
+  )
   // A card whose form is open stays where it opened, by `cardHoldKey`: moving it to
   // another list would make it a new card, losing what the form holds.
   const [held, setHeld] = useState<
@@ -61,9 +65,9 @@ export function RoadmapItems({
         const key = cardHoldKey(item, position)
         return held.has(key)
           ? (held.get(key) ?? null)
-          : applyItemChanges(item, entries.get(position)).placement
+          : (shownItems[position] ?? item).placement
       }),
-    [items, entries, held],
+    [items, shownItems, held],
   )
   // A moved item's card is a new one, in another list, so focus is handed to it here.
   const [focus, setFocus] = useState<FocusRequest | null>(null)
@@ -94,6 +98,7 @@ export function RoadmapItems({
     <ItemList
       roadmapId={roadmapId}
       items={items}
+      shownItems={shownItems}
       organisations={organisations}
       placed={placed}
       entries={entries}
@@ -161,6 +166,7 @@ interface FocusRequest {
 interface ItemListProps {
   roadmapId: string
   items: readonly RoadmapItem[]
+  shownItems: readonly RoadmapItem[]
   organisations: readonly Organisation[]
   placed: readonly PositionedRoadmapItem[]
   entries: ReadonlyMap<number, ItemChanges>
@@ -181,6 +187,7 @@ function cardHoldKey(item: RoadmapItem, position: number): string {
 function ItemList({
   roadmapId,
   items,
+  shownItems,
   organisations,
   placed,
   entries,
@@ -196,6 +203,7 @@ function ItemList({
           key={keys[index]}
           roadmapId={roadmapId}
           items={items}
+          shownItems={shownItems}
           item={item}
           organisations={organisations}
           position={position}

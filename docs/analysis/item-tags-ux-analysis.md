@@ -4,7 +4,7 @@
 - **Question**: how should a Product Lead add, rename and remove an item's tags, and be
   offered the tags the roadmap already uses?
 - **Scope**: the Tags field of an item's edit form, for
-  [STY-037](../backlog/EPC-009-item-tags/STY-037-edit-an-items-tags.md). Base
+  [STY-037](../backlog/_archive/EPC-009-item-tags/STY-037-edit-an-items-tags.md). Base
   `52850bf`. Only documents and one prototype page were added; no application code.
 - **Prototypes**: [`item-tags-ux-analysis/prototypes.html`](item-tags-ux-analysis/prototypes.html),
   one self-contained page; open it in a browser. The owner asked for prototypes of the
@@ -136,8 +136,8 @@ pending edits included. The write of the `Labels` cell is STY-037's own (S12);
 
 ## Related
 
-- [STY-037](../backlog/EPC-009-item-tags/STY-037-edit-an-items-tags.md) and
-  [EPC-009](../backlog/EPC-009-item-tags/README.md).
+- [STY-037](../backlog/_archive/EPC-009-item-tags/STY-037-edit-an-items-tags.md) and
+  [EPC-009](../backlog/_archive/EPC-009-item-tags/README.md).
 - [`roadmap-tab-format.md`](roadmap-tab-format.md): the `Labels` column.
 - Persona: `docs/backlog/personas/product-lead.md`.
 

@@ -16,7 +16,9 @@ doc comments first, since they are the contract.
      - `listRoadmaps` maps each roadmap to the domain's `Roadmap` (ADR-009), in the
        API's order, with ids that are URL-safe slugs;
      - `listRoadmapItems` returns one roadmap's items as `RoadmapItem`s (ADR-011), each
-       naming its organisations by `organisationIds` (below);
+       naming its organisations by `organisationIds` (below), and saying by
+       `hasWelshTags` whether it holds any Welsh for its tags, paired with the English or
+       not: the editor changes no tags that have Welsh (STY-037);
      - `listOrganisations` returns the organisations table as `Organisation`s (`id`,
        `code`, `shortName`, `name` in English and Welsh, and a `national` column, true
        for All Wales only), in any order: the screens sort them. Items link to it by

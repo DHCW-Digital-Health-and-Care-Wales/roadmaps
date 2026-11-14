@@ -7,7 +7,8 @@
 - Date: 2026-11-11 (amended in ADR-013: family and category become choosable; `Family (cy)`
   is copied; amended in ADR-014: an item's placement and organisations become editable;
   amended by STY-035: a roadmap's published state is written on its own; amended by
-  STY-036: `Last updated` becomes editable, and publishing sets it only when asked)
+  STY-036: `Last updated` becomes editable, and publishing sets it only when asked;
+  amended by STY-037: an item's tags become editable, unless it has Welsh ones)
 
 ## Context
 
@@ -212,6 +213,27 @@ Nothing checks permission in advance.
 - **Written as `YYYY-MM-DD` text** (D2), whatever the cell held, or an empty cell when
   cleared. "Today" is the browser's local date (D11); the future database API takes it
   in UTC (CHO-005).
+
+### STY-037 amendments
+
+- **An item's tags become a pending edit** (STY-037 D1, D3, D11): added, renamed and
+  removed in its edit form, one field for conflicts, compared as the ordered list of
+  English tags (D4), so a co-lead's reordering is a conflict. This amends _What is
+  editable_ and the ADR-014 amendments, which kept tags read-only; details and Welsh
+  still are.
+- **Publishing writes the item's `Labels` cell alone** (D5): the tags in order, separated
+  by a comma and a space, as text, or an empty cell for none, adding the `Labels` column
+  when missing. A comma or a line break ends a tag, so no tag holds either.
+- **No Welsh cell is written, and tags that have Welsh are not edited** (owner, D14;
+  D16): while an item's `Labels (cy)` cell holds anything, paired with the English or
+  not, the form shows its tags without a way to change them, as writing the English
+  alone could pair the wrong Welsh with a tag or drop every Welsh tag. `RoadmapItem`
+  gains `hasWelshTags` to say so (amends ADR-011), since tags whose Welsh pairs with
+  nothing read as English alone.
+- **Welsh tags written since the item was read are a conflict that can't be kept**
+  (D17): the publish writes nothing, whatever the English cell then holds, and the review
+  offers only to discard the tag change (`FieldConflict.welshTags`). Tags the cell
+  already holds are published without a write, as any field is.
 
 ## Options (owner's choice marked ✅, 2026-11-11)
 

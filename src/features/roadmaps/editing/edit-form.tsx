@@ -6,6 +6,7 @@ import {
   useState,
   type SubmitEvent,
   type KeyboardEvent,
+  type ReactNode,
 } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -16,9 +17,12 @@ import { Label } from "@/components/ui/label"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Textarea } from "@/components/ui/textarea"
 import { isCalendarDate } from "@/domain/roadmap/calendar-date"
+import { tagsOf, tagsValue } from "@/domain/roadmap/roadmap-changes"
 
 import { RoadmapSwatch } from "../components/roadmap-swatch"
+import type { TagInUse } from "./item-tags"
 import { OpeningField } from "./opening-field"
+import { TagsField } from "./tags-field"
 
 /** One choice of a field chosen from a list. */
 export interface EditFormOption {
@@ -54,10 +58,16 @@ export interface EditFormField<F extends string> {
   }
   /** Said of a checkbox group as a whole, under its label, shut or open (STY-038 S5). */
   hint?: string
+  /**
+   * An item's tags (STY-037), edited in a `TagsField`, which opens on request: the
+   * field's value holds them as `tagsValue` gives them, with whatever is half done in
+   * the field kept. `inUse` are the tags the roadmap's other items carry, to offer.
+   */
+  tags?: { inUse: readonly TagInUse[] }
   /** Held at its value, as while its options are read. */
   disabled?: boolean
-  /** Shown as `text`, not edited, with a notice of why (STY-028 S6). */
-  fixed?: { text: string; notice: string }
+  /** Shown as `text`, not edited, with a notice of why (STY-028 S6, STY-037 S20). */
+  fixed?: { text: ReactNode; notice: string }
   /**
    * A calendar date, `YYYY-MM-DD` or `""` for none, in the browser's own date input
    * (STY-036 D8): none after `today()`, which "Today" fills in. Read when it is needed,
@@ -79,7 +89,7 @@ export interface EditFormProps<F extends string> {
   /**
    * Confirms the form, with each value changed from `initial` (trimmed at its ends, as
    * the comparison is): a field left as it opened is no edit, whatever has been read
-   * since.
+   * since, and neither is one that is `fixed` when the form is confirmed.
    */
   onDone: (values: Partial<Record<F, string>>) => void
   onCancel: () => void
@@ -88,9 +98,10 @@ export interface EditFormProps<F extends string> {
 /**
  * The form an item or the roadmap's own text turns into for editing (STY-025 S1, S4,
  * S5): a labelled field each, typed, chosen from a list (STY-028), ticked from one that
- * opens on request (STY-034, STY-038) or a date picked (STY-036), or shown read-only
- * when it can't be changed, then "Done" to keep the values pending and Cancel (or
- * Escape) to leave them. The title is required, and a date is a real one and not after
+ * opens on request (STY-034, STY-038), tags added, renamed and removed (STY-037) or a
+ * date picked (STY-036), or shown read-only when it can't be changed, then "Done" to
+ * keep the values pending and Cancel (or Escape, unless a field has used it) to leave
+ * them. The title is required, and a date is a real one and not after
  * today: confirming otherwise keeps the form open with an error linked to each field,
  * focusing the first. Writes nothing; the caller keeps the values pending.
  */
@@ -145,14 +156,18 @@ export function EditForm<F extends string>({
     }
     onDone(
       Object.fromEntries(
-        fields.flatMap(({ name }) =>
-          trimmed[name] === opened[name].trim() ? [] : [[name, trimmed[name]]],
+        // A field shown read-only is no edit, whatever it held before it was fixed.
+        fields.flatMap(({ name, fixed }) =>
+          fixed || trimmed[name] === opened[name].trim()
+            ? []
+            : [[name, trimmed[name]]],
         ),
       ) as Partial<Record<F, string>>,
     )
   }
   const escape = (event: KeyboardEvent<HTMLFormElement>) => {
-    if (event.key !== "Escape") return
+    // A field may use Escape itself, as a tag's rename does (STY-037 S15).
+    if (event.key !== "Escape" || event.defaultPrevented) return
     event.preventDefault()
     onCancel()
   }
@@ -176,7 +191,11 @@ export function EditForm<F extends string>({
           return (
             <div key={field.name} className="flex flex-col gap-1.5">
               <p className="font-bold">{field.label}</p>
-              <p>{field.fixed.text}</p>
+              {typeof field.fixed.text === "string" ? (
+                <p>{field.fixed.text}</p>
+              ) : (
+                field.fixed.text
+              )}
               <p className="text-muted-foreground">{field.fixed.notice}</p>
             </div>
           )
@@ -224,6 +243,20 @@ export function EditForm<F extends string>({
                 ))
               }
             </OpeningField>
+          )
+        }
+        if (field.tags) {
+          return (
+            <TagsField
+              key={field.name}
+              label={field.label}
+              // What the form holds, so a field drawn again shows what Done keeps.
+              initial={tagsOf(values[field.name])}
+              inUse={field.tags.inUse}
+              onChange={(tags) => {
+                change(tagsValue(tags))
+              }}
+            />
           )
         }
         if (field.options) {

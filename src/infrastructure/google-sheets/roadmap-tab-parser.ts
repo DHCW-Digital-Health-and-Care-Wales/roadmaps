@@ -264,6 +264,8 @@ function toItem(row: ItemRow, seenIds: Set<string>): RoadmapItem | null {
     expectedOutcome: readText(row, "Outcome"),
     phase: readText(row, "Phase"),
     tags: readTags(row),
+    // Whatever the Welsh cell holds, paired with the English or not (STY-037 D16).
+    hasWelshTags: row.readWelsh("Labels") !== "",
     ...readOrganisations(row),
     details: readDetails(row),
   }

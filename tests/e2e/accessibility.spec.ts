@@ -262,6 +262,79 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expectNoAxeViolations(page, theme)
     })
 
+    test("an item's tags: shut, open, a rename, a removal with Undo, a refusal, then the changed card (STY-037)", async ({
+      page,
+    }) => {
+      const title = "Longer-term idea"
+      await page.goto("./#/roadmaps/producta")
+      await connect(page)
+      const main = page.getByRole("main")
+      await main.getByRole("button", { name: `Edit ${title}` }).click()
+      const form = main.getByRole("form", { name: title })
+      await expect(
+        form.getByRole("button", { name: "Change tags" }),
+      ).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+
+      await form.getByRole("button", { name: "Change tags" }).click()
+      const field = form.getByRole("group", { name: "Tags" })
+      await expect(
+        field.getByRole("textbox", { name: "Add a tag" }),
+      ).toBeFocused()
+      await expectNoAxeViolations(page, theme)
+
+      await field.getByRole("button", { name: "Rename Service Z" }).click()
+      await expect(
+        field.getByRole("textbox", { name: "Rename Service Z" }),
+      ).toBeFocused()
+      await expectNoAxeViolations(page, theme)
+
+      await field.getByRole("button", { name: "Remove Service Y" }).click()
+      await expect(
+        field.getByRole("button", { name: "Undo removing Service Y" }),
+      ).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+
+      await field.getByRole("textbox", { name: "Add a tag" }).fill("service z")
+      await page.keyboard.press("Enter")
+      await expect(field.getByRole("status")).toHaveText(
+        "“Service Z” is already on this item.",
+      )
+      await field.getByRole("textbox", { name: "Add a tag" }).fill("zzz")
+      await expect(field.getByText("No other tag matches “zzz”.")).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+
+      await form.getByRole("button", { name: "Done" }).click()
+      await expect(main.getByText("Service Z, zzz")).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+    })
+
+    test("an item with no tags, and one whose Welsh tags can't be changed (STY-037)", async ({
+      page,
+    }) => {
+      await page.goto("./#/roadmaps/producta")
+      await connect(page)
+      const main = page.getByRole("main")
+      await main.getByRole("button", { name: "Edit Minimal card" }).click()
+      const empty = main.getByRole("form", { name: "Minimal card" })
+      await expect(empty.getByText("No tags")).toBeVisible()
+      await empty.getByRole("button", { name: "Add tags" }).click()
+      await expect(
+        empty.getByRole("button", { name: "Add Service X, on 2 other items" }),
+      ).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+      await empty.getByRole("button", { name: "Cancel" }).click()
+
+      const item = "Example card with every column"
+      await main.getByRole("button", { name: `Edit ${item}` }).click()
+      await expect(
+        main
+          .getByRole("form", { name: item })
+          .getByText(/^These tags have Welsh versions/),
+      ).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+    })
+
     test("an item with no organisations, its field shut then open (STY-038)", async ({
       page,
     }) => {

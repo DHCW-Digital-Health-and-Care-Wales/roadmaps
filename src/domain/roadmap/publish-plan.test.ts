@@ -437,6 +437,132 @@ describe("planRoadmapPublish", () => {
     })
   })
 
+  describe("tags, decided as the ordered list (STY-037)", () => {
+    const tagged = (...tags: string[]) => tags.map((en) => ({ en, cy: "" }))
+    const item = createTestRoadmapItem("Online booking", {
+      id: "bookingx",
+      tags: tagged("Patients", "Video consultations"),
+    })
+    const retag = (base: string, value: string) => ({
+      roadmap: {},
+      items: [{ item, position: 0, fields: { tags: { base, value } } }],
+    })
+    const BASE = "Patients, Video consultations"
+
+    it("writes the tags in order, each trimmed, or none (S12)", () => {
+      const changed = planRoadmapPublish(
+        retag(BASE, " Patients,Video appointments , Carers "),
+        snapshotOf([item]),
+      )
+      const none = planRoadmapPublish(retag(BASE, ""), snapshotOf([item]))
+
+      expect(changed.kind === "write" && changed.writes.items).toEqual([
+        {
+          index: 0,
+          id: "bookingx",
+          field: "tags",
+          value: "Patients, Video appointments, Carers",
+        },
+      ])
+      expect(none.kind === "write" && none.writes.items).toEqual([
+        { index: 0, id: "bookingx", field: "tags", value: "" },
+      ])
+    })
+
+    it("is a conflict when a co-lead changed the tags or their order, and none for the same tags in the same order (S13)", () => {
+      const intent = retag(BASE, "Patients, Carers")
+      const reordered = planRoadmapPublish(
+        intent,
+        snapshotOf([
+          { ...item, tags: tagged("Video consultations", "Patients") },
+        ]),
+      )
+      const same = planRoadmapPublish(
+        intent,
+        snapshotOf([{ ...item, tags: tagged("Patients", "Carers") }]),
+      )
+
+      expect(reordered).toEqual({
+        kind: "settled",
+        outcome: {
+          status: "refused",
+          conflicts: [
+            {
+              subject: "item",
+              item: intent.items[0],
+              field: "tags",
+              base: BASE,
+              pending: "Patients, Carers",
+              current: "Video consultations, Patients",
+            },
+          ],
+          missingItems: [],
+        },
+      })
+      expect(same).toEqual({
+        kind: "settled",
+        outcome: { status: "published" },
+      })
+    })
+
+    it("refuses, as a conflict that can't be kept, when the item's tags have gained Welsh, even with the English as it was (S22)", () => {
+      const intent = retag(BASE, "Patients, Carers")
+
+      const plan = planRoadmapPublish(
+        intent,
+        snapshotOf([{ ...item, hasWelshTags: true }]),
+      )
+
+      expect(plan).toEqual({
+        kind: "settled",
+        outcome: {
+          status: "refused",
+          conflicts: [
+            {
+              subject: "item",
+              item: intent.items[0],
+              field: "tags",
+              base: BASE,
+              pending: "Patients, Carers",
+              current: BASE,
+              welshTags: true,
+            },
+          ],
+          missingItems: [],
+        },
+      })
+    })
+
+    it("writes the item's other fields beside Welsh tags, and takes tags already held as published (S20, S22)", () => {
+      const withWelsh = { ...item, hasWelshTags: true }
+      const other = planRoadmapPublish(
+        {
+          roadmap: {},
+          items: [
+            {
+              item: withWelsh,
+              position: 0,
+              fields: { phase: { base: "", value: "Beta" } },
+            },
+          ],
+        },
+        snapshotOf([withWelsh]),
+      )
+      const held = planRoadmapPublish(
+        retag(BASE, "Patients, Carers"),
+        snapshotOf([{ ...withWelsh, tags: tagged("Patients", "Carers") }]),
+      )
+
+      expect(other.kind === "write" && other.writes.items).toEqual([
+        { index: 0, id: "bookingx", field: "phase", value: "Beta" },
+      ])
+      expect(held).toEqual({
+        kind: "settled",
+        outcome: { status: "published" },
+      })
+    })
+  })
+
   describe("Last updated, a calendar date (STY-036)", () => {
     const dated = { ...roadmap, lastUpdated: "2026-10-02" }
     const date = (base: string, value: string, overwrite?: true) => ({

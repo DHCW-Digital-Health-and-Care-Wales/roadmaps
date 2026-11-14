@@ -196,6 +196,16 @@ for (const theme of THEMES) {
       const minimal = main.getByRole("form", { name: "Minimal card" })
       await minimal.getByRole("button", { name: "Add organisations" }).click()
       await expect(minimal.getByRole("checkbox")).toHaveCount(12)
+      // Another item's Tags field opened, a name being changed, so the tour stops on
+      // its rows, its fields and the tags it offers (STY-037).
+      const tagged = "Longer-term idea"
+      await main.getByRole("button", { name: `Edit ${tagged}` }).click()
+      const tags = main.getByRole("form", { name: tagged })
+      await tags.getByRole("button", { name: "Change tags" }).click()
+      await tags.getByRole("button", { name: "Rename Service Y" }).click()
+      await expect(
+        tags.getByRole("textbox", { name: "Rename Service Y" }),
+      ).toBeFocused()
 
       await expectEveryStopShowsAnIndicator(page)
     })

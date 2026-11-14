@@ -109,6 +109,7 @@ const itemFixtures = {
         { en: "Service X", cy: "Gwasanaeth X" },
         { en: "Service Y", cy: "Gwasanaeth Y" },
       ],
+      hasWelshTags: true,
       organisationIds: ["national", "cavuhb", "sbuhb"],
       details: [
         { text: { en: "First", cy: "Cyntaf" }, level: 0 },
@@ -1020,6 +1021,168 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
         expect(await organisationsOf(repository)).toEqual([
           { ids: ["cavuhb"], unknown: ["CAVHB"] },
         ])
+      })
+    })
+
+    describe("tags (STY-037)", () => {
+      const tagged = (...tags: string[]) => tags.map((en) => ({ en, cy: "" }))
+      const booking = {
+        ...laterWork,
+        id: "bookingx",
+        tags: tagged("Patients", "Video consultations"),
+      }
+      const BASE = "Patients, Video consultations"
+      const retag = (value: string) =>
+        edit(booking, 0, { tags: change(BASE, value) })
+      const tagsOf = async (repository: RoadmapRepository) =>
+        (await repository.listRoadmapItems("producta")).map(
+          ({ tags, hasWelshTags }) => ({ tags, hasWelshTags }),
+        )
+
+      it("writes the tags in order, in English alone, keeping the item's other fields (S12)", async () => {
+        const repository = setup.withRoadmaps(fixtures, {
+          producta: [booking, everyField],
+        })
+
+        const outcome = await repository.publishRoadmapChanges("producta", {
+          roadmap: {},
+          items: [retag("Patients, Video appointments, Carers")],
+        })
+
+        expect(outcome).toEqual({ status: "published" })
+        expect(await repository.listRoadmapItems("producta")).toStrictEqual([
+          {
+            ...booking,
+            tags: tagged("Patients", "Video appointments", "Carers"),
+          },
+          everyField,
+        ])
+      })
+
+      it("writes no tags as none (S12)", async () => {
+        const repository = setup.withRoadmaps(fixtures, {
+          producta: [booking],
+        })
+
+        await repository.publishRoadmapChanges("producta", {
+          roadmap: {},
+          items: [retag("")],
+        })
+
+        expect(await tagsOf(repository)).toEqual([
+          { tags: [], hasWelshTags: false },
+        ])
+      })
+
+      it("refuses a co-lead's other tags, or other order, writing nothing (S13)", async () => {
+        const reordered = tagged("Video consultations", "Patients")
+        const repository = setup.withRoadmaps(fixtures, {
+          producta: [{ ...booking, tags: reordered }],
+        })
+        const mine = retag("Patients, Carers")
+
+        const outcome = await repository.publishRoadmapChanges("producta", {
+          roadmap: {},
+          items: [mine],
+        })
+
+        expect(outcome).toEqual({
+          status: "refused",
+          conflicts: [
+            {
+              subject: "item",
+              item: mine,
+              field: "tags",
+              base: BASE,
+              pending: "Patients, Carers",
+              current: "Video consultations, Patients",
+            },
+          ],
+          missingItems: [],
+        })
+        expect(await tagsOf(repository)).toEqual([
+          { tags: reordered, hasWelshTags: false },
+        ])
+      })
+
+      it("takes a co-lead's same tags, in the same order, as published (S13)", async () => {
+        const repository = setup.withRoadmaps(fixtures, {
+          producta: [{ ...booking, tags: tagged("Patients", "Carers") }],
+        })
+
+        const outcome = await repository.publishRoadmapChanges("producta", {
+          roadmap: {},
+          items: [retag("Patients, Carers")],
+        })
+
+        expect(outcome).toEqual({ status: "published" })
+      })
+
+      it("says an item has Welsh tags even when none pairs with the English (S20)", async () => {
+        const unpaired = { ...booking, hasWelshTags: true }
+        const repository = setup.withRoadmaps(fixtures, {
+          producta: [unpaired],
+        })
+
+        expect(await repository.listRoadmapItems("producta")).toStrictEqual([
+          unpaired,
+        ])
+      })
+
+      it("refuses tags for an item that has gained Welsh ones, writing nothing, though its English is as it was (S22)", async () => {
+        const withWelsh = {
+          ...booking,
+          tags: [
+            { en: "Patients", cy: "Cleifion" },
+            { en: "Video consultations", cy: "Ymgynghoriadau fideo" },
+          ],
+          hasWelshTags: true,
+        }
+        const repository = setup.withRoadmaps(fixtures, {
+          producta: [withWelsh],
+        })
+        const mine = retag("Patients, Carers")
+
+        const outcome = await repository.publishRoadmapChanges("producta", {
+          roadmap: {},
+          items: [mine],
+        })
+
+        expect(outcome).toEqual({
+          status: "refused",
+          conflicts: [
+            {
+              subject: "item",
+              item: mine,
+              field: "tags",
+              base: BASE,
+              pending: "Patients, Carers",
+              current: BASE,
+              welshTags: true,
+            },
+          ],
+          missingItems: [],
+        })
+        expect(await repository.listRoadmapItems("producta")).toStrictEqual([
+          withWelsh,
+        ])
+      })
+
+      it("publishes the other fields of an item with Welsh tags, leaving its tags as they are (S20)", async () => {
+        const repository = setup.withRoadmaps(fixtures, itemFixtures)
+
+        const outcome = await repository.publishRoadmapChanges("producta", {
+          roadmap: {},
+          items: [edit(everyField, 0, { phase: change("Beta", "Live") })],
+        })
+
+        expect(outcome).toEqual({ status: "published" })
+        const [published] = await repository.listRoadmapItems("producta")
+        expect(published).toMatchObject({
+          phase: { en: "Live", cy: "Beta" },
+          tags: everyField.tags,
+          hasWelshTags: true,
+        })
       })
     })
 

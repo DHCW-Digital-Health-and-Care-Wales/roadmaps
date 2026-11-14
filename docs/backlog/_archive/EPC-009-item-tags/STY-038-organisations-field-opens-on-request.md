@@ -3,7 +3,7 @@
 - **Status**: Done — delivered in its PR, which awaits the owner's merge
 - **Type**: Feature
 - **Area**: Features/UI + i18n (en + cy) + E2E
-- **Epic**: [EPC-009-item-tags](../../EPC-009-item-tags/README.md)
+- **Epic**: [EPC-009-item-tags](README.md)
 - **Depends on**: none
 - **Binding ADRs**: ADR-014 §Organisations, ADR-010, ADR-008
 - **Suggested model**: Sonnet — a presentation change to one form field, with its tests

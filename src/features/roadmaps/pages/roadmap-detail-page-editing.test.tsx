@@ -157,7 +157,7 @@ describe("Editing a roadmap's items (STY-025)", () => {
       "",
     )
     expect(form.getByRole("textbox", { name: "Phase" })).toHaveValue("")
-    // Tags stay on the card, read-only.
+    // Its tags show on one line in the form, the Tags field shut (STY-037 S19).
     expect(card("First item").getByText("Records")).toBeInTheDocument()
   })
 

@@ -23,7 +23,7 @@ moves to `_archive/`, where its row here still points.
 | [EPC-006 Product families and colours](_archive/EPC-006-product-families-and-colours/README.md)          | STY-027–STY-030: families and categories defined once in their own tabs, chosen per roadmap, managed in one page, out-of-step rows fixed                                                                             | Done   |
 | [EPC-007 Item placement and organisations](_archive/EPC-007-item-placement-and-organisations/README.md)  | STY-031–STY-034: move an item between horizons and sections; organisations served by the repository, listed, and chosen per item                                                                                     | Done   |
 | [EPC-008 Publishing and freshness](_archive/EPC-008-publishing-and-freshness/README.md)                  | STY-035–STY-036: publish or unpublish a roadmap from its page, refused when the public sync would fail; set its Last updated date                                                                                    | Done   |
-| [EPC-009 Item tags](EPC-009-item-tags/README.md)                                                         | STY-037–STY-038: add, rename and remove an item's tags in its edit form, offered the tags the roadmap's other items carry (editor B chosen from four prototypes); Tags and Organisations open on request in the form | Active |
+| [EPC-009 Item tags](_archive/EPC-009-item-tags/README.md)                                                | STY-037–STY-038: add, rename and remove an item's tags in its edit form, offered the tags the roadmap's other items carry (editor B chosen from four prototypes); Tags and Organisations open on request in the form | Done   |
 
 ## Chores
 

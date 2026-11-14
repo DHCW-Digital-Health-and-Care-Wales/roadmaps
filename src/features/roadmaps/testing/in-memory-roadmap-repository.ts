@@ -31,6 +31,7 @@ import {
   type EditableRoadmapField,
   organisationIdsOf,
   type RoadmapChoiceField,
+  tagsOf,
 } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { isRoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
@@ -552,9 +553,10 @@ function setRoadmapText(
 }
 
 /**
- * Sets an item's English, placement or organisations as a later read gives it: blank
- * optional text is none, a value no placement has leaves the item unplaced with it as
- * its horizon, and written organisations hold known codes only.
+ * Sets an item's English, placement, tags or organisations as a later read gives it:
+ * blank optional text is none, a value no placement has leaves the item unplaced with it
+ * as its horizon, written tags are English alone, and written organisations hold known
+ * codes only.
  */
 function setItemValue(
   item: RoadmapItem,
@@ -565,6 +567,9 @@ function setItemValue(
     const placed = isRoadmapPlacement(value)
     item.placement = placed ? value : null
     item.writtenHorizon = placed ? null : value
+  } else if (field === "tags") {
+    // The plan writes tags only to an item with no Welsh ones (STY-037 S22).
+    item.tags = tagsOf(value).map((en) => ({ en, cy: "" }))
   } else if (field === "organisationIds") {
     item.organisationIds = organisationIdsOf(value)
     item.unknownOrganisationCodes = []

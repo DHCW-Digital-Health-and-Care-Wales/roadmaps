@@ -8,7 +8,7 @@
 - **Binding ADRs**: ADR-009, ADR-012, ADR-013, ADR-003, ADR-005, ADR-008, ADR-010
 - **Suggested model**: Opus — the app's first dialog form, whose closing and focus
   rules three later stories reuse, with six refusals to show at their fields
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/75
 
 ## Summary
 

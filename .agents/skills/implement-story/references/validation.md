@@ -43,7 +43,9 @@ A fix made between review rounds, before it is pushed, needs the tests of its
 changed files and their consumers (`pnpm exec vitest related --run <files>`),
 with `pnpm lint`, `pnpm typecheck` and `pnpm format:check`, plus the Playwright
 specs of any journey it changes; with those green, commit it and start the next
-round's reviewers. Every head you push gets the full gate first.
+round's reviewers. Every head you push gets the full gate first. A head that
+differs from one that passed it only in `README.md` or under `docs/` takes the
+_Documentation only_ row instead: no other check reads those files.
 
 CI is the shared merge gate, and independent review covers requirements and
 judgement beyond deterministic checks. Never rely on one as a replacement for

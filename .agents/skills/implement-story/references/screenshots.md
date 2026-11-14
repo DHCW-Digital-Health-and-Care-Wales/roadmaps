@@ -101,9 +101,11 @@ gh pr create --base <base branch> --head <branch> --title '<title>' --body-file 
 existing PR. The CLI uploads the images and rewrites matching local references
 to hosted URLs, keeping alt text and placement; an unreferenced attachment is
 appended at the end, so reference every capture. Afterwards read back the PR
-body to confirm every local reference became a hosted URL, and record those
-URLs in the manifest. A 404 from an unauthenticated request does not prove an
-attachment on this private repository is missing.
+body to confirm every local reference became a hosted URL, since an upload can
+skip one without an error; re-attach any left local with `gh pr edit --attach`
+of that file, and record the URLs in the manifest. A 404 from an
+unauthenticated request does not prove an attachment on this private
+repository is missing.
 
 Add captures from later fixes without replacing other PR sections: keep
 published URLs, upload only new captures, and update superseded captions. If

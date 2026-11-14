@@ -6,8 +6,9 @@
 - **Area**: Domain + Infrastructure + Features/UI + i18n (en + cy) + E2E
 - **Epic**: [EPC-010-item-details](README.md)
 - **Depends on**: STY-037 (hard, must be on the default branch; merged as `0d494ef`)
-- **Binding ADRs**: ADR-012 (this story amends _What is editable_), ADR-014, ADR-011,
-  ADR-010, ADR-008
+- **Binding ADRs**: ADR-012 (this story amends _What is editable_), ADR-014, ADR-011
+  (amended: an item says whether its Welsh details cell holds anything), ADR-010,
+  ADR-008
 - **Suggested model**: Opus — an ordered, nested field through the pending-change
   model, publish plan and conflict review, and a new form control with its own keys
 
@@ -28,10 +29,10 @@ field (`domain/`), and the write of the item's details (`infrastructure/`), with
 in English and Welsh. The field reads only the item, so it has no loading or failure
 state of its own.
 
-S1–S20 hold for any of the three editors prototyped; S21–S25 are design A's own, which
-the owner chose (D10). This story changes what the editor writes to
-the shared data source, a contract with the public site: the item's `Details` cell
-(S14). `Details (cy)` is never written (S18).
+S1–S20 hold for any editor with a control per detail; S21–S25 are design A's own,
+which the owner chose (D10). This story changes what the editor writes to the shared
+data source, a contract with the public site: the item's `Details` cell (S14).
+`Details (cy)` is never written (S18).
 
 ## Acceptance criteria
 
@@ -217,7 +218,7 @@ them: “Two” one level under “One”
 **And** once Sam changes them, the cell is written as S14 says, at the levels shown
 **And** a detail read deeper than the third level shows at the third in the field
 
-### S21: Enter starts the next detail (owner, D10)
+### S21: Enter starts the next detail (owner, D10; agent, D16, D17)
 
 **Given** the Details editor, with the caret at the end of “Rheumatology”
 **When** Sam presses Enter and types “Adult clinics first”
@@ -236,7 +237,8 @@ under “Follow-up appointments in three specialties”
 **When** Sam presses Backspace
 **Then** “Rheumatology” moves out a level, with its text as it was
 **And** at the start of a top-level detail, Backspace joins its text to the detail
-above, with the caret where the two meet; a detail with no text is removed that way
+above, with the caret where the two meet, and the details nested under it keep their
+level; a detail with no text is removed that way
 **And** at the start of the first detail, at the top level, it does nothing
 
 ### S23: The buttons under the list act on the detail being written (owner, D10)
@@ -322,16 +324,36 @@ specialties”. The 2 details under it moved up a level.”
 - **D17** (agent, 2026-11-14): Enter in a nested detail with no text moves it out a
   level, over doing nothing: as prototyped in the editor the owner chose (D10), and as
   a document does → S21.
+- **D18** (agent, 2026-11-14, round 1 review): details are compared at the levels the field shows, three at most,
+  over the levels the card shows: opening the field of a list read deeper and
+  confirming it unchanged is no pending edit, and its cell stays as written until the
+  Product Lead changes the details → S15, S20.
+- **D19** (agent, 2026-11-14, round 1 review): in editor A, after a removal focus is in the text of the detail now
+  in its place (the next, or the one before when it was the last), or in the empty
+  detail the list keeps when none is left, which is A's control for adding; by
+  keyboard and pointer alike, over leaving it on “Remove”, where a second press would
+  remove the next detail → S13. A move keeps focus as S23 says.
+- **D20** (agent, 2026-11-14, round 1 review): a detail whose text is cleared is removed as “Remove” removes it,
+  so the details nested under it move up a level (D15), over leaving them to nest
+  under whichever detail is then above → S5, S6.
+- **D21** (agent, 2026-11-14, round 1 review): hyphens and spaces before a detail's text are never kept. Typed or
+  pasted, each hyphen nests it a level (`- -5 degrees` is “5 degrees”, two levels in
+  where S3 allows). In a detail read with one (`- -5 degrees` reads as “-5 degrees”,
+  one level in) it is no change until the details are next changed, then dropped.
+  Over keeping it as text: moved to the top level, such a line would be read back
+  nested and without its hyphen → S9, S20.
+- **D22** (agent, 2026-11-14): lines pasted into a detail that holds text follow it and
+  the details nested under it, nested by their hyphens from its level; pasted into a
+  detail with no text, they take its place: as prototyped in editor A → S8.
 
 ## Starting point
 
-Audited at `3d0029e`, and again at `0d494ef` once STY-037 had merged; the public site
-at its commit `4b3354d`. Epic F1–F6 hold what the format, the parser and the form give.
+Epic F1–F6 hold what the format, the parser and the form give, and when they were
+audited. This story's own:
 
-- `RoadmapItemDetail.level` is the number of hyphens as written, with no limit, so it
-  can start above 0 or skip a level; the card nests each detail under the last
-  shallower one (`nestItemDetails`), as the public site does. The field and the
-  comparison of S15 need the levels shown, not the levels written (S20, D4).
+- `RoadmapItemDetail.level` is the number of hyphens as written (epic F2, F3). The
+  field and the comparison of S15 need the levels shown, not the levels written (S20,
+  D4, D18).
 - When the Welsh and English line counts differ the parser drops the Welsh, so
   `RoadmapItem.details` alone cannot say the Welsh cell holds anything (S18);
   `RoadmapItem.hasWelshTags` is there for the same reason.
@@ -339,13 +361,10 @@ at its commit `4b3354d`. Epic F1–F6 hold what the format, the parser and the f
   leaves Escape to a field that has used it, `OpeningField` takes `onShut`, a list
   field's value is held as one string (`tagsValue`, `tagsOf`), and
   `FieldConflict.welshTags` is the conflict that can only be dropped.
-- The public site also turns lines of a description or expected outcome that start
-  `- ` into a list. That is a different rule from `Details` and is not this story's.
 
 ## Out of scope
 
-- Editing a detail's Welsh: with Welsh content editing, a later record.
-- Lists inside a description or an expected outcome: no record yet.
-- Bold, links or any other formatting in a detail: the format holds text only.
-- A limit on how much an item says: the card budget, deferred (persona A11).
+- What the epic leaves out (EPC-010 _Out of scope_): editing Welsh details, lists in a
+  description or an expected outcome, formatting in a detail, and a limit on how much
+  an item says.
 - Adding or deleting items: later editing records.

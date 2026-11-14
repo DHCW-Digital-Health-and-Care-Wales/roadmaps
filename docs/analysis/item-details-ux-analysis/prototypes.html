@@ -720,18 +720,21 @@ An interpreter can join the call
       const MAX_LEVEL = 2
       const HINT = "The public site lists these under “What this covers”."
       const clean = (text) => text.replace(/\s+/g, " ").trim()
+      /** The hyphens and spaces before a line's text: never text, however written. */
+      const leadOf = (line) => /^[\s-]*/.exec(line)[0]
+      const hyphensIn = (lead) => lead.replace(/[^-]/g, "").length
 
       /**
-       * Lines of text as details: each hyphen a line starts with nests it a level
+       * Lines of text as details: each hyphen before a line's text nests it a level
        * deeper than `base`, and a blank line is none.
        */
       function parseLines(text, base = 0) {
         return text.split(/\r?\n/).flatMap((line) => {
-          const [, hyphens, rest] = /^\s*(-*)(.*)$/.exec(line)
-          const detail = clean(rest)
+          const lead = leadOf(line)
+          const detail = clean(line.slice(lead.length))
           return detail === ""
             ? []
-            : [{ text: detail, level: base + hyphens.length }]
+            : [{ text: detail, level: base + hyphensIn(lead) }]
         })
       }
 
@@ -1052,13 +1055,13 @@ An interpreter can join the call
 
         function typed(detail, area) {
           // Hyphens at the start nest the detail, as they do where it is written.
-          const [lead, hyphens] = /^\s*(-*)\s*/.exec(area.value)
+          const lead = leadOf(area.value)
           if (lead !== "") {
             const at = Math.max(0, area.selectionStart - lead.length)
             detail.text = area.value.slice(lead.length)
             area.value = detail.text
             area.setSelectionRange(at, at)
-            for (let step = 0; step < hyphens.length; step += 1)
+            for (let step = 0; step < hyphensIn(lead); step += 1)
               moveIn(indexOf(detail.id), { id: detail.id, caret: at })
           } else {
             detail.text = area.value
@@ -1189,6 +1192,8 @@ An interpreter can join the call
             loud: true,
             action: undo,
           })
+          // Focus goes to the detail now in its place, so a second press removes nothing.
+          place(current, 0)
         }
 
         // The buttons act on the detail last written in, and say why when they can't.
@@ -1236,6 +1241,7 @@ An interpreter can join the call
               details.length === 1 && clean(details[0].text) === ""
                 ? "There is no detail to remove."
                 : null,
+            placesFocus: true,
             run: (index) => remove(index),
           },
         ]
@@ -1259,7 +1265,7 @@ An interpreter can join the call
                   return
                 }
                 action.run(index, focus)
-                if (!focus) button.focus()
+                if (!focus && !action.placesFocus) button.focus()
               },
             },
             icon(action.icon),
@@ -1314,12 +1320,16 @@ An interpreter can join the call
         draw()
         return {
           element,
-          value: () =>
-            settle(
-              plain(details)
-                .map((detail) => ({ ...detail, text: clean(detail.text) }))
-                .filter(({ text }) => text !== ""),
-            ),
+          value: () => {
+            let kept = plain(details).map((detail) => ({
+              ...detail,
+              text: clean(detail.text),
+            }))
+            // A detail left with no text is removed as Remove removes it.
+            for (let at = kept.length - 1; at >= 0; at -= 1)
+              if (kept[at].text === "") kept = without(kept, at)
+            return settle(kept)
+          },
           focus: () => place(current, fields.get(current).value.length),
         }
       }

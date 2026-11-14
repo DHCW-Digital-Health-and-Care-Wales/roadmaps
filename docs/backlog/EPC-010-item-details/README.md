@@ -60,8 +60,10 @@ rewrote the hyphens as written would call these different.
 ### F4 — A detail cannot start with a hyphen or hold a line break
 
 A hyphen at the start of a line is always nesting, with or without a space after it,
-and a line break always ends a detail. The format has no way to write either as text.
-Blank lines are dropped.
+and a line break always ends a detail. The format has no way to write a line break in
+a detail, or a hyphen at the start of a top-level one; a nested line can hold one
+after a space (`- -5 degrees` reads as “-5 degrees”, one level in). Blank lines are
+dropped.
 
 ### F5 — Welsh details are paired with English by position
 
@@ -98,9 +100,10 @@ details editor adds between about 460px and 650px for seven details, by design
    Organisations do (F6; EPC-009 _A field that opens on request_).
 6. An item that has Welsh details keeps its details read-only in the form until Welsh
    content can be edited, as decided for tags (F5; STY-039 D11).
-7. **Unchanged:** the card's Details list; how details are read (ADR-011); ADR-012's
-   per-roadmap, all-or-nothing publish, its Refresh rules and its conflict review, but
-   for the conflict of point 6; no limit on how much an item says (persona A11).
+7. **Unchanged:** the card's Details list; how a detail's text and level are read
+   (ADR-011); ADR-012's per-roadmap, all-or-nothing publish, its Refresh rules and its
+   conflict review, but for the Welsh conflict STY-039 S19 adds; no limit on how much
+   an item says (persona A11).
 
 ## Shared assumptions and contracts
 
@@ -109,10 +112,18 @@ details editor adds between about 460px and 650px for seven details, by design
 STY-039 adds the item's `Details` cell to README _What the editor writes_ in its own
 PR and says so in the PR, since the format is a contract with the public site.
 
-### ADR-012 amendment
+### ADR amendments
 
-STY-039 amends ADR-012 in place (`### STY-039 amendments`) in its PR, citing its owner
-decisions: details are no longer read-only, and `Details (cy)` is never written (D11).
+STY-039 amends ADR-012 in place (`### STY-039 amendments`) in its PR, citing its
+decisions: details are no longer read-only; what is written, and the column added when
+a tab lacks it (S14, D14); details are compared as the list they show as, not as the
+cell's text (D4, D18); and `Details (cy)` is never written (D11). It amends ADR-011 for
+what S18 needs the repository to say: whether an item's Welsh details cell holds
+anything, as `hasWelshTags` says of its tags.
+
+### Glossary
+
+STY-039 adds **Detail** to `docs/GLOSSARY.md` (D9).
 
 ### What it builds on
 

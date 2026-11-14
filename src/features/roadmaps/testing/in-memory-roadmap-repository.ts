@@ -1,5 +1,5 @@
-import { detailsOf } from "@/domain/roadmap/item-details"
 import { isCalendarDate } from "@/domain/roadmap/calendar-date"
+import { englishDetails } from "@/domain/roadmap/item-details"
 import type { Category } from "@/domain/roadmap/category"
 import type { Family } from "@/domain/roadmap/family"
 import {
@@ -576,10 +576,7 @@ function setItemValue(
     item.unknownOrganisationCodes = []
   } else if (field === "details") {
     // The plan writes details only to an item with no Welsh ones (STY-039 S19).
-    item.details = detailsOf(value).map(({ text, level }) => ({
-      text: { en: text, cy: "" },
-      level,
-    }))
+    item.details = englishDetails(value)
   } else if (field === "title") {
     item.title = { ...item.title, en: value }
   } else {

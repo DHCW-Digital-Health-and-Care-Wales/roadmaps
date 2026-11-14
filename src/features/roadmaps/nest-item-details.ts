@@ -1,18 +1,3 @@
-import type { DetailLine } from "@/domain/roadmap/item-details"
-import { type ContentLanguage, localise } from "@/domain/roadmap/localised-text"
-import type { RoadmapItemDetail } from "@/domain/roadmap/roadmap-item"
-
-/** An item's details as text in `language`, each at its level. */
-export function localiseDetails(
-  details: readonly RoadmapItemDetail[],
-  language: ContentLanguage,
-): DetailLine[] {
-  return details.map(({ text, level }) => ({
-    text: localise(text, language),
-    level,
-  }))
-}
-
 /** A detail with the entries nested under it. */
 export interface NestedItemDetail<T> {
   detail: T

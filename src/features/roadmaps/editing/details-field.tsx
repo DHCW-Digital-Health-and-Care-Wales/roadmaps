@@ -5,7 +5,6 @@ import {
   ListIndentIncreaseIcon,
   Trash2Icon,
 } from "lucide-react"
-import type { TFunction } from "i18next"
 import {
   type ClipboardEvent,
   type ComponentType,
@@ -45,13 +44,24 @@ import {
   whyNotIn,
   whyNotOut,
   whyNotUp,
-} from "./item-details"
+} from "./details-outline"
+import {
+  detailName,
+  type DetailsMessage,
+  detailsMessageText,
+} from "./details-messages"
 import { OpeningField } from "./opening-field"
 
 export interface DetailsFieldProps {
   label: string
   /** The item's details as the form opened, each at the level it shows at. */
   initial: readonly DetailLine[]
+  /**
+   * The item's details as the card lists them, which the field shows until it is first
+   * opened (S17): a list read deeper than three levels shows at the third only then
+   * (D12).
+   */
+  asListed: readonly DetailLine[]
   /**
    * Called with the details confirming the form would keep, whenever they change: those
    * written, a detail with no text left out (S5, S10).
@@ -73,11 +83,17 @@ function orBlank(lines: readonly EditorLine[]): EditorLine[] {
  * read, with buttons under the list that act on the detail being written. Shutting
  * keeps what is written, as confirming the form does.
  */
-export function DetailsField({ label, initial, onChange }: DetailsFieldProps) {
+export function DetailsField({
+  label,
+  initial,
+  asListed,
+  onChange,
+}: DetailsFieldProps) {
   const { t } = useTranslation()
   const [lines, setLines] = useState(() => orBlank(initial.map(identify)))
   const [current, setCurrent] = useState(() => lines[0]?.id ?? 0)
-  const kept = keptDetails(lines)
+  const [opened, setOpened] = useState(false)
+  const kept = opened ? keptDetails(lines) : asListed
 
   return (
     <OpeningField
@@ -99,6 +115,9 @@ export function DetailsField({ label, initial, onChange }: DetailsFieldProps) {
         <DetailsEditor
           lines={lines}
           current={current}
+          onOpened={() => {
+            setOpened(true)
+          }}
           onSelect={setCurrent}
           onApply={(next, selected) => {
             const shown = orBlank(next)
@@ -115,27 +134,6 @@ export function DetailsField({ label, initial, onChange }: DetailsFieldProps) {
     </OpeningField>
   )
 }
-
-/** What the editor says of a change; all but a refusal and a removal reach assistive technology only. */
-type Message =
-  | { readonly kind: "refused"; readonly why: Refusal }
-  | {
-      readonly kind: "movedIn" | "movedOut" | "new"
-      /** The detail it is now nested under; `null` at the top level. */
-      readonly parent: string | null
-    }
-  | { readonly kind: "movedUp" | "movedDown" | "joined" | "removedEmpty" }
-  | { readonly kind: "added"; readonly count: number }
-  | {
-      readonly kind: "removed"
-      readonly detail: string
-      /** How many details were nested under it, and moved up a level (D15). */
-      readonly nested: number
-      /** The list as it was, which Undo puts back (S25). */
-      readonly before: readonly EditorLine[]
-      readonly id: number
-    }
-  | { readonly kind: "putBack"; readonly detail: string }
 
 /** Where focus goes once a change is drawn: a detail's text, the caret at `caret`. */
 interface FocusTarget {
@@ -165,6 +163,8 @@ interface DetailsEditorProps {
   lines: readonly EditorLine[]
   /** The detail the buttons act on, and the list's one stop for the Tab key (S24). */
   current: number
+  /** Called once the outline is first drawn. */
+  onOpened: () => void
   onSelect: (id: number) => void
   /** Keeps a changed list, with the detail then selected. */
   onApply: (lines: readonly EditorLine[], current: number) => void
@@ -180,6 +180,7 @@ interface DetailsEditorProps {
 function DetailsEditor({
   lines,
   current,
+  onOpened,
   onSelect,
   onApply,
 }: DetailsEditorProps) {
@@ -187,9 +188,9 @@ function DetailsEditor({
   // Numbered, so a message said twice running is still a new one.
   const [said, setSaid] = useState<{
     serial: number
-    message: Message
+    message: DetailsMessage
   } | null>(null)
-  const say = (message: Message | null) => {
+  const say = (message: DetailsMessage | null) => {
     setSaid((last) => message && { serial: (last?.serial ?? 0) + 1, message })
   }
   const fields = useRef(new Map<number, HTMLTextAreaElement>())
@@ -211,6 +212,7 @@ function DetailsEditor({
   useEffect(() => {
     const field = fields.current.get(current)
     if (field) place({ id: current, caret: field.value.length })
+    onOpened()
     // Only as the editor is first drawn.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -223,7 +225,7 @@ function DetailsEditor({
   const change = (
     next: readonly EditorLine[],
     selected: number,
-    message: Message | null,
+    message: DetailsMessage | null,
     focus?: FocusTarget,
   ) => {
     onApply(next, selected)
@@ -304,7 +306,7 @@ function DetailsEditor({
       { id: after.id, caret: 0 },
     )
   }
-  const undoRemove = (message: Message & { kind: "removed" }) => {
+  const undoRemove = (message: DetailsMessage & { kind: "removed" }) => {
     const put = message.before.find(({ id }) => id === message.id)
     change(
       message.before,
@@ -317,7 +319,7 @@ function DetailsEditor({
   const typed = (line: EditorLine, field: HTMLTextAreaElement) => {
     const index = indexOf(line.id)
     const result = typedInto(lines, index, field.value)
-    const message: Message | null = result.refusal
+    const message: DetailsMessage | null = result.refusal
       ? { kind: "refused", why: result.refusal }
       : result.nested > 0
         ? { kind: "movedIn", parent: parentText(result.lines, index) }
@@ -455,7 +457,7 @@ function DetailsEditor({
     }
   }
 
-  const subject = detailText(selected?.text ?? "")
+  const subject = detailName(selected?.text ?? "", t)
   const actionButton = ({ name, Icon, iconOnly }: (typeof ACTIONS)[number]) => {
     const word = t(`roadmaps.edit.details.actions.${name}`)
     return (
@@ -476,15 +478,13 @@ function DetailsEditor({
           <Icon aria-hidden="true" />
           <span className={cn(iconOnly && "sr-only")}>{word}</span>
         </span>{" "}
-        <span className="sr-only">
-          {subject === "" ? t("roadmaps.edit.details.emptySubject") : subject}
-        </span>
+        <span className="sr-only">{subject}</span>
       </Button>
     )
   }
 
   const message = said?.message
-  const text = message ? messageText(message, t) : ""
+  const text = message ? detailsMessageText(message, t) : ""
   const loud = message?.kind === "refused" || message?.kind === "removed"
 
   return (
@@ -522,7 +522,7 @@ function DetailsEditor({
                     : t("roadmaps.edit.details.name.nested", {
                         position: index + 1,
                         total: lines.length,
-                        parent: detailText(parent),
+                        parent: detailName(parent, t),
                       })
                 }
                 autoCapitalize="sentences"
@@ -593,47 +593,4 @@ function DetailsEditor({
       </div>
     </>
   )
-}
-
-/** What the status line says for `message`. */
-function messageText(message: Message, t: TFunction): string {
-  switch (message.kind) {
-    case "refused":
-      return t(`roadmaps.edit.details.refused.${message.why}`)
-    case "movedIn":
-      return t("roadmaps.edit.details.said.movedIn", {
-        parent: detailText(message.parent ?? ""),
-      })
-    case "movedOut":
-      return message.parent === null
-        ? t("roadmaps.edit.details.said.movedOutTop")
-        : t("roadmaps.edit.details.said.movedOutUnder", {
-            parent: detailText(message.parent),
-          })
-    case "new":
-      return message.parent === null
-        ? t("roadmaps.edit.details.said.newTop")
-        : t("roadmaps.edit.details.said.newUnder", {
-            parent: detailText(message.parent),
-          })
-    case "added":
-      return t("roadmaps.edit.details.said.added", { count: message.count })
-    case "removed":
-      return [
-        t("roadmaps.edit.details.said.removed", { detail: message.detail }),
-        ...(message.nested > 0
-          ? [
-              t("roadmaps.edit.details.said.nestedMoved", {
-                count: message.nested,
-              }),
-            ]
-          : []),
-      ].join(" ")
-    case "putBack":
-      return t("roadmaps.edit.details.said.putBack", {
-        detail: message.detail,
-      })
-    default:
-      return t(`roadmaps.edit.details.said.${message.kind}`)
-  }
 }

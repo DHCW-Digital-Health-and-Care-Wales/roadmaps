@@ -16,7 +16,7 @@ import {
   whyNotOut,
   whyNotUp,
   type EditorLine,
-} from "./item-details"
+} from "./details-outline"
 
 /** Editor lines from `text:level` pairs, identified in order from 1. */
 const lines = (...pairs: [string, number][]): EditorLine[] =>
@@ -213,6 +213,16 @@ describe("pasted lines (S8, D22)", () => {
       ["Adult clinics", 2],
       ["Paediatrics", 1],
       ["Under 16s", 2],
+    ])
+  })
+
+  it("are a detail each when a carriage return alone parts them", () => {
+    const pasted = pastedInto(lines(["", 0]), 0, "One\r- Two\r- Three", fresh)
+
+    expect(plain(pasted?.lines ?? [])).toEqual([
+      ["One", 0],
+      ["Two", 1],
+      ["Three", 1],
     ])
   })
 

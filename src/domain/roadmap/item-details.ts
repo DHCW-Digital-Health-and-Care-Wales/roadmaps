@@ -3,6 +3,8 @@
  * level it shows at, and the one field value they are kept, compared and written as.
  */
 
+import type { RoadmapItemDetail } from "./roadmap-item"
+
 /** One detail as edited: its English, and how deep it is nested, 0 for the top level. */
 export interface DetailLine {
   text: string
@@ -27,12 +29,15 @@ export function detailText(line: string): string {
   return line.slice(detailLead(line).length).replace(/\s+/g, " ").trim()
 }
 
+/** A line break however it is written: pasted text may part lines with `\r` alone. */
+const LINE_BREAK = /\r\n|\r|\n/
+
 /**
  * Lines of text as details: each hyphen before a line's text nests it a level deeper
  * than `base`, and a blank line is none (S8, S9). The levels are as written: settle them.
  */
 export function parseDetailLines(text: string, base = 0): DetailLine[] {
-  return text.split(/\r?\n/).flatMap((line) => {
+  return text.split(LINE_BREAK).flatMap((line) => {
     const detail = detailText(line)
     return detail === ""
       ? []
@@ -125,4 +130,15 @@ export function detailsValue(details: readonly DetailLine[]): string {
 /** The details of a `detailsValue`, in its order, at the levels they show at. */
 export function detailsOf(value: string): DetailLine[] {
   return keptDetails(parseDetailLines(value))
+}
+
+/**
+ * The details of a `detailsValue` as an item holds them: English alone, as only an item
+ * with no Welsh details has them changed (STY-039 S18).
+ */
+export function englishDetails(value: string): RoadmapItemDetail[] {
+  return detailsOf(value).map(({ text, level }) => ({
+    text: { en: text, cy: "" },
+    level,
+  }))
 }

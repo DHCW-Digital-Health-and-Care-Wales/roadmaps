@@ -780,3 +780,47 @@ describe("a change of details (STY-039)", () => {
     )
   })
 })
+
+describe("an item without an ID whose details a co-lead wrote another way (STY-039 S15)", () => {
+  const detailed = (...lines: [string, number][]) =>
+    lines.map(([en, level]) => ({ text: { en, cy: "" }, level }))
+  const loaded = createTestRoadmapItem("Video appointments", {
+    details: detailed(["One", 0], ["Two", 1]),
+  })
+  // The same list, a hyphen on every line.
+  const rewritten = { ...loaded, details: detailed(["One", 1], ["Two", 2]) }
+
+  it("is still found, with a pending change of its details or of another field", () => {
+    const redetailed = editItem(NO_CHANGES, undefined, loaded, 1, {
+      details: "One\n- Two\nThree",
+    })
+    const retitled = editItem(NO_CHANGES, undefined, loaded, 1, {
+      title: "Video calls",
+    })
+
+    expect(matchItemChanges([first, rewritten], redetailed).get(1)).toBe(
+      redetailed.items[0],
+    )
+    expect(matchItemChanges([first, rewritten], retitled).get(1)).toBe(
+      retitled.items[0],
+    )
+  })
+
+  it("is not found once its details read as another list, or gain Welsh", () => {
+    const retitled = editItem(NO_CHANGES, undefined, loaded, 1, {
+      title: "Video calls",
+    })
+    const other = { ...loaded, details: detailed(["One", 0], ["Other", 1]) }
+    const welsh = {
+      ...loaded,
+      details: [
+        { text: { en: "One", cy: "Un" }, level: 0 },
+        { text: { en: "Two", cy: "Dau" }, level: 1 },
+      ],
+      hasWelshDetails: true,
+    }
+
+    expect(matchItemChanges([first, other], retitled).size).toBe(0)
+    expect(matchItemChanges([first, welsh], retitled).size).toBe(0)
+  })
+})

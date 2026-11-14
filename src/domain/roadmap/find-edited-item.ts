@@ -58,8 +58,9 @@ const CONTENT_KEYS = Object.keys(CONTENT) as (keyof typeof CONTENT)[]
 /**
  * Whether `current` holds `loaded`'s content, with `edited` fields' values replaced: a
  * text field's Welsh must still be `loaded`'s where both reads show it, a placed item has
- * no horizon as written, and an item whose organisations were written has no unknown
- * codes, as only known ones are written (ADR-014).
+ * no horizon as written, an item whose organisations were written has no unknown codes,
+ * as only known ones are written (ADR-014), and details are compared as the list they
+ * show as (STY-039).
  */
 function sameContent(
   current: RoadmapItem,
@@ -77,9 +78,18 @@ function sameContent(
     const value = edited.get(key)
     if (value === undefined) {
       // A set of organisations is the same in any order (ADR-014).
-      return key === "organisationIds"
-        ? itemValue(current, key) === itemValue(loaded, key)
-        : sameValue(current[key], loaded[key])
+      if (key === "organisationIds") {
+        return itemValue(current, key) === itemValue(loaded, key)
+      }
+      // Details are the same as the list they show as, however their hyphens are
+      // written (STY-039 D4), with the Welsh they had.
+      if (key === "details") {
+        return (
+          itemValue(current, key) === itemValue(loaded, key) &&
+          sameValue(welshDetails(current), welshDetails(loaded))
+        )
+      }
+      return sameValue(current[key], loaded[key])
     }
     return (
       itemValue(current, key) === value &&
@@ -100,6 +110,11 @@ function welshShown(
   value: string,
 ): boolean {
   return value !== "" && itemValue(loaded, field) !== ""
+}
+
+/** The Welsh of each of an item's details, in order. */
+function welshDetails({ details }: RoadmapItem): string[] {
+  return details.map(({ text }) => text.cy)
 }
 
 function isEditable(key: string): key is EditableItemField {

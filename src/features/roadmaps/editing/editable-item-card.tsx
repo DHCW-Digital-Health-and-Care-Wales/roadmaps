@@ -20,7 +20,7 @@ import { useLanguage } from "@/i18n"
 
 import { DetailList } from "../components/detail-list"
 import { RoadmapItemCard } from "../components/roadmap-item-card"
-import { localiseDetails } from "../nest-item-details"
+import { localiseDetails } from "../localise-details"
 import { shortNamesOf, sortOrganisations } from "../sort-organisations"
 import { EditControls } from "./edit-controls"
 import { EditForm, type EditFormField } from "./edit-form"
@@ -299,7 +299,8 @@ export function EditableItemCard({
         name: "details",
         label: t("roadmaps.edit.itemFields.details"),
         multiline: false,
-        details: true,
+        // English, as the field's own are: Welsh details are never changed here.
+        details: { asListed: localiseDetails(shown.details, "en") },
       }
 
   return (

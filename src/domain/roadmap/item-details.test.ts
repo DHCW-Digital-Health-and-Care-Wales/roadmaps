@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
   detailsOf,
   detailsValue,
+  englishDetails,
   parseDetailLines,
   settleDetails,
   withoutDetail,
@@ -108,6 +109,25 @@ describe("parseDetailLines", () => {
       detail("Three", 3),
       detail("5 degrees", 3),
     ])
+  })
+
+  it("ends a detail at a carriage return alone, as at any line break (S8)", () => {
+    expect(parseDetailLines("One\r- Two\r\n- Three\n\rFour")).toEqual([
+      detail("One"),
+      detail("Two", 1),
+      detail("Three", 1),
+      detail("Four"),
+    ])
+  })
+})
+
+describe("englishDetails", () => {
+  it("gives a value's details as an item holds them, in English alone", () => {
+    expect(englishDetails("One\n- Two")).toEqual([
+      { text: { en: "One", cy: "" }, level: 0 },
+      { text: { en: "Two", cy: "" }, level: 1 },
+    ])
+    expect(englishDetails("")).toEqual([])
   })
 })
 

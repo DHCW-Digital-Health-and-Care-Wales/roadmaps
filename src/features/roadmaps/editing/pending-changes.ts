@@ -5,7 +5,7 @@
  */
 
 import { findEditedItem } from "@/domain/roadmap/find-edited-item"
-import { detailsOf } from "@/domain/roadmap/item-details"
+import { englishDetails } from "@/domain/roadmap/item-details"
 import type { LocalisedText } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import {
@@ -462,12 +462,7 @@ export function applyItemChanges(
       organisationIds: organisationIdsOf(organisations),
       unknownOrganisationCodes: [],
     }),
-    ...(details !== undefined && {
-      details: detailsOf(details).map(({ text, level }) => ({
-        text: { en: text, cy: "" },
-        level,
-      })),
-    }),
+    ...(details !== undefined && { details: englishDetails(details) }),
     title: withEnglish(item.title, fields.title) ?? item.title,
     description: withEnglish(item.description, fields.description),
     expectedOutcome: withEnglish(item.expectedOutcome, fields.expectedOutcome),

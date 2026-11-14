@@ -8,8 +8,8 @@ import type { Organisation } from "@/domain/roadmap/organisation"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { useLanguage } from "@/i18n"
 
+import { localiseDetails } from "../localise-details"
 import { shortNamesOf } from "../sort-organisations"
-import { localiseDetails } from "../nest-item-details"
 import { DetailList } from "./detail-list"
 
 export interface RoadmapItemCardProps {

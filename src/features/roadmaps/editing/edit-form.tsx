@@ -17,7 +17,11 @@ import { Label } from "@/components/ui/label"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Textarea } from "@/components/ui/textarea"
 import { isCalendarDate } from "@/domain/roadmap/calendar-date"
-import { detailsOf, detailsValue } from "@/domain/roadmap/item-details"
+import {
+  type DetailLine,
+  detailsOf,
+  detailsValue,
+} from "@/domain/roadmap/item-details"
 import { tagsOf, tagsValue } from "@/domain/roadmap/roadmap-changes"
 
 import { RoadmapSwatch } from "../components/roadmap-swatch"
@@ -69,9 +73,10 @@ export interface EditFormField<F extends string> {
   /**
    * An item's details (STY-039), edited in a `DetailsField`, which opens on request:
    * the field's value holds them as `detailsValue` gives them, with a detail still
-   * being written kept.
+   * being written kept. `asListed` are the details as the card lists them, shown until
+   * the field is first opened.
    */
-  details?: true
+  details?: { asListed: readonly DetailLine[] }
   /** Held at its value, as while its options are read. */
   disabled?: boolean
   /** Shown as `text`, not edited, with a notice of why (STY-028 S6, STY-037 S20). */
@@ -108,11 +113,11 @@ export interface EditFormProps<F extends string> {
  * S5): a labelled field each, typed, chosen from a list (STY-028), ticked from one that
  * opens on request (STY-034, STY-038), tags added, renamed and removed (STY-037),
  * details written as an outline (STY-039) or a date picked (STY-036), or shown
- * read-only when it can't be changed, then "Done" to
- * keep the values pending and Cancel (or Escape, unless a field has used it) to leave
- * them. The title is required, and a date is a real one and not after
- * today: confirming otherwise keeps the form open with an error linked to each field,
- * focusing the first. Writes nothing; the caller keeps the values pending.
+ * read-only when it can't be changed, then "Done" to keep the values pending and Cancel
+ * (or Escape, unless a field has used it) to leave them. The title is required, and a
+ * date is a real one and not after today: confirming otherwise keeps the form open with
+ * an error linked to each field, focusing the first. Writes nothing; the caller keeps
+ * the values pending.
  */
 export function EditForm<F extends string>({
   fields,
@@ -275,6 +280,7 @@ export function EditForm<F extends string>({
               label={field.label}
               // What the form holds, so a field drawn again shows what Done keeps.
               initial={detailsOf(values[field.name])}
+              asListed={field.details.asListed}
               onChange={(details) => {
                 change(detailsValue(details))
               }}

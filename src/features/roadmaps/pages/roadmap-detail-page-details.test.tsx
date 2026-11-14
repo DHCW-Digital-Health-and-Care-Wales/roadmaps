@@ -679,6 +679,26 @@ describe("Editing an item's details (STY-039)", () => {
     ])
   })
 
+  it("names a detail nested under one with no text by the empty detail", async () => {
+    const { user } = await renderPage()
+    const { field } = await openDetails(user)
+
+    // An empty detail after Dermatology, then Rheumatology nested under it.
+    await caretIn(user, field, "Dermatology")
+    await user.keyboard("{Enter}")
+    await caretIn(user, field, "Rheumatology")
+    await user.click(
+      field.getByRole("button", { name: "Move in Rheumatology" }),
+    )
+
+    expect(status(field)).toBe("Moved in, under “the empty detail”.")
+    expect(
+      field.getByRole("textbox", {
+        name: "Detail 4 of 5, nested under “the empty detail”",
+      }),
+    ).toHaveValue("Rheumatology")
+  })
+
   it("moves an empty nested detail out on Enter, and does nothing in an empty top-level one (S21, D17)", async () => {
     const { user } = await renderPage()
     const { form, field } = await openDetails(user)
@@ -955,6 +975,24 @@ describe("Details written another way (STY-039 S20)", () => {
       await done(user, form)
 
       expect(main().queryByText("Changed")).toBeNull()
+    },
+  )
+
+  it.each(["Deep", "Cold"])(
+    "shows %s as the card lists them until the field is first opened, then at the levels it will write (S17, D12)",
+    async (title) => {
+      const { user } = await renderPage({ shown: written20 })
+      const listed = cardDetails(title)
+
+      const form = await openForm(user, title)
+      expect(pairsOf(shutList(form))).toEqual(listed)
+
+      await user.click(form.getByRole("button", { name: "Change details" }))
+      await user.click(form.getByRole("button", { name: "Close details" }))
+      await vi.waitFor(() => {
+        expect(form.queryByRole("group", { name: "Details" })).toBeNull()
+      })
+      expect(pairsOf(shutList(form))).not.toEqual(listed)
     },
   )
 

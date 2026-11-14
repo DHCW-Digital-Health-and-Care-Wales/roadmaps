@@ -355,6 +355,29 @@ specialties”. The 2 details under it moved up a level.”
   the details nested under it, nested by their hyphens from its level; pasted into a
   detail with no text, they take its place: as prototyped in editor A → S8.
 
+## Starting point
+
+Epic F1–F6 hold what the format, the parser and the form give, and when they were
+audited. This story's own:
+
+- `RoadmapItemDetail.level` is the number of hyphens as written (epic F2, F3). The
+  field and the comparison of S15 need the levels shown, not the levels written (S20,
+  D4, D18).
+- When the Welsh and English line counts differ the parser drops the Welsh, so
+  `RoadmapItem.details` alone cannot say the Welsh cell holds anything (S18);
+  `RoadmapItem.hasWelshTags` is there for the same reason.
+- STY-037 brought what this field builds on (its _Contract for dependents_): `EditForm`
+  leaves Escape to a field that has used it, `OpeningField` takes `onShut`, a list
+  field's value is held as one string (`tagsValue`, `tagsOf`), and
+  `FieldConflict.welshTags` is the conflict that can only be dropped.
+
+## Out of scope
+
+- What the epic leaves out (EPC-010 _Out of scope_): editing Welsh details, lists in a
+  description or an expected outcome, formatting in a detail, and a limit on how much
+  an item says.
+- Adding or deleting items: later editing records.
+
 ## Delivery
 
 ### Departures
@@ -416,12 +439,23 @@ specialties”. The 2 details under it moved up a level.”
   missing module), then the publish plan, the contract on both repositories, the
   parser, the Sheets cells, the pending-change and conflict rules (60 failing, the
   rest of the contract with them until `hasWelshDetails` was read). The outline's rules
-  (`editing/item-details.test.ts`, 18) were written with their module, and the page
+  (`editing/details-outline.test.ts`, 18) were written with their module, and the page
   tests (`roadmap-detail-page-details.test.tsx`, 38) after the component: a departure
   from test-first. Of the page tests 30 passed at once; the other 8 were wrong
   expectations or helpers of the tests, not faults of the field. The Playwright specs
   followed working code. The focus tour then found a fault the component tests could
   not: a faded button lost the bar of its focus indicator, fixed as S23 above says.
+- **Review round 1 fixes** (agent). An item with no ID yet whose details a co-lead
+  rewrote as the same list is still found at publish, where it was reported as removed
+  and its pending edits dropped: `findEditedItem` compares details as the list they
+  show as, with their Welsh (Sol P2). A carriage return alone ends a pasted detail, as
+  any line break does (Sol P2). Until the field is first opened it shows the details
+  as the card lists them, a fourth level and a hyphen read after the nesting included
+  (S17, D12; Opus P3). A detail nested under one with no text is named "nested under
+  “the empty detail”". For the quality lane: this section moved to the record's end,
+  `localiseDetails` to its own module, the status line's messages to
+  `details-messages.ts`, the outline's rules to `details-outline.ts`, and the value's
+  details as an item holds them to one `englishDetails`.
 - **Epic close**: this closes EPC-010. It had no delivery notes.
 
 ### Contract for dependents
@@ -432,18 +466,19 @@ specialties”. The 2 details under it moved up a level.”
   public site reads the same format it did; a cell with a hyphen on every line loses
   one from each the first time its details are changed here (D14).
 - **Domain**: `details` in `EDITABLE_ITEM_FIELDS`; `domain/roadmap/item-details.ts`
-  (`DetailLine`, `detailsValue`, `detailsOf`, `settleDetails`, `keptDetails`,
-  `withoutDetail`, `parseDetailLines`, `MAX_DETAIL_LEVEL`); `RoadmapItem.hasWelshDetails`,
+  (`DetailLine`, `detailsValue`, `detailsOf`, `englishDetails`, `settleDetails`,
+  `keptDetails`, `withoutDetail`, `parseDetailLines`, `MAX_DETAIL_LEVEL`); `RoadmapItem.hasWelshDetails`,
   which every `RoadmapRepository` must supply (the contract's "says an item has Welsh
   details even when none pairs with the English";
   `docs/operations/replacing-google-sheets.md`); `FieldConflict.gainedWelsh`, in place
   of `welshTags`.
-- **Rules** (`features/roadmaps/editing/item-details.ts`): `whyNotIn`, `whyNotOut`,
+- **Rules** (`features/roadmaps/editing/details-outline.ts`): `whyNotIn`, `whyNotOut`,
   `whyNotUp`, `whyNotDown`, `movedUp`, `movedDown`, `typedInto`, `splitAt`,
   `joinedToAbove`, `pastedInto`.
 - **Components**: `DetailsField` (`editing/details-field.tsx`), drawn by `EditForm` for
-  a field with `details: true`; `DetailList` (`components/detail-list.tsx`), the nested
-  list the card, the shut field and the conflict review share.
+  a field with `details`; `DetailList` (`components/detail-list.tsx`), the nested list
+  the card, the shut field and the conflict review share, given an item's details by
+  `localiseDetails` (`localise-details.ts`).
 - **Copy**: `roadmaps.edit.itemFields.details`, `roadmaps.edit.details.*`,
   `roadmaps.publish.notice.refused.welshDetails`.
 - **E2E hooks**: "Change details", "Add details", "Close details"; the group "Details";
@@ -462,7 +497,7 @@ specialties”. The 2 details under it moved up a level.”
 ### Scenario evidence
 
 `page` is `roadmap-detail-page-details.test.tsx`; `rules` is
-`editing/item-details.test.ts`; `value` is `domain/roadmap/item-details.test.ts`; `e2e`
+`editing/details-outline.test.ts`; `value` is `domain/roadmap/item-details.test.ts`; `e2e`
 is `tests/e2e/editing.spec.ts`, _editing an item's details (STY-039)_.
 
 | Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
@@ -481,9 +516,9 @@ is `tests/e2e/editing.spec.ts`, _editing an item's details (STY-039)_.
 | S12      | page "reads No details beside Add details for an item with none, which holds one empty detail at the top level to write in"; e2e "adds a Details column…"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | S13      | page "does everything by keyboard alone, the Tab key always moving on, each change announced and focus staying in the field"; "removes a detail alone…" (focus on the empty detail); `accessibility.spec.ts` ("an item's details: shut, open, nested, a refusal, a removal with Undo, then the changed card"; "an item with no details, and one whose Welsh details can't be changed"), light and dark; `focus-indicator.spec.ts` (the editing tour opens the field)                                                                                                                                                                                                                                   |
 | S14      | value "is a line for each detail…"; `publish-plan.test.ts` (_details, decided as the list they show as_); the contract's _details (STY-039)_ on both repositories; `google-sheets-roadmap-repository.test.ts` (_an item's details_: the cell alone as text, an empty cell, a `Details` column added); e2e first test and "adds a Details column to a roadmap with none, and an empty cell for no details"                                                                                                                                                                                                                                                                                              |
-| S15      | `publish-plan.test.ts` ("is a conflict when a co-lead changed the list, and none for details that show as the same list"); the contract's "refuses a co-lead's other details" and "takes a co-lead's details that show as the same list as published…"; `pending-changes.test.ts` ("is dropped by a read that finds a co-lead wrote the same list…"); page "shows a co-lead's different details beside yours, each nested as it will read, to keep or use"; "…Refresh drops a change the data source holds"; e2e "a co-lead's different details are shown beside yours, each nested, nothing written"                                                                                                  |
+| S15      | `publish-plan.test.ts` ("is a conflict when a co-lead changed the list, and none for details that show as the same list"); the contract's "refuses a co-lead's other details" and "takes a co-lead's details that show as the same list as published…"; `pending-changes.test.ts` ("is dropped by a read that finds a co-lead wrote the same list…"); page "shows a co-lead's different details beside yours, each nested as it will read, to keep or use"; "…Refresh drops a change the data source holds"; `pending-changes.test.ts` (_an item without an ID whose details a co-lead wrote another way_); e2e "a co-lead's different details are shown beside yours, each nested, nothing written"   |
 | S16      | e2e "on a phone / in the narrowest card, a long detail at the third level wraps, every control can be reached and nothing scrolls sideways" (375px, and 640px for a 294px card)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| S17      | page "starts shut, the details as the card lists them beside Change details, with no editor and no Details list on the card"; "reads No details beside Add details…"; "shuts keeping text typed, the list showing the details as changed, and Done keeps them with the field shut"; e2e first test                                                                                                                                                                                                                                                                                                                                                                                                     |
+| S17      | page "starts shut, the details as the card lists them beside Change details, with no editor and no Details list on the card"; "reads No details beside Add details…"; "shows Deep / Cold as the card lists them until the field is first opened…"; "shuts keeping text typed, the list showing the details as changed, and Done keeps them with the field shut"; e2e first test                                                                                                                                                                                                                                                                                                                        |
 | S18      | `roadmap-tab-parser.test.ts` ("says whether an item has Welsh details, shown or not…", five cells, and a tab with no Welsh column); the contract's "says an item has Welsh details even when none pairs with the English" and "publishes the other fields of an item with Welsh details…"; page _An item with Welsh details_ ("shows the details of Paired / Unpaired with no button to change them, and says why"; "shows them in Welsh…"; "edits and publishes the item's other fields…"; "keeps no change of details made in a form whose item gains Welsh details while it is open"); e2e "an item with Welsh details shows them with no way to change them, and publishes its other fields alone" |
 | S19      | `publish-plan.test.ts` ("refuses, as a conflict that can't be kept, when the item's details have gained Welsh…"; "writes the item's other fields beside Welsh details…"); the contract's "refuses details for an item that has gained Welsh ones…"; `google-sheets-roadmap-repository.test.ts` ("writes nothing over details whose Welsh cell holds anything…"); `conflicts.test.ts` (_Welsh details written since an item was read_); page "refuses a change of details to an item that has gained Welsh details: it can be discarded, not kept"; e2e "Welsh details written since the item was read stop the publish…"                                                                               |
 | S20      | value "holds the levels the details show at…" (three cells); `pending-changes.test.ts` ("is no change for details written another way that show as the same list"); `google-sheets-roadmap-repository.test.ts` ("leaves a cell written another way as it is until the details change, then writes it at the levels shown"); page _Details written another way_ (four items, then "writes the details at the levels shown once they change…"); e2e "details written another way show as the public site shows them, and are written only once they change"                                                                                                                                              |
@@ -492,26 +527,3 @@ is `tests/e2e/editing.spec.ts`, _editing an item's details (STY-039)_.
 | S23      | page "opens the outline in place…" (the buttons' names); "puts the caret back in the detail's text after a move chosen with a pointer, and marks the detail the buttons act on"; the keyboard test (focus stays on the button); "nests a detail…" (`aria-disabled`, then why); e2e first test and the S16 tests                                                                                                                                                                                                                                                                                                                                                                                        |
 | S24      | page "is one stop for the Tab key, in the detail last written in, and the arrows move between details at a detail's start and end"; "opens the outline in place…" (each name); e2e first test                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | S25      | page "puts a removed detail back in its place on Undo, with those nested under it as they were"; e2e first test                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-
-## Starting point
-
-Epic F1–F6 hold what the format, the parser and the form give, and when they were
-audited. This story's own:
-
-- `RoadmapItemDetail.level` is the number of hyphens as written (epic F2, F3). The
-  field and the comparison of S15 need the levels shown, not the levels written (S20,
-  D4, D18).
-- When the Welsh and English line counts differ the parser drops the Welsh, so
-  `RoadmapItem.details` alone cannot say the Welsh cell holds anything (S18);
-  `RoadmapItem.hasWelshTags` is there for the same reason.
-- STY-037 brought what this field builds on (its _Contract for dependents_): `EditForm`
-  leaves Escape to a field that has used it, `OpeningField` takes `onShut`, a list
-  field's value is held as one string (`tagsValue`, `tagsOf`), and
-  `FieldConflict.welshTags` is the conflict that can only be dropped.
-
-## Out of scope
-
-- What the epic leaves out (EPC-010 _Out of scope_): editing Welsh details, lists in a
-  description or an expected outcome, formatting in a detail, and a limit on how much
-  an item says.
-- Adding or deleting items: later editing records.

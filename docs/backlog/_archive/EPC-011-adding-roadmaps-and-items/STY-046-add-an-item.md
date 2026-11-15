@@ -172,6 +172,8 @@ the empty roadmap, in both themes and at phone width.
   roadmap, as the prototype has it, and "It isn't saved until you choose “Save
   changes”." on one that is not, where saving makes nothing public. Over one line
   saying "publish or save" for both.
+- **D13** (owner, 2026-11-15, answering D11): both buttons stay on an empty roadmap,
+  the page's own and its panel's.
 
 ## Out of scope
 

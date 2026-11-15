@@ -123,8 +123,10 @@ editor sets one (field hint, pending edits, publish confirmation). Start from th
    of them).
 5. Update any Vitest test or Playwright spec asserting a string you changed;
    E2E locates things by accessible name and visible copy (`tests/e2e/AGENTS.md`).
-6. **Welsh is machine-assisted.** Say in the handoff which Welsh strings you
-   added or changed, so a fluent speaker can review them before launch.
+6. **Welsh is machine-assisted**, and a fluent speaker reads all of `cy.ts`
+   before launch (README, _Languages_). List the Welsh strings you added or
+   changed in the PR's Copy section, with any doubt a reviewer raised about
+   one; that read is the launch's, so it is no owner question.
 
 ## Where a budget bites
 

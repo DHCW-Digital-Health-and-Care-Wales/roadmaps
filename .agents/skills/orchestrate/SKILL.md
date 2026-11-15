@@ -133,7 +133,9 @@ agent and `<run-folder>/progress/<ITEM>-handoff.md`.
      an answer that arrives before the child's PR to the running child, if
      the runtime can message it, so one build absorbs it; after hand-back
      (item 3), resume the child or start a fresh delivery child from its
-     handoff with it.
+     handoff with it. An answer that keeps the build as it is needs no
+     child: name it in the item's retrospective brief, and that PR adds it
+     to the record's Decisions.
    - On a fallback wake, read the child's handoff record and the progress
      log. If they record its final hand-back (the reviewed PR or a blocker),
      read its result and continue from item 3. Otherwise end the turn; the

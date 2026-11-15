@@ -3,7 +3,7 @@
 - **Status**: Proposed — owner, 2026-11-15 (D1); after DEF-013 and DEF-014
 - **Severity**: Low — rare (a write must land and the read after it fail, or the write's
   answer be lost), but the page can then show text the public site does not
-- **Area**: Features/UI + i18n (en + cy) + Docs
+- **Area**: Domain + Infrastructure + Features/UI + i18n (en + cy) + Docs
 - **Epic**: EPC-011-adding-roadmaps-and-items
 - **Depends on**: DEF-013, DEF-014 (D1: priority, not a code dependency)
 - **Binding ADRs**: ADR-012 (Option 16 and the DEF-015 amendments)
@@ -49,13 +49,18 @@ answer (`unconfirmed`) holds only Undo, Discard and a new item's controls
 Every write the editor makes, each with a read after it or a lost-answer path, which D3
 puts under the one rule:
 
-- `rg -n 'onSettled' src/features/roadmaps/hooks --glob '!*.test.*'` — 5 sites:
-  `use-publish-roadmap-changes.ts` ("Publish changes"), `use-set-roadmap-published.ts`
-  ("Publish/Unpublish roadmap", "Save and publish"), `use-add-roadmap.ts` ("Add a
-  roadmap"), `use-family-changes.ts` (add and change a family), `use-match-roadmap.ts`
-  (match a roadmap to the lists).
+- `rg -n 'onSettled' src/features/roadmaps/hooks --glob '!*.test.*'` — 6 sites in 5
+  files: `use-publish-roadmap-changes.ts:77` ("Publish changes"),
+  `use-set-roadmap-published.ts:68` ("Publish/Unpublish roadmap", "Save and publish"),
+  `use-add-roadmap.ts:51` ("Add a roadmap"), `use-family-changes.ts:35,46` (add and
+  change a family), `use-match-roadmap.ts:33` (match a roadmap to the lists).
 - `rg -n 'unconfirmed' src --glob '!*.test.*' -l` — the lost-answer outcomes and their
-  notices, `add-roadmap-failed.tsx` among them.
+  notices, `add-roadmap-failed.tsx` among them. A family write and a match have none:
+  their lost answer is settled by a re-read (`whenHeld`,
+  `google-sheets-roadmap-repository.ts`, and the in-memory fake alike), and a failed
+  re-read rejects as `network` (STY-029), so the page can't tell "may have been written"
+  from "not written". `FamilyOutcome` and `MatchOutcome` gain `unconfirmed`, with the
+  adapter, the fake and the repository's contract tests.
 - `rg -n 'keepUnread|settleReadBack|publishedNewItems|keepPublished|awaitingRead|awaitingRefresh' src`
   — DEF-009's rules and the lost answer's hold, which D4 replaces.
 
@@ -82,7 +87,9 @@ notices, "Add a roadmap"'s among them
 **Given** the dialog of S1 or S2
 **When** the Product Lead chooses Refresh and any of its reads fails
 **Then** the dialog stays and says the Refresh failed; it closes once a Refresh reads
-the roadmap list and the roadmap's items, as the page's Refresh does
+all the write can have changed: for a roadmap's page, what its Refresh reads (the
+roadmaps, the roadmap's items, the organisations); for adding a roadmap, the roadmaps;
+for a family write, the families and the roadmaps; for a match, the roadmaps
 
 ### S4: An ended session offers Connect
 
@@ -122,8 +129,13 @@ published new items are gone from the code
   an outage, so the hold stays. The dialog offers Connect when the session has ended.
   The published changes stay shown as pending behind it (S6).
 - **D3** (owner, 2026-11-15, grilling round 3 Q3; Q7): one rule across the app. A lost
-  answer gets the same hold as a failed read, on every write, "Add a roadmap" included,
-  whose dialog notice goes.
+  answer gets the same hold as a failed read, on every write in Cause, "Add a roadmap"
+  included, whose dialog notice goes, and a family write and a match, which gain an
+  unconfirmed outcome. A write whose answer already put its result on the page (a
+  roadmap added or published, a match made) still holds when the read after it fails.
+  This replaces the lost-answer notices of STY-025 (S18), STY-035 (S10), STY-040,
+  STY-045 and STY-046, and STY-029's rule that a failed re-read shows the network
+  error.
 - **D4** (owner, 2026-11-15, grilling Q7): refactor to one clean mechanism, so the
   hold can be deleted whole when a database API replaces Google Sheets (ADR-012's
   DEF-015 amendments). Remove DEF-009's keep-pending rules (D1–D3 there) and the lost
@@ -134,5 +146,8 @@ published new items are gone from the code
   that landed shows "Changes published", a lost answer nothing more. A browser reload
   ends the hold, as it reads everything again. The dialog's copy is written at delivery
   with the `copywriter` skill.
+- **D6** (owner, 2026-11-15, grilling round 3 Q6, round 4): a database API's write
+  returns what it wrote, so no read follows it, and is made conditional on a version
+  (`ETag` and `If-Match`); recorded in ADR-012's DEF-015 amendments.
 
 ## Delivery _(add on delivery; as in `story.md`)_

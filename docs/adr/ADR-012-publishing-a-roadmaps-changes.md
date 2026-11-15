@@ -332,21 +332,23 @@ Nothing checks permission in advance.
 - **A write the editor can't read back holds the whole app until a Refresh** (DEF-015
   D2, D3): a lost answer (Option 16's unconfirmed) and a write that landed but whose
   read after it failed both open one dialog over the app that can't be dismissed, and
-  nothing else can be done until a Refresh reads the roadmap list and the roadmap's
-  items, or Connect when the session has ended. The changes sent stay shown pending
-  behind it. This holds for every write: a publish, "Publish/Unpublish roadmap",
-  "Save and publish", adding a roadmap, a family write and matching a roadmap to the
-  lists. It replaces Option 16's page notice, which let the Product Lead edit and
-  publish meanwhile, and DEF-009's keep-pending rules. Until DEF-015 is delivered, the
+  nothing else can be done until a Refresh reads all the write can have changed
+  (DEF-015 S3), or Connect when the session has ended. The changes sent stay shown
+  pending behind it. This holds for every write: a publish, "Publish/Unpublish
+  roadmap", "Save and publish", adding a roadmap, a family write and matching a roadmap
+  to the lists, the last two gaining Option 16's unconfirmed outcome. It replaces
+  Option 16's page notice, which let the Product Lead edit and publish meanwhile, and
+  DEF-009's keep-pending rules. Until DEF-015 is delivered, the
   code does as Option 16 says.
 - **The hold is Google Sheets plumbing** (DEF-015 D4), kept in one place so it is
   deleted whole when a database API replaces the spreadsheet. That API's write returns
   what it wrote (`200` with the saved roadmap and items, as an update method returns
-  its resource in Google's API design guidance, AIP-134), so no read follows a write;
-  and a co-lead's change is caught by a version, an `ETag` sent back as `If-Match` and
-  refused with `412`, in place of comparing each base and the one-request race
-  _Consequences_ accepts. Only a lost answer can then leave the editor not knowing
-  what was written, and the hold stays for it.
+  its resource in Google's API design guidance, AIP-134), so no read follows a write
+  (DEF-015 D6). Its write is conditional on the version read, an `ETag` sent back as
+  `If-Match` and refused with `412`, which closes the one-request race _Consequences_
+  accepts; a `412` re-reads and compares each field with its base as Option 12 does,
+  so a co-lead's change to another field is still no conflict. Only a lost answer can
+  then leave the editor not knowing what was written, and the hold stays for it.
 
 ## Options (owner's choice marked ✅, 2026-11-11)
 

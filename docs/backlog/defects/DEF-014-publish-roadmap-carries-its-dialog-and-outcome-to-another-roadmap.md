@@ -46,6 +46,15 @@ this hook alone.
 **When** the Product Lead reaches another roadmap's page before it ends
 **Then** that page shows neither its dialog nor its outcome
 
+### S2: "Publish roadmap" stays unavailable while its roadmap's write runs
+
+**Given** a "Publish roadmap" or "Unpublish roadmap" confirmed on roadmap A, with no
+pending edits sent
+**When** the Product Lead leaves A's page by any route and comes back before the write
+ends
+**Then** A's "Publish roadmap" is unavailable until the write ends, as STY-035 has it
+while a write of the roadmap is under way (D4)
+
 ## Decisions
 
 - **D1** (owner, 2026-11-15, grilling of DEF-011 to DEF-014, Q3): fix.
@@ -53,6 +62,13 @@ this hook alone.
   its roadmap changes, not `usePublishedState` alone, so no dialog, notice or other state
   of one roadmap's page reaches another's.
 - **D3** (owner, 2026-11-15, Q5): back on roadmap A once its write has ended, the page
-  shows no outcome notice for it; the roadmap's published state says what happened.
+  shows no confirmation the hook held for it; the roadmap's published state says what
+  happened. An outcome the pending-edit store keeps for A (a refusal and its conflict
+  review) still shows there.
+- **D4** (agent, 2026-11-15, review of the triage): D2 must not drop a write under
+  way. Whether a write of the roadmap runs is read from where it outlives the page (a
+  mutation key per roadmap, or the store), not from the hook's own `isPending`, which
+  D2's reset would clear; this also closes the same gap by A, home, A, which the page
+  has today. S2 holds it; it keeps STY-035's rule rather than changing it.
 
 ## Delivery _(add on delivery; as in `story.md`)_

@@ -1,4 +1,4 @@
-import { act, screen, waitFor, within } from "@testing-library/react"
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
@@ -386,8 +386,7 @@ describe("Editing what a roadmap is about in the roadmap dialog (STY-043)", () =
       "A clear vision. Still.",
     )
     expect(form.queryByRole("textbox", { name: "Short name" })).toBeNull()
-    // The page stays as it was behind the dialog, out of reach: the in-place form took
-    // the panel's place.
+    // The page stays as it was behind the dialog, out of reach of role queries.
     const about = screen.getByRole("region", {
       name: "About this roadmap",
       hidden: true,
@@ -430,6 +429,27 @@ describe("Editing what a roadmap is about in the roadmap dialog (STY-043)", () =
       )
     },
   )
+
+  it("returns focus to Edit as it closes where the click that opened it left focus elsewhere, as Safari's does (S4)", async () => {
+    const { user } = await renderPage()
+    const edit = main().getByRole("button", {
+      name: "Edit About this roadmap",
+    })
+
+    // A click event alone: Safari doesn't focus a button it clicks.
+    fireEvent.click(edit)
+    expect(edit).not.toHaveFocus()
+    await user.click(
+      editRoadmapDialog().getByRole("button", { name: "Cancel" }),
+    )
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+    })
+    await waitFor(() => {
+      expect(edit).toHaveFocus()
+    })
+  })
 
   it("keeps the dialog and what was typed when the session expires, and Done still keeps the edits (S4)", async () => {
     const { user, authClient } = await renderPage()

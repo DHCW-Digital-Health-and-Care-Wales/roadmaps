@@ -223,6 +223,10 @@ flowchart LR
 - [DEF-006](../_archive/defects/DEF-006-a-refused-reconnect-drops-the-add-a-roadmap-dialog.md):
   a reconnect Google refuses drops the "Add a roadmap" dialog and what was typed.
   Won't fix (owner, 2026-11-14): rare and a small loss; reopen on evidence from real users.
+- [DEF-008](../defects/DEF-008-focus-is-lost-after-add-a-roadmap-closes-in-safari.md):
+  focus is lost when "Add a roadmap" closes, for a Product Lead who clicked it in
+  Safari. Needs triage; found by STY-043's review, which fixed the same for About's
+  Edit.
 
 ## Related
 

@@ -13,9 +13,9 @@ import { connect, expect, test } from "./fixtures/test"
 /**
  * A Product Lead edits what a roadmap is about in the roadmap dialog (STY-043), against
  * the fake Sheets API: the dialog that adds a roadmap, on every About field and no
- * short name. Done keeps the edits pending, as the form in place of the panel did; the
- * rules of each field are held where they were (`editing.spec.ts`,
- * `last-updated.spec.ts`), now through this dialog. The journey runs once, at the
+ * short name. Done keeps the edits pending, and nothing is written until the roadmap is
+ * published or saved. The rules of each field are held in `editing.spec.ts` and
+ * `last-updated.spec.ts`, through this dialog. The journey runs once, at the
  * default size and theme (EPC-011's delivery notes): the accessibility spec and the
  * focus tour open the dialog in both themes.
  */
@@ -73,7 +73,7 @@ test("a Product Lead edits About in the roadmap dialog, the edits pending until 
     .selectOption({ label: "Tests, Scans & Results" })
   await dialog.getByRole("button", { name: "Done" }).click()
 
-  // Pending, as the form in place left them: shown, tagged, undoable, not written.
+  // Pending: shown, tagged, undoable, not written.
   await expect(dialog).toBeHidden()
   const main = page.getByRole("main")
   const about = main.getByRole("region", { name: "About this roadmap" })

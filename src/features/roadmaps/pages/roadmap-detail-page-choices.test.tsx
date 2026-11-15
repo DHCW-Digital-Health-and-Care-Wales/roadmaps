@@ -6,6 +6,7 @@ import type { AuthState } from "@/domain/auth/auth-client"
 import type { Category } from "@/domain/roadmap/category"
 import type { Family } from "@/domain/roadmap/family"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
+import { UNLISTED_FAMILY } from "@/domain/roadmap/roadmap-changes"
 import {
   GP_AND_COMMUNITY_SERVICES,
   MEDICINES_AND_DIAGNOSTICS,
@@ -49,9 +50,9 @@ interface Lists {
   categories?: Category[] | null
 }
 
-function repositoryWith(lists: Lists = {}) {
+function repositoryWith(lists: Lists = {}, listed: Roadmap[] = roadmaps) {
   return createInMemoryRoadmapRepository(
-    roadmaps,
+    listed,
     { producta: [createTestRoadmapItem("First item")] },
     { families: TEST_FAMILIES, categories: TEST_CATEGORIES, ...lists },
   )
@@ -115,8 +116,30 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
     expect(write).not.toHaveBeenCalled()
   })
 
+  it("opens on a family the list doesn't have, offered as not listed and left by Done (STY-043 S3)", async () => {
+    const legacy = createTestRoadmap("producta", "Product A roadmap", {
+      family: { en: "Legacy family", cy: "" },
+      familyNotListed: true,
+    })
+    const { user, form } = await renderPage(repositoryWith({}, [legacy]))
+
+    const family = await select(form, "Family")
+    expect(family).toHaveValue(UNLISTED_FAMILY)
+    expect(optionsOf(family)).toEqual([
+      "No family",
+      "Legacy family (not listed)",
+      "Single Record",
+      "Medicines & Diagnostics",
+    ])
+    await confirmRoadmapEdit(user)
+
+    expect(main().getByText("Family: Legacy family")).toBeInTheDocument()
+    expect(main().queryByText(/unpublished change/)).toBeNull()
+  })
+
   it("offers the lists a Refresh asked for, read again while the dialog is open", async () => {
     const repository = repositoryWith()
+    // `renderPage` opens the dialog: once it has read the lists, it is closed again.
     const { user, form } = await renderPage(repository)
     await select(form, "Family")
     await user.click(form.getByRole("button", { name: "Cancel" }))

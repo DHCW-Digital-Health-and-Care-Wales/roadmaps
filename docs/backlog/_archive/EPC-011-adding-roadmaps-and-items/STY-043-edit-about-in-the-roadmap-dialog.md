@@ -124,7 +124,10 @@ re-pointed at the dialog: none is dropped, and each rule S3 names keeps its test
 - **S4, focus** (agent): `EditForm` no longer focuses its own first field when it is
   in a dialog. Doing so moved focus before the dialog had noted the control that
   opened it, so closing returned focus nowhere; the dialog focuses the first field
-  itself.
+  itself. The dialog is also given About's Edit as its `opener`, and returns focus to
+  it by name (review, Opus): Safari leaves a clicked button unfocused, and the
+  in-place form focused Edit itself. "Add a roadmap" has the same gap, from STY-041:
+  [DEF-008](../../defects/DEF-008-focus-is-lost-after-add-a-roadmap-closes-in-safari.md).
 - **"Undo changes" moves focus to Edit as it is chosen** (agent), not after the next
   render: Edit is always there now, where the in-place form took its place.
 - **STY-042's panel test runs its behaviour once** (agent): `roadmap-page.spec.ts`
@@ -133,13 +136,15 @@ re-pointed at the dialog: none is dropped, and each rule S3 names keeps its test
   border and background stay per theme (D5; CHO-014's row for it is marked).
 - **Tests.** The component tests were re-pointed at the dialog first and run red: 38
   failed across four files for want of the dialog (five more in a fifth once the form
-  had gone), with the four new cases among them. The Playwright specs followed working
+  had gone), with the four new cases among them. The review added two: the Safari
+  case, written first and run red, and the unlisted family, which passed as written. The Playwright specs followed working
   code. None was dropped; the two Refresh tests are re-sequenced as above.
 
 ### Contract for dependents
 
-- **`RoadmapDialog`** (`dialogs/roadmap-dialog.tsx`) takes `open`, `onClose`, and
-  either `roadmaps` and `onAdded` (it adds, STY-041) or `roadmap` and `onDone` (it
+- **`RoadmapDialog`** (`dialogs/roadmap-dialog.tsx`) takes `open`, `onClose`, an
+  `opener` (the ref of the control that opens it, which `FormDialog` returns focus
+  to), and either `roadmaps` and `onAdded` (it adds, STY-041) or `roadmap` and `onDone` (it
   edits that roadmap, as the page shows it). Its editing form is `EditRoadmapForm`
   (`dialogs/edit-roadmap-form.tsx`), which gives `EditForm` the About fields.
 - **`EditForm` with no `onCancel` is a form in a dialog**: its buttons are a
@@ -154,15 +159,16 @@ re-pointed at the dialog: none is dropped, and each rule S3 names keeps its test
   the in-place form had.
 - **Vitest**: `features/roadmaps/testing/roadmap-dialog.ts` opens the dialog from
   About's Edit (`openEditRoadmapDialog`), finds it (`editRoadmapDialog`), sets one
-  text field and confirms (`editRoadmapText`) and chooses Done, waiting for the
-  dialog to go (`confirmRoadmapEdit`), in English or Welsh.
+  text field and confirms (`editRoadmapText`, in English only) and chooses Done,
+  waiting for the dialog to go (`confirmRoadmapEdit`); the other three take the
+  language, English or Welsh.
 - **E2E**: `openEditRoadmapDialog(page, { offersLists, language })` and
   `editRoadmapButton(page, language)` (`tests/e2e/fixtures/dialogs.ts`); the dialog is
   `getByRole("dialog", { name: "Edit this roadmap" })`. `expectDialogTour` now takes a
   date field as one stop, though Tab goes through its day, month and year. The
   structure snapshot is `edit-roadmap-dialog.aria.yml`.
 - **DEF-005 and CHO-007** are still open, each with a note of what the modal dialog
-  changes about reaching it.
+  changes about reaching it (DEF-005's under Cause: its D1 is the owner's triage).
 
 ### Scenario evidence
 
@@ -173,10 +179,10 @@ re-pointed at the dialog: none is dropped, and each rule S3 names keeps its test
 `tour` is `tests/e2e/focus-indicator.spec.ts`; `structure` is
 `tests/e2e/structure.spec.ts`.
 
-| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1       | editing "opens the roadmap dialog on every About field and no short name, the page behind it as it was", "edits the roadmap's five fields, tagging the block and the title"; e2e "a Product Lead edits About in the roadmap dialog, the edits pending until published" (once, D5); structure `edit-roadmap-dialog`                                                                                                                                                                                                                                                                        |
-| S2       | editing "edits the roadmap's five fields…", "tags only the block when the title is unchanged, and undoes it all", and every publish and co-lead case that edits About through the dialog; choices (S1–S3, S5); e2e the journey (nothing written until published); `tests/e2e/editing.spec.ts` "a family and category (STY-028)" and "a co-lead's change (STY-026)"; `tests/e2e/roadmap-page.spec.ts` "About's panel holds “Changed” and “Undo changes”, which returns focus to Edit"                                                                                                      |
-| S3       | the title: e2e "editing About in Welsh", axe "editing a roadmap, then publishing it"; the date: date (S3, S4, the day past midnight, a date already after today, one the browser can't read) and `tests/e2e/last-updated.spec.ts`; an unlisted family and a list that can't be read: choices (S6, "holds the family at its value while the list is read") and `editing.spec.ts` "is shown read-only…"; a Refresh: editing "leaves alone a co-lead's change, read while the roadmap dialog was open…", choices "offers the lists a Refresh asked for, read again while the dialog is open" |
-| S4       | editing "Cancel…" and "Escape closes it, dropping what was typed and keeping the edits already pending, with focus back on Edit", "keeps the dialog and what was typed when the session expires, and Done still keeps the edits"; e2e "Cancel and Escape close the dialog…; a click outside does nothing", "the dialog stays through the session warning and the session's end, and Done still keeps the edits"                                                                                                                                                                           |
-| S5       | Welsh: date "is in Welsh, the field, Today, the tick box and the messages", e2e "editing About in Welsh"; named by its heading, each message with its field: structure `edit-roadmap-dialog`, date (S4); holds focus: tour "every control in the roadmap dialog, editing About, shows DHCW's focus indicator" (both themes); axe "editing a roadmap, then publishing it" (the dialog open, then refused), "choosing a family, then its pending colour", "a co-lead's change to review, in Cymraeg on a phone" (both themes); the phone: D5                                                |
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | editing "opens the roadmap dialog on every About field and no short name, the page behind it as it was", "edits the roadmap's five fields, tagging the block and the title"; e2e "a Product Lead edits About in the roadmap dialog, the edits pending until published" (once, D5); structure `edit-roadmap-dialog`                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| S2       | editing "edits the roadmap's five fields…", "tags only the block when the title is unchanged, and undoes it all", and every publish and co-lead case that edits About through the dialog; choices (S1–S3, S5); e2e the journey (nothing written until published); `tests/e2e/editing.spec.ts` "a family and category (STY-028)" and "a co-lead's change (STY-026)"; `tests/e2e/roadmap-page.spec.ts` "About's panel holds “Changed” and “Undo changes”, which returns focus to Edit"                                                                                                                                                                                                                                                |
+| S3       | the title: e2e "editing About in Welsh", axe "editing a roadmap, then publishing it"; the date: date (S3, S4, the day past midnight, a date already after today, one the browser can't read) and `tests/e2e/last-updated.spec.ts`; an unlisted family: choices "opens on a family the list doesn't have, offered as not listed and left by Done", added by the review, the rule having had no test; a list that can't be read: choices (S6, "holds the family at its value while the list is read") and `editing.spec.ts` "is shown read-only…"; a Refresh: editing "leaves alone a co-lead's change, read while the roadmap dialog was open…", choices "offers the lists a Refresh asked for, read again while the dialog is open" |
+| S4       | editing "Cancel…" and "Escape closes it, dropping what was typed and keeping the edits already pending, with focus back on Edit", "keeps the dialog and what was typed when the session expires, and Done still keeps the edits", "returns focus to Edit as it closes where the click that opened it left focus elsewhere, as Safari's does"; e2e "Cancel and Escape close the dialog…; a click outside does nothing", "the dialog stays through the session warning and the session's end, and Done still keeps the edits"                                                                                                                                                                                                         |
+| S5       | Welsh: date "is in Welsh, the field, Today, the tick box and the messages", e2e "editing About in Welsh"; named by its heading, each message with its field: structure `edit-roadmap-dialog`, date (S4); holds focus: tour "every control in the roadmap dialog, editing About, shows DHCW's focus indicator" (both themes); axe "editing a roadmap, then publishing it" (the dialog open, then refused), "choosing a family, then its pending colour", "a co-lead's change to review, in Cymraeg on a phone" (both themes); the phone: D5                                                                                                                                                                                          |

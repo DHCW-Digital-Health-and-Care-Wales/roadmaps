@@ -3,17 +3,15 @@ import { useTranslation } from "react-i18next"
 import { useAddingRoadmap } from "../hooks/use-add-roadmap"
 import { AddRoadmapForm, type AddRoadmapFormProps } from "./add-roadmap-form"
 import { EditRoadmapForm, type EditRoadmapFormProps } from "./edit-roadmap-form"
-import { FormDialog } from "./form-dialog"
+import { FormDialog, type FormDialogProps } from "./form-dialog"
 
 /** What the dialog is given to add a roadmap, or to edit the one it is given. */
 type RoadmapDialogForm =
   | Omit<AddRoadmapFormProps, "labelledBy">
   | Omit<EditRoadmapFormProps, "labelledBy">
 
-export type RoadmapDialogProps = RoadmapDialogForm & {
-  open: boolean
-  onClose: () => void
-}
+export type RoadmapDialogProps = RoadmapDialogForm &
+  Pick<FormDialogProps, "open" | "onClose" | "opener">
 
 /**
  * The roadmap dialog (EPC-011): the one place a roadmap is added, and where what it is
@@ -21,7 +19,12 @@ export type RoadmapDialogProps = RoadmapDialogForm & {
  * name (STY-043); given none it adds one (STY-041). It closes as `FormDialog` sets,
  * except while a roadmap is being added.
  */
-export function RoadmapDialog({ open, onClose, ...form }: RoadmapDialogProps) {
+export function RoadmapDialog({
+  open,
+  onClose,
+  opener,
+  ...form
+}: RoadmapDialogProps) {
   const { t } = useTranslation()
   const adding = useAddingRoadmap()
   const editing = "roadmap" in form
@@ -31,6 +34,7 @@ export function RoadmapDialog({ open, onClose, ...form }: RoadmapDialogProps) {
       title={t(editing ? "roadmaps.edit.roadmapHeading" : "roadmaps.add.title")}
       busy={!editing && adding}
       onClose={onClose}
+      opener={opener}
     >
       {(titleId) =>
         editing ? (

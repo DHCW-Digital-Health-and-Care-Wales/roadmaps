@@ -21,13 +21,17 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   are the dialog's footer, and it leaves Escape and the first focus to `FormDialog`. A
   form that focuses a field as it mounts moves focus before the dialog has noted what
   opened it, and closing then returns focus nowhere.
+- **A dialog is given its `opener`**, the ref of the control that opens it
+  (`FormDialog`, `RoadmapDialog`): Safari leaves a clicked button unfocused, so the
+  dialog can't find it by where focus was. A test clicks without focusing
+  (`fireEvent.click`) to show it. "Add a roadmap" gives none yet (DEF-008).
 - **Nothing behind an open dialog can be pressed, Refresh included**: a test of a read
   that lands while a dialog is open asks for the Refresh first, holds the read
   (`holdCall`), opens the dialog, then lets the read go.
 - **The roadmap dialog's tests go through its helpers**:
   `features/roadmaps/testing/roadmap-dialog.ts` in Vitest, and `openEditRoadmapDialog`
-  and `editRoadmapButton` (`tests/e2e/fixtures/dialogs.ts`) in Playwright, each in
-  English or Welsh. The item dialog's go beside them.
+  and `editRoadmapButton` (`tests/e2e/fixtures/dialogs.ts`) in Playwright, in English
+  or Welsh (`editRoadmapText` in English only). The item dialog's go beside them.
 - **While a dialog is open, the page behind it is out of reach of role queries**, in
   Vitest as in Playwright: wait for a heading of the page before reading `main`.
 - **`user.selectOptions` matches an option's text as HTML**, so a name with `&` never

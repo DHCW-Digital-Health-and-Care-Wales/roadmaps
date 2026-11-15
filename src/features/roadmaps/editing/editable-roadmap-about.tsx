@@ -53,10 +53,10 @@ export function EditableRoadmapAbout({ roadmap }: EditableRoadmapAboutProps) {
     setOpened(null)
   }
   const done = (values: RoadmapValues) => {
-    const from = opened ?? { read: roadmap, shown }
+    if (!opened) return
     store.update(roadmap.id, (current) =>
-      editRoadmap(current, from.read, values, {
-        shown: from.shown,
+      editRoadmap(current, opened.read, values, {
+        shown: opened.shown,
         latest: roadmap,
       }),
     )
@@ -91,6 +91,7 @@ export function EditableRoadmapAbout({ roadmap }: EditableRoadmapAboutProps) {
         roadmap={shown}
         onDone={done}
         onClose={close}
+        opener={editButton}
       />
     </>
   )

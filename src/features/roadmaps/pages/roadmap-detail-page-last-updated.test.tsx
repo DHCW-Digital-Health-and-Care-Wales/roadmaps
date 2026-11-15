@@ -64,14 +64,14 @@ async function renderPage({
   return { user, repository }
 }
 
-/** Opens the dialog editing About and gives its date field. */
-async function openForm(user: User) {
+/** Opens the roadmap dialog and gives its date field. */
+async function openDateField(user: User) {
   const form = await openEditRoadmapDialog(user)
   return form.getByLabelText("Last updated")
 }
 
-/** Chooses `name` in the open dialog: a Done it refuses, or Today. */
-function choose(user: User, name: string) {
+/** Presses the open dialog's button named `name`: a Done it refuses, or Today. */
+function pressInDialog(user: User, name: string) {
   return user.click(editRoadmapDialog().getByRole("button", { name }))
 }
 
@@ -117,7 +117,7 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
     const { user, repository } = await renderPage()
     const write = vi.spyOn(repository, "publishRoadmapChanges")
 
-    const field = await openForm(user)
+    const field = await openDateField(user)
     expect(field).toHaveAttribute("type", "date")
     expect(field).toHaveValue("2026-10-02")
     pick(field, "2026-11-10")
@@ -137,16 +137,16 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
   it("fills today's date by the browser's clock with Today, and offers no later one (S3, S4)", async () => {
     const { user } = await renderPage()
 
-    const field = await openForm(user)
+    const field = await openDateField(user)
     expect(field).toHaveAttribute("max", "2026-11-13")
-    await choose(user, "Today")
+    await pressInDialog(user, "Today")
 
     expect(field).toHaveValue("2026-11-13")
   })
 
   it("takes the new day for Today and the limit when the form is left open past midnight", async () => {
     const { user } = await renderPage()
-    const field = await openForm(user)
+    const field = await openDateField(user)
 
     // 00:01 on 14 November in Tokyo.
     vi.setSystemTime(new Date("2026-11-13T15:01:00Z"))
@@ -156,17 +156,17 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
     await confirmRoadmapEdit(user)
     expect(main().getByText("1 unpublished change")).toBeInTheDocument()
 
-    const reopened = await openForm(user)
-    await choose(user, "Today")
+    const reopened = await openDateField(user)
+    await pressInDialog(user, "Today")
     expect(reopened).toHaveValue("2026-11-14")
   })
 
   it("refuses a date after today with a message, until it is fixed (S4)", async () => {
     const { user } = await renderPage()
 
-    const field = await openForm(user)
+    const field = await openDateField(user)
     pick(field, "2026-11-20")
-    await choose(user, "Done")
+    await pressInDialog(user, "Done")
 
     expect(field).toHaveAccessibleDescription(
       "Error: Enter today's date or an earlier one",
@@ -194,12 +194,12 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
   it("refuses a date the browser can't read, such as one half typed, rather than clear it", async () => {
     const { user } = await renderPage()
 
-    const field = await openForm(user)
+    const field = await openDateField(user)
     pick(field, "")
     Object.defineProperty(field, "validity", {
       value: { badInput: true },
     })
-    await choose(user, "Done")
+    await pressInDialog(user, "Done")
 
     expect(field).toHaveAccessibleDescription(
       "Error: Enter a real date, or clear the field",
@@ -211,7 +211,7 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
   it("clears the date, publishing an empty date (S5)", async () => {
     const { user, repository } = await renderPage()
 
-    pick(await openForm(user), "")
+    pick(await openDateField(user), "")
     await confirmRoadmapEdit(user)
     expect(about().getByText("No date")).toBeInTheDocument()
     await publish(user, "Publish changes")
@@ -316,7 +316,7 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
 
     it("isn't offered while a date is pending, which is published instead (S7)", async () => {
       const { user, repository } = await renderPage()
-      pick(await openForm(user), "2026-11-10")
+      pick(await openDateField(user), "2026-11-10")
       await confirmRoadmapEdit(user)
 
       await user.click(main().getByRole("button", { name: "Publish changes" }))
@@ -335,7 +335,7 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
 
   it("shows a co-lead's date beside yours in the review, as dates (S9)", async () => {
     const { user, repository } = await renderPage()
-    pick(await openForm(user), "2026-11-10")
+    pick(await openDateField(user), "2026-11-10")
     await confirmRoadmapEdit(user)
     repository.coLead((list) => {
       const roadmap = list.find(({ id }) => id === "producta")

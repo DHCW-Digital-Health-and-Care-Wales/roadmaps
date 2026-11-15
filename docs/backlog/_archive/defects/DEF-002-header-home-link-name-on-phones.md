@@ -8,7 +8,7 @@
 - **Depends on**: none
 - **Binding ADRs**: ADR-008, ADR-010
 - **Suggested model**: Sonnet — one link's name and a copy choice
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/100
 
 ## Summary
 

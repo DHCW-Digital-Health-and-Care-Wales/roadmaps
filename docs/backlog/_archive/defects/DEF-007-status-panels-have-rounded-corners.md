@@ -8,7 +8,7 @@
 - **Depends on**: none
 - **Binding ADRs**: ADR-010
 - **Suggested model**: Haiku — one class on one shared component, with a look check
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/100
 
 ## Summary
 

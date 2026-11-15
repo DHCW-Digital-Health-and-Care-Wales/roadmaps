@@ -9,7 +9,7 @@
 - **Binding ADRs**: ADR-005
 - **Suggested model**: Haiku — one ref passed to a prop the dialog already has, with a
   component test
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/100
 
 ## Summary
 

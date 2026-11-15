@@ -9,7 +9,7 @@
 - **Binding ADRs**: ADR-012, ADR-013
 - **Suggested model**: Sonnet — one form's options, beside the item form's fix for
   the same case
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/100
 
 ## Summary
 

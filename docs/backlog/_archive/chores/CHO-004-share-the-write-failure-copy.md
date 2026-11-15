@@ -7,7 +7,7 @@
 - **Depends on**: none
 - **Binding ADRs**: ADR-008
 - **Suggested model**: Sonnet — a mechanical merge of catalogue keys
-- **Delivered**: _(PR link, added once the PR is open)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/101
 
 ## Summary
 

@@ -30,7 +30,7 @@ production build with the E2E fakes (`sheets.spreadsheet = withTabItems("Product
    the "No items yet" panel (`[data-slot=empty]`).
 3. Open the roadmap list and read the same of a roadmap card.
 
-**Expected**: to be decided (_Open questions_).
+**Expected**: as D1 decides.
 **Actual**: About `0px`, a roadmap card `0px`, the "No items yet" panel `4px`.
 
 ## Cause
@@ -52,7 +52,7 @@ sets 4px and `_input-base.scss` 0.
   among the header's buttons. The rest are controls, menus and their items, icon tiles,
   the skeleton, focus targets and two comments (`empty.tsx:3`, `skeleton.tsx:2`).
 
-## Open questions
+## Open questions _(answered: see Decisions)_
 
 The right outcome is a look choice, not a fault against a written scenario: no story
 says which corners a panel has, and both looks were chosen on purpose.

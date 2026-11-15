@@ -15,7 +15,8 @@
   Each item ran in its own top-level orchestrator thread. Stop after the queue.
 - Outcome: completed. Both stories merged, EPC-008 is closed and archived, and the
   orchestration retrospective is this record's PR. Pending for the owner: the test-first
-  decision (CHO-008), the fluent Welsh review and CHO-007 (see Learnings).
+  decision (CHO-008), the fluent Welsh review and CHO-007 (see Learnings). _2026-11-15: CHO-008 relaxed and
+  Done; CHO-007 Won't do._
 - Coverage:
   - Sources: the run's progress log, run handoff, shared brief, child handoffs, delivery and
     retro reports, the outgoing orchestrator's report, and PR and CI state on GitHub.
@@ -126,10 +127,10 @@
 - Follow-up work:
   - [CHO-008](../../backlog/_archive/chores/CHO-008-settle-the-test-first-rule.md): both stories,
     like nine before them, wrote some tests after the code and reported it as a departure.
-    The owner decides whether to enforce, relax or keep the rule.
+    The owner decides whether to enforce, relax or keep the rule. _2026-11-15: relaxed, Done._
   - Fluent Welsh review of both stories' new strings, tracked in the README's Welsh note.
   - [CHO-007](../../backlog/_archive/chores/CHO-007-rebase-an-open-date-form-after-marking-updated.md)
-    waits for the owner.
+    waits for the owner. _2026-11-15: Won't do._
 - Next comparison: on the next UI items, compare the after captures read and the checker's
   suspects against faults found later in review or by the owner, to see whether the
   risk-based sample misses anything that reading every capture would have caught.

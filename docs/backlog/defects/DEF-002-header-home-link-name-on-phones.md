@@ -46,7 +46,7 @@ Verified: `AppHeader` (`src/components/layout/app-header.tsx`) gives the link
 **When** axe runs with the WCAG 2.2 AA tags over the whole page
 **Then** it reports no `label-content-name-mismatch`
 
-## Open questions _(while Needs grilling)_
+## Open questions _(answered: see Decisions)_
 
 - A product choice: change the short name so it sits inside the full name (for example
   "Roadmap Editor"), or name the link by what it shows below `sm`. The header's width

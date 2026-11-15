@@ -1,6 +1,6 @@
 # CHO-007: An open About form takes a date its own "Mark as updated today" wrote as its own
 
-- **Status**: Won't do — owner, 2026-11-15 (D1); archived
+- **Status**: Won't do — owner, 2026-11-15 (D2); archived
 - **Type**: Chore
 - **Area**: Features/UI
 - **Epic**: standalone
@@ -48,7 +48,7 @@ and publishes
   publish is still being written. The owner may prefer to close this chore: until
   then it stays Proposed.
 
-- **D1** (owner, 2026-11-15, the owner's triage of the live chores and defects): Won't do. Since STY-043 the About form is in a modal dialog, so the path is left only while a publish is still being written as the dialog opens (D1 above), and "Keep mine" resolves it. Reopen on a report of the refusal from a Product Lead.
+- **D2** (owner, 2026-11-15, the owner's triage of the live chores and defects): Won't do, accepting the agent's recommendation and its reason: since STY-043 the About form is in a modal dialog, so the path is left only while a publish is still being written as the dialog opens (D1 above), and "Keep mine" resolves it. Reopen on a report of the refusal from a Product Lead.
 
 ## Out of scope
 

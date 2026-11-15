@@ -69,8 +69,9 @@ the Worker contract.
 
 Start the reviewers of a round together so they run concurrently: a
 reviewer on your own provider through the runtime's native subagent tool with
-the model and effort set explicitly (Opus; Sonnet at high effort), and one on another provider (Sol, or
-Opus and Sonnet when you run on Codex) through a cross-provider delegation tool.
+the model and effort set explicitly (Opus; Sonnet at high effort), and one on
+another provider (Sol; or Opus, and Sonnet at high effort, when you run on
+Codex) through a cross-provider delegation tool.
 Start any background delegation first, then the foreground ones, so nothing
 waits on another.
 
@@ -143,10 +144,10 @@ pass.
   Worker contract sets.
 - **Round 2, the re-check**: only for a reviewer whose round 1 found anything
   above P3 (correctness) or a 🔴 or 🟡 (quality); a CI finding that arrives
-  first joins it. Start a fresh reviewer on the same model. Supply its previous
-  findings and how each was addressed, the head last reviewed, the new head and
-  the diff command between them. A rebase since the last round moves the base
-  too: re-pin both SHAs and supply
+  first joins it. Start a fresh reviewer on the same model and effort. Supply
+  its previous findings and how each was addressed, the head last reviewed, the
+  new head and the diff command between them. A rebase since the last round
+  moves the base too: re-pin both SHAs and supply
   `git range-diff <old base>..<old head> <new base>..<new head>`, since a diff
   between the heads shows the base's new work as the fix. The re-checker
   confirms or reopens each finding and reviews the changed lines and the code
@@ -156,7 +157,8 @@ pass.
 - **Final fresh pass**: when a fix changes runtime behaviour (logic, data,
   auth or UI behaviour), not only wording, docs, tests or renames, start one
   fresh reviewer over the whole diff in the lane that owns that behaviour: Sol
-  for correctness, Sonnet at high effort for quality. A fix for a CI finding counts. The pass
+  for correctness, Sonnet at high effort for quality. A fix for a CI finding
+  counts. The pass
   is its own task beside that lane's re-checks, briefed as a first round at the
   new head with the requirements and pinned SHAs, and asked to judge from those
   and the pinned diff alone, not the PR's body or comments. Its own findings

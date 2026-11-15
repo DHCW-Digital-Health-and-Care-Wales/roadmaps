@@ -83,9 +83,9 @@ offer then, until it has gone
 **Given** the publish dialog is open and a read finds the roadmap already holds every
 pending change
 **When** the read lands
-**Then** the dialog does not stand over an empty list: what it does instead is Q1
+**Then** the dialog does not stand over an empty list: what it does instead is Q1, answered by D1
 
-## Open questions
+## Open questions _(answered: see Decisions)_
 
 - **Q1**: What should the publish dialog do when a read leaves nothing to publish
   while it is open? _Sam's save lost its answer; Sam refreshes and opens "Save

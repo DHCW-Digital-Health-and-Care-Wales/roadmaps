@@ -54,7 +54,7 @@ choose another, in English and Welsh
 
 ## Decisions
 
-- **D1** (owner, 2026-11-15, the owner's triage of the live chores and defects): Won't do. Only a hand edit of the spreadsheet deletes a family or category (ADR-013), and choosing again recovers. Reopen when the database API replaces Sheets (ADR-002) and deleting a family or category, and its effect on the roadmaps that use it, is designed there.
+- **D1** (owner, 2026-11-15, the owner's triage of the live chores and defects): Won't do, accepting the agent's recommendation and its reason. Only a hand edit of the spreadsheet deletes a family or category (ADR-013), and choosing again recovers. Reopen when the database API replaces Sheets (ADR-002) and deleting a family or category, and its effect on the roadmaps that use it, is designed there.
 
 ## Out of scope
 

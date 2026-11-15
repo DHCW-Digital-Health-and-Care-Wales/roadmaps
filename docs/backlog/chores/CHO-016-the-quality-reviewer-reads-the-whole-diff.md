@@ -75,7 +75,7 @@ tokens, the saved outputs it opened of those it had, and the parts it reported u
 **And** where a first pass still left a part unread, the record says so and names the
 option of Q1 to try next
 
-## Open questions
+## Open questions _(answered: see Decisions)_
 
 - **Q1**: What should the quality lane's reviewer run as? On STY-045 the Sonnet
   reviewer left 69 lines of the story's record unread, and its re-checker six test

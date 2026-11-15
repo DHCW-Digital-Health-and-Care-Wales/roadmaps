@@ -27,8 +27,6 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
 - **An E2E spec that needs a roadmap with other items, or none, uses `withTabItems`**
   (`tests/e2e/fixtures/fake-sheets.ts`), or `withTabRows` for a tab's whole rows: it
   does not map over `EXAMPLE_SPREADSHEET` itself.
-- **Adding a roadmap and publishing a new item work against a real spreadsheet**: the
-  owner ran CHO-010's and CHO-015's checks (2026-11-15), so the fake's guesses stand.
 - **A dialog's closing and focus rules are `FormDialog`'s**, and a form's fields are
   `FormField`, `ChoiceField` and `FixedField`: STY-041's _Contract for dependents_
   (archived) says how each is used. A new dialog passes its form to `FormDialog`; it

@@ -58,4 +58,4 @@ are changed together, in a PR that says the format changed
 
 ## Delivery
 
-- **Owner's check** (2026-11-15): the owner ran the checks of the Measurement table against a test spreadsheet and reported that the write works correctly. No row was reported different, so the write, the fake and README _What the editor writes_ are unchanged, and STY-040's record stands.
+- **Owner's check** (2026-11-15): the owner ran the checks of the Measurement table against a test spreadsheet and reported that the write works correctly, without detail on the rows that ask what happens (a protected `Template`, a filter or table on the tab). No row was reported different, so the write, the fake and README _What the editor writes_ are unchanged, and STY-040's record stands.

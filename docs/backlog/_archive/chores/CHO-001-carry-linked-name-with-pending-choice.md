@@ -52,7 +52,7 @@ a `Family ID` or `Category ID`: if none, close it as Won't do.
 
 ## Decisions
 
-- **D1** (owner, 2026-11-15, the owner's triage of the live chores and defects): Won't do. The window closes for good as each row's first publish links its IDs, and "Keep mine" resolves a refusal in it. Reopen if rows without a `Family ID` or `Category ID` are seen refused after a rename.
+- **D1** (owner, 2026-11-15, the owner's triage of the live chores and defects): Won't do, accepting the agent's recommendation and its reason. The window closes for good as each row's first publish links its IDs, and "Keep mine" resolves a refusal in it. Reopen if rows without a `Family ID` or `Category ID` are seen refused after a rename.
 
 ## Out of scope
 

@@ -1,6 +1,6 @@
 # CHO-014: The E2E suite holds geometry, and repeats a run, only where that proves something
 
-- **Status**: Proposed — asked for by the owner (D1); measured here, no test changed yet; not to be selected until its measurements grow (D4)
+- **Status**: Proposed — asked for by the owner (D1); measured here, no test changed yet; not to be selected until its measurements grow (D4); the focus tours stay in both themes (D7)
 - **Type**: Refactor
 - **Area**: E2E (tests only)
 - **Epic**: standalone
@@ -129,7 +129,7 @@ repeat it, which is how STY-041's journey came to run four times
   (ADR-010) holds only the tokens, not which token a component uses. The focus tours'
   dark half is put to the owner in S4, not assumed.
 - **D4** (owner, 2026-11-14): not worth selecting now, given the measured saving (at
-  most 5% of the suite's time; S4's focus-tour question is not decided either).
+  most 5% of the suite's time; S4's focus-tour question was not decided either; D7 has since decided it).
   Revisit when the suite's run time, or the share of it that S1–S3 would remove,
   grows; re-measure first (`## Measurement` is as at `697fcc5`).
 - **D5** (agent, 2026-11-15, STY-043): About's panel test now checks its border and
@@ -140,7 +140,6 @@ repeat it, which is how STY-041's journey came to run four times
   375 px alone, in the item dialog. Their 640 px runs ("in the narrowest card") have
   gone: no form sits in a card now, and the dialog is narrowest on a phone. The
   square icons and the row's alignment are still asserted, as measured.
-
 - **D7** (owner, 2026-11-15, the owner's triage of the live chores and defects): the focus tours keep running in both themes (S4). The chore stays parked as D4 set.
 
 ## Out of scope

@@ -58,5 +58,5 @@
 ## Learnings and next evaluation
 
 - What helped or caused avoidable cost: sequential reviewers and `--maxWorkers=2` kept memory in bounds after the STY-019 OOM; no later item was killed. Reviews were fast and found nothing in the correctness lanes on all three items, so Sonnet's quality lane caught every accepted finding.
-- Follow-up work: DEF-002 (triage); fluent Welsh review of the copy added by STY-011, STY-012, STY-016, STY-017 and STY-021.
+- Follow-up work: DEF-002 (triage; _2026-11-15: Proposed_); fluent Welsh review of the copy added by STY-011, STY-012, STY-016, STY-017 and STY-021.
 - Next comparison: whether Opus and Sol keep finding nothing on comparable items, and whether sequential reviewing stays at about 5 to 12 min. No policy change is implied.

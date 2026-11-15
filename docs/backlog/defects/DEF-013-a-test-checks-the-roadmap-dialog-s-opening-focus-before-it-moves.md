@@ -1,13 +1,13 @@
 # DEF-013: A test checks the roadmap dialog's opening focus before it has moved
 
-- **Status**: Needs triage — found by retro of DEF-009 (a CI flake on PR #95)
+- **Status**: Proposed — owner, 2026-11-15 (D1); high priority, before DEF-014 and DEF-015
 - **Severity**: Low — a Verify run fails now and then on a change that does not touch
   the file, and a rerun passes; no user is affected
 - **Area**: Features/UI
 - **Epic**: EPC-011-adding-roadmaps-and-items
 - **Depends on**: none
 - **Binding ADRs**: none
-- **Suggested model**: Sonnet — one assertion wrapped in `waitFor`, and a look at the sibling sites
+- **Suggested model**: Sonnet — a shared helper for eight assertions, and a guide rule
 - **Delivered**: _(add on delivery)_
 
 ## Summary
@@ -60,5 +60,12 @@ read, with no wait. A neighbouring test waits for the same thing
 and a sibling site that reads an opening focus without waiting is checked the same way
 
 ## Decisions
+
+- **D1** (owner, 2026-11-15, grilling of DEF-011 to DEF-014, Q1): fix, high priority
+  — a flaky Verify can fail any PR.
+- **D2** (owner, 2026-11-15, Q2): every site that reads an opening focus waits for it,
+  through one shared test helper (all eight sites in Cause, and any the delivery finds),
+  and a rule that a dialog's opening focus is read through it goes in the narrowest
+  guide by the ladder in `docs/operations/authoring-agent-instructions.md`.
 
 ## Delivery _(add on delivery; as in `story.md`)_

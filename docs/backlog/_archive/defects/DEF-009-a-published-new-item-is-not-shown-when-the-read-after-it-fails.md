@@ -90,6 +90,11 @@ whether it succeeds or fails, leaving the items as cached before the publish.
 - **D1** (owner, 2026-11-15, the owner's triage of the live chores and defects): Q1 (a). A new item the publish confirmed stays pending, tagged "New" and counted, until a read holds it.
 - **D2** (owner, 2026-11-15, the owner's triage of the live chores and defects): Q2 yes. A confirmed edit stays pending, with its text, until a read holds it.
 - **D3** (owner, 2026-11-15, Q3): (a). A card D1 keeps pending offers no Remove until a read holds its item; removing a published item stays STY-049's.
+- **D4** (owner, 2026-11-15, grilling of DEF-011 to DEF-014): D1–D3 are replaced by
+  [DEF-015](../../defects/DEF-015-a-write-the-editor-can-t-read-back-leaves-the-app-out-of-step.md):
+  a write the editor can't read back holds the whole app in a dialog until a Refresh
+  succeeds, the changes sent still shown pending behind it, so nothing can be added
+  twice, edited or removed meanwhile. DEF-015 removes the keep-pending rules built here.
 
 ## Delivery
 
@@ -119,9 +124,9 @@ holds it, which the pending-edit store's reconcile on read already drops.
   until the next read, which holds the published text; nothing is published twice.
 - **An item without an ID keeps the content it was loaded with** (agent), so its card
   finds it in the items last read and S2 shows its edit; edited again before a read,
-  it is reported changed: [DEF-012](../../defects/DEF-012-an-item-without-an-id-edited-again-before-a-read-is-reported-changed.md).
+  it is reported changed: [DEF-012](DEF-012-an-item-without-an-id-edited-again-before-a-read-is-reported-changed.md).
 - **An edit back to the text last read is dropped** while a kept edit waits for a read:
-  [DEF-011](../../defects/DEF-011-an-edit-back-to-the-text-last-read-is-dropped-before-a-read-holds-a-publish.md).
+  [DEF-011](DEF-011-an-edit-back-to-the-text-last-read-is-dropped-before-a-read-holds-a-publish.md).
 - **Before screenshots were captured after the tests were written**, from a build of
   the base commit (`4ff0fb0`), not from the checkout before the first edit.
 

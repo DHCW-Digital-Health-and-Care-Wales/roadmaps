@@ -234,18 +234,25 @@ flowchart LR
   pending: the publish dialog's list empties, as it closes or when a read leaves
   nothing to publish, and a tick box can appear. Done (delivered in its PR, awaiting
   merge); found by STY-047's delivery.
-- [DEF-011](../defects/DEF-011-an-edit-back-to-the-text-last-read-is-dropped-before-a-read-holds-a-publish.md):
+- [DEF-011](../_archive/defects/DEF-011-an-edit-back-to-the-text-last-read-is-dropped-before-a-read-holds-a-publish.md):
   an edit back to the text last read is dropped while a published edit waits for a
-  read. Needs triage; found by DEF-009's review.
-- [DEF-012](../defects/DEF-012-an-item-without-an-id-edited-again-before-a-read-is-reported-changed.md):
+  read. Superseded by DEF-015 (owner, 2026-11-15); found by DEF-009's review.
+- [DEF-012](../_archive/defects/DEF-012-an-item-without-an-id-edited-again-before-a-read-is-reported-changed.md):
   an item without an ID, edited again before a read holds its publish, is reported
-  changed. Needs triage; found by DEF-009's review.
+  changed. Superseded by DEF-015 (owner, 2026-11-15); found by DEF-009's review.
 - [DEF-013](../defects/DEF-013-a-test-checks-the-roadmap-dialog-s-opening-focus-before-it-moves.md):
   a test checks the roadmap dialog's opening focus before it has moved, so Verify
-  fails now and then. Needs triage; found by the retro of DEF-009.
+  fails now and then. Proposed, high priority (owner, 2026-11-15); found by the retro
+  of DEF-009.
 - [DEF-014](../defects/DEF-014-publish-roadmap-carries-its-dialog-and-outcome-to-another-roadmap.md):
   "Publish roadmap" carries its dialog and outcome onto another roadmap's page when the
-  Product Lead moves between them during the write. Needs triage; found by DEF-010's review.
+  Product Lead moves between them during the write. Proposed, after DEF-013 (owner,
+  2026-11-15); found by DEF-010's review.
+- [DEF-015](../defects/DEF-015-a-write-the-editor-can-t-read-back-leaves-the-app-out-of-step.md):
+  a write the editor can't read back leaves the app out of step with the data source;
+  it is to hold the whole app until a Refresh succeeds, replacing DEF-009's keep-pending
+  rules. Proposed, after DEF-014 (owner, 2026-11-15); from the grilling of DEF-011 to
+  DEF-014.
 
 ## Related
 

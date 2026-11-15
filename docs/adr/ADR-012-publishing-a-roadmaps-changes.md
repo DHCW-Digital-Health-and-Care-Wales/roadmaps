@@ -11,7 +11,9 @@
   amended by STY-037: an item's tags become editable, unless it has Welsh ones;
   amended by STY-039: an item's details become editable, unless it has Welsh ones;
   amended by STY-040: adding a roadmap is a write at once, and copies the `Template` tab;
-  amended by STY-045: a new item is a pending edit, published as a new row)
+  amended by STY-045: a new item is a pending edit, published as a new row;
+  amended by DEF-015: a write that can't be read back holds the app until a Refresh,
+  and what a database API's write must return)
 
 ## Context
 
@@ -324,6 +326,27 @@ Nothing checks permission in advance.
 - `RoadmapChanges` carries the new items, so `publishRoadmapChanges` and
   `setRoadmapPublished` ("Save and publish") take them: `RoadmapRepository` gains no
   call (ADR-002 stands), and `RoadmapItem` is unchanged (ADR-011 stands).
+
+### DEF-015 amendments
+
+- **A write the editor can't read back holds the whole app until a Refresh** (DEF-015
+  D2, D3): a lost answer (Option 16's unconfirmed) and a write that landed but whose
+  read after it failed both open one dialog over the app that can't be dismissed, and
+  nothing else can be done until a Refresh reads the roadmap list and the roadmap's
+  items, or Connect when the session has ended. The changes sent stay shown pending
+  behind it. This holds for every write: a publish, "Publish/Unpublish roadmap",
+  "Save and publish", adding a roadmap, a family write and matching a roadmap to the
+  lists. It replaces Option 16's page notice, which let the Product Lead edit and
+  publish meanwhile, and DEF-009's keep-pending rules. Until DEF-015 is delivered, the
+  code does as Option 16 says.
+- **The hold is Google Sheets plumbing** (DEF-015 D4), kept in one place so it is
+  deleted whole when a database API replaces the spreadsheet. That API's write returns
+  what it wrote (`200` with the saved roadmap and items, as an update method returns
+  its resource in Google's API design guidance, AIP-134), so no read follows a write;
+  and a co-lead's change is caught by a version, an `ETag` sent back as `If-Match` and
+  refused with `412`, in place of comparing each base and the one-request race
+  _Consequences_ accepts. Only a lost answer can then leave the editor not knowing
+  what was written, and the hold stays for it.
 
 ## Options (owner's choice marked ✅, 2026-11-11)
 

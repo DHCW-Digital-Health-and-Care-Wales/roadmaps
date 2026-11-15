@@ -1,6 +1,6 @@
 # DEF-002: On a phone, the header's home link is named without the word it shows
 
-- **Status**: Needs triage — found by STY-021 delivery
+- **Status**: Proposed — triaged by the owner, 2026-11-15 (D1)
 - **Severity**: Low — speech-input users on a phone may not reach the home link by saying
   what they see; axe reports a WCAG 2.2 AA failure (2.5.3 Label in Name)
 - **Area**: Features/UI + i18n (en + cy)
@@ -53,5 +53,7 @@ Verified: `AppHeader` (`src/components/layout/app-header.tsx`) gives the link
   budget in Cymraeg (STY-016 D6) limits the first.
 
 ## Decisions
+
+- **D1** (owner, 2026-11-15, the owner's triage of the live chores and defects): the link is named by what it shows, followed by "home": below `sm` its name starts "Roadmaps", above it the service name. The short name is unchanged, since the header's width in Cymraeg limits it (STY-016 D6). An axe scan of the header at 375 px holds it.
 
 ## Delivery _(add on delivery; as in `story.md`)_

@@ -2,6 +2,7 @@
 name: quality-reviewer
 description: Read-only maintainability and repository-convention review.
 model: sonnet
+effort: high
 tools: Read, Grep, Glob, Bash
 ---
 

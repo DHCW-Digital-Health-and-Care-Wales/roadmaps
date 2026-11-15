@@ -1,7 +1,6 @@
 # DEF-007: Status panels have rounded corners; cards and the About panel beside them are square
 
-- **Status**: Needs triage — found by STY-042's review (Opus, round 1), recorded by its
-  retro
+- **Status**: Proposed — triaged by the owner, 2026-11-15 (D1)
 - **Severity**: Low — two kinds of corner on one page, hard to see at normal size;
   nothing is broken
 - **Area**: Features/UI
@@ -67,5 +66,7 @@ says which corners a panel has, and both looks were chosen on purpose.
    - (c) Keep both looks: nothing to build; this record closes as Won't fix.
 
 ## Decisions
+
+- **D1** (owner, 2026-11-15, the owner's triage of the live chores and defects): option (a). Status panels are square, like the cards and the About panel beside them; dialogs keep their 4px.
 
 ## Delivery _(add on delivery)_

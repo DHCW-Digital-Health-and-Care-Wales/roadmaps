@@ -1,6 +1,6 @@
 # CHO-002: A pending family or category deleted from its list shows as not listed
 
-- **Status**: Proposed — declined from STY-028's review as a known gap; the owner may pay the cost later
+- **Status**: Won't do — owner, 2026-11-15 (D1); archived
 - **Type**: Chore
 - **Area**: Features/UI + i18n (en + cy)
 - **Epic**: standalone
@@ -53,6 +53,8 @@ choose another, in English and Welsh
 **Then** it is shown and refused as S1 and S2 set
 
 ## Decisions
+
+- **D1** (owner, 2026-11-15, the owner's triage of the live chores and defects): Won't do. Only a hand edit of the spreadsheet deletes a family or category (ADR-013), and choosing again recovers. Reopen when the database API replaces Sheets (ADR-002) and deleting a family or category, and its effect on the roadmaps that use it, is designed there.
 
 ## Out of scope
 

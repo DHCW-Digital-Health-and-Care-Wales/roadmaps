@@ -37,6 +37,8 @@ has no `--brand`. No analysis under `docs/analysis/` uses the stylesheet yet.
 
 ## Decisions
 
+- **D1** (owner, 2026-11-15, the owner's triage of the live chores and defects): deliver it before the next round of prototypes, not before.
+
 ## Out of scope
 
 - A mode of the skill for working prototypes of one component, as STY-037's page is:

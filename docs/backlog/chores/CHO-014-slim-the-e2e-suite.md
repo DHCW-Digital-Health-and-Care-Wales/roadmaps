@@ -141,6 +141,8 @@ repeat it, which is how STY-041's journey came to run four times
   gone: no form sits in a card now, and the dialog is narrowest on a phone. The
   square icons and the row's alignment are still asserted, as measured.
 
+- **D7** (owner, 2026-11-15, the owner's triage of the live chores and defects): the focus tours keep running in both themes (S4). The chore stays parked as D4 set.
+
 ## Out of scope
 
 - Any change to production code, or to what a test asserts about behaviour.

@@ -1,6 +1,6 @@
 # DEF-009: A new item that was published is not shown when the read after the publish fails
 
-- **Status**: Needs triage — found by STY-046's review (Opus, round 1)
+- **Status**: Proposed — triaged by the owner, 2026-11-15 (D1, D2)
 - **Severity**: Medium — the item is public but missing from the page until a Refresh
   succeeds, so a Product Lead may add it again and publish it twice
 - **Area**: Features (pending-edit rules)
@@ -71,5 +71,8 @@ whether it succeeds or fails, leaving the items as cached before the publish.
   the next read.
 
 ## Decisions
+
+- **D1** (owner, 2026-11-15, the owner's triage of the live chores and defects): Q1 (a). A new item the publish confirmed stays pending, tagged "New" and counted, until a read holds it. The delivery decides what Remove does to such a card, since its item is public.
+- **D2** (owner, 2026-11-15, the owner's triage of the live chores and defects): Q2 yes. A confirmed edit stays pending, with its text, until a read holds it.
 
 ## Delivery _(add on delivery; as in `story.md`)_

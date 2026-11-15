@@ -29,39 +29,39 @@ moves to `_archive/`, where its row here still points.
 
 ## Chores
 
-| ID                                                                             | Chore                                                                                                                  | Status                           |
-| ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
-| [CHO-001](chores/CHO-001-carry-linked-name-with-pending-choice.md)             | Carry the linked name with each pending family/category choice, so renames before first publish are not conflicts      | Proposed                         |
-| [CHO-002](chores/CHO-002-show-a-deleted-pending-choice-as-not-listed.md)       | Show a pending family or category deleted from its list as not listed                                                  | Proposed                         |
-| [CHO-004](chores/CHO-004-share-the-write-failure-copy.md)                      | Share the eight-key write-failure copy between publishing, families and "Make it match"                                | Proposed                         |
-| [CHO-005](chores/CHO-005-send-last-updated-to-the-api-in-utc.md)               | Send a roadmap's Last updated to the future database API in UTC, once it replaces Sheets                               | Placeholder                      |
-| [CHO-007](chores/CHO-007-rebase-an-open-date-form-after-marking-updated.md)    | An open About form takes a date its own "Mark as updated today" wrote as its own                                       | Proposed                         |
-| [CHO-008](chores/CHO-008-settle-the-test-first-rule.md)                        | Deliveries follow a test-first rule they can keep                                                                      | Needs grilling                   |
-| [CHO-009](chores/CHO-009-prototype-styles-match-the-app.md)                    | The `ux-prototypes` stylesheet still draws shadcn's greys, not the app's DHCW look                                     | Proposed                         |
-| [CHO-010](chores/CHO-010-check-adding-a-roadmap-against-a-real-spreadsheet.md) | Check STY-040's write (a copied `Template`, frozen, hidden or protected) against a real test spreadsheet               | Proposed                         |
-| [CHO-011](_archive/chores/CHO-011-the-dialog-tests-share-their-setup.md)       | The dialog tests share one way to open a dialog, one focus tour and one set of fixtures, before more dialogs copy them | Done — in its PR, awaiting merge |
-| [CHO-012](chores/CHO-012-the-other-tests-use-the-shared-fixtures.md)           | The other tests take their families, categories and connected state from the shared fixtures                           | Proposed                         |
-| [CHO-013](chores/CHO-013-the-page-focus-tour-tells-its-stops-apart.md)         | The page focus tour tells its stops apart, so it can't miss a text field                                               | Proposed                         |
-| [CHO-014](chores/CHO-014-slim-the-e2e-suite.md)                                | The E2E suite holds geometry, and repeats a run per theme, language or width, only where that proves something         | Proposed                         |
-| [CHO-015](chores/CHO-015-check-adding-an-item-against-a-real-spreadsheet.md)   | Check STY-045's write (a new item's row appended to a roadmap's tab) against a real test spreadsheet                   | Proposed                         |
-| [CHO-016](chores/CHO-016-the-quality-reviewer-reads-the-whole-diff.md)         | The quality reviewer reads the whole diff in one pass                                                                  | Needs grilling                   |
+| ID                                                                                      | Chore                                                                                                                  | Status      |
+| --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ----------- |
+| [CHO-001](_archive/chores/CHO-001-carry-linked-name-with-pending-choice.md)             | Carry the linked name with each pending family/category choice, so renames before first publish are not conflicts      | Won't do    |
+| [CHO-002](_archive/chores/CHO-002-show-a-deleted-pending-choice-as-not-listed.md)       | Show a pending family or category deleted from its list as not listed                                                  | Won't do    |
+| [CHO-004](chores/CHO-004-share-the-write-failure-copy.md)                               | Share the eight-key write-failure copy between publishing, families and "Make it match"                                | Proposed    |
+| [CHO-005](chores/CHO-005-send-last-updated-to-the-api-in-utc.md)                        | Send a roadmap's Last updated to the future database API in UTC, once it replaces Sheets                               | Placeholder |
+| [CHO-007](_archive/chores/CHO-007-rebase-an-open-date-form-after-marking-updated.md)    | An open About form takes a date its own "Mark as updated today" wrote as its own                                       | Won't do    |
+| [CHO-008](_archive/chores/CHO-008-settle-the-test-first-rule.md)                        | Deliveries follow a test-first rule they can keep                                                                      | Done        |
+| [CHO-009](chores/CHO-009-prototype-styles-match-the-app.md)                             | The `ux-prototypes` stylesheet still draws shadcn's greys, not the app's DHCW look                                     | Proposed    |
+| [CHO-010](_archive/chores/CHO-010-check-adding-a-roadmap-against-a-real-spreadsheet.md) | Check STY-040's write (a copied `Template`, frozen, hidden or protected) against a real test spreadsheet               | Done        |
+| [CHO-011](_archive/chores/CHO-011-the-dialog-tests-share-their-setup.md)                | The dialog tests share one way to open a dialog, one focus tour and one set of fixtures, before more dialogs copy them | Done        |
+| [CHO-012](chores/CHO-012-the-other-tests-use-the-shared-fixtures.md)                    | The other tests take their families, categories and connected state from the shared fixtures                           | Proposed    |
+| [CHO-013](chores/CHO-013-the-page-focus-tour-tells-its-stops-apart.md)                  | The page focus tour tells its stops apart, so it can't miss a text field                                               | Proposed    |
+| [CHO-014](chores/CHO-014-slim-the-e2e-suite.md)                                         | The E2E suite holds geometry, and repeats a run per theme, language or width, only where that proves something         | Proposed    |
+| [CHO-015](_archive/chores/CHO-015-check-adding-an-item-against-a-real-spreadsheet.md)   | Check STY-045's write (a new item's row appended to a roadmap's tab) against a real test spreadsheet                   | Done        |
+| [CHO-016](chores/CHO-016-the-quality-reviewer-reads-the-whole-diff.md)                  | The quality reviewer reads the whole diff in one pass                                                                  | In progress |
 
 Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status token.
 
 ## Defects
 
-| ID                                                                                           | Defect                                                                                         | Status                           |
-| -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | -------------------------------- |
-| [DEF-001](_archive/defects/DEF-001-roadmaps-heading-title-case.md)                           | The roadmaps heading is in Title Case                                                          | Done                             |
-| [DEF-002](defects/DEF-002-header-home-link-name-on-phones.md)                                | On a phone, the header's home link is named without the word it shows                          | Needs triage                     |
-| [DEF-003](_archive/defects/DEF-003-refusal-shows-stale-text-or-restores-removed-roadmap.md)  | After a refused publish, "Use theirs" can show older text, and a removed roadmap can come back | Done — in its PR, awaiting merge |
-| [DEF-004](defects/DEF-004-pending-no-category-dropped-when-category-unlisted.md)             | A pending "No category" is dropped, unwritten, once the roadmap's category leaves its list     | Needs triage                     |
-| [DEF-005](defects/DEF-005-about-form-shows-no-family-after-refresh.md)                       | An open About form shows "No family" after Refresh reads a co-lead's family                    | Needs triage                     |
-| [DEF-006](_archive/defects/DEF-006-a-refused-reconnect-drops-the-add-a-roadmap-dialog.md)    | A reconnect Google refuses drops the "Add a roadmap" dialog and what was typed                 | Won't fix                        |
-| [DEF-007](defects/DEF-007-status-panels-have-rounded-corners.md)                             | Status panels have rounded corners; cards and the About panel beside them are square           | Needs triage                     |
-| [DEF-008](defects/DEF-008-focus-is-lost-after-add-a-roadmap-closes-in-safari.md)             | Focus is lost when "Add a roadmap" closes, for a Product Lead who clicked it in Safari         | Needs triage                     |
-| [DEF-009](defects/DEF-009-a-published-new-item-is-not-shown-when-the-read-after-it-fails.md) | A new item that was published is not shown when the read after the publish fails               | Needs triage                     |
-| [DEF-010](defects/DEF-010-a-publishing-dialog-changes-what-it-shows-once-written.md)         | A dialog that publishes changes what it shows once its changes are no longer pending           | Needs triage                     |
+| ID                                                                                           | Defect                                                                                         | Status    |
+| -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | --------- |
+| [DEF-001](_archive/defects/DEF-001-roadmaps-heading-title-case.md)                           | The roadmaps heading is in Title Case                                                          | Done      |
+| [DEF-002](defects/DEF-002-header-home-link-name-on-phones.md)                                | On a phone, the header's home link is named without the word it shows                          | Proposed  |
+| [DEF-003](_archive/defects/DEF-003-refusal-shows-stale-text-or-restores-removed-roadmap.md)  | After a refused publish, "Use theirs" can show older text, and a removed roadmap can come back | Done      |
+| [DEF-004](_archive/defects/DEF-004-pending-no-category-dropped-when-category-unlisted.md)    | A pending "No category" is dropped, unwritten, once the roadmap's category leaves its list     | Won't fix |
+| [DEF-005](defects/DEF-005-about-form-shows-no-family-after-refresh.md)                       | An open About form shows "No family" after Refresh reads a co-lead's family                    | Proposed  |
+| [DEF-006](_archive/defects/DEF-006-a-refused-reconnect-drops-the-add-a-roadmap-dialog.md)    | A reconnect Google refuses drops the "Add a roadmap" dialog and what was typed                 | Won't fix |
+| [DEF-007](defects/DEF-007-status-panels-have-rounded-corners.md)                             | Status panels have rounded corners; cards and the About panel beside them are square           | Proposed  |
+| [DEF-008](defects/DEF-008-focus-is-lost-after-add-a-roadmap-closes-in-safari.md)             | Focus is lost when "Add a roadmap" closes, for a Product Lead who clicked it in Safari         | Proposed  |
+| [DEF-009](defects/DEF-009-a-published-new-item-is-not-shown-when-the-read-after-it-fails.md) | A new item that was published is not shown when the read after the publish fails               | Proposed  |
+| [DEF-010](defects/DEF-010-a-publishing-dialog-changes-what-it-shows-once-written.md)         | A dialog that publishes changes what it shows once its changes are no longer pending           | Proposed  |
 
 A defect found during delivery is recorded in `defects/` with
 Status `Needs triage` and listed here until the owner triages it.

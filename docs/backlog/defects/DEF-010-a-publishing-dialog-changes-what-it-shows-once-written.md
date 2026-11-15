@@ -1,7 +1,6 @@
 # DEF-010: A dialog that publishes changes what it shows once its changes are no longer pending
 
-- **Status**: Needs triage — found by STY-047's delivery, which removed the guard
-  that hid the empty list's heading
+- **Status**: Proposed — triaged by the owner, 2026-11-15 (D1)
 - **Severity**: Low — cosmetic, mostly for the length of the dialog's closing; nothing
   is written wrongly or lost
 - **Area**: Features/UI
@@ -97,5 +96,7 @@ pending change
   - (b) Keep it open and say there is nothing left to publish, with Cancel alone.
 
 ## Decisions
+
+- **D1** (owner, 2026-11-15, the owner's triage of the live chores and defects): Q1 (a). The publish dialog closes when a read leaves nothing to publish; until then, and as it closes, it shows what it listed and offered when it was confirmed (S1).
 
 ## Delivery _(add on delivery; as in `story.md`)_

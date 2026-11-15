@@ -1,6 +1,6 @@
 # CHO-001: A pending family or category choice carries the name its row was linked by
 
-- **Status**: Proposed — declined from STY-028's PR review; the owner accepted the narrowing (2026-11-12) and may pay the cost later
+- **Status**: Won't do — owner, 2026-11-15 (D1); archived
 - **Type**: Refactor
 - **Area**: Domain + Features/UI
 - **Epic**: standalone
@@ -51,6 +51,8 @@ a `Family ID` or `Category ID`: if none, close it as Won't do.
 **Then** the publish writes the choice with no conflict
 
 ## Decisions
+
+- **D1** (owner, 2026-11-15, the owner's triage of the live chores and defects): Won't do. The window closes for good as each row's first publish links its IDs, and "Keep mine" resolves a refusal in it. Reopen if rows without a `Family ID` or `Category ID` are seen refused after a rename.
 
 ## Out of scope
 

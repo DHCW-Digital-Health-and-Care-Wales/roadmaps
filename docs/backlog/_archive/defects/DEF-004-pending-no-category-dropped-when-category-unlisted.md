@@ -1,6 +1,6 @@
 # DEF-004: A pending "No category" is dropped, unwritten, once the roadmap's category leaves its list
 
-- **Status**: Needs triage — found by STY-028 delivery, recorded by its retro
+- **Status**: Won't fix — owner, 2026-11-15 (D1); archived
 - **Severity**: Low — a Product Lead's pending change disappears without a publish, and
   the public site keeps the old category; it needs the Categories tab edited by hand
   while the change is pending
@@ -65,5 +65,7 @@ with the tab missing
 **Then** "No category" stays pending
 
 ## Decisions
+
+- **D1** (owner, 2026-11-15, the owner's triage of the live chores and defects): Won't fix. It needs the Categories tab edited by hand while a change is pending, and the editor never deletes a category (ADR-013). Deleting families and categories, and what that does to the roadmaps that use them, is to be designed with the database API that replaces Sheets (ADR-002); reopen it there.
 
 ## Delivery _(add on delivery; as in `story.md`)_

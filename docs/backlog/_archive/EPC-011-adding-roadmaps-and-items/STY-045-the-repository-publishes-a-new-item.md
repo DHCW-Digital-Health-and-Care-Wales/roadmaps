@@ -178,7 +178,7 @@ Audited at `400c90c`.
 - **Nothing was checked against a real spreadsheet** (agent): the delivery had no
   Google account. The row is appended as a new family's and a new roadmap's index row
   are (STY-029, STY-040), and
-  [CHO-015](../../chores/CHO-015-check-adding-an-item-against-a-real-spreadsheet.md)
+  [CHO-015](../chores/CHO-015-check-adding-an-item-against-a-real-spreadsheet.md)
   records the check owed. Asked of the owner in the delivery run: accept that, or
   check before merge.
 - **No Playwright spec** (agent): no screen adds an item until STY-046. The E2E Sheets

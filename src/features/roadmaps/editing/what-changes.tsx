@@ -11,6 +11,11 @@ export interface WhatChangesProps {
   changes: RoadmapChanges
 }
 
+/** The line of a part that is edited: its name, then the names of its changed fields. */
+function edited(key: string, name: string, fields: readonly string[]) {
+  return { key, name, change: fields.join(", ") }
+}
+
 /**
  * "What changes", in a dialog that asks before a roadmap's pending changes are written:
  * each changed part by name with its changed fields, then each new item by its title,
@@ -23,20 +28,18 @@ export function WhatChanges({ changes }: WhatChangesProps) {
   const listed = [
     ...changedParts(changes).map((part) =>
       part.kind === "roadmap"
-        ? {
-            key: "roadmap",
-            name: t("roadmaps.about.title"),
-            change: part.fields
-              .map((field) => t(`roadmaps.edit.roadmapFields.${field}`))
-              .join(", "),
-          }
-        : {
-            key: `item-${String(part.position)}`,
-            name: localise(part.item.title, language),
-            change: part.fields
-              .map((field) => t(`roadmaps.edit.itemFields.${field}`))
-              .join(", "),
-          },
+        ? edited(
+            "roadmap",
+            t("roadmaps.about.title"),
+            part.fields.map((field) =>
+              t(`roadmaps.edit.roadmapFields.${field}`),
+            ),
+          )
+        : edited(
+            `item-${String(part.position)}`,
+            localise(part.item.title, language),
+            part.fields.map((field) => t(`roadmaps.edit.itemFields.${field}`)),
+          ),
     ),
     // A new item is English alone, and no field of it is a change of its own.
     ...changes.newItems.map(({ id, values }) => ({

@@ -652,7 +652,7 @@ export const en = {
           publish: "The public site shows them after its next nightly update.",
           save: "This roadmap isn't published, so nothing will be public.",
         },
-        /** Lists what changes, by roadmap section or item title. */
+        /** Lists what changes, by roadmap section or item title, new items last. */
         changes: "What changes",
         /** Under the title of an item that is new, in place of its changed fields. */
         newItem: "New item",

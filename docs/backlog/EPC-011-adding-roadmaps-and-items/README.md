@@ -230,9 +230,10 @@ flowchart LR
 - [DEF-009](../defects/DEF-009-a-published-new-item-is-not-shown-when-the-read-after-it-fails.md):
   a new item that was published is not shown when the read after the publish fails,
   until a Refresh succeeds. Needs triage; found by STY-046's review.
-- [DEF-010](../defects/DEF-010-the-publish-dialog-changes-what-it-shows-while-it-closes.md):
-  the publish dialog changes what it shows while it closes after a publish: its list
-  empties, and a tick box can appear. Needs triage; found by STY-047's delivery.
+- [DEF-010](../defects/DEF-010-a-publishing-dialog-changes-what-it-shows-once-written.md):
+  a dialog that publishes changes what it shows once its changes are written, while
+  it closes: the publish dialog's list empties, and a tick box can appear. Needs
+  triage; found by STY-047's delivery.
 
 ## Related
 

@@ -58,7 +58,11 @@ in the dialog
   changes go with the publish. Over leaving one of S1's three ways without the list,
   and over a list of new items alone there, which would name some of what is written
   and not the rest. Unpublishing lists nothing, since its changes stay pending
-  (STY-035 S7). Taking the list back out of that question is one line.
+  (STY-035 S7). Taking the list back out of that question is one line. What the
+  question lists follows the pending changes until it is confirmed, as the publish
+  dialog's does: a read that lands while it is open can drop one, and the question
+  used to keep what it asked from the moment it opened, a count then, which a list
+  of titles can't be left to do (review, Sol).
 - **D5** (agent, 2026-11-15): the marker is "New item", on the line under the title
   where an edited item's changed fields are, so the list keeps one shape. Over the
   card's "New" tag drawn in the list, a second look for one line.
@@ -85,19 +89,20 @@ in the dialog
 - **S2: the journey runs once** (owner; CHO-011 D5, the epic's delivery notes), at the
   default size and theme. Axe checks the publish dialog with a new item in both
   themes, and "Publish roadmap" with one at 375px.
-- **D3: the guard is gone, and an older fault shows through it** (agent): while the
-  dialog closes after a publish, nothing is pending, so "What changes" stands over no
-  lines for that moment. Before STY-046 the same moment dropped the one list there
-  was. Recorded, not fixed here:
-  [DEF-010](../../defects/DEF-010-the-publish-dialog-changes-what-it-shows-while-it-closes.md).
+- **D3: the guard is gone, and an older fault shows through it** (agent): once a
+  publish is written nothing is pending, so "What changes" stands over no lines while
+  the publish dialog closes. Before STY-046 the same moment dropped the one list there
+  was. Recorded, not fixed here, with the tick box that appears then in both dialogs:
+  [DEF-010](../../defects/DEF-010-a-publishing-dialog-changes-what-it-shows-once-written.md).
 - **Every alert dialog scrolls when it is taller than the screen** (agent): "Publish
   roadmap" became the third to need it, with the publish dialog and a family's, so
   the two copies of the rule went into the dialog itself.
 - **Tests.** The publish dialog's list was written first and run red: six page tests
   failed before any code. The tests of the list in "Publish roadmap" came after its
   code, and were shown to fail with its line taken out, which was put back from a
-  saved copy: tests that discriminate, not ones written first. The Playwright specs
-  followed working code.
+  saved copy: tests that discriminate, not ones written first. The review's case, a
+  read that lands while that question is open, was written and run red before its
+  fix. The Playwright specs followed working code.
 - **Welsh is machine-assisted** (agent), as all of `cy.ts` is: "Eitem newydd" wants a
   fluent read.
 
@@ -110,8 +115,10 @@ in the dialog
   pending change is added there, once. `changedParts` still lists edits only: the new
   items come from `changes.newItems`, which `countChanges` counts too.
 - **`PublishedStateQuestion.changes`** (`editing/use-published-state.ts`) is the
-  pending changes as the question was asked, in place of `count`, which
-  `PublishedStateAction` now takes from them.
+  pending changes the question lists, in place of `count`, which
+  `PublishedStateAction` now takes from them. `PublishedState.asked` fixes whether it
+  publishes as the dialog opens, follows the pending changes until it is confirmed,
+  and is then kept whole while the write runs and the dialog closes.
 - **Gone**: the publish dialog's guard on an empty list, and the scrolling rule on
   `PublishDialog` and `FamilyChangeDialog`, which `AlertDialogContent` now has.
 - **Copy**, in both catalogues, the Welsh machine-assisted:
@@ -128,7 +135,7 @@ in the dialog
 is `tests/e2e/adding-an-item.spec.ts`; `axe` is `tests/e2e/accessibility.spec.ts`;
 `structure` is `tests/e2e/structure.spec.ts`.
 
-| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1       | adding "lists a new item by its title, marked as new, after the edited item as it is listed", "lists new items alone, in the order added, which they are written in", "lists it for “Save changes” too, on a roadmap that isn't published", "lists it in the question that offers “Save and publish”, under how many changes go public", "names a new item by the title it has now, once, whatever was edited of it" and "a conflict in the edit publishes nothing through …, keeps the new item pending, and its review never lists it" (“Publish changes”, “Save changes”, “Save and publish”); publishing S2, S5 and S7 (the question lists edits that go with a publish, and nothing with none pending or when unpublishing); e2e "the publish dialog lists a new item beside an edit; a co-lead's conflict publishes nothing and keeps it" (once, default theme and size), the first journey and the empty roadmap's; structure `add-item-publish-dialog` |
-| S2       | adding "marks a new item in Welsh, in the line that holds its title" and "gives the marker in the list item its title is in, so the two are read together"; e2e "adding an item in Welsh"; axe "adding an item: … the new item's card and the publish dialog that lists it" (both themes) and "an empty roadmap's panel …, then its first item in “Publish roadmap”, on a phone" (both themes)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| S1       | adding "lists a new item by its title, marked as new, after the edited item as it is listed", "lists new items alone, in the order added, which they are written in", "lists it after the edited item for “Save changes” too, on a roadmap that isn't published", "lists it in the question that offers “Save and publish”, under how many changes go public", "stops listing, in that question, a new item that a read landing while it is open holds", "names a new item by the title it has now, once, whatever was edited of it" and "a conflict in the edit publishes nothing through …, keeps the new item pending, and its review never lists it" (“Publish changes”, “Save changes”, “Save and publish”); publishing S2, S5 and S7 (the question lists edits that go with a publish, and nothing with none pending or when unpublishing); e2e "the publish dialog lists a new item beside an edit; a co-lead's conflict publishes nothing and keeps it" (once, default theme and size), the first journey and the empty roadmap's; structure `add-item-publish-dialog` |
+| S2       | adding "marks a new item in Welsh, in the one list item that holds its title, so the two are read together"; e2e "adding an item in Welsh"; structure `add-item-publish-dialog` (one list item holds the title and the marker); axe "adding an item: … the new item's card and the publish dialog that lists it" (both themes) and "an empty roadmap's panel …, then its first item in “Publish roadmap”, on a phone" (both themes)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |

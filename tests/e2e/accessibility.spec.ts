@@ -2,6 +2,7 @@ import AxeBuilder from "@axe-core/playwright"
 import type { Page } from "@playwright/test"
 
 import {
+  addItem,
   addItemButtons,
   openAddItemDialog,
   openAddRoadmapDialog,
@@ -304,17 +305,10 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
         opener: addItemButtons(page).last(),
       })
       await expectNoAxeViolations(page, theme, { only: "[role=dialog]" })
+      await dialog.getByRole("button", { name: "Cancel" }).click()
 
       // "Publish roadmap" on a phone, listing the new item that goes with it (STY-047).
-      await dialog
-        .getByRole("textbox", { name: "Title" })
-        .fill("Choose a clinic closer to home")
-      await dialog
-        .getByRole("combobox", { name: "Horizon or section" })
-        .selectOption({ label: "Now" })
-      await dialog
-        .getByRole("button", { name: "Add item", exact: true })
-        .click()
+      await addItem(page, "Choose a clinic closer to home", "Now")
       await page
         .getByRole("main")
         .getByRole("button", { name: "Publish roadmap" })

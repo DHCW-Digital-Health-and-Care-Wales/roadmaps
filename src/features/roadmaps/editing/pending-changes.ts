@@ -582,7 +582,10 @@ export type ChangedPart =
       readonly fields: EditableItemField[]
     }
 
-/** What a publish changes: the roadmap's own text first, then items in their order. */
+/**
+ * What a publish changes of what the roadmap holds: its own text first, then its items
+ * in their order. The items new to it are no part of these: `changes.newItems`.
+ */
 export function changedParts(changes: RoadmapChanges): ChangedPart[] {
   const roadmapFields = changedRoadmapFields(changes)
   return [

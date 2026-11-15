@@ -832,16 +832,23 @@ describe("The publish dialog names the new items (STY-047 S1)", () => {
     ])
   })
 
-  it("lists it for “Save changes” too, on a roadmap that isn't published", async () => {
-    const { user } = await renderPage({ path: "/roadmaps/productc" })
+  it("lists it after the edited item for “Save changes” too, on a roadmap that isn't published", async () => {
+    const { user } = await renderPage({
+      path: "/roadmaps/productc",
+      items: { productc: [idea] },
+    })
     await addItem(user, CLINIC, "Later")
+    await editItemText(user, "Longer-term idea", "Description", "Mine.")
 
     await user.click(main().getByRole("button", { name: "Save changes" }))
 
     expect(
       screen.getByRole("alertdialog", { name: "Save these changes?" }),
     ).toBeVisible()
-    expect(listedChanges()).toEqual([`${CLINIC}New item`])
+    expect(listedChanges()).toEqual([
+      "Longer-term ideaDescription",
+      `${CLINIC}New item`,
+    ])
   })
 
   it("lists it in the question that offers “Save and publish”, under how many changes go public", async () => {
@@ -869,6 +876,59 @@ describe("The publish dialog names the new items (STY-047 S1)", () => {
     ).toBeVisible()
   })
 
+  it("stops listing, in that question, a new item that a read landing while it is open holds", async () => {
+    const { user, repository } = await renderPage({
+      path: "/roadmaps/productc",
+    })
+    // The save's answer is lost; it landed, and a co-lead has since renamed the item.
+    let savedId: string | undefined
+    vi.spyOn(repository, "publishRoadmapChanges").mockImplementation(
+      (_roadmapId, changes) => {
+        savedId = changes.newItems[0]?.id
+        return Promise.resolve({ status: "unconfirmed" })
+      },
+    )
+    const setPublished = vi.spyOn(repository, "setRoadmapPublished")
+    await addItem(user, CLINIC, "Next")
+    await publish(user, "Save changes")
+    await screen.findByText("Your changes may have been saved")
+    await waitFor(() => {
+      expect(screen.queryByRole("alertdialog")).toBeNull()
+    })
+    repository.coLead((_roadmaps, itemsOf) => {
+      itemsOf("productc").push(
+        createTestRoadmapItem("Renamed by a co-lead", {
+          id: savedId ?? null,
+          placement: "next",
+        }),
+      )
+    })
+    const letGo = await holdRefresh(user, repository)
+    await user.click(main().getByRole("button", { name: "Publish roadmap" }))
+    expect(listedChanges()).toEqual([`${CLINIC}New item`])
+
+    await letGo()
+
+    // The item is the roadmap's now, so nothing goes with the publish.
+    const question = screen.getByRole("alertdialog", {
+      name: "Publish Product C roadmap?",
+    })
+    expect(question).toHaveAccessibleDescription(
+      "It shows on the public site after its next nightly update.",
+    )
+    expect(within(question).queryByText("What changes")).toBeNull()
+    expect(within(question).queryByText(CLINIC)).toBeNull()
+    await user.click(
+      within(question).getByRole("button", { name: "Publish roadmap" }),
+    )
+    await waitFor(() => {
+      expect(setPublished).toHaveBeenCalledWith(
+        expect.objectContaining({ id: "productc" }),
+        { published: true, changes: undefined },
+      )
+    })
+  })
+
   it("names a new item by the title it has now, once, whatever was edited of it", async () => {
     const { user } = await renderPage()
     await addItem(user, CLINIC, "Next")
@@ -883,6 +943,7 @@ describe("The publish dialog names the new items (STY-047 S1)", () => {
   it.each([
     {
       path: "/roadmaps/producta",
+      roadmapId: "producta",
       edited: "Online booking",
       choose: ["Publish changes", "Publish changes"],
       nothing: "Nothing was published.",
@@ -890,6 +951,7 @@ describe("The publish dialog names the new items (STY-047 S1)", () => {
     },
     {
       path: "/roadmaps/productc",
+      roadmapId: "productc",
       edited: "Longer-term idea",
       choose: ["Save changes", "Save changes"],
       nothing: "Nothing was saved.",
@@ -897,6 +959,7 @@ describe("The publish dialog names the new items (STY-047 S1)", () => {
     },
     {
       path: "/roadmaps/productc",
+      roadmapId: "productc",
       edited: "Longer-term idea",
       choose: ["Publish roadmap", "Save and publish"],
       nothing: "Nothing was saved.",
@@ -904,12 +967,18 @@ describe("The publish dialog names the new items (STY-047 S1)", () => {
     },
   ] as const)(
     "a conflict in the edit publishes nothing through “$choose.1”, keeps the new item pending, and its review never lists it",
-    async ({ path, edited, choose: [opener, confirm], nothing, pending }) => {
+    async ({
+      path,
+      roadmapId,
+      edited,
+      choose: [opener, confirm],
+      nothing,
+      pending,
+    }) => {
       const { user, repository } = await renderPage({
         path,
         items: { producta: [booking, reminders], productc: [idea] },
       })
-      const roadmapId = path === "/roadmaps/producta" ? "producta" : "productc"
       const titlesHeld = async () =>
         (await repository.listRoadmapItems(roadmapId)).map(
           ({ title }) => title.en,
@@ -953,7 +1022,7 @@ describe("The publish dialog names the new items (STY-047 S1)", () => {
 })
 
 describe("The publish dialog's new items, in Welsh and to assistive technology (STY-047 S2)", () => {
-  it("marks a new item in Welsh, in the line that holds its title", async () => {
+  it("marks a new item in Welsh, in the one list item that holds its title, so the two are read together", async () => {
     const { user } = await renderPage({ language: "cy" })
     await addItem(user, CLINIC, "Nesaf", "cy")
 
@@ -962,16 +1031,6 @@ describe("The publish dialog's new items, in Welsh and to assistive technology (
     )
 
     expect(listedChanges("Beth sy'n newid")).toEqual([`${CLINIC}Eitem newydd`])
-  })
-
-  it("gives the marker in the list item its title is in, so the two are read together", async () => {
-    const { user } = await renderPage()
-    await addItem(user, CLINIC, "Next")
-
-    await user.click(main().getByRole("button", { name: "Publish changes" }))
-
-    const marker = within(screen.getByRole("alertdialog")).getByText("New item")
-    expect(marker.closest("li")).toHaveTextContent(CLINIC)
   })
 })
 

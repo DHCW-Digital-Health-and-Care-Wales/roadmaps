@@ -101,8 +101,7 @@ function describeElement(element: Element) {
     element.getAttribute("aria-label") ??
     [...named.map((id) => document.getElementById(id)), ...labels]
       .map((label) => label?.textContent)
-      .join(" ") ??
-    ""
+      .join(" ")
   const text = name.trim() || element.textContent.trim()
   return `${region ?? "page"}: ${element.tagName.toLowerCase()} ${text}`
 }

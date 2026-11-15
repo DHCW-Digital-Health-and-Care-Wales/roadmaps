@@ -819,6 +819,33 @@ describe("Publishing a roadmap's changes (STY-025)", () => {
     expect(main().queryByText(/unpublished change/)).toBeNull()
   })
 
+  it("publishes an edit made again before a read holds the last publish, as no conflict with it (DEF-009 S2)", async () => {
+    const repository = createInMemoryRoadmapRepository(roadmaps, roadmapItems)
+    const { user } = await renderPage({ repository })
+    await editTitle(user, "First item", "First, edited")
+    const reads = vi
+      .spyOn(repository, "listRoadmapItems")
+      .mockRejectedValue(new AppError("network"))
+    await publish(user)
+    await vi.waitFor(() => {
+      expect(main().getByText(/^Changes published\./)).toBeVisible()
+    })
+
+    await editTitle(user, "First, edited", "First, again")
+    reads.mockRestore()
+    await publish(user)
+
+    await vi.waitFor(() => {
+      expect(main().getByText(/^Changes published\./)).toBeVisible()
+    })
+    expect(main().queryByText(/Someone else/)).toBeNull()
+    expect(
+      (await repository.listRoadmapItems("producta")).map(
+        ({ title }) => title.en,
+      ),
+    ).toEqual(["First, again", "Second item", "Unplaced item"])
+  })
+
   it("keeps the roadmap's published text, pending, while the roadmap can't be read back, until a read holds it (DEF-009)", async () => {
     const repository = createInMemoryRoadmapRepository(roadmaps, roadmapItems)
     const { user } = await renderPage({ repository })

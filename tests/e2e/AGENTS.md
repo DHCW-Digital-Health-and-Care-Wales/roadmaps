@@ -61,3 +61,6 @@ tours.
   `focus-link`: a new kind of control uses one of them, or the check gains a utility.
 - The item dialog's tour (`focus-indicator.spec.ts`) opens each form field that opens
   on request, so its controls are toured: open a new one there too.
+- A page tour names each stop by its `aria-label` or label, and fails if two share a
+  name; a text field out of the Tab order fails it too, unless it is the details
+  outline's (`NOT_A_STOP`). Give a new text field a label of its own.

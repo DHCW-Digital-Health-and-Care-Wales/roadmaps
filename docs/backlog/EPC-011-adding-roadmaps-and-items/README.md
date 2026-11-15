@@ -258,11 +258,11 @@ flowchart LR
 - [CHO-011](../_archive/chores/CHO-011-the-dialog-tests-share-their-setup.md): the
   test setup STY-041 wrote out per spec, shared before STY-043, STY-044 and STY-046
   copy it. Done.
-- [CHO-012](../chores/CHO-012-the-other-tests-use-the-shared-fixtures.md): the
-  family and category lists other tests still declare, and the connected state every
-  page test declares.
-- [CHO-013](../chores/CHO-013-the-page-focus-tour-tells-its-stops-apart.md): the page
-  focus tour names text fields alike, so it can miss one.
+- [CHO-012](../_archive/chores/CHO-012-the-other-tests-use-the-shared-fixtures.md): the
+  family and category lists other tests declared, and the connected state every
+  page test declared. Done, in its PR.
+- [CHO-013](../_archive/chores/CHO-013-the-page-focus-tour-tells-its-stops-apart.md): the page
+  focus tour named text fields alike, so it could miss one. Done, in its PR.
 - [CHO-014](../chores/CHO-014-slim-the-e2e-suite.md): the E2E suite slimmed where a
   test holds only geometry or repeats a run, as the owner asked after CHO-011 cut the
   add-a-roadmap journey to one run. STY-043 re-pointed the About tests at the roadmap

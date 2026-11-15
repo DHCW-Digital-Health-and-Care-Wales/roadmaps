@@ -1,11 +1,9 @@
 import {
-  useEffect,
   useId,
   useReducer,
   useRef,
   useState,
   type SubmitEvent,
-  type KeyboardEvent,
   type ReactNode,
 } from "react"
 import { useTranslation } from "react-i18next"
@@ -84,7 +82,7 @@ export interface EditFormField<F extends string> {
 type FieldError = "titleRequired" | "dateInFuture" | "dateInvalid"
 
 export interface EditFormProps<F extends string> {
-  /** The fields, the first of which is the title: required, and focused on opening. */
+  /** The fields, the first of which is the title, which is required. */
   fields: readonly EditFormField<F>[]
   /** Each field's value as the form opens: the English, pending or not. */
   initial: Record<F, string>
@@ -96,31 +94,25 @@ export interface EditFormProps<F extends string> {
    * since, and neither is one that is `fixed` when the form is confirmed.
    */
   onDone: (values: Partial<Record<F, string>>) => void
-  /**
-   * Leaves a form open in place of what it edits, by Cancel or Escape. A form in a
-   * dialog gives none: the dialog puts focus in its first field, and its own Cancel
-   * and Escape close it (`FormDialog`).
-   */
-  onCancel?: () => void
 }
 
 /**
- * The form an item's card turns into for editing (STY-025 S1, S4), and the roadmap
- * dialog's form editing what a roadmap is about (STY-025 S5, STY-043): a labelled field
- * each, typed, chosen from a list (STY-028), ticked from one that opens on request
- * (STY-034, STY-038), tags added, renamed and removed (STY-037), details written as an
- * outline (STY-039) or a date picked (STY-036), or shown read-only when it can't be
- * changed, then "Done" to keep the values pending and Cancel (or Escape, unless a field
- * has used it) to leave them. The title is required, and a date is a real one and not
- * after today: confirming otherwise keeps the form open with an error linked to each
- * field, focusing the first. Writes nothing; the caller keeps the values pending.
+ * The editing form of the item dialog (STY-025 S1, S4; STY-044) and of the roadmap
+ * dialog (STY-025 S5, STY-043): a labelled field each, typed, chosen from a list
+ * (STY-028), ticked from one that opens on request (STY-034, STY-038), tags added,
+ * renamed and removed (STY-037), details written as an outline (STY-039) or a date
+ * picked (STY-036), or shown read-only when it can't be changed, then "Done" to keep the
+ * values pending and the dialog's Cancel to leave them. Its first focus, Escape and
+ * closing are the dialog's (`FormDialog`). The title is required, and a date is a real
+ * one and not after today: confirming otherwise keeps the form open with an error
+ * linked to each field, focusing the first. Writes nothing; the caller keeps the values
+ * pending.
  */
 export function EditForm<F extends string>({
   fields,
   initial,
   labelledBy,
   onDone,
-  onCancel,
 }: EditFormProps<F>) {
   const { t } = useTranslation()
   const id = useId()
@@ -135,13 +127,6 @@ export function EditForm<F extends string>({
       if (control) controls.current.set(name, control)
       else controls.current.delete(name)
     }
-
-  // In place, the title is the first control set, as the form opens. A dialog must
-  // find focus still on the control that opened it, to return it there as it closes.
-  const inPlace = onCancel !== undefined
-  useEffect(() => {
-    if (inPlace) controls.current.values().next().value?.focus()
-  }, [inPlace])
 
   const submit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -177,24 +162,12 @@ export function EditForm<F extends string>({
       ) as Partial<Record<F, string>>,
     )
   }
-  const escape =
-    onCancel &&
-    ((event: KeyboardEvent<HTMLFormElement>) => {
-      // A field may use Escape itself, as a tag's rename does (STY-037 S15).
-      if (event.key !== "Escape" || event.defaultPrevented) return
-      event.preventDefault()
-      onCancel()
-    })
-  const done = <Button type="submit">{t("roadmaps.edit.done")}</Button>
 
   return (
-    // In place, Escape is a shortcut for Cancel, which is a button in the form.
-    // eslint-disable-next-line jsx-a11y-x/no-noninteractive-element-interactions
     <form
       aria-labelledby={labelledBy}
       noValidate
       onSubmit={submit}
-      onKeyDown={escape}
       className="flex flex-col gap-4"
     >
       {fields.map((field) => {
@@ -346,19 +319,10 @@ export function EditForm<F extends string>({
           </FormField>
         )
       })}
-      {onCancel ? (
-        <div className="flex flex-wrap gap-3">
-          {done}
-          <Button type="button" variant="secondary" onClick={onCancel}>
-            {t("common.cancel")}
-          </Button>
-        </div>
-      ) : (
-        <DialogFooter>
-          {done}
-          <DialogClose type="button">{t("common.cancel")}</DialogClose>
-        </DialogFooter>
-      )}
+      <DialogFooter>
+        <Button type="submit">{t("roadmaps.edit.done")}</Button>
+        <DialogClose type="button">{t("common.cancel")}</DialogClose>
+      </DialogFooter>
     </form>
   )
 }

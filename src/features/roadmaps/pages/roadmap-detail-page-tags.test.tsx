@@ -14,10 +14,12 @@ import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-ite
 import type { Language } from "@/i18n"
 import { renderWithProviders } from "@/test/render-with-providers"
 
+import { holdRefresh, readAgain } from "../testing/held-call"
 import {
   createInMemoryRoadmapRepository,
   type InMemoryRoadmapRepository,
 } from "../testing/in-memory-roadmap-repository"
+import { confirmItemEdit, openEditItemDialog } from "../testing/item-dialog"
 
 const connected: AuthState = {
   status: "connected",
@@ -60,7 +62,7 @@ function main() {
   return within(screen.getByRole("main"))
 }
 
-/** The card (or form) of the item headed `title`. */
+/** The card of the item headed `title`. */
 function card(title: string) {
   const heading = main().getByRole("heading", { level: 3, name: title })
   const item = heading.closest("li")
@@ -86,7 +88,7 @@ async function renderPage({
   language?: Language
 } = {}) {
   const user = userEvent.setup()
-  await renderWithProviders({
+  const { queryClient } = await renderWithProviders({
     path: "/roadmaps/producta",
     authState: connected,
     repository,
@@ -95,18 +97,12 @@ async function renderPage({
   const [first] = shown
   if (!first) throw new Error("The page needs an item")
   await main().findByRole("heading", { level: 3, name: first.title.en })
-  return { user, repository }
+  return { user, repository, queryClient }
 }
 
-/** Opens the item's form, its Tags field still shut. */
-async function openForm(user: User, title: string) {
-  await user.click(main().getByRole("button", { name: `Edit ${title}` }))
-  return within(main().getByRole("form", { name: title }))
-}
-
-/** Opens the item's form and its Tags field: the form, and the field's group. */
+/** Opens the item dialog and its Tags field: the dialog, and the field's group. */
 async function openTags(user: User, title: string) {
-  const form = await openForm(user, title)
+  const form = await openEditItemDialog(user, title)
   await user.click(form.getByRole("button", { name: /^(Change|Add) tags$/ }))
   return { form, field: within(form.getByRole("group", { name: "Tags" })) }
 }
@@ -138,10 +134,6 @@ async function addTag(user: User, field: Within, text: string) {
   await user.click(field.getByRole("button", { name: "Add tag" }))
 }
 
-async function done(user: User, form: Within) {
-  await user.click(form.getByRole("button", { name: "Done" }))
-}
-
 async function publish(user: User) {
   await user.click(main().getByRole("button", { name: "Publish changes" }))
   await user.click(
@@ -152,11 +144,11 @@ async function publish(user: User) {
 }
 
 describe("Editing an item's tags (STY-037)", () => {
-  it("starts shut, both tags on one line beside Change tags, with no editor and no Tags line on the card (S19)", async () => {
+  it("starts shut, both tags on one line beside Change tags, with no editor (S19)", async () => {
     const { user } = await renderPage()
     expect(tagsLineOf("Video clinics")).toBe("Patients, Video consultations")
 
-    const form = await openForm(user, "Video clinics")
+    const form = await openEditItemDialog(user, "Video clinics")
 
     const line = form.getAllByRole("list")[0]
     expect(line).toHaveTextContent("PatientsVideo consultations")
@@ -166,13 +158,12 @@ describe("Editing an item's tags (STY-037)", () => {
     )
     expect(form.queryByRole("group", { name: "Tags" })).toBeNull()
     expect(form.queryByRole("textbox", { name: "Add a tag" })).toBeNull()
-    expect(tagsLineOf("Video clinics")).toBeNull()
   })
 
   it("reads No tags beside Add tags for an item with none (S19)", async () => {
     const { user } = await renderPage()
 
-    const form = await openForm(user, "New idea")
+    const form = await openEditItemDialog(user, "New idea")
 
     expect(form.getByText("No tags")).toBeVisible()
     expect(form.getByRole("button", { name: "Add tags" })).toBeVisible()
@@ -202,10 +193,7 @@ describe("Editing an item's tags (STY-037)", () => {
   it("is Welsh on the Welsh interface, the tags staying English (S1)", async () => {
     const { user } = await renderPage({ language: "cy" })
 
-    await user.click(
-      main().getByRole("button", { name: "Golygu Video clinics" }),
-    )
-    const form = within(main().getByRole("form", { name: "Video clinics" }))
+    const form = await openEditItemDialog(user, "Video clinics", "cy")
     await user.click(form.getByRole("button", { name: "Newid tagiau" }))
     const field = within(form.getByRole("group", { name: "Tagiau (Saesneg)" }))
 
@@ -224,11 +212,11 @@ describe("Editing an item's tags (STY-037)", () => {
 
   it("keeps an added tag pending, on the card and in the publish dialog, writing nothing until published (S2, S12)", async () => {
     const { user, repository } = await renderPage()
-    const { form, field } = await openTags(user, "Video clinics")
+    const { field } = await openTags(user, "Video clinics")
 
     await addTag(user, field, "Carers")
     expect(field.getByRole("status")).toHaveTextContent("Added Carers.")
-    await done(user, form)
+    await confirmItemEdit(user)
 
     expect(tagsLineOf("Video clinics")).toBe(
       "Patients, Video consultations, Carers",
@@ -300,7 +288,7 @@ describe("Editing an item's tags (STY-037)", () => {
     const { user } = await renderPage()
     const other = await openTags(user, "New idea")
     await addTag(user, other.field, "Self-service")
-    await done(user, other.form)
+    await confirmItemEdit(user)
 
     const { field } = await openTags(user, "Video clinics")
 
@@ -325,26 +313,26 @@ describe("Editing an item's tags (STY-037)", () => {
 
   it("removes a tag, offering it again while other items carry it (S5)", async () => {
     const { user } = await renderPage()
-    const { form, field } = await openTags(user, "Video clinics")
+    const { field } = await openTags(user, "Video clinics")
 
     await user.click(field.getByRole("button", { name: "Remove Patients" }))
 
     expect(field.getByRole("status")).toHaveTextContent("Removed “Patients”.")
     expect(offeredBy(field)[0]).toBe("Add Patients, on 3 other items")
-    await done(user, form)
+    await confirmItemEdit(user)
     expect(tagsLineOf("Video clinics")).toBe("Video consultations")
     expect(within(card("Video clinics")).getByText("Changed")).toBeVisible()
   })
 
   it("shows no Tags line for an item with every tag removed (S5)", async () => {
     const { user } = await renderPage()
-    const { form, field } = await openTags(user, "Rotas")
+    const { field } = await openTags(user, "Rotas")
 
     await user.click(field.getByRole("button", { name: "Remove Clinic staff" }))
     expect(rowsOf(field)).toEqual([])
     // None is left, so focus is on the control for adding (S11).
     expect(field.getByRole("textbox", { name: "Add a tag" })).toHaveFocus()
-    await done(user, form)
+    await confirmItemEdit(user)
 
     expect(tagsLineOf("Rotas")).toBeNull()
     expect(within(card("Rotas")).getByText("Changed")).toBeVisible()
@@ -367,7 +355,7 @@ describe("Editing an item's tags (STY-037)", () => {
 
   it("renames a tag in its place, on this item only (S6, S15)", async () => {
     const { user } = await renderPage()
-    const { form, field } = await openTags(user, "Online booking")
+    const { field } = await openTags(user, "Online booking")
 
     await user.click(field.getByRole("button", { name: "Rename Patients" }))
     const name = field.getByRole("textbox", { name: "Rename Patients" })
@@ -383,7 +371,7 @@ describe("Editing an item's tags (STY-037)", () => {
     // Enter kept the name without confirming the form.
     expect(rowsOf(field)).toEqual(["Carers", "Appointments"])
     expect(field.getByRole("button", { name: "Rename Carers" })).toHaveFocus()
-    await done(user, form)
+    await confirmItemEdit(user)
     expect(tagsLineOf("Online booking")).toBe("Carers, Appointments")
     expect(tagsLineOf("Reminders")).toBe("Patients, Clinic staff")
   })
@@ -445,7 +433,7 @@ describe("Editing an item's tags (STY-037)", () => {
 
   it("keeps a name still being changed when the form is confirmed (S15)", async () => {
     const { user } = await renderPage()
-    const { form, field } = await openTags(user, "Video clinics")
+    const { field } = await openTags(user, "Video clinics")
     await user.click(
       field.getByRole("button", { name: "Rename Video consultations" }),
     )
@@ -455,7 +443,7 @@ describe("Editing an item's tags (STY-037)", () => {
     await user.clear(name)
     await user.type(name, "Video appointments")
 
-    await done(user, form)
+    await confirmItemEdit(user)
 
     expect(tagsLineOf("Video clinics")).toBe("Patients, Video appointments")
   })
@@ -479,7 +467,7 @@ describe("Editing an item's tags (STY-037)", () => {
 
   it("ends a tag at a comma as it is typed, and at a pasted line break, each trimmed (S7)", async () => {
     const { user } = await renderPage()
-    const { form, field } = await openTags(user, "New idea")
+    const { field } = await openTags(user, "New idea")
     const input = field.getByRole("textbox", { name: "Add a tag" })
 
     await user.type(input, " Carers , Clinic staff{Enter}")
@@ -494,7 +482,7 @@ describe("Editing an item's tags (STY-037)", () => {
       "Waiting lists",
       "Appointments",
     ])
-    await done(user, form)
+    await confirmItemEdit(user)
     expect(tagsLineOf("New idea")).toBe(
       "Carers, Clinic staff, Waiting lists, Appointments",
     )
@@ -502,10 +490,10 @@ describe("Editing an item's tags (STY-037)", () => {
 
   it("counts text typed but not yet added when the form is confirmed (S8)", async () => {
     const { user } = await renderPage()
-    const { form, field } = await openTags(user, "Video clinics")
+    const { field } = await openTags(user, "Video clinics")
 
     await user.type(field.getByRole("textbox", { name: "Add a tag" }), "Carers")
-    await done(user, form)
+    await confirmItemEdit(user)
 
     expect(tagsLineOf("Video clinics")).toBe(
       "Patients, Video consultations, Carers",
@@ -540,7 +528,7 @@ describe("Editing an item's tags (STY-037)", () => {
     expect(rowsOf(again)).toEqual(["Patients", "Video appointments", "Carers"])
     expect(again.getByRole("textbox", { name: "Add a tag" })).toHaveValue("")
     await user.click(form.getByRole("button", { name: "Close tags" }))
-    await done(user, form)
+    await confirmItemEdit(user)
 
     expect(tagsLineOf("Video clinics")).toBe(
       "Patients, Video appointments, Carers",
@@ -561,9 +549,9 @@ describe("Editing an item's tags (STY-037)", () => {
 
   it("shows the tags as read on Undo changes (S9)", async () => {
     const { user } = await renderPage()
-    const { form, field } = await openTags(user, "Video clinics")
+    const { field } = await openTags(user, "Video clinics")
     await addTag(user, field, "Carers")
-    await done(user, form)
+    await confirmItemEdit(user)
 
     await user.click(
       main().getByRole("button", { name: "Undo changes Video clinics" }),
@@ -575,11 +563,11 @@ describe("Editing an item's tags (STY-037)", () => {
 
   it("is no change when a tag is added and removed again (S9)", async () => {
     const { user } = await renderPage()
-    const { form, field } = await openTags(user, "Video clinics")
+    const { field } = await openTags(user, "Video clinics")
     await addTag(user, field, "Carers")
     await user.click(field.getByRole("button", { name: "Remove Carers" }))
 
-    await done(user, form)
+    await confirmItemEdit(user)
 
     expect(main().queryByText("Changed")).toBeNull()
   })
@@ -591,13 +579,13 @@ describe("Editing an item's tags (STY-037)", () => {
     ]
     const { user } = await renderPage({ shown: bare })
 
-    const { form, field } = await openTags(user, "New idea")
+    const { field } = await openTags(user, "New idea")
 
     expect(rowsOf(field)).toEqual([])
     expect(field.queryByText("Used elsewhere in this roadmap")).toBeNull()
     expect(offeredBy(field)).toEqual([])
     await addTag(user, field, "Carers")
-    await done(user, form)
+    await confirmItemEdit(user)
     expect(tagsLineOf("New idea")).toBe("Carers")
   })
 
@@ -617,7 +605,7 @@ describe("Editing an item's tags (STY-037)", () => {
 
   it("adds, chooses, renames and removes by keyboard alone, focus staying in the field (S11)", async () => {
     const { user } = await renderPage()
-    const form = await openForm(user, "Video clinics")
+    const form = await openEditItemDialog(user, "Video clinics")
     form.getByRole("button", { name: "Change tags" }).focus()
     await user.keyboard("{Enter}")
     const field = within(form.getByRole("group", { name: "Tags" }))
@@ -671,9 +659,9 @@ describe("Editing an item's tags (STY-037)", () => {
 
   it("shows a co-lead's different tags beside yours, to keep or use (S13)", async () => {
     const { user, repository } = await renderPage()
-    const { form, field } = await openTags(user, "Video clinics")
+    const { field } = await openTags(user, "Video clinics")
     await addTag(user, field, "Carers")
-    await done(user, form)
+    await confirmItemEdit(user)
     repository.coLead((_list, itemsOf) => {
       const clinics = itemsOf("producta")[0]
       if (clinics) clinics.tags = tagged("Video consultations", "Patients")
@@ -710,9 +698,9 @@ describe("Editing an item's tags (STY-037)", () => {
 
   it("publishes over a co-lead's same tags in the same order, and Refresh drops a change the data source holds (S13)", async () => {
     const { user, repository } = await renderPage()
-    const { form, field } = await openTags(user, "Video clinics")
+    const { field } = await openTags(user, "Video clinics")
     await addTag(user, field, "Carers")
-    await done(user, form)
+    await confirmItemEdit(user)
     repository.coLead((_list, itemsOf) => {
       const clinics = itemsOf("producta")[0]
       if (clinics) {
@@ -771,15 +759,17 @@ describe("What the Tags field keeps (STY-037, review round 1)", () => {
   it.each(["shut", "open"])(
     "keeps typed text in the spelling another item has taken since, the field %s when the form is confirmed (S19, S21)",
     async (state) => {
-      const { user } = await renderPage()
+      const { user, repository } = await renderPage()
+      const land = await holdRefresh(user, repository)
       const { form, field } = await openTags(user, "Video clinics")
       await user.type(
         field.getByRole("textbox", { name: "Add a tag" }),
         "carers",
       )
-      const other = await openTags(user, "New idea")
-      await addTag(user, other.field, "Carers")
-      await done(user, other.form)
+      repository.coLead((_list, itemsOf) => {
+        itemsOf("producta")[2]?.tags.push({ en: "Carers", cy: "" })
+      })
+      await land()
 
       if (state === "shut") {
         await user.click(form.getByRole("button", { name: "Close tags" }))
@@ -787,7 +777,7 @@ describe("What the Tags field keeps (STY-037, review round 1)", () => {
           "PatientsVideo consultationsCarers",
         )
       }
-      await done(user, form)
+      await confirmItemEdit(user)
 
       expect(tagsLineOf("Video clinics")).toBe(
         "Patients, Video consultations, Carers",
@@ -847,10 +837,10 @@ describe("What the Tags field keeps (STY-037, review round 1)", () => {
       }),
     ]
     const { user } = await renderPage({ shown: spaced })
-    const { form, field } = await openTags(user, "Spaced")
+    const { field } = await openTags(user, "Spaced")
 
     await user.click(field.getByRole("button", { name: "Rename Clinic staff" }))
-    await done(user, form)
+    await confirmItemEdit(user)
 
     expect(main().queryByText("Changed")).toBeNull()
   })
@@ -885,21 +875,19 @@ describe("An item with Welsh tags (STY-037 S20, S22)", () => {
     async (title) => {
       const { user } = await renderPage({ shown: welshItems })
 
-      const form = await openForm(user, title)
+      const form = await openEditItemDialog(user, title)
 
       expect(form.getByText("Tags")).toBeVisible()
       expect(form.getAllByRole("list")[0]).toHaveTextContent("PatientsCarers")
       expect(form.getByText(NOTICE)).toBeVisible()
       expect(form.queryByRole("button", { name: /tags$/ })).toBeNull()
-      expect(tagsLineOf(title)).toBeNull()
     },
   )
 
   it("shows them in Welsh, as the card does, on the Welsh interface (S20)", async () => {
     const { user } = await renderPage({ shown: welshItems, language: "cy" })
 
-    await user.click(main().getByRole("button", { name: "Golygu Paired" }))
-    const form = within(main().getByRole("form", { name: "Paired" }))
+    const form = await openEditItemDialog(user, "Paired", "cy")
 
     expect(form.getAllByRole("list")[0]).toHaveTextContent("CleifionGofalwyr")
     expect(
@@ -912,10 +900,10 @@ describe("An item with Welsh tags (STY-037 S20, S22)", () => {
 
   it("edits and publishes the item's other fields, leaving its tags as they are (S20)", async () => {
     const { user, repository } = await renderPage({ shown: welshItems })
-    const form = await openForm(user, "Paired")
+    const form = await openEditItemDialog(user, "Paired")
 
     await user.type(form.getByRole("textbox", { name: "Phase" }), "Beta")
-    await done(user, form)
+    await confirmItemEdit(user)
     await publish(user)
 
     expect(await main().findByText(/^Changes published\./)).toBeInTheDocument()
@@ -927,8 +915,9 @@ describe("An item with Welsh tags (STY-037 S20, S22)", () => {
     })
   })
 
-  it("keeps no tag change made in a form whose item gains Welsh tags while it is open (S20)", async () => {
+  it("keeps no tag change made in a dialog whose item gains Welsh tags while it is open (S20)", async () => {
     const { user, repository } = await renderPage({ shown: welshItems })
+    const land = await holdRefresh(user, repository)
     const { form, field } = await openTags(user, "English only")
     await addTag(user, field, "Carers")
     repository.coLead((_list, itemsOf) => {
@@ -938,17 +927,20 @@ describe("An item with Welsh tags (STY-037 S20, S22)", () => {
       item.hasWelshTags = true
     })
 
-    await user.click(main().getByRole("button", { name: "Refresh" }))
-    expect(await form.findByText(NOTICE)).toBeVisible()
+    await land()
+    expect(form.getByText(NOTICE)).toBeVisible()
     expect(form.queryByRole("button", { name: /tags$/ })).toBeNull()
-    await done(user, form)
+    await confirmItemEdit(user)
 
     expect(main().queryByText("Changed")).toBeNull()
     expect(tagsLineOf("English only")).toBe("Patients")
   })
 
-  it("shows the tags it keeps when an item's Welsh tags come and go while its form is open (S19)", async () => {
-    const { user, repository } = await renderPage({ shown: welshItems })
+  it("shows the tags it keeps when an item's Welsh tags come and go while its dialog is open (S19)", async () => {
+    const { user, repository, queryClient } = await renderPage({
+      shown: welshItems,
+    })
+    const land = await holdRefresh(user, repository)
     const { form, field } = await openTags(user, "English only")
     await addTag(user, field, "Carers")
     const welsh = (tags: RoadmapItem["tags"], hasWelshTags: boolean) => {
@@ -959,25 +951,25 @@ describe("An item with Welsh tags (STY-037 S20, S22)", () => {
     }
 
     welsh([{ en: "Patients", cy: "Cleifion" }], true)
-    await user.click(main().getByRole("button", { name: "Refresh" }))
-    expect(await form.findByText(NOTICE)).toBeVisible()
+    await land()
+    expect(form.getByText(NOTICE)).toBeVisible()
     welsh(tagged("Patients"), false)
-    await user.click(main().getByRole("button", { name: "Refresh" }))
+    await readAgain(queryClient)
     expect(
       await form.findByRole("button", { name: "Change tags" }),
     ).toBeVisible()
 
     // What the field shows is what Done keeps.
     expect(form.getAllByRole("list")[0]).toHaveTextContent("PatientsCarers")
-    await done(user, form)
+    await confirmItemEdit(user)
     expect(tagsLineOf("English only")).toBe("Patients, Carers")
   })
 
   it("refuses a tag change to an item that has gained Welsh tags: it can be discarded, not kept (S22)", async () => {
     const { user, repository } = await renderPage({ shown: welshItems })
-    const { form, field } = await openTags(user, "English only")
+    const { field } = await openTags(user, "English only")
     await addTag(user, field, "Carers")
-    await done(user, form)
+    await confirmItemEdit(user)
     repository.coLead((_list, itemsOf) => {
       const item = itemsOf("producta")[2]
       if (!item) return
@@ -1017,7 +1009,7 @@ describe("An item with Welsh tags (STY-037 S20, S22)", () => {
     expect(main().queryByText("Changed")).toBeNull()
     expect(tagsLineOf("English only")).toBe("Patients")
     // Its tags can no longer be changed here.
-    const again = await openForm(user, "English only")
+    const again = await openEditItemDialog(user, "English only")
     expect(again.getByText(NOTICE)).toBeVisible()
     expect(again.queryByRole("button", { name: /tags$/ })).toBeNull()
   })

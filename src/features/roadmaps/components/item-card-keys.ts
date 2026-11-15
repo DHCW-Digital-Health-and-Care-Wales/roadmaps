@@ -2,9 +2,10 @@ import { useState } from "react"
 
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 
-import type { PositionedRoadmapItem } from "../group-roadmap-items"
-
-/** A list's card keys, and the keys items with an ID took over from before they had one. */
+/**
+ * A roadmap's card keys, by each item's position, and the keys items with an ID took
+ * over from before they had one.
+ */
 export interface ItemCardKeys {
   readonly keys: readonly string[]
   readonly adopted: ReadonlyMap<string, string>
@@ -16,14 +17,15 @@ function positionalKey(item: RoadmapItem, position: number): string {
 }
 
 /**
- * Each card's key, so a card, and a form open on it, lasts across reads while it shows
- * the same item (STY-025): an item with an ID by its ID, wherever it moves; one without
- * by its position and content, so a read that puts another item there or changes it
- * starts a new card. An item given its first ID, at the same position with the same
- * content, as a first publish does to every item, keeps the key it had without one.
+ * Each item's card key, so a card, and the item dialog open on its item, lasts across
+ * reads while it is the same item (STY-025, STY-044): an item with an ID by its ID,
+ * wherever it moves; one without by its position and content, so a read that puts
+ * another item there or changes it starts a new card and closes the dialog. An item
+ * given its first ID, at the same position with the same content, as a first publish
+ * does to every item, keeps the key it had without one.
  */
 export function assignItemCardKeys(
-  placed: readonly PositionedRoadmapItem[],
+  items: readonly RoadmapItem[],
   previous: ItemCardKeys | undefined,
 ): ItemCardKeys {
   const before = new Set(previous?.keys)
@@ -40,7 +42,7 @@ export function assignItemCardKeys(
     }
     return `id:${item.id}`
   }
-  const keys = placed.map(({ item, position }) => {
+  const keys = items.map((item, position) => {
     const key = cardKey(item, position)
     used.add(key)
     return key
@@ -56,14 +58,14 @@ function sameKeys(a: ItemCardKeys, b: ItemCardKeys): boolean {
   )
 }
 
-/** {@link assignItemCardKeys} for a list's cards, remembering the keys it last gave. */
+/** {@link assignItemCardKeys} for a roadmap's items, remembering the keys it last gave. */
 export function useItemCardKeys(
-  placed: readonly PositionedRoadmapItem[],
+  items: readonly RoadmapItem[],
 ): readonly string[] {
   const [remembered, setRemembered] = useState(() =>
-    assignItemCardKeys(placed, undefined),
+    assignItemCardKeys(items, undefined),
   )
-  const next = assignItemCardKeys(placed, remembered)
+  const next = assignItemCardKeys(items, remembered)
   // Adjusting state while rendering, as React documents for state that follows props.
   if (!sameKeys(next, remembered)) setRemembered(next)
   return next.keys

@@ -503,6 +503,8 @@ export const en = {
       moveTo: "Move to",
       /** The form's placement choice for an unplaced item, until one is chosen. */
       choosePlacement: "Choose a horizon or section",
+      /** Heads the item dialog while it edits an item (STY-044). */
+      itemHeading: "Edit this item",
       /** Heads the roadmap dialog while it edits what a roadmap is about (STY-043). */
       roadmapHeading: "Edit this roadmap",
       roadmapFields: {

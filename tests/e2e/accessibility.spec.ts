@@ -1,7 +1,11 @@
 import AxeBuilder from "@axe-core/playwright"
 import type { Page } from "@playwright/test"
 
-import { openAddRoadmapDialog, openEditRoadmapDialog } from "./fixtures/dialogs"
+import {
+  openAddRoadmapDialog,
+  openEditItemDialog,
+  openEditRoadmapDialog,
+} from "./fixtures/dialogs"
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
 import {
   EXAMPLE_INDEX_ROWS,
@@ -154,8 +158,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       const main = page.getByRole("main")
 
       // A form open with a field in error.
-      await main.getByRole("button", { name: `Edit ${item}` }).click()
-      const form = main.getByRole("form", { name: item })
+      const form = await openEditItemDialog(page, item)
       await form.getByRole("textbox", { name: "Title" }).fill("")
       await form.getByRole("button", { name: "Done" }).click()
       await expect(form.getByText("Enter a title")).toBeVisible()
@@ -253,9 +256,9 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expect(page.getByRole("menu")).toHaveCount(0)
       await expectNoAxeViolations(page, theme)
 
-      await main.getByRole("button", { name: "Edit Minimal card" }).click()
+      const form = await openEditItemDialog(page, "Minimal card")
       await expect(
-        main.getByRole("combobox", { name: "Horizon or section" }),
+        form.getByRole("combobox", { name: "Horizon or section" }),
       ).toHaveValue("")
       await expectNoAxeViolations(page, theme)
     })
@@ -273,9 +276,8 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await page.goto("./#/roadmaps/producta")
       await connect(page)
       const main = page.getByRole("main")
-      await main.getByRole("button", { name: "Edit Minimal card" }).click()
       // The field starts shut, the unknown code named (STY-038 S5, S7).
-      const form = main.getByRole("form", { name: "Minimal card" })
+      const form = await openEditItemDialog(page, "Minimal card")
       await expect(form.getByText(/CAVHB isn't recognised/)).toBeVisible()
       await expect(form.getByText("Cardiff and Vale")).toBeVisible()
       await expectNoAxeViolations(page, theme)
@@ -286,7 +288,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await group.getByRole("checkbox", { name: "Powys (PTHB)" }).click()
       await expectNoAxeViolations(page, theme)
 
-      await main.getByRole("form").getByRole("button", { name: "Done" }).click()
+      await form.getByRole("button", { name: "Done" }).click()
       await expect(main.getByText("Cardiff and Vale, Powys")).toBeVisible()
       await expectNoAxeViolations(page, theme)
     })
@@ -298,8 +300,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await page.goto("./#/roadmaps/producta")
       await connect(page)
       const main = page.getByRole("main")
-      await main.getByRole("button", { name: `Edit ${title}` }).click()
-      const form = main.getByRole("form", { name: title })
+      const form = await openEditItemDialog(page, title)
       await expect(
         form.getByRole("button", { name: "Change tags" }),
       ).toBeVisible()
@@ -343,9 +344,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
     }) => {
       await page.goto("./#/roadmaps/producta")
       await connect(page)
-      const main = page.getByRole("main")
-      await main.getByRole("button", { name: "Edit Minimal card" }).click()
-      const empty = main.getByRole("form", { name: "Minimal card" })
+      const empty = await openEditItemDialog(page, "Minimal card")
       await expect(empty.getByText("No tags")).toBeVisible()
       await empty.getByRole("button", { name: "Add tags" }).click()
       await expect(
@@ -355,11 +354,9 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await empty.getByRole("button", { name: "Cancel" }).click()
 
       const item = "Example card with every column"
-      await main.getByRole("button", { name: `Edit ${item}` }).click()
+      const locked = await openEditItemDialog(page, item)
       await expect(
-        main
-          .getByRole("form", { name: item })
-          .getByText(/^These tags have Welsh versions/),
+        locked.getByText(/^These tags have Welsh versions/),
       ).toBeVisible()
       await expectNoAxeViolations(page, theme)
     })
@@ -371,8 +368,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await page.goto("./#/roadmaps/producta")
       await connect(page)
       const main = page.getByRole("main")
-      await main.getByRole("button", { name: `Edit ${title}` }).click()
-      const form = main.getByRole("form", { name: title })
+      const form = await openEditItemDialog(page, title)
       await expect(
         form.getByRole("button", { name: "Change details" }),
       ).toBeVisible()
@@ -421,9 +417,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
     }) => {
       await page.goto("./#/roadmaps/producta")
       await connect(page)
-      const main = page.getByRole("main")
-      await main.getByRole("button", { name: "Edit Minimal card" }).click()
-      const empty = main.getByRole("form", { name: "Minimal card" })
+      const empty = await openEditItemDialog(page, "Minimal card")
       await expect(empty.getByText("No details")).toBeVisible()
       await empty.getByRole("button", { name: "Add details" }).click()
       await expect(
@@ -433,11 +427,9 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await empty.getByRole("button", { name: "Cancel" }).click()
 
       const item = "Example card with every column"
-      await main.getByRole("button", { name: `Edit ${item}` }).click()
+      const locked = await openEditItemDialog(page, item)
       await expect(
-        main
-          .getByRole("form", { name: item })
-          .getByText(/^These details have Welsh versions/),
+        locked.getByText(/^These details have Welsh versions/),
       ).toBeVisible()
       await expectNoAxeViolations(page, theme)
     })
@@ -447,13 +439,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
     }) => {
       await page.goto("./#/roadmaps/producta")
       await connect(page)
-      const main = page.getByRole("main")
-      await main
-        .getByRole("button", { name: "Edit Something we are not doing" })
-        .click()
-      const form = main.getByRole("form", {
-        name: "Something we are not doing",
-      })
+      const form = await openEditItemDialog(page, "Something we are not doing")
       await expect(form.getByText("No organisations")).toBeVisible()
       await expectNoAxeViolations(page, theme)
 
@@ -580,8 +566,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await page.goto("./#/roadmaps/producta")
       await connect(page)
       const main = page.getByRole("main")
-      await main.getByRole("button", { name: `Edit ${item}` }).click()
-      const form = main.getByRole("form", { name: item })
+      const form = await openEditItemDialog(page, item)
       await form.getByRole("textbox", { name: "Title" }).fill("A clearer card")
       await form.getByRole("button", { name: "Done" }).click()
 

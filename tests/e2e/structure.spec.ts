@@ -1,6 +1,10 @@
 import type { Locator, Page } from "@playwright/test"
 
-import { openAddRoadmapDialog, openEditRoadmapDialog } from "./fixtures/dialogs"
+import {
+  openAddRoadmapDialog,
+  openEditItemDialog,
+  openEditRoadmapDialog,
+} from "./fixtures/dialogs"
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
 import {
   EXAMPLE_INDEX_ROWS,
@@ -156,8 +160,7 @@ test.describe("editing a roadmap (STY-025)", () => {
       .getByRole("note")
       .getByRole("button", { name: "Dismiss message" })
       .click()
-    await main.getByRole("button", { name: `Edit ${ITEM}` }).click()
-    const form = main.getByRole("form", { name: ITEM })
+    const form = await openEditItemDialog(page, ITEM)
     await form.getByRole("textbox", { name: "Title" }).fill("A clearer card")
     await form.getByRole("button", { name: "Done" }).click()
     return main
@@ -177,8 +180,7 @@ test.describe("editing a roadmap (STY-025)", () => {
       "edit-publish-bar.aria.yml",
     )
 
-    await main.getByRole("button", { name: "Edit A clearer card" }).click()
-    const itemForm = main.getByRole("form", { name: "A clearer card" })
+    const itemForm = await openEditItemDialog(page, "A clearer card")
     await itemForm.getByRole("textbox", { name: "Title" }).fill("")
     await itemForm.getByRole("button", { name: "Done" }).click()
     await expect(itemForm.getByText("Enter a title")).toBeVisible()
@@ -192,8 +194,7 @@ test.describe("editing a roadmap (STY-025)", () => {
     await itemForm.getByRole("button", { name: "Cancel" }).click()
 
     // An item's Tags field opened, one tag removed (STY-037).
-    await main.getByRole("button", { name: "Edit Longer-term idea" }).click()
-    const tagsForm = main.getByRole("form", { name: "Longer-term idea" })
+    const tagsForm = await openEditItemDialog(page, "Longer-term idea")
     await tagsForm.getByRole("button", { name: "Change tags" }).click()
     await tagsForm.getByRole("button", { name: "Remove Service Y" }).click()
     await expect(
@@ -204,8 +205,7 @@ test.describe("editing a roadmap (STY-025)", () => {
 
     // An item's Details field opened, one detail nested and then removed (STY-039).
     const detailed = "Earlier delivery this year"
-    await main.getByRole("button", { name: `Edit ${detailed}` }).click()
-    const detailsForm = main.getByRole("form", { name: detailed })
+    const detailsForm = await openEditItemDialog(page, detailed)
     await detailsForm.getByRole("button", { name: "Change details" }).click()
     await detailsForm.getByRole("textbox").last().click()
     await detailsForm

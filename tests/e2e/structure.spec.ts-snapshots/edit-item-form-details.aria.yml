@@ -1,43 +1,45 @@
-- form "Earlier delivery this year":
-  - text: Title
-  - textbox "Title": Earlier delivery this year
-  - text: Description
-  - textbox "Description": Something we delivered earlier in the year.
-  - text: Expected outcome
-  - textbox "Expected outcome"
-  - text: Phase
-  - textbox "Phase": Live
-  - text: Horizon or section
-  - combobox "Horizon or section":
-    - option "Recently delivered"
-    - option "Now"
-    - option "Next"
-    - option "Later"
-    - option "Delivered this year" [selected]
-    - option "Not doing"
-  - paragraph: Tags
-  - button "Add tags"
-  - paragraph: No tags
-  - paragraph: Organisations
-  - button "Change organisations"
-  - text: All Wales
-  - paragraph: Details
-  - button "Close details" [expanded]
-  - paragraph: The public site lists these under “What this covers”.
-  - group "Details":
-    - list:
-      - listitem:
-        - textbox "Detail 1 of 2, top level": What it included
-      - listitem:
-        - textbox "Detail 2 of 2, nested under “What it included”": Another thing it included
-    - group "The detail selected":
-      - button "Move out Another thing it included"
-      - button "Move in Another thing it included" [disabled]
-      - button "Move up Another thing it included" [disabled]
-      - button "Move down Another thing it included" [disabled]
-      - button "Remove Another thing it included"
-    - paragraph: Press Enter for a new detail. To nest one, start it with a hyphen.
-    - status: Removed “A third”.
-    - button "Undo removing A third"
-  - button "Done"
-  - button "Cancel"
+- dialog "Edit this item":
+  - heading "Edit this item" [level=2]
+  - form "Edit this item":
+    - text: Title
+    - textbox "Title": Earlier delivery this year
+    - text: Description
+    - textbox "Description": Something we delivered earlier in the year.
+    - text: Expected outcome
+    - textbox "Expected outcome"
+    - text: Phase
+    - textbox "Phase": Live
+    - text: Horizon or section
+    - combobox "Horizon or section":
+      - option "Recently delivered"
+      - option "Now"
+      - option "Next"
+      - option "Later"
+      - option "Delivered this year" [selected]
+      - option "Not doing"
+    - paragraph: Tags
+    - button "Add tags"
+    - paragraph: No tags
+    - paragraph: Organisations
+    - button "Change organisations"
+    - text: All Wales
+    - paragraph: Details
+    - button "Close details" [expanded]
+    - paragraph: The public site lists these under “What this covers”.
+    - group "Details":
+      - list:
+        - listitem:
+          - textbox "Detail 1 of 2, top level": What it included
+        - listitem:
+          - textbox "Detail 2 of 2, nested under “What it included”": Another thing it included
+      - group "The detail selected":
+        - button "Move out Another thing it included"
+        - button "Move in Another thing it included" [disabled]
+        - button "Move up Another thing it included" [disabled]
+        - button "Move down Another thing it included" [disabled]
+        - button "Remove Another thing it included"
+      - paragraph: Press Enter for a new detail. To nest one, start it with a hyphen.
+      - status: Removed “A third”.
+      - button "Undo removing A third"
+    - button "Done"
+    - button "Cancel"

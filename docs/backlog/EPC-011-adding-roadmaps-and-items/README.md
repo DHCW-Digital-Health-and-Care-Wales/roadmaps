@@ -1,9 +1,9 @@
 # EPC-011: Adding roadmaps and items — started here, not in the spreadsheet, in one dialog each
 
-- **Status**: Active — grilled with the owner on 2026-11-14; STY-040 to STY-043
-  delivered, four stories Proposed, three recorded for later grilling
-- **Progress**: 4 of 11 terminal; next selectable: STY-044, once STY-043's PR is merged;
-  blocked on: nothing
+- **Status**: Active — grilled with the owner on 2026-11-14; STY-040 to STY-044
+  delivered, three stories Proposed, three recorded for later grilling
+- **Progress**: 5 of 11 terminal; next selectable: STY-045; STY-046 once STY-044's PR
+  is merged; blocked on: nothing
 - **Binding ADRs**: ADR-012, ADR-011, ADR-009, ADR-013, ADR-014, ADR-002, ADR-003, ADR-005,
   ADR-006, ADR-010, ADR-008
 
@@ -122,7 +122,7 @@ therefore has one possible place without a new kind of write: after the last row
 - **An expired session** (owner) keeps the dialog and its text. A dialog is modal, so
   nothing behind it can be reached: one that writes at once (adding a roadmap)
   offers Reconnect inside itself (STY-041 S11); one whose Done or "Add item" only
-  keeps a pending edit still works while expired, as the in-place forms do.
+  keeps a pending edit still works while expired, as the in-place forms did.
 - Focus goes to the dialog's first field as it opens and back to the control that
   opened it as it closes, unless a story says where else.
 
@@ -178,7 +178,7 @@ STY-040 adds **Short name** and brings **Roadmap**, **Published roadmap** and
 | STY-041 | [A Product Lead adds a roadmap](../_archive/EPC-011-adding-roadmaps-and-items/STY-041-add-a-roadmap.md)                                                                     | Features/UI + i18n (en + cy) + E2E | STY-040                   | ✅    |
 | STY-042 | [A roadmap's page shows About in a panel, and says when it is empty](../_archive/EPC-011-adding-roadmaps-and-items/STY-042-the-roadmap-page-about-panel-and-empty-state.md) | Features/UI + i18n (en + cy) + E2E | —                         | ✅    |
 | STY-043 | [“About this roadmap” is edited in the roadmap dialog](../_archive/EPC-011-adding-roadmaps-and-items/STY-043-edit-about-in-the-roadmap-dialog.md)                           | Features/UI + i18n (en + cy) + E2E | STY-041                   | ✅    |
-| STY-044 | [An item is edited in a dialog](STY-044-edit-an-item-in-a-dialog.md)                                                                                                        | Features/UI + i18n (en + cy) + E2E | STY-041                   |       |
+| STY-044 | [An item is edited in a dialog](../_archive/EPC-011-adding-roadmaps-and-items/STY-044-edit-an-item-in-a-dialog.md)                                                          | Features/UI + i18n (en + cy) + E2E | STY-041                   | ✅    |
 | STY-045 | [The repository publishes a new item](STY-045-the-repository-publishes-a-new-item.md)                                                                                       | Domain + Infrastructure + Docs     | —                         |       |
 | STY-046 | [A Product Lead adds an item](STY-046-add-an-item.md)                                                                                                                       | Features/UI + i18n (en + cy) + E2E | STY-042, STY-044, STY-045 |       |
 | STY-047 | [The publish dialog names the new items](STY-047-a-new-item-in-the-publish-dialog.md)                                                                                       | Features/UI + i18n (en + cy) + E2E | STY-046                   |       |
@@ -244,8 +244,8 @@ flowchart LR
 - [CHO-014](../chores/CHO-014-slim-the-e2e-suite.md): the E2E suite slimmed where a
   test holds only geometry or repeats a run, as the owner asked after CHO-011 cut the
   add-a-roadmap journey to one run. STY-043 re-pointed the About tests at the roadmap
-  dialog and ran About's panel behaviour once; its rows for the item-form tests wait
-  for STY-044.
+  dialog and ran About's panel behaviour once; STY-044 re-pointed the item-form tests
+  at the item dialog and kept the long tag and the long detail at one width.
 - [`docs/analysis/add-a-roadmap-ux-analysis.md`](../../analysis/add-a-roadmap-ux-analysis.md):
   twelve mock-ups over four journeys. Outcome: a dialog for adding a roadmap, landing on
   the new roadmap; a dialog for adding an item; one panel on an empty roadmap.

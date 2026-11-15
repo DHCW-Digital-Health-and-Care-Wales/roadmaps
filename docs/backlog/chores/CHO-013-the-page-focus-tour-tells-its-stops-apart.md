@@ -50,6 +50,12 @@ skipped one, and it can end before the last of them.
 
 ## Decisions
 
+- **D1** (agent, 2026-11-15, STY-044): the tour measured above as "A roadmap's page
+  while editing" is now two. The page is toured with a change pending and no form
+  open, and the item dialog with Tags, Organisations and Details open, through the
+  same helper and so with the same names. Measure both again before starting: the
+  text fields that share a name are now in the dialog's tour.
+
 ## Out of scope
 
 - The dialog tour (`expectDialogTour`), which takes each stop in turn and has no names.

@@ -23,6 +23,12 @@ import {
   type InMemoryRoadmapRepository,
 } from "../testing/in-memory-roadmap-repository"
 import {
+  confirmItemEdit,
+  editItemDialog,
+  editItemText,
+  openEditItemDialog,
+} from "../testing/item-dialog"
+import {
   confirmRoadmapEdit,
   editRoadmapDialog,
   editRoadmapText,
@@ -70,7 +76,7 @@ function main() {
   return within(screen.getByRole("main"))
 }
 
-/** The card (or form) of the item headed `title`. */
+/** The card of the item headed `title`. */
 function card(title: string) {
   const heading = main().getByRole("heading", { level: 3, name: title })
   const item = heading.closest("li")
@@ -127,13 +133,9 @@ async function renderPage({
   return { user, ...rendered }
 }
 
-/** Edits an item's title from its card and confirms it. */
-async function editTitle(user: User, from: string, to: string) {
-  await user.click(main().getByRole("button", { name: `Edit ${from}` }))
-  const title = main().getByRole("textbox", { name: "Title" })
-  await user.clear(title)
-  await user.type(title, to)
-  await user.click(main().getByRole("button", { name: "Done" }))
+/** Edits an item's title in the item dialog and confirms it. */
+function editTitle(user: User, from: string, to: string) {
+  return editItemText(user, from, "Title", to)
 }
 
 /** Opens the publish dialog and confirms it. */
@@ -147,15 +149,18 @@ async function publish(user: User, action = "Publish changes") {
 }
 
 describe("Editing a roadmap's items (STY-025)", () => {
-  it("turns an item's card into a form prefilled with its English, its other fields still shown (S1)", async () => {
+  it("opens the item dialog prefilled with the item's English, pending edits included, its card as it was behind it (S1)", async () => {
     const { user } = await renderPage()
+    await editTitle(user, "First item", "First, edited")
 
-    await user.click(main().getByRole("button", { name: "Edit First item" }))
+    const form = await openEditItemDialog(user, "First, edited")
 
-    const form = within(main().getByRole("form", { name: "First item" }))
-    expect(form.getByRole("textbox", { name: "Title" })).toHaveFocus()
+    expect(form.getByRole("form", { name: "Edit this item" })).toBeVisible()
+    await waitFor(() => {
+      expect(form.getByRole("textbox", { name: "Title" })).toHaveFocus()
+    })
     expect(form.getByRole("textbox", { name: "Title" })).toHaveValue(
-      "First item",
+      "First, edited",
     )
     expect(form.getByRole("textbox", { name: "Description" })).toHaveValue(
       "What it is.",
@@ -165,7 +170,19 @@ describe("Editing a roadmap's items (STY-025)", () => {
     )
     expect(form.getByRole("textbox", { name: "Phase" })).toHaveValue("")
     // Its tags show on one line in the form, the Tags field shut (STY-037 S19).
-    expect(card("First item").getByText("Records")).toBeInTheDocument()
+    expect(form.getByText("Records")).toBeInTheDocument()
+    // The card stays as it was behind the dialog, out of reach of role queries.
+    const heading = screen.getByRole("heading", {
+      level: 3,
+      name: "First, edited",
+      hidden: true,
+    })
+    const behind = within(heading.closest("li") ?? heading)
+    expect(behind.getByText("What it is.")).toBeVisible()
+    expect(behind.getByText("Changed")).toBeVisible()
+    expect(
+      behind.getByRole("button", { name: "Move First, edited", hidden: true }),
+    ).toBeVisible()
   })
 
   it("keeps a confirmed change pending: trimmed, shown, tagged and counted, nothing written (S2)", async () => {
@@ -177,9 +194,11 @@ describe("Editing a roadmap's items (STY-025)", () => {
 
     const edited = card("A better first item")
     expect(edited.getByText("Changed")).toBeInTheDocument()
-    expect(
-      edited.getByRole("button", { name: "Edit A better first item" }),
-    ).toHaveFocus()
+    await waitFor(() => {
+      expect(
+        edited.getByRole("button", { name: "Edit A better first item" }),
+      ).toHaveFocus()
+    })
     expect(main().getByText("1 unpublished change")).toBeInTheDocument()
     expect(
       main().getByRole("button", { name: "Publish changes" }),
@@ -187,46 +206,91 @@ describe("Editing a roadmap's items (STY-025)", () => {
     expect(write).not.toHaveBeenCalled()
   })
 
-  it.each(["Cancel", "Escape"])(
-    "leaves the item as it was on %s, focus back on Edit (S3)",
-    async (how) => {
+  it.each([
+    [
+      "Cancel",
+      (user: User) =>
+        user.click(editItemDialog().getByRole("button", { name: "Cancel" })),
+    ],
+    ["Escape", (user: User) => user.keyboard("{Escape}")],
+  ])(
+    "%s closes the dialog, dropping what was typed and keeping the edits already pending, with focus back on Edit (S5)",
+    async (_how, close) => {
       const { user } = await renderPage()
+      await editTitle(user, "Second item", "Second, edited")
+      const form = await openEditItemDialog(user, "First item")
+      await user.type(form.getByRole("textbox", { name: "Title" }), " more")
 
-      await user.click(main().getByRole("button", { name: "Edit First item" }))
-      await user.type(main().getByRole("textbox", { name: "Title" }), " more")
-      if (how === "Cancel") {
-        await user.click(main().getByRole("button", { name: "Cancel" }))
-      } else {
-        await user.keyboard("{Escape}")
-      }
+      await close(user)
 
-      expect(main().queryByRole("form")).toBeNull()
-      expect(
-        main().getByRole("button", { name: "Edit First item" }),
-      ).toHaveFocus()
+      await waitFor(() => {
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+      })
+      await waitFor(() => {
+        expect(
+          main().getByRole("button", { name: "Edit First item" }),
+        ).toHaveFocus()
+      })
       expect(card("First item").queryByText("Changed")).toBeNull()
-      expect(main().queryByText(/unpublished change/)).toBeNull()
+      expect(card("Second, edited").getByText("Changed")).toBeInTheDocument()
+      expect(main().getByText("1 unpublished change")).toBeInTheDocument()
+      const reopened = await openEditItemDialog(user, "First item")
+      expect(reopened.getByRole("textbox", { name: "Title" })).toHaveValue(
+        "First item",
+      )
     },
   )
+
+  it("returns focus to the card's Edit as it closes where the click that opened it left focus elsewhere, as Safari's does (S5)", async () => {
+    const { user } = await renderPage()
+    const edit = main().getByRole("button", { name: "Edit First item" })
+
+    // A click event alone: Safari doesn't focus a button it clicks.
+    fireEvent.click(edit)
+    expect(edit).not.toHaveFocus()
+    await user.click(editItemDialog().getByRole("button", { name: "Cancel" }))
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+    })
+    await waitFor(() => {
+      expect(edit).toHaveFocus()
+    })
+  })
+
+  it("keeps the dialog and what was typed when the session expires, and Done still keeps the edits (S5)", async () => {
+    const { user, authClient } = await renderPage()
+    const form = await openEditItemDialog(user, "First item")
+    await user.type(form.getByRole("textbox", { name: "Phase" }), "Beta")
+
+    act(() => {
+      authClient.setState({ status: "expired" })
+    })
+
+    expect(form.getByRole("textbox", { name: "Phase" })).toHaveValue("Beta")
+    await confirmItemEdit(user)
+    expect(card("First item").getByText("Beta")).toBeInTheDocument()
+    expect(main().getByText("1 unpublished change")).toBeInTheDocument()
+  })
 
   it("requires a title, linking the error to the field, and lets other fields be cleared (S4)", async () => {
     const { user } = await renderPage()
 
-    await user.click(main().getByRole("button", { name: "Edit First item" }))
-    const title = main().getByRole("textbox", { name: "Title" })
+    const form = await openEditItemDialog(user, "First item")
+    const title = form.getByRole("textbox", { name: "Title" })
     await user.clear(title)
     await user.type(title, "   ")
-    await user.clear(main().getByRole("textbox", { name: "Description" }))
-    await user.click(main().getByRole("button", { name: "Done" }))
+    await user.clear(form.getByRole("textbox", { name: "Description" }))
+    await user.click(form.getByRole("button", { name: "Done" }))
 
     expect(title).toHaveAttribute("aria-invalid", "true")
     expect(title).toHaveAccessibleDescription("Error: Enter a title")
     expect(title).toHaveFocus()
-    expect(main().queryByText(/unpublished change/)).toBeNull()
+    expect(screen.queryByText(/unpublished change/)).toBeNull()
 
     await user.clear(title)
     await user.type(title, "Titled again")
-    await user.click(main().getByRole("button", { name: "Done" }))
+    await confirmItemEdit(user)
 
     expect(card("Titled again").queryByText("What it is.")).toBeNull()
     expect(main().getByText("2 unpublished changes")).toBeInTheDocument()
@@ -251,9 +315,11 @@ describe("Editing a roadmap's items (STY-025)", () => {
     )
 
     expect(card("First item").queryByText("Changed")).toBeNull()
-    expect(
-      main().getByRole("button", { name: "Edit First item" }),
-    ).toHaveFocus()
+    await waitFor(() => {
+      expect(
+        main().getByRole("button", { name: "Edit First item" }),
+      ).toHaveFocus()
+    })
     expect(main().getByText("1 unpublished change")).toBeInTheDocument()
 
     await user.click(main().getByRole("button", { name: "Discard all" }))
@@ -280,14 +346,12 @@ describe("Editing a roadmap's items (STY-025)", () => {
   it("labels the fields as the English in Welsh, and shows the Welsh tagged (S16)", async () => {
     const { user } = await renderPage({ language: "cy" })
 
-    await user.click(
-      main().getByRole("button", { name: "Golygu Eitem gyntaf" }),
-    )
-    const title = main().getByRole("textbox", { name: "Teitl (Saesneg)" })
+    const form = await openEditItemDialog(user, "Eitem gyntaf", "cy")
+    const title = form.getByRole("textbox", { name: "Teitl (Saesneg)" })
     expect(title).toHaveValue("First item")
     await user.clear(title)
     await user.type(title, "First, edited")
-    await user.click(main().getByRole("button", { name: "Gorffen" }))
+    await confirmItemEdit(user, "cy")
 
     expect(card("Eitem gyntaf").getByText("Wedi newid")).toBeInTheDocument()
   })
@@ -571,7 +635,7 @@ describe("Keeping a roadmap's changes (STY-025)", () => {
     ).toBeInTheDocument()
   })
 
-  it("closes the form of an item without an ID when a read puts another item in its place", async () => {
+  it("closes the dialog of an item without an ID when a read puts another item in its place", async () => {
     const repository = createInMemoryRoadmapRepository(roadmaps, {
       producta: [
         createTestRoadmapItem("No ID one"),
@@ -579,25 +643,35 @@ describe("Keeping a roadmap's changes (STY-025)", () => {
       ],
     })
     const { user } = await renderPage({ repository, waitFor: "No ID two" })
-    await user.click(main().getByRole("button", { name: "Edit No ID one" }))
-    await user.type(main().getByRole("textbox", { name: "Phase" }), "Beta")
+    const { held, release, released } = holdCall(() =>
+      Promise.resolve([
+        createTestRoadmapItem("Inserted by a co-lead"),
+        createTestRoadmapItem("No ID one"),
+        createTestRoadmapItem("No ID two"),
+      ]),
+    )
+    vi.spyOn(repository, "listRoadmapItems").mockImplementation(held)
 
-    vi.spyOn(repository, "listRoadmapItems").mockResolvedValue([
-      createTestRoadmapItem("Inserted by a co-lead"),
-      createTestRoadmapItem("No ID one"),
-      createTestRoadmapItem("No ID two"),
-    ])
+    // The dialog is modal, so the Refresh is asked for before it opens, and read after.
     await user.click(main().getByRole("button", { name: "Refresh" }))
-
-    await main().findByRole("heading", {
-      level: 3,
-      name: "Inserted by a co-lead",
+    const form = await openEditItemDialog(user, "No ID one")
+    await user.type(form.getByRole("textbox", { name: "Phase" }), "Beta")
+    expect(held).toHaveBeenCalled()
+    await act(async () => {
+      release()
+      await released
     })
-    expect(main().queryByRole("form")).toBeNull()
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+    })
+    expect(
+      main().getByRole("heading", { level: 3, name: "Inserted by a co-lead" }),
+    ).toBeInTheDocument()
     expect(main().queryByText(/unpublished change/)).toBeNull()
   })
 
-  it("keeps another item's open form when publishing gives every item an ID", async () => {
+  it("keeps an item's open dialog when a read gives every item its first ID, as a co-lead's first publish does", async () => {
     const repository = createInMemoryRoadmapRepository(roadmaps, {
       producta: [
         createTestRoadmapItem("No ID one"),
@@ -605,15 +679,32 @@ describe("Keeping a roadmap's changes (STY-025)", () => {
       ],
     })
     const { user } = await renderPage({ repository, waitFor: "No ID two" })
-    await editTitle(user, "No ID one", "One, edited")
-    await user.click(main().getByRole("button", { name: "Edit No ID two" }))
-    await user.type(main().getByRole("textbox", { name: "Phase" }), "Beta")
+    const { held, release, released } = holdCall(() =>
+      Promise.resolve([
+        createTestRoadmapItem("No ID one", { id: "item-1" }),
+        createTestRoadmapItem("No ID two", { id: "item-2" }),
+      ]),
+    )
+    vi.spyOn(repository, "listRoadmapItems").mockImplementation(held)
 
-    await publish(user)
-    await main().findByText(/^Changes published\./)
+    // The dialog is modal, so the Refresh is asked for before it opens, and read after.
+    await user.click(main().getByRole("button", { name: "Refresh" }))
+    const form = await openEditItemDialog(user, "No ID two")
+    await user.type(form.getByRole("textbox", { name: "Phase" }), "Beta")
+    expect(held).toHaveBeenCalled()
+    await act(async () => {
+      release()
+      await released
+    })
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: "Refresh", hidden: true }),
+      ).not.toHaveAttribute("aria-busy", "true")
+    })
 
-    expect(main().getByRole("textbox", { name: "Phase" })).toHaveValue("Beta")
-    await user.click(main().getByRole("button", { name: "Done" }))
+    expect(form.getByRole("textbox", { name: "Phase" })).toHaveValue("Beta")
+    await confirmItemEdit(user)
+    expect(card("No ID two").getByText("Beta")).toBeInTheDocument()
     expect(main().getByText("1 unpublished change")).toBeInTheDocument()
   })
 
@@ -638,10 +729,10 @@ describe("Publishing a roadmap's changes (STY-025)", () => {
     const write = vi.spyOn(repository, "publishRoadmapChanges")
     const { user } = await renderPage({ repository })
     await editTitle(user, "Second item", "Second, edited")
-    await user.click(main().getByRole("button", { name: "Edit First item" }))
-    await user.clear(main().getByRole("textbox", { name: "Description" }))
-    await user.type(main().getByRole("textbox", { name: "Phase" }), "Beta")
-    await user.click(main().getByRole("button", { name: "Done" }))
+    const item = await openEditItemDialog(user, "First item")
+    await user.clear(item.getByRole("textbox", { name: "Description" }))
+    await user.type(item.getByRole("textbox", { name: "Phase" }), "Beta")
+    await confirmItemEdit(user)
     const about = await openEditRoadmapDialog(user)
     await user.clear(about.getByRole("textbox", { name: "Vision" }))
     await confirmRoadmapEdit(user)

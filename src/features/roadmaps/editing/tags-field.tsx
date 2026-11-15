@@ -296,8 +296,9 @@ function TagsEditor({
                       if (event.key !== "Enter" && event.key !== "Escape") {
                         return
                       }
-                      // Neither confirms nor cancels the form (S15).
+                      // Neither confirms the form nor closes its dialog (S15).
                       event.preventDefault()
+                      event.stopPropagation()
                       finishRename(event.key === "Enter")
                     }}
                   />

@@ -40,7 +40,10 @@ report in the conversation only.
 
 1. **Diff and rules.** Pin the scope as `code-review`'s _Pin the scope_ step
    does, on the same snapshot, and read every changed line of it, test bodies
-   and both catalogues included. Read the root `AGENTS.md` and the `AGENTS.md`
+   and both catalogues included, a file or a directory at a time so each
+   output arrives whole. A diff read through `head` or a filter, and an output
+   a tool cut or saved to a file, still has lines unread: read the rest before
+   going on. Read the root `AGENTS.md` and the `AGENTS.md`
    along each changed path's directory ancestry (`tests/e2e/AGENTS.md`,
    `docs/AGENTS.md`), the epic's `delivery-notes.md` when the change belongs
    to an epic, and the binding ADRs; cite the rule by file and line,

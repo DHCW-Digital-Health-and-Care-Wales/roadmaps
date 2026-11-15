@@ -154,15 +154,15 @@ pass.
   they affect. A fix that answers only P3 or 💭 findings or wording, and a
   rebase whose range-diff shows the branch's own commits unchanged, get no
   re-check: list them in the PR body's Review record.
-- **Final fresh pass**: when a fix changes runtime behaviour (logic, data,
-  auth or UI behaviour), not only wording, docs, tests or renames, start one
-  fresh reviewer over the whole diff in the lane that owns that behaviour: Sol
-  for correctness, Sonnet at high effort for quality. A fix for a CI finding
-  counts. The pass is its own task beside that lane's re-checks, briefed as a
-  first round at the new head with the requirements and pinned SHAs, and asked to judge from those
-  and the pinned diff alone, not the PR's body or comments. Its own findings
-  that would trigger a re-check get one, unless the pass ran after the cap.
-  Record in the PR body's Review record whether the pass ran and why.
+- **Final fresh pass**: when a fix changes runtime behaviour (logic, data, auth
+  or UI behaviour), not only wording, docs, tests or renames, start one fresh
+  reviewer over the whole diff in the lane that owns that behaviour: Sol for
+  correctness, Sonnet at high effort for quality. A fix for a CI finding counts.
+  The pass is its own task beside that lane's re-checks, briefed as a first
+  round at the new head with the requirements and pinned SHAs, and asked to
+  judge from those and the pinned diff alone, not the PR's body or comments. Its
+  own findings that would trigger a re-check get one, unless the pass ran after
+  the cap. Record in the PR body's Review record whether the pass ran and why.
 - **Cap**: two rounds per reviewer, round 1 and its re-check, plus the final
   fresh pass and its re-check when they run. A reviewer reaches its cap once
   its re-check has run or been skipped because round 1 found nothing that

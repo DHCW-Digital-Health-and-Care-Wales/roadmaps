@@ -29,7 +29,7 @@ default branch, one way to try:
    fields, tagging the block and the title (S5)" fails (it may not).
 
 **Expected**: the test passes on every run.
-**Actual**: on a slow runner, the assertion at line 387 fails with the focus still on
+**Actual**: on a slow runner, the assertion at line 383 (387 when it failed) fails with the focus still on
 the opening Edit button (CI run 43718510320, attempt 1; attempt 2 passed).
 
 ## Cause
@@ -37,17 +37,17 @@ the opening Edit button (CI run 43718510320, attempt 1; attempt 2 passed).
 Suspected, from the failed run's log. The dialog moves focus into its first field after
 it renders; the test reads focus straight after `openEditRoadmapDialog` and the field
 read, with no wait. A neighbouring test waits for the same thing
-(`roadmap-detail-page-editing.test.tsx:161`, inside `waitFor`).
+(`roadmap-detail-page-editing.test.tsx:158`, inside `waitFor`).
 
-- `rg -n 'getByRole\("textbox", \{ name: "[A-Za-z ]+" \}\)\)?\.toHaveFocus' src` — 11 hits.
-  Two already sit in `waitFor` (`roadmap-detail-page-editing.test.tsx:162`,
-  `roadmap-detail-page-adding.test.tsx:1247`); two read focus after an action, not after
-  opening (`roadmap-detail-page-tags.test.tsx:334,616`). The other seven read an opening
-  focus without waiting: `roadmap-detail-page-editing.test.tsx:387` (the failure),
-  `roadmaps-page-adding.test.tsx:166`, `roadmap-detail-page-tags.test.tsx:177,200,612`,
+- `rg -n 'getByRole\("textbox", \{ name: "[A-Za-z ]+" \}\)\)?\.toHaveFocus' src` — 11 hits (lines as of `59598cb`).
+  Two already sit in `waitFor` (`roadmap-detail-page-editing.test.tsx:158`,
+  `roadmap-detail-page-adding.test.tsx:1243`); two read focus after an action, not after
+  opening (`roadmap-detail-page-tags.test.tsx:329,611`). The other seven read an opening
+  focus without waiting: `roadmap-detail-page-editing.test.tsx:383` (the failure),
+  `roadmaps-page-adding.test.tsx:161`, `roadmap-detail-page-tags.test.tsx:172,195,607`,
   `opening-field.test.tsx:155,183`.
 - `rg -n 'expect\(\w+\)\.toHaveFocus' src` — a field kept in a variable first is missed by
-  the search above: `roadmaps-page-adding.test.tsx:191` is an eighth site. Read each
+  the search above: `roadmaps-page-adding.test.tsx:243` is an eighth site. Read each
   `toHaveFocus` that follows a dialog opening, as the search cannot know them all.
 
 ## Acceptance criteria

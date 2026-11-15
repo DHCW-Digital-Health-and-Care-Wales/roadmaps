@@ -202,18 +202,21 @@ describe("“Add an item” on a roadmap's page (STY-046 S1)", () => {
     expect(screen.queryByRole("dialog")).toBeNull()
   })
 
-  it("is unavailable while the session has expired", async () => {
-    const { user, authClient } = await renderPage()
+  it.each<AuthState>([{ status: "expired" }, { status: "connecting" }])(
+    "is unavailable while not connected: $status",
+    async (state) => {
+      const { user, authClient } = await renderPage()
 
-    act(() => {
-      authClient.setState({ status: "expired" })
-    })
+      act(() => {
+        authClient.setState(state)
+      })
 
-    const [button] = addItemButtons()
-    expect(button).toHaveAttribute("aria-disabled", "true")
-    if (button) await user.click(button)
-    expect(screen.queryByRole("dialog")).toBeNull()
-  })
+      const [button] = addItemButtons()
+      expect(button).toHaveAttribute("aria-disabled", "true")
+      if (button) await user.click(button)
+      expect(screen.queryByRole("dialog")).toBeNull()
+    },
+  )
 })
 
 describe("The item dialog, adding (STY-046 S2)", () => {
@@ -728,8 +731,45 @@ describe("Publishing a new item (STY-046 S7)", () => {
     expect(await main().findByText(/^Changes published\./)).toBeVisible()
   })
 
-  it("holds them until a Refresh follows a publish whose answer was lost", async () => {
-    const { user } = await renderPage({ write: { lost: "reread-fails" } })
+  it("holds them through “Save and publish” too", async () => {
+    const { user, repository } = await renderPage({
+      path: "/roadmaps/productc",
+    })
+    const { held, release, released } = holdCall(
+      repository.setRoadmapPublished.bind(repository),
+    )
+    vi.spyOn(repository, "setRoadmapPublished").mockImplementation(held)
+    await addItem(user, CLINIC, "Now")
+
+    await user.click(main().getByRole("button", { name: "Publish roadmap" }))
+    await user.click(
+      within(await screen.findByRole("alertdialog")).getByRole("button", {
+        name: "Save and publish",
+      }),
+    )
+
+    for (const name of ["Edit", "Move", "Remove"]) {
+      expect(
+        screen.getByRole("button", { name: `${name} ${CLINIC}`, hidden: true }),
+      ).toHaveAttribute("aria-disabled", "true")
+    }
+    await act(async () => {
+      release()
+      await released
+    })
+    expect(
+      await main().findByText(
+        /^Changes saved and Product C roadmap published\./,
+      ),
+    ).toBeVisible()
+  })
+
+  it("holds them after a publish whose answer was lost, until a Refresh reads the roadmap", async () => {
+    const { user, repository } = await renderPage()
+    // The answer is lost and nothing was written: the Refresh that follows finds no item.
+    vi.spyOn(repository, "publishRoadmapChanges").mockResolvedValue({
+      status: "unconfirmed",
+    })
     await addItem(user, CLINIC, "Next")
 
     await publish(user)
@@ -746,6 +786,21 @@ describe("Publishing a new item (STY-046 S7)", () => {
     expect(screen.queryByRole("dialog")).toBeNull()
     expect(screen.queryByRole("menu")).toBeNull()
     expect(card(CLINIC).getByText("New")).toBeVisible()
+
+    await user.click(main().getByRole("button", { name: "Refresh" }))
+
+    await waitFor(() => {
+      expect(
+        main().queryByText("Your changes may have been published"),
+      ).toBeNull()
+    })
+    for (const name of ["Edit", "Move", "Remove"]) {
+      expect(
+        main().getByRole("button", { name: `${name} ${CLINIC}` }),
+      ).toHaveAttribute("aria-disabled", "false")
+    }
+    expect(card(CLINIC).getByText("New")).toBeVisible()
+    expect(main().getByText("1 unpublished change")).toBeVisible()
   })
 })
 
@@ -859,6 +914,45 @@ describe("Closing the adding form, Welsh and assistive technology (STY-046 S9)",
         expect(addItemDialog().getByRole("status")).not.toBeEmptyDOMElement()
       })
 
+      await close(user)
+
+      await expectDialogClosed()
+      expect(addItemButtons()).toHaveLength(1)
+      await waitFor(() => {
+        expect(addItemButtons()[0]).toHaveFocus()
+      })
+    },
+  )
+
+  it.each([
+    [
+      "Cancel",
+      (user: User) =>
+        user.click(addItemDialog().getByRole("button", { name: "Cancel" })),
+    ],
+    ["Escape", (user: User) => user.keyboard("{Escape}")],
+  ])(
+    "%s puts focus on the page's “Add an item” once a read has put a co-lead's item in the place of the panel the dialog opened from",
+    async (_how, close) => {
+      const { user, repository } = await renderPage({
+        path: "/roadmaps/productc",
+      })
+      const letGo = await holdRefresh(user, repository)
+      const [, inPanel] = addItemButtons()
+      if (!inPanel) throw new Error("The panel has no Add an item")
+      await user.click(inPanel)
+      await user.type(
+        addItemDialog().getByRole("textbox", { name: "Title" }),
+        CLINIC,
+      )
+
+      repository.coLead((_roadmaps, itemsOf) => {
+        itemsOf("productc").push(createTestRoadmapItem("A co-lead's item"))
+      })
+      await letGo()
+      expect(
+        addItemDialog().getByRole("textbox", { name: "Title" }),
+      ).toHaveValue(CLINIC)
       await close(user)
 
       await expectDialogClosed()

@@ -23,7 +23,7 @@ type Target =
     }
   | {
       readonly form: "add"
-      /** The "Add an item" focus goes back to, unless "Add item" closes the dialog. */
+      /** The "Add an item" that opened it: the page's own, or an empty roadmap's. */
       readonly from: RefObject<HTMLElement | null>
       /** The key of the card of the item "Add item" added as it closed the dialog. */
       readonly addedKey: string | null
@@ -89,8 +89,8 @@ export interface PageItemDialog {
  * of a new item (STY-046 S6). Adding, it is on no item: "Add item" and "Add and start
  * another" keep a new item pending, and the first closes the dialog with focus going
  * to the new item's card. Cancel and Escape send focus back to the "Add an item" that
- * opened it, or to the page's own once the first item has taken an empty roadmap's
- * panel's place, and its button with it.
+ * opened it, or to the page's own once an item has taken an empty roadmap's panel's
+ * place, and its button with it.
  */
 export function useItemDialog({
   roadmap,
@@ -158,13 +158,7 @@ export function useItemDialog({
       then === "close" && newItem ? newItemCardKey(newItem.id) : null
     setOpening((current) =>
       current?.form === "add"
-        ? {
-            ...current,
-            // The roadmap now has an item, so no panel: only the page's button stays.
-            from: addItemButton,
-            addedKey,
-            open: then !== "close",
-          }
+        ? { ...current, addedKey, open: then !== "close" }
         : current,
     )
   }
@@ -181,8 +175,15 @@ export function useItemDialog({
         ? {
             ...shared,
             open: opening.open,
-            // Once "Add item" has added one, its card's Edit; until then, "Add an item".
-            opener: opening.addedKey === null ? opening.from : cardOpener,
+            // The card of the item "Add item" has just added, else the "Add an item"
+            // that opened it. An empty roadmap's panel, and its button, go once the
+            // page has an item, added here or read meanwhile: the page's own stays.
+            opener:
+              opening.addedKey !== null
+                ? cardOpener
+                : pageItems.length === 0
+                  ? opening.from
+                  : addItemButton,
             action: publishAction(roadmap),
             onAdd: added,
           }

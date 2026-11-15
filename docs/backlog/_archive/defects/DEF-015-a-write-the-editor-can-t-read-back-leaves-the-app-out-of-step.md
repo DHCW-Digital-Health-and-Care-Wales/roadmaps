@@ -9,7 +9,7 @@
 - **Binding ADRs**: ADR-012 (Option 16 and the DEF-015 amendments)
 - **Suggested model**: Opus — one hold across every write, and a clean removal of
   DEF-009's keep-pending rules
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/115
 
 ## Summary
 

@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next"
 import { DismissibleNotice } from "@/components/layout/dismissible-notice"
 import { useNoticeDwell } from "@/features/auth/use-notice-dwell"
 
+import { writeFailureMessage } from "../write-failure-message"
 import type { PublishNotice } from "./pending-changes-store"
 
 export interface PublishOutcomeNoticeProps {
@@ -55,7 +56,7 @@ export function PublishOutcomeNotice({
           Icon: CircleAlertIcon,
           title: t(`roadmaps.publish.notice.failed.${action}`),
           lines: [
-            t(`roadmaps.publish.errors.${notice.error}`),
+            writeFailureMessage(t, "publish", notice.error),
             t("roadmaps.publish.notice.kept"),
           ],
         } as const

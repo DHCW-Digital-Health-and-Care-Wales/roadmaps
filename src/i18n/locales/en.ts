@@ -165,22 +165,6 @@ export const en = {
             "This roadmap changed while you were looking. Nothing was changed.",
           failed: "Couldn't make the roadmap match",
         },
-        errors: {
-          unauthenticated:
-            "Your session has expired. Reconnect, then try again.",
-          forbidden:
-            "This Google account isn't allowed to change roadmaps. Ask the spreadsheet owner for edit access.",
-          "not-found":
-            "The spreadsheet couldn't be found. Check that it still exists.",
-          "rate-limited":
-            "Too many requests right now. Wait a moment and try again.",
-          network:
-            "Couldn't connect. Check your internet connection and try again.",
-          "invalid-response": "The answer was in an unexpected format.",
-          "invalid-data":
-            "The family list isn't in the expected format in the spreadsheet. Ask the spreadsheet owner to check it.",
-          unknown: "Something went wrong. Please try again.",
-        } satisfies Record<AppErrorKind, string>,
       },
     },
     /** Adding a roadmap from the list, in the roadmap dialog (STY-041). */
@@ -216,23 +200,6 @@ export const en = {
         "Reconnect to Google to add the roadmap. What you've typed is kept.",
       failed: {
         title: "Couldn't add the roadmap",
-        /** Why, in place of `errors.*`, which are about reading (S7). */
-        errors: {
-          unauthenticated:
-            "Your session expired before it could be added. Try again.",
-          forbidden:
-            "This Google account isn't allowed to add roadmaps. Ask the spreadsheet owner for edit access.",
-          "not-found":
-            "The spreadsheet couldn't be found. Check that it still exists.",
-          "rate-limited":
-            "Too many requests right now. Wait a moment and try again.",
-          network:
-            "Couldn't connect. Check your internet connection and try again.",
-          "invalid-response": "The answer was in an unexpected format.",
-          "invalid-data":
-            "The template for new roadmaps is missing or isn't in the expected format in the spreadsheet. Ask the spreadsheet owner to check it.",
-          unknown: "Something went wrong. Please try again.",
-        } satisfies Record<AppErrorKind, string>,
       },
       /** The answer was lost, and a check couldn't settle it (S7). */
       unconfirmed: {
@@ -722,21 +689,41 @@ export const en = {
             "The answer was lost. Refresh this roadmap before you do anything else.",
         },
       },
-      /** Why a publish failed, in place of `errors.*`, which are about reading. */
-      errors: {
-        unauthenticated: "Your session has expired. Reconnect, then try again.",
-        forbidden:
-          "This Google account isn't allowed to change this roadmap. Ask the spreadsheet owner for edit access.",
+    },
+    /** Why a write failed, for every surface that writes (CHO-004). `action` is `writeFailure.action.*`. */
+    writeFailure: {
+      /** What the account isn't allowed to do, in `forbidden`. */
+      action: {
+        lists: "change roadmaps",
+        publish: "change this roadmap",
+        families: "change families",
+        add: "add roadmaps",
+      },
+      unauthenticated: "Your session has expired. Reconnect, then try again.",
+      forbidden:
+        "This Google account isn't allowed to {{action}}. Ask the spreadsheet owner for edit access.",
+      "not-found":
+        "The spreadsheet couldn't be found. Check that it still exists.",
+      "rate-limited":
+        "Too many requests right now. Wait a moment and try again.",
+      network:
+        "Couldn't connect. Check your internet connection and try again.",
+      "invalid-response": "The answer was in an unexpected format.",
+      "invalid-data":
+        "The family list isn't in the expected format in the spreadsheet. Ask the spreadsheet owner to check it.",
+      unknown: "Something went wrong. Please try again.",
+      /** In place of the above, where the wording differs beyond what is changed. */
+      publish: {
         "not-found": "This roadmap is no longer listed.",
-        "rate-limited":
-          "Too many requests right now. Wait a moment and try again.",
-        network:
-          "Couldn't connect. Check your internet connection and try again.",
-        "invalid-response": "The answer was in an unexpected format.",
         "invalid-data":
           "This roadmap isn't in the expected format in the spreadsheet. Ask the spreadsheet owner to check it.",
-        unknown: "Something went wrong. Please try again.",
-      } satisfies Record<AppErrorKind, string>,
+      },
+      add: {
+        unauthenticated:
+          "Your session expired before it could be added. Try again.",
+        "invalid-data":
+          "The template for new roadmaps is missing or isn't in the expected format in the spreadsheet. Ask the spreadsheet owner to check it.",
+      },
     },
     /** The page listing the families, categories and organisations (STY-029, STY-033), linked from the list. */
     families: {
@@ -813,22 +800,6 @@ export const en = {
           change: "Couldn't change the family",
         },
       },
-      /** Why adding or changing a family failed. */
-      errors: {
-        unauthenticated: "Your session has expired. Reconnect, then try again.",
-        forbidden:
-          "This Google account isn't allowed to change families. Ask the spreadsheet owner for edit access.",
-        "not-found":
-          "The spreadsheet couldn't be found. Check that it still exists.",
-        "rate-limited":
-          "Too many requests right now. Wait a moment and try again.",
-        network:
-          "Couldn't connect. Check your internet connection and try again.",
-        "invalid-response": "The answer was in an unexpected format.",
-        "invalid-data":
-          "The family list isn't in the expected format in the spreadsheet. Ask the spreadsheet owner to check it.",
-        unknown: "Something went wrong. Please try again.",
-      } satisfies Record<AppErrorKind, string>,
       categories: {
         heading: "Categories",
         description: "Categories can't be changed here yet.",

@@ -6,16 +6,17 @@
  */
 
 import type { Roadmap } from "@/domain/roadmap/roadmap"
-import type {
-  FieldConflict,
-  RoadmapChanges,
+import {
+  type FieldConflict,
+  NO_CHANGES,
+  type RoadmapChanges,
 } from "@/domain/roadmap/roadmap-changes"
 import type { LocalisedText } from "@/domain/roadmap/localised-text"
 import type { AppErrorKind } from "@/lib/errors"
 import { createExternalStore } from "@/lib/external-store"
 
 import { openConflicts } from "./conflicts"
-import { countChanges, NO_CHANGES } from "./pending-changes"
+import { countChanges } from "./pending-changes"
 
 /** "save" for a roadmap that is not published, whose changes go nowhere public. */
 export type PublishAction = "publish" | "save"

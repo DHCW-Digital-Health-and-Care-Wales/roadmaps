@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest"
 
-import type {
-  FieldConflict,
-  ItemChanges,
-  RoadmapChanges,
+import {
+  type FieldConflict,
+  type ItemChanges,
+  NO_CHANGES,
+  type RoadmapChanges,
 } from "@/domain/roadmap/roadmap-changes"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
@@ -37,6 +38,7 @@ const second: ItemChanges = {
   fields: { title: { base: "Second", value: "Second, mine" } },
 }
 const changes: RoadmapChanges = {
+  ...NO_CHANGES,
   roadmap: { vision: { base: "A vision", value: "My vision" } },
   items: [first, second],
 }
@@ -109,7 +111,7 @@ describe("openConflicts", () => {
 
   it("finds an item's change by its ID after a read moved it", () => {
     const moved: RoadmapChanges = {
-      roadmap: {},
+      ...NO_CHANGES,
       items: [{ ...first, position: 4 }],
     }
 
@@ -121,9 +123,9 @@ describe("openConflicts", () => {
   it("has none open once the change is undone or there are no changes", () => {
     const conflict = conflictOn(second, "title", "Theirs")
 
-    expect(openConflicts([conflict], { roadmap: {}, items: [first] })).toEqual(
-      [],
-    )
+    expect(
+      openConflicts([conflict], { ...NO_CHANGES, items: [first] }),
+    ).toEqual([])
     expect(openConflicts([conflict], undefined)).toEqual([])
   })
 })
@@ -168,7 +170,7 @@ describe("discardItems", () => {
       fields: { title: { base: "Third", value: "Third, mine" } },
     }
     const pending: RoadmapChanges = {
-      roadmap: {},
+      ...NO_CHANGES,
       items: [{ ...first, position: 3 }, second, unidentified],
     }
 
@@ -188,7 +190,7 @@ describe("discardItems", () => {
       fields: { title: { base: "Fourth", value: "Fourth, mine" } },
     }
     const edited = editItem(
-      { roadmap: {}, items: [sent, other] },
+      { ...NO_CHANGES, items: [sent, other] },
       sent,
       sent.item,
       2,
@@ -345,7 +347,7 @@ describe("Welsh tags written since an item was read (STY-037 S22)", () => {
     current: "Patients",
     gainedWelsh: true,
   }
-  const pending: RoadmapChanges = { roadmap: {}, items: [retagged] }
+  const pending: RoadmapChanges = { ...NO_CHANGES, items: [retagged] }
 
   it("stays open, though the English is as it was edited from, until the tag change is given up", () => {
     expect(
@@ -392,7 +394,7 @@ describe("Welsh details written since an item was read (STY-039 S19)", () => {
     current: "Follow-up appointments",
     gainedWelsh: true,
   }
-  const pending: RoadmapChanges = { roadmap: {}, items: [redetailed] }
+  const pending: RoadmapChanges = { ...NO_CHANGES, items: [redetailed] }
 
   it("stays open, though the English is as it was edited from, until the change of details is given up", () => {
     expect(

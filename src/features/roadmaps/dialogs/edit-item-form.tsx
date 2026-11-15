@@ -6,6 +6,7 @@ import {
   ITEM_TEXT_FIELDS,
   itemValue,
   type ItemTextField,
+  type ItemValues,
   organisationIdsOf,
   organisationIdsValue,
 } from "@/domain/roadmap/roadmap-changes"
@@ -17,7 +18,6 @@ import { DetailList } from "../components/detail-list"
 import { EditForm, type EditFormField } from "../editing/edit-form"
 import { editFormFields } from "../editing/edit-form-fields"
 import type { TagInUse } from "../editing/item-tags"
-import type { ItemValues } from "../editing/pending-changes"
 import { TagList } from "../editing/tag-list"
 import type { OpenedItem } from "../editing/use-item-dialog"
 import { localiseDetails } from "../localise-details"

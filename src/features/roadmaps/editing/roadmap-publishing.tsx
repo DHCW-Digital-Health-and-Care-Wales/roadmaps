@@ -5,14 +5,17 @@ import { useTranslation } from "react-i18next"
 import { InsetText } from "@/components/layout/inset-text"
 import { Button } from "@/components/ui/button"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
-import type { FieldConflict } from "@/domain/roadmap/roadmap-changes"
+import {
+  type FieldConflict,
+  NO_CHANGES,
+} from "@/domain/roadmap/roadmap-changes"
 import { useAuth } from "@/features/auth/use-auth"
 import { localToday } from "@/lib/local-today"
 
 import { ConflictReview } from "./conflict-review"
 import { keepMine, openConflicts, takeTheirs } from "./conflicts"
 import { DiscardDialog } from "./discard-dialog"
-import { countChanges, NO_CHANGES } from "./pending-changes"
+import { countChanges } from "./pending-changes"
 import {
   usePendingChanges,
   usePendingChangesStore,

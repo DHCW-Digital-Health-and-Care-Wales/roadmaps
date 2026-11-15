@@ -52,8 +52,9 @@ export interface RoadmapRepository {
   ): Promise<RoadmapItem[]>
   /**
    * Publishes one roadmap's pending changes, all or nothing (ADR-012): re-reads the
-   * roadmap, then writes every changed field and an ID for each item without one, unless
-   * a co-lead's change conflicts or something edited is gone. Rejects with
+   * roadmap, then writes every changed field, each new item after the roadmap's last
+   * (STY-045) and an ID for each item without one, unless a co-lead's change conflicts
+   * or something edited is gone. A new item is never one of either. Rejects with
    * `AppError('invalid-data')` when the roadmap's items can't be read, as
    * `listRoadmapItems` does, and never retries. `signal` cancels only the reads: once the
    * write is sent, the call waits for its answer.

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
   itemValue,
   markedUpdated,
+  NO_CHANGES,
   type RoadmapChanges,
   tagsOf,
   tagsValue,
@@ -11,24 +12,24 @@ import { createTestRoadmapItem } from "./testing/test-roadmap-item"
 
 describe("markedUpdated", () => {
   const vision: RoadmapChanges = {
+    ...NO_CHANGES,
     roadmap: { vision: { base: "", value: "Clear" } },
-    items: [],
   }
 
   it("sets Last updated to today over whatever it holds, beside the other changes (STY-036 S6)", () => {
     expect(markedUpdated(vision, "2026-11-13")).toEqual({
+      ...NO_CHANGES,
       roadmap: {
         vision: { base: "", value: "Clear" },
         lastUpdated: { base: "", value: "2026-11-13", overwrite: true },
       },
-      items: [],
     })
   })
 
   it("leaves a pending date to be published instead (STY-036 S7)", () => {
     const dated: RoadmapChanges = {
+      ...NO_CHANGES,
       roadmap: { lastUpdated: { base: "", value: "2026-11-10" } },
-      items: [],
     }
 
     expect(markedUpdated(dated, "2026-11-13")).toBe(dated)

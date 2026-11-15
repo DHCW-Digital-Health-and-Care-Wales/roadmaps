@@ -6,13 +6,30 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   it rejects with, the domain's checks and the doubles' options are in STY-040's
   _Contract for dependents_ (archived), not restated here or in `features/`.
 - **A hand-made repository double needs `addRoadmap`**: the typecheck names each one.
+- **A new item is `RoadmapChanges.newItems`** (STY-045; its _Contract for dependents_,
+  archived, says what `checkNewItem`, `addNewItem` and the pending-edit rules do, and
+  what is left for STY-046 and STY-047). A hand-written `RoadmapChanges` needs
+  `newItems`: the typecheck names each one, so spread `NO_CHANGES`, which is the
+  domain's now (`domain/roadmap/roadmap-changes.ts`), as `ItemValues` is.
+- **Only a new item's ID says it was published**: a read that holds an item with it
+  drops the new item, and a publish skips it, whatever that item then reads. Nothing
+  compares its content, and a new item is never a conflict or "not found". A row a
+  co-lead has cleared of its title is no item, so a read leaves that new item pending
+  until the next publish, which takes it as published and writes nothing.
+- **The Sheets fake fails a test whose publish appends a bad row**: one on a tab no
+  index row names, or without a title, one of the public site's `Horizon` values, or an
+  `Item ID`, in the editor's format, that no other row of the tab holds
+  (`tests/fixtures/sheets/apply-batch-update.ts`). A test's new items take their IDs
+  from `createItemId`, or use `NEW_CLINIC` and `NEW_LETTERS`
+  (`domain/roadmap/testing/test-new-item.ts`).
 - **An E2E spec that replaces `sheets.spreadsheet` keeps a `Template` tab** to add a
   roadmap: the example spreadsheet ends with one, and `withRoadmapIndex` keeps it.
 - **An E2E spec that needs a roadmap with other items, or none, uses `withTabItems`**
   (`tests/e2e/fixtures/fake-sheets.ts`), or `withTabRows` for a tab's whole rows: it
   does not map over `EXAMPLE_SPREADSHEET` itself.
-- **Nothing here has met a real spreadsheet yet** (CHO-010): don't write copy or a
-  scenario that promises what a copy of a protected `Template` does.
+- **Nothing here has met a real spreadsheet yet** (CHO-010, CHO-015): don't write copy
+  or a scenario that promises what a copy of a protected `Template` does, or where
+  Google puts a new item's row on a tab with a filter or a table.
 - **A dialog's closing and focus rules are `FormDialog`'s**, and a form's fields are
   `FormField`, `ChoiceField` and `FixedField`: STY-041's _Contract for dependents_
   (archived) says how each is used. A new dialog passes its form to `FormDialog`; it

@@ -130,9 +130,9 @@ const ROADMAP_COLUMNS: Readonly<
 }
 
 /**
- * The roadmap tab's column each editable item field is written to (ADR-012, ADR-014,
- * STY-037, STY-039): the English one alone, so `Labels (cy)` and `Details (cy)` are
- * never written.
+ * The roadmap tab's column each editable item field is written to, an edit's or a new
+ * item's (ADR-012, ADR-014, STY-037, STY-039, STY-045): the English one alone, so
+ * `Labels (cy)` and `Details (cy)` are never written.
  */
 const ITEM_COLUMNS: Readonly<Record<EditableItemField, RoadmapTabColumn>> = {
   title: "Title",
@@ -190,8 +190,9 @@ type IndexCells = readonly (readonly [RoadmapIndexWriteColumn, string])[]
  * `Families` and `Categories` tabs that link each roadmap to its family and category
  * (ADR-013). A roadmap's items take one more read, of the tab its index row names
  * (ADR-011). A publish makes those reads, then one all-or-nothing `batchUpdate`
- * (ADR-012); so does adding or changing a family (STY-029), and adding a roadmap, which
- * also reads the `Template` tab's header (STY-040).
+ * (ADR-012), which also appends a row for each new item (STY-045); so does adding or
+ * changing a family (STY-029), and adding a roadmap, which also reads the `Template`
+ * tab's header (STY-040).
  */
 export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
   readonly #client: SheetsClient
@@ -259,7 +260,9 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
   /**
    * Re-reads the roadmap as `listRoadmapItems` does, plans the publish over it, then
    * sends every write in one `batchUpdate`, which Google applies all or nothing
-   * (ADR-012). A write whose answer is lost is settled by one more read (Option 16).
+   * (ADR-012): each changed cell, and a row for each new item, which Google puts after
+   * the last row any value uses as it applies the write. A write whose answer is lost
+   * is settled by one more read (Option 16).
    */
   async publishRoadmapChanges(
     roadmapId: string,
@@ -362,7 +365,11 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
     const { tab, parsed, list } = usableFamilyTab(
       await this.#readFamilyTab(tabList, { signal }),
     )
-    const plan = planNewFamily(input, list, idsIn(tab, parsed))
+    const plan = planNewFamily(
+      input,
+      list,
+      idsIn(tab, parsed.columns.get("ID")),
+    )
     if (plan.kind === "settled") return plan.outcome
     signal?.throwIfAborted()
 
@@ -1002,14 +1009,16 @@ function categoryCells(category: Category | null): IndexCells {
   ]
 }
 
-/** Every ID the tab's rows hold, listed or skipped, so a new one repeats none. */
-function idsIn({ rows }: TabRows, { columns }: ListTab<Family>): Set<string> {
-  const at = columns.get("ID")
+/**
+ * Every ID the tab's rows hold in the column at `column`, in a row its parser keeps or
+ * skips, so a new ID repeats none; no IDs for a tab without the column.
+ */
+function idsIn({ rows }: TabRows, column: number | undefined): Set<string> {
   return new Set(
-    at === undefined
+    column === undefined
       ? []
       : rows.slice(1).flatMap((row) => {
-          const id = row[at]?.trim() ?? ""
+          const id = row[column]?.trim() ?? ""
           return id === "" ? [] : [id]
         }),
   )
@@ -1023,7 +1032,6 @@ function snapshotOf({
   families,
   categories,
 }: RoadmapRead): RoadmapSnapshot {
-  const idColumn = items.columns.get("Item ID")
   return {
     roadmap: entry.roadmap,
     items: items.items,
@@ -1032,15 +1040,7 @@ function snapshotOf({
         code === "duplicate-item-id" && value !== null ? [value] : [],
       ),
     ),
-    // Every row's ID, kept or not, so a new ID never repeats one a skipped row holds.
-    takenIds: new Set(
-      idColumn === undefined
-        ? []
-        : itemTab.rows.slice(1).flatMap((row) => {
-            const id = row[idColumn]?.trim() ?? ""
-            return id === "" ? [] : [id]
-          }),
-    ),
+    takenIds: idsIn(itemTab, items.columns.get("Item ID")),
     missingLists: new Set([
       ...(families === null ? (["familyId"] as const) : []),
       ...(categories === null ? (["categoryId"] as const) : []),
@@ -1051,7 +1051,8 @@ function snapshotOf({
 
 /**
  * The requests that make `writes`, after any `index` already holds: growing grids
- * first, then headers, then cells.
+ * first, then headers, then cells, then a row for each new item, after the tab's last
+ * row in use (STY-045).
  */
 function batchRequests(
   read: RoadmapRead,
@@ -1085,15 +1086,24 @@ function batchRequests(
   for (const { index: i, id } of writes.ids) {
     tab.write(rowOf(i), "Item ID", id)
   }
+  for (const { id, fields } of writes.newItems) {
+    tab.append([
+      ["Item ID", id],
+      ...fields.map(
+        ({ field, value }) =>
+          [ITEM_COLUMNS[field], itemCell(field, value)] as const,
+      ),
+    ])
+  }
   return [...index.requests(), ...tab.requests()]
 }
 
 /**
- * What an item's cell holds for `value`: a placement as its `Horizon` value, tags in
- * order separated by `, `, as the public site reads them (STY-037 D5), organisations as
- * their codes, national first, then by code, separated by `, ` (ADR-014, STY-034 D7):
- * known codes only, so an unknown one written there goes; and details as
- * `detailsValue` holds them, a line each (STY-039 S14).
+ * What an item's cell holds for `value`, an edit's or a new item's: a placement as its
+ * `Horizon` value, tags in order separated by `, `, as the public site reads them
+ * (STY-037 D5), organisations as their codes, national first, then by code, separated
+ * by `, ` (ADR-014, STY-034 D7): known codes only, so an unknown one written there
+ * goes; and details as `detailsValue` holds them, a line each (STY-039 S14).
  */
 function itemCell(field: EditableItemField, value: string): string {
   switch (field) {

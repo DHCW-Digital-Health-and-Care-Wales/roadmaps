@@ -72,7 +72,9 @@ _Avoid_: Draft, hidden item
 **Roadmap item**:
 One piece of work on a roadmap: a title, a description, expected outcomes, tags and any
 other details that help a public reader. It fits on one card no bigger than a phone
-screen.
+screen. A **new item** is one a Product Lead has added, with a title and a placement,
+and not yet published: a pending edit, which publishing writes after the roadmap's last
+item (ADR-012).
 _Avoid_: Ticket, task, feature, epic, story
 
 **Expected outcome**:
@@ -108,11 +110,12 @@ twelve (ADR-014).
 _Avoid_: Health board (only some are), customer
 
 **Pending edit**:
-A change to a roadmap or roadmap item that the Product Lead has made but not yet
-published or saved; the public site does not show it. It is kept in this browser tab,
-in memory, with the value it was edited from, through an expired session, Reconnect
-and, if the Product Lead chooses, Disconnect. It is lost on closing the tab, after
-asking (ADR-012).
+A change to a roadmap or roadmap item, or a new item, that the Product Lead has made
+but not yet published or saved; the public site does not show it. It is kept in this
+browser tab, in memory, through an expired session, Reconnect and, if the Product Lead
+chooses, Disconnect. A change is kept with the value it was edited from, which a
+co-lead's change is found by; a new item has none, so it never conflicts with one. It
+is lost on closing the tab, after asking (ADR-012).
 _Avoid_: Unsaved change, draft (drafts are a later feature)
 
 **Publish**:
@@ -224,9 +227,9 @@ _Avoid_: Sheet (ambiguous with spreadsheet)
 
 **Item ID**:
 The column of a roadmap's worksheet holding each roadmap item's identity, which the
-editor reads (an item without one has none) and will add and fill when it publishes, and
-never shows (ADR-012). Only infrastructure
-and setup documentation use this term.
+editor reads (an item without one has none), adds and fills when it publishes, and
+never shows. A new item's is made when the item is added, and written with its row
+(ADR-012). Only infrastructure and setup documentation use this term.
 _Avoid_: Row number, key
 
 ### Connection

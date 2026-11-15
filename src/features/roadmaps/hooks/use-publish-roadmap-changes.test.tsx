@@ -3,9 +3,10 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import type { AuthState } from "@/domain/auth/auth-client"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
-import type {
-  PublishOutcome,
-  RoadmapChanges,
+import {
+  NO_CHANGES,
+  type PublishOutcome,
+  type RoadmapChanges,
 } from "@/domain/roadmap/roadmap-changes"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
@@ -34,6 +35,7 @@ const connected: AuthState = {
 }
 const item = createTestRoadmapItem("First")
 const changes: RoadmapChanges = {
+  ...NO_CHANGES,
   roadmap: { title: { base: "Product A roadmap", value: "Renamed roadmap" } },
   items: [
     {

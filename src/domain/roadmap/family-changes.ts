@@ -1,7 +1,7 @@
 import { nameKey } from "@/lib/text"
 
 import type { Family } from "./family"
-import { createItemId } from "./item-id"
+import { createItemId, createUnusedId } from "./item-id"
 import type { Roadmap } from "./roadmap"
 
 /** What a Product Lead types to add or change a family (ADR-013): English only. */
@@ -104,9 +104,10 @@ export function planNewFamily(
   if (nameTaken(input.name, families)) {
     return { kind: "settled", outcome: { status: "name-taken" } }
   }
-  const taken = new Set([...takenIds, ...families.map(({ id }) => id)])
-  let id = newId()
-  while (taken.has(id)) id = newId()
+  const id = createUnusedId(
+    new Set([...takenIds, ...families.map(({ id }) => id)]),
+    newId,
+  )
   return {
     kind: "write",
     family: { id, name: { en: input.name, cy: "" }, colour: input.colour },

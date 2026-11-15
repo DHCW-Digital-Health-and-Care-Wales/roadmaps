@@ -126,6 +126,15 @@ it writes the `Families` tab only as below.
   anything, even Welsh that pairs with no detail, has neither cell written: its details
   can't be changed in the editor, and a publish that finds Welsh written there since
   the item was read writes nothing (STY-039);
+- a new item: one row after the tab's last row in use, appended by Google as it applies
+  the write, so a row a co-lead added meanwhile is kept and no row moves. The row holds
+  the item's `Item ID`, made when the item was added, its `Title`, its `Horizon` as the
+  public site's English value, and each of `Description`, `Outcome`, `Phase`, `Labels`,
+  `Organisations` and `Details` the item has, each written as a change to that field
+  is written above. Every other cell of the row is left empty, each Welsh cell among
+  them. Several new items are appended in the order they were added. A new item is
+  written with the roadmap's other changes or not at all, and is not written again
+  once a row of the tab holds its `Item ID` (STY-045);
 - an `Item ID` for every item row it reads (one with a title) that has none, or repeats
   another row's: eight random
   lower-case letters and digits starting with a letter, such as `k7q2xwbn`;
@@ -138,11 +147,10 @@ it writes the `Families` tab only as below.
 - on any publish, the `Family ID` or `Category ID` of a row with none whose name links
   it to a listed family or category, never changing an ID already there;
 - a column the roadmap needs but lacks (the `Item ID` column the first time, the
-  `Family ID` or `Category ID` column, or an edited field's column, `Horizon` for a
-  move, `Labels` for tags, `Organisations` for a choice of organisations and `Details`
-  for details), appended
-  after the last column in use with the public site's English header, the grid widened
-  in the same request.
+  `Family ID` or `Category ID` column, or the column of a field edited or of a field a
+  new item has: `Horizon` for a move, `Labels` for tags, `Organisations` for a choice
+  of organisations and `Details` for details), appended after the last column in use
+  with the public site's English header, the grid widened in the same request.
 
 Adding, renaming or recolouring a family on the "Families, categories and organisations" page writes
 at once, after a re-read, in one all-or-nothing `spreadsheets.batchUpdate`, only:

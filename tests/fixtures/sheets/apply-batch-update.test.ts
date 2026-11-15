@@ -228,12 +228,147 @@ describe("applyBatchUpdate", () => {
     })
   })
 
-  it("records a row appended to a tab but Families and the roadmap index as a violation", () => {
-    const result = applyBatchUpdate([index(), productA()], {
-      requests: [appendRow(10, ["x"])],
+  describe("a row appended to a roadmap's own tab (STY-045)", () => {
+    /** Product A's tab, which the index's row names, holding one item. */
+    const items = (): GridTab => ({
+      ...productA(),
+      rows: [
+        ["Title", "Horizon", "Item ID", "Title (cy)"],
+        ["Online booking", "Now", "k7q2xwbn"],
+      ],
+      rowCount: 2,
+      columnCount: 4,
+    })
+    const other = (title: string): GridTab => ({
+      title,
+      sheetId: 11,
+      rows: [["Title", "Horizon", "Item ID"]],
+      rowCount: 1,
+      columnCount: 3,
     })
 
-    expect(result.violations).toEqual(["appendCells on ProductA"])
+    it("appends a new item's rows after the tab's last row in use", () => {
+      const result = applyBatchUpdate([index(), items()], {
+        requests: [
+          appendRow(10, ["Letters by email", "Later", "fwd9s3hj"]),
+          appendRow(10, ["Choose a clinic", "Not doing", "ckn7q2xw"]),
+        ],
+      })
+
+      expect(result).toEqual({
+        tabs: [
+          index(),
+          {
+            ...items(),
+            rows: [
+              ...items().rows,
+              ["Letters by email", "Later", "fwd9s3hj"],
+              ["Choose a clinic", "Not doing", "ckn7q2xw"],
+            ],
+            rowCount: 4,
+          },
+        ],
+        violations: [],
+      })
+    })
+
+    it.each(["Notes", "Categories", "Template"])(
+      "records a row appended to %s, a tab that is no roadmap's, as a violation",
+      (title) => {
+        const named = {
+          ...index(),
+          rows: [...index().rows, ["Categories"], ["Template"]],
+          rowCount: 4,
+        }
+
+        const result = applyBatchUpdate([named, items(), other(title)], {
+          requests: [appendRow(11, ["Choose a clinic", "Next", "ckn7q2xw"])],
+        })
+
+        expect(result.violations).toEqual([`appendCells on ${title}`])
+      },
+    )
+
+    it.each([
+      [
+        "no Item ID",
+        ["Choose a clinic", "Next"],
+        "ProductA row appended without an Item ID",
+      ],
+      [
+        "an Item ID another row has",
+        ["Choose a clinic", "Next", "k7q2xwbn"],
+        "ProductA row appended with the Item ID k7q2xwbn, which another row has",
+      ],
+      [
+        "no title",
+        ["", "Next", "ckn7q2xw"],
+        "ProductA row appended without a Title",
+      ],
+      [
+        "no horizon",
+        ["Choose a clinic", "", "ckn7q2xw"],
+        'ProductA row appended with the Horizon "", not one the public site reads',
+      ],
+      [
+        "a horizon the public site doesn't write",
+        ["Choose a clinic", "next", "ckn7q2xw"],
+        'ProductA row appended with the Horizon "next", not one the public site reads',
+      ],
+      [
+        "an Item ID the editor never makes",
+        ["Choose a clinic", "Next", "clinic-1"],
+        "ProductA row appended with the Item ID clinic-1, not in the Item ID format",
+      ],
+      [
+        "a cell under no header",
+        ["Choose a clinic", "Next", "ckn7q2xw", "", "Discovery"],
+        "ProductA row appended with a cell under no header",
+      ],
+      [
+        "a Welsh cell",
+        ["Choose a clinic", "Next", "ckn7q2xw", "Dewis clinig"],
+        "ProductA!R3C4 in a Welsh column",
+      ],
+    ])(
+      "records a new item's row with %s as a violation",
+      (_, row, violation) => {
+        const result = applyBatchUpdate([index(), items()], {
+          requests: [appendRow(10, row)],
+        })
+
+        expect(result.violations).toEqual([violation])
+      },
+    )
+
+    it("finds each column by its header as the adapter does, whatever its case, spaces or punctuation", () => {
+      const respelt = {
+        ...items(),
+        rows: [
+          ["TITLE", " horizon ", "Item-ID", "Item ID"],
+          ["Online booking", "Now", "k7q2xwbn"],
+        ],
+      }
+
+      const result = applyBatchUpdate([index(), respelt], {
+        requests: [appendRow(10, ["Choose a clinic", "Next", "ckn7q2xw"])],
+      })
+
+      expect(result.violations).toEqual([])
+    })
+
+    it("records the second of two rows appended with one Item ID as a violation", () => {
+      const result = applyBatchUpdate([index(), items()], {
+        requests: [
+          appendRow(10, ["Letters by email", "Later", "ckn7q2xw"]),
+          appendRow(10, ["Choose a clinic", "Next", "ckn7q2xw"]),
+        ],
+      })
+
+      expect(result.violations).toEqual([
+        "ProductA row appended with the Item ID ckn7q2xw, which another row has",
+      ])
+    })
   })
 
   it("allows Family (cy), the family's Welsh name copied from its list (ADR-013)", () => {

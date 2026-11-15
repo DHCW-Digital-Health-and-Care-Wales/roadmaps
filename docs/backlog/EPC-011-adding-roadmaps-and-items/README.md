@@ -1,9 +1,9 @@
 # EPC-011: Adding roadmaps and items — started here, not in the spreadsheet, in one dialog each
 
-- **Status**: Active — grilled with the owner on 2026-11-14; STY-040 to STY-044
-  delivered, three stories Proposed, three recorded for later grilling
-- **Progress**: 5 of 11 terminal; next selectable: STY-045; STY-046 once STY-044's PR
-  is merged and STY-045 is delivered; blocked on: nothing
+- **Status**: Active — grilled with the owner on 2026-11-14; STY-040 to STY-045
+  delivered, two stories Proposed, three recorded for later grilling
+- **Progress**: 6 of 11 terminal; next selectable: STY-046, once STY-045's PR is merged;
+  blocked on: nothing
 - **Binding ADRs**: ADR-012, ADR-011, ADR-009, ADR-013, ADR-014, ADR-002, ADR-003, ADR-005,
   ADR-006, ADR-010, ADR-008
 
@@ -179,7 +179,7 @@ STY-040 adds **Short name** and brings **Roadmap**, **Published roadmap** and
 | STY-042 | [A roadmap's page shows About in a panel, and says when it is empty](../_archive/EPC-011-adding-roadmaps-and-items/STY-042-the-roadmap-page-about-panel-and-empty-state.md) | Features/UI + i18n (en + cy) + E2E | —                         | ✅    |
 | STY-043 | [“About this roadmap” is edited in the roadmap dialog](../_archive/EPC-011-adding-roadmaps-and-items/STY-043-edit-about-in-the-roadmap-dialog.md)                           | Features/UI + i18n (en + cy) + E2E | STY-041                   | ✅    |
 | STY-044 | [An item is edited in a dialog](../_archive/EPC-011-adding-roadmaps-and-items/STY-044-edit-an-item-in-a-dialog.md)                                                          | Features/UI + i18n (en + cy) + E2E | STY-041                   | ✅    |
-| STY-045 | [The repository publishes a new item](STY-045-the-repository-publishes-a-new-item.md)                                                                                       | Domain + Infrastructure + Docs     | —                         |       |
+| STY-045 | [The repository publishes a new item](../_archive/EPC-011-adding-roadmaps-and-items/STY-045-the-repository-publishes-a-new-item.md)                                         | Domain + Infrastructure + Docs     | —                         | ✅    |
 | STY-046 | [A Product Lead adds an item](STY-046-add-an-item.md)                                                                                                                       | Features/UI + i18n (en + cy) + E2E | STY-042, STY-044, STY-045 |       |
 | STY-047 | [The publish dialog names the new items](STY-047-a-new-item-in-the-publish-dialog.md)                                                                                       | Features/UI + i18n (en + cy) + E2E | STY-046                   |       |
 | STY-048 | [A Product Lead removes a roadmap](STY-048-remove-a-roadmap.md)                                                                                                             | to be decided                      | —                         |       |
@@ -233,6 +233,9 @@ flowchart LR
 - [CHO-010](../chores/CHO-010-check-adding-a-roadmap-against-a-real-spreadsheet.md): the
   checks of STY-040's write against a real test spreadsheet, which its delivery could
   not run.
+- [CHO-015](../chores/CHO-015-check-adding-an-item-against-a-real-spreadsheet.md): the
+  check of STY-045's write, a new item's row, against a real test spreadsheet, which
+  its delivery could not run.
 - [CHO-011](../_archive/chores/CHO-011-the-dialog-tests-share-their-setup.md): the
   test setup STY-041 wrote out per spec, shared before STY-043, STY-044 and STY-046
   copy it. Done, in its PR, awaiting merge.

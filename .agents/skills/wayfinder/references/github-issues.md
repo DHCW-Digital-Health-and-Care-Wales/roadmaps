@@ -39,8 +39,8 @@ done
 - **Resolve**: `gh issue comment <n> --body-file <file>`, then
   `gh issue close <n>`, then add the line to the map's Decisions so far:
   read the body (`gh issue view <map> --json body --jq .body`) just before
-  writing it back (`gh issue edit <map> --body-file <file>`), since another
-  session may have edited it. Comment before closing: on an already-closed
+  writing it back (`gh issue edit <map> --body-file <file>`), then read it
+  again and re-apply your edit if another session's write replaced it. Comment before closing: on an already-closed
   issue `gh issue close --comment` drops the comment yet exits 0.
 - **Out of scope**: comment the reason, close it with
   `gh issue close <n> --reason "not planned"`, and add its line to the map.

@@ -9,7 +9,7 @@
 - **Binding ADRs**: ADR-012
 - **Suggested model**: Opus — what a publish settles while the page can't read what it
   wrote
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/97
 
 ## Summary
 

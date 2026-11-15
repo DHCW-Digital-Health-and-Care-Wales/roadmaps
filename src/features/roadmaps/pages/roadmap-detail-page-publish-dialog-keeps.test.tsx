@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor, within } from "@testing-library/react"
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
@@ -7,6 +7,7 @@ import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 import { renderWithProviders } from "@/test/render-with-providers"
 
+import { holdCall } from "../testing/held-call"
 import { holdRefresh } from "../testing/held-refresh"
 import { createInMemoryRoadmapRepository } from "../testing/in-memory-roadmap-repository"
 import {
@@ -28,10 +29,12 @@ const connected: AuthState = {
 
 const roadmaps = [
   createTestRoadmap("producta", "Product A roadmap"),
+  createTestRoadmap("productb", "Product B roadmap"),
   createTestRoadmap("productc", "Product C roadmap", { published: false }),
 ]
 const items = {
   producta: [createTestRoadmapItem("First item", { id: "item-1" })],
+  productb: [createTestRoadmapItem("B item", { id: "item-3" })],
   productc: [createTestRoadmapItem("Draft item", { id: "item-2" })],
 }
 
@@ -44,9 +47,13 @@ function main() {
 async function renderPage(path: string) {
   const user = userEvent.setup()
   const repository = createInMemoryRoadmapRepository(roadmaps, items)
-  await renderWithProviders({ path, authState: connected, repository })
+  const rendered = await renderWithProviders({
+    path,
+    authState: connected,
+    repository,
+  })
   await main().findByRole("heading", { level: 3 })
-  return { user, repository }
+  return { user, repository, router: rendered.router }
 }
 
 /**
@@ -174,5 +181,48 @@ describe("The publish dialog never asks to publish nothing (DEF-010 S2, D1)", ()
       expect(screen.queryByRole("alertdialog")).toBeNull()
     })
     expect(main().queryByText(/unpublished change/)).toBeNull()
+  })
+})
+
+describe("A confirmed dialog belongs to its roadmap (DEF-010 review)", () => {
+  it("is gone on another roadmap's page, which it cannot publish", async () => {
+    const { user, repository, router } = await renderPage("/roadmaps/producta")
+    await editItemText(user, "First item", "Phase", "Beta")
+    await act(() =>
+      router.navigate({
+        to: "/roadmaps/$roadmapId",
+        params: { roadmapId: "productb" },
+      }),
+    )
+    await main().findByRole("heading", { level: 3, name: "B item" })
+    await editItemText(user, "B item", "Phase", "Alpha")
+    act(() => {
+      router.history.back()
+    })
+    await main().findByRole("heading", { level: 3, name: "First item" })
+    const { held, release, released } = holdCall(
+      repository.publishRoadmapChanges.bind(repository),
+    )
+    const write = vi
+      .spyOn(repository, "publishRoadmapChanges")
+      .mockImplementation(held)
+    await user.click(main().getByRole("button", { name: "Publish changes" }))
+    await confirmIn(user, "Publish changes")
+
+    act(() => {
+      router.history.forward()
+    })
+    await screen.findByRole("heading", {
+      level: 3,
+      name: "B item",
+      hidden: true,
+    })
+
+    expect(screen.queryByRole("alertdialog")).toBeNull()
+    expect(write).toHaveBeenCalledTimes(1)
+    await act(async () => {
+      release()
+      await released
+    })
   })
 })

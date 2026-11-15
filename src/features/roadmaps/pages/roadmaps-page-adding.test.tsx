@@ -188,6 +188,37 @@ describe("adding a roadmap from the list (STY-041)", () => {
       }
     })
 
+    it("gets focus back on the button beside Refresh when a read removes the panel's button the dialog opened from (DEF-008)", async () => {
+      const repository = repositoryWith({}, [])
+      const { user } = await renderList(repository)
+      await main().findByRole("heading", { name: "No roadmaps yet" })
+      const [toolbar, inPanel] = main().getAllByRole("button", {
+        name: "Add a roadmap",
+      })
+      if (!toolbar || !inPanel)
+        throw new Error("The empty list offers no button")
+      const { held, release, released } = holdCall(() =>
+        Promise.resolve([...roadmaps]),
+      )
+      vi.spyOn(repository, "listRoadmaps").mockImplementation(held)
+
+      // The dialog is modal, so the Refresh is asked for before it opens, and read after.
+      await user.click(main().getByRole("button", { name: "Refresh" }))
+      fireEvent.click(inPanel)
+      await act(async () => {
+        release()
+        await released
+      })
+      await waitFor(() => {
+        expect(inPanel).not.toBeInTheDocument()
+      })
+      await user.click(dialog().getByRole("button", { name: "Cancel" }))
+      await expectDialogClosed()
+
+      expect(toolbar).toBeInTheDocument()
+      expect(toolbar).toHaveFocus()
+    })
+
     it("is unavailable, though focusable, while the session has expired", async () => {
       const { user, authClient } = await renderList()
       await main().findAllByRole("list")

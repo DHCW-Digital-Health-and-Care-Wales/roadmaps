@@ -7,8 +7,9 @@
 - **Epic**: standalone
 - **Depends on**: none
 - **Binding ADRs**: none
-- **Suggested model**: Sonnet — one agent definition and one table row once the owner
-  has decided, then two deliveries measured
+- **Suggested model**: Sonnet — the agent definition and each place `delegation.md`
+  names the quality lane's reviewer once the owner has decided, then two deliveries
+  measured
 - **Delivered**: _(add on delivery)_
 
 ## Summary
@@ -101,8 +102,8 @@ option of Q1 to try next
 
 ## Out of scope
 
-- The correctness lane's reviewers (Opus, Sol): Opus left part of a diff unread on one
-  of the four stories and Sol reported each of its diffs read; changing either is
+- The correctness lane's reviewers: Opus left part of STY-043's diff unread and read
+  STY-044's and STY-045's whole, and Sol reported STY-045's read. Changing either is
   another record.
 - Splitting a quality review between several reviewers by path: each would load the
   same guides, and none would see a copy made across the split.

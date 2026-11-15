@@ -44,8 +44,10 @@ shadcn CLI and `@playwright/cli`; revisions unrecorded). `implement-story`,
   into `docs/` records.
 - `logic-prototype` is upstream's `prototype` with only its logic branch:
   `LOGIC.md` is merged into `SKILL.md`, and `UI.md` is dropped, since UI
-  questions go to `ux-prototypes`. Prototypes publish to a throwaway branch
-  without touching the shared checkout.
+  questions go to `ux-prototypes`. Prototypes are built in a scratch directory,
+  not beside the code, and publish to a throwaway branch without touching the
+  shared checkout; the validated logic reaches the real code only when that
+  work is built; labels use `docs/GLOSSARY.md` terms.
 - `retro` keeps the upstream improvement categories inside this repository's
   delivery flow: after the primary PR is raised, on its own branch and PR.
 

@@ -1,8 +1,8 @@
 # Wayfinding on GitHub Issues
 
-Run `gh` inside the checkout so it targets `collisdigital/roadmaps-editor`;
-confirm with `gh repo view --json nameWithOwner` before the session's first
-write. Write multi-line bodies to a temporary file and pass `--body-file`.
+Run `gh` inside the checkout; before the session's first write, confirm with
+`gh repo view --json nameWithOwner` that it targets this repository, not a fork
+or upstream. Write multi-line bodies to a temporary file and pass `--body-file`.
 
 ## Labels
 
@@ -45,6 +45,23 @@ done
 - **Out of scope**: comment the reason, close it with
   `gh issue close <n> --reason "not planned"`, and add its line to the map.
 - **Read a ticket**: `gh issue view <n> --json number,title,body,labels,assignees,comments`.
+
+## Publish an asset branch
+
+A research or prototype file goes on its own throwaway branch through git's
+object plumbing, which leaves the shared checkout's HEAD, index and files
+untouched, so parallel subagents can each publish one; `<type>` is `research`
+or `prototype`:
+
+```sh
+blob=$(git hash-object -w <file>)
+tree=$(printf '100644 blob %s\t%s\n' "$blob" "<file name>" | git mktree)
+commit=$(git commit-tree "$tree" -m "<type>: <ticket title>")
+git push origin "$commit:refs/heads/<type>/<slug>"
+```
+
+Link the branch's file from the resolution comment:
+`https://github.com/<owner>/<repo>/blob/<type>/<slug>/<file name>`.
 
 A bare `#<n>` in a body links to whichever issue or PR holds that number, so
 write cross-references only once the real numbers exist.

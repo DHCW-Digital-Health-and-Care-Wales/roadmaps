@@ -1,8 +1,22 @@
-# Logic Prototype
+---
+name: logic-prototype
+description: Build a throwaway logic prototype, one HTML file anyone can click through, to answer a question about a state model, business rule or data shape. Use when a design question is how something should behave, not how it should look.
+---
 
-A single, self-contained HTML file (a **shareable demo**) that lets anyone drive a state model by clicking buttons. Use this when the question is about **business logic, state transitions, or data shape**: the kind of thing that looks reasonable on paper but only feels wrong once you push it through real cases.
+# Logic prototype
 
-Because it's one file with nothing to install, you can hand it to a non-developer (a designer, a PM, a domain expert) and let them feel the model for themselves. So it speaks their language, not the code's.
+A prototype is **throwaway code that answers a question**. This one is a single, self-contained HTML file (a **shareable demo**) that lets anyone drive a state model by clicking buttons. Use it when the question is about **business logic, state transitions, or data shape**: the kind of thing that looks reasonable on paper but only feels wrong once you push it through real cases.
+
+Because it's one file with nothing to install, you can hand it to a non-developer (a Product Lead, a designer, a domain expert) and let them feel the model for themselves. So it speaks their language, not the code's.
+
+## Rules
+
+1. **Throwaway from day one, and clearly marked as such.** Name the file so a casual reader can see it's a prototype, not production (`<topic>-prototype.html`). Build it outside the tracked tree (a scratch directory), so it never reaches `main`.
+2. **Trivial to run.** A single HTML file the user double-clicks: no thinking required to start it.
+3. **No persistence by default.** State lives in memory. Persistence is the thing the prototype is _checking_, not something it should depend on.
+4. **Skip the polish.** No tests, no error handling beyond what makes the prototype _runnable_, no abstractions. The point is to learn something fast.
+5. **Surface the state.** After every action, render the full relevant state so the user can see what changed.
+6. **Capture it when done.** The validated decision reaches the real code when that work is built (for a `wayfinder` map, after its destination). Capture the prototype itself as a **primary source**: publish it as a throwaway `prototype/<slug>` branch, pushed with no PR and never merged, without touching the shared checkout (`.agents/skills/wayfinder/references/github-issues.md`, _Publish an asset branch_). Capture the answer too (the verdict and the question it settled) with a context pointer to that branch: in a `wayfinder` ticket's resolution comment, or as a Decisions entry in the backlog record it informs. `main` keeps only the validated decision.
 
 ## When this is the right shape
 
@@ -11,7 +25,7 @@ Because it's one file with nothing to install, you can hand it to a non-develope
 - "I want to feel out what the API should look like before writing it."
 - Anything where someone wants to **press buttons and watch state change**.
 
-If the question is "what should this look like," this is the wrong branch. Use [UI.md](UI.md).
+If the question is "what should this look like", this is the wrong skill: use `ux-prototypes`.
 
 ## Process
 
@@ -30,13 +44,13 @@ The right shape depends on the question:
 - **A small set of pure functions** over a plain data type. Good when there's no implicit current state, just transformations.
 - **A class or module with a clear method surface** when the logic genuinely owns ongoing internal state.
 
-Pick whichever shape best fits the question being asked, *not* whichever is easiest to wire to a page. Keep it pure: no DOM, no `document`, no button handlers reaching inside it. The page calls into it; nothing flows the other direction. This is what makes the prototype useful past its own lifetime: once the question's answered, the validated reducer / machine / function set lifts into the real module on its own.
+Pick whichever shape best fits the question being asked, _not_ whichever is easiest to wire to a page. Keep it pure: no DOM, no `document`, no button handlers reaching inside it. The page calls into it; nothing flows the other direction. This is what makes the prototype useful past its own lifetime: once the question's answered, the validated reducer / machine / function set lifts into the real module on its own.
 
 ### 3. Build the shareable HTML file
 
 One file, plain HTML/CSS/JS: no framework, no bundler, no server, everything inline so it opens by double-click and survives being emailed around. Anyone should be able to run it by opening it.
 
-Write it for a non-developer. Every label is in **domain language**, not code: buttons and state read like the business, not the reducer. Explain in plain words what's happening.
+Write it for a non-developer. Every label is in **domain language**, the terms of `docs/GLOSSARY.md`, not code: buttons and state read like the business, not the reducer. Explain in plain words what's happening.
 
 Lay it out with a clean hierarchy, top to bottom:
 
@@ -55,7 +69,7 @@ Send them the file, or open it for them. They'll click through the walkthroughs 
 
 ### 5. Capture the answer and the prototype
 
-Once the prototype has answered its question, capture the answer, then capture the prototype the way the [SKILL](SKILL.md) describes. The logic-specific mapping: the validated reducer / machine / function set lifts into the real module (the decision, absorbed); the HTML shell rides along to the throwaway branch that keeps the prototype as a primary source, and being one self-contained file, it stays trivially re-runnable there.
+Once the prototype has answered its question, capture the answer, then capture the prototype as _Capture it when done_ describes. The logic-specific mapping: the validated reducer / machine / function set lifts into the real module (the decision, absorbed); the HTML shell rides along to the throwaway branch that keeps the prototype as a primary source, and being one self-contained file, it stays trivially re-runnable there.
 
 ## Anti-patterns
 

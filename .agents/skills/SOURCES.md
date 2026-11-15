@@ -15,6 +15,7 @@ license is preserved in `mattpocock-LICENSE`.
 | `writing-for-agents`            | `skills/productivity/writing-for-agents`           |
 | `grilling`                      | `skills/productivity/grilling`                     |
 | `wayfinder`                     | `skills/engineering/wayfinder` (at `5863806`)      |
+| `logic-prototype`               | `skills/engineering/prototype` (at `5863806`)      |
 
 `shadcn` and `playwright-cli` come from their tools' own distributions (the
 shadcn CLI and `@playwright/cli`; revisions unrecorded). `implement-story`,
@@ -37,10 +38,14 @@ shadcn CLI and `@playwright/cli`; revisions unrecorded). `implement-story`,
 - `shadcn` and `playwright-cli` open with a local preface: this repository's
   guides and `pnpm` take precedence over the upstream examples.
 - `wayfinder` tracks its maps as GitHub issues (`references/github-issues.md`
-  replaces upstream's tracker setup), briefs research subagents and logic
-  prototypes itself in place of upstream's `research` and `prototype` skills,
-  hands UI questions to `ux-prototypes`, and ends by writing the destination
+  replaces upstream's tracker setup), briefs research subagents itself in
+  place of upstream's `research` skill, hands prototype tickets to
+  `ux-prototypes` or `logic-prototype`, and ends by writing the destination
   into `docs/` records.
+- `logic-prototype` is upstream's `prototype` with only its logic branch:
+  `LOGIC.md` is merged into `SKILL.md`, and `UI.md` is dropped, since UI
+  questions go to `ux-prototypes`. Prototypes publish to a throwaway branch
+  without touching the shared checkout.
 - `retro` keeps the upstream improvement categories inside this repository's
   delivery flow: after the primary PR is raised, on its own branch and PR.
 

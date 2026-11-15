@@ -1,6 +1,6 @@
 # DEF-013: A test checks the roadmap dialog's opening focus before it has moved
 
-- **Status**: Proposed — owner, 2026-11-15 (D1); high priority, before DEF-014 and DEF-015
+- **Status**: Done
 - **Severity**: Low — a Verify run fails now and then on a change that does not touch
   the file, and a rerun passes; no user is affected
 - **Area**: Features/UI
@@ -68,4 +68,34 @@ and a sibling site that reads an opening focus without waiting is checked the sa
   and a rule that a dialog's opening focus is read through it goes in the narrowest
   guide by the ladder in `docs/operations/authoring-agent-instructions.md`.
 
-## Delivery _(add on delivery; as in `story.md`)_
+## Delivery
+
+The cause was as stated. `expectOpeningFocus` (`features/roadmaps/testing/opening-focus.ts`)
+waits, with `waitFor`, for a field to hold focus, and every site that reads the focus a
+dialog or an opened field moves to goes through it: the eight in Cause; the three that
+already waited by hand (`roadmap-detail-page-editing.test.tsx`,
+`roadmap-detail-page-adding.test.tsx`); and the others the read-through found: an opened
+field's first focus in `opening-field.test.tsx` (three), the tags field's Rename and
+Add a tag, the details field's outline and the organisations field's first box. A
+`toHaveFocus` after an action (Done refused, an undo, a close) is left as it was: focus
+moves there as part of the action. The rule is `src/features/roadmaps/AGENTS.md`, the
+nearest guide to every site.
+
+### Departures
+
+- **A new nested guide** (agent): no guide sat nearer the sites than the root, whose
+  rule would cost every task; `src/features/roadmaps/AGENTS.md` and its `CLAUDE.md`
+  are new, for this one rule.
+- **No screenshots** (agent): no visible UI changes.
+
+### Contract for dependents
+
+A test that opens a dialog or a field and reads where focus went calls
+`expectOpeningFocus(field)`; the helper's own test is
+`testing/opening-focus.test.ts`.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                             |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `opening-focus.test.ts` (waits for focus that moves after the field is found; fails when it never does), red before the helper existed. On the page, with every `focus()` deferred 100 ms in `src/test/setup.ts` (a scratch edit, reverted), "edits the roadmap's five fields" failed at its old line 383 with focus still on the Edit button, and passes that line with the helper |

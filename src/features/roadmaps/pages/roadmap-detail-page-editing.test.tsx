@@ -37,6 +37,7 @@ import {
   editRoadmapText,
   openEditRoadmapDialog,
 } from "../testing/roadmap-dialog"
+import { expectOpeningFocus } from "../testing/opening-focus"
 
 const roadmaps: Roadmap[] = [
   createTestRoadmap("producta", "Product A roadmap", {
@@ -154,9 +155,7 @@ describe("Editing a roadmap's items (STY-025)", () => {
     const form = await openEditItemDialog(user, "First, edited")
 
     expect(form.getByRole("form", { name: "Edit this item" })).toBeVisible()
-    await waitFor(() => {
-      expect(form.getByRole("textbox", { name: "Title" })).toHaveFocus()
-    })
+    await expectOpeningFocus(form.getByRole("textbox", { name: "Title" }))
     expect(form.getByRole("textbox", { name: "Title" })).toHaveValue(
       "First, edited",
     )
@@ -380,7 +379,7 @@ describe("Editing what a roadmap is about (STY-025)", () => {
           (field) => (field as HTMLInputElement | HTMLTextAreaElement).value,
         ),
     ).toEqual(["Product A roadmap", "Live", "", "A clear vision.", ""])
-    expect(form.getByRole("textbox", { name: "Title" })).toHaveFocus()
+    await expectOpeningFocus(form.getByRole("textbox", { name: "Title" }))
     await user.clear(form.getByRole("textbox", { name: "Title" }))
     await user.type(
       form.getByRole("textbox", { name: "Title" }),

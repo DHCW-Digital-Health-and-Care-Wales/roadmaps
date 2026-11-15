@@ -28,6 +28,7 @@ import {
   confirmRoadmapEdit,
   openEditRoadmapDialog,
 } from "../testing/roadmap-dialog"
+import { expectOpeningFocus } from "../testing/opening-focus"
 
 const roadmaps: Roadmap[] = [
   createTestRoadmap("outpatient-booking", "Outpatient Booking roadmap", {
@@ -158,7 +159,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
       expect(others).toEqual([])
       await user.click(inPanel)
 
-      expect(dialog().getByRole("textbox", { name: "Title" })).toHaveFocus()
+      await expectOpeningFocus(dialog().getByRole("textbox", { name: "Title" }))
     })
 
     it.each([
@@ -240,7 +241,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
     const form = await openDialog(user)
 
     const title = form.getByRole("textbox", { name: "Title" })
-    expect(title).toHaveFocus()
+    await expectOpeningFocus(title)
     expect(title).toBeRequired()
     expect(title).toHaveAccessibleDescription("The name the public site shows.")
     expect(form.getByRole("textbox", { name: "Short name" })).toBeRequired()

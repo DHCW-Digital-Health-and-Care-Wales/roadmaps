@@ -150,6 +150,23 @@ roadmaps.add.note                    It starts not published, with no items. The
 roadmaps.add.added                   {{title}} was added. It isn't published yet.
 ```
 
+## Pending add
+
+**Shape:** an add that waits for a publish keeps the add dialog's opener, heading and
+confirm button ("Add an item", "Add item"). A second confirm button names what follows
+it ("Add and start another"), and the dialog then says what was added. The line under
+the fields names the button that publishes it, as this roadmap's page words that button.
+What was added is tagged "New" where a change is tagged "Changed", and "Remove" plus its
+subject takes the place of "Undo changes". An empty state that holds the opener says
+what to add.
+
+```
+roadmaps.edit.addItem.note.publish  It stays unpublished until you choose “Publish changes”.
+roadmaps.edit.addItem.note.save     It isn't saved until you choose “Save changes”.
+roadmaps.edit.addItem.added         “{{title}}” was added.
+roadmaps.items.empty.description    Add what the product is doing now, next and later.
+```
+
 ## Move menu
 
 **Shape:** a button that names its verb and, for assistive technology, its subject

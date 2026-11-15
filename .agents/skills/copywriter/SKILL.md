@@ -98,10 +98,9 @@ Google message: the domain and infrastructure layers emit codes (`AppError.kind`
 
 ## Shapes to copy
 
-Canonical patterns for each surface built so far — connect prompt, expired
-session, access error, load error, empty state, loading, page notice, timeout
-warning, status label, count — are in `references/patterns.md`; add a pattern there when the item
-editor sets one (field hint, pending edits, publish confirmation). Start from the shape rather than from a blank line.
+Canonical patterns for each surface built so far are in
+`references/patterns.md`, one heading per surface; add a pattern there in the
+change that sets a new one. Start from the shape rather than from a blank line.
 
 ## Working order
 
@@ -123,8 +122,10 @@ editor sets one (field hint, pending edits, publish confirmation). Start from th
    of them).
 5. Update any Vitest test or Playwright spec asserting a string you changed;
    E2E locates things by accessible name and visible copy (`tests/e2e/AGENTS.md`).
-6. **Welsh is machine-assisted.** Say in the handoff which Welsh strings you
-   added or changed, so a fluent speaker can review them before launch.
+6. **Welsh is machine-assisted**, and a fluent speaker reads all of `cy.ts`
+   before launch (README, _Languages_). List the Welsh strings you added or
+   changed in the PR's Copy section, with any doubt a reviewer raised about
+   one; that read is the launch's, so it is no owner question.
 
 ## Where a budget bites
 

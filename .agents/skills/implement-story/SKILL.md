@@ -114,7 +114,9 @@ intended failure, then implement the smallest coherent change. Slice a large
 story (a new repository method, several routes, a rewritten screen) so each
 scenario's test goes red before the code that passes it. Red shown by breaking
 finished code proves a test discriminates, not that it came first: report it
-as a departure, never as TDD evidence. A Playwright test may follow working
+as a departure, never as TDD evidence. Undo such a break from a copy of the
+file saved before it: `git checkout -- <file>` puts back the last commit,
+without the uncommitted work around the break. A Playwright test may follow working
 code, since its selectors may not exist before; that order is no departure.
 
 A value with no behaviour of its own to assert (a retry count, a chunk group,
@@ -161,9 +163,10 @@ or `quality-review` in the lanes, rounds and runtimes `references/delegation.md`
 sets. Supply requirements and evidence, not
 the implementer's self-assessment. Reviewers inspect their own relevant
 callers and rules; they do not edit or switch the shared checkout. Keep their
-reports separate. Resolve findings, fixing each wherever it recurs rather than
-only at the reported line: for a changed term or label, search the changed
-files and both catalogues for the old form. Repeat affected checks, commit
+reports separate. Resolve findings, fixing each at its cause and wherever it
+recurs, rather than only for the reported trigger or at the reported line:
+ask what else reaches that cause and test it too; for a changed term or
+label, search the changed files and both catalogues for the old form. Repeat affected checks, commit
 fixes and re-review the new head in the lanes and rounds `delegation.md` sets.
 An unavailable reviewer is a stated limitation, not an invented independent
 review.

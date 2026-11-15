@@ -241,6 +241,9 @@ flowchart LR
 - [DEF-012](../defects/DEF-012-an-item-without-an-id-edited-again-before-a-read-is-reported-changed.md):
   an item without an ID, edited again before a read holds its publish, is reported
   changed. Needs triage; found by DEF-009's review.
+- [DEF-013](../defects/DEF-013-a-test-checks-the-roadmap-dialog-s-opening-focus-before-it-moves.md):
+  a test checks the roadmap dialog's opening focus before it has moved, so Verify
+  fails now and then. Needs triage; found by the retro of DEF-009.
 
 ## Related
 

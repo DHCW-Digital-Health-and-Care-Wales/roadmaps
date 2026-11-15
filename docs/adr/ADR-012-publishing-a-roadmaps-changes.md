@@ -140,7 +140,8 @@ edits were made on.
   result (a co-lead changed one of those cells meanwhile) or a failed re-read is
   **unconfirmed**: the edits are kept, and the page
   says the changes may have been published and asks the Product Lead to refresh before
-  anything else, which drops whatever was written (above).
+  anything else, which drops whatever was written (above); the hold replaces the
+  notice (DEF-015 amendments).
 - A publish is never retried automatically.
 
 ### The repository call (amends ADR-002)
@@ -338,8 +339,7 @@ Nothing checks permission in advance.
   roadmap", "Save and publish", adding a roadmap, a family write and matching a roadmap
   to the lists, the last two gaining Option 16's unconfirmed outcome. It replaces
   Option 16's page notice, which let the Product Lead edit and publish meanwhile, and
-  DEF-009's keep-pending rules. Until DEF-015 is delivered, the
-  code does as Option 16 says.
+  DEF-009's keep-pending rules.
 - **The hold is Google Sheets plumbing** (DEF-015 D4), kept in one place so it is
   deleted whole when a database API replaces the spreadsheet. That API's write returns
   what it wrote (`200` with the saved roadmap and items, as an update method returns

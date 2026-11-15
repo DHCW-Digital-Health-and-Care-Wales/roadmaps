@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 
-import { addNewItem, removeNewItem } from "@/domain/roadmap/new-item"
+import { addNewItem } from "@/domain/roadmap/new-item"
 import { NO_CHANGES } from "@/domain/roadmap/roadmap-changes"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 
@@ -159,7 +159,7 @@ describe("createPendingChangesStore", () => {
     const store = createPendingChangesStore()
     store.update("producta", () => retitled)
     store.startPublish("producta")
-    store.finishPublish("producta", { kind: "unconfirmed", action: "publish" })
+    store.finishPublish("producta", { kind: "published", action: "publish" })
     store.removeRoadmap("productb")
     expect(store.getSnapshot().removed.size).toBe(0)
 
@@ -178,57 +178,15 @@ describe("createPendingChangesStore", () => {
     expect(store.getSnapshot().removed.size).toBe(0)
   })
 
-  describe("a published new item no read has held (DEF-009)", () => {
-    /** A store holding two new items of `producta`, with IDs `a` and `b`. */
-    function withTwoNewItems() {
-      const store = createPendingChangesStore()
-      const ids = ["a", "b"]
-      store.update("producta", (changes) =>
-        [
-          { title: "Online booking", placement: "now" },
-          { title: "Text reminders", placement: "next" },
-        ].reduce(
-          (added, input) =>
-            addNewItem(added, input, [], () => ids.shift() ?? ""),
-          changes,
-        ),
-      )
-      return store
-    }
+  it("holds a roadmap's changes from discarding only while a publish of them is under way", () => {
+    const store = createPendingChangesStore()
+    store.update("producta", () => retitled)
+    store.startPublish("producta")
 
-    it("holds that item and every change of its roadmap, leaving another new item and roadmap free", () => {
-      const store = withTwoNewItems()
+    expect(discardable(store.getSnapshot(), "producta")).toBe(false)
+    expect(discardable(store.getSnapshot(), "productb")).toBe(true)
 
-      store.keepPublished("producta", ["a"])
-
-      const snapshot = store.getSnapshot()
-      expect(discardable(snapshot, "producta", "a")).toBe(false)
-      expect(discardable(snapshot, "producta", "b")).toBe(true)
-      expect(discardable(snapshot, "producta")).toBe(false)
-      expect(discardable(snapshot, "productb")).toBe(true)
-    })
-
-    it("is forgotten once it is no longer pending, and its roadmap once none is", () => {
-      const store = withTwoNewItems()
-      store.keepPublished("producta", ["a", "b"])
-
-      store.update("producta", (changes) => removeNewItem(changes, "a"))
-      expect(store.getSnapshot().publishedNewItems.get("producta")).toEqual(
-        new Set(["b"]),
-      )
-
-      store.discard("producta")
-      expect(store.getSnapshot().publishedNewItems.size).toBe(0)
-    })
-
-    it("does not notify when none is kept", () => {
-      const store = withTwoNewItems()
-      const listener = vi.fn()
-      store.subscribe(listener)
-
-      store.keepPublished("producta", [])
-
-      expect(listener).not.toHaveBeenCalled()
-    })
+    store.finishPublish("producta", null)
+    expect(discardable(store.getSnapshot(), "producta")).toBe(true)
   })
 })

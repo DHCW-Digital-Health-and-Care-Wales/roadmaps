@@ -191,6 +191,37 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expectNoAxeViolations(page, theme)
     })
 
+    test("the hold after a publish that couldn't be read back, then a failed Refresh (DEF-015)", async ({
+      page,
+      sheets,
+    }) => {
+      const item = "Example card with every column"
+      await page.goto("./#/roadmaps/producta")
+      await connect(page)
+      const main = page.getByRole("main")
+      const form = await openEditItemDialog(page, item)
+      await form.getByRole("textbox", { name: "Title" }).fill("A clearer card")
+      await form.getByRole("button", { name: "Done" }).click()
+      sheets.failReadsAfterNextWrite(503)
+
+      await main.getByRole("button", { name: "Publish changes" }).click()
+      await page
+        .getByRole("alertdialog")
+        .getByRole("button", { name: "Publish changes" })
+        .click()
+      const hold = page.getByRole("alertdialog", {
+        name: "Your changes were published",
+      })
+      await expect(hold).toBeVisible({ timeout: 15_000 })
+      await expectNoAxeViolations(page, theme)
+
+      await hold.getByRole("button", { name: "Refresh" }).click()
+      await expect(
+        hold.getByText("Couldn't refresh your roadmaps"),
+      ).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+    })
+
     test("publishing a roadmap: its dialog, a refusal, then the published notice (STY-035)", async ({
       page,
       sheets,

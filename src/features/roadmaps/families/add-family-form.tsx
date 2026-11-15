@@ -44,6 +44,9 @@ export function AddFamilyForm({
       onSuccess: (outcome) => {
         if (outcome.status === "saved") {
           onAdded({ kind: "added", name: outcome.family.name.en })
+        } else if (outcome.status === "unconfirmed") {
+          // The app is held, saying the family may have been added (DEF-015).
+          onCancel()
         } else {
           refuse({ name: "taken" })
         }

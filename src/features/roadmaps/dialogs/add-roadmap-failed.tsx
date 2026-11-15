@@ -1,44 +1,34 @@
-import { CircleAlertIcon, TriangleAlertIcon } from "lucide-react"
+import { CircleAlertIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { DismissibleNotice } from "@/components/layout/dismissible-notice"
+import type { AppError } from "@/lib/errors"
 
 import { writeFailureMessage } from "../write-failure-message"
 
-import type { NewRoadmapFailure } from "./use-new-roadmap-form"
-
 export interface AddRoadmapFailedProps {
-  failure: NewRoadmapFailure
+  failure: AppError
   onDismiss: () => void
 }
 
 /**
- * Why a roadmap couldn't be added, and who can put it right; or, when the answer was
- * lost, that it may have been added (STY-041 S7). What was typed stays in the form.
+ * Why a roadmap couldn't be added, and who can put it right (STY-041 S7). What was typed
+ * stays in the form.
  */
 export function AddRoadmapFailed({
   failure,
   onDismiss,
 }: AddRoadmapFailedProps) {
   const { t } = useTranslation()
-  const unconfirmed = failure === "unconfirmed"
   return (
     <DismissibleNotice
       role="alert"
-      variant={unconfirmed ? "warning" : "destructive"}
-      Icon={unconfirmed ? TriangleAlertIcon : CircleAlertIcon}
-      title={t(
-        unconfirmed
-          ? "roadmaps.add.unconfirmed.title"
-          : "roadmaps.add.failed.title",
-      )}
+      variant="destructive"
+      Icon={CircleAlertIcon}
+      title={t("roadmaps.add.failed.title")}
       onDismiss={onDismiss}
     >
-      <p>
-        {unconfirmed
-          ? t("roadmaps.add.unconfirmed.description")
-          : writeFailureMessage(t, "add", failure.kind)}
-      </p>
+      <p>{writeFailureMessage(t, "add", failure.kind)}</p>
     </DismissibleNotice>
   )
 }

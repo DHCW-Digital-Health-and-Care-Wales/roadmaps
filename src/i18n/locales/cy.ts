@@ -193,11 +193,6 @@ export const cy = {
       failed: {
         title: "Doedd dim modd ychwanegu'r map trywydd",
       },
-      unconfirmed: {
-        title: "Efallai bod y map trywydd wedi'i ychwanegu",
-        description:
-          "Cafodd yr ateb ei golli. Canslwch, yna adnewyddwch eich mapiau trywydd i wirio cyn ei ychwanegu eto.",
-      },
       added: "Cafodd {{title}} ei ychwanegu. Dydy e ddim wedi'i gyhoeddi eto.",
     },
     card: {
@@ -513,10 +508,6 @@ export const cy = {
           publish: "Doedd dim modd cyhoeddi {{title}}",
           unpublish: "Doedd dim modd dad-gyhoeddi {{title}}",
         },
-        unconfirmed: {
-          publish: "Efallai bod {{title}} wedi'i gyhoeddi",
-          unpublish: "Efallai bod {{title}} wedi'i ddad-gyhoeddi",
-        },
         refused: {
           description:
             "Byddai ei gyhoeddi yn atal y wefan gyhoeddus rhag diweddaru. Cywirwch y daenlen, yna cyhoeddwch eto.",
@@ -613,14 +604,6 @@ export const cy = {
           removed:
             "Mae rhywun arall wedi tynnu neu newid “{{title}}”, felly doedd dim modd cadw eich newidiadau iddo.",
           otherKept: "Mae eich newidiadau eraill wedi'u cadw yn y tab hwn.",
-        },
-        unconfirmed: {
-          title: {
-            publish: "Efallai bod eich newidiadau wedi'u cyhoeddi",
-            save: "Efallai bod eich newidiadau wedi'u cadw",
-          },
-          description:
-            "Cafodd yr ateb ei golli. Adnewyddwch y map trywydd hwn cyn gwneud unrhyw beth arall.",
         },
       },
     },
@@ -741,6 +724,36 @@ export const cy = {
         entry: "{{name}} ({{code}})",
         none: "Does dim sefydliadau wedi'u rhestru.",
       },
+    },
+    hold: {
+      title: {
+        landed: {
+          publish: "Cafodd eich newidiadau eu cyhoeddi",
+          save: "Cafodd eich newidiadau eu cadw",
+          published: "Cafodd y map trywydd hwn ei gyhoeddi",
+          unpublished: "Cafodd y map trywydd hwn ei ddad-gyhoeddi",
+          added: "Cafodd y map trywydd ei ychwanegu",
+          family: "Cafodd y teulu ei gadw",
+          matched:
+            "Mae'r map trywydd bellach yn cyfateb i'w deulu a'i gategori",
+        },
+        lost: {
+          publish: "Efallai bod eich newidiadau wedi'u cyhoeddi",
+          save: "Efallai bod eich newidiadau wedi'u cadw",
+          published: "Efallai bod y map trywydd hwn wedi'i gyhoeddi",
+          unpublished: "Efallai bod y map trywydd hwn wedi'i ddad-gyhoeddi",
+          added: "Efallai bod y map trywydd wedi'i ychwanegu",
+          family: "Efallai bod y teulu wedi'i gadw",
+          matched:
+            "Efallai bod y map trywydd bellach yn cyfateb i'w deulu a'i gategori",
+        },
+      },
+      description: {
+        landed:
+          "Doedd dim modd diweddaru'r dudalen hon i ddangos hyn. Adnewyddwch cyn bwrw ymlaen.",
+        lost: "Cafodd yr ateb ei golli. Adnewyddwch i wirio cyn bwrw ymlaen.",
+      },
+      reconnect: "Ailgysylltwch i adnewyddu eich mapiau trywydd.",
     },
     disconnect: {
       title: "Cadw eich newidiadau?",

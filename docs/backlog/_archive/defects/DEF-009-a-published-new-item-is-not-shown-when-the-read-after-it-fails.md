@@ -91,7 +91,7 @@ whether it succeeds or fails, leaving the items as cached before the publish.
 - **D2** (owner, 2026-11-15, the owner's triage of the live chores and defects): Q2 yes. A confirmed edit stays pending, with its text, until a read holds it.
 - **D3** (owner, 2026-11-15, Q3): (a). A card D1 keeps pending offers no Remove until a read holds its item; removing a published item stays STY-049's.
 - **D4** (owner, 2026-11-15, grilling of DEF-011 to DEF-014): D1–D3 are replaced by
-  [DEF-015](../../defects/DEF-015-a-write-the-editor-can-t-read-back-leaves-the-app-out-of-step.md):
+  [DEF-015](DEF-015-a-write-the-editor-can-t-read-back-leaves-the-app-out-of-step.md):
   a write the editor can't read back holds the whole app in a dialog until a Refresh
   succeeds, the changes sent still shown pending behind it, so nothing can be added
   twice, edited or removed meanwhile. DEF-015 removes the keep-pending rules built here.

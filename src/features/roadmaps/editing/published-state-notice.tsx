@@ -1,9 +1,4 @@
-import {
-  CircleAlertIcon,
-  CircleCheckIcon,
-  InfoIcon,
-  TriangleAlertIcon,
-} from "lucide-react"
+import { CircleAlertIcon, CircleCheckIcon, InfoIcon } from "lucide-react"
 import type { TFunction } from "i18next"
 import { useTranslation } from "react-i18next"
 
@@ -81,16 +76,6 @@ export function PublishedStateNotice({
             { title },
           ),
           lines: [writeFailureMessage(t, "publish", notice.error)],
-        } as const
-      case "unconfirmed":
-        return {
-          variant: "warning",
-          Icon: TriangleAlertIcon,
-          title: t(
-            `roadmaps.publishRoadmap.notice.unconfirmed.${verb(notice.published)}`,
-            { title },
-          ),
-          lines: [t("roadmaps.publish.notice.unconfirmed.description")],
         } as const
     }
   })()

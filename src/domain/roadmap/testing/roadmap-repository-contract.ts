@@ -1904,6 +1904,23 @@ function describeFamilyChanges(setup: RoadmapRepositoryContractSetup): void {
         ])
       },
     )
+
+    it.each(calls)(
+      "is unconfirmed when %s's answer is lost and the re-read fails (DEF-015)",
+      async (_, call) => {
+        const repository = setup.withRoadmaps(
+          fixtures,
+          {},
+          {
+            write: { lost: "reread-fails" },
+          },
+        )
+
+        await expect(call(repository)).resolves.toEqual({
+          status: "unconfirmed",
+        })
+      },
+    )
   })
 }
 

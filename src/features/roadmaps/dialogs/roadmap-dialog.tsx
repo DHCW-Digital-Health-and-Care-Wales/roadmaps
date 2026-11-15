@@ -7,7 +7,7 @@ import { FormDialog, type FormDialogProps } from "./form-dialog"
 
 /** What the dialog is given to add a roadmap, or to edit the one it is given. */
 type RoadmapDialogForm =
-  | Omit<AddRoadmapFormProps, "labelledBy">
+  | Omit<AddRoadmapFormProps, "labelledBy" | "onClose">
   | Omit<EditRoadmapFormProps, "labelledBy">
 
 export type RoadmapDialogProps = RoadmapDialogForm &
@@ -40,7 +40,7 @@ export function RoadmapDialog({
         editing ? (
           <EditRoadmapForm labelledBy={titleId} {...form} />
         ) : (
-          <AddRoadmapForm labelledBy={titleId} {...form} />
+          <AddRoadmapForm labelledBy={titleId} onClose={onClose} {...form} />
         )
       }
     </FormDialog>

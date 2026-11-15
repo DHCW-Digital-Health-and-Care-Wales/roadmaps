@@ -27,6 +27,8 @@ export interface AddRoadmapFormProps {
   /** The roadmap list as cached, whose addresses a new short name can't have (D7). */
   roadmaps: readonly Roadmap[]
   onAdded: (roadmap: Roadmap) => void
+  /** Closes the dialog, once the answer was lost (DEF-015). */
+  onClose: () => void
 }
 
 /**
@@ -41,12 +43,13 @@ export function AddRoadmapForm({
   labelledBy,
   roadmaps,
   onAdded,
+  onClose,
 }: AddRoadmapFormProps) {
   const { t } = useTranslation()
   const id = useId()
   const { state } = useAuth()
   const connected = state.status === "connected"
-  const form = useNewRoadmapForm({ roadmaps, onAdded })
+  const form = useNewRoadmapForm({ roadmaps, onAdded, onClose })
   const { values, problems, focusRequest, busy } = form
   const choices = useRoadmapChoices(true).fields(null)
   // A list read again, as after a reconnect, may no longer offer what was chosen: the

@@ -13,14 +13,21 @@ import { toAppError, type AppErrorKind } from "@/lib/errors"
 import { localToday } from "@/lib/local-today"
 
 import { useSetRoadmapPublished } from "../hooks/use-set-roadmap-published"
+import { holdAfterWrite, writeAnswer } from "../write-hold/hold-after-write"
+import { roadmapPageReads } from "../write-hold/read-back"
+import { useWriteHold } from "../write-hold/write-hold-context"
 import { discardItems, openConflicts } from "./conflicts"
-import { countChanges, publishesNoItems } from "./pending-changes"
+import {
+  countChanges,
+  publishesNoItems,
+  settlePublished,
+} from "./pending-changes"
 import {
   usePendingChanges,
   usePendingChangesStore,
 } from "./pending-changes-context"
 import { publishAction, type PublishNotice } from "./pending-changes-store"
-import { CURRENT_TEXT, settleReadBack } from "./use-publish"
+import { CURRENT_TEXT } from "./use-publish"
 
 /** What the last publish or unpublish of the roadmap came to, as its page says it. */
 export type PublishedStateOutcomeNotice =
@@ -30,8 +37,6 @@ export type PublishedStateOutcomeNotice =
   /** Publishing was refused, as the public site's sync would fail (S4). */
   | { kind: "unpublishable"; problems: PublishProblem[]; kept: boolean }
   | { kind: "failed"; published: boolean; error: AppErrorKind; kept: boolean }
-  /** The answer was lost (S10); with pending edits sent, the store says so instead. */
-  | { kind: "unconfirmed"; published: boolean }
 
 /** What the action asks, as its dialog says it. */
 export interface PublishedStateQuestion {
@@ -80,8 +85,11 @@ export interface PublishedState {
 /**
  * Publishing or unpublishing a roadmap from its page (STY-035): asked first, then
  * written at once. Publishing sends the roadmap's pending edits with it, through the
- * pending-edit store as a publish of them goes, so a conflict opens its review and a
- * lost answer waits for a Refresh (S5, S6, S10); unpublishing leaves them pending (S7).
+ * pending-edit store as a publish of them goes, so a conflict opens its review (S5, S6);
+ * unpublishing leaves them pending (S7). Once the roadmap and its items are not read
+ * back after a write that landed, or its answer was lost, the app is held until a
+ * Refresh reads them (DEF-015), any edits sent still pending; one that landed then
+ * settles and says so.
  * Publishing can also set the roadmap's `Last updated` to today (STY-036 D10). It is
  * still allowed when the public would see no items, which the question then says, going
  * by `items`, the roadmap's items once read (STY-042 D3). Unavailable unless connected,
@@ -92,6 +100,7 @@ export function usePublishedState(
   items: readonly RoadmapItem[] | undefined,
 ): PublishedState {
   const store = usePendingChangesStore()
+  const hold = useWriteHold()
   const snapshot = usePendingChanges()
   const connected = useAuth().state.status === "connected"
   const { mutateAsync, writing, readBack } = useSetRoadmapPublished(roadmap, {
@@ -147,14 +156,42 @@ export function usePublishedState(
             }
           : { published: false },
       )
+      const holding = holdAfterWrite(
+        hold,
+        {
+          write: publishing ? "published" : "unpublished",
+          reads: roadmapPageReads(roadmap.id),
+        },
+        writeAnswer(result.status, "set"),
+        readBack(),
+      )
       switch (result.status) {
-        case "set":
-          if (sent) settleReadBack(store, roadmap.id, sent, readBack())
-          shown = { kind: "set", published: publishing, withChanges: kept }
+        case "set": {
+          const set: PublishedStateOutcomeNotice = {
+            kind: "set",
+            published: publishing,
+            withChanges: kept,
+          }
+          const settle = () => {
+            if (sent) {
+              store.update(roadmap.id, (changes) =>
+                settlePublished(changes, sent),
+              )
+            }
+          }
+          if (!holding) {
+            settle()
+            shown = set
+            break
+          }
+          void holding.then(() => {
+            settle()
+            setNotice(set)
+          })
           break
+        }
         case "unconfirmed":
-          if (sent) stored = { action, kind: "unconfirmed" }
-          else shown = { kind: "unconfirmed", published: publishing }
+          // Held above, by `holdAfterWrite` (DEF-015).
           break
         case "refused":
           store.update(roadmap.id, (later) =>

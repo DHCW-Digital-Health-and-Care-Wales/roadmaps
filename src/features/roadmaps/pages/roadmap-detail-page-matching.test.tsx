@@ -1,9 +1,10 @@
 import { act, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { RepositoryReadOptions } from "@/domain/roadmap/roadmap-repository"
+import type { ContractWrite } from "@/domain/roadmap/testing/contract-write"
 import { AppError } from "@/lib/errors"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
@@ -11,6 +12,7 @@ import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
 import { createInMemoryRoadmapRepository } from "../testing/in-memory-roadmap-repository"
+import { expectWriteHold, refreshHold } from "../testing/write-hold"
 
 const outOfStep = (overrides: Partial<Roadmap> = {}) =>
   createTestRoadmap("producta", "Product A roadmap", {
@@ -21,7 +23,7 @@ const outOfStep = (overrides: Partial<Roadmap> = {}) =>
     ...overrides,
   })
 
-async function renderPage(roadmap: Roadmap, write?: { fails: "forbidden" }) {
+async function renderPage(roadmap: Roadmap, write?: ContractWrite) {
   const user = userEvent.setup()
   const repository = createInMemoryRoadmapRepository(
     [roadmap],
@@ -54,6 +56,45 @@ describe("making a roadmap match its lists (STY-030)", () => {
     expect(main.queryByRole("button", { name: /Make it match/ })).toBeNull()
     expect(main.queryByText("Doesn't match its family or category")).toBeNull()
     expect((await repository.listRoadmaps())[0]?.outOfStep).toBe(false)
+  })
+
+  it("holds the app once a match isn't read back, until a Refresh reads it (DEF-015 S1, S3)", async () => {
+    const { user, main, repository } = await renderPage(
+      outOfStep({ published: false }),
+    )
+    const reads = vi
+      .spyOn(repository, "listRoadmaps")
+      .mockRejectedValue(new AppError("network"))
+
+    await user.click(main.getByRole("button", { name: /Make it match/ }))
+
+    const hold = await expectWriteHold(
+      "The roadmap now matches its family and category",
+    )
+    reads.mockRestore()
+    await refreshHold(user, hold)
+    expect(
+      main.getByText("Product A roadmap now matches its family and category"),
+    ).toBeVisible()
+    expect(main.queryByRole("button", { name: /Make it match/ })).toBeNull()
+  })
+
+  it("holds the app, saying nothing more, when the answer is lost (DEF-015 S2)", async () => {
+    const { user, main } = await renderPage(outOfStep({ published: false }), {
+      lost: "reread-fails",
+    })
+
+    await user.click(main.getByRole("button", { name: /Make it match/ }))
+
+    const hold = await expectWriteHold(
+      "The roadmap may now match its family and category",
+    )
+    expect(
+      within(screen.getByRole("main", { hidden: true })).queryByText(
+        /now matches its family and category/,
+      ),
+    ).toBeNull()
+    expect(hold).toBeInTheDocument()
   })
 
   it("tells a published roadmap's reader first, writing nothing until they confirm (S2)", async () => {

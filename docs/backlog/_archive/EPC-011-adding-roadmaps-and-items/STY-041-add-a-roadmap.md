@@ -167,11 +167,10 @@ phone width; S6 and S7 can be component tests against the in-memory double.
   end-to-end suite is getting long. Changes: Tests, and the Playwright runs the
   Scenario evidence cites for S1–S3 and S5.
 - **D10** (owner, 2026-11-15, grilling of DEF-011 to DEF-014, recorded by
-  [DEF-015](../../defects/DEF-015-a-write-the-editor-can-t-read-back-leaves-the-app-out-of-step.md)
+  [DEF-015](../defects/DEF-015-a-write-the-editor-can-t-read-back-leaves-the-app-out-of-step.md)
   D3): S7's "may have been applied" notice in the dialog ("Cancel, then refresh your
   roadmaps") goes: a lost answer, or a read after the write that fails, holds the
-  whole app in a dialog until a Refresh reads the roadmaps. Until DEF-015 is
-  delivered, S7 stands.
+  whole app in a dialog until a Refresh reads the roadmaps. DEF-015 delivered it.
 
 ## Starting point
 

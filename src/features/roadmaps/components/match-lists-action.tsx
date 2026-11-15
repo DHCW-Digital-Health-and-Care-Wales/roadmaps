@@ -74,6 +74,8 @@ export function MatchListsAction({ roadmap }: MatchListsActionProps) {
     setNotice(null)
     match.mutate(roadmap, {
       onSuccess: (outcome: MatchOutcome) => {
+        // The app is held, saying the roadmap may now match (DEF-015).
+        if (outcome.status === "unconfirmed") return
         setNotice(
           outcome.status === "matched"
             ? { kind: "matched", published: roadmap.published }

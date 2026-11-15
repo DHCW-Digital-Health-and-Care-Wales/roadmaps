@@ -22,6 +22,7 @@ import { renderWithProviders } from "@/test/render-with-providers"
 
 import { holdCall } from "../testing/held-call"
 import { createInMemoryRoadmapRepository } from "../testing/in-memory-roadmap-repository"
+import { expectWriteHold, refreshHold } from "../testing/write-hold"
 
 function member(id: string, title: string, published: boolean): Roadmap {
   return createTestRoadmap(id, title, {
@@ -133,6 +134,50 @@ describe("FamiliesPage (STY-029)", () => {
       await main().findByRole("heading", { level: 3, name: "Dental" }),
     ).toBeInTheDocument()
     expect(main().getByText("#00796b")).toBeInTheDocument()
+  })
+
+  it("holds the app once a family added isn't read back, until a Refresh reads it (DEF-015 S1, S3)", async () => {
+    const repository = repositoryWith()
+    const { user } = await renderPage(repository)
+    await user.click(
+      await main().findByRole("button", { name: "Add a family" }),
+    )
+    const form = within(main().getByRole("form", { name: "Add a family" }))
+    await user.type(form.getByLabelText("Name"), "Dental")
+    await user.type(form.getByLabelText("Colour"), "#00796B")
+    const reads = vi
+      .spyOn(repository, "listFamilies")
+      .mockRejectedValue(new AppError("network"))
+
+    await user.click(form.getByRole("button", { name: "Add family" }))
+
+    const hold = await expectWriteHold("The family was saved")
+    reads.mockRestore()
+    await refreshHold(user, hold)
+    expect(main().getByRole("status")).toHaveTextContent("Dental added")
+    expect(
+      main().getByRole("heading", { level: 3, name: "Dental" }),
+    ).toBeInTheDocument()
+  })
+
+  it("closes the form, holding the app, when the answer is lost (DEF-015 S2)", async () => {
+    const addFamily = vi
+      .fn<RoadmapRepository["addFamily"]>()
+      .mockResolvedValue({ status: "unconfirmed" })
+    const { user } = await renderPage(repositoryWith({ addFamily }))
+    await user.click(
+      await main().findByRole("button", { name: "Add a family" }),
+    )
+    const form = within(main().getByRole("form", { name: "Add a family" }))
+    await user.type(form.getByLabelText("Name"), "Dental")
+    await user.type(form.getByLabelText("Colour"), "#00796B")
+
+    await user.click(form.getByRole("button", { name: "Add family" }))
+
+    const hold = await expectWriteHold("The family may have been saved")
+    await refreshHold(user, hold)
+    expect(main().queryByRole("form", { name: "Add a family" })).toBeNull()
+    expect(main().queryByRole("status")).toBeNull()
   })
 
   it("says what is wrong with each field, and writes nothing (S6)", async () => {

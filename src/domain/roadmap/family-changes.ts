@@ -57,6 +57,8 @@ export type FamilyOutcome =
   | { status: "members-changed"; members: Roadmap[] }
   /** The family is no longer listed. */
   | { status: "family-not-found" }
+  /** The answer was lost and a re-read failed: the family may have been saved (DEF-015). */
+  | { status: "unconfirmed" }
 
 interface Settled {
   kind: "settled"

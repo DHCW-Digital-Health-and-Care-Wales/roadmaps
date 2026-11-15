@@ -1,6 +1,6 @@
 # DEF-012: An item without an ID, edited again before a read holds its publish, is reported changed
 
-- **Status**: Superseded — by [DEF-015](../../defects/DEF-015-a-write-the-editor-can-t-read-back-leaves-the-app-out-of-step.md), owner, 2026-11-15 (D1); archived
+- **Status**: Superseded — by [DEF-015](DEF-015-a-write-the-editor-can-t-read-back-leaves-the-app-out-of-step.md), owner, 2026-11-15 (D1); archived
 - **Severity**: Low — the second edit is discarded with "changed since you opened it",
   and the Product Lead redoes it after a Refresh
 - **Area**: Features (pending-edit rules)
@@ -51,7 +51,7 @@ fix the publish but hide the kept edit from the card (DEF-009 S2).
 ## Decisions
 
 - **D1** (owner, 2026-11-15, grilling of DEF-011 to DEF-014, Q6–Q9): Superseded by
-  [DEF-015](../../defects/DEF-015-a-write-the-editor-can-t-read-back-leaves-the-app-out-of-step.md).
+  [DEF-015](DEF-015-a-write-the-editor-can-t-read-back-leaves-the-app-out-of-step.md).
   Rather than teach the pending-edit rules to tell a kept edit from an ordinary one, a
   write the editor can't read back holds the app until a Refresh succeeds, so this
   sequence can't be reached (DEF-015 S7), and DEF-009's re-basing is removed. A

@@ -14,7 +14,7 @@ import {
   usePendingChanges,
   usePendingChangesStore,
 } from "./pending-changes-context"
-import { awaitingRefresh, discardable } from "./pending-changes-store"
+import { discardable } from "./pending-changes-store"
 
 export interface EditableItemCardProps {
   roadmapId: string
@@ -75,12 +75,9 @@ export function EditableItemCard({
   const snapshot = usePendingChanges()
   const { shown, entry } = pageItem
   const isNew = pageItem.newItemId !== undefined
-  // Nothing is behind a new item: once it is sent, or may be or was published unseen,
-  // a change to it would be lost as the item read takes its place, so it waits, as
-  // "Discard all" does.
-  const changeable =
-    !isNew || discardable(snapshot, roadmapId, pageItem.newItemId)
-  const droppable = isNew ? changeable : !awaitingRefresh(snapshot, roadmapId)
+  // Nothing is behind a new item: once it is sent, a change to it would be lost as the
+  // item read takes its place, so it waits, as "Discard all" does.
+  const changeable = !isNew || discardable(snapshot, roadmapId)
   const ownEditButton = useRef<HTMLButtonElement>(null)
   const editButton = dialogOpener ?? ownEditButton
   const moveButton = useRef<HTMLButtonElement>(null)
@@ -102,7 +99,7 @@ export function EditableItemCard({
     onFocusRequest(position, "move")
   }
   const drop = () => {
-    if (!droppable) return
+    if (!changeable) return
     store.update(roadmapId, (changes) =>
       dropPageItem(changes, items, pageItem, position),
     )
@@ -120,7 +117,6 @@ export function EditableItemCard({
         <EditControls
           subject={title}
           pending={isNew ? "new" : entry && "changed"}
-          droppable={droppable}
           editable={changeable}
           editButton={editButton}
           move={

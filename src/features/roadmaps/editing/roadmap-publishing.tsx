@@ -58,7 +58,6 @@ export function RoadmapPublishing({ roadmap }: RoadmapPublishingProps) {
   const publishing = snapshot.publishing.has(roadmap.id)
   const outcome = snapshot.notices.get(roadmap.id)
   const action = publishAction(roadmap)
-  // Discarding before a Refresh could hide changes an unconfirmed publish wrote (S18).
   const canDiscard = discardable(snapshot, roadmap.id)
   // The store keeps a refusal only while it has something to say.
   const refused = outcome?.kind === "refused" ? outcome : null

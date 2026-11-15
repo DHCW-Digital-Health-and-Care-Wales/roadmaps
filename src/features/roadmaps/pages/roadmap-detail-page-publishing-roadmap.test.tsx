@@ -14,6 +14,7 @@ import { renderWithProviders } from "@/test/render-with-providers"
 
 import { createInMemoryRoadmapRepository } from "../testing/in-memory-roadmap-repository"
 import { editRoadmapText } from "../testing/roadmap-dialog"
+import { expectWriteHold } from "../testing/write-hold"
 
 const draft = createTestRoadmap("producta", "Product A roadmap", {
   published: false,
@@ -321,20 +322,21 @@ describe("publishing or unpublishing a roadmap (STY-035)", () => {
     expect((await repository.listRoadmaps())[0]?.published).toBe(false)
   })
 
-  it("asks for a refresh when the answer is lost and a re-read can't settle it (S10)", async () => {
-    const { user, main } = await renderPage({
+  it("holds the app when the answer is lost, until a Refresh reads the roadmap (S10, DEF-015 S2, S3)", async () => {
+    const { user } = await renderPage({
       write: { lost: "reread-fails" },
     })
 
     await choose(user, "Publish roadmap")
 
+    const hold = await expectWriteHold("This roadmap may have been published")
+    expect(hold).toHaveAccessibleDescription(
+      "The answer was lost. Refresh to check before you carry on.",
+    )
+    // The data source still can't be read.
+    await user.click(within(hold).getByRole("button", { name: "Refresh" }))
     expect(
-      await main.findByText("Product A roadmap may have been published"),
-    ).toBeVisible()
-    expect(
-      main.getByText(
-        "The answer was lost. Refresh this roadmap before you do anything else.",
-      ),
+      await within(hold).findByText("Couldn't refresh your roadmaps"),
     ).toBeVisible()
   })
 

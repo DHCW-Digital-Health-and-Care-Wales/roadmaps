@@ -29,6 +29,7 @@ import {
   openEditRoadmapDialog,
 } from "../testing/roadmap-dialog"
 import { expectOpeningFocus } from "../testing/opening-focus"
+import { expectWriteHold, refreshHold } from "../testing/write-hold"
 
 const roadmaps: Roadmap[] = [
   createTestRoadmap("outpatient-booking", "Outpatient Booking roadmap", {
@@ -575,7 +576,16 @@ describe("adding a roadmap from the list (STY-041)", () => {
       )
       await submit(user)
 
-      const page = await findRoadmapPage("Patient Summary roadmap")
+      // The list isn't read back, so the app is held over the roadmap's page (DEF-015).
+      await expectWriteHold("The roadmap was added")
+      const page = within(screen.getByRole("main", { hidden: true }))
+      expect(
+        page.getByRole("heading", {
+          level: 1,
+          name: "Patient Summary roadmap",
+          hidden: true,
+        }),
+      ).toBeInTheDocument()
       expect(page.getByText(/was added/)).toBeInTheDocument()
       expect(page.queryByText("Roadmap not found")).not.toBeInTheDocument()
     })
@@ -854,27 +864,39 @@ describe("adding a roadmap from the list (STY-041)", () => {
       expect(addRoadmap).toHaveBeenCalledOnce()
     })
 
-    it("says a write that may have been applied may have added it, and to refresh the list", async () => {
+    it("closes, holding the app, when the answer is lost and a check can't settle it (DEF-015 S2)", async () => {
       const { user } = await renderList(
         repositoryWith({ write: { lost: "reread-fails" } }),
       )
-      const form = await openDialog(user)
+      await openDialog(user)
       await fillIn(user)
 
       await submit(user)
 
-      const alert = within(await form.findByRole("alert"))
-      expect(
-        alert.getByText("The roadmap may have been added"),
-      ).toBeInTheDocument()
-      expect(
-        alert.getByText(
-          "The answer was lost. Cancel, then refresh your roadmaps to check before adding it again.",
-        ),
-      ).toBeInTheDocument()
-      expect(form.getByRole("textbox", { name: "Title" })).toHaveValue(
-        "Community Nursing roadmap",
+      const hold = await expectWriteHold("The roadmap may have been added")
+      expect(hold).toHaveAccessibleDescription(
+        "The answer was lost. Refresh to check before you carry on.",
       )
+      expect(
+        screen.queryByRole("dialog", { name: "Add a roadmap", hidden: true }),
+      ).toBeNull()
+    })
+
+    it("holds the app once a roadmap added isn't read back, until a Refresh reads the list (DEF-015 S1, S3)", async () => {
+      const repository = repositoryWith()
+      const listRoadmaps = vi.spyOn(repository, "listRoadmaps")
+      const { user } = await renderList(repository)
+      await openDialog(user)
+      await fillIn(user)
+      listRoadmaps.mockRejectedValue(new AppError("network"))
+
+      await submit(user)
+
+      const hold = await expectWriteHold("The roadmap was added")
+      listRoadmaps.mockRestore()
+      await refreshHold(user, hold)
+      const page = await findRoadmapPage()
+      expect(page.getByText(/was added/)).toBeInTheDocument()
     })
 
     it("drops the failure when the next attempt starts", async () => {

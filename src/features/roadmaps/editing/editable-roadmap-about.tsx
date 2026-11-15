@@ -16,11 +16,9 @@ import {
   type RoadmapValues,
 } from "./pending-changes"
 import {
-  usePendingChanges,
   usePendingChangesStore,
   useRoadmapChanges,
 } from "./pending-changes-context"
-import { awaitingRefresh } from "./pending-changes-store"
 
 export interface EditableRoadmapAboutProps {
   /** The roadmap as last read. */
@@ -38,7 +36,6 @@ export function EditableRoadmapAbout({ roadmap }: EditableRoadmapAboutProps) {
   const { t } = useTranslation()
   const store = usePendingChangesStore()
   const changes = useRoadmapChanges(roadmap.id)
-  const undoable = !awaitingRefresh(usePendingChanges(), roadmap.id)
   // The roadmap as read and as shown when the dialog opened, which its edits are made
   // from: a co-lead's change read while it is open never changes what Done keeps.
   const [opened, setOpened] = useState<{
@@ -63,7 +60,6 @@ export function EditableRoadmapAbout({ roadmap }: EditableRoadmapAboutProps) {
     close()
   }
   const undo = () => {
-    if (!undoable) return
     store.update(roadmap.id, undoRoadmap)
     // "Undo changes" goes with the changes.
     editButton.current?.focus()
@@ -79,7 +75,6 @@ export function EditableRoadmapAbout({ roadmap }: EditableRoadmapAboutProps) {
             pending={
               changedRoadmapFields(changes).length > 0 ? "changed" : undefined
             }
-            droppable={undoable}
             editButton={editButton}
             onEdit={() => {
               setOpened({ read: roadmap, shown })

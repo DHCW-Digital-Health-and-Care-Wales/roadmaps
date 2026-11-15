@@ -99,4 +99,18 @@ describe("createInMemoryRoadmapRepository matching a roadmap to its lists (STY-0
       notApplied.matchRoadmapToLists(outOfStep),
     ).rejects.toMatchObject({ kind: "network" })
   })
+
+  it("is unconfirmed when the re-read fails (DEF-015)", async () => {
+    const repository = createInMemoryRoadmapRepository(
+      [outOfStep],
+      {},
+      {
+        write: { lost: "reread-fails" },
+      },
+    )
+
+    await expect(repository.matchRoadmapToLists(outOfStep)).resolves.toEqual({
+      status: "unconfirmed",
+    })
+  })
 })

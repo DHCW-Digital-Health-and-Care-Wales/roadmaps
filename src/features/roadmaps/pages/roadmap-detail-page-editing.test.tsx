@@ -38,6 +38,7 @@ import {
   editRoadmapText,
   openEditRoadmapDialog,
 } from "../testing/roadmap-dialog"
+import { expectWriteHold, refreshHold } from "../testing/write-hold"
 
 const roadmaps: Roadmap[] = [
   createTestRoadmap("producta", "Product A roadmap", {
@@ -785,36 +786,74 @@ describe("Publishing a roadmap's changes (STY-025)", () => {
     expect(card("First, edited").queryByText("Changed")).toBeNull()
   })
 
-  it("keeps a published edit's text, pending, while the items can't be read back, until a read holds it (DEF-009 S2)", async () => {
+  it.each([
+    [
+      "an item",
+      "listRoadmapItems",
+      (user: User) => editTitle(user, "First item", "First, edited"),
+    ],
+    [
+      "the roadmap",
+      "listRoadmaps",
+      (user: User) => editRoadmapText(user, "Product lead", "Alex Jones"),
+    ],
+  ] as const)(
+    "holds the app once a publish of %s can't be read back, its changes pending behind, until a Refresh reads them (DEF-015 S1, S3, S5, S6)",
+    async (_, read, edit) => {
+      const repository = createInMemoryRoadmapRepository(roadmaps, roadmapItems)
+      const { user } = await renderPage({ repository })
+      await edit(user)
+      const reads = vi
+        .spyOn(repository, read)
+        .mockRejectedValue(new AppError("network"))
+
+      await publish(user)
+
+      const hold = await expectWriteHold("Your changes were published")
+      expect(hold).toHaveAccessibleDescription(
+        "This page couldn't be updated to show it. Refresh before you carry on.",
+      )
+      await user.keyboard("{Escape}")
+      expect(hold).toBeInTheDocument()
+      const page = within(screen.getByRole("main", { hidden: true }))
+      expect(page.getByText("1 unpublished change")).toBeInTheDocument()
+      expect(page.queryByText(/^Changes published\./)).toBeNull()
+
+      const refresh = within(hold).getByRole("button", { name: "Refresh" })
+      await user.click(refresh)
+      expect(
+        await within(hold).findByText("Couldn't refresh your roadmaps"),
+      ).toBeInTheDocument()
+      expect(refresh).toHaveFocus()
+
+      reads.mockRestore()
+      await refreshHold(user, hold)
+
+      expect(main().getByText(/^Changes published\./)).toBeVisible()
+      expect(main().queryByText(/unpublished change/)).toBeNull()
+      expect(main().queryByText("Changed")).toBeNull()
+    },
+  )
+
+  it("holds the app once the organisations can't be read after a publish, until a Refresh reads them (DEF-015 S1, S3)", async () => {
     const repository = createInMemoryRoadmapRepository(roadmaps, roadmapItems)
     const { user } = await renderPage({ repository })
     await editTitle(user, "First item", "First, edited")
     const reads = vi
-      .spyOn(repository, "listRoadmapItems")
+      .spyOn(repository, "listOrganisations")
       .mockRejectedValue(new AppError("network"))
 
     await publish(user)
 
-    // The dialog stays until the failing reads have given up.
-    await vi.waitFor(() => {
-      expect(main().getByText(/^Changes published\./)).toBeVisible()
-    })
-    expect(
-      await main().findByText("Couldn't refresh this roadmap's items"),
-    ).toBeInTheDocument()
-    expect(card("First, edited").getByText("Changed")).toBeVisible()
-    expect(main().getByText("1 unpublished change")).toBeInTheDocument()
-
+    const hold = await expectWriteHold("Your changes were published")
     reads.mockRestore()
-    await user.click(main().getByRole("button", { name: "Refresh" }))
+    await refreshHold(user, hold)
 
-    await waitFor(() => {
-      expect(card("First, edited").queryByText("Changed")).toBeNull()
-    })
+    expect(main().getByText(/^Changes published\./)).toBeVisible()
     expect(main().queryByText(/unpublished change/)).toBeNull()
   })
 
-  it("publishes an edit made again before a read holds the last publish, as no conflict with it (DEF-009 S2)", async () => {
+  it("publishes an edit made again once the hold has read the last publish, as no conflict with it (DEF-012)", async () => {
     const repository = createInMemoryRoadmapRepository(roadmaps, roadmapItems)
     const { user } = await renderPage({ repository })
     await editTitle(user, "First item", "First, edited")
@@ -822,12 +861,11 @@ describe("Publishing a roadmap's changes (STY-025)", () => {
       .spyOn(repository, "listRoadmapItems")
       .mockRejectedValue(new AppError("network"))
     await publish(user)
-    await vi.waitFor(() => {
-      expect(main().getByText(/^Changes published\./)).toBeVisible()
-    })
+    const hold = await expectWriteHold("Your changes were published")
+    reads.mockRestore()
+    await refreshHold(user, hold)
 
     await editTitle(user, "First, edited", "First, again")
-    reads.mockRestore()
     await publish(user)
 
     await vi.waitFor(() => {
@@ -839,40 +877,6 @@ describe("Publishing a roadmap's changes (STY-025)", () => {
         ({ title }) => title.en,
       ),
     ).toEqual(["First, again", "Second item", "Unplaced item"])
-  })
-
-  it("keeps the roadmap's published text, pending, while the roadmap can't be read back, until a read holds it (DEF-009)", async () => {
-    const repository = createInMemoryRoadmapRepository(roadmaps, roadmapItems)
-    const { user } = await renderPage({ repository })
-    await editRoadmapText(user, "Product lead", "Alex Jones")
-    const reads = vi
-      .spyOn(repository, "listRoadmaps")
-      .mockRejectedValue(new AppError("network"))
-
-    await publish(user)
-
-    // The dialog stays until the failing reads have given up.
-    await vi.waitFor(() => {
-      expect(main().getByText(/^Changes published\./)).toBeVisible()
-    })
-    expect(
-      await main().findByText("Couldn't refresh your roadmaps"),
-    ).toBeInTheDocument()
-    const about = within(
-      main().getByRole("region", { name: "About this roadmap" }),
-    )
-    expect(about.getByText("Alex Jones")).toBeVisible()
-    expect(about.getByText("Changed")).toBeVisible()
-    expect(main().getByText("1 unpublished change")).toBeInTheDocument()
-
-    reads.mockRestore()
-    await user.click(main().getByRole("button", { name: "Refresh" }))
-
-    await waitFor(() => {
-      expect(main().queryByText(/unpublished change/)).toBeNull()
-    })
-    expect(about.getByText("Alex Jones")).toBeVisible()
-    expect(about.queryByText("Changed")).toBeNull()
   })
 
   it("saves an unpublished roadmap, saying nothing goes public (S11)", async () => {
@@ -976,81 +980,54 @@ describe("Publishing a roadmap's changes (STY-025)", () => {
     ).toHaveAttribute("aria-disabled", "true")
   })
 
-  it("says an unconfirmed write may have landed; Refresh clears the notice and drops what was written (S18)", async () => {
+  it("holds the app when the answer is lost; Refresh drops what was written, leaving the rest pending (DEF-015 S2, S5)", async () => {
     const { user } = await renderPage({ write: { lost: "partly-applied" } })
     await editTitle(user, "First item", "First, edited")
     await editTitle(user, "Second item", "Second, edited")
 
     await publish(user)
 
-    const notice = await main().findByRole("alert")
-    expect(notice).toHaveTextContent("Your changes may have been published")
+    const hold = await expectWriteHold("Your changes may have been published")
+    expect(hold).toHaveAccessibleDescription(
+      "The answer was lost. Refresh to check before you carry on.",
+    )
+    await refreshHold(user, hold)
+
     // The second item's title was written; a co-lead wrote over the first's.
-    await main().findByText("1 unpublished change")
+    expect(main().getByText("1 unpublished change")).toBeInTheDocument()
     expect(card("Second, edited").queryByText("Changed")).toBeNull()
     expect(card("First, edited").getByText("Changed")).toBeInTheDocument()
-
-    await user.click(main().getByRole("button", { name: "Refresh" }))
-
-    await vi.waitFor(() => {
-      expect(main().queryByRole("alert")).toBeNull()
-    })
+    expect(main().queryByRole("alert")).toBeNull()
+    expect(main().queryByText(/^Changes published\./)).toBeNull()
   })
 
-  it("keeps saying a write may have landed while Refresh cannot read the roadmap (S18)", async () => {
-    const { user } = await renderPage({ write: { lost: "reread-fails" } })
+  it("offers Reconnect once the session ends, then reads again once connected (DEF-015 S4)", async () => {
+    const { user, authClient } = await renderPage({
+      write: { lost: "partly-applied" },
+    })
     await editTitle(user, "First item", "First, edited")
-
+    await editTitle(user, "Second item", "Second, edited")
     await publish(user)
-    // The dialog stays until the failing re-reads have given up.
-    await vi.waitFor(() => {
-      expect(
-        main().getByText("Your changes may have been published"),
-      ).toBeInTheDocument()
+    const hold = await expectWriteHold("Your changes may have been published")
+
+    act(() => {
+      authClient.setState({ status: "expired" })
     })
 
-    const refresh = main().getByRole("button", { name: "Refresh" })
-    await user.click(refresh)
-
-    await vi.waitFor(() => {
-      expect(refresh).not.toHaveAttribute("aria-busy", "true")
-    })
-    expect(
-      main().getByText("Your changes may have been published"),
-    ).toBeInTheDocument()
-  })
-
-  it("lets nothing drop a change that may have been published until Refresh reads the roadmap (S18)", async () => {
-    const { user } = await renderPage({ write: { lost: "reread-fails" } })
-    await editTitle(user, "First item", "First, edited")
-
-    await publish(user)
-    const notice = await vi.waitFor(() =>
-      main()
-        .getByText("Your changes may have been published")
-        .closest("[role]"),
+    const reconnect = within(hold).getByRole("button", { name: "Reconnect" })
+    expect(reconnect).toHaveFocus()
+    expect(hold).toHaveAccessibleDescription(
+      "The answer was lost. Refresh to check before you carry on. Reconnect to refresh your roadmaps.",
     )
+    await user.click(reconnect)
 
-    expect(notice).not.toBeNull()
-    expect(
-      within(notice as HTMLElement).queryByRole("button", {
-        name: "Dismiss message",
-      }),
-    ).toBeNull()
-    // The dialog stays until the failing re-reads have given up.
-    const discard = await main().findByRole("button", { name: "Discard all" })
-    const undo = main().getByRole("button", {
-      name: "Undo changes First, edited",
+    expect(authClient.connect).toHaveBeenCalledTimes(1)
+    await waitFor(() => {
+      expect(hold).not.toBeInTheDocument()
     })
-    expect(discard).toHaveAttribute("data-disabled")
-    expect(undo).toHaveAttribute("data-disabled")
-    await user.click(discard)
-    await user.click(undo)
-    expect(screen.queryByRole("alertdialog")).toBeNull()
-    expect(main().getByText("1 unpublished change")).toBeInTheDocument()
   })
 
-  it("keeps saying a write may have landed when the session ends during Refresh (S18)", async () => {
+  it("keeps holding when the session ends during Refresh (DEF-015 S3)", async () => {
     const repository = createInMemoryRoadmapRepository(roadmaps, roadmapItems, {
       write: { lost: "partly-applied" },
     })
@@ -1058,9 +1035,7 @@ describe("Publishing a roadmap's changes (STY-025)", () => {
     await editTitle(user, "First item", "First, edited")
     await editTitle(user, "Second item", "Second, edited")
     await publish(user)
-    expect(await main().findByRole("alert")).toHaveTextContent(
-      "Your changes may have been published",
-    )
+    const hold = await expectWriteHold("Your changes may have been published")
     // Reads that never answer, until the session's end cancels them.
     const hang = (options?: RepositoryReadOptions) =>
       new Promise<never>((_, reject) => {
@@ -1073,7 +1048,7 @@ describe("Publishing a roadmap's changes (STY-025)", () => {
       hang(options),
     )
 
-    const refresh = main().getByRole("button", { name: "Refresh" })
+    const refresh = within(hold).getByRole("button", { name: "Refresh" })
     await user.click(refresh)
     await vi.waitFor(() => {
       expect(refresh).toHaveAttribute("aria-busy", "true")
@@ -1087,10 +1062,8 @@ describe("Publishing a roadmap's changes (STY-025)", () => {
     })
     // Let Refresh's cancelled reads settle before looking.
     await act(() => new Promise((resolve) => setTimeout(resolve, 50)))
-    // The session's own alert shows too.
-    expect(
-      main().getByText("Your changes may have been published"),
-    ).toBeInTheDocument()
+    expect(hold).toBeInTheDocument()
+    expect(refresh).toHaveAccessibleName("Reconnect")
   })
 
   it("cannot publish from an open dialog once the session has expired (S12)", async () => {

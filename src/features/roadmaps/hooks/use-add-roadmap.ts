@@ -8,6 +8,7 @@ import type { NewRoadmapInput } from "@/domain/roadmap/new-roadmap"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 
 import { useRoadmapRepository } from "../roadmap-repository-context"
+import { useReadBackOrHold, writeAnswer } from "../write-hold/hold-after-write"
 import { roadmapKeys } from "./roadmap-queries"
 import { patchQueryData } from "./use-publish-roadmap-changes"
 
@@ -19,11 +20,13 @@ const ADD_ROADMAP_KEY = ["add-roadmap"] as const
  * cached list at once, keeping the list's age, so its page opens without waiting for a
  * read; items read earlier under its address were a removed roadmap's, and are
  * forgotten. Whatever the write came to, the list is then read again; so are the family
- * and category lists once a choice was no longer listed.
+ * and category lists once a choice was no longer listed. Once a roadmap added isn't read
+ * back, or the answer was lost, the app is held until a Refresh reads it (DEF-015).
  */
 export function useAddRoadmap() {
   const repository = useRoadmapRepository()
   const queryClient = useQueryClient()
+  const readBackOrHold = useReadBackOrHold()
   return useMutation({
     mutationKey: ADD_ROADMAP_KEY,
     mutationFn: (input: NewRoadmapInput) => repository.addRoadmap(input),
@@ -47,9 +50,12 @@ export function useAddRoadmap() {
         })
       }
     },
-    // Not awaited: the dialog's answer does not wait for the list.
-    onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: roadmapKeys.list() })
+    onSettled: (outcome) => {
+      // Not awaited: the dialog's answer does not wait for the list.
+      void readBackOrHold(
+        { write: "added", reads: ["roadmaps"] },
+        writeAnswer(outcome?.status, "added"),
+      )
     },
   })
 }

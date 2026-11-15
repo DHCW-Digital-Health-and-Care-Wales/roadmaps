@@ -48,9 +48,10 @@ export interface EditControlsProps {
    * tagged "New", which Remove drops (STY-046).
    */
   pending: "changed" | "new" | undefined
-  /** Whether what is pending can be dropped; its button stays focusable when not. */
-  droppable: boolean
-  /** Whether it can be edited now, which it can unless told; Edit stays focusable. */
+  /**
+   * Whether it can be edited, and what is pending dropped, now, which it can unless
+   * told; the buttons stay focusable when not.
+   */
   editable?: boolean
   editButton: RefObject<HTMLButtonElement | null>
   /** A control between the drop button and Edit, such as an item's Move menu (STY-031). */
@@ -67,7 +68,6 @@ export interface EditControlsProps {
 export function EditControls({
   subject,
   pending,
-  droppable,
   editable = true,
   editButton,
   move,
@@ -86,7 +86,7 @@ export function EditControls({
           <Button
             variant="secondary"
             size="sm"
-            disabled={!droppable}
+            disabled={!editable}
             focusableWhenDisabled
             onClick={onDrop}
           >

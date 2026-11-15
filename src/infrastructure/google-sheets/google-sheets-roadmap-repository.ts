@@ -799,12 +799,20 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
 
 /**
  * How a write with no partial outcome settles a lost answer: `sent` when a re-read by
- * `held` finds every write in place, else the failure is rethrown. A re-read that fails
- * finds nothing.
+ * `held` finds every write in place, unconfirmed when the re-read fails (DEF-015), else
+ * the failure is rethrown.
  */
 function whenHeld<Outcome>(sent: Outcome, held: () => Promise<boolean>) {
-  return async (lost: AppError): Promise<Outcome> => {
-    if (!(await held().catch(() => false))) throw lost
+  return async (
+    lost: AppError,
+  ): Promise<Outcome | { status: "unconfirmed" }> => {
+    let found: boolean
+    try {
+      found = await held()
+    } catch {
+      return { status: "unconfirmed" }
+    }
+    if (!found) throw lost
     return sent
   }
 }

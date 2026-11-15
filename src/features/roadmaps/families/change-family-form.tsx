@@ -127,6 +127,11 @@ export function ChangeFamilyForm({
               setConflicts(outcome.conflicts)
               setReviewRequest({})
               return
+            case "unconfirmed":
+              // The app is held, saying the family may have been saved (DEF-015).
+              setConfirming(null)
+              onDone(null)
+              return
           }
         },
         onError: (cause) => {

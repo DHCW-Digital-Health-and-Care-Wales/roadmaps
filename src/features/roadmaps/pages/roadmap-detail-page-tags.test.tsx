@@ -20,6 +20,7 @@ import {
   type InMemoryRoadmapRepository,
 } from "../testing/in-memory-roadmap-repository"
 import { confirmItemEdit, openEditItemDialog } from "../testing/item-dialog"
+import { expectOpeningFocus } from "../testing/opening-focus"
 
 const roadmaps = [createTestRoadmap("producta", "Product A roadmap")]
 
@@ -169,7 +170,7 @@ describe("Editing an item's tags (STY-037)", () => {
 
     const { form, field } = await openTags(user, "Video clinics")
 
-    expect(field.getByRole("textbox", { name: "Add a tag" })).toHaveFocus()
+    await expectOpeningFocus(field.getByRole("textbox", { name: "Add a tag" }))
     expect(form.getByRole("button", { name: "Close tags" })).toHaveAttribute(
       "aria-expanded",
       "true",
@@ -192,7 +193,9 @@ describe("Editing an item's tags (STY-037)", () => {
     await user.click(form.getByRole("button", { name: "Newid tagiau" }))
     const field = within(form.getByRole("group", { name: "Tagiau (Saesneg)" }))
 
-    expect(field.getByRole("textbox", { name: "Ychwanegu tag" })).toHaveFocus()
+    await expectOpeningFocus(
+      field.getByRole("textbox", { name: "Ychwanegu tag" }),
+    )
     expect(
       field.getByRole("button", { name: "Ailenwi Patients" }),
     ).toBeVisible()
@@ -354,7 +357,7 @@ describe("Editing an item's tags (STY-037)", () => {
 
     await user.click(field.getByRole("button", { name: "Rename Patients" }))
     const name = field.getByRole("textbox", { name: "Rename Patients" })
-    expect(name).toHaveFocus()
+    await expectOpeningFocus(name)
     expect(name).toHaveValue("Patients")
     expect(field.getByRole("button", { name: "Update Patients" })).toBeVisible()
     expect(
@@ -604,7 +607,7 @@ describe("Editing an item's tags (STY-037)", () => {
     form.getByRole("button", { name: "Change tags" }).focus()
     await user.keyboard("{Enter}")
     const field = within(form.getByRole("group", { name: "Tags" }))
-    expect(field.getByRole("textbox", { name: "Add a tag" })).toHaveFocus()
+    await expectOpeningFocus(field.getByRole("textbox", { name: "Add a tag" }))
 
     await user.keyboard("Carers{Enter}")
     expect(rowsOf(field)).toEqual(["Patients", "Video consultations", "Carers"])

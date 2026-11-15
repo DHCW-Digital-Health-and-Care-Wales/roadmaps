@@ -6,6 +6,8 @@ import { describe, expect, it, vi } from "vitest"
 import type { Language } from "@/i18n"
 import { renderWithI18n } from "@/test/render-with-i18n"
 
+import { expectOpeningFocus } from "../testing/opening-focus"
+
 import { OpeningField } from "./opening-field"
 
 /**
@@ -120,9 +122,9 @@ describe("OpeningField (EPC-009, a field that opens on request)", () => {
       within(group).getByRole("button", { name: "Remove Ada" }),
     ).toBeVisible()
     // Not the first control of the field, but the one the field names.
-    expect(
+    await expectOpeningFocus(
       within(group).getByRole("textbox", { name: "Add a name" }),
-    ).toHaveFocus()
+    )
     const button = screen.getByRole("button", { name: "Close names" })
     expect(button).toHaveAttribute("aria-expanded", "true")
     expect(button).toHaveAttribute("aria-controls", group.id)
@@ -152,7 +154,9 @@ describe("OpeningField (EPC-009, a field that opens on request)", () => {
   it("moves focus to its button on shutting, where pressing a button does not focus it", async () => {
     const { user } = renderField({ initial: ["Ada"] })
     await user.click(screen.getByRole("button", { name: "Change names" }))
-    expect(screen.getByRole("textbox", { name: "Add a name" })).toHaveFocus()
+    await expectOpeningFocus(
+      screen.getByRole("textbox", { name: "Add a name" }),
+    )
 
     // A click that leaves focus where it was, as Safari's does on a button.
     fireEvent.click(screen.getByRole("button", { name: "Close names" }))
@@ -180,7 +184,9 @@ describe("OpeningField (EPC-009, a field that opens on request)", () => {
     await user.tab()
     expect(screen.getByRole("button", { name: "Change names" })).toHaveFocus()
     await user.keyboard("{Enter}")
-    expect(screen.getByRole("textbox", { name: "Add a name" })).toHaveFocus()
+    await expectOpeningFocus(
+      screen.getByRole("textbox", { name: "Add a name" }),
+    )
 
     await user.tab({ shift: true })
     await user.tab({ shift: true })

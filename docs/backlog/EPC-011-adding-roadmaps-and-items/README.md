@@ -240,10 +240,10 @@ flowchart LR
 - [DEF-012](../_archive/defects/DEF-012-an-item-without-an-id-edited-again-before-a-read-is-reported-changed.md):
   an item without an ID, edited again before a read holds its publish, is reported
   changed. Superseded by DEF-015 (owner, 2026-11-15); found by DEF-009's review.
-- [DEF-013](../defects/DEF-013-a-test-checks-the-roadmap-dialog-s-opening-focus-before-it-moves.md):
+- [DEF-013](../_archive/defects/DEF-013-a-test-checks-the-roadmap-dialog-s-opening-focus-before-it-moves.md):
   a test checks the roadmap dialog's opening focus before it has moved, so Verify
-  fails now and then. Proposed, high priority (owner, 2026-11-15); found by the retro
-  of DEF-009.
+  fails now and then. Done, delivered in its PR and awaiting merge (high priority, owner,
+  2026-11-15); found by the retro of DEF-009.
 - [DEF-014](../defects/DEF-014-publish-roadmap-carries-its-dialog-and-outcome-to-another-roadmap.md):
   "Publish roadmap" carries its dialog and outcome onto another roadmap's page when the
   Product Lead moves between them during the write. Proposed, after DEF-013 (owner,

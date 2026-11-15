@@ -19,6 +19,7 @@ import {
   editItemDialog,
   openEditItemDialog,
 } from "../testing/item-dialog"
+import { expectOpeningFocus } from "../testing/opening-focus"
 
 const roadmaps = [createTestRoadmap("producta", "Product A roadmap")]
 
@@ -356,7 +357,9 @@ describe("The Organisations field opens on request (STY-038)", () => {
     const boxes = group.getAllByRole("checkbox")
     expect(boxes).toHaveLength(7)
     expect(boxes[0]).toHaveAccessibleName("All Wales (National)")
-    expect(boxes[0]).toHaveFocus()
+    await expectOpeningFocus(
+      group.getByRole("checkbox", { name: "All Wales (National)" }),
+    )
     expect(
       group
         .getAllByRole("checkbox", { checked: true })
@@ -393,9 +396,9 @@ describe("The Organisations field opens on request (STY-038)", () => {
   it("moves focus to the button on shutting, where pressing a button does not focus it (S3)", async () => {
     const { user } = await renderPage()
     const group = await openOrganisations(user, "Video clinics")
-    expect(
+    await expectOpeningFocus(
       group.getByRole("checkbox", { name: "All Wales (National)" }),
-    ).toHaveFocus()
+    )
     const form = editItemDialog()
 
     // A click that leaves focus where it was, as Safari's does on a button.
@@ -529,9 +532,9 @@ describe("The Organisations field opens on request (STY-038)", () => {
 
     button().focus()
     await user.keyboard("{Enter}")
-    expect(
+    await expectOpeningFocus(
       form.getByRole("checkbox", { name: "All Wales (National)" }),
-    ).toHaveFocus()
+    )
     await user.keyboard(" ")
     expect(
       form.getByRole("checkbox", { name: "All Wales (National)" }),

@@ -31,6 +31,7 @@ import {
   openAddItemDialog,
   openEditItemDialog,
 } from "../testing/item-dialog"
+import { expectOpeningFocus } from "../testing/opening-focus"
 
 const roadmaps: Roadmap[] = [
   createTestRoadmap("producta", "Product A roadmap"),
@@ -223,9 +224,7 @@ describe("The item dialog, adding (STY-046 S2)", () => {
     const form = await openAddItemDialog(user)
 
     const title = form.getByRole("textbox", { name: "Title" })
-    await waitFor(() => {
-      expect(title).toHaveFocus()
-    })
+    await expectOpeningFocus(title)
     for (const name of ["Title", "Description", "Expected outcome", "Phase"]) {
       expect(form.getByRole("textbox", { name })).toHaveValue("")
     }
@@ -1239,9 +1238,7 @@ describe("An empty roadmap (STY-046 S8)", () => {
 
     await user.click(inPanel)
     const form = addItemDialog()
-    await waitFor(() => {
-      expect(form.getByRole("textbox", { name: "Title" })).toHaveFocus()
-    })
+    await expectOpeningFocus(form.getByRole("textbox", { name: "Title" }))
     await user.click(form.getByRole("button", { name: "Cancel" }))
     await expectDialogClosed()
     await waitFor(() => {

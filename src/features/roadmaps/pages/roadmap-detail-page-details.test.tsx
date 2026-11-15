@@ -22,6 +22,7 @@ import {
   type InMemoryRoadmapRepository,
 } from "../testing/in-memory-roadmap-repository"
 import { confirmItemEdit, openEditItemDialog } from "../testing/item-dialog"
+import { expectOpeningFocus } from "../testing/opening-focus"
 
 const roadmaps = [createTestRoadmap("producta", "Product A roadmap")]
 
@@ -212,7 +213,7 @@ describe("Editing an item's details (STY-039)", () => {
     const only = field.getByRole("textbox", {
       name: "Detail 1 of 1, top level",
     })
-    expect(only).toHaveFocus()
+    await expectOpeningFocus(only)
     await user.keyboard("Evening clinics")
     await confirmItemEdit(user)
 
@@ -233,7 +234,7 @@ describe("Editing an item's details (STY-039)", () => {
         "Detail 4 of 4, top level",
       ],
     )
-    expect(box(field, FOLLOW_UP)).toHaveFocus()
+    await expectOpeningFocus(box(field, FOLLOW_UP))
     expect(form.getByRole("button", { name: "Close details" })).toHaveAttribute(
       "aria-expanded",
       "true",

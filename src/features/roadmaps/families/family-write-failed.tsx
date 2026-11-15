@@ -4,6 +4,8 @@ import { useTranslation } from "react-i18next"
 import { DismissibleNotice } from "@/components/layout/dismissible-notice"
 import type { AppError } from "@/lib/errors"
 
+import { writeFailureMessage } from "../write-failure-message"
+
 export interface FamilyWriteFailedProps {
   action: "add" | "change"
   error: AppError
@@ -26,7 +28,7 @@ export function FamilyWriteFailed({
       onDismiss={onDismiss}
       className="max-w-2xl"
     >
-      <p>{t(`roadmaps.families.errors.${error.kind}`)}</p>
+      <p>{writeFailureMessage(t, "families", error.kind)}</p>
     </DismissibleNotice>
   )
 }

@@ -14,6 +14,7 @@ import { useNoticeDwell } from "@/features/auth/use-notice-dwell"
 import { useLanguage, type Language } from "@/i18n"
 
 import type { PublishedStateOutcomeNotice } from "./use-published-state"
+import { writeFailureMessage } from "../write-failure-message"
 
 export interface PublishedStateNoticeProps {
   notice: PublishedStateOutcomeNotice
@@ -79,7 +80,7 @@ export function PublishedStateNotice({
             `roadmaps.publishRoadmap.notice.failed.${verb(notice.published)}`,
             { title },
           ),
-          lines: [t(`roadmaps.publish.errors.${notice.error}`)],
+          lines: [writeFailureMessage(t, "publish", notice.error)],
         } as const
       case "unconfirmed":
         return {

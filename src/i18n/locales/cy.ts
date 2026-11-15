@@ -159,22 +159,6 @@ export const cy = {
             "Newidiodd y map trywydd hwn tra oeddech chi'n edrych. Chafodd dim byd ei newid.",
           failed: "Doedd dim modd gwneud i'r map trywydd gyfateb",
         },
-        errors: {
-          unauthenticated:
-            "Mae eich sesiwn wedi dod i ben. Ailgysylltwch, yna rhowch gynnig arall arni.",
-          forbidden:
-            "Does gan y cyfrif Google hwn ddim hawl i newid mapiau trywydd. Gofynnwch i berchennog y daenlen am fynediad golygu.",
-          "not-found":
-            "Doedd dim modd dod o hyd i'r daenlen. Gwiriwch ei bod yn dal i fodoli.",
-          "rate-limited":
-            "Mae gormod o geisiadau ar hyn o bryd. Arhoswch funud a rhowch gynnig arall arni.",
-          network:
-            "Methu cysylltu. Gwiriwch eich cysylltiad â'r rhyngrwyd a rhowch gynnig arall arni.",
-          "invalid-response": "Roedd yr ateb mewn fformat annisgwyl.",
-          "invalid-data":
-            "Dydy'r rhestr teuluoedd ddim yn y fformat disgwyliedig yn y daenlen. Gofynnwch i berchennog y daenlen ei gwirio.",
-          unknown: "Aeth rhywbeth o'i le. Rhowch gynnig arall arni.",
-        },
       },
     },
     add: {
@@ -208,22 +192,6 @@ export const cy = {
         "Ailgysylltwch â Google i ychwanegu'r map trywydd. Mae'r hyn rydych wedi'i deipio wedi'i gadw.",
       failed: {
         title: "Doedd dim modd ychwanegu'r map trywydd",
-        errors: {
-          unauthenticated:
-            "Daeth eich sesiwn i ben cyn iddo gael ei ychwanegu. Rhowch gynnig arall arni.",
-          forbidden:
-            "Does gan y cyfrif Google hwn ddim hawl i ychwanegu mapiau trywydd. Gofynnwch i berchennog y daenlen am fynediad golygu.",
-          "not-found":
-            "Doedd dim modd dod o hyd i'r daenlen. Gwiriwch ei bod yn dal i fodoli.",
-          "rate-limited":
-            "Mae gormod o geisiadau ar hyn o bryd. Arhoswch funud a rhowch gynnig arall arni.",
-          network:
-            "Methu cysylltu. Gwiriwch eich cysylltiad â'r rhyngrwyd a rhowch gynnig arall arni.",
-          "invalid-response": "Roedd yr ateb mewn fformat annisgwyl.",
-          "invalid-data":
-            "Mae'r templed ar gyfer mapiau trywydd newydd ar goll neu ddim yn y fformat disgwyliedig yn y daenlen. Gofynnwch i berchennog y daenlen ei wirio.",
-          unknown: "Aeth rhywbeth o'i le. Rhowch gynnig arall arni.",
-        },
       },
       unconfirmed: {
         title: "Efallai bod y map trywydd wedi'i ychwanegu",
@@ -655,20 +623,38 @@ export const cy = {
             "Cafodd yr ateb ei golli. Adnewyddwch y map trywydd hwn cyn gwneud unrhyw beth arall.",
         },
       },
-      errors: {
-        unauthenticated:
-          "Mae eich sesiwn wedi dod i ben. Ailgysylltwch, yna rhowch gynnig arall arni.",
-        forbidden:
-          "Does gan y cyfrif Google hwn ddim hawl i newid y map trywydd hwn. Gofynnwch i berchennog y daenlen am fynediad golygu.",
+    },
+    writeFailure: {
+      action: {
+        lists: "newid mapiau trywydd",
+        publish: "newid y map trywydd hwn",
+        families: "newid teuluoedd",
+        add: "ychwanegu mapiau trywydd",
+      },
+      unauthenticated:
+        "Mae eich sesiwn wedi dod i ben. Ailgysylltwch, yna rhowch gynnig arall arni.",
+      forbidden:
+        "Does gan y cyfrif Google hwn ddim hawl i {{action}}. Gofynnwch i berchennog y daenlen am fynediad golygu.",
+      "not-found":
+        "Doedd dim modd dod o hyd i'r daenlen. Gwiriwch ei bod yn dal i fodoli.",
+      "rate-limited":
+        "Mae gormod o geisiadau ar hyn o bryd. Arhoswch funud a rhowch gynnig arall arni.",
+      network:
+        "Methu cysylltu. Gwiriwch eich cysylltiad â'r rhyngrwyd a rhowch gynnig arall arni.",
+      "invalid-response": "Roedd yr ateb mewn fformat annisgwyl.",
+      "invalid-data":
+        "Dydy'r rhestr teuluoedd ddim yn y fformat disgwyliedig yn y daenlen. Gofynnwch i berchennog y daenlen ei gwirio.",
+      unknown: "Aeth rhywbeth o'i le. Rhowch gynnig arall arni.",
+      publish: {
         "not-found": "Dydy'r map trywydd hwn ddim wedi'i restru mwyach.",
-        "rate-limited":
-          "Mae gormod o geisiadau ar hyn o bryd. Arhoswch funud a rhowch gynnig arall arni.",
-        network:
-          "Methu cysylltu. Gwiriwch eich cysylltiad â'r rhyngrwyd a rhowch gynnig arall arni.",
-        "invalid-response": "Roedd yr ateb mewn fformat annisgwyl.",
         "invalid-data":
           "Dydy'r map trywydd hwn ddim yn y fformat disgwyliedig yn y daenlen. Gofynnwch i berchennog y daenlen ei wirio.",
-        unknown: "Aeth rhywbeth o'i le. Rhowch gynnig arall arni.",
+      },
+      add: {
+        unauthenticated:
+          "Daeth eich sesiwn i ben cyn iddo gael ei ychwanegu. Rhowch gynnig arall arni.",
+        "invalid-data":
+          "Mae'r templed ar gyfer mapiau trywydd newydd ar goll neu ddim yn y fformat disgwyliedig yn y daenlen. Gofynnwch i berchennog y daenlen ei wirio.",
       },
     },
     families: {
@@ -743,22 +729,6 @@ export const cy = {
           add: "Doedd dim modd ychwanegu'r teulu",
           change: "Doedd dim modd newid y teulu",
         },
-      },
-      errors: {
-        unauthenticated:
-          "Mae eich sesiwn wedi dod i ben. Ailgysylltwch, yna rhowch gynnig arall arni.",
-        forbidden:
-          "Does gan y cyfrif Google hwn ddim hawl i newid teuluoedd. Gofynnwch i berchennog y daenlen am fynediad golygu.",
-        "not-found":
-          "Doedd dim modd dod o hyd i'r daenlen. Gwiriwch ei bod yn dal i fodoli.",
-        "rate-limited":
-          "Mae gormod o geisiadau ar hyn o bryd. Arhoswch funud a rhowch gynnig arall arni.",
-        network:
-          "Methu cysylltu. Gwiriwch eich cysylltiad â'r rhyngrwyd a rhowch gynnig arall arni.",
-        "invalid-response": "Roedd yr ateb mewn fformat annisgwyl.",
-        "invalid-data":
-          "Dydy'r rhestr teuluoedd ddim yn y fformat disgwyliedig yn y daenlen. Gofynnwch i berchennog y daenlen ei gwirio.",
-        unknown: "Aeth rhywbeth o'i le. Rhowch gynnig arall arni.",
       },
       categories: {
         heading: "Categorïau",

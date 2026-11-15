@@ -10,6 +10,7 @@ import { DismissibleNotice } from "@/components/layout/dismissible-notice"
 import { useNoticeDwell } from "@/features/auth/use-notice-dwell"
 
 import type { PublishNotice } from "./pending-changes-store"
+import { writeFailureMessage } from "../write-failure-message"
 
 export interface PublishOutcomeNoticeProps {
   ref: RefObject<HTMLDivElement | null>
@@ -55,7 +56,7 @@ export function PublishOutcomeNotice({
           Icon: CircleAlertIcon,
           title: t(`roadmaps.publish.notice.failed.${action}`),
           lines: [
-            t(`roadmaps.publish.errors.${notice.error}`),
+            writeFailureMessage(t, "publish", notice.error),
             t("roadmaps.publish.notice.kept"),
           ],
         } as const

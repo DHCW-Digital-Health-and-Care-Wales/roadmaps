@@ -22,6 +22,7 @@ import { useLanguage } from "@/i18n"
 import { isAppError, type AppErrorKind } from "@/lib/errors"
 
 import { useMatchRoadmap } from "../hooks/use-match-roadmap"
+import { writeFailureMessage } from "../write-failure-message"
 
 export interface MatchListsActionProps {
   roadmap: Roadmap
@@ -41,7 +42,7 @@ const noticeLook = {
 function noticeText(notice: Notice, title: string, t: TFunction): string {
   switch (notice.kind) {
     case "failed":
-      return t(`roadmaps.lists.match.errors.${notice.error}`)
+      return writeFailureMessage(t, "lists", notice.error)
     case "changed":
       return t("roadmaps.lists.match.notice.changed")
     case "matched":

@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next"
 
 import { DismissibleNotice } from "@/components/layout/dismissible-notice"
 
+import { writeFailureMessage } from "../write-failure-message"
+
 import type { NewRoadmapFailure } from "./use-new-roadmap-form"
 
 export interface AddRoadmapFailedProps {
@@ -35,7 +37,7 @@ export function AddRoadmapFailed({
       <p>
         {unconfirmed
           ? t("roadmaps.add.unconfirmed.description")
-          : t(`roadmaps.add.failed.errors.${failure.kind}`)}
+          : writeFailureMessage(t, "add", failure.kind)}
       </p>
     </DismissibleNotice>
   )

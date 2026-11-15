@@ -7,7 +7,7 @@
 - **Depends on**: none
 - **Binding ADRs**: none
 - **Suggested model**: Sonnet — an edit to one skill step once the owner has decided
-- **Delivered**: _(add on delivery)_
+- **Delivered**: [#95](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/95)
 
 ## Summary
 

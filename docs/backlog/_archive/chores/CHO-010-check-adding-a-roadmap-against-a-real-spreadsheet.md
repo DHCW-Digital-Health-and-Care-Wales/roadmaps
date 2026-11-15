@@ -9,7 +9,7 @@
 - **Binding ADRs**: ADR-011, ADR-012
 - **Suggested model**: Sonnet — a manual run with seven things to look at, and a small
   change to the copy's requests only if one fails
-- **Delivered**: _(add on delivery)_
+- **Delivered**: [#95](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/95)
 
 ## Summary
 

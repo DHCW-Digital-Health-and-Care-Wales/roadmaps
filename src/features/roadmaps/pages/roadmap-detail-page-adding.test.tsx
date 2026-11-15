@@ -791,6 +791,132 @@ describe("Publishing a new item (STY-046 S7)", () => {
   })
 })
 
+describe("A published new item the roadmap can't be read back with (DEF-009)", () => {
+  /** Makes every read of the roadmap's items fail; the returned function ends it. */
+  function failItemReads(repository: InMemoryRoadmapRepository) {
+    const reads = vi
+      .spyOn(repository, "listRoadmapItems")
+      .mockRejectedValue(new AppError("network"))
+    return () => {
+      reads.mockRestore()
+    }
+  }
+
+  /** Expects the item's Edit, Move and Remove held, and choosing them to do nothing. */
+  async function expectHeld(user: User, title: string) {
+    for (const name of ["Edit", "Move", "Remove"]) {
+      const button = main().getByRole("button", { name: `${name} ${title}` })
+      expect(button).toHaveAttribute("aria-disabled", "true")
+      await user.click(button)
+    }
+    expect(screen.queryByRole("dialog")).toBeNull()
+    expect(screen.queryByRole("menu")).toBeNull()
+  }
+
+  it("stays on the page, tagged New and counted, with no Remove, Edit or Move, until a read holds it (S1, S3)", async () => {
+    const { user, repository } = await renderPage()
+    await addItem(user, CLINIC, "Next")
+    const readsBack = failItemReads(repository)
+
+    await publish(user)
+
+    // The dialog stays until the failing reads have given up.
+    await vi.waitFor(() => {
+      expect(main().getByText(/^Changes published\./)).toBeVisible()
+    })
+    expect(
+      await main().findByText("Couldn't refresh this roadmap's items"),
+    ).toBeInTheDocument()
+    expect(titlesUnder("Next")).toEqual(["Text reminders", CLINIC])
+    expect(card(CLINIC).getByText("New")).toBeVisible()
+    expect(main().getByText("1 unpublished change")).toBeVisible()
+    await expectHeld(user, CLINIC)
+    expect(main().getByRole("button", { name: "Discard all" })).toHaveAttribute(
+      "data-disabled",
+    )
+
+    readsBack()
+    await user.click(main().getByRole("button", { name: "Refresh" }))
+
+    await waitFor(() => {
+      expect(card(CLINIC).queryByText("New")).toBeNull()
+    })
+    expect(titlesUnder("Next")).toEqual(["Text reminders", CLINIC])
+    expect(main().queryByText(/unpublished change/)).toBeNull()
+    expect(
+      (await repository.listRoadmapItems("producta")).map(
+        ({ title }) => title.en,
+      ),
+    ).toEqual(["Online booking", "Text reminders", CLINIC])
+  })
+
+  it("is published once when published again before a read holds it", async () => {
+    const { user, repository } = await renderPage()
+    await addItem(user, CLINIC, "Next")
+    const readsBack = failItemReads(repository)
+    await publish(user)
+    await vi.waitFor(() => main().getByText(/^Changes published\./))
+    readsBack()
+
+    await publish(user)
+
+    await waitFor(() => {
+      expect(card(CLINIC).queryByText("New")).toBeNull()
+    })
+    expect(
+      (await repository.listRoadmapItems("producta")).map(
+        ({ title }) => title.en,
+      ),
+    ).toEqual(["Online booking", "Text reminders", CLINIC])
+  })
+
+  it("leaves a new item added after the publish free to change and remove", async () => {
+    const { user, repository } = await renderPage()
+    await addItem(user, CLINIC, "Next")
+    const readsBack = failItemReads(repository)
+    await publish(user)
+    await vi.waitFor(() => main().getByText(/^Changes published\./))
+
+    await addItem(user, CHECK_IN, "Later")
+
+    for (const name of ["Edit", "Move", "Remove"]) {
+      expect(
+        main().getByRole("button", { name: `${name} ${CHECK_IN}` }),
+      ).toHaveAttribute("aria-disabled", "false")
+    }
+    await expectHeld(user, CLINIC)
+    readsBack()
+  })
+
+  it("stays on the page after “Save and publish” too", async () => {
+    const { user, repository } = await renderPage({
+      path: "/roadmaps/productc",
+    })
+    await addItem(user, CLINIC, "Now")
+    const readsBack = failItemReads(repository)
+
+    await user.click(main().getByRole("button", { name: "Publish roadmap" }))
+    await user.click(
+      within(await screen.findByRole("alertdialog")).getByRole("button", {
+        name: "Save and publish",
+      }),
+    )
+
+    await vi.waitFor(() => {
+      expect(
+        main().getByText(/^Changes saved and Product C roadmap published\./),
+      ).toBeVisible()
+    })
+    expect(
+      await main().findByText("Couldn't refresh this roadmap's items"),
+    ).toBeInTheDocument()
+    expect(titlesUnder("Now")).toEqual([CLINIC])
+    expect(card(CLINIC).getByText("New")).toBeVisible()
+    await expectHeld(user, CLINIC)
+    readsBack()
+  })
+})
+
 /** What the open publish dialog lists under its heading named `heading`, line by line. */
 function listedChanges(heading = "What changes") {
   const dialog = within(screen.getByRole("alertdialog"))

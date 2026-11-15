@@ -888,6 +888,33 @@ describe("A published new item the roadmap can't be read back with (DEF-009)", (
     readsBack()
   })
 
+  it("stays on the page when the session ends while the read after the publish is under way", async () => {
+    const { user, repository, authClient } = await renderPage()
+    await addItem(user, CLINIC, "Next")
+    // The first read after the write never answers; the session ends meanwhile.
+    vi.spyOn(repository, "listRoadmapItems").mockImplementationOnce(
+      () => new Promise(() => undefined),
+    )
+    const published = vi.spyOn(repository, "publishRoadmapChanges")
+
+    await publish(user)
+    await waitFor(() => {
+      expect(published).toHaveBeenCalled()
+    })
+    await act(async () => {
+      await published.mock.results[0]?.value
+    })
+    act(() => {
+      authClient.setState({ status: "expired" })
+    })
+
+    await vi.waitFor(() => {
+      expect(main().getByText(/^Changes published\./)).toBeVisible()
+    })
+    expect(titlesUnder("Next")).toEqual(["Text reminders", CLINIC])
+    expect(card(CLINIC).getByText("New")).toBeVisible()
+  })
+
   it("stays on the page after “Save and publish” too", async () => {
     const { user, repository } = await renderPage({
       path: "/roadmaps/productc",

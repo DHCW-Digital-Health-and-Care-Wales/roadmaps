@@ -96,9 +96,11 @@ notifications, use this lifecycle at every nesting level:
    rerun a Sol review with the same brief on `gpt-6.1-sol` through the other
    provider that serves it (Codex or GitHub Copilot), naming that provider in
    the PR's Review record; for any other worker, or when both are limited, save
-   its reset time (or unknown), pending tasks and next action, and resume from
-   that handoff once the worker is terminal. Completion grants no approval
-   rights.
+   its reset time (or unknown), pending tasks and next action. Once the worker
+   is terminal, resume it by messaging it where the runtime can, since it
+   keeps its context; a message the limit still refuses is sent again after
+   the reset. Replace the worker from that handoff only when the runtime
+   cannot message it. Completion grants no approval rights.
 
 Without asynchronous delegation, run reviewers in the foreground and wait for
 them. Never poll a running delegate, sleep, or set scheduled check-ins as a
@@ -115,7 +117,7 @@ worker; replace one only once it is terminal or cancelled, so one checkout
 never has two writers.
 
 Every review or re-check is a new reviewer, briefed as "Review rounds" sets;
-never restart a finished reviewer by messaging it.
+never restart a reviewer that has reported by messaging it.
 
 If delegation is unavailable, report that independent reviews are unavailable
 and complete useful local checks; a main-agent reread is not an independent

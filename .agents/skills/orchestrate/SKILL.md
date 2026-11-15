@@ -75,8 +75,8 @@ State these policies, using the user's instructions where supplied:
 On resume, read the named run handoff first. Reconcile the checkout, item
 state, task IDs and pending PR work before dispatching anything. A child
 waiting for its reviewers is still active work: let its completion reach its
-parent. Replace an agent only once it is terminal or cancelled (step 3), from
-its saved handoff, not a fresh start.
+parent. Resume or replace an agent only once it is terminal or cancelled
+(step 3); a replacement starts from its saved handoff, not afresh.
 
 Completion: an ordered queue with prerequisite evidence, policies stated and
 blocking queue decisions resolved.
@@ -141,8 +141,8 @@ agent and `<run-folder>/progress/<ITEM>-handoff.md`.
    - Delete the fallback wake once the child's final hand-back reaches this
      session by either path. A yield's interim completion keeps it running.
    - On a completion that reports the child failed, read its status from the
-     runtime before replacing it: `failed` is not yet terminal, as the
-     delegation reference defines it.
+     runtime first: `failed` is not yet terminal. Once it is, resume or
+     replace the child as the delegation reference sets.
 3. On completion, verify the returned branch/head against the checkout and
    handoff, and distinct reviewer task IDs and pinned heads against the claimed
    passes. An early hand-back or mismatch is unfinished work to reconcile,

@@ -28,9 +28,11 @@ not post, change code, merge or message other people as part of reviewing.
    misses. Keep the checkout read-only; read other revisions with
    `git show <sha>:<path>`. A bad ref is a scope error; an empty scope is
    "nothing to review", not a pass. Read every changed line of the scope, docs
-   included, a file or a directory at a time so each output arrives whole. A
-   diff read through `head` or a filter, and an output a tool cut or saved to
-   a file, still has lines unread: read the rest before going on.
+   included, a file or a directory at a time. An output too long for one
+   command is cut or saved to a file, and one record's diff can be that long:
+   read the saved file with the file-reading tool, or the same diff a range of
+   lines at a time, until every line has arrived whole. A diff read through
+   `head`, `cut` or a pattern filter still has lines unread.
 2. **Find the requirements.** Read the user's instructions and the linked
    story, defect or chore (`docs/backlog/`, ids `STY-<nnn>`, `DEF-<nnn>`, `CHO-<nnn>`) with
    its acceptance criteria, the PR body and the binding ADRs in `docs/adr/`,

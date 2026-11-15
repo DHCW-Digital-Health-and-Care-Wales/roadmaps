@@ -8,6 +8,7 @@ import type { Roadmap } from "@/domain/roadmap/roadmap"
 import {
   type FieldConflict,
   NO_CHANGES,
+  type RoadmapChanges,
 } from "@/domain/roadmap/roadmap-changes"
 import { useAuth } from "@/features/auth/use-auth"
 import { localToday } from "@/lib/local-today"
@@ -46,6 +47,8 @@ export function RoadmapPublishing({ roadmap }: RoadmapPublishingProps) {
   const connected = useAuth().state.status === "connected"
   const publish = usePublish(roadmap)
   const [confirming, setConfirming] = useState(false)
+  // What the dialog listed when it was confirmed: set then, dropped when it is next asked.
+  const [confirmed, setConfirmed] = useState<RoadmapChanges | null>(null)
   const [markUpdated, setMarkUpdated] = useState(false)
   const [discarding, setDiscarding] = useState(false)
   const notice = useRef<HTMLDivElement>(null)
@@ -61,6 +64,11 @@ export function RoadmapPublishing({ roadmap }: RoadmapPublishingProps) {
   const refused = outcome?.kind === "refused" ? outcome : null
   const open = refused ? openConflicts(refused.conflicts, changes) : []
   const reviewing = open.length > 0
+
+  // A read that leaves nothing to publish closes a dialog not yet confirmed, as the page
+  // then shows nothing pending (DEF-010 D1). Once confirmed, the write's own settling
+  // drops the changes and the dialog closes with it.
+  if (confirming && !confirmed && count === 0) setConfirming(false)
 
   // A confirmation is for the page it was given on (the copywriter's page notice).
   useEffect(
@@ -89,6 +97,7 @@ export function RoadmapPublishing({ roadmap }: RoadmapPublishingProps) {
   const confirm = () => {
     if (!connected) return
     focusNoticeOnClose.current = true
+    setConfirmed(changes ?? NO_CHANGES)
     void publish(markUpdated ? localToday() : undefined).finally(() => {
       setConfirming(false)
     })
@@ -139,6 +148,7 @@ export function RoadmapPublishing({ roadmap }: RoadmapPublishingProps) {
               onClick={() => {
                 focusNoticeOnClose.current = false
                 setMarkUpdated(false)
+                setConfirmed(null)
                 setConfirming(true)
               }}
             >
@@ -161,7 +171,7 @@ export function RoadmapPublishing({ roadmap }: RoadmapPublishingProps) {
       <PublishDialog
         open={confirming}
         action={action}
-        changes={changes ?? NO_CHANGES}
+        changes={confirmed ?? changes ?? NO_CHANGES}
         publishing={publishing}
         available={connected}
         markUpdated={markUpdated}

@@ -285,7 +285,8 @@ function RoadmapView({
             onDismiss={publishedState.dismissNotice}
           />
         )}
-        <RoadmapPublishing roadmap={roadmap} />
+        {/* Its dialog is for one roadmap: another's page starts it afresh. */}
+        <RoadmapPublishing key={roadmap.id} roadmap={roadmap} />
       </div>
       <EditableRoadmapAbout roadmap={roadmap} />
       <RoadmapItemsArea

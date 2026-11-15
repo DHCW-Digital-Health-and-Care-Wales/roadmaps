@@ -1,6 +1,6 @@
 # DEF-010: A dialog that publishes changes what it shows once its changes are no longer pending
 
-- **Status**: Proposed — triaged by the owner, 2026-11-15 (D1)
+- **Status**: Done
 - **Severity**: Low — cosmetic, mostly for the length of the dialog's closing; nothing
   is written wrongly or lost
 - **Area**: Features/UI
@@ -9,7 +9,7 @@
 - **Binding ADRs**: ADR-012
 - **Suggested model**: Sonnet — a dialog keeps what it asked from when it is confirmed
   until it has gone
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/99
 
 ## Summary
 
@@ -99,4 +99,32 @@ pending change
 
 - **D1** (owner, 2026-11-15, the owner's triage of the live chores and defects): Q1 (a). The publish dialog closes when a read leaves nothing to publish; until then, and as it closes, it shows what it listed and offered when it was confirmed (S1).
 
-## Delivery _(add on delivery; as in `story.md`)_
+## Delivery
+
+The cause was as stated. `RoadmapPublishing` now keeps what its dialog listed when it was
+confirmed (`confirmed`, set in `confirm`, dropped when the dialog is next asked) and gives
+`PublishDialog` that until it has gone, so neither the list nor the tick box changes as the
+write settles. `usePublishedState` takes `offersMarkUpdated` from `asked.changes`, which it
+already fixes at confirmation, not from the changes as they are now. Under D1, a read that
+leaves nothing pending closes a publish dialog not yet confirmed: `RoadmapPublishing` sets
+`confirming` false while no change is left and nothing is confirmed. Its page keys it by
+roadmap, so a kept confirmation never meets another roadmap's page (a review finding, with
+a test red before it: `A confirmed dialog belongs to its roadmap`).
+
+### Departures
+
+- **No screenshots** (agent): what changes is the dialog's content for about a tenth of a
+  second as it closes, or its staying open with an empty list; no settled state differs
+  from before. The page tests record the dialog on every change to the page, which a still
+  capture cannot.
+
+### Contract for dependents
+
+None; no data-source write changes.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                           |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `roadmap-detail-page-publish-dialog.test.tsx` (`A dialog that publishes closes showing what it asked`: the list, the pending date's tick box on "Publish changes", and on "Save and publish"), red before the fix |
+| S2, D1   | the same file (`closes when a read finds every pending change already written`), red before the fix                                                                                                               |

@@ -53,7 +53,7 @@ export interface PublishedState {
   available: boolean
   /**
    * Whether the dialog offers "Mark as updated today" (STY-036 D10): when publishing,
-   * unless a date is pending, which is published instead (S7).
+   * unless a date is pending, which is published instead (S7), as `asked` has it.
    */
   offersMarkUpdated: boolean
   /** Whether it is ticked: unticked each time the dialog opens. */
@@ -193,7 +193,7 @@ export function usePublishedState(
   return {
     publishing,
     available: connected && !pending && !reviewing,
-    offersMarkUpdated: asked.publishing && !changes?.roadmap.lastUpdated,
+    offersMarkUpdated: asked.publishing && !asked.changes.roadmap.lastUpdated,
     markUpdated,
     setMarkUpdated,
     pending,

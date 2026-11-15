@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test"
 
 import {
+  openAddItemDialog,
   openAddRoadmapDialog,
   openEditItemDialog,
   openEditRoadmapDialog,
@@ -227,6 +228,33 @@ test.describe("editing a roadmap (STY-025)", () => {
       await openEditRoadmapDialog(page),
       "edit-roadmap-dialog.aria.yml",
     )
+  })
+
+  test("adding an item: the dialog after one was added, then a new item's card (STY-046)", async ({
+    page,
+  }) => {
+    await page.goto("./#/roadmaps/producta")
+    await connect(page)
+    const main = page.getByRole("main")
+    await expect(
+      main.getByRole("heading", { level: 3, name: ITEM }),
+    ).toBeVisible()
+    const title = "Choose a clinic closer to home"
+
+    const dialog = await openAddItemDialog(page)
+    await dialog.getByRole("textbox", { name: "Title" }).fill(title)
+    await dialog
+      .getByRole("combobox", { name: "Horizon or section" })
+      .selectOption({ label: "Next" })
+    await dialog.getByRole("button", { name: "Add and start another" }).click()
+    await expect(dialog.getByRole("status")).not.toBeEmpty()
+    await expectStructure(dialog, "add-item-dialog.aria.yml")
+    await dialog.getByRole("button", { name: "Cancel" }).click()
+
+    const card = main
+      .getByRole("listitem")
+      .filter({ has: page.getByRole("heading", { name: title }) })
+    await expectStructure(card, "add-item-new.aria.yml")
   })
 
   test("an item's Move menu (STY-031)", async ({ page }) => {

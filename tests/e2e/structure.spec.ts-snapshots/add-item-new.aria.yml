@@ -1,0 +1,6 @@
+- listitem:
+  - heading "Choose a clinic closer to home" [level=3]
+  - text: New Choose a clinic closer to home
+  - button "Remove Choose a clinic closer to home"
+  - button "Move Choose a clinic closer to home"
+  - button "Edit Choose a clinic closer to home"

@@ -5,17 +5,19 @@
  * roadmap and a new family are, since what a new item must hold and how its ID is made
  * are rules of a roadmap, whatever screen adds one; how an edit is kept and finds its
  * item again is `features/roadmaps/editing/pending-changes.ts`, whose `reconcileItems`
- * calls `dropPublishedNewItems`. The screen that adds an item (STY-046) calls the rest.
+ * calls `dropPublishedNewItems`. The item dialog and a new item's card call the rest
+ * (STY-046).
  */
 
 import { AppError } from "@/lib/errors"
 
 import { createItemId, createUnusedId } from "./item-id"
-import type {
-  EditableItemField,
-  ItemValues,
-  NewItem,
-  RoadmapChanges,
+import {
+  EDITABLE_ITEM_FIELDS,
+  type EditableItemField,
+  type ItemValues,
+  type NewItem,
+  type RoadmapChanges,
 } from "./roadmap-changes"
 import type { RoadmapItem } from "./roadmap-item"
 import { isRoadmapPlacement } from "./roadmap-placement"
@@ -55,10 +57,24 @@ export function checkNewItem(input: ItemValues): {
 }
 
 /**
+ * `input` as a new item holds it. Throws for input `checkNewItem` refuses, which a
+ * screen never sends.
+ */
+function checkedValues(input: ItemValues): NewItem["values"] {
+  const { values, problems } = checkNewItem(input)
+  if (Object.keys(problems).length > 0) {
+    throw new AppError("unknown", {
+      message: "A new item's input was not checked",
+    })
+  }
+  return values
+}
+
+/**
  * `changes` with a new item added after those already pending, from input `checkNewItem`
  * passed. Its ID is made now, in the `Item ID` format: one that none of `items`, the
  * roadmap's items as read, has, nor any other new item. Throws for input `checkNewItem`
- * refuses, which a screen never sends.
+ * refuses.
  */
 export function addNewItem(
   changes: RoadmapChanges,
@@ -66,18 +82,53 @@ export function addNewItem(
   items: readonly RoadmapItem[],
   createId: () => string = createItemId,
 ): RoadmapChanges {
-  const { values, problems } = checkNewItem(input)
-  if (Object.keys(problems).length > 0) {
-    throw new AppError("unknown", {
-      message: "A new item's input was not checked",
-    })
-  }
+  const values = checkedValues(input)
   const taken = new Set([
     ...items.flatMap(({ id }) => id ?? []),
     ...changes.newItems.map(({ id }) => id),
   ])
   const id = createUnusedId(taken, createId)
   return { ...changes, newItems: [...changes.newItems, { id, values }] }
+}
+
+/**
+ * `changes` with the new item `id` holding `values` over those it held, in its place
+ * among the new items: an edit to a new item is part of it, not a change of its own
+ * (STY-046 S6). `changes` itself when that changes nothing, or no new item has the ID.
+ * Throws for values that leave it what `checkNewItem` refuses.
+ */
+export function editNewItem(
+  changes: RoadmapChanges,
+  id: string,
+  values: ItemValues,
+): RoadmapChanges {
+  const current = changes.newItems.find((each) => each.id === id)
+  if (!current) return changes
+  const edited = checkedValues({ ...current.values, ...values })
+  if (
+    EDITABLE_ITEM_FIELDS.every(
+      (field) => edited[field] === current.values[field],
+    )
+  ) {
+    return changes
+  }
+  return {
+    ...changes,
+    newItems: changes.newItems.map((each) =>
+      each === current ? { id, values: edited } : each,
+    ),
+  }
+}
+
+/** `changes` without the new item `id`; `changes` itself when no new item has it. */
+export function removeNewItem(
+  changes: RoadmapChanges,
+  id: string,
+): RoadmapChanges {
+  const kept = changes.newItems.filter((each) => each.id !== id)
+  return kept.length === changes.newItems.length
+    ? changes
+    : { ...changes, newItems: kept }
 }
 
 /**

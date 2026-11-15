@@ -22,6 +22,8 @@ export interface MoveMenuProps {
   /** Where the item is shown now; `null` while unplaced. */
   placement: RoadmapPlacement | null
   button: RefObject<HTMLButtonElement | null>
+  /** Held shut, though focusable: the item can't be moved for now. */
+  disabled?: boolean
   onMove: (placement: RoadmapPlacement) => void
 }
 
@@ -33,6 +35,7 @@ export function MoveMenu({
   subject,
   placement,
   button,
+  disabled = false,
   onMove,
 }: MoveMenuProps) {
   const { t } = useTranslation()
@@ -40,7 +43,8 @@ export function MoveMenu({
     <DropdownMenu>
       <DropdownMenuTrigger
         ref={button}
-        render={<Button variant="secondary" size="sm" />}
+        disabled={disabled}
+        render={<Button variant="secondary" size="sm" focusableWhenDisabled />}
       >
         <ArrowRightLeftIcon data-icon="inline-start" aria-hidden="true" />
         {t("roadmaps.edit.move")} <span className="sr-only">{subject}</span>

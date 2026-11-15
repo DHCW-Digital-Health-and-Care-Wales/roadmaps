@@ -1,10 +1,9 @@
 import { TriangleAlertIcon } from "lucide-react"
-import { useId, useMemo, useState, type RefObject } from "react"
+import { useId, useMemo, useRef, useState, type RefObject } from "react"
 import { useTranslation } from "react-i18next"
 
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Organisation } from "@/domain/roadmap/organisation"
-import type { ItemChanges } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 
 import { ItemDialog } from "../dialogs/item-dialog"
@@ -12,14 +11,10 @@ import {
   type CardControl,
   EditableItemCard,
 } from "../editing/editable-item-card"
-import { applyItemChanges, matchItemChanges } from "../editing/pending-changes"
-import { useRoadmapChanges } from "../editing/pending-changes-context"
-import { useItemDialog } from "../editing/use-item-dialog"
-import {
-  groupRoadmapItems,
-  type PositionedRoadmapItem,
-} from "../group-roadmap-items"
-import { useItemCardKeys } from "./item-card-keys"
+import type { PageItem } from "../editing/page-items"
+import type { PageItemDialog } from "../editing/use-item-dialog"
+import { groupRoadmapItems, type Positioned } from "../group-roadmap-items"
+import { AddItemButton } from "./add-item-button"
 import { StatusPanel } from "./status-panel"
 
 /** One, two, then three columns of item cards, as the roadmap cards are laid out. */
@@ -28,43 +23,40 @@ const itemGridClassName =
 
 export interface RoadmapItemsProps {
   roadmapId: string
+  /** The roadmap's items as last read. */
   items: readonly RoadmapItem[]
   organisations: readonly Organisation[]
+  /** Those items as the page shows them, then the items new to it (`usePageItems`). */
+  pageItems: readonly PageItem[]
+  /** The page's one item dialog (`useItemDialog`). */
+  itemDialog: PageItemDialog
+  /** A new item was removed, its card with it: focus needs somewhere to go (S6). */
+  onItemRemoved: () => void
 }
 
 /**
  * A roadmap's items: those the public site leaves out first, flagged (D4), then all six
  * placements in the public site's order, each under its heading, saying when it has
- * none (D1). A roadmap with no items has one dashed panel instead, saying where they
- * are added (D5, STY-042 S2). Each item can be moved, and shows its pending changes, in
- * its pending placement (STY-025, STY-031). Edit on a card opens the page's one item
- * dialog (`useItemDialog`, STY-044).
+ * none (D1). A roadmap with no items, and none pending, has one dashed panel instead,
+ * saying what to add, with "Add an item" (D5, STY-042 S2, STY-046 S8). Each item can be
+ * moved, and shows its pending changes, in its pending placement (STY-025, STY-031); an
+ * item added and not yet published shows last in its placement (STY-046 S3). Edit on a
+ * card, and "Add an item", open the page's one item dialog, which is drawn here.
  */
 export function RoadmapItems({
   roadmapId,
   items,
   organisations,
+  pageItems,
+  itemDialog,
+  onItemRemoved,
 }: RoadmapItemsProps) {
   const { t } = useTranslation()
   const headingId = useId()
-  const changes = useRoadmapChanges(roadmapId)
-  const entries = useMemo(
-    () => matchItemChanges(items, changes),
-    [items, changes],
-  )
-  const shownItems = useMemo(
-    () => items.map((item, at) => applyItemChanges(item, entries.get(at))),
-    [items, entries],
-  )
   const { unplaced, placements } = useMemo(
-    () =>
-      groupRoadmapItems(
-        items,
-        (item, position) => (shownItems[position] ?? item).placement,
-      ),
-    [items, shownItems],
+    () => groupRoadmapItems(pageItems, ({ shown }) => shown.placement),
+    [pageItems],
   )
-  const keys = useItemCardKeys(items)
   // A moved item's card is a new one, in another list, so focus is handed to it here.
   const [focus, setFocus] = useState<FocusRequest | null>(null)
   const cardHandlers = useMemo(
@@ -75,14 +67,14 @@ export function RoadmapItems({
       focused: () => {
         setFocus(null)
       },
+      removed: onItemRemoved,
     }),
-    [],
+    [onItemRemoved],
   )
-
-  const dialog = useItemDialog({ roadmapId, items, shownItems, keys })
+  const panelAddButton = useRef<HTMLButtonElement>(null)
 
   const list = (
-    placed: readonly PositionedRoadmapItem[],
+    placed: readonly Positioned<PageItem>[],
     labelledBy: string,
   ) => (
     <ItemList
@@ -90,76 +82,73 @@ export function RoadmapItems({
       items={items}
       organisations={organisations}
       placed={placed}
-      keys={keys}
-      entries={entries}
       labelledBy={labelledBy}
       focus={focus}
       cardHandlers={cardHandlers}
-      onEdit={dialog.edit}
-      dialogAt={dialog.edited?.at}
-      dialogOpener={dialog.opener}
+      onEdit={itemDialog.edit}
+      dialogAt={itemDialog.cardAt}
+      dialogOpener={itemDialog.cardOpener}
     />
   )
 
-  if (items.length === 0) {
-    return (
-      <StatusPanel
-        compact
-        title={t("roadmaps.items.empty.title")}
-        description={t("roadmaps.items.empty.description")}
-      />
-    )
-  }
-
   const unplacedId = `${headingId}-unplaced`
   return (
-    <div className="flex flex-col gap-10">
-      {unplaced.length > 0 && (
-        <div className="flex flex-col gap-3 border-l-8 border-status-warning-border pl-4 sm:pl-6">
-          <h2
-            id={unplacedId}
-            className="flex items-center gap-2 text-heading-m [&>svg]:size-6 [&>svg]:shrink-0"
-          >
-            <TriangleAlertIcon aria-hidden="true" />
-            {t("roadmaps.items.unplaced.title")}
-          </h2>
-          <p className="text-pretty">
-            {t("roadmaps.items.unplaced.description")}
-          </p>
-          {list(unplaced, unplacedId)}
+    <>
+      {pageItems.length === 0 ? (
+        <StatusPanel
+          compact
+          title={t("roadmaps.items.empty.title")}
+          description={t("roadmaps.items.empty.description")}
+          action={
+            <AddItemButton
+              ref={panelAddButton}
+              onAdd={() => {
+                itemDialog.add(panelAddButton)
+              }}
+            />
+          }
+        />
+      ) : (
+        <div className="flex flex-col gap-10">
+          {unplaced.length > 0 && (
+            <div className="flex flex-col gap-3 border-l-8 border-status-warning-border pl-4 sm:pl-6">
+              <h2
+                id={unplacedId}
+                className="flex items-center gap-2 text-heading-m [&>svg]:size-6 [&>svg]:shrink-0"
+              >
+                <TriangleAlertIcon aria-hidden="true" />
+                {t("roadmaps.items.unplaced.title")}
+              </h2>
+              <p className="text-pretty">
+                {t("roadmaps.items.unplaced.description")}
+              </p>
+              {list(unplaced, unplacedId)}
+            </div>
+          )}
+          {placements.map(({ placement, items: placed }) => {
+            const id = `${headingId}-${placement}`
+            return (
+              <div key={placement} className="flex flex-col gap-3">
+                <h2 id={id} className="text-heading-m">
+                  {t(`roadmaps.items.placements.${placement}`)}
+                </h2>
+                {placed.length > 0 ? (
+                  list(placed, id)
+                ) : (
+                  <p className="text-muted-foreground">
+                    {t("roadmaps.items.noneInPlacement")}
+                  </p>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
-      {placements.map(({ placement, items: placed }) => {
-        const id = `${headingId}-${placement}`
-        return (
-          <div key={placement} className="flex flex-col gap-3">
-            <h2 id={id} className="text-heading-m">
-              {t(`roadmaps.items.placements.${placement}`)}
-            </h2>
-            {placed.length > 0 ? (
-              list(placed, id)
-            ) : (
-              <p className="text-muted-foreground">
-                {t("roadmaps.items.noneInPlacement")}
-              </p>
-            )}
-          </div>
-        )
-      })}
-      {dialog.edited && (
-        <ItemDialog
-          key={dialog.edited.key}
-          open={dialog.edited.open}
-          opened={dialog.edited.opened}
-          item={dialog.edited.item}
-          tagsInUse={dialog.tagsInUse}
-          organisations={organisations}
-          onDone={dialog.done}
-          onClose={dialog.close}
-          opener={dialog.opener}
-        />
+      {/* After either, so it stays as the first item added takes the panel's place. */}
+      {itemDialog.drawn && (
+        <ItemDialog key={itemDialog.drawn.key} {...itemDialog.drawn.props} />
       )}
-    </div>
+    </>
   )
 }
 
@@ -173,19 +162,18 @@ interface ItemListProps {
   roadmapId: string
   items: readonly RoadmapItem[]
   organisations: readonly Organisation[]
-  placed: readonly PositionedRoadmapItem[]
-  /** Each item's card key, by its position (`useItemCardKeys`). */
-  keys: readonly string[]
-  entries: ReadonlyMap<number, ItemChanges>
+  /** The items listed, each with its position among the page's items. */
+  placed: readonly Positioned<PageItem>[]
   labelledBy: string
   focus: FocusRequest | null
   cardHandlers: {
     requestFocus: (position: number, control: CardControl) => void
     focused: () => void
+    removed: () => void
   }
   onEdit: (position: number) => void
-  /** Where the item the dialog edits is among `items`, if it edits one. */
-  dialogAt: number | undefined
+  /** Where, among the page's items, the one is whose card holds `dialogOpener`. */
+  dialogAt: number
   /** The ref that item's card gives its Edit (`EditableItemCard`). */
   dialogOpener: RefObject<HTMLButtonElement | null>
 }
@@ -195,8 +183,6 @@ function ItemList({
   items,
   organisations,
   placed,
-  keys,
-  entries,
   labelledBy,
   focus,
   cardHandlers,
@@ -206,21 +192,21 @@ function ItemList({
 }: ItemListProps) {
   return (
     <ul aria-labelledby={labelledBy} className={itemGridClassName}>
-      {placed.map(({ item, position }) => (
+      {placed.map(({ item: pageItem, position }) => (
         <EditableItemCard
-          key={keys[position]}
+          key={pageItem.key}
           roadmapId={roadmapId}
           items={items}
-          item={item}
+          pageItem={pageItem}
           organisations={organisations}
           position={position}
-          entry={entries.get(position)}
           focusRequest={
             focus?.position === position ? focus.control : undefined
           }
           onFocusRequest={cardHandlers.requestFocus}
           onFocused={cardHandlers.focused}
           onEdit={onEdit}
+          onRemoved={cardHandlers.removed}
           dialogOpener={dialogAt === position ? dialogOpener : undefined}
         />
       ))}

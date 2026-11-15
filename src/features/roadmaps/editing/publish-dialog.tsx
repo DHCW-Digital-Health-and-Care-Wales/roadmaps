@@ -98,19 +98,24 @@ export function PublishDialog({
             {t(`roadmaps.publish.dialog.note.${action}`)}
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <div className="flex flex-col gap-2">
-          <h3 className="font-bold">{t("roadmaps.publish.dialog.changes")}</h3>
-          <ul className="flex list-disc flex-col gap-1.5 pl-5">
-            {parts.map(({ key, name, fields }) => (
-              <li key={key} className="wrap-break-word">
-                <span className="font-bold">{name}</span>
-                <span className="block text-body-xs text-muted-foreground">
-                  {fields.join(", ")}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        {/* A new item is not named yet (STY-047), so new items alone list nothing. */}
+        {parts.length > 0 && (
+          <div className="flex flex-col gap-2">
+            <h3 className="font-bold">
+              {t("roadmaps.publish.dialog.changes")}
+            </h3>
+            <ul className="flex list-disc flex-col gap-1.5 pl-5">
+              {parts.map(({ key, name, fields }) => (
+                <li key={key} className="wrap-break-word">
+                  <span className="font-bold">{name}</span>
+                  <span className="block text-body-xs text-muted-foreground">
+                    {fields.join(", ")}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         {!changes.roadmap.lastUpdated && (
           <MarkUpdatedCheckbox
             checked={markUpdated}

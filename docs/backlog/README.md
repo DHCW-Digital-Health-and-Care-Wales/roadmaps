@@ -50,16 +50,17 @@ Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status toke
 
 ## Defects
 
-| ID                                                                                          | Defect                                                                                         | Status                           |
-| ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | -------------------------------- |
-| [DEF-001](_archive/defects/DEF-001-roadmaps-heading-title-case.md)                          | The roadmaps heading is in Title Case                                                          | Done                             |
-| [DEF-002](defects/DEF-002-header-home-link-name-on-phones.md)                               | On a phone, the header's home link is named without the word it shows                          | Needs triage                     |
-| [DEF-003](_archive/defects/DEF-003-refusal-shows-stale-text-or-restores-removed-roadmap.md) | After a refused publish, "Use theirs" can show older text, and a removed roadmap can come back | Done — in its PR, awaiting merge |
-| [DEF-004](defects/DEF-004-pending-no-category-dropped-when-category-unlisted.md)            | A pending "No category" is dropped, unwritten, once the roadmap's category leaves its list     | Needs triage                     |
-| [DEF-005](defects/DEF-005-about-form-shows-no-family-after-refresh.md)                      | An open About form shows "No family" after Refresh reads a co-lead's family                    | Needs triage                     |
-| [DEF-006](_archive/defects/DEF-006-a-refused-reconnect-drops-the-add-a-roadmap-dialog.md)   | A reconnect Google refuses drops the "Add a roadmap" dialog and what was typed                 | Won't fix                        |
-| [DEF-007](defects/DEF-007-status-panels-have-rounded-corners.md)                            | Status panels have rounded corners; cards and the About panel beside them are square           | Needs triage                     |
-| [DEF-008](defects/DEF-008-focus-is-lost-after-add-a-roadmap-closes-in-safari.md)            | Focus is lost when "Add a roadmap" closes, for a Product Lead who clicked it in Safari         | Needs triage                     |
+| ID                                                                                           | Defect                                                                                         | Status                           |
+| -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | -------------------------------- |
+| [DEF-001](_archive/defects/DEF-001-roadmaps-heading-title-case.md)                           | The roadmaps heading is in Title Case                                                          | Done                             |
+| [DEF-002](defects/DEF-002-header-home-link-name-on-phones.md)                                | On a phone, the header's home link is named without the word it shows                          | Needs triage                     |
+| [DEF-003](_archive/defects/DEF-003-refusal-shows-stale-text-or-restores-removed-roadmap.md)  | After a refused publish, "Use theirs" can show older text, and a removed roadmap can come back | Done — in its PR, awaiting merge |
+| [DEF-004](defects/DEF-004-pending-no-category-dropped-when-category-unlisted.md)             | A pending "No category" is dropped, unwritten, once the roadmap's category leaves its list     | Needs triage                     |
+| [DEF-005](defects/DEF-005-about-form-shows-no-family-after-refresh.md)                       | An open About form shows "No family" after Refresh reads a co-lead's family                    | Needs triage                     |
+| [DEF-006](_archive/defects/DEF-006-a-refused-reconnect-drops-the-add-a-roadmap-dialog.md)    | A reconnect Google refuses drops the "Add a roadmap" dialog and what was typed                 | Won't fix                        |
+| [DEF-007](defects/DEF-007-status-panels-have-rounded-corners.md)                             | Status panels have rounded corners; cards and the About panel beside them are square           | Needs triage                     |
+| [DEF-008](defects/DEF-008-focus-is-lost-after-add-a-roadmap-closes-in-safari.md)             | Focus is lost when "Add a roadmap" closes, for a Product Lead who clicked it in Safari         | Needs triage                     |
+| [DEF-009](defects/DEF-009-a-published-new-item-is-not-shown-when-the-read-after-it-fails.md) | A new item that was published is not shown when the read after the publish fails               | Needs triage                     |
 
 A defect found during delivery is recorded in `defects/` with
 Status `Needs triage` and listed here until the owner triages it.

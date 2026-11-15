@@ -1,6 +1,8 @@
 import type { Locator, Page } from "@playwright/test"
 
 import {
+  addItem,
+  openAddItemDialog,
   openAddRoadmapDialog,
   openEditItemDialog,
   openEditRoadmapDialog,
@@ -259,6 +261,9 @@ for (const theme of THEMES) {
       // Gone, so the tour's stops are the page's alone.
       await expect(form).toHaveCount(0)
       await expect(main.getByText("1 unpublished change")).toBeVisible()
+      // And one new item: its card's Remove (STY-046).
+      await addItem(page, "Choose a clinic closer to home", "Next")
+      await expect(main.getByText("2 unpublished changes")).toBeVisible()
 
       await expectEveryStopShowsAnIndicator(page)
     })
@@ -288,6 +293,19 @@ for (const theme of THEMES) {
       ).toBeFocused()
 
       await expectEveryStopShowsAnIndicator(page, dialog)
+    })
+
+    test("every control in the item dialog, adding, shows DHCW's focus indicator (STY-046)", async ({
+      page,
+    }) => {
+      await page.goto("./#/roadmaps/producta")
+      await connect(page)
+      await expect(
+        page.getByRole("heading", { level: 3, name: "Minimal card" }),
+      ).toBeVisible()
+      const dialog = await openAddItemDialog(page)
+
+      await expectDialogTour(page, dialog)
     })
 
     test("every control in the Add a roadmap dialog shows DHCW's focus indicator (STY-041)", async ({

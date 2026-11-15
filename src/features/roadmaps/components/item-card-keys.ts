@@ -58,7 +58,10 @@ function sameKeys(a: ItemCardKeys, b: ItemCardKeys): boolean {
   )
 }
 
-/** {@link assignItemCardKeys} for a roadmap's items, remembering the keys it last gave. */
+/**
+ * {@link assignItemCardKeys} for a roadmap's items, remembering the keys it last gave:
+ * the very list it gave before, while the keys are the same.
+ */
 export function useItemCardKeys(
   items: readonly RoadmapItem[],
 ): readonly string[] {
@@ -66,7 +69,8 @@ export function useItemCardKeys(
     assignItemCardKeys(items, undefined),
   )
   const next = assignItemCardKeys(items, remembered)
+  if (sameKeys(next, remembered)) return remembered.keys
   // Adjusting state while rendering, as React documents for state that follows props.
-  if (!sameKeys(next, remembered)) setRemembered(next)
+  setRemembered(next)
   return next.keys
 }

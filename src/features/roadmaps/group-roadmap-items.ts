@@ -1,45 +1,33 @@
-import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import {
   ROADMAP_PLACEMENTS,
   type RoadmapPlacement,
 } from "@/domain/roadmap/roadmap-placement"
 
-/**
- * An item with its position among the roadmap's items, which keys it: items have no
- * identity yet (ADR-011).
- */
-export interface PositionedRoadmapItem {
-  item: RoadmapItem
+/** One of the things grouped, with its position among them. */
+export interface Positioned<T> {
+  item: T
   position: number
 }
 
-export interface RoadmapItemGroups {
-  /** Items with no recognised horizon, which the public site leaves out. */
-  unplaced: PositionedRoadmapItem[]
+export interface RoadmapItemGroups<T> {
+  /** Those with no recognised horizon, which the public site leaves out. */
+  unplaced: Positioned<T>[]
   /** Every placement in the public site's order, each with its items (maybe none). */
-  placements: { placement: RoadmapPlacement; items: PositionedRoadmapItem[] }[]
+  placements: { placement: RoadmapPlacement; items: Positioned<T>[] }[]
 }
 
 /**
- * A roadmap's items by placement, each group in row order: where `placementAt` puts
- * each, its own placement unless a pending move says otherwise (STY-031).
+ * A roadmap's items by placement, each group in the order given: `placementOf` says
+ * where each shows, which for a roadmap's page is where a pending move puts it
+ * (STY-031), with the items new to the roadmap last (STY-046).
  */
-export function groupRoadmapItems(
-  items: readonly RoadmapItem[],
-  placementAt: (
-    item: RoadmapItem,
-    position: number,
-  ) => RoadmapPlacement | null = (item) => item.placement,
-): RoadmapItemGroups {
-  const positioned = items.map((item, position) => ({
-    item,
-    position,
-    placement: placementAt(item, position),
-  }))
+export function groupRoadmapItems<T>(
+  items: readonly T[],
+  placementOf: (item: T) => RoadmapPlacement | null,
+): RoadmapItemGroups<T> {
+  const positioned = items.map((item, position) => ({ item, position }))
   const at = (placement: RoadmapPlacement | null) =>
-    positioned.flatMap(({ placement: each, ...rest }) =>
-      each === placement ? [rest] : [],
-    )
+    positioned.filter(({ item }) => placementOf(item) === placement)
   return {
     unplaced: at(null),
     placements: ROADMAP_PLACEMENTS.map((placement) => ({

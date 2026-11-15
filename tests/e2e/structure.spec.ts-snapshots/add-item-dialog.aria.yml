@@ -1,0 +1,36 @@
+- dialog "Add an item":
+  - heading "Add an item" [level=2]
+  - status:
+    - note:
+      - paragraph: “Choose a clinic closer to home” was added.
+  - form "Add an item":
+    - text: Title
+    - textbox "Title"
+    - text: Description
+    - textbox "Description"
+    - text: Expected outcome
+    - textbox "Expected outcome"
+    - text: Phase
+    - textbox "Phase"
+    - text: Horizon or section
+    - combobox "Horizon or section":
+      - option "Recently delivered"
+      - option "Now"
+      - option "Next" [selected]
+      - option "Later"
+      - option "Delivered this year"
+      - option "Not doing"
+    - paragraph: Tags
+    - button "Add tags"
+    - paragraph: No tags
+    - paragraph: Organisations
+    - button "Add organisations"
+    - paragraph: No organisations
+    - paragraph: Details
+    - button "Add details"
+    - paragraph: The public site lists these under “What this covers”.
+    - paragraph: No details
+    - paragraph: It stays unpublished until you choose “Publish changes”.
+    - button "Add item"
+    - button "Add and start another"
+    - button "Cancel"

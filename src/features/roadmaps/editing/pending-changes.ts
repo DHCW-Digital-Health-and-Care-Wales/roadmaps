@@ -1,8 +1,8 @@
 /**
  * The rules of pending edits (ADR-012, EPC-005 "The pending-edit store"): what an edit
  * keeps, what a fresh read or a publish drops, and how an edit finds its item again. Pure
- * functions over `RoadmapChanges`; the store applies them. A new item is added by
- * `addNewItem` (`domain/roadmap/new-item.ts`).
+ * functions over `RoadmapChanges`; the store applies them. A new item is added, edited
+ * and removed by `domain/roadmap/new-item.ts`; how it shows is here (`shownNewItem`).
  */
 
 import { findEditedItem } from "@/domain/roadmap/find-edited-item"
@@ -20,6 +20,7 @@ import {
   type ItemChanges,
   itemValue,
   type ItemValues,
+  type NewItem,
   organisationIdsOf,
   type RoadmapChanges,
   type RoadmapChoiceField,
@@ -28,7 +29,10 @@ import {
   UNLISTED_FAMILY,
 } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
-import { isRoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
+import {
+  isRoadmapPlacement,
+  type RoadmapPlacement,
+} from "@/domain/roadmap/roadmap-placement"
 
 import type { RoadmapLists } from "../hooks/use-roadmap-lists"
 
@@ -361,13 +365,26 @@ export function settlePublished(
 }
 
 /**
+ * The roadmap's new items still to be published: those `items`, its items as read,
+ * don't hold. One a read holds is that item, however it then reads.
+ */
+export function pendingNewItems(
+  items: readonly RoadmapItem[],
+  changes: RoadmapChanges | undefined,
+): readonly NewItem[] {
+  return changes ? dropPublishedNewItems(changes, items).newItems : []
+}
+
+/**
  * Whether publishing `changes` leaves the public site nothing of `items` to show: none
- * is in a horizon or section, counting a pending move (STY-042 D4).
+ * is in a horizon or section, counting a pending move (STY-042 D4), and no item is new,
+ * which is always in one (STY-046 D9).
  */
 export function publishesNoItems(
   items: readonly RoadmapItem[],
   changes: RoadmapChanges | undefined,
 ): boolean {
+  if (pendingNewItems(items, changes).length > 0) return false
   const entries = matchItemChanges(items, changes)
   return items.every(
     (item, at) => applyItemChanges(item, entries.get(at)).placement === null,
@@ -390,14 +407,14 @@ export function countChanges(changes: RoadmapChanges | undefined): number {
   )
 }
 
-/** `text` showing `change`'s value as its English: `null` for a cleared field. */
+/** `text` showing `value` as its English, if one is given: `null` for a cleared field. */
 function withEnglish(
   text: LocalisedText | null,
-  change: FieldChange | undefined,
+  value: string | undefined,
 ): LocalisedText | null {
-  if (!change) return text
-  if (change.value === "") return null
-  return { en: change.value, cy: text?.cy ?? "" }
+  if (value === undefined) return text
+  if (value === "") return null
+  return { en: value, cy: text?.cy ?? "" }
 }
 
 /**
@@ -417,18 +434,18 @@ export function applyRoadmapChanges(
     ...roadmap,
     ...chosenFamily(fields.familyId, lists?.families),
     ...chosenCategory(fields.categoryId, lists?.categories),
-    title: withEnglish(roadmap.title, fields.title) ?? roadmap.title,
-    statusLabel: withEnglish(roadmap.statusLabel, fields.statusLabel),
+    title: withEnglish(roadmap.title, fields.title?.value) ?? roadmap.title,
+    statusLabel: withEnglish(roadmap.statusLabel, fields.statusLabel?.value),
     productLead: fields.productLead
       ? fields.productLead.value || null
       : roadmap.productLead,
     lastUpdated: fields.lastUpdated
       ? fields.lastUpdated.value || null
       : roadmap.lastUpdated,
-    vision: withEnglish(roadmap.vision, fields.vision),
+    vision: withEnglish(roadmap.vision, fields.vision?.value),
     serviceDescription: withEnglish(
       roadmap.serviceDescription,
-      fields.serviceDescription,
+      fields.serviceDescription?.value,
     ),
   }
 }
@@ -476,11 +493,17 @@ export function applyItemChanges(
   entry: ItemChanges | undefined,
 ): RoadmapItem {
   if (!entry) return item
-  const { fields } = entry
-  const placement = fields.placement?.value
-  const tags = fields.tags?.value
-  const organisations = fields.organisationIds?.value
-  const details = fields.details?.value
+  return withValues(
+    item,
+    Object.fromEntries(
+      pendingValues(entry).map(({ field, value }) => [field, value]),
+    ),
+  )
+}
+
+/** `item` reading `values` in each field they give, as a publish of them writes it. */
+function withValues(item: RoadmapItem, values: ItemValues): RoadmapItem {
+  const { placement, tags, organisationIds, details } = values
   return {
     ...item,
     ...(placement !== undefined &&
@@ -488,16 +511,49 @@ export function applyItemChanges(
     ...(tags !== undefined && {
       tags: tagsOf(tags).map((en) => ({ en, cy: "" })),
     }),
-    ...(organisations !== undefined && {
-      organisationIds: organisationIdsOf(organisations),
+    ...(organisationIds !== undefined && {
+      organisationIds: organisationIdsOf(organisationIds),
       unknownOrganisationCodes: [],
     }),
     ...(details !== undefined && { details: englishDetails(details) }),
-    title: withEnglish(item.title, fields.title) ?? item.title,
-    description: withEnglish(item.description, fields.description),
-    expectedOutcome: withEnglish(item.expectedOutcome, fields.expectedOutcome),
-    phase: withEnglish(item.phase, fields.phase),
+    title: withEnglish(item.title, values.title) ?? item.title,
+    description: withEnglish(item.description, values.description),
+    expectedOutcome: withEnglish(item.expectedOutcome, values.expectedOutcome),
+    phase: withEnglish(item.phase, values.phase),
   }
+}
+
+/** An item with nothing in it and no horizon, which a new item's values go over. */
+const BLANK_ITEM: RoadmapItem = {
+  id: null,
+  title: { en: "", cy: "" },
+  placement: null,
+  writtenHorizon: "",
+  description: null,
+  expectedOutcome: null,
+  phase: null,
+  tags: [],
+  hasWelshTags: false,
+  organisationIds: [],
+  unknownOrganisationCodes: [],
+  details: [],
+  hasWelshDetails: false,
+}
+
+/**
+ * An item with nothing in it, which the item dialog's adding form starts from: in
+ * `placement`, or in none, which a new item can't keep (ADR-014).
+ */
+export function blankItem(placement: RoadmapPlacement | null): RoadmapItem {
+  return placement ? withValues(BLANK_ITEM, { placement }) : BLANK_ITEM
+}
+
+/**
+ * A new item as its card shows it: the item it will read as once published, in English
+ * alone, with the ID it was added with.
+ */
+export function shownNewItem({ id, values }: NewItem): RoadmapItem {
+  return withValues({ ...BLANK_ITEM, id }, values)
 }
 
 /** The roadmap's own fields that are pending, in the form's order. */

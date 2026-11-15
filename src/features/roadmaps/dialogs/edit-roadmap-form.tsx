@@ -45,7 +45,7 @@ export function EditRoadmapForm({
     ROADMAP_TEXT_FIELDS,
     (field) => roadmapValue(roadmap, field),
     (field) => t(`roadmaps.edit.roadmapFields.${field}`),
-    multilineRoadmapFields,
+    { multiline: multilineRoadmapFields, required: { title: "titleRequired" } },
   )
   const chosen = useRoadmapChoices(true).fields(roadmap)
   const lastUpdated = {

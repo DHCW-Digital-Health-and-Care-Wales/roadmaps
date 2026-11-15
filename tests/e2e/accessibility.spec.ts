@@ -2,6 +2,8 @@ import AxeBuilder from "@axe-core/playwright"
 import type { Page } from "@playwright/test"
 
 import {
+  addItemButtons,
+  openAddItemDialog,
   openAddRoadmapDialog,
   openEditItemDialog,
   openEditRoadmapDialog,
@@ -238,6 +240,61 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
         "Bydd y wefan gyhoeddus yn ei ddangos heb eitemau.",
       )
       await expectNoAxeViolations(page, theme, { only: "[role=alertdialog]" })
+    })
+
+    test("adding an item: the dialog empty, refused and after adding one, then the new item's card (STY-046)", async ({
+      page,
+    }) => {
+      await page.goto("./#/roadmaps/producta")
+      await connect(page)
+      const main = page.getByRole("main")
+      await expect(
+        main.getByRole("heading", { level: 3, name: "Minimal card" }),
+      ).toBeVisible()
+
+      const dialog = await openAddItemDialog(page)
+      await expectNoAxeViolations(page, theme)
+
+      // A blank title and no horizon, each said at its field.
+      await dialog
+        .getByRole("button", { name: "Add item", exact: true })
+        .click()
+      await expect(dialog.getByText("Enter a title")).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+
+      // "Add and start another": the form empty again, under what was added.
+      await dialog
+        .getByRole("textbox", { name: "Title" })
+        .fill("Choose a clinic closer to home")
+      await dialog
+        .getByRole("combobox", { name: "Horizon or section" })
+        .selectOption({ label: "Next" })
+      await dialog
+        .getByRole("button", { name: "Add and start another" })
+        .click()
+      await expect(dialog.getByRole("status")).not.toBeEmpty()
+      await expectNoAxeViolations(page, theme)
+
+      // The new item's card, tagged "New" with Remove, and the publish bar.
+      await dialog.getByRole("button", { name: "Cancel" }).click()
+      await expect(main.getByText("1 unpublished change")).toBeVisible()
+      await expectNoAxeViolations(page, theme, { only: "main" })
+    })
+
+    test("an empty roadmap's panel with “Add an item”, on a phone (STY-046)", async ({
+      page,
+      sheets,
+    }) => {
+      await page.setViewportSize({ width: 375, height: 800 })
+      sheets.spreadsheet = withTabItems("ProductC")
+      await page.goto("./#/roadmaps/productc")
+      await connect(page)
+      await expect(addItemButtons(page)).toHaveCount(2)
+      await expectNoAxeViolations(page, theme, { only: "main" })
+
+      // The adding form on a phone, as it opens from the panel.
+      await openAddItemDialog(page, { opener: addItemButtons(page).last() })
+      await expectNoAxeViolations(page, theme, { only: "[role=dialog]" })
     })
 
     test("an item's Move menu, then the moved item and an unplaced item's form (STY-031)", async ({

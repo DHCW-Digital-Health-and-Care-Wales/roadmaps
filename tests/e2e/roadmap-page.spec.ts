@@ -1,6 +1,10 @@
 import type { Locator, Page } from "@playwright/test"
 
-import { editRoadmapButton, openEditRoadmapDialog } from "./fixtures/dialogs"
+import {
+  addItemButtons,
+  editRoadmapButton,
+  openEditRoadmapDialog,
+} from "./fixtures/dialogs"
 import {
   EXAMPLE_SPREADSHEET,
   withTabItems,
@@ -338,7 +342,7 @@ for (const theme of THEMES) {
     expect(button.y + button.height).toBeLessThanOrEqual(firstField.y)
   })
 
-  test(`a roadmap with no items shows a compact dashed panel, in the ${theme} theme (STY-042 S2, S4)`, async ({
+  test(`a roadmap with no items shows a compact dashed panel, which holds "Add an item", in the ${theme} theme (STY-042 S2, S4; STY-046 S8)`, async ({
     page,
     sheets,
   }) => {
@@ -356,19 +360,24 @@ for (const theme of THEMES) {
       panel.getByRole("heading", { name: "No items yet" }),
     ).toBeVisible()
     await expect(
-      panel.getByText(
-        "Add its items in the spreadsheet for now. They show here after Refresh.",
-      ),
+      panel.getByText("Add what the product is doing now, next and later."),
     ).toBeVisible()
-    await expect(panel.locator("svg, img")).toHaveCount(0)
+    await expect(main.getByText(/spreadsheet/i)).toHaveCount(0)
+    await expect(
+      panel.getByRole("button", { name: "Add an item" }),
+    ).toBeVisible()
+    // No picture stands for the absence: the only icon is the button's.
+    await expect(panel.locator("img")).toHaveCount(0)
+    await expect(panel.locator("svg")).toHaveCount(1)
     await expect(panel).toHaveCSS("border-top-style", "dashed")
     await expect(panel).toHaveCSS(
       "border-top-color",
       await tokenColour(page, "--border"),
     )
-    expect((await panel.boundingBox())?.height).toBeLessThan(160)
+    // Compact: its heading, one line and the button, well short of a full panel.
+    expect((await panel.boundingBox())?.height).toBeLessThan(200)
 
-    // As it says: items added in the spreadsheet show after Refresh.
+    // An item a co-lead adds shows after Refresh, in the panel's place.
     sheets.spreadsheet = withTabItems("ProductA", ["First work", "Now"])
     await main.getByRole("button", { name: "Refresh" }).click()
     await expect(titlesUnder(page, "Now")).toHaveText(["First work"])
@@ -395,9 +404,10 @@ test("an empty roadmap's page is in Welsh and fits a phone (STY-042 S4)", async 
   ])
   await expect(
     main.getByText(
-      "Ychwanegwch ei eitemau yn y daenlen am y tro. Byddan nhw'n ymddangos yma ar ôl Adnewyddu.",
+      "Ychwanegwch yr hyn mae'r cynnyrch yn ei wneud nawr, nesaf ac yn hwyrach.",
     ),
   ).toBeVisible()
+  await expect(addItemButtons(page, "cy")).toHaveCount(2)
   await expect(
     main.getByRole("button", { name: "Golygu Ynglŷn â'r map trywydd hwn" }),
   ).toBeVisible()

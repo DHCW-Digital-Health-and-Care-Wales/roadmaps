@@ -347,16 +347,14 @@ describe("RoadmapDetailPage items", () => {
     ).toBeInTheDocument()
   })
 
-  it("says a roadmap with no items has none, instead of six empty groups, and where they are added (S6, STY-042 S2)", async () => {
+  it("says a roadmap with no items has none, instead of six empty groups, and what to add (S6, STY-042 S2, STY-046 S8)", async () => {
     await renderRoadmap("producta", { producta: [] })
 
     expect(
       await main().findByRole("heading", { level: 2, name: "No items yet" }),
     ).toBeInTheDocument()
     expect(
-      main().getByText(
-        "Add its items in the spreadsheet for now. They show here after Refresh.",
-      ),
+      main().getByText("Add what the product is doing now, next and later."),
     ).toBeInTheDocument()
     expect(
       main().getByRole("heading", { level: 1, name: "Product A roadmap" }),
@@ -374,7 +372,7 @@ describe("RoadmapDetailPage items", () => {
     ).toBeInTheDocument()
     expect(
       main().getByText(
-        "Ychwanegwch ei eitemau yn y daenlen am y tro. Byddan nhw'n ymddangos yma ar ôl Adnewyddu.",
+        "Ychwanegwch yr hyn mae'r cynnyrch yn ei wneud nawr, nesaf ac yn hwyrach.",
       ),
     ).toBeInTheDocument()
   })

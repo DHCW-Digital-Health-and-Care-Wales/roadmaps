@@ -18,7 +18,7 @@ afterEach(() => {
 const copy = {
   en: {
     logo: "Digital Health and Care Wales",
-    home: "DHCW Roadmap Editor home",
+    homeWord: "home",
     name: "Roadmap Editor",
     shortName: "Roadmaps",
     phaseText: "This is a new service. Your feedback will help us improve it.",
@@ -28,7 +28,7 @@ const copy = {
   },
   cy: {
     logo: "Iechyd a Gofal Digidol Cymru",
-    home: "Hafan Golygydd Mapiau Trywydd IGDC",
+    homeWord: "hafan",
     name: "Golygydd Mapiau Trywydd",
     shortName: "Mapiau Trywydd",
     phaseText:
@@ -57,11 +57,13 @@ describe.each(["en", "cy"] as const)("the shell in %s", (language) => {
       )
     })
 
-    it("has one home link whose name is the full service name", async () => {
+    it('has one home link named by the names it shows, then "home" (DEF-002)', async () => {
       await renderWithProviders({ language, appInfo })
 
+      // jsdom applies no stylesheet, so both visible names are in the name here; the
+      // per-width names are held by tests/e2e/shell.spec.ts.
       const home = within(screen.getByRole("banner")).getByRole("link", {
-        name: c.home,
+        name: `${c.shortName} ${c.name} ${c.homeWord}`,
       })
       expect(home).toHaveAttribute("href", "/")
       // The visible names: the header's own (from `sm`) and the short one below it.

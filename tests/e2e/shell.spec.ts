@@ -9,14 +9,16 @@ import { expect, roadmapCards, test } from "./fixtures/test"
 const copy = {
   en: {
     logo: "Digital Health and Care Wales",
-    home: "DHCW Roadmap Editor home",
+    home: "Roadmap Editor home",
+    shortHome: "Roadmaps home",
     connect: "Connect Google",
     disconnect: "Disconnect",
     copyright: "© Digital Health and Care Wales",
   },
   cy: {
     logo: "Iechyd a Gofal Digidol Cymru",
-    home: "Hafan Golygydd Mapiau Trywydd IGDC",
+    home: "Golygydd Mapiau Trywydd hafan",
+    shortHome: "Mapiau Trywydd hafan",
     connect: "Cysylltu â Google",
     disconnect: "Datgysylltu",
     copyright: "© Iechyd a Gofal Digidol Cymru",
@@ -93,6 +95,23 @@ for (const language of ["en", "cy"] as const) {
       await expect(banner.getByRole("button", { name: c.connect })).toBeHidden()
       await expect(banner.getByRole("status")).not.toBeEmpty()
       await expect(banner.getByRole("status")).toBeAttached()
+    })
+
+    test('the home link is named by the name it shows, then "home", at each width (DEF-002 S1, D1)', async ({
+      page,
+    }) => {
+      const banner = page.getByRole("banner")
+
+      await page.setViewportSize({ width: 375, height: 800 })
+      await page.goto("./")
+      await expect(
+        banner.getByRole("link", { name: c.shortHome }),
+      ).toBeVisible()
+      await expect(banner.getByRole("link", { name: c.home })).toBeHidden()
+
+      await page.setViewportSize({ width: 1280, height: 800 })
+      await expect(banner.getByRole("link", { name: c.home })).toBeVisible()
+      await expect(banner.getByRole("link", { name: c.shortHome })).toBeHidden()
     })
 
     for (const width of [375, 640, 768, 900, 1024, 1280]) {

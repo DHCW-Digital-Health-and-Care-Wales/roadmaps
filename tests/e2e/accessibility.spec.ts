@@ -759,3 +759,18 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
     })
   })
 }
+
+// Label in Name (WCAG 2.5.3): the header's home link shows "Roadmaps" below `sm`, so its
+// name has to contain it (DEF-002).
+for (const language of ["en", "cy"] as const) {
+  test(`the header at 375px wide in ${language}: the home link's name holds what it shows (DEF-002 S1)`, async ({
+    page,
+  }) => {
+    await useLanguage(page, language)
+    await useTheme(page, "light")
+    await page.setViewportSize({ width: 375, height: 800 })
+    await page.goto("./")
+    await expect(page.getByRole("banner")).toBeVisible()
+    await expectNoAxeViolations(page, "light")
+  })
+}

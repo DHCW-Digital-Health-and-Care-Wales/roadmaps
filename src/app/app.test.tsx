@@ -202,7 +202,7 @@ describe("header", () => {
     await renderWithProviders({ path: "/roadmaps/producta" })
 
     expect(
-      header().getByRole("link", { name: "DHCW Roadmap Editor home" }),
+      header().getByRole("link", { name: /Roadmap Editor home$/ }),
     ).toHaveAttribute("href", "/")
   })
 })

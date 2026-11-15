@@ -1,6 +1,6 @@
 # DEF-009: A new item that was published is not shown when the read after the publish fails
 
-- **Status**: Needs triage — found by STY-046's review (Opus, round 1)
+- **Status**: Proposed — triaged by the owner, 2026-11-15 (D1–D3)
 - **Severity**: Medium — the item is public but missing from the page until a Refresh
   succeeds, so a Product Lead may add it again and publish it twice
 - **Area**: Features (pending-edit rules)
@@ -55,7 +55,19 @@ whether it succeeds or fails, leaving the items as cached before the publish.
 **When** the page shows what the publish came to
 **Then** the item is still shown, and nothing invites the Product Lead to add it again
 
-## Open questions
+### S2: A published edit keeps its new text while the roadmap can't be read again
+
+**Given** a publish of an edit to an item that is confirmed, and a read after it that fails
+**When** the page shows what the publish came to
+**Then** the item shows the edited text, still pending, until a read holds it (D2)
+
+### S3: A published new item can't be removed until a read holds it
+
+**Given** a new item S1 keeps pending after a confirmed publish
+**When** the Product Lead looks at its card
+**Then** the card offers no Remove until a read holds the item (D3)
+
+## Open questions _(answered: see Decisions)_
 
 - **Q1**: What should the page show for a new item it knows was published but can't
   read back? _Sam publishes "Choose a clinic closer to home"; the write lands and the
@@ -69,7 +81,14 @@ whether it succeeds or fails, leaving the items as cached before the publish.
   - (c) Leave it, and say in the alert that what was published shows after Refresh.
 - **Q2**: Should an edit follow the same answer? Its old text shows, untagged, until
   the next read.
+- **Q3**: What does Remove do on a card D1 keeps pending, whose item is already public?
+  Removing a published item is undecided (STY-049). Recommended: no Remove on that card
+  until a read holds the item.
 
 ## Decisions
+
+- **D1** (owner, 2026-11-15, the owner's triage of the live chores and defects): Q1 (a). A new item the publish confirmed stays pending, tagged "New" and counted, until a read holds it.
+- **D2** (owner, 2026-11-15, the owner's triage of the live chores and defects): Q2 yes. A confirmed edit stays pending, with its text, until a read holds it.
+- **D3** (owner, 2026-11-15, Q3): (a). A card D1 keeps pending offers no Remove until a read holds its item; removing a published item stays STY-049's.
 
 ## Delivery _(add on delivery; as in `story.md`)_

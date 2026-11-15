@@ -1,6 +1,6 @@
 # DEF-008: Focus is lost when "Add a roadmap" closes, for a Product Lead who clicked it in Safari
 
-- **Status**: Needs triage — found by STY-043's review (Opus, round 1)
+- **Status**: Proposed — triaged by the owner, 2026-11-15 (D1)
 - **Severity**: Low — after Cancel or Escape a keyboard or screen-reader user is put
   back at the top of the page; nothing is lost and nothing wrong is written
 - **Area**: Features/UI
@@ -64,5 +64,7 @@ test here runs Safari.
 **Then** focus is on the button that opened it, of the two an empty list shows
 
 ## Decisions
+
+- **D1** (owner, 2026-11-15, the owner's triage of the live chores and defects): fix it as Cause sets out, and make `opener` required in `FormDialogProps` and `RoadmapDialogProps`, so the type check names a later dialog that gives none.
 
 ## Delivery _(add on delivery; as in `story.md`)_

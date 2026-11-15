@@ -225,28 +225,28 @@ flowchart LR
   Won't fix (owner, 2026-11-14): rare and a small loss; reopen on evidence from real users.
 - [DEF-008](../defects/DEF-008-focus-is-lost-after-add-a-roadmap-closes-in-safari.md):
   focus is lost when "Add a roadmap" closes, for a Product Lead who clicked it in
-  Safari. Needs triage; found by STY-043's review, which fixed the same for About's
-  Edit.
+  Safari. Proposed (owner, 2026-11-15); found by STY-043's review, which fixed the
+  same for About's Edit.
 - [DEF-009](../defects/DEF-009-a-published-new-item-is-not-shown-when-the-read-after-it-fails.md):
   a new item that was published is not shown when the read after the publish fails,
-  until a Refresh succeeds. Needs triage; found by STY-046's review.
+  until a Refresh succeeds. Proposed (owner, 2026-11-15); found by STY-046's review.
 - [DEF-010](../defects/DEF-010-a-publishing-dialog-changes-what-it-shows-once-written.md):
   a dialog that publishes changes what it shows once its changes are no longer
   pending: the publish dialog's list empties, as it closes or when a read leaves
-  nothing to publish, and a tick box can appear. Needs triage; found by STY-047's
-  delivery.
+  nothing to publish, and a tick box can appear. Proposed (owner, 2026-11-15); found
+  by STY-047's delivery.
 
 ## Related
 
-- [CHO-010](../chores/CHO-010-check-adding-a-roadmap-against-a-real-spreadsheet.md): the
+- [CHO-010](../_archive/chores/CHO-010-check-adding-a-roadmap-against-a-real-spreadsheet.md): the
   checks of STY-040's write against a real test spreadsheet, which its delivery could
-  not run.
-- [CHO-015](../chores/CHO-015-check-adding-an-item-against-a-real-spreadsheet.md): the
+  not run. Done: the owner ran them, 2026-11-15.
+- [CHO-015](../_archive/chores/CHO-015-check-adding-an-item-against-a-real-spreadsheet.md): the
   check of STY-045's write, a new item's row, against a real test spreadsheet, which
-  its delivery could not run.
+  its delivery could not run. Done: the owner ran it, 2026-11-15.
 - [CHO-011](../_archive/chores/CHO-011-the-dialog-tests-share-their-setup.md): the
   test setup STY-041 wrote out per spec, shared before STY-043, STY-044 and STY-046
-  copy it. Done, in its PR, awaiting merge.
+  copy it. Done.
 - [CHO-012](../chores/CHO-012-the-other-tests-use-the-shared-fixtures.md): the
   family and category lists other tests still declare, and the connected state every
   page test declares.

@@ -1,6 +1,6 @@
 # DEF-005: An open About form shows "No family" after Refresh reads a co-lead's family
 
-- **Status**: Needs triage — found by the STY-031 retro's review
+- **Status**: Proposed — triaged by the owner, 2026-11-15 (D1)
 - **Severity**: Low — the form shows a family choice that isn't the roadmap's, though
   Done changes nothing and nothing wrong is written
 - **Area**: Features/UI
@@ -67,5 +67,7 @@ now; `EditableRoadmapAbout` keeps the roadmap as shown when the dialog opened
 change
 
 ## Decisions
+
+- **D1** (owner, 2026-11-15, the owner's triage of the live chores and defects): fix it, though the modal dialog has made it rare: the Family options are built from the roadmap as shown when the dialog opened (`opened.shown`), as the item form's are.
 
 ## Delivery _(add on delivery; as in `story.md`)_

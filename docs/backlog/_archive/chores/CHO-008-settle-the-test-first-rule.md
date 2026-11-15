@@ -1,14 +1,13 @@
 # CHO-008: Deliveries follow a test-first rule they can keep
 
-- **Status**: Needs grilling — the owner decides whether to enforce, relax or keep the
-  test-first rule
+- **Status**: Done — the owner chose to relax the rule (2026-11-15, D1); archived
 - **Type**: Docs
 - **Area**: Docs
 - **Epic**: standalone
 - **Depends on**: none
 - **Binding ADRs**: none
 - **Suggested model**: Sonnet — an edit to one skill step once the owner has decided
-- **Delivered**: _(add on delivery)_
+- **Delivered**: [#95](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/95)
 
 ## Summary
 
@@ -43,3 +42,9 @@ implement-story step 3 states the rule the owner chose, in one place.
 - Keep: is reporting the departure enough?
 
 ## Decisions
+
+- **D1** (owner, 2026-11-15, the owner's triage of the live chores and defects): Relax. A defect fix, a change to `domain/` and a pending-edit rule stay test-first; any other behaviour (layout, copy, a review fix) may take its test after the code, once that test is shown red by breaking the finished code.
+
+## Delivery
+
+- implement-story step 3 states the rule of D1 in its one paragraph on test order (S1).

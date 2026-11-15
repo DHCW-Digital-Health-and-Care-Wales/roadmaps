@@ -1,7 +1,6 @@
 # CHO-010: Adding a roadmap is checked against a real test spreadsheet
 
-- **Status**: Proposed — STY-040's delivery had no Google account to run the checks its
-  _Starting point_ asks for; they need a person, or an agent given a test spreadsheet
+- **Status**: Done — the owner ran the checks against a test spreadsheet, 2026-11-15; archived
 - **Type**: Chore
 - **Area**: Infrastructure + Docs
 - **Epic**: EPC-011-adding-roadmaps-and-items
@@ -10,7 +9,7 @@
 - **Binding ADRs**: ADR-011, ADR-012
 - **Suggested model**: Sonnet — a manual run with seven things to look at, and a small
   change to the copy's requests only if one fails
-- **Delivered**: _(add on delivery)_
+- **Delivered**: [#95](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/95)
 
 ## Summary
 
@@ -56,3 +55,7 @@ are changed together, in a PR that says the format changed
 ## Out of scope
 
 - The live spreadsheet: never used for a check.
+
+## Delivery
+
+- **Owner's check** (2026-11-15): the owner ran the checks of the Measurement table against a test spreadsheet and reported that the write works correctly, without detail on the rows that ask what happens (a protected `Template`, a filter or table on the tab). No row was reported different, so the write, the fake and README _What the editor writes_ are unchanged, and STY-040's record stands.

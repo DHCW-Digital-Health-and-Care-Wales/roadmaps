@@ -195,7 +195,7 @@ Audited at `400c90c`.
 - **The checks against a real spreadsheet were not run** (agent; _Starting point_, D10):
   the delivery had no Google account to write a test spreadsheet with. Each of the
   three unknowns was built in the form that holds whichever way Google answers, and
-  [CHO-010](../../chores/CHO-010-check-adding-a-roadmap-against-a-real-spreadsheet.md)
+  [CHO-010](../chores/CHO-010-check-adding-a-roadmap-against-a-real-spreadsheet.md)
   records the checks still owed, a protected `Template` among them, which nothing here
   handles.
 - **S2, D5: one row is kept under the header, emptied; every row after it is deleted**

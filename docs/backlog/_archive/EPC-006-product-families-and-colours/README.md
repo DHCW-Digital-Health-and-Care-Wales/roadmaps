@@ -103,8 +103,8 @@ need the owner's tabs only for a check against the real sheet; tests use the fak
 
 ## Defects
 
-- [DEF-004](../../defects/DEF-004-pending-no-category-dropped-when-category-unlisted.md): a pending "No category" is dropped, unwritten, once the roadmap's category leaves its list (Needs triage)
-- [DEF-005](../../defects/DEF-005-about-form-shows-no-family-after-refresh.md): an open About form shows "No family" after Refresh reads a co-lead's family (Needs triage)
+- [DEF-004](../defects/DEF-004-pending-no-category-dropped-when-category-unlisted.md): a pending "No category" is dropped, unwritten, once the roadmap's category leaves its list (Won't fix, owner, 2026-11-15)
+- [DEF-005](../../defects/DEF-005-about-form-shows-no-family-after-refresh.md): an open About form shows "No family" after Refresh reads a co-lead's family (Proposed, owner, 2026-11-15)
 
 ## Related
 

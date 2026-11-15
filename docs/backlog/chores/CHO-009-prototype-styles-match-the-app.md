@@ -1,7 +1,7 @@
 # CHO-009: The prototype stylesheet draws the app's DHCW look
 
-- **Status**: Proposed — found writing STY-037's prototypes; the owner may want to pay
-  the cost before the next design review
+- **Status**: Proposed — not to be selected now; deliver it before the next round of
+  prototypes (D1)
 - **Type**: Chore
 - **Area**: Docs
 - **Epic**: standalone
@@ -36,6 +36,8 @@ has no `--brand`. No analysis under `docs/analysis/` uses the stylesheet yet.
 **Then** colours, corners, type and focus styles match the app's
 
 ## Decisions
+
+- **D1** (owner, 2026-11-15, the owner's triage of the live chores and defects): deliver it before the next round of prototypes, not now.
 
 ## Out of scope
 

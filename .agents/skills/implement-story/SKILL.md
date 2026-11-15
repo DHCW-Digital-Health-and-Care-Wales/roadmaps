@@ -109,15 +109,21 @@ blocking decisions resolved or explicitly separated.
 If entering here for an ad-hoc change, capture the affected UI baselines per
 `references/screenshots.md` before implementation edits, just as in step 2.
 
-For behaviour, write the unit or component regression first and observe its
-intended failure, then implement the smallest coherent change. Slice a large
-story (a new repository method, several routes, a rewritten screen) so each
-scenario's test goes red before the code that passes it. Red shown by breaking
-finished code proves a test discriminates, not that it came first: report it
-as a departure, never as TDD evidence. Undo such a break from a copy of the
-file saved before it: `git checkout -- <file>` puts back the last commit,
-without the uncommitted work around the break. A Playwright test may follow working
-code, since its selectors may not exist before; that order is no departure.
+A defect fix, a change to `domain/` and a pending-edit rule (what
+`src/features/roadmaps/editing/` keeps, shows or drops while a change is
+pending) are test-first, even when it is a review fix: write the unit or
+component regression, observe its intended failure, then implement the smallest
+coherent change. Slice a large story (a new repository method, several routes, a
+rewritten screen) so each such scenario's test goes red before the code that
+passes it. Any other behaviour (layout, copy, a review fix) may take its test
+after the code, once that test is shown red by breaking the finished code;
+record the red in Delivery's Scenario evidence. Red shown by breaking finished
+code proves a test discriminates, not that it came first: on a test-first
+change, report it as a departure, never as TDD evidence. Undo a break from a
+copy of the file saved before it: `git checkout -- <file>` puts back the last
+commit, without the uncommitted work around the break. A Playwright test may
+follow working code, since its selectors may not exist before; that order is no
+departure.
 
 A value with no behaviour of its own to assert (a retry count, a chunk group,
 a CI job graph) is evidenced by an observed run showing its effect, recorded in

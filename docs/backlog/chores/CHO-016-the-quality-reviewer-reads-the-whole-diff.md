@@ -1,7 +1,6 @@
 # CHO-016: The quality reviewer reads the whole diff in one pass
 
-- **Status**: Needs grilling — the owner decides what the quality lane's reviewer runs
-  as (Q1)
+- **Status**: In progress — S1 in the backlog triage PR; S2 measures the next two deliveries whose diff is over 100,000 characters
 - **Type**: Chore
 - **Area**: Docs (agent definitions and skills)
 - **Epic**: standalone
@@ -76,7 +75,7 @@ tokens, the saved outputs it opened of those it had, and the parts it reported u
 **And** where a first pass still left a part unread, the record says so and names the
 option of Q1 to try next
 
-## Open questions
+## Open questions _(answered: see Decisions)_
 
 - **Q1**: What should the quality lane's reviewer run as? On STY-045 the Sonnet
   reviewer left 69 lines of the story's record unread, and its re-checker six test
@@ -99,6 +98,8 @@ option of Q1 to try next
     which its brief now asks for. This record closes Won't do.
 
 ## Decisions
+
+- **D1** (owner, 2026-11-15, the owner's triage of the live chores and defects): Q1 (a), Sonnet at high effort, as a trial. If a first pass of either measured delivery (S2) still leaves part of the diff unread, the quality lane's reviewer becomes Opus (b), with no further owner question.
 
 ## Out of scope
 

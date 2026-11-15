@@ -202,7 +202,7 @@ header, as any edited field's is. ADR-012 gains _STY-036 amendments_ and
   publishing other edits with "Mark as updated today" ticked, then confirming and
   publishing the form, is refused, the review showing that date as "Current text".
   Nothing is lost and "Keep mine" resolves it; recorded as
-  [CHO-007](../../chores/CHO-007-rebase-an-open-date-form-after-marking-updated.md).
+  [CHO-007](../chores/CHO-007-rebase-an-open-date-form-after-marking-updated.md).
 - **A date already held in another format is not rewritten** (agent, review round 1
   Sol P2, declined): when the cell holds the same date as `DD/MM/YYYY` (`13/11/2026`),
   a picked or ticked `2026-11-13` is no change, so nothing is written, as for any field

@@ -11,7 +11,7 @@ having the main agent inspect every site. Do small edits directly.
 | Mechanical edits requiring per-site reading               | Economy (`mechanical-worker`) with constrained brief         | Disjoint files, explicit pattern/exceptions, changed paths and verification |
 | Architecture, auth/token handling, ambiguous requirements | Main agent or a stronger worker                              | Relevant domain context and trade-offs; main retains decision               |
 | Correctness review                                        | **Opus** (`code-reviewer`) **and Sol** (Codex `gpt-6.1-sol`) | Fresh pinned scope; `code-review` skill; two independent reviews            |
-| Maintainability and conventions review                    | **Sonnet** (`quality-reviewer`)                              | Fresh pinned scope; `quality-review` skill                                  |
+| Maintainability and conventions review                    | **Sonnet**, high effort (`quality-reviewer`)                 | Fresh pinned scope; `quality-review` skill                                  |
 
 Model names in Claude agent frontmatter are Claude-specific preferences. At
 runtime inspect the available providers and models; choose the cheapest capable
@@ -69,8 +69,9 @@ the Worker contract.
 
 Start the reviewers of a round together so they run concurrently: a
 reviewer on your own provider through the runtime's native subagent tool with
-the model set explicitly (Opus, Sonnet), and one on another provider (Sol, or
-Opus and Sonnet when you run on Codex) through a cross-provider delegation tool.
+the model and effort set explicitly (Opus; Sonnet at high effort), and one on
+another provider (Sol; or Opus, and Sonnet at high effort, when you run on
+Codex) through a cross-provider delegation tool.
 Start any background delegation first, then the foreground ones, so nothing
 waits on another.
 
@@ -129,7 +130,7 @@ pass.
 ## Review rounds
 
 - **Lanes**: _correctness_, with two reviewers (Opus and Sol), each following
-  `code-review`; _quality_, with one reviewer (Sonnet) following
+  `code-review`; _quality_, with one reviewer (Sonnet, high effort) following
   `quality-review`. Each reviewer is its own track for re-checks. A docs-only
   PR, one that changes only Markdown under `docs/` or `.agents/skills/` or an
   `AGENTS.md`/`CLAUDE.md` (an agent definition under `.claude/agents/` or a
@@ -143,25 +144,25 @@ pass.
   Worker contract sets.
 - **Round 2, the re-check**: only for a reviewer whose round 1 found anything
   above P3 (correctness) or a 🔴 or 🟡 (quality); a CI finding that arrives
-  first joins it. Start a fresh reviewer on the same model. Supply its previous
-  findings and how each was addressed, the head last reviewed, the new head and
-  the diff command between them. A rebase since the last round moves the base
-  too: re-pin both SHAs and supply
+  first joins it. Start a fresh reviewer on the same model and effort. Supply
+  its previous findings and how each was addressed, the head last reviewed, the
+  new head and the diff command between them. A rebase since the last round
+  moves the base too: re-pin both SHAs and supply
   `git range-diff <old base>..<old head> <new base>..<new head>`, since a diff
   between the heads shows the base's new work as the fix. The re-checker
   confirms or reopens each finding and reviews the changed lines and the code
   they affect. A fix that answers only P3 or 💭 findings or wording, and a
   rebase whose range-diff shows the branch's own commits unchanged, get no
   re-check: list them in the PR body's Review record.
-- **Final fresh pass**: when a fix changes runtime behaviour (logic, data,
-  auth or UI behaviour), not only wording, docs, tests or renames, start one
-  fresh reviewer over the whole diff in the lane that owns that behaviour: Sol
-  for correctness, Sonnet for quality. A fix for a CI finding counts. The pass
-  is its own task beside that lane's re-checks, briefed as a first round at the
-  new head with the requirements and pinned SHAs, and asked to judge from those
-  and the pinned diff alone, not the PR's body or comments. Its own findings
-  that would trigger a re-check get one, unless the pass ran after the cap.
-  Record in the PR body's Review record whether the pass ran and why.
+- **Final fresh pass**: when a fix changes runtime behaviour (logic, data, auth
+  or UI behaviour), not only wording, docs, tests or renames, start one fresh
+  reviewer over the whole diff in the lane that owns that behaviour: Sol for
+  correctness, Sonnet at high effort for quality. A fix for a CI finding counts.
+  The pass is its own task beside that lane's re-checks, briefed as a first
+  round at the new head with the requirements and pinned SHAs, and asked to
+  judge from those and the pinned diff alone, not the PR's body or comments. Its
+  own findings that would trigger a re-check get one, unless the pass ran after
+  the cap. Record in the PR body's Review record whether the pass ran and why.
 - **Cap**: two rounds per reviewer, round 1 and its re-check, plus the final
   fresh pass and its re-check when they run. A reviewer reaches its cap once
   its re-check has run or been skipped because round 1 found nothing that

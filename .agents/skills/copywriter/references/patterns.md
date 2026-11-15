@@ -130,7 +130,8 @@ field names; in Welsh each says it is the English ("Teitl (Saesneg)"). The confi
 button is **Done**, never "Save", which names the write on a roadmap that is not
 published; Cancel leaves the form. A required field's error is an instruction:
 `roadmaps.edit.titleRequired` "Enter a title". What holds a pending change is tagged
-"Changed"; Undo is "Undo changes" plus its subject.
+"Changed"; Undo is "Undo changes" plus its subject. A form in a dialog is headed by
+the verb and what it edits ("Edit this roadmap"), as an add dialog is.
 
 ## Add dialog
 

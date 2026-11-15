@@ -1,4 +1,4 @@
-import { useId, type ReactNode } from "react"
+import { useId, type ReactNode, type RefObject } from "react"
 
 import {
   Dialog,
@@ -19,6 +19,12 @@ export interface FormDialogProps {
   /** Cancel or Escape was chosen: the caller closes it, dropping what was typed. */
   onClose: () => void
   /**
+   * The control that opens it, where focus goes as it closes. Without it focus goes
+   * back to whatever held it as the dialog opened, which is not that control in a
+   * browser that leaves a clicked button unfocused, as Safari does.
+   */
+  opener?: RefObject<HTMLElement | null> | undefined
+  /**
    * The form, given the heading's id to be named by, and drawn afresh each time the
    * dialog opens. Its Cancel is a `DialogClose`.
    */
@@ -28,15 +34,16 @@ export interface FormDialogProps {
 /**
  * A form in a dialog, as EPC-011's _The dialogs_ sets for every one: modal, named by its
  * heading, with focus in its first field as it opens and back on the control that opened
- * it as it closes. Cancel and Escape close it; a click outside does nothing. On a phone
- * it fills the width from the foot of the screen, and it scrolls when it is taller than
- * the screen.
+ * it as it closes (its `opener`, when the caller names it). Cancel and Escape close it; a
+ * click outside does nothing. On a phone it fills the width from the foot of the screen,
+ * and it scrolls when it is taller than the screen.
  */
 export function FormDialog({
   open,
   title,
   busy = false,
   onClose,
+  opener,
   children,
 }: FormDialogProps) {
   const titleId = useId()
@@ -48,7 +55,7 @@ export function FormDialog({
         if (!next && !busy) onClose()
       }}
     >
-      <DialogContent>
+      <DialogContent finalFocus={opener}>
         <DialogHeader>
           <DialogTitle id={titleId}>{title}</DialogTitle>
         </DialogHeader>

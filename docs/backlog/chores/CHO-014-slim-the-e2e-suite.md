@@ -4,8 +4,8 @@
 - **Type**: Refactor
 - **Area**: E2E (tests only)
 - **Epic**: standalone
-- **Depends on**: STY-043 and STY-044 (preferred order: they re-point the About and
-  item-form tests at dialogs)
+- **Depends on**: STY-044 (preferred order: it re-points the item-form tests at a
+  dialog, as STY-043 has the About tests)
 - **Binding ADRs**: ADR-006, ADR-008, ADR-010
 - **Suggested model**: Sonnet — each test needs reading to tell a behaviour from a
   repeat; no production code
@@ -48,7 +48,7 @@ Find the candidates with:
 | A long tag or detail, at two widths   | `editing.spec.ts`: two tests, each at 375 px and at 640 px ("the narrowest card"). 4 runs, 5.1 s, 112 lines. They hold square icons and a row's alignment, and also wrapping, a refusal, every button inside the page and no sideways scroll. STY-044 moves these forms into a dialog, where a card's width no longer applies                                                          | After STY-044: one width; cut the squares and the alignment, keep the rest |
 | The header, at six widths             | `shell.spec.ts`: the service name untruncated and no sideways scroll at 375, 640, 768, 900, 1024 and 1280 px, in English and Welsh. 12 runs, 8.0 s                                                                                                                                                                                                                                     | Keep a width each side of each breakpoint the header has                   |
 | Fitting a phone                       | Nine copies of the sideways-scroll expression in five specs (`accessibility`, `editing`, `roadmap-page`, `roadmaps`, `shell`), under three names; `roadmaps.spec.ts` also holds a long badge inside its card. They hold reflow, an accessibility rule that axe does not check                                                                                                          | Keep every check at 375 px; share one helper                               |
-| A journey repeated per theme          | `roadmap-page.spec.ts`: About's panel and the empty panel run in both themes (the 4 runs above). Only their border and background come from a theme; the form, Undo and Refresh are the same twice. STY-043 moves About's form into a dialog                                                                                                                                           | After STY-043: token checks per theme, the behaviour once                  |
+| A journey repeated per theme          | `roadmap-page.spec.ts`: About's panel and the empty panel run in both themes (the 4 runs above). Only their border and background come from a theme; the form, Undo and Refresh are the same twice. STY-043 moves About's form into a dialog                                                                                                                                           | About's: done in STY-043 (D5). The empty panel's: as left                  |
 | The accessibility scans, per theme    | `accessibility.spec.ts`: 24 tests in both themes. 48 runs, 165.8 s, 38% of the time. Each scans with axe, whose contrast rule depends on the theme; 8 of the runs are on a phone                                                                                                                                                                                                       | Keep                                                                       |
 | The focus tours, per theme            | `focus-indicator.spec.ts`: five tours and one test of each kind of control, in both themes. 12 runs, 76.3 s, 18% of the time; the dark half of the two long tours (editing, a co-lead's review) is 29.3 s. The focus tokens keep their light values in the dark theme (`src/styles/globals.css`), so a dark tour fails alone only where a control's dark style overrides its indicator | Keep, unless the owner takes that risk (S4)                                |
 | Tokens and type                       | `styles.spec.ts` in both themes (4 runs, 2.4 s); `typography.spec.ts` at 375 and 1280 px (2 runs, 1.4 s)                                                                                                                                                                                                                                                                               | Keep: the theme and the width are what they hold                           |
@@ -132,6 +132,10 @@ repeat it, which is how STY-041's journey came to run four times
   most 5% of the suite's time; S4's focus-tour question is not decided either).
   Revisit when the suite's run time, or the share of it that S1–S3 would remove,
   grows; re-measure first (`## Measurement` is as at `697fcc5`).
+- **D5** (agent, 2026-11-15, STY-043): About's panel test now checks its border and
+  background per theme and its behaviour ("Changed", "Undo changes", focus after
+  Undo) once, since the edit is made in the roadmap dialog, whose journey runs once
+  (CHO-011 D5). Its position check, and the empty panel's two runs, are as measured.
 
 ## Out of scope
 

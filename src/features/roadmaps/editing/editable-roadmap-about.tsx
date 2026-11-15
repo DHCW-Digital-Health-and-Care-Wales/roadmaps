@@ -1,17 +1,12 @@
+import { useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import type { Roadmap } from "@/domain/roadmap/roadmap"
-import {
-  ROADMAP_TEXT_FIELDS,
-  roadmapValue,
-  type RoadmapTextField,
-} from "@/domain/roadmap/roadmap-changes"
-import { localToday } from "@/lib/local-today"
 
 import { RoadmapAbout } from "../components/roadmap-about"
+import { RoadmapDialog } from "../dialogs/roadmap-dialog"
+import { useRoadmapLists } from "../hooks/use-roadmap-lists"
 import { EditControls } from "./edit-controls"
-import { EditForm } from "./edit-form"
-import { editFormFields } from "./edit-form-fields"
 import {
   applyRoadmapChanges,
   changedRoadmapFields,
@@ -26,14 +21,6 @@ import {
   useRoadmapChanges,
 } from "./pending-changes-context"
 import { awaitingRefresh } from "./pending-changes-store"
-import { useEditMode } from "./use-edit-mode"
-import { useRoadmapChoices } from "./use-roadmap-choices"
-
-/** Fields that hold paragraphs; the others are one line unless they already break. */
-const multilineRoadmapFields: ReadonlySet<RoadmapTextField> = new Set([
-  "vision",
-  "serviceDescription",
-])
 
 export interface EditableRoadmapAboutProps {
   /** The roadmap as last read. */
@@ -41,87 +28,71 @@ export interface EditableRoadmapAboutProps {
 }
 
 /**
- * What the roadmap is about, with its pending English shown and tagged, and an Edit for
- * its title, status, product lead, vision and service description (STY-025 S5), its
- * family and category, chosen from the lists (STY-028), and when it was last updated,
- * none after today (STY-036).
+ * What the roadmap is about, with its pending English shown and tagged, and an Edit
+ * that opens the roadmap dialog on it (STY-043): its title, status, product lead,
+ * vision and service description (STY-025 S5), its family and category (STY-028), and
+ * when it was last updated (STY-036). Done keeps the edits pending; the panel stays as
+ * it is behind the dialog.
  */
 export function EditableRoadmapAbout({ roadmap }: EditableRoadmapAboutProps) {
   const { t } = useTranslation()
   const store = usePendingChangesStore()
   const changes = useRoadmapChanges(roadmap.id)
   const undoable = !awaitingRefresh(usePendingChanges(), roadmap.id)
-  const mode = useEditMode<{ read: Roadmap; shown: Roadmap }>()
-  const changedFields = changedRoadmapFields(changes)
-  const choices = useRoadmapChoices(mode.editing || hasChoiceChange(changes))
-  const shown = applyRoadmapChanges(roadmap, changes, choices.lists)
-  const changed = changedFields.length > 0
+  // The roadmap as read and as shown when the dialog opened, which its edits are made
+  // from: a co-lead's change read while it is open never changes what Done keeps.
+  const [opened, setOpened] = useState<{
+    read: Roadmap
+    shown: Roadmap
+  } | null>(null)
+  const editButton = useRef<HTMLButtonElement>(null)
+  const { lists } = useRoadmapLists(hasChoiceChange(changes))
+  const shown = applyRoadmapChanges(roadmap, changes, lists)
 
-  // A field's edit is made from the roadmap as the form opened on it.
+  const close = () => {
+    setOpened(null)
+  }
   const done = (values: RoadmapValues) => {
-    const opened = mode.opened ?? { read: roadmap, shown }
+    if (!opened) return
     store.update(roadmap.id, (current) =>
       editRoadmap(current, opened.read, values, {
         shown: opened.shown,
         latest: roadmap,
       }),
     )
-    mode.close()
+    close()
   }
   const undo = () => {
     if (!undoable) return
     store.update(roadmap.id, undoRoadmap)
-    mode.refocus()
+    // "Undo changes" goes with the changes.
+    editButton.current?.focus()
   }
 
-  const text = editFormFields(
-    ROADMAP_TEXT_FIELDS,
-    (field) => roadmapValue(shown, field),
-    (field) => t(`roadmaps.edit.roadmapFields.${field}`),
-    multilineRoadmapFields,
-  )
-  const chosen = choices.fields(shown)
-  const lastUpdated = {
-    name: "lastUpdated",
-    label: t("roadmaps.edit.roadmapFields.lastUpdated"),
-    multiline: false,
-    date: { today: localToday },
-  } as const
-
   return (
-    <RoadmapAbout
-      roadmap={shown}
-      form={
-        mode.editing
-          ? (headingId) => (
-              <EditForm
-                fields={[...text.fields, ...chosen.fields, lastUpdated]}
-                initial={{
-                  ...text.initial,
-                  ...chosen.initial,
-                  lastUpdated: roadmapValue(shown, "lastUpdated"),
-                }}
-                labelledBy={headingId}
-                onDone={done}
-                onCancel={mode.close}
-              />
-            )
-          : undefined
-      }
-      actions={
-        mode.editing ? undefined : (
+    <>
+      <RoadmapAbout
+        roadmap={shown}
+        actions={
           <EditControls
             subject={t("roadmaps.about.title")}
-            changed={changed}
+            changed={changedRoadmapFields(changes).length > 0}
             undoable={undoable}
-            editButton={mode.editButton}
+            editButton={editButton}
             onEdit={() => {
-              mode.open({ read: roadmap, shown })
+              setOpened({ read: roadmap, shown })
             }}
             onUndo={undo}
           />
-        )
-      }
-    />
+        }
+      />
+      <RoadmapDialog
+        open={opened !== null}
+        roadmap={shown}
+        onDone={done}
+        onClose={close}
+        opener={editButton}
+      />
+    </>
   )
 }

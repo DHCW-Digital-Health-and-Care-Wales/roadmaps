@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test"
 
+import { editRoadmapButton, openEditRoadmapDialog } from "./fixtures/dialogs"
 import {
   EXAMPLE_SPREADSHEET,
   withTabItems,
@@ -287,6 +288,26 @@ test.describe("when the items can't be read (S8)", () => {
   })
 })
 
+test("About's panel holds “Changed” and “Undo changes”, which returns focus to Edit (STY-042 S1)", async ({
+  page,
+}) => {
+  await openProductA(page)
+  const about = page
+    .getByRole("main")
+    .getByRole("region", { name: ABOUT_HEADING })
+
+  // Once, not per theme: the edit is made in the roadmap dialog (STY-043).
+  const dialog = await openEditRoadmapDialog(page)
+  await dialog.getByRole("textbox", { name: "Product lead" }).fill("Sam Evans")
+  await dialog.getByRole("button", { name: "Done" }).click()
+  await expect(about.getByText("Changed", { exact: true })).toBeVisible()
+  await about
+    .getByRole("button", { name: `Undo changes ${ABOUT_HEADING}` })
+    .click()
+  await expect(about.getByText("Changed", { exact: true })).toBeHidden()
+  await expect(editRoadmapButton(page)).toBeFocused()
+})
+
 for (const theme of THEMES) {
   test(`About is a bordered panel with Edit beside its heading, in the ${theme} theme (STY-042 S1, S4)`, async ({
     page,
@@ -315,18 +336,6 @@ for (const theme of THEMES) {
     expect(button.x).toBeGreaterThan(heading.x + heading.width)
     expect(button.y).toBeLessThan(heading.y + heading.height)
     expect(button.y + button.height).toBeLessThanOrEqual(firstField.y)
-
-    // The form, then "Changed" and "Undo changes", stay inside the panel.
-    await edit.click()
-    const form = about.getByRole("form", { name: ABOUT_HEADING })
-    await form.getByRole("textbox", { name: "Product lead" }).fill("Sam Evans")
-    await form.getByRole("button", { name: "Done" }).click()
-    await expect(about.getByText("Changed", { exact: true })).toBeVisible()
-    await about
-      .getByRole("button", { name: `Undo changes ${ABOUT_HEADING}` })
-      .click()
-    await expect(about.getByText("Changed", { exact: true })).toBeHidden()
-    await expect(edit).toBeFocused()
   })
 
   test(`a roadmap with no items shows a compact dashed panel, in the ${theme} theme (STY-042 S2, S4)`, async ({

@@ -1,6 +1,6 @@
 import type { Locator, Page } from "@playwright/test"
 
-import { openAddRoadmapDialog } from "./fixtures/dialogs"
+import { openAddRoadmapDialog, openEditRoadmapDialog } from "./fixtures/dialogs"
 import { EXAMPLE_SPREADSHEET_WITH_LISTS } from "./fixtures/fake-sheets"
 import {
   holdConnectedNotice,
@@ -164,7 +164,8 @@ async function expectEveryStopShowsAnIndicator(page: Page) {
  * shows its indicator, the fill on a button and the ring on a field, and Tab from the
  * last comes back to the first, since a dialog holds focus. The stops are the dialog's
  * controls, found first, so one added to its form is toured, and one taken out of the
- * Tab order fails the tour: unlike a page, a form dialog keeps every control in it.
+ * Tab order fails the tour: unlike a page, a form dialog keeps every control in it. A
+ * date field is one stop, though Tab goes through its day, month and year.
  */
 async function expectDialogTour(page: Page, dialog: Locator) {
   const colours = await focusColours(page)
@@ -177,15 +178,26 @@ async function expectDialogTour(page: Page, dialog: Locator) {
   if (!first) throw new Error("The dialog has no tab stops")
   expect(stops.length, "the dialog's tab stops").toBeGreaterThan(3)
 
-  for (const [index, stop] of stops.entries()) {
-    if (index > 0) await page.keyboard.press("Tab")
+  for (const stop of stops) {
     const isButton = await stop.evaluate(
       (element) => element instanceof HTMLButtonElement,
     )
     await expectIndicator(stop, colours, isButton ? "fill" : "ring")
+    await tabPast(page, stop)
   }
-  await page.keyboard.press("Tab")
   await expect(first).toBeFocused()
+}
+
+/** Tabs on from `stop`: a date field keeps focus through its day, month and year. */
+async function tabPast(page: Page, stop: Locator) {
+  for (let presses = 0; presses < 4; presses++) {
+    await page.keyboard.press("Tab")
+    const left = await stop.evaluate(
+      (element) => element !== document.activeElement,
+    )
+    if (left) return
+  }
+  throw new Error("Tab did not leave the stop")
 }
 
 for (const theme of THEMES) {
@@ -273,6 +285,18 @@ for (const theme of THEMES) {
       await expectDialogTour(page, dialog)
     })
 
+    test("every control in the roadmap dialog, editing About, shows DHCW's focus indicator (STY-043)", async ({
+      page,
+      sheets,
+    }) => {
+      sheets.spreadsheet = EXAMPLE_SPREADSHEET_WITH_LISTS
+      await page.goto("./#/roadmaps/producta")
+      await connect(page)
+      const dialog = await openEditRoadmapDialog(page, { offersLists: true })
+
+      await expectDialogTour(page, dialog)
+    })
+
     test("every control in a co-lead's review shows DHCW's focus indicator (STY-026)", async ({
       page,
       sheets,
@@ -287,11 +311,9 @@ for (const theme of THEMES) {
         .getByRole("note")
         .getByRole("button", { name: "Dismiss message" })
         .click()
-      await main
-        .getByRole("button", { name: "Edit About this roadmap" })
-        .click()
-      await main.getByRole("textbox", { name: "Vision" }).fill("My vision.")
-      await main.getByRole("button", { name: "Done" }).click()
+      const editing = await openEditRoadmapDialog(page)
+      await editing.getByRole("textbox", { name: "Vision" }).fill("My vision.")
+      await editing.getByRole("button", { name: "Done" }).click()
       sheets.coLead("Roadmaps", "ProductA", "Vision", "Their vision.")
       await main.getByRole("button", { name: "Publish changes" }).click()
       await page

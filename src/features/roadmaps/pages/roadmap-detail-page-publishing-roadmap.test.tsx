@@ -13,6 +13,7 @@ import type { Language } from "@/i18n"
 import { renderWithProviders } from "@/test/render-with-providers"
 
 import { createInMemoryRoadmapRepository } from "../testing/in-memory-roadmap-repository"
+import { editRoadmapText } from "../testing/roadmap-dialog"
 
 const connected: AuthState = {
   status: "connected",
@@ -80,14 +81,9 @@ async function choose(
   await user.click(within(dialog).getByRole("button", { name: confirm }))
 }
 
-/** Edits the roadmap's status label through the About form, leaving it pending. */
-async function editStatus(user: ReturnType<typeof userEvent.setup>) {
-  const main = within(screen.getByRole("main"))
-  await user.click(main.getByRole("button", { name: /^Edit About/ }))
-  const status = main.getByRole("textbox", { name: "Status" })
-  await user.clear(status)
-  await user.type(status, "Live")
-  await user.click(main.getByRole("button", { name: "Done" }))
+/** Edits the roadmap's status label in the roadmap dialog, leaving it pending. */
+function editStatus(user: ReturnType<typeof userEvent.setup>) {
+  return editRoadmapText(user, "Status", "Live")
 }
 
 describe("publishing or unpublishing a roadmap (STY-035)", () => {

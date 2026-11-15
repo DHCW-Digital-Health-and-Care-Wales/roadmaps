@@ -1,10 +1,11 @@
 import type { Page } from "@playwright/test"
 
+import { openEditRoadmapDialog } from "./fixtures/dialogs"
 import { connect, expect, test } from "./fixtures/test"
 
 /**
  * A Product Lead sets when a roadmap was last updated (STY-036), against the fake Sheets
- * API: a pending date from the About form, or today's date ticked when publishing, each
+ * API: a pending date from the roadmap dialog, or today's date ticked when publishing, each
  * written to the index's `Last updated` cell as `YYYY-MM-DD` text.
  */
 
@@ -27,7 +28,7 @@ async function open(page: Page, id: string, title: string) {
   await expect(page.getByRole("heading", { level: 3 }).first()).toBeVisible()
 }
 
-test("publishes a date picked in the About form as YYYY-MM-DD text (S2, S8)", async ({
+test("publishes a date picked in the roadmap dialog as YYYY-MM-DD text (S2, S8)", async ({
   page,
   sheets,
 }) => {
@@ -36,11 +37,11 @@ test("publishes a date picked in the About form as YYYY-MM-DD text (S2, S8)", as
   const about = main.getByRole("region", { name: "About this roadmap" })
   await expect(about).toContainText("Last updated15 September 2026")
 
-  await main.getByRole("button", { name: "Edit About this roadmap" }).click()
-  const field = main.getByLabel("Last updated")
+  const editing = await openEditRoadmapDialog(page)
+  const field = editing.getByLabel("Last updated")
   await expect(field).toHaveValue("2026-09-15")
   await field.fill("2026-11-10")
-  await main.getByRole("button", { name: "Done" }).click()
+  await editing.getByRole("button", { name: "Done" }).click()
   await expect(about).toContainText("Last updated10 November 2026")
   await expect(main.getByText("1 unpublished change")).toBeVisible()
   expect(sheets.writes).toEqual([])
@@ -70,19 +71,18 @@ test.describe("today, by the browser's clock (D11)", () => {
     page,
   }) => {
     await open(page, "producta", "Product A roadmap")
-    const main = page.getByRole("main")
-    await main.getByRole("button", { name: "Edit About this roadmap" }).click()
-    const field = main.getByLabel("Last updated")
+    const editing = await openEditRoadmapDialog(page)
+    const field = editing.getByLabel("Last updated")
     await expect(field).toHaveAttribute("max", "2026-07-02")
 
     await field.fill("2026-07-03")
-    await main.getByRole("button", { name: "Done" }).click()
+    await editing.getByRole("button", { name: "Done" }).click()
     await expect(field).toHaveAccessibleDescription(
       "Error: Enter today's date or an earlier one",
     )
     await expect(field).toBeFocused()
 
-    await main.getByRole("button", { name: "Today" }).click()
+    await editing.getByRole("button", { name: "Today" }).click()
     await expect(field).toHaveValue("2026-07-02")
   })
 
@@ -92,9 +92,9 @@ test.describe("today, by the browser's clock (D11)", () => {
   }) => {
     await open(page, "producta", "Product A roadmap")
     const main = page.getByRole("main")
-    await main.getByRole("button", { name: "Edit About this roadmap" }).click()
-    await main.getByRole("textbox", { name: "Status" }).fill("Live")
-    await main.getByRole("button", { name: "Done" }).click()
+    const editing = await openEditRoadmapDialog(page)
+    await editing.getByRole("textbox", { name: "Status" }).fill("Live")
+    await editing.getByRole("button", { name: "Done" }).click()
 
     await main.getByRole("button", { name: "Publish changes" }).click()
     const dialog = page.getByRole("alertdialog")

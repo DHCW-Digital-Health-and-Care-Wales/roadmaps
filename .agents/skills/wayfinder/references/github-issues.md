@@ -40,8 +40,14 @@ done
   `gh issue close <n>`, then add the line to the map's Decisions so far:
   read the body (`gh issue view <map> --json body --jq .body`) just before
   writing it back (`gh issue edit <map> --body-file <file>`), then read it
-  again and re-apply your edit if another session's write replaced it. Comment before closing: on an already-closed
-  issue `gh issue close --comment` drops the comment yet exits 0.
+  again and re-apply your edit if another session's write replaced it. Comment
+  before closing: on an already-closed issue `gh issue close --comment` drops
+  the comment yet exits 0.
+- **Reconcile**: GitHub has no conditional write, so two sessions editing the
+  map body at once can still drop a line. List the closed children
+  (`gh issue view <map> --json subIssues --jq '.subIssues.nodes[] | select(.state == "CLOSED") | "\(.number) \(.title)"'`)
+  and add a line, gisted from its resolution comment, for each one whose link
+  is in neither Decisions so far nor Out of scope.
 - **Out of scope**: comment the reason, close it with
   `gh issue close <n> --reason "not planned"`, and add its line to the map.
 - **Read a ticket**: `gh issue view <n> --json number,title,body,labels,assignees,comments`.

@@ -308,8 +308,10 @@ describe("A publish roadmap's dialog and outcome belong to its roadmap (DEF-014)
       release()
       await released
     })
-    await waitFor(() => {
-      expect(main().queryByText("Not published")).toBeNull()
+    const unpublish = await main().findByRole("button", {
+      name: "Unpublish roadmap",
     })
+    expect(unpublish).toHaveAttribute("aria-disabled", "false")
+    expect(main().queryByText(/is published/)).toBeNull()
   })
 })

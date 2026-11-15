@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest"
 
-import type { FieldChange, NewItem, RoadmapChanges } from "../roadmap-changes"
+import {
+  type FieldChange,
+  NO_CHANGES,
+  type RoadmapChanges,
+} from "../roadmap-changes"
 import { CO_LEAD_VALUE } from "./contract-write"
 import type { RoadmapRepositoryContractSetup } from "./roadmap-repository-contract"
-import { createTestNewItem } from "./test-new-item"
+import { addingItems, NEW_CLINIC, NEW_LETTERS } from "./test-new-item"
 import { createTestRoadmap } from "./test-roadmap"
 import { createTestRoadmapItem } from "./test-roadmap-item"
 
@@ -27,25 +31,13 @@ const reminders = createTestRoadmapItem("Text reminders", {
 })
 const items = { producta: [booking, reminders] }
 
-/** A new item with a title and a placement alone, and the item a read then gives. */
-const clinic = createTestNewItem("ckn7q2xw", "Choose a clinic closer to home", {
-  placement: "next",
-})
+/** The item a read gives once `NEW_CLINIC` is published. */
 const clinicRead = createTestRoadmapItem("Choose a clinic closer to home", {
   id: "ckn7q2xw",
   placement: "next",
 })
 
-/** A new item with every field, as typed, and the item a read then gives. */
-const letters = createTestNewItem("fwd9s3hj", "  Letters by email ", {
-  description: " Read your letters online.\nNo post. ",
-  expectedOutcome: "Fewer lost letters",
-  phase: "Discovery",
-  placement: "delivered-this-year",
-  tags: "Patients, Carers",
-  organisationIds: "national,sbuhb",
-  details: "Appointment letters\n- Outpatients\n-- Adult clinics first",
-})
+/** The item a read gives once `NEW_LETTERS` is published: tidied, in English alone. */
 const lettersRead = createTestRoadmapItem("Letters by email", {
   id: "fwd9s3hj",
   description: { en: "Read your letters online.\nNo post.", cy: "" },
@@ -64,18 +56,13 @@ const lettersRead = createTestRoadmapItem("Letters by email", {
   ],
 })
 
-/** Only new items are pending. */
-function adding(...newItems: NewItem[]): RoadmapChanges {
-  return { roadmap: {}, items: [], newItems }
-}
-
-/** `clinic` beside an edit to the phase of `booking`, which is found by its ID. */
+/** `NEW_CLINIC` beside an edit to the phase of `booking`, which is found by its ID. */
 const clinicAndEdit: RoadmapChanges = {
-  roadmap: {},
+  ...NO_CHANGES,
   items: [
     { item: booking, position: 0, fields: { phase: change("Beta", "Live") } },
   ],
-  newItems: [clinic],
+  newItems: [NEW_CLINIC],
 }
 const bookingLive = { ...booking, phase: { en: "Live", cy: "Beta" } }
 
@@ -89,7 +76,7 @@ export function describeNewItems(setup: RoadmapRepositoryContractSetup): void {
       const repository = setup.withRoadmaps([live, other], items)
 
       await expect(
-        repository.publishRoadmapChanges("producta", adding(clinic)),
+        repository.publishRoadmapChanges("producta", addingItems(NEW_CLINIC)),
       ).resolves.toEqual({ status: "published" })
       expect(await repository.listRoadmapItems("producta")).toStrictEqual([
         booking,
@@ -103,7 +90,10 @@ export function describeNewItems(setup: RoadmapRepositoryContractSetup): void {
     it("writes every field it has as that field's edit is written, in English alone (S2)", async () => {
       const repository = setup.withRoadmaps([live, other], items)
 
-      await repository.publishRoadmapChanges("producta", adding(letters))
+      await repository.publishRoadmapChanges(
+        "producta",
+        addingItems(NEW_LETTERS),
+      )
 
       expect(await repository.listRoadmapItems("producta")).toStrictEqual([
         booking,
@@ -118,7 +108,7 @@ export function describeNewItems(setup: RoadmapRepositoryContractSetup): void {
       const outcome = await repository.publishRoadmapChanges("producta", {
         ...clinicAndEdit,
         roadmap: { statusLabel: change("Beta", "Live") },
-        newItems: [letters, clinic],
+        newItems: [NEW_LETTERS, NEW_CLINIC],
       })
 
       expect(outcome).toEqual({ status: "published" })
@@ -137,7 +127,10 @@ export function describeNewItems(setup: RoadmapRepositoryContractSetup): void {
     it("starts a roadmap that has no items", async () => {
       const repository = setup.withRoadmaps([live, other])
 
-      await repository.publishRoadmapChanges("producta", adding(clinic))
+      await repository.publishRoadmapChanges(
+        "producta",
+        addingItems(NEW_CLINIC),
+      )
 
       expect(await repository.listRoadmapItems("producta")).toStrictEqual([
         clinicRead,
@@ -214,10 +207,10 @@ export function describeNewItems(setup: RoadmapRepositoryContractSetup): void {
       })
 
       await expect(
-        repository.publishRoadmapChanges("unknown", adding(clinic)),
+        repository.publishRoadmapChanges("unknown", addingItems(NEW_CLINIC)),
       ).resolves.toEqual({ status: "roadmap-not-found" })
       await expect(
-        repository.publishRoadmapChanges("productb", adding(clinic)),
+        repository.publishRoadmapChanges("productb", addingItems(NEW_CLINIC)),
       ).rejects.toMatchObject({ kind: "invalid-data", retryable: false })
     })
 
@@ -228,7 +221,7 @@ export function describeNewItems(setup: RoadmapRepositoryContractSetup): void {
       })
 
       await expect(
-        repository.publishRoadmapChanges("producta", adding(clinic)),
+        repository.publishRoadmapChanges("producta", addingItems(NEW_CLINIC)),
       ).resolves.toEqual({ status: "published" })
       expect(await repository.listRoadmapItems("producta")).toStrictEqual([
         booking,
@@ -243,10 +236,13 @@ export function describeNewItems(setup: RoadmapRepositoryContractSetup): void {
       "rejects one with %s, which a screen never sends, writing nothing (S1)",
       async (_case, values) => {
         const repository = setup.withRoadmaps([live, other], items)
-        const invalid = { ...clinic, values: { ...clinic.values, ...values } }
+        const invalid = {
+          ...NEW_CLINIC,
+          values: { ...NEW_CLINIC.values, ...values },
+        }
 
         await expect(
-          repository.publishRoadmapChanges("producta", adding(invalid)),
+          repository.publishRoadmapChanges("producta", addingItems(invalid)),
         ).rejects.toMatchObject({ kind: "unknown" })
         expect(await repository.listRoadmapItems("producta")).toStrictEqual(
           items.producta,
@@ -276,13 +272,13 @@ export function describeNewItems(setup: RoadmapRepositoryContractSetup): void {
         })
 
         await expect(
-          repository.publishRoadmapChanges("producta", adding(clinic)),
+          repository.publishRoadmapChanges("producta", addingItems(NEW_CLINIC)),
         ).resolves.toEqual({ status: "published" })
       })
 
       it.each([
         ["with an edit", clinicAndEdit],
-        ["alone", adding(clinic)],
+        ["alone", addingItems(NEW_CLINIC)],
       ])(
         "rejects with a network AppError when a re-read finds none of a new item %s",
         async (_case, changes) => {
@@ -320,7 +316,7 @@ export function describeNewItems(setup: RoadmapRepositoryContractSetup): void {
         })
 
         await expect(
-          repository.publishRoadmapChanges("producta", adding(clinic)),
+          repository.publishRoadmapChanges("producta", addingItems(NEW_CLINIC)),
         ).resolves.toEqual({ status: "unconfirmed" })
       })
     })
@@ -332,7 +328,7 @@ export function describeNewItems(setup: RoadmapRepositoryContractSetup): void {
         await expect(
           repository.setRoadmapPublished(draft, {
             published: true,
-            changes: adding(clinic),
+            changes: addingItems(NEW_CLINIC),
           }),
         ).resolves.toEqual({ status: "set" })
         expect(await repository.listRoadmaps()).toStrictEqual([live, other])
@@ -349,7 +345,7 @@ export function describeNewItems(setup: RoadmapRepositoryContractSetup): void {
         await expect(
           repository.setRoadmapPublished(draft, {
             published: true,
-            changes: adding(clinic),
+            changes: addingItems(NEW_CLINIC),
           }),
         ).resolves.toEqual({ status: "set" })
         expect(await repository.listRoadmapItems("producta")).toStrictEqual([
@@ -367,7 +363,7 @@ export function describeNewItems(setup: RoadmapRepositoryContractSetup): void {
         await expect(
           repository.setRoadmapPublished(draft, {
             published: true,
-            changes: adding(clinic),
+            changes: addingItems(NEW_CLINIC),
           }),
         ).resolves.toEqual({ status: "set" })
         expect(await repository.listRoadmaps()).toStrictEqual([live, other])

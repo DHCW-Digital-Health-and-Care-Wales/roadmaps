@@ -17,6 +17,7 @@ import {
   type RoadmapChoiceField,
   isChoiceField,
   itemValue,
+  NO_CHANGES,
   organisationIdsOf,
   roadmapValue,
 } from "@/domain/roadmap/roadmap-changes"
@@ -31,7 +32,6 @@ import {
   applyItemChanges,
   applyRoadmapChanges,
   matchItemChanges,
-  NO_CHANGES,
   sameTarget,
 } from "./pending-changes"
 

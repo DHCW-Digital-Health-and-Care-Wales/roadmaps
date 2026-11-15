@@ -5,6 +5,7 @@ import type { PublishedStateChange } from "../published-state"
 import {
   type FieldChange,
   markedUpdated,
+  NO_CHANGES,
   type RoadmapChanges,
 } from "../roadmap-changes"
 import type { RoadmapRepositoryContractSetup } from "./roadmap-repository-contract"
@@ -33,14 +34,13 @@ function saveAndPublish(changes: RoadmapChanges): PublishedStateChange {
 }
 
 /** Publishing with "Mark as updated today" ticked (STY-036 S6, D10). */
-const publishToday = (
-  changes: RoadmapChanges = { roadmap: {}, items: [], newItems: [] },
-) => saveAndPublish(markedUpdated(changes, "2026-11-13"))
+const publishToday = (changes: RoadmapChanges = NO_CHANGES) =>
+  saveAndPublish(markedUpdated(changes, "2026-11-13"))
 
 const twoEdits: RoadmapChanges = {
+  ...NO_CHANGES,
   roadmap: { statusLabel: change("Beta", "Live") },
   items: [{ item, position: 0, fields: { phase: change("", "Alpha") } }],
-  newItems: [],
 }
 
 /**
@@ -333,9 +333,8 @@ export function describePublishedState(
           repository.setRoadmapPublished(
             draft,
             saveAndPublish({
+              ...NO_CHANGES,
               roadmap: { familyId: change("", family.id) },
-              items: [],
-              newItems: [],
             }),
           ),
         ).resolves.toEqual({ status: "set" })
@@ -407,12 +406,11 @@ export function describePublishedState(
           repository.setRoadmapPublished(
             draft,
             saveAndPublish({
+              ...NO_CHANGES,
               roadmap: {
                 vision: change("", "Clear"),
                 statusLabel: change("Beta", ""),
               },
-              items: [],
-              newItems: [],
             }),
           ),
         ).resolves.toEqual({ status: "set" })

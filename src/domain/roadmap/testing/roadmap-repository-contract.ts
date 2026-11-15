@@ -10,6 +10,7 @@ import {
   type FieldChange,
   type ItemChanges,
   markedUpdated,
+  NO_CHANGES,
   type RoadmapChanges,
 } from "../roadmap-changes"
 import type { RoadmapItem } from "../roadmap-item"
@@ -156,7 +157,7 @@ function edit(
 
 /** Only the roadmap's own text changes. */
 function roadmapOnly(roadmap: RoadmapChanges["roadmap"]): RoadmapChanges {
-  return { roadmap, items: [], newItems: [] }
+  return { ...NO_CHANGES, roadmap }
 }
 
 /** A roadmap fixture with these fields changed. */
@@ -415,6 +416,7 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
       const repository = setup.withRoadmaps(fixtures, itemFixtures)
 
       const outcome = await repository.publishRoadmapChanges("producta", {
+        ...NO_CHANGES,
         roadmap: { statusLabel: change("Beta", "Live") },
         items: [
           edit(everyField, 0, {
@@ -423,7 +425,6 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
           }),
           edit(laterWork, 1, { description: change("", "Now described") }),
         ],
-        newItems: [],
       })
 
       expect(outcome).toEqual({ status: "published" })
@@ -452,6 +453,7 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
       const repository = setup.withRoadmaps(fixtures, itemFixtures)
 
       await repository.publishRoadmapChanges("producta", {
+        ...NO_CHANGES,
         roadmap: {
           vision: change(
             "Where Product A is heading.\nAnd why.",
@@ -470,7 +472,6 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
             phase: change("", "TRUE"),
           }),
         ],
-        newItems: [],
       })
 
       expect(await repository.listRoadmaps()).toStrictEqual(
@@ -493,9 +494,8 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
       })
 
       const outcome = await repository.publishRoadmapChanges("producta", {
-        roadmap: {},
+        ...NO_CHANGES,
         items: [edit(everyField, 0, { phase: change("Beta", "Live") })],
-        newItems: [],
       })
 
       expect(outcome).toEqual({ status: "published" })
@@ -511,9 +511,8 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
       })
 
       const outcome = await repository.publishRoadmapChanges("producta", {
-        roadmap: {},
+        ...NO_CHANGES,
         items: [edit(everyField, 0, { phase: change("Beta", "Live") })],
-        newItems: [],
       })
 
       expect(outcome).toEqual({ status: "published" })
@@ -532,9 +531,8 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
       const changes = edit(everyField, 0, { phase: change("Beta", "Live") })
 
       const outcome = await repository.publishRoadmapChanges("producta", {
-        roadmap: {},
+        ...NO_CHANGES,
         items: [changes],
-        newItems: [],
       })
 
       expect(outcome).toEqual({
@@ -555,9 +553,8 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
       const moved = edit(laterWork, 1, { phase: change("", "Alpha") })
 
       const outcome = await repository.publishRoadmapChanges("producta", {
-        roadmap: {},
+        ...NO_CHANGES,
         items: [moved],
-        newItems: [],
       })
 
       expect(outcome).toEqual({
@@ -579,9 +576,8 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
       })
 
       const outcome = await repository.publishRoadmapChanges("producta", {
-        roadmap: {},
+        ...NO_CHANGES,
         items: [edit(laterWork, 1, { phase: change("", "Alpha") })],
-        newItems: [],
       })
 
       expect(outcome).toEqual({ status: "published" })
@@ -604,9 +600,8 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
       })
 
       const outcome = await repository.publishRoadmapChanges("producta", {
-        roadmap: {},
+        ...NO_CHANGES,
         items: [changes],
-        newItems: [],
       })
 
       expect(outcome).toEqual({
@@ -625,9 +620,8 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
         producta: [everyField, translated],
       })
       const clear = {
-        roadmap: {},
+        ...NO_CHANGES,
         items: [edit(translated, 1, { description: change("Before", "") })],
-        newItems: [],
       }
       await repository.publishRoadmapChanges("producta", clear)
       const [, cleared] = await repository.listRoadmapItems("producta")
@@ -677,12 +671,12 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
       })
 
       const outcome = await repository.publishRoadmapChanges("producta", {
+        ...NO_CHANGES,
         roadmap: {
           statusLabel: change("Beta", "Alpha"),
           vision: change("Where Product A is heading.\nAnd why.", "New vision"),
         },
         items: [itemEdit],
-        newItems: [],
       })
 
       expect(outcome).toEqual({
@@ -724,14 +718,13 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
       })
 
       const outcome = await repository.publishRoadmapChanges("producta", {
-        roadmap: {},
+        ...NO_CHANGES,
         items: [
           edit(everyField, 0, {
             title: change("Every field", "Every field, renamed"),
             phase: change("Beta", "Live"),
           }),
         ],
-        newItems: [],
       })
 
       expect(outcome).toEqual({ status: "published" })
@@ -752,9 +745,8 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
 
           await expect(
             repository.publishRoadmapChanges("producta", {
+              ...NO_CHANGES,
               roadmap: { lastUpdated: change("2026-10-01", value) },
-              items: [],
-              newItems: [],
             }),
           ).resolves.toEqual({ status: "published" })
           expect(await repository.listRoadmaps()).toStrictEqual(
@@ -769,9 +761,8 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
 
         await expect(
           repository.publishRoadmapChanges("producta", {
+            ...NO_CHANGES,
             roadmap: { lastUpdated: change("2026-10-01", "2026-11-10") },
-            items: [],
-            newItems: [],
           }),
         ).resolves.toEqual({
           status: "refused",
@@ -800,9 +791,8 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
             "producta",
             markedUpdated(
               {
+                ...NO_CHANGES,
                 roadmap: { statusLabel: change("Beta", "Live") },
-                items: [],
-                newItems: [],
               },
               "2026-11-13",
             ),
@@ -822,13 +812,12 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
         const repository = setup.withRoadmaps(fixtures, itemFixtures)
 
         const outcome = await repository.publishRoadmapChanges("producta", {
-          roadmap: {},
+          ...NO_CHANGES,
           items: [
             edit(laterWork, 1, {
               placement: change("later", "recently-delivered"),
             }),
           ],
-          newItems: [],
         })
 
         expect(outcome).toEqual({ status: "published" })
@@ -847,9 +836,8 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
         const repository = setup.withRoadmaps(fixtures, itemFixtures)
 
         await repository.publishRoadmapChanges("producta", {
-          roadmap: {},
+          ...NO_CHANGES,
           items: [edit(unplacedWork, 2, { placement: change("", "later") })],
-          newItems: [],
         })
 
         const items = await repository.listRoadmapItems("producta")
@@ -871,9 +859,8 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
         })
 
         const outcome = await repository.publishRoadmapChanges("producta", {
-          roadmap: {},
+          ...NO_CHANGES,
           items: [move],
-          newItems: [],
         })
 
         expect(outcome).toEqual({
@@ -905,13 +892,12 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
         })
 
         const outcome = await repository.publishRoadmapChanges("producta", {
-          roadmap: {},
+          ...NO_CHANGES,
           items: [
             edit(everyField, 0, {
               placement: change("recently-delivered", "now"),
             }),
           ],
-          newItems: [],
         })
 
         expect(outcome).toEqual({ status: "published" })
@@ -941,13 +927,12 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
         })
 
         const outcome = await repository.publishRoadmapChanges("producta", {
-          roadmap: {},
+          ...NO_CHANGES,
           items: [
             edit(forCardiff, 0, {
               organisationIds: change("cavuhb", "national,sbuhb"),
             }),
           ],
-          newItems: [],
         })
 
         expect(outcome).toEqual({ status: "published" })
@@ -962,11 +947,10 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
         })
 
         await repository.publishRoadmapChanges("producta", {
-          roadmap: {},
+          ...NO_CHANGES,
           items: [
             edit(forCardiff, 0, { organisationIds: change("cavuhb", "") }),
           ],
-          newItems: [],
         })
 
         expect(await organisationsOf(repository)).toEqual([
@@ -980,9 +964,8 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
         })
 
         await repository.publishRoadmapChanges("producta", {
-          roadmap: {},
+          ...NO_CHANGES,
           items: [edit(forCardiff, 0, { phase: change("", "Beta") })],
-          newItems: [],
         })
 
         expect(await organisationsOf(repository)).toEqual([
@@ -1000,9 +983,8 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
         })
 
         const outcome = await repository.publishRoadmapChanges("producta", {
-          roadmap: {},
+          ...NO_CHANGES,
           items: [choice],
-          newItems: [],
         })
 
         expect(outcome).toEqual({
@@ -1030,9 +1012,8 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
         })
 
         const outcome = await repository.publishRoadmapChanges("producta", {
-          roadmap: {},
+          ...NO_CHANGES,
           items: [choice],
-          newItems: [],
         })
 
         expect(outcome).toEqual({ status: "published" })
@@ -1047,13 +1028,12 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
         })
 
         const publishing = repository.publishRoadmapChanges("producta", {
-          roadmap: {},
+          ...NO_CHANGES,
           items: [
             edit(forCardiff, 0, {
               organisationIds: change("cavuhb", "cavuhb,cavhb"),
             }),
           ],
-          newItems: [],
         })
 
         await expect(publishing).rejects.toMatchObject({ kind: "unknown" })
@@ -1084,9 +1064,8 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
         })
 
         const outcome = await repository.publishRoadmapChanges("producta", {
-          roadmap: {},
+          ...NO_CHANGES,
           items: [retag("Patients, Video appointments, Carers")],
-          newItems: [],
         })
 
         expect(outcome).toEqual({ status: "published" })
@@ -1105,9 +1084,8 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
         })
 
         await repository.publishRoadmapChanges("producta", {
-          roadmap: {},
+          ...NO_CHANGES,
           items: [retag("")],
-          newItems: [],
         })
 
         expect(await tagsOf(repository)).toEqual([
@@ -1123,9 +1101,8 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
         const mine = retag("Patients, Carers")
 
         const outcome = await repository.publishRoadmapChanges("producta", {
-          roadmap: {},
+          ...NO_CHANGES,
           items: [mine],
-          newItems: [],
         })
 
         expect(outcome).toEqual({
@@ -1153,9 +1130,8 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
         })
 
         const outcome = await repository.publishRoadmapChanges("producta", {
-          roadmap: {},
+          ...NO_CHANGES,
           items: [retag("Patients, Carers")],
-          newItems: [],
         })
 
         expect(outcome).toEqual({ status: "published" })
@@ -1187,9 +1163,8 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
         const mine = retag("Patients, Carers")
 
         const outcome = await repository.publishRoadmapChanges("producta", {
-          roadmap: {},
+          ...NO_CHANGES,
           items: [mine],
-          newItems: [],
         })
 
         expect(outcome).toEqual({
@@ -1216,9 +1191,8 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
         const repository = setup.withRoadmaps(fixtures, itemFixtures)
 
         const outcome = await repository.publishRoadmapChanges("producta", {
-          roadmap: {},
+          ...NO_CHANGES,
           items: [edit(everyField, 0, { phase: change("Beta", "Live") })],
-          newItems: [],
         })
 
         expect(outcome).toEqual({ status: "published" })
@@ -1255,9 +1229,8 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
         })
 
         const outcome = await repository.publishRoadmapChanges("producta", {
-          roadmap: {},
+          ...NO_CHANGES,
           items: [redetail(MINE)],
-          newItems: [],
         })
 
         expect(outcome).toEqual({ status: "published" })
@@ -1279,9 +1252,8 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
         const repository = setup.withRoadmaps(fixtures, { producta: [video] })
 
         await repository.publishRoadmapChanges("producta", {
-          roadmap: {},
+          ...NO_CHANGES,
           items: [redetail("")],
-          newItems: [],
         })
 
         expect(await detailsOf(repository)).toEqual([
@@ -1297,9 +1269,8 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
         const mine = redetail(MINE)
 
         const outcome = await repository.publishRoadmapChanges("producta", {
-          roadmap: {},
+          ...NO_CHANGES,
           items: [mine],
-          newItems: [],
         })
 
         expect(outcome).toEqual({
@@ -1334,9 +1305,8 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
         })
 
         const outcome = await repository.publishRoadmapChanges("producta", {
-          roadmap: {},
+          ...NO_CHANGES,
           items: [redetail(MINE)],
-          newItems: [],
         })
 
         expect(outcome).toEqual({ status: "published" })
@@ -1374,9 +1344,8 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
         const mine = redetail(MINE)
 
         const outcome = await repository.publishRoadmapChanges("producta", {
-          roadmap: {},
+          ...NO_CHANGES,
           items: [mine],
-          newItems: [],
         })
 
         expect(outcome).toEqual({
@@ -1403,9 +1372,8 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
         const repository = setup.withRoadmaps(fixtures, itemFixtures)
 
         const outcome = await repository.publishRoadmapChanges("producta", {
-          roadmap: {},
+          ...NO_CHANGES,
           items: [edit(everyField, 0, { phase: change("Beta", "Live") })],
-          newItems: [],
         })
 
         expect(outcome).toEqual({ status: "published" })
@@ -1526,9 +1494,9 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
       const gone = edit(everyField, 0, { phase: change("Beta", "Live") })
 
       const outcome = await repository.publishRoadmapChanges("producta", {
+        ...NO_CHANGES,
         roadmap: { statusLabel: change("Beta", "Live") },
         items: [gone],
-        newItems: [],
       })
 
       expect(outcome).toEqual({
@@ -1571,11 +1539,11 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
       const repository = setup.withRoadmaps(fixtures, itemFixtures)
 
       const outcome = await repository.publishRoadmapChanges("producta", {
+        ...NO_CHANGES,
         roadmap: { statusLabel: change("Beta", " Beta ") },
         items: [
           edit(laterWork, 1, { title: change("Later work", "Later work") }),
         ],
-        newItems: [],
       })
 
       expect(outcome).toEqual({ status: "published" })
@@ -1620,9 +1588,9 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
 
     describe("when the write's answer is lost (S12)", () => {
       const changes: RoadmapChanges = {
+        ...NO_CHANGES,
         roadmap: { statusLabel: change("Beta", "Live") },
         items: [edit(laterWork, 1, { title: change("Later work", "Renamed") })],
-        newItems: [],
       }
 
       it("is published when a re-read finds every change", async () => {

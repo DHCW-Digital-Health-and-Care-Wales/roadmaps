@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from "vitest"
 
 import { addNewItem } from "@/domain/roadmap/new-item"
+import { NO_CHANGES } from "@/domain/roadmap/roadmap-changes"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 
-import { editRoadmap, NO_CHANGES } from "./pending-changes"
+import { editRoadmap } from "./pending-changes"
 import { createPendingChangesStore } from "./pending-changes-store"
 
 const roadmap = createTestRoadmap("producta", "Product A")

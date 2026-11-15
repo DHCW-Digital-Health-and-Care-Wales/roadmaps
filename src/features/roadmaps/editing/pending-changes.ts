@@ -7,8 +7,8 @@
 
 import { findEditedItem } from "@/domain/roadmap/find-edited-item"
 import { englishDetails } from "@/domain/roadmap/item-details"
-import { dropPublishedNewItems } from "@/domain/roadmap/new-item"
 import type { LocalisedText } from "@/domain/roadmap/localised-text"
+import { dropPublishedNewItems } from "@/domain/roadmap/new-item"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import {
   EDITABLE_ITEM_FIELDS,
@@ -19,6 +19,7 @@ import {
   isChoiceField,
   type ItemChanges,
   itemValue,
+  type ItemValues,
   organisationIdsOf,
   type RoadmapChanges,
   type RoadmapChoiceField,
@@ -31,17 +32,10 @@ import { isRoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 
 import type { RoadmapLists } from "../hooks/use-roadmap-lists"
 
-/** A form's values, as typed: kept trimmed. */
+/** The roadmap's own fields as a form gives them, as typed: kept trimmed. */
 export type RoadmapValues = Partial<Record<EditableRoadmapField, string>>
-export type ItemValues = Partial<Record<EditableItemField, string>>
 
 type FieldChanges<F extends string> = Partial<Record<F, FieldChange>>
-
-export const NO_CHANGES: RoadmapChanges = {
-  roadmap: {},
-  items: [],
-  newItems: [],
-}
 
 /**
  * `fields` with `values` applied over `current`: a value is kept trimmed, with the text

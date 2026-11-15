@@ -365,7 +365,11 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
     const { tab, parsed, list } = usableFamilyTab(
       await this.#readFamilyTab(tabList, { signal }),
     )
-    const plan = planNewFamily(input, list, idsIn(tab, parsed))
+    const plan = planNewFamily(
+      input,
+      list,
+      idsIn(tab, parsed.columns.get("ID")),
+    )
     if (plan.kind === "settled") return plan.outcome
     signal?.throwIfAborted()
 
@@ -1005,14 +1009,16 @@ function categoryCells(category: Category | null): IndexCells {
   ]
 }
 
-/** Every ID the tab's rows hold, listed or skipped, so a new one repeats none. */
-function idsIn({ rows }: TabRows, { columns }: ListTab<Family>): Set<string> {
-  const at = columns.get("ID")
+/**
+ * Every ID the tab's rows hold in the column at `column`, in a row its parser keeps or
+ * skips, so a new ID repeats none; no IDs for a tab without the column.
+ */
+function idsIn({ rows }: TabRows, column: number | undefined): Set<string> {
   return new Set(
-    at === undefined
+    column === undefined
       ? []
       : rows.slice(1).flatMap((row) => {
-          const id = row[at]?.trim() ?? ""
+          const id = row[column]?.trim() ?? ""
           return id === "" ? [] : [id]
         }),
   )
@@ -1026,7 +1032,6 @@ function snapshotOf({
   families,
   categories,
 }: RoadmapRead): RoadmapSnapshot {
-  const idColumn = items.columns.get("Item ID")
   return {
     roadmap: entry.roadmap,
     items: items.items,
@@ -1035,15 +1040,7 @@ function snapshotOf({
         code === "duplicate-item-id" && value !== null ? [value] : [],
       ),
     ),
-    // Every row's ID, kept or not, so a new ID never repeats one a skipped row holds.
-    takenIds: new Set(
-      idColumn === undefined
-        ? []
-        : itemTab.rows.slice(1).flatMap((row) => {
-            const id = row[idColumn]?.trim() ?? ""
-            return id === "" ? [] : [id]
-          }),
-    ),
+    takenIds: idsIn(itemTab, items.columns.get("Item ID")),
     missingLists: new Set([
       ...(families === null ? (["familyId"] as const) : []),
       ...(categories === null ? (["categoryId"] as const) : []),

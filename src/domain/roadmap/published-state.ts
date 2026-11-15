@@ -264,12 +264,15 @@ function editedFields(
   )
 }
 
-/** Whether any pending edit is sent: a field of the roadmap's, of an item's, or a new item. */
+/**
+ * Whether any pending edit is sent: a field of the roadmap's, an item's changes, or a
+ * new item.
+ */
 function hasChanges(change: PublishedStateChange): boolean {
-  if (!change.published || change.changes === undefined) return false
-  const { items, newItems } = change.changes
+  const sent = change.published ? change.changes : undefined
   return (
-    editedFields(change).size > 0 || items.length > 0 || newItems.length > 0
+    editedFields(change).size > 0 ||
+    (sent !== undefined && sent.items.length + sent.newItems.length > 0)
   )
 }
 

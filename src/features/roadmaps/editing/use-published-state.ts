@@ -3,7 +3,7 @@ import { useCallback, useState } from "react"
 import type { PublishProblem } from "@/domain/roadmap/published-state"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
-import { markedUpdated } from "@/domain/roadmap/roadmap-changes"
+import { markedUpdated, NO_CHANGES } from "@/domain/roadmap/roadmap-changes"
 import { useAuth } from "@/features/auth/use-auth"
 import { toAppError, type AppErrorKind } from "@/lib/errors"
 import { localToday } from "@/lib/local-today"
@@ -12,7 +12,6 @@ import { useSetRoadmapPublished } from "../hooks/use-set-roadmap-published"
 import { discardItems, openConflicts } from "./conflicts"
 import {
   countChanges,
-  NO_CHANGES,
   publishesNoItems,
   settlePublished,
 } from "./pending-changes"

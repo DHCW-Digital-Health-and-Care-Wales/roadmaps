@@ -82,6 +82,12 @@ export const EDITABLE_ITEM_FIELDS = [
 
 export type EditableItemField = (typeof EDITABLE_ITEM_FIELDS)[number]
 
+/**
+ * An item's fields as a form gives them, each as its edit's value is typed or chosen,
+ * and any left out: what an edit changes, or what a new item starts with.
+ */
+export type ItemValues = Partial<Record<EditableItemField, string>>
+
 export function isItemTextField(
   field: EditableItemField,
 ): field is ItemTextField {
@@ -254,6 +260,13 @@ export interface RoadmapChanges {
   roadmap: Partial<Record<EditableRoadmapField, FieldChange>>
   items: readonly ItemChanges[]
   newItems: readonly NewItem[]
+}
+
+/** A roadmap with nothing pending. */
+export const NO_CHANGES: RoadmapChanges = {
+  roadmap: {},
+  items: [],
+  newItems: [],
 }
 
 /**

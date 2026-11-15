@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest"
 
 import { addNewItem } from "@/domain/roadmap/new-item"
 import { planRoadmapPublish } from "@/domain/roadmap/publish-plan"
-import type { RoadmapChanges } from "@/domain/roadmap/roadmap-changes"
+import {
+  NO_CHANGES,
+  type RoadmapChanges,
+} from "@/domain/roadmap/roadmap-changes"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 
@@ -14,7 +17,6 @@ import {
   editItem,
   editRoadmap,
   matchItemChanges,
-  NO_CHANGES,
   publishesNoItems,
   reconcileItems,
   reconcileRoadmap,

@@ -125,20 +125,42 @@ const FAMILIES_TAB = "Families"
 /** The tab that, with `Template` and `Families`, is never a roadmap's own (ADR-013). */
 const CATEGORIES_TAB = "Categories"
 
+/**
+ * A header as the parsers match one (ADR-009, ADR-011): ignoring case, accents, spaces
+ * and punctuation, so `Item-ID` is the `Item ID` column. Kept apart from the adapter's,
+ * like `WELSH_HEADER`.
+ */
+const headerKey = (header: string) =>
+  header
+    .normalize("NFKD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "")
+
+/** Where the first column headed `key`, a `headerKey`, is in a header row; -1 for none. */
+const columnAt = (header: readonly string[], key: string) =>
+  header.findIndex((name) => headerKey(name) === key)
+
 /** The index column the editor writes only as a `YYYY-MM-DD` date or blank (STY-036 D2). */
-const LAST_UPDATED_HEADER = /^\s*last\s+updated\s*$/i
+const LAST_UPDATED = "lastupdated"
 const LAST_UPDATED_VALUE = /^(\d{4}-\d{2}-\d{2})?$/
 
 /** The index columns a new roadmap's row is checked by (STY-040 S2). */
-const SHEET_HEADER = /^\s*sheet\s*$/i
-const ENABLED_HEADER = /^\s*enabled\s*$/i
+const SHEET = "sheet"
+const ENABLED = "enabled"
 
 /** The roadmap tab columns a new item's row is checked by (STY-045 S2). */
-const ITEM_ID_HEADER = /^\s*item\s+id\s*$/i
-const TITLE_HEADER = /^\s*title\s*$/i
-const HORIZON_HEADER = /^\s*horizon\s*$/i
+const ITEM_ID = "itemid"
+const TITLE = "title"
+const HORIZON = "horizon"
 
-/** The `Horizon` values the public site writes, which a new item's row holds one of. */
+/** An `Item ID` as the editor makes one (ADR-012), which a new item's row holds. */
+const ITEM_ID_VALUE = /^[bcdfghjkmnpqrstvwxz][bcdfghjkmnpqrstvwxz2-9]{7}$/
+
+/**
+ * The `Horizon` values the public site writes, which a new item's row holds one of:
+ * the fake's own list, kept apart from the adapter's so it checks what the adapter writes.
+ */
 const HORIZON_VALUES = new Set([
   "Recently delivered",
   "Now",
@@ -159,7 +181,8 @@ const HORIZON_VALUES = new Set([
  * - a row appended to a tab but `Families`, the roadmap index and a roadmap's own tab,
  *   one the index names; one appended to the index that is published or names no tab
  *   the same body copied; and one appended to a roadmap's tab without a title, a
- *   `Horizon` the public site reads or an `Item ID` no other row of the tab holds;
+ *   `Horizon` the public site reads or an `Item ID`, in the editor's format, that no
+ *   other row of the tab holds, or with a cell under no header;
  * - a copy of a tab but `Template`, or placed anywhere but after the last tab;
  * - a tab unhidden or its frozen rows changed, rows deleted or cells cleared, but in a
  *   tab the same body copied; that tab hidden, its header row unfrozen, deleted or
@@ -303,30 +326,40 @@ class Batch {
       return false
     }
     const [header = [], ...rows] = this.tabs[0]?.rows ?? []
-    const sheet = header.findIndex((name) => SHEET_HEADER.test(name))
+    const sheet = columnAt(header, SHEET)
     return rows.some((row) => row[sheet]?.trim() === tab.title)
   }
 
   /**
    * A row appended to a roadmap's tab, a new item's: its title, a `Horizon` the public
-   * site reads and an `Item ID` no other row of the tab holds.
+   * site reads and an `Item ID`, as the editor makes one, that no other row of the tab
+   * holds; and no cell under a column with no header.
    */
   #checkNewItemRow(tab: GridTab, row: readonly string[]): void {
     const [header = [], ...rows] = tab.rows
-    const at = (column: RegExp) => header.findIndex((name) => column.test(name))
-    const cell = (column: RegExp) => row[at(column)] ?? ""
-    const id = cell(ITEM_ID_HEADER)
+    const cell = (key: string) => row[columnAt(header, key)] ?? ""
+    const id = cell(ITEM_ID)
+    const idAt = columnAt(header, ITEM_ID)
     if (id === "") {
       this.violations.push(`${tab.title} row appended without an Item ID`)
-    } else if (rows.some((other) => other[at(ITEM_ID_HEADER)] === id)) {
+    } else if (!ITEM_ID_VALUE.test(id)) {
+      this.violations.push(
+        `${tab.title} row appended with the Item ID ${id}, not in the Item ID format`,
+      )
+    } else if (rows.some((other) => other[idAt]?.trim() === id)) {
       this.violations.push(
         `${tab.title} row appended with the Item ID ${id}, which another row has`,
       )
     }
-    if (cell(TITLE_HEADER) === "") {
+    if (cell(TITLE) === "") {
       this.violations.push(`${tab.title} row appended without a Title`)
     }
-    const horizon = cell(HORIZON_HEADER)
+    if (row.some((value, c) => value !== "" && !header[c]?.trim())) {
+      this.violations.push(
+        `${tab.title} row appended with a cell under no header`,
+      )
+    }
+    const horizon = cell(HORIZON)
     if (!HORIZON_VALUES.has(horizon)) {
       this.violations.push(
         `${tab.title} row appended with the Horizon ${JSON.stringify(horizon)}, not one the public site reads`,
@@ -337,10 +370,9 @@ class Batch {
   /** A row appended to the roadmap index: not published, its tab copied by this body. */
   #checkNewRoadmapRow(index: GridTab, row: readonly string[]): void {
     const [header = []] = index.rows
-    const cell = (column: RegExp) =>
-      row[header.findIndex((name) => column.test(name))] ?? ""
-    const sheet = cell(SHEET_HEADER)
-    if (cell(ENABLED_HEADER) !== "No") {
+    const cell = (key: string) => row[columnAt(header, key)] ?? ""
+    const sheet = cell(SHEET)
+    if (cell(ENABLED) !== "No") {
       this.violations.push(`${sheet} appended to the index without Enabled No`)
     }
     const copied = this.tabs.some(
@@ -542,7 +574,7 @@ class Batch {
     }
     if (
       !isHeader &&
-      LAST_UPDATED_HEADER.test(column) &&
+      headerKey(column) === LAST_UPDATED &&
       !LAST_UPDATED_VALUE.test(value)
     ) {
       this.violations.push(`${where} in Last updated, not YYYY-MM-DD`)

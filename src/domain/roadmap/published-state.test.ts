@@ -9,7 +9,8 @@ import {
   type PublishProblem,
 } from "./published-state"
 import type { RoadmapSnapshot } from "./publish-plan"
-import { createTestNewItem } from "./testing/test-new-item"
+import { NO_CHANGES } from "./roadmap-changes"
+import { addingItems, NEW_CLINIC } from "./testing/test-new-item"
 import { createTestRoadmap } from "./testing/test-roadmap"
 import { createTestRoadmapItem } from "./testing/test-roadmap-item"
 
@@ -31,7 +32,6 @@ const snapshot: RoadmapSnapshot = {
   missingLists: new Set(),
   organisationIds: new Set(),
 }
-const newItem = createTestNewItem("ckn7q2xw", "Choose a clinic closer to home")
 const found: FoundRow = {
   kind: "found",
   index: 0,
@@ -52,12 +52,11 @@ describe("findPublishedStateRow", () => {
 
   it("leaves an edited field out whole, its Welsh and its being blank too", () => {
     const changes = {
+      ...NO_CHANGES,
       roadmap: {
         statusLabel: { base: "Beta", value: "Live" },
         vision: { base: "", value: "Clear" },
       },
-      items: [],
-      newItems: [],
     }
     const edited = { published: true, changes } as const
 
@@ -80,11 +79,10 @@ describe("findPublishedStateRow", () => {
     const today = {
       published: true,
       changes: {
+        ...NO_CHANGES,
         roadmap: {
           lastUpdated: { base: "", value: "2026-11-13", overwrite: true },
         },
-        items: [],
-        newItems: [],
       },
     } as const
 
@@ -104,11 +102,10 @@ describe("findPublishedStateRow", () => {
     const today = {
       published: true,
       changes: {
+        ...NO_CHANGES,
         roadmap: {
           lastUpdated: { base: "", value: "2026-11-13", overwrite: true },
         },
-        items: [],
-        newItems: [],
       },
     } as const
 
@@ -176,7 +173,7 @@ describe("findPublishedStateRow", () => {
 })
 
 describe("a new item sent with a roadmap's published state (STY-045)", () => {
-  const changes = { roadmap: {}, items: [], newItems: [newItem] }
+  const changes = addingItems(NEW_CLINIC)
 
   it("is a pending edit to write, though the roadmap already reads as published", () => {
     expect(
@@ -213,7 +210,7 @@ describe("planPublishedStateWrite", () => {
 
   it("publishes a tab without a Horizon column once a placement written adds one", () => {
     const changes = {
-      roadmap: {},
+      ...NO_CHANGES,
       items: [
         {
           item,
@@ -221,7 +218,6 @@ describe("planPublishedStateWrite", () => {
           fields: { placement: { base: "", value: "now" } },
         },
       ],
-      newItems: [],
     }
 
     expect(
@@ -238,7 +234,7 @@ describe("planPublishedStateWrite", () => {
   })
 
   it("publishes a tab without a Horizon column once a new item, always placed, adds one (STY-045)", () => {
-    const changes = { roadmap: {}, items: [], newItems: [newItem] }
+    const changes = addingItems(NEW_CLINIC)
 
     expect(
       planPublishedStateWrite(

@@ -316,6 +316,16 @@ describe("applyBatchUpdate", () => {
         'ProductA row appended with the Horizon "next", not one the public site reads',
       ],
       [
+        "an Item ID the editor never makes",
+        ["Choose a clinic", "Next", "clinic-1"],
+        "ProductA row appended with the Item ID clinic-1, not in the Item ID format",
+      ],
+      [
+        "a cell under no header",
+        ["Choose a clinic", "Next", "ckn7q2xw", "", "Discovery"],
+        "ProductA row appended with a cell under no header",
+      ],
+      [
         "a Welsh cell",
         ["Choose a clinic", "Next", "ckn7q2xw", "Dewis clinig"],
         "ProductA!R3C4 in a Welsh column",
@@ -330,6 +340,22 @@ describe("applyBatchUpdate", () => {
         expect(result.violations).toEqual([violation])
       },
     )
+
+    it("finds each column by its header as the adapter does, whatever its case, spaces or punctuation", () => {
+      const respelt = {
+        ...items(),
+        rows: [
+          ["TITLE", " horizon ", "Item-ID", "Item ID"],
+          ["Online booking", "Now", "k7q2xwbn"],
+        ],
+      }
+
+      const result = applyBatchUpdate([index(), respelt], {
+        requests: [appendRow(10, ["Choose a clinic", "Next", "ckn7q2xw"])],
+      })
+
+      expect(result.violations).toEqual([])
+    })
 
     it("records the second of two rows appended with one Item ID as a violation", () => {
       const result = applyBatchUpdate([index(), items()], {

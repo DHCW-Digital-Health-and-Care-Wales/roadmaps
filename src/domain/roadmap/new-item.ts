@@ -1,7 +1,10 @@
 /**
  * Adding an item to a roadmap (STY-045): a new item is pending with the roadmap's other
  * changes from the moment it is added, and published with them (`publish-plan.ts`).
- * Pure functions over `RoadmapChanges`.
+ * Pure functions over `RoadmapChanges`. They are the domain's, as the checks of a new
+ * roadmap and a new family are, since what a new item must hold and how its ID is made
+ * are rules of a roadmap, whatever screen adds one; how an edit is kept and finds its
+ * item again is `features/roadmaps/editing/pending-changes.ts`, which calls these.
  */
 
 import { AppError } from "@/lib/errors"
@@ -9,17 +12,12 @@ import { AppError } from "@/lib/errors"
 import { createItemId, createUnusedId } from "./item-id"
 import type {
   EditableItemField,
+  ItemValues,
   NewItem,
   RoadmapChanges,
 } from "./roadmap-changes"
 import type { RoadmapItem } from "./roadmap-item"
 import { isRoadmapPlacement } from "./roadmap-placement"
-
-/**
- * What a Product Lead gives to add an item: each field as its edit's value is typed or
- * chosen, in English only, and any field left out.
- */
-export type NewItemInput = Partial<Record<EditableItemField, string>>
 
 /** Why a new item can't be added: it needs a title and a placement (ADR-014). */
 export interface NewItemProblems {
@@ -28,8 +26,8 @@ export interface NewItemProblems {
   placement?: "none"
 }
 
-/** The input as a new item holds it, every value trimmed, and what is wrong with it. */
-export function checkNewItem(input: NewItemInput): {
+/** `input` as a new item holds it, every value trimmed, and what is wrong with it. */
+export function checkNewItem(input: ItemValues): {
   values: NewItem["values"]
   problems: NewItemProblems
 } {
@@ -63,7 +61,7 @@ export function checkNewItem(input: NewItemInput): {
  */
 export function addNewItem(
   changes: RoadmapChanges,
-  input: NewItemInput,
+  input: ItemValues,
   items: readonly RoadmapItem[],
   createId: () => string = createItemId,
 ): RoadmapChanges {
@@ -84,7 +82,10 @@ export function addNewItem(
 /**
  * `changes` without each new item that `items`, a fresh read of the roadmap's items,
  * holds, found by its ID: its write landed, so the item read is shown in its place,
- * whatever a co-lead has made of it since. `changes` itself when none is dropped.
+ * whatever a co-lead has made of it since. `changes` itself when none is dropped. A
+ * read gives no item for a row with no title, so a new item whose row a co-lead has
+ * cleared of its title stays pending here; the next publish, which sees every row's ID,
+ * takes it as published (`planRoadmapPublish`).
  */
 export function dropPublishedNewItems(
   changes: RoadmapChanges,

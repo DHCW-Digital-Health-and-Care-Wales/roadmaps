@@ -105,9 +105,16 @@ alone, with other edits, and with a missing column.
   the edited items with nothing behind it, or an optional list: an edit is found, has a
   base and can conflict, a new item none of those, and the typecheck names every place
   that builds a roadmap's changes, so none drops a new item unseen.
-- **D8** (agent, 2026-11-15): a new item is held by its ID alone, in any row of the
-  roadmap, read or not, whatever that row then reads, over comparing its content: a
-  co-lead who has edited the new row since must not make it "not written" (S3, S4).
+- **D8** (agent, 2026-11-15): a new item is held by its ID alone, whatever its row
+  then reads, over comparing its content: a co-lead who has edited the new row since
+  must not make it "not written" (S3, S4). A publish looks in every row of the roadmap,
+  read or not; Refresh has only the items read.
+- **D9** (agent, 2026-11-15; review, Sonnet): `checkNewItem`, `addNewItem` and
+  `dropPublishedNewItems` are the domain's (`domain/roadmap/new-item.ts`), as Scope
+  says and as the checks of a new roadmap and a new family are, over sitting with the
+  pending-edit rules in `features/`: what a new item must hold and how its ID is made
+  are rules of a roadmap, whatever screen adds one. They take the form's `ItemValues`,
+  which moved to the domain with `NO_CHANGES` so both layers share one of each.
 
 ## Starting point
 
@@ -143,6 +150,14 @@ Audited at `400c90c`.
   other pending new items** (agent). A row the read skips keeps its ID out of sight of
   the page; a new ID that repeated one (one chance in some 2×10¹¹) would be taken as
   already published at the next publish (D8).
+- **S4: a new item whose row a co-lead has cleared of its title stays pending through
+  Refresh** (agent; review, Sol). S4 drops it when a re-read "finds an item with its
+  ID", and a row with no title is no item, so `listRoadmapItems` gives Refresh nothing
+  to find it by. The next publish, which sees every row's ID, takes it as published
+  and writes nothing more, so the co-lead's removal stands and no second row is
+  written. Telling Refresh would mean the repository giving the page the IDs of rows
+  it doesn't list, a wider change to the port than this case, a lost answer followed by
+  a co-lead clearing that very row, has earned.
 - **S2, S4: two new items with one ID are rejected** (agent) with `AppError('unknown')`,
   as input a screen never sends, over writing two rows with it.
 - **S2: a row without an ID is never given a new item's** (agent): the IDs a publish
@@ -155,7 +170,11 @@ Audited at `400c90c`.
 - **The Sheets fake's guard checks the new row too** (agent; _Starting point_): a row
   appended to a tab is allowed only on a tab a row of the index names, never
   `Template`, `Families` or `Categories`, and is a violation without a title, a
-  `Horizon` value the public site writes, or an `Item ID` no other row of the tab holds.
+  `Horizon` value the public site writes, or an `Item ID`, in the editor's format, that
+  no other row of the tab holds, or with a cell under no header. The fake now finds
+  every column it checks as the adapter does, ignoring case, spaces and punctuation
+  (review, Sol). It can't tell which roadmap a publish is for, so a row appended to
+  another roadmap's tab passes it.
 - **Nothing was checked against a real spreadsheet** (agent): the delivery had no
   Google account. The row is appended as a new family's and a new roadmap's index row
   are (STY-029, STY-040), and
@@ -177,9 +196,11 @@ Audited at `400c90c`.
 - **The type** (`domain/roadmap/roadmap-changes.ts`): `RoadmapChanges.newItems`, in the
   order added, each a `NewItem`: its `id` and its `values`, one string for every
   `EditableItemField` as an edit's value holds it (`""` for none; tags, organisations
-  and details as their one value). A hand-written `RoadmapChanges` needs `newItems`;
-  `features/` code spreads `NO_CHANGES`.
-- **Adding** (`domain/roadmap/new-item.ts`): `checkNewItem(input)` gives the trimmed
+  and details as their one value). A hand-written `RoadmapChanges` needs `newItems`:
+  spread `NO_CHANGES`, which now lives beside the type, as does `ItemValues`, the
+  item form's values (both were `features/roadmaps/editing/pending-changes.ts`'s).
+- **Adding** (`domain/roadmap/new-item.ts`): `checkNewItem(input)`, which takes the
+  item form's `ItemValues`, gives the trimmed
   `values` and `problems` (`title: "blank"`, `placement: "none"`);
   `addNewItem(changes, input, items)` gives the changes with the new item last, its ID
   made then, and throws for input the check refuses; `items` is the roadmap's items as
@@ -197,8 +218,11 @@ Audited at `400c90c`.
   `settlePublished` drops the new item it was made to. **Left for STY-047**:
   `changedParts` lists edits only, so the publish dialog names no new item.
 - **The in-memory double** adds a published new item after the roadmap's stored items;
-  `coLead` can then change it. `createTestNewItem(id, title, values)`
-  (`domain/roadmap/testing/test-new-item.ts`) makes one for a test, placed in Now.
+  `coLead` can then change it. `domain/roadmap/testing/test-new-item.ts` holds the
+  tests' new items: `NEW_CLINIC`, with a title and a placement alone, `NEW_LETTERS`,
+  with every field, and `addingItems(...newItems)`, the changes that hold them alone.
+  A test that needs another spreads one of them, or exports the file's
+  `createTestNewItem`.
 - **The E2E Sheets fake**: a publish with a new item is still one `batchUpdate` in
   `sheets.writes`, ending with an `appendCells` request for each; the fake fails a test
   whose appended row breaks the guard above.
@@ -213,10 +237,10 @@ tests; `adapter` is `google-sheets-roadmap-repository.test.ts`, _a new item (STY
 roadmap's own tab_; `pending` is `features/roadmaps/editing/pending-changes.test.ts`,
 _a new item (STY-045)_.
 
-| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1       | rules "holds the new item with an ID made then, in the Item ID format", "gives it an ID no item of the roadmap as read has, nor another new item", "refuses a blank title", "refuses no placement, or one that is none of the six", "refuses input that was not checked"; plan "rejects a blank title / no placement …, which the editor never sends"; contract "rejects one with a blank title / no placement …, writing nothing"; `pending-changes-store.test.ts` "keeps a roadmap whose only change is a new item"; pending "is one pending change, beside the fields edited"                                                                                                                                                                                                                            |
-| S2       | adapter "appends one row after the tab's last row in use, with its Item ID, Title and Horizon, in the one batchUpdate", "writes each field it has as that field's edit is written, and no Welsh cell", "sends several in the order added, after the cells of the roadmap's other changes", "adds a column the row needs and the tab lacks, and none for a field it lacks", "adds the Item ID and Horizon columns to a tab with neither", "gives no row without an ID the ID of a new item"; plan "writes a new item's ID, title and placement, and no field it lacks", "writes each field it has as that field's edit is written, in the order added"; fake "appends a new item's rows after the tab's last row in use" and the violations it records                                                       |
-| S3       | contract "publishes nothing, the new item neither, when a co-lead changed a field edited with it", "… when an item edited with it is gone", "is added whatever a co-lead did to the roadmap's other items, even one with its title", "fails as an edit does when the roadmap is no longer listed, or its items can't be read"; adapter "keeps a row a co-lead added after the read, appending after it"; plan "publishes nothing of it when an edit is refused, and is never itself a conflict or missing"                                                                                                                                                                                                                                                                                                  |
-| S4       | pending "is dropped by a read that holds an item with its ID, whatever a co-lead made of it since, the edits kept", "stays pending over a read that doesn't hold it", "is no longer pending once the publish it was sent in lands, and one added since is"; rules (`dropPublishedNewItems`); contract "takes a new item the roadmap already holds as published, writing no second one" and _when the write's answer is lost_ (found with every other change, found alone, none found, a co-lead's value where an edit was written, the re-read fails); adapter "writes nothing for a new item the tab already holds, even in a row it no longer reads", "settles a lost answer by one more read of the roadmap, which finds the new row by its ID"; plan (`heldWrites`, _a new item, held by its ID alone_) |
-| S5       | contract, run by `google-sheets-roadmap-repository.test.ts` and `in-memory-roadmap-repository.test.ts`: "adds it after the roadmap's last item, with its ID, title and placement", "writes every field it has as that field's edit is written, in English alone", "adds several in the order they were added, in the one write with the roadmap's other changes", "starts a roadmap that has no items", and _with the roadmap published at once_                                                                                                                                                                                                                                                                                                                                                            |
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | rules "holds the new item with an ID made then, in the Item ID format", "gives it an ID no item of the roadmap as read has, nor another new item", "refuses a blank title", "refuses no placement, or one that is none of the six", "refuses input that was not checked"; plan "rejects a blank title / no placement …, which the editor never sends"; contract "rejects one with a blank title / no placement …, writing nothing"; `pending-changes-store.test.ts` "keeps a roadmap whose only change is a new item"; pending "is one pending change, beside the fields edited"                                                                                                                                                                                                                                                                                                                                       |
+| S2       | adapter "appends one row after the tab's last row in use, with its Item ID, Title and Horizon, in the one batchUpdate", "writes each field it has as that field's edit is written, and no Welsh cell", "sends several in the order added, after the cells of the roadmap's other changes", "adds a column the row needs and the tab lacks, and none for a field it lacks", "adds the Item ID and Horizon columns to a tab with neither", "gives no row without an ID the ID of a new item"; plan "writes a new item's ID, title and placement, and no field it lacks", "writes each field it has as that field's edit is written, in the order added"; fake "appends a new item's rows after the tab's last row in use" and the violations it records                                                                                                                                                                  |
+| S3       | contract "publishes nothing, the new item neither, when a co-lead changed a field edited with it", "… when an item edited with it is gone", "is added whatever a co-lead did to the roadmap's other items, even one with its title", "fails as an edit does when the roadmap is no longer listed, or its items can't be read"; adapter "keeps a row a co-lead added after the read, appending after it"; plan "publishes nothing of it when an edit is refused, and is never itself a conflict or missing"                                                                                                                                                                                                                                                                                                                                                                                                             |
+| S4       | pending "is dropped by a read that holds an item with its ID, whatever a co-lead made of it since, the edits kept", "stays pending over a read that doesn't hold it", "is no longer pending once the publish it was sent in lands, and one added since is"; rules (`dropPublishedNewItems`); contract "takes a new item the roadmap already holds as published, writing no second one" and _when the write's answer is lost_ (found with every other change, found alone, none found, a co-lead's value where an edit was written, the re-read fails); adapter "writes nothing for a new item the tab already holds, even in a row it no longer reads", "reads no item for a new item's row whose title a co-lead has cleared, so a read alone leaves it pending", "settles a lost answer by one more read of the roadmap, which finds the new row by its ID"; plan (`heldWrites`, _a new item, held by its ID alone_) |
+| S5       | contract, run by `google-sheets-roadmap-repository.test.ts` and `in-memory-roadmap-repository.test.ts`: "adds it after the roadmap's last item, with its ID, title and placement", "writes every field it has as that field's edit is written, in English alone", "adds several in the order they were added, in the one write with the roadmap's other changes", "starts a roadmap that has no items", and _with the roadmap published at once_                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |

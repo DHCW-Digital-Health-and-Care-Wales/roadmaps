@@ -313,9 +313,11 @@ Nothing checks permission in advance.
   included, and it stays pending. A roadmap whose index row or tab is gone fails as
   before.
 - **A new item the re-read already holds is no longer pending**, as a pending field
-  is not: it is found by its ID in any row of the tab, kept by the parser or not,
-  whatever that row then holds. Publishing skips it and Refresh drops it, showing the
-  item read.
+  is not, and it is found by its ID alone, whatever its row then holds. Publishing
+  skips one whose ID any row of the tab holds, kept by the parser or not. Refresh drops
+  one whose ID an item it reads holds, and shows that item. A row a co-lead has since
+  cleared of its title is no item, so Refresh leaves the new item pending and the next
+  publish, finding its ID, takes it as published and writes nothing more.
 - **A lost answer is settled as Option 16 settles one**: a new row counts as written
   when a row of the tab holds its ID. Every new row and written cell there is
   published, none is `network`, and anything else, or a failed re-read, is unconfirmed.

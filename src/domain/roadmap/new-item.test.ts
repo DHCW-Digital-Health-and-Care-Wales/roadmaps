@@ -2,21 +2,19 @@ import { describe, expect, it } from "vitest"
 
 import { isAppError } from "@/lib/errors"
 
+import { addNewItem, checkNewItem, dropPublishedNewItems } from "./new-item"
 import {
-  addNewItem,
-  checkNewItem,
-  dropPublishedNewItems,
-  type NewItemInput,
-} from "./new-item"
-import type { NewItem, RoadmapChanges } from "./roadmap-changes"
+  type ItemValues,
+  type NewItem,
+  NO_CHANGES,
+  type RoadmapChanges,
+} from "./roadmap-changes"
 import { createTestRoadmapItem } from "./testing/test-roadmap-item"
-
-const NO_CHANGES: RoadmapChanges = { roadmap: {}, items: [], newItems: [] }
 
 /** The form of an `Item ID` (ADR-012). */
 const ITEM_ID = /^[bcdfghjkmnpqrstvwxz][bcdfghjkmnpqrstvwxz2-9]{7}$/
 
-const clinic: NewItemInput = {
+const clinic: ItemValues = {
   title: "Choose a clinic closer to home",
   placement: "next",
 }
@@ -92,8 +90,7 @@ describe("addNewItem (STY-045 S1)", () => {
     const changes = addNewItem(NO_CHANGES, clinic, [])
 
     expect(changes).toEqual({
-      roadmap: {},
-      items: [],
+      ...NO_CHANGES,
       newItems: [
         { id: expect.stringMatching(ITEM_ID) as string, values: clinicValues },
       ],
@@ -128,6 +125,7 @@ describe("addNewItem (STY-045 S1)", () => {
   it("adds it after the new items already pending, keeping every other change", () => {
     const item = createTestRoadmapItem("Online booking", { id: "takenaaa" })
     const pending: RoadmapChanges = {
+      ...NO_CHANGES,
       roadmap: { vision: { base: "", value: "Clear" } },
       items: [
         { item, position: 0, fields: { phase: { base: "", value: "Beta" } } },
@@ -159,7 +157,7 @@ describe("addNewItem (STY-045 S1)", () => {
     expect(pending.newItems).toHaveLength(1)
   })
 
-  it.each<NewItemInput>([
+  it.each<ItemValues>([
     { title: " ", placement: "next" },
     { title: "Online booking" },
     { title: "Online booking", placement: "Soon" },
@@ -177,8 +175,8 @@ describe("addNewItem (STY-045 S1)", () => {
 
 describe("dropPublishedNewItems (STY-045 S4)", () => {
   const changes: RoadmapChanges = {
+    ...NO_CHANGES,
     roadmap: { vision: { base: "", value: "Clear" } },
-    items: [],
     newItems: [
       { id: "firstnew", values: clinicValues },
       { id: "secondnw", values: { ...clinicValues, title: "Text reminders" } },

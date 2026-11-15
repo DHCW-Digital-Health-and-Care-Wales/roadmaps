@@ -5,8 +5,8 @@
 - **Type**: Chore
 - **Area**: Infrastructure + Docs
 - **Epic**: EPC-011-adding-roadmaps-and-items
-- **Depends on**: STY-045 (its write, on the default branch); easier once STY-046 gives
-  it a screen
+- **Depends on**: STY-045 (hard: its write) and STY-046 (hard: the screen that adds an
+  item, which the check is run from), both on the default branch
 - **Binding ADRs**: ADR-011, ADR-012
 - **Suggested model**: Sonnet — a manual run with four things to look at, and a change
   to how the row is placed only if one fails
@@ -16,20 +16,20 @@
 
 STY-045 publishes a new item as a row appended to its roadmap's tab (`appendCells`), in
 the same `spreadsheets.batchUpdate` as the roadmap's other changes. Where Google puts
-that row was never seen: the delivery ran against fakes only, which put it after the
-last row holding any value. A new family's row and a new roadmap's index row are
-appended the same way (STY-029, STY-040), so the three share the guess. A wrong guess
-shows as a new item that is published but sits below blank rows, which both the editor
-and the public site skip, or as a publish Google refuses, writing nothing. Done looks
-like: one publish of new items run against a test spreadsheet (never the live one),
-each row of the table below seen, and the fake, the README and STY-045's record
-corrected where Google differs. Run it with
-[CHO-010](CHO-010-check-adding-a-roadmap-against-a-real-spreadsheet.md) where one
-session can do both.
+that row was never seen: the delivery ran against fakes only. A wrong guess shows as a
+new item published below blank rows, or as a publish Google refuses, writing nothing.
+Done looks like: one publish of new items run against a test spreadsheet (never the
+live one), each row of the table below seen, and the fake, the README and STY-045's
+record corrected where Google differs. One session can run it with
+[CHO-010](CHO-010-check-adding-a-roadmap-against-a-real-spreadsheet.md).
 
 ## Measurement
 
-At STY-045's head. `batchRequests`
+At `61f1e2f`, STY-045's delivery. The fake puts an appended row after the last row
+holding any value, as a new family's row and a new roadmap's index row are placed
+(STY-029, STY-040), so the three share the guess. A row with no title is skipped by
+the editor and by the public site (`docs/analysis/roadmap-tab-format.md`), so a new
+item below blank rows still reads last. `batchRequests`
 (`src/infrastructure/google-sheets/google-sheets-roadmap-repository.ts`) appends the
 rows through `TabWriter.append` (`tab-writer.ts`);
 `tests/fixtures/sheets/apply-batch-update.ts` is the fake that stands in for Google.

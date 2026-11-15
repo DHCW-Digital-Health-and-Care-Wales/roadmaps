@@ -1,9 +1,10 @@
 import { useMemo, useRef, useState } from "react"
 
+import type { ItemValues } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 
 import { tagsInUse } from "./item-tags"
-import { editItem, matchItemChanges, type ItemValues } from "./pending-changes"
+import { editItem, matchItemChanges } from "./pending-changes"
 import { usePendingChangesStore } from "./pending-changes-context"
 
 /**

@@ -5,17 +5,18 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import type { Category } from "@/domain/roadmap/category"
 import type { Family } from "@/domain/roadmap/family"
 import type { LocalisedText } from "@/domain/roadmap/localised-text"
+import { dropPublishedNewItems } from "@/domain/roadmap/new-item"
 import type { NewRoadmapInput } from "@/domain/roadmap/new-roadmap"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
-import {
-  markedUpdated,
-  type NewItem,
-  type RoadmapChanges,
-} from "@/domain/roadmap/roadmap-changes"
+import { markedUpdated, NO_CHANGES } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { CO_LEAD_VALUE } from "@/domain/roadmap/testing/contract-write"
 import { categoriesOf, familiesOf } from "@/domain/roadmap/testing/linked-lists"
-import { createTestNewItem } from "@/domain/roadmap/testing/test-new-item"
+import {
+  addingItems,
+  NEW_CLINIC,
+  NEW_LETTERS,
+} from "@/domain/roadmap/testing/test-new-item"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import {
   type ContractOptions,
@@ -1215,9 +1216,8 @@ describe("GoogleSheetsRoadmapRepository", () => {
     ]
 
     const titleChange = {
+      ...NO_CHANGES,
       roadmap: { title: { base: "Product A roadmap", value: "Product A" } },
-      items: [],
-      newItems: [],
     }
 
     it("sends one batchUpdate after the three reads, as JSON with the token (S2)", async () => {
@@ -1293,6 +1293,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
       if (item === undefined) throw new Error("Product A has items")
 
       await httpRepository().publishRoadmapChanges("producta", {
+        ...NO_CHANGES,
         roadmap: { statusLabel: { base: "Beta", value: "=SUM(A1)" } },
         items: [
           {
@@ -1307,7 +1308,6 @@ describe("GoogleSheetsRoadmapRepository", () => {
             },
           },
         ],
-        newItems: [],
       })
 
       const { requests } = spreadsheet.bodies[0] as BatchUpdateBody
@@ -1337,9 +1337,8 @@ describe("GoogleSheetsRoadmapRepository", () => {
 
         await expect(
           httpRepository().publishRoadmapChanges("producta", {
+            ...NO_CHANGES,
             roadmap: { lastUpdated: { base: "2026-10-01", value } },
-            items: [],
-            newItems: [],
           }),
         ).resolves.toEqual({ status: "published" })
 
@@ -1372,7 +1371,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
       const before = spreadsheet.tabs()
 
       await httpRepository().publishRoadmapChanges("producta", {
-        roadmap: {},
+        ...NO_CHANGES,
         items: [
           {
             item,
@@ -1382,7 +1381,6 @@ describe("GoogleSheetsRoadmapRepository", () => {
             },
           },
         ],
-        newItems: [],
       })
 
       const horizon = EXAMPLE_TAB_ROWS.ProductA?.[0]?.indexOf("Horizon") ?? -1
@@ -1404,11 +1402,10 @@ describe("GoogleSheetsRoadmapRepository", () => {
         const [item] = await httpRepository().listRoadmapItems(id)
         if (item === undefined) throw new Error(`${id} has an item`)
         return httpRepository().publishRoadmapChanges(id, {
-          roadmap: {},
+          ...NO_CHANGES,
           items: [
             { item, position: 0, fields: { organisationIds: { base, value } } },
           ],
-          newItems: [],
         })
       }
 
@@ -1449,7 +1446,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
         const outcome = await httpRepository().publishRoadmapChanges(
           "producta",
           {
-            roadmap: {},
+            ...NO_CHANGES,
             items: [
               {
                 item,
@@ -1459,7 +1456,6 @@ describe("GoogleSheetsRoadmapRepository", () => {
                 },
               },
             ],
-            newItems: [],
           },
         )
 
@@ -1513,9 +1509,8 @@ describe("GoogleSheetsRoadmapRepository", () => {
         const item = items[position]
         if (item === undefined) throw new Error(`${id} has no ${title}`)
         return httpRepository().publishRoadmapChanges(id, {
-          roadmap: {},
+          ...NO_CHANGES,
           items: [{ item, position, fields: { tags: { base, value } } }],
-          newItems: [],
         })
       }
 
@@ -1589,7 +1584,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
         const outcome = await httpRepository().publishRoadmapChanges(
           "productc",
           {
-            roadmap: {},
+            ...NO_CHANGES,
             items: [
               {
                 item,
@@ -1599,7 +1594,6 @@ describe("GoogleSheetsRoadmapRepository", () => {
                 },
               },
             ],
-            newItems: [],
           },
         )
 
@@ -1634,9 +1628,8 @@ describe("GoogleSheetsRoadmapRepository", () => {
         const item = items[position]
         if (item === undefined) throw new Error(`${id} has no ${title}`)
         return httpRepository().publishRoadmapChanges(id, {
-          roadmap: {},
+          ...NO_CHANGES,
           items: [{ item, position, fields: { details: { base, value } } }],
-          newItems: [],
         })
       }
 
@@ -1749,7 +1742,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
         const outcome = await httpRepository().publishRoadmapChanges(
           "productc",
           {
-            roadmap: {},
+            ...NO_CHANGES,
             items: [
               {
                 item,
@@ -1757,7 +1750,6 @@ describe("GoogleSheetsRoadmapRepository", () => {
                 fields: { details: { base: "One\n- Two", value: "One" } },
               },
             ],
-            newItems: [],
           },
         )
 
@@ -1781,9 +1773,8 @@ describe("GoogleSheetsRoadmapRepository", () => {
         const spreadsheet = serveStatefulSpreadsheet(before)
 
         await httpRepository().publishRoadmapChanges("producta", {
+          ...NO_CHANGES,
           roadmap: { vision: { base: "", value: "Where we are heading" } },
-          items: [],
-          newItems: [],
         })
 
         expect(
@@ -1820,7 +1811,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
         if (item === undefined) throw new Error("Product B has items")
 
         await httpRepository().publishRoadmapChanges("productb", {
-          roadmap: {},
+          ...NO_CHANGES,
           items: [
             {
               item,
@@ -1828,7 +1819,6 @@ describe("GoogleSheetsRoadmapRepository", () => {
               fields: { phase: { base: "", value: "Beta" } },
             },
           ],
-          newItems: [],
         })
 
         expect(changedCells(before, spreadsheet.tabs())).toEqual([
@@ -1893,9 +1883,8 @@ describe("GoogleSheetsRoadmapRepository", () => {
 
         await expect(
           httpRepository().publishRoadmapChanges("producta", {
+            ...NO_CHANGES,
             roadmap: { familyId: { base: "fc29g5b9", value: "vdkxj63m" } },
-            items: [],
-            newItems: [],
           }),
         ).resolves.toEqual({ status: "published" })
 
@@ -1916,9 +1905,8 @@ describe("GoogleSheetsRoadmapRepository", () => {
         const spreadsheet = serveStatefulSpreadsheet(before)
 
         await httpRepository().publishRoadmapChanges("producta", {
+          ...NO_CHANGES,
           roadmap: { familyId: { base: "fc29g5b9", value: "" } },
-          items: [],
-          newItems: [],
         })
 
         expect(indexChanges(before, spreadsheet.tabs())).toEqual([
@@ -1933,9 +1921,8 @@ describe("GoogleSheetsRoadmapRepository", () => {
         const spreadsheet = serveStatefulSpreadsheet(before)
 
         await httpRepository().publishRoadmapChanges("producta", {
+          ...NO_CHANGES,
           roadmap: { familyId: { base: "fc29g5b9", value: "" } },
-          items: [],
-          newItems: [],
         })
 
         // Family (cy), column 13, is a trailing blank the row's array leaves out.
@@ -1951,15 +1938,13 @@ describe("GoogleSheetsRoadmapRepository", () => {
         const spreadsheet = serveStatefulSpreadsheet(before)
 
         await httpRepository().publishRoadmapChanges("producta", {
+          ...NO_CHANGES,
           roadmap: { categoryId: { base: "khzpchkh", value: "w7vrv5kn" } },
-          items: [],
-          newItems: [],
         })
         const chosen = spreadsheet.tabs()
         await httpRepository().publishRoadmapChanges("producta", {
+          ...NO_CHANGES,
           roadmap: { categoryId: { base: "w7vrv5kn", value: "" } },
-          items: [],
-          newItems: [],
         })
 
         expect(indexChanges(before, chosen)).toEqual([
@@ -1990,9 +1975,8 @@ describe("GoogleSheetsRoadmapRepository", () => {
 
         await expect(
           httpRepository().publishRoadmapChanges("producta", {
+            ...NO_CHANGES,
             roadmap: { familyId: { base: "fc29g5b9", value: "gone0000" } },
-            items: [],
-            newItems: [],
           }),
         ).rejects.toMatchObject({ kind: "invalid-data" })
         expect(spreadsheet.bodies).toEqual([])
@@ -2030,9 +2014,8 @@ describe("GoogleSheetsRoadmapRepository", () => {
 
           await expect(
             httpRepository().publishRoadmapChanges(roadmapId, {
+              ...NO_CHANGES,
               roadmap: { title: { base: "Product A roadmap", value: "New" } },
-              items: [],
-              newItems: [],
             }),
           ).rejects.toMatchObject({ kind: "invalid-data", retryable: false })
           await expect(
@@ -2086,25 +2069,6 @@ describe("GoogleSheetsRoadmapRepository", () => {
     })
 
     describe("a new item (STY-045)", () => {
-      const clinic = createTestNewItem(
-        "ckn7q2xw",
-        "Choose a clinic closer to home",
-        { placement: "next" },
-      )
-      const letters = createTestNewItem("fwd9s3hj", "Letters by email", {
-        description: "Read your letters online.\nNo post.",
-        expectedOutcome: "Fewer lost letters",
-        phase: "Discovery",
-        placement: "delivered-this-year",
-        tags: "Patients, Carers",
-        organisationIds: "sbuhb,national",
-        details: "Appointment letters\n- Outpatients",
-      })
-      const adding = (...newItems: NewItem[]): RoadmapChanges => ({
-        roadmap: {},
-        items: [],
-        newItems,
-      })
       const text = (stringValue: string) => ({
         userEnteredValue: { stringValue },
       })
@@ -2120,7 +2084,10 @@ describe("GoogleSheetsRoadmapRepository", () => {
         const spreadsheet = serveStatefulSpreadsheet(before)
 
         await expect(
-          httpRepository().publishRoadmapChanges("producta", adding(clinic)),
+          httpRepository().publishRoadmapChanges(
+            "producta",
+            addingItems(NEW_CLINIC),
+          ),
         ).resolves.toEqual({ status: "published" })
 
         // Rows 2 to 10 hold the example's items: each gets an ID, as on any publish.
@@ -2166,7 +2133,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
 
         await httpRepository().publishRoadmapChanges(
           "producta",
-          adding(letters),
+          addingItems(NEW_LETTERS),
         )
 
         expect(changedCells(before, spreadsheet.tabs()).slice(10)).toEqual([
@@ -2177,7 +2144,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
           "ProductA!R11C5 Discovery",
           "ProductA!R11C6 Patients, Carers",
           "ProductA!R11C7 National, SBUHB",
-          "ProductA!R11C8 Appointment letters\n- Outpatients",
+          "ProductA!R11C8 Appointment letters\n- Outpatients\n-- Adult clinics first",
           "ProductA!R11C15 fwd9s3hj",
         ])
       })
@@ -2188,6 +2155,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
         if (item === undefined) throw new Error("Product A has an item")
 
         await httpRepository().publishRoadmapChanges("producta", {
+          ...NO_CHANGES,
           roadmap: { title: { base: "Product A roadmap", value: "Product A" } },
           items: [
             {
@@ -2196,7 +2164,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
               fields: { title: { base: "Online booking", value: "Booking" } },
             },
           ],
-          newItems: [letters, clinic],
+          newItems: [NEW_LETTERS, NEW_CLINIC],
         })
 
         expect(spreadsheet.bodies).toHaveLength(1)
@@ -2229,7 +2197,10 @@ describe("GoogleSheetsRoadmapRepository", () => {
 
         await httpRepository().publishRoadmapChanges(
           "producta",
-          adding({ ...clinic, values: { ...clinic.values, phase: "Beta" } }),
+          addingItems({
+            ...NEW_CLINIC,
+            values: { ...NEW_CLINIC.values, phase: "Beta" },
+          }),
         )
 
         expect(spreadsheet.bodies).toEqual([
@@ -2281,7 +2252,10 @@ describe("GoogleSheetsRoadmapRepository", () => {
           gridTab("ProductA", [["Title"]], 10, 1),
         ])
 
-        await httpRepository().publishRoadmapChanges("producta", adding(clinic))
+        await httpRepository().publishRoadmapChanges(
+          "producta",
+          addingItems(NEW_CLINIC),
+        )
 
         expect(spreadsheet.tabs()[1]?.rows).toEqual([
           ["Title", "Item ID", "Horizon"],
@@ -2306,7 +2280,10 @@ describe("GoogleSheetsRoadmapRepository", () => {
         })
 
         await expect(
-          httpRepository().publishRoadmapChanges("producta", adding(clinic)),
+          httpRepository().publishRoadmapChanges(
+            "producta",
+            addingItems(NEW_CLINIC),
+          ),
         ).resolves.toEqual({ status: "published" })
 
         expect(spreadsheet.tabs()[1]?.rows.slice(1)).toEqual([
@@ -2322,10 +2299,23 @@ describe("GoogleSheetsRoadmapRepository", () => {
         )
 
         await expect(
-          httpRepository().publishRoadmapChanges("producta", adding(clinic)),
+          httpRepository().publishRoadmapChanges(
+            "producta",
+            addingItems(NEW_CLINIC),
+          ),
         ).resolves.toEqual({ status: "published" })
 
         expect(spreadsheet.bodies).toEqual([])
+      })
+
+      it("reads no item for a new item's row whose title a co-lead has cleared, so a read alone leaves it pending (S4)", async () => {
+        serveStatefulSpreadsheet(smallTabs(kept, ["", "Next", "ckn7q2xw"]))
+        const pending = addingItems(NEW_CLINIC)
+
+        const items = await httpRepository().listRoadmapItems("producta")
+
+        expect(items.map(({ id }) => id)).toEqual(["k7q2xwbn"])
+        expect(dropPublishedNewItems(pending, items)).toBe(pending)
       })
 
       it("gives no row without an ID the ID of a new item (S1)", async () => {
@@ -2334,7 +2324,10 @@ describe("GoogleSheetsRoadmapRepository", () => {
         )
         nextItemIds.push("ckn7q2xw", "fresh234")
 
-        await httpRepository().publishRoadmapChanges("producta", adding(clinic))
+        await httpRepository().publishRoadmapChanges(
+          "producta",
+          addingItems(NEW_CLINIC),
+        )
 
         expect(spreadsheet.tabs()[1]?.rows.map((row) => row[2])).toEqual([
           "Item ID",
@@ -2349,7 +2342,10 @@ describe("GoogleSheetsRoadmapRepository", () => {
         })
 
         await expect(
-          httpRepository().publishRoadmapChanges("producta", adding(clinic)),
+          httpRepository().publishRoadmapChanges(
+            "producta",
+            addingItems(NEW_CLINIC),
+          ),
         ).resolves.toEqual({ status: "published" })
 
         expect(spreadsheet.requests.map(({ method }) => method)).toEqual([
@@ -2376,7 +2372,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
         await expect(
           httpRepository().setRoadmapPublished(loaded, {
             published: true,
-            changes: adding(clinic),
+            changes: addingItems(NEW_CLINIC),
           }),
         ).resolves.toEqual({ status: "set" })
 
@@ -3318,10 +3314,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
       await expect(
         httpRepository().setRoadmapPublished(productC, {
           published: true,
-          changes: markedUpdated(
-            { roadmap: {}, items: [], newItems: [] },
-            "2026-11-13",
-          ),
+          changes: markedUpdated(NO_CHANGES, "2026-11-13"),
         }),
       ).resolves.toEqual({ status: "set" })
 
@@ -3342,10 +3335,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
       await expect(
         httpRepository().setRoadmapPublished(productC, {
           published: true,
-          changes: markedUpdated(
-            { roadmap: {}, items: [], newItems: [] },
-            "2026-11-13",
-          ),
+          changes: markedUpdated(NO_CHANGES, "2026-11-13"),
         }),
       ).resolves.toEqual({ status: "set" })
 

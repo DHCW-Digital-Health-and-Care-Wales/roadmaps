@@ -163,10 +163,10 @@ or `quality-review` in the lanes, rounds and runtimes `references/delegation.md`
 sets. Supply requirements and evidence, not
 the implementer's self-assessment. Reviewers inspect their own relevant
 callers and rules; they do not edit or switch the shared checkout. Keep their
-reports separate. Resolve findings, fixing each at its cause rather than only
-for the reported trigger or at the reported line: ask what else reaches that
-cause and test it too; for a changed term or label, search the changed files
-and both catalogues for the old form. Repeat affected checks, commit
+reports separate. Resolve findings, fixing each at its cause and wherever it
+recurs, rather than only for the reported trigger or at the reported line:
+ask what else reaches that cause and test it too; for a changed term or
+label, search the changed files and both catalogues for the old form. Repeat affected checks, commit
 fixes and re-review the new head in the lanes and rounds `delegation.md` sets.
 An unavailable reviewer is a stated limitation, not an invented independent
 review.

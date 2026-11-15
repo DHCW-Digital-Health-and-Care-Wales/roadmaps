@@ -134,8 +134,10 @@ agent and `<run-folder>/progress/<ITEM>-handoff.md`.
      the runtime can message it, so one build absorbs it; after hand-back
      (item 3), resume the child or start a fresh delivery child from its
      handoff with it. An answer that keeps the build as it is needs no
-     child: name it in the item's retrospective brief, and that PR adds it
-     to the record's Decisions.
+     child, only its entry in the record's Decisions: push that as a
+     record-only commit to the item's PR while it is open; once it is
+     merged, name the answer in the item's retrospective brief, and that
+     PR adds the entry.
    - On a fallback wake, read the child's handoff record and the progress
      log. If they record its final hand-back (the reviewed PR or a blocker),
      read its result and continue from item 3. Otherwise end the turn; the

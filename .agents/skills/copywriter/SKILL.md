@@ -98,10 +98,9 @@ Google message: the domain and infrastructure layers emit codes (`AppError.kind`
 
 ## Shapes to copy
 
-Canonical patterns for each surface built so far — connect prompt, expired
-session, access error, load error, empty state, loading, page notice, timeout
-warning, status label, count — are in `references/patterns.md`; add a pattern there when the item
-editor sets one (field hint, pending edits, publish confirmation). Start from the shape rather than from a blank line.
+Canonical patterns for each surface built so far are in
+`references/patterns.md`, one heading per surface; add a pattern there in the
+change that sets a new one. Start from the shape rather than from a blank line.
 
 ## Working order
 

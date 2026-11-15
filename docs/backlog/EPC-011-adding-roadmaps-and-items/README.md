@@ -2,7 +2,7 @@
 
 - **Status**: Active — grilled with the owner on 2026-11-14; STY-040 to STY-046
   delivered, one story Proposed, three recorded for later grilling
-- **Progress**: 7 of 11 terminal; next selectable: STY-047, once STY-046's PR is merged;
+- **Progress**: 7 of 11 terminal; next selectable: STY-047;
   blocked on: nothing
 - **Binding ADRs**: ADR-012, ADR-011, ADR-009, ADR-013, ADR-014, ADR-002, ADR-003, ADR-005,
   ADR-006, ADR-010, ADR-008

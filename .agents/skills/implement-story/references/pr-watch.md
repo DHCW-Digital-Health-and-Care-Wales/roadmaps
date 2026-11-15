@@ -75,7 +75,7 @@ Supply the PR URL, expected current head, the specific failure or finding and
 evidence links, task handoff path, permitted files and checkout, required
 verification and stop condition. Include authority to start fresh independent
 reviewers when the fix needs them. Have the worker verify the head before
-editing, fix each finding wherever it recurs (`../SKILL.md` step 4) and report
+editing, fix each finding as `../SKILL.md` step 4 sets and report
 drift instead of applying stale findings. Assign one writer per checkout;
 collect new events while it runs and reconcile them after completion rather
 than starting competing writers.

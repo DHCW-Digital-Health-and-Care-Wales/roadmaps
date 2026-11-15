@@ -8,8 +8,7 @@ import type { NewRoadmapInput } from "@/domain/roadmap/new-roadmap"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 
 import { useRoadmapRepository } from "../roadmap-repository-context"
-import { readBackAfterWrite } from "../write-hold/read-back"
-import { useWriteHold } from "../write-hold/write-hold-context"
+import { useReadBackOrHold, writeAnswer } from "../write-hold/hold-after-write"
 import { roadmapKeys } from "./roadmap-queries"
 import { patchQueryData } from "./use-publish-roadmap-changes"
 
@@ -27,7 +26,7 @@ const ADD_ROADMAP_KEY = ["add-roadmap"] as const
 export function useAddRoadmap() {
   const repository = useRoadmapRepository()
   const queryClient = useQueryClient()
-  const hold = useWriteHold()
+  const readBackOrHold = useReadBackOrHold()
   return useMutation({
     mutationKey: ADD_ROADMAP_KEY,
     mutationFn: (input: NewRoadmapInput) => repository.addRoadmap(input),
@@ -52,17 +51,11 @@ export function useAddRoadmap() {
       }
     },
     onSettled: (outcome) => {
-      const held = { write: "added", reads: ["roadmaps"] } as const
-      if (outcome?.status === "unconfirmed") {
-        void hold({ ...held, landed: false })
-        return
-      }
       // Not awaited: the dialog's answer does not wait for the list.
-      void readBackAfterWrite(queryClient, held.reads).then((read) => {
-        if (!read && outcome?.status === "added") {
-          void hold({ ...held, landed: true })
-        }
-      })
+      void readBackOrHold(
+        { write: "added", reads: ["roadmaps"] },
+        writeAnswer(outcome?.status, "added"),
+      )
     },
   })
 }

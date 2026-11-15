@@ -1,8 +1,4 @@
-import {
-  useIsMutating,
-  useMutation,
-  useQueryClient,
-} from "@tanstack/react-query"
+import { useIsMutating, useMutation } from "@tanstack/react-query"
 
 import type {
   FamilyEdit,
@@ -11,8 +7,7 @@ import type {
 } from "@/domain/roadmap/family-changes"
 
 import { useRoadmapRepository } from "../roadmap-repository-context"
-import { readBackAfterWrite } from "../write-hold/read-back"
-import { useWriteHold } from "../write-hold/write-hold-context"
+import { useReadBackOrHold, writeAnswer } from "../write-hold/hold-after-write"
 
 /** Every family write's mutation key, so the page can tell one is under way. */
 const FAMILY_WRITE_KEY = ["family-write"] as const
@@ -24,19 +19,12 @@ const FAMILY_WRITE_KEY = ["family-write"] as const
  * (DEF-015).
  */
 function useRereadAfterFamilyWrite() {
-  const queryClient = useQueryClient()
-  const hold = useWriteHold()
-  return async (outcome: FamilyOutcome | undefined) => {
-    const held = { write: "family", reads: ["families", "roadmaps"] } as const
-    if (outcome?.status === "unconfirmed") {
-      void hold({ ...held, landed: false })
-      return
-    }
-    const read = await readBackAfterWrite(queryClient, held.reads)
-    if (!read && outcome?.status === "saved") {
-      void hold({ ...held, landed: true })
-    }
-  }
+  const readBackOrHold = useReadBackOrHold()
+  return (outcome: FamilyOutcome | undefined) =>
+    readBackOrHold(
+      { write: "family", reads: ["families", "roadmaps"] },
+      writeAnswer(outcome?.status, "saved"),
+    )
 }
 
 /** Adds a family (STY-029 S2). A write is never retried. */

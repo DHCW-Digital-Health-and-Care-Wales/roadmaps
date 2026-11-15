@@ -835,6 +835,24 @@ describe("Publishing a roadmap's changes (STY-025)", () => {
     },
   )
 
+  it("holds the app once the organisations can't be read after a publish, until a Refresh reads them (DEF-015 S1, S3)", async () => {
+    const repository = createInMemoryRoadmapRepository(roadmaps, roadmapItems)
+    const { user } = await renderPage({ repository })
+    await editTitle(user, "First item", "First, edited")
+    const reads = vi
+      .spyOn(repository, "listOrganisations")
+      .mockRejectedValue(new AppError("network"))
+
+    await publish(user)
+
+    const hold = await expectWriteHold("Your changes were published")
+    reads.mockRestore()
+    await refreshHold(user, hold)
+
+    expect(main().getByText(/^Changes published\./)).toBeVisible()
+    expect(main().queryByText(/unpublished change/)).toBeNull()
+  })
+
   it("publishes an edit made again once the hold has read the last publish, as no conflict with it (DEF-012)", async () => {
     const repository = createInMemoryRoadmapRepository(roadmaps, roadmapItems)
     const { user } = await renderPage({ repository })

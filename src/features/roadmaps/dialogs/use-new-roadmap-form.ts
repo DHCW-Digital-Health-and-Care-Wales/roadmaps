@@ -47,9 +47,9 @@ const EMPTY = { title: "", familyId: "", categoryId: "", productLead: "" }
  * The adding form's state (STY-041): what was typed, with the short name following the
  * title until it is changed (S3); what the last attempt found wrong with each field, and
  * a request to focus the first (S4, S6); and a write that failed (S7). A lost answer
- * closes the dialog with `onClose`, as the app is held until a Refresh (DEF-015). Submitting checks
- * the fields, and the short name against `roadmaps`, the list as cached, before anything
- * is sent (D7); the write checks again. Whatever it answers but `added`, everything
+ * closes the dialog with `onClose`, as the app is held until a Refresh (DEF-015).
+ * Submitting checks the fields, and the short name against `roadmaps`, the list as
+ * cached, before anything is sent (D7); the write checks again. Whatever it answers but `added`, everything
  * typed is kept, but a family or category the lists no longer offer, which goes back to
  * none with its field saying so (S6).
  */

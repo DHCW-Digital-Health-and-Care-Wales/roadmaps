@@ -13,6 +13,7 @@ import { toAppError, type AppErrorKind } from "@/lib/errors"
 import { localToday } from "@/lib/local-today"
 
 import { useSetRoadmapPublished } from "../hooks/use-set-roadmap-published"
+import { holdAfterWrite, writeAnswer } from "../write-hold/hold-after-write"
 import { roadmapPageReads } from "../write-hold/read-back"
 import { useWriteHold } from "../write-hold/write-hold-context"
 import { discardItems, openConflicts } from "./conflicts"
@@ -155,10 +156,15 @@ export function usePublishedState(
             }
           : { published: false },
       )
-      const held = {
-        write: publishing ? "published" : "unpublished",
-        reads: roadmapPageReads(roadmap.id),
-      } as const
+      const holding = holdAfterWrite(
+        hold,
+        {
+          write: publishing ? "published" : "unpublished",
+          reads: roadmapPageReads(roadmap.id),
+        },
+        writeAnswer(result.status, "set"),
+        readBack(),
+      )
       switch (result.status) {
         case "set": {
           const set: PublishedStateOutcomeNotice = {
@@ -173,19 +179,18 @@ export function usePublishedState(
               )
             }
           }
-          if (readBack()) {
+          if (!holding) {
             settle()
             shown = set
             break
           }
-          void hold({ ...held, landed: true }).then(() => {
+          void holding.then(() => {
             settle()
             setNotice(set)
           })
           break
         }
         case "unconfirmed":
-          void hold({ ...held, landed: false })
           break
         case "refused":
           store.update(roadmap.id, (later) =>

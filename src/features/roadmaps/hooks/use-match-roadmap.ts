@@ -3,8 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 
 import { useRoadmapRepository } from "../roadmap-repository-context"
-import { readBackAfterWrite } from "../write-hold/read-back"
-import { useWriteHold } from "../write-hold/write-hold-context"
+import { useReadBackOrHold, writeAnswer } from "../write-hold/hold-after-write"
 import { roadmapKeys } from "./roadmap-queries"
 
 /**
@@ -19,7 +18,7 @@ import { roadmapKeys } from "./roadmap-queries"
 export function useMatchRoadmap() {
   const repository = useRoadmapRepository()
   const queryClient = useQueryClient()
-  const hold = useWriteHold()
+  const readBackOrHold = useReadBackOrHold()
   return useMutation({
     mutationFn: (loaded: Roadmap) => repository.matchRoadmapToLists(loaded),
     retry: false,
@@ -35,16 +34,10 @@ export function useMatchRoadmap() {
         { updatedAt: state.dataUpdatedAt },
       )
     },
-    onSettled: async (outcome) => {
-      const held = { write: "matched", reads: ["roadmaps"] } as const
-      if (outcome?.status === "unconfirmed") {
-        void hold({ ...held, landed: false })
-        return
-      }
-      const read = await readBackAfterWrite(queryClient, held.reads)
-      if (!read && outcome?.status === "matched") {
-        void hold({ ...held, landed: true })
-      }
-    },
+    onSettled: (outcome) =>
+      readBackOrHold(
+        { write: "matched", reads: ["roadmaps"] },
+        writeAnswer(outcome?.status, "matched"),
+      ),
   })
 }

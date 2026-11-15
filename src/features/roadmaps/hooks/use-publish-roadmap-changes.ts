@@ -15,7 +15,7 @@ import type {
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 
 import { useRoadmapRepository } from "../roadmap-repository-context"
-import { readBackAfterWrite } from "../write-hold/read-back"
+import { readBackAfterWrite, roadmapPageReads } from "../write-hold/read-back"
 import { roadmapKeys } from "./roadmap-queries"
 import type { RoadmapLists } from "./use-roadmap-lists"
 
@@ -81,19 +81,19 @@ export function usePublishRoadmapChanges(
 }
 
 /**
- * Reads the roadmap list and the roadmap's items again once a write has answered, and
- * tells, by the `readBack` it returns, whether both read, for the write that last
- * settled (`readBackAfterWrite`).
+ * Reads what the roadmap's page shows again once a write has answered, and tells, by the
+ * `readBack` it returns, whether all of it read, for the write that last settled
+ * (`readBackAfterWrite`).
  */
 export function useReadAgain(roadmapId: string) {
   const queryClient = useQueryClient()
   const read = useRef(true)
   return {
     readAgain: async () => {
-      read.current = await readBackAfterWrite(queryClient, [
-        "roadmaps",
-        { items: roadmapId },
-      ])
+      read.current = await readBackAfterWrite(
+        queryClient,
+        roadmapPageReads(roadmapId),
+      )
     },
     readBack: () => read.current,
   }

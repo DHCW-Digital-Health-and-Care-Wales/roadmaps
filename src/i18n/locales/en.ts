@@ -794,7 +794,6 @@ export const en = {
         none: "No organisations are listed.",
       },
     },
-    /** Asked on Disconnect while changes are pending. */
     /**
      * A write the app couldn't read back holds the whole app until a Refresh reads it
      * (DEF-015): `landed` once it was written, `lost` once its answer was lost.
@@ -827,6 +826,7 @@ export const en = {
       },
       reconnect: "Reconnect to refresh your roadmaps.",
     },
+    /** Asked on Disconnect while changes are pending. */
     disconnect: {
       title: "Keep your changes?",
       description_one:

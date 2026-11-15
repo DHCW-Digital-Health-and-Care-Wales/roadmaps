@@ -7,6 +7,7 @@ import {
   type CurrentText,
 } from "../hooks/use-publish-roadmap-changes"
 import { roadmapPageReads } from "../write-hold/read-back"
+import { holdAfterWrite, writeAnswer } from "../write-hold/hold-after-write"
 import { useWriteHold } from "../write-hold/write-hold-context"
 import {
   discardItems,
@@ -55,6 +56,12 @@ export function usePublish(
     try {
       // Settles once the roadmap and its items are read again, or have failed to be.
       const outcome = await mutateAsync(markedUpdated(sent, today))
+      const holding = holdAfterWrite(
+        hold,
+        { write: action, reads: roadmapPageReads(roadmap.id) },
+        writeAnswer(outcome.status, "published"),
+        readBack(),
+      )
       switch (outcome.status) {
         case "published": {
           const published: PublishNotice = { action, kind: "published" }
@@ -63,16 +70,12 @@ export function usePublish(
               settlePublished(changes, sent),
             )
           }
-          if (readBack()) {
+          if (!holding) {
             settle()
             notice = published
             break
           }
-          void hold({
-            write: action,
-            landed: true,
-            reads: roadmapPageReads(roadmap.id),
-          }).then(() => {
+          void holding.then(() => {
             settle()
             store.showNotice(roadmap.id, published)
           })
@@ -80,11 +83,6 @@ export function usePublish(
           break
         }
         case "unconfirmed":
-          void hold({
-            write: action,
-            landed: false,
-            reads: roadmapPageReads(roadmap.id),
-          })
           notice = null
           break
         case "refused":

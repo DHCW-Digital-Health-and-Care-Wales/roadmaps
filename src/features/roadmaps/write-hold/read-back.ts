@@ -84,9 +84,11 @@ export async function readNow(
       try {
         await fetchRead(queryClient, repository, read)
       } catch (error) {
-        if (typeof read === "object" && isAppError(error)) {
-          if (error.kind === "not-found") return true
-        }
+        const gone =
+          typeof read === "object" &&
+          isAppError(error) &&
+          error.kind === "not-found"
+        if (gone) return true
         throw error
       }
       const state = queryClient.getQueryState(keyOf(read))

@@ -65,6 +65,7 @@ Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status toke
 | [DEF-011](defects/DEF-011-an-edit-back-to-the-text-last-read-is-dropped-before-a-read-holds-a-publish.md) | An edit back to the text last read is dropped while a published edit waits for a read          | Needs triage |
 | [DEF-012](defects/DEF-012-an-item-without-an-id-edited-again-before-a-read-is-reported-changed.md)        | An item without an ID, edited again before a read holds its publish, is reported changed       | Needs triage |
 | [DEF-013](defects/DEF-013-a-test-checks-the-roadmap-dialog-s-opening-focus-before-it-moves.md)            | A test checks the roadmap dialog's opening focus before it has moved                           | Needs triage |
+| [DEF-014](defects/DEF-014-publish-roadmap-carries-its-dialog-and-outcome-to-another-roadmap.md)           | "Publish roadmap" carries its dialog and outcome onto another roadmap's page                   | Needs triage |
 
 A defect found during delivery is recorded in `defects/` with
 Status `Needs triage` and listed here until the owner triages it.

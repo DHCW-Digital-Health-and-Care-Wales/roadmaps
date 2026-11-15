@@ -244,6 +244,9 @@ flowchart LR
 - [DEF-013](../defects/DEF-013-a-test-checks-the-roadmap-dialog-s-opening-focus-before-it-moves.md):
   a test checks the roadmap dialog's opening focus before it has moved, so Verify
   fails now and then. Needs triage; found by the retro of DEF-009.
+- [DEF-014](../defects/DEF-014-publish-roadmap-carries-its-dialog-and-outcome-to-another-roadmap.md):
+  "Publish roadmap" carries its dialog and outcome onto another roadmap's page when the
+  Product Lead moves between them during the write. Needs triage; found by DEF-010's review.
 
 ## Related
 

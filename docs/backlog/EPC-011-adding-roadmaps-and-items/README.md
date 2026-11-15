@@ -253,6 +253,9 @@ flowchart LR
   it holds the whole app until a Refresh succeeds, replacing DEF-009's keep-pending
   rules. Done, delivered in its PR and awaiting merge (owner, 2026-11-15); from the
   grilling of DEF-011 to DEF-014.
+- [DEF-016](../defects/DEF-016-the-item-dialog-s-focus-tour-counts-a-focus-guard-as-a-stop.md):
+  the item dialog's focus tour counts a focus guard as a stop, so an E2E run fails now
+  and then. Needs triage; found by DEF-015's delivery.
 
 ## Related
 

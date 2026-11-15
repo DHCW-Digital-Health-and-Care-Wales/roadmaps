@@ -175,6 +175,10 @@ holds it (`dropPublishedNewItems`), and the hold's Refresh is that read.
 - **S4's Connect is "Reconnect"** (agent): the hold reuses the session warning's
   `auth.reconnect` label, as the session that ended was connected before, over a new
   "Connect" string for one button.
+- **A lost answer closes the form that wrote it** (agent): "Add a roadmap" and the
+  family forms close behind the hold, so what was typed goes, where STY-041 S7 kept it.
+  A form left open would be a second dialog under the hold, and after a write that did
+  land a resubmit would only be refused as taken; the Refresh shows whether it landed.
 - **Focus stays on the hold when the page moves it** (agent): a form a lost family
   write closes gives focus back to its opener behind the dialog; the hold takes it
   back to its button, leaving any dialog opened over it (the session warning) alone.

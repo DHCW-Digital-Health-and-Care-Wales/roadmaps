@@ -46,6 +46,9 @@ read, with no wait. A neighbouring test waits for the same thing
   focus without waiting: `roadmap-detail-page-editing.test.tsx:387` (the failure),
   `roadmaps-page-adding.test.tsx:166`, `roadmap-detail-page-tags.test.tsx:177,200,612`,
   `opening-field.test.tsx:155,183`.
+- `rg -n 'expect\(\w+\)\.toHaveFocus' src` — a field kept in a variable first is missed by
+  the search above: `roadmaps-page-adding.test.tsx:190` is an eighth site. Read each
+  `toHaveFocus` that follows a dialog opening, as the search cannot know them all.
 
 ## Acceptance criteria
 

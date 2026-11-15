@@ -62,6 +62,7 @@ export const cy = {
     },
     footer: {
       copyright: "© Iechyd a Gofal Digidol Cymru",
+      github: "Gweld ar GitHub",
       version: "Fersiwn {{version}}",
     },
   },

@@ -68,6 +68,7 @@ export const en = {
     },
     footer: {
       copyright: "© Digital Health and Care Wales",
+      github: "View on GitHub",
       version: "Version {{version}}",
     },
   },

@@ -1,6 +1,6 @@
 # DEF-005: An open About form shows "No family" after Refresh reads a co-lead's family
 
-- **Status**: Proposed — triaged by the owner, 2026-11-15 (D1)
+- **Status**: Done
 - **Severity**: Low — the form shows a family choice that isn't the roadmap's, though
   Done changes nothing and nothing wrong is written
 - **Area**: Features/UI
@@ -70,4 +70,25 @@ change
 
 - **D1** (owner, 2026-11-15, the owner's triage of the live chores and defects): fix it, though the modal dialog has made it rare: the Family options are built from the roadmap as shown when the dialog opened (`opened.shown`), as the item form's are.
 
-## Delivery _(add on delivery; as in `story.md`)_
+## Delivery
+
+The cause was as stated. `EditableRoadmapAbout` gives `RoadmapDialog` the roadmap as shown
+when the dialog opened (`opened.shown`) while it is open, and the roadmap as shown now
+only while it is closed, so `EditRoadmapForm` builds the Family options (and the rest of
+its fields) from what its values were taken from, as the item form does (D1). Nothing in
+`use-roadmap-choices.ts` changes: its condition on `familyNotListed` now meets the roadmap
+the form opened on.
+
+### Departures
+
+None.
+
+### Contract for dependents
+
+`EditRoadmapFormProps.roadmap` is the roadmap as the page showed it when the form opened.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                               |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `roadmap-detail-page-choices.test.tsx` (`keeps the not listed family the form opened on when a co-lead's listed family is read while it is open`), red before the fix |

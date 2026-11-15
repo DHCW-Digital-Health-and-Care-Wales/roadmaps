@@ -1,6 +1,6 @@
 # DEF-002: On a phone, the header's home link is named without the word it shows
 
-- **Status**: Proposed — triaged by the owner, 2026-11-15 (D1)
+- **Status**: Done
 - **Severity**: Low — speech-input users on a phone may not reach the home link by saying
   what they see; axe reports a WCAG 2.2 AA failure (2.5.3 Label in Name)
 - **Area**: Features/UI + i18n (en + cy)
@@ -56,4 +56,31 @@ Verified: `AppHeader` (`src/components/layout/app-header.tsx`) gives the link
 
 - **D1** (owner, 2026-11-15, the owner's triage of the live chores and defects): the link is named by what it shows, followed by "home": below `sm` its name starts "Roadmaps", above it the service name. The short name is unchanged, since the header's width in Cymraeg limits it (STY-016 D6). An axe scan of the header at 375 px holds it.
 
-## Delivery _(add on delivery; as in `story.md`)_
+## Delivery
+
+The cause was as stated. The home link no longer has an `aria-label`: it is named by the
+visible name span (`aria-labelledby`), which holds the name shown at that width and a
+screen-reader-only "home" (`layout.homeSuffix`). Below `sm` the name is "Roadmaps home";
+from `sm`, "Roadmap Editor home"; in Cymraeg "Mapiau Trywydd hafan" and "Golygydd Mapiau
+Trywydd hafan". The `aria-labelledby` names the link from that span alone, so the hidden
+name and the logo's alternative text are not in it. `layout.home` is gone, and the logo
+keeps its own alternative text.
+
+### Departures
+
+- **Welsh word order** (agent): the Welsh says "hafan" after the name, as D1 says "home"
+  does in English, though a Welsh speaker would put "Hafan" first. A leading "Hafan"
+  would need a second, per-language slot for one word; the strings are for the fluent
+  read of `cy.ts` that the launch already needs (README, _Languages_).
+- **No short name change** (D1): `common.shortAppName` is unchanged.
+
+### Contract for dependents
+
+The home link's accessible name is "<name shown> home" and no longer "DHCW Roadmap Editor
+home": a test locates it by that, and an aria snapshot of the header holds it.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                                                                  |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| S1       | `accessibility.spec.ts` (`the header at 375px wide in en`: axe over the whole page, red before the fix; Cymraeg passed before it), `shell.spec.ts` (`the home link is named by the name it shows, then "home", at each width`, red before the fix), `app-shell.test.tsx` |

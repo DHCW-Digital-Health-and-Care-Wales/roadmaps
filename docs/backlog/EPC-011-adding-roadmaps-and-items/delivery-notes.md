@@ -45,7 +45,7 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
 - **A dialog is given its `opener`**, the ref of the control that opens it
   (`FormDialog`, `RoadmapDialog`): Safari leaves a clicked button unfocused, so the
   dialog can't find it by where focus was. A test clicks without focusing
-  (`fireEvent.click`) to show it. "Add a roadmap" gives none yet (DEF-008).
+  (`fireEvent.click`) to show it. `opener` is required, so the type check names a dialog that gives none.
 - **A read can land while a dialog is open**, and drop or change what the dialog
   lists, what opened it or what it will send: each dialog, and each thing one comes to
   show, gets a test of that read, written with it and not left to review. Nothing

@@ -7,7 +7,6 @@ import { toAppError } from "@/lib/errors"
 
 import {
   usePublishRoadmapChanges,
-  useReadBack,
   type CurrentText,
   type ReadBack,
 } from "../hooks/use-publish-roadmap-changes"
@@ -32,7 +31,7 @@ export const CURRENT_TEXT: CurrentText = {
 
 /**
  * Settles the roadmap's changes once `sent` is published, by what the reads after it
- * read back (`read`, from `useReadBack`): what a failed read would show stays pending,
+ * read back (`read`, from the publish's `readBack`): what a failed read would show stays pending,
  * based on what was published (`keepUnread`), until a read holds it, as the page would
  * otherwise show what was cached before (DEF-009 D1, D2); a new item kept so is
  * published, offering no Remove (D3).
@@ -80,10 +79,9 @@ export function usePublish(
   roadmap: Roadmap,
 ): (today?: string) => Promise<void> {
   const store = usePendingChangesStore()
-  const { mutateAsync } = usePublishRoadmapChanges(roadmap.id, {
+  const { mutateAsync, readBack } = usePublishRoadmapChanges(roadmap.id, {
     currentText: CURRENT_TEXT,
   })
-  const readBack = useReadBack(roadmap.id)
   const action = publishAction(roadmap)
 
   return async (today) => {
@@ -93,11 +91,10 @@ export function usePublish(
     let notice: PublishNotice | null
     try {
       // Settles once the roadmap and its items are read again, or have failed to be.
-      const startedAt = Date.now()
       const outcome = await mutateAsync(markedUpdated(sent, today))
       switch (outcome.status) {
         case "published":
-          settleReadBack(store, roadmap.id, sent, readBack(startedAt))
+          settleReadBack(store, roadmap.id, sent, readBack())
           notice = { action, kind: "published" }
           break
         case "unconfirmed":

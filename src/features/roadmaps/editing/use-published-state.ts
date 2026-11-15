@@ -12,7 +12,6 @@ import { useAuth } from "@/features/auth/use-auth"
 import { toAppError, type AppErrorKind } from "@/lib/errors"
 import { localToday } from "@/lib/local-today"
 
-import { useReadBack } from "../hooks/use-publish-roadmap-changes"
 import { useSetRoadmapPublished } from "../hooks/use-set-roadmap-published"
 import { discardItems, openConflicts } from "./conflicts"
 import { countChanges, publishesNoItems } from "./pending-changes"
@@ -95,10 +94,9 @@ export function usePublishedState(
   const store = usePendingChangesStore()
   const snapshot = usePendingChanges()
   const connected = useAuth().state.status === "connected"
-  const { mutateAsync, isPending } = useSetRoadmapPublished(roadmap, {
+  const { mutateAsync, isPending, readBack } = useSetRoadmapPublished(roadmap, {
     currentText: CURRENT_TEXT,
   })
-  const readBack = useReadBack(roadmap.id)
   const [open, setOpen] = useState(false)
   const [askedPublishing, setAskedPublishing] = useState<boolean | null>(null)
   const [confirmed, setConfirmed] = useState<PublishedStateQuestion | null>(
@@ -138,7 +136,6 @@ export function usePublishedState(
     let stored: PublishNotice | null = null
     let shown: PublishedStateOutcomeNotice | null = null
     try {
-      const startedAt = Date.now()
       const result = await mutateAsync(
         publishing
           ? {
@@ -152,7 +149,7 @@ export function usePublishedState(
       )
       switch (result.status) {
         case "set":
-          if (sent) settleReadBack(store, roadmap.id, sent, readBack(startedAt))
+          if (sent) settleReadBack(store, roadmap.id, sent, readBack())
           shown = { kind: "set", published: publishing, withChanges: kept }
           break
         case "unconfirmed":

@@ -819,7 +819,7 @@ describe("The publish dialog names the new items (STY-047 S1)", () => {
     ])
   })
 
-  it("lists new items alone, in the order added, which they are written in", async () => {
+  it("lists new items alone, in the order added", async () => {
     const { user } = await renderPage()
     await addItem(user, CLINIC, "Later")
     await addItem(user, CHECK_IN, "Now")

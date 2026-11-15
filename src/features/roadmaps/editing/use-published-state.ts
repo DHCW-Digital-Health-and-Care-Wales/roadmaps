@@ -215,7 +215,7 @@ export function usePublishedState(
       if (!pending) setOpen(false)
     },
     confirm: () => {
-      if (!open || askedPublishing === null || !connected || pending) return
+      if (!open || !connected || pending) return
       setNotice(null)
       setConfirmed(asked)
       const today = asked.publishing && markUpdated ? localToday() : undefined

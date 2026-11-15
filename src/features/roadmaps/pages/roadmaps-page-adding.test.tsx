@@ -17,6 +17,7 @@ import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-ite
 import { AppError } from "@/lib/errors"
 import { renderWithProviders } from "@/test/render-with-providers"
 
+import { expectDialogClosed } from "../testing/edit-dialog"
 import { holdCall } from "../testing/held-call"
 import {
   createInMemoryRoadmapRepository,
@@ -367,9 +368,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
       })
 
       release()
-      await waitFor(() => {
-        expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
-      })
+      await expectDialogClosed()
     })
 
     it("opens the new roadmap, with a notice that it was added and isn't published", async () => {
@@ -862,9 +861,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
 
         await close(user)
 
-        await waitFor(() => {
-          expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
-        })
+        await expectDialogClosed()
         const button = main().getByRole("button", { name: "Add a roadmap" })
         await waitFor(() => {
           expect(button).toHaveFocus()

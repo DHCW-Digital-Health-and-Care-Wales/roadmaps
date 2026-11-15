@@ -19,6 +19,7 @@ import { editFormFields } from "../editing/edit-form-fields"
 import type { TagInUse } from "../editing/item-tags"
 import type { ItemValues } from "../editing/pending-changes"
 import { TagList } from "../editing/tag-list"
+import type { OpenedItem } from "../editing/use-item-dialog"
 import { localiseDetails } from "../localise-details"
 import { shortNamesOf, sortOrganisations } from "../sort-organisations"
 
@@ -27,15 +28,6 @@ const multilineItemFields: ReadonlySet<ItemTextField> = new Set([
   "description",
   "expectedOutcome",
 ])
-
-/**
- * An item as read and as shown when the dialog opened on it, which its edits are made
- * from: a co-lead's change read while it is open never changes what Done keeps.
- */
-export interface OpenedItem {
-  readonly read: RoadmapItem
-  readonly shown: RoadmapItem
-}
 
 export interface EditItemFormProps {
   /** The id of the heading naming the form. */

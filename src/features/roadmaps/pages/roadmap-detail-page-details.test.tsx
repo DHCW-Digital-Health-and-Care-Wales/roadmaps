@@ -3,7 +3,6 @@ import {
   fireEvent,
   type queries,
   screen,
-  waitFor,
   within,
 } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
@@ -16,7 +15,8 @@ import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-ite
 import type { Language } from "@/i18n"
 import { renderWithProviders } from "@/test/render-with-providers"
 
-import { holdRefresh, readAgain } from "../testing/held-call"
+import { expectDialogClosed } from "../testing/edit-dialog"
+import { holdRefresh, readAgain } from "../testing/held-refresh"
 import {
   createInMemoryRoadmapRepository,
   type InMemoryRoadmapRepository,
@@ -1088,9 +1088,7 @@ describe("An item with Welsh details (STY-039 S18, S19)", () => {
       ["Dermatoleg", 1],
     ])
     await user.click(form.getByRole("button", { name: "Canslo" }))
-    await waitFor(() => {
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
-    })
+    await expectDialogClosed()
     const alone = await openEditItemDialog(user, "Welsh alone", "cy")
     expect(alone.getByText("Dim manylion")).toBeVisible()
   })

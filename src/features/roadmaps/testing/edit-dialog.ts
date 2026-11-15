@@ -50,11 +50,19 @@ export async function retype(
 }
 
 /**
- * Chooses Done in the dialog and waits for it to go, so the page behind can be read
- * again. A test of a Done the form refuses clicks the button itself.
+ * Chooses Done in the dialog and waits for it to go. A test of a Done the form refuses
+ * clicks the button itself.
  */
 export async function confirmEdit(user: UserEvent, names: EditDialogNames) {
   await user.click(editDialog(names).getByRole("button", { name: names.done }))
+  await expectDialogClosed()
+}
+
+/**
+ * Waits for the open form dialog, whichever it is, to go, so the page behind can be
+ * read again: after Cancel, Escape or a read that closes it.
+ */
+export async function expectDialogClosed() {
   await waitFor(() => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
   })

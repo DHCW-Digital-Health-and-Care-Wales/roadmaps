@@ -96,9 +96,8 @@ export function RoadmapItems({
       focus={focus}
       cardHandlers={cardHandlers}
       onEdit={dialog.edit}
-      dialogCard={
-        dialog.edited && { at: dialog.edited.at, opener: dialog.opener }
-      }
+      dialogAt={dialog.edited?.at}
+      dialogOpener={dialog.opener}
     />
   )
 
@@ -185,11 +184,10 @@ interface ItemListProps {
     focused: () => void
   }
   onEdit: (position: number) => void
-  /** Where the item the dialog edits is, and the ref its card's Edit takes. */
-  dialogCard: {
-    at: number
-    opener: RefObject<HTMLButtonElement | null>
-  } | null
+  /** Where the item the dialog edits is among `items`, if it edits one. */
+  dialogAt: number | undefined
+  /** The ref that item's card gives its Edit (`EditableItemCard`). */
+  dialogOpener: RefObject<HTMLButtonElement | null>
 }
 
 function ItemList({
@@ -203,7 +201,8 @@ function ItemList({
   focus,
   cardHandlers,
   onEdit,
-  dialogCard,
+  dialogAt,
+  dialogOpener,
 }: ItemListProps) {
   return (
     <ul aria-labelledby={labelledBy} className={itemGridClassName}>
@@ -222,9 +221,7 @@ function ItemList({
           onFocusRequest={cardHandlers.requestFocus}
           onFocused={cardHandlers.focused}
           onEdit={onEdit}
-          dialogOpener={
-            dialogCard?.at === position ? dialogCard.opener : undefined
-          }
+          dialogOpener={dialogAt === position ? dialogOpener : undefined}
         />
       ))}
     </ul>

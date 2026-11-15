@@ -1,4 +1,4 @@
-import { act, screen, waitFor, within } from "@testing-library/react"
+import { screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
@@ -11,12 +11,17 @@ import type { Language } from "@/i18n"
 import { AppError } from "@/lib/errors"
 import { renderWithProviders } from "@/test/render-with-providers"
 
-import { holdCall } from "../testing/held-call"
+import { expectDialogClosed } from "../testing/edit-dialog"
+import { holdRefresh } from "../testing/held-refresh"
 import {
   createInMemoryRoadmapRepository,
   type InMemoryRoadmapRepository,
 } from "../testing/in-memory-roadmap-repository"
-import { confirmItemEdit, openEditItemDialog } from "../testing/item-dialog"
+import {
+  confirmItemEdit,
+  editItemDialog,
+  openEditItemDialog,
+} from "../testing/item-dialog"
 
 const connected: AuthState = {
   status: "connected",
@@ -205,30 +210,14 @@ describe("Moving an item (STY-031)", () => {
 
   it("keeps the none option, and its choice, in the open dialog after a Refresh reads a co-lead's placing the item (S4)", async () => {
     const { user, repository } = await renderPage()
-    const { held, release, released } = holdCall(
-      repository.listRoadmapItems.bind(repository),
-    )
-    vi.spyOn(repository, "listRoadmapItems").mockImplementation(held)
+    const land = await holdRefresh(user, repository)
+    const form = await openEditItemDialog(user, "Someday item")
     repository.coLead((_list, itemsOf) => {
       const someday = itemsOf("producta")[3]
       if (someday) someday.placement = "now"
     })
 
-    // The dialog is modal, so the Refresh is asked for before it opens, and read after.
-    await user.click(main().getByRole("button", { name: "Refresh" }))
-    const form = await openEditItemDialog(user, "Someday item")
-    expect(held).toHaveBeenCalled()
-    await act(async () => {
-      release()
-      await released
-    })
-    await waitFor(() => {
-      expect(
-        within(
-          screen.getByRole("list", { name: "Now", hidden: true }),
-        ).getByRole("heading", { name: "Someday item", hidden: true }),
-      ).toBeInTheDocument()
-    })
+    await land()
 
     const choice = form.getByRole("combobox", { name: "Horizon or section" })
     expect(choice).toHaveDisplayValue("Choose a horizon or section")
@@ -347,46 +336,59 @@ describe("Moving an item (STY-031)", () => {
     expect(titlesUnder("Now")).not.toContain("Online booking")
   })
 
-  it("keeps the open dialog and what was typed when a read moves the item's card to another list, focus on the card where it now is after Done (STY-044 S7)", async () => {
-    const { user, repository } = await renderPage()
-    const { held, release, released } = holdCall(
-      repository.listRoadmapItems.bind(repository),
-    )
-    vi.spyOn(repository, "listRoadmapItems").mockImplementation(held)
-    repository.coLead((_list, itemsOf) => {
-      const booking = itemsOf("producta")[1]
-      if (booking) booking.placement = "next"
-    })
+  it.each([
+    [
+      "Done",
+      async (user: User) => {
+        await confirmItemEdit(user)
+        expect(within(card("Online booking")).getByText("Typed")).toBeVisible()
+      },
+    ],
+    [
+      "Cancel",
+      async (user: User) => {
+        await user.click(
+          editItemDialog().getByRole("button", { name: "Cancel" }),
+        )
+        await expectDialogClosed()
+        expect(within(card("Online booking")).queryByText("Typed")).toBeNull()
+      },
+    ],
+  ])(
+    "keeps the open dialog and what was typed when a read moves the item's card to another list, focus on the card where it now is after %s (STY-044 S7)",
+    async (_how, close) => {
+      const { user, repository } = await renderPage()
+      const land = await holdRefresh(user, repository)
+      const form = await openEditItemDialog(user, "Online booking")
+      await user.type(
+        form.getByRole("textbox", { name: "Description" }),
+        "Typed",
+      )
+      repository.coLead((_list, itemsOf) => {
+        const booking = itemsOf("producta")[1]
+        if (booking) booking.placement = "next"
+      })
 
-    // The dialog is modal, so the Refresh is asked for before it opens, and read after.
-    await user.click(main().getByRole("button", { name: "Refresh" }))
-    const form = await openEditItemDialog(user, "Online booking")
-    await user.type(form.getByRole("textbox", { name: "Description" }), "Typed")
-    expect(held).toHaveBeenCalled()
-    await act(async () => {
-      release()
-      await released
-    })
-    await waitFor(() => {
+      await land()
+
+      // Its card is now a new one, in Next, behind the dialog.
       expect(
         within(
           screen.getByRole("list", { name: "Next", hidden: true }),
         ).getByRole("heading", { name: "Online booking", hidden: true }),
       ).toBeInTheDocument()
-    })
-
-    expect(form.getByRole("textbox", { name: "Description" })).toHaveValue(
-      "Typed",
-    )
-    await confirmItemEdit(user)
-    expect(titlesUnder("Next")).toEqual(["Online booking"])
-    expect(within(card("Online booking")).getByText("Typed")).toBeVisible()
-    await vi.waitFor(() => {
-      expect(
-        main().getByRole("button", { name: "Edit Online booking" }),
-      ).toHaveFocus()
-    })
-  })
+      expect(form.getByRole("textbox", { name: "Description" })).toHaveValue(
+        "Typed",
+      )
+      await close(user)
+      expect(titlesUnder("Next")).toEqual(["Online booking"])
+      await vi.waitFor(() => {
+        expect(
+          main().getByRole("button", { name: "Edit Online booking" }),
+        ).toHaveFocus()
+      })
+    },
+  )
 
   it("moves by keyboard, naming the menu for the item, then focuses the moved item's card (S10)", async () => {
     const { user } = await renderPage()

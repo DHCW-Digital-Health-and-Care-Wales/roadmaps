@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor, within } from "@testing-library/react"
+import { fireEvent, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
@@ -9,6 +9,7 @@ import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-ite
 import type { Language } from "@/i18n"
 import { renderWithProviders } from "@/test/render-with-providers"
 
+import { expectDialogClosed } from "../testing/edit-dialog"
 import {
   createInMemoryRoadmapRepository,
   type InMemoryRoadmapRepository,
@@ -497,9 +498,7 @@ describe("The Organisations field opens on request (STY-038)", () => {
     const group = await openOrganisations(user, "Video clinics")
     await user.click(group.getByRole("checkbox", { name: "Hywel Dda (HDUHB)" }))
     await user.click(editItemDialog().getByRole("button", { name: "Cancel" }))
-    await waitFor(() => {
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
-    })
+    await expectDialogClosed()
     expect(organisationsOf("Video clinics")).toBe(
       "Cardiff and Vale, Swansea Bay",
     )
@@ -566,9 +565,7 @@ describe("The Organisations field opens on request (STY-038)", () => {
     expect(form.getByRole("group", { name: "Sefydliadau" })).toBeVisible()
     await user.click(form.getByRole("button", { name: "Cau sefydliadau" }))
     await user.click(form.getByRole("button", { name: "Canslo" }))
-    await waitFor(() => {
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
-    })
+    await expectDialogClosed()
 
     const empty = await openEditItemDialog(user, "New idea", "cy")
     expect(empty.getByText("Dim sefydliadau")).toBeVisible()

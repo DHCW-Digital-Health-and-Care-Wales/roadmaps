@@ -29,7 +29,7 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
 - **Nothing behind an open dialog can be pressed, Refresh included**: a test of a
   read that lands while a dialog is open asks for the Refresh first, holds the read,
   opens the dialog, then lets the read go. On a roadmap's page that is
-  `holdRefresh(user, repository)` (`features/roadmaps/testing/held-call.ts`), and
+  `holdRefresh(user, repository)` (`features/roadmaps/testing/held-refresh.ts`), and
   `readAgain(queryClient)` makes a further read. Two dialogs are never open at once,
   and nothing is published while one is.
 - **The item dialog is the page's, not a card's** (STY-044; its _Contract for
@@ -38,7 +38,8 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   back to the card wherever it now is. A card has no form and no hold.
 - **Each dialog's tests go through its helpers**: in Vitest
   `features/roadmaps/testing/roadmap-dialog.ts` and `item-dialog.ts`, which share
-  `edit-dialog.ts`; in Playwright `openEditRoadmapDialog`, `editRoadmapButton`,
+  `edit-dialog.ts` (with `expectDialogClosed` for a dialog closed another way than
+  Done); in Playwright `openEditRoadmapDialog`, `editRoadmapButton`,
   `openEditItemDialog` and `editItemButton` (`tests/e2e/fixtures/dialogs.ts`). Each
   takes the language, English or Welsh, but `editRoadmapText` and `editItemText`,
   which are English only.

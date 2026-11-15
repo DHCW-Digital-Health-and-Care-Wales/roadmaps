@@ -160,13 +160,13 @@ test.describe("editing a roadmap (STY-025)", () => {
       .getByRole("note")
       .getByRole("button", { name: "Dismiss message" })
       .click()
-    const form = await openEditItemDialog(page, ITEM)
-    await form.getByRole("textbox", { name: "Title" }).fill("A clearer card")
-    await form.getByRole("button", { name: "Done" }).click()
+    const dialog = await openEditItemDialog(page, ITEM)
+    await dialog.getByRole("textbox", { name: "Title" }).fill("A clearer card")
+    await dialog.getByRole("button", { name: "Done" }).click()
     return main
   }
 
-  test("the forms, a changed card and the publish bar", async ({ page }) => {
+  test("a changed card, the publish bar and the dialogs", async ({ page }) => {
     const main = await openWithAChange(page)
     const card = main
       .getByRole("listitem")
@@ -180,46 +180,48 @@ test.describe("editing a roadmap (STY-025)", () => {
       "edit-publish-bar.aria.yml",
     )
 
-    const itemForm = await openEditItemDialog(page, "A clearer card")
-    await itemForm.getByRole("textbox", { name: "Title" }).fill("")
-    await itemForm.getByRole("button", { name: "Done" }).click()
-    await expect(itemForm.getByText("Enter a title")).toBeVisible()
-    await expectStructure(itemForm, "edit-item-form-error.aria.yml")
-    // Its Organisations field, shut in the form above, opened (STY-038).
-    await itemForm.getByRole("button", { name: "Change organisations" }).click()
+    const itemDialog = await openEditItemDialog(page, "A clearer card")
+    await itemDialog.getByRole("textbox", { name: "Title" }).fill("")
+    await itemDialog.getByRole("button", { name: "Done" }).click()
+    await expect(itemDialog.getByText("Enter a title")).toBeVisible()
+    await expectStructure(itemDialog, "edit-item-dialog-error.aria.yml")
+    // Its Organisations field, shut in the dialog above, opened (STY-038).
+    await itemDialog
+      .getByRole("button", { name: "Change organisations" })
+      .click()
     await expect(
-      itemForm.getByRole("checkbox", { name: "All Wales (National)" }),
+      itemDialog.getByRole("checkbox", { name: "All Wales (National)" }),
     ).toBeFocused()
-    await expectStructure(itemForm, "edit-item-form-organisations.aria.yml")
-    await itemForm.getByRole("button", { name: "Cancel" }).click()
+    await expectStructure(itemDialog, "edit-item-dialog-organisations.aria.yml")
+    await itemDialog.getByRole("button", { name: "Cancel" }).click()
 
     // An item's Tags field opened, one tag removed (STY-037).
-    const tagsForm = await openEditItemDialog(page, "Longer-term idea")
-    await tagsForm.getByRole("button", { name: "Change tags" }).click()
-    await tagsForm.getByRole("button", { name: "Remove Service Y" }).click()
+    const tagsDialog = await openEditItemDialog(page, "Longer-term idea")
+    await tagsDialog.getByRole("button", { name: "Change tags" }).click()
+    await tagsDialog.getByRole("button", { name: "Remove Service Y" }).click()
     await expect(
-      tagsForm.getByRole("button", { name: "Remove Service Z" }),
+      tagsDialog.getByRole("button", { name: "Remove Service Z" }),
     ).toBeFocused()
-    await expectStructure(tagsForm, "edit-item-form-tags.aria.yml")
-    await tagsForm.getByRole("button", { name: "Cancel" }).click()
+    await expectStructure(tagsDialog, "edit-item-dialog-tags.aria.yml")
+    await tagsDialog.getByRole("button", { name: "Cancel" }).click()
 
     // An item's Details field opened, one detail nested and then removed (STY-039).
     const detailed = "Earlier delivery this year"
-    const detailsForm = await openEditItemDialog(page, detailed)
-    await detailsForm.getByRole("button", { name: "Change details" }).click()
-    await detailsForm.getByRole("textbox").last().click()
-    await detailsForm
+    const detailsDialog = await openEditItemDialog(page, detailed)
+    await detailsDialog.getByRole("button", { name: "Change details" }).click()
+    await detailsDialog.getByRole("textbox").last().click()
+    await detailsDialog
       .getByRole("button", { name: "Move in Another thing it included" })
       .click()
     await page.keyboard.press("End")
     await page.keyboard.press("Enter")
     await page.keyboard.type("A third")
-    await detailsForm.getByRole("button", { name: "Remove A third" }).click()
+    await detailsDialog.getByRole("button", { name: "Remove A third" }).click()
     await expect(
-      detailsForm.getByRole("button", { name: "Undo removing A third" }),
+      detailsDialog.getByRole("button", { name: "Undo removing A third" }),
     ).toBeVisible()
-    await expectStructure(detailsForm, "edit-item-form-details.aria.yml")
-    await detailsForm.getByRole("button", { name: "Cancel" }).click()
+    await expectStructure(detailsDialog, "edit-item-dialog-details.aria.yml")
+    await detailsDialog.getByRole("button", { name: "Cancel" }).click()
 
     await expectStructure(
       await openEditRoadmapDialog(page),

@@ -1006,14 +1006,13 @@ test.describe("editing an item's tags (STY-037)", () => {
     const main = page.getByRole("main")
     const form = await openEditItemDialog(page, TAGGED)
 
-    // Shut: the tags on one line, no editor, and no Tags line on the card (S19).
+    // Shut: the tags on one line, and no editor (S19).
     await expect(form.getByRole("list").first()).toHaveText(
       "Service YService Z",
     )
     await expect(form.getByRole("textbox", { name: "Add a tag" })).toHaveCount(
       0,
     )
-    await expect(itemCard(page, TAGGED).getByRole("term")).toHaveCount(0)
     await form.getByRole("button", { name: "Change tags" }).click()
     const field = form.getByRole("group", { name: "Tags" })
     await expect(
@@ -1335,12 +1334,9 @@ test.describe("editing an item's details (STY-039)", () => {
     const main = page.getByRole("main")
     const form = await openEditItemDialog(page, DETAILED)
 
-    // Shut: the details as the card lists them, no editor, none on the card (S17).
+    // Shut: the details as the card lists them, and no editor (S17).
     await expect(form.getByRole("list").last()).toHaveText(FIRST + SECOND)
     await expect(form.getByRole("textbox", { name: /^Detail / })).toHaveCount(0)
-    await expect(
-      itemCard(page, DETAILED).getByRole("term").filter({ hasText: "Details" }),
-    ).toHaveCount(0)
     await form.getByRole("button", { name: "Change details" }).click()
     const field = form.getByRole("group", { name: "Details" })
     await expect(

@@ -2,10 +2,18 @@ import { useMemo, useRef, useState } from "react"
 
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 
-import type { OpenedItem } from "../dialogs/edit-item-form"
 import { tagsInUse } from "./item-tags"
 import { editItem, matchItemChanges, type ItemValues } from "./pending-changes"
 import { usePendingChangesStore } from "./pending-changes-context"
+
+/**
+ * An item as read and as shown when the dialog opened on it, which its edits are made
+ * from: a co-lead's change read while it is open never changes what Done keeps.
+ */
+export interface OpenedItem {
+  readonly read: RoadmapItem
+  readonly shown: RoadmapItem
+}
 
 /**
  * The item the dialog edits, by its card's key. It is kept once the dialog has closed,

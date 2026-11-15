@@ -7,8 +7,8 @@ export type ItemDialogProps = Omit<EditItemFormProps, "labelledBy"> &
   Pick<FormDialogProps, "open" | "onClose" | "opener">
 
 /**
- * The item dialog (EPC-011): where an item is edited, in place of its card turning into
- * a form (STY-044). It closes as `FormDialog` sets.
+ * The item dialog (EPC-011): the one place an item is edited (STY-044). It closes as
+ * `FormDialog` sets.
  */
 export function ItemDialog({
   open,

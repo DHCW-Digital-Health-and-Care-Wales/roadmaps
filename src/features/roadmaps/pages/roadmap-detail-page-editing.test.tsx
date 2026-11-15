@@ -16,7 +16,9 @@ import type { Language } from "@/i18n"
 import { AppError } from "@/lib/errors"
 import { renderWithProviders } from "@/test/render-with-providers"
 
+import { expectDialogClosed } from "../testing/edit-dialog"
 import { holdCall } from "../testing/held-call"
+import { holdRefresh } from "../testing/held-refresh"
 import {
   createInMemoryRoadmapRepository,
   type InMemoryRoadmapItems,
@@ -223,9 +225,7 @@ describe("Editing a roadmap's items (STY-025)", () => {
 
       await close(user)
 
-      await waitFor(() => {
-        expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
-      })
+      await expectDialogClosed()
       await waitFor(() => {
         expect(
           main().getByRole("button", { name: "Edit First item" }),
@@ -250,11 +250,26 @@ describe("Editing a roadmap's items (STY-025)", () => {
     expect(edit).not.toHaveFocus()
     await user.click(editItemDialog().getByRole("button", { name: "Cancel" }))
 
-    await waitFor(() => {
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
-    })
+    await expectDialogClosed()
     await waitFor(() => {
       expect(edit).toHaveFocus()
+    })
+  })
+
+  it("returns focus to the Edit of the card it was last opened from, whichever card had it before (S5)", async () => {
+    const { user } = await renderPage()
+    const first = await openEditItemDialog(user, "First item")
+    await user.click(first.getByRole("button", { name: "Cancel" }))
+    await expectDialogClosed()
+
+    const second = await openEditItemDialog(user, "Second item")
+    await user.click(second.getByRole("button", { name: "Cancel" }))
+    await expectDialogClosed()
+
+    await waitFor(() => {
+      expect(
+        main().getByRole("button", { name: "Edit Second item" }),
+      ).toHaveFocus()
     })
   })
 
@@ -476,9 +491,7 @@ describe("Editing what a roadmap is about in the roadmap dialog (STY-043)", () =
 
       await close(user)
 
-      await waitFor(() => {
-        expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
-      })
+      await expectDialogClosed()
       const edit = main().getByRole("button", {
         name: "Edit About this roadmap",
       })
@@ -507,9 +520,7 @@ describe("Editing what a roadmap is about in the roadmap dialog (STY-043)", () =
       editRoadmapDialog().getByRole("button", { name: "Cancel" }),
     )
 
-    await waitFor(() => {
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
-    })
+    await expectDialogClosed()
     await waitFor(() => {
       expect(edit).toHaveFocus()
     })
@@ -643,28 +654,18 @@ describe("Keeping a roadmap's changes (STY-025)", () => {
       ],
     })
     const { user } = await renderPage({ repository, waitFor: "No ID two" })
-    const { held, release, released } = holdCall(() =>
-      Promise.resolve([
-        createTestRoadmapItem("Inserted by a co-lead"),
-        createTestRoadmapItem("No ID one"),
-        createTestRoadmapItem("No ID two"),
-      ]),
-    )
-    vi.spyOn(repository, "listRoadmapItems").mockImplementation(held)
-
-    // The dialog is modal, so the Refresh is asked for before it opens, and read after.
-    await user.click(main().getByRole("button", { name: "Refresh" }))
+    const land = await holdRefresh(user, repository)
     const form = await openEditItemDialog(user, "No ID one")
     await user.type(form.getByRole("textbox", { name: "Phase" }), "Beta")
-    expect(held).toHaveBeenCalled()
-    await act(async () => {
-      release()
-      await released
+    repository.coLead((_list, itemsOf) => {
+      itemsOf("producta").unshift(
+        createTestRoadmapItem("Inserted by a co-lead"),
+      )
     })
 
-    await waitFor(() => {
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
-    })
+    await land()
+
+    await expectDialogClosed()
     expect(
       main().getByRole("heading", { level: 3, name: "Inserted by a co-lead" }),
     ).toBeInTheDocument()
@@ -679,28 +680,16 @@ describe("Keeping a roadmap's changes (STY-025)", () => {
       ],
     })
     const { user } = await renderPage({ repository, waitFor: "No ID two" })
-    const { held, release, released } = holdCall(() =>
-      Promise.resolve([
-        createTestRoadmapItem("No ID one", { id: "item-1" }),
-        createTestRoadmapItem("No ID two", { id: "item-2" }),
-      ]),
-    )
-    vi.spyOn(repository, "listRoadmapItems").mockImplementation(held)
-
-    // The dialog is modal, so the Refresh is asked for before it opens, and read after.
-    await user.click(main().getByRole("button", { name: "Refresh" }))
+    const land = await holdRefresh(user, repository)
     const form = await openEditItemDialog(user, "No ID two")
     await user.type(form.getByRole("textbox", { name: "Phase" }), "Beta")
-    expect(held).toHaveBeenCalled()
-    await act(async () => {
-      release()
-      await released
+    repository.coLead((_list, itemsOf) => {
+      itemsOf("producta").forEach((item, at) => {
+        item.id = `item-${String(at + 1)}`
+      })
     })
-    await waitFor(() => {
-      expect(
-        screen.getByRole("button", { name: "Refresh", hidden: true }),
-      ).not.toHaveAttribute("aria-busy", "true")
-    })
+
+    await land()
 
     expect(form.getByRole("textbox", { name: "Phase" })).toHaveValue("Beta")
     await confirmItemEdit(user)

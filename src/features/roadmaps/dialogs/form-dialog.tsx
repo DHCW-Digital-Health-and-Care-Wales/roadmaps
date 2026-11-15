@@ -34,9 +34,9 @@ export interface FormDialogProps {
 /**
  * A form in a dialog, as EPC-011's _The dialogs_ sets for every one: modal, named by its
  * heading, with focus in its first field as it opens and back on the control that opened
- * it as it closes (its `opener`). Cancel and Escape close it; a
- * click outside does nothing. On a phone it fills the width from the foot of the screen,
- * and it scrolls when it is taller than the screen.
+ * it as it closes (its `opener`). Cancel and Escape close it; a click outside does
+ * nothing. On a phone it fills the width from the foot of the screen, and it scrolls when
+ * it is taller than the screen.
  */
 export function FormDialog({
   open,

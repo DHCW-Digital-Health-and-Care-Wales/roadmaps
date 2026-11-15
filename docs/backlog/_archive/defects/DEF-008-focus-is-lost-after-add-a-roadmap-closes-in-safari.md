@@ -76,7 +76,10 @@ and so in `RoadmapDialogProps`, so the type check names a later dialog that give
 
 ### Departures
 
-None.
+- **A fallback opener** (agent; two reviewers found it): a Refresh asked for before the
+  dialog opens can read the first roadmap while it is open, which removes the empty
+  panel's button, so the page falls back to the button beside Refresh as the dialog
+  closes (test red before the fallback: `gets focus back on the button beside Refresh …`).
 
 ### Contract for dependents
 

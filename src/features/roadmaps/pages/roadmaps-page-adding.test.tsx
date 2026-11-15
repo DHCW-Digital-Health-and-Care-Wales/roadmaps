@@ -166,18 +166,22 @@ describe("adding a roadmap from the list (STY-041)", () => {
       expect(dialog().getByRole("textbox", { name: "Title" })).toHaveFocus()
     })
 
-    it("gets focus back, whichever of the empty list's two buttons a click that did not focus it opened, by Cancel or Escape (DEF-008 S1)", async () => {
-      const { user } = await renderList(repositoryWith({}, []))
-      await main().findByRole("heading", { name: "No roadmaps yet" })
-
-      for (const index of [0, 1]) {
+    it.each([
+      { index: 0, closeBy: "Cancel" },
+      { index: 1, closeBy: "Escape" },
+    ])(
+      "gets focus back on button $index of the empty list, opened by a click that did not focus it and closed by $closeBy (DEF-008 S1)",
+      async ({ index, closeBy }) => {
+        const { user } = await renderList(repositoryWith({}, []))
+        await main().findByRole("heading", { name: "No roadmaps yet" })
         const button = main().getAllByRole("button", {
           name: "Add a roadmap",
         })[index]
         if (!button) throw new Error("The empty list offers no such button")
+
         // Safari does not focus a button it is clicked on.
         fireEvent.click(button)
-        if (index === 0) {
+        if (closeBy === "Cancel") {
           await user.click(dialog().getByRole("button", { name: "Cancel" }))
         } else {
           await user.keyboard("{Escape}")
@@ -185,8 +189,8 @@ describe("adding a roadmap from the list (STY-041)", () => {
         await expectDialogClosed()
 
         expect(button).toHaveFocus()
-      }
-    })
+      },
+    )
 
     it("gets focus back on the button beside Refresh when a read removes the panel's button the dialog opened from (DEF-008)", async () => {
       const repository = repositoryWith({}, [])

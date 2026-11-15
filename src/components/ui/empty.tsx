@@ -1,6 +1,7 @@
 // Deviates from upstream shadcn (ADR-010): imports cn from @/lib/utils;
 // text-body-xs for upstream's text-sm (no letter-spacing); a hovered link is --link-hover,
-// as --primary is a fill only; square corners, like DHCW's panels and the cards beside it, for `rounded-xl` (DEF-007).
+// as --primary is a fill only; square corners, like DHCW's panels and the cards beside
+// it, for `rounded-xl` (DEF-007).
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 

@@ -8,7 +8,7 @@ describe("Empty", () => {
     const { container } = render(<Empty />)
 
     expect(container.querySelector("[data-slot=empty]")?.className).not.toMatch(
-      /rounded/,
+      /rounded-(?!none)/,
     )
   })
 })

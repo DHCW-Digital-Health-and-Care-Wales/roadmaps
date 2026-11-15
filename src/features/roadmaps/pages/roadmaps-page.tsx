@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router"
 import { PlusIcon } from "lucide-react"
-import { useRef, useState } from "react"
+import { useRef, useState, type Ref } from "react"
 import { useTranslation } from "react-i18next"
 
 import { textLinkClasses } from "@/components/layout/text-link-classes"
@@ -33,8 +33,10 @@ export function RoadmapsPage() {
   const connected = useAuth().state.status === "connected"
   const [adding, setAdding] = useState(false)
   // The "Add a roadmap" button clicked, of the two an empty list shows: where focus
-  // returns as the dialog closes (DEF-008).
+  // returns as the dialog closes (DEF-008). The one beside Refresh stands in for the
+  // panel's, which a read can remove while the dialog is open.
   const opener = useRef<HTMLElement | null>(null)
+  const toolbarAdd = useRef<HTMLButtonElement>(null)
   const openAdded = useOpenAddedRoadmap()
 
   const unpublished =
@@ -44,19 +46,21 @@ export function RoadmapsPage() {
   const reload = () => {
     void refetch()
   }
-  const addButton = roadmaps && (
-    <Button
-      disabled={!connected}
-      focusableWhenDisabled
-      onClick={(event) => {
-        opener.current = event.currentTarget
-        setAdding(true)
-      }}
-    >
-      <PlusIcon data-icon="inline-start" aria-hidden="true" />
-      {t("roadmaps.add.title")}
-    </Button>
-  )
+  const addButton = (ref?: Ref<HTMLButtonElement>) =>
+    roadmaps && (
+      <Button
+        ref={ref}
+        disabled={!connected}
+        focusableWhenDisabled
+        onClick={(event) => {
+          opener.current = event.currentTarget
+          setAdding(true)
+        }}
+      >
+        <PlusIcon data-icon="inline-start" aria-hidden="true" />
+        {t("roadmaps.add.title")}
+      </Button>
+    )
 
   return (
     <section aria-labelledby={TITLE_ID}>
@@ -87,7 +91,7 @@ export function RoadmapsPage() {
             </p>
           )}
           <RefreshButton fetching={isFetching} onRefresh={reload} />
-          {addButton}
+          {addButton(toolbarAdd)}
         </div>
       </div>
 
@@ -105,7 +109,7 @@ export function RoadmapsPage() {
             {roadmaps.length > 0 ? (
               <RoadmapGroups roadmaps={roadmaps} />
             ) : (
-              <RoadmapsEmptyState action={addButton} />
+              <RoadmapsEmptyState action={addButton()} />
             )}
           </>
         ) : problem ? (
@@ -126,6 +130,8 @@ export function RoadmapsPage() {
           roadmaps={roadmaps}
           onAdded={openAdded}
           onClose={() => {
+            if (!opener.current?.isConnected)
+              opener.current = toolbarAdd.current
             setAdding(false)
           }}
         />

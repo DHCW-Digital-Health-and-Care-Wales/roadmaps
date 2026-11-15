@@ -166,7 +166,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
       expect(dialog().getByRole("textbox", { name: "Title" })).toHaveFocus()
     })
 
-    it("gets focus back from Cancel, whichever of the empty list's two buttons a click that did not focus it opened, by Cancel or Escape (DEF-008 S1)", async () => {
+    it("gets focus back, whichever of the empty list's two buttons a click that did not focus it opened, by Cancel or Escape (DEF-008 S1)", async () => {
       const { user } = await renderList(repositoryWith({}, []))
       await main().findByRole("heading", { name: "No roadmaps yet" })
 

@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router"
 import { PlusIcon } from "lucide-react"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { textLinkClasses } from "@/components/layout/text-link-classes"
@@ -32,6 +32,9 @@ export function RoadmapsPage() {
   const { data: roadmaps, error, isFetching, refetch } = useRoadmaps()
   const connected = useAuth().state.status === "connected"
   const [adding, setAdding] = useState(false)
+  // The "Add a roadmap" button clicked, of the two an empty list shows: where focus
+  // returns as the dialog closes (DEF-008).
+  const opener = useRef<HTMLElement | null>(null)
   const openAdded = useOpenAddedRoadmap()
 
   const unpublished =
@@ -45,7 +48,8 @@ export function RoadmapsPage() {
     <Button
       disabled={!connected}
       focusableWhenDisabled
-      onClick={() => {
+      onClick={(event) => {
+        opener.current = event.currentTarget
         setAdding(true)
       }}
     >
@@ -118,6 +122,7 @@ export function RoadmapsPage() {
       {roadmaps && (
         <RoadmapDialog
           open={adding}
+          opener={opener}
           roadmaps={roadmaps}
           onAdded={openAdded}
           onClose={() => {

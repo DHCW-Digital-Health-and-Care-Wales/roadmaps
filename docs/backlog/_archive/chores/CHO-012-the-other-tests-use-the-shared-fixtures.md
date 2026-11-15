@@ -65,9 +65,9 @@ At commit `858be74`, with CHO-011's changes.
   family it adds to `TEST_FAMILIES` (S1's "declares only that one").
 - **`auth-scoped-queries.test.ts` and `auth-notice.test.tsx` keep their own states**:
   a 60 s session and a builder function, not the page tests' connected state.
-- **`new-roadmap.test.ts` took the shared Welsh name** for Medicines & Diagnostics
-  (none, not `Meddyginiaethau a Diagnosteg`); no assertion reads it by value, each
-  reads `MEDICINES_AND_DIAGNOSTICS.name`.
+- **`new-roadmap.test.ts` keeps a Welsh name for one test.** The shared Medicines &
+  Diagnostics has none, so "copies a chosen family's names and colour (S2)" adds its
+  own `cy` to a copy of it, and still sees both names copied.
 - **Inline IDs** were read from the shared constants only in the two files this chore
   touches (`family-changes.test.ts`, `new-roadmap.test.ts`), as the Measurement says
   ("when touched").

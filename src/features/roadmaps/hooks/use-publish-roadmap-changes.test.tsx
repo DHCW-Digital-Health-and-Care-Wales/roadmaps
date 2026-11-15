@@ -12,6 +12,7 @@ import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-ite
 import { createInMemoryRoadmapRepository } from "@/features/roadmaps/testing/in-memory-roadmap-repository"
 import { AppError } from "@/lib/errors"
 import { renderHookWithProviders } from "@/test/render-with-providers"
+import { connected } from "@/test/connected-state"
 
 import {
   withCurrentItemText,
@@ -28,7 +29,6 @@ import {
 } from "./use-publish-roadmap-changes"
 import { useRoadmapItems } from "./use-roadmap-items"
 import { useRoadmaps } from "./use-roadmaps"
-import { connected } from "@/test/connected-state"
 
 const item = createTestRoadmapItem("First")
 const changes: RoadmapChanges = {

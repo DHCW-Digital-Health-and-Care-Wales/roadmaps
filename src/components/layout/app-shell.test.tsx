@@ -2,8 +2,8 @@ import { screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
 import type { Language } from "@/i18n"
-import { renderWithProviders } from "@/test/render-with-providers"
 import { connected } from "@/test/connected-state"
+import { renderWithProviders } from "@/test/render-with-providers"
 
 afterEach(() => {
   localStorage.clear()

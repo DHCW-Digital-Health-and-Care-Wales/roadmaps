@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest"
 
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
-import { renderWithProviders } from "@/test/render-with-providers"
 import { connected } from "@/test/connected-state"
+import { renderWithProviders } from "@/test/render-with-providers"
 
 /** The example roadmaps (`tests/fixtures/sheets/Roadmaps.csv`) as the app reads them. */
 const productA = createTestRoadmap("producta", "Product A roadmap", {

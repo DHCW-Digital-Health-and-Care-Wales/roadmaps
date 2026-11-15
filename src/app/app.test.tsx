@@ -6,8 +6,8 @@ import { afterEach, describe, expect, it } from "vitest"
 import type { AuthState } from "@/domain/auth/auth-client"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { authScopedQueryKey } from "@/features/auth/auth-scoped-queries"
-import { renderWithProviders } from "@/test/render-with-providers"
 import { connected } from "@/test/connected-state"
+import { renderWithProviders } from "@/test/render-with-providers"
 
 function header() {
   return within(screen.getByRole("banner"))

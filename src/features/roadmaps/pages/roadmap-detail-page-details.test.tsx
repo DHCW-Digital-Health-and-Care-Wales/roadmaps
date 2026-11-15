@@ -12,6 +12,7 @@ import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 import type { Language } from "@/i18n"
+import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
 import { expectDialogClosed } from "../testing/edit-dialog"
@@ -21,7 +22,6 @@ import {
   type InMemoryRoadmapRepository,
 } from "../testing/in-memory-roadmap-repository"
 import { confirmItemEdit, openEditItemDialog } from "../testing/item-dialog"
-import { connected } from "@/test/connected-state"
 
 const roadmaps = [createTestRoadmap("producta", "Product A roadmap")]
 

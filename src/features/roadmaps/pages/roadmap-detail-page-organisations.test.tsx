@@ -8,10 +8,10 @@ import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 import { TEST_ORGANISATIONS } from "@/domain/roadmap/testing/test-organisations"
 import { AppError } from "@/lib/errors"
+import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
 import { createInMemoryRoadmapRepository } from "../testing/in-memory-roadmap-repository"
-import { connected } from "@/test/connected-state"
 
 const roadmaps = [createTestRoadmap("producta", "Product A roadmap")]
 

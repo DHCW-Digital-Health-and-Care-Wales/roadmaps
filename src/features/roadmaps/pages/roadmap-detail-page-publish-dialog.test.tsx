@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest"
 
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
+import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
 import { holdCall } from "../testing/held-call"
@@ -18,7 +19,6 @@ import {
   confirmRoadmapEdit,
   openEditRoadmapDialog,
 } from "../testing/roadmap-dialog"
-import { connected } from "@/test/connected-state"
 
 // A dialog that publishes shows what it asked until it has gone (DEF-010).
 

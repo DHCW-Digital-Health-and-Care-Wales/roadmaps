@@ -9,13 +9,13 @@ import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 import type { Language } from "@/i18n"
 import { AppError } from "@/lib/errors"
+import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
 import {
   createInMemoryRoadmapRepository,
   type InMemoryRoadmapItems,
 } from "../testing/in-memory-roadmap-repository"
-import { connected } from "@/test/connected-state"
 
 // The roadmap's own text comes first, above the items.
 const ABOUT_HEADING = "About this roadmap"

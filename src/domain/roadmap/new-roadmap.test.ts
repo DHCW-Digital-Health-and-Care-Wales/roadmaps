@@ -118,19 +118,27 @@ describe("planNewRoadmap (STY-040)", () => {
   })
 
   it("copies a chosen family's names and colour (S2)", () => {
+    // With a Welsh name, so the copy of both names is seen.
+    const welsh = {
+      ...MEDICINES_AND_DIAGNOSTICS,
+      name: {
+        en: "Medicines & Diagnostics",
+        cy: "Meddyginiaethau a Diagnosteg",
+      },
+    }
     const plan = planNewRoadmap(
-      input({ familyId: MEDICINES_AND_DIAGNOSTICS.id }),
-      current(),
+      input({ familyId: welsh.id }),
+      current({ families: [welsh] }),
     )
 
     expect(plan).toMatchObject({
       kind: "write",
       roadmap: {
-        family: MEDICINES_AND_DIAGNOSTICS.name,
-        familyId: MEDICINES_AND_DIAGNOSTICS.id,
+        family: welsh.name,
+        familyId: welsh.id,
         colour: "#006747",
         copied: {
-          family: MEDICINES_AND_DIAGNOSTICS.name,
+          family: welsh.name,
           colour: "#006747",
           category: "",
         },

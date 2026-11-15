@@ -7,10 +7,10 @@ import type { RepositoryReadOptions } from "@/domain/roadmap/roadmap-repository"
 import { AppError } from "@/lib/errors"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
+import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
 import { createInMemoryRoadmapRepository } from "../testing/in-memory-roadmap-repository"
-import { connected } from "@/test/connected-state"
 
 const outOfStep = (overrides: Partial<Roadmap> = {}) =>
   createTestRoadmap("producta", "Product A roadmap", {

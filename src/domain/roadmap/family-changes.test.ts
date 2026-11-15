@@ -14,8 +14,6 @@ import {
 } from "./testing/test-lists"
 import { createTestRoadmap } from "./testing/test-roadmap"
 
-const families = TEST_FAMILIES
-
 const member = (id: string, published = true) =>
   createTestRoadmap(id, id, {
     familyId: SINGLE_RECORD.id,
@@ -44,7 +42,10 @@ function edit(
 describe("checkFamilyInput", () => {
   it("trims the name and the colour, and lower-cases the colour", () => {
     expect(
-      checkFamilyInput({ name: "  Screening ", colour: " #00796B " }, families),
+      checkFamilyInput(
+        { name: "  Screening ", colour: " #00796B " },
+        TEST_FAMILIES,
+      ),
     ).toEqual({
       input: { name: "Screening", colour: "#00796b" },
       problems: {},
@@ -60,7 +61,8 @@ describe("checkFamilyInput", () => {
     ["Medicines Diagnostics", "taken"],
   ] as const)("finds the name %j %s", (name, problem) => {
     expect(
-      checkFamilyInput({ name, colour: "#00796b" }, families).problems.name,
+      checkFamilyInput({ name, colour: "#00796b" }, TEST_FAMILIES).problems
+        .name,
     ).toBe(problem ?? undefined)
   })
 
@@ -68,7 +70,7 @@ describe("checkFamilyInput", () => {
     expect(
       checkFamilyInput(
         { name: "SINGLE  record", colour: "#12a3c9" },
-        families,
+        TEST_FAMILIES,
         SINGLE_RECORD.id,
       ).problems,
     ).toEqual({})
@@ -78,7 +80,7 @@ describe("checkFamilyInput", () => {
     "refuses the colour %j",
     (colour) => {
       expect(
-        checkFamilyInput({ name: "Screening", colour }, families).problems,
+        checkFamilyInput({ name: "Screening", colour }, TEST_FAMILIES).problems,
       ).toEqual({ colour: "invalid" })
     },
   )
@@ -89,7 +91,7 @@ describe("planNewFamily", () => {
     expect(
       planNewFamily(
         { name: "Screening", colour: "#00796b" },
-        families,
+        TEST_FAMILIES,
         new Set([SINGLE_RECORD.id, "takenxxx"]),
         idsOf(SINGLE_RECORD.id, "takenxxx", "newidaaa"),
       ),
@@ -105,13 +107,16 @@ describe("planNewFamily", () => {
 
   it("refuses a name another family has, folded", () => {
     expect(
-      planNewFamily({ name: "single-record", colour: "#00796b" }, families),
+      planNewFamily(
+        { name: "single-record", colour: "#00796b" },
+        TEST_FAMILIES,
+      ),
     ).toEqual({ kind: "settled", outcome: { status: "name-taken" } })
   })
 })
 
 describe("planFamilyChange", () => {
-  const current = { families, roadmaps }
+  const current = { families: TEST_FAMILIES, roadmaps }
 
   it("renames the family, keeping its colour and Welsh name, with its members", () => {
     expect(
@@ -188,7 +193,7 @@ describe("planFamilyChange", () => {
     "gives the members found again when %s",
     (_case, current, ids) => {
       const plan = planFamilyChange(edit({ colour: "#00796b" }), {
-        families,
+        families: TEST_FAMILIES,
         roadmaps: current.flatMap((each) => (each ? [each] : [])),
       })
       expect(
@@ -217,10 +222,10 @@ describe("planFamilyChange", () => {
 
 describe("familyHeld", () => {
   it("holds a family listed with its name and colour", () => {
-    expect(familyHeld(SINGLE_RECORD, families)).toBe(true)
-    expect(familyHeld({ ...SINGLE_RECORD, colour: "#000000" }, families)).toBe(
-      false,
-    )
+    expect(familyHeld(SINGLE_RECORD, TEST_FAMILIES)).toBe(true)
+    expect(
+      familyHeld({ ...SINGLE_RECORD, colour: "#000000" }, TEST_FAMILIES),
+    ).toBe(false)
     expect(familyHeld(SINGLE_RECORD, null)).toBe(false)
   })
 })

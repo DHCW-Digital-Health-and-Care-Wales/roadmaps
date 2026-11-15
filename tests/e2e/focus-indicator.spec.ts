@@ -130,8 +130,8 @@ const IN_TAB_ORDER = ':not([tabindex="-1"])'
  * What is out of the Tab order and no stop: an element that takes focus only from a
  * script, such as a notice; the form input behind a custom control (a checkbox's), which
  * is hidden from the page; and the details outline's text fields but the selected one
- * (STY-039 S24). Any other text field out of the Tab order is a stop the tour must
- * reach, so it fails if Tab cannot.
+ * (STY-039 S24), which `expectOutlineKeepsAStop` checks is there. Any other text field
+ * out of the Tab order is a stop the tour must reach, so it fails if Tab cannot.
  */
 const NOT_A_STOP =
   '[tabindex="-1"]:not(input, select, textarea), input[aria-hidden="true"], li > textarea[tabindex="-1"]'
@@ -141,6 +141,23 @@ function tabStops(scope: Page | Locator) {
   return scope
     .locator(`:is(${CONTROLS}, [tabindex]):not(${NOT_A_STOP})`)
     .filter({ visible: true })
+}
+
+/**
+ * A details outline in `scope` keeps its selected text field in the Tab order, the one
+ * stop the outline offers (STY-039 S24): `NOT_A_STOP` leaves out the rest, so without
+ * this a selected field taken out of reach would pass.
+ */
+async function expectOutlineKeepsAStop(scope: Page | Locator) {
+  const outlines = scope.locator("ul:has(> li > textarea)").filter({
+    visible: true,
+  })
+  for (const outline of await outlines.all()) {
+    await expect(
+      outline.locator('li > textarea:not([tabindex="-1"])'),
+      "the details outline's text field in the Tab order",
+    ).toHaveCount(1)
+  }
 }
 
 /**
@@ -154,6 +171,7 @@ async function expectEveryStopShowsAnIndicator(
   scope: Page | Locator = page,
 ) {
   const colours = await focusColours(page)
+  await expectOutlineKeepsAStop(scope)
   const names = await Promise.all(
     (await tabStops(scope).all()).map((stop) => stop.evaluate(describeElement)),
   )

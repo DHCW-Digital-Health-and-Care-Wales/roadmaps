@@ -14,6 +14,7 @@ import {
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 import { AppError } from "@/lib/errors"
+import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
 import { expectDialogClosed } from "../testing/edit-dialog"
@@ -27,7 +28,6 @@ import {
   confirmRoadmapEdit,
   openEditRoadmapDialog,
 } from "../testing/roadmap-dialog"
-import { connected } from "@/test/connected-state"
 
 const roadmaps: Roadmap[] = [
   createTestRoadmap("outpatient-booking", "Outpatient Booking roadmap", {

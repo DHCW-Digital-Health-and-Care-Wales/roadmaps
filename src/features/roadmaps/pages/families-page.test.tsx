@@ -17,11 +17,11 @@ import {
 import { TEST_ORGANISATIONS } from "@/domain/roadmap/testing/test-organisations"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { AppError } from "@/lib/errors"
+import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
 import { holdCall } from "../testing/held-call"
 import { createInMemoryRoadmapRepository } from "../testing/in-memory-roadmap-repository"
-import { connected } from "@/test/connected-state"
 
 function member(id: string, title: string, published: boolean): Roadmap {
   return createTestRoadmap(id, title, {

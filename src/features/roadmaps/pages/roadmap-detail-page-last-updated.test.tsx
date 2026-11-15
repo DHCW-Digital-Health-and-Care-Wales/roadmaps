@@ -6,6 +6,7 @@ import type { Roadmap } from "@/domain/roadmap/roadmap"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 import type { Language } from "@/i18n"
+import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
 import {
@@ -18,7 +19,6 @@ import {
   editRoadmapText,
   openEditRoadmapDialog,
 } from "../testing/roadmap-dialog"
-import { connected } from "@/test/connected-state"
 
 const productA = createTestRoadmap("producta", "Product A roadmap", {
   statusLabel: { en: "Beta", cy: "" },

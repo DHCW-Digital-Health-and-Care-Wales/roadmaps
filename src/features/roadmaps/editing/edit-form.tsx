@@ -38,9 +38,9 @@ export interface EditFormField<F extends string> {
   multiline: boolean
   /**
    * Typed or chosen from `options`, it must hold a value: what the form says at the
-   * field when it holds none (STY-046 S2). The title is required whatever this says.
+   * field when it holds none, as it does of a title (STY-025 S4, STY-046 S2).
    */
-  required?: FieldError
+  required?: RequiredError
   /** Chosen from these, in this order, instead of typed (STY-028). */
   options?: readonly ChoiceOption[]
   /**
@@ -88,11 +88,17 @@ export interface EditFormField<F extends string> {
 type FieldError =
   "titleRequired" | "placementRequired" | "dateInFuture" | "dateInvalid"
 
+/** Why a field that must hold a value keeps the form open while it holds none. */
+export type RequiredError = Extract<
+  FieldError,
+  "titleRequired" | "placementRequired"
+>
+
 /** A form's values as it confirms them: each changed since it opened. */
 type ChangedValues<F extends string> = Partial<Record<F, string>>
 
 export interface EditFormProps<F extends string> {
-  /** The fields, the first of which is the title, which is required. */
+  /** The fields, in order; the dialog gives the first its focus. */
   fields: readonly EditFormField<F>[]
   /** Each field's value as the form opens: the English, pending or not. */
   initial: Record<F, string>
@@ -105,12 +111,13 @@ export interface EditFormProps<F extends string> {
    */
   onDone: (values: ChangedValues<F>) => void
   /** What the button that confirms the form says, if not "Done". */
-  confirmLabel?: string
+  confirmLabel?: string | undefined
   /**
    * A second button that confirms the form, after the first: its label, and what it
    * is given in place of `onDone` ("Add and start another", STY-046 S4).
    */
-  another?: { label: string; onDone: (values: ChangedValues<F>) => void }
+  another?:
+    { label: string; onDone: (values: ChangedValues<F>) => void } | undefined
   /** Said under the fields, above the buttons. */
   note?: ReactNode
   /**
@@ -118,7 +125,7 @@ export interface EditFormProps<F extends string> {
    * opens on its first focus (`FormDialog`); a form drawn in an open dialog, in place
    * of one just confirmed, takes it itself.
    */
-  takesFocus?: boolean
+  takesFocus?: boolean | undefined
 }
 
 /**
@@ -130,10 +137,10 @@ export interface EditFormProps<F extends string> {
  * values pending and the dialog's Cancel to leave them. The item dialog's adding form is
  * this one too, over an item with nothing in it (STY-046): its buttons are named for
  * adding, and a note says when the item is published. Its first focus, Escape and
- * closing are the dialog's (`FormDialog`). The title is required, as is any field that
- * says so, and a date is a real one and not after today: confirming otherwise keeps the
- * form open with an error linked to each field, focusing the first. Writes nothing; the
- * caller keeps the values pending.
+ * closing are the dialog's (`FormDialog`). A field that is `required` holds a value, as
+ * a title does, and a date is a real one and not after today: confirming otherwise keeps
+ * the form open with an error linked to each field, focusing the first. Writes nothing;
+ * the caller keeps the values pending.
  */
 export function EditForm<F extends string>({
   fields,
@@ -173,9 +180,8 @@ export function EditForm<F extends string>({
       fields.map(({ name }) => [name, values[name].trim()]),
     ) as Record<F, string>
     const found = Object.fromEntries(
-      fields.flatMap((field, index) => {
+      fields.flatMap((field) => {
         const error = fieldError(field, {
-          isTitle: index === 0,
           value: trimmed[field.name],
           opened: opened[field.name].trim(),
           badInput:
@@ -389,21 +395,19 @@ export function EditForm<F extends string>({
 type FieldControl = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
 
 /**
- * What keeps `field` from being confirmed with `value`, trimmed: the title blank, a
- * required field with nothing in it, a date the browser couldn't read (a half-typed one
- * reads as none), or a date changed from `opened` to one after today. A date left as it
- * opened is no edit, so one already after today never holds up the other fields.
+ * What keeps `field` from being confirmed with `value`, trimmed: a required field with
+ * nothing in it, a date the browser couldn't read (a half-typed one reads as none), or a
+ * date changed from `opened` to one after today. A date left as it opened is no edit, so
+ * one already after today never holds up the other fields.
  */
 function fieldError<F extends string>(
   field: EditFormField<F>,
   {
-    isTitle,
     value,
     opened,
     badInput,
-  }: { isTitle: boolean; value: string; opened: string; badInput: boolean },
+  }: { value: string; opened: string; badInput: boolean },
 ): FieldError | null {
-  if (isTitle && value === "") return "titleRequired"
   if (field.required && value === "") return field.required
   if (!field.date) return null
   if (badInput || (value !== "" && !isCalendarDate(value))) {

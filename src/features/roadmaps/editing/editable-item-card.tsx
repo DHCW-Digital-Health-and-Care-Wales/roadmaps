@@ -1,7 +1,6 @@
 import { useLayoutEffect, useRef, type RefObject } from "react"
 
 import { localise } from "@/domain/roadmap/localised-text"
-import { editNewItem, removeNewItem } from "@/domain/roadmap/new-item"
 import type { Organisation } from "@/domain/roadmap/organisation"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import type { RoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
@@ -10,8 +9,7 @@ import { useLanguage } from "@/i18n"
 import { RoadmapItemCard } from "../components/roadmap-item-card"
 import { EditControls } from "./edit-controls"
 import { MoveMenu } from "./move-menu"
-import type { PageItem } from "./page-items"
-import { editItem, matchItemChanges, undoItem } from "./pending-changes"
+import { dropPageItem, editPageItem, type PageItem } from "./page-items"
 import {
   usePendingChanges,
   usePendingChangesStore,
@@ -62,7 +60,7 @@ export type CardControl = "edit" | "move"
 export function EditableItemCard({
   roadmapId,
   items,
-  pageItem: { item, shown, entry, newItemId },
+  pageItem,
   organisations,
   position,
   focusRequest,
@@ -75,7 +73,8 @@ export function EditableItemCard({
   const language = useLanguage()
   const store = usePendingChangesStore()
   const snapshot = usePendingChanges()
-  const isNew = newItemId !== undefined
+  const { shown, entry } = pageItem
+  const isNew = pageItem.newItemId !== undefined
   // Nothing is behind a new item: once it is sent, or may be published unseen, a change
   // to it would be lost as the item read takes its place, so it waits, as "Discard
   // all" does.
@@ -94,35 +93,22 @@ export function EditableItemCard({
     onFocused()
   }, [focusRequest, editButton, onFocused])
 
-  // Each change finds the item's entry afresh, so it never builds on a stale one.
   const move = (placement: RoadmapPlacement) => {
     if (!changeable) return
     store.update(roadmapId, (changes) =>
-      newItemId === undefined
-        ? editItem(
-            changes,
-            matchItemChanges(items, changes).get(position),
-            item,
-            position,
-            { placement },
-          )
-        : editNewItem(changes, newItemId, { placement }),
+      editPageItem(changes, items, pageItem, position, { placement }),
     )
     onFocusRequest(position, "move")
   }
   const drop = () => {
     if (!droppable) return
-    if (newItemId !== undefined) {
-      store.update(roadmapId, (changes) => removeNewItem(changes, newItemId))
-      onRemoved()
-      return
-    }
-    store.update(roadmapId, (changes) => {
-      const current = matchItemChanges(items, changes).get(position)
-      return current ? undoItem(changes, current) : changes
-    })
-    // "Undo changes" goes with the changes, and the card may go to another list.
-    onFocusRequest(position, "edit")
+    store.update(roadmapId, (changes) =>
+      dropPageItem(changes, items, pageItem, position),
+    )
+    // A new item's card has gone. "Undo changes" goes with the changes, and the card
+    // may go to another list.
+    if (isNew) onRemoved()
+    else onFocusRequest(position, "edit")
   }
 
   return (

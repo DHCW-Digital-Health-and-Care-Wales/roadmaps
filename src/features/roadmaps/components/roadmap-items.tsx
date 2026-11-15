@@ -13,10 +13,7 @@ import {
 } from "../editing/editable-item-card"
 import type { PageItem } from "../editing/page-items"
 import type { PageItemDialog } from "../editing/use-item-dialog"
-import {
-  groupRoadmapItems,
-  type PositionedRoadmapItem,
-} from "../group-roadmap-items"
+import { groupRoadmapItems, type Positioned } from "../group-roadmap-items"
 import { AddItemButton } from "./add-item-button"
 import { StatusPanel } from "./status-panel"
 
@@ -33,11 +30,8 @@ export interface RoadmapItemsProps {
   pageItems: readonly PageItem[]
   /** The page's one item dialog (`useItemDialog`). */
   itemDialog: PageItemDialog
-  /**
-   * "Add an item" with the page's actions, where focus goes when a new item is removed
-   * (STY-046 S6).
-   */
-  addItemButton: RefObject<HTMLButtonElement | null>
+  /** A new item was removed, its card with it: focus needs somewhere to go (S6). */
+  onItemRemoved: () => void
 }
 
 /**
@@ -55,12 +49,12 @@ export function RoadmapItems({
   organisations,
   pageItems,
   itemDialog,
-  addItemButton,
+  onItemRemoved,
 }: RoadmapItemsProps) {
   const { t } = useTranslation()
   const headingId = useId()
   const { unplaced, placements } = useMemo(
-    () => groupRoadmapItems(pageItems.map(({ shown }) => shown)),
+    () => groupRoadmapItems(pageItems, ({ shown }) => shown.placement),
     [pageItems],
   )
   // A moved item's card is a new one, in another list, so focus is handed to it here.
@@ -73,25 +67,20 @@ export function RoadmapItems({
       focused: () => {
         setFocus(null)
       },
-      // The card has gone, and its roadmap may now have no items: the page's own
-      // "Add an item" is always there.
-      removed: () => {
-        addItemButton.current?.focus()
-      },
+      removed: onItemRemoved,
     }),
-    [addItemButton],
+    [onItemRemoved],
   )
   const panelAddButton = useRef<HTMLButtonElement>(null)
 
   const list = (
-    placed: readonly PositionedRoadmapItem[],
+    placed: readonly Positioned<PageItem>[],
     labelledBy: string,
   ) => (
     <ItemList
       roadmapId={roadmapId}
       items={items}
       organisations={organisations}
-      pageItems={pageItems}
       placed={placed}
       labelledBy={labelledBy}
       focus={focus}
@@ -157,11 +146,7 @@ export function RoadmapItems({
       )}
       {/* After either, so it stays as the first item added takes the panel's place. */}
       {itemDialog.drawn && (
-        <ItemDialog
-          key={itemDialog.drawn.key}
-          {...itemDialog.drawn.props}
-          organisations={organisations}
-        />
+        <ItemDialog key={itemDialog.drawn.key} {...itemDialog.drawn.props} />
       )}
     </>
   )
@@ -177,9 +162,8 @@ interface ItemListProps {
   roadmapId: string
   items: readonly RoadmapItem[]
   organisations: readonly Organisation[]
-  pageItems: readonly PageItem[]
-  /** The items listed, each by its position among `pageItems`. */
-  placed: readonly PositionedRoadmapItem[]
+  /** The items listed, each with its position among the page's items. */
+  placed: readonly Positioned<PageItem>[]
   labelledBy: string
   focus: FocusRequest | null
   cardHandlers: {
@@ -188,7 +172,7 @@ interface ItemListProps {
     removed: () => void
   }
   onEdit: (position: number) => void
-  /** Where, among `pageItems`, the item is whose card holds `dialogOpener`; -1 for none. */
+  /** Where, among the page's items, the one is whose card holds `dialogOpener`. */
   dialogAt: number
   /** The ref that item's card gives its Edit (`EditableItemCard`). */
   dialogOpener: RefObject<HTMLButtonElement | null>
@@ -198,7 +182,6 @@ function ItemList({
   roadmapId,
   items,
   organisations,
-  pageItems,
   placed,
   labelledBy,
   focus,
@@ -209,28 +192,24 @@ function ItemList({
 }: ItemListProps) {
   return (
     <ul aria-labelledby={labelledBy} className={itemGridClassName}>
-      {placed.flatMap(({ position }) => {
-        const pageItem = pageItems[position]
-        if (!pageItem) return []
-        return [
-          <EditableItemCard
-            key={pageItem.key}
-            roadmapId={roadmapId}
-            items={items}
-            pageItem={pageItem}
-            organisations={organisations}
-            position={position}
-            focusRequest={
-              focus?.position === position ? focus.control : undefined
-            }
-            onFocusRequest={cardHandlers.requestFocus}
-            onFocused={cardHandlers.focused}
-            onEdit={onEdit}
-            onRemoved={cardHandlers.removed}
-            dialogOpener={dialogAt === position ? dialogOpener : undefined}
-          />,
-        ]
-      })}
+      {placed.map(({ item: pageItem, position }) => (
+        <EditableItemCard
+          key={pageItem.key}
+          roadmapId={roadmapId}
+          items={items}
+          pageItem={pageItem}
+          organisations={organisations}
+          position={position}
+          focusRequest={
+            focus?.position === position ? focus.control : undefined
+          }
+          onFocusRequest={cardHandlers.requestFocus}
+          onFocused={cardHandlers.focused}
+          onEdit={onEdit}
+          onRemoved={cardHandlers.removed}
+          dialogOpener={dialogAt === position ? dialogOpener : undefined}
+        />
+      ))}
     </ul>
   )
 }

@@ -1,7 +1,6 @@
 import type { Locator, Page } from "@playwright/test"
 
 import {
-  addItem,
   addItemButtons,
   clickOutside,
   editItemButton,
@@ -280,7 +279,18 @@ test("an empty roadmap's panel holds “Add an item”; its first item brings th
   await dialog.getByRole("button", { name: "Cancel" }).click()
   await expect(inPanel).toBeFocused()
 
-  await addItem(page, CLINIC, "Now")
+  // The first item takes the panel's place, and its button with it: closing the
+  // dialog then puts focus on the page's own "Add an item".
+  await page.keyboard.press("Enter")
+  await dialog.getByRole("textbox", { name: "Title" }).fill(CLINIC)
+  await dialog
+    .getByRole("combobox", { name: "Horizon or section" })
+    .selectOption({ label: "Now" })
+  await dialog.getByRole("button", { name: "Add and start another" }).click()
+  await expect(dialog.getByRole("status")).not.toBeEmpty()
+  await page.keyboard.press("Escape")
+  await expect(dialog).toBeHidden()
+  await expect(addItemButtons(page)).toBeFocused()
 
   await expect(main.getByRole("heading", { level: 2 })).toHaveText([
     "About this roadmap",

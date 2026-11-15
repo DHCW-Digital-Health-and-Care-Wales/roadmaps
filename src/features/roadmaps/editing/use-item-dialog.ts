@@ -1,15 +1,15 @@
 import { useMemo, useRef, useState, type RefObject } from "react"
 
-import { addNewItem, editNewItem } from "@/domain/roadmap/new-item"
+import { addNewItem } from "@/domain/roadmap/new-item"
+import type { Organisation } from "@/domain/roadmap/organisation"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { ItemValues, NewItem } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 
-import type { ItemDialogProps } from "../dialogs/item-dialog"
-import type { AfterAdding, OpenedItem } from "../dialogs/item-form"
+import type { AfterAdding, ItemDialogProps } from "../dialogs/item-dialog"
+import type { OpenedItem } from "../dialogs/item-form"
 import { tagsInUse } from "./item-tags"
-import { newItemCardKey, type PageItem } from "./page-items"
-import { editItem, matchItemChanges } from "./pending-changes"
+import { editPageItem, newItemCardKey, type PageItem } from "./page-items"
 import { usePendingChangesStore } from "./pending-changes-context"
 import { publishAction } from "./pending-changes-store"
 
@@ -23,7 +23,7 @@ type Target =
     }
   | {
       readonly form: "add"
-      /** The button that opened it, where focus goes back if nothing is added last. */
+      /** The "Add an item" focus goes back to, unless "Add item" closes the dialog. */
       readonly from: RefObject<HTMLElement | null>
       /** The key of the card of the item "Add item" added as it closed the dialog. */
       readonly addedKey: string | null
@@ -44,25 +44,26 @@ export interface ItemDialogOptions {
   roadmap: Roadmap
   /** The roadmap's items as last read; `undefined` until they are. */
   items: readonly RoadmapItem[] | undefined
+  /** The organisation list, which the dialog names an item's organisations from. */
+  organisations: readonly Organisation[] | undefined
   /** The page's items (`usePageItems`). */
   pageItems: readonly PageItem[]
+  /** "Add an item" with the page's actions: the one that is always there. */
+  addItemButton: RefObject<HTMLElement | null>
 }
-
-/** `Omit`, of each member of a union. */
-type OmitFromEach<T, K extends PropertyKey> = T extends unknown
-  ? Omit<T, K>
-  : never
 
 /** The page's one item dialog, as `useItemDialog` gives it. */
 export interface PageItemDialog {
   /**
-   * The dialog to draw, `null` until it first opens: what `ItemDialog` takes but the
-   * organisation list, and `key`, which is new each time it opens.
+   * The dialog to draw, `null` until it first opens: what `ItemDialog` takes, and
+   * `key`, which is new each time it opens.
    */
   readonly drawn: {
     readonly key: number
-    readonly props: OmitFromEach<ItemDialogProps, "organisations">
+    readonly props: ItemDialogProps
   } | null
+  /** Whether an item can be added: once the items and the organisation list are read. */
+  readonly canAdd: boolean
   /**
    * Where, among the page's items, the one is whose card takes focus as the dialog
    * closes: the item it edits, or the one "Add item" just added; -1 for none.
@@ -72,8 +73,11 @@ export interface PageItemDialog {
   readonly cardOpener: RefObject<HTMLButtonElement | null>
   /** Opens the dialog to edit the page's item at `position`. */
   readonly edit: (position: number) => void
-  /** Opens the dialog to add an item, from the button `from`. */
-  readonly add: (from: RefObject<HTMLElement | null>) => void
+  /**
+   * Opens the dialog to add an item, from "Add an item" with the page's actions, or
+   * from `from`, an empty roadmap's own.
+   */
+  readonly add: (from?: RefObject<HTMLElement | null>) => void
 }
 
 /**
@@ -84,12 +88,16 @@ export interface PageItemDialog {
  * the values pending, each edited from the item as the dialog opened on it, or as part
  * of a new item (STY-046 S6). Adding, it is on no item: "Add item" and "Add and start
  * another" keep a new item pending, and the first closes the dialog with focus going
- * to the new item's card.
+ * to the new item's card. Cancel and Escape send focus back to the "Add an item" that
+ * opened it, or to the page's own once the first item has taken an empty roadmap's
+ * panel's place, and its button with it.
  */
 export function useItemDialog({
   roadmap,
   items,
+  organisations,
   pageItems,
+  addItemButton,
 }: ItemDialogOptions): PageItemDialog {
   const store = usePendingChangesStore()
   const [opening, setOpening] = useState<Opening | null>(null)
@@ -127,19 +135,12 @@ export function useItemDialog({
   /** Keeps `values` pending, as the edits of the item the dialog is on, and closes it. */
   const done = (values: ItemValues) => {
     if (opening?.form !== "edit" || !edited || !items) return
-    const { opened } = opening
+    const { read, shown } = opening.opened
     store.update(roadmap.id, (changes) =>
-      edited.newItemId === undefined
-        ? // Finds the item's entry afresh, so the edit never builds on a stale one.
-          editItem(
-            changes,
-            matchItemChanges(items, changes).get(cardAt),
-            opened.read,
-            cardAt,
-            values,
-            { shown: opened.shown, latest: edited.item },
-          )
-        : editNewItem(changes, edited.newItemId, values),
+      editPageItem(changes, items, edited, cardAt, values, {
+        read,
+        since: { shown, latest: edited.item },
+      }),
     )
     close()
   }
@@ -153,41 +154,53 @@ export function useItemDialog({
       newItem = next.newItems.at(-1)
       return next
     })
-    if (then === "another") return
-    const addedKey = newItem ? newItemCardKey(newItem.id) : null
-    setOpening(
-      (current) =>
-        current &&
-        (current.form === "add"
-          ? { ...current, addedKey, open: false }
-          : current),
+    const addedKey =
+      then === "close" && newItem ? newItemCardKey(newItem.id) : null
+    setOpening((current) =>
+      current?.form === "add"
+        ? {
+            ...current,
+            // The roadmap now has an item, so no panel: only the page's button stays.
+            from: addItemButton,
+            addedKey,
+            open: then !== "close",
+          }
+        : current,
     )
   }
 
-  const shared = { onClose: close, tagsInUse: othersTags }
-  const props =
-    opening?.form === "add"
-      ? {
-          ...shared,
-          open: opening.open,
-          // Once an item is added, its card's Edit; until then, the button it opened from.
-          opener: opening.addedKey === null ? opening.from : cardOpener,
-          action: publishAction(roadmap),
-          onAdd: added,
-        }
-      : opening && edited
+  const shared = organisations && {
+    onClose: close,
+    tagsInUse: othersTags,
+    organisations,
+  }
+  const props: ItemDialogProps | null =
+    !opening || !shared
+      ? null
+      : opening.form === "add"
         ? {
             ...shared,
             open: opening.open,
-            opener: cardOpener,
-            opened: opening.opened,
-            item: edited.shown,
-            onDone: done,
+            // Once "Add item" has added one, its card's Edit; until then, "Add an item".
+            opener: opening.addedKey === null ? opening.from : cardOpener,
+            action: publishAction(roadmap),
+            onAdd: added,
           }
-        : null
+        : edited
+          ? {
+              ...shared,
+              open: opening.open,
+              opener: cardOpener,
+              opened: opening.opened,
+              item: edited.shown,
+              onDone: done,
+            }
+          : null
+  const canAdd = items !== undefined && organisations !== undefined
 
   return {
     drawn: opening && props ? { key: opening.count, props } : null,
+    canAdd,
     cardAt,
     cardOpener,
     edit: (position) => {
@@ -199,8 +212,8 @@ export function useItemDialog({
         opened: { read: target.item, shown: target.shown },
       })
     },
-    add: (from) => {
-      if (items) open({ form: "add", from, addedKey: null })
+    add: (from = addItemButton) => {
+      if (canAdd) open({ form: "add", from, addedKey: null })
     },
   }
 }

@@ -43,8 +43,8 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   any Escape it gets.
 - **The item dialog's adding form is its editing form** (`ItemForm`, STY-046), over
   an item with nothing in it: a field added to one is in the other. `EditForm` takes
-  what differs: a `required` field, the buttons' names and a second button, and a
-  note.
+  what differs: the buttons' names and a second button, and a note. No field is
+  required but one that says so (`required`), a title included.
 - **A dialog is given its `opener`**, the ref of the control that opens it
   (`FormDialog`, `RoadmapDialog`): Safari leaves a clicked button unfocused, so the
   dialog can't find it by where focus was. A test clicks without focusing
@@ -64,8 +64,9 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
 - **A roadmap's page shows `PageItem`s** (`usePageItems`, STY-046): the items read, each
   at its place among them, then the new items, last. A position on the page is a place
   in that list, and `newItemId` says an item is new: its card is tagged "New", with
-  Remove, and what Edit and Move change is part of it (`editNewItem`), never an edit
-  of its own. A new item is in no list of items read, so `matchItemChanges` and
+  Remove, and what Edit and Move change is part of it, never an edit of its own.
+  Whatever changes a page's item goes through `editPageItem` or `dropPageItem`, which
+  know both kinds. A new item is in no list of items read, so `matchItemChanges` and
   `changedParts` still know edits only.
 - **A new item's Edit, Move and Remove wait while it may be published unseen**: while
   a publish of its roadmap is under way, and until a Refresh follows one whose answer

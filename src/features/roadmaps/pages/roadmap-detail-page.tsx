@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router"
 import { LockKeyholeIcon, MapPinOffIcon } from "lucide-react"
-import { useRef } from "react"
+import { useCallback, useRef } from "react"
 import { useTranslation } from "react-i18next"
 
 import { BackLink } from "@/components/layout/back-link"
@@ -194,8 +194,18 @@ function RoadmapView({
   const shown = applyRoadmapChanges(roadmap, changes, lists.lists)
   const publishedState = usePublishedState(roadmap, items.data)
   const pageItems = usePageItems(roadmap.id, items.data)
-  const itemDialog = useItemDialog({ roadmap, items: items.data, pageItems })
   const addItemButton = useRef<HTMLButtonElement>(null)
+  const itemDialog = useItemDialog({
+    roadmap,
+    items: items.data,
+    organisations: organisations.data,
+    pageItems,
+    addItemButton,
+  })
+  // The page's own "Add an item" is always there, where a removed item's card is not.
+  const focusAddItem = useCallback(() => {
+    addItemButton.current?.focus()
+  }, [])
   const addedNotice = useAddedRoadmapNotice(roadmap)
   const title = localise(shown.title, language)
   const retryList = () => {
@@ -256,10 +266,9 @@ function RoadmapView({
             />
             <AddItemButton
               ref={addItemButton}
-              // The dialog names the item's organisations from their list.
-              disabled={!items.data || !organisations.data}
+              disabled={!itemDialog.canAdd}
               onAdd={() => {
-                itemDialog.add(addItemButton)
+                itemDialog.add()
               }}
             />
           </div>
@@ -284,7 +293,7 @@ function RoadmapView({
         listFetching={listFetching}
         pageItems={pageItems}
         itemDialog={itemDialog}
-        addItemButton={addItemButton}
+        onItemRemoved={focusAddItem}
       />
     </div>
   )
@@ -292,7 +301,7 @@ function RoadmapView({
 
 interface RoadmapItemsAreaProps extends Pick<
   RoadmapItemsProps,
-  "roadmapId" | "pageItems" | "itemDialog" | "addItemButton"
+  "roadmapId" | "pageItems" | "itemDialog" | "onItemRemoved"
 > {
   /** The roadmap list is being read, as it is again once the roadmap is gone (D11). */
   listFetching: boolean

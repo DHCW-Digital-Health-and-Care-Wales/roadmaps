@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest"
 
+import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { ROADMAP_PLACEMENTS } from "@/domain/roadmap/roadmap-placement"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 
 import { groupRoadmapItems } from "./group-roadmap-items"
+
+const placementOf = ({ placement }: RoadmapItem) => placement
 
 describe("groupRoadmapItems", () => {
   it("lists every placement in the public site's order, each item in row order", () => {
@@ -11,7 +14,7 @@ describe("groupRoadmapItems", () => {
     const nowA = createTestRoadmapItem("Now A")
     const nowB = createTestRoadmapItem("Now B")
 
-    const { placements } = groupRoadmapItems([later, nowA, nowB])
+    const { placements } = groupRoadmapItems([later, nowA, nowB], placementOf)
 
     expect(placements.map(({ placement }) => placement)).toEqual(
       ROADMAP_PLACEMENTS,
@@ -41,7 +44,10 @@ describe("groupRoadmapItems", () => {
       writtenHorizon: "",
     })
 
-    const { unplaced, placements } = groupRoadmapItems([soon, placed, blank])
+    const { unplaced, placements } = groupRoadmapItems(
+      [soon, placed, blank],
+      placementOf,
+    )
 
     expect(unplaced).toEqual([
       { item: soon, position: 0 },
@@ -49,6 +55,27 @@ describe("groupRoadmapItems", () => {
     ])
     expect(placements.flatMap(({ items }) => items)).toEqual([
       { item: placed, position: 1 },
+    ])
+  })
+
+  it("groups anything by the placement it is said to show in, keeping each as given", () => {
+    const cards = [
+      { title: "Moved to later", shown: "later" as const },
+      { title: "Unplaced", shown: null },
+      { title: "New, last in later", shown: "later" as const },
+    ]
+
+    const { unplaced, placements } = groupRoadmapItems(
+      cards,
+      ({ shown }) => shown,
+    )
+
+    expect(unplaced).toEqual([{ item: cards[1], position: 1 }])
+    expect(
+      placements.find(({ placement }) => placement === "later")?.items,
+    ).toEqual([
+      { item: cards[0], position: 0 },
+      { item: cards[2], position: 2 },
     ])
   })
 })

@@ -3,28 +3,33 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { DismissibleNotice } from "@/components/layout/dismissible-notice"
+import type { ItemValues } from "@/domain/roadmap/roadmap-changes"
 import {
   isRoadmapPlacement,
   type RoadmapPlacement,
 } from "@/domain/roadmap/roadmap-placement"
 
+import { blankItem } from "../editing/pending-changes"
+import type { PublishAction } from "../editing/pending-changes-store"
 import { FormDialog, type FormDialogProps } from "./form-dialog"
-import {
-  type AddItemFormProps,
-  type EditItemFormProps,
-  ItemForm,
-} from "./item-form"
+import { ItemForm, type ItemFormProps } from "./item-form"
+
+/** What follows adding an item: the dialog closes, or its form empties for the next. */
+export type AfterAdding = "close" | "another"
 
 /** What the dialog is given to add items, however many before it closes. */
-type AddingItems = Omit<
-  AddItemFormProps,
-  "labelledBy" | "placement" | "takesFocus"
->
+interface AddingItems {
+  /** What publishing the roadmap's changes is called, which the form's note names. */
+  action: PublishAction
+  /** "Add item" or "Add and start another" was chosen, with the new item's values. */
+  onAdd: (values: ItemValues, then: AfterAdding) => void
+}
 
-/** What the dialog is given to add items, or to edit the one it is given. */
-type ItemDialogForm = AddingItems | Omit<EditItemFormProps, "labelledBy">
+/** What the dialog is given to edit an item: the item, and what Done does. */
+type EditingItem = Pick<ItemFormProps, "opened" | "item" | "onDone">
 
-export type ItemDialogProps = ItemDialogForm &
+export type ItemDialogProps = (AddingItems | EditingItem) &
+  Pick<ItemFormProps, "tagsInUse" | "organisations"> &
   Pick<FormDialogProps, "open" | "onClose" | "opener">
 
 /**
@@ -36,6 +41,8 @@ export function ItemDialog({
   open,
   onClose,
   opener,
+  tagsInUse,
+  organisations,
   ...form
 }: ItemDialogProps) {
   const { t } = useTranslation()
@@ -49,13 +56,14 @@ export function ItemDialog({
       onClose={onClose}
       opener={opener}
     >
-      {(titleId) =>
-        editing ? (
-          <ItemForm labelledBy={titleId} {...form} />
+      {(labelledBy) => {
+        const fields = { labelledBy, tagsInUse, organisations }
+        return editing ? (
+          <ItemForm {...fields} {...form} />
         ) : (
-          <AddItemForms labelledBy={titleId} {...form} />
+          <AddItemForms {...fields} {...form} />
         )
-      }
+      }}
     </FormDialog>
   )
 }
@@ -73,11 +81,27 @@ interface LastAdded {
  * added (STY-046 S4). The line's place is there from the start, so it is announced.
  */
 function AddItemForms({
+  action,
   onAdd,
-  ...form
-}: AddingItems & Pick<AddItemFormProps, "labelledBy">) {
+  ...fields
+}: AddingItems &
+  Pick<ItemFormProps, "labelledBy" | "tagsInUse" | "organisations">) {
   const { t } = useTranslation()
   const [last, setLast] = useState<LastAdded | null>(null)
+  // No horizon is chosen to start with; the next form keeps the last one's (D4, D5).
+  const start = blankItem(last?.placement ?? null)
+  const add = (then: AfterAdding) => (changed: ItemValues) => {
+    // The form gives the values changed since it opened, so not a placement it kept.
+    const values = { placement: start.placement ?? "", ...changed }
+    onAdd(values, then)
+    if (then === "close") return
+    const { title = "", placement } = values
+    setLast({
+      count: (last?.count ?? 0) + 1,
+      title,
+      placement: isRoadmapPlacement(placement) ? placement : null,
+    })
+  }
   return (
     <div>
       <div role="status">
@@ -95,19 +119,14 @@ function AddItemForms({
       <ItemForm
         // A form of its own for each item: nothing of the last one stays in its fields.
         key={last?.count ?? 0}
-        {...form}
-        placement={last?.placement ?? null}
-        takesFocus={last !== null}
-        onAdd={(values, then) => {
-          onAdd(values, then)
-          if (then === "another") {
-            const { title = "", placement = "" } = values
-            setLast({
-              count: (last?.count ?? 0) + 1,
-              title,
-              placement: isRoadmapPlacement(placement) ? placement : null,
-            })
-          }
+        {...fields}
+        opened={{ read: start, shown: start }}
+        item={start}
+        onDone={add("close")}
+        adding={{
+          action,
+          takesFocus: last !== null,
+          onAnother: add("another"),
         }}
       />
     </div>

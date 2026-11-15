@@ -183,6 +183,25 @@ describe("“Add an item” on a roadmap's page (STY-046 S1)", () => {
     expect(screen.queryByRole("dialog")).toBeNull()
   })
 
+  it("is unavailable while the organisation list, which the dialog names from, can't be read", async () => {
+    const user = userEvent.setup()
+    await renderWithProviders({
+      path: "/roadmaps/producta",
+      authState: connected,
+      repository: createInMemoryRoadmapRepository(
+        roadmaps,
+        { producta: [booking] },
+        { organisations: new AppError("network") },
+      ),
+    })
+    await main().findByText("Couldn't load this roadmap's items")
+
+    const [button] = addItemButtons()
+    expect(button).toHaveAttribute("aria-disabled", "true")
+    if (button) await user.click(button)
+    expect(screen.queryByRole("dialog")).toBeNull()
+  })
+
   it("is unavailable while the session has expired", async () => {
     const { user, authClient } = await renderPage()
 
@@ -392,6 +411,10 @@ describe("“Add and start another” (STY-046 S4)", () => {
     await user.click(first.getByRole("button", { name: "Add tags" }))
     await user.type(first.getByRole("textbox", { name: "Add a tag" }), "Carers")
     await user.click(first.getByRole("button", { name: "Add tag" }))
+    await user.click(first.getByRole("button", { name: "Add organisations" }))
+    await user.click(first.getByRole("checkbox", { name: /^Cardiff and Vale/ }))
+    await user.click(first.getByRole("button", { name: "Add details" }))
+    await user.keyboard("Outpatients")
 
     await fillAndAddItem(user, CLINIC, "Next", { another: true })
 
@@ -399,11 +422,24 @@ describe("“Add and start another” (STY-046 S4)", () => {
     await waitFor(() => {
       expect(form.getByRole("status")).not.toBeEmptyDOMElement()
     })
-    expect(form.getByRole("button", { name: "Add tags" })).toHaveAttribute(
-      "aria-expanded",
-      "false",
-    )
-    expect(form.getByText("No tags")).toBeVisible()
+    for (const [button, none] of [
+      ["Add tags", "No tags"],
+      ["Add organisations", "No organisations"],
+      ["Add details", "No details"],
+    ] as const) {
+      expect(form.getByRole("button", { name: button })).toHaveAttribute(
+        "aria-expanded",
+        "false",
+      )
+      expect(form.getByText(none)).toBeVisible()
+    }
+    await user.click(form.getByRole("button", { name: "Cancel" }))
+    await expectDialogClosed()
+    // The one added kept its own.
+    const added = card(CLINIC)
+    expect(added.getByText("Carers")).toBeVisible()
+    expect(added.getByText("Cardiff and Vale")).toBeVisible()
+    expect(added.getByText("Outpatients")).toBeVisible()
   })
 
   it("keeps what was added when the dialog is then cancelled, focus back on “Add an item”", async () => {
@@ -632,6 +668,25 @@ describe("Publishing a new item (STY-046 S7)", () => {
     ])
   })
 
+  it("is saved by “Save changes” on a roadmap that isn't published", async () => {
+    const { user, repository } = await renderPage({
+      path: "/roadmaps/productc",
+    })
+    await addItem(user, CLINIC, "Later")
+
+    await publish(user, "Save changes")
+
+    expect(await main().findByText("Changes saved")).toBeVisible()
+    expect(titlesUnder("Later")).toEqual([CLINIC])
+    expect(card(CLINIC).queryByText("New")).toBeNull()
+    expect(main().queryByText(/change to save/)).toBeNull()
+    expect(
+      (await repository.listRoadmapItems("productc")).map(
+        ({ title, placement }) => [title.en, placement],
+      ),
+    ).toEqual([[CLINIC, "later"]])
+  })
+
   it("names no new item under “What changes” yet, and shows no empty list", async () => {
     const { user } = await renderPage()
     await addItem(user, CLINIC, "Next")
@@ -782,6 +837,35 @@ describe("Closing the adding form, Welsh and assistive technology (STY-046 S9)",
       expect(main().queryByText(/unpublished change/)).toBeNull()
       const reopened = await openAddItemDialog(user)
       expect(reopened.getByRole("textbox", { name: "Title" })).toHaveValue("")
+    },
+  )
+
+  it.each([
+    [
+      "Cancel",
+      (user: User) =>
+        user.click(addItemDialog().getByRole("button", { name: "Cancel" })),
+    ],
+    ["Escape", (user: User) => user.keyboard("{Escape}")],
+  ])(
+    "%s puts focus on the page's “Add an item” once the first item has taken the place of the panel the dialog opened from",
+    async (_how, close) => {
+      const { user } = await renderPage({ path: "/roadmaps/productc" })
+      const [, inPanel] = addItemButtons()
+      if (!inPanel) throw new Error("The panel has no Add an item")
+      await user.click(inPanel)
+      await fillAndAddItem(user, CLINIC, "Now", { another: true })
+      await waitFor(() => {
+        expect(addItemDialog().getByRole("status")).not.toBeEmptyDOMElement()
+      })
+
+      await close(user)
+
+      await expectDialogClosed()
+      expect(addItemButtons()).toHaveLength(1)
+      await waitFor(() => {
+        expect(addItemButtons()[0]).toHaveFocus()
+      })
     },
   )
 

@@ -1,14 +1,22 @@
 import { useMemo } from "react"
 
-import type { ItemChanges } from "@/domain/roadmap/roadmap-changes"
+import { editNewItem, removeNewItem } from "@/domain/roadmap/new-item"
+import type {
+  ItemChanges,
+  ItemValues,
+  RoadmapChanges,
+} from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 
 import { useItemCardKeys } from "../components/item-card-keys"
 import {
   applyItemChanges,
+  editItem,
   matchItemChanges,
   pendingNewItems,
   shownNewItem,
+  type SinceOpened,
+  undoItem,
 } from "./pending-changes"
 import { useRoadmapChanges } from "./pending-changes-context"
 
@@ -71,4 +79,46 @@ export function usePageItems(
       }),
     ]
   }, [items, changes, keys])
+}
+
+/**
+ * `changes` with the page's item at `position` edited to `values`: an edit to an item
+ * the roadmap holds, found afresh among `items`, its items as last read, so it never
+ * builds on a stale entry; or part of a new item, never an edit of its own (STY-046
+ * S6). `from` is the item as read when a form opened on it, with what the form has seen
+ * since, for an edit made in a dialog.
+ */
+export function editPageItem(
+  changes: RoadmapChanges,
+  items: readonly RoadmapItem[],
+  { item, newItemId }: PageItem,
+  position: number,
+  values: ItemValues,
+  from?: { read: RoadmapItem; since: SinceOpened<RoadmapItem> },
+): RoadmapChanges {
+  if (newItemId !== undefined) return editNewItem(changes, newItemId, values)
+  const entry = matchItemChanges(items, changes).get(position)
+  return editItem(
+    changes,
+    entry,
+    from?.read ?? item,
+    position,
+    values,
+    from?.since,
+  )
+}
+
+/**
+ * `changes` without what is pending of the page's item at `position`: the edits to an
+ * item the roadmap holds ("Undo changes"), or the whole of a new item (Remove).
+ */
+export function dropPageItem(
+  changes: RoadmapChanges,
+  items: readonly RoadmapItem[],
+  { newItemId }: PageItem,
+  position: number,
+): RoadmapChanges {
+  if (newItemId !== undefined) return removeNewItem(changes, newItemId)
+  const entry = matchItemChanges(items, changes).get(position)
+  return entry ? undoItem(changes, entry) : changes
 }

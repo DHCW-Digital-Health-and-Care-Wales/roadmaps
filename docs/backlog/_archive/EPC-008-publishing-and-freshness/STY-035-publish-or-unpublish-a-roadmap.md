@@ -151,6 +151,11 @@ list's badge and count must change after the write.
   state is binary and the confirmation names it.
 - **D10** (agent, 2026-11-13): a roadmap index with no `Enabled` column gains one,
   appended with its header, as ADR-012 adds a missing column, over refusing.
+- **D11** (owner, 2026-11-15, grilling of DEF-011 to DEF-014, recorded by
+  [DEF-015](../../defects/DEF-015-a-write-the-editor-can-t-read-back-leaves-the-app-out-of-step.md)
+  D3): a write whose answer is lost (S10), with edits sent or without, and one whose
+  read after it fails, hold the whole app in a dialog until a Refresh (or Connect)
+  succeeds, in place of the page's notices. Until DEF-015 is delivered, S10 stands.
 
 ## Starting point
 

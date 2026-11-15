@@ -1,13 +1,13 @@
 # DEF-014: "Publish roadmap" carries its dialog and outcome onto another roadmap's page
 
-- **Status**: Needs triage — found by DEF-010's review (Sol, round 2)
+- **Status**: Proposed — owner, 2026-11-15 (D1); after DEF-013, before DEF-015
 - **Severity**: Low — needs two unpublished roadmaps, a slow write and browser history;
   the notice is wrong, nothing is written to the wrong roadmap
 - **Area**: Features/UI
 - **Epic**: EPC-011-adding-roadmaps-and-items
 - **Depends on**: none
 - **Binding ADRs**: ADR-012
-- **Suggested model**: Sonnet — scope a page hook and its notice to one roadmap
+- **Suggested model**: Sonnet — key the page's view by its roadmap
 - **Delivered**: _(add on delivery)_
 
 ## Summary
@@ -45,3 +45,31 @@ this hook alone.
 **Given** a "Publish roadmap" or "Unpublish roadmap" confirmed on one roadmap
 **When** the Product Lead reaches another roadmap's page before it ends
 **Then** that page shows neither its dialog nor its outcome
+
+### S2: "Publish roadmap" stays unavailable while its roadmap's write runs
+
+**Given** a "Publish roadmap" or "Unpublish roadmap" confirmed on roadmap A, with no
+pending edits sent
+**When** the Product Lead leaves A's page by any route and comes back before the write
+ends
+**Then** A's "Publish roadmap" is unavailable until the write ends, as STY-035 has it
+while a write of the roadmap is under way (D4)
+
+## Decisions
+
+- **D1** (owner, 2026-11-15, grilling of DEF-011 to DEF-014, Q3): fix.
+- **D2** (owner, 2026-11-15, Q4): the page's whole view (`RoadmapView`) is reset when
+  its roadmap changes, not `usePublishedState` alone, so no dialog, notice or other state
+  of one roadmap's page reaches another's.
+- **D3** (owner, 2026-11-15, Q5): back on roadmap A once its write has ended, the page
+  shows no outcome the hook held for it; the roadmap's published state says what
+  happened, except after a lost answer with no edits sent, which is left without a
+  notice until DEF-015's hold covers it. An outcome the pending-edit store keeps for A (a refusal and its conflict
+  review) still shows there.
+- **D4** (agent, 2026-11-15, review of the triage): D2 must not drop a write under
+  way. Whether a write of the roadmap runs is read from where it outlives the page (a
+  mutation key per roadmap, or the store), not from the hook's own `isPending`, which
+  D2's reset would clear; this also closes the same gap by A, home, A, which the page
+  has today. S2 holds it; it keeps STY-035's rule rather than changing it.
+
+## Delivery _(add on delivery; as in `story.md`)_

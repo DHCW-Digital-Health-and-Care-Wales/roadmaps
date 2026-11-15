@@ -1,6 +1,6 @@
 # DEF-011: An edit back to the text last read is dropped while a published edit waits for a read
 
-- **Status**: Needs triage — found by DEF-009's review (Sol, round 2)
+- **Status**: Superseded — by [DEF-015](../../defects/DEF-015-a-write-the-editor-can-t-read-back-leaves-the-app-out-of-step.md), owner, 2026-11-15 (D1); archived
 - **Severity**: Low — the page shows the old text with nothing pending, while the data
   source holds the published text, until the next read shows it
 - **Area**: Features (pending-edit rules)
@@ -48,5 +48,12 @@ back to it"): `FieldChange` can't tell a kept edit from an ordinary one.
 **Then** the field stays pending with that value, and publishing writes it
 
 ## Decisions
+
+- **D1** (owner, 2026-11-15, grilling of DEF-011 to DEF-014, Q6–Q8): Superseded by
+  [DEF-015](../../defects/DEF-015-a-write-the-editor-can-t-read-back-leaves-the-app-out-of-step.md).
+  Rather than teach the pending-edit rules to tell a kept edit from an ordinary one, a
+  write the editor can't read back holds the app until a Refresh succeeds, so this
+  sequence can't be reached (DEF-015 S7), and DEF-009's re-basing is removed. A
+  database API whose write returns what it wrote removes the case (ADR-012).
 
 ## Delivery _(add on delivery; as in `story.md`)_

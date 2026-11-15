@@ -35,8 +35,15 @@ export function RoadmapsPage() {
   // The "Add a roadmap" button clicked, of the two an empty list shows: where focus
   // returns as the dialog closes (DEF-008). The one beside Refresh stands in for the
   // panel's, which a read can remove while the dialog is open.
-  const opener = useRef<HTMLElement | null>(null)
+  const clicked = useRef<HTMLElement | null>(null)
   const toolbarAdd = useRef<HTMLButtonElement>(null)
+  // Read when the dialog restores focus, after its closing animation: a read that lands
+  // meanwhile can remove the button that was clicked.
+  const opener = {
+    get current() {
+      return clicked.current?.isConnected ? clicked.current : toolbarAdd.current
+    },
+  }
   const openAdded = useOpenAddedRoadmap()
 
   const unpublished =
@@ -53,7 +60,7 @@ export function RoadmapsPage() {
         disabled={!connected}
         focusableWhenDisabled
         onClick={(event) => {
-          opener.current = event.currentTarget
+          clicked.current = event.currentTarget
           setAdding(true)
         }}
       >
@@ -130,8 +137,6 @@ export function RoadmapsPage() {
           roadmaps={roadmaps}
           onAdded={openAdded}
           onClose={() => {
-            if (!opener.current?.isConnected)
-              opener.current = toolbarAdd.current
             setAdding(false)
           }}
         />

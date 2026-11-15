@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from "vitest"
 
-import { addNewItem } from "@/domain/roadmap/new-item"
+import { addNewItem, removeNewItem } from "@/domain/roadmap/new-item"
 import { NO_CHANGES } from "@/domain/roadmap/roadmap-changes"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 
 import { editRoadmap } from "./pending-changes"
-import { createPendingChangesStore } from "./pending-changes-store"
+import { createPendingChangesStore, discardable } from "./pending-changes-store"
 
 const roadmap = createTestRoadmap("producta", "Product A")
 const retitled = editRoadmap(NO_CHANGES, roadmap, { title: "Product A2" })
@@ -176,5 +176,59 @@ describe("createPendingChangesStore", () => {
 
     store.restoreRoadmaps(["productb", "producta"])
     expect(store.getSnapshot().removed.size).toBe(0)
+  })
+
+  describe("a published new item no read has held (DEF-009)", () => {
+    /** A store holding two new items of `producta`, with IDs `a` and `b`. */
+    function withTwoNewItems() {
+      const store = createPendingChangesStore()
+      const ids = ["a", "b"]
+      store.update("producta", (changes) =>
+        [
+          { title: "Online booking", placement: "now" },
+          { title: "Text reminders", placement: "next" },
+        ].reduce(
+          (added, input) =>
+            addNewItem(added, input, [], () => ids.shift() ?? ""),
+          changes,
+        ),
+      )
+      return store
+    }
+
+    it("holds that item and every change of its roadmap, leaving another new item and roadmap free", () => {
+      const store = withTwoNewItems()
+
+      store.keepPublished("producta", ["a"])
+
+      const snapshot = store.getSnapshot()
+      expect(discardable(snapshot, "producta", "a")).toBe(false)
+      expect(discardable(snapshot, "producta", "b")).toBe(true)
+      expect(discardable(snapshot, "producta")).toBe(false)
+      expect(discardable(snapshot, "productb")).toBe(true)
+    })
+
+    it("is forgotten once it is no longer pending, and its roadmap once none is", () => {
+      const store = withTwoNewItems()
+      store.keepPublished("producta", ["a", "b"])
+
+      store.update("producta", (changes) => removeNewItem(changes, "a"))
+      expect(store.getSnapshot().publishedNewItems.get("producta")).toEqual(
+        new Set(["b"]),
+      )
+
+      store.discard("producta")
+      expect(store.getSnapshot().publishedNewItems.size).toBe(0)
+    })
+
+    it("does not notify when none is kept", () => {
+      const store = withTwoNewItems()
+      const listener = vi.fn()
+      store.subscribe(listener)
+
+      store.keepPublished("producta", [])
+
+      expect(listener).not.toHaveBeenCalled()
+    })
   })
 })

@@ -201,6 +201,8 @@ export class FakeSheets {
   spreadsheet: readonly FakeTab[] = EXAMPLE_SPREADSHEET
 
   readonly #failures: number[] = []
+  /** The status every read fails with once the next write is applied, then since. */
+  #failReadsAfterWrite: { status: number; armed: boolean } | undefined
   readonly #gis: FakeGis
   #held: Promise<void> | undefined
 
@@ -211,6 +213,18 @@ export class FakeSheets {
   /** Fails the next requests, read or write, with these HTTP statuses, one each. */
   failWith(...statuses: number[]): void {
     this.#failures.push(...statuses)
+  }
+
+  /**
+   * Fails every read after the next `batchUpdate` is applied with this HTTP status, as
+   * when the connection drops once a write has landed, until the returned function is
+   * called.
+   */
+  failReadsAfterNextWrite(status: number): () => void {
+    this.#failReadsAfterWrite = { status, armed: false }
+    return () => {
+      this.#failReadsAfterWrite = undefined
+    }
   }
 
   /**
@@ -285,7 +299,11 @@ export class FakeSheets {
           : `${read.kind}:${read.tab.title}`,
       )
     }
-    const failure = this.#failures.shift()
+    const failure =
+      this.#failures.shift() ??
+      (read.kind !== "batchUpdate" && this.#failReadsAfterWrite?.armed
+        ? this.#failReadsAfterWrite.status
+        : undefined)
     if (failure !== undefined) {
       return fulfil(route, failure, errorBody(failure))
     }
@@ -332,6 +350,7 @@ export class FakeSheets {
     }
     this.writes.push(body)
     this.spreadsheet = result.tabs
+    if (this.#failReadsAfterWrite) this.#failReadsAfterWrite.armed = true
     return fulfil(route, 200, {
       spreadsheetId: appConfig.spreadsheetId,
       replies: [],

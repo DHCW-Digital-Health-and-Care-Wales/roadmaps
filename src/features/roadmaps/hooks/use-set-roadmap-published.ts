@@ -10,6 +10,7 @@ import {
   patchQueryData,
   readBefore,
   showCurrentText,
+  useReadAgain,
 } from "./use-publish-roadmap-changes"
 
 /**
@@ -18,7 +19,8 @@ import {
  * list's age: the roadmap as asked once set, or as it now is once changed, so the page
  * shows it even if reading the list again fails; a refusal of pending edits shows the
  * text it found by `currentText`, as a publish of them does. The roadmap and its items
- * are read again once it settles, whatever its result.
+ * are read again once it settles, whatever its result, and `readBack` then tells which
+ * of those reads succeeded.
  */
 export function useSetRoadmapPublished(
   loaded: Roadmap,
@@ -27,6 +29,7 @@ export function useSetRoadmapPublished(
   const repository = useRoadmapRepository()
   const queryClient = useQueryClient()
   const roadmapId = loaded.id
+  const { readAgain, readBack } = useReadAgain(roadmapId)
   const replaceRoadmap = (replace: (roadmap: Roadmap) => Roadmap) => {
     patchQueryData<readonly Roadmap[]>(
       queryClient,
@@ -35,7 +38,7 @@ export function useSetRoadmapPublished(
         roadmaps.map((each) => (each.id === roadmapId ? replace(each) : each)),
     )
   }
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: (change: PublishedStateChange) =>
       repository.setRoadmapPublished(loaded, change),
     retry: false,
@@ -62,12 +65,7 @@ export function useSetRoadmapPublished(
       }
     },
     // The items too: a change of state can change which row with the id is listed.
-    onSettled: () =>
-      Promise.all([
-        queryClient.invalidateQueries({ queryKey: roadmapKeys.list() }),
-        queryClient.invalidateQueries({
-          queryKey: roadmapKeys.items(roadmapId),
-        }),
-      ]),
+    onSettled: readAgain,
   })
+  return { ...mutation, readBack }
 }

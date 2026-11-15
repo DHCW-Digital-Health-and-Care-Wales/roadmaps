@@ -75,10 +75,11 @@ export function EditableItemCard({
   const snapshot = usePendingChanges()
   const { shown, entry } = pageItem
   const isNew = pageItem.newItemId !== undefined
-  // Nothing is behind a new item: once it is sent, or may be published unseen, a change
-  // to it would be lost as the item read takes its place, so it waits, as "Discard
-  // all" does.
-  const changeable = !isNew || discardable(snapshot, roadmapId)
+  // Nothing is behind a new item: once it is sent, or may be or was published unseen,
+  // a change to it would be lost as the item read takes its place, so it waits, as
+  // "Discard all" does.
+  const changeable =
+    !isNew || discardable(snapshot, roadmapId, pageItem.newItemId)
   const droppable = isNew ? changeable : !awaitingRefresh(snapshot, roadmapId)
   const ownEditButton = useRef<HTMLButtonElement>(null)
   const editButton = dialogOpener ?? ownEditButton

@@ -227,14 +227,20 @@ flowchart LR
   focus is lost when "Add a roadmap" closes, for a Product Lead who clicked it in
   Safari. Proposed (owner, 2026-11-15); found by STY-043's review, which fixed the
   same for About's Edit.
-- [DEF-009](../defects/DEF-009-a-published-new-item-is-not-shown-when-the-read-after-it-fails.md):
+- [DEF-009](../_archive/defects/DEF-009-a-published-new-item-is-not-shown-when-the-read-after-it-fails.md):
   a new item that was published is not shown when the read after the publish fails,
-  until a Refresh succeeds. Proposed (owner, 2026-11-15); found by STY-046's review.
+  until a Refresh succeeds. Done; found by STY-046's review.
 - [DEF-010](../defects/DEF-010-a-publishing-dialog-changes-what-it-shows-once-written.md):
   a dialog that publishes changes what it shows once its changes are no longer
   pending: the publish dialog's list empties, as it closes or when a read leaves
   nothing to publish, and a tick box can appear. Proposed (owner, 2026-11-15); found
   by STY-047's delivery.
+- [DEF-011](../defects/DEF-011-an-edit-back-to-the-text-last-read-is-dropped-before-a-read-holds-a-publish.md):
+  an edit back to the text last read is dropped while a published edit waits for a
+  read. Needs triage; found by DEF-009's review.
+- [DEF-012](../defects/DEF-012-an-item-without-an-id-edited-again-before-a-read-is-reported-changed.md):
+  an item without an ID, edited again before a read holds its publish, is reported
+  changed. Needs triage; found by DEF-009's review.
 
 ## Related
 

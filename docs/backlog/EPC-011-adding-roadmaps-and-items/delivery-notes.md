@@ -73,8 +73,9 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   edits from `changedParts` and then the new items from `changes.newItems`. A new kind
   of pending change is listed there, not in a dialog.
 - **A new item's Edit, Move and Remove wait while it may be published unseen**: while
-  a publish of its roadmap is under way, and until a Refresh follows one whose answer
-  was lost (`discardable`, the rule "Discard all" has). Nothing is behind a new item,
+  a publish of its roadmap is under way, until a Refresh follows one whose answer
+  was lost, and, for the item alone, until a read holds one a confirmed publish wrote
+  (DEF-009; `discardable`, the rule "Discard all" has). Nothing is behind a new item,
   so a change made then would be lost as the item read takes its place.
 - **Each dialog's tests go through its helpers**: in Vitest
   `features/roadmaps/testing/roadmap-dialog.ts` and `item-dialog.ts`, which share

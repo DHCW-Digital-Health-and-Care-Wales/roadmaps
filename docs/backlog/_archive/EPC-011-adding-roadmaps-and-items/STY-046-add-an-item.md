@@ -210,7 +210,7 @@ the empty roadmap, in both themes and at phone width.
   and Sol). When that read fails, the item is published but not shown until a
   Refresh succeeds, as an edit's new text is not: what a publish settles is STY-045's
   rule, and what to show instead is a product choice, recorded as
-  [DEF-009](../../defects/DEF-009-a-published-new-item-is-not-shown-when-the-read-after-it-fails.md).
+  [DEF-009](../defects/DEF-009-a-published-new-item-is-not-shown-when-the-read-after-it-fails.md).
 - **S9: the journey runs once** (owner; CHO-011 D5, the epic's delivery notes), at the
   default size and theme, with no check of where the dialog sits: the Tests note's
   "in both themes and at phone width" and S9's phone predate that. The accessibility

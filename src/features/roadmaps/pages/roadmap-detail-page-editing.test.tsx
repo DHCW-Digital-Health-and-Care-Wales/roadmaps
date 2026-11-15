@@ -790,6 +790,96 @@ describe("Publishing a roadmap's changes (STY-025)", () => {
     expect(card("First, edited").queryByText("Changed")).toBeNull()
   })
 
+  it("keeps a published edit's text, pending, while the items can't be read back, until a read holds it (DEF-009 S2)", async () => {
+    const repository = createInMemoryRoadmapRepository(roadmaps, roadmapItems)
+    const { user } = await renderPage({ repository })
+    await editTitle(user, "First item", "First, edited")
+    const reads = vi
+      .spyOn(repository, "listRoadmapItems")
+      .mockRejectedValue(new AppError("network"))
+
+    await publish(user)
+
+    // The dialog stays until the failing reads have given up.
+    await vi.waitFor(() => {
+      expect(main().getByText(/^Changes published\./)).toBeVisible()
+    })
+    expect(
+      await main().findByText("Couldn't refresh this roadmap's items"),
+    ).toBeInTheDocument()
+    expect(card("First, edited").getByText("Changed")).toBeVisible()
+    expect(main().getByText("1 unpublished change")).toBeInTheDocument()
+
+    reads.mockRestore()
+    await user.click(main().getByRole("button", { name: "Refresh" }))
+
+    await waitFor(() => {
+      expect(card("First, edited").queryByText("Changed")).toBeNull()
+    })
+    expect(main().queryByText(/unpublished change/)).toBeNull()
+  })
+
+  it("publishes an edit made again before a read holds the last publish, as no conflict with it (DEF-009 S2)", async () => {
+    const repository = createInMemoryRoadmapRepository(roadmaps, roadmapItems)
+    const { user } = await renderPage({ repository })
+    await editTitle(user, "First item", "First, edited")
+    const reads = vi
+      .spyOn(repository, "listRoadmapItems")
+      .mockRejectedValue(new AppError("network"))
+    await publish(user)
+    await vi.waitFor(() => {
+      expect(main().getByText(/^Changes published\./)).toBeVisible()
+    })
+
+    await editTitle(user, "First, edited", "First, again")
+    reads.mockRestore()
+    await publish(user)
+
+    await vi.waitFor(() => {
+      expect(main().getByText(/^Changes published\./)).toBeVisible()
+    })
+    expect(main().queryByText(/Someone else/)).toBeNull()
+    expect(
+      (await repository.listRoadmapItems("producta")).map(
+        ({ title }) => title.en,
+      ),
+    ).toEqual(["First, again", "Second item", "Unplaced item"])
+  })
+
+  it("keeps the roadmap's published text, pending, while the roadmap can't be read back, until a read holds it (DEF-009)", async () => {
+    const repository = createInMemoryRoadmapRepository(roadmaps, roadmapItems)
+    const { user } = await renderPage({ repository })
+    await editRoadmapText(user, "Product lead", "Alex Jones")
+    const reads = vi
+      .spyOn(repository, "listRoadmaps")
+      .mockRejectedValue(new AppError("network"))
+
+    await publish(user)
+
+    // The dialog stays until the failing reads have given up.
+    await vi.waitFor(() => {
+      expect(main().getByText(/^Changes published\./)).toBeVisible()
+    })
+    expect(
+      await main().findByText("Couldn't refresh your roadmaps"),
+    ).toBeInTheDocument()
+    const about = within(
+      main().getByRole("region", { name: "About this roadmap" }),
+    )
+    expect(about.getByText("Alex Jones")).toBeVisible()
+    expect(about.getByText("Changed")).toBeVisible()
+    expect(main().getByText("1 unpublished change")).toBeInTheDocument()
+
+    reads.mockRestore()
+    await user.click(main().getByRole("button", { name: "Refresh" }))
+
+    await waitFor(() => {
+      expect(main().queryByText(/unpublished change/)).toBeNull()
+    })
+    expect(about.getByText("Alex Jones")).toBeVisible()
+    expect(about.queryByText("Changed")).toBeNull()
+  })
+
   it("saves an unpublished roadmap, saying nothing goes public (S11)", async () => {
     const { user } = await renderPage({
       path: "/roadmaps/productc",

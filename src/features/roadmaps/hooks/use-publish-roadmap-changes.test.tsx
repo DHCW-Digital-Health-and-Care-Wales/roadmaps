@@ -22,6 +22,7 @@ import {
   roadmapItemsQueryOptions,
   roadmapListQueryOptions,
 } from "./roadmap-queries"
+import { holdCall } from "../testing/held-call"
 import {
   usePublishRoadmapChanges,
   type CurrentText,
@@ -104,6 +105,40 @@ describe("usePublishRoadmapChanges", () => {
         roadmapItemsQueryOptions(repository, "producta").queryKey,
       )?.[0]?.title.en,
     ).toBe("Renamed item")
+  })
+
+  it("tells the read after the write was not read back when the session ends during it, though a read landed during the write (DEF-009)", async () => {
+    const repository = createInMemoryRoadmapRepository(
+      [createTestRoadmap("producta", "Product A roadmap")],
+      { producta: [item] },
+    )
+    const { held, release } = holdCall(
+      repository.publishRoadmapChanges.bind(repository),
+    )
+    vi.spyOn(repository, "publishRoadmapChanges").mockImplementation(held)
+    const { result, authClient } = await renderPublish(repository)
+
+    let settled: Promise<unknown> = Promise.resolve()
+    act(() => {
+      settled = result.current.publish.mutateAsync(changes)
+    })
+    // A Refresh begun before the write lands while it is under way.
+    await act(() => result.current.items.refetch())
+    const reads = vi
+      .spyOn(repository, "listRoadmapItems")
+      .mockImplementationOnce(() => new Promise(() => undefined))
+    await act(async () => {
+      release()
+      await vi.waitFor(() => {
+        expect(reads).toHaveBeenCalled()
+      })
+    })
+    act(() => {
+      authClient.setState({ status: "expired" })
+    })
+    await act(() => settled)
+
+    expect(result.current.publish.readBack().items).toBe(false)
   })
 
   it("never retries a failed publish", async () => {

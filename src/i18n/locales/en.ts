@@ -60,15 +60,16 @@ export const en = {
     homeSuffix: "home",
     /** The DHCW logo's alternative text: the organisation's name. */
     logoAlt: "Digital Health and Care Wales",
+    /** Said after a link's name when it opens another tab. */
+    opensInNewTab: "(opens in a new tab)",
     phase: {
       tag: "Beta",
       text: "This is a new service. Your feedback will help us improve it.",
       feedback: "Give feedback",
-      opensInNewTab: "(opens in a new tab)",
     },
     footer: {
       copyright: "© Digital Health and Care Wales",
-      github: "View on GitHub",
+      repository: "View on GitHub",
       version: "Version {{version}}",
     },
   },

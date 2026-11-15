@@ -8,6 +8,7 @@
 - **Binding ADRs**: ADR-012, ADR-008, ADR-010
 - **Suggested model**: Sonnet — one list that already names pending changes learns of
   a new kind
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/92
 
 ## Summary
 

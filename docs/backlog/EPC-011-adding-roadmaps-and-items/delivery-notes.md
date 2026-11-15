@@ -7,10 +7,10 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   _Contract for dependents_ (archived), not restated here or in `features/`.
 - **A hand-made repository double needs `addRoadmap`**: the typecheck names each one.
 - **A new item is `RoadmapChanges.newItems`** (STY-045; its _Contract for dependents_,
-  archived, says what `checkNewItem`, `addNewItem` and the pending-edit rules do, and
-  what is left for STY-046 and STY-047). A hand-written `RoadmapChanges` needs
-  `newItems`: the typecheck names each one, so spread `NO_CHANGES`, which is the
-  domain's now (`domain/roadmap/roadmap-changes.ts`), as `ItemValues` is.
+  archived, says what `checkNewItem`, `addNewItem` and the pending-edit rules do). A
+  hand-written `RoadmapChanges` needs `newItems`: the typecheck names each one, so
+  spread `NO_CHANGES`, which is the domain's now (`domain/roadmap/roadmap-changes.ts`),
+  as `ItemValues` is.
 - **Only a new item's ID says it was published**: a read that holds an item with it
   drops the new item, and a publish skips it, whatever that item then reads. Nothing
   compares its content, and a new item is never a conflict or "not found". A row a
@@ -49,12 +49,15 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   (`FormDialog`, `RoadmapDialog`): Safari leaves a clicked button unfocused, so the
   dialog can't find it by where focus was. A test clicks without focusing
   (`fireEvent.click`) to show it. "Add a roadmap" gives none yet (DEF-008).
-- **Nothing behind an open dialog can be pressed, Refresh included**: a test of a
-  read that lands while a dialog is open asks for the Refresh first, holds the read,
-  opens the dialog, then lets the read go. On a roadmap's page that is
-  `holdRefresh(user, repository)` (`features/roadmaps/testing/held-refresh.ts`), and
-  `readAgain(queryClient)` makes a further read. Two dialogs are never open at once,
-  and nothing is published while one is.
+- **A read can land while a dialog is open**, and drop or change what the dialog
+  lists, what opened it or what it will send: each dialog, and each thing one comes to
+  show, gets a test of that read, written with it and not left to review. Nothing
+  behind an open dialog can be pressed, Refresh included, so the test asks for the
+  Refresh first, holds the read, opens the dialog, then lets the read go. On a
+  roadmap's page that is `holdRefresh(user, repository)`
+  (`features/roadmaps/testing/held-refresh.ts`), and `readAgain(queryClient)` makes a
+  further read. Two dialogs are never open at once, and nothing is published while one
+  is.
 - **The item dialog is the page's, not a card's** (STY-044, STY-046; their _Contract
   for dependents_, archived): the roadmap's page calls `useItemDialog`, since its "Add
   an item" opens the dialog too, and `RoadmapItems` draws it. Editing, it finds its

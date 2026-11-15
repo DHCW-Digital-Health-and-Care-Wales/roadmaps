@@ -43,7 +43,10 @@ A fix made between review rounds, before it is pushed, needs the tests of its
 changed files and their consumers (`pnpm exec vitest related --run <files>`),
 with `pnpm lint`, `pnpm typecheck` and `pnpm format:check`, plus the Playwright
 specs of any journey it changes; with those green, commit it and start the next
-round's reviewers. Every head you push gets the full gate first. A head that
+round's reviewers. Every head you push gets the full gate first, on its
+current base: fetch the base before that gate and rebase when it has moved
+(`pull-requests.md`, _Update a branch_), since a base found moved at the push
+costs the gate again. A head that
 differs from one that passed it only in Markdown other than an `AGENTS.md`
 needs just its table rows: of the gate, only `pnpm format:check` reads it.
 

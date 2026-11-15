@@ -69,6 +69,8 @@ in the dialog
   card's "New" tag drawn in the list, a second look for one line.
 - **D6** (agent, 2026-11-15): new items are listed last, in the order added: where
   the page shows them among its items, and the order they are written in (STY-045 D2).
+- **D7** (owner, 2026-11-15, answering D4): "Publish roadmap" keeps the "What changes"
+  list.
 
 ## Out of scope
 

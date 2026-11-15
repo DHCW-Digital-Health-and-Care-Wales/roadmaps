@@ -65,7 +65,7 @@ Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status toke
 | [DEF-011](_archive/defects/DEF-011-an-edit-back-to-the-text-last-read-is-dropped-before-a-read-holds-a-publish.md) | An edit back to the text last read is dropped while a published edit waits for a read          | Superseded |
 | [DEF-012](_archive/defects/DEF-012-an-item-without-an-id-edited-again-before-a-read-is-reported-changed.md)        | An item without an ID, edited again before a read holds its publish, is reported changed       | Superseded |
 | [DEF-013](_archive/defects/DEF-013-a-test-checks-the-roadmap-dialog-s-opening-focus-before-it-moves.md)            | A test checks the roadmap dialog's opening focus before it has moved                           | Done       |
-| [DEF-014](defects/DEF-014-publish-roadmap-carries-its-dialog-and-outcome-to-another-roadmap.md)                    | "Publish roadmap" carries its dialog and outcome onto another roadmap's page                   | Proposed   |
+| [DEF-014](_archive/defects/DEF-014-publish-roadmap-carries-its-dialog-and-outcome-to-another-roadmap.md)           | "Publish roadmap" carries its dialog and outcome onto another roadmap's page                   | Done       |
 | [DEF-015](defects/DEF-015-a-write-the-editor-can-t-read-back-leaves-the-app-out-of-step.md)                        | A write the editor can't read back leaves the app out of step with the data source             | Proposed   |
 
 A defect found during delivery is recorded in `defects/` with

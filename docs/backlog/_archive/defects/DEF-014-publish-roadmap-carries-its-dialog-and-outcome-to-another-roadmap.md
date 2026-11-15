@@ -1,6 +1,6 @@
 # DEF-014: "Publish roadmap" carries its dialog and outcome onto another roadmap's page
 
-- **Status**: Proposed — owner, 2026-11-15 (D1); after DEF-013, before DEF-015
+- **Status**: Done
 - **Severity**: Low — needs two unpublished roadmaps, a slow write and browser history;
   the notice is wrong, nothing is written to the wrong roadmap
 - **Area**: Features/UI
@@ -8,7 +8,7 @@
 - **Depends on**: none
 - **Binding ADRs**: ADR-012
 - **Suggested model**: Sonnet — key the page's view by its roadmap
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/113
 
 ## Summary
 
@@ -72,4 +72,31 @@ while a write of the roadmap is under way (D4)
   D2's reset would clear; this also closes the same gap by A, home, A, which the page
   has today. S2 holds it; it keeps STY-035's rule rather than changing it.
 
-## Delivery _(add on delivery; as in `story.md`)_
+## Delivery
+
+The cause was as stated. `RoadmapDetail` now renders `RoadmapView` with `key={roadmap.id}`
+(D2), so `usePublishedState`'s `open`, `confirmed` and `notice` and every other state of
+the page start afresh on another roadmap; `RoadmapPublishing`'s own key, DEF-010's patch
+for the same cause, is dropped as redundant. For D4 the write's mutation carries a key
+per roadmap (`["set-roadmap-published", id]`) and `useSetRoadmapPublished` returns
+`writing`, read with `useIsMutating` from the query cache, where a write outlives the page
+that started it; `usePublishedState` takes `pending` from it in place of the mutation's
+own `isPending`.
+
+### Departures
+
+- **No screenshots** (agent): visible UI is unchanged in normal use; only a state that
+  used to leak between roadmaps no longer does.
+
+### Contract for dependents
+
+A roadmap page's state is one roadmap's: a new piece of page state needs no reset on
+a change of roadmap. DEF-015's hold reads a write's progress from the cache, not from
+the hook's `isPending`.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                                                                                                  |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `roadmap-detail-page-publish-dialog.test.tsx`, "shows another roadmap's page neither A's dialog nor A's outcome", written first: red (B's page held A's open dialog), green with the key                                                                                                                 |
+| S2       | Same file, "keeps Publish roadmap unavailable on A until its write ends (S2)". Red with `pending` taken from the mutation's `isPending` again (a scratch edit, reverted): A's action was available after Back and Forward; green with `writing`. D3 holds by the key: the test ends with no outcome on A |

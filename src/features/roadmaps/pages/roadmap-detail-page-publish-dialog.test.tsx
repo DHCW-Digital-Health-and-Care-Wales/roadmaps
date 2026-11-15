@@ -217,3 +217,101 @@ describe("A confirmed dialog belongs to its roadmap (DEF-010 review)", () => {
     })
   })
 })
+
+describe("A publish roadmap's dialog and outcome belong to its roadmap (DEF-014)", () => {
+  const unpublished = [
+    createTestRoadmap("producta", "Product A roadmap", { published: false }),
+    createTestRoadmap("productb", "Product B roadmap", { published: false }),
+  ]
+
+  async function renderUnpublished() {
+    const user = userEvent.setup()
+    const repository = createInMemoryRoadmapRepository(unpublished, items)
+    const rendered = await renderWithProviders({
+      path: "/roadmaps/producta",
+      authState: connected,
+      repository,
+    })
+    await main().findByRole("heading", { level: 3 })
+    const { router } = rendered
+    await act(() =>
+      router.navigate({
+        to: "/roadmaps/$roadmapId",
+        params: { roadmapId: "productb" },
+      }),
+    )
+    await main().findByRole("heading", { level: 3, name: "B item" })
+    act(() => {
+      router.history.back()
+    })
+    await main().findByRole("heading", { level: 3, name: "First item" })
+    const { held, release, released } = holdCall(
+      repository.setRoadmapPublished.bind(repository),
+    )
+    vi.spyOn(repository, "setRoadmapPublished").mockImplementation(held)
+    return { user, repository, router, release, released }
+  }
+
+  it("shows another roadmap's page neither A's dialog nor A's outcome", async () => {
+    const { user, router, release, released } = await renderUnpublished()
+    await user.click(main().getByRole("button", { name: "Publish roadmap" }))
+    await confirmIn(user, "Publish roadmap")
+
+    act(() => {
+      router.history.forward()
+    })
+    await screen.findByRole("heading", {
+      level: 3,
+      name: "B item",
+      hidden: true,
+    })
+    expect(screen.queryByRole("alertdialog")).toBeNull()
+    await act(async () => {
+      release()
+      await released
+    })
+
+    await waitFor(() => {
+      expect(main().queryByText(/is published/)).toBeNull()
+    })
+    expect(main().getByText("Not published")).toBeVisible()
+    expect(
+      main().getByRole("button", { name: "Publish roadmap" }),
+    ).toHaveAttribute("aria-disabled", "false")
+  })
+
+  it("keeps Publish roadmap unavailable on A until its write ends (S2)", async () => {
+    const { user, router, release, released } = await renderUnpublished()
+    await user.click(main().getByRole("button", { name: "Publish roadmap" }))
+    await confirmIn(user, "Publish roadmap")
+
+    act(() => {
+      router.history.forward()
+    })
+    await screen.findByRole("heading", {
+      level: 3,
+      name: "B item",
+      hidden: true,
+    })
+    act(() => {
+      router.history.back()
+    })
+    await screen.findByRole("heading", {
+      level: 3,
+      name: "First item",
+      hidden: true,
+    })
+
+    const action = main().getByRole("button", { name: "Publish roadmap" })
+    expect(action).toHaveAttribute("aria-disabled", "true")
+    await act(async () => {
+      release()
+      await released
+    })
+    const unpublish = await main().findByRole("button", {
+      name: "Unpublish roadmap",
+    })
+    expect(unpublish).toHaveAttribute("aria-disabled", "false")
+    expect(main().queryByText(/is published/)).toBeNull()
+  })
+})

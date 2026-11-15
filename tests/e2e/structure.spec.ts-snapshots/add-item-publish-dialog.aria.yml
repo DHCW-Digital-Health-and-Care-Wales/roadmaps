@@ -1,0 +1,10 @@
+- alertdialog "Publish these changes?":
+  - heading "Publish these changes?" [level=2]
+  - paragraph: The public site shows them after its next nightly update.
+  - heading "What changes" [level=3]
+  - list:
+    - listitem: Choose a clinic closer to home New item
+  - checkbox "Mark as updated today"
+  - text: Mark as updated today
+  - button "Publish changes"
+  - button "Cancel"

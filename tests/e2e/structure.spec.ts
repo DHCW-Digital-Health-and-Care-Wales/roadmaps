@@ -230,7 +230,7 @@ test.describe("editing a roadmap (STY-025)", () => {
     )
   })
 
-  test("adding an item: the dialog after one was added, then a new item's card (STY-046)", async ({
+  test("adding an item: the dialog after one was added, a new item's card, then the publish dialog that lists it (STY-046, STY-047)", async ({
     page,
   }) => {
     await page.goto("./#/roadmaps/producta")
@@ -255,6 +255,12 @@ test.describe("editing a roadmap (STY-025)", () => {
       .getByRole("listitem")
       .filter({ has: page.getByRole("heading", { name: title }) })
     await expectStructure(card, "add-item-new.aria.yml")
+
+    // The publish dialog lists it in the one list, marked as new (STY-047).
+    await main.getByRole("button", { name: "Publish changes" }).click()
+    const publishing = page.getByRole("alertdialog")
+    await expect(publishing).toBeVisible()
+    await expectStructure(publishing, "add-item-publish-dialog.aria.yml")
   })
 
   test("an item's Move menu (STY-031)", async ({ page }) => {

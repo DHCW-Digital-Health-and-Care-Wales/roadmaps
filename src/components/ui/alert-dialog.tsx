@@ -3,7 +3,8 @@
 // most 25rem wide, 24px padding, a grey border, square 4px corners and a dimmed page
 // (`bg-overlay`, its backdrop), with the popup shadow menus use. The header and footer are
 // left-aligned at every width, the title is DHCW's `text-heading-m` and the description
-// body text; buttons sit inline in their DOM order, wrapping on a phone. Upstream's `size`
+// body text; buttons sit inline in their DOM order, wrapping on a phone. A dialog taller
+// than the screen, as one that lists what it changes can be, scrolls. Upstream's `size`
 // prop, `AlertDialogMedia`, backdrop blur and muted footer band are gone. `AlertDialogCancel`
 // is the secondary button (upstream's `outline` variant no longer exists).
 import * as React from "react"
@@ -54,7 +55,7 @@ function AlertDialogContent({
       <AlertDialogPrimitive.Popup
         data-slot="alert-dialog-content"
         className={cn(
-          "fixed inset-x-4 top-1/2 z-50 mx-auto flex max-w-100 -translate-y-1/2 flex-col gap-4 rounded-lg border border-border bg-popover p-6 text-popover-foreground shadow-popup duration-100 outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          "fixed inset-x-4 top-1/2 z-50 mx-auto flex max-h-[calc(100dvh-2rem)] max-w-100 -translate-y-1/2 flex-col gap-4 overflow-y-auto rounded-lg border border-border bg-popover p-6 text-popover-foreground shadow-popup duration-100 outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           className,
         )}
         {...props}

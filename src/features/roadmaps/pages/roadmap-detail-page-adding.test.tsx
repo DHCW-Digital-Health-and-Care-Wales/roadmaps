@@ -25,6 +25,7 @@ import {
   addItemDialog,
   confirmItemEdit,
   editItemDialog,
+  editItemText,
   fillAndAddItem,
   openAddItemDialog,
   openEditItemDialog,
@@ -690,20 +691,6 @@ describe("Publishing a new item (STY-046 S7)", () => {
     ).toEqual([[CLINIC, "later"]])
   })
 
-  it("names no new item under “What changes” yet, and shows no empty list", async () => {
-    const { user } = await renderPage()
-    await addItem(user, CLINIC, "Next")
-
-    await user.click(main().getByRole("button", { name: "Publish changes" }))
-
-    const dialog = within(screen.getByRole("alertdialog"))
-    expect(dialog.queryByText("What changes")).toBeNull()
-    expect(dialog.queryByRole("list")).toBeNull()
-    expect(
-      dialog.getByRole("button", { name: "Publish changes" }),
-    ).toBeVisible()
-  })
-
   it("holds its Edit, Move and Remove while a publish of the roadmap is under way", async () => {
     const { user, repository } = await renderPage()
     const { held, release, released } = holdCall(
@@ -801,6 +788,249 @@ describe("Publishing a new item (STY-046 S7)", () => {
     }
     expect(card(CLINIC).getByText("New")).toBeVisible()
     expect(main().getByText("1 unpublished change")).toBeVisible()
+  })
+})
+
+/** What the open publish dialog lists under its heading named `heading`, line by line. */
+function listedChanges(heading = "What changes") {
+  const dialog = within(screen.getByRole("alertdialog"))
+  expect(dialog.getByRole("heading", { name: heading })).toBeVisible()
+  return within(dialog.getByRole("list"))
+    .getAllByRole("listitem")
+    .map(({ textContent }) => textContent)
+}
+
+describe("The publish dialog names the new items (STY-047 S1)", () => {
+  const idea = createTestRoadmapItem("Longer-term idea", {
+    id: "item-9",
+    placement: "later",
+  })
+
+  it("lists a new item by its title, marked as new, after the edited item as it is listed", async () => {
+    const { user } = await renderPage()
+    await addItem(user, CLINIC, "Next")
+    await editItemText(user, "Online booking", "Description", "Book online.")
+
+    await user.click(main().getByRole("button", { name: "Publish changes" }))
+
+    expect(listedChanges()).toEqual([
+      "Online bookingDescription",
+      `${CLINIC}New item`,
+    ])
+  })
+
+  it("lists new items alone, in the order added", async () => {
+    const { user } = await renderPage()
+    await addItem(user, CLINIC, "Later")
+    await addItem(user, CHECK_IN, "Now")
+
+    await user.click(main().getByRole("button", { name: "Publish changes" }))
+
+    expect(listedChanges()).toEqual([
+      `${CLINIC}New item`,
+      `${CHECK_IN}New item`,
+    ])
+  })
+
+  it("lists it after the edited item for “Save changes” too, on a roadmap that isn't published", async () => {
+    const { user } = await renderPage({
+      path: "/roadmaps/productc",
+      items: { productc: [idea] },
+    })
+    await addItem(user, CLINIC, "Later")
+    await editItemText(user, "Longer-term idea", "Description", "Mine.")
+
+    await user.click(main().getByRole("button", { name: "Save changes" }))
+
+    expect(
+      screen.getByRole("alertdialog", { name: "Save these changes?" }),
+    ).toBeVisible()
+    expect(listedChanges()).toEqual([
+      "Longer-term ideaDescription",
+      `${CLINIC}New item`,
+    ])
+  })
+
+  it("lists it in the question that offers “Save and publish”, under how many changes go public", async () => {
+    const { user } = await renderPage({
+      path: "/roadmaps/productc",
+      items: { productc: [idea] },
+    })
+    await addItem(user, CLINIC, "Next")
+    await editItemText(user, "Longer-term idea", "Description", "Mine.")
+
+    await user.click(main().getByRole("button", { name: "Publish roadmap" }))
+
+    const question = screen.getByRole("alertdialog", {
+      name: "Publish Product C roadmap?",
+    })
+    expect(question).toHaveAccessibleDescription(
+      "It shows on the public site after its next nightly update. Your 2 unsaved changes go public with it.",
+    )
+    expect(listedChanges()).toEqual([
+      "Longer-term ideaDescription",
+      `${CLINIC}New item`,
+    ])
+    expect(
+      within(question).getByRole("button", { name: "Save and publish" }),
+    ).toBeVisible()
+  })
+
+  it("stops listing, in that question, a new item that a read landing while it is open holds", async () => {
+    const { user, repository } = await renderPage({
+      path: "/roadmaps/productc",
+    })
+    // The save's answer is lost; it landed, and a co-lead has since renamed the item.
+    let savedId: string | undefined
+    vi.spyOn(repository, "publishRoadmapChanges").mockImplementation(
+      (_roadmapId, changes) => {
+        savedId = changes.newItems[0]?.id
+        return Promise.resolve({ status: "unconfirmed" })
+      },
+    )
+    const setPublished = vi.spyOn(repository, "setRoadmapPublished")
+    await addItem(user, CLINIC, "Next")
+    await publish(user, "Save changes")
+    await screen.findByText("Your changes may have been saved")
+    await waitFor(() => {
+      expect(screen.queryByRole("alertdialog")).toBeNull()
+    })
+    repository.coLead((_roadmaps, itemsOf) => {
+      itemsOf("productc").push(
+        createTestRoadmapItem("Renamed by a co-lead", {
+          id: savedId ?? null,
+          placement: "next",
+        }),
+      )
+    })
+    const letGo = await holdRefresh(user, repository)
+    await user.click(main().getByRole("button", { name: "Publish roadmap" }))
+    expect(listedChanges()).toEqual([`${CLINIC}New item`])
+
+    await letGo()
+
+    // The item is the roadmap's now, so nothing goes with the publish.
+    const question = screen.getByRole("alertdialog", {
+      name: "Publish Product C roadmap?",
+    })
+    expect(question).toHaveAccessibleDescription(
+      "It shows on the public site after its next nightly update.",
+    )
+    expect(within(question).queryByText("What changes")).toBeNull()
+    expect(within(question).queryByText(CLINIC)).toBeNull()
+    await user.click(
+      within(question).getByRole("button", { name: "Publish roadmap" }),
+    )
+    await waitFor(() => {
+      expect(setPublished).toHaveBeenCalledWith(
+        expect.objectContaining({ id: "productc" }),
+        { published: true, changes: undefined },
+      )
+    })
+  })
+
+  it("names a new item by the title it has now, once, whatever was edited of it", async () => {
+    const { user } = await renderPage()
+    await addItem(user, CLINIC, "Next")
+    await editItemText(user, CLINIC, "Title", CHECK_IN)
+    await editItemText(user, CHECK_IN, "Phase", "Discovery")
+
+    await user.click(main().getByRole("button", { name: "Publish changes" }))
+
+    expect(listedChanges()).toEqual([`${CHECK_IN}New item`])
+  })
+
+  it.each([
+    {
+      path: "/roadmaps/producta",
+      roadmapId: "producta",
+      edited: "Online booking",
+      choose: ["Publish changes", "Publish changes"],
+      nothing: "Nothing was published.",
+      pending: "2 unpublished changes",
+    },
+    {
+      path: "/roadmaps/productc",
+      roadmapId: "productc",
+      edited: "Longer-term idea",
+      choose: ["Save changes", "Save changes"],
+      nothing: "Nothing was saved.",
+      pending: "2 changes to save",
+    },
+    {
+      path: "/roadmaps/productc",
+      roadmapId: "productc",
+      edited: "Longer-term idea",
+      choose: ["Publish roadmap", "Save and publish"],
+      nothing: "Nothing was saved.",
+      pending: "2 changes to save",
+    },
+  ] as const)(
+    "a conflict in the edit publishes nothing through “$choose.1”, keeps the new item pending, and its review never lists it",
+    async ({
+      path,
+      roadmapId,
+      edited,
+      choose: [opener, confirm],
+      nothing,
+      pending,
+    }) => {
+      const { user, repository } = await renderPage({
+        path,
+        items: { producta: [booking, reminders], productc: [idea] },
+      })
+      const titlesHeld = async () =>
+        (await repository.listRoadmapItems(roadmapId)).map(
+          ({ title }) => title.en,
+        )
+      const held = await titlesHeld()
+      await addItem(user, CLINIC, "Next")
+      await editItemText(user, edited, "Description", "Mine.")
+      repository.coLead((_roadmaps, itemsOf) => {
+        const item = itemsOf(roadmapId).find(({ title }) => title.en === edited)
+        if (!item) throw new Error(`No item titled ${edited}`)
+        item.description = { en: "Theirs.", cy: "" }
+      })
+
+      await user.click(main().getByRole("button", { name: opener }))
+      await user.click(
+        within(screen.getByRole("alertdialog")).getByRole("button", {
+          name: confirm,
+        }),
+      )
+
+      const review = await main().findByRole("alert")
+      expect(review).toHaveTextContent(
+        "Someone else has changed text you edited",
+      )
+      expect(review).toHaveTextContent(nothing)
+      expect(
+        within(review)
+          .getAllByRole("listitem")
+          .map(
+            (each) =>
+              within(each).getByText(/: /, { selector: "p" }).textContent,
+          ),
+      ).toEqual([`${edited}: Description`])
+      expect(review).not.toHaveTextContent(CLINIC)
+      // Nothing was written, and the new item is still pending, on its card.
+      expect(await titlesHeld()).toEqual(held)
+      expect(card(CLINIC).getByText("New")).toBeVisible()
+      expect(main().getByText(pending)).toBeVisible()
+    },
+  )
+})
+
+describe("The publish dialog's new items, in Welsh and to assistive technology (STY-047 S2)", () => {
+  it("marks a new item in Welsh, in the one list item that holds its title, so the two are read together", async () => {
+    const { user } = await renderPage({ language: "cy" })
+    await addItem(user, CLINIC, "Nesaf", "cy")
+
+    await user.click(
+      main().getByRole("button", { name: "Cyhoeddi'r newidiadau" }),
+    )
+
+    expect(listedChanges("Beth sy'n newid")).toEqual([`${CLINIC}Eitem newydd`])
   })
 })
 

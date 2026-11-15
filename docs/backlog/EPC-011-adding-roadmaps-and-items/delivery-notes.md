@@ -68,6 +68,10 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   Whatever changes a page's item goes through `editPageItem` or `dropPageItem`, which
   know both kinds. A new item is in no list of items read, so `matchItemChanges` and
   `changedParts` still know edits only.
+- **"What changes" is one list, `WhatChanges`** (`editing/what-changes.tsx`, STY-047):
+  the publish dialog and "Publish roadmap", when changes go with it, both draw it, the
+  edits from `changedParts` and then the new items from `changes.newItems`. A new kind
+  of pending change is listed there, not in a dialog.
 - **A new item's Edit, Move and Remove wait while it may be published unseen**: while
   a publish of its roadmap is under way, and until a Refresh follows one whose answer
   was lost (`discardable`, the rule "Discard all" has). Nothing is behind a new item,

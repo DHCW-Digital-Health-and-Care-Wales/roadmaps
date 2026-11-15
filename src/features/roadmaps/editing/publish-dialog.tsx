@@ -10,13 +10,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
-import { localise } from "@/domain/roadmap/localised-text"
 import type { RoadmapChanges } from "@/domain/roadmap/roadmap-changes"
-import { useLanguage } from "@/i18n"
 
 import { MarkUpdatedCheckbox } from "./mark-updated-checkbox"
-import { changedParts } from "./pending-changes"
 import type { PublishAction } from "./pending-changes-store"
+import { WhatChanges } from "./what-changes"
 
 export interface PublishDialogProps {
   open: boolean
@@ -37,11 +35,11 @@ export interface PublishDialogProps {
 }
 
 /**
- * Asks before publishing, listing each changed part by name with its changed fields,
- * and when the public site shows them (S9), with "Mark as updated today" unless a date
- * is pending, which is published instead (STY-036 S6, S7). Cancel writes nothing; while
- * the publish is under way it cannot be closed, and while publishing is unavailable it
- * cannot be confirmed.
+ * Asks before publishing, saying when the public site shows the changes (S9) and
+ * listing them (`WhatChanges`), with "Mark as updated today" unless a date is pending,
+ * which is published instead (STY-036 S6, S7). Cancel writes nothing; while the publish
+ * is under way it cannot be closed, and while publishing is unavailable it cannot be
+ * confirmed.
  */
 export function PublishDialog({
   open,
@@ -57,24 +55,6 @@ export function PublishDialog({
   onCancel,
 }: PublishDialogProps) {
   const { t } = useTranslation()
-  const language = useLanguage()
-  const parts = changedParts(changes).map((part) =>
-    part.kind === "roadmap"
-      ? {
-          key: "roadmap",
-          name: t("roadmaps.about.title"),
-          fields: part.fields.map((field) =>
-            t(`roadmaps.edit.roadmapFields.${field}`),
-          ),
-        }
-      : {
-          key: `item-${String(part.position)}`,
-          name: localise(part.item.title, language),
-          fields: part.fields.map((field) =>
-            t(`roadmaps.edit.itemFields.${field}`),
-          ),
-        },
-  )
 
   return (
     <AlertDialog
@@ -86,10 +66,7 @@ export function PublishDialog({
         if (!next) onClosed()
       }}
     >
-      <AlertDialogContent
-        finalFocus={returnFocus}
-        className="max-h-[calc(100dvh-2rem)] overflow-y-auto"
-      >
+      <AlertDialogContent finalFocus={returnFocus}>
         <AlertDialogHeader>
           <AlertDialogTitle>
             {t(`roadmaps.publish.dialog.title.${action}`)}
@@ -98,24 +75,7 @@ export function PublishDialog({
             {t(`roadmaps.publish.dialog.note.${action}`)}
           </AlertDialogDescription>
         </AlertDialogHeader>
-        {/* A new item is not named yet (STY-047), so new items alone list nothing. */}
-        {parts.length > 0 && (
-          <div className="flex flex-col gap-2">
-            <h3 className="font-bold">
-              {t("roadmaps.publish.dialog.changes")}
-            </h3>
-            <ul className="flex list-disc flex-col gap-1.5 pl-5">
-              {parts.map(({ key, name, fields }) => (
-                <li key={key} className="wrap-break-word">
-                  <span className="font-bold">{name}</span>
-                  <span className="block text-body-xs text-muted-foreground">
-                    {fields.join(", ")}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        <WhatChanges changes={changes} />
         {!changes.roadmap.lastUpdated && (
           <MarkUpdatedCheckbox
             checked={markUpdated}

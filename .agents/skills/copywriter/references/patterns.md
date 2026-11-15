@@ -182,8 +182,10 @@ again.
 not; the count beside it matches ("2 unpublished changes", "1 change to save"). The
 check is a question title naming the step ("Publish these changes?"), then what
 follows for the public (the nightly note, or "nothing will be public"), then "What
-changes": each subject by name with its changed fields. Its confirm button repeats
-the step.
+changes": each subject by name with its changed fields, then each new item by its
+title, with "New item" where an edit's changed fields go. Its confirm button repeats
+the step. "Publish roadmap" lists the same under its sentence about the changes that
+go public with it.
 
 ## Destructive question
 

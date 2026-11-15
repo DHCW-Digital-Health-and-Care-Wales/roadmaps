@@ -3,7 +3,11 @@ import { useCallback, useState } from "react"
 import type { PublishProblem } from "@/domain/roadmap/published-state"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
-import { markedUpdated, NO_CHANGES } from "@/domain/roadmap/roadmap-changes"
+import {
+  markedUpdated,
+  NO_CHANGES,
+  type RoadmapChanges,
+} from "@/domain/roadmap/roadmap-changes"
 import { useAuth } from "@/features/auth/use-auth"
 import { toAppError, type AppErrorKind } from "@/lib/errors"
 import { localToday } from "@/lib/local-today"
@@ -33,12 +37,12 @@ export type PublishedStateOutcomeNotice =
   /** The answer was lost (S10); with pending edits sent, the store says so instead. */
   | { kind: "unconfirmed"; published: boolean }
 
-/** What the action asks, as its dialog said it. */
+/** What the action asks, as its dialog says it. */
 export interface PublishedStateQuestion {
   /** Publish, the roadmap not being published, or unpublish. */
   publishing: boolean
-  /** Pending edits that go with a publish, or stay with an unpublish. */
-  count: number
+  /** The pending changes: they go with a publish, or stay with an unpublish. */
+  changes: RoadmapChanges
   /**
    * Whether a publish leaves the public site none of the roadmap's items to show
    * (STY-042 S3): never while its items are not read.
@@ -64,8 +68,10 @@ export interface PublishedState {
   /** Whether the dialog asking is open. */
   open: boolean
   /**
-   * What the dialog asks: fixed when it opens, and kept while it closes, though the
-   * roadmap changes under it.
+   * What the dialog asks. Whether it publishes is fixed when it opens, though the
+   * roadmap's state flips under it. What goes with it follows the pending changes, as a
+   * read that lands while it is open can drop one, until it is confirmed: the whole
+   * question is then kept while the write runs and the dialog closes.
    */
   asked: PublishedStateQuestion
   ask: () => void
@@ -96,7 +102,10 @@ export function usePublishedState(
     currentText: CURRENT_TEXT,
   })
   const [open, setOpen] = useState(false)
-  const [asked, setAsked] = useState<PublishedStateQuestion | null>(null)
+  const [askedPublishing, setAskedPublishing] = useState<boolean | null>(null)
+  const [confirmed, setConfirmed] = useState<PublishedStateQuestion | null>(
+    null,
+  )
   const [markUpdated, setMarkUpdated] = useState(false)
   const [notice, setNotice] = useState<PublishedStateOutcomeNotice | null>(null)
   // Stable, as a confirmation's dwell restarts when it changes.
@@ -106,11 +115,12 @@ export function usePublishedState(
 
   const publishing = !roadmap.published
   const changes = snapshot.changes.get(roadmap.id)
-  const question: PublishedStateQuestion = {
-    publishing,
-    count: countChanges(changes),
+  const asksToPublish = askedPublishing ?? publishing
+  const asked: PublishedStateQuestion = confirmed ?? {
+    publishing: asksToPublish,
+    changes: changes ?? NO_CHANGES,
     noItems:
-      publishing && items !== undefined && publishesNoItems(items, changes),
+      asksToPublish && items !== undefined && publishesNoItems(items, changes),
   }
   const outcome = snapshot.notices.get(roadmap.id)
   const reviewing =
@@ -189,15 +199,15 @@ export function usePublishedState(
   return {
     publishing,
     available: connected && !pending && !reviewing,
-    offersMarkUpdated:
-      (asked ?? question).publishing && !changes?.roadmap.lastUpdated,
+    offersMarkUpdated: asked.publishing && !changes?.roadmap.lastUpdated,
     markUpdated,
     setMarkUpdated,
     pending,
     open,
-    asked: asked ?? question,
+    asked,
     ask: () => {
-      setAsked(question)
+      setAskedPublishing(publishing)
+      setConfirmed(null)
       setMarkUpdated(false)
       setOpen(true)
     },
@@ -205,8 +215,9 @@ export function usePublishedState(
       if (!pending) setOpen(false)
     },
     confirm: () => {
-      if (!open || asked === null || !connected || pending) return
+      if (!open || !connected || pending) return
       setNotice(null)
+      setConfirmed(asked)
       const today = asked.publishing && markUpdated ? localToday() : undefined
       void write(asked, today).finally(() => {
         setOpen(false)

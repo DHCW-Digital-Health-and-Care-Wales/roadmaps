@@ -2,6 +2,7 @@ import AxeBuilder from "@axe-core/playwright"
 import type { Page } from "@playwright/test"
 
 import {
+  addItem,
   addItemButtons,
   openAddItemDialog,
   openAddRoadmapDialog,
@@ -242,7 +243,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expectNoAxeViolations(page, theme, { only: "[role=alertdialog]" })
     })
 
-    test("adding an item: the dialog empty, refused and after adding one, then the new item's card (STY-046)", async ({
+    test("adding an item: the dialog empty, refused and after adding one, then the new item's card and the publish dialog that lists it (STY-046, STY-047)", async ({
       page,
     }) => {
       await page.goto("./#/roadmaps/producta")
@@ -279,9 +280,16 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await dialog.getByRole("button", { name: "Cancel" }).click()
       await expect(main.getByText("1 unpublished change")).toBeVisible()
       await expectNoAxeViolations(page, theme, { only: "main" })
+
+      // The publish dialog, listing the new item as new (STY-047 S2).
+      await main.getByRole("button", { name: "Publish changes" }).click()
+      await expect(
+        page.getByRole("alertdialog").getByText("New item"),
+      ).toBeVisible()
+      await expectNoAxeViolations(page, theme)
     })
 
-    test("an empty roadmap's panel with “Add an item”, on a phone (STY-046)", async ({
+    test("an empty roadmap's panel with “Add an item”, then its first item in “Publish roadmap”, on a phone (STY-046, STY-047)", async ({
       page,
       sheets,
     }) => {
@@ -293,8 +301,22 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expectNoAxeViolations(page, theme, { only: "main" })
 
       // The adding form on a phone, as it opens from the panel.
-      await openAddItemDialog(page, { opener: addItemButtons(page).last() })
+      const dialog = await openAddItemDialog(page, {
+        opener: addItemButtons(page).last(),
+      })
       await expectNoAxeViolations(page, theme, { only: "[role=dialog]" })
+      await dialog.getByRole("button", { name: "Cancel" }).click()
+
+      // "Publish roadmap" on a phone, listing the new item that goes with it (STY-047).
+      await addItem(page, "Choose a clinic closer to home", "Now")
+      await page
+        .getByRole("main")
+        .getByRole("button", { name: "Publish roadmap" })
+        .click()
+      await expect(
+        page.getByRole("alertdialog").getByText("New item"),
+      ).toBeVisible()
+      await expectNoAxeViolations(page, theme, { only: "[role=alertdialog]" })
     })
 
     test("an item's Move menu, then the moved item and an unplaced item's form (STY-031)", async ({

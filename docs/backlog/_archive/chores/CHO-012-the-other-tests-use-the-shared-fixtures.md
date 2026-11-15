@@ -8,7 +8,7 @@
 - **Binding ADRs**: none
 - **Suggested model**: Sonnet — each site needs reading: some names are asserted, and
   some lists differ on purpose
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/110
 
 ## Summary
 

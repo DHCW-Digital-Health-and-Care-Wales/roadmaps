@@ -7,7 +7,7 @@
 - **Depends on**: none
 - **Binding ADRs**: ADR-010
 - **Suggested model**: Sonnet — one helper, but every tour runs through it
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/110
 
 ## Summary
 

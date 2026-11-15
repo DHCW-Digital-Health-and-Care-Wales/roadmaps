@@ -94,7 +94,7 @@ export function usePublishedState(
   const store = usePendingChangesStore()
   const snapshot = usePendingChanges()
   const connected = useAuth().state.status === "connected"
-  const { mutateAsync, isPending, readBack } = useSetRoadmapPublished(roadmap, {
+  const { mutateAsync, writing, readBack } = useSetRoadmapPublished(roadmap, {
     currentText: CURRENT_TEXT,
   })
   const [open, setOpen] = useState(false)
@@ -122,7 +122,7 @@ export function usePublishedState(
   const reviewing =
     outcome?.kind === "refused" &&
     openConflicts(outcome.conflicts, changes).length > 0
-  const pending = isPending || snapshot.publishing.has(roadmap.id)
+  const pending = writing || snapshot.publishing.has(roadmap.id)
 
   const write = async (
     { publishing }: PublishedStateQuestion,

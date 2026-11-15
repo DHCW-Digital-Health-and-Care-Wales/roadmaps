@@ -88,6 +88,8 @@ function RoadmapDetail({ roadmapId }: RoadmapDetailPageProps) {
   if (roadmap && !removed) {
     return (
       <RoadmapView
+        // The view's state (dialog, outcome notice) is one roadmap's: another starts afresh.
+        key={roadmap.id}
         roadmap={roadmap}
         listProblem={problem}
         listFetching={isFetching}
@@ -285,8 +287,7 @@ function RoadmapView({
             onDismiss={publishedState.dismissNotice}
           />
         )}
-        {/* Its dialog is for one roadmap: another's page starts it afresh. */}
-        <RoadmapPublishing key={roadmap.id} roadmap={roadmap} />
+        <RoadmapPublishing roadmap={roadmap} />
       </div>
       <EditableRoadmapAbout roadmap={roadmap} />
       <RoadmapItemsArea

@@ -244,10 +244,10 @@ flowchart LR
   a test checks the roadmap dialog's opening focus before it has moved, so Verify
   fails now and then. Done, delivered in its PR and awaiting merge (high priority, owner,
   2026-11-15); found by the retro of DEF-009.
-- [DEF-014](../defects/DEF-014-publish-roadmap-carries-its-dialog-and-outcome-to-another-roadmap.md):
+- [DEF-014](../_archive/defects/DEF-014-publish-roadmap-carries-its-dialog-and-outcome-to-another-roadmap.md):
   "Publish roadmap" carries its dialog and outcome onto another roadmap's page when the
-  Product Lead moves between them during the write. Proposed, after DEF-013 (owner,
-  2026-11-15); found by DEF-010's review.
+  Product Lead moves between them during the write. Done, delivered in its PR and
+  awaiting merge (owner, 2026-11-15); found by DEF-010's review.
 - [DEF-015](../defects/DEF-015-a-write-the-editor-can-t-read-back-leaves-the-app-out-of-step.md):
   a write the editor can't read back leaves the app out of step with the data source;
   it is to hold the whole app until a Refresh succeeds, replacing DEF-009's keep-pending

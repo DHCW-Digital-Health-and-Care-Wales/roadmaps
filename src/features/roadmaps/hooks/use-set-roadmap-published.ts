@@ -1,4 +1,8 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import {
+  useIsMutating,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query"
 
 import type { PublishedStateChange } from "@/domain/roadmap/published-state"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
@@ -13,6 +17,9 @@ import {
   useReadAgain,
 } from "./use-publish-roadmap-changes"
 
+const setPublishedKey = (roadmapId: string) =>
+  ["set-roadmap-published", roadmapId] as const
+
 /**
  * Publishes or unpublishes a roadmap, with any pending edits sent (STY-035). The write
  * is never retried. What it came to is put in the cached list at once, keeping the
@@ -20,7 +27,8 @@ import {
  * shows it even if reading the list again fails; a refusal of pending edits shows the
  * text it found by `currentText`, as a publish of them does. The roadmap and its items
  * are read again once it settles, whatever its result, and `readBack` then tells which
- * of those reads succeeded.
+ * of those reads succeeded. `writing` says whether one is under way for the roadmap, on
+ * any page that started it.
  */
 export function useSetRoadmapPublished(
   loaded: Roadmap,
@@ -39,6 +47,7 @@ export function useSetRoadmapPublished(
     )
   }
   const mutation = useMutation({
+    mutationKey: setPublishedKey(roadmapId),
     mutationFn: (change: PublishedStateChange) =>
       repository.setRoadmapPublished(loaded, change),
     retry: false,
@@ -67,5 +76,7 @@ export function useSetRoadmapPublished(
     // The items too: a change of state can change which row with the id is listed.
     onSettled: readAgain,
   })
-  return { ...mutation, readBack }
+  // Counted in the cache, where a write outlives the page that started it (STY-035).
+  const writing = useIsMutating({ mutationKey: setPublishedKey(roadmapId) }) > 0
+  return { ...mutation, writing, readBack }
 }

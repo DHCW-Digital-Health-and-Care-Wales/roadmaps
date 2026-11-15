@@ -1,4 +1,4 @@
-import { act, screen, waitFor, within } from "@testing-library/react"
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react"
 import userEvent, { type UserEvent } from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
@@ -164,6 +164,28 @@ describe("adding a roadmap from the list (STY-041)", () => {
       await user.click(inPanel)
 
       expect(dialog().getByRole("textbox", { name: "Title" })).toHaveFocus()
+    })
+
+    it("gets focus back from Cancel, whichever of the empty list's two buttons a click that did not focus it opened, by Cancel or Escape (DEF-008 S1)", async () => {
+      const { user } = await renderList(repositoryWith({}, []))
+      await main().findByRole("heading", { name: "No roadmaps yet" })
+
+      for (const index of [0, 1]) {
+        const button = main().getAllByRole("button", {
+          name: "Add a roadmap",
+        })[index]
+        if (!button) throw new Error("The empty list offers no such button")
+        // Safari does not focus a button it is clicked on.
+        fireEvent.click(button)
+        if (index === 0) {
+          await user.click(dialog().getByRole("button", { name: "Cancel" }))
+        } else {
+          await user.keyboard("{Escape}")
+        }
+        await expectDialogClosed()
+
+        expect(button).toHaveFocus()
+      }
     })
 
     it("is unavailable, though focusable, while the session has expired", async () => {

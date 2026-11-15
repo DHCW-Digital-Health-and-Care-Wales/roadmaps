@@ -14,6 +14,7 @@ license is preserved in `mattpocock-LICENSE`.
 | `retro`                         | `skills/engineering/retro`                         |
 | `writing-for-agents`            | `skills/productivity/writing-for-agents`           |
 | `grilling`                      | `skills/productivity/grilling`                     |
+| `wayfinder`                     | `skills/engineering/wayfinder` (at `5863806`)      |
 
 `shadcn` and `playwright-cli` come from their tools' own distributions (the
 shadcn CLI and `@playwright/cli`; revisions unrecorded). `implement-story`,
@@ -35,6 +36,11 @@ shadcn CLI and `@playwright/cli`; revisions unrecorded). `implement-story`,
   specific tool, with a sequential fallback where it is unavailable.
 - `shadcn` and `playwright-cli` open with a local preface: this repository's
   guides and `pnpm` take precedence over the upstream examples.
+- `wayfinder` tracks its maps as GitHub issues (`references/github-issues.md`
+  replaces upstream's tracker setup), briefs research subagents and logic
+  prototypes itself in place of upstream's `research` and `prototype` skills,
+  hands UI questions to `ux-prototypes`, and ends by writing the destination
+  into `docs/` records.
 - `retro` keeps the upstream improvement categories inside this repository's
   delivery flow: after the primary PR is raised, on its own branch and PR.
 

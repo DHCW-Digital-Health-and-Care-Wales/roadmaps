@@ -2,7 +2,8 @@
 
 Requirements, analyses, decisions and runbooks live here; rules about code
 live in the `AGENTS.md` beside that code. Never start a backlog, chore list,
-spec or plan outside `docs/`.
+spec or plan outside `docs/`, except a `wayfinder` map: it charts decisions as
+GitHub issues, and its destination lands here as records.
 
 ## Layout
 

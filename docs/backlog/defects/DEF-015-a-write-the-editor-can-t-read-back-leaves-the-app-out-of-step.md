@@ -133,9 +133,10 @@ published new items are gone from the code
   included, whose dialog notice goes, and a family write and a match, which gain an
   unconfirmed outcome. A write whose answer already put its result on the page (a
   roadmap added or published, a match made) still holds when the read after it fails.
-  This replaces the lost-answer notices of STY-025 (S18), STY-035 (S10), STY-040,
-  STY-045 and STY-046, and STY-029's rule that a failed re-read shows the network
-  error.
+  This replaces the lost-answer notices and holds of STY-025 (S18), STY-035 (S10),
+  STY-041 (S7) and STY-046, and the rule of STY-029 and STY-030 that a failed re-read
+  shows the network error; each carries a Decisions entry saying so. STY-040's and
+  STY-045's repository outcomes are unchanged.
 - **D4** (owner, 2026-11-15, grilling Q7): refactor to one clean mechanism, so the
   hold can be deleted whole when a database API replaces Google Sheets (ADR-012's
   DEF-015 amendments). Remove DEF-009's keep-pending rules (D1–D3 there) and the lost

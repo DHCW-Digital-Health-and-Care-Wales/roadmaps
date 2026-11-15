@@ -62,8 +62,9 @@ while a write of the roadmap is under way (D4)
   its roadmap changes, not `usePublishedState` alone, so no dialog, notice or other state
   of one roadmap's page reaches another's.
 - **D3** (owner, 2026-11-15, Q5): back on roadmap A once its write has ended, the page
-  shows no confirmation the hook held for it; the roadmap's published state says what
-  happened. An outcome the pending-edit store keeps for A (a refusal and its conflict
+  shows no outcome the hook held for it; the roadmap's published state says what
+  happened, except after a lost answer with no edits sent, which is left without a
+  notice until DEF-015's hold covers it. An outcome the pending-edit store keeps for A (a refusal and its conflict
   review) still shows there.
 - **D4** (agent, 2026-11-15, review of the triage): D2 must not drop a write under
   way. Whether a write of the roadmap runs is read from where it outlives the page (a

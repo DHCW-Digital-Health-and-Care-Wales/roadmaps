@@ -208,6 +208,12 @@ answers "unconfirmed". S10, S11, S13, S14 and S8 (the
 - **D9** (owner, 2026-11-11, grilling Q33, Q34): an unconfirmed publish keeps every
   change and asks for a refresh, which drops what the roadmap already holds; values are
   trimmed at their ends on confirm (ADR-012 Options 16, 17) → S4, S18.
+- **D10** (owner, 2026-11-15, grilling of DEF-011 to DEF-014, recorded by
+  [DEF-015](../../defects/DEF-015-a-write-the-editor-can-t-read-back-leaves-the-app-out-of-step.md)
+  D3): S18's message, which kept the edits and held Undo and Discard until a Refresh,
+  becomes a dialog over the whole app that nothing but a Refresh (or Connect) gets
+  past, as it does when a publish lands and the read after it fails. Until DEF-015 is
+  delivered, S18 stands.
 
 ## Starting point
 

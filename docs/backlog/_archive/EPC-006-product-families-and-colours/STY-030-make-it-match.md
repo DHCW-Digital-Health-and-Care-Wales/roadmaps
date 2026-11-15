@@ -55,6 +55,12 @@ loaded, nothing is written and the roadmap is shown as it now is
   values, flags the roadmap and offers "Make it match" → this record.
 - **D2** (owner, 2026-11-12, round 4 Q7): the fix writes at once, not as a pending edit
   → adds S4.
+- **D3** (owner, 2026-11-15, grilling of DEF-011 to DEF-014, recorded by
+  [DEF-015](../../defects/DEF-015-a-write-the-editor-can-t-read-back-leaves-the-app-out-of-step.md)
+  D3): a match whose answer is lost and whose re-read fails gains an unconfirmed
+  outcome in place of the network error, and it, or a match whose read after it fails,
+  holds the whole app in a dialog until a Refresh reads the roadmaps. Until DEF-015 is
+  delivered, the match does as it does now.
 
 ## Out of scope
 

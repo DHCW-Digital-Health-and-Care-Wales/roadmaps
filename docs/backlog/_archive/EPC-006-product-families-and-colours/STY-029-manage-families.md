@@ -97,6 +97,12 @@ writes it, and the confirmation says nothing about Welsh
   writes nothing and confirms again → adds S8.
 - **D4** (owner, 2026-11-12, round 4 Q6): a rename neither warns about nor blanks the
   Welsh name; Welsh editing comes later → adds S9.
+- **D5** (owner, 2026-11-15, grilling of DEF-011 to DEF-014, recorded by
+  [DEF-015](../../defects/DEF-015-a-write-the-editor-can-t-read-back-leaves-the-app-out-of-step.md)
+  D3): a family write whose answer is lost and whose re-read fails no longer shows the
+  network error: its outcome is unconfirmed, and it holds the whole app in a dialog
+  until a Refresh reads the families and the roadmaps, as does a family write whose
+  read after it fails. Until DEF-015 is delivered, the Known edges rule stands.
 
 ## Out of scope
 

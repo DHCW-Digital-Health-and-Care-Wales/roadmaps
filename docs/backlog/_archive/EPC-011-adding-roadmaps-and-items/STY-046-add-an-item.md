@@ -9,7 +9,7 @@
 - **Binding ADRs**: ADR-012, ADR-014, ADR-011, ADR-005, ADR-008, ADR-010
 - **Suggested model**: Opus — a new kind of pending change, shown, counted and removed
   on a page built around items the data source already holds
-- **Delivered**: _the PR's URL, once it is open_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/89
 
 ## Summary
 

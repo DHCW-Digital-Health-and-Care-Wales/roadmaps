@@ -266,8 +266,9 @@ Report each item's title, outcome and PRs (open for review, or merged),
 measured usage, new backlog items, remaining work, any item blocked on an
 unmerged prerequisite, and report locations. Include screenshots where
 available and the recurring misses, stalls or process findings supported by
-the progress log and the reports. Then run the orchestration retrospective below and publish the
-run summary per `references/run-summary.md`, including no-op and blocked runs.
+the progress log and the reports. Then run the orchestration retrospective
+below and publish the run summary per `references/run-summary.md`, including
+no-op and blocked runs.
 
 Completion: a self-contained user report and saved run summary, no orphaned
 work or watches, and exact handoff/publication state for anything blocked.

@@ -72,9 +72,10 @@ finding, so those lines are left out below. Each primary PR gained its record-on
   PR to merge 15: CI was green after 4, and the rest waited on a hand-back notification
   that never came. Retro 16. Total 84.
 - Reviews: 6 tasks (round 1 in three lanes, Sol and Sonnet re-checks, Sol's final fresh
-  pass). Accepted: 1 P2 (two frozen rows made every add fail), 3 P3, 3 🟡 and 3 💭, all
-  fixed. Not fixed: 1 P3 (`History` may be refused by Google: unverified, moved to
-  CHO-010) and 2 💭, one declined and one accepted as it stood.
+  pass). Accepted: 1 P2 (two frozen rows made every add fail; Opus raised the same as a
+  P3, counted once), 2 P3, 3 🟡 and 3 💭, all fixed. Not fixed: 1 P3 (`History` may be
+  refused by Google: unverified, moved to CHO-010) and 2 💭, one declined and one accepted
+  as it stood.
 - Escapes: none observed.
 - Recovery: the child's final hand-back raised no completion notification; the
   orchestrator resumed on the owner's "Status ?".
@@ -150,8 +151,9 @@ finding, so those lines are left out below. Each primary PR gained its record-on
   answered in 21 minutes and delivered in the PR. In the retro, a Claude usage limit
   stopped both Opus reviewers at their start and then the retro agent; nothing was
   replaced, and all resumed after the reset at 23:20.
-- Human interventions: 1 (the answer, which cut the journey's per-theme and per-device
-  runs and its geometry checks).
+- Human interventions: 2. In the delivery, the answer that cut the journey's per-theme
+  and per-device runs and its geometry checks. On the retro's PRs, the owner's answers
+  that the once-only journey holds for the later dialogs and that CHO-014 waits.
 - Retro: [#81](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/81),
   merged as 4a3fb4e: a dialog's Playwright journey runs once. With it
   [#82](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/82),
@@ -230,8 +232,8 @@ finding, so those lines are left out below. Each primary PR gained its record-on
   tasks; 1 P2 and 4 P3 fixed, the last of them after the cap. Four Sonnet trial reviewers
   tested a reworded reading step: none read the file, two claimed a full read; the
   wording was dropped.
-- Evidence limits: tokens Opus 155.4k, Sonnet 273.7k; retro Opus 103.6k, trial reviewers
-  not reported. The check against a real spreadsheet was not run (CHO-015).
+- Evidence limits: tokens Opus 155.4k, Sonnet 273.7k; retro Opus 103.6k, and 225.7k over
+  the four trial reviewers. The check against a real spreadsheet was not run (CHO-015).
 
 ### STY-046 A Product Lead adds an item
 
@@ -288,9 +290,10 @@ finding, so those lines are left out below. Each primary PR gained its record-on
 ## Learnings and next evaluation
 
 - Totals: 57 reviewer tasks on the deliveries and 25 on the retros. Accepted on the
-  deliveries: no P0 or P1; 11 P2 (9 fixed, 2 excepted as DEF-006 and DEF-009); 13 P3 and
-  23 🟡 fixed. Fixes made after a review cap, with no review of their own: STY-045
-  (comments), STY-046 (the reopened P2, with tests), STY-047 (a record), and retro PRs
+  deliveries: no P0 or P1; 11 P2 (9 fixed, 2 excepted as DEF-006 and DEF-009); 12 P3 and
+  23 🟡 fixed. Seven of the nine deliveries made a fix after their review cap, with no
+  review of its own: wording, comments or a record on STY-040, STY-042, CHO-011, STY-043,
+  STY-045 and STY-047, and on STY-046 the reopened P2 with its tests. So did retro PRs
   #79, #81, #82 and #88.
 - What helped:
   - Merging between items kept each on a fresh `main`: every merged head was green, and no

@@ -62,8 +62,9 @@ Delivery and review children never launch that successor session themselves.
 
 Name the item(s), their file paths and severity. Give the repository, the
 base branch (the default branch, or the prerequisite's branch for a stacked
-PR) and its current SHA, and confirm the checkout is clean on
-`<designated branch>`. Tell it to read root `AGENTS.md` and follow
+PR) and its current SHA, and `<designated branch>`, read from the clean
+checkout (`git status -sb`) as you write the brief: one copied from the last
+item's keeps that item's branch. Tell it to read root `AGENTS.md` and follow
 `.agents/skills/implement-story/SKILL.md` for the named item(s) through step 4,
 the PR opened and linked, then hand back with its handoff record current and a
 report on the implementation and reviews. For UI work, require before

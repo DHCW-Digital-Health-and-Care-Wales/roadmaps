@@ -141,8 +141,8 @@ agent and `<run-folder>/progress/<ITEM>-handoff.md`.
    - Delete the fallback wake once the child's final hand-back reaches this
      session by either path. A yield's interim completion keeps it running.
    - On a completion that reports the child failed, read its status from the
-     runtime before replacing it: `failed` is not yet terminal, as the
-     delegation reference defines it.
+     runtime first: `failed` is not yet terminal. Once it is, resume or
+     replace the child as the delegation reference sets.
 3. On completion, verify the returned branch/head against the checkout and
    handoff, and distinct reviewer task IDs and pinned heads against the claimed
    passes. An early hand-back or mismatch is unfinished work to reconcile,

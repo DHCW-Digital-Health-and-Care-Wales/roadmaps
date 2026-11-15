@@ -96,9 +96,10 @@ notifications, use this lifecycle at every nesting level:
    rerun a Sol review with the same brief on `gpt-6.1-sol` through the other
    provider that serves it (Codex or GitHub Copilot), naming that provider in
    the PR's Review record; for any other worker, or when both are limited, save
-   its reset time (or unknown), pending tasks and next action, and resume from
-   that handoff once the worker is terminal. Completion grants no approval
-   rights.
+   its reset time (or unknown), pending tasks and next action. Once the worker
+   is terminal and the limit has reset, resume it by messaging it where the
+   runtime can, since it keeps its context; replace it from that handoff only
+   when it cannot be resumed. Completion grants no approval rights.
 
 Without asynchronous delegation, run reviewers in the foreground and wait for
 them. Never poll a running delegate, sleep, or set scheduled check-ins as a

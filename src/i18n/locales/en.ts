@@ -56,7 +56,8 @@ export const en = {
   },
   layout: {
     skipToContent: "Skip to main content",
-    home: "DHCW Roadmap Editor home",
+    /** Said after the service name in the home link's name: "Roadmap Editor home". */
+    homeSuffix: "home",
     /** The DHCW logo's alternative text: the organisation's name. */
     logoAlt: "Digital Health and Care Wales",
     phase: {

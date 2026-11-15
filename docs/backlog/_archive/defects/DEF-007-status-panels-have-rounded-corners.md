@@ -1,6 +1,6 @@
 # DEF-007: Status panels have rounded corners; cards and the About panel beside them are square
 
-- **Status**: Proposed — triaged by the owner, 2026-11-15 (D1)
+- **Status**: Done
 - **Severity**: Low — two kinds of corner on one page, hard to see at normal size;
   nothing is broken
 - **Area**: Features/UI
@@ -8,7 +8,7 @@
 - **Depends on**: none
 - **Binding ADRs**: ADR-010
 - **Suggested model**: Haiku — one class on one shared component, with a look check
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/100
 
 ## Summary
 
@@ -69,4 +69,24 @@ says which corners a panel has, and both looks were chosen on purpose.
 
 - **D1** (owner, 2026-11-15, the owner's triage of the live chores and defects): option (a). Status panels are square, like the cards and the About panel beside them; dialogs keep their 4px.
 
-## Delivery _(add on delivery)_
+## Delivery
+
+The cause was as stated. `Empty`, which every `StatusPanel` draws, drops its `rounded-lg`,
+so status panels are square, like the cards and the About panel (D1, option (a)). Dialogs,
+controls and the header's connection status keep their 4px.
+
+### Departures
+
+- **A look check** (agent): `empty.test.tsx` holds that `Empty` carries no `rounded-*`
+  class, and `roadmap-page.spec.ts` that the "No items yet" panel and the About panel
+  both compute `0px`, in both themes.
+
+### Contract for dependents
+
+None.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                          |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1       | `empty.test.tsx` and `roadmap-page.spec.ts` (`a roadmap with no items shows a compact dashed panel`), red before the fix; before and after screenshots in the PR |

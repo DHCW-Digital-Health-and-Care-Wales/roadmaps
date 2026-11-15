@@ -9,14 +9,16 @@ import { expect, roadmapCards, test } from "./fixtures/test"
 const copy = {
   en: {
     logo: "Digital Health and Care Wales",
-    home: "DHCW Roadmap Editor home",
+    home: "Roadmap Editor home",
+    shortHome: "Roadmaps home",
     connect: "Connect Google",
     disconnect: "Disconnect",
     copyright: "© Digital Health and Care Wales",
   },
   cy: {
     logo: "Iechyd a Gofal Digidol Cymru",
-    home: "Hafan Golygydd Mapiau Trywydd IGDC",
+    home: "Golygydd Mapiau Trywydd hafan",
+    shortHome: "Mapiau Trywydd hafan",
     connect: "Cysylltu â Google",
     disconnect: "Datgysylltu",
     copyright: "© Iechyd a Gofal Digidol Cymru",
@@ -54,7 +56,9 @@ for (const language of ["en", "cy"] as const) {
       // The full logo is wide; the icon is square.
       const box = await logo.boundingBox()
       expect(box?.width ?? 0).toBeGreaterThan((box?.height ?? 0) * 2)
-      await expect(banner.getByRole("link", { name: c.home })).toBeVisible()
+      await expect(
+        banner.getByRole("link", { name: c.home, exact: true }),
+      ).toBeVisible()
 
       // Not sticky: it scrolls away with the page (D4).
       await expect(banner).toHaveCSS("position", "static")
@@ -62,7 +66,7 @@ for (const language of ["en", "cy"] as const) {
       // Left to right: the home link, the status chip, then the three buttons.
       const xs = await Promise.all(
         [
-          banner.getByRole("link", { name: c.home }),
+          banner.getByRole("link", { name: c.home, exact: true }),
           banner.getByRole("status"),
           ...[0, 1, 2].map((index) => banner.getByRole("button").nth(index)),
         ].map(async (locator) => (await locator.boundingBox())?.x ?? NaN),
@@ -95,6 +99,29 @@ for (const language of ["en", "cy"] as const) {
       await expect(banner.getByRole("status")).toBeAttached()
     })
 
+    test('the home link is named by the name it shows, then "home", at each width (DEF-002 S1, D1)', async ({
+      page,
+    }) => {
+      const banner = page.getByRole("banner")
+
+      await page.setViewportSize({ width: 375, height: 800 })
+      await page.goto("./")
+      await expect(
+        banner.getByRole("link", { name: c.shortHome, exact: true }),
+      ).toBeVisible()
+      await expect(
+        banner.getByRole("link", { name: c.home, exact: true }),
+      ).toBeHidden()
+
+      await page.setViewportSize({ width: 1280, height: 800 })
+      await expect(
+        banner.getByRole("link", { name: c.home, exact: true }),
+      ).toBeVisible()
+      await expect(
+        banner.getByRole("link", { name: c.shortHome, exact: true }),
+      ).toBeHidden()
+    })
+
     for (const width of [375, 640, 768, 900, 1024, 1280]) {
       test(`the service name shows untruncated and neither page scrolls sideways at ${String(width)}px (S1, D6; STY-018 S4)`, async ({
         page,
@@ -113,7 +140,10 @@ for (const language of ["en", "cy"] as const) {
 
         const name = page
           .getByRole("banner")
-          .getByRole("link", { name: c.home })
+          .getByRole("link", {
+            name: width < 640 ? c.shortHome : c.home,
+            exact: true,
+          })
           .locator("span")
           .first()
         const [scrollWidth, clientWidth] = await name.evaluate((element) => [

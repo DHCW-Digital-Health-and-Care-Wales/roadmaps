@@ -90,7 +90,9 @@ export function EditableRoadmapAbout({ roadmap }: EditableRoadmapAboutProps) {
       />
       <RoadmapDialog
         open={opened !== null}
-        roadmap={shown}
+        // As shown when it opened, so its options match the values it holds, whatever a
+        // Refresh reads meanwhile (DEF-005).
+        roadmap={opened?.shown ?? shown}
         onDone={done}
         onClose={close}
         opener={editButton}

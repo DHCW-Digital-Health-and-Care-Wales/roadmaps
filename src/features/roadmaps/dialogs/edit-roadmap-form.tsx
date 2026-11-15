@@ -22,7 +22,7 @@ const multilineRoadmapFields: ReadonlySet<RoadmapTextField> = new Set([
 export interface EditRoadmapFormProps {
   /** The id of the heading naming the form. */
   labelledBy: string
-  /** The roadmap as the page shows it, its pending edits applied. */
+  /** The roadmap as the page showed it when the form opened, its pending edits applied. */
   roadmap: Roadmap
   /** Done was chosen, with each value changed since the form opened. */
   onDone: (values: RoadmapValues) => void

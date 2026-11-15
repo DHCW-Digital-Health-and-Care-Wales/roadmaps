@@ -52,7 +52,7 @@ export const cy = {
   },
   layout: {
     skipToContent: "Neidio i'r prif gynnwys",
-    home: "Hafan Golygydd Mapiau Trywydd IGDC",
+    homeSuffix: "hafan",
     logoAlt: "Iechyd a Gofal Digidol Cymru",
     phase: {
       tag: "Beta",

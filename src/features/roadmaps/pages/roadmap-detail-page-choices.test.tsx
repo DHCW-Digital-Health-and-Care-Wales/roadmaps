@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react"
+import { act, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
@@ -134,6 +134,48 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
     await confirmRoadmapEdit(user)
 
     expect(main().getByText("Family: Legacy family")).toBeInTheDocument()
+    expect(main().queryByText(/unpublished change/)).toBeNull()
+  })
+
+  it("keeps the not listed family the form opened on when a co-lead's listed family is read while it is open (DEF-005 S1)", async () => {
+    const legacy = createTestRoadmap("producta", "Product A roadmap", {
+      family: { en: "Legacy family", cy: "" },
+      familyNotListed: true,
+    })
+    const repository = repositoryWith({}, [legacy])
+    const user = userEvent.setup()
+    await renderWithProviders({
+      path: "/roadmaps/producta",
+      authState: connected,
+      repository,
+    })
+    await main().findByRole("heading", { level: 3, name: "First item" })
+    const { held, release, released } = holdCall(() =>
+      Promise.resolve([
+        createTestRoadmap("producta", "Product A roadmap", {
+          familyId: SINGLE_RECORD.id,
+          family: SINGLE_RECORD.name,
+          colour: SINGLE_RECORD.colour,
+        }),
+      ]),
+    )
+    vi.spyOn(repository, "listRoadmaps").mockImplementation(held)
+
+    // The dialog is modal, so the Refresh is asked for before it opens, and read after.
+    await user.click(main().getByRole("button", { name: "Refresh" }))
+    const form = await openEditRoadmapDialog(user)
+    const family = await select(form, "Family")
+    expect(family).toHaveValue(UNLISTED_FAMILY)
+    await act(async () => {
+      release()
+      await released
+    })
+    await screen.findByText("Family: Single Record")
+
+    expect(family).toHaveValue(UNLISTED_FAMILY)
+    expect(optionsOf(family)).toContain("Legacy family (not listed)")
+    await confirmRoadmapEdit(user)
+    expect(main().getByText("Family: Single Record")).toBeInTheDocument()
     expect(main().queryByText(/unpublished change/)).toBeNull()
   })
 

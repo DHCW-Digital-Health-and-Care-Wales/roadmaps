@@ -237,7 +237,7 @@ need before/after screenshots (`implement-story` `references/screenshots.md`).
 
 - **S11's phone axe run covers `main` only** (agent): at 375px in English the header's
   home link fails WCAG 2.5.3 on every page, which predates this story and is recorded as
-  [DEF-002](../../defects/DEF-002-header-home-link-name-on-phones.md). The roadmap page's
+  [DEF-002](../defects/DEF-002-header-home-link-name-on-phones.md). The roadmap page's
   whole-page axe runs stay at desktop width in both themes; S11's overflow, heading and
   `main` axe checks run at 375px in both themes and languages, in
   `accessibility.spec.ts` beside them rather than in the new spec.

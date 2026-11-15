@@ -1,4 +1,4 @@
-import { act, screen, waitFor, within } from "@testing-library/react"
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react"
 import userEvent, { type UserEvent } from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
@@ -164,6 +164,63 @@ describe("adding a roadmap from the list (STY-041)", () => {
       await user.click(inPanel)
 
       expect(dialog().getByRole("textbox", { name: "Title" })).toHaveFocus()
+    })
+
+    it.each([
+      { index: 0, closeBy: "Cancel" },
+      { index: 1, closeBy: "Escape" },
+    ])(
+      "gets focus back on button $index of the empty list, opened by a click that did not focus it and closed by $closeBy (DEF-008 S1)",
+      async ({ index, closeBy }) => {
+        const { user } = await renderList(repositoryWith({}, []))
+        await main().findByRole("heading", { name: "No roadmaps yet" })
+        const button = main().getAllByRole("button", {
+          name: "Add a roadmap",
+        })[index]
+        if (!button) throw new Error("The empty list offers no such button")
+
+        // Safari does not focus a button it is clicked on.
+        fireEvent.click(button)
+        if (closeBy === "Cancel") {
+          await user.click(dialog().getByRole("button", { name: "Cancel" }))
+        } else {
+          await user.keyboard("{Escape}")
+        }
+        await expectDialogClosed()
+
+        expect(button).toHaveFocus()
+      },
+    )
+
+    it("gets focus back on the button beside Refresh when a read removes the panel's button the dialog opened from (DEF-008)", async () => {
+      const repository = repositoryWith({}, [])
+      const { user } = await renderList(repository)
+      await main().findByRole("heading", { name: "No roadmaps yet" })
+      const [toolbar, inPanel] = main().getAllByRole("button", {
+        name: "Add a roadmap",
+      })
+      if (!toolbar || !inPanel)
+        throw new Error("The empty list offers no button")
+      const { held, release, released } = holdCall(() =>
+        Promise.resolve([...roadmaps]),
+      )
+      vi.spyOn(repository, "listRoadmaps").mockImplementation(held)
+
+      // The dialog is modal, so the Refresh is asked for before it opens, and read after.
+      await user.click(main().getByRole("button", { name: "Refresh" }))
+      fireEvent.click(inPanel)
+      await act(async () => {
+        release()
+        await released
+      })
+      await waitFor(() => {
+        expect(inPanel).not.toBeInTheDocument()
+      })
+      await user.click(dialog().getByRole("button", { name: "Cancel" }))
+      await expectDialogClosed()
+
+      expect(toolbar).toBeInTheDocument()
+      expect(toolbar).toHaveFocus()
     })
 
     it("is unavailable, though focusable, while the session has expired", async () => {

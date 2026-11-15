@@ -1,6 +1,7 @@
 // Deviates from upstream shadcn (ADR-010): imports cn from @/lib/utils;
 // text-body-xs for upstream's text-sm (no letter-spacing); a hovered link is --link-hover,
-// as --primary is a fill only; 4px corners (`rounded-lg`, DHCW's radius) for `rounded-xl`.
+// as --primary is a fill only; square corners, like DHCW's panels and the cards beside
+// it, for `rounded-xl` (DEF-007).
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
@@ -9,7 +10,7 @@ function Empty({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="empty"
       className={cn(
-        "flex w-full min-w-0 flex-1 flex-col items-center justify-center gap-4 rounded-lg border-dashed p-6 text-center text-balance",
+        "flex w-full min-w-0 flex-1 flex-col items-center justify-center gap-4 border-dashed p-6 text-center text-balance",
         className,
       )}
       {...props}

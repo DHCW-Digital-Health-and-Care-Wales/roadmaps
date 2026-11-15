@@ -127,7 +127,7 @@ re-pointed at the dialog: none is dropped, and each rule S3 names keeps its test
   itself. The dialog is also given About's Edit as its `opener`, and returns focus to
   it by name (review, Opus): Safari leaves a clicked button unfocused, and the
   in-place form focused Edit itself. "Add a roadmap" has the same gap, from STY-041:
-  [DEF-008](../../defects/DEF-008-focus-is-lost-after-add-a-roadmap-closes-in-safari.md).
+  [DEF-008](../defects/DEF-008-focus-is-lost-after-add-a-roadmap-closes-in-safari.md).
 - **"Undo changes" moves focus to Edit as it is chosen** (agent), not after the next
   render: Edit is always there now, where the in-place form took its place.
 - **STY-042's panel test runs its behaviour once** (agent): `roadmap-page.spec.ts`

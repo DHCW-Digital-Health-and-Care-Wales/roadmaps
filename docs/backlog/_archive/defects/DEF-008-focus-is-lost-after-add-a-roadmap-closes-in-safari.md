@@ -1,6 +1,6 @@
 # DEF-008: Focus is lost when "Add a roadmap" closes, for a Product Lead who clicked it in Safari
 
-- **Status**: Proposed — triaged by the owner, 2026-11-15 (D1)
+- **Status**: Done
 - **Severity**: Low — after Cancel or Escape a keyboard or screen-reader user is put
   back at the top of the page; nothing is lost and nothing wrong is written
 - **Area**: Features/UI
@@ -9,7 +9,7 @@
 - **Binding ADRs**: ADR-005
 - **Suggested model**: Haiku — one ref passed to a prop the dialog already has, with a
   component test
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/100
 
 ## Summary
 
@@ -67,4 +67,26 @@ test here runs Safari.
 
 - **D1** (owner, 2026-11-15, the owner's triage of the live chores and defects): fix it as Cause sets out, and make `opener` required in `FormDialogProps` and `RoadmapDialogProps`, so the type check names a later dialog that gives none.
 
-## Delivery _(add on delivery; as in `story.md`)_
+## Delivery
+
+The cause was as stated. `RoadmapsPage` notes the "Add a roadmap" button that was clicked
+(`event.currentTarget`, since the list has two while empty) in a ref and gives it to
+`RoadmapDialog` as its `opener`. Under D1, `opener` is now required in `FormDialogProps`,
+and so in `RoadmapDialogProps`, so the type check names a later dialog that gives none.
+
+### Departures
+
+- **A fallback opener** (agent; two reviewers found it): a Refresh asked for before the
+  dialog opens can read the first roadmap while it is open, which removes the empty
+  panel's button, so the page falls back to the button beside Refresh as the dialog
+  closes (test red before the fallback: `gets focus back on the button beside Refresh …`).
+
+### Contract for dependents
+
+A `FormDialog` or `RoadmapDialog` is given an `opener`; `delivery-notes.md` of EPC-011 says so.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                 |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `roadmaps-page-adding.test.tsx` (`gets focus back, whichever of the empty list's two buttons …`: each button, by Cancel and by Escape, opened by `fireEvent.click`), red before the fix |

@@ -223,10 +223,9 @@ flowchart LR
 - [DEF-006](../_archive/defects/DEF-006-a-refused-reconnect-drops-the-add-a-roadmap-dialog.md):
   a reconnect Google refuses drops the "Add a roadmap" dialog and what was typed.
   Won't fix (owner, 2026-11-14): rare and a small loss; reopen on evidence from real users.
-- [DEF-008](../defects/DEF-008-focus-is-lost-after-add-a-roadmap-closes-in-safari.md):
+- [DEF-008](../_archive/defects/DEF-008-focus-is-lost-after-add-a-roadmap-closes-in-safari.md):
   focus is lost when "Add a roadmap" closes, for a Product Lead who clicked it in
-  Safari. Proposed (owner, 2026-11-15); found by STY-043's review, which fixed the
-  same for About's Edit.
+  Safari. Done; found by STY-043's review, which fixed the same for About's Edit.
 - [DEF-009](../_archive/defects/DEF-009-a-published-new-item-is-not-shown-when-the-read-after-it-fails.md):
   a new item that was published is not shown when the read after the publish fails,
   until a Refresh succeeds. Done; found by STY-046's review.

@@ -370,6 +370,12 @@ for (const theme of THEMES) {
     await expect(panel.locator("img")).toHaveCount(0)
     await expect(panel.locator("svg")).toHaveCount(1)
     await expect(panel).toHaveCSS("border-top-style", "dashed")
+    // Square, as the About panel above it is (DEF-007 D1).
+    await expect(panel).toHaveCSS("border-top-left-radius", "0px")
+    await expect(main.getByRole("region", { name: ABOUT_HEADING })).toHaveCSS(
+      "border-top-left-radius",
+      "0px",
+    )
     await expect(panel).toHaveCSS(
       "border-top-color",
       await tokenColour(page, "--border"),

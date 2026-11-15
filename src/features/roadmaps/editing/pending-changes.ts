@@ -365,57 +365,6 @@ export function settlePublished(
 }
 
 /**
- * `fields` once `sent` is published but not read back: each field sent stays pending,
- * now based on the value published, whether still as sent or edited again since.
- */
-function rebaseFields<F extends string>(
-  fields: FieldChanges<F>,
-  sent: FieldChanges<F>,
-): FieldChanges<F> {
-  return Object.fromEntries(
-    (Object.entries(fields) as [F, FieldChange][]).map(([field, change]) => {
-      const published = sent[field]?.value
-      return [
-        field,
-        published === undefined
-          ? change
-          : { base: published, value: change.value },
-      ]
-    }),
-  ) as FieldChanges<F>
-}
-
-/**
- * `changes` once `sent` is published, while no read holds it (DEF-009 D2): each edit
- * sent stays pending, as the items and roadmap last read show what was there before,
- * and is based on what was published, as an edit made since is too, so publishing it
- * again is no conflict with that. An item with an ID is checked by what was published;
- * one without keeps the content it was loaded with, as its card finds it by that in the
- * items last read. New items are not changed.
- */
-export function keepUnread(
-  changes: RoadmapChanges,
-  sent: RoadmapChanges,
-): RoadmapChanges {
-  return {
-    ...changes,
-    roadmap: rebaseFields(changes.roadmap, sent.roadmap),
-    items: changes.items.map((entry) => {
-      const sentEntry = sent.items.find((each) => sameTarget(each, entry))
-      if (!sentEntry) return entry
-      return {
-        ...entry,
-        item:
-          entry.item.id === null
-            ? entry.item
-            : applyItemChanges(entry.item, sentEntry),
-        fields: rebaseFields(entry.fields, sentEntry.fields),
-      }
-    }),
-  }
-}
-
-/**
  * The roadmap's new items still to be published: those `items`, its items as read,
  * don't hold. One a read holds is that item, however it then reads.
  */

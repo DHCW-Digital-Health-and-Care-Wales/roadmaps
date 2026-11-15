@@ -134,7 +134,7 @@ describe("usePublishRoadmapChanges", () => {
     })
     await act(() => settled)
 
-    expect(result.current.publish.readBack().items).toBe(false)
+    expect(result.current.publish.readBack()).toBe(false)
   })
 
   it("never retries a failed publish", async () => {

@@ -37,7 +37,6 @@ import {
 } from "../editing/pending-changes"
 import {
   usePendingChanges,
-  usePendingChangesStore,
   useRoadmapChanges,
 } from "../editing/pending-changes-context"
 import { PublishedStateAction } from "../editing/published-state-action"
@@ -156,18 +155,12 @@ function RoadmapDetail({ roadmapId }: RoadmapDetailPageProps) {
   )
 }
 
-/** What a refetch reports, enough to tell whether it read anything new. */
-interface RefreshRead {
-  readonly isSuccess: boolean
-  readonly dataUpdatedAt: number
-}
-
 interface RoadmapViewProps {
   roadmap: Roadmap
   /** Why the list the roadmap came from may be out of date, if it may. */
   listProblem: AppError | null
   listFetching: boolean
-  refetchList: () => Promise<RefreshRead>
+  refetchList: () => Promise<unknown>
 }
 
 /**
@@ -187,7 +180,6 @@ function RoadmapView({
   refetchList,
 }: RoadmapViewProps) {
   const language = useLanguage()
-  const store = usePendingChangesStore()
   const changes = useRoadmapChanges(roadmap.id)
   // The same queries the items area and the form read, for the page's Refresh.
   const items = useRoadmapItems(roadmap.id)
@@ -213,26 +205,12 @@ function RoadmapView({
   const retryList = () => {
     void refetchList()
   }
-  const refresh = async () => {
-    const startedAt = Date.now()
-    // The lists, where any part of the page needs them, are read again whatever the
-    // roadmap's reads come to.
+  const refresh = () => {
+    // The lists, where any part of the page needs them, are read again too.
     void lists.refetch()
-    const reads = await Promise.all([
-      refetchList(),
-      items.refetch(),
-      organisations.refetch(),
-    ])
-    // A notice asking for a Refresh has been heeded once both reads came back (S18);
-    // until then what the publish came to is still unknown. A read cancelled at the
-    // session's end comes back with the cached data and no error, so only data read
-    // since Refresh began counts. A conflict review stays until each field is decided.
-    const answered = (read: RefreshRead) =>
-      read.isSuccess && read.dataUpdatedAt >= startedAt
-    if (!reads.every(answered)) return
-    if (store.getSnapshot().notices.get(roadmap.id)?.kind === "unconfirmed") {
-      store.clearNotice(roadmap.id)
-    }
+    void refetchList()
+    void items.refetch()
+    void organisations.refetch()
   }
 
   return (
@@ -262,9 +240,7 @@ function RoadmapView({
               fetching={
                 listFetching || items.isFetching || organisations.isFetching
               }
-              onRefresh={() => {
-                void refresh()
-              }}
+              onRefresh={refresh}
             />
             <AddItemButton
               ref={addItemButton}

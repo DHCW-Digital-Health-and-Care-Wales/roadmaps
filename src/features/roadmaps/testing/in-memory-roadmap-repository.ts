@@ -307,17 +307,17 @@ export function createInMemoryRoadmapRepository(
   }
 
   /**
-   * Writes a family change as a `batchUpdate` would, by `write`: an unconfirmed lost
-   * write throws `network`, since a family change has no partial outcome.
+   * Writes a family change as a `batchUpdate` would, by `write`: a lost write the re-read
+   * finds is saved, one it doesn't throws `network`, and one whose re-read fails is
+   * unconfirmed.
    */
   const writeFamily = (family: Family, apply: () => void): FamilyOutcome => {
     if (write !== undefined && "fails" in write) throw new AppError(write.fails)
     if (write?.lost !== "not-applied") apply()
     if (write === undefined) return { status: "saved", family }
     if (write.lost === "reread-fails") rereadFails = true
-    if (rereadFails || !familyHeld(family, lists.families)) {
-      throw new AppError("network")
-    }
+    if (rereadFails) return { status: "unconfirmed" }
+    if (!familyHeld(family, lists.families)) throw new AppError("network")
     return { status: "saved", family }
   }
 
@@ -475,7 +475,8 @@ export function createInMemoryRoadmapRepository(
         }
         if (write === undefined) return { status: "matched" as const }
         if (write.lost === "reread-fails") rereadFails = true
-        if (rereadFails || current.outOfStep) throw new AppError("network")
+        if (rereadFails) return { status: "unconfirmed" as const }
+        if (current.outOfStep) throw new AppError("network")
         return { status: "matched" as const }
       }),
     setRoadmapPublished: (loaded, change, { signal } = {}) =>

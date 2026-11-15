@@ -248,11 +248,11 @@ flowchart LR
   "Publish roadmap" carries its dialog and outcome onto another roadmap's page when the
   Product Lead moves between them during the write. Done, delivered in its PR and
   awaiting merge (owner, 2026-11-15); found by DEF-010's review.
-- [DEF-015](../defects/DEF-015-a-write-the-editor-can-t-read-back-leaves-the-app-out-of-step.md):
+- [DEF-015](../_archive/defects/DEF-015-a-write-the-editor-can-t-read-back-leaves-the-app-out-of-step.md):
   a write the editor can't read back leaves the app out of step with the data source;
-  it is to hold the whole app until a Refresh succeeds, replacing DEF-009's keep-pending
-  rules. Proposed, after DEF-014 (owner, 2026-11-15); from the grilling of DEF-011 to
-  DEF-014.
+  it holds the whole app until a Refresh succeeds, replacing DEF-009's keep-pending
+  rules. Done, delivered in its PR and awaiting merge (owner, 2026-11-15); from the
+  grilling of DEF-011 to DEF-014.
 
 ## Related
 

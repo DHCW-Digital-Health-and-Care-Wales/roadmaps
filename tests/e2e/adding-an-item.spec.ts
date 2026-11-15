@@ -195,7 +195,7 @@ test("a Product Lead adds an item in the item dialog, pending until published (S
   await expect(main.getByText(/unpublished change/)).toHaveCount(0)
 })
 
-test("a published new item stays, pending and held, while the roadmap can't be read back (DEF-009 S1, S3)", async ({
+test("a publish the roadmap can't be read back after holds the app until a Refresh reads it (DEF-015 S1, S3)", async ({
   page,
   sheets,
 }) => {
@@ -210,30 +210,32 @@ test("a published new item stays, pending and held, while the roadmap can't be r
     .getByRole("button", { name: "Publish changes" })
     .click()
 
-  // The dialog stays until the failing reads have given up.
-  await expect(main.getByText(/^Changes published\./)).toBeVisible({
-    timeout: 15_000,
+  // The hold opens once the failing reads have given up, over the whole app.
+  const hold = page.getByRole("alertdialog", {
+    name: "Your changes were published",
   })
-  await expect(
-    main.getByText("Couldn't refresh this roadmap's items"),
-  ).toBeVisible()
+  await expect(hold).toBeVisible({ timeout: 15_000 })
+  const refresh = hold.getByRole("button", { name: "Refresh" })
+  await expect(refresh).toBeFocused()
+  await expect(page.getByRole("banner")).toHaveCount(0)
+  await expect(page.getByRole("main")).toHaveCount(0)
+  await page.keyboard.press("Escape")
+  await clickOutside(page, hold)
+  await page.keyboard.press("Tab")
+  await expect(hold).toBeVisible()
+  await expect(refresh).toBeFocused()
   expect(sheets.writes).toHaveLength(1)
-  await expect(titlesUnder(page, "Next")).toHaveText([
-    "Card being explored",
-    CLINIC,
-  ])
-  const card = itemCard(page, CLINIC)
-  await expect(newTag(card, CLINIC)).toBeVisible()
-  await expect(main.getByText("1 unpublished change")).toBeVisible()
-  for (const name of ["Edit", "Move", "Remove"]) {
-    await expect(
-      card.getByRole("button", { name: `${name} ${CLINIC}`, exact: true }),
-    ).toHaveAttribute("aria-disabled", "true")
-  }
 
-  // A read that holds it ends it: published, no longer pending.
+  // A Refresh that fails keeps it.
+  await refresh.click()
+  await expect(hold.getByText("Couldn't refresh your roadmaps")).toBeVisible()
+  await expect(refresh).toBeFocused()
+
+  // One that reads ends it: published, no longer pending.
   readsBack()
-  await main.getByRole("button", { name: "Refresh" }).click()
+  await refresh.click()
+  await expect(hold).toHaveCount(0)
+  const card = itemCard(page, CLINIC)
   await expect(newTag(card, CLINIC)).toHaveCount(0)
   await expect(main.getByText(/unpublished change/)).toHaveCount(0)
   await expect(titlesUnder(page, "Next")).toHaveText([

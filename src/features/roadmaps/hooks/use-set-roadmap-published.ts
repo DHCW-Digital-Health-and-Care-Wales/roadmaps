@@ -26,8 +26,8 @@ const setPublishedKey = (roadmapId: string) =>
  * list's age: the roadmap as asked once set, or as it now is once changed, so the page
  * shows it even if reading the list again fails; a refusal of pending edits shows the
  * text it found by `currentText`, as a publish of them does. The roadmap and its items
- * are read again once it settles, whatever its result, and `readBack` then tells which
- * of those reads succeeded. `writing` says whether one is under way for the roadmap, on
+ * are read again once it settles, whatever its result, and `readBack` then tells
+ * whether both succeeded. `writing` says whether one is under way for the roadmap, on
  * any page that started it.
  */
 export function useSetRoadmapPublished(

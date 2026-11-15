@@ -14,6 +14,8 @@ export type MatchOutcome =
    * or it is already in step or can't be fixed here): this is how it is.
    */
   | { status: "changed"; roadmap: Roadmap }
+  /** The answer was lost and a re-read failed: the row may now match (DEF-015). */
+  | { status: "unconfirmed" }
 
 interface Settled {
   kind: "settled"

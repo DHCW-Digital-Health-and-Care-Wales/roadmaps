@@ -201,12 +201,6 @@ export const en = {
       failed: {
         title: "Couldn't add the roadmap",
       },
-      /** The answer was lost, and a check couldn't settle it (S7). */
-      unconfirmed: {
-        title: "The roadmap may have been added",
-        description:
-          "The answer was lost. Cancel, then refresh your roadmaps to check before adding it again.",
-      },
       /** On the new roadmap's page (S5). */
       added: "{{title}} was added. It isn't published yet.",
     },
@@ -565,11 +559,6 @@ export const en = {
           publish: "Couldn't publish {{title}}",
           unpublish: "Couldn't unpublish {{title}}",
         },
-        /** Followed by `roadmaps.publish.notice.unconfirmed.description`. */
-        unconfirmed: {
-          publish: "{{title}} may have been published",
-          unpublish: "{{title}} may have been unpublished",
-        },
         /** Publishing refused, as the public site's nightly update would fail (S4). */
         refused: {
           description:
@@ -679,14 +668,6 @@ export const en = {
           removed:
             "Someone else has removed or changed “{{title}}”, so your changes to it couldn't be kept.",
           otherKept: "Your other changes are kept in this tab.",
-        },
-        unconfirmed: {
-          title: {
-            publish: "Your changes may have been published",
-            save: "Your changes may have been saved",
-          },
-          description:
-            "The answer was lost. Refresh this roadmap before you do anything else.",
         },
       },
     },
@@ -814,6 +795,38 @@ export const en = {
       },
     },
     /** Asked on Disconnect while changes are pending. */
+    /**
+     * A write the app couldn't read back holds the whole app until a Refresh reads it
+     * (DEF-015): `landed` once it was written, `lost` once its answer was lost.
+     */
+    hold: {
+      title: {
+        landed: {
+          publish: "Your changes were published",
+          save: "Your changes were saved",
+          published: "This roadmap was published",
+          unpublished: "This roadmap was unpublished",
+          added: "The roadmap was added",
+          family: "The family was saved",
+          matched: "The roadmap now matches its family and category",
+        },
+        lost: {
+          publish: "Your changes may have been published",
+          save: "Your changes may have been saved",
+          published: "This roadmap may have been published",
+          unpublished: "This roadmap may have been unpublished",
+          added: "The roadmap may have been added",
+          family: "The family may have been saved",
+          matched: "The roadmap may now match its family and category",
+        },
+      },
+      description: {
+        landed:
+          "This page couldn't be updated to show it. Refresh before you carry on.",
+        lost: "The answer was lost. Refresh to check before you carry on.",
+      },
+      reconnect: "Reconnect to refresh your roadmaps.",
+    },
     disconnect: {
       title: "Keep your changes?",
       description_one:

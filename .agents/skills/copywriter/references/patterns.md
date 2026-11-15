@@ -211,6 +211,23 @@ auth.sessionWarning.stayConnected  Stay connected
 `{{remaining}}` is `formatDuration` (`@/i18n`): "1 minute and 49 seconds",
 built from `common.duration.*` plurals, never concatenated.
 
+## Write hold
+
+**Shape:** a dialog over the whole app when a write can't be read back (DEF-015). The
+title says what was written, as fact when the write answered ("Your changes were
+published"), as possible when its answer was lost ("…may have been published"). One
+line says why the page may be wrong and that the reader must refresh first; the only
+button is Refresh (Reconnect once the session has ended, with a sentence saying so). A
+failed Refresh adds the page's own refresh failure, never a new one.
+
+```
+roadmaps.hold.title.landed.publish  Your changes were published
+roadmaps.hold.title.lost.publish    Your changes may have been published
+roadmaps.hold.description.landed    This page couldn't be updated to show it. Refresh before you carry on.
+roadmaps.hold.description.lost      The answer was lost. Refresh to check before you carry on.
+roadmaps.hold.reconnect             Reconnect to refresh your roadmaps.
+```
+
 ## Status label
 
 **Shape:** a short noun phrase or past participle, no full stop.

@@ -3111,16 +3111,6 @@ describe("GoogleSheetsRoadmapRepository", () => {
         }),
       ).rejects.toMatchObject({ kind: "network" })
     })
-
-    it("rethrows a lost write's network error when the re-read fails", async () => {
-      serveStatefulSpreadsheet(familyTabs(), {
-        write: { lost: "reread-fails" },
-      })
-
-      await expect(httpRepository().changeFamily(rename)).rejects.toMatchObject(
-        { kind: "network" },
-      )
-    })
   })
 
   describe("making a roadmap match its lists (STY-030)", () => {
@@ -3181,6 +3171,23 @@ describe("GoogleSheetsRoadmapRepository", () => {
         "Roadmaps!R2C13 Cofnod Sengl",
       ])
       expect(spreadsheet.bodies).toHaveLength(1)
+    })
+
+    it("settles a lost answer by a re-read: matched once it finds the row in step, unconfirmed once it fails (DEF-015)", async () => {
+      serveStatefulSpreadsheet(tabs(), { write: { lost: "applied" } })
+      await expect(
+        httpRepository().matchRoadmapToLists(loaded()),
+      ).resolves.toEqual({ status: "matched" })
+
+      serveStatefulSpreadsheet(tabs(), { write: { lost: "reread-fails" } })
+      await expect(
+        httpRepository().matchRoadmapToLists(loaded()),
+      ).resolves.toEqual({ status: "unconfirmed" })
+
+      serveStatefulSpreadsheet(tabs(), { write: { lost: "not-applied" } })
+      await expect(
+        httpRepository().matchRoadmapToLists(loaded()),
+      ).rejects.toMatchObject({ kind: "network" })
     })
 
     it("writes nothing when a co-lead edited one of the row's own copied cells meanwhile, though it is still out of step (S4)", async () => {

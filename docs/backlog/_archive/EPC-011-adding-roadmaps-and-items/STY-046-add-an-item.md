@@ -175,10 +175,10 @@ the empty roadmap, in both themes and at phone width.
 - **D13** (owner, 2026-11-15, answering D11): both buttons stay on an empty roadmap,
   the page's own and its panel's.
 - **D14** (owner, 2026-11-15, grilling of DEF-011 to DEF-014, recorded by
-  [DEF-015](../../defects/DEF-015-a-write-the-editor-can-t-read-back-leaves-the-app-out-of-step.md)
+  [DEF-015](../defects/DEF-015-a-write-the-editor-can-t-read-back-leaves-the-app-out-of-step.md)
   D3): a new item's Edit, Move and Remove no longer wait on their own after a lost
-  answer: the whole app is held in a dialog until a Refresh succeeds. Until DEF-015 is
-  delivered, the rule stands.
+  answer: the whole app is held in a dialog until a Refresh succeeds. DEF-015
+  delivered it.
 
 ## Out of scope
 

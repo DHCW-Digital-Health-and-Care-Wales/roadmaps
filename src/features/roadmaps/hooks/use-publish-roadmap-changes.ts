@@ -15,6 +15,7 @@ import type {
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 
 import { useRoadmapRepository } from "../roadmap-repository-context"
+import { readBackAfterWrite } from "../write-hold/read-back"
 import { roadmapKeys } from "./roadmap-queries"
 import type { RoadmapLists } from "./use-roadmap-lists"
 
@@ -48,9 +49,9 @@ export interface ReadBefore {
 /**
  * Publishes one roadmap's changes (ADR-012). A publish is never retried; whatever its
  * result, the roadmap and its items are read again before it settles, so the page shows
- * what the data source now holds, and `readBack` then tells which of those reads
- * succeeded. A refusal first shows the text it found by
- * `currentText`, so the page shows it even if that read fails.
+ * what the data source now holds, and `readBack` then tells whether both succeeded. A
+ * refusal first shows the text it found by `currentText`, so the page shows it even if
+ * that read fails.
  */
 export function usePublishRoadmapChanges(
   roadmapId: string,
@@ -79,61 +80,20 @@ export function usePublishRoadmapChanges(
   return { ...mutation, readBack }
 }
 
-/** Whether the reads after a publish read the roadmap list, and the roadmap's items. */
-export interface ReadBack {
-  roadmaps: boolean
-  items: boolean
-}
-
-/** Everything read back: what a publish that has not settled tells. */
-const ALL_READ: ReadBack = { roadmaps: true, items: true }
-
-/**
- * Which of the reads after a write that answered at `since` succeeded (DEF-009). A read
- * a page shows counts only if it answered since then: one that failed, or was cancelled
- * as the session ended, leaves what was cached before. A read no page shows is not
- * made, and counts unless the last one failed, as the next read of it, once a page
- * does, holds what was published.
- */
-function readBackSince(
-  queryClient: QueryClient,
-  roadmapId: string,
-  since: number,
-): ReadBack {
-  const succeeded = (key: QueryKey) => {
-    const query = queryClient
-      .getQueryCache()
-      .find({ queryKey: key, exact: true })
-    if (!query) return true
-    if (query.getObserversCount() === 0) return query.state.status !== "error"
-    return (
-      query.state.status === "success" && query.state.dataUpdatedAt >= since
-    )
-  }
-  return {
-    roadmaps: succeeded(roadmapKeys.list()),
-    items: succeeded(roadmapKeys.items(roadmapId)),
-  }
-}
-
 /**
  * Reads the roadmap list and the roadmap's items again once a write has answered, and
- * tells, by the `readBack` it returns, which of those reads succeeded, for the publish
- * that last settled.
+ * tells, by the `readBack` it returns, whether both read, for the write that last
+ * settled (`readBackAfterWrite`).
  */
 export function useReadAgain(roadmapId: string) {
   const queryClient = useQueryClient()
-  const read = useRef<ReadBack>(ALL_READ)
+  const read = useRef(true)
   return {
     readAgain: async () => {
-      const answeredAt = Date.now()
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: roadmapKeys.list() }),
-        queryClient.invalidateQueries({
-          queryKey: roadmapKeys.items(roadmapId),
-        }),
+      read.current = await readBackAfterWrite(queryClient, [
+        "roadmaps",
+        { items: roadmapId },
       ])
-      read.current = readBackSince(queryClient, roadmapId, answeredAt)
     },
     readBack: () => read.current,
   }

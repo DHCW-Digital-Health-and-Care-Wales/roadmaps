@@ -17,7 +17,6 @@ import {
   countChanges,
   editItem,
   editRoadmap,
-  keepUnread,
   matchItemChanges,
   publishesNoItems,
   reconcileItems,
@@ -314,42 +313,17 @@ describe("settlePublished", () => {
   })
 })
 
-describe("keepUnread (DEF-009 D2)", () => {
-  it("keeps each edit sent pending, based on what was published, and one edited since based on it too", () => {
-    const sent = editItem(
-      editRoadmap(NO_CHANGES, roadmap, { title: "Sent", vision: "Sent" }),
-      undefined,
-      first,
-      0,
-      { title: "Sent" },
-    )
-    const since = editRoadmap(sent, roadmap, { vision: "Later" })
+describe("after a publish is read back (DEF-011)", () => {
+  it("keeps an edit back to the text replaced pending, based on what was published", () => {
+    const sent = editRoadmap(NO_CHANGES, roadmap, { title: "Sent" })
+    const read = { ...roadmap, title: { en: "Sent", cy: "" } }
 
-    const kept = keepUnread(since, sent)
+    const settled = reconcileRoadmap(settlePublished(sent, sent), read)
+    const back = editRoadmap(settled, read, { title: roadmap.title.en })
 
-    expect(kept.roadmap).toEqual({
-      title: { base: "Sent", value: "Sent" },
-      vision: { base: "Sent", value: "Later" },
+    expect(back.roadmap).toEqual({
+      title: { base: "Sent", value: roadmap.title.en },
     })
-    expect(kept.items.map(({ fields }) => fields)).toEqual([
-      { title: { base: "Sent", value: "Sent" } },
-    ])
-    expect(kept.items[0]?.item.title.en).toBe("Sent")
-    expect(countChanges(kept)).toBe(3)
-    // Edited again, it stays based on what was published.
-    const again = editItem(kept, kept.items[0], first, 0, { title: "Again" })
-    expect(again.items[0]?.fields).toEqual({
-      title: { base: "Sent", value: "Again" },
-    })
-  })
-
-  it("keeps the content an item without an ID was loaded with, by which its card finds it", () => {
-    const sent = editItem(NO_CHANGES, undefined, second, 1, { title: "Sent" })
-
-    const kept = keepUnread(sent, sent)
-
-    expect(kept.items[0]?.item).toBe(second)
-    expect(matchItemChanges([first, second], kept).get(1)).toBe(kept.items[0])
   })
 })
 

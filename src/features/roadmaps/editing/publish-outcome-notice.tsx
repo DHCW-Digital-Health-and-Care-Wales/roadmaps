@@ -1,8 +1,4 @@
-import {
-  CircleAlertIcon,
-  CircleCheckIcon,
-  TriangleAlertIcon,
-} from "lucide-react"
+import { CircleAlertIcon, CircleCheckIcon } from "lucide-react"
 import type { RefObject } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -22,8 +18,7 @@ export interface PublishOutcomeNoticeProps {
 /**
  * A publish's outcome as a page notice: a confirmation clears itself after a dwell; a
  * failure interrupts and stays until dismissed or the next attempt, saying the changes
- * are kept; an unconfirmed outcome cannot be dismissed, staying until a Refresh reads
- * what was written (S18). Focus comes here when the publish dialog closes.
+ * are kept. Focus comes here when the publish dialog closes.
  */
 export function PublishOutcomeNotice({
   ref,
@@ -60,13 +55,6 @@ export function PublishOutcomeNotice({
             t("roadmaps.publish.notice.kept"),
           ],
         } as const
-      case "unconfirmed":
-        return {
-          variant: "warning",
-          Icon: TriangleAlertIcon,
-          title: t(`roadmaps.publish.notice.unconfirmed.title.${action}`),
-          lines: [t("roadmaps.publish.notice.unconfirmed.description")],
-        } as const
     }
   })()
 
@@ -78,7 +66,7 @@ export function PublishOutcomeNotice({
       variant={content.variant}
       Icon={content.Icon}
       title={content.title}
-      {...(notice.kind === "unconfirmed" ? {} : { onDismiss })}
+      onDismiss={onDismiss}
       className="max-w-2xl outline-none focus-visible:focus-ring"
       {...dwell}
     >

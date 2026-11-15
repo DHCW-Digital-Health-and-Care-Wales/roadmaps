@@ -32,6 +32,7 @@ import {
   openEditItemDialog,
 } from "../testing/item-dialog"
 import { expectOpeningFocus } from "../testing/opening-focus"
+import { expectWriteHold, refreshHold } from "../testing/write-hold"
 
 const roadmaps: Roadmap[] = [
   createTestRoadmap("producta", "Product A roadmap"),
@@ -746,7 +747,7 @@ describe("Publishing a new item (STY-046 S7)", () => {
     ).toBeVisible()
   })
 
-  it("holds them after a publish whose answer was lost, until a Refresh reads the roadmap", async () => {
+  it("frees them once a Refresh after a publish whose answer was lost finds it unwritten", async () => {
     const { user, repository } = await renderPage()
     // The answer is lost and nothing was written: the Refresh that follows finds no item.
     vi.spyOn(repository, "publishRoadmapChanges").mockResolvedValue({
@@ -756,26 +757,9 @@ describe("Publishing a new item (STY-046 S7)", () => {
 
     await publish(user)
 
-    await screen.findByText("Your changes may have been published")
-    await waitFor(() => {
-      expect(screen.queryByRole("alertdialog")).toBeNull()
-    })
-    for (const name of ["Edit", "Move", "Remove"]) {
-      const button = main().getByRole("button", { name: `${name} ${CLINIC}` })
-      expect(button).toHaveAttribute("aria-disabled", "true")
-      await user.click(button)
-    }
-    expect(screen.queryByRole("dialog")).toBeNull()
-    expect(screen.queryByRole("menu")).toBeNull()
-    expect(card(CLINIC).getByText("New")).toBeVisible()
+    const hold = await expectWriteHold("Your changes may have been published")
+    await refreshHold(user, hold)
 
-    await user.click(main().getByRole("button", { name: "Refresh" }))
-
-    await waitFor(() => {
-      expect(
-        main().queryByText("Your changes may have been published"),
-      ).toBeNull()
-    })
     for (const name of ["Edit", "Move", "Remove"]) {
       expect(
         main().getByRole("button", { name: `${name} ${CLINIC}` }),
@@ -786,56 +770,42 @@ describe("Publishing a new item (STY-046 S7)", () => {
   })
 })
 
-describe("A published new item the roadmap can't be read back with (DEF-009)", () => {
-  /** Makes every read of the roadmap's items fail; the returned function ends it. */
-  function failItemReads(repository: InMemoryRoadmapRepository) {
+describe("A published new item the roadmap can't be read back with (DEF-015 S6)", () => {
+  /** The page behind the write hold, which keeps it from assistive technology. */
+  function behind() {
+    return within(screen.getByRole("main", { hidden: true }))
+  }
+
+  /** Expects `title` behind the hold, tagged New, as it was before the publish. */
+  function expectPendingBehind(title: string) {
+    const heading = behind().getByRole("heading", {
+      level: 3,
+      name: title,
+      hidden: true,
+    })
+    expect(
+      within(heading.closest("li") ?? heading).getByText("New"),
+    ).toBeVisible()
+  }
+
+  it("stays on the page, tagged New and counted, behind the hold, until a Refresh reads it once", async () => {
+    const { user, repository } = await renderPage()
+    await addItem(user, CLINIC, "Next")
     const reads = vi
       .spyOn(repository, "listRoadmapItems")
       .mockRejectedValue(new AppError("network"))
-    return () => {
-      reads.mockRestore()
-    }
-  }
-
-  /** Expects the item's Edit, Move and Remove held, and choosing them to do nothing. */
-  async function expectHeld(user: User, title: string) {
-    for (const name of ["Edit", "Move", "Remove"]) {
-      const button = main().getByRole("button", { name: `${name} ${title}` })
-      expect(button).toHaveAttribute("aria-disabled", "true")
-      await user.click(button)
-    }
-    expect(screen.queryByRole("dialog")).toBeNull()
-    expect(screen.queryByRole("menu")).toBeNull()
-  }
-
-  it("stays on the page, tagged New and counted, with no Remove, Edit or Move, until a read holds it (S1, S3)", async () => {
-    const { user, repository } = await renderPage()
-    await addItem(user, CLINIC, "Next")
-    const readsBack = failItemReads(repository)
 
     await publish(user)
 
-    // The dialog stays until the failing reads have given up.
-    await vi.waitFor(() => {
-      expect(main().getByText(/^Changes published\./)).toBeVisible()
-    })
-    expect(
-      await main().findByText("Couldn't refresh this roadmap's items"),
-    ).toBeInTheDocument()
-    expect(titlesUnder("Next")).toEqual(["Text reminders", CLINIC])
-    expect(card(CLINIC).getByText("New")).toBeVisible()
-    expect(main().getByText("1 unpublished change")).toBeVisible()
-    await expectHeld(user, CLINIC)
-    expect(main().getByRole("button", { name: "Discard all" })).toHaveAttribute(
-      "data-disabled",
-    )
+    const hold = await expectWriteHold("Your changes were published")
+    expectPendingBehind(CLINIC)
+    expect(behind().getByText("1 unpublished change")).toBeVisible()
 
-    readsBack()
-    await user.click(main().getByRole("button", { name: "Refresh" }))
+    reads.mockRestore()
+    await refreshHold(user, hold)
 
-    await waitFor(() => {
-      expect(card(CLINIC).queryByText("New")).toBeNull()
-    })
+    expect(main().getByText(/^Changes published\./)).toBeVisible()
+    expect(card(CLINIC).queryByText("New")).toBeNull()
     expect(titlesUnder("Next")).toEqual(["Text reminders", CLINIC])
     expect(main().queryByText(/unpublished change/)).toBeNull()
     expect(
@@ -843,44 +813,6 @@ describe("A published new item the roadmap can't be read back with (DEF-009)", (
         ({ title }) => title.en,
       ),
     ).toEqual(["Online booking", "Text reminders", CLINIC])
-  })
-
-  it("is published once when published again before a read holds it", async () => {
-    const { user, repository } = await renderPage()
-    await addItem(user, CLINIC, "Next")
-    const readsBack = failItemReads(repository)
-    await publish(user)
-    await vi.waitFor(() => main().getByText(/^Changes published\./))
-    readsBack()
-
-    await publish(user)
-
-    await waitFor(() => {
-      expect(card(CLINIC).queryByText("New")).toBeNull()
-    })
-    expect(
-      (await repository.listRoadmapItems("producta")).map(
-        ({ title }) => title.en,
-      ),
-    ).toEqual(["Online booking", "Text reminders", CLINIC])
-  })
-
-  it("leaves a new item added after the publish free to change and remove", async () => {
-    const { user, repository } = await renderPage()
-    await addItem(user, CLINIC, "Next")
-    const readsBack = failItemReads(repository)
-    await publish(user)
-    await vi.waitFor(() => main().getByText(/^Changes published\./))
-
-    await addItem(user, CHECK_IN, "Later")
-
-    for (const name of ["Edit", "Move", "Remove"]) {
-      expect(
-        main().getByRole("button", { name: `${name} ${CHECK_IN}` }),
-      ).toHaveAttribute("aria-disabled", "false")
-    }
-    await expectHeld(user, CLINIC)
-    readsBack()
   })
 
   it("stays on the page when the session ends while the read after the publish is under way", async () => {
@@ -903,46 +835,13 @@ describe("A published new item the roadmap can't be read back with (DEF-009)", (
       authClient.setState({ status: "expired" })
     })
 
-    await vi.waitFor(() => {
-      expect(main().getByText(/^Changes published\./)).toBeVisible()
+    const hold = await screen.findByRole("alertdialog", {
+      name: "Your changes were published",
     })
-    expect(titlesUnder("Next")).toEqual(["Text reminders", CLINIC])
-    expect(card(CLINIC).getByText("New")).toBeVisible()
-  })
-
-  it("stays on the page when the session ends while the read after “Save and publish” is under way", async () => {
-    const { user, repository, authClient } = await renderPage({
-      path: "/roadmaps/productc",
-    })
-    await addItem(user, CLINIC, "Now")
-    vi.spyOn(repository, "listRoadmapItems").mockImplementationOnce(
-      () => new Promise(() => undefined),
-    )
-    const published = vi.spyOn(repository, "setRoadmapPublished")
-
-    await user.click(main().getByRole("button", { name: "Publish roadmap" }))
-    await user.click(
-      within(await screen.findByRole("alertdialog")).getByRole("button", {
-        name: "Save and publish",
-      }),
-    )
-    await waitFor(() => {
-      expect(published).toHaveBeenCalled()
-    })
-    await act(async () => {
-      await published.mock.results[0]?.value
-    })
-    act(() => {
-      authClient.setState({ status: "expired" })
-    })
-
-    await vi.waitFor(() => {
-      expect(
-        main().getByText(/^Changes saved and Product C roadmap published\./),
-      ).toBeVisible()
-    })
-    expect(titlesUnder("Now")).toEqual([CLINIC])
-    expect(card(CLINIC).getByText("New")).toBeVisible()
+    expect(
+      within(hold).getByRole("button", { name: "Reconnect" }),
+    ).toBeVisible()
+    expectPendingBehind(CLINIC)
   })
 
   it("stays on the page after “Save and publish” too", async () => {
@@ -950,7 +849,9 @@ describe("A published new item the roadmap can't be read back with (DEF-009)", (
       path: "/roadmaps/productc",
     })
     await addItem(user, CLINIC, "Now")
-    const readsBack = failItemReads(repository)
+    vi.spyOn(repository, "listRoadmapItems").mockRejectedValue(
+      new AppError("network"),
+    )
 
     await user.click(main().getByRole("button", { name: "Publish roadmap" }))
     await user.click(
@@ -959,18 +860,8 @@ describe("A published new item the roadmap can't be read back with (DEF-009)", (
       }),
     )
 
-    await vi.waitFor(() => {
-      expect(
-        main().getByText(/^Changes saved and Product C roadmap published\./),
-      ).toBeVisible()
-    })
-    expect(
-      await main().findByText("Couldn't refresh this roadmap's items"),
-    ).toBeInTheDocument()
-    expect(titlesUnder("Now")).toEqual([CLINIC])
-    expect(card(CLINIC).getByText("New")).toBeVisible()
-    await expectHeld(user, CLINIC)
-    readsBack()
+    await expectWriteHold("This roadmap was published")
+    expectPendingBehind(CLINIC)
   })
 })
 
@@ -1063,7 +954,7 @@ describe("The publish dialog names the new items (STY-047 S1)", () => {
     const { user, repository } = await renderPage({
       path: "/roadmaps/productc",
     })
-    // The save's answer is lost; it landed, and a co-lead has since renamed the item.
+    // The save's answer is lost; it lands late, and a co-lead has since renamed the item.
     let savedId: string | undefined
     vi.spyOn(repository, "publishRoadmapChanges").mockImplementation(
       (_roadmapId, changes) => {
@@ -1074,10 +965,11 @@ describe("The publish dialog names the new items (STY-047 S1)", () => {
     const setPublished = vi.spyOn(repository, "setRoadmapPublished")
     await addItem(user, CLINIC, "Next")
     await publish(user, "Save changes")
-    await screen.findByText("Your changes may have been saved")
-    await waitFor(() => {
-      expect(screen.queryByRole("alertdialog")).toBeNull()
-    })
+    // The Refresh the hold asks for finds nothing written yet.
+    await refreshHold(
+      user,
+      await expectWriteHold("Your changes may have been saved"),
+    )
     repository.coLead((_roadmaps, itemsOf) => {
       itemsOf("productc").push(
         createTestRoadmapItem("Renamed by a co-lead", {

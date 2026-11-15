@@ -53,6 +53,7 @@ export function composeApp(config: AppConfig = defaultConfig): AppServices {
   const appInfo = {
     version: __APP_VERSION__,
     feedbackUrl: config.feedbackUrl,
+    repositoryUrl: config.repositoryUrl,
   }
 
   return { i18n, queryClient, authClient, roadmapRepository, appInfo }

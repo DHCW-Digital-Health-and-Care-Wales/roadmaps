@@ -45,20 +45,21 @@ describe("parseConfig", () => {
   })
 })
 
-describe("parseConfig, feedback address", () => {
+describe.each([
+  ["feedback", "VITE_FEEDBACK_URL", "feedbackUrl"],
+  ["repository", "VITE_REPOSITORY_URL", "repositoryUrl"],
+] as const)("parseConfig, %s address", (_name, variable, key) => {
   it("is optional: unset or blank means no link", () => {
-    expect(parseConfig(validEnv).feedbackUrl).toBeUndefined()
-    expect(
-      parseConfig({ ...validEnv, VITE_FEEDBACK_URL: "  " }).feedbackUrl,
-    ).toBeUndefined()
+    expect(parseConfig(validEnv)[key]).toBeUndefined()
+    expect(parseConfig({ ...validEnv, [variable]: "  " })[key]).toBeUndefined()
   })
 
   it("accepts an https address, trimmed", () => {
     expect(
       parseConfig({
         ...validEnv,
-        VITE_FEEDBACK_URL: " https://forms.example.org/roadmaps?src=app ",
-      }).feedbackUrl,
+        [variable]: " https://forms.example.org/roadmaps?src=app ",
+      })[key],
     ).toBe("https://forms.example.org/roadmaps?src=app")
   })
 
@@ -71,8 +72,8 @@ describe("parseConfig, feedback address", () => {
     "https://user:secret@example.org/feedback",
     "not a url",
   ])("rejects %s, which is not an https address", (value) => {
-    expect(() =>
-      parseConfig({ ...validEnv, VITE_FEEDBACK_URL: value }),
-    ).toThrow(/Invalid app configuration[\s\S]*VITE_FEEDBACK_URL/)
+    expect(() => parseConfig({ ...validEnv, [variable]: value })).toThrow(
+      new RegExp(`Invalid app configuration[\\s\\S]*${variable}`),
+    )
   })
 })

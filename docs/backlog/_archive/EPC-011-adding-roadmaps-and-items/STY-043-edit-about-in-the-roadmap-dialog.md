@@ -137,16 +137,18 @@ re-pointed at the dialog: none is dropped, and each rule S3 names keeps its test
 - **Tests.** The component tests were re-pointed at the dialog first and run red: 38
   failed across four files for want of the dialog (five more in a fifth once the form
   had gone), with the four new cases among them. The review added two: the Safari
-  case, written first and run red, and the unlisted family, which passed as written. The Playwright specs followed working
-  code. None was dropped; the two Refresh tests are re-sequenced as above.
+  case, written first and run red, and the unlisted family, which passed as written.
+  The Playwright specs followed working code. None was dropped; the two Refresh tests
+  are re-sequenced as above.
 
 ### Contract for dependents
 
 - **`RoadmapDialog`** (`dialogs/roadmap-dialog.tsx`) takes `open`, `onClose`, an
-  `opener` (the ref of the control that opens it, which `FormDialog` returns focus
-  to), and either `roadmaps` and `onAdded` (it adds, STY-041) or `roadmap` and `onDone` (it
-  edits that roadmap, as the page shows it). Its editing form is `EditRoadmapForm`
-  (`dialogs/edit-roadmap-form.tsx`), which gives `EditForm` the About fields.
+  optional `opener` (the ref of the control that opens it, which `FormDialog` returns
+  focus to), and either `roadmaps` and `onAdded` (it adds, STY-041) or `roadmap` and
+  `onDone` (it edits that roadmap, as the page shows it). Its editing form is
+  `EditRoadmapForm` (`dialogs/edit-roadmap-form.tsx`), which gives `EditForm` the About
+  fields.
 - **`EditForm` with no `onCancel` is a form in a dialog**: its buttons are a
   `DialogFooter` with a `DialogClose`, and it neither handles Escape nor focuses its
   first field, which are `FormDialog`'s. With `onCancel` it is the item's in-place

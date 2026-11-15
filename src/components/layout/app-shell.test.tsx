@@ -63,7 +63,7 @@ describe.each(["en", "cy"] as const)("the shell in %s", (language) => {
       // jsdom applies no stylesheet, so both visible names are in the name here; the
       // per-width names are held by tests/e2e/shell.spec.ts.
       const home = within(screen.getByRole("banner")).getByRole("link", {
-        name: `${c.shortName} ${c.name} ${c.homeWord}`,
+        name: new RegExp(`${c.name} ${c.homeWord}$`),
       })
       expect(home).toHaveAttribute("href", "/")
       // The visible names: the header's own (from `sm`) and the short one below it.

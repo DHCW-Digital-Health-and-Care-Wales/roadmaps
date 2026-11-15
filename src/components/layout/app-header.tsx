@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router"
-import type { ReactNode } from "react"
+import { useId, type ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
 import dhcwIcon from "@/assets/dhcw/dhcw-icon-white.svg"
@@ -24,14 +24,17 @@ export interface AppHeaderProps {
  */
 export function AppHeader({ actions }: AppHeaderProps) {
   const { t } = useTranslation()
+  const nameId = useId()
 
   return (
     <header className="bg-header text-header-foreground">
       <PageContainer className="flex min-h-16 items-center gap-1 py-3 sm:gap-3">
         <Link
           to="/"
-          // The service's full name, whichever of the visible names is shown.
-          aria-label={t("layout.home")}
+          // Named by the visible name and "home": a name from content would lead with the
+          // logo's alternative text, and a label that differs from the shown name fails
+          // WCAG 2.5.3 (DEF-002). The hidden name is not in it.
+          aria-labelledby={nameId}
           // -ml-1 lines the logo up with the page content (the padding is the focus ring's room).
           className="-ml-1 flex min-w-0 items-center gap-2 rounded-lg border border-transparent p-1 outline-none focus-visible:focus-ring sm:gap-3"
         >
@@ -43,9 +46,10 @@ export function AppHeader({ actions }: AppHeaderProps) {
               className="h-8 w-auto sm:h-10 md:h-12"
             />
           </picture>
-          <span className="truncate text-heading-xs">
+          <span id={nameId} className="truncate text-heading-xs">
             <span className="sm:hidden">{t("common.shortAppName")}</span>
-            <span className="max-sm:hidden">{t("common.headerName")}</span>
+            <span className="max-sm:hidden">{t("common.headerName")}</span>{" "}
+            <span className="sr-only">{t("layout.homeSuffix")}</span>
           </span>
         </Link>
         <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">

@@ -56,7 +56,9 @@ for (const language of ["en", "cy"] as const) {
       // The full logo is wide; the icon is square.
       const box = await logo.boundingBox()
       expect(box?.width ?? 0).toBeGreaterThan((box?.height ?? 0) * 2)
-      await expect(banner.getByRole("link", { name: c.home })).toBeVisible()
+      await expect(
+        banner.getByRole("link", { name: c.home, exact: true }),
+      ).toBeVisible()
 
       // Not sticky: it scrolls away with the page (D4).
       await expect(banner).toHaveCSS("position", "static")
@@ -64,7 +66,7 @@ for (const language of ["en", "cy"] as const) {
       // Left to right: the home link, the status chip, then the three buttons.
       const xs = await Promise.all(
         [
-          banner.getByRole("link", { name: c.home }),
+          banner.getByRole("link", { name: c.home, exact: true }),
           banner.getByRole("status"),
           ...[0, 1, 2].map((index) => banner.getByRole("button").nth(index)),
         ].map(async (locator) => (await locator.boundingBox())?.x ?? NaN),
@@ -105,13 +107,19 @@ for (const language of ["en", "cy"] as const) {
       await page.setViewportSize({ width: 375, height: 800 })
       await page.goto("./")
       await expect(
-        banner.getByRole("link", { name: c.shortHome }),
+        banner.getByRole("link", { name: c.shortHome, exact: true }),
       ).toBeVisible()
-      await expect(banner.getByRole("link", { name: c.home })).toBeHidden()
+      await expect(
+        banner.getByRole("link", { name: c.home, exact: true }),
+      ).toBeHidden()
 
       await page.setViewportSize({ width: 1280, height: 800 })
-      await expect(banner.getByRole("link", { name: c.home })).toBeVisible()
-      await expect(banner.getByRole("link", { name: c.shortHome })).toBeHidden()
+      await expect(
+        banner.getByRole("link", { name: c.home, exact: true }),
+      ).toBeVisible()
+      await expect(
+        banner.getByRole("link", { name: c.shortHome, exact: true }),
+      ).toBeHidden()
     })
 
     for (const width of [375, 640, 768, 900, 1024, 1280]) {
@@ -132,7 +140,10 @@ for (const language of ["en", "cy"] as const) {
 
         const name = page
           .getByRole("banner")
-          .getByRole("link", { name: c.home })
+          .getByRole("link", {
+            name: width < 640 ? c.shortHome : c.home,
+            exact: true,
+          })
           .locator("span")
           .first()
         const [scrollWidth, clientWidth] = await name.evaluate((element) => [

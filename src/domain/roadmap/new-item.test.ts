@@ -2,7 +2,13 @@ import { describe, expect, it } from "vitest"
 
 import { isAppError } from "@/lib/errors"
 
-import { addNewItem, checkNewItem, dropPublishedNewItems } from "./new-item"
+import {
+  addNewItem,
+  checkNewItem,
+  dropPublishedNewItems,
+  editNewItem,
+  removeNewItem,
+} from "./new-item"
 import {
   type ItemValues,
   type NewItem,
@@ -208,5 +214,75 @@ describe("dropPublishedNewItems (STY-045 S4)", () => {
     ]
 
     expect(dropPublishedNewItems(changes, read)).toBe(changes)
+  })
+})
+
+describe("a new item, before it is published (STY-046 S6)", () => {
+  const reminders = { ...clinicValues, title: "Text reminders" }
+  const changes: RoadmapChanges = {
+    ...NO_CHANGES,
+    roadmap: { vision: { base: "", value: "Clear" } },
+    newItems: [
+      { id: "firstnew", values: clinicValues },
+      { id: "secondnw", values: reminders },
+    ],
+  }
+
+  it("is edited in place: the values given, trimmed, over those it held, its ID and its place kept", () => {
+    expect(
+      editNewItem(changes, "firstnew", {
+        title: " Choose a clinic near you ",
+        placement: "now",
+        tags: "Patients",
+      }),
+    ).toEqual({
+      ...changes,
+      newItems: [
+        {
+          id: "firstnew",
+          values: {
+            ...clinicValues,
+            title: "Choose a clinic near you",
+            placement: "now",
+            tags: "Patients",
+          },
+        },
+        { id: "secondnw", values: reminders },
+      ],
+    })
+  })
+
+  it("gives back the very changes for an edit that changes nothing, or to a new item that has gone", () => {
+    expect(
+      editNewItem(changes, "firstnew", { title: clinicValues.title }),
+    ).toBe(changes)
+    expect(editNewItem(changes, "firstnew", {})).toBe(changes)
+    expect(editNewItem(changes, "gonegone", { title: "Renamed" })).toBe(changes)
+  })
+
+  it.each<ItemValues>([
+    { title: " " },
+    { placement: "" },
+    { placement: "Soon" },
+  ])(
+    "refuses an edit that leaves it without a title or a placement: %o",
+    (values) => {
+      let thrown: unknown
+      try {
+        editNewItem(changes, "firstnew", values)
+      } catch (error) {
+        thrown = error
+      }
+
+      expect(isAppError(thrown) && thrown.kind).toBe("unknown")
+    },
+  )
+
+  it("is removed whole, the roadmap's other changes kept", () => {
+    expect(removeNewItem(changes, "firstnew")).toEqual({
+      ...changes,
+      newItems: [{ id: "secondnw", values: reminders }],
+    })
+    expect(removeNewItem(changes, "gonegone")).toBe(changes)
   })
 })

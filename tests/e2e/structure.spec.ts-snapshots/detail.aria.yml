@@ -7,6 +7,7 @@
   - heading "Product A roadmap" [level=1]
   - button "Unpublish roadmap"
   - button "Refresh"
+  - button "Add an item"
   - paragraph: "Family: Single Record"
   - paragraph: "Category: GP & Community Services"
   - region "About this roadmap":

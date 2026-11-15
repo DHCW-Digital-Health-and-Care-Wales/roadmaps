@@ -51,29 +51,4 @@ describe("groupRoadmapItems", () => {
       { item: placed, position: 1 },
     ])
   })
-
-  it("groups each item where `placementAt` puts it, keeping the item as given (STY-031 S1)", () => {
-    const soon = createTestRoadmapItem("Soon", {
-      placement: null,
-      writtenHorizon: "Soon",
-    })
-    const nowA = createTestRoadmapItem("Now A")
-    const nowB = createTestRoadmapItem("Now B")
-
-    const { unplaced, placements } = groupRoadmapItems(
-      [nowA, soon, nowB],
-      (item, position) => (position === 1 ? "now" : item.placement && "later"),
-    )
-
-    expect(unplaced).toEqual([])
-    expect(
-      placements.find(({ placement }) => placement === "now")?.items,
-    ).toEqual([{ item: soon, position: 1 }])
-    expect(
-      placements.find(({ placement }) => placement === "later")?.items,
-    ).toEqual([
-      { item: nowA, position: 0 },
-      { item: nowB, position: 2 },
-    ])
-  })
 })

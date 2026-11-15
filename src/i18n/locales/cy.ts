@@ -280,7 +280,7 @@ export const cy = {
       empty: {
         title: "Dim eitemau eto",
         description:
-          "Ychwanegwch ei eitemau yn y daenlen am y tro. Byddan nhw'n ymddangos yma ar ôl Adnewyddu.",
+          "Ychwanegwch yr hyn mae'r cynnyrch yn ei wneud nawr, nesaf ac yn hwyrach.",
       },
       noneInPlacement: "Dim eitemau",
       // Nawr, Nesaf and Hwyrach are the public site's Welsh headings.
@@ -313,7 +313,10 @@ export const cy = {
       done: "Gorffen",
       undo: "Dadwneud y newidiadau",
       changed: "Wedi newid",
+      new: "Newydd",
+      remove: "Tynnu",
       titleRequired: "Rhowch deitl",
+      placementRequired: "Dewiswch orwel neu adran",
       errorPrefix: "Gwall:",
       itemFields: {
         title: "Teitl (Saesneg)",
@@ -452,6 +455,17 @@ export const cy = {
       moveTo: "Symud i",
       choosePlacement: "Dewiswch orwel neu adran",
       itemHeading: "Golygu'r eitem hon",
+      addItem: {
+        title: "Ychwanegu eitem",
+        submit: "Ychwanegu'r eitem",
+        another: "Ychwanegu a dechrau un arall",
+        note: {
+          publish:
+            "Bydd yn aros heb ei chyhoeddi nes i chi ddewis “Cyhoeddi'r newidiadau”.",
+          save: "Fydd hi ddim yn cael ei chadw nes i chi ddewis “Cadw'r newidiadau”.",
+        },
+        added: "Ychwanegwyd “{{title}}”.",
+      },
       roadmapHeading: "Golygu'r map trywydd hwn",
       roadmapFields: {
         title: "Teitl (Saesneg)",

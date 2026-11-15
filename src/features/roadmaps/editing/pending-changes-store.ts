@@ -67,6 +67,20 @@ export function awaitingRefresh(
   return snapshot.notices.get(roadmapId)?.kind === "unconfirmed"
 }
 
+/**
+ * Whether a roadmap's changes can be discarded, all of them or a new item alone: not
+ * while a publish of them is under way, nor until a Refresh follows one that may have
+ * written them unseen. Dropping them then could hide what was published.
+ */
+export function discardable(
+  snapshot: PendingChangesSnapshot,
+  roadmapId: string,
+): boolean {
+  return (
+    !snapshot.publishing.has(roadmapId) && !awaitingRefresh(snapshot, roadmapId)
+  )
+}
+
 export interface PendingChangesStore {
   readonly getSnapshot: () => PendingChangesSnapshot
   readonly subscribe: (listener: () => void) => () => void

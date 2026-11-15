@@ -6,6 +6,7 @@ import {
   NO_CHANGES,
   type RoadmapChanges,
 } from "@/domain/roadmap/roadmap-changes"
+import { addingItems, NEW_CLINIC } from "@/domain/roadmap/testing/test-new-item"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 
@@ -21,6 +22,7 @@ import {
   reconcileItems,
   reconcileRoadmap,
   settlePublished,
+  shownNewItem,
   undoItem,
 } from "./pending-changes"
 
@@ -954,5 +956,66 @@ describe("a new item (STY-045)", () => {
 
     expect(settled.newItems).toEqual(since.newItems.slice(1))
     expect(settled.items).toEqual([])
+  })
+
+  it("shows as the item it will read as once published: its English alone, placed, with its ID (STY-046 S3)", () => {
+    expect(shownNewItem(NEW_CLINIC)).toEqual(
+      createTestRoadmapItem("Choose a clinic closer to home", {
+        id: NEW_CLINIC.id,
+        placement: "next",
+      }),
+    )
+    const [letters] = addNewItem(
+      NO_CHANGES,
+      {
+        title: "Letters by email",
+        description: "Read your letters online.\nNo post.",
+        expectedOutcome: "Fewer lost letters",
+        phase: "Discovery",
+        placement: "delivered-this-year",
+        tags: "Patients, Carers",
+        organisationIds: "national,sbuhb",
+        details: "Appointment letters\n- Outpatients\n-- Adult clinics first",
+      },
+      [],
+    ).newItems
+    if (letters === undefined) throw new Error("The new item is pending")
+
+    expect(shownNewItem(letters)).toEqual(
+      createTestRoadmapItem("Letters by email", {
+        id: letters.id,
+        placement: "delivered-this-year",
+        description: { en: "Read your letters online.\nNo post.", cy: "" },
+        expectedOutcome: { en: "Fewer lost letters", cy: "" },
+        phase: { en: "Discovery", cy: "" },
+        tags: [
+          { en: "Patients", cy: "" },
+          { en: "Carers", cy: "" },
+        ],
+        organisationIds: ["national", "sbuhb"],
+        details: [
+          { text: { en: "Appointment letters", cy: "" }, level: 0 },
+          { text: { en: "Outpatients", cy: "" }, level: 1 },
+          { text: { en: "Adult clinics first", cy: "" }, level: 2 },
+        ],
+      }),
+    )
+  })
+
+  it("is an item the public would see, so publishing with one never leaves them nothing (STY-046 S10)", () => {
+    const unplaced = createTestRoadmapItem("Unplaced", {
+      placement: null,
+      writtenHorizon: "Soon",
+    })
+
+    expect(publishesNoItems([], addingItems(NEW_CLINIC))).toBe(false)
+    expect(publishesNoItems([unplaced], addingItems(NEW_CLINIC))).toBe(false)
+    // One a read already holds is that item: it counts as the read has it.
+    expect(
+      publishesNoItems(
+        [{ ...unplaced, id: NEW_CLINIC.id }],
+        addingItems(NEW_CLINIC),
+      ),
+    ).toBe(true)
   })
 })

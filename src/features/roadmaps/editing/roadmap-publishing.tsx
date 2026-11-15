@@ -20,7 +20,7 @@ import {
   usePendingChanges,
   usePendingChangesStore,
 } from "./pending-changes-context"
-import { awaitingRefresh, publishAction } from "./pending-changes-store"
+import { discardable, publishAction } from "./pending-changes-store"
 import { PublishDialog } from "./publish-dialog"
 import { PublishOutcomeNotice } from "./publish-outcome-notice"
 import { useDecisionFocus } from "./use-decision-focus"
@@ -56,7 +56,7 @@ export function RoadmapPublishing({ roadmap }: RoadmapPublishingProps) {
   const outcome = snapshot.notices.get(roadmap.id)
   const action = publishAction(roadmap)
   // Discarding before a Refresh could hide changes an unconfirmed publish wrote (S18).
-  const discardable = !publishing && !awaitingRefresh(snapshot, roadmap.id)
+  const canDiscard = discardable(snapshot, roadmap.id)
   // The store keeps a refusal only while it has something to say.
   const refused = outcome?.kind === "refused" ? outcome : null
   const open = refused ? openConflicts(refused.conflicts, changes) : []
@@ -147,7 +147,7 @@ export function RoadmapPublishing({ roadmap }: RoadmapPublishingProps) {
             </Button>
             <Button
               variant="secondary"
-              disabled={!discardable}
+              disabled={!canDiscard}
               focusableWhenDisabled
               onClick={() => {
                 setDiscarding(true)
@@ -178,7 +178,7 @@ export function RoadmapPublishing({ roadmap }: RoadmapPublishingProps) {
       <DiscardDialog
         open={discarding}
         onDiscard={() => {
-          if (discardable) store.discard(roadmap.id)
+          if (canDiscard) store.discard(roadmap.id)
           setDiscarding(false)
         }}
         onCancel={() => {

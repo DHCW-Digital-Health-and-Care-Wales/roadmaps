@@ -290,11 +290,10 @@ export const en = {
       /** In place of `errors.invalid-data`, which is about the roadmap list. */
       invalidData:
         "This roadmap's items aren't in the expected format in the spreadsheet. Ask the spreadsheet owner to check them.",
-      /** A roadmap with none: where they are added, until they can be added here (D2). */
+      /** A roadmap with none, in a panel that holds "Add an item" (STY-046 S8). */
       empty: {
         title: "No items yet",
-        description:
-          "Add its items in the spreadsheet for now. They show here after Refresh.",
+        description: "Add what the product is doing now, next and later.",
       },
       /** Under a horizon or section heading that has no items. */
       noneInPlacement: "No items",
@@ -335,7 +334,15 @@ export const en = {
       undo: "Undo changes",
       /** The tag on whatever holds a pending change. */
       changed: "Changed",
+      /**
+       * The tag on an item added and not yet published, and what drops it; each is
+       * followed by the item's title, for assistive technology (STY-046).
+       */
+      new: "New",
+      remove: "Remove",
       titleRequired: "Enter a title",
+      /** A new item with no horizon or section chosen (STY-046 S2). */
+      placementRequired: "Choose a horizon or section",
       /** Read before an error message by assistive technology. */
       errorPrefix: "Error:",
       /** Each label says the field is the English, in Welsh (Welsh is not edited yet). */
@@ -505,6 +512,22 @@ export const en = {
       choosePlacement: "Choose a horizon or section",
       /** Heads the item dialog while it edits an item (STY-044). */
       itemHeading: "Edit this item",
+      /** The item dialog while it adds an item (STY-046). */
+      addItem: {
+        /** The page's button, an empty roadmap's, and the dialog's heading. */
+        title: "Add an item",
+        /** Keeps the item pending and closes the dialog. */
+        submit: "Add item",
+        /** Keeps it pending and empties the form for the next. */
+        another: "Add and start another",
+        /** Under the fields: the button that makes it public, or saves it. */
+        note: {
+          publish: "It stays unpublished until you choose “Publish changes”.",
+          save: "It isn't saved until you choose “Save changes”.",
+        },
+        /** Announced in the dialog after "Add and start another". */
+        added: "“{{title}}” was added.",
+      },
       /** Heads the roadmap dialog while it edits what a roadmap is about (STY-043). */
       roadmapHeading: "Edit this roadmap",
       roadmapFields: {

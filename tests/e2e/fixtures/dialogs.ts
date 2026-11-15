@@ -51,6 +51,30 @@ const EDIT_ITEM = {
 } as const satisfies Record<Language, DialogNames & { opener: string }>
 
 /**
+ * The item dialog adding an item, in each language: `opener` is "Add an item", with the
+ * page's actions and in an empty roadmap's panel.
+ */
+const ADD_ITEM = {
+  en: {
+    opener: "Add an item",
+    title: "Add an item",
+    firstField: "Title",
+    placement: "Horizon or section",
+    submit: "Add item",
+  },
+  cy: {
+    opener: "Ychwanegu eitem",
+    title: "Ychwanegu eitem",
+    firstField: "Teitl (Saesneg)",
+    placement: "Gorwel neu adran",
+    submit: "Ychwanegu'r eitem",
+  },
+} as const satisfies Record<
+  Language,
+  DialogNames & { opener: string; placement: string; submit: string }
+>
+
+/**
  * Clicks `opener` and returns the dialog it opens, once focus is in its first field:
  * the dialog is ready then, and not before.
  */
@@ -172,4 +196,48 @@ export function openEditItemDialog(
     editItemButton(page, title, language),
     EDIT_ITEM[language],
   )
+}
+
+/**
+ * A roadmap's page's "Add an item" buttons, in `language`: with the page's actions,
+ * then an empty roadmap's panel's own.
+ */
+export function addItemButtons(page: Page, language: Language = "en"): Locator {
+  return page
+    .getByRole("main")
+    .getByRole("button", { name: ADD_ITEM[language].opener, exact: true })
+}
+
+/**
+ * Opens the item dialog to add an item, from "Add an item" with the page's actions, or
+ * from `opener`.
+ */
+export function openAddItemDialog(
+  page: Page,
+  {
+    language = "en",
+    opener = addItemButtons(page, language).first(),
+  }: { language?: Language; opener?: Locator } = {},
+): Promise<Locator> {
+  return openDialog(page, opener, ADD_ITEM[language])
+}
+
+/**
+ * Adds an item titled `title` to the horizon or section headed `placement`, with "Add
+ * item", and waits for the dialog to go: the item is then pending, on its card.
+ */
+export async function addItem(
+  page: Page,
+  title: string,
+  placement: string,
+  language: Language = "en",
+): Promise<void> {
+  const names = ADD_ITEM[language]
+  const dialog = await openAddItemDialog(page, { language })
+  await dialog.getByRole("textbox", { name: names.firstField }).fill(title)
+  await dialog
+    .getByRole("combobox", { name: names.placement })
+    .selectOption({ label: placement })
+  await dialog.getByRole("button", { name: names.submit, exact: true }).click()
+  await expect(dialog).toBeHidden()
 }

@@ -47,6 +47,11 @@ in the dialog
   cut from STY-046, over one story of eleven scenarios across the page, the list and
   the publish dialog.
 
+- **D3** (agent, 2026-11-15, from STY-046's delivery): until this story lists them,
+  the publish dialog shows no "What changes" when new items are all that is pending,
+  in place of a heading over an empty list (`publish-dialog.tsx`). The list this
+  story adds is never empty then, so that guard goes with it.
+
 ## Out of scope
 
 - Adding, editing and removing a new item, the tags offered and the empty-roadmap

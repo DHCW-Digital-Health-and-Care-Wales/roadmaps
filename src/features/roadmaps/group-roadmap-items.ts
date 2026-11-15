@@ -4,10 +4,7 @@ import {
   type RoadmapPlacement,
 } from "@/domain/roadmap/roadmap-placement"
 
-/**
- * An item with its position among the roadmap's items, which keys it: items have no
- * identity yet (ADR-011).
- */
+/** An item with its position among the items grouped. */
 export interface PositionedRoadmapItem {
   item: RoadmapItem
   position: number
@@ -21,25 +18,16 @@ export interface RoadmapItemGroups {
 }
 
 /**
- * A roadmap's items by placement, each group in row order: where `placementAt` puts
- * each, its own placement unless a pending move says otherwise (STY-031).
+ * Items by placement, each group in the order given: a roadmap's items as its page
+ * shows them, where a pending move puts each (STY-031), with those new to it last
+ * (STY-046).
  */
 export function groupRoadmapItems(
   items: readonly RoadmapItem[],
-  placementAt: (
-    item: RoadmapItem,
-    position: number,
-  ) => RoadmapPlacement | null = (item) => item.placement,
 ): RoadmapItemGroups {
-  const positioned = items.map((item, position) => ({
-    item,
-    position,
-    placement: placementAt(item, position),
-  }))
+  const positioned = items.map((item, position) => ({ item, position }))
   const at = (placement: RoadmapPlacement | null) =>
-    positioned.flatMap(({ placement: each, ...rest }) =>
-      each === placement ? [rest] : [],
-    )
+    positioned.filter(({ item }) => item.placement === placement)
   return {
     unplaced: at(null),
     placements: ROADMAP_PLACEMENTS.map((placement) => ({

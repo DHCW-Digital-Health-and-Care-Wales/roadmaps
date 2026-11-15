@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next"
 
+import { InsetText } from "@/components/layout/inset-text"
 import { localise } from "@/domain/roadmap/localised-text"
 import type { Organisation } from "@/domain/roadmap/organisation"
 import {
@@ -11,15 +12,19 @@ import {
   organisationIdsValue,
 } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
-import { ROADMAP_PLACEMENTS } from "@/domain/roadmap/roadmap-placement"
+import {
+  ROADMAP_PLACEMENTS,
+  type RoadmapPlacement,
+} from "@/domain/roadmap/roadmap-placement"
 import { useLanguage } from "@/i18n"
 
 import { DetailList } from "../components/detail-list"
 import { EditForm, type EditFormField } from "../editing/edit-form"
 import { editFormFields } from "../editing/edit-form-fields"
 import type { TagInUse } from "../editing/item-tags"
+import { blankItem } from "../editing/pending-changes"
+import type { PublishAction } from "../editing/pending-changes-store"
 import { TagList } from "../editing/tag-list"
-import type { OpenedItem } from "../editing/use-item-dialog"
 import { localiseDetails } from "../localise-details"
 import { shortNamesOf, sortOrganisations } from "../sort-organisations"
 
@@ -29,34 +34,64 @@ const multilineItemFields: ReadonlySet<ItemTextField> = new Set([
   "expectedOutcome",
 ])
 
-export interface EditItemFormProps {
+interface ItemFormFields {
   /** The id of the heading naming the form. */
   labelledBy: string
-  opened: OpenedItem
-  /** The item as the page shows it now, its pending edits applied. */
-  item: RoadmapItem
   /** The tags the roadmap's other items carry, which the form offers (STY-037 S3). */
   tagsInUse: readonly TagInUse[]
   /** The organisation list the item's organisations are named from (ADR-014). */
   organisations: readonly Organisation[]
+}
+
+/**
+ * An item as read and as shown when the dialog opened on it, which its edits are made
+ * from: a co-lead's change read while it is open never changes what Done keeps.
+ */
+export interface OpenedItem {
+  readonly read: RoadmapItem
+  readonly shown: RoadmapItem
+}
+
+export interface EditItemFormProps extends ItemFormFields {
+  opened: OpenedItem
+  /** The item as the page shows it now, its pending edits applied. */
+  item: RoadmapItem
   /** Done was chosen, with each value changed since the form opened. */
   onDone: (values: ItemValues) => void
 }
 
+/** What follows adding an item: the dialog closes, or its form empties for the next. */
+export type AfterAdding = "close" | "another"
+
+export interface AddItemFormProps extends ItemFormFields {
+  /**
+   * The horizon or section the form starts on: none, or the last item's after "Add
+   * and start another" (STY-046 D4, D5).
+   */
+  placement: RoadmapPlacement | null
+  /** What publishing the roadmap's changes is called, which the form's note names. */
+  action: PublishAction
+  /** Whether the form takes focus as it is drawn (`EditForm`). */
+  takesFocus: boolean
+  /** "Add item" or "Add and start another" was chosen, with the new item's values. */
+  onAdd: (values: ItemValues, then: AfterAdding) => void
+}
+
+export type ItemFormProps = EditItemFormProps | AddItemFormProps
+
 /**
- * The item dialog's editing form (STY-044): an item's title, description, expected
+ * The item dialog's form (STY-044, STY-046): an item's title, description, expected
  * outcome, phase and placement (STY-025 S1–S4; STY-031 S3), its tags (STY-037),
  * organisations (STY-034) and details (STY-039), the last three shut until asked for.
- * Done writes nothing: the caller keeps the values pending.
+ * Given an item it edits it, and Done keeps the values changed. Given none it adds one:
+ * the same fields over an item with nothing in it, a horizon or section required, a
+ * note of when the item is published, and "Add item" or "Add and start another". Either
+ * way it writes nothing: the caller keeps the values pending.
  */
-export function EditItemForm({
-  labelledBy,
-  opened,
-  item,
-  tagsInUse,
-  organisations,
-  onDone,
-}: EditItemFormProps) {
+export function ItemForm(props: ItemFormProps) {
+  const { labelledBy, tagsInUse, organisations } = props
+  const adding = "onAdd" in props
+  const { opened, item } = adding ? blankOf(props.placement) : props
   const { t } = useTranslation()
   const language = useLanguage()
   const text = editFormFields(
@@ -71,6 +106,8 @@ export function EditItemForm({
     name: "placement",
     label: t("roadmaps.edit.itemFields.placement"),
     multiline: false,
+    // An item that is edited may stay unplaced; a new one is always placed (ADR-014).
+    ...(adding && { required: "placementRequired" as const }),
     options: [
       // An unplaced item starts on none, which can't be chosen again (S4).
       ...(opened.shown.placement === null
@@ -169,24 +206,60 @@ export function EditItemForm({
         details: { asListed: localiseDetails(opened.shown.details, "en") },
       }
 
+  const fields = [
+    ...text.fields,
+    placementField,
+    tagsField,
+    organisationsField,
+    detailsField,
+  ]
+  const initial = {
+    ...text.initial,
+    placement: itemValue(item, "placement"),
+    tags: itemValue(item, "tags"),
+    organisationIds: itemValue(item, "organisationIds"),
+    details: itemValue(item, "details"),
+  }
+  if (!adding) {
+    return (
+      <EditForm
+        fields={fields}
+        initial={initial}
+        labelledBy={labelledBy}
+        onDone={props.onDone}
+      />
+    )
+  }
+  // The form gives the values changed since it opened, so not a placement it kept.
+  const add = (then: AfterAdding) => (values: ItemValues) => {
+    props.onAdd({ placement: initial.placement, ...values }, then)
+  }
   return (
     <EditForm
-      fields={[
-        ...text.fields,
-        placementField,
-        tagsField,
-        organisationsField,
-        detailsField,
-      ]}
-      initial={{
-        ...text.initial,
-        placement: itemValue(item, "placement"),
-        tags: itemValue(item, "tags"),
-        organisationIds: itemValue(item, "organisationIds"),
-        details: itemValue(item, "details"),
-      }}
+      fields={fields}
+      initial={initial}
       labelledBy={labelledBy}
-      onDone={onDone}
+      confirmLabel={t("roadmaps.edit.addItem.submit")}
+      onDone={add("close")}
+      another={{
+        label: t("roadmaps.edit.addItem.another"),
+        onDone: add("another"),
+      }}
+      note={
+        <InsetText className="py-2 pl-4">
+          <p>{t(`roadmaps.edit.addItem.note.${props.action}`)}</p>
+        </InsetText>
+      }
+      takesFocus={props.takesFocus}
     />
   )
+}
+
+/** What the adding form opens on: an item with nothing in it but its `placement`. */
+function blankOf(placement: RoadmapPlacement | null): {
+  opened: OpenedItem
+  item: RoadmapItem
+} {
+  const item = blankItem(placement)
+  return { opened: { read: item, shown: item }, item }
 }

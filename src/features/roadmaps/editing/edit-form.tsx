@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useId,
   useReducer,
   useRef,
@@ -35,6 +36,11 @@ export interface EditFormField<F extends string> {
   label: string
   /** A text area, for text with line breaks; otherwise one line. */
   multiline: boolean
+  /**
+   * Typed or chosen from `options`, it must hold a value: what the form says at the
+   * field when it holds none (STY-046 S2). The title is required whatever this says.
+   */
+  required?: FieldError
   /** Chosen from these, in this order, instead of typed (STY-028). */
   options?: readonly ChoiceOption[]
   /**
@@ -79,7 +85,11 @@ export interface EditFormField<F extends string> {
 }
 
 /** Why a field keeps the form open: its message's key under `roadmaps.edit`. */
-type FieldError = "titleRequired" | "dateInFuture" | "dateInvalid"
+type FieldError =
+  "titleRequired" | "placementRequired" | "dateInFuture" | "dateInvalid"
+
+/** A form's values as it confirms them: each changed since it opened. */
+type ChangedValues<F extends string> = Partial<Record<F, string>>
 
 export interface EditFormProps<F extends string> {
   /** The fields, the first of which is the title, which is required. */
@@ -93,7 +103,22 @@ export interface EditFormProps<F extends string> {
    * the comparison is): a field left as it opened is no edit, whatever has been read
    * since, and neither is one that is `fixed` when the form is confirmed.
    */
-  onDone: (values: Partial<Record<F, string>>) => void
+  onDone: (values: ChangedValues<F>) => void
+  /** What the button that confirms the form says, if not "Done". */
+  confirmLabel?: string
+  /**
+   * A second button that confirms the form, after the first: its label, and what it
+   * is given in place of `onDone` ("Add and start another", STY-046 S4).
+   */
+  another?: { label: string; onDone: (values: ChangedValues<F>) => void }
+  /** Said under the fields, above the buttons. */
+  note?: ReactNode
+  /**
+   * Puts focus in the first field as the form is drawn. A dialog gives the form it
+   * opens on its first focus (`FormDialog`); a form drawn in an open dialog, in place
+   * of one just confirmed, takes it itself.
+   */
+  takesFocus?: boolean
 }
 
 /**
@@ -102,17 +127,23 @@ export interface EditFormProps<F extends string> {
  * (STY-028), ticked from one that opens on request (STY-034, STY-038), tags added,
  * renamed and removed (STY-037), details written as an outline (STY-039) or a date
  * picked (STY-036), or shown read-only when it can't be changed, then "Done" to keep the
- * values pending and the dialog's Cancel to leave them. Its first focus, Escape and
- * closing are the dialog's (`FormDialog`). The title is required, and a date is a real
- * one and not after today: confirming otherwise keeps the form open with an error
- * linked to each field, focusing the first. Writes nothing; the caller keeps the values
- * pending.
+ * values pending and the dialog's Cancel to leave them. The item dialog's adding form is
+ * this one too, over an item with nothing in it (STY-046): its buttons are named for
+ * adding, and a note says when the item is published. Its first focus, Escape and
+ * closing are the dialog's (`FormDialog`). The title is required, as is any field that
+ * says so, and a date is a real one and not after today: confirming otherwise keeps the
+ * form open with an error linked to each field, focusing the first. Writes nothing; the
+ * caller keeps the values pending.
  */
 export function EditForm<F extends string>({
   fields,
   initial,
   labelledBy,
   onDone,
+  confirmLabel,
+  another,
+  note,
+  takesFocus = false,
 }: EditFormProps<F>) {
   const { t } = useTranslation()
   const id = useId()
@@ -121,15 +152,23 @@ export function EditForm<F extends string>({
   const [errors, setErrors] = useState<Partial<Record<F, FieldError>>>({})
   // Draws the form again, so a date field's limit is today's when its picker opens.
   const [, redraw] = useReducer((count: number) => count + 1, 0)
-  const controls = useRef(new Map<F, HTMLInputElement | HTMLTextAreaElement>())
-  const controlRef =
-    (name: F) => (control: HTMLInputElement | HTMLTextAreaElement | null) => {
-      if (control) controls.current.set(name, control)
-      else controls.current.delete(name)
+  const controls = useRef(new Map<F, FieldControl>())
+  const controlRef = (name: F) => (control: FieldControl | null) => {
+    if (control) controls.current.set(name, control)
+    else controls.current.delete(name)
+  }
+  const firstField = fields[0]?.name
+  useEffect(() => {
+    if (takesFocus && firstField !== undefined) {
+      controls.current.get(firstField)?.focus()
     }
+  }, [takesFocus, firstField])
 
-  const submit = (event: SubmitEvent<HTMLFormElement>) => {
-    event.preventDefault()
+  /**
+   * The values to confirm, each changed since the form opened; or `null`, with each
+   * field's error shown and focus on the first, when a field keeps the form open.
+   */
+  const confirmed = (): ChangedValues<F> | null => {
     const trimmed = Object.fromEntries(
       fields.map(({ name }) => [name, values[name].trim()]),
     ) as Record<F, string>
@@ -149,18 +188,21 @@ export function EditForm<F extends string>({
     const invalid = fields.find(({ name }) => found[name])
     if (invalid) {
       controls.current.get(invalid.name)?.focus()
-      return
+      return null
     }
-    onDone(
-      Object.fromEntries(
-        // A field shown read-only is no edit, whatever it held before it was fixed.
-        fields.flatMap(({ name, fixed }) =>
-          fixed || trimmed[name] === opened[name].trim()
-            ? []
-            : [[name, trimmed[name]]],
-        ),
-      ) as Partial<Record<F, string>>,
-    )
+    return Object.fromEntries(
+      // A field shown read-only is no edit, whatever it held before it was fixed.
+      fields.flatMap(({ name, fixed }) =>
+        fixed || trimmed[name] === opened[name].trim()
+          ? []
+          : [[name, trimmed[name]]],
+      ),
+    ) as ChangedValues<F>
+  }
+  const submit = (event: SubmitEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    const values = confirmed()
+    if (values) onDone(values)
   }
 
   return (
@@ -175,6 +217,8 @@ export function EditForm<F extends string>({
         const change = (value: string) => {
           setValues((current) => ({ ...current, [field.name]: value }))
         }
+        const error: FieldError | undefined = errors[field.name]
+        const message = error && t(`roadmaps.edit.${error}`)
         if (field.fixed) {
           return (
             <FixedField key={field.name} label={field.label} {...field.fixed} />
@@ -261,16 +305,17 @@ export function EditForm<F extends string>({
           return (
             <ChoiceField
               key={field.name}
+              ref={controlRef(field.name)}
               id={controlId}
               label={field.label}
               options={field.options}
               value={values[field.name]}
               disabled={field.disabled}
+              error={message}
               onChange={change}
             />
           )
         }
-        const error: FieldError | undefined = errors[field.name]
         const { date } = field
         const Control = field.multiline ? Textarea : Input
         return (
@@ -278,7 +323,7 @@ export function EditForm<F extends string>({
             key={field.name}
             id={controlId}
             label={field.label}
-            error={error && t(`roadmaps.edit.${error}`)}
+            error={message}
           >
             {(control) =>
               date ? (
@@ -319,19 +364,35 @@ export function EditForm<F extends string>({
           </FormField>
         )
       })}
+      {note}
       <DialogFooter>
-        <Button type="submit">{t("roadmaps.edit.done")}</Button>
+        <Button type="submit">{confirmLabel ?? t("roadmaps.edit.done")}</Button>
+        {another && (
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => {
+              const values = confirmed()
+              if (values) another.onDone(values)
+            }}
+          >
+            {another.label}
+          </Button>
+        )}
         <DialogClose type="button">{t("common.cancel")}</DialogClose>
       </DialogFooter>
     </form>
   )
 }
 
+/** A control the form focuses: a field's input, text area or select. */
+type FieldControl = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+
 /**
- * What keeps `field` from being confirmed with `value`, trimmed: the title blank, or a
- * date the browser couldn't read (a half-typed one reads as none), or a date changed
- * from `opened` to one after today. A date left as it opened is no edit, so one already
- * after today never holds up the other fields.
+ * What keeps `field` from being confirmed with `value`, trimmed: the title blank, a
+ * required field with nothing in it, a date the browser couldn't read (a half-typed one
+ * reads as none), or a date changed from `opened` to one after today. A date left as it
+ * opened is no edit, so one already after today never holds up the other fields.
  */
 function fieldError<F extends string>(
   field: EditFormField<F>,
@@ -343,6 +404,7 @@ function fieldError<F extends string>(
   }: { isTitle: boolean; value: string; opened: string; badInput: boolean },
 ): FieldError | null {
   if (isTitle && value === "") return "titleRequired"
+  if (field.required && value === "") return field.required
   if (!field.date) return null
   if (badInput || (value !== "" && !isCalendarDate(value))) {
     return "dateInvalid"

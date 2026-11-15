@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router"
 import { LockKeyholeIcon, MapPinOffIcon } from "lucide-react"
+import { useRef } from "react"
 import { useTranslation } from "react-i18next"
 
 import { BackLink } from "@/components/layout/back-link"
@@ -13,17 +14,23 @@ import { useLanguage } from "@/i18n"
 import type { AppError } from "@/lib/errors"
 import { cn } from "@/lib/utils"
 
+import { AddItemButton } from "../components/add-item-button"
 import { AddedRoadmapNotice } from "../components/added-roadmap-notice"
 import { ListMismatchBadges } from "../components/list-mismatch-badges"
 import { MatchListsAction } from "../components/match-lists-action"
 import { NotPublishedBadge } from "../components/not-published-badge"
 import { RefreshButton } from "../components/refresh-button"
 import { RoadmapFamilyLine } from "../components/roadmap-family-line"
-import { RoadmapItems, RoadmapItemsSkeleton } from "../components/roadmap-items"
+import {
+  RoadmapItems,
+  type RoadmapItemsProps,
+  RoadmapItemsSkeleton,
+} from "../components/roadmap-items"
 import { RoadmapsErrorState } from "../components/roadmaps-error-state"
 import { StatusPanel } from "../components/status-panel"
 import { ChangedTag } from "../editing/edit-controls"
 import { EditableRoadmapAbout } from "../editing/editable-roadmap-about"
+import { usePageItems } from "../editing/page-items"
 import {
   applyRoadmapChanges,
   hasChoiceChange,
@@ -36,6 +43,7 @@ import {
 import { PublishedStateAction } from "../editing/published-state-action"
 import { PublishedStateNotice } from "../editing/published-state-notice"
 import { RoadmapPublishing } from "../editing/roadmap-publishing"
+import { useItemDialog } from "../editing/use-item-dialog"
 import { usePublishedState } from "../editing/use-published-state"
 import { useAddedRoadmapNotice } from "../hooks/use-added-roadmap"
 import { useOrganisations } from "../hooks/use-organisations"
@@ -164,10 +172,11 @@ interface RoadmapViewProps {
  * A listed roadmap: a notice when it was just added (STY-041 S5), its title, a Not
  * published badge when it is not public (D8), a badge when it is out of step with the
  * family or category list (STY-027 S4, S8), Publish roadmap or Unpublish roadmap
- * (STY-035) and a Refresh for the roadmap, its items and the lists (D7), its family and
- * category as they will be published (STY-028 S1), its pending changes with Publish,
- * what it is about, then its items, each showing its pending English (STY-025). The
- * title stays whatever happens to the items.
+ * (STY-035), a Refresh for the roadmap, its items and the lists (D7) and "Add an item"
+ * (STY-046 S1), its family and category as they will be published (STY-028 S1), its
+ * pending changes with Publish, what it is about, then its items, each showing its
+ * pending English (STY-025). The title stays whatever happens to the items. It holds
+ * the page's one item dialog, which "Add an item" and each item's Edit open.
  */
 function RoadmapView({
   roadmap,
@@ -184,6 +193,9 @@ function RoadmapView({
   const lists = useRoadmapLists(hasChoiceChange(changes))
   const shown = applyRoadmapChanges(roadmap, changes, lists.lists)
   const publishedState = usePublishedState(roadmap, items.data)
+  const pageItems = usePageItems(roadmap.id, items.data)
+  const itemDialog = useItemDialog({ roadmap, items: items.data, pageItems })
+  const addItemButton = useRef<HTMLButtonElement>(null)
   const addedNotice = useAddedRoadmapNotice(roadmap)
   const title = localise(shown.title, language)
   const retryList = () => {
@@ -242,6 +254,14 @@ function RoadmapView({
                 void refresh()
               }}
             />
+            <AddItemButton
+              ref={addItemButton}
+              // The dialog names the item's organisations from their list.
+              disabled={!items.data || !organisations.data}
+              onAdd={() => {
+                itemDialog.add(addItemButton)
+              }}
+            />
           </div>
         </div>
         <RoadmapFamilyLine roadmap={shown} />
@@ -259,13 +279,21 @@ function RoadmapView({
         <RoadmapPublishing roadmap={roadmap} />
       </div>
       <EditableRoadmapAbout roadmap={roadmap} />
-      <RoadmapItemsArea roadmapId={roadmap.id} listFetching={listFetching} />
+      <RoadmapItemsArea
+        roadmapId={roadmap.id}
+        listFetching={listFetching}
+        pageItems={pageItems}
+        itemDialog={itemDialog}
+        addItemButton={addItemButton}
+      />
     </div>
   )
 }
 
-interface RoadmapItemsAreaProps {
-  roadmapId: string
+interface RoadmapItemsAreaProps extends Pick<
+  RoadmapItemsProps,
+  "roadmapId" | "pageItems" | "itemDialog" | "addItemButton"
+> {
   /** The roadmap list is being read, as it is again once the roadmap is gone (D11). */
   listFetching: boolean
 }
@@ -276,7 +304,11 @@ interface RoadmapItemsAreaProps {
  * items' failure (ADR-014). An expired session is the list's alert to show, once, above
  * the title, with Reconnect; the items read earlier stay.
  */
-function RoadmapItemsArea({ roadmapId, listFetching }: RoadmapItemsAreaProps) {
+function RoadmapItemsArea({
+  roadmapId,
+  listFetching,
+  ...page
+}: RoadmapItemsAreaProps) {
   const itemsRead = useRoadmapItems(roadmapId)
   const organisationsRead = useOrganisations()
   const { data: items } = itemsRead
@@ -309,6 +341,7 @@ function RoadmapItemsArea({ roadmapId, listFetching }: RoadmapItemsAreaProps) {
           roadmapId={roadmapId}
           items={items}
           organisations={organisations}
+          {...page}
         />
       </div>
     )

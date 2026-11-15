@@ -76,13 +76,15 @@ export function EditableRoadmapAbout({ roadmap }: EditableRoadmapAboutProps) {
         actions={
           <EditControls
             subject={t("roadmaps.about.title")}
-            changed={changedRoadmapFields(changes).length > 0}
-            undoable={undoable}
+            pending={
+              changedRoadmapFields(changes).length > 0 ? "changed" : undefined
+            }
+            droppable={undoable}
             editButton={editButton}
             onEdit={() => {
               setOpened({ read: roadmap, shown })
             }}
-            onUndo={undo}
+            onDrop={undo}
           />
         }
       />

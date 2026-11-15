@@ -1,6 +1,6 @@
 # DEF-009: A new item that was published is not shown when the read after the publish fails
 
-- **Status**: Proposed — triaged by the owner, 2026-11-15 (D1–D3)
+- **Status**: Done — delivered on `fix/def-009-published-item-stays-pending`, awaiting merge
 - **Severity**: Medium — the item is public but missing from the page until a Refresh
   succeeds, so a Product Lead may add it again and publish it twice
 - **Area**: Features (pending-edit rules)
@@ -91,4 +91,45 @@ whether it succeeds or fails, leaving the items as cached before the publish.
 - **D2** (owner, 2026-11-15, the owner's triage of the live chores and defects): Q2 yes. A confirmed edit stays pending, with its text, until a read holds it.
 - **D3** (owner, 2026-11-15, Q3): (a). A card D1 keeps pending offers no Remove until a read holds its item; removing a published item stays STY-049's.
 
-## Delivery _(add on delivery; as in `story.md`)_
+## Delivery
+
+The cause was as stated, and it reached an edit and the roadmap's own text too: both
+`usePublish` and "Save and publish" (`usePublishedState`) settled every change sent once
+the write was confirmed, whatever the reads after it came to. They now settle, by
+`settlePublishedChanges` (`editing/use-publish.ts`), only what a read after the write
+read back (`useReadBack`, `hooks/use-publish-roadmap-changes.ts`): the items' changes
+and new items while the items were read, the roadmap's own text while the list was.
+What a failed read would show stays pending, as any pending change does, until a read
+holds it, which the pending-edit store's reconcile on read already drops.
+
+### Departures
+
+- **S3 holds Edit and Move as well as Remove, and "Discard all"** (agent): a new item
+  kept by D1 is in the data source with its ID, so a change to it would be lost as
+  the item read takes its place, and "Discard all" would drop it as Remove would. Both
+  follow the rule a publish whose answer was lost already has (STY-046 S7). A new item
+  added after the publish keeps its controls.
+- **The roadmap's own text follows D2** (agent): a confirmed edit of it stays pending
+  while the roadmap list can't be read back, as an item's does while the items can't.
+- **An edit kept by D2 keeps "Undo changes"**: undoing it shows the text as last read
+  until the next read, which holds the published text; nothing is published twice.
+- **Before screenshots were captured after the tests were written**, from a build of
+  the base commit (`4ff0fb0`), not from the checkout before the first edit.
+
+### Contract for dependents
+
+- `PendingChangesSnapshot.publishedNewItems`: each roadmap's new items, by ID, that a
+  confirmed publish wrote and no read has held since; pruned to those still pending.
+  The store's `keepPublished(roadmapId, ids)` records them.
+- `discardable(snapshot, roadmapId, newItemId?)`: with an ID, whether that new item can
+  change or go; without, whether all changes can. DEF-010 touches the same
+  `settlePublishedChanges` callers.
+- E2E: `FakeSheets.failReadsAfterNextWrite(status)` fails every read after the next
+  `batchUpdate` until the function it returns is called.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                            |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1, S3   | `roadmap-detail-page-adding.test.tsx` (`A published new item the roadmap can't be read back with (DEF-009)`, four tests, red before the fix); `tests/e2e/adding-an-item.spec.ts` (`a published new item stays, pending and held…`) |
+| S2       | `roadmap-detail-page-editing.test.tsx` (`keeps a published edit's text, pending, … (DEF-009 S2)`, and the roadmap's own text alike), red before the fix                                                                            |

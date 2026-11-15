@@ -12,19 +12,16 @@ import { useAuth } from "@/features/auth/use-auth"
 import { toAppError, type AppErrorKind } from "@/lib/errors"
 import { localToday } from "@/lib/local-today"
 
+import { useReadBack } from "../hooks/use-publish-roadmap-changes"
 import { useSetRoadmapPublished } from "../hooks/use-set-roadmap-published"
 import { discardItems, openConflicts } from "./conflicts"
-import {
-  countChanges,
-  publishesNoItems,
-  settlePublished,
-} from "./pending-changes"
+import { countChanges, publishesNoItems } from "./pending-changes"
 import {
   usePendingChanges,
   usePendingChangesStore,
 } from "./pending-changes-context"
 import { publishAction, type PublishNotice } from "./pending-changes-store"
-import { CURRENT_TEXT } from "./use-publish"
+import { CURRENT_TEXT, settlePublishedChanges } from "./use-publish"
 
 /** What the last publish or unpublish of the roadmap came to, as its page says it. */
 export type PublishedStateOutcomeNotice =
@@ -101,6 +98,7 @@ export function usePublishedState(
   const { mutateAsync, isPending } = useSetRoadmapPublished(roadmap, {
     currentText: CURRENT_TEXT,
   })
+  const readBack = useReadBack(roadmap.id)
   const [open, setOpen] = useState(false)
   const [askedPublishing, setAskedPublishing] = useState<boolean | null>(null)
   const [confirmed, setConfirmed] = useState<PublishedStateQuestion | null>(
@@ -153,9 +151,7 @@ export function usePublishedState(
       )
       switch (result.status) {
         case "set":
-          if (sent) {
-            store.update(roadmap.id, (later) => settlePublished(later, sent))
-          }
+          if (sent) settlePublishedChanges(store, roadmap.id, sent, readBack())
           shown = { kind: "set", published: publishing, withChanges: kept }
           break
         case "unconfirmed":

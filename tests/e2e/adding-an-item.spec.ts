@@ -195,6 +195,54 @@ test("a Product Lead adds an item in the item dialog, pending until published (S
   await expect(main.getByText(/unpublished change/)).toHaveCount(0)
 })
 
+test("a published new item stays, pending and held, while the roadmap can't be read back (DEF-009 S1, S3)", async ({
+  page,
+  sheets,
+}) => {
+  await openRoadmap(page, "producta")
+  const main = page.getByRole("main")
+  await addItem(page, CLINIC, "Next")
+  const readsBack = sheets.failReadsAfterNextWrite(503)
+
+  await main.getByRole("button", { name: "Publish changes" }).click()
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: "Publish changes" })
+    .click()
+
+  // The dialog stays until the failing reads have given up.
+  await expect(main.getByText(/^Changes published\./)).toBeVisible({
+    timeout: 15_000,
+  })
+  await expect(
+    main.getByText("Couldn't refresh this roadmap's items"),
+  ).toBeVisible()
+  expect(sheets.writes).toHaveLength(1)
+  await expect(titlesUnder(page, "Next")).toHaveText([
+    "Card being explored",
+    CLINIC,
+  ])
+  const card = itemCard(page, CLINIC)
+  await expect(newTag(card, CLINIC)).toBeVisible()
+  await expect(main.getByText("1 unpublished change")).toBeVisible()
+  for (const name of ["Edit", "Move", "Remove"]) {
+    await expect(
+      card.getByRole("button", { name: `${name} ${CLINIC}`, exact: true }),
+    ).toHaveAttribute("aria-disabled", "true")
+  }
+
+  // A read that holds it ends it: published, no longer pending.
+  readsBack()
+  await main.getByRole("button", { name: "Refresh" }).click()
+  await expect(newTag(card, CLINIC)).toHaveCount(0)
+  await expect(main.getByText(/unpublished change/)).toHaveCount(0)
+  await expect(titlesUnder(page, "Next")).toHaveText([
+    "Card being explored",
+    CLINIC,
+  ])
+  expect(sheets.writes).toHaveLength(1)
+})
+
 test("the publish dialog lists a new item beside an edit; a co-lead's conflict publishes nothing and keeps it (STY-047 S1)", async ({
   page,
   sheets,

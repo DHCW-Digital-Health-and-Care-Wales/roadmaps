@@ -53,6 +53,11 @@ export interface PendingChangesSnapshot {
    * (S6): until a list holds them again, their page says so.
    */
   readonly removed: ReadonlySet<string>
+  /**
+   * Each roadmap's new items, by ID, that a confirmed publish wrote and no read has held
+   * since, so they are still pending (DEF-009 D1). Only those still pending are kept.
+   */
+  readonly publishedNewItems: ReadonlyMap<string, ReadonlySet<string>>
 }
 
 /**
@@ -68,16 +73,35 @@ export function awaitingRefresh(
 }
 
 /**
- * Whether a roadmap's changes can be discarded, all of them or a new item alone: not
- * while a publish of them is under way, nor until a Refresh follows one that may have
- * written them unseen. Dropping them then could hide what was published.
+ * Whether a published new item of the roadmap waits for a read to hold it: the one
+ * with `newItemId`, or any without (DEF-009 D1).
+ */
+function awaitingRead(
+  snapshot: PendingChangesSnapshot,
+  roadmapId: string,
+  newItemId: string | undefined,
+): boolean {
+  const published = snapshot.publishedNewItems.get(roadmapId)
+  if (!published) return false
+  return newItemId === undefined || published.has(newItemId)
+}
+
+/**
+ * Whether a roadmap's changes can be discarded, all of them or the new item with
+ * `newItemId` alone: not while a publish of them is under way, nor until a Refresh
+ * follows one that may have written them unseen, nor while a new item one published
+ * waits for a read to hold it (DEF-009 D3). Dropping them then could hide what was
+ * published.
  */
 export function discardable(
   snapshot: PendingChangesSnapshot,
   roadmapId: string,
+  newItemId?: string,
 ): boolean {
   return (
-    !snapshot.publishing.has(roadmapId) && !awaitingRefresh(snapshot, roadmapId)
+    !snapshot.publishing.has(roadmapId) &&
+    !awaitingRefresh(snapshot, roadmapId) &&
+    !awaitingRead(snapshot, roadmapId, newItemId)
   )
 }
 
@@ -99,6 +123,14 @@ export interface PendingChangesStore {
     roadmapId: string,
     notice: PublishNotice | null,
   ) => void
+  /**
+   * Records the roadmap's new items with these IDs as published, though still pending
+   * until a read holds them (DEF-009 D1).
+   */
+  readonly keepPublished: (
+    roadmapId: string,
+    newItemIds: readonly string[],
+  ) => void
   readonly clearNotice: (roadmapId: string) => void
   /** Forgets every roadmap's notice, as Disconnect does. */
   readonly clearNotices: () => void
@@ -113,6 +145,7 @@ const EMPTY: PendingChangesSnapshot = {
   publishing: new Set(),
   notices: new Map(),
   removed: new Set(),
+  publishedNewItems: new Map(),
 }
 
 export function createPendingChangesStore(): PendingChangesStore {
@@ -122,6 +155,10 @@ export function createPendingChangesStore(): PendingChangesStore {
     store.setSnapshot({
       ...snapshot,
       notices: retireDecided(snapshot.notices, snapshot.changes),
+      publishedNewItems: retireHeld(
+        snapshot.publishedNewItems,
+        snapshot.changes,
+      ),
     })
   }
 
@@ -167,6 +204,16 @@ export function createPendingChangesStore(): PendingChangesStore {
       const updated = new Map(notices)
       if (notice) updated.set(roadmapId, notice)
       patch({ publishing: stillPublishing, notices: updated })
+    },
+    keepPublished(roadmapId, newItemIds) {
+      if (newItemIds.length === 0) return
+      const { publishedNewItems } = store.getSnapshot()
+      const updated = new Map(publishedNewItems)
+      updated.set(
+        roadmapId,
+        new Set([...(publishedNewItems.get(roadmapId) ?? []), ...newItemIds]),
+      )
+      patch({ publishedNewItems: updated })
     },
     clearNotice(roadmapId) {
       const { notices } = store.getSnapshot()
@@ -230,4 +277,26 @@ function retireDecided(
     }
   }
   return retired ?? notices
+}
+
+/**
+ * `published` with only the new items still pending: one a read held, Discard dropped
+ * or a later publish settled is gone. `published` itself when nothing changes.
+ */
+function retireHeld(
+  published: ReadonlyMap<string, ReadonlySet<string>>,
+  changes: ReadonlyMap<string, RoadmapChanges>,
+): ReadonlyMap<string, ReadonlySet<string>> {
+  let retired: Map<string, ReadonlySet<string>> | undefined
+  for (const [roadmapId, ids] of published) {
+    const pending = new Set(
+      changes.get(roadmapId)?.newItems.map(({ id }) => id) ?? [],
+    )
+    const still = [...ids].filter((id) => pending.has(id))
+    if (still.length === ids.size) continue
+    retired ??= new Map(published)
+    if (still.length === 0) retired.delete(roadmapId)
+    else retired.set(roadmapId, new Set(still))
+  }
+  return retired ?? published
 }

@@ -227,9 +227,10 @@ flowchart LR
   focus is lost when "Add a roadmap" closes, for a Product Lead who clicked it in
   Safari. Proposed (owner, 2026-11-15); found by STY-043's review, which fixed the
   same for About's Edit.
-- [DEF-009](../defects/DEF-009-a-published-new-item-is-not-shown-when-the-read-after-it-fails.md):
+- [DEF-009](../_archive/defects/DEF-009-a-published-new-item-is-not-shown-when-the-read-after-it-fails.md):
   a new item that was published is not shown when the read after the publish fails,
-  until a Refresh succeeds. Proposed (owner, 2026-11-15); found by STY-046's review.
+  until a Refresh succeeds. Done, delivered in its PR and awaiting merge; found by
+  STY-046's review.
 - [DEF-010](../defects/DEF-010-a-publishing-dialog-changes-what-it-shows-once-written.md):
   a dialog that publishes changes what it shows once its changes are no longer
   pending: the publish dialog's list empties, as it closes or when a read leaves

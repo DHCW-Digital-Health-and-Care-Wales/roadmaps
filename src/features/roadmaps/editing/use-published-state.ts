@@ -3,7 +3,11 @@ import { useCallback, useState } from "react"
 import type { PublishProblem } from "@/domain/roadmap/published-state"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
-import { markedUpdated, NO_CHANGES } from "@/domain/roadmap/roadmap-changes"
+import {
+  markedUpdated,
+  NO_CHANGES,
+  type RoadmapChanges,
+} from "@/domain/roadmap/roadmap-changes"
 import { useAuth } from "@/features/auth/use-auth"
 import { toAppError, type AppErrorKind } from "@/lib/errors"
 import { localToday } from "@/lib/local-today"
@@ -37,8 +41,8 @@ export type PublishedStateOutcomeNotice =
 export interface PublishedStateQuestion {
   /** Publish, the roadmap not being published, or unpublish. */
   publishing: boolean
-  /** Pending edits that go with a publish, or stay with an unpublish. */
-  count: number
+  /** The pending changes: they go with a publish, or stay with an unpublish. */
+  changes: RoadmapChanges
   /**
    * Whether a publish leaves the public site none of the roadmap's items to show
    * (STY-042 S3): never while its items are not read.
@@ -108,7 +112,7 @@ export function usePublishedState(
   const changes = snapshot.changes.get(roadmap.id)
   const question: PublishedStateQuestion = {
     publishing,
-    count: countChanges(changes),
+    changes: changes ?? NO_CHANGES,
     noItems:
       publishing && items !== undefined && publishesNoItems(items, changes),
   }

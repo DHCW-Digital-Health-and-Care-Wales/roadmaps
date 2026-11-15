@@ -1,9 +1,9 @@
 # EPC-011: Adding roadmaps and items — started here, not in the spreadsheet, in one dialog each
 
-- **Status**: Active — grilled with the owner on 2026-11-14; STY-040 to STY-046
-  delivered, one story Proposed, three recorded for later grilling
-- **Progress**: 7 of 11 terminal; next selectable: STY-047;
-  blocked on: nothing
+- **Status**: Active — grilled with the owner on 2026-11-14; STY-040 to STY-047
+  delivered, three recorded for later grilling
+- **Progress**: 8 of 11 terminal; next selectable: none, until STY-048 to STY-050 are
+  grilled; blocked on: nothing
 - **Binding ADRs**: ADR-012, ADR-011, ADR-009, ADR-013, ADR-014, ADR-002, ADR-003, ADR-005,
   ADR-006, ADR-010, ADR-008
 
@@ -181,7 +181,7 @@ STY-040 adds **Short name** and brings **Roadmap**, **Published roadmap** and
 | STY-044 | [An item is edited in a dialog](../_archive/EPC-011-adding-roadmaps-and-items/STY-044-edit-an-item-in-a-dialog.md)                                                          | Features/UI + i18n (en + cy) + E2E | STY-041                   | ✅    |
 | STY-045 | [The repository publishes a new item](../_archive/EPC-011-adding-roadmaps-and-items/STY-045-the-repository-publishes-a-new-item.md)                                         | Domain + Infrastructure + Docs     | —                         | ✅    |
 | STY-046 | [A Product Lead adds an item](../_archive/EPC-011-adding-roadmaps-and-items/STY-046-add-an-item.md)                                                                         | Features/UI + i18n (en + cy) + E2E | STY-042, STY-044, STY-045 | ✅    |
-| STY-047 | [The publish dialog names the new items](STY-047-a-new-item-in-the-publish-dialog.md)                                                                                       | Features/UI + i18n (en + cy) + E2E | STY-046                   |       |
+| STY-047 | [The publish dialog names the new items](../_archive/EPC-011-adding-roadmaps-and-items/STY-047-a-new-item-in-the-publish-dialog.md)                                         | Features/UI + i18n (en + cy) + E2E | STY-046                   | ✅    |
 | STY-048 | [A Product Lead removes a roadmap](STY-048-remove-a-roadmap.md)                                                                                                             | to be decided                      | —                         |       |
 | STY-049 | [A Product Lead removes a published item](STY-049-remove-a-published-item.md)                                                                                               | to be decided                      | —                         |       |
 | STY-050 | [A Product Lead reorders the items in a horizon](STY-050-reorder-items-in-a-horizon.md)                                                                                     | to be decided                      | —                         |       |
@@ -230,6 +230,9 @@ flowchart LR
 - [DEF-009](../defects/DEF-009-a-published-new-item-is-not-shown-when-the-read-after-it-fails.md):
   a new item that was published is not shown when the read after the publish fails,
   until a Refresh succeeds. Needs triage; found by STY-046's review.
+- [DEF-010](../defects/DEF-010-the-publish-dialog-changes-what-it-shows-while-it-closes.md):
+  the publish dialog changes what it shows while it closes after a publish: its list
+  empties, and a tick box can appear. Needs triage; found by STY-047's delivery.
 
 ## Related
 

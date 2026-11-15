@@ -607,6 +607,7 @@ export const cy = {
           save: "Dydy'r map trywydd hwn ddim wedi'i gyhoeddi, felly fydd dim byd yn gyhoeddus.",
         },
         changes: "Beth sy'n newid",
+        newItem: "Eitem newydd",
       },
       markUpdated: "Nodi ei fod wedi'i ddiweddaru heddiw",
       notice: {

@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test"
 
 import {
+  addItem,
   addItemButtons,
   clickOutside,
   editItemButton,
@@ -18,7 +19,8 @@ import { connect, expect, test } from "./fixtures/test"
  * on a card tagged "New", and nothing is written until the roadmap is published or
  * saved. The rules of each field are held in `editing.spec.ts`, through the same form.
  * The journey runs once, at the default size and theme (EPC-011's delivery notes): the
- * accessibility spec and the focus tour open the dialog in both themes.
+ * accessibility spec and the focus tour open the dialog in both themes. The dialog that
+ * asks before a publish lists each new item, marked as new (STY-047).
  */
 
 const CLINIC = "Choose a clinic closer to home"
@@ -65,6 +67,14 @@ function itemCard(page: Page, title: string): Locator {
 /** The "New" tag on a card, which is named for its item. */
 function newTag(card: Locator, title: string, word = "New"): Locator {
   return card.getByText(`${word} ${title}`, { exact: true })
+}
+
+/**
+ * The lines under "What changes" in the open dialog that asks before a publish: each a
+ * name, then what changes of it (STY-047).
+ */
+function listedChanges(page: Page): Locator {
+  return page.getByRole("alertdialog").getByRole("listitem")
 }
 
 /** The cells of the rows a publish appended, by the write's last request. */
@@ -161,6 +171,7 @@ test("a Product Lead adds an item in the item dialog, pending until published (S
 
   // Publishing writes it in the one write, as a row after the roadmap's last.
   await main.getByRole("button", { name: "Publish changes" }).click()
+  await expect(listedChanges(page)).toHaveText([`${CLINIC}New item`])
   await page
     .getByRole("alertdialog")
     .getByRole("button", { name: "Publish changes" })
@@ -182,6 +193,72 @@ test("a Product Lead adds an item in the item dialog, pending until published (S
     card.getByRole("button", { name: `Remove ${CLINIC}` }),
   ).toHaveCount(0)
   await expect(main.getByText(/unpublished change/)).toHaveCount(0)
+})
+
+test("the publish dialog lists a new item beside an edit; a co-lead's conflict publishes nothing and keeps it (STY-047 S1)", async ({
+  page,
+  sheets,
+}) => {
+  await openRoadmap(page, "producta")
+  const main = page.getByRole("main")
+  const confirmPublish = async () => {
+    await main.getByRole("button", { name: "Publish changes" }).click()
+    await page
+      .getByRole("alertdialog")
+      .getByRole("button", { name: "Publish changes" })
+      .click()
+  }
+  // Only an item with an ID can conflict: a first publish gives every item its ID.
+  await addItem(page, CHECK_IN, "Now")
+  await confirmPublish()
+  await expect(main.getByText(/^Changes published\./)).toBeVisible()
+  expect(sheets.writes).toHaveLength(1)
+
+  const EDITED = "Card being explored"
+  await addItem(page, CLINIC, "Next")
+  const editing = await openEditItemDialog(page, EDITED)
+  await editing.getByRole("textbox", { name: "Description" }).fill("Mine.")
+  await editing.getByRole("button", { name: "Done" }).click()
+  await expect(editing).toBeHidden()
+  sheets.coLead("ProductA", EDITED, "Description", "Theirs.")
+
+  // The edit as it is always listed, then the new item, marked as new.
+  await main.getByRole("button", { name: "Publish changes" }).click()
+  const dialog = page.getByRole("alertdialog", {
+    name: "Publish these changes?",
+  })
+  await expect(dialog.getByRole("heading", { level: 3 })).toHaveText(
+    "What changes",
+  )
+  await expect(listedChanges(page)).toHaveText([
+    `${EDITED}Description`,
+    `${CLINIC}New item`,
+  ])
+  await dialog.getByRole("button", { name: "Publish changes" }).click()
+
+  // The conflict publishes nothing; its review names the edit alone, and the new item
+  // stays pending.
+  const review = main.getByRole("alert")
+  await expect(review).toContainText("Someone else has changed text you edited")
+  await expect(review).toContainText("Nothing was published.")
+  await expect(review.getByRole("listitem")).toHaveCount(1)
+  await expect(review.getByRole("listitem")).toContainText(
+    `${EDITED}: Description`,
+  )
+  await expect(review).not.toContainText(CLINIC)
+  expect(sheets.writes).toHaveLength(1)
+  await expect(newTag(itemCard(page, CLINIC), CLINIC)).toBeVisible()
+  await expect(main.getByText("2 unpublished changes")).toBeVisible()
+
+  // Once the edit is decided, the new item is published with the rest.
+  await review.getByRole("button", { name: /^Use theirs/ }).click()
+  await expect(main.getByText("1 unpublished change")).toBeVisible()
+  await confirmPublish()
+  await expect(main.getByText(/^Changes published\./)).toBeVisible()
+  expect(sheets.writes).toHaveLength(2)
+  const [row = []] = appendedRows(sheets.writes[1])
+  expect(row).toContain(CLINIC)
+  await expect(newTag(itemCard(page, CLINIC), CLINIC)).toHaveCount(0)
 })
 
 test("“Add and start another” keeps the dialog open; a new item is edited, moved and removed before publishing (S4, S6)", async ({
@@ -306,6 +383,7 @@ test("an empty roadmap's panel holds “Add an item”; its first item brings th
   await expect(question).toHaveAccessibleDescription(
     "It shows on the public site after its next nightly update. Your unsaved change goes public with it.",
   )
+  await expect(listedChanges(page)).toHaveText([`${CLINIC}New item`])
   await question.getByRole("button", { name: "Save and publish" }).click()
   await expect(
     main.getByText(/^Changes saved and Product C roadmap published\./),
@@ -387,7 +465,7 @@ test("the dialog stays through the session's end, and “Add item” still adds 
   ).toHaveAttribute("aria-disabled", "true")
 })
 
-test("adding an item in Welsh (S9)", async ({ page }) => {
+test("adding an item in Welsh (S9, STY-047 S2)", async ({ page }) => {
   await useLanguage(page, "cy")
   await openRoadmap(page, "producta", "Cysylltu â Google")
   const main = page.getByRole("main")
@@ -425,4 +503,11 @@ test("adding an item in Welsh (S9)", async ({ page }) => {
     card.getByRole("button", { name: `Tynnu ${CLINIC}` }),
   ).toBeVisible()
   await expect(main.getByText("1 newid heb ei gyhoeddi")).toBeVisible()
+
+  // The publish dialog marks it as new, in Welsh (STY-047 S2).
+  await main.getByRole("button", { name: "Cyhoeddi'r newidiadau" }).click()
+  await expect(
+    page.getByRole("alertdialog").getByRole("heading", { level: 3 }),
+  ).toHaveText("Beth sy'n newid")
+  await expect(listedChanges(page)).toHaveText([`${CLINIC}Eitem newydd`])
 })

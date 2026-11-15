@@ -13,7 +13,9 @@ import {
 import { Button } from "@/components/ui/button"
 
 import { MarkUpdatedCheckbox } from "./mark-updated-checkbox"
+import { countChanges } from "./pending-changes"
 import type { PublishedState } from "./use-published-state"
+import { WhatChanges } from "./what-changes"
 
 export interface PublishedStateActionProps {
   state: PublishedState
@@ -25,8 +27,8 @@ export interface PublishedStateActionProps {
  * "Publish roadmap" or "Unpublish roadmap" beside a roadmap's title, and the dialog
  * that asks first, saying when the public site shows the change, when it would show
  * the roadmap with no items (STY-042 S3), and what happens to pending edits: published
- * with it ("Save and publish", S5) or left pending (S7), and, when publishing, "Mark as
- * updated today" (STY-036 D10).
+ * with it ("Save and publish", S5), and then listed (`WhatChanges`, STY-047 S1), or left
+ * pending (S7), and, when publishing, "Mark as updated today" (STY-036 D10).
  * Unavailable, though focusable, while it can't be chosen (S1); the dialog can't be
  * closed while the write is under way.
  */
@@ -40,7 +42,9 @@ export function PublishedStateAction({
   // asked while it closes, though the state flips under it.
   const liveVerb = state.publishing ? "publish" : "unpublish"
   const Icon = state.publishing ? GlobeIcon : EyeOffIcon
-  const { publishing, count, noItems } = state.asked
+  const { publishing, changes, noItems } = state.asked
+  const count = countChanges(changes)
+  const sendsChanges = publishing && count > 0
   const askedVerb = publishing ? "publish" : "unpublish"
   const description: string[] = [
     t(`roadmaps.publishRoadmap.confirm.note.${askedVerb}`),
@@ -86,6 +90,7 @@ export function PublishedStateAction({
               {description.join(" ")}
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {sendsChanges && <WhatChanges changes={changes} />}
           {state.offersMarkUpdated && (
             <MarkUpdatedCheckbox
               checked={state.markUpdated}
@@ -100,7 +105,7 @@ export function PublishedStateAction({
               aria-busy={pending}
               onClick={state.confirm}
             >
-              {publishing && count > 0
+              {sendsChanges
                 ? t("roadmaps.publishRoadmap.confirm.saveAndPublish")
                 : t(`roadmaps.publishRoadmap.action.${askedVerb}`)}
             </Button>

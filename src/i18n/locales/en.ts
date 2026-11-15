@@ -654,6 +654,8 @@ export const en = {
         },
         /** Lists what changes, by roadmap section or item title. */
         changes: "What changes",
+        /** Under the title of an item that is new, in place of its changed fields. */
+        newItem: "New item",
       },
       /**
        * The tick box that sets the roadmap's `Last updated` to today in the same write,

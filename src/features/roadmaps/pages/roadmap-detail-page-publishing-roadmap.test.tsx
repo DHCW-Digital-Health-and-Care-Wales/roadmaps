@@ -143,6 +143,9 @@ describe("publishing or unpublishing a roadmap (STY-035)", () => {
         "It shows on the public site after its next nightly update.",
       ),
     ).toBeVisible()
+    // Nothing is pending, so nothing is listed as changing.
+    expect(within(dialog).queryByText("What changes")).toBeNull()
+    expect(within(dialog).queryByRole("list")).toBeNull()
     await user.click(within(dialog).getByRole("button", { name: "Cancel" }))
     expect((await repository.listRoadmaps())[0]?.published).toBe(false)
 
@@ -225,6 +228,15 @@ describe("publishing or unpublishing a roadmap (STY-035)", () => {
     expect(
       within(dialog).getByText(/Your unsaved change goes public with it\./),
     ).toBeVisible()
+    // Listed as the publish dialog lists it (STY-047 S1).
+    expect(
+      within(dialog).getByRole("heading", { name: "What changes" }),
+    ).toBeVisible()
+    expect(
+      within(dialog)
+        .getAllByRole("listitem")
+        .map(({ textContent }) => textContent),
+    ).toEqual(["About this roadmapStatus"])
     await user.click(
       within(dialog).getByRole("button", { name: "Save and publish" }),
     )
@@ -270,11 +282,13 @@ describe("publishing or unpublishing a roadmap (STY-035)", () => {
     expect(main.getByText("1 unpublished change")).toBeVisible()
 
     await user.click(main.getByRole("button", { name: "Unpublish roadmap" }))
+    const dialog = within(await screen.findByRole("alertdialog"))
     expect(
-      within(await screen.findByRole("alertdialog")).getByText(
-        /Your unpublished change stays, to save later\./,
-      ),
+      dialog.getByText(/Your unpublished change stays, to save later\./),
     ).toBeVisible()
+    // It stays pending, so the question lists nothing as changing.
+    expect(dialog.queryByText("What changes")).toBeNull()
+    expect(dialog.queryByRole("list")).toBeNull()
     await user.click(
       within(screen.getByRole("alertdialog")).getByRole("button", {
         name: "Unpublish roadmap",

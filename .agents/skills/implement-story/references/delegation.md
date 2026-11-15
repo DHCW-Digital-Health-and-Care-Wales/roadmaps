@@ -158,9 +158,8 @@ pass.
   auth or UI behaviour), not only wording, docs, tests or renames, start one
   fresh reviewer over the whole diff in the lane that owns that behaviour: Sol
   for correctness, Sonnet at high effort for quality. A fix for a CI finding
-  counts. The pass
-  is its own task beside that lane's re-checks, briefed as a first round at the
-  new head with the requirements and pinned SHAs, and asked to judge from those
+  counts. The pass is its own task beside that lane's re-checks, briefed as a
+  first round at the new head with the requirements and pinned SHAs, and asked to judge from those
   and the pinned diff alone, not the PR's body or comments. Its own findings
   that would trigger a re-check get one, unless the pass ran after the cap.
   Record in the PR body's Review record whether the pass ran and why.

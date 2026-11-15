@@ -46,7 +46,7 @@ and publishes
   is modal, so the publish bar can't be used while the form is open with the date
   changed. The path in the Summary is left only where the dialog is opened while that
   publish is still being written. The owner may prefer to close this chore: until
-  then it stays Proposed.
+  then it stays Proposed (closed by D2).
 
 - **D2** (owner, 2026-11-15, the owner's triage of the live chores and defects): Won't do, accepting the agent's recommendation and its reason: since STY-043 the About form is in a modal dialog, so the path is left only while a publish is still being written as the dialog opens (D1 above), and "Keep mine" resolves it. Reopen on a report of the refusal from a Product Lead.
 

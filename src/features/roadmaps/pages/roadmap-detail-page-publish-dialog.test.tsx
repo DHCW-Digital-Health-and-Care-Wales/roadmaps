@@ -1,6 +1,6 @@
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import type { AuthState } from "@/domain/auth/auth-client"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
@@ -92,10 +92,6 @@ async function confirmIn(user: User, name: string) {
 }
 
 describe("A dialog that publishes closes showing what it asked (DEF-010 S1)", () => {
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
-
   it("keeps the publish dialog's list while it closes", async () => {
     const { user } = await renderPage("/roadmaps/producta")
     const item = await openEditItemDialog(user, "First item")

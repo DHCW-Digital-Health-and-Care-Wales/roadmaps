@@ -8,7 +8,7 @@
 - **Binding ADRs**: ADR-012, ADR-014, ADR-005, ADR-008, ADR-010
 - **Suggested model**: Opus — moves the app's largest form, with its tags and details
   editors and their focus rules, out of the card without changing what it does
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/85
 
 ## Summary
 

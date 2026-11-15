@@ -50,18 +50,20 @@ Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status toke
 
 ## Defects
 
-| ID                                                                                                    | Defect                                                                                         | Status    |
-| ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | --------- |
-| [DEF-001](_archive/defects/DEF-001-roadmaps-heading-title-case.md)                                    | The roadmaps heading is in Title Case                                                          | Done      |
-| [DEF-002](defects/DEF-002-header-home-link-name-on-phones.md)                                         | On a phone, the header's home link is named without the word it shows                          | Proposed  |
-| [DEF-003](_archive/defects/DEF-003-refusal-shows-stale-text-or-restores-removed-roadmap.md)           | After a refused publish, "Use theirs" can show older text, and a removed roadmap can come back | Done      |
-| [DEF-004](_archive/defects/DEF-004-pending-no-category-dropped-when-category-unlisted.md)             | A pending "No category" is dropped, unwritten, once the roadmap's category leaves its list     | Won't fix |
-| [DEF-005](defects/DEF-005-about-form-shows-no-family-after-refresh.md)                                | An open About form shows "No family" after Refresh reads a co-lead's family                    | Proposed  |
-| [DEF-006](_archive/defects/DEF-006-a-refused-reconnect-drops-the-add-a-roadmap-dialog.md)             | A reconnect Google refuses drops the "Add a roadmap" dialog and what was typed                 | Won't fix |
-| [DEF-007](defects/DEF-007-status-panels-have-rounded-corners.md)                                      | Status panels have rounded corners; cards and the About panel beside them are square           | Proposed  |
-| [DEF-008](defects/DEF-008-focus-is-lost-after-add-a-roadmap-closes-in-safari.md)                      | Focus is lost when "Add a roadmap" closes, for a Product Lead who clicked it in Safari         | Proposed  |
-| [DEF-009](_archive/defects/DEF-009-a-published-new-item-is-not-shown-when-the-read-after-it-fails.md) | A new item that was published is not shown when the read after the publish fails               | Done      |
-| [DEF-010](defects/DEF-010-a-publishing-dialog-changes-what-it-shows-once-written.md)                  | A dialog that publishes changes what it shows once its changes are no longer pending           | Proposed  |
+| ID                                                                                                        | Defect                                                                                         | Status       |
+| --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------ |
+| [DEF-001](_archive/defects/DEF-001-roadmaps-heading-title-case.md)                                        | The roadmaps heading is in Title Case                                                          | Done         |
+| [DEF-002](defects/DEF-002-header-home-link-name-on-phones.md)                                             | On a phone, the header's home link is named without the word it shows                          | Proposed     |
+| [DEF-003](_archive/defects/DEF-003-refusal-shows-stale-text-or-restores-removed-roadmap.md)               | After a refused publish, "Use theirs" can show older text, and a removed roadmap can come back | Done         |
+| [DEF-004](_archive/defects/DEF-004-pending-no-category-dropped-when-category-unlisted.md)                 | A pending "No category" is dropped, unwritten, once the roadmap's category leaves its list     | Won't fix    |
+| [DEF-005](defects/DEF-005-about-form-shows-no-family-after-refresh.md)                                    | An open About form shows "No family" after Refresh reads a co-lead's family                    | Proposed     |
+| [DEF-006](_archive/defects/DEF-006-a-refused-reconnect-drops-the-add-a-roadmap-dialog.md)                 | A reconnect Google refuses drops the "Add a roadmap" dialog and what was typed                 | Won't fix    |
+| [DEF-007](defects/DEF-007-status-panels-have-rounded-corners.md)                                          | Status panels have rounded corners; cards and the About panel beside them are square           | Proposed     |
+| [DEF-008](defects/DEF-008-focus-is-lost-after-add-a-roadmap-closes-in-safari.md)                          | Focus is lost when "Add a roadmap" closes, for a Product Lead who clicked it in Safari         | Proposed     |
+| [DEF-009](_archive/defects/DEF-009-a-published-new-item-is-not-shown-when-the-read-after-it-fails.md)     | A new item that was published is not shown when the read after the publish fails               | Done         |
+| [DEF-010](defects/DEF-010-a-publishing-dialog-changes-what-it-shows-once-written.md)                      | A dialog that publishes changes what it shows once its changes are no longer pending           | Proposed     |
+| [DEF-011](defects/DEF-011-an-edit-back-to-the-text-last-read-is-dropped-before-a-read-holds-a-publish.md) | An edit back to the text last read is dropped while a published edit waits for a read          | Needs triage |
+| [DEF-012](defects/DEF-012-an-item-without-an-id-edited-again-before-a-read-is-reported-changed.md)        | An item without an ID, edited again before a read holds its publish, is reported changed       | Needs triage |
 
 A defect found during delivery is recorded in `defects/` with
 Status `Needs triage` and listed here until the owner triages it.

@@ -54,7 +54,10 @@ judging. Two labels on one review are not two independent reviewers.
 Cross-review handoffs contain evidence, not instructions to accept another
 verdict. Ask for findings ranked by severity, each with a _realistic trigger_:
 the input or workflow in this repository that produces it. A finding without
-one is a decline candidate.
+one is a decline candidate. Ask too for each part of the pinned diff the
+reviewer left unread, by path and lines, which Dispatch step 5 gives to a
+fresh reviewer: a reviewer not asked may report a diff it read in part as
+read.
 
 For role-specific briefs, use `.claude/agents/mechanical-worker.md`,
 `.claude/agents/quality-reviewer.md` and `.claude/agents/code-reviewer.md`. The

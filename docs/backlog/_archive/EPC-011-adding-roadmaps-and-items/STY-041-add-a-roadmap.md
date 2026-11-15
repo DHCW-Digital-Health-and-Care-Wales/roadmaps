@@ -219,7 +219,7 @@ unavailable.
   page, as any failed connection has since the first sign-in story, and the dialog and
   its text go with the list. Not changed here: what a failed connection shows is the
   owner's to choose,
-  [DEF-006](../../defects/DEF-006-a-refused-reconnect-drops-the-add-a-roadmap-dialog.md).
+  [DEF-006](../defects/DEF-006-a-refused-reconnect-drops-the-add-a-roadmap-dialog.md).
 - **S5: the notice is said once** (agent; review, Opus): by the page as it opens, until
   the dwell ends or it is dismissed. Going back to the page, or reloading it, says
   nothing, and publishing the roadmap ends it for good.

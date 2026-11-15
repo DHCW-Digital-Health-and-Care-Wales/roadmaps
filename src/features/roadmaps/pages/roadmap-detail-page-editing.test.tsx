@@ -31,13 +31,13 @@ import {
   editItemText,
   openEditItemDialog,
 } from "../testing/item-dialog"
+import { expectOpeningFocus } from "../testing/opening-focus"
 import {
   confirmRoadmapEdit,
   editRoadmapDialog,
   editRoadmapText,
   openEditRoadmapDialog,
 } from "../testing/roadmap-dialog"
-import { expectOpeningFocus } from "../testing/opening-focus"
 
 const roadmaps: Roadmap[] = [
   createTestRoadmap("producta", "Product A roadmap", {

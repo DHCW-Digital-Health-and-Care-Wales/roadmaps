@@ -532,9 +532,9 @@ describe("The Organisations field opens on request (STY-038)", () => {
 
     button().focus()
     await user.keyboard("{Enter}")
-    expect(
+    await expectOpeningFocus(
       form.getByRole("checkbox", { name: "All Wales (National)" }),
-    ).toHaveFocus()
+    )
     await user.keyboard(" ")
     expect(
       form.getByRole("checkbox", { name: "All Wales (National)" }),

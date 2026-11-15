@@ -71,15 +71,14 @@ and a sibling site that reads an opening focus without waiting is checked the sa
 ## Delivery
 
 The cause was as stated. `expectOpeningFocus` (`features/roadmaps/testing/opening-focus.ts`)
-waits, with `waitFor`, for a field to hold focus, and every site that reads the focus a
-dialog or an opened field moves to goes through it: the eight in Cause; the three that
-already waited by hand (`roadmap-detail-page-editing.test.tsx`,
-`roadmap-detail-page-adding.test.tsx`); and the others the read-through found: an opened
-field's first focus in `opening-field.test.tsx` (three), the tags field's Rename and
-Add a tag, the details field's outline and the organisations field's first box. A
-`toHaveFocus` after an action (Done refused, an undo, a close) is left as it was: focus
-moves there as part of the action. The rule is `src/features/roadmaps/AGENTS.md`, the
-nearest guide to every site.
+waits, with `waitFor`, for a field to hold focus, and every site found that reads the focus
+a dialog or an opened field moves to goes through it: the eight in Cause,
+the three that already waited by hand, and seven more the read-through found: an opened
+field's first focus in `opening-field.test.tsx` (the "opens in place" test), the tags
+field's Rename, the details field's two opening reads and the organisations field's three
+(its keyboard test among them). A `toHaveFocus` after an action (Done refused, an undo, a
+close) is left as it was: focus moves there as part of the action. The rule is
+`src/features/roadmaps/AGENTS.md`, the nearest guide to every site.
 
 ### Departures
 

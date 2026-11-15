@@ -154,7 +154,10 @@ const ITEM_ID = "itemid"
 const TITLE = "title"
 const HORIZON = "horizon"
 
-/** An `Item ID` as the editor makes one (ADR-012), which a new item's row holds. */
+/**
+ * An `Item ID` as the editor makes one (ADR-012), which a new item's row holds: the
+ * fake's own copy of the format, kept apart from `createItemId` like `HORIZON_VALUES`.
+ */
 const ITEM_ID_VALUE = /^[bcdfghjkmnpqrstvwxz][bcdfghjkmnpqrstvwxz2-9]{7}$/
 
 /**

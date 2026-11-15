@@ -4,7 +4,8 @@
  * Pure functions over `RoadmapChanges`. They are the domain's, as the checks of a new
  * roadmap and a new family are, since what a new item must hold and how its ID is made
  * are rules of a roadmap, whatever screen adds one; how an edit is kept and finds its
- * item again is `features/roadmaps/editing/pending-changes.ts`, which calls these.
+ * item again is `features/roadmaps/editing/pending-changes.ts`, whose `reconcileItems`
+ * calls `dropPublishedNewItems`. The screen that adds an item (STY-046) calls the rest.
  */
 
 import { AppError } from "@/lib/errors"

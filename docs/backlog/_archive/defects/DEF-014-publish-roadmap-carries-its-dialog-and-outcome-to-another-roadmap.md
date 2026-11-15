@@ -8,7 +8,7 @@
 - **Depends on**: none
 - **Binding ADRs**: ADR-012
 - **Suggested model**: Sonnet — key the page's view by its roadmap
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/113
 
 ## Summary
 

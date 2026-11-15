@@ -17,7 +17,7 @@ export function PhaseBanner() {
 
   return (
     <div data-slot="phase-banner" className="border-b">
-      <PageContainer className="flex items-baseline gap-x-3 py-2.5 text-body-xs">
+      <PageContainer className="flex items-center gap-x-3 py-2.5 text-body-xs">
         <Badge variant="info">{t("layout.phase.tag")}</Badge>
         <p className="min-w-0 text-pretty">
           {t("layout.phase.text")}

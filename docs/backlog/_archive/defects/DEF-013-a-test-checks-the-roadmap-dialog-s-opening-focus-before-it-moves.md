@@ -8,7 +8,7 @@
 - **Depends on**: none
 - **Binding ADRs**: none
 - **Suggested model**: Sonnet — a shared helper for eight assertions, and a guide rule
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/112
 
 ## Summary
 

@@ -3,7 +3,7 @@
 - **Status**: Needs triage — found by retro of DEF-009 (a CI flake on PR #95)
 - **Severity**: Low — a Verify run fails now and then on a change that does not touch
   the file, and a rerun passes; no user is affected
-- **Area**: Features/UI (test)
+- **Area**: Features/UI
 - **Epic**: EPC-011-adding-roadmaps-and-items
 - **Depends on**: none
 - **Binding ADRs**: none
@@ -21,11 +21,12 @@ but it will come back on any PR. The product behaves as intended; the test is ea
 
 ## Reproduce
 
-Seen once, not reproduced locally (not tried under load). At `10f5295` on the default branch:
+Seen once in CI; not reproduced locally, and no method is known to. At `10f5295` on the
+default branch, one way to try:
 
 1. Rerun `./node_modules/.bin/vitest run src/features/roadmaps/pages/roadmap-detail-page-editing.test.tsx`
    repeatedly, with the CPU loaded (parallel runs), until "edits the roadmap's five
-   fields, tagging the block and the title (S5)" fails.
+   fields, tagging the block and the title (S5)" fails (it may not).
 
 **Expected**: the test passes on every run.
 **Actual**: on a slow runner, the assertion at line 387 fails with the focus still on
@@ -38,10 +39,12 @@ it renders; the test reads focus straight after `openEditRoadmapDialog` and the 
 read, with no wait. A neighbouring test waits for the same thing
 (`roadmap-detail-page-editing.test.tsx:161`, inside `waitFor`).
 
-- `rg -n -B1 'getByRole\("textbox", \{ name: "[A-Za-z ]+" \}\)\)\.toHaveFocus' src` —
-  the sites that read an opening focus without `waitFor`, to check each for the same
-  early read: `roadmap-detail-page-editing.test.tsx:387` (the failure),
-  `roadmaps-page-adding.test.tsx:166`, `roadmap-detail-page-tags.test.tsx:177`,
+- `rg -n 'getByRole\("textbox", \{ name: "[A-Za-z ]+" \}\)\)?\.toHaveFocus' src` — 11 hits.
+  Two already sit in `waitFor` (`roadmap-detail-page-editing.test.tsx:162`,
+  `roadmap-detail-page-adding.test.tsx:1247`); two read focus after an action, not after
+  opening (`roadmap-detail-page-tags.test.tsx:334,616`). The other seven read an opening
+  focus without waiting: `roadmap-detail-page-editing.test.tsx:387` (the failure),
+  `roadmaps-page-adding.test.tsx:166`, `roadmap-detail-page-tags.test.tsx:177,200,612`,
   `opening-field.test.tsx:155,183`.
 
 ## Acceptance criteria

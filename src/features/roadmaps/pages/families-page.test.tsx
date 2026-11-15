@@ -21,11 +21,7 @@ import { renderWithProviders } from "@/test/render-with-providers"
 
 import { holdCall } from "../testing/held-call"
 import { createInMemoryRoadmapRepository } from "../testing/in-memory-roadmap-repository"
-
-const connected: AuthState = {
-  status: "connected",
-  expiresAt: Date.now() + 3_600_000,
-}
+import { connected } from "@/test/connected-state"
 
 function member(id: string, title: string, published: boolean): Roadmap {
   return createTestRoadmap(id, title, {

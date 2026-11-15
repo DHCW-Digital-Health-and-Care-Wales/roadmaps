@@ -1,7 +1,6 @@
 # CHO-012: The other tests take their families, categories and connected state from the shared fixtures
 
-- **Status**: Proposed — found delivering CHO-011, which shared the lists of the three
-  page tests it measured and left the rest
+- **Status**: Done — in its PR, awaiting merge
 - **Type**: Refactor
 - **Area**: Domain + Features/UI (tests only)
 - **Epic**: standalone
@@ -52,3 +51,40 @@ At commit `858be74`, with CHO-011's changes.
 
 - Any change to what the tests assert, or to production code.
 - The infrastructure tests' spreadsheet rows.
+
+## Delivery
+
+### Departures
+
+- **The two contract files keep their lists.** `roadmap-repository-contract.ts` and
+  `published-state-contract.ts` declare families and categories inside single tests,
+  and they differ on purpose: the first lists them in data-source order with a
+  `Medicines` family and a shortened Welsh category name; the second needs a family
+  with no Welsh name. Neither is the shared list, so S1 leaves them.
+- **`roadmap-detail-page-choices.test.tsx` keeps its `Workforce` family**, the one
+  family it adds to `TEST_FAMILIES` (S1's "declares only that one").
+- **`auth-scoped-queries.test.ts` and `auth-notice.test.tsx` keep their own states**:
+  a 60 s session and a builder function, not the page tests' connected state.
+- **`new-roadmap.test.ts` took the shared Welsh name** for Medicines & Diagnostics
+  (none, not `Meddyginiaethau a Diagnosteg`); no assertion reads it by value, each
+  reads `MEDICINES_AND_DIAGNOSTICS.name`.
+- **Inline IDs** were read from the shared constants only in the two files this chore
+  touches (`family-changes.test.ts`, `new-roadmap.test.ts`), as the Measurement says
+  ("when touched").
+
+### Contract for dependents
+
+- **The connected state (Vitest)**: `connected` (`src/test/connected-state.ts`), beside
+  `renderWithProviders`: `{ status: "connected", expiresAt: Date.now() + 3_600_000 }`,
+  fixed when the module loads. A page test imports it; a test that needs a session of
+  another length writes its own state.
+
+### Scenario evidence
+
+No test was added or removed, and no assertion changed: 2152 tests in 96 files, as
+before.
+
+| Scenario | Evidence                                                                                                                                                                                                 |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `rg -n ": Family = \{\|: Category = \{" src --glob '*.test.ts*'` finds only `roadmap-detail-page-choices.test.tsx`'s `Workforce`; the two domain tests import the lists from `test-lists.ts`             |
+| S2       | `rg -n "const connected: AuthState" src` finds `src/test/connected-state.ts` and `auth-scoped-queries.test.ts`'s 60 s state; the 22 page, hook and shell tests that declared the hour-long one import it |

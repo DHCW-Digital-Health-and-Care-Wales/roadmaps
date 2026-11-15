@@ -2,7 +2,6 @@ import { act, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
-import type { AuthState } from "@/domain/auth/auth-client"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { RoadmapRepository } from "@/domain/roadmap/roadmap-repository"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
@@ -10,11 +9,7 @@ import { AppError } from "@/lib/errors"
 import { renderWithProviders } from "@/test/render-with-providers"
 
 import { roadmapKeys } from "../hooks/roadmap-queries"
-
-const connected: AuthState = {
-  status: "connected",
-  expiresAt: Date.now() + 3_600_000,
-}
+import { connected } from "@/test/connected-state"
 
 const roadmaps: Roadmap[] = [
   createTestRoadmap("producta", "Product A roadmap"),

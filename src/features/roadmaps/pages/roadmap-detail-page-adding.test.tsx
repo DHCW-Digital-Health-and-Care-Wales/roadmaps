@@ -30,11 +30,7 @@ import {
   openAddItemDialog,
   openEditItemDialog,
 } from "../testing/item-dialog"
-
-const connected: AuthState = {
-  status: "connected",
-  expiresAt: Date.now() + 3_600_000,
-}
+import { connected } from "@/test/connected-state"
 
 const roadmaps: Roadmap[] = [
   createTestRoadmap("producta", "Product A roadmap"),

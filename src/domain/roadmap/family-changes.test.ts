@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest"
 
-import type { Family } from "./family"
 import {
   checkFamilyInput,
   familyHeld,
@@ -8,31 +7,26 @@ import {
   planNewFamily,
   type FamilyEdit,
 } from "./family-changes"
+import {
+  MEDICINES_AND_DIAGNOSTICS,
+  SINGLE_RECORD,
+  TEST_FAMILIES,
+} from "./testing/test-lists"
 import { createTestRoadmap } from "./testing/test-roadmap"
 
-const singleRecord: Family = {
-  id: "fc29g5b9",
-  name: { en: "Single Record", cy: "Cofnod Sengl" },
-  colour: "#12a3c9",
-}
-const medicines: Family = {
-  id: "vdkxj63m",
-  name: { en: "Medicines & Diagnostics", cy: "" },
-  colour: "#006747",
-}
-const families = [singleRecord, medicines]
+const families = TEST_FAMILIES
 
 const member = (id: string, published = true) =>
   createTestRoadmap(id, id, {
-    familyId: singleRecord.id,
-    family: singleRecord.name,
-    colour: singleRecord.colour,
+    familyId: SINGLE_RECORD.id,
+    family: SINGLE_RECORD.name,
+    colour: SINGLE_RECORD.colour,
     published,
   })
 const roadmaps = [
   member("a"),
   member("b", false),
-  createTestRoadmap("c", "c", { familyId: medicines.id }),
+  createTestRoadmap("c", "c", { familyId: MEDICINES_AND_DIAGNOSTICS.id }),
 ]
 
 /** IDs handed out in turn. */
@@ -44,7 +38,7 @@ function edit(
   changes: FamilyEdit["changes"],
   overrides: Partial<FamilyEdit> = {},
 ): FamilyEdit {
-  return { family: singleRecord, changes, members: ["a", "b"], ...overrides }
+  return { family: SINGLE_RECORD, changes, members: ["a", "b"], ...overrides }
 }
 
 describe("checkFamilyInput", () => {
@@ -75,7 +69,7 @@ describe("checkFamilyInput", () => {
       checkFamilyInput(
         { name: "SINGLE  record", colour: "#12a3c9" },
         families,
-        singleRecord.id,
+        SINGLE_RECORD.id,
       ).problems,
     ).toEqual({})
   })
@@ -96,8 +90,8 @@ describe("planNewFamily", () => {
       planNewFamily(
         { name: "Screening", colour: "#00796b" },
         families,
-        new Set(["fc29g5b9", "takenxxx"]),
-        idsOf("fc29g5b9", "takenxxx", "newidaaa"),
+        new Set([SINGLE_RECORD.id, "takenxxx"]),
+        idsOf(SINGLE_RECORD.id, "takenxxx", "newidaaa"),
       ),
     ).toEqual({
       kind: "write",
@@ -125,7 +119,7 @@ describe("planFamilyChange", () => {
     ).toEqual({
       kind: "write",
       family: {
-        ...singleRecord,
+        ...SINGLE_RECORD,
         name: { en: "Shared Care Record", cy: "Cofnod Sengl" },
       },
       members: [roadmaps[0], roadmaps[1]],
@@ -133,9 +127,9 @@ describe("planFamilyChange", () => {
   })
 
   it("takes an unedited field as the family now holds it", () => {
-    const recoloured = { ...singleRecord, colour: "#ff0000" }
+    const recoloured = { ...SINGLE_RECORD, colour: "#ff0000" }
     const plan = planFamilyChange(edit({ name: "Shared Care Record" }), {
-      families: [recoloured, medicines],
+      families: [recoloured, MEDICINES_AND_DIAGNOSTICS],
       roadmaps,
     })
     expect(plan.kind === "write" && plan.family.colour).toBe("#ff0000")
@@ -143,14 +137,14 @@ describe("planFamilyChange", () => {
 
   it("refuses a field a co-lead changed since, showing each side", () => {
     const renamed = {
-      ...singleRecord,
+      ...SINGLE_RECORD,
       name: { en: "Single Records", cy: "" },
       colour: "#ff0000",
     }
     expect(
       planFamilyChange(
         edit({ name: "Shared Care Record", colour: "#00796b" }),
-        { families: [renamed, medicines], roadmaps },
+        { families: [renamed, MEDICINES_AND_DIAGNOSTICS], roadmaps },
       ),
     ).toEqual({
       kind: "settled",
@@ -176,12 +170,12 @@ describe("planFamilyChange", () => {
 
   it("is no conflict when a co-lead made the same change", () => {
     const renamed = {
-      ...singleRecord,
+      ...SINGLE_RECORD,
       name: { en: "Shared Care Record", cy: "" },
     }
     expect(
       planFamilyChange(edit({ name: "Shared Care Record" }), {
-        families: [renamed, medicines],
+        families: [renamed, MEDICINES_AND_DIAGNOSTICS],
         roadmaps,
       }).kind,
     ).toBe("write")
@@ -214,7 +208,7 @@ describe("planFamilyChange", () => {
   it("is not found once the family is gone", () => {
     expect(
       planFamilyChange(edit({ name: "Shared Care Record" }), {
-        families: [medicines],
+        families: [MEDICINES_AND_DIAGNOSTICS],
         roadmaps,
       }),
     ).toEqual({ kind: "settled", outcome: { status: "family-not-found" } })
@@ -223,10 +217,10 @@ describe("planFamilyChange", () => {
 
 describe("familyHeld", () => {
   it("holds a family listed with its name and colour", () => {
-    expect(familyHeld(singleRecord, families)).toBe(true)
-    expect(familyHeld({ ...singleRecord, colour: "#000000" }, families)).toBe(
+    expect(familyHeld(SINGLE_RECORD, families)).toBe(true)
+    expect(familyHeld({ ...SINGLE_RECORD, colour: "#000000" }, families)).toBe(
       false,
     )
-    expect(familyHeld(singleRecord, null)).toBe(false)
+    expect(familyHeld(SINGLE_RECORD, null)).toBe(false)
   })
 })

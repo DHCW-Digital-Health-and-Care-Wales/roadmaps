@@ -7,11 +7,7 @@ import type { AuthState } from "@/domain/auth/auth-client"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { authScopedQueryKey } from "@/features/auth/auth-scoped-queries"
 import { renderWithProviders } from "@/test/render-with-providers"
-
-const connected: AuthState = {
-  status: "connected",
-  expiresAt: Date.now() + 3_600_000,
-}
+import { connected } from "@/test/connected-state"
 
 function header() {
   return within(screen.getByRole("banner"))

@@ -1,15 +1,10 @@
 import { screen, within } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
 
-import type { AuthState } from "@/domain/auth/auth-client"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { renderWithProviders } from "@/test/render-with-providers"
-
-const connected: AuthState = {
-  status: "connected",
-  expiresAt: Date.now() + 3_600_000,
-}
+import { connected } from "@/test/connected-state"
 
 /** The example roadmaps (`tests/fixtures/sheets/Roadmaps.csv`) as the app reads them. */
 const productA = createTestRoadmap("producta", "Product A roadmap", {

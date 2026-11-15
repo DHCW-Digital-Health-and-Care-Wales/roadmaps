@@ -2,8 +2,6 @@ import { describe, expect, it } from "vitest"
 
 import { isAppError } from "@/lib/errors"
 
-import type { Category } from "./category"
-import type { Family } from "./family"
 import {
   checkNewRoadmapInput,
   type NewRoadmapInput,
@@ -11,20 +9,12 @@ import {
   settleLostNewRoadmap,
   shortNameInUse,
 } from "./new-roadmap"
+import {
+  GP_AND_COMMUNITY_SERVICES,
+  MEDICINES_AND_DIAGNOSTICS,
+} from "./testing/test-lists"
 import { createTestRoadmap } from "./testing/test-roadmap"
 
-const medicines: Family = {
-  id: "vdkxj63m",
-  name: { en: "Medicines & Diagnostics", cy: "Meddyginiaethau a Diagnosteg" },
-  colour: "#006747",
-}
-const community: Category = {
-  id: "khzpchkh",
-  name: {
-    en: "GP & Community Services",
-    cy: "Meddygon Teulu a Gwasanaethau Cymunedol",
-  },
-}
 const outpatients = createTestRoadmap(
   "outpatient-booking",
   "Outpatient Booking roadmap",
@@ -45,8 +35,8 @@ const current = (
 ) => ({
   roadmaps: [outpatients],
   names: ["Roadmaps", "Outpatient Booking", "Template"],
-  families: [medicines],
-  categories: [community],
+  families: [MEDICINES_AND_DIAGNOSTICS],
+  categories: [GP_AND_COMMUNITY_SERVICES],
   ...overrides,
 })
 
@@ -93,7 +83,10 @@ describe("planNewRoadmap (STY-040)", () => {
   it("plans a roadmap that is not published, with nothing but what was given (S2)", () => {
     expect(
       planNewRoadmap(
-        input({ categoryId: "khzpchkh", productLead: " Sam Evans " }),
+        input({
+          categoryId: GP_AND_COMMUNITY_SERVICES.id,
+          productLead: " Sam Evans ",
+        }),
         current(),
       ),
     ).toEqual({
@@ -103,8 +96,8 @@ describe("planNewRoadmap (STY-040)", () => {
         itemsLocation: "Community Nursing",
         title: { en: "Community Nursing roadmap", cy: "" },
         published: false,
-        category: community.name,
-        categoryId: "khzpchkh",
+        category: GP_AND_COMMUNITY_SERVICES.name,
+        categoryId: GP_AND_COMMUNITY_SERVICES.id,
         family: null,
         familyId: null,
         copied: {
@@ -125,15 +118,22 @@ describe("planNewRoadmap (STY-040)", () => {
   })
 
   it("copies a chosen family's names and colour (S2)", () => {
-    const plan = planNewRoadmap(input({ familyId: "vdkxj63m" }), current())
+    const plan = planNewRoadmap(
+      input({ familyId: MEDICINES_AND_DIAGNOSTICS.id }),
+      current(),
+    )
 
     expect(plan).toMatchObject({
       kind: "write",
       roadmap: {
-        family: medicines.name,
-        familyId: "vdkxj63m",
+        family: MEDICINES_AND_DIAGNOSTICS.name,
+        familyId: MEDICINES_AND_DIAGNOSTICS.id,
         colour: "#006747",
-        copied: { family: medicines.name, colour: "#006747", category: "" },
+        copied: {
+          family: MEDICINES_AND_DIAGNOSTICS.name,
+          colour: "#006747",
+          category: "",
+        },
         productLead: null,
       },
     })
@@ -180,7 +180,10 @@ describe("planNewRoadmap (STY-040)", () => {
   it("settles a family or category whose list has gone (S5)", () => {
     expect(
       planNewRoadmap(
-        input({ familyId: "vdkxj63m", categoryId: "khzpchkh" }),
+        input({
+          familyId: MEDICINES_AND_DIAGNOSTICS.id,
+          categoryId: GP_AND_COMMUNITY_SERVICES.id,
+        }),
         current({ families: null, categories: null }),
       ),
     ).toEqual({

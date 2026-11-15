@@ -1,7 +1,6 @@
 import { act, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import type { AuthState } from "@/domain/auth/auth-client"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import {
   NO_CHANGES,
@@ -29,11 +28,8 @@ import {
 } from "./use-publish-roadmap-changes"
 import { useRoadmapItems } from "./use-roadmap-items"
 import { useRoadmaps } from "./use-roadmaps"
+import { connected } from "@/test/connected-state"
 
-const connected: AuthState = {
-  status: "connected",
-  expiresAt: Date.now() + 3_600_000,
-}
 const item = createTestRoadmapItem("First")
 const changes: RoadmapChanges = {
   ...NO_CHANGES,

@@ -8,7 +8,6 @@ import {
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
-import type { AuthState } from "@/domain/auth/auth-client"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
@@ -22,11 +21,7 @@ import {
   type InMemoryRoadmapRepository,
 } from "../testing/in-memory-roadmap-repository"
 import { confirmItemEdit, openEditItemDialog } from "../testing/item-dialog"
-
-const connected: AuthState = {
-  status: "connected",
-  expiresAt: Date.now() + 3_600_000,
-}
+import { connected } from "@/test/connected-state"
 
 const roadmaps = [createTestRoadmap("producta", "Product A roadmap")]
 

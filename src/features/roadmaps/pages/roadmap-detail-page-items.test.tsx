@@ -2,7 +2,6 @@ import { act, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
-import type { AuthState } from "@/domain/auth/auth-client"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import type { RoadmapRepository } from "@/domain/roadmap/roadmap-repository"
@@ -16,14 +15,10 @@ import {
   createInMemoryRoadmapRepository,
   type InMemoryRoadmapItems,
 } from "../testing/in-memory-roadmap-repository"
+import { connected } from "@/test/connected-state"
 
 // The roadmap's own text comes first, above the items.
 const ABOUT_HEADING = "About this roadmap"
-
-const connected: AuthState = {
-  status: "connected",
-  expiresAt: Date.now() + 3_600_000,
-}
 
 const roadmaps: Roadmap[] = [
   createTestRoadmap("producta", "Product A roadmap"),

@@ -2,7 +2,6 @@ import { act, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it } from "vitest"
 
-import type { AuthState } from "@/domain/auth/auth-client"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { RepositoryReadOptions } from "@/domain/roadmap/roadmap-repository"
 import { AppError } from "@/lib/errors"
@@ -11,11 +10,7 @@ import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-ite
 import { renderWithProviders } from "@/test/render-with-providers"
 
 import { createInMemoryRoadmapRepository } from "../testing/in-memory-roadmap-repository"
-
-const connected: AuthState = {
-  status: "connected",
-  expiresAt: Date.now() + 3_600_000,
-}
+import { connected } from "@/test/connected-state"
 
 const outOfStep = (overrides: Partial<Roadmap> = {}) =>
   createTestRoadmap("producta", "Product A roadmap", {

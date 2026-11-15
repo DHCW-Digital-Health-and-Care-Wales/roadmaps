@@ -2,7 +2,6 @@ import { fireEvent, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import type { AuthState } from "@/domain/auth/auth-client"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
@@ -19,11 +18,7 @@ import {
   editRoadmapText,
   openEditRoadmapDialog,
 } from "../testing/roadmap-dialog"
-
-const connected: AuthState = {
-  status: "connected",
-  expiresAt: Date.now() + 3_600_000,
-}
+import { connected } from "@/test/connected-state"
 
 const productA = createTestRoadmap("producta", "Product A roadmap", {
   statusLabel: { en: "Beta", cy: "" },

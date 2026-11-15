@@ -2,7 +2,6 @@ import { act, fireEvent, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
-import type { AuthState } from "@/domain/auth/auth-client"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 import { renderWithProviders } from "@/test/render-with-providers"
@@ -19,13 +18,9 @@ import {
   confirmRoadmapEdit,
   openEditRoadmapDialog,
 } from "../testing/roadmap-dialog"
+import { connected } from "@/test/connected-state"
 
 // A dialog that publishes shows what it asked until it has gone (DEF-010).
-
-const connected: AuthState = {
-  status: "connected",
-  expiresAt: Date.now() + 3_600_000,
-}
 
 const roadmaps = [
   createTestRoadmap("producta", "Product A roadmap"),

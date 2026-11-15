@@ -1,6 +1,6 @@
 import type { Locator, Page } from "@playwright/test"
 
-import { openEditRoadmapDialog } from "./fixtures/dialogs"
+import { openEditItemDialog, openEditRoadmapDialog } from "./fixtures/dialogs"
 import {
   EXAMPLE_INDEX_ROWS,
   EXAMPLE_LISTS,
@@ -25,6 +25,9 @@ import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 const ITEM = "Example card with every column"
 
+/** A phone's width, the narrowest the item dialog is shown at. */
+const PHONE_WIDTH = 375
+
 /** The card of the item with this title, found by its heading. */
 function itemCard(page: Page, title: string) {
   return page
@@ -41,11 +44,9 @@ async function openRoadmap(page: Page, id: string, firstItem: string) {
   ).toBeVisible()
 }
 
-/** Edits an item's English title through its card's form. */
+/** Edits an item's English title in the item dialog. */
 async function editTitle(page: Page, from: string, to: string) {
-  const main = page.getByRole("main")
-  await main.getByRole("button", { name: `Edit ${from}` }).click()
-  const form = main.getByRole("form", { name: from })
+  const form = await openEditItemDialog(page, from)
   await form.getByRole("textbox", { name: "Title" }).fill(to)
   await form.getByRole("button", { name: "Done" }).click()
   await expect(itemCard(page, to).getByText("Changed")).toBeVisible()
@@ -227,17 +228,8 @@ test("edits an unplaced item on a phone, every form and dialog fitting the width
         document.documentElement.clientWidth,
     )
 
-  await page
-    .getByRole("main")
-    .getByRole("button", { name: "Edit Minimal card" })
-    .click()
-  await expect(
-    page.getByRole("main").getByRole("form", { name: "Minimal card" }),
-  ).toBeVisible()
+  const form = await openEditItemDialog(page, "Minimal card")
   expect(await overflow()).toBe(0)
-  const form = page
-    .getByRole("main")
-    .getByRole("form", { name: "Minimal card" })
   await form.getByRole("textbox", { name: "Title" }).fill("A placed card, soon")
   await form.getByRole("button", { name: "Done" }).click()
   await expect(
@@ -700,9 +692,7 @@ test.describe("choosing an item's organisations (STY-034)", () => {
     title: string,
     names: readonly string[],
   ) {
-    const main = page.getByRole("main")
-    await main.getByRole("button", { name: `Edit ${title}` }).click()
-    const form = main.getByRole("form", { name: title })
+    const form = await openEditItemDialog(page, title)
     // The field starts shut (STY-038): "Change", or "Add" for an item with none.
     await form
       .getByRole("button", { name: /^(Change|Add) organisations$/ })
@@ -788,9 +778,7 @@ test.describe("choosing an item's organisations (STY-034)", () => {
 test.describe("the Organisations field opens on request (STY-038)", () => {
   /** Opens the item's form, its Organisations field still shut. */
   async function openForm(page: Page, title: string) {
-    const main = page.getByRole("main")
-    await main.getByRole("button", { name: `Edit ${title}` }).click()
-    const form = main.getByRole("form", { name: title })
+    const form = await openEditItemDialog(page, title)
     await expect(form).toBeVisible()
     return form
   }
@@ -957,10 +945,8 @@ test.describe("the Organisations field opens on request (STY-038)", () => {
     await useLanguage(page, "cy")
     await page.goto("./#/roadmaps/producta")
     await connect(page, "Cysylltu â Google")
-    const main = page.getByRole("main")
     const title = "Cerdyn enghreifftiol gyda phob colofn"
-    await main.getByRole("button", { name: `Golygu ${title}` }).click()
-    const form = main.getByRole("form", { name: title })
+    const form = await openEditItemDialog(page, title, "cy")
 
     await expect(form.getByText("Sefydliadau", { exact: true })).toBeVisible()
     await expect(form.getByText("Cardiff and Vale, Swansea Bay")).toBeVisible()
@@ -973,10 +959,11 @@ test.describe("the Organisations field opens on request (STY-038)", () => {
     await form.getByRole("button", { name: "Cau sefydliadau" }).click()
     await form.getByRole("button", { name: "Canslo" }).click()
 
-    await main
-      .getByRole("button", { name: "Golygu Something we are not doing" })
-      .click()
-    const empty = main.getByRole("form", { name: "Something we are not doing" })
+    const empty = await openEditItemDialog(
+      page,
+      "Something we are not doing",
+      "cy",
+    )
     await expect(empty.getByText("Dim sefydliadau")).toBeVisible()
     await expect(
       empty.getByRole("button", { name: "Ychwanegu sefydliadau" }),
@@ -990,9 +977,7 @@ test.describe("editing an item's tags (STY-037)", () => {
 
   /** Opens the item's form and its Tags field: the form, and the field's group. */
   async function openTags(page: Page, title: string) {
-    const main = page.getByRole("main")
-    await main.getByRole("button", { name: `Edit ${title}` }).click()
-    const form = main.getByRole("form", { name: title })
+    const form = await openEditItemDialog(page, title)
     await form.getByRole("button", { name: /^(Change|Add) tags$/ }).click()
     const field = form.getByRole("group", { name: "Tags" })
     await expect(
@@ -1019,17 +1004,15 @@ test.describe("editing an item's tags (STY-037)", () => {
     await openRoadmap(page, "producta", ITEM)
     const before = sheets.spreadsheet
     const main = page.getByRole("main")
-    await main.getByRole("button", { name: `Edit ${TAGGED}` }).click()
-    const form = main.getByRole("form", { name: TAGGED })
+    const form = await openEditItemDialog(page, TAGGED)
 
-    // Shut: the tags on one line, no editor, and no Tags line on the card (S19).
+    // Shut: the tags on one line, and no editor (S19).
     await expect(form.getByRole("list").first()).toHaveText(
       "Service YService Z",
     )
     await expect(form.getByRole("textbox", { name: "Add a tag" })).toHaveCount(
       0,
     )
-    await expect(itemCard(page, TAGGED).getByRole("term")).toHaveCount(0)
     await form.getByRole("button", { name: "Change tags" }).click()
     const field = form.getByRole("group", { name: "Tags" })
     await expect(
@@ -1150,8 +1133,7 @@ test.describe("editing an item's tags (STY-037)", () => {
     await openRoadmap(page, "producta", ITEM)
     const before = sheets.spreadsheet
     const main = page.getByRole("main")
-    await main.getByRole("button", { name: `Edit ${ITEM}` }).click()
-    const form = main.getByRole("form", { name: ITEM })
+    const form = await openEditItemDialog(page, ITEM)
 
     await expect(form.getByText("Tags", { exact: true })).toBeVisible()
     await expect(form.getByRole("list").first()).toHaveText(
@@ -1206,65 +1188,57 @@ test.describe("editing an item's tags (STY-037)", () => {
     await expect(review).toHaveCount(0)
     await expect(main.getByText("Changed")).toHaveCount(0)
     // Its tags are now shown, not changed (S20).
-    await main.getByRole("button", { name: `Edit ${TAGGED}` }).click()
-    await expect(
-      main
-        .getByRole("form", { name: TAGGED })
-        .getByRole("button", { name: /tags$/ }),
-    ).toHaveCount(0)
+    const reopened = await openEditItemDialog(page, TAGGED)
+    await expect(reopened.getByRole("button", { name: /tags$/ })).toHaveCount(0)
     expect(sheets.writes).toHaveLength(1)
   })
 
-  for (const { name, width } of [
-    { name: "on a phone", width: 375 },
-    // Two cards across, each about 294px wide.
-    { name: "in the narrowest card", width: 640 },
-  ]) {
-    test(`${name}, the rows' buttons are icons beside a long tag, which wraps, and nothing scrolls sideways (S14, S16)`, async ({
-      page,
-      sheets,
-    }) => {
-      const long = "A tag that runs to forty characters long"
-      sheets.coLead("ProductA", TAGGED, "Labels", `Service Y, ${long}`)
-      await page.setViewportSize({ width, height: 812 })
-      await openRoadmap(page, "producta", ITEM)
-      const { form, field } = await openTags(page, TAGGED)
+  test("on a phone, the rows' buttons are icons beside a long tag, which wraps, and nothing scrolls sideways (S14, S16)", async ({
+    page,
+    sheets,
+  }) => {
+    const long = "A tag that runs to forty characters long"
+    sheets.coLead("ProductA", TAGGED, "Labels", `Service Y, ${long}`)
+    await page.setViewportSize({ width: PHONE_WIDTH, height: 812 })
+    await openRoadmap(page, "producta", ITEM)
+    const { form, field } = await openTags(page, TAGGED)
 
-      const [short, wrapped] = await rows(field).all()
-      if (!short || !wrapped) throw new Error("The item has two tags")
-      for (const row of [short, wrapped]) {
-        const tag = await row.locator("span").first().boundingBox()
-        for (const button of await row.getByRole("button").all()) {
-          const box = await button.boundingBox()
-          // An icon, square, on its tag's row and inside the page.
-          expect(box?.width).toBe(box?.height)
-          expect(box?.y).toBeLessThan((tag?.y ?? 0) + (tag?.height ?? 0))
-          expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(width)
-        }
+    const [short, wrapped] = await rows(field).all()
+    if (!short || !wrapped) throw new Error("The item has two tags")
+    for (const row of [short, wrapped]) {
+      const tag = await row.locator("span").first().boundingBox()
+      for (const button of await row.getByRole("button").all()) {
+        const box = await button.boundingBox()
+        // An icon, square, on its tag's row and inside the page.
+        expect(box?.width).toBe(box?.height)
+        expect(box?.y).toBeLessThan((tag?.y ?? 0) + (tag?.height ?? 0))
+        expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(
+          PHONE_WIDTH,
+        )
       }
-      await expect(
-        wrapped.getByRole("button", { name: `Rename ${long}` }),
-      ).toBeVisible()
-      await expect(
-        short.getByRole("button", { name: "Remove Service Y" }),
-      ).toHaveAttribute("title", "Remove")
-      const [shortBox, wrappedBox] = await Promise.all([
-        short.locator("span").first().boundingBox(),
-        wrapped.locator("span").first().boundingBox(),
-      ])
-      expect(wrappedBox?.height).toBeGreaterThan(shortBox?.height ?? 0)
-      expect(await sideways(page)).toBe(0)
+    }
+    await expect(
+      wrapped.getByRole("button", { name: `Rename ${long}` }),
+    ).toBeVisible()
+    await expect(
+      short.getByRole("button", { name: "Remove Service Y" }),
+    ).toHaveAttribute("title", "Remove")
+    const [shortBox, wrappedBox] = await Promise.all([
+      short.locator("span").first().boundingBox(),
+      wrapped.locator("span").first().boundingBox(),
+    ])
+    expect(wrappedBox?.height).toBeGreaterThan(shortBox?.height ?? 0)
+    expect(await sideways(page)).toBe(0)
 
-      // A rename keeps the icons, and its field and buttons fit too.
-      await short.getByRole("button", { name: "Rename Service Y" }).click()
-      await expect(
-        field.getByRole("button", { name: "Update Service Y" }),
-      ).toHaveAttribute("title", "Update")
-      expect(await sideways(page)).toBe(0)
-      await page.keyboard.press("Escape")
-      await expect(form.getByRole("button", { name: "Done" })).toBeVisible()
-    })
-  }
+    // A rename keeps the icons, and its field and buttons fit too.
+    await short.getByRole("button", { name: "Rename Service Y" }).click()
+    await expect(
+      field.getByRole("button", { name: "Update Service Y" }),
+    ).toHaveAttribute("title", "Update")
+    expect(await sideways(page)).toBe(0)
+    await page.keyboard.press("Escape")
+    await expect(form.getByRole("button", { name: "Done" })).toBeVisible()
+  })
 
   test("the rows' buttons show words where every tag fits beside them (S16)", async ({
     page,
@@ -1284,9 +1258,7 @@ test.describe("editing an item's tags (STY-037)", () => {
     await useLanguage(page, "cy")
     await page.goto("./#/roadmaps/producta")
     await connect(page, "Cysylltu â Google")
-    const main = page.getByRole("main")
-    await main.getByRole("button", { name: `Golygu ${TAGGED}` }).click()
-    const form = main.getByRole("form", { name: TAGGED })
+    const form = await openEditItemDialog(page, TAGGED, "cy")
 
     await form.getByRole("button", { name: "Newid tagiau" }).click()
     const field = form.getByRole("group", { name: "Tagiau (Saesneg)" })
@@ -1318,9 +1290,7 @@ test.describe("editing an item's details (STY-039)", () => {
 
   /** Opens the item's form and its Details field: the form, and the field's group. */
   async function openDetails(page: Page, title: string) {
-    const main = page.getByRole("main")
-    await main.getByRole("button", { name: `Edit ${title}` }).click()
-    const form = main.getByRole("form", { name: title })
+    const form = await openEditItemDialog(page, title)
     await form.getByRole("button", { name: /^(Change|Add) details$/ }).click()
     const field = form.getByRole("group", { name: "Details" })
     await expect(field.getByRole("textbox").first()).toBeFocused()
@@ -1362,15 +1332,11 @@ test.describe("editing an item's details (STY-039)", () => {
     await openRoadmap(page, "producta", ITEM)
     const before = sheets.spreadsheet
     const main = page.getByRole("main")
-    await main.getByRole("button", { name: `Edit ${DETAILED}` }).click()
-    const form = main.getByRole("form", { name: DETAILED })
+    const form = await openEditItemDialog(page, DETAILED)
 
-    // Shut: the details as the card lists them, no editor, none on the card (S17).
+    // Shut: the details as the card lists them, and no editor (S17).
     await expect(form.getByRole("list").last()).toHaveText(FIRST + SECOND)
     await expect(form.getByRole("textbox", { name: /^Detail / })).toHaveCount(0)
-    await expect(
-      itemCard(page, DETAILED).getByRole("term").filter({ hasText: "Details" }),
-    ).toHaveCount(0)
     await form.getByRole("button", { name: "Change details" }).click()
     const field = form.getByRole("group", { name: "Details" })
     await expect(
@@ -1585,8 +1551,7 @@ test.describe("editing an item's details (STY-039)", () => {
     await openRoadmap(page, "producta", ITEM)
     const before = sheets.spreadsheet
     const main = page.getByRole("main")
-    await main.getByRole("button", { name: `Edit ${ITEM}` }).click()
-    const form = main.getByRole("form", { name: ITEM })
+    const form = await openEditItemDialog(page, ITEM)
 
     await expect(form.getByText("Details", { exact: true })).toBeVisible()
     await expect(
@@ -1641,77 +1606,65 @@ test.describe("editing an item's details (STY-039)", () => {
     await expect(review).toHaveCount(0)
     await expect(main.getByText("Changed")).toHaveCount(0)
     // Its details are now shown, not changed (S18).
-    await main.getByRole("button", { name: `Edit ${DETAILED}` }).click()
+    const reopened = await openEditItemDialog(page, DETAILED)
     await expect(
-      main
-        .getByRole("form", { name: DETAILED })
-        .getByRole("button", { name: /details$/ }),
+      reopened.getByRole("button", { name: /details$/ }),
     ).toHaveCount(0)
     expect(sheets.writes).toHaveLength(1)
   })
 
-  for (const { name, width } of [
-    { name: "on a phone", width: 375 },
-    // Two cards across, each about 294px wide.
-    { name: "in the narrowest card", width: 640 },
-  ]) {
-    test(`${name}, a long detail at the third level wraps, every control can be reached and nothing scrolls sideways (S16)`, async ({
-      page,
-      sheets,
-    }) => {
-      const long =
-        "Adult clinics first, with the children's clinics to follow once they are settled"
-      expect(long).toHaveLength(80)
-      sheets.coLead(
-        "ProductA",
-        DETAILED,
-        "Details",
-        `${FIRST}\n- ${SECOND}\n-- ${long}`,
-      )
-      await page.setViewportSize({ width, height: 812 })
-      await openRoadmap(page, "producta", ITEM)
-      const { field } = await openDetails(page, DETAILED)
+  test("on a phone, a long detail at the third level wraps, every control can be reached and nothing scrolls sideways (S16)", async ({
+    page,
+    sheets,
+  }) => {
+    const long =
+      "Adult clinics first, with the children's clinics to follow once they are settled"
+    expect(long).toHaveLength(80)
+    sheets.coLead(
+      "ProductA",
+      DETAILED,
+      "Details",
+      `${FIRST}\n- ${SECOND}\n-- ${long}`,
+    )
+    await page.setViewportSize({ width: PHONE_WIDTH, height: 812 })
+    await openRoadmap(page, "producta", ITEM)
+    const { field } = await openDetails(page, DETAILED)
 
-      const longDetail = await detail(field, long)
-      const [shortBox, longBox] = await Promise.all([
-        (await detail(field, FIRST)).boundingBox(),
-        longDetail.boundingBox(),
-      ])
-      // Wrapped over several lines, all of it on show, inside the page.
-      expect(longBox?.height).toBeGreaterThan((shortBox?.height ?? 0) * 2)
-      expect(
-        await longDetail.evaluate(
-          (box) => box.scrollHeight <= box.clientHeight,
-        ),
-      ).toBe(true)
-      expect((longBox?.x ?? 0) + (longBox?.width ?? 0)).toBeLessThanOrEqual(
-        width,
-      )
-      expect(await sideways(page)).toBe(0)
+    const longDetail = await detail(field, long)
+    const [shortBox, longBox] = await Promise.all([
+      (await detail(field, FIRST)).boundingBox(),
+      longDetail.boundingBox(),
+    ])
+    // Wrapped over several lines, all of it on show, inside the page.
+    expect(longBox?.height).toBeGreaterThan((shortBox?.height ?? 0) * 2)
+    expect(
+      await longDetail.evaluate((box) => box.scrollHeight <= box.clientHeight),
+    ).toBe(true)
+    expect((longBox?.x ?? 0) + (longBox?.width ?? 0)).toBeLessThanOrEqual(
+      PHONE_WIDTH,
+    )
+    expect(await sideways(page)).toBe(0)
 
-      await longDetail.click()
-      const buttons = field
-        .getByRole("group", { name: "The detail selected" })
-        .getByRole("button")
-      await expect(buttons).toHaveCount(5)
-      for (const button of await buttons.all()) {
-        const box = await button.boundingBox()
-        expect(box?.x).toBeGreaterThanOrEqual(0)
-        expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(width)
-      }
-      await expect(
-        field.getByRole("button", { name: `Move down ${long}` }),
-      ).toHaveAttribute("title", "Move down")
-      // A refusal fits too.
-      await chooseRefused(
-        field.getByRole("button", { name: `Move in ${long}` }),
-      )
-      await expect(field.getByRole("status")).toHaveText(
-        "It is already nested under the detail above.",
-      )
-      expect(await sideways(page)).toBe(0)
-    })
-  }
+    await longDetail.click()
+    const buttons = field
+      .getByRole("group", { name: "The detail selected" })
+      .getByRole("button")
+    await expect(buttons).toHaveCount(5)
+    for (const button of await buttons.all()) {
+      const box = await button.boundingBox()
+      expect(box?.x).toBeGreaterThanOrEqual(0)
+      expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(PHONE_WIDTH)
+    }
+    await expect(
+      field.getByRole("button", { name: `Move down ${long}` }),
+    ).toHaveAttribute("title", "Move down")
+    // A refusal fits too.
+    await chooseRefused(field.getByRole("button", { name: `Move in ${long}` }))
+    await expect(field.getByRole("status")).toHaveText(
+      "It is already nested under the detail above.",
+    )
+    expect(await sideways(page)).toBe(0)
+  })
 
   test("is Welsh on the Welsh interface, the details staying English (S1)", async ({
     page,
@@ -1719,9 +1672,7 @@ test.describe("editing an item's details (STY-039)", () => {
     await useLanguage(page, "cy")
     await page.goto("./#/roadmaps/producta")
     await connect(page, "Cysylltu â Google")
-    const main = page.getByRole("main")
-    await main.getByRole("button", { name: `Golygu ${DETAILED}` }).click()
-    const form = main.getByRole("form", { name: DETAILED })
+    const form = await openEditItemDialog(page, DETAILED, "cy")
 
     await form.getByRole("button", { name: "Newid manylion" }).click()
     const field = form.getByRole("group", { name: "Manylion (Saesneg)" })

@@ -1,6 +1,10 @@
 import type { Locator, Page } from "@playwright/test"
 
-import { openAddRoadmapDialog, openEditRoadmapDialog } from "./fixtures/dialogs"
+import {
+  openAddRoadmapDialog,
+  openEditItemDialog,
+  openEditRoadmapDialog,
+} from "./fixtures/dialogs"
 import { EXAMPLE_SPREADSHEET_WITH_LISTS } from "./fixtures/fake-sheets"
 import {
   holdConnectedNotice,
@@ -121,20 +125,24 @@ function tabStops(scope: Page | Locator) {
 }
 
 /**
- * Tabs until every focusable element of the page has had focus, and expects each to show
- * one of the three indicators. The tab stops are those the page offers, found first, so a
- * control a tour never reaches fails the test too.
+ * Tabs until every focusable element of `scope` has had focus, and expects each to show
+ * one of the three indicators. The tab stops are those `scope` offers, found first, so a
+ * control a tour never reaches fails the test too. `scope` is the page, or an open
+ * dialog, which holds focus: the page behind it has no stops.
  */
-async function expectEveryStopShowsAnIndicator(page: Page) {
+async function expectEveryStopShowsAnIndicator(
+  page: Page,
+  scope: Page | Locator = page,
+) {
   const colours = await focusColours(page)
   const expected = new Set(
     await Promise.all(
-      (await tabStops(page).all()).map((stop) =>
+      (await tabStops(scope).all()).map((stop) =>
         stop.evaluate(describeElement),
       ),
     ),
   )
-  expect(expected.size, "the page's tab stops").toBeGreaterThan(3)
+  expect(expected.size, "the tab stops").toBeGreaterThan(3)
 
   const visited = new Set<string>()
   for (
@@ -229,7 +237,7 @@ for (const theme of THEMES) {
       await expectEveryStopShowsAnIndicator(page)
     })
 
-    test("every control on a roadmap's page while editing shows DHCW's focus indicator (STY-025)", async ({
+    test("every control on a roadmap's page with a change pending shows DHCW's focus indicator (STY-025)", async ({
       page,
     }) => {
       const item = "Example card with every column"
@@ -244,35 +252,42 @@ for (const theme of THEMES) {
         .getByRole("note")
         .getByRole("button", { name: "Dismiss message" })
         .click()
-      // One change pending (Undo and the publish bar), and a form open.
-      await main.getByRole("button", { name: `Edit ${item}` }).click()
-      const form = main.getByRole("form", { name: item })
+      // One change pending: "Undo changes" and the publish bar.
+      const form = await openEditItemDialog(page, item)
       await form.getByRole("textbox", { name: "Title" }).fill("A clearer card")
       await form.getByRole("button", { name: "Done" }).click()
-      await main.getByRole("button", { name: "Edit Minimal card" }).click()
-      // Its Organisations field opened, so the tour stops on each checkbox (STY-038).
-      const minimal = main.getByRole("form", { name: "Minimal card" })
-      await minimal.getByRole("button", { name: "Add organisations" }).click()
-      await expect(minimal.getByRole("checkbox")).toHaveCount(12)
-      // Another item's Tags field opened, a name being changed, so the tour stops on
-      // its rows, its fields and the tags it offers (STY-037).
-      const tagged = "Longer-term idea"
-      await main.getByRole("button", { name: `Edit ${tagged}` }).click()
-      const tags = main.getByRole("form", { name: tagged })
-      await tags.getByRole("button", { name: "Change tags" }).click()
-      await tags.getByRole("button", { name: "Rename Service Y" }).click()
-      await expect(
-        tags.getByRole("textbox", { name: "Rename Service Y" }),
-      ).toBeFocused()
-      // A third item's Details field opened, so the tour stops on the outline's one
-      // stop and the buttons under it (STY-039).
-      const detailed = "Earlier delivery this year"
-      await main.getByRole("button", { name: `Edit ${detailed}` }).click()
-      const details = main.getByRole("form", { name: detailed })
-      await details.getByRole("button", { name: "Change details" }).click()
-      await expect(details.getByRole("textbox").last()).toBeVisible()
+      // Gone, so the tour's stops are the page's alone.
+      await expect(form).toHaveCount(0)
+      await expect(main.getByText("1 unpublished change")).toBeVisible()
 
       await expectEveryStopShowsAnIndicator(page)
+    })
+
+    test("every control in the item dialog, its fields shut and then open, shows DHCW's focus indicator (STY-044)", async ({
+      page,
+    }) => {
+      await page.goto("./#/roadmaps/producta")
+      await connect(page)
+      const dialog = await openEditItemDialog(page, "Longer-term idea")
+
+      await expectDialogTour(page, dialog)
+
+      // Its Organisations field opened, so the tour stops on each checkbox (STY-038).
+      await dialog.getByRole("button", { name: "Change organisations" }).click()
+      await expect(dialog.getByRole("checkbox")).toHaveCount(12)
+      // Its Details field opened, so the tour stops on the outline's one stop and the
+      // buttons under it (STY-039).
+      await dialog.getByRole("button", { name: "Add details" }).click()
+      await expect(dialog.getByRole("textbox").last()).toBeFocused()
+      // Its Tags field opened, a name being changed, so the tour stops on its rows, its
+      // fields and the tags it offers (STY-037).
+      await dialog.getByRole("button", { name: "Change tags" }).click()
+      await dialog.getByRole("button", { name: "Rename Service Y" }).click()
+      await expect(
+        dialog.getByRole("textbox", { name: "Rename Service Y" }),
+      ).toBeFocused()
+
+      await expectEveryStopShowsAnIndicator(page, dialog)
     })
 
     test("every control in the Add a roadmap dialog shows DHCW's focus indicator (STY-041)", async ({

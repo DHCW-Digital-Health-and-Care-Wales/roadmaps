@@ -15,10 +15,13 @@ import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-ite
 import type { Language } from "@/i18n"
 import { renderWithProviders } from "@/test/render-with-providers"
 
+import { expectDialogClosed } from "../testing/edit-dialog"
+import { holdRefresh, readAgain } from "../testing/held-refresh"
 import {
   createInMemoryRoadmapRepository,
   type InMemoryRoadmapRepository,
 } from "../testing/in-memory-roadmap-repository"
+import { confirmItemEdit, openEditItemDialog } from "../testing/item-dialog"
 
 const connected: AuthState = {
   status: "connected",
@@ -54,7 +57,7 @@ function main() {
   return within(screen.getByRole("main"))
 }
 
-/** The card (or form) of the item headed `title`. */
+/** The card of the item headed `title`. */
 function card(title: string) {
   const heading = main().getByRole("heading", { level: 3, name: title })
   const item = heading.closest("li")
@@ -94,7 +97,7 @@ async function renderPage({
   language?: Language
 } = {}) {
   const user = userEvent.setup()
-  await renderWithProviders({
+  const { queryClient } = await renderWithProviders({
     path: "/roadmaps/producta",
     authState: connected,
     repository,
@@ -103,18 +106,12 @@ async function renderPage({
   const [first] = shown
   if (!first) throw new Error("The page needs an item")
   await main().findByRole("heading", { level: 3, name: first.title.en })
-  return { user, repository }
+  return { user, repository, queryClient }
 }
 
-/** Opens the item's form, its Details field still shut. */
-async function openForm(user: User, title: string) {
-  await user.click(main().getByRole("button", { name: `Edit ${title}` }))
-  return within(main().getByRole("form", { name: title }))
-}
-
-/** Opens the item's form and its Details field: the form, and the field's group. */
+/** Opens the item dialog and its Details field: the dialog, and the field's group. */
 async function openDetails(user: User, title = VIDEO) {
-  const form = await openForm(user, title)
+  const form = await openEditItemDialog(user, title)
   await user.click(form.getByRole("button", { name: /^(Change|Add) details$/ }))
   return { form, field: within(form.getByRole("group", { name: "Details" })) }
 }
@@ -177,10 +174,6 @@ function firstConflict(review: HTMLElement) {
 
 const status = (field: Within) => field.getByRole("status").textContent
 
-async function done(user: User, form: Within) {
-  await user.click(form.getByRole("button", { name: "Done" }))
-}
-
 async function publish(user: User) {
   await user.click(main().getByRole("button", { name: "Publish changes" }))
   await user.click(
@@ -199,11 +192,11 @@ const storedDetails = async (
   )
 
 describe("Editing an item's details (STY-039)", () => {
-  it("starts shut, the details as the card lists them beside Change details, with no editor and no Details list on the card (S17)", async () => {
+  it("starts shut, the details as the card lists them beside Change details, with no editor (S17)", async () => {
     const { user } = await renderPage()
     expect(cardDetails(VIDEO)).toEqual(S1)
 
-    const form = await openForm(user, VIDEO)
+    const form = await openEditItemDialog(user, VIDEO)
 
     expect(pairsOf(shutList(form))).toEqual(S1)
     expect(
@@ -211,13 +204,12 @@ describe("Editing an item's details (STY-039)", () => {
     ).toHaveAttribute("aria-expanded", "false")
     expect(form.queryByRole("group", { name: "Details" })).toBeNull()
     expect(form.queryByRole("textbox", { name: /^Detail / })).toBeNull()
-    expect(cardDetails(VIDEO)).toEqual([])
   })
 
   it("reads No details beside Add details for an item with none, which holds one empty detail at the top level to write in (S12, S17)", async () => {
     const { user } = await renderPage()
 
-    const form = await openForm(user, "Bare")
+    const form = await openEditItemDialog(user, "Bare")
     expect(form.getByText("No details")).toBeVisible()
     await user.click(form.getByRole("button", { name: "Add details" }))
     const field = within(form.getByRole("group", { name: "Details" }))
@@ -227,7 +219,7 @@ describe("Editing an item's details (STY-039)", () => {
     })
     expect(only).toHaveFocus()
     await user.keyboard("Evening clinics")
-    await done(user, form)
+    await confirmItemEdit(user)
 
     expect(cardDetails("Bare")).toEqual([["Evening clinics", 0]])
   })
@@ -264,8 +256,7 @@ describe("Editing an item's details (STY-039)", () => {
 
   it("is Welsh on the Welsh interface, the details staying English (S1)", async () => {
     const { user } = await renderPage({ language: "cy" })
-    await user.click(main().getByRole("button", { name: `Golygu ${VIDEO}` }))
-    const form = within(main().getByRole("form", { name: VIDEO }))
+    const form = await openEditItemDialog(user, VIDEO, "cy")
 
     await user.click(form.getByRole("button", { name: "Newid manylion" }))
     const field = within(
@@ -289,12 +280,12 @@ describe("Editing an item's details (STY-039)", () => {
 
   it("keeps an added detail pending, on the card and in the publish dialog, writing nothing until published (S2, S14)", async () => {
     const { user, repository } = await renderPage()
-    const { form, field } = await openDetails(user)
+    const { field } = await openDetails(user)
     const ADDED = "A test call before the first video appointment"
 
     await caretIn(user, field, IN_PERSON)
     await user.keyboard(`{Enter}${ADDED}`)
-    await done(user, form)
+    await confirmItemEdit(user)
 
     expect(cardDetails(VIDEO)).toEqual([...S1, [ADDED, 0]])
     expect(within(card(VIDEO)).getByText("Changed")).toBeVisible()
@@ -310,7 +301,7 @@ describe("Editing an item's details (STY-039)", () => {
 
   it("nests a detail under the one above it, to the third level, and says why where it can't (S3)", async () => {
     const { user } = await renderPage()
-    const { form, field } = await openDetails(user)
+    const { field } = await openDetails(user)
 
     await caretIn(user, field, "Dermatology")
     await user.keyboard("{Enter}Adult clinics first")
@@ -352,7 +343,7 @@ describe("Editing an item's details (STY-039)", () => {
     await user.click(field.getByRole("button", { name: "Move in Dermatology" }))
     expect(status(field)).toBe("It is already nested under the detail above.")
 
-    await done(user, form)
+    await confirmItemEdit(user)
     expect(cardDetails(VIDEO)).toEqual([
       [FOLLOW_UP, 0],
       ["Dermatology", 1],
@@ -384,13 +375,13 @@ describe("Editing an item's details (STY-039)", () => {
 
   it("moves a nested detail back out (S4)", async () => {
     const { user } = await renderPage()
-    const { form, field } = await openDetails(user)
+    const { field } = await openDetails(user)
 
     await caretIn(user, field, "Rheumatology")
     await user.click(
       field.getByRole("button", { name: "Move out Rheumatology" }),
     )
-    await done(user, form)
+    await confirmItemEdit(user)
 
     expect(cardDetails(VIDEO)).toEqual([
       [FOLLOW_UP, 0],
@@ -402,12 +393,12 @@ describe("Editing an item's details (STY-039)", () => {
 
   it("keeps a detail's place and level when its text changes, and removes one whose text is cleared, those nested under it moving up (S5, D20)", async () => {
     const { user } = await renderPage()
-    const { form, field } = await openDetails(user)
+    const { field } = await openDetails(user)
 
     await caretIn(user, field, "Rheumatology")
     await user.keyboard(" and pain clinics")
     await user.clear(box(field, FOLLOW_UP))
-    await done(user, form)
+    await confirmItemEdit(user)
 
     expect(cardDetails(VIDEO)).toEqual([
       ["Dermatology", 0],
@@ -418,12 +409,12 @@ describe("Editing an item's details (STY-039)", () => {
 
   it("removes a detail alone, and shows no Details for an item with every detail removed (S6)", async () => {
     const { user } = await renderPage()
-    const { form, field } = await openDetails(user)
+    const { field } = await openDetails(user)
 
     await caretIn(user, field, IN_PERSON)
     await user.click(field.getByRole("button", { name: `Remove ${IN_PERSON}` }))
     expect(written(field)).toEqual(S1.slice(0, 3))
-    await done(user, form)
+    await confirmItemEdit(user)
     expect(cardDetails(VIDEO)).toEqual(S1.slice(0, 3))
     expect(within(card(VIDEO)).getByText("Changed")).toBeVisible()
 
@@ -439,7 +430,7 @@ describe("Editing an item's details (STY-039)", () => {
       again.field.getByRole("button", { name: "Remove the empty detail" }),
     )
     expect(status(again.field)).toBe("There is no detail to remove.")
-    await done(user, again.form)
+    await confirmItemEdit(user)
 
     expect(cardDetails(VIDEO)).toEqual([])
     expect(
@@ -449,7 +440,7 @@ describe("Editing an item's details (STY-039)", () => {
 
   it("moves a detail up or down past the one at its level, with those nested under it (S7, S23)", async () => {
     const { user } = await renderPage()
-    const { form, field } = await openDetails(user)
+    const { field } = await openDetails(user)
 
     await caretIn(user, field, IN_PERSON)
     await user.click(
@@ -460,14 +451,14 @@ describe("Editing an item's details (STY-039)", () => {
       field.getByRole("button", { name: `Move up ${IN_PERSON}` }),
     )
     expect(status(field)).toBe("It is already the first at its level.")
-    await done(user, form)
+    await confirmItemEdit(user)
 
     expect(cardDetails(VIDEO)).toEqual([[IN_PERSON, 0], ...S1.slice(0, 3)])
   })
 
   it("makes a detail of each pasted line, nested by its hyphens and trimmed, a blank line none (S8)", async () => {
     const { user } = await renderPage()
-    const { form, field } = await openDetails(user, "Bare")
+    const { field } = await openDetails(user, "Bare")
 
     await user.click(boxes(field)[0] as HTMLElement)
     await user.paste("  Evening clinics \n- Tuesdays\n\n-  Thursdays  ")
@@ -479,7 +470,7 @@ describe("Editing an item's details (STY-039)", () => {
     ])
     expect(status(field)).toBe("Added 3 details.")
     expect(box(field, "Thursdays")).toHaveFocus()
-    await done(user, form)
+    await confirmItemEdit(user)
     expect(cardDetails("Bare")).toEqual([
       ["Evening clinics", 0],
       ["Tuesdays", 1],
@@ -518,7 +509,7 @@ describe("Editing an item's details (STY-039)", () => {
 
   it("nests a detail for each hyphen typed or pasted before its text, which never holds one (S9, D21)", async () => {
     const { user } = await renderPage()
-    const { form, field } = await openDetails(user)
+    const { field } = await openDetails(user)
 
     await caretIn(user, field, "Rheumatology")
     await user.keyboard("{Enter}-Pain clinics")
@@ -531,7 +522,7 @@ describe("Editing an item's details (STY-039)", () => {
     expect(written(field).at(-1)).toEqual(["5 degrees", 1])
     expect(status(field)).toBe("It is already nested under the detail above.")
 
-    await done(user, form)
+    await confirmItemEdit(user)
     expect(cardDetails(VIDEO).slice(3)).toEqual([
       ["Pain clinics", 2],
       [IN_PERSON, 0],
@@ -556,10 +547,10 @@ describe("Editing an item's details (STY-039)", () => {
 
   it("shows the details as read on Undo changes (S11)", async () => {
     const { user } = await renderPage()
-    const { form, field } = await openDetails(user)
+    const { field } = await openDetails(user)
     await caretIn(user, field, IN_PERSON)
     await user.click(field.getByRole("button", { name: `Remove ${IN_PERSON}` }))
-    await done(user, form)
+    await confirmItemEdit(user)
 
     await user.click(
       main().getByRole("button", { name: `Undo changes ${VIDEO}` }),
@@ -571,12 +562,12 @@ describe("Editing an item's details (STY-039)", () => {
 
   it("is no change when a detail is added and removed again (S11)", async () => {
     const { user } = await renderPage()
-    const { form, field } = await openDetails(user)
+    const { field } = await openDetails(user)
 
     await caretIn(user, field, IN_PERSON)
     await user.keyboard("{Enter}Diabetes")
     await user.click(field.getByRole("button", { name: "Remove Diabetes" }))
-    await done(user, form)
+    await confirmItemEdit(user)
 
     expect(main().queryByText("Changed")).toBeNull()
   })
@@ -595,7 +586,7 @@ describe("Editing an item's details (STY-039)", () => {
 
     expect(form.getByRole("button", { name: "Change details" })).toHaveFocus()
     expect(pairsOf(shutList(form))).toEqual([...S1, ["Evening clinics", 0]])
-    await done(user, form)
+    await confirmItemEdit(user)
     expect(cardDetails(VIDEO)).toEqual([...S1, ["Evening clinics", 0]])
   })
 
@@ -850,7 +841,7 @@ describe("Editing an item's details (STY-039)", () => {
 
   it("puts a removed detail back in its place on Undo, with those nested under it as they were (S25)", async () => {
     const { user } = await renderPage()
-    const { form, field } = await openDetails(user)
+    const { field } = await openDetails(user)
 
     await caretIn(user, field, FOLLOW_UP)
     await user.click(field.getByRole("button", { name: `Remove ${FOLLOW_UP}` }))
@@ -872,16 +863,16 @@ describe("Editing an item's details (STY-039)", () => {
     expect(status(field)).toBe(`Put back “${FOLLOW_UP}”.`)
     expect(box(field, FOLLOW_UP)).toHaveFocus()
     expect(field.queryByRole("button", { name: /^Undo/ })).toBeNull()
-    await done(user, form)
+    await confirmItemEdit(user)
     expect(main().queryByText("Changed")).toBeNull()
   })
 
   it("shows a co-lead's different details beside yours, each nested as it will read, to keep or use (S15)", async () => {
     const { user, repository } = await renderPage()
-    const { form, field } = await openDetails(user)
+    const { field } = await openDetails(user)
     await caretIn(user, field, "Dermatology")
     await user.keyboard("{Enter}-Adult clinics first")
-    await done(user, form)
+    await confirmItemEdit(user)
     const THEIRS: Pair[] = [
       [FOLLOW_UP, 0],
       ["Diabetes", 1],
@@ -922,10 +913,10 @@ describe("Editing an item's details (STY-039)", () => {
 
   it("takes a co-lead's details that show as the same list as no conflict, and Refresh drops a change the data source holds (S15)", async () => {
     const { user, repository } = await renderPage()
-    const { form, field } = await openDetails(user)
+    const { field } = await openDetails(user)
     await caretIn(user, field, IN_PERSON)
     await user.click(field.getByRole("button", { name: `Remove ${IN_PERSON}` }))
-    await done(user, form)
+    await confirmItemEdit(user)
     // The same list, every line a hyphen deeper.
     repository.coLead((_list, itemsOf) => {
       const video = itemsOf("producta")[0]
@@ -1004,9 +995,9 @@ describe("Details written another way (STY-039 S20)", () => {
     async (title, shown) => {
       const { user } = await renderPage({ shown: written20 })
 
-      const { form, field } = await openDetails(user, title)
+      const { field } = await openDetails(user, title)
       expect(written(field)).toEqual(shown)
-      await done(user, form)
+      await confirmItemEdit(user)
 
       expect(main().queryByText("Changed")).toBeNull()
     },
@@ -1018,7 +1009,7 @@ describe("Details written another way (STY-039 S20)", () => {
       const { user } = await renderPage({ shown: written20 })
       const listed = cardDetails(title)
 
-      const form = await openForm(user, title)
+      const form = await openEditItemDialog(user, title)
       expect(pairsOf(shutList(form))).toEqual(listed)
 
       await user.click(form.getByRole("button", { name: "Change details" }))
@@ -1032,11 +1023,11 @@ describe("Details written another way (STY-039 S20)", () => {
 
   it("writes the details at the levels shown once they change, without a hyphen read after the nesting", async () => {
     const { user, repository } = await renderPage({ shown: written20 })
-    const { form, field } = await openDetails(user, "Cold")
+    const { field } = await openDetails(user, "Cold")
 
     await caretIn(user, field, "5 degrees")
     await user.keyboard("{Enter}Checked daily")
-    await done(user, form)
+    await confirmItemEdit(user)
     await publish(user)
 
     expect(await main().findByText(/^Changes published\./)).toBeInTheDocument()
@@ -1080,7 +1071,7 @@ describe("An item with Welsh details (STY-039 S18, S19)", () => {
     async (title) => {
       const { user } = await renderPage({ shown: welshItems })
 
-      const form = await openForm(user, title)
+      const form = await openEditItemDialog(user, title)
 
       expect(form.getByText(NOTICE)).toBeVisible()
       expect(form.queryByRole("button", { name: /details$/ })).toBeNull()
@@ -1090,28 +1081,24 @@ describe("An item with Welsh details (STY-039 S18, S19)", () => {
 
   it("shows them in Welsh on the Welsh interface, as the card does, and No details where only the Welsh cell holds anything", async () => {
     const { user } = await renderPage({ shown: welshItems, language: "cy" })
-    await user.click(main().getByRole("button", { name: "Golygu Paired" }))
-    const form = within(main().getByRole("form", { name: "Paired" }))
+    const form = await openEditItemDialog(user, "Paired", "cy")
 
     expect(pairsOf(shutList(form))).toEqual([
       ["Dilynol", 0],
       ["Dermatoleg", 1],
     ])
     await user.click(form.getByRole("button", { name: "Canslo" }))
-    await user.click(main().getByRole("button", { name: "Golygu Welsh alone" }))
-    expect(
-      within(main().getByRole("form", { name: "Welsh alone" })).getByText(
-        "Dim manylion",
-      ),
-    ).toBeVisible()
+    await expectDialogClosed()
+    const alone = await openEditItemDialog(user, "Welsh alone", "cy")
+    expect(alone.getByText("Dim manylion")).toBeVisible()
   })
 
   it("edits and publishes the item's other fields, leaving its details as they are (S18)", async () => {
     const { user, repository } = await renderPage({ shown: welshItems })
-    const form = await openForm(user, "Paired")
+    const form = await openEditItemDialog(user, "Paired")
 
     await user.type(form.getByRole("textbox", { name: "Phase" }), "Beta")
-    await done(user, form)
+    await confirmItemEdit(user)
     await publish(user)
 
     expect(await main().findByText(/^Changes published\./)).toBeInTheDocument()
@@ -1123,8 +1110,9 @@ describe("An item with Welsh details (STY-039 S18, S19)", () => {
     })
   })
 
-  it("keeps no change of details made in a form whose item gains Welsh details while it is open (S18)", async () => {
+  it("keeps no change of details made in a dialog whose item gains Welsh details while it is open (S18)", async () => {
     const { user, repository } = await renderPage({ shown: welshItems })
+    const land = await holdRefresh(user, repository)
     const { form, field } = await openDetails(user, "English only")
     await caretIn(user, field, "Follow-up")
     await user.keyboard("{Enter}Diabetes")
@@ -1135,15 +1123,18 @@ describe("An item with Welsh details (STY-039 S18, S19)", () => {
       item.hasWelshDetails = true
     })
 
-    await user.click(main().getByRole("button", { name: "Refresh" }))
-    expect(await form.findByText(NOTICE)).toBeVisible()
-    await done(user, form)
+    await land()
+    expect(form.getByText(NOTICE)).toBeVisible()
+    await confirmItemEdit(user)
 
     expect(main().queryByText("Changed")).toBeNull()
   })
 
-  it("shows what Done keeps when an item's Welsh details come and go while its form is open (S17)", async () => {
-    const { user, repository } = await renderPage({ shown: welshItems })
+  it("shows what Done keeps when an item's Welsh details come and go while its dialog is open (S17)", async () => {
+    const { user, repository, queryClient } = await renderPage({
+      shown: welshItems,
+    })
+    const land = await holdRefresh(user, repository)
     const { form, field } = await openDetails(user, "English only")
     await caretIn(user, field, "Follow-up")
     await user.keyboard(" and diabetes")
@@ -1157,20 +1148,21 @@ describe("An item with Welsh details (STY-039 S18, S19)", () => {
     }
 
     welsh("Dilynol")
-    await user.click(main().getByRole("button", { name: "Refresh" }))
-    expect(await form.findByText(NOTICE)).toBeVisible()
+    await land()
+    expect(form.getByText(NOTICE)).toBeVisible()
     welsh("")
-    await user.click(main().getByRole("button", { name: "Refresh" }))
+    await readAgain(queryClient)
     await form.findByRole("button", { name: "Change details" })
 
     expect(pairsOf(shutList(form))).toEqual([["Follow-up and diabetes", 0]])
-    await done(user, form)
+    await confirmItemEdit(user)
     expect(cardDetails("English only")).toEqual([["Follow-up and diabetes", 0]])
   })
 
-  it("shows a field never opened as the form opened on it, whatever a Refresh reads since (S17)", async () => {
+  it("shows a field never opened as the dialog opened on it, whatever a Refresh reads since (S17)", async () => {
     const { user, repository } = await renderPage({ shown: welshItems })
-    const form = await openForm(user, "English only")
+    const land = await holdRefresh(user, repository)
+    const form = await openEditItemDialog(user, "English only")
     repository.coLead((_list, itemsOf) => {
       const [paired, , item] = itemsOf("producta")
       if (item) item.details = detailed(["Their list", 0])
@@ -1178,8 +1170,10 @@ describe("An item with Welsh details (STY-039 S18, S19)", () => {
       if (paired) paired.title = { en: "Paired, since read", cy: "" }
     })
 
-    await user.click(main().getByRole("button", { name: "Refresh" }))
-    await main().findByRole("heading", { level: 3, name: "Paired, since read" })
+    await land()
+    expect(
+      screen.getByRole("heading", { name: "Paired, since read", hidden: true }),
+    ).toBeInTheDocument()
 
     expect(pairsOf(shutList(form))).toEqual([["Follow-up", 0]])
     await user.click(form.getByRole("button", { name: "Change details" }))
@@ -1190,10 +1184,10 @@ describe("An item with Welsh details (STY-039 S18, S19)", () => {
 
   it("refuses a change of details to an item that has gained Welsh details: it can be discarded, not kept (S19)", async () => {
     const { user, repository } = await renderPage({ shown: welshItems })
-    const { form, field } = await openDetails(user, "English only")
+    const { field } = await openDetails(user, "English only")
     await caretIn(user, field, "Follow-up")
     await user.keyboard("{Enter}Diabetes")
-    await done(user, form)
+    await confirmItemEdit(user)
     const theirs = [{ text: { en: "Follow-up", cy: "Dilynol" }, level: 0 }]
     repository.coLead((_list, itemsOf) => {
       const item = itemsOf("producta")[2]
@@ -1231,7 +1225,7 @@ describe("An item with Welsh details (STY-039 S18, S19)", () => {
     expect(main().queryByText("Changed")).toBeNull()
     expect(cardDetails("English only")).toEqual([["Follow-up", 0]])
     // Its details can no longer be changed here.
-    const again = await openForm(user, "English only")
+    const again = await openEditItemDialog(user, "English only")
     expect(again.getByText(NOTICE)).toBeVisible()
   })
 })

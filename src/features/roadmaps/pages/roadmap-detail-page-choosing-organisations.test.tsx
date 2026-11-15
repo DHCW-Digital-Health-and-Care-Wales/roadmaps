@@ -9,10 +9,16 @@ import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-ite
 import type { Language } from "@/i18n"
 import { renderWithProviders } from "@/test/render-with-providers"
 
+import { expectDialogClosed } from "../testing/edit-dialog"
 import {
   createInMemoryRoadmapRepository,
   type InMemoryRoadmapRepository,
 } from "../testing/in-memory-roadmap-repository"
+import {
+  confirmItemEdit,
+  editItemDialog,
+  openEditItemDialog,
+} from "../testing/item-dialog"
 
 const connected: AuthState = {
   status: "connected",
@@ -44,7 +50,7 @@ function main() {
   return within(screen.getByRole("main"))
 }
 
-/** The card (or form) of the item headed `title`. */
+/** The card of the item headed `title`. */
 function card(title: string) {
   const heading = main().getByRole("heading", { level: 3, name: title })
   const item = heading.closest("li")
@@ -75,32 +81,22 @@ async function renderPage({
   return { user, repository }
 }
 
-/** Opens the item's form, its Organisations field still shut (STY-038). */
-async function openForm(user: User, title: string) {
-  await user.click(main().getByRole("button", { name: `Edit ${title}` }))
-  return within(main().getByRole("form", { name: title }))
-}
-
-/** Opens the item's form and its Organisations field, and returns the field's group. */
+/** Opens the item dialog and its Organisations field, and returns the field's group. */
 async function openOrganisations(user: User, title: string) {
-  const form = await openForm(user, title)
+  const form = await openEditItemDialog(user, title)
   await user.click(
     form.getByRole("button", { name: /^(Change|Add) organisations$/ }),
   )
   return within(form.getByRole("group", { name: "Organisations" }))
 }
 
-/** Ticks or unticks each named checkbox in the item's form, then confirms it. */
+/** Ticks or unticks each named checkbox in the item dialog, then confirms it. */
 async function choose(user: User, title: string, toggle: readonly string[]) {
   const group = await openOrganisations(user, title)
   for (const name of toggle) {
     await user.click(group.getByRole("checkbox", { name }))
   }
-  await user.click(
-    within(main().getByRole("form", { name: title })).getByRole("button", {
-      name: "Done",
-    }),
-  )
+  await confirmItemEdit(user)
 }
 
 async function publish(user: User) {
@@ -140,8 +136,7 @@ describe("Choosing an item's organisations (STY-034)", () => {
   it("labels the group in Welsh, the short names staying English (S1)", async () => {
     const { user } = await renderPage({ language: "cy" })
 
-    await user.click(main().getByRole("button", { name: "Golygu Typo" }))
-    const form = within(main().getByRole("form", { name: "Typo" }))
+    const form = await openEditItemDialog(user, "Typo", "cy")
     await user.click(form.getByRole("button", { name: "Newid sefydliadau" }))
     const group = within(form.getByRole("group", { name: "Sefydliadau" }))
     expect(
@@ -192,7 +187,7 @@ describe("Choosing an item's organisations (STY-034)", () => {
     await openOrganisations(user, "Typo")
 
     // The notice sits above the group, where it shows while the field is shut (STY-038).
-    const form = within(main().getByRole("form", { name: "Typo" }))
+    const form = editItemDialog()
     expect(
       form.getByRole("group", { name: "Organisations" }),
     ).toHaveAccessibleDescription(
@@ -219,7 +214,7 @@ describe("Choosing an item's organisations (STY-034)", () => {
     await openOrganisations(user, "Typo")
 
     expect(
-      main().getByText(
+      editItemDialog().getByText(
         "CAVHB, Mars, SBHB aren't recognised. Changing the organisations will remove them.",
       ),
     ).toBeVisible()
@@ -230,7 +225,7 @@ describe("Choosing an item's organisations (STY-034)", () => {
 
     await openOrganisations(user, "Online booking")
 
-    expect(main().queryByText(/isn't recognised/)).toBeNull()
+    expect(editItemDialog().queryByText(/isn't recognised/)).toBeNull()
   })
 
   it("publishes the chosen set, dropping an unknown code, and leaves it on other edits (S4, S5)", async () => {
@@ -301,18 +296,21 @@ describe("The Organisations field opens on request (STY-038)", () => {
   const NOTICE =
     "CAVHB isn't recognised. Changing the organisations will remove it."
 
-  /** Whether anything on the page is pending. */
+  /** Whether anything on the page, behind the dialog, is pending. */
   function pending() {
     return (
-      main().queryByText("Changed") !== null ||
-      main().queryByRole("button", { name: "Publish changes" }) !== null
+      screen.queryByText("Changed") !== null ||
+      screen.queryByRole("button", {
+        name: "Publish changes",
+        hidden: true,
+      }) !== null
     )
   }
 
   it("starts shut, naming the chosen by short name beside Change organisations, with no checkboxes (S1)", async () => {
     const { user } = await renderPage()
 
-    const form = await openForm(user, "Video clinics")
+    const form = await openEditItemDialog(user, "Video clinics")
 
     expect(form.getByText("Organisations")).toBeVisible()
     expect(form.getByText("Cardiff and Vale, Swansea Bay")).toBeVisible()
@@ -334,7 +332,7 @@ describe("The Organisations field opens on request (STY-038)", () => {
       }),
     })
 
-    const form = await openForm(user, "Typo")
+    const form = await openEditItemDialog(user, "Typo")
 
     expect(
       form.getByText("All Wales, Betsi Cadwaladr, Swansea Bay"),
@@ -344,7 +342,7 @@ describe("The Organisations field opens on request (STY-038)", () => {
   it("reads No organisations beside Add organisations for an item with none (S1)", async () => {
     const { user } = await renderPage()
 
-    const form = await openForm(user, "New idea")
+    const form = await openEditItemDialog(user, "New idea")
 
     expect(form.getByText("No organisations")).toBeVisible()
     expect(
@@ -355,7 +353,7 @@ describe("The Organisations field opens on request (STY-038)", () => {
 
   it("opens the checkboxes in place, the item's ticked, focus on the first (S2)", async () => {
     const { user } = await renderPage()
-    const form = await openForm(user, "Video clinics")
+    const form = await openEditItemDialog(user, "Video clinics")
 
     await user.click(form.getByRole("button", { name: "Change organisations" }))
 
@@ -381,7 +379,7 @@ describe("The Organisations field opens on request (STY-038)", () => {
     const { user } = await renderPage()
     const group = await openOrganisations(user, "Video clinics")
     await user.click(group.getByRole("checkbox", { name: "Hywel Dda (HDUHB)" }))
-    const form = within(main().getByRole("form", { name: "Video clinics" }))
+    const form = editItemDialog()
 
     await user.click(form.getByRole("button", { name: "Close organisations" }))
 
@@ -403,7 +401,7 @@ describe("The Organisations field opens on request (STY-038)", () => {
     expect(
       group.getByRole("checkbox", { name: "All Wales (National)" }),
     ).toHaveFocus()
-    const form = within(main().getByRole("form", { name: "Video clinics" }))
+    const form = editItemDialog()
 
     // A click that leaves focus where it was, as Safari's does on a button.
     fireEvent.click(form.getByRole("button", { name: "Close organisations" }))
@@ -420,7 +418,7 @@ describe("The Organisations field opens on request (STY-038)", () => {
     const { user } = await renderPage()
     const group = await openOrganisations(user, "Video clinics")
     await user.click(group.getByRole("checkbox", { name: "Hywel Dda (HDUHB)" }))
-    const form = within(main().getByRole("form", { name: "Video clinics" }))
+    const form = editItemDialog()
     await user.click(form.getByRole("button", { name: "Close organisations" }))
 
     await user.click(form.getByRole("button", { name: "Change organisations" }))
@@ -444,14 +442,14 @@ describe("The Organisations field opens on request (STY-038)", () => {
       await user.click(
         group.getByRole("checkbox", { name: "Hywel Dda (HDUHB)" }),
       )
-      const form = within(main().getByRole("form", { name: "Video clinics" }))
+      const form = editItemDialog()
       if (state === "shut") {
         await user.click(
           form.getByRole("button", { name: "Close organisations" }),
         )
       }
 
-      await user.click(form.getByRole("button", { name: "Done" }))
+      await confirmItemEdit(user)
 
       expect(organisationsOf("Video clinics")).toBe(
         "Cardiff and Vale, Hywel Dda, Swansea Bay",
@@ -462,7 +460,7 @@ describe("The Organisations field opens on request (STY-038)", () => {
 
   it("adds the first organisation of an item with none (S1, S4)", async () => {
     const { user } = await renderPage()
-    const form = await openForm(user, "New idea")
+    const form = await openEditItemDialog(user, "New idea")
     await user.click(form.getByRole("button", { name: "Add organisations" }))
     await user.click(
       form.getByRole("checkbox", { name: "All Wales (National)" }),
@@ -480,7 +478,7 @@ describe("The Organisations field opens on request (STY-038)", () => {
   it("names an unknown code while the field is shut, and open too (S5)", async () => {
     const { user } = await renderPage()
 
-    const form = await openForm(user, "Typo")
+    const form = await openEditItemDialog(user, "Typo")
 
     expect(form.getByText(NOTICE)).toBeVisible()
     expect(form.queryAllByRole("checkbox")).toEqual([])
@@ -499,18 +497,14 @@ describe("The Organisations field opens on request (STY-038)", () => {
     const { user } = await renderPage()
     const group = await openOrganisations(user, "Video clinics")
     await user.click(group.getByRole("checkbox", { name: "Hywel Dda (HDUHB)" }))
-    await user.click(
-      within(main().getByRole("form", { name: "Video clinics" })).getByRole(
-        "button",
-        { name: "Cancel" },
-      ),
-    )
+    await user.click(editItemDialog().getByRole("button", { name: "Cancel" }))
+    await expectDialogClosed()
     expect(organisationsOf("Video clinics")).toBe(
       "Cardiff and Vale, Swansea Bay",
     )
     expect(pending()).toBe(false)
 
-    const form = await openForm(user, "Video clinics")
+    const form = await openEditItemDialog(user, "Video clinics")
 
     expect(form.getByText("Cardiff and Vale, Swansea Bay")).toBeVisible()
     expect(form.queryAllByRole("checkbox")).toEqual([])
@@ -524,7 +518,7 @@ describe("The Organisations field opens on request (STY-038)", () => {
     const { user } = await renderPage()
     await choose(user, "Video clinics", ["Hywel Dda (HDUHB)"])
 
-    const form = await openForm(user, "Video clinics")
+    const form = await openEditItemDialog(user, "Video clinics")
 
     expect(
       form.getByText("Cardiff and Vale, Hywel Dda, Swansea Bay"),
@@ -534,7 +528,7 @@ describe("The Organisations field opens on request (STY-038)", () => {
 
   it("opens, ticks and shuts by keyboard alone (S7)", async () => {
     const { user } = await renderPage()
-    const form = await openForm(user, "Video clinics")
+    const form = await openEditItemDialog(user, "Video clinics")
     const button = () =>
       form.getByRole("button", { name: /^(Change|Close) organisations$/ })
 
@@ -564,19 +558,16 @@ describe("The Organisations field opens on request (STY-038)", () => {
   it("is Welsh on the Welsh interface, the short names staying English (S7)", async () => {
     const { user } = await renderPage({ language: "cy" })
 
-    await user.click(
-      main().getByRole("button", { name: "Golygu Video clinics" }),
-    )
-    const form = within(main().getByRole("form", { name: "Video clinics" }))
+    const form = await openEditItemDialog(user, "Video clinics", "cy")
     expect(form.getByText("Sefydliadau")).toBeVisible()
     expect(form.getByText("Cardiff and Vale, Swansea Bay")).toBeVisible()
     await user.click(form.getByRole("button", { name: "Newid sefydliadau" }))
     expect(form.getByRole("group", { name: "Sefydliadau" })).toBeVisible()
     await user.click(form.getByRole("button", { name: "Cau sefydliadau" }))
     await user.click(form.getByRole("button", { name: "Canslo" }))
+    await expectDialogClosed()
 
-    await user.click(main().getByRole("button", { name: "Golygu New idea" }))
-    const empty = within(main().getByRole("form", { name: "New idea" }))
+    const empty = await openEditItemDialog(user, "New idea", "cy")
     expect(empty.getByText("Dim sefydliadau")).toBeVisible()
     expect(
       empty.getByRole("button", { name: "Ychwanegu sefydliadau" }),

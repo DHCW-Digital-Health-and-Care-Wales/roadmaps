@@ -11,10 +11,17 @@ import type { Language } from "@/i18n"
 import { AppError } from "@/lib/errors"
 import { renderWithProviders } from "@/test/render-with-providers"
 
+import { expectDialogClosed } from "../testing/edit-dialog"
+import { holdRefresh } from "../testing/held-refresh"
 import {
   createInMemoryRoadmapRepository,
   type InMemoryRoadmapRepository,
 } from "../testing/in-memory-roadmap-repository"
+import {
+  confirmItemEdit,
+  editItemDialog,
+  openEditItemDialog,
+} from "../testing/item-dialog"
 
 const connected: AuthState = {
   status: "connected",
@@ -46,7 +53,7 @@ function main() {
   return within(screen.getByRole("main"))
 }
 
-/** The card (or form) of the item headed `title`. */
+/** The card of the item headed `title`. */
 function card(title: string) {
   const heading = main().getByRole("heading", { level: 3, name: title })
   const item = heading.closest("li")
@@ -82,21 +89,20 @@ async function moveWithMenu(user: User, title: string, to: string) {
   await user.click(await screen.findByRole("menuitem", { name: to }))
 }
 
-/** Moves the item through its edit form. */
-async function moveWithForm(user: User, title: string, to: string) {
-  await user.click(main().getByRole("button", { name: `Edit ${title}` }))
-  const form = within(main().getByRole("form", { name: title }))
+/** Moves the item in the item dialog. */
+async function moveWithDialog(user: User, title: string, to: string) {
+  const form = await openEditItemDialog(user, title)
   await user.selectOptions(
     form.getByRole("combobox", { name: "Horizon or section" }),
     to,
   )
-  await user.click(form.getByRole("button", { name: "Done" }))
+  await confirmItemEdit(user)
 }
 
 describe("Moving an item (STY-031)", () => {
   it.each([
     ["menu", moveWithMenu],
-    ["form", moveWithForm],
+    ["dialog", moveWithDialog],
   ] as const)(
     "shows an item moved by its %s in its new place, in row order, pending (S1, S3)",
     async (_way, move) => {
@@ -117,7 +123,7 @@ describe("Moving an item (STY-031)", () => {
     },
   )
 
-  it("offers the other five placements by heading, in page order, and no menu while the form is open (S2)", async () => {
+  it("offers the other five placements by heading, in page order, and no menu within reach while the dialog is open (S2)", async () => {
     const { user } = await renderPage()
 
     await user.click(
@@ -138,24 +144,18 @@ describe("Moving an item (STY-031)", () => {
       "Not doing",
     ])
     await user.keyboard("{Escape}")
-    await user.click(
-      main().getByRole("button", { name: "Edit Online booking" }),
-    )
+    await openEditItemDialog(user, "Online booking")
     expect(
-      main().queryByRole("button", { name: "Move Online booking" }),
+      screen.queryByRole("button", { name: "Move Online booking" }),
     ).toBeNull()
   })
 
-  it("sets the form's choice to the item's placement, offering all six (S3)", async () => {
+  it("sets the dialog's choice to the item's placement, offering all six (S3)", async () => {
     const { user } = await renderPage()
 
-    await user.click(
-      main().getByRole("button", { name: "Edit Online booking" }),
-    )
+    const form = await openEditItemDialog(user, "Online booking")
 
-    const choice = within(
-      main().getByRole("form", { name: "Online booking" }),
-    ).getByRole("combobox", { name: "Horizon or section" })
+    const choice = form.getByRole("combobox", { name: "Horizon or section" })
     expect(choice).toHaveDisplayValue("Later")
     expect(
       within(choice)
@@ -173,7 +173,7 @@ describe("Moving an item (STY-031)", () => {
 
   it.each([
     ["menu", moveWithMenu],
-    ["form", moveWithForm],
+    ["dialog", moveWithDialog],
   ] as const)(
     "places an unplaced item by its %s, no longer flagged (S4)",
     async (_way, move) => {
@@ -191,17 +191,15 @@ describe("Moving an item (STY-031)", () => {
     },
   )
 
-  it("never unplaces an item: the menu offers all six, the form starts on none, which can't be chosen (S4)", async () => {
+  it("never unplaces an item: the menu offers all six, the dialog starts on none, which can't be chosen (S4)", async () => {
     const { user } = await renderPage()
 
     await user.click(main().getByRole("button", { name: "Move Someday item" }))
     expect(await screen.findAllByRole("menuitem")).toHaveLength(6)
     await user.keyboard("{Escape}")
-    await user.click(main().getByRole("button", { name: "Edit Someday item" }))
+    const form = await openEditItemDialog(user, "Someday item")
 
-    const choice = within(
-      main().getByRole("form", { name: "Someday item" }),
-    ).getByRole("combobox", { name: "Horizon or section" })
+    const choice = form.getByRole("combobox", { name: "Horizon or section" })
     expect(choice).toHaveDisplayValue("Choose a horizon or section")
     expect(
       within(choice).getByRole("option", {
@@ -210,26 +208,20 @@ describe("Moving an item (STY-031)", () => {
     ).toBeDisabled()
   })
 
-  it("keeps the none option, and its choice, in an open form after Refresh reads a co-lead's placing the item (S4)", async () => {
+  it("keeps the none option, and its choice, in the open dialog after a Refresh reads a co-lead's placing the item (S4)", async () => {
     const { user, repository } = await renderPage()
-    const read = vi.spyOn(repository, "listRoadmapItems")
-    await user.click(main().getByRole("button", { name: "Edit Someday item" }))
+    const land = await holdRefresh(user, repository)
+    const form = await openEditItemDialog(user, "Someday item")
     repository.coLead((_list, itemsOf) => {
       const someday = itemsOf("producta")[3]
       if (someday) someday.placement = "now"
     })
 
-    await user.click(main().getByRole("button", { name: "Refresh" }))
-    await vi.waitFor(() => {
-      expect(read).toHaveBeenCalled()
-    })
-    await read.mock.results[0]?.value
-    await new Promise((resolve) => setTimeout(resolve, 0))
+    await land()
 
-    const form = within(main().getByRole("form", { name: "Someday item" }))
     const choice = form.getByRole("combobox", { name: "Horizon or section" })
     expect(choice).toHaveDisplayValue("Choose a horizon or section")
-    await user.click(form.getByRole("button", { name: "Done" }))
+    await confirmItemEdit(user)
     expect(titlesUnder("Now")).toContain("Someday item")
     expect(main().queryByText("1 unpublished change")).toBeNull()
   })
@@ -344,53 +336,59 @@ describe("Moving an item (STY-031)", () => {
     expect(titlesUnder("Now")).not.toContain("Online booking")
   })
 
-  it("keeps an open form, and its card where it opened, when Use theirs moves the item, until Done (S8)", async () => {
-    const { user, repository } = await renderPage()
-    await moveWithMenu(user, "Online booking", "Now")
-    repository.coLead((_list, itemsOf) => {
-      const booking = itemsOf("producta")[1]
-      if (booking) booking.placement = "next"
-    })
-    await user.click(main().getByRole("button", { name: "Publish changes" }))
-    await user.click(
-      within(screen.getByRole("alertdialog")).getByRole("button", {
-        name: "Publish changes",
-      }),
-    )
-    const review = await main().findByRole("alert")
-    await user.click(
-      main().getByRole("button", { name: "Edit Online booking" }),
-    )
-    const form = within(main().getByRole("form", { name: "Online booking" }))
-    await user.type(form.getByRole("textbox", { name: "Description" }), "Typed")
+  it.each([
+    [
+      "Done",
+      async (user: User) => {
+        await confirmItemEdit(user)
+        expect(within(card("Online booking")).getByText("Typed")).toBeVisible()
+      },
+    ],
+    [
+      "Cancel",
+      async (user: User) => {
+        await user.click(
+          editItemDialog().getByRole("button", { name: "Cancel" }),
+        )
+        await expectDialogClosed()
+        expect(within(card("Online booking")).queryByText("Typed")).toBeNull()
+      },
+    ],
+  ])(
+    "keeps the open dialog and what was typed when a read moves the item's card to another list, focus on the card where it now is after %s (STY-044 S7)",
+    async (_how, close) => {
+      const { user, repository } = await renderPage()
+      const land = await holdRefresh(user, repository)
+      const form = await openEditItemDialog(user, "Online booking")
+      await user.type(
+        form.getByRole("textbox", { name: "Description" }),
+        "Typed",
+      )
+      repository.coLead((_list, itemsOf) => {
+        const booking = itemsOf("producta")[1]
+        if (booking) booking.placement = "next"
+      })
 
-    await user.click(
-      within(review).getByRole("button", {
-        name: "Use theirs Online booking: Horizon or section",
-      }),
-    )
+      await land()
 
-    expect(
-      within(main().getByRole("form", { name: "Online booking" })).getByRole(
-        "textbox",
-        { name: "Description" },
-      ),
-    ).toHaveValue("Typed")
-    expect(titlesUnder("Now")).toContain("Online booking")
-    await user.click(
-      within(main().getByRole("form", { name: "Online booking" })).getByRole(
-        "button",
-        { name: "Done" },
-      ),
-    )
-    expect(titlesUnder("Next")).toEqual(["Online booking"])
-    expect(within(card("Online booking")).getByText("Typed")).toBeVisible()
-    await vi.waitFor(() => {
+      // Its card is now a new one, in Next, behind the dialog.
       expect(
-        main().getByRole("button", { name: "Edit Online booking" }),
-      ).toHaveFocus()
-    })
-  })
+        within(
+          screen.getByRole("list", { name: "Next", hidden: true }),
+        ).getByRole("heading", { name: "Online booking", hidden: true }),
+      ).toBeInTheDocument()
+      expect(form.getByRole("textbox", { name: "Description" })).toHaveValue(
+        "Typed",
+      )
+      await close(user)
+      expect(titlesUnder("Next")).toEqual(["Online booking"])
+      await vi.waitFor(() => {
+        expect(
+          main().getByRole("button", { name: "Edit Online booking" }),
+        ).toHaveFocus()
+      })
+    },
+  )
 
   it("moves by keyboard, naming the menu for the item, then focuses the moved item's card (S10)", async () => {
     const { user } = await renderPage()
@@ -413,7 +411,7 @@ describe("Moving an item (STY-031)", () => {
   })
 
   it.each([
-    ["Done", (user: User) => moveWithForm(user, "Online booking", "Now")],
+    ["Done", (user: User) => moveWithDialog(user, "Online booking", "Now")],
     [
       "Undo changes",
       async (user: User) => {
@@ -438,7 +436,7 @@ describe("Moving an item (STY-031)", () => {
     },
   )
 
-  it("speaks Welsh: the menu, its name, the form's label and the headings (S11)", async () => {
+  it("speaks Welsh: the menu, its name, the dialog's label and the headings (S11)", async () => {
     const user = userEvent.setup()
     await renderWithProviders({
       path: "/roadmaps/producta",
@@ -467,11 +465,9 @@ describe("Moving an item (STY-031)", () => {
       "Ddim yn bwrw ymlaen",
     ])
     await user.keyboard("{Escape}")
-    await user.click(
-      main().getByRole("button", { name: "Golygu Archebu ar-lein" }),
-    )
+    const form = await openEditItemDialog(user, "Archebu ar-lein", "cy")
     expect(
-      main().getByRole("combobox", { name: "Gorwel neu adran" }),
+      form.getByRole("combobox", { name: "Gorwel neu adran" }),
     ).toHaveDisplayValue("Hwyrach")
   })
 })

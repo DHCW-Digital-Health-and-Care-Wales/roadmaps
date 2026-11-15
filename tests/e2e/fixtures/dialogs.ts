@@ -38,6 +38,19 @@ const EDIT_ROADMAP = {
 } as const satisfies Record<Language, DialogNames & { opener: string }>
 
 /**
+ * The item dialog editing an item, in each language: `opener` is the Edit on the
+ * item's card, which its title follows.
+ */
+const EDIT_ITEM = {
+  en: { opener: "Edit", title: "Edit this item", firstField: "Title" },
+  cy: {
+    opener: "Golygu",
+    title: "Golygu'r eitem hon",
+    firstField: "Teitl (Saesneg)",
+  },
+} as const satisfies Record<Language, DialogNames & { opener: string }>
+
+/**
  * Clicks `opener` and returns the dialog it opens, once focus is in its first field:
  * the dialog is ready then, and not before.
  */
@@ -134,4 +147,29 @@ async function expectOffersLists(dialog: Locator): Promise<void> {
   const selects = dialog.getByRole("combobox")
   await expect(selects).toHaveCount(2)
   for (const select of await selects.all()) await expect(select).toBeEnabled()
+}
+
+/** The Edit on the card of the item titled `title`, on a roadmap's page in `language`. */
+export function editItemButton(
+  page: Page,
+  title: string,
+  language: Language = "en",
+): Locator {
+  return page.getByRole("main").getByRole("button", {
+    name: `${EDIT_ITEM[language].opener} ${title}`,
+    exact: true,
+  })
+}
+
+/** Opens the item dialog on the item titled `title`, from its card's Edit. */
+export function openEditItemDialog(
+  page: Page,
+  title: string,
+  language: Language = "en",
+): Promise<Locator> {
+  return openDialog(
+    page,
+    editItemButton(page, title, language),
+    EDIT_ITEM[language],
+  )
 }

@@ -17,21 +17,32 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   `FormField`, `ChoiceField` and `FixedField`: STY-041's _Contract for dependents_
   (archived) says how each is used. A new dialog passes its form to `FormDialog`; it
   does not handle Escape, a click outside or focus itself.
-- **An edit form in a dialog is `EditForm` with no `onCancel`** (STY-043): its buttons
-  are the dialog's footer, and it leaves Escape and the first focus to `FormDialog`. A
-  form that focuses a field as it mounts moves focus before the dialog has noted what
-  opened it, and closing then returns focus nowhere.
+- **`EditForm` is always a dialog's form** (STY-044): its buttons are the dialog's
+  footer, and it leaves Escape and the first focus to `FormDialog`. A form that focuses
+  a field as it mounts moves focus before the dialog has noted what opened it, and
+  closing then returns focus nowhere. A field that uses Escape itself, as a tag's
+  rename does, stops it reaching the dialog, which closes on any Escape it gets.
 - **A dialog is given its `opener`**, the ref of the control that opens it
   (`FormDialog`, `RoadmapDialog`): Safari leaves a clicked button unfocused, so the
   dialog can't find it by where focus was. A test clicks without focusing
   (`fireEvent.click`) to show it. "Add a roadmap" gives none yet (DEF-008).
-- **Nothing behind an open dialog can be pressed, Refresh included**: a test of a read
-  that lands while a dialog is open asks for the Refresh first, holds the read
-  (`holdCall`), opens the dialog, then lets the read go.
-- **The roadmap dialog's tests go through its helpers**:
-  `features/roadmaps/testing/roadmap-dialog.ts` in Vitest, and `openEditRoadmapDialog`
-  and `editRoadmapButton` (`tests/e2e/fixtures/dialogs.ts`) in Playwright, in English
-  or Welsh (`editRoadmapText` in English only). The item dialog's go beside them.
+- **Nothing behind an open dialog can be pressed, Refresh included**: a test of a
+  read that lands while a dialog is open asks for the Refresh first, holds the read,
+  opens the dialog, then lets the read go. On a roadmap's page that is
+  `holdRefresh(user, repository)` (`features/roadmaps/testing/held-refresh.ts`), and
+  `readAgain(queryClient)` makes a further read. Two dialogs are never open at once,
+  and nothing is published while one is.
+- **The item dialog is the page's, not a card's** (STY-044; its _Contract for
+  dependents_, archived): `useItemDialog` finds its item again by card key after
+  every read, and the card of that item holds the dialog's `opener`, so focus goes
+  back to the card wherever it now is. A card has no form and no hold.
+- **Each dialog's tests go through its helpers**: in Vitest
+  `features/roadmaps/testing/roadmap-dialog.ts` and `item-dialog.ts`, which share
+  `edit-dialog.ts` (with `expectDialogClosed` for a dialog closed another way than
+  Done); in Playwright `openEditRoadmapDialog`, `editRoadmapButton`,
+  `openEditItemDialog` and `editItemButton` (`tests/e2e/fixtures/dialogs.ts`). Each
+  takes the language, English or Welsh, but `editRoadmapText` and `editItemText`,
+  which are English only.
 - **While a dialog is open, the page behind it is out of reach of role queries**, in
   Vitest as in Playwright: wait for a heading of the page before reading `main`.
 - **`user.selectOptions` matches an option's text as HTML**, so a name with `&` never

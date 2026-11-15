@@ -1,19 +1,20 @@
 import { TriangleAlertIcon } from "lucide-react"
-import { useId, useMemo, useState } from "react"
+import { useId, useMemo, useState, type RefObject } from "react"
 import { useTranslation } from "react-i18next"
 
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Organisation } from "@/domain/roadmap/organisation"
 import type { ItemChanges } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
-import type { RoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 
+import { ItemDialog } from "../dialogs/item-dialog"
 import {
   type CardControl,
   EditableItemCard,
 } from "../editing/editable-item-card"
 import { applyItemChanges, matchItemChanges } from "../editing/pending-changes"
 import { useRoadmapChanges } from "../editing/pending-changes-context"
+import { useItemDialog } from "../editing/use-item-dialog"
 import {
   groupRoadmapItems,
   type PositionedRoadmapItem,
@@ -35,8 +36,9 @@ export interface RoadmapItemsProps {
  * A roadmap's items: those the public site leaves out first, flagged (D4), then all six
  * placements in the public site's order, each under its heading, saying when it has
  * none (D1). A roadmap with no items has one dashed panel instead, saying where they
- * are added (D5, STY-042 S2). Each item can be edited and moved, and shows its pending
- * changes, in its pending placement (STY-025, STY-031).
+ * are added (D5, STY-042 S2). Each item can be moved, and shows its pending changes, in
+ * its pending placement (STY-025, STY-031). Edit on a card opens the page's one item
+ * dialog (`useItemDialog`, STY-044).
  */
 export function RoadmapItems({
   roadmapId,
@@ -54,21 +56,15 @@ export function RoadmapItems({
     () => items.map((item, at) => applyItemChanges(item, entries.get(at))),
     [items, entries],
   )
-  // A card whose form is open stays where it opened, by `cardHoldKey`: moving it to
-  // another list would make it a new card, losing what the form holds.
-  const [held, setHeld] = useState<
-    ReadonlyMap<string, RoadmapPlacement | null>
-  >(new Map())
   const { unplaced, placements } = useMemo(
     () =>
-      groupRoadmapItems(items, (item, position) => {
-        const key = cardHoldKey(item, position)
-        return held.has(key)
-          ? (held.get(key) ?? null)
-          : (shownItems[position] ?? item).placement
-      }),
-    [items, shownItems, held],
+      groupRoadmapItems(
+        items,
+        (item, position) => (shownItems[position] ?? item).placement,
+      ),
+    [items, shownItems],
   )
+  const keys = useItemCardKeys(items)
   // A moved item's card is a new one, in another list, so focus is handed to it here.
   const [focus, setFocus] = useState<FocusRequest | null>(null)
   const cardHandlers = useMemo(
@@ -79,18 +75,12 @@ export function RoadmapItems({
       focused: () => {
         setFocus(null)
       },
-      hold: (key: string, placement: RoadmapPlacement | null | undefined) => {
-        setHeld((current) => {
-          if (current.get(key) === placement) return current
-          const next = new Map(current)
-          if (placement === undefined) next.delete(key)
-          else next.set(key, placement)
-          return next
-        })
-      },
     }),
     [],
   )
+
+  const dialog = useItemDialog({ roadmapId, items, shownItems, keys })
+
   const list = (
     placed: readonly PositionedRoadmapItem[],
     labelledBy: string,
@@ -98,13 +88,16 @@ export function RoadmapItems({
     <ItemList
       roadmapId={roadmapId}
       items={items}
-      shownItems={shownItems}
       organisations={organisations}
       placed={placed}
+      keys={keys}
       entries={entries}
       labelledBy={labelledBy}
       focus={focus}
       cardHandlers={cardHandlers}
+      onEdit={dialog.edit}
+      dialogAt={dialog.edited?.at}
+      dialogOpener={dialog.opener}
     />
   )
 
@@ -153,6 +146,19 @@ export function RoadmapItems({
           </div>
         )
       })}
+      {dialog.edited && (
+        <ItemDialog
+          key={dialog.edited.key}
+          open={dialog.edited.open}
+          opened={dialog.edited.opened}
+          item={dialog.edited.item}
+          tagsInUse={dialog.tagsInUse}
+          organisations={organisations}
+          onDone={dialog.done}
+          onClose={dialog.close}
+          opener={dialog.opener}
+        />
+      )}
     </div>
   )
 }
@@ -166,44 +172,45 @@ interface FocusRequest {
 interface ItemListProps {
   roadmapId: string
   items: readonly RoadmapItem[]
-  shownItems: readonly RoadmapItem[]
   organisations: readonly Organisation[]
   placed: readonly PositionedRoadmapItem[]
+  /** Each item's card key, by its position (`useItemCardKeys`). */
+  keys: readonly string[]
   entries: ReadonlyMap<number, ItemChanges>
   labelledBy: string
   focus: FocusRequest | null
   cardHandlers: {
     requestFocus: (position: number, control: CardControl) => void
     focused: () => void
-    hold: (key: string, placement: RoadmapPlacement | null | undefined) => void
   }
-}
-
-/** Which item a held card shows: by its ID, or with none by its place. */
-function cardHoldKey(item: RoadmapItem, position: number): string {
-  return item.id ?? `at:${String(position)}`
+  onEdit: (position: number) => void
+  /** Where the item the dialog edits is among `items`, if it edits one. */
+  dialogAt: number | undefined
+  /** The ref that item's card gives its Edit (`EditableItemCard`). */
+  dialogOpener: RefObject<HTMLButtonElement | null>
 }
 
 function ItemList({
   roadmapId,
   items,
-  shownItems,
   organisations,
   placed,
+  keys,
   entries,
   labelledBy,
   focus,
   cardHandlers,
+  onEdit,
+  dialogAt,
+  dialogOpener,
 }: ItemListProps) {
-  const keys = useItemCardKeys(placed)
   return (
     <ul aria-labelledby={labelledBy} className={itemGridClassName}>
-      {placed.map(({ item, position }, index) => (
+      {placed.map(({ item, position }) => (
         <EditableItemCard
-          key={keys[index]}
+          key={keys[position]}
           roadmapId={roadmapId}
           items={items}
-          shownItems={shownItems}
           item={item}
           organisations={organisations}
           position={position}
@@ -213,8 +220,8 @@ function ItemList({
           }
           onFocusRequest={cardHandlers.requestFocus}
           onFocused={cardHandlers.focused}
-          holdKey={cardHoldKey(item, position)}
-          onHold={cardHandlers.hold}
+          onEdit={onEdit}
+          dialogOpener={dialogAt === position ? dialogOpener : undefined}
         />
       ))}
     </ul>

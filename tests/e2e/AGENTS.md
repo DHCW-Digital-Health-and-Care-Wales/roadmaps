@@ -59,5 +59,5 @@ tours.
   (`fixtures/look.ts`), never a copied colour.
 - The focus tours need every tab stop to match `focus-fill`, `focus-ring` or
   `focus-link`: a new kind of control uses one of them, or the check gains a utility.
-- The editing tour (`focus-indicator.spec.ts`) opens each form field that opens on
-  request, so its controls are toured: open a new one there too.
+- The item dialog's tour (`focus-indicator.spec.ts`) opens each form field that opens
+  on request, so its controls are toured: open a new one there too.

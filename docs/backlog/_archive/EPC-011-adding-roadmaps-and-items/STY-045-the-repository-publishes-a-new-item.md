@@ -9,7 +9,7 @@
 - **Binding ADRs**: ADR-012, ADR-011, ADR-014, ADR-002, ADR-006
 - **Suggested model**: Opus — extends the all-or-nothing publish with rows that have
   no base to conflict on, and its lost-answer settlement
-- **Delivered**: _(the PR's URL, added once it is open)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/87
 
 ## Summary
 

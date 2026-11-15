@@ -16,7 +16,7 @@ import {
   withCurrentItemText,
   withCurrentRoadmapText,
 } from "./conflicts"
-import { countChanges, settlePublished } from "./pending-changes"
+import { countChanges, keepUnread, settlePublished } from "./pending-changes"
 import { usePendingChangesStore } from "./pending-changes-context"
 import {
   publishAction,
@@ -32,9 +32,10 @@ export const CURRENT_TEXT: CurrentText = {
 
 /**
  * Settles the roadmap's changes once `sent` is published, by what the reads after it
- * read back (`read`, from `useReadBack`): what a read that failed would show stays pending until a read
- * holds it, as the page would otherwise show what was cached before (DEF-009 D1, D2),
- * and a new item kept so is published, offering no Remove (D3).
+ * read back (`read`, from `useReadBack`): what a failed read would show stays pending,
+ * based on what was published (`keepUnread`), until a read holds it, as the page would
+ * otherwise show what was cached before (DEF-009 D1, D2); a new item kept so is
+ * published, offering no Remove (D3).
  */
 export function settleReadBack(
   store: PendingChangesStore,
@@ -42,12 +43,19 @@ export function settleReadBack(
   sent: RoadmapChanges,
   read: ReadBack,
 ) {
-  const settled: RoadmapChanges = {
+  const readBack: RoadmapChanges = {
     roadmap: read.roadmaps ? sent.roadmap : {},
     items: read.items ? sent.items : [],
     newItems: read.items ? sent.newItems : [],
   }
-  store.update(roadmapId, (changes) => settlePublished(changes, settled))
+  const unread: RoadmapChanges = {
+    roadmap: read.roadmaps ? {} : sent.roadmap,
+    items: read.items ? [] : sent.items,
+    newItems: [],
+  }
+  store.update(roadmapId, (changes) =>
+    keepUnread(settlePublished(changes, readBack), unread),
+  )
   if (!read.items) {
     store.keepPublished(
       roadmapId,

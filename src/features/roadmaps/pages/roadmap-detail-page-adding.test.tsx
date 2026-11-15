@@ -915,6 +915,41 @@ describe("A published new item the roadmap can't be read back with (DEF-009)", (
     expect(card(CLINIC).getByText("New")).toBeVisible()
   })
 
+  it("stays on the page when the session ends while the read after “Save and publish” is under way", async () => {
+    const { user, repository, authClient } = await renderPage({
+      path: "/roadmaps/productc",
+    })
+    await addItem(user, CLINIC, "Now")
+    vi.spyOn(repository, "listRoadmapItems").mockImplementationOnce(
+      () => new Promise(() => undefined),
+    )
+    const published = vi.spyOn(repository, "setRoadmapPublished")
+
+    await user.click(main().getByRole("button", { name: "Publish roadmap" }))
+    await user.click(
+      within(await screen.findByRole("alertdialog")).getByRole("button", {
+        name: "Save and publish",
+      }),
+    )
+    await waitFor(() => {
+      expect(published).toHaveBeenCalled()
+    })
+    await act(async () => {
+      await published.mock.results[0]?.value
+    })
+    act(() => {
+      authClient.setState({ status: "expired" })
+    })
+
+    await vi.waitFor(() => {
+      expect(
+        main().getByText(/^Changes saved and Product C roadmap published\./),
+      ).toBeVisible()
+    })
+    expect(titlesUnder("Now")).toEqual([CLINIC])
+    expect(card(CLINIC).getByText("New")).toBeVisible()
+  })
+
   it("stays on the page after “Save and publish” too", async () => {
     const { user, repository } = await renderPage({
       path: "/roadmaps/productc",

@@ -115,6 +115,12 @@ holds it, which the pending-edit store's reconcile on read already drops.
   while the roadmap list can't be read back, as an item's does while the items can't.
 - **An edit kept by D2 keeps "Undo changes"**: undoing it shows the text as last read
   until the next read, which holds the published text; nothing is published twice.
+- **An item without an ID keeps the content it was loaded with** (agent): its card
+  finds it by that content in the items last read, which hold no ID yet, so S2 shows
+  its edit. Edited again before a read, its next publish finds the row changed and
+  reports the item as changed since it was opened, as ADR-012 Option 13 does. This
+  needs a roadmap's first publish from the editor, a failed read back and an edit before
+  any read; a read in between avoids it.
 - **Before screenshots were captured after the tests were written**, from a build of
   the base commit (`4ff0fb0`), not from the checkout before the first edit.
 
@@ -135,6 +141,8 @@ holds it, which the pending-edit store's reconcile on read already drops.
 | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | S1, S3   | `roadmap-detail-page-adding.test.tsx` (`A published new item the roadmap can't be read back with (DEF-009)`, four tests, red before the fix); `tests/e2e/adding-an-item.spec.ts` (`a published new item stays, pending and held…`) |
 | S1       | `roadmap-detail-page-adding.test.tsx` (`stays on the page when the session ends while the read after the publish is under way`), a review fix, red before it                                                                       |
+| S1       | `roadmap-detail-page-adding.test.tsx` (`… while the read after “Save and publish” is under way`), written after the fix, red when `useReadBack` counted a cancelled read                                                           |
+| S2       | `roadmap-detail-page-editing.test.tsx` (`publishes an edit made again before a read holds the last publish, …`) and `pending-changes.test.ts` (`keepUnread (DEF-009 D2)`), a review fix, red before it                             |
 | S2       | `roadmap-detail-page-editing.test.tsx` (`keeps a published edit's text, pending, … (DEF-009 S2)`, and the roadmap's own text alike), red before the fix                                                                            |
 
 The Playwright test followed the working fix, so it was not seen red; the Vitest tests

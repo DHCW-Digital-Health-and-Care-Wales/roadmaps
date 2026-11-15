@@ -9,7 +9,7 @@
 - **Binding ADRs**: ADR-012, ADR-013, ADR-005, ADR-008, ADR-010
 - **Suggested model**: Sonnet — an existing form moved into an existing dialog, with
   no change to what is written
-- **Delivered**: _(the PR's URL, once it is open)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/83
 
 ## Summary
 

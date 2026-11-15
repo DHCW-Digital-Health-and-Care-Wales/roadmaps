@@ -8,8 +8,13 @@ import {
   type PublishWrites,
   type RoadmapSnapshot,
 } from "./publish-plan"
-import { UNLISTED_FAMILY } from "./roadmap-changes"
+import {
+  type NewItem,
+  type RoadmapChanges,
+  UNLISTED_FAMILY,
+} from "./roadmap-changes"
 import type { RoadmapItem } from "./roadmap-item"
+import { createTestNewItem } from "./testing/test-new-item"
 import { createTestRoadmap } from "./testing/test-roadmap"
 import { createTestRoadmapItem } from "./testing/test-roadmap-item"
 
@@ -46,6 +51,7 @@ describe("planRoadmapPublish", () => {
       {
         roadmap: { vision: { base: "", value: "A vision" } },
         items: [],
+        newItems: [],
       },
       snapshotOf(items, ["dropidxx"]),
       idsOf("keptidxx", "newidaaa", "dropidxx", "newidaaa", "newidbbb"),
@@ -60,6 +66,7 @@ describe("planRoadmapPublish", () => {
           { index: 1, id: "newidaaa" },
           { index: 2, id: "newidbbb" },
         ],
+        newItems: [],
       },
     })
   })
@@ -79,6 +86,7 @@ describe("planRoadmapPublish", () => {
             fields: { phase: { base: "Beta", value: "Live" } },
           },
         ],
+        newItems: [],
       },
       snapshotOf([item]),
       idsOf(),
@@ -108,7 +116,7 @@ describe("planRoadmapPublish", () => {
       }
 
       const plan = planRoadmapPublish(
-        { roadmap: {}, items: [changes] },
+        { roadmap: {}, items: [changes], newItems: [] },
         { ...snapshotOf([other]), repeatedIds },
         idsOf(),
       )
@@ -151,6 +159,7 @@ describe("planRoadmapPublish", () => {
               fields: { description: { base: loadedEnglish, value } },
             },
           ],
+          newItems: [],
         },
         snapshotOf([written]),
         idsOf("newidaaa"),
@@ -179,6 +188,7 @@ describe("planRoadmapPublish", () => {
         categoryId: { base: "khzpchkh", value: "" },
       },
       items: [],
+      newItems: [],
     }
 
     it("writes the chosen IDs over a family renamed since", () => {
@@ -196,6 +206,7 @@ describe("planRoadmapPublish", () => {
           ],
           items: [],
           ids: [],
+          newItems: [],
         },
       })
     })
@@ -237,6 +248,7 @@ describe("planRoadmapPublish", () => {
         {
           roadmap: { familyId: { base: UNLISTED_FAMILY, value: "" } },
           items: [],
+          newItems: [],
         },
         snapshot,
       )
@@ -255,7 +267,11 @@ describe("planRoadmapPublish", () => {
 
       expect(() =>
         planRoadmapPublish(
-          { roadmap: { [field]: { base: "fc29g5b9", value: "" } }, items: [] },
+          {
+            roadmap: { [field]: { base: "fc29g5b9", value: "" } },
+            items: [],
+            newItems: [],
+          },
           snapshot,
         ),
       ).toThrow(expect.objectContaining({ kind: "invalid-data" }))
@@ -275,6 +291,7 @@ describe("planRoadmapPublish", () => {
     const move = (item: RoadmapItem, base: string, value: string) => ({
       roadmap: {},
       items: [{ item, position: 0, fields: { placement: { base, value } } }],
+      newItems: [],
     })
 
     it("writes the item's new placement as its id", () => {
@@ -288,6 +305,7 @@ describe("planRoadmapPublish", () => {
             { index: 0, id: "bookingx", field: "placement", value: "now" },
           ],
           ids: [],
+          newItems: [],
         },
       })
     })
@@ -359,6 +377,7 @@ describe("planRoadmapPublish", () => {
       items: [
         { item, position: 0, fields: { organisationIds: { base, value } } },
       ],
+      newItems: [],
     })
 
     it("writes the chosen set as sorted ids, or none", () => {
@@ -446,6 +465,7 @@ describe("planRoadmapPublish", () => {
     const retag = (base: string, value: string) => ({
       roadmap: {},
       items: [{ item, position: 0, fields: { tags: { base, value } } }],
+      newItems: [],
     })
     const BASE = "Patients, Video consultations"
 
@@ -545,6 +565,7 @@ describe("planRoadmapPublish", () => {
               fields: { phase: { base: "", value: "Beta" } },
             },
           ],
+          newItems: [],
         },
         snapshotOf([withWelsh]),
       )
@@ -575,6 +596,7 @@ describe("planRoadmapPublish", () => {
     const redetail = (base: string, value: string) => ({
       roadmap: {},
       items: [{ item, position: 0, fields: { details: { base, value } } }],
+      newItems: [],
     })
 
     it("writes the details as lines, a hyphen for each level shown and a space, or none (S14)", () => {
@@ -708,6 +730,7 @@ describe("planRoadmapPublish", () => {
               fields: { phase: { base: "", value: "Beta" } },
             },
           ],
+          newItems: [],
         },
         snapshotOf([withWelsh]),
       )
@@ -735,6 +758,7 @@ describe("planRoadmapPublish", () => {
         lastUpdated: { base, value, ...(overwrite && { overwrite }) },
       },
       items: [],
+      newItems: [],
     })
     const plan = (changes: ReturnType<typeof date>, current = dated) =>
       planRoadmapPublish(changes, { ...snapshotOf([]), roadmap: current })
@@ -749,6 +773,7 @@ describe("planRoadmapPublish", () => {
           roadmap: [{ field: "lastUpdated", value }],
           items: [],
           ids: [],
+          newItems: [],
         },
       })
     })
@@ -789,6 +814,7 @@ describe("planRoadmapPublish", () => {
           roadmap: [{ field: "lastUpdated", value: "2026-11-13" }],
           items: [],
           ids: [],
+          newItems: [],
         },
       })
     })
@@ -823,7 +849,11 @@ describe("planRoadmapPublish", () => {
     let error: unknown
     try {
       planRoadmapPublish(
-        { roadmap: { title: { base: "Product A", value: "  " } }, items: [] },
+        {
+          roadmap: { title: { base: "Product A", value: "  " } },
+          items: [],
+          newItems: [],
+        },
         snapshotOf([]),
       )
     } catch (caught) {
@@ -832,6 +862,217 @@ describe("planRoadmapPublish", () => {
 
     expect(isAppError(error) && error.kind).toBe("unknown")
   })
+
+  describe("new items, written after the roadmap's last (STY-045)", () => {
+    const clinic = createTestNewItem(
+      "clinicid",
+      "Choose a clinic closer to home",
+      { placement: "next" },
+    )
+    const reminders = createTestNewItem("reminder", " Text reminders ", {
+      description: " Before each appointment.\nBy text. ",
+      expectedOutcome: "Fewer missed appointments",
+      phase: "Discovery",
+      placement: "recently-delivered",
+      tags: " Patients ,, Carers,Patients",
+      organisationIds: "sbuhb, national",
+      details: "Outpatients\n- Dermatology\n--- Adults",
+    })
+    const adding = (...newItems: NewItem[]): RoadmapChanges => ({
+      roadmap: {},
+      items: [],
+      newItems,
+    })
+    const held = createTestRoadmapItem("Online booking", { id: "bookingx" })
+
+    it("writes a new item's ID, title and placement, and no field it lacks (S2)", () => {
+      expect(
+        planRoadmapPublish(adding(clinic), snapshotOf([held]), idsOf()),
+      ).toEqual({
+        kind: "write",
+        writes: {
+          roadmap: [],
+          items: [],
+          ids: [],
+          newItems: [
+            {
+              id: "clinicid",
+              fields: [
+                { field: "title", value: "Choose a clinic closer to home" },
+                { field: "placement", value: "next" },
+              ],
+            },
+          ],
+        },
+      })
+    })
+
+    it("writes each field it has as that field's edit is written, in the order added (S2)", () => {
+      const plan = planRoadmapPublish(
+        adding(reminders, clinic),
+        snapshotOf([held]),
+        idsOf(),
+      )
+
+      expect(plan.kind === "write" && plan.writes.newItems).toEqual([
+        {
+          id: "reminder",
+          fields: [
+            { field: "title", value: "Text reminders" },
+            {
+              field: "description",
+              value: "Before each appointment.\nBy text.",
+            },
+            { field: "expectedOutcome", value: "Fewer missed appointments" },
+            { field: "phase", value: "Discovery" },
+            { field: "placement", value: "recently-delivered" },
+            { field: "tags", value: "Patients, Carers" },
+            { field: "organisationIds", value: "national,sbuhb" },
+            {
+              field: "details",
+              value: "Outpatients\n- Dermatology\n-- Adults",
+            },
+          ],
+        },
+        expect.objectContaining({ id: "clinicid" }),
+      ])
+    })
+
+    it("goes with the roadmap's other changes, and an ID for each item without one that is no new item's", () => {
+      const noId = createTestRoadmapItem("No ID yet")
+
+      const plan = planRoadmapPublish(
+        {
+          roadmap: { vision: { base: "", value: "A vision" } },
+          items: [
+            {
+              item: held,
+              position: 0,
+              fields: { phase: { base: "", value: "Beta" } },
+            },
+          ],
+          newItems: [clinic],
+        },
+        snapshotOf([held, noId]),
+        idsOf("clinicid", "newidaaa"),
+      )
+
+      expect(plan).toEqual({
+        kind: "write",
+        writes: {
+          roadmap: [{ field: "vision", value: "A vision" }],
+          items: [{ index: 0, id: "bookingx", field: "phase", value: "Beta" }],
+          ids: [{ index: 1, id: "newidaaa" }],
+          newItems: [expect.objectContaining({ id: "clinicid" })],
+        },
+      })
+    })
+
+    it("publishes nothing of it when an edit is refused, and is never itself a conflict or missing (S3)", () => {
+      const edited = {
+        item: held,
+        position: 0,
+        fields: { phase: { base: "", value: "Beta" } },
+      }
+
+      const conflict = planRoadmapPublish(
+        { roadmap: {}, items: [edited], newItems: [clinic] },
+        snapshotOf([{ ...held, phase: { en: "Live", cy: "" } }]),
+        idsOf(),
+      )
+      const gone = planRoadmapPublish(
+        { roadmap: {}, items: [edited], newItems: [clinic] },
+        snapshotOf([]),
+        idsOf(),
+      )
+
+      expect(conflict).toEqual({
+        kind: "settled",
+        outcome: {
+          status: "refused",
+          conflicts: [expect.objectContaining({ field: "phase" })],
+          missingItems: [],
+        },
+      })
+      expect(gone).toEqual({
+        kind: "settled",
+        outcome: { status: "refused", conflicts: [], missingItems: [edited] },
+      })
+    })
+
+    it("is written whatever a co-lead did to the roadmap's other items (S3)", () => {
+      const plan = planRoadmapPublish(
+        adding(clinic),
+        snapshotOf([
+          createTestRoadmapItem("Choose a clinic closer to home", {
+            id: "theirsxx",
+          }),
+        ]),
+        idsOf(),
+      )
+
+      expect(plan.kind === "write" && plan.writes.newItems).toEqual([
+        expect.objectContaining({ id: "clinicid" }),
+      ])
+    })
+
+    it("takes a new item whose ID the roadmap holds as published, read or in a row it skips (S4)", () => {
+      const landed = createTestRoadmapItem("Renamed by a co-lead", {
+        id: "clinicid",
+      })
+
+      expect(
+        planRoadmapPublish(adding(clinic), snapshotOf([landed]), idsOf()),
+      ).toEqual({ kind: "settled", outcome: { status: "published" } })
+      expect(
+        planRoadmapPublish(
+          adding(clinic),
+          snapshotOf([], ["clinicid"]),
+          idsOf(),
+        ),
+      ).toEqual({ kind: "settled", outcome: { status: "published" } })
+      const plan = planRoadmapPublish(
+        adding(clinic, reminders),
+        snapshotOf([landed]),
+        idsOf(),
+      )
+      expect(plan.kind === "write" && plan.writes.newItems).toEqual([
+        expect.objectContaining({ id: "reminder" }),
+      ])
+    })
+
+    it("says a roadmap no longer listed is not found, as for an edit (S3)", () => {
+      expect(planRoadmapPublish(adding(clinic), null)).toEqual({
+        kind: "settled",
+        outcome: { status: "roadmap-not-found" },
+      })
+    })
+
+    it.each([
+      ["a blank title", { title: " " }],
+      ["no placement", { placement: "" }],
+      ["a placement that is none of the six", { placement: "Soon" }],
+      ["an organisation the list doesn't hold", { organisationIds: "nowhere" }],
+    ])("rejects %s, which the editor never sends", (_, values) => {
+      const invalid = {
+        id: "invalidx",
+        values: { ...clinic.values, ...values },
+      }
+
+      expect(() =>
+        planRoadmapPublish(adding(invalid), snapshotOf([held])),
+      ).toThrow(expect.objectContaining({ kind: "unknown" }))
+    })
+
+    it("rejects two new items with one ID, which the editor never sends", () => {
+      expect(() =>
+        planRoadmapPublish(
+          adding(clinic, { ...reminders, id: "clinicid" }),
+          snapshotOf([held]),
+        ),
+      ).toThrow(expect.objectContaining({ kind: "unknown" }))
+    })
+  })
 })
 
 describe("heldWrites", () => {
@@ -839,6 +1080,7 @@ describe("heldWrites", () => {
     roadmap: [{ field: "vision", value: "A vision" }],
     items: [{ index: 0, id: "newidaaa", field: "phase", value: "Live" }],
     ids: [{ index: 0, id: "newidaaa" }],
+    newItems: [],
   }
   const before = createTestRoadmapItem("Item")
   const after = createTestRoadmapItem("Item", {
@@ -873,6 +1115,7 @@ describe("heldWrites", () => {
       roadmap: [],
       items: [{ index: 0, id: "newidaaa", field: "phase", value: "Live" }],
       ids: [{ index: 0, id: "newidaaa" }],
+      newItems: [],
     }
     const alreadyLive = createTestRoadmapItem("Other", {
       phase: { en: "Live", cy: "" },
@@ -887,5 +1130,50 @@ describe("heldWrites", () => {
 
   it("can't tell when the roadmap is no longer listed", () => {
     expect(heldWrites(writes, null)).toBe("some")
+  })
+
+  describe("a new item, held by its ID alone (STY-045 S4)", () => {
+    const withNewItem: PublishWrites = {
+      ...writes,
+      newItems: [
+        {
+          id: "clinicid",
+          fields: [
+            { field: "title", value: "Choose a clinic closer to home" },
+            { field: "placement", value: "next" },
+          ],
+        },
+      ],
+    }
+    const landed = createTestRoadmapItem("Renamed by a co-lead", {
+      id: "clinicid",
+      placement: "later",
+    })
+
+    it("is all when every new item and written cell is there, whatever the new item now reads", () => {
+      expect(
+        heldWrites(withNewItem, {
+          ...snapshotOf([after, landed]),
+          roadmap: written,
+        }),
+      ).toBe("all")
+      expect(
+        heldWrites(
+          { roadmap: [], items: [], ids: [], newItems: withNewItem.newItems },
+          snapshotOf([before], ["clinicid"]),
+        ),
+      ).toBe("all")
+    })
+
+    it("is none when neither it nor any written cell is there", () => {
+      expect(heldWrites(withNewItem, snapshotOf([before]))).toBe("none")
+    })
+
+    it("is some when it is there and a written cell is not, or the other way round", () => {
+      expect(heldWrites(withNewItem, snapshotOf([before, landed]))).toBe("some")
+      expect(
+        heldWrites(withNewItem, { ...snapshotOf([after]), roadmap: written }),
+      ).toBe("some")
+    })
   })
 })

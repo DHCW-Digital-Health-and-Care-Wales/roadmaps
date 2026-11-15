@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 
+import { addNewItem } from "@/domain/roadmap/new-item"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 
 import { editRoadmap, NO_CHANGES } from "./pending-changes"
@@ -18,6 +19,18 @@ describe("createPendingChangesStore", () => {
       editRoadmap(changes, roadmap, { title: "Product A" }),
     )
     expect(store.getSnapshot().changes.has("producta")).toBe(false)
+  })
+
+  it("keeps a roadmap whose only change is a new item (STY-045 S1)", () => {
+    const store = createPendingChangesStore()
+
+    store.update("producta", (changes) =>
+      addNewItem(changes, { title: "Online booking", placement: "now" }, []),
+    )
+
+    expect(store.getSnapshot().changes.get("producta")?.newItems).toHaveLength(
+      1,
+    )
   })
 
   it("discards one roadmap's changes and leaves another's", () => {

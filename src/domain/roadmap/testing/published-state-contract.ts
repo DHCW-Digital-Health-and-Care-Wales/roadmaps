@@ -33,12 +33,14 @@ function saveAndPublish(changes: RoadmapChanges): PublishedStateChange {
 }
 
 /** Publishing with "Mark as updated today" ticked (STY-036 S6, D10). */
-const publishToday = (changes: RoadmapChanges = { roadmap: {}, items: [] }) =>
-  saveAndPublish(markedUpdated(changes, "2026-11-13"))
+const publishToday = (
+  changes: RoadmapChanges = { roadmap: {}, items: [], newItems: [] },
+) => saveAndPublish(markedUpdated(changes, "2026-11-13"))
 
 const twoEdits: RoadmapChanges = {
   roadmap: { statusLabel: change("Beta", "Live") },
   items: [{ item, position: 0, fields: { phase: change("", "Alpha") } }],
+  newItems: [],
 }
 
 /**
@@ -333,6 +335,7 @@ export function describePublishedState(
             saveAndPublish({
               roadmap: { familyId: change("", family.id) },
               items: [],
+              newItems: [],
             }),
           ),
         ).resolves.toEqual({ status: "set" })
@@ -409,6 +412,7 @@ export function describePublishedState(
                 statusLabel: change("Beta", ""),
               },
               items: [],
+              newItems: [],
             }),
           ),
         ).resolves.toEqual({ status: "set" })

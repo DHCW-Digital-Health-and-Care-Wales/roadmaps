@@ -13,6 +13,7 @@ describe("markedUpdated", () => {
   const vision: RoadmapChanges = {
     roadmap: { vision: { base: "", value: "Clear" } },
     items: [],
+    newItems: [],
   }
 
   it("sets Last updated to today over whatever it holds, beside the other changes (STY-036 S6)", () => {
@@ -22,6 +23,7 @@ describe("markedUpdated", () => {
         lastUpdated: { base: "", value: "2026-11-13", overwrite: true },
       },
       items: [],
+      newItems: [],
     })
   })
 
@@ -29,6 +31,7 @@ describe("markedUpdated", () => {
     const dated: RoadmapChanges = {
       roadmap: { lastUpdated: { base: "", value: "2026-11-10" } },
       items: [],
+      newItems: [],
     }
 
     expect(markedUpdated(dated, "2026-11-13")).toBe(dated)

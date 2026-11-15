@@ -27,3 +27,16 @@ export function createItemId(randomBytes: RandomBytes = cryptoRandomBytes) {
   }
   return id
 }
+
+/**
+ * A new ID that is none of `taken`: `createId` is asked again until it gives one, so an
+ * ID is unique where it is used, however unlikely a repeat.
+ */
+export function createUnusedId(
+  taken: ReadonlySet<string>,
+  createId: () => string,
+): string {
+  let id = createId()
+  while (taken.has(id)) id = createId()
+  return id
+}

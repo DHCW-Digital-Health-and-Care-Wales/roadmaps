@@ -10,7 +10,8 @@
   STY-036: `Last updated` becomes editable, and publishing sets it only when asked;
   amended by STY-037: an item's tags become editable, unless it has Welsh ones;
   amended by STY-039: an item's details become editable, unless it has Welsh ones;
-  amended by STY-040: adding a roadmap is a write at once, and copies the `Template` tab)
+  amended by STY-040: adding a roadmap is a write at once, and copies the `Template` tab;
+  amended by STY-045: a new item is a pending edit, published as a new row)
 
 ## Context
 
@@ -65,7 +66,7 @@ first.
 - **Publishing is per roadmap and all or nothing** (Option 8): every pending edit of one
   roadmap is written in one `spreadsheets.batchUpdate`, across the roadmap index and the
   roadmap's tab, or none is. Only the changed cells are written, plus any item IDs and
-  columns publishing adds.
+  columns publishing adds (and a row for each new item: _STY-045 amendments_).
 - **Each pending edit keeps its base value**: the field's value when it was loaded.
   Refresh re-reads the roadmap and keeps pending edits on top; the base stays the value
   first edited, so a refresh never hides a co-lead's change.
@@ -288,6 +289,40 @@ Nothing checks permission in advance.
   its other rows can go.
 - `RoadmapRepository` gains `addRoadmap` (amends ADR-002).
 
+### STY-045 amendments
+
+- **A new item is a pending edit** (STY-045 D1): added with a title and one of the six
+  placements, never unplaced (D3), and any other field an item's form edits, in English
+  only (D4). It gathers with the roadmap's other pending edits and is published with
+  them, all or nothing, in the same `batchUpdate`. This amends _Pending edits and
+  publishing_, where a publish wrote changed cells, item IDs and columns alone: it now
+  adds rows too.
+- **Its ID is made when it is added, not when it is published** (D5): in the `Item ID`
+  format, and one no item of the roadmap as read has. Option 6 still gives every other
+  row without an ID one at publish, none of them a new item's.
+- **Its row goes after the tab's last row in use** (D2), by `appendCells`: Google picks
+  the row as it applies the write, so a row a co-lead added meanwhile is kept, and no
+  row in use moves, so an item without an ID is still found by its position. The row
+  holds its `Item ID`, its `Title`, its `Horizon` as the public site's English value and
+  each other field it has, written as an edit of that field is written. No Welsh cell
+  is written. A column the row needs and the tab lacks is added as for an edit (Q28).
+  Several new items are written in the order they were added.
+- **A new item is never a conflict and never "not found"** (D4): it has no base value
+  and no row to find, whatever a co-lead did to the roadmap's other rows. A conflict or
+  a missing item among the roadmap's other edits still publishes nothing, the new item
+  included, and it stays pending. A roadmap whose index row or tab is gone fails as
+  before.
+- **A new item the re-read already holds is no longer pending**, as a pending field
+  is not: it is found by its ID in any row of the tab, kept by the parser or not,
+  whatever that row then holds. Publishing skips it and Refresh drops it, showing the
+  item read.
+- **A lost answer is settled as Option 16 settles one**: a new row counts as written
+  when a row of the tab holds its ID. Every new row and written cell there is
+  published, none is `network`, and anything else, or a failed re-read, is unconfirmed.
+- `RoadmapChanges` carries the new items, so `publishRoadmapChanges` and
+  `setRoadmapPublished` ("Save and publish") take them: `RoadmapRepository` gains no
+  call (ADR-002 stands), and `RoadmapItem` is unchanged (ADR-011 stands).
+
 ## Options (owner's choice marked ✅, 2026-11-11)
 
 1. **What is editable** (round 1 Q1, round 2 Q11)
@@ -386,6 +421,8 @@ Nothing checks permission in advance.
   column appears at the end of each roadmap's tab on its first publish, and a missing
   field column at the end of the index or a tab when a publish needs it. The public site
   ignores unknown columns and reads columns by header. Every PR that writes says so.
+  Since STY-045 a publish also adds rows to a roadmap's tab, one for each new item,
+  which the public site shows as it shows any item row.
 - **A small race remains**: a co-lead's change landing between the re-read and the
   write is overwritten, as Google has no conditional write. The window is one request.
 - A publish costs three reads and one write, sequential.

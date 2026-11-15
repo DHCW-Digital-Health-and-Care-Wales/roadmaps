@@ -9,7 +9,7 @@ import { AppError } from "@/lib/errors"
 import { isCalendarDate } from "./calendar-date"
 import { findEditedItem } from "./find-edited-item"
 import { detailsOf, detailsValue } from "./item-details"
-import { createItemId } from "./item-id"
+import { createItemId, createUnusedId } from "./item-id"
 import type { Roadmap } from "./roadmap"
 import {
   EDITABLE_ITEM_FIELDS,
@@ -65,6 +65,14 @@ export interface PublishWrites {
   }[]
   /** New IDs, for items with none: they go with any other write (ADR-012 Option 6). */
   ids: { index: number; id: string }[]
+  /**
+   * The items new to the roadmap, in the order they were added, each with the ID it was
+   * added with and every field it has: they go after the roadmap's last item (STY-045).
+   */
+  newItems: {
+    id: string
+    fields: { field: EditableItemField; value: string }[]
+  }[]
 }
 
 export type PublishPlan =
@@ -77,15 +85,17 @@ const REQUIRED_FIELDS: ReadonlySet<string> = new Set(["title"])
 /**
  * Decides what publishing `changes` over `snapshot` (`null`: the roadmap is no longer
  * listed) writes: each pending value that differs from the current one, unless a
- * co-lead changed it too, plus an ID for every item without one. Values are trimmed.
- * An item's organisations are compared as a set, its tags as the ordered list and its
- * details as the list they show as; tags are never written to an item that now has
- * Welsh ones, nor details (STY-037 S22, STY-039 S19), and a change made over whatever
- * the field holds (`FieldChange.overwrite`) is never a conflict. Throws
- * `AppError('unknown')` for a blank title, a placement that is none of the six, an
- * organisation the list doesn't hold or a `Last updated` that is no `YYYY-MM-DD` date,
- * which callers never send, and `AppError('invalid-data')` for a family or category
- * chosen while its list is missing.
+ * co-lead changed it too, each new item the roadmap doesn't hold, plus an ID for every
+ * item without one. Values are trimmed. An item's organisations are compared as a set,
+ * its tags as the ordered list and its details as the list they show as; tags are never
+ * written to an item that now has Welsh ones, nor details (STY-037 S22, STY-039 S19),
+ * and a change made over whatever the field holds (`FieldChange.overwrite`) is never a
+ * conflict. A new item is never a conflict or missing: it is written unless a row of
+ * the roadmap holds its ID, which a write of it whose answer was lost left there
+ * (STY-045). Throws `AppError('unknown')` for a blank title, a placement that is none of
+ * the six, an organisation the list doesn't hold, a `Last updated` that is no
+ * `YYYY-MM-DD` date or two new items with one ID, which callers never send, and
+ * `AppError('invalid-data')` for a family or category chosen while its list is missing.
  */
 export function planRoadmapPublish(
   changes: RoadmapChanges,
@@ -95,6 +105,7 @@ export function planRoadmapPublish(
   if (snapshot === null) {
     return { kind: "settled", outcome: { status: "roadmap-not-found" } }
   }
+  const newItems = newItemWrites(changes.newItems, snapshot)
   const conflicts: FieldConflict[] = []
   const missingItems: ItemChanges[] = []
   const roadmapWrites: PublishWrites["roadmap"] = []
@@ -170,10 +181,14 @@ export function planRoadmapPublish(
       outcome: { status: "refused", conflicts, missingItems },
     }
   }
-  if (roadmapWrites.length === 0 && itemWrites.length === 0) {
+  if (
+    roadmapWrites.length === 0 &&
+    itemWrites.length === 0 &&
+    newItems.length === 0
+  ) {
     return { kind: "settled", outcome: { status: "published" } }
   }
-  const ids = newIds(snapshot, createId)
+  const ids = newIds(snapshot, newItems, createId)
   const newIdAt = new Map(ids.map(({ index, id }) => [index, id]))
   const idAt = (index: number) => {
     const id = snapshot.items[index]?.id ?? newIdAt.get(index)
@@ -187,6 +202,7 @@ export function planRoadmapPublish(
       roadmap: roadmapWrites,
       items: itemWrites.map((write) => ({ ...write, id: idAt(write.index) })),
       ids,
+      newItems,
     },
   }
 }
@@ -194,7 +210,8 @@ export function planRoadmapPublish(
 /**
  * How many of `writes` the roadmap now holds (`null`: no longer listed, so unknown),
  * to settle a write whose answer was lost (ADR-012 Option 16). Items are found by the
- * ID each holds once written, never by place, as rows may have moved since.
+ * ID each holds once written, never by place, as rows may have moved since; a new item
+ * is held when a row holds its ID, whatever that row now reads (STY-045).
  */
 export function heldWrites(
   writes: PublishWrites,
@@ -211,6 +228,7 @@ export function heldWrites(
       return item !== undefined && itemValue(item, field) === value
     }),
     ...writes.ids.map(({ id }) => snapshot.takenIds.has(id)),
+    ...writes.newItems.map(({ id }) => snapshot.takenIds.has(id)),
   ]
   // A row the read skips (its title cleared since) may still hold an item's write.
   const unread = writes.items.some(
@@ -221,9 +239,31 @@ export function heldWrites(
 }
 
 /**
- * A change's trimmed value with its base, or `null` when it changes nothing: a set of
- * organisations as `organisationIdsValue` gives it, tags as `tagsValue` does and details
- * as `detailsValue` does. One set over whatever the field holds is never nothing.
+ * What is written for each new item the roadmap doesn't hold yet, in the order added:
+ * every field it has, as `publishedValue` gives it, so as an edit of that field is
+ * written. One whose ID a row holds, read or not, was written already.
+ */
+function newItemWrites(
+  newItems: RoadmapChanges["newItems"],
+  snapshot: RoadmapSnapshot,
+): PublishWrites["newItems"] {
+  if (new Set(newItems.map(({ id }) => id)).size !== newItems.length) {
+    throw new AppError("unknown", {
+      message: "Two new items can't be published with one ID",
+    })
+  }
+  return newItems.flatMap(({ id, values }) => {
+    const fields = EDITABLE_ITEM_FIELDS.flatMap((field) => {
+      const value = publishedValue(field, values[field], snapshot)
+      return value === "" ? [] : [{ field, value }]
+    })
+    return snapshot.takenIds.has(id) ? [] : [{ id, fields }]
+  })
+}
+
+/**
+ * A change's value as it is published, with its base, or `null` when it changes
+ * nothing. One set over whatever the field holds is never nothing.
  */
 function pendingValue(
   field: string,
@@ -231,14 +271,31 @@ function pendingValue(
   snapshot: RoadmapSnapshot,
 ): { base: string; value: string; overwrite: boolean } | null {
   if (change === undefined) return null
+  const value = publishedValue(field, change.value, snapshot)
+  const overwrite = change.overwrite === true
+  return value === change.base && !overwrite
+    ? null
+    : { base: change.base, value, overwrite }
+}
+
+/**
+ * A field's value as it is published, an edit's or a new item's: trimmed, a set of
+ * organisations as `organisationIdsValue` gives it, tags as `tagsValue` does and details
+ * as `detailsValue` does. Throws for a value that is never sent (`planRoadmapPublish`).
+ */
+function publishedValue(
+  field: string,
+  raw: string,
+  snapshot: RoadmapSnapshot,
+): string {
   const value =
     field === "organisationIds"
-      ? listedOrganisationIdsValue(change.value, snapshot.organisationIds)
+      ? listedOrganisationIdsValue(raw, snapshot.organisationIds)
       : field === "tags"
-        ? tagsValue(tagsOf(change.value))
+        ? tagsValue(tagsOf(raw))
         : field === "details"
-          ? detailsValue(detailsOf(change.value))
-          : change.value.trim()
+          ? detailsValue(detailsOf(raw))
+          : raw.trim()
   if (value === "" && REQUIRED_FIELDS.has(field)) {
     throw new AppError("unknown", {
       message: `A blank ${field} can't be published`,
@@ -254,10 +311,7 @@ function pendingValue(
       message: "Only a YYYY-MM-DD date can be published as Last updated",
     })
   }
-  const overwrite = change.overwrite === true
-  return value === change.base && !overwrite
-    ? null
-    : { base: change.base, value, overwrite }
+  return value
 }
 
 /** `value`'s organisations as one value, each of which the list must hold. */
@@ -276,16 +330,19 @@ function listedOrganisationIdsValue(
   return organisationIdsValue(ids)
 }
 
-/** A new ID for every item without one, none repeating an ID the roadmap holds. */
+/**
+ * A new ID for every item without one, none repeating an ID the roadmap holds or one a
+ * new item is written with.
+ */
 function newIds(
   snapshot: RoadmapSnapshot,
+  newItems: PublishWrites["newItems"],
   createId: () => string,
 ): PublishWrites["ids"] {
-  const taken = new Set(snapshot.takenIds)
+  const taken = new Set([...snapshot.takenIds, ...newItems.map(({ id }) => id)])
   return snapshot.items.flatMap(({ id }, index) => {
     if (id !== null) return []
-    let next = createId()
-    while (taken.has(next)) next = createId()
+    const next = createUnusedId(taken, createId)
     taken.add(next)
     return [{ index, id: next }]
   })

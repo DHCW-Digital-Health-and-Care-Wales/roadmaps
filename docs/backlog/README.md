@@ -43,6 +43,7 @@ moves to `_archive/`, where its row here still points.
 | [CHO-012](chores/CHO-012-the-other-tests-use-the-shared-fixtures.md)           | The other tests take their families, categories and connected state from the shared fixtures                           | Proposed                         |
 | [CHO-013](chores/CHO-013-the-page-focus-tour-tells-its-stops-apart.md)         | The page focus tour tells its stops apart, so it can't miss a text field                                               | Proposed                         |
 | [CHO-014](chores/CHO-014-slim-the-e2e-suite.md)                                | The E2E suite holds geometry, and repeats a run per theme, language or width, only where that proves something         | Proposed                         |
+| [CHO-015](chores/CHO-015-check-adding-an-item-against-a-real-spreadsheet.md)   | Check STY-045's write (a new item's row appended to a roadmap's tab) against a real test spreadsheet                   | Proposed                         |
 
 Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status token.
 

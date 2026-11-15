@@ -264,11 +264,12 @@ function editedFields(
   )
 }
 
-/** Whether any pending edit is sent. */
+/** Whether any pending edit is sent: a field of the roadmap's, of an item's, or a new item. */
 function hasChanges(change: PublishedStateChange): boolean {
+  if (!change.published || change.changes === undefined) return false
+  const { items, newItems } = change.changes
   return (
-    editedFields(change).size > 0 ||
-    (change.published && (change.changes?.items.length ?? 0) > 0)
+    editedFields(change).size > 0 || items.length > 0 || newItems.length > 0
   )
 }
 
@@ -320,7 +321,8 @@ function blocksItems(problem: PublishProblem): boolean {
 
 /**
  * Whether `writes` clears the problem: a family chosen writes its six-digit colour, and
- * a placement written adds the missing column for it (ADR-012).
+ * a placement written, a moved item's or a new item's, adds the missing column for it
+ * (ADR-012).
  */
 function fixedBy(problem: PublishProblem, writes: PublishWrites | null) {
   if (writes === null) return false
@@ -332,7 +334,8 @@ function fixedBy(problem: PublishProblem, writes: PublishWrites | null) {
     case "items-field-missing":
       return (
         problem.field === "placement" &&
-        writes.items.some(({ field }) => field === "placement")
+        (writes.newItems.length > 0 ||
+          writes.items.some(({ field }) => field === "placement"))
       )
     default:
       return false

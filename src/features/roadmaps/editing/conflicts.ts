@@ -31,6 +31,7 @@ import {
   applyItemChanges,
   applyRoadmapChanges,
   matchItemChanges,
+  NO_CHANGES,
   sameTarget,
 } from "./pending-changes"
 
@@ -221,7 +222,7 @@ export function withCurrentRoadmapText(
         : [],
     ),
   )
-  return applyRoadmapChanges(roadmap, { roadmap: fields, items: [] }, lists)
+  return applyRoadmapChanges(roadmap, { ...NO_CHANGES, roadmap: fields }, lists)
 }
 
 /** Whether `value` is none, or a family or category `lists` names. */
@@ -251,7 +252,7 @@ export function withCurrentItemText(
     conflict.subject === "item" ? [conflict] : [],
   )
   const conflicted: RoadmapChanges = {
-    roadmap: {},
+    ...NO_CHANGES,
     items: itemConflicts.map((conflict) => conflict.item),
   }
   const before = itemsByEntry(since ?? [], conflicted)

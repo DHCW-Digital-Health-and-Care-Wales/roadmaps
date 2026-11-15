@@ -1,11 +1,13 @@
 /**
  * The rules of pending edits (ADR-012, EPC-005 "The pending-edit store"): what an edit
  * keeps, what a fresh read or a publish drops, and how an edit finds its item again. Pure
- * functions over `RoadmapChanges`; the store applies them.
+ * functions over `RoadmapChanges`; the store applies them. A new item is added by
+ * `addNewItem` (`domain/roadmap/new-item.ts`).
  */
 
 import { findEditedItem } from "@/domain/roadmap/find-edited-item"
 import { englishDetails } from "@/domain/roadmap/item-details"
+import { dropPublishedNewItems } from "@/domain/roadmap/new-item"
 import type { LocalisedText } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import {
@@ -35,7 +37,11 @@ export type ItemValues = Partial<Record<EditableItemField, string>>
 
 type FieldChanges<F extends string> = Partial<Record<F, FieldChange>>
 
-export const NO_CHANGES: RoadmapChanges = { roadmap: {}, items: [] }
+export const NO_CHANGES: RoadmapChanges = {
+  roadmap: {},
+  items: [],
+  newItems: [],
+}
 
 /**
  * `fields` with `values` applied over `current`: a value is kept trimmed, with the text
@@ -230,9 +236,18 @@ function noChoiceHeld(
  * to its place in the read, without the fields the item already holds; an entry not
  * found is kept as it was. Bases stay as they were, and so does the content an entry
  * was loaded with, which a publish checks a repeated ID by (ADR-012): the entry only
- * takes the item's ID if it had none, and the value of each field it drops.
+ * takes the item's ID if it had none, and the value of each field it drops. A new item
+ * the read holds is no longer pending (`dropPublishedNewItems`).
  */
 export function reconcileItems(
+  changes: RoadmapChanges,
+  items: readonly RoadmapItem[],
+): RoadmapChanges {
+  return reconcileEdits(dropPublishedNewItems(changes, items), items)
+}
+
+/** `reconcileItems` for the edits to the items the roadmap already held. */
+function reconcileEdits(
   changes: RoadmapChanges,
   items: readonly RoadmapItem[],
 ): RoadmapChanges {
@@ -328,12 +343,14 @@ function settleFields<F extends string>(
 
 /**
  * `changes` once `sent` is published: each edit still as it was sent is gone, and any
- * made meanwhile is kept, edited from what was published.
+ * made meanwhile is kept, edited from what was published. A new item that was sent is
+ * gone too, and one added meanwhile is kept.
  */
 export function settlePublished(
   changes: RoadmapChanges,
   sent: RoadmapChanges,
 ): RoadmapChanges {
+  const sentIds = new Set(sent.newItems.map(({ id }) => id))
   return {
     roadmap: settleFields(changes.roadmap, sent.roadmap),
     items: changes.items.flatMap((entry) => {
@@ -345,6 +362,7 @@ export function settlePublished(
         { ...entry, item: applyItemChanges(entry.item, sentEntry), fields },
       ]
     }),
+    newItems: changes.newItems.filter(({ id }) => !sentIds.has(id)),
   }
 }
 
@@ -362,7 +380,10 @@ export function publishesNoItems(
   )
 }
 
-/** How many fields are pending: what the page counts as unpublished changes. */
+/**
+ * How many changes are pending, what the page counts as unpublished changes: each field
+ * edited, and each new item as one, whatever fields it has.
+ */
 export function countChanges(changes: RoadmapChanges | undefined): number {
   if (!changes) return 0
   return (
@@ -370,7 +391,8 @@ export function countChanges(changes: RoadmapChanges | undefined): number {
     changes.items.reduce(
       (count, entry) => count + Object.keys(entry.fields).length,
       0,
-    )
+    ) +
+    changes.newItems.length
   )
 }
 

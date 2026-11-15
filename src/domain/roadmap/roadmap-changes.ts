@@ -229,10 +229,31 @@ export interface ItemChanges {
   fields: Partial<Record<EditableItemField, FieldChange>>
 }
 
-/** Every pending change to one roadmap: its own fields and its items' (ADR-012). */
+/**
+ * An item a Product Lead has added and not yet published (STY-045). It has no base, as
+ * nothing held it before: no change a co-lead makes is a conflict with it.
+ */
+export interface NewItem {
+  /**
+   * Made when it was added, not when it is published, so a later read of the roadmap
+   * that holds an item with it tells that its write landed (ADR-012).
+   */
+  id: string
+  /**
+   * Each field's value as an edit's `FieldChange.value` holds it, `""` for none. Its
+   * title is never blank and its placement is one of the six: never unplaced (ADR-014).
+   */
+  values: Readonly<Record<EditableItemField, string>>
+}
+
+/**
+ * Every pending change to one roadmap: its own fields, its items' and the items new to
+ * it, in the order they were added (ADR-012).
+ */
 export interface RoadmapChanges {
   roadmap: Partial<Record<EditableRoadmapField, FieldChange>>
   items: readonly ItemChanges[]
+  newItems: readonly NewItem[]
 }
 
 /**
@@ -272,7 +293,8 @@ export type PublishOutcome =
   | { status: "roadmap-not-found" }
   /**
    * A co-lead's change conflicts, or an edited item can no longer be found; nothing was
-   * written. `missingItems` are the very `ItemChanges` given.
+   * written, a new item neither, which is never one of either. `missingItems` are the
+   * very `ItemChanges` given.
    */
   | {
       status: "refused"

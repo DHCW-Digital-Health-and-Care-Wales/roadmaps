@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { createItemId, type RandomBytes } from "./item-id"
+import { createItemId, createUnusedId, type RandomBytes } from "./item-id"
 
 /** Random bytes that are these values, in turn. */
 function bytesOf(...values: number[]): RandomBytes {
@@ -25,5 +25,18 @@ describe("createItemId", () => {
     const id = createItemId(bytesOf(255, 0, 243, 1, 18, 19, 26, 27, 28, 0))
 
     expect(id).toBe("bcz29bcb")
+  })
+})
+
+describe("createUnusedId", () => {
+  it("asks again until the ID is none of those taken", () => {
+    const ids = ["takenaaa", "takenbbb", "freshccc", "freshddd"]
+
+    expect(
+      createUnusedId(
+        new Set(["takenbbb", "takenaaa"]),
+        () => ids.shift() ?? "",
+      ),
+    ).toBe("freshccc")
   })
 })

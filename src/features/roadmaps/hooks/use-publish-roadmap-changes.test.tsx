@@ -42,6 +42,7 @@ const changes: RoadmapChanges = {
       fields: { title: { base: "First", value: "Renamed item" } },
     },
   ],
+  newItems: [],
 }
 
 function repositoryWith(write?: { fails: "forbidden" | "unauthenticated" }) {

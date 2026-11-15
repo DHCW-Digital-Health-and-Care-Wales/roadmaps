@@ -7,10 +7,15 @@ import type { Family } from "@/domain/roadmap/family"
 import type { LocalisedText } from "@/domain/roadmap/localised-text"
 import type { NewRoadmapInput } from "@/domain/roadmap/new-roadmap"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
-import { markedUpdated } from "@/domain/roadmap/roadmap-changes"
+import {
+  markedUpdated,
+  type NewItem,
+  type RoadmapChanges,
+} from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { CO_LEAD_VALUE } from "@/domain/roadmap/testing/contract-write"
 import { categoriesOf, familiesOf } from "@/domain/roadmap/testing/linked-lists"
+import { createTestNewItem } from "@/domain/roadmap/testing/test-new-item"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import {
   type ContractOptions,
@@ -478,8 +483,11 @@ function overwriteFirstValue(tabs: readonly FakeTab[], body: unknown) {
   }
 }
 
-/** Every cell that differs, as `tab!R1C1 value`. */
-function changedCells(before: FakeTab[], after: FakeTab[]): string[] {
+/** Every cell that differs between two spreadsheets, as `tab!R1C1 value`. */
+function changedCells(
+  before: readonly FakeTab[],
+  after: readonly FakeTab[],
+): string[] {
   return after.flatMap((tab, t) =>
     tab.rows.flatMap((row, r) =>
       row.flatMap((value, c) =>
@@ -1206,26 +1214,10 @@ describe("GoogleSheetsRoadmapRepository", () => {
       gridTab("Template", [["Title", "Item ID", "Horizon"]], 20, 2),
     ]
 
-    /** Every cell that differs between two spreadsheets, as `tab!R1C1 value`. */
-    function changedCells(
-      before: readonly FakeTab[],
-      after: readonly FakeTab[],
-    ): string[] {
-      return after.flatMap((tab, t) => {
-        const old = before[t]?.rows ?? []
-        return tab.rows.flatMap((row, r) =>
-          row.flatMap((value, c) =>
-            (old[r]?.[c] ?? "") === value
-              ? []
-              : [`${tab.title}!R${String(r + 1)}C${String(c + 1)} ${value}`],
-          ),
-        )
-      })
-    }
-
     const titleChange = {
       roadmap: { title: { base: "Product A roadmap", value: "Product A" } },
       items: [],
+      newItems: [],
     }
 
     it("sends one batchUpdate after the three reads, as JSON with the token (S2)", async () => {
@@ -1315,6 +1307,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
             },
           },
         ],
+        newItems: [],
       })
 
       const { requests } = spreadsheet.bodies[0] as BatchUpdateBody
@@ -1346,6 +1339,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
           httpRepository().publishRoadmapChanges("producta", {
             roadmap: { lastUpdated: { base: "2026-10-01", value } },
             items: [],
+            newItems: [],
           }),
         ).resolves.toEqual({ status: "published" })
 
@@ -1388,6 +1382,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
             },
           },
         ],
+        newItems: [],
       })
 
       const horizon = EXAMPLE_TAB_ROWS.ProductA?.[0]?.indexOf("Horizon") ?? -1
@@ -1413,6 +1408,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
           items: [
             { item, position: 0, fields: { organisationIds: { base, value } } },
           ],
+          newItems: [],
         })
       }
 
@@ -1463,6 +1459,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
                 },
               },
             ],
+            newItems: [],
           },
         )
 
@@ -1518,6 +1515,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
         return httpRepository().publishRoadmapChanges(id, {
           roadmap: {},
           items: [{ item, position, fields: { tags: { base, value } } }],
+          newItems: [],
         })
       }
 
@@ -1601,6 +1599,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
                 },
               },
             ],
+            newItems: [],
           },
         )
 
@@ -1637,6 +1636,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
         return httpRepository().publishRoadmapChanges(id, {
           roadmap: {},
           items: [{ item, position, fields: { details: { base, value } } }],
+          newItems: [],
         })
       }
 
@@ -1757,6 +1757,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
                 fields: { details: { base: "One\n- Two", value: "One" } },
               },
             ],
+            newItems: [],
           },
         )
 
@@ -1782,6 +1783,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
         await httpRepository().publishRoadmapChanges("producta", {
           roadmap: { vision: { base: "", value: "Where we are heading" } },
           items: [],
+          newItems: [],
         })
 
         expect(
@@ -1826,6 +1828,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
               fields: { phase: { base: "", value: "Beta" } },
             },
           ],
+          newItems: [],
         })
 
         expect(changedCells(before, spreadsheet.tabs())).toEqual([
@@ -1892,6 +1895,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
           httpRepository().publishRoadmapChanges("producta", {
             roadmap: { familyId: { base: "fc29g5b9", value: "vdkxj63m" } },
             items: [],
+            newItems: [],
           }),
         ).resolves.toEqual({ status: "published" })
 
@@ -1914,6 +1918,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
         await httpRepository().publishRoadmapChanges("producta", {
           roadmap: { familyId: { base: "fc29g5b9", value: "" } },
           items: [],
+          newItems: [],
         })
 
         expect(indexChanges(before, spreadsheet.tabs())).toEqual([
@@ -1930,6 +1935,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
         await httpRepository().publishRoadmapChanges("producta", {
           roadmap: { familyId: { base: "fc29g5b9", value: "" } },
           items: [],
+          newItems: [],
         })
 
         // Family (cy), column 13, is a trailing blank the row's array leaves out.
@@ -1947,11 +1953,13 @@ describe("GoogleSheetsRoadmapRepository", () => {
         await httpRepository().publishRoadmapChanges("producta", {
           roadmap: { categoryId: { base: "khzpchkh", value: "w7vrv5kn" } },
           items: [],
+          newItems: [],
         })
         const chosen = spreadsheet.tabs()
         await httpRepository().publishRoadmapChanges("producta", {
           roadmap: { categoryId: { base: "w7vrv5kn", value: "" } },
           items: [],
+          newItems: [],
         })
 
         expect(indexChanges(before, chosen)).toEqual([
@@ -1984,6 +1992,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
           httpRepository().publishRoadmapChanges("producta", {
             roadmap: { familyId: { base: "fc29g5b9", value: "gone0000" } },
             items: [],
+            newItems: [],
           }),
         ).rejects.toMatchObject({ kind: "invalid-data" })
         expect(spreadsheet.bodies).toEqual([])
@@ -2023,6 +2032,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
             httpRepository().publishRoadmapChanges(roadmapId, {
               roadmap: { title: { base: "Product A roadmap", value: "New" } },
               items: [],
+              newItems: [],
             }),
           ).rejects.toMatchObject({ kind: "invalid-data", retryable: false })
           await expect(
@@ -2071,6 +2081,315 @@ describe("GoogleSheetsRoadmapRepository", () => {
           "Item ID",
           "skipped2",
           "fresh234",
+        ])
+      })
+    })
+
+    describe("a new item (STY-045)", () => {
+      const clinic = createTestNewItem(
+        "ckn7q2xw",
+        "Choose a clinic closer to home",
+        { placement: "next" },
+      )
+      const letters = createTestNewItem("fwd9s3hj", "Letters by email", {
+        description: "Read your letters online.\nNo post.",
+        expectedOutcome: "Fewer lost letters",
+        phase: "Discovery",
+        placement: "delivered-this-year",
+        tags: "Patients, Carers",
+        organisationIds: "sbuhb,national",
+        details: "Appointment letters\n- Outpatients",
+      })
+      const adding = (...newItems: NewItem[]): RoadmapChanges => ({
+        roadmap: {},
+        items: [],
+        newItems,
+      })
+      const text = (stringValue: string) => ({
+        userEnteredValue: { stringValue },
+      })
+      /** The example spreadsheet with a Product A tab of one item, as wide as its header. */
+      const smallTabs = (...rows: string[][]): FakeTab[] => [
+        gridTab("Roadmaps", EXAMPLE_ROWS, 0),
+        gridTab("ProductA", [["Title", "Horizon", "Item ID"], ...rows], 10, 1),
+      ]
+      const kept = ["Online booking", "Now", "k7q2xwbn"]
+
+      it("appends one row after the tab's last row in use, with its Item ID, Title and Horizon, in the one batchUpdate (S2)", async () => {
+        const before = exampleTabs()
+        const spreadsheet = serveStatefulSpreadsheet(before)
+
+        await expect(
+          httpRepository().publishRoadmapChanges("producta", adding(clinic)),
+        ).resolves.toEqual({ status: "published" })
+
+        // Rows 2 to 10 hold the example's items: each gets an ID, as on any publish.
+        expect(changedCells(before, spreadsheet.tabs()).slice(10)).toEqual([
+          "ProductA!R11C1 Choose a clinic closer to home",
+          "ProductA!R11C4 Next",
+          "ProductA!R11C15 ckn7q2xw",
+        ])
+        expect(spreadsheet.bodies).toHaveLength(1)
+        const { requests } = spreadsheet.bodies[0] as BatchUpdateBody
+        expect(requests.at(-1)).toEqual({
+          appendCells: {
+            sheetId: 10,
+            rows: [
+              {
+                values: [
+                  text("Choose a clinic closer to home"),
+                  {},
+                  {},
+                  text("Next"),
+                  ...Array.from({ length: 10 }, () => ({})),
+                  text("ckn7q2xw"),
+                ],
+              },
+            ],
+            fields: "userEnteredValue",
+          },
+        })
+        expect(
+          requests.filter((request) => "appendCells" in request),
+        ).toHaveLength(1)
+        expect(spreadsheet.requests.map(({ method }) => method)).toEqual([
+          "GET",
+          "GET",
+          "GET",
+          "POST",
+        ])
+      })
+
+      it("writes each field it has as that field's edit is written, and no Welsh cell (S2)", async () => {
+        const before = exampleTabs()
+        const spreadsheet = serveStatefulSpreadsheet(before)
+
+        await httpRepository().publishRoadmapChanges(
+          "producta",
+          adding(letters),
+        )
+
+        expect(changedCells(before, spreadsheet.tabs()).slice(10)).toEqual([
+          "ProductA!R11C1 Letters by email",
+          "ProductA!R11C2 Read your letters online.\nNo post.",
+          "ProductA!R11C3 Fewer lost letters",
+          "ProductA!R11C4 Delivered this year",
+          "ProductA!R11C5 Discovery",
+          "ProductA!R11C6 Patients, Carers",
+          "ProductA!R11C7 National, SBUHB",
+          "ProductA!R11C8 Appointment letters\n- Outpatients",
+          "ProductA!R11C15 fwd9s3hj",
+        ])
+      })
+
+      it("sends several in the order added, after the cells of the roadmap's other changes (S2)", async () => {
+        const spreadsheet = serveStatefulSpreadsheet(smallTabs(kept))
+        const [item] = await httpRepository().listRoadmapItems("producta")
+        if (item === undefined) throw new Error("Product A has an item")
+
+        await httpRepository().publishRoadmapChanges("producta", {
+          roadmap: { title: { base: "Product A roadmap", value: "Product A" } },
+          items: [
+            {
+              item,
+              position: 0,
+              fields: { title: { base: "Online booking", value: "Booking" } },
+            },
+          ],
+          newItems: [letters, clinic],
+        })
+
+        expect(spreadsheet.bodies).toHaveLength(1)
+        const { requests } = spreadsheet.bodies[0] as BatchUpdateBody
+        expect(
+          requests.map((request) =>
+            "appendCells" in request
+              ? request.appendCells.rows[0]?.values[2]
+              : Object.keys(request)[0],
+          ),
+        ).toEqual([
+          // The index's cell, then the tab's: its grid grown, six new headers, the
+          // edited cell, then the new rows.
+          "updateCells",
+          "appendDimension",
+          ...Array.from({ length: 7 }, () => "updateCells"),
+          text("fwd9s3hj"),
+          text("ckn7q2xw"),
+        ])
+        expect(spreadsheet.tabs()[1]?.rows.map((row) => row[0])).toEqual([
+          "Title",
+          "Booking",
+          "Letters by email",
+          "Choose a clinic closer to home",
+        ])
+      })
+
+      it("adds a column the row needs and the tab lacks, and none for a field it lacks (S2)", async () => {
+        const spreadsheet = serveStatefulSpreadsheet(smallTabs(kept))
+
+        await httpRepository().publishRoadmapChanges(
+          "producta",
+          adding({ ...clinic, values: { ...clinic.values, phase: "Beta" } }),
+        )
+
+        expect(spreadsheet.bodies).toEqual([
+          {
+            requests: [
+              {
+                appendDimension: {
+                  sheetId: 10,
+                  dimension: "COLUMNS",
+                  length: 1,
+                },
+              },
+              {
+                updateCells: {
+                  start: { sheetId: 10, rowIndex: 0, columnIndex: 3 },
+                  rows: [{ values: [text("Phase")] }],
+                  fields: "userEnteredValue",
+                },
+              },
+              {
+                appendCells: {
+                  sheetId: 10,
+                  rows: [
+                    {
+                      values: [
+                        text("Choose a clinic closer to home"),
+                        text("Next"),
+                        text("ckn7q2xw"),
+                        text("Beta"),
+                      ],
+                    },
+                  ],
+                  fields: "userEnteredValue",
+                },
+              },
+            ],
+          },
+        ])
+        expect(spreadsheet.tabs()[1]?.rows).toEqual([
+          ["Title", "Horizon", "Item ID", "Phase"],
+          kept,
+          ["Choose a clinic closer to home", "Next", "ckn7q2xw", "Beta"],
+        ])
+      })
+
+      it("adds the Item ID and Horizon columns to a tab with neither (S2)", async () => {
+        const spreadsheet = serveStatefulSpreadsheet([
+          gridTab("Roadmaps", EXAMPLE_ROWS, 0),
+          gridTab("ProductA", [["Title"]], 10, 1),
+        ])
+
+        await httpRepository().publishRoadmapChanges("producta", adding(clinic))
+
+        expect(spreadsheet.tabs()[1]?.rows).toEqual([
+          ["Title", "Item ID", "Horizon"],
+          ["Choose a clinic closer to home", "ckn7q2xw", "Next"],
+        ])
+        expect(spreadsheet.tabs()[1]?.columnCount).toBe(3)
+      })
+
+      it("keeps a row a co-lead added after the read, appending after it (S3)", async () => {
+        const theirs = ["Added by a co-lead", "Later", ""]
+        const spreadsheet = serveStatefulSpreadsheet(smallTabs(kept), {
+          beforeWrite: (tabs) =>
+            tabs.map((tab) =>
+              tab.title === "ProductA"
+                ? {
+                    ...tab,
+                    rows: [...tab.rows, theirs],
+                    rowCount: tab.rowCount + 1,
+                  }
+                : tab,
+            ),
+        })
+
+        await expect(
+          httpRepository().publishRoadmapChanges("producta", adding(clinic)),
+        ).resolves.toEqual({ status: "published" })
+
+        expect(spreadsheet.tabs()[1]?.rows.slice(1)).toEqual([
+          kept,
+          theirs,
+          ["Choose a clinic closer to home", "Next", "ckn7q2xw"],
+        ])
+      })
+
+      it("writes nothing for a new item the tab already holds, even in a row it no longer reads (S4)", async () => {
+        const spreadsheet = serveStatefulSpreadsheet(
+          smallTabs(kept, ["", "Next", "ckn7q2xw"]),
+        )
+
+        await expect(
+          httpRepository().publishRoadmapChanges("producta", adding(clinic)),
+        ).resolves.toEqual({ status: "published" })
+
+        expect(spreadsheet.bodies).toEqual([])
+      })
+
+      it("gives no row without an ID the ID of a new item (S1)", async () => {
+        const spreadsheet = serveStatefulSpreadsheet(
+          smallTabs(["No ID yet", "Now", ""]),
+        )
+        nextItemIds.push("ckn7q2xw", "fresh234")
+
+        await httpRepository().publishRoadmapChanges("producta", adding(clinic))
+
+        expect(spreadsheet.tabs()[1]?.rows.map((row) => row[2])).toEqual([
+          "Item ID",
+          "fresh234",
+          "ckn7q2xw",
+        ])
+      })
+
+      it("settles a lost answer by one more read of the roadmap, which finds the new row by its ID (S4)", async () => {
+        const spreadsheet = serveStatefulSpreadsheet(smallTabs(kept), {
+          write: { lost: "applied" },
+        })
+
+        await expect(
+          httpRepository().publishRoadmapChanges("producta", adding(clinic)),
+        ).resolves.toEqual({ status: "published" })
+
+        expect(spreadsheet.requests.map(({ method }) => method)).toEqual([
+          "GET",
+          "GET",
+          "GET",
+          "POST",
+          "GET",
+          "GET",
+          "GET",
+        ])
+      })
+
+      it("sends it with the roadmap's published state, in the one batchUpdate (STY-035 S5)", async () => {
+        const spreadsheet = serveStatefulSpreadsheet([
+          gridTab("Roadmaps", EXAMPLE_ROWS, 0),
+          gridTab("ProductC", [["Title", "Horizon", "Item ID"], kept], 30, 1),
+        ])
+        const loaded = (await httpRepository().listRoadmaps()).find(
+          ({ id }) => id === "productc",
+        )
+        if (loaded === undefined) throw new Error("Product C is listed")
+
+        await expect(
+          httpRepository().setRoadmapPublished(loaded, {
+            published: true,
+            changes: adding(clinic),
+          }),
+        ).resolves.toEqual({ status: "set" })
+
+        expect(spreadsheet.bodies).toHaveLength(1)
+        const { requests } = spreadsheet.bodies[0] as BatchUpdateBody
+        expect(requests.map((request) => Object.keys(request)[0])).toEqual([
+          "updateCells",
+          "appendCells",
+        ])
+        expect(spreadsheet.tabs()[1]?.rows.at(-1)).toEqual([
+          "Choose a clinic closer to home",
+          "Next",
+          "ckn7q2xw",
         ])
       })
     })
@@ -2999,7 +3318,10 @@ describe("GoogleSheetsRoadmapRepository", () => {
       await expect(
         httpRepository().setRoadmapPublished(productC, {
           published: true,
-          changes: markedUpdated({ roadmap: {}, items: [] }, "2026-11-13"),
+          changes: markedUpdated(
+            { roadmap: {}, items: [], newItems: [] },
+            "2026-11-13",
+          ),
         }),
       ).resolves.toEqual({ status: "set" })
 
@@ -3020,7 +3342,10 @@ describe("GoogleSheetsRoadmapRepository", () => {
       await expect(
         httpRepository().setRoadmapPublished(productC, {
           published: true,
-          changes: markedUpdated({ roadmap: {}, items: [] }, "2026-11-13"),
+          changes: markedUpdated(
+            { roadmap: {}, items: [], newItems: [] },
+            "2026-11-13",
+          ),
         }),
       ).resolves.toEqual({ status: "set" })
 

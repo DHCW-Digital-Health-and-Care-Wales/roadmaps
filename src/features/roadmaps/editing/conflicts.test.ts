@@ -39,6 +39,7 @@ const second: ItemChanges = {
 const changes: RoadmapChanges = {
   roadmap: { vision: { base: "A vision", value: "My vision" } },
   items: [first, second],
+  newItems: [],
 }
 
 const visionConflict: FieldConflict = {
@@ -111,6 +112,7 @@ describe("openConflicts", () => {
     const moved: RoadmapChanges = {
       roadmap: {},
       items: [{ ...first, position: 4 }],
+      newItems: [],
     }
 
     expect(
@@ -121,9 +123,9 @@ describe("openConflicts", () => {
   it("has none open once the change is undone or there are no changes", () => {
     const conflict = conflictOn(second, "title", "Theirs")
 
-    expect(openConflicts([conflict], { roadmap: {}, items: [first] })).toEqual(
-      [],
-    )
+    expect(
+      openConflicts([conflict], { roadmap: {}, items: [first], newItems: [] }),
+    ).toEqual([])
     expect(openConflicts([conflict], undefined)).toEqual([])
   })
 })
@@ -170,6 +172,7 @@ describe("discardItems", () => {
     const pending: RoadmapChanges = {
       roadmap: {},
       items: [{ ...first, position: 3 }, second, unidentified],
+      newItems: [],
     }
 
     expect(discardItems(pending, [first, unidentified]).items).toEqual([second])
@@ -188,7 +191,7 @@ describe("discardItems", () => {
       fields: { title: { base: "Fourth", value: "Fourth, mine" } },
     }
     const edited = editItem(
-      { roadmap: {}, items: [sent, other] },
+      { roadmap: {}, items: [sent, other], newItems: [] },
       sent,
       sent.item,
       2,
@@ -345,7 +348,11 @@ describe("Welsh tags written since an item was read (STY-037 S22)", () => {
     current: "Patients",
     gainedWelsh: true,
   }
-  const pending: RoadmapChanges = { roadmap: {}, items: [retagged] }
+  const pending: RoadmapChanges = {
+    roadmap: {},
+    items: [retagged],
+    newItems: [],
+  }
 
   it("stays open, though the English is as it was edited from, until the tag change is given up", () => {
     expect(
@@ -392,7 +399,11 @@ describe("Welsh details written since an item was read (STY-039 S19)", () => {
     current: "Follow-up appointments",
     gainedWelsh: true,
   }
-  const pending: RoadmapChanges = { roadmap: {}, items: [redetailed] }
+  const pending: RoadmapChanges = {
+    roadmap: {},
+    items: [redetailed],
+    newItems: [],
+  }
 
   it("stays open, though the English is as it was edited from, until the change of details is given up", () => {
     expect(

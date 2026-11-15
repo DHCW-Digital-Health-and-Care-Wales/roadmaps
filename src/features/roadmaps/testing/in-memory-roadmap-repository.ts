@@ -50,6 +50,7 @@ import { categoriesOf, familiesOf } from "@/domain/roadmap/testing/linked-lists"
 import { TEST_ORGANISATIONS } from "@/domain/roadmap/testing/test-organisations"
 import type { SyncFault } from "@/domain/roadmap/testing/roadmap-repository-contract"
 import { inStep } from "@/domain/roadmap/testing/test-roadmap"
+import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 import { AppError } from "@/lib/errors"
 
 /**
@@ -157,13 +158,17 @@ export function createInMemoryRoadmapRepository(
       return read(roadmaps)
     })
 
-  /** The roadmap's items as stored (a repeated ID kept), or throws as a read does. */
+  /**
+   * The roadmap's items as stored (a repeated ID kept), or throws as a read does. A
+   * roadmap given none holds an empty list from then on, which a publish may add to.
+   */
   const storedItems = (roadmapId: string): RoadmapItem[] => {
     const stored = held.get(roadmapId) ?? []
     if (stored instanceof AppError) throw stored
     if (syncFaults[roadmapId]?.includes("no-title-column")) {
       throw new AppError("invalid-data", { message: "No Title column" })
     }
+    held.set(roadmapId, stored)
     return stored
   }
 
@@ -232,6 +237,12 @@ export function createInMemoryRoadmapRepository(
     for (const { index, id } of writes.ids) {
       const item = stored[index]
       if (item) item.id = id
+    }
+    // After the roadmap's last item, as the Google adapter appends a row (STY-045).
+    for (const { id, fields } of writes.newItems) {
+      const item = createTestRoadmapItem("", { id, placement: null })
+      for (const { field, value } of fields) setItemValue(item, field, value)
+      stored.push(item)
     }
   }
 

@@ -35,7 +35,7 @@ export type BatchRequest =
       }
     }
   | {
-      /** Google adds the rows after the last row any value uses (STY-029). */
+      /** Google adds the rows after the last row any value uses (STY-029, STY-045). */
       appendCells: {
         sheetId: number
         rows: [{ values: CellData[] }]
@@ -75,9 +75,9 @@ export type BatchRequest =
     }
 
 /**
- * Collects one tab's cell writes. A column the header lacks is added after the last
- * column any row uses, with its English header (ADR-012 Option 9), the grid growing
- * to hold it; no existing column moves.
+ * Collects one tab's cell writes and appended rows. A column the header lacks is added
+ * after the last column any row uses, with its English header (ADR-012 Option 9), the
+ * grid growing to hold it; no existing column moves.
  */
 export class TabWriter<Column extends string> {
   readonly #sheetId: number
@@ -107,7 +107,8 @@ export class TabWriter<Column extends string> {
   /**
    * Appends a row holding each cell under its column, after the last row any value
    * uses: Google picks the row as it applies the write, so a row a co-lead added
-   * meanwhile is never overwritten (STY-029). A blank cell is left out, adding no column.
+   * meanwhile is never overwritten (STY-029), and no row in use moves. A blank cell is
+   * left out, adding no column. Rows are appended in the order of the calls.
    */
   append(cells: Iterable<readonly [Column, string]>): void {
     const values: CellData[] = []

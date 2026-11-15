@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 
+import { addNewItem } from "@/domain/roadmap/new-item"
 import { planRoadmapPublish } from "@/domain/roadmap/publish-plan"
 import type { RoadmapChanges } from "@/domain/roadmap/roadmap-changes"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
@@ -906,5 +907,50 @@ describe("an item with pending details, found by its content (STY-039, after the
     const deeper = { ...loaded, details: detailed(0, 1, 2, 3) }
 
     expect(matchItemChanges([first, deeper], redetailed).size).toBe(0)
+  })
+})
+
+describe("a new item (STY-045)", () => {
+  const clinic = { title: "Choose a clinic closer to home", placement: "next" }
+  const added = addNewItem(
+    editItem(NO_CHANGES, undefined, first, 0, { phase: "Beta" }),
+    clinic,
+    [first, second],
+  )
+  const [newItem] = added.newItems
+  if (newItem === undefined) throw new Error("The new item is pending")
+
+  it("is one pending change, beside the fields edited (S1)", () => {
+    expect(countChanges(added)).toBe(2)
+    expect(countChanges(addNewItem(NO_CHANGES, clinic, []))).toBe(1)
+  })
+
+  it("stays pending over a read that doesn't hold it (S4)", () => {
+    expect(reconcileItems(added, [first, second])).toBe(added)
+  })
+
+  it("is dropped by a read that holds an item with its ID, whatever a co-lead made of it since, the edits kept (S4)", () => {
+    const landed = createTestRoadmapItem("Renamed by a co-lead", {
+      id: newItem.id,
+      placement: "later",
+    })
+
+    const reconciled = reconcileItems(added, [first, second, landed])
+
+    expect(reconciled.newItems).toEqual([])
+    expect(reconciled.items).toBe(added.items)
+  })
+
+  it("is no longer pending once the publish it was sent in lands, and one added since is (S4)", () => {
+    const since = addNewItem(
+      added,
+      { title: "Text reminders", placement: "later" },
+      [first, second],
+    )
+
+    const settled = settlePublished(since, added)
+
+    expect(settled.newItems).toEqual(since.newItems.slice(1))
+    expect(settled.items).toEqual([])
   })
 })

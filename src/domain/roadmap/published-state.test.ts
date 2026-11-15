@@ -9,6 +9,7 @@ import {
   type PublishProblem,
 } from "./published-state"
 import type { RoadmapSnapshot } from "./publish-plan"
+import { createTestNewItem } from "./testing/test-new-item"
 import { createTestRoadmap } from "./testing/test-roadmap"
 import { createTestRoadmapItem } from "./testing/test-roadmap-item"
 
@@ -30,6 +31,7 @@ const snapshot: RoadmapSnapshot = {
   missingLists: new Set(),
   organisationIds: new Set(),
 }
+const newItem = createTestNewItem("ckn7q2xw", "Choose a clinic closer to home")
 const found: FoundRow = {
   kind: "found",
   index: 0,
@@ -55,6 +57,7 @@ describe("findPublishedStateRow", () => {
         vision: { base: "", value: "Clear" },
       },
       items: [],
+      newItems: [],
     }
     const edited = { published: true, changes } as const
 
@@ -81,6 +84,7 @@ describe("findPublishedStateRow", () => {
           lastUpdated: { base: "", value: "2026-11-13", overwrite: true },
         },
         items: [],
+        newItems: [],
       },
     } as const
 
@@ -104,6 +108,7 @@ describe("findPublishedStateRow", () => {
           lastUpdated: { base: "", value: "2026-11-13", overwrite: true },
         },
         items: [],
+        newItems: [],
       },
     } as const
 
@@ -170,6 +175,21 @@ describe("findPublishedStateRow", () => {
   })
 })
 
+describe("a new item sent with a roadmap's published state (STY-045)", () => {
+  const changes = { roadmap: {}, items: [], newItems: [newItem] }
+
+  it("is a pending edit to write, though the roadmap already reads as published", () => {
+    expect(
+      findPublishedStateRow(loaded, { published: true, changes }, [
+        row({}, true),
+      ]),
+    ).toEqual({ ...found, writeState: false, check: false })
+    expect(
+      findPublishedStateRow(loaded, { published: true }, [row({}, true)]),
+    ).toEqual({ kind: "settled", outcome: { status: "set" } })
+  })
+})
+
 describe("planPublishedStateWrite", () => {
   const horizon: PublishProblem = {
     code: "items-field-missing",
@@ -201,6 +221,7 @@ describe("planPublishedStateWrite", () => {
           fields: { placement: { base: "", value: "now" } },
         },
       ],
+      newItems: [],
     }
 
     expect(
@@ -214,6 +235,23 @@ describe("planPublishedStateWrite", () => {
     expect(
       planPublishedStateWrite(found, { published: true }, [horizon], null),
     ).toMatchObject({ outcome: { status: "unpublishable" } })
+  })
+
+  it("publishes a tab without a Horizon column once a new item, always placed, adds one (STY-045)", () => {
+    const changes = { roadmap: {}, items: [], newItems: [newItem] }
+
+    expect(
+      planPublishedStateWrite(
+        found,
+        { published: true, changes },
+        [horizon],
+        snapshot,
+      ),
+    ).toMatchObject({
+      kind: "write",
+      writeState: true,
+      writes: { newItems: [{ id: "ckn7q2xw" }] },
+    })
   })
 
   it("ignores problems when the state is not checked", () => {
@@ -244,6 +282,7 @@ describe("heldPublishedState", () => {
       roadmap: [{ field: "lastUpdated" as const, value: "2026-11-13" }],
       items: [],
       ids: [],
+      newItems: [],
     }
     const held = (lastUpdated: string) =>
       heldPublishedState(
@@ -262,6 +301,7 @@ describe("heldPublishedState", () => {
       roadmap: [{ field: "statusLabel" as const, value: "Live" }],
       items: [],
       ids: [],
+      newItems: [],
     }
 
     expect(

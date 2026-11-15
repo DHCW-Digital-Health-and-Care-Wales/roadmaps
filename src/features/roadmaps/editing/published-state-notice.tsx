@@ -13,8 +13,8 @@ import type { PublishProblem } from "@/domain/roadmap/published-state"
 import { useNoticeDwell } from "@/features/auth/use-notice-dwell"
 import { useLanguage, type Language } from "@/i18n"
 
-import type { PublishedStateOutcomeNotice } from "./use-published-state"
 import { writeFailureMessage } from "../write-failure-message"
+import type { PublishedStateOutcomeNotice } from "./use-published-state"
 
 export interface PublishedStateNoticeProps {
   notice: PublishedStateOutcomeNotice

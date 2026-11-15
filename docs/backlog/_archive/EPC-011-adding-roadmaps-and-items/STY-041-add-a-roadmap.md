@@ -272,9 +272,9 @@ unavailable.
   `hooks/use-added-roadmap.ts`): `useOpenAddedRoadmap()` opens the page, and
   `useAddedRoadmapNotice(roadmap)` takes the word, which the entry then forgets. It is
   in memory with the entry, never in the URL.
-- **Copy**: `roadmaps.add.*` in both catalogues. `roadmaps.add.failed.errors` is a
-  fifth map of write-failure messages
-  ([CHO-004](../../chores/CHO-004-share-the-write-failure-copy.md)). The Welsh is
+- **Copy**: `roadmaps.add.*` in both catalogues. Its write failures are
+  `roadmaps.writeFailure`, shared with the other writes
+  ([CHO-004](../chores/CHO-004-share-the-write-failure-copy.md)). The Welsh is
   machine-assisted, as all of `cy.ts` is.
 - **E2E**: the dialog is `getByRole("dialog", { name: "Add a roadmap" })`; while it is
   open the page behind it is out of reach of role queries. The example spreadsheet

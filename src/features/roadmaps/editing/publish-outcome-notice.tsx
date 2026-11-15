@@ -9,8 +9,8 @@ import { useTranslation } from "react-i18next"
 import { DismissibleNotice } from "@/components/layout/dismissible-notice"
 import { useNoticeDwell } from "@/features/auth/use-notice-dwell"
 
-import type { PublishNotice } from "./pending-changes-store"
 import { writeFailureMessage } from "../write-failure-message"
+import type { PublishNotice } from "./pending-changes-store"
 
 export interface PublishOutcomeNoticeProps {
   ref: RefObject<HTMLDivElement | null>

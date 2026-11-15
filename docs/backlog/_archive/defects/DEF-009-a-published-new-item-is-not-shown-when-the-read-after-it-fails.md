@@ -1,6 +1,6 @@
 # DEF-009: A new item that was published is not shown when the read after the publish fails
 
-- **Status**: Done — delivered on `fix/def-009-published-item-stays-pending`, awaiting merge
+- **Status**: Done
 - **Severity**: Medium — the item is public but missing from the page until a Refresh
   succeeds, so a Product Lead may add it again and publish it twice
 - **Area**: Features (pending-edit rules)
@@ -96,9 +96,11 @@ whether it succeeds or fails, leaving the items as cached before the publish.
 The cause was as stated, and it reached an edit and the roadmap's own text too: both
 `usePublish` and "Save and publish" (`usePublishedState`) settled every change sent once
 the write was confirmed, whatever the reads after it came to. They now settle, by
-`settlePublishedChanges` (`editing/use-publish.ts`), only what a read after the write
+`settleReadBack` (`editing/use-publish.ts`), only what a read after the write
 read back (`useReadBack`, `hooks/use-publish-roadmap-changes.ts`): the items' changes
-and new items while the items were read, the roadmap's own text while the list was.
+and new items while the items were read, the roadmap's own text while the list was. A
+read counts only if it answered since the publish began, so one cancelled as the
+session ends, which puts back what was cached before, is no read back.
 What a failed read would show stays pending, as any pending change does, until a read
 holds it, which the pending-edit store's reconcile on read already drops.
 
@@ -123,7 +125,7 @@ holds it, which the pending-edit store's reconcile on read already drops.
   The store's `keepPublished(roadmapId, ids)` records them.
 - `discardable(snapshot, roadmapId, newItemId?)`: with an ID, whether that new item can
   change or go; without, whether all changes can. DEF-010 touches the same
-  `settlePublishedChanges` callers.
+  `settleReadBack` callers.
 - E2E: `FakeSheets.failReadsAfterNextWrite(status)` fails every read after the next
   `batchUpdate` until the function it returns is called.
 
@@ -132,4 +134,8 @@ holds it, which the pending-edit store's reconcile on read already drops.
 | Scenario | Held by                                                                                                                                                                                                                            |
 | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | S1, S3   | `roadmap-detail-page-adding.test.tsx` (`A published new item the roadmap can't be read back with (DEF-009)`, four tests, red before the fix); `tests/e2e/adding-an-item.spec.ts` (`a published new item stays, pending and held…`) |
+| S1       | `roadmap-detail-page-adding.test.tsx` (`stays on the page when the session ends while the read after the publish is under way`), a review fix, red before it                                                                       |
 | S2       | `roadmap-detail-page-editing.test.tsx` (`keeps a published edit's text, pending, … (DEF-009 S2)`, and the roadmap's own text alike), red before the fix                                                                            |
+
+The Playwright test followed the working fix, so it was not seen red; the Vitest tests
+carry the red-first evidence.

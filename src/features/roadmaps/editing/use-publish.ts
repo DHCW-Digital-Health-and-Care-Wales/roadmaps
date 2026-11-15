@@ -32,18 +32,18 @@ export const CURRENT_TEXT: CurrentText = {
 
 /**
  * Settles the roadmap's changes once `sent` is published, by what the reads after it
- * read back (`read`): what a read that failed would show stays pending until a read
+ * read back (`read`, from `useReadBack`): what a read that failed would show stays pending until a read
  * holds it, as the page would otherwise show what was cached before (DEF-009 D1, D2),
  * and a new item kept so is published, offering no Remove (D3).
  */
-export function settlePublishedChanges(
+export function settleReadBack(
   store: PendingChangesStore,
   roadmapId: string,
   sent: RoadmapChanges,
   read: ReadBack,
 ) {
   const settled: RoadmapChanges = {
-    roadmap: read.roadmap ? sent.roadmap : {},
+    roadmap: read.roadmaps ? sent.roadmap : {},
     items: read.items ? sent.items : [],
     newItems: read.items ? sent.newItems : [],
   }
@@ -61,7 +61,7 @@ export function settlePublishedChanges(
  * roadmap is under way, never retried (S13). Given `today`, its date, the roadmap's
  * `Last updated` is set to it in the same write ("Mark as updated today", STY-036 S6).
  * What it came to is the roadmap's notice; on success the changes it sent are no longer
- * pending, unless the read after it failed (`settlePublishedChanges`), and any made
+ * pending, unless a read after it failed (`settleReadBack`), and any made
  * meanwhile stay.
  * A refusal discards the changes to items that are gone and leaves each conflict to the
  * review, showing the co-lead's text even if the read after it fails; a roadmap gone
@@ -85,10 +85,11 @@ export function usePublish(
     let notice: PublishNotice | null
     try {
       // Settles once the roadmap and its items are read again, or have failed to be.
+      const startedAt = Date.now()
       const outcome = await mutateAsync(markedUpdated(sent, today))
       switch (outcome.status) {
         case "published":
-          settlePublishedChanges(store, roadmap.id, sent, readBack())
+          settleReadBack(store, roadmap.id, sent, readBack(startedAt))
           notice = { action, kind: "published" }
           break
         case "unconfirmed":

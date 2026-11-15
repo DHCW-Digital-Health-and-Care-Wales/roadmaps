@@ -80,26 +80,37 @@ export function usePublishRoadmapChanges(
   })
 }
 
-/** Whether the read after a publish read the roadmap list, and the roadmap's items. */
+/** Whether the reads after a publish read the roadmap list, and the roadmap's items. */
 export interface ReadBack {
-  roadmap: boolean
+  roadmaps: boolean
   items: boolean
 }
 
 /**
- * Tells, once a publish has settled, which of the reads after it succeeded: a failed
- * read leaves what was cached before it (DEF-009). A read not made, as when no page
- * shows the roadmap, counts as succeeded unless the last one failed, as the next read
- * of it, once a page does, holds what was published.
+ * Tells, once a publish begun at `since` has settled, which of the reads after it
+ * succeeded (DEF-009). A read a page shows counts only if it answered since then: one
+ * that failed, or was cancelled as the session ended, leaves what was cached before. A
+ * read no page shows is not made, and counts unless the last one failed, as the next
+ * read of it, once a page does, holds what was published.
  */
-export function useReadBack(roadmapId: string): () => ReadBack {
+export function useReadBack(roadmapId: string): (since: number) => ReadBack {
   const queryClient = useQueryClient()
-  const succeeded = (key: QueryKey) =>
-    queryClient.getQueryState(key)?.status !== "error"
-  return () => ({
-    roadmap: succeeded(roadmapKeys.list()),
-    items: succeeded(roadmapKeys.items(roadmapId)),
-  })
+  return (since) => {
+    const succeeded = (key: QueryKey) => {
+      const query = queryClient
+        .getQueryCache()
+        .find({ queryKey: key, exact: true })
+      if (!query) return true
+      if (query.getObserversCount() === 0) return query.state.status !== "error"
+      return (
+        query.state.status === "success" && query.state.dataUpdatedAt >= since
+      )
+    }
+    return {
+      roadmaps: succeeded(roadmapKeys.list()),
+      items: succeeded(roadmapKeys.items(roadmapId)),
+    }
+  }
 }
 
 /** The roadmap list and the roadmap's items as cached now, before a publish. */

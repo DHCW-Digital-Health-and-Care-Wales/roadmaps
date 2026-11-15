@@ -21,7 +21,7 @@ import {
   usePendingChangesStore,
 } from "./pending-changes-context"
 import { publishAction, type PublishNotice } from "./pending-changes-store"
-import { CURRENT_TEXT, settlePublishedChanges } from "./use-publish"
+import { CURRENT_TEXT, settleReadBack } from "./use-publish"
 
 /** What the last publish or unpublish of the roadmap came to, as its page says it. */
 export type PublishedStateOutcomeNotice =
@@ -138,6 +138,7 @@ export function usePublishedState(
     let stored: PublishNotice | null = null
     let shown: PublishedStateOutcomeNotice | null = null
     try {
+      const startedAt = Date.now()
       const result = await mutateAsync(
         publishing
           ? {
@@ -151,7 +152,7 @@ export function usePublishedState(
       )
       switch (result.status) {
         case "set":
-          if (sent) settlePublishedChanges(store, roadmap.id, sent, readBack())
+          if (sent) settleReadBack(store, roadmap.id, sent, readBack(startedAt))
           shown = { kind: "set", published: publishing, withChanges: kept }
           break
         case "unconfirmed":

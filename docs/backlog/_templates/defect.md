@@ -6,8 +6,9 @@
   what the code cannot say; never rewrite the claim; IDs; statuses in
   `status-lifecycle.md`).
 - **Reproduce before recording.** Run the steps at a default-branch commit
-  (a branch commit is lost to a squash merge) and list every site the run and
-  its search found, not the first one.
+  (a branch commit is lost to a squash merge). List every site the run and its
+  search found and every way a user reaches the cause, not the first one, and
+  run a neighbouring screen or path before calling it unaffected.
 - A defect found during delivery starts as `Needs triage` and is listed under
   Defects in `docs/backlog/README.md` (and in its epic's `## Defects`, if it
   belongs to one). Only the owner moves it out of triage.

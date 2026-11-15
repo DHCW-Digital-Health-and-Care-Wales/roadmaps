@@ -47,6 +47,14 @@ buttons while it is empty, so the page has to note which one opened the dialog.
   `dialogs/form-dialog.tsx` and `dialogs/roadmap-dialog.tsx`, and its one user,
   `editing/editable-roadmap-about.tsx`; `pages/roadmaps-page.tsx` gives none.
 
+For the fix (agent, 2026-11-15, retro of STY-043): the adding form is the only caller
+without an `opener` (`rg -n '<(FormDialog|RoadmapDialog)\b' src` — `FormDialog` once, in
+`RoadmapDialog`; `RoadmapDialog` in `roadmaps-page.tsx` and
+`editable-roadmap-about.tsx`). Once it gives one, `opener` can be required in
+`FormDialogProps`, and so in `RoadmapDialogProps`, and the type check then names a
+later dialog that gives none. STY-041's reviews did not find the missing one, and no
+test here runs Safari.
+
 ## Acceptance criteria
 
 ### S1: Focus returns to the button that opened the dialog, however it was pressed

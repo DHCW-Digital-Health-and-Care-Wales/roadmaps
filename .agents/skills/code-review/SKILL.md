@@ -27,7 +27,10 @@ not post, change code, merge or message other people as part of reviewing.
    working-tree and untracked files when defaulted, which a three-dot diff
    misses. Keep the checkout read-only; read other revisions with
    `git show <sha>:<path>`. A bad ref is a scope error; an empty scope is
-   "nothing to review", not a pass.
+   "nothing to review", not a pass. Read every changed line of the scope, docs
+   included, a file or a directory at a time so each output arrives whole. A
+   diff read through `head` or a filter, and an output a tool cut or saved to
+   a file, still has lines unread: read the rest before going on.
 2. **Find the requirements.** Read the user's instructions and the linked
    story, defect or chore (`docs/backlog/`, ids `STY-<nnn>`, `DEF-<nnn>`, `CHO-<nnn>`) with
    its acceptance criteria, the PR body and the binding ADRs in `docs/adr/`,
@@ -44,9 +47,11 @@ not post, change code, merge or message other people as part of reviewing.
    name, type, CSS class, fake or comment proves behavior. Trace quality-review
    handoffs too.
 4. **Apply the lenses** (general, then each area the diff reaches), labelling requirements and regression
-   findings separately. A docs-only diff is reviewed against `docs/AGENTS.md`
-   (the records guide): do the records agree with the code and each other, and
-   is a status or acceptance claim true? Invent no other risk.
+   findings separately. The docs a diff changes, which is all of a docs-only
+   one, are reviewed against `docs/AGENTS.md` (the records guide): do the
+   records agree with the code and each other, is a status or acceptance claim
+   true, and does each test a record cites as evidence exist under that name
+   and hold what the record says? Invent no other risk.
 5. **Verify plausible findings** with a concrete trigger and an observed or
    code-derived failure path. Run a focused test, minimal reproduction or
    computed-style check when useful, outputs and caches under `/tmp`:

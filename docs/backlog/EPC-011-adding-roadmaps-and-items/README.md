@@ -230,11 +230,11 @@ flowchart LR
 - [DEF-009](../_archive/defects/DEF-009-a-published-new-item-is-not-shown-when-the-read-after-it-fails.md):
   a new item that was published is not shown when the read after the publish fails,
   until a Refresh succeeds. Done; found by STY-046's review.
-- [DEF-010](../defects/DEF-010-a-publishing-dialog-changes-what-it-shows-once-written.md):
+- [DEF-010](../_archive/defects/DEF-010-a-publishing-dialog-changes-what-it-shows-once-written.md):
   a dialog that publishes changes what it shows once its changes are no longer
   pending: the publish dialog's list empties, as it closes or when a read leaves
-  nothing to publish, and a tick box can appear. Proposed (owner, 2026-11-15); found
-  by STY-047's delivery.
+  nothing to publish, and a tick box can appear. Done (delivered in its PR, awaiting
+  merge); found by STY-047's delivery.
 - [DEF-011](../defects/DEF-011-an-edit-back-to-the-text-last-read-is-dropped-before-a-read-holds-a-publish.md):
   an edit back to the text last read is dropped while a published edit waits for a
   read. Needs triage; found by DEF-009's review.

@@ -98,7 +98,7 @@ in the dialog
   was. A read that leaves nothing to publish while the dialog is open does the same,
   until the dialog is cancelled or confirmed. Recorded, not fixed here, with the tick
   box that appears as either dialog closes:
-  [DEF-010](../../defects/DEF-010-a-publishing-dialog-changes-what-it-shows-once-written.md).
+  [DEF-010](../defects/DEF-010-a-publishing-dialog-changes-what-it-shows-once-written.md).
 - **Every alert dialog scrolls when it is taller than the screen** (agent): "Publish
   roadmap" became the third to need it, with the publish dialog and a family's, so
   the two copies of the rule went into the dialog itself.

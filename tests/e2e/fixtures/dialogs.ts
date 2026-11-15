@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test"
 
+import type { Language } from "./look"
 import { connect, expect, roadmapCards } from "./test"
 
 // The form dialogs (EPC-011, _The dialogs_): how a spec opens one and clicks outside
@@ -18,6 +19,23 @@ export const ADD_ROADMAP = {
   title: "Add a roadmap",
   firstField: "Title",
 } as const satisfies DialogNames
+
+/**
+ * The roadmap dialog editing what a roadmap is about, in each language: `opener` is
+ * the Edit beside "About this roadmap", which opens it.
+ */
+const EDIT_ROADMAP = {
+  en: {
+    opener: "Edit About this roadmap",
+    title: "Edit this roadmap",
+    firstField: "Title",
+  },
+  cy: {
+    opener: "Golygu Ynglŷn â'r map trywydd hwn",
+    title: "Golygu'r map trywydd hwn",
+    firstField: "Teitl (Saesneg)",
+  },
+} as const satisfies Record<Language, DialogNames & { opener: string }>
 
 /**
  * Clicks `opener` and returns the dialog it opens, once focus is in its first field:
@@ -73,10 +91,47 @@ export async function openAddRoadmapDialog(
   await connect(page)
   await expect(roadmapCards(page)).toHaveCount(3)
   const dialog = await openDialog(page, addRoadmapButtons(page), ADD_ROADMAP)
-  if (offersLists) {
-    for (const name of ["Family", "Category"]) {
-      await expect(dialog.getByRole("combobox", { name })).toBeEnabled()
-    }
-  }
+  if (offersLists) await expectOffersLists(dialog)
   return dialog
+}
+
+/** About's Edit, on a roadmap's page in `language`. */
+export function editRoadmapButton(
+  page: Page,
+  language: Language = "en",
+): Locator {
+  return page
+    .getByRole("main")
+    .getByRole("button", { name: EDIT_ROADMAP[language].opener })
+}
+
+/**
+ * Opens the roadmap dialog on the roadmap whose page is open, from About's Edit. As
+ * `openAddRoadmapDialog`, a spec whose spreadsheet has the family and category lists
+ * passes `offersLists`; one on the Welsh interface passes its `language`.
+ */
+export async function openEditRoadmapDialog(
+  page: Page,
+  {
+    offersLists = false,
+    language = "en",
+  }: { offersLists?: boolean; language?: Language } = {},
+): Promise<Locator> {
+  const dialog = await openDialog(
+    page,
+    editRoadmapButton(page, language),
+    EDIT_ROADMAP[language],
+  )
+  if (offersLists) await expectOffersLists(dialog)
+  return dialog
+}
+
+/**
+ * Waits for the roadmap dialog to offer a family and a category, their lists read: each
+ * is a select, held while its list is read.
+ */
+async function expectOffersLists(dialog: Locator): Promise<void> {
+  const selects = dialog.getByRole("combobox")
+  await expect(selects).toHaveCount(2)
+  for (const select of await selects.all()) await expect(select).toBeEnabled()
 }

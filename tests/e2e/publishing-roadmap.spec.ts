@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test"
 
+import { openEditRoadmapDialog } from "./fixtures/dialogs"
 import {
   EXAMPLE_INDEX_ROWS,
   withRoadmapIndex,
@@ -106,10 +107,9 @@ test("saves and publishes a roadmap's unsaved edits in one write (S5)", async ({
 }) => {
   await openProductC(page)
   const main = page.getByRole("main")
-  await main.getByRole("button", { name: "Edit About this roadmap" }).click()
-  const status = main.getByRole("textbox", { name: "Status" })
-  await status.fill("Beta")
-  await main.getByRole("button", { name: "Done" }).click()
+  const editing = await openEditRoadmapDialog(page)
+  await editing.getByRole("textbox", { name: "Status" }).fill("Beta")
+  await editing.getByRole("button", { name: "Done" }).click()
   await expect(main.getByText("1 change to save")).toBeVisible()
 
   await main.getByRole("button", { name: "Publish roadmap" }).click()

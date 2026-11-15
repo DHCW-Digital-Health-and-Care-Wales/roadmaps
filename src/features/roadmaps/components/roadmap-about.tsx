@@ -10,11 +10,6 @@ type AboutField =
 
 export interface RoadmapAboutProps {
   roadmap: Roadmap
-  /**
-   * A form editing the roadmap's text, given the heading's id to be named by, shown in
-   * place of the fields.
-   */
-  form?: ((headingId: string) => ReactNode) | undefined
   /** Controls beside the heading, such as Edit. */
   actions?: ReactNode | undefined
 }
@@ -26,7 +21,7 @@ export interface RoadmapAboutProps {
  * none says so, so editing has a place to start. Then, always, when it was last
  * updated, as its list card shows the date, or that it has none (STY-036 S1).
  */
-export function RoadmapAbout({ roadmap, form, actions }: RoadmapAboutProps) {
+export function RoadmapAbout({ roadmap, actions }: RoadmapAboutProps) {
   const { t } = useTranslation()
   const language = useLanguage()
   const headingId = useId()
@@ -66,33 +61,25 @@ export function RoadmapAbout({ roadmap, form, actions }: RoadmapAboutProps) {
         </h2>
         {actions}
       </div>
-      {form ? (
-        <div className="max-w-prose">{form(headingId)}</div>
-      ) : (
-        <>
-          {fields.length === 0 && (
-            <p className="text-muted-foreground">{t("roadmaps.about.empty")}</p>
-          )}
-          <dl className="flex max-w-prose flex-col gap-3">
-            {fields.map(({ key, value }) => (
-              <div key={key} className="flex flex-col gap-0.5">
-                <dt className="font-bold">
-                  {t(`roadmaps.about.fields.${key}`)}
-                </dt>
-                <dd className="wrap-break-word whitespace-pre-line">{value}</dd>
-              </div>
-            ))}
-            <div className="flex flex-col gap-0.5">
-              <dt className="font-bold">
-                {t("roadmaps.about.fields.lastUpdated")}
-              </dt>
-              <dd className={updated ? undefined : "text-muted-foreground"}>
-                {updated ?? t("roadmaps.about.noDate")}
-              </dd>
-            </div>
-          </dl>
-        </>
+      {fields.length === 0 && (
+        <p className="text-muted-foreground">{t("roadmaps.about.empty")}</p>
       )}
+      <dl className="flex max-w-prose flex-col gap-3">
+        {fields.map(({ key, value }) => (
+          <div key={key} className="flex flex-col gap-0.5">
+            <dt className="font-bold">{t(`roadmaps.about.fields.${key}`)}</dt>
+            <dd className="wrap-break-word whitespace-pre-line">{value}</dd>
+          </div>
+        ))}
+        <div className="flex flex-col gap-0.5">
+          <dt className="font-bold">
+            {t("roadmaps.about.fields.lastUpdated")}
+          </dt>
+          <dd className={updated ? undefined : "text-muted-foreground"}>
+            {updated ?? t("roadmaps.about.noDate")}
+          </dd>
+        </div>
+      </dl>
     </section>
   )
 }

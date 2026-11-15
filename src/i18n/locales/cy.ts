@@ -451,6 +451,7 @@ export const cy = {
       move: "Symud",
       moveTo: "Symud i",
       choosePlacement: "Dewiswch orwel neu adran",
+      roadmapHeading: "Golygu'r map trywydd hwn",
       roadmapFields: {
         title: "Teitl (Saesneg)",
         statusLabel: "Statws (Saesneg)",

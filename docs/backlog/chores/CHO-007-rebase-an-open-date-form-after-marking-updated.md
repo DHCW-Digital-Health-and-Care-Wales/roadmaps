@@ -43,6 +43,12 @@ and publishes
 
 ## Decisions
 
+- **D1** (agent, 2026-11-15, STY-043): About is now edited in the roadmap dialog, which
+  is modal, so the publish bar can't be used while the form is open with the date
+  changed. The path in the Summary is left only where the dialog is opened while that
+  publish is still being written. The owner may prefer to close this chore: until
+  then it stays Proposed.
+
 ## Out of scope
 
 - A co-lead's date written while the form is open: still a conflict (STY-036 S9).

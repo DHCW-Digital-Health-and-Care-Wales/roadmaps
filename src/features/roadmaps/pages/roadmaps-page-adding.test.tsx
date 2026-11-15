@@ -23,6 +23,10 @@ import {
   type InMemoryRoadmapRepository,
   type InMemoryRoadmapRepositoryOptions,
 } from "../testing/in-memory-roadmap-repository"
+import {
+  confirmRoadmapEdit,
+  openEditRoadmapDialog,
+} from "../testing/roadmap-dialog"
 
 const connected: AuthState = {
   status: "connected",
@@ -499,14 +503,10 @@ describe("adding a roadmap from the list (STY-041)", () => {
       await user.click(
         await main().findByRole("link", { name: "Patient Summary roadmap" }),
       )
-      await user.click(
-        await main().findByRole("button", { name: "Edit About this roadmap" }),
-      )
-      const about = within(
-        main().getByRole("form", { name: "About this roadmap" }),
-      )
+      await main().findByRole("button", { name: "Edit About this roadmap" })
+      const about = await openEditRoadmapDialog(user)
       await user.type(about.getByRole("textbox", { name: "Title" }), " draft")
-      await user.click(about.getByRole("button", { name: "Done" }))
+      await confirmRoadmapEdit(user)
       await removePatientSummary(user, repository)
       await main().findByText(
         "This roadmap was removed from the list, so your changes to it couldn't be kept.",

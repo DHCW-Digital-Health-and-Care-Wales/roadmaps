@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright"
 import type { Page } from "@playwright/test"
 
-import { openAddRoadmapDialog } from "./fixtures/dialogs"
+import { openAddRoadmapDialog, openEditRoadmapDialog } from "./fixtures/dialogs"
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
 import {
   EXAMPLE_INDEX_ROWS,
@@ -161,15 +161,19 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expect(form.getByText("Enter a title")).toBeVisible()
       await expectNoAxeViolations(page, theme)
 
-      // A pending change: the marker, the publish bar and the roadmap's form.
+      // A pending change: the marker, the publish bar and the roadmap dialog, opened
+      // and then with a field in error (STY-043).
       await form.getByRole("textbox", { name: "Title" }).fill("A clearer card")
       await form.getByRole("button", { name: "Done" }).click()
-      await main
-        .getByRole("button", { name: "Edit About this roadmap" })
-        .click()
-      await expect(main.getByRole("form")).toBeVisible()
+      const editing = await openEditRoadmapDialog(page)
       await expectNoAxeViolations(page, theme)
-      await main.getByRole("form").getByRole("button", { name: "Done" }).click()
+      const roadmapTitle = editing.getByRole("textbox", { name: "Title" })
+      await roadmapTitle.fill("")
+      await editing.getByRole("button", { name: "Done" }).click()
+      await expect(editing.getByText("Enter a title")).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+      await roadmapTitle.fill("Product A, renamed")
+      await editing.getByRole("button", { name: "Done" }).click()
 
       await main.getByRole("button", { name: "Publish changes" }).click()
       const dialog = page.getByRole("alertdialog")
@@ -468,14 +472,12 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await page.goto("./#/roadmaps/producta")
       await connect(page)
       const main = page.getByRole("main")
-      await main
-        .getByRole("button", { name: "Edit About this roadmap" })
-        .click()
-      const family = main.getByRole("combobox", { name: "Family" })
+      const editing = await openEditRoadmapDialog(page, { offersLists: true })
+      const family = editing.getByRole("combobox", { name: "Family" })
       await family.selectOption("Medicines & Diagnostics")
       await expectNoAxeViolations(page, theme)
 
-      await main.getByRole("form").getByRole("button", { name: "Done" }).click()
+      await editing.getByRole("button", { name: "Done" }).click()
       await expect(
         main.getByText("Family: Medicines & Diagnostics"),
       ).toBeVisible()
@@ -611,11 +613,11 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await connect(page, "Cysylltu â Google")
       const main = page.getByRole("main")
       const about = "Ynglŷn â'r map trywydd hwn"
-      await main.getByRole("button", { name: `Golygu ${about}` }).click()
-      await main
+      const editing = await openEditRoadmapDialog(page, { language: "cy" })
+      await editing
         .getByRole("textbox", { name: "Gweledigaeth (Saesneg)" })
         .fill("My vision.")
-      await main.getByRole("button", { name: "Gorffen" }).click()
+      await editing.getByRole("button", { name: "Gorffen" }).click()
       sheets.coLead("Roadmaps", "ProductA", "Vision", "Their vision.")
       await main.getByRole("button", { name: "Cyhoeddi'r newidiadau" }).click()
       await page

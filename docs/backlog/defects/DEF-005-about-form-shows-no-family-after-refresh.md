@@ -60,4 +60,12 @@ change
 
 ## Decisions
 
+- **D1** (agent, 2026-11-15, STY-043): About is now edited in the roadmap dialog, which
+  is modal, so Refresh can't be pressed while the form is open. The defect is reached
+  only when a Refresh asked for before the dialog opens is read while it is open, and
+  S1 reads that way. The fields are now built in `EditRoadmapForm`
+  (`src/features/roadmaps/dialogs/edit-roadmap-form.tsx`), still from the roadmap as
+  read now; `EditableRoadmapAbout` keeps the roadmap as shown when the dialog opened
+  (`opened.shown`), which a fix would build the options from.
+
 ## Delivery _(add on delivery; as in `story.md`)_

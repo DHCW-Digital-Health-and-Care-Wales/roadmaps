@@ -13,6 +13,12 @@ import {
   createInMemoryRoadmapRepository,
   type InMemoryRoadmapRepository,
 } from "../testing/in-memory-roadmap-repository"
+import {
+  confirmRoadmapEdit,
+  editRoadmapDialog,
+  editRoadmapText,
+  openEditRoadmapDialog,
+} from "../testing/roadmap-dialog"
 
 const connected: AuthState = {
   status: "connected",
@@ -58,10 +64,15 @@ async function renderPage({
   return { user, repository }
 }
 
-/** Opens the About form and gives its date field. */
+/** Opens the dialog editing About and gives its date field. */
 async function openForm(user: User) {
-  await user.click(main().getByRole("button", { name: /^Edit About/ }))
-  return main().getByLabelText("Last updated")
+  const form = await openEditRoadmapDialog(user)
+  return form.getByLabelText("Last updated")
+}
+
+/** Chooses `name` in the open dialog: a Done it refuses, or Today. */
+function choose(user: User, name: string) {
+  return user.click(editRoadmapDialog().getByRole("button", { name }))
 }
 
 /** Sets the date field as the browser's date input does once a date is picked. */
@@ -111,7 +122,7 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
     expect(field).toHaveValue("2026-10-02")
     pick(field, "2026-11-10")
     expect(field).toHaveValue("2026-11-10")
-    await user.click(main().getByRole("button", { name: "Done" }))
+    await confirmRoadmapEdit(user)
 
     expect(about().getByText("10 November 2026")).toBeInTheDocument()
     expect(about().getByText("Changed")).toBeInTheDocument()
@@ -128,7 +139,7 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
 
     const field = await openForm(user)
     expect(field).toHaveAttribute("max", "2026-11-13")
-    await user.click(main().getByRole("button", { name: "Today" }))
+    await choose(user, "Today")
 
     expect(field).toHaveValue("2026-11-13")
   })
@@ -142,12 +153,12 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
     fireEvent.focus(field)
     expect(field).toHaveAttribute("max", "2026-11-14")
     pick(field, "2026-11-14")
-    await user.click(main().getByRole("button", { name: "Done" }))
+    await confirmRoadmapEdit(user)
     expect(main().getByText("1 unpublished change")).toBeInTheDocument()
 
-    await openForm(user)
-    await user.click(main().getByRole("button", { name: "Today" }))
-    expect(main().getByLabelText("Last updated")).toHaveValue("2026-11-14")
+    const reopened = await openForm(user)
+    await choose(user, "Today")
+    expect(reopened).toHaveValue("2026-11-14")
   })
 
   it("refuses a date after today with a message, until it is fixed (S4)", async () => {
@@ -155,17 +166,18 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
 
     const field = await openForm(user)
     pick(field, "2026-11-20")
-    await user.click(main().getByRole("button", { name: "Done" }))
+    await choose(user, "Done")
 
     expect(field).toHaveAccessibleDescription(
       "Error: Enter today's date or an earlier one",
     )
     expect(field).toHaveAttribute("aria-invalid", "true")
     expect(field).toHaveFocus()
-    expect(main().queryByText(/unpublished change/)).toBeNull()
+    // By its text: the page is out of reach of role queries behind the dialog.
+    expect(screen.queryByText(/unpublished change/)).toBeNull()
 
     pick(field, "2026-11-13")
-    await user.click(main().getByRole("button", { name: "Done" }))
+    await confirmRoadmapEdit(user)
     expect(main().getByText("1 unpublished change")).toBeInTheDocument()
   })
 
@@ -174,11 +186,7 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
       roadmaps: [{ ...productA, lastUpdated: "2027-01-01" }, draft],
     })
 
-    await openForm(user)
-    const status = main().getByRole("textbox", { name: "Status" })
-    await user.clear(status)
-    await user.type(status, "Live")
-    await user.click(main().getByRole("button", { name: "Done" }))
+    await editRoadmapText(user, "Status", "Live")
 
     expect(main().getByText("1 unpublished change")).toBeInTheDocument()
   })
@@ -191,19 +199,20 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
     Object.defineProperty(field, "validity", {
       value: { badInput: true },
     })
-    await user.click(main().getByRole("button", { name: "Done" }))
+    await choose(user, "Done")
 
     expect(field).toHaveAccessibleDescription(
       "Error: Enter a real date, or clear the field",
     )
-    expect(main().queryByText(/unpublished change/)).toBeNull()
+    expect(editRoadmapDialog().getByLabelText("Last updated")).toBe(field)
+    expect(screen.queryByText(/unpublished change/)).toBeNull()
   })
 
   it("clears the date, publishing an empty date (S5)", async () => {
     const { user, repository } = await renderPage()
 
     pick(await openForm(user), "")
-    await user.click(main().getByRole("button", { name: "Done" }))
+    await confirmRoadmapEdit(user)
     expect(about().getByText("No date")).toBeInTheDocument()
     await publish(user, "Publish changes")
 
@@ -213,12 +222,8 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
   })
 
   describe("Mark as updated today (S6, S7)", () => {
-    async function editStatus(user: User, to = "Live") {
-      await user.click(main().getByRole("button", { name: /^Edit About/ }))
-      const status = main().getByRole("textbox", { name: "Status" })
-      await user.clear(status)
-      await user.type(status, to)
-      await user.click(main().getByRole("button", { name: "Done" }))
+    function editStatus(user: User, to = "Live") {
+      return editRoadmapText(user, "Status", to)
     }
 
     function tickBox() {
@@ -312,7 +317,7 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
     it("isn't offered while a date is pending, which is published instead (S7)", async () => {
       const { user, repository } = await renderPage()
       pick(await openForm(user), "2026-11-10")
-      await user.click(main().getByRole("button", { name: "Done" }))
+      await confirmRoadmapEdit(user)
 
       await user.click(main().getByRole("button", { name: "Publish changes" }))
       expect(tickBox()).toBeNull()
@@ -331,7 +336,7 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
   it("shows a co-lead's date beside yours in the review, as dates (S9)", async () => {
     const { user, repository } = await renderPage()
     pick(await openForm(user), "2026-11-10")
-    await user.click(main().getByRole("button", { name: "Done" }))
+    await confirmRoadmapEdit(user)
     repository.coLead((list) => {
       const roadmap = list.find(({ id }) => id === "producta")
       if (roadmap) roadmap.lastUpdated = "2026-11-01"
@@ -373,14 +378,14 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
     ).not.toBeChecked()
     await user.keyboard("{Escape}")
 
-    await user.click(main().getByRole("button", { name: /^Golygu Ynglŷn/ }))
-    const field = main().getByLabelText("Diweddarwyd ddiwethaf")
+    const form = await openEditRoadmapDialog(user, "cy")
+    const field = form.getByLabelText("Diweddarwyd ddiwethaf")
     pick(field, "2026-11-20")
-    await user.click(main().getByRole("button", { name: "Gorffen" }))
+    await user.click(form.getByRole("button", { name: "Gorffen" }))
     expect(field).toHaveAccessibleDescription(
       "Gwall: Rhowch ddyddiad heddiw neu un cynharach",
     )
-    await user.click(main().getByRole("button", { name: "Heddiw" }))
+    await user.click(form.getByRole("button", { name: "Heddiw" }))
     expect(field).toHaveValue("2026-11-13")
   })
 })

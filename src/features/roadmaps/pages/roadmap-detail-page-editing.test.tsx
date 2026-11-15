@@ -1,4 +1,4 @@
-import { act, screen, within } from "@testing-library/react"
+import { act, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
@@ -22,6 +22,12 @@ import {
   type InMemoryRoadmapItems,
   type InMemoryRoadmapRepository,
 } from "../testing/in-memory-roadmap-repository"
+import {
+  confirmRoadmapEdit,
+  editRoadmapDialog,
+  editRoadmapText,
+  openEditRoadmapDialog,
+} from "../testing/roadmap-dialog"
 
 const connected: AuthState = {
   status: "connected",
@@ -291,12 +297,7 @@ describe("Editing what a roadmap is about (STY-025)", () => {
   it("edits the roadmap's five fields, tagging the block and the title (S5)", async () => {
     const { user } = await renderPage()
 
-    await user.click(
-      main().getByRole("button", { name: "Edit About this roadmap" }),
-    )
-    const form = within(
-      main().getByRole("form", { name: "About this roadmap" }),
-    )
+    const form = await openEditRoadmapDialog(user)
     expect(
       form
         .getAllByRole("textbox")
@@ -314,7 +315,7 @@ describe("Editing what a roadmap is about (STY-025)", () => {
       form.getByRole("textbox", { name: "Product lead" }),
       "Alex Jones",
     )
-    await user.click(form.getByRole("button", { name: "Done" }))
+    await confirmRoadmapEdit(user)
 
     const heading = main().getByRole("heading", {
       level: 1,
@@ -326,20 +327,20 @@ describe("Editing what a roadmap is about (STY-025)", () => {
     )
     expect(about.getByText("Alex Jones")).toBeInTheDocument()
     expect(about.getByText("Changed")).toBeInTheDocument()
-    expect(
-      about.getByRole("button", { name: "Edit About this roadmap" }),
-    ).toHaveFocus()
+    await waitFor(() => {
+      expect(
+        about.getByRole("button", { name: "Edit About this roadmap" }),
+      ).toHaveFocus()
+    })
     expect(main().getByText("2 unpublished changes")).toBeInTheDocument()
   })
 
   it("tags only the block when the title is unchanged, and undoes it all", async () => {
     const { user } = await renderPage()
 
-    await user.click(
-      main().getByRole("button", { name: "Edit About this roadmap" }),
-    )
-    await user.clear(main().getByRole("textbox", { name: "Vision" }))
-    await user.click(main().getByRole("button", { name: "Done" }))
+    const form = await openEditRoadmapDialog(user)
+    await user.clear(form.getByRole("textbox", { name: "Vision" }))
+    await confirmRoadmapEdit(user)
 
     const heading = main().getByRole("heading", {
       level: 1,
@@ -351,6 +352,100 @@ describe("Editing what a roadmap is about (STY-025)", () => {
     )
     expect(main().getByText("A clear vision.")).toBeInTheDocument()
     expect(main().queryByText(/unpublished change/)).toBeNull()
+    expect(
+      main().getByRole("button", { name: "Edit About this roadmap" }),
+    ).toHaveFocus()
+  })
+})
+
+describe("Editing what a roadmap is about in the roadmap dialog (STY-043)", () => {
+  it("opens the roadmap dialog on every About field and no short name, the page behind it as it was (S1)", async () => {
+    const { user } = await renderPage()
+    await editRoadmapText(user, "Vision", "A clear vision. Still.")
+
+    const form = await openEditRoadmapDialog(user)
+
+    expect(form.getByRole("form", { name: "Edit this roadmap" })).toBeVisible()
+    expect(
+      form
+        .getAllByRole("textbox")
+        .map((field) => (field as HTMLInputElement).labels?.[0]?.textContent),
+    ).toEqual([
+      "Title",
+      "Status",
+      "Product lead",
+      "Vision",
+      "Service description",
+    ])
+    // No family or category list here, so each is shown as it is.
+    expect(form.getByText("Family")).toBeInTheDocument()
+    expect(form.getByText("Category")).toBeInTheDocument()
+    expect(form.getByLabelText("Last updated")).toHaveAttribute("type", "date")
+    // Its pending edit is what the field opens on.
+    expect(form.getByRole("textbox", { name: "Vision" })).toHaveValue(
+      "A clear vision. Still.",
+    )
+    expect(form.queryByRole("textbox", { name: "Short name" })).toBeNull()
+    // The page stays as it was behind the dialog, out of reach: the in-place form took
+    // the panel's place.
+    const about = screen.getByRole("region", {
+      name: "About this roadmap",
+      hidden: true,
+    })
+    expect(within(about).getByText("A clear vision. Still.")).toBeVisible()
+    expect(screen.getByText("1 unpublished change")).toBeVisible()
+  })
+
+  it.each([
+    [
+      "Cancel",
+      (user: User) =>
+        user.click(editRoadmapDialog().getByRole("button", { name: "Cancel" })),
+    ],
+    ["Escape", (user: User) => user.keyboard("{Escape}")],
+  ])(
+    "%s closes it, dropping what was typed and keeping the edits already pending, with focus back on Edit (S4)",
+    async (_how, close) => {
+      const { user } = await renderPage()
+      await editRoadmapText(user, "Vision", "A clear vision. Still.")
+      const form = await openEditRoadmapDialog(user)
+      await user.type(form.getByRole("textbox", { name: "Status" }), ", soon")
+
+      await close(user)
+
+      await waitFor(() => {
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+      })
+      const edit = main().getByRole("button", {
+        name: "Edit About this roadmap",
+      })
+      await waitFor(() => {
+        expect(edit).toHaveFocus()
+      })
+      expect(main().getByText("A clear vision. Still.")).toBeInTheDocument()
+      expect(main().getByText("1 unpublished change")).toBeInTheDocument()
+      const reopened = await openEditRoadmapDialog(user)
+      expect(reopened.getByRole("textbox", { name: "Status" })).toHaveValue(
+        "Live",
+      )
+    },
+  )
+
+  it("keeps the dialog and what was typed when the session expires, and Done still keeps the edits (S4)", async () => {
+    const { user, authClient } = await renderPage()
+    const form = await openEditRoadmapDialog(user)
+    await user.type(form.getByRole("textbox", { name: "Status" }), ", soon")
+
+    act(() => {
+      authClient.setState({ status: "expired" })
+    })
+
+    expect(form.getByRole("textbox", { name: "Status" })).toHaveValue(
+      "Live, soon",
+    )
+    await confirmRoadmapEdit(user)
+    expect(main().getByText("Live, soon")).toBeInTheDocument()
+    expect(main().getByText("1 unpublished change")).toBeInTheDocument()
   })
 })
 
@@ -423,31 +518,37 @@ describe("Keeping a roadmap's changes (STY-025)", () => {
     expect(main().getByText("1 unpublished change")).toBeInTheDocument()
   })
 
-  it("leaves alone a co-lead's change, read while a form was open, to a field it did not change", async () => {
+  it("leaves alone a co-lead's change, read while the roadmap dialog was open, to a field it did not change", async () => {
     const repository = createInMemoryRoadmapRepository(roadmaps, roadmapItems)
     const { user } = await renderPage({ repository })
-    await user.click(
-      main().getByRole("button", { name: "Edit About this roadmap" }),
-    )
-    await user.type(main().getByRole("textbox", { name: "Title" }), " v2")
-
-    const read = vi
-      .spyOn(repository, "listRoadmaps")
-      .mockResolvedValue(
+    const { held, release, released } = holdCall(() =>
+      Promise.resolve(
         roadmaps.map((roadmap) =>
           roadmap.id === "producta"
             ? { ...roadmap, vision: { en: "A co-lead's vision.", cy: "" } }
             : roadmap,
         ),
-      )
+      ),
+    )
+    vi.spyOn(repository, "listRoadmaps").mockImplementation(held)
+
+    // The dialog is modal, so the Refresh is asked for before it opens, and read after.
     await user.click(main().getByRole("button", { name: "Refresh" }))
-    await vi.waitFor(() => {
-      expect(read).toHaveBeenCalled()
+    const form = await openEditRoadmapDialog(user)
+    await user.type(form.getByRole("textbox", { name: "Title" }), " v2")
+    expect(held).toHaveBeenCalled()
+    await act(async () => {
+      release()
+      await released
     })
-    await user.click(main().getByRole("button", { name: "Done" }))
+    await screen.findByText("A co-lead's vision.")
+    await confirmRoadmapEdit(user)
 
     expect(main().getByText("1 unpublished change")).toBeInTheDocument()
-    expect(await main().findByText("A co-lead's vision.")).toBeInTheDocument()
+    expect(main().getByText("A co-lead's vision.")).toBeInTheDocument()
+    expect(
+      main().getByRole("heading", { level: 1, name: "Product A roadmap v2" }),
+    ).toBeInTheDocument()
   })
 
   it("closes the form of an item without an ID when a read puts another item in its place", async () => {
@@ -521,11 +622,9 @@ describe("Publishing a roadmap's changes (STY-025)", () => {
     await user.clear(main().getByRole("textbox", { name: "Description" }))
     await user.type(main().getByRole("textbox", { name: "Phase" }), "Beta")
     await user.click(main().getByRole("button", { name: "Done" }))
-    await user.click(
-      main().getByRole("button", { name: "Edit About this roadmap" }),
-    )
-    await user.clear(main().getByRole("textbox", { name: "Vision" }))
-    await user.click(main().getByRole("button", { name: "Done" }))
+    const about = await openEditRoadmapDialog(user)
+    await user.clear(about.getByRole("textbox", { name: "Vision" }))
+    await confirmRoadmapEdit(user)
 
     await user.click(main().getByRole("button", { name: "Publish changes" }))
 
@@ -962,14 +1061,8 @@ describe("A co-lead's changes (STY-026)", () => {
     )
   }
 
-  async function editVision(user: User, to: string) {
-    await user.click(
-      main().getByRole("button", { name: "Edit About this roadmap" }),
-    )
-    const vision = main().getByRole("textbox", { name: "Vision" })
-    await user.clear(vision)
-    await user.type(vision, to)
-    await user.click(main().getByRole("button", { name: "Done" }))
+  function editVision(user: User, to: string) {
+    return editRoadmapText(user, "Vision", to)
   }
 
   /** The review, once the publish it follows has ended. */

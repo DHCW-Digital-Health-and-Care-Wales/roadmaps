@@ -24,6 +24,10 @@ import {
   createInMemoryRoadmapRepository,
   type InMemoryRoadmapRepository,
 } from "../testing/in-memory-roadmap-repository"
+import {
+  confirmRoadmapEdit,
+  openEditRoadmapDialog,
+} from "../testing/roadmap-dialog"
 
 const connected: AuthState = {
   status: "connected",
@@ -65,10 +69,7 @@ async function renderPage(repository: InMemoryRoadmapRepository) {
     repository,
   })
   await main().findByRole("heading", { level: 3, name: "First item" })
-  await user.click(
-    main().getByRole("button", { name: "Edit About this roadmap" }),
-  )
-  const form = within(main().getByRole("form", { name: "About this roadmap" }))
+  const form = await openEditRoadmapDialog(user)
   return { user, form }
 }
 
@@ -103,7 +104,7 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
       "Medicines & Diagnostics",
     ])
     await user.selectOptions(family, MEDICINES_AND_DIAGNOSTICS.id)
-    await user.click(form.getByRole("button", { name: "Done" }))
+    await confirmRoadmapEdit(user)
 
     const line = main().getByText("Family: Medicines & Diagnostics")
     // The family line's swatch sits before its text.
@@ -114,24 +115,32 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
     expect(write).not.toHaveBeenCalled()
   })
 
-  it("reads the lists again on Refresh while About is open", async () => {
+  it("offers the lists a Refresh asked for, read again while the dialog is open", async () => {
     const repository = repositoryWith()
     const { user, form } = await renderPage(repository)
     await select(form, "Family")
+    await user.click(form.getByRole("button", { name: "Cancel" }))
+    await main().findByRole("button", { name: "Refresh" })
     const workforce: Family = {
       id: "x7k2m9qp",
       name: { en: "Workforce", cy: "Gweithlu" },
       colour: "#5f3d8a",
     }
-    vi.spyOn(repository, "listFamilies").mockResolvedValue([
-      ...TEST_FAMILIES,
-      workforce,
-    ])
+    const { held, release } = holdCall(() =>
+      Promise.resolve([...TEST_FAMILIES, workforce]),
+    )
+    vi.spyOn(repository, "listFamilies").mockImplementation(held)
 
+    // The dialog is modal, so a Refresh is asked for before it opens.
     await user.click(main().getByRole("button", { name: "Refresh" }))
+    const reopened = await openEditRoadmapDialog(user)
+    const family = reopened.getByRole("combobox", { name: "Family" })
+    expect(family).toBeEnabled()
+    expect(optionsOf(family)).not.toContain("Workforce")
+    release()
 
-    await vi.waitFor(async () => {
-      expect(optionsOf(await select(form, "Family"))).toContain("Workforce")
+    await vi.waitFor(() => {
+      expect(optionsOf(family)).toContain("Workforce")
     })
   })
 
@@ -146,7 +155,7 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
     ])
     expect(form.queryByRole("textbox", { name: "Category" })).toBeNull()
     await user.selectOptions(category, "No category")
-    await user.click(form.getByRole("button", { name: "Done" }))
+    await confirmRoadmapEdit(user)
 
     expect(main().queryByText(/^Category:/)).toBeNull()
     expect(main().getByText("1 unpublished change")).toBeInTheDocument()
@@ -160,7 +169,7 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
       await select(form, "Family"),
       MEDICINES_AND_DIAGNOSTICS.id,
     )
-    await user.click(form.getByRole("button", { name: "Done" }))
+    await confirmRoadmapEdit(user)
     await user.click(main().getByRole("button", { name: "Publish changes" }))
     await user.click(
       within(screen.getByRole("alertdialog")).getByRole("button", {
@@ -222,7 +231,7 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
     const repository = repositoryWith()
     const { user, form } = await renderPage(repository)
     await user.selectOptions(await select(form, "Family"), "No family")
-    await user.click(form.getByRole("button", { name: "Done" }))
+    await confirmRoadmapEdit(user)
     repository.coLead((list) => {
       const roadmap = list.find(({ id }) => id === "producta")
       if (!roadmap) throw new Error("No Product A")
@@ -253,7 +262,7 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
     const { user, form } = await renderPage(repository)
     await user.selectOptions(await select(form, "Family"), "No family")
     await user.selectOptions(await select(form, "Category"), "No category")
-    await user.click(form.getByRole("button", { name: "Done" }))
+    await confirmRoadmapEdit(user)
     repository.coLead((list) => {
       const roadmap = list.find(({ id }) => id === "producta")
       if (!roadmap) throw new Error("No Product A")

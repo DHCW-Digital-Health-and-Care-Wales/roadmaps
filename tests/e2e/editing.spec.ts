@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test"
 
+import { openEditRoadmapDialog } from "./fixtures/dialogs"
 import {
   EXAMPLE_INDEX_ROWS,
   EXAMPLE_LISTS,
@@ -289,13 +290,12 @@ async function publishOnce(page: Page) {
   ).toBeVisible()
 }
 
-/** Edits the roadmap's English vision through "About this roadmap". */
+/** Edits the roadmap's English vision in the roadmap dialog. */
 async function editVision(page: Page, to: string) {
-  const main = page.getByRole("main")
-  await main.getByRole("button", { name: "Edit About this roadmap" }).click()
-  await main.getByRole("textbox", { name: "Vision" }).fill(to)
-  await main.getByRole("button", { name: "Done" }).click()
-  await expect(main.getByText(to)).toBeVisible()
+  const dialog = await openEditRoadmapDialog(page)
+  await dialog.getByRole("textbox", { name: "Vision" }).fill(to)
+  await dialog.getByRole("button", { name: "Done" }).click()
+  await expect(page.getByRole("main").getByText(to)).toBeVisible()
 }
 
 test.describe("a co-lead's change (STY-026)", () => {
@@ -440,12 +440,6 @@ test.describe("a family and category (STY-028)", () => {
     return Object.fromEntries(header.map((name, i) => [name, row[i] ?? ""]))
   }
 
-  async function editAbout(page: Page) {
-    const main = page.getByRole("main")
-    await main.getByRole("button", { name: "Edit About this roadmap" }).click()
-    return main.getByRole("form", { name: "About this roadmap" })
-  }
-
   test.beforeEach(({ sheets }) => {
     sheets.spreadsheet = EXAMPLE_SPREADSHEET_WITH_LISTS
   })
@@ -455,18 +449,18 @@ test.describe("a family and category (STY-028)", () => {
     sheets,
   }) => {
     await openRoadmap(page, "producta", ITEM)
-    const form = await editAbout(page)
-    const category = form.getByRole("combobox", { name: "Category" })
+    const dialog = await openEditRoadmapDialog(page)
+    const category = dialog.getByRole("combobox", { name: "Category" })
     await expect(category.getByRole("option")).toHaveText([
       "No category",
       "GP & Community Services",
       "Tests, Scans & Results",
     ])
-    await form
+    await dialog
       .getByRole("combobox", { name: "Family" })
       .selectOption("Medicines & Diagnostics")
     await category.selectOption("Tests, Scans & Results")
-    await form.getByRole("button", { name: "Done" }).click()
+    await dialog.getByRole("button", { name: "Done" }).click()
 
     const main = page.getByRole("main")
     const line = main.getByText("Family: Medicines & Diagnostics")
@@ -501,11 +495,11 @@ test.describe("a family and category (STY-028)", () => {
     sheets,
   }) => {
     await openRoadmap(page, "productb", "Building the core service")
-    const form = await editAbout(page)
-    await form
+    const dialog = await openEditRoadmapDialog(page)
+    await dialog
       .getByRole("combobox", { name: "Family" })
       .selectOption("No family")
-    await form.getByRole("button", { name: "Done" }).click()
+    await dialog.getByRole("button", { name: "Done" }).click()
 
     await confirmPublish(page, "Publish")
 
@@ -552,11 +546,11 @@ test.describe("a family and category (STY-028)", () => {
     sheets,
   }) => {
     await openRoadmap(page, "producta", ITEM)
-    const form = await editAbout(page)
-    await form
+    const dialog = await openEditRoadmapDialog(page)
+    await dialog
       .getByRole("combobox", { name: "Family" })
       .selectOption("No family")
-    await form.getByRole("button", { name: "Done" }).click()
+    await dialog.getByRole("button", { name: "Done" }).click()
     sheets.coLead("Roadmaps", "ProductA", "Family", "Medicines & Diagnostics")
 
     await confirmPublish(page, "Publish")
@@ -578,13 +572,17 @@ test.describe("a family and category (STY-028)", () => {
       ...EXAMPLE_LISTS.filter(({ title }) => title !== "Families"),
     ]
     await openRoadmap(page, "producta", ITEM)
-    const form = await editAbout(page)
+    const dialog = await openEditRoadmapDialog(page)
 
-    await expect(form.getByRole("combobox", { name: "Category" })).toBeVisible()
-    await expect(form.getByRole("combobox", { name: "Family" })).toHaveCount(0)
-    await expect(form.getByText("Single Record")).toBeVisible()
     await expect(
-      form.getByText("The family can't be changed right now."),
+      dialog.getByRole("combobox", { name: "Category" }),
+    ).toBeVisible()
+    await expect(dialog.getByRole("combobox", { name: "Family" })).toHaveCount(
+      0,
+    )
+    await expect(dialog.getByText("Single Record")).toBeVisible()
+    await expect(
+      dialog.getByText("The family can't be changed right now."),
     ).toBeVisible()
   })
 })

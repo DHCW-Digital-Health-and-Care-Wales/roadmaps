@@ -1,6 +1,6 @@
 import type { Locator, Page } from "@playwright/test"
 
-import { openAddRoadmapDialog } from "./fixtures/dialogs"
+import { openAddRoadmapDialog, openEditRoadmapDialog } from "./fixtures/dialogs"
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
 import {
   EXAMPLE_INDEX_ROWS,
@@ -221,8 +221,10 @@ test.describe("editing a roadmap (STY-025)", () => {
     await expectStructure(detailsForm, "edit-item-form-details.aria.yml")
     await detailsForm.getByRole("button", { name: "Cancel" }).click()
 
-    await main.getByRole("button", { name: "Edit About this roadmap" }).click()
-    await expectStructure(main.getByRole("form"), "edit-roadmap-form.aria.yml")
+    await expectStructure(
+      await openEditRoadmapDialog(page),
+      "edit-roadmap-dialog.aria.yml",
+    )
   })
 
   test("an item's Move menu (STY-031)", async ({ page }) => {
@@ -270,9 +272,9 @@ test.describe("editing a roadmap (STY-025)", () => {
     sheets,
   }) => {
     const main = await openWithAChange(page)
-    await main.getByRole("button", { name: "Edit About this roadmap" }).click()
-    await main.getByRole("textbox", { name: "Vision" }).fill("My vision.")
-    await main.getByRole("button", { name: "Done" }).click()
+    const editing = await openEditRoadmapDialog(page)
+    await editing.getByRole("textbox", { name: "Vision" }).fill("My vision.")
+    await editing.getByRole("button", { name: "Done" }).click()
     sheets.coLead("Roadmaps", "ProductA", "Vision", "Their vision.")
     // The edited item has no ID yet, so a new title leaves it unmatched.
     sheets.coLead("ProductA", ITEM, "Title", "Their card")

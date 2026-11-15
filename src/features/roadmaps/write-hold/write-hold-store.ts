@@ -47,6 +47,8 @@ export interface WriteHold {
   readonly request: WriteHoldRequest
   /** What a Refresh reads: every held write's reads. */
   readonly reads: readonly HoldRead[]
+  /** How many writes are held, so a Refresh tells whether one joined while it read. */
+  readonly writes: number
   readonly refresh: HoldRefresh
 }
 
@@ -59,8 +61,12 @@ export interface WriteHoldStore {
    */
   readonly hold: (request: WriteHoldRequest) => Promise<void>
   readonly setRefresh: (refresh: HoldRefresh) => void
-  /** Ends the hold, settling every `hold` made. */
-  readonly release: () => void
+  /**
+   * Ends the hold, settling every `hold` made, unless more than `writes` are held: a
+   * write held since the Refresh began may have changed what it read. Tells whether it
+   * ended.
+   */
+  readonly release: (writes: number) => boolean
 }
 
 export function createWriteHoldStore(): WriteHoldStore {
@@ -82,8 +88,14 @@ export function createWriteHoldStore(): WriteHoldStore {
                   (read) => !current.reads.some((each) => sameRead(each, read)),
                 ),
               ],
+              writes: current.writes + 1,
             }
-          : { request, reads: request.reads, refresh: { status: "idle" } },
+          : {
+              request,
+              reads: request.reads,
+              writes: 1,
+              refresh: { status: "idle" },
+            },
       )
       return new Promise((resolve) => {
         waiting.push(resolve)
@@ -93,11 +105,13 @@ export function createWriteHoldStore(): WriteHoldStore {
       const current = store.getSnapshot()
       if (current) store.setSnapshot({ ...current, refresh })
     },
-    release() {
+    release(writes) {
+      if (store.getSnapshot()?.writes !== writes) return false
       const released = waiting
       waiting = []
       store.setSnapshot(null)
       for (const resolve of released) resolve()
+      return true
     },
   }
 }

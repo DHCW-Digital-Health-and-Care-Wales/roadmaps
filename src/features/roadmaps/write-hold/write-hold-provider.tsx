@@ -93,11 +93,18 @@ function WriteHoldContent({ held, store }: WriteHoldContentProps) {
     : state.status === "connecting"
 
   const read = async () => {
-    const { reads } = store.getSnapshot() ?? held
     store.setRefresh({ status: "reading" })
     try {
-      if (await readNow(queryClient, repository, reads)) store.release()
-      else store.setRefresh({ status: "idle" })
+      // A write held while this reads may have changed what it read: read again.
+      for (;;) {
+        const current = store.getSnapshot()
+        if (!current) return
+        if (!(await readNow(queryClient, repository, current.reads))) {
+          store.setRefresh({ status: "idle" })
+          return
+        }
+        if (store.release(current.writes)) return
+      }
     } catch (error) {
       store.setRefresh({ status: "failed", error: toAppError(error).kind })
     }

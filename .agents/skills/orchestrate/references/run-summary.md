@@ -15,8 +15,8 @@ for the queue, not one record/publication PR per session.
 
 ## Collect once, at the source
 
-Keep raw events and task/head correlations in the existing run folder,
-`progress/log.txt` and `metrics.md`. `brief.md` assigns stage logging to the
+Keep raw events and task/head correlations in the existing run folder:
+`progress/log.txt` and the run handoff. `brief.md` assigns stage logging to the
 actor doing the work. The top-level orchestrator aggregates child reports on
 completion and logs its own PR stages; it never polls running tasks to fill
 metrics. Record at milestones, not on a timer. Before compaction, save the

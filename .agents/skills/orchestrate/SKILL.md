@@ -88,8 +88,8 @@ remote default branch with `--prune`. Use the existing isolated checkout;
 request a separate checkout through the delegation tool only when authorized.
 
 Create a unique run folder with `mktemp -d /tmp/orchestrate-<slug>-XXXXXX`.
-Keep `run-handoff.md`, `metrics.md`, `brief-common.md`, and progress, report
-and screenshot folders there. Resume in the existing run folder when supplied.
+Keep `run-handoff.md`, `brief-common.md`, and progress, report and
+screenshot folders there. Resume in the existing run folder when supplied.
 Write briefs using `references/brief.md`. Read `references/run-summary.md`
 to establish collection ownership and the run-summary destination.
 
@@ -266,7 +266,7 @@ Report each item's title, outcome and PRs (open for review, or merged),
 measured usage, new backlog items, remaining work, any item blocked on an
 unmerged prerequisite, and report locations. Include screenshots where
 available and the recurring misses, stalls or process findings supported by
-`metrics.md`. Then run the orchestration retrospective below and publish the
+the progress log and the reports. Then run the orchestration retrospective below and publish the
 run summary per `references/run-summary.md`, including no-op and blocked runs.
 
 Completion: a self-contained user report and saved run summary, no orphaned

@@ -4,7 +4,8 @@ import { useAppInfo } from "./app-info"
 import { PageContainer } from "./page-container"
 import { textLinkClasses } from "./text-link-classes"
 
-const REPOSITORY_URL = "https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor"
+const REPOSITORY_URL =
+  "https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor"
 
 /** DHCW's footer: who the service belongs to, and which version of the app this is. */
 export function AppFooter() {

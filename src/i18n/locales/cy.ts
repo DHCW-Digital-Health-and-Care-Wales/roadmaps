@@ -750,7 +750,7 @@ export const cy = {
       },
       description: {
         landed:
-          "Doedd dim modd diweddaru'r dudalen hon i'w ddangos. Adnewyddwch cyn bwrw ymlaen.",
+          "Doedd dim modd diweddaru'r dudalen hon i ddangos hyn. Adnewyddwch cyn bwrw ymlaen.",
         lost: "Cafodd yr ateb ei golli. Adnewyddwch i wirio cyn bwrw ymlaen.",
       },
       reconnect: "Ailgysylltwch i adnewyddu eich mapiau trywydd.",

@@ -191,6 +191,7 @@ export function usePublishedState(
           break
         }
         case "unconfirmed":
+          // Held above, by `holdAfterWrite` (DEF-015).
           break
         case "refused":
           store.update(roadmap.id, (later) =>

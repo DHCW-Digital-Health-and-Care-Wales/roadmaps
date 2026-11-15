@@ -14,9 +14,9 @@ export type WriteAnswer = "landed" | "not-landed" | "lost"
  * The answer of a write whose outcome is `status` (none once it failed), given the
  * status it has once it landed; a write whose answer was lost is `unconfirmed`.
  */
-export function writeAnswer(
-  status: string | undefined,
-  landed: string,
+export function writeAnswer<S extends string>(
+  status: S | undefined,
+  landed: NoInfer<S>,
 ): WriteAnswer {
   if (status === landed) return "landed"
   return status === "unconfirmed" ? "lost" : "not-landed"

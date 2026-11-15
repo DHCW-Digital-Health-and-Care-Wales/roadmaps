@@ -12,10 +12,9 @@ import type { Language } from "@/i18n"
 import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
-import { expectWriteHold } from "../testing/write-hold"
-
 import { createInMemoryRoadmapRepository } from "../testing/in-memory-roadmap-repository"
 import { editRoadmapText } from "../testing/roadmap-dialog"
+import { expectWriteHold } from "../testing/write-hold"
 
 const draft = createTestRoadmap("producta", "Product A roadmap", {
   published: false,

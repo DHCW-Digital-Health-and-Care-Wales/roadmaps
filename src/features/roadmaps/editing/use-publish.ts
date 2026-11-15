@@ -83,6 +83,7 @@ export function usePublish(
           break
         }
         case "unconfirmed":
+          // Held above, by `holdAfterWrite` (DEF-015).
           notice = null
           break
         case "refused":

@@ -117,7 +117,6 @@ export function EditableItemCard({
         <EditControls
           subject={title}
           pending={isNew ? "new" : entry && "changed"}
-          droppable={changeable}
           editable={changeable}
           editButton={editButton}
           move={

@@ -75,7 +75,6 @@ export function EditableRoadmapAbout({ roadmap }: EditableRoadmapAboutProps) {
             pending={
               changedRoadmapFields(changes).length > 0 ? "changed" : undefined
             }
-            droppable
             editButton={editButton}
             onEdit={() => {
               setOpened({ read: roadmap, shown })

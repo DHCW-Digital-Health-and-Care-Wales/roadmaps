@@ -192,18 +192,20 @@ holds it (`dropPublishedNewItems`), and the hold's Refresh is that read.
 
 ### Contract for dependents
 
-- A new write holds through `useWriteHold()` (`write-hold/write-hold-context.ts`):
-  `hold({ write, landed, reads })`, `write` naming the copy (`roadmaps.hold.<landed |
-lost>.<write>`) and `reads` what a Refresh must read; after a write that answered,
-  `readBackAfterWrite(queryClient, reads)` tells whether to hold. A page that reads
-  data a write changes adds its read to `HoldRead` and `keyOf` (`write-hold/read-back.ts`).
+- A new write holds through `write-hold/hold-after-write.ts`, the one place that
+  decides when: its mutation's `onSettled` calls `useReadBackOrHold()` with
+  `{ write, reads }` and `writeAnswer(outcome?.status, "<its landed status>")`, `write`
+  naming the copy (`roadmaps.hold.<landed | lost>.<write>`) and `reads` what a Refresh
+  must read. A write that reads back on its own, as a publish does, passes what it read
+  to `holdAfterWrite`. A page that reads data a write changes adds its read to
+  `HoldRead` and `keyOf` (`write-hold/read-back.ts`).
 - `useHeldWrite()` is the held write, or `null`; nothing else needs to check it, as
   the dialog is modal over the whole app.
 - Tests: `expectWriteHold(title)` and `refreshHold(user, hold)`
   (`features/roadmaps/testing/write-hold.ts`); in Playwright, the hold is the
   `alertdialog` named by its title, and `sheets.failReadsAfterNextWrite` opens it.
 - When a database API replaces Google Sheets (ADR-012's DEF-015 amendments), the
-  hold, `readBackAfterWrite` and the `unconfirmed` outcomes are deleted whole.
+  `write-hold/` and the `unconfirmed` outcomes are deleted whole.
 
 ### Scenario evidence
 

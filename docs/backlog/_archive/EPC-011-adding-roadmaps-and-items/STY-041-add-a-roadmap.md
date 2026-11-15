@@ -170,8 +170,7 @@ phone width; S6 and S7 can be component tests against the in-memory double.
   [DEF-015](../defects/DEF-015-a-write-the-editor-can-t-read-back-leaves-the-app-out-of-step.md)
   D3): S7's "may have been applied" notice in the dialog ("Cancel, then refresh your
   roadmaps") goes: a lost answer, or a read after the write that fails, holds the
-  whole app in a dialog until a Refresh reads the roadmaps. DEF-015 delivered
-  it.
+  whole app in a dialog until a Refresh reads the roadmaps. DEF-015 delivered it.
 
 ## Starting point
 

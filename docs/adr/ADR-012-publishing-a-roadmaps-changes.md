@@ -140,7 +140,8 @@ edits were made on.
   result (a co-lead changed one of those cells meanwhile) or a failed re-read is
   **unconfirmed**: the edits are kept, and the page
   says the changes may have been published and asks the Product Lead to refresh before
-  anything else, which drops whatever was written (above).
+  anything else, which drops whatever was written (above); the hold replaces the
+  notice (DEF-015 amendments).
 - A publish is never retried automatically.
 
 ### The repository call (amends ADR-002)

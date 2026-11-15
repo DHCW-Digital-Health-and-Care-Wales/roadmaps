@@ -75,8 +75,8 @@ State these policies, using the user's instructions where supplied:
 On resume, read the named run handoff first. Reconcile the checkout, item
 state, task IDs and pending PR work before dispatching anything. A child
 waiting for its reviewers is still active work: let its completion reach its
-parent. Replace an agent only once it is terminal or cancelled (step 3), from
-its saved handoff, not a fresh start.
+parent. Resume or replace an agent only once it is terminal or cancelled
+(step 3); a replacement starts from its saved handoff, not afresh.
 
 Completion: an ordered queue with prerequisite evidence, policies stated and
 blocking queue decisions resolved.

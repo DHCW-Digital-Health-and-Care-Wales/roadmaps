@@ -9,7 +9,7 @@
 - **Binding ADRs**: ADR-012
 - **Suggested model**: Sonnet — a dialog keeps what it asked from when it is confirmed
   until it has gone
-- **Delivered**: _(PR URL, added once the PR is open)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/99
 
 ## Summary
 

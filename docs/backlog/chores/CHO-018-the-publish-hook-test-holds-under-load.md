@@ -1,13 +1,13 @@
 # CHO-018: The publish hook's "read back" test holds when CI is slow
 
-- **Status**: Proposed — one flake seen; the owner decides whether it is worth chasing
+- **Status**: Delivered
 - **Type**: Chore
 - **Area**: Features/UI
 - **Epic**: standalone
 - **Depends on**: none
 - **Binding ADRs**: none
 - **Suggested model**: Sonnet — one test's ordering, once the cause is reproduced
-- **Delivered**: _(add on delivery)_
+- **Delivered**: The test freezes `Date` and advances it a millisecond after the Refresh, so the Refresh's `dataUpdatedAt` is strictly older than the read-back's `since`. Cause (from reading, not reproduced): both could land in the same millisecond, and `dataUpdatedAt >= since` then counted the stale read as new. Twenty local runs pass; the loaded fifty-run check of S1 was not run.
 
 ## Summary
 

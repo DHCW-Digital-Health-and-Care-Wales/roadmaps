@@ -14,8 +14,8 @@
 `src/features/roadmaps/hooks/use-publish-roadmap-changes.test.tsx` failed once in CI on a
 change that does not touch it: `expect(result.current.publish.readBack()).toBe(false)`
 received `true` (line 137, the test about a Refresh begun before a write lands, then the
-session expiring). The failed job's rerun passed. Done: the test passes on every run
-fifty runs in a row (S1), or the owner decides one flake is not worth the work.
+session expiring). The failed job's rerun passed. Done: the test passes fifty
+runs in a row under load (S1), or the owner decides one flake is not worth the work.
 
 ## Measurement
 

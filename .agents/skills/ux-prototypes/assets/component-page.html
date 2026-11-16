@@ -258,7 +258,8 @@
                  draws the host on it. These are the item card's: one across
                  under 640px, two across to 1023px, then three across in a page
                  at most 1200px wide, so no monitor gives a wider card than
-                 1280 does. Measure another host's in the running app. -->
+                 1280 does. Measure another host's in the running app.
+                 data-phone marks the screen a phone opens on. -->
             <span id="screen-label">Screen</span>
             <span class="seg" role="group" aria-labelledby="screen-label">
               <button
@@ -437,7 +438,7 @@
       })
       // Someone reading on a phone starts with the phone's host.
       if (matchMedia("(max-width: 639px)").matches)
-        document.querySelector("[data-phone]").click()
+        document.querySelector("[data-phone]")?.click()
     </script>
   </body>
 </html>

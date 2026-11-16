@@ -42,7 +42,7 @@ test("the starter page is written with the app's tokens, and never over a page a
     assert.equal(await readFile(out, "utf8"), html)
   }))
 
-test("the starter page passes the page check, and its switches and design work by keyboard", () =>
+test("the starter page passes the page check, draws with the app's tokens at each screen's width, and works by keyboard", () =>
   withStarterPage(async (out, scratch) => {
     const html = await readFile(out, "utf8")
     const server = createServer((_, res) => {
@@ -74,10 +74,16 @@ test("the starter page passes the page check, and its switches and design work b
       const widthShown = () => page.locator("#host-width").textContent()
 
       // Each block of tokens resolves on the stage: a colour through the three
-      // :root tiers, the font from the theme block, and .dark over both.
+      // :root tiers, the app's font from the theme block (not the page's own),
+      // and .dark over both.
       const light = await style("backgroundColor")
       assert.match(light, /^rgb\(/)
-      assert.match(await style("fontFamily"), /Roboto/)
+      assert.notEqual(
+        await style("fontFamily"),
+        await page
+          .locator(".page")
+          .evaluate((el) => getComputedStyle(el).fontFamily),
+      )
       await page.getByRole("button", { name: "Dark" }).click()
       assert.notEqual(await style("backgroundColor"), light)
 
@@ -103,12 +109,15 @@ test("the starter page passes the page check, and its switches and design work b
         "Edit Book a video call",
       )
 
-      // Each design's Start again is named for its design.
+      // Each design's figure and its Start again are named for the design.
+      assert.equal(
+        await page
+          .getByRole("figure", { name: "A. The design's name" })
+          .count(),
+        1,
+      )
       await page.getByRole("button", { name: "Start again design A" }).click()
       assert.equal(await host.locator("h3").textContent(), sample)
-      await page
-        .getByRole("figure", { name: "A. The design's name" })
-        .waitFor({ timeout: 1000 })
 
       // On a phone the page opens on the phone's host, drawn as wide as the
       // app draws it; a wider host keeps its width and its stage scrolls.

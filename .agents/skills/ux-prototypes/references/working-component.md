@@ -54,8 +54,7 @@ covers every scenario and planted case.
 ## Check
 
 The page check presses nothing. Drive the page yourself, with the
-`playwright-cli` skill or by hand: work every thing
-to try in every design by keyboard alone, at the narrowest host and in the
-dark theme. Done when every thing to try works in every design and the readout
-shows its result, or the analysis lists the gap in that design's Risks or in
-_Not yet drawn_.
+`playwright-cli` skill or by hand: work every thing to try in every design by
+keyboard alone, at the narrowest host and in the dark theme. Done when every
+thing to try works in every design and the readout shows its result, or the
+analysis lists the gap in that design's Risks or in _Not yet drawn_.

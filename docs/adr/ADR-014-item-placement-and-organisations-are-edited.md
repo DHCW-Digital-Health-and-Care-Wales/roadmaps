@@ -4,8 +4,10 @@
   the shape of the organisation data to the agent, as "whichever needs less rework when
   the database replaces Sheets"; a follow-up to Q25 chose, on the agent's advice, that the
   screen sorts the organisations. Amends ADR-011 (organisations as a fixed vocabulary,
-  shown as codes) and ADR-012 (what is editable).
-- Date: 2026-11-13
+  shown as codes) and ADR-012 (what is editable). STY-051 amendments: owner,
+  2026-11-16, on the wayfinder map "Reordering a placement's items".
+- Date: 2026-11-13 (amended in STY-051: a moved item goes last in its new placement, and
+  publishing moves its row)
 
 ## Context
 
@@ -29,7 +31,7 @@ database that replaces Sheets (ADR-002) will hold them as a table, linked to ite
 - **A move changes the `Horizon` cell only** (Q3, round 2 Q18): publishing writes the
   public site's English value (`Now`, `Recently delivered`…). No row moves, so the item
   appears in its new placement in row order, before and after publishing. Reordering
-  within a placement is a later record.
+  within a placement is a later record. _STY-051 amendments_ replace this bullet.
 - **One field for conflicts** (Q11): its base is the placement as loaded, none for an
   unplaced item, compared as ADR-012 compares text.
 
@@ -74,8 +76,36 @@ database that replaces Sheets (ADR-002) will hold them as a table, linked to ite
   the label and language a screen shows, and Welsh sorts its digraphs (`ch`, `dd`, `ll`)
   as letters, which only a locale-aware comparison in the interface gets right.
 - Moving a row to the top or bottom of its new placement (Q3): a row move is a harder
-  write to make safe beside a co-lead, and no reorder exists yet to match.
+  write to make safe beside a co-lead, and no reorder exists yet to match. Taken for
+  the bottom since: _STY-051 amendments_.
 - Keeping unknown codes in the cell (Q9): the public site drops them anyway.
+
+### STY-051 amendments
+
+Decided with the owner on 2026-11-16, on the wayfinder map
+[Reordering a placement's items](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/102).
+
+- **A moved item goes last in its new placement** (map ticket
+  [Where does a moved item land, and where does a new item go?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/106)
+  Q1, Q3, Q7): in all six placements, shown there as soon as it is moved, and written
+  so. Publishing writes the `Horizon` cell and moves the item's row to just after the
+  row of the placement's last item in the re-read, a co-lead's items included, which is
+  no conflict (Q6). This replaces "A move changes the `Horizon` cell only … No row
+  moves". Several items moved into one placement go last in the order they were moved.
+- **Why the row now moves**: the rejected option's reason has gone. Reordering exists
+  (STY-050, ADR-012 _STY-050 amendments_), and a check on a scratch copy of a roadmap
+  tab ([What do row moves do to a real roadmap tab?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/109))
+  showed a moved row keeps its formatting, dropdown and the references to it. Lost
+  (Q1): first in the placement (wrong for a demotion), the kept row (it can land
+  mid-list, unpredictably) and a place chosen at move time (reordering covers it).
+- **Undo and moving back** (Q5): undoing a move, or moving the item back to where it
+  was loaded, is no change, and it keeps its loaded position; rows move only at
+  publish.
+- **How the row moves** is ADR-012's (_STY-051 amendments_). A move into a placement
+  with no items, or one whose row already sits last there, writes the `Horizon` cell
+  alone.
+- The rest of _Placement_ stands: a placement is a pending edit, one field for
+  conflicts, chosen from the card's Move menu or the form, never unplaced.
 
 ## Consequences
 
@@ -90,3 +120,7 @@ database that replaces Sheets (ADR-002) will hold them as a table, linked to ite
   are now data the repository serves) and its Option 6 (codes on the card become short
   names). Amends ADR-012's "Tags, organisations, details, placement and Welsh stay
   read-only": placement and organisations no longer do.
+- Since STY-051 a published move also moves the item's row (README _What the editor
+  writes_ changes with it): a row the account may not edit refuses the whole publish,
+  and a co-lead's edit in progress in a moved row is lost with an error in their
+  spreadsheet.

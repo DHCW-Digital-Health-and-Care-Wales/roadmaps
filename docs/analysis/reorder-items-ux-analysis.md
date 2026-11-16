@@ -5,7 +5,7 @@
   a phone, by keyboard, touch and screen reader, and how does a changed order show as
   pending and get undone?
 - **Scope**: a roadmap's page, for
-  [STY-050](../backlog/EPC-011-adding-roadmaps-and-items/STY-050-reorder-items-in-a-horizon.md),
+  [STY-050](../backlog/EPC-011-adding-roadmaps-and-items/STY-050-reorder-items-in-a-placement.md),
   answering the wayfinder ticket
   [How does a Product Lead reorder a placement's items?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/105)
   on the map
@@ -172,7 +172,7 @@ No design needs a read or write those don't supply.
 
 ## Related
 
-- [STY-050](../backlog/EPC-011-adding-roadmaps-and-items/STY-050-reorder-items-in-a-horizon.md)
+- [STY-050](../backlog/EPC-011-adding-roadmaps-and-items/STY-050-reorder-items-in-a-placement.md)
   and [EPC-011](../backlog/EPC-011-adding-roadmaps-and-items/README.md).
 - The map:
   [Reordering a placement's items](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/102).
@@ -199,5 +199,6 @@ Every recommendation was taken.
 - **In "What changes"**: A, one line, "Now" then "Order changed".
 - **Positions**: numerals, "4 of 4".
 
-The decisions stay on the ticket and the map until the map reaches its destination,
-when they are written into STY-050.
+The decisions are recorded in
+[STY-050](../backlog/EPC-011-adding-roadmaps-and-items/STY-050-reorder-items-in-a-placement.md)'s
+Decisions, D3 to D7.

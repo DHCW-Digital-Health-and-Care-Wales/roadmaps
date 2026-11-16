@@ -1,9 +1,9 @@
 # EPC-011: Adding roadmaps and items — started here, not in the spreadsheet, in one dialog each
 
 - **Status**: Active — grilled with the owner on 2026-11-14; STY-040 to STY-047
-  delivered, three recorded for later grilling
-- **Progress**: 8 of 11 terminal; next selectable: none, until STY-048 to STY-050 are
-  grilled; blocked on: nothing
+  delivered; reordering settled on 2026-11-16 as STY-051 then STY-050
+- **Progress**: 8 of 12 terminal; next selectable: STY-051; blocked on: STY-048 and
+  STY-049 wait for grilling
 - **Binding ADRs**: ADR-012, ADR-011, ADR-009, ADR-013, ADR-014, ADR-002, ADR-003, ADR-005,
   ADR-006, ADR-010, ADR-008
 
@@ -15,19 +15,18 @@ from the roadmap list and add items on a roadmap's page. A new roadmap is writte
 once and starts not published; a new item is a pending edit, published with the rest.
 Both are added in a dialog, and the owner asked that editing converge on the same
 dialogs: one for a roadmap, adding it or editing "About this roadmap", and one for an
-item. The in-place edit forms go. Removing a roadmap, removing a published item and
-reordering items are recorded for later.
+item. The in-place edit forms go. A Product Lead can also put a placement's items in
+the order they want (STY-051, STY-050). Removing a roadmap and removing a published
+item are recorded for later.
 
 ## Owner decisions waiting
 
 - [STY-048](STY-048-remove-a-roadmap.md#open-questions) — how a roadmap is removed, and
   what happens to its items
 - [STY-049](STY-049-remove-a-published-item.md#open-questions) — whether removing an
-  item is pending, and what "Not doing" is for
-- [STY-050](STY-050-reorder-items-in-a-horizon.md#open-questions) — how items are
-  reordered, and what is written
+  item is pending, what "Not doing" is for, and how a removal meets a pending order
 
-None blocks STY-040 to STY-047.
+None blocks STY-040 to STY-047, STY-050 or STY-051.
 
 ## Findings
 
@@ -106,6 +105,13 @@ therefore has one possible place without a new kind of write: after the last row
 7. **Unchanged:** ADR-012's per-roadmap, all-or-nothing publish, its conflict rules and
    Refresh; what each field writes (README, _What the editor writes_); English only;
    Move on an item's card; who may edit (anyone connected, ADR-012 Option 14).
+8. A moved item goes last in its new placement, and publishing moves its row (STY-051).
+   A Product Lead reorders a placement's items from each card's Move menu; the order is
+   a pending edit of the placement, written as row moves, and a co-lead's change to the
+   same placement's items is a conflict reviewed with both orders (STY-050). Settled on
+   the wayfinder map
+   [Reordering a placement's items](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/102),
+   whose tickets each story's Decisions cite.
 
 ## Shared assumptions and contracts
 
@@ -133,9 +139,10 @@ pending edit: a new item, and every change made in either dialog's editing form.
 
 ### What the editor writes
 
-STY-040 and STY-045 each add to README _What the editor writes_ in their own PR and say
-so in the PR, since the format is a contract with the public site. No other story
-changes a write.
+STY-040, STY-045, STY-051 and STY-050 each change README _What the editor writes_ in
+their own PR and say so in the PR, since the format is a contract with the public site.
+No other story changes a write. STY-051 and STY-050 change no column or cell format:
+they move and insert rows, whose order the public site already reads.
 
 ### ADR amendments
 
@@ -148,6 +155,10 @@ changes a write.
   It updates the persona's answered question on format ownership to match.
 - STY-045 amends ADR-012 (a new item is a pending edit; how its row is written and
   settled) and ADR-011 if the item model changes.
+- STY-051 and STY-050 do not amend an ADR: the PR that wrote them amended ADR-014 (a
+  moved item goes last, and its row moves) and ADR-012 (how rows are moved, the
+  protected-row refusal, and an order as a pending edit) in place, on the owner's
+  choice (STY-051 D5). Each story checks its build against those amendments.
 
 ### Refactoring and code quality come first
 
@@ -168,23 +179,25 @@ Decisions cite the round and question an answer came from.
 
 STY-040 adds **Short name** and brings **Roadmap**, **Published roadmap** and
 **Worksheet** (the `Template` entry) up to date. STY-045 brings **Pending edit** and
-**Roadmap item** up to date.
+**Roadmap item** up to date. **Order** and **Position** were added, and **Pending
+edit** and **Conflict** extended to orders, by the PR that wrote STY-050 and STY-051.
 
 ## Stories
 
-| ID      | Story                                                                                                                                                                       | Area                               | Depends on                | State |
-| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ------------------------- | ----- |
-| STY-040 | [The repository adds a roadmap](../_archive/EPC-011-adding-roadmaps-and-items/STY-040-the-repository-adds-a-roadmap.md)                                                     | Domain + Infrastructure + Docs     | —                         | ✅    |
-| STY-041 | [A Product Lead adds a roadmap](../_archive/EPC-011-adding-roadmaps-and-items/STY-041-add-a-roadmap.md)                                                                     | Features/UI + i18n (en + cy) + E2E | STY-040                   | ✅    |
-| STY-042 | [A roadmap's page shows About in a panel, and says when it is empty](../_archive/EPC-011-adding-roadmaps-and-items/STY-042-the-roadmap-page-about-panel-and-empty-state.md) | Features/UI + i18n (en + cy) + E2E | —                         | ✅    |
-| STY-043 | [“About this roadmap” is edited in the roadmap dialog](../_archive/EPC-011-adding-roadmaps-and-items/STY-043-edit-about-in-the-roadmap-dialog.md)                           | Features/UI + i18n (en + cy) + E2E | STY-041                   | ✅    |
-| STY-044 | [An item is edited in a dialog](../_archive/EPC-011-adding-roadmaps-and-items/STY-044-edit-an-item-in-a-dialog.md)                                                          | Features/UI + i18n (en + cy) + E2E | STY-041                   | ✅    |
-| STY-045 | [The repository publishes a new item](../_archive/EPC-011-adding-roadmaps-and-items/STY-045-the-repository-publishes-a-new-item.md)                                         | Domain + Infrastructure + Docs     | —                         | ✅    |
-| STY-046 | [A Product Lead adds an item](../_archive/EPC-011-adding-roadmaps-and-items/STY-046-add-an-item.md)                                                                         | Features/UI + i18n (en + cy) + E2E | STY-042, STY-044, STY-045 | ✅    |
-| STY-047 | [The publish dialog names the new items](../_archive/EPC-011-adding-roadmaps-and-items/STY-047-a-new-item-in-the-publish-dialog.md)                                         | Features/UI + i18n (en + cy) + E2E | STY-046                   | ✅    |
-| STY-048 | [A Product Lead removes a roadmap](STY-048-remove-a-roadmap.md)                                                                                                             | to be decided                      | —                         |       |
-| STY-049 | [A Product Lead removes a published item](STY-049-remove-a-published-item.md)                                                                                               | to be decided                      | —                         |       |
-| STY-050 | [A Product Lead reorders the items in a horizon](STY-050-reorder-items-in-a-horizon.md)                                                                                     | to be decided                      | —                         |       |
+| ID      | Story                                                                                                                                                                       | Area                                                                | Depends on                | State |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------- | ----- |
+| STY-040 | [The repository adds a roadmap](../_archive/EPC-011-adding-roadmaps-and-items/STY-040-the-repository-adds-a-roadmap.md)                                                     | Domain + Infrastructure + Docs                                      | —                         | ✅    |
+| STY-041 | [A Product Lead adds a roadmap](../_archive/EPC-011-adding-roadmaps-and-items/STY-041-add-a-roadmap.md)                                                                     | Features/UI + i18n (en + cy) + E2E                                  | STY-040                   | ✅    |
+| STY-042 | [A roadmap's page shows About in a panel, and says when it is empty](../_archive/EPC-011-adding-roadmaps-and-items/STY-042-the-roadmap-page-about-panel-and-empty-state.md) | Features/UI + i18n (en + cy) + E2E                                  | —                         | ✅    |
+| STY-043 | [“About this roadmap” is edited in the roadmap dialog](../_archive/EPC-011-adding-roadmaps-and-items/STY-043-edit-about-in-the-roadmap-dialog.md)                           | Features/UI + i18n (en + cy) + E2E                                  | STY-041                   | ✅    |
+| STY-044 | [An item is edited in a dialog](../_archive/EPC-011-adding-roadmaps-and-items/STY-044-edit-an-item-in-a-dialog.md)                                                          | Features/UI + i18n (en + cy) + E2E                                  | STY-041                   | ✅    |
+| STY-045 | [The repository publishes a new item](../_archive/EPC-011-adding-roadmaps-and-items/STY-045-the-repository-publishes-a-new-item.md)                                         | Domain + Infrastructure + Docs                                      | —                         | ✅    |
+| STY-046 | [A Product Lead adds an item](../_archive/EPC-011-adding-roadmaps-and-items/STY-046-add-an-item.md)                                                                         | Features/UI + i18n (en + cy) + E2E                                  | STY-042, STY-044, STY-045 | ✅    |
+| STY-047 | [The publish dialog names the new items](../_archive/EPC-011-adding-roadmaps-and-items/STY-047-a-new-item-in-the-publish-dialog.md)                                         | Features/UI + i18n (en + cy) + E2E                                  | STY-046                   | ✅    |
+| STY-048 | [A Product Lead removes a roadmap](STY-048-remove-a-roadmap.md)                                                                                                             | to be decided                                                       | —                         |       |
+| STY-049 | [A Product Lead removes a published item](STY-049-remove-a-published-item.md)                                                                                               | to be decided                                                       | —                         |       |
+| STY-050 | [A Product Lead reorders the items in a placement](STY-050-reorder-items-in-a-placement.md)                                                                                 | Domain + Infrastructure + Features/UI + i18n (en + cy) + E2E + Docs | STY-051                   |       |
+| STY-051 | [A moved item goes last in its new placement](STY-051-a-moved-item-goes-last-in-its-new-placement.md)                                                                       | Domain + Infrastructure + Features/UI + i18n (en + cy) + E2E + Docs | —                         |       |
 
 ## Sequencing
 
@@ -194,8 +207,11 @@ screen that uses it, and keeps its contract documents, which must change with it
 STY-042, STY-043, STY-044, STY-046 and STY-047 all change the roadmap's page, so none
 runs beside another. STY-041 brings the dialog primitive that STY-043 and STY-044
 need; STY-043 prefers STY-042 first, which puts Edit beside the About heading.
-STY-048 to STY-050 wait for grilling; when grilled, STY-048 follows STY-040 and
-STY-049 follows STY-046, by preference.
+STY-048 and STY-049 wait for grilling; when grilled, STY-048 follows STY-040 and
+STY-049 follows STY-046, by preference. STY-051 comes before STY-050 (owner,
+2026-11-16): it brings the row moves STY-050 builds on, and is usable on its own. Both
+change the publish plan and the roadmap's page, so neither runs beside the other or
+beside STY-049.
 
 ```mermaid
 flowchart LR
@@ -204,6 +220,7 @@ flowchart LR
   STY-042 --> STY-046
   STY-042 -.-> STY-043
   STY-045 --> STY-046 --> STY-047
+  STY-051 --> STY-050
 ```
 
 ## Out of scope
@@ -287,10 +304,8 @@ flowchart LR
 - [`docs/analysis/reorder-items-ux-analysis.md`](../../analysis/reorder-items-ux-analysis.md):
   nine mock-ups over three journeys, for STY-050. Outcome: "To the top", "Up one",
   "Down one" and "To the bottom" in each card's Move menu; "Order changed" and "Undo
-  order" beside the placement's heading; one line in the publish dialog. The decisions
-  stay on the wayfinder ticket
-  [How does a Product Lead reorder a placement's items?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/105)
-  until its map is done.
+  order" beside the placement's heading; one line in the publish dialog. Recorded in
+  STY-050's Decisions (D3–D7).
 - `docs/analysis/roadmaps-tab-format.md` and `docs/analysis/roadmap-tab-format.md`: the
   roadmap index and roadmap tab formats, and the `Template` tab.
 - [EPC-008](../_archive/EPC-008-publishing-and-freshness/README.md): "Publish roadmap",

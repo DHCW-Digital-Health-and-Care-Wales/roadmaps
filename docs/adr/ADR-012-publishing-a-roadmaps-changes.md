@@ -3,7 +3,8 @@
 - Status: Accepted — owner, 2026-11-11: grilling rounds 1–3, Q28–Q30 and Q32–Q34 of
   the Editing epic (Options 1–17 below); Q32–Q34 settled what review raised (a copied
   ID, a write whose result never arrives, trimming). Amends ADR-002 (a write call) and ADR-011 (item identity);
-  extends ADR-009 (the editor writes to the roadmap index).
+  extends ADR-009 (the editor writes to the roadmap index). STY-051 and STY-050
+  amendments: owner, 2026-11-16, on the wayfinder map "Reordering a placement's items".
 - Date: 2026-11-11 (amended in ADR-013: family and category become choosable; `Family (cy)`
   is copied; amended in ADR-014: an item's placement and organisations become editable;
   amended by STY-035: a roadmap's published state is written on its own; amended by
@@ -13,7 +14,9 @@
   amended by STY-040: adding a roadmap is a write at once, and copies the `Template` tab;
   amended by STY-045: a new item is a pending edit, published as a new row;
   amended by DEF-015: a write that can't be read back holds the app until a Refresh,
-  and what a database API's write must return)
+  and what a database API's write must return;
+  amended by STY-051: publishing moves a moved item's row, and a protected row refuses it;
+  amended by STY-050: a placement's order is a pending edit, written as row moves)
 
 ## Context
 
@@ -68,7 +71,8 @@ first.
 - **Publishing is per roadmap and all or nothing** (Option 8): every pending edit of one
   roadmap is written in one `spreadsheets.batchUpdate`, across the roadmap index and the
   roadmap's tab, or none is. Only the changed cells are written, plus any item IDs and
-  columns publishing adds (and a row for each new item: _STY-045 amendments_).
+  columns publishing adds (and a row for each new item: _STY-045 amendments_; and the
+  rows moved or inserted for a move or an order: _STY-051_ and _STY-050 amendments_).
 - **Each pending edit keeps its base value**: the field's value when it was loaded.
   Refresh re-reads the roadmap and keeps pending edits on top; the base stays the value
   first edited, so a refresh never hides a co-lead's change.
@@ -349,6 +353,77 @@ Nothing checks permission in advance.
   accepts; a `412` re-reads and compares each field with its base as Option 12 does,
   so a co-lead's change to another field is still no conflict. Only a lost answer can
   then leave the editor not knowing what was written, and the hold stays for it.
+
+### STY-051 amendments
+
+Decided with the owner on 2026-11-16, on the wayfinder map
+[Reordering a placement's items](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/102).
+ADR-014 _STY-051 amendments_ say where a moved item goes; these say how it is written.
+
+- **Publishing moves rows, never rewrites them** (map ticket
+  [How do row moves behave in one Sheets batchUpdate?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/103)):
+  a row is moved by a `moveDimension` request in the same `batchUpdate`, after the cell
+  and `Item ID` writes (which keep the re-read's row numbers) and before any appended
+  row. Rewriting the rows' values lost: it would write cells the editor never writes
+  (Welsh, unknown columns), turn formulas, numbers and dates into text, leave formatting
+  and notes on the wrong item, and overwrite a co-lead's edit anywhere in those rows.
+- **A move that would leave a row where it is is never sent** (map ticket
+  [What do row moves do to a real roadmap tab?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/109)):
+  Google refuses it, and the whole batch with it.
+- **A protected row refuses the publish** (map ticket
+  [What does publishing write for an order change?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/107)
+  Q4): Google refuses a move, or a write, of a cell the account may not edit, so nothing
+  is published. Pending changes are kept, and a new `AppError` kind says a protected
+  part of the spreadsheet stopped it. This refines _Who may edit_: nothing is still
+  checked in advance.
+- **A hidden row is an item** (#107 Q7): it holds a position, though the public site
+  leaves it out.
+- **A lost answer** (Option 16) for a move is judged by its `Horizon` cell, as before:
+  the batch is all or nothing, so the cell proves the row moved too.
+- **Accepted cost**: a co-lead's edit in progress in a moved row is lost, with an error
+  in their spreadsheet (#109). The one-request race of _Consequences_ is unchanged.
+
+### STY-050 amendments
+
+Decided with the owner on 2026-11-16, on the same map.
+
+- **An order is a pending edit of a placement** (map ticket
+  [What is an order change, and when is it a conflict?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/104)):
+  one per placement, its placed items in sequence, its base the order as loaded,
+  compared as one value as an item's tags are. It exists only once the Product Lead
+  reorders; items moved or added into the placement join it last, items moved out leave
+  it, and one equal to its base is no change. It is undone on its own, apart from an
+  item's changes. One the re-read already holds is no longer pending; "Discard all"
+  drops it, and Disconnect then Keep keeps it with its base. A per-item position and
+  one order for the whole tab lost.
+- **Its conflict is Option 12 applied to the order** (#104 Q4): the re-read's order of
+  that placement differs from both its base and the pending order, so any co-lead
+  change to that placement's items is one. Merging relative orders lost: it needs a
+  rule for where a co-lead's added item goes. An item a co-lead removed is reported not
+  found first (Option 13) and leaves the order; if the order then differs only by it,
+  there is no conflict.
+- **It is reviewed as one value** (map ticket
+  [How is an order conflict reviewed?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/117)),
+  in the existing review: "Your order", what "Keep mine" would publish, beside "Current
+  order". "Keep mine" writes the Product Lead's order of the items they know, with a
+  co-lead's added or moved-in items last and removed or moved-out ones gone, and makes
+  the current order the base. "Use theirs" drops the pending order. Deciding an item's
+  placement conflict updates the order conflict at once.
+- **It is written as row moves** (#107 Q1, Q2, Q5): the target order of each placement
+  with a pending order, or receiving a moved item, is worked out from the re-read, and
+  the fewest `moveDimension` requests reach it, each row going just after its new
+  predecessor's (the first just before the placement's first row). A new item that is
+  not last is inserted (`insertDimension`, then its cells); one that stays last is
+  appended as _STY-045 amendments_ set. Requests go: column growth and headers, cell
+  and `Item ID` writes at the re-read's rows, moves, inserts, appends. No order column
+  is written, and the public site's format is unchanged: it already orders a placement
+  by row.
+- **A lost answer** (Option 16, #107 Q6): a placement whose re-read order equals the
+  pending order is published, one equal to its base is not written (`network`, changes
+  kept), and anything else is unconfirmed.
+- **The order is the domain's** (ADR-002 stands): `RoadmapChanges` carries each
+  placement's pending order and `RoadmapRepository` gains no call. A database API keeps
+  each item's position in its placement; rows stay inside infrastructure.
 
 ## Options (owner's choice marked ✅, 2026-11-11)
 

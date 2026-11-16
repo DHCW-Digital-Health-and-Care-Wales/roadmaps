@@ -70,12 +70,22 @@ A roadmap item with no recognised horizon or section, which the public site does
 show. The editor shows it, flagged, so the Product Lead can place it (ADR-011).
 _Avoid_: Draft, hidden item
 
+**Order**:
+The sequence a placement's items show in, here and on the public site. A Product Lead
+can change it; a changed order is one pending edit of its placement (ADR-012). Order
+says nothing about importance.
+_Avoid_: Rank, priority, sort order, row order
+
+**Position**:
+An item's place in its placement's order, counted from the top: "4 of 4".
+_Avoid_: Rank, row, index
+
 **Roadmap item**:
 One piece of work on a roadmap: a title, a description, expected outcomes, tags and any
 other details that help a public reader. It fits on one card no bigger than a phone
 screen. A **new item** is one a Product Lead has added, with a title and a placement,
-and not yet published: a pending edit, which publishing writes after the roadmap's last
-item (ADR-012).
+and not yet published: a pending edit, which goes last in its placement unless the
+Product Lead reorders it (ADR-012).
 _Avoid_: Ticket, task, feature, epic, story
 
 **Expected outcome**:
@@ -111,10 +121,10 @@ list (ADR-014).
 _Avoid_: Health board (only some are), customer
 
 **Pending edit**:
-A change to a roadmap or roadmap item, or a new item, that the Product Lead has made
-but not yet published or saved; the public site does not show it. It is kept in this
-browser tab, in memory, through an expired session, Reconnect and, if the Product Lead
-chooses, Disconnect. A change is kept with the value it was edited from, which a
+A change to a roadmap or roadmap item, a new item, or a placement's new order, that
+the Product Lead has made but not yet published or saved; the public site does not show
+it. It is kept in this browser tab, in memory, through an expired session, Reconnect
+and, if the Product Lead chooses, Disconnect. A change is kept with the value it was edited from, which a
 co-lead's change is found by; a new item has none, so it never conflicts with one. It
 is lost on closing the tab, after asking (ADR-012).
 _Avoid_: Unsaved change, draft (drafts are a later feature)
@@ -134,8 +144,8 @@ STY-035).
 _Avoid_: Publish (for a roadmap that is not published), store
 
 **Conflict** _(planned)_:
-A field a co-lead changed in the data source, to a different value, after the Product
-Lead loaded the field they have edited. Publishing stops until, for each conflict, the
+A field, or a placement's order, a co-lead changed in the data source, to a different
+value, after the Product Lead loaded what they have edited. Publishing stops until, for each conflict, the
 Product Lead keeps their change or uses the co-lead's (ADR-012).
 _Avoid_: Clash, merge conflict
 

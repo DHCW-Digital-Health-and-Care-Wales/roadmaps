@@ -47,8 +47,9 @@ An organisation's short name (`Cardiff and Vale`) is another thing.
 _Avoid_: Slug, ID, key, sheet name, tab name
 
 **Horizon**:
-One of a roadmap's three columns: **Now** (being worked on), **Next** (coming up) and
-**Later** (intended, further out). Horizons are not dates.
+One of the three groups a roadmap sorts its work into, by how soon it is expected:
+**Now** (being worked on), **Next** (coming up) and **Later** (intended, further out).
+Horizons are not dates.
 _Avoid_: Column, lane, quarter, phase
 
 **Section**:

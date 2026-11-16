@@ -38,3 +38,11 @@ README _What the editor writes_ and an ADR-012 amendment.
   - (a) The confirmation mentions "Not doing" as the way to show a dropped item
     (recommended).
   - (b) No mention.
+- **Q4**: How does a removal meet a placement's pending order (STY-050)? _Sam has
+  reordered Now and removes one of its items._ The map that settled reordering decided
+  that an item a co-lead removed leaves a pending order
+  ([What does publishing write for an order change?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/107),
+  point 4), and a deleted row shifts the rows below it, which the moves' indices count.
+  - (a) Sam's removal leaves the pending order too, and the row is deleted after the
+    moves and inserts, so their indices stand (recommended).
+  - (b) A removal is refused while its placement has a pending order.

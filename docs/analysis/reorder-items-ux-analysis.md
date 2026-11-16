@@ -5,7 +5,7 @@
   a phone, by keyboard, touch and screen reader, and how does a changed order show as
   pending and get undone?
 - **Scope**: a roadmap's page, for
-  [STY-050](../backlog/EPC-011-adding-roadmaps-and-items/STY-050-reorder-items-in-a-horizon.md),
+  [STY-050](../backlog/EPC-011-adding-roadmaps-and-items/STY-050-reorder-items-in-a-placement.md),
   answering the wayfinder ticket
   [How does a Product Lead reorder a placement's items?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/105)
   on the map
@@ -33,8 +33,9 @@ the same roadmap (A12), and nothing is public until a deliberate publish (A9, A1
 | 2. See a changed order, pending, and undo it | see which placement's order is pending; see the unpublished change count; undo the order | ticket 104 points 1, 5, 6      |
 | 3. Publish a changed order                   | see the order in "What changes" before publishing                                        | STY-025 S9 (the dialog exists) |
 
-STY-050 has no acceptance scenarios yet, so each design is traced against the
-ticket's question and the decisions already made on the map:
+When the mock-ups were drawn, STY-050 had no acceptance scenarios, so each design is
+traced against the ticket's question and the decisions already made on the map (its
+scenarios are now settled: see _Outcome_):
 [What is an order change, and when is it a conflict?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/104)
 and
 [Where does a moved item land, and where does a new item go?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/106).
@@ -172,7 +173,7 @@ No design needs a read or write those don't supply.
 
 ## Related
 
-- [STY-050](../backlog/EPC-011-adding-roadmaps-and-items/STY-050-reorder-items-in-a-horizon.md)
+- [STY-050](../backlog/EPC-011-adding-roadmaps-and-items/STY-050-reorder-items-in-a-placement.md)
   and [EPC-011](../backlog/EPC-011-adding-roadmaps-and-items/README.md).
 - The map:
   [Reordering a placement's items](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/102).
@@ -199,5 +200,6 @@ Every recommendation was taken.
 - **In "What changes"**: A, one line, "Now" then "Order changed".
 - **Positions**: numerals, "4 of 4".
 
-The decisions stay on the ticket and the map until the map reaches its destination,
-when they are written into STY-050.
+The decisions are recorded in
+[STY-050](../backlog/EPC-011-adding-roadmaps-and-items/STY-050-reorder-items-in-a-placement.md)'s
+Decisions, D3 to D7.

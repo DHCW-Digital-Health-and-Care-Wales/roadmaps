@@ -2,7 +2,8 @@
 // Renders a UX prototype page: screenshots each design at 1440px and fails if
 // the page's script throws as it opens, the page scrolls sideways at 375px, a
 // navigation contains no native controls, a choice mark sits outside a native
-// control, or an element id repeats.
+// control, an element id repeats, or the review bar does not link every
+// design.
 // Usage: node check-page.mjs <page.html-or-url> <shots-dir>
 import { mkdir } from "node:fs/promises"
 import path from "node:path"
@@ -42,10 +43,21 @@ try {
     )
     process.exitCode = 1
   }
-  // An assembled page's own header stays in view as the page scrolls, and
-  // would cross every design taller than the window in its screenshot.
-  await desk.addStyleTag({ content: "body>header.top{position:static}" })
-  const ids = await desk.$$eval("figure[id]", (fs) => fs.map((f) => f.id))
+  // Under automation the review chrome sits in the page's flow
+  // (assets/review-chrome.js), so it crosses no design in a screenshot.
+  const ids = await desk.$$eval("figure[id]", (fs) =>
+    fs.filter((f) => !f.parentElement.closest("figure[id]")).map((f) => f.id),
+  )
+  const linked = await desk.$$eval(".review-bar a.review-design", (links) =>
+    links.map((a) => a.getAttribute("href").slice(1)),
+  )
+  const unlinked = ids.filter((id) => !linked.includes(id))
+  if (unlinked.length > 0) {
+    console.error(
+      `the review bar does not link ${unlinked.join(", ")}; keep the review chrome the starter and the assembler write`,
+    )
+    process.exitCode = 1
+  }
   const emptyNavigation = await desk.$$eval(
     'figure[id] :is(nav, .hdr, [role="navigation"])',
     (navs) =>

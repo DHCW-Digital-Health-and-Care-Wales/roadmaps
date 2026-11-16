@@ -29,7 +29,13 @@ components do, so a design looks as it will when built.
 
 The starter holds one of each part the page needs; keep them all:
 
-- the **Theme** and **Screen** switches, which act on every stage
+- the **Theme** and **Screen** switches, which act on every stage, in the
+  page's one `.controls`: add any other switch there too
+- the **review chrome**, inlined from `assets/review-chrome.*`: a bar linking
+  every design, and an Options panel that floats `.controls` in reach beside
+  any design. A design's link reads the letter its name starts with ("A.
+  Outline"), else its figure's `data-short`. Designs of several journeys go in
+  a `section[id]` each, headed by an `h2`, which the bar groups them under
 - **Things to try in each**, the list the owner works through
 - **The sample**, the world the designs start from
 - a figure per design: its name, **Start again**, its idea in a sentence or

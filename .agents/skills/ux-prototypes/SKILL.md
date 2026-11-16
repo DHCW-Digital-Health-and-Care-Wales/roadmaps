@@ -235,7 +235,11 @@ The check runs by hand, not in CI: it is a local aid for throwaway design
 pages. It screenshots every design at 1440px wide. It fails when the page's
 script throws as it opens, the page scrolls sideways at 375px wide, a design's
 navigation has no native links or buttons, a `.rad` or `.chk` mark sits
-outside a native control, or an element id repeats. A pass says the page is
+outside a native control, an element id repeats, or the review bar does not
+link every design. Under automation, as in the check, the bar and the
+Options panel stay in the page's flow, so they cover no design in a
+screenshot; add `?float` to a page's URL to see them as the owner does, or
+`?capture` to keep them in flow in a browser. A pass says the page is
 well formed, not that a design is right or works: the shape's reference says
 what to check by eye and by hand.
 

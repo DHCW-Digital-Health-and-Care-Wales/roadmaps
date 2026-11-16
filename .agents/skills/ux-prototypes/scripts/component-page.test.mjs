@@ -140,6 +140,42 @@ test("the starter page, served", (t) =>
         )
       })
 
+      await t.test(
+        "on screen, the bar links every design and the switches float in reach",
+        async () => {
+          const screen = await browser.newPage({
+            viewport: { width: 375, height: 800 },
+          })
+          await screen.goto(`${url}?float`)
+          const bar = screen.getByRole("navigation", {
+            name: "Journeys and designs",
+          })
+          assert.equal(
+            await bar.evaluate((el) => getComputedStyle(el).position),
+            "sticky",
+          )
+          assert.equal(
+            await bar
+              .getByRole("link", { name: "A. The design's name" })
+              .textContent(),
+            "A",
+          )
+          const options = screen.getByRole("button", { name: /Options/ })
+          assert.match(await options.textContent(), /Light · Phone 375/)
+          await screen.locator("#pa .stage").scrollIntoViewIfNeeded()
+          await options.click()
+          await screen.getByRole("button", { name: "Dark" }).click()
+          assert.match(await options.textContent(), /Dark · Phone 375/)
+          assert.equal(await screen.locator("#pa .stage.dark").count(), 1)
+          await screen.keyboard.press("Escape")
+          assert.equal(await options.getAttribute("aria-expanded"), "false")
+          assert.equal(
+            await screen.evaluate(() => document.documentElement.scrollWidth),
+            375,
+          )
+        },
+      )
+
       // The phone's host is drawn as wide as the app draws it; a wider host
       // keeps its width and its stage scrolls.
       await t.test("on a phone it opens on the phone's host", async () => {

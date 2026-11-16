@@ -1,15 +1,20 @@
 #!/usr/bin/env node
 // Starts a working-component prototype page: writes assets/component-page.html
 // with the app's theme tokens set on every .stage, so a prototype draws with
-// the app's own token names, light and dark.
+// the app's own token names, light and dark, and the review chrome
+// (assets/review-chrome.*) inlined, so the page links every design and floats
+// its switches.
 // Usage: node component-page.mjs <out.html>
 import { mkdir, readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { appTokens } from "./app-tokens.mjs"
+import { reviewChrome } from "./review-chrome.mjs"
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const MARKER = "/* @app-tokens */"
+const CHROME_CSS = "/* @review-chrome */"
+const CHROME_JS = "// @review-chrome"
 
 const [out] = process.argv.slice(2)
 if (!out) {
@@ -28,11 +33,18 @@ try {
     { lightSelector: ".stage", darkSelector: ".stage.dark" },
     indent,
   )
+  const chrome = await reviewChrome()
+  for (const marker of [CHROME_CSS, CHROME_JS])
+    if (!starter.includes(marker))
+      throw new Error(`the starter page has no ${marker} marker`)
   await mkdir(path.dirname(out), { recursive: true })
   // "wx": a page already there is someone's work, never overwritten.
   await writeFile(
     out,
-    starter.replace(MARKER, () => tokens),
+    starter
+      .replace(MARKER, () => tokens)
+      .replace(CHROME_CSS, () => chrome.css)
+      .replace(CHROME_JS, () => chrome.js),
     { flag: "wx" },
   )
   console.log(`wrote ${out}`)

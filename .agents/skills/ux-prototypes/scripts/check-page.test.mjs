@@ -8,6 +8,7 @@ import path from "node:path"
 import { test } from "node:test"
 import { fileURLToPath } from "node:url"
 import { promisify } from "node:util"
+import { reviewChrome } from "./review-chrome.mjs"
 
 const run = promisify(execFile)
 const checker = fileURLToPath(new URL("./check-page.mjs", import.meta.url))
@@ -40,14 +41,21 @@ const fixtures = {
   "/native-choice":
     '<figure id="d1"><button type="button" role="radio" aria-checked="true" class="opt"><span class="rad on"></span>Platform</button><label><input type="checkbox"><span class="chk"></span>Mobile app</label><span aria-hidden="true" class="rad on"></span>Data and analytics</figure>',
 }
+// Every fixture carries the review chrome a real page does, but this one.
+const unchromed = "/no-chrome"
+fixtures[unchromed] = '<figure id="d1">Roadmaps</figure>'
 
 test("prototype page checks exercise rendered browser fixtures", async (t) => {
   const scratch = await mkdtemp(path.join(os.tmpdir(), "ux-prototype-check-"))
+  const chrome = await reviewChrome()
   const server = createServer((req, res) => {
     const body = fixtures[req.url]
+    const script = req.url === unchromed ? "" : `<script>${chrome.js}</script>`
     res.writeHead(body ? 200 : 404, { "Content-Type": "text/html" })
     res.end(
-      body ? `<!doctype html><html lang="en"><body>${body}</body></html>` : "",
+      body
+        ? `<!doctype html><html lang="en"><body>${body}${script}</body></html>`
+        : "",
     )
   })
   try {
@@ -139,6 +147,18 @@ test("prototype page checks exercise rendered browser fixtures", async (t) => {
           (error) =>
             error.code === 1 &&
             /duplicate element ids: d2 in d1, d2/.test(error.stderr),
+        )
+      },
+    )
+
+    await t.test(
+      "a page whose review bar misses a design is refused",
+      async () => {
+        await assert.rejects(
+          () => check("no-chrome"),
+          (error) =>
+            error.code === 1 &&
+            /the review bar does not link d1/.test(error.stderr),
         )
       },
     )

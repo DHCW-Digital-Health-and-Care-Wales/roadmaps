@@ -51,7 +51,7 @@ test("the review page styles its own chrome and leaves a design's markup alone",
       const css = (el) => getComputedStyle(el)
       const byId = (id) => css(document.getElementById(id))
       return {
-        pageHeader: css(document.querySelector("body > header")).position,
+        pageBar: css(document.querySelector("body > nav.review-bar")).position,
         pageHeading: css(document.querySelector("section > h2")).fontSize,
         frame: css(document.querySelector("figure > .frame")).overflowX,
         zoom: css(document.querySelector(".frame .ab")).zoom,
@@ -66,7 +66,8 @@ test("the review page styles its own chrome and leaves a design's markup alone",
     )
     assert.notEqual(pageBrief, "none", "the page's brief keeps its measure")
     assert.deepEqual(styles, {
-      pageHeader: "sticky",
+      // Under automation the bar sits in the page's flow, covering nothing.
+      pageBar: "static",
       pageHeading: "22px",
       frame: "auto",
       zoom: "0.8",
@@ -184,7 +185,7 @@ test("every artboard draws with the app's tokens, mock.css and the manifest's sh
     // A shared rule for a bare element stays inside the designs.
     assert.notEqual(
       await page
-        .locator("body > header select")
+        .locator(".intro .controls select")
         .evaluate((el) => getComputedStyle(el).minWidth),
       "300px",
     )

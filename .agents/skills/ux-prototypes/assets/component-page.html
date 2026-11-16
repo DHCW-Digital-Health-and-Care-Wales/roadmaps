@@ -123,6 +123,10 @@
         white-space: nowrap;
       }
 
+      /* The review chrome, written here by scripts/component-page.mjs from
+         assets/review-chrome.css: the bar of designs and the Options panel. */
+      /* @review-chrome */
+
       /* The app's theme, written here by scripts/component-page.mjs from
          src/styles/globals.css: every token under its own name, on each stage. */
       /* @app-tokens */
@@ -259,6 +263,8 @@
           What the control is and where it sits, what every design shares, and
           how the designs differ.
         </p>
+        <!-- The page's switches. On screen they float in the Options panel,
+             in reach beside every design. -->
         <div class="controls">
           <div>
             <span id="theme-label">Theme</span>
@@ -459,6 +465,9 @@
       // Someone reading on a phone starts with the phone's host.
       if (matchMedia("(max-width: 639px)").matches)
         document.querySelector("[data-phone]")?.click()
+    </script>
+    <script>
+      // @review-chrome
     </script>
   </body>
 </html>

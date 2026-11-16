@@ -21,32 +21,6 @@
         color: #111827;
       }
       /* The page's own chrome, by child path from body, so a design's header, section or brief keeps its own styles. */
-      body > header.top {
-        position: sticky;
-        top: 0;
-        z-index: 20;
-        background: #ffffffee;
-        border-bottom: 1px solid #d1d5db;
-        padding: 10px 16px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px 14px;
-        align-items: center;
-      }
-      body > header.top strong {
-        font-size: 15px;
-        margin-right: 8px;
-      }
-      body > header.top a {
-        font-size: 13px;
-        color: #1d4ed8;
-        text-decoration: none;
-        white-space: nowrap;
-      }
-      body > header.top label {
-        font-size: 13px;
-        margin-left: auto;
-      }
       body > main.wrap {
         padding: 16px;
         display: flex;
@@ -6471,30 +6445,172 @@
       #d12 .dlg.wide {
         width: 560px;
       }
+      body > main.wrap > .intro > h1 {
+        margin: 0;
+        font-size: 22px;
+        line-height: 1.3;
+        color: #111827;
+      }
+      /* The review page's chrome, shared by both shapes and built by
+   review-chrome.js: a one-line bar of links to every journey and design, and a
+   floating panel holding the page's .controls. It draws in system colours, so
+   it reads on any page and never on a design's tokens.
+   Under automation, or with ?capture in the URL, both sit in the page's flow,
+   so they neither cover a design in a screenshot nor intercept a click. */
+      .review-bar {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        display: flex;
+        gap: 4px;
+        align-items: center;
+        overflow-x: auto;
+        white-space: nowrap;
+        scrollbar-width: thin;
+        padding: 6px 12px;
+        border-bottom: 1px solid GrayText;
+        background: Canvas;
+        color: CanvasText;
+        font:
+          13px/1.4 system-ui,
+          "Segoe UI",
+          Arial,
+          sans-serif;
+      }
+      .review-bar a {
+        flex: none;
+        color: LinkText;
+        text-decoration: none;
+      }
+      .review-bar a:hover {
+        text-decoration: underline;
+      }
+      .review-bar .review-group {
+        display: inline-flex;
+        flex: none;
+        gap: 3px;
+        align-items: center;
+      }
+      .review-bar .review-group + .review-group {
+        margin-left: 10px;
+        padding-left: 10px;
+        border-left: 1px solid GrayText;
+      }
+      .review-bar .review-journey {
+        max-width: 28ch;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-right: 3px;
+        font-weight: 600;
+        color: CanvasText;
+      }
+      .review-bar .review-design {
+        min-width: 22px;
+        max-width: 16ch;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 0 5px;
+        border: 1px solid currentColor;
+        border-radius: 4px;
+        text-align: center;
+      }
+      .review-bar .review-design[aria-current="location"] {
+        background: LinkText;
+        color: Canvas;
+      }
+      .review-bar a:focus-visible,
+      .review-options button:focus-visible {
+        outline: 3px solid Highlight;
+        outline-offset: 1px;
+      }
+
+      .review-options {
+        position: fixed;
+        right: 12px;
+        bottom: 12px;
+        z-index: 30;
+        display: flex;
+        flex-direction: column-reverse;
+        align-items: flex-end;
+        gap: 6px;
+        max-width: calc(100% - 24px);
+        font:
+          15px/1.5 system-ui,
+          "Segoe UI",
+          Arial,
+          sans-serif;
+        color: CanvasText;
+      }
+      .review-options > .review-options-toggle {
+        appearance: none;
+        padding: 4px 12px;
+        border: 1px solid GrayText;
+        border-radius: 999px;
+        background: Canvas;
+        color: CanvasText;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgb(0 0 0 / 0.25);
+        cursor: pointer;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .review-options > .review-options-body {
+        max-width: 640px;
+        max-height: 50vh;
+        overflow: auto;
+        padding: 10px 12px;
+        border: 1px solid GrayText;
+        border-radius: 8px;
+        background: Canvas;
+        box-shadow: 0 4px 16px rgb(0 0 0 / 0.25);
+      }
+      .review-options .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        align-items: center;
+      }
+      .review-options > .review-options-body[hidden] {
+        display: none;
+      }
+
+      /* Room below the last design, so the pill never covers its end. */
+      .review-floating body {
+        padding-bottom: 56px;
+      }
+
+      @media (max-width: 639px) {
+        .review-bar .review-journey {
+          max-width: 18ch;
+        }
+        .review-options > .review-options-body {
+          max-height: 40vh;
+        }
+      }
+
+      .review-inline .review-bar {
+        position: static;
+      }
+      .review-inline .review-options {
+        display: none;
+      }
+
+      @media print {
+        .review-bar,
+        .review-options {
+          display: none;
+        }
+      }
     </style>
   </head>
   <body>
-    <header class="top">
-      <strong>Adding a roadmap and its items — UX prototypes</strong
-      ><a href="#j1">1. Start adding a roadmap</a
-      ><a href="#j2">2. Just after adding</a><a href="#j3">3. Add an item</a
-      ><a href="#j4">4. The first item of an empty roadmap</a
-      ><label
-        >Zoom
-        <select
-          onchange="
-            document.documentElement.style.setProperty('--z', this.value)
-          "
-        >
-          <option value="0.5">50%</option>
-          <option value="0.65">65%</option>
-          <option value="0.8" selected>80%</option>
-          <option value="1">100%</option>
-        </select></label
-      >
-    </header>
     <main class="wrap">
       <div class="intro">
+        <h1>Adding a roadmap and its items — UX prototypes</h1>
         <p>
           Static mock-ups for EPC-011: a Product Lead adds a roadmap from the
           roadmap list (STY-041, journeys 1 and 2) and adds items to a roadmap
@@ -6510,6 +6626,21 @@
           form is, how much it asks, and where Sam is afterwards. Copy is draft,
           in English only.
         </p>
+        <div class="controls">
+          <label
+            >Zoom
+            <select
+              onchange="
+                document.documentElement.style.setProperty('--z', this.value)
+              "
+            >
+              <option value="0.5">50%</option>
+              <option value="0.65">65%</option>
+              <option value="0.8" selected>80%</option>
+              <option value="1">100%</option>
+            </select></label
+          >
+        </div>
       </div>
       <section id="j1">
         <h2>
@@ -10792,5 +10923,240 @@ Shorter journeys for patients, and clinics with space are used.</textarea>
         </figure>
       </section>
     </main>
+    <script>
+      // The review page's chrome, shared by both shapes (review-chrome.css styles it).
+      // A bar of links to every journey and design, one line that scrolls sideways,
+      // and a floating Options panel that holds the page's .controls, so a switch is
+      // in reach beside any design. A design is a figure[id] not inside another; its
+      // journey is the section[id] holding it, or the page's h1. A design's link reads
+      // the letter that starts its caption ("A. Outline", "B2 — …"), or its
+      // data-short; a journey's, its heading up to " — ".
+      // Under automation, or with ?capture in the URL, the bar stays at the top of
+      // the page and the controls stay where the page put them, so neither covers a
+      // design in a screenshot; ?float shows the floating chrome there too.
+      ;(() => {
+        const params = new URLSearchParams(location.search)
+        const inline =
+          params.has("capture") || (navigator.webdriver && !params.has("float"))
+        if (inline) document.documentElement.classList.add("review-inline")
+
+        const designs = [...document.querySelectorAll("figure[id]")].filter(
+          (figure) => !figure.parentElement.closest("figure[id]"),
+        )
+        if (designs.length === 0) return
+        const text = (element) =>
+          element?.textContent.replace(/\s+/g, " ").trim()
+        const heading = document.querySelector("h1")
+        if (heading && !heading.id) heading.id = "review-top"
+
+        const groups = new Map()
+        for (const figure of designs) {
+          const section = figure.closest("section[id]")
+          const key = section ?? heading
+          if (!groups.has(key)) groups.set(key, [])
+          groups.get(key).push(figure)
+        }
+
+        function link(href, label, className, title) {
+          const a = document.createElement("a")
+          a.href = href
+          a.className = className
+          a.textContent = label
+          a.title = title ?? label
+          return a
+        }
+
+        const bar = document.createElement("nav")
+        bar.className = "review-bar"
+        bar.setAttribute("aria-label", "Journeys and designs")
+        const designLinks = new Map()
+        for (const [owner, figures] of groups) {
+          const group = document.createElement("span")
+          group.className = "review-group"
+          if (owner) {
+            const title = text(owner.querySelector("h1, h2") ?? owner)
+            owner.classList.add("review-target")
+            group.append(
+              link(
+                `#${owner.id}`,
+                title.split(" — ")[0],
+                "review-journey",
+                title,
+              ),
+            )
+          }
+          for (const figure of figures) {
+            const caption =
+              text(figure.querySelector("figcaption, h2, h3")) ?? ""
+            const short =
+              figure.dataset.short ??
+              caption.match(/^([A-Z][0-9]*)(?:\.|:|\s[—–-])\s/)?.[1] ??
+              caption
+            const a = link(
+              `#${figure.id}`,
+              short || figure.id,
+              "review-design",
+              caption || figure.id,
+            )
+            a.setAttribute("aria-label", caption || figure.id)
+            figure.classList.add("review-target")
+            designLinks.set(figure, a)
+            group.append(a)
+          }
+          bar.append(group)
+        }
+        document.body.prepend(bar)
+
+        // A link's target lands below the bar, not under it.
+        const style = document.createElement("style")
+        document.head.append(style)
+        const fitTargets = () => {
+          style.textContent = `.review-target{scroll-margin-top:${bar.offsetHeight + 8}px}`
+        }
+        fitTargets()
+        addEventListener("resize", fitTargets)
+
+        // The bar marks the design in view, and scrolls itself to show its link.
+        let current
+        // A design whose link was followed stays marked, even where the page cannot
+        // scroll it to the top, until the reader scrolls on their own.
+        let pinned
+        /** The design whose top has passed a third of the way down, or the last at the page's foot. */
+        function designInView() {
+          if (pinned) return pinned
+          const root = document.documentElement
+          if (
+            root.scrollTop > 0 &&
+            scrollY + innerHeight >= root.scrollHeight - 2
+          )
+            return designs.at(-1)
+          const line = Math.max(bar.offsetHeight + 16, innerHeight / 3)
+          let inView = designs[0]
+          for (const figure of designs)
+            if (figure.getBoundingClientRect().top <= line) inView = figure
+          return inView
+        }
+        function markCurrent(inView = designInView()) {
+          if (inView === current) return
+          designLinks.get(current)?.removeAttribute("aria-current")
+          current = inView
+          const a = designLinks.get(current)
+          a.setAttribute("aria-current", "location")
+          // Show the link's group from its start, or as much of it as keeps the
+          // link itself in view.
+          const right = a.offsetLeft + a.offsetWidth
+          if (
+            a.offsetLeft < bar.scrollLeft ||
+            right > bar.scrollLeft + bar.clientWidth
+          )
+            bar.scrollLeft = Math.max(
+              a.parentElement.offsetLeft - 4,
+              right - bar.clientWidth + 8,
+            )
+        }
+        let queued = false
+        addEventListener(
+          "scroll",
+          () => {
+            if (queued) return
+            queued = true
+            requestAnimationFrame(() => {
+              queued = false
+              markCurrent()
+            })
+          },
+          { passive: true },
+        )
+        addEventListener("resize", () => markCurrent())
+        bar.addEventListener("click", (event) => {
+          const a = event.target.closest("a")
+          pinned = designs.find((f) => designLinks.get(f) === a)
+          markCurrent()
+        })
+        for (const type of ["wheel", "touchstart", "keydown"])
+          addEventListener(type, () => (pinned = undefined), { passive: true })
+        markCurrent()
+
+        const controls = document.querySelector(".controls")
+        if (inline || !controls) return
+
+        // The Options panel: a pill that names the current choices, opening the
+        // page's controls above it. The pill comes first, so Tab moves from it into
+        // the controls; the panel's column runs in reverse to draw them above.
+        document.documentElement.classList.add("review-floating")
+        const panel = document.createElement("div")
+        panel.className = "review-options"
+        const body = document.createElement("div")
+        body.className = "review-options-body"
+        body.id = "review-options-body"
+        body.hidden = true
+        body.setAttribute("role", "group")
+        body.setAttribute("aria-label", "Options")
+        const toggle = document.createElement("button")
+        toggle.type = "button"
+        toggle.className = "review-options-toggle"
+        toggle.setAttribute("aria-controls", body.id)
+        toggle.setAttribute("aria-expanded", "false")
+        controls.replaceWith(panel)
+        body.append(controls)
+        panel.append(toggle, body)
+
+        function summarise() {
+          const chosen = [
+            ...[
+              ...controls.querySelectorAll('button[aria-pressed="true"]'),
+            ].map(text),
+            ...[...controls.querySelectorAll("select")].map((select) =>
+              text(select.selectedOptions[0]),
+            ),
+            ...[...controls.querySelectorAll("input:checked")].map(
+              (input) => text(input.labels?.[0]) ?? input.value,
+            ),
+          ].filter(Boolean)
+          const arrow = document.createElement("span")
+          arrow.setAttribute("aria-hidden", "true")
+          arrow.textContent = body.hidden ? "▴ " : "▾ "
+          toggle.replaceChildren(
+            arrow,
+            `Options${chosen.length ? `: ${chosen.join(" · ")}` : ""}`,
+          )
+        }
+        function setOpen(open) {
+          body.hidden = !open
+          toggle.setAttribute("aria-expanded", String(open))
+          summarise()
+        }
+        toggle.addEventListener("click", () => setOpen(body.hidden))
+        panel.addEventListener("keydown", (event) => {
+          if (event.key !== "Escape" || body.hidden) return
+          setOpen(false)
+          toggle.focus()
+        })
+        addEventListener("pointerdown", (event) => {
+          if (!body.hidden && !panel.contains(event.target)) setOpen(false)
+        })
+
+        // A switch that changes the page's height, such as Zoom or Screen, keeps the
+        // design in view where it was: its top is noted before the switch's own
+        // handler runs (capturing), and restored after it (bubbling).
+        let anchor
+        const noteAnchor = () => {
+          const figure = designInView()
+          anchor = { figure, top: figure.getBoundingClientRect().top }
+        }
+        const afterSwitch = () => {
+          summarise()
+          if (anchor)
+            scrollBy(0, anchor.figure.getBoundingClientRect().top - anchor.top)
+          anchor = undefined
+          markCurrent()
+        }
+        for (const type of ["click", "change"]) {
+          controls.addEventListener(type, noteAnchor, true)
+          controls.addEventListener(type, afterSwitch)
+        }
+        summarise()
+      })()
+    </script>
   </body>
 </html>

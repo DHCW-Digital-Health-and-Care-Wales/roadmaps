@@ -309,7 +309,8 @@ Nothing checks permission in advance.
   row without an ID one at publish, none of them a new item's.
 - **Its row goes after the tab's last row in use** (D2), by `appendCells`: Google picks
   the row as it applies the write, so a row a co-lead added meanwhile is kept, and no
-  row in use moves, so an item without an ID is still found by its position. The row
+  row in use moves for it, so an item without an ID is still found by its position
+  (a move or an order does move rows: _STY-051 amendments_). The row
   holds its `Item ID`, its `Title`, its `Horizon` as the public site's English value and
   each other field it has, written as an edit of that field is written. No Welsh cell
   is written. A column the row needs and the tab lacks is added as for an edit (Q28).
@@ -367,6 +368,9 @@ ADR-014 _STY-051 amendments_ say where a moved item goes; these say how it is wr
   row. Rewriting the rows' values lost: it would write cells the editor never writes
   (Welsh, unknown columns), turn formulas, numbers and dates into text, leave formatting
   and notes on the wrong item, and overwrite a co-lead's edit anywhere in those rows.
+- **A row already in place is not moved** (#107 point 1): a moved item's row that
+  already sits after every row of its new placement's items gets its `Horizon` cell
+  alone.
 - **A move that would leave a row where it is is never sent** (map ticket
   [What do row moves do to a real roadmap tab?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/109)):
   Google refuses it, and the whole batch with it.
@@ -382,6 +386,9 @@ ADR-014 _STY-051 amendments_ say where a moved item goes; these say how it is wr
   the batch is all or nothing, so the cell proves the row moved too.
 - **Accepted cost**: a co-lead's edit in progress in a moved row is lost, with an error
   in their spreadsheet (#109). The one-request race of _Consequences_ is unchanged.
+- **Noted by the agent** (STY-051 D8): a moved row shifts the positions of the rows it
+  passes, so an item without an ID, as a co-lead loaded it, can be reported not found
+  on their publish (Option 13), as after a row moved by hand. Option 13 is unchanged.
 
 ### STY-050 amendments
 
@@ -422,8 +429,8 @@ Decided with the owner on 2026-11-16, on the same map.
   pending order is published, one equal to its base is not written (`network`, changes
   kept), and anything else is unconfirmed.
 - **The order is the domain's** (ADR-002 stands): `RoadmapChanges` carries each
-  placement's pending order and `RoadmapRepository` gains no call. A database API keeps
-  each item's position in its placement; rows stay inside infrastructure.
+  placement's pending order and `RoadmapRepository` gains no call; rows stay inside
+  infrastructure.
 
 ## Options (owner's choice marked ✅, 2026-11-11)
 

@@ -26,7 +26,9 @@ publish plan moves the item's row after the re-read (`domain/`, with the contrac
 test), the Sheets adapter sends the moves and the in-memory double keeps the same
 order (`infrastructure/`, `tests/`). A new `AppError` kind for a refused protected row,
 with its copy in English and Welsh (`lib/`, `i18n/`). README _What the editor writes_
-changes in this story's PR, which says so. The ADR-014 and ADR-012 amendments are
+changes in this story's PR, which says so, and so does
+`docs/operations/replacing-google-sheets.md` (a moved item is returned last; the new
+error kind). The ADR-014 and ADR-012 amendments are
 already written (D5); this story checks the build against them.
 
 ## Acceptance criteria
@@ -50,9 +52,10 @@ the order they were moved (D3), and new items after every moved item (D4)
 
 **Given** a pending move of "Online booking" into Now
 **When** the roadmap is published, or saved, or "Save and publish" is chosen
-**Then** the same all-or-nothing `batchUpdate` writes its `Horizon` cell and moves its
-row to just after the row of Now's last item in the re-read, by `moveDimension`, after
-the cell and `Item ID` writes and before any appended row
+**Then** the same all-or-nothing `batchUpdate` writes its `Horizon` cell and, unless
+its row already sits after every row of Now's items (S5), moves the row to just after
+the row of Now's last item in the re-read, by `moveDimension`, after the cell and
+`Item ID` writes and before any appended row
 **And** no cell of the row is rewritten, and the rows of every other placement keep
 their order relative to each other
 
@@ -64,13 +67,15 @@ their order relative to each other
 **Then** the row goes after "D", and the publish is not stopped for review
 **And** the page, once the publish is read back, shows "Online booking" fifth of five
 
-### S5: A move that would leave the row where it is sends no move (D2)
+### S5: A row already after the placement's items is not moved (D2)
 
-**Given** a pending move whose row already sits just after the new placement's last
-item, or a move into a placement with no items
+**Given** a pending move whose row already sits after every row of the new placement's
+items, as a Next item does below Now's rows when it moves to Now, or a move into a
+placement with no items
 **When** the roadmap is published
-**Then** only its `Horizon` cell is written, and no `moveDimension` request is sent
-(Google refuses a move to the row's own position, failing the whole publish)
+**Then** only its `Horizon` cell is written, and no `moveDimension` request is sent: it
+already shows last, and Google refuses a move to the row's own position, failing the
+whole publish
 
 ### S6: Several moved items go last in the order they were moved (D3)
 
@@ -86,7 +91,7 @@ it shows after both (D4)
 account may not edit
 **When** the roadmap is published
 **Then** nothing is published, the Product Lead is told a protected part of the
-spreadsheet stopped the publish and who can change that, in English or Welsh
+spreadsheet stopped the publish, in English or Welsh
 **And** every pending change stays pending; the error is its own `AppError` kind,
 not `unknown` or `forbidden`
 
@@ -134,7 +139,9 @@ moves an item and publishes it.
   Q2, Q5, Q7; #106 Q6): rows are moved by `moveDimension`, never rewritten;
   `destinationIndex` counts rows before the moved row is taken out (up to `f`: `f`;
   down to `f`: `f + 1`); "last" is resolved against the re-read, and a co-lead's
-  change is no conflict; a no-op move is never sent; a hidden row is an item; a lost
+  change is no conflict; a row already after every row of the placement's items is not
+  moved (#107 point 1: rows already in order stay), and a no-op move is never sent; a
+  hidden row is an item; a lost
   answer is judged by the `Horizon` cell, since the batch is atomic (confirmed with the
   owner on ticket
   [How is STY-050 sliced into stories?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/126)).
@@ -155,6 +162,11 @@ moves an item and publishes it.
   account may not edit (`400 INVALID_ARGUMENT`, "You are trying to edit a protected
   cell or object"), failing the whole batch. A new `AppError` kind covers any such
   refusal on a publish, whatever the request; its copy is settled with `copywriter`.
+- **D8** (agent, 2026-11-16, from review): a row move shifts the positions of the rows
+  it passes. A co-lead who loaded the roadmap while one of its items had no `Item ID`
+  then finds that item "not found" on their publish (ADR-012 Option 13), as after a row
+  moved by hand. No new rule: Option 13 already governs it, and any publish gives every
+  item an ID, so it can happen once per such item. Recorded so the owner can see it.
 - **D7** (owner, 2026-11-16, #126 Q5): suggested model Fable 5.2, "I'm testing the
   model".
 

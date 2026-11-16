@@ -103,8 +103,9 @@ therefore has one possible place without a new kind of write: after the last row
 6. A roadmap with no items shows one panel with the button, and the publish dialog says
    when the public would see a roadmap with no items (F4). STY-042, STY-046.
 7. **Unchanged:** ADR-012's per-roadmap, all-or-nothing publish, its conflict rules and
-   Refresh; what each field writes (README, _What the editor writes_); English only;
-   Move on an item's card; who may edit (anyone connected, ADR-012 Option 14).
+   Refresh; what each field writes (README, _What the editor writes_), apart from the
+   row moves of item 8; English only; Move on an item's card; who may edit (anyone
+   connected, ADR-012 Option 14).
 8. A moved item goes last in its new placement, and publishing moves its row (STY-051).
    A Product Lead reorders a placement's items from each card's Move menu; the order is
    a pending edit of the placement, written as row moves, and a co-lead's change to the
@@ -141,7 +142,7 @@ pending edit: a new item, and every change made in either dialog's editing form.
 
 STY-040, STY-045, STY-051 and STY-050 each change README _What the editor writes_ in
 their own PR and say so in the PR, since the format is a contract with the public site.
-No other story changes a write. STY-051 and STY-050 change no column or cell format:
+No other story changes a write, but STY-048 and STY-049 will once grilled. STY-051 and STY-050 change no column or cell format:
 they move and insert rows, whose order the public site already reads.
 
 ### ADR amendments

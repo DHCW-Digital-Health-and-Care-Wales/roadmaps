@@ -71,9 +71,9 @@ show. The editor shows it, flagged, so the Product Lead can place it (ADR-011).
 _Avoid_: Draft, hidden item
 
 **Order**:
-The sequence a placement's items show in, here and on the public site. A Product Lead
-can change it; a changed order is one pending edit of its placement (ADR-012). Order
-says nothing about importance.
+The sequence a placement's items show in, here and on the public site. Once STY-050 is
+delivered a Product Lead can change it, and a changed order is one pending edit of its
+placement (ADR-012). Order says nothing about importance.
 _Avoid_: Rank, priority, sort order, row order
 
 **Position**:
@@ -85,7 +85,7 @@ One piece of work on a roadmap: a title, a description, expected outcomes, tags 
 other details that help a public reader. It fits on one card no bigger than a phone
 screen. A **new item** is one a Product Lead has added, with a title and a placement,
 and not yet published: a pending edit, which goes last in its placement unless the
-Product Lead reorders it (ADR-012).
+Product Lead reorders it (STY-050; ADR-012).
 _Avoid_: Ticket, task, feature, epic, story
 
 **Expected outcome**:
@@ -121,7 +121,7 @@ list (ADR-014).
 _Avoid_: Health board (only some are), customer
 
 **Pending edit**:
-A change to a roadmap or roadmap item, a new item, or a placement's new order, that
+A change to a roadmap or roadmap item, a new item, or (from STY-050) a placement's order, that
 the Product Lead has made but not yet published or saved; the public site does not show
 it. It is kept in this browser tab, in memory, through an expired session, Reconnect
 and, if the Product Lead chooses, Disconnect. A change is kept with the value it was edited from, which a
@@ -144,7 +144,7 @@ STY-035).
 _Avoid_: Publish (for a roadmap that is not published), store
 
 **Conflict** _(planned)_:
-A field, or a placement's order, a co-lead changed in the data source, to a different
+A field, or (from STY-050) a placement's order, a co-lead changed in the data source, to a different
 value, after the Product Lead loaded what they have edited. Publishing stops until, for each conflict, the
 Product Lead keeps their change or uses the co-lead's (ADR-012).
 _Avoid_: Clash, merge conflict

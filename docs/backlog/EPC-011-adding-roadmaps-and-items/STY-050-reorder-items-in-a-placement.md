@@ -56,8 +56,8 @@ message gives its new position
 **Then** Now's heading shows an "Order changed" tag and "Undo order"; no card is
 tagged for its position
 **And** "Undo order" restores the loaded order, sends focus to Now's heading and
-announces "Order of Now undone"; an order reordered back to the loaded one is no
-change, and the tag goes
+announces "Order of Now undone"; an order reordered back to the one the page shows
+without it is no change, and the tag goes (D12)
 
 ### S4: An item's own Undo leaves the order alone (D2)
 
@@ -211,6 +211,13 @@ published, and an order conflict reviewed, at desktop and phone width.
   by the PR that wrote this record; this story's PR changes README _What the editor
   writes_ (a reorder moves rows, writing no cell content and no column; a new item not
   last is inserted rather than appended).
+- **D12** (agent, 2026-11-16, from review): "equal to its base is no change" (D2)
+  compares the pending order with the order the page shows without one: the loaded
+  order without the items moved out, then the items moved in and the new items, as
+  STY-051 shows them. Comparing with the loaded order alone lost: an order holding a
+  moved-in item could never equal it, so "Order changed" would stay with the page back
+  at its default, and a co-lead's change to the placement would become a conflict. The
+  conflict rule (D9) still compares the re-read with the loaded order.
 
 ## Starting point
 

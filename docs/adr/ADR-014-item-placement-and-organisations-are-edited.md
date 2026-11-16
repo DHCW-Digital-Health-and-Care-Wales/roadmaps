@@ -91,7 +91,8 @@ Decided with the owner on 2026-11-16, on the wayfinder map
   so. Publishing writes the `Horizon` cell and moves the item's row to just after the
   row of the placement's last item in the re-read, a co-lead's items included, which is
   no conflict (Q6). This replaces "A move changes the `Horizon` cell only … No row
-  moves". Several items moved into one placement go last in the order they were moved.
+  moves". Several items moved into one placement go last in the order they were moved
+  (agent, STY-051 D3, reading the rule move by move).
 - **Why the row now moves**: the rejected option's reason has gone. Reordering exists
   (STY-050, ADR-012 _STY-050 amendments_), and a check on a scratch copy of a roadmap
   tab ([What do row moves do to a real roadmap tab?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/109))
@@ -102,8 +103,8 @@ Decided with the owner on 2026-11-16, on the wayfinder map
   was loaded, is no change, and it keeps its loaded position; rows move only at
   publish.
 - **How the row moves** is ADR-012's (_STY-051 amendments_). A move into a placement
-  with no items, or one whose row already sits last there, writes the `Horizon` cell
-  alone.
+  with no items, or one whose row already sits after every row of the placement's
+  items, writes the `Horizon` cell alone (#107 point 1).
 - The rest of _Placement_ stands: a placement is a pending edit, one field for
   conflicts, chosen from the card's Move menu or the form, never unplaced.
 

@@ -7,7 +7,7 @@
 - **Depends on**: none
 - **Binding ADRs**: ADR-011
 - **Suggested model**: Haiku — one glossary entry, with the `domain-modeling` skill
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/121
 
 ## Summary
 

@@ -1,7 +1,7 @@
 import type { Organisation } from "@/domain/roadmap/organisation"
 
 /**
- * The twelve organisations, built in because the spreadsheet has no `Organisations` tab
+ * The fourteen organisations, built in because the spreadsheet has no `Organisations` tab
  * (ADR-014). In the public site's order, which is where its parser's order stays.
  * Codes, ids and short names are not translated; the full names are the public site's,
  * except All Wales's, which has no "(national)" since the code beside it says so.
@@ -118,6 +118,26 @@ export const BUILT_IN_ORGANISATIONS: readonly Organisation[] = [
     name: {
       en: "Health Education and Improvement Wales",
       cy: "Addysg a Gwella Iechyd Cymru",
+    },
+    national: false,
+  },
+  {
+    id: "dhcw",
+    code: "DHCW",
+    shortName: "Digital Health and Care Wales",
+    name: {
+      en: "Digital Health and Care Wales",
+      cy: "Iechyd a Gofal Digidol Cymru",
+    },
+    national: false,
+  },
+  {
+    id: "pi",
+    code: "P&I",
+    shortName: "Performance and Improvement",
+    name: {
+      en: "NHS Wales Performance and Improvement",
+      cy: "Perfformiad a Gwella GIG Cymru",
     },
     national: false,
   },

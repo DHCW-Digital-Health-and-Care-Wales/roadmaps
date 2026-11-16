@@ -36,7 +36,7 @@ const ROADMAP_PLACEMENTS = [
 type RoadmapPlacement = (typeof ROADMAP_PLACEMENTS)[number]
 const ROADMAP_HORIZONS = ["now", "next", "later"] as const // the rest are sections
 
-// domain/roadmap/organisation.ts — the public site's twelve, in its display order
+// domain/roadmap/organisation.ts — the public site's fourteen, in its display order
 const ORGANISATIONS = [
   "national",
   "abuhb",
@@ -50,6 +50,8 @@ const ORGANISATIONS = [
   "wast",
   "phw",
   "heiw",
+  "dhcw",
+  "pi", // code `P&I`; codes match ignoring punctuation
 ] as const
 type Organisation = (typeof ORGANISATIONS)[number]
 
@@ -108,7 +110,7 @@ or written.
 Organisations are no longer a domain vocabulary: the repository serves them as a list
 (`listOrganisations()`), items carry `organisationIds`, and the card shows short names,
 national first then alphabetical, instead of codes (Option 6's choice ends). The Sheets adapter keeps the
-twelve built in and still matches codes as headers, leaving out an unknown one; the item
+fourteen built in and still matches codes as headers, leaving out an unknown one; the item
 now keeps that code as written. Placements stay a domain vocabulary.
 
 ### STY-039 amendment

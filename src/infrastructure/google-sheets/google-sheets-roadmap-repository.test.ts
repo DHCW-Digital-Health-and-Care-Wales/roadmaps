@@ -714,7 +714,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
       ])
     })
 
-    it("serves the built-in twelve organisations, by short name, without a request (S2)", async () => {
+    it("serves the built-in fourteen organisations, by short name, without a request (S2)", async () => {
       const requests = serveLists()
 
       const organisations = await httpRepository().listOrganisations()
@@ -735,6 +735,8 @@ describe("GoogleSheetsRoadmapRepository", () => {
         ["wast", "WAST", "Welsh Ambulance"],
         ["phw", "PHW", "Public Health Wales"],
         ["heiw", "HEIW", "Health Education and Improvement Wales"],
+        ["dhcw", "DHCW", "Digital Health and Care Wales"],
+        ["pi", "P&I", "Performance and Improvement"],
       ])
       expect(
         organisations.filter(({ national }) => national).map(({ id }) => id),

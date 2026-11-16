@@ -13,7 +13,7 @@ ADR-012 kept an item's placement and organisations read-only. A Product Lead's f
 recurring job after fixing text is moving an item between horizons as priorities change
 (persona: _Move items between horizons_). Placement and organisations are each one cell
 in an item's row (`Horizon`, `Organisations`), which the public site reads. The editor
-and the public site each hold the twelve organisations in code today (ADR-011); the
+and the public site each hold the fourteen organisations in code today (ADR-011); the
 database that replaces Sheets (ADR-002) will hold them as a table, linked to items.
 
 ## Decision
@@ -45,7 +45,7 @@ database that replaces Sheets (ADR-002) will hold them as a table, linked to ite
   Q16, round 3 Q21, round 4 Q24, Q25). The card and form sort English short names; the
   families page sorts full names, Welsh on the Welsh interface. The order is
   presentation, so the database and API need only the `national` column.
-- **In Sheets the list is built in** (Q13): the adapter returns the twelve, with today's
+- **In Sheets the list is built in** (Q13): the adapter returns the fourteen, with today's
   ids (`cavuhb`) as keys, and maps an item's codes to ids as it reads. No
   `Organisations` tab: the owner chose to keep the list in code until the database.
 - **The database holds them as rows** (Q19): an organisations table keyed by `id` and a

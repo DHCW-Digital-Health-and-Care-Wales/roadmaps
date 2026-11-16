@@ -91,7 +91,7 @@ test("lists each family with its colour, names and roadmaps, and the categories 
     exact: true,
   })
   const entries = organisations.getByRole("listitem")
-  await expect(entries).toHaveCount(12)
+  await expect(entries).toHaveCount(14)
   await expect(entries.first()).toHaveText("All Wales (National)")
   await expect(entries.nth(1)).toHaveText(
     "Aneurin Bevan University Health Board (ABUHB)",

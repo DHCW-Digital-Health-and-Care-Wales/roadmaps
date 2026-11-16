@@ -531,9 +531,14 @@ describe("parseRoadmapTab", () => {
       const tab = parseRows({
         Title: "An item",
         Horizon: "Now",
-        Organisations: " heiw\nC.A.V.U.H.B,, cavuhb",
+        Organisations: " heiw\nC.A.V.U.H.B,, cavuhb, p&i, D.H.C.W",
       })
-      expect(tab.items[0]?.organisationIds).toEqual(["cavuhb", "heiw"])
+      expect(tab.items[0]?.organisationIds).toEqual([
+        "cavuhb",
+        "heiw",
+        "dhcw",
+        "pi",
+      ])
       expect(tab.items[0]?.unknownOrganisationCodes).toEqual([])
       expect(tab.problems).toEqual([])
     })

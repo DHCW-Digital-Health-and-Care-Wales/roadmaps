@@ -797,7 +797,7 @@ test.describe("the Organisations field opens on request (STY-038)", () => {
 
     await change.click()
     const group = form.getByRole("group", { name: "Organisations" })
-    await expect(group.getByRole("checkbox")).toHaveCount(12)
+    await expect(group.getByRole("checkbox")).toHaveCount(14)
     await expect(
       group.getByRole("checkbox", { name: "All Wales (National)" }),
     ).toBeFocused()

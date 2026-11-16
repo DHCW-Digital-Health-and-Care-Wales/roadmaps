@@ -36,10 +36,14 @@
       - text: Cardiff and Vale (CAVUHB)
       - checkbox "Cwm Taf Morgannwg (CTMUHB)"
       - text: Cwm Taf Morgannwg (CTMUHB)
+      - checkbox "Digital Health and Care Wales (DHCW)"
+      - text: Digital Health and Care Wales (DHCW)
       - checkbox "Health Education and Improvement Wales (HEIW)"
       - text: Health Education and Improvement Wales (HEIW)
       - checkbox "Hywel Dda (HDUHB)"
       - text: Hywel Dda (HDUHB)
+      - checkbox "Performance and Improvement (P&I)"
+      - text: Performance and Improvement (P&I)
       - checkbox "Powys (PTHB)"
       - text: Powys (PTHB)
       - checkbox "Public Health Wales (PHW)"

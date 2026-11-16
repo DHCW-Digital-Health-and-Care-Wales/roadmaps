@@ -40,9 +40,3 @@ editor writes_ and an ADR-012 or ADR-014 amendment.
   - (a) Pending; a co-lead's different order of the same horizon is a conflict
     (recommended).
   - (b) Written at once.
-
-## Related
-
-- [`reorder-items-ux-analysis.md`](../../analysis/reorder-items-ux-analysis.md): how a
-  Product Lead reorders, how a pending order shows, and how it is published, compared
-  in mock-ups.

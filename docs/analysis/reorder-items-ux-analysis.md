@@ -27,7 +27,7 @@ the same roadmap (A12), and nothing is public until a deliberate publish (A9, A1
 
 ## Journeys covered
 
-| Group                                        | Journeys                                                                                 | Source                         |
+| Group                                        | Journeys                                                                                 | Stories and tickets            |
 | -------------------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------ |
 | 1. Put an item in its place                  | find the control; move an item to the top, up or down; know its position; focus after    | STY-050 Q1; ticket 105         |
 | 2. See a changed order, pending, and undo it | see which placement's order is pending; see the unpublished change count; undo the order | ticket 104 points 1, 5, 6      |
@@ -63,7 +63,9 @@ the Welsh interface; connecting to Google.
 - **Positions are numerals**: "4 of 4", never "4th". Welsh ordinals change with the
   noun and the number, so numerals translate cleanly.
 - **Focus follows the moved item**: after a move, focus is on the same control of the
-  moved card or row, and a status message says its new position ("Moved up. 1 of 4.").
+  moved card or list entry, and a status message says its new position, such as
+  "Moved to the top. 1 of 4." or "Moved up. 2 of 4."; the wording is settled with the
+  build.
 - The order controls are held, though focusable, while the roadmap is being published,
   as Edit and Move are today.
 - The app's look: its header band, cards, buttons and tags.
@@ -86,7 +88,7 @@ Sam wants the newest item in Now shown first, here and on the public site.
 | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | A. Move menu (inline)                     | Each card's Move menu gains a group above "Move to", labelled with the item's position ("In Now: 4 of 4"): "To the top", "Up one", "Down one", "To the bottom", each shown only where it applies. Each choice changes the order at once; focus returns to the moved card's Move. | One control for every kind of move, so a moved item put last (ticket 106) is put first from the same menu. Built from the existing menu: the same by keyboard, touch and screen reader, and on the phone. The common jobs, first or one place up, are one choice. | A middle position takes several trips through the menu: 6th to 3rd is three "Up one". The menu grows from five choices to as many as nine. In the three-column grid, "up" is left-to-right reading order, and the card jumps rows.                                                                                                                                                                  |
 | B. Drag a handle, or the Move menu        | Each card gets a handle. Drag it, or on a phone press and hold, to a drop line between cards. From the keyboard, Space lifts, the arrows move and Space drops, with spoken positions. A's menu stays, as the way for anyone who can't drag.                                      | Familiar from other tools; any position in one gesture on a desktop.                                                                                                                                                                                              | A new interaction and library to build and test: Base UI has no sortable list. Cards are as tall as a phone screen, so a drag on a phone needs the page to scroll under the finger, and press-and-hold fights the page's own scrolling. The drop line in a grid is ambiguous: before this card, or after the one to its left. Everything in A has to be built too (WCAG 2.5.7, dragging movements). |
-| C. Reorder mode for one placement (mode)  | "Reorder" beside a placement's heading turns its cards into one numbered row per title, with up and down arrows, as the details editor moves a detail. "Done" makes the new order pending; "Cancel" leaves the order as it was. One placement at a time.                         | The whole order on one screen, even on a phone, so a reshuffle is quick and its result seen. Follows a pattern the editor already has ("Move up", "Move down", "Moved up."). Cards stay uncluttered outside the mode.                                             | Two more presses, in and out, for a one-step job. Titles only: phase and description are out of sight while ordering. A second way of moving items besides the Move menu. What happens to Edit, Move and the other placements while a mode is open has to be settled.                                                                                                                               |
+| C. Reorder mode for one placement (mode)  | "Reorder" beside a placement's heading turns its cards into a numbered list of their titles, with up and down arrows, as the details editor moves a detail. "Done" makes the new order pending; "Cancel" leaves the order as it was. One placement at a time.                    | The whole order on one screen, even on a phone, so a reshuffle is quick and its result seen. Follows a pattern the editor already has ("Move up", "Move down", "Moved up."). Cards stay uncluttered outside the mode.                                             | Two more presses, in and out, for a one-step job. Titles only: phase and description are out of sight while ordering. A second way of moving items besides the Move menu. What happens to Edit, Move and the other placements while a mode is open has to be settled.                                                                                                                               |
 | D. Position in the item's dialog (guided) | The item dialog gains "Position in Now", a choice of "1 of 4" to "4 of 4", beside "Horizon or section".                                                                                                                                                                          | No new control on the page; the position sits with the item's other details.                                                                                                                                                                                      | The order is a placement's edit, not the item's (ticket 104 point 5), so the item's "Undo changes" could not undo what its own form changed. One item per trip, choosing a number with the other items out of sight. Choosing a position moves every item between, which the form doesn't show.                                                                                                     |
 
 **Recommendation**: **A, the Move menu**. It answers the usual job in one or two
@@ -150,11 +152,13 @@ No design needs a read or write those don't supply.
 - A placement with one item, and the unplaced items, with no order controls.
 - A section's order (Recently delivered, Delivered this year, Not doing), the same as
   a horizon's.
-- The status messages and focus after each move, given here as text only.
+- The status messages and focus after each move and after "Undo order", given here
+  as text only.
 - The page while publishing, with the order controls held; an expired session, which
   keeps the pending order.
-- Undo order, Discard all and Refresh dropping an order; an order equal to its base,
-  which is no change.
+- Undo order and Discard all dropping an order; Refresh dropping only an order the
+  re-read already holds (ticket 104 point 6); an order equal to its base, which is no
+  change.
 - The Welsh interface; dark mode.
 
 ## What does not change

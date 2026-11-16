@@ -284,6 +284,13 @@ flowchart LR
 - [`docs/analysis/remove-a-published-item-ux-analysis.md`](../../analysis/remove-a-published-item-ux-analysis.md):
   six designs over two journeys for STY-049, drawing every option of its Q1–Q3; no
   outcome yet.
+- [`docs/analysis/reorder-items-ux-analysis.md`](../../analysis/reorder-items-ux-analysis.md):
+  nine mock-ups over three journeys, for STY-050. Outcome: "To the top", "Up one",
+  "Down one" and "To the bottom" in each card's Move menu; "Order changed" and "Undo
+  order" beside the placement's heading; one line in the publish dialog. The decisions
+  stay on the wayfinder ticket
+  [How does a Product Lead reorder a placement's items?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/105)
+  until its map is done.
 - `docs/analysis/roadmaps-tab-format.md` and `docs/analysis/roadmap-tab-format.md`: the
   roadmap index and roadmap tab formats, and the `Template` tab.
 - [EPC-008](../_archive/EPC-008-publishing-and-freshness/README.md): "Publish roadmap",

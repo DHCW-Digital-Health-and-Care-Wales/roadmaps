@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Renders a UX prototype page: screenshots each design at 1440px and fails if
-// the page scrolls sideways at 375px, a navigation contains no native controls,
-// a choice mark sits outside a native control, or an element id repeats.
+// the page's script throws as it opens, the page scrolls sideways at 375px, a
+// navigation contains no native controls, a choice mark sits outside a native
+// control, or an element id repeats.
 // Usage: node check-page.mjs <page.html-or-url> <shots-dir>
 import { mkdir } from "node:fs/promises"
 import path from "node:path"
@@ -25,10 +26,21 @@ try {
   const desk = await browser.newPage({
     viewport: { width: 1440, height: 900 },
   })
+  const scriptErrors = []
+  desk.on("pageerror", (err) => scriptErrors.push(err.message))
   await desk.goto(url)
+  // An assembled page's own header stays in view as the page scrolls, and
+  // would cross every design taller than the window in its screenshot.
+  await desk.addStyleTag({ content: "body>header.top{position:static}" })
+  if (scriptErrors.length > 0) {
+    console.error(
+      `the page's script threw as it opened: ${scriptErrors.join("; ")}`,
+    )
+    process.exitCode = 1
+  }
   const ids = await desk.$$eval("figure[id]", (fs) => fs.map((f) => f.id))
   const emptyNavigation = await desk.$$eval(
-    'figure[id] :is(nav, .tabbar, .side, [role="navigation"])',
+    'figure[id] :is(nav, .hdr, [role="navigation"])',
     (navs) =>
       navs
         .filter((nav) => !nav.querySelector("a[href],button"))

@@ -27,14 +27,21 @@ Read these before drawing anything:
   this editor. State in the inventory which of the persona's assumptions each
   journey relies on. Keep connecting to Google out of the designs unless the
   journey is about it
-- the existing screens each journey touches, in `src/features/`,
-  `src/components/layout/` and `src/routes/`, for navigation, page layout and
-  the components a design would reuse (`src/components/ui/`)
+- the existing screens each journey touches, in `src/features/` and
+  `src/components/layout/`, for navigation, page layout and the components a
+  design would reuse (`src/components/ui/`). See them as the app draws them
+  too: capture each with Google faked, as
+  `.agents/skills/implement-story/references/screenshots.md` (_Capture_) says.
+  Class names alone misdraw the shell
+
+A record not yet grilled has open questions where its scenarios will be. Each
+option of each question then stands for a scenario, and between them the
+designs draw every option.
 
 Done when you hold an **inventory**. Each journey in it has its reader, device,
-place, owning story, and that story's acceptance scenarios. Group journeys that
-share a screen into main journeys. List each excluded journey with its reason,
-such as belonging to a deferred epic.
+place, owning story, and that story's acceptance scenarios or open questions.
+Group journeys that share a screen into main journeys. List each excluded
+journey with its reason, such as belonging to a deferred epic.
 
 ## 2. Choose the shape and what varies
 
@@ -44,13 +51,17 @@ Choose the shape by what the owner has to judge:
   state shows, how a journey moves between screens. Each design is a static
   desktop frame and phone frame.
 - **Working component**, when it is something done: how one control behaves
-  under the hand as the Product Lead types, pastes, reorders, nests or removes,
-  by keyboard and by touch. Each design is the control itself, working, inside
-  the card, form or dialog that holds it.
+  under the hand as the Product Lead types, pastes, reorders or nests, by
+  keyboard and by touch. Each design is the control itself, working, inside its
+  **host**: the card, form, dialog or part of a page that holds it.
 
-A request that names its shape has chosen it. An epic with both kinds of
-question takes an analysis of each. When the open question is the rule the
-control keeps, not how it is worked, use `logic-prototype`.
+A request that names its shape has chosen it. A journey with a control in it
+is frames, unless how the control is worked is the question. An epic with both
+kinds of question takes an analysis of each. When the open question is the
+rule the control keeps, not how it is worked, use `logic-prototype`.
+
+Read the shape's reference before going on: `references/frames.md` or
+`references/working-component.md`.
 
 Then write down what every design shares: the contract's invariants and the
 product's existing look. The comparison is between interaction models, so
@@ -62,7 +73,8 @@ separate cleanly:
 - **overview** or **mode**: a new place or state built for the task
 
 For a component, the models are ways of working the same value, such as a
-type-ahead box, a row per entry, a tick list and one line of text.
+type-ahead box, a row per entry and a tick list, or a menu, a handle to drag
+and a mode.
 
 Done when the shape is stated with its reason, and every main journey has its
 designs named, each with its model.
@@ -83,9 +95,11 @@ holds:
 - every derived value a design shows, such as a count of roadmaps or of
   pending edits
 - the awkward cases planted on purpose, such as "patient" beside "Patients"
+- where the question is what publishing writes, the data as the data source
+  holds it, such as the order a roadmap's items are stored in
 
-A working component's world is small: the one item or roadmap that holds the
-control, and whatever else the control reads.
+A working component's world is what its host shows, and whatever else the
+control reads.
 
 Show a date only where the product shows one, such as a roadmap's Last
 updated, and never after today. Name a design's moments by state: "before
@@ -105,8 +119,7 @@ derived value agrees with the rows it counts.
 
 ## 4. Draw
 
-Read the shape's reference and draw by it: `references/frames.md` or
-`references/working-component.md`. In either shape:
+Draw by the shape's reference. In either shape:
 
 - **Copy.** Write the designs' copy in the product's voice from the copywriter
   skill, reusing strings from `src/i18n/locales/en.ts` where a screen already
@@ -129,6 +142,10 @@ one of three outcomes:
 - **departure**, recorded as a decision in the analysis
 - **not yet drawn**, listed in the analysis
 
+For a record not yet grilled, trace each option of each open question to the
+designs that draw it. A design drawing one option is no departure from the
+others; an option no design draws is not yet drawn.
+
 The details a shortcut tends to skip are:
 
 - the loading, empty and error states, and the retry or reconnect action
@@ -143,22 +160,25 @@ Also trace each read and write a design uses against the story that supplies
 it, and each stored state a read returns (a roadmap that is not published)
 against the story that first writes it (the epic's `delivery-notes.md` may
 name it). List a missing one in _Decisions needed_, as an owner question raised
-with the designs, not after the owner has chosen.
+with the designs, not after the owner has chosen. Trace each design against
+the decisions of its binding ADRs too: a design that reopens one is a row
+there.
 
-Done when no scenario, read or write is left untraced. Keep the trace in the
-scratchpad.
+Done when no scenario or option, read, write or ADR decision is left untraced.
+Keep the trace in the scratchpad.
 
 ## 6. Write the analysis
 
 Write `docs/analysis/{topic}-ux-analysis.md` under the analysis rules in
-`docs/AGENTS.md`. Put the page in a sibling folder:
+`docs/AGENTS.md`, with `{topic}` naming the job, such as `remove-a-roadmap`.
+Put the page in a sibling folder:
 `docs/analysis/{topic}-ux-analysis/prototypes.html`.
 
 Use these sections, in this order:
 
-1. A head giving the scope and the base SHA, naming the page's shape, saying
-   that only documents and one prototype page were added, and linking any
-   shared sample sheet.
+1. A head giving the date, the question, the scope and the base SHA, naming
+   the page's shape, saying that only documents and one prototype page were
+   added, and linking any shared sample sheet.
 2. _Readers and where they are_.
 3. _Journeys covered_: a table of groups, their journeys and their stories,
    plus the exclusions.
@@ -166,31 +186,36 @@ Use these sections, in this order:
 5. One section per journey. Describe its situation, then give a table with
    columns for Design, Idea, Strengths and Risks. End with a
    **Recommendation** naming one primary design and any add-ons.
-6. _Decisions needed_.
+6. _Decisions needed_, each row citing the open question it answers, where the
+   record has one.
 7. _Not yet drawn_.
 8. _What does not change_.
 9. _Related_.
 
-Link the analysis from the _Related_ list of the epic or record it supports.
+Link the analysis from the _Related_ list of the epic it supports.
 
 Done when every section is present in that order, and every departure and every
 missing read or write from step 5 has a row in _Decisions needed_.
 
 ## 7. Check
 
-Run the check on the page, in either shape. It uses `@playwright/test` from the
-root `pnpm install` and a Chromium (`pnpm exec playwright install chromium`).
-Write its screenshots to the scratchpad.
+Format the page and the analysis with Prettier, which `pnpm format:check`
+holds them to. Then run the check on the page, in either shape. It uses
+`@playwright/test` from the root `pnpm install` and a Chromium
+(`pnpm exec playwright install chromium`). Write its screenshots to the
+scratchpad.
 
 ```bash
 node .agents/skills/ux-prototypes/scripts/check-page.mjs docs/analysis/{topic}-ux-analysis/prototypes.html <scratchpad>/shots
 ```
 
 The check runs by hand, not in CI: it is a local aid for throwaway design
-pages. It screenshots every design at 1440px wide. It fails when the page
-scrolls sideways at 375px wide, a design's navigation has no native links or
-buttons, a `.rad` or `.chk` mark sits outside a native control, or an element
-id repeats. The shape's reference says what to check by eye and by hand.
+pages. It screenshots every design at 1440px wide. It fails when the page's
+script throws as it opens, the page scrolls sideways at 375px wide, a design's
+navigation has no native links or buttons, a `.rad` or `.chk` mark sits
+outside a native control, or an element id repeats. A pass says the page is
+well formed, not that a design is right or works: the shape's reference says
+what to check by eye and by hand.
 
 For system Chromium, set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to its
 executable, and confirm the setting on the scripts' own fixtures

@@ -13,13 +13,11 @@ const run = promisify(execFile)
 const checker = fileURLToPath(new URL("./check-page.mjs", import.meta.url))
 const fixtures = {
   "/links":
-    '<figure id="d1"><nav><a href="#d1">Home</a></nav><div class="tabbar"><a href="#d1">Roadmaps</a></div><div class="side"><button type="button">More</button></div><div role="navigation"><a href="#d1">Settings</a></div></figure>',
+    '<figure id="d1"><nav><a href="#d1">Home</a></nav><div class="hdr"><a href="#d1">Roadmaps</a><button type="button">Disconnect</button></div><div role="navigation"><a href="#d1">Settings</a></div></figure>',
   "/labels":
     '<figure id="d1"><div class="dev"><nav><a href="#d1">Home</a></nav></div><div class="ph"><nav><span>Home</span></nav></div></figure>',
-  "/tabbar-labels":
-    '<figure id="d1"><div class="tabbar"><span>Home</span></div></figure>',
-  "/side-labels":
-    '<figure id="d1"><div class="side"><span>Home</span></div></figure>',
+  "/header-labels":
+    '<figure id="d1"><div class="hdr"><span>Roadmaps</span></div></figure>',
   "/role-labels":
     '<figure id="d1"><div role="navigation"><span>Home</span></div></figure>',
   "/wide": '<figure id="d1" style="min-width:800px">Timeline</figure>',
@@ -35,6 +33,8 @@ const fixtures = {
     '<figure id="d1"><label for="email">Email</label><input id="email"></figure><figure id="d2"><label for="email">Email</label><input id="email"></figure>',
   "/figure-id-reused":
     '<figure id="d1"><a href="#d1">Home</a><span id="d2">Settings</span></figure><figure id="d2">Roadmap detail</figure>',
+  "/script-error":
+    '<figure id="d1"><div id="host"></div><script>document.getElementById("hosts").append("A")</script></figure>',
   "/native-choice":
     '<figure id="d1"><button type="button" role="radio" aria-checked="true" class="opt"><span class="rad on"></span>Platform</button><label><input type="checkbox"><span class="chk"></span>Mobile app</label><span aria-hidden="true" class="rad on"></span>Data and analytics</figure>',
 }
@@ -58,6 +58,17 @@ test("prototype page checks exercise rendered browser fixtures", async (t) => {
         `http://127.0.0.1:${port}/${fixture}`,
         path.join(scratch, fixture),
       ])
+
+    await t.test(
+      "a page whose script throws as it opens is refused",
+      async () => {
+        await assert.rejects(
+          () => check("script-error"),
+          (error) =>
+            error.code === 1 && /script threw as it opened/.test(error.stderr),
+        )
+      },
+    )
 
     await t.test("native navigation passes and captures a design", async () => {
       const { stdout } = await check("links")
@@ -135,7 +146,7 @@ test("prototype page checks exercise rendered browser fixtures", async (t) => {
       )
     })
 
-    for (const fixture of ["tabbar-labels", "side-labels", "role-labels"]) {
+    for (const fixture of ["header-labels", "role-labels"]) {
       await t.test(`${fixture} without a nav element is refused`, async () => {
         await assert.rejects(
           () => check(fixture),

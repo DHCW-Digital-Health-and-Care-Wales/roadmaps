@@ -1,34 +1,42 @@
 # Frames
 
-Each design is one fragment, holding both of its frames unless the request
-says otherwise. An assembler builds the fragments into the review page.
+Each design is one fragment of static mock-up. An assembler builds the
+fragments into the review page.
 
 ## Draw
 
 Draw each design as one fragment, using the classes in `assets/mock.css`.
 
-- **Layout.** The fragment is a `.ab` artboard with two `.col` columns. Each
-  column holds a `.lbl` label strip and then a frame: `.dev` for the desktop in
-  the first, `.ph` for the phone in the second. The phone is sized by `.ph`.
-  For a page that scrolls, add `tall` to the `.ab` so both frames show it whole.
-- **Styles.** `mock.css` mirrors the theme tokens in `src/styles/globals.css`
-  (`:root` and `.dark`); update it when those tokens change. Add `dark` to an
-  `.ab` to draw a dark-mode artboard. Put a design's own styles in a `<style>`
-  block of plain rules inside the fragment. The assembler scopes them to that
-  design and stops on an at-rule such as `@media`.
+- **Layout.** An `.ab` artboard holds two `.col` columns. Each column holds a
+  `.lbl` label strip and then a frame: `.dev` for the desktop in the first,
+  `.ph` for the phone in the second, unless the request says otherwise. For a
+  page that scrolls, add `tall` to the `.ab` so both frames show it whole.
+- **Moments.** Both frames of an artboard show the same moment, named by state
+  in their `.lbl`. A design with several moments, such as confirming, just
+  done and refused, stacks one artboard for each in its fragment.
+- **Styles.** `mock.css` draws the app's look: its shell (`.hdr`, `.phase`,
+  `.pg`), cards, buttons, fields, tags, alerts, dialogs and menus, each named
+  in its comments. The assembler sets the app's theme tokens on every artboard,
+  so name a token and never a colour. Add `dark` to an `.ab` to draw it in the
+  dark theme. Styles every design shares go in one stylesheet, named as the
+  manifest's `css`. A design's own go in a `<style>` block of plain rules
+  inside its fragment, which the assembler scopes to that design; it stops on
+  an at-rule such as `@media`.
 
-When the runtime offers a design canvas artifact, publish the designs there for
-the owner to comment on. Its `.dc.html` files work directly as fragments,
-because the assembler reads the markup inside `<x-dc>`.
+When the runtime offers a design canvas artifact, publish the designs there as
+well, for the owner to comment on; the committed page stays the record. Its
+`.dc.html` files work directly as fragments, because the assembler reads the
+markup inside `<x-dc>`.
 
-Done when every design is a fragment with both frames.
+Done when every design is a fragment with both frames for each of its moments.
 
 ## Assemble
 
-1. Put the fragments in a folder.
-2. Write a manifest JSON:
-   `{"title", "intro", "journeys": [{"title", "brief", "designs": [{"title", "file"}]}]}`.
-   Each `file` is relative to the manifest.
+1. Keep the fragments, any shared stylesheet and the manifest in one scratchpad
+   folder: only the assembled page is committed.
+2. Write the manifest JSON:
+   `{"title", "intro", "css", "journeys": [{"title", "brief", "designs": [{"title", "file"}]}]}`.
+   `css` is optional; it and each `file` are relative to the manifest.
 3. Run the assembler:
 
 ```bash
@@ -37,5 +45,14 @@ node .agents/skills/ux-prototypes/scripts/assemble.mjs <manifest.json> docs/anal
 
 ## Check
 
-The page check cannot see clipping inside a frame: read its screenshots. Done
-when every screenshot shows its frames unclipped.
+The page check sees neither clipping nor a wrong fact. Read every screenshot
+for:
+
+- each frame unclipped, and nothing drawn scrolled under a header that does not
+  stay in place in the app
+- every count against the rows drawn, in both frames
+- every state a frame names, such as its pending edits, against what its dialog
+  or notice says of it
+- the shell and its controls against your captures of the app
+
+Done when every screenshot has been read for all four.

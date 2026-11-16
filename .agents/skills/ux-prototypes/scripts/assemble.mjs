@@ -5,9 +5,12 @@
 // plain rules and comments only; an at-rule stops the build, since scoping it
 // would leave an open block that swallows every later design's styles.
 // Fragments may be plain HTML or design-canvas .dc.html files (read inside <x-dc>).
+// Every artboard gets the app's theme tokens, then assets/mock.css, then the
+// manifest's own "css" file, which every design shares unscoped.
 import { readFile, writeFile, mkdir } from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
+import { appTokens } from "./app-tokens.mjs"
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const escapeHtml = (s) =>
@@ -68,6 +71,10 @@ async function assemble(manifestPath) {
   const manifest = JSON.parse(await readFile(manifestPath, "utf8"))
   const base = path.dirname(manifestPath)
   const mockCss = await readFile(path.join(here, "../assets/mock.css"), "utf8")
+  const tokens = await appTokens({ light: ".ab", dark: ".ab.dark" })
+  const sharedCss = manifest.css
+    ? await readFile(path.join(base, manifest.css), "utf8")
+    : ""
   const scoped = []
   const sections = []
   let n = 0
@@ -118,7 +125,9 @@ body>main.wrap>section>figure>figcaption{font-weight:600;font-size:15px;margin:0
 /* Each design scrolls inside its own frame; 32px is main.wrap's padding. Zoom fits a 1560px artboard on a laptop. */
 body>main.wrap>section>figure>.frame{overflow-x:auto;border-radius:12px;max-width:calc(100vw - 32px)}
 body>main.wrap>section>figure>.frame .ab{zoom:var(--z,.8)}
+${tokens}
 ${mockCss}
+${sharedCss}
 ${scoped.join("\n")}
 </style>
 </head>

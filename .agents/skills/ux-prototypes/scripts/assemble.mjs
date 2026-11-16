@@ -26,6 +26,22 @@ const paragraphs = (text = "") =>
     .map((p) => `<p>${escapeHtml(p).replace(/\n/g, "<br>")}</p>`)
     .join("")
 
+/** A selector list's selectors: split at its own commas, not one inside `:is()` or `:has()`. */
+function selectorsOf(list) {
+  const selectors = []
+  let depth = 0
+  let from = 0
+  for (const [at, char] of [...list].entries()) {
+    if (char === "(") depth += 1
+    if (char === ")") depth -= 1
+    if (char === "," && depth === 0) {
+      selectors.push(list.slice(from, at))
+      from = at + 1
+    }
+  }
+  return [...selectors, list.slice(from)]
+}
+
 /** `css` with every rule under `prefix`; `owner` names it in a refusal. */
 function scope(css, prefix, owner) {
   const plain = css.replace(/\/\*[\s\S]*?\*\//g, "")
@@ -36,8 +52,7 @@ function scope(css, prefix, owner) {
     .filter((rule) => rule.includes("{"))
     .map((rule) => {
       const [selectors, body] = rule.split(/\{(.*)/s)
-      const scoped = selectors
-        .split(",")
+      const scoped = selectorsOf(selectors)
         .map((s) => s.trim())
         .filter((s) => s && !["body", "html", ":root"].includes(s))
         .map((s) => `${prefix} ${s}`)

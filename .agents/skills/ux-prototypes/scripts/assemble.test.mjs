@@ -131,7 +131,7 @@ test("every artboard draws with the app's tokens, mock.css and the manifest's sh
     )
     await writeFile(
       path.join(scratch, "shared.css"),
-      ".ab .probe { outline: 3px solid rgb(4, 5, 6) } select { min-width: 300px }",
+      ".ab .probe { outline: 3px solid rgb(4, 5, 6) } select { min-width: 300px } .ab:has(.missing, .probe) { padding: 31px }",
     )
     await writeFile(
       path.join(scratch, "manifest.json"),
@@ -174,6 +174,13 @@ test("every artboard draws with the app's tokens, mock.css and the manifest's sh
     assert.notEqual(dark.backgroundColor, light.backgroundColor)
     assert.notEqual(light.fontFamily, pageFont)
     assert.equal(light.outlineColor, "rgb(4, 5, 6)")
+    // A comma inside :has() is the selector's own, so its second branch still matches.
+    assert.equal(
+      await page
+        .locator("#light")
+        .evaluate((el) => getComputedStyle(el).paddingTop),
+      "31px",
+    )
     // A shared rule for a bare element stays inside the designs.
     assert.notEqual(
       await page

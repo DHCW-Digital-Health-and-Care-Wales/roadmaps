@@ -5,6 +5,12 @@ import type { Organisation } from "@/domain/roadmap/organisation"
  * (ADR-014). In the public site's order, which is where its parser's order stays.
  * Codes, ids and short names are not translated; the full names are the public site's,
  * except All Wales's, which has no "(national)" since the code beside it says so.
+ *
+ * Adding one: match the public site's list, then update what counts or lists them: the
+ * repository test's expected rows, the `toHaveCount` of the organisations in
+ * `tests/e2e/` (`editing`, `families`, `focus-indicator`), the ARIA snapshot
+ * `edit-item-dialog-organisations.aria.yml`, and the table in
+ * `docs/analysis/roadmap-tab-format.md`.
  */
 export const BUILT_IN_ORGANISATIONS: readonly Organisation[] = [
   {

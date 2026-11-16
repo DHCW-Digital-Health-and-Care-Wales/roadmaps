@@ -364,12 +364,14 @@ variable.
 | `VITE_GOOGLE_CLIENT_ID`      | OAuth client ID (`….apps.googleusercontent.com`)                                  | `.env.production` (committed, used by builds); `.env.local` for `pnpm dev` |
 | `VITE_GOOGLE_SPREADSHEET_ID` | The spreadsheet to read: the `<ID>` in `docs.google.com/spreadsheets/d/<ID>/edit` | same                                                                       |
 | `VITE_FEEDBACK_URL`          | Optional `https://` address for the phase banner's feedback link; none when unset | `.env.production` or `.env.local`                                          |
+| `VITE_REPOSITORY_URL`        | Optional `https://` address for the footer's repository link; none when unset     | `.env.production` or `.env.local`                                          |
 | `VITE_BASE_PATH`             | Optional build-time override of the URL base path, e.g. `/preview/`               | shell / CI                                                                 |
 | `PAGES_CUSTOM_DOMAIN`        | Custom Pages domain; forces base path `/`                                         | GitHub repository variable                                                 |
 | `GITHUB_REPOSITORY`          | `owner/repo`; derives the base path                                               | set automatically by GitHub Actions                                        |
 
-A `VITE_FEEDBACK_URL` that is not `https` stops the app, like any other bad value; leave it
-blank (or out) and the banner invites feedback without a link. The footer shows the app's
+A `VITE_FEEDBACK_URL` or `VITE_REPOSITORY_URL` that is not `https` stops the app, like any other bad value; leave it
+blank (or out) and the banner invites feedback without a link, and the footer omits the
+repository link. The footer shows the app's
 version: the package version and short commit of a CI build (`0.0.0+a1b2c3d`), or `dev` for a
 local one (`build/resolve-build-version.ts`).
 

@@ -31,10 +31,7 @@ export function PhaseBanner() {
                 className={textLinkClasses}
               >
                 {t("layout.phase.feedback")}
-                <span className="sr-only">
-                  {" "}
-                  {t("layout.phase.opensInNewTab")}
-                </span>
+                <span className="sr-only"> {t("layout.opensInNewTab")}</span>
               </a>
             </>
           )}

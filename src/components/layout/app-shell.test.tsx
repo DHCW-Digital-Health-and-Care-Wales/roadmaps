@@ -18,6 +18,8 @@ const copy = {
     shortName: "Roadmaps",
     phaseText: "This is a new service. Your feedback will help us improve it.",
     feedback: "Give feedback",
+    repository: "View on GitHub",
+    opensInNewTab: "(opens in a new tab)",
     copyright: "© Digital Health and Care Wales",
     version: "Version 1.2.3+abc1234",
   },
@@ -29,6 +31,8 @@ const copy = {
     phaseText:
       "Mae hwn yn wasanaeth newydd. Bydd eich adborth yn ein helpu i'w wella.",
     feedback: "Rhoi adborth",
+    repository: "Gweld ar GitHub",
+    opensInNewTab: "(yn agor mewn tab newydd)",
     copyright: "© Iechyd a Gofal Digidol Cymru",
     version: "Fersiwn 1.2.3+abc1234",
   },
@@ -129,6 +133,28 @@ describe.each(["en", "cy"] as const)("the shell in %s", (language) => {
       const footer = within(screen.getByRole("contentinfo"))
       expect(footer.getByText(c.copyright)).toBeInTheDocument()
       expect(footer.getByText(c.version)).toBeInTheDocument()
+    })
+
+    it("has no repository link when no address is set", async () => {
+      await renderWithProviders({ language, appInfo })
+
+      expect(
+        within(screen.getByRole("contentinfo")).queryByRole("link"),
+      ).not.toBeInTheDocument()
+    })
+
+    it("links to the repository, in a new tab, when an address is set", async () => {
+      await renderWithProviders({
+        language,
+        appInfo: { ...appInfo, repositoryUrl: "https://example.org/repo" },
+      })
+
+      const link = within(screen.getByRole("contentinfo")).getByRole("link", {
+        name: `${c.repository} ${c.opensInNewTab}`,
+      })
+      expect(link).toHaveAttribute("href", "https://example.org/repo")
+      expect(link).toHaveAttribute("target", "_blank")
+      expect(link).toHaveAttribute("rel", "noopener noreferrer")
     })
 
     it("shows dev for a local build", async () => {

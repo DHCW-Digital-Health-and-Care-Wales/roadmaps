@@ -54,14 +54,16 @@ export const cy = {
     skipToContent: "Neidio i'r prif gynnwys",
     homeSuffix: "hafan",
     logoAlt: "Iechyd a Gofal Digidol Cymru",
+    /** Said after a link's name when it opens another tab. */
+    opensInNewTab: "(yn agor mewn tab newydd)",
     phase: {
       tag: "Beta",
       text: "Mae hwn yn wasanaeth newydd. Bydd eich adborth yn ein helpu i'w wella.",
       feedback: "Rhoi adborth",
-      opensInNewTab: "(yn agor mewn tab newydd)",
     },
     footer: {
       copyright: "© Iechyd a Gofal Digidol Cymru",
+      repository: "Gweld ar GitHub",
       version: "Fersiwn {{version}}",
     },
   },

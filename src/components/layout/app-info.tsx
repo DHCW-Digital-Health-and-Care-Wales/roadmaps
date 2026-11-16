@@ -6,6 +6,8 @@ export interface AppInfo {
   readonly version: string
   /** Where the phase banner's feedback link goes (https); no link when unset. */
   readonly feedbackUrl?: string | undefined
+  /** Where the footer's repository link goes (https); no link when unset. */
+  readonly repositoryUrl?: string | undefined
 }
 
 const AppInfoContext = createContext<AppInfo | null>(null)

@@ -1,7 +1,7 @@
 import { z } from "zod/mini"
 
 /**
- * A feedback address is a web page people leave the app for, so only https, and never one
+ * An external address is a web page people leave the app for, so only https, and never one
  * with credentials in it.
  */
 function isHttpsUrl(value: string): boolean {
@@ -21,8 +21,8 @@ const blankToUndefined = z.transform((value: string | undefined) => {
   return trimmed === "" ? undefined : trimmed
 })
 
-/** Optional: blank means no feedback link; anything else must be an https address. */
-const feedbackUrlSchema = z.pipe(
+/** Optional: blank means no link; anything else must be an https address. */
+const optionalHttpsUrlSchema = z.pipe(
   z.pipe(z.optional(z.string()), blankToUndefined),
   z.optional(
     z
@@ -47,13 +47,16 @@ const envSchema = z.pipe(
     VITE_GOOGLE_SPREADSHEET_ID: z
       .string("is required")
       .check(z.trim(), z.regex(/^[\w-]+$/, "must be a Google spreadsheet ID")),
-    VITE_FEEDBACK_URL: feedbackUrlSchema,
+    VITE_FEEDBACK_URL: optionalHttpsUrlSchema,
+    VITE_REPOSITORY_URL: optionalHttpsUrlSchema,
   }),
   z.transform((env) => ({
     googleClientId: env.VITE_GOOGLE_CLIENT_ID,
     spreadsheetId: env.VITE_GOOGLE_SPREADSHEET_ID,
     /** Where the phase banner's feedback link goes; none when unset. */
     feedbackUrl: env.VITE_FEEDBACK_URL,
+    /** Where the footer's repository link goes; none when unset. */
+    repositoryUrl: env.VITE_REPOSITORY_URL,
   })),
 )
 

@@ -8,6 +8,8 @@ interface ImportMetaEnv {
   readonly VITE_GOOGLE_SPREADSHEET_ID: string
   /** Optional https address for the phase banner's feedback link. */
   readonly VITE_FEEDBACK_URL?: string
+  /** Optional https address for the footer's repository link. */
+  readonly VITE_REPOSITORY_URL?: string
 }
 
 /** The footer's version: set at build time by `build/resolve-build-version.ts`. */

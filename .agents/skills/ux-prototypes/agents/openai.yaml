@@ -1,5 +1,5 @@
 interface:
   display_name: "UX Prototypes"
-  short_description: "Alternative UX designs per journey, desktop and phone"
+  short_description: "Alternative UX designs: screen frames or a working component"
 policy:
   allow_implicit_invocation: true

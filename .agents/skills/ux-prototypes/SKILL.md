@@ -1,17 +1,18 @@
 ---
 name: ux-prototypes
-description: Prototype UX designs before a feature is built, as alternative designs per user journey, desktop and phone, for the owner to choose from. Use for "prototype ux designs for x", design options or mock-ups of planned screens for an epic or story.
+description: Prototype UX designs before a feature is built, as alternatives for the owner to choose from, either static desktop and phone frames per user journey or one component working in isolation to try. Use for "prototype ux designs for x", design options or mock-ups of planned screens, or a working prototype of a field or control.
 ---
 
 # UX prototypes
 
 Produce a **design review**: alternative designs for each main journey,
 grounded in the people who use the product and the agreed contract. The
-designs are static mock-ups under `docs/analysis/`, compared in an analysis
-that ends with the owner's decisions.
+designs are one page under `docs/analysis/`, compared in an analysis that ends
+with the owner's decisions.
 
-Default to three designs per journey. Each design has a desktop (or iPad) frame
-and a phone frame, unless the request says otherwise.
+Default to three designs per journey. The page takes one of two **shapes**,
+chosen in step 2: **frames**, static mock-ups of whole screens, or a **working
+component**, one control the owner can try.
 
 ## 1. Ground the journeys
 
@@ -23,9 +24,9 @@ Read these before drawing anything:
   (`docs/backlog/personas/product-lead.md`), a DHCW Product Lead managing
   their products' public Now / Next / Later roadmaps, mostly on a desktop with
   the phone as a second device. The public site is a separate app; draw only
-  this editor. State in
-  the inventory which of the persona's assumptions each journey relies on.
-  Keep connecting to Google out of the frames unless the journey is about it
+  this editor. State in the inventory which of the persona's assumptions each
+  journey relies on. Keep connecting to Google out of the designs unless the
+  journey is about it
 - the existing screens each journey touches, in `src/features/`,
   `src/components/layout/` and `src/routes/`, for navigation, page layout and
   the components a design would reuse (`src/components/ui/`)
@@ -35,96 +36,92 @@ place, owning story, and that story's acceptance scenarios. Group journeys that
 share a screen into main journeys. List each excluded journey with its reason,
 such as belonging to a deferred epic.
 
-## 2. Fix the sample world
+## 2. Choose the shape and what varies
 
-Write one sample-data sheet before drawing. It holds:
+Choose the shape by what the owner has to judge:
 
-- today's date
-- the cast: the invented Product Leads, roadmaps and roadmap items the screens
-  show: each roadmap's name, and each item's horizon (Now, Next, Later), title,
-  description, expected outcomes and tags, written as a real Product Lead
-  would for the public and no longer than one phone-sized card
-- every entity's state and dated history: when an item was added, moved or
-  last published, which edits are pending, which roadmaps are stale (six weeks
-  without publishing), when the feature started, and
-  the connection state only where a journey shows it
-- every derived value a screen shows, such as a count, a connection status or
-  a "last refreshed" time that follows from the history
+- **Frames**, when it is something seen: where things go on a screen, what a
+  state shows, how a journey moves between screens. Each design is a static
+  desktop frame and phone frame.
+- **Working component**, when it is something done: how one control behaves
+  under the hand as the Product Lead types, pastes, reorders, nests or removes,
+  by keyboard and by touch. Each design is the control itself, working, inside
+  the card, form or dialog that holds it.
 
-Keep the sheet in the scratchpad when one analysis uses it. When several
-analyses share one world, such as an epic's journey groups delivered as
-separate PRs, the first commits it beside them as
-`docs/analysis/{epic}-ux-sample-world.md`. A later analysis only adds to it,
-and every state, count and sentence already written stays true: a new entity
-of a kind the sheet counts, such as a visible roadmap, is one it already counts
-but leaves unnamed. Correct a wrong fact in the sheet and in every merged
-analysis and page that shows it, in one PR, and name the correction to the
-code-reviewer. A decided analysis and its page keep their text instead: add a
-line naming the correction to the analysis's _Outcome_.
+A request that names its shape has chosen it. An epic with both kinds of
+question takes an analysis of each. When the open question is the rule the
+control keeps, not how it is worked, use `logic-prototype`.
 
-Every screen derives from this sheet, and the sheet states **now**, a time
-today. A frame without a time shows the world at now. Set a frame of the user
-taking a journey's action at now or a stated time today; the action's own
-dates, such as an observation date, are whatever the journey enters. Unsaved
-input changes no state or count, though the sheet may name it as not yet saved.
-A frame showing the action just saved gives its time, before now, and the sheet
-records that save as an event at that time. The recorded save, like any
-addition to a shared sheet, leaves every state and count already stated true.
-Take each weekday from a command, such as
-`node -p "new Date('2026-10-28T12:00Z').toUTCString()"`, rather than from
-memory. Done when every history event is dated before now, every derived value
-and sentence agrees with the history it comes from, and each entity has exactly
-one state at each stated moment, its state at now being the one every untimed
-screen shows.
-
-## 3. Decide what varies
-
-Write down what every design shares: the contract's invariants, the
-permissions, and the product's existing look. The comparison is then between
-interaction models. For each main journey, choose designs that differ in their
-model. These three usually separate cleanly:
+Then write down what every design shares: the contract's invariants and the
+product's existing look. The comparison is between interaction models, so
+choose designs that differ in their model. For a journey, these three usually
+separate cleanly:
 
 - **inline**: the action sits on the existing screen
 - **guided**: a focused flow, drawer or wizard
 - **overview** or **mode**: a new place or state built for the task
 
-Done when every main journey has its designs named, each with its model.
+For a component, the models are ways of working the same value, such as a
+type-ahead box, a row per entry, a tick list and one line of text.
+
+Done when the shape is stated with its reason, and every main journey has its
+designs named, each with its model.
+
+## 3. Fix the sample world
+
+Write one sample-data sheet before drawing; every design derives from it. It
+holds:
+
+- today's date
+- the cast: the invented Product Lead, roadmaps and roadmap items the designs
+  show: each roadmap's name, and each item's placement, title, description,
+  expected outcomes and tags, written as a real Product Lead would for the
+  public and no longer than one phone-sized card
+- every entity's state: a roadmap published or not, out of step or stale; which
+  edits are pending and what publishing them would change; a co-lead's change
+  where a journey shows a conflict; the connection state only where a journey
+  shows it
+- every derived value a design shows, such as a count of roadmaps or of
+  pending edits
+- the awkward cases planted on purpose, such as "patient" beside "Patients"
+
+A working component's world is small: the one item or roadmap that holds the
+control, and whatever else the control reads.
+
+Show a date only where the product shows one, such as a roadmap's Last
+updated, and never after today. Name a design's moments by state: "before
+publishing", "just published".
+
+Keep the sheet in the scratchpad. When a later analysis draws the same world,
+commit the sheet as `docs/analysis/{epic}-ux-sample-world.md`; that analysis
+only adds to it, and every state and count already written stays true.
+
+Done when each entity has exactly one state at each named moment, and every
+derived value agrees with the rows it counts.
 
 ## 4. Draw
 
-Draw each design as one fragment, using the classes in `assets/mock.css`.
+Read the shape's reference and draw by it: `references/frames.md` or
+`references/working-component.md`. In either shape:
 
-- **Layout.** The fragment is a `.ab` artboard with two `.col` columns. Each
-  column holds a `.lbl` label strip and then a frame: `.dev` for desktop or iPad
-  in the first, `.ph` for the phone in the second. The phone is sized by `.ph`.
-  For a page that scrolls, add `tall` to the `.ab` so both frames show it whole.
-- **Styles.** `mock.css` mirrors the theme tokens in `src/styles/globals.css`
-  (`:root` and `.dark`); update it when those tokens change. Add `dark` to an
-  `.ab` to draw a dark-mode artboard. Put a design's own styles in a `<style>` block of
-  plain rules inside the fragment. The assembler scopes them to that design and
-  stops on an at-rule such as `@media`.
-- **Copy.** Write mock-up copy in the product's voice from the copywriter skill,
-  reusing strings from `src/i18n/locales/en.ts` where a screen already says
-  the thing. It is draft, in English only; Welsh follows with the build. Rationale goes in the analysis, not on the
-  mock-ups.
+- **Copy.** Write the designs' copy in the product's voice from the copywriter
+  skill, reusing strings from `src/i18n/locales/en.ts` where a screen already
+  says the thing. It is draft, in English only; Welsh follows with the build.
+  Rationale goes in the analysis, not on the designs.
 - **Elements.** Use real `<button>`, `<a>` and `<input>` elements with
-  accessible names, even in static mock-ups. A choice card is a button with a
+  accessible names, even in a static mock-up. A choice card is a button with a
   `radio` or `checkbox` role and `aria-checked`. Every design shares one page,
   so prefix each `id` with its design.
 
-When the runtime offers a design canvas artifact, publish the designs there for
-the owner to comment on. Its `.dc.html` files work directly as fragments,
-because the assembler reads the markup inside `<x-dc>`.
-
-Done when every main journey has all its designs as fragments with both frames,
-and every count drawn matches the rows drawn.
+Done when every main journey has all its designs drawn as its shape's
+reference says, and every count drawn matches the rows drawn.
 
 ## 5. Trace the scenarios
 
 For each design, trace every acceptance scenario of the stories it covers to
 one of three outcomes:
 
-- **shown**, naming the frame that shows it
+- **shown**, naming the frame, or the thing to try, that shows it
 - **departure**, recorded as a decision in the analysis
 - **not yet drawn**, listed in the analysis
 
@@ -132,15 +129,17 @@ The details a shortcut tends to skip are:
 
 - the loading, empty and error states, and the retry or reconnect action
 - the expired-session path and what stays on screen through it
-- a state the current screen already handles, such as a hidden worksheet
-- the stored time of an event, such as when the data was last refreshed
+- a state the current screen already handles, such as a roadmap that is not
+  published or an unplaced item
+- what the design leaves pending, and where the Product Lead sees it before
+  publishing
 - keyboard focus and the screen-reader name of each control
 
 Also trace each read and write a design uses against the story that supplies
-it, and each stored state a read returns (a hidden worksheet) against the story
-that first writes it (an epic's delivery rules may name this). List a missing
-one in _Decisions needed_, as an owner question raised with the designs, not
-after the owner has chosen.
+it, and each stored state a read returns (a roadmap that is not published)
+against the story that first writes it (the epic's `delivery-notes.md` may
+name it). List a missing one in _Decisions needed_, as an owner question raised
+with the designs, not after the owner has chosen.
 
 Done when no scenario, read or write is left untraced. Keep the trace in the
 scratchpad.
@@ -153,8 +152,9 @@ Write `docs/analysis/{topic}-ux-analysis.md` under the analysis rules in
 
 Use these sections, in this order:
 
-1. A head giving the scope and the base SHA, saying that only static
-   mock-ups and documents were added, and linking any shared sample sheet.
+1. A head giving the scope and the base SHA, naming the page's shape, saying
+   that only documents and one prototype page were added, and linking any
+   shared sample sheet.
 2. _Readers and where they are_.
 3. _Journeys covered_: a table of groups, their journeys and their stories,
    plus the exclusions.
@@ -172,38 +172,28 @@ Link the analysis from the _Related_ list of the epic or record it supports.
 Done when every section is present in that order, and every departure and every
 missing read or write from step 5 has a row in _Decisions needed_.
 
-## 7. Assemble and check
+## 7. Check
 
-1. Put the fragments in a folder.
-2. Write a manifest JSON:
-   `{"title", "intro", "journeys": [{"title", "brief", "designs": [{"title", "file"}]}]}`.
-   Each `file` is relative to the manifest.
-3. Run the assembler and the check. The check uses `@playwright/test` from the root `pnpm install` and a
-   Chromium (`pnpm exec playwright install chromium`). Write its screenshots to
-   the scratchpad.
+Run the check on the page, in either shape. It uses `@playwright/test` from the
+root `pnpm install` and a Chromium (`pnpm exec playwright install chromium`).
+Write its screenshots to the scratchpad.
 
 ```bash
-node .agents/skills/ux-prototypes/scripts/assemble.mjs <manifest.json> docs/analysis/{topic}-ux-analysis/prototypes.html
 node .agents/skills/ux-prototypes/scripts/check-page.mjs docs/analysis/{topic}-ux-analysis/prototypes.html <scratchpad>/shots
 ```
 
-These checks run by hand, not in CI: they are a local aid for throwaway design
-pages. `check-page.mjs` screenshots every design at 1440px wide. It fails when the
-page scrolls sideways at 375px wide, an artboard's navigation has no native
-links or buttons, a `.rad` or `.chk` mark sits outside a native control, or an
-element id repeats.
-It cannot see clipping inside a frame, so read the screenshots for that.
+The check runs by hand, not in CI: it is a local aid for throwaway design
+pages. It screenshots every design at 1440px wide. It fails when the page
+scrolls sideways at 375px wide, a design's navigation has no native links or
+buttons, a `.rad` or `.chk` mark sits outside a native control, or an element
+id repeats. It presses nothing and cannot see clipping inside a frame: the
+shape's reference says what to check by eye and by hand.
 
-For system Chromium, set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to its executable.
-If the browser blocks file URLs, serve the page and pass its HTTP(S) URL instead
-of a file path. Run the assembler and checker fixtures with the same browser
-configuration:
+For system Chromium, set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to its
+executable; the scripts' own tests take the same setting. If the browser blocks
+file URLs, serve the page and pass its HTTP(S) URL instead of a file path.
 
-```bash
-node --test .agents/skills/ux-prototypes/scripts/*.test.mjs
-```
-
-Done when the check passes and every screenshot shows its frames unclipped.
+Done when the check passes and the shape's own check is done.
 
 ## 8. Review and deliver
 
@@ -213,16 +203,15 @@ committed page and analysis plus:
 
 - **`code-reviewer`**: the inventory, the scenario trace and the sample sheet.
   It checks each design against the contract and the stories, and checks that
-  the sample data agrees across screens. For a shared sheet, it also checks
-  that every state, count and sentence the sheet already held still holds or
-  is a named correction, carried through as step 2 says.
+  the sample data agrees across designs. For a shared sheet, it also checks
+  that every state and count the sheet already held still holds.
 - **`quality-reviewer`**: the analysis rules, the glossary and the copywriter
   voice.
 
 ## Delegation
 
 Draw every design in the main agent. One author keeps the visual language and
-the sample world coherent. Parallel drafting multiplies the cross-screen
+the sample world coherent. Parallel drafting multiplies the cross-design
 inconsistencies that reviewers then have to catch.
 
 Delegate in one case beyond the reviewers above. For a large epic, an

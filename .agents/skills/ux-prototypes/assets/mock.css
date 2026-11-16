@@ -74,7 +74,7 @@
 .ab * {
   box-sizing: border-box;
 }
-/* A page that scrolls, such as a marketing page, grows to its full length. */
+/* A page that scrolls, such as a long roadmap, grows to its full length. */
 .ab.tall {
   height: auto;
 }

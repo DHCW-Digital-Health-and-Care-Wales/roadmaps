@@ -12,7 +12,7 @@
   [Reordering a placement's items](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/102).
   Base `69ff0d1`. Only documents and one prototype page were added; no application
   code.
-- **Prototypes**: [`reorder-items-ux-analysis/prototypes.html`](reorder-items-ux-analysis/prototypes.html),
+- **Prototypes**: [`reorder-items-ux-analysis/reorder-items-ux-prototypes.html`](reorder-items-ux-analysis/reorder-items-ux-prototypes.html),
   one self-contained page of static mock-ups, each with a desktop and a phone frame;
   open it in a browser. The mock-ups approximate the app's look.
 

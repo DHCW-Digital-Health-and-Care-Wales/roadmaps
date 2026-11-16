@@ -9,14 +9,15 @@ Draw each design as one fragment, using the classes in `assets/mock.css`.
 
 - **Layout.** An `.ab` artboard holds two `.col` columns. Each column holds a
   `.lbl` label strip and then a frame: `.dev` for the desktop in the first,
-  `.ph` for the phone in the second, unless the request says otherwise. For a
-  page that scrolls, add `tall` to the `.ab` so both frames show it whole.
+  `.ph` for the phone in the second, unless the request says otherwise. A
+  frame shows the part of a page in view, with where it is scrolled to in its
+  `.lbl`; add `tall` to the `.ab` to show a page whole.
 - **Moments.** Both frames of an artboard show the same moment, named by state
   in their `.lbl`. A design with several moments, such as confirming, just
   done and refused, stacks one artboard for each in its fragment.
 - **Styles.** `mock.css` draws the app's look: its shell (`.hdr`, `.phase`,
-  `.pg`), cards, buttons, fields, tags, alerts, dialogs and menus, each named
-  in its comments. The assembler sets the app's theme tokens on every artboard,
+  `.pg`), item cards, buttons, fields, tags, alerts, dialogs and menus, each
+  named in its comments. The assembler sets the app's theme tokens on every artboard,
   so name a token and never a colour. Add `dark` to an `.ab` to draw it in the
   dark theme. Styles every design shares go in one stylesheet, named as the
   manifest's `css`. A design's own go in a `<style>` block of plain rules
@@ -27,6 +28,9 @@ When the runtime offers a design canvas artifact, publish the designs there as
 well, for the owner to comment on; the committed page stays the record. Its
 `.dc.html` files work directly as fragments, because the assembler reads the
 markup inside `<x-dc>`.
+
+Fragments that share a screen are best written by one script, so the sample
+world cannot drift between them.
 
 Done when every design is a fragment with both frames for each of its moments.
 
@@ -48,8 +52,9 @@ node .agents/skills/ux-prototypes/scripts/assemble.mjs <manifest.json> docs/anal
 The page check sees neither clipping nor a wrong fact. Read every screenshot
 for:
 
-- each frame unclipped, and nothing drawn scrolled under a header that does not
-  stay in place in the app
+- nothing cut off sideways or by another element, and nothing drawn scrolled
+  under a header that does not stay in place in the app; a page running past a
+  frame's foot is the edge of the view
 - every count against the rows drawn, in both frames
 - every state a frame names, such as its pending edits, against what its dialog
   or notice says of it

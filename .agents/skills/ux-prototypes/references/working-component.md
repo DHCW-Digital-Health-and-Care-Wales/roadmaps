@@ -32,10 +32,10 @@ The starter holds one of each part the page needs; keep them all:
   has. Keep the starter's styles for the app's controls and replace its host's.
 - **Screens.** The Screen switch names screens and sets the host to the width
   the app draws it at on each. Give it a phone, a laptop and a monitor (375px,
-  1024px and 1280px) and the screens where the host is narrowest and widest,
-  which fall either side of a layout breakpoint. Take each width from a capture
-  of the app (`.agents/skills/implement-story/references/screenshots.md`,
-  _Capture_), or work it out from the page container's and the grid's classes.
+  1024px and 1280px) and the screens where the control has least and most
+  room, which fall either side of a layout breakpoint. Take each width from
+  your captures of the app, or work it out from the page container's and the
+  grid's classes.
 - **Rules.** Write the rules every design shares once, as pure functions the
   designs call: what the value may hold, how typed text is cleaned, what Done
   keeps and Cancel leaves. The designs then differ only in how the control is
@@ -43,10 +43,12 @@ The starter holds one of each part the page needs; keep them all:
 - **Designs.** Each design draws the whole round trip: the host as it shows the
   value, the control opened, a change confirmed or cancelled, and the host
   showing the result. A redrawn control loses focus, so after each action put
-  focus where the built control would.
+  focus where the built control would. An interaction built by hand here, such
+  as a drag, will not feel as the library a build would use does: say so in
+  that design's Risks.
 - **Readout.** Under each design, show what it keeps as the pending edit, and
   what publishing would write where that is in question. It exposes a rule the
-  control hides.
+  control hides, and shows each option of an open question about a rule.
 - **Things to try.** Write one line per acceptance scenario, or per option of
   an open question, and per planted awkward case, in the Product Lead's words.
   End with the keyboard alone, the narrowest host and the dark theme.
@@ -58,8 +60,8 @@ covers every scenario or option and every planted case.
 
 The page check presses nothing. Drive the page yourself: work every thing to
 try in every design by keyboard alone, at the narrowest host and in the dark
-theme. A short Playwright script on `scripts/chromium.mjs` that fails on any
+theme. A Playwright script on `scripts/chromium.mjs` that fails on any
 `pageerror` repeats the run at each screen and theme; read a screenshot of each
-design it leaves. Done when every thing to try works in every design and the
-readout shows its result, or the analysis lists the gap in that design's Risks
-or in _Not yet drawn_.
+design it leaves, and of each menu open at the narrowest host. Done when every
+thing to try works in every design and the readout shows its result, or the
+analysis lists the gap in that design's Risks or in _Not yet drawn_.

@@ -126,6 +126,11 @@
   grid-template-columns: minmax(0, 1fr);
   gap: 16px;
 }
+ul.grid {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
 /* The bar that counts pending edits, over a roadmap's page. */
 .pend {
   padding: 12px 16px;
@@ -181,6 +186,26 @@
   color: var(--link);
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+/* Text for a screen reader alone, such as the item a button acts on. */
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+/* An inline SVG icon in a button or a tag. */
+.ic {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .kbd {
   font-family: ui-monospace, Menlo, monospace;
@@ -256,6 +281,39 @@
 .card.bar {
   padding: 16px;
   box-shadow: var(--shadow-card-bar);
+}
+/* An item card's fields: a <dl class="f"> of name and value. */
+dl.f {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: var(--text-body-xs);
+  line-height: var(--text-body-xs--line-height);
+}
+dl.f dt {
+  font-weight: 700;
+}
+dl.f dd {
+  margin: 0;
+}
+/* A card's foot: its tag first, then its buttons in .acts, pushed to the right
+   on the desktop. */
+.foot {
+  margin-top: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.foot .acts {
+  margin-left: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ph .foot .acts {
+  margin-left: 0;
 }
 
 /* ---- Buttons ---- */

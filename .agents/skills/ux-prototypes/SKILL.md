@@ -18,7 +18,8 @@ component**, one control the owner can try.
 
 Read these before drawing anything:
 
-- the epic or story, and its binding Accepted ADRs
+- the epic or story, the epic's `delivery-notes.md`, and the Accepted ADRs
+  that bind the story or the screens it changes
 - `docs/GLOSSARY.md`
 - who the reader is: the Product Lead persona
   (`docs/backlog/personas/product-lead.md`), a DHCW Product Lead managing
@@ -30,16 +31,19 @@ Read these before drawing anything:
 - the existing screens each journey touches, in `src/features/` and
   `src/components/layout/`, for navigation, page layout and the components a
   design would reuse (`src/components/ui/`). See them as the app draws them
-  too: capture each with Google faked, as
-  `.agents/skills/implement-story/references/screenshots.md` (_Capture_) says.
-  Class names alone misdraw the shell
+  too, since class names alone misdraw the shell: capture each with Google
+  faked, by the first paragraph of _Capture_ in
+  `.agents/skills/implement-story/references/screenshots.md`. A scratch spec
+  that imports `tests/e2e/fixtures/test.ts`, run against `vite preview` on a
+  free port, is the shortest way
 
 A record not yet grilled has open questions where its scenarios will be. Each
 option of each question then stands for a scenario, and between them the
-designs draw every option.
+designs show every option.
 
-Done when you hold an **inventory**. Each journey in it has its reader, device,
-place, owning story, and that story's acceptance scenarios or open questions.
+Done when you hold an **inventory**. Each journey in it has its reader, their
+device and where they are, its owning story, and that story's acceptance
+scenarios or open questions.
 Group journeys that share a screen into main journeys. List each excluded
 journey with its reason, such as belonging to a deferred epic.
 
@@ -57,8 +61,9 @@ Choose the shape by what the owner has to judge:
 
 A request that names its shape has chosen it. A journey with a control in it
 is frames, unless how the control is worked is the question. An epic with both
-kinds of question takes an analysis of each. When the open question is the
-rule the control keeps, not how it is worked, use `logic-prototype`.
+kinds of question takes an analysis of each. A question about a rule stays on
+the page beside one of look or feel; when a rule is the record's only open
+question, use `logic-prototype`.
 
 Read the shape's reference before going on: `references/frames.md` or
 `references/working-component.md`.
@@ -75,6 +80,13 @@ separate cleanly:
 For a component, the models are ways of working the same value, such as a
 type-ahead box, a row per entry and a tick list, or a menu, a handle to drag
 and a mode.
+
+A model answers how a thing is done. An open question about a rule, such as
+whether a change waits to be published, is no model and decides no design, or
+the comparison cannot tell the rule from the model. Show each of its options
+on every design it bears on: in frames as a moment, in a working component
+as a switch on the page or in the readout. Where a journey's only questions
+are rules, draw one design for each option.
 
 Done when the shape is stated with its reason, and every main journey has its
 designs named, each with its model.
@@ -138,7 +150,7 @@ reference says, and every count drawn matches the rows drawn.
 For each design, trace every acceptance scenario of the stories it covers to
 one of three outcomes:
 
-- **shown**, naming the frame, or the thing to try, that shows it
+- **shown**, naming the frame, the thing to try or the readout that shows it
 - **departure**, recorded as a decision in the analysis
 - **not yet drawn**, listed in the analysis
 
@@ -178,7 +190,7 @@ Use these sections, in this order:
 
 1. A head giving the date, the question, the scope and the base SHA, naming
    the page's shape, saying that only documents and one prototype page were
-   added, and linking any shared sample sheet.
+   added, and summarising the sample world or linking its shared sheet.
 2. _Readers and where they are_.
 3. _Journeys covered_: a table of groups, their journeys and their stories,
    plus the exclusions.
@@ -202,7 +214,7 @@ missing read or write from step 5 has a row in _Decisions needed_.
 Format the page and the analysis with Prettier, which `pnpm format:check`
 holds them to. Then run the check on the page, in either shape. It uses
 `@playwright/test` from the root `pnpm install` and a Chromium
-(`pnpm exec playwright install chromium`). Write its screenshots to the
+(`./node_modules/.bin/playwright install chromium`). Write its screenshots to the
 scratchpad.
 
 ```bash
@@ -231,7 +243,8 @@ Deliver through the PR path in `.agents/skills/implement-story/SKILL.md`. Brief 
 `.agents/skills/implement-story/references/delegation.md`, giving each the
 committed page and analysis plus:
 
-- **`code-reviewer`**: the inventory, the scenario trace and the sample sheet.
+- **`code-reviewer`**: the inventory, the scenario trace and the sample sheet,
+  by their scratchpad paths.
   It checks each design against the contract and the stories, and checks that
   the sample data agrees across designs. For a shared sheet, it also checks
   that every state and count the sheet already held still holds or is a named

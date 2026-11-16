@@ -81,18 +81,11 @@ test("the starter page passes the page check, and its switches and design work b
       await page.getByRole("button", { name: "Dark" }).click()
       assert.notEqual(await style("backgroundColor"), light)
 
-      // A screen sets the host to the width the app gives it there, and the
-      // page says the width drawn, which a narrow window makes narrower.
+      // A screen sets the host to the width the app gives it there.
       assert.equal(await width(), 360)
       await page.getByRole("button", { name: "Small tablet 640" }).click()
       assert.equal(await width(), 294)
       assert.equal(await widthShown(), "294")
-      await page.setViewportSize({ width: 320, height: 800 })
-      await page.waitForFunction(
-        () => document.getElementById("host-width").textContent !== "294",
-      )
-      assert.ok((await width()) < 294)
-      assert.equal(await widthShown(), String(Math.round(await width())))
 
       // The round trip by keyboard: Edit, type, Enter; focus returns to Edit.
       const sample = await host.locator("h3").textContent()
@@ -116,6 +109,25 @@ test("the starter page passes the page check, and its switches and design work b
       await page
         .getByRole("figure", { name: "A. The design's name" })
         .waitFor({ timeout: 1000 })
+
+      // On a phone the page opens on the phone's host, drawn as wide as the
+      // app draws it; a wider host keeps its width and its stage scrolls.
+      const phone = await browser.newPage({
+        viewport: { width: 375, height: 800 },
+      })
+      await phone.goto(url)
+      const phoneWidth = () =>
+        phone
+          .locator("#pa-host")
+          .evaluate((el) => el.getBoundingClientRect().width)
+      assert.equal(await phoneWidth(), 343)
+      assert.equal(await phone.locator("#host-width").textContent(), "343")
+      await phone.getByRole("button", { name: "Large phone 639" }).click()
+      assert.equal(await phoneWidth(), 607)
+      assert.equal(
+        await phone.evaluate(() => document.documentElement.scrollWidth),
+        375,
+      )
     } finally {
       await browser?.close()
       server.close()

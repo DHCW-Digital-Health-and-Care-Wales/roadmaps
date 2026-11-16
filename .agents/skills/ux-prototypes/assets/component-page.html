@@ -118,11 +118,11 @@
          src/styles/globals.css: every token under its own name, on each stage. */
       /* @app-tokens */
 
-      /* A stage is the app's page behind the host; the host is as wide as the
-         Screen switch says. */
+      /* A stage is the app's page behind the host. The host keeps the width the
+         Screen switch gives it: a stage too narrow for it scrolls sideways. */
       .stage {
         display: flex;
-        justify-content: center;
+        overflow-x: auto;
         padding: 16px;
         border: 1px solid var(--border);
         background: var(--background);
@@ -132,9 +132,18 @@
         line-height: var(--text-body--line-height);
       }
       .host {
+        flex: none;
         width: var(--host-w, 360px);
-        max-width: 100%;
-        min-width: 0;
+        margin-inline: auto;
+      }
+      /* On a phone the stage runs edge to edge, so its 16px padding is the
+         app's own page padding and a 375px phone draws the host as the app
+         does. */
+      @media (max-width: 639px) {
+        .stage {
+          margin-inline: -16px;
+          border-inline: 0;
+        }
       }
 
       /* The host and the controls, drawn as the app draws them. Replace these
@@ -252,7 +261,12 @@
                  1280 does. Measure another host's in the running app. -->
             <span id="screen-label">Screen</span>
             <span class="seg" role="group" aria-labelledby="screen-label">
-              <button type="button" data-width="343" aria-pressed="false">
+              <button
+                type="button"
+                data-width="343"
+                data-phone
+                aria-pressed="false"
+              >
                 Phone 375
               </button>
               <button type="button" data-width="607" aria-pressed="false">
@@ -417,20 +431,13 @@
       bindSwitch("theme", (stage, theme) =>
         stage.classList.toggle("dark", theme === "dark"),
       )
-      /** The width the host is drawn at: a window too narrow for the screen
-          chosen draws it narrower. */
-      function showHostWidth() {
-        const { width } = document
-          .querySelector(".host")
-          .getBoundingClientRect()
-        document.getElementById("host-width").textContent = Math.round(width)
-      }
       bindSwitch("width", (stage, width) => {
         stage.style.setProperty("--host-w", `${width}px`)
-        showHostWidth()
+        document.getElementById("host-width").textContent = width
       })
-      window.addEventListener("resize", showHostWidth)
-      showHostWidth()
+      // Someone reading on a phone starts with the phone's host.
+      if (matchMedia("(max-width: 639px)").matches)
+        document.querySelector("[data-phone]").click()
     </script>
   </body>
 </html>

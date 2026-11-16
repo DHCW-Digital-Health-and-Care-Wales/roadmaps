@@ -112,6 +112,9 @@ describe("usePublishRoadmapChanges", () => {
       repository.publishRoadmapChanges.bind(repository),
     )
     vi.spyOn(repository, "publishRoadmapChanges").mockImplementation(held)
+    // A frozen clock, so the Refresh below is strictly older than the read after the write
+    // and never lands in the same millisecond as it (CHO-018).
+    vi.useFakeTimers({ toFake: ["Date"] })
     const { result, authClient } = await renderPublish(repository)
 
     let settled: Promise<unknown> = Promise.resolve()
@@ -120,6 +123,7 @@ describe("usePublishRoadmapChanges", () => {
     })
     // A Refresh begun before the write lands while it is under way.
     await act(() => result.current.items.refetch())
+    vi.advanceTimersByTime(1)
     const reads = vi
       .spyOn(repository, "listRoadmapItems")
       .mockImplementationOnce(() => new Promise(() => undefined))

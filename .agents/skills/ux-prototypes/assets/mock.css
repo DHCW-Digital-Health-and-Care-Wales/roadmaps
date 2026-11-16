@@ -367,7 +367,8 @@ dl.f dd {
   box-shadow: none;
   cursor: not-allowed;
 }
-/* A button drawn with keyboard focus. */
+/* A button drawn with keyboard focus: the app's yellow fill, which replaces the
+   button's own colour, so .dg no longer shows red. */
 .btn.focus {
   border-color: transparent;
   background: var(--focus);

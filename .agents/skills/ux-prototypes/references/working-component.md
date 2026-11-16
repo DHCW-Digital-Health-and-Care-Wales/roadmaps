@@ -40,6 +40,10 @@ The starter holds one of each part the page needs; keep them all:
 - **Host.** Draw the host from the component in `src/features/` that holds the
   control, with enough of its other content to show how much room the control
   has. Keep the starter's styles for the app's controls and replace its host's.
+  Compare the host with your captures of the app before drawing a design in
+  it. Where one of the starter's controls differs, the app has moved on:
+  correct it in `assets/component-page.html` and in `assets/mock.css`, in this
+  PR, then run the skill's script tests.
 - **Screens.** The Screen switch names screens and sets the host to the width
   the app draws it at on each. Give it a phone, a laptop and a monitor (375px,
   1024px and 1280px) and the screens where the control has least and most

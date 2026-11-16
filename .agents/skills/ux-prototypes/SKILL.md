@@ -37,11 +37,23 @@ Read these before drawing anything:
   that imports `tests/e2e/fixtures/test.ts`, run against the build served by
   `vite preview` on a free port, is the shortest way
 
-A record not yet grilled has open questions where its scenarios will be. Each
-option of each question then stands for a scenario.
+A record not yet grilled has open questions where its scenarios will be. Ask
+the owner before drawing for them: list each open question that bears on the
+journeys, with its options, and ask which they want.
 
-Done when you hold an **inventory**. Each journey in it has its reader, their
-device and where they are, its owning story, and that story's acceptance
+- **Narrow**: settle the questions first, by the `grilling` skill, so the
+  designs cover only what is left.
+- **Explore**: leave them open, so the designs show every option and help
+  decide.
+
+The owner may settle some questions and leave the rest; a request that says
+which has answered. Each answer goes into the record's Decisions, with the
+sweep `docs/AGENTS.md` sets. Each option of each question still open then
+stands for a scenario.
+
+Done when you hold an **inventory**, and the owner has said which open
+questions the designs explore. Each journey in the inventory has its reader,
+their device and where they are, its owning story, and that story's acceptance
 scenarios or open questions.
 Group journeys that share a screen into main journeys. List each excluded
 journey with its reason, such as belonging to a deferred epic.

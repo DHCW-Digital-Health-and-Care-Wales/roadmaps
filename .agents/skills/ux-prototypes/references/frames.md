@@ -18,6 +18,14 @@ design it bears on.
 
 Draw each design as one fragment, using the classes in `assets/mock.css`.
 
+`mock.css` follows the app's tokens by itself, but its shell and controls are
+drawn by hand, so they fall behind when the app's header, navigation or a
+control changes. Draw the screen as it is today first, assemble it alone, and
+compare its screenshot with your captures. Where they differ, correct
+`mock.css` in this PR, and the same control in `assets/component-page.html`,
+then run the skill's script tests. Every later prototype then starts from the
+app as it is; a design's own styles hold only what the design adds.
+
 - **Layout.** An `.ab` artboard holds two `.col` columns. Each column holds a
   `.lbl` label strip and then a frame: `.dev` for the desktop in the first,
   `.ph` for the phone in the second, unless the request says otherwise. A
@@ -26,6 +34,11 @@ Draw each design as one fragment, using the classes in `assets/mock.css`.
 - **Moments.** Both frames of an artboard show the same moment, named by state
   in their `.lbl`. A design with several moments, such as confirming, just
   done and refused, stacks one artboard for each in its fragment.
+- **Focus.** Draw a frame as someone using a pointer sees it, and say where
+  keyboard focus lands in its `.lbl`. The app's focus is a yellow fill that
+  replaces a button's own colour, so a destructive button drawn with `.focus`
+  no longer shows red. Draw `.focus` on a button only where keyboard focus is
+  the journey's question.
 - **Styles.** `mock.css` draws the app's look: its shell (`.hdr`, `.phase`,
   `.pg`), item cards, buttons, fields, tags, alerts, dialogs and menus, each
   named in its comments. The assembler sets the app's theme tokens on every

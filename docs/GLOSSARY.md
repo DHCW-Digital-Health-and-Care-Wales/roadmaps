@@ -107,7 +107,7 @@ One of the NHS Wales bodies a roadmap item's work is for, such as Cardiff and Va
 University Health Board, or **All Wales** for national work; shared with the public
 site, which filters by it (ADR-011). Each has a code (`CAVUHB`), a short name (`Cardiff
 and Vale`) and a full name. The repository serves the list; in Sheets it is the built-in
-fourteen (ADR-014).
+list (ADR-014).
 _Avoid_: Health board (only some are), customer
 
 **Pending edit**:

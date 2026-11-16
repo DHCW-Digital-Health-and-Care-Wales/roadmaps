@@ -714,7 +714,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
       ])
     })
 
-    it("serves the built-in fourteen organisations, by short name, without a request (S2)", async () => {
+    it("serves the built-in organisations, by short name, without a request (S2)", async () => {
       const requests = serveLists()
 
       const organisations = await httpRepository().listOrganisations()

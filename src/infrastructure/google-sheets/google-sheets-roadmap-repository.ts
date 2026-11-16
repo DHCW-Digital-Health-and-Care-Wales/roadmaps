@@ -227,7 +227,7 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
   }
 
   /**
-   * The built-in fourteen (ADR-014): the spreadsheet has no `Organisations` tab, so there
+   * The built-in list (ADR-014): the spreadsheet has no `Organisations` tab, so there
    * is nothing to request.
    */
   listOrganisations(

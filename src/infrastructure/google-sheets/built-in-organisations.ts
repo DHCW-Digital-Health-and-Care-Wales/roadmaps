@@ -1,7 +1,7 @@
 import type { Organisation } from "@/domain/roadmap/organisation"
 
 /**
- * The fourteen organisations, built in because the spreadsheet has no `Organisations` tab
+ * The organisations, built in because the spreadsheet has no `Organisations` tab
  * (ADR-014). In the public site's order, which is where its parser's order stays.
  * Codes, ids and short names are not translated; the full names are the public site's,
  * except All Wales's, which has no "(national)" since the code beside it says so.

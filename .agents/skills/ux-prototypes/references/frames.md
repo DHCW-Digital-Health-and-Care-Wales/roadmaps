@@ -28,12 +28,13 @@ Draw each design as one fragment, using the classes in `assets/mock.css`.
   done and refused, stacks one artboard for each in its fragment.
 - **Styles.** `mock.css` draws the app's look: its shell (`.hdr`, `.phase`,
   `.pg`), item cards, buttons, fields, tags, alerts, dialogs and menus, each
-  named in its comments. The assembler sets the app's theme tokens on every artboard,
-  so name a token and never a colour. Add `dark` to an `.ab` to draw it in the
-  dark theme. Styles every design shares go in one stylesheet, named as the
-  manifest's `css`, and a design's own in a `<style>` block inside its
-  fragment. Both hold plain rules: the assembler scopes them to the designs and
-  stops on an at-rule such as `@media`.
+  named in its comments. The assembler sets the app's theme tokens on every
+  artboard, so name a token and never a colour. Add `dark` to an `.ab` to draw
+  it in the dark theme. Styles every design shares go in one stylesheet, named
+  as the manifest's `css`, and a design's own in a `<style>` block inside its
+  fragment. Both hold plain rules: the assembler scopes them to the designs,
+  stops on an at-rule such as `@media`, and drops a rule for `body`, `html` or
+  `:root`.
 
 When the runtime offers a design canvas artifact, publish the designs there as
 well, for the owner to comment on; the committed page stays the record. Its

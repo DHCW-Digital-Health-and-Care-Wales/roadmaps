@@ -186,3 +186,47 @@ test("every artboard draws with the app's tokens, mock.css and the manifest's sh
     await rm(scratch, { recursive: true, force: true })
   }
 })
+
+test("an at-rule in the shared stylesheet stops the build, naming the stylesheet", async () => {
+  const scratch = await mkdtemp(
+    path.join(os.tmpdir(), "ux-prototype-assemble-"),
+  )
+  try {
+    await writeFile(path.join(scratch, "a.html"), '<div class="ab"></div>')
+    await writeFile(
+      path.join(scratch, "shared.css"),
+      "@media (min-width: 40em) { .ab .probe { color: red } }",
+    )
+    await writeFile(
+      path.join(scratch, "manifest.json"),
+      JSON.stringify({
+        title: "Fixture",
+        intro: "Intro",
+        css: "shared.css",
+        journeys: [
+          {
+            title: "One",
+            brief: "Brief",
+            designs: [{ title: "A", file: "a.html" }],
+          },
+        ],
+      }),
+    )
+    const out = path.join(scratch, "page.html")
+    await assert.rejects(
+      run(process.execPath, [
+        path.join(here, "assemble.mjs"),
+        path.join(scratch, "manifest.json"),
+        out,
+      ]),
+      (error) =>
+        error.code === 1 &&
+        /the shared stylesheet shared\.css: at-rules are not supported/.test(
+          error.stderr,
+        ),
+    )
+    await assert.rejects(readFile(out, "utf8"), { code: "ENOENT" })
+  } finally {
+    await rm(scratch, { recursive: true, force: true })
+  }
+})

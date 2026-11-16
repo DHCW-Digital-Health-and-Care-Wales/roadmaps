@@ -82,7 +82,8 @@ journey with no question of how a thing is done: there each option is a
 design.
 
 Done when the shape is stated with its reason, and every main journey has its
-designs named, each with its model or the option it shows.
+designs named, each with its model or, in a journey with no question of how,
+its option.
 
 ## 3. Fix the sample world
 
@@ -134,8 +135,8 @@ Draw by the shape's reference. In either shape:
   `radio` or `checkbox` role and `aria-checked`. Every design shares one page,
   so prefix each `id` with its design.
 
-Done when every main journey has all its designs drawn, and for frames
-assembled, as its shape's reference says.
+Done when every main journey has all its designs drawn, and assembled for
+frames, as its shape's reference says.
 
 ## 5. Trace the scenarios
 
@@ -200,9 +201,9 @@ Use these sections, in this order:
 
 Link the analysis from the _Related_ list of the epic it supports.
 
-Done when every section is present in that order, and every departure, every
-missing read or write and every ADR decision reopened in step 5 has a row in
-_Decisions needed_.
+Done when every section is present in that order, and _Decisions needed_ holds
+every row steps 3 and 5 call for: each rule the sheet chose, departure, missing
+read or write, ADR decision reopened and option the record lacks.
 
 ## 7. Check
 

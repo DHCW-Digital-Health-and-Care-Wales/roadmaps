@@ -7,11 +7,14 @@
 // that swallows every later design's styles.
 // Fragments may be plain HTML or design-canvas .dc.html files (read inside <x-dc>).
 // Every artboard gets the app's theme tokens, then assets/mock.css, then the
-// styles the designs share, then each design's own.
+// styles the designs share, then each design's own. The page carries the
+// review chrome (assets/review-chrome.*): a bar linking every journey and
+// design, and a floating Options panel holding the Zoom.
 import { readFile, writeFile, mkdir } from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { appTokens } from "./app-tokens.mjs"
+import { reviewChrome } from "./review-chrome.mjs"
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const escapeHtml = (s) =>
@@ -117,12 +120,7 @@ async function assemble(manifestPath) {
       `<section id="j${j + 1}"><h2>${j + 1}. ${escapeHtml(journey.title)}</h2><div class="brief">${paragraphs(journey.brief)}</div>${figures.join("")}</section>`,
     )
   }
-  const nav = manifest.journeys
-    .map(
-      (jr, j) =>
-        `<a href="#j${j + 1}">${j + 1}. ${escapeHtml(jr.title.split(" — ")[0])}</a>`,
-    )
-    .join("")
+  const chrome = await reviewChrome()
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -133,10 +131,7 @@ async function assemble(manifestPath) {
 html,body{margin:0;background:#e2e7ee}
 body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:#111827}
 /* The page's own chrome, by child path from body, so a design's header, section or brief keeps its own styles. */
-body>header.top{position:sticky;top:0;z-index:20;background:#ffffffee;border-bottom:1px solid #d1d5db;padding:10px 16px;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
-body>header.top strong{font-size:15px;margin-right:8px}
-body>header.top a{font-size:13px;color:#1d4ed8;text-decoration:none;white-space:nowrap}
-body>header.top label{font-size:13px;margin-left:auto}
+body>main.wrap>.intro>h1{margin:0;font-size:22px;line-height:1.3;color:#111827}
 body>main.wrap{padding:16px;display:flex;flex-direction:column;gap:40px}
 body>main.wrap>.intro,body>main.wrap>section>.brief{max-width:80ch;font-size:14px;line-height:1.5;color:#374151;display:flex;flex-direction:column;gap:6px}
 body>main.wrap>.intro>p,body>main.wrap>section>.brief>p{margin:0}
@@ -152,14 +147,17 @@ ${tokens}
 ${mockCss}
 ${sharedCss}
 ${scoped.join("\n")}
+${chrome.css}
 </style>
 </head>
 <body>
-<header class="top"><strong>${escapeHtml(manifest.title)}</strong>${nav}<label>Zoom <select onchange="document.documentElement.style.setProperty('--z',this.value)"><option value="0.5">50%</option><option value="0.65">65%</option><option value="0.8" selected>80%</option><option value="1">100%</option></select></label></header>
 <main class="wrap">
-<div class="intro">${paragraphs(manifest.intro)}</div>
+<div class="intro"><h1>${escapeHtml(manifest.title)}</h1>${paragraphs(manifest.intro)}<div class="controls"><label>Zoom <select onchange="document.documentElement.style.setProperty('--z',this.value)"><option value="0.5">50%</option><option value="0.65">65%</option><option value="0.8" selected>80%</option><option value="1">100%</option></select></label></div></div>
 ${sections.join("\n")}
 </main>
+<script>
+${chrome.js}
+</script>
 </body>
 </html>
 `

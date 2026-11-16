@@ -61,6 +61,10 @@ Done when every design is a fragment with both frames for each of its moments.
 
 ## Assemble
 
+The assembled page carries the review chrome (`assets/review-chrome.*`): a bar
+linking every journey and design, and an Options panel floating the Zoom. A
+design's link reads the letter its title starts with ("A. Inline").
+
 1. Keep the fragments, any shared stylesheet and the manifest in one scratchpad
    folder: only the assembled page is committed.
 2. Write the manifest JSON:

@@ -11,8 +11,8 @@ HTML, CSS and JavaScript, with no framework and no network.
 The models are ways of working the same value, such as a type-ahead box, a row
 per entry and a tick list, or a menu, a handle to drag and a mode.
 
-Each option of an open question about a rule is a switch on the page that
-every design obeys, or a line of every design's readout.
+Each option of an open question that decides no design is a switch on the page
+that every design obeys, or a line of every design's readout.
 
 The sample world is what the host shows, and whatever else the control reads.
 
@@ -61,7 +61,8 @@ The starter holds one of each part the page needs; keep them all:
   control hides.
 - **Things to try.** Write one line per acceptance scenario, or per option of
   an open question, and per planted awkward case, in the Product Lead's words.
-  End with the keyboard alone, the narrowest host and the dark theme.
+  End with the keyboard alone, the screen where the control has least room and
+  the dark theme.
 
 Done when every design draws its round trip and has its readout, and the list
 covers every scenario or option and every planted case.
@@ -69,10 +70,10 @@ covers every scenario or option and every planted case.
 ## Check
 
 The page check presses nothing. Drive the page yourself: work every thing to
-try in every design by keyboard alone, at the narrowest host and in the dark
-theme. A Playwright script that takes its browser from `launchChromium` in
-`scripts/chromium.mjs` and fails on any `pageerror` repeats those tries at each
-screen and theme; read a screenshot of each design it leaves, and of each menu
-open at the narrowest host. Done when every
-thing to try works in every design and the readout shows its result, or the
-analysis lists the gap in that design's Risks or in _Not yet drawn_.
+try in every design by keyboard alone, on the screen where the control has
+least room and in the dark theme. A Playwright script that takes its browser
+from `launchChromium` in `scripts/chromium.mjs` and fails on any `pageerror`
+repeats those tries at each screen and theme; read a screenshot of each design
+it leaves, and of each menu open on that screen. Done when every thing to try
+works in every design and the readout shows its result, or the analysis lists
+the gap in that design's Risks or in _Not yet drawn_.

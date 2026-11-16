@@ -101,6 +101,13 @@ test("the starter page, served", (t) =>
         async () => {
           const sample = await host.locator("h3").textContent()
           await page.getByRole("button", { name: /^Edit / }).press("Enter")
+          // As tall as the app's field: 24px of text, 8px padding, a 2px border.
+          assert.equal(
+            await page
+              .getByRole("textbox", { name: "Title" })
+              .evaluate((el) => el.getBoundingClientRect().height),
+            44,
+          )
           await page.keyboard.press("ControlOrMeta+a")
           await page.keyboard.type("  Book  a video call ")
           await page.keyboard.press("Enter")

@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 // Assembles UX prototype fragments into one self-contained review page.
 // Usage: node assemble.mjs <manifest.json> <out.html>
-// Each fragment's <style> blocks are scoped to its own design. They may hold
-// plain rules and comments only; an at-rule stops the build, since scoping it
-// would leave an open block that swallows every later design's styles.
+// Each fragment's <style> blocks are scoped to its own design, and the
+// manifest's "css" file to every design. They may hold plain rules and comments
+// only; an at-rule stops the build, since scoping it would leave an open block
+// that swallows every later design's styles.
 // Fragments may be plain HTML or design-canvas .dc.html files (read inside <x-dc>).
 // Every artboard gets the app's theme tokens, then assets/mock.css, then the
-// manifest's own "css" file, which every design shares unscoped.
+// styles the designs share, then each design's own.
 import { readFile, writeFile, mkdir } from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
@@ -25,12 +26,11 @@ const paragraphs = (text = "") =>
     .map((p) => `<p>${escapeHtml(p).replace(/\n/g, "<br>")}</p>`)
     .join("")
 
-function scope(css, id) {
+/** `css` with every rule under `prefix`; `owner` names it in a refusal. */
+function scope(css, prefix, owner) {
   const plain = css.replace(/\/\*[\s\S]*?\*\//g, "")
   if (plain.includes("@"))
-    throw new Error(
-      `design ${id}: at-rules are not supported in fragment styles`,
-    )
+    throw new Error(`${owner}: at-rules are not supported in design styles`)
   return plain
     .split("}")
     .filter((rule) => rule.includes("{"))
@@ -40,7 +40,7 @@ function scope(css, id) {
         .split(",")
         .map((s) => s.trim())
         .filter((s) => s && !["body", "html", ":root"].includes(s))
-        .map((s) => `#${id} ${s}`)
+        .map((s) => `${prefix} ${s}`)
         .join(",")
       return scoped ? `${scoped}{${body}}` : ""
     })
@@ -75,8 +75,13 @@ async function assemble(manifestPath) {
     lightSelector: ".ab",
     darkSelector: ".ab.dark",
   })
+  // Under .frame, so a rule for a bare element leaves the page's chrome alone.
   const sharedCss = manifest.css
-    ? await readFile(path.join(base, manifest.css), "utf8")
+    ? scope(
+        await readFile(path.join(base, manifest.css), "utf8"),
+        ".frame",
+        `the shared stylesheet ${manifest.css}`,
+      )
     : ""
   const scoped = []
   const sections = []
@@ -88,7 +93,7 @@ async function assemble(manifestPath) {
       const { body, css } = fragmentParts(
         await readFile(path.join(base, design.file), "utf8"),
       )
-      scoped.push(scope(css, id))
+      scoped.push(scope(css, `#${id}`, `design ${id}`))
       figures.push(
         `<figure id="${id}"><figcaption>${escapeHtml(design.title)}</figcaption><div class="frame">${body}</div></figure>`,
       )

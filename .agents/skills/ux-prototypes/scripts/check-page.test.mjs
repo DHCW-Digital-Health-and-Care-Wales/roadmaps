@@ -34,7 +34,9 @@ const fixtures = {
   "/figure-id-reused":
     '<figure id="d1"><a href="#d1">Home</a><span id="d2">Settings</span></figure><figure id="d2">Roadmap detail</figure>',
   "/script-error":
-    '<figure id="d1"><div id="host"></div><script>document.getElementById("hosts").append("A")</script></figure>',
+    '<figure id="d1">Reorder<div id="host"></div><script>document.getElementById("hosts").append("A")</script></figure>',
+  "/phone-script-error":
+    '<figure id="d1">Reorder<div id="host"></div><script>if (matchMedia("(max-width: 639px)").matches) document.getElementById("hosts").append("A")</script></figure>',
   "/native-choice":
     '<figure id="d1"><button type="button" role="radio" aria-checked="true" class="opt"><span class="rad on"></span>Platform</button><label><input type="checkbox"><span class="chk"></span>Mobile app</label><span aria-hidden="true" class="rad on"></span>Data and analytics</figure>',
 }
@@ -59,16 +61,19 @@ test("prototype page checks exercise rendered browser fixtures", async (t) => {
         path.join(scratch, fixture),
       ])
 
-    await t.test(
-      "a page whose script throws as it opens is refused",
-      async () => {
-        await assert.rejects(
-          () => check("script-error"),
-          (error) =>
-            error.code === 1 && /script threw as it opened/.test(error.stderr),
-        )
-      },
-    )
+    for (const fixture of ["script-error", "phone-script-error"]) {
+      await t.test(
+        `${fixture}: a page whose script throws as it opens is refused`,
+        async () => {
+          await assert.rejects(
+            () => check(fixture),
+            (error) =>
+              error.code === 1 &&
+              /script threw as it opened/.test(error.stderr),
+          )
+        },
+      )
+    }
 
     await t.test("native navigation passes and captures a design", async () => {
       const { stdout } = await check("links")

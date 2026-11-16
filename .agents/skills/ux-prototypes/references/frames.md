@@ -11,8 +11,8 @@ For a journey, these three usually separate cleanly:
 - **guided**: a focused flow, drawer or wizard
 - **overview** or **mode**: a new place or state built for the task
 
-Each option of an open question about a rule is a moment of every design it
-bears on.
+Each option of an open question that decides no design is a moment of every
+design it bears on.
 
 ## Draw
 
@@ -31,9 +31,9 @@ Draw each design as one fragment, using the classes in `assets/mock.css`.
   named in its comments. The assembler sets the app's theme tokens on every artboard,
   so name a token and never a colour. Add `dark` to an `.ab` to draw it in the
   dark theme. Styles every design shares go in one stylesheet, named as the
-  manifest's `css`. A design's own go in a `<style>` block of plain rules
-  inside its fragment, which the assembler scopes to that design; it stops on
-  an at-rule such as `@media`.
+  manifest's `css`, and a design's own in a `<style>` block inside its
+  fragment. Both hold plain rules: the assembler scopes them to the designs and
+  stops on an at-rule such as `@media`.
 
 When the runtime offers a design canvas artifact, publish the designs there as
 well, for the owner to comment on; the committed page stays the record. Its
@@ -65,7 +65,8 @@ for:
 
 - nothing cut off sideways or by another element, and nothing drawn scrolled
   under a header that does not stay in place in the app; a page running past a
-  frame's foot is the edge of the view
+  frame's foot is the edge of the view, so long as what the moment is about is
+  in it
 - every count against the rows drawn, in both frames
 - every state a frame names, such as its pending edits, against what its dialog
   or notice says of it

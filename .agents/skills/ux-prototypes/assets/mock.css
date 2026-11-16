@@ -383,7 +383,7 @@ dl.f dd {
 .inp {
   width: 100%;
   min-height: 40px;
-  padding: 6px 8px;
+  padding: 8px;
   border: 2px solid var(--input);
   border-radius: 0;
   background: var(--background);

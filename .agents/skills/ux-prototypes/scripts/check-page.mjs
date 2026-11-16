@@ -26,18 +26,25 @@ try {
   const desk = await browser.newPage({
     viewport: { width: 1440, height: 900 },
   })
-  const scriptErrors = []
-  desk.on("pageerror", (err) => scriptErrors.push(err.message))
-  await desk.goto(url)
-  // An assembled page's own header stays in view as the page scrolls, and
-  // would cross every design taller than the window in its screenshot.
-  await desk.addStyleTag({ content: "body>header.top{position:static}" })
-  if (scriptErrors.length > 0) {
+  const phone = await browser.newPage({
+    viewport: { width: 375, height: 800 },
+  })
+  // Both pages are opened first: a script may throw only at one width, in a
+  // branch a phone alone takes.
+  const scriptErrors = new Set()
+  for (const page of [desk, phone]) {
+    page.on("pageerror", (err) => scriptErrors.add(err.message))
+    await page.goto(url)
+  }
+  if (scriptErrors.size > 0) {
     console.error(
-      `the page's script threw as it opened: ${scriptErrors.join("; ")}`,
+      `the page's script threw as it opened: ${[...scriptErrors].join("; ")}`,
     )
     process.exitCode = 1
   }
+  // An assembled page's own header stays in view as the page scrolls, and
+  // would cross every design taller than the window in its screenshot.
+  await desk.addStyleTag({ content: "body>header.top{position:static}" })
   const ids = await desk.$$eval("figure[id]", (fs) => fs.map((f) => f.id))
   const emptyNavigation = await desk.$$eval(
     'figure[id] :is(nav, .hdr, [role="navigation"])',
@@ -96,10 +103,6 @@ try {
     await desk
       .locator(`#${id}`)
       .screenshot({ path: path.join(out, `${id}.png`) })
-  const phone = await browser.newPage({
-    viewport: { width: 375, height: 800 },
-  })
-  await phone.goto(url)
   const width = await phone.evaluate(() => document.documentElement.scrollWidth)
   console.log(
     `${ids.length} designs captured in ${out}; phone scroll width ${width}px`,

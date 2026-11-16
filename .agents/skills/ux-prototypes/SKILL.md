@@ -31,8 +31,8 @@ Read these before drawing anything:
 - the existing screens each journey touches, in `src/features/` and
   `src/components/layout/`, for navigation, page layout and the components a
   design would reuse (`src/components/ui/`). See them as the app draws them
-  too, since class names alone misdraw the shell: capture each with Google
-  faked, by the first paragraph of _Capture_ in
+  too, since class names alone misdraw the shell: capture each at 1280px and
+  375px wide with Google faked, by the first paragraph of _Capture_ in
   `.agents/skills/implement-story/references/screenshots.md`. A scratch spec
   that imports `tests/e2e/fixtures/test.ts`, run against the build served by
   `vite preview` on a free port, is the shortest way
@@ -59,10 +59,10 @@ Choose the shape by what the owner has to judge:
   **host**: the card, form, dialog or part of a page that holds it.
 
 A request that names its shape has chosen it. A journey with a control in it
-is frames, unless how the control is worked is the question. An epic with both
-kinds of question takes an analysis of each. A question about a rule stays on
-the page beside one of look or feel; when a rule is the record's only open
-question, use `logic-prototype`.
+is frames, unless how the control is worked is the question. An epic with
+questions for both shapes takes an analysis of each. A question about a rule
+stays on the page beside one of look or feel; when rules are a record's only
+open questions, use `logic-prototype`.
 
 Read the shape's reference before going on: `references/frames.md` or
 `references/working-component.md`.
@@ -73,14 +73,16 @@ choose designs that differ in their model, the way a thing is done; the
 shape's reference names the usual ones. An open question about how a thing is
 done is answered by the designs: each option is a design.
 
-An open question about a rule, such as whether a change waits to be
-published, decides no design, or the comparison cannot tell the rule from the
-model. Show each of its options on every design it bears on, as the shape's
-reference says. Only a journey whose questions are all rules gets one design
-for each option.
+Any other open question, about a rule such as whether a change waits to be
+published or about what a screen says, decides no design, or the comparison
+cannot tell its answer from the model. Show each of its options on every
+design it bears on, as the shape's reference says; an option that would turn
+one design into another is shown on the design it fits. The exception is a
+journey with no question of how a thing is done: there each option is a
+design.
 
 Done when the shape is stated with its reason, and every main journey has its
-designs named, each with its model.
+designs named, each with its model or the option it shows.
 
 ## 3. Fix the sample world
 
@@ -97,6 +99,8 @@ holds:
   journey shows a conflict; the connection state only where a journey shows it
 - every derived value a design shows, such as a count of roadmaps or of
   pending edits
+- the rule the designs follow wherever drawing needs one no record settles,
+  which _Decisions needed_ then asks
 - the awkward cases planted on purpose, such as "patient" beside "Patients"
 - where the question is what publishing writes, the data as the data source
   holds it, such as the order a roadmap's items are stored in
@@ -145,7 +149,8 @@ one of three outcomes:
 
 For a record not yet grilled, trace each option of each open question to
 where it is shown. A design that is one option is no departure from another;
-an option shown nowhere is not yet drawn.
+an option shown nowhere is not yet drawn; an option a design brings that the
+record does not list is a row in _Decisions needed_.
 
 The details a shortcut tends to skip are:
 

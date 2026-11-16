@@ -1,6 +1,6 @@
 ---
 name: logic-prototype
-description: Build a throwaway logic prototype, one HTML file anyone can click through, to answer a question about a state model, business rule or data shape. Use when a design question is how something should behave, not how it should look.
+description: Build a throwaway logic prototype, one HTML file anyone can click through, to answer a question about a state model, business rule or data shape. Use when a design question is what a rule or state model should do, not how a screen looks or a control is worked.
 ---
 
 # Logic prototype

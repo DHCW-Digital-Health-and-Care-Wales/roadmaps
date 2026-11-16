@@ -1,10 +1,10 @@
 # Working component
 
-Each design is the control itself, working, inside its **host**: the card, form
-or dialog that holds it in the app, at the widths the app gives it. The owner
-tries every design on one page, so the page is written by hand: one
-self-contained file of plain HTML, CSS and JavaScript, with no framework and no
-network.
+The **host** is the card, form or dialog that holds the control in the app,
+drawn at the widths the app gives it. Each design's host sits on a **stage**,
+the app's page behind it. The owner tries every design on one page, so the page
+is written by hand: one self-contained file of plain HTML, CSS and JavaScript,
+with no framework and no network.
 
 ## Start the page
 
@@ -30,10 +30,10 @@ The starter holds one of each part the page needs; keep them all:
 - **Host.** Draw the host from the component in `src/features/` that holds the
   control, with enough of its other content to show how much room the control
   has. The Screen switch names screens and sets the host to the width the app
-  draws it at on each. Give it the persona's screens (a 375px phone, a 1024px
-  laptop, a 1280px monitor) and the screens where the host is narrowest and
-  widest, which fall either side of a layout breakpoint. Measure each width in
-  the running app.
+  draws it at on each. Give it a phone, a laptop and a monitor (375px, 1024px
+  and 1280px) and the screens where the host is narrowest and widest, which
+  fall either side of a layout breakpoint. Measure each width in the running
+  app.
 - **Rules.** Write the rules every design shares once, as pure functions the
   designs call: what the value may hold, how typed text is cleaned, what Done
   keeps and Cancel leaves. The designs then differ only in how the control is
@@ -53,8 +53,8 @@ covers every scenario and planted case.
 
 ## Check
 
-The page check screenshots each design as it opens and presses nothing. Drive
-the page yourself, with the `playwright-cli` skill or by hand: work every thing
+The page check presses nothing. Drive the page yourself, with the
+`playwright-cli` skill or by hand: work every thing
 to try in every design by keyboard alone, at the narrowest host and in the
 dark theme. Done when every thing to try works in every design and the readout
 shows its result, or the analysis lists the gap in that design's Risks or in

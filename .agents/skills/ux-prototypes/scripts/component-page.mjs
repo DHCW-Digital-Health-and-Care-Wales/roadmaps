@@ -21,7 +21,7 @@ function appTokens(css, indent) {
   const plain = css.replace(/\/\*[\s\S]*?\*\//g, "")
   const blocks = [...plain.matchAll(BLOCK)]
   for (const selector of Object.keys(SCOPES))
-    if (!blocks.some(([, found]) => found === selector))
+    if (!blocks.some(([, blockSelector]) => blockSelector === selector))
       throw new Error(`no ${selector} block of tokens found in globals.css`)
   return blocks
     .map(([, selector, body]) => {
@@ -53,9 +53,9 @@ try {
   const at = starter.indexOf(MARKER)
   if (at < 0) throw new Error(`the starter page has no ${MARKER} marker`)
   const indent = starter.slice(starter.lastIndexOf("\n", at) + 1, at)
+  const tokens = appTokens(globals, indent)
   await mkdir(path.dirname(out), { recursive: true })
   // "wx": a page already there is someone's work, never overwritten.
-  const tokens = appTokens(globals, indent)
   await writeFile(
     out,
     starter.replace(MARKER, () => tokens),

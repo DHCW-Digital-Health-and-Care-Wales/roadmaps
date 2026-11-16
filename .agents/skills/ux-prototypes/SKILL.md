@@ -1,6 +1,6 @@
 ---
 name: ux-prototypes
-description: Prototype UX designs before a feature is built, as alternatives for the owner to choose from, either static desktop and phone frames per user journey or one component working in isolation to try. Use for "prototype ux designs for x", design options or mock-ups of planned screens, or a working prototype of a field or control.
+description: Prototype UX designs before a feature is built, as alternatives for the owner to choose from. Use for "prototype ux designs for x", as static desktop and phone frames of planned screens, or as one field or control working in isolation to try.
 ---
 
 # UX prototypes
@@ -77,10 +77,9 @@ holds:
   show: each roadmap's name, and each item's placement, title, description,
   expected outcomes and tags, written as a real Product Lead would for the
   public and no longer than one phone-sized card
-- every entity's state: a roadmap published or not, out of step or stale; which
-  edits are pending and what publishing them would change; a co-lead's change
-  where a journey shows a conflict; the connection state only where a journey
-  shows it
+- every entity's state: a roadmap published or not, or out of step; which edits
+  are pending and what publishing them would change; a co-lead's change where a
+  journey shows a conflict; the connection state only where a journey shows it
 - every derived value a design shows, such as a count of roadmaps or of
   pending edits
 - the awkward cases planted on purpose, such as "patient" beside "Patients"
@@ -92,9 +91,14 @@ Show a date only where the product shows one, such as a roadmap's Last
 updated, and never after today. Name a design's moments by state: "before
 publishing", "just published".
 
-Keep the sheet in the scratchpad. When a later analysis draws the same world,
-commit the sheet as `docs/analysis/{epic}-ux-sample-world.md`; that analysis
-only adds to it, and every state and count already written stays true.
+Keep the sheet in the scratchpad when one analysis uses it. When several
+analyses will share one world, such as an epic's journey groups delivered as
+separate PRs, the first commits it beside them as
+`docs/analysis/{epic}-ux-sample-world.md`. A later analysis only adds to it,
+and every state and count already written stays true. Correct a wrong fact in
+the sheet and in every merged analysis and page that shows it, in one PR, and
+name the correction to the code-reviewer; a decided analysis keeps its text and
+names the correction in its _Outcome_.
 
 Done when each entity has exactly one state at each named moment, and every
 derived value agrees with the rows it counts.
@@ -186,12 +190,13 @@ The check runs by hand, not in CI: it is a local aid for throwaway design
 pages. It screenshots every design at 1440px wide. It fails when the page
 scrolls sideways at 375px wide, a design's navigation has no native links or
 buttons, a `.rad` or `.chk` mark sits outside a native control, or an element
-id repeats. It presses nothing and cannot see clipping inside a frame: the
-shape's reference says what to check by eye and by hand.
+id repeats. The shape's reference says what to check by eye and by hand.
 
 For system Chromium, set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to its
-executable; the scripts' own tests take the same setting. If the browser blocks
-file URLs, serve the page and pass its HTTP(S) URL instead of a file path.
+executable, and confirm the setting on the scripts' own fixtures
+(`node --test '.agents/skills/ux-prototypes/scripts/*.test.mjs'`). If the
+browser blocks file URLs, serve the page and pass its HTTP(S) URL instead of a
+file path.
 
 Done when the check passes and the shape's own check is done.
 
@@ -204,7 +209,8 @@ committed page and analysis plus:
 - **`code-reviewer`**: the inventory, the scenario trace and the sample sheet.
   It checks each design against the contract and the stories, and checks that
   the sample data agrees across designs. For a shared sheet, it also checks
-  that every state and count the sheet already held still holds.
+  that every state and count the sheet already held still holds or is a named
+  correction, carried through as step 3 says.
 - **`quality-reviewer`**: the analysis rules, the glossary and the copywriter
   voice.
 

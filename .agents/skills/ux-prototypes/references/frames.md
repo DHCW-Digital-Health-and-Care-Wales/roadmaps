@@ -1,8 +1,7 @@
 # Frames
 
-Each design is one fragment of static mock-up: a desktop frame and a phone
-frame, unless the request says otherwise. An assembler builds the fragments
-into the review page.
+Each design is one fragment, holding both of its frames unless the request
+says otherwise. An assembler builds the fragments into the review page.
 
 ## Draw
 
@@ -38,5 +37,5 @@ node .agents/skills/ux-prototypes/scripts/assemble.mjs <manifest.json> docs/anal
 
 ## Check
 
-The page check cannot see clipping inside a frame, so read its screenshots for
-that. Done when every screenshot shows its frames unclipped.
+The page check cannot see clipping inside a frame: read its screenshots. Done
+when every screenshot shows its frames unclipped.

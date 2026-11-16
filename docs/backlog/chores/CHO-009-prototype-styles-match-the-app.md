@@ -43,4 +43,5 @@ has no `--brand`. No analysis under `docs/analysis/` uses the stylesheet yet.
 
 - A mode of the skill for working prototypes of one component, as STY-037's page is:
   the skill's working-component shape. Its starter page takes the app's tokens from
-  `globals.css` by script (`scripts/component-page.mjs`), not from `mock.css`.
+  `globals.css` by script (`scripts/component-page.mjs`), which this chore could
+  reuse for `mock.css`.

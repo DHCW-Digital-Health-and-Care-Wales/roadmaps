@@ -167,7 +167,8 @@ Use these sections, in this order:
 8. _What does not change_.
 9. _Related_.
 
-Link the analysis from the _Related_ list of the epic or record it supports.
+Link the analysis from the _Related_ list of the epic it supports: of the
+backlog templates, only the epic's has one.
 
 Done when every section is present in that order, and every departure and every
 missing read or write from step 5 has a row in _Decisions needed_.

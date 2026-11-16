@@ -117,3 +117,36 @@ test("a complete HTML design keeps the styles in its head, scoped to it", async 
     await rm(scratch, { recursive: true, force: true })
   }
 })
+
+test("a numbered journey title stops the build, since the page numbers journeys", async () => {
+  const scratch = await mkdtemp(
+    path.join(os.tmpdir(), "ux-prototype-assemble-"),
+  )
+  try {
+    await writeFile(path.join(scratch, "a.html"), "<p>Roadmaps</p>")
+    await writeFile(
+      path.join(scratch, "manifest.json"),
+      JSON.stringify({
+        title: "Fixture",
+        intro: "Intro",
+        journeys: [
+          {
+            title: "1. Put an item in its place",
+            brief: "Brief",
+            designs: [{ title: "A", file: "a.html" }],
+          },
+        ],
+      }),
+    )
+    await assert.rejects(
+      run(process.execPath, [
+        path.join(here, "assemble.mjs"),
+        path.join(scratch, "manifest.json"),
+        path.join(scratch, "page.html"),
+      ]),
+      /journey 1: leave the number out of "1\. Put an item in its place"/,
+    )
+  } finally {
+    await rm(scratch, { recursive: true, force: true })
+  }
+})

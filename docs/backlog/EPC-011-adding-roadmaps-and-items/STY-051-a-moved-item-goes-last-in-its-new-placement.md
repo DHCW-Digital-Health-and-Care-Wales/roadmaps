@@ -53,7 +53,7 @@ the order they were moved (D3), and new items after every moved item (D4)
 **Given** a pending move of "Online booking" into Now
 **When** the roadmap is published, or saved, or "Save and publish" is chosen
 **Then** the same all-or-nothing `batchUpdate` writes its `Horizon` cell and, unless
-its row already sits after every row of Now's items (S5), moves the row to just after
+its row is already where Now's new order puts it (S5), moves the row to just after
 the row of Now's last item in the re-read, by `moveDimension`, after the cell and
 `Item ID` writes and before any appended row
 **And** no cell of the row is rewritten, and the rows of every other placement keep
@@ -67,11 +67,12 @@ their order relative to each other
 **Then** the row goes after "D", and the publish is not stopped for review
 **And** the page, once the publish is read back, shows "Online booking" fifth of five
 
-### S5: A row already after the placement's items is not moved (D2)
+### S5: A row already where the new order puts it is not moved (D2)
 
-**Given** a pending move whose row already sits after every row of the new placement's
-items, as a Next item does below Now's rows when it moves to Now, or a move into a
-placement with no items
+**Given** a pending move whose row already sits where the placement's new order puts
+it: after every row of the placement's items and of the items moved in before it, as
+a Next item does below Now's rows when it is the one item moved to Now, or the one
+item moved into a placement with no items
 **When** the roadmap is published
 **Then** only its `Horizon` cell is written, and no `moveDimension` request is sent: it
 already shows last, and Google refuses a move to the row's own position, failing the
@@ -82,6 +83,8 @@ whole publish
 **Given** Sam moves "X" and then "Y" into Now
 **When** the roadmap is published
 **Then** Now's rows end "X", "Y", as the page showed them, with the fewest moves
+**And** when Now held no items and Y's row sits above X's, Y's row is moved after X's:
+a placement with no items exempts only a row the order already puts last (S5)
 **And** a new item added to Now is still appended after the tab's last row in use, so
 it shows after both (D4)
 

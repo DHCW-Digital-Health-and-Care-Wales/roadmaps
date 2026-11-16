@@ -102,9 +102,10 @@ Decided with the owner on 2026-11-16, on the wayfinder map
 - **Undo and moving back** (Q5): undoing a move, or moving the item back to where it
   was loaded, is no change, and it keeps its loaded position; rows move only at
   publish.
-- **How the row moves** is ADR-012's (_STY-051 amendments_). A move into a placement
-  with no items, or one whose row already sits after every row of the placement's
-  items, writes the `Horizon` cell alone (#107 point 1).
+- **How the row moves** is ADR-012's (_STY-051 amendments_). A moved item whose row
+  already sits where the placement's new order puts it, after every row of the
+  placement's items and of the items moved in before it, has its `Horizon` cell written
+  alone (#107 point 1: rows already in order stay).
 - The rest of _Placement_ stands: a placement is a pending edit, one field for
   conflicts, chosen from the card's Move menu or the form, never unplaced.
 

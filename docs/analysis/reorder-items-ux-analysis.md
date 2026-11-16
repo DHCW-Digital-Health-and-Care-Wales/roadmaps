@@ -33,8 +33,9 @@ the same roadmap (A12), and nothing is public until a deliberate publish (A9, A1
 | 2. See a changed order, pending, and undo it | see which placement's order is pending; see the unpublished change count; undo the order | ticket 104 points 1, 5, 6      |
 | 3. Publish a changed order                   | see the order in "What changes" before publishing                                        | STY-025 S9 (the dialog exists) |
 
-STY-050 has no acceptance scenarios yet, so each design is traced against the
-ticket's question and the decisions already made on the map:
+When the mock-ups were drawn, STY-050 had no acceptance scenarios, so each design is
+traced against the ticket's question and the decisions already made on the map (its
+scenarios are now settled: see _Outcome_):
 [What is an order change, and when is it a conflict?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/104)
 and
 [Where does a moved item land, and where does a new item go?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/106).

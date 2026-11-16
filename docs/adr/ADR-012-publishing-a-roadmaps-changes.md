@@ -369,7 +369,8 @@ ADR-014 _STY-051 amendments_ say where a moved item goes; these say how it is wr
   (Welsh, unknown columns), turn formulas, numbers and dates into text, leave formatting
   and notes on the wrong item, and overwrite a co-lead's edit anywhere in those rows.
 - **A row already in place is not moved** (#107 point 1): a moved item's row that
-  already sits after every row of its new placement's items gets its `Horizon` cell
+  already sits where its new placement's order puts it, after every row of the
+  placement's items and of the items moved in before it, gets its `Horizon` cell
   alone.
 - **A move that would leave a row where it is is never sent** (map ticket
   [What do row moves do to a real roadmap tab?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/109)):

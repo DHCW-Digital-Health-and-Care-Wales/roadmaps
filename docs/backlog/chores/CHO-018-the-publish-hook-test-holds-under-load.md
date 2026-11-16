@@ -2,7 +2,7 @@
 
 - **Status**: Proposed — one flake seen; the owner decides whether it is worth chasing
 - **Type**: Chore
-- **Area**: Features/UI (test)
+- **Area**: Features/UI
 - **Epic**: standalone
 - **Depends on**: none
 - **Binding ADRs**: none
@@ -15,7 +15,7 @@
 change that does not touch it: `expect(result.current.publish.readBack()).toBe(false)`
 received `true` (line 137, the test about a Refresh begun before a write lands, then the
 session expiring). The failed job's rerun passed. Done: the test passes on every run
-under a loaded runner, or the owner decides one flake in a month is not worth the work.
+fifty runs in a row (S1), or the owner decides one flake is not worth the work.
 
 ## Measurement
 
@@ -36,11 +36,11 @@ reproduced: this is a guess from reading the test.
 
 ## Acceptance criteria
 
-### S1: the test no longer depends on how fast the runner is
+### S1: the test passes under load
 
-Reproduce the failure under load (a loop of runs beside a busy process),
-name the step whose order changes, and wait on what the assertion depends on, not on the
-second read starting.
+**Given** the test file run fifty times, a quarter of them beside a busy process,
+**Then** every run passes, **And** Delivery names the step whose order changed and what
+the test now waits on.
 
 ## Decisions
 

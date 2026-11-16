@@ -6,7 +6,7 @@
 - **Scope**: the Tags field of an item's edit form, for
   [STY-037](../backlog/_archive/EPC-009-item-tags/STY-037-edit-an-items-tags.md). Base
   `52850bf`. Only documents and one prototype page were added; no application code.
-- **Prototypes**: [`item-tags-ux-analysis/prototypes.html`](item-tags-ux-analysis/prototypes.html),
+- **Prototypes**: [`item-tags-ux-analysis/item-tags-ux-prototypes.html`](item-tags-ux-analysis/item-tags-ux-prototypes.html),
   one self-contained page; open it in a browser. The owner asked for prototypes of the
   component alone, to try (STY-037 D2). So, unlike the `ux-prototypes` skill's static
   desktop and phone frames, each design is a working field inside one item card, with

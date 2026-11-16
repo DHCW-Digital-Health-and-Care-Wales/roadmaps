@@ -69,7 +69,7 @@ Done when every design is a fragment with both frames for each of its moments.
 3. Run the assembler:
 
 ```bash
-node .agents/skills/ux-prototypes/scripts/assemble.mjs <manifest.json> docs/analysis/{topic}-ux-analysis/prototypes.html
+node .agents/skills/ux-prototypes/scripts/assemble.mjs <manifest.json> docs/analysis/{topic}-ux-analysis/{topic}-ux-prototypes.html
 ```
 
 ## Check

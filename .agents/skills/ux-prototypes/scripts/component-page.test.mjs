@@ -19,7 +19,7 @@ const checker = path.join(here, "check-page.mjs")
 async function withStarterPage(body) {
   const scratch = await mkdtemp(path.join(os.tmpdir(), "ux-prototype-start-"))
   try {
-    const out = path.join(scratch, "page", "prototypes.html")
+    const out = path.join(scratch, "page", "sample-ux-prototypes.html")
     await run(process.execPath, [starter, out])
     await body(out, scratch)
   } finally {

@@ -190,8 +190,9 @@ Keep the trace in the scratchpad.
 
 Write `docs/analysis/{topic}-ux-analysis.md` under the analysis rules in
 `docs/AGENTS.md`, with `{topic}` naming the job, such as `remove-a-roadmap`.
-Put the page in a sibling folder:
-`docs/analysis/{topic}-ux-analysis/prototypes.html`.
+Put the page in a sibling folder, named for its topic so the owner can tell
+one downloaded page from another:
+`docs/analysis/{topic}-ux-analysis/{topic}-ux-prototypes.html`.
 
 Use these sections, in this order:
 
@@ -226,7 +227,7 @@ holds them to. Then run the check on the page, in either shape. It uses
 scratchpad.
 
 ```bash
-node .agents/skills/ux-prototypes/scripts/check-page.mjs docs/analysis/{topic}-ux-analysis/prototypes.html <scratchpad>/shots
+node .agents/skills/ux-prototypes/scripts/check-page.mjs docs/analysis/{topic}-ux-analysis/{topic}-ux-prototypes.html <scratchpad>/shots
 ```
 
 The check runs by hand, not in CI: it is a local aid for throwaway design

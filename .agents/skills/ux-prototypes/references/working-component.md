@@ -19,7 +19,7 @@ The sample world is what the host shows, and whatever else the control reads.
 ## Start the page
 
 ```bash
-node .agents/skills/ux-prototypes/scripts/component-page.mjs docs/analysis/{topic}-ux-analysis/prototypes.html
+node .agents/skills/ux-prototypes/scripts/component-page.mjs docs/analysis/{topic}-ux-analysis/{topic}-ux-prototypes.html
 ```
 
 This writes the starter page, with the app's theme tokens copied from

@@ -37,7 +37,7 @@ moves to `_archive/`, where its row here still points.
 | [CHO-005](chores/CHO-005-send-last-updated-to-the-api-in-utc.md)                        | Send a roadmap's Last updated to the future database API in UTC, once it replaces Sheets                               | Placeholder |
 | [CHO-007](_archive/chores/CHO-007-rebase-an-open-date-form-after-marking-updated.md)    | An open About form takes a date its own "Mark as updated today" wrote as its own                                       | Won't do    |
 | [CHO-008](_archive/chores/CHO-008-settle-the-test-first-rule.md)                        | Deliveries follow a test-first rule they can keep                                                                      | Done        |
-| [CHO-009](chores/CHO-009-prototype-styles-match-the-app.md)                             | The `ux-prototypes` stylesheet still draws shadcn's greys, not the app's DHCW look                                     | Proposed    |
+| [CHO-009](_archive/chores/CHO-009-prototype-styles-match-the-app.md)                    | The `ux-prototypes` stylesheet still draws shadcn's greys, not the app's DHCW look                                     | Done        |
 | [CHO-010](_archive/chores/CHO-010-check-adding-a-roadmap-against-a-real-spreadsheet.md) | Check STY-040's write (a copied `Template`, frozen, hidden or protected) against a real test spreadsheet               | Done        |
 | [CHO-011](_archive/chores/CHO-011-the-dialog-tests-share-their-setup.md)                | The dialog tests share one way to open a dialog, one focus tour and one set of fixtures, before more dialogs copy them | Done        |
 | [CHO-012](_archive/chores/CHO-012-the-other-tests-use-the-shared-fixtures.md)           | The other tests take their families, categories and connected state from the shared fixtures                           | Done        |
@@ -45,6 +45,7 @@ moves to `_archive/`, where its row here still points.
 | [CHO-014](chores/CHO-014-slim-the-e2e-suite.md)                                         | The E2E suite holds geometry, and repeats a run per theme, language or width, only where that proves something         | Proposed    |
 | [CHO-015](_archive/chores/CHO-015-check-adding-an-item-against-a-real-spreadsheet.md)   | Check STY-045's write (a new item's row appended to a roadmap's tab) against a real test spreadsheet                   | Done        |
 | [CHO-016](chores/CHO-016-the-quality-reviewer-reads-the-whole-diff.md)                  | The quality reviewer reads the whole diff in one pass                                                                  | In progress |
+| [CHO-017](chores/CHO-017-the-glossary-says-how-the-editor-shows-a-horizon.md)           | The glossary calls a horizon a column, which the editor does not draw and the entry itself says to avoid               | Proposed    |
 
 Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status token.
 

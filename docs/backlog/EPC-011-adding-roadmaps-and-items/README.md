@@ -281,6 +281,9 @@ flowchart LR
 - [`docs/analysis/add-a-roadmap-ux-analysis.md`](../../analysis/add-a-roadmap-ux-analysis.md):
   twelve mock-ups over four journeys. Outcome: a dialog for adding a roadmap, landing on
   the new roadmap; a dialog for adding an item; one panel on an empty roadmap.
+- [`docs/analysis/remove-a-published-item-ux-analysis.md`](../../analysis/remove-a-published-item-ux-analysis.md):
+  six designs over two journeys for STY-049, drawing every option of its Q1–Q3; no
+  outcome yet.
 - `docs/analysis/roadmaps-tab-format.md` and `docs/analysis/roadmap-tab-format.md`: the
   roadmap index and roadmap tab formats, and the `Template` tab.
 - [EPC-008](../_archive/EPC-008-publishing-and-freshness/README.md): "Publish roadmap",

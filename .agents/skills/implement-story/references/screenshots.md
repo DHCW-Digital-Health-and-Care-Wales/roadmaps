@@ -28,10 +28,11 @@ without it, a locator that matches nothing (a Welsh capture looking for an
 English name) waits out the whole test timeout. Bound a run with
 `timeout -s INT <seconds>` and its output in a log file: interrupted, Playwright
 reports the test and the locator it was waiting on, where a killed run or a
-`tail` pipe shows nothing. For a dark capture, call `useTheme(page, "dark")`
-from `tests/e2e/fixtures/look.ts` before navigating: the app is light until the
-user chooses dark (ADR-005), so `colorScheme: "dark"` alone captures the light
-theme.
+`tail` pipe shows nothing. Set `reducedMotion: "reduce"` in the config's
+`use`, or a dialog or menu is captured part-way through fading in. For a dark
+capture, call `useTheme(page, "dark")` from `tests/e2e/fixtures/look.ts` before
+navigating: the app is light until the user chooses dark (ADR-005), so
+`colorScheme: "dark"` alone captures the light theme.
 
 Cover desktop (1280 px) and phone (375 px), light and dark mode where relevant,
 and Welsh (`cy`) where copy changed. Save captures under

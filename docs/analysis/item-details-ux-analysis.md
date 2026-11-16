@@ -6,7 +6,7 @@
 - **Scope**: the Details field of an item's edit form, for
   [STY-039](../backlog/_archive/EPC-010-item-details/STY-039-edit-an-items-details.md). Base
   `3d0029e`. Only documents and one prototype page were added; no application code.
-- **Prototypes**: [`item-details-ux-analysis/prototypes.html`](item-details-ux-analysis/prototypes.html),
+- **Prototypes**: [`item-details-ux-analysis/item-details-ux-prototypes.html`](item-details-ux-analysis/item-details-ux-prototypes.html),
   one self-contained page; open it in a browser. Nesting is something done, not seen,
   so, as for tags and unlike the `ux-prototypes` skill's static desktop and phone
   frames, each design is a working field inside one item card, with the card's width

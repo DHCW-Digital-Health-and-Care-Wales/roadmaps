@@ -1,6 +1,6 @@
 ---
 name: logic-prototype
-description: Build a throwaway logic prototype, one HTML file anyone can click through, to answer a question about a state model, business rule or data shape. Use when a design question is how something should behave, not how it should look.
+description: Build a throwaway logic prototype, one HTML file anyone can click through, to answer a question about a state model, business rule or data shape. Use when a design question is what a rule or state model should do, not how a screen looks or a control is worked.
 ---
 
 # Logic prototype
@@ -25,7 +25,7 @@ Because it's one file with nothing to install, you can hand it to a non-develope
 - "I want to feel out what the API should look like before writing it."
 - Anything where someone wants to **press buttons and watch state change**.
 
-If the question is "what should this look like", this is the wrong skill: use `ux-prototypes`.
+If the question is "what should this look like", or how a control should feel to work, this is the wrong skill: use `ux-prototypes`.
 
 ## Process
 

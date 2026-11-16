@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Topic: component prototypes</title>
+    <style>
+      /* The review page's own chrome. It sets no background, so it sits on whatever
+         shows it; each design draws inside a .stage that has its own. */
+      html,
+      body {
+        margin: 0;
+      }
+      /* As wide as the app's page, so a host the width of a page fits its stage;
+         the prose keeps a reading measure. */
+      .page {
+        max-width: 1232px;
+        margin: 0 auto;
+        padding: 8px 16px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        font-family: system-ui, "Segoe UI", Arial, sans-serif;
+        font-size: 15px;
+        line-height: 1.5;
+      }
+      .page * {
+        box-sizing: border-box;
+      }
+      .page h1 {
+        margin: 0;
+        font-size: 20px;
+        line-height: 1.3;
+      }
+      /* The chrome's rules name the chrome's own elements, never a bare p or ol:
+         a design's markup sits inside .page too. */
+      .intro > *,
+      .page figure > p {
+        max-width: 728px;
+      }
+      .intro p,
+      .intro ol,
+      .page figure > p,
+      .page pre {
+        margin: 0;
+      }
+      .intro,
+      .page figure {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin: 0;
+        min-width: 0;
+      }
+      .intro ol {
+        padding-left: 22px;
+      }
+      .page summary {
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .page details > :not(summary) {
+        margin-top: 8px;
+      }
+      .page pre {
+        font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+        font-size: 13px;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        border-left: 3px solid currentColor;
+        padding-left: 10px;
+      }
+      .controls,
+      .controls > div,
+      .caption {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        align-items: center;
+      }
+      .caption {
+        justify-content: space-between;
+      }
+      .seg {
+        display: inline-flex;
+        flex-wrap: wrap;
+        border: 1px solid currentColor;
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .seg button,
+      .again {
+        appearance: none;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        padding: 5px 10px;
+        cursor: pointer;
+      }
+      .seg button[aria-pressed="true"] {
+        background: #1b365d;
+        color: #fff;
+      }
+      .again {
+        border: 1px solid currentColor;
+        border-radius: 6px;
+        font-size: 13px;
+        padding: 3px 9px;
+      }
+      .caption h2 {
+        margin: 0;
+        font-size: 17px;
+        line-height: 1.3;
+      }
+      .sr {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+      }
+
+      /* The app's theme, written here by scripts/component-page.mjs from
+         src/styles/globals.css: every token under its own name, on each stage. */
+      /* @app-tokens */
+
+      /* A stage is the app's page behind the host. The host keeps the width the
+         Screen switch gives it: a stage too narrow for it scrolls sideways. */
+      .stage {
+        display: flex;
+        overflow-x: auto;
+        padding: 16px;
+        border: 1px solid var(--border);
+        background: var(--background);
+        color: var(--foreground);
+        font-family: var(--font-sans);
+        font-size: var(--text-body);
+        line-height: var(--text-body--line-height);
+      }
+      .host {
+        flex: none;
+        width: var(--host-w, 360px);
+        margin-inline: auto;
+      }
+      /* On a phone the stage runs edge to edge, so its 16px padding is the
+         app's own page padding and a 375px phone draws the host as the app
+         does. */
+      @media (max-width: 639px) {
+        .stage {
+          margin-inline: -16px;
+          border-inline: 0;
+        }
+      }
+
+      /* The app's controls, drawn as the app draws them and named as
+         assets/mock.css names them. Keep these: every design uses them. */
+      .inp {
+        width: 100%;
+        min-height: 40px;
+        padding: 8px;
+        border: 2px solid var(--input);
+        border-radius: 0;
+        background: var(--background);
+        color: var(--foreground);
+        font: inherit;
+      }
+      .inp:focus-visible {
+        outline: 3px solid var(--focus);
+        outline-offset: 0;
+        border-color: var(--focus-foreground);
+        box-shadow: inset 0 0 0 2px var(--focus-foreground);
+      }
+      /* The secondary button; .p is the primary. */
+      .btn {
+        appearance: none;
+        height: 40px;
+        padding: 0 16px;
+        border: 1px solid var(--input);
+        border-radius: var(--radius);
+        background: var(--background);
+        color: var(--foreground);
+        font: inherit;
+        font-weight: 700;
+        box-shadow: var(--shadow-control-edge);
+        cursor: pointer;
+      }
+      .btn:hover {
+        background: var(--muted);
+      }
+      .btn.p {
+        border-color: var(--primary);
+        background: var(--primary);
+        color: var(--primary-foreground);
+        box-shadow: var(--shadow-control);
+      }
+      .btn.p:hover {
+        background: var(--primary-hover);
+      }
+      .btn.sm {
+        height: 32px;
+        padding: 0 12px;
+        font-size: var(--text-body-xs);
+      }
+      .btn:focus-visible {
+        outline: 3px solid transparent;
+        outline-offset: 0;
+        border-color: transparent;
+        background: var(--focus);
+        color: var(--focus-foreground);
+        box-shadow: 0 2px 0 var(--focus-foreground);
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      /* The host: here an item card and its form. Replace these rules with
+         the host this prototype needs. */
+      .card {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 16px;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--card-foreground);
+        box-shadow: var(--shadow-card-bar);
+      }
+      .card h3 {
+        margin: 0;
+        font-size: var(--text-body);
+        line-height: var(--text-body--line-height);
+        overflow-wrap: break-word;
+      }
+      .card form,
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin: 0;
+      }
+      .card form {
+        gap: 16px;
+      }
+      .field label {
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <div class="intro">
+        <h1>Topic: how many designs, of what</h1>
+        <p>
+          What the control is and where it sits, what every design shares, and
+          how the designs differ.
+        </p>
+        <div class="controls">
+          <div>
+            <span id="theme-label">Theme</span>
+            <span class="seg" role="group" aria-labelledby="theme-label">
+              <button type="button" data-theme="light" aria-pressed="true">
+                Light
+              </button>
+              <button type="button" data-theme="dark" aria-pressed="false">
+                Dark
+              </button>
+            </span>
+          </div>
+          <div>
+            <!-- Each button names a screen; data-width is how wide the app
+                 draws the host on it. These are the item card's: one across
+                 under 640px, two across to 1023px, then three across in a page
+                 at most 1200px wide, so no monitor gives a wider card than
+                 1280 does. Measure another host's in the running app.
+                 data-phone marks the screen a phone opens on. -->
+            <span id="screen-label">Screen</span>
+            <span class="seg" role="group" aria-labelledby="screen-label">
+              <button
+                type="button"
+                data-width="343"
+                data-phone
+                aria-pressed="false"
+              >
+                Phone 375
+              </button>
+              <button type="button" data-width="607" aria-pressed="false">
+                Large phone 639
+              </button>
+              <button type="button" data-width="294" aria-pressed="false">
+                Small tablet 640
+              </button>
+              <button type="button" data-width="301" aria-pressed="false">
+                Laptop 1024
+              </button>
+              <button type="button" data-width="360" aria-pressed="true">
+                Monitor 1280 and wider
+              </button>
+            </span>
+            <span>The card is <span id="host-width">360</span>px wide.</span>
+          </div>
+        </div>
+        <details open>
+          <summary>Things to try in each</summary>
+          <ol>
+            <li>Change the title, then press Done.</li>
+            <li>Do it with the keyboard alone.</li>
+            <li>Try it on the small tablet, and in the dark theme.</li>
+          </ol>
+        </details>
+        <details>
+          <summary>The sample</summary>
+          <pre id="sample"></pre>
+        </details>
+      </div>
+
+      <figure id="pa" aria-labelledby="pa-name">
+        <div class="caption">
+          <h2 id="pa-name">A. The design's name</h2>
+          <button type="button" class="again" data-again="pa">
+            Start again <span class="sr">design A</span>
+          </button>
+        </div>
+        <p>The design's idea, in a sentence or two.</p>
+        <div class="stage"><div class="host card" id="pa-host"></div></div>
+        <details>
+          <summary>What this design keeps as the pending edit</summary>
+          <pre id="pa-readout"></pre>
+        </details>
+      </figure>
+    </main>
+
+    <script>
+      // ---- The sample world ----
+      const INITIAL = { title: "Offer video appointments where suitable" }
+
+      // ---- The rules every design shares: pure, with no page in them ----
+      const clean = (text) => text.replace(/\s+/g, " ").trim()
+      /** The value as the readout and the sample show it. */
+      const written = (value) => `Title: ${value.title}`
+
+      // ---- Drawing ----
+      /** An element with its attributes, listeners (`onclick`) and children. */
+      function h(tag, attributes = {}, ...children) {
+        const element = document.createElement(tag)
+        for (const [name, value] of Object.entries(attributes)) {
+          if (name.startsWith("on")) element[name] = value
+          else element.setAttribute(name, value)
+        }
+        element.append(...children)
+        return element
+      }
+
+      // ---- The designs ----
+      /**
+       * A design draws the control into `host` from the value kept, and calls
+       * `keep(next)` when the Product Lead confirms; it is drawn again after.
+       * `id` prefixes every element id, since the designs share one page.
+       * It returns the function that draws its first view, given whether that
+       * view takes focus: true after a change is kept, false as the page opens.
+       */
+      function designA(id, host, kept, keep) {
+        function showCard(focus) {
+          const edit = h(
+            "button",
+            { type: "button", class: "btn", onclick: showForm },
+            "Edit",
+            " ",
+            h("span", { class: "sr" }, kept.title),
+          )
+          host.replaceChildren(h("h3", {}, kept.title), edit)
+          // A redrawn control loses focus: put it where the app would.
+          if (focus) edit.focus()
+        }
+        function showForm() {
+          const input = h("input", {
+            id: `${id}-title`,
+            class: "inp",
+            value: kept.title,
+          })
+          const form = h(
+            "form",
+            {
+              onsubmit: (event) => {
+                event.preventDefault()
+                const title = clean(input.value)
+                if (title === "") showCard(true)
+                else keep({ ...kept, title })
+              },
+            },
+            h(
+              "div",
+              { class: "field" },
+              h("label", { for: `${id}-title` }, "Title"),
+              input,
+            ),
+            h(
+              "div",
+              { class: "actions" },
+              h("button", { type: "submit", class: "btn p" }, "Done"),
+              h(
+                "button",
+                {
+                  type: "button",
+                  class: "btn",
+                  onclick: () => showCard(true),
+                },
+                "Cancel",
+              ),
+            ),
+          )
+          host.replaceChildren(form)
+          input.focus()
+        }
+        return showCard
+      }
+
+      // ---- The page: one figure per design, each with its own kept value ----
+      // A design that holds state of its own between draws, such as a card
+      // picked up, may be wired another way; the figure's parts stay.
+      function mount(id, design) {
+        const host = document.getElementById(`${id}-host`)
+        const readout = document.getElementById(`${id}-readout`)
+        function show(kept, focus) {
+          readout.textContent = written(kept)
+          design(id, host, kept, (next) => show(next, true))(focus)
+        }
+        document
+          .querySelector(`[data-again="${id}"]`)
+          .addEventListener("click", () => show(INITIAL, false))
+        show(INITIAL, false)
+      }
+      mount("pa", designA)
+
+      // ---- The page's own controls ----
+      document.getElementById("sample").textContent = written(INITIAL)
+      function bindSwitch(attribute, apply) {
+        const buttons = document.querySelectorAll(`[data-${attribute}]`)
+        for (const button of buttons) {
+          button.addEventListener("click", () => {
+            for (const other of buttons)
+              other.setAttribute("aria-pressed", String(other === button))
+            for (const stage of document.querySelectorAll(".stage"))
+              apply(stage, button.dataset[attribute])
+          })
+        }
+      }
+      bindSwitch("theme", (stage, theme) =>
+        stage.classList.toggle("dark", theme === "dark"),
+      )
+      bindSwitch("width", (stage, width) => {
+        stage.style.setProperty("--host-w", `${width}px`)
+        document.getElementById("host-width").textContent = width
+      })
+      // Someone reading on a phone starts with the phone's host.
+      if (matchMedia("(max-width: 639px)").matches)
+        document.querySelector("[data-phone]")?.click()
+    </script>
+  </body>
+</html>

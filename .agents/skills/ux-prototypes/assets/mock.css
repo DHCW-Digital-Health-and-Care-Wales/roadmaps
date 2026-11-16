@@ -1,72 +1,19 @@
-/* UX prototype mock styles. The tokens below mirror src/styles/globals.css (:root and .dark); keep them in step. */
-/* Add class "dark" to an .ab artboard to draw it in dark mode. */
-.ab {
-  --brand: oklch(0.511 0.262 276.966);
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --radius: 0.625rem;
-  /* Mock-only: the app has no success or warning tokens yet, so these are
-     placeholders for a status a design needs to show. Raise a missing token as a
-     decision in the analysis instead of relying on these. */
-  --ok-bg: #dcfce7;
-  --ok-fg: #166534;
-  --ok-dot: #16a34a;
-  --ok-line: #bbf7d0;
-  --warn-bg: #fffbeb;
-  --warn-fg: #92400e;
-  --warn-dot: #d97706;
-  --warn-line: #fde68a;
-  /* Derived tints of the real tokens. */
-  --brand-soft: color-mix(in oklch, var(--brand) 8%, var(--card));
-  --brand-line: color-mix(in oklch, var(--brand) 30%, var(--card));
-  --destructive-soft: color-mix(in oklch, var(--destructive) 8%, var(--card));
-  --destructive-line: color-mix(in oklch, var(--destructive) 30%, var(--card));
-}
-.ab.dark {
-  --brand: oklch(0.673 0.182 276.935);
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ok-bg: #052e16;
-  --ok-fg: #86efac;
-  --ok-dot: #22c55e;
-  --ok-line: #14532d;
-  --warn-bg: #451a03;
-  --warn-fg: #fcd34d;
-  --warn-dot: #f59e0b;
-  --warn-line: #78350f;
-}
+/* UX prototype mock styles: the app's look, drawn with the app's own tokens. The
+   assembler sets every token of src/styles/globals.css on each .ab artboard
+   (scripts/app-tokens.mjs), so a rule here names a token and never a colour.
+   Add class "dark" to an .ab to draw it in the dark theme. */
+
+/* ---- The artboard and its two frames ---- */
 .ab {
   width: 1560px;
   height: 900px;
   box-sizing: border-box;
   padding: 28px 32px;
   background: var(--muted);
-  font-family:
-    system-ui,
-    -apple-system,
-    "Segoe UI",
-    Roboto,
-    Arial,
-    sans-serif;
   color: var(--foreground);
-  font-size: 14px;
-  line-height: 1.45;
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: var(--text-body--line-height);
   display: flex;
   gap: 40px;
   align-items: flex-start;
@@ -74,7 +21,7 @@
 .ab * {
   box-sizing: border-box;
 }
-/* A page that scrolls, such as a marketing page, grows to its full length. */
+/* A page that scrolls, such as a long roadmap, grows to its full length. */
 .ab.tall {
   height: auto;
 }
@@ -88,9 +35,11 @@
   flex-direction: column;
   gap: 8px;
 }
+/* The strip over a frame: its device in <b>, then the moment it shows. */
 .lbl {
   font-size: 12px;
-  font-weight: 600;
+  line-height: 20px;
+  font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--muted-foreground);
@@ -100,140 +49,175 @@
 }
 .lbl b {
   background: var(--foreground);
-  color: var(--primary-foreground);
-  border-radius: 4px;
-  padding: 1px 6px;
+  color: var(--background);
+  padding: 0 6px;
   letter-spacing: 0;
+}
+.dev,
+.ph {
+  height: 810px;
+  background: var(--background);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
 }
 .dev {
   width: 1060px;
-  height: 810px;
-  background: var(--background);
   border: 1px solid var(--input);
   border-radius: 12px;
-  overflow: hidden;
-  display: flex;
-  position: relative;
-  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.1);
 }
 .ph {
-  width: 375px;
-  height: 810px;
-  background: var(--background);
+  width: 391px;
   border: 8px solid var(--foreground);
   border-radius: 36px;
-  overflow: hidden;
+}
+
+/* ---- The app's shell: header band, phase banner, page ---- */
+.hdr {
+  flex: none;
+  min-height: 64px;
+  padding: 12px 40px;
+  background: var(--header);
+  color: var(--header-foreground);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.hdr .app {
+  color: inherit;
+  text-decoration: none;
+  font-weight: 700;
+}
+.phase {
+  flex: none;
+  padding: 10px 40px;
+  border-bottom: 1px solid var(--border);
+  font-size: var(--text-body-xs);
+  line-height: var(--text-body-xs--line-height);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+/* The page under the banner: put the screen's content here. */
+.pg {
+  flex: 1;
+  min-height: 0;
+  padding: 32px 40px;
   display: flex;
   flex-direction: column;
+  gap: 24px;
+  overflow: hidden;
   position: relative;
 }
-.side {
-  width: 196px;
-  flex: none;
-  background: var(--card);
-  border-right: 1px solid var(--border);
-  padding: 16px 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+.ph .hdr,
+.ph .phase,
+.ph .pg {
+  padding-inline: 16px;
 }
-.side .app {
-  font-weight: 700;
-  font-size: 14px;
-  padding: 4px 10px 14px;
+/* A horizon's or a list's cards: three across, one across on the phone. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
 }
-.side a {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 10px;
-  border-radius: 8px;
-  color: var(--foreground);
-  text-decoration: none;
-  font-size: 13.5px;
-}
-.side a.on {
-  background: var(--brand-soft);
-  color: var(--brand);
-  font-weight: 600;
-}
-.main {
-  flex: 1;
-  min-width: 0;
-  padding: 22px 26px;
-  display: flex;
-  flex-direction: column;
+.ph .grid {
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
-  overflow: hidden;
 }
-.pbar {
-  background: var(--card);
-  border-bottom: 1px solid var(--border);
+ul.grid {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* The bar that counts pending edits, over a roadmap's page. */
+.pend {
   padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-left: 8px solid var(--status-info-border);
+  background: var(--card);
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  font-weight: 600;
-}
-.pbody {
-  flex: 1;
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
   gap: 12px;
-  overflow: hidden;
+  font-weight: 700;
 }
-.tabbar {
-  display: flex;
-  justify-content: space-around;
-  border-top: 1px solid var(--border);
-  background: var(--card);
-  padding: 8px 0 14px;
-  font-size: 11px;
-  color: var(--muted-foreground);
-}
-.tabbar span.on {
-  color: var(--brand);
-  font-weight: 600;
-}
-h1,
-h2,
-h3,
-h4 {
+
+/* ---- Type ---- */
+.ab h1,
+.ab h2,
+.ab h3,
+.ab h4,
+.ab p {
   margin: 0;
-  letter-spacing: -0.01em;
 }
-h1 {
-  font-size: 22px;
+.ab h1 {
+  font-size: var(--text-heading-xl);
+  line-height: var(--text-heading-xl--line-height);
 }
-h2 {
-  font-size: 17px;
+.ab h2 {
+  font-size: var(--text-heading-m);
+  line-height: var(--text-heading-m--line-height);
 }
-h3 {
-  font-size: 15px;
-}
-h4 {
-  font-size: 13.5px;
-}
-p {
-  margin: 0;
+.ab h3,
+.ab h4 {
+  font-size: var(--text-heading-xs);
+  line-height: var(--text-heading-xs--line-height);
 }
 .muted {
   color: var(--muted-foreground);
 }
-.sm {
-  font-size: 12.5px;
-}
+.sm,
 .xs {
-  font-size: 11.5px;
+  font-size: var(--text-body-xs);
+  line-height: var(--text-body-xs--line-height);
 }
 .b {
-  font-weight: 600;
+  font-weight: 700;
 }
+/* A value a pending edit takes away, such as an item to be removed. */
+.strike {
+  text-decoration: line-through;
+  color: var(--muted-foreground);
+}
+/* A text link, and the back link over a page's title. */
+.lnk {
+  color: var(--link);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+/* Text for a screen reader alone, such as the item a button acts on. */
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+/* An inline SVG icon in a button or a tag. */
+.ic {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ---- Layout helpers ---- */
 .hstack {
   display: flex;
   align-items: center;
+  gap: 8px;
+}
+.vstack {
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 .between {
@@ -241,11 +225,6 @@ p {
 }
 .wrap {
   flex-wrap: wrap;
-}
-.vstack {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 }
 .g4 {
   gap: 4px;
@@ -260,469 +239,339 @@ p {
   flex: 1;
   min-width: 0;
 }
-.card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 14px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.card.flat {
-  padding: 0;
-  gap: 0;
-}
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  border-radius: 8px;
-  padding: 7px 12px;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.2;
-  border: 1px solid var(--input);
-  background: var(--card);
-  color: var(--foreground);
-  white-space: nowrap;
-  cursor: pointer;
-  min-height: 34px;
-}
-.btn.p {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: var(--primary-foreground);
-}
-.btn.gh {
-  border-color: transparent;
-  background: transparent;
-  color: var(--brand);
-}
-.btn.dg {
-  color: var(--destructive);
-}
-.btn.sm {
-  padding: 4px 9px;
-  font-size: 12.5px;
-  min-height: 28px;
-}
-.btn.lg {
-  padding: 12px 16px;
-  font-size: 15px;
-  min-height: 48px;
-}
-.btn.blk {
-  width: 100%;
-}
-.bdg {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  border-radius: 999px;
-  padding: 1px 9px;
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-  border: 1px solid transparent;
-}
-.bdg.ok {
-  background: var(--ok-bg);
-  color: var(--ok-fg);
-}
-.bdg.warn {
-  background: var(--warn-bg);
-  color: var(--warn-fg);
-  border-color: var(--warn-line);
-}
-.bdg.info {
-  background: var(--brand-soft);
-  color: var(--brand);
-  border-color: var(--brand-line);
-}
-.bdg.mut {
-  background: var(--muted);
-  color: var(--muted-foreground);
-  border-color: var(--border);
-}
-.bdg.err {
-  background: var(--destructive-soft);
-  color: var(--destructive);
-  border-color: var(--destructive-line);
+.sep {
+  height: 1px;
+  background: var(--border);
 }
 .row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
+  gap: 12px;
+  padding: 12px 16px;
   border-top: 1px solid var(--border);
 }
 .row:first-child {
   border-top: 0;
 }
-.av {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: var(--border);
-  color: var(--foreground);
-  display: grid;
-  place-items: center;
-  font-size: 11.5px;
-  font-weight: 700;
-  flex: none;
-}
-.chk {
-  width: 18px;
-  height: 18px;
-  border: 1.5px solid var(--muted-foreground);
-  border-radius: 4px;
-  flex: none;
-  display: grid;
-  place-items: center;
+
+/* ---- Cards ---- */
+/* A panel, such as "About this roadmap". */
+.card {
   background: var(--card);
-}
-.chk.on {
-  background: var(--primary);
-  border-color: var(--primary);
-}
-.chk.on::after {
-  content: "";
-  width: 9px;
-  height: 5px;
-  border: 2px solid var(--primary-foreground);
-  border-top: 0;
-  border-right: 0;
-  transform: rotate(-45deg) translate(1px, -1px);
-}
-.chk.off {
-  background: var(--muted);
-  border-color: var(--border);
-}
-.rad {
-  width: 18px;
-  height: 18px;
-  border: 1.5px solid var(--muted-foreground);
-  border-radius: 50%;
-  flex: none;
-  display: grid;
-  place-items: center;
-}
-.rad.on {
-  border-color: var(--primary);
-}
-.rad.on::after {
-  content: "";
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--primary);
-}
-.opt {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
+  color: var(--card-foreground);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 10px 12px;
-}
-.opt.on {
-  border-color: var(--primary);
-  background: var(--brand-soft);
-}
-.seg {
-  display: inline-flex;
-  border: 1px solid var(--input);
-  border-radius: 8px;
-  overflow: hidden;
-  background: var(--card);
-}
-.seg span {
-  padding: 6px 12px;
-  font-size: 13px;
-  border-left: 1px solid var(--border);
-}
-.seg span:first-child {
-  border-left: 0;
-}
-.seg span.on {
-  background: var(--primary);
-  color: var(--primary-foreground);
-  font-weight: 600;
-}
-.seg.big span {
-  padding: 12px 0;
-  flex: 1;
-  text-align: center;
-  font-size: 14px;
-}
-.seg.big {
-  display: flex;
-}
-.inp {
-  border: 1px solid var(--input);
-  border-radius: 8px;
-  padding: 8px 10px;
-  background: var(--card);
-  font-size: 13.5px;
-  color: var(--foreground);
-  min-height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.fl {
-  font-size: 11.5px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--muted-foreground);
-}
-.scrim {
-  position: absolute;
-  inset: 0;
-  background: rgba(17, 24, 39, 0.42);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 5;
-}
-.scrim.bot {
-  align-items: flex-end;
-}
-.scrim.right {
-  justify-content: flex-end;
-  align-items: stretch;
-}
-.dlg {
-  background: var(--card);
-  border-radius: 14px;
-  width: 460px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
-}
-.sheet {
-  background: var(--card);
-  border-radius: 18px 18px 0 0;
-  width: 100%;
-  padding: 16px 16px 22px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
-.sheet .grab {
-  width: 40px;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--input);
-  align-self: center;
+.ph .card {
+  padding: 16px;
 }
-.drawer {
-  background: var(--card);
-  width: 440px;
-  height: 100%;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.18);
-}
-.toast {
-  position: absolute;
-  left: 50%;
-  bottom: 22px;
-  transform: translateX(-50%);
-  background: var(--foreground);
-  color: var(--primary-foreground);
-  border-radius: 10px;
-  padding: 10px 14px;
-  font-size: 13px;
-  display: flex;
-  gap: 14px;
-  align-items: center;
-  z-index: 6;
-  white-space: nowrap;
-}
-.toast a {
-  color: inherit;
-  font-weight: 600;
-  text-decoration: underline;
-}
-.alert {
-  border-radius: 10px;
-  padding: 10px 12px;
-  font-size: 13px;
-  display: flex;
-  gap: 8px;
-  align-items: flex-start;
-}
-.alert.w {
-  background: var(--warn-bg);
-  border: 1px solid var(--warn-line);
-  color: var(--warn-fg);
-}
-.alert.i {
-  background: var(--brand-soft);
-  border: 1px solid var(--brand-line);
-  color: var(--brand);
-}
-.alert.s {
-  background: var(--ok-bg);
-  border: 1px solid var(--ok-line);
-  color: var(--ok-fg);
-}
-table.t {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-table.t th {
-  text-align: left;
-  font-size: 11.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--muted-foreground);
-  font-weight: 600;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--border);
-  background: var(--background);
-}
-table.t td {
-  padding: 9px 12px;
-  border-bottom: 1px solid var(--border);
-  vertical-align: middle;
-}
-.strike {
-  text-decoration: line-through;
-  color: var(--muted-foreground);
-}
-.tile {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.tile .n {
-  font-size: 24px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-.tile.warn {
-  border-color: var(--warn-line);
-  background: var(--warn-bg);
-}
-.kbd {
-  font-family: ui-monospace, Menlo, monospace;
-  font-size: 11px;
-  border: 1px solid var(--input);
-  border-radius: 4px;
-  padding: 0 4px;
-  color: var(--muted-foreground);
-}
-.tl {
-  display: flex;
-  flex-direction: column;
+.card.flat {
+  padding: 0;
   gap: 0;
-  border-left: 2px solid var(--border);
-  margin-left: 6px;
-  padding-left: 14px;
 }
-.tl .ev {
-  position: relative;
-  padding: 6px 0;
+/* An item card or a roadmap card: tighter, with the bar under it. */
+.card.bar {
+  padding: 16px;
+  box-shadow: var(--shadow-card-bar);
 }
-.tl .ev::before {
-  content: "";
-  position: absolute;
-  left: -21px;
-  top: 11px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--card);
-  border: 2px solid var(--muted-foreground);
+/* An item card's fields: a <dl class="f"> of name and value. */
+dl.f {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: var(--text-body-xs);
+  line-height: var(--text-body-xs--line-height);
 }
-.tl .ev.ok::before {
-  border-color: var(--ok-dot);
-  background: var(--ok-bg);
+dl.f dt {
+  font-weight: 700;
 }
-.tl .ev.w::before {
-  border-color: var(--warn-dot);
-  background: var(--warn-bg);
+dl.f dd {
+  margin: 0;
 }
-.tl .ev.i::before {
+/* A card's foot: its tag first, then its buttons in .acts, pushed to the right
+   on the desktop. */
+.foot {
+  margin-top: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.foot .acts {
+  margin-left: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ph .foot .acts {
+  margin-left: 0;
+}
+
+/* ---- Buttons ---- */
+/* The secondary button; .p primary, .dg destructive, .gh ghost, .hd in the header. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--input);
+  border-radius: var(--radius);
+  background: var(--background);
+  color: var(--foreground);
+  font: inherit;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: var(--shadow-control-edge);
+  cursor: pointer;
+}
+.btn.p {
   border-color: var(--primary);
-  background: var(--brand-soft);
+  background: var(--primary);
+  color: var(--primary-foreground);
+  box-shadow: var(--shadow-control);
 }
-.chip {
+.btn.dg {
+  border-color: var(--destructive-fill);
+  background: var(--destructive-fill);
+  color: var(--destructive-foreground);
+  box-shadow: var(--shadow-control);
+}
+.btn.gh {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+.btn.hd {
+  border-color: var(--header-border);
+  background: transparent;
+  color: var(--header-foreground);
+  box-shadow: none;
+}
+.btn.sm {
+  height: 32px;
+  padding: 0 12px;
+  font-size: var(--text-body-xs);
+}
+.btn.blk {
+  width: 100%;
+}
+.btn[aria-disabled="true"],
+.btn:disabled {
+  opacity: 0.5;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+/* A button drawn with keyboard focus: the app's yellow fill, which replaces the
+   button's own colour, so .dg no longer shows red. */
+.btn.focus {
+  border-color: transparent;
+  background: var(--focus);
+  color: var(--focus-foreground);
+  box-shadow: 0 2px 0 var(--focus-foreground);
+}
+
+/* ---- Fields ---- */
+.fl {
+  display: block;
+  font-weight: 700;
+}
+.inp {
+  width: 100%;
+  min-height: 40px;
+  padding: 8px;
+  border: 2px solid var(--input);
+  border-radius: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+/* A field, card or checkbox drawn with keyboard focus. */
+.focus-ring,
+.inp.focus {
+  outline: 3px solid var(--focus);
+  outline-offset: 0;
+  border-color: var(--focus-foreground);
+  box-shadow: inset 0 0 0 2px var(--focus-foreground);
+}
+/* A checkbox or radio mark: put it in a native control (the page check fails
+   one that is not). */
+.chk,
+.rad {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border: 2px solid var(--input);
+  background: var(--background);
+  display: grid;
+  place-items: center;
+}
+.rad {
+  border-radius: 50%;
+}
+.chk.on::after {
+  content: "";
+  width: 12px;
+  height: 6px;
+  border: 3px solid var(--foreground);
+  border-top: 0;
+  border-right: 0;
+  transform: rotate(-45deg) translate(1px, -1px);
+}
+.rad.on::after {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--foreground);
+}
+/* A choice card: a button with a radio or checkbox role. */
+.opt {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px;
+  border: 1px solid var(--input);
+  background: var(--background);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+.opt.on {
+  border-color: var(--foreground);
+  box-shadow: inset 0 0 0 1px var(--foreground);
+}
+
+/* ---- Tags and messages ---- */
+/* A tag: neutral, or .info, .ok, .warn, .err, .plain. */
+.bdg {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  border: 1px solid var(--input);
-  border-radius: 999px;
-  padding: 4px 11px;
-  font-size: 12.5px;
-  background: var(--card);
-  white-space: nowrap;
+  padding: 2px 8px;
+  border: 1px solid var(--status-neutral-border);
+  background: var(--status-neutral-bg);
+  color: var(--status-neutral-fg);
+  font-size: var(--text-body-xs);
+  line-height: var(--text-body-xs--line-height);
+  font-weight: 700;
+  width: fit-content;
+  max-width: 100%;
 }
-.chip.on {
-  background: var(--foreground);
+.bdg.info {
+  border-color: var(--status-info-border);
+  background: var(--status-info-bg);
+  color: var(--status-info-fg);
+}
+.bdg.ok {
+  border-color: var(--status-success-border);
+  background: var(--status-success-bg);
+  color: var(--status-success-fg);
+}
+.bdg.warn {
+  border-color: var(--status-warning-border);
+  background: var(--status-warning-bg);
+  color: var(--status-warning-fg);
+}
+.bdg.err {
+  border-color: var(--status-danger-border);
+  background: var(--status-danger-bg);
+  color: var(--status-danger-fg);
+}
+.bdg.plain {
   border-color: var(--foreground);
-  color: var(--primary-foreground);
-  font-weight: 600;
-}
-.sep {
-  height: 1px;
-  background: var(--border);
-}
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex: none;
-  display: inline-block;
-}
-.dot.ok {
-  background: var(--ok-dot);
-}
-.dot.warn {
-  background: var(--warn-dot);
-}
-.dot.mut {
-  background: var(--muted-foreground);
-}
-.dot.i {
-  background: var(--primary);
-}
-.sw {
-  width: 38px;
-  height: 22px;
-  border-radius: 999px;
-  background: var(--input);
-  position: relative;
-  flex: none;
-}
-.sw::after {
-  content: "";
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
   background: var(--background);
+  color: var(--foreground);
 }
-.sw.on {
-  background: var(--primary);
+/* A notice or an error panel: .i information, .s success, .w warning, .e error. */
+.alert {
+  padding: 12px 16px;
+  border: 4px solid var(--status-info-border);
+  background: var(--card);
+  color: var(--card-foreground);
+  font-size: var(--text-body-xs);
+  line-height: var(--text-body-xs--line-height);
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
 }
-.sw.on::after {
-  left: 19px;
+.alert.s {
+  border-color: var(--status-success-border);
+}
+.alert.w {
+  border-color: var(--focus);
+  background: var(--status-warning-bg);
+  color: var(--status-warning-fg);
+}
+.alert.e {
+  border-color: var(--destructive);
+}
+
+/* ---- Dialogs and menus ---- */
+/* Dims the frame behind a dialog; .bot puts a phone's dialog at the foot. */
+.scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: var(--overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.scrim.bot {
+  align-items: flex-end;
+}
+.dlg,
+.sheet {
+  padding: 24px;
+  border: 1px solid var(--border);
+  background: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow: var(--shadow-popup);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.dlg {
+  width: 512px;
+  border-radius: var(--radius);
+}
+.sheet {
+  width: 100%;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+/* An open menu: position it by its button with an inline style. */
+.menu {
+  position: absolute;
+  z-index: 4;
+  min-width: 128px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow: var(--shadow-popup);
+  display: flex;
+  flex-direction: column;
+}
+.menu button {
+  all: unset;
+  padding: 4px 6px;
+  border-radius: var(--radius);
+  font-size: var(--text-body-xs);
+  line-height: var(--text-body-xs--line-height);
+  cursor: pointer;
+}
+.menu button.on {
+  background: var(--focus);
+  color: var(--focus-foreground);
+  box-shadow: 0 2px 0 var(--focus-foreground);
 }

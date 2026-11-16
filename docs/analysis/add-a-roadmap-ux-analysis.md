@@ -6,7 +6,7 @@
 - **Scope**: the roadmap list and a roadmap's page, for
   [EPC-011](../backlog/EPC-011-adding-roadmaps-and-items/README.md). Base `400c90c`.
   Only documents and one prototype page were added; no application code.
-- **Prototypes**: [`add-a-roadmap-ux-analysis/prototypes.html`](add-a-roadmap-ux-analysis/prototypes.html),
+- **Prototypes**: [`add-a-roadmap-ux-analysis/add-a-roadmap-ux-prototypes.html`](add-a-roadmap-ux-analysis/add-a-roadmap-ux-prototypes.html),
   one self-contained page of static mock-ups, each with a desktop and a phone frame;
   open it in a browser. Its mock-ups approximate the app's look: the `ux-prototypes`
   stylesheet is not yet the DHCW one (CHO-009).

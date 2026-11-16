@@ -198,7 +198,8 @@ Use these sections, in this order:
 
 1. A head giving the date, the question, the scope and the base SHA, naming
    the page's shape, saying that only documents and one prototype page were
-   added, and summarising the sample world or linking its shared sheet.
+   added, with any correction to the skill's stylesheet or starter named
+   beside them, and summarising the sample world or linking its shared sheet.
 2. _Readers and where they are_.
 3. _Journeys covered_: a table of groups, their journeys and their stories,
    plus the exclusions.
@@ -257,7 +258,9 @@ committed page and analysis plus:
   It checks each design against the contract and the stories, and checks that
   the sample data agrees across designs. For a shared sheet, it also checks
   that every state and count the sheet already held still holds or is a named
-  correction, carried through as step 3 says.
+  correction, carried through as step 3 says. Where the PR corrects the
+  skill's stylesheet or starter, give it your captures of the app too, to
+  check the correction against.
 - **`quality-reviewer`**: the analysis rules, the glossary and the copywriter
   voice.
 

@@ -3,6 +3,17 @@
 Each design is one fragment of static mock-up. An assembler builds the
 fragments into the review page.
 
+## Models
+
+For a journey, these three usually separate cleanly:
+
+- **inline**: the action sits on the existing screen
+- **guided**: a focused flow, drawer or wizard
+- **overview** or **mode**: a new place or state built for the task
+
+Each option of an open question about a rule is a moment of every design it
+bears on.
+
 ## Draw
 
 Draw each design as one fragment, using the classes in `assets/mock.css`.

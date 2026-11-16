@@ -71,7 +71,10 @@ async function assemble(manifestPath) {
   const manifest = JSON.parse(await readFile(manifestPath, "utf8"))
   const base = path.dirname(manifestPath)
   const mockCss = await readFile(path.join(here, "../assets/mock.css"), "utf8")
-  const tokens = await appTokens({ light: ".ab", dark: ".ab.dark" })
+  const tokens = await appTokens({
+    lightSelector: ".ab",
+    darkSelector: ".ab.dark",
+  })
   const sharedCss = manifest.css
     ? await readFile(path.join(base, manifest.css), "utf8")
     : ""

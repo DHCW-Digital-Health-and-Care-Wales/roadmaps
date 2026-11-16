@@ -6,6 +6,16 @@ sits on a **stage**, the app's page behind it. The owner tries every design on
 one page, so the page is written by hand: one self-contained file of plain
 HTML, CSS and JavaScript, with no framework and no network.
 
+## Models
+
+The models are ways of working the same value, such as a type-ahead box, a row
+per entry and a tick list, or a menu, a handle to drag and a mode.
+
+Each option of an open question about a rule is a switch on the page that
+every design obeys, or a line of every design's readout.
+
+The sample world is what the host shows, and whatever else the control reads.
+
 ## Start the page
 
 ```bash
@@ -48,7 +58,7 @@ The starter holds one of each part the page needs; keep them all:
   that design's Risks.
 - **Readout.** Under each design, show what it keeps as the pending edit, and
   what publishing would write where that is in question. It exposes a rule the
-  control hides, and shows each option of an open question about a rule.
+  control hides.
 - **Things to try.** Write one line per acceptance scenario, or per option of
   an open question, and per planted awkward case, in the Product Lead's words.
   End with the keyboard alone, the narrowest host and the dark theme.
@@ -60,8 +70,9 @@ covers every scenario or option and every planted case.
 
 The page check presses nothing. Drive the page yourself: work every thing to
 try in every design by keyboard alone, at the narrowest host and in the dark
-theme. A Playwright script on `scripts/chromium.mjs` that fails on any
-`pageerror` repeats the run at each screen and theme; read a screenshot of each
-design it leaves, and of each menu open at the narrowest host. Done when every
+theme. A Playwright script that takes its browser from `launchChromium` in
+`scripts/chromium.mjs` and fails on any `pageerror` repeats those tries at each
+screen and theme; read a screenshot of each design it leaves, and of each menu
+open at the narrowest host. Done when every
 thing to try works in every design and the readout shows its result, or the
 analysis lists the gap in that design's Risks or in _Not yet drawn_.

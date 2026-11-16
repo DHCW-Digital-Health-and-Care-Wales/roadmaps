@@ -42,7 +42,7 @@ test("the starter page is written with the app's tokens, and never over a page a
     assert.equal(await readFile(out, "utf8"), html)
   }))
 
-test("the starter page passes the page check, draws with the app's tokens at each screen's width, and works by keyboard", () =>
+test("the starter page, served", (t) =>
   withStarterPage(async (out, scratch) => {
     const html = await readFile(out, "utf8")
     const server = createServer((_, res) => {
@@ -54,14 +54,6 @@ test("the starter page passes the page check, draws with the app's tokens at eac
       server.listen(0, "127.0.0.1")
       await once(server, "listening")
       const url = `http://127.0.0.1:${server.address().port}/`
-
-      const { stdout } = await run(process.execPath, [
-        checker,
-        url,
-        path.join(scratch, "shots"),
-      ])
-      assert.match(stdout, /1 designs captured/)
-
       browser = await launchChromium()
       const page = await browser.newPage()
       await page.goto(url)
@@ -69,74 +61,95 @@ test("the starter page passes the page check, draws with the app's tokens at eac
       const host = page.locator("#pa-host")
       const style = (property) =>
         stage.evaluate((el, name) => getComputedStyle(el)[name], property)
-      const width = () =>
-        host.evaluate((el) => el.getBoundingClientRect().width)
-      const widthShown = () => page.locator("#host-width").textContent()
+      const width = (locator) =>
+        locator.evaluate((el) => el.getBoundingClientRect().width)
+
+      await t.test("passes the page check", async () => {
+        const { stdout } = await run(process.execPath, [
+          checker,
+          url,
+          path.join(scratch, "shots"),
+        ])
+        assert.match(stdout, /1 designs captured/)
+      })
 
       // Each block of tokens resolves on the stage: a colour through the three
       // :root tiers, the app's font from the theme block (not the page's own),
       // and .dark over both.
-      const light = await style("backgroundColor")
-      assert.match(light, /^rgb\(/)
-      assert.notEqual(
-        await style("fontFamily"),
-        await page
-          .locator(".page")
-          .evaluate((el) => getComputedStyle(el).fontFamily),
-      )
-      await page.getByRole("button", { name: "Dark" }).click()
-      assert.notEqual(await style("backgroundColor"), light)
-
-      // A screen sets the host to the width the app gives it there.
-      assert.equal(await width(), 360)
-      await page.getByRole("button", { name: "Small tablet 640" }).click()
-      assert.equal(await width(), 294)
-      assert.equal(await widthShown(), "294")
-
-      // The round trip by keyboard: Edit, type, Enter; focus returns to Edit.
-      const sample = await host.locator("h3").textContent()
-      await page.getByRole("button", { name: /^Edit / }).press("Enter")
-      await page.keyboard.press("ControlOrMeta+a")
-      await page.keyboard.type("  Book  a video call ")
-      await page.keyboard.press("Enter")
-      assert.equal(await host.locator("h3").textContent(), "Book a video call")
-      assert.equal(
-        await page.locator("#pa-readout").textContent(),
-        "Title: Book a video call",
-      )
-      assert.equal(
-        await page.evaluate(() => document.activeElement.textContent),
-        "Edit Book a video call",
-      )
-
-      // Each design's figure and its Start again are named for the design.
-      assert.equal(
-        await page
-          .getByRole("figure", { name: "A. The design's name" })
-          .count(),
-        1,
-      )
-      await page.getByRole("button", { name: "Start again design A" }).click()
-      assert.equal(await host.locator("h3").textContent(), sample)
-
-      // On a phone the page opens on the phone's host, drawn as wide as the
-      // app draws it; a wider host keeps its width and its stage scrolls.
-      const phone = await browser.newPage({
-        viewport: { width: 375, height: 800 },
+      await t.test("draws with the app's tokens, light and dark", async () => {
+        const light = await style("backgroundColor")
+        assert.match(light, /^rgb\(/)
+        assert.notEqual(
+          await style("fontFamily"),
+          await page
+            .locator(".page")
+            .evaluate((el) => getComputedStyle(el).fontFamily),
+        )
+        await page.getByRole("button", { name: "Dark" }).click()
+        assert.notEqual(await style("backgroundColor"), light)
       })
-      await phone.goto(url)
-      const phoneWidth = () =>
-        phone
-          .locator("#pa-host")
-          .evaluate((el) => el.getBoundingClientRect().width)
-      assert.equal(await phoneWidth(), 343)
-      assert.equal(await phone.locator("#host-width").textContent(), "343")
-      await phone.getByRole("button", { name: "Large phone 639" }).click()
-      assert.equal(await phoneWidth(), 607)
-      assert.equal(
-        await phone.evaluate(() => document.documentElement.scrollWidth),
-        375,
+
+      await t.test("a screen sets the host to its width there", async () => {
+        assert.equal(await width(host), 360)
+        await page.getByRole("button", { name: "Small tablet 640" }).click()
+        assert.equal(await width(host), 294)
+        assert.equal(await page.locator("#host-width").textContent(), "294")
+      })
+
+      await t.test(
+        "the design works by keyboard and starts again",
+        async () => {
+          const sample = await host.locator("h3").textContent()
+          await page.getByRole("button", { name: /^Edit / }).press("Enter")
+          await page.keyboard.press("ControlOrMeta+a")
+          await page.keyboard.type("  Book  a video call ")
+          await page.keyboard.press("Enter")
+          assert.equal(
+            await host.locator("h3").textContent(),
+            "Book a video call",
+          )
+          assert.equal(
+            await page.locator("#pa-readout").textContent(),
+            "Title: Book a video call",
+          )
+          // Focus returns to Edit, named for the item.
+          assert.equal(
+            await page.evaluate(() => document.activeElement.textContent),
+            "Edit Book a video call",
+          )
+          await page
+            .getByRole("button", { name: "Start again design A" })
+            .click()
+          assert.equal(await host.locator("h3").textContent(), sample)
+        },
       )
+
+      await t.test("a design's figure is named for the design", async () => {
+        assert.equal(
+          await page
+            .getByRole("figure", { name: "A. The design's name" })
+            .count(),
+          1,
+        )
+      })
+
+      // The phone's host is drawn as wide as the app draws it; a wider host
+      // keeps its width and its stage scrolls.
+      await t.test("on a phone it opens on the phone's host", async () => {
+        const phone = await browser.newPage({
+          viewport: { width: 375, height: 800 },
+        })
+        await phone.goto(url)
+        const phoneHost = phone.locator("#pa-host")
+        assert.equal(await width(phoneHost), 343)
+        assert.equal(await phone.locator("#host-width").textContent(), "343")
+        await phone.getByRole("button", { name: "Large phone 639" }).click()
+        assert.equal(await width(phoneHost), 607)
+        assert.equal(
+          await phone.evaluate(() => document.documentElement.scrollWidth),
+          375,
+        )
+      })
     } finally {
       await browser?.close()
       server.close()

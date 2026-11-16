@@ -177,6 +177,7 @@ ul.grid {
 .b {
   font-weight: 700;
 }
+/* A value a pending edit takes away, such as an item to be removed. */
 .strike {
   text-decoration: line-through;
   color: var(--muted-foreground);
@@ -206,12 +207,6 @@ ul.grid {
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
-}
-.kbd {
-  font-family: ui-monospace, Menlo, monospace;
-  font-size: 12px;
-  border: 1px solid var(--input);
-  padding: 0 4px;
 }
 
 /* ---- Layout helpers ---- */
@@ -578,23 +573,4 @@ dl.f dd {
   background: var(--focus);
   color: var(--focus-foreground);
   box-shadow: 0 2px 0 var(--focus-foreground);
-}
-
-/* ---- Tables ---- */
-table.t {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: var(--text-body-xs);
-  line-height: var(--text-body-xs--line-height);
-}
-table.t th {
-  text-align: left;
-  font-weight: 700;
-  padding: 8px 12px;
-  border-bottom: 2px solid var(--border);
-}
-table.t td {
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--border);
-  vertical-align: top;
 }

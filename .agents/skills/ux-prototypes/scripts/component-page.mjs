@@ -25,7 +25,7 @@ try {
   if (at < 0) throw new Error(`the starter page has no ${MARKER} marker`)
   const indent = starter.slice(starter.lastIndexOf("\n", at) + 1, at)
   const tokens = await appTokens(
-    { light: ".stage", dark: ".stage.dark" },
+    { lightSelector: ".stage", darkSelector: ".stage.dark" },
     indent,
   )
   await mkdir(path.dirname(out), { recursive: true })

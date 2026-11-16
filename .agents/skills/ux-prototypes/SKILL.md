@@ -1,6 +1,6 @@
 ---
 name: ux-prototypes
-description: Prototype UX designs before a feature is built, as alternatives for the owner to choose from. Use for "prototype ux designs for x", as static desktop and phone frames of planned screens, or as one field or control working in isolation to try.
+description: Prototype UX designs before a feature is built, as alternatives for the owner to choose from. Use for "prototype ux designs for x", as static frames of planned screens on desktop and phone, or as a working component, one field or control to try inside the card or form that holds it.
 ---
 
 # UX prototypes
@@ -34,12 +34,11 @@ Read these before drawing anything:
   too, since class names alone misdraw the shell: capture each with Google
   faked, by the first paragraph of _Capture_ in
   `.agents/skills/implement-story/references/screenshots.md`. A scratch spec
-  that imports `tests/e2e/fixtures/test.ts`, run against `vite preview` on a
-  free port, is the shortest way
+  that imports `tests/e2e/fixtures/test.ts`, run against the build served by
+  `vite preview` on a free port, is the shortest way
 
 A record not yet grilled has open questions where its scenarios will be. Each
-option of each question then stands for a scenario, and between them the
-designs show every option.
+option of each question then stands for a scenario.
 
 Done when you hold an **inventory**. Each journey in it has its reader, their
 device and where they are, its owning story, and that story's acceptance
@@ -70,23 +69,15 @@ Read the shape's reference before going on: `references/frames.md` or
 
 Then write down what every design shares: the contract's invariants and the
 product's existing look. The comparison is between interaction models, so
-choose designs that differ in their model. For a journey, these three usually
-separate cleanly:
+choose designs that differ in their model, the way a thing is done; the
+shape's reference names the usual ones. An open question about how a thing is
+done is answered by the designs: each option is a design.
 
-- **inline**: the action sits on the existing screen
-- **guided**: a focused flow, drawer or wizard
-- **overview** or **mode**: a new place or state built for the task
-
-For a component, the models are ways of working the same value, such as a
-type-ahead box, a row per entry and a tick list, or a menu, a handle to drag
-and a mode.
-
-A model answers how a thing is done. An open question about a rule, such as
-whether a change waits to be published, is no model and decides no design, or
-the comparison cannot tell the rule from the model. Show each of its options
-on every design it bears on: in frames as a moment, in a working component
-as a switch on the page or in the readout. Where a journey's only questions
-are rules, draw one design for each option.
+An open question about a rule, such as whether a change waits to be
+published, decides no design, or the comparison cannot tell the rule from the
+model. Show each of its options on every design it bears on, as the shape's
+reference says. Only a journey whose questions are all rules gets one design
+for each option.
 
 Done when the shape is stated with its reason, and every main journey has its
 designs named, each with its model.
@@ -109,9 +100,6 @@ holds:
 - the awkward cases planted on purpose, such as "patient" beside "Patients"
 - where the question is what publishing writes, the data as the data source
   holds it, such as the order a roadmap's items are stored in
-
-A working component's world is what its host shows, and whatever else the
-control reads.
 
 Show a date only where the product shows one, such as a roadmap's Last
 updated, and never after today. Name a design's moments by state: "before
@@ -142,21 +130,22 @@ Draw by the shape's reference. In either shape:
   `radio` or `checkbox` role and `aria-checked`. Every design shares one page,
   so prefix each `id` with its design.
 
-Done when every main journey has all its designs drawn as its shape's
-reference says, and every count drawn matches the rows drawn.
+Done when every main journey has all its designs drawn, and for frames
+assembled, as its shape's reference says.
 
 ## 5. Trace the scenarios
 
 For each design, trace every acceptance scenario of the stories it covers to
 one of three outcomes:
 
-- **shown**, naming the frame, the thing to try or the readout that shows it
+- **shown**, naming the artboard, the thing to try or the readout that shows
+  it
 - **departure**, recorded as a decision in the analysis
 - **not yet drawn**, listed in the analysis
 
-For a record not yet grilled, trace each option of each open question to the
-designs that draw it. A design drawing one option is no departure from the
-others; an option no design draws is not yet drawn.
+For a record not yet grilled, trace each option of each open question to
+where it is shown. A design that is one option is no departure from another;
+an option shown nowhere is not yet drawn.
 
 The details a shortcut tends to skip are:
 
@@ -206,8 +195,9 @@ Use these sections, in this order:
 
 Link the analysis from the _Related_ list of the epic it supports.
 
-Done when every section is present in that order, and every departure and every
-missing read or write from step 5 has a row in _Decisions needed_.
+Done when every section is present in that order, and every departure, every
+missing read or write and every ADR decision reopened in step 5 has a row in
+_Decisions needed_.
 
 ## 7. Check
 

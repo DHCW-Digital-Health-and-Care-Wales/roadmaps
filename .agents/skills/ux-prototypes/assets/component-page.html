@@ -113,7 +113,7 @@
         font-size: 17px;
         line-height: 1.3;
       }
-      .sr-only {
+      .sr {
         position: absolute;
         width: 1px;
         height: 1px;
@@ -155,9 +155,9 @@
         }
       }
 
-      /* The app's controls, drawn as the app draws them. Keep these: every
-         design uses them. */
-      .input {
+      /* The app's controls, drawn as the app draws them and named as
+         assets/mock.css names them. Keep these: every design uses them. */
+      .inp {
         width: 100%;
         min-height: 40px;
         padding: 6px 8px;
@@ -167,36 +167,37 @@
         color: var(--foreground);
         font: inherit;
       }
-      .input:focus-visible {
+      .inp:focus-visible {
         outline: 3px solid var(--focus);
         outline-offset: 0;
         border-color: var(--focus-foreground);
         box-shadow: inset 0 0 0 2px var(--focus-foreground);
       }
+      /* The secondary button; .p is the primary. */
       .btn {
         appearance: none;
         height: 40px;
         padding: 0 16px;
-        border: 1px solid var(--primary);
+        border: 1px solid var(--input);
         border-radius: var(--radius);
-        background: var(--primary);
-        color: var(--primary-foreground);
+        background: var(--background);
+        color: var(--foreground);
         font: inherit;
         font-weight: 700;
-        box-shadow: var(--shadow-control);
+        box-shadow: var(--shadow-control-edge);
         cursor: pointer;
       }
       .btn:hover {
-        background: var(--primary-hover);
-      }
-      .btn.sec {
-        border-color: var(--input);
-        background: var(--background);
-        color: var(--foreground);
-        box-shadow: var(--shadow-control-edge);
-      }
-      .btn.sec:hover {
         background: var(--muted);
+      }
+      .btn.p {
+        border-color: var(--primary);
+        background: var(--primary);
+        color: var(--primary-foreground);
+        box-shadow: var(--shadow-control);
+      }
+      .btn.p:hover {
+        background: var(--primary-hover);
       }
       .btn.sm {
         height: 32px;
@@ -321,7 +322,7 @@
         <div class="caption">
           <h2 id="pa-name">A. The design's name</h2>
           <button type="button" class="again" data-again="pa">
-            Start again <span class="sr-only">design A</span>
+            Start again <span class="sr">design A</span>
           </button>
         </div>
         <p>The design's idea, in a sentence or two.</p>
@@ -366,10 +367,10 @@
         function showCard(focus) {
           const edit = h(
             "button",
-            { type: "button", class: "btn sec", onclick: showForm },
+            { type: "button", class: "btn", onclick: showForm },
             "Edit",
             " ",
-            h("span", { class: "sr-only" }, kept.title),
+            h("span", { class: "sr" }, kept.title),
           )
           host.replaceChildren(h("h3", {}, kept.title), edit)
           // A redrawn control loses focus: put it where the app would.
@@ -378,7 +379,7 @@
         function showForm() {
           const input = h("input", {
             id: `${id}-title`,
-            class: "input",
+            class: "inp",
             value: kept.title,
           })
           const form = h(
@@ -400,12 +401,12 @@
             h(
               "div",
               { class: "actions" },
-              h("button", { type: "submit", class: "btn" }, "Done"),
+              h("button", { type: "submit", class: "btn p" }, "Done"),
               h(
                 "button",
                 {
                   type: "button",
-                  class: "btn sec",
+                  class: "btn",
                   onclick: () => showCard(true),
                 },
                 "Cancel",

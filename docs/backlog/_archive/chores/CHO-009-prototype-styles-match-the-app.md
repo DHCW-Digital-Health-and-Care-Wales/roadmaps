@@ -41,8 +41,7 @@ has no `--brand`. No analysis under `docs/analysis/` uses the stylesheet yet.
 ## Out of scope
 
 - A mode of the skill for working prototypes of one component, as STY-037's page is:
-  the skill's working-component shape. Its starter page takes the app's tokens from
-  `globals.css` by script (`scripts/component-page.mjs`).
+  no record yet; the retrospective of STY-037's PR weighs it.
 
 ## Delivery
 
@@ -52,6 +51,10 @@ fragment, which is the cost this chore names.
 
 ### Departures
 
+- **The mode this record leaves out of scope ships beside it**, with no record of its
+  own: the owner asked for it while the skill was reworked. It is the skill's
+  working-component shape (`references/working-component.md`), whose starter page takes
+  the same tokens by the same script.
 - **The tokens are not carried in `mock.css`.** The assembler reads them from
   `src/styles/globals.css` each time it runs (`scripts/app-tokens.mjs`, shared with the
   working-component starter page) and sets them on every artboard, light and dark, under

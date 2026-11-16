@@ -11,7 +11,7 @@
   of scope.
 - **Base**: `5207d4b`.
 - **Shape**: frames. Each design is a static desktop frame and phone frame for each
-  moment, on [one page](remove-a-published-item-ux-analysis/prototypes.html). This
+  moment, on [one page](remove-a-published-item-ux-analysis/remove-a-published-item-ux-prototypes.html). This
   change adds documents and that one prototype page, and nothing else.
 - **Sample world**: Sam Evans removes "Fax referrals" from the published Electronic
   Referrals roadmap on 16 November 2026. One change is already pending ("Referral

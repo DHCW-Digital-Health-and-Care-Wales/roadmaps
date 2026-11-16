@@ -45,6 +45,7 @@ moves to `_archive/`, where its row here still points.
 | [CHO-014](chores/CHO-014-slim-the-e2e-suite.md)                                         | The E2E suite holds geometry, and repeats a run per theme, language or width, only where that proves something         | Proposed    |
 | [CHO-015](_archive/chores/CHO-015-check-adding-an-item-against-a-real-spreadsheet.md)   | Check STY-045's write (a new item's row appended to a roadmap's tab) against a real test spreadsheet                   | Done        |
 | [CHO-016](chores/CHO-016-the-quality-reviewer-reads-the-whole-diff.md)                  | The quality reviewer reads the whole diff in one pass                                                                  | In progress |
+| [CHO-017](chores/CHO-017-the-glossary-says-how-the-editor-shows-a-horizon.md)           | The glossary calls a horizon a column, which the editor does not draw and the entry itself says to avoid               | Proposed    |
 
 Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status token.
 

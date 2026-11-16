@@ -4,8 +4,8 @@
 // Each fragment's <style> blocks are scoped to its own design. They may hold
 // plain rules and comments only; an at-rule stops the build, since scoping it
 // would leave an open block that swallows every later design's styles.
-// The page numbers journeys, so a numbered journey title stops the build too.
 // Fragments may be plain HTML or design-canvas .dc.html files (read inside <x-dc>).
+// The page numbers journeys, so a numbered journey title stops the build too.
 import { readFile, writeFile, mkdir } from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
@@ -73,7 +73,7 @@ async function assemble(manifestPath) {
   const sections = []
   let n = 0
   for (const [j, journey] of manifest.journeys.entries()) {
-    if (/^\s*\d+[.)]/.test(journey.title))
+    if (/^\s*\d+[.)](\s|$)/.test(journey.title))
       throw new Error(
         `journey ${j + 1}: leave the number out of "${journey.title}"; the page numbers journeys`,
       )

@@ -124,28 +124,32 @@ test("a numbered journey title stops the build, since the page numbers journeys"
   )
   try {
     await writeFile(path.join(scratch, "a.html"), "<p>Roadmaps</p>")
-    await writeFile(
-      path.join(scratch, "manifest.json"),
-      JSON.stringify({
-        title: "Fixture",
-        intro: "Intro",
-        journeys: [
-          {
-            title: "1. Put an item in its place",
-            brief: "Brief",
-            designs: [{ title: "A", file: "a.html" }],
-          },
-        ],
-      }),
-    )
-    await assert.rejects(
-      run(process.execPath, [
+    const assembleWith = async (title) => {
+      await writeFile(
+        path.join(scratch, "manifest.json"),
+        JSON.stringify({
+          title: "Fixture",
+          intro: "Intro",
+          journeys: [
+            {
+              title,
+              brief: "Brief",
+              designs: [{ title: "A", file: "a.html" }],
+            },
+          ],
+        }),
+      )
+      return run(process.execPath, [
         path.join(here, "assemble.mjs"),
         path.join(scratch, "manifest.json"),
         path.join(scratch, "page.html"),
-      ]),
+      ])
+    }
+    await assert.rejects(
+      assembleWith("1. Put an item in its place"),
       /journey 1: leave the number out of "1\. Put an item in its place"/,
     )
+    await assembleWith("2.0 roadmaps")
   } finally {
     await rm(scratch, { recursive: true, force: true })
   }

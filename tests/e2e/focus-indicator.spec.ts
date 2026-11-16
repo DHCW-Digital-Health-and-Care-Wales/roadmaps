@@ -317,7 +317,7 @@ for (const theme of THEMES) {
 
       // Its Organisations field opened, so the tour stops on each checkbox (STY-038).
       await dialog.getByRole("button", { name: "Change organisations" }).click()
-      await expect(dialog.getByRole("checkbox")).toHaveCount(12)
+      await expect(dialog.getByRole("checkbox")).toHaveCount(14)
       // Its Details field opened, so the tour stops on the outline's one stop and the
       // buttons under it (STY-039).
       await dialog.getByRole("button", { name: "Add details" }).click()

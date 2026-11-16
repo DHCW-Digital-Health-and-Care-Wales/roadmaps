@@ -35,7 +35,7 @@
     a.href = href
     a.className = className
     a.textContent = label
-    if (title && title !== label) a.title = title
+    a.title = title ?? label
     return a
   }
 
@@ -59,7 +59,12 @@
         figure.dataset.short ??
         caption.match(/^([A-Z][0-9]*)(?:\.|:|\s[—–-])\s/)?.[1] ??
         caption
-      const a = link(`#${figure.id}`, short || figure.id, "review-design")
+      const a = link(
+        `#${figure.id}`,
+        short || figure.id,
+        "review-design",
+        caption || figure.id,
+      )
       a.setAttribute("aria-label", caption || figure.id)
       figure.classList.add("review-target")
       designLinks.set(figure, a)
@@ -80,23 +85,38 @@
 
   // The bar marks the design in view, and scrolls itself to show its link.
   let current
-  function markCurrent() {
-    // A design is in view once its top passes a third of the way down.
+  // A design whose link was followed stays marked, even where the page cannot
+  // scroll it to the top, until the reader scrolls on their own.
+  let pinned
+  /** The design whose top has passed a third of the way down, or the last at the page's foot. */
+  function designInView() {
+    if (pinned) return pinned
+    const root = document.documentElement
+    if (root.scrollTop > 0 && scrollY + innerHeight >= root.scrollHeight - 2)
+      return designs.at(-1)
     const line = Math.max(bar.offsetHeight + 16, innerHeight / 3)
     let inView = designs[0]
     for (const figure of designs)
       if (figure.getBoundingClientRect().top <= line) inView = figure
+    return inView
+  }
+  function markCurrent(inView = designInView()) {
     if (inView === current) return
     designLinks.get(current)?.removeAttribute("aria-current")
     current = inView
     const a = designLinks.get(current)
     a.setAttribute("aria-current", "location")
-    const left = a.parentElement.offsetLeft
+    // Show the link's group from its start, or as much of it as keeps the
+    // link itself in view.
+    const right = a.offsetLeft + a.offsetWidth
     if (
-      left < bar.scrollLeft ||
-      a.offsetLeft + a.offsetWidth > bar.scrollLeft + bar.clientWidth
+      a.offsetLeft < bar.scrollLeft ||
+      right > bar.scrollLeft + bar.clientWidth
     )
-      bar.scrollLeft = left - 12
+      bar.scrollLeft = Math.max(
+        a.parentElement.offsetLeft - 4,
+        right - bar.clientWidth + 8,
+      )
   }
   let queued = false
   addEventListener(
@@ -111,13 +131,23 @@
     },
     { passive: true },
   )
+  addEventListener("resize", () => markCurrent())
+  bar.addEventListener("click", (event) => {
+    const a = event.target.closest("a")
+    pinned = designs.find((f) => designLinks.get(f) === a)
+    markCurrent()
+  })
+  for (const type of ["wheel", "touchstart", "keydown"])
+    addEventListener(type, () => (pinned = undefined), { passive: true })
   markCurrent()
 
   const controls = document.querySelector(".controls")
   if (inline || !controls) return
 
   // The Options panel: a pill that names the current choices, opening the
-  // page's controls above it.
+  // page's controls above it. The pill comes first, so Tab moves from it into
+  // the controls; the panel's column runs in reverse to draw them above.
+  document.documentElement.classList.add("review-floating")
   const panel = document.createElement("div")
   panel.className = "review-options"
   const body = document.createElement("div")
@@ -133,7 +163,7 @@
   toggle.setAttribute("aria-expanded", "false")
   controls.replaceWith(panel)
   body.append(controls)
-  panel.append(body, toggle)
+  panel.append(toggle, body)
 
   function summarise() {
     const chosen = [
@@ -147,8 +177,13 @@
         (input) => text(input.labels?.[0]) ?? input.value,
       ),
     ].filter(Boolean)
-    const open = !body.hidden
-    toggle.textContent = `${open ? "▾" : "▴"} Options${chosen.length ? `: ${chosen.join(" · ")}` : ""}`
+    const arrow = document.createElement("span")
+    arrow.setAttribute("aria-hidden", "true")
+    arrow.textContent = body.hidden ? "▴ " : "▾ "
+    toggle.replaceChildren(
+      arrow,
+      `Options${chosen.length ? `: ${chosen.join(" · ")}` : ""}`,
+    )
   }
   function setOpen(open) {
     body.hidden = !open
@@ -161,8 +196,28 @@
     setOpen(false)
     toggle.focus()
   })
-  // Bubbling here, after a switch's own handler has updated what is pressed.
-  controls.addEventListener("click", summarise)
-  controls.addEventListener("change", summarise)
+  addEventListener("pointerdown", (event) => {
+    if (!body.hidden && !panel.contains(event.target)) setOpen(false)
+  })
+
+  // A switch that changes the page's height, such as Zoom or Screen, keeps the
+  // design in view where it was: its top is noted before the switch's own
+  // handler runs (capturing), and restored after it (bubbling).
+  let anchor
+  const noteAnchor = () => {
+    const figure = designInView()
+    anchor = { figure, top: figure.getBoundingClientRect().top }
+  }
+  const afterSwitch = () => {
+    summarise()
+    if (anchor)
+      scrollBy(0, anchor.figure.getBoundingClientRect().top - anchor.top)
+    anchor = undefined
+    markCurrent()
+  }
+  for (const type of ["click", "change"]) {
+    controls.addEventListener(type, noteAnchor, true)
+    controls.addEventListener(type, afterSwitch)
+  }
   summarise()
 })()

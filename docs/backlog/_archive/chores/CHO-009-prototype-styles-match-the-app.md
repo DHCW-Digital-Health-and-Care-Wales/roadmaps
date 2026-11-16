@@ -74,6 +74,10 @@ fragment, which is the cost this chore names.
 - A frames design uses `mock.css`'s classes and the app's tokens; styles every design
   shares go in one stylesheet named as the manifest's `css`
   (`.agents/skills/ux-prototypes/references/frames.md`).
+- The tokens follow the app by themselves; the shell and the controls are drawn by
+  hand. A change to the app's header, navigation or a control reaches `mock.css` with
+  the next prototype, which draws today's screen first, compares it with its captures
+  of the app and corrects the stylesheet in its own PR (the same reference, _Draw_).
 
 ### Scenario evidence
 

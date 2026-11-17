@@ -1,6 +1,7 @@
 # CHO-016: The quality reviewer reads the whole diff in one pass
 
-- **Status**: In progress — S1 in the backlog triage PR; S2 measures the next two deliveries whose diff is over 100,000 characters
+- **Status**: In progress — S1 in the backlog triage PR; S2 has measured one of its two
+  deliveries, STY-051, in Delivery
 - **Type**: Chore
 - **Area**: Docs (agent definitions and skills)
 - **Epic**: standalone
@@ -108,3 +109,29 @@ option of Q1 to try next
   another record.
 - Splitting a quality review between several reviewers by path: each would load the
   same guides, and none would see a copy made across the split.
+
+## Delivery
+
+### S2: the measured deliveries
+
+**STY-051** ([#128](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/128)):
+round 1 over `25079d1..94b0063`, 41 files, 3,708 lines and 164,582 characters; the
+re-check over `94b0063..98a107d`, 535 lines. From the reviewer session logs; tokens are
+the runtime's total for each reviewer.
+
+- **Round 1** (`claude-sonnet-5-5`, effort high): 2.7 min, 125.8k tokens. It had no
+  saved output to open: it wrote the diff to five files and read each from its first
+  line to its last. It reported nothing unread, and its log agrees: the archived story
+  record, outside those files, it read as the old file's removal and the new file's
+  lines 1–25 and 190–302, which hold every changed line. Findings: 2 🟡 and 4 💭, all
+  fixed.
+- **Re-check** (same model and effort): 0.6 min, 42.7k tokens. It wrote its diff to one
+  file and read it whole; it reported nothing unread, and its log agrees. Findings: 2 💭,
+  fixed.
+- **Outcome**: the first pass left nothing unread, so no second pass ran and D1's trial
+  continues. Beside it, the Opus correctness reviewer took 3.3 min and 130.4k
+  tokens over the same round 1 diff.
+- **Not measured here**: DEF-015
+  ([#115](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/115),
+  203,411 characters of diff) merged after D1 and before STY-051; its review sessions are
+  outside this evidence, so whether it is one of S2's two is the owner's call.

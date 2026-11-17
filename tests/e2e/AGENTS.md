@@ -46,11 +46,12 @@ tours.
   the YAML diff. That flag never writes a _new_ snapshot: use `--update-snapshots=all`,
   check `git status` lists it, and restore the others it rewrote with
   `git checkout -- <file>`. In each snapshot it writes, an update drops checks. A number
-  of two or more digits becomes a pattern (`1 October 2026` to `/1 October \d+/`) and a
-  link's text becomes `text: ""`, and both then match anything. A button whose name
-  differs from its visible text loses that text (`button "Publish changes": Publish` to
-  `button "Publish changes"`), which fails the next run. Put back the literal where the
-  fixtures fix the value and each control's text, then commit.
+  of two or more digits becomes a pattern (`1 October 2026` to `/1 October \d+/`) that
+  matches any number. Text that is part of a control's name becomes `text: ""` beside
+  another child, such as a link's `/url`, and matches any text; as the only child it is
+  dropped (`button "Publish changes": Publish` to `button "Publish changes"`), which
+  fails the next run. Put back the literal where the fixtures fix the value and each
+  control's text, then commit.
 - CI serves under `/roadmaps-editor/`: after changing the structure snapshots, run them
   once with
   `GITHUB_REPOSITORY=DHCW-Digital-Health-and-Care-Wales/roadmaps-editor`.

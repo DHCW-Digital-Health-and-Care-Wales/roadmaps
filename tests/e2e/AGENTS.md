@@ -45,12 +45,12 @@ tours.
   deliberate change run `pnpm test:e2e structure.spec.ts --update-snapshots` and review
   the YAML diff. That flag never writes a _new_ snapshot: use `--update-snapshots=all`,
   check `git status` lists it, and restore the others it rewrote with
-  `git checkout -- <file>`. In each snapshot it writes, an update loosens checks that the
-  looser snapshot still passes: a number of two or more digits becomes a pattern
-  (`1 October 2026` to `/1 October \d+/`), and a button or link named apart from its
-  visible text loses that text (`button "Publish changes": Publish` to
-  `button "Publish changes"`). Put back the literal where the fixtures fix the value,
-  and every visible text, then commit.
+  `git checkout -- <file>`. In each snapshot it writes, an update drops checks. A number
+  of two or more digits becomes a pattern (`1 October 2026` to `/1 October \d+/`) and a
+  link's text becomes `text: ""`, and both then match anything. A button whose name
+  differs from its visible text loses that text (`button "Publish changes": Publish` to
+  `button "Publish changes"`), which fails the next run. Put back the literal where the
+  fixtures fix the value and each control's text, then commit.
 - CI serves under `/roadmaps-editor/`: after changing the structure snapshots, run them
   once with
   `GITHUB_REPOSITORY=DHCW-Digital-Health-and-Care-Wales/roadmaps-editor`.

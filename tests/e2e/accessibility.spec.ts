@@ -46,7 +46,13 @@ async function expectNoAxeViolations(
   await (theme === "dark"
     ? expect(html).toHaveClass(/\bdark\b/)
     : expect(html).not.toHaveClass(/\bdark\b/))
-  let builder = new AxeBuilder({ page }).withTags(WCAG_TAGS)
+  let builder = new AxeBuilder({ page })
+    .withTags(WCAG_TAGS)
+    // Base UI's focus guards, hidden and tabbable while a menu is open, return focus to
+    // its trigger. axe passes them only when something covers the screen's centre, its
+    // sign of a modal open: a Move button scrolled to the centre (two columns of cards
+    // beside the navigation, STY-054) hides the open menu from that test.
+    .exclude("[data-base-ui-focus-guard]")
   if (only) builder = builder.include(only)
   const { violations } = await builder.analyze()
   const summary = violations.map(({ id, nodes }) => ({
@@ -149,6 +155,37 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expect(
         main.getByRole("button", { name: "Show less" }),
       ).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+    })
+
+    test("the shell's navigation beside a roadmap's page, then folded to its rail with a tooltip shown (STY-054)", async ({
+      page,
+    }) => {
+      await page.goto("./#/roadmaps/producta")
+      await connect(page)
+      const navigation = page.getByRole("navigation", { name: "Roadmaps" })
+      await expect(
+        navigation.getByRole("link", { name: "Product A roadmap" }),
+      ).toHaveAttribute("aria-current", "page")
+      await expectNoAxeViolations(page, theme)
+
+      await page.getByRole("button", { name: "Fold the navigation" }).click()
+      await navigation.getByRole("link", { name: "Product B roadmap" }).hover()
+      await expect(page.getByText("Product B roadmap").last()).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+    })
+
+    test("the shell's navigation as a drawer on a phone (STY-054 S5)", async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 375, height: 800 })
+      await page.goto("./#/roadmaps/producta")
+      await connect(page)
+      await page
+        .getByRole("banner")
+        .getByRole("button", { name: "Menu" })
+        .click()
+      await expect(page.getByRole("dialog", { name: "Menu" })).toBeVisible()
       await expectNoAxeViolations(page, theme)
     })
 

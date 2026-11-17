@@ -222,6 +222,21 @@ roadmaps.jumpTo.targetPending_one   {{name}}, {{count, number}} item, unpublishe
 An empty placement still has a count, so both `target` and `targetPending` have
 `_zero`.
 
+## Shell navigation
+
+**Shape:** the shell's destinations by the names their pages show: "All roadmaps" for
+the list, each roadmap by its title, "Families, categories and organisations"; a
+family names its roadmaps' list. A button that hides or shows the navigation names
+what pressing it does ("Fold the navigation", "Open the navigation"); a phone's button,
+and the drawer it opens, are "Menu", closed by "Close menu".
+
+```
+layout.navigation.label        Roadmaps
+layout.navigation.fold         Fold the navigation
+layout.navigation.closeMenu    Close menu
+roadmaps.navigation.all        All roadmaps
+```
+
 ## Publish and save
 
 **Shape:** "Publish changes" on a published roadmap, "Save changes" on one that is

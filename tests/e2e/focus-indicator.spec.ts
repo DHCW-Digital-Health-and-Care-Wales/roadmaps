@@ -445,14 +445,17 @@ for (const theme of THEMES) {
       await tabTo(page, refresh)
       await expectIndicator(refresh, colours, "fill")
 
-      const card = page.getByRole("link", { name: "Product B roadmap" })
+      const card = main.getByRole("link", { name: "Product B roadmap" })
       await expect(roadmapCards(page).first()).toHaveText("Product B roadmap")
       await tabTo(page, card)
       // The stretched title link takes focus; the card around it draws the ring.
       await expectIndicator(
-        page
+        main
           .getByRole("listitem")
-          .filter({ has: card })
+          // Relative to the item: the card's title link.
+          .filter({
+            has: page.getByRole("link", { name: "Product B roadmap" }),
+          })
           .locator(":scope > div"),
         colours,
         "ring",
@@ -463,6 +466,19 @@ for (const theme of THEMES) {
       const back = main.getByRole("link", { name: "Back to roadmaps" })
       await tabTo(page, back)
       await expectIndicator(back, colours, "link")
+
+      // The navigation's links and its fold button take the fill, the current page's
+      // link too, its blue giving way (STY-054).
+      const navigation = page.getByRole("navigation", { name: "Roadmaps" })
+      const current = navigation.getByRole("link", {
+        name: "Product B roadmap",
+      })
+      await expect(current).toHaveAttribute("aria-current", "page")
+      await tabTo(page, current, "Shift+Tab")
+      await expectIndicator(current, colours, "fill")
+      const fold = page.getByRole("button", { name: "Fold the navigation" })
+      await tabTo(page, fold, "Shift+Tab")
+      await expectIndicator(fold, colours, "fill")
     })
   })
 }

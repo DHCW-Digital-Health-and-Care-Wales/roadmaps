@@ -1,5 +1,6 @@
 import type { ReactNode, RefObject } from "react"
 
+import { NavigationMenuButton } from "@/components/layout/navigation-drawer"
 import { StickyHeader } from "@/components/layout/sticky-header"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import {
@@ -49,7 +50,8 @@ export interface RoadmapTitleRowProps {
  * slims to one row: the title cut with an ellipsis, its full text still its name, and
  * no badges, "Jump to" cut where the row is still short of room; on a phone, "Add an
  * item" is an icon and "Publish roadmap" moves into More (D18, D19). Narrower than a
- * desktop, "Jump to" keeps a row of its own under the rest.
+ * desktop, "Jump to" keeps a row of its own under the rest, and stuck, the row starts
+ * with the shell's menu button, so the navigation is one press away (STY-054 D8).
  */
 export function RoadmapTitleRow({
   roadmap,
@@ -90,6 +92,7 @@ export function RoadmapTitleRow({
                   stuck ? "flex-1 lg:min-w-24" : "flex-wrap",
                 )}
               >
+                {stuck && <NavigationMenuButton variant="secondary" />}
                 <h1
                   ref={heading}
                   tabIndex={-1}

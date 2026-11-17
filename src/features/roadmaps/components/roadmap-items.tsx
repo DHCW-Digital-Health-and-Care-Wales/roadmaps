@@ -21,11 +21,8 @@ import {
 } from "../group-roadmap-items"
 import { jumpTargetHeadingId } from "../placement-navigation/jump-targets"
 import { AddItemButton } from "./add-item-button"
+import { CardGrid } from "./card-grid"
 import { StatusPanel } from "./status-panel"
-
-/** One, two, then three columns of item cards, as the roadmap cards are laid out. */
-const itemGridClassName =
-  "grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3"
 
 export interface RoadmapItemsProps {
   roadmapId: string
@@ -220,7 +217,7 @@ function ItemList({
   dialogOpener,
 }: ItemListProps) {
   return (
-    <ul aria-labelledby={labelledBy} className={itemGridClassName}>
+    <CardGrid aria-labelledby={labelledBy}>
       {placed.map(({ item: pageItem, position }, at) => (
         <EditableItemCard
           key={pageItem.key}
@@ -241,7 +238,7 @@ function ItemList({
           dialogOpener={dialogAt === position ? dialogOpener : undefined}
         />
       ))}
-    </ul>
+    </CardGrid>
   )
 }
 
@@ -253,18 +250,18 @@ export function RoadmapItemsSkeleton() {
       <span className="sr-only">{t("roadmaps.items.loading")}</span>
       <div aria-hidden="true" className="flex flex-col gap-3">
         <Skeleton className="h-6 w-32" />
-        <div className={itemGridClassName}>
+        <CardGrid>
           {[0, 1, 2].map((index) => (
-            <div
+            <li
               key={index}
               className="flex flex-col gap-2.5 border bg-card p-4 shadow-card-bar"
             >
               <Skeleton className="h-4 w-3/5" />
               <Skeleton className="h-3 w-full" />
               <Skeleton className="h-3 w-4/5" />
-            </div>
+            </li>
           ))}
-        </div>
+        </CardGrid>
       </div>
     </div>
   )

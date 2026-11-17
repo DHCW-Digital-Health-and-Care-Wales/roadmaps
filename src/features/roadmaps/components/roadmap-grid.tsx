@@ -1,10 +1,10 @@
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 
+import { CardGrid } from "./card-grid"
 import { RoadmapCard } from "./roadmap-card"
 
-/** Shared by the grid and its skeleton, so loading does not shift the layout. */
-export const roadmapGridClassName =
-  "grid grid-cols-1 gap-4 sm:auto-rows-fr sm:grid-cols-2 sm:gap-5 lg:grid-cols-3"
+/** Rows of even height once there are columns; the skeleton's too, so loading does not shift the layout. */
+export const ROADMAP_ROWS = "@xl:auto-rows-fr"
 
 export interface RoadmapGridProps {
   roadmaps: readonly Roadmap[]
@@ -12,18 +12,15 @@ export interface RoadmapGridProps {
   labelledBy?: string
 }
 
-/**
- * The roadmaps as a responsive list of cards (one, two, then three columns), 16px apart
- * and 20px from `sm`, DHCW's card group gutter.
- */
+/** The roadmaps as a list of cards in columns (`CardGrid`), each row of even height. */
 export function RoadmapGrid({ roadmaps, labelledBy }: RoadmapGridProps) {
   return (
-    <ul aria-labelledby={labelledBy} className={roadmapGridClassName}>
+    <CardGrid aria-labelledby={labelledBy} className={ROADMAP_ROWS}>
       {roadmaps.map((roadmap) => (
         <li key={roadmap.id}>
           <RoadmapCard roadmap={roadmap} />
         </li>
       ))}
-    </ul>
+    </CardGrid>
   )
 }

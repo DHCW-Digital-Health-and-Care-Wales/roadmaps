@@ -7,6 +7,7 @@ import { ThemeToggle } from "@/components/theme/theme-toggle"
 import { AuthNotice } from "@/features/auth/components/auth-notice"
 import { ConnectionStatus } from "@/features/auth/components/connection-status"
 import { HeaderAuthButton } from "@/features/auth/components/header-auth-button"
+import { RoadmapNavigation } from "@/features/roadmaps/navigation/roadmap-navigation"
 
 export const Route = createRootRoute({
   component: RootLayout,
@@ -24,6 +25,7 @@ function RootLayout() {
           <HeaderAuthButton />
         </>
       }
+      navigation={(form) => <RoadmapNavigation form={form} />}
     >
       <AuthNotice />
       <Outlet />

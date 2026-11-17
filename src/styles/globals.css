@@ -175,7 +175,8 @@
   --header-hover: var(--nhsw-colour-button-primary-hover);
   --header-border: var(--nhsw-grey-border-colour);
 
-  /* Reserved for the deferred dashboard shell: DHCW's navy navigation. */
+  /* The dashboard shell's navy navigation (STY-054), the same in both themes: DHCW's
+     page-background blue, its current page DHCW's active blue. */
   --sidebar: var(--nhsw-page-background-blue);
   --sidebar-foreground: var(--nhsw-exceptional-text-colour);
   --sidebar-primary: var(--nhsw-exceptional-text-colour);
@@ -398,17 +399,27 @@
   }
   /* A bar pinned to the screen (`usePinnedInset`) sets its height on the document as
      `--pinned-top` or `--pinned-bottom`: scrolling to a focused control keeps it clear of
-     the bars (WCAG 2.4.11), and the end of the page clears the foot's. */
+     the bars (WCAG 2.4.11), and the end of the page clears the foot's. The bars start
+     after the shell's navigation, `--navigation-width` wide on a desktop (`AppShell`). */
   html {
     @apply font-sans;
     --pinned-top: 0px;
     --pinned-bottom: 0px;
+    --navigation-width: 0px;
     scroll-padding-top: var(--pinned-top);
     scroll-padding-bottom: var(--pinned-bottom);
   }
   body {
     @apply bg-background text-body text-foreground;
     padding-bottom: var(--pinned-bottom);
+  }
+  /* The shell's navigation beside the page on a desktop (STY-054 D5): open, or folded to
+     a rail of icons. */
+  [data-navigation="open"] {
+    --navigation-width: --spacing(64);
+  }
+  [data-navigation="folded"] {
+    --navigation-width: --spacing(16);
   }
 }
 

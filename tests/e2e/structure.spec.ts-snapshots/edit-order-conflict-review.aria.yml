@@ -1,7 +1,6 @@
-- alert:
-  - text: Someone else has changed this roadmap too
-  - paragraph: Nothing was published.
-  - paragraph: Choose which to keep for each, then publish again.
+- dialog "Someone else has changed this roadmap too":
+  - heading "Someone else has changed this roadmap too" [level=2]
+  - paragraph: Nothing was published. Choose which to keep for each, then publish again.
   - list:
     - listitem:
       - paragraph: "Now: Order"
@@ -21,3 +20,4 @@
           - listitem: Card being explored
       - 'button "Keep mine Now: Order"'
       - 'button "Use theirs Now: Order"'
+  - button "Close"

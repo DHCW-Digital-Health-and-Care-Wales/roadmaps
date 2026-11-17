@@ -1,5 +1,6 @@
 import { CircleAlertIcon, CircleCheckIcon, InfoIcon } from "lucide-react"
 import type { TFunction } from "i18next"
+import type { RefObject } from "react"
 import { useTranslation } from "react-i18next"
 
 import { DismissibleNotice } from "@/components/layout/dismissible-notice"
@@ -12,6 +13,7 @@ import { writeFailureMessage } from "../write-failure-message"
 import type { PublishedStateOutcomeNotice } from "./use-published-state"
 
 export interface PublishedStateNoticeProps {
+  ref: RefObject<HTMLDivElement | null>
   notice: PublishedStateOutcomeNotice
   /** The roadmap's title, as shown. */
   title: string
@@ -21,9 +23,11 @@ export interface PublishedStateNoticeProps {
 /**
  * What publishing or unpublishing a roadmap came to, as a page notice (STY-035): a
  * confirmation clears itself after a dwell; a refusal names each problem to fix in the
- * spreadsheet (S4); a failure says why (S8), and both say pending edits are kept.
+ * spreadsheet (S4); a failure says why (S8), and both say pending edits are kept. It
+ * shows at the foot, where focus comes as the dialog that asked closes (STY-052 D21).
  */
 export function PublishedStateNotice({
+  ref,
   notice,
   title,
   onDismiss,
@@ -82,12 +86,14 @@ export function PublishedStateNotice({
 
   return (
     <DismissibleNotice
+      ref={ref}
+      tabIndex={-1}
       role={confirmed || notice.kind === "changed" ? "status" : "alert"}
       variant={content.variant}
       Icon={content.Icon}
       title={content.title}
       onDismiss={onDismiss}
-      className="max-w-2xl"
+      className="outline-none focus-visible:focus-ring"
       {...(confirmed ? dwell : {})}
     >
       {content.lines.map((line) => (

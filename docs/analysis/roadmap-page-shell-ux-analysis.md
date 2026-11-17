@@ -5,7 +5,7 @@
   its actions and its pending changes with Publish in view, and how do they reach any
   placement directly, with "About this roadmap" folded?
 - **Scope**: a roadmap's page, for
-  [STY-052](../backlog/EPC-012-app-shell-and-navigation/STY-052-keep-a-roadmaps-controls-in-view.md)
+  [STY-052](../backlog/_archive/EPC-012-app-shell-and-navigation/STY-052-keep-a-roadmaps-controls-in-view.md)
   and
   [STY-053](../backlog/EPC-012-app-shell-and-navigation/STY-053-jump-between-a-roadmaps-placements.md)
   of [EPC-012](../backlog/EPC-012-app-shell-and-navigation/README.md), after two rounds
@@ -200,7 +200,7 @@ roadmap" in the title row), not as the last line below has it.
 ## Related
 
 - [EPC-012](../backlog/EPC-012-app-shell-and-navigation/README.md),
-  [STY-052](../backlog/EPC-012-app-shell-and-navigation/STY-052-keep-a-roadmaps-controls-in-view.md),
+  [STY-052](../backlog/_archive/EPC-012-app-shell-and-navigation/STY-052-keep-a-roadmaps-controls-in-view.md),
   [STY-053](../backlog/EPC-012-app-shell-and-navigation/STY-053-jump-between-a-roadmaps-placements.md)
   and [STY-054](../backlog/EPC-012-app-shell-and-navigation/STY-054-move-between-roadmaps-from-the-shell.md)
   (the side rail, D1), and
@@ -225,7 +225,7 @@ failed publish.
 
 - **Where the controls pin**: **B**, not the recommended A. The title row sticks at the
   top, and pending changes pin in a bar at the foot, on a desktop and a phone:
-  [STY-052](../backlog/EPC-012-app-shell-and-navigation/STY-052-keep-a-roadmaps-controls-in-view.md)
+  [STY-052](../backlog/_archive/EPC-012-app-shell-and-navigation/STY-052-keep-a-roadmaps-controls-in-view.md)
   D10.
 - **Discard on a phone**: neither (a) nor (b). The foot bar's buttons are shortened to
   "Publish", with its icon, and "Discard" (STY-052 D11). Measured at 375px in Cymraeg,

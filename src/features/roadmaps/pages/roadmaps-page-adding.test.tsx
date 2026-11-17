@@ -34,6 +34,7 @@ import {
   openEditRoadmapDialog,
 } from "../testing/roadmap-dialog"
 import { expectOpeningFocus } from "../testing/opening-focus"
+import { chooseFromMore, refreshRoadmap } from "../testing/roadmap-page"
 import { expectWriteHold, refreshHold } from "../testing/write-hold"
 
 const roadmaps: Roadmap[] = [
@@ -127,18 +128,14 @@ function submit(user: UserEvent) {
   return user.click(dialog().getByRole("button", { name: "Add roadmap" }))
 }
 
-/** A co-lead removes Patient Summary from the list, which this tab then reads again. */
-async function removePatientSummary(
-  user: UserEvent,
-  repository: InMemoryRoadmapRepository,
-) {
+/** A co-lead removes Patient Summary from the list; the caller reads the list again. */
+function removePatientSummary(repository: InMemoryRoadmapRepository) {
   repository.coLead((rows) => {
     rows.splice(
       rows.findIndex(({ id }) => id === "patient-summary"),
       1,
     )
   })
-  await user.click(await main().findByRole("button", { name: "Refresh" }))
 }
 
 describe("adding a roadmap from the list (STY-041)", () => {
@@ -543,9 +540,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
           name: "Publish roadmap",
         }),
       )
-      await user.click(
-        await main().findByRole("button", { name: "Unpublish roadmap" }),
-      )
+      await chooseFromMore(user, "Unpublish roadmap")
       await user.click(
         within(screen.getByRole("alertdialog")).getByRole("button", {
           name: "Unpublish roadmap",
@@ -569,7 +564,8 @@ describe("adding a roadmap from the list (STY-041)", () => {
       const about = await openEditRoadmapDialog(user)
       await user.type(about.getByRole("textbox", { name: "Title" }), " draft")
       await confirmRoadmapEdit(user)
-      await removePatientSummary(user, repository)
+      removePatientSummary(repository)
+      await refreshRoadmap(user)
       await main().findByText(
         "This roadmap was removed from the list, so your changes to it couldn't be kept.",
       )
@@ -611,7 +607,8 @@ describe("adding a roadmap from the list (STY-041)", () => {
       )
       await main().findByRole("heading", { name: "Shared summary view" })
       await user.click(main().getByRole("link", { name: "Back to roadmaps" }))
-      await removePatientSummary(user, repository)
+      removePatientSummary(repository)
+      await user.click(await main().findByRole("button", { name: "Refresh" }))
       await main().findByText("1 roadmap")
 
       await openDialog(user)

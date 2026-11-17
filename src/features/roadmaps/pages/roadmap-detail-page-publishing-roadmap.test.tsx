@@ -18,6 +18,15 @@ import { renderWithProviders } from "@/test/render-with-providers"
 
 import { createInMemoryRoadmapRepository } from "../testing/in-memory-roadmap-repository"
 import { editRoadmapText } from "../testing/roadmap-dialog"
+import {
+  chooseFromMore,
+  closeConflictReview,
+  findRefusal,
+  moreButton,
+  openConflictReview,
+  openMore,
+} from "../testing/roadmap-page"
+import { expectOpeningFocus } from "../testing/opening-focus"
 import { expectWriteHold } from "../testing/write-hold"
 
 const draft = createTestRoadmap("producta", "Product A roadmap", {
@@ -81,6 +90,13 @@ async function choose(
   await user.click(within(dialog).getByRole("button", { name: confirm }))
 }
 
+/** The notice `line` is in. */
+function noticeOf(line: HTMLElement): HTMLElement {
+  const notice = line.closest<HTMLElement>("[role=status], [role=alert]")
+  if (!notice) throw new Error("The line is in no notice")
+  return notice
+}
+
 /** Edits the roadmap's status label in the roadmap dialog, leaving it pending. */
 function editStatus(user: ReturnType<typeof userEvent.setup>) {
   return editRoadmapText(user, "Status", "Live")
@@ -95,13 +111,14 @@ describe("publishing or unpublishing a roadmap (STY-035)", () => {
   })
 
   it("offers Unpublish roadmap beside a published roadmap (S1)", async () => {
-    const { main } = await renderPage({
+    const { user, main } = await renderPage({
       roadmaps: [{ ...draft, published: true }, other],
     })
 
     expect(main.queryByText("Not published")).toBeNull()
+    const menu = await openMore(user)
     expect(
-      main.getByRole("button", { name: "Unpublish roadmap" }),
+      within(menu).getByRole("menuitem", { name: "Unpublish roadmap" }),
     ).toBeVisible()
   })
 
@@ -176,18 +193,38 @@ describe("publishing or unpublishing a roadmap (STY-035)", () => {
     expect(within(dialog).queryByRole("list")).toBeNull()
     await user.click(within(dialog).getByRole("button", { name: "Cancel" }))
     expect((await repository.listRoadmaps())[0]?.published).toBe(false)
+    await expectOpeningFocus(
+      main.getByRole("button", { name: "Publish roadmap" }),
+    )
 
     await choose(user, "Publish roadmap")
 
-    expect(
-      await main.findByText(
-        "Product A roadmap is published. The public site shows it after its next nightly update.",
-      ),
-    ).toBeVisible()
+    // Its outcome shows at the foot, focus on it, as a publish's does (STY-052 D21).
+    const published = await main.findByText(
+      "Product A roadmap is published. The public site shows it after its next nightly update.",
+    )
+    expect(published).toBeVisible()
+    await expectOpeningFocus(noticeOf(published))
     expect(main.queryByText("Not published")).toBeNull()
+    const menu = await openMore(user)
     expect(
-      main.getByRole("button", { name: "Unpublish roadmap" }),
+      within(menu).getByRole("menuitem", { name: "Unpublish roadmap" }),
     ).toBeVisible()
+    expect((await repository.listRoadmaps())[0]?.published).toBe(true)
+  })
+
+  it("returns focus to More when Unpublish roadmap, chosen from it, is cancelled (STY-052 D6)", async () => {
+    const { user, repository } = await renderPage({
+      roadmaps: [{ ...draft, published: true }],
+    })
+
+    await chooseFromMore(user, "Unpublish roadmap")
+    const dialog = await screen.findByRole("alertdialog", {
+      name: "Unpublish Product A roadmap?",
+    })
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }))
+
+    await expectOpeningFocus(moreButton())
     expect((await repository.listRoadmaps())[0]?.published).toBe(true)
   })
 
@@ -197,7 +234,7 @@ describe("publishing or unpublishing a roadmap (STY-035)", () => {
       syncFaults: { producta: ["short-colour"] },
     })
 
-    await user.click(main.getByRole("button", { name: "Unpublish roadmap" }))
+    await chooseFromMore(user, "Unpublish roadmap")
     expect(
       within(
         await screen.findByRole("alertdialog", {
@@ -211,9 +248,11 @@ describe("publishing or unpublishing a roadmap (STY-035)", () => {
       }),
     )
 
-    expect(
-      await main.findByText(/^Product A roadmap is unpublished\./),
-    ).toBeVisible()
+    const unpublished = await main.findByText(
+      /^Product A roadmap is unpublished\./,
+    )
+    expect(unpublished).toBeVisible()
+    await expectOpeningFocus(noticeOf(unpublished))
     expect(main.getByText("Not published")).toBeVisible()
     expect((await repository.listRoadmaps())[0]?.published).toBe(false)
   })
@@ -279,7 +318,7 @@ describe("publishing or unpublishing a roadmap (STY-035)", () => {
     })
   })
 
-  it("publishes nothing on a co-lead's conflicting change, opening the review (S6)", async () => {
+  it("publishes nothing on a co-lead's conflicting change, its refusal at the foot taking focus, then opens the review (S6; STY-052 D21)", async () => {
     const { user, main, repository } = await renderPage()
     await editStatus(user)
     repository.coLead(([roadmap]) => {
@@ -288,15 +327,19 @@ describe("publishing or unpublishing a roadmap (STY-035)", () => {
 
     await choose(user, "Publish roadmap", "Save and publish")
 
-    expect(
-      await main.findByText("Someone else has changed this roadmap too"),
-    ).toBeVisible()
+    const refusal = await findRefusal()
+    expect(refusal).toHaveTextContent(
+      "Someone else has changed this roadmap too",
+    )
+    await expectOpeningFocus(refusal)
     expect(
       main.getByRole("button", { name: "Publish roadmap" }),
     ).toHaveAttribute("aria-disabled", "true")
     expect((await repository.listRoadmaps())[0]?.published).toBe(false)
 
-    await user.click(main.getByRole("button", { name: /^Keep mine/ }))
+    const review = await openConflictReview(user)
+    await user.click(within(review).getByRole("button", { name: /^Keep mine/ }))
+    await closeConflictReview(user, review)
     expect(
       main.getByRole("button", { name: "Publish roadmap" }),
     ).toHaveAttribute("aria-disabled", "false")
@@ -309,7 +352,7 @@ describe("publishing or unpublishing a roadmap (STY-035)", () => {
     await editStatus(user)
     expect(main.getByText("1 unpublished change")).toBeVisible()
 
-    await user.click(main.getByRole("button", { name: "Unpublish roadmap" }))
+    await chooseFromMore(user, "Unpublish roadmap")
     const dialog = within(await screen.findByRole("alertdialog"))
     expect(
       dialog.getByText(/Your unpublished change stays, to save later\./),
@@ -406,7 +449,11 @@ describe("publishing a roadmap the public would see with no items (STY-042 S3)",
     user: ReturnType<typeof userEvent.setup>,
     action = "Publish roadmap",
   ) {
-    await user.click(screen.getByRole("button", { name: action }))
+    if (action === "Unpublish roadmap") {
+      await chooseFromMore(user, action)
+    } else {
+      await user.click(screen.getByRole("button", { name: action }))
+    }
     return screen.findByRole("alertdialog")
   }
 

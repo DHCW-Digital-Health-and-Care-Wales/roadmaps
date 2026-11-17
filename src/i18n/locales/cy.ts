@@ -125,6 +125,7 @@ export const cy = {
     title: "Eich mapiau trywydd",
     description: "Pob map trywydd, wedi'i gyhoeddi neu beidio.",
     refresh: "Adnewyddu",
+    more: "Mwy",
     loading: "Wrthi'n llwytho mapiau trywydd…",
     // Small numerals take a singular noun, and "dau" (2) softens "map" to "fap";
     // larger counts read naturally as "o" plus the softened plural.
@@ -571,7 +572,12 @@ export const cy = {
         publish: "Cyhoeddi'r newidiadau",
         save: "Cadw'r newidiadau",
       },
-      discardAll: "Gwaredu'r cyfan",
+      discardAll: "Gwaredu pob newid",
+      bar: {
+        publish: "Cyhoeddi",
+        save: "Cadw",
+        discard: "Gwaredu",
+      },
       discard: {
         title: "Gwaredu pob newid i'r map trywydd hwn?",
         description:
@@ -630,6 +636,17 @@ export const cy = {
           removed:
             "Mae rhywun arall wedi tynnu neu newid “{{title}}”, felly doedd dim modd cadw eich newidiadau iddo.",
           otherKept: "Mae eich newidiadau eraill wedi'u cadw yn y tab hwn.",
+          review: "Adolygu'r newidiadau",
+          decided: {
+            publish:
+              "Mae pob newid wedi'i benderfynu. Cyhoeddwch pan fyddwch chi'n barod.",
+            save: "Mae pob newid wedi'i benderfynu. Cadwch pan fyddwch chi'n barod.",
+          },
+          nothingLeft: {
+            publish:
+              "Mae pob newid wedi'i benderfynu. Does dim byd ar ôl i'w gyhoeddi.",
+            save: "Mae pob newid wedi'i benderfynu. Does dim byd ar ôl i'w gadw.",
+          },
         },
       },
     },

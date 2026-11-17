@@ -11,6 +11,8 @@ export interface DecisionFocus {
   ) => (button: HTMLButtonElement | null) => void
   /** Call as `conflict` is decided, before the decision is stored. */
   readonly decided: (conflict: Conflict) => void
+  /** The Keep mine button of the first conflict still open, where a review starts. */
+  readonly firstOpen: () => HTMLButtonElement | null
 }
 
 /**
@@ -41,6 +43,10 @@ export function useDecisionFocus(
     },
     decided: (conflict) => {
       decidedAt.current = open.findIndex((each) => each.conflict === conflict)
+    },
+    firstOpen: () => {
+      const [first] = open
+      return (first && keepMineButtons.current.get(first.key)) ?? null
     },
   }
 }

@@ -33,6 +33,11 @@ import {
   openEditItemDialog,
 } from "../testing/item-dialog"
 import { expectOpeningFocus } from "../testing/opening-focus"
+import {
+  closeConflictReview,
+  moreButton,
+  openConflictReview,
+} from "../testing/roadmap-page"
 import { expectWriteHold, refreshHold } from "../testing/write-hold"
 
 const roadmaps: Roadmap[] = [
@@ -133,9 +138,8 @@ describe("“Add an item” on a roadmap's page (STY-046 S1)", () => {
     const buttons = addItemButtons()
     expect(buttons).toHaveLength(1)
     expect(buttons[0]).toHaveAttribute("aria-disabled", "false")
-    // After Refresh, in the row of the page's actions.
-    const refresh = main().getByRole("button", { name: "Refresh" })
-    expect(buttons[0]?.parentElement).toBe(refresh.parentElement)
+    // In the title row, beside More.
+    expect(buttons[0]?.parentElement).toBe(moreButton().parentElement)
   })
 
   it("is unavailable while the items are read", async () => {
@@ -559,9 +563,13 @@ describe("A new item is one pending change (STY-046 S5)", () => {
     expect(titlesUnder("Next")).toEqual(["Text reminders", CLINIC])
     expect(card(CLINIC).getByText("New")).toBeVisible()
 
-    await user.click(main().getByRole("button", { name: "Discard all" }))
     await user.click(
-      screen.getByRole("button", { name: "Discard all changes" }),
+      main().getByRole("button", { name: "Discard all changes" }),
+    )
+    await user.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", {
+        name: "Discard all changes",
+      }),
     )
 
     await waitFor(() => {
@@ -1109,7 +1117,7 @@ describe("The publish dialog names the new items (STY-047 S1)", () => {
         }),
       )
 
-      const review = await main().findByRole("alert")
+      const review = await openConflictReview(user)
       expect(review).toHaveTextContent(
         "Someone else has changed this roadmap too",
       )
@@ -1123,6 +1131,7 @@ describe("The publish dialog names the new items (STY-047 S1)", () => {
           ),
       ).toEqual([`${edited}: Description`])
       expect(review).not.toHaveTextContent(CLINIC)
+      await closeConflictReview(user, review)
       // Nothing was written, and the new item is still pending, on its card.
       expect(await titlesHeld()).toEqual(held)
       expect(card(CLINIC).getByText("New")).toBeVisible()

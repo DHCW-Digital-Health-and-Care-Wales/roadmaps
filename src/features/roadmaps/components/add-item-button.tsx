@@ -4,11 +4,17 @@ import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import { useSessionAction } from "@/features/auth/session-action"
+import { cn } from "@/lib/utils"
 
 export interface AddItemButtonProps {
   ref: RefObject<HTMLButtonElement | null>
   /** The roadmap's items are not read, so none can be added to them yet. */
   disabled?: boolean
+  /**
+   * An icon alone, still named "Add an item", as in a phone's stuck title row (STY-052
+   * D18).
+   */
+  compact?: boolean
   onAdd: () => void
 }
 
@@ -21,6 +27,7 @@ export interface AddItemButtonProps {
 export function AddItemButton({
   ref,
   disabled = false,
+  compact = false,
   onAdd,
 }: AddItemButtonProps) {
   const { t } = useTranslation()
@@ -30,12 +37,15 @@ export function AddItemButton({
       ref={ref}
       disabled={disabled}
       focusableWhenDisabled
+      size={compact ? "icon" : "default"}
       onClick={(event) => {
         add(event.currentTarget)
       }}
     >
       <PlusIcon data-icon="inline-start" aria-hidden="true" />
-      {t("roadmaps.edit.addItem.title")}
+      <span className={cn(compact && "sr-only")}>
+        {t("roadmaps.edit.addItem.title")}
+      </span>
     </Button>
   )
 }

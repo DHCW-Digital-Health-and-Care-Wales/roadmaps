@@ -15,6 +15,7 @@ import {
   withTabRows,
 } from "./fixtures/fake-sheets"
 import { useLanguage } from "./fixtures/look"
+import { openConflictReview, refusal } from "./fixtures/roadmap-page"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 /**
@@ -301,20 +302,22 @@ test.describe("a co-lead's change (STY-026)", () => {
 
     await confirmPublish(page, "Publish")
 
-    const review = page.getByRole("main").getByRole("alert")
-    await expect(review).toBeFocused()
-    await expect(review).toContainText(
+    const notice = refusal(page)
+    await expect(notice).toBeFocused()
+    await expect(notice).toContainText(
       "Someone else has changed this roadmap too",
     )
-    await expect(review).toContainText("Nothing was published.")
-    await expect(review.getByRole("listitem")).toHaveCount(2)
-    await expect(review.getByRole("listitem").first()).toContainText(
-      /About this roadmap: Vision.*Your change.*My vision\..*Current text.*Their vision\./,
-    )
+    await expect(notice).toContainText("Nothing was published.")
     expect(sheets.writes).toHaveLength(1)
     await expect(
       page.getByRole("main").getByRole("button", { name: "Publish changes" }),
     ).toHaveAttribute("aria-disabled", "true")
+
+    const review = await openConflictReview(page)
+    await expect(review.getByRole("listitem")).toHaveCount(2)
+    await expect(review.getByRole("listitem").first()).toContainText(
+      /About this roadmap: Vision.*Your change.*My vision\..*Current text.*Their vision\./,
+    )
 
     await review
       .getByRole("button", { name: "Keep mine About this roadmap: Vision" })
@@ -325,11 +328,18 @@ test.describe("a co-lead's change (STY-026)", () => {
     await review
       .getByRole("button", { name: "Use theirs My first card: Title" })
       .click()
+    await expect(review).toContainText(
+      "Every change is decided. Publish when you're ready.",
+    )
+    await expect(
+      review.getByRole("button", { name: "Publish changes" }),
+    ).toBeFocused()
+    await review.getByRole("button", { name: "Close" }).click()
+    await expect(review).toBeHidden()
     const action = page
       .getByRole("main")
       .getByRole("button", { name: "Publish changes" })
     await expect(action).toBeFocused()
-    await expect(review).toHaveCount(0)
 
     await confirmPublish(page, "Publish")
 
@@ -544,8 +554,8 @@ test.describe("a family and category (STY-028)", () => {
 
     await confirmPublish(page, "Publish")
 
-    const review = page.getByRole("main").getByRole("alert")
-    await expect(review).toBeFocused()
+    await expect(refusal(page)).toBeFocused()
+    const review = await openConflictReview(page)
     await expect(review.getByRole("listitem")).toContainText(
       /About this roadmap: Family.*Your change.*No family.*Current text.*Medicines & Diagnostics/,
     )
@@ -705,8 +715,8 @@ test.describe("moving an item (STY-031)", () => {
 
     await confirmPublish(page, "Publish")
 
-    const review = page.getByRole("main").getByRole("alert")
-    await expect(review).toBeFocused()
+    await expect(refusal(page)).toBeFocused()
+    const review = await openConflictReview(page)
     await expect(review.getByRole("listitem")).toContainText(
       new RegExp(
         `${ITEM}: Horizon or section.*Your change.*Next.*Current text.*Later`,
@@ -879,13 +889,15 @@ test.describe("reordering a placement's items (STY-050)", () => {
 
       await confirmPublish(page, "Publish")
 
-      const review = main.getByRole("alert")
-      await expect(review).toBeFocused()
-      await expect(review).toContainText(
+      const notice = refusal(page)
+      await expect(notice).toBeFocused()
+      await expect(notice).toContainText(
         "Someone else has changed this roadmap too",
       )
+      await expect(notice).toContainText("Nothing was published.")
+      const review = await openConflictReview(page)
       await expect(review).toContainText(
-        "Nothing was published.Choose which to keep for each, then publish again.",
+        "Choose which to keep for each, then publish again.",
       )
       const conflict = review.getByRole("listitem").filter({
         has: page.getByText("Now: Order", { exact: true }),
@@ -927,12 +939,16 @@ test.describe("reordering a placement's items (STY-050)", () => {
         ),
       ).toBe(true)
       expect(sheets.writes).toHaveLength(1)
-      const publishAgain = main.getByRole("button", { name: "Publish changes" })
-      await expect(publishAgain).toHaveAttribute("aria-disabled", "true")
 
       await review.getByRole("button", { name: "Keep mine Now: Order" }).click()
+      await expect(review).toContainText(
+        "Every change is decided. Publish when you're ready.",
+      )
+      await review.getByRole("button", { name: "Close" }).click()
+      await expect(review).toBeHidden()
+      const publishAgain = main.getByRole("button", { name: "Publish changes" })
       await expect(publishAgain).toBeFocused()
-      await expect(review).toHaveCount(0)
+      await expect(publishAgain).not.toHaveAttribute("aria-disabled", "true")
       await expect(main.getByText("Order changed")).toBeVisible()
 
       await confirmPublish(page, "Publish")
@@ -965,11 +981,16 @@ test.describe("reordering a placement's items (STY-050)", () => {
     sheets.coLead("ProductA", "Card being explored", "Horizon", "Now")
     await confirmPublish(page, "Publish")
 
-    await main
-      .getByRole("alert")
-      .getByRole("button", { name: "Use theirs Now: Order" })
-      .click()
+    const review = await openConflictReview(page)
+    await review.getByRole("button", { name: "Use theirs Now: Order" }).click()
+    await expect(review).toContainText(
+      "Every change is decided. Nothing is left to publish.",
+    )
+    await expect(review.getByRole("button", { name: "Close" })).toBeFocused()
+    await review.getByRole("button", { name: "Close" }).click()
 
+    await expect(review).toBeHidden()
+    await expect(main.getByRole("heading", { level: 1 })).toBeFocused()
     await expect(main.getByRole("alert")).toHaveCount(0)
     await expect(main.getByText("Order changed")).toHaveCount(0)
     await expect(main.getByText(/unpublished change/)).toHaveCount(0)
@@ -1062,8 +1083,8 @@ test.describe("choosing an item's organisations (STY-034)", () => {
 
     await confirmPublish(page, "Publish")
 
-    const review = page.getByRole("main").getByRole("alert")
-    await expect(review).toBeFocused()
+    await expect(refusal(page)).toBeFocused()
+    const review = await openConflictReview(page)
     await expect(review.getByRole("listitem")).toContainText(
       new RegExp(
         `${ITEM}: Organisations.*Your change.*Cardiff and Vale, Powys, Swansea Bay.*Current text.*Swansea Bay, Welsh Ambulance`,
@@ -1414,8 +1435,8 @@ test.describe("editing an item's tags (STY-037)", () => {
 
     await confirmPublish(page, "Publish")
 
-    const review = page.getByRole("main").getByRole("alert")
-    await expect(review).toBeFocused()
+    await expect(refusal(page)).toBeFocused()
+    const review = await openConflictReview(page)
     await expect(review.getByRole("listitem")).toContainText(
       new RegExp(
         `${TAGGED}: Tags.*Your change.*Service Y, Service Z, Carers.*Current text.*Service Z, Service Y`,
@@ -1468,8 +1489,8 @@ test.describe("editing an item's tags (STY-037)", () => {
     await confirmPublish(page, "Publish")
 
     const main = page.getByRole("main")
-    const review = main.getByRole("alert")
-    await expect(review).toBeFocused()
+    await expect(refusal(page)).toBeFocused()
+    const review = await openConflictReview(page)
     const conflict = review.getByRole("listitem")
     await expect(conflict).toContainText(`${TAGGED}: Tags`)
     await expect(
@@ -1483,7 +1504,11 @@ test.describe("editing an item's tags (STY-037)", () => {
     expect(sheets.writes).toHaveLength(1)
 
     await conflict.getByRole("button", { name: /^Discard my change/ }).click()
-    await expect(review).toHaveCount(0)
+    await expect(review).toContainText(
+      "Every change is decided. Nothing is left to publish.",
+    )
+    await review.getByRole("button", { name: "Close" }).click()
+    await expect(review).toBeHidden()
     await expect(main.getByText("Changed")).toHaveCount(0)
     // Its tags are now shown, not changed (S20).
     const reopened = await openEditItemDialog(page, TAGGED)
@@ -1793,8 +1818,8 @@ test.describe("editing an item's details (STY-039)", () => {
 
     await confirmPublish(page, "Publish")
 
-    const review = page.getByRole("main").getByRole("alert")
-    await expect(review).toBeFocused()
+    await expect(refusal(page)).toBeFocused()
+    const review = await openConflictReview(page)
     await expect(review).toContainText(`${DETAILED}: Details`)
     const values = review.getByRole("definition")
     await expect(values.first().getByRole("listitem")).toHaveText([
@@ -1887,21 +1912,25 @@ test.describe("editing an item's details (STY-039)", () => {
     await confirmPublish(page, "Publish")
 
     const main = page.getByRole("main")
-    const review = main.getByRole("alert")
-    await expect(review).toBeFocused()
+    await expect(refusal(page)).toBeFocused()
+    const review = await openConflictReview(page)
     await expect(review).toContainText(`${DETAILED}: Details`)
     await expect(
       review.getByText(
         "These details now have Welsh versions, so they can't be changed here yet.",
       ),
     ).toBeVisible()
-    await expect(review.getByRole("button")).toHaveText([
+    await expect(review.getByRole("listitem").getByRole("button")).toHaveText([
       `Discard my change ${DETAILED}: Details`,
     ])
     expect(sheets.writes).toHaveLength(1)
 
     await review.getByRole("button", { name: /^Discard my change/ }).click()
-    await expect(review).toHaveCount(0)
+    await expect(review).toContainText(
+      "Every change is decided. Nothing is left to publish.",
+    )
+    await review.getByRole("button", { name: "Close" }).click()
+    await expect(review).toBeHidden()
     await expect(main.getByText("Changed")).toHaveCount(0)
     // Its details are now shown, not changed (S18).
     const reopened = await openEditItemDialog(page, DETAILED)

@@ -20,6 +20,8 @@ import {
   createInMemoryRoadmapRepository,
   type InMemoryRoadmapItems,
 } from "../testing/in-memory-roadmap-repository"
+import { expectOpeningFocus } from "../testing/opening-focus"
+import { moreButton, openMore, refreshRoadmap } from "../testing/roadmap-page"
 
 // The roadmap's own text comes first, above the items.
 const ABOUT_HEADING = "About this roadmap"
@@ -570,7 +572,7 @@ describe("RoadmapDetailPage items", () => {
       await main().findByRole("heading", { name: "Not on the public roadmap" })
       expect(listRoadmaps).toHaveBeenCalledTimes(1)
 
-      await user.click(main().getByRole("button", { name: "Refresh" }))
+      await refreshRoadmap(user)
 
       await vi.waitFor(() => {
         expect(titlesUnder("Next")).toEqual([
@@ -599,13 +601,15 @@ describe("RoadmapDetailPage items", () => {
         repository: { ...repository, listRoadmapItems },
       })
       await main().findByRole("heading", { level: 2, name: "Now" })
-      const refresh = main().getByRole("button", { name: "Refresh" })
-      expect(refresh).toHaveAttribute("aria-busy", "false")
+      expect(moreButton()).toHaveAttribute("aria-busy", "false")
 
-      await user.click(refresh)
+      await refreshRoadmap(user)
 
-      expect(refresh).toHaveAttribute("aria-busy", "true")
-      expect(refresh).toHaveAttribute("aria-disabled", "true")
+      expect(moreButton()).toHaveAttribute("aria-busy", "true")
+      const menu = await openMore(user)
+      expect(
+        within(menu).getByRole("menuitem", { name: "Refresh" }),
+      ).toHaveAttribute("aria-disabled", "true")
     })
 
     it("asks to reconnect when the session has expired, then reads each once (STY-057)", async () => {
@@ -624,21 +628,23 @@ describe("RoadmapDetailPage items", () => {
       act(() => {
         authClient.setState({ status: "expired" })
       })
-      const refresh = main().getByRole("button", { name: "Refresh" })
-      expect(refresh).toHaveAttribute("aria-disabled", "false")
+      const menu = await openMore(user)
+      expect(
+        within(menu).getByRole("menuitem", { name: "Refresh" }),
+      ).not.toHaveAttribute("aria-disabled", "true")
 
-      await user.click(refresh)
+      await user.click(within(menu).getByRole("menuitem", { name: "Refresh" }))
       await findReconnectDialog()
       expect(listRoadmapItems).toHaveBeenCalledOnce()
       await reconnectFromDialog(user)
 
       // Reconnecting reads the page again, and Refresh joins that read.
       await vi.waitFor(() => {
-        expect(refresh).toHaveAttribute("aria-busy", "false")
+        expect(moreButton()).toHaveAttribute("aria-busy", "false")
       })
       expect(listRoadmaps).toHaveBeenCalledTimes(2)
       expect(listRoadmapItems).toHaveBeenCalledTimes(2)
-      expect(refresh).toHaveFocus()
+      await expectOpeningFocus(moreButton())
     })
 
     it("on the home page still reads only the roadmap list", async () => {

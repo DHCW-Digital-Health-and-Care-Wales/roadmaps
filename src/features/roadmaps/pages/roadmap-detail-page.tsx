@@ -15,13 +15,10 @@ import { useLanguage } from "@/i18n"
 import type { AppError } from "@/lib/errors"
 import { cn } from "@/lib/utils"
 
-import { AddItemButton } from "../components/add-item-button"
 import { AddedRoadmapNotice } from "../components/added-roadmap-notice"
-import { ListMismatchBadges } from "../components/list-mismatch-badges"
 import { MatchListsAction } from "../components/match-lists-action"
-import { NotPublishedBadge } from "../components/not-published-badge"
-import { RefreshButton } from "../components/refresh-button"
 import { RoadmapFamilyLine } from "../components/roadmap-family-line"
+import { RoadmapTitleRow } from "../components/roadmap-title-row"
 import {
   RoadmapItems,
   type RoadmapItemsProps,
@@ -29,7 +26,6 @@ import {
 } from "../components/roadmap-items"
 import { RoadmapsErrorState } from "../components/roadmaps-error-state"
 import { StatusPanel } from "../components/status-panel"
-import { ChangedTag } from "../editing/edit-controls"
 import { EditableRoadmapAbout } from "../editing/editable-roadmap-about"
 import { usePageItems } from "../editing/page-items"
 import {
@@ -40,7 +36,7 @@ import {
   usePendingChanges,
   useRoadmapChanges,
 } from "../editing/pending-changes-context"
-import { PublishedStateAction } from "../editing/published-state-action"
+import { PublishedStateDialog } from "../editing/published-state-dialog"
 import { PublishedStateNotice } from "../editing/published-state-notice"
 import { RoadmapPublishing } from "../editing/roadmap-publishing"
 import { useItemDialog } from "../editing/use-item-dialog"
@@ -166,14 +162,13 @@ interface RoadmapViewProps {
 }
 
 /**
- * A listed roadmap: a notice when it was just added (STY-041 S5), its title, a Not
- * published badge when it is not public (D8), a badge when it is out of step with the
- * family or category list (STY-027 S4, S8), Publish roadmap or Unpublish roadmap
- * (STY-035), a Refresh for the roadmap, its items and the lists (D7) and "Add an item"
- * (STY-046 S1), its family and category as they will be published (STY-028 S1), its
- * pending changes with Publish, what it is about, then its items, each showing its
- * pending English (STY-025). The title stays whatever happens to the items. It holds
- * the page's one item dialog, which "Add an item" and each item's Edit open.
+ * A listed roadmap: its title row, which sticks as the page scrolls (STY-052), its
+ * family and category as they will be published (STY-028 S1), a notice when it was just
+ * added (STY-041 S5), what it is about, then its items, each showing its pending English
+ * (STY-025). At the foot of the screen, what publishing or unpublishing it came to
+ * (STY-035, STY-052 D21) and its pending changes with Publish. The title stays whatever
+ * happens to the items. It holds the page's one item dialog, which "Add an item" and
+ * each item's Edit open.
  */
 function RoadmapView({
   roadmap,
@@ -190,7 +185,10 @@ function RoadmapView({
   const shown = applyRoadmapChanges(roadmap, changes, lists.lists)
   const publishedState = usePublishedState(roadmap, items.data)
   const pageItems = usePageItems(roadmap.id, items.data)
+  const heading = useRef<HTMLHeadingElement>(null)
   const addItemButton = useRef<HTMLButtonElement>(null)
+  const publishedStateNotice = useRef<HTMLDivElement>(null)
+  const publishNotice = useRef<HTMLDivElement>(null)
   const itemDialog = useItemDialog({
     roadmap,
     items: items.data,
@@ -227,45 +225,51 @@ function RoadmapView({
             retrying={listFetching}
           />
         )}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
-            <h1 className="text-heading-xl text-pretty wrap-break-word">
-              {title}
-            </h1>
-            {!roadmap.published && <NotPublishedBadge />}
-            <ListMismatchBadges roadmap={roadmap} />
-            {changes?.roadmap.title && <ChangedTag />}
-          </div>
-          <div className="flex shrink-0 flex-wrap gap-3">
-            <PublishedStateAction state={publishedState} title={title} />
-            <RefreshButton
-              fetching={
-                listFetching || items.isFetching || organisations.isFetching
-              }
-              onRefresh={refresh}
-            />
-            <AddItemButton
-              ref={addItemButton}
-              disabled={!itemDialog.canAdd}
-              onAdd={() => {
-                itemDialog.add()
-              }}
-            />
-          </div>
-        </div>
+        <RoadmapTitleRow
+          roadmap={roadmap}
+          title={title}
+          titleChanged={Boolean(changes?.roadmap.title)}
+          heading={heading}
+          publishedState={publishedState}
+          fetching={
+            listFetching || items.isFetching || organisations.isFetching
+          }
+          onRefresh={refresh}
+          addItemButton={addItemButton}
+          canAddItem={itemDialog.canAdd}
+          onAddItem={() => {
+            itemDialog.add()
+          }}
+        />
+        {/* Next in the page's order, where it stays on a short screen: elsewhere it
+            pins to the foot (STY-052 S6). */}
+        <RoadmapPublishing
+          roadmap={roadmap}
+          pageItems={pageItems}
+          heading={heading}
+          outcomeNotice={publishNotice}
+          pageNotices={
+            publishedState.notice && (
+              <PublishedStateNotice
+                ref={publishedStateNotice}
+                notice={publishedState.notice}
+                title={title}
+                onDismiss={publishedState.dismissNotice}
+              />
+            )
+          }
+        />
+        <PublishedStateDialog
+          state={publishedState}
+          title={title}
+          // Its own notice, or the refusal of the changes it sent (D21).
+          notice={() => publishedStateNotice.current ?? publishNotice.current}
+        />
         <RoadmapFamilyLine roadmap={shown} />
         <MatchListsAction roadmap={roadmap} />
         {addedNotice.shown && (
           <AddedRoadmapNotice title={title} onDismiss={addedNotice.dismiss} />
         )}
-        {publishedState.notice && (
-          <PublishedStateNotice
-            notice={publishedState.notice}
-            title={title}
-            onDismiss={publishedState.dismissNotice}
-          />
-        )}
-        <RoadmapPublishing roadmap={roadmap} pageItems={pageItems} />
       </div>
       <EditableRoadmapAbout roadmap={roadmap} />
       <RoadmapItemsArea

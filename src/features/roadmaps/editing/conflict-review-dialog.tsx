@@ -1,9 +1,17 @@
-import { TriangleAlertIcon } from "lucide-react"
-import type { ReactNode, RefObject } from "react"
+import { UploadIcon } from "lucide-react"
+import { type ReactNode, useRef } from "react"
 import { useTranslation } from "react-i18next"
 
-import { DismissibleNotice } from "@/components/layout/dismissible-notice"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { detailsOf } from "@/domain/roadmap/item-details"
 import { type Conflict, isChoiceField } from "@/domain/roadmap/roadmap-changes"
 import { localise, type LocalisedText } from "@/domain/roadmap/localised-text"
@@ -21,86 +29,113 @@ import {
 import { type OrderLine, reviewedOrders } from "./order-review"
 import type { PageItem } from "./page-items"
 import type { PublishAction } from "./pending-changes-store"
-import type { DecisionFocus } from "./use-decision-focus"
+import { RemovedItems } from "./refusal-notice"
+import { useDecisionFocus } from "./use-decision-focus"
 import { useRoadmapChoices } from "./use-roadmap-choices"
 
-export interface ConflictReviewProps {
-  ref: RefObject<HTMLDivElement | null>
+export interface ConflictReviewDialogProps {
+  open: boolean
+  onClose: () => void
+  /** Called once the dialog has finished closing. */
+  onClosed: () => void
+  /** Where focus goes as the dialog closes: `true` back to what opened it. */
+  finalFocus: () => HTMLElement | boolean
   action: PublishAction
   /** The fields and orders still to decide, in page order. */
-  open: readonly OpenConflict[]
+  conflicts: readonly OpenConflict[]
   /** The page's items, which an order's items are drawn from (`reviewedOrders`). */
   pageItems: readonly PageItem[]
   /** The loaded titles of the edited items that are gone. */
   removed: readonly LocalisedText[]
   /** Whether any change is still pending. */
   hasPendingChanges: boolean
-  /** The ref for each conflict's first button, Keep mine or its like, by its key. */
-  keepMineRef: DecisionFocus["keepMineRef"]
   onKeepMine: (conflict: Conflict) => void
   onUseTheirs: (conflict: Conflict) => void
-  onDismiss: () => void
+  /** "Publish changes", once every one is decided: closes the review to publish. */
+  onPublish: () => void
 }
 
 /**
- * A publish someone else's changes stopped (STY-026): each field they changed that the
+ * The review of a publish someone else's changes stopped (STY-026), in a dialog over
+ * the page, which does not move (STY-052 D12): each field they changed that the
  * Product Lead also changed (`FieldConflictItem`), and each placement's order
- * (`OrderConflictItem`, STY-050), to keep or give up one by one; then what was lost
- * with removed items. Tags or details that have gained Welsh versions can only be
- * given up (STY-037 S22, STY-039 S19). Nothing was written, so it cannot be dismissed
- * until every one is decided.
+ * (`OrderConflictItem`, STY-050), to keep or give up one by one, focus starting on the
+ * first's Keep mine and moving to the next's as each is decided (D18). Tags or details
+ * that have gained Welsh versions can only be given up (STY-037 S22, STY-039 S19). Once
+ * every one is decided it names what was lost with removed items (D17) and says so,
+ * with "Publish changes", focused, while anything is left to publish (D16), or Close
+ * alone (D22).
  */
-export function ConflictReview({
-  ref,
-  action,
+export function ConflictReviewDialog({
   open,
+  onClose,
+  onClosed,
+  finalFocus,
+  action,
+  conflicts,
   pageItems,
   removed,
   hasPendingChanges,
-  keepMineRef,
   onKeepMine,
   onUseTheirs,
-  onDismiss,
-}: ConflictReviewProps) {
+  onPublish,
+}: ConflictReviewDialogProps) {
   const { t } = useTranslation()
-  const language = useLanguage()
-  const deciding = open.length > 0
-  const choosing = open.some(
+  const deciding = conflicts.length > 0
+  const choosing = conflicts.some(
     (each) => each.kind === "order" || !each.conflict.gainedWelsh,
   )
+  const publish = useRef<HTMLButtonElement>(null)
+  const close = useRef<HTMLButtonElement>(null)
+  const focus = useDecisionFocus(
+    conflicts,
+    () => publish.current ?? close.current,
+  )
   const decision = (each: OpenConflict) => ({
-    firstButton: keepMineRef(each.key),
+    firstButton: focus.keepMineRef(each.key),
     onKeepMine: () => {
+      focus.decided(each.conflict)
       onKeepMine(each.conflict)
     },
     onUseTheirs: () => {
+      focus.decided(each.conflict)
       onUseTheirs(each.conflict)
     },
   })
+  const description: string[] = [
+    t(`roadmaps.publish.notice.refused.nothing.${action}`),
+  ]
+  if (deciding && choosing) {
+    description.push(t(`roadmaps.publish.notice.refused.choose.${action}`))
+  }
 
   return (
-    <DismissibleNotice
-      ref={ref}
-      tabIndex={-1}
-      role="alert"
-      variant="warning"
-      Icon={TriangleAlertIcon}
-      title={t(
-        deciding
-          ? "roadmaps.publish.notice.refused.title"
-          : "roadmaps.publish.notice.refused.partialTitle",
-      )}
-      {...(deciding ? {} : { onDismiss })}
-      className="max-w-2xl outline-none focus-visible:focus-ring"
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) onClose()
+      }}
+      onOpenChangeComplete={(next) => {
+        if (!next) onClosed()
+      }}
     >
-      <p>{t(`roadmaps.publish.notice.refused.nothing.${action}`)}</p>
-      {deciding && (
-        <>
-          {choosing && (
-            <p>{t(`roadmaps.publish.notice.refused.choose.${action}`)}</p>
-          )}
-          <ul className="mb-4 flex flex-col gap-4">
-            {open.map((each) =>
+      <DialogContent
+        initialFocus={() => focus.firstOpen() ?? true}
+        finalFocus={finalFocus}
+      >
+        <DialogHeader>
+          <DialogTitle>
+            {t(
+              deciding || removed.length === 0
+                ? "roadmaps.publish.notice.refused.title"
+                : "roadmaps.publish.notice.refused.partialTitle",
+            )}
+          </DialogTitle>
+          <DialogDescription>{description.join(" ")}</DialogDescription>
+        </DialogHeader>
+        {deciding && (
+          <ul className="flex flex-col gap-4">
+            {conflicts.map((each) =>
               each.kind === "order" ? (
                 <OrderConflictItem
                   key={each.key}
@@ -117,20 +152,38 @@ export function ConflictReview({
               ),
             )}
           </ul>
-        </>
-      )}
-      {removed.map((title, index) => (
-        // Two removed items may share a title.
-        <p key={index}>
-          {t("roadmaps.publish.notice.refused.removed", {
-            title: localise(title, language),
-          })}
-        </p>
-      ))}
-      {removed.length > 0 && hasPendingChanges && (
-        <p>{t("roadmaps.publish.notice.refused.otherKept")}</p>
-      )}
-    </DismissibleNotice>
+        )}
+        {!deciding && (
+          <>
+            <RemovedItems
+              removed={removed}
+              hasPendingChanges={hasPendingChanges}
+            />
+            <p className="font-bold">
+              {t(
+                hasPendingChanges
+                  ? `roadmaps.publish.notice.refused.decided.${action}`
+                  : `roadmaps.publish.notice.refused.nothingLeft.${action}`,
+              )}
+            </p>
+          </>
+        )}
+        <DialogFooter>
+          {!deciding && hasPendingChanges && (
+            <Button ref={publish} onClick={onPublish}>
+              <UploadIcon data-icon="inline-start" aria-hidden="true" />
+              {t(`roadmaps.publish.action.${action}`)}
+            </Button>
+          )}
+          <DialogClose
+            ref={close}
+            variant={!deciding && !hasPendingChanges ? "default" : "secondary"}
+          >
+            {t("common.close")}
+          </DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 

@@ -15,6 +15,7 @@ import { useSessionAction } from "@/features/auth/session-action"
 
 import { MarkUpdatedCheckbox } from "./mark-updated-checkbox"
 import type { PublishAction } from "./pending-changes-store"
+import { useFocusNoticeOnClose } from "./use-focus-notice-on-close"
 import { WhatChanges } from "./what-changes"
 
 export interface PublishDialogProps {
@@ -25,10 +26,10 @@ export interface PublishDialogProps {
   /** Whether "Mark as updated today" is ticked, offered unless a date is pending. */
   markUpdated: boolean
   onMarkUpdatedChange: (checked: boolean) => void
-  /** Whether closing returns focus to the control that opened it. */
-  returnFocus: () => boolean
-  /** Called once the dialog has finished closing. */
-  onClosed: () => void
+  /** The notice saying what the publish came to, where focus goes once confirmed. */
+  notice: () => HTMLElement | null
+  /** Where focus goes when it closes unconfirmed: by default, what opened it. */
+  returnTo: () => HTMLElement | null
   onConfirm: () => void
   onCancel: () => void
 }
@@ -37,8 +38,9 @@ export interface PublishDialogProps {
  * Asks before publishing, saying when the public site shows the changes (S9) and
  * listing them (`WhatChanges`), with "Mark as updated today" unless a date is pending,
  * which is published instead (STY-036 S6, S7). Cancel writes nothing; while the publish
- * is under way it cannot be closed. Confirmed after the session has expired, it asks to
- * reconnect first, then publishes (STY-057).
+ * is under way it cannot be closed. Once it ends, focus goes to its outcome (STY-052
+ * S4). Confirmed after the session has expired, it asks to reconnect first, then
+ * publishes (STY-057).
  */
 export function PublishDialog({
   open,
@@ -47,13 +49,17 @@ export function PublishDialog({
   publishing,
   markUpdated,
   onMarkUpdatedChange,
-  returnFocus,
-  onClosed,
+  notice,
+  returnTo,
   onConfirm,
   onCancel,
 }: PublishDialogProps) {
   const { t } = useTranslation()
-  const confirm = useSessionAction(onConfirm)
+  const outcome = useFocusNoticeOnClose(notice)
+  const confirm = useSessionAction(() => {
+    outcome.confirmed()
+    onConfirm()
+  })
 
   return (
     <AlertDialog
@@ -61,11 +67,9 @@ export function PublishDialog({
       onOpenChange={(next) => {
         if (!next && !publishing) onCancel()
       }}
-      onOpenChangeComplete={(next) => {
-        if (!next) onClosed()
-      }}
+      onOpenChangeComplete={outcome.onOpenChangeComplete}
     >
-      <AlertDialogContent finalFocus={returnFocus}>
+      <AlertDialogContent finalFocus={() => outcome.finalFocus(returnTo())}>
         <AlertDialogHeader>
           <AlertDialogTitle>
             {t(`roadmaps.publish.dialog.title.${action}`)}

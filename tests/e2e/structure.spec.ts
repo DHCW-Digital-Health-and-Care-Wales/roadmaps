@@ -17,6 +17,7 @@ import {
   type Language,
   useLanguage,
 } from "./fixtures/look"
+import { openConflictReview, refusal } from "./fixtures/roadmap-page"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 // The structure of the key screens, held as aria snapshots in
@@ -343,10 +344,22 @@ test.describe("editing a roadmap (STY-025)", () => {
       .getByRole("alertdialog")
       .getByRole("button", { name: "Publish changes" })
       .click()
-    const review = main.getByRole("alert")
-    await expect(review).toBeFocused()
+    const notice = refusal(page)
+    await expect(notice).toBeFocused()
+    await expectStructure(notice, "edit-conflict-notice.aria.yml")
 
+    const review = await openConflictReview(page)
     await expectStructure(review, "edit-conflict-review.aria.yml")
+
+    // Decided, it names the item that couldn't be kept (STY-052 D16, D17).
+    await review
+      .getByRole("button", { name: "Keep mine About this roadmap: Vision" })
+      .click()
+    const decided = page.getByRole("dialog")
+    await expect(
+      decided.getByRole("button", { name: "Publish changes" }),
+    ).toBeFocused()
+    await expectStructure(decided, "edit-conflict-review-decided.aria.yml")
   })
 
   test("a placement's order in the publish dialog, then a co-lead's change to it to review (STY-050)", async ({
@@ -376,9 +389,9 @@ test.describe("editing a roadmap (STY-025)", () => {
     const dialog = await confirm()
     await expectStructure(dialog, "edit-order-publish-dialog.aria.yml")
     await dialog.getByRole("button", { name: "Publish changes" }).click()
-    const review = main.getByRole("alert")
-    await expect(review).toBeFocused()
+    await expect(refusal(page)).toBeFocused()
 
+    const review = await openConflictReview(page)
     await expectStructure(review, "edit-order-conflict-review.aria.yml")
   })
 

@@ -7,6 +7,7 @@ import {
 } from "./fixtures/dialogs"
 import { sessionMs } from "./fixtures/fake-gis"
 import { useLanguage } from "./fixtures/look"
+import { moreButton, refreshRoadmap } from "./fixtures/roadmap-page"
 import { connect, expect, test } from "./fixtures/test"
 
 /**
@@ -132,19 +133,16 @@ test("Refresh asks to reconnect, then reads the page once (S1, D1)", async ({
   const main = await expireWithAChange(page)
   const reads = sheets.reads.length
 
-  await main.getByRole("button", { name: "Refresh" }).click()
+  await refreshRoadmap(page)
   await reconnectButton(page).click()
 
   // Reconnecting reads the page again, and Refresh joins those reads: the items are
-  // read once.
-  await expect(main.getByRole("button", { name: "Refresh" })).toBeFocused()
+  // read once. Focus goes back to More, the control Refresh was chosen from.
+  await expect(moreButton(page)).toBeFocused()
   await expect
     .poll(() => sheets.reads.slice(reads))
     .toContain("values:ProductA")
-  await expect(main.getByRole("button", { name: "Refresh" })).toHaveAttribute(
-    "aria-busy",
-    "false",
-  )
+  await expect(moreButton(page)).toHaveAttribute("aria-busy", "false")
   expect(
     sheets.reads.slice(reads).filter((read) => read === "values:ProductA"),
   ).toHaveLength(1)

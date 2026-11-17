@@ -1,0 +1,8 @@
+- dialog "Some changes couldn't be kept":
+  - heading "Some changes couldn't be kept" [level=2]
+  - paragraph: Nothing was published.
+  - paragraph: Someone else has removed or changed “Example card with every column”, so your changes to it couldn't be kept.
+  - paragraph: Your other changes are kept in this tab.
+  - paragraph: Every change is decided. Publish when you're ready.
+  - button "Publish changes"
+  - button "Close"

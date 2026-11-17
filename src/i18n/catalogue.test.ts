@@ -64,3 +64,20 @@ describe("catalogues", () => {
     },
   )
 })
+
+describe("the foot bar's short labels (STY-052 D11)", () => {
+  it.each(supportedLanguages)(
+    "%s starts each name with its label, so a spoken label finds it (WCAG 2.5.3)",
+    (language) => {
+      const { publish } = { en, cy }[language].roadmaps
+      const pairs = [
+        [publish.bar.publish, publish.action.publish],
+        [publish.bar.save, publish.action.save],
+        [publish.bar.discard, publish.discardAll],
+      ] as const
+      for (const [label, name] of pairs) {
+        expect(name.startsWith(label), `${label} / ${name}`).toBe(true)
+      }
+    },
+  )
+})

@@ -1,7 +1,6 @@
-- alert:
-  - text: Someone else has changed this roadmap too
-  - paragraph: Nothing was published.
-  - paragraph: Choose which to keep for each, then publish again.
+- dialog "Someone else has changed this roadmap too":
+  - heading "Someone else has changed this roadmap too" [level=2]
+  - paragraph: Nothing was published. Choose which to keep for each, then publish again.
   - list:
     - listitem:
       - paragraph: "About this roadmap: Vision"
@@ -11,5 +10,4 @@
       - definition: Their vision.
       - 'button "Keep mine About this roadmap: Vision"'
       - 'button "Use theirs About this roadmap: Vision"'
-  - paragraph: Someone else has removed or changed “Example card with every column”, so your changes to it couldn't be kept.
-  - paragraph: Your other changes are kept in this tab.
+  - button "Close"

@@ -101,8 +101,10 @@ auth.status.connecting  Connecting…
 ## Page notice
 
 **Shape:** one sentence, about 80 characters, confirming what the reader just
-did, or what blocked it, as a callout at the top of the page in view (DHCW's
-notification banner; there are no toasts). A failure stays until the next
+did, or what blocked it, as a callout in view (DHCW's notification banner; there
+are no toasts): at the top of the page, or, on a roadmap's page, at the foot of
+the screen for the outcome of publishing its changes, or of publishing or
+unpublishing the roadmap. A failure stays until the next
 attempt or the reader dismisses it. A confirmation clears itself after a few
 seconds (waiting while it is hovered or focused), or sooner on the next change
 or page, so write it to be read at a glance; the header's status keeps the
@@ -211,6 +213,20 @@ changes": each subject by name with its changed fields, then each new item by it
 title, with "New item" where an edit's changed fields go. Its confirm button repeats
 the step. "Publish roadmap" lists the same under its sentence about the changes that
 go public with it.
+
+The bar pinned at the foot of a roadmap's page shortens its buttons to the verb,
+"Publish" (or "Save") and "Discard", each the start of its accessible name, "Publish
+changes" and "Discard all changes", so a spoken command finds it (WCAG 2.5.3); the
+Welsh keeps the same order ("Cyhoeddi", "Cyhoeddi'r newidiadau").
+
+A refused publish says so in a notice at the foot ("Someone else has changed this
+roadmap too", "Nothing was published.") whose button names the next step, "Review
+the changes". The review, in a dialog, ends by saying where the reader stands:
+
+```
+roadmaps.publish.notice.refused.decided.publish      Every change is decided. Publish when you're ready.
+roadmaps.publish.notice.refused.nothingLeft.publish  Every change is decided. Nothing is left to publish.
+```
 
 ## Destructive question
 

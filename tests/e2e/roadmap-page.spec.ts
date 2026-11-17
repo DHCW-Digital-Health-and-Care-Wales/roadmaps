@@ -11,6 +11,7 @@ import {
   withTabRows,
 } from "./fixtures/fake-sheets"
 import { THEMES, tokenColour, useLanguage, useTheme } from "./fixtures/look"
+import { refreshRoadmap } from "./fixtures/roadmap-page"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 const ABOUT_HEADING = "About this roadmap"
@@ -219,7 +220,7 @@ test("Refresh reads the roadmap and its items again (S14)", async ({
     ["Placed work", "Now"],
     ["Work coming soon", "Next"],
   )
-  await page.getByRole("main").getByRole("button", { name: "Refresh" }).click()
+  await refreshRoadmap(page)
 
   await expect(titlesUnder(page, "Next")).toHaveText(["Work coming soon"])
   await expect(
@@ -385,7 +386,7 @@ for (const theme of THEMES) {
 
     // An item a co-lead adds shows after Refresh, in the panel's place.
     sheets.spreadsheet = withTabItems("ProductA", ["First work", "Now"])
-    await main.getByRole("button", { name: "Refresh" }).click()
+    await refreshRoadmap(page)
     await expect(titlesUnder(page, "Now")).toHaveText(["First work"])
     await expect(
       main.getByRole("heading", { name: "No items yet" }),

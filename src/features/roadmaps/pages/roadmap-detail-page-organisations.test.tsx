@@ -12,6 +12,7 @@ import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
 import { createInMemoryRoadmapRepository } from "../testing/in-memory-roadmap-repository"
+import { refreshRoadmap } from "../testing/roadmap-page"
 
 const roadmaps = [createTestRoadmap("producta", "Product A roadmap")]
 
@@ -172,7 +173,7 @@ describe("RoadmapDetailPage organisations (STY-032)", () => {
     await organisationsOf("Cross-border work")
     expect(listOrganisations).toHaveBeenCalledTimes(1)
 
-    await user.click(screen.getByRole("button", { name: "Refresh" }))
+    await refreshRoadmap(user)
 
     await vi.waitFor(() => {
       expect(listOrganisations).toHaveBeenCalledTimes(2)

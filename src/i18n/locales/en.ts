@@ -140,6 +140,8 @@ export const en = {
     title: "Your roadmaps",
     description: "Every roadmap, published or not.",
     refresh: "Refresh",
+    /** A roadmap's menu of its less frequent actions, in its title row (STY-052 D6). */
+    more: "More",
     loading: "Loading roadmaps…",
     count_zero: "No roadmaps",
     count_one: "{{count, number}} roadmap",
@@ -622,11 +624,22 @@ export const en = {
         publish: "Unpublished changes",
         save: "Changes to save",
       },
+      /** The buttons' names, and the publish dialog's and the review's buttons. */
       action: {
         publish: "Publish changes",
         save: "Save changes",
       },
-      discardAll: "Discard all",
+      /** The name of the foot bar's Discard. */
+      discardAll: "Discard all changes",
+      /**
+       * The foot bar's short labels (STY-052 D11): each is the start of its name,
+       * `action.*` or `discardAll`, so a spoken command finds it.
+       */
+      bar: {
+        publish: "Publish",
+        save: "Save",
+        discard: "Discard",
+      },
       discard: {
         title: "Discard all changes to this roadmap?",
         description:
@@ -706,6 +719,18 @@ export const en = {
           removed:
             "Someone else has removed or changed “{{title}}”, so your changes to it couldn't be kept.",
           otherKept: "Your other changes are kept in this tab.",
+          /** Opens the review in a dialog, from the notice at the foot (STY-052 D12). */
+          review: "Review the changes",
+          /** In the review, once every field is decided and changes are left (D16). */
+          decided: {
+            publish: "Every change is decided. Publish when you're ready.",
+            save: "Every change is decided. Save when you're ready.",
+          },
+          /** In the review, once every field is decided and nothing is left (D22). */
+          nothingLeft: {
+            publish: "Every change is decided. Nothing is left to publish.",
+            save: "Every change is decided. Nothing is left to save.",
+          },
         },
       },
     },

@@ -19,6 +19,7 @@ import {
   confirmRoadmapEdit,
   openEditRoadmapDialog,
 } from "../testing/roadmap-dialog"
+import { openMore } from "../testing/roadmap-page"
 
 // A dialog that publishes shows what it asked until it has gone (DEF-010).
 
@@ -308,10 +309,10 @@ describe("A publish roadmap's dialog and outcome belong to its roadmap (DEF-014)
       release()
       await released
     })
-    const unpublish = await main().findByRole("button", {
-      name: "Unpublish roadmap",
-    })
-    expect(unpublish).toHaveAttribute("aria-disabled", "false")
+    const menu = await openMore(user)
+    expect(
+      within(menu).getByRole("menuitem", { name: "Unpublish roadmap" }),
+    ).not.toHaveAttribute("aria-disabled", "true")
     expect(main().queryByText(/is published/)).toBeNull()
   })
 })

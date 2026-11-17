@@ -21,6 +21,12 @@ import {
 } from "../testing/in-memory-roadmap-repository"
 import { confirmItemEdit, openEditItemDialog } from "../testing/item-dialog"
 import { expectOpeningFocus } from "../testing/opening-focus"
+import {
+  closeConflictReview,
+  findRefusal,
+  openConflictReview,
+  refreshRoadmap,
+} from "../testing/roadmap-page"
 
 const roadmaps = [createTestRoadmap("producta", "Product A roadmap")]
 
@@ -667,7 +673,7 @@ describe("Editing an item's tags (STY-037)", () => {
 
     await publish(user)
 
-    const review = await main().findByRole("alert")
+    const review = await openConflictReview(user)
     const conflict = within(within(review).getByRole("listitem"))
     expect(conflict.getByText(/: /, { selector: "p" })).toHaveTextContent(
       "Video clinics: Tags",
@@ -684,6 +690,7 @@ describe("Editing an item's tags (STY-037)", () => {
     await user.click(
       conflict.getByRole("button", { name: "Keep mine Video clinics: Tags" }),
     )
+    await closeConflictReview(user, review)
     expect(tagsLineOf("Video clinics")).toBe(
       "Patients, Video consultations, Carers",
     )
@@ -706,7 +713,7 @@ describe("Editing an item's tags (STY-037)", () => {
       }
     })
 
-    await user.click(main().getByRole("button", { name: "Refresh" }))
+    await refreshRoadmap(user)
 
     await vi.waitFor(() => {
       expect(within(card("Video clinics")).queryByText("Changed")).toBeNull()
@@ -976,8 +983,12 @@ describe("An item with Welsh tags (STY-037 S20, S22)", () => {
     })
 
     await publish(user)
+    await findRefusal()
+    expect(
+      main().getByRole("button", { name: "Publish changes" }),
+    ).toHaveAttribute("aria-disabled", "true")
 
-    const review = await main().findByRole("alert")
+    const review = await openConflictReview(user)
     const conflict = within(within(review).getByRole("listitem"))
     expect(conflict.getByText(/: /, { selector: "p" })).toHaveTextContent(
       "English only: Tags",
@@ -990,9 +1001,6 @@ describe("An item with Welsh tags (STY-037 S20, S22)", () => {
     expect(conflict.queryByRole("button", { name: /^Keep mine/ })).toBeNull()
     expect(conflict.queryByRole("button", { name: /^Use theirs/ })).toBeNull()
     expect(within(review).queryByText(/^Choose which to keep/)).toBeNull()
-    expect(
-      main().getByRole("button", { name: "Publish changes" }),
-    ).toHaveAttribute("aria-disabled", "true")
     expect((await repository.listRoadmapItems("producta"))[2]?.tags).toEqual([
       { en: "Patients", cy: "Cleifion" },
     ])
@@ -1002,6 +1010,7 @@ describe("An item with Welsh tags (STY-037 S20, S22)", () => {
         name: "Discard my change English only: Tags",
       }),
     )
+    await closeConflictReview(user, review)
 
     expect(main().queryByRole("alert")).toBeNull()
     expect(main().queryByText("Changed")).toBeNull()

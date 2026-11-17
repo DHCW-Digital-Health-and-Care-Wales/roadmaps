@@ -1,0 +1,4 @@
+- alert:
+  - text: Someone else has changed this roadmap too
+  - paragraph: Nothing was published.
+  - button "Review the changes"

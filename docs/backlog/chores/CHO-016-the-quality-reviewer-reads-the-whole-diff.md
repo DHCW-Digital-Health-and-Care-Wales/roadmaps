@@ -1,7 +1,7 @@
 # CHO-016: The quality reviewer reads the whole diff in one pass
 
-- **Status**: In progress — S1 in the backlog triage PR; S2 has measured one of its two
-  deliveries, STY-051, in Delivery
+- **Status**: In progress — S1 in the backlog triage PR; S2 measured STY-051 (Delivery);
+  three earlier reviews over 100,000 characters after D1 went unmeasured
 - **Type**: Chore
 - **Area**: Docs (agent definitions and skills)
 - **Epic**: standalone
@@ -116,22 +116,28 @@ option of Q1 to try next
 
 **STY-051** ([#128](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/128)):
 round 1 over `25079d1..94b0063`, 41 files, 3,708 lines and 164,582 characters; the
-re-check over `94b0063..98a107d`, 535 lines. From the reviewer session logs; tokens are
-the runtime's total for each reviewer.
+re-check over `94b0063..98a107d`, 535 lines. Durations and tokens are the runtime's
+totals in the delivery session's results for each reviewer; what each read is from the
+reviewer session logs.
 
 - **Round 1** (`claude-sonnet-5-5`, effort high): 2.7 min, 125.8k tokens. It had no
   saved output to open: it wrote the diff to five files and read each from its first
-  line to its last. It reported nothing unread, and its log agrees: the archived story
-  record, outside those files, it read as the old file's removal and the new file's
-  lines 1–25 and 190–302, which hold every changed line. Findings: 2 🟡 and 4 💭, all
-  fixed.
-- **Re-check** (same model and effort): 0.6 min, 42.7k tokens. It wrote its diff to one
-  file and read it whole; it reported nothing unread, and its log agrees. Findings: 2 💭,
-  fixed.
-- **Outcome**: the first pass left nothing unread, so no second pass ran and D1's trial
-  continues. Beside it, the Opus correctness reviewer took 3.3 min and 130.4k
-  tokens over the same round 1 diff.
-- **Not measured here**: DEF-015
+  line to its last, and read CHO-019 and `write-failure-message.test.ts`, outside them,
+  whole. Git shows the story record's move to `_archive/` as a removal and an addition;
+  the reviewer read the removal and the added file's lines 1–25 and 190–302, which hold
+  every line that differs from the old file. It reported nothing unread, and its log
+  agrees. Findings: 2 🟡 and 4 💭, all fixed.
+- **Re-check** (same model and effort): 0.6 min, 42.7k tokens. It had no saved output
+  to open: it wrote its diff to one file and read it whole. It reported nothing unread,
+  and its log agrees. Findings: 2 💭, fixed.
+- **Outcome**: the first pass left nothing unread, so no second pass ran. Beside it, the
+  Opus correctness reviewer took 3.3 min and 130.4k tokens over the same round 1 diff.
+- **Not measured**: three quality reviews over more than 100,000 characters ran
+  after D1 and before STY-051, their sessions outside this evidence: DEF-015
   ([#115](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/115),
-  203,411 characters of diff) merged after D1 and before STY-051; its review sessions are
-  outside this evidence, so whether it is one of S2's two is the owner's call.
+  203,411 characters); the reordering UX prototypes
+  ([#118](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/118),
+  round 1 at `607d1a0`, 330,720); and CHO-009's fresh pass
+  ([#120](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/120),
+  at `ea1d47a`, 100,417). So STY-051 may not be one of S2's two; which two count, and
+  whether D1's trial still stands, is the owner's call.

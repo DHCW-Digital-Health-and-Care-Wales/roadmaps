@@ -1,7 +1,8 @@
 # CHO-016: The quality reviewer reads the whole diff in one pass
 
-- **Status**: In progress — S1 in the backlog triage PR; S2 measured STY-051 (Delivery),
-  and three earlier reviews over 100,000 characters after D1 are still unmeasured
+- **Status**: In progress — S1 in the backlog triage PR; S2 measured STY-051 and STY-050
+  (Delivery), each read whole in one pass, and three earlier reviews over 100,000
+  characters after D1 are still unmeasured
 - **Type**: Chore
 - **Area**: Docs (agent definitions and skills)
 - **Epic**: standalone
@@ -142,3 +143,23 @@ reviewer session logs.
   at `ea1d47a`, 100,417). By S2's "next two", their measurement is outstanding, not
   STY-051's; counting STY-051 in their place, or leaving D1's trial as it stands, takes
   an owner decision in Decisions.
+
+**STY-050** ([#130](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/130)):
+round 1 over `3f309cc..2c4fc7c`, 68 files, 8,150 lines and 342,827 characters; the
+re-check over `2c4fc7c..c5dd96c`, 2,310 lines and 106,597 characters. The sources are
+STY-051's.
+
+- **Round 1** (`claude-sonnet-5-5`, effort high): 5.1 min, 255.9k tokens. It had no
+  saved output to open: it wrote the diff to one file and read it in 15 consecutive
+  ranges, from its first line to its last. It reported nothing unread, and its log
+  agrees. Findings: 2 🟡 and 7 💭, all fixed bar one name kept on purpose.
+- **Re-check** (same model and effort): 2.2 min, 100.6k tokens. It had no saved output
+  to open: it wrote its diff to one file and read it whole in four ranges. It reported
+  nothing unread, and its log agrees. Findings: 3 💭, two fixed and one declined.
+- **Outcome**: the first pass left nothing unread, so no second pass ran. Beside it, the
+  Opus correctness reviewer took 12.8 min and 208.8k tokens over the same round 1 diff
+  and reported most of the test files' changes and `published-state.ts` unread; a
+  second Opus reviewer read them in 3.3 min and 158.8k tokens and found a P2 there.
+  That lane is out of this record's scope.
+- **Not measured**: the same three reviews as STY-051's. Counting STY-051 and STY-050
+  in their place is still the owner's decision.

@@ -180,7 +180,10 @@ announced and shown in view, and focus goes to it as it does today
   "sticks and slims as the page scrolls" is built as a row that scrolls with the page
   until it has gone, then reappears slim across the top. Its place keeps the height it
   had, so nothing below it moves as it sticks or lets go, which a row slimming while
-  stuck would do, and could repeat on the scroll that the move itself causes.
+  stuck would do, and could repeat on the scroll that the move itself causes. Its place
+  keeps the height measured as it stuck: should the row change while stuck ("Publish
+  roadmap" leaving it once published), the page moves once, by that change, as the row
+  lets go.
 - **The stuck row drops the badges** (agent): stuck, the row holds the title and its
   buttons, as the prototypes draw it; Not published, the list-mismatch badges and
   Changed stay at the page's top.

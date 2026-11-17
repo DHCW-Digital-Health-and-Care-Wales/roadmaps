@@ -39,14 +39,13 @@ working order, and grade and report findings as it sets.
   focus management in `AppShell` (focus moves to `<main>` after in-app
   navigation, and when the focused control inside `<main>` is removed; the skip
   link focuses `<main>` because hash history owns the fragment), menu and dialog
-  keyboard behavior, contrast in light and dark and
+  keyboard behavior, contrast in light and dark, and
   `prefers-reduced-motion`. Components under `components/ui/` stay close to
   upstream shadcn (Base UI flavour, no Radix); hand-rolled competing primitives
   are a finding.
-- **Responsive layout.** Hold a changed screen at 375 px and 200% zoom, and a
-  changed row of controls at the widths
-  `.agents/skills/implement-story/references/validation.md` sets for visible UI:
-  overflow arrives where a breakpoint brings in the wider layout with the least
-  room, and Welsh labels run longest. A stuck or pinned bar runs off screen
-  without widening the page, so a `scrollWidth` check passes over it; its
-  evidence is as `tests/e2e/AGENTS.md` sets.
+- **Responsive layout.** Check a changed screen at 375 px and 200% zoom, and a
+  changed row of controls in Welsh at the widths
+  `.agents/skills/implement-story/references/validation.md` sets for visible UI,
+  where each wider layout arrives at its narrowest. For a stuck or pinned bar,
+  whose overflow a `scrollWidth` check misses, the evidence is as
+  `tests/e2e/AGENTS.md` sets.

@@ -334,7 +334,9 @@ for (const { width, language, placement, publish } of [
     await expect(row.getByRole("button", { name: publish })).toBeVisible()
 
     for (const control of await row.getByRole("button").all()) {
-      await expect(control).toBeInViewport({ ratio: 1 })
+      await expect(control, await control.innerText()).toBeInViewport({
+        ratio: 1,
+      })
     }
     expect(
       await page.evaluate(

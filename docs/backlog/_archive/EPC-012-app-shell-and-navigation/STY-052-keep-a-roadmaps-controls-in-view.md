@@ -9,6 +9,7 @@
 - **Binding ADRs**: ADR-012, ADR-010, ADR-008, ADR-005
 - **Suggested model**: Opus — sticky layout against focus, zoom, dialogs and Welsh
   widths, and the publish flow's focus rules
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/138
 
 ## Summary
 

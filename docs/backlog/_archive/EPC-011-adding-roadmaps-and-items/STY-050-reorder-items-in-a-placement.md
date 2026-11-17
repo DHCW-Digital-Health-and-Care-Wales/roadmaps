@@ -8,7 +8,7 @@
 - **Binding ADRs**: ADR-012, ADR-014, ADR-011, ADR-002, ADR-008
 - **Suggested model**: Opus — an order as a pending edit, its conflicts, and moving
   rows in a tab a co-lead may be editing
-- **Delivered**: _(its PR, added once it is open)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/130
 
 ## Summary
 

@@ -148,8 +148,6 @@ export const cy = {
     lists: {
       outOfStep: "Yn wahanol i'w deulu neu gategori",
       familyNotListed: "Teulu heb ei restru",
-      family: "Teulu: {{name}}",
-      category: "Categori: {{name}}",
       match: {
         /** Beside a family the list doesn't have, which "Make it match" can't fix (S3). */
         chooseFamily: "Dewiswch ei deulu o dan Ynglŷn â'r map trywydd hwn.",
@@ -202,7 +200,7 @@ export const cy = {
       },
       added: "Cafodd {{title}} ei ychwanegu. Dydy e ddim wedi'i gyhoeddi eto.",
     },
-    card: {
+    facts: {
       productLead: "Arweinydd cynnyrch: {{name}}",
       updated: "Diweddarwyd {{date}}",
     },
@@ -237,9 +235,35 @@ export const cy = {
         productLead: "Arweinydd cynnyrch",
         vision: "Gweledigaeth",
         serviceDescription: "Disgrifiad o'r gwasanaeth",
+        family: "Teulu",
+        category: "Categori",
         lastUpdated: "Diweddarwyd ddiwethaf",
       },
+      showMore: "Dangos mwy",
+      showLess: "Dangos llai",
       noDate: "Dim dyddiad",
+    },
+    jumpTo: {
+      menu: "Neidio i",
+      current: "Neidio i: {{name}}",
+      links: "Gorwelion ac adrannau",
+      target_zero: "{{name}}, dim eitemau",
+      target_one: "{{name}}, {{count, number}} eitem",
+      target_two: "{{name}}, {{count, number}} eitem",
+      target_few: "{{name}}, {{count, number}} eitem",
+      target_many: "{{name}}, {{count, number}} eitem",
+      target_other: "{{name}}, {{count, number}} o eitemau",
+      targetPending_zero: "{{name}}, dim eitemau, newidiadau heb eu cyhoeddi",
+      targetPending_one:
+        "{{name}}, {{count, number}} eitem, newidiadau heb eu cyhoeddi",
+      targetPending_two:
+        "{{name}}, {{count, number}} eitem, newidiadau heb eu cyhoeddi",
+      targetPending_few:
+        "{{name}}, {{count, number}} eitem, newidiadau heb eu cyhoeddi",
+      targetPending_many:
+        "{{name}}, {{count, number}} eitem, newidiadau heb eu cyhoeddi",
+      targetPending_other:
+        "{{name}}, {{count, number}} o eitemau, newidiadau heb eu cyhoeddi",
     },
     items: {
       loading: "Wrthi'n llwytho eitemau'r map trywydd…",

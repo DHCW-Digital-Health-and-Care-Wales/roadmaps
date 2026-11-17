@@ -15,7 +15,12 @@ import {
   withTabRows,
 } from "./fixtures/fake-sheets"
 import { useLanguage } from "./fixtures/look"
-import { openConflictReview, refusal } from "./fixtures/roadmap-page"
+import {
+  aboutField,
+  openAbout,
+  openConflictReview,
+  refusal,
+} from "./fixtures/roadmap-page"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 /**
@@ -280,12 +285,14 @@ function changedCells(
   ]
 }
 
-/** Edits the roadmap's English vision in the roadmap dialog. */
+/** Edits the roadmap's English vision in the roadmap dialog, leaving About open. */
 async function editVision(page: Page, to: string) {
   const dialog = await openEditRoadmapDialog(page)
   await dialog.getByRole("textbox", { name: "Vision" }).fill(to)
   await dialog.getByRole("button", { name: "Done" }).click()
-  await expect(page.getByRole("main").getByText(to)).toBeVisible()
+  // The vision shows in About once opened, and stays open.
+  const about = await openAbout(page)
+  await expect(about.getByText(to)).toBeVisible()
 }
 
 test.describe("a co-lead's change (STY-026)", () => {
@@ -462,15 +469,16 @@ test.describe("a family and category (STY-028)", () => {
     await dialog.getByRole("button", { name: "Done" }).click()
 
     const main = page.getByRole("main")
-    const line = main.getByText("Family: Medicines & Diagnostics")
-    await expect(line).toBeVisible()
-    await expect(line.locator("xpath=../..").locator("span[style]")).toHaveCSS(
+    const about = await openAbout(page)
+    const family = aboutField(about, "Family")
+    await expect(family).toContainText("Medicines & Diagnostics")
+    await expect(family.locator("span[style]").first()).toHaveCSS(
       "background-color",
       "rgb(0, 103, 71)",
     )
-    await expect(
-      main.getByText("Category: Tests, Scans & Results"),
-    ).toBeVisible()
+    await expect(aboutField(about, "Category")).toHaveText(
+      "Tests, Scans & Results",
+    )
     await expect(main.getByText("2 unpublished changes")).toBeVisible()
     expect(sheets.writes).toEqual([])
 
@@ -486,7 +494,7 @@ test.describe("a family and category (STY-028)", () => {
       Category: "Tests, Scans & Results",
       "Category ID": "w7vrv5kn",
     })
-    await expect(line).toBeVisible()
+    await expect(family).toContainText("Medicines & Diagnostics")
   })
 
   test("No family blanks its names, keeping the colour (S2)", async ({

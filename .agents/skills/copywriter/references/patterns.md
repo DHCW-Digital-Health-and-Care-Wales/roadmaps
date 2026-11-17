@@ -203,6 +203,25 @@ roadmaps.edit.order.changed        Order changed
 roadmaps.edit.order.undone         Order of {{placement}} undone
 ```
 
+## Placement navigation
+
+**Shape:** a menu button named for what it does, gaining the place it is at once there
+is one ("Jump to", then "Jump to: Later"); each entry names a placement by its page
+heading. What an entry shows as marks (its count, a dot while a change is pending) a
+screen reader reads as one phrase from one plural key, never pieced together from
+visible parts:
+
+```
+roadmaps.jumpTo.current             Jump to: {{name}}
+roadmaps.jumpTo.target_zero         {{name}}, no items
+roadmaps.jumpTo.target_one          {{name}}, {{count, number}} item
+roadmaps.jumpTo.targetPending_zero  {{name}}, no items, unpublished changes
+roadmaps.jumpTo.targetPending_one   {{name}}, {{count, number}} item, unpublished changes
+```
+
+An empty placement still has a count, so both `target` and `targetPending` have
+`_zero`.
+
 ## Publish and save
 
 **Shape:** "Publish changes" on a published roadmap, "Save changes" on one that is
@@ -307,7 +326,7 @@ roadmaps.countWithUnpublished   $t(roadmaps.count, …), $t(roadmaps.unpublished
 
 **Shape:** a badge is a short noun phrase for a state the reader must not miss
 ("Not published"), never colour alone; a fact line is a label and its value in one key
-(`roadmaps.card.productLead`: "Product lead: {{name}}"), shown only when the roadmap has
+(`roadmaps.facts.productLead`: "Product lead: {{name}}"), shown only when the roadmap has
 it, so no card carries an empty label. A date is written out from the catalogue's month
 names (`formatCalendarDate`), never numerically.
 

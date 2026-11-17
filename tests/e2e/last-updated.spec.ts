@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test"
 
 import { openEditRoadmapDialog } from "./fixtures/dialogs"
+import { openAbout } from "./fixtures/roadmap-page"
 import { connect, expect, test } from "./fixtures/test"
 
 /**
@@ -34,7 +35,7 @@ test("publishes a date picked in the roadmap dialog as YYYY-MM-DD text (S2, S8)"
 }) => {
   await open(page, "productb", "Product B roadmap")
   const main = page.getByRole("main")
-  const about = main.getByRole("region", { name: "About this roadmap" })
+  const about = await openAbout(page)
   await expect(about).toContainText("Last updated15 September 2026")
 
   const editing = await openEditRoadmapDialog(page)
@@ -129,9 +130,8 @@ test.describe("today, by the browser's clock (D11)", () => {
     await expect(
       main.getByText(/^Product C roadmap is published\./),
     ).toBeVisible()
-    await expect(
-      main.getByRole("region", { name: "About this roadmap" }),
-    ).toContainText("Last updated2 July 2026")
+    const about = await openAbout(page)
+    await expect(about).toContainText("Last updated2 July 2026")
     expect(sheets.writes).toHaveLength(1)
     const [index] = sheets.spreadsheet
     expect(indexCell(index?.rows, "ProductC", "Enabled")).toBe("Yes")

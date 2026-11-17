@@ -10,6 +10,10 @@ import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 
 import { useItemCardKeys } from "../components/item-card-keys"
 import {
+  groupRoadmapItems,
+  type RoadmapItemGroups,
+} from "../group-roadmap-items"
+import {
   applyItemChanges,
   editItem,
   matchItemChanges,
@@ -91,6 +95,21 @@ export function usePageItems(
       }),
     ]
   }, [items, changes, keys])
+}
+
+/**
+ * The page's items by placement, each where it shows and in the order it shows there
+ * (`groupRoadmapItems`): an item a pending move puts elsewhere shows there (STY-031),
+ * after the others, by its `turn`.
+ */
+export function groupPageItems(
+  pageItems: readonly PageItem[],
+): RoadmapItemGroups<PageItem> {
+  return groupRoadmapItems(
+    pageItems,
+    ({ shown }) => shown.placement,
+    ({ turn }) => turn,
+  )
 }
 
 /**

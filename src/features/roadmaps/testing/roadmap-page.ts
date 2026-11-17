@@ -6,9 +6,10 @@ import { expectOpeningFocus } from "./opening-focus"
 
 type User = ReturnType<typeof userEvent.setup>
 
-// A roadmap's page as STY-052 shaped it: Refresh and "Unpublish roadmap" (or "Publish
-// roadmap" on a phone's stuck row) in the title row's More, and a publish someone else's
-// changes stopped reviewed in a dialog, opened from its notice at the foot.
+// A roadmap's page as STY-052 and STY-053 shaped it: Refresh and "Unpublish roadmap" (or
+// "Publish roadmap" on a phone's stuck row) in the title row's More, a publish someone
+// else's changes stopped reviewed in a dialog, opened from its notice at the foot, and
+// "About this roadmap" folded to one line until its "Show more".
 
 /** The title row's More, which opens the menu. */
 export function moreButton(): HTMLElement {
@@ -72,4 +73,30 @@ export async function closeConflictReview(user: User, review: HTMLElement) {
   await waitFor(() => {
     expect(review).not.toBeInTheDocument()
   })
+}
+
+/** "About this roadmap", once it has been read. */
+function findAbout(): Promise<HTMLElement> {
+  return screen.findByRole("region", { name: /About this roadmap|Ynglŷn/ })
+}
+
+/**
+ * Opens "About this roadmap" with its "Show more", unless it is open already, and
+ * returns it, its fields shown.
+ */
+export async function openAbout(user: User): Promise<HTMLElement> {
+  const about = await findAbout()
+  const showMore = within(about).queryByRole("button", {
+    name: /Show more|Dangos mwy/,
+  })
+  if (showMore) await user.click(showMore)
+  return about
+}
+
+/** What the opened About shows under `term`, or null when it has no such field. */
+export function aboutField(about: HTMLElement, term: string): Element | null {
+  return (
+    within(about).queryByText(term, { selector: "dt" })?.nextElementSibling ??
+    null
+  )
 }

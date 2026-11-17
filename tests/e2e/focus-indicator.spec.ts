@@ -8,6 +8,7 @@ import {
   openEditRoadmapDialog,
 } from "./fixtures/dialogs"
 import { EXAMPLE_SPREADSHEET_WITH_LISTS } from "./fixtures/fake-sheets"
+import { tabTo } from "./fixtures/keyboard"
 import {
   holdConnectedNotice,
   THEMES,
@@ -104,19 +105,6 @@ function describeElement(element: Element) {
       .join(" ")
   const text = name.trim() || element.textContent.trim()
   return `${region ?? "page"}: ${element.tagName.toLowerCase()} ${text}`
-}
-
-/** Presses Tab (or Shift+Tab, backwards) until `target` has focus, as a keyboard user would. */
-async function tabTo(page: Page, target: Locator, key = "Tab") {
-  for (let presses = 0; presses < 20; presses += 1) {
-    await page.keyboard.press(key)
-    if (
-      await target.evaluate((element) => element === document.activeElement)
-    ) {
-      return
-    }
-  }
-  throw new Error("Tabbing never reached the target")
 }
 
 /** The links and form controls a keyboard can use. */
@@ -302,6 +290,14 @@ for (const theme of THEMES) {
       // And one new item: its card's Remove (STY-046).
       await addItem(page, "Choose a clinic closer to home", "Next")
       await expect(main.getByText("2 unpublished changes")).toBeVisible()
+      // From the page's top, as the tour's stops are named: "Jump to" names the
+      // placement the page has scrolled into (STY-053 S3).
+      await page.evaluate(() => {
+        window.scrollTo(0, 0)
+      })
+      await expect(
+        main.getByRole("button", { name: "Jump to", exact: true }),
+      ).toBeVisible()
 
       await expectEveryStopShowsAnIndicator(page)
     })

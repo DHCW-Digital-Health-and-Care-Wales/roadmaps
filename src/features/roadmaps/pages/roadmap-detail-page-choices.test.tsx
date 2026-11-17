@@ -30,7 +30,9 @@ import {
   openEditRoadmapDialog,
 } from "../testing/roadmap-dialog"
 import {
+  aboutField,
   closeConflictReview,
+  openAbout,
   openConflictReview,
   refreshRoadmap,
 } from "../testing/roadmap-page"
@@ -107,9 +109,10 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
     await user.selectOptions(family, MEDICINES_AND_DIAGNOSTICS.id)
     await confirmRoadmapEdit(user)
 
-    const line = main().getByText("Family: Medicines & Diagnostics")
-    // The family line's swatch sits before its text.
-    expect(line.parentElement?.previousElementSibling).toHaveStyle({
+    const shownFamily = aboutField(await openAbout(user), "Family")
+    expect(shownFamily).toHaveTextContent("Medicines & Diagnostics")
+    // The family's swatch sits before its name.
+    expect(shownFamily?.firstElementChild).toHaveStyle({
       backgroundColor: MEDICINES_AND_DIAGNOSTICS.colour,
     })
     expect(main().getByText("1 unpublished change")).toBeInTheDocument()
@@ -133,7 +136,9 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
     ])
     await confirmRoadmapEdit(user)
 
-    expect(main().getByText("Family: Legacy family")).toBeInTheDocument()
+    expect(aboutField(await openAbout(user), "Family")).toHaveTextContent(
+      "Legacy family",
+    )
     expect(main().queryByText(/unpublished change/)).toBeNull()
   })
 
@@ -161,7 +166,8 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
     )
     vi.spyOn(repository, "listRoadmaps").mockImplementation(held)
 
-    // The dialog is modal, so the Refresh is asked for before it opens, and read after.
+    // The dialog is modal, so About is opened, and the Refresh asked for, before it opens.
+    const about = await openAbout(user)
     await refreshRoadmap(user)
     const form = await openEditRoadmapDialog(user)
     const family = await select(form, "Family")
@@ -170,12 +176,16 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
       release()
       await released
     })
-    await screen.findByText("Family: Single Record")
+    await vi.waitFor(() => {
+      expect(aboutField(about, "Family")).toHaveTextContent("Single Record")
+    })
 
     expect(family).toHaveValue(UNLISTED_FAMILY)
     expect(optionsOf(family)).toContain("Legacy family (not listed)")
     await confirmRoadmapEdit(user)
-    expect(main().getByText("Family: Single Record")).toBeInTheDocument()
+    expect(aboutField(await openAbout(user), "Family")).toHaveTextContent(
+      "Single Record",
+    )
     expect(main().queryByText(/unpublished change/)).toBeNull()
   })
 
@@ -222,7 +232,7 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
     await user.selectOptions(category, "No category")
     await confirmRoadmapEdit(user)
 
-    expect(main().queryByText(/^Category:/)).toBeNull()
+    expect(aboutField(await openAbout(user), "Category")).toBeNull()
     expect(main().getByText("1 unpublished change")).toBeInTheDocument()
   })
 
@@ -245,9 +255,9 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
     await vi.waitFor(() => {
       expect(main().queryByText(/unpublished change/)).toBeNull()
     })
-    expect(
-      main().getByText("Family: Medicines & Diagnostics"),
-    ).toBeInTheDocument()
+    expect(aboutField(await openAbout(user), "Family")).toHaveTextContent(
+      "Medicines & Diagnostics",
+    )
   })
 
   it("holds the family at its value while the list is read", async () => {
@@ -360,12 +370,13 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
     }
     await closeConflictReview(user, review)
 
-    expect(
-      main().getByText("Family: Medicines & Diagnostics"),
-    ).toBeInTheDocument()
-    expect(
-      main().getByText("Category: Tests, Scans & Results"),
-    ).toBeInTheDocument()
+    const about = await openAbout(user)
+    expect(aboutField(about, "Family")).toHaveTextContent(
+      "Medicines & Diagnostics",
+    )
+    expect(aboutField(about, "Category")).toHaveTextContent(
+      "Tests, Scans & Results",
+    )
     expect(main().queryByText(/unpublished change/)).toBeNull()
   })
 })

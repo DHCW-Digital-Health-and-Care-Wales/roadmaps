@@ -159,8 +159,6 @@ export const en = {
     lists: {
       outOfStep: "Doesn't match its family or category",
       familyNotListed: "Family isn't listed",
-      family: "Family: {{name}}",
-      category: "Category: {{name}}",
       /** Fixing a roadmap whose copied family or category cells differ from the lists (STY-030). */
       match: {
         /** Beside a family the list doesn't have, which "Make it match" can't fix (S3). */
@@ -216,7 +214,8 @@ export const en = {
       /** On the new roadmap's page (S5). */
       added: "{{title}} was added. It isn't published yet.",
     },
-    card: {
+    /** A roadmap's facts, on its card and in "About this roadmap" while it is folded. */
+    facts: {
       productLead: "Product lead: {{name}}",
       updated: "Updated {{date}}",
     },
@@ -251,10 +250,37 @@ export const en = {
         productLead: "Product lead",
         vision: "Vision",
         serviceDescription: "Service description",
+        family: "Family",
+        category: "Category",
         lastUpdated: "Last updated",
       },
+      /** Unfolds the panel from its one line, and folds it again (STY-053 S6). */
+      showMore: "Show more",
+      showLess: "Show less",
       /** In place of the date, for a roadmap with none (STY-036 S1). */
       noDate: "No date",
+    },
+    /** A roadmap's placement navigation: the title row's menu and the links (STY-053). */
+    jumpTo: {
+      /** The menu button, before the page has reached a placement (D8). */
+      menu: "Jump to",
+      /** The menu button, naming the placement the page is in (S3). */
+      current: "Jump to: {{name}}",
+      /** Names the row of links under "About this roadmap". */
+      links: "Horizons and sections",
+      /**
+       * A placement or the unplaced items, for screen readers: its name, how many items
+       * it holds, and whether any has an unpublished change (S2).
+       */
+      target_zero: "{{name}}, no items",
+      target_one: "{{name}}, {{count, number}} item",
+      target_other: "{{name}}, {{count, number}} items",
+      /** A placement with no items is still marked while its order is pending. */
+      targetPending_zero: "{{name}}, no items, unpublished changes",
+      targetPending_one:
+        "{{name}}, {{count, number}} item, unpublished changes",
+      targetPending_other:
+        "{{name}}, {{count, number}} items, unpublished changes",
     },
     /** A roadmap's items, on its page. */
     items: {

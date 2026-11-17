@@ -1,7 +1,7 @@
 import type { RefetchOptions } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { LockKeyholeIcon, MapPinOffIcon } from "lucide-react"
-import { useCallback, useRef } from "react"
+import { useCallback, useMemo, useRef } from "react"
 import { useTranslation } from "react-i18next"
 
 import { BackLink } from "@/components/layout/back-link"
@@ -17,7 +17,6 @@ import { cn } from "@/lib/utils"
 
 import { AddedRoadmapNotice } from "../components/added-roadmap-notice"
 import { MatchListsAction } from "../components/match-lists-action"
-import { RoadmapFamilyLine } from "../components/roadmap-family-line"
 import { RoadmapTitleRow } from "../components/roadmap-title-row"
 import {
   RoadmapItems,
@@ -27,7 +26,7 @@ import {
 import { RoadmapsErrorState } from "../components/roadmaps-error-state"
 import { StatusPanel } from "../components/status-panel"
 import { EditableRoadmapAbout } from "../editing/editable-roadmap-about"
-import { usePageItems } from "../editing/page-items"
+import { groupPageItems, usePageItems } from "../editing/page-items"
 import {
   applyRoadmapChanges,
   hasChoiceChange,
@@ -41,6 +40,7 @@ import { PublishedStateNotice } from "../editing/published-state-notice"
 import { RoadmapPublishing } from "../editing/roadmap-publishing"
 import { useItemDialog } from "../editing/use-item-dialog"
 import { usePublishedState } from "../editing/use-published-state"
+import { hasGroupedItems } from "../group-roadmap-items"
 import { JOIN_READ } from "../hooks/roadmap-queries"
 import { useAddedRoadmapNotice } from "../hooks/use-added-roadmap"
 import { useOrganisations } from "../hooks/use-organisations"
@@ -48,6 +48,9 @@ import { isRoadmapGone, useRoadmapItems } from "../hooks/use-roadmap-items"
 import { useRoadmapLists } from "../hooks/use-roadmap-lists"
 import { useRoadmap } from "../hooks/use-roadmaps"
 import { useRoadmapsProblem } from "../hooks/use-roadmaps-problem"
+import { JumpToMenu } from "../placement-navigation/jump-to-menu"
+import { PlacementLinks } from "../placement-navigation/placement-links"
+import { usePlacementNavigation } from "../placement-navigation/use-placement-navigation"
 
 export interface RoadmapDetailPageProps {
   roadmapId: string
@@ -162,9 +165,10 @@ interface RoadmapViewProps {
 }
 
 /**
- * A listed roadmap: its title row, which sticks as the page scrolls (STY-052), its
- * family and category as they will be published (STY-028 S1), a notice when it was just
- * added (STY-041 S5), what it is about, then its items, each showing its pending English
+ * A listed roadmap: its title row, which sticks as the page scrolls (STY-052), a notice
+ * when it was just added (STY-041 S5), what it is about, folded to one line (STY-053
+ * S6), then, once its items are shown, a row of links to its placements, which "Jump
+ * to" in the title row reaches too (D5), and its items, each showing its pending English
  * (STY-025). At the foot of the screen, what publishing or unpublishing it came to
  * (STY-035, STY-052 D21) and its pending changes with Publish. The title stays whatever
  * happens to the items. It holds the page's one item dialog, which "Add an item" and
@@ -185,6 +189,14 @@ function RoadmapView({
   const shown = applyRoadmapChanges(roadmap, changes, lists.lists)
   const publishedState = usePublishedState(roadmap, items.data)
   const pageItems = usePageItems(roadmap.id, items.data)
+  const groups = useMemo(() => groupPageItems(pageItems), [pageItems])
+  const navigation = usePlacementNavigation(groups, changes?.orders)
+  // As the items area shows its placements, each with a heading to jump to: once both
+  // reads are in, with an item to show (`RoadmapItemsArea`, `RoadmapItems`).
+  const placementsShown =
+    items.data !== undefined &&
+    organisations.data !== undefined &&
+    hasGroupedItems(groups)
   const heading = useRef<HTMLHeadingElement>(null)
   const addItemButton = useRef<HTMLButtonElement>(null)
   const publishedStateNotice = useRef<HTMLDivElement>(null)
@@ -240,6 +252,7 @@ function RoadmapView({
           onAddItem={() => {
             itemDialog.add()
           }}
+          jumpTo={placementsShown && <JumpToMenu navigation={navigation} />}
         />
         {/* Next in the page's order, where it stays on a short screen: elsewhere it
             pins to the foot (STY-052 S6). */}
@@ -265,17 +278,19 @@ function RoadmapView({
           // Its own notice, or the refusal of the changes it sent (D21).
           notice={() => publishedStateNotice.current ?? publishNotice.current}
         />
-        <RoadmapFamilyLine roadmap={shown} />
         <MatchListsAction roadmap={roadmap} />
         {addedNotice.shown && (
           <AddedRoadmapNotice title={title} onDismiss={addedNotice.dismiss} />
         )}
       </div>
-      <EditableRoadmapAbout roadmap={roadmap} />
+      <div className="flex flex-col gap-4">
+        <EditableRoadmapAbout roadmap={roadmap} />
+        {placementsShown && <PlacementLinks navigation={navigation} />}
+      </div>
       <RoadmapItemsArea
         roadmapId={roadmap.id}
         listFetching={listFetching}
-        pageItems={pageItems}
+        groups={groups}
         itemDialog={itemDialog}
         onItemRemoved={focusAddItem}
       />
@@ -285,7 +300,7 @@ function RoadmapView({
 
 interface RoadmapItemsAreaProps extends Pick<
   RoadmapItemsProps,
-  "roadmapId" | "pageItems" | "itemDialog" | "onItemRemoved"
+  "roadmapId" | "groups" | "itemDialog" | "onItemRemoved"
 > {
   /** The roadmap list is being read, as it is again once the roadmap is gone (D11). */
   listFetching: boolean

@@ -21,7 +21,13 @@ import {
   type InMemoryRoadmapItems,
 } from "../testing/in-memory-roadmap-repository"
 import { expectOpeningFocus } from "../testing/opening-focus"
-import { moreButton, openMore, refreshRoadmap } from "../testing/roadmap-page"
+import {
+  aboutField,
+  moreButton,
+  openAbout,
+  openMore,
+  refreshRoadmap,
+} from "../testing/roadmap-page"
 
 // The roadmap's own text comes first, above the items.
 const ABOUT_HEADING = "About this roadmap"
@@ -733,8 +739,9 @@ describe("RoadmapDetailPage items", () => {
     expect(title.parentElement).toHaveTextContent(
       /^Product A roadmapDoesn't match its family or categoryFamily isn't listed$/,
     )
-    expect(main().getByText("Family: Single Record")).toBeInTheDocument()
-    expect(main().getByText("Category: Clinical")).toBeInTheDocument()
+    const about = await openAbout(userEvent.setup())
+    expect(aboutField(about, "Family")).toHaveTextContent("Single Record")
+    expect(aboutField(about, "Category")).toHaveTextContent("Clinical")
     unmount()
 
     await renderWithProviders({
@@ -748,11 +755,12 @@ describe("RoadmapDetailPage items", () => {
       await main().findByText("Yn wahanol i'w deulu neu gategori"),
     ).toBeInTheDocument()
     expect(main().getByText("Teulu heb ei restru")).toBeInTheDocument()
-    expect(main().getByText("Teulu: Cofnod Sengl")).toBeInTheDocument()
-    expect(main().getByText("Categori: Clinigol")).toBeInTheDocument()
+    const aboutCy = await openAbout(userEvent.setup())
+    expect(aboutField(aboutCy, "Teulu")).toHaveTextContent("Cofnod Sengl")
+    expect(aboutField(aboutCy, "Categori")).toHaveTextContent("Clinigol")
   })
 
-  it("shows no family line for a roadmap with neither a family nor a category (STY-027 S4)", async () => {
+  it("shows no family or category in About for a roadmap with neither a family nor a category (STY-027 S4)", async () => {
     await renderWithProviders({
       path: "/roadmaps/producta",
       authState: connected,
@@ -761,8 +769,9 @@ describe("RoadmapDetailPage items", () => {
     })
 
     await main().findByRole("heading", { level: 1, name: "Product A roadmap" })
-    expect(main().queryByText(/^Family: /)).not.toBeInTheDocument()
-    expect(main().queryByText(/^Category: /)).not.toBeInTheDocument()
+    const about = await openAbout(userEvent.setup())
+    expect(aboutField(about, "Family")).toBeNull()
+    expect(aboutField(about, "Category")).toBeNull()
   })
 
   it("says a roadmap removed since the list loaded is not found (S16)", async () => {

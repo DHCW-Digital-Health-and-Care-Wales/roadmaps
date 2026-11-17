@@ -34,7 +34,12 @@ import {
   openEditRoadmapDialog,
 } from "../testing/roadmap-dialog"
 import { expectOpeningFocus } from "../testing/opening-focus"
-import { chooseFromMore, refreshRoadmap } from "../testing/roadmap-page"
+import {
+  aboutField,
+  chooseFromMore,
+  openAbout,
+  refreshRoadmap,
+} from "../testing/roadmap-page"
 import { expectWriteHold, refreshHold } from "../testing/write-hold"
 
 const roadmaps: Roadmap[] = [
@@ -449,16 +454,14 @@ describe("adding a roadmap from the list (STY-041)", () => {
       expect(
         main().getByRole("button", { name: "Publish roadmap" }),
       ).toBeInTheDocument()
-      const about = within(
-        main().getByRole("region", { name: "About this roadmap" }),
+      const about = await openAbout(user)
+      expect(aboutField(about, "Product lead")).toHaveTextContent("Sam Evans")
+      expect(aboutField(about, "Family")).toHaveTextContent(
+        "Medicines & Diagnostics",
       )
-      expect(about.getByText("Sam Evans")).toBeInTheDocument()
-      expect(
-        main().getByText("Family: Medicines & Diagnostics"),
-      ).toBeInTheDocument()
-      expect(
-        main().getByText("Category: GP & Community Services"),
-      ).toBeInTheDocument()
+      expect(aboutField(about, "Category")).toHaveTextContent(
+        "GP & Community Services",
+      )
       expect(
         await main().findByRole("heading", { name: "No items yet" }),
       ).toBeInTheDocument()

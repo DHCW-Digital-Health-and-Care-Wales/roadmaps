@@ -4,7 +4,7 @@ import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { ROADMAP_PLACEMENTS } from "@/domain/roadmap/roadmap-placement"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 
-import { groupRoadmapItems } from "./group-roadmap-items"
+import { groupRoadmapItems, hasGroupedItems } from "./group-roadmap-items"
 
 const placementOf = ({ placement }: RoadmapItem) => placement
 
@@ -106,5 +106,27 @@ describe("groupRoadmapItems", () => {
       ["Moved second", 0],
       ["New", 5],
     ])
+  })
+})
+
+describe("hasGroupedItems", () => {
+  it("is false for no items, and true for one unplaced or one placed", () => {
+    const unplaced = createTestRoadmapItem("Soon", {
+      placement: null,
+      writtenHorizon: "Soon",
+    })
+
+    expect(hasGroupedItems(groupRoadmapItems([], placementOf))).toBe(false)
+    expect(hasGroupedItems(groupRoadmapItems([unplaced], placementOf))).toBe(
+      true,
+    )
+    expect(
+      hasGroupedItems(
+        groupRoadmapItems(
+          [createTestRoadmapItem("Later", { placement: "later" })],
+          placementOf,
+        ),
+      ),
+    ).toBe(true)
   })
 })

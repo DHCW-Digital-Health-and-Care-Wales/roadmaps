@@ -8,6 +8,7 @@ import {
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
 import { EXAMPLE_SPREADSHEET_WITH_LISTS } from "./fixtures/fake-sheets"
 import { useLanguage } from "./fixtures/look"
+import { aboutField, openAbout } from "./fixtures/roadmap-page"
 import { connect, expect, test } from "./fixtures/test"
 
 /**
@@ -76,14 +77,16 @@ test("a Product Lead edits About in the roadmap dialog, the edits pending until 
   // Pending: shown, tagged, undoable, not written.
   await expect(dialog).toBeHidden()
   const main = page.getByRole("main")
-  const about = main.getByRole("region", { name: "About this roadmap" })
   await expect(editRoadmapButton(page)).toBeFocused()
+  const about = await openAbout(page)
   await expect(about.getByText(VISION)).toBeVisible()
   await expect(about.getByText("Changed")).toBeVisible()
   await expect(
     about.getByRole("button", { name: "Undo changes About this roadmap" }),
   ).toBeEnabled()
-  await expect(main.getByText("Category: Tests, Scans & Results")).toBeVisible()
+  await expect(aboutField(about, "Category")).toHaveText(
+    "Tests, Scans & Results",
+  )
   await expect(main.getByText("2 unpublished changes")).toBeVisible()
   expect(sheets.writes).toEqual([])
 
@@ -128,7 +131,7 @@ test("Cancel and Escape close the dialog and drop what was typed, keeping the ed
   await expect(dialog).toBeHidden()
   await expect(editRoadmapButton(page)).toBeFocused()
 
-  const about = main.getByRole("region", { name: "About this roadmap" })
+  const about = await openAbout(page)
   await expect(about.getByText("Beta")).toBeVisible()
   await expect(about.getByText(VISION)).toBeVisible()
   await expect(main.getByText("1 unpublished change")).toBeVisible()
@@ -163,7 +166,7 @@ test("the dialog stays through the session warning and the session's end, and Do
 
   await expect(dialog).toBeHidden()
   const main = page.getByRole("main")
-  await expect(main.getByText(VISION)).toBeVisible()
+  await expect((await openAbout(page)).getByText(VISION)).toBeVisible()
   await expect(main.getByText("1 unpublished change")).toBeVisible()
   // Still on offer: it asks to reconnect first (STY-057).
   await expect(

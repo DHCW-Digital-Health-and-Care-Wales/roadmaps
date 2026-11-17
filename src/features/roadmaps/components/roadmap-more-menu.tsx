@@ -1,5 +1,5 @@
 import { ChevronDownIcon, RefreshCwIcon } from "lucide-react"
-import { useRef, useState } from "react"
+import { useRef } from "react"
 import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useSessionAction } from "@/features/auth/session-action"
+import { useMenuChoice } from "@/lib/use-menu-choice"
 import { cn } from "@/lib/utils"
 
 import { publishedStateAction } from "../editing/published-state-action"
@@ -42,16 +43,14 @@ export function RoadmapMoreMenu({
     publishedState?.ask()
   })
   const actions = { refresh, publishedState: askPublishedState }
-  const [chosen, setChosen] = useState<keyof typeof actions | null>(null)
+  const { choose, onOpenChangeComplete } = useMenuChoice(
+    (chosen: keyof typeof actions) => {
+      actions[chosen](trigger.current)
+    },
+  )
 
   return (
-    <DropdownMenu
-      onOpenChangeComplete={(open) => {
-        if (open || !chosen) return
-        setChosen(null)
-        actions[chosen](trigger.current)
-      }}
-    >
+    <DropdownMenu onOpenChangeComplete={onOpenChangeComplete}>
       <DropdownMenuTrigger
         ref={trigger}
         aria-busy={fetching}
@@ -71,7 +70,7 @@ export function RoadmapMoreMenu({
         <DropdownMenuItem
           disabled={fetching}
           onClick={() => {
-            setChosen("refresh")
+            choose("refresh")
           }}
         >
           <RefreshCwIcon
@@ -84,7 +83,7 @@ export function RoadmapMoreMenu({
           <PublishedStateItem
             state={publishedState}
             onChoose={() => {
-              setChosen("publishedState")
+              choose("publishedState")
             }}
           />
         )}

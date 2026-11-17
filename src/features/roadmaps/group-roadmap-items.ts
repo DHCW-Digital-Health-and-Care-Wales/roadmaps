@@ -44,3 +44,11 @@ export function groupRoadmapItems<T>(
     })),
   }
 }
+
+/** Whether `groups` holds any item, unplaced or in a placement. */
+export function hasGroupedItems({
+  unplaced,
+  placements,
+}: RoadmapItemGroups<unknown>): boolean {
+  return unplaced.length > 0 || placements.some(({ items }) => items.length > 0)
+}

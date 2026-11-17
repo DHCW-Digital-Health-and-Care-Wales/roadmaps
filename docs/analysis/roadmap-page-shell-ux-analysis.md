@@ -273,13 +273,14 @@ failed publish.
   (theme, Disconnect), without "Google connected" or "Connected to Google"; and a phone's
   sticky strip starts with the navigation's menu button, which at the page's top sits at
   the left of the navy top bar (STY-054 D9, round 4). The chosen page draws these.
-  STY-054's dashboard shell will add the left-hand navigation, which neither page draws.
+  STY-054's dashboard shell adds the left-hand navigation: the five-design page does not
+  draw it, and the chosen page draws it only as context frames (below).
 - **After review round 1** (EPC-012 review round 1), the owner settled three more:
   STY-057 is built first, and STY-052 depends on it, hard (D20); "Publish roadmap" and
   "Unpublish roadmap" show their outcome at the foot like a publish's, in the bar's
   place or stacked above it (D21); and a review that leaves nothing pending says
   "Every change is decided. Nothing is left to publish.", with Close only, which
-  returns focus to the roadmap's title (D22). The chosen page draws all three. Once
+  returns focus to the roadmap's title (D22). The chosen page draws D21 and D22. Once
   nothing is left, the removed list sits at the foot in the bar's place until
   dismissed (D23, the owner's answer to the one row this round left open).
 - **The navigation around the page** (STY-054, STY-055), drawn as context on the chosen

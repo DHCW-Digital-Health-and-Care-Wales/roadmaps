@@ -9,7 +9,7 @@
 - **Binding ADRs**: ADR-003, ADR-012, ADR-008, ADR-010
 - **Suggested model**: Opus — a reusable gate over every write and read that needs a
   session, with ADR-003's synchronous connect and focus return
-- **Delivered**: _(the PR's URL, once raised)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/136
 
 ## Summary
 

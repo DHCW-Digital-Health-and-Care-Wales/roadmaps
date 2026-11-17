@@ -3,7 +3,7 @@
 - **Status**: Active — proposed by the owner on 2026-11-17 from a UX review of the
   shell; the owner chose STY-052's and STY-053's designs from their prototypes and
   answered every story's questions in four grilling rounds and a review round
-- **Progress**: 1 of 6 terminal (STY-057, delivered in its PR, awaiting merge); next
+- **Progress**: 1 of 6 terminal (STY-057, delivered in [#136](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/136), awaiting merge); next
   selectable: STY-052 once STY-057 is merged (STY-054 and STY-056 have no hard
   dependency, but prefer to follow STY-052); blocked on: nothing
 - **Binding ADRs**: ADR-010, ADR-008, ADR-005, ADR-012, ADR-002, ADR-003, ADR-004

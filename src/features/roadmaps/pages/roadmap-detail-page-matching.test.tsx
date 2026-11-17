@@ -5,13 +5,13 @@ import { describe, expect, it, vi } from "vitest"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { RepositoryReadOptions } from "@/domain/roadmap/roadmap-repository"
 import type { ContractWrite } from "@/domain/roadmap/testing/contract-write"
+import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
+import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 import {
   findReconnectDialog,
   reconnectFromDialog,
 } from "@/features/auth/testing/reconnect-dialog"
 import { AppError } from "@/lib/errors"
-import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
-import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 

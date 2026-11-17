@@ -3,7 +3,7 @@
 - An action that needs a session (a write, a read, Refresh) wraps its handler in
   `useSessionAction(action)` (`features/auth/session-action.ts`) and calls the result
   with the pressed control (`event.currentTarget`, or a form's
-  `event.nativeEvent.submitter`), never `disabled={!connected}` (STY-057). A control
+  `event.nativeEvent.submitter`), never `disabled={!connected}`. A control
   that moves into a pinned bar, a menu or the navigation keeps that wrapper: Publish's
   is in `RoadmapPublishing`, Refresh's in `RefreshButton`.
 - A control that connects Google itself is `ReconnectButton` or `AuthButton`, which call

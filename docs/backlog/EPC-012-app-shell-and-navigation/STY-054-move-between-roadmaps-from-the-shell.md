@@ -92,6 +92,9 @@ Cymraeg
   in a roadmap's sticky strip once scrolled (D8).
 - **D10** (owner, 2026-11-17, PR #133): the desktop navigation's fold button shows
   Lucide's `panel-left-close` while open and `panel-left` while folded (D5).
+- **D11** (owner, 2026-11-17, during delivery): the fold button shows Lucide's
+  `panel-left-open` while folded, instead of `panel-left` (D10); `panel-left-close`
+  while open is unchanged.
 
 ## Out of scope
 

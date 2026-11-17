@@ -2,17 +2,17 @@ import type { ComponentProps } from "react"
 
 import { cn } from "@/lib/utils"
 
+export interface CardGridProps extends ComponentProps<"ul"> {
+  /** Each row as tall as its tallest card, once there are columns. */
+  evenRows?: boolean
+}
+
 /**
  * A list of cards in one, two, then three columns, 16px apart and 20px from `sm`, DHCW's
  * card group gutter: the roadmap cards, the item cards and their skeletons alike. The
  * columns follow the room the page has, not the screen's width, so beside the shell's
  * open navigation a 1280px desktop has two, and folded to its rail three (STY-054 D5).
  */
-export interface CardGridProps extends ComponentProps<"ul"> {
-  /** Each row as tall as its tallest card, once there are columns. */
-  evenRows?: boolean
-}
-
 export function CardGrid({
   evenRows = false,
   className,

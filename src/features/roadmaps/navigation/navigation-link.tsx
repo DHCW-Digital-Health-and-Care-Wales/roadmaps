@@ -17,8 +17,12 @@ export type NavigationMark =
   /** A roadmap's colour as a strip, and in a rail its initials in place of its title. */
   | { colour: string | null; initials: string }
 
-interface NavigationEntryProps extends Omit<ComponentProps<"a">, "children"> {
-  /** Folded to a rail: the mark alone, the name in a tooltip and for a screen reader. */
+// Its classes are the navigation's own, so the anchor takes none from a caller.
+interface NavigationEntryProps extends Omit<
+  ComponentProps<"a">,
+  "children" | "className"
+> {
+  /** Folded to a rail: the mark, the name in a tooltip and, beyond the initials, read only. */
   rail: boolean
   name: string
   mark: NavigationMark
@@ -41,7 +45,10 @@ function linkClasses(rail: boolean): string {
   )
 }
 
-/** What the link shows: its mark and name, or in a rail its mark, the name read alone. */
+/**
+ * What the link shows: its mark and name; in a rail, its mark alone, a page's name read
+ * after its icon and a roadmap's title after the initials that begin its name.
+ */
 function EntryLabel({
   rail,
   name,

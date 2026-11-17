@@ -5,7 +5,6 @@ import { useCallback, useRef } from "react"
 import { useTranslation } from "react-i18next"
 
 import { BackLink } from "@/components/layout/back-link"
-import { PinnedFoot } from "@/components/layout/pinned-foot"
 import { buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { localise } from "@/domain/roadmap/localised-text"
@@ -189,6 +188,7 @@ function RoadmapView({
   const heading = useRef<HTMLHeadingElement>(null)
   const addItemButton = useRef<HTMLButtonElement>(null)
   const publishedStateNotice = useRef<HTMLDivElement>(null)
+  const publishNotice = useRef<HTMLDivElement>(null)
   const itemDialog = useItemDialog({
     roadmap,
     items: items.data,
@@ -241,33 +241,35 @@ function RoadmapView({
             itemDialog.add()
           }}
         />
+        {/* Next in the page's order, where it stays on a short screen: elsewhere it
+            pins to the foot (STY-052 S6). */}
+        <RoadmapPublishing
+          roadmap={roadmap}
+          pageItems={pageItems}
+          heading={heading}
+          notice={publishNotice}
+          notices={
+            publishedState.notice && (
+              <PublishedStateNotice
+                ref={publishedStateNotice}
+                notice={publishedState.notice}
+                title={title}
+                onDismiss={publishedState.dismissNotice}
+              />
+            )
+          }
+        />
+        <PublishedStateDialog
+          state={publishedState}
+          title={title}
+          // Its own notice, or the refusal of the changes it sent (D21).
+          notice={() => publishedStateNotice.current ?? publishNotice.current}
+        />
         <RoadmapFamilyLine roadmap={shown} />
         <MatchListsAction roadmap={roadmap} />
         {addedNotice.shown && (
           <AddedRoadmapNotice title={title} onDismiss={addedNotice.dismiss} />
         )}
-        {/* First in the page's flow, after the title row, where it stays on a short
-            screen: elsewhere it pins to the foot (STY-052 S6). */}
-        <PinnedFoot>
-          {publishedState.notice && (
-            <PublishedStateNotice
-              ref={publishedStateNotice}
-              notice={publishedState.notice}
-              title={title}
-              onDismiss={publishedState.dismissNotice}
-            />
-          )}
-          <RoadmapPublishing
-            roadmap={roadmap}
-            pageItems={pageItems}
-            heading={heading}
-          />
-        </PinnedFoot>
-        <PublishedStateDialog
-          state={publishedState}
-          title={title}
-          notice={publishedStateNotice}
-        />
       </div>
       <EditableRoadmapAbout roadmap={roadmap} />
       <RoadmapItemsArea

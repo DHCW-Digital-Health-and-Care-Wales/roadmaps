@@ -318,7 +318,7 @@ describe("publishing or unpublishing a roadmap (STY-035)", () => {
     })
   })
 
-  it("publishes nothing on a co-lead's conflicting change, opening the review (S6)", async () => {
+  it("publishes nothing on a co-lead's conflicting change, its refusal at the foot taking focus, then opens the review (S6; STY-052 D21)", async () => {
     const { user, main, repository } = await renderPage()
     await editStatus(user)
     repository.coLead(([roadmap]) => {
@@ -327,9 +327,11 @@ describe("publishing or unpublishing a roadmap (STY-035)", () => {
 
     await choose(user, "Publish roadmap", "Save and publish")
 
-    expect(await findRefusal()).toHaveTextContent(
+    const refusal = await findRefusal()
+    expect(refusal).toHaveTextContent(
       "Someone else has changed this roadmap too",
     )
+    await expectOpeningFocus(refusal)
     expect(
       main.getByRole("button", { name: "Publish roadmap" }),
     ).toHaveAttribute("aria-disabled", "true")

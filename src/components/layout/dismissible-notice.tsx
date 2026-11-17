@@ -29,8 +29,9 @@ export interface DismissibleNoticeProps extends Omit<
 
 /**
  * A page notice (the copywriter's pattern): a callout with its icon, an optional title,
- * its text, an optional `action` and, given `onDismiss`, a button that dismisses it. Its `role` defaults to
- * the alert's; a caller passes anything else, such as a dwell's handlers, through.
+ * its text, an optional `action` and, given `onDismiss`, a button that dismisses it.
+ * Its `role` defaults to the alert's; a caller passes anything else, such as a dwell's
+ * handlers, through.
  */
 export function DismissibleNotice({
   variant,

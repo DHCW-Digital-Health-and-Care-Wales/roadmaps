@@ -2,7 +2,7 @@ import type { RefObject } from "react"
 
 import { StickyHeader } from "@/components/layout/sticky-header"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
-import { useMediaQuery } from "@/lib/use-media-query"
+import { useMediaQuery, WIDER_THAN_A_PHONE } from "@/lib/use-media-query"
 import { cn } from "@/lib/utils"
 
 import { ChangedTag } from "../editing/edit-controls"
@@ -12,9 +12,6 @@ import { AddItemButton } from "./add-item-button"
 import { ListMismatchBadges } from "./list-mismatch-badges"
 import { NotPublishedBadge } from "./not-published-badge"
 import { RoadmapMoreMenu } from "./roadmap-more-menu"
-
-/** From Tailwind's `sm`: a viewport wider than a phone's. */
-const WIDER_THAN_A_PHONE = "(min-width: 40rem)"
 
 export interface RoadmapTitleRowProps {
   roadmap: Roadmap

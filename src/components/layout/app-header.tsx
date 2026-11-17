@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next"
 
 import dhcwIcon from "@/assets/dhcw/dhcw-icon-white.svg"
 import dhcwLogo from "@/assets/dhcw/nhsw-logo.svg"
+import { WIDER_THAN_A_PHONE } from "@/lib/use-media-query"
 
 import { PageContainer } from "./page-container"
 
@@ -39,7 +40,7 @@ export function AppHeader({ actions }: AppHeaderProps) {
           className="-ml-1 flex min-w-0 items-center gap-2 rounded-lg border border-transparent p-1 outline-none focus-visible:focus-ring sm:gap-3"
         >
           <picture className="flex shrink-0">
-            <source media="(min-width: 40rem)" srcSet={dhcwLogo} />
+            <source media={WIDER_THAN_A_PHONE} srcSet={dhcwLogo} />
             <img
               src={dhcwIcon}
               alt={t("layout.logoAlt")}

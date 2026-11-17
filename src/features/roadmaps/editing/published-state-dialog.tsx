@@ -1,4 +1,3 @@
-import { type RefObject, useRef } from "react"
 import { useTranslation } from "react-i18next"
 
 import {
@@ -15,6 +14,7 @@ import { useSessionAction } from "@/features/auth/session-action"
 
 import { MarkUpdatedCheckbox } from "./mark-updated-checkbox"
 import { publishedStateAction } from "./published-state-action"
+import { useFocusNoticeOnClose } from "./use-focus-notice-on-close"
 import { countChanges } from "./pending-changes"
 import type { PublishedState } from "./use-published-state"
 import { WhatChanges } from "./what-changes"
@@ -52,8 +52,11 @@ export interface PublishedStateDialogProps {
   state: PublishedState
   /** The roadmap's title, as shown. */
   title: string
-  /** The notice saying what the write came to, where focus goes once it is confirmed. */
-  notice: RefObject<HTMLElement | null>
+  /**
+   * The notice saying what the write came to, where focus goes once it is confirmed: its
+   * own, or the refusal of the changes it sent (STY-052 D21).
+   */
+  notice: () => HTMLElement | null
 }
 
 /**
@@ -73,10 +76,9 @@ export function PublishedStateDialog({
 }: PublishedStateDialogProps) {
   const { t } = useTranslation()
   const { available, pending } = state
-  // Set as the write is confirmed, so the closing dialog hands focus to its notice.
-  const focusNotice = useRef(false)
+  const outcome = useFocusNoticeOnClose(notice)
   const confirm = useSessionAction(() => {
-    focusNotice.current = true
+    outcome.confirmed()
     state.confirm()
   })
   const { publishing, changes, noItems } = state.asked
@@ -104,15 +106,9 @@ export function PublishedStateDialog({
       onOpenChange={(next) => {
         if (!next) state.cancel()
       }}
-      onOpenChangeComplete={(next) => {
-        if (next) focusNotice.current = false
-        else if (focusNotice.current) notice.current?.focus()
-      }}
+      onOpenChangeComplete={outcome.onOpenChangeComplete}
     >
-      <AlertDialogContent
-        // Back to the control that asked, unless its notice takes focus once closed.
-        finalFocus={() => !(focusNotice.current && notice.current)}
-      >
+      <AlertDialogContent finalFocus={() => outcome.finalFocus()}>
         <AlertDialogHeader>
           <AlertDialogTitle>
             {t(`roadmaps.publishRoadmap.confirm.title.${askedVerb}`, {

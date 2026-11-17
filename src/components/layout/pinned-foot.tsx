@@ -6,18 +6,24 @@ import { PageContainer } from "./page-container"
 import { useMeasuredHeight, usePinnedInset, usePinning } from "./pinning"
 
 export interface PinnedFootProps {
-  /** Stacked from the top down; with none, nothing shows. */
-  children: ReactNode
+  /** Notices, stacked above the bar: past the room they have, they scroll. */
+  notices: ReactNode
+  /** What stays in view whatever the notices above it. */
+  bar: ReactNode
 }
+
+/** In the page's flow, the page's own container frames it already. */
+const IN_FLOW = "max-w-none px-0 md:px-0"
 
 /**
  * What a page keeps at the foot of the screen, as a band across it, from the page's top
  * (STY-052 D10): it takes no room in the page's flow, its height keeping focus clear of
- * it and leaving room at the end of the page (`usePinnedInset`), and it never covers
- * more than half the screen, scrolling inside itself instead. Where the viewport is too
- * short (`usePinning`) it stays where it is in the page's flow.
+ * it and leaving room at the end of the page (`usePinnedInset`). It never covers more
+ * than half the screen: the notices scroll inside it, the bar always in view (D14).
+ * Where the viewport is too short (`usePinning`) it stays where it is in the page's
+ * flow. With nothing in it, it shows nothing.
  */
-export function PinnedFoot({ children }: PinnedFootProps) {
+export function PinnedFoot({ notices, bar }: PinnedFootProps) {
   const pinning = usePinning()
   const foot = useRef<HTMLDivElement>(null)
   usePinnedInset("bottom", useMeasuredHeight(foot, pinning), pinning)
@@ -28,18 +34,26 @@ export function PinnedFoot({ children }: PinnedFootProps) {
       data-slot="pinned-foot"
       data-pinned={pinning || undefined}
       className={cn(
-        "border-t-4 border-status-info-border bg-background has-[>div:empty]:hidden",
-        pinning && "fixed inset-x-0 bottom-0 z-40 max-h-1/2 overflow-y-auto",
+        "flex flex-col border-t-4 border-status-info-border bg-background pb-3 [&:not(:has([data-slot=page-container]>*))]:hidden",
+        pinning && "fixed inset-x-0 bottom-0 z-40 max-h-1/2",
       )}
     >
-      <PageContainer
+      <div
         className={cn(
-          "flex flex-col gap-3 py-3",
-          // In the page's flow its own container frames it already.
-          !pinning && "max-w-none px-0 md:px-0",
+          "min-h-0 has-[>div:empty]:hidden",
+          pinning && "overflow-y-auto",
         )}
       >
-        {children}
+        <PageContainer
+          className={cn("flex flex-col gap-3 pt-3", !pinning && IN_FLOW)}
+        >
+          {notices}
+        </PageContainer>
+      </div>
+      <PageContainer
+        className={cn("shrink-0 pt-3 empty:hidden", !pinning && IN_FLOW)}
+      >
+        {bar}
       </PageContainer>
     </div>
   )

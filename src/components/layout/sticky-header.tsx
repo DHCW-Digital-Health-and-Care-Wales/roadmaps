@@ -27,6 +27,8 @@ export function StickyHeader({ children }: StickyHeaderProps) {
   const place = useRef<HTMLDivElement>(null)
   const header = useRef<HTMLDivElement>(null)
   const stuck = useScrolledPast(place, pinning)
+  // Two heights of the one row: its place keeps the height the row had in the flow,
+  // last measured before it stuck, while the inset follows the row's stuck height.
   const flowHeight = useMeasuredHeight(header, pinning && !stuck)
   const stuckHeight = useMeasuredHeight(header, stuck)
   usePinnedInset("top", stuckHeight, pinning)

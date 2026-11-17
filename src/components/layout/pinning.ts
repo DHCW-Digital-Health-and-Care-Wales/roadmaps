@@ -13,16 +13,13 @@ export function usePinning(): boolean {
   return useMediaQuery(PINNING_QUERY)
 }
 
-/** The viewport edge a pinned bar holds, as `globals.css` names its inset. */
-export type PinnedEdge = "top" | "bottom"
-
 /**
  * Sets `--pinned-<edge>` on the document to `height` while `active`: `globals.css` turns
  * it into the `scroll-padding` that keeps a focused control clear of the bar (WCAG
  * 2.4.11) and, at the foot, into room at the end of the page.
  */
 export function usePinnedInset(
-  edge: PinnedEdge,
+  edge: "top" | "bottom",
   height: number | undefined,
   active: boolean,
 ): void {

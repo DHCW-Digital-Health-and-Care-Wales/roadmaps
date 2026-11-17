@@ -60,10 +60,10 @@ export interface ConflictReviewDialogProps {
  * the page, which does not move (STY-052 D12): each field they changed that the
  * Product Lead also changed (`FieldConflictItem`), and each placement's order
  * (`OrderConflictItem`, STY-050), to keep or give up one by one, focus starting on the
- * first's Keep mine and moving to the next's as each is decided (D18); then what was
- * lost with removed items. Tags or details that have gained Welsh versions can only be
- * given up (STY-037 S22, STY-039 S19). Once every one is decided it says so, with
- * "Publish changes", focused, while anything is left to publish (D16, D17), or Close
+ * first's Keep mine and moving to the next's as each is decided (D18). Tags or details
+ * that have gained Welsh versions can only be given up (STY-037 S22, STY-039 S19). Once
+ * every one is decided it names what was lost with removed items (D17) and says so,
+ * with "Publish changes", focused, while anything is left to publish (D16), or Close
  * alone (D22).
  */
 export function ConflictReviewDialog({
@@ -153,7 +153,12 @@ export function ConflictReviewDialog({
             )}
           </ul>
         )}
-        <RemovedItems removed={removed} hasPendingChanges={hasPendingChanges} />
+        {!deciding && (
+          <RemovedItems
+            removed={removed}
+            hasPendingChanges={hasPendingChanges}
+          />
+        )}
         {!deciding && (
           <p className="font-bold">
             {t(

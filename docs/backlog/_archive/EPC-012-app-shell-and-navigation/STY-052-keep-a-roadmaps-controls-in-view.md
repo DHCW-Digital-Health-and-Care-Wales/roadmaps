@@ -188,11 +188,12 @@ announced and shown in view, and focus goes to it as it does today
   prototype draws "+" before More. Moving the button would remount it, losing focus on
   it as the row sticks, and would put the order seen out of step with the order tabbed.
 - **The foot is first in the page's order after the title row** (agent): on a short
-  screen (S6) it stays where today's pending bar was, under the title, rather than
-  after the last item; with a tall one it pins at the foot, as the prototypes draw it,
-  and tabbing reaches it after the title row. Its notices keep the app's callout look
-  inside the band, rather than the prototype's full-width bands, and the band never
-  covers more than half the screen, scrolling inside itself.
+  screen (S6) it stays under the title, near where today's pending bar was, rather
+  than after the last item; with a tall one it pins at the foot, as the prototypes
+  draw it, and tabbing reaches it after the title row. Its notices keep the app's
+  callout look inside the band, rather than the prototype's full-width bands. The band
+  never covers more than half the screen: past that the notices scroll inside it, the
+  pending bar always in view (D14).
 - **More spins while a read is under way** (agent): Refresh lives in a menu (D6), so
   More is busy (`aria-busy`) and shows Refresh's spinning icon while the page reads,
   where today's Refresh button did; the menu's Refresh is unavailable meanwhile.
@@ -205,59 +206,49 @@ announced and shown in view, and focus goes to it as it does today
 
 ### Contract for dependents
 
-- **`RoadmapTitleRow`** (`src/features/roadmaps/components/roadmap-title-row.tsx`)
-  inside **`StickyHeader`** (`src/components/layout/sticky-header.tsx`), whose
-  children are `(stuck: boolean) => ReactNode`: slim a control in place by `stuck`
-  (STY-053's "Jump to", STY-054's menu button). `phone` is `useMediaQuery`'s
-  `(min-width: 40rem)` turned round.
-- **`PinnedFoot`** (`src/components/layout/pinned-foot.tsx`) stacks its children at
-  the foot; `RoadmapView` puts the published-state notice and `RoadmapPublishing`
-  (refusal or outcome notice, `PendingBar`, the dialogs) in it.
-- **`src/components/layout/pinning.ts`**: `usePinning()` (viewport at least 500px
-  tall), `usePinnedInset(edge, height, active)` (sets `--pinned-top` or
-  `--pinned-bottom`, which `globals.css` turns into `scroll-padding` and the body's
-  bottom padding), `useMeasuredHeight` and `useScrolledPast`. `useMediaQuery` is in
-  `src/lib/use-media-query.ts`.
-- **`RoadmapMoreMenu`** runs a chosen item once the menu has closed, with More as the
-  control focus returns to. `publishedStateAction(state)` (`editing/published-state-action.ts`)
-  names the verb and icon; `PublishRoadmapButton` and `PublishedStateDialog`
-  (`editing/published-state-dialog.tsx`) replace `PublishedStateAction`.
-- **The review**: `RefusalNotice` (`editing/refusal-notice.tsx`, with `RemovedItems`)
-  at the foot, `ConflictReviewDialog` (`editing/conflict-review-dialog.tsx`, was
-  `conflict-review.tsx`). `DismissibleNotice` takes an `action` beside its text.
+The epic's `delivery-notes.md` carries the seams the next stories build on, as they
+stand: the title row and `StickyHeader`, the pinned insets, More's deferred actions and
+the test helpers. Besides those:
+
+- **`PinnedFoot`** (`src/components/layout/pinned-foot.tsx`) takes `notices`, which
+  scroll inside it, and a `bar` always in view. `RoadmapPublishing` renders it, with the
+  page's published-state notice passed in as `notices`.
+- **Focus after a dialog's write**: `useFocusNoticeOnClose(notice)`
+  (`editing/use-focus-notice-on-close.ts`) sends focus to the outcome once the dialog
+  has closed; the publish dialog and `PublishedStateDialog` use it.
+- **Replaced**: `PublishedStateAction` by `PublishRoadmapButton`, `PublishedStateDialog`
+  and `publishedStateAction(state)`; `ConflictReview` by `RefusalNotice` and
+  `ConflictReviewDialog`. `DismissibleNotice` takes an `action` beside its text.
 - **Copy**: `roadmaps.more`, `roadmaps.publish.bar.{publish,save,discard}`,
   `roadmaps.publish.notice.refused.{review,decided.*,nothingLeft.*}`;
-  `roadmaps.publish.discardAll` now reads "Discard all changes", the bar's Discard's
-  name. A catalogue test holds each short label as the start of its name.
-- **Tests**: `src/features/roadmaps/testing/roadmap-page.ts` (`refreshRoadmap`,
-  `chooseFromMore`, `findRefusal`, `openConflictReview`, `closeConflictReview`) and
-  `tests/e2e/fixtures/roadmap-page.ts`; E2E finds the bars by `[data-stuck]` and
-  `[data-pinned]`. jsdom's `matchMedia` (`src/test/setup.ts`) matches nothing, so
-  nothing pins in a component test.
+  `roadmaps.publish.discardAll` now reads "Discard all changes", the name of the bar's
+  Discard. A catalogue test holds each short label as the start of its name.
 
 ### Scenario evidence
 
 `e2e` is `tests/e2e/roadmap-controls.spec.ts`; `pages/` is
 `src/features/roadmaps/pages/`.
 
-| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1       | e2e "keeps the title, Add an item, the pending count, Publish and Discard in view on a desktop" and "… on a phone" (More holds Refresh and Unpublish roadmap); `pages/roadmap-detail-page-items.test.tsx` "Refresh (S14)"; `pages/roadmap-detail-page-publishing-roadmap.test.tsx` (Unpublish roadmap from More, focus back on More when cancelled); `structure` `detail`                                                                                                                                                                                                                                                                                                                                                                   |
-| S2       | the same two e2e tests (nothing pending shows nothing; the count, Publish and Discard in view, named "Publish changes" and "Discard all changes"); `src/i18n/catalogue.test.ts` "starts each name with its label" (D11); `structure` `edit-publish-bar`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| S3       | e2e "counts a change made far down the page at once, focus following the card clear of the bars"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| S4       | e2e "shows a publish's outcome at the foot…" (focused, in view, the page unmoved) and "stacks a failed publish's notice above the bar…" (D14); the review in a dialog (D12, D16–D18, D22, D23): `pages/roadmap-detail-page-editing.test.tsx` "A co-lead's changes" (S1, S2: the notice, the dialog, focus through each decision, "Publish changes" then Close; "closed with a field undecided…"; "goes from the review's Publish changes…"; "lists the items a co-lead removed…"; "says nothing is left…"), `tests/e2e/editing.spec.ts` co-lead tests, `structure` `edit-conflict-notice`, `edit-conflict-review`, `edit-order-conflict-review`; D21: `pages/roadmap-detail-page-publishing-roadmap.test.tsx` S2, S3 (focus on the outcome) |
-| S5       | e2e "scrolls a control reached by Shift+Tab out from behind the bar at the top" and "… by Tab … at the bottom", "keeps every control focused by Tab, forwards and backwards, clear of the bars"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| S6       | e2e "pins nothing on a screen too short to spare it, as at 400% zoom…" (320×200)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| S7       | e2e "fits the pinned controls in Cymraeg on a 375px phone, cutting no label" (and the stuck title's ellipsis)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| S8       | e2e "keeps the count and Publish in view once the session has expired…"; `tests/e2e/reconnect.spec.ts` "Publish stays on offer…"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | e2e "keeps the title, Add an item, the pending count, Publish and Discard in view on a desktop" and "… on a phone" (More holds Refresh and Unpublish roadmap), "keeps Publish roadmap in a desktop's stuck row, and moves it into More on a phone's…" (D15, D18, D19); `pages/roadmap-detail-page-items.test.tsx` "Refresh (S14)"; `pages/roadmap-detail-page-publishing-roadmap.test.tsx` (Unpublish roadmap from More, focus back on More when cancelled); `structure` `detail`                                                                                                                                                                                                                                                                                                                          |
+| S2       | the same two e2e tests (nothing pending shows nothing; the count, Publish and Discard in view, named "Publish changes" and "Discard all changes"), and "keeps the count, Publish and Discard in view under a notice too long for the room at the foot of a phone" (D14); `src/i18n/catalogue.test.ts` "starts each name with its label" (D11); `structure` `edit-publish-bar`                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| S3       | e2e "counts a change made far down the page at once, focus following the card clear of the bars"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| S4       | e2e "shows a publish's outcome at the foot…" (focused, in view, the page unmoved) and "stacks a failed publish's notice above the bar…" (D14); the review in a dialog (D12, D16–D18, D22, D23): `pages/roadmap-detail-page-editing.test.tsx` "A co-lead's changes" (S1, S2: the notice, the dialog, focus through each decision, "Publish changes" then Close; "closed with a field undecided…"; "goes from the review's Publish changes…"; "lists the items a co-lead removed…"; "says nothing is left…"), `tests/e2e/editing.spec.ts` co-lead tests, `structure` `edit-conflict-notice`, `edit-conflict-review`, `edit-order-conflict-review`; D21: `pages/roadmap-detail-page-publishing-roadmap.test.tsx` S2, S3 (focus on the outcome) and S6 (on the refusal of the changes "Save and publish" sent) |
+| S5       | e2e "scrolls a control reached by Shift+Tab out from behind the bar at the top" and "… by Tab … at the bottom", "keeps every control focused by Tab, forwards and backwards, clear of the bars"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| S6       | e2e "pins nothing on a screen too short to spare it, as at 400% zoom…" (320×200)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| S7       | e2e "fits the pinned controls in Cymraeg on a 375px phone, cutting no label" (and the stuck title's ellipsis)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| S8       | e2e "keeps the count and Publish in view once the session has expired…"; `tests/e2e/reconnect.spec.ts` "Publish stays on offer…"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 
 The tests followed working code. Each that holds a new rule was shown red by
 breaking the finished code: no focus on the published-state notice fails the
 publishing-roadmap S2 and S3 tests (D21); Close sending focus nowhere when nothing is
 left fails "says nothing is left…" and "shows their text after Use theirs…" (D22);
 no publish dialog after the review's "Publish changes" fails "goes from the review's
-Publish changes…" (D16); a notice without its removed items fails "lists the items a
-co-lead removed…" (D17); a Welsh short label that does not start its name fails the
-catalogue test (D11); and a build without the `scroll-padding` fails both "scrolls a
-control … out from behind the bar" tests. The Tab tour passed without it, since
+Publish changes…" (D16); a notice without its removed items, or a review naming them
+before every field is decided, fails "lists the items a co-lead removed…" (D17);
+"Publish roadmap" focusing only its own notice fails the publishing-roadmap S6 test;
+a Welsh short label that does not start its name fails the catalogue test (D11); and
+a build without the `scroll-padding` fails both "scrolls a control … out from behind
+the bar" tests. The Tab tour passed without it, since
 Chrome centres a control it scrolls to, so the two behind-the-bar tests hold the rule.

@@ -1648,6 +1648,8 @@ describe("A co-lead's changes (STY-026)", () => {
     })
     await publish(user)
     const dialog = await review(user)
+    // Named once every field is decided, not before.
+    expect(dialog).not.toHaveTextContent("“Second item”")
 
     for (const name of [
       "Use theirs About this roadmap: Vision",

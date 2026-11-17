@@ -1,8 +1,16 @@
 import type { Page } from "@playwright/test"
 
-import { openEditItemDialog, reconnectDialog } from "./fixtures/dialogs"
 import { sessionMs } from "./fixtures/fake-gis"
-import { EXAMPLE_SPREADSHEET, withTabRows } from "./fixtures/fake-sheets"
+import {
+  openEditItemDialog,
+  publishOnce,
+  reconnectDialog,
+} from "./fixtures/dialogs"
+import {
+  EXAMPLE_SPREADSHEET,
+  type FakeTab,
+  withTabRows,
+} from "./fixtures/fake-sheets"
 import { useLanguage, type Language } from "./fixtures/look"
 import { connect, expect, test } from "./fixtures/test"
 
@@ -15,10 +23,13 @@ import { connect, expect, test } from "./fixtures/test"
 const DESKTOP = { width: 1280, height: 800 }
 const PHONE = { width: 375, height: 812 }
 
-/** Product A with a dozen more items, so its page runs to several screens. */
-const LONG_PRODUCT_A = (() => {
-  const productA = EXAMPLE_SPREADSHEET.find(({ title }) => title === "ProductA")
-  const [header = [], ...rows] = productA?.rows ?? []
+/**
+ * The example spreadsheet with a dozen more items on the roadmap tab `tab`, "Planned
+ * work 1" to "Planned work 12", so its page runs to several screens.
+ */
+function withLongRoadmap(tab: "ProductA" | "ProductC"): readonly FakeTab[] {
+  const roadmap = EXAMPLE_SPREADSHEET.find(({ title }) => title === tab)
+  const [header = [], ...rows] = roadmap?.rows ?? []
   const horizons = ["Now", "Next", "Later", "Delivered this year"]
   const extra = Array.from({ length: 12 }, (_, index) =>
     header.map((name) => {
@@ -28,8 +39,8 @@ const LONG_PRODUCT_A = (() => {
       return ""
     }),
   )
-  return withTabRows("ProductA", [header, ...rows, ...extra])
-})()
+  return withTabRows(tab, [header, ...rows, ...extra])
+}
 
 const COPY = {
   en: {
@@ -48,14 +59,20 @@ const COPY = {
   },
 } as const satisfies Record<Language, Record<string, string>>
 
-async function openLongProductA(
+/** Opens Product A, published, or Product C, not published, each with a long page. */
+async function openLongRoadmap(
   page: Page,
-  sheets: { spreadsheet: unknown },
-  language: Language = "en",
+  sheets: { spreadsheet: readonly FakeTab[] },
+  {
+    id = "producta",
+    language = "en",
+  }: { id?: string; language?: Language } = {},
 ) {
-  sheets.spreadsheet = LONG_PRODUCT_A
+  sheets.spreadsheet = withLongRoadmap(
+    id === "productc" ? "ProductC" : "ProductA",
+  )
   if (language !== "en") await useLanguage(page, language)
-  await page.goto("./#/roadmaps/producta")
+  await page.goto(`./#/roadmaps/${id}`)
   await connect(page, COPY[language].connect)
   await expect(
     page.getByRole("heading", { level: 3, name: "Planned work 12" }),
@@ -123,7 +140,7 @@ for (const [device, size] of [
     sheets,
   }) => {
     await page.setViewportSize(size)
-    await openLongProductA(page, sheets)
+    await openLongRoadmap(page, sheets)
     const main = page.getByRole("main")
     await expect(main.getByText(/unpublished change/)).toHaveCount(0)
     await editTitle(page, "Planned work 3")
@@ -159,7 +176,7 @@ test("counts a change made far down the page at once, focus following the card c
   sheets,
 }) => {
   await page.setViewportSize(DESKTOP)
-  await openLongProductA(page, sheets)
+  await openLongRoadmap(page, sheets)
   await scrollTo(page, "Later")
   const main = page.getByRole("main")
 
@@ -178,7 +195,7 @@ test("shows a publish's outcome at the foot, where it was published from, focus 
   sheets,
 }) => {
   await page.setViewportSize(DESKTOP)
-  await openLongProductA(page, sheets)
+  await openLongRoadmap(page, sheets)
   await editTitle(page, "Planned work 3")
   await scrollTo(page, "Later")
   const later = page.getByRole("heading", { level: 2, name: "Later" })
@@ -206,7 +223,7 @@ test("stacks a failed publish's notice above the bar, which stays (S4, D14)", as
   sheets,
 }) => {
   await page.setViewportSize(DESKTOP)
-  await openLongProductA(page, sheets)
+  await openLongRoadmap(page, sheets)
   await editTitle(page, "Planned work 3")
   await scrollTo(page, "Later")
   const main = page.getByRole("main")
@@ -234,7 +251,7 @@ test("keeps every control focused by Tab, forwards and backwards, clear of the b
   sheets,
 }) => {
   await page.setViewportSize(DESKTOP)
-  await openLongProductA(page, sheets)
+  await openLongRoadmap(page, sheets)
   await editTitle(page, "Planned work 3")
   await scrollTo(page, "Next")
   await page
@@ -304,7 +321,7 @@ for (const [edge, key] of [
     sheets,
   }) => {
     await page.setViewportSize(DESKTOP)
-    await openLongProductA(page, sheets)
+    await openLongRoadmap(page, sheets)
     await editTitle(page, "Planned work 3")
     await scrollTo(page, "Later")
     await behindTheBar(page, "Move Planned work 7", edge, key)
@@ -320,13 +337,86 @@ for (const [edge, key] of [
   })
 }
 
+test("keeps Publish roadmap in a desktop's stuck row, and moves it into More on a phone's, where Add an item is an icon (D15, D18, D19)", async ({
+  page,
+  sheets,
+}) => {
+  await page.setViewportSize(PHONE)
+  await openLongRoadmap(page, sheets, { id: "productc" })
+  const main = page.getByRole("main")
+  const publishRoadmap = main.getByRole("button", { name: "Publish roadmap" })
+  const addItem = main.getByRole("button", { name: "Add an item" })
+  const more = main.getByRole("button", { name: "More" })
+  const menuItems = page.getByRole("menu").getByRole("menuitem")
+  await expect(publishRoadmap).toBeVisible()
+
+  await scrollTo(page, "Later")
+
+  await expect(publishRoadmap).toHaveCount(0)
+  await expect(addItem).toBeInViewport()
+  await expect(addItem).toHaveCSS("width", "40px")
+  await more.click()
+  await expect(menuItems).toHaveText(["Refresh", "Publish roadmap"])
+  await page.keyboard.press("Escape")
+
+  await page.setViewportSize(DESKTOP)
+
+  await expect(page.locator("[data-stuck]")).toBeVisible()
+  await expect(publishRoadmap).toBeInViewport()
+  await expect(addItem).toHaveText("Add an item")
+  await more.click()
+  await expect(menuItems).toHaveText(["Refresh"])
+})
+
+test("keeps the count, Publish and Discard in view under a notice too long for the room at the foot of a phone (D14)", async ({
+  page,
+  sheets,
+}) => {
+  await page.setViewportSize(PHONE)
+  await openLongRoadmap(page, sheets)
+  await publishOnce(page)
+  const removed = [1, 2, 3, 4, 5, 6].map(
+    (each) => `Planned work ${String(each)}`,
+  )
+  for (const title of [...removed, "Planned work 7"])
+    await editTitle(page, title)
+  for (const title of removed) sheets.coLead("ProductA", title, "Title", null)
+  const main = page.getByRole("main")
+
+  await main.getByRole("button", { name: "Publish changes" }).click()
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: "Publish changes" })
+    .click()
+
+  const notice = main
+    .getByRole("alert")
+    .filter({ hasText: "Some changes couldn't be kept" })
+  await expect(notice).toBeFocused()
+  await expect(notice.getByText(/^Someone else has removed/)).toHaveCount(6)
+  for (const control of [
+    main.getByText("1 unpublished change"),
+    main.getByRole("button", { name: "Publish changes" }),
+    main.getByRole("button", { name: "Discard all changes" }),
+  ]) {
+    await expect(control).toBeInViewport({ ratio: 1 })
+  }
+  // The notices scroll inside the foot, the bar below them.
+  expect(
+    await notice.evaluate((each) => {
+      const region = each.closest("[data-pinned] > div")
+      return region !== null && region.scrollHeight > region.clientHeight
+    }),
+  ).toBe(true)
+})
+
 test("pins nothing on a screen too short to spare it, as at 400% zoom, with no sideways scroll (S6)", async ({
   page,
   sheets,
 }) => {
   // 1280×800 at 400% zoom.
   await page.setViewportSize({ width: 320, height: 200 })
-  await openLongProductA(page, sheets)
+  await openLongRoadmap(page, sheets)
   await editTitle(page, "Planned work 3")
 
   await page
@@ -354,7 +444,7 @@ test("fits the pinned controls in Cymraeg on a 375px phone, cutting no label (S7
   sheets,
 }) => {
   await page.setViewportSize(PHONE)
-  await openLongProductA(page, sheets, "cy")
+  await openLongRoadmap(page, sheets, { language: "cy" })
   await editTitle(page, "Planned work 3", "cy")
 
   await scrollTo(page, COPY.cy.later)
@@ -392,7 +482,7 @@ test("keeps the count and Publish in view once the session has expired, Publish 
 }) => {
   await page.setViewportSize(DESKTOP)
   await page.clock.install()
-  await openLongProductA(page, sheets)
+  await openLongRoadmap(page, sheets)
   await editTitle(page, "Planned work 3")
   await page.clock.fastForward(sessionMs())
   // The session warning closes as the session ends, and the page says it has.

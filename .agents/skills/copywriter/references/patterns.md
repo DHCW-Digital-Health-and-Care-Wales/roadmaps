@@ -101,10 +101,10 @@ auth.status.connecting  Connecting…
 ## Page notice
 
 **Shape:** one sentence, about 80 characters, confirming what the reader just
-did, or what blocked it, as a callout in view where they acted (DHCW's
-notification banner; there are no toasts): at the top of the page, or at the
-foot of the screen for a roadmap's publish or "Publish roadmap", which are
-pressed there. A failure stays until the next
+did, or what blocked it, as a callout in view (DHCW's notification banner; there
+are no toasts): at the top of the page, or, on a roadmap's page, at the foot of
+the screen for what publishing its changes, or publishing or unpublishing the
+roadmap, came to, beside its pending changes. A failure stays until the next
 attempt or the reader dismisses it. A confirmation clears itself after a few
 seconds (waiting while it is hovered or focused), or sooner on the next change
 or page, so write it to be read at a glance; the header's status keeps the

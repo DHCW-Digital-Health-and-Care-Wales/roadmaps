@@ -122,20 +122,20 @@ reviewer session logs.
 
 - **Round 1** (`claude-sonnet-5-5`, effort high): 2.7 min, 125.8k tokens. It had no
   saved output to open: it wrote the diff to five files and read each from its first
-  line to its last, and read CHO-019 and `write-failure-message.test.ts`, outside them,
-  whole. Git shows the story record's move to `_archive/` as a removal and an addition;
-  the reviewer read the removal and the added file's lines 1–25 and 190–302, which hold
-  every line that differs from the old file. It reported nothing unread, and its log
-  agrees. Findings: 2 🟡 and 4 💭, all fixed.
+  line to its last, and read, outside them, CHO-019 whole and the diff of
+  `write-failure-message.test.ts`. Git shows the story record's move to `_archive/` as
+  a removal and an addition; the reviewer read the removal and the added file's lines
+  1–25 and 190–302, which hold every line that differs from the old file. It reported
+  nothing unread, and its log agrees. Findings: 2 🟡 and 4 💭, all fixed.
 - **Re-check** (same model and effort): 0.6 min, 42.7k tokens. It had no saved output
   to open: it wrote its diff to one file and read it whole. It reported nothing unread,
   and its log agrees. Findings: 2 💭, fixed.
 - **Outcome**: the first pass left nothing unread, so no second pass ran. Beside it, the
   Opus correctness reviewer took 3.3 min and 130.4k tokens over the same round 1 diff.
-- **Not measured**: three quality reviews over more than 100,000 characters ran
-  after D1 and before STY-051, their sessions outside this evidence: DEF-015
+- **Not measured**: three quality reviews over more than 100,000 characters ran after
+  D1 and before STY-051, their sessions outside this evidence: DEF-015
   ([#115](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/115),
-  203,411 characters); the reordering UX prototypes
+  round 1 at `3611e9b`, 184,862); the reordering UX prototypes
   ([#118](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/118),
   round 1 at `607d1a0`, 330,720); and CHO-009's fresh pass
   ([#120](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/120),

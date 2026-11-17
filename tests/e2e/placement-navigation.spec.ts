@@ -307,6 +307,12 @@ for (const { width, language, placement, publish } of [
   },
   {
     width: 640,
+    language: "cy",
+    placement: "Wedi'u cyflawni'n ddiweddar",
+    publish: "Cyhoeddi'r map trywydd",
+  },
+  {
+    width: 640,
     language: "en",
     placement: "Delivered this year",
     publish: "Publish roadmap",
@@ -331,14 +337,19 @@ for (const { width, language, placement, publish } of [
       buttons
         .filter((button) => {
           const box = button.getBoundingClientRect()
-          return box.left < 0 || box.right > window.innerWidth
+          // The layout's width, so a scroll bar hides no overflow.
+          return (
+            box.left < 0 || box.right > document.documentElement.clientWidth
+          )
         })
         .map((button) => button.textContent),
     )
     expect(outside).toEqual([])
     expect(
       await page.evaluate(
-        () => document.documentElement.scrollWidth <= window.innerWidth,
+        () =>
+          document.documentElement.scrollWidth <=
+          document.documentElement.clientWidth,
       ),
     ).toBe(true)
   })

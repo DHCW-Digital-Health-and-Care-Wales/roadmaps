@@ -64,7 +64,7 @@ export function jumpTargetHeadingId(target: JumpTarget): string {
 }
 
 /** A jump target's name: the heading it has on the page. */
-export function jumpTargetName(t: TFunction, target: JumpTarget): string {
+export function jumpTargetName(target: JumpTarget, t: TFunction): string {
   return target === "unplaced"
     ? t("roadmaps.items.unplaced.title")
     : t(`roadmaps.items.placements.${target}`)

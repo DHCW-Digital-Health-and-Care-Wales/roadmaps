@@ -22,8 +22,8 @@ export interface JumpToMenuProps {
  * "Jump to", in a roadmap's title row (STY-053 D5): a menu of the page's jump targets,
  * each with its count and pending mark, the current one ticked. The button names the
  * current one once the page has reached it ("Jump to: Later", S3, D8). Narrower than a
- * desktop it runs across the page, in a row of its own. A jump waits for the menu to close, so focus lands on the
- * heading and stays there.
+ * desktop it runs across the page, in a row of its own. A jump waits for the menu to
+ * close, so focus lands on the heading and stays there.
  */
 export function JumpToMenu({
   navigation: { summaries, current, jump },
@@ -37,14 +37,15 @@ export function JumpToMenu({
         render={
           <Button
             variant="secondary"
-            // It gives way first in a row short of room, cutting its label.
+            // It gives way first in a row short of room, cutting its label; full
+            // width in a row of its own, below `DESKTOP_WIDTH` (lg).
             className="w-full min-w-0 shrink justify-between lg:w-auto"
           />
         }
       >
         <span className="truncate">
           {current
-            ? t("roadmaps.jumpTo.current", { name: jumpTargetName(t, current) })
+            ? t("roadmaps.jumpTo.current", { name: jumpTargetName(current, t) })
             : t("roadmaps.jumpTo.menu")}
         </span>
         <ChevronDownIcon data-icon="inline-end" aria-hidden="true" />

@@ -86,8 +86,8 @@ export function RoadmapTitleRow({
               <div
                 className={cn(
                   "flex min-w-0 items-center gap-x-3 gap-y-2",
-                  // Stuck, the title keeps some room as the controls give way.
-                  stuck ? "min-w-24 flex-1" : "flex-wrap",
+                  // Stuck beside "Jump to", the title keeps some room as it gives way.
+                  stuck ? "flex-1 lg:min-w-24" : "flex-wrap",
                 )}
               >
                 <h1

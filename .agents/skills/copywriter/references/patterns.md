@@ -215,11 +215,12 @@ visible parts:
 roadmaps.jumpTo.current             Jump to: {{name}}
 roadmaps.jumpTo.target_zero         {{name}}, no items
 roadmaps.jumpTo.target_one          {{name}}, {{count, number}} item
+roadmaps.jumpTo.targetPending_zero  {{name}}, no items, unpublished changes
 roadmaps.jumpTo.targetPending_one   {{name}}, {{count, number}} item, unpublished changes
 ```
 
-Each plural key that can be zero has a `_zero` form in both catalogues, so neither
-reads "0 items".
+An empty placement still has a count, so both `target` and `targetPending` have
+`_zero`.
 
 ## Publish and save
 

@@ -15,7 +15,7 @@ export function JumpTargetLabel({
   summary: JumpTargetSummary
 }) {
   const { t } = useTranslation()
-  const name = jumpTargetName(t, target)
+  const name = jumpTargetName(target, t)
   return (
     <>
       {target === "unplaced" && (

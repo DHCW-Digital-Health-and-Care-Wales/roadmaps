@@ -41,6 +41,11 @@ working order, and grade and report findings as it sets.
   navigation, and when the focused control inside `<main>` is removed; the skip
   link focuses `<main>` because hash history owns the fragment), menu and dialog
   keyboard behavior, contrast in light and dark, 375 px layouts, 200% zoom and
-  `prefers-reduced-motion`. Components under `components/ui/` stay close to
-  upstream shadcn (Base UI flavour, no Radix); hand-rolled competing primitives
-  are a finding.
+  `prefers-reduced-motion`. Overflow arrives just above a breakpoint, where a
+  layout's longer labels have the least room: measure a changed row at the
+  narrowest width of each layout (640 px at `sm`, 1024 px at `lg`) in Welsh. A
+  `position: fixed` bar (a stuck or pinned one) clips its overflow instead of
+  scrolling the page, so `scrollWidth` misses it: compare each control's box
+  with `document.documentElement.clientWidth`. Components under `components/ui/`
+  stay close to upstream shadcn (Base UI flavour, no Radix); hand-rolled
+  competing primitives are a finding.

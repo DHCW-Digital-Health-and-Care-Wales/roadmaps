@@ -111,7 +111,21 @@ it writes the `Families` tab only as below.
   shift by one and keep their order, as do the rows of every other placement. Rows are
   moved after every cell is written and before a new item's row is appended. A co-lead
   part-way through editing a cell of a row as it moves loses that edit, with an error
-  in their spreadsheet (STY-051);
+  in their spreadsheet (STY-051). A placement the Product Lead has reordered takes the
+  item where that order has it instead (below);
+- a reordered placement (a horizon or section whose items the Product Lead put in
+  another order): row moves alone (`moveDimension`), which write no cell content and no
+  column, as the public site already orders a placement by row. The fewest rows move
+  that put the placement's rows in the new order, as the tab reads at publish: the
+  longest run of them already in that order stays, and each other row goes to just
+  after the row of the item it then follows, or, for the first, to just before the
+  placement's first row that stays. An order a re-read already holds moves nothing.
+  Every row of the placement may move, and each moves whole, as a moved item's does;
+  the rows of every other placement keep their order. An item a co-lead added or moved
+  into the placement since the Product Lead read it goes last, and one they removed or
+  moved out is left out, but only once the Product Lead has seen their change and kept
+  their own order: until then a publish that finds the placement's items changed
+  writes nothing (STY-050);
 - a changed `Last updated`: the index row's `Last updated` cell, as text `YYYY-MM-DD`
   (`2026-11-13`) whatever format the cell held, or an empty cell when cleared; and,
   when "Mark as updated today" is ticked (and no date is pending), today's date by the
@@ -141,12 +155,18 @@ it writes the `Families` tab only as below.
   the item was read writes nothing (STY-039);
 - a new item: one row after the tab's last row in use, appended by Google as it applies
   the write, so a row a co-lead added meanwhile is kept, no row moves for it, and it
-  shows after any item moved into its placement in the same publish. The row holds
+  shows after any item moved into its placement in the same publish. A new item the
+  Product Lead has put before another item of a reordered placement is inserted
+  instead of appended: a row is put in (`insertDimension`) just before the row of the
+  item that follows it there, after the row moves, formatted as that row is, and its
+  cells are written in it; a new item that is last in its placement is appended as
+  ever (STY-050). The row holds
   the item's `Item ID`, made when the item was added, its `Title`, its `Horizon` as the
   public site's English value, and each of `Description`, `Outcome`, `Phase`, `Labels`,
   `Organisations` and `Details` the item has, each written as a change to that field
   is written above. Every other cell of the row is left empty, each Welsh cell among
-  them. Several new items are appended in the order they were added. A new item is
+  them. Several new items are appended in the order they were added, those of a
+  reordered placement in its order. A new item is
   written with the roadmap's other changes or not at all, and is not written again
   once a row of the tab holds its `Item ID` (STY-045);
 - an `Item ID` for every item row it reads (one with a title) that has none, or repeats

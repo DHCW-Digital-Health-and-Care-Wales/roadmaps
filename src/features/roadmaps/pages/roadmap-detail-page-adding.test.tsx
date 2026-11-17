@@ -599,7 +599,12 @@ describe("A new item before it is published (STY-046 S6)", () => {
       (await screen.findAllByRole("menuitem")).map(
         ({ textContent }) => textContent,
       ),
-    ).toEqual(PLACEMENT_HEADINGS.filter((each) => each !== "Next"))
+    ).toEqual([
+      // It is last of Next's two items, and can be put elsewhere there (STY-050 S5).
+      "To the top",
+      "Up one",
+      ...PLACEMENT_HEADINGS.filter((each) => each !== "Next"),
+    ])
     await user.click(screen.getByRole("menuitem", { name: "Now" }))
 
     await waitFor(() => {
@@ -1076,7 +1081,7 @@ describe("The publish dialog names the new items (STY-047 S1)", () => {
 
       const review = await main().findByRole("alert")
       expect(review).toHaveTextContent(
-        "Someone else has changed text you edited",
+        "Someone else has changed this roadmap too",
       )
       expect(review).toHaveTextContent(nothing)
       expect(

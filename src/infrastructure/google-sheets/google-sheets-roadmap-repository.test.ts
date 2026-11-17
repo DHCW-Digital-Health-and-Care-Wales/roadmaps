@@ -8,7 +8,12 @@ import type { LocalisedText } from "@/domain/roadmap/localised-text"
 import { dropPublishedNewItems } from "@/domain/roadmap/new-item"
 import type { NewRoadmapInput } from "@/domain/roadmap/new-roadmap"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
-import { markedUpdated, NO_CHANGES } from "@/domain/roadmap/roadmap-changes"
+import { orderedItem } from "@/domain/roadmap/placement-order"
+import {
+  markedUpdated,
+  NO_CHANGES,
+  type RoadmapChanges,
+} from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { CO_LEAD_VALUE } from "@/domain/roadmap/testing/contract-write"
 import { categoriesOf, familiesOf } from "@/domain/roadmap/testing/linked-lists"
@@ -1773,6 +1778,279 @@ describe("GoogleSheetsRoadmapRepository", () => {
           ).toHaveLength(6)
         },
       )
+    })
+
+    describe("a placement's pending order (STY-050)", () => {
+      const HEADER = ["Title", "Horizon", "Item ID", "Title (cy)", "Notes"]
+      /** A row of `HEADER`'s tab: an item with an ID, its title squeezed. */
+      const row = (title: string, horizon: string, ...more: string[]) => [
+        title,
+        horizon,
+        title
+          .toLowerCase()
+          .replaceAll(/[^a-z]/g, "")
+          .padEnd(8, "x")
+          .slice(0, 8),
+        ...more,
+      ]
+      /** `tab` holding `rows` under `HEADER`, with a spare row in its grid. */
+      const tabsOf = (tab: string, ...rows: string[][]): FakeTab[] => [
+        gridTab("Roadmaps", EXAMPLE_ROWS, 0),
+        {
+          ...gridTab(tab, [HEADER, ...rows], 10, 1),
+          rowCount: rows.length + 2,
+        },
+      ]
+      const moveRow = (startIndex: number, destinationIndex: number) => ({
+        moveDimension: {
+          source: {
+            sheetId: 10,
+            dimension: "ROWS",
+            startIndex,
+            endIndex: startIndex + 1,
+          },
+          destinationIndex,
+        },
+      })
+      const insertRow = (startIndex: number) => ({
+        insertDimension: {
+          range: {
+            sheetId: 10,
+            dimension: "ROWS",
+            startIndex,
+            endIndex: startIndex + 1,
+          },
+          inheritFromBefore: false,
+        },
+      })
+      const cellAt = (
+        rowIndex: number,
+        columnIndex: number,
+        stringValue: string,
+      ) => ({
+        updateCells: {
+          start: { sheetId: 10, rowIndex, columnIndex },
+          rows: [{ values: [{ userEnteredValue: { stringValue } }] }],
+          fields: "userEnteredValue",
+        },
+      })
+      const newClinic = {
+        ...NEW_CLINIC,
+        values: { ...NEW_CLINIC.values, placement: "now" },
+      }
+      const titles = (spreadsheet: { tabs: () => FakeTab[] }) =>
+        spreadsheet
+          .tabs()[1]
+          ?.rows.slice(1)
+          .map(([title]) => title)
+
+      /**
+       * Now's order as the page that read `loaded` holds it once reordered to `order`,
+       * its items by title, a new item by its ID.
+       */
+      function reordering(
+        loaded: readonly RoadmapItem[],
+        order: readonly string[],
+        more: Partial<RoadmapChanges> = {},
+      ): RoadmapChanges {
+        const ordered = loaded.map((item, position) =>
+          orderedItem(item, position),
+        )
+        const at = (title: string) =>
+          loaded.findIndex((each) => each.title.en === title)
+        return {
+          ...NO_CHANGES,
+          ...more,
+          orders: [
+            {
+              placement: "now",
+              base: ordered.filter((_, i) => loaded[i]?.placement === "now"),
+              items: order.map((title) => ordered[at(title)] ?? { id: title }),
+            },
+          ],
+        }
+      }
+
+      it("sends one moveDimension that moves the row whole to just before the placement's first, and writes no cell (S7)", async () => {
+        const d = row("D", "Now", "Ch", "=A2")
+        const spreadsheet = serveStatefulSpreadsheet(
+          tabsOf(
+            "ProductA",
+            row("Video", "Next"),
+            row("A", "Now"),
+            row("B", "Now"),
+            row("C", "Now"),
+            d,
+          ),
+        )
+        const repository = httpRepository()
+        const loaded = await repository.listRoadmapItems("producta")
+
+        await expect(
+          repository.publishRoadmapChanges(
+            "producta",
+            reordering(loaded, ["D", "A", "B", "C"]),
+          ),
+        ).resolves.toEqual({ status: "published" })
+
+        expect(spreadsheet.bodies).toEqual([{ requests: [moveRow(5, 2)] }])
+        expect(spreadsheet.tabs()[1]?.rows.slice(1)).toEqual([
+          row("Video", "Next"),
+          d,
+          row("A", "Now"),
+          row("B", "Now"),
+          row("C", "Now"),
+        ])
+      })
+
+      it("sends the cell writes, then the moves, then a row inserted with its cells, then a row appended (S8)", async () => {
+        const spreadsheet = serveStatefulSpreadsheet(
+          tabsOf(
+            "ProductA",
+            row("A", "Now"),
+            row("B", "Now"),
+            row("Later one", "Later"),
+          ),
+        )
+        const repository = httpRepository()
+        const loaded = await repository.listRoadmapItems("producta")
+        const [a] = loaded
+        if (!a) throw new Error("Product A has items")
+        const last = {
+          id: "zzxtqwmn",
+          values: { ...newClinic.values, title: "Last" },
+        }
+
+        await expect(
+          repository.publishRoadmapChanges(
+            "producta",
+            reordering(loaded, ["B", newClinic.id, "A", last.id], {
+              items: [
+                {
+                  item: a,
+                  position: 0,
+                  fields: { title: { base: "A", value: "A1" } },
+                },
+              ],
+              newItems: [newClinic, last],
+            }),
+          ),
+        ).resolves.toEqual({ status: "published" })
+
+        expect(spreadsheet.bodies).toHaveLength(1)
+        const { requests } = spreadsheet.bodies[0] as BatchUpdateBody
+        expect(requests.slice(0, -1)).toEqual([
+          cellAt(1, 0, "A1"),
+          // A's row goes to just after B's; the new row is then put in before it.
+          moveRow(1, 3),
+          insertRow(2),
+          cellAt(2, 2, newClinic.id),
+          cellAt(2, 0, "Choose a clinic closer to home"),
+          cellAt(2, 1, "Now"),
+        ])
+        expect(Object.keys(requests.at(-1) ?? {})).toEqual(["appendCells"])
+        expect(titles(spreadsheet)).toEqual([
+          "B",
+          "Choose a clinic closer to home",
+          "A1",
+          "Later one",
+          "Last",
+        ])
+      })
+
+      it("sends nothing when a co-lead has added an item to the placement, and reports the order conflict (S10)", async () => {
+        const rows = [row("A", "Now"), row("B", "Now")]
+        const repository = httpRepository()
+        serveStatefulSpreadsheet(tabsOf("ProductA", ...rows))
+        const loaded = await repository.listRoadmapItems("producta")
+        const spreadsheet = serveStatefulSpreadsheet(
+          tabsOf("ProductA", ...rows, row("Theirs", "Now")),
+        )
+
+        await expect(
+          repository.publishRoadmapChanges(
+            "producta",
+            reordering(loaded, ["B", "A"]),
+          ),
+        ).resolves.toMatchObject({
+          status: "refused",
+          conflicts: [
+            {
+              subject: "order",
+              placement: "now",
+              current: [
+                { title: { en: "A" } },
+                { title: { en: "B" } },
+                { title: { en: "Theirs" } },
+              ],
+            },
+          ],
+        })
+        expect(spreadsheet.bodies).toEqual([])
+      })
+
+      it("is unconfirmed when the answer is lost and a re-read finds the placement in neither order (S14)", async () => {
+        const rows = [row("A", "Now"), row("B", "Now"), row("C", "Now")]
+        const spreadsheet = serveStatefulSpreadsheet(
+          tabsOf("ProductA", ...rows),
+          {
+            write: { lost: "applied" },
+            // A co-lead swaps A and B as the write is sent: it lands over their order.
+            beforeWrite: (tabs) =>
+              tabs.map((tab) =>
+                tab.title === "ProductA"
+                  ? {
+                      ...tab,
+                      rows: [
+                        HEADER,
+                        row("B", "Now"),
+                        row("A", "Now"),
+                        rows[2] ?? [],
+                      ],
+                    }
+                  : tab,
+              ),
+          },
+        )
+        const repository = httpRepository()
+        const loaded = await repository.listRoadmapItems("producta")
+
+        await expect(
+          repository.publishRoadmapChanges(
+            "producta",
+            reordering(loaded, ["C", "A", "B"]),
+          ),
+        ).resolves.toEqual({ status: "unconfirmed" })
+        expect(titles(spreadsheet)).toEqual(["C", "B", "A"])
+      })
+
+      it("orders the placement with “Save and publish” too, after the row's Enabled cell (S8)", async () => {
+        const spreadsheet = serveStatefulSpreadsheet(
+          tabsOf("ProductC", row("A", "Now"), row("B", "Now")),
+        )
+        const repository = httpRepository()
+        const roadmap = (await repository.listRoadmaps()).find(
+          ({ id }) => id === "productc",
+        )
+        if (!roadmap) throw new Error("Product C is listed")
+        const loaded = await repository.listRoadmapItems("productc")
+
+        await expect(
+          repository.setRoadmapPublished(roadmap, {
+            published: true,
+            changes: reordering(loaded, ["B", "A"]),
+          }),
+        ).resolves.toEqual({ status: "set" })
+
+        expect(spreadsheet.bodies).toHaveLength(1)
+        const { requests } = spreadsheet.bodies[0] as BatchUpdateBody
+        expect(requests.map((request) => Object.keys(request)[0])).toEqual([
+          "updateCells",
+          "moveDimension",
+        ])
+        expect(requests.at(-1)).toEqual(moveRow(1, 3))
+        expect(titles(spreadsheet)).toEqual(["B", "A"])
+      })
     })
 
     describe("an item's organisations (STY-034)", () => {

@@ -18,7 +18,8 @@ import { connect, expect, roadmapCards, test } from "./fixtures/test"
  * is not published (STY-025), against the fake Sheets API: one `batchUpdate` per publish.
  * A co-lead's change made meanwhile is shown, never overwritten (STY-026). A family and
  * category are chosen from their lists (STY-028). An item is moved to another placement,
- * writing its `Horizon` cell and moving its row to last there (STY-031, STY-051). Its
+ * writing its `Horizon` cell and moving its row to last there (STY-031, STY-051), or
+ * put elsewhere in its own, which moves rows alone (STY-050). Its
  * organisations are ticked in a field that opens on request (STY-034, STY-038), its tags
  * are added, renamed and removed in another (STY-037), and its details are written as
  * an outline in a third (STY-039).
@@ -308,7 +309,7 @@ test.describe("a co-lead's change (STY-026)", () => {
     const review = page.getByRole("main").getByRole("alert")
     await expect(review).toBeFocused()
     await expect(review).toContainText(
-      "Someone else has changed text you edited",
+      "Someone else has changed this roadmap too",
     )
     await expect(review).toContainText("Nothing was published.")
     await expect(review.getByRole("listitem")).toHaveCount(2)
@@ -731,12 +732,259 @@ test.describe("moving an item (STY-031)", () => {
     await move.focus()
     await page.keyboard.press("Enter")
     await expect(page.getByRole("menu")).toBeVisible()
+    // Past its two choices of position in Later, then "Recently delivered", to "Now".
+    await page.keyboard.press("ArrowDown")
+    await page.keyboard.press("ArrowDown")
     await page.keyboard.press("ArrowDown")
     await page.keyboard.press("Enter")
 
     await expect(titlesUnder(page, "Now")).toContainText(["Discovery card"])
     await expect(move).toBeFocused()
     await expect(page.getByRole("menu")).toHaveCount(0)
+  })
+})
+
+test.describe("reordering a placement's items (STY-050)", () => {
+  /** The cards' titles under a horizon or section heading. */
+  function titlesUnder(page: Page, heading: string) {
+    return page
+      .getByRole("main")
+      .getByRole("list", { name: heading, exact: true })
+      .getByRole("heading", { level: 3 })
+  }
+  const moveButton = (page: Page, title: string) =>
+    page.getByRole("main").getByRole("button", { name: `Move ${title}` })
+  const nowRows = (tabs: readonly FakeTab[]) => {
+    const [header = [], ...rows] =
+      tabs.find(({ title }) => title === "ProductA")?.rows ?? []
+    const horizon = header.indexOf("Horizon")
+    return rows.filter((row) => row[horizon] === "Now").map(([title]) => title)
+  }
+  const LAST = "Card awaiting release"
+
+  for (const [size, width] of [
+    ["a desktop", 1280],
+    ["a phone", PHONE_WIDTH],
+  ] as const) {
+    test(`puts an item first from its Move menu on ${size}, pending at the heading, then publishes it as one row move (S1, S2, S3, S6, S7)`, async ({
+      page,
+      sheets,
+    }) => {
+      await page.setViewportSize({ width, height: 812 })
+      await openRoadmap(page, "producta", ITEM)
+      const before = sheets.spreadsheet.find(
+        ({ title }) => title === "ProductA",
+      )?.rows
+
+      // By keyboard: the menu opens on its first choice, "To the top".
+      await moveButton(page, LAST).focus()
+      await page.keyboard.press("Enter")
+      const menu = page.getByRole("menu")
+      await expect(menu).toContainText("In Now: 3 of 3")
+      await expect(menu.getByRole("menuitem")).toHaveText([
+        "To the top",
+        "Up one",
+        "Recently delivered",
+        "Next",
+        "Later",
+        "Delivered this year",
+        "Not doing",
+      ])
+      await page.keyboard.press("Enter")
+
+      await expect(titlesUnder(page, "Now")).toHaveText([
+        LAST,
+        ITEM,
+        "Minimal card",
+      ])
+      await expect(moveButton(page, LAST)).toBeFocused()
+      const main = page.getByRole("main")
+      await expect(
+        main.getByRole("status").filter({ hasText: "Moved to the top" }),
+      ).toHaveText("Moved to the top. 1 of 3.")
+      await expect(main.getByText("Order changed")).toBeVisible()
+      await expect(
+        main.getByRole("button", { name: "Undo order Now" }),
+      ).toBeVisible()
+      await expect(main.getByText("Changed", { exact: true })).toHaveCount(0)
+      await expect(main.getByText("1 unpublished change")).toBeVisible()
+      expect(
+        await page.evaluate(
+          () =>
+            document.documentElement.scrollWidth <=
+            document.documentElement.clientWidth,
+        ),
+      ).toBe(true)
+      expect(sheets.writes).toEqual([])
+
+      await main.getByRole("button", { name: "Publish changes" }).click()
+      const dialog = page.getByRole("alertdialog")
+      await expect(dialog.getByRole("listitem")).toHaveText([
+        "NowOrder changed",
+      ])
+      await dialog.getByRole("button", { name: "Publish changes" }).click()
+      await expect(main.getByText(/^Changes published\./)).toBeVisible()
+
+      // One row moved, whole; beside it only the Item ID any publish gives each row.
+      expect(sheets.writes).toHaveLength(1)
+      const { requests } = sheets.writes[0] as {
+        requests: Record<string, unknown>[]
+      }
+      expect(
+        requests
+          .map((request) => Object.keys(request)[0])
+          .filter(
+            (kind) => kind !== "updateCells" && kind !== "appendDimension",
+          ),
+      ).toEqual(["moveDimension"])
+      const [header = [], ...rows] =
+        sheets.spreadsheet.find(({ title }) => title === "ProductA")?.rows ?? []
+      expect(rows.map(([title]) => title)).toEqual([
+        LAST,
+        ITEM,
+        "Minimal card",
+        "Card being explored",
+        "Discovery card",
+        "Longer-term idea",
+        "Recently shipped work",
+        "Earlier delivery this year",
+        "Something we are not doing",
+      ])
+      const itemId = header.indexOf("Item ID")
+      for (const row of rows) {
+        const was = before?.find(([title]) => title === row[0]) ?? []
+        expect(row.filter((_, column) => column !== itemId)).toEqual(
+          was.slice(0, row.length).filter((_, column) => column !== itemId),
+        )
+      }
+      await expect(main.getByText("Order changed")).toHaveCount(0)
+
+      await page.reload()
+      await connect(page)
+      await expect(titlesUnder(page, "Now")).toHaveText([
+        LAST,
+        ITEM,
+        "Minimal card",
+      ])
+    })
+
+    test(`shows a co-lead's change to the placement's items beside your order on ${size}, nothing written until it is decided (S10, S11, S12)`, async ({
+      page,
+      sheets,
+    }) => {
+      await page.setViewportSize({ width, height: 812 })
+      await openRoadmap(page, "producta", ITEM)
+      await publishOnce(page)
+      const main = page.getByRole("main")
+      await moveButton(page, LAST).click()
+      await page.getByRole("menuitem", { name: "To the top" }).click()
+      await expect(main.getByText("Order changed")).toBeVisible()
+      // A co-lead moves an item into Now meanwhile.
+      sheets.coLead("ProductA", "Card being explored", "Horizon", "Now")
+
+      await confirmPublish(page, "Publish")
+
+      const review = main.getByRole("alert")
+      await expect(review).toBeFocused()
+      await expect(review).toContainText(
+        "Someone else has changed this roadmap too",
+      )
+      await expect(review).toContainText(
+        "Nothing was published.Choose which to keep for each, then publish again.",
+      )
+      const conflict = review.getByRole("listitem").filter({
+        has: page.getByText("Now: Order", { exact: true }),
+      })
+      await expect(conflict.getByRole("term")).toHaveText([
+        "Your order",
+        "Current order",
+      ])
+      const [yours, theirs] = [
+        conflict.getByRole("definition").nth(0),
+        conflict.getByRole("definition").nth(1),
+      ]
+      await expect(yours.getByRole("listitem")).toHaveText([
+        LAST,
+        ITEM,
+        "A minimal card",
+        "Card being explored",
+      ])
+      await expect(theirs.getByRole("listitem")).toHaveText([
+        ITEM,
+        "A minimal card",
+        LAST,
+        "Card being explored",
+      ])
+      // Side by side on a desktop, stacked on a phone, nothing scrolling sideways.
+      const yoursBox = await yours.boundingBox()
+      const theirsBox = await theirs.boundingBox()
+      if (!yoursBox || !theirsBox) throw new Error("Both orders are drawn")
+      if (width === PHONE_WIDTH) {
+        expect(theirsBox.y).toBeGreaterThan(yoursBox.y + yoursBox.height)
+      } else {
+        expect(theirsBox.x).toBeGreaterThan(yoursBox.x + yoursBox.width)
+      }
+      expect(
+        await page.evaluate(
+          () =>
+            document.documentElement.scrollWidth <=
+            document.documentElement.clientWidth,
+        ),
+      ).toBe(true)
+      expect(sheets.writes).toHaveLength(1)
+      const publishAgain = main.getByRole("button", { name: "Publish changes" })
+      await expect(publishAgain).toHaveAttribute("aria-disabled", "true")
+
+      await review.getByRole("button", { name: "Keep mine Now: Order" }).click()
+      await expect(publishAgain).toBeFocused()
+      await expect(review).toHaveCount(0)
+      await expect(main.getByText("Order changed")).toBeVisible()
+
+      await confirmPublish(page, "Publish")
+      await expect(main.getByText(/^Changes published\./)).toBeVisible()
+      expect(sheets.writes).toHaveLength(2)
+      expect(nowRows(sheets.spreadsheet)).toEqual([
+        LAST,
+        ITEM,
+        "A minimal card",
+        "Card being explored",
+      ])
+      await expect(titlesUnder(page, "Now")).toHaveText([
+        LAST,
+        ITEM,
+        "A minimal card",
+        "Card being explored",
+      ])
+    })
+  }
+
+  test("Use theirs drops the pending order, leaving the co-lead's (S12)", async ({
+    page,
+    sheets,
+  }) => {
+    await openRoadmap(page, "producta", ITEM)
+    await publishOnce(page)
+    const main = page.getByRole("main")
+    await moveButton(page, LAST).click()
+    await page.getByRole("menuitem", { name: "Up one" }).click()
+    sheets.coLead("ProductA", "Card being explored", "Horizon", "Now")
+    await confirmPublish(page, "Publish")
+
+    await main
+      .getByRole("alert")
+      .getByRole("button", { name: "Use theirs Now: Order" })
+      .click()
+
+    await expect(main.getByRole("alert")).toHaveCount(0)
+    await expect(main.getByText("Order changed")).toHaveCount(0)
+    await expect(main.getByText(/unpublished change/)).toHaveCount(0)
+    await expect(titlesUnder(page, "Now")).toHaveText([
+      ITEM,
+      "A minimal card",
+      LAST,
+      "Card being explored",
+    ])
+    expect(sheets.writes).toHaveLength(1)
   })
 })
 

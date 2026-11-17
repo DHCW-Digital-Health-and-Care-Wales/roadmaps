@@ -123,3 +123,20 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   refuses, as Google does, a move that leaves a row where it is
   (`tests/fixtures/sheets/apply-batch-update.ts`). `sheets.refuseProtected()` makes
   the E2E fake refuse the next write as a protected cell or row is refused.
+- **A placement's order is `RoadmapChanges.orders`** (STY-050; its _Contract for
+  dependents_, archived, says what `PlacementOrder`, `arrangedOrder`, `settleOrders`
+  and `reviewedOrders` do). A hand-written `RoadmapChanges` or `PublishWrites` needs
+  `orders`: the typecheck names each one, so spread `NO_CHANGES`.
+- **The store settles every change against the roadmap's items as cached**
+  (`createPendingChangesStore(itemsOf)`): a change that adds an item to a placement,
+  takes one out or drops one, a removal included, needs no code for orders, but its
+  page test shows the order after it. A unit test of a store made without `itemsOf`
+  settles nothing.
+- **A refusal's `conflicts` hold orders too** (`Conflict`): code that reads `field`,
+  `item` or `current` of one narrows by `subject` first, and `OpenConflict` by
+  `"item" in open`.
+- **A roadmap's page with items has a status line of its own**, empty until an item is
+  reordered: a test finds a notice that is a status by its text
+  (`getByRole("status").filter({ hasText })`), never as the page's only status.
+- **A card's Move menu opens on a position**, when its placement shows two items or
+  more: a test that steps through the menu by keyboard counts those choices first.

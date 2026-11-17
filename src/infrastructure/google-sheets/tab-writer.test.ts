@@ -94,3 +94,100 @@ describe("TabWriter.move (STY-051)", () => {
     }).toThrow(expect.objectContaining({ kind: "unknown" }))
   })
 })
+
+describe("TabWriter.insert (STY-050)", () => {
+  /** A blank row put in at 0-based `startIndex`, taking after the row below it. */
+  const inserted = (startIndex: number) => ({
+    insertDimension: {
+      range: {
+        sheetId: 7,
+        dimension: "ROWS",
+        startIndex,
+        endIndex: startIndex + 1,
+      },
+      inheritFromBefore: false,
+    },
+  })
+  const cellAt = (
+    rowIndex: number,
+    columnIndex: number,
+    stringValue: string,
+  ) => ({
+    updateCells: {
+      start: { sheetId: 7, rowIndex, columnIndex },
+      rows: [{ values: [{ userEnteredValue: { stringValue } }] }],
+      fields: "userEnteredValue",
+    },
+  })
+
+  it("inserts a row just before a row as read and writes its cells there, a blank one left out", () => {
+    const tab = writer()
+
+    tab.insert(4, [
+      ["Title", "New"],
+      ["Phase", ""],
+    ])
+
+    expect(tab.requests()).toEqual([inserted(3), cellAt(3, 0, "New")])
+  })
+
+  it("works each insert out over the moves and the inserts before it", () => {
+    const tab = writer()
+
+    tab.move(6, { before: 2 })
+    tab.insert(2, [["Title", "First"]])
+    tab.insert(2, [["Title", "Second"]])
+    tab.insert(5, [["Title", "Third"]])
+
+    // 2 3 4 5 6 → 6 2 3 4 5 → 6 First 2 … → 6 First Second 2 3 4 5 → … 4 Third 5
+    expect(tab.requests()).toEqual([
+      {
+        moveDimension: {
+          source: { sheetId: 7, dimension: "ROWS", startIndex: 5, endIndex: 6 },
+          destinationIndex: 1,
+        },
+      },
+      inserted(2),
+      cellAt(2, 0, "First"),
+      inserted(3),
+      cellAt(3, 0, "Second"),
+      inserted(7),
+      cellAt(7, 0, "Third"),
+    ])
+  })
+
+  it("sends the inserts after the moves and before a row appended, a column they add grown and headed first (S8)", () => {
+    const tab = writer()
+
+    tab.append([["Title", "Last"]])
+    tab.move(2, { after: 6 })
+    tab.insert(3, [
+      ["Title", "New"],
+      ["Item ID", "bcdfghjk"],
+    ])
+    tab.write(2, "Title", "Moved")
+
+    expect(tab.requests().map((request) => Object.keys(request)[0])).toEqual([
+      "appendDimension",
+      "updateCells",
+      "updateCells",
+      "moveDimension",
+      "insertDimension",
+      "updateCells",
+      "updateCells",
+      "appendCells",
+    ])
+    expect(tab.requests()[1]).toEqual(cellAt(0, 1, "Item ID"))
+  })
+
+  it("rejects a row the tab was not read with, and a move made once a row is inserted", () => {
+    expect(() => {
+      writer().insert(9, [["Title", "New"]])
+    }).toThrow(expect.objectContaining({ kind: "unknown" }))
+    const tab = writer()
+    tab.insert(3, [["Title", "New"]])
+    expect(() => {
+      tab.move(2, { after: 6 })
+    }).toThrow(expect.objectContaining({ kind: "unknown" }))
+  })
+})

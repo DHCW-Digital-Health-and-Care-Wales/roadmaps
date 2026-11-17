@@ -353,7 +353,8 @@ function settleFields<F extends string>(
 /**
  * `changes` once `sent` is published: each edit still as it was sent is gone, and any
  * made meanwhile is kept, edited from what was published. A new item that was sent is
- * gone too, and one added meanwhile is kept.
+ * gone too, and one added meanwhile is kept. So is a placement's order that was sent:
+ * none is made meanwhile, as the order controls wait for the publish (STY-050 S15).
  */
 export function settlePublished(
   changes: RoadmapChanges,
@@ -372,6 +373,10 @@ export function settlePublished(
       ]
     }),
     newItems: changes.newItems.filter(({ id }) => !sentIds.has(id)),
+    orders: changes.orders.filter(
+      ({ placement }) =>
+        !sent.orders.some((each) => each.placement === placement),
+    ),
   }
 }
 
@@ -428,7 +433,8 @@ export function publishesNoItems(
 
 /**
  * How many changes are pending, what the page counts as unpublished changes: each field
- * edited, and each new item as one, whatever fields it has.
+ * edited, each new item as one, whatever fields it has, and each placement's order as
+ * one, however many of its items moved (STY-050).
  */
 export function countChanges(changes: RoadmapChanges | undefined): number {
   if (!changes) return 0
@@ -438,7 +444,8 @@ export function countChanges(changes: RoadmapChanges | undefined): number {
       (count, entry) => count + Object.keys(entry.fields).length,
       0,
     ) +
-    changes.newItems.length
+    changes.newItems.length +
+    changes.orders.length
   )
 }
 

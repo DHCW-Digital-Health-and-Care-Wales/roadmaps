@@ -261,9 +261,10 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
    * Re-reads the roadmap as `listRoadmapItems` does, plans the publish over it, then
    * sends every write in one `batchUpdate`, which Google applies all or nothing
    * (ADR-012): each changed cell, then the row of each moved item, to last in its new
-   * placement (STY-051), then a row for each new item, which Google puts after the last
-   * row any value uses as it applies the write. A write whose answer is lost is settled
-   * by one more read (Option 16).
+   * placement (STY-051) or to where its placement's pending order has it (STY-050), then
+   * a row for each new item, inserted where such an order has it or else put by Google
+   * after the last row any value uses as it applies the write. A write whose answer is
+   * lost is settled by one more read (Option 16).
    */
   async publishRoadmapChanges(
     roadmapId: string,
@@ -1061,7 +1062,9 @@ function snapshotOf({
 /**
  * The requests that make `writes`, after any `index` already holds: growing grids
  * first, then headers, then cells, at the rows as read, then each moved item's row
- * (STY-051), then a row for each new item, after the tab's last row in use (STY-045).
+ * (STY-051, STY-050), then a row for each new item: inserted just before the item a
+ * pending order puts after it, or else appended after the tab's last row in use
+ * (STY-045, STY-050 S8).
  */
 function batchRequests(
   read: RoadmapRead,
@@ -1103,14 +1106,16 @@ function batchRequests(
         : { before: rowOf(move.before) },
     )
   }
-  for (const { id, fields } of writes.newItems) {
-    tab.append([
-      ["Item ID", id],
+  for (const { id, fields, before } of writes.newItems) {
+    const cells = [
+      ["Item ID", id] as const,
       ...fields.map(
         ({ field, value }) =>
           [ITEM_COLUMNS[field], itemCell(field, value)] as const,
       ),
-    ])
+    ]
+    if (before === undefined) tab.append(cells)
+    else tab.insert(rowOf(before), cells)
   }
   return [...index.requests(), ...tab.requests()]
 }

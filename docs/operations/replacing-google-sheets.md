@@ -53,7 +53,18 @@ doc comments first, since they are the contract.
        moved. The plan's `moves` say which items go where among the roadmap's items
        (`planItemMoves`, `movedItems` in `src/domain/roadmap/item-moves.ts`); an API
        that stores each item's position writes those positions in the same
-       transaction as the placement, and needs no row to move (STY-051);
+       transaction as the placement, and needs no row to move (STY-051). A placement's
+       pending order (`RoadmapChanges.orders`, STY-050) is published the same way:
+       the plan settles it against the snapshot, reports a co-lead's change to the
+       placement's items as an `OrderConflict` among the refusal's `conflicts`, and
+       gives the order to write as `moves`, a new item that is not last with the item
+       it goes `before`, and `PublishWrites.orders`, each placement's items once
+       written, by ID. An API that stores positions writes each placement's from
+       `orders` and ignores the moves; `listRoadmapItems` then returns the placement's
+       items in that order. `heldWrites` judges a lost answer by those IDs, so the
+       API's ids must be the ones the plan gave: an item's own, and a new item's the
+       one it was added with. An item with no ID is found by what it held
+       (`findOrderedItems`), which an API whose items always have ids never needs;
      - `addRoadmap` adds a roadmap and its empty list of items together or not at
        all, not published (STY-040). `planNewRoadmap` and `settleLostNewRoadmap`
        (`src/domain/roadmap/new-roadmap.ts`) are the rules both current repositories

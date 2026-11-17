@@ -785,3 +785,153 @@ describe("applyBatchUpdate moving a roadmap tab's rows (STY-051)", () => {
     ).toEqual(["moveDimension on Template"])
   })
 })
+
+describe("applyBatchUpdate inserting a row in a roadmap's tab (STY-050)", () => {
+  /** Product A's tab, which the index's row names: a header and two item rows. */
+  const items = (): GridTab => ({
+    ...productA(),
+    rows: [
+      ["Title", "Horizon", "Item ID"],
+      ["A", "Now", "bcdfghjk"],
+      ["B", "Now", "bcdfghjm"],
+    ],
+    rowCount: 5,
+    columnCount: 3,
+  })
+
+  const insert = (
+    sheetId: number,
+    startIndex: number,
+    { endIndex = startIndex + 1, inheritFromBefore = false } = {},
+  ) => ({
+    insertDimension: {
+      range: { sheetId, dimension: "ROWS", startIndex, endIndex },
+      inheritFromBefore,
+    },
+  })
+  /** A new item's cells, written at the row inserted at `rowIndex`. */
+  const newItem = (rowIndex: number, title = "New") => [
+    cell(10, rowIndex, 0, title),
+    cell(10, rowIndex, 1, "Now"),
+    cell(10, rowIndex, 2, "bcdfghjn"),
+  ]
+
+  it("puts a blank row before the row at the index, the grid growing by it, and takes the cells then written there", () => {
+    const result = applyBatchUpdate([index(), items()], {
+      requests: [insert(10, 2), ...newItem(2)],
+    })
+
+    expect(result).toMatchObject({
+      tabs: [
+        index(),
+        {
+          rows: [
+            ["Title", "Horizon", "Item ID"],
+            ["A", "Now", "bcdfghjk"],
+            ["New", "Now", "bcdfghjn"],
+            ["B", "Now", "bcdfghjm"],
+          ],
+          rowCount: 6,
+        },
+      ],
+      violations: [],
+    })
+  })
+
+  it("makes each insert over what the requests before it left", () => {
+    const result = applyBatchUpdate([index(), items()], {
+      requests: [
+        {
+          moveDimension: {
+            source: {
+              sheetId: 10,
+              dimension: "ROWS",
+              startIndex: 2,
+              endIndex: 3,
+            },
+            destinationIndex: 1,
+          },
+        },
+        insert(10, 2),
+        ...newItem(2),
+      ],
+    })
+
+    expect(
+      "tabs" in result && result.tabs[1]?.rows.map(([title]) => title),
+    ).toEqual(["Title", "B", "New", "A"])
+    expect(result.violations).toEqual([])
+  })
+
+  it.each([
+    ["no rows", insert(10, 2, { endIndex: 2 })],
+    ["a row beyond the grid", insert(10, 6)],
+    ["a tab that is not there", insert(99, 1)],
+    [
+      "a row that takes after the one before it, where there is none",
+      insert(10, 0, { inheritFromBefore: true }),
+    ],
+  ])("rejects an insert of %s, applying nothing", (_what, request) => {
+    expect(
+      applyBatchUpdate([index(), items()], {
+        requests: [cell(10, 1, 0, "Renamed"), request],
+      }),
+    ).toHaveProperty("error")
+  })
+
+  it("records what the editor never inserts as violations: a row above the header, columns, several rows, one that takes after the row above, and a row in any tab but a roadmap's own", () => {
+    const violationsOf = (tabs: GridTab[], ...requests: unknown[]) =>
+      applyBatchUpdate(tabs, { requests }).violations
+
+    expect(
+      violationsOf([index(), items()], insert(10, 0), ...newItem(0)),
+    ).toContain("insertDimension above ProductA's header row")
+    expect(
+      violationsOf([index(), items()], {
+        insertDimension: {
+          range: {
+            sheetId: 10,
+            dimension: "COLUMNS",
+            startIndex: 1,
+            endIndex: 2,
+          },
+          inheritFromBefore: false,
+        },
+      }),
+    ).toEqual(["insertDimension of COLUMNS, not ROWS"])
+    expect(
+      violationsOf([index(), items()], insert(10, 2, { endIndex: 4 })),
+    ).toContain("insertDimension of 2 rows in ProductA, not 1")
+    expect(
+      violationsOf(
+        [index(), items()],
+        insert(10, 2, { inheritFromBefore: true }),
+        ...newItem(2),
+      ),
+    ).toEqual(["insertDimension in ProductA taking after the row before"])
+    expect(violationsOf([index(), items()], insert(0, 1))).toContain(
+      "insertDimension on Roadmaps",
+    )
+  })
+
+  it("records a row inserted and left without a title, a Horizon the public site reads or an Item ID of its own as a violation", () => {
+    const violationsOf = (...requests: unknown[]) =>
+      applyBatchUpdate([index(), items()], { requests }).violations
+
+    expect(violationsOf(insert(10, 2))).toEqual([
+      "ProductA row inserted without an Item ID",
+      "ProductA row inserted without a Title",
+      'ProductA row inserted with the Horizon "", not one the public site reads',
+    ])
+    expect(
+      violationsOf(
+        insert(10, 2),
+        cell(10, 2, 0, "New"),
+        cell(10, 2, 1, "Now"),
+        cell(10, 2, 2, "bcdfghjk"),
+      ),
+    ).toEqual([
+      "ProductA row inserted with the Item ID bcdfghjk, which another row has",
+    ])
+  })
+})

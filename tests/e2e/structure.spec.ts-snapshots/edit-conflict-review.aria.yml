@@ -1,7 +1,7 @@
 - alert:
-  - text: Someone else has changed text you edited
+  - text: Someone else has changed this roadmap too
   - paragraph: Nothing was published.
-  - paragraph: Choose which text to keep for each, then publish again.
+  - paragraph: Choose which to keep for each, then publish again.
   - list:
     - listitem:
       - paragraph: "About this roadmap: Vision"

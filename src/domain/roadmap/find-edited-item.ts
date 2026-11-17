@@ -32,11 +32,23 @@ export function findEditedItem(
   const current = items[index]
   if (current === undefined) return -1
   if (item.id !== null && !repeatedIds.has(item.id)) return index
+  return holdsLoaded(current, item, pending) ? index : -1
+}
+
+/**
+ * Whether `current` holds what `loaded` did when it was read, or that with the
+ * `pending` values written, as a publish whose answer was lost leaves it.
+ */
+export function holdsLoaded(
+  current: RoadmapItem,
+  loaded: RoadmapItem,
+  pending: readonly { field: EditableItemField; value: string }[],
+): boolean {
   const edited = new Map(pending.map(({ field, value }) => [field, value]))
-  return sameContent(current, item, new Map()) ||
-    sameContent(current, item, edited)
-    ? index
-    : -1
+  return (
+    sameContent(current, loaded, new Map()) ||
+    sameContent(current, loaded, edited)
+  )
 }
 
 /** Every part of an item but its ID, so its content can be compared. */

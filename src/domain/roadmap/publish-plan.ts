@@ -11,17 +11,20 @@ import { findEditedItem } from "./find-edited-item"
 import { detailsOf, detailsValue } from "./item-details"
 import { type ItemMove, planItemMoves } from "./item-moves"
 import { createItemId, createUnusedId } from "./item-id"
+import { arrangedOrder, findOrderedItems, orderedItem } from "./placement-order"
 import type { Roadmap } from "./roadmap"
 import {
+  type Conflict,
   EDITABLE_ITEM_FIELDS,
   EDITABLE_ROADMAP_FIELDS,
   type EditableItemField,
   type EditableRoadmapField,
   type FieldChange,
-  type FieldConflict,
   isChoiceField,
   type ItemChanges,
   itemValue,
+  type OrderConflict,
+  type OrderedItem,
   organisationIdsOf,
   organisationIdsValue,
   type PublishOutcome,
@@ -32,7 +35,7 @@ import {
   tagsValue,
 } from "./roadmap-changes"
 import type { RoadmapItem } from "./roadmap-item"
-import { isRoadmapPlacement } from "./roadmap-placement"
+import { isRoadmapPlacement, type RoadmapPlacement } from "./roadmap-placement"
 
 /** A roadmap as just read, to publish over. */
 export interface RoadmapSnapshot {
@@ -67,17 +70,32 @@ export interface PublishWrites {
   /** New IDs, for items with none: they go with any other write (ADR-012 Option 6). */
   ids: { index: number; id: string }[]
   /**
-   * The items whose placement is written that are not yet last in it, each moved there,
-   * in the order to make the moves, after every value above is written (STY-051).
+   * The items to move, in the order to make the moves, after every value above is
+   * written: one whose placement is written that is not yet last in it (STY-051), and
+   * those that put a placement in its pending order (STY-050).
    */
   moves: ItemMove[]
   /**
-   * The items new to the roadmap, in the order they were added, each with the ID it was
-   * added with and every field it has: they go after the roadmap's last item (STY-045).
+   * The items new to the roadmap, each with the ID it was added with and every field it
+   * has, in the order to write them, after the moves: the order they were added, but as
+   * its placement's pending order has those in one. One goes after the roadmap's last
+   * item (STY-045), unless that order puts an item after it: it then goes just `before`
+   * that item, by its index, where the moves leave it (STY-050 S8).
    */
   newItems: {
     id: string
     fields: { field: EditableItemField; value: string }[]
+    before?: number
+  }[]
+  /**
+   * Each placement whose pending order the moves and new items above reach: the IDs of
+   * its `items` once written, in order, and of those it held, `null` for one with none
+   * yet. A write whose answer was lost is judged by them (STY-050 S14).
+   */
+  orders: {
+    placement: RoadmapPlacement
+    items: string[]
+    was: (string | null)[]
   }[]
 }
 
@@ -99,7 +117,10 @@ const REQUIRED_FIELDS: ReadonlySet<string> = new Set(["title"])
  * conflict. A new item is never a conflict or missing: it is written unless a row of
  * the roadmap holds its ID, which a write of it whose answer was lost left there
  * (STY-045). An item whose placement is written goes last in it, in the order the
- * changes give the moves (`planItemMoves`, STY-051). Throws `AppError('unknown')` for a
+ * changes give the moves (`planItemMoves`, STY-051), unless the placement's order is
+ * pending: its items are then put in that order, the items a co-lead added or moved in
+ * last, a new item among them inserted, unless a co-lead changed the placement's items
+ * too, which is a conflict (STY-050). Throws `AppError('unknown')` for a
  * blank title, a placement that is none of the six, an organisation the list doesn't
  * hold, a `Last updated` that is no `YYYY-MM-DD` date or two new items with one ID,
  * which callers never send, and `AppError('invalid-data')` for a family or category
@@ -114,8 +135,10 @@ export function planRoadmapPublish(
     return { kind: "settled", outcome: { status: "roadmap-not-found" } }
   }
   const newItems = newItemWrites(changes.newItems, snapshot)
-  const conflicts: FieldConflict[] = []
+  const conflicts: Conflict[] = []
   const missingItems: ItemChanges[] = []
+  // Where each item found is to be, by its index: only those with a placement pending.
+  const movedTo = new Map<number, string>()
   const roadmapWrites: PublishWrites["roadmap"] = []
   const itemWrites: Omit<PublishWrites["items"][number], "id">[] = []
 
@@ -160,6 +183,7 @@ export function planRoadmapPublish(
       continue
     }
     for (const { field, base, value } of pending) {
+      if (field === "placement") movedTo.set(index, value)
       const currentValue = itemValue(current, field)
       if (currentValue === value) continue
       // Writing the English alone could pair the wrong Welsh with a tag or a detail
@@ -183,16 +207,33 @@ export function planRoadmapPublish(
     }
   }
 
+  const orders = plannedOrders(changes, snapshot, {
+    movedTo,
+    missingItems,
+    newItems,
+  })
+  conflicts.push(...orders.conflicts)
   if (conflicts.length > 0 || missingItems.length > 0) {
     return {
       kind: "settled",
       outcome: { status: "refused", conflicts, missingItems },
     }
   }
+  const moves = planItemMoves(
+    snapshot.items.map(({ placement }) => placement),
+    itemWrites.flatMap(({ index, field, value }) =>
+      field === "placement" ? [{ index, placement: value }] : [],
+    ),
+    orders.targets.map(({ placement, items }) => ({
+      placement,
+      items: items.filter((slot) => typeof slot === "number"),
+    })),
+  )
   if (
     roadmapWrites.length === 0 &&
     itemWrites.length === 0 &&
-    newItems.length === 0
+    newItems.length === 0 &&
+    moves.length === 0
   ) {
     return { kind: "settled", outcome: { status: "published" } }
   }
@@ -210,15 +251,161 @@ export function planRoadmapPublish(
       roadmap: roadmapWrites,
       items: itemWrites.map((write) => ({ ...write, id: idAt(write.index) })),
       ids,
-      moves: planItemMoves(
-        snapshot.items.map(({ placement }) => placement),
-        itemWrites.flatMap(({ index, field, value }) =>
-          field === "placement" ? [{ index, placement: value }] : [],
-        ),
-      ),
-      newItems,
+      moves,
+      newItems: orderedNewItems(newItems, orders.targets),
+      orders: orders.targets
+        .filter(({ items, was }) => !sameSlots(items, was))
+        .map(({ placement, items, was }) => ({
+          placement,
+          items: items.map((slot) =>
+            typeof slot === "number" ? idAt(slot) : slot,
+          ),
+          was: was.map((index) => snapshot.items[index]?.id ?? null),
+        })),
     },
   }
+}
+
+/**
+ * An item of a placement as its order is planned: one the roadmap holds, by its index
+ * among the snapshot's items, or a new one, by its ID.
+ */
+type Slot = number | string
+
+/** A placement's pending order as the publish writes it. */
+interface OrderTarget {
+  placement: RoadmapPlacement
+  /** The placement's items once written, in order. */
+  items: Slot[]
+  /** The items it holds as read, in order. */
+  was: number[]
+}
+
+function sameSlots(a: readonly Slot[], b: readonly Slot[]): boolean {
+  return a.length === b.length && a.every((slot, index) => slot === b[index])
+}
+
+/**
+ * Each pending order as it is written over `snapshot`, or the conflict it is in (STY-050
+ * S10): a placement's items as read are in neither the order's base nor the order to
+ * write. That order is `arrangedOrder`'s: the pending one over the items the placement
+ * is to hold, those it holds bar any moved out (`movedTo`, the found items with a
+ * placement pending, in the order moved), then the items moved in and the `newItems`
+ * written. An edited item no longer found (`missingItems`) has left both orders, so
+ * one that differs by it alone is no conflict.
+ */
+function plannedOrders(
+  changes: RoadmapChanges,
+  snapshot: RoadmapSnapshot,
+  {
+    movedTo,
+    missingItems,
+    newItems,
+  }: {
+    movedTo: ReadonlyMap<number, string>
+    missingItems: readonly ItemChanges[]
+    newItems: PublishWrites["newItems"]
+  },
+): { conflicts: OrderConflict[]; targets: OrderTarget[] } {
+  const conflicts: OrderConflict[] = []
+  const targets: OrderTarget[] = []
+  const found = (entry: OrderedItem) =>
+    !missingItems.some(({ item, position }) =>
+      entry.id === null
+        ? item.id === null && position === entry.position
+        : item.id === entry.id,
+    )
+  const written = new Set(newItems.map(({ id }) => id))
+  /** Each of `ordered` that is still an item, or a new one to write. */
+  const slotsOf = (ordered: readonly OrderedItem[]): Slot[] => {
+    const known = ordered.filter(found)
+    const indexes = findOrderedItems(snapshot.items, known, changes.items)
+    return known.flatMap(({ id }, at): Slot[] => {
+      const index = indexes[at] ?? -1
+      if (index >= 0) return [index]
+      return id !== null && written.has(id) ? [id] : []
+    })
+  }
+
+  for (const order of changes.orders) {
+    const { placement } = order
+    const was = snapshot.items.flatMap((item, index) =>
+      item.placement === placement ? [index] : [],
+    )
+    const present: Slot[] = [
+      ...was.filter((index) => (movedTo.get(index) ?? placement) === placement),
+      ...[...movedTo.keys()].filter(
+        (index) =>
+          movedTo.get(index) === placement &&
+          snapshot.items[index]?.placement !== placement,
+      ),
+      ...newItems.flatMap(({ id, fields }) =>
+        fields.some(
+          ({ field, value }) => field === "placement" && value === placement,
+        )
+          ? [id]
+          : [],
+      ),
+    ]
+    const items = arrangedOrder(slotsOf(order.items), present)
+    // A base item that has gone is one more than the placement holds: never the same.
+    const base = order.base.filter(found)
+    const baseHeld = base.length === was.length && sameSlots(slotsOf(base), was)
+    if (baseHeld || sameSlots(items, was)) {
+      targets.push({ placement, items, was })
+    } else {
+      conflicts.push({
+        subject: "order",
+        placement,
+        base: order.base,
+        pending: order.items,
+        current: was.flatMap((index) => {
+          const item = snapshot.items[index]
+          return item
+            ? [{ item: orderedItem(item, index), title: item.title }]
+            : []
+        }),
+      })
+    }
+  }
+  return { conflicts, targets }
+}
+
+/**
+ * `newItems` in the order to write them, each that a pending order puts before an item
+ * the roadmap holds with that item, to be inserted before it; the rest are appended.
+ * Those of one placement with a pending order take the places they have between them,
+ * in that order's sequence.
+ */
+function orderedNewItems(
+  newItems: PublishWrites["newItems"],
+  targets: readonly OrderTarget[],
+): PublishWrites["newItems"] {
+  // The item each new item of a pending order goes before, when one follows it.
+  const before = new Map<string, number | undefined>()
+  for (const { items } of targets) {
+    items.forEach((slot, at) => {
+      if (typeof slot !== "string") return
+      before.set(
+        slot,
+        items.slice(at).find((next) => typeof next === "number"),
+      )
+    })
+  }
+  const groups = targets.map(({ items }) =>
+    items.filter((slot) => typeof slot === "string"),
+  )
+  return newItems.map((newItem) => {
+    const group = groups.find((ids) => ids.includes(newItem.id))
+    if (!group) return newItem
+    // Among the new items, the places of its placement's go to them in its order.
+    const turn = newItems
+      .filter(({ id }) => group.includes(id))
+      .indexOf(newItem)
+    const taking = newItems.find(({ id }) => id === group[turn]) ?? newItem
+    const next = before.get(taking.id)
+    return next === undefined ? taking : { ...taking, before: next }
+  })
 }
 
 /**
@@ -227,7 +414,9 @@ export function planRoadmapPublish(
  * ID each holds once written, never by place, as rows may have moved since; a new item
  * is held when a row holds its ID, whatever that row now reads (STY-045). A move is held
  * when its placement is: the write is all or nothing, so no place is looked at (STY-051
- * S8).
+ * S8). A placement's order is held when the placement's items are in it and not held
+ * when they are in the order they had; in any other, as after a co-lead's change, it
+ * can't be told (STY-050 S14).
  */
 export function heldWrites(
   writes: PublishWrites,
@@ -235,7 +424,17 @@ export function heldWrites(
 ): "all" | "none" | "some" {
   if (snapshot === null) return "some"
   const withId = (id: string) => snapshot.items.find((item) => item.id === id)
+  const orders = writes.orders.map(({ placement, items, was }) => {
+    const now = snapshot.items.flatMap((item) =>
+      item.placement === placement ? [item.id] : [],
+    )
+    const holds = (ids: readonly (string | null)[]) =>
+      ids.length === now.length && ids.every((id, at) => id === now[at])
+    return holds(items) ? true : holds(was) ? false : null
+  })
+  if (orders.includes(null)) return "some"
   const held = [
+    ...orders,
     ...writes.roadmap.map(
       ({ field, value }) => roadmapValue(snapshot.roadmap, field) === value,
     ),

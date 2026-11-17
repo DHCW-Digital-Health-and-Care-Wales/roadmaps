@@ -17,7 +17,7 @@ import {
 import type { Roadmap } from "./roadmap"
 import type {
   EditableRoadmapField,
-  FieldConflict,
+  Conflict,
   ItemChanges,
   RoadmapChanges,
 } from "./roadmap-changes"
@@ -66,7 +66,7 @@ export type PublishedStateOutcome =
   /** A co-lead's change conflicts with a pending edit, or an edited item is gone (S6). */
   | {
       status: "refused"
-      conflicts: FieldConflict[]
+      conflicts: Conflict[]
       missingItems: ItemChanges[]
     }
 

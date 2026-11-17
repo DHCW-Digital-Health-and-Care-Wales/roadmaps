@@ -279,6 +279,7 @@ describe("heldPublishedState", () => {
       items: [],
       ids: [],
       moves: [],
+      orders: [],
       newItems: [],
     }
     const held = (lastUpdated: string) =>
@@ -299,6 +300,7 @@ describe("heldPublishedState", () => {
       items: [],
       ids: [],
       moves: [],
+      orders: [],
       newItems: [],
     }
 

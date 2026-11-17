@@ -239,14 +239,17 @@ export function createInMemoryRoadmapRepository(
       const item = stored[index]
       if (item) item.id = id
     }
-    // Each moved item last in its new placement, as the Google adapter moves its row
-    // (STY-051).
+    // Each moved item last in its new placement, or where its placement's pending order
+    // has it, as the Google adapter moves its row (STY-051, STY-050).
+    const asRead = [...stored]
     stored.splice(0, stored.length, ...movedItems(stored, writes.moves))
-    // After the roadmap's last item, as the Google adapter appends a row (STY-045).
-    for (const { id, fields } of writes.newItems) {
+    // After the roadmap's last item, as the Google adapter appends a row (STY-045), or
+    // just before the item a pending order puts after it, as it inserts one (STY-050).
+    for (const { id, fields, before } of writes.newItems) {
       const item = createTestRoadmapItem("", { id, placement: null })
       for (const { field, value } of fields) setItemValue(item, field, value)
-      stored.push(item)
+      const next = before === undefined ? undefined : asRead[before]
+      stored.splice(next ? stored.indexOf(next) : stored.length, 0, item)
     }
   }
 

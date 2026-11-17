@@ -1243,9 +1243,11 @@ describe("A co-lead's changes (STY-026)", () => {
     await publish(user)
 
     const notice = await review()
-    expect(notice).toHaveTextContent("Someone else has changed text you edited")
     expect(notice).toHaveTextContent(
-      /Nothing was published\.Choose which text to keep for each, then publish again\./,
+      "Someone else has changed this roadmap too",
+    )
+    expect(notice).toHaveTextContent(
+      /Nothing was published\.Choose which to keep for each, then publish again\./,
     )
     const conflicts = within(notice)
       .getAllByRole("listitem")
@@ -1579,7 +1581,7 @@ describe("A co-lead's changes (STY-026)", () => {
       roadmap.vision = { en: "Their vision.", cy: "" }
     })
     await publish(user)
-    await main().findByText("Someone else has changed text you edited")
+    await main().findByText("Someone else has changed this roadmap too")
 
     await act(() =>
       router.navigate({

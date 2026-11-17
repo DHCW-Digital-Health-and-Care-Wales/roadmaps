@@ -4,8 +4,11 @@ import { addNewItem } from "@/domain/roadmap/new-item"
 import { NO_CHANGES } from "@/domain/roadmap/roadmap-changes"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 
-import { editRoadmap } from "./pending-changes"
+import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
+
+import { editItem, editRoadmap } from "./pending-changes"
 import { createPendingChangesStore, discardable } from "./pending-changes-store"
+import { reorderItem } from "./placement-orders"
 
 const roadmap = createTestRoadmap("producta", "Product A")
 const retitled = editRoadmap(NO_CHANGES, roadmap, { title: "Product A2" })
@@ -32,6 +35,54 @@ describe("createPendingChangesStore", () => {
     expect(store.getSnapshot().changes.get("producta")?.newItems).toHaveLength(
       1,
     )
+  })
+
+  describe("a pending order (STY-050)", () => {
+    const first = createTestRoadmapItem("First", { id: "firstidx" })
+    const second = createTestRoadmapItem("Second", { id: "secondid" })
+    const moved = createTestRoadmapItem("Moved", {
+      id: "movedidx",
+      placement: "next",
+    })
+    const items = [first, second, moved]
+
+    it("is settled against the roadmap's items as last read by every update, whatever it changes (S5, D12)", () => {
+      const store = createPendingChangesStore((roadmapId) =>
+        roadmapId === "producta" ? items : undefined,
+      )
+      const orderOf = () =>
+        store
+          .getSnapshot()
+          .changes.get("producta")
+          ?.orders[0]?.items.map(({ id }) => id)
+      // Moved goes to Now, last, then first: an order is pending.
+      store.update("producta", (changes) =>
+        editItem(changes, undefined, moved, 2, { placement: "now" }),
+      )
+      store.update("producta", (changes) =>
+        reorderItem(changes, items, 2, "top"),
+      )
+      expect(orderOf()).toEqual(["movedidx", "firstidx", "secondid"])
+
+      // Its move is undone by an update that knows nothing of orders.
+      store.update("producta", (changes) => ({ ...changes, items: [] }))
+
+      expect(store.getSnapshot().changes.has("producta")).toBe(false)
+    })
+
+    it("waits as it is while the roadmap's items are not read, as after Disconnect and Keep (S9)", () => {
+      const store = createPendingChangesStore()
+      const reordered = reorderItem(NO_CHANGES, items, 1, "top")
+
+      store.update("producta", () => reordered)
+      store.update("producta", (changes) =>
+        editRoadmap(changes, roadmap, { title: "Product A2" }),
+      )
+
+      expect(store.getSnapshot().changes.get("producta")?.orders).toEqual(
+        reordered.orders,
+      )
+    })
   })
 
   it("discards one roadmap's changes and leaves another's", () => {

@@ -418,6 +418,23 @@ export const cy = {
       },
       move: "Symud",
       moveTo: "Symud i",
+      order: {
+        position: "{{placement}}: {{position, number}} o {{count, number}}",
+        toTop: "I'r brig",
+        upOne: "I fyny un",
+        downOne: "I lawr un",
+        toBottom: "I'r gwaelod",
+        moved: {
+          top: "Symudwyd i'r brig. {{position, number}} o {{count, number}}.",
+          up: "Symudwyd i fyny. {{position, number}} o {{count, number}}.",
+          down: "Symudwyd i lawr. {{position, number}} o {{count, number}}.",
+          bottom:
+            "Symudwyd i'r gwaelod. {{position, number}} o {{count, number}}.",
+        },
+        changed: "Trefn wedi'i newid",
+        undo: "Dadwneud y drefn",
+        undone: "Dadwnaed trefn {{placement}}",
+      },
       choosePlacement: "Dewiswch orwel neu adran",
       itemHeading: "Golygu'r eitem hon",
       addItem: {
@@ -581,7 +598,7 @@ export const cy = {
         },
         kept: "Mae eich newidiadau wedi'u cadw yn y tab hwn.",
         refused: {
-          title: "Mae rhywun arall wedi newid testun a olygoch chi",
+          title: "Mae rhywun arall wedi newid y map trywydd hwn hefyd",
           partialTitle: "Doedd dim modd cadw rhai newidiadau",
           nothing: {
             publish: "Chafodd dim byd ei gyhoeddi.",
@@ -589,15 +606,18 @@ export const cy = {
           },
           choose: {
             publish:
-              "Dewiswch pa destun i'w gadw ar gyfer pob un, yna cyhoeddwch eto.",
-            save: "Dewiswch pa destun i'w gadw ar gyfer pob un, yna cadwch eto.",
+              "Dewiswch pa un i'w gadw ar gyfer pob un, yna cyhoeddwch eto.",
+            save: "Dewiswch pa un i'w gadw ar gyfer pob un, yna cadwch eto.",
           },
           target: "{{subject}}: {{field}}",
           yours: "Eich newid",
           theirs: "Testun presennol",
+          orderField: "Trefn",
+          yourOrder: "Eich trefn chi",
+          currentOrder: "Trefn bresennol",
           empty: "Dim testun",
           keepMine: "Cadw fy un i",
-          useTheirs: "Defnyddio'u testun nhw",
+          useTheirs: "Defnyddio'r un presennol",
           welshTags:
             "Mae fersiynau Cymraeg o'r tagiau hyn erbyn hyn, felly does dim modd eu newid yma eto.",
           welshDetails:

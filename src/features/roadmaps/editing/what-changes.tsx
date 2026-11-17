@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next"
 
 import { localise } from "@/domain/roadmap/localised-text"
 import type { RoadmapChanges } from "@/domain/roadmap/roadmap-changes"
+import { ROADMAP_PLACEMENTS } from "@/domain/roadmap/roadmap-placement"
 import { useLanguage } from "@/i18n"
 
 import { changedParts } from "./pending-changes"
@@ -19,27 +20,48 @@ function edited(key: string, name: string, fields: readonly string[]) {
 /**
  * "What changes", in a dialog that asks before a roadmap's pending changes are written:
  * each changed part by name with its changed fields, then each new item by its title,
- * marked as new (STY-025 S9, STY-047 S1), in the page's order. One list, whatever is
- * pending: the roadmap's own text, the items it holds, then the new ones.
+ * marked as new (STY-025 S9, STY-047 S1), in the page's order. A placement whose order
+ * is pending is one line, by its heading: the new order is not listed (STY-050 S6).
+ * One list, whatever is pending: the roadmap's own text, the placements reordered, the
+ * items the roadmap holds, then the new ones.
  */
 export function WhatChanges({ changes }: WhatChangesProps) {
   const { t } = useTranslation()
   const language = useLanguage()
+  const parts = changedParts(changes)
   const listed = [
-    ...changedParts(changes).map((part) =>
+    ...parts.flatMap((part) =>
       part.kind === "roadmap"
-        ? edited(
-            "roadmap",
-            t("roadmaps.about.title"),
-            part.fields.map((field) =>
-              t(`roadmaps.edit.roadmapFields.${field}`),
+        ? [
+            edited(
+              "roadmap",
+              t("roadmaps.about.title"),
+              part.fields.map((field) =>
+                t(`roadmaps.edit.roadmapFields.${field}`),
+              ),
             ),
-          )
-        : edited(
-            `item-${String(part.position)}`,
-            localise(part.item.title, language),
-            part.fields.map((field) => t(`roadmaps.edit.itemFields.${field}`)),
-          ),
+          ]
+        : [],
+    ),
+    ...ROADMAP_PLACEMENTS.filter((placement) =>
+      changes.orders.some((order) => order.placement === placement),
+    ).map((placement) => ({
+      key: `order-${placement}`,
+      name: t(`roadmaps.items.placements.${placement}`),
+      change: t("roadmaps.edit.order.changed"),
+    })),
+    ...parts.flatMap((part) =>
+      part.kind === "item"
+        ? [
+            edited(
+              `item-${String(part.position)}`,
+              localise(part.item.title, language),
+              part.fields.map((field) =>
+                t(`roadmaps.edit.itemFields.${field}`),
+              ),
+            ),
+          ]
+        : [],
     ),
     // A new item is English alone, and no field of it is a change of its own.
     ...changes.newItems.map(({ id, values }) => ({

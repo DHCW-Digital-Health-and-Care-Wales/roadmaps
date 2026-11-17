@@ -373,6 +373,52 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expectNoAxeViolations(page, theme)
     })
 
+    test("a placement's order: the Move menu's positions, the heading once it is changed, the publish dialog, then a co-lead's change to review, on a phone (STY-050)", async ({
+      page,
+      sheets,
+    }) => {
+      await page.setViewportSize({ width: 375, height: 812 })
+      await page.goto("./#/roadmaps/producta")
+      await connect(page)
+      const main = page.getByRole("main")
+      // A first publish gives every item its ID: only then can a co-lead's change be told.
+      const form = await openEditItemDialog(page, "Minimal card")
+      await form.getByRole("textbox", { name: "Title" }).fill("A minimal card")
+      await form.getByRole("button", { name: "Done" }).click()
+      await main.getByRole("button", { name: "Publish changes" }).click()
+      await page
+        .getByRole("alertdialog")
+        .getByRole("button", { name: "Publish changes" })
+        .click()
+      await expect(main.getByText(/^Changes published\./)).toBeVisible()
+
+      await main
+        .getByRole("button", { name: "Move Card awaiting release" })
+        .click()
+      await expect(page.getByRole("menu")).toContainText("In Now: 3 of 3")
+      await expectNoAxeViolations(page, theme)
+
+      await page.getByRole("menuitem", { name: "To the top" }).click()
+      await expect(
+        main.getByRole("button", { name: "Undo order Now" }),
+      ).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+
+      sheets.coLead("ProductA", "Card being explored", "Horizon", "Now")
+      await main.getByRole("button", { name: "Publish changes" }).click()
+      const dialog = page.getByRole("alertdialog")
+      await expect(dialog).toContainText("Order changed")
+      await expectNoAxeViolations(page, theme)
+
+      await dialog.getByRole("button", { name: "Publish changes" }).click()
+      const review = main.getByRole("alert")
+      await expect(review.getByRole("term")).toHaveText([
+        "Your order",
+        "Current order",
+      ])
+      await expectNoAxeViolations(page, theme)
+    })
+
     test("an item's organisations, shut then open with an unknown code named, then the changed card (STY-034, STY-038)", async ({
       page,
       sheets,
@@ -723,7 +769,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       const review = main.getByRole("alert")
       await expect(review).toBeFocused()
       await expect(review).toContainText(
-        "Mae rhywun arall wedi newid testun a olygoch chi",
+        "Mae rhywun arall wedi newid y map trywydd hwn hefyd",
       )
       // The two values are told apart by their labels, not by colour.
       await expect(review.getByRole("term")).toHaveText([

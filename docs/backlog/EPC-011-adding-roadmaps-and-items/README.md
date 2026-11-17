@@ -2,8 +2,8 @@
 
 - **Status**: Active — grilled with the owner on 2026-11-14; STY-040 to STY-047
   delivered; reordering settled on 2026-11-16 as STY-051 then STY-050; STY-051 is
-  delivered in its PR and awaits merge
-- **Progress**: 9 of 12 terminal; next selectable: STY-050, once STY-051 is merged;
+  merged and STY-050 is delivered in its PR and awaits merge
+- **Progress**: 10 of 12 terminal; next selectable: none;
   blocked on: STY-048 and STY-049 wait for grilling
 - **Binding ADRs**: ADR-012, ADR-011, ADR-009, ADR-013, ADR-014, ADR-002, ADR-003, ADR-005,
   ADR-006, ADR-010, ADR-008
@@ -199,7 +199,7 @@ edit** and **Conflict** extended to orders, by the PR that wrote STY-050 and STY
 | STY-047 | [The publish dialog names the new items](../_archive/EPC-011-adding-roadmaps-and-items/STY-047-a-new-item-in-the-publish-dialog.md)                                         | Features/UI + i18n (en + cy) + E2E                                  | STY-046                   | ✅    |
 | STY-048 | [A Product Lead removes a roadmap](STY-048-remove-a-roadmap.md)                                                                                                             | to be decided                                                       | —                         |       |
 | STY-049 | [A Product Lead removes a published item](STY-049-remove-a-published-item.md)                                                                                               | to be decided                                                       | —                         |       |
-| STY-050 | [A Product Lead reorders the items in a placement](STY-050-reorder-items-in-a-placement.md)                                                                                 | Domain + Infrastructure + Features/UI + i18n (en + cy) + E2E + Docs | STY-051                   |       |
+| STY-050 | [A Product Lead reorders the items in a placement](../_archive/EPC-011-adding-roadmaps-and-items/STY-050-reorder-items-in-a-placement.md)                                   | Domain + Infrastructure + Features/UI + i18n (en + cy) + E2E + Docs | STY-051                   | ✅    |
 | STY-051 | [A moved item goes last in its new placement](../_archive/EPC-011-adding-roadmaps-and-items/STY-051-a-moved-item-goes-last-in-its-new-placement.md)                         | Domain + Infrastructure + Features/UI + i18n (en + cy) + E2E + Docs | —                         | ✅    |
 
 ## Sequencing
@@ -291,6 +291,10 @@ flowchart LR
 - [CHO-019](../chores/CHO-019-check-a-published-move-against-a-real-spreadsheet.md): the
   check of STY-051's write, a moved item's row, against a real test spreadsheet, which
   its delivery could not run. Proposed.
+- [CHO-020](../chores/CHO-020-check-a-published-order-against-a-real-spreadsheet.md): the
+  check of STY-050's write, a placement's rows reordered and a new item's row
+  inserted, against a real test spreadsheet, which its delivery could not run.
+  Proposed.
 - [CHO-011](../_archive/chores/CHO-011-the-dialog-tests-share-their-setup.md): the
   test setup STY-041 wrote out per spec, shared before STY-043, STY-044 and STY-046
   copy it. Done.

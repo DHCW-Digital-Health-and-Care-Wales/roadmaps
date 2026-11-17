@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, type RefObject } from "react"
+import { useTranslation } from "react-i18next"
 
 import { localise } from "@/domain/roadmap/localised-text"
 import type { Organisation } from "@/domain/roadmap/organisation"
@@ -15,6 +16,7 @@ import {
   usePendingChangesStore,
 } from "./pending-changes-context"
 import { discardable } from "./pending-changes-store"
+import { type OrderMove, reorderItem } from "./placement-orders"
 
 export interface EditableItemCardProps {
   roadmapId: string
@@ -26,6 +28,13 @@ export interface EditableItemCardProps {
   organisations: readonly Organisation[]
   /** Its 0-based place among the page's items. */
   position: number
+  /**
+   * Its place among its placement's items as the page shows them, and how many they
+   * are; none for an unplaced item, which is in no order (STY-050 S1).
+   */
+  order?: { at: number; count: number } | undefined
+  /** Says a status message: where the item now is in its placement's order (S2). */
+  onAnnounce: (message: string) => void
   /** Which control takes focus as the card renders, once; see `onFocusRequest`. */
   focusRequest?: CardControl | undefined
   /**
@@ -52,10 +61,13 @@ export type CardControl = "edit" | "move"
 /**
  * An item's card with its pending English, placement, tags, organisations and details
  * shown and tagged, an Edit that opens the item dialog on it (STY-044), a Move menu
- * (STY-031 S1, S2) and, while it has pending changes, "Undo changes". An item added
- * and not yet published is tagged "New" instead, with Remove, which drops it without
- * asking; what Edit and Move change is part of it (STY-046 S6). Nothing is written
- * until the roadmap is published.
+ * (STY-031 S1, S2) and, while it has pending changes, "Undo changes". The Move menu
+ * also puts it elsewhere in its placement's order, at once, which is the placement's
+ * change, not the item's: the card is not tagged for it (STY-050 S2, S3), and the
+ * choices wait while the roadmap is being published (S15). An item added and not yet
+ * published is tagged "New" instead, with Remove, which drops it without asking; what
+ * Edit and Move change is part of it (STY-046 S6). Nothing is written until the
+ * roadmap is published.
  */
 export function EditableItemCard({
   roadmapId,
@@ -63,6 +75,8 @@ export function EditableItemCard({
   pageItem,
   organisations,
   position,
+  order,
+  onAnnounce,
   focusRequest,
   onFocusRequest,
   onFocused,
@@ -70,6 +84,7 @@ export function EditableItemCard({
   onRemoved,
   dialogOpener,
 }: EditableItemCardProps) {
+  const { t } = useTranslation()
   const language = useLanguage()
   const store = usePendingChangesStore()
   const snapshot = usePendingChanges()
@@ -77,7 +92,8 @@ export function EditableItemCard({
   const isNew = pageItem.newItemId !== undefined
   // Nothing is behind a new item: once it is sent, a change to it would be lost as the
   // item read takes its place, so it waits, as "Discard all" does.
-  const changeable = !isNew || discardable(snapshot, roadmapId)
+  const publishing = !discardable(snapshot, roadmapId)
+  const changeable = !isNew || !publishing
   const ownEditButton = useRef<HTMLButtonElement>(null)
   const editButton = dialogOpener ?? ownEditButton
   const moveButton = useRef<HTMLButtonElement>(null)
@@ -96,6 +112,24 @@ export function EditableItemCard({
     store.update(roadmapId, (changes) =>
       editPageItem(changes, items, pageItem, position, { placement }),
     )
+    onFocusRequest(position, "move")
+  }
+  const reorder = (to: OrderMove) => {
+    if (!order || publishing) return
+    store.update(roadmapId, (changes) =>
+      reorderItem(changes, items, position, to),
+    )
+    const last = order.count - 1
+    const at = { top: 0, up: order.at - 1, down: order.at + 1, bottom: last }[
+      to
+    ]
+    onAnnounce(
+      t(`roadmaps.edit.order.moved.${to}`, {
+        position: at + 1,
+        count: order.count,
+      }),
+    )
+    // Its card is drawn again in its new place: focus goes back to its Move.
     onFocusRequest(position, "move")
   }
   const drop = () => {
@@ -123,9 +157,15 @@ export function EditableItemCard({
             <MoveMenu
               subject={title}
               placement={shown.placement}
+              position={
+                order && order.count > 1
+                  ? { ...order, held: publishing }
+                  : undefined
+              }
               button={moveButton}
               disabled={!changeable}
               onMove={move}
+              onReorder={reorder}
             />
           }
           onEdit={() => {

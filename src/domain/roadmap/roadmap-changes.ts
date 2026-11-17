@@ -1,6 +1,8 @@
 import { detailsValue } from "./item-details"
+import type { LocalisedText } from "./localised-text"
 import type { Roadmap } from "./roadmap"
 import type { RoadmapItem } from "./roadmap-item"
+import type { RoadmapPlacement } from "./roadmap-placement"
 
 /** The roadmap's own text a Product Lead may edit, in English only (ADR-012). */
 export const ROADMAP_TEXT_FIELDS = [
@@ -253,15 +255,47 @@ export interface NewItem {
 }
 
 /**
- * Every pending change to one roadmap: its own fields, its items' and the items new to
- * it, in the order they were added (ADR-012). The items moved to another placement are
- * in the order they were moved, whatever else of `items` lies between: publishing puts
- * them last there in that order (STY-051 D3).
+ * One item of a placement's order, as a later read of the roadmap finds it again
+ * (`findOrderedItems`): by its ID, which for a new item is the one it was added with;
+ * or, with no ID yet, by what it held when read, looked for first at `position`, its
+ * 0-based place among the roadmap's items then.
+ */
+export type OrderedItem =
+  { id: string } | { id: null; item: RoadmapItem; position: number }
+
+/**
+ * A placement's order as a pending edit (ADR-012, _STY-050 amendments_): one value,
+ * compared whole, as an item's tags are. It exists only once the Product Lead reorders
+ * the placement, and no longer once it is the order the placement would show without
+ * it.
+ */
+export interface PlacementOrder {
+  placement: RoadmapPlacement
+  /**
+   * The placement's items as loaded when it was first reordered, in their order: what a
+   * co-lead's change to them is found by. "Keep mine" makes it the order then found.
+   */
+  base: readonly OrderedItem[]
+  /**
+   * The items to publish the placement with, in order: those it holds, bar any moved
+   * out, the items moved in and the new ones. An item it lacks joins it last, and one it
+   * names that the placement no longer holds is left out (`arrangedOrder`).
+   */
+  items: readonly OrderedItem[]
+}
+
+/**
+ * Every pending change to one roadmap: its own fields, its items', the items new to it,
+ * in the order they were added, and the order of each placement reordered, one a
+ * placement (ADR-012). The items moved to another placement are in the order they were
+ * moved, whatever else of `items` lies between: publishing puts them last there in that
+ * order (STY-051 D3), unless the placement's order says where (STY-050).
  */
 export interface RoadmapChanges {
   roadmap: Partial<Record<EditableRoadmapField, FieldChange>>
   items: readonly ItemChanges[]
   newItems: readonly NewItem[]
+  orders: readonly PlacementOrder[]
 }
 
 /** A roadmap with nothing pending. */
@@ -269,6 +303,7 @@ export const NO_CHANGES: RoadmapChanges = {
   roadmap: {},
   items: [],
   newItems: [],
+  orders: [],
 }
 
 /**
@@ -293,6 +328,25 @@ export type FieldConflict = (
 }
 
 /**
+ * A placement's order a co-lead changed since it was reordered: the placement's items,
+ * as the publish read them, are in neither the order's base nor the order it would
+ * publish (ADR-012 Option 12 applied to the order), so a co-lead reordered them, or
+ * added, moved in, moved out or removed one (STY-050 S10).
+ */
+export interface OrderConflict {
+  subject: "order"
+  placement: RoadmapPlacement
+  base: readonly OrderedItem[]
+  /** The pending order, as it was sent. */
+  pending: readonly OrderedItem[]
+  /** The placement's items as the publish read them, in order, each with its title. */
+  current: readonly { item: OrderedItem; title: LocalisedText }[]
+}
+
+/** What stops a publish for review: a field or an order a co-lead changed too. */
+export type Conflict = FieldConflict | OrderConflict
+
+/**
  * What publishing a roadmap's changes came to. Every outcome but `published` wrote
  * nothing, except `unconfirmed`, which may have written everything.
  */
@@ -313,6 +367,6 @@ export type PublishOutcome =
    */
   | {
       status: "refused"
-      conflicts: FieldConflict[]
+      conflicts: Conflict[]
       missingItems: ItemChanges[]
     }

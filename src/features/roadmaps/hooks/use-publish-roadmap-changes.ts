@@ -8,10 +8,7 @@ import {
 import { useRef } from "react"
 
 import type { Roadmap } from "@/domain/roadmap/roadmap"
-import type {
-  FieldConflict,
-  RoadmapChanges,
-} from "@/domain/roadmap/roadmap-changes"
+import type { Conflict, RoadmapChanges } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 
 import { useRoadmapRepository } from "../roadmap-repository-context"
@@ -29,13 +26,13 @@ import type { RoadmapLists } from "./use-roadmap-lists"
 export interface CurrentText {
   roadmap: (
     roadmap: Roadmap,
-    conflicts: readonly FieldConflict[],
+    conflicts: readonly Conflict[],
     since: Roadmap | undefined,
     lists: RoadmapLists,
   ) => Roadmap
   items: (
     items: readonly RoadmapItem[],
-    conflicts: readonly FieldConflict[],
+    conflicts: readonly Conflict[],
     since: readonly RoadmapItem[] | undefined,
   ) => RoadmapItem[]
 }
@@ -123,7 +120,7 @@ export function showCurrentText(
     before,
   }: {
     roadmapId: string
-    conflicts: readonly FieldConflict[]
+    conflicts: readonly Conflict[]
     currentText: CurrentText
     before: ReadBefore
   },

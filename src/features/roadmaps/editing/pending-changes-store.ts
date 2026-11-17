@@ -7,16 +7,18 @@
 
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import {
-  type FieldConflict,
+  type Conflict,
   NO_CHANGES,
   type RoadmapChanges,
 } from "@/domain/roadmap/roadmap-changes"
+import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import type { LocalisedText } from "@/domain/roadmap/localised-text"
 import type { AppErrorKind } from "@/lib/errors"
 import { createExternalStore } from "@/lib/external-store"
 
 import { openConflicts } from "./conflicts"
 import { countChanges } from "./pending-changes"
+import { settleOrders } from "./placement-orders"
 
 /** "save" for a roadmap that is not published, whose changes go nowhere public. */
 export type PublishAction = "publish" | "save"
@@ -30,13 +32,14 @@ export function publishAction(roadmap: Roadmap): PublishAction {
 export type PublishNotice = { action: PublishAction } & (
   | { kind: "published" }
   /**
-   * Nothing was written: a co-lead changed what was edited (`conflicts`, those still to
-   * decide in the review), or edited items are gone (`removed`, their loaded titles;
-   * their changes are already discarded). Gone once nothing is left of either.
+   * Nothing was written: a co-lead changed what was edited or reordered (`conflicts`,
+   * those still to decide in the review), or edited items are gone (`removed`, their
+   * loaded titles; their changes are already discarded). Gone once nothing is left of
+   * either.
    */
   | {
       kind: "refused"
-      conflicts: readonly FieldConflict[]
+      conflicts: readonly Conflict[]
       removed: readonly LocalisedText[]
     }
   | { kind: "failed"; error: AppErrorKind }
@@ -66,7 +69,11 @@ export function discardable(
 export interface PendingChangesStore {
   readonly getSnapshot: () => PendingChangesSnapshot
   readonly subscribe: (listener: () => void) => () => void
-  /** Replaces a roadmap's changes with `edit`'s result; none left removes the entry. */
+  /**
+   * Replaces a roadmap's changes with `edit`'s result, its pending orders settled
+   * against the roadmap's items as last read (`settleOrders`); none left removes the
+   * entry.
+   */
   readonly update: (
     roadmapId: string,
     edit: (changes: RoadmapChanges) => RoadmapChanges,
@@ -99,7 +106,16 @@ const EMPTY: PendingChangesSnapshot = {
   removed: new Set(),
 }
 
-export function createPendingChangesStore(): PendingChangesStore {
+/**
+ * The store. `itemsOf` gives a roadmap's items as last read, if they are read: every
+ * change is settled against them, so a pending order follows a move, a new item, a
+ * decision in the review or a read as soon as it is made, whatever made it (STY-050
+ * S5, S9, S13). Without them, as while disconnected, an order waits as it is.
+ */
+export function createPendingChangesStore(
+  itemsOf: (roadmapId: string) => readonly RoadmapItem[] | undefined = () =>
+    undefined,
+): PendingChangesStore {
   const store = createExternalStore(EMPTY)
   const patch = (next: Partial<PendingChangesSnapshot>) => {
     const snapshot = { ...store.getSnapshot(), ...next }
@@ -115,7 +131,9 @@ export function createPendingChangesStore(): PendingChangesStore {
     update(roadmapId, edit) {
       const { changes } = store.getSnapshot()
       const current = changes.get(roadmapId)
-      const next = edit(current ?? NO_CHANGES)
+      const edited = edit(current ?? NO_CHANGES)
+      const items = itemsOf(roadmapId)
+      const next = items ? settleOrders(edited, items) : edited
       const emptied = countChanges(next) === 0
       if (next === current || (emptied && current === undefined)) return
       const updated = new Map(changes)

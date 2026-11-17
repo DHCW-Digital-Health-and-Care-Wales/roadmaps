@@ -1,17 +1,26 @@
-import { TriangleAlertIcon } from "lucide-react"
+import { TriangleAlertIcon, Undo2Icon } from "lucide-react"
 import { useId, useMemo, useRef, useState, type RefObject } from "react"
 import { useTranslation } from "react-i18next"
 
+import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Organisation } from "@/domain/roadmap/organisation"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
+import type { RoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 
 import { ItemDialog } from "../dialogs/item-dialog"
+import { ChangedTag } from "../editing/edit-controls"
 import {
   type CardControl,
   EditableItemCard,
 } from "../editing/editable-item-card"
 import type { PageItem } from "../editing/page-items"
+import {
+  usePendingChanges,
+  usePendingChangesStore,
+} from "../editing/pending-changes-context"
+import { discardable } from "../editing/pending-changes-store"
+import { undoOrder } from "../editing/placement-orders"
 import type { PageItemDialog } from "../editing/use-item-dialog"
 import { groupRoadmapItems, type Positioned } from "../group-roadmap-items"
 import { AddItemButton } from "./add-item-button"
@@ -41,8 +50,11 @@ export interface RoadmapItemsProps {
  * saying what to add, with "Add an item" (D5, STY-042 S2, STY-046 S8). Each item can be
  * moved, and shows its pending changes, in its pending placement (STY-025, STY-031),
  * last there, in the order moved (STY-051 S1); an item added and not yet published
- * shows after those (STY-046 S3). Edit on a card, and "Add an item", open the page's
- * one item dialog, which is drawn here.
+ * shows after those (STY-046 S3). A placement whose order is pending shows its items
+ * in it, with "Order changed" and "Undo order" beside its heading, which takes focus
+ * once the order is undone (STY-050 S3); what a move within a placement and "Undo
+ * order" came to is said in a status line. Edit on a card, and "Add an item", open the
+ * page's one item dialog, which is drawn here.
  */
 export function RoadmapItems({
   roadmapId,
@@ -54,15 +66,22 @@ export function RoadmapItems({
 }: RoadmapItemsProps) {
   const { t } = useTranslation()
   const headingId = useId()
+  const store = usePendingChangesStore()
+  const snapshot = usePendingChanges()
+  const reordered = new Set(
+    snapshot.changes.get(roadmapId)?.orders.map(({ placement }) => placement),
+  )
   const { unplaced, placements } = useMemo(
     () =>
       groupRoadmapItems(
         pageItems,
         ({ shown }) => shown.placement,
-        ({ arrival }) => arrival,
+        ({ turn }) => turn,
       ),
     [pageItems],
   )
+  const [said, setSaid] = useState<{ serial: number; text: string }>()
+  const headings = useRef(new Map<RoadmapPlacement, HTMLHeadingElement>())
   // A moved item's card is a new one, in another list, so focus is handed to it here.
   const [focus, setFocus] = useState<FocusRequest | null>(null)
   const cardHandlers = useMemo(
@@ -74,20 +93,37 @@ export function RoadmapItems({
         setFocus(null)
       },
       removed: onItemRemoved,
+      announce: (text: string) => {
+        setSaid((last) => ({ serial: (last?.serial ?? 0) + 1, text }))
+      },
     }),
     [onItemRemoved],
   )
   const panelAddButton = useRef<HTMLButtonElement>(null)
 
+  const undo = (placement: RoadmapPlacement) => {
+    if (!discardable(snapshot, roadmapId)) return
+    store.update(roadmapId, (changes) => undoOrder(changes, placement))
+    // "Undo order" goes with the order, so focus goes to the heading it sat beside.
+    headings.current.get(placement)?.focus()
+    cardHandlers.announce(
+      t("roadmaps.edit.order.undone", {
+        placement: t(`roadmaps.items.placements.${placement}`),
+      }),
+    )
+  }
+
   const list = (
     placed: readonly Positioned<PageItem>[],
     labelledBy: string,
+    ordered: boolean,
   ) => (
     <ItemList
       roadmapId={roadmapId}
       items={items}
       organisations={organisations}
       placed={placed}
+      ordered={ordered}
       labelledBy={labelledBy}
       focus={focus}
       cardHandlers={cardHandlers}
@@ -116,6 +152,11 @@ export function RoadmapItems({
         />
       ) : (
         <div className="flex flex-col gap-10">
+          {/* There from the start, so what a move came to is announced. */}
+          <p role="status" className="sr-only">
+            {/* A new node each time, so a message said twice is announced twice. */}
+            <span key={said?.serial}>{said?.text}</span>
+          </p>
           {unplaced.length > 0 && (
             <div className="flex flex-col gap-3 border-l-8 border-status-warning-border pl-4 sm:pl-6">
               <h2
@@ -128,18 +169,50 @@ export function RoadmapItems({
               <p className="text-pretty">
                 {t("roadmaps.items.unplaced.description")}
               </p>
-              {list(unplaced, unplacedId)}
+              {list(unplaced, unplacedId, false)}
             </div>
           )}
           {placements.map(({ placement, items: placed }) => {
             const id = `${headingId}-${placement}`
+            const name = t(`roadmaps.items.placements.${placement}`)
             return (
               <div key={placement} className="flex flex-col gap-3">
-                <h2 id={id} className="text-heading-m">
-                  {t(`roadmaps.items.placements.${placement}`)}
-                </h2>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                  <h2
+                    id={id}
+                    ref={(heading) => {
+                      if (heading) headings.current.set(placement, heading)
+                      else headings.current.delete(placement)
+                    }}
+                    tabIndex={-1}
+                    className="text-heading-m outline-none focus-visible:focus-ring"
+                  >
+                    {name}
+                  </h2>
+                  {reordered.has(placement) && (
+                    <>
+                      <ChangedTag label={t("roadmaps.edit.order.changed")} />
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        disabled={!discardable(snapshot, roadmapId)}
+                        focusableWhenDisabled
+                        onClick={() => {
+                          undo(placement)
+                        }}
+                      >
+                        <Undo2Icon
+                          data-icon="inline-start"
+                          aria-hidden="true"
+                        />
+                        {t("roadmaps.edit.order.undo")}{" "}
+                        <span className="sr-only">{name}</span>
+                      </Button>
+                    </>
+                  )}
+                </div>
                 {placed.length > 0 ? (
-                  list(placed, id)
+                  list(placed, id, true)
                 ) : (
                   <p className="text-muted-foreground">
                     {t("roadmaps.items.noneInPlacement")}
@@ -170,12 +243,15 @@ interface ItemListProps {
   organisations: readonly Organisation[]
   /** The items listed, each with its position among the page's items. */
   placed: readonly Positioned<PageItem>[]
+  /** Whether they are a placement's, in its order: the unplaced items are in none. */
+  ordered: boolean
   labelledBy: string
   focus: FocusRequest | null
   cardHandlers: {
     requestFocus: (position: number, control: CardControl) => void
     focused: () => void
     removed: () => void
+    announce: (text: string) => void
   }
   onEdit: (position: number) => void
   /** Where, among the page's items, the one is whose card holds `dialogOpener`. */
@@ -189,6 +265,7 @@ function ItemList({
   items,
   organisations,
   placed,
+  ordered,
   labelledBy,
   focus,
   cardHandlers,
@@ -198,7 +275,7 @@ function ItemList({
 }: ItemListProps) {
   return (
     <ul aria-labelledby={labelledBy} className={itemGridClassName}>
-      {placed.map(({ item: pageItem, position }) => (
+      {placed.map(({ item: pageItem, position }, at) => (
         <EditableItemCard
           key={pageItem.key}
           roadmapId={roadmapId}
@@ -206,6 +283,8 @@ function ItemList({
           pageItem={pageItem}
           organisations={organisations}
           position={position}
+          order={ordered ? { at, count: placed.length } : undefined}
+          onAnnounce={cardHandlers.announce}
           focusRequest={
             focus?.position === position ? focus.control : undefined
           }

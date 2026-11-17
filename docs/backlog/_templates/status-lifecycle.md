@@ -62,9 +62,10 @@ stateDiagram-v2
   Decisions entry, not a departure, and the story can then be Done.
 - **Done moves with the PR.** The PR that delivers a record sets Done, moves
   the file to `_archive/` and marks its epic row. `Delivered` links that PR,
-  added in a commit pushed once the PR exists; the PR's own state says whether
-  it merged, so the field is not updated afterwards. Dependents wait for the
-  required behaviour on the default branch.
+  added in a commit pushed once the PR exists. Records, an epic's lines and rows
+  included, state delivery (Done, ✅) and leave merge state to the PR: words
+  about merging go stale the moment it merges. Dependents wait for the required
+  behaviour on the default branch.
 - **Reopening** a Won't fix / Won't do: move the file back to the live tree,
   set Proposed or Needs grilling, and add a Decisions entry citing the
   trigger. The ID is kept.

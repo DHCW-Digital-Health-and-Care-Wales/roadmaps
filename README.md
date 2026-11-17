@@ -105,12 +105,13 @@ it writes the `Families` tab only as below.
   each item moved there before it, is left where it is, as is the one item moved into
   a placement with no items. Several items moved into one placement end in the order
   they were moved: only their rows move, never a row of an item the placement already
-  held, and as few of them as put them so. A row is moved whole and none of its cells is rewritten: it keeps its formatting,
-  its `Horizon` dropdown, its Welsh and unknown columns, and a formula elsewhere that
-  refers to it follows it. The rows it passes shift by one and keep their order, as do
-  the rows of every other placement. Rows are moved after every cell is written and
-  before a new item's row is appended. A co-lead part-way through editing a cell of a
-  row as it moves loses that edit, with an error in their spreadsheet (STY-051);
+  held, and as few of them as put them so. A row is moved whole and none of its cells
+  is rewritten: it keeps its formatting, its `Horizon` dropdown, its Welsh and unknown
+  columns, and a formula elsewhere that refers to it follows it. The rows it passes
+  shift by one and keep their order, as do the rows of every other placement. Rows are
+  moved after every cell is written and before a new item's row is appended. A co-lead
+  part-way through editing a cell of a row as it moves loses that edit, with an error
+  in their spreadsheet (STY-051);
 - a changed `Last updated`: the index row's `Last updated` cell, as text `YYYY-MM-DD`
   (`2026-11-13`) whatever format the cell held, or an empty cell when cleared; and,
   when "Mark as updated today" is ticked (and no date is pending), today's date by the

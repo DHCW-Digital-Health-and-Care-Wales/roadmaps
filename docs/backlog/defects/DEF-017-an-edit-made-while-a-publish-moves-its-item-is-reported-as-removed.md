@@ -23,8 +23,9 @@ is to make the edit again. STY-051 D8 records the same effect for a co-lead.
 
 ## Reproduce
 
-At `94b0063`, STY-051's delivery, not yet on the default branch; before it no publish
-moved a row, so this did not happen. With the pending-edit rules alone
+At `94b0063`, STY-051's delivery, not yet on the default branch (re-pin these steps
+to its merge commit at triage); before it no publish moved a row, so this did not
+happen. With the pending-edit rules alone
 (`src/features/roadmaps/editing/pending-changes.ts`) and the publish plan:
 
 1. A roadmap reads `X` (Later, no ID) then `A` (Now).
@@ -50,6 +51,10 @@ it has matched it.
 
 - `rg -n 'position' src/domain/roadmap/find-edited-item.ts src/features/roadmaps/editing/pending-changes.ts`
 
+## Acceptance criteria
+
+The scenarios wait for Q1: only (b) and (c) change what the build does.
+
 ## Open questions
 
 - **Q1**: What should happen to an edit made during a publish that moves the row of
@@ -65,3 +70,5 @@ it has matched it.
     owner chose as position plus content; needs an ADR amendment.
 
 ## Decisions
+
+## Delivery _(add on delivery; as in `story.md`)_

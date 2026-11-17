@@ -140,8 +140,10 @@ Draw by the shape's reference. In either shape:
 
 - **Copy.** Write the designs' copy in the product's voice from the copywriter
   skill, reusing strings from `src/i18n/locales/en.ts` where a screen already
-  says the thing, whole, and `cy.ts`'s for a frame drawn in Welsh to measure
-  it. Other copy is draft, in English only; Welsh follows with the build.
+  says the thing. It is draft, in English; Welsh follows with the build. A
+  frame drawn in Welsh to measure widths takes `cy.ts`'s strings whole where
+  they say the thing, and draft Welsh for the rest, marked as draft in the
+  analysis.
   Rationale goes in the analysis, not on the designs.
 - **Elements.** Use real `<button>`, `<a>` and `<input>` elements with
   accessible names, even in a static mock-up. A choice card is a button with a
@@ -271,14 +273,14 @@ committed page and analysis plus:
 
 ## Delegation
 
-Draw every design in one author. One author keeps the visual language and
+Draw every design by one author. One author keeps the visual language and
 the sample world coherent. Parallel drafting multiplies the cross-design
 inconsistencies that reviewers then have to catch. When the owner asks for a
-delegated author, it is that author, and the owner's questions reach it
-through its parent: it ends each grilling round by returning the round's
-questions in the grilling skill's shape, and resumes, from the answers its
-parent sends, at the next round or the next step.
+delegated author, it is that one author, and its questions for the owner, and
+the owner's answers, pass through its parent: it ends each grilling round by
+returning the round's questions in the grilling skill's shape, then resumes
+from the answers at the next round or the next step.
 
-Delegate in one case beyond the reviewers above. For a large epic, an
+Delegate in one more case beyond the reviewers above. For a large epic, an
 `Explore` worker can build step 1's inventory, keeping the stories out of the
 main context.

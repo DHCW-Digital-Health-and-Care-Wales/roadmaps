@@ -132,7 +132,9 @@ export function editRoadmap(
 /**
  * `changes` with an item edited to `values`: `previous` is the item's entry (from
  * {@link matchItemChanges}), `item` the item as the form opened on it, `position` where
- * it is now and `since` what the form has seen since. An entry keeps the item as first loaded, which a publish checks it by.
+ * it is now and `since` what the form has seen since. An entry keeps the item as first
+ * loaded, which a publish checks it by. It keeps its turn among the entries too, unless
+ * the edit moves the item, which puts it after every item moved before it (STY-051 D3).
  */
 export function editItem(
   changes: RoadmapChanges,
@@ -149,8 +151,17 @@ export function editItem(
   )
   const others = changes.items.filter((entry) => entry !== previous)
   if (isEmpty(fields)) return { ...changes, items: others }
-  const loaded = previous?.item ?? item
-  return { ...changes, items: [...others, { item: loaded, position, fields }] }
+  const entry = { item: previous?.item ?? item, position, fields }
+  const moved =
+    fields.placement !== undefined &&
+    fields.placement.value !== previous?.fields.placement?.value
+  return {
+    ...changes,
+    items:
+      previous === undefined || moved
+        ? [...others, entry]
+        : changes.items.map((each) => (each === previous ? entry : each)),
+  }
 }
 
 /** `changes` without the roadmap's own text's. */
@@ -362,6 +373,30 @@ export function settlePublished(
     }),
     newItems: changes.newItems.filter(({ id }) => !sentIds.has(id)),
   }
+}
+
+/**
+ * An entry's turn among the items that show last in their placement (STY-051 S1): its
+ * place among the roadmap's pending moves, in the order they were made (D3); none for
+ * an entry that moves nothing. A new item's turn follows them all: `newItemTurn`.
+ */
+export function moveTurn(
+  changes: RoadmapChanges | undefined,
+  entry: ItemChanges | undefined,
+): number | undefined {
+  if (!changes || !entry?.fields.placement) return undefined
+  return changes.items.indexOf(entry)
+}
+
+/**
+ * The turn of the new item `added`th among those pending: after every `moveTurn`, each
+ * of which is an index of `changes.items`, in the order added (STY-051 D4).
+ */
+export function newItemTurn(
+  changes: RoadmapChanges | undefined,
+  added: number,
+): number {
+  return (changes?.items.length ?? 0) + added
 }
 
 /**

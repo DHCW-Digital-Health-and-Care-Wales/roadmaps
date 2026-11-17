@@ -108,3 +108,18 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   STY-043, STY-044 and STY-046: write the journey once, with no run per theme or
   width and no check of where a dialog sits; where a story's scenario or note says
   otherwise, this note governs, and the story's report says so.
+- **A published move is `PublishWrites.moves`** (STY-051; its _Contract for
+  dependents_, archived, says what `planItemMoves`, `movedItems`, `TabWriter.move`
+  and `PageItem.arrival` do). `planItemMoves` holds a placement's own items still and
+  moves only those arriving: an order that moves them needs its own plan, over the
+  placement's whole target order.
+- **The order of `RoadmapChanges.items` is the order of moves**: code that rebuilds
+  the list keeps it, and only a move puts an entry last (`editItem`).
+- **A test whose publish moves a row compares rows by their title, or the tab's rows
+  whole**: a cell-by-cell diff by row number (`changedCells`) reads every row the move
+  passed as changed.
+- **The Sheets fake fails a test whose publish moves a row it should not**: a header
+  row, a row above one, a column, or a row of a tab no index row names; and it
+  refuses, as Google does, a move that leaves a row where it is
+  (`tests/fixtures/sheets/apply-batch-update.ts`). `sheets.refuseProtected()` makes
+  the E2E fake refuse the next write as a protected cell or row is refused.

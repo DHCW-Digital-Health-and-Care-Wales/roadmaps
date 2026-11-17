@@ -18,6 +18,7 @@ import {
   type InMemoryRoadmapRepository,
 } from "../testing/in-memory-roadmap-repository"
 import {
+  addItem,
   confirmItemEdit,
   editItemDialog,
   openEditItemDialog,
@@ -99,7 +100,7 @@ describe("Moving an item (STY-031)", () => {
     ["menu", moveWithMenu],
     ["dialog", moveWithDialog],
   ] as const)(
-    "shows an item moved by its %s in its new place, in row order, pending (S1, S3)",
+    "shows an item moved by its %s last in its new place, pending (S1, S3; STY-051 S1)",
     async (_way, move) => {
       const { user, repository } = await renderPage()
       const write = vi.spyOn(repository, "publishRoadmapChanges")
@@ -108,8 +109,8 @@ describe("Moving an item (STY-031)", () => {
 
       expect(titlesUnder("Now")).toEqual([
         "First now",
-        "Online booking",
         "Last now",
+        "Online booking",
       ])
       expect(main().queryByRole("list", { name: "Later" })).toBeNull()
       expect(within(card("Online booking")).getByText("Changed")).toBeVisible()
@@ -117,6 +118,183 @@ describe("Moving an item (STY-031)", () => {
       expect(write).not.toHaveBeenCalled()
     },
   )
+
+  describe("going last in its new placement (STY-051)", () => {
+    it("shows items moved into one placement in the order they were moved, whatever is edited since, and new items after them all (S1)", async () => {
+      const { user } = await renderPage()
+
+      await moveWithMenu(user, "Someday item", "Now")
+      await moveWithMenu(user, "Online booking", "Now")
+      expect(titlesUnder("Now")).toEqual([
+        "First now",
+        "Last now",
+        "Someday item",
+        "Online booking",
+      ])
+
+      await addItem(user, "New clinic", "Now")
+      await moveWithMenu(user, "First now", "Later")
+      await moveWithMenu(user, "First now", "Now")
+      const form = await openEditItemDialog(user, "Someday item")
+      await user.type(form.getByRole("textbox", { name: "Title" }), " soon")
+      await confirmItemEdit(user)
+
+      expect(titlesUnder("Now")).toEqual([
+        "First now",
+        "Last now",
+        "Someday item soon",
+        "Online booking",
+        "New clinic",
+      ])
+    })
+
+    it("shows an item moved after a new item was added before it, the new item still last (S1, D4)", async () => {
+      const { user } = await renderPage()
+      await addItem(user, "New clinic", "Now")
+
+      await moveWithMenu(user, "Online booking", "Now")
+
+      expect(titlesUnder("Now")).toEqual([
+        "First now",
+        "Last now",
+        "Online booking",
+        "New clinic",
+      ])
+    })
+
+    it.each([
+      [
+        "undone",
+        (user: User) =>
+          user.click(
+            main().getByRole("button", { name: "Undo changes First now" }),
+          ),
+      ],
+      ["moved back", (user: User) => moveWithMenu(user, "First now", "Now")],
+    ] as const)(
+      "shows an item where it was loaded once its move is %s, with nothing pending (S2)",
+      async (_how, restore) => {
+        const { user, repository } = await renderPage()
+        const write = vi.spyOn(repository, "publishRoadmapChanges")
+        await moveWithMenu(user, "First now", "Later")
+        expect(titlesUnder("Later")).toEqual(["Online booking", "First now"])
+
+        await restore(user)
+
+        expect(titlesUnder("Now")).toEqual(["First now", "Last now"])
+        expect(titlesUnder("Later")).toEqual(["Online booking"])
+        expect(within(card("First now")).queryByText("Changed")).toBeNull()
+        expect(main().queryByText(/unpublished change/)).toBeNull()
+        expect(
+          main().queryByRole("button", { name: "Publish changes" }),
+        ).toBeNull()
+        expect(write).not.toHaveBeenCalled()
+      },
+    )
+
+    it.each([
+      [
+        "en",
+        {
+          move: "Move Online booking",
+          to: "Now",
+          publish: "Publish changes",
+          title: "Couldn't publish your changes",
+          reason:
+            "Part of the spreadsheet is protected, so nothing was changed. Ask its owner to let this account edit it.",
+          kept: "Your changes are kept in this tab.",
+          pending: "1 unpublished change",
+          changed: "Changed",
+        },
+      ],
+      [
+        "cy",
+        {
+          move: "Symud Archebu ar-lein",
+          to: "Nawr",
+          publish: "Cyhoeddi'r newidiadau",
+          title: "Doedd dim modd cyhoeddi eich newidiadau",
+          reason:
+            "Mae rhan o'r daenlen wedi'i diogelu, felly newidiwyd dim byd. Gofynnwch i'w pherchennog adael i'r cyfrif hwn ei golygu.",
+          kept: "Mae eich newidiadau wedi'u cadw yn y tab hwn.",
+          pending: "1 newid heb ei gyhoeddi",
+          changed: "Wedi newid",
+        },
+      ],
+    ] as const)(
+      "says a protected part of the spreadsheet stopped the publish, keeping the move pending, without trying again (S7, %s)",
+      async (language, copy) => {
+        const repository = createInMemoryRoadmapRepository(roadmaps, {
+          producta: items,
+        })
+        const write = vi
+          .spyOn(repository, "publishRoadmapChanges")
+          .mockRejectedValue(new AppError("protected", { status: 400 }))
+        const { user } = await renderPage({ repository, language })
+        await user.click(main().getByRole("button", { name: copy.move }))
+        await user.click(await screen.findByRole("menuitem", { name: copy.to }))
+
+        await user.click(main().getByRole("button", { name: copy.publish }))
+        await user.click(
+          within(screen.getByRole("alertdialog")).getByRole("button", {
+            name: copy.publish,
+          }),
+        )
+
+        const notice = await main().findByRole("alert")
+        expect(notice).toHaveTextContent(copy.title)
+        expect(notice).toHaveTextContent(copy.reason)
+        expect(notice).toHaveTextContent(copy.kept)
+        expect(write).toHaveBeenCalledTimes(1)
+        expect(main().getByText(copy.pending)).toBeInTheDocument()
+        expect(
+          within(main().getByRole("list", { name: copy.to })).getByText(
+            copy.changed,
+          ),
+        ).toBeVisible()
+      },
+    )
+
+    it("shows a published move last in its placement once it is read back, after a co-lead's item too (S3, S4)", async () => {
+      const { user, repository } = await renderPage()
+      await moveWithMenu(user, "First now", "Later")
+      repository.coLead((_list, itemsOf) => {
+        itemsOf("producta").push(
+          createTestRoadmapItem("Added by a co-lead", {
+            id: "item-5",
+            placement: "later",
+          }),
+        )
+      })
+
+      await user.click(main().getByRole("button", { name: "Publish changes" }))
+      await user.click(
+        within(screen.getByRole("alertdialog")).getByRole("button", {
+          name: "Publish changes",
+        }),
+      )
+
+      expect(
+        await main().findByText(/^Changes published\./),
+      ).toBeInTheDocument()
+      expect(titlesUnder("Later")).toEqual([
+        "Online booking",
+        "Added by a co-lead",
+        "First now",
+      ])
+      expect(
+        (await repository.listRoadmapItems("producta")).map(
+          ({ title }) => title.en,
+        ),
+      ).toEqual([
+        "Online booking",
+        "Last now",
+        "Someday item",
+        "Added by a co-lead",
+        "First now",
+      ])
+    })
+  })
 
   it("offers the other five placements by heading, in page order, and no menu within reach while the dialog is open (S2)", async () => {
     const { user } = await renderPage()

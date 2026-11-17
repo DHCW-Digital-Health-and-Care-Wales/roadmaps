@@ -39,9 +39,10 @@ export interface RoadmapItemsProps {
  * placements in the public site's order, each under its heading, saying when it has
  * none (D1). A roadmap with no items, and none pending, has one dashed panel instead,
  * saying what to add, with "Add an item" (D5, STY-042 S2, STY-046 S8). Each item can be
- * moved, and shows its pending changes, in its pending placement (STY-025, STY-031); an
- * item added and not yet published shows last in its placement (STY-046 S3). Edit on a
- * card, and "Add an item", open the page's one item dialog, which is drawn here.
+ * moved, and shows its pending changes, in its pending placement (STY-025, STY-031),
+ * last there, in the order moved (STY-051 S1); an item added and not yet published
+ * shows after those (STY-046 S3). Edit on a card, and "Add an item", open the page's
+ * one item dialog, which is drawn here.
  */
 export function RoadmapItems({
   roadmapId,
@@ -54,7 +55,12 @@ export function RoadmapItems({
   const { t } = useTranslation()
   const headingId = useId()
   const { unplaced, placements } = useMemo(
-    () => groupRoadmapItems(pageItems, ({ shown }) => shown.placement),
+    () =>
+      groupRoadmapItems(
+        pageItems,
+        ({ shown }) => shown.placement,
+        ({ arrival }) => arrival,
+      ),
     [pageItems],
   )
   // A moved item's card is a new one, in another list, so focus is handed to it here.

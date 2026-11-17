@@ -627,3 +627,161 @@ describe("applyBatchUpdate copying the Template for a new roadmap (STY-040)", ()
     expect(result.violations).toContain("appendCells on Template")
   })
 })
+
+describe("applyBatchUpdate moving a roadmap tab's rows (STY-051)", () => {
+  /** Product A's tab, which the index's row names: a header and five item rows. */
+  const items = (): GridTab => ({
+    ...productA(),
+    rows: [["Title", "Horizon"], ...["A", "B", "C", "D", "E"].map(row)],
+    rowCount: 8,
+    columnCount: 2,
+  })
+  const row = (title: string) => [title, "Now"]
+
+  const move = (
+    sheetId: number,
+    startIndex: number,
+    destinationIndex: number,
+    endIndex = startIndex + 1,
+  ) => ({
+    moveDimension: {
+      source: { sheetId, dimension: "ROWS", startIndex, endIndex },
+      destinationIndex,
+    },
+  })
+
+  /** The titles of Product A's rows once `requests` are applied, or what refused them. */
+  function titlesAfter(...requests: unknown[]) {
+    const result = applyBatchUpdate([index(), items()], { requests })
+    if ("error" in result) return result
+    expect(result.violations).toEqual([])
+    return result.tabs[1]?.rows.map(([title]) => title)
+  }
+
+  it("takes the destination as counted before the row is taken out: up to f is f, down to f is f + 1", () => {
+    // Google's own example: 0,1,2,3,4 with [1,3) moved to 4 gives 0,3,1,2,4.
+    expect(titlesAfter(move(10, 1, 4, 3))).toEqual([
+      "Title",
+      "C",
+      "A",
+      "B",
+      "D",
+      "E",
+    ])
+    // The owner's check (#109): row 3 moved to 5 lands in row 5.
+    expect(titlesAfter(move(10, 2, 5))).toEqual([
+      "Title",
+      "A",
+      "C",
+      "D",
+      "B",
+      "E",
+    ])
+    expect(titlesAfter(move(10, 4, 1))).toEqual([
+      "Title",
+      "D",
+      "A",
+      "B",
+      "C",
+      "E",
+    ])
+  })
+
+  it("makes each move over what the one before it left, a row carrying every cell it has", () => {
+    const result = applyBatchUpdate([index(), items()], {
+      requests: [cell(10, 1, 1, "Next"), move(10, 1, 6), move(10, 1, 3)],
+    })
+
+    expect(result).toMatchObject({
+      tabs: [
+        index(),
+        {
+          rows: [
+            ["Title", "Horizon"],
+            ["C", "Now"],
+            ["B", "Now"],
+            ["D", "Now"],
+            ["E", "Now"],
+            ["A", "Next"],
+          ],
+          rowCount: 8,
+        },
+      ],
+      violations: [],
+    })
+  })
+
+  it("moves a row to below the last row in use, into the grid's spare rows", () => {
+    expect(titlesAfter(move(10, 1, 8))).toEqual([
+      "Title",
+      "B",
+      "C",
+      "D",
+      "E",
+      undefined,
+      undefined,
+      "A",
+    ])
+  })
+
+  it.each([
+    ["its own position", 2, 2],
+    ["just after itself", 2, 3],
+  ])(
+    "rejects a move of a row to %s, as Google does, applying nothing",
+    (_where, startIndex, destinationIndex) => {
+      expect(
+        titlesAfter(
+          cell(10, 1, 0, "Renamed"),
+          move(10, startIndex, destinationIndex),
+        ),
+      ).toEqual({
+        error: `destinationIndex[${String(destinationIndex)}] must be outside the requested range[2-3]`,
+        violations: [],
+      })
+    },
+  )
+
+  it.each([
+    ["no rows", move(10, 2, 4, 2)],
+    ["rows beyond the grid", move(10, 8, 1)],
+    ["a destination beyond the grid", move(10, 1, 9)],
+    ["a tab that is not there", move(99, 1, 3)],
+  ])("rejects a move of %s", (_what, request) => {
+    expect(titlesAfter(request)).toHaveProperty("error")
+  })
+
+  it("records what the editor never moves as violations: the header, columns, and rows of any tab but a roadmap's own", () => {
+    const violationsOf = (tabs: GridTab[], request: unknown) =>
+      applyBatchUpdate(tabs, { requests: [request] }).violations
+
+    expect(violationsOf([index(), items()], move(10, 0, 3))).toEqual([
+      "moveDimension of ProductA's header row",
+    ])
+    expect(violationsOf([index(), items()], move(10, 3, 0))).toEqual([
+      "moveDimension above ProductA's header row",
+    ])
+    expect(
+      violationsOf([index(), items()], {
+        moveDimension: {
+          source: {
+            sheetId: 10,
+            dimension: "COLUMNS",
+            startIndex: 0,
+            endIndex: 1,
+          },
+          destinationIndex: 2,
+        },
+      }),
+    ).toEqual(["moveDimension of COLUMNS, not ROWS"])
+    expect(
+      violationsOf([{ ...index(), rowCount: 4 }, items()], move(0, 1, 3)),
+    ).toEqual(["moveDimension on Roadmaps"])
+    expect(
+      violationsOf(
+        [index(), items(), { ...template(), rowCount: 4 }],
+        move(9, 1, 3),
+      ),
+    ).toEqual(["moveDimension on Template"])
+  })
+})

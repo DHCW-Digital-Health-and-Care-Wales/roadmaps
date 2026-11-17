@@ -1,3 +1,5 @@
+import { AppError } from "@/lib/errors"
+
 import type { TabProperties } from "./sheets-schemas"
 
 /** A tab's every row as displayed, with its properties, to write back to. */
@@ -64,6 +66,21 @@ export type BatchRequest =
       }
     }
   | {
+      /**
+       * One row taken out and put back at `destinationIndex`, which counts rows before
+       * it is taken out (STY-051): the row moves with all it holds, nothing rewritten.
+       */
+      moveDimension: {
+        source: {
+          sheetId: number
+          dimension: "ROWS"
+          startIndex: number
+          endIndex: number
+        }
+        destinationIndex: number
+      }
+    }
+  | {
       deleteDimension: {
         range: {
           sheetId: number
@@ -74,10 +91,13 @@ export type BatchRequest =
       }
     }
 
+/** Where a row is moved to: just after another row, or just before it. */
+export type RowDestination = { after: number } | { before: number }
+
 /**
- * Collects one tab's cell writes and appended rows. A column the header lacks is added
- * after the last column any row uses, with its English header (ADR-012 Option 9), the
- * grid growing to hold it; no existing column moves.
+ * Collects one tab's cell writes, row moves and appended rows. A column the header
+ * lacks is added after the last column any row uses, with its English header (ADR-012
+ * Option 9), the grid growing to hold it; no existing column moves.
  */
 export class TabWriter<Column extends string> {
   readonly #sheetId: number
@@ -86,6 +106,9 @@ export class TabWriter<Column extends string> {
   #width: number
   readonly #headers: BatchRequest[] = []
   readonly #cells: BatchRequest[] = []
+  readonly #moves: BatchRequest[] = []
+  /** The rows as read, by number, in the order the moves so far leave them. */
+  readonly #order: number[]
   readonly #appended: BatchRequest[] = []
 
   constructor(
@@ -97,11 +120,52 @@ export class TabWriter<Column extends string> {
     // Google drops trailing blank cells, so a row's length is where its last value ends.
     this.#width = Math.max(0, ...rows.map((row) => row.length))
     this.#columnCount = properties.gridProperties?.columnCount ?? this.#width
+    this.#order = rows.map((_, index) => index + 1)
   }
 
   /** Writes `value` to `column` of spreadsheet row `row` (1 is the header). */
   write(row: number, column: Column, value: string): void {
     this.#cells.push(this.#cell(row, this.#columnIndex(column), value))
+  }
+
+  /**
+   * Moves spreadsheet row `row` to just after another, or just before it, each a row
+   * as the tab was read, numbered as `write` numbers it. The row itself is moved, by
+   * `moveDimension`, so no cell is rewritten and it keeps its formatting, its dropdown
+   * and the references to it (ADR-012, _STY-051 amendments_). Moves are made in the
+   * order of the calls, after every cell is written, so each is worked out over what
+   * the moves before it left. A move that would leave the row where it is is not sent:
+   * Google refuses one, and the whole write with it.
+   */
+  move(row: number, to: RowDestination): void {
+    const from = this.#order.indexOf(row)
+    const beside = this.#order.indexOf("after" in to ? to.after : to.before)
+    if (from < 0 || beside < 0) {
+      throw new AppError("unknown", {
+        message:
+          "A row to move, or to move it beside, is none the tab was read with",
+      })
+    }
+    // Counted before the row is taken out: up to index `f` is `f`, down to it `f + 1`.
+    const destinationIndex = "after" in to ? beside + 1 : beside
+    if (destinationIndex === from || destinationIndex === from + 1) return
+    this.#moves.push({
+      moveDimension: {
+        source: {
+          sheetId: this.#sheetId,
+          dimension: "ROWS",
+          startIndex: from,
+          endIndex: from + 1,
+        },
+        destinationIndex,
+      },
+    })
+    this.#order.splice(from, 1)
+    this.#order.splice(
+      destinationIndex > from ? destinationIndex - 1 : destinationIndex,
+      0,
+      row,
+    )
   }
 
   /**
@@ -127,7 +191,7 @@ export class TabWriter<Column extends string> {
     })
   }
 
-  /** Growing the grid first, then headers, then cells, then appended rows. */
+  /** Growing the grid first, then headers, then cells, then row moves, then appended rows. */
   requests(): BatchRequest[] {
     const grow = this.#width - this.#columnCount
     return [
@@ -144,6 +208,7 @@ export class TabWriter<Column extends string> {
         : []),
       ...this.#headers,
       ...this.#cells,
+      ...this.#moves,
       ...this.#appended,
     ]
   }

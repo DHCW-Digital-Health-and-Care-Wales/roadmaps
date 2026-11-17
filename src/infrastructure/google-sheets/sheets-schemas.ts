@@ -85,3 +85,21 @@ export function describeGoogleError(body: unknown): string | undefined {
   const { status, message } = result.data.error
   return [status, message].filter(Boolean).join(": ") || undefined
 }
+
+/**
+ * What Google's refusal to change a cell, a row or another object the account may not
+ * edit says: the one thing that tells it from any other `INVALID_ARGUMENT` (STY-051 D6).
+ */
+const PROTECTED_REFUSAL = "protected cell or object"
+
+/**
+ * Whether a Google error body is its refusal of a write to a protected part of the
+ * spreadsheet: "Invalid requests[0].moveDimension: You are trying to edit a protected
+ * cell or object…", for a move as for a cell.
+ */
+export function isProtectedRefusal(body: unknown): boolean {
+  const result = googleErrorBodySchema.safeParse(body)
+  if (!result.success) return false
+  const { status, message = "" } = result.data.error
+  return status === "INVALID_ARGUMENT" && message.includes(PROTECTED_REFUSAL)
+}

@@ -29,6 +29,23 @@ describe("writeFailureMessage", () => {
     )
   })
 
+  it("says a protected part of the spreadsheet stopped a write, whatever it changes, and who can lift it (STY-051 S7)", () => {
+    const message =
+      "Part of the spreadsheet is protected, so nothing was changed. Ask its owner to let this account edit it."
+
+    expect(writeFailureMessage(t, "publish", "protected")).toBe(message)
+    expect(writeFailureMessage(t, "families", "protected")).toBe(message)
+    expect(
+      writeFailureMessage(
+        createI18n({ language: "cy" }).t,
+        "publish",
+        "protected",
+      ),
+    ).toBe(
+      "Mae rhan o'r daenlen wedi'i diogelu, felly newidiwyd dim byd. Gofynnwch i'w pherchennog adael i'r cyfrif hwn ei golygu.",
+    )
+  })
+
   it("speaks Welsh", () => {
     const cy = createI18n({ language: "cy" })
     expect(writeFailureMessage(cy.t, "families", "forbidden")).toContain(

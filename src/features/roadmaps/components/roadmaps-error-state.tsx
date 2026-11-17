@@ -26,6 +26,7 @@ import { SessionExpiredAlert } from "./session-expired-alert"
 
 const icons = {
   forbidden: LockKeyholeIcon,
+  protected: LockKeyholeIcon,
   "not-found": FileQuestionIcon,
   "rate-limited": HourglassIcon,
   network: WifiOffIcon,

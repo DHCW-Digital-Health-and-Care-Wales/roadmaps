@@ -254,7 +254,9 @@ export interface NewItem {
 
 /**
  * Every pending change to one roadmap: its own fields, its items' and the items new to
- * it, in the order they were added (ADR-012).
+ * it, in the order they were added (ADR-012). The items moved to another placement are
+ * in the order they were moved, whatever else of `items` lies between: publishing puts
+ * them last there in that order (STY-051 D3).
  */
 export interface RoadmapChanges {
   roadmap: Partial<Record<EditableRoadmapField, FieldChange>>

@@ -13,6 +13,8 @@ import {
   applyItemChanges,
   editItem,
   matchItemChanges,
+  moveTurn,
+  newItemTurn,
   pendingNewItems,
   shownNewItem,
   type SinceOpened,
@@ -24,7 +26,8 @@ import { useRoadmapChanges } from "./pending-changes-context"
  * One item of a roadmap's page, with a card of its own. An item is known there by its
  * position among the page's items: the roadmap's items in the order read, so each at the
  * place it has among them, then the items new to it in the order added, last, as
- * publishing writes them (STY-045 D2).
+ * publishing writes them (STY-045 D2). Where it shows in its placement is another
+ * matter: `arrival`.
  */
 export interface PageItem {
   /** Its card's key, which it keeps across reads while it is the same item. */
@@ -37,6 +40,12 @@ export interface PageItem {
   readonly entry: ItemChanges | undefined
   /** Its ID among the roadmap's new items, when it is one: added and not published. */
   readonly newItemId: string | undefined
+  /**
+   * Its turn among the items that show last in their placement, as publishing puts
+   * them (STY-051 S1): one moved, in the order moved, then one new, in the order added.
+   * None for an item that shows where it was read.
+   */
+  readonly arrival: number | undefined
 }
 
 /** The key of a new item's card: its own until a read holds the item (`useItemCardKeys`). */
@@ -65,9 +74,10 @@ export function usePageItems(
         if (key === undefined) return []
         const entry = entries.get(at)
         const shown = applyItemChanges(item, entry)
-        return [{ key, item, shown, entry, newItemId: undefined }]
+        const arrival = moveTurn(changes, entry)
+        return [{ key, item, shown, entry, newItemId: undefined, arrival }]
       }),
-      ...pendingNewItems(items, changes).map((newItem): PageItem => {
+      ...pendingNewItems(items, changes).map((newItem, added): PageItem => {
         const item = shownNewItem(newItem)
         return {
           key: newItemCardKey(newItem.id),
@@ -75,6 +85,7 @@ export function usePageItems(
           shown: item,
           entry: undefined,
           newItemId: newItem.id,
+          arrival: newItemTurn(changes, added),
         }
       }),
     ]

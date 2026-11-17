@@ -47,29 +47,31 @@ moves to `_archive/`, where its row here still points.
 | [CHO-016](chores/CHO-016-the-quality-reviewer-reads-the-whole-diff.md)                  | The quality reviewer reads the whole diff in one pass                                                                  | In progress |
 | [CHO-017](_archive/chores/CHO-017-the-glossary-says-how-the-editor-shows-a-horizon.md)  | The glossary calls a horizon a column, which the editor does not draw and the entry itself says to avoid               | Done        |
 | [CHO-018](chores/CHO-018-the-publish-hook-test-holds-under-load.md)                     | The publish hook's "read back" test holds when CI is slow                                                              | Delivered   |
+| [CHO-019](chores/CHO-019-check-a-published-move-against-a-real-spreadsheet.md)          | Check STY-051's write (a moved item's row moved, with its cell write, in one request) against a real test spreadsheet  | Proposed    |
 
 Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status token.
 
 ## Defects
 
-| ID                                                                                                                 | Defect                                                                                         | Status       |
-| ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- | ------------ |
-| [DEF-001](_archive/defects/DEF-001-roadmaps-heading-title-case.md)                                                 | The roadmaps heading is in Title Case                                                          | Done         |
-| [DEF-002](_archive/defects/DEF-002-header-home-link-name-on-phones.md)                                             | On a phone, the header's home link is named without the word it shows                          | Done         |
-| [DEF-003](_archive/defects/DEF-003-refusal-shows-stale-text-or-restores-removed-roadmap.md)                        | After a refused publish, "Use theirs" can show older text, and a removed roadmap can come back | Done         |
-| [DEF-004](_archive/defects/DEF-004-pending-no-category-dropped-when-category-unlisted.md)                          | A pending "No category" is dropped, unwritten, once the roadmap's category leaves its list     | Won't fix    |
-| [DEF-005](_archive/defects/DEF-005-about-form-shows-no-family-after-refresh.md)                                    | An open About form shows "No family" after Refresh reads a co-lead's family                    | Done         |
-| [DEF-006](_archive/defects/DEF-006-a-refused-reconnect-drops-the-add-a-roadmap-dialog.md)                          | A reconnect Google refuses drops the "Add a roadmap" dialog and what was typed                 | Won't fix    |
-| [DEF-007](_archive/defects/DEF-007-status-panels-have-rounded-corners.md)                                          | Status panels have rounded corners; cards and the About panel beside them are square           | Done         |
-| [DEF-008](_archive/defects/DEF-008-focus-is-lost-after-add-a-roadmap-closes-in-safari.md)                          | Focus is lost when "Add a roadmap" closes, for a Product Lead who clicked it in Safari         | Done         |
-| [DEF-009](_archive/defects/DEF-009-a-published-new-item-is-not-shown-when-the-read-after-it-fails.md)              | A new item that was published is not shown when the read after the publish fails               | Done         |
-| [DEF-010](_archive/defects/DEF-010-a-publishing-dialog-changes-what-it-shows-once-written.md)                      | A dialog that publishes changes what it shows once its changes are no longer pending           | Done         |
-| [DEF-011](_archive/defects/DEF-011-an-edit-back-to-the-text-last-read-is-dropped-before-a-read-holds-a-publish.md) | An edit back to the text last read is dropped while a published edit waits for a read          | Superseded   |
-| [DEF-012](_archive/defects/DEF-012-an-item-without-an-id-edited-again-before-a-read-is-reported-changed.md)        | An item without an ID, edited again before a read holds its publish, is reported changed       | Superseded   |
-| [DEF-013](_archive/defects/DEF-013-a-test-checks-the-roadmap-dialog-s-opening-focus-before-it-moves.md)            | A test checks the roadmap dialog's opening focus before it has moved                           | Done         |
-| [DEF-014](_archive/defects/DEF-014-publish-roadmap-carries-its-dialog-and-outcome-to-another-roadmap.md)           | "Publish roadmap" carries its dialog and outcome onto another roadmap's page                   | Done         |
-| [DEF-015](_archive/defects/DEF-015-a-write-the-editor-can-t-read-back-leaves-the-app-out-of-step.md)               | A write the editor can't read back leaves the app out of step with the data source             | Done         |
-| [DEF-016](defects/DEF-016-the-item-dialog-s-focus-tour-counts-a-focus-guard-as-a-stop.md)                          | The item dialog's focus tour counts a focus guard as a stop                                    | Needs triage |
+| ID                                                                                                                 | Defect                                                                                           | Status       |
+| ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ | ------------ |
+| [DEF-001](_archive/defects/DEF-001-roadmaps-heading-title-case.md)                                                 | The roadmaps heading is in Title Case                                                            | Done         |
+| [DEF-002](_archive/defects/DEF-002-header-home-link-name-on-phones.md)                                             | On a phone, the header's home link is named without the word it shows                            | Done         |
+| [DEF-003](_archive/defects/DEF-003-refusal-shows-stale-text-or-restores-removed-roadmap.md)                        | After a refused publish, "Use theirs" can show older text, and a removed roadmap can come back   | Done         |
+| [DEF-004](_archive/defects/DEF-004-pending-no-category-dropped-when-category-unlisted.md)                          | A pending "No category" is dropped, unwritten, once the roadmap's category leaves its list       | Won't fix    |
+| [DEF-005](_archive/defects/DEF-005-about-form-shows-no-family-after-refresh.md)                                    | An open About form shows "No family" after Refresh reads a co-lead's family                      | Done         |
+| [DEF-006](_archive/defects/DEF-006-a-refused-reconnect-drops-the-add-a-roadmap-dialog.md)                          | A reconnect Google refuses drops the "Add a roadmap" dialog and what was typed                   | Won't fix    |
+| [DEF-007](_archive/defects/DEF-007-status-panels-have-rounded-corners.md)                                          | Status panels have rounded corners; cards and the About panel beside them are square             | Done         |
+| [DEF-008](_archive/defects/DEF-008-focus-is-lost-after-add-a-roadmap-closes-in-safari.md)                          | Focus is lost when "Add a roadmap" closes, for a Product Lead who clicked it in Safari           | Done         |
+| [DEF-009](_archive/defects/DEF-009-a-published-new-item-is-not-shown-when-the-read-after-it-fails.md)              | A new item that was published is not shown when the read after the publish fails                 | Done         |
+| [DEF-010](_archive/defects/DEF-010-a-publishing-dialog-changes-what-it-shows-once-written.md)                      | A dialog that publishes changes what it shows once its changes are no longer pending             | Done         |
+| [DEF-011](_archive/defects/DEF-011-an-edit-back-to-the-text-last-read-is-dropped-before-a-read-holds-a-publish.md) | An edit back to the text last read is dropped while a published edit waits for a read            | Superseded   |
+| [DEF-012](_archive/defects/DEF-012-an-item-without-an-id-edited-again-before-a-read-is-reported-changed.md)        | An item without an ID, edited again before a read holds its publish, is reported changed         | Superseded   |
+| [DEF-013](_archive/defects/DEF-013-a-test-checks-the-roadmap-dialog-s-opening-focus-before-it-moves.md)            | A test checks the roadmap dialog's opening focus before it has moved                             | Done         |
+| [DEF-014](_archive/defects/DEF-014-publish-roadmap-carries-its-dialog-and-outcome-to-another-roadmap.md)           | "Publish roadmap" carries its dialog and outcome onto another roadmap's page                     | Done         |
+| [DEF-015](_archive/defects/DEF-015-a-write-the-editor-can-t-read-back-leaves-the-app-out-of-step.md)               | A write the editor can't read back leaves the app out of step with the data source               | Done         |
+| [DEF-016](defects/DEF-016-the-item-dialog-s-focus-tour-counts-a-focus-guard-as-a-stop.md)                          | The item dialog's focus tour counts a focus guard as a stop                                      | Needs triage |
+| [DEF-017](defects/DEF-017-an-edit-made-while-a-publish-moves-its-item-is-reported-as-removed.md)                   | An edit made while a publish moves its item's row is reported as removed, for an item with no ID | Needs triage |
 
 A defect found during delivery is recorded in `defects/` with
 Status `Needs triage` and listed here until the owner triages it.

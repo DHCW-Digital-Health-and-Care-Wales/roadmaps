@@ -21,7 +21,7 @@ const cellSchema = z.object({
 const rowsSchema = z.array(
   z.object({ values: z._default(z.array(cellSchema), []) }),
 )
-/** The `spreadsheets.batchUpdate` requests the editor sends (ADR-012, STY-023 D6, STY-040). */
+/** The `spreadsheets.batchUpdate` requests the editor sends (ADR-012, STY-023 D6, STY-040, STY-051). */
 const requestSchema = z.union([
   z.object({
     appendDimension: z.object({
@@ -85,6 +85,17 @@ const requestSchema = z.union([
         startIndex: z.int(),
         endIndex: z.int(),
       }),
+    }),
+  }),
+  z.object({
+    moveDimension: z.object({
+      source: z.object({
+        sheetId: z.int(),
+        dimension: z.string(),
+        startIndex: z.int(),
+        endIndex: z.int(),
+      }),
+      destinationIndex: z.int(),
     }),
   }),
 ])
@@ -189,7 +200,9 @@ const HORIZON_VALUES = new Set([
  * - a copy of a tab but `Template`, or placed anywhere but after the last tab;
  * - a tab unhidden or its frozen rows changed, rows deleted or cells cleared, but in a
  *   tab the same body copied; that tab hidden, its header row unfrozen, deleted or
- *   cleared.
+ *   cleared;
+ * - rows moved in a tab but a roadmap's own, a header row moved or rows moved above
+ *   it, or columns moved (STY-051).
  */
 export function applyBatchUpdate(
   tabs: readonly GridTab[],
@@ -240,6 +253,8 @@ class Batch {
       this.#updateSheetProperties(request.updateSheetProperties)
     } else if ("deleteDimension" in request) {
       this.#deleteDimension(request.deleteDimension)
+    } else if ("moveDimension" in request) {
+      this.#moveDimension(request.moveDimension)
     } else if ("range" in request.updateCells) {
       this.#clearCells(request.updateCells)
     } else {
@@ -488,6 +503,59 @@ class Batch {
     tab.rows.splice(startIndex, endIndex - startIndex)
     tab.rowCount = left
     if (tab.frozenRowCount !== undefined) tab.frozenRowCount = frozenLeft
+  }
+
+  /**
+   * Rows taken out and put back at `destinationIndex`, which counts rows before they
+   * are taken out, as Google does: moving up to index `f` is `f`, moving down to it
+   * `f + 1`. Each row carries every cell it has. As Google refuses: a destination within
+   * the rows moved or just after them, which would leave them where they are (seen for
+   * the first, map ticket #109; the second is refused here too, as the editor sends
+   * neither).
+   */
+  #moveDimension({
+    source: { sheetId, dimension, startIndex, endIndex },
+    destinationIndex,
+  }: RequestOf<"moveDimension">): void {
+    const tab = this.#tab(sheetId, "moveDimension")
+    if (dimension !== "ROWS") {
+      this.violations.push(`moveDimension of ${dimension}, not ROWS`)
+      return
+    }
+    if (startIndex < 0 || startIndex >= endIndex || endIndex > tab.rowCount) {
+      throw new Rejection(
+        `${tab.title} has no rows ${String(startIndex)} to ${String(endIndex)}`,
+      )
+    }
+    if (destinationIndex < 0 || destinationIndex > tab.rowCount) {
+      throw new Rejection(
+        `${tab.title} has no row ${String(destinationIndex)} to move rows to`,
+      )
+    }
+    if (destinationIndex >= startIndex && destinationIndex <= endIndex) {
+      throw new Rejection(
+        `destinationIndex[${String(destinationIndex)}] must be outside the requested range[${String(startIndex)}-${String(endIndex)}]`,
+      )
+    }
+    if (!this.#isRoadmapTab(tab)) {
+      this.violations.push(`moveDimension on ${tab.title}`)
+    }
+    if (startIndex < 1) {
+      this.violations.push(`moveDimension of ${tab.title}'s header row`)
+    }
+    if (destinationIndex < 1) {
+      this.violations.push(`moveDimension above ${tab.title}'s header row`)
+    }
+    // Every row the move reaches, blank or not, so each index is a row's.
+    while (tab.rows.length < Math.max(endIndex, destinationIndex)) {
+      tab.rows.push([])
+    }
+    const moved = tab.rows.splice(startIndex, endIndex - startIndex)
+    const to =
+      destinationIndex > startIndex
+        ? destinationIndex - moved.length
+        : destinationIndex
+    tab.rows.splice(to, 0, ...moved)
   }
 
   /** `updateCells` over a range, with no rows: every cell in it cleared of `fields`. */

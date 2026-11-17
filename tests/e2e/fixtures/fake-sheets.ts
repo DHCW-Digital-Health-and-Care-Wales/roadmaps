@@ -167,6 +167,13 @@ type SheetsRequest =
   | { kind: "values" | "header"; tab: FakeTab }
   | { kind: "batchUpdate" }
 
+/**
+ * What Google answers a write that changes a cell or a row the account may not edit,
+ * with HTTP 400 `INVALID_ARGUMENT` (seen by the owner on a scratch copy, STY-051 D6).
+ */
+const PROTECTED_REFUSAL =
+  "Invalid requests[0].moveDimension: You are trying to edit a protected cell or object. Please contact the spreadsheet owner to remove protection if you need to edit."
+
 /** Google's canonical status names, for its JSON error envelope. */
 const STATUS_NAMES: Readonly<Record<number, string>> = {
   400: "INVALID_ARGUMENT",
@@ -201,6 +208,7 @@ export class FakeSheets {
   spreadsheet: readonly FakeTab[] = EXAMPLE_SPREADSHEET
 
   readonly #failures: number[] = []
+  #refusesProtected = false
   /** The status every read fails with once the next write is applied, then since. */
   #failReadsAfterWrite: { status: number; armed: boolean } | undefined
   readonly #gis: FakeGis
@@ -213,6 +221,14 @@ export class FakeSheets {
   /** Fails the next requests, read or write, with these HTTP statuses, one each. */
   failWith(...statuses: number[]): void {
     this.#failures.push(...statuses)
+  }
+
+  /**
+   * Refuses the next `batchUpdate`, applying none of it, as Google refuses one that
+   * changes a cell or a row protected from the account.
+   */
+  refuseProtected(): void {
+    this.#refusesProtected = true
   }
 
   /**
@@ -306,6 +322,16 @@ export class FakeSheets {
         : undefined)
     if (failure !== undefined) {
       return fulfil(route, failure, errorBody(failure))
+    }
+    if (read.kind === "batchUpdate" && this.#refusesProtected) {
+      this.#refusesProtected = false
+      return fulfil(route, 400, {
+        error: {
+          code: 400,
+          message: PROTECTED_REFUSAL,
+          status: STATUS_NAMES[400],
+        },
+      })
     }
     if (read.kind === "batchUpdate") {
       return this.#write(route, request.postDataJSON())

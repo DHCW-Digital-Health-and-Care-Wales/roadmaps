@@ -278,6 +278,7 @@ describe("heldPublishedState", () => {
       roadmap: [{ field: "lastUpdated" as const, value: "2026-11-13" }],
       items: [],
       ids: [],
+      moves: [],
       newItems: [],
     }
     const held = (lastUpdated: string) =>
@@ -297,6 +298,7 @@ describe("heldPublishedState", () => {
       roadmap: [{ field: "statusLabel" as const, value: "Live" }],
       items: [],
       ids: [],
+      moves: [],
       newItems: [],
     }
 

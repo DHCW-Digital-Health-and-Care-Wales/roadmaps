@@ -18,9 +18,10 @@ import { connect, expect, roadmapCards, test } from "./fixtures/test"
  * is not published (STY-025), against the fake Sheets API: one `batchUpdate` per publish.
  * A co-lead's change made meanwhile is shown, never overwritten (STY-026). A family and
  * category are chosen from their lists (STY-028). An item is moved to another placement,
- * writing its `Horizon` cell alone (STY-031). Its organisations are ticked in a field
- * that opens on request (STY-034, STY-038), its tags are added, renamed and removed in
- * another (STY-037), and its details are written as an outline in a third (STY-039).
+ * writing its `Horizon` cell and moving its row to last there (STY-031, STY-051). Its
+ * organisations are ticked in a field that opens on request (STY-034, STY-038), its tags
+ * are added, renamed and removed in another (STY-037), and its details are written as
+ * an outline in a third (STY-039).
  */
 
 const ITEM = "Example card with every column"
@@ -596,18 +597,21 @@ test.describe("moving an item (STY-031)", () => {
     await page.getByRole("menuitem", { name: to, exact: true }).click()
   }
 
-  test("moves an item from its card, pending, then publishes its Horizon cell alone (S1, S6)", async ({
+  test("moves an item from its card, last in its new placement, pending, then publishes its Horizon cell and moves its row (S1, S6; STY-051 S1, S3)", async ({
     page,
     sheets,
   }) => {
     await openRoadmap(page, "producta", ITEM)
-    const before = sheets.spreadsheet
+    const tab = (tabs: readonly FakeTab[]) =>
+      tabs.find(({ title }) => title === "ProductA")?.rows ?? []
+    const before = tab(sheets.spreadsheet)
 
     await moveWithMenu(page, "Discovery card", "Recently delivered")
 
+    // Its row is above the placement's one item's: it shows last all the same.
     await expect(titlesUnder(page, "Recently delivered")).toHaveText([
-      "Discovery card",
       "Recently shipped work",
+      "Discovery card",
     ])
     await expect(
       itemCard(page, "Discovery card").getByText("Changed"),
@@ -622,25 +626,76 @@ test.describe("moving an item (STY-031)", () => {
       page.getByRole("main").getByText(/^Changes published\./),
     ).toBeVisible()
 
-    const tab = (tabs: readonly FakeTab[]) =>
-      tabs.find(({ title }) => title === "ProductA")?.rows ?? []
+    // The row went to just after the placement's last, whole: only its Horizon differs.
     const [header = [], ...rows] = tab(sheets.spreadsheet)
+    expect(rows.map(([title]) => title)).toEqual([
+      "Example card with every column",
+      "Minimal card",
+      "Card awaiting release",
+      "Card being explored",
+      "Longer-term idea",
+      "Recently shipped work",
+      "Discovery card",
+      "Earlier delivery this year",
+      "Something we are not doing",
+    ])
     const itemId = header.indexOf("Item ID")
-    const changed = rows.flatMap((row, r) =>
-      row.flatMap((cell, c) =>
-        c === itemId || cell === (tab(before)[r + 1]?.[c] ?? "")
+    const changed = rows.flatMap((row) => {
+      const was = before.find(([title]) => title === row[0]) ?? []
+      return row.flatMap((cell, c) =>
+        c === itemId || cell === (was[c] ?? "")
           ? []
           : [`${row[0] ?? ""}: ${header[c] ?? ""} = ${cell}`],
-      ),
-    )
+      )
+    })
     expect(changed).toEqual(["Discovery card: Horizon = Recently delivered"])
+    expect(sheets.writes).toHaveLength(1)
 
+    await expect(titlesUnder(page, "Recently delivered")).toHaveText([
+      "Recently shipped work",
+      "Discovery card",
+    ])
     await page.reload()
     await connect(page)
     await expect(titlesUnder(page, "Recently delivered")).toHaveText([
-      "Discovery card",
       "Recently shipped work",
+      "Discovery card",
     ])
+  })
+
+  test("says a protected part of the spreadsheet stopped the publish, keeping the move, nothing written (STY-051 S7)", async ({
+    page,
+    sheets,
+  }) => {
+    await openRoadmap(page, "producta", ITEM)
+    const before = sheets.spreadsheet
+    await moveWithMenu(page, "Discovery card", "Recently delivered")
+    sheets.refuseProtected()
+
+    await confirmPublish(page, "Publish")
+
+    const alert = page.getByRole("main").getByRole("alert")
+    await expect(alert).toContainText("Couldn't publish your changes")
+    await expect(alert).toContainText(
+      "Part of the spreadsheet is protected, so nothing was changed. Ask its owner to let this account edit it.",
+    )
+    await expect(alert).toContainText("Your changes are kept in this tab.")
+    await expect(
+      page.getByRole("main").getByText("1 unpublished change"),
+    ).toBeVisible()
+    await expect(titlesUnder(page, "Recently delivered")).toHaveText([
+      "Recently shipped work",
+      "Discovery card",
+    ])
+    expect(sheets.writes).toEqual([])
+    expect(sheets.spreadsheet).toBe(before)
+
+    // The owner lifts the protection: the same changes then publish.
+    await confirmPublish(page, "Publish")
+    await expect(
+      page.getByRole("main").getByText(/^Changes published\./),
+    ).toBeVisible()
+    expect(sheets.writes).toHaveLength(1)
   })
 
   test("a co-lead's other move is shown beside yours, by heading, nothing written (S8)", async ({

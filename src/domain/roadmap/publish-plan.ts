@@ -9,6 +9,7 @@ import { AppError } from "@/lib/errors"
 import { isCalendarDate } from "./calendar-date"
 import { findEditedItem } from "./find-edited-item"
 import { detailsOf, detailsValue } from "./item-details"
+import { type ItemMove, planItemMoves } from "./item-moves"
 import { createItemId, createUnusedId } from "./item-id"
 import type { Roadmap } from "./roadmap"
 import {
@@ -66,6 +67,11 @@ export interface PublishWrites {
   /** New IDs, for items with none: they go with any other write (ADR-012 Option 6). */
   ids: { index: number; id: string }[]
   /**
+   * The items whose placement is written that are not yet last in it, each moved there,
+   * in the order to make the moves, after every value above is written (STY-051).
+   */
+  moves: ItemMove[]
+  /**
    * The items new to the roadmap, in the order they were added, each with the ID it was
    * added with and every field it has: they go after the roadmap's last item (STY-045).
    */
@@ -92,10 +98,12 @@ const REQUIRED_FIELDS: ReadonlySet<string> = new Set(["title"])
  * and a change made over whatever the field holds (`FieldChange.overwrite`) is never a
  * conflict. A new item is never a conflict or missing: it is written unless a row of
  * the roadmap holds its ID, which a write of it whose answer was lost left there
- * (STY-045). Throws `AppError('unknown')` for a blank title, a placement that is none of
- * the six, an organisation the list doesn't hold, a `Last updated` that is no
- * `YYYY-MM-DD` date or two new items with one ID, which callers never send, and
- * `AppError('invalid-data')` for a family or category chosen while its list is missing.
+ * (STY-045). An item whose placement is written goes last in it, in the order the
+ * changes give the moves (`planItemMoves`, STY-051). Throws `AppError('unknown')` for a
+ * blank title, a placement that is none of the six, an organisation the list doesn't
+ * hold, a `Last updated` that is no `YYYY-MM-DD` date or two new items with one ID,
+ * which callers never send, and `AppError('invalid-data')` for a family or category
+ * chosen while its list is missing.
  */
 export function planRoadmapPublish(
   changes: RoadmapChanges,
@@ -202,6 +210,12 @@ export function planRoadmapPublish(
       roadmap: roadmapWrites,
       items: itemWrites.map((write) => ({ ...write, id: idAt(write.index) })),
       ids,
+      moves: planItemMoves(
+        snapshot.items.map(({ placement }) => placement),
+        itemWrites.flatMap(({ index, field, value }) =>
+          field === "placement" ? [{ index, placement: value }] : [],
+        ),
+      ),
       newItems,
     },
   }
@@ -211,7 +225,9 @@ export function planRoadmapPublish(
  * How many of `writes` the roadmap now holds (`null`: no longer listed, so unknown),
  * to settle a write whose answer was lost (ADR-012 Option 16). Items are found by the
  * ID each holds once written, never by place, as rows may have moved since; a new item
- * is held when a row holds its ID, whatever that row now reads (STY-045).
+ * is held when a row holds its ID, whatever that row now reads (STY-045). A move is held
+ * when its placement is: the write is all or nothing, so no place is looked at (STY-051
+ * S8).
  */
 export function heldWrites(
   writes: PublishWrites,

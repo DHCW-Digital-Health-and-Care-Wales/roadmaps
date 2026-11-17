@@ -20,6 +20,11 @@ import {
   openEditItemDialog,
 } from "../testing/item-dialog"
 import { expectOpeningFocus } from "../testing/opening-focus"
+import {
+  closeConflictReview,
+  openConflictReview,
+  refreshRoadmap,
+} from "../testing/roadmap-page"
 
 const roadmaps = [createTestRoadmap("producta", "Product A roadmap")]
 
@@ -253,7 +258,7 @@ describe("Choosing an item's organisations (STY-034)", () => {
 
     await publish(user)
 
-    const review = await main().findByRole("alert")
+    const review = await openConflictReview(user)
     const conflict = within(within(review).getByRole("listitem"))
     expect(conflict.getByText(/: /, { selector: "p" })).toHaveTextContent(
       "Online booking: Organisations",
@@ -266,6 +271,7 @@ describe("Choosing an item's organisations (STY-034)", () => {
         name: "Use theirs Online booking: Organisations",
       }),
     )
+    await closeConflictReview(user, review)
     expect(organisationsOf("Online booking")).toBe("Hywel Dda")
   })
 
@@ -277,7 +283,7 @@ describe("Choosing an item's organisations (STY-034)", () => {
       if (booking) booking.organisationIds = ["sbuhb", "cavuhb"]
     })
 
-    await user.click(main().getByRole("button", { name: "Refresh" }))
+    await refreshRoadmap(user)
 
     await vi.waitFor(() => {
       expect(within(card("Online booking")).queryByText("Changed")).toBeNull()

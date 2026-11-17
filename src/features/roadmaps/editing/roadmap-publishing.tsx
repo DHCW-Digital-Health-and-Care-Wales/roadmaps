@@ -1,9 +1,5 @@
-import { UploadIcon } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
-import { useTranslation } from "react-i18next"
+import { type RefObject, useEffect, useRef, useState } from "react"
 
-import { InsetText } from "@/components/layout/inset-text"
-import { Button } from "@/components/ui/button"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import {
   type Conflict,
@@ -13,10 +9,11 @@ import {
 import { useSessionAction } from "@/features/auth/session-action"
 import { localToday } from "@/lib/local-today"
 
-import { ConflictReview } from "./conflict-review"
+import { ConflictReviewDialog } from "./conflict-review-dialog"
 import { keepMine, openConflicts, takeTheirs } from "./conflicts"
 import { DiscardDialog } from "./discard-dialog"
 import type { PageItem } from "./page-items"
+import { PendingBar } from "./pending-bar"
 import { countChanges } from "./pending-changes"
 import {
   usePendingChanges,
@@ -25,7 +22,7 @@ import {
 import { discardable, publishAction } from "./pending-changes-store"
 import { PublishDialog } from "./publish-dialog"
 import { PublishOutcomeNotice } from "./publish-outcome-notice"
-import { useDecisionFocus } from "./use-decision-focus"
+import { RefusalNotice } from "./refusal-notice"
 import { usePublish } from "./use-publish"
 
 export interface RoadmapPublishingProps {
@@ -33,22 +30,25 @@ export interface RoadmapPublishingProps {
   roadmap: Roadmap
   /** The page's items (`usePageItems`), which the review draws an order's items from. */
   pageItems: readonly PageItem[]
+  /** The roadmap's heading, where focus goes once a review leaves nothing to publish. */
+  heading: RefObject<HTMLElement | null>
 }
 
 /**
- * Under a roadmap's title: what its last publish came to, and, while changes are
- * pending, how many there are with Publish (or Save, S11) and Discard all (STY-025 S2,
- * S6, S9–S15, S18). Publishing asks first, listing what changes and offering to mark the
- * roadmap as updated today (STY-036 S6); it is unavailable, though focusable, while a
- * publish is under way and until every field and order someone else changed is decided
- * in the review (STY-026, STY-050). After the session has expired it asks to reconnect
- * first, then carries on (STY-057).
+ * At the foot of a roadmap's page (STY-052): what its last publish came to, and, while
+ * changes are pending, how many there are with Publish (or Save, S11) and Discard
+ * (STY-025 S2, S6, S9–S15, S18). Publishing asks first, listing what changes and
+ * offering to mark the roadmap as updated today (STY-036 S6); it is unavailable, though
+ * focusable, while a publish is under way and until every field and order someone else
+ * changed is decided in the review (STY-026, STY-050), which opens in a dialog (STY-052
+ * D12). After the session has expired it asks to reconnect first, then carries on
+ * (STY-057).
  */
 export function RoadmapPublishing({
   roadmap,
   pageItems,
+  heading,
 }: RoadmapPublishingProps) {
-  const { t } = useTranslation()
   const store = usePendingChangesStore()
   const snapshot = usePendingChanges()
   const publish = usePublish(roadmap)
@@ -57,7 +57,12 @@ export function RoadmapPublishing({
   const [confirmed, setConfirmed] = useState<RoadmapChanges | null>(null)
   const [markUpdated, setMarkUpdated] = useState(false)
   const [discarding, setDiscarding] = useState(false)
+  // Open until closed, though deciding the last field drops the refusal it reviews.
+  const [reviewing, setReviewing] = useState(false)
+  // "Publish changes" in the review: the publish dialog opens once the review has gone.
+  const publishAfterReview = useRef(false)
   const notice = useRef<HTMLDivElement>(null)
+  const publishButton = useRef<HTMLButtonElement>(null)
 
   const changes = snapshot.changes.get(roadmap.id)
   const count = countChanges(changes)
@@ -68,7 +73,7 @@ export function RoadmapPublishing({
   // The store keeps a refusal only while it has something to say.
   const refused = outcome?.kind === "refused" ? outcome : null
   const open = refused ? openConflicts(refused.conflicts, changes) : []
-  const reviewing = open.length > 0
+  const deciding = open.length > 0
 
   // A read that leaves nothing to publish closes a dialog not yet confirmed, as the page
   // then shows nothing pending (DEF-010 D1). Once confirmed, the write's own settling
@@ -85,15 +90,7 @@ export function RoadmapPublishing({
     [store, roadmap.id],
   )
 
-  // Once every field is decided, focus goes to Publish, or to the review while it still
-  // names removed items; with neither left, the shell moves it to the page.
-  const publishButton = useRef<HTMLButtonElement>(null)
-  const focus = useDecisionFocus(
-    open,
-    () => publishButton.current ?? notice.current,
-  )
   const decide = (resolve: typeof keepMine) => (conflict: Conflict) => {
-    focus.decided(conflict)
     store.update(roadmap.id, (pending) => resolve(pending, conflict))
   }
 
@@ -117,16 +114,15 @@ export function RoadmapPublishing({
   return (
     <>
       {refused && (
-        <ConflictReview
+        <RefusalNotice
           ref={notice}
           action={action}
-          open={open}
-          pageItems={pageItems}
+          deciding={deciding}
           removed={refused.removed}
           hasPendingChanges={count > 0}
-          keepMineRef={focus.keepMineRef}
-          onKeepMine={decide(keepMine)}
-          onUseTheirs={decide(takeTheirs)}
+          onReview={() => {
+            setReviewing(true)
+          }}
           onDismiss={() => {
             store.clearNotice(roadmap.id)
           }}
@@ -144,39 +140,46 @@ export function RoadmapPublishing({
         />
       )}
       {(count > 0 || publishing) && (
-        <InsetText
-          tone="info"
-          className="flex max-w-none flex-col gap-3 bg-card py-3 pl-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between"
-        >
-          <p className="font-bold" role="status">
-            {t(`roadmaps.publish.pending.${action}`, { count })}
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <Button
-              ref={publishButton}
-              disabled={publishing || reviewing}
-              focusableWhenDisabled
-              aria-busy={publishing}
-              onClick={(event) => {
-                ask(event.currentTarget)
-              }}
-            >
-              <UploadIcon data-icon="inline-start" aria-hidden="true" />
-              {t(`roadmaps.publish.action.${action}`)}
-            </Button>
-            <Button
-              variant="secondary"
-              disabled={!canDiscard}
-              focusableWhenDisabled
-              onClick={() => {
-                setDiscarding(true)
-              }}
-            >
-              {t("roadmaps.publish.discardAll")}
-            </Button>
-          </div>
-        </InsetText>
+        <PendingBar
+          action={action}
+          count={count}
+          publishButton={publishButton}
+          publishHeld={publishing || deciding}
+          publishing={publishing}
+          discardHeld={!canDiscard}
+          onPublish={ask}
+          onDiscard={() => {
+            setDiscarding(true)
+          }}
+        />
       )}
+      <ConflictReviewDialog
+        open={reviewing}
+        onClose={() => {
+          setReviewing(false)
+        }}
+        // Undecided, back to "Review the changes"; decided, to Publish, or to the
+        // roadmap's title once nothing is left (D16, D18, D22).
+        finalFocus={() =>
+          deciding ? true : (publishButton.current ?? heading.current ?? true)
+        }
+        action={action}
+        conflicts={open}
+        pageItems={pageItems}
+        removed={refused?.removed ?? []}
+        hasPendingChanges={count > 0}
+        onKeepMine={decide(keepMine)}
+        onUseTheirs={decide(takeTheirs)}
+        onPublish={() => {
+          publishAfterReview.current = true
+          setReviewing(false)
+        }}
+        onClosed={() => {
+          if (!publishAfterReview.current) return
+          publishAfterReview.current = false
+          ask(publishButton.current)
+        }}
+      />
       <PublishDialog
         open={confirming}
         action={action}
@@ -184,7 +187,9 @@ export function RoadmapPublishing({
         publishing={publishing}
         markUpdated={markUpdated}
         onMarkUpdatedChange={setMarkUpdated}
-        returnFocus={() => !focusNoticeOnClose.current}
+        returnFocus={() =>
+          focusNoticeOnClose.current ? false : (publishButton.current ?? true)
+        }
         onClosed={() => {
           if (focusNoticeOnClose.current) notice.current?.focus()
         }}

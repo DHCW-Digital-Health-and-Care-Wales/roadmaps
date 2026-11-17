@@ -25,8 +25,8 @@ export interface PublishDialogProps {
   /** Whether "Mark as updated today" is ticked, offered unless a date is pending. */
   markUpdated: boolean
   onMarkUpdatedChange: (checked: boolean) => void
-  /** Whether closing returns focus to the control that opened it. */
-  returnFocus: () => boolean
+  /** Where focus goes as the dialog closes: `true` back to what opened it, `false` nowhere. */
+  returnFocus: () => HTMLElement | boolean
   /** Called once the dialog has finished closing. */
   onClosed: () => void
   onConfirm: () => void

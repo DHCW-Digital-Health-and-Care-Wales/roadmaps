@@ -20,6 +20,14 @@ import {
   confirmItemEdit,
   openEditItemDialog,
 } from "../testing/item-dialog"
+import { expectOpeningFocus } from "../testing/opening-focus"
+import {
+  closeConflictReview,
+  findRefusal,
+  moreButton,
+  openConflictReview,
+  refreshRoadmap,
+} from "../testing/roadmap-page"
 
 /**
  * A Product Lead reorders a placement's items from each card's Move menu (STY-050): the
@@ -303,7 +311,9 @@ describe("A pending order at the placement's heading (S3)", () => {
     const { user } = await renderPage()
     await chooseFromMenu(user, "Delta", "To the top")
 
-    await user.click(main().getByRole("button", { name: "Discard all" }))
+    await user.click(
+      main().getByRole("button", { name: "Discard all changes" }),
+    )
     await user.click(
       within(screen.getByRole("alertdialog")).getByRole("button", {
         name: "Discard all changes",
@@ -357,7 +367,7 @@ describe("A pending order at the placement's heading (S3)", () => {
     ])
     expect(main().getByText("Order changed")).toBeInTheDocument()
     await publish(user)
-    const review = await main().findByRole("alert")
+    const review = await openConflictReview(user)
     expect(conflictOf(review, "Now: Order").lists).toEqual([
       ["Delta", "Alpha", "Bravo", "Charlie", "Golf"],
       ["Alpha", "Bravo", "Charlie", "Delta", "Golf"],
@@ -368,9 +378,9 @@ describe("A pending order at the placement's heading (S3)", () => {
     const { user, repository } = await renderPage()
     await chooseFromMenu(user, "Delta", "To the top")
 
-    await user.click(main().getByRole("button", { name: "Refresh" }))
-    await waitFor(() => {
-      expect(main().getByRole("button", { name: "Refresh" })).toBeEnabled()
+    await refreshRoadmap(user)
+    await vi.waitFor(() => {
+      expect(moreButton()).not.toHaveAttribute("aria-busy", "true")
     })
     expect(main().getByText("Order changed")).toBeInTheDocument()
 
@@ -380,7 +390,7 @@ describe("A pending order at the placement's heading (S3)", () => {
       const [delta] = stored.splice(4, 1)
       if (delta) stored.unshift(delta)
     })
-    await user.click(main().getByRole("button", { name: "Refresh" }))
+    await refreshRoadmap(user)
 
     await waitFor(() => {
       expect(main().queryByText("Order changed")).toBeNull()
@@ -608,12 +618,13 @@ describe("A co-lead's change to the placement's items (S10–S13)", () => {
 
     await publish(user)
 
-    const review = await main().findByRole("alert")
-    expect(review).toHaveTextContent(
-      "Someone else has changed this roadmap too",
+    const refusal = await findRefusal()
+    expect(refusal).toHaveTextContent(
+      "Someone else has changed this roadmap tooNothing was published.Review the changes",
     )
-    expect(review).toHaveTextContent(
-      "Nothing was published.Choose which to keep for each, then publish again.",
+    const review = await openConflictReview(user)
+    expect(review).toHaveAccessibleDescription(
+      "Nothing was published. Choose which to keep for each, then publish again.",
     )
     const { conflict, lists } = conflictOf(review, "Now: Order")
     expect(
@@ -623,6 +634,7 @@ describe("A co-lead's change to the placement's items (S10–S13)", () => {
       ["Delta", "Alpha", "Bravo", "Charlie", "Golf"],
       ["Alpha", "Bravo", "Charlie", "Delta", "Golf"],
     ])
+    await closeConflictReview(user, review)
     expect(
       main().getByRole("button", { name: "Publish changes" }),
     ).toHaveAttribute("aria-disabled", "true")
@@ -647,16 +659,25 @@ describe("A co-lead's change to the placement's items (S10–S13)", () => {
     await chooseFromMenu(user, "Delta", "To the top")
     addTheirs(repository)
     await publish(user)
-    const review = await main().findByRole("alert")
+    const review = await openConflictReview(user)
 
     await user.click(
       within(review).getByRole("button", { name: "Keep mine Now: Order" }),
     )
 
+    // Nothing is left to decide: the review offers to publish, focused.
+    expect(review).toHaveTextContent(
+      "Every change is decided. Publish when you're ready.",
+    )
+    await expectOpeningFocus(
+      within(review).getByRole("button", { name: "Publish changes" }),
+    )
+    await closeConflictReview(user, review)
+
     expect(main().queryByRole("alert")).toBeNull()
     expect(main().getByText("Order changed")).toBeInTheDocument()
     const action = main().getByRole("button", { name: "Publish changes" })
-    expect(action).toHaveFocus()
+    await expectOpeningFocus(action)
     await publish(user)
     expect(await main().findByText(/^Changes published\./)).toBeInTheDocument()
     expect(
@@ -671,11 +692,17 @@ describe("A co-lead's change to the placement's items (S10–S13)", () => {
     await chooseFromMenu(user, "Delta", "To the top")
     addTheirs(repository)
     await publish(user)
-    const review = await main().findByRole("alert")
+    const review = await openConflictReview(user)
 
     await user.click(
       within(review).getByRole("button", { name: "Use theirs Now: Order" }),
     )
+
+    // Dropping the order leaves nothing to publish.
+    expect(review).toHaveTextContent(
+      "Every change is decided. Nothing is left to publish.",
+    )
+    await closeConflictReview(user, review)
 
     expect(main().queryByRole("alert")).toBeNull()
     expect(main().queryByText("Order changed")).toBeNull()
@@ -704,7 +731,7 @@ describe("A co-lead's change to the placement's items (S10–S13)", () => {
 
     await publish(user)
 
-    const review = await main().findByRole("alert")
+    const review = await openConflictReview(user)
     expect(
       [...review.querySelectorAll(":scope ul > li > p")].map(
         ({ textContent }) => textContent,
@@ -760,7 +787,7 @@ describe("A co-lead's change to the placement's items (S10–S13)", () => {
         stored.splice(5, 0, item("Golf"))
       })
       await publish(user)
-      const review = await main().findByRole("alert")
+      const review = await openConflictReview(user)
       expect(conflictOf(review, "Now: Order").lists).toEqual([
         ["Alpha", "Bravo", "Charlie", "Echo", "Delta", "Golf"],
         ["Alpha", "Bravo", "Charlie", "Delta", "Golf"],
@@ -771,6 +798,10 @@ describe("A co-lead's change to the placement's items (S10–S13)", () => {
           name: "Use theirs Echo: Horizon or section",
         }),
       )
+      expect(review).toHaveTextContent(
+        "Every change is decided. Nothing is left to publish.",
+      )
+      await closeConflictReview(user, review)
 
       expect(main().queryByRole("alert")).toBeNull()
       expect(main().queryByText("Order changed")).toBeNull()
@@ -788,7 +819,7 @@ describe("A co-lead's change to the placement's items (S10–S13)", () => {
       await chooseFromMenu(user, "Delta", "To the top")
       await conflicted(user, repository)
       await publish(user)
-      const review = await main().findByRole("alert")
+      const review = await openConflictReview(user)
       expect(conflictOf(review, "Now: Order").lists).toEqual([
         ["Delta", "Alpha", "Bravo", "Charlie", "Echo", "Golf"],
         ["Alpha", "Bravo", "Charlie", "Delta", "Golf"],
@@ -800,12 +831,11 @@ describe("A co-lead's change to the placement's items (S10–S13)", () => {
         }),
       )
 
-      expect(conflictOf(main().getByRole("alert"), "Now: Order").lists).toEqual(
-        [
-          ["Delta", "Alpha", "Bravo", "Charlie", "Golf"],
-          ["Alpha", "Bravo", "Charlie", "Delta", "Golf"],
-        ],
-      )
+      expect(conflictOf(review, "Now: Order").lists).toEqual([
+        ["Delta", "Alpha", "Bravo", "Charlie", "Golf"],
+        ["Alpha", "Bravo", "Charlie", "Delta", "Golf"],
+      ])
+      await closeConflictReview(user, review)
       expect(main().getByText("Order changed")).toBeInTheDocument()
     })
   })

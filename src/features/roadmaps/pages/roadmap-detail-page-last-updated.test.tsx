@@ -19,6 +19,7 @@ import {
   editRoadmapText,
   openEditRoadmapDialog,
 } from "../testing/roadmap-dialog"
+import { chooseFromMore, openConflictReview } from "../testing/roadmap-page"
 
 const productA = createTestRoadmap("producta", "Product A roadmap", {
   statusLabel: { en: "Beta", cy: "" },
@@ -302,10 +303,9 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
     it("isn't offered on Unpublish roadmap", async () => {
       const { user } = await renderPage()
 
-      await user.click(
-        main().getByRole("button", { name: "Unpublish roadmap" }),
-      )
+      await chooseFromMore(user, "Unpublish roadmap")
 
+      await screen.findByRole("alertdialog")
       expect(tickBox()).toBeNull()
     })
 
@@ -339,17 +339,17 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
 
     await publish(user, "Publish changes")
 
-    const notice = await main().findByRole("alert")
-    expect(within(notice).getByText(/: /, { selector: "p" })).toHaveTextContent(
+    const review = await openConflictReview(user)
+    expect(within(review).getByText(/: /, { selector: "p" })).toHaveTextContent(
       "About this roadmap: Last updated",
     )
     expect(
-      within(notice)
+      within(review)
         .getAllByRole("definition")
         .map((each) => each.textContent),
     ).toEqual(["10 November 2026", "1 November 2026"])
     expect(
-      within(notice).getByRole("button", {
+      within(review).getByRole("button", {
         name: "Keep mine About this roadmap: Last updated",
       }),
     ).toBeInTheDocument()

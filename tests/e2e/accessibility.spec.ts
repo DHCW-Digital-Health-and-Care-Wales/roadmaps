@@ -20,6 +20,12 @@ import {
   withTabItems,
 } from "./fixtures/fake-sheets"
 import { useLanguage, useTheme } from "./fixtures/look"
+import {
+  conflictReview,
+  moreButton,
+  openConflictReview,
+  refusal,
+} from "./fixtures/roadmap-page"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 const [header = []] = EXAMPLE_INDEX_ROWS
@@ -342,6 +348,11 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
 
       // "Publish roadmap" on a phone, listing the new item that goes with it (STY-047).
       await addItem(page, "Choose a clinic closer to home", "Now")
+      // The new card is on screen, so the title row is stuck and has moved "Publish
+      // roadmap" into More: back at the top, it is a button again.
+      await page.evaluate(() => {
+        window.scrollTo(0, 0)
+      })
       await page
         .getByRole("main")
         .getByRole("button", { name: "Publish roadmap" })
@@ -404,12 +415,16 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expectNoAxeViolations(page, theme)
 
       await dialog.getByRole("button", { name: "Publish changes" }).click()
-      const review = main.getByRole("alert")
+      await expect(refusal(page)).toBeFocused()
+      await expectNoAxeViolations(page, theme)
+
+      // The review opens in a dialog, which the page behind it gives way to.
+      const review = await openConflictReview(page)
       await expect(review.getByRole("term")).toHaveText([
         "Your order",
         "Current order",
       ])
-      await expectNoAxeViolations(page, theme)
+      await expectNoAxeViolations(page, theme, { only: "[role=dialog]" })
     })
 
     test("an item's organisations, shut then open with an unknown code named, then the changed card (STY-034, STY-038)", async ({
@@ -705,7 +720,8 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expect(
         main.getByRole("heading", { name: "No items yet" }),
       ).toBeVisible()
-      await listRead()
+      // The roadmap's page has no Refresh button: its More says it is reading.
+      await expect(moreButton(page)).not.toHaveAttribute("aria-busy", "true")
       await expectNoAxeViolations(page, theme)
     })
 
@@ -760,11 +776,21 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
         .getByRole("button", { name: "Cyhoeddi'r newidiadau" })
         .click()
 
-      const review = main.getByRole("alert")
-      await expect(review).toBeFocused()
-      await expect(review).toContainText(
+      const notice = refusal(page, "cy")
+      await expect(notice).toBeFocused()
+      await expect(notice).toContainText(
         "Mae rhywun arall wedi newid y map trywydd hwn hefyd",
       )
+      await expectNoAxeViolations(page, theme, { only: "main" })
+
+      // By keyboard: Tab reaches "Review the changes", and Enter opens the review.
+      await page.keyboard.press("Tab")
+      await expect(
+        notice.getByRole("button", { name: "Adolygu'r newidiadau" }),
+      ).toBeFocused()
+      await page.keyboard.press("Enter")
+      const review = conflictReview(page, "cy")
+      await expect(review).toBeVisible()
       // The two values are told apart by their labels, not by colour.
       await expect(review.getByRole("term")).toHaveText([
         "Eich newid",
@@ -782,9 +808,10 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       expect(overflow).toBe(0)
       // The narrow header's home link fails 2.5.3 in English only (DEF-002), but the
       // review is the page's own content.
-      await expectNoAxeViolations(page, theme, { only: "main" })
+      await expectNoAxeViolations(page, theme, { only: "[role=dialog]" })
 
-      await page.keyboard.press("Tab")
+      // Focus is on the first conflict's first button; Enter keeps it, and the dialog
+      // offers to publish.
       await expect(
         review.getByRole("button", {
           name: `Cadw fy un i ${about}: Gweledigaeth (Saesneg)`,
@@ -792,9 +819,15 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       ).toBeFocused()
       await page.keyboard.press("Enter")
       await expect(
+        review.getByRole("button", { name: "Cyhoeddi'r newidiadau" }),
+      ).toBeFocused()
+      await page.keyboard.press("Tab")
+      await expect(review.getByRole("button", { name: "Cau" })).toBeFocused()
+      await page.keyboard.press("Enter")
+      await expect(review).toHaveCount(0)
+      await expect(
         main.getByRole("button", { name: "Cyhoeddi'r newidiadau" }),
       ).toBeFocused()
-      await expect(review).toHaveCount(0)
     })
 
     test("session warning, then a failed renewal", async ({ page, gis }) => {

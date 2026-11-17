@@ -23,6 +23,11 @@ import {
 } from "../testing/in-memory-roadmap-repository"
 import { confirmItemEdit, openEditItemDialog } from "../testing/item-dialog"
 import { expectOpeningFocus } from "../testing/opening-focus"
+import {
+  closeConflictReview,
+  openConflictReview,
+  refreshRoadmap,
+} from "../testing/roadmap-page"
 
 const roadmaps = [createTestRoadmap("producta", "Product A roadmap")]
 
@@ -880,7 +885,7 @@ describe("Editing an item's details (STY-039)", () => {
 
     await publish(user)
 
-    const review = await main().findByRole("alert")
+    const review = await openConflictReview(user)
     const conflict = firstConflict(review)
     expect(conflict.getByText(/: /, { selector: "p" })).toHaveTextContent(
       `${VIDEO}: Details`,
@@ -901,6 +906,7 @@ describe("Editing an item's details (STY-039)", () => {
     await user.click(
       conflict.getByRole("button", { name: `Keep mine ${VIDEO}: Details` }),
     )
+    await closeConflictReview(user, review)
     expect(cardDetails(VIDEO)).toEqual(MINE)
     await publish(user)
     expect(await main().findByText(/^Changes published\./)).toBeInTheDocument()
@@ -925,7 +931,7 @@ describe("Editing an item's details (STY-039)", () => {
       }
     })
 
-    await user.click(main().getByRole("button", { name: "Refresh" }))
+    await refreshRoadmap(user)
 
     await vi.waitFor(() => {
       expect(within(card(VIDEO)).queryByText("Changed")).toBeNull()
@@ -1194,7 +1200,7 @@ describe("An item with Welsh details (STY-039 S18, S19)", () => {
 
     await publish(user)
 
-    const review = await main().findByRole("alert")
+    const review = await openConflictReview(user)
     const conflict = firstConflict(review)
     expect(conflict.getByText(/: /, { selector: "p" })).toHaveTextContent(
       "English only: Details",
@@ -1216,6 +1222,7 @@ describe("An item with Welsh details (STY-039 S18, S19)", () => {
         name: "Discard my change English only: Details",
       }),
     )
+    await closeConflictReview(user, review)
 
     expect(main().queryByRole("alert")).toBeNull()
     expect(main().queryByText("Changed")).toBeNull()

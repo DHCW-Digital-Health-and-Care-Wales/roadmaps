@@ -21,13 +21,15 @@ export interface DismissibleNoticeProps extends Omit<
   title?: ReactNode
   /** The notice's text. */
   children: ReactNode
+  /** A control that acts on what the notice says, beside its text. */
+  action?: ReactNode
   /** Leave out for a notice that stays until what it asks for is done. */
   onDismiss?: () => void
 }
 
 /**
  * A page notice (the copywriter's pattern): a callout with its icon, an optional title,
- * its text and, given `onDismiss`, a button that dismisses it. Its `role` defaults to
+ * its text, an optional `action` and, given `onDismiss`, a button that dismisses it. Its `role` defaults to
  * the alert's; a caller passes anything else, such as a dwell's handlers, through.
  */
 export function DismissibleNotice({
@@ -35,6 +37,7 @@ export function DismissibleNotice({
   Icon,
   title,
   children,
+  action,
   onDismiss,
   ...props
 }: DismissibleNoticeProps) {
@@ -46,6 +49,7 @@ export function DismissibleNotice({
         {title && <AlertTitle>{title}</AlertTitle>}
         <AlertDescription>{children}</AlertDescription>
       </AlertContent>
+      {action && <AlertAction>{action}</AlertAction>}
       {onDismiss && (
         <AlertAction className="-my-1.5 -mr-2 self-start max-sm:w-auto max-sm:pl-0">
           <Button

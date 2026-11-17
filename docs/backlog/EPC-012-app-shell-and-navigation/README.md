@@ -3,9 +3,9 @@
 - **Status**: Active — proposed by the owner on 2026-11-17 from a UX review of the
   shell; the owner chose STY-052's and STY-053's designs from their prototypes and
   answered every story's questions in four grilling rounds and a review round
-- **Progress**: 1 of 6 terminal (STY-057, delivered in [#136](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/136), awaiting merge); next
-  selectable: STY-052 once STY-057 is merged (STY-054 and STY-056 have no hard
-  dependency, but prefer to follow STY-052); blocked on: nothing
+- **Progress**: 2 of 6 terminal (STY-057, STY-052); next selectable: STY-053, which
+  builds on STY-052's title row (STY-054 and STY-056 have no hard dependency, but
+  prefer to follow STY-052); blocked on: nothing
 - **Binding ADRs**: ADR-010, ADR-008, ADR-005, ADR-012, ADR-002, ADR-003, ADR-004
 
 ## Summary
@@ -147,7 +147,7 @@ handler with no `await` before it (ADR-003).
 
 | ID      | Story                                                                                                                                      | Area                                | Depends on | State |
 | ------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------- | ---------- | ----- |
-| STY-052 | [Keep a roadmap's controls in view](STY-052-keep-a-roadmaps-controls-in-view.md)                                                           | Features/UI + i18n (en + cy) + E2E  | STY-057    |       |
+| STY-052 | [Keep a roadmap's controls in view](../_archive/EPC-012-app-shell-and-navigation/STY-052-keep-a-roadmaps-controls-in-view.md)              | Features/UI + i18n (en + cy) + E2E  | STY-057    | ✅    |
 | STY-053 | [Jump between a roadmap's placements](STY-053-jump-between-a-roadmaps-placements.md)                                                       | Features/UI + i18n (en + cy) + E2E  | STY-052    |       |
 | STY-054 | [Move between roadmaps from the shell](STY-054-move-between-roadmaps-from-the-shell.md)                                                    | Features/UI + Routing + i18n + Docs | —          |       |
 | STY-055 | [See unpublished changes across roadmaps](STY-055-see-unpublished-changes-across-roadmaps.md)                                              | Features/UI + i18n (en + cy) + E2E  | STY-054    |       |

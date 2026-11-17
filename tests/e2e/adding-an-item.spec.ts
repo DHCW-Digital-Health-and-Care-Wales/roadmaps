@@ -11,6 +11,11 @@ import {
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
 import { withTabItems } from "./fixtures/fake-sheets"
 import { useLanguage } from "./fixtures/look"
+import {
+  openConflictReview,
+  refreshRoadmap,
+  refusal,
+} from "./fixtures/roadmap-page"
 import { connect, expect, test } from "./fixtures/test"
 
 /**
@@ -160,7 +165,7 @@ test("a Product Lead adds an item in the item dialog, pending until published (S
   expect(sheets.writes).toEqual([])
 
   // Refresh keeps it; the roadmap list marks the roadmap.
-  await main.getByRole("button", { name: "Refresh" }).click()
+  await refreshRoadmap(page)
   await expect(newTag(card, CLINIC)).toBeVisible()
   await main.getByRole("link", { name: "Back to roadmaps" }).click()
   await expect(
@@ -288,22 +293,27 @@ test("the publish dialog lists a new item beside an edit; a co-lead's conflict p
 
   // The conflict publishes nothing; its review names the edit alone, and the new item
   // stays pending.
-  const review = main.getByRole("alert")
-  await expect(review).toContainText(
+  const notice = refusal(page)
+  await expect(notice).toContainText(
     "Someone else has changed this roadmap too",
   )
-  await expect(review).toContainText("Nothing was published.")
+  await expect(notice).toContainText("Nothing was published.")
+  const review = await openConflictReview(page)
   await expect(review.getByRole("listitem")).toHaveCount(1)
   await expect(review.getByRole("listitem")).toContainText(
     `${EDITED}: Description`,
   )
   await expect(review).not.toContainText(CLINIC)
   expect(sheets.writes).toHaveLength(1)
-  await expect(newTag(itemCard(page, CLINIC), CLINIC)).toBeVisible()
-  await expect(main.getByText("2 unpublished changes")).toBeVisible()
 
   // Once the edit is decided, the new item is published with the rest.
   await review.getByRole("button", { name: /^Use theirs/ }).click()
+  await expect(review).toContainText(
+    "Every change is decided. Publish when you're ready.",
+  )
+  await review.getByRole("button", { name: "Close" }).click()
+  await expect(review).toBeHidden()
+  await expect(newTag(itemCard(page, CLINIC), CLINIC)).toBeVisible()
   await expect(main.getByText("1 unpublished change")).toBeVisible()
   await confirmPublish()
   await expect(main.getByText(/^Changes published\./)).toBeVisible()

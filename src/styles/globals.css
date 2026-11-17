@@ -396,11 +396,19 @@
   * {
     @apply border-border;
   }
+  /* A bar pinned to the screen (`usePinnedInset`) sets its height on the document as
+     `--pinned-top` or `--pinned-bottom`: scrolling to a focused control keeps it clear of
+     the bars (WCAG 2.4.11), and the end of the page clears the foot's. */
   html {
     @apply font-sans;
+    --pinned-top: 0px;
+    --pinned-bottom: 0px;
+    scroll-padding-top: var(--pinned-top);
+    scroll-padding-bottom: var(--pinned-bottom);
   }
   body {
     @apply bg-background text-body text-foreground;
+    padding-bottom: var(--pinned-bottom);
   }
 }
 

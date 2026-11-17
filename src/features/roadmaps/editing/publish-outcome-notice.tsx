@@ -10,7 +10,7 @@ import type { PublishNotice } from "./pending-changes-store"
 
 export interface PublishOutcomeNoticeProps {
   ref: RefObject<HTMLDivElement | null>
-  /** A refused publish is `ConflictReview`'s. */
+  /** A refused publish is `RefusalNotice`'s. */
   notice: Exclude<PublishNotice, { kind: "refused" }>
   onDismiss: () => void
 }
@@ -18,7 +18,8 @@ export interface PublishOutcomeNoticeProps {
 /**
  * A publish's outcome as a page notice: a confirmation clears itself after a dwell; a
  * failure interrupts and stays until dismissed or the next attempt, saying the changes
- * are kept. Focus comes here when the publish dialog closes.
+ * are kept. It shows at the foot, where Publish was pressed (STY-052 D14), and focus
+ * comes here when the publish dialog closes.
  */
 export function PublishOutcomeNotice({
   ref,
@@ -67,7 +68,7 @@ export function PublishOutcomeNotice({
       Icon={content.Icon}
       title={content.title}
       onDismiss={onDismiss}
-      className="max-w-2xl outline-none focus-visible:focus-ring"
+      className="outline-none focus-visible:focus-ring"
       {...dwell}
     >
       {content.lines.map((line) => (

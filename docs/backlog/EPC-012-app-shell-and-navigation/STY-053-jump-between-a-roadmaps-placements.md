@@ -1,7 +1,7 @@
 # STY-053: A Product Lead jumps between a roadmap's placements
 
 - **Status**: Proposed — grilled over the UX prototypes' four rounds (D1–D8);
-  selectable once STY-052 is done
+  selectable, as STY-052, its hard dependency, is done
 - **Type**: Feature
 - **Area**: Features/UI + i18n (en + cy) + E2E
 - **Epic**: EPC-012-app-shell-and-navigation

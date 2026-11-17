@@ -1,11 +1,12 @@
 import type { QueryClient } from "@tanstack/react-query"
-import { act, screen, waitFor, within } from "@testing-library/react"
+import { act, screen, waitFor } from "@testing-library/react"
 import type { UserEvent } from "@testing-library/user-event"
 import { expect, vi } from "vitest"
 
 import type { RoadmapRepository } from "@/domain/roadmap/roadmap-repository"
 
 import { holdCall } from "./held-call"
+import { refreshRoadmap } from "./roadmap-page"
 
 // A read that lands on a roadmap's page while a dialog is open (test code only): a
 // dialog is modal, so Refresh can't be pressed once it is.
@@ -23,9 +24,7 @@ export async function holdRefresh(
     repository.listRoadmapItems.bind(repository),
   )
   vi.spyOn(repository, "listRoadmapItems").mockImplementation(held)
-  await user.click(
-    within(screen.getByRole("main")).getByRole("button", { name: "Refresh" }),
-  )
+  await refreshRoadmap(user)
   expect(held).toHaveBeenCalled()
   return async () => {
     await act(async () => {
@@ -34,7 +33,7 @@ export async function holdRefresh(
     })
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: "Refresh", hidden: true }),
+        screen.getByRole("button", { name: "More", hidden: true }),
       ).not.toHaveAttribute("aria-busy", "true")
     })
   }

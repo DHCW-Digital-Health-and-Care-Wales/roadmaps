@@ -6,6 +6,7 @@ import {
   withRoadmapIndex,
   withTabItems,
 } from "./fixtures/fake-sheets"
+import { chooseFromMore } from "./fixtures/roadmap-page"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 /**
@@ -26,12 +27,17 @@ async function openProductC(page: Page) {
 
 const NO_ITEMS_LINE = "The public site will show it with no items."
 
-/** Chooses the action, then the dialog's button named `confirm`. */
-async function choose(page: Page, action: string, confirm = action) {
-  await page.getByRole("main").getByRole("button", { name: action }).click()
+/** Presses the dialog's button named `confirm`, once the action has opened it. */
+async function confirmInDialog(page: Page, confirm: string) {
   const dialog = page.getByRole("alertdialog")
   await expect(dialog).toBeVisible()
   await dialog.getByRole("button", { name: confirm }).click()
+}
+
+/** Chooses the page's visible button, then the dialog's button named `confirm`. */
+async function choose(page: Page, action: string, confirm = action) {
+  await page.getByRole("main").getByRole("button", { name: action }).click()
+  await confirmInDialog(page, confirm)
 }
 
 /** The index cell of the row whose `Sheet` is `sheet`, in the column headed `column`. */
@@ -134,7 +140,8 @@ test("unpublishes a roadmap after asking (S3)", async ({ page, sheets }) => {
     page.getByRole("heading", { level: 1, name: "Product A roadmap" }),
   ).toBeVisible()
 
-  await choose(page, "Unpublish roadmap")
+  await chooseFromMore(page, "Unpublish roadmap")
+  await confirmInDialog(page, "Unpublish roadmap")
 
   await expect(
     page.getByRole("main").getByText("Not published", { exact: true }),
@@ -169,7 +176,7 @@ test("says the public site will show a roadmap with no items, and still publishe
   expect(indexCell(index?.rows, "ProductC", "Enabled")).toBe("Yes")
 
   // Published, it can only be unpublished, which never says so.
-  await main.getByRole("button", { name: "Unpublish roadmap" }).click()
+  await chooseFromMore(page, "Unpublish roadmap")
   await expect(dialog).toContainText(
     "It leaves the public site after its next nightly update.",
   )

@@ -29,6 +29,11 @@ import {
   confirmRoadmapEdit,
   openEditRoadmapDialog,
 } from "../testing/roadmap-dialog"
+import {
+  closeConflictReview,
+  openConflictReview,
+  refreshRoadmap,
+} from "../testing/roadmap-page"
 
 const roadmaps: Roadmap[] = [
   createTestRoadmap("producta", "Product A roadmap", {
@@ -157,7 +162,7 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
     vi.spyOn(repository, "listRoadmaps").mockImplementation(held)
 
     // The dialog is modal, so the Refresh is asked for before it opens, and read after.
-    await user.click(main().getByRole("button", { name: "Refresh" }))
+    await refreshRoadmap(user)
     const form = await openEditRoadmapDialog(user)
     const family = await select(form, "Family")
     expect(family).toHaveValue(UNLISTED_FAMILY)
@@ -180,7 +185,7 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
     const { user, form } = await renderPage(repository)
     await select(form, "Family")
     await user.click(form.getByRole("button", { name: "Cancel" }))
-    await main().findByRole("button", { name: "Refresh" })
+    await main().findByRole("button", { name: "More" })
     const workforce: Family = {
       id: "x7k2m9qp",
       name: { en: "Workforce", cy: "Gweithlu" },
@@ -192,7 +197,7 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
     vi.spyOn(repository, "listFamilies").mockImplementation(held)
 
     // The dialog is modal, so a Refresh is asked for before it opens.
-    await user.click(main().getByRole("button", { name: "Refresh" }))
+    await refreshRoadmap(user)
     const reopened = await openEditRoadmapDialog(user)
     const family = reopened.getByRole("combobox", { name: "Family" })
     expect(family).toBeEnabled()
@@ -309,9 +314,9 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
       }),
     )
 
-    const notice = await main().findByRole("alert")
+    const review = await openConflictReview(user)
     expect(
-      within(notice)
+      within(review)
         .getAllByRole("definition")
         .map((each) => each.textContent),
     ).toEqual(["No family", "Medicines & Diagnostics"])
@@ -345,17 +350,15 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
       }),
     )
     await main().findByText("Couldn't refresh your roadmaps")
-    const notice = main()
-      .getAllByRole("alert")
-      .find((each) => each.textContent.includes("Someone else"))
-    if (!notice) throw new Error("No review")
+    const review = await openConflictReview(user)
     for (const name of ["Family", "Category"]) {
       await user.click(
-        within(notice).getByRole("button", {
+        within(review).getByRole("button", {
           name: `Use theirs About this roadmap: ${name}`,
         }),
       )
     }
+    await closeConflictReview(user, review)
 
     expect(
       main().getByText("Family: Medicines & Diagnostics"),

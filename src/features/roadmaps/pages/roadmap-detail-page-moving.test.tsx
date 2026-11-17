@@ -23,6 +23,10 @@ import {
   editItemDialog,
   openEditItemDialog,
 } from "../testing/item-dialog"
+import {
+  closeConflictReview,
+  openConflictReview,
+} from "../testing/roadmap-page"
 
 const roadmaps = [createTestRoadmap("producta", "Product A roadmap")]
 
@@ -445,7 +449,7 @@ describe("Moving an item (STY-031)", () => {
       }),
     )
 
-    const review = await main().findByRole("alert")
+    const review = await openConflictReview(user)
     const conflict = within(within(review).getByRole("listitem"))
     expect(conflict.getByText(/: /, { selector: "p" })).toHaveTextContent(
       "Online booking: Horizon or section",
@@ -458,6 +462,10 @@ describe("Moving an item (STY-031)", () => {
         name: "Use theirs Online booking: Horizon or section",
       }),
     )
+    expect(review).toHaveTextContent(
+      "Every change is decided. Nothing is left to publish.",
+    )
+    await closeConflictReview(user, review)
     expect(titlesUnder("Next")).toEqual(["Online booking"])
   })
 
@@ -486,10 +494,7 @@ describe("Moving an item (STY-031)", () => {
     expect(
       await main().findByText("Couldn't refresh your roadmaps"),
     ).toBeInTheDocument()
-    const review = main()
-      .getAllByRole("alert")
-      .find((each) => each.textContent.includes("Someone else"))
-    if (!review) throw new Error("No review")
+    const review = await openConflictReview(user)
     expect(
       within(review)
         .getAllByRole("definition")
@@ -500,6 +505,7 @@ describe("Moving an item (STY-031)", () => {
         name: "Use theirs Online booking: Horizon or section",
       }),
     )
+    await closeConflictReview(user, review)
 
     expect(titlesUnder("Not on the public roadmap")).toEqual([
       "Online booking",

@@ -149,9 +149,10 @@ each scenario's evidence) and tick its acceptance criteria. Give each learning
 its narrowest home by the ladder in
 `docs/operations/authoring-agent-instructions.md` (_Where it goes_). When
 implementation and verification are complete, set Status `Done`, move the
-record to `docs/backlog/_archive/<epic>/` and mark its epic row, noting that it
-is delivered in this PR and awaits merge. When that closes the epic, sweep its
-`delivery-notes.md` as `docs/AGENTS.md` says before archiving the epic. A
+record to `docs/backlog/_archive/<epic>/` and mark its epic row; leave merge
+state to the PR (`status-lifecycle.md`, _Done moves with the PR_). When that
+closes the epic, sweep its `delivery-notes.md` as `docs/AGENTS.md` says before
+archiving the epic. A
 record delivered in part or handed back blocked returns to `Proposed` (or
 `Needs grilling`), with a Decisions entry naming what remains. Commit only intended files with a conventional commit
 message (`feat(scope): …`); preserve unrelated work and generated outputs

@@ -8,6 +8,7 @@
 - **Binding ADRs**: none
 - **Suggested model**: Sonnet — extends one script and its test, and one line of the
   ux-prototypes skill's step 8
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/143
 
 ## Summary
 

@@ -5,7 +5,7 @@
  * the same way.
  */
 
-import { holdsLoaded } from "./find-edited-item"
+import { itemHoldsLoaded, type PendingItemValues } from "./find-edited-item"
 import {
   EDITABLE_ITEM_FIELDS,
   type ItemChanges,
@@ -28,16 +28,31 @@ export function sameOrderedItem(a: OrderedItem, b: OrderedItem): boolean {
     : a.position === b.position
 }
 
-/** Whether two orders made over one read hold the same items in the same sequence. */
+/**
+ * Whether two items of orders made over different reads are one item: by its ID, or,
+ * with none, by what each held, wherever its row was. Two items that hold the same
+ * can't be told apart, and are as good as each other in an order.
+ */
+export function sameItemAcrossReads(a: OrderedItem, b: OrderedItem): boolean {
+  return a.id !== null || b.id !== null
+    ? a.id === b.id
+    : itemHoldsLoaded(a.item, b.item, [])
+}
+
+/**
+ * Whether two orders hold the same items in the same sequence: orders made over one
+ * read, unless `same` tells items of different reads apart (`sameItemAcrossReads`).
+ */
 export function sameOrder(
   a: readonly OrderedItem[],
   b: readonly OrderedItem[],
+  same: (a: OrderedItem, b: OrderedItem) => boolean = sameOrderedItem,
 ): boolean {
   return (
     a.length === b.length &&
     a.every((item, index) => {
       const other = b[index]
-      return other !== undefined && sameOrderedItem(item, other)
+      return other !== undefined && same(item, other)
     })
   )
 }
@@ -82,7 +97,7 @@ export function findOrderedItems(
     const current = items[index]
     return (
       current !== undefined &&
-      holdsLoaded(current, entry.item, pendingAt(edits, entry.position))
+      itemHoldsLoaded(current, entry.item, pendingAt(edits, entry.position))
     )
   }
   // Those still where they were first, so one whose row moved is not found in their place.
@@ -106,7 +121,7 @@ export function findOrderedItems(
 function pendingAt(
   edits: readonly ItemChanges[],
   position: number,
-): Parameters<typeof holdsLoaded>[2] {
+): PendingItemValues {
   const entry = edits.find(
     (each) => each.item.id === null && each.position === position,
   )

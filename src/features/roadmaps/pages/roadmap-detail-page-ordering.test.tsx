@@ -1,4 +1,4 @@
-import { act, screen, waitFor, within } from "@testing-library/react"
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
@@ -314,6 +314,56 @@ describe("A pending order at the placement's heading (S3)", () => {
     expect(main().queryByText("Order changed")).toBeNull()
   })
 
+  it("is kept with its base through Disconnect and “Keep changes”, so a co-lead's change made meanwhile still stops the publish (S9)", async () => {
+    const user = userEvent.setup()
+    const repository = createInMemoryRoadmapRepository(roadmaps, {
+      producta: items,
+    })
+    const { router } = await renderWithProviders({
+      path: "/roadmaps/producta",
+      authState: connected,
+      repository,
+    })
+    await main().findByRole("heading", { level: 3, name: "Delta" })
+    await chooseFromMenu(user, "Delta", "To the top")
+
+    await user.click(
+      within(screen.getByRole("banner")).getByRole("button", {
+        name: "Disconnect",
+      }),
+    )
+    await user.click(
+      screen.getByRole("button", { name: "Keep changes and disconnect" }),
+    )
+    repository.coLead((_list, itemsOf) => {
+      itemsOf("producta").splice(5, 0, item("Golf"))
+    })
+    await act(() => router.navigate({ to: "/" }))
+    await user.click(main().getByRole("button", { name: "Connect Google" }))
+    await act(() =>
+      router.navigate({
+        to: "/roadmaps/$roadmapId",
+        params: { roadmapId: "producta" },
+      }),
+    )
+
+    await main().findByRole("heading", { level: 3, name: "Golf" })
+    expect(titlesUnder("Now")).toEqual([
+      "Delta",
+      "Alpha",
+      "Bravo",
+      "Charlie",
+      "Golf",
+    ])
+    expect(main().getByText("Order changed")).toBeInTheDocument()
+    await publish(user)
+    const review = await main().findByRole("alert")
+    expect(conflictOf(review, "Now: Order").lists).toEqual([
+      ["Delta", "Alpha", "Bravo", "Charlie", "Golf"],
+      ["Alpha", "Bravo", "Charlie", "Delta", "Golf"],
+    ])
+  })
+
   it("is dropped by a Refresh that reads the order already there, and kept by one that doesn't (S9)", async () => {
     const { user, repository } = await renderPage()
     await chooseFromMenu(user, "Delta", "To the top")
@@ -520,6 +570,11 @@ describe("Publishing a pending order (S6, S7, S15)", () => {
     expect(
       screen.getByRole("menuitem", { name: "Later", hidden: true }),
     ).not.toHaveAttribute("aria-disabled", "true")
+    // Chosen all the same, by pointer and by keyboard: nothing moves, nothing is said.
+    fireEvent.click(choice)
+    choice.focus()
+    await user.keyboard("{Enter}")
+    expect(screen.queryByText(/^Moved to the top/)).toBeNull()
     await user.keyboard("{Escape}")
 
     await act(async () => {
@@ -533,6 +588,7 @@ describe("Publishing a pending order (S6, S7, S15)", () => {
       "Charlie",
       "Delta",
     ])
+    expect(main().queryByText("Order changed")).toBeNull()
   })
 })
 

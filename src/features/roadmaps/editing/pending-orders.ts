@@ -163,9 +163,8 @@ export function settleOrders(
     )
     if (sameOrder(arranged, own)) return []
     // An item of the base that has gone stays in it: the base is no longer held.
-    const base = latest(order.base, items, changes, placed).map(
-      (entry, at) => entry ?? order.base[at],
-    ) as OrderedItem[]
+    const followed = latest(order.base, items, changes, placed)
+    const base = order.base.map((was, at) => followed[at] ?? was)
     return unchanged(order.items, arranged) && unchanged(order.base, base)
       ? [order]
       : [{ placement: order.placement, base, items: arranged }]
@@ -199,9 +198,8 @@ export function reorderItem(
     sameOrderedItem,
   )
   const from = shown.indexOf(moved.ordered)
-  const last = shown.length - 1
-  const at = { top: 0, up: from - 1, down: from + 1, bottom: last }[to]
-  if (from < 0 || at === from || at < 0 || at > last) return changes
+  const at = positionAfter(from, shown.length, to)
+  if (from < 0 || at === from) return changes
   const others = shown.filter((each) => each !== moved.ordered)
   const order: PlacementOrder = {
     placement,
@@ -222,6 +220,19 @@ export function reorderItem(
     },
     items,
   )
+}
+
+/**
+ * Where an item at `from`, its 0-based place among the `count` items of its placement,
+ * is once it is moved `to`: where it is, for a move it can't make.
+ */
+export function positionAfter(
+  from: number,
+  count: number,
+  to: OrderMove,
+): number {
+  const at = { top: 0, up: from - 1, down: from + 1, bottom: count - 1 }[to]
+  return at < 0 || at >= count ? from : at
 }
 
 /** `changes` without the placement's pending order ("Undo order", STY-050 S3). */

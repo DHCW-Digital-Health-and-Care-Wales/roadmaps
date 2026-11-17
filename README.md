@@ -158,10 +158,12 @@ it writes the `Families` tab only as below.
   shows after any item moved into its placement in the same publish. A new item the
   Product Lead has put before another item of a reordered placement is inserted
   instead of appended: a row is put in (`insertDimension`) just before the row of the
-  item that follows it there, after the row moves, formatted as that row is, and its
-  cells are written in it; a new item that is last in its placement is appended as
-  ever (STY-050). The row holds
-  the item's `Item ID`, made when the item was added, its `Title`, its `Horizon` as the
+  item that follows it there, after the row moves, and its cells are written in it.
+  The request asks Google to format the new row as that row, never as the row above,
+  which may be the header (`inheritFromBefore: false`); what Google then gives it has
+  not been checked against a real spreadsheet (CHO-020). A new item that is last in
+  its placement is appended as ever (STY-050). The row holds the item's `Item ID`,
+  made when the item was added, its `Title`, its `Horizon` as the
   public site's English value, and each of `Description`, `Outcome`, `Phase`, `Labels`,
   `Organisations` and `Details` the item has, each written as a change to that field
   is written above. Every other cell of the row is left empty, each Welsh cell among

@@ -187,6 +187,27 @@ describe("a new item sent with a roadmap's published state (STY-045)", () => {
   })
 })
 
+describe("a placement's order sent with a roadmap's published state (STY-050)", () => {
+  const changes = {
+    ...NO_CHANGES,
+    orders: [
+      {
+        placement: "now" as const,
+        base: [{ id: "firstidx" }, { id: "secondid" }],
+        items: [{ id: "secondid" }, { id: "firstidx" }],
+      },
+    ],
+  }
+
+  it("is a pending edit to write, though the roadmap already reads as published", () => {
+    expect(
+      findPublishedStateRow(loaded, { published: true, changes }, [
+        row({}, true),
+      ]),
+    ).toEqual({ ...found, writeState: false, check: false })
+  })
+})
+
 describe("planPublishedStateWrite", () => {
   const horizon: PublishProblem = {
     code: "items-field-missing",

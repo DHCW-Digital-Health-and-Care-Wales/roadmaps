@@ -8,7 +8,7 @@ import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-ite
 
 import { editItem, editRoadmap } from "./pending-changes"
 import { createPendingChangesStore, discardable } from "./pending-changes-store"
-import { reorderItem } from "./placement-orders"
+import { reorderItem } from "./pending-orders"
 
 const roadmap = createTestRoadmap("producta", "Product A")
 const retitled = editRoadmap(NO_CHANGES, roadmap, { title: "Product A2" })

@@ -8,6 +8,7 @@ import {
   openAddRoadmapDialog,
   openEditItemDialog,
   openEditRoadmapDialog,
+  publishOnce,
 } from "./fixtures/dialogs"
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
 import {
@@ -381,16 +382,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await page.goto("./#/roadmaps/producta")
       await connect(page)
       const main = page.getByRole("main")
-      // A first publish gives every item its ID: only then can a co-lead's change be told.
-      const form = await openEditItemDialog(page, "Minimal card")
-      await form.getByRole("textbox", { name: "Title" }).fill("A minimal card")
-      await form.getByRole("button", { name: "Done" }).click()
-      await main.getByRole("button", { name: "Publish changes" }).click()
-      await page
-        .getByRole("alertdialog")
-        .getByRole("button", { name: "Publish changes" })
-        .click()
-      await expect(main.getByText(/^Changes published\./)).toBeVisible()
+      await publishOnce(page)
 
       await main
         .getByRole("button", { name: "Move Card awaiting release" })

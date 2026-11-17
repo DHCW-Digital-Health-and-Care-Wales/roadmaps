@@ -58,12 +58,14 @@ doc comments first, since they are the contract.
        the plan settles it against the snapshot, reports a co-lead's change to the
        placement's items as an `OrderConflict` among the refusal's `conflicts`, and
        gives the order to write as `moves`, a new item that is not last with the item
-       it goes `before`, and `PublishWrites.orders`, each placement's items once
-       written, by ID. An API that stores positions writes each placement's from
-       `orders` and ignores the moves; `listRoadmapItems` then returns the placement's
-       items in that order. `heldWrites` judges a lost answer by those IDs, so the
-       API's ids must be the ones the plan gave: an item's own, and a new item's the
-       one it was added with. An item with no ID is found by what it held
+       it goes `before`, and `PublishWrites.orders`, each reordered placement's items
+       once written, by ID. An API that stores positions may write a reordered
+       placement's from `orders` in place of its moves; `orders` names no other
+       placement, so an item moved into one that was not reordered still goes last
+       there, by `moves`, as above. `listRoadmapItems` then returns each placement's
+       items in the order written. `heldWrites` judges a lost answer by those IDs, so
+       the API's ids must be the ones the plan gave: an item's own, and a new item's
+       the one it was added with. An item with no ID is found by what it held
        (`findOrderedItems`), which an API whose items always have ids never needs;
      - `addRoadmap` adds a roadmap and its empty list of items together or not at
        all, not published (STY-040). `planNewRoadmap` and `settleLostNewRoadmap`

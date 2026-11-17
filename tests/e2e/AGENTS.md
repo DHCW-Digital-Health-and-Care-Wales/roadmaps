@@ -14,7 +14,7 @@ End-to-end tests of the production build, with Google faked (ADR-006).
   token reaching storage, cookies, the URL or the console fail the test at teardown.
   Add a new external dependency to the fakes, never to the guard.
 - Only an item with an ID can conflict: a co-lead test publishes once first
-  (`publishOnce` in `editing.spec.ts`) to give every item its ID, then calls
+  (`publishOnce` in `fixtures/dialogs.ts`) to give every item its ID, then calls
   `sheets.coLead`.
 - No sleeps. For back-off or expiry, `page.clock.install()` before `goto`, then
   fast-forward; time still runs in real time until moved. Move the clock to a session's

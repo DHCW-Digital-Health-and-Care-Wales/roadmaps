@@ -265,7 +265,13 @@ false`), never as the header.
 - **S13: with the read after a refusal failed, an order conflict whose two orders
   become equal stays open** (agent) until it is decided or a read succeeds: the store
   settles an order against the items it has, which then lack the co-lead's. The
-  review still draws both orders rightly (`reviewedOrders`).
+  review still draws both orders rightly (`reviewedOrders`), finding each item the
+  publish read among the page's by its ID or by what it holds, never by its place,
+  which is another read's (found by Sol's review).
+- **S11: an order conflict with no field conflict among its placement's items sits
+  after every item's** (agent), such orders in page order: field conflicts are listed
+  by their items' place in the roadmap, not by placement, so there is no placement to
+  sit before.
 - **S11: both lists show an item by the title the page shows** (agent), a pending
   title edit included, so one item reads the same in "Your order" and "Current order".
 - **S15: "as Edit and Move are"** (agent). Only a new item's Edit and Move wait for a
@@ -296,13 +302,17 @@ false`), never as the header.
 - **Tests.** Written before the code and run red: the move plan for an order
   (`item-moves.test.ts`), the order helpers (`placement-order.test.ts`), the fake's
   `insertDimension` and `TabWriter.insert`, the pending-order rules
-  (`placement-orders.test.ts`) and the conflict rules (`conflicts.test.ts`). The
+  (`pending-orders.test.ts`) and the conflict rules (`conflicts.test.ts`). The
   publish plan's tests and the repository contract were written first but first run
   after the plan: their red was shown against the plan as it was (30 failing), and
   the contract's against the in-memory double before it could insert, which is no
   test-first evidence. The adapter's request tests followed their code and were shown
   red by breaking it (inserts sent before moves, a new item appended). The page,
-  store and Playwright tests followed their code.
+  store and Playwright tests followed their code. The review's fixes were test-first:
+  "Save and publish" dropping an order sent alone (`published-state.test.ts`, the
+  contract), the review's titles for items with no ID after a failed read
+  (`order-review.test.ts`), a kept order staying decided, and the place of an order
+  conflict among the others (`conflicts.test.ts`), five tests red before their fixes.
 
 ### Contract for dependents
 
@@ -315,23 +325,28 @@ false`), never as the header.
   needs `orders`: spread `NO_CHANGES`. `countChanges` counts each as one.
 - **`Conflict`** is `FieldConflict | OrderConflict`: a refusal's `conflicts`, the
   store's notice and `keepMine`/`takeTheirs` take either, told apart by `subject`
-  (`"order"`). `OpenConflict` is a union too: one of a field has `yours` and `item`.
-- **`domain/roadmap/placement-order.ts`**: `orderedItem`, `sameOrderedItem`,
-  `sameOrder`, `arrangedOrder` (an order over the items a placement holds: its own
-  first, the rest last) and `findOrderedItems`.
+  (`"order"`). `OpenConflict` is `OpenFieldConflict | OpenOrderConflict`, told apart
+  by `kind`.
+- **`domain/roadmap/placement-order.ts`**: `orderedItem`, `sameOrderedItem` (items of
+  one read), `sameItemAcrossReads`, `sameOrder`, `arrangedOrder` (an order over the
+  items a placement holds: its own first, the rest last) and `findOrderedItems`.
 - **`planItemMoves(placements, moved, orders)`**: a placement of `orders` is put in
   the order given, any of its rows moving; without it, as STY-051.
 - **`PublishWrites`**: `newItems[].before`, the index of the item a new item is
   inserted before, and `orders`, each written placement's IDs before and after, which
   `heldWrites` judges a lost answer by. A hand-written one needs `orders`.
 - **`TabWriter.insert(before, cells)`**: after every `move`, before any `append`.
-- **`features/roadmaps/editing/placement-orders.ts`**: `reorderItem`, `undoOrder`,
-  `settleOrders`, `shownTurns`. `createPendingChangesStore(itemsOf)` settles orders on
-  every `update`; a store made without `itemsOf`, as in a unit test, leaves them.
+- **`features/roadmaps/editing/pending-orders.ts`**: `reorderItem`, `undoOrder`,
+  `settleOrders`, `shownTurns`, `positionAfter`. `createPendingChangesStore(itemsOf)`
+  settles orders on every `update`; a store made without `itemsOf`, as in a unit
+  test, leaves them.
+- **`PlacementHeading`** (`editing/placement-heading.tsx`) draws a placement's heading
+  with its "Order changed" tag and "Undo order".
 - **`PageItem.turn`** replaces `arrival`: an item's place in its placement's pending
   order, or its turn among those that show last.
-- **`reviewedOrders(conflict, pageItems)`** draws the review's two orders;
-  `RoadmapPublishing` and `ConflictReview` take the page's items.
+- **`reviewedOrders(conflict, pageItems)`** (`editing/order-review.ts`) draws the
+  review's two orders; `RoadmapPublishing` and `ConflictReview` take the page's items.
+- **`publishOnce`** is `tests/e2e/fixtures/dialogs.ts`'s, for any spec.
 - **Copy**: `roadmaps.edit.order.*`, and `orderField`, `yourOrder`, `currentOrder`
   under `roadmaps.publish.notice.refused`.
 - **Accessible names**: a placement's "Undo order" is "Undo order Now"; a card's Move
@@ -345,16 +360,16 @@ false`), never as the header.
 | Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | S1       | `roadmap-detail-page-ordering.test.tsx` (`The Move menu's position group (S1)`, `In Welsh (D7)`); `tests/e2e/editing.spec.ts` (`puts an item first from its Move menu on …`); `structure.spec.ts` (`edit-move-menu.aria.yml`)                                                                                                                                                                                                                                                                                              |
-| S2       | `roadmap-detail-page-ordering.test.tsx` (`Choosing a position (S2)`); `placement-orders.test.ts` (`reorderItem`); the E2E journey above, by keyboard                                                                                                                                                                                                                                                                                                                                                                       |
-| S3       | `roadmap-detail-page-ordering.test.tsx` (`A pending order at the placement's heading (S3)`); `placement-orders.test.ts` (`is no change once the order is the one the page shows without it (D12)`, `undoOrder`)                                                                                                                                                                                                                                                                                                            |
-| S4       | `roadmap-detail-page-ordering.test.tsx` (`is left alone by an item's “Undo changes”…`); `placement-orders.test.ts` (same)                                                                                                                                                                                                                                                                                                                                                                                                  |
-| S5       | `placement-orders.test.ts` (`a pending order and the Product Lead's other changes`); `pending-changes-store.test.ts` (`is settled against the roadmap's items as last read by every update…`); `roadmap-detail-page-ordering.test.tsx` (`takes an item moved in, and one added, last…`, `lets an item moved out leave the order…`)                                                                                                                                                                                         |
+| S2       | `roadmap-detail-page-ordering.test.tsx` (`Choosing a position (S2)`); `pending-orders.test.ts` (`reorderItem`); the E2E journey above, by keyboard                                                                                                                                                                                                                                                                                                                                                                         |
+| S3       | `roadmap-detail-page-ordering.test.tsx` (`A pending order at the placement's heading (S3)`); `pending-orders.test.ts` (`is no change once the order is the one the page shows without it (D12)`, `undoOrder`)                                                                                                                                                                                                                                                                                                              |
+| S4       | `roadmap-detail-page-ordering.test.tsx` (`is left alone by an item's “Undo changes”…`); `pending-orders.test.ts` (same)                                                                                                                                                                                                                                                                                                                                                                                                    |
+| S5       | `pending-orders.test.ts` (`a pending order and the Product Lead's other changes`); `pending-changes-store.test.ts` (`is settled against the roadmap's items as last read by every update…`); `roadmap-detail-page-ordering.test.tsx` (`takes an item moved in, and one added, last…`, `lets an item moved out leave the order…`)                                                                                                                                                                                           |
 | S6       | `roadmap-detail-page-ordering.test.tsx` (`names the order in one line of “What changes”…`); `structure.spec.ts` (`edit-order-publish-dialog.aria.yml`)                                                                                                                                                                                                                                                                                                                                                                     |
 | S7       | `item-moves.test.ts` (`planItemMoves, for a placement's pending order`); `publish-plan.test.ts` (`moves the fewest rows to reach the order…`); `google-sheets-roadmap-repository.test.ts` (`sends one moveDimension that moves the row whole…`); `placement-order-contract.ts`; the E2E journey above                                                                                                                                                                                                                      |
 | S8       | `publish-plan.test.ts` (`inserts a new item that is not last…`, `appends a new item that stays last…`, `writes several new items in the order the placement has them…`); `tab-writer.test.ts` (`TabWriter.insert`); `google-sheets-roadmap-repository.test.ts` (`sends the cell writes, then the moves, then a row inserted with its cells, then a row appended`, `orders the placement with “Save and publish” too…`); `apply-batch-update.test.ts` (`inserting a row in a roadmap's tab`); `placement-order-contract.ts` |
-| S9       | `publish-plan.test.ts` (`writes nothing, not even IDs, for an order the roadmap already holds…`); `placement-orders.test.ts` (`a pending order after a read (S9)`); `pending-changes-store.test.ts` (`waits as it is while the roadmap's items are not read…`); `roadmap-detail-page-ordering.test.tsx` (`is dropped by “Discard all”`, `is dropped by a Refresh that reads the order already there…`)                                                                                                                     |
+| S9       | `publish-plan.test.ts` (`writes nothing, not even IDs, for an order the roadmap already holds…`); `pending-orders.test.ts` (`a pending order after a read (S9)`); `pending-changes-store.test.ts` (`waits as it is while the roadmap's items are not read…`); `roadmap-detail-page-ordering.test.tsx` (`is kept with its base through Disconnect and “Keep changes”…`, `is dropped by “Discard all”`, `is dropped by a Refresh that reads the order already there…`)                                                       |
 | S10      | `publish-plan.test.ts` (`a co-lead's change to the placement's items (S10)`); `placement-order-contract.ts` (`when a co-lead changed the placement's items`); `google-sheets-roadmap-repository.test.ts` (`sends nothing when a co-lead has added an item…`); `roadmap-detail-page-ordering.test.tsx` (`stops the publish and shows both orders…`, `is no conflict for a co-lead's change to another placement…`)                                                                                                          |
-| S11      | `conflicts.test.ts` (`an order conflict (STY-050)`); `roadmap-detail-page-ordering.test.tsx` (`stops the publish…`, `sits before the field conflicts…`); `tests/e2e/editing.spec.ts` (`shows a co-lead's change to the placement's items beside your order on a desktop / a phone…`, side by side then stacked); `structure.spec.ts` (`edit-order-conflict-review.aria.yml`)                                                                                                                                               |
+| S11      | `conflicts.test.ts` (`an order conflict (STY-050)`); `order-review.test.ts`; `roadmap-detail-page-ordering.test.tsx` (`stops the publish…`, `sits before the field conflicts…`); `tests/e2e/editing.spec.ts` (`shows a co-lead's change to the placement's items beside your order on a desktop / a phone…`, side by side then stacked); `structure.spec.ts` (`edit-order-conflict-review.aria.yml`)                                                                                                                       |
 | S12      | `conflicts.test.ts` (`Keep mine makes the order found the base…`, `Use theirs drops the pending order`); `publish-plan.test.ts` (`writes the order kept over a co-lead's change…`); `roadmap-detail-page-ordering.test.tsx`; `tests/e2e/editing.spec.ts` (the journey above, `Use theirs drops the pending order…`)                                                                                                                                                                                                        |
 | S13      | `roadmap-detail-page-ordering.test.tsx` (`deciding an item's placement (S13)`)                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | S14      | `publish-plan.test.ts` (`a lost answer, judged by the placement's order (S14)`); `placement-order-contract.ts` (`when the write's answer is lost`); `google-sheets-roadmap-repository.test.ts` (`is unconfirmed when the answer is lost and a re-read finds the placement in neither order`)                                                                                                                                                                                                                               |

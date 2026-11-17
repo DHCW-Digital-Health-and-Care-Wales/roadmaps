@@ -4,6 +4,7 @@ import {
   arrangedOrder,
   findOrderedItems,
   orderedItem,
+  sameItemAcrossReads,
   sameOrder,
   sameOrderedItem,
 } from "./placement-order"
@@ -42,6 +43,25 @@ describe("sameOrderedItem", () => {
   })
 })
 
+describe("sameItemAcrossReads", () => {
+  it("tells items of different reads apart by ID, or with none by what each held, wherever it was", () => {
+    const item = createTestRoadmapItem("Item")
+
+    expect(sameItemAcrossReads(withId("a"), withId("a"))).toBe(true)
+    expect(sameItemAcrossReads(withId("a"), withId("b"))).toBe(false)
+    expect(
+      sameItemAcrossReads(orderedItem(item, 0), orderedItem({ ...item }, 4)),
+    ).toBe(true)
+    expect(
+      sameItemAcrossReads(
+        orderedItem(item, 0),
+        orderedItem(createTestRoadmapItem("Other"), 0),
+      ),
+    ).toBe(false)
+    expect(sameItemAcrossReads(withId("a"), orderedItem(item, 0))).toBe(false)
+  })
+})
+
 describe("sameOrder", () => {
   it("is the same items in the same sequence", () => {
     const order = [withId("a"), withId("b")]
@@ -50,6 +70,15 @@ describe("sameOrder", () => {
     expect(sameOrder(order, [withId("b"), withId("a")])).toBe(false)
     expect(sameOrder(order, [withId("a")])).toBe(false)
     expect(sameOrder([], [])).toBe(true)
+  })
+
+  it("tells the items apart as it is told to", () => {
+    const item = createTestRoadmapItem("Item")
+    const here = [orderedItem(item, 0)]
+    const there = [orderedItem(item, 3)]
+
+    expect(sameOrder(here, there)).toBe(false)
+    expect(sameOrder(here, there, sameItemAcrossReads)).toBe(true)
   })
 })
 

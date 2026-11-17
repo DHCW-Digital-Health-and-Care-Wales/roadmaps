@@ -17,7 +17,7 @@ import {
   type RoadmapPlacement,
 } from "@/domain/roadmap/roadmap-placement"
 
-import type { OrderMove } from "./placement-orders"
+import type { OrderMove } from "./pending-orders"
 
 /** An item's place in its placement's order, as its Move menu offers to change it. */
 export interface MenuPosition {

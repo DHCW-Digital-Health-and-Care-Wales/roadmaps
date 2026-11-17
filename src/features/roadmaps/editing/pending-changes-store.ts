@@ -18,7 +18,7 @@ import { createExternalStore } from "@/lib/external-store"
 
 import { openConflicts } from "./conflicts"
 import { countChanges } from "./pending-changes"
-import { settleOrders } from "./placement-orders"
+import { settleOrders } from "./pending-orders"
 
 /** "save" for a roadmap that is not published, whose changes go nowhere public. */
 export type PublishAction = "publish" | "save"

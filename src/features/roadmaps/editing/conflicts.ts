@@ -4,13 +4,12 @@
  * (STY-050), until the Product Lead keeps theirs or takes the co-lead's, and the
  * edited items the co-lead removed, whose changes cannot be kept. Pure functions over
  * `RoadmapChanges`; a conflict needs no state of its own, as the pending change says
- * whether it is still open.
+ * whether it is still open. The two orders the review draws are `order-review.ts`'s.
  */
 
 import {
-  orderedItem,
+  sameItemAcrossReads,
   sameOrder,
-  sameOrderedItem,
 } from "@/domain/roadmap/placement-order"
 import {
   type Conflict,
@@ -21,7 +20,6 @@ import {
   type FieldConflict,
   type ItemChanges,
   type OrderConflict,
-  type OrderedItem,
   type RoadmapChanges,
   type RoadmapChoiceField,
   isChoiceField,
@@ -30,18 +28,14 @@ import {
   organisationIdsOf,
   roadmapValue,
 } from "@/domain/roadmap/roadmap-changes"
-import type {
-  ContentLanguage,
-  LocalisedText,
-} from "@/domain/roadmap/localised-text"
+import type { ContentLanguage } from "@/domain/roadmap/localised-text"
 import type { Organisation } from "@/domain/roadmap/organisation"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
+import { ROADMAP_PLACEMENTS } from "@/domain/roadmap/roadmap-placement"
 
-import { groupRoadmapItems } from "../group-roadmap-items"
 import type { RoadmapLists } from "../hooks/use-roadmap-lists"
 import { shortNamesOf } from "../sort-organisations"
-import type { PageItem } from "./page-items"
 import {
   applyItemChanges,
   applyRoadmapChanges,
@@ -49,21 +43,30 @@ import {
   sameTarget,
 } from "./pending-changes"
 
-/** A conflict still to decide, as the review shows it. */
-export type OpenConflict = {
+/** A field's conflict still to decide, as the review shows it. */
+export interface OpenFieldConflict {
+  readonly kind: "field"
+  readonly conflict: FieldConflict
+  /** The pending value now: what the publish sent, unless edited again since. */
+  readonly yours: string
+  /** The edited item as it will read once published; `null` for the roadmap's text. */
+  readonly item: RoadmapItem | null
   /** Tells conflicts apart, for React. */
   readonly key: string
-} & (
-  | {
-      readonly conflict: FieldConflict
-      /** The pending value now: what the publish sent, unless edited again since. */
-      readonly yours: string
-      /** The edited item as it will read once published; `null` for the roadmap's text. */
-      readonly item: RoadmapItem | null
-    }
-  /** A placement's order: the review draws its two orders (`reviewedOrders`). */
-  | { readonly conflict: OrderConflict }
-)
+}
+
+/**
+ * A placement's order still to decide: the review draws its two orders
+ * (`reviewedOrders`).
+ */
+export interface OpenOrderConflict {
+  readonly kind: "order"
+  readonly conflict: OrderConflict
+  readonly key: string
+}
+
+/** A conflict still to decide, as the review shows it. */
+export type OpenConflict = OpenFieldConflict | OpenOrderConflict
 
 /** Where the roadmap's own text sorts among the edited items: before them all. */
 const ROADMAP_FIRST = -1
@@ -86,11 +89,12 @@ function pendingOf(
 /**
  * The conflicts of `conflicts` still open over `changes`, the roadmap's text first, then
  * items in their order, a placement's order just before the first of its items (STY-050
- * S11): one is open while its field is pending and not yet edited from the co-lead's
- * text, or its order is pending and not yet from the order found. Keep mine, Use
- * theirs, undoing the edit or a read that finds the roadmap already holding it each
- * close it. Tags or details that have gained Welsh versions can't be kept (STY-037 S22,
- * STY-039 S19), so theirs stays open until the change is given up.
+ * S11), or, with none of them in conflict, after every item, in page order. One is open
+ * while its field is pending and not yet edited from the co-lead's text, or its order
+ * is pending and not yet from the order found. Keep mine, Use theirs, undoing the edit
+ * or a read that finds the roadmap already holding it each close it. Tags or details
+ * that have gained Welsh versions can't be kept (STY-037 S22, STY-039 S19), so theirs
+ * stays open until the change is given up.
  */
 export function openConflicts(
   conflicts: readonly Conflict[],
@@ -112,6 +116,7 @@ export function openConflicts(
           at: ROADMAP_FIRST,
           fieldAt: EDITABLE_ROADMAP_FIELDS.indexOf(conflict.field),
           open: {
+            kind: "field",
             conflict,
             yours: change.value,
             item: null,
@@ -129,6 +134,7 @@ export function openConflicts(
         at: entry.position,
         fieldAt: EDITABLE_ITEM_FIELDS.indexOf(conflict.field),
         open: {
+          kind: "field",
           conflict,
           yours: change.value,
           item: applyItemChanges(entry.item, entry),
@@ -143,11 +149,12 @@ export function openConflicts(
       ({ placement }) => placement === conflict.placement,
     )
     const found = conflict.current.map(({ item }) => item)
-    if (!order || sameOrder(order.base, found)) return []
-    // Before its placement's items; with none of them in conflict, after every item.
+    // The base may be of another read than the one the publish made: "Keep mine" takes
+    // the order found, and the store then finds its items where the page read them.
+    if (!order || sameOrder(order.base, found, sameItemAcrossReads)) return []
     const first = Math.min(
       ...fields.flatMap(({ at, open }) =>
-        "item" in open && open.item?.placement === conflict.placement
+        open.kind === "field" && open.item?.placement === conflict.placement
           ? [at]
           : [],
       ),
@@ -155,13 +162,16 @@ export function openConflicts(
     return [
       {
         at: first - JUST_BEFORE,
-        fieldAt: 0,
-        open: { conflict, key: `order-${conflict.placement}` },
+        fieldAt: ROADMAP_PLACEMENTS.indexOf(conflict.placement),
+        open: { kind: "order", conflict, key: `order-${conflict.placement}` },
       },
     ]
   })
   return [...fields, ...orders]
-    .sort((a, b) => a.at - b.at || a.fieldAt - b.fieldAt)
+    .sort(
+      // Two orders with no item in conflict are both after every item: page order.
+      (a, b) => (a.at === b.at ? 0 : a.at - b.at) || a.fieldAt - b.fieldAt,
+    )
     .map(({ open: each }) => each)
 }
 
@@ -241,76 +251,6 @@ export function takeTheirs(
     }
   }
   return withConflictField(changes, conflict, () => undefined)
-}
-
-/** One item of an order the review shows, by the title the page shows it with. */
-export interface OrderLine {
-  /** Tells the items of one order apart, for React. */
-  readonly key: string
-  readonly title: LocalisedText
-}
-
-/**
- * The two orders the review shows for `conflict` (STY-050 S11), from `pageItems`, the
- * page's items: `yours`, what "Keep mine" would publish, the placement's items the
- * Product Lead knows in their order, with the items a co-lead added or moved in last
- * and those they removed or moved out gone; and `theirs`, the order the publish found.
- * An item is shown by the title the page shows, so one reads the same in both. The
- * page may not hold what the publish found, when the read after it failed: an item
- * of the page's that the publish did not find in the placement is shown only if the
- * Product Lead moved or added it there, and one it did find that the page lacks is
- * shown last, unless the Product Lead moved it out.
- */
-export function reviewedOrders(
-  conflict: OrderConflict,
-  pageItems: readonly PageItem[],
-): { yours: OrderLine[]; theirs: OrderLine[] } {
-  const onPage = pageItems.map((pageItem, position) => ({
-    pageItem,
-    ordered:
-      pageItem.newItemId === undefined
-        ? orderedItem(pageItem.item, position)
-        : { id: pageItem.newItemId },
-  }))
-  const lineOf = (ordered: OrderedItem, title: LocalisedText): OrderLine => ({
-    key: ordered.id ?? `at-${String(ordered.position)}`,
-    title:
-      onPage.find((each) => sameOrderedItem(each.ordered, ordered))?.pageItem
-        .shown.title ?? title,
-  })
-  const found = (ordered: OrderedItem) =>
-    conflict.current.some(({ item }) => sameOrderedItem(item, ordered))
-  // The Product Lead's own: moved to where the page shows it, or new.
-  const placedByThem = ({ entry, newItemId }: PageItem) =>
-    newItemId !== undefined || entry?.fields.placement !== undefined
-
-  const shown =
-    groupRoadmapItems(
-      onPage,
-      ({ pageItem }) => pageItem.shown.placement,
-      ({ pageItem }) => pageItem.turn,
-    )
-      .placements.find(({ placement }) => placement === conflict.placement)
-      ?.items.map(({ item }) => item)
-      .filter(
-        ({ pageItem, ordered }) => found(ordered) || placedByThem(pageItem),
-      ) ?? []
-  const added = conflict.current.filter(({ item }) => {
-    const known = onPage.find((each) => sameOrderedItem(each.ordered, item))
-    // One the page never read is a co-lead's; one it shows elsewhere is theirs too,
-    // moved in since, unless the Product Lead moved it out.
-    if (known === undefined) return true
-    return !shown.includes(known) && !placedByThem(known.pageItem)
-  })
-  return {
-    yours: [
-      ...shown.map(({ pageItem, ordered }) =>
-        lineOf(ordered, pageItem.shown.title),
-      ),
-      ...added.map(({ item, title }) => lineOf(item, title)),
-    ],
-    theirs: conflict.current.map(({ item, title }) => lineOf(item, title)),
-  }
 }
 
 /**

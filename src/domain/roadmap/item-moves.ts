@@ -42,7 +42,7 @@ interface PlacementTarget {
 export function planItemMoves(
   placements: readonly (string | null)[],
   moved: readonly { index: number; placement: string }[],
-  orders: readonly { placement: string; items: readonly number[] }[] = [],
+  orders: readonly { placement: string; items: readonly number[] }[],
 ): ItemMove[] {
   // By index, so an item given twice is moved once, to where it was last sent.
   const movedTo = new Map(

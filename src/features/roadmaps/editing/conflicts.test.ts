@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest"
 
-import { addNewItem } from "@/domain/roadmap/new-item"
 import { orderedItem } from "@/domain/roadmap/placement-order"
 import {
   type FieldConflict,
@@ -9,31 +8,18 @@ import {
   type OrderConflict,
   type RoadmapChanges,
 } from "@/domain/roadmap/roadmap-changes"
-import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import type { RoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 import { TEST_ORGANISATIONS } from "@/domain/roadmap/testing/test-organisations"
 
-import type { PageItem } from "./page-items"
-import {
-  applyItemChanges,
-  editItem,
-  matchItemChanges,
-  shownNewItem,
-} from "./pending-changes"
-import {
-  reorderItem,
-  settleOrders,
-  shownTurns,
-  undoOrder,
-} from "./placement-orders"
+import { editItem } from "./pending-changes"
+import { reorderItem, settleOrders, undoOrder } from "./pending-orders"
 import {
   describeOrganisations,
   discardItems,
   keepMine,
   openConflicts,
-  reviewedOrders,
   takeTheirs,
   withCurrentItemText,
   withCurrentRoadmapText,
@@ -493,38 +479,9 @@ describe("an order conflict (STY-050)", () => {
       title: each.title,
     })),
   }
-  /** The page's items over `read`, as `usePageItems` gives them. */
-  const pageItemsOf = (
-    read: readonly RoadmapItem[],
-    pending: RoadmapChanges,
-  ): PageItem[] => {
-    const entries = matchItemChanges(read, pending)
-    const turns = shownTurns(read, pending)
-    return [
-      ...read.map((each, position) => ({
-        key: `read-${String(position)}`,
-        item: each,
-        shown: applyItemChanges(each, entries.get(position)),
-        entry: entries.get(position),
-        newItemId: undefined,
-        turn: turns[position],
-      })),
-      ...pending.newItems.map((newItem, added) => ({
-        key: `new-${newItem.id}`,
-        item: shownNewItem(newItem),
-        shown: shownNewItem(newItem),
-        entry: undefined,
-        newItemId: newItem.id,
-        turn: turns[read.length + added],
-      })),
-    ]
-  }
-  const titles = (lines: readonly { title: { en: string } }[]) =>
-    lines.map(({ title }) => title.en)
-
   it("is open while the order is pending from another order than the one found (S10)", () => {
     expect(openConflicts([conflict], reordered)).toEqual([
-      { conflict, key: "order-now" },
+      { kind: "order", conflict, key: "order-now" },
     ])
     expect(openConflicts([conflict], NO_CHANGES)).toEqual([])
     expect(openConflicts([conflict], undoOrder(reordered, "now"))).toEqual([])
@@ -571,6 +528,71 @@ describe("an order conflict (STY-050)", () => {
     expect(openConflicts([conflict], kept)).toEqual([])
   })
 
+  it("lists the orders of placements with no item in conflict after every item, in page order", () => {
+    const later = item("Later one", "later")
+    const other = item("Later two", "later")
+    const read = [...loaded, later, other]
+    // Later is reordered first, then Now.
+    const both = reorderItem(
+      reorderItem(NO_CHANGES, read, 4, "top"),
+      read,
+      2,
+      "top",
+    )
+    const laterConflict: OrderConflict = {
+      ...conflict,
+      placement: "later",
+      current: [],
+    }
+    const edit: ItemChanges = {
+      item: later,
+      position: 3,
+      fields: { title: { base: "Later one", value: "Mine" } },
+    }
+
+    const open = openConflicts(
+      [laterConflict, conflictOn(edit, "title", "Theirs"), conflict],
+      { ...both, items: [edit] },
+    )
+
+    // Later's order is before its item; Now has no item in conflict, so it is last.
+    expect(open.map(({ key }) => key)).toEqual([
+      "order-later",
+      `item-${later.id ?? ""}-title`,
+      "order-now",
+    ])
+    expect(
+      openConflicts([laterConflict, conflict], both).map(({ key }) => key),
+    ).toEqual(["order-now", "order-later"])
+  })
+
+  it("stays decided once kept, for items with no ID that the store then finds where the page read them", () => {
+    const first = createTestRoadmapItem("First")
+    const second = createTestRoadmapItem("Second")
+    const third = createTestRoadmapItem("Third")
+    // The read after the refusal failed: the page holds them as loaded, and a co-lead
+    // has since sorted the rows.
+    const page = [first, second, third]
+    const pending = reorderItem(NO_CHANGES, page, 2, "top")
+    const pendingOrder = pending.orders[0]
+    if (!pendingOrder) throw new Error("Now is reordered")
+    const found: OrderConflict = {
+      subject: "order",
+      placement: "now",
+      base: pendingOrder.base,
+      pending: pendingOrder.items,
+      current: [second, first, third].map((each, position) => ({
+        item: orderedItem(each, position),
+        title: each.title,
+      })),
+    }
+
+    const kept = settleOrders(keepMine(pending, found), page)
+
+    expect(openConflicts([found], kept)).toEqual([])
+    expect(openConflicts([found], pending)).toHaveLength(1)
+  })
+
   it("Use theirs drops the pending order (S12)", () => {
     expect(takeTheirs(reordered, conflict)).toEqual(NO_CHANGES)
   })
@@ -587,78 +609,5 @@ describe("an order conflict (STY-050)", () => {
 
     expect(taken.orders.map(({ placement }) => placement)).toEqual(["next"])
     expect(taken.roadmap).toBe(both.roadmap)
-  })
-
-  describe("the two orders the review shows (S11)", () => {
-    it("shows what Keep mine would publish beside the order found: a co-lead's item last, one they removed gone", () => {
-      // The read after the refusal holds the co-lead's change.
-      const pending = settleOrders(reordered, current)
-
-      const { yours, theirs: found } = reviewedOrders(
-        conflict,
-        pageItemsOf(current, pending),
-      )
-
-      expect(titles(yours)).toEqual(["A", "B", "E"])
-      expect(titles(found)).toEqual(["A", "B", "E"])
-    })
-
-    it("keeps the Product Lead's order of the items they know, and their own moves and new items", () => {
-      const read = [...current, item("X", "next")]
-      const pending = settleOrders(
-        addNewItem(
-          editItem(
-            reorderItem(NO_CHANGES, [...loaded, item("X", "next")], 1, "top"),
-            undefined,
-            item("X", "next"),
-            3,
-            { placement: "now" },
-          ),
-          { title: "New", placement: "now" },
-          read,
-        ),
-        read,
-      )
-
-      const { yours, theirs: found } = reviewedOrders(
-        conflict,
-        pageItemsOf(read, pending),
-      )
-
-      expect(titles(yours)).toEqual(["B", "A", "E", "X", "New"])
-      expect(titles(found)).toEqual(["A", "B", "E"])
-    })
-
-    it("shows each item by the title the page shows, in both orders", () => {
-      const pending = settleOrders(
-        editItem(reorderItem(NO_CHANGES, loaded, 1, "top"), undefined, a, 0, {
-          title: "My A",
-        }),
-        current,
-      )
-
-      const { yours, theirs: found } = reviewedOrders(
-        conflict,
-        pageItemsOf(current, pending),
-      )
-
-      expect(titles(yours)).toEqual(["B", "My A", "E"])
-      expect(titles(found)).toEqual(["My A", "B", "E"])
-    })
-
-    it("shows a co-lead's items though the read after the refusal failed, and leaves out one the Product Lead moved out", () => {
-      // The page still holds the roadmap as loaded: A, B and C.
-      const pending = editItem(
-        reorderItem(NO_CHANGES, loaded, 1, "top"),
-        undefined,
-        a,
-        0,
-        { placement: "later" },
-      )
-
-      const { yours } = reviewedOrders(conflict, pageItemsOf(loaded, pending))
-
-      expect(titles(yours)).toEqual(["B", "E"])
-    })
   })
 })

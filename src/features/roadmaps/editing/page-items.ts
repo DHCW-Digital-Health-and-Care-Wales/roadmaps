@@ -19,7 +19,7 @@ import {
   undoItem,
 } from "./pending-changes"
 import { useRoadmapChanges } from "./pending-changes-context"
-import { shownTurns } from "./placement-orders"
+import { shownTurns } from "./pending-orders"
 
 /**
  * One item of a roadmap's page, with a card of its own. An item is known there by its

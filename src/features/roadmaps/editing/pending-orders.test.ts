@@ -24,7 +24,7 @@ import {
   settleOrders,
   shownTurns,
   undoOrder,
-} from "./placement-orders"
+} from "./pending-orders"
 
 const item = (title: string, placement: RoadmapPlacement = "now") =>
   createTestRoadmapItem(title, {

@@ -16,7 +16,7 @@ import {
   usePendingChangesStore,
 } from "./pending-changes-context"
 import { discardable } from "./pending-changes-store"
-import { type OrderMove, reorderItem } from "./placement-orders"
+import { type OrderMove, positionAfter, reorderItem } from "./pending-orders"
 
 export interface EditableItemCardProps {
   roadmapId: string
@@ -119,10 +119,7 @@ export function EditableItemCard({
     store.update(roadmapId, (changes) =>
       reorderItem(changes, items, position, to),
     )
-    const last = order.count - 1
-    const at = { top: 0, up: order.at - 1, down: order.at + 1, bottom: last }[
-      to
-    ]
+    const at = positionAfter(order.at, order.count, to)
     onAnnounce(
       t(`roadmaps.edit.order.moved.${to}`, {
         position: at + 1,

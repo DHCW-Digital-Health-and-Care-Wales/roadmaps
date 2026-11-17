@@ -25,24 +25,30 @@ export function findEditedItem(
   items: readonly RoadmapItem[],
   repeatedIds: ReadonlySet<string>,
   { item, position }: ItemChanges,
-  pending: readonly { field: EditableItemField; value: string }[],
+  pending: PendingItemValues,
 ): number {
   const index =
     item.id === null ? position : items.findIndex(({ id }) => id === item.id)
   const current = items[index]
   if (current === undefined) return -1
   if (item.id !== null && !repeatedIds.has(item.id)) return index
-  return holdsLoaded(current, item, pending) ? index : -1
+  return itemHoldsLoaded(current, item, pending) ? index : -1
 }
+
+/** An item's pending values, each with its field. */
+export type PendingItemValues = readonly {
+  field: EditableItemField
+  value: string
+}[]
 
 /**
  * Whether `current` holds what `loaded` did when it was read, or that with the
  * `pending` values written, as a publish whose answer was lost leaves it.
  */
-export function holdsLoaded(
+export function itemHoldsLoaded(
   current: RoadmapItem,
   loaded: RoadmapItem,
-  pending: readonly { field: EditableItemField; value: string }[],
+  pending: PendingItemValues,
 ): boolean {
   const edited = new Map(pending.map(({ field, value }) => [field, value]))
   return (

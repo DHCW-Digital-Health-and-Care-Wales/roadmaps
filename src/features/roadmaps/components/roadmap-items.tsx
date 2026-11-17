@@ -1,26 +1,18 @@
-import { TriangleAlertIcon, Undo2Icon } from "lucide-react"
+import { TriangleAlertIcon } from "lucide-react"
 import { useId, useMemo, useRef, useState, type RefObject } from "react"
 import { useTranslation } from "react-i18next"
 
-import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Organisation } from "@/domain/roadmap/organisation"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
-import type { RoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 
 import { ItemDialog } from "../dialogs/item-dialog"
-import { ChangedTag } from "../editing/edit-controls"
 import {
   type CardControl,
   EditableItemCard,
 } from "../editing/editable-item-card"
 import type { PageItem } from "../editing/page-items"
-import {
-  usePendingChanges,
-  usePendingChangesStore,
-} from "../editing/pending-changes-context"
-import { discardable } from "../editing/pending-changes-store"
-import { undoOrder } from "../editing/placement-orders"
+import { PlacementHeading } from "../editing/placement-heading"
 import type { PageItemDialog } from "../editing/use-item-dialog"
 import { groupRoadmapItems, type Positioned } from "../group-roadmap-items"
 import { AddItemButton } from "./add-item-button"
@@ -51,10 +43,9 @@ export interface RoadmapItemsProps {
  * moved, and shows its pending changes, in its pending placement (STY-025, STY-031),
  * last there, in the order moved (STY-051 S1); an item added and not yet published
  * shows after those (STY-046 S3). A placement whose order is pending shows its items
- * in it, with "Order changed" and "Undo order" beside its heading, which takes focus
- * once the order is undone (STY-050 S3); what a move within a placement and "Undo
- * order" came to is said in a status line. Edit on a card, and "Add an item", open the
- * page's one item dialog, which is drawn here.
+ * in it, under a heading that says so (`PlacementHeading`, STY-050 S3); what a move
+ * within a placement and "Undo order" came to is said in a status line. Edit on a
+ * card, and "Add an item", open the page's one item dialog, which is drawn here.
  */
 export function RoadmapItems({
   roadmapId,
@@ -66,11 +57,6 @@ export function RoadmapItems({
 }: RoadmapItemsProps) {
   const { t } = useTranslation()
   const headingId = useId()
-  const store = usePendingChangesStore()
-  const snapshot = usePendingChanges()
-  const reordered = new Set(
-    snapshot.changes.get(roadmapId)?.orders.map(({ placement }) => placement),
-  )
   const { unplaced, placements } = useMemo(
     () =>
       groupRoadmapItems(
@@ -81,7 +67,6 @@ export function RoadmapItems({
     [pageItems],
   )
   const [said, setSaid] = useState<{ serial: number; text: string }>()
-  const headings = useRef(new Map<RoadmapPlacement, HTMLHeadingElement>())
   // A moved item's card is a new one, in another list, so focus is handed to it here.
   const [focus, setFocus] = useState<FocusRequest | null>(null)
   const cardHandlers = useMemo(
@@ -100,18 +85,6 @@ export function RoadmapItems({
     [onItemRemoved],
   )
   const panelAddButton = useRef<HTMLButtonElement>(null)
-
-  const undo = (placement: RoadmapPlacement) => {
-    if (!discardable(snapshot, roadmapId)) return
-    store.update(roadmapId, (changes) => undoOrder(changes, placement))
-    // "Undo order" goes with the order, so focus goes to the heading it sat beside.
-    headings.current.get(placement)?.focus()
-    cardHandlers.announce(
-      t("roadmaps.edit.order.undone", {
-        placement: t(`roadmaps.items.placements.${placement}`),
-      }),
-    )
-  }
 
   const list = (
     placed: readonly Positioned<PageItem>[],
@@ -174,43 +147,14 @@ export function RoadmapItems({
           )}
           {placements.map(({ placement, items: placed }) => {
             const id = `${headingId}-${placement}`
-            const name = t(`roadmaps.items.placements.${placement}`)
             return (
               <div key={placement} className="flex flex-col gap-3">
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                  <h2
-                    id={id}
-                    ref={(heading) => {
-                      if (heading) headings.current.set(placement, heading)
-                      else headings.current.delete(placement)
-                    }}
-                    tabIndex={-1}
-                    className="text-heading-m outline-none focus-visible:focus-ring"
-                  >
-                    {name}
-                  </h2>
-                  {reordered.has(placement) && (
-                    <>
-                      <ChangedTag label={t("roadmaps.edit.order.changed")} />
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        disabled={!discardable(snapshot, roadmapId)}
-                        focusableWhenDisabled
-                        onClick={() => {
-                          undo(placement)
-                        }}
-                      >
-                        <Undo2Icon
-                          data-icon="inline-start"
-                          aria-hidden="true"
-                        />
-                        {t("roadmaps.edit.order.undo")}{" "}
-                        <span className="sr-only">{name}</span>
-                      </Button>
-                    </>
-                  )}
-                </div>
+                <PlacementHeading
+                  roadmapId={roadmapId}
+                  placement={placement}
+                  id={id}
+                  onAnnounce={cardHandlers.announce}
+                />
                 {placed.length > 0 ? (
                   list(placed, id, true)
                 ) : (

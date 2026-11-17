@@ -86,13 +86,10 @@ export function describePlacementOrders(
       const outcome = await repository
         .publishRoadmapChanges("producta", changes)
         .catch((error: unknown) => error)
-      const read = await repository
-        .listRoadmapItems("producta")
-        .catch((error: unknown) => error)
-      return { outcome, read }
+      return { outcome, read: await repository.listRoadmapItems("producta") }
     }
-    const titles = (read: unknown) =>
-      (read as RoadmapItem[]).map(({ title }) => title.en)
+    const titles = (read: readonly RoadmapItem[]) =>
+      read.map(({ title }) => title.en)
 
     it("returns the placement's items in the published order, each as it was, and every other item in its order (S7, S16)", async () => {
       const items = [video, a, b, letters, c, d]
@@ -127,7 +124,7 @@ export function describePlacementOrders(
 
       expect(outcome).toEqual({ status: "published" })
       expect(titles(read)).toEqual(["Third", "First", "Second"])
-      expect((read as RoadmapItem[]).every(({ id }) => id !== null)).toBe(true)
+      expect(read.every(({ id }) => id !== null)).toBe(true)
     })
 
     it("orders the placement with an edit of one of its items and a move into it (S5)", async () => {
@@ -335,12 +332,36 @@ export function describePlacementOrders(
       })
 
       it("is unconfirmed when the re-read fails", async () => {
-        const { outcome } = await publish(items, changes, {
-          write: { lost: "reread-fails" },
-        })
+        // Every read after the write fails, so nothing is read back here.
+        const repository = setup.withRoadmaps(
+          [live],
+          { producta: items },
+          { write: { lost: "reread-fails" } },
+        )
 
-        expect(outcome).toEqual({ status: "unconfirmed" })
+        await expect(
+          repository.publishRoadmapChanges("producta", changes),
+        ).resolves.toEqual({ status: "unconfirmed" })
       })
+    })
+
+    it("publishes an order alone with “Save and publish” on a roadmap a co-lead already published (S8)", async () => {
+      const draft = { ...live, published: false }
+      const items = [a, b, c, d]
+      const repository = setup.withRoadmaps([live], { producta: items })
+
+      const outcome = await repository.setRoadmapPublished(draft, {
+        published: true,
+        changes: reordering(nowOrder(items, [d, a, b, c])),
+      })
+
+      expect(outcome).toEqual({ status: "set" })
+      expect(await repository.listRoadmapItems("producta")).toStrictEqual([
+        d,
+        a,
+        b,
+        c,
+      ])
     })
 
     it("publishes an order with “Save and publish” too (S8)", async () => {

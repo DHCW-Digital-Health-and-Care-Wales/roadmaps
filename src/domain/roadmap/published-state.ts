@@ -265,14 +265,15 @@ function editedFields(
 }
 
 /**
- * Whether any pending edit is sent: a field of the roadmap's, an item's changes, or a
- * new item.
+ * Whether any pending edit is sent: a field of the roadmap's, an item's changes, a new
+ * item, or a placement's order.
  */
 function hasChanges(change: PublishedStateChange): boolean {
   const sent = change.published ? change.changes : undefined
   return (
     editedFields(change).size > 0 ||
-    (sent !== undefined && sent.items.length + sent.newItems.length > 0)
+    (sent !== undefined &&
+      sent.items.length + sent.newItems.length + sent.orders.length > 0)
   )
 }
 

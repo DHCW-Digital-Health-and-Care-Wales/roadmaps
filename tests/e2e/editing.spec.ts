@@ -1,6 +1,10 @@
 import type { Locator, Page } from "@playwright/test"
 
-import { openEditItemDialog, openEditRoadmapDialog } from "./fixtures/dialogs"
+import {
+  openEditItemDialog,
+  openEditRoadmapDialog,
+  publishOnce,
+} from "./fixtures/dialogs"
 import {
   EXAMPLE_INDEX_ROWS,
   EXAMPLE_LISTS,
@@ -273,15 +277,6 @@ function changedCells(
       ),
     ),
   ]
-}
-
-/** Publishes a first edit, so every item has an ID a later publish can find it by. */
-async function publishOnce(page: Page) {
-  await editTitle(page, "Minimal card", "A minimal card")
-  await confirmPublish(page, "Publish")
-  await expect(
-    page.getByRole("main").getByText(/^Changes published\./),
-  ).toBeVisible()
 }
 
 /** Edits the roadmap's English vision in the roadmap dialog. */

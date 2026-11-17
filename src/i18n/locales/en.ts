@@ -687,7 +687,7 @@ export const en = {
         "This Google account isn't allowed to {{action}}. Ask the spreadsheet owner for edit access.",
       /** The account may edit the spreadsheet, but not a part the write changes (STY-051 S7). */
       protected:
-        "Part of the spreadsheet is protected, so nothing was changed. Ask the spreadsheet owner to let this Google account edit it.",
+        "Part of the spreadsheet is protected, so nothing was changed. Ask its owner to let this account edit it.",
       "not-found":
         "The spreadsheet couldn't be found. Check that it still exists.",
       "rate-limited":
@@ -854,7 +854,7 @@ export const en = {
     forbidden:
       "You don't have access to this spreadsheet. Ask the spreadsheet owner for access.",
     protected:
-      "Part of the spreadsheet is protected, so nothing was changed. Ask the spreadsheet owner to let this Google account edit it.",
+      "Part of the spreadsheet is protected, so nothing was changed. Ask its owner to let this account edit it.",
     "not-found":
       "The spreadsheet couldn't be found. Check that it still exists.",
     "rate-limited": "Too many requests right now. Wait a moment and try again.",

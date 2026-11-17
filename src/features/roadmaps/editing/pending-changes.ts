@@ -376,8 +376,9 @@ export function settlePublished(
 }
 
 /**
- * An entry's turn among the roadmap's pending moves, in the order they were made
- * (STY-051 D3); none for an entry that moves nothing.
+ * An entry's turn among the items that show last in their placement (STY-051 S1): its
+ * place among the roadmap's pending moves, in the order they were made (D3); none for
+ * an entry that moves nothing. A new item's turn follows them all: `newItemTurn`.
  */
 export function moveTurn(
   changes: RoadmapChanges | undefined,
@@ -385,6 +386,17 @@ export function moveTurn(
 ): number | undefined {
   if (!changes || !entry?.fields.placement) return undefined
   return changes.items.indexOf(entry)
+}
+
+/**
+ * The turn of the new item `added`th among those pending: after every `moveTurn`, each
+ * of which is an index of `changes.items`, in the order added (STY-051 D4).
+ */
+export function newItemTurn(
+  changes: RoadmapChanges | undefined,
+  added: number,
+): number {
+  return (changes?.items.length ?? 0) + added
 }
 
 /**

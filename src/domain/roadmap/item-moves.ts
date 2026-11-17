@@ -4,6 +4,8 @@
  * `RoadmapRepository` moves the same ones; each finds what holds an item itself.
  */
 
+import { AppError } from "@/lib/errors"
+
 /**
  * One item taken out of the roadmap's items and put back just after another, or just
  * before it. Each index is the item's place among the items as read, and the move is
@@ -68,8 +70,13 @@ function moveTo(
   first: number | undefined,
 ): ItemMove {
   if (previous !== undefined) return { index, after: previous }
-  // With no item to follow, every item arriving is in reach of the run, so it has one.
-  if (first === undefined) throw new Error("A placement's run holds an item")
+  // Never: with no item to follow, every item arriving may stay, so one of them does.
+  if (first === undefined) {
+    throw new AppError("unknown", {
+      message:
+        "An item moved into a placement with no items has none to go before",
+    })
+  }
   return { index, before: first }
 }
 
@@ -82,6 +89,7 @@ export function movedItems<T>(
     afterMove,
     items.map((_, index) => index),
   )
+  // Each index is one of `items`: a slice gives that item, typed, or nothing.
   return order.flatMap((index) => items.slice(index, index + 1))
 }
 
@@ -101,22 +109,19 @@ function longestRun(
   indexes: readonly number[],
   at: (index: number) => number,
 ): ReadonlySet<number> {
-  const places = indexes.map(at)
-  // The length of the longest run that starts with each.
-  const lengths = places.map(() => 1)
-  for (let i = places.length - 1; i >= 0; i--) {
-    for (let j = i + 1; j < places.length; j++) {
-      if ((places[j] ?? 0) > (places[i] ?? 0)) {
-        lengths[i] = Math.max(lengths[i] ?? 1, (lengths[j] ?? 1) + 1)
-      }
-    }
+  // Each with the length of the longest run that starts with it, from the last back.
+  const starts: { index: number; place: number; length: number }[] = []
+  for (const index of indexes.toReversed()) {
+    const place = at(index)
+    const longer = starts.filter((later) => later.place > place)
+    const length = 1 + Math.max(0, ...longer.map((later) => later.length))
+    starts.unshift({ index, place, length })
   }
   const run = new Set<number>()
-  let left = Math.max(0, ...lengths)
+  let left = Math.max(0, ...starts.map(({ length }) => length))
   let last = -1
-  for (const [i, index] of indexes.entries()) {
-    const place = places[i] ?? 0
-    if (lengths[i] === left && place > last) {
+  for (const { index, place, length } of starts) {
+    if (length === left && place > last) {
       run.add(index)
       last = place
       left--

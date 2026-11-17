@@ -98,11 +98,12 @@ const REQUIRED_FIELDS: ReadonlySet<string> = new Set(["title"])
  * and a change made over whatever the field holds (`FieldChange.overwrite`) is never a
  * conflict. A new item is never a conflict or missing: it is written unless a row of
  * the roadmap holds its ID, which a write of it whose answer was lost left there
- * (STY-045). An item whose placement is written goes last in it, in the order the changes
- * give the moves (`planItemMoves`, STY-051). Throws `AppError('unknown')` for a blank title, a placement that is none of
- * the six, an organisation the list doesn't hold, a `Last updated` that is no
- * `YYYY-MM-DD` date or two new items with one ID, which callers never send, and
- * `AppError('invalid-data')` for a family or category chosen while its list is missing.
+ * (STY-045). An item whose placement is written goes last in it, in the order the
+ * changes give the moves (`planItemMoves`, STY-051). Throws `AppError('unknown')` for a
+ * blank title, a placement that is none of the six, an organisation the list doesn't
+ * hold, a `Last updated` that is no `YYYY-MM-DD` date or two new items with one ID,
+ * which callers never send, and `AppError('invalid-data')` for a family or category
+ * chosen while its list is missing.
  */
 export function planRoadmapPublish(
   changes: RoadmapChanges,

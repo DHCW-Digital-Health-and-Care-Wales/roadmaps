@@ -560,6 +560,51 @@ describe("the order of moves (STY-051 D3)", () => {
     ).toEqual(["Third", "First"])
   })
 
+  it("keeps the order through a read and a publish that drop some of the items' changes", () => {
+    const fourth = createTestRoadmapItem("Fourth", { id: "fourthid" })
+    const moved = [third, fourth, first].reduce(
+      (changes, item, at) =>
+        editItem(changes, undefined, item, at, {
+          placement: "later",
+          title: `${item.title.en}, renamed`,
+        }),
+      NO_CHANGES,
+    )
+    // By ID: an entry's item takes each title a read or a publish settles.
+    const ids = (changes: RoadmapChanges) =>
+      changes.items.map(({ item }) => item.id)
+    expect(ids(moved)).toEqual(["thirdidx", "fourthid", "firstidx"])
+
+    // A read holds Fourth's whole change and Third's title; the others' moves stay.
+    const read = [
+      { ...third, title: { en: "Third, renamed", cy: "" } },
+      {
+        ...fourth,
+        title: { en: "Fourth, renamed", cy: "" },
+        placement: "later" as const,
+      },
+      first,
+    ]
+    const reconciled = reconcileItems(moved, read)
+    expect(ids(reconciled)).toEqual(["thirdidx", "firstidx"])
+
+    // A publish of the titles alone lands: the moves, made meanwhile, stay in order.
+    const sent: RoadmapChanges = {
+      ...moved,
+      items: moved.items.map((entry) => ({
+        ...entry,
+        fields: { title: entry.fields.title },
+      })) as RoadmapChanges["items"],
+    }
+    const settled = settlePublished(moved, sent)
+    expect(ids(settled)).toEqual(["thirdidx", "fourthid", "firstidx"])
+    expect(settled.items.map(({ fields }) => Object.keys(fields))).toEqual([
+      ["placement"],
+      ["placement"],
+      ["placement"],
+    ])
+  })
+
   it("puts an item moved after one edited before it was, and one moved back and out again last", () => {
     const edited = editItem(NO_CHANGES, undefined, second, 1, {
       title: "Edited first",

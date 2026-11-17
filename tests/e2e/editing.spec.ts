@@ -18,9 +18,10 @@ import { connect, expect, roadmapCards, test } from "./fixtures/test"
  * is not published (STY-025), against the fake Sheets API: one `batchUpdate` per publish.
  * A co-lead's change made meanwhile is shown, never overwritten (STY-026). A family and
  * category are chosen from their lists (STY-028). An item is moved to another placement,
- * writing its `Horizon` cell and moving its row to last there (STY-031, STY-051). Its organisations are ticked in a field
- * that opens on request (STY-034, STY-038), its tags are added, renamed and removed in
- * another (STY-037), and its details are written as an outline in a third (STY-039).
+ * writing its `Horizon` cell and moving its row to last there (STY-031, STY-051). Its
+ * organisations are ticked in a field that opens on request (STY-034, STY-038), its tags
+ * are added, renamed and removed in another (STY-037), and its details are written as
+ * an outline in a third (STY-039).
  */
 
 const ITEM = "Example card with every column"
@@ -676,7 +677,7 @@ test.describe("moving an item (STY-031)", () => {
     const alert = page.getByRole("main").getByRole("alert")
     await expect(alert).toContainText("Couldn't publish your changes")
     await expect(alert).toContainText(
-      "Part of the spreadsheet is protected, so nothing was changed. Ask the spreadsheet owner to let this Google account edit it.",
+      "Part of the spreadsheet is protected, so nothing was changed. Ask its owner to let this account edit it.",
     )
     await expect(alert).toContainText("Your changes are kept in this tab.")
     await expect(

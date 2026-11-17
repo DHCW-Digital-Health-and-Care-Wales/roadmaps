@@ -191,9 +191,8 @@ type IndexCells = readonly (readonly [RoadmapIndexWriteColumn, string])[]
  * (ADR-013). A roadmap's items take one more read, of the tab its index row names
  * (ADR-011). A publish makes those reads, then one all-or-nothing `batchUpdate`
  * (ADR-012), which also moves the row of each moved item (STY-051) and appends a row
- * for each new item (STY-045); so does adding or
- * changing a family (STY-029), and adding a roadmap, which also reads the `Template`
- * tab's header (STY-040).
+ * for each new item (STY-045); so does adding or changing a family (STY-029), and
+ * adding a roadmap, which also reads the `Template` tab's header (STY-040).
  */
 export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
   readonly #client: SheetsClient

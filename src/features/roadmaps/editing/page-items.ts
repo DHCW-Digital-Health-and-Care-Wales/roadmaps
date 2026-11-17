@@ -14,6 +14,7 @@ import {
   editItem,
   matchItemChanges,
   moveTurn,
+  newItemTurn,
   pendingNewItems,
   shownNewItem,
   type SinceOpened,
@@ -84,8 +85,7 @@ export function usePageItems(
           shown: item,
           entry: undefined,
           newItemId: newItem.id,
-          // After every moved item, each of which is one of the changes' items.
-          arrival: (changes?.items.length ?? 0) + added,
+          arrival: newItemTurn(changes, added),
         }
       }),
     ]

@@ -201,7 +201,7 @@ describe("Moving an item (STY-031)", () => {
           publish: "Publish changes",
           title: "Couldn't publish your changes",
           reason:
-            "Part of the spreadsheet is protected, so nothing was changed. Ask the spreadsheet owner to let this Google account edit it.",
+            "Part of the spreadsheet is protected, so nothing was changed. Ask its owner to let this account edit it.",
           kept: "Your changes are kept in this tab.",
           pending: "1 unpublished change",
           changed: "Changed",
@@ -215,7 +215,7 @@ describe("Moving an item (STY-031)", () => {
           publish: "Cyhoeddi'r newidiadau",
           title: "Doedd dim modd cyhoeddi eich newidiadau",
           reason:
-            "Mae rhan o'r daenlen wedi'i diogelu, felly chafodd dim byd ei newid. Gofynnwch i berchennog y daenlen adael i'r cyfrif Google hwn ei golygu.",
+            "Mae rhan o'r daenlen wedi'i diogelu, felly newidiwyd dim byd. Gofynnwch i'w pherchennog adael i'r cyfrif hwn ei golygu.",
           kept: "Mae eich newidiadau wedi'u cadw yn y tab hwn.",
           pending: "1 newid heb ei gyhoeddi",
           changed: "Wedi newid",

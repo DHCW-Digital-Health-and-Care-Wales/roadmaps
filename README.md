@@ -101,10 +101,11 @@ it writes the `Families` tab only as below.
   the row of its new placement's last item, as the tab reads at publish, so the item
   shows last there. That counts an item a co-lead added to the placement meanwhile,
   and a row hidden by hand, which holds a position though the public site leaves it
-  out. A row already below every item row of its new placement is left where it is, as
-  is the one item moved into a placement with no items. Several items moved into one
-  placement end in the order they were moved, with the fewest row moves that put them
-  so. A row is moved whole and none of its cells is rewritten: it keeps its formatting,
+  out. A row already below every item row of its new placement, and below the row of
+  each item moved there before it, is left where it is, as is the one item moved into
+  a placement with no items. Several items moved into one placement end in the order
+  they were moved: only their rows move, never a row of an item the placement already
+  held, and as few of them as put them so. A row is moved whole and none of its cells is rewritten: it keeps its formatting,
   its `Horizon` dropdown, its Welsh and unknown columns, and a formula elsewhere that
   refers to it follows it. The rows it passes shift by one and keep their order, as do
   the rows of every other placement. Rows are moved after every cell is written and

@@ -41,8 +41,8 @@ export interface RoadmapItemsProps {
  * saying what to add, with "Add an item" (D5, STY-042 S2, STY-046 S8). Each item can be
  * moved, and shows its pending changes, in its pending placement (STY-025, STY-031),
  * last there, in the order moved (STY-051 S1); an item added and not yet published
- * shows after those (STY-046 S3). Edit on a
- * card, and "Add an item", open the page's one item dialog, which is drawn here.
+ * shows after those (STY-046 S3). Edit on a card, and "Add an item", open the page's
+ * one item dialog, which is drawn here.
  */
 export function RoadmapItems({
   roadmapId,

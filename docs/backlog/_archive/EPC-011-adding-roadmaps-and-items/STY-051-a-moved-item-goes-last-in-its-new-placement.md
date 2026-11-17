@@ -227,7 +227,13 @@ Audited at `881ea16`.
   and stay hidden.
 - **S8: `heldWrites` is unchanged** (agent): it never looks at a row's place, so a
   move is judged by its `Horizon` cell alone.
-- **D8: nothing was built**, as it says.
+- **D8: nothing was built**, as it says. Review (Opus) found the same effect nearer
+  home: the Product Lead's own edit, made while their publish is being written, to an
+  item with no ID whose row that publish moves, is dropped at the next publish as
+  "removed or changed".
+  [DEF-017](../../defects/DEF-017-an-edit-made-while-a-publish-moves-its-item-is-reported-as-removed.md)
+  records it for the owner, not fixed here: how such an item is found is ADR-012's
+  rule (Options 11, 13).
 - **The Sheets fake refuses a move to just after the row too** (agent): a
   `destinationIndex` equal to the row's `endIndex` leaves it where it is, as one
   equal to its `startIndex` does. The owner saw Google refuse the second (#109); the
@@ -269,8 +275,8 @@ Audited at `881ea16`.
   it sends `moveDimension` after the cells and before the appended rows, and never a
   move that leaves a row where it is.
 - **The order of `RoadmapChanges.items` is the order of moves** (D3): `editItem`
-  keeps it, and `moveTurn` reads an entry's turn. Code that rebuilds `items` keeps
-  their order.
+  keeps it, `moveTurn` reads an entry's turn and `newItemTurn` a new item's, after
+  them all. Code that rebuilds `items` keeps their order.
 - **`PageItem.arrival`** (`features/roadmaps/editing/page-items.ts`): the turn of an
   item that shows last in its placement, a moved one and then a new one;
   `groupRoadmapItems` takes it as its third argument. A page item's `position` is

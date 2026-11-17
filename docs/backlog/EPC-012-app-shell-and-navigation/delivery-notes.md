@@ -52,7 +52,9 @@
   drawn by `AppShell` in a `form`: `full` beside the page from `DESKTOP_WIDTH` or in the
   drawer below it, `rail` folded. Below it the menu button (`NavigationMenuButton`)
   starts the top bar and the stuck strip; STY-055's dots join both. A bar pinned to the
-  screen starts at `left-(--navigation-width)`.
+  screen starts at `left-(--navigation-width)`, and the room the foot leaves at the
+  page's end is the shell's page column's padding, inside the row the navigation sticks
+  in. A destination is a `NavigationLink`, its `mark` an icon or a roadmap's initials.
 - jsdom matches no media query, so component tests render a phone, its navigation in
   the closed drawer; `matchMediaQueries(DESKTOP_WIDTH)` (`src/test/media-query.ts`)
   renders it beside the page. E2E runs at 1280px, the navigation beside the page: its

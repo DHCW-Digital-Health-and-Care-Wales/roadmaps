@@ -18,12 +18,12 @@ const IN_FLOW = "max-w-none px-0 md:px-0"
 
 /**
  * What a page keeps at the foot of the screen, as a band across it beside the shell's
- * navigation, from the page's top
- * (STY-052 D10): it takes no room in the page's flow, its height keeping focus clear of
- * it and leaving room at the end of the page (`usePinnedInset`). It never covers more
- * than half the screen: the notices scroll inside it, the bar always in view (D14).
- * Where the viewport is too short (`usePinning`) it stays where it is in the page's
- * flow. With nothing in it, it shows nothing.
+ * navigation, from the page's top (STY-052 D10): it takes no room in the page's flow,
+ * its height keeping focus clear of it and leaving room at the end of the page
+ * (`usePinnedInset`). It never covers more than half the screen: the notices scroll
+ * inside it, the bar always in view (D14). Where the viewport is too short
+ * (`usePinning`) it stays where it is in the page's flow. With nothing in it, it shows
+ * nothing.
  */
 export function PinnedFoot({ notices, bar }: PinnedFootProps) {
   const pinning = usePinning()

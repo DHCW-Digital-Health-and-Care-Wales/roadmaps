@@ -1,7 +1,8 @@
 // Deviates from upstream shadcn (ADR-010): imports cn from @/lib/utils, and draws with
 // the theme's tokens: body-xs text in the page's own colours reversed, 4px corners, the
 // popup shadow, no arrow (its upstream radius and offsets are values the locked theme
-// rejects) and no zoom, only the fade, stilled under reduced motion by `globals.css`.
+// rejects) and no zoom, only the fade the menus have, stilled under reduced motion by
+// `globals.css`.
 // A tooltip repeats a name the trigger already has (Base UI does not announce it), so
 // it is for sight only: never the only place a name is.
 import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip"
@@ -50,7 +51,7 @@ function TooltipContent({
         <TooltipPrimitive.Popup
           data-slot="tooltip-content"
           className={cn(
-            "w-fit max-w-xs rounded-lg bg-foreground px-3 py-1.5 text-body-xs text-background shadow-popup transition-opacity duration-100 data-ending-style:opacity-0 data-starting-style:opacity-0",
+            "w-fit max-w-xs rounded-lg bg-foreground px-3 py-1.5 text-body-xs text-background shadow-popup duration-100 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
             className,
           )}
           {...props}

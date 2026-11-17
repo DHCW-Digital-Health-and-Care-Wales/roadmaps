@@ -56,7 +56,7 @@ async function renderNavigation(
 /** The navigation's link names, in order. */
 async function linkNames() {
   const nav = navigation()
-  await within(nav).findByRole("link", { name: "Bed Management" })
+  await within(nav).findByRole("link", { name: /Bed Management$/ })
   return within(nav)
     .getAllByRole("link")
     .map((link) => link.textContent)
@@ -201,20 +201,20 @@ describe("the shell's navigation", () => {
       return renderNavigation()
     }
 
-    it("shows each roadmap's initials, named by its title", async () => {
+    it("shows each roadmap's initials, named by them and its title (WCAG 2.5.3)", async () => {
       await renderRail()
 
       const link = await within(navigation()).findByRole("link", {
-        name: "Community Nursing roadmap",
+        name: "CN Community Nursing roadmap",
       })
-      expect(link).toHaveTextContent(/^CN/)
-      // Every destination keeps its name, the families named for a screen reader.
+      expect(link).toHaveTextContent(/^CN /)
+      // Every destination keeps its name, the pages' read alone beside their icons.
       expect(await linkNames()).toEqual([
         "All roadmaps",
-        "CNCommunity Nursing roadmap",
-        "BMBed Management",
-        "TSTheatre Scheduling",
-        "PSPharmacy Stock",
+        "CN Community Nursing roadmap",
+        "BM Bed Management",
+        "TS Theatre Scheduling",
+        "PS Pharmacy Stock",
         "Families, categories and organisations",
       ])
       expect(
@@ -228,10 +228,11 @@ describe("the shell's navigation", () => {
 
       await user.hover(
         await within(navigation()).findByRole("link", {
-          name: "Bed Management",
+          name: "BM Bed Management",
         }),
       )
 
+      // Base UI gives a tooltip no role: it repeats a name the link already has.
       expect(
         await screen.findByText("Bed Management", {
           selector: "[data-slot=tooltip-content]",

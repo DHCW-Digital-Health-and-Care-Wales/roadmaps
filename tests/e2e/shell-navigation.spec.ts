@@ -143,6 +143,13 @@ test.describe("on a desktop", () => {
       expect(box?.x, bar).toBe(256)
       expect((box?.x ?? 0) + (box?.width ?? 0), bar).toBe(DESKTOP.width)
     }
+    // At the page's end too, below the room the pinned foot leaves.
+    await page.evaluate(() => {
+      window.scrollTo(0, document.documentElement.scrollHeight)
+    })
+    await expect
+      .poll(() => page.locator("[data-slot=navigation-sidebar]").boundingBox())
+      .toMatchObject({ x: 0, y: 0, width: 256, height: 800 })
     // The top bar and phase banner have scrolled away.
     await expect(page.getByRole("banner")).not.toBeInViewport()
   })
@@ -171,9 +178,9 @@ test.describe("on a desktop", () => {
     await expect(unfold).toBeFocused()
     expect((await sidebar.boundingBox())?.width).toBe(64)
     expect(await columns()).toBe(3)
-    // A roadmap shows its initials, still named by its title.
-    await expect(navLink(page, "Product B roadmap")).toHaveText(
-      /^PBProduct B roadmap$/,
+    // A roadmap shows its initials, named by them and its title.
+    await expect(navLink(page, "PB Product B roadmap")).toHaveText(
+      "PB Product B roadmap",
     )
 
     await page.reload()

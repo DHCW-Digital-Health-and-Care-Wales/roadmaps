@@ -1,11 +1,10 @@
 import { useId, useMemo } from "react"
-import { useTranslation } from "react-i18next"
 
-import { localise } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import { useLanguage } from "@/i18n"
 
-import { groupRoadmaps } from "../group-roadmaps"
+import { groupRoadmaps, namesFamilies } from "../group-roadmaps"
+import { useGroupName } from "../hooks/use-group-name"
 import { RoadmapGrid } from "./roadmap-grid"
 
 export interface RoadmapGroupsProps {
@@ -17,29 +16,30 @@ export interface RoadmapGroupsProps {
  * order. When no roadmap has a family there is one list and no heading.
  */
 export function RoadmapGroups({ roadmaps }: RoadmapGroupsProps) {
-  const { t } = useTranslation()
   const language = useLanguage()
+  const groupName = useGroupName()
   const headingId = useId()
   const groups = useMemo(
     () => groupRoadmaps(roadmaps, language),
     [roadmaps, language],
   )
 
+  // With no family to name, the one group's roadmaps, still in title order.
   const [only] = groups
-  if (groups.length === 1 && only?.family === null) {
+  if (only && !namesFamilies(groups)) {
     return <RoadmapGrid roadmaps={only.roadmaps} />
   }
 
   return (
     <div className="flex flex-col gap-8">
-      {groups.map(({ key, family, roadmaps: members }, index) => {
+      {groups.map((group, index) => {
         const id = `${headingId}-${String(index)}`
         return (
-          <div key={key} className="flex flex-col gap-3">
+          <div key={group.key} className="flex flex-col gap-3">
             <h2 id={id} className="text-heading-s wrap-anywhere">
-              {family ? localise(family, language) : t("roadmaps.noFamily")}
+              {groupName(group)}
             </h2>
-            <RoadmapGrid roadmaps={members} labelledBy={id} />
+            <RoadmapGrid roadmaps={group.roadmaps} labelledBy={id} />
           </div>
         )
       })}

@@ -399,8 +399,8 @@
   }
   /* A bar pinned to the screen (`usePinnedInset`) sets its height on the document as
      `--pinned-top` or `--pinned-bottom`: scrolling to a focused control keeps it clear of
-     the bars (WCAG 2.4.11), and the end of the page clears the foot's. The bars start
-     after the shell's navigation, `--navigation-width` wide on a desktop (`AppShell`). */
+     the bars (WCAG 2.4.11), and the end of the page clears the foot's (`AppShell`). The
+     bars start after the shell's navigation, `--navigation-width` wide on a desktop. */
   html {
     @apply font-sans;
     --pinned-top: 0px;
@@ -411,7 +411,6 @@
   }
   body {
     @apply bg-background text-body text-foreground;
-    padding-bottom: var(--pinned-bottom);
   }
   /* The shell's navigation beside the page on a desktop (STY-054 D5): open, or folded to
      a rail of icons. */

@@ -4,7 +4,8 @@
 // sides, header, footer and description are gone. The panel's colours are its user's:
 // the drawer is navy, as the navigation is. Upstream's corner close button carries copy,
 // which `components/ui` never does, so its user draws its own `SheetClose`. It slides
-// 2.5rem as it fades, stilled under reduced motion by `globals.css`.
+// 2.5rem as it fades, animated as the dialog and the menus are and stilled under reduced
+// motion by `globals.css`.
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog"
 
 import { cn } from "@/lib/utils"
@@ -28,12 +29,12 @@ function SheetContent({ className, ...props }: SheetPrimitive.Popup.Props) {
     <SheetPrimitive.Portal data-slot="sheet-portal">
       <SheetPrimitive.Backdrop
         data-slot="sheet-overlay"
-        className="fixed inset-0 z-50 bg-overlay transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0"
+        className="fixed inset-0 z-50 bg-overlay duration-100 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0"
       />
       <SheetPrimitive.Popup
         data-slot="sheet-content"
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex h-full w-4/5 max-w-sm flex-col shadow-popup transition duration-200 ease-in-out outline-none data-ending-style:-translate-x-10 data-ending-style:opacity-0 data-starting-style:-translate-x-10 data-starting-style:opacity-0",
+          "fixed inset-y-0 left-0 z-50 flex h-full w-4/5 max-w-sm flex-col shadow-popup duration-200 outline-none data-open:animate-in data-open:fade-in-0 data-open:slide-in-from-left-10 data-closed:animate-out data-closed:fade-out-0 data-closed:slide-out-to-left-10",
           className,
         )}
         {...props}
@@ -42,14 +43,8 @@ function SheetContent({ className, ...props }: SheetPrimitive.Popup.Props) {
   )
 }
 
-function SheetTitle({ className, ...props }: SheetPrimitive.Title.Props) {
-  return (
-    <SheetPrimitive.Title
-      data-slot="sheet-title"
-      className={cn(className)}
-      {...props}
-    />
-  )
+function SheetTitle(props: SheetPrimitive.Title.Props) {
+  return <SheetPrimitive.Title data-slot="sheet-title" {...props} />
 }
 
 const createSheetHandle = SheetPrimitive.createHandle

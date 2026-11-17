@@ -18,10 +18,10 @@ export interface StickyHeaderProps {
 /**
  * A page's header that sticks to the top of the screen once it has scrolled wholly out
  * of view, as a band across the screen beside the shell's navigation, slimmed by its own
- * `children` (STY-052 D5). Its
- * place in the page keeps the height it had there, so nothing below it moves as it
- * sticks or lets go. It never sticks where the viewport is too short (`usePinning`), and
- * while stuck its height keeps focus clear of it (`usePinnedInset`).
+ * `children` (STY-052 D5). Its place in the page keeps the height it had there, so
+ * nothing below it moves as it sticks or lets go. It never sticks where the viewport is
+ * too short (`usePinning`), and while stuck its height keeps focus clear of it
+ * (`usePinnedInset`).
  */
 export function StickyHeader({ children }: StickyHeaderProps) {
   const pinning = usePinning()

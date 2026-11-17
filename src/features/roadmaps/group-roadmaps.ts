@@ -66,3 +66,12 @@ export function groupRoadmaps(
   }
   return sorted
 }
+
+/**
+ * Whether each group is shown under its family's name: unless the roadmaps have no
+ * family at all, which shows as one list with no name, on the list and in the navigation.
+ */
+export function namesFamilies(groups: readonly RoadmapGroup[]): boolean {
+  const [only] = groups
+  return !(groups.length === 1 && only?.family === null)
+}

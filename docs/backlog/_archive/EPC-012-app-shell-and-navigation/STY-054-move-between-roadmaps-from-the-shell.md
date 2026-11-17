@@ -120,7 +120,8 @@ Cymraeg
   frames' `globe`, tie the two forms together, as DHCW's navigation links carry icons.
 - **A tooltip names each entry of the rail** (agent): its initials do not name a
   roadmap to sight. shadcn's Base UI tooltip came in for it. A roadmap's initials are
-  the first letter or number of its title's first two words ("CN").
+  the first letter or number of its title's first two words ("CN"), and begin its name
+  ("CN Community Nursing roadmap"), so speech input can say what is shown (WCAG 2.5.3).
 - **The drawer is titled "Menu"** (agent): the frames drew "All roadmaps" beside its
   close button; a dialog needs a name, and the menu button that opens it says "Menu".
 - **A family's name is read once** (agent): it names its list, so as text it is hidden
@@ -136,11 +137,15 @@ Cymraeg
   and three folded; folded between 1024px and 1167px, two, where there were three.
 - **"Back to roadmaps" and the list's link to the families page stay** (agent): the
   chosen page keeps the first; removing either is a product choice for a later record.
-- **The axe checks leave out Base UI's focus guards** (agent, found here): axe passes
-  them only when something covers the screen's centre, its sign of a modal open. With
-  two columns of cards, the Move button sits there with its menu open, so the STY-031
-  check failed on a structure unchanged from the default branch
-  (`tests/e2e/accessibility.spec.ts`).
+- **The STY-031 axe check leaves out Base UI's focus guards** (agent, found here): axe
+  passes them only when something covers the screen's centre, its sign of a modal open.
+  With two columns of cards, the Move button sits there with its menu open, so the check
+  failed on a structure unchanged from the default branch. Only that check, with a menu
+  open, leaves them out (`menuOpen`, `tests/e2e/accessibility.spec.ts`).
+- **The room the pinned foot leaves at the page's end** (agent, review round 1) is the
+  shell's page column's, no longer the body's: the navigation sticks within the shell's
+  row, so with the room outside it, at the page's end the navigation rose by the foot's
+  height (D7).
 - **The count and dots of unpublished changes** are STY-055's, as the epic plans.
 
 ### Contract for dependents
@@ -150,7 +155,11 @@ The epic's `delivery-notes.md` carries the seams as they stand. Besides those:
 - **`AppShell`** takes `navigation: (form: NavigationForm) => ReactNode`, `full` beside
   the page or in the drawer and `rail` folded; the root route passes
   `RoadmapNavigation` (`features/roadmaps/navigation/`), which STY-055's dots and count
-  join. `AppHeader` takes `start`, where the menu button sits.
+  join. Each destination is a `NavigationLink` (`createLink`, so it takes the router
+  `Link`'s props) with a `mark`: an icon, or a roadmap's colour and initials. The list
+  and the navigation share `namesFamilies(groups)` (`group-roadmaps.ts`) and
+  `useGroupName()` (`hooks/use-group-name.ts`). `AppHeader` takes `start`, where the
+  menu button sits.
 - **`NavigationMenuButton`** (`components/layout/navigation-drawer.tsx`) renders only
   where the shell has a drawer (`NavigationDrawerContext`); STY-055's dot goes on it.
   The drawer is a Base UI dialog shared by both buttons through a handle, so closing
@@ -159,7 +168,7 @@ The epic's `delivery-notes.md` carries the seams as they stand. Besides those:
   where a bar pinned to the screen starts: `StickyHeader` and `PinnedFoot` use
   `left-(--navigation-width)`.
 - **`CardGrid`** (`features/roadmaps/components/card-grid.tsx`) is the one card grid:
-  the roadmap cards, the item cards and both skeletons.
+  the roadmap cards (`evenRows`), the item cards and both skeletons.
 - **The top bar is a size container**: a control in it that follows width uses a
   container variant, as `ConnectionStatus` does (`@max-5xl:sr-only`). STY-056 reshapes it.
 - **Copy**: `layout.navigation.*` and `roadmaps.navigation.all`. **Storage**:
@@ -195,4 +204,7 @@ key fails "stays open for a link opened elsewhere…"; the families in reverse o
 "lists all the roadmaps, then each roadmap by family…"; other initials fail "shows each
 roadmap's initials…", and another tooltip text "shows a roadmap's title in a tooltip…".
 Removing `exact` from "All roadmaps"' active match fails nothing: the router never marks
-`/` current elsewhere, so it states the intent only.
+`/` current elsewhere, so it states the intent only. Review round 1's fixes: the room at
+the page's end back on the body lifts the navigation by the foot's height there, in the
+e2e "stays full height…"; the initials hidden from the name fail "shows each roadmap's
+initials, named by them and its title" and the tooltip test that finds the link by it.

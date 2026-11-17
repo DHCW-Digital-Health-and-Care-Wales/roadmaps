@@ -65,7 +65,7 @@ export interface NavigationDrawerProps {
  * A link in the drawer was pressed to open its page here: a plain click, as the router
  * follows; one with a modifier key opens it elsewhere, leaving this page as it is.
  */
-function choseLink(event: MouseEvent): boolean {
+function isPlainLinkClick(event: MouseEvent): boolean {
   const plain =
     event.button === 0 &&
     !event.metaKey &&
@@ -92,6 +92,10 @@ export function NavigationDrawer({
 }: NavigationDrawerProps) {
   const { t } = useTranslation()
   const chosen = useRef(false)
+  // Back to the menu button that opened it, unless a link was chosen. Read more than once
+  // as it closes, so the choice clears only as it opens. Base UI would move on from
+  // `<main>` to its first tabbable element, so focus is moved to the page once closed.
+  const returnToMenuButton = () => !chosen.current
   return (
     <Sheet
       handle={handle}
@@ -106,14 +110,11 @@ export function NavigationDrawer({
       <SheetContent
         className="overflow-y-auto border-r border-sidebar-border bg-sidebar text-sidebar-foreground"
         onClick={(event) => {
-          if (!choseLink(event)) return
+          if (!isPlainLinkClick(event)) return
           chosen.current = true
           handle.close()
         }}
-        // Read more than once as it closes, so the choice is cleared only as it opens. Base
-        // UI would move on from `<main>` to its first tabbable element, so focus is moved
-        // to the page once closed instead.
-        finalFocus={() => !chosen.current}
+        finalFocus={returnToMenuButton}
       >
         <div className="flex items-center justify-between gap-3 px-4 pt-3">
           <SheetTitle className="text-heading-xs">

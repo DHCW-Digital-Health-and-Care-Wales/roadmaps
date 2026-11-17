@@ -8,13 +8,23 @@ import { cn } from "@/lib/utils"
  * columns follow the room the page has, not the screen's width, so beside the shell's
  * open navigation a 1280px desktop has two, and folded to its rail three (STY-054 D5).
  */
-export function CardGrid({ className, ...props }: ComponentProps<"ul">) {
+export interface CardGridProps extends ComponentProps<"ul"> {
+  /** Each row as tall as its tallest card, once there are columns. */
+  evenRows?: boolean
+}
+
+export function CardGrid({
+  evenRows = false,
+  className,
+  ...props
+}: CardGridProps) {
   return (
     // A container of its own, holding no pinned bar: a size container can contain them.
     <div className="@container">
       <ul
         className={cn(
           "grid grid-cols-1 gap-4 sm:gap-5 @xl:grid-cols-2 @5xl:grid-cols-3",
+          evenRows && "@xl:auto-rows-fr",
           className,
         )}
         {...props}

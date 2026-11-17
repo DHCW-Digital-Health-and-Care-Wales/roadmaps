@@ -8,15 +8,13 @@ import {
 } from "react"
 import { useTranslation } from "react-i18next"
 
+import { createSheetHandle } from "@/components/ui/sheet"
 import { DESKTOP_WIDTH, useMediaQuery } from "@/lib/use-media-query"
 
 import { AppFooter } from "./app-footer"
 import { AppHeader } from "./app-header"
 import { NavigationDrawer, NavigationMenuButton } from "./navigation-drawer"
-import {
-  createNavigationDrawerHandle,
-  NavigationDrawerContext,
-} from "./navigation-drawer-context"
+import { NavigationDrawerContext } from "./navigation-drawer-context"
 import {
   readNavigationFolded,
   storeNavigationFolded,
@@ -121,7 +119,7 @@ export function AppShell({
   useRescueFocus(main)
   const desktop = useMediaQuery(DESKTOP_WIDTH)
   const [folded, setFolded] = useNavigationFolded()
-  const [drawer] = useState(createNavigationDrawerHandle)
+  const [drawer] = useState(createSheetHandle)
 
   return (
     <NavigationDrawerContext value={desktop ? null : drawer}>
@@ -150,7 +148,9 @@ export function AppShell({
             {navigation("full")}
           </NavigationDrawer>
         )}
-        <div className="flex min-w-0 flex-1 flex-col">
+        {/* Its foot clears the pinned foot's height, inside the row the navigation
+            sticks in, so the navigation stays full height to the page's end (D7). */}
+        <div className="flex min-w-0 flex-1 flex-col pb-(--pinned-bottom)">
           <AppHeader
             start={<NavigationMenuButton variant="header" />}
             actions={headerActions}

@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next"
 import { Skeleton } from "@/components/ui/skeleton"
 
 import { CardGrid } from "./card-grid"
-import { ROADMAP_ROWS } from "./roadmap-grid"
 
 /** Varied widths, so the placeholder reads as names rather than a pattern. */
 const NAME_WIDTHS = ["w-3/5", "w-2/5", "w-1/2", "w-2/3", "w-1/3", "w-3/5"]
@@ -15,7 +14,8 @@ export function RoadmapGridSkeleton() {
   return (
     <div role="status">
       <span className="sr-only">{t("roadmaps.loading")}</span>
-      <CardGrid aria-hidden="true" className={ROADMAP_ROWS}>
+      {/* Rows as even as the cards', so loading does not shift the layout. */}
+      <CardGrid aria-hidden="true" evenRows>
         {NAME_WIDTHS.map((width, index) => (
           <li
             // Static placeholders: the index is a stable key.

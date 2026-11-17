@@ -241,3 +241,21 @@ export async function addItem(
   await dialog.getByRole("button", { name: names.submit, exact: true }).click()
   await expect(dialog).toBeHidden()
 }
+
+/**
+ * Publishes a first edit of Product A, "Minimal card" retitled "A minimal card", which
+ * gives every item its ID: only an item with an ID can be found again, so only then
+ * does a co-lead's change conflict.
+ */
+export async function publishOnce(page: Page): Promise<void> {
+  const main = page.getByRole("main")
+  const form = await openEditItemDialog(page, "Minimal card")
+  await form.getByRole("textbox", { name: "Title" }).fill("A minimal card")
+  await form.getByRole("button", { name: "Done" }).click()
+  await main.getByRole("button", { name: "Publish changes" }).click()
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: "Publish changes" })
+    .click()
+  await expect(main.getByText(/^Changes published\./)).toBeVisible()
+}

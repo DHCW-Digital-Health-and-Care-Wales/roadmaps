@@ -1,0 +1,23 @@
+- alert:
+  - text: Someone else has changed this roadmap too
+  - paragraph: Nothing was published.
+  - paragraph: Choose which to keep for each, then publish again.
+  - list:
+    - listitem:
+      - paragraph: "Now: Order"
+      - term: Your order
+      - definition:
+        - list:
+          - listitem: Card awaiting release
+          - listitem: A clearer card
+          - listitem: Minimal card
+          - listitem: Card being explored
+      - term: Current order
+      - definition:
+        - list:
+          - listitem: A clearer card
+          - listitem: Minimal card
+          - listitem: Card awaiting release
+          - listitem: Card being explored
+      - 'button "Keep mine Now: Order"'
+      - 'button "Use theirs Now: Order"'

@@ -81,6 +81,21 @@ export type BatchRequest =
       }
     }
   | {
+      /**
+       * One blank row put in before the row at `startIndex`, formatted as the row after
+       * it, never as the one before, which may be the header (STY-050).
+       */
+      insertDimension: {
+        range: {
+          sheetId: number
+          dimension: "ROWS"
+          startIndex: number
+          endIndex: number
+        }
+        inheritFromBefore: false
+      }
+    }
+  | {
       deleteDimension: {
         range: {
           sheetId: number
@@ -94,10 +109,13 @@ export type BatchRequest =
 /** Where a row is moved to: just after another row, or just before it. */
 export type RowDestination = { after: number } | { before: number }
 
+/** The place, among the rows in their order, of a row inserted: no row as read is 0. */
+const INSERTED_ROW = 0
+
 /**
- * Collects one tab's cell writes, row moves and appended rows. A column the header
- * lacks is added after the last column any row uses, with its English header (ADR-012
- * Option 9), the grid growing to hold it; no existing column moves.
+ * Collects one tab's cell writes, row moves, inserted rows and appended rows. A column
+ * the header lacks is added after the last column any row uses, with its English header
+ * (ADR-012 Option 9), the grid growing to hold it; no existing column moves.
  */
 export class TabWriter<Column extends string> {
   readonly #sheetId: number
@@ -107,8 +125,12 @@ export class TabWriter<Column extends string> {
   readonly #headers: BatchRequest[] = []
   readonly #cells: BatchRequest[] = []
   readonly #moves: BatchRequest[] = []
-  /** The rows as read, by number, in the order the moves so far leave them. */
+  /**
+   * The rows as read, by number, in the order the moves and inserts so far leave them,
+   * with `INSERTED_ROW` for each row inserted.
+   */
   readonly #order: number[]
+  readonly #inserted: BatchRequest[] = []
   readonly #appended: BatchRequest[] = []
 
   constructor(
@@ -135,9 +157,15 @@ export class TabWriter<Column extends string> {
    * and the references to it (ADR-012, _STY-051 amendments_). Moves are made in the
    * order of the calls, after every cell is written, so each is worked out over what
    * the moves before it left. A move that would leave the row where it is is not sent:
-   * Google refuses one, and the whole write with it.
+   * Google refuses one, and the whole write with it. Every move is made before any row
+   * is inserted, as they are sent.
    */
   move(row: number, to: RowDestination): void {
+    if (this.#inserted.length > 0) {
+      throw new AppError("unknown", {
+        message: "A row is moved before any row is inserted",
+      })
+    }
     const from = this.#order.indexOf(row)
     const beside = this.#order.indexOf("after" in to ? to.after : to.before)
     if (from < 0 || beside < 0) {
@@ -169,6 +197,38 @@ export class TabWriter<Column extends string> {
   }
 
   /**
+   * Inserts a row just before spreadsheet row `before`, a row as the tab was read,
+   * where the moves and the inserts before it leave that row, and writes each cell
+   * under its column there (ADR-012, _STY-050 amendments_). The new row is formatted
+   * as the row after it. A blank cell is left out. Rows are inserted in the order of
+   * the calls, after every move.
+   */
+  insert(before: number, cells: Iterable<readonly [Column, string]>): void {
+    const at = this.#order.indexOf(before)
+    if (at < 0) {
+      throw new AppError("unknown", {
+        message: "A row to insert a row before is none the tab was read with",
+      })
+    }
+    this.#inserted.push({
+      insertDimension: {
+        range: {
+          sheetId: this.#sheetId,
+          dimension: "ROWS",
+          startIndex: at,
+          endIndex: at + 1,
+        },
+        inheritFromBefore: false,
+      },
+    })
+    for (const [column, value] of cells) {
+      if (value === "") continue
+      this.#inserted.push(this.#cell(at + 1, this.#columnIndex(column), value))
+    }
+    this.#order.splice(at, 0, INSERTED_ROW)
+  }
+
+  /**
    * Appends a row holding each cell under its column, after the last row any value
    * uses: Google picks the row as it applies the write, so a row a co-lead added
    * meanwhile is never overwritten (STY-029), and no row in use moves. A blank cell is
@@ -191,7 +251,10 @@ export class TabWriter<Column extends string> {
     })
   }
 
-  /** Growing the grid first, then headers, then cells, then row moves, then appended rows. */
+  /**
+   * Growing the grid first, then headers, then cells, then row moves, then inserted
+   * rows, each with its cells, then appended rows (STY-050 S8).
+   */
   requests(): BatchRequest[] {
     const grow = this.#width - this.#columnCount
     return [
@@ -209,6 +272,7 @@ export class TabWriter<Column extends string> {
       ...this.#headers,
       ...this.#cells,
       ...this.#moves,
+      ...this.#inserted,
       ...this.#appended,
     ]
   }

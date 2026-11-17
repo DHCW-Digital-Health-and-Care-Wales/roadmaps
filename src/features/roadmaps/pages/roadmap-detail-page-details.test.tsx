@@ -1206,7 +1206,7 @@ describe("An item with Welsh details (STY-039 S18, S19)", () => {
     ).toBeVisible()
     expect(conflict.queryByRole("button", { name: /^Keep mine/ })).toBeNull()
     expect(conflict.queryByRole("button", { name: /^Use theirs/ })).toBeNull()
-    expect(within(review).queryByText(/^Choose which text/)).toBeNull()
+    expect(within(review).queryByText(/^Choose which to keep/)).toBeNull()
     expect((await repository.listRoadmapItems("producta"))[2]?.details).toEqual(
       theirs,
     )

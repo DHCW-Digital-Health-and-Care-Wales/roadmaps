@@ -1,16 +1,20 @@
 import { describe, expect, it } from "vitest"
 
+import { orderedItem } from "@/domain/roadmap/placement-order"
 import {
   type FieldConflict,
   type ItemChanges,
   NO_CHANGES,
+  type OrderConflict,
   type RoadmapChanges,
 } from "@/domain/roadmap/roadmap-changes"
+import type { RoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 import { TEST_ORGANISATIONS } from "@/domain/roadmap/testing/test-organisations"
 
 import { editItem } from "./pending-changes"
+import { reorderItem, settleOrders, undoOrder } from "./pending-orders"
 import {
   describeOrganisations,
   discardItems,
@@ -84,7 +88,7 @@ describe("openConflicts", () => {
       "item-first-description",
       "item-second-title",
     ])
-    expect(open[0]?.item).toBeNull()
+    expect(open[0]).toMatchObject({ item: null })
     expect(open[1]).toMatchObject({
       yours: "First, mine",
       item: { title: { en: "First, mine" } },
@@ -103,9 +107,9 @@ describe("openConflicts", () => {
       ],
     }
 
-    expect(openConflicts([conflict], editedAgain)[0]?.yours).toBe(
-      "First, again",
-    )
+    expect(openConflicts([conflict], editedAgain)).toMatchObject([
+      { yours: "First, again" },
+    ])
     expect(openConflicts([conflict], keepMine(changes, conflict))).toEqual([])
   })
 
@@ -350,9 +354,9 @@ describe("Welsh tags written since an item was read (STY-037 S22)", () => {
   const pending: RoadmapChanges = { ...NO_CHANGES, items: [retagged] }
 
   it("stays open, though the English is as it was edited from, until the tag change is given up", () => {
-    expect(
-      openConflicts([welshTags], pending).map(({ yours }) => yours),
-    ).toEqual(["Patients, Carers"])
+    expect(openConflicts([welshTags], pending)).toMatchObject([
+      { yours: "Patients, Carers" },
+    ])
 
     const dropped = takeTheirs(pending, welshTags)
 
@@ -397,9 +401,9 @@ describe("Welsh details written since an item was read (STY-039 S19)", () => {
   const pending: RoadmapChanges = { ...NO_CHANGES, items: [redetailed] }
 
   it("stays open, though the English is as it was edited from, until the change of details is given up", () => {
-    expect(
-      openConflicts([welshDetails], pending).map(({ yours }) => yours),
-    ).toEqual(["Follow-up appointments\n- Dermatology"])
+    expect(openConflicts([welshDetails], pending)).toMatchObject([
+      { yours: "Follow-up appointments\n- Dermatology" },
+    ])
 
     const dropped = takeTheirs(pending, welshDetails)
 
@@ -446,5 +450,164 @@ describe("describeOrganisations (STY-034 S7)", () => {
     expect(describeOrganisations("cavuhb,sbuhb", undefined, "en")).toBe(
       "cavuhb, sbuhb",
     )
+  })
+})
+
+describe("an order conflict (STY-050)", () => {
+  const item = (title: string, placement: RoadmapPlacement = "now") =>
+    createTestRoadmapItem(title, {
+      id: `${title.toLowerCase()}idxxxx`,
+      placement,
+    })
+  const a = item("A")
+  const b = item("B")
+  const c = item("C")
+  const theirs = item("E")
+  const loaded = [a, b, c]
+  /** As a co-lead left the roadmap: C removed, E added. */
+  const current = [a, b, theirs]
+  const reordered = reorderItem(NO_CHANGES, loaded, 2, "top")
+  const order = reordered.orders[0]
+  if (!order) throw new Error("Now is reordered")
+  const conflict: OrderConflict = {
+    subject: "order",
+    placement: "now",
+    base: order.base,
+    pending: order.items,
+    current: current.map((each, position) => ({
+      item: orderedItem(each, position),
+      title: each.title,
+    })),
+  }
+  it("is open while the order is pending from another order than the one found (S10)", () => {
+    expect(openConflicts([conflict], reordered)).toEqual([
+      { kind: "order", conflict, key: "order-now" },
+    ])
+    expect(openConflicts([conflict], NO_CHANGES)).toEqual([])
+    expect(openConflicts([conflict], undoOrder(reordered, "now"))).toEqual([])
+  })
+
+  it("sits before the field conflicts of its placement's items, after the roadmap's and any item above them (S11)", () => {
+    const next = item("Next one", "next")
+    const edits: ItemChanges[] = [
+      {
+        item: next,
+        position: 0,
+        fields: { title: { base: "Next one", value: "Mine" } },
+      },
+      { item: b, position: 2, fields: { title: { base: "B", value: "My B" } } },
+    ]
+    const [aboveThem, inNow] = edits
+    if (!aboveThem || !inNow) throw new Error("Two items are edited")
+    const pending = { ...changes, items: edits, orders: [order] }
+
+    const open = openConflicts(
+      [
+        conflictOn(inNow, "title", "Their B"),
+        conflict,
+        conflictOn(aboveThem, "title", "Theirs"),
+        visionConflict,
+      ],
+      pending,
+    )
+
+    expect(open.map(({ key }) => key)).toEqual([
+      "roadmap-vision",
+      `item-${next.id ?? ""}-title`,
+      "order-now",
+      `item-${b.id ?? ""}-title`,
+    ])
+  })
+
+  it("Keep mine makes the order found the base, the order still pending (S12)", () => {
+    const kept = keepMine(reordered, conflict)
+
+    expect(kept.orders).toEqual([
+      { ...order, base: conflict.current.map(({ item: each }) => each) },
+    ])
+    expect(openConflicts([conflict], kept)).toEqual([])
+  })
+
+  it("lists the orders of placements with no item in conflict after every item, in page order", () => {
+    const later = item("Later one", "later")
+    const other = item("Later two", "later")
+    const read = [...loaded, later, other]
+    // Later is reordered first, then Now.
+    const both = reorderItem(
+      reorderItem(NO_CHANGES, read, 4, "top"),
+      read,
+      2,
+      "top",
+    )
+    const laterConflict: OrderConflict = {
+      ...conflict,
+      placement: "later",
+      current: [],
+    }
+    const edit: ItemChanges = {
+      item: later,
+      position: 3,
+      fields: { title: { base: "Later one", value: "Mine" } },
+    }
+
+    const open = openConflicts(
+      [laterConflict, conflictOn(edit, "title", "Theirs"), conflict],
+      { ...both, items: [edit] },
+    )
+
+    // Later's order is before its item; Now has no item in conflict, so it is last.
+    expect(open.map(({ key }) => key)).toEqual([
+      "order-later",
+      `item-${later.id ?? ""}-title`,
+      "order-now",
+    ])
+    expect(
+      openConflicts([laterConflict, conflict], both).map(({ key }) => key),
+    ).toEqual(["order-now", "order-later"])
+  })
+
+  it("stays decided once kept, for items with no ID that the store then finds where the page read them", () => {
+    const first = createTestRoadmapItem("First")
+    const second = createTestRoadmapItem("Second")
+    const third = createTestRoadmapItem("Third")
+    // The read after the refusal failed: the page holds them as loaded, and a co-lead
+    // has since sorted the rows.
+    const page = [first, second, third]
+    const pending = reorderItem(NO_CHANGES, page, 2, "top")
+    const pendingOrder = pending.orders[0]
+    if (!pendingOrder) throw new Error("Now is reordered")
+    const found: OrderConflict = {
+      subject: "order",
+      placement: "now",
+      base: pendingOrder.base,
+      pending: pendingOrder.items,
+      current: [second, first, third].map((each, position) => ({
+        item: orderedItem(each, position),
+        title: each.title,
+      })),
+    }
+
+    const kept = settleOrders(keepMine(pending, found), page)
+
+    expect(openConflicts([found], kept)).toEqual([])
+    expect(openConflicts([found], pending)).toHaveLength(1)
+  })
+
+  it("Use theirs drops the pending order (S12)", () => {
+    expect(takeTheirs(reordered, conflict)).toEqual(NO_CHANGES)
+  })
+
+  it("leaves another placement's order, and a field's change, as they are", () => {
+    const both = reorderItem(
+      { ...reordered, roadmap: changes.roadmap },
+      [...loaded, item("X", "next"), item("Y", "next")],
+      4,
+      "top",
+    )
+
+    const taken = takeTheirs(both, conflict)
+
+    expect(taken.orders.map(({ placement }) => placement)).toEqual(["next"])
+    expect(taken.roadmap).toBe(both.roadmap)
   })
 })

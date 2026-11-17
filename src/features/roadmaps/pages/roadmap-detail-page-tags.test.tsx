@@ -989,7 +989,7 @@ describe("An item with Welsh tags (STY-037 S20, S22)", () => {
     ).toBeVisible()
     expect(conflict.queryByRole("button", { name: /^Keep mine/ })).toBeNull()
     expect(conflict.queryByRole("button", { name: /^Use theirs/ })).toBeNull()
-    expect(within(review).queryByText(/^Choose which text/)).toBeNull()
+    expect(within(review).queryByText(/^Choose which to keep/)).toBeNull()
     expect(
       main().getByRole("button", { name: "Publish changes" }),
     ).toHaveAttribute("aria-disabled", "true")

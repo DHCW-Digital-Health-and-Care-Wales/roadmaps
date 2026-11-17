@@ -472,6 +472,29 @@ export const en = {
       move: "Move",
       /** Heads the list of places an item can move to. */
       moveTo: "Move to",
+      /** A placement's order, changed from an item's Move menu (STY-050). */
+      order: {
+        /** Heads the Move menu's choices of position: "In Now: 4 of 4". */
+        position: "In {{placement}}: {{position, number}} of {{count, number}}",
+        toTop: "To the top",
+        upOne: "Up one",
+        downOne: "Down one",
+        toBottom: "To the bottom",
+        /** Said once an item has moved, with its new position. */
+        moved: {
+          top: "Moved to the top. {{position, number}} of {{count, number}}.",
+          up: "Moved up. {{position, number}} of {{count, number}}.",
+          down: "Moved down. {{position, number}} of {{count, number}}.",
+          bottom:
+            "Moved to the bottom. {{position, number}} of {{count, number}}.",
+        },
+        /** The tag beside a placement's heading, and its line in "What changes". */
+        changed: "Order changed",
+        /** Followed by the placement, for assistive technology: "Undo order Now". */
+        undo: "Undo order",
+        /** Said once a placement's order is undone. */
+        undone: "Order of {{placement}} undone",
+      },
       /** The form's placement choice for an unplaced item, until one is chosen. */
       choosePlacement: "Choose a horizon or section",
       /** Heads the item dialog while it edits an item (STY-044). */
@@ -633,8 +656,8 @@ export const en = {
         kept: "Your changes are kept in this tab.",
         /** A publish stopped by someone else's changes, reviewed field by field. */
         refused: {
-          /** While any field is still to decide. */
-          title: "Someone else has changed text you edited",
+          /** While any field or order is still to decide. */
+          title: "Someone else has changed this roadmap too",
           /** Once every field is decided, while removed items are still reported. */
           partialTitle: "Some changes couldn't be kept",
           nothing: {
@@ -642,13 +665,18 @@ export const en = {
             save: "Nothing was saved.",
           },
           choose: {
-            publish: "Choose which text to keep for each, then publish again.",
-            save: "Choose which text to keep for each, then save again.",
+            publish: "Choose which to keep for each, then publish again.",
+            save: "Choose which to keep for each, then save again.",
           },
           /** A field to decide: "First item: Title", or "About this roadmap: Vision". */
           target: "{{subject}}: {{field}}",
           yours: "Your change",
           theirs: "Current text",
+          /** A placement's order to decide, as its field: "Now: Order" (STY-050). */
+          orderField: "Order",
+          /** Heads the order "Keep mine" would publish, then the one found. */
+          yourOrder: "Your order",
+          currentOrder: "Current order",
           /** In place of a value that is blank. */
           empty: "No text",
           /** Followed by the field, for assistive technology. */

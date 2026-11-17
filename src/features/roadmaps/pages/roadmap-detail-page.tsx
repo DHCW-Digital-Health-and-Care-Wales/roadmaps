@@ -263,7 +263,7 @@ function RoadmapView({
             onDismiss={publishedState.dismissNotice}
           />
         )}
-        <RoadmapPublishing roadmap={roadmap} />
+        <RoadmapPublishing roadmap={roadmap} pageItems={pageItems} />
       </div>
       <EditableRoadmapAbout roadmap={roadmap} />
       <RoadmapItemsArea

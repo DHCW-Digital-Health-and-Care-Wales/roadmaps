@@ -21,7 +21,7 @@ const cellSchema = z.object({
 const rowsSchema = z.array(
   z.object({ values: z._default(z.array(cellSchema), []) }),
 )
-/** The `spreadsheets.batchUpdate` requests the editor sends (ADR-012, STY-023 D6, STY-040, STY-051). */
+/** The `spreadsheets.batchUpdate` requests the editor sends (ADR-012, STY-023 D6, STY-040, STY-051, STY-050). */
 const requestSchema = z.union([
   z.object({
     appendDimension: z.object({
@@ -96,6 +96,17 @@ const requestSchema = z.union([
         endIndex: z.int(),
       }),
       destinationIndex: z.int(),
+    }),
+  }),
+  z.object({
+    insertDimension: z.object({
+      range: z.object({
+        sheetId: z.int(),
+        dimension: z.string(),
+        startIndex: z.int(),
+        endIndex: z.int(),
+      }),
+      inheritFromBefore: z._default(z.boolean(), false),
     }),
   }),
 ])
@@ -202,7 +213,10 @@ const HORIZON_VALUES = new Set([
  *   tab the same body copied; that tab hidden, its header row unfrozen, deleted or
  *   cleared;
  * - rows moved in a tab but a roadmap's own, a header row moved or rows moved above
- *   it, or columns moved (STY-051).
+ *   it, or columns moved (STY-051);
+ * - a row inserted in a tab but a roadmap's own, above its header row, several at once,
+ *   columns, or one that takes after the row before it; and a row inserted that the
+ *   body leaves without what a row appended to that tab must hold (STY-050).
  */
 export function applyBatchUpdate(
   tabs: readonly GridTab[],
@@ -218,6 +232,7 @@ export function applyBatchUpdate(
   const batch = new Batch(tabs)
   try {
     for (const request of parsed.data.requests) batch.apply(request)
+    batch.checkInsertedRows()
   } catch (error) {
     if (!(error instanceof Rejection)) throw error
     return { error: error.message, violations: batch.violations }
@@ -234,6 +249,8 @@ class Batch {
   readonly violations: string[] = []
   /** The tabs this body copied: the only ones it may unhide, delete rows from or clear. */
   readonly #copies = new Set<number>()
+  /** The rows this body inserted in a roadmap's tab, each a new item's once it is done. */
+  readonly #inserted: { tab: GridTab; row: string[] }[] = []
 
   constructor(tabs: readonly GridTab[]) {
     this.tabs = tabs.map((tab) => ({
@@ -255,6 +272,8 @@ class Batch {
       this.#deleteDimension(request.deleteDimension)
     } else if ("moveDimension" in request) {
       this.#moveDimension(request.moveDimension)
+    } else if ("insertDimension" in request) {
+      this.#insertDimension(request.insertDimension)
     } else if ("range" in request.updateCells) {
       this.#clearCells(request.updateCells)
     } else {
@@ -349,39 +368,54 @@ class Batch {
   }
 
   /**
-   * A row appended to a roadmap's tab, a new item's: its title, a `Horizon` the public
-   * site reads and an `Item ID`, as the editor makes one, that no other row of the tab
-   * holds; and no cell under a column with no header.
+   * A row added to a roadmap's tab, a new item's, `appended` or `inserted`: its title,
+   * a `Horizon` the public site reads and an `Item ID`, as the editor makes one, that
+   * no other row of the tab holds; and no cell under a column with no header.
    */
-  #checkNewItemRow(tab: GridTab, row: readonly string[]): void {
+  #checkNewItemRow(
+    tab: GridTab,
+    row: readonly string[],
+    added: "appended" | "inserted" = "appended",
+  ): void {
     const [header = [], ...rows] = tab.rows
     const cell = (key: string) => row[columnAt(header, key)] ?? ""
     const id = cell(ITEM_ID)
     const idAt = columnAt(header, ITEM_ID)
+    const what = `${tab.title} row ${added}`
     if (id === "") {
-      this.violations.push(`${tab.title} row appended without an Item ID`)
+      this.violations.push(`${what} without an Item ID`)
     } else if (!ITEM_ID_VALUE.test(id)) {
       this.violations.push(
-        `${tab.title} row appended with the Item ID ${id}, not in the Item ID format`,
+        `${what} with the Item ID ${id}, not in the Item ID format`,
       )
-    } else if (rows.some((other) => other[idAt]?.trim() === id)) {
+    } else if (
+      rows.some((other) => other !== row && other[idAt]?.trim() === id)
+    ) {
       this.violations.push(
-        `${tab.title} row appended with the Item ID ${id}, which another row has`,
+        `${what} with the Item ID ${id}, which another row has`,
       )
     }
     if (cell(TITLE) === "") {
-      this.violations.push(`${tab.title} row appended without a Title`)
+      this.violations.push(`${what} without a Title`)
     }
     if (row.some((value, c) => value !== "" && !header[c]?.trim())) {
-      this.violations.push(
-        `${tab.title} row appended with a cell under no header`,
-      )
+      this.violations.push(`${what} with a cell under no header`)
     }
     const horizon = cell(HORIZON)
     if (!HORIZON_VALUES.has(horizon)) {
       this.violations.push(
-        `${tab.title} row appended with the Horizon ${JSON.stringify(horizon)}, not one the public site reads`,
+        `${what} with the Horizon ${JSON.stringify(horizon)}, not one the public site reads`,
       )
+    }
+  }
+
+  /**
+   * Each row inserted in a roadmap's tab, checked as a row appended to it is, once
+   * every request is applied: its cells are written after it is inserted.
+   */
+  checkInsertedRows(): void {
+    for (const { tab, row } of this.#inserted) {
+      this.#checkNewItemRow(tab, row, "inserted")
     }
   }
 
@@ -556,6 +590,56 @@ class Batch {
         ? destinationIndex - moved.length
         : destinationIndex
     tab.rows.splice(to, 0, ...moved)
+  }
+
+  /**
+   * Blank rows put in before the row at `startIndex`, the grid growing by them. As
+   * Google refuses: rows that take after the row before them where there is none.
+   */
+  #insertDimension({
+    range: { sheetId, dimension, startIndex, endIndex },
+    inheritFromBefore,
+  }: RequestOf<"insertDimension">): void {
+    const tab = this.#tab(sheetId, "insertDimension")
+    if (dimension !== "ROWS") {
+      this.violations.push(`insertDimension of ${dimension}, not ROWS`)
+      return
+    }
+    if (startIndex < 0 || startIndex >= endIndex || startIndex > tab.rowCount) {
+      throw new Rejection(
+        `${tab.title} has no rows ${String(startIndex)} to ${String(endIndex)} to insert`,
+      )
+    }
+    if (inheritFromBefore && startIndex === 0) {
+      throw new Rejection(
+        "inheritFromBefore must be false when inserting at index 0",
+      )
+    }
+    const count = endIndex - startIndex
+    if (!this.#isRoadmapTab(tab)) {
+      this.violations.push(`insertDimension on ${tab.title}`)
+    }
+    if (startIndex < 1) {
+      this.violations.push(`insertDimension above ${tab.title}'s header row`)
+    }
+    if (count !== 1) {
+      this.violations.push(
+        `insertDimension of ${String(count)} rows in ${tab.title}, not 1`,
+      )
+    }
+    if (inheritFromBefore) {
+      this.violations.push(
+        `insertDimension in ${tab.title} taking after the row before`,
+      )
+    }
+    // Every row above it, blank or not, so each index is a row's.
+    while (tab.rows.length < startIndex) tab.rows.push([])
+    const rows = Array.from({ length: count }, (): string[] => [])
+    tab.rows.splice(startIndex, 0, ...rows)
+    tab.rowCount += count
+    if (this.#isRoadmapTab(tab)) {
+      this.#inserted.push(...rows.map((row) => ({ tab, row })))
+    }
   }
 
   /** `updateCells` over a range, with no rows: every cell in it cleared of `fields`. */

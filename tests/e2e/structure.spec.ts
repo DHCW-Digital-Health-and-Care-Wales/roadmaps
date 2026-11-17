@@ -325,6 +325,39 @@ test.describe("editing a roadmap (STY-025)", () => {
     await expectStructure(review, "edit-conflict-review.aria.yml")
   })
 
+  test("a placement's order in the publish dialog, then a co-lead's change to it to review (STY-050)", async ({
+    page,
+    sheets,
+  }) => {
+    // The first publish gives every item its ID: only then can a co-lead's change be told.
+    const main = await openWithAChange(page)
+    const confirm = async () => {
+      await main.getByRole("button", { name: "Publish changes" }).click()
+      const dialog = page.getByRole("alertdialog")
+      await expect(dialog).toBeVisible()
+      return dialog
+    }
+    await (
+      await confirm()
+    )
+      .getByRole("button", { name: "Publish changes" })
+      .click()
+    await expect(main.getByText(/^Changes published\./)).toBeVisible()
+    await main
+      .getByRole("button", { name: "Move Card awaiting release" })
+      .click()
+    await page.getByRole("menuitem", { name: "To the top" }).click()
+    sheets.coLead("ProductA", "Card being explored", "Horizon", "Now")
+
+    const dialog = await confirm()
+    await expectStructure(dialog, "edit-order-publish-dialog.aria.yml")
+    await dialog.getByRole("button", { name: "Publish changes" }).click()
+    const review = main.getByRole("alert")
+    await expect(review).toBeFocused()
+
+    await expectStructure(review, "edit-order-conflict-review.aria.yml")
+  })
+
   test("Disconnect's question, then the start page's waiting note", async ({
     page,
   }) => {

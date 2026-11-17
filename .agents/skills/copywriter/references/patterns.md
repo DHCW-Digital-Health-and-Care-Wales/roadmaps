@@ -176,6 +176,20 @@ the heading the page shows it under, in page order. The edit form's choice is la
 unplaced item's choice starts on "Choose a horizon or section", which can't be chosen
 again.
 
+Above "Move to", an item in a placement of two or more has its position as a heading,
+in numerals ("In Now: 4 of 4"; in Welsh the heading alone, "Nawr: 4 o 4"), then where
+it can go: "To the top", "Up one", "Down one", "To the bottom". What a move came to is
+a status line: the move, then the new position ("Moved up. 3 of 4."). A changed order
+is the placement's, tagged at its heading ("Order changed") with an undo named for
+what it undoes ("Undo order"), and one line in "What changes".
+
+```
+roadmaps.edit.order.position       In {{placement}}: {{position}} of {{count}}
+roadmaps.edit.order.moved.top      Moved to the top. {{position}} of {{count}}.
+roadmaps.edit.order.changed        Order changed
+roadmaps.edit.order.undone         Order of {{placement}} undone
+```
+
 ## Publish and save
 
 **Shape:** "Publish changes" on a published roadmap, "Save changes" on one that is

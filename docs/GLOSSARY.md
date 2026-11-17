@@ -71,9 +71,10 @@ show. The editor shows it, flagged, so the Product Lead can place it (ADR-011).
 _Avoid_: Draft, hidden item
 
 **Order**:
-The sequence a placement's items show in, here and on the public site. Once STY-050 is
-delivered a Product Lead can change it, and a changed order is one pending edit of its
-placement (ADR-012). Order says nothing about importance.
+The sequence a placement's items show in, here and on the public site. A Product Lead
+changes it from an item's Move menu, and a changed order is one pending edit of its
+placement, whatever number of its items moved (STY-050; ADR-012). Order says nothing
+about importance.
 _Avoid_: Rank, priority, sort order, row order
 
 **Position**:
@@ -121,7 +122,7 @@ list (ADR-014).
 _Avoid_: Health board (only some are), customer
 
 **Pending edit**:
-A change to a roadmap or roadmap item, a new item, or (from STY-050) a placement's order, that
+A change to a roadmap or roadmap item, a new item, or a placement's order, that
 the Product Lead has made but not yet published or saved; the public site does not show
 it. It is kept in this browser tab, in memory, through an expired session, Reconnect
 and, if the Product Lead chooses, Disconnect. A change is kept with the value it was edited from, which a
@@ -144,8 +145,10 @@ STY-035).
 _Avoid_: Publish (for a roadmap that is not published), store
 
 **Conflict** _(planned)_:
-A field, or (from STY-050) a placement's order, a co-lead changed in the data source, to a different
-value, after the Product Lead loaded what they have edited. Publishing stops until, for each conflict, the
+A field, or a placement's order, a co-lead changed in the data source, to a different
+value, after the Product Lead loaded what they have edited. Any change a co-lead makes
+to a placement's items is one to its order: a reorder, or an item added, moved in,
+moved out or removed (STY-050). Publishing stops until, for each conflict, the
 Product Lead keeps their change or uses the co-lead's (ADR-012).
 _Avoid_: Clash, merge conflict
 

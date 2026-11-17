@@ -438,7 +438,10 @@ test("makes a roadmap out of step match its lists, telling a published one first
 
   await dialog.getByRole("button", { name: "Make it match" }).click()
 
-  await expect(main.getByRole("status")).toContainText(
+  // The items' own status line, which says where a reordered item went, is there too.
+  await expect(
+    main.getByRole("status").filter({ hasText: "now matches" }),
+  ).toContainText(
     "Product A roadmap now matches its family and category. The public site shows it after its next nightly update.",
   )
   await expect(

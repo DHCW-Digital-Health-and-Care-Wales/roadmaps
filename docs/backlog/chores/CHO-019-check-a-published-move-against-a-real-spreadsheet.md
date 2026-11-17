@@ -55,5 +55,5 @@ are changed together, in a PR that says the format changed
 ## Out of scope
 
 - The live spreadsheet: never used for a check.
-- Reordering a placement's items: STY-050, whose own write is checked when it is
-  delivered.
+- Reordering a placement's items: STY-050, whose own write
+  [CHO-020](CHO-020-check-a-published-order-against-a-real-spreadsheet.md) checks.

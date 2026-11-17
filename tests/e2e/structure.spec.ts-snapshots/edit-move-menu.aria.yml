@@ -1,4 +1,8 @@
 - menu "Move A clearer card":
+  - 'group "In Now: 1 of 3"':
+    - menuitem "Down one"
+    - menuitem "To the bottom"
+  - separator
   - group "Move to":
     - menuitem "Recently delivered"
     - menuitem "Next"

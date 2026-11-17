@@ -19,18 +19,19 @@ export interface RoadmapItemGroups<T> {
 /**
  * A roadmap's items by placement, each group in the order given: `placementOf` says
  * where each shows, which for a roadmap's page is where a pending move puts it
- * (STY-031). One that `arrivalOf` gives a turn shows after the others of its group, by
- * its turn: on a roadmap's page a moved item, then an item new to the roadmap, as
- * publishing writes them (STY-051 S1, STY-046).
+ * (STY-031). One that `turnOf` gives a turn shows after the others of its group, by its
+ * turn. On a roadmap's page those are a moved item, then an item new to the roadmap,
+ * as publishing writes them (STY-051 S1, STY-046), or, in a placement whose order is
+ * pending, every item, by its place in that order (STY-050 S2).
  */
 export function groupRoadmapItems<T>(
   items: readonly T[],
   placementOf: (item: T) => RoadmapPlacement | null,
-  arrivalOf: (item: T) => number | undefined = () => undefined,
+  turnOf: (item: T) => number | undefined = () => undefined,
 ): RoadmapItemGroups<T> {
   const positioned = items.map((item, position) => ({ item, position }))
   // A stable sort: those with no turn stay first, in the order given.
-  const turn = ({ item }: Positioned<T>) => arrivalOf(item) ?? -1
+  const turn = ({ item }: Positioned<T>) => turnOf(item) ?? -1
   const at = (placement: RoadmapPlacement | null) =>
     positioned
       .filter(({ item }) => placementOf(item) === placement)

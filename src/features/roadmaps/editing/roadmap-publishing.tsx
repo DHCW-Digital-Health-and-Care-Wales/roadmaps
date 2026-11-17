@@ -6,7 +6,7 @@ import { InsetText } from "@/components/layout/inset-text"
 import { Button } from "@/components/ui/button"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import {
-  type FieldConflict,
+  type Conflict,
   NO_CHANGES,
   type RoadmapChanges,
 } from "@/domain/roadmap/roadmap-changes"
@@ -16,6 +16,7 @@ import { localToday } from "@/lib/local-today"
 import { ConflictReview } from "./conflict-review"
 import { keepMine, openConflicts, takeTheirs } from "./conflicts"
 import { DiscardDialog } from "./discard-dialog"
+import type { PageItem } from "./page-items"
 import { countChanges } from "./pending-changes"
 import {
   usePendingChanges,
@@ -30,6 +31,8 @@ import { usePublish } from "./use-publish"
 export interface RoadmapPublishingProps {
   /** The roadmap as last read. */
   roadmap: Roadmap
+  /** The page's items (`usePageItems`), which the review draws an order's items from. */
+  pageItems: readonly PageItem[]
 }
 
 /**
@@ -37,10 +40,13 @@ export interface RoadmapPublishingProps {
  * pending, how many there are with Publish (or Save, S11) and Discard all (STY-025 S2,
  * S6, S9–S15, S18). Publishing asks first, listing what changes and offering to mark the
  * roadmap as updated today (STY-036 S6); it is unavailable,
- * though focusable, unless connected and until every field someone else changed is
- * decided in the review (STY-026).
+ * though focusable, unless connected and until every field and order someone else
+ * changed is decided in the review (STY-026, STY-050).
  */
-export function RoadmapPublishing({ roadmap }: RoadmapPublishingProps) {
+export function RoadmapPublishing({
+  roadmap,
+  pageItems,
+}: RoadmapPublishingProps) {
   const { t } = useTranslation()
   const store = usePendingChangesStore()
   const snapshot = usePendingChanges()
@@ -86,7 +92,7 @@ export function RoadmapPublishing({ roadmap }: RoadmapPublishingProps) {
     open,
     () => publishButton.current ?? notice.current,
   )
-  const decide = (resolve: typeof keepMine) => (conflict: FieldConflict) => {
+  const decide = (resolve: typeof keepMine) => (conflict: Conflict) => {
     focus.decided(conflict)
     store.update(roadmap.id, (pending) => resolve(pending, conflict))
   }
@@ -109,6 +115,7 @@ export function RoadmapPublishing({ roadmap }: RoadmapPublishingProps) {
           ref={notice}
           action={action}
           open={open}
+          pageItems={pageItems}
           removed={refused.removed}
           hasPendingChanges={count > 0}
           keepMineRef={focus.keepMineRef}

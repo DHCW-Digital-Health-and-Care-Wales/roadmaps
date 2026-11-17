@@ -13,21 +13,20 @@ import {
   applyItemChanges,
   editItem,
   matchItemChanges,
-  moveTurn,
-  newItemTurn,
   pendingNewItems,
   shownNewItem,
   type SinceOpened,
   undoItem,
 } from "./pending-changes"
 import { useRoadmapChanges } from "./pending-changes-context"
+import { shownTurns } from "./pending-orders"
 
 /**
  * One item of a roadmap's page, with a card of its own. An item is known there by its
  * position among the page's items: the roadmap's items in the order read, so each at the
  * place it has among them, then the items new to it in the order added, last, as
  * publishing writes them (STY-045 D2). Where it shows in its placement is another
- * matter: `arrival`.
+ * matter: `turn`.
  */
 export interface PageItem {
   /** Its card's key, which it keeps across reads while it is the same item. */
@@ -41,11 +40,12 @@ export interface PageItem {
   /** Its ID among the roadmap's new items, when it is one: added and not published. */
   readonly newItemId: string | undefined
   /**
-   * Its turn among the items that show last in their placement, as publishing puts
-   * them (STY-051 S1): one moved, in the order moved, then one new, in the order added.
-   * None for an item that shows where it was read.
+   * Where it shows in its placement, as publishing puts it: its place in the
+   * placement's pending order (STY-050 S2), or, with none pending, its turn among the
+   * items that show last (STY-051 S1), one moved, in the order moved, then one new, in
+   * the order added. None for an item that shows where it was read.
    */
-  readonly arrival: number | undefined
+  readonly turn: number | undefined
 }
 
 /** The key of a new item's card: its own until a read holds the item (`useItemCardKeys`). */
@@ -67,6 +67,7 @@ export function usePageItems(
   const keys = useItemCardKeys(items)
   return useMemo(() => {
     const entries = matchItemChanges(items, changes)
+    const turns = shownTurns(items, changes)
     return [
       ...items.flatMap((item, at): PageItem[] => {
         const key = keys[at]
@@ -74,8 +75,8 @@ export function usePageItems(
         if (key === undefined) return []
         const entry = entries.get(at)
         const shown = applyItemChanges(item, entry)
-        const arrival = moveTurn(changes, entry)
-        return [{ key, item, shown, entry, newItemId: undefined, arrival }]
+        const turn = turns[at]
+        return [{ key, item, shown, entry, newItemId: undefined, turn }]
       }),
       ...pendingNewItems(items, changes).map((newItem, added): PageItem => {
         const item = shownNewItem(newItem)
@@ -85,7 +86,7 @@ export function usePageItems(
           shown: item,
           entry: undefined,
           newItemId: newItem.id,
-          arrival: newItemTurn(changes, added),
+          turn: turns[items.length + added],
         }
       }),
     ]

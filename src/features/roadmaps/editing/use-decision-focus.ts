@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef } from "react"
 
-import type { FieldConflict } from "@/domain/roadmap/roadmap-changes"
+import type { Conflict } from "@/domain/roadmap/roadmap-changes"
 
 import type { OpenConflict } from "./conflicts"
 
@@ -10,7 +10,7 @@ export interface DecisionFocus {
     key: string,
   ) => (button: HTMLButtonElement | null) => void
   /** Call as `conflict` is decided, before the decision is stored. */
-  readonly decided: (conflict: FieldConflict) => void
+  readonly decided: (conflict: Conflict) => void
 }
 
 /**

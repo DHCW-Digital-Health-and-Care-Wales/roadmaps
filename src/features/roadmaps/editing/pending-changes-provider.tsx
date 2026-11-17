@@ -43,13 +43,18 @@ export interface PendingChangesProviderProps {
  * Holds every roadmap's pending edits for the life of the tab (ADR-012), outside the
  * query cache so Disconnect does not drop them. It drops, after each fresh read, every
  * change the data source already holds; asks before the tab is closed while any change
- * is pending; and asks, on Disconnect, whether to keep them.
+ * is pending; and asks, on Disconnect, whether to keep them. The store settles each
+ * roadmap's pending orders against its items as cached (STY-050).
  */
 export function PendingChangesProvider({
   children,
 }: PendingChangesProviderProps) {
-  const [store] = useState(createPendingChangesStore)
   const queryClient = useQueryClient()
+  const [store] = useState(() =>
+    createPendingChangesStore((roadmapId) =>
+      queryClient.getQueryData(roadmapKeys.items(roadmapId)),
+    ),
+  )
   const [asking, setAsking] = useState(false)
   // Kept after the question closes, so its text does not change as it fades.
   const [roadmapCount, setRoadmapCount] = useState(0)

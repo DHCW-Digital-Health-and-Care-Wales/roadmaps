@@ -8,8 +8,18 @@ import {
   type PublishWrites,
   type RoadmapSnapshot,
 } from "./publish-plan"
-import { type NewItem, NO_CHANGES, UNLISTED_FAMILY } from "./roadmap-changes"
+import { orderedItem } from "./placement-order"
+import {
+  type ItemChanges,
+  type NewItem,
+  NO_CHANGES,
+  type OrderedItem,
+  type PlacementOrder,
+  type RoadmapChanges,
+  UNLISTED_FAMILY,
+} from "./roadmap-changes"
 import type { RoadmapItem } from "./roadmap-item"
+import type { RoadmapPlacement } from "./roadmap-placement"
 import { addingItems, NEW_CLINIC, NEW_LETTERS } from "./testing/test-new-item"
 import { createTestRoadmap } from "./testing/test-roadmap"
 import { createTestRoadmapItem } from "./testing/test-roadmap-item"
@@ -59,6 +69,7 @@ describe("planRoadmapPublish", () => {
           { index: 2, id: "newidbbb" },
         ],
         moves: [],
+        orders: [],
         newItems: [],
       },
     })
@@ -198,6 +209,7 @@ describe("planRoadmapPublish", () => {
           items: [],
           ids: [],
           moves: [],
+          orders: [],
           newItems: [],
         },
       })
@@ -295,6 +307,7 @@ describe("planRoadmapPublish", () => {
           ],
           ids: [],
           moves: [],
+          orders: [],
           newItems: [],
         },
       })
@@ -373,6 +386,7 @@ describe("planRoadmapPublish", () => {
           ],
           ids: [],
           moves: [{ index: 0, after: 2 }],
+          orders: [],
           newItems: [],
         })
       })
@@ -388,6 +402,7 @@ describe("planRoadmapPublish", () => {
             { index: 2, id: "bookingx", field: "placement", value: "now" },
           ],
           moves: [],
+          orders: [],
         })
       })
 
@@ -416,6 +431,7 @@ describe("planRoadmapPublish", () => {
         expect(plan.kind === "write" && plan.writes).toMatchObject({
           items: [],
           moves: [],
+          orders: [],
         })
       })
 
@@ -861,6 +877,7 @@ describe("planRoadmapPublish", () => {
           items: [],
           ids: [],
           moves: [],
+          orders: [],
           newItems: [],
         },
       })
@@ -903,6 +920,7 @@ describe("planRoadmapPublish", () => {
           items: [],
           ids: [],
           moves: [],
+          orders: [],
           newItems: [],
         },
       })
@@ -977,6 +995,7 @@ describe("planRoadmapPublish", () => {
           items: [],
           ids: [],
           moves: [],
+          orders: [],
           newItems: [
             {
               id: "ckn7q2xw",
@@ -1049,6 +1068,7 @@ describe("planRoadmapPublish", () => {
           items: [{ index: 0, id: "bookingx", field: "phase", value: "Beta" }],
           ids: [{ index: 1, id: "newidaaa" }],
           moves: [],
+          orders: [],
           newItems: [expect.objectContaining({ id: "ckn7q2xw" })],
         },
       })
@@ -1171,6 +1191,7 @@ describe("heldWrites", () => {
     items: [{ index: 0, id: "newidaaa", field: "phase", value: "Live" }],
     ids: [{ index: 0, id: "newidaaa" }],
     moves: [],
+    orders: [],
     newItems: [],
   }
   const before = createTestRoadmapItem("Item")
@@ -1207,6 +1228,7 @@ describe("heldWrites", () => {
       items: [{ index: 0, id: "newidaaa", field: "phase", value: "Live" }],
       ids: [{ index: 0, id: "newidaaa" }],
       moves: [],
+      orders: [],
       newItems: [],
     }
     const alreadyLive = createTestRoadmapItem("Other", {
@@ -1222,6 +1244,7 @@ describe("heldWrites", () => {
       items: [{ index: 0, id: "bookingx", field: "placement", value: "now" }],
       ids: [],
       moves: [{ index: 0, after: 1 }],
+      orders: [],
       newItems: [],
     }
     const booking = createTestRoadmapItem("Online booking", { id: "bookingx" })
@@ -1275,6 +1298,7 @@ describe("heldWrites", () => {
             items: [],
             ids: [],
             moves: [],
+            orders: [],
             newItems: withNewItem.newItems,
           },
           snapshotOf([before], ["ckn7q2xw"]),
@@ -1291,6 +1315,530 @@ describe("heldWrites", () => {
       expect(
         heldWrites(withNewItem, { ...snapshotOf([after]), roadmap: written }),
       ).toBe("some")
+    })
+  })
+})
+
+describe("a placement's pending order (STY-050)", () => {
+  const item = (title: string, placement: RoadmapPlacement = "now") =>
+    createTestRoadmapItem(title, {
+      id: `${title.toLowerCase()}idxxxx`,
+      placement,
+    })
+  const a = item("A")
+  const b = item("B")
+  const c = item("C")
+  const d = item("D")
+  const idOf = (title: string) => `${title.toLowerCase()}idxxxx`
+  const ids = (titles: string): OrderedItem[] =>
+    titles.split("").map((title) => ({ id: idOf(title) }))
+  /** Now reordered from `base` to `items`, each a run of one-letter titles. */
+  const nowOrder = (base: string, items: string): PlacementOrder => ({
+    placement: "now",
+    base: ids(base),
+    items: ids(items),
+  })
+  const reordering = (
+    order: PlacementOrder,
+    changes: Partial<RoadmapChanges> = {},
+  ): RoadmapChanges => ({ ...NO_CHANGES, ...changes, orders: [order] })
+  /** The conflict found over `current`, Now's items as the publish read them. */
+  const conflictOf = (order: PlacementOrder, current: RoadmapItem[]) => ({
+    subject: "order",
+    placement: "now",
+    base: order.base,
+    pending: order.items,
+    current: current.map((each) => ({
+      item: { id: each.id },
+      title: each.title,
+    })),
+  })
+
+  it("moves the fewest rows to reach the order, writing no cell, and says what the placement then holds (S7)", () => {
+    expect(
+      planRoadmapPublish(
+        reordering(nowOrder("ABCD", "DABC")),
+        snapshotOf([a, b, c, d]),
+        idsOf(),
+      ),
+    ).toEqual({
+      kind: "write",
+      writes: {
+        roadmap: [],
+        items: [],
+        ids: [],
+        moves: [{ index: 3, before: 0 }],
+        newItems: [],
+        orders: [
+          {
+            placement: "now",
+            items: [idOf("D"), idOf("A"), idOf("B"), idOf("C")],
+            was: [idOf("A"), idOf("B"), idOf("C"), idOf("D")],
+          },
+        ],
+      },
+    })
+  })
+
+  it("gives each item without an ID one, as any write does, and finds it by what it held", () => {
+    const first = createTestRoadmapItem("First")
+    const second = createTestRoadmapItem("Second")
+    const order: PlacementOrder = {
+      placement: "now",
+      base: [orderedItem(first, 0), orderedItem(second, 1)],
+      items: [orderedItem(second, 1), orderedItem(first, 0)],
+    }
+
+    expect(
+      planRoadmapPublish(
+        reordering(order),
+        snapshotOf([first, second]),
+        idsOf("newidaaa", "newidbbb"),
+      ),
+    ).toEqual({
+      kind: "write",
+      writes: {
+        roadmap: [],
+        items: [],
+        ids: [
+          { index: 0, id: "newidaaa" },
+          { index: 1, id: "newidbbb" },
+        ],
+        moves: [{ index: 0, after: 1 }],
+        newItems: [],
+        orders: [
+          {
+            placement: "now",
+            items: ["newidbbb", "newidaaa"],
+            was: [null, null],
+          },
+        ],
+      },
+    })
+  })
+
+  it("writes nothing, not even IDs, for an order the roadmap already holds, whoever made it (S9)", () => {
+    expect(
+      planRoadmapPublish(
+        reordering(nowOrder("ABCD", "DABC")),
+        snapshotOf([d, item("Other", "next"), a, b, c]),
+        idsOf(),
+      ),
+    ).toEqual({ kind: "settled", outcome: { status: "published" } })
+  })
+
+  describe("a co-lead's change to the placement's items (S10)", () => {
+    const order = nowOrder("ABCD", "DABC")
+    const theirs = item("E")
+
+    it.each<[string, RoadmapItem[], RoadmapItem[]]>([
+      ["reordered it", [b, a, c, d], [b, a, c, d]],
+      ["added an item to it", [a, b, c, d, theirs], [a, b, c, d, theirs]],
+      [
+        "moved an item into it",
+        [{ ...theirs, placement: "now" }, a, b, c, d],
+        [{ ...theirs, placement: "now" }, a, b, c, d],
+      ],
+      [
+        "moved an item out of it",
+        [a, { ...b, placement: "later" }, c, d],
+        [a, c, d],
+      ],
+      ["removed an item from it", [a, b, d], [a, b, d]],
+    ])("is a conflict when a co-lead has %s", (_, items, current) => {
+      expect(
+        planRoadmapPublish(reordering(order), snapshotOf(items), idsOf()),
+      ).toEqual({
+        kind: "settled",
+        outcome: {
+          status: "refused",
+          conflicts: [conflictOf(order, current)],
+          missingItems: [],
+        },
+      })
+    })
+
+    it("is none when a co-lead changed another placement, or an item's text", () => {
+      const plan = planRoadmapPublish(
+        reordering(order),
+        snapshotOf([
+          item("Theirs", "next"),
+          { ...a, title: { en: "Their A", cy: "" } },
+          b,
+          c,
+          d,
+        ]),
+        idsOf(),
+      )
+
+      expect(plan).toMatchObject({
+        kind: "write",
+        writes: { moves: [{ index: 4, before: 1 }] },
+      })
+    })
+
+    it("publishes nothing else beside it, and names it after the fields in conflict", () => {
+      const edit: ItemChanges = {
+        item: a,
+        position: 0,
+        fields: { title: { base: "A", value: "My A" } },
+      }
+      const current = [{ ...a, title: { en: "Their A", cy: "" } }, c, b, d]
+
+      const plan = planRoadmapPublish(
+        reordering(order, { items: [edit] }),
+        snapshotOf(current),
+        idsOf(),
+      )
+
+      expect(plan).toMatchObject({
+        kind: "settled",
+        outcome: {
+          status: "refused",
+          conflicts: [
+            { subject: "item", field: "title" },
+            { subject: "order", placement: "now" },
+          ],
+        },
+      })
+    })
+
+    it("reports an edited item a co-lead removed as not found, and no conflict when that was the only difference", () => {
+      const edit: ItemChanges = {
+        item: b,
+        position: 1,
+        fields: { title: { base: "B", value: "My B" } },
+      }
+
+      expect(
+        planRoadmapPublish(
+          reordering(order, { items: [edit] }),
+          snapshotOf([a, c, d]),
+          idsOf(),
+        ),
+      ).toEqual({
+        kind: "settled",
+        outcome: { status: "refused", conflicts: [], missingItems: [edit] },
+      })
+    })
+
+    it("reports both when the order differs by more than the item removed", () => {
+      const edit: ItemChanges = {
+        item: b,
+        position: 1,
+        fields: { title: { base: "B", value: "My B" } },
+      }
+
+      expect(
+        planRoadmapPublish(
+          reordering(order, { items: [edit] }),
+          snapshotOf([c, a, d]),
+          idsOf(),
+        ),
+      ).toEqual({
+        kind: "settled",
+        outcome: {
+          status: "refused",
+          conflicts: [conflictOf(order, [c, a, d])],
+          missingItems: [edit],
+        },
+      })
+    })
+  })
+
+  it("writes the order kept over a co-lead's change with their items last and their removals gone (S12)", () => {
+    const theirs = item("E")
+    // "Keep mine" made the order found the base: D, A, B, C over A, C, D and E.
+    const kept: PlacementOrder = {
+      placement: "now",
+      base: ids("ACDE"),
+      items: ids("DABC"),
+    }
+
+    expect(
+      planRoadmapPublish(
+        reordering(kept),
+        snapshotOf([a, c, d, theirs]),
+        idsOf(),
+      ),
+    ).toMatchObject({
+      kind: "write",
+      writes: {
+        moves: [{ index: 2, before: 0 }],
+        orders: [
+          {
+            placement: "now",
+            items: [idOf("D"), idOf("A"), idOf("C"), idOf("E")],
+          },
+        ],
+      },
+    })
+  })
+
+  describe("with the Product Lead's own moves and new items (S5, S8)", () => {
+    const moved = item("X", "next")
+    const move: ItemChanges = {
+      item: moved,
+      position: 0,
+      fields: { placement: { base: "next", value: "now" } },
+    }
+    const added: NewItem = {
+      ...NEW_CLINIC,
+      values: { ...NEW_CLINIC.values, placement: "now" },
+    }
+    const addedId: OrderedItem = { id: NEW_CLINIC.id }
+    const newFields = [
+      { field: "title", value: "Choose a clinic closer to home" },
+      { field: "placement", value: "now" },
+    ]
+
+    it("puts an item moved in where the order has it, and is no conflict though the placement lacks it", () => {
+      const order: PlacementOrder = {
+        placement: "now",
+        base: ids("AB"),
+        items: [{ id: idOf("X") }, ...ids("AB")],
+      }
+
+      expect(
+        planRoadmapPublish(
+          reordering(order, { items: [move] }),
+          snapshotOf([a, moved, b]),
+          idsOf(),
+        ),
+      ).toEqual({
+        kind: "write",
+        writes: {
+          roadmap: [],
+          items: [
+            { index: 1, id: idOf("X"), field: "placement", value: "now" },
+          ],
+          ids: [],
+          moves: [{ index: 0, after: 1 }],
+          newItems: [],
+          orders: [
+            {
+              placement: "now",
+              items: [idOf("X"), idOf("A"), idOf("B")],
+              was: [idOf("A"), idOf("B")],
+            },
+          ],
+        },
+      })
+    })
+
+    it("leaves out an item moved out, which goes last in its new placement", () => {
+      const out: ItemChanges = {
+        item: b,
+        position: 1,
+        fields: { placement: { base: "now", value: "next" } },
+      }
+
+      expect(
+        planRoadmapPublish(
+          reordering(nowOrder("ABC", "CA"), { items: [out] }),
+          snapshotOf([a, b, c, moved]),
+          idsOf(),
+        ),
+      ).toMatchObject({
+        kind: "write",
+        writes: {
+          moves: [
+            { index: 0, after: 2 },
+            { index: 1, after: 3 },
+          ],
+          orders: [
+            {
+              placement: "now",
+              items: [idOf("C"), idOf("A")],
+              was: [idOf("A"), idOf("B"), idOf("C")],
+            },
+          ],
+        },
+      })
+    })
+
+    it("inserts a new item that is not last before the item it precedes (S8)", () => {
+      const order: PlacementOrder = {
+        placement: "now",
+        base: ids("AB"),
+        items: [{ id: idOf("A") }, addedId, { id: idOf("B") }],
+      }
+
+      expect(
+        planRoadmapPublish(
+          reordering(order, { newItems: [added] }),
+          snapshotOf([a, moved, b]),
+          idsOf(),
+        ),
+      ).toEqual({
+        kind: "write",
+        writes: {
+          roadmap: [],
+          items: [],
+          ids: [],
+          moves: [],
+          newItems: [{ id: NEW_CLINIC.id, fields: newFields, before: 2 }],
+          orders: [
+            {
+              placement: "now",
+              items: [idOf("A"), NEW_CLINIC.id, idOf("B")],
+              was: [idOf("A"), idOf("B")],
+            },
+          ],
+        },
+      })
+    })
+
+    it("appends a new item that stays last, as before, and one joining a pending order last (S5, S8)", () => {
+      const plan = planRoadmapPublish(
+        reordering(nowOrder("AB", "BA"), { newItems: [added] }),
+        snapshotOf([a, b]),
+        idsOf(),
+      )
+
+      expect(plan).toMatchObject({
+        kind: "write",
+        writes: {
+          moves: [{ index: 0, after: 1 }],
+          newItems: [{ id: NEW_CLINIC.id, fields: newFields }],
+          orders: [{ items: [idOf("B"), idOf("A"), NEW_CLINIC.id] }],
+        },
+      })
+      expect(plan).not.toHaveProperty("writes.newItems.0.before")
+    })
+
+    it("writes several new items in the order the placement has them, inserted or appended", () => {
+      const second: NewItem = {
+        id: "secondid",
+        values: { ...added.values, title: "Second" },
+      }
+      const third: NewItem = {
+        id: "thirdidx",
+        values: { ...added.values, title: "Third" },
+      }
+      const order: PlacementOrder = {
+        placement: "now",
+        base: ids("A"),
+        items: [
+          { id: "thirdidx" },
+          addedId,
+          { id: idOf("A") },
+          { id: "secondid" },
+        ],
+      }
+
+      const plan = planRoadmapPublish(
+        reordering(order, { newItems: [added, second, third] }),
+        snapshotOf([a]),
+        idsOf(),
+      )
+
+      expect(plan).toMatchObject({
+        kind: "write",
+        writes: {
+          moves: [],
+          newItems: [
+            { id: "thirdidx", before: 0 },
+            { id: NEW_CLINIC.id, before: 0 },
+            { id: "secondid" },
+          ],
+        },
+      })
+      expect(plan).not.toHaveProperty("writes.newItems.2.before")
+    })
+
+    it("takes a new item whose ID the roadmap holds as an item of it, written already", () => {
+      const landed = createTestRoadmapItem("Choose a clinic closer to home", {
+        id: NEW_CLINIC.id,
+      })
+      const order: PlacementOrder = {
+        placement: "now",
+        base: ids("AB"),
+        items: [{ id: idOf("A") }, addedId, { id: idOf("B") }],
+      }
+
+      expect(
+        planRoadmapPublish(
+          reordering(order, { newItems: [added] }),
+          snapshotOf([a, landed, b]),
+          idsOf(),
+        ),
+      ).toEqual({ kind: "settled", outcome: { status: "published" } })
+    })
+  })
+
+  describe("a lost answer, judged by the placement's order (S14)", () => {
+    const writes: PublishWrites = {
+      roadmap: [],
+      items: [],
+      ids: [],
+      moves: [{ index: 3, before: 0 }],
+      newItems: [],
+      orders: [
+        {
+          placement: "now",
+          items: [idOf("D"), idOf("A"), idOf("B"), idOf("C")],
+          was: [idOf("A"), idOf("B"), idOf("C"), idOf("D")],
+        },
+      ],
+    }
+    const elsewhere = item("Other", "next")
+
+    it("is all when the placement holds the pending order, whatever lies between", () => {
+      expect(heldWrites(writes, snapshotOf([d, elsewhere, a, b, c]))).toBe(
+        "all",
+      )
+    })
+
+    it("is none when it holds the order it had", () => {
+      expect(heldWrites(writes, snapshotOf([a, b, elsewhere, c, d]))).toBe(
+        "none",
+      )
+    })
+
+    it("is some when it holds any other, as after a co-lead's change", () => {
+      expect(heldWrites(writes, snapshotOf([d, a, c, b]))).toBe("some")
+      expect(heldWrites(writes, snapshotOf([a, b, c]))).toBe("some")
+    })
+
+    it("is some when the order is there and another write is not", () => {
+      expect(
+        heldWrites(
+          { ...writes, roadmap: [{ field: "vision", value: "A vision" }] },
+          snapshotOf([d, a, b, c]),
+        ),
+      ).toBe("some")
+    })
+
+    it("tells an order of items given their IDs by the same write", () => {
+      const first = createTestRoadmapItem("First")
+      const second = createTestRoadmapItem("Second")
+      const given: PublishWrites = {
+        ...writes,
+        ids: [
+          { index: 0, id: "newidaaa" },
+          { index: 1, id: "newidbbb" },
+        ],
+        moves: [{ index: 0, after: 1 }],
+        orders: [
+          {
+            placement: "now",
+            items: ["newidbbb", "newidaaa"],
+            was: [null, null],
+          },
+        ],
+      }
+
+      expect(heldWrites(given, snapshotOf([first, second]))).toBe("none")
+      expect(
+        heldWrites(
+          given,
+          snapshotOf([
+            { ...second, id: "newidbbb" },
+            { ...first, id: "newidaaa" },
+          ]),
+        ),
+      ).toBe("all")
     })
   })
 })

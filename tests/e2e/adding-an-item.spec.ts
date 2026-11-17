@@ -289,7 +289,9 @@ test("the publish dialog lists a new item beside an edit; a co-lead's conflict p
   // The conflict publishes nothing; its review names the edit alone, and the new item
   // stays pending.
   const review = main.getByRole("alert")
-  await expect(review).toContainText("Someone else has changed text you edited")
+  await expect(review).toContainText(
+    "Someone else has changed this roadmap too",
+  )
   await expect(review).toContainText("Nothing was published.")
   await expect(review.getByRole("listitem")).toHaveCount(1)
   await expect(review.getByRole("listitem")).toContainText(

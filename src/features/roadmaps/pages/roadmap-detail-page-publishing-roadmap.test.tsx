@@ -257,7 +257,7 @@ describe("publishing or unpublishing a roadmap (STY-035)", () => {
     await choose(user, "Publish roadmap", "Save and publish")
 
     expect(
-      await main.findByText("Someone else has changed text you edited"),
+      await main.findByText("Someone else has changed this roadmap too"),
     ).toBeVisible()
     expect(
       main.getByRole("button", { name: "Publish roadmap" }),

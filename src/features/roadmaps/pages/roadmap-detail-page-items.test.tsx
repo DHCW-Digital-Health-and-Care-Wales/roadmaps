@@ -253,13 +253,14 @@ describe("RoadmapDetailPage items", () => {
         .getAllByRole("heading", { level: 2 })
         .map((heading) => heading.textContent),
     ).toEqual([ABOUT_HEADING, ...PLACEMENT_HEADINGS])
+    // What follows a placement's heading, and whatever sits beside it.
+    const under = (name: string) =>
+      main().getByRole("heading", { level: 2, name }).parentElement
+        ?.nextElementSibling
     for (const empty of ["Recently delivered", "Not doing"]) {
-      const heading = main().getByRole("heading", { level: 2, name: empty })
-      expect(heading.nextElementSibling).toHaveTextContent("No items")
+      expect(under(empty)).toHaveTextContent("No items")
     }
-    expect(
-      main().getByRole("heading", { level: 2, name: "Now" }).nextElementSibling,
-    ).not.toHaveTextContent("No items")
+    expect(under("Now")).not.toHaveTextContent("No items")
   })
 
   it("shows unplaced items first, flagged with what to fix (S4, S13)", async () => {

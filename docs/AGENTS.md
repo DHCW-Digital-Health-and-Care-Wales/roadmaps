@@ -49,7 +49,8 @@ the next free number across the live tree, `_archive/` and open PRs' files
   leaving `_archive/` alone; triage the hits), since a decision leaves
   "waits for" and "undecided" claims in intros and gate paragraphs. An answer
   that changes another record's contract goes into that record's Decisions,
-  not only the one it was raised in.
+  not only the one it was raised in; one that makes a record need another's
+  behaviour also sets its Depends on, and the epic's table and Sequencing.
 - A defect found while delivering anything is recorded in its own file in
   `backlog/defects/` with Status `Needs triage`, listed under Defects in
   `backlog/README.md` (and in its epic's `## Defects`, if it belongs to one).

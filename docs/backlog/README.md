@@ -50,6 +50,7 @@ moves to `_archive/`, where its row here still points.
 | [CHO-018](chores/CHO-018-the-publish-hook-test-holds-under-load.md)                     | The publish hook's "read back" test holds when CI is slow                                                                           | Delivered   |
 | [CHO-019](chores/CHO-019-check-a-published-move-against-a-real-spreadsheet.md)          | Check STY-051's write (a moved item's row moved, with its cell write, in one request) against a real test spreadsheet               | Proposed    |
 | [CHO-020](chores/CHO-020-check-a-published-order-against-a-real-spreadsheet.md)         | Check STY-050's write (a placement's rows reordered, and a new item's row inserted, in one request) against a real test spreadsheet | Proposed    |
+| [CHO-021](chores/CHO-021-the-prototype-check-gives-reviewers-frames-and-text.md)        | The prototype page check writes a screenshot per artboard and a text extract, and step 8 hands both to reviewers                    | Proposed    |
 
 Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status token.
 

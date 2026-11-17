@@ -18,6 +18,7 @@ import {
   withRoadmapIndex,
 } from "./fixtures/fake-sheets"
 import { useLanguage } from "./fixtures/look"
+import { aboutField, openAbout } from "./fixtures/roadmap-page"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 const [HEADER = []] = EXAMPLE_INDEX_ROWS
@@ -86,15 +87,14 @@ test("a Product Lead adds a roadmap and lands on its page (S1–S3, S5)", async 
   await expect(
     main.getByRole("button", { name: "Publish roadmap" }),
   ).toBeEnabled()
-  await expect(main.getByText("Family: Medicines & Diagnostics")).toBeVisible()
-  await expect(
-    main.getByText("Category: GP & Community Services"),
-  ).toBeVisible()
-  await expect(
-    main
-      .getByRole("region", { name: "About this roadmap" })
-      .getByText("Sam Evans"),
-  ).toBeVisible()
+  const about = await openAbout(page)
+  await expect(aboutField(about, "Family")).toContainText(
+    "Medicines & Diagnostics",
+  )
+  await expect(aboutField(about, "Category")).toHaveText(
+    "GP & Community Services",
+  )
+  await expect(about.getByText("Sam Evans")).toBeVisible()
   await expect(
     main.getByRole("heading", { name: "No items yet" }),
   ).toBeVisible()

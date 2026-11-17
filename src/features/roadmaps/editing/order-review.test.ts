@@ -11,15 +11,10 @@ import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import type { RoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 
+import { pageItemsOf } from "../testing/page-items"
 import { reviewedOrders } from "./order-review"
-import type { PageItem } from "./page-items"
-import {
-  applyItemChanges,
-  editItem,
-  matchItemChanges,
-  shownNewItem,
-} from "./pending-changes"
-import { reorderItem, settleOrders, shownTurns } from "./pending-orders"
+import { editItem } from "./pending-changes"
+import { reorderItem, settleOrders } from "./pending-orders"
 
 const item = (title: string, placement: RoadmapPlacement = "now") =>
   createTestRoadmapItem(title, {
@@ -55,33 +50,6 @@ function conflictOver(
 
 const reordered = reorderItem(NO_CHANGES, loaded, 2, "top")
 const conflict = conflictOver(reordered, current)
-
-/** The page's items over `read`, as `usePageItems` gives them. */
-function pageItemsOf(
-  read: readonly RoadmapItem[],
-  pending: RoadmapChanges,
-): PageItem[] {
-  const entries = matchItemChanges(read, pending)
-  const turns = shownTurns(read, pending)
-  return [
-    ...read.map((each, position) => ({
-      key: `read-${String(position)}`,
-      item: each,
-      shown: applyItemChanges(each, entries.get(position)),
-      entry: entries.get(position),
-      newItemId: undefined,
-      turn: turns[position],
-    })),
-    ...pending.newItems.map((newItem, added) => ({
-      key: `new-${newItem.id}`,
-      item: shownNewItem(newItem),
-      shown: shownNewItem(newItem),
-      entry: undefined,
-      newItemId: newItem.id,
-      turn: turns[read.length + added],
-    })),
-  ]
-}
 
 const titles = (lines: readonly { title: { en: string } }[]) =>
   lines.map(({ title }) => title.en)

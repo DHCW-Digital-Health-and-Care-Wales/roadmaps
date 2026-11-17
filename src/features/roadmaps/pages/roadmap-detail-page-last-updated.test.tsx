@@ -19,7 +19,11 @@ import {
   editRoadmapText,
   openEditRoadmapDialog,
 } from "../testing/roadmap-dialog"
-import { chooseFromMore, openConflictReview } from "../testing/roadmap-page"
+import {
+  chooseFromMore,
+  openAbout,
+  openConflictReview,
+} from "../testing/roadmap-page"
 
 const productA = createTestRoadmap("producta", "Product A roadmap", {
   statusLabel: { en: "Beta", cy: "" },
@@ -96,15 +100,17 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
   })
 
   it("shows the date in the About block as the list card does (S1)", async () => {
-    await renderPage()
+    const { user } = await renderPage()
 
+    await openAbout(user)
     expect(about().getByText("Last updated")).toBeInTheDocument()
     expect(about().getByText("2 October 2026")).toBeInTheDocument()
   })
 
   it("shows that a roadmap has no date (S1)", async () => {
-    await renderPage({ path: "/roadmaps/productc" })
+    const { user } = await renderPage({ path: "/roadmaps/productc" })
 
+    await openAbout(user)
     expect(about().getByText("Last updated")).toBeInTheDocument()
     expect(about().getByText("No date")).toBeInTheDocument()
   })
@@ -120,6 +126,7 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
     expect(field).toHaveValue("2026-11-10")
     await confirmRoadmapEdit(user)
 
+    await openAbout(user)
     expect(about().getByText("10 November 2026")).toBeInTheDocument()
     expect(about().getByText("Changed")).toBeInTheDocument()
     expect(main().getByText("1 unpublished change")).toBeInTheDocument()
@@ -209,6 +216,7 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
 
     pick(await openDateField(user), "")
     await confirmRoadmapEdit(user)
+    await openAbout(user)
     expect(about().getByText("No date")).toBeInTheDocument()
     await publish(user, "Publish changes")
 
@@ -361,6 +369,7 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
       language: "cy",
     })
 
+    await openAbout(user)
     expect(about().queryByText("Diweddarwyd ddiwethaf")).toBeInTheDocument()
     expect(about().queryByText("Dim dyddiad")).toBeInTheDocument()
     await user.click(

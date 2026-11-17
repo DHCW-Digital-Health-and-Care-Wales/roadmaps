@@ -7,6 +7,7 @@ import {
   withRoadmapIndex,
 } from "./fixtures/fake-sheets"
 import { useLanguage } from "./fixtures/look"
+import { aboutField, openAbout } from "./fixtures/roadmap-page"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 /**
@@ -375,10 +376,11 @@ test("families and categories come from their lists, flagging a roadmap out of s
     main.getByText("Doesn't match its family or category"),
   ).toBeVisible()
   // The lists' values, which the row's cells differ from (S4).
-  await expect(main.getByText("Family: Single Record")).toBeVisible()
-  await expect(
-    main.getByText("Category: GP & Community Services"),
-  ).toBeVisible()
+  const about = await openAbout(page)
+  await expect(aboutField(about, "Family")).toContainText("Single Record")
+  await expect(aboutField(about, "Category")).toHaveText(
+    "GP & Community Services",
+  )
 })
 
 test("a family and category read their Welsh names from the lists (STY-027 S5)", async ({

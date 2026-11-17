@@ -1,5 +1,5 @@
 import { TriangleAlertIcon } from "lucide-react"
-import { useId, useMemo, useRef, useState, type RefObject } from "react"
+import { useMemo, useRef, useState, type RefObject } from "react"
 import { useTranslation } from "react-i18next"
 
 import { Skeleton } from "@/components/ui/skeleton"
@@ -14,7 +14,8 @@ import {
 import type { PageItem } from "../editing/page-items"
 import { PlacementHeading } from "../editing/placement-heading"
 import type { PageItemDialog } from "../editing/use-item-dialog"
-import { groupRoadmapItems, type Positioned } from "../group-roadmap-items"
+import type { Positioned, RoadmapItemGroups } from "../group-roadmap-items"
+import { jumpTargetHeadingId } from "../placement-navigation/jump-targets"
 import { AddItemButton } from "./add-item-button"
 import { StatusPanel } from "./status-panel"
 
@@ -27,8 +28,11 @@ export interface RoadmapItemsProps {
   /** The roadmap's items as last read. */
   items: readonly RoadmapItem[]
   organisations: readonly Organisation[]
-  /** Those items as the page shows them, then the items new to it (`usePageItems`). */
-  pageItems: readonly PageItem[]
+  /**
+   * Those items as the page shows them, then the items new to it, by placement
+   * (`groupPageItems`).
+   */
+  groups: RoadmapItemGroups<PageItem>
   /** The page's one item dialog (`useItemDialog`). */
   itemDialog: PageItemDialog
   /** A new item was removed, its card with it: focus needs somewhere to go (S6). */
@@ -38,8 +42,9 @@ export interface RoadmapItemsProps {
 /**
  * A roadmap's items: those the public site leaves out first, flagged (D4), then all six
  * placements in the public site's order, each under its heading, saying when it has
- * none (D1). A roadmap with no items, and none pending, has one dashed panel instead,
- * saying what to add, with "Add an item" (D5, STY-042 S2, STY-046 S8). Each item can be
+ * none (D1); each heading is where the placement navigation jumps (STY-053). A roadmap
+ * with no items, and none pending, has one dashed panel instead, saying what to add,
+ * with "Add an item" (D5, STY-042 S2, STY-046 S8). Each item can be
  * moved, and shows its pending changes, in its pending placement (STY-025, STY-031),
  * last there, in the order moved (STY-051 S1); an item added and not yet published
  * shows after those (STY-046 S3). A placement whose order is pending shows its items
@@ -51,21 +56,13 @@ export function RoadmapItems({
   roadmapId,
   items,
   organisations,
-  pageItems,
+  groups: { unplaced, placements },
   itemDialog,
   onItemRemoved,
 }: RoadmapItemsProps) {
   const { t } = useTranslation()
-  const headingId = useId()
-  const { unplaced, placements } = useMemo(
-    () =>
-      groupRoadmapItems(
-        pageItems,
-        ({ shown }) => shown.placement,
-        ({ turn }) => turn,
-      ),
-    [pageItems],
-  )
+  const empty =
+    unplaced.length === 0 && placements.every(({ items }) => items.length === 0)
   const [said, setSaid] = useState<{ serial: number; text: string }>()
   // A moved item's card is a new one, in another list, so focus is handed to it here.
   const [focus, setFocus] = useState<FocusRequest | null>(null)
@@ -106,10 +103,10 @@ export function RoadmapItems({
     />
   )
 
-  const unplacedId = `${headingId}-unplaced`
+  const unplacedId = jumpTargetHeadingId("unplaced")
   return (
     <>
-      {pageItems.length === 0 ? (
+      {empty ? (
         <StatusPanel
           compact
           title={t("roadmaps.items.empty.title")}
@@ -134,7 +131,9 @@ export function RoadmapItems({
             <div className="flex flex-col gap-3 border-l-8 border-status-warning-border pl-4 sm:pl-6">
               <h2
                 id={unplacedId}
-                className="flex items-center gap-2 text-heading-m [&>svg]:size-6 [&>svg]:shrink-0"
+                // Where the placement navigation moves focus (STY-053 S4).
+                tabIndex={-1}
+                className="flex items-center gap-2 text-heading-m outline-none focus-visible:focus-ring [&>svg]:size-6 [&>svg]:shrink-0"
               >
                 <TriangleAlertIcon aria-hidden="true" />
                 {t("roadmaps.items.unplaced.title")}
@@ -146,7 +145,7 @@ export function RoadmapItems({
             </div>
           )}
           {placements.map(({ placement, items: placed }) => {
-            const id = `${headingId}-${placement}`
+            const id = jumpTargetHeadingId(placement)
             return (
               <div key={placement} className="flex flex-col gap-3">
                 <PlacementHeading

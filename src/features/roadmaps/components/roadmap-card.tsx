@@ -123,14 +123,14 @@ export function RoadmapCard({ roadmap }: RoadmapCardProps) {
             <div className="mt-auto flex flex-col gap-0.5 pt-1 text-body-xs text-muted-foreground">
               {roadmap.productLead !== null && (
                 <span id={`${id}-productLead`} className="wrap-anywhere">
-                  {t("roadmaps.card.productLead", {
+                  {t("roadmaps.facts.productLead", {
                     name: roadmap.productLead,
                   })}
                 </span>
               )}
               {updated !== null && (
                 <span id={`${id}-updated`}>
-                  {t("roadmaps.card.updated", { date: updated })}
+                  {t("roadmaps.facts.updated", { date: updated })}
                 </span>
               )}
             </div>

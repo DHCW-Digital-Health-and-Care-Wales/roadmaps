@@ -21,8 +21,10 @@ import {
 } from "./fixtures/fake-sheets"
 import { useLanguage, useTheme } from "./fixtures/look"
 import {
+  aboutField,
   conflictReview,
   moreButton,
+  openAbout,
   openConflictReview,
   refusal,
 } from "./fixtures/roadmap-page"
@@ -114,6 +116,38 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
           level: 3,
           name: "Example card with every column",
         }),
+      ).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+    })
+
+    test("a roadmap's placement navigation: Jump to open with a change pending, a placement jumped to, then About open (STY-053)", async ({
+      page,
+    }) => {
+      await page.goto("./#/roadmaps/producta")
+      await connect(page)
+      const form = await openEditItemDialog(page, "Minimal card")
+      await form.getByRole("textbox", { name: "Title" }).fill("A minimal card")
+      await form.getByRole("button", { name: "Done" }).click()
+      await expect(form).toBeHidden()
+      const main = page.getByRole("main")
+
+      await main.getByRole("button", { name: /^Jump to/ }).click()
+      const menu = page.getByRole("menu")
+      await expect(menu).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+
+      await menu.getByRole("menuitem", { name: /^Later,/ }).click()
+      await expect(
+        main.getByRole("heading", { level: 2, name: "Later", exact: true }),
+      ).toBeFocused()
+      await expectNoAxeViolations(page, theme)
+
+      await page.evaluate(() => {
+        window.scrollTo(0, 0)
+      })
+      await openAbout(page)
+      await expect(
+        main.getByRole("button", { name: "Show less" }),
       ).toBeVisible()
       await expectNoAxeViolations(page, theme)
     })
@@ -621,16 +655,16 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       sheets.spreadsheet = EXAMPLE_SPREADSHEET_WITH_LISTS
       await page.goto("./#/roadmaps/producta")
       await connect(page)
-      const main = page.getByRole("main")
       const editing = await openEditRoadmapDialog(page, { offersLists: true })
       const family = editing.getByRole("combobox", { name: "Family" })
       await family.selectOption("Medicines & Diagnostics")
       await expectNoAxeViolations(page, theme)
 
       await editing.getByRole("button", { name: "Done" }).click()
-      await expect(
-        main.getByText("Family: Medicines & Diagnostics"),
-      ).toBeVisible()
+      const about = await openAbout(page)
+      await expect(aboutField(about, "Family")).toContainText(
+        "Medicines & Diagnostics",
+      )
       await expectNoAxeViolations(page, theme)
     })
 

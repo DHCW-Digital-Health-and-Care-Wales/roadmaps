@@ -16,6 +16,7 @@ import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
 import { createInMemoryRoadmapRepository } from "../testing/in-memory-roadmap-repository"
+import { openAbout } from "../testing/roadmap-page"
 import { expectWriteHold, refreshHold } from "../testing/write-hold"
 
 const outOfStep = (overrides: Partial<Roadmap> = {}) =>
@@ -262,7 +263,17 @@ describe("making a roadmap match its lists (STY-030)", () => {
 
     await user.click(main.getByRole("button", { name: /Make it match/ }))
 
-    expect(await main.findByText("Family: Shared Care Record")).toBeVisible()
+    const about = await openAbout(user)
+    await vi.waitFor(() => {
+      expect(
+        within(about).getByText("Family", { selector: "dt" })
+          .nextElementSibling,
+      ).toHaveTextContent("Shared Care Record")
+      expect(
+        within(about).getByText("Family", { selector: "dt" })
+          .nextElementSibling,
+      ).toBeVisible()
+    })
   })
 
   it("says why it failed, keeping the button", async () => {

@@ -46,6 +46,7 @@ import {
   closeConflictReview,
   findRefusal,
   moreButton,
+  openAbout,
   openConflictReview,
   refreshRoadmap,
 } from "../testing/roadmap-page"
@@ -417,13 +418,14 @@ describe("Editing what a roadmap is about (STY-025)", () => {
     const about = within(
       main().getByRole("region", { name: "About this roadmap" }),
     )
-    expect(about.getByText("Alex Jones")).toBeInTheDocument()
     expect(about.getByText("Changed")).toBeInTheDocument()
     await waitFor(() => {
       expect(
         about.getByRole("button", { name: "Edit About this roadmap" }),
       ).toHaveFocus()
     })
+    await openAbout(user)
+    expect(about.getByText("Alex Jones")).toBeInTheDocument()
     expect(main().getByText("2 unpublished changes")).toBeInTheDocument()
   })
 
@@ -439,6 +441,7 @@ describe("Editing what a roadmap is about (STY-025)", () => {
       name: "Product A roadmap",
     })
     expect(within(titleRow(heading)).queryByText("Changed")).toBeNull()
+    await openAbout(user)
     await user.click(
       main().getByRole("button", { name: "Undo changes About this roadmap" }),
     )
@@ -454,6 +457,7 @@ describe("Editing what a roadmap is about in the roadmap dialog (STY-043)", () =
   it("opens the roadmap dialog on every About field and no short name, the page behind it as it was (S1)", async () => {
     const { user } = await renderPage()
     await editRoadmapText(user, "Vision", "A clear vision. Still.")
+    await openAbout(user)
 
     const form = await openEditRoadmapDialog(user)
 
@@ -511,6 +515,7 @@ describe("Editing what a roadmap is about in the roadmap dialog (STY-043)", () =
       await waitFor(() => {
         expect(edit).toHaveFocus()
       })
+      await openAbout(user)
       expect(main().getByText("A clear vision. Still.")).toBeInTheDocument()
       expect(main().getByText("1 unpublished change")).toBeInTheDocument()
       const reopened = await openEditRoadmapDialog(user)
@@ -662,7 +667,8 @@ describe("Keeping a roadmap's changes (STY-025)", () => {
     )
     vi.spyOn(repository, "listRoadmaps").mockImplementation(held)
 
-    // The dialog is modal, so the Refresh is asked for before it opens, and read after.
+    // The dialog is modal, so About is opened, and the Refresh asked for, before it opens.
+    const about = await openAbout(user)
     await refreshRoadmap(user)
     const form = await openEditRoadmapDialog(user)
     await user.type(form.getByRole("textbox", { name: "Title" }), " v2")
@@ -671,11 +677,11 @@ describe("Keeping a roadmap's changes (STY-025)", () => {
       release()
       await released
     })
-    await screen.findByText("A co-lead's vision.")
+    await within(about).findByText("A co-lead's vision.")
     await confirmRoadmapEdit(user)
 
     expect(main().getByText("1 unpublished change")).toBeInTheDocument()
-    expect(main().getByText("A co-lead's vision.")).toBeInTheDocument()
+    expect(within(about).getByText("A co-lead's vision.")).toBeInTheDocument()
     expect(
       main().getByRole("heading", { level: 1, name: "Product A roadmap v2" }),
     ).toBeInTheDocument()
@@ -1445,11 +1451,15 @@ describe("A co-lead's changes (STY-026)", () => {
     expect(main().queryByRole("alert")).toBeNull()
     expect(card("First, theirs").queryByText("Changed")).toBeNull()
     expect(main().getByText("1 unpublished change")).toBeInTheDocument()
-    expect(main().getByText("My vision.")).toBeInTheDocument()
+    expect(
+      within(await openAbout(user)).getByText("My vision."),
+    ).toBeInTheDocument()
 
     await publish(user)
     expect(await main().findByText(/^Changes published\./)).toBeInTheDocument()
-    expect(main().getByText("My vision.")).toBeInTheDocument()
+    expect(
+      within(await openAbout(user)).getByText("My vision."),
+    ).toBeInTheDocument()
     expect(main().queryByText(/unpublished change/)).toBeNull()
   })
 
@@ -1483,7 +1493,9 @@ describe("A co-lead's changes (STY-026)", () => {
       main().getByRole("heading", { level: 1, name: "Product A roadmap" }),
     )
 
-    expect(main().getByText("Their vision.")).toBeInTheDocument()
+    expect(
+      within(await openAbout(user)).getByText("Their vision."),
+    ).toBeInTheDocument()
     expect(
       main().getByRole("heading", { level: 3, name: "First, theirs" }),
     ).toBeInTheDocument()
@@ -1523,7 +1535,9 @@ describe("A co-lead's changes (STY-026)", () => {
     }
     await closeConflictReview(user, dialog)
 
-    expect(main().getByText("Their later vision.")).toBeInTheDocument()
+    expect(
+      within(await openAbout(user)).getByText("Their later vision."),
+    ).toBeInTheDocument()
     expect(
       main().getByRole("heading", { level: 3, name: "First, theirs later" }),
     ).toBeInTheDocument()
@@ -1547,7 +1561,7 @@ describe("A co-lead's changes (STY-026)", () => {
       if (roadmap) roadmap.vision = { en: "Their second vision.", cy: "" }
     })
     await refreshRoadmap(user)
-    await main().findByText("Their second vision.")
+    await within(await openAbout(user)).findByText("Their second vision.")
 
     await editVision(user, "My later vision.")
 
@@ -1557,7 +1571,9 @@ describe("A co-lead's changes (STY-026)", () => {
     ).toHaveAttribute("aria-disabled", "false")
     await publish(user)
     expect(await main().findByText(/^Changes published\./)).toBeInTheDocument()
-    expect(main().getByText("My later vision.")).toBeInTheDocument()
+    expect(
+      within(await openAbout(user)).getByText("My later vision."),
+    ).toBeInTheDocument()
   })
 
   it("stops again for a co-lead's change made after Keep mine (S3)", async () => {
@@ -1597,7 +1613,9 @@ describe("A co-lead's changes (STY-026)", () => {
     await publish(user)
 
     expect(await main().findByText(/^Changes published\./)).toBeInTheDocument()
-    expect(main().getByText("Their vision.")).toBeInTheDocument()
+    expect(
+      within(await openAbout(user)).getByText("Their vision."),
+    ).toBeInTheDocument()
     expect(
       main().getByRole("heading", { level: 3, name: "First, theirs" }),
     ).toBeInTheDocument()

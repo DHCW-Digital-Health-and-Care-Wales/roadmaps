@@ -6,13 +6,13 @@ import {
   publishOnce,
   reconnectDialog,
 } from "./fixtures/dialogs"
+import type { Language } from "./fixtures/look"
 import {
-  EXAMPLE_SPREADSHEET,
-  type FakeTab,
-  withTabRows,
-} from "./fixtures/fake-sheets"
-import { useLanguage, type Language } from "./fixtures/look"
-import { connect, expect, test } from "./fixtures/test"
+  focusClearOfBars,
+  LEFT_THE_CONTENT,
+  openLongRoadmap,
+} from "./fixtures/roadmap-page"
+import { expect, test } from "./fixtures/test"
 
 /**
  * STY-052: as a roadmap's page scrolls, its title row sticks at the top of the screen
@@ -23,62 +23,20 @@ import { connect, expect, test } from "./fixtures/test"
 const DESKTOP = { width: 1280, height: 800 }
 const PHONE = { width: 375, height: 812 }
 
-/** A roadmap's tab: Product A is published, Product C is not. */
-type LongRoadmapTab = "ProductA" | "ProductC"
-
-/**
- * The example spreadsheet with a dozen more items on the roadmap tab `tab`, "Planned
- * work 1" to "Planned work 12", so its page runs to several screens.
- */
-function withLongRoadmap(tab: LongRoadmapTab): readonly FakeTab[] {
-  const roadmap = EXAMPLE_SPREADSHEET.find(({ title }) => title === tab)
-  const [header = [], ...rows] = roadmap?.rows ?? []
-  const horizons = ["Now", "Next", "Later", "Delivered this year"]
-  const extra = Array.from({ length: 12 }, (_, index) =>
-    header.map((name) => {
-      if (name === "Title") return `Planned work ${String(index + 1)}`
-      if (name === "Horizon") return horizons[index % horizons.length] ?? ""
-      if (name === "Description") return "What this work is, in a sentence."
-      return ""
-    }),
-  )
-  return withTabRows(tab, [header, ...rows, ...extra])
-}
-
 const COPY = {
   en: {
-    connect: "Connect Google",
     edit: "Edit",
     title: "Title",
     done: "Done",
     later: "Later",
   },
   cy: {
-    connect: "Cysylltu â Google",
     edit: "Golygu",
     title: "Teitl (Saesneg)",
     done: "Gorffen",
     later: "Hwyrach",
   },
 } as const satisfies Record<Language, Record<string, string>>
-
-/** Opens Product A, published, or Product C, not published, each with a long page. */
-async function openLongRoadmap(
-  page: Page,
-  sheets: { spreadsheet: readonly FakeTab[] },
-  {
-    tab = "ProductA",
-    language = "en",
-  }: { tab?: LongRoadmapTab; language?: Language } = {},
-) {
-  sheets.spreadsheet = withLongRoadmap(tab)
-  if (language !== "en") await useLanguage(page, language)
-  await page.goto(`./#/roadmaps/${tab.toLowerCase()}`)
-  await connect(page, COPY[language].connect)
-  await expect(
-    page.getByRole("heading", { level: 3, name: "Planned work 12" }),
-  ).toBeVisible()
-}
 
 /** Retitles an item, leaving one change pending. */
 async function editTitle(page: Page, from: string, language: Language = "en") {
@@ -97,39 +55,6 @@ async function scrollTo(page: Page, name: string) {
       heading.scrollIntoView({ block: "center" })
     })
   await expect(page.locator("[data-stuck]")).toBeVisible()
-}
-
-const LEFT_THE_CONTENT = "focus left the page's content"
-
-/**
- * What hides the focused control in the page's content, if anything: it should be wholly
- * in view between the bars pinned at the top and the foot of the screen, or in one of
- * them. Read once the bars have settled after the scroll that focusing caused.
- */
-async function focusClearOfBars(page: Page): Promise<string | null> {
-  await page.evaluate(
-    () =>
-      new Promise((settled) => {
-        requestAnimationFrame(() => requestAnimationFrame(settled))
-      }),
-  )
-  return page.evaluate((leftTheContent) => {
-    const focused = document.activeElement
-    if (!(focused instanceof HTMLElement) || !focused.closest("main")) {
-      return leftTheContent
-    }
-    const header = document.querySelector("[data-stuck]")
-    const foot = document.querySelector("[data-pinned]")
-    if (header?.contains(focused) || foot?.contains(focused)) return null
-    const box = focused.getBoundingClientRect()
-    const top = header?.getBoundingClientRect().bottom ?? 0
-    const bottom = foot?.getBoundingClientRect().top ?? window.innerHeight
-    const clear = box.top >= top - 0.5 && box.bottom <= bottom + 0.5
-    const name = focused.getAttribute("aria-label") ?? focused.textContent
-    return clear
-      ? null
-      : `${name} at ${String(box.top)}–${String(box.bottom)}, between ${String(top)} and ${String(bottom)}`
-  }, LEFT_THE_CONTENT)
 }
 
 for (const [device, size] of [
@@ -163,7 +88,7 @@ for (const [device, size] of [
     ).toBeInViewport()
 
     // Refresh and Unpublish roadmap are a press away, in More (S1, D6).
-    await main.getByRole("button", { name: "More" }).click()
+    await main.getByRole("button", { name: "More", exact: true }).click()
     const menu = page.getByRole("menu")
     await expect(menu.getByRole("menuitem")).toHaveText([
       "Refresh",
@@ -347,7 +272,7 @@ test("keeps Publish roadmap in a desktop's stuck row, and moves it into More on 
   const main = page.getByRole("main")
   const publishRoadmap = main.getByRole("button", { name: "Publish roadmap" })
   const addItem = main.getByRole("button", { name: "Add an item" })
-  const more = main.getByRole("button", { name: "More" })
+  const more = main.getByRole("button", { name: "More", exact: true })
   const menuItems = page.getByRole("menu").getByRole("menuitem")
   await expect(publishRoadmap).toBeVisible()
 
@@ -452,7 +377,7 @@ test("fits the pinned controls in Cymraeg on a 375px phone, cutting no label (S7
 
   const main = page.getByRole("main")
   const controls = [
-    main.getByRole("button", { name: "Mwy" }),
+    main.getByRole("button", { name: "Mwy", exact: true }),
     main.getByRole("button", { name: "Ychwanegu eitem" }),
     main.getByRole("button", { name: "Cyhoeddi'r newidiadau" }),
     main.getByRole("button", { name: "Gwaredu pob newid" }),

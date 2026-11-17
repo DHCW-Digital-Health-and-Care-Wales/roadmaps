@@ -1,6 +1,26 @@
-import { type RefObject, useEffect, useLayoutEffect, useState } from "react"
+import {
+  type RefObject,
+  useEffect,
+  useLayoutEffect,
+  useState,
+  useSyncExternalStore,
+} from "react"
 
+import { createExternalStore } from "@/lib/external-store"
 import { useMediaQuery } from "@/lib/use-media-query"
+
+type Edge = "top" | "bottom"
+
+/** The pinned bars' heights, as `usePinnedInset` sets them on the document. */
+const insets = createExternalStore<Readonly<Partial<Record<Edge, number>>>>({})
+
+function setInset(edge: Edge, height: number | undefined): void {
+  const { style } = document.documentElement
+  const name = `--pinned-${edge}`
+  if (height === undefined) style.removeProperty(name)
+  else style.setProperty(name, `${String(height)}px`)
+  insets.setSnapshot({ ...insets.getSnapshot(), [edge]: height })
+}
 
 /**
  * Below this viewport height nothing pins, and the page keeps its controls in its flow
@@ -19,22 +39,35 @@ export function usePinning(): boolean {
  * 2.4.11) and, at the foot, into room at the end of the page.
  */
 export function usePinnedInset(
-  edge: "top" | "bottom",
+  edge: Edge,
   height: number | undefined,
   active: boolean,
 ): void {
   useLayoutEffect(() => {
     if (!active || height === undefined) return
-    const name = `--pinned-${edge}`
-    const { style } = document.documentElement
-    style.setProperty(name, `${String(height)}px`)
+    setInset(edge, height)
     return () => {
-      style.removeProperty(name)
+      setInset(edge, undefined)
     }
   }, [edge, height, active])
 }
 
-/** `element`'s height while `measuring`, as it last was: kept once measuring stops. */
+/**
+ * The height `usePinnedInset` keeps clear at `edge`, 0 while none is set: where a
+ * scroll by script puts what it shows, as the browser's `scroll-padding` does.
+ */
+export function usePinnedHeight(edge: Edge): number {
+  return useSyncExternalStore(
+    insets.subscribe,
+    () => insets.getSnapshot()[edge] ?? 0,
+  )
+}
+
+/**
+ * `element`'s height while `measuring`, as it last was: kept once measuring stops. Its
+ * border box is watched, so padding or a border that arrives late, as a reduced-motion
+ * transition brings them in, is measured too.
+ */
 export function useMeasuredHeight(
   element: RefObject<HTMLElement | null>,
   measuring: boolean,
@@ -46,7 +79,7 @@ export function useMeasuredHeight(
     const observer = new ResizeObserver(() => {
       setHeight(measured.offsetHeight)
     })
-    observer.observe(measured)
+    observer.observe(measured, { box: "border-box" })
     return () => {
       observer.disconnect()
     }

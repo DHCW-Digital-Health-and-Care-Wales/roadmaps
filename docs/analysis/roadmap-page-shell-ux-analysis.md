@@ -7,7 +7,7 @@
 - **Scope**: a roadmap's page, for
   [STY-052](../backlog/_archive/EPC-012-app-shell-and-navigation/STY-052-keep-a-roadmaps-controls-in-view.md)
   and
-  [STY-053](../backlog/EPC-012-app-shell-and-navigation/STY-053-jump-between-a-roadmaps-placements.md)
+  [STY-053](../backlog/_archive/EPC-012-app-shell-and-navigation/STY-053-jump-between-a-roadmaps-placements.md)
   of [EPC-012](../backlog/EPC-012-app-shell-and-navigation/README.md), after two rounds
   of grilling (STY-052 D1–D9, STY-053 D1–D4). Base `242f683`. Only documents and one
   prototype page were added; no application code. (Since then, four rounds and a
@@ -201,7 +201,7 @@ roadmap" in the title row), not as the last line below has it.
 
 - [EPC-012](../backlog/EPC-012-app-shell-and-navigation/README.md),
   [STY-052](../backlog/_archive/EPC-012-app-shell-and-navigation/STY-052-keep-a-roadmaps-controls-in-view.md),
-  [STY-053](../backlog/EPC-012-app-shell-and-navigation/STY-053-jump-between-a-roadmaps-placements.md)
+  [STY-053](../backlog/_archive/EPC-012-app-shell-and-navigation/STY-053-jump-between-a-roadmaps-placements.md)
   and [STY-054](../backlog/EPC-012-app-shell-and-navigation/STY-054-move-between-roadmaps-from-the-shell.md)
   (the side rail, D1), and
   [STY-057](../backlog/_archive/EPC-012-app-shell-and-navigation/STY-057-reconnect-from-the-action-that-needs-it.md)
@@ -238,7 +238,7 @@ failed publish.
   the sticky title row, naming the current placement. **D**'s row of links stays as
   well, in the page below "About this roadmap", not sticky, so it scrolls away. Both
   show counts and pending marks:
-  [STY-053](../backlog/EPC-012-app-shell-and-navigation/STY-053-jump-between-a-roadmaps-placements.md)
+  [STY-053](../backlog/_archive/EPC-012-app-shell-and-navigation/STY-053-jump-between-a-roadmaps-placements.md)
   D5.
 - **About and the family line**: About stays one line, and the Family and Category line
   moves into it, out from under the title (STY-053 D6, changing S6). On the line they

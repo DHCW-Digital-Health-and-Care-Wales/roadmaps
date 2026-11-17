@@ -11,7 +11,7 @@ import {
   withTabRows,
 } from "./fixtures/fake-sheets"
 import { THEMES, tokenColour, useLanguage, useTheme } from "./fixtures/look"
-import { refreshRoadmap } from "./fixtures/roadmap-page"
+import { openAbout, refreshRoadmap } from "./fixtures/roadmap-page"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 const ABOUT_HEADING = "About this roadmap"
@@ -71,10 +71,12 @@ async function expectProductA(page: Page) {
     ABOUT_HEADING,
     ...PLACEMENT_HEADINGS,
   ])
-  const about = main.getByRole("region", { name: ABOUT_HEADING })
+  const about = await openAbout(page)
   await expect(about.getByRole("term")).toHaveText([
     "Status",
     "Product lead",
+    "Family",
+    "Category",
     "Vision",
     "Service description",
     "Last updated",
@@ -297,9 +299,7 @@ test("About's panel holds “Changed” and “Undo changes”, which returns fo
   page,
 }) => {
   await openProductA(page)
-  const about = page
-    .getByRole("main")
-    .getByRole("region", { name: ABOUT_HEADING })
+  const about = await openAbout(page)
 
   // Once, not per theme: the edit is made in the roadmap dialog (STY-043).
   const dialog = await openEditRoadmapDialog(page)
@@ -319,9 +319,8 @@ for (const theme of THEMES) {
   }) => {
     await useTheme(page, theme)
     await openProductA(page)
-    const about = page
-      .getByRole("main")
-      .getByRole("region", { name: ABOUT_HEADING })
+    // Open, so the first field shows below the heading.
+    const about = await openAbout(page)
     const edit = about.getByRole("button", { name: `Edit ${ABOUT_HEADING}` })
 
     await expect(about).toHaveCSS("border-top-style", "solid")

@@ -1,4 +1,4 @@
-import type { RefObject } from "react"
+import type { ReactNode, RefObject } from "react"
 
 import { StickyHeader } from "@/components/layout/sticky-header"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
@@ -29,6 +29,11 @@ export interface RoadmapTitleRowProps {
   /** The roadmap's items are read, so one can be added. */
   canAddItem: boolean
   onAddItem: () => void
+  /**
+   * The placement navigation's "Jump to" (STY-053 D5), while the page has placements to
+   * jump to: among the controls, or on a phone in a row of its own under them.
+   */
+  jumpTo?: ReactNode
 }
 
 /**
@@ -36,9 +41,10 @@ export interface RoadmapTitleRowProps {
  * scrolled past it (STY-052 S1, D5): its title, a Not published badge when it is not
  * public (STY-025 D8), a badge when it is out of step with the family or category list
  * (STY-027 S4, S8) and a Changed tag, then "Publish roadmap" while it is not published
- * (D15), More (D6) and "Add an item" (STY-046 S1). Stuck, it slims to one row: the title
- * cut with an ellipsis, its full text still its name, and no badges; on a phone, "Add
- * an item" is an icon and "Publish roadmap" moves into More (D18, D19).
+ * (D15), "Jump to" (STY-053 D5), More (D6) and "Add an item" (STY-046 S1). Stuck, it
+ * slims to one row: the title cut with an ellipsis, its full text still its name, and
+ * no badges; on a phone, "Add an item" is an icon, "Publish roadmap" moves into More
+ * (D18, D19), and "Jump to" keeps its own row under the rest.
  */
 export function RoadmapTitleRow({
   roadmap,
@@ -51,6 +57,7 @@ export function RoadmapTitleRow({
   addItemButton,
   canAddItem,
   onAddItem,
+  jumpTo,
 }: RoadmapTitleRowProps) {
   const phone = !useMediaQuery(WIDER_THAN_A_PHONE)
   return (
@@ -59,54 +66,60 @@ export function RoadmapTitleRow({
         const slim = stuck && phone
         const publishShown = publishedState.publishing && !slim
         return (
-          <div
-            className={cn(
-              "flex gap-3",
-              stuck
-                ? "items-center"
-                : "flex-col gap-4 sm:flex-row sm:items-start sm:justify-between",
-            )}
-          >
+          <div className="flex flex-col gap-3">
             <div
               className={cn(
-                "flex min-w-0 items-center gap-x-3 gap-y-2",
-                stuck ? "flex-1" : "flex-wrap",
+                "flex gap-3",
+                stuck
+                  ? "items-center"
+                  : "flex-col gap-4 sm:flex-row sm:items-start sm:justify-between",
               )}
             >
-              <h1
-                ref={heading}
-                tabIndex={-1}
+              <div
                 className={cn(
-                  "outline-none focus-visible:focus-ring",
-                  stuck
-                    ? "truncate text-heading-s"
-                    : "text-heading-xl text-pretty wrap-break-word",
+                  "flex min-w-0 items-center gap-x-3 gap-y-2",
+                  stuck ? "flex-1" : "flex-wrap",
                 )}
               >
-                {title}
-              </h1>
-              {!stuck && (
-                <>
-                  {!roadmap.published && <NotPublishedBadge />}
-                  <ListMismatchBadges roadmap={roadmap} />
-                  {titleChanged && <ChangedTag />}
-                </>
-              )}
+                <h1
+                  ref={heading}
+                  tabIndex={-1}
+                  className={cn(
+                    "outline-none focus-visible:focus-ring",
+                    stuck
+                      ? "truncate text-heading-s"
+                      : "text-heading-xl text-pretty wrap-break-word",
+                  )}
+                >
+                  {title}
+                </h1>
+                {!stuck && (
+                  <>
+                    {!roadmap.published && <NotPublishedBadge />}
+                    <ListMismatchBadges roadmap={roadmap} />
+                    {titleChanged && <ChangedTag />}
+                  </>
+                )}
+              </div>
+              <div className={cn("flex shrink-0 gap-3", !stuck && "flex-wrap")}>
+                {publishShown && (
+                  <PublishRoadmapButton state={publishedState} />
+                )}
+                {!phone && jumpTo}
+                <RoadmapMoreMenu
+                  fetching={fetching}
+                  onRefresh={onRefresh}
+                  publishedState={publishShown ? null : publishedState}
+                />
+                <AddItemButton
+                  ref={addItemButton}
+                  compact={slim}
+                  disabled={!canAddItem}
+                  onAdd={onAddItem}
+                />
+              </div>
             </div>
-            <div className={cn("flex shrink-0 gap-3", !stuck && "flex-wrap")}>
-              {publishShown && <PublishRoadmapButton state={publishedState} />}
-              <RoadmapMoreMenu
-                fetching={fetching}
-                onRefresh={onRefresh}
-                publishedState={publishShown ? null : publishedState}
-              />
-              <AddItemButton
-                ref={addItemButton}
-                compact={slim}
-                disabled={!canAddItem}
-                onAdd={onAddItem}
-              />
-            </div>
+            {phone && jumpTo}
           </div>
         )
       }}

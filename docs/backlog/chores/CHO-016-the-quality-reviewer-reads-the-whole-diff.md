@@ -1,7 +1,7 @@
 # CHO-016: The quality reviewer reads the whole diff in one pass
 
-- **Status**: In progress — S1 in the backlog triage PR; S2 measured STY-051 (Delivery);
-  three earlier reviews over 100,000 characters after D1 went unmeasured
+- **Status**: In progress — S1 in the backlog triage PR; S2 measured STY-051 (Delivery),
+  and three earlier reviews over 100,000 characters after D1 are still unmeasured
 - **Type**: Chore
 - **Area**: Docs (agent definitions and skills)
 - **Epic**: standalone
@@ -139,5 +139,6 @@ reviewer session logs.
   ([#118](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/118),
   round 1 at `607d1a0`, 330,720); and CHO-009's fresh pass
   ([#120](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/120),
-  at `ea1d47a`, 100,417). So STY-051 may not be one of S2's two; which two count, and
-  whether D1's trial still stands, is the owner's call.
+  at `ea1d47a`, 100,417). By S2's "next two", their measurement is outstanding, not
+  STY-051's; counting STY-051 in their place, or leaving D1's trial as it stands, takes
+  an owner decision in Decisions.

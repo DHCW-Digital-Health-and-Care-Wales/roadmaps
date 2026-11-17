@@ -8,7 +8,7 @@
 - **Binding ADRs**: ADR-014, ADR-012, ADR-011, ADR-002, ADR-008
 - **Suggested model**: Fable 5.2 — the owner is testing the model (D7); the first story
   to move rows in a tab a co-lead may be editing
-- **Delivered**: _the PR's URL, once it is open_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/128
 
 ## Summary
 

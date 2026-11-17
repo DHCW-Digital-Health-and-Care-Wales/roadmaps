@@ -10,7 +10,7 @@
 - **Binding ADRs**: ADR-010 _Deferred: the dashboard shell_, ADR-004, ADR-008, ADR-002
 - **Suggested model**: Opus — a shell-wide layout change, an ADR amendment and
   focus on navigation
-- **Delivered**: (the PR)
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/142
 
 ## Summary
 

@@ -10,7 +10,9 @@
   [STY-053](../backlog/EPC-012-app-shell-and-navigation/STY-053-jump-between-a-roadmaps-placements.md)
   of [EPC-012](../backlog/EPC-012-app-shell-and-navigation/README.md), after two rounds
   of grilling (STY-052 D1–D9, STY-053 D1–D4). Base `242f683`. Only documents and one
-  prototype page were added; no application code. The skill's stylesheet is not
+  prototype page were added; no application code. (Since then, four rounds and a
+  review settled both stories, and a second page draws the chosen design: see
+  _Outcome_.) The skill's stylesheet is not
   corrected: the page's own shared styles draw the desktop frame at 1280px, the width
   the scenarios name, and today's pending inset without the outer border `mock.css`
   gives it, as the app's captures show.
@@ -78,7 +80,8 @@ The owner's answers bind every design:
   `aria-current`.
 - **About folds to one line** (D2): status, product lead and last updated, its Changed
   tag, Show more and Edit.
-- **Rules no record settles**, which _Decisions needed_ asks about:
+- **Rules no record settled** when the five were drawn, which _Decisions needed_ asks
+  about (since decided: STY-052 D18, STY-053 D8):
   - pinning stops below a viewport height of 500px;
   - `scroll-padding` at the pinned heights keeps a focused control or a jumped-to heading
     clear of every bar;
@@ -158,6 +161,7 @@ record's former "side rail on a desktop, a strip on a phone" was.
 | Removed items the review names                               | listed in the dialog once every field is decided, under "Some changes couldn't be kept", with "Your other changes are kept in this tab"; after Close, the notice above the bar keeps them until dismissed, Publish available (recommended; not drawn); dropped with the dialog                          | STY-052 D12 (a rule this review chose); **Decided** (STY-052 D17)                                                                              |
 | Closing the dialog with a field undecided                    | Close or Escape keeps the refusal notice above the bar and Publish unavailable but focusable, as today, and returns focus to Review the changes (as drawn)                                                                                                                                              | STY-052 D12 (as the owner's change asks); **Decided** (STY-052 D18)                                                                            |
 | Publish roadmap on a phone while not published               | as D15 reads, beside Jump to in the strip's second row, which wraps, so three rows pin at the top (as drawn: 371px of 343 in English, 450px in Welsh); at the page's top, then in More once the strip is stuck (recommended); an icon button in the strip's first row, cutting the title to about 100px | STY-052 D15; **Decided**: at the page's top, then in More (STY-052 D19)                                                                        |
+| The removed list once nothing is left (chosen page)          | at the foot, in the bar's place, until dismissed (decided, as drawn); dropped with the dialog                                                                                                                                                                                                           | STY-052 D23                                                                                                                                    |
 
 Reads and writes: no design reads or writes anything the page does not today.
 Publishing, Discard all, Refresh and Unpublish roadmap are today's calls (ADR-012,
@@ -167,6 +171,10 @@ design reopens an ADR decision: ADR-012 does not tie Publish to being connected;
 stories do.
 
 ## Not yet drawn
+
+On the five-design page. The chosen page since draws a failed publish, and the
+not-published state as STY-052 D15 and D19 set it ("Save" at the foot, "Publish
+roadmap" in the title row), not as the last line below has it.
 
 - A failed publish's outcome, in every design.
 - Short viewports and 400% zoom, where nothing pins (STY-052 S6).
@@ -237,7 +245,7 @@ failed publish.
   would wrap it at 1280px, so they sit among the fields shown by "Show more". The
   roadmap dialog already edits family and category (STY-043), so About's Edit covers
   them.
-- **Settled in a third round** (UX prototypes grilling round 3), each as recommended:
+- **Settled in the third of four rounds** (UX prototypes grilling round 3), each as recommended:
   a refusal or failure stacks above the foot bar (STY-052 D14); "Changes published"
   clears itself after 8 seconds (D13); the unplaced group stays first, even when it
   pushes the first placement below the first screen (STY-053 D7). The owner accepted
@@ -264,7 +272,26 @@ failed publish.
   phase banner scroll away; the header keeps the language button and an account menu
   (theme, Disconnect), without "Google connected" or "Connected to Google"; and a phone's
   sticky strip starts with the navigation's menu button, which at the page's top sits at
-  the left of the navy top bar (STY-054 D8, D9, round 4). The chosen page draws these.
+  the left of the navy top bar (STY-054 D9, round 4). The chosen page draws these.
   STY-054's dashboard shell will add the left-hand navigation, which neither page draws.
+- **After review round 1** (EPC-012 review round 1), the owner settled three more:
+  STY-057 is built first, and STY-052 depends on it, hard (D20); "Publish roadmap" and
+  "Unpublish roadmap" show their outcome at the foot like a publish's, in the bar's
+  place or stacked above it (D21); and a review that leaves nothing pending says
+  "Every change is decided. Nothing is left to publish.", with Close only, which
+  returns focus to the roadmap's title (D22). The chosen page draws all three. Once
+  nothing is left, the removed list sits at the foot in the bar's place until
+  dismissed (D23, the owner's answer to the one row this round left open).
+- **The navigation around the page** (STY-054, STY-055), drawn as context on the chosen
+  page: a desktop with the left-hand navigation open, its roadmaps by family with their
+  colour, a dot on each with changes and "2 roadmaps have unpublished changes" at its
+  top (the cards drop to two columns at 1280px); the same folded to its rail, dots and
+  total kept, three columns; and a phone's drawer. A phone's menu button, in the top
+  bar and the sticky strip, carries a dot while any roadmap has unpublished changes,
+  its name saying how many (STY-055 D4). To give it a second roadmap, Theatre
+  Scheduling has one change pending from earlier in the session.
+- **Times**: on the chosen page Sam opens "Jump to" at 09:36, chooses Later at 09:37 and
+  publishes at 09:38; the five-design page keeps its own times (Later at 09:37,
+  published at 09:36 in journey 1).
 - **The reconnect dialog** beyond Publish is recorded as
   [STY-057](../backlog/EPC-012-app-shell-and-navigation/STY-057-reconnect-from-the-action-that-needs-it.md).

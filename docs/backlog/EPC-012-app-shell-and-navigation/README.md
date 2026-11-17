@@ -2,8 +2,9 @@
 
 - **Status**: Active — proposed by the owner on 2026-11-17 from a UX review of the
   shell; the owner chose STY-052's and STY-053's designs from their prototypes and
-  answered every story's questions in three grilling rounds
-- **Progress**: 0 of 6 terminal; next selectable: STY-052; blocked on: nothing
+  answered every story's questions in four grilling rounds and a review round
+- **Progress**: 0 of 6 terminal; next selectable: STY-057 (STY-054 and STY-056 have no
+  hard dependency either, but prefer to follow STY-052); blocked on: nothing
 - **Binding ADRs**: ADR-010, ADR-008, ADR-005, ADR-012, ADR-002, ADR-003, ADR-004
 
 ## Summary
@@ -109,8 +110,9 @@ them.
    away (STY-054 D7, STY-056 D2).
 7. An action that needs a session stays available when it has expired, and asks to
    reconnect before it carries on (STY-057, from STY-052 D4; F1).
-8. A notice about a publish appears where the Product Lead published from (STY-052;
-   F7).
+8. A notice about a publish, or about publishing or unpublishing the roadmap, appears
+   at the foot, where the Product Lead pressed it (STY-052; F7). The added-roadmap
+   notice stays at the top: it shows on arrival, with the page at its top.
 9. **Unchanged:** publishing and its dialog, conflict review's decisions (Keep mine,
    Use theirs) though it moves into a dialog (STY-052), the pending-changes store and
    its rules (ADR-012); the item card and its Move and Edit; DHCW's tokens,
@@ -144,22 +146,27 @@ handler with no `await` before it (ADR-003).
 
 | ID      | Story                                                                                         | Area                                | Depends on | State |
 | ------- | --------------------------------------------------------------------------------------------- | ----------------------------------- | ---------- | ----- |
-| STY-052 | [Keep a roadmap's controls in view](STY-052-keep-a-roadmaps-controls-in-view.md)              | Features/UI + i18n (en + cy) + E2E  | —          |       |
+| STY-052 | [Keep a roadmap's controls in view](STY-052-keep-a-roadmaps-controls-in-view.md)              | Features/UI + i18n (en + cy) + E2E  | STY-057    |       |
 | STY-053 | [Jump between a roadmap's placements](STY-053-jump-between-a-roadmaps-placements.md)          | Features/UI + i18n (en + cy) + E2E  | STY-052    |       |
 | STY-054 | [Move between roadmaps from the shell](STY-054-move-between-roadmaps-from-the-shell.md)       | Features/UI + Routing + i18n + Docs | —          |       |
 | STY-055 | [See unpublished changes across roadmaps](STY-055-see-unpublished-changes-across-roadmaps.md) | Features/UI + i18n (en + cy) + E2E  | STY-054    |       |
-| STY-056 | [A quieter header](STY-056-a-quieter-header.md)                                               | Features/UI + i18n (en + cy) + E2E  | STY-054    |       |
+| STY-056 | [A quieter header](STY-056-a-quieter-header.md)                                               | Features/UI + i18n (en + cy) + E2E  | —          |       |
 | STY-057 | [Reconnect from the action that needs it](STY-057-reconnect-from-the-action-that-needs-it.md) | Features/UI + i18n (en + cy) + E2E  | —          |       |
 
 ## Sequencing
 
-STY-052 first: it answers the sharpest finding (F1) and opens no ADR. STY-053 puts its
-"Jump to" in STY-052's sticky title row, so it follows; the two were prototyped
-together. STY-057 can follow STY-052 at any point: Publish in the foot bar is its first
-caller. STY-054 amends ADR-010, adds its phone menu button to STY-052's sticky strip
-and moves the header's controls into the dashboard shell's top bar, so it follows
-STY-052; STY-055 (whose dots live in its navigation) and STY-056 (which reshapes that
-top bar) follow STY-054.
+The column above holds hard dependencies only; each story's Depends on gives its
+preferred order too.
+
+STY-057 first: STY-052's Publish stays available while the session has expired and
+asks to reconnect (STY-052 D4), which is STY-057's dialog, so the owner put it first
+(STY-052, EPC-012 review round 1). STY-052 next: it answers the sharpest finding (F1)
+and opens no ADR. STY-053 puts its "Jump to" in STY-052's sticky title row, so it
+follows; the two were prototyped together. STY-054 amends ADR-010, adds its phone menu
+button to STY-052's sticky strip and moves the header's controls into the dashboard
+shell's top bar: it can start beside STY-057, but prefers to follow STY-052. STY-055
+(whose dots live in its navigation) follows STY-054, and STY-056 (which reshapes that
+top bar) prefers to.
 
 ## Out of scope
 

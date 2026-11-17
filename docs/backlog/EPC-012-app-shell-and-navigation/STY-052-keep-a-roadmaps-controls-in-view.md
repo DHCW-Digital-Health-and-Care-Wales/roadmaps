@@ -1,11 +1,11 @@
 # STY-052: A Product Lead keeps a roadmap's controls and pending changes in view
 
-- **Status**: Proposed — grilled in three rounds and settled from the UX prototypes
-  (D1–D19); the reconnect dialog D4 relies on is STY-057
+- **Status**: Proposed — grilled in four rounds and settled from the UX prototypes
+  (D1–D23); selectable once STY-057, whose reconnect dialog D4 needs, is done
 - **Type**: Feature
 - **Area**: Features/UI + i18n (en + cy) + E2E
 - **Epic**: EPC-012-app-shell-and-navigation
-- **Depends on**: none
+- **Depends on**: STY-057 (hard: S8 as D4 changes it needs its reconnect dialog)
 - **Binding ADRs**: ADR-012, ADR-010, ADR-008, ADR-005
 - **Suggested model**: Opus — sticky layout against focus, zoom, dialogs and Welsh
   widths, and the publish flow's focus rules
@@ -15,10 +15,11 @@
 On a roadmap's page, the title, "Add an item" and the pending changes with Publish
 scroll out of view within the first screen, though the page runs to six screens on a
 desktop and eleven on a phone. A Product Lead editing in Later cannot see that anything
-is pending, or publish, without scrolling back. This story keeps them in view as the
-page scrolls, and shows a publish's outcome where it was published from. It does not
-change publishing, its dialog or conflict review. The title row sticks at the top and
-pending changes pin at the foot, on a desktop and a phone (D10).
+is pending, or publish, without scrolling back. This story keeps them in view: the
+title row sticks at the top and pending changes pin at the foot, on a desktop and a
+phone (D10). A publish's outcome shows at the foot, where it was published from, and
+the conflict review opens in a dialog, so the page never jumps (D12, D16–D17). It
+does not change publishing or its dialog.
 
 ## Acceptance criteria
 
@@ -150,6 +151,21 @@ announced and shown in view, and focus goes to it as it does today
   roadmap" is a visible button at the page's top and moves into More once the strip
   sticks, so the strip stays two rows; it did not fit beside "Jump to" at 375px (371px
   of 343 in English). Changes D15 on a phone.
+- **D20** (owner, 2026-11-17, EPC-012 review round 1): STY-057 is delivered first; this
+  story depends on it, hard, since S8 as D4 changes it needs its reconnect dialog.
+- **D21** (owner, 2026-11-17, EPC-012 review round 1): the outcome of "Publish roadmap"
+  or "Unpublish roadmap" (STY-035's notice) shows at the foot as a publish's does
+  (D13, D14): in the foot bar's place when nothing is pending, stacked above it when
+  changes are; the page does not jump. Changes: STY-035's notice under the title.
+- **D22** (owner, 2026-11-17, EPC-012 review round 1; refines D16): once every field in
+  the review dialog is decided and nothing is left pending (each "Use theirs"), it says
+  "Every change is decided. Nothing is left to publish." with Close only, any removed
+  items listed first; the foot bar has gone, so Close returns focus to the roadmap's
+  title.
+- **D23** (owner, 2026-11-17, EPC-012 review round 1): when D22's review lists removed
+  items, after Close their notice ("Some changes couldn't be kept") sits at the foot in
+  the bar's place until dismissed, as D21 places an outcome with nothing pending.
+  Refines D17 for that case.
 
 ## Out of scope
 

@@ -1,11 +1,11 @@
 # STY-053: A Product Lead jumps between a roadmap's placements
 
-- **Status**: Proposed — grilled in three rounds and settled from the UX prototypes
-  (D1–D8); follows STY-052
+- **Status**: Proposed — grilled over the UX prototypes' four rounds (D1–D8);
+  selectable once STY-052 is done
 - **Type**: Feature
 - **Area**: Features/UI + i18n (en + cy) + E2E
 - **Epic**: EPC-012-app-shell-and-navigation
-- **Depends on**: STY-052 (preferred order: the jump links may live in its bar)
+- **Depends on**: STY-052 (hard: "Jump to" lives in its sticky title row, D5)
 - **Binding ADRs**: ADR-011, ADR-012, ADR-010, ADR-008
 - **Suggested model**: Opus — in-page navigation with scroll position, focus and
   pending markers across six placements
@@ -90,7 +90,7 @@ scroll
 - **D6** (owner, 2026-11-17, UX prototypes review, owner's choice): "About this roadmap"
   stays one line (D2) and takes in the Family and Category line, which leaves its place
   under the title. Changes: S6 (what the line holds and what shows the rest).
-- **D7** (owner, 2026-11-17, UX prototypes grilling round 3; answers former Q3 with
+- **D7** (owner, 2026-11-17, UX prototypes grilling round 3; answers round 3's Q3 with
   (a)): the unplaced group stays first and may push the first placement below the first
   screen (S6); rare, and expected to go with the move from the spreadsheet.
 - **D8** (owner, 2026-11-17, UX prototypes grilling round 3; accepts the analysis's

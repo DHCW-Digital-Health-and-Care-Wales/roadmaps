@@ -5,8 +5,8 @@
 - **Type**: Feature
 - **Area**: Features/UI + i18n (en + cy) + E2E
 - **Epic**: EPC-012-app-shell-and-navigation
-- **Depends on**: none; STY-052 (preferred order: Publish is its first caller, drawn in
-  its prototypes)
+- **Depends on**: none. STY-052 depends on it (STY-052's Publish is its first caller,
+  drawn in the EPC-012 UX prototypes), so it is delivered first
 - **Binding ADRs**: ADR-003, ADR-012, ADR-008, ADR-010
 - **Suggested model**: Opus — a reusable gate over every write and read that needs a
   session, with ADR-003's synchronous connect and focus return

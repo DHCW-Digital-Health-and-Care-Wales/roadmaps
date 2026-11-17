@@ -178,12 +178,11 @@ announced and shown in view, and focus goes to it as it does today
 
 - **The title row sticks once it has scrolled wholly out of view** (agent): D5's row
   "sticks and slims as the page scrolls" is built as a row that scrolls with the page
-  until it has gone, then reappears slim across the top. Its place keeps the height it
-  had, so nothing below it moves as it sticks or lets go, which a row slimming while
-  stuck would do, and could repeat on the scroll that the move itself causes. Its place
-  keeps the height measured as it stuck: should the row change while stuck ("Publish
-  roadmap" leaving it once published), the page moves once, by that change, as the row
-  lets go.
+  until it has gone, then reappears slim across the top. Its place keeps the height the
+  row had as it stuck, so nothing below it moves as it sticks or lets go, which a row
+  slimming while stuck would do, and could repeat on the scroll that the move itself
+  causes. Should the row change while stuck ("Publish roadmap" leaving it once
+  published), the page moves once, by that change, as the row lets go.
 - **The stuck row drops the badges** (agent): stuck, the row holds the title and its
   buttons, as the prototypes draw it; Not published, the list-mismatch badges and
   Changed stay at the page's top.
@@ -215,7 +214,7 @@ the test helpers. Besides those:
 
 - **`PinnedFoot`** (`src/components/layout/pinned-foot.tsx`) takes `notices`, which
   scroll inside it, and a `bar` always in view. `RoadmapPublishing` renders it, with the
-  page's published-state notice passed in as `notices`.
+  page's published-state notice passed in as `pageNotices`.
 - **Focus after a dialog's write**: `useFocusNoticeOnClose(notice)`
   (`editing/use-focus-notice-on-close.ts`) sends focus to the outcome once the dialog
   has closed; the publish dialog and `PublishedStateDialog` use it.

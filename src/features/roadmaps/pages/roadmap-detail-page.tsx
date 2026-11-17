@@ -247,8 +247,8 @@ function RoadmapView({
           roadmap={roadmap}
           pageItems={pageItems}
           heading={heading}
-          notice={publishNotice}
-          notices={
+          outcomeNotice={publishNotice}
+          pageNotices={
             publishedState.notice && (
               <PublishedStateNotice
                 ref={publishedStateNotice}

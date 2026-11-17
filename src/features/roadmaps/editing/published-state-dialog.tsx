@@ -13,9 +13,9 @@ import { Button } from "@/components/ui/button"
 import { useSessionAction } from "@/features/auth/session-action"
 
 import { MarkUpdatedCheckbox } from "./mark-updated-checkbox"
+import { countChanges } from "./pending-changes"
 import { publishedStateAction } from "./published-state-action"
 import { useFocusNoticeOnClose } from "./use-focus-notice-on-close"
-import { countChanges } from "./pending-changes"
 import type { PublishedState } from "./use-published-state"
 import { WhatChanges } from "./what-changes"
 

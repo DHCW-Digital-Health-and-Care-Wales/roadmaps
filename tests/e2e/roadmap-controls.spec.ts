@@ -23,11 +23,14 @@ import { connect, expect, test } from "./fixtures/test"
 const DESKTOP = { width: 1280, height: 800 }
 const PHONE = { width: 375, height: 812 }
 
+/** A roadmap's tab: Product A is published, Product C is not. */
+type LongRoadmapTab = "ProductA" | "ProductC"
+
 /**
  * The example spreadsheet with a dozen more items on the roadmap tab `tab`, "Planned
  * work 1" to "Planned work 12", so its page runs to several screens.
  */
-function withLongRoadmap(tab: "ProductA" | "ProductC"): readonly FakeTab[] {
+function withLongRoadmap(tab: LongRoadmapTab): readonly FakeTab[] {
   const roadmap = EXAMPLE_SPREADSHEET.find(({ title }) => title === tab)
   const [header = [], ...rows] = roadmap?.rows ?? []
   const horizons = ["Now", "Next", "Later", "Delivered this year"]
@@ -64,15 +67,13 @@ async function openLongRoadmap(
   page: Page,
   sheets: { spreadsheet: readonly FakeTab[] },
   {
-    id = "producta",
+    tab = "ProductA",
     language = "en",
-  }: { id?: string; language?: Language } = {},
+  }: { tab?: LongRoadmapTab; language?: Language } = {},
 ) {
-  sheets.spreadsheet = withLongRoadmap(
-    id === "productc" ? "ProductC" : "ProductA",
-  )
+  sheets.spreadsheet = withLongRoadmap(tab)
   if (language !== "en") await useLanguage(page, language)
-  await page.goto(`./#/roadmaps/${id}`)
+  await page.goto(`./#/roadmaps/${tab.toLowerCase()}`)
   await connect(page, COPY[language].connect)
   await expect(
     page.getByRole("heading", { level: 3, name: "Planned work 12" }),
@@ -342,7 +343,7 @@ test("keeps Publish roadmap in a desktop's stuck row, and moves it into More on 
   sheets,
 }) => {
   await page.setViewportSize(PHONE)
-  await openLongRoadmap(page, sheets, { id: "productc" })
+  await openLongRoadmap(page, sheets, { tab: "ProductC" })
   const main = page.getByRole("main")
   const publishRoadmap = main.getByRole("button", { name: "Publish roadmap" })
   const addItem = main.getByRole("button", { name: "Add an item" })
@@ -404,7 +405,7 @@ test("keeps the count, Publish and Discard in view under a notice too long for t
   // The notices scroll inside the foot, the bar below them.
   expect(
     await notice.evaluate((each) => {
-      const region = each.closest("[data-pinned] > div")
+      const region = each.closest("[data-slot=pinned-notices]")
       return region !== null && region.scrollHeight > region.clientHeight
     }),
   ).toBe(true)

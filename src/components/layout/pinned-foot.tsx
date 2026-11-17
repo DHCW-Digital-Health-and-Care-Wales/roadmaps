@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils"
 import { PageContainer } from "./page-container"
 import { useMeasuredHeight, usePinnedInset, usePinning } from "./pinning"
 
+/** Each slot counts as empty when it renders nothing: an empty wrapper still shows. */
 export interface PinnedFootProps {
   /** Notices, stacked above the bar: past the room they have, they scroll. */
   notices: ReactNode
@@ -39,6 +40,7 @@ export function PinnedFoot({ notices, bar }: PinnedFootProps) {
       )}
     >
       <div
+        data-slot="pinned-notices"
         className={cn(
           "min-h-0 has-[>div:empty]:hidden",
           pinning && "overflow-y-auto",

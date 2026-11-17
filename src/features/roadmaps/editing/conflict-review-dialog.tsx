@@ -154,19 +154,19 @@ export function ConflictReviewDialog({
           </ul>
         )}
         {!deciding && (
-          <RemovedItems
-            removed={removed}
-            hasPendingChanges={hasPendingChanges}
-          />
-        )}
-        {!deciding && (
-          <p className="font-bold">
-            {t(
-              hasPendingChanges
-                ? `roadmaps.publish.notice.refused.decided.${action}`
-                : `roadmaps.publish.notice.refused.nothingLeft.${action}`,
-            )}
-          </p>
+          <>
+            <RemovedItems
+              removed={removed}
+              hasPendingChanges={hasPendingChanges}
+            />
+            <p className="font-bold">
+              {t(
+                hasPendingChanges
+                  ? `roadmaps.publish.notice.refused.decided.${action}`
+                  : `roadmaps.publish.notice.refused.nothingLeft.${action}`,
+              )}
+            </p>
+          </>
         )}
         <DialogFooter>
           {!deciding && hasPendingChanges && (

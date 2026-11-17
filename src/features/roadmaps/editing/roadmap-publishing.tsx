@@ -7,7 +7,6 @@ import {
 } from "react"
 
 import { PinnedFoot } from "@/components/layout/pinned-foot"
-
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import {
   type Conflict,
@@ -40,17 +39,19 @@ export interface RoadmapPublishingProps {
   pageItems: readonly PageItem[]
   /** The roadmap's heading, where focus goes once a review leaves nothing to publish. */
   heading: RefObject<HTMLElement | null>
-  /** Its notice saying what the last publish came to, where focus goes after one. */
-  notice: RefObject<HTMLDivElement | null>
-  /** Notices about the roadmap of the page's own, stacked above this one's. */
-  notices: ReactNode
+  /**
+   * The notice saying what the last publish of the changes came to, refused or not:
+   * where focus goes after one, from this or another dialog that sends them.
+   */
+  outcomeNotice: RefObject<HTMLDivElement | null>
+  /** The page's other notices for the foot, stacked above the publish's. */
+  pageNotices: ReactNode
 }
 
 /**
- * At the foot of a roadmap's page (`PinnedFoot`, STY-052): what its last publish came
- * to, below the page's own `notices`, and, while
- * changes are pending, how many there are with Publish (or Save, S11) and Discard
- * (STY-025 S2, S6, S9–S15, S18). Publishing asks first, listing what changes and
+ * The foot of a roadmap's page (`PinnedFoot`, STY-052): the page's other notices, what
+ * the last publish of its changes came to and, while changes are pending, how many there
+ * are with Publish (or Save, S11) and Discard (STY-025 S2, S6, S9–S15, S18). Publishing asks first, listing what changes and
  * offering to mark the roadmap as updated today (STY-036 S6); it is unavailable, though
  * focusable, while a publish is under way and until every field and order someone else
  * changed is decided in the review (STY-026, STY-050), which opens in a dialog (STY-052
@@ -61,8 +62,8 @@ export function RoadmapPublishing({
   roadmap,
   pageItems,
   heading,
-  notice,
-  notices,
+  outcomeNotice,
+  pageNotices,
 }: RoadmapPublishingProps) {
   const store = usePendingChangesStore()
   const snapshot = usePendingChanges()
@@ -126,10 +127,10 @@ export function RoadmapPublishing({
       <PinnedFoot
         notices={
           <>
-            {notices}
+            {pageNotices}
             {refused && (
               <RefusalNotice
-                ref={notice}
+                ref={outcomeNotice}
                 action={action}
                 deciding={deciding}
                 removed={refused.removed}
@@ -146,7 +147,7 @@ export function RoadmapPublishing({
               <PublishOutcomeNotice
                 // Each publish's notice is new: announced again, with a dwell of its own.
                 key={`${outcome.kind}-${String(publishing)}`}
-                ref={notice}
+                ref={outcomeNotice}
                 notice={outcome}
                 onDismiss={() => {
                   store.clearNotice(roadmap.id)
@@ -206,7 +207,7 @@ export function RoadmapPublishing({
         publishing={publishing}
         markUpdated={markUpdated}
         onMarkUpdatedChange={setMarkUpdated}
-        notice={() => notice.current}
+        notice={() => outcomeNotice.current}
         returnTo={() => publishButton.current}
         onConfirm={confirm}
         onCancel={() => {

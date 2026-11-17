@@ -510,11 +510,11 @@ test("the dialog stays through the session's end, and “Add item” still adds 
   const main = page.getByRole("main")
   await expect(newTag(itemCard(page, CLINIC), CLINIC)).toBeVisible()
   await expect(main.getByText("1 unpublished change")).toBeVisible()
-  // Nothing more can be added, or published, until Sam reconnects.
-  await expect(addItemButtons(page)).toHaveAttribute("aria-disabled", "true")
+  // Adding and publishing stay on offer: each asks to reconnect first (STY-057).
+  await expect(addItemButtons(page)).toBeEnabled()
   await expect(
     main.getByRole("button", { name: "Publish changes" }),
-  ).toHaveAttribute("aria-disabled", "true")
+  ).toBeEnabled()
 })
 
 test("adding an item in Welsh (S9, STY-047 S2)", async ({ page }) => {

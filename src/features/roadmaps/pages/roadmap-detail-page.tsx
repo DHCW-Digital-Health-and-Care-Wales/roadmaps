@@ -1,3 +1,4 @@
+import type { RefetchOptions } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { LockKeyholeIcon, MapPinOffIcon } from "lucide-react"
 import { useCallback, useRef } from "react"
@@ -44,6 +45,7 @@ import { PublishedStateNotice } from "../editing/published-state-notice"
 import { RoadmapPublishing } from "../editing/roadmap-publishing"
 import { useItemDialog } from "../editing/use-item-dialog"
 import { usePublishedState } from "../editing/use-published-state"
+import { JOIN_READ } from "../hooks/roadmap-queries"
 import { useAddedRoadmapNotice } from "../hooks/use-added-roadmap"
 import { useOrganisations } from "../hooks/use-organisations"
 import { isRoadmapGone, useRoadmapItems } from "../hooks/use-roadmap-items"
@@ -160,7 +162,7 @@ interface RoadmapViewProps {
   /** Why the list the roadmap came from may be out of date, if it may. */
   listProblem: AppError | null
   listFetching: boolean
-  refetchList: () => Promise<unknown>
+  refetchList: (options?: RefetchOptions) => Promise<unknown>
 }
 
 /**
@@ -208,9 +210,9 @@ function RoadmapView({
   const refresh = () => {
     // The lists, where any part of the page needs them, are read again too.
     void lists.refetch()
-    void refetchList()
-    void items.refetch()
-    void organisations.refetch()
+    void refetchList(JOIN_READ)
+    void items.refetch(JOIN_READ)
+    void organisations.refetch(JOIN_READ)
   }
 
   return (

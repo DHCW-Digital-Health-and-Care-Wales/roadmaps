@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { RoadmapRepository } from "@/domain/roadmap/roadmap-repository"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
+import { findReconnectDialog } from "@/features/auth/testing/reconnect-dialog"
 import { AppError } from "@/lib/errors"
 import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
@@ -387,6 +388,37 @@ describe("RoadmapsPage", () => {
     expect(repository.listRoadmaps).not.toHaveBeenCalled()
   })
 
+  it("leaves the list for the start page when the reconnect Refresh asked for is refused, carrying nothing on (STY-057, DEF-006)", async () => {
+    const user = userEvent.setup()
+    const repository = scriptedRepository(roadmaps)
+    const { authClient } = await renderWithProviders({
+      authState: connected,
+      repository,
+    })
+    await main().findByText("3 roadmaps")
+    act(() => {
+      authClient.setState({ status: "expired" })
+    })
+    await user.click(main().getByRole("button", { name: "Refresh" }))
+    const dialog = await findReconnectDialog()
+    authClient.connect.mockImplementationOnce(() => {
+      authClient.setState({ status: "error", error: "access-denied" })
+    })
+
+    await user.click(within(dialog).getByRole("button", { name: "Reconnect" }))
+
+    // The dialog says why over the start page, which a failed connection shows.
+    expect(within(dialog).getByRole("alert")).toHaveTextContent(
+      "Couldn't reconnect",
+    )
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }))
+    expect(screen.getByRole("main")).toHaveFocus()
+    expect(
+      screen.queryByRole("button", { name: "Refresh" }),
+    ).not.toBeInTheDocument()
+    expect(repository.listRoadmaps).toHaveBeenCalledOnce()
+  })
+
   it("expires the session on a rejected token, then reloads after Reconnect", async () => {
     const user = userEvent.setup()
     const repository = scriptedRepository(
@@ -401,9 +433,10 @@ describe("RoadmapsPage", () => {
     const alert = await main().findByRole("alert")
     expect(alert).toHaveTextContent("Your session has expired")
     expect(authClient.reportUnauthenticated).toHaveBeenCalledOnce()
+    // Pressed, it would ask to reconnect first (STY-057).
     expect(main().getByRole("button", { name: "Refresh" })).toHaveAttribute(
       "aria-disabled",
-      "true",
+      "false",
     )
 
     await user.click(within(alert).getByRole("button", { name: "Reconnect" }))

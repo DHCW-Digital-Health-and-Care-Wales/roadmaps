@@ -3,7 +3,7 @@ import type { RefObject } from "react"
 import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
-import { useAuth } from "@/features/auth/use-auth"
+import { useSessionAction } from "@/features/auth/session-action"
 
 export interface AddItemButtonProps {
   ref: RefObject<HTMLButtonElement | null>
@@ -15,7 +15,8 @@ export interface AddItemButtonProps {
 /**
  * "Add an item", which opens the item dialog to add one (STY-046 S1): with a roadmap's
  * page's actions, and in the panel of a roadmap that has none. Unavailable, but
- * focusable, unless connected and while the roadmap's items are not read.
+ * focusable, while the roadmap's items are not read. After the session has expired it
+ * asks to reconnect first, then opens the dialog (STY-057).
  */
 export function AddItemButton({
   ref,
@@ -23,13 +24,15 @@ export function AddItemButton({
   onAdd,
 }: AddItemButtonProps) {
   const { t } = useTranslation()
-  const connected = useAuth().state.status === "connected"
+  const add = useSessionAction(onAdd)
   return (
     <Button
       ref={ref}
-      disabled={disabled || !connected}
+      disabled={disabled}
       focusableWhenDisabled
-      onClick={onAdd}
+      onClick={(event) => {
+        add(event.currentTarget)
+      }}
     >
       <PlusIcon data-icon="inline-start" aria-hidden="true" />
       {t("roadmaps.edit.addItem.title")}

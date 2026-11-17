@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button"
 import { canMatchLists, type MatchOutcome } from "@/domain/roadmap/list-match"
 import { localise } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
-import { useAuth } from "@/features/auth/use-auth"
+import { useSessionAction } from "@/features/auth/session-action"
 import { useLanguage } from "@/i18n"
 import { isAppError, type AppErrorKind } from "@/lib/errors"
 
@@ -60,11 +60,11 @@ function noticeText(notice: Notice, title: string, t: TFunction): string {
  * came to (STY-030). A published roadmap is told the fix goes public at the next nightly
  * update before anything is written (S2); an unpublished one is written at once. Not
  * offered for a family the list doesn't have (S3). Its pending edits are untouched (S4).
+ * Pressed after the session has expired, it asks to reconnect first (STY-057).
  */
 export function MatchListsAction({ roadmap }: MatchListsActionProps) {
   const { t } = useTranslation()
   const language = useLanguage()
-  const connected = useAuth().state.status === "connected"
   const match = useMatchRoadmap()
   const [asking, setAsking] = useState(false)
   const [notice, setNotice] = useState<Notice | null>(null)
@@ -93,10 +93,11 @@ export function MatchListsAction({ roadmap }: MatchListsActionProps) {
       },
     })
   }
-  const choose = () => {
+  const choose = useSessionAction(() => {
     if (roadmap.published) setAsking(true)
     else write()
-  }
+  })
+  const confirm = useSessionAction(write)
 
   return (
     <div className="flex flex-col gap-4">
@@ -104,10 +105,12 @@ export function MatchListsAction({ roadmap }: MatchListsActionProps) {
         <div>
           <Button
             variant="secondary"
-            disabled={!connected || match.isPending}
+            disabled={match.isPending}
             focusableWhenDisabled
             aria-busy={match.isPending}
-            onClick={choose}
+            onClick={(event) => {
+              choose(event.currentTarget)
+            }}
           >
             {t("roadmaps.lists.match.action")}
             {/* Names the roadmap for a screen reader, after the visible name. */}{" "}
@@ -158,7 +161,9 @@ export function MatchListsAction({ roadmap }: MatchListsActionProps) {
               disabled={match.isPending}
               focusableWhenDisabled
               aria-busy={match.isPending}
-              onClick={write}
+              onClick={(event) => {
+                confirm(event.currentTarget)
+              }}
             >
               {t("roadmaps.lists.match.confirm.action")}
             </Button>

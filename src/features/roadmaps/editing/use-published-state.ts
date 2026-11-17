@@ -8,7 +8,6 @@ import {
   NO_CHANGES,
   type RoadmapChanges,
 } from "@/domain/roadmap/roadmap-changes"
-import { useAuth } from "@/features/auth/use-auth"
 import { toAppError, type AppErrorKind } from "@/lib/errors"
 import { localToday } from "@/lib/local-today"
 
@@ -92,8 +91,8 @@ export interface PublishedState {
  * settles and says so.
  * Publishing can also set the roadmap's `Last updated` to today (STY-036 D10). It is
  * still allowed when the public would see no items, which the question then says, going
- * by `items`, the roadmap's items once read (STY-042 D3). Unavailable unless connected,
- * while a write of the roadmap is under way, and while a conflict is still to decide.
+ * by `items`, the roadmap's items once read (STY-042 D3). Unavailable while a write of the
+ * roadmap is under way, and while a conflict is still to decide.
  */
 export function usePublishedState(
   roadmap: Roadmap,
@@ -102,7 +101,6 @@ export function usePublishedState(
   const store = usePendingChangesStore()
   const hold = useWriteHold()
   const snapshot = usePendingChanges()
-  const connected = useAuth().state.status === "connected"
   const { mutateAsync, writing, readBack } = useSetRoadmapPublished(roadmap, {
     currentText: CURRENT_TEXT,
   })
@@ -229,7 +227,7 @@ export function usePublishedState(
 
   return {
     publishing,
-    available: connected && !pending && !reviewing,
+    available: !pending && !reviewing,
     offersMarkUpdated: asked.publishing && !asked.changes.roadmap.lastUpdated,
     markUpdated,
     setMarkUpdated,
@@ -246,7 +244,7 @@ export function usePublishedState(
       if (!pending) setOpen(false)
     },
     confirm: () => {
-      if (!open || !connected || pending) return
+      if (!open || pending) return
       setNotice(null)
       setConfirmed(asked)
       const today = asked.publishing && markUpdated ? localToday() : undefined

@@ -14,6 +14,7 @@ import { useFamilyInputCheck } from "./use-family-input-check"
 export interface AddFamilyFormProps {
   /** The family list as cached, which a new name must not match (S6). */
   families: readonly Family[]
+  /** Whether saving is available: only with a usable family list (S7). */
   available: boolean
   onAdded: (notice: FamilyNotice) => void
   onCancel: () => void

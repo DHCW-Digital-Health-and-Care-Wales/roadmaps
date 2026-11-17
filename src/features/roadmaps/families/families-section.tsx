@@ -20,7 +20,6 @@ export interface FamiliesSectionProps {
   /** `null` without a usable family list (S7). */
   families: readonly Family[] | null
   roadmaps: readonly Roadmap[]
-  available: boolean
 }
 
 /**
@@ -41,11 +40,7 @@ function changeId(family: Family): string {
  * usable list, a note that they can't be changed (S7). Focus returns to the control a
  * form opened from, or moves to the notice of what it did.
  */
-export function FamiliesSection({
-  families,
-  roadmaps,
-  available,
-}: FamiliesSectionProps) {
+export function FamiliesSection({ families, roadmaps }: FamiliesSectionProps) {
   const { t } = useTranslation()
   const [editing, setEditing] = useState<Editing>(null)
   const [notice, setNotice] = useState<FamilyNotice | null>(null)
@@ -118,7 +113,7 @@ export function FamiliesSection({
                     family={editing.family}
                     families={shown}
                     roadmaps={roadmaps}
-                    available={available && families !== null}
+                    available={families !== null}
                     onDone={(done) => {
                       close(done, changeId(family))
                     }}
@@ -140,7 +135,7 @@ export function FamiliesSection({
           {editing?.kind === "add" ? (
             <AddFamilyForm
               families={shown}
-              available={available && families !== null}
+              available={families !== null}
               onAdded={(done) => {
                 close(done, ADD_ID)
               }}

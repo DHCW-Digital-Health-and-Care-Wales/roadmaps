@@ -3,6 +3,7 @@ import {
   FileWarningIcon,
   FileXIcon,
   HourglassIcon,
+  KeyRoundIcon,
   LoaderCircleIcon,
   LockKeyholeIcon,
   RotateCwIcon,
@@ -20,9 +21,8 @@ import {
   AlertTitle,
 } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+import { ReconnectButton } from "@/features/auth/components/reconnect-button"
 import type { AppError, AppErrorKind } from "@/lib/errors"
-
-import { SessionExpiredAlert } from "./session-expired-alert"
 
 const icons = {
   forbidden: LockKeyholeIcon,
@@ -89,9 +89,20 @@ export function RoadmapsErrorState({
   const titleElement = variant === "panel" ? (titleAs ?? "h2") : "div"
   if (error.kind === "unauthenticated") {
     return (
-      <SessionExpiredAlert titleAs={titleElement}>
-        {t("roadmaps.expired.description")}
-      </SessionExpiredAlert>
+      <Alert variant="warning">
+        <KeyRoundIcon aria-hidden="true" />
+        <AlertContent>
+          <AlertTitle as={titleElement}>
+            {t("roadmaps.expired.title")}
+          </AlertTitle>
+          <AlertDescription>
+            {t("roadmaps.expired.description")}
+          </AlertDescription>
+        </AlertContent>
+        <AlertAction>
+          <ReconnectButton size="sm" />
+        </AlertAction>
+      </Alert>
     )
   }
 

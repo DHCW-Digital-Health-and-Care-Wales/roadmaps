@@ -9,6 +9,7 @@ import {
   openEditItemDialog,
   openEditRoadmapDialog,
   publishOnce,
+  reconnectButton,
 } from "./fixtures/dialogs"
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
 import {
@@ -675,7 +676,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await listRead()
       await expectNoAxeViolations(page, theme)
 
-      // Failed, then expired with Reconnect in the dialog.
+      // Failed, then expired: "Add roadmap" asks to reconnect (STY-057).
       await shortName.fill("Community Nursing")
       sheets.failWith(403)
       await add.click()
@@ -687,13 +688,14 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       sheets.failWith(401)
       await add.click()
       await expect(dialog.getByRole("alert")).toContainText(
-        "Your session has expired",
+        "Your session expired before it could be added. Try again.",
       )
       await expectNoAxeViolations(page, theme)
 
-      await dialog.getByRole("button", { name: "Reconnect" }).click()
-      await expect(add).toBeEnabled()
       await add.click()
+      await expect(reconnectButton(page)).toBeFocused()
+      await expectNoAxeViolations(page, theme)
+      await reconnectButton(page).click()
       const main = page.getByRole("main")
       await expect(
         main.getByText(

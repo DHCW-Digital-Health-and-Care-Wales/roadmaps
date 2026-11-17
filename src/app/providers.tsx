@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/components/theme/theme-provider"
 import type { AuthClient } from "@/domain/auth/auth-client"
 import type { RoadmapRepository } from "@/domain/roadmap/roadmap-repository"
 import { AuthProvider } from "@/features/auth/auth-provider"
+import { ReconnectDialogProvider } from "@/features/auth/components/reconnect-dialog"
 import { SessionWarning } from "@/features/auth/components/session-warning"
 import { PendingChangesProvider } from "@/features/roadmaps/editing/pending-changes-provider"
 import { RoadmapRepositoryProvider } from "@/features/roadmaps/roadmap-repository-context"
@@ -29,11 +30,12 @@ export interface AppProvidersProps {
 
 /**
  * Every app-wide provider, outermost first: i18n (so everything below, the session warning
- * included, is translated), theme, query cache, auth, the roadmap data source, the
- * Product Lead's pending edits (which outlive a session, and decide what Disconnect asks),
- * the hold after a write the app couldn't read back, then the app's own details (version,
- * feedback address). The hold and the session warning are dialogs over whichever page is
- * open.
+ * included, is translated), theme, query cache, auth, the dialog that asks to reconnect
+ * before an action that needs a session, the roadmap data source, the Product Lead's
+ * pending edits (which outlive a session, and decide what Disconnect asks), the hold after
+ * a write the app couldn't read back, then the app's own details (version, feedback
+ * address). The reconnect dialog, the hold and the session warning are dialogs over
+ * whichever page is open.
  */
 export function AppProviders({ services, children }: AppProvidersProps) {
   return (
@@ -41,16 +43,20 @@ export function AppProviders({ services, children }: AppProvidersProps) {
       <ThemeProvider>
         <QueryClientProvider client={services.queryClient}>
           <AuthProvider client={services.authClient}>
-            <RoadmapRepositoryProvider repository={services.roadmapRepository}>
-              <PendingChangesProvider>
-                <WriteHoldProvider>
-                  <AppInfoProvider info={services.appInfo}>
-                    {children}
-                  </AppInfoProvider>
-                  <SessionWarning />
-                </WriteHoldProvider>
-              </PendingChangesProvider>
-            </RoadmapRepositoryProvider>
+            <ReconnectDialogProvider>
+              <RoadmapRepositoryProvider
+                repository={services.roadmapRepository}
+              >
+                <PendingChangesProvider>
+                  <WriteHoldProvider>
+                    <AppInfoProvider info={services.appInfo}>
+                      {children}
+                    </AppInfoProvider>
+                    <SessionWarning />
+                  </WriteHoldProvider>
+                </PendingChangesProvider>
+              </RoadmapRepositoryProvider>
+            </ReconnectDialogProvider>
           </AuthProvider>
         </QueryClientProvider>
       </ThemeProvider>

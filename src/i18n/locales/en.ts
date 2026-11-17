@@ -116,6 +116,17 @@ export const en = {
       failed: "Couldn't keep you connected",
       reconnectLater: "You'll need to reconnect when your session ends.",
     },
+    /**
+     * Asked when an action that needs a session is pressed after it expired; the action
+     * carries on once reconnected. A Reconnect from here that fails says why under
+     * `failed`, from `auth.errors.*`.
+     */
+    reconnectDialog: {
+      title: "Your session has expired",
+      description:
+        "Reconnect to Google to carry on. Your changes are kept in this tab.",
+      failed: "Couldn't reconnect",
+    },
     /** The warning two minutes before the session ends. */
     sessionWarning: {
       title: "Your session is about to end",
@@ -197,9 +208,6 @@ export const en = {
           categoryId: "This category is no longer listed. Choose another.",
         } satisfies Record<RoadmapChoiceField, string>,
       },
-      /** Under `roadmaps.expired.title`, in the dialog (S11). */
-      expired:
-        "Reconnect to Google to add the roadmap. What you've typed is kept.",
       failed: {
         title: "Couldn't add the roadmap",
       },

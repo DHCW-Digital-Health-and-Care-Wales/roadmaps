@@ -1,0 +1,5 @@
+- alertdialog "Your session has expired":
+  - heading "Your session has expired" [level=2]
+  - paragraph: Reconnect to Google to carry on. Your changes are kept in this tab.
+  - button "Reconnect"
+  - button "Cancel"

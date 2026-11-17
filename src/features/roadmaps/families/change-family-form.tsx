@@ -27,6 +27,7 @@ export interface ChangeFamilyFormProps {
   families: readonly Family[]
   /** The roadmaps as cached, which the confirmation names (S3). */
   roadmaps: readonly Roadmap[]
+  /** Whether saving is available: only with a usable family list (S7). */
   available: boolean
   onDone: (notice: FamilyNotice | null) => void
 }

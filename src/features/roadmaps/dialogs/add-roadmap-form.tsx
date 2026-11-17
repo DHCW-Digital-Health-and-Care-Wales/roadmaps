@@ -11,10 +11,9 @@ import {
   SHORT_NAME_MAX_LENGTH,
   shortNameAddress,
 } from "@/domain/roadmap/short-name"
-import { useAuth } from "@/features/auth/use-auth"
+import { useSessionAction } from "@/features/auth/session-action"
 
 import { FormField } from "../components/form-field"
-import { SessionExpiredAlert } from "../components/session-expired-alert"
 import { ChoiceField } from "../editing/choice-field"
 import { FixedField } from "../editing/fixed-field"
 import { useRoadmapChoices } from "../editing/use-roadmap-choices"
@@ -36,8 +35,9 @@ export interface AddRoadmapFormProps {
  * the title and shown with the public address it gives, then a family, a category and a
  * product lead, each optional. "Add roadmap" writes at once: it shows it is working and
  * holds the fields until the write answers. What can't be sent, or is refused, is said
- * at its field, with focus on the first; a failure, or an expired session with
- * Reconnect, is said above the buttons, where the Product Lead is looking (S11).
+ * at its field, with focus on the first; a failure is said above the buttons, where the
+ * Product Lead is looking (S7). After the session has expired, "Add roadmap" asks to
+ * reconnect first, then adds what the form then holds (STY-057).
  */
 export function AddRoadmapForm({
   labelledBy,
@@ -47,8 +47,6 @@ export function AddRoadmapForm({
 }: AddRoadmapFormProps) {
   const { t } = useTranslation()
   const id = useId()
-  const { state } = useAuth()
-  const connected = state.status === "connected"
   const form = useNewRoadmapForm({ roadmaps, onAdded, onClose })
   const { values, problems, focusRequest, busy } = form
   const choices = useRoadmapChoices(true).fields(null)
@@ -78,9 +76,10 @@ export function AddRoadmapForm({
     if (focusRequest) controls.current.get(focusRequest.field)?.focus()
   }, [focusRequest, requestedIsFixed])
 
+  const add = useSessionAction(form.submit)
   const submit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (connected) form.submit()
+    add(event.nativeEvent.submitter)
   }
 
   const address = shortNameAddress(values.shortName)
@@ -190,25 +189,16 @@ export function AddRoadmapForm({
       <InsetText className="py-2 pl-4">
         <p>{t("roadmaps.add.note")}</p>
       </InsetText>
-      {!connected ? (
-        <SessionExpiredAlert>
-          <p>{t("roadmaps.add.expired")}</p>
-          {state.status === "expired" && state.lastError && (
-            <p>{t(`auth.errors.${state.lastError}`)}</p>
-          )}
-        </SessionExpiredAlert>
-      ) : (
-        form.failure && (
-          <AddRoadmapFailed
-            failure={form.failure}
-            onDismiss={form.dismissFailure}
-          />
-        )
+      {form.failure && (
+        <AddRoadmapFailed
+          failure={form.failure}
+          onDismiss={form.dismissFailure}
+        />
       )}
       <DialogFooter>
         <Button
           type="submit"
-          disabled={busy || !connected}
+          disabled={busy}
           focusableWhenDisabled
           aria-busy={busy}
         >

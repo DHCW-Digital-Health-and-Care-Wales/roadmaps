@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { localise } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
+import { useSessionAction } from "@/features/auth/session-action"
 import { useLanguage } from "@/i18n"
 
 export interface FamilyChangeDialogProps {
@@ -24,7 +25,7 @@ export interface FamilyChangeDialogProps {
   /** Whether a re-read found these roadmaps different from those confirmed (S8). */
   membersChanged: boolean
   saving: boolean
-  /** Whether saving is available: only while connected. */
+  /** Whether saving is available: only with a usable family list (S7). */
   available: boolean
   /** Whether closing returns focus to the control that opened it. */
   returnFocus: () => boolean
@@ -37,7 +38,8 @@ export interface FamilyChangeDialogProps {
 /**
  * Asks before a change that rewrites roadmaps, naming each and marking those published,
  * and when the public site shows it (S3). Says nothing about Welsh (S9). Cancel writes
- * nothing; while the change is under way it cannot be closed.
+ * nothing; while the change is under way it cannot be closed. Confirmed after the
+ * session has expired, it asks to reconnect first, then saves (STY-057).
  */
 export function FamilyChangeDialog({
   open,
@@ -54,6 +56,7 @@ export function FamilyChangeDialog({
   const { t } = useTranslation()
   const language = useLanguage()
   const published = members.some((roadmap) => roadmap.published)
+  const confirm = useSessionAction(onConfirm)
 
   return (
     <AlertDialog
@@ -112,7 +115,9 @@ export function FamilyChangeDialog({
             disabled={saving || !available}
             focusableWhenDisabled
             aria-busy={saving}
-            onClick={onConfirm}
+            onClick={(event) => {
+              confirm(event.currentTarget)
+            }}
           >
             {t("roadmaps.families.confirm.action")}
           </Button>

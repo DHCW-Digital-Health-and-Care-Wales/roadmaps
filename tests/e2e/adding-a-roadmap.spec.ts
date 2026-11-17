@@ -7,6 +7,8 @@ import {
   clickOutside,
   openAddRoadmapDialog,
   openDialog,
+  reconnectButton,
+  reconnectDialog,
 } from "./fixtures/dialogs"
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
 import {
@@ -148,7 +150,7 @@ test("the empty list offers Add a roadmap too, and lists the first roadmap (S1, 
   await expect(page.getByText("1 roadmap, 1 not published")).toBeVisible()
 })
 
-test("Add a roadmap is unavailable once the session has expired (S1)", async ({
+test("Add a roadmap asks to reconnect once the session has expired, then opens the dialog (S1, STY-057)", async ({
   page,
 }) => {
   await page.clock.install()
@@ -164,9 +166,12 @@ test("Add a roadmap is unavailable once the session has expired (S1)", async ({
   await expect(
     page.getByRole("main").getByText("Your session has expired"),
   ).toBeVisible()
-  await expect(add).toHaveAttribute("aria-disabled", "true")
-  await add.click({ force: true })
-  await expect(addRoadmapDialog(page)).toBeHidden()
+  await expect(add).toBeEnabled()
+  await add.click()
+  await reconnectButton(page).click()
+
+  await expect(reconnectDialog(page)).toBeHidden()
+  await expect(addRoadmapDialog(page)).toBeVisible()
 })
 
 test("Cancel and Escape close the dialog and drop what was typed; a click outside does nothing (S8)", async ({
@@ -264,7 +269,7 @@ test("a spreadsheet with no template says who can put it right, keeping what was
 })
 
 test.describe("an expired session (S11)", () => {
-  test("the dialog stays through the session warning, then offers Reconnect itself, keeping what was typed", async ({
+  test("the dialog stays through the session warning; “Add roadmap” then asks to reconnect and adds what was typed (STY-057)", async ({
     page,
     gis,
   }) => {
@@ -287,25 +292,20 @@ test.describe("an expired session (S11)", () => {
     await expect(title).toHaveValue("Community Nursing roadmap")
 
     await page.clock.fastForward(SESSION_WARNING_MS)
-    const expired = dialog.getByRole("alert")
-    await expect(expired).toContainText("Your session has expired")
-    await expect(expired).toContainText(
-      "Reconnect to Google to add the roadmap. What you've typed is kept.",
-    )
+    // Said by the page behind, which only its text can reach.
+    await expect(page.getByText("Your session has expired")).toBeVisible()
     const add = dialog.getByRole("button", { name: "Add roadmap" })
-    await expect(add).toHaveAttribute("aria-disabled", "true")
-    // The header's and the page's Reconnect are behind the dialog, out of reach.
+    await expect(add).toBeEnabled()
+    await add.click()
+    // The header's and the page's Reconnect are behind the dialogs, out of reach.
     const reconnect = page.getByRole("button", { name: "Reconnect" })
     await expect(reconnect).toHaveCount(1)
+    await expect(reconnectButton(page)).toBeFocused()
 
     const requests = gis.tokenRequests.length
     await reconnect.click()
 
-    await expect(expired).toBeHidden()
     expect(gis.tokenRequests).toHaveLength(requests + 1)
-    await expect(title).toHaveValue("Community Nursing roadmap")
-    await expect(add).toBeEnabled()
-    await add.click()
     await expectNewRoadmapPage(page)
   })
 
@@ -322,11 +322,7 @@ test.describe("an expired session (S11)", () => {
     sheets.failWith(401)
     await add.click()
 
-    const alert = dialog.getByRole("alert")
-    await expect(alert).toContainText("Your session has expired")
-    await expect(add).toHaveAttribute("aria-disabled", "true")
-    await alert.getByRole("button", { name: "Reconnect" }).click()
-    await expect(alert).toContainText(
+    await expect(dialog.getByRole("alert")).toContainText(
       "Your session expired before it could be added. Try again.",
     )
     await expect(dialog.getByRole("textbox", { name: "Title" })).toHaveValue(
@@ -334,6 +330,7 @@ test.describe("an expired session (S11)", () => {
     )
 
     await add.click()
+    await reconnectButton(page).click()
     const main = await expectNewRoadmapPage(page)
     await expect(main.getByText(ADDED)).toBeVisible()
     expect(sheets.writes).toHaveLength(1)

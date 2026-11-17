@@ -32,6 +32,17 @@ auth.reconnect                Reconnect
 The title states the event; the description gives the action and the benefit.
 Cached roadmaps may stay on screen: say what is old only if it matters.
 
+An action pressed after the session expired asks in one dialog, whatever the action:
+the same title, then the action (carry on, since the pressed action does) and that
+nothing is lost. A Reconnect from it that fails says so under a short title, with the
+reason from `auth.errors.*`.
+
+```
+auth.reconnectDialog.title        Your session has expired
+auth.reconnectDialog.description  Reconnect to Google to carry on. Your changes are kept in this tab.
+auth.reconnectDialog.failed       Couldn't reconnect
+```
+
 ## Access and permission error
 
 **Shape:** what is wrong, in the reader's terms → who fixes it.

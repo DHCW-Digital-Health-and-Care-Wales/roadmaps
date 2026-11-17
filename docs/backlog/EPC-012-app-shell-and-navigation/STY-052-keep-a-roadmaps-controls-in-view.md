@@ -1,7 +1,8 @@
 # STY-052: A Product Lead keeps a roadmap's controls and pending changes in view
 
 - **Status**: Proposed — grilled in four rounds and settled from the UX prototypes
-  (D1–D23); selectable once STY-057, whose reconnect dialog D4 needs, is done
+  (D1–D23); selectable once STY-057, whose reconnect dialog D4 needs, is merged (it is
+  delivered in its PR)
 - **Type**: Feature
 - **Area**: Features/UI + i18n (en + cy) + E2E
 - **Epic**: EPC-012-app-shell-and-navigation

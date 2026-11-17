@@ -13,10 +13,15 @@ import {
 } from "@/domain/roadmap/testing/test-lists"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
+import {
+  findReconnectDialog,
+  reconnectFromDialog,
+} from "@/features/auth/testing/reconnect-dialog"
 import { AppError } from "@/lib/errors"
 import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
+import { roadmapKeys } from "../hooks/roadmap-queries"
 import { expectDialogClosed } from "../testing/edit-dialog"
 import { holdCall } from "../testing/held-call"
 import {
@@ -220,7 +225,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
       expect(toolbar).toHaveFocus()
     })
 
-    it("is unavailable, though focusable, while the session has expired", async () => {
+    it("asks to reconnect while the session has expired, then opens the dialog (STY-057)", async () => {
       const { user, authClient } = await renderList()
       await main().findAllByRole("list")
       act(() => {
@@ -228,11 +233,15 @@ describe("adding a roadmap from the list (STY-041)", () => {
       })
 
       const button = main().getByRole("button", { name: "Add a roadmap" })
-      expect(button).toHaveAttribute("aria-disabled", "true")
-      button.focus()
-      expect(button).toHaveFocus()
+      expect(button).not.toHaveAttribute("aria-disabled")
       await user.click(button)
+      await findReconnectDialog()
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+      await reconnectFromDialog(user)
+
+      expect(
+        await screen.findByRole("dialog", { name: "Add a roadmap" }),
+      ).toBeVisible()
     })
   })
 
@@ -764,7 +773,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
         .mockResolvedValueOnce([...TEST_FAMILIES])
         .mockResolvedValue([SINGLE_RECORD])
       const addRoadmap = vi.spyOn(inMemory, "addRoadmap")
-      const { user, authClient } = await renderList({
+      const { user, authClient, queryClient } = await renderList({
         ...inMemory,
         listFamilies,
         addRoadmap,
@@ -773,11 +782,19 @@ describe("adding a roadmap from the list (STY-041)", () => {
       await fillIn(user)
       await choose(user, "Family", "Medicines & Diagnostics")
 
-      // The lists are read again once reconnected.
+      // The lists are read again once reconnected, here from outside the dialog, as the
+      // session's end marked them stale.
       act(() => {
         authClient.setState({ status: "expired" })
       })
-      await user.click(form.getByRole("button", { name: "Reconnect" }))
+      await waitFor(() => {
+        expect(
+          queryClient.getQueryState(roadmapKeys.families())?.isInvalidated,
+        ).toBe(true)
+      })
+      act(() => {
+        authClient.connect()
+      })
 
       const family = form.getByRole("combobox", { name: "Family" })
       await waitFor(() => {
@@ -1030,53 +1047,55 @@ describe("adding a roadmap from the list (STY-041)", () => {
   })
 
   describe("an expired session (S11)", () => {
-    it("offers Reconnect inside the dialog, keeping what was typed", async () => {
-      const { user, authClient } = await renderList()
-      const form = await openDialog(user)
+    it("asks to reconnect when “Add roadmap” is pressed, then adds what was typed (STY-057)", async () => {
+      const inMemory = repositoryWith()
+      const addRoadmap = vi.spyOn(inMemory, "addRoadmap")
+      const { user, authClient } = await renderList(inMemory)
+      await openDialog(user)
       await fillIn(user)
-
       act(() => {
         authClient.setState({ status: "expired" })
       })
+      const add = dialog().getByRole("button", { name: "Add roadmap" })
+      expect(add).toHaveAttribute("aria-disabled", "false")
 
-      const alert = within(form.getByRole("alert"))
-      expect(alert.getByText("Your session has expired")).toBeInTheDocument()
-      expect(
-        alert.getByText(
-          "Reconnect to Google to add the roadmap. What you've typed is kept.",
-        ),
-      ).toBeInTheDocument()
-      const add = form.getByRole("button", { name: "Add roadmap" })
-      expect(add).toHaveAttribute("aria-disabled", "true")
       await user.click(add)
-      expect(form.getByRole("textbox", { name: "Title" })).not.toBeInvalid()
+      await findReconnectDialog()
+      expect(addRoadmap).not.toHaveBeenCalled()
+      await reconnectFromDialog(user)
 
-      await user.click(alert.getByRole("button", { name: "Reconnect" }))
+      await findRoadmapPage()
+      expect(addRoadmap).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({
+          title: "Community Nursing roadmap",
+          productLead: "Sam Evans",
+        }),
+      )
+    })
 
-      expect(authClient.connect).toHaveBeenCalledOnce()
-      expect(form.queryByRole("alert")).not.toBeInTheDocument()
+    it("keeps what was typed when reconnecting is cancelled, focus back on “Add roadmap” (STY-057 S4)", async () => {
+      const { user, authClient } = await renderList()
+      const form = await openDialog(user)
+      await fillIn(user)
+      act(() => {
+        authClient.setState({ status: "expired" })
+      })
+      const add = form.getByRole("button", { name: "Add roadmap" })
+      await user.click(add)
+
+      await user.click(
+        within(await findReconnectDialog()).getByRole("button", {
+          name: "Cancel",
+        }),
+      )
+
+      expect(add).toHaveFocus()
       expect(form.getByRole("textbox", { name: "Title" })).toHaveValue(
         "Community Nursing roadmap",
       )
       expect(form.getByRole("textbox", { name: "Product lead" })).toHaveValue(
         "Sam Evans",
       )
-      expect(add).toBeEnabled()
-    })
-
-    it("says why a Reconnect that Google's window stopped didn't work", async () => {
-      const { user, authClient } = await renderList()
-      const form = await openDialog(user)
-
-      act(() => {
-        authClient.setState({ status: "expired", lastError: "popup-blocked" })
-      })
-
-      expect(
-        within(form.getByRole("alert")).getByText(
-          "Your browser blocked the Google window. Allow pop-ups for this site and try again.",
-        ),
-      ).toBeInTheDocument()
     })
 
     it("ends the session when the write is refused for it, then adds once reconnected", async () => {
@@ -1093,19 +1112,18 @@ describe("adding a roadmap from the list (STY-041)", () => {
 
       await submit(user)
 
-      const alert = within(await form.findByRole("alert"))
-      expect(alert.getByText("Your session has expired")).toBeInTheDocument()
-      expect(authClient.reportUnauthenticated).toHaveBeenCalledOnce()
-      await user.click(alert.getByRole("button", { name: "Reconnect" }))
       expect(
-        within(form.getByRole("alert")).getByText(
+        within(await form.findByRole("alert")).getByText(
           "Your session expired before it could be added. Try again.",
         ),
       ).toBeInTheDocument()
+      expect(authClient.reportUnauthenticated).toHaveBeenCalledOnce()
 
       await submit(user)
+      await reconnectFromDialog(user)
 
       await findRoadmapPage()
+      expect(addRoadmap).toHaveBeenCalledTimes(2)
     })
   })
 })

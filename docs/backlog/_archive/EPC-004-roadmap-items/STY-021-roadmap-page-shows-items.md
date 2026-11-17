@@ -210,6 +210,11 @@ h1, which comes from the list before the items arrive: it must wait for an item 
 - **D12** (agent, 2026-11-10, Sonnet review): S14 and S15 stay in this story, over a
   fourth story, since both reuse home-page pieces on the page this story builds; the
   Suggested model moves to Opus for the size.
+- **D13** (owner, 2026-11-17, EPC-012 grilling round 3, recorded by
+  [STY-057](../EPC-012-app-shell-and-navigation/STY-057-reconnect-from-the-action-that-needs-it.md)
+  D1): Refresh stays available while the session has expired; pressed, it asks to
+  reconnect first, then reads. Changes: S14 ("unavailable but focusable when not
+  connected").
 
 ## Starting point
 

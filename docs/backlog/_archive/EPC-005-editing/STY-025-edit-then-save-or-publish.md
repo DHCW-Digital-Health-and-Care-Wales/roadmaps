@@ -214,6 +214,11 @@ answers "unconfirmed". S10, S11, S13, S14 and S8 (the
   becomes a dialog over the whole app that nothing but a Refresh (or Connect) gets
   past, as it does when a publish lands and the read after it fails. DEF-015
   delivered it.
+- **D11** (owner, 2026-11-17, EPC-012 grilling round 3, recorded by
+  [STY-057](../EPC-012-app-shell-and-navigation/STY-057-reconnect-from-the-action-that-needs-it.md)
+  D1): Publish changes (or Save), and the dialog's own button, stay available while the
+  session has expired; pressed, each asks to reconnect first, then carries on. Changes:
+  S12 ("publishing is unavailable until Reconnect").
 
 ## Starting point
 

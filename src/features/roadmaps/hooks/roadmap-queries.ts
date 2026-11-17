@@ -1,4 +1,4 @@
-import { queryOptions } from "@tanstack/react-query"
+import { queryOptions, type RefetchOptions } from "@tanstack/react-query"
 
 import type { RoadmapRepository } from "@/domain/roadmap/roadmap-repository"
 import { authScopedQueryKey } from "@/features/auth/auth-scoped-queries"
@@ -16,6 +16,13 @@ export const roadmapKeys = {
   categories: () => [...roadmapKeys.all, "categories"] as const,
   organisations: () => [...roadmapKeys.all, "organisations"] as const,
 }
+
+/**
+ * A Refresh's refetch options: it joins a read already under way rather than restart it,
+ * as reconnecting starts one before a Refresh that asked to reconnect carries on
+ * (STY-057).
+ */
+export const JOIN_READ = { cancelRefetch: false } satisfies RefetchOptions
 
 /**
  * The listed roadmaps, in source order. `staleTime` and retries come from the query

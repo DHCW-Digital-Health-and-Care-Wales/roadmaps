@@ -96,7 +96,8 @@ test("an expired token keeps the roadmaps on screen until reconnected", async ({
   await expect(alert).toContainText("Your session has expired")
   await expect(page.getByRole("status")).toHaveText("Session expired")
   await expect(roadmapCards(page)).toHaveCount(3)
-  await expect(page.getByRole("button", { name: "Refresh" })).toBeDisabled()
+  // Still on offer: it asks to reconnect first (STY-057).
+  await expect(page.getByRole("button", { name: "Refresh" })).toBeEnabled()
 
   await alert.getByRole("button", { name: "Reconnect" }).click()
 

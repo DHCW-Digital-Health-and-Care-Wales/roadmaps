@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next"
 
 import { textLinkClasses } from "@/components/layout/text-link-classes"
 import { Button } from "@/components/ui/button"
-import { useAuth } from "@/features/auth/use-auth"
+import { useSessionAction } from "@/features/auth/session-action"
 
 import { RefreshButton } from "../components/refresh-button"
 import { RoadmapGroups } from "../components/roadmap-groups"
@@ -13,6 +13,7 @@ import { RoadmapGridSkeleton } from "../components/roadmap-grid-skeleton"
 import { RoadmapsEmptyState } from "../components/roadmaps-empty-state"
 import { RoadmapsErrorState } from "../components/roadmaps-error-state"
 import { RoadmapDialog } from "../dialogs/roadmap-dialog"
+import { JOIN_READ } from "../hooks/roadmap-queries"
 import { useOpenAddedRoadmap } from "../hooks/use-added-roadmap"
 import { useRoadmaps } from "../hooks/use-roadmaps"
 import { useRoadmapsProblem } from "../hooks/use-roadmaps-problem"
@@ -24,13 +25,12 @@ const TITLE_ID = "roadmaps-title"
  * error and expired states, a link to the families, categories and organisations
  * (STY-029), and "Add a roadmap" once the list has loaded, which opens the roadmap
  * dialog and then the roadmap it added (STY-041). While expired, roadmaps loaded earlier
- * stay visible under a Reconnect prompt, nothing refetches until the user reconnects,
- * and nothing can be added.
+ * stay visible under a Reconnect prompt and nothing refetches until the user reconnects;
+ * Refresh and "Add a roadmap" ask to reconnect first, then carry on (STY-057).
  */
 export function RoadmapsPage() {
   const { t } = useTranslation()
   const { data: roadmaps, error, isFetching, refetch } = useRoadmaps()
-  const connected = useAuth().state.status === "connected"
   const [adding, setAdding] = useState(false)
   // The "Add a roadmap" button clicked, of the two an empty list shows: where focus
   // returns as the dialog closes (DEF-008). The one beside Refresh stands in for the
@@ -51,17 +51,18 @@ export function RoadmapsPage() {
 
   const problem = useRoadmapsProblem(error)
   const reload = () => {
-    void refetch()
+    void refetch(JOIN_READ)
   }
+  const add = useSessionAction(() => {
+    setAdding(true)
+  })
   const addButton = (ref?: Ref<HTMLButtonElement>) =>
     roadmaps && (
       <Button
         ref={ref}
-        disabled={!connected}
-        focusableWhenDisabled
         onClick={(event) => {
           clicked.current = event.currentTarget
-          setAdding(true)
+          add(event.currentTarget)
         }}
       >
         <PlusIcon data-icon="inline-start" aria-hidden="true" />

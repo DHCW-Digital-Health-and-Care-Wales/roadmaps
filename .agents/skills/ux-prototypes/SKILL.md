@@ -262,11 +262,10 @@ Done when the check passes and the shape's own check is done.
 
 Deliver through the PR path in `.agents/skills/implement-story/SKILL.md`. Brief the reviewers per
 `.agents/skills/implement-story/references/delegation.md`, giving each the
-committed page and analysis plus:
+committed page and analysis, with step 7's `page-text.txt` and per-artboard
+screenshots (a working component's design screenshots) by their scratchpad
+paths, to read beside the page's markup, plus:
 
-- **Both reviewers**: the page's `page-text.txt` and the per-artboard screenshots
-  from step 7's check, by their scratchpad paths, as what to read for the page
-  beside its markup, which runs to thousands of lines.
 - **`code-reviewer`**: the inventory, the scenario trace and the sample sheet,
   by their scratchpad paths.
   It checks each design against the contract and the stories, and checks that

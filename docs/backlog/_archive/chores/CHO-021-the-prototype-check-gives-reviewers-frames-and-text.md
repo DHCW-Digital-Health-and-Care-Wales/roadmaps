@@ -1,6 +1,6 @@
 # CHO-021: The prototype page check gives reviewers each artboard and the page's text
 
-- **Status**: Done — in its PR, awaiting merge
+- **Status**: Done
 - **Type**: Chore
 - **Area**: Docs
 - **Epic**: standalone
@@ -71,19 +71,19 @@ None.
 ### Contract for dependents
 
 The check writes, beside `d<n>.png`, one `d<n>-ab<m>.png` per `.ab` and one
-`page-text.txt`. A design with no `.ab` (the working-component page) gets its whole
-outline in the text and no artboard image. The outline is Playwright's
-`ariaSnapshot`, so it leaves out what is `aria-hidden` or not rendered. The success
-line now ends the design count with the artboard count; it still begins
-"N designs captured".
+`page-text.txt`; it first deletes the earlier run's such files from the folder, so
+nothing of a design or artboard since cut is left to be read. A design with no `.ab`
+(the working-component page) gets its whole outline in the text and no artboard
+image. A frame's outline is Playwright's `ariaSnapshot`, which leaves out what is
+`aria-hidden`, so a closing line, `aria-hidden text drawn:`, lists the `aria-hidden`
+text the frame does draw (a logo's words); text that is not rendered is in neither.
+The success line still begins "N designs captured" and now ends it with the artboard
+count.
 
 ### Scenario evidence
 
-| Scenario | Held by                                                                                                                                                                                                                                                                                                  |
-| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1       | `.agents/skills/ux-prototypes/scripts/check-page.test.mjs` (_each artboard is captured beside its design, no taller than itself_). Observed run on the EPC-012 prototype page (`roadmap-page-shell-ux-prototypes.html`): 5 designs, 27 artboards, e.g. `d1-ab1.png` 1420×732 where `d1.png` is 1408×6685 |
-| S2       | `check-page.test.mjs` (_the text extract lists, per artboard, each frame's caption, text and controls_); the same run wrote a 3,209-line `page-text.txt` with each frame's caption and its links, buttons and headings by name                                                                           |
-| S3       | `.agents/skills/ux-prototypes/SKILL.md` step 8 (new "Both reviewers" bullet); a prose instruction, so reviewed, not tested                                                                                                                                                                               |
-
-Red shown by breaking the finished code (the artboard screenshot taken of the design,
-the text left empty): both new tests failed; the 29 existing ones still passed.
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                               |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `.agents/skills/ux-prototypes/scripts/check-page.test.mjs` (_each artboard is captured beside its design, no taller than itself_; _images of an artboard since cut are not left to be read_). Observed run on the EPC-012 prototype page (`roadmap-page-shell-ux-prototypes.html`): `d1-ab1.png` 1420×732 where `d1.png` is 1408×6685 |
+| S2       | `check-page.test.mjs` (_the text extract lists, per artboard, each frame's caption, text and controls_). The same run's `page-text.txt` gives each frame's caption and its links, buttons and headings by name, and the header logo's words as drawn `aria-hidden` text                                                               |
+| S3       | `.agents/skills/ux-prototypes/SKILL.md` step 8 (the lead-in now names the extract and the screenshots); a prose instruction, so reviewed, not tested                                                                                                                                                                                  |

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { execFile } from "node:child_process"
 import { once } from "node:events"
-import { mkdtemp, readFile, rm } from "node:fs/promises"
+import { mkdtemp, readdir, readFile, rm } from "node:fs/promises"
 import { createServer } from "node:http"
 import os from "node:os"
 import path from "node:path"
@@ -46,9 +46,11 @@ const frame = (device, moment, body) =>
   `<div class="col"><div class="lbl"><b>${device}</b> ${moment}\n  and more</div><div class="${device === "Desktop" ? "dev" : "ph"}">${body}</div></div>`
 fixtures["/artboards"] =
   `<figure id="d1"><figcaption>A. Inline</figcaption>` +
-  `<div class="ab" style="display:flex;width:300px;height:200px">${frame("Desktop", "Before publishing", '<h1>Roadmaps</h1><p>2 pending edits</p><button type="button">Publish</button><span aria-hidden="true">Hidden mark</span>')}${frame("Phone", "Before publishing", '<a href="#d1">Open roadmap</a>')}</div>` +
+  `<div class="ab" style="display:flex;width:300px;height:200px">${frame("Desktop", "Before publishing", '<h1>Roadmaps</h1><p>2 pending edits</p><button type="button">Publish</button><span aria-hidden="true">Logo mark</span><span aria-hidden="true" style="display:none">Never drawn</span><span style="display:none">Hidden copy</span>')}${frame("Phone", "Before publishing", '<a href="#d1">Open roadmap</a>')}</div>` +
   `<div class="ab" style="display:flex;width:300px;height:320px">${frame("Desktop", "Just published", "<p>Published</p>")}${frame("Phone", "Just published", "<p>Published</p>")}</div></figure>` +
   `<figure id="d2"><figcaption>B. Guided</figcaption><div class="frame"><button type="button">Review</button></div></figure>`
+fixtures["/artboards-one"] =
+  `<figure id="d1"><figcaption>A. Inline</figcaption><div class="ab" style="display:flex;width:300px;height:200px">${frame("Desktop", "Just published", "<p>Published</p>")}</div></figure>`
 // Every fixture carries the review chrome a real page does, but this one.
 const unchromed = "/no-chrome"
 fixtures[unchromed] = '<figure id="d1">Roadmaps</figure>'
@@ -70,11 +72,11 @@ test("prototype page checks exercise rendered browser fixtures", async (t) => {
     server.listen(0, "127.0.0.1")
     await once(server, "listening")
     const { port } = server.address()
-    const check = (fixture) =>
+    const check = (fixture, into = fixture) =>
       run(process.execPath, [
         checker,
         `http://127.0.0.1:${port}/${fixture}`,
-        path.join(scratch, fixture),
+        path.join(scratch, into),
       ])
 
     for (const fixture of ["script-error", "phone-script-error"]) {
@@ -103,6 +105,7 @@ test("prototype page checks exercise rendered browser fixtures", async (t) => {
       async () => {
         const { stdout } = await check("artboards")
         assert.match(stdout, /2 designs captured.*\(2 artboards/)
+        // A PNG's height is the big-endian word at byte 20, in its IHDR chunk.
         const height = async (name) =>
           (await readFile(path.join(scratch, "artboards", name))).readUInt32BE(
             20,
@@ -113,6 +116,18 @@ test("prototype page checks exercise rendered browser fixtures", async (t) => {
         await assert.rejects(
           readFile(path.join(scratch, "artboards/d2-ab1.png")),
         )
+      },
+    )
+
+    await t.test(
+      "images of an artboard since cut are not left to be read",
+      async () => {
+        await check("artboards")
+        await check("artboards-one", "artboards")
+        const files = await readdir(path.join(scratch, "artboards"))
+        assert.ok(files.includes("d1-ab1.png"))
+        assert.ok(!files.includes("d1-ab2.png"))
+        assert.ok(!files.includes("d2.png"))
       },
     )
 
@@ -141,12 +156,18 @@ test("prototype page checks exercise rendered browser fixtures", async (t) => {
           'button "Review"',
         ]
         const positions = order.map(at)
-        assert.ok(!positions.includes(-1), `${order[positions.indexOf(-1)]}`)
+        assert.ok(
+          !positions.includes(-1),
+          `page-text.txt lacks: ${order[positions.indexOf(-1)]}`,
+        )
         assert.deepEqual(
           positions,
           [...positions].sort((a, b) => a - b),
         )
-        assert.ok(!text.includes("Hidden mark"))
+        // Drawn but aria-hidden text is listed apart; text that is not drawn is not.
+        assert.match(text, /- aria-hidden text drawn: Logo mark\n/)
+        assert.ok(!text.includes("Never drawn"))
+        assert.ok(!text.includes("Hidden copy"))
       },
     )
 

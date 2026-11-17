@@ -55,6 +55,9 @@ tours.
   version changes per build.
 - The "Connected" notice clears itself after eight seconds: a test that snapshots or
   tabs past it calls `holdConnectedNotice(page)` right after connecting.
+- A stuck or pinned bar is `position: fixed`, so a control past its edge never widens
+  the page and a `scrollWidth` check passes. Scroll until it sticks, then hold each of
+  its controls with `toBeInViewport({ ratio: 1 })`.
 - Compare a computed style with the token it comes from, `tokenColour(page, "--token")`
   (`fixtures/look.ts`), never a copied colour.
 - The focus tours need every tab stop to match `focus-fill`, `focus-ring` or

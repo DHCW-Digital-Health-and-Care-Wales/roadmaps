@@ -24,8 +24,7 @@ working order, and grade and report findings as it sets.
   by branching on English text, `<html lang>`/`document.title` stay in sync,
   stored language preference handling is try/catch-wrapped, and a rendered
   error is never an error object or its `message`. Welsh text is
-  machine-assisted: flag a clearly wrong or untranslated string, and keep
-  Welsh-length overflow in mind for layout.
+  machine-assisted: flag a clearly wrong or untranslated string.
 - **Styling and accessibility.** Verify classes, variants and inline geometry
   produce the intended CSS, including `cn`/tailwind-merge ordering, cascade,
   state variants and caller overrides (a link styled as a button needs
@@ -40,12 +39,14 @@ working order, and grade and report findings as it sets.
   focus management in `AppShell` (focus moves to `<main>` after in-app
   navigation, and when the focused control inside `<main>` is removed; the skip
   link focuses `<main>` because hash history owns the fragment), menu and dialog
-  keyboard behavior, contrast in light and dark, 375 px layouts, 200% zoom and
-  `prefers-reduced-motion`. Overflow arrives just above a breakpoint, where a
-  layout's longer labels have the least room: measure a changed row at the
-  narrowest width of each layout (640 px at `sm`, 1024 px at `lg`) in Welsh. A
-  `position: fixed` bar (a stuck or pinned one) clips its overflow instead of
-  scrolling the page, so `scrollWidth` misses it: compare each control's box
-  with `document.documentElement.clientWidth`. Components under `components/ui/`
-  stay close to upstream shadcn (Base UI flavour, no Radix); hand-rolled
-  competing primitives are a finding.
+  keyboard behavior, contrast in light and dark and
+  `prefers-reduced-motion`. Components under `components/ui/` stay close to
+  upstream shadcn (Base UI flavour, no Radix); hand-rolled competing primitives
+  are a finding.
+- **Responsive layout.** Hold a changed screen at 375 px and 200% zoom, and a
+  changed row of controls at the widths
+  `.agents/skills/implement-story/references/validation.md` sets for visible UI:
+  overflow arrives where a breakpoint brings in the wider layout with the least
+  room, and Welsh labels run longest. A stuck or pinned bar runs off screen
+  without widening the page, so a `scrollWidth` check passes over it; its
+  evidence is as `tests/e2e/AGENTS.md` sets.

@@ -1,6 +1,6 @@
 import { AppError, type AppErrorKind, isAppError } from "@/lib/errors"
 
-import { describeGoogleError } from "./sheets-schemas"
+import { describeGoogleError, isProtectedRefusal } from "./sheets-schemas"
 
 const SHEETS_API_BASE_URL = "https://sheets.googleapis.com/v4/spreadsheets"
 
@@ -140,11 +140,21 @@ async function toHttpError(response: Response): Promise<AppError> {
   const { status } = response
   const body: unknown = await response.json().catch(() => undefined)
   const detail = describeGoogleError(body)
-  return new AppError(kindForStatus(status), {
+  return new AppError(kindOf(status, body), {
     message: `Google Sheets request failed with HTTP ${String(status)}${detail ? ` (${detail})` : ""}`,
     status,
     retryable: status === 429 || status >= 500,
   })
+}
+
+/**
+ * The kind of an HTTP error: its status's, but for Google's refusal to change a
+ * protected part of the spreadsheet, a 400 told apart by its body (STY-051 D6).
+ */
+function kindOf(status: number, body: unknown): AppErrorKind {
+  return status === 400 && isProtectedRefusal(body)
+    ? "protected"
+    : kindForStatus(status)
 }
 
 function kindForStatus(status: number): AppErrorKind {

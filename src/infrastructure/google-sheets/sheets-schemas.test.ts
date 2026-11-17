@@ -5,6 +5,7 @@ import { AppError } from "@/lib/errors"
 
 import {
   describeGoogleError,
+  isProtectedRefusal,
   parseSheetValues,
   parseSpreadsheetMetadata,
 } from "./sheets-schemas"
@@ -166,4 +167,39 @@ describe("describeGoogleError", () => {
       expect(describeGoogleError(body)).toBeUndefined()
     },
   )
+})
+
+describe("isProtectedRefusal", () => {
+  const refusal = (message: string, status = "INVALID_ARGUMENT") => ({
+    error: { code: 400, status, message },
+  })
+
+  it.each([
+    "Invalid requests[0].moveDimension: You are trying to edit a protected cell or object. Please contact the spreadsheet owner to remove protection if you need to edit.",
+    "Invalid requests[3].updateCells: You are trying to edit a protected cell or object.",
+  ])("knows Google's refusal to change what is protected: %s", (message) => {
+    expect(isProtectedRefusal(refusal(message))).toBe(true)
+  })
+
+  it.each([
+    [
+      "another invalid argument",
+      refusal(
+        "Invalid requests[0].moveDimension: destinationIndex[2] must be outside the requested range[2-3]",
+      ),
+    ],
+    [
+      "the message under another status",
+      refusal(
+        "You are trying to edit a protected cell or object.",
+        "PERMISSION_DENIED",
+      ),
+    ],
+    ["no message", { error: { status: "INVALID_ARGUMENT" } }],
+    ["no error", {}],
+    ["no body", undefined],
+    ["text", "You are trying to edit a protected cell or object."],
+  ])("takes %s as none", (_what, body) => {
+    expect(isProtectedRefusal(body)).toBe(false)
+  })
 })

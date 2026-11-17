@@ -1364,13 +1364,14 @@ describe("GoogleSheetsRoadmapRepository", () => {
       },
     )
 
-    it("writes a move as the public site's Horizon value, in that cell alone (STY-031 S6)", async () => {
+    it("writes a move as the public site's Horizon value, and moves the row whole, no other cell written (STY-031 S6, STY-051 S3)", async () => {
       const spreadsheet = serveStatefulSpreadsheet(exampleTabs())
       const items = await httpRepository().listRoadmapItems("producta")
       const later = items.findIndex(({ placement }) => placement === "later")
       const item = items[later]
       if (item === undefined) throw new Error("Product A has a Later item")
-      const before = spreadsheet.tabs()
+      const [header = [], ...before] = EXAMPLE_TAB_ROWS.ProductA ?? []
+      const horizon = header.indexOf("Horizon")
 
       await httpRepository().publishRoadmapChanges("producta", {
         ...NO_CHANGES,
@@ -1385,14 +1386,393 @@ describe("GoogleSheetsRoadmapRepository", () => {
         ],
       })
 
-      const horizon = EXAMPLE_TAB_ROWS.ProductA?.[0]?.indexOf("Horizon") ?? -1
-      expect(
-        changedCells(before, spreadsheet.tabs()).filter(
-          (change) => !change.includes("C15 "),
+      // Each row's cells under the example's header: not the Item ID the publish added.
+      const cells = (row: readonly string[]) =>
+        trimRows([row.slice(0, header.length)])[0] ?? []
+      // The row as it was but for its Horizon, now just after the last Recently delivered row.
+      const moved = before[later]?.map((value, c) =>
+        c === horizon ? "Recently delivered" : value,
+      )
+      const rest = before.filter((_, r) => r !== later)
+      const last = rest.findLastIndex(
+        (row) => row[horizon] === "Recently delivered",
+      )
+      expect(spreadsheet.tabs()[1]?.rows.slice(1).map(cells)).toEqual(
+        [...rest.slice(0, last + 1), moved ?? [], ...rest.slice(last + 1)].map(
+          cells,
         ),
-      ).toEqual([
-        `ProductA!R${String(later + 2)}C${String(horizon + 1)} Recently delivered`,
-      ])
+      )
+    })
+
+    describe("a moved item's row (STY-051)", () => {
+      const HEADER = ["Title", "Horizon", "Item ID", "Title (cy)", "Notes"]
+      /** A row of `HEADER`'s tab: an item with an ID, its title squeezed. */
+      const row = (title: string, horizon: string, ...more: string[]) => [
+        title,
+        horizon,
+        title
+          .toLowerCase()
+          .replaceAll(/[^a-z]/g, "")
+          .padEnd(8, "x")
+          .slice(0, 8),
+        ...more,
+      ]
+      /** Product A's tab holding `rows` under `HEADER`, with a spare row in its grid. */
+      const tabsOf = (...rows: string[][]): FakeTab[] => [
+        gridTab("Roadmaps", EXAMPLE_ROWS, 0),
+        {
+          ...gridTab("ProductA", [HEADER, ...rows], 10, 1),
+          rowCount: rows.length + 2,
+        },
+      ]
+      /** The move of one row, by 0-based index, to before the row then at `destinationIndex`. */
+      const moveRow = (startIndex: number, destinationIndex: number) => ({
+        moveDimension: {
+          source: {
+            sheetId: 10,
+            dimension: "ROWS",
+            startIndex,
+            endIndex: startIndex + 1,
+          },
+          destinationIndex,
+        },
+      })
+      const horizonCell = (rowIndex: number, stringValue: string) => ({
+        updateCells: {
+          start: { sheetId: 10, rowIndex, columnIndex: 1 },
+          rows: [{ values: [{ userEnteredValue: { stringValue } }] }],
+          fields: "userEnteredValue",
+        },
+      })
+
+      /**
+       * Publishes the moves of the items titled so, in that order, each to its
+       * placement, over what `listRoadmapItems` read; gives the one body sent.
+       */
+      async function publishMoves(
+        spreadsheet: ReturnType<typeof serveStatefulSpreadsheet>,
+        moves: readonly [string, string][],
+        more: Partial<typeof NO_CHANGES> = {},
+      ) {
+        const items = await httpRepository().listRoadmapItems("producta")
+        const outcome = await httpRepository().publishRoadmapChanges(
+          "producta",
+          {
+            ...NO_CHANGES,
+            ...more,
+            items: moves.map(([title, value]) => {
+              const position = items.findIndex(
+                (each) => each.title.en === title,
+              )
+              const item = items[position]
+              if (item === undefined) throw new Error(`No item ${title}`)
+              return {
+                item,
+                position,
+                fields: { placement: { base: item.placement ?? "", value } },
+              }
+            }),
+          },
+        )
+        expect(outcome).toEqual({ status: "published" })
+        expect(spreadsheet.bodies).toHaveLength(1)
+        return (spreadsheet.bodies[0] as BatchUpdateBody).requests
+      }
+      const titles = (spreadsheet: { tabs: () => FakeTab[] }) =>
+        spreadsheet
+          .tabs()[1]
+          ?.rows.slice(1)
+          .map(([title]) => title)
+
+      it("writes the Horizon cell at the row as read, then moves the row to just after the placement's last item's, rewriting no cell (S3)", async () => {
+        const booking = row("Online booking", "Next", "Archebu ar-lein", "=A3")
+        const untitled = ["", "Now", "", "", "A row with no title is no item"]
+        const spreadsheet = serveStatefulSpreadsheet(
+          tabsOf(
+            booking,
+            row("A", "Now"),
+            untitled,
+            row("B", "Now"),
+            row("Video", "Next"),
+            row("C", "Now"),
+            row("Later one", "Later"),
+          ),
+        )
+
+        const requests = await publishMoves(spreadsheet, [
+          ["Online booking", "now"],
+        ])
+
+        // Row 2 (index 1) goes to before what is at index 7: just after C's row, 7.
+        expect(requests).toEqual([horizonCell(1, "Now"), moveRow(1, 7)])
+        expect(spreadsheet.tabs()[1]?.rows.slice(1)).toEqual([
+          row("A", "Now"),
+          untitled,
+          row("B", "Now"),
+          row("Video", "Next"),
+          row("C", "Now"),
+          ["Online booking", "Now", ...booking.slice(2)],
+          row("Later one", "Later"),
+        ])
+      })
+
+      it("moves the row after the cell and Item ID writes and before an appended row (S3, S6)", async () => {
+        const spreadsheet = serveStatefulSpreadsheet([
+          gridTab("Roadmaps", EXAMPLE_ROWS, 0),
+          gridTab(
+            "ProductA",
+            [
+              ["Title", "Horizon"],
+              ["Online booking", "Next"],
+              ["A", "Now"],
+            ],
+            10,
+            1,
+          ),
+        ])
+
+        const requests = await publishMoves(
+          spreadsheet,
+          [["Online booking", "now"]],
+          {
+            newItems: [
+              {
+                ...NEW_CLINIC,
+                values: { ...NEW_CLINIC.values, placement: "now" },
+              },
+            ],
+          },
+        )
+
+        expect(requests.map((request) => Object.keys(request)[0])).toEqual([
+          "appendDimension",
+          // The Item ID header, the Horizon cell, then an ID for each of the two rows.
+          "updateCells",
+          "updateCells",
+          "updateCells",
+          "updateCells",
+          "moveDimension",
+          "appendCells",
+        ])
+        expect(requests[5]).toEqual(moveRow(1, 3))
+        expect(titles(spreadsheet)).toEqual([
+          "A",
+          "Online booking",
+          "Choose a clinic closer to home",
+        ])
+        const [, first, second] = spreadsheet.tabs()[1]?.rows ?? []
+        // Each ID written at its row as read, then carried with it.
+        expect([first?.[1], second?.[1]]).toEqual(["Now", "Now"])
+        expect(first?.[2]).not.toBe(second?.[2])
+      })
+
+      it("goes after a row a co-lead added to the placement since, without a conflict (S4)", async () => {
+        const loaded = [row("Online booking", "Next"), row("A", "Now")]
+        const spreadsheet = serveStatefulSpreadsheet(tabsOf(...loaded))
+        const [item] = await httpRepository().listRoadmapItems("producta")
+        if (item === undefined) throw new Error("Product A has an item")
+        server.resetHandlers()
+        const reread = serveStatefulSpreadsheet(
+          tabsOf(...loaded, row("Later one", "Later"), row("D", "Now")),
+        )
+
+        await expect(
+          httpRepository().publishRoadmapChanges("producta", {
+            ...NO_CHANGES,
+            items: [
+              {
+                item,
+                position: 0,
+                fields: { placement: { base: "next", value: "now" } },
+              },
+            ],
+          }),
+        ).resolves.toEqual({ status: "published" })
+
+        expect(spreadsheet.bodies).toEqual([])
+        expect((reread.bodies[0] as BatchUpdateBody).requests).toEqual([
+          horizonCell(1, "Now"),
+          moveRow(1, 5),
+        ])
+        expect(titles(reread)).toEqual([
+          "A",
+          "Later one",
+          "D",
+          "Online booking",
+        ])
+      })
+
+      it.each([
+        [
+          "below its new placement's rows",
+          [row("A", "Now"), row("Later one", "Later"), row("Booking", "Next")],
+          "now",
+        ],
+        [
+          "the one item moved into a placement with no items",
+          [row("Booking", "Next"), row("A", "Now")],
+          "later",
+        ],
+      ] as const)(
+        "writes the Horizon cell alone, and no move, for a row already last: %s (S5)",
+        async (_where, rows, placement) => {
+          const spreadsheet = serveStatefulSpreadsheet(tabsOf(...rows))
+          const at = rows.findIndex(([title]) => title === "Booking")
+
+          const requests = await publishMoves(spreadsheet, [
+            ["Booking", placement],
+          ])
+
+          expect(requests).toEqual([
+            horizonCell(at + 1, placement === "now" ? "Now" : "Later"),
+          ])
+          expect(titles(spreadsheet)).toEqual(rows.map(([title]) => title))
+        },
+      )
+
+      it("moves several rows in the order they were moved, each over what the move before it left (S6)", async () => {
+        const spreadsheet = serveStatefulSpreadsheet(
+          tabsOf(row("Y", "Next"), row("X", "Later"), row("A", "Now")),
+        )
+
+        const requests = await publishMoves(spreadsheet, [
+          ["X", "now"],
+          ["Y", "now"],
+        ])
+
+        expect(requests).toEqual([
+          horizonCell(2, "Now"),
+          horizonCell(1, "Now"),
+          // X to after A; then Y, still at index 1, to after X, now at index 3.
+          moveRow(2, 4),
+          moveRow(1, 4),
+        ])
+        expect(titles(spreadsheet)).toEqual(["A", "X", "Y"])
+      })
+
+      it("moves the later moved after the earlier when the placement held no items and its row is above (S6)", async () => {
+        const spreadsheet = serveStatefulSpreadsheet(
+          tabsOf(row("Y", "Later"), row("A", "Later"), row("X", "Later")),
+        )
+
+        const requests = await publishMoves(spreadsheet, [
+          ["X", "now"],
+          ["Y", "now"],
+        ])
+
+        expect(requests.slice(2)).toEqual([moveRow(1, 4)])
+        expect(titles(spreadsheet)).toEqual(["A", "X", "Y"])
+      })
+
+      it("moves one row up, to just before the first of a run already in order, as the fewest moves (S6)", async () => {
+        const spreadsheet = serveStatefulSpreadsheet(
+          tabsOf(row("Y", "Later"), row("Z", "Later"), row("X", "Later")),
+        )
+
+        const requests = await publishMoves(spreadsheet, [
+          ["X", "now"],
+          ["Y", "now"],
+          ["Z", "now"],
+        ])
+
+        expect(requests.slice(3)).toEqual([moveRow(3, 1)])
+        expect(titles(spreadsheet)).toEqual(["X", "Y", "Z"])
+      })
+
+      it("moves the row with “Save and publish” too, in its one batchUpdate (S3)", async () => {
+        const spreadsheet = serveStatefulSpreadsheet([
+          gridTab("Roadmaps", EXAMPLE_ROWS, 0),
+          gridTab(
+            "ProductC",
+            [HEADER, row("Online booking", "Next"), row("A", "Now")],
+            10,
+            1,
+          ),
+        ])
+        const repository = httpRepository()
+        const loaded = (await repository.listRoadmaps()).find(
+          ({ id }) => id === "productc",
+        )
+        const [item] = await repository.listRoadmapItems("productc")
+        if (!loaded || !item) throw new Error("Product C has an item")
+
+        await expect(
+          repository.setRoadmapPublished(loaded, {
+            published: true,
+            changes: {
+              ...NO_CHANGES,
+              items: [
+                {
+                  item,
+                  position: 0,
+                  fields: { placement: { base: "next", value: "now" } },
+                },
+              ],
+            },
+          }),
+        ).resolves.toEqual({ status: "set" })
+
+        expect(spreadsheet.bodies).toHaveLength(1)
+        const { requests } = spreadsheet.bodies[0] as BatchUpdateBody
+        expect(requests.slice(-2)).toEqual([
+          horizonCell(1, "Now"),
+          moveRow(1, 3),
+        ])
+        expect(titles(spreadsheet)).toEqual(["A", "Online booking"])
+      })
+
+      it.each([
+        [
+          "a move of a row",
+          "Invalid requests[1].moveDimension: You are trying to edit a protected cell or object. Please contact the spreadsheet owner to remove protection if you need to edit.",
+        ],
+        [
+          "a write to a cell",
+          "Invalid requests[0].updateCells: You are trying to edit a protected cell or object. Please contact the spreadsheet owner to remove protection if you need to edit.",
+        ],
+      ])(
+        "rejects with protected, publishing nothing and trying once, when Google refuses %s the account may not edit (S7)",
+        async (_what, message) => {
+          const before = tabsOf(row("Online booking", "Next"), row("A", "Now"))
+          const spreadsheet = serveStatefulSpreadsheet(before)
+          const [item] = await httpRepository().listRoadmapItems("producta")
+          if (item === undefined) throw new Error("Product A has an item")
+          let writes = 0
+          server.use(
+            http.post(BATCH_UPDATE_ENDPOINT, () => {
+              writes++
+              return HttpResponse.json(
+                { error: { code: 400, message, status: "INVALID_ARGUMENT" } },
+                { status: 400 },
+              )
+            }),
+          )
+
+          await expect(
+            httpRepository().publishRoadmapChanges("producta", {
+              ...NO_CHANGES,
+              items: [
+                {
+                  item,
+                  position: 0,
+                  fields: { placement: { base: "next", value: "now" } },
+                },
+              ],
+            }),
+          ).rejects.toMatchObject({
+            kind: "protected",
+            status: 400,
+            retryable: false,
+          })
+          expect(writes).toBe(1)
+          expect(spreadsheet.tabs()).toEqual(before)
+          // Three reads to list the items, three before the write, and none after it:
+          // nothing to settle.
+          expect(
+            spreadsheet.requests.filter(({ method }) => method === "GET"),
+          ).toHaveLength(6)
+        },
+      )
     })
 
     describe("an item's organisations (STY-034)", () => {

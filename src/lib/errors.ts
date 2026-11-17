@@ -5,6 +5,11 @@
 export type AppErrorKind =
   | "unauthenticated"
   | "forbidden"
+  /**
+   * The data source refused a write to a part of it that is protected from this
+   * account, which may change the rest: nothing was written (ADR-012).
+   */
+  | "protected"
   | "not-found"
   | "rate-limited"
   | "network"

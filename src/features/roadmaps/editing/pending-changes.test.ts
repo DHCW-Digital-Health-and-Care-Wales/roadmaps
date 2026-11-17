@@ -507,6 +507,81 @@ describe("a move (STY-031)", () => {
   })
 })
 
+describe("the order of moves (STY-051 D3)", () => {
+  const third = createTestRoadmapItem("Third", { id: "thirdidx" })
+  const titles = (changes: RoadmapChanges) =>
+    changes.items.map(({ item }) => item.title.en)
+  const entryOf = (changes: RoadmapChanges, item: typeof first) =>
+    changes.items.find((entry) => entry.item === item)
+
+  /** First moved to Later, then Third. */
+  function bothMoved(): RoadmapChanges {
+    const one = editItem(NO_CHANGES, undefined, first, 0, {
+      placement: "later",
+    })
+    return editItem(one, undefined, third, 2, { placement: "later" })
+  }
+
+  it("keeps the items in the order they were moved, whatever else is edited since", () => {
+    const moved = bothMoved()
+    expect(titles(moved)).toEqual(["First", "Third"])
+
+    const retitled = editItem(moved, entryOf(moved, first), first, 0, {
+      title: "Renamed",
+    })
+
+    expect(titles(retitled)).toEqual(["First", "Third"])
+    expect(retitled.items[0]?.fields).toEqual({
+      placement: { base: "now", value: "later" },
+      title: { base: "First", value: "Renamed" },
+    })
+  })
+
+  it("keeps an item's turn when it is given the placement it is already moved to", () => {
+    const moved = bothMoved()
+
+    expect(
+      titles(
+        editItem(moved, entryOf(moved, first), first, 0, {
+          placement: "later",
+          phase: "Beta",
+        }),
+      ),
+    ).toEqual(["First", "Third"])
+  })
+
+  it("puts an item moved again after those moved before it", () => {
+    const moved = bothMoved()
+
+    expect(
+      titles(
+        editItem(moved, entryOf(moved, first), first, 0, { placement: "next" }),
+      ),
+    ).toEqual(["Third", "First"])
+  })
+
+  it("puts an item moved after one edited before it was, and one moved back and out again last", () => {
+    const edited = editItem(NO_CHANGES, undefined, second, 1, {
+      title: "Edited first",
+    })
+    const moved = editItem(edited, undefined, first, 0, { placement: "later" })
+    const secondMoved = editItem(moved, entryOf(moved, second), second, 1, {
+      placement: "later",
+    })
+    expect(titles(secondMoved)).toEqual(["First", "Second"])
+
+    const back = editItem(secondMoved, entryOf(secondMoved, first), first, 0, {
+      placement: "now",
+      title: "Kept",
+    })
+    expect(titles(back)).toEqual(["First", "Second"])
+    const again = editItem(back, entryOf(back, first), first, 0, {
+      placement: "later",
+    })
+    expect(titles(again)).toEqual(["Second", "First"])
+  })
+})
+
 describe("a choice of organisations (STY-034)", () => {
   const forCardiff = createTestRoadmapItem("For Cardiff", {
     id: "cardiffx",

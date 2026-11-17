@@ -620,6 +620,8 @@ export const cy = {
         "Mae eich sesiwn wedi dod i ben. Ailgysylltwch, yna rhowch gynnig arall arni.",
       forbidden:
         "Does gan y cyfrif Google hwn ddim hawl i {{action}}. Gofynnwch i berchennog y daenlen am fynediad golygu.",
+      protected:
+        "Mae rhan o'r daenlen wedi'i diogelu, felly chafodd dim byd ei newid. Gofynnwch i berchennog y daenlen adael i'r cyfrif Google hwn ei golygu.",
       "not-found":
         "Doedd dim modd dod o hyd i'r daenlen. Gwiriwch ei bod yn dal i fodoli.",
       "rate-limited":
@@ -790,6 +792,8 @@ export const cy = {
     unauthenticated: "Mae eich sesiwn wedi dod i ben. Ailgysylltwch i barhau.",
     forbidden:
       "Nid oes gennych fynediad at y daenlen hon. Gofynnwch i berchennog y daenlen am fynediad.",
+    protected:
+      "Mae rhan o'r daenlen wedi'i diogelu, felly chafodd dim byd ei newid. Gofynnwch i berchennog y daenlen adael i'r cyfrif Google hwn ei golygu.",
     "not-found":
       "Doedd dim modd dod o hyd i'r daenlen. Gwiriwch ei bod yn dal i fodoli.",
     "rate-limited":

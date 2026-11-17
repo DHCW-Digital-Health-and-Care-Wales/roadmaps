@@ -17,6 +17,7 @@ import type { RoadmapItem } from "../roadmap-item"
 import type { RoadmapRepository } from "../roadmap-repository"
 import { CO_LEAD_VALUE, type ContractWrite } from "./contract-write"
 import { categoriesOf, familiesOf } from "./linked-lists"
+import { describeMovedItems } from "./moved-item-contract"
 import { describeNewItems } from "./new-item-contract"
 import { describeNewRoadmap } from "./new-roadmap-contract"
 import { describePublishedState } from "./published-state-contract"
@@ -401,6 +402,7 @@ export function describeRoadmapRepositoryContract(
     })
 
     describePublishing(setup)
+    describeMovedItems(setup)
     describeNewItems(setup)
     describeNewRoadmap(setup)
     describeFamilyChanges(setup)
@@ -808,7 +810,7 @@ function describePublishing(setup: RoadmapRepositoryContractSetup): void {
     })
 
     describe("a placement (STY-031)", () => {
-      it("moves an item by its placement alone, keeping every row where it is (S6)", async () => {
+      it("moves an item by its placement alone when it is already last there (S6; STY-051 S5)", async () => {
         const repository = setup.withRoadmaps(fixtures, itemFixtures)
 
         const outcome = await repository.publishRoadmapChanges("producta", {

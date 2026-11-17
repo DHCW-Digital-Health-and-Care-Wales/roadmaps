@@ -58,6 +58,7 @@ describe("planRoadmapPublish", () => {
           { index: 1, id: "newidaaa" },
           { index: 2, id: "newidbbb" },
         ],
+        moves: [],
         newItems: [],
       },
     })
@@ -196,6 +197,7 @@ describe("planRoadmapPublish", () => {
           ],
           items: [],
           ids: [],
+          moves: [],
           newItems: [],
         },
       })
@@ -292,6 +294,7 @@ describe("planRoadmapPublish", () => {
             { index: 0, id: "bookingx", field: "placement", value: "now" },
           ],
           ids: [],
+          moves: [],
           newItems: [],
         },
       })
@@ -341,6 +344,109 @@ describe("planRoadmapPublish", () => {
       expect(same).toEqual({
         kind: "settled",
         outcome: { status: "published" },
+      })
+    })
+
+    describe("moving its row, last in its new placement (STY-051)", () => {
+      const a = createTestRoadmapItem("A", { id: "aaaaaaaa" })
+      const b = createTestRoadmapItem("B", { id: "bbbbbbbb" })
+      const toNow = (item: RoadmapItem, position: number) => ({
+        item,
+        position,
+        fields: { placement: { base: "later", value: "now" } },
+      })
+      const video = createTestRoadmapItem("Video", {
+        id: "videoxxx",
+        placement: "later",
+      })
+
+      it("moves the row to just after the placement's last item as re-read, a co-lead's included (S3, S4)", () => {
+        const plan = planRoadmapPublish(
+          { ...NO_CHANGES, items: [toNow(later, 0)] },
+          snapshotOf([later, a, b]),
+        )
+
+        expect(plan.kind === "write" && plan.writes).toEqual({
+          roadmap: [],
+          items: [
+            { index: 0, id: "bookingx", field: "placement", value: "now" },
+          ],
+          ids: [],
+          moves: [{ index: 0, after: 2 }],
+          newItems: [],
+        })
+      })
+
+      it("writes the placement alone for a row already last there (S5)", () => {
+        const plan = planRoadmapPublish(
+          { ...NO_CHANGES, items: [toNow(later, 2)] },
+          snapshotOf([a, b, later]),
+        )
+
+        expect(plan.kind === "write" && plan.writes).toMatchObject({
+          items: [
+            { index: 2, id: "bookingx", field: "placement", value: "now" },
+          ],
+          moves: [],
+        })
+      })
+
+      it("moves several in the order they were moved, whatever their rows' order (S6)", () => {
+        const plan = planRoadmapPublish(
+          { ...NO_CHANGES, items: [toNow(video, 1), toNow(later, 0)] },
+          snapshotOf([later, video, a]),
+        )
+
+        expect(plan.kind === "write" && plan.writes.moves).toEqual([
+          { index: 1, after: 2 },
+          { index: 0, after: 1 },
+        ])
+      })
+
+      it("moves no row for a placement the roadmap already holds, whoever wrote it", () => {
+        const plan = planRoadmapPublish(
+          {
+            ...NO_CHANGES,
+            roadmap: { vision: { base: "", value: "A vision" } },
+            items: [toNow(later, 0)],
+          },
+          snapshotOf([{ ...later, placement: "now" }, a, b]),
+        )
+
+        expect(plan.kind === "write" && plan.writes).toMatchObject({
+          items: [],
+          moves: [],
+        })
+      })
+
+      it("moves no row for an edit that is no move", () => {
+        const plan = planRoadmapPublish(
+          {
+            ...NO_CHANGES,
+            items: [
+              {
+                item: later,
+                position: 0,
+                fields: { phase: { base: "", value: "Beta" } },
+              },
+            ],
+          },
+          snapshotOf([later, a, video]),
+        )
+
+        expect(plan.kind === "write" && plan.writes.moves).toEqual([])
+      })
+
+      it("moves nothing when a co-lead's change refuses the publish", () => {
+        const plan = planRoadmapPublish(
+          { ...NO_CHANGES, items: [toNow(later, 0)] },
+          snapshotOf([{ ...later, placement: "next" }, a]),
+        )
+
+        expect(plan).toMatchObject({
+          kind: "settled",
+          outcome: { status: "refused" },
+        })
       })
     })
 
@@ -754,6 +860,7 @@ describe("planRoadmapPublish", () => {
           roadmap: [{ field: "lastUpdated", value }],
           items: [],
           ids: [],
+          moves: [],
           newItems: [],
         },
       })
@@ -795,6 +902,7 @@ describe("planRoadmapPublish", () => {
           roadmap: [{ field: "lastUpdated", value: "2026-11-13" }],
           items: [],
           ids: [],
+          moves: [],
           newItems: [],
         },
       })
@@ -868,6 +976,7 @@ describe("planRoadmapPublish", () => {
           roadmap: [],
           items: [],
           ids: [],
+          moves: [],
           newItems: [
             {
               id: "ckn7q2xw",
@@ -939,6 +1048,7 @@ describe("planRoadmapPublish", () => {
           roadmap: [{ field: "vision", value: "A vision" }],
           items: [{ index: 0, id: "bookingx", field: "phase", value: "Beta" }],
           ids: [{ index: 1, id: "newidaaa" }],
+          moves: [],
           newItems: [expect.objectContaining({ id: "ckn7q2xw" })],
         },
       })
@@ -1060,6 +1170,7 @@ describe("heldWrites", () => {
     roadmap: [{ field: "vision", value: "A vision" }],
     items: [{ index: 0, id: "newidaaa", field: "phase", value: "Live" }],
     ids: [{ index: 0, id: "newidaaa" }],
+    moves: [],
     newItems: [],
   }
   const before = createTestRoadmapItem("Item")
@@ -1095,6 +1206,7 @@ describe("heldWrites", () => {
       roadmap: [],
       items: [{ index: 0, id: "newidaaa", field: "phase", value: "Live" }],
       ids: [{ index: 0, id: "newidaaa" }],
+      moves: [],
       newItems: [],
     }
     const alreadyLive = createTestRoadmapItem("Other", {
@@ -1102,6 +1214,25 @@ describe("heldWrites", () => {
     })
 
     expect(heldWrites(itemWrites, snapshotOf([alreadyLive]))).toBe("none")
+  })
+
+  it("judges a move by its placement alone, wherever the item then is (STY-051 S8)", () => {
+    const move: PublishWrites = {
+      roadmap: [],
+      items: [{ index: 0, id: "bookingx", field: "placement", value: "now" }],
+      ids: [],
+      moves: [{ index: 0, after: 1 }],
+      newItems: [],
+    }
+    const booking = createTestRoadmapItem("Online booking", { id: "bookingx" })
+    const other = createTestRoadmapItem("Other", { id: "otherxxx" })
+
+    expect(heldWrites(move, snapshotOf([other, booking]))).toBe("all")
+    // The write is all or nothing, so a co-lead moved the row back since.
+    expect(heldWrites(move, snapshotOf([booking, other]))).toBe("all")
+    expect(
+      heldWrites(move, snapshotOf([{ ...booking, placement: "later" }, other])),
+    ).toBe("none")
   })
 
   it("can't tell when a written item's row is still there but no longer read", () => {
@@ -1139,7 +1270,13 @@ describe("heldWrites", () => {
       ).toBe("all")
       expect(
         heldWrites(
-          { roadmap: [], items: [], ids: [], newItems: withNewItem.newItems },
+          {
+            roadmap: [],
+            items: [],
+            ids: [],
+            moves: [],
+            newItems: withNewItem.newItems,
+          },
           snapshotOf([before], ["ckn7q2xw"]),
         ),
       ).toBe("all")

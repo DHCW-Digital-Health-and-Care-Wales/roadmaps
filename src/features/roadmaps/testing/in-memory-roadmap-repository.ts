@@ -8,6 +8,7 @@ import {
   planNewFamily,
   type FamilyOutcome,
 } from "@/domain/roadmap/family-changes"
+import { movedItems } from "@/domain/roadmap/item-moves"
 import { planListMatch } from "@/domain/roadmap/list-match"
 import {
   planNewRoadmap,
@@ -238,6 +239,9 @@ export function createInMemoryRoadmapRepository(
       const item = stored[index]
       if (item) item.id = id
     }
+    // Each moved item last in its new placement, as the Google adapter moves its row
+    // (STY-051).
+    stored.splice(0, stored.length, ...movedItems(stored, writes.moves))
     // After the roadmap's last item, as the Google adapter appends a row (STY-045).
     for (const { id, fields } of writes.newItems) {
       const item = createTestRoadmapItem("", { id, placement: null })
@@ -295,7 +299,8 @@ export function createInMemoryRoadmapRepository(
       return
     }
     const [firstItem] = writes.items
-    const item = firstItem && storedItems(roadmap.id)[firstItem.index]
+    // By the ID it holds once written: its place may have changed with a move.
+    const item = storedItems(roadmap.id).find(({ id }) => id === firstItem?.id)
     if (!firstItem || !item) return
     if (firstItem.field === "organisationIds") {
       // As the Google adapter reads a cell a co-lead typed over: a code it doesn't know.

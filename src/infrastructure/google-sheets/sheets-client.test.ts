@@ -270,6 +270,37 @@ describe("createSheetsClient", () => {
       ).rejects.toMatchObject({ kind, status })
     })
 
+    it("maps Google's refusal to change what is protected to protected, not retryable, and any other HTTP 400 to unknown (STY-051 S7)", async () => {
+      const refuse = (message: string) => {
+        server.use(
+          http.post(BATCH, () =>
+            HttpResponse.json(
+              { error: { code: 400, status: "INVALID_ARGUMENT", message } },
+              { status: 400 },
+            ),
+          ),
+        )
+      }
+
+      refuse(
+        "Invalid requests[0].moveDimension: You are trying to edit a protected cell or object. Please contact the spreadsheet owner to remove protection if you need to edit.",
+      )
+      await expect(
+        connectedClient().postJson("/sheet-1:batchUpdate", {}),
+      ).rejects.toMatchObject({
+        kind: "protected",
+        status: 400,
+        retryable: false,
+      })
+
+      refuse(
+        "Invalid requests[0].moveDimension: destinationIndex[2] must be outside the requested range[2-3]",
+      )
+      await expect(
+        connectedClient().postJson("/sheet-1:batchUpdate", {}),
+      ).rejects.toMatchObject({ kind: "unknown", status: 400 })
+    })
+
     it("maps a lost answer to a network error", async () => {
       server.use(http.post(BATCH, () => HttpResponse.error()))
 

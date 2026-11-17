@@ -685,6 +685,9 @@ export const en = {
       unauthenticated: "Your session has expired. Reconnect, then try again.",
       forbidden:
         "This Google account isn't allowed to {{action}}. Ask the spreadsheet owner for edit access.",
+      /** The account may edit the spreadsheet, but not a part the write changes (STY-051 S7). */
+      protected:
+        "Part of the spreadsheet is protected, so nothing was changed. Ask the spreadsheet owner to let this Google account edit it.",
       "not-found":
         "The spreadsheet couldn't be found. Check that it still exists.",
       "rate-limited":
@@ -850,6 +853,8 @@ export const en = {
     unauthenticated: "Your session has expired. Reconnect to continue.",
     forbidden:
       "You don't have access to this spreadsheet. Ask the spreadsheet owner for access.",
+    protected:
+      "Part of the spreadsheet is protected, so nothing was changed. Ask the spreadsheet owner to let this Google account edit it.",
     "not-found":
       "The spreadsheet couldn't be found. Check that it still exists.",
     "rate-limited": "Too many requests right now. Wait a moment and try again.",

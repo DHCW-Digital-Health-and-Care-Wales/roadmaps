@@ -10,7 +10,11 @@ doc comments first, since they are the contract.
      failures to `AppError` kinds the same way the Sheets client does (401 →
      `unauthenticated`, 403 → `forbidden`, 404 → `not-found`, 429 → `rate-limited`, 5xx →
      retryable `unknown`, fetch failure → `network`, unparsable body →
-     `invalid-response`);
+     `invalid-response`). A write the API refuses because part of what it changes is
+     locked to this account, though the account may change the rest, is `protected`
+     (STY-051): the Sheets client knows Google's by its message, as Google gives it no
+     status of its own; an API gives it a status or a code of its own, or never
+     answers so if it has no such lock;
    - Zod schemas for the responses;
    - `ApiRoadmapRepository implements RoadmapRepository`:
      - `listRoadmaps` maps each roadmap to the domain's `Roadmap` (ADR-009), in the
@@ -43,7 +47,13 @@ doc comments first, since they are the contract.
        or one chosen while its table is missing, is rejected with `invalid-data`
        (STY-028). An item's chosen `organisationIds` replace its join rows as a set;
        the snapshot's `organisationIds` are the organisations table's ids, and the plan
-       rejects any other with `unknown` (STY-034);
+       rejects any other with `unknown` (STY-034). A published move also puts the item
+       last in its new placement: `listRoadmapItems` then returns it after every other
+       item of that placement, and several moved into one in the order they were
+       moved. The plan's `moves` say which items go where among the roadmap's items
+       (`planItemMoves`, `movedItems` in `src/domain/roadmap/item-moves.ts`); an API
+       that stores each item's position writes those positions in the same
+       transaction as the placement, and needs no row to move (STY-051);
      - `addRoadmap` adds a roadmap and its empty list of items together or not at
        all, not published (STY-040). `planNewRoadmap` and `settleLostNewRoadmap`
        (`src/domain/roadmap/new-roadmap.ts`) are the rules both current repositories

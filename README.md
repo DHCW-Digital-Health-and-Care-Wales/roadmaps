@@ -95,10 +95,21 @@ it writes the `Families` tab only as below.
   `Vision` and `Service description`, and each item's `Title`, `Description`, `Outcome`
   and `Phase`, as plain text exactly as typed (trimmed; a formula, number, date or
   `TRUE` stays text), a cleared field as an empty cell;
-- a moved item: its row's `Horizon` cell alone, as the public site's English value
-  for the placement chosen (`Recently delivered`, `Now`, `Next`, `Later`,
-  `Delivered this year` or `Not doing`), so the row keeps its place and the item
-  shows in row order in its new placement; a move never blanks the cell;
+- a moved item: its row's `Horizon` cell, as the public site's English value for the
+  placement chosen (`Recently delivered`, `Now`, `Next`, `Later`, `Delivered this year`
+  or `Not doing`), never a blank; and its row, moved (`moveDimension`) to just after
+  the row of its new placement's last item, as the tab reads at publish, so the item
+  shows last there. That counts an item a co-lead added to the placement meanwhile,
+  and a row hidden by hand, which holds a position though the public site leaves it
+  out. A row already below every item row of its new placement is left where it is, as
+  is the one item moved into a placement with no items. Several items moved into one
+  placement end in the order they were moved, with the fewest row moves that put them
+  so. A row is moved whole and none of its cells is rewritten: it keeps its formatting,
+  its `Horizon` dropdown, its Welsh and unknown columns, and a formula elsewhere that
+  refers to it follows it. The rows it passes shift by one and keep their order, as do
+  the rows of every other placement. Rows are moved after every cell is written and
+  before a new item's row is appended. A co-lead part-way through editing a cell of a
+  row as it moves loses that edit, with an error in their spreadsheet (STY-051);
 - a changed `Last updated`: the index row's `Last updated` cell, as text `YYYY-MM-DD`
   (`2026-11-13`) whatever format the cell held, or an empty cell when cleared; and,
   when "Mark as updated today" is ticked (and no date is pending), today's date by the
@@ -127,7 +138,8 @@ it writes the `Families` tab only as below.
   can't be changed in the editor, and a publish that finds Welsh written there since
   the item was read writes nothing (STY-039);
 - a new item: one row after the tab's last row in use, appended by Google as it applies
-  the write, so a row a co-lead added meanwhile is kept and no row moves. The row holds
+  the write, so a row a co-lead added meanwhile is kept, no row moves for it, and it
+  shows after any item moved into its placement in the same publish. The row holds
   the item's `Item ID`, made when the item was added, its `Title`, its `Horizon` as the
   public site's English value, and each of `Description`, `Outcome`, `Phase`, `Labels`,
   `Organisations` and `Details` the item has, each written as a change to that field
@@ -244,7 +256,11 @@ roadmap index is itself named `Template`. A field a co-lead has changed since it
 loaded (a family or category by its ID, so a rename is no change), or an item or
 roadmap since removed, refuses the whole publish. A family or category ID the list
 doesn't have refuses it too, as does any family or category choice, "No family" or "No
-category" included, while its list tab is missing.
+category" included, while its list tab is missing. So does a cell or a row protected
+from the connected account: Google refuses a write that changes one or moves one, and
+with it the whole request, so nothing is written; the editor says a protected part of
+the spreadsheet stopped it and keeps the pending changes (STY-051). Nothing checks for
+protection beforehand.
 
 - The rules, and how the editor differs from the public site on mistakes, are in
   [the roadmap index analysis](docs/analysis/roadmaps-tab-format.md) and

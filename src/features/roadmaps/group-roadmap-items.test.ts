@@ -78,4 +78,33 @@ describe("groupRoadmapItems", () => {
       { item: cards[2], position: 2 },
     ])
   })
+
+  it("shows those that arrived in a placement last, in the order they arrived (STY-051 S1)", () => {
+    const cards = [
+      { title: "Moved second", shown: "now" as const, arrival: 1 },
+      { title: "Read first", shown: "now" as const },
+      { title: "Moved first", shown: "now" as const, arrival: 0 },
+      { title: "Elsewhere", shown: "later" as const, arrival: 2 },
+      { title: "Read last", shown: "now" as const },
+      { title: "New", shown: "now" as const, arrival: 3 },
+    ]
+
+    const { placements } = groupRoadmapItems(
+      cards,
+      ({ shown }) => shown,
+      ({ arrival }) => arrival,
+    )
+
+    expect(
+      placements
+        .find(({ placement }) => placement === "now")
+        ?.items.map(({ item, position }) => [item.title, position]),
+    ).toEqual([
+      ["Read first", 1],
+      ["Read last", 4],
+      ["Moved first", 2],
+      ["Moved second", 0],
+      ["New", 5],
+    ])
+  })
 })

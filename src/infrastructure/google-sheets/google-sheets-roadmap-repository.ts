@@ -190,7 +190,8 @@ type IndexCells = readonly (readonly [RoadmapIndexWriteColumn, string])[]
  * `Families` and `Categories` tabs that link each roadmap to its family and category
  * (ADR-013). A roadmap's items take one more read, of the tab its index row names
  * (ADR-011). A publish makes those reads, then one all-or-nothing `batchUpdate`
- * (ADR-012), which also appends a row for each new item (STY-045); so does adding or
+ * (ADR-012), which also moves the row of each moved item (STY-051) and appends a row
+ * for each new item (STY-045); so does adding or
  * changing a family (STY-029), and adding a roadmap, which also reads the `Template`
  * tab's header (STY-040).
  */
@@ -260,9 +261,10 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
   /**
    * Re-reads the roadmap as `listRoadmapItems` does, plans the publish over it, then
    * sends every write in one `batchUpdate`, which Google applies all or nothing
-   * (ADR-012): each changed cell, and a row for each new item, which Google puts after
-   * the last row any value uses as it applies the write. A write whose answer is lost
-   * is settled by one more read (Option 16).
+   * (ADR-012): each changed cell, then the row of each moved item, to last in its new
+   * placement (STY-051), then a row for each new item, which Google puts after the last
+   * row any value uses as it applies the write. A write whose answer is lost is settled
+   * by one more read (Option 16).
    */
   async publishRoadmapChanges(
     roadmapId: string,
@@ -1059,8 +1061,8 @@ function snapshotOf({
 
 /**
  * The requests that make `writes`, after any `index` already holds: growing grids
- * first, then headers, then cells, then a row for each new item, after the tab's last
- * row in use (STY-045).
+ * first, then headers, then cells, at the rows as read, then each moved item's row
+ * (STY-051), then a row for each new item, after the tab's last row in use (STY-045).
  */
 function batchRequests(
   read: RoadmapRead,
@@ -1093,6 +1095,14 @@ function batchRequests(
   }
   for (const { index: i, id } of writes.ids) {
     tab.write(rowOf(i), "Item ID", id)
+  }
+  for (const move of writes.moves) {
+    tab.move(
+      rowOf(move.index),
+      "after" in move
+        ? { after: rowOf(move.after) }
+        : { before: rowOf(move.before) },
+    )
   }
   for (const { id, fields } of writes.newItems) {
     tab.append([

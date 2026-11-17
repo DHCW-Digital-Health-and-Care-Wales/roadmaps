@@ -235,7 +235,11 @@ node .agents/skills/ux-prototypes/scripts/check-page.mjs docs/analysis/{topic}-u
 ```
 
 The check runs by hand, not in CI: it is a local aid for throwaway design
-pages. It screenshots every design at 1440px wide. It fails when the page's
+pages. It screenshots every design at 1440px wide (`d1.png`) and each of its
+artboards (`d1-ab1.png`), and writes `page-text.txt` to the same folder: per
+design and artboard, each frame's caption, its visible text and each control's
+role and accessible name. Read the artboard images, since a design's own image
+can stand many artboards tall. It fails when the page's
 script throws as it opens, the page scrolls sideways at 375px wide, a design's
 navigation has no native links or buttons, a `.rad` or `.chk` mark sits
 outside a native control, an element id repeats, or the review bar does not
@@ -260,6 +264,9 @@ Deliver through the PR path in `.agents/skills/implement-story/SKILL.md`. Brief 
 `.agents/skills/implement-story/references/delegation.md`, giving each the
 committed page and analysis plus:
 
+- **Both reviewers**: the page's `page-text.txt` and the per-artboard screenshots
+  from step 7's check, by their scratchpad paths, as what to read for the page
+  beside its markup, which runs to thousands of lines.
 - **`code-reviewer`**: the inventory, the scenario trace and the sample sheet,
   by their scratchpad paths.
   It checks each design against the contract and the stories, and checks that

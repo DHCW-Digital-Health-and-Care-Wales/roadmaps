@@ -1,6 +1,6 @@
 # CHO-021: The prototype page check gives reviewers each artboard and the page's text
 
-- **Status**: Proposed — found by the EPC-012 retrospective; tooling only
+- **Status**: Done — in its PR, awaiting merge
 - **Type**: Chore
 - **Area**: Docs
 - **Epic**: standalone
@@ -61,3 +61,29 @@ for the page, beside its markup
 ## Out of scope
 
 - Changing what the check fails on.
+
+## Delivery
+
+### Departures
+
+None.
+
+### Contract for dependents
+
+The check writes, beside `d<n>.png`, one `d<n>-ab<m>.png` per `.ab` and one
+`page-text.txt`. A design with no `.ab` (the working-component page) gets its whole
+outline in the text and no artboard image. The outline is Playwright's
+`ariaSnapshot`, so it leaves out what is `aria-hidden` or not rendered. The success
+line now ends the design count with the artboard count; it still begins
+"N designs captured".
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                                                                                                  |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `.agents/skills/ux-prototypes/scripts/check-page.test.mjs` (_each artboard is captured beside its design, no taller than itself_). Observed run on the EPC-012 prototype page (`roadmap-page-shell-ux-prototypes.html`): 5 designs, 27 artboards, e.g. `d1-ab1.png` 1420×732 where `d1.png` is 1408×6685 |
+| S2       | `check-page.test.mjs` (_the text extract lists, per artboard, each frame's caption, text and controls_); the same run wrote a 3,209-line `page-text.txt` with each frame's caption and its links, buttons and headings by name                                                                           |
+| S3       | `.agents/skills/ux-prototypes/SKILL.md` step 8 (new "Both reviewers" bullet); a prose instruction, so reviewed, not tested                                                                                                                                                                               |
+
+Red shown by breaking the finished code (the artboard screenshot taken of the design,
+the text left empty): both new tests failed; the 29 existing ones still passed.

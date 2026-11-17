@@ -110,9 +110,9 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   otherwise, this note governs, and the story's report says so.
 - **A published move is `PublishWrites.moves`** (STY-051; its _Contract for
   dependents_, archived, says what `planItemMoves`, `movedItems`, `TabWriter.move`
-  and `PageItem.arrival` do). `planItemMoves` holds a placement's own items still and
-  moves only those arriving: an order that moves them needs its own plan, over the
-  placement's whole target order.
+  and `PageItem.turn`, then `arrival`, do). `planItemMoves` holds a placement's own
+  items still and moves only those arriving, unless the placement's order is pending:
+  it is then given the placement's whole order and may move any of its rows (STY-050).
 - **The order of `RoadmapChanges.items` is the order of moves**: code that rebuilds
   the list keeps it, and only a move puts an entry last (`editItem`).
 - **A test whose publish moves a row compares rows by their title, or the tab's rows
@@ -127,8 +127,7 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   dependents_, archived, says what `PlacementOrder`, `arrangedOrder`, `settleOrders`
   and `reviewedOrders` do). A hand-written `RoadmapChanges` or `PublishWrites` needs
   `orders`: the typecheck names each one, so spread `NO_CHANGES`. A write that counts
-  what is pending counts orders too: `hasChanges` of `published-state.ts` missed them
-  once, and "Save and publish" dropped an order.
+  what is pending counts orders too (`hasChanges` in `published-state.ts`).
 - **The store settles every change against the roadmap's items as cached**
   (`createPendingChangesStore(itemsOf)`): a change that adds an item to a placement,
   takes one out or drops one, a removal included, needs no code for orders, but its

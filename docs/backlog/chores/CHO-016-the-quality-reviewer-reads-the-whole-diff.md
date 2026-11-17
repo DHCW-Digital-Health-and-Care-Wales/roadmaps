@@ -145,8 +145,8 @@ reviewer session logs.
   an owner decision in Decisions.
 
 **STY-050** ([#130](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/130)):
-round 1 over `3f309cc..2c4fc7c`, 68 files, 8,150 lines and 343,019 characters; the
-re-check over `2c4fc7c..c5dd96c`, 2,310 lines and 106,707 characters. The sources are
+round 1 over `3f309cc..2c4fc7c`, 68 files, 8,150 lines and 342,827 characters; the
+re-check over `2c4fc7c..c5dd96c`, 2,310 lines and 106,597 characters. The sources are
 STY-051's.
 
 - **Round 1** (`claude-sonnet-5-5`, effort high): 5.1 min, 255.9k tokens. It had no

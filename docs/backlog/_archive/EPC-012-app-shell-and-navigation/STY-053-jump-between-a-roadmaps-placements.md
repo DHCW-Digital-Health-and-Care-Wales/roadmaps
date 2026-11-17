@@ -10,7 +10,7 @@
 - **Binding ADRs**: ADR-011, ADR-012, ADR-010, ADR-008
 - **Suggested model**: Opus — in-page navigation with scroll position, focus and
   pending markers across six placements
-- **Delivered**: _(the PR, once raised)_
+- **Delivered**: _(add on delivery)_
 
 ## Summary
 
@@ -113,8 +113,18 @@ scroll
   links show once the items are shown with their placements.
 - **The current placement** (agent, S3, D8): the last whose heading has reached the
   foot of the stuck title row, none above the first. A jump names its target until the
-  page next scrolls, so a short placement near the end, which can never reach the top,
-  still reads as current once chosen.
+  page next scrolls, or its target leaves the page (the unplaced items, once placed),
+  so a short placement near the end, which can never reach the top, still reads as
+  current once chosen.
+- **Links whose address is the page's own** (agent, review round 1): the router owns
+  the fragment (ADR-004), so a link to `#placement-later` opened in a new tab would
+  find no route; each link's address is the roadmap's, and a click jumps instead.
+- **"Jump to" has a row of its own narrower than a desktop** (agent, review round 1):
+  at a tablet's width, with "Publish roadmap" in the row and a long placement named
+  (in Cymraeg at 768px, in English at 640px), the stuck row was wider than the screen.
+  Below 1024px, "Jump to" runs across the page under the other controls, as on a phone;
+  above it, should the row still be short of room, the controls may shrink, "Jump to"
+  first, cutting its label (its name stays whole), and the title keeps some room.
 - **About's one line** (agent, as the prototypes draw S6): folded, it holds the status
   as a tag, "Product lead: …", "Updated …" (the card's facts, each only when the
   roadmap has it) and Changed, then "Show more" and Edit; "Undo changes" shows once
@@ -137,12 +147,14 @@ scroll
 The epic's `delivery-notes.md` carries the seams as they stand. Besides those:
 
 - **`RoadmapTitleRow`** takes `jumpTo`, a slot placed among the controls on a desktop
-  and in its own row on a phone. **`RoadmapItems`** takes the page's `groups`
+  (`DESKTOP_WIDTH`, `lib/use-media-query.ts`) and in its own row below that. **`RoadmapItems`** takes the page's `groups`
   (`groupPageItems(pageItems)`, `editing/page-items.ts`), computed once in
   `RoadmapView`, in place of `pageItems`.
-- **`placement-navigation/`**: `summariseJumpTargets(groups, orders)` and
-  `jumpTargetHeadingId(target)` (`jump-targets.ts`), `usePlacementNavigation`,
-  `JumpToMenu`, `PlacementLinks` and `JumpTargetLabel`.
+- **`placement-navigation/`**: `summariseJumpTargets(groups, orders)`,
+  `jumpTargetHeadingId(target)` and `jumpTargetName(t, target)` (`jump-targets.ts`),
+  `usePlacementNavigation`, `JumpToMenu`, `PlacementLinks` and `JumpTargetLabel`.
+  `hasGroupedItems(groups)` (`group-roadmap-items.ts`) is the one test of whether the
+  page has items to show, for the items area and the navigation alike.
 - **`useMenuChoice`** (`lib/use-menu-choice.ts`) replaces More's own deferred-action
   state; **`usePinnedHeight(edge)`** (`components/layout/pinning.ts`) reads a pinned
   inset for a scroll by script.
@@ -150,6 +162,9 @@ The epic's `delivery-notes.md` carries the seams as they stand. Besides those:
   **Renamed**: `roadmaps.card.*` to `roadmaps.facts.*`, shared by the card and About's
   line. **Copy**: `roadmaps.jumpTo.*`, `roadmaps.about.{showMore,showLess}`,
   `roadmaps.about.fields.{family,category}`.
+- **E2E**: `openRoadmapIn` (any spreadsheet) and `openLongRoadmap`
+  (`fixtures/roadmap-page.ts`); `tabTo` (`fixtures/keyboard.ts`), shared with the focus
+  tours.
 - **Data source**: nothing read or written changes.
 
 ### Scenario evidence
@@ -158,15 +173,15 @@ The epic's `delivery-notes.md` carries the seams as they stand. Besides those:
 `src/features/roadmaps/pages/roadmap-detail-page-placement-navigation.test.tsx`;
 `targets` is `src/features/roadmaps/placement-navigation/jump-targets.test.ts`.
 
-| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| S1       | e2e "jumps to Later from "Jump to", its heading under the title row, focused, the address unchanged, on a desktop" and "… on a phone" (D8), "jumps to a heading clear of the title row, as it sticks for the first time" (reduced motion), "jumps from the links under About, and from a heading jumped to, on to the next"; nav "moves focus to the placement's heading from the menu…" and "… from a link, without changing the address" |
-| S2       | targets (counts; an edited, moved, new or reordered item's mark where it shows); nav "lists the unplaced items and all six placements with their counts…" and "marks where a change is pending…"; e2e "shows each placement's count and marks those with pending changes"                                                                                                                                                                  |
-| S3       | e2e "marks the placement the page is in, to sight and to a screen reader, and none at the top" (D8); nav "… and names it the current one" (`aria-current` on the link and menu item, the button's name)                                                                                                                                                                                                                                    |
-| S4       | targets "lists the unplaced items first, only while there are some"; nav "leaves the unplaced items out while there are none"; e2e "reaches the unplaced items, and an empty placement…"                                                                                                                                                                                                                                                   |
-| S5       | targets (an empty placement with 0); nav "reaches an empty placement, which says it has none"; e2e "reaches the unplaced items, and an empty placement, which says it has none"                                                                                                                                                                                                                                                            |
-| S6       | `components/roadmap-about.test.tsx` (the one line, what it leaves out, Changed on it, the fields once open, Family and Category among them); e2e "folds About to one line, so the first placement starts on the first screen at 1280×800"; `structure` `detail`                                                                                                                                                                            |
-| S7       | e2e "is used by keyboard alone, in Cymraeg on a 375px phone, with no sideways scroll"; nav "is Welsh, its names and counts"; `focus-indicator.spec.ts` (the links, Show more and Jump to on the page's tour); `accessibility.spec.ts` "a roadmap's placement navigation: Jump to open…" (axe, light and dark)                                                                                                                              |
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | e2e "jumps to Later from "Jump to", its heading under the title row, focused, the address unchanged, on a desktop" and "… on a phone" (D8), "jumps to a heading clear of the title row, as it sticks for the first time" (reduced motion), "jumps from the links under About, and from a heading jumped to, on to the next"; nav "moves focus to the placement's heading from the menu…" and "… from a link, without changing the address"   |
+| S2       | targets (counts; an edited, moved, new or reordered item's mark where it shows); nav "lists the unplaced items and all six placements with their counts…" and "marks where a change is pending…"; e2e "shows each placement's count and marks those with pending changes"                                                                                                                                                                    |
+| S3       | e2e "marks the placement the page is in, to sight and to a screen reader, and none at the top" (D8); nav "… and names it the current one" (`aria-current` on the link and menu item, the button's name) and "names no placement once the one jumped to has gone from the page"                                                                                                                                                               |
+| S4       | targets "lists the unplaced items first, only while there are some"; nav "leaves the unplaced items out while there are none"; e2e "reaches the unplaced items, and an empty placement…"                                                                                                                                                                                                                                                     |
+| S5       | targets (an empty placement with 0); nav "reaches an empty placement, which says it has none"; e2e "reaches the unplaced items, and an empty placement, which says it has none"                                                                                                                                                                                                                                                              |
+| S6       | `components/roadmap-about.test.tsx` (the one line, what it leaves out, Changed on it, the fields once open, Family and Category among them); e2e "folds About to one line, so the first placement starts on the first screen at 1280×800"; `structure` `detail`                                                                                                                                                                              |
+| S7       | e2e "is used by keyboard alone, in Cymraeg on a 375px phone, with no sideways scroll" (Tab, Enter and the arrow keys) and "keeps every control of the stuck row on screen at 640px, in en…" and "… at 768px, in cy…"; nav "is Welsh, its names and counts"; `focus-indicator.spec.ts` (the links, Show more and Jump to on the page's tour); `accessibility.spec.ts` "a roadmap's placement navigation: Jump to open…" (axe, light and dark) |
 
 `summariseJumpTargets` was test-first: its six tests failed on a stub before it was
 written. The rest followed working code, each shown red by breaking it: no focus on the
@@ -174,4 +189,7 @@ heading after a jump fails four nav tests; no `aria-current` on the links fails 
 names it the current one"; the entry's phrase without "unpublished changes" fails "marks
 where a change is pending…"; "Undo changes" while folded fails the editing test of S5
 (STY-025); and the inset measured from the content box puts Later's heading at 40px
-under the 68px row in the reduced-motion e2e test.
+under the 68px row in the reduced-motion e2e test. Review round 1's fixes: the jump
+kept after its target left fails "names no placement once the one jumped to has gone"
+(written first, red before the fix); the stuck row as it was puts "Add an item" (640px, English) and "Ychwanegu eitem" (768px, Cymraeg) past the right edge in the e2e tests "keeps every control of the stuck row on screen…"; and About's actions given `true` whatever
+its state fails "shows its controls in the heading's row…".

@@ -146,10 +146,16 @@ describe("Jumping between a roadmap's placements (STY-053)", () => {
   it("moves focus to the heading from a link, without changing the address (S1, D8)", async () => {
     const user = await renderPage()
     const address = window.location.href
-
-    await user.click(
-      within(links()).getByRole("link", { name: /^Not on the public roadmap/ }),
+    const link = within(links()).getByRole("link", {
+      name: /^Not on the public roadmap/,
+    })
+    // Its address is the roadmap's own, so one opened in a new tab opens it.
+    expect(link).toHaveAttribute(
+      "href",
+      expect.stringMatching(/\/roadmaps\/producta$/),
     )
+
+    await user.click(link)
 
     expect(
       main().getByRole("heading", {
@@ -158,6 +164,24 @@ describe("Jumping between a roadmap's placements (STY-053)", () => {
       }),
     ).toHaveFocus()
     expect(window.location.href).toBe(address)
+  })
+
+  it("names no placement once the one jumped to has gone from the page (S3)", async () => {
+    const user = await renderPage()
+    await user.click(
+      within(links()).getByRole("link", { name: /^Not on the public roadmap/ }),
+    )
+    expect(
+      jumpToButton("Jump to: Not on the public roadmap"),
+    ).toBeInTheDocument()
+
+    // Its one item given a placement, the unplaced items go.
+    await user.click(main().getByRole("button", { name: "Move Someday item" }))
+    await user.click(await screen.findByRole("menuitem", { name: "Now" }))
+
+    await waitFor(() => {
+      expect(jumpToButton("Jump to")).toBeInTheDocument()
+    })
   })
 
   it("reaches an empty placement, which says it has none (S5)", async () => {

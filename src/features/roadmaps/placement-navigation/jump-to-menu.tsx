@@ -11,7 +11,7 @@ import {
 import { useMenuChoice } from "@/lib/use-menu-choice"
 
 import { JumpTargetLabel } from "./jump-target-label"
-import { useJumpTargetName } from "./use-jump-target-name"
+import { jumpTargetName } from "./jump-targets"
 import type { PlacementNavigation } from "./use-placement-navigation"
 
 export interface JumpToMenuProps {
@@ -21,15 +21,14 @@ export interface JumpToMenuProps {
 /**
  * "Jump to", in a roadmap's title row (STY-053 D5): a menu of the page's jump targets,
  * each with its count and pending mark, the current one ticked. The button names the
- * current one once the page has reached it ("Jump to: Later", S3, D8). On a phone it
- * runs across the page. A jump waits for the menu to close, so focus lands on the
+ * current one once the page has reached it ("Jump to: Later", S3, D8). Narrower than a
+ * desktop it runs across the page, in a row of its own. A jump waits for the menu to close, so focus lands on the
  * heading and stays there.
  */
 export function JumpToMenu({
   navigation: { summaries, current, jump },
 }: JumpToMenuProps) {
   const { t } = useTranslation()
-  const nameOf = useJumpTargetName()
   const { choose, onOpenChangeComplete } = useMenuChoice(jump)
 
   return (
@@ -38,13 +37,14 @@ export function JumpToMenu({
         render={
           <Button
             variant="secondary"
-            className="w-full min-w-0 justify-between sm:w-auto"
+            // It gives way first in a row short of room, cutting its label.
+            className="w-full min-w-0 shrink justify-between lg:w-auto"
           />
         }
       >
         <span className="truncate">
           {current
-            ? t("roadmaps.jumpTo.current", { name: nameOf(current) })
+            ? t("roadmaps.jumpTo.current", { name: jumpTargetName(t, current) })
             : t("roadmaps.jumpTo.menu")}
         </span>
         <ChevronDownIcon data-icon="inline-end" aria-hidden="true" />

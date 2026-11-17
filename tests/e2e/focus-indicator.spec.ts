@@ -8,6 +8,7 @@ import {
   openEditRoadmapDialog,
 } from "./fixtures/dialogs"
 import { EXAMPLE_SPREADSHEET_WITH_LISTS } from "./fixtures/fake-sheets"
+import { tabTo } from "./fixtures/keyboard"
 import {
   holdConnectedNotice,
   THEMES,
@@ -104,19 +105,6 @@ function describeElement(element: Element) {
       .join(" ")
   const text = name.trim() || element.textContent.trim()
   return `${region ?? "page"}: ${element.tagName.toLowerCase()} ${text}`
-}
-
-/** Presses Tab (or Shift+Tab, backwards) until `target` has focus, as a keyboard user would. */
-async function tabTo(page: Page, target: Locator, key = "Tab") {
-  for (let presses = 0; presses < 20; presses += 1) {
-    await page.keyboard.press(key)
-    if (
-      await target.evaluate((element) => element === document.activeElement)
-    ) {
-      return
-    }
-  }
-  throw new Error("Tabbing never reached the target")
 }
 
 /** The links and form controls a keyboard can use. */

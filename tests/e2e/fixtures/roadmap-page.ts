@@ -106,8 +106,36 @@ export function withLongRoadmap(tab: LongRoadmapTab): readonly FakeTab[] {
   return withTabRows(tab, [header, ...rows, ...extra])
 }
 
+/**
+ * Opens the roadmap on the tab `tab` of `spreadsheet`, in `language`, and connects,
+ * once the card of its item `lastCard` shows.
+ */
+export async function openRoadmapIn(
+  page: Page,
+  sheets: { spreadsheet: readonly FakeTab[] },
+  {
+    spreadsheet,
+    tab,
+    lastCard,
+    language = "en",
+  }: {
+    spreadsheet: readonly FakeTab[]
+    tab: string
+    lastCard: string
+    language?: Language | undefined
+  },
+) {
+  sheets.spreadsheet = spreadsheet
+  if (language !== "en") await useLanguage(page, language)
+  await page.goto(`./#/roadmaps/${tab.toLowerCase()}`)
+  await connect(page, COPY[language].connect)
+  await expect(
+    page.getByRole("heading", { level: 3, name: lastCard }),
+  ).toBeVisible()
+}
+
 /** Opens Product A, published, or Product C, not published, each with a long page. */
-export async function openLongRoadmap(
+export function openLongRoadmap(
   page: Page,
   sheets: { spreadsheet: readonly FakeTab[] },
   {
@@ -115,13 +143,12 @@ export async function openLongRoadmap(
     language = "en",
   }: { tab?: LongRoadmapTab; language?: Language } = {},
 ) {
-  sheets.spreadsheet = withLongRoadmap(tab)
-  if (language !== "en") await useLanguage(page, language)
-  await page.goto(`./#/roadmaps/${tab.toLowerCase()}`)
-  await connect(page, COPY[language].connect)
-  await expect(
-    page.getByRole("heading", { level: 3, name: "Planned work 12" }),
-  ).toBeVisible()
+  return openRoadmapIn(page, sheets, {
+    spreadsheet: withLongRoadmap(tab),
+    tab,
+    lastCard: "Planned work 12",
+    language,
+  })
 }
 
 export const LEFT_THE_CONTENT = "focus left the page's content"
@@ -167,13 +194,18 @@ export function about(page: Page, language: Language = "en"): Locator {
     .getByRole("region", { name: COPY[language].about })
 }
 
-/** Opens "About this roadmap" with its "Show more", and returns it, its fields shown. */
+/**
+ * Opens "About this roadmap" with its "Show more", unless it is open already, and
+ * returns it, its fields shown.
+ */
 export async function openAbout(
   page: Page,
   language: Language = "en",
 ): Promise<Locator> {
   const region = about(page, language)
-  await region.getByRole("button", { name: COPY[language].showMore }).click()
+  const showMore = region.getByRole("button", { name: COPY[language].showMore })
+  if (await showMore.isVisible()) await showMore.click()
+  await expect(region.getByRole("term").first()).toBeVisible()
   return region
 }
 

@@ -35,6 +35,7 @@ import {
 } from "../testing/roadmap-dialog"
 import { expectOpeningFocus } from "../testing/opening-focus"
 import {
+  aboutField,
   chooseFromMore,
   openAbout,
   refreshRoadmap,
@@ -453,12 +454,12 @@ describe("adding a roadmap from the list (STY-041)", () => {
       expect(
         main().getByRole("button", { name: "Publish roadmap" }),
       ).toBeInTheDocument()
-      const about = within(await openAbout(user))
-      expect(about.getByText("Sam Evans")).toBeInTheDocument()
-      expect(about.getByText("Family").nextElementSibling).toHaveTextContent(
+      const about = await openAbout(user)
+      expect(aboutField(about, "Product lead")).toHaveTextContent("Sam Evans")
+      expect(aboutField(about, "Family")).toHaveTextContent(
         "Medicines & Diagnostics",
       )
-      expect(about.getByText("Category").nextElementSibling).toHaveTextContent(
+      expect(aboutField(about, "Category")).toHaveTextContent(
         "GP & Community Services",
       )
       expect(

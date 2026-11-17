@@ -16,7 +16,7 @@ import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
 import { createInMemoryRoadmapRepository } from "../testing/in-memory-roadmap-repository"
-import { openAbout } from "../testing/roadmap-page"
+import { aboutField, openAbout } from "../testing/roadmap-page"
 import { expectWriteHold, refreshHold } from "../testing/write-hold"
 
 const outOfStep = (overrides: Partial<Roadmap> = {}) =>
@@ -265,14 +265,9 @@ describe("making a roadmap match its lists (STY-030)", () => {
 
     const about = await openAbout(user)
     await vi.waitFor(() => {
-      expect(
-        within(about).getByText("Family", { selector: "dt" })
-          .nextElementSibling,
-      ).toHaveTextContent("Shared Care Record")
-      expect(
-        within(about).getByText("Family", { selector: "dt" })
-          .nextElementSibling,
-      ).toBeVisible()
+      const family = aboutField(about, "Family")
+      expect(family).toHaveTextContent("Shared Care Record")
+      expect(family).toBeVisible()
     })
   })
 

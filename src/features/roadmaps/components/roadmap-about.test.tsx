@@ -2,7 +2,6 @@ import { screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it } from "vitest"
 
-import type { Roadmap } from "@/domain/roadmap/roadmap"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import type { Language } from "@/i18n"
 import { renderWithI18n } from "@/test/render-with-i18n"
@@ -24,7 +23,7 @@ function about() {
 }
 
 function renderAbout(
-  props: Partial<RoadmapAboutProps> & { roadmap?: Roadmap } = {},
+  props: Partial<RoadmapAboutProps> = {},
   language: Language = "en",
 ) {
   const user = userEvent.setup()
@@ -64,7 +63,7 @@ describe("RoadmapAbout", () => {
       "About this roadmap",
     )
     expect(region).toHaveTextContent(
-      "Beta" + "Product lead: Alex Jones, Sam Evans" + "Updated 2 October 2026",
+      "BetaProduct lead: Alex Jones, Sam EvansUpdated 2 October 2026",
     )
     expect(within(region).queryByRole("term")).not.toBeInTheDocument()
     expect(region).not.toHaveTextContent("What Product A does.")
@@ -145,15 +144,26 @@ describe("RoadmapAbout", () => {
     expect(definitions()).toEqual(["No date"])
   })
 
-  it("shows its controls beside the heading, as they suit it folded or open, ahead of the fields (STY-042 S1)", async () => {
-    await renderOpen({
+  it("shows its controls in the heading's row, as they suit it folded or open, ahead of the fields (STY-042 S1)", async () => {
+    const user = renderAbout({
       actions: (open) => (
         <button type="button">{open ? "Edit open" : "Edit folded"}</button>
       ),
     })
-
     const region = about()
+    const headingRow = within(region).getByRole("heading", { level: 2 })
+      .parentElement?.parentElement
+    expect(headingRow).toContainElement(
+      within(region).getByRole("button", { name: "Edit folded" }),
+    )
+
+    await user.click(within(region).getByRole("button", { name: "Show more" }))
+
+    expect(
+      within(region).queryByRole("button", { name: "Edit folded" }),
+    ).not.toBeInTheDocument()
     const edit = within(region).getByRole("button", { name: "Edit open" })
+    expect(headingRow).toContainElement(edit)
     const [firstLabel] = within(region).getAllByRole("term")
     expect(firstLabel && edit.compareDocumentPosition(firstLabel)).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,

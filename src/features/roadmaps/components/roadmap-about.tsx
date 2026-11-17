@@ -9,7 +9,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { localise } from "@/domain/roadmap/localised-text"
+import { localise, type LocalisedText } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import { formatCalendarDate, useLanguage } from "@/i18n"
 
@@ -38,9 +38,10 @@ export interface RoadmapAboutProps {
  * and when it was last updated, each only when it has one, and a Changed tag while it
  * has a pending change; "Show more" opens the rest in place. Open, each field shows
  * under its label, only when it has one: status label, product lead, family, with its
- * colour, and category (D6, D8), vision and service description. Text keeps its line breaks. A
- * roadmap with none says so, so editing has a place to start. Then, always, when it was
- * last updated, as its list card shows the date, or that it has none (STY-036 S1).
+ * colour, and category (D6, D8), vision and service description. Text keeps its line
+ * breaks. A roadmap with none says so, so editing has a place to start. Then, always,
+ * when it was last updated, as its list card shows the date, or that it has none
+ * (STY-036 S1).
  */
 export function RoadmapAbout({
   roadmap,
@@ -52,15 +53,16 @@ export function RoadmapAbout({
   const headingId = useId()
   const [open, setOpen] = useState(false)
 
-  const shown = (text: Roadmap["vision"]) => text && localise(text, language)
-  const status = shown(roadmap.statusLabel)
+  const localised = (text: LocalisedText | null) =>
+    text && localise(text, language)
+  const status = localised(roadmap.statusLabel)
   const fields = [
     { key: "statusLabel", value: status },
     { key: "productLead", value: roadmap.productLead },
-    { key: "family", value: shown(roadmap.family) },
-    { key: "category", value: shown(roadmap.category) },
-    { key: "vision", value: shown(roadmap.vision) },
-    { key: "serviceDescription", value: shown(roadmap.serviceDescription) },
+    { key: "family", value: localised(roadmap.family) },
+    { key: "category", value: localised(roadmap.category) },
+    { key: "vision", value: localised(roadmap.vision) },
+    { key: "serviceDescription", value: localised(roadmap.serviceDescription) },
   ].filter((field): field is { key: AboutField; value: string } =>
     Boolean(field.value),
   )

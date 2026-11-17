@@ -1,8 +1,7 @@
 import { TriangleAlertIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
-import type { JumpTargetSummary } from "./jump-targets"
-import { useJumpTargetName } from "./use-jump-target-name"
+import { jumpTargetName, type JumpTargetSummary } from "./jump-targets"
 
 /**
  * A jump target as a menu item or link shows it (STY-053 S2): its name, the unplaced
@@ -16,7 +15,7 @@ export function JumpTargetLabel({
   summary: JumpTargetSummary
 }) {
   const { t } = useTranslation()
-  const name = useJumpTargetName()(target)
+  const name = jumpTargetName(t, target)
   return (
     <>
       {target === "unplaced" && (

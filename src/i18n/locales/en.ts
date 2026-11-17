@@ -275,6 +275,8 @@ export const en = {
       target_zero: "{{name}}, no items",
       target_one: "{{name}}, {{count, number}} item",
       target_other: "{{name}}, {{count, number}} items",
+      /** A placement with no items is still marked while its order is pending. */
+      targetPending_zero: "{{name}}, no items, unpublished changes",
       targetPending_one:
         "{{name}}, {{count, number}} item, unpublished changes",
       targetPending_other:

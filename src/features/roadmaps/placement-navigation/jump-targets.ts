@@ -1,3 +1,5 @@
+import type { TFunction } from "i18next"
+
 import type { PlacementOrder } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 
@@ -59,4 +61,11 @@ function isPending({ entry, newItemId }: PageItem): boolean {
  */
 export function jumpTargetHeadingId(target: JumpTarget): string {
   return `placement-${target}`
+}
+
+/** A jump target's name: the heading it has on the page. */
+export function jumpTargetName(t: TFunction, target: JumpTarget): string {
+  return target === "unplaced"
+    ? t("roadmaps.items.unplaced.title")
+    : t(`roadmaps.items.placements.${target}`)
 }

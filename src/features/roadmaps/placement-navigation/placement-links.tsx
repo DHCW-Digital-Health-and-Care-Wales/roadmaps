@@ -1,9 +1,9 @@
+import { useLocation, useRouter } from "@tanstack/react-router"
 import { useTranslation } from "react-i18next"
 
 import { cn } from "@/lib/utils"
 
 import { JumpTargetLabel } from "./jump-target-label"
-import { jumpTargetHeadingId } from "./jump-targets"
 import type { PlacementNavigation } from "./use-placement-navigation"
 
 export interface PlacementLinksProps {
@@ -14,12 +14,16 @@ export interface PlacementLinksProps {
  * A row of links to the page's jump targets, under "About this roadmap" and scrolling
  * away with it (STY-053 D5), each with its count and pending mark, the current one bold
  * and underlined. On a phone the row scrolls inside itself, never the page (S7). A link
- * jumps without changing the address, as the skip link does (D8, ADR-004).
+ * jumps without changing the address, as the skip link does (D8, ADR-004); its address
+ * is the page's own, since the router owns the fragment, so one opened in a new tab
+ * opens the roadmap.
  */
 export function PlacementLinks({
   navigation: { summaries, current, jump },
 }: PlacementLinksProps) {
   const { t } = useTranslation()
+  const router = useRouter()
+  const here = router.history.createHref(useLocation().href)
   return (
     <nav
       aria-label={t("roadmaps.jumpTo.links")}
@@ -32,14 +36,14 @@ export function PlacementLinks({
           return (
             <li key={summary.target} className="flex">
               <a
-                href={`#${jumpTargetHeadingId(summary.target)}`}
+                href={here}
                 aria-current={isCurrent ? "location" : undefined}
                 className={cn(
                   "flex items-center gap-1.5 border-b-4 border-transparent px-2.5 py-1.5 text-body-xs whitespace-nowrap text-foreground outline-none focus-visible:focus-link [&>svg]:size-4 [&>svg]:shrink-0",
                   isCurrent && "border-primary font-bold",
                 )}
                 onClick={(event) => {
-                  // Hash history owns the URL fragment, so jump without navigating.
+                  // Jump without navigating: the address stays the page's.
                   event.preventDefault()
                   jump(summary.target)
                 }}

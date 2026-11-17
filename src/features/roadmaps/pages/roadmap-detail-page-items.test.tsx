@@ -22,8 +22,8 @@ import {
 } from "../testing/in-memory-roadmap-repository"
 import { expectOpeningFocus } from "../testing/opening-focus"
 import {
-  moreButton,
   aboutField,
+  moreButton,
   openAbout,
   openMore,
   refreshRoadmap,

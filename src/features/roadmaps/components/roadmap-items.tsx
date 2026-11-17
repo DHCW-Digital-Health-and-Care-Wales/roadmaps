@@ -14,7 +14,11 @@ import {
 import type { PageItem } from "../editing/page-items"
 import { PlacementHeading } from "../editing/placement-heading"
 import type { PageItemDialog } from "../editing/use-item-dialog"
-import type { Positioned, RoadmapItemGroups } from "../group-roadmap-items"
+import {
+  hasGroupedItems,
+  type Positioned,
+  type RoadmapItemGroups,
+} from "../group-roadmap-items"
 import { jumpTargetHeadingId } from "../placement-navigation/jump-targets"
 import { AddItemButton } from "./add-item-button"
 import { StatusPanel } from "./status-panel"
@@ -44,25 +48,24 @@ export interface RoadmapItemsProps {
  * placements in the public site's order, each under its heading, saying when it has
  * none (D1); each heading is where the placement navigation jumps (STY-053). A roadmap
  * with no items, and none pending, has one dashed panel instead, saying what to add,
- * with "Add an item" (D5, STY-042 S2, STY-046 S8). Each item can be
- * moved, and shows its pending changes, in its pending placement (STY-025, STY-031),
- * last there, in the order moved (STY-051 S1); an item added and not yet published
- * shows after those (STY-046 S3). A placement whose order is pending shows its items
- * in it, under a heading that says so (`PlacementHeading`, STY-050 S3); what a move
- * within a placement and "Undo order" came to is said in a status line. Edit on a
- * card, and "Add an item", open the page's one item dialog, which is drawn here.
+ * with "Add an item" (D5, STY-042 S2, STY-046 S8). Each item can be moved, and shows
+ * its pending changes, in its pending placement (STY-025, STY-031), last there, in the
+ * order moved (STY-051 S1); an item added and not yet published shows after those
+ * (STY-046 S3). A placement whose order is pending shows its items in it, under a
+ * heading that says so (`PlacementHeading`, STY-050 S3); what a move within a
+ * placement and "Undo order" came to is said in a status line. Edit on a card, and
+ * "Add an item", open the page's one item dialog, which is drawn here.
  */
 export function RoadmapItems({
   roadmapId,
   items,
   organisations,
-  groups: { unplaced, placements },
+  groups,
   itemDialog,
   onItemRemoved,
 }: RoadmapItemsProps) {
   const { t } = useTranslation()
-  const empty =
-    unplaced.length === 0 && placements.every(({ items }) => items.length === 0)
+  const { unplaced, placements } = groups
   const [said, setSaid] = useState<{ serial: number; text: string }>()
   // A moved item's card is a new one, in another list, so focus is handed to it here.
   const [focus, setFocus] = useState<FocusRequest | null>(null)
@@ -106,7 +109,7 @@ export function RoadmapItems({
   const unplacedId = jumpTargetHeadingId("unplaced")
   return (
     <>
-      {empty ? (
+      {!hasGroupedItems(groups) ? (
         <StatusPanel
           compact
           title={t("roadmaps.items.empty.title")}

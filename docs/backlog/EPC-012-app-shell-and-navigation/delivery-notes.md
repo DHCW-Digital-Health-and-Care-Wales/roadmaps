@@ -21,7 +21,7 @@
   with `stuck`. Slim a control by its props or classes, in place: moving it to another
   parent remounts it, and focus on it is lost as the row sticks. STY-054's phone menu
   button joins this row; "Jump to" comes in by its `jumpTo` slot, among the controls on
-  a desktop and in a row of its own on a phone.
+  a desktop (`DESKTOP_WIDTH`, 1024px) and in a row of its own below that.
 - A bar pinned to the screen publishes its height through `usePinnedInset`
   (`components/layout/pinning.ts`), which `globals.css` turns into `scroll-padding`, so
   a focused control or a jumped-to heading stays clear of it. The top inset is the

@@ -71,9 +71,15 @@ export function usePlacementNavigation(
     const follow = () => {
       cancelAnimationFrame(frame)
       frame = requestAnimationFrame(() => {
-        // A scroll that moved the page from where a jump left it ends the jump.
-        if (lastJump.current?.scrollY !== window.scrollY)
+        // A scroll that moved the page from where a jump left it ends the jump, as
+        // does its target leaving the page (the unplaced items, once placed).
+        const jumped = lastJump.current
+        if (
+          jumped?.scrollY !== window.scrollY ||
+          !targets.includes(jumped.target)
+        ) {
           lastJump.current = null
+        }
         setCurrent(lastJump.current?.target ?? targetAtTop(targets, top))
       })
     }

@@ -40,6 +40,7 @@ import { PublishedStateNotice } from "../editing/published-state-notice"
 import { RoadmapPublishing } from "../editing/roadmap-publishing"
 import { useItemDialog } from "../editing/use-item-dialog"
 import { usePublishedState } from "../editing/use-published-state"
+import { hasGroupedItems } from "../group-roadmap-items"
 import { JOIN_READ } from "../hooks/roadmap-queries"
 import { useAddedRoadmapNotice } from "../hooks/use-added-roadmap"
 import { useOrganisations } from "../hooks/use-organisations"
@@ -190,11 +191,12 @@ function RoadmapView({
   const pageItems = usePageItems(roadmap.id, items.data)
   const groups = useMemo(() => groupPageItems(pageItems), [pageItems])
   const navigation = usePlacementNavigation(groups, changes?.orders)
-  // The items area shows its placements, each with a heading to jump to.
+  // As the items area shows its placements, each with a heading to jump to: once both
+  // reads are in, with an item to show (`RoadmapItemsArea`, `RoadmapItems`).
   const placementsShown =
     items.data !== undefined &&
     organisations.data !== undefined &&
-    pageItems.length > 0
+    hasGroupedItems(groups)
   const heading = useRef<HTMLHeadingElement>(null)
   const addItemButton = useRef<HTMLButtonElement>(null)
   const publishedStateNotice = useRef<HTMLDivElement>(null)

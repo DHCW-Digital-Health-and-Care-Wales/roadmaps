@@ -1,14 +1,16 @@
 import type { Locator, Page } from "@playwright/test"
 
 import { openEditItemDialog } from "./fixtures/dialogs"
-import { withTabItems } from "./fixtures/fake-sheets"
-import { useLanguage, type Language } from "./fixtures/look"
+import { type FakeTab, withTabItems } from "./fixtures/fake-sheets"
+import { tabTo } from "./fixtures/keyboard"
+import type { Language } from "./fixtures/look"
 import {
   about,
   focusClearOfBars,
   openLongRoadmap,
+  openRoadmapIn,
 } from "./fixtures/roadmap-page"
-import { connect, expect, test } from "./fixtures/test"
+import { expect, test } from "./fixtures/test"
 
 /**
  * STY-053: a roadmap's page reaches any placement from "Jump to" in its title row, or
@@ -21,13 +23,11 @@ const PHONE = { width: 375, height: 812 }
 
 const COPY = {
   en: {
-    connect: "Connect Google",
     jumpTo: "Jump to",
     links: "Horizons and sections",
     later: "Later",
   },
   cy: {
-    connect: "Cysylltu â Google",
     jumpTo: "Neidio i",
     links: "Gorwelion ac adrannau",
     later: "Hwyrach",
@@ -69,28 +69,27 @@ async function jumpFromMenu(
 }
 
 /** A small roadmap: one unplaced item, seven in Now, two in Next, one in Later. */
-async function openSmallRoadmap(
+function openSmallRoadmap(
   page: Page,
-  sheets: { spreadsheet: unknown },
+  sheets: { spreadsheet: readonly FakeTab[] },
   language: Language = "en",
 ) {
-  sheets.spreadsheet = withTabItems(
-    "ProductA",
-    ["Leaflets in plain language", "Soon"],
-    ...Array.from({ length: 7 }, (_, index): [string, string] => [
-      `Now item ${String(index + 1)}`,
-      "Now",
-    ]),
-    ["Next item 1", "Next"],
-    ["Next item 2", "Next"],
-    ["Later item", "Later"],
-  )
-  if (language !== "en") await useLanguage(page, language)
-  await page.goto("./#/roadmaps/producta")
-  await connect(page, COPY[language].connect)
-  await expect(
-    page.getByRole("heading", { level: 3, name: "Later item" }),
-  ).toBeVisible()
+  return openRoadmapIn(page, sheets, {
+    spreadsheet: withTabItems(
+      "ProductA",
+      ["Leaflets in plain language", "Soon"],
+      ...Array.from({ length: 7 }, (_, index): [string, string] => [
+        `Now item ${String(index + 1)}`,
+        "Now",
+      ]),
+      ["Next item 1", "Next"],
+      ["Next item 2", "Next"],
+      ["Later item", "Later"],
+    ),
+    tab: "ProductA",
+    lastCard: "Later item",
+    language,
+  })
 }
 
 /** The top of `locator`'s box, in the viewport. */
@@ -268,13 +267,16 @@ test("is used by keyboard alone, in Cymraeg on a 375px phone, with no sideways s
   await page.setViewportSize(PHONE)
   await openSmallRoadmap(page, sheets, "cy")
 
-  await jumpTo(page, "cy").focus()
+  await tabTo(page, jumpTo(page, "cy"), "Tab", 40)
   await page.keyboard.press("Enter")
   const menu = page.getByRole("menu")
   await expect(menu.getByRole("menuitem")).toHaveCount(7)
-  await menu
-    .getByRole("menuitem", { name: new RegExp(`^${COPY.cy.later},`) })
-    .focus()
+  // From the first item, the unplaced items', down to Later, the fifth.
+  await expect(menu.getByRole("menuitem").first()).toBeFocused()
+  for (let down = 0; down < 4; down += 1) await page.keyboard.press("ArrowDown")
+  await expect(
+    menu.getByRole("menuitem", { name: new RegExp(`^${COPY.cy.later},`) }),
+  ).toBeFocused()
   await page.keyboard.press("Enter")
   await expect(placementHeading(page, COPY.cy.later)).toBeFocused()
   await expect(jumpTo(page, "cy")).toHaveAccessibleName("Neidio i: Hwyrach")
@@ -287,10 +289,57 @@ test("is used by keyboard alone, in Cymraeg on a 375px phone, with no sideways s
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true)
-  // The links scroll inside their row; Tab brings each into view.
+  // The links scroll inside their row; Tab brings each into view. Backwards from the
+  // heading jumped to, the last link is reached before the rest.
   const notDoing = links(page, "cy").getByRole("link").last()
-  await notDoing.focus()
+  await tabTo(page, notDoing, "Shift+Tab", 40)
   await expect(notDoing).toBeInViewport()
   await page.keyboard.press("Enter")
   await expect(placementHeading(page, "Ddim yn bwrw ymlaen")).toBeFocused()
 })
+
+for (const { width, language, placement, publish } of [
+  {
+    width: 768,
+    language: "cy",
+    placement: "Wedi'u cyflawni'n ddiweddar",
+    publish: "Cyhoeddi'r map trywydd",
+  },
+  {
+    width: 640,
+    language: "en",
+    placement: "Delivered this year",
+    publish: "Publish roadmap",
+  },
+] as const) {
+  test(`keeps every control of the stuck row on screen at ${String(width)}px, in ${language}, for a roadmap not published (S7)`, async ({
+    page,
+    sheets,
+  }) => {
+    await page.setViewportSize({ width, height: 1024 })
+    await openLongRoadmap(page, sheets, { tab: "ProductC", language })
+
+    // A long placement name, so "Jump to" is at its widest.
+    await jumpFromMenu(page, placement, language)
+    await expect(jumpTo(page, language)).toHaveAccessibleName(
+      `${COPY[language].jumpTo}: ${placement}`,
+    )
+    const row = page.locator("[data-stuck]")
+    await expect(row.getByRole("button", { name: publish })).toBeVisible()
+
+    const outside = await row.getByRole("button").evaluateAll((buttons) =>
+      buttons
+        .filter((button) => {
+          const box = button.getBoundingClientRect()
+          return box.left < 0 || box.right > window.innerWidth
+        })
+        .map((button) => button.textContent),
+    )
+    expect(outside).toEqual([])
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+    ).toBe(true)
+  })
+}

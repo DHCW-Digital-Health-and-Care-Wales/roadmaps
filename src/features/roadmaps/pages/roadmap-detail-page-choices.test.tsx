@@ -30,8 +30,8 @@ import {
   openEditRoadmapDialog,
 } from "../testing/roadmap-dialog"
 import {
-  closeConflictReview,
   aboutField,
+  closeConflictReview,
   openAbout,
   openConflictReview,
   refreshRoadmap,

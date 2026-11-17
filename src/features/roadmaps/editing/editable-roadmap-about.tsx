@@ -28,10 +28,9 @@ export interface EditableRoadmapAboutProps {
 /**
  * What the roadmap is about, folded to one line until shown in full (STY-053 S6), with
  * its pending English shown and tagged, and an Edit that opens the roadmap dialog on it
- * (STY-043): its title, status, product lead,
- * vision and service description (STY-025 S5), its family and category (STY-028), and
- * when it was last updated (STY-036). Done keeps the edits pending; the panel stays as
- * it is behind the dialog.
+ * (STY-043): its title, status, product lead, vision and service description (STY-025
+ * S5), its family and category (STY-028), and when it was last updated (STY-036). Done
+ * keeps the edits pending; the panel stays as it is behind the dialog.
  */
 export function EditableRoadmapAbout({ roadmap }: EditableRoadmapAboutProps) {
   const { t } = useTranslation()

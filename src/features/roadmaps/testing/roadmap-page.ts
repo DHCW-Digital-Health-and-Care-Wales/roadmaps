@@ -76,7 +76,7 @@ export async function closeConflictReview(user: User, review: HTMLElement) {
 }
 
 /** "About this roadmap", once it has been read. */
-export function findAbout(): Promise<HTMLElement> {
+function findAbout(): Promise<HTMLElement> {
   return screen.findByRole("region", { name: /About this roadmap|Ynglŷn/ })
 }
 

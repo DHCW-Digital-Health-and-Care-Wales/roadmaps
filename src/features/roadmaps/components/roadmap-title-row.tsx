@@ -2,7 +2,11 @@ import type { ReactNode, RefObject } from "react"
 
 import { StickyHeader } from "@/components/layout/sticky-header"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
-import { useMediaQuery, WIDER_THAN_A_PHONE } from "@/lib/use-media-query"
+import {
+  DESKTOP_WIDTH,
+  useMediaQuery,
+  WIDER_THAN_A_PHONE,
+} from "@/lib/use-media-query"
 import { cn } from "@/lib/utils"
 
 import { ChangedTag } from "../editing/edit-controls"
@@ -31,7 +35,7 @@ export interface RoadmapTitleRowProps {
   onAddItem: () => void
   /**
    * The placement navigation's "Jump to" (STY-053 D5), while the page has placements to
-   * jump to: among the controls, or on a phone in a row of its own under them.
+   * jump to: among the controls on a desktop, or in a row of its own under them.
    */
   jumpTo?: ReactNode
 }
@@ -43,8 +47,9 @@ export interface RoadmapTitleRowProps {
  * (STY-027 S4, S8) and a Changed tag, then "Publish roadmap" while it is not published
  * (D15), "Jump to" (STY-053 D5), More (D6) and "Add an item" (STY-046 S1). Stuck, it
  * slims to one row: the title cut with an ellipsis, its full text still its name, and
- * no badges; on a phone, "Add an item" is an icon, "Publish roadmap" moves into More
- * (D18, D19), and "Jump to" keeps its own row under the rest.
+ * no badges, "Jump to" cut where the row is still short of room; on a phone, "Add an
+ * item" is an icon and "Publish roadmap" moves into More (D18, D19). Narrower than a
+ * desktop, "Jump to" keeps a row of its own under the rest.
  */
 export function RoadmapTitleRow({
   roadmap,
@@ -60,6 +65,9 @@ export function RoadmapTitleRow({
   jumpTo,
 }: RoadmapTitleRowProps) {
   const phone = !useMediaQuery(WIDER_THAN_A_PHONE)
+  // Narrower than a desktop, "Jump to" has a row of its own: beside the rest it would
+  // push them off a tablet's screen, in Cymraeg above all.
+  const jumpToInline = useMediaQuery(DESKTOP_WIDTH)
   return (
     <StickyHeader>
       {(stuck) => {
@@ -78,7 +86,8 @@ export function RoadmapTitleRow({
               <div
                 className={cn(
                   "flex min-w-0 items-center gap-x-3 gap-y-2",
-                  stuck ? "flex-1" : "flex-wrap",
+                  // Stuck, the title keeps some room as the controls give way.
+                  stuck ? "min-w-24 flex-1" : "flex-wrap",
                 )}
               >
                 <h1
@@ -101,11 +110,18 @@ export function RoadmapTitleRow({
                   </>
                 )}
               </div>
-              <div className={cn("flex shrink-0 gap-3", !stuck && "flex-wrap")}>
+              <div
+                className={cn(
+                  "flex gap-3",
+                  // Stuck, the row never wraps: "Jump to" gives way, cutting its
+                  // placement's name, so every control stays on the screen.
+                  stuck ? "min-w-0" : "shrink-0 flex-wrap",
+                )}
+              >
                 {publishShown && (
                   <PublishRoadmapButton state={publishedState} />
                 )}
-                {!phone && jumpTo}
+                {jumpToInline && jumpTo}
                 <RoadmapMoreMenu
                   fetching={fetching}
                   onRefresh={onRefresh}
@@ -119,7 +135,7 @@ export function RoadmapTitleRow({
                 />
               </div>
             </div>
-            {phone && jumpTo}
+            {!jumpToInline && jumpTo}
           </div>
         )
       }}

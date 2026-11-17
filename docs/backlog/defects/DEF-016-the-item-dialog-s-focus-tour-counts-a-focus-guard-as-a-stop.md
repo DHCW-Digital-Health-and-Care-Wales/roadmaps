@@ -16,8 +16,9 @@ The focus-indicator test that tours the item dialog with its fields open fails n
 then: it reports a nameless stop and misses the Title field. It failed once in each of
 two full E2E runs on the DEF-015 branch, in different themes, and passed on rerun. With
 the CPU loaded it fails about one run in five at the default branch, so any PR's
-Playwright run can hit it. The product behaves as intended; the test reads focus while
-the dialog is still moving it.
+Playwright run can hit it. It failed the same way in one of two full runs at STY-051's
+first head (`94b0063`, PR #128), which does not touch the dialog. The product behaves as
+intended; the test reads focus while the dialog is still moving it.
 
 ## Reproduce
 

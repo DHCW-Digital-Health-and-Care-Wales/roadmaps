@@ -1,6 +1,7 @@
 # CHO-016: The quality reviewer reads the whole diff in one pass
 
-- **Status**: In progress — S1 in the backlog triage PR; S2 measures the next two deliveries whose diff is over 100,000 characters
+- **Status**: In progress — S1 in the backlog triage PR; S2 measured STY-051 (Delivery),
+  and three earlier reviews over 100,000 characters after D1 are still unmeasured
 - **Type**: Chore
 - **Area**: Docs (agent definitions and skills)
 - **Epic**: standalone
@@ -108,3 +109,36 @@ option of Q1 to try next
   another record.
 - Splitting a quality review between several reviewers by path: each would load the
   same guides, and none would see a copy made across the split.
+
+## Delivery
+
+### S2: the measured deliveries
+
+**STY-051** ([#128](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/128)):
+round 1 over `25079d1..94b0063`, 41 files, 3,708 lines and 164,582 characters; the
+re-check over `94b0063..98a107d`, 535 lines. Durations and tokens are the runtime's
+totals in the delivery session's results for each reviewer; what each read is from the
+reviewer session logs.
+
+- **Round 1** (`claude-sonnet-5-5`, effort high): 2.7 min, 125.8k tokens. It had no
+  saved output to open: it wrote the diff to five files and read each from its first
+  line to its last, and read, outside them, CHO-019 whole and the diff of
+  `write-failure-message.test.ts`. Git shows the story record's move to `_archive/` as
+  a removal and an addition; the reviewer read the removal and the added file's lines
+  1–25 and 190–302, which hold every line that differs from the old file. It reported
+  nothing unread, and its log agrees. Findings: 2 🟡 and 4 💭, all fixed.
+- **Re-check** (same model and effort): 0.6 min, 42.7k tokens. It had no saved output
+  to open: it wrote its diff to one file and read it whole. It reported nothing unread,
+  and its log agrees. Findings: 2 💭, fixed.
+- **Outcome**: the first pass left nothing unread, so no second pass ran. Beside it, the
+  Opus correctness reviewer took 3.3 min and 130.4k tokens over the same round 1 diff.
+- **Not measured**: three quality reviews over more than 100,000 characters ran after
+  D1 and before STY-051, their sessions outside this evidence: DEF-015
+  ([#115](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/115),
+  round 1 at `3611e9b`, 184,862); the reordering UX prototypes
+  ([#118](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/118),
+  round 1 at `607d1a0`, 330,720); and CHO-009's fresh pass
+  ([#120](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/120),
+  at `ea1d47a`, 100,417). By S2's "next two", their measurement is outstanding, not
+  STY-051's; counting STY-051 in their place, or leaving D1's trial as it stands, takes
+  an owner decision in Decisions.

@@ -90,6 +90,8 @@ Cymraeg
 - **D9** (owner, 2026-11-17, EPC-012 UX prototypes grilling round 4): on a phone, the
   navigation's menu button sits at the left of the navy top bar at the page's top, and
   in a roadmap's sticky strip once scrolled (D8).
+- **D10** (owner, 2026-11-17, PR #133): the desktop navigation's fold button shows
+  Lucide's `panel-left-close` while open and `panel-left` while folded (D5).
 
 ## Out of scope
 

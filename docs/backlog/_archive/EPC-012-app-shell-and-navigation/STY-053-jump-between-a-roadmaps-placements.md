@@ -10,7 +10,7 @@
 - **Binding ADRs**: ADR-011, ADR-012, ADR-010, ADR-008
 - **Suggested model**: Opus — in-page navigation with scroll position, focus and
   pending markers across six placements
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/140
 
 ## Summary
 

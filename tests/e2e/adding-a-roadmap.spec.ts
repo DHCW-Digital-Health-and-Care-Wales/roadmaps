@@ -7,6 +7,8 @@ import {
   clickOutside,
   openAddRoadmapDialog,
   openDialog,
+  reconnectButton,
+  reconnectDialog,
 } from "./fixtures/dialogs"
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
 import {
@@ -166,12 +168,9 @@ test("Add a roadmap asks to reconnect once the session has expired, then opens t
   ).toBeVisible()
   await expect(add).toBeEnabled()
   await add.click()
-  const reconnect = page.getByRole("alertdialog", {
-    name: "Your session has expired",
-  })
-  await reconnect.getByRole("button", { name: "Reconnect" }).click()
+  await reconnectButton(page).click()
 
-  await expect(reconnect).toBeHidden()
+  await expect(reconnectDialog(page)).toBeHidden()
   await expect(addRoadmapDialog(page)).toBeVisible()
 })
 
@@ -298,15 +297,10 @@ test.describe("an expired session (S11)", () => {
     const add = dialog.getByRole("button", { name: "Add roadmap" })
     await expect(add).toBeEnabled()
     await add.click()
-    const asking = page.getByRole("alertdialog", {
-      name: "Your session has expired",
-    })
     // The header's and the page's Reconnect are behind the dialogs, out of reach.
     const reconnect = page.getByRole("button", { name: "Reconnect" })
     await expect(reconnect).toHaveCount(1)
-    await expect(
-      asking.getByRole("button", { name: "Reconnect" }),
-    ).toBeFocused()
+    await expect(reconnectButton(page)).toBeFocused()
 
     const requests = gis.tokenRequests.length
     await reconnect.click()
@@ -336,10 +330,7 @@ test.describe("an expired session (S11)", () => {
     )
 
     await add.click()
-    await page
-      .getByRole("alertdialog", { name: "Your session has expired" })
-      .getByRole("button", { name: "Reconnect" })
-      .click()
+    await reconnectButton(page).click()
     const main = await expectNewRoadmapPage(page)
     await expect(main.getByText(ADDED)).toBeVisible()
     expect(sheets.writes).toHaveLength(1)

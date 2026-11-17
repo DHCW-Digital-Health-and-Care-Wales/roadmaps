@@ -11,6 +11,7 @@ import { renderWithI18n } from "@/test/render-with-i18n"
 import { AuthProvider } from "../auth-provider"
 import { useSessionAction } from "../session-action"
 import { createFakeAuthClient } from "../testing/fake-auth-client"
+import { findReconnectDialog } from "../testing/reconnect-dialog"
 import { ReconnectDialogProvider } from "./reconnect-dialog"
 
 /** A control whose action needs a session, as every write and Refresh is. */
@@ -75,7 +76,7 @@ function action() {
 
 async function press(user: ReturnType<typeof userEvent.setup>) {
   await user.click(action())
-  return screen.findByRole("alertdialog", { name: "Your session has expired" })
+  return findReconnectDialog()
 }
 
 describe("an action that needs a session (STY-057)", () => {
@@ -267,9 +268,7 @@ describe("an action that needs a session (STY-057)", () => {
 
     await user.keyboard("{Enter}")
 
-    const dialog = await screen.findByRole("alertdialog", {
-      name: "Mae eich sesiwn wedi dod i ben",
-    })
+    const dialog = await findReconnectDialog("Mae eich sesiwn wedi dod i ben")
     expect(dialog).toHaveAccessibleDescription(
       "Ailgysylltwch â Google i barhau. Mae eich newidiadau wedi'u cadw yn y tab hwn.",
     )

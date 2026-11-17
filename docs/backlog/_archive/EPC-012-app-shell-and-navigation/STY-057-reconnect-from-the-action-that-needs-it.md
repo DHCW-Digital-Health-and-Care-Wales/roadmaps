@@ -112,15 +112,20 @@ control
   Refresh in that state.
 - **A Refresh that asked joins the reads reconnecting starts** (agent): reconnecting
   reads the page again by itself, so each Refresh refetch joins a read under way
-  (`JOIN_READ`) rather than cancel and repeat it. While connected Refresh is busy, and
-  unavailable, during its own reads, so nothing else changes. Reconnecting on a
+  (`JOIN_READ`) rather than cancel and repeat it. While connected, Refresh is busy, and
+  unavailable, during the reads it shows; a family or category list read it doesn't
+  show is joined rather than restarted, which reads the same. Reconnecting on a
   roadmap's page already reads the list twice:
   [DEF-018](../../defects/DEF-018-reconnecting-on-a-roadmap-s-page-reads-the-roadmap-list-twice.md).
-- **A refused reconnect from "Add a roadmap" still leaves the list for the start page**
-  (agent): the reconnect dialog stays, saying why, but the "Add a roadmap" dialog and
-  what was typed go with the list, as
+- **A refused reconnect on the roadmap list leaves it for the start page** (agent): a
+  refusal is the auth state `error`, and `/` shows the start page for it, as any failed
+  connection has since the first sign-in story. The reconnect dialog stays, saying why,
+  but the list's Refresh or "Add a roadmap" that asked is gone with the list: S3 does
+  not carry it on once reconnected, and S4 returns focus to the page, not to it. The
+  "Add a roadmap" dialog and what was typed go too, as
   [DEF-006](../../_archive/defects/DEF-006-a-refused-reconnect-drops-the-add-a-roadmap-dialog.md)
-  records (Won't fix). A control gone by the time the session resumes carries nothing
+  records (Won't fix). A roadmap's page and the families page keep what they read, so
+  S3 and S4 hold there. A control gone by the time the session resumes carries nothing
   on.
 
 ### Contract for dependents
@@ -137,7 +142,10 @@ control
 - **`ReconnectDialogProvider`** (`src/features/auth/components/reconnect-dialog.tsx`)
   is mounted once in `AppProviders`, inside `AuthProvider`. Its dialog's Reconnect is
   `ReconnectButton`, which now takes `ref`, `size` and `onReconnect` (it calls
-  `connect()` first, in the click, ADR-003); `SessionExpiredAlert` passes `size="sm"`.
+  `connect()` first, in the click, ADR-003). `SessionExpiredAlert`, left with one
+  caller, is folded into `RoadmapsErrorState`. `connectFailure(state)`
+  (`features/auth/connect-failure.ts`) says why the latest attempt to connect failed,
+  for the dialog and the page notice alike.
 - **`useReturnFocus(target?)`** returns focus to `target` when given, else to what had
   it as the dialog opened.
 - **`JOIN_READ`** (`hooks/roadmap-queries.ts`) is a Refresh's refetch options; the
@@ -145,25 +153,26 @@ control
 - **Copy**: `auth.reconnectDialog.title`, `.description` and `.failed`, in both
   catalogues; `roadmaps.add.expired` is gone. The pattern is in the copywriter's
   `references/patterns.md` (_Expired session_).
-- **Tests**: `findReconnectDialog()` and `reconnectFromDialog(user)`
+- **Tests**: `findReconnectDialog(name?)` and `reconnectFromDialog(user)`
   (`src/features/auth/testing/reconnect-dialog.ts`) find and answer the dialog in a
-  component test. E2E finds it as
-  `getByRole("alertdialog", { name: "Your session has expired" })`; its structure is
-  `reconnect-dialog.aria.yml` (and `-cy`).
+  component test; E2E uses `reconnectDialog(page, language)` and
+  `reconnectButton(page, language)` (`tests/e2e/fixtures/dialogs.ts`). Its structure is
+  `reconnect-dialog.aria.yml` (and `-cy`). The epic's `delivery-notes.md` carries
+  these for the stories that follow.
 
 ### Scenario evidence
 
 `dialog` is `src/features/auth/components/reconnect-dialog.test.tsx`; `e2e` is
 `tests/e2e/reconnect.spec.ts`; `pages/` is `src/features/roadmaps/pages/`.
 
-| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1       | dialog "stays available after the session has expired…"; `pages/roadmap-detail-page-editing.test.tsx` "keeps them while the session has expired; Publish asks to reconnect…"; for D1's other actions `roadmap-detail-page-publishing-roadmap`, `-adding`, `-items`, `-matching`, `roadmaps-page-adding` and `families-page` tests (each "asks to reconnect…"); e2e "Publish stays on offer…", "Refresh asks to reconnect…"; `structure` `main-expired` (Refresh and "Add a roadmap" no longer `[disabled]`) |
-| S2       | dialog "stays available… asks to reconnect first"; e2e "Publish stays on offer…"; `structure` `reconnect-dialog`                                                                                                                                                                                                                                                                                                                                                                                            |
-| S3       | dialog "connects inside the Reconnect click, then closes and carries on…", "carries on with the action as its component renders it…"; `roadmap-detail-page-editing.test.tsx` (the publish dialog opens listing the change; from an open dialog, it publishes); e2e "Publish stays on offer…", where the fake GIS fails the test unless the popup comes from the click                                                                                                                                       |
-| S4       | dialog "Cancel closes it…", "Escape cancels…", "says why when Google's access is …" (refused, closed, closed after a refusal, blocked), "says nothing of a failure from before it opened"; `roadmap-detail-page-editing.test.tsx` "keeps them when reconnecting is cancelled…"; `roadmaps-page-adding.test.tsx` "keeps what was typed when reconnecting is cancelled…"; e2e "a refusal or a closed window says why…"                                                                                        |
-| S5       | `roadmap-detail-page-adding.test.tsx` "stays unavailable while the items can't be read, once the session has expired too"; `roadmap-detail-page-editing.test.tsx` "keeps Publish unavailable while a publish is under way, once the session has expired too"                                                                                                                                                                                                                                                |
-| S6       | dialog "is in Welsh, keeps focus inside and returns it by keyboard"; e2e "in Welsh, by keyboard…"; `accessibility.spec.ts` (the dialog over "Add a roadmap", both themes); `structure` `reconnect-dialog-cy`                                                                                                                                                                                                                                                                                                |
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | dialog "stays available after the session has expired…"; `pages/roadmap-detail-page-editing.test.tsx` "keeps them while the session has expired; Publish asks to reconnect…"; for D1's other actions `roadmap-detail-page-publishing-roadmap`, `-adding`, `-items`, `-matching`, `roadmaps-page-adding` and `families-page` tests (each "asks to reconnect…"); e2e "Publish stays on offer…", "Refresh asks to reconnect…"; `structure` `main-expired` (Refresh and "Add a roadmap" no longer `[disabled]`)                                                |
+| S2       | dialog "stays available… asks to reconnect first"; e2e "Publish stays on offer…"; `structure` `reconnect-dialog`                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| S3       | dialog "connects inside the Reconnect click, then closes and carries on…", "carries on with the action as its component renders it…"; `roadmap-detail-page-editing.test.tsx` (the publish dialog opens listing the change; from an open dialog, it publishes); e2e "Publish stays on offer…", where the fake GIS fails the test unless the popup comes from the click                                                                                                                                                                                      |
+| S4       | dialog "Cancel closes it…", "Escape cancels…", "says why when Google's access is …" (refused, closed, closed after a refusal, blocked), "says nothing of a failure from before it opened"; `roadmap-detail-page-editing.test.tsx` "keeps them when reconnecting is cancelled…"; `roadmaps-page-adding.test.tsx` "keeps what was typed when reconnecting is cancelled…"; e2e "a refusal or a closed window says why…"; `pages/roadmaps-page.test.tsx` "leaves the list for the start page when the reconnect Refresh asked for is refused…" (the departure) |
+| S5       | `roadmap-detail-page-adding.test.tsx` "stays unavailable while the items can't be read, once the session has expired too"; `roadmap-detail-page-editing.test.tsx` "keeps Publish unavailable while a publish is under way, once the session has expired too"                                                                                                                                                                                                                                                                                               |
+| S6       | dialog "is in Welsh, keeps focus inside and returns it by keyboard"; e2e "in Welsh, by keyboard…"; `accessibility.spec.ts` (the dialog over "Add a roadmap", both themes); `structure` `reconnect-dialog-cy`                                                                                                                                                                                                                                                                                                                                               |
 
 The new tests followed working code. Each that holds a rule was shown red by
 breaking the finished code: carrying on with the action as pressed, not as rendered,

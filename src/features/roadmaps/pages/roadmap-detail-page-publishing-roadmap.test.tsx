@@ -8,11 +8,11 @@ import type { ContractWrite } from "@/domain/roadmap/testing/contract-write"
 import type { SyncFault } from "@/domain/roadmap/testing/roadmap-repository-contract"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
-import type { Language } from "@/i18n"
 import {
   findReconnectDialog,
   reconnectFromDialog,
 } from "@/features/auth/testing/reconnect-dialog"
+import type { Language } from "@/i18n"
 import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 

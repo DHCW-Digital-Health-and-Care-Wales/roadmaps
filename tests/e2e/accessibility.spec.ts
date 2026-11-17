@@ -9,6 +9,7 @@ import {
   openEditItemDialog,
   openEditRoadmapDialog,
   publishOnce,
+  reconnectButton,
 } from "./fixtures/dialogs"
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
 import {
@@ -692,14 +693,9 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expectNoAxeViolations(page, theme)
 
       await add.click()
-      const asking = page.getByRole("alertdialog", {
-        name: "Your session has expired",
-      })
-      await expect(
-        asking.getByRole("button", { name: "Reconnect" }),
-      ).toBeFocused()
+      await expect(reconnectButton(page)).toBeFocused()
       await expectNoAxeViolations(page, theme)
-      await asking.getByRole("button", { name: "Reconnect" }).click()
+      await reconnectButton(page).click()
       const main = page.getByRole("main")
       await expect(
         main.getByText(

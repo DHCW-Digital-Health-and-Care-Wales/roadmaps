@@ -13,11 +13,11 @@ import {
 } from "@/domain/roadmap/testing/test-lists"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
-import { AppError } from "@/lib/errors"
 import {
   findReconnectDialog,
   reconnectFromDialog,
 } from "@/features/auth/testing/reconnect-dialog"
+import { AppError } from "@/lib/errors"
 import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 

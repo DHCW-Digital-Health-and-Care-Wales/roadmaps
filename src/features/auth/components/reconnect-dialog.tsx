@@ -18,8 +18,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import type { AuthErrorCode, AuthState } from "@/domain/auth/auth-client"
 
+import { connectFailure } from "../connect-failure"
 import {
   type ReconnectRequest,
   ReconnectRequestContext,
@@ -68,22 +68,6 @@ export function ReconnectDialogProvider({
   )
 }
 
-/**
- * Why the latest attempt to connect didn't succeed, if it didn't. An abandoned attempt
- * returns to `expired`, or to `ready` when it followed a refusal.
- */
-function connectFailure(state: AuthState): AuthErrorCode | undefined {
-  switch (state.status) {
-    case "error":
-      return state.error
-    case "expired":
-    case "ready":
-      return state.lastError
-    default:
-      return undefined
-  }
-}
-
 interface ReconnectDialogContentProps {
   from: HTMLElement | null
 }
@@ -98,7 +82,7 @@ function ReconnectDialogContent({ from }: ReconnectDialogContentProps) {
   const reconnect = useRef<HTMLButtonElement>(null)
   // A failure from before the dialog opened is not this dialog's to say.
   const [tried, setTried] = useState(false)
-  const failure = tried ? connectFailure(state) : undefined
+  const failure = tried ? connectFailure(state) : null
   useReturnFocus(from)
 
   return (
@@ -114,7 +98,9 @@ function ReconnectDialogContent({ from }: ReconnectDialogContentProps) {
           <TriangleAlertIcon aria-hidden="true" />
           <AlertContent>
             <AlertTitle>{t("auth.reconnectDialog.failed")}</AlertTitle>
-            <AlertDescription>{t(`auth.errors.${failure}`)}</AlertDescription>
+            <AlertDescription>
+              {t(`auth.errors.${failure.code}`)}
+            </AlertDescription>
           </AlertContent>
         </Alert>
       )}

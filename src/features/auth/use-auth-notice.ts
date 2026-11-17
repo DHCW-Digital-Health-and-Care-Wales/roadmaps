@@ -1,21 +1,15 @@
 import { useLocation } from "@tanstack/react-router"
 import { useCallback, useState } from "react"
 
-import type {
-  AuthCancellationCode,
-  AuthErrorCode,
-  AuthFailureCode,
-  AuthState,
-} from "@/domain/auth/auth-client"
+import type { AuthErrorCode, AuthState } from "@/domain/auth/auth-client"
 
+import { type ConnectFailure, connectFailure } from "./connect-failure"
 import { useAuth } from "./use-auth"
 
 /** What the page notice says about the session, as codes; the notice picks the copy. */
 export type AuthNotice =
-  /** Connecting failed: nothing loads until it works. */
-  | { readonly kind: "failed"; readonly code: AuthFailureCode }
-  /** A connect attempt was abandoned: its popup was closed or blocked. */
-  | { readonly kind: "cancelled"; readonly code: AuthCancellationCode }
+  /** Connecting failed (nothing loads until it works), or was abandoned. */
+  | ConnectFailure
   /** "Stay connected" didn't work. The session carries on until it ends. */
   | { readonly kind: "renewal-failed"; readonly code: AuthErrorCode }
   /** The user's own connect or disconnect worked. */
@@ -25,21 +19,12 @@ type Confirmation = Extract<AuthNotice, { kind: "confirmed" }>["code"]
 
 /** A failure the state still carries: it lasts until the next attempt or expiry. */
 function failureIn(state: AuthState): AuthNotice | null {
-  switch (state.status) {
-    case "error":
-      return { kind: "failed", code: state.error }
-    case "ready":
-    case "expired":
-      return state.lastError
-        ? { kind: "cancelled", code: state.lastError }
-        : null
-    case "connected":
-      return state.lastError
-        ? { kind: "renewal-failed", code: state.lastError }
-        : null
-    default:
-      return null
+  if (state.status === "connected") {
+    return state.lastError
+      ? { kind: "renewal-failed", code: state.lastError }
+      : null
   }
+  return connectFailure(state)
 }
 
 /**

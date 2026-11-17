@@ -1,6 +1,10 @@
 import type { Page } from "@playwright/test"
 
-import { openEditItemDialog } from "./fixtures/dialogs"
+import {
+  openEditItemDialog,
+  reconnectButton,
+  reconnectDialog,
+} from "./fixtures/dialogs"
 import { sessionMs } from "./fixtures/fake-gis"
 import { useLanguage } from "./fixtures/look"
 import { connect, expect, test } from "./fixtures/test"
@@ -34,6 +38,8 @@ async function expireWithAChange(page: Page, language: "en" | "cy" = "en") {
   const form = await openEditItemDialog(page, ITEM, language)
   await form.getByRole("textbox", { name: copy.title }).fill(EDITED)
   await form.getByRole("button", { name: copy.done }).click()
+  // Closed, it has given focus back to the card's Edit.
+  await expect(form).toBeHidden()
   await expect(
     page.getByRole("heading", { level: 3, name: EDITED }),
   ).toBeVisible()
@@ -44,10 +50,6 @@ async function expireWithAChange(page: Page, language: "en" | "cy" = "en") {
   const main = page.getByRole("main")
   await expect(main.getByRole("alert")).toBeVisible()
   return main
-}
-
-function reconnectDialog(page: Page, name = "Your session has expired") {
-  return page.getByRole("alertdialog", { name })
 }
 
 test("Publish stays on offer, asks to reconnect, then asks to publish the changes (S1, S2, S3)", async ({
@@ -131,7 +133,7 @@ test("Refresh asks to reconnect, then reads the page once (S1, D1)", async ({
   const reads = sheets.reads.length
 
   await main.getByRole("button", { name: "Refresh" }).click()
-  await reconnectDialog(page).getByRole("button", { name: "Reconnect" }).click()
+  await reconnectButton(page).click()
 
   // Reconnecting reads the page again, and Refresh joins those reads: the items are
   // read once.
@@ -160,7 +162,7 @@ test("in Welsh, by keyboard: the dialog keeps focus, and Escape gives it back (S
 
   await page.keyboard.press("Enter")
 
-  const dialog = reconnectDialog(page, "Mae eich sesiwn wedi dod i ben")
+  const dialog = reconnectDialog(page, "cy")
   await expect(dialog).toContainText(
     "Ailgysylltwch â Google i barhau. Mae eich newidiadau wedi'u cadw yn y tab hwn.",
   )

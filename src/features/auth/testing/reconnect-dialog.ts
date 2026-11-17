@@ -4,9 +4,12 @@ import { expect } from "vitest"
 
 const NAME = "Your session has expired"
 
-/** The dialog an action that needs a session opens once it has expired (test code only). */
-export function findReconnectDialog(): Promise<HTMLElement> {
-  return screen.findByRole("alertdialog", { name: NAME })
+/**
+ * The dialog an action that needs a session opens once it has expired, named in English
+ * unless `name` gives its Welsh (test code only).
+ */
+export function findReconnectDialog(name = NAME): Promise<HTMLElement> {
+  return screen.findByRole("alertdialog", { name })
 }
 
 /**

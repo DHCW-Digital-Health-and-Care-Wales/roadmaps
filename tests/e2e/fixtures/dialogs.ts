@@ -259,3 +259,30 @@ export async function publishOnce(page: Page): Promise<void> {
     .click()
   await expect(main.getByText(/^Changes published\./)).toBeVisible()
 }
+
+/**
+ * The dialog an action that needs a session asks in once it has expired (STY-057), in
+ * each language: `reconnect` is its button that reconnects.
+ */
+const RECONNECT = {
+  en: { title: "Your session has expired", reconnect: "Reconnect" },
+  cy: { title: "Mae eich sesiwn wedi dod i ben", reconnect: "Ailgysylltu" },
+} as const satisfies Record<Language, { title: string; reconnect: string }>
+
+/** The reconnect dialog, in `language`. */
+export function reconnectDialog(
+  page: Page,
+  language: Language = "en",
+): Locator {
+  return page.getByRole("alertdialog", { name: RECONNECT[language].title })
+}
+
+/** The reconnect dialog's Reconnect, in `language`. */
+export function reconnectButton(
+  page: Page,
+  language: Language = "en",
+): Locator {
+  return reconnectDialog(page, language).getByRole("button", {
+    name: RECONNECT[language].reconnect,
+  })
+}

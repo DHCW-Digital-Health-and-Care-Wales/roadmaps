@@ -16,11 +16,11 @@ import {
 } from "@/domain/roadmap/testing/test-lists"
 import { TEST_ORGANISATIONS } from "@/domain/roadmap/testing/test-organisations"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
-import { AppError } from "@/lib/errors"
 import {
   findReconnectDialog,
   reconnectFromDialog,
 } from "@/features/auth/testing/reconnect-dialog"
+import { AppError } from "@/lib/errors"
 import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 

@@ -1,8 +1,7 @@
 # EPC-011: Adding roadmaps and items — started here, not in the spreadsheet, in one dialog each
 
 - **Status**: Active — grilled with the owner on 2026-11-14; STY-040 to STY-047
-  delivered; reordering settled on 2026-11-16 as STY-051 then STY-050; STY-051 is
-  merged and STY-050 is delivered in its PR and awaits merge
+  delivered; reordering settled on 2026-11-16 as STY-051 then STY-050, both delivered
 - **Progress**: 10 of 12 terminal; next selectable: none;
   blocked on: STY-048 and STY-049 wait for grilling
 - **Binding ADRs**: ADR-012, ADR-011, ADR-009, ADR-013, ADR-014, ADR-002, ADR-003, ADR-005,
@@ -252,8 +251,7 @@ flowchart LR
 - [DEF-010](../_archive/defects/DEF-010-a-publishing-dialog-changes-what-it-shows-once-written.md):
   a dialog that publishes changes what it shows once its changes are no longer
   pending: the publish dialog's list empties, as it closes or when a read leaves
-  nothing to publish, and a tick box can appear. Done (delivered in its PR, awaiting
-  merge); found by STY-047's delivery.
+  nothing to publish, and a tick box can appear. Done; found by STY-047's delivery.
 - [DEF-011](../_archive/defects/DEF-011-an-edit-back-to-the-text-last-read-is-dropped-before-a-read-holds-a-publish.md):
   an edit back to the text last read is dropped while a published edit waits for a
   read. Superseded by DEF-015 (owner, 2026-11-15); found by DEF-009's review.
@@ -262,17 +260,16 @@ flowchart LR
   changed. Superseded by DEF-015 (owner, 2026-11-15); found by DEF-009's review.
 - [DEF-013](../_archive/defects/DEF-013-a-test-checks-the-roadmap-dialog-s-opening-focus-before-it-moves.md):
   a test checks the roadmap dialog's opening focus before it has moved, so Verify
-  fails now and then. Done, delivered in its PR and awaiting merge (high priority, owner,
-  2026-11-15); found by the retro of DEF-009.
+  fails now and then. Done (high priority, owner, 2026-11-15); found by the retro of
+  DEF-009.
 - [DEF-014](../_archive/defects/DEF-014-publish-roadmap-carries-its-dialog-and-outcome-to-another-roadmap.md):
   "Publish roadmap" carries its dialog and outcome onto another roadmap's page when the
-  Product Lead moves between them during the write. Done, delivered in its PR and
-  awaiting merge (owner, 2026-11-15); found by DEF-010's review.
+  Product Lead moves between them during the write. Done (owner, 2026-11-15); found by
+  DEF-010's review.
 - [DEF-015](../_archive/defects/DEF-015-a-write-the-editor-can-t-read-back-leaves-the-app-out-of-step.md):
   a write the editor can't read back leaves the app out of step with the data source;
   it holds the whole app until a Refresh succeeds, replacing DEF-009's keep-pending
-  rules. Done, delivered in its PR and awaiting merge (owner, 2026-11-15); from the
-  grilling of DEF-011 to DEF-014.
+  rules. Done (owner, 2026-11-15); from the grilling of DEF-011 to DEF-014.
 - [DEF-016](../defects/DEF-016-the-item-dialog-s-focus-tour-counts-a-focus-guard-as-a-stop.md):
   the item dialog's focus tour counts a focus guard as a stop, so an E2E run fails now
   and then. Needs triage; found by DEF-015's delivery.

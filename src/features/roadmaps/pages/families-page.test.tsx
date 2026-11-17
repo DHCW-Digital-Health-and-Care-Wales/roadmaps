@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from "@testing-library/react"
+import { act, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
@@ -17,6 +17,10 @@ import {
 import { TEST_ORGANISATIONS } from "@/domain/roadmap/testing/test-organisations"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { AppError } from "@/lib/errors"
+import {
+  findReconnectDialog,
+  reconnectFromDialog,
+} from "@/features/auth/testing/reconnect-dialog"
 import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
@@ -69,13 +73,13 @@ async function renderPage(
   language: "en" | "cy" = "en",
 ) {
   const user = userEvent.setup()
-  await renderWithProviders({
+  const { authClient } = await renderWithProviders({
     path: "/families",
     authState,
     repository,
     language,
   })
-  return { user }
+  return { user, authClient }
 }
 
 async function openChange(user: ReturnType<typeof userEvent.setup>) {
@@ -231,6 +235,53 @@ describe("FamiliesPage (STY-029)", () => {
 
     await user.click(within(dialog).getByRole("button", { name: "Cancel" }))
     expect(changeFamily).not.toHaveBeenCalled()
+  })
+
+  it("asks to reconnect when a family is added after the session has expired, then adds it (STY-057)", async () => {
+    const addFamily = vi.fn<RoadmapRepository["addFamily"]>()
+    const repository = repositoryWith()
+    addFamily.mockImplementation(repository.addFamily.bind(repository))
+    const { user, authClient } = await renderPage({ ...repository, addFamily })
+    await user.click(
+      await main().findByRole("button", { name: "Add a family" }),
+    )
+    const form = within(main().getByRole("form", { name: "Add a family" }))
+    await user.type(form.getByLabelText("Name"), "Dental")
+    await user.type(form.getByLabelText("Colour"), "#00796B")
+    act(() => {
+      authClient.setState({ status: "expired" })
+    })
+
+    const add = form.getByRole("button", { name: "Add family" })
+    expect(add).toHaveAttribute("aria-disabled", "false")
+    await user.click(add)
+    await findReconnectDialog()
+    expect(addFamily).not.toHaveBeenCalled()
+    await reconnectFromDialog(user)
+
+    expect(await main().findByRole("status")).toHaveTextContent("Dental added")
+    expect(addFamily).toHaveBeenCalledOnce()
+  })
+
+  it("asks to reconnect when a change is confirmed after the session has expired, then saves it (STY-057)", async () => {
+    const { user, authClient } = await renderPage()
+    const form = await openChange(user)
+    await user.clear(form.getByLabelText("Name"))
+    await user.type(form.getByLabelText("Name"), "Shared Care Record")
+    await user.click(form.getByRole("button", { name: "Save changes" }))
+    const confirm = await screen.findByRole("button", {
+      name: "Change family",
+    })
+    act(() => {
+      authClient.setState({ status: "expired" })
+    })
+
+    await user.click(confirm)
+    await reconnectFromDialog(user)
+
+    expect(await main().findByRole("status")).toHaveTextContent(
+      "Shared Care Record changed.",
+    )
   })
 
   it("renames a family and its roadmaps at once, keeping its Welsh name (S4, S9)", async () => {
@@ -507,7 +558,7 @@ describe("FamiliesPage (STY-029)", () => {
     ).not.toBeInTheDocument()
   })
 
-  it("asks to connect when nothing has loaded", async () => {
+  it("asks to connect when nothing has loaded, with nothing to refresh", async () => {
     await renderPage(repositoryWith(), { status: "ready" })
 
     expect(
@@ -515,6 +566,9 @@ describe("FamiliesPage (STY-029)", () => {
         "Connect Google to view the families, categories and organisations.",
       ),
     ).toBeInTheDocument()
+    expect(
+      main().queryByRole("button", { name: "Refresh" }),
+    ).not.toBeInTheDocument()
   })
 
   it("is linked from the roadmap list", async () => {

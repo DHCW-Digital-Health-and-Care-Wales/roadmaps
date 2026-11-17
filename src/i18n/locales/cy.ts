@@ -108,6 +108,12 @@ export const cy = {
       reconnectLater:
         "Bydd angen i chi ailgysylltu pan ddaw eich sesiwn i ben.",
     },
+    reconnectDialog: {
+      title: "Mae eich sesiwn wedi dod i ben",
+      description:
+        "Ailgysylltwch â Google i barhau. Mae eich newidiadau wedi'u cadw yn y tab hwn.",
+      failed: "Doedd dim modd ailgysylltu",
+    },
     sessionWarning: {
       title: "Mae eich sesiwn ar fin dod i ben",
       endsIn: "Bydd eich sesiwn yn dod i ben ymhen {{remaining}}.",
@@ -190,8 +196,6 @@ export const cy = {
             "Dydy'r categori hwn ddim wedi'i restru mwyach. Dewiswch un arall.",
         },
       },
-      expired:
-        "Ailgysylltwch â Google i ychwanegu'r map trywydd. Mae'r hyn rydych wedi'i deipio wedi'i gadw.",
       failed: {
         title: "Doedd dim modd ychwanegu'r map trywydd",
       },

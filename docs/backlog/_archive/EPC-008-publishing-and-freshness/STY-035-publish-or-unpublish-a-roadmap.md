@@ -156,6 +156,12 @@ list's badge and count must change after the write.
   D3): a write whose answer is lost (S10), with edits sent or without, and one whose
   read after it fails, hold the whole app in a dialog until a Refresh (or Connect)
   succeeds, in place of the page's notices. DEF-015 delivered it.
+- **D12** (owner, 2026-11-17, EPC-012 grilling round 3, recorded by
+  [STY-057](../EPC-012-app-shell-and-navigation/STY-057-reconnect-from-the-action-that-needs-it.md)
+  D1): Publish roadmap and Unpublish roadmap, and the dialog's own button, stay
+  available while the session has expired; pressed, each asks to reconnect first, then
+  carries on. Changes: S1 ("while not connected, or while the session has expired, the
+  action is unavailable").
 
 ## Starting point
 

@@ -179,6 +179,12 @@ the empty roadmap, in both themes and at phone width.
   D3): a new item's Edit, Move and Remove no longer wait on their own after a lost
   answer: the whole app is held in a dialog until a Refresh succeeds. DEF-015
   delivered it.
+- **D15** (owner, 2026-11-17, EPC-012 grilling round 3, recorded by
+  [STY-057](../EPC-012-app-shell-and-navigation/STY-057-reconnect-from-the-action-that-needs-it.md)
+  D1): "Add an item" stays available while the session has expired; pressed, it asks to
+  reconnect first, then opens the dialog. It is still unavailable while the items can't
+  be read. Changes: S1 ("unavailable while not connected, while the session has
+  expired").
 
 ## Out of scope
 

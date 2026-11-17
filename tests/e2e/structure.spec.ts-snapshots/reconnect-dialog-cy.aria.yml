@@ -1,0 +1,5 @@
+- alertdialog "Mae eich sesiwn wedi dod i ben":
+  - heading "Mae eich sesiwn wedi dod i ben" [level=2]
+  - paragraph: Ailgysylltwch â Google i barhau. Mae eich newidiadau wedi'u cadw yn y tab hwn.
+  - button "Ailgysylltu"
+  - button "Canslo"

@@ -10,7 +10,7 @@ import {
   NO_CHANGES,
   type RoadmapChanges,
 } from "@/domain/roadmap/roadmap-changes"
-import { useAuth } from "@/features/auth/use-auth"
+import { useSessionAction } from "@/features/auth/session-action"
 import { localToday } from "@/lib/local-today"
 
 import { ConflictReview } from "./conflict-review"
@@ -39,9 +39,10 @@ export interface RoadmapPublishingProps {
  * Under a roadmap's title: what its last publish came to, and, while changes are
  * pending, how many there are with Publish (or Save, S11) and Discard all (STY-025 S2,
  * S6, S9–S15, S18). Publishing asks first, listing what changes and offering to mark the
- * roadmap as updated today (STY-036 S6); it is unavailable,
- * though focusable, unless connected and until every field and order someone else
- * changed is decided in the review (STY-026, STY-050).
+ * roadmap as updated today (STY-036 S6); it is unavailable, though focusable, while a
+ * publish is under way and until every field and order someone else changed is decided
+ * in the review (STY-026, STY-050). After the session has expired it asks to reconnect
+ * first, then carries on (STY-057).
  */
 export function RoadmapPublishing({
   roadmap,
@@ -50,7 +51,6 @@ export function RoadmapPublishing({
   const { t } = useTranslation()
   const store = usePendingChangesStore()
   const snapshot = usePendingChanges()
-  const connected = useAuth().state.status === "connected"
   const publish = usePublish(roadmap)
   const [confirming, setConfirming] = useState(false)
   // What the dialog listed when it was confirmed: set then, dropped when it is next asked.
@@ -100,13 +100,19 @@ export function RoadmapPublishing({
   // Once a publish ends the dialog, focus goes to the notice saying what it came to.
   const focusNoticeOnClose = useRef(false)
   const confirm = () => {
-    if (!connected) return
     focusNoticeOnClose.current = true
     setConfirmed(changes ?? NO_CHANGES)
     void publish(markUpdated ? localToday() : undefined).finally(() => {
       setConfirming(false)
     })
   }
+
+  const ask = useSessionAction(() => {
+    focusNoticeOnClose.current = false
+    setMarkUpdated(false)
+    setConfirmed(null)
+    setConfirming(true)
+  })
 
   return (
     <>
@@ -148,14 +154,11 @@ export function RoadmapPublishing({
           <div className="flex flex-wrap gap-3">
             <Button
               ref={publishButton}
-              disabled={!connected || publishing || reviewing}
+              disabled={publishing || reviewing}
               focusableWhenDisabled
               aria-busy={publishing}
-              onClick={() => {
-                focusNoticeOnClose.current = false
-                setMarkUpdated(false)
-                setConfirmed(null)
-                setConfirming(true)
+              onClick={(event) => {
+                ask(event.currentTarget)
               }}
             >
               <UploadIcon data-icon="inline-start" aria-hidden="true" />
@@ -179,7 +182,6 @@ export function RoadmapPublishing({
         action={action}
         changes={confirmed ?? changes ?? NO_CHANGES}
         publishing={publishing}
-        available={connected}
         markUpdated={markUpdated}
         onMarkUpdatedChange={setMarkUpdated}
         returnFocus={() => !focusNoticeOnClose.current}

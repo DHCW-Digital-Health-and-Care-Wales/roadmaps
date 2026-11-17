@@ -14,6 +14,10 @@ import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 import type { Language } from "@/i18n"
 import { AppError } from "@/lib/errors"
+import {
+  findReconnectDialog,
+  reconnectFromDialog,
+} from "@/features/auth/testing/reconnect-dialog"
 import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
@@ -583,7 +587,7 @@ describe("Keeping a roadmap's changes (STY-025)", () => {
     expect(main().getByText("1 unpublished change")).toBeInTheDocument()
   })
 
-  it("keeps them, and holds Publish, while the session has expired (S12)", async () => {
+  it("keeps them while the session has expired; Publish asks to reconnect, then asks to publish them (S12; STY-057 S1–S3)", async () => {
     const { user, authClient } = await renderPage()
     await editTitle(user, "First item", "First, edited")
 
@@ -592,20 +596,42 @@ describe("Keeping a roadmap's changes (STY-025)", () => {
     })
 
     const action = main().getByRole("button", { name: "Publish changes" })
-    expect(action).toHaveAttribute("aria-disabled", "true")
+    expect(action).toHaveAttribute("aria-disabled", "false")
     await user.click(action)
-    expect(screen.queryByRole("alertdialog")).toBeNull()
-    expect(card("First, edited").getByText("Changed")).toBeInTheDocument()
+    const dialog = await findReconnectDialog()
+    expect(dialog).toHaveAccessibleDescription(
+      "Reconnect to Google to carry on. Your changes are kept in this tab.",
+    )
 
-    act(() => {
-      authClient.setState({
-        status: "connected",
-        expiresAt: Date.now() + 3_600_000,
-      })
+    await reconnectFromDialog(user)
+
+    const confirm = await screen.findByRole("alertdialog", {
+      name: "Publish these changes?",
     })
-    expect(
-      main().getByRole("button", { name: "Publish changes" }),
-    ).toHaveAttribute("aria-disabled", "false")
+    expect(within(confirm).getByText("First, edited")).toBeInTheDocument()
+  })
+
+  it("keeps them when reconnecting is cancelled, focus back on Publish (STY-057 S4)", async () => {
+    const repository = createInMemoryRoadmapRepository(roadmaps, roadmapItems)
+    const write = vi.spyOn(repository, "publishRoadmapChanges")
+    const { user, authClient } = await renderPage({ repository })
+    await editTitle(user, "First item", "First, edited")
+    act(() => {
+      authClient.setState({ status: "expired" })
+    })
+    const action = main().getByRole("button", { name: "Publish changes" })
+    await user.click(action)
+
+    await user.click(
+      within(await findReconnectDialog()).getByRole("button", {
+        name: "Cancel",
+      }),
+    )
+
+    expect(screen.queryByRole("alertdialog")).toBeNull()
+    expect(action).toHaveFocus()
+    expect(write).not.toHaveBeenCalled()
+    expect(card("First, edited").getByText("Changed")).toBeInTheDocument()
     expect(main().getByText("1 unpublished change")).toBeInTheDocument()
   })
 
@@ -784,6 +810,37 @@ describe("Publishing a roadmap's changes (STY-025)", () => {
     })
     expect(main().queryByText(/unpublished change/)).toBeNull()
     expect(card("First, edited").queryByText("Changed")).toBeNull()
+  })
+
+  it("keeps Publish unavailable while a publish is under way, once the session has expired too (STY-057 S5)", async () => {
+    const repository = createInMemoryRoadmapRepository(roadmaps, roadmapItems)
+    const {
+      held: write,
+      release,
+      released,
+    } = holdCall(repository.publishRoadmapChanges.bind(repository))
+    const { user, authClient } = await renderPage({
+      repository: { ...repository, publishRoadmapChanges: write },
+    })
+    await editTitle(user, "First item", "First, edited")
+    await publish(user)
+    const dialog = screen.getByRole("alertdialog")
+
+    act(() => {
+      authClient.setState({ status: "expired" })
+    })
+
+    const confirm = within(dialog).getByRole("button", {
+      name: "Publish changes",
+    })
+    expect(confirm).toHaveAttribute("aria-disabled", "true")
+    await user.click(confirm)
+    expect(screen.getAllByRole("alertdialog")).toEqual([dialog])
+    await act(async () => {
+      release()
+      await released
+    })
+    expect(write).toHaveBeenCalledTimes(1)
   })
 
   it.each([
@@ -975,9 +1032,10 @@ describe("Publishing a roadmap's changes (STY-025)", () => {
       expect(authClient.getSnapshot().status).toBe("expired")
     })
     expect(main().getByText("1 unpublished change")).toBeInTheDocument()
+    // Still offered: pressed, it asks to reconnect first (STY-057).
     expect(
       main().getByRole("button", { name: "Publish changes" }),
-    ).toHaveAttribute("aria-disabled", "true")
+    ).toHaveAttribute("aria-disabled", "false")
   })
 
   it("holds the app when the answer is lost; Refresh drops what was written, leaving the rest pending (DEF-015 S2, S5)", async () => {
@@ -1066,7 +1124,7 @@ describe("Publishing a roadmap's changes (STY-025)", () => {
     expect(refresh).toHaveAccessibleName("Reconnect")
   })
 
-  it("cannot publish from an open dialog once the session has expired (S12)", async () => {
+  it("asks to reconnect when confirmed once the session has expired, then publishes (S12; STY-057)", async () => {
     const repository = createInMemoryRoadmapRepository(roadmaps, roadmapItems)
     const write = vi.spyOn(repository, "publishRoadmapChanges")
     const { user, authClient } = await renderPage({ repository })
@@ -1081,9 +1139,17 @@ describe("Publishing a roadmap's changes (STY-025)", () => {
       "button",
       { name: "Publish changes" },
     )
-    expect(confirm).toHaveAttribute("aria-disabled", "true")
+    expect(confirm).toHaveAttribute("aria-disabled", "false")
     await user.click(confirm)
+    await findReconnectDialog()
     expect(write).not.toHaveBeenCalled()
+
+    await reconnectFromDialog(user)
+
+    await waitFor(() => {
+      expect(write).toHaveBeenCalledOnce()
+    })
+    expect(await main().findByText(/^Changes published\./)).toBeInTheDocument()
   })
 })
 

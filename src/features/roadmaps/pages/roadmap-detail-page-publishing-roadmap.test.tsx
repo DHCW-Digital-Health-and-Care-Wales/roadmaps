@@ -9,6 +9,10 @@ import type { SyncFault } from "@/domain/roadmap/testing/roadmap-repository-cont
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 import type { Language } from "@/i18n"
+import {
+  findReconnectDialog,
+  reconnectFromDialog,
+} from "@/features/auth/testing/reconnect-dialog"
 import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
@@ -113,18 +117,46 @@ describe("publishing or unpublishing a roadmap (STY-035)", () => {
     expect(main.queryByRole("button", { name: /publish roadmap/i })).toBeNull()
   })
 
-  it("is unavailable while the session has expired, as Publish changes is (S1)", async () => {
+  it("asks to reconnect when the session has expired, then asks to publish (S1; STY-057)", async () => {
     const { user, authClient, repository } = await renderPage()
 
     act(() => {
       authClient.setState({ status: "expired" })
     })
     const action = screen.getByRole("button", { name: "Publish roadmap" })
-    expect(action).toHaveAttribute("aria-disabled", "true")
+    expect(action).toHaveAttribute("aria-disabled", "false")
     await user.click(action)
+    await findReconnectDialog()
+    await reconnectFromDialog(user)
 
-    expect(screen.queryByRole("alertdialog")).toBeNull()
+    expect(
+      await screen.findByRole("alertdialog", {
+        name: "Publish Product A roadmap?",
+      }),
+    ).toBeVisible()
     expect((await repository.listRoadmaps())[0]?.published).toBe(false)
+  })
+
+  it("asks to reconnect when confirmed once the session has expired, then publishes (STY-057)", async () => {
+    const { user, main, authClient, repository } = await renderPage()
+    await user.click(main.getByRole("button", { name: "Publish roadmap" }))
+    const dialog = await screen.findByRole("alertdialog", {
+      name: "Publish Product A roadmap?",
+    })
+
+    act(() => {
+      authClient.setState({ status: "expired" })
+    })
+    await user.click(
+      within(dialog).getByRole("button", { name: "Publish roadmap" }),
+    )
+    await findReconnectDialog()
+    expect((await repository.listRoadmaps())[0]?.published).toBe(false)
+    await reconnectFromDialog(user)
+
+    await waitFor(async () => {
+      expect((await repository.listRoadmaps())[0]?.published).toBe(true)
+    })
   })
 
   it("asks first, writes nothing on Cancel, then publishes and says so (S2)", async () => {

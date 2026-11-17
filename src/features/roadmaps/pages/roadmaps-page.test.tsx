@@ -401,9 +401,10 @@ describe("RoadmapsPage", () => {
     const alert = await main().findByRole("alert")
     expect(alert).toHaveTextContent("Your session has expired")
     expect(authClient.reportUnauthenticated).toHaveBeenCalledOnce()
+    // Pressed, it would ask to reconnect first (STY-057).
     expect(main().getByRole("button", { name: "Refresh" })).toHaveAttribute(
       "aria-disabled",
-      "true",
+      "false",
     )
 
     await user.click(within(alert).getByRole("button", { name: "Reconnect" }))

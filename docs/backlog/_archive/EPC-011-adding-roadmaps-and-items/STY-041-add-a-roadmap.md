@@ -171,6 +171,12 @@ phone width; S6 and S7 can be component tests against the in-memory double.
   D3): S7's "may have been applied" notice in the dialog ("Cancel, then refresh your
   roadmaps") goes: a lost answer, or a read after the write that fails, holds the
   whole app in a dialog until a Refresh reads the roadmaps. DEF-015 delivered it.
+- **D11** (owner, 2026-11-17, EPC-012 grilling round 3, recorded by
+  [STY-057](../EPC-012-app-shell-and-navigation/STY-057-reconnect-from-the-action-that-needs-it.md)
+  D1): "Add a roadmap" and the dialog's "Add roadmap" stay available while the session
+  has expired; pressed, each asks to reconnect first, then carries on. Changes: S1 ("the
+  button is unavailable") and S11 ("with Add roadmap unavailable"); STY-057's Delivery
+  says what else S11 loses.
 
 ## Starting point
 

@@ -8,6 +8,10 @@ import type { ContractWrite } from "@/domain/roadmap/testing/contract-write"
 import { AppError } from "@/lib/errors"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
+import {
+  findReconnectDialog,
+  reconnectFromDialog,
+} from "@/features/auth/testing/reconnect-dialog"
 import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
@@ -138,7 +142,7 @@ describe("making a roadmap match its lists (STY-030)", () => {
     expect(main.queryByRole("button", { name: /Make it match/ })).toBeNull()
   })
 
-  it("is held while the session has expired, writing nothing", async () => {
+  it("asks to reconnect when the session has expired, writing nothing until reconnected (STY-057)", async () => {
     const { user, main, authClient, repository } = await renderPage(
       outOfStep({ published: false }),
     )
@@ -147,10 +151,39 @@ describe("making a roadmap match its lists (STY-030)", () => {
       authClient.setState({ status: "expired" })
     })
     const action = main.getByRole("button", { name: /Make it match/ })
-    expect(action).toHaveAttribute("aria-disabled", "true")
+    expect(action).toHaveAttribute("aria-disabled", "false")
     await user.click(action)
-
+    await findReconnectDialog()
     expect((await repository.listRoadmaps())[0]?.outOfStep).toBe(true)
+
+    await reconnectFromDialog(user)
+
+    await vi.waitFor(async () => {
+      expect((await repository.listRoadmaps())[0]?.outOfStep).toBe(false)
+    })
+  })
+
+  it("asks to reconnect when confirmed once the session has expired, then matches (STY-057)", async () => {
+    const { user, main, authClient, repository } = await renderPage(
+      outOfStep({ published: true }),
+    )
+    await user.click(main.getByRole("button", { name: /Make it match/ }))
+    const confirm = await screen.findByRole("alertdialog")
+
+    act(() => {
+      authClient.setState({ status: "expired" })
+    })
+    await user.click(
+      within(confirm).getByRole("button", { name: "Make it match" }),
+    )
+    await findReconnectDialog()
+    expect((await repository.listRoadmaps())[0]?.outOfStep).toBe(true)
+
+    await reconnectFromDialog(user)
+
+    await vi.waitFor(async () => {
+      expect((await repository.listRoadmaps())[0]?.outOfStep).toBe(false)
+    })
   })
 
   it("is not offered for a roadmap in step", async () => {

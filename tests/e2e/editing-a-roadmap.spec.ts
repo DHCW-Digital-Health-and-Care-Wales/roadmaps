@@ -165,9 +165,10 @@ test("the dialog stays through the session warning and the session's end, and Do
   const main = page.getByRole("main")
   await expect(main.getByText(VISION)).toBeVisible()
   await expect(main.getByText("1 unpublished change")).toBeVisible()
+  // Still on offer: it asks to reconnect first (STY-057).
   await expect(
     main.getByRole("button", { name: "Publish changes" }),
-  ).toHaveAttribute("aria-disabled", "true")
+  ).toBeEnabled()
 })
 
 test("editing About in Welsh (S5)", async ({ page }) => {

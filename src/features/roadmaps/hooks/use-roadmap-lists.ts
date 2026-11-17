@@ -8,6 +8,7 @@ import { useEnabledWhileConnected } from "./enabled-while-connected"
 import {
   categoryListQueryOptions,
   familyListQueryOptions,
+  JOIN_READ,
 } from "./roadmap-queries"
 
 /**
@@ -56,8 +57,14 @@ export function useRoadmapLists(needed: boolean) {
   }
   const refetch = () =>
     Promise.all([
-      queryClient.invalidateQueries({ queryKey: familyOptions.queryKey }),
-      queryClient.invalidateQueries({ queryKey: categoryOptions.queryKey }),
+      queryClient.invalidateQueries(
+        { queryKey: familyOptions.queryKey },
+        JOIN_READ,
+      ),
+      queryClient.invalidateQueries(
+        { queryKey: categoryOptions.queryKey },
+        JOIN_READ,
+      ),
     ])
   return { lists, reading, refetch }
 }

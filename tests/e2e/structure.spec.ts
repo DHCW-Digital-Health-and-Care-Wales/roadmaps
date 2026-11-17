@@ -129,6 +129,30 @@ for (const language of ["en", "cy"] as const) {
 
       await expectStructure(main, snapshotName("main-expired", language))
     })
+
+    test("the reconnect dialog, asked by Refresh once expired (STY-057)", async ({
+      page,
+      gis,
+    }) => {
+      const expiresIn = 300
+      gis.respondWith({ type: "grant", expiresIn })
+      await page.clock.install()
+      await connectTo(page, language)
+      await expect(roadmapCards(page)).toHaveCount(3)
+      await page.clock.fastForward(sessionMs(expiresIn))
+      const main = page.getByRole("main")
+      await expect(main.getByRole("alert")).toBeVisible()
+      await main
+        .getByRole("button", {
+          name: language === "en" ? "Refresh" : "Adnewyddu",
+        })
+        .click()
+
+      await expectStructure(
+        page.getByRole("alertdialog"),
+        snapshotName("reconnect-dialog", language),
+      )
+    })
   })
 }
 

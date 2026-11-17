@@ -9,6 +9,7 @@ import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 import type { Language } from "@/i18n"
 import { AppError } from "@/lib/errors"
+import { findReconnectDialog } from "@/features/auth/testing/reconnect-dialog"
 import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
@@ -201,19 +202,48 @@ describe("“Add an item” on a roadmap's page (STY-046 S1)", () => {
     expect(screen.queryByRole("dialog")).toBeNull()
   })
 
+  it("stays unavailable while the items can't be read, once the session has expired too (STY-057 S5)", async () => {
+    const user = userEvent.setup()
+    const { authClient } = await renderWithProviders({
+      path: "/roadmaps/producta",
+      authState: connected,
+      repository: createInMemoryRoadmapRepository(roadmaps, {
+        producta: new AppError("network"),
+      }),
+    })
+    await main().findByText("Couldn't load this roadmap's items")
+    act(() => {
+      authClient.setState({ status: "expired" })
+    })
+
+    const [button] = addItemButtons()
+    expect(button).toHaveAttribute("aria-disabled", "true")
+    if (button) await user.click(button)
+    expect(screen.queryByRole("alertdialog")).toBeNull()
+    expect(screen.queryByRole("dialog")).toBeNull()
+  })
+
   it.each<AuthState>([{ status: "expired" }, { status: "connecting" }])(
-    "is unavailable while not connected: $status",
+    "asks to reconnect while not connected, then opens the dialog (STY-057): $status",
     async (state) => {
       const { user, authClient } = await renderPage()
-
       act(() => {
         authClient.setState(state)
       })
 
       const [button] = addItemButtons()
-      expect(button).toHaveAttribute("aria-disabled", "true")
+      expect(button).toHaveAttribute("aria-disabled", "false")
       if (button) await user.click(button)
+      await findReconnectDialog()
       expect(screen.queryByRole("dialog")).toBeNull()
+
+      act(() => {
+        authClient.setState(connected)
+      })
+
+      expect(
+        await screen.findByRole("dialog", { name: "Add an item" }),
+      ).toBeVisible()
     },
   )
 })

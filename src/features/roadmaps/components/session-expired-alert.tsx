@@ -35,7 +35,7 @@ export function SessionExpiredAlert({
         <AlertDescription>{children}</AlertDescription>
       </AlertContent>
       <AlertAction>
-        <ReconnectButton />
+        <ReconnectButton size="sm" />
       </AlertAction>
     </Alert>
   )

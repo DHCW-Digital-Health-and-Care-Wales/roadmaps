@@ -1,4 +1,5 @@
 import { LoaderCircleIcon } from "lucide-react"
+import type { ComponentProps, Ref } from "react"
 import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
@@ -6,27 +7,37 @@ import { Button } from "@/components/ui/button"
 import { useAuth } from "../use-auth"
 
 export interface ReconnectButtonProps {
-  className?: string
+  ref?: Ref<HTMLButtonElement>
+  size?: ComponentProps<typeof Button>["size"]
+  /** Called after reconnecting has started, inside the same click. */
+  onReconnect?: () => void
 }
 
 /**
- * Reconnect, offered where an expired session blocks content. It stays labelled
- * "Reconnect" (busy, still focusable) while the popup is open.
+ * Reconnect, offered where an expired session blocks content or an action. It stays
+ * labelled "Reconnect" (busy, still focusable) while the popup is open.
  */
-export function ReconnectButton({ className }: ReconnectButtonProps) {
+export function ReconnectButton({
+  ref,
+  size,
+  onReconnect,
+}: ReconnectButtonProps) {
   const { t } = useTranslation()
   const { state, connect } = useAuth()
   const busy = state.status === "connecting"
 
   return (
     <Button
-      size="sm"
-      className={className}
+      ref={ref}
+      size={size}
       disabled={busy}
       focusableWhenDisabled
       aria-busy={busy}
-      // Synchronous inside the click, or the browser blocks the sign-in popup (ADR-003).
-      onClick={connect}
+      onClick={() => {
+        // Synchronous inside the click, or the browser blocks the sign-in popup (ADR-003).
+        connect()
+        onReconnect?.()
+      }}
     >
       {busy && (
         <LoaderCircleIcon

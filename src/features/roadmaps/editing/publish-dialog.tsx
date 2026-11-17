@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import type { RoadmapChanges } from "@/domain/roadmap/roadmap-changes"
+import { useSessionAction } from "@/features/auth/session-action"
 
 import { MarkUpdatedCheckbox } from "./mark-updated-checkbox"
 import type { PublishAction } from "./pending-changes-store"
@@ -21,8 +22,6 @@ export interface PublishDialogProps {
   action: PublishAction
   changes: RoadmapChanges
   publishing: boolean
-  /** Whether publishing is available: only while connected (S12). */
-  available: boolean
   /** Whether "Mark as updated today" is ticked, offered unless a date is pending. */
   markUpdated: boolean
   onMarkUpdatedChange: (checked: boolean) => void
@@ -38,15 +37,14 @@ export interface PublishDialogProps {
  * Asks before publishing, saying when the public site shows the changes (S9) and
  * listing them (`WhatChanges`), with "Mark as updated today" unless a date is pending,
  * which is published instead (STY-036 S6, S7). Cancel writes nothing; while the publish
- * is under way it cannot be closed, and while publishing is unavailable it cannot be
- * confirmed.
+ * is under way it cannot be closed. Confirmed after the session has expired, it asks to
+ * reconnect first, then publishes (STY-057).
  */
 export function PublishDialog({
   open,
   action,
   changes,
   publishing,
-  available,
   markUpdated,
   onMarkUpdatedChange,
   returnFocus,
@@ -55,6 +53,7 @@ export function PublishDialog({
   onCancel,
 }: PublishDialogProps) {
   const { t } = useTranslation()
+  const confirm = useSessionAction(onConfirm)
 
   return (
     <AlertDialog
@@ -85,10 +84,12 @@ export function PublishDialog({
         )}
         <AlertDialogFooter>
           <Button
-            disabled={publishing || !available}
+            disabled={publishing}
             focusableWhenDisabled
             aria-busy={publishing}
-            onClick={onConfirm}
+            onClick={(event) => {
+              confirm(event.currentTarget)
+            }}
           >
             {t(`roadmaps.publish.action.${action}`)}
           </Button>

@@ -9,6 +9,10 @@ import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 import type { Language } from "@/i18n"
 import { AppError } from "@/lib/errors"
+import {
+  findReconnectDialog,
+  reconnectFromDialog,
+} from "@/features/auth/testing/reconnect-dialog"
 import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
@@ -604,19 +608,37 @@ describe("RoadmapDetailPage items", () => {
       expect(refresh).toHaveAttribute("aria-disabled", "true")
     })
 
-    it("is unavailable but focusable when not connected", async () => {
-      const { authClient } = await renderRoadmap("producta", {
+    it("asks to reconnect when the session has expired, then reads each once (STY-057)", async () => {
+      const user = userEvent.setup()
+      const repository = createInMemoryRoadmapRepository(roadmaps, {
         producta: productAItems,
       })
+      const listRoadmaps = vi.spyOn(repository, "listRoadmaps")
+      const listRoadmapItems = vi.spyOn(repository, "listRoadmapItems")
+      const { authClient } = await renderWithProviders({
+        path: "/roadmaps/producta",
+        authState: connected,
+        repository,
+      })
       await main().findByRole("heading", { level: 2, name: "Now" })
-
       act(() => {
         authClient.setState({ status: "expired" })
       })
-
       const refresh = main().getByRole("button", { name: "Refresh" })
-      expect(refresh).toHaveAttribute("aria-disabled", "true")
-      expect(refresh).not.toBeDisabled()
+      expect(refresh).toHaveAttribute("aria-disabled", "false")
+
+      await user.click(refresh)
+      await findReconnectDialog()
+      expect(listRoadmapItems).toHaveBeenCalledOnce()
+      await reconnectFromDialog(user)
+
+      // Reconnecting reads the page again, and Refresh joins that read.
+      await vi.waitFor(() => {
+        expect(refresh).toHaveAttribute("aria-busy", "false")
+      })
+      expect(listRoadmaps).toHaveBeenCalledTimes(2)
+      expect(listRoadmapItems).toHaveBeenCalledTimes(2)
+      expect(refresh).toHaveFocus()
     })
 
     it("on the home page still reads only the roadmap list", async () => {

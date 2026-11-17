@@ -17,6 +17,7 @@ import { useEnabledWhileConnected } from "../hooks/enabled-while-connected"
 import {
   categoryListQueryOptions,
   familyListQueryOptions,
+  JOIN_READ,
 } from "../hooks/roadmap-queries"
 import { useOrganisations } from "../hooks/use-organisations"
 import { useRoadmaps } from "../hooks/use-roadmaps"
@@ -29,6 +30,8 @@ const TITLE_ID = "families-title"
  * `/families`: each family with its colour, names and roadmaps, which anyone connected
  * can add to, rename or recolour, and the categories and organisations, read-only
  * (STY-029, STY-033). Handles not connected, loading and failure, as the roadmap list does.
+ * Refresh is offered once something has been read: a page asking to connect has nothing
+ * to refresh.
  */
 export function FamiliesPage() {
   const { t } = useTranslation()
@@ -48,8 +51,11 @@ export function FamiliesPage() {
     queries.find(({ error }) => error !== null)?.error ?? null,
   )
   const reload = () => {
-    for (const query of queries) void query.refetch()
+    for (const query of queries) void query.refetch(JOIN_READ)
   }
+  // Nothing was read with a session: the page asks to connect, with nothing to refresh.
+  const asksToConnect =
+    !connected && queries.every(({ data }) => data === undefined)
 
   const content = (() => {
     if (
@@ -69,17 +75,13 @@ export function FamiliesPage() {
               retrying={fetching}
             />
           )}
-          <FamiliesSection
-            families={families.data}
-            roadmaps={roadmaps.data}
-            available={connected}
-          />
+          <FamiliesSection families={families.data} roadmaps={roadmaps.data} />
           <CategoriesSection categories={categories.data} />
           <OrganisationsSection organisations={organisations.data} />
         </>
       )
     }
-    if (!connected && queries.every(({ data }) => data === undefined)) {
+    if (asksToConnect) {
       return (
         <StatusPanel
           icon={<LockKeyholeIcon />}
@@ -123,9 +125,11 @@ export function FamiliesPage() {
             {t("roadmaps.families.description")}
           </p>
         </div>
-        <div className="shrink-0">
-          <RefreshButton fetching={fetching} onRefresh={reload} />
-        </div>
+        {!asksToConnect && (
+          <div className="shrink-0">
+            <RefreshButton fetching={fetching} onRefresh={reload} />
+          </div>
+        )}
       </div>
       <div className="mt-8 flex flex-col gap-10">{content}</div>
     </section>

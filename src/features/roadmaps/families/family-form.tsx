@@ -14,6 +14,7 @@ import type {
   FamilyInput,
   FamilyInputProblems,
 } from "@/domain/roadmap/family-changes"
+import { useSessionAction } from "@/features/auth/session-action"
 
 import { FormField } from "../components/form-field"
 import { RoadmapSwatch } from "../components/roadmap-swatch"
@@ -27,7 +28,7 @@ export interface FamilyFormProps {
   focusRequest: { field: FamilyField } | null
   submitLabel: string
   busy: boolean
-  /** Whether saving is available: only while connected. */
+  /** Whether saving is available: only with a usable family list (S7). */
   available: boolean
   onChange: (values: FamilyInput) => void
   onSubmit: () => void
@@ -39,7 +40,8 @@ const FIELDS: readonly FamilyField[] = ["name", "colour"]
 /**
  * A family's English name and colour, with a swatch of the colour as typed, each field's
  * problem linked to it, then the save button and Cancel (or Escape). Checks nothing
- * itself: the caller checks on submit and passes the problems back.
+ * itself: the caller checks on submit and passes the problems back. Submitted after the
+ * session has expired, it asks to reconnect first, then submits (STY-057).
  */
 export function FamilyForm({
   labelledBy,
@@ -67,9 +69,10 @@ export function FamilyForm({
     ref.current?.focus()
   }, [focusRequest])
 
+  const save = useSessionAction(onSubmit)
   const submit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (!busy && available) onSubmit()
+    if (!busy && available) save(event.nativeEvent.submitter)
   }
   const escape = (event: KeyboardEvent<HTMLFormElement>) => {
     if (event.key !== "Escape" || busy) return

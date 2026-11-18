@@ -78,8 +78,8 @@ node .agents/skills/ux-prototypes/scripts/assemble.mjs <manifest.json> docs/anal
 
 ## Check
 
-The page check sees neither clipping nor a wrong fact. Read every screenshot
-for:
+The page check sees neither clipping nor a wrong fact. Read every artboard
+screenshot for:
 
 - nothing cut off sideways or by another element, and nothing drawn scrolled
   under a header that does not stay in place in the app; a page running past a
@@ -90,4 +90,4 @@ for:
   or notice says of it
 - the shell and its controls against your captures of the app
 
-Done when every screenshot has been read for all four.
+Done when every artboard screenshot has been read for all four.

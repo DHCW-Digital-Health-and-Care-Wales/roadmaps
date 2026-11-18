@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { execFile } from "node:child_process"
 import { once } from "node:events"
-import { mkdtemp, readFile, rm } from "node:fs/promises"
+import { mkdtemp, readdir, readFile, rm } from "node:fs/promises"
 import { createServer } from "node:http"
 import os from "node:os"
 import path from "node:path"
@@ -41,6 +41,16 @@ const fixtures = {
   "/native-choice":
     '<figure id="d1"><button type="button" role="radio" aria-checked="true" class="opt"><span class="rad on"></span>Platform</button><label><input type="checkbox"><span class="chk"></span>Mobile app</label><span aria-hidden="true" class="rad on"></span>Data and analytics</figure>',
 }
+// Two artboards of different heights, each holding a desktop and a phone frame.
+const frame = (device, moment, body) =>
+  `<div class="col"><div class="lbl"><b>${device}</b> ${moment}\n  and more</div><div class="${device === "Desktop" ? "dev" : "ph"}">${body}</div></div>`
+fixtures["/artboards"] =
+  `<figure id="d1"><figcaption>A. Inline</figcaption>` +
+  `<div class="ab" style="display:flex;width:300px;height:200px">${frame("Desktop", "Before publishing", '<h1>Roadmaps</h1><p>2 pending edits</p><button type="button">Publish</button><span aria-hidden="true">Logo mark</span><span aria-hidden="true" style="display:none">Never drawn</span><span style="display:none">Hidden copy</span>')}${frame("Phone", "Before publishing", '<a href="#d1">Open roadmap</a>')}</div>` +
+  `<div class="ab" style="display:flex;width:300px;height:320px">${frame("Desktop", "Just published", "<p>Published</p>")}${frame("Phone", "Just published", "<p>Published</p>")}</div></figure>` +
+  `<figure id="d2"><figcaption>B. Guided</figcaption><div class="frame"><button type="button">Review</button></div></figure>`
+fixtures["/artboards-one"] =
+  `<figure id="d1"><figcaption>A. Inline</figcaption><div class="ab" style="display:flex;width:300px;height:200px">${frame("Desktop", "Just published", "<p>Published</p>")}</div></figure>`
 // Every fixture carries the review chrome a real page does, but this one.
 const unchromed = "/no-chrome"
 fixtures[unchromed] = '<figure id="d1">Roadmaps</figure>'
@@ -62,11 +72,11 @@ test("prototype page checks exercise rendered browser fixtures", async (t) => {
     server.listen(0, "127.0.0.1")
     await once(server, "listening")
     const { port } = server.address()
-    const check = (fixture) =>
+    const check = (fixture, into = fixture) =>
       run(process.execPath, [
         checker,
         `http://127.0.0.1:${port}/${fixture}`,
-        path.join(scratch, fixture),
+        path.join(scratch, into),
       ])
 
     for (const fixture of ["script-error", "phone-script-error"]) {
@@ -89,6 +99,77 @@ test("prototype page checks exercise rendered browser fixtures", async (t) => {
       const screenshot = await readFile(path.join(scratch, "links/d1.png"))
       assert.equal(screenshot.subarray(1, 4).toString(), "PNG")
     })
+
+    await t.test(
+      "each artboard is captured beside its design, no taller than itself",
+      async () => {
+        const { stdout } = await check("artboards")
+        assert.match(stdout, /2 designs captured.*\(2 artboards/)
+        // A PNG's height is the big-endian word at byte 20, in its IHDR chunk.
+        const height = async (name) =>
+          (await readFile(path.join(scratch, "artboards", name))).readUInt32BE(
+            20,
+          )
+        assert.equal(await height("d1-ab1.png"), 200)
+        assert.equal(await height("d1-ab2.png"), 320)
+        assert.ok((await height("d1.png")) > 520)
+        await assert.rejects(
+          readFile(path.join(scratch, "artboards/d2-ab1.png")),
+        )
+      },
+    )
+
+    await t.test(
+      "images of an artboard since cut are not left to be read",
+      async () => {
+        await check("artboards")
+        await check("artboards-one", "artboards")
+        const files = await readdir(path.join(scratch, "artboards"))
+        assert.ok(files.includes("d1-ab1.png"))
+        assert.ok(!files.includes("d1-ab2.png"))
+        assert.ok(!files.includes("d2.png"))
+      },
+    )
+
+    await t.test(
+      "the text extract lists, per artboard, each frame's caption, text and controls",
+      async () => {
+        await check("artboards")
+        const text = await readFile(
+          path.join(scratch, "artboards/page-text.txt"),
+          "utf8",
+        )
+        const at = (needle) => text.indexOf(needle)
+        // Page order: design, artboard, frame caption, then what it shows.
+        const order = [
+          "# d1: A. Inline",
+          "## d1-ab1",
+          "### Desktop Before publishing and more",
+          'heading "Roadmaps"',
+          "2 pending edits",
+          'button "Publish"',
+          "### Phone Before publishing and more",
+          'link "Open roadmap"',
+          "## d1-ab2",
+          "### Desktop Just published and more",
+          "# d2: B. Guided",
+          'button "Review"',
+        ]
+        const positions = order.map(at)
+        assert.ok(
+          !positions.includes(-1),
+          `page-text.txt lacks: ${order[positions.indexOf(-1)]}`,
+        )
+        assert.deepEqual(
+          positions,
+          [...positions].sort((a, b) => a - b),
+        )
+        // Drawn but aria-hidden text is listed apart; text that is not drawn is not.
+        assert.match(text, /- aria-hidden text drawn: Logo mark\n/)
+        assert.ok(!text.includes("Never drawn"))
+        assert.ok(!text.includes("Hidden copy"))
+      },
+    )
 
     await t.test(
       "label-only phone navigation is refused beside working desktop links",

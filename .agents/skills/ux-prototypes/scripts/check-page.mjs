@@ -1,11 +1,12 @@
 #!/usr/bin/env node
-// Renders a UX prototype page: screenshots each design at 1440px and fails if
-// the page's script throws as it opens, the page scrolls sideways at 375px, a
-// navigation contains no native controls, a choice mark sits outside a native
-// control, an element id repeats, or the review bar does not link every
-// design.
+// Renders a UX prototype page: screenshots each design, and each of its
+// artboards, at 1440px, writes the page's text for reviewers
+// (page-text.txt), and fails if the page's script throws as it opens, the page
+// scrolls sideways at 375px, a navigation contains no native controls, a
+// choice mark sits outside a native control, an element id repeats, or the
+// review bar does not link every design.
 // Usage: node check-page.mjs <page.html-or-url> <shots-dir>
-import { mkdir } from "node:fs/promises"
+import { mkdir, readdir, rm, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
 import { launchChromium } from "./chromium.mjs"
@@ -13,12 +14,60 @@ import { launchChromium } from "./chromium.mjs"
 const CHOICE_CONTROLS =
   'button, [tabindex]:is([role="radio"], [role="checkbox"]), [aria-hidden="true"]'
 
+/**
+ * A frame's outline: its visible text and each control's role and accessible
+ * name, then the aria-hidden text it also draws, such as a logo, which the
+ * outline leaves out.
+ */
+async function frameText(locator) {
+  const outline = await locator.ariaSnapshot()
+  const drawn = await locator.evaluate((root) =>
+    [...root.querySelectorAll('[aria-hidden="true"]')]
+      .filter(
+        (el) =>
+          !el.parentElement.closest('[aria-hidden="true"]') &&
+          el.checkVisibility(),
+      )
+      .map((el) => (el.innerText ?? "").replace(/\s+/g, " ").trim())
+      .filter(Boolean),
+  )
+  return drawn.length > 0
+    ? `${outline}\n- aria-hidden text drawn: ${drawn.join(" | ")}`
+    : outline
+}
+
+/** An artboard's frames in page order: each one's caption (its label strip), then its outline. */
+async function artboardText(board) {
+  const columns = board.locator(":scope > .col")
+  const lines = []
+  for (let n = 0; n < (await columns.count()); n++) {
+    const column = columns.nth(n)
+    const caption = await column.locator(":scope > .lbl").evaluateAll((lbls) =>
+      lbls.map((lbl) =>
+        [...lbl.childNodes]
+          .map((node) => node.textContent.replace(/\s+/g, " ").trim())
+          .filter(Boolean)
+          .join(" "),
+      ),
+    )
+    lines.push(`\n### ${caption.join(" / ")}`)
+    const frames = column.locator(":scope > :not(.lbl)")
+    for (let f = 0; f < (await frames.count()); f++)
+      lines.push(await frameText(frames.nth(f)))
+  }
+  return lines
+}
+
 const [page, out] = process.argv.slice(2)
 if (!page || !out) {
   console.error("usage: node check-page.mjs <page.html-or-url> <shots-dir>")
   process.exit(2)
 }
 await mkdir(out, { recursive: true })
+// An earlier run's images of a design or artboard since cut would be read as the page's.
+for (const file of await readdir(out))
+  if (/^(d\d+(-ab\d+)?\.png|page-text\.txt)$/.test(file))
+    await rm(path.join(out, file))
 const url = /^https?:\/\//.test(page)
   ? new URL(page).href
   : pathToFileURL(path.resolve(page)).href
@@ -111,13 +160,30 @@ try {
     )
     process.exitCode = 1
   }
-  for (const id of ids)
-    await desk
-      .locator(`#${id}`)
-      .screenshot({ path: path.join(out, `${id}.png`) })
+  let artboards = 0
+  const text = []
+  for (const id of ids) {
+    const design = desk.locator(`#${id}`)
+    await design.screenshot({ path: path.join(out, `${id}.png`) })
+    const boards = design.locator(".ab")
+    const count = await boards.count()
+    const [title] = await design.locator("figcaption").allInnerTexts()
+    text.push(`# ${id}${title ? `: ${title}` : ""}`)
+    for (let n = 0; n < count; n++) {
+      const name = `${id}-ab${n + 1}`
+      const board = boards.nth(n)
+      await board.screenshot({ path: path.join(out, `${name}.png`) })
+      text.push(`\n## ${name}`)
+      text.push(...(await artboardText(board)))
+      artboards += 1
+    }
+    // A design drawn without artboards, such as a working component.
+    if (count === 0) text.push(await frameText(design))
+  }
+  await writeFile(path.join(out, "page-text.txt"), `${text.join("\n")}\n`)
   const width = await phone.evaluate(() => document.documentElement.scrollWidth)
   console.log(
-    `${ids.length} designs captured in ${out}; phone scroll width ${width}px`,
+    `${ids.length} designs captured in ${out} (${artboards} artboards; text in page-text.txt); phone scroll width ${width}px`,
   )
   if (ids.length === 0 || width > 375) {
     console.error(

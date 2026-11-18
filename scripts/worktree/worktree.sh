@@ -39,12 +39,11 @@ lock() {
   mkdir -p "$REGISTRY"
   until ln -s "$$" "$LOCK" 2>/dev/null; do
     owner="$(readlink "$LOCK" 2>/dev/null || true)"
-    if [ -n "$owner" ] && ! kill -0 "$owner" 2>/dev/null; then
-      break_dead_lock "$owner"
+    if [ -n "$owner" ] && ! kill -0 "$owner" 2>/dev/null && break_dead_lock "$owner"; then
       continue
     fi
     tries=$((tries + 1))
-    [ "$tries" -lt 600 ] || {
+    [ "$tries" -lt "${RE_WORKTREE_LOCK_TRIES:-600}" ] || {
       echo "worktree: registry lock held by pid ${owner:-?}; remove $LOCK and $LOCK.break if no worktree command is running" >&2
       exit 1
     }
@@ -55,9 +54,11 @@ lock() {
 
 # Removes the lock if the dead owner still holds it. Under a second lock, so a
 # waiter that saw the dead owner never removes the lock another waiter has
-# taken since: it re-reads the owner first.
+# taken since: it re-reads the owner first. Fails while another waiter holds
+# the second lock, so the caller waits its turn; a second lock left by a crash
+# runs that wait out to the error naming both locks.
 break_dead_lock() {
-  ln -s "$$" "$LOCK.break" 2>/dev/null || return 0
+  ln -s "$$" "$LOCK.break" 2>/dev/null || return 1
   [ "$(readlink "$LOCK" 2>/dev/null || true)" = "$1" ] && rm -f "$LOCK"
   rm -f "$LOCK.break"
 }

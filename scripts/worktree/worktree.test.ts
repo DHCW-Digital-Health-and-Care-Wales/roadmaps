@@ -55,9 +55,12 @@ function worktree(name: string): string {
   return root
 }
 
-async function setup(root: string): Promise<number> {
+async function setup(
+  root: string,
+  extraEnv: NodeJS.ProcessEnv = {},
+): Promise<number> {
   await run(join(root, "scripts", "worktree", "worktree.sh"), ["setup"], {
-    env,
+    env: { ...env, ...extraEnv },
   })
   return slotOf(root)
 }
@@ -92,6 +95,16 @@ describe("worktree.sh setup", () => {
     expect(await setup(worktree("next"))).toBe(slot)
   })
 
+  it("stops with the fix named when a crashed setup left both of its locks", async () => {
+    mkdirSync(registry, { recursive: true })
+    symlinkSync(String(deadPid()), join(registry, ".lock"))
+    symlinkSync(String(deadPid()), join(registry, ".lock.break"))
+
+    const failure = setup(worktree("blocked"), { RE_WORKTREE_LOCK_TRIES: "5" })
+
+    await expect(failure).rejects.toThrow(/remove .*\.lock and .*\.lock\.break/)
+  }, 10_000)
+
   it("gives concurrent setups distinct slots after a crashed setup left its lock", async () => {
     const roots = Array.from({ length: 8 }, (_, i) => worktree(`w${String(i)}`))
     mkdirSync(registry, { recursive: true })
@@ -102,7 +115,7 @@ describe("worktree.sh setup", () => {
       for (const file of readdirSync(registry)) rmSync(join(registry, file))
       symlinkSync(String(deadPid()), join(registry, ".lock"))
 
-      const slots = await Promise.all(roots.map(setup))
+      const slots = await Promise.all(roots.map((root) => setup(root)))
 
       expect(new Set(slots).size).toBe(roots.length)
       expect(readdirSync(registry)).not.toContain(".lock")

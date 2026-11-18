@@ -399,11 +399,11 @@ the OAuth client does not list.
 
 Several worktrees can each run their own dev server and E2E suite on one host. `t3.json`
 runs `scripts/worktree/worktree.sh setup` (`pnpm worktree:setup`) when T3 Code creates a
-worktree. The setup claims a numbered
-slot, writes the slot's ports to `.env.worktree`, installs dependencies and creates
-`.env.local`. Slot _n_ owns `21000 + 10n` for `pnpm dev` and `21000 + 10n + 1` for
-`pnpm preview` and `pnpm test:e2e`; `vite.config.ts` and `playwright.config.ts` read the
-file (`build/resolve-dev-ports.ts`). A checkout without it keeps 5173 and 4173.
+worktree. The setup claims a numbered slot, writes the slot's ports to `.env.worktree`,
+installs dependencies and creates `.env.local`. Slot _n_ owns `21000 + 10n` for
+`pnpm dev` and `21000 + 10n + 1` for `pnpm preview` and `pnpm test:e2e`;
+`vite.config.ts` and `playwright.config.ts` read the file (`build/resolve-dev-ports.ts`).
+A checkout without it keeps 5173 and 4173.
 
 ```sh
 pnpm worktree:info      # this worktree's ports
@@ -413,9 +413,9 @@ pnpm worktree:teardown  # stop its servers, free the slot
 Slots are tracked in `~/.local/state/roadmaps-editor/worktree-slots`. A worktree removed
 without a teardown (`git worktree remove`, or deleted and then `git worktree prune`d)
 has its slot reclaimed by the next setup; after a `git worktree move`, run
-`pnpm worktree:setup` in the moved worktree to claim a slot under its new path. Real Google sign-in works only on an origin
-the OAuth client lists, so sign in from a checkout on 5173, or add the worktree's
-`http://localhost:<dev port>` to the client's origins
+`pnpm worktree:setup` in the moved worktree to claim a slot under its new path. Real
+Google sign-in works only on an origin the OAuth client lists, so sign in from a checkout
+on 5173, or add the worktree's `http://localhost:<dev port>` to the client's origins
 ([Google Cloud setup](docs/operations/google-cloud-setup.md)). The E2E suite fakes
 Google, so it runs on any slot.
 

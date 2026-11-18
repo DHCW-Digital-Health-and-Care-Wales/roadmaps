@@ -157,8 +157,11 @@ strip's layout, including "keeps every control of the stuck row on screen" at 64
   (`grid-cols-1`), so no content widens it past the page.
 - **Catalogue**: no key added or removed; the comments on `roadmaps.jumpTo` say which
   width shows which control.
-- **Test hooks**: `tests/e2e/control-row.spec.ts`; the `detail` structure snapshot, at
-  1280px, has the links and no "Jump to".
+- **Test hooks**: `tests/e2e/control-row.spec.ts`; `jumpTo` and `placementLinks` in
+  `tests/e2e/fixtures/roadmap-page.ts` find the jump control per width; `boxOf` (with
+  `right` and `bottom`) and `scrollsSideways` are in `tests/e2e/fixtures/layout.ts`,
+  which `roadmap-header.spec.ts` and `roadmaps.spec.ts` now share; the `detail`
+  structure snapshot, at 1280px, has the links and no "Jump to".
 
 ### Scenario evidence
 

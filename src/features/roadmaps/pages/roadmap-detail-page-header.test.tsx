@@ -76,17 +76,16 @@ function inDocumentOrder(elements: HTMLElement[]): boolean {
   })
 }
 
-/** The three controls Tab reaches after About's Edit. */
-async function tabsAfterEdit(
+/** Tab reaches each of `stops`, in order, after About's Edit. */
+async function expectTabsAfterEdit(
   user: ReturnType<typeof userEvent.setup>,
-): Promise<(Element | null)[]> {
+  stops: HTMLElement[],
+) {
   button("Edit About this roadmap").focus()
-  const reached: (Element | null)[] = []
-  for (let press = 0; press < 3; press++) {
+  for (const stop of stops) {
     await user.tab()
-    reached.push(document.activeElement)
+    expect(document.activeElement).toBe(stop)
   }
-  return reached
 }
 
 /** The page's button named exactly `name`. */
@@ -175,7 +174,7 @@ describe("A roadmap's header block (STY-059)", () => {
   it("reaches Add an item, More and Jump to by Tab after Edit (S7)", async () => {
     const user = await renderPage(demographics)
 
-    expect(await tabsAfterEdit(user)).toEqual([
+    await expectTabsAfterEdit(user, [
       button("Add an item"),
       button("More"),
       button("Jump to"),
@@ -186,7 +185,7 @@ describe("A roadmap's header block (STY-059)", () => {
     matchMediaQueries(DESKTOP_WIDTH)
     const user = await renderPage(demographics)
 
-    expect(await tabsAfterEdit(user)).toEqual([
+    await expectTabsAfterEdit(user, [
       button("Add an item"),
       button("More"),
       main().getByRole("link", { name: "Recently delivered, no items" }),

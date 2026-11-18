@@ -184,7 +184,7 @@ export function RoadmapHeader({
           {navigation && desktop && (
             <PlacementLinks
               navigation={navigation}
-              className={cn(stuck ? "border-y-0 lg:col-span-2" : undefined)}
+              className={cn(stuck && "border-y-0 lg:col-span-2")}
             />
           )}
         </div>

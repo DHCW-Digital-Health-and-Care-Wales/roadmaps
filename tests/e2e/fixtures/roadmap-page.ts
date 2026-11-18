@@ -4,10 +4,11 @@ import { EXAMPLE_SPREADSHEET, type FakeTab, withTabRows } from "./fake-sheets"
 import { type Language, useLanguage } from "./look"
 import { connect, expect } from "./test"
 
-// A roadmap's page as STY-052, STY-053 and STY-059 shaped it: Refresh and "Unpublish
-// roadmap" in the header's More, a publish someone else's changes stopped reviewed in a
-// dialog, opened from its notice at the foot, and "About this roadmap" a disclosure,
-// closed until pressed. No back link: the header's name leads to the list.
+// A roadmap's page as STY-052, STY-053, STY-059 and STY-060 shaped it: Refresh and
+// "Unpublish roadmap" in the header's More, a publish someone else's changes stopped
+// reviewed in a dialog, opened from its notice at the foot, "About this roadmap" a
+// disclosure, closed until pressed, and one jump control per width. No back link: the
+// header's name leads to the list.
 
 const COPY = {
   en: {
@@ -15,6 +16,8 @@ const COPY = {
     about: "About this roadmap",
     facts: "Roadmap details",
     home: "home",
+    jumpTo: "Jump to",
+    links: "Horizons and sections",
     more: "More",
     refresh: "Refresh",
     review: "Review the changes",
@@ -25,6 +28,8 @@ const COPY = {
     about: "Ynglŷn â'r map trywydd hwn",
     facts: "Manylion y map trywydd",
     home: "hafan",
+    jumpTo: "Neidio i",
+    links: "Gorwelion ac adrannau",
     more: "Mwy",
     refresh: "Adnewyddu",
     review: "Adolygu'r newidiadau",
@@ -199,6 +204,20 @@ export async function focusClearOfBars(page: Page): Promise<string | null> {
       ? null
       : `${name} at ${String(box.top)}–${String(box.bottom)}, between ${String(top)} and ${String(bottom)}`
   }, LEFT_THE_CONTENT)
+}
+
+/** The header's "Jump to", a jump control below a desktop, whatever placement it names. */
+export function jumpTo(page: Page, language: Language = "en"): Locator {
+  return page
+    .getByRole("main")
+    .getByRole("button", { name: new RegExp(`^${COPY[language].jumpTo}`) })
+}
+
+/** The row of placement links, a desktop's jump control (STY-060 S1). */
+export function placementLinks(page: Page, language: Language = "en"): Locator {
+  return page
+    .getByRole("main")
+    .getByRole("navigation", { name: COPY[language].links })
 }
 
 /** "About this roadmap", in the page's content. */

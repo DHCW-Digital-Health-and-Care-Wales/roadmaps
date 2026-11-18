@@ -285,7 +285,8 @@ test("moves Publish roadmap into More once the row sticks, at every width, where
   expect(await namesShownInStuckRow(page)).not.toContain("Publish roadmap")
   await expect(addItem).toBeInViewport()
   await expect(addItem).toHaveCSS("width", "40px")
-  await expect(more.getByText("More")).toHaveClass(/sr-only/)
+  // An ellipsis and a chevron, its label hidden (STY-060 D2, D5).
+  expect((await more.boundingBox())?.width).toBeLessThan(70)
   await more.click()
   await expect(menuItems).toHaveText(["Refresh", "Publish roadmap"])
   await page.keyboard.press("Escape")
@@ -295,7 +296,7 @@ test("moves Publish roadmap into More once the row sticks, at every width, where
   await expect(page.locator("[data-stuck]")).toBeVisible()
   expect(await namesShownInStuckRow(page)).not.toContain("Publish roadmap")
   await expect(addItem).toHaveText("Add an item")
-  await expect(more.getByText("More")).not.toHaveClass(/sr-only/)
+  expect((await more.boundingBox())?.width).toBeGreaterThan(70)
   await more.click()
   await expect(menuItems).toHaveText(["Refresh", "Publish roadmap"])
 })

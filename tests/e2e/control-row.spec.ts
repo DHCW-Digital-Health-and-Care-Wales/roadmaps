@@ -2,13 +2,16 @@ import type { Locator, Page } from "@playwright/test"
 
 import { openEditItemDialog, openEditRoadmapDialog } from "./fixtures/dialogs"
 import { withTabItems } from "./fixtures/fake-sheets"
+import { boxOf, scrollsSideways } from "./fixtures/layout"
 import type { Language } from "./fixtures/look"
 import {
   focusClearOfBars,
+  jumpTo,
   LEFT_THE_CONTENT,
   openAbout,
   openLongRoadmap,
   openRoadmapIn,
+  placementLinks,
   shownInStuckRow,
 } from "./fixtures/roadmap-page"
 import { expect, test } from "./fixtures/test"
@@ -53,28 +56,8 @@ const COPY = {
 const LONG_TITLE =
   "Demographics and Identity: the Master Patient Index, the Welsh Demographic Service and WAMS"
 
-/** The header's "Jump to", whatever placement it names. */
-function jumpTo(page: Page, language: Language = "en"): Locator {
-  return page
-    .getByRole("main")
-    .getByRole("button", { name: new RegExp(`^${COPY[language].jumpTo}`) })
-}
-
-/** The row of placement links. */
-function links(page: Page, language: Language = "en"): Locator {
-  return page
-    .getByRole("main")
-    .getByRole("navigation", { name: COPY[language].links })
-}
-
 function button(page: Page, name: string): Locator {
   return page.getByRole("main").getByRole("button", { name, exact: true })
-}
-
-async function boxOf(locator: Locator) {
-  const box = await locator.boundingBox()
-  if (!box) throw new Error("Not laid out")
-  return { ...box, right: box.x + box.width, bottom: box.y + box.height }
 }
 
 /** The right edge of the page's content, where a control may run to. */
@@ -127,15 +110,6 @@ async function scrollInto(page: Page, name: string) {
   })
 }
 
-/** Whether the page scrolls sideways. */
-function scrollsSideways(page: Page): Promise<boolean> {
-  return page.evaluate(
-    () =>
-      document.documentElement.scrollWidth >
-      document.documentElement.clientWidth,
-  )
-}
-
 for (const language of ["en", "cy"] as const) {
   const copy = COPY[language]
   for (const width of [375, 640, 768, 820, 1024, 1280]) {
@@ -149,16 +123,16 @@ for (const language of ["en", "cy"] as const) {
       const strip = page.locator("[data-stuck]")
 
       if (desktop) {
-        await expect(links(page, language)).toBeVisible()
+        await expect(placementLinks(page, language)).toBeVisible()
         await expect(jumpTo(page, language)).toHaveCount(0)
         // Under Add an item and More.
         const more = await boxOf(button(page, copy.more))
-        expect((await boxOf(links(page, language))).y).toBeGreaterThanOrEqual(
-          more.bottom,
-        )
+        expect(
+          (await boxOf(placementLinks(page, language))).y,
+        ).toBeGreaterThanOrEqual(more.bottom)
       } else {
         await expect(jumpTo(page, language)).toBeVisible()
-        await expect(links(page, language)).toHaveCount(0)
+        await expect(placementLinks(page, language)).toHaveCount(0)
       }
 
       await scrollInto(page, copy.next)
@@ -182,7 +156,7 @@ for (const language of ["en", "cy"] as const) {
             name: `${copy.jumpTo}: ${copy.next}`,
           }),
         ).toBeInViewport({ ratio: 1 })
-        await expect(links(page, language)).toHaveCount(0)
+        await expect(placementLinks(page, language)).toHaveCount(0)
       }
       for (const control of await shownInStuckRow(page)) {
         await expect(control).toBeInViewport({ ratio: 1 })
@@ -474,7 +448,10 @@ for (const language of ["en", "cy"] as const) {
       // The count beside them, on two lines at most.
       expect(count.y).toBeLessThan(publish.bottom)
       expect(count.bottom).toBeGreaterThan(publish.y)
-      expect(count.height).toBeLessThanOrEqual(2 * 24 + 1)
+      const lineHeight = await countText.evaluate((text) =>
+        Number.parseFloat(getComputedStyle(text).lineHeight),
+      )
+      expect(count.height).toBeLessThanOrEqual(2 * lineHeight + 0.5)
       for (const control of [countText, publishButton, discardButton]) {
         await expect(control).toBeInViewport({ ratio: 1 })
       }
@@ -524,7 +501,7 @@ for (const [device, size] of [
     await editItems(page, ["Planned work 1", "Planned work 2"])
 
     if (size.width >= 1024) {
-      await links(page)
+      await placementLinks(page)
         .getByRole("link", { name: /^Later,/ })
         .click()
     } else {

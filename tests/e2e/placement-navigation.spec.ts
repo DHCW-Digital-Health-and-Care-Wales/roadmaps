@@ -7,8 +7,10 @@ import type { Language } from "./fixtures/look"
 import {
   about,
   focusClearOfBars,
+  jumpTo,
   openLongRoadmap,
   openRoadmapIn,
+  placementLinks,
   shownInStuckRow,
 } from "./fixtures/roadmap-page"
 import { expect, test } from "./fixtures/test"
@@ -28,30 +30,14 @@ const COPY = {
   en: {
     jumpTo: "Jump to",
     more: "More",
-    links: "Horizons and sections",
     later: "Later",
   },
   cy: {
     jumpTo: "Neidio i",
     more: "Mwy",
-    links: "Gorwelion ac adrannau",
     later: "Hwyrach",
   },
 } as const satisfies Record<Language, Record<string, string>>
-
-/** The header's "Jump to", whatever placement it names. */
-function jumpTo(page: Page, language: Language = "en"): Locator {
-  return page
-    .getByRole("main")
-    .getByRole("button", { name: new RegExp(`^${COPY[language].jumpTo}`) })
-}
-
-/** The row of placement links, a desktop's jump control. */
-function links(page: Page, language: Language = "en"): Locator {
-  return page
-    .getByRole("main")
-    .getByRole("navigation", { name: COPY[language].links })
-}
 
 function placementHeading(page: Page, name: string): Locator {
   return page
@@ -119,7 +105,7 @@ for (const [device, size] of [
     const address = page.url()
 
     if (desktop) {
-      await links(page)
+      await placementLinks(page)
         .getByRole("link", { name: /^Later,/ })
         .click()
     } else {
@@ -160,7 +146,7 @@ test.describe("with reduced motion", () => {
     await page.setViewportSize(DESKTOP)
     await openLongRoadmap(page, sheets)
 
-    await links(page)
+    await placementLinks(page)
       .getByRole("link", { name: /^Later,/ })
       .click()
 
@@ -176,7 +162,7 @@ test("jumps from the links at the top, and from the stuck row's links on to the 
   await page.setViewportSize(DESKTOP)
   await openLongRoadmap(page, sheets)
 
-  await links(page)
+  await placementLinks(page)
     .getByRole("link", { name: /^Next,/ })
     .click()
   await expect(placementHeading(page, "Next")).toBeFocused()
@@ -206,11 +192,11 @@ test("shows each placement's count in the links and marks those with pending cha
   await openSmallRoadmap(page, sheets)
   await editNowItem(page)
 
-  const now = links(page).getByRole("link", { name: /^Now,/ })
+  const now = placementLinks(page).getByRole("link", { name: /^Now,/ })
   await expect(now).toHaveAccessibleName("Now, 7 items, unpublished changes")
   await expect(now).toContainText("7")
   await expect(
-    links(page).getByRole("link", { name: /^Next,/ }),
+    placementLinks(page).getByRole("link", { name: /^Next,/ }),
   ).toHaveAccessibleName("Next, 2 items")
 })
 
@@ -264,7 +250,7 @@ test("marks the placement the page is in, in the links, and none at the top (S3,
 }) => {
   await page.setViewportSize(DESKTOP)
   await openLongRoadmap(page, sheets)
-  const next = links(page).getByRole("link", { name: /^Next,/ })
+  const next = placementLinks(page).getByRole("link", { name: /^Next,/ })
   await expect(next).not.toHaveAttribute("aria-current")
 
   // Scrolled by hand: Next's heading just under the stuck row, as it sticks.
@@ -286,7 +272,7 @@ test("reaches the unplaced items, and an empty placement, which says it has none
 }) => {
   await page.setViewportSize(DESKTOP)
   await openSmallRoadmap(page, sheets)
-  const unplaced = links(page).getByRole("link").first()
+  const unplaced = placementLinks(page).getByRole("link").first()
   await expect(unplaced).toHaveAccessibleName(
     "Not on the public roadmap, 1 item",
   )
@@ -296,7 +282,7 @@ test("reaches the unplaced items, and an empty placement, which says it has none
     placementHeading(page, "Not on the public roadmap"),
   ).toBeFocused()
 
-  await links(page)
+  await placementLinks(page)
     .getByRole("link", { name: /^Not doing,/ })
     .click()
   await expect(placementHeading(page, "Not doing")).toBeFocused()
@@ -304,7 +290,7 @@ test("reaches the unplaced items, and an empty placement, which says it has none
     page.getByRole("main").getByText("No items", { exact: true }).last(),
   ).toBeInViewport()
   await expect(
-    links(page).getByRole("link", { name: /^Not doing,/ }),
+    placementLinks(page).getByRole("link", { name: /^Not doing,/ }),
   ).toHaveAttribute("aria-current", "location")
 })
 
@@ -346,7 +332,7 @@ test("is used by keyboard alone, in Cymraeg on a 375px phone, with no sideways s
   await expect(jumpTo(page, "cy")).toHaveAccessibleName("Neidio i: Hwyrach")
 
   // "Jump to" alone: no row of links on a phone (STY-060 S1).
-  await expect(links(page, "cy")).toHaveCount(0)
+  await expect(placementLinks(page, "cy")).toHaveCount(0)
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth,

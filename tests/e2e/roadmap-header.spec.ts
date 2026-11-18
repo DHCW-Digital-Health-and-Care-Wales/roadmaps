@@ -1,5 +1,6 @@
-import type { Locator, Page } from "@playwright/test"
+import type { Page } from "@playwright/test"
 
+import { boxOf } from "./fixtures/layout"
 import type { Language } from "./fixtures/look"
 import {
   aboutDisclosure,
@@ -43,12 +44,6 @@ const COPY = {
     publish: "Cyhoeddi'r map trywydd",
   },
 } as const satisfies Record<Language, unknown>
-
-async function boxOf(locator: Locator) {
-  const box = await locator.boundingBox()
-  if (!box) throw new Error("Not laid out")
-  return box
-}
 
 /** Each control of the header block that passes the layout's right edge, by its text. */
 function pastTheRightEdge(page: Page): Promise<string[]> {

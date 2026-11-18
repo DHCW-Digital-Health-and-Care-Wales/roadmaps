@@ -1192,6 +1192,11 @@
               all".
             </li>
             <li>
+              Drag the width, fold or close a family, then reload the page: each
+              is as you left it, as the app remembers them on this device. Start
+              again forgets them.
+            </li>
+            <li>
               Close "Single Record", then search "shared". The closed family's
               roadmap is found. Clear the search: the family is still closed.
             </li>
@@ -1341,13 +1346,57 @@
       /** From this window width the navigation stands beside the page. */
       const DESKTOP = 1024
 
+      // What the app remembers on this device, kept here in this page's own
+      // browser storage. A value that can't be read or kept falls back to its
+      // default, as the app's do.
+      const STORE_KEY = "navigation-prototype"
+      function readStored() {
+        try {
+          const stored = JSON.parse(localStorage.getItem(STORE_KEY) ?? "{}")
+          return {
+            width: Number.isFinite(stored.width)
+              ? Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, stored.width))
+              : DEFAULT_WIDTH,
+            folded: stored.folded === true,
+            closedFamilies: new Set(
+              Array.isArray(stored.closedFamilies) ? stored.closedFamilies : [],
+            ),
+          }
+        } catch {
+          return {
+            width: DEFAULT_WIDTH,
+            folded: false,
+            closedFamilies: new Set(),
+          }
+        }
+      }
+      function store(state) {
+        try {
+          localStorage.setItem(
+            STORE_KEY,
+            JSON.stringify({
+              width: state.width,
+              folded: state.folded,
+              closedFamilies: [...state.closedFamilies],
+            }),
+          )
+        } catch {
+          // Still applies for this visit.
+        }
+      }
+      function forget() {
+        try {
+          localStorage.removeItem(STORE_KEY)
+        } catch {
+          // Nothing was kept.
+        }
+      }
+
       function initialState() {
         return {
           page: "careplans",
           changed: new Set(CHANGES[changesMode]),
-          width: DEFAULT_WIDTH,
-          folded: false,
-          closedFamilies: new Set(),
+          ...readStored(),
           query: "",
           onlyChanged: false,
           drawerOpen: false,
@@ -2003,6 +2052,7 @@
             // between the two clicks of a double-click.
             handle.classList.remove("dragging")
             frame.firstChild.classList.remove("resizing")
+            store(state)
             showReadout()
           }
           handle.ondblclick = () => act.width(DEFAULT_WIDTH)
@@ -2187,7 +2237,12 @@
           const caret =
             active?.tagName === "INPUT" ? active.selectionStart : null
           tip.hidden = true
+          // The list keeps its scroll through the redraw.
+          const scrolled = frame.querySelector(".nav-list")?.scrollTop ?? 0
           frame.replaceChildren(shell())
+          const list = frame.querySelector(".nav-list")
+          if (list) list.scrollTop = scrolled
+          store(state)
           if (key) {
             const target =
               frame.querySelector(`[data-fk="${key}"]`) ??
@@ -2195,6 +2250,14 @@
                 ? frame.querySelector('[data-fk="main"]')
                 : null)
             target?.focus({ preventScroll: true })
+            // A control the list holds stays in its view, without moving the page.
+            if (list && target && list.contains(target)) {
+              const box = target.getBoundingClientRect()
+              const view = list.getBoundingClientRect()
+              if (box.bottom > view.bottom)
+                list.scrollTop += box.bottom - view.bottom
+              if (box.top < view.top) list.scrollTop -= view.top - box.top
+            }
             if (target?.tagName === "INPUT") {
               const at = caret ?? target.value.length
               target.setSelectionRange(at, at)
@@ -2251,6 +2314,7 @@
         return {
           reset() {
             clearTimeout(sayTimer)
+            forget()
             state = initialState()
             live.textContent = ""
             draw(null)

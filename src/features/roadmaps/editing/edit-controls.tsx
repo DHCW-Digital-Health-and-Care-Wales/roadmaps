@@ -40,6 +40,89 @@ function NewTag({ subject }: { subject: string }) {
   )
 }
 
+/** What of an item or a roadmap is pending: see `EditControlsProps.pending`. */
+export type Pending = "changed" | "new" | undefined
+
+/** "Changed" or "New" for what is pending, or nothing. */
+export function PendingTag({
+  pending,
+  subject,
+}: {
+  pending: Pending
+  /** Names what is new, for assistive technology: "New First item". */
+  subject: string
+}) {
+  if (pending === "changed") return <ChangedTag />
+  if (pending === "new") return <NewTag subject={subject} />
+  return null
+}
+
+interface ButtonProps {
+  /** What the button acts on, for assistive technology: "Edit First item". */
+  subject: string
+  /** Held, though focusable: what it does can't be done for now. */
+  disabled: boolean
+  size: "default" | "sm"
+}
+
+/** "Undo changes", or Remove for what is `new`, which drops what is pending. */
+export function DropButton({
+  subject,
+  pending,
+  disabled,
+  size,
+  onDrop,
+}: ButtonProps & { pending: "changed" | "new"; onDrop: () => void }) {
+  const { t } = useTranslation()
+  const isNew = pending === "new"
+  const DropIcon = isNew ? Trash2Icon : Undo2Icon
+  return (
+    <Button
+      variant="secondary"
+      size={size}
+      disabled={disabled}
+      focusableWhenDisabled
+      onClick={onDrop}
+    >
+      <DropIcon data-icon="inline-start" aria-hidden="true" />
+      {t(isNew ? "roadmaps.edit.remove" : "roadmaps.edit.undo")}{" "}
+      <span className="sr-only">{subject}</span>
+    </Button>
+  )
+}
+
+/** Edit, its word shown unless `iconOnly`, its name the same either way. */
+export function EditButton({
+  subject,
+  disabled,
+  size,
+  iconOnly = false,
+  button,
+  onEdit,
+}: ButtonProps & {
+  iconOnly?: boolean
+  button: RefObject<HTMLButtonElement | null>
+  onEdit: () => void
+}) {
+  const { t } = useTranslation()
+  return (
+    <Button
+      ref={button}
+      variant="secondary"
+      size={iconOnly ? "icon-sm" : size}
+      disabled={disabled}
+      focusableWhenDisabled
+      onClick={onEdit}
+    >
+      <PencilIcon data-icon="inline-start" aria-hidden="true" />
+      <span className={cn(iconOnly && "sr-only")}>
+        {t("roadmaps.edit.edit")}
+      </span>{" "}
+      <span className="sr-only">{subject}</span>
+    </Button>
+  )
+}
+
 export interface EditControlsProps {
   /** What is edited, for assistive technology: "Edit First item". */
   subject: string
@@ -48,7 +131,7 @@ export interface EditControlsProps {
    * "Undo changes" drops; or `new`, the whole of an item added and not yet published,
    * tagged "New", which Remove drops (STY-046).
    */
-  pending: "changed" | "new" | undefined
+  pending: Pending
   /**
    * Whether it can be edited, and what is pending dropped, now, which it can unless
    * told; the buttons stay focusable when not.
@@ -84,41 +167,29 @@ export function EditControls({
   onEdit,
   onDrop,
 }: EditControlsProps) {
-  const { t } = useTranslation()
-  const isNew = pending === "new"
-  const DropIcon = isNew ? Trash2Icon : Undo2Icon
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-      {pending === "changed" && <ChangedTag />}
-      {isNew && <NewTag subject={subject} />}
+      <PendingTag pending={pending} subject={subject} />
       <div
         className={cn("flex flex-wrap gap-2", align === "end" && "sm:ml-auto")}
       >
         {pending && (
-          <Button
-            variant="secondary"
-            size={size}
+          <DropButton
+            subject={subject}
+            pending={pending}
             disabled={!editable}
-            focusableWhenDisabled
-            onClick={onDrop}
-          >
-            <DropIcon data-icon="inline-start" aria-hidden="true" />
-            {t(isNew ? "roadmaps.edit.remove" : "roadmaps.edit.undo")}{" "}
-            <span className="sr-only">{subject}</span>
-          </Button>
+            size={size}
+            onDrop={onDrop}
+          />
         )}
         {move}
-        <Button
-          ref={editButton}
-          variant="secondary"
-          size={size}
+        <EditButton
+          subject={subject}
           disabled={!editable}
-          focusableWhenDisabled
-          onClick={onEdit}
-        >
-          <PencilIcon data-icon="inline-start" aria-hidden="true" />
-          {t("roadmaps.edit.edit")} <span className="sr-only">{subject}</span>
-        </Button>
+          size={size}
+          button={editButton}
+          onEdit={onEdit}
+        />
       </div>
     </div>
   )

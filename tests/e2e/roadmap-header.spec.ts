@@ -17,9 +17,10 @@ import { expect, test } from "./fixtures/test"
 /**
  * STY-065: a roadmap's page opens on three rows: the title with Add an item and More,
  * one line of facts ending in "Product details", then the jump control; a roadmap not
- * published adds one notice with Publish roadmap under the facts. From 768px Add an item
- * and More end the title's row and the placement links are the jump control; narrower,
- * More is "…" at the end of the title's row and Add an item shares a row with "Jump to".
+ * published adds one notice with Publish roadmap under the facts. From 768px the switch
+ * of views (STY-067 S1), Add an item and More end the title's row and the placement
+ * links are the jump control; narrower, More is "…" at the end of the title's row and
+ * Add an item shares a row with "Jump to" and "Compact view" (STY-067 S2).
  */
 
 const WIDTHS = [
@@ -39,6 +40,10 @@ const COPY = {
     addItem: "Add an item",
     more: "More",
     jumpTo: "Jump to",
+    view: "View",
+    cards: "Cards",
+    compact: "Compact",
+    compactView: "Compact view",
     notPublished: "Not published",
     notPublishedNote: "The public site doesn't show this roadmap.",
     publish: "Publish roadmap",
@@ -50,6 +55,10 @@ const COPY = {
     addItem: "Ychwanegu eitem",
     more: "Mwy",
     jumpTo: "Neidio i",
+    view: "Golwg",
+    cards: "Cardiau",
+    compact: "Cryno",
+    compactView: "Golwg gryno",
     notPublished: "Heb ei gyhoeddi",
     notPublishedNote:
       "Dydy'r wefan gyhoeddus ddim yn dangos y map trywydd hwn.",
@@ -125,7 +134,11 @@ for (const language of ["en", "cy"] as const) {
       ).toHaveCount(0)
 
       if (tablet) {
-        // Add an item and More end the title's row, at the content's right edge.
+        // The switch, Add an item and More end the title's row, at the content's right
+        // edge (STY-067 S1).
+        const view = await boxOf(main.getByRole("group", { name: copy.view }))
+        expect(view.y).toBe(add.y)
+        expect(view.right).toBeLessThanOrEqual(add.x)
         expect(add.y).toBeGreaterThanOrEqual(titleRow.y - 0.5)
         expect(add.y).toBeLessThan(titleRow.bottom)
         expect(more.x).toBeGreaterThan(add.right)
@@ -145,14 +158,18 @@ for (const language of ["en", "cy"] as const) {
         await expect(button(copy.more).locator("svg")).toHaveCount(2)
         expect(more.width).toBeLessThan(70)
         expect(Math.abs(more.right - right)).toBeLessThan(1)
-        // Add an item and Jump to share a row under the facts.
+        // Add an item, Jump to and Compact view share a row under the facts, Compact
+        // view at its end (STY-067 S2).
         const jump = await boxOf(jumpTo(page, language))
+        const toggle = await boxOf(button(copy.compactView))
         await expect(placementLinks(page, language)).toHaveCount(0)
         expect(add.y).toBeGreaterThanOrEqual(facts.bottom)
         expect(jump.y).toBe(add.y)
         expect(jump.x).toBeGreaterThan(add.right)
         expect(jump.height).toBe(40)
-        expect(Math.abs(jump.right - right)).toBeLessThan(1)
+        expect(toggle.y).toBe(add.y)
+        expect(toggle.x).toBeGreaterThan(jump.right)
+        expect(Math.abs(toggle.right - right)).toBeLessThan(1)
         // Add an item as wide as its label, short of the row's two-thirds, and the
         // rest left to Jump to.
         expect(add.width).toBeLessThan(((right - title.x) * 2) / 3)
@@ -313,8 +330,11 @@ for (const [device, width] of WIDTHS) {
     const heading = main.getByRole("heading", { level: 1 })
 
     if (width >= 768) {
-      // Add an item, More, Product details, Publish roadmap, then the placement links.
+      // The switch, Add an item, More, Product details, Publish roadmap, then the
+      // placement links (STY-067 S13).
       await expectTabOrder(page, heading, [
+        button(copy.cards),
+        button(copy.compact),
         button(copy.addItem),
         button(copy.more),
         productDetailsDisclosure(page),
@@ -329,6 +349,7 @@ for (const [device, width] of WIDTHS) {
         button(copy.addItem),
         button(copy.more),
         jumpTo(page),
+        button(copy.compactView),
       ])
     }
   })
@@ -460,7 +481,7 @@ test("reaches Product details by Shift+Tab from the stuck row's links, the block
   await expect(disclosure).toBeInViewport()
 })
 
-test("tabs on from the stuck row's menu button to Add an item, the row staying stuck (STY-059 S7)", async ({
+test("tabs on from the stuck row's menu button to the switch, then Add an item, the row staying stuck (STY-059 S7, STY-067 S13)", async ({
   page,
   sheets,
 }) => {
@@ -479,6 +500,11 @@ test("tabs on from the stuck row's menu button to Add an item, the row staying s
   await stuck.getByRole("button", { name: "Menu", exact: true }).focus()
   await page.keyboard.press("Tab")
 
+  await expect(
+    main.getByRole("button", { name: "Cards", exact: true }),
+  ).toBeFocused()
+  await page.keyboard.press("Tab")
+  await page.keyboard.press("Tab")
   await expect(main.getByRole("button", { name: "Add an item" })).toBeFocused()
   await expect(stuck).toBeVisible()
   expect(await page.evaluate(() => window.scrollY)).toBe(top)

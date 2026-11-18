@@ -1,7 +1,7 @@
 # STY-067: A Product Lead sees a roadmap's items as compact rows, and switches back to cards
 
-- **Status**: Proposed — the owner chose rows, what a row shows and where the switch
-  is, and answered both questions on 2026-11-18
+- **Status**: Done — the owner chose rows, what a row shows and where the switch is,
+  and answered both questions on 2026-11-18
 - **Type**: Feature + Copy
 - **Area**: Features/UI + i18n (en + cy) + E2E
 - **Epic**: [EPC-016-a-roadmaps-items-at-a-glance](README.md)
@@ -9,6 +9,7 @@
 - **Binding ADRs**: ADR-002, ADR-005, ADR-008, ADR-010, ADR-011
 - **Suggested model**: Opus — a second view of the whole items area, at two widths and
   in two languages, with focus carried through moves and a choice kept on the device
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/170
 
 ## Summary
 
@@ -206,6 +207,8 @@ and in Cymraeg, at each width of S13. The rest hold as component tests.
   changes (STY-065 D7); the glossary changes with this story, not before.
 - **D14** (agent, 2026-11-18): the chevron's name changes as the row opens and it reads
   as expanded too, as the item form's opening fields do, over a fixed name.
+- **D15** (owner, 2026-11-18): "Neidio i" cut to "Nei…" on a phone in Cymraeg at 375px
+  is accepted, over a shorter Welsh "Ychwanegu eitem" or the switch in More (design E).
 
 ## Starting point
 
@@ -225,3 +228,80 @@ title's row the switch takes about 220px: at 768px a title is left about 220px.
 - Filtering, sorting or dragging items.
 - Opening every row at once: the Cards view is that.
 - A third view, and a choice of view for each roadmap.
+
+## Delivery
+
+### Departures
+
+- **S1, S2, D13**: the view in use is drawn pressed by what holds its button, DHCW's grey
+  with a 2px dark inner ring, the button transparent over it, as the navigation's pressed
+  entry is: on the button the grey would hide the focus fill (`src/styles/AGENTS.md`).
+  Focused, the pressed button shows the fill inside the ring (agent).
+- **S2**: on a phone in Cymraeg at 375px, "Ychwanegu eitem" and "Golwg gryno" leave
+  "Neidio i" cut to "Nei…" at the top, before any placement is named, where S2 expects
+  only a placement's name cut. The analysis named this risk for design D, with the
+  switch in More (design E) as the fallback; the owner accepted it (D15).
+- **S2**: where the page has no placements to jump to (no items yet, or while they are
+  read), "Compact view" sits alone at the end of the row of Add an item (agent).
+- **S4**: on a desktop's line an unplaced item's flag takes at most a quarter of the
+  line and, while the row is closed, is cut with an ellipsis where it runs past it, its
+  whole text still read, so a long horizon, or a Welsh flag beside a pending tag, leaves
+  the title its room; opened, the flag wraps whole within its quarter. On a card, and on
+  a phone's row, it wraps as before (agent).
+- **S4, S5**: "a desktop" is the viewport's width from 768px (`TABLET_WIDTH`), as the top
+  of the page's, not the list's room: beside the open navigation at 1024px the line is
+  narrower, and still one line (agent, D13).
+- **S6, D11**: a row opened, then moved to another placement, is drawn anew there,
+  closed, as a card's opened field is (STY-066 D7); one moved within its placement's
+  order stays open (agent).
+- **S8**: one item component draws either view: `EditableItemCard` is `EditableItem`,
+  `CardControl` is `ItemControl`. The card's fields and its unplaced flag are
+  `ItemFields` and `HorizonFlag` (its own module), which a card and a row share; `EditControls`
+  is drawn from `PendingTag`, `DropButton` and `EditButton`, which a row uses apart. Move
+  and Edit hold their word in a span of its own, visually hidden on a phone's row; the
+  accessible name is unchanged (agent).
+- **S3**: the placement navigation gains `align`, a jump that leaves focus where it is,
+  so a view chosen puts the placement the page was in back at the top; pressing the
+  view already in use changes nothing. `jump` is `align` and a focus, so a jump to a
+  target whose heading has gone now ends the last jump, where it was kept (agent).
+
+### Contract for dependents
+
+- **Stored choice**: `roadmaps.items.view` in `localStorage`, `compact` or absent (Cards),
+  read and kept by `useItemsView` (`features/roadmaps/hooks/use-items-view.ts`), never
+  sent anywhere; nothing read from or written to the data source changes.
+- **Catalogue keys**: `roadmaps.view.label`, `.cards`, `.compact`, `.compactView`;
+  `roadmaps.items.row.show` and `.hide`, with `{{item}}`.
+- **Test hooks**: the group "View" with buttons "Cards" and "Compact" (pressed), from
+  768px; "Compact view" (pressed) narrower; a row's chevron "Show the rest of <title>" /
+  "Hide the rest of <title>". E2E: `tests/e2e/roadmap-items-compact.spec.ts`; the aria
+  snapshot `detail-compact.aria.yml`.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                                                                                                      |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| S1       | `pages/roadmap-detail-page-compact.test.tsx` (`is a group named View, Cards pressed, before Add an item and More`); `roadmap-items-compact.spec.ts` (`sits before Add an item at …px in en/cy, at the top and once stuck`, 768–1280px); `roadmap-header.spec.ts` (`opens on the title with its controls…`)   |
+| S2       | `roadmap-detail-page-compact.test.tsx` (`is one button, Compact view, after Jump to…`); `roadmap-items-compact.spec.ts` (`sits after Jump to at 375px/640px…`); `control-row.spec.ts` (phone's row and stuck strip)                                                                                          |
+| S3       | `roadmap-detail-page-compact.test.tsx` (`shows the items as rows under the same headings, in the same order…`); `roadmap-items-compact.spec.ts` (`keeps the placement the page was in at the top as the view changes, focus on the switch`, `leaves the page where it is when the view in use is pressed…`)  |
+| S4       | `roadmap-items-compact.spec.ts` (`is one line at 768px/1024px/1280px…`, `puts an unplaced item's flag in the line`, `keeps a flagged row's title in view and its Edit within the list at 768px/1024px in Cymraeg…`); `roadmap-detail-page-compact.test.tsx` (`holds, on a desktop, the chevron, the title…`) |
+| S5       | `roadmap-items-compact.spec.ts` (`shows the title whole on its lines, no description…`); `roadmap-detail-page-compact.test.tsx` (`shows, on a phone, the title with no description…`)                                                                                                                        |
+| S6       | `roadmap-detail-page-compact.test.tsx` (`shows every field the item has…`, `opens any number of rows at once, all closed again once the view changes`); `roadmap-items-compact.spec.ts` (`opens a row in place at …px`)                                                                                      |
+| S7       | `roadmap-items-compact.spec.ts` (`opens a row in place at 1280px/375px, its long fields cut after three lines`)                                                                                                                                                                                              |
+| S8       | `roadmap-detail-page-compact.test.tsx` (`moves the item to another placement…`, `moves the item within its placement's order…`, `opens the item dialog from Edit…`, `holds a new item's Move, Edit and Remove while the roadmap is being published`)                                                         |
+| S9       | `roadmap-detail-page-compact.test.tsx` (`ends in Undo changes…`, `ends in Remove…`, `moves the item within its placement's order, which the heading then marks`, and the Changed tag in the row tests)                                                                                                       |
+| S10      | `roadmap-detail-page-compact.test.tsx` (`lists the unplaced items first, flagged, with their note, and an empty placement says No items`); `roadmap-items-compact.spec.ts` (the flag in the line and under the title)                                                                                        |
+| S11      | `hooks/use-items-view.test.ts`; `roadmap-detail-page-compact.test.tsx` (`the view kept on the device`); `roadmap-items-compact.spec.ts` (`remembers the view on another roadmap and after a reload`)                                                                                                         |
+| S12      | `roadmap-detail-page-compact.test.tsx` (`the states the items area already has`: loading drawn as rows, a failed read, an expired session, no items)                                                                                                                                                         |
+| S13      | `roadmap-items-compact.spec.ts` (`the keyboard`, `the switch beside a long title` in en and cy at 375–1280px, `has no axe violation in the compact view…`); `roadmap-header.spec.ts` (`reaches the controls in the order they are drawn`); `structure.spec.ts` (`detail-compact.aria.yml`)                   |
+
+Each test was written after the code and shown red by breaking it, then green with the
+code restored: the choice never stored (two tests), the phone's toggle not pressed, the
+opened row's "Undo changes" and Remove dropped (three tests), a desktop's row with no
+description, the switch left out from 768px (19 tests); in Playwright, the view's change
+not realigning the page (S3) and a description not cut (S4); after review, the pressed
+view realigning later (S3) and the flag drawn whole in Welsh beside a Changed tag, which
+left the title no room (S4, two widths); and the opened row's flag cut (S6). The header's specs for
+STY-059 S7, STY-060 S3 and STY-065 S1, S7 and S10 changed with D5: the switch before Add
+an item from 768px, and "Compact view" after "Jump to" narrower. The aria snapshots
+`detail` and `detail-not-published` gain the switch.

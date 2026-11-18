@@ -34,6 +34,12 @@ export interface PlacementNavigation {
   current: JumpTarget | null
   /** Scrolls `target`'s heading to the top of the screen and moves focus to it (S1). */
   jump: (target: JumpTarget) => void
+  /**
+   * Scrolls `target`'s heading to the top of the screen as `jump` does, leaving focus
+   * where it is: the page's items drawn in another view keep the placement in view
+   * (STY-067 S3).
+   */
+  align: (target: JumpTarget) => void
 }
 
 /** A jump, and where it left the page. */
@@ -99,18 +105,22 @@ export function usePlacementNavigation(
     if (jump) lastJump.current = alignHeading(jump.target, top)
   }, [top])
 
-  const jump = useCallback(
+  const align = useCallback(
     (target: JumpTarget) => {
-      const heading = headingOf(target)
-      if (!heading) return
       lastJump.current = alignHeading(target, top)
-      heading.focus({ preventScroll: true })
-      setCurrent(target)
+      if (lastJump.current) setCurrent(target)
     },
     [top],
   )
+  const jump = useCallback(
+    (target: JumpTarget) => {
+      align(target)
+      headingOf(target)?.focus({ preventScroll: true })
+    },
+    [align],
+  )
 
-  return { summaries, current, jump }
+  return { summaries, current, jump, align }
 }
 
 const NO_ORDERS: readonly PlacementOrder[] = []

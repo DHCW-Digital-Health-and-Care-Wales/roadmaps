@@ -7,10 +7,7 @@ import type { Organisation } from "@/domain/roadmap/organisation"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 
 import { ItemDialog } from "../dialogs/item-dialog"
-import {
-  type CardControl,
-  EditableItemCard,
-} from "../editing/editable-item-card"
+import { EditableItem, type ItemControl } from "../editing/editable-item"
 import type { PageItem } from "../editing/page-items"
 import { PlacementHeading } from "../editing/placement-heading"
 import type { PageItemDialog } from "../editing/use-item-dialog"
@@ -19,9 +16,11 @@ import {
   type Positioned,
   type RoadmapItemGroups,
 } from "../group-roadmap-items"
+import type { ItemsView } from "../hooks/use-items-view"
 import { jumpTargetHeadingId } from "../placement-navigation/jump-targets"
 import { AddItemButton } from "./add-item-button"
 import { CardGrid } from "./card-grid"
+import { CompactList } from "./compact-list"
 import { StatusPanel } from "./status-panel"
 
 export interface RoadmapItemsProps {
@@ -34,9 +33,11 @@ export interface RoadmapItemsProps {
    * (`groupPageItems`).
    */
   groups: RoadmapItemGroups<PageItem>
+  /** Whether the items show as cards or as rows (STY-067). */
+  view: ItemsView
   /** The page's one item dialog (`useItemDialog`). */
   itemDialog: PageItemDialog
-  /** A new item was removed, its card with it: focus needs somewhere to go (S6). */
+  /** A new item was removed, its card or row with it: focus needs somewhere to go (S6). */
   onItemRemoved: () => void
 }
 
@@ -50,25 +51,28 @@ export interface RoadmapItemsProps {
  * order moved (STY-051 S1); an item added and not yet published shows after those
  * (STY-046 S3). A placement whose order is pending shows its items in it, under a
  * heading that says so (`PlacementHeading`, STY-050 S3); what a move within a
- * placement and "Undo order" came to is said in a status line. Edit on a card, and
- * "Add an item", open the page's one item dialog, which is drawn here.
+ * placement and "Undo order" came to is said in a status line. Edit on an item, and
+ * "Add an item", open the page's one item dialog, which is drawn here. The items show
+ * as cards, or as the compact view's rows, under the same headings in the same groups
+ * and order (`view`, STY-067 S3).
  */
 export function RoadmapItems({
   roadmapId,
   items,
   organisations,
   groups,
+  view,
   itemDialog,
   onItemRemoved,
 }: RoadmapItemsProps) {
   const { t } = useTranslation()
   const { unplaced, placements } = groups
   const [said, setSaid] = useState<{ serial: number; text: string }>()
-  // A moved item's card is a new one, in another list, so focus is handed to it here.
+  // A moved item is drawn anew, in another list, so focus is handed to it here.
   const [focus, setFocus] = useState<FocusRequest | null>(null)
   const cardHandlers = useMemo(
     () => ({
-      requestFocus: (position: number, control: CardControl) => {
+      requestFocus: (position: number, control: ItemControl) => {
         setFocus({ position, control })
       },
       focused: () => {
@@ -92,6 +96,7 @@ export function RoadmapItems({
       roadmapId={roadmapId}
       items={items}
       organisations={organisations}
+      view={view}
       placed={placed}
       ordered={ordered}
       labelledBy={labelledBy}
@@ -174,16 +179,17 @@ export function RoadmapItems({
   )
 }
 
-/** The control of the card at `position` that focus goes to as it next renders. */
+/** The control of the item at `position` that focus goes to as it next renders. */
 interface FocusRequest {
   position: number
-  control: CardControl
+  control: ItemControl
 }
 
 interface ItemListProps {
   roadmapId: string
   items: readonly RoadmapItem[]
   organisations: readonly Organisation[]
+  view: ItemsView
   /** The items listed, each with its position among the page's items. */
   placed: readonly Positioned<PageItem>[]
   /** Whether they are a placement's, in its order: the unplaced items are in none. */
@@ -191,15 +197,15 @@ interface ItemListProps {
   labelledBy: string
   focus: FocusRequest | null
   cardHandlers: {
-    requestFocus: (position: number, control: CardControl) => void
+    requestFocus: (position: number, control: ItemControl) => void
     focused: () => void
     removed: () => void
     announce: (text: string) => void
   }
   onEdit: (position: number) => void
-  /** Where, among the page's items, the one is whose card holds `dialogOpener`. */
+  /** Where, among the page's items, the one is that holds `dialogOpener`. */
   dialogAt: number
-  /** The ref that item's card gives its Edit (`EditableItemCard`). */
+  /** The ref that item gives its Edit (`EditableItem`). */
   dialogOpener: RefObject<HTMLButtonElement | null>
 }
 
@@ -207,6 +213,7 @@ function ItemList({
   roadmapId,
   items,
   organisations,
+  view,
   placed,
   ordered,
   labelledBy,
@@ -216,15 +223,17 @@ function ItemList({
   dialogAt,
   dialogOpener,
 }: ItemListProps) {
+  const List = view === "compact" ? CompactList : CardGrid
   return (
-    <CardGrid aria-labelledby={labelledBy}>
+    <List aria-labelledby={labelledBy}>
       {placed.map(({ item: pageItem, position }, at) => (
-        <EditableItemCard
+        <EditableItem
           key={pageItem.key}
           roadmapId={roadmapId}
           items={items}
           pageItem={pageItem}
           organisations={organisations}
+          view={view}
           position={position}
           order={ordered ? { at, count: placed.length } : undefined}
           onAnnounce={cardHandlers.announce}
@@ -238,30 +247,48 @@ function ItemList({
           dialogOpener={dialogAt === position ? dialogOpener : undefined}
         />
       ))}
-    </CardGrid>
+    </List>
   )
 }
 
-/** Stands in for the items while they are read, announced once as loading. */
-export function RoadmapItemsSkeleton() {
+/**
+ * Stands in for the items while they are read, announced once as loading: cards, or
+ * rows in the compact view (STY-067 S12).
+ */
+export function RoadmapItemsSkeleton({ view }: { view: ItemsView }) {
   const { t } = useTranslation()
   return (
     <div role="status">
       <span className="sr-only">{t("roadmaps.items.loading")}</span>
       <div aria-hidden="true" className="flex flex-col gap-3">
         <Skeleton className="h-6 w-32" />
-        <CardGrid>
-          {[0, 1, 2].map((index) => (
-            <li
-              key={index}
-              className="flex flex-col gap-2.5 border bg-card p-4 shadow-card-bar"
-            >
-              <Skeleton className="h-4 w-3/5" />
-              <Skeleton className="h-3 w-full" />
-              <Skeleton className="h-3 w-4/5" />
-            </li>
-          ))}
-        </CardGrid>
+        {view === "compact" ? (
+          <CompactList>
+            {[0, 1, 2].map((index) => (
+              <li
+                key={index}
+                className="flex min-h-12 items-center gap-3 border-t px-3 py-2 first:border-t-0"
+              >
+                <Skeleton className="size-4" />
+                <Skeleton className="h-4 w-2/5" />
+                <Skeleton className="h-3 flex-1" />
+              </li>
+            ))}
+          </CompactList>
+        ) : (
+          <CardGrid>
+            {[0, 1, 2].map((index) => (
+              <li
+                key={index}
+                className="flex flex-col gap-2.5 border bg-card p-4 shadow-card-bar"
+              >
+                <Skeleton className="h-4 w-3/5" />
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-3 w-4/5" />
+              </li>
+            ))}
+          </CardGrid>
+        )}
       </div>
     </div>
   )

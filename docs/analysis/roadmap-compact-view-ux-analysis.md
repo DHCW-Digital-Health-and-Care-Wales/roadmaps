@@ -9,7 +9,7 @@
   `RoadmapItemCard`, `CardGrid`) and the top of the page (`RoadmapHeader`), on a desktop
   and a phone. It comes from the owner's request of 2026-11-18 to explore the idea. The
   owner answered the same day: the answers are in _Outcome_, and in the stories of
-  [EPC-016](../backlog/EPC-016-a-roadmaps-items-at-a-glance/README.md).
+  [EPC-016](../backlog/_archive/EPC-016-a-roadmaps-items-at-a-glance/README.md).
   Base `2e073ee`: the frames were first drawn at `b6aaea0`, and redrawn after STY-065
   changed the top of the page. Only documents and one prototype page were added: no
   application code. The skill asks for its stylesheet to be corrected where the app
@@ -225,10 +225,10 @@ answered, which the agent took to draw the frames, and which are still open.
 
 On 2026-11-18, over seven replies, the owner chose the designs, answered the rows
 below and asked for the work to be written into the backlog. It is
-[EPC-016](../backlog/EPC-016-a-roadmaps-items-at-a-glance/README.md):
+[EPC-016](../backlog/_archive/EPC-016-a-roadmaps-items-at-a-glance/README.md):
 [STY-066](../backlog/_archive/EPC-016-a-roadmaps-items-at-a-glance/STY-066-a-long-field-is-cut-after-three-lines.md)
 for journey 3, and
-[STY-067](../backlog/EPC-016-a-roadmaps-items-at-a-glance/STY-067-a-compact-view-of-a-roadmaps-items.md)
+[STY-067](../backlog/_archive/EPC-016-a-roadmaps-items-at-a-glance/STY-067-a-compact-view-of-a-roadmaps-items.md)
 for journeys 1 and 2. No row is left open.
 
 **The owner's answers**
@@ -300,7 +300,7 @@ Rows 10 and 14 fell away with the board and the table.
 
 ## Related
 
-- [EPC-016: a roadmap's items at a glance](../backlog/EPC-016-a-roadmaps-items-at-a-glance/README.md),
+- [EPC-016: a roadmap's items at a glance](../backlog/_archive/EPC-016-a-roadmaps-items-at-a-glance/README.md),
   which holds the stories
 - [Product Lead persona](../backlog/personas/product-lead.md)
 - [STY-021: a roadmap's page shows its items](../backlog/_archive/EPC-004-roadmap-items/STY-021-roadmap-page-shows-items.md),

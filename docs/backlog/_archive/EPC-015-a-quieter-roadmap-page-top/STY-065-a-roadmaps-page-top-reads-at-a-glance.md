@@ -187,7 +187,7 @@ when it shows, then the placement links, as they are drawn
 - **D14** (owner, 2026-11-18, compact view UX analysis decision 4): the title's row
   gains a switch between the Cards and compact views, before Add an item and More, and
   narrower than 768px the row of Add an item and "Jump to" gains its button
-  ([STY-067](../../EPC-016-a-roadmaps-items-at-a-glance/STY-067-a-compact-view-of-a-roadmaps-items.md)
+  ([STY-067](../EPC-016-a-roadmaps-items-at-a-glance/STY-067-a-compact-view-of-a-roadmaps-items.md)
   D5). Changes: S1, S6, S7 and S10, once STY-067 is delivered.
 
 ## Starting point

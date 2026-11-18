@@ -151,7 +151,7 @@ for (const language of ["en", "cy"] as const) {
   }
 }
 
-test("puts More at the end of the title's row on a phone, and Add an item and Jump to on one row below, Jump to across the rest (STY-065 S7)", async ({
+test("puts More at the end of the title's row on a phone, and Add an item, Jump to and Compact view on one row below, Jump to across the rest (STY-065 S7, STY-067 S2)", async ({
   page,
   sheets,
 }) => {
@@ -164,17 +164,21 @@ test("puts More at the end of the title's row on a phone, and Add an item and Ju
   const add = await boxOf(button(page, "Add an item"))
   const more = await boxOf(button(page, "More"))
   const jump = await boxOf(jumpTo(page))
+  const toggle = await boxOf(button(page, "Compact view"))
   // More is "…" with a chevron, named More, at the end of the title's row.
   await expect(button(page, "More").locator("svg")).toHaveCount(2)
   expect(more.width).toBeLessThan(70)
   expect(more.y).toBeLessThan(title.bottom)
   expect(Math.abs(more.right - (await contentRight(page)))).toBeLessThan(1)
-  // Add an item as wide as its label, Jump to growing to the edge.
+  // Add an item as wide as its label, Jump to growing to Compact view at the edge.
   expect(jump.y).toBe(add.y)
   expect(jump.x).toBeGreaterThan(add.right)
   expect(add.width).toBeLessThan(160)
   expect(add.y).toBeGreaterThanOrEqual(more.bottom)
-  expect(Math.abs(jump.right - (await contentRight(page)))).toBeLessThan(1)
+  expect(toggle.y).toBe(add.y)
+  expect(toggle.x - jump.right).toBe(12)
+  expect(toggle.width).toBe(40)
+  expect(Math.abs(toggle.right - (await contentRight(page)))).toBeLessThan(1)
   expect(add.height).toBe(40)
   expect(jump.height).toBe(40)
 })
@@ -257,7 +261,7 @@ test("keeps a 360px phone's top to the screen's width in Cymraeg, Jump to naming
   expect(await scrollsSideways(page)).toBe(false)
 })
 
-test("shapes a phone's stuck strip as two rows: the menu button and the title cut after two lines, then +, … and Jump to (S3)", async ({
+test("shapes a phone's stuck strip as two rows: the menu button and the title cut after two lines, then +, …, Jump to and Compact view (S3, STY-067 S2)", async ({
   page,
   sheets,
 }) => {
@@ -290,19 +294,22 @@ test("shapes a phone's stuck strip as two rows: the menu button and the title cu
   expect(lines.cut).toBe(true)
   expect(Math.round(lines.lines)).toBe(2)
 
-  // Row two: +, … with its chevron, then "Jump to: Next" to the right edge.
+  // Row two: +, … with its chevron, "Jump to: Next", then Compact view at the right
+  // edge.
   const addButton = strip.getByRole("button", { name: "Add an item" })
   const moreButton = strip.getByRole("button", { name: "More", exact: true })
   const jumpButton = strip.getByRole("button", { name: "Jump to: Next" })
-  const [add, more, jump] = [
+  const toggleButton = strip.getByRole("button", { name: "Compact view" })
+  const [add, more, jump, toggle] = [
     await boxOf(addButton),
     await boxOf(moreButton),
     await boxOf(jumpButton),
+    await boxOf(toggleButton),
   ]
   expect(add.y).toBeGreaterThanOrEqual(
     Math.max(title.bottom, menuButton.bottom),
   )
-  for (const box of [add, more, jump]) {
+  for (const box of [add, more, jump, toggle]) {
     expect(box.height).toBe(40)
     expect(box.y).toBe(add.y)
   }
@@ -313,7 +320,8 @@ test("shapes a phone's stuck strip as two rows: the menu button and the title cu
   expect(more.width).toBeLessThan(70)
   expect(more.x).toBeGreaterThan(add.right)
   expect(jump.x).toBeGreaterThan(more.right)
-  expect(Math.abs(jump.right - (await contentRight(page)))).toBeLessThan(1)
+  expect(toggle.x).toBeGreaterThan(jump.right)
+  expect(Math.abs(toggle.right - (await contentRight(page)))).toBeLessThan(1)
   expect(await scrollsSideways(page)).toBe(false)
 })
 

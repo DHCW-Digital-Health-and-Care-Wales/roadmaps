@@ -4,7 +4,7 @@
   questions on 2026-11-18
 - **Type**: Feature + Copy
 - **Area**: Features/UI + i18n (en + cy) + E2E
-- **Epic**: [EPC-016-a-roadmaps-items-at-a-glance](../../EPC-016-a-roadmaps-items-at-a-glance/README.md)
+- **Epic**: [EPC-016-a-roadmaps-items-at-a-glance](README.md)
 - **Depends on**: none
 - **Binding ADRs**: ADR-008, ADR-010, ADR-011
 - **Suggested model**: Sonnet — one component gains a cut that depends on measured

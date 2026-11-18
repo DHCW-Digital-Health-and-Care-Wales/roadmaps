@@ -5,9 +5,9 @@ import { describe, expect, it } from "vitest"
 
 /**
  * Every aria snapshot holds the literal text the E2E fixtures fix. Playwright's
- * `--update-snapshots` rewrites each snapshot it touches with checks dropped: a number of
- * two or more digits becomes a pattern (`2026-10-01` to `/\d+-\d+-\d+/`) that matches any
- * number, and text that is part of a control's name becomes `text: ""`, which matches any
+ * `--update-snapshots` rewrites each snapshot it touches with checks dropped: a number,
+ * duration or ID becomes a pattern (`2026-10-01` to `/\d+-\d+-\d+/`) that matches any
+ * other, and text that is part of a control's name becomes `text: ""`, which matches any
  * text (tests/e2e/AGENTS.md, Look checks). Both still pass, so only this test sees them.
  * Incident: in November 2026 five deliveries' snapshot updates wrote such patterns, each
  * found by reading the YAML diff, the last a dialog's date field. Review by February 2027
@@ -30,14 +30,13 @@ const KEPT: Record<string, string[]> = {
 }
 
 /** A node's key (its role and name) and its raw value, the key's YAML quotes undone. */
-function split(body: string): { key: string; value: string } {
-  if (body.startsWith("'")) {
-    const end = /'(?!')/g
-    end.lastIndex = 1
-    const close = end.exec(body)?.index ?? body.length
+function splitKeyAndValue(body: string): { key: string; value: string } {
+  // A single-quoted key doubles each apostrophe in it.
+  const quoted = /^'((?:[^']|'')*)'/.exec(body)
+  if (quoted?.[1] !== undefined) {
     return {
-      key: body.slice(1, close).replaceAll("''", "'"),
-      value: body.slice(close + 1).replace(/^:\s?/, ""),
+      key: quoted[1].replaceAll("''", "'"),
+      value: body.slice(quoted[0].length).replace(/^:\s?/, ""),
     }
   }
   const colon = /:(\s|$)/.exec(body)
@@ -58,20 +57,18 @@ function unquote(value: string): string {
   }
 }
 
-const PATTERN = /^\/.+\/$/
-
 /** What an update wrote in place of a literal on one snapshot line, if anything. */
 function looseCheck(line: string): string | undefined {
   const node = /^\s*- (.*)$/.exec(line)
   if (!node?.[1]) return undefined
-  const { key, value } = split(node[1])
+  const { key, value } = splitKeyAndValue(node[1])
   // A property (`/url`, `/children`) holds no text of the screen's own.
   if (key.startsWith("/")) return undefined
   const name = /^[a-z]+ (\/(?:\\.|[^\\/])+\/)(?: \[|$)/.exec(key)
   if (name?.[1]) return name[1]
   if (value === '""') return 'text: ""'
   const text = unquote(value)
-  return PATTERN.test(text) ? text : undefined
+  return /^\/.+\/$/.test(text) ? text : undefined
 }
 
 describe("looseCheck", () => {
@@ -84,6 +81,15 @@ describe("looseCheck", () => {
     ["- 'heading /Now: \\d+ items/ [level=2]'", "/Now: \\d+ items/"],
     ["- link /Item \\d+/:", "/Item \\d+/"],
     ['      - text: ""', 'text: ""'],
+    [
+      "- 'heading /You''ll publish: \\d+ items/ [level=2]'",
+      "/You'll publish: \\d+ items/",
+    ],
+    [
+      "- 'textbox \"Dyddiad diweddaru''r map: dyddiad\"': /\\d+-\\d+-\\d+/",
+      "/\\d+-\\d+-\\d+/",
+    ],
+    ["- 'link \"Don''t: x\"': \"\"", 'text: ""'],
   ])("reads %s as loose", (line, check) => {
     expect(looseCheck(line)).toBe(check)
   })
@@ -93,6 +99,7 @@ describe("looseCheck", () => {
     '- button "Add Service X, on 2 other items": Service X',
     "- 'button \"Keep mine Product details: Vision\"'",
     "- 'group \"In Now: 1 of 3\"':",
+    "- 'button \"Cau''r neges: Vision\"'",
     '- link "Docs /help/"',
     "- paragraph: and/or",
     "- paragraph: /roadmaps is where it lives",
@@ -125,6 +132,7 @@ describe("the aria snapshots", () => {
   )
 
   it("hold the literals the fixtures fix", () => {
+    expect(files, "No aria snapshot was found").not.toEqual([])
     const unkept = loose
       .filter(({ file, check }) => !KEPT[file]?.includes(check))
       .map(({ file, line, check }) => `${file}:${String(line)} ${check}`)
@@ -143,6 +151,8 @@ describe("the aria snapshots", () => {
         )
         .map((check) => `${file} ${check}`),
     )
-    expect(stale, "A kept pattern is gone: drop it from KEPT").toEqual([])
+    expect(stale, "A kept pattern is gone: replace or drop it in KEPT").toEqual(
+      [],
+    )
   })
 })

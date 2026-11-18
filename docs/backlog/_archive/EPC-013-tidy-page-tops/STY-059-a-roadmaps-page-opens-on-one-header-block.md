@@ -7,7 +7,7 @@
 - **Epic**: [EPC-013-tidy-page-tops](../../EPC-013-tidy-page-tops/README.md)
 - **Depends on**: none
 - **Binding ADRs**: ADR-010, ADR-008, ADR-012
-- **Delivered**: _PR to follow_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/156
 - **Suggested model**: Opus — it restructures the top of a roadmap's page around the
   sticky title row, About's editing and pending marks, and Publish roadmap
 

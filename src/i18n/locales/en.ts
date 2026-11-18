@@ -198,6 +198,10 @@ export const en = {
         /** Said once the search is cleared (S5). */
         showingAll: "Showing all roadmaps",
       },
+      /** Said as the count of unpublished changes narrows the list to them (STY-063 S1). */
+      showingChanged_one: "Showing only the roadmap with unpublished changes",
+      showingChanged_other:
+        "Showing only the {{count, number}} roadmaps with unpublished changes",
       /** Closing and opening the families in the navigation (STY-062). */
       families: {
         /** The button's words while any family is open, and what a screen reader names it (S3). */

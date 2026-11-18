@@ -1,7 +1,7 @@
 import type { Page } from "@playwright/test"
 
 import { disconnectFromHeader } from "./fixtures/account-menu"
-import { openEditItemDialog } from "./fixtures/dialogs"
+import { changeItem, openEditItemDialog } from "./fixtures/dialogs"
 import { tokenColour } from "./fixtures/look"
 import { openLongRoadmap } from "./fixtures/roadmap-page"
 import { connect, expect, test } from "./fixtures/test"
@@ -22,32 +22,21 @@ const navigation = (page: Page) =>
 const A_ITEM = "Example card with every column"
 const B_ITEM = "Building the core service"
 
-/** Gives a roadmap one pending change, by retitling the item `item` on its page. */
-async function change(page: Page, roadmapId: string, item: string) {
-  await page.goto(`./#/roadmaps/${roadmapId}`)
-  await expect(
-    page.getByRole("main").getByRole("heading", { level: 3, name: item }),
-  ).toBeVisible()
-  const form = await openEditItemDialog(page, item)
-  await form.getByRole("textbox", { name: "Title" }).fill(`${item}, edited`)
-  await form.getByRole("button", { name: "Done" }).click()
-  await expect(form).toBeHidden()
-}
-
 /** Two roadmaps with changes, then the families page, connected. */
 async function twoChangedThenFamilies(page: Page) {
   await page.goto("./#/roadmaps/producta")
   await connect(page)
-  await change(page, "producta", A_ITEM)
-  await change(page, "productb", B_ITEM)
+  await changeItem(page, "producta", A_ITEM)
+  await changeItem(page, "productb", B_ITEM)
   await page.goto("./#/families")
   await expect(
     page.getByRole("main").getByRole("heading", { level: 1 }),
   ).toBeVisible()
 }
 
+// With two roadmaps changed the count is a button that shows only them (STY-063).
 const count = (page: Page) =>
-  navigation(page).getByRole("link", {
+  navigation(page).getByRole("button", {
     name: "2 roadmaps have unpublished changes",
   })
 
@@ -113,29 +102,29 @@ test.describe("on a desktop", () => {
     )
   })
 
-  test("leads from the count to each roadmap with changes in turn (S2)", async ({
+  test("leads from the count to the one roadmap with changes, and is text on its page (S2, STY-063 S5)", async ({
     page,
   }) => {
-    await twoChangedThenFamilies(page)
-    const heading = (name: string) =>
-      page.getByRole("main").getByRole("heading", { level: 1, name })
-    // In the navigation's order, whichever it is.
-    const dotted = await navigation(page)
-      .getByRole("link", { name: /, unpublished changes$/ })
-      .evaluateAll((links) =>
-        // A name shown and the phrase read, one after the other: the title once.
-        links.map((link) => /Product \w roadmap/.exec(link.textContent)?.[0]),
-      )
-    expect(dotted).toHaveLength(2)
-    const [first = "", second = ""] = dotted
+    await page.goto("./#/roadmaps/producta")
+    await connect(page)
+    await changeItem(page, "productb", B_ITEM)
+    await page.goto("./#/families")
+    const lead = navigation(page).getByRole("link", {
+      name: "1 roadmap has unpublished changes",
+    })
 
-    await count(page).click()
-    await expect(heading(first)).toBeVisible()
+    await lead.click()
+
+    await expect(
+      page
+        .getByRole("main")
+        .getByRole("heading", { level: 1, name: "Product B roadmap" }),
+    ).toBeVisible()
     await expect(page.getByRole("main")).toBeFocused()
-    await count(page).click()
-    await expect(heading(second)).toBeVisible()
-    await count(page).click()
-    await expect(heading(first)).toBeVisible()
+    await expect(
+      navigation(page).getByText("1 roadmap has unpublished changes"),
+    ).toBeVisible()
+    await expect(lead).toBeHidden()
   })
 
   test("keeps the count and the dots when the navigation is folded to a rail (D3)", async ({
@@ -161,7 +150,7 @@ test.describe("on a desktop", () => {
   }) => {
     await page.goto("./#/roadmaps/producta")
     await connect(page)
-    await change(page, "producta", A_ITEM)
+    await changeItem(page, "producta", A_ITEM)
     // On the one roadmap with changes, the count has nowhere else to lead.
     const one = navigation(page).getByText("1 roadmap has unpublished changes")
     await expect(one).toBeVisible()
@@ -293,7 +282,7 @@ test.describe("on a phone", () => {
     await menu.click()
     const drawer = page.getByRole("dialog", { name: "Dewislen" })
     await expect(drawer).toBeVisible()
-    const entry = drawer.getByRole("link", {
+    const entry = drawer.getByRole("button", {
       name: "2 fap trywydd â newidiadau heb eu cyhoeddi",
     })
     await expect(entry).toBeVisible()

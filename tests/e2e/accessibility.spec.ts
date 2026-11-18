@@ -4,6 +4,7 @@ import type { Page } from "@playwright/test"
 import { disconnectFromHeader } from "./fixtures/account-menu"
 import {
   addItem,
+  changeItem,
   addItemButtons,
   openAddItemDialog,
   openAddRoadmapDialog,
@@ -264,6 +265,36 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
         .getByRole("button", { name: "Menu" })
         .click()
       await expect(page.getByRole("dialog", { name: "Menu" })).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+    })
+
+    test("the navigation's count: pressed to show only the roadmaps with changes, folded to its rail, and in the drawer (STY-063)", async ({
+      page,
+    }) => {
+      await page.goto("./#/roadmaps/producta")
+      await connect(page)
+      await changeItem(page, "producta", "Example card with every column")
+      await changeItem(page, "productb", "Building the core service")
+      await page.goto("./#/families")
+      const navigation = page.getByRole("navigation", { name: "Roadmaps" })
+      const count = navigation.getByRole("button", {
+        name: "2 roadmaps have unpublished changes",
+      })
+      await count.click()
+      await expect(count).toHaveAttribute("aria-pressed", "true")
+      await expectNoAxeViolations(page, theme)
+
+      await page.getByRole("button", { name: "Fold the navigation" }).click()
+      await expectNoAxeViolations(page, theme)
+
+      await page.setViewportSize({ width: 375, height: 800 })
+      await page
+        .getByRole("banner")
+        .getByRole("button", { name: /^Menu/ })
+        .click()
+      await expect(page.getByRole("dialog", { name: "Menu" })).toBeVisible()
+      // Still pressed, as the narrowing lasts while the navigation changes form.
+      await expect(count).toHaveAttribute("aria-pressed", "true")
       await expectNoAxeViolations(page, theme)
     })
 

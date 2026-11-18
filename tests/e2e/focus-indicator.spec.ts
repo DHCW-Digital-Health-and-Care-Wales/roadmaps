@@ -2,6 +2,7 @@ import type { Locator, Page } from "@playwright/test"
 
 import {
   addItem,
+  changeItem,
   openAddItemDialog,
   openAddRoadmapDialog,
   openEditItemDialog,
@@ -376,6 +377,31 @@ for (const theme of THEMES) {
       await expect(main.getByRole("alert")).toBeFocused()
 
       await expectEveryStopShowsAnIndicator(page)
+    })
+
+    test("the navigation's count takes the fill and keeps it once pressed (STY-063 S8)", async ({
+      page,
+    }) => {
+      await page.goto("./#/roadmaps/producta")
+      await connect(page)
+      await changeItem(page, "producta", "Example card with every column")
+      await changeItem(page, "productb", "Building the core service")
+      await page.goto("./#/families")
+      const colours = await focusColours(page)
+      const count = page
+        .getByRole("navigation", { name: "Roadmaps" })
+        .getByRole("button", { name: "2 roadmaps have unpublished changes" })
+
+      await tabTo(page, count)
+      await expectIndicator(count, colours, "fill")
+      await page.keyboard.press("Enter")
+
+      await expect(count).toHaveAttribute("aria-pressed", "true")
+      // The pressed entry's blue gives way to the fill, as the current page's does.
+      await expectIndicator(count, colours, "fill")
+      await page.keyboard.press("Space")
+      await expect(count).toHaveAttribute("aria-pressed", "false")
+      await expectIndicator(count, colours, "fill")
     })
 
     test("each kind of control shows the indicator it is meant to", async ({

@@ -82,3 +82,17 @@ export function narrowGroups(
     return roadmaps.length > 0 ? [{ ...group, roadmaps }] : []
   })
 }
+
+/**
+ * The groups as the count of unpublished changes narrows them (STY-063 S1): only the
+ * roadmaps in `ids`, in their groups' order, and no group left with none.
+ */
+export function narrowToRoadmaps(
+  groups: readonly RoadmapGroup[],
+  ids: ReadonlySet<string>,
+): readonly RoadmapGroup[] {
+  return groups.flatMap((group) => {
+    const roadmaps = group.roadmaps.filter((roadmap) => ids.has(roadmap.id))
+    return roadmaps.length > 0 ? [{ ...group, roadmaps }] : []
+  })
+}

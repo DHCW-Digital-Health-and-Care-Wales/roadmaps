@@ -3,7 +3,12 @@ import { describe, expect, it } from "vitest"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 
 import { groupRoadmaps } from "../group-roadmaps"
-import { findIn, narrowGroups, searchKey } from "./narrow-roadmaps"
+import {
+  findIn,
+  narrowGroups,
+  narrowToRoadmaps,
+  searchKey,
+} from "./narrow-roadmaps"
 
 const single = { en: "Single Record", cy: "Cofnod Sengl" }
 const citizen = { en: "Citizen Services", cy: "Gwasanaethau Dinasyddion" }
@@ -99,5 +104,23 @@ describe("narrowGroups", () => {
 
   it("finds nothing for text no roadmap holds (S4)", () => {
     expect(found("xyz")).toEqual([])
+  })
+})
+
+describe("narrowToRoadmaps", () => {
+  it("keeps only the roadmaps named, in their groups' order, leaving out a group with none (STY-063 S1)", () => {
+    expect(
+      narrowToRoadmaps(GROUPS, new Set(["plans", "carers", "online"])).map(
+        (group) => [group.key, group.roadmaps.map((roadmap) => roadmap.id)],
+      ),
+    ).toEqual([
+      ["citizenservices", ["online"]],
+      ["singlerecord", ["plans"]],
+      ["", ["carers"]],
+    ])
+  })
+
+  it("keeps nothing for no roadmap", () => {
+    expect(narrowToRoadmaps(GROUPS, new Set())).toEqual([])
   })
 })

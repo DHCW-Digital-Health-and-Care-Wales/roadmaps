@@ -35,8 +35,11 @@ export type NavigationForm = "full" | "rail"
 export interface AppShellProps {
   /** Header controls, composed by the root route. */
   headerActions: ReactNode
-  /** The navigation's destinations in `form`, composed by the root route. */
-  navigation: (form: NavigationForm) => ReactNode
+  /**
+   * The navigation's destinations in `form`, composed by the root route; `openNavigation`
+   * opens a rail, remembered as open, for its count's circle (STY-063 S7).
+   */
+  navigation: (form: NavigationForm, openNavigation: () => void) => ReactNode
   /**
    * The navigation's search in `form`, at the start of its top row, composed by the root
    * route (STY-061); `openNavigation` opens a rail, remembered as open, for its spyglass.
@@ -169,7 +172,7 @@ export function AppShell({
               onFoldedChange={setFolded}
               search={navigationSearch(form, openNavigation)}
             >
-              {navigation(form)}
+              {navigation(form, openNavigation)}
             </NavigationSidebar>
           ) : (
             <NavigationDrawer
@@ -177,7 +180,7 @@ export function AppShell({
               page={main}
               search={navigationSearch("full", openNavigation)}
             >
-              {navigation("full")}
+              {navigation("full", openNavigation)}
             </NavigationDrawer>
           )}
           {/* Its foot clears the pinned foot's height, inside the row the navigation

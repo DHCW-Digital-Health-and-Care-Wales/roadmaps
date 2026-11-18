@@ -14,12 +14,14 @@ import { renderWithProviders } from "@/test/render-with-providers"
 import { roadmapKeys } from "../hooks/roadmap-queries"
 import { holdCall } from "../testing/held-call"
 import { createInMemoryRoadmapRepository } from "../testing/in-memory-roadmap-repository"
+import { change } from "../testing/change-roadmap"
 import { editItemText } from "../testing/item-dialog"
 
 // STY-055: which roadmaps have unpublished changes, from any page: a dot on each in the
-// shell's navigation and under "All roadmaps" how many, which leads to them (S1 to S4,
-// D1, D3); the phone's menu button saying so (D4); and the Disconnect question naming
-// them (D2). What the roadmaps feature keeps and shows of the changes is held elsewhere.
+// shell's navigation and under "All roadmaps" how many (S1 to S4, D1, D3); the phone's
+// menu button saying so (D4); and the Disconnect question naming them (D2). STY-063: the
+// count leads to the one roadmap with changes, and with two or more shows only those
+// roadmaps. What the roadmaps feature keeps and shows of the changes is held elsewhere.
 
 const family = { en: "Care Closer to Home", cy: "Gofal yn Nes at Adref" }
 const ROADMAPS = [
@@ -40,13 +42,14 @@ function announcement(): HTMLElement {
   if (!region) throw new Error("The shell has no live region")
   return region
 }
-/** The navigation's entry for the count: a link, or text where it leads nowhere. */
+/** The navigation's entry for the count: a button, a link, or text where it leads nowhere. */
 const countEntry = () =>
   within(navigation()).queryByText(/^\d+ roadmaps? ha(s|ve) unpublished/)
+const countName = /^\d+ roadmaps? ha(s|ve) unpublished changes$/
 const countLink = () =>
-  within(navigation()).getByRole("link", {
-    name: /^\d+ roadmaps? ha(s|ve) unpublished changes$/,
-  })
+  within(navigation()).getByRole("link", { name: countName })
+const countButton = () =>
+  within(navigation()).getByRole("button", { name: countName })
 const total = (count: number) =>
   count === 1
     ? "1 roadmap has unpublished changes"
@@ -64,18 +67,6 @@ async function renderShell(
     ...options,
   })
   return { user, ...rendered }
-}
-
-/** Opens a roadmap and changes the title of its one item, so it has a pending change. */
-async function change(
-  user: ReturnType<typeof userEvent.setup>,
-  router: { navigate: (options: { to: string }) => Promise<void> },
-  roadmapId: string,
-  item: string,
-) {
-  await act(() => router.navigate({ to: `/roadmaps/${roadmapId}` }))
-  await screen.findByRole("heading", { level: 3, name: item })
-  await editItemText(user, item, "Title", `${item}, edited`)
 }
 
 async function changeTwo(
@@ -105,7 +96,7 @@ describe("on a desktop", () => {
     const { user, router } = await renderShell()
     await changeTwo(user, router)
 
-    expect(countLink()).toHaveTextContent(total(2))
+    expect(countButton()).toHaveTextContent(total(2))
     expect(announcement()).toHaveTextContent(total(2))
     const nav = within(navigation())
     expect(
@@ -126,19 +117,23 @@ describe("on a desktop", () => {
     expect(dot("Product C roadmap")).toBeNull()
   })
 
-  it("leads to each roadmap with changes in turn, round to the first (S2)", async () => {
+  it("leads to the roadmap with changes while it is the only one, and to nothing on its own page (STY-063 S5)", async () => {
     matchMediaQueries(DESKTOP_WIDTH)
     const { user, router } = await renderShell()
-    await changeTwo(user, router)
-    const count = countLink
+    await change(user, router, "productb", "B item")
+    await act(() => router.navigate({ to: "/families" }))
 
-    expect(count()).toHaveAttribute("href", "/roadmaps/producta")
-    await user.click(count())
-    await screen.findByRole("heading", { level: 1, name: "Product A roadmap" })
-    expect(count()).toHaveAttribute("href", "/roadmaps/productb")
-    await user.click(count())
+    expect(countLink()).toHaveAttribute("href", "/roadmaps/productb")
+    await user.click(countLink())
+
     await screen.findByRole("heading", { level: 1, name: "Product B roadmap" })
-    expect(count()).toHaveAttribute("href", "/roadmaps/producta")
+    expect(countEntry()).toHaveTextContent(total(1))
+    expect(
+      within(navigation()).queryByRole("link", { name: countName }),
+    ).not.toBeInTheDocument()
+    expect(
+      within(navigation()).queryByRole("button", { name: countName }),
+    ).not.toBeInTheDocument()
   })
 
   it("drops the count and the dot as a roadmap's last change goes (S3)", async () => {
@@ -249,7 +244,7 @@ describe("on a desktop", () => {
     await changeTwo(user, router)
 
     expect(
-      within(navigation()).getByRole("link", { name: total(2) }),
+      within(navigation()).getByRole("button", { name: total(2) }),
     ).toHaveTextContent("2")
     expect(
       within(navigation()).getByRole("link", {
@@ -267,7 +262,7 @@ describe("on a desktop", () => {
   it("says it as text alone while the roadmaps are not read, as after Disconnect keeps the changes", async () => {
     matchMediaQueries(DESKTOP_WIDTH)
     const { user, router } = await renderShell()
-    await change(user, router, "producta", "A item")
+    await changeTwo(user, router)
 
     await disconnectFromHeader(user)
     await user.click(
@@ -279,9 +274,14 @@ describe("on a desktop", () => {
         within(navigation()).queryByRole("link", { name: "Product A roadmap" }),
       ).not.toBeInTheDocument()
     })
-    expect(announcement()).toHaveTextContent(total(1))
+    expect(announcement()).toHaveTextContent(total(2))
+    // Nothing to press, while the roadmaps are unread (STY-063 S9).
+    expect(countEntry()).toHaveTextContent(total(2))
     expect(
-      within(navigation()).queryByRole("link", { name: /^\d+ roadmaps? ha/ }),
+      within(navigation()).queryByRole("link", { name: countName }),
+    ).not.toBeInTheDocument()
+    expect(
+      within(navigation()).queryByRole("button", { name: countName }),
     ).not.toBeInTheDocument()
   })
 })
@@ -331,7 +331,7 @@ describe("on a phone", () => {
 
     const drawer = await screen.findByRole("dialog", { name: "Menu" })
     const nav = within(within(drawer).getByRole("navigation"))
-    expect(nav.getByRole("link", { name: total(2) })).toBeInTheDocument()
+    expect(nav.getByRole("button", { name: total(2) })).toBeInTheDocument()
     expect(
       nav.getByRole("link", { name: "Product A roadmap, unpublished changes" }),
     ).toBeInTheDocument()

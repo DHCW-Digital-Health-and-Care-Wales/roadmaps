@@ -30,7 +30,9 @@ function RootLayout() {
               <AccountMenu />
             </>
           }
-          navigation={(form) => <RoadmapNavigation form={form} />}
+          navigation={(form, openNavigation) => (
+            <RoadmapNavigation form={form} onOpenNavigation={openNavigation} />
+          )}
           navigationSearch={(form, openNavigation) => (
             <NavigationSearchBox
               form={form}

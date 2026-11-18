@@ -22,13 +22,18 @@ import { namesFamilies, type RoadmapGroup } from "../group-roadmaps"
 import { useGroupName } from "../hooks/use-group-name"
 import { usePendingChanges } from "../editing/pending-changes-context"
 import { findIn } from "./narrow-roadmaps"
-import { NavigationLink, NavigationText } from "./navigation-link"
+import {
+  NavigationButton,
+  NavigationLink,
+  NavigationText,
+} from "./navigation-link"
 import { useNavigationSearch } from "./navigation-search-context"
-import { nextChangedRoadmap } from "./next-changed-roadmap"
 import { roadmapInitials } from "./roadmap-initials"
 
 export interface RoadmapNavigationProps {
   form: NavigationForm
+  /** Opens a rail, remembered as open, for its count's circle (STY-063 S7). */
+  onOpenNavigation: () => void
 }
 
 /**
@@ -40,40 +45,50 @@ export interface RoadmapNavigationProps {
  * each shows as an icon or a roadmap's initials (`NavigationLink`).
  *
  * It says, from every page, which roadmaps have unpublished changes (STY-055): a dot on
- * each, and under "All roadmaps" how many, which leads to one of them. Changes are held
- * for the tab, so the count shows while the roadmaps are unread, as text alone.
+ * each, and under "All roadmaps" how many. With one roadmap changed the count leads to it;
+ * with two or more it is a button that shows only those roadmaps, and every roadmap again
+ * once pressed again (STY-063). Changes are held for the tab, so the count shows while
+ * the roadmaps are unread, as text alone.
  *
  * In full, it lists only the roadmaps its search finds, each with the part found
- * underlined, or says none match (STY-061 S1–S4); the rail lists every roadmap whatever
- * the search (D4). All roadmaps, the count and the families page always show.
+ * underlined, or says none match (STY-061 S1–S4), or only those the count shows; the rail
+ * lists every roadmap whatever the search or the count (D4), and its count's circle opens
+ * the navigation narrowed (STY-063 S7). All roadmaps, the count and the families page
+ * always show.
  *
  * Listed whole, each family's name is a button that closes and opens its roadmaps, with
- * "Close all" above them (STY-062 S1, S3); narrowed by the search, a closed family shows
- * what it holds under a plain heading (S6), and the rail lists every roadmap, with no
- * family control (S7).
+ * "Close all" above them (STY-062 S1, S3); narrowed by the search or the count, a closed
+ * family shows what it holds under a plain heading (S6), and the rail lists every
+ * roadmap, with no family control (S7).
  */
-export function RoadmapNavigation({ form }: RoadmapNavigationProps) {
+export function RoadmapNavigation({
+  form,
+  onOpenNavigation,
+}: RoadmapNavigationProps) {
   const { t } = useTranslation()
   const search = useNavigationSearch()
   const groups = search.groups ?? []
   const rail = form === "rail"
   const named = namesFamilies(groups)
   const searched = !rail && search.key !== ""
-  const listed = searched ? search.found : groups
+  const narrowed = searched || (!rail && search.onlyChanged)
+  const listed = narrowed ? search.found : groups
   // Only the whole list in full has families to close, where there are some and they have
   // names.
-  const foldable = !rail && !searched && named && groups.length > 0
+  const foldable = !rail && !narrowed && named && groups.length > 0
   const { changes } = usePendingChanges()
   const changed = useMemo(() => new Set(changes.keys()), [changes])
   const currentId = useParams({
     strict: false,
     select: (params) => params.roadmapId,
   })
-  // In the navigation's order, so the count steps through them as the Product Lead reads.
-  const changedInOrder = groups
-    .flatMap((group) => group.roadmaps)
-    .filter((roadmap) => changed.has(roadmap.id))
-    .map((roadmap) => roadmap.id)
+  // Where the count leads while one roadmap has changes, and it is not the page open.
+  const soleChangedId =
+    changed.size === 1
+      ? groups
+          .flatMap((group) => group.roadmaps)
+          .find((roadmap) => changed.has(roadmap.id))?.id
+      : undefined
 
   const destinations = (
     <>
@@ -90,8 +105,9 @@ export function RoadmapNavigation({ form }: RoadmapNavigationProps) {
         </ul>
         <UnpublishedTotal
           count={changed.size}
-          leadsTo={nextChangedRoadmap(changedInOrder, currentId)}
+          leadsTo={soleChangedId === currentId ? undefined : soleChangedId}
           rail={rail}
+          onOpenNavigation={onOpenNavigation}
         />
       </div>
       {searched && listed.length === 0 ? (
@@ -285,28 +301,62 @@ function CloseAllFamilies({ allClosed, onPress }: CloseAllFamiliesProps) {
 interface UnpublishedTotalProps {
   /** How many roadmaps have unpublished changes. */
   count: number
-  /** The roadmap it leads to, if there is one to lead to. */
+  /** The one roadmap with changes it leads to, if it is not the page open. */
   leadsTo: string | undefined
   rail: boolean
+  /** Opens a rail, remembered as open, as its circle is pressed (S7). */
+  onOpenNavigation: () => void
 }
 
 /**
- * How many roadmaps have unpublished changes, none shown while there are none (S3). It
- * leads to one of them, and the dots mark each (S2); where there is none else to lead to,
- * it says so as text. What a screen reader is told of the number is the shell's
- * (`UnpublishedAnnouncement`), which this drawer may not be in.
+ * How many roadmaps have unpublished changes, none shown while there are none (S3). With
+ * two or more it is a button that shows only them, pressed while it does (STY-063 S1, S2),
+ * and in a rail pressing it opens the navigation (S7), the circle carrying no pressed
+ * state. With one it leads to that roadmap, and the dots mark each (STY-055 S2); on its
+ * own page, or while the roadmaps are unread, it says so as text. What a screen reader is
+ * told of the number is the shell's (`UnpublishedAnnouncement`), which this drawer may
+ * not be in.
  */
-function UnpublishedTotal({ count, leadsTo, rail }: UnpublishedTotalProps) {
+function UnpublishedTotal({
+  count,
+  leadsTo,
+  rail,
+  onOpenNavigation,
+}: UnpublishedTotalProps) {
   const { t } = useTranslation()
+  const search = useNavigationSearch()
   if (count === 0) return null
+  // Two or more roadmaps with changes, once the roadmaps are read, are to narrow to.
+  const narrows = search.groups !== null && count >= 2
   const entry = {
     rail,
     name: t("layout.navigation.unpublished", { count }),
-    mark: { count },
+    mark: { count, narrows },
+  }
+  const press = () => {
+    if (rail) {
+      // The circle always opens the navigation narrowed, with focus on the count (S7).
+      search.requestFocus("count")
+      search.showChanged()
+      onOpenNavigation()
+    } else if (search.onlyChanged) {
+      search.showEveryRoadmap()
+    } else {
+      search.showChanged()
+    }
   }
   return (
     <ul className="mt-1 flex flex-col gap-1">
-      {leadsTo === undefined ? (
+      {narrows ? (
+        <NavigationButton
+          {...entry}
+          ref={(element) => {
+            if (element && search.takeFocusRequest("count")) element.focus()
+          }}
+          pressed={rail ? undefined : search.onlyChanged}
+          onPress={press}
+        />
+      ) : leadsTo === undefined ? (
         <NavigationText {...entry} />
       ) : (
         <NavigationLink

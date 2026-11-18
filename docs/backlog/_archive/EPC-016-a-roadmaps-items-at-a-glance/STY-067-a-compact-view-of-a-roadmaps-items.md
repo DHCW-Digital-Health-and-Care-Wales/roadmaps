@@ -9,6 +9,7 @@
 - **Binding ADRs**: ADR-002, ADR-005, ADR-008, ADR-010, ADR-011
 - **Suggested model**: Opus — a second view of the whole items area, at two widths and
   in two languages, with focus carried through moves and a choice kept on the device
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/170
 
 ## Summary
 

@@ -16,7 +16,10 @@ import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
 import { createInMemoryRoadmapRepository } from "../testing/in-memory-roadmap-repository"
-import { aboutField, openAbout } from "../testing/roadmap-page"
+import {
+  productDetailsField,
+  openProductDetails,
+} from "../testing/roadmap-page"
 import { expectWriteHold, refreshHold } from "../testing/write-hold"
 
 const outOfStep = (overrides: Partial<Roadmap> = {}) =>
@@ -138,7 +141,7 @@ describe("making a roadmap match its lists (STY-030)", () => {
 
     expect(main.getByText("Family isn't listed")).toBeVisible()
     expect(
-      main.getByText("Choose its family under About this roadmap."),
+      main.getByText("Choose its family under Product details."),
     ).toBeVisible()
     expect(main.queryByRole("button", { name: /Make it match/ })).toBeNull()
   })
@@ -263,9 +266,9 @@ describe("making a roadmap match its lists (STY-030)", () => {
 
     await user.click(main.getByRole("button", { name: /Make it match/ }))
 
-    const about = await openAbout(user)
+    const details = await openProductDetails(user)
     await vi.waitFor(() => {
-      const family = aboutField(about, "Family")
+      const family = productDetailsField(details, "Family")
       expect(family).toHaveTextContent("Shared Care Record")
       expect(family).toBeVisible()
     })

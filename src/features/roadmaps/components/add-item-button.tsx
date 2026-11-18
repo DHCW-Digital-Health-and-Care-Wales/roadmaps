@@ -15,6 +15,7 @@ export interface AddItemButtonProps {
    * D18).
    */
   compact?: boolean
+  className?: string | undefined
   onAdd: () => void
 }
 
@@ -28,6 +29,7 @@ export function AddItemButton({
   ref,
   disabled = false,
   compact = false,
+  className,
   onAdd,
 }: AddItemButtonProps) {
   const { t } = useTranslation()
@@ -38,6 +40,7 @@ export function AddItemButton({
       disabled={disabled}
       focusableWhenDisabled
       size={compact ? "icon" : "default"}
+      className={className}
       onClick={(event) => {
         add(event.currentTarget)
       }}

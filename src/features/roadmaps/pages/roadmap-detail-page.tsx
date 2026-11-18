@@ -24,7 +24,8 @@ import {
 } from "../components/roadmap-items"
 import { RoadmapsErrorState } from "../components/roadmaps-error-state"
 import { StatusPanel } from "../components/status-panel"
-import { EditableRoadmapAbout } from "../editing/editable-roadmap-about"
+import { RoadmapDialog } from "../dialogs/roadmap-dialog"
+import { EditableProductDetails } from "../editing/editable-product-details"
 import { groupPageItems, usePageItems } from "../editing/page-items"
 import {
   applyRoadmapChanges,
@@ -39,6 +40,7 @@ import { PublishedStateNotice } from "../editing/published-state-notice"
 import { RoadmapPublishing } from "../editing/roadmap-publishing"
 import { useItemDialog } from "../editing/use-item-dialog"
 import { usePublishedState } from "../editing/use-published-state"
+import { useRoadmapEdit } from "../editing/use-roadmap-edit"
 import { hasGroupedItems } from "../group-roadmap-items"
 import { JOIN_READ } from "../hooks/roadmap-queries"
 import { useAddedRoadmapNotice } from "../hooks/use-added-roadmap"
@@ -157,13 +159,14 @@ interface RoadmapViewProps {
 }
 
 /**
- * A listed roadmap: its header block, with its facts, what it is about and its
- * controls, among them the placement navigation once its items are shown, which sticks
- * as the page scrolls (STY-052, STY-059, STY-060), a notice when it was just added
+ * A listed roadmap: its header block, with its actions, its facts and product details
+ * and, once its items are shown, the placement navigation, which sticks as the page
+ * scrolls (STY-052, STY-060, STY-065), a notice when it was just added
  * (STY-041 S5), then its items, each showing its pending English (STY-025). At the
  * foot of the screen, what publishing or unpublishing it came to (STY-035, STY-052 D21)
  * and its pending changes with Publish. The title stays whatever happens to the items.
- * It holds the page's one item dialog, which "Add an item" and each item's Edit open.
+ * It holds the page's one item dialog, which "Add an item" and each item's Edit open,
+ * and its roadmap dialog, which the product details' Edit and More open.
  */
 function RoadmapView({
   roadmap,
@@ -190,6 +193,7 @@ function RoadmapView({
     hasGroupedItems(groups)
   const heading = useRef<HTMLHeadingElement>(null)
   const addItemButton = useRef<HTMLButtonElement>(null)
+  const roadmapEdit = useRoadmapEdit(roadmap, shown)
   const publishedStateNotice = useRef<HTMLDivElement>(null)
   const publishNotice = useRef<HTMLDivElement>(null)
   const itemDialog = useItemDialog({
@@ -230,12 +234,18 @@ function RoadmapView({
         )}
         <RoadmapHeader
           roadmap={roadmap}
-          shown={shown}
           title={title}
           titleChanged={Boolean(changes?.roadmap.title)}
           heading={heading}
           publishedState={publishedState}
-          about={<EditableRoadmapAbout roadmap={roadmap} />}
+          details={
+            <EditableProductDetails
+              roadmap={roadmap}
+              shown={shown}
+              onEdit={roadmapEdit.open}
+            />
+          }
+          onEditRoadmap={roadmapEdit.open}
           fetching={
             listFetching || items.isFetching || organisations.isFetching
           }
@@ -271,6 +281,7 @@ function RoadmapView({
           // Its own notice, or the refusal of the changes it sent (D21).
           notice={() => publishedStateNotice.current ?? publishNotice.current}
         />
+        <RoadmapDialog {...roadmapEdit.dialog} />
         <MatchListsAction roadmap={roadmap} />
         {addedNotice.shown && (
           <AddedRoadmapNotice title={title} onDismiss={addedNotice.dismiss} />

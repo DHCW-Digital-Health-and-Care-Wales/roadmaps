@@ -14,9 +14,10 @@ export type RoadmapDialogProps = RoadmapDialogForm &
   Pick<FormDialogProps, "open" | "onClose" | "opener">
 
 /**
- * The roadmap dialog (EPC-011): the one place a roadmap is added, and where what it is
- * about is edited. Given a `roadmap` it edits it, with every About field and no short
- * name (STY-043); given none it adds one (STY-041). It closes as `FormDialog` sets,
+ * The roadmap dialog (EPC-011): the one place a roadmap is added, and where its product
+ * details are edited. Given a `roadmap` it edits it, with its title, every product
+ * details field and its last update, and no short name (STY-043); given none it adds
+ * one (STY-041). It closes as `FormDialog` sets,
  * except while a roadmap is being added.
  */
 export function RoadmapDialog({

@@ -38,7 +38,7 @@ test("publishes a date picked in the roadmap dialog as YYYY-MM-DD text (S2, S8)"
   await expect(roadmapFacts(page)).toContainText("Updated 15 September 2026")
 
   const editing = await openEditRoadmapDialog(page)
-  const field = editing.getByLabel("Last updated")
+  const field = editing.getByLabel("Roadmap last updated")
   await expect(field).toHaveValue("2026-09-15")
   await field.fill("2026-11-10")
   await editing.getByRole("button", { name: "Done" }).click()
@@ -48,7 +48,10 @@ test("publishes a date picked in the roadmap dialog as YYYY-MM-DD text (S2, S8)"
 
   await main.getByRole("button", { name: "Publish changes" }).click()
   const dialog = page.getByRole("alertdialog")
-  await expect(dialog).toContainText("Last updated")
+  // Named among the product details, as the review names it (STY-065 S9).
+  await expect(
+    dialog.getByRole("listitem").filter({ hasText: "Product details" }),
+  ).toHaveText(/Product details\s*Roadmap last updated/)
   await expect(
     dialog.getByRole("checkbox", { name: "Mark as updated today" }),
   ).toHaveCount(0)
@@ -72,7 +75,7 @@ test.describe("today, by the browser's clock (D11)", () => {
   }) => {
     await open(page, "producta", "Product A roadmap")
     const editing = await openEditRoadmapDialog(page)
-    const field = editing.getByLabel("Last updated")
+    const field = editing.getByLabel("Roadmap last updated")
     await expect(field).toHaveAttribute("max", "2026-07-02")
 
     await field.fill("2026-07-03")

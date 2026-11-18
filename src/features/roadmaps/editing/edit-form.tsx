@@ -86,12 +86,16 @@ export interface EditFormField<F extends string> {
 
 /** Why a field keeps the form open: its message's key under `roadmaps.edit`. */
 type FieldError =
-  "titleRequired" | "placementRequired" | "dateInFuture" | "dateInvalid"
+  | "titleRequired"
+  | "productNameRequired"
+  | "placementRequired"
+  | "dateInFuture"
+  | "dateInvalid"
 
 /** Why a field that must hold a value keeps the form open while it holds none. */
 export type RequiredError = Extract<
   FieldError,
-  "titleRequired" | "placementRequired"
+  "titleRequired" | "productNameRequired" | "placementRequired"
 >
 
 /** A form's values as it confirms them: each changed since it opened. */

@@ -6,7 +6,7 @@ import { tabTo } from "./fixtures/keyboard"
 import { scrollsSideways } from "./fixtures/layout"
 import type { Language } from "./fixtures/look"
 import {
-  about,
+  productDetails,
   focusClearOfBars,
   jumpTo,
   openLongRoadmap,
@@ -19,7 +19,7 @@ import { expect, test } from "./fixtures/test"
 /**
  * STY-053: a roadmap's page reaches any placement from its header, by "Jump to" below
  * a desktop or a row of links from one (STY-060 S1), each with its count and pending
- * mark; the page marks which placement it is in; and "About this roadmap" folds to one
+ * mark; the page marks which placement it is in; and "Product details" folds to one
  * line.
  */
 
@@ -96,8 +96,9 @@ for (const [device, size] of [
   ["an iPad", IPAD],
   ["a phone", PHONE],
 ] as const) {
-  const desktop = size.width >= DESKTOP.width
-  test(`jumps to Later from ${desktop ? "its link" : '"Jump to"'}, its heading under the stuck row, focused, the address unchanged, on ${device} (S1, D8)`, async ({
+  // The links from 768px, "Jump to" narrower (STY-065 S6, S7, D7).
+  const desktop = size.width >= 768
+  test(`jumps to Later from ${desktop ? "its link" : '"Jump to"'}, its heading under the stuck row, focused, the address unchanged, on ${device} (S1, D8, STY-065 D7)`, async ({
     page,
     sheets,
   }) => {
@@ -205,7 +206,7 @@ test("shows each placement's count in Jump to and marks those with pending chang
   page,
   sheets,
 }) => {
-  await page.setViewportSize(IPAD)
+  await page.setViewportSize(PHONE)
   await openSmallRoadmap(page, sheets)
   await editNowItem(page)
 
@@ -224,7 +225,7 @@ test("marks the placement the page is in, in Jump to, and none at the top (S3, D
   page,
   sheets,
 }) => {
-  await page.setViewportSize(IPAD)
+  await page.setViewportSize(PHONE)
   await openLongRoadmap(page, sheets)
   await expect(jumpTo(page)).toHaveAccessibleName("Jump to")
 
@@ -295,16 +296,16 @@ test("reaches the unplaced items, and an empty placement, which says it has none
   ).toHaveAttribute("aria-current", "location")
 })
 
-test("keeps About closed, so the first placement starts on the first screen at 1280×800 (S6, STY-059 S8)", async ({
+test("keeps Product details closed, so the first placement starts on the first screen at 1280×800 (S6, STY-059 S8, STY-065 S10)", async ({
   page,
   sheets,
 }) => {
   await page.setViewportSize(DESKTOP)
   await openLongRoadmap(page, sheets)
 
-  const region = about(page)
+  const region = productDetails(page)
   await expect(region.getByRole("term")).toHaveCount(0)
-  // One row: its disclosure and Edit, at 1280px.
+  // One line: the facts ending in its disclosure, at 1280px.
   expect((await region.boundingBox())?.height).toBeLessThan(50)
   expect(
     await topOf(placementHeading(page, "Recently delivered")),
@@ -359,19 +360,29 @@ for (const { width, language, placement, publish } of [
     publish: "Publish roadmap",
   },
 ] as const) {
-  test(`keeps every control of the stuck row on screen at ${String(width)}px, in ${language}, for a roadmap not published (S7)`, async ({
+  test(`keeps every control of the stuck row on screen at ${String(width)}px, in ${language}, for a roadmap not published (S7, STY-065 S6, S10)`, async ({
     page,
     sheets,
   }) => {
     await page.setViewportSize({ width, height: 1024 })
     await openLongRoadmap(page, sheets, { tab: "ProductC", language })
-
-    // A long placement name, so "Jump to" is at its widest.
-    await jumpFromMenu(page, placement, language)
-    await expect(jumpTo(page, language)).toHaveAccessibleName(
-      `${COPY[language].jumpTo}: ${placement}`,
-    )
     const row = page.locator("[data-stuck]")
+
+    // A long placement name, so "Jump to" is at its widest; from 768px the link.
+    if (width >= 768) {
+      await placementLinks(page, language)
+        .getByRole("link", { name: new RegExp(`^${placement},`) })
+        .click()
+      await expect(
+        row.getByRole("link", { name: new RegExp(`^${placement},`) }),
+      ).toHaveAttribute("aria-current", "location")
+      await expect(jumpTo(page, language)).toHaveCount(0)
+    } else {
+      await jumpFromMenu(page, placement, language)
+      await expect(jumpTo(page, language)).toHaveAccessibleName(
+        `${COPY[language].jumpTo}: ${placement}`,
+      )
+    }
     const shown = await shownInStuckRow(page)
     // Once stuck, More holds it (STY-059 D7).
     const names = await Promise.all(shown.map((button) => button.innerText()))

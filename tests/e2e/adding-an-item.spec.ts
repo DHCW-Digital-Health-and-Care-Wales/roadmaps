@@ -48,7 +48,7 @@ async function openRoadmap(
 ) {
   await page.goto(`./#/roadmaps/${roadmap}`)
   await connect(page, connectName)
-  // The items are read once a heading follows About's.
+  // The items are read once a heading follows Product details'.
   await expect(
     page.getByRole("main").getByRole("heading", { level: 2 }).nth(1),
   ).toBeVisible()
@@ -433,7 +433,7 @@ test("an empty roadmap's panel holds “Add an item”; its first item brings th
   await expect(addItemButtons(page)).toBeFocused()
 
   await expect(main.getByRole("heading", { level: 2 })).toHaveText([
-    "About this roadmap",
+    "Product details",
     ...PLACEMENT_HEADINGS,
   ])
   await expect(titlesUnder(page, "Now")).toHaveText([CLINIC])

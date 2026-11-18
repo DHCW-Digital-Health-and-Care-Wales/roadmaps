@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 /** The "Changed" tag on whatever holds a pending change. */
 export interface ChangedTagProps {
@@ -56,6 +57,8 @@ export interface EditControlsProps {
   editButton: RefObject<HTMLButtonElement | null>
   /** `sm` (32px) by default, for a card; `default` (40px) beside About (STY-059 D6). */
   size?: "default" | "sm"
+  /** Where the buttons sit from 640px: at the row's `end` by default, as on a card. */
+  align?: "start" | "end"
   /** A control between the drop button and Edit, such as an item's Move menu (STY-031). */
   move?: ReactNode
   onEdit: () => void
@@ -73,6 +76,7 @@ export function EditControls({
   editable = true,
   editButton,
   size = "sm",
+  align = "end",
   move,
   onEdit,
   onDrop,
@@ -84,7 +88,9 @@ export function EditControls({
     <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
       {pending === "changed" && <ChangedTag />}
       {isNew && <NewTag subject={subject} />}
-      <div className="flex flex-wrap gap-2 sm:ml-auto">
+      <div
+        className={cn("flex flex-wrap gap-2", align === "end" && "sm:ml-auto")}
+      >
         {pending && (
           <Button
             variant="secondary"

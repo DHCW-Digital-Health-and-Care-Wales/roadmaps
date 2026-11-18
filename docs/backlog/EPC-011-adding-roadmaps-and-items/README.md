@@ -14,7 +14,8 @@ either: both are begun by hand in the spreadsheet. This epic lets them add a roa
 from the roadmap list and add items on a roadmap's page. A new roadmap is written at
 once and starts not published; a new item is a pending edit, published with the rest.
 Both are added in a dialog, and the owner asked that editing converge on the same
-dialogs: one for a roadmap, adding it or editing "About this roadmap", and one for an
+dialogs: one for a roadmap, adding it or editing "About this roadmap" ("Product
+details" since STY-065), and one for an
 item. The in-place edit forms go. A Product Lead can also put a placement's items in
 the order they want (STY-051, STY-050). Removing a roadmap and removing a published
 item are recorded for later.

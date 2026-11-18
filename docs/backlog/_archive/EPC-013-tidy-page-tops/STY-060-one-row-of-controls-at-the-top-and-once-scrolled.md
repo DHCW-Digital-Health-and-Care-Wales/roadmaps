@@ -97,6 +97,12 @@ foot bar, and below 500px nothing pins, as today (STY-052 D18)
 - **D5** (owner, 2026-11-18, accepting the analysis's _Not yet drawn_): the stuck
   "Jump to" stays on one line, cut with an ellipsis; the stuck … keeps a chevron; the
   phone's foot bar trims Publish's and Discard's padding to give the count room.
+- **D6** (owner, 2026-11-18, review of STY-065's prototype; delivered by
+  [STY-065](../EPC-015-a-quieter-roadmap-page-top/STY-065-a-roadmaps-page-top-reads-at-a-glance.md)): the jump control
+  is the row of placement links from 768px, not 1024px, at the top and once stuck, and
+  "Jump to" narrower; from 768px Add an item and More sit at the end of the title's
+  row at the top too; narrower, Add an item and "Jump to" share a row and More sits
+  beside the title. Changes S1, S2 and S4's 820px strip, and D1 and D4.
 
 ## Starting point
 

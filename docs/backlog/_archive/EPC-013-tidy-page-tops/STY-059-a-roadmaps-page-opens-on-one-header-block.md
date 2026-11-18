@@ -113,6 +113,13 @@ and named, and the first placement still starts on the first screen at 1280×800
 - **D7** (agent, 2026-11-18): once the strip sticks, More holds Publish roadmap at every
   width, as STY-052 D19 had it on a phone, so the strip keeps one set of controls
   (epic _Design_ 4); left visible on a desktop, it would add a control G does not draw.
+- **D8** (owner, 2026-11-18, review of the built page and of STY-065's prototype;
+  delivered by [STY-065](../EPC-015-a-quieter-roadmap-page-top/STY-065-a-roadmaps-page-top-reads-at-a-glance.md)): the
+  header block is rearranged. The actions sit on the title's row; the facts are one
+  line of plain text, the status label no longer a tag, ending in the disclosure, now
+  "Product details"; its Edit is inside the open details and in More; the Not published
+  tag and its button become one notice. Changes S1, S2, S4, S6 and S7, and D2, D4, D5's
+  tag and D6's visible Edit.
 
 ## Starting point
 

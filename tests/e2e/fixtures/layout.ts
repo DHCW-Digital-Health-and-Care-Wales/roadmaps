@@ -25,3 +25,22 @@ export function scrollsSideways(page: Page): Promise<boolean> {
       document.documentElement.clientWidth,
   )
 }
+
+/**
+ * The right edge of a roadmap's page content, where a control may run to: the page
+ * container's right edge less its padding.
+ */
+export function contentRight(page: Page): Promise<number> {
+  return page
+    .getByRole("main")
+    .getByRole("heading", { level: 1 })
+    .evaluate((title) => {
+      const content = title.closest("[data-slot=page-container]")
+      if (!content) throw new Error("No page container")
+      const style = getComputedStyle(content)
+      return (
+        content.getBoundingClientRect().right -
+        Number.parseFloat(style.paddingRight)
+      )
+    })
+}

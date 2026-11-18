@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next"
 
-import { Badge } from "@/components/ui/badge"
 import { localise } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import { formatCalendarDate, useLanguage } from "@/i18n"
@@ -11,10 +10,10 @@ export interface RoadmapFactsProps {
 }
 
 /**
- * A roadmap's facts under its title (STY-059 S2): its status, read "Status:" then its
- * tag so it is not taken for the service's phase, its product lead and when it was last
- * updated, each only when it has one. A list named "Roadmap details": on a phone one
- * fact to a row, wider on one line, wrapping between facts.
+ * A roadmap's facts, as items of the list under its title (STY-065 S2): its status,
+ * read "Status:" then its label so it is not taken for the service's phase, its product
+ * lead and when it was last updated, each only when it has one. Plain text, quieter
+ * than the title, the status label alone in the text's own weight and colour.
  */
 export function RoadmapFacts({ roadmap }: RoadmapFactsProps) {
   const { t } = useTranslation()
@@ -25,23 +24,24 @@ export function RoadmapFacts({ roadmap }: RoadmapFactsProps) {
       ? undefined
       : formatCalendarDate(roadmap.lastUpdated, t)
 
-  if (!status && roadmap.productLead === null && !updated) return null
   return (
-    <ul
-      aria-label={t("roadmaps.facts.name")}
-      className="flex flex-col items-start gap-1 text-body-xs sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-6"
-    >
+    <>
       {status && (
-        <li className="flex items-center gap-1.5">
-          {t("roadmaps.facts.status")} <Badge variant="neutral">{status}</Badge>
+        <li className="text-muted-foreground">
+          {t("roadmaps.facts.status")}{" "}
+          <span className="font-bold text-foreground">{status}</span>
         </li>
       )}
       {roadmap.productLead !== null && (
-        <li className="wrap-anywhere">
+        <li className="wrap-anywhere text-muted-foreground">
           {t("roadmaps.facts.productLead", { name: roadmap.productLead })}
         </li>
       )}
-      {updated && <li>{t("roadmaps.facts.updated", { date: updated })}</li>}
-    </ul>
+      {updated && (
+        <li className="text-muted-foreground">
+          {t("roadmaps.facts.updated", { date: updated })}
+        </li>
+      )}
+    </>
   )
 }

@@ -1,0 +1,4 @@
+- menu "More":
+  - menuitem "Edit product details"
+  - menuitem "Refresh"
+  - menuitem "Unpublish roadmap"

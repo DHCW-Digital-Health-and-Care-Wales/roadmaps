@@ -14,7 +14,13 @@ import {
   withRoadmapIndex,
 } from "./fixtures/fake-sheets"
 import { type Language, useLanguage } from "./fixtures/look"
-import { goToList, openConflictReview, refusal } from "./fixtures/roadmap-page"
+import {
+  goToList,
+  moreButton,
+  openConflictReview,
+  openProductDetails,
+  refusal,
+} from "./fixtures/roadmap-page"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 // The structure of the key screens, held as aria snapshots in
@@ -159,6 +165,37 @@ test("a roadmap's detail page", async ({ page }) => {
   ).toBeVisible()
 
   await expectStructure(page.getByRole("main"), "detail.aria.yml")
+})
+
+test("a roadmap's product details open, and More with its Edit product details (STY-065)", async ({
+  page,
+}) => {
+  await page.goto("./#/roadmaps/producta")
+  await connect(page)
+  await expect(
+    page.getByRole("heading", {
+      level: 3,
+      name: "Example card with every column",
+    }),
+  ).toBeVisible()
+
+  await expectStructure(
+    await openProductDetails(page),
+    "product-details-open.aria.yml",
+  )
+
+  await moreButton(page).click()
+  await expectStructure(page.getByRole("menu"), "roadmap-more-menu.aria.yml")
+})
+
+test("a roadmap not published reads Not published once, in a notice with Publish roadmap (STY-065 S4)", async ({
+  page,
+}) => {
+  await page.goto("./#/roadmaps/productc")
+  await connect(page)
+  await expect(page.getByRole("heading", { level: 3 }).first()).toBeVisible()
+
+  await expectStructure(page.getByRole("main"), "detail-not-published.aria.yml")
 })
 
 test.describe("editing a roadmap (STY-025)", () => {
@@ -339,7 +376,7 @@ test.describe("editing a roadmap (STY-025)", () => {
 
     // Decided, it names the item that couldn't be kept (STY-052 D16, D17).
     await review
-      .getByRole("button", { name: "Keep mine About this roadmap: Vision" })
+      .getByRole("button", { name: "Keep mine Product details: Vision" })
       .click()
     const decided = page.getByRole("dialog")
     await expect(
@@ -409,7 +446,7 @@ test("the Add a roadmap dialog, refused (STY-041)", async ({
   const dialog = await openAddRoadmapDialog(page, { offersLists: true })
   await dialog.getByRole("textbox", { name: "Short name" }).fill("ProductA")
   await dialog.getByRole("button", { name: "Add roadmap" }).click()
-  await expect(dialog.getByText("Enter a title")).toBeVisible()
+  await expect(dialog.getByText("Enter a product name")).toBeVisible()
 
   await expectStructure(dialog, "add-roadmap-dialog.aria.yml")
 })

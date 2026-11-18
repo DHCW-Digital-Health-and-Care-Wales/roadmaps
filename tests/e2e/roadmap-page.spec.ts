@@ -3,8 +3,10 @@ import type { Locator, Page } from "@playwright/test"
 import {
   addItemButtons,
   editRoadmapButton,
-  openEditRoadmapDialog,
+  editRoadmapDialog,
+  openEditRoadmapDialogFromMore,
 } from "./fixtures/dialogs"
+import { boxOf } from "./fixtures/layout"
 import {
   EXAMPLE_SPREADSHEET,
   withTabItems,
@@ -12,15 +14,16 @@ import {
 } from "./fixtures/fake-sheets"
 import { THEMES, tokenColour, useLanguage, useTheme } from "./fixtures/look"
 import {
-  aboutDisclosure,
   goToList,
-  openAbout,
+  openProductDetails,
+  productDetails,
+  productDetailsDisclosure,
   refreshRoadmap,
   roadmapFacts,
 } from "./fixtures/roadmap-page"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
-const ABOUT_HEADING = "About this roadmap"
+const PRODUCT_DETAILS = "Product details"
 
 const PLACEMENT_HEADINGS = [
   "Recently delivered",
@@ -74,16 +77,17 @@ async function openProductA(page: Page) {
 async function expectProductA(page: Page) {
   const main = page.getByRole("main")
   await expect(main.getByRole("heading", { level: 2 })).toHaveText([
-    ABOUT_HEADING,
+    PRODUCT_DETAILS,
     ...PLACEMENT_HEADINGS,
   ])
   await expect(roadmapFacts(page).getByRole("listitem")).toHaveText([
     "Status: Beta",
     "Product lead: Alex Jones",
     "Updated 1 October 2026",
+    PRODUCT_DETAILS,
   ])
-  const about = await openAbout(page)
-  await expect(about.getByRole("term")).toHaveText([
+  const details = await openProductDetails(page)
+  await expect(details.getByRole("term")).toHaveText([
     "Vision",
     "Service description",
     "Family",
@@ -187,7 +191,7 @@ test("items with no recognised horizon are shown first, flagged (S4, S13)", asyn
 
   const main = page.getByRole("main")
   await expect(main.getByRole("heading", { level: 2 })).toHaveText([
-    ABOUT_HEADING,
+    PRODUCT_DETAILS,
     "Not on the public roadmap",
     ...PLACEMENT_HEADINGS,
   ])
@@ -299,63 +303,93 @@ test.describe("when the items can't be read (S8)", () => {
   })
 })
 
-test("About holds “Changed” beside its disclosure, closed or open, and “Undo changes” once open, which returns focus to Edit (STY-042 S1, STY-059 S5)", async ({
+test("Product details holds “Changed” beside its disclosure while closed, and beside “Undo changes” and Edit once open, which returns focus to Edit (STY-042 S1, STY-065 S3)", async ({
   page,
 }) => {
   await openProductA(page)
 
-  // Once, not per theme: the edit is made in the roadmap dialog (STY-043).
-  const dialog = await openEditRoadmapDialog(page)
+  // Once, not per theme: the edit is made in the roadmap dialog (STY-043), opened from
+  // More so the details stay closed.
+  const dialog = await openEditRoadmapDialogFromMore(page)
   await dialog.getByRole("textbox", { name: "Product lead" }).fill("Sam Evans")
   await dialog.getByRole("button", { name: "Done" }).click()
-  const closed = page
-    .getByRole("main")
-    .getByRole("region", { name: ABOUT_HEADING })
-  await expect(closed.getByText("Changed", { exact: true })).toBeVisible()
+  const details = productDetails(page)
+  await expect(productDetailsDisclosure(page)).toHaveAttribute(
+    "aria-expanded",
+    "false",
+  )
+  await expect(details.getByText("Changed", { exact: true })).toBeVisible()
   await expect(
-    closed.getByRole("button", { name: `Undo changes ${ABOUT_HEADING}` }),
+    details.getByRole("button", { name: `Undo changes ${PRODUCT_DETAILS}` }),
   ).toHaveCount(0)
-  const about = await openAbout(page)
-  await expect(about.getByText("Changed", { exact: true })).toBeVisible()
-  await about
-    .getByRole("button", { name: `Undo changes ${ABOUT_HEADING}` })
+  await expect(editRoadmapButton(page)).toHaveCount(0)
+
+  await openProductDetails(page)
+  // Beside Undo changes and Edit, at the foot of the details.
+  const changed = details.getByText("Changed", { exact: true })
+  await expect(changed).toBeVisible()
+  const tag = await boxOf(changed)
+  const undo = await boxOf(
+    details.getByRole("button", { name: `Undo changes ${PRODUCT_DETAILS}` }),
+  )
+  const lastField = await boxOf(details.getByRole("definition").last())
+  expect(tag.y).toBeGreaterThanOrEqual(lastField.bottom)
+  expect(
+    Math.abs(tag.y + tag.height / 2 - (undo.y + undo.height / 2)),
+  ).toBeLessThan(undo.height / 2)
+  await details
+    .getByRole("button", { name: `Undo changes ${PRODUCT_DETAILS}` })
     .click()
-  await expect(about.getByText("Changed", { exact: true })).toBeHidden()
+  await expect(details.getByText("Changed", { exact: true })).toBeHidden()
   await expect(editRoadmapButton(page)).toBeFocused()
 })
 
 for (const theme of THEMES) {
-  test(`About opens in place under a rule, with a 40px Edit beside its disclosure, in the ${theme} theme (STY-059 S4)`, async ({
+  test(`Product details open in place under a rule, ending in a 40px Edit, a press across 44px, in the ${theme} theme (STY-065 S3)`, async ({
     page,
   }) => {
     await useTheme(page, theme)
     await openProductA(page)
-    const disclosure = aboutDisclosure(page)
+    const disclosure = productDetailsDisclosure(page)
     await expect(disclosure).toHaveAttribute("aria-expanded", "false")
-    // A text control at least 44px tall, underlined on hover.
-    expect((await disclosure.boundingBox())?.height).toBeGreaterThanOrEqual(44)
-    const label = disclosure.getByText(ABOUT_HEADING)
-    await expect(label).toHaveCSS("text-decoration-line", "none")
-    await disclosure.hover()
+    // A line of text 32px tall, always underlined as a link is.
+    const label = disclosure.getByText(PRODUCT_DETAILS)
     await expect(label).toHaveCSS("text-decoration-line", "underline")
+    // Pressed across 44px: 20px above and below its middle still toggles it.
+    const line = await boxOf(disclosure)
+    expect(line.height).toBe(32)
+    const middle = line.y + line.height / 2
+    const x = line.x + line.width / 2
+    for (const y of [middle + 20, middle - 20]) {
+      await page.mouse.click(x, y)
+      await expect(disclosure).toHaveAttribute("aria-expanded", "true")
+      await page.mouse.click(x, y)
+      await expect(disclosure).toHaveAttribute("aria-expanded", "false")
+    }
 
-    const about = await openAbout(page)
-    const edit = about.getByRole("button", { name: `Edit ${ABOUT_HEADING}` })
-    expect((await edit.boundingBox())?.height).toBe(40)
-    // Beside the disclosure, above the first field.
-    const opener = await disclosure.boundingBox()
-    const button = await edit.boundingBox()
-    const firstField = await about.getByRole("term").first().boundingBox()
-    if (!opener || !button || !firstField) throw new Error("Not laid out")
-    expect(button.x).toBeGreaterThan(opener.x + opener.width)
-    expect(button.y + button.height).toBeLessThanOrEqual(firstField.y)
+    const details = await openProductDetails(page)
+    await expect(disclosure).toHaveAttribute("aria-expanded", "true")
+    const edit = details.getByRole("button", {
+      name: `Edit ${PRODUCT_DETAILS}`,
+    })
+    expect((await boxOf(edit)).height).toBe(40)
+    // At the foot of the details, under the last field.
+    const lastField = await boxOf(details.getByRole("definition").last())
+    expect((await boxOf(edit)).y).toBeGreaterThanOrEqual(lastField.bottom)
     // The fields sit in place, behind a rule in the border's colour.
-    const fields = about.locator("[data-slot=collapsible-content]")
+    const fields = details.locator("[data-slot=collapsible-content]")
     await expect(fields).toHaveCSS("border-left-style", "solid")
     await expect(fields).toHaveCSS(
       "border-left-color",
       await tokenColour(page, "--border"),
     )
+    // Edit opens the dialog and takes focus back as it closes.
+    await edit.click()
+    const dialog = editRoadmapDialog(page)
+    await expect(dialog).toBeVisible()
+    await dialog.getByRole("button", { name: "Cancel" }).click()
+    await expect(dialog).toBeHidden()
+    await expect(edit).toBeFocused()
   })
 
   test(`a roadmap with no items shows a compact dashed panel, which holds "Add an item", in the ${theme} theme (STY-042 S2, S4; STY-046 S8)`, async ({
@@ -369,7 +403,7 @@ for (const theme of THEMES) {
     const panel = main.locator("[data-slot=empty]")
 
     await expect(main.getByRole("heading", { level: 2 })).toHaveText([
-      ABOUT_HEADING,
+      PRODUCT_DETAILS,
       "No items yet",
     ])
     await expect(
@@ -386,9 +420,9 @@ for (const theme of THEMES) {
     await expect(panel.locator("img")).toHaveCount(0)
     await expect(panel.locator("svg")).toHaveCount(1)
     await expect(panel).toHaveCSS("border-top-style", "dashed")
-    // Square, as the About panel above it is (DEF-007 D1).
+    // Square, as the Product details above it are (DEF-007 D1).
     await expect(panel).toHaveCSS("border-top-left-radius", "0px")
-    await expect(main.getByRole("region", { name: ABOUT_HEADING })).toHaveCSS(
+    await expect(main.getByRole("region", { name: PRODUCT_DETAILS })).toHaveCSS(
       "border-top-left-radius",
       "0px",
     )
@@ -421,7 +455,7 @@ test("an empty roadmap's page is in Welsh and fits a phone (STY-042 S4)", async 
   const main = page.getByRole("main")
 
   await expect(main.getByRole("heading", { level: 2 })).toHaveText([
-    "Ynglŷn â'r map trywydd hwn",
+    "Manylion y cynnyrch",
     "Dim eitemau eto",
   ])
   await expect(
@@ -430,9 +464,8 @@ test("an empty roadmap's page is in Welsh and fits a phone (STY-042 S4)", async 
     ),
   ).toBeVisible()
   await expect(addItemButtons(page, "cy")).toHaveCount(2)
-  await expect(
-    main.getByRole("button", { name: "Golygu Ynglŷn â'r map trywydd hwn" }),
-  ).toBeVisible()
+  await openProductDetails(page, "cy")
+  await expect(editRoadmapButton(page, "cy")).toBeVisible()
   const overflow = await page.evaluate(
     () =>
       document.documentElement.scrollWidth -

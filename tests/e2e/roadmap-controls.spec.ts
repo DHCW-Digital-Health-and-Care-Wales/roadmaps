@@ -88,10 +88,12 @@ for (const [device, size] of [
       main.getByRole("button", { name: "Discard all changes" }),
     ).toBeInViewport()
 
-    // Refresh and Unpublish roadmap are a press away, in More (S1, D6).
+    // Edit product details, Refresh and Unpublish roadmap are a press away, in More
+    // (S1, D6, STY-065 S5).
     await main.getByRole("button", { name: "More", exact: true }).click()
     const menu = page.getByRole("menu")
     await expect(menu.getByRole("menuitem")).toHaveText([
+      "Edit product details",
       "Refresh",
       "Unpublish roadmap",
     ])
@@ -277,7 +279,8 @@ test("moves Publish roadmap into More once the row sticks, at every width, where
   const menuItems = page.getByRole("menu").getByRole("menuitem")
   await expect(publishRoadmap).toBeVisible()
   await more.click()
-  await expect(menuItems).toHaveText(["Refresh"])
+  // The Not published notice holds Publish roadmap at the top (STY-065 S4).
+  await expect(menuItems).toHaveText(["Edit product details", "Refresh"])
   await page.keyboard.press("Escape")
 
   await scrollTo(page, "Later")
@@ -288,7 +291,11 @@ test("moves Publish roadmap into More once the row sticks, at every width, where
   // An ellipsis and a chevron, its label hidden (STY-060 D2, D5).
   expect((await more.boundingBox())?.width).toBeLessThan(70)
   await more.click()
-  await expect(menuItems).toHaveText(["Refresh", "Publish roadmap"])
+  await expect(menuItems).toHaveText([
+    "Edit product details",
+    "Refresh",
+    "Publish roadmap",
+  ])
   await page.keyboard.press("Escape")
 
   await page.setViewportSize(DESKTOP)
@@ -298,7 +305,11 @@ test("moves Publish roadmap into More once the row sticks, at every width, where
   await expect(addItem).toHaveText("Add an item")
   expect((await more.boundingBox())?.width).toBeGreaterThan(70)
   await more.click()
-  await expect(menuItems).toHaveText(["Refresh", "Publish roadmap"])
+  await expect(menuItems).toHaveText([
+    "Edit product details",
+    "Refresh",
+    "Publish roadmap",
+  ])
 })
 
 test("keeps the count, Publish and Discard in view under a notice too long for the room at the foot of a phone (D14)", async ({

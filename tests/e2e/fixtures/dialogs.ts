@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test"
 
 import type { Language } from "./look"
+import { moreButton, openProductDetails } from "./roadmap-page"
 import { connect, expect, roadmapCards } from "./test"
 
 // The form dialogs (EPC-011, _The dialogs_): how a spec opens one and clicks outside
@@ -17,25 +18,33 @@ export interface DialogNames {
 /** "Add a roadmap": the buttons that open it carry its heading. */
 export const ADD_ROADMAP = {
   title: "Add a roadmap",
-  firstField: "Title",
+  firstField: "Product name",
 } as const satisfies DialogNames
 
 /**
- * The roadmap dialog editing what a roadmap is about, in each language: `opener` is
- * the Edit beside "About this roadmap", which opens it.
+ * The roadmap dialog editing a roadmap's product details, in each language: `opener` is
+ * the Edit at the foot of the open "Product details", `moreItem` the item of More that
+ * opens it too (STY-065 S5).
  */
 const EDIT_ROADMAP = {
   en: {
-    opener: "Edit About this roadmap",
-    title: "Edit this roadmap",
-    firstField: "Title",
+    opener: "Edit Product details",
+    moreItem: "Edit product details",
+    title: "Edit product details",
+    firstField: "Product name",
+    lastField: "Roadmap last updated",
   },
   cy: {
-    opener: "Golygu Ynglŷn â'r map trywydd hwn",
-    title: "Golygu'r map trywydd hwn",
-    firstField: "Teitl (Saesneg)",
+    opener: "Golygu Manylion y cynnyrch",
+    moreItem: "Golygu manylion y cynnyrch",
+    title: "Golygu manylion y cynnyrch",
+    firstField: "Enw'r cynnyrch (Saesneg)",
+    lastField: "Diweddarwyd y map trywydd ddiwethaf",
   },
-} as const satisfies Record<Language, DialogNames & { opener: string }>
+} as const satisfies Record<
+  Language,
+  DialogNames & { opener: string; moreItem: string; lastField: string }
+>
 
 /**
  * The item dialog editing an item, in each language: `opener` is the Edit on the
@@ -132,7 +141,17 @@ export async function openAddRoadmapDialog(
   return dialog
 }
 
-/** About's Edit, on a roadmap's page in `language`. */
+/**
+ * The roadmap dialog's names in `language`: its heading, and its first and last fields
+ * (STY-065 S9).
+ */
+export function editRoadmapNames(
+  language: Language = "en",
+): Pick<(typeof EDIT_ROADMAP)[Language], "title" | "firstField" | "lastField"> {
+  return EDIT_ROADMAP[language]
+}
+
+/** The Edit at the foot of the open "Product details", on a roadmap's page in `language`. */
 export function editRoadmapButton(
   page: Page,
   language: Language = "en",
@@ -142,9 +161,18 @@ export function editRoadmapButton(
     .getByRole("button", { name: EDIT_ROADMAP[language].opener })
 }
 
+/** The roadmap dialog, open or not, in `language`. */
+export function editRoadmapDialog(
+  page: Page,
+  language: Language = "en",
+): Locator {
+  return page.getByRole("dialog", { name: EDIT_ROADMAP[language].title })
+}
+
 /**
- * Opens the roadmap dialog on the roadmap whose page is open, from About's Edit, back
- * at the top of the page: once the header has stuck, About is not in it (STY-059). As
+ * Opens the roadmap dialog on the roadmap whose page is open, from Edit at the foot of
+ * the open "Product details" (STY-065 S3), which this opens first, back at the top of
+ * the page: once the header has stuck, the details are not in it (STY-059). As
  * `openAddRoadmapDialog`, a spec whose spreadsheet has the family and category lists
  * passes `offersLists`; one on the Welsh interface passes its `language`.
  */
@@ -159,6 +187,7 @@ export async function openEditRoadmapDialog(
     window.scrollTo(0, 0)
   })
   await expect(page.locator("[data-stuck]")).toHaveCount(0)
+  await openProductDetails(page, language)
   const dialog = await openDialog(
     page,
     editRoadmapButton(page, language),
@@ -166,6 +195,24 @@ export async function openEditRoadmapDialog(
   )
   if (offersLists) await expectOffersLists(dialog)
   return dialog
+}
+
+/**
+ * Opens the roadmap dialog from "Edit product details" in More, the details as they are
+ * (STY-065 S5), and returns it once focus is in its first field.
+ */
+export async function openEditRoadmapDialogFromMore(
+  page: Page,
+  language: Language = "en",
+): Promise<Locator> {
+  await moreButton(page, language).click()
+  return openDialog(
+    page,
+    page
+      .getByRole("menu")
+      .getByRole("menuitem", { name: EDIT_ROADMAP[language].moreItem }),
+    EDIT_ROADMAP[language],
+  )
 }
 
 /**

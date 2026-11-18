@@ -103,6 +103,12 @@ re-pointed at the dialog: none is dropped, and each rule S3 names keeps its test
 - **D6** (agent, 2026-11-15): the fields keep the in-place form's order (the domain's
   `EDITABLE_ROADMAP_FIELDS`: the text, then family and category, then the date), over
   the order S1 lists them in, so nothing about the form changes but where it opens.
+- **D7** (owner, 2026-11-18; delivered by
+  [STY-065](../EPC-015-a-quieter-roadmap-page-top/STY-065-a-roadmaps-page-top-reads-at-a-glance.md)): the dialog is
+  headed "Edit product details" ("Golygu manylion y cynnyrch"), not D4's "Edit this
+  roadmap", since "About this roadmap" is now "Product details"; its title and date
+  fields read "Product name" and "Roadmap last updated". Edit, at the foot of the open
+  details, and "Edit product details" in More both open it.
 
 ## Out of scope
 

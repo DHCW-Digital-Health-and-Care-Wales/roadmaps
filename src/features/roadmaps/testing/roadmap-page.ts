@@ -9,7 +9,7 @@ type User = ReturnType<typeof userEvent.setup>
 // A roadmap's page as STY-052, STY-053 and STY-059 shaped it: Refresh and "Unpublish
 // roadmap" (or "Publish roadmap" once the header has stuck) in its More, a publish
 // someone else's changes stopped reviewed in a dialog, opened from its notice at the
-// foot, and "About this roadmap" a disclosure, closed until pressed. No back link: the
+// foot, and "Product details" a disclosure, closed until pressed. No back link: the
 // header's name leads to the list.
 
 /** Goes back to the roadmap list by the header's name, its home link (STY-059 D3). */
@@ -85,29 +85,31 @@ export async function closeConflictReview(user: User, review: HTMLElement) {
   })
 }
 
-/** "About this roadmap", once it has been read. */
-function findAbout(): Promise<HTMLElement> {
-  return screen.findByRole("region", { name: /About this roadmap|Ynglŷn/ })
+/** "Product details", once the roadmap has been read. */
+function findProductDetails(): Promise<HTMLElement> {
+  return screen.findByRole("region", {
+    name: /^(Product details|Manylion y cynnyrch)$/,
+  })
 }
 
 /**
- * Opens "About this roadmap" by its disclosure, unless it is open already, and returns
+ * Opens "Product details" by its disclosure, unless it is open already, and returns
  * it, its fields shown.
  */
-export async function openAbout(user: User): Promise<HTMLElement> {
-  const about = await findAbout()
-  const disclosure = within(about).getByRole("button", {
-    name: /^(About this roadmap|Ynglŷn â'r map trywydd hwn)$/,
+export async function openProductDetails(user: User): Promise<HTMLElement> {
+  const region = await findProductDetails()
+  const disclosure = within(region).getByRole("button", {
+    name: /^(Product details|Manylion y cynnyrch)$/,
   })
   if (disclosure.getAttribute("aria-expanded") !== "true") {
     await user.click(disclosure)
   }
-  return about
+  return region
 }
 
 const FACTS = { name: /^(Roadmap details|Manylion y map trywydd)$/ }
 
-/** The roadmap's facts under its title, "Roadmap details" (STY-059 S2). */
+/** The roadmap's facts under its title, in the list "Roadmap details" (STY-065 S2). */
 export function roadmapFacts(): HTMLElement {
   return within(screen.getByRole("main")).getByRole("list", FACTS)
 }
@@ -117,10 +119,13 @@ export function findRoadmapFacts(): Promise<HTMLElement> {
   return within(screen.getByRole("main")).findByRole("list", FACTS)
 }
 
-/** What the opened About shows under `term`, or null when it has no such field. */
-export function aboutField(about: HTMLElement, term: string): Element | null {
+/** What the opened product details show under `term`, or null when it has no such field. */
+export function productDetailsField(
+  details: HTMLElement,
+  term: string,
+): Element | null {
   return (
-    within(about).queryByText(term, { selector: "dt" })?.nextElementSibling ??
+    within(details).queryByText(term, { selector: "dt" })?.nextElementSibling ??
     null
   )
 }

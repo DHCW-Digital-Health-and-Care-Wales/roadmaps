@@ -1,4 +1,9 @@
-import { ChevronDownIcon, EllipsisIcon, RefreshCwIcon } from "lucide-react"
+import {
+  ChevronDownIcon,
+  EllipsisIcon,
+  PencilIcon,
+  RefreshCwIcon,
+} from "lucide-react"
 import { useRef } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -20,6 +25,8 @@ export interface RoadmapMoreMenuProps {
   /** A read is in flight: Refresh is busy, and More spins. */
   fetching: boolean
   onRefresh: () => void
+  /** "Edit product details" was chosen, with More, where focus returns. */
+  onEdit: (from: HTMLElement | null) => void
   /** Publishing or unpublishing the roadmap, when More offers it. */
   publishedState: PublishedState | null
   /**
@@ -27,20 +34,25 @@ export interface RoadmapMoreMenuProps {
    * (STY-060 D2, D5).
    */
   compact?: boolean
+  className?: string | undefined
 }
 
 /**
- * "More", in a roadmap's header: Refresh, which reads the page's roadmap data again,
- * and "Unpublish roadmap", or "Publish roadmap" once the header has stuck (STY-052 D6,
+ * "More", in a roadmap's header: "Edit product details", which opens the roadmap
+ * dialog (STY-065 S5), Refresh, which reads the page's roadmap data again, and
+ * "Unpublish roadmap", or "Publish roadmap" once the header has stuck (STY-052 D6,
  * STY-059 D7), shown as "…" where `compact`. An item's action waits for the menu to
  * close, so focus is back on More, where what it opens returns it. After the session
- * has expired each asks to reconnect first, then carries on (STY-057).
+ * has expired Refresh and the publishing items ask to reconnect first, then carry on
+ * (STY-057).
  */
 export function RoadmapMoreMenu({
   fetching,
   onRefresh,
+  onEdit,
   publishedState,
   compact = false,
+  className,
 }: RoadmapMoreMenuProps) {
   const { t } = useTranslation()
   const trigger = useRef<HTMLButtonElement>(null)
@@ -48,7 +60,12 @@ export function RoadmapMoreMenu({
   const askPublishedState = useSessionAction(() => {
     publishedState?.ask()
   })
-  const actions = { refresh, publishedState: askPublishedState }
+  const actions = {
+    // It writes nothing, so it never asks to reconnect.
+    edit: onEdit,
+    refresh,
+    publishedState: askPublishedState,
+  }
   const { choose, onOpenChangeComplete } = useMenuChoice(
     (chosen: keyof typeof actions) => {
       actions[chosen](trigger.current)
@@ -61,7 +78,10 @@ export function RoadmapMoreMenu({
         ref={trigger}
         aria-busy={fetching}
         render={
-          <Button variant="secondary" className={cn(compact && "gap-1")} />
+          <Button
+            variant="secondary"
+            className={cn(compact && "gap-1", className)}
+          />
         }
       >
         {fetching ? (
@@ -79,6 +99,14 @@ export function RoadmapMoreMenu({
         <ChevronDownIcon data-icon="inline-end" aria-hidden="true" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-auto">
+        <DropdownMenuItem
+          onClick={() => {
+            choose("edit")
+          }}
+        >
+          <PencilIcon aria-hidden="true" />
+          {t("roadmaps.editDetails")}
+        </DropdownMenuItem>
         <DropdownMenuItem
           disabled={fetching}
           onClick={() => {

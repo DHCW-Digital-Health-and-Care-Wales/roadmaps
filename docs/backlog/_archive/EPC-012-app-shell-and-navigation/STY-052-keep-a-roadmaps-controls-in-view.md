@@ -173,6 +173,10 @@ announced and shown in view, and focus goes to it as it does today
   roadmap" moves beside the Not published tag, and into More once stuck at every width
   (changes D15 and D19); once stuck on a phone More is an icon too (extends D18); the
   phone's foot bar is one row.
+- **D25** (owner, 2026-11-18, review of STY-065's prototype; delivered by
+  [STY-065](../EPC-015-a-quieter-roadmap-page-top/STY-065-a-roadmaps-page-top-reads-at-a-glance.md)): at the top,
+  "Publish roadmap" sits in a Not published notice, in place of the tag D24 put it
+  beside; More holds it once stuck, as D24 has it. More gains "Edit product details".
 
 ## Out of scope
 

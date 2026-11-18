@@ -17,17 +17,27 @@ const demographics = createTestRoadmap(
   },
 )
 
+/** The facts are items of a list the caller owns, as in the product details' line. */
 function renderFacts(roadmap = demographics, language: Language = "en") {
-  renderWithI18n(<RoadmapFacts roadmap={roadmap} />, { language })
+  renderWithI18n(
+    <ul
+      aria-label={
+        language === "cy" ? "Manylion y map trywydd" : "Roadmap details"
+      }
+    >
+      <RoadmapFacts roadmap={roadmap} />
+    </ul>,
+    { language },
+  )
 }
 
 const facts = () =>
   within(screen.getByRole("list", { name: /Roadmap details|Manylion/ }))
-    .getAllByRole("listitem")
+    .queryAllByRole("listitem")
     .map((fact) => fact.textContent)
 
 describe("RoadmapFacts", () => {
-  it('lists the status, product lead and last update as "Roadmap details" (STY-059 S2)', () => {
+  it('lists the status, product lead and last update as items of the "Roadmap details" list (STY-065 S2)', () => {
     renderFacts()
 
     expect(facts()).toEqual([
@@ -37,16 +47,15 @@ describe("RoadmapFacts", () => {
     ])
   })
 
-  it('reads the status as "Status:" then its tag, not a bare tag like the phase banner\'s (S2, D5)', () => {
+  it('reads the status as "Status:" then its label as plain text, not a tag (S2)', () => {
     renderFacts()
 
     const status = screen.getAllByRole("listitem").at(0)
     if (!status) throw new Error("No facts")
     expect(status).toHaveTextContent(/^Status: Live$/)
-    expect(within(status).getByText("Live")).toHaveAttribute(
-      "data-slot",
-      "badge",
-    )
+    const label = within(status).getByText("Live")
+    expect(label).not.toHaveAttribute("data-slot", "badge")
+    expect(label).toHaveClass("font-bold")
   })
 
   it("shows each fact only when the roadmap has it (S2)", () => {
@@ -55,20 +64,10 @@ describe("RoadmapFacts", () => {
     expect(facts()).toEqual(["Product lead: Sam Evans & Rhian Morgan"])
   })
 
-  it("shows no list for a roadmap with no facts", () => {
+  it("shows no item for a roadmap with no facts (S2)", () => {
     renderFacts(createTestRoadmap("bare", "Bare roadmap"))
 
-    expect(screen.queryByRole("list")).not.toBeInTheDocument()
-  })
-
-  it("puts one fact to a row on a phone, and from 640px one line, wrapping between facts (S2)", () => {
-    renderFacts()
-
-    expect(screen.getByRole("list")).toHaveClass(
-      "flex-col",
-      "sm:flex-row",
-      "sm:flex-wrap",
-    )
+    expect(facts()).toEqual([])
   })
 
   it("is in Welsh (ADR-008)", () => {

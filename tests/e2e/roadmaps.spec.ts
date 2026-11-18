@@ -8,7 +8,11 @@ import {
 } from "./fixtures/fake-sheets"
 import { boxOf } from "./fixtures/layout"
 import { useLanguage } from "./fixtures/look"
-import { aboutField, goToList, openAbout } from "./fixtures/roadmap-page"
+import {
+  productDetailsField,
+  goToList,
+  openProductDetails,
+} from "./fixtures/roadmap-page"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 /**
@@ -377,9 +381,11 @@ test("families and categories come from their lists, flagging a roadmap out of s
     main.getByText("Doesn't match its family or category"),
   ).toBeVisible()
   // The lists' values, which the row's cells differ from (S4).
-  const about = await openAbout(page)
-  await expect(aboutField(about, "Family")).toContainText("Single Record")
-  await expect(aboutField(about, "Category")).toHaveText(
+  const details = await openProductDetails(page)
+  await expect(productDetailsField(details, "Family")).toContainText(
+    "Single Record",
+  )
+  await expect(productDetailsField(details, "Category")).toHaveText(
     "GP & Community Services",
   )
 })

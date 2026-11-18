@@ -59,10 +59,10 @@ for (const theme of THEMES) {
     test("a text control uses the link token", async ({ page }) => {
       await page.goto("./#/roadmaps/producta")
       await connect(page)
-      // About's disclosure, a text button (STY-059 S4).
+      // The product details' disclosure, a text button (STY-065 S3).
       const disclosure = page
         .getByRole("main")
-        .getByRole("button", { name: "About this roadmap", exact: true })
+        .getByRole("button", { name: "Product details", exact: true })
       await expect(disclosure).toBeVisible()
 
       await expect(disclosure).toHaveCSS(

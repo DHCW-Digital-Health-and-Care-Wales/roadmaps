@@ -1,0 +1,57 @@
+- main:
+  - heading "Product C roadmap" [level=1]
+  - button "Add an item"
+  - button "More"
+  - region "Product details":
+    - list "Roadmap details":
+      - listitem: "Status: Alpha"
+      - listitem: "Product lead: Sam Evans"
+      - listitem: Updated 1 October 2026
+      - listitem:
+        - heading "Product details" [level=2]:
+          - button "Product details"
+  - paragraph:
+    - strong: Not published
+    - text: The public site doesn't show this roadmap.
+  - button "Publish roadmap"
+  - navigation "Horizons and sections":
+    - list:
+      - listitem:
+        - link "Recently delivered, no items":
+          - /url: /#/roadmaps/productc
+      - listitem:
+        - link "Now, 1 item":
+          - /url: /#/roadmaps/productc
+      - listitem:
+        - link "Next, no items":
+          - /url: /#/roadmaps/productc
+      - listitem:
+        - link "Later, no items":
+          - /url: /#/roadmaps/productc
+      - listitem:
+        - link "Delivered this year, no items":
+          - /url: /#/roadmaps/productc
+      - listitem:
+        - link "Not doing, no items":
+          - /url: /#/roadmaps/productc
+  - status
+  - heading "Recently delivered" [level=2]
+  - paragraph: No items
+  - heading "Now" [level=2]
+  - list "Now":
+    - listitem:
+      - heading "Unpublished work" [level=3]
+      - term: Phase
+      - definition: Alpha
+      - term: Description
+      - definition: This roadmap is disabled on the Roadmaps tab, so this tab is never read.
+      - button "Move Unpublished work"
+      - button "Edit Unpublished work"
+  - heading "Next" [level=2]
+  - paragraph: No items
+  - heading "Later" [level=2]
+  - paragraph: No items
+  - heading "Delivered this year" [level=2]
+  - paragraph: No items
+  - heading "Not doing" [level=2]
+  - paragraph: No items

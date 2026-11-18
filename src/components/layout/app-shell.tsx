@@ -223,7 +223,12 @@ export function AppShell({
               start={<NavigationMenuButton variant="header" />}
               actions={headerActions}
             />
-            <PhaseBanner />
+            <PhaseBanner
+              // Its button goes with it: focus carries on from the page.
+              onDismiss={() => {
+                main.current?.focus({ preventScroll: true })
+              }}
+            />
             <main
               ref={main}
               id={MAIN_ID}

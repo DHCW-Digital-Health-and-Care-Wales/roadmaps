@@ -1,15 +1,15 @@
 - main:
   - heading "Product A roadmap" [level=1]
-  - list "Roadmap details":
-    - listitem: "Status: Beta"
-    - listitem: "Product lead: Alex Jones"
-    - listitem: Updated 1 October 2026
-  - region "About this roadmap":
-    - heading "About this roadmap" [level=2]:
-      - button "About this roadmap"
-    - button "Edit About this roadmap"
   - button "Add an item"
   - button "More"
+  - region "Product details":
+    - list "Roadmap details":
+      - listitem: "Status: Beta"
+      - listitem: "Product lead: Alex Jones"
+      - listitem: Updated 1 October 2026
+      - listitem:
+        - heading "Product details" [level=2]:
+          - button "Product details"
   - navigation "Horizons and sections":
     - list:
       - listitem:

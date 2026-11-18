@@ -3,6 +3,7 @@ import type { Locator, Page } from "@playwright/test"
 import {
   addItem,
   changeItem,
+  editRoadmapButton,
   openAddItemDialog,
   openAddRoadmapDialog,
   openEditItemDialog,
@@ -11,6 +12,10 @@ import {
 import { EXAMPLE_SPREADSHEET_WITH_LISTS } from "./fixtures/fake-sheets"
 import { tabTo } from "./fixtures/keyboard"
 import { THEMES, tokenColour, useTheme } from "./fixtures/look"
+import {
+  openLongRoadmap,
+  productDetailsDisclosure,
+} from "./fixtures/roadmap-page"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 // DHCW's yellow focus indicator (ADR-010). Its contrast in both themes is held by
@@ -293,6 +298,38 @@ for (const theme of THEMES) {
       await expectEveryStopShowsAnIndicator(page)
     })
 
+    test("every control on a roadmap not published, its product details open, shows DHCW's focus indicator, the banner's dismiss button and Publish roadmap among them (STY-065)", async ({
+      page,
+      sheets,
+    }) => {
+      await openLongRoadmap(page, sheets, { tab: "ProductC" })
+      const main = page.getByRole("main")
+      const colours = await focusColours(page)
+
+      // The banner's dismiss button, a button, takes the fill; the disclosure, a text
+      // control, takes the link's.
+      const dismiss = page.getByRole("button", { name: "Dismiss message" })
+      // Connecting leaves focus on the content, the banner before it.
+      await tabTo(page, dismiss, "Shift+Tab", 40)
+      await expectIndicator(dismiss, colours, "fill")
+      const disclosure = productDetailsDisclosure(page)
+      await tabTo(page, disclosure, "Tab", 60)
+      await expectIndicator(disclosure, colours, "link")
+      await page.keyboard.press("Enter")
+      await expect(disclosure).toHaveAttribute("aria-expanded", "true")
+      const edit = editRoadmapButton(page)
+      await tabTo(page, edit)
+      await expectIndicator(edit, colours, "fill")
+      const publish = main.getByRole("button", { name: "Publish roadmap" })
+      await tabTo(page, publish)
+      await expectIndicator(publish, colours, "fill")
+
+      await page.evaluate(() => {
+        window.scrollTo(0, 0)
+      })
+      await expectEveryStopShowsAnIndicator(page)
+    })
+
     test("every control in the item dialog, its fields shut and then open, shows DHCW's focus indicator (STY-044)", async ({
       page,
     }) => {
@@ -343,7 +380,7 @@ for (const theme of THEMES) {
       await expectDialogTour(page, dialog)
     })
 
-    test("every control in the roadmap dialog, editing About, shows DHCW's focus indicator (STY-043)", async ({
+    test("every control in the roadmap dialog, editing product details, shows DHCW's focus indicator (STY-043)", async ({
       page,
       sheets,
     }) => {
@@ -444,6 +481,9 @@ for (const theme of THEMES) {
       // Menu items take the fill, as a DHCW link or button does (STY-015 D5).
       await expectIndicator(welsh, colours, "fill")
       await page.keyboard.press("Escape")
+      // Focus is back on the button once the menu has closed: Tab from inside the
+      // closing menu would go round the whole page to reach the next control.
+      await expect(language).toBeFocused()
 
       const account = banner.getByRole("button", { name: "Account" })
       await tabTo(page, account)
@@ -461,6 +501,7 @@ for (const theme of THEMES) {
       await expect(disconnect).toBeFocused()
       await expectIndicator(disconnect, colours, "fill")
       await page.keyboard.press("Escape")
+      await expect(account).toBeFocused()
 
       const refresh = main.getByRole("button", { name: "Refresh" })
       await tabTo(page, refresh)
@@ -484,9 +525,9 @@ for (const theme of THEMES) {
       )
 
       await page.keyboard.press("Enter")
-      // About's disclosure, a text control, takes the link's (STY-059 S4).
+      // The product details' disclosure, a text control, takes the link's (STY-065 S3).
       const disclosure = main.getByRole("button", {
-        name: "About this roadmap",
+        name: "Product details",
         exact: true,
       })
       await tabTo(page, disclosure)

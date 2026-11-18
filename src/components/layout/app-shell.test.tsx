@@ -1,5 +1,6 @@
-import { screen, within } from "@testing-library/react"
-import { afterEach, describe, expect, it } from "vitest"
+import { act, screen, waitFor, within } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
+import { afterEach, describe, expect, it, onTestFinished, vi } from "vitest"
 
 import type { Language } from "@/i18n"
 import { connected } from "@/test/connected-state"
@@ -24,6 +25,7 @@ const copy = {
     version: "Version 1.2.3+abc1234",
     menu: "Menu",
     account: "Account",
+    dismiss: "Dismiss message",
   },
   cy: {
     logo: "Iechyd a Gofal Digidol Cymru",
@@ -39,6 +41,7 @@ const copy = {
     version: "Fersiwn 1.2.3+abc1234",
     menu: "Dewislen",
     account: "Cyfrif",
+    dismiss: "Cau'r neges",
   },
 } as const satisfies Record<Language, unknown>
 
@@ -133,6 +136,51 @@ describe.each(["en", "cy"] as const)("the shell in %s", (language) => {
         beta.compareDocumentPosition(screen.getByRole("main")) &
           Node.DOCUMENT_POSITION_FOLLOWING,
       ).toBeTruthy()
+    })
+    it("is dismissed by its button, which moves focus to the page's content (STY-065 S8)", async () => {
+      const user = userEvent.setup()
+      await renderWithProviders({ language, appInfo })
+
+      await user.click(screen.getByRole("button", { name: c.dismiss }))
+
+      expect(screen.queryByText(c.phaseText)).not.toBeInTheDocument()
+      expect(
+        screen.queryByRole("button", { name: c.dismiss }),
+      ).not.toBeInTheDocument()
+      await waitFor(() => {
+        expect(screen.getByRole("main")).toHaveFocus()
+      })
+    })
+
+    it("stays away after an in-app navigation, while the app stays loaded (STY-065 S8)", async () => {
+      const user = userEvent.setup()
+      const { router } = await renderWithProviders({ language, appInfo })
+      await user.click(screen.getByRole("button", { name: c.dismiss }))
+
+      await act(async () => {
+        await router.navigate({ to: "/families" })
+      })
+
+      expect(router.state.location.pathname).toBe("/families")
+      expect(screen.queryByText(c.phaseText)).not.toBeInTheDocument()
+    })
+
+    it("shows again once the app is loaded again, as nothing is stored (STY-065 S8, D11)", async () => {
+      const user = userEvent.setup()
+      const setItem = vi.spyOn(Storage.prototype, "setItem")
+      onTestFinished(() => {
+        setItem.mockRestore()
+      })
+      const first = await renderWithProviders({ language, appInfo })
+      await user.click(screen.getByRole("button", { name: c.dismiss }))
+      expect(setItem).not.toHaveBeenCalled()
+      expect(localStorage).toHaveLength(0)
+      expect(sessionStorage).toHaveLength(0)
+      first.unmount()
+
+      await renderWithProviders({ language, appInfo })
+
+      expect(screen.getByText(c.phaseText)).toBeInTheDocument()
     })
   })
 

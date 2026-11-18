@@ -135,6 +135,27 @@ decision it reopens. No record holds open questions on this yet.
 | 16  | Close all and Open all (added at the owner's request; the placement was left to the agent): one button, "Close all" while any family is open and "Open all" once all are closed, at the end of its own row above the first family. It shows only while the families are listed whole, so not while narrowed or in the rail, and it closes the current roadmap's family too. | (a) as drawn; (b) in the top row beside the search, which leaves the search too narrow at 208px; (c) two buttons, both always shown; (d) closing all but the current roadmap's family |
 | 17  | The rail shows no scrollbar (at the owner's request) and still scrolls by wheel, touch and focus. The open navigation and the drawer keep theirs.                                                                                                                                                                                                                           | (a) as drawn; (b) no scrollbar in the open navigation either                                                                                                                          |
 
+## Outcome
+
+On 2026-11-18 the owner chose the chevrons as drawn (decision 2 (a)), accepted the
+count's change to STY-055 D5 (decision 9), and asked for the prototype to be delivered
+as drawn. The agent took option (a) of every other decision, as the prototype draws it;
+decision 1's (a) made
+[EPC-014 A navigation that scales](../backlog/EPC-014-a-navigation-that-scales/README.md),
+with the count's narrowing as a story of its own:
+
+| Decisions             | Record                                                                                                            |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| 6, 11, 12, 14, 15, 17 | [STY-061](../backlog/EPC-014-a-navigation-that-scales/STY-061-find-a-roadmap-by-searching-the-navigation.md)      |
+| 2, 3, 4, 5, 7, 16     | [STY-062](../backlog/EPC-014-a-navigation-that-scales/STY-062-close-the-families-they-dont-need.md)               |
+| 8, 9, 10, 11, 12      | [STY-063](../backlog/EPC-014-a-navigation-that-scales/STY-063-show-only-the-roadmaps-with-unpublished-changes.md) |
+| 4 (the width), 13     | [STY-064](../backlog/EPC-014-a-navigation-that-scales/STY-064-drag-the-navigation-to-the-width-they-want.md)      |
+
+_Not yet drawn_ is written into the stories' scenarios: Welsh (each story's last
+scenario), the navigation before the roadmaps are read (STY-061 S11), the drawer as a
+dialog (STY-061 S10, unchanged from STY-054 S5), the pinned bars following the width
+(STY-064 S1, S7). A shortcut to the search stays out of scope.
+
 ## Not yet drawn
 
 - Welsh: the search's placeholder and the count's button at 208px in Cymraeg, and Welsh

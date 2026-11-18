@@ -101,6 +101,13 @@ Cymraeg
   [STY-059](../../EPC-013-tidy-page-tops/STY-059-a-roadmaps-page-opens-on-one-header-block.md)): "Back to
   roadmaps" and the list's link to the families page go, since the navigation holds
   both; changes the departure that kept them.
+- **D13** (owner, 2026-11-18, navigation UX analysis; delivered by
+  [EPC-014](../../EPC-014-a-navigation-that-scales/README.md)): the navigation gains a
+  search in its top row beside the fold button, which moves inside the landmark and
+  stays in view as the list scrolls; the drawer's top row holds the search and Close
+  menu, so "Menu" names it without showing (STY-061); families close (STY-062); the open
+  navigation's width is dragged from 208px to 400px, remembered as D5's fold is
+  (STY-064). Changes D5 (a fixed width) and the drawer's visible title.
 
 ## Out of scope
 

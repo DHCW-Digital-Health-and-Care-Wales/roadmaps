@@ -8,7 +8,7 @@
 - **Binding ADRs**: ADR-005, ADR-008, ADR-010
 - **Suggested model**: Sonnet — one control in one shared dialog, behaviour already
   set by EPC-011
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/169
 
 ## Summary
 

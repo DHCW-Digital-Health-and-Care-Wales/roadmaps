@@ -1,7 +1,7 @@
 import type { Locator, Page } from "@playwright/test"
 
 import { EXAMPLE_SPREADSHEET, type FakeTab, withTabRows } from "./fake-sheets"
-import { type Language } from "./look"
+import type { Language } from "./look"
 import { openRoadmapIn } from "./roadmap-page"
 
 // A roadmap page whose items have long fields, for the cut after three lines (STY-066).

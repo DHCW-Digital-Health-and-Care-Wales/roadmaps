@@ -242,6 +242,15 @@ test("keeps focus on Show less when a resize lets the field fit (S4, D7)", async
   await expect(less).toBeFocused()
 
   await page.setViewportSize({ width: 1280, height: 900 })
+  // The field now fits: a frame to measure it, a frame for the page to draw again.
+  await page.evaluate(
+    () =>
+      new Promise((resolve) => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(resolve)
+        })
+      }),
+  )
   expect(await linesOf(fieldOf(card, "Description"))).toEqual({
     shown: 3,
     whole: 3,

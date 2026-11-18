@@ -136,6 +136,11 @@ and S8 hold as component tests once the measure is given to them.
 - **D8** (agent, 2026-11-18): the control's words change as it opens and it reads as
   expanded too, as the item form's opening fields do, over a fixed name: its words are
   on the page, and say what a press will do.
+- **D9** (agent, 2026-11-18; correctness review): an open field keeps its "Show less"
+  while it is open, though a resize or an edit has made it fit in three lines, over
+  dropping the button, which would throw focus to the page when it is on the button
+  (S4). S5 holds for a field that has not been opened; one the Product Lead opened
+  shows whole with "Show less" until they press it (D7).
 
 ## Starting point
 
@@ -172,6 +177,9 @@ nothing of the pending state. Details are a nested list of up to three levels
   hidden text, "Show more of the description of First item"; two items with the same
   title have controls of the same name (agent; the title is the item's only name).
 
+- **S5**: a field opened and then made to fit (a resize, a pending edit) keeps its
+  "Show less" until pressed (D9).
+
 ### Contract for dependents
 
 - **STY-067's opened row** shows a card's fields through `RoadmapItemCard`'s own cut, or
@@ -193,17 +201,17 @@ nothing of the pending state. Details are a nested list of up to three levels
 
 ### Scenario evidence
 
-| Scenario | Held by                                                                                                                                                                                                                                                       |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1       | `components/roadmap-item-card.test.tsx` (`cuts a description past three lines…`); `tests/e2e/roadmap-items-cut.spec.ts` (`a long description shows three lines…`, at 1280px and 375px)                                                                        |
-| S2       | `roadmap-item-card.test.tsx` (`cuts each long field apart from the others`); `roadmap-items-cut.spec.ts` (`a long expected outcome is cut on its own`)                                                                                                        |
-| S3       | `roadmap-items-cut.spec.ts` (`a list of details is cut at its third line, between details…`, `a detail the cut falls within ends in an ellipsis…`, `one detail that wraps past three lines…`); `roadmap-item-card.test.tsx` (`a card's long list of details`) |
-| S4       | `roadmap-item-card.test.tsx` (`shows the rest in place and cuts it again, focus staying on the control`); `roadmap-items-cut.spec.ts` (`a long description shows three lines, then opens in place and shuts`, `a list opens whole and cuts again`)            |
-| S5       | `roadmap-item-card.test.tsx` (`shows a short field whole…`); `roadmap-items-cut.spec.ts` (`a short field shows whole, with its line breaks`)                                                                                                                  |
-| S6       | `roadmap-item-card.test.tsx` (`names two items' controls apart`); `roadmap-items-cut.spec.ts` (`names each control for its field and item`)                                                                                                                   |
-| S7       | `roadmap-items-cut.spec.ts` (`the cut follows the card's width: the window and the navigation's fold`, `a field stays open until it is shut, however the page is resized`)                                                                                    |
-| S8       | `roadmap-items-cut.spec.ts` (`a pending change to a description is cut as it is, with its Changed tag`)                                                                                                                                                       |
-| S9       | `roadmap-item-card.test.tsx` (`says Show more and Show less in Welsh…`); `roadmap-items-cut.spec.ts` (`in Welsh at 375px`, `has no axe violation in the … theme at …px`); the button is a text link: `textLinkClasses`, `focus-visible:focus-link`            |
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                  |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `components/roadmap-item-card.test.tsx` (`cuts a description past three lines…`); `tests/e2e/roadmap-items-cut.spec.ts` (`a long description shows three lines…`, at 1280px and 375px)                                                                                                                                                                   |
+| S2       | `roadmap-item-card.test.tsx` (`cuts each long field apart from the others`); `roadmap-items-cut.spec.ts` (`a long expected outcome is cut on its own`)                                                                                                                                                                                                   |
+| S3       | `roadmap-items-cut.spec.ts` (`a list of details is cut at its third line, between details…`, `a detail the cut falls within ends in an ellipsis…`, `one detail that wraps past three lines…`); `roadmap-item-card.test.tsx` (`a card's long list of details`)                                                                                            |
+| S4       | `roadmap-item-card.test.tsx` (`shows the rest in place and cuts it again, focus staying on the control`); `roadmap-items-cut.spec.ts` (`a long description shows three lines, then opens in place and shuts`, `a list opens whole and cuts again`, `keeps focus on Show less when a resize lets the field fit`, red against the control dropped at once) |
+| S5       | `roadmap-item-card.test.tsx` (`shows a short field whole…`); `roadmap-items-cut.spec.ts` (`a short field shows whole, with its line breaks`)                                                                                                                                                                                                             |
+| S6       | `roadmap-item-card.test.tsx` (`names two items' controls apart`); `roadmap-items-cut.spec.ts` (`names each control for its field and item`)                                                                                                                                                                                                              |
+| S7       | `roadmap-items-cut.spec.ts` (`the cut follows the card's width: the window and the navigation's fold`, `a field stays open until it is shut, however the page is resized`)                                                                                                                                                                               |
+| S8       | `roadmap-items-cut.spec.ts` (`a pending change to a description is cut as it is, with its Changed tag`)                                                                                                                                                                                                                                                  |
+| S9       | `roadmap-item-card.test.tsx` (`says Show more and Show less in Welsh…`); `roadmap-items-cut.spec.ts` (`in Welsh at 375px`, `has no axe violation in the … theme at …px`); the button is a text link: `textLinkClasses`, `focus-visible:focus-link`                                                                                                       |
 
 Each unit test was shown red by breaking the finished code (the control's hidden
 subject removed, the control always drawn, no clamp on a text, the detail clamp ignoring

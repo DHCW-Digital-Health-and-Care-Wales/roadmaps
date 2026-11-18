@@ -141,9 +141,9 @@ export interface CutFieldProps {
  * A text field's value, cut after three lines when it runs past them, with an ellipsis,
  * and a button under it that shows the rest in place and cuts it again (STY-066). A
  * field of three lines or fewer shows as it is, with no button. Opened it stays so until
- * it is shut or the card goes (D7), with its button, though the field then fits, so
- * focus is not lost to a resize. The text keeps its line breaks, which the field's
- * own class passes on.
+ * it is shut or the card goes (D7). Its button stays while it is open, even if a resize
+ * lets the field fit, so focus on "Show less" is not lost (D9). The text keeps its line
+ * breaks, which the field's own class passes on.
  */
 export function CutField({ subject, children }: CutFieldProps) {
   const id = useId()
@@ -181,7 +181,8 @@ export interface CutDetailsProps {
  * every nested detail counting, with the same button as `CutField`. A browser's own
  * line clamp would end the third line in an ellipsis even where a detail ends there, so
  * the list is held to three lines by its height, and only the detail the cut falls
- * within is clamped, to the lines it has left (`detailCuts`).
+ * within is clamped, to the lines it has left (`detailCuts`). As in `CutField`, the
+ * button stays while the list is open (D9).
  */
 export function CutDetails({ details, subject }: CutDetailsProps) {
   const id = useId()

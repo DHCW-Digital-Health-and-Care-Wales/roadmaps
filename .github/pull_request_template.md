@@ -44,7 +44,7 @@ files; gh --attach uploads them
 | ------------------------------- | ----------------------------- |
 | ![Before: <screen>](before.png) | ![After: <screen>](after.png) |
 
-**S2 · phone · <screen> · <state> · dark · cy · new**
+**S2 · phone · <screen> · <state> · dark · en · new**
 
 ![<screen>, <state>](new.png)
 

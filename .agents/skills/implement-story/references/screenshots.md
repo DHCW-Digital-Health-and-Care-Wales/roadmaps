@@ -36,9 +36,9 @@ navigating: the app is light until the user chooses dark (ADR-005), so
 
 Cover desktop (1280 px) and phone (375 px), light and dark mode where relevant,
 in English, and in Welsh (`cy`) only when the record or the owner asks for it.
-Save captures under
-`.artifacts/screenshots/<record-id>/` at the root of your checkout (git-ignored)
-with descriptive names, e.g. `s1-roadmaps-desktop-dark-en-after.png`.
+Save captures under `.artifacts/screenshots/<record-id>/` at the root of your
+checkout (git-ignored) with descriptive names, e.g.
+`s1-roadmaps-desktop-dark-en-after.png`.
 
 ## Before and after
 

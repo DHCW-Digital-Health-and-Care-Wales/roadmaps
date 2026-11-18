@@ -1,6 +1,7 @@
 import { useLocation } from "@tanstack/react-router"
 import {
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type ReactNode,
@@ -18,7 +19,9 @@ import { NavigationDrawer, NavigationMenuButton } from "./navigation-drawer"
 import { NavigationDrawerContext } from "./navigation-drawer-context"
 import {
   readNavigationFolded,
+  readNavigationWidth,
   storeNavigationFolded,
+  storeNavigationWidth,
 } from "./navigation-preference"
 import { NavigationSidebar } from "./navigation-sidebar"
 import { PageContainer } from "./page-container"
@@ -117,14 +120,36 @@ function useNavigationFolded() {
 }
 
 /**
+ * The open navigation's width on a desktop, in px: dragged or keyed (`setWidth`), kept on
+ * this device when the Product Lead lets go (`keepWidth`) (STY-064 D3). While `open` it
+ * sets `--navigation-width` on `frame`, before the next paint, as `usePinnedInset` sets
+ * its bars' heights, since an inline style may not carry a custom property (ADR-010).
+ */
+function useNavigationWidth(
+  frame: RefObject<HTMLElement | null>,
+  open: boolean,
+) {
+  const [width, setWidth] = useState(readNavigationWidth)
+  useLayoutEffect(() => {
+    const element = frame.current
+    if (!element || !open) return
+    element.style.setProperty("--navigation-width", `${String(width)}px`)
+    return () => {
+      element.style.removeProperty("--navigation-width")
+    }
+  }, [frame, open, width])
+  return [width, setWidth, storeNavigationWidth] as const
+}
+
+/**
  * Page frame, DHCW's dashboard shell (ADR-010, STY-054): skip link, the navigation, then
  * DHCW's header as its top bar, phase banner, the main landmark (which keeps focus) and
  * footer. Every page sits in DHCW's wide container with its main-wrapper spacing, so a
  * page renders its content only.
  *
  * On a desktop the navigation stands at the left, full height as the page scrolls past
- * (D7), open or folded to a rail; `--navigation-width` says how wide, so the bars pinned
- * to the screen start where it ends. Narrower, it is a drawer, opened by the menu button
+ * (D7), open or folded to a rail; `--navigation-width` says how wide (an open one's is
+ * dragged, STY-064), so the bars pinned to the screen start where it ends. Narrower, it is a drawer, opened by the menu button
  * at the start of the top bar and of a roadmap's sticky strip (D8, D9).
  */
 export function AppShell({
@@ -140,6 +165,11 @@ export function AppShell({
   useRescueFocus(main)
   const desktop = useMediaQuery(DESKTOP_WIDTH)
   const [folded, setFolded] = useNavigationFolded()
+  const frame = useRef<HTMLDivElement>(null)
+  const [width, setWidth, keepWidth] = useNavigationWidth(
+    frame,
+    desktop && !folded,
+  )
   const [drawer] = useState(createSheetHandle)
   const form: NavigationForm = folded ? "rail" : "full"
   const openNavigation = () => {
@@ -151,7 +181,9 @@ export function AppShell({
       <UnpublishedRoadmapsContext value={unpublishedRoadmaps}>
         <div
           className="flex min-h-svh"
-          // Sets `--navigation-width` (globals.css) while the navigation stands beside the page.
+          ref={frame}
+          // Sets `--navigation-width` (globals.css) while the navigation stands beside the
+          // page; an open one's is the dragged width (`useNavigationWidth`).
           data-navigation={desktop ? (folded ? "folded" : "open") : undefined}
         >
           <a
@@ -170,6 +202,9 @@ export function AppShell({
             <NavigationSidebar
               folded={folded}
               onFoldedChange={setFolded}
+              width={width}
+              onResize={setWidth}
+              onResizeEnd={keepWidth}
               search={navigationSearch(form, openNavigation)}
             >
               {navigation(form, openNavigation)}

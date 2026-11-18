@@ -1,8 +1,8 @@
 # EPC-014: A navigation that scales — every roadmap, always open, at one width
 
-- **Status**: Active — the owner asked on 2026-11-18 to deliver the navigation UX
+- **Status**: Done — the owner asked on 2026-11-18 to deliver the navigation UX
   prototype as drawn, choosing its chevrons and the count's new behaviour
-- **Progress**: 3 of 4 terminal; next selectable: STY-064; blocked on: nothing
+- **Progress**: 4 of 4 terminal (STY-061, STY-062, STY-063, STY-064)
 - **Binding ADRs**: ADR-010, ADR-008, ADR-005, ADR-002
 
 ## Summary
@@ -65,7 +65,7 @@ with the list, and in the 64px rail a scrollbar takes room from the marks.
 
 ## Design
 
-The [navigation UX analysis](../../analysis/navigation-sidebar-ux-analysis.md)'s
+The [navigation UX analysis](../../../analysis/navigation-sidebar-ux-analysis.md)'s
 prototype, design A, as drawn; its decisions are in the stories.
 
 1. The top row holds a search, then the fold button; folded, a spyglass, then the button
@@ -92,7 +92,7 @@ prototype, design A, as drawn; its decisions are in the stories.
 
 ### The prototype is the reference
 
-[`navigation-sidebar-ux-prototypes.html`](../../analysis/navigation-sidebar-ux-analysis/navigation-sidebar-ux-prototypes.html)
+[`navigation-sidebar-ux-prototypes.html`](../../../analysis/navigation-sidebar-ux-analysis/navigation-sidebar-ux-prototypes.html)
 works every behaviour these stories build, at 375px, 1023px, 1024px and 1280px, light
 and dark. Its _Things to try_ list is a checklist for each story. Where a story and the
 prototype differ, the story wins. The prototype's sample world (14 roadmaps in five
@@ -148,12 +148,12 @@ links and buttons, `focus-ring` on the search).
 
 ## Stories
 
-| ID      | Story                                                                                                                                                                      | Area                               | Depends on                                                                                                                     | State |
-| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ----- |
-| STY-061 | [A Product Lead finds a roadmap by searching the navigation](../_archive/EPC-014-a-navigation-that-scales/STY-061-find-a-roadmap-by-searching-the-navigation.md)           | Features/UI + i18n (en + cy) + E2E | —                                                                                                                              | ✅    |
-| STY-062 | [A Product Lead closes the families they don't need](../_archive/EPC-014-a-navigation-that-scales/STY-062-close-the-families-they-dont-need.md)                            | Features/UI + i18n (en + cy) + E2E | STY-061                                                                                                                        | ✅    |
-| STY-063 | [A Product Lead shows only the roadmaps with unpublished changes](../_archive/EPC-014-a-navigation-that-scales/STY-063-show-only-the-roadmaps-with-unpublished-changes.md) | Features/UI + i18n (en + cy) + E2E | STY-061, STY-062                                                                                                               | ✅    |
-| STY-064 | [A Product Lead drags the navigation to the width they want](STY-064-drag-the-navigation-to-the-width-they-want.md)                                                        | Features/UI + i18n (en + cy) + E2E | STY-061, [STY-060](../_archive/EPC-013-tidy-page-tops/STY-060-one-row-of-controls-at-the-top-and-once-scrolled.md) (preferred) |       |
+| ID      | Story                                                                                                                         | Area                               | Depends on                                                                                                            | State |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ----- |
+| STY-061 | [A Product Lead finds a roadmap by searching the navigation](STY-061-find-a-roadmap-by-searching-the-navigation.md)           | Features/UI + i18n (en + cy) + E2E | —                                                                                                                     | ✅    |
+| STY-062 | [A Product Lead closes the families they don't need](STY-062-close-the-families-they-dont-need.md)                            | Features/UI + i18n (en + cy) + E2E | STY-061                                                                                                               | ✅    |
+| STY-063 | [A Product Lead shows only the roadmaps with unpublished changes](STY-063-show-only-the-roadmaps-with-unpublished-changes.md) | Features/UI + i18n (en + cy) + E2E | STY-061, STY-062                                                                                                      | ✅    |
+| STY-064 | [A Product Lead drags the navigation to the width they want](STY-064-drag-the-navigation-to-the-width-they-want.md)           | Features/UI + i18n (en + cy) + E2E | STY-061, [STY-060](../EPC-013-tidy-page-tops/STY-060-one-row-of-controls-at-the-top-and-once-scrolled.md) (preferred) | ✅    |
 
 ## Sequencing
 
@@ -183,9 +183,9 @@ None.
 
 ## Related
 
-- [Navigation UX analysis](../../analysis/navigation-sidebar-ux-analysis.md), with its
+- [Navigation UX analysis](../../../analysis/navigation-sidebar-ux-analysis.md), with its
   _Outcome_
-- [EPC-012 App shell and navigation](../_archive/EPC-012-app-shell-and-navigation/README.md),
+- [EPC-012 App shell and navigation](../EPC-012-app-shell-and-navigation/README.md),
   whose STY-054 and STY-055 these stories change
-- [ADR-010](../../adr/ADR-010-align-the-ui-with-the-dhcw-design-system.md)
-- [Product Lead persona](../personas/product-lead.md)
+- [ADR-010](../../../adr/ADR-010-align-the-ui-with-the-dhcw-design-system.md)
+- [Product Lead persona](../../personas/product-lead.md)

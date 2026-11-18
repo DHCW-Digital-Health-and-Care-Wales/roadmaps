@@ -102,7 +102,7 @@ Cymraeg
   roadmaps" and the list's link to the families page go, since the navigation holds
   both; changes the departure that kept them.
 - **D13** (owner, 2026-11-18, navigation UX analysis; delivered by
-  [EPC-014](../../EPC-014-a-navigation-that-scales/README.md)): the navigation gains a
+  [EPC-014](../EPC-014-a-navigation-that-scales/README.md)): the navigation gains a
   search in its top row with the fold button to its right, a spyglass when folded
   (STY-061); families close one at a time or all together (STY-062); on a desktop its
   width is dragged (STY-064). Changes D5's fixed width.

@@ -412,11 +412,9 @@
   body {
     @apply bg-background text-body text-foreground;
   }
-  /* The shell's navigation beside the page on a desktop (STY-054 D5): open, or folded to
-     a rail of icons. */
-  [data-navigation="open"] {
-    --navigation-width: --spacing(64);
-  }
+  /* The shell's navigation beside the page on a desktop (STY-054 D5): open, as wide as the
+     Product Lead dragged it (`AppShell` sets `--navigation-width` inline, STY-064), or
+     folded to a rail of icons. */
   [data-navigation="folded"] {
     --navigation-width: --spacing(16);
   }

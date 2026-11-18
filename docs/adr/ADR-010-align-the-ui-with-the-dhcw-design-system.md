@@ -111,9 +111,12 @@ families page and EPC-005's editor.
   the families, categories and organisations, marking the current page (D3).
 - **Desktop:** from `lg` it stands at the left, full height as the page scrolls past
   (D7), and folds to a rail of icons and initials, the choice kept in browser storage as
-  a convenience (D5). Its width, `--navigation-width`, is set in `globals.css`; the bars
-  pinned to the screen start after it. Card grids take their columns from the room they
-  have (container queries), so a 1280px desktop has two open and three folded.
+  a convenience (D5). Its width, `--navigation-width`, is 64px folded (`globals.css`) and,
+  open, 208px to 400px as the Product Lead drags its right edge (256px to start,
+  remembered on this device, STY-064), which `AppShell` sets on the shell's frame since an
+  inline style may not carry a custom property; the bars pinned to the screen start after
+  it. Card grids take their columns from the room they have (container queries), so a
+  1280px desktop has two open at 256px and three folded.
 - **Narrower:** a drawer over the page (a Base UI dialog), opened by a menu button at the
   start of the top bar and of a roadmap's sticky strip (D8, D9).
 - **Top bar:** DHCW's navy header is the top bar (D9), in place of DHCW's white top bar

@@ -69,11 +69,7 @@ function SessionMenuItem({ onDisconnect }: SessionMenuItemProps) {
 
   if (connected) {
     return (
-      <DropdownMenuItem
-        onClick={() => {
-          onDisconnect()
-        }}
-      >
+      <DropdownMenuItem onClick={onDisconnect}>
         {t("auth.disconnect")}
       </DropdownMenuItem>
     )

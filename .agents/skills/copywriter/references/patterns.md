@@ -312,8 +312,7 @@ roadmaps.hold.reconnect             Reconnect to refresh your roadmaps.
 ## Status label
 
 **Shape:** a short noun phrase or past participle, no full stop. Shown to no one: a
-live region tells a screen reader the connection's state, as the header has no chip
-for it.
+live region tells a screen reader when the connection's state changes.
 
 ```
 auth.status.ready      Not connected

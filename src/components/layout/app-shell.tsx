@@ -13,6 +13,7 @@ import { DESKTOP_WIDTH, useMediaQuery } from "@/lib/use-media-query"
 
 import { AppFooter } from "./app-footer"
 import { AppHeader } from "./app-header"
+import { MAIN_ID } from "./main-landmark"
 import { NavigationDrawer, NavigationMenuButton } from "./navigation-drawer"
 import { NavigationDrawerContext } from "./navigation-drawer-context"
 import {
@@ -22,6 +23,8 @@ import {
 import { NavigationSidebar } from "./navigation-sidebar"
 import { PageContainer } from "./page-container"
 import { PhaseBanner } from "./phase-banner"
+import { UnpublishedAnnouncement } from "./unpublished-announcement"
+import { UnpublishedRoadmapsContext } from "./unpublished-roadmaps-context"
 
 /**
  * How the navigation is drawn: in `full`, beside the page or in its drawer, or folded to
@@ -34,10 +37,15 @@ export interface AppShellProps {
   headerActions: ReactNode
   /** The navigation's destinations in `form`, composed by the root route. */
   navigation: (form: NavigationForm) => ReactNode
+  /**
+   * How many roadmaps have unpublished changes: the menu buttons carry a dot and say so
+   * while it is above 0 (STY-055 D4), and a screen reader is told when it changes (S4).
+   * The navigation draws its own count. A prop, not a context from the route, so a shell
+   * without a count is a type error.
+   */
+  unpublishedRoadmaps: number
   children: ReactNode
 }
-
-const MAIN_ID = "main-content"
 
 /**
  * After an in-app navigation, moves focus to the new page's content, as a page load
@@ -111,6 +119,7 @@ function useNavigationFolded() {
 export function AppShell({
   headerActions,
   navigation,
+  unpublishedRoadmaps,
   children,
 }: AppShellProps) {
   const { t } = useTranslation()
@@ -123,52 +132,55 @@ export function AppShell({
 
   return (
     <NavigationDrawerContext value={desktop ? null : drawer}>
-      <div
-        className="flex min-h-svh"
-        // Sets `--navigation-width` (globals.css) while the navigation stands beside the page.
-        data-navigation={desktop ? (folded ? "folded" : "open") : undefined}
-      >
-        <a
-          href={`#${MAIN_ID}`}
-          className="sr-only z-50 rounded-lg text-body-xs font-bold focus:not-sr-only focus:fixed focus:top-2 focus:left-4 focus:focus-fill focus:px-3 focus:py-2 md:focus:left-10"
-          onClick={(event) => {
-            // Hash history owns the URL fragment, so move focus without navigating.
-            event.preventDefault()
-            main.current?.focus()
-          }}
+      <UnpublishedRoadmapsContext value={unpublishedRoadmaps}>
+        <div
+          className="flex min-h-svh"
+          // Sets `--navigation-width` (globals.css) while the navigation stands beside the page.
+          data-navigation={desktop ? (folded ? "folded" : "open") : undefined}
         >
-          {t("layout.skipToContent")}
-        </a>
-        {desktop ? (
-          <NavigationSidebar folded={folded} onFoldedChange={setFolded}>
-            {navigation(folded ? "rail" : "full")}
-          </NavigationSidebar>
-        ) : (
-          <NavigationDrawer handle={drawer} page={main}>
-            {navigation("full")}
-          </NavigationDrawer>
-        )}
-        {/* Its foot clears the pinned foot's height, inside the row the navigation
-            sticks in, so the navigation stays full height to the page's end (D7). */}
-        <div className="flex min-w-0 flex-1 flex-col pb-(--pinned-bottom)">
-          <AppHeader
-            start={<NavigationMenuButton variant="header" />}
-            actions={headerActions}
-          />
-          <PhaseBanner />
-          <main
-            ref={main}
-            id={MAIN_ID}
-            tabIndex={-1}
-            className="flex flex-1 flex-col outline-none"
+          <a
+            href={`#${MAIN_ID}`}
+            className="sr-only z-50 rounded-lg text-body-xs font-bold focus:not-sr-only focus:fixed focus:top-2 focus:left-4 focus:focus-fill focus:px-3 focus:py-2 md:focus:left-10"
+            onClick={(event) => {
+              // Hash history owns the URL fragment, so move focus without navigating.
+              event.preventDefault()
+              main.current?.focus()
+            }}
           >
-            <PageContainer className="flex flex-1 flex-col pt-6 pb-8 sm:pt-8">
-              {children}
-            </PageContainer>
-          </main>
-          <AppFooter />
+            {t("layout.skipToContent")}
+          </a>
+          <UnpublishedAnnouncement count={unpublishedRoadmaps} />
+          {desktop ? (
+            <NavigationSidebar folded={folded} onFoldedChange={setFolded}>
+              {navigation(folded ? "rail" : "full")}
+            </NavigationSidebar>
+          ) : (
+            <NavigationDrawer handle={drawer} page={main}>
+              {navigation("full")}
+            </NavigationDrawer>
+          )}
+          {/* Its foot clears the pinned foot's height, inside the row the navigation
+            sticks in, so the navigation stays full height to the page's end (D7). */}
+          <div className="flex min-w-0 flex-1 flex-col pb-(--pinned-bottom)">
+            <AppHeader
+              start={<NavigationMenuButton variant="header" />}
+              actions={headerActions}
+            />
+            <PhaseBanner />
+            <main
+              ref={main}
+              id={MAIN_ID}
+              tabIndex={-1}
+              className="flex flex-1 flex-col outline-none"
+            >
+              <PageContainer className="flex flex-1 flex-col pt-6 pb-8 sm:pt-8">
+                {children}
+              </PageContainer>
+            </main>
+            <AppFooter />
+          </div>
         </div>
-      </div>
+      </UnpublishedRoadmapsContext>
     </NavigationDrawerContext>
   )
 }

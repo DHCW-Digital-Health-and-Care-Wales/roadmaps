@@ -16,12 +16,16 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import { isPlainClick } from "@/lib/plain-click"
+import { cn } from "@/lib/utils"
 
 import {
   NavigationDrawerContext,
   type NavigationDrawerHandle,
 } from "./navigation-drawer-context"
 import { NavigationLandmark } from "./navigation-landmark"
+import { UnpublishedDot } from "./unpublished-dot"
+import { UnpublishedRoadmapsContext } from "./unpublished-roadmaps-context"
 
 export interface NavigationMenuButtonProps {
   /** `header` on the navy top bar, `secondary` on the page. */
@@ -32,11 +36,14 @@ export interface NavigationMenuButtonProps {
  * The button that opens the navigation's drawer, where the shell has one (narrower than
  * a desktop); elsewhere nothing. The shell's top bar starts with one, and a roadmap's
  * sticky strip with another once stuck (STY-054 D8, D9): closing the drawer returns
- * focus to the one that opened it.
+ * focus to the one that opened it. While any roadmap has unpublished changes it carries a
+ * dot and its name says how many (STY-055 D4), since the drawer hides the navigation's
+ * own count.
  */
 export function NavigationMenuButton({ variant }: NavigationMenuButtonProps) {
   const { t } = useTranslation()
   const drawer = useContext(NavigationDrawerContext)
+  const unpublished = useContext(UnpublishedRoadmapsContext)
   if (!drawer) return null
   return (
     <SheetTrigger
@@ -45,11 +52,27 @@ export function NavigationMenuButton({ variant }: NavigationMenuButtonProps) {
         <Button
           variant={variant}
           size={variant === "header" ? "icon-sm" : "icon"}
+          className="relative"
         />
       }
     >
       <MenuIcon aria-hidden="true" />
-      <span className="sr-only">{t("layout.navigation.menu")}</span>
+      {unpublished > 0 && (
+        <UnpublishedDot
+          // The ring cuts the dot from the button, whose colour it stands on.
+          className={cn(
+            "absolute top-1 right-1 size-2.5 ring-2",
+            variant === "header"
+              ? "bg-focus ring-header group-focus-visible/button:bg-focus-foreground"
+              : "bg-status-info-border ring-background",
+          )}
+        />
+      )}
+      <span className="sr-only">
+        {unpublished > 0
+          ? t("layout.navigation.menuUnpublished", { roadmaps: unpublished })
+          : t("layout.navigation.menu")}
+      </span>
     </SheetTrigger>
   )
 }
@@ -66,14 +89,8 @@ export interface NavigationDrawerProps {
  * follows; one with a modifier key opens it elsewhere, leaving this page as it is.
  */
 function isPlainLinkClick(event: MouseEvent): boolean {
-  const plain =
-    event.button === 0 &&
-    !event.metaKey &&
-    !event.ctrlKey &&
-    !event.shiftKey &&
-    !event.altKey
   return (
-    plain &&
+    isPlainClick(event) &&
     event.target instanceof Element &&
     !!event.target.closest("a[href]")
   )

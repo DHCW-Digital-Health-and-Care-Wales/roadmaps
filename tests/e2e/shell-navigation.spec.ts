@@ -323,7 +323,8 @@ test("keeps a roadmap's pending changes as the Product Lead switches roadmaps an
       .getByRole("heading", { level: 1, name: "Product B roadmap" }),
   ).toBeVisible()
   await expect(pending).toBeHidden()
-  await navLink(page, "Product A roadmap").click()
+  // Its dot says it has the change (STY-055).
+  await navLink(page, "Product A roadmap, unpublished changes").click()
 
   await expect(pending).toBeVisible()
   await expect(

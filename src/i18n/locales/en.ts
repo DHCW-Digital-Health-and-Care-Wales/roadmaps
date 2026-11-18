@@ -78,6 +78,16 @@ export const en = {
       fold: "Fold the navigation",
       /** The same button while folded. */
       unfold: "Open the navigation",
+      /**
+       * How many roadmaps have unpublished changes (STY-055): the navigation's count, the
+       * list of them in the Disconnect question, and the menu button's name, which adds
+       * it to "Menu" while there are any (D4).
+       */
+      unpublished_zero: "No roadmaps have unpublished changes",
+      unpublished_one: "{{count, number}} roadmap has unpublished changes",
+      unpublished_other: "{{count, number}} roadmaps have unpublished changes",
+      menuUnpublished:
+        '$t(layout.navigation.menu), $t(layout.navigation.unpublished, {"count": {{roadmaps}} })',
     },
     footer: {
       copyright: "© Digital Health and Care Wales",
@@ -171,6 +181,8 @@ export const en = {
     navigation: {
       /** The link to the roadmap list, the home page (D4). */
       all: "All roadmaps",
+      /** A roadmap with unpublished changes: its title, then what its dot shows (STY-055 D1). */
+      changed: "{{name}}, unpublished changes",
     },
     /** A roadmap whose own family or category differs from the lists' (STY-027 S4, S8). */
     lists: {

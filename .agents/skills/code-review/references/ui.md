@@ -36,7 +36,13 @@ working order, and grade and report findings as it sets.
   computed-style or visual evidence. Hold UI to WCAG 2.2 AA: accessible names
   that contain their visible text (the language switcher's "Language English"
   keeps a space node), native structure and landmarks, live regions (`role=status`
-  and `role=alert` usage, page notices, the session warning's announcements), `aria-busy`, focus order and visible focus,
+  and `role=alert` usage, page notices, the session warning's announcements;
+  trace each through every change of state, since a region speaks only a change
+  to its text while mounted: it is mounted when the news comes, not in a closed
+  drawer's or dialog's portal; every state leaves it text to speak, the last
+  change gone included; its text changes only when the news does, not as nodes
+  inside it swap, the language changes or it remounts; a repeated message is
+  spoken again), `aria-busy`, focus order and visible focus,
   focus management in `AppShell` (focus moves to `<main>` after in-app
   navigation, and when the focused control inside `<main>` is removed; the skip
   link focuses `<main>` because hash history owns the fragment), menu and dialog

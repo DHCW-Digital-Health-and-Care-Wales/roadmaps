@@ -11,7 +11,7 @@
 - **Binding ADRs**: ADR-012, ADR-010, ADR-008
 - **Suggested model**: Sonnet — reads the existing pending-changes store; one
   indicator and its list
-- **Delivered**: _(PR URL, added once the PR exists)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/145
 
 ## Summary
 

@@ -1,7 +1,7 @@
 # EPC-016: A roadmap's items at a glance — every item a full card, however long
 
 - **Status**: Done — two stories from the compact view UX analysis, with the owner's
-  answers of 2026-11-18
+  answers of 2026-11-18, and a follow-up, STY-069
 - **Progress**: 3 of 3 terminal (STY-066, STY-067, STY-069)
 - **Binding ADRs**: ADR-002, ADR-005, ADR-008, ADR-010, ADR-011
 

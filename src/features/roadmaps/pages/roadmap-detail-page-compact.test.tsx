@@ -318,7 +318,48 @@ describe("an opened row (S6, S9)", () => {
     ).toBeNull()
   })
 
-  it("opens and closes by a press on its title, or on its description from a tablet's width (STY-069)", async () => {
+  it("ends in Undo changes for an item with pending edits, which drops them, focus going to its Edit", async () => {
+    const { user } = await renderPage()
+    await chooseCompact(user)
+    await editTitle(user, "Last now", "Last now two")
+    await user.click(chevron("Last now two"))
+
+    await user.click(
+      main().getByRole("button", { name: "Undo changes Last now two" }),
+    )
+
+    const edit = main().getByRole("button", { name: "Edit Last now" })
+    await waitFor(() => {
+      expect(edit).toHaveFocus()
+    })
+    expect(within(itemOf("Last now")).queryByText("Changed")).toBeNull()
+  })
+
+  it("ends in Remove for an item added and not yet published, tagged New, which drops it", async () => {
+    const { user } = await renderPage()
+    await chooseCompact(user)
+    await addItem(user, "Brand new", "Next")
+
+    const row = within(itemOf("Brand new"))
+    expect(row.getByText("New")).toBeVisible()
+    await user.click(
+      row.getByRole("button", { name: "Show the rest of Brand new" }),
+    )
+    await user.click(main().getByRole("button", { name: "Remove Brand new" }))
+
+    expect(
+      main().queryByRole("heading", { level: 3, name: "Brand new" }),
+    ).toBeNull()
+    await waitFor(() => {
+      expect(
+        main().getAllByRole("button", { name: "Add an item" })[0],
+      ).toHaveFocus()
+    })
+  })
+})
+
+describe("a row opened by a press on its text (STY-069 S1, S2, S4)", () => {
+  it("opens and closes by a press on its title, or on its description from a tablet's width", async () => {
     const { user } = await renderPage()
     await chooseCompact(user)
 
@@ -369,45 +410,6 @@ describe("an opened row (S6, S9)", () => {
     fireEvent.click(heading)
 
     expect(chevron("First now")).toHaveAttribute("aria-expanded", "false")
-  })
-
-  it("ends in Undo changes for an item with pending edits, which drops them, focus going to its Edit", async () => {
-    const { user } = await renderPage()
-    await chooseCompact(user)
-    await editTitle(user, "Last now", "Last now two")
-    await user.click(chevron("Last now two"))
-
-    await user.click(
-      main().getByRole("button", { name: "Undo changes Last now two" }),
-    )
-
-    const edit = main().getByRole("button", { name: "Edit Last now" })
-    await waitFor(() => {
-      expect(edit).toHaveFocus()
-    })
-    expect(within(itemOf("Last now")).queryByText("Changed")).toBeNull()
-  })
-
-  it("ends in Remove for an item added and not yet published, tagged New, which drops it", async () => {
-    const { user } = await renderPage()
-    await chooseCompact(user)
-    await addItem(user, "Brand new", "Next")
-
-    const row = within(itemOf("Brand new"))
-    expect(row.getByText("New")).toBeVisible()
-    await user.click(
-      row.getByRole("button", { name: "Show the rest of Brand new" }),
-    )
-    await user.click(main().getByRole("button", { name: "Remove Brand new" }))
-
-    expect(
-      main().queryByRole("heading", { level: 3, name: "Brand new" }),
-    ).toBeNull()
-    await waitFor(() => {
-      expect(
-        main().getAllByRole("button", { name: "Add an item" })[0],
-      ).toHaveFocus()
-    })
   })
 })
 

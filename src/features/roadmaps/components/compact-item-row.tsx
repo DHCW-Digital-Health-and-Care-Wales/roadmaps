@@ -30,16 +30,21 @@ export interface CompactItemRowProps {
 
 /**
  * A roadmap item as a row of the compact view (STY-067): a chevron that opens the row
- * in place, as does a press on its text (STY-069), its title as a heading, then Move and Edit, always at the row's end. From
+ * in place, its title as a heading, then Move and Edit, always at the row's end. From
  * a tablet's width one line that never wraps (S4): the title, then the start of its
  * description in the room the title leaves, each cut with an ellipsis, then an
  * unplaced item's flag, cut within a quarter of the line, and the pending tag; each
  * keeps its whole text for assistive technology. Narrower, the title on the lines it
  * needs, with no description, and the flag and the tag under it (S5, D10).
  *
+ * A press on the title, or on the description and the room beside it, opens and closes
+ * the row too (STY-069); only the chevron is a control, for a keyboard or a screen
+ * reader.
+ *
  * Opened, its title and its flag show whole, then every field the item has, as a card
- * labels and cuts them (S6, S7), and `drop`. Each row opens and closes by itself; it starts closed,
- * as the view does when it is drawn again (D11). A list item, for a list of rows.
+ * labels and cuts them (S6, S7), and `drop`. Each row opens and closes by itself; it
+ * starts closed, as the view does when it is drawn again (D11). A list item, for a
+ * list of rows.
  */
 export function CompactItemRow({
   item,
@@ -57,11 +62,14 @@ export function CompactItemRow({
   const description = item.description && localise(item.description, language)
   const horizon = item.writtenHorizon
   const wholeClasses = "wrap-break-word whitespace-pre-line"
-  // The text opens the row too (STY-069), for a pointer; the chevron stays the one
-  // control for a keyboard or a screen reader, so the text takes no role or focus.
+  function toggle() {
+    setOpen(!open)
+  }
+  // The text opens the row for a pointer; the chevron stays the one control for a
+  // keyboard or a screen reader, so the text takes no role or focus (STY-069 D2).
   function toggleByText() {
     // A drag across the text to copy it ends in a click, which asks for nothing.
-    if (!window.getSelection()?.toString()) setOpen(!open)
+    if (!window.getSelection()?.toString()) toggle()
   }
 
   return (
@@ -82,9 +90,7 @@ export function CompactItemRow({
           size="icon-sm"
           aria-expanded={open}
           aria-controls={open ? id : undefined}
-          onClick={() => {
-            setOpen(!open)
-          }}
+          onClick={toggle}
         >
           <ChevronRightIcon
             aria-hidden="true"

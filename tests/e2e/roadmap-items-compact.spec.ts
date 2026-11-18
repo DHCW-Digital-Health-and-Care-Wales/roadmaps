@@ -300,6 +300,10 @@ for (const [width, height] of [
       name: /^(Show|Hide) the rest of/,
     })
 
+    await expect(row.getByRole("heading").locator("..")).toHaveCSS(
+      "cursor",
+      "pointer",
+    )
     await row.getByRole("heading").click()
     await expect(chevron).toHaveAttribute("aria-expanded", "true")
     await row.getByRole("heading").click()

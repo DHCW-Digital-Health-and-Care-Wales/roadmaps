@@ -20,7 +20,7 @@ the row's controls (Move, Edit) or its other fields opening it.
 
 ## Acceptance criteria
 
-### S1: A press on the text opens the row
+### S1: A press on the text opens the row (owner, D1)
 
 **Given** a row of the compact view, closed
 **When** the Product Lead presses its title, or, from 768px, the start of its
@@ -29,7 +29,7 @@ description or the room between the text and the row's tag
 **And** on a phone the same holds for the title and what sits under it, its flag and
 its pending tag
 
-### S2: A second press closes it
+### S2: A second press closes it (owner, D1)
 
 **Given** a row opened by its text or by its chevron
 **When** the Product Lead presses its title again
@@ -60,8 +60,9 @@ AA violation
 
 ## Decisions
 
-- **D1** (owner, 2026-11-18): a second press on the text closes the row, as the
-  chevron does. Adds S2. Changes STY-067 S6, which names the chevron as the control.
+- **D1** (owner, 2026-11-18): a press on the text opens the row, and a second press
+  closes it, as the chevron does. Adds S1, S2. Changes STY-067 S6, which names the
+  chevron as the control.
 - **D2** (agent, 2026-11-18): the text takes no role and no focus, over a button or a
   link around the title, which would add a second stop and a second name to every row;
   the chevron already carries the state (STY-067 D14).
@@ -90,13 +91,13 @@ None.
 
 ### Scenario evidence
 
-| Scenario | Held by                                                                                                                                                                                                                                                              |
-| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1, S2   | `pages/roadmap-detail-page-compact.test.tsx` (`opens and closes by a press on its title, or on its description…`, `opens by a press on its title on a phone too`); `roadmap-items-compact.spec.ts` (`opens and closes a row by a press on its text at 1280px/375px`) |
-| S3       | `roadmap-items-compact.spec.ts` (the same test ends on Move, the row closed); the existing chevron, Move and Edit tests                                                                                                                                              |
-| S4       | `roadmap-detail-page-compact.test.tsx` (`stays closed when the press ends a selection of its text`)                                                                                                                                                                  |
-| S5       | `roadmap-items-compact.spec.ts` (`the keyboard`, `has no axe violation in the compact view…`), unchanged and green; the cursor: observed run, the row's text carries `cursor-pointer`                                                                                |
+| Scenario                     | Held by                                                                                                                                                                                                                                                              |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1, S2                       | `pages/roadmap-detail-page-compact.test.tsx` (`opens and closes by a press on its title, or on its description…`, `opens by a press on its title on a phone too`); `roadmap-items-compact.spec.ts` (`opens and closes a row by a press on its text at 1280px/375px`) |
+| S3                           | `roadmap-items-compact.spec.ts` (the same test ends on Move, the row closed); Edit sits in the same block as Move, outside the text; the existing                                                                                                                    |
+| chevron, Move and Edit tests |
+| S4                           | `roadmap-detail-page-compact.test.tsx` (`stays closed when the press ends a selection of its text`)                                                                                                                                                                  |
+| S5                           | `roadmap-items-compact.spec.ts` (the cursor on the text, `the keyboard`, `has no axe violation in the compact view…`), the last two unchanged and green                                                                                                              |
 
 Each test was written after the code and shown red by breaking it: the selection guard
-removed (S4), the handler made to do nothing (S1, S2: seven component tests and both
-Playwright tests failed), then restored.
+removed (S4), and the handler made to do nothing (S1, S2, both Playwright tests).

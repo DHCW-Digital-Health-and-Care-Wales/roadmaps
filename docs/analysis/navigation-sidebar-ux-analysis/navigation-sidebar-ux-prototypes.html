@@ -764,7 +764,7 @@
 
       /* A destination: a link, the count's button, or the count's text. */
       .nav li {
-        border-radius: var(--radius-lg, 8px);
+        border-radius: var(--radius-lg);
       }
       .nav li:has([aria-current="page"]),
       .nav li:has([aria-pressed="true"]) {
@@ -779,7 +779,7 @@
         min-height: 40px;
         padding: 8px;
         border: 0;
-        border-radius: var(--radius-lg, 8px);
+        border-radius: var(--radius-lg);
         background: transparent;
         color: inherit;
         font: inherit;
@@ -880,7 +880,7 @@
         width: 100%;
         min-height: 32px;
         border: 0;
-        border-radius: var(--radius-lg, 8px);
+        border-radius: var(--radius-lg);
         background: transparent;
         color: inherit;
         font-family: inherit;
@@ -904,7 +904,7 @@
         min-height: 32px;
         padding: 4px 8px;
         border: 0;
-        border-radius: var(--radius-lg, 8px);
+        border-radius: var(--radius-lg);
         background: transparent;
         color: inherit;
         font-family: inherit;
@@ -1166,8 +1166,10 @@
           <ol>
             <li>
               Drag the navigation's right edge to make it wider, then narrower.
-              It stops at 208px and at 400px. Double-click the edge to put it
-              back to 256px.
+              It stops at 208px and at 400px, where "Patient-reported outcome
+              measures collection" wraps. Double-click the edge to put it back
+              to 256px. On Tablet 1023 there is no edge: the navigation is a
+              drawer.
             </li>
             <li>
               Close "Single Record" with the arrow at the end of its name. It
@@ -1192,9 +1194,10 @@
               all".
             </li>
             <li>
-              Drag the width, fold or close a family, then reload the page: each
-              is as you left it, as the app remembers them on this device. Start
-              again forgets them.
+              Drag the width, fold, or close Workforce, then reload the page:
+              each is as you left it, as the built navigation will remember them
+              on this device. Reloading on Shared care plans opens Single
+              Record, its family. Start again forgets them.
             </li>
             <li>
               Close "Single Record", then search "shared". The closed family's
@@ -1216,13 +1219,15 @@
             </li>
             <li>
               Set Unpublished changes to "One roadmap": the count leads to that
-              roadmap, as it does today, and does not narrow the list.
+              roadmap, as it does today, and does not narrow the list. Set it to
+              "None": there is no count.
             </li>
             <li>
               Press the fold button. The search becomes a spyglass, and the rail
               scrolls without a scrollbar. Press the spyglass, and the
               navigation opens with the search ready to type in. Fold again and
-              press the count's circle.
+              press the count's circle. Point at the two "CR" marks: their names
+              tell Care record viewer from Carers' register.
             </li>
             <li>
               Choose Phone 375 and press Menu. The search and Close menu share
@@ -1393,10 +1398,14 @@
       }
 
       function initialState() {
+        const stored = readStored()
+        // Arriving on a roadmap's page, by a reload or an address, opens its
+        // family, as choosing it does.
+        stored.closedFamilies.delete(byId("careplans").family)
         return {
           page: "careplans",
           changed: new Set(CHANGES[changesMode]),
-          ...readStored(),
+          ...stored,
           query: "",
           onlyChanged: false,
           drawerOpen: false,
@@ -1612,7 +1621,8 @@
           clear() {
             state.query = ""
             draw(`${id}-search`)
-            say(ALL_TEXT)
+            // A blank search cleared under the count's narrowing says nothing.
+            if (!state.onlyChanged) say(ALL_TEXT)
           },
           count() {
             // From the rail, the circle always opens the navigation narrowed;
@@ -1779,7 +1789,7 @@
         }
 
         /** A link to a page, its mark and name; in a rail its mark alone. */
-        function link(page, rail, label, extra = {}) {
+        function link(page, label, extra = {}) {
           return h(
             "a",
             {
@@ -1803,7 +1813,6 @@
             {},
             link(
               page,
-              rail,
               [
                 icon(iconName),
                 rail ? sr(name) : h("span", { class: "name" }, name),
@@ -1828,7 +1837,6 @@
               {},
               link(
                 roadmap.id,
-                rail,
                 [
                   swatch,
                   h("span", { class: "initials" }, initials(roadmap.title)),
@@ -1848,7 +1856,7 @@
           return h(
             "li",
             {},
-            link(roadmap.id, rail, [
+            link(roadmap.id, [
               swatch,
               h(
                 "span",
@@ -1889,7 +1897,8 @@
                 type: "button",
                 class: "entry",
                 "data-fk": "count",
-                "aria-pressed": String(state.onlyChanged),
+                // In the rail the circle only opens the navigation narrowed.
+                "aria-pressed": rail ? undefined : String(state.onlyChanged),
                 "data-tip": rail ? text : undefined,
                 onclick: act.count,
               },
@@ -1898,8 +1907,7 @@
             )
           else if (kind === "link") {
             const [only] = state.changed
-            entry = link(only, rail, mark, rail ? { "data-tip": text } : {})
-            entry.removeAttribute("aria-current")
+            entry = link(only, mark, rail ? { "data-tip": text } : {})
             entry.dataset.fk = "count"
           } else
             entry = h(
@@ -1913,7 +1921,7 @@
         function familyBlock(family, rail, narrowed, query) {
           const listId = `${id}-family-${family.key}`
           const links = family.roadmaps.map((r) => roadmapLink(r, rail, query))
-          if (rail) return h("ul", {}, links)
+          if (rail) return h("ul", { "aria-label": family.name }, links)
           if (narrowed)
             return h(
               "div",
@@ -1958,7 +1966,7 @@
          * only while the families are listed whole, not narrowed or in a rail.
          */
         function allFamiliesButton() {
-          const open = allClosed(state)
+          const opensAll = allClosed(state)
           return h(
             "div",
             { class: "fam-all" },
@@ -1969,8 +1977,8 @@
                 "data-fk": "all-families",
                 onclick: act.allFamilies,
               },
-              icon(open ? "openAll" : "closeAll"),
-              open ? "Open all" : "Close all",
+              icon(opensAll ? "openAll" : "closeAll"),
+              opensAll ? "Open all" : "Close all",
               " ",
               sr("families"),
             ),
@@ -2274,9 +2282,9 @@
           ).map((f) => f.name)
           readout.textContent = [
             `Page open: ${pageName(state.page)}`,
-            `Navigation width: ${state.width}px (remembered on this device)`,
-            `Folded to a rail: ${state.folded ? "yes" : "no"} (remembered on this device)`,
-            `Closed families: ${closed.length ? closed.join(", ") : "none"} (remembered on this device)`,
+            `Navigation width: ${state.width}px (kept on this device)`,
+            `Folded to a rail: ${state.folded ? "yes" : "no"} (kept on this device)`,
+            `Closed families: ${closed.length ? closed.join(", ") : "none"} (kept on this device)`,
             `Search: ${state.query === "" ? "empty" : `"${state.query}"`}`,
             `Only roadmaps with changes: ${state.onlyChanged ? "on" : "off"}`,
             `Roadmaps listed: ${narrowed ? shown : ROADMAPS.length} of ${ROADMAPS.length}`,

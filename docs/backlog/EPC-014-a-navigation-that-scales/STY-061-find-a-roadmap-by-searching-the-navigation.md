@@ -135,7 +135,7 @@ themes
   row stays in place inside the landmark. Changes STY-054's drawer and fold button row.
 - **D6** (agent, 2026-11-18): no search before the roadmaps are read, over a search that
   can find nothing, as STY-054 S4 offers nothing that would fail.
-- **D7** (agent, 2026-11-18, code review): the drawer opens with focus on Close menu,
+- **D7** (agent, 2026-11-18, code review, analysis decision 18 (a)): the drawer opens with focus on Close menu,
   over the search, its first control, which would open a phone's keyboard on every
   visit.
 

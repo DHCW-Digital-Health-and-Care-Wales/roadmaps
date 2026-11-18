@@ -51,7 +51,7 @@ families"
 
 ### S4: Remembered on this device
 
-**Given** Single Record and Workforce closed
+**Given** Single Record and Workforce closed, on the All roadmaps page
 **When** the Product Lead reloads the page
 **Then** both are still closed
 **And** where browser storage can't be read or kept, every family is open and no error
@@ -61,7 +61,7 @@ shows
 
 **Given** Single Record closed
 **When** the Product Lead goes to Shared care plans by any route (its card on the list,
-the count, or an address)
+the count, or its address, a reload included)
 **Then** Single Record opens, so its current roadmap shows
 
 ### S6: A search finds roadmaps in closed families

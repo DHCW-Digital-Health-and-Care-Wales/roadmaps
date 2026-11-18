@@ -126,7 +126,8 @@ default and is never an error. Nothing is written to the data source.
 
 Through a polite live region that the shell always holds, outside the drawer, as
 `UnpublishedAnnouncement` is: how many roadmaps match once typing pauses (STY-061);
-"Showing all roadmaps" when a search is cleared or the count lets go; the count's
+"Showing all roadmaps" when a search is cleared or the count lets go, but not when a
+blank search is cleared while the count is pressed; the count's
 narrowing (STY-063); "All families closed" and "All families open" (STY-062). A
 control's own state (pressed, expanded) is on the control, not announced again.
 
@@ -147,12 +148,12 @@ links and buttons, `focus-ring` on the search).
 
 ## Stories
 
-| ID      | Story                                                                                                                         | Area                               | Depends on                   | State |
-| ------- | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ---------------------------- | ----- |
-| STY-061 | [A Product Lead finds a roadmap by searching the navigation](STY-061-find-a-roadmap-by-searching-the-navigation.md)           | Features/UI + i18n (en + cy) + E2E | —                            |       |
-| STY-062 | [A Product Lead closes the families they don't need](STY-062-close-the-families-they-dont-need.md)                            | Features/UI + i18n (en + cy) + E2E | STY-061                      |       |
-| STY-063 | [A Product Lead shows only the roadmaps with unpublished changes](STY-063-show-only-the-roadmaps-with-unpublished-changes.md) | Features/UI + i18n (en + cy) + E2E | STY-061, STY-062             |       |
-| STY-064 | [A Product Lead drags the navigation to the width they want](STY-064-drag-the-navigation-to-the-width-they-want.md)           | Features/UI + i18n (en + cy) + E2E | STY-061, STY-060 (preferred) |       |
+| ID      | Story                                                                                                                         | Area                               | Depends on                                                                                                            | State |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ----- |
+| STY-061 | [A Product Lead finds a roadmap by searching the navigation](STY-061-find-a-roadmap-by-searching-the-navigation.md)           | Features/UI + i18n (en + cy) + E2E | —                                                                                                                     |       |
+| STY-062 | [A Product Lead closes the families they don't need](STY-062-close-the-families-they-dont-need.md)                            | Features/UI + i18n (en + cy) + E2E | STY-061                                                                                                               |       |
+| STY-063 | [A Product Lead shows only the roadmaps with unpublished changes](STY-063-show-only-the-roadmaps-with-unpublished-changes.md) | Features/UI + i18n (en + cy) + E2E | STY-061, STY-062                                                                                                      |       |
+| STY-064 | [A Product Lead drags the navigation to the width they want](STY-064-drag-the-navigation-to-the-width-they-want.md)           | Features/UI + i18n (en + cy) + E2E | STY-061, [STY-060](../EPC-013-tidy-page-tops/STY-060-one-row-of-controls-at-the-top-and-once-scrolled.md) (preferred) |       |
 
 ## Sequencing
 

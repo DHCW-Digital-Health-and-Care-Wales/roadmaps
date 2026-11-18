@@ -106,7 +106,7 @@ Cymraeg
   search in its top row with the fold button to its right, a spyglass when folded
   (STY-061); families close one at a time or all together (STY-062); on a desktop its
   width is dragged (STY-064). Changes D5's fixed width.
-- **D14** (agent, 2026-11-18, navigation UX analysis decisions 13 to 15 (a)): the top
+- **D14** (agent, 2026-11-18, navigation UX analysis decisions 4 and 13 to 15 (a)): the top
   row moves inside the landmark and stays in view as the list scrolls; the drawer's top
   row holds the search and Close menu, so "Menu" names the drawer without showing
   (STY-061 D5); the width runs from 208px to 400px, remembered as D5's fold is (STY-064

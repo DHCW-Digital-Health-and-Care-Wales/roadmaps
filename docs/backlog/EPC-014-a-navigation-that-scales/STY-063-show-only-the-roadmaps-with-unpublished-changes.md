@@ -74,6 +74,8 @@ or not
 **When** the Product Lead presses the count's circle
 **Then** the navigation opens, remembered as open, with only those three showing and
 the count pressed
+**And** in the rail the circle carries no pressed state, since pressing it always opens
+the navigation narrowed
 
 ### S8: Welsh, keyboard and dark
 
@@ -105,6 +107,10 @@ the list failed to load
 - **D4** (agent, 2026-11-18, analysis decisions 11 (a) and 12 (a)): the narrowing lasts
   while moving between pages, not past a reload; the rail's circle opens the navigation
   narrowed.
+- **D5** (agent, 2026-11-18, code review, analysis decision 19 (a)): the rail's circle
+  opens the navigation narrowed whether or not the count was pressed; the drawer's count
+  leaves the desktop's fold alone; a blank search neither lets the count go nor
+  announces anything.
 
 ## Starting point
 

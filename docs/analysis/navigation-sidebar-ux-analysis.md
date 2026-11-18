@@ -8,7 +8,8 @@
   `NavigationDrawer`) on a desktop, folded to its rail, and as a phone's drawer. It comes
   from the owner's request of 2026-11-18, with no record yet. The owner asked for one
   design, so this analysis compares the design with today's navigation, not with other
-  designs, in one section for its three journey groups, which share one screen. Base `f46384c`. Only documents and one prototype page were added; no
+  designs. Its three journey groups share one screen, so they share one section. Base
+  `f46384c`. Only documents and one prototype page were added; no
   application code, and no correction to the skill's stylesheet or starter.
 - **Prototypes**: one self-contained page, a **working component**,
   [`navigation-sidebar-ux-prototypes.html`](navigation-sidebar-ux-analysis/navigation-sidebar-ux-prototypes.html).
@@ -75,16 +76,19 @@ interface; the pinned foot bar and the cards' columns, which follow
   one, it leads to that roadmap, or is text on its own page, as today (STY-055 D5, D6).
   With two or more, it is a button that narrows the list to them, pressed while it
   does. Pressing it clears the search, and pressing it again shows every roadmap
-  without bringing the search back. Typing in the search lets the count go. Fewer than
-  two left ends the narrowing.
+  without bringing the search back. Typing in the search lets the count go; a blank
+  search does not. Fewer than two left ends the narrowing. The rail's circle opens the
+  navigation narrowed, and the drawer's count leaves the desktop's fold alone.
 - **What is remembered on this device**, as the fold is today (STY-054 D5): the width
   and the closed families. The search and the narrowing last while the Product Lead
   moves between pages, and not past a reload.
 - **The width** runs from 208px to 400px, starting at today's 256px.
 - **Close all** closes every family, the current roadmap's too, and becomes **Open
   all** once all are closed. Focus stays on it as its words change.
-- **Choosing a roadmap opens its family**, so the current page is never hidden by a
-  choice made elsewhere.
+- **Choosing a roadmap opens its family**, and so does arriving on its page by an
+  address or a reload, so the current page is never hidden by a choice made elsewhere.
+- **The drawer opens on Close menu**, so a phone's keyboard stays shut until the
+  Product Lead chooses the search.
 - **What a screen reader is told**, in the shell's live region: how many roadmaps match
   once typing pauses; "Showing the 3 roadmaps with unpublished changes" and "Showing all
   roadmaps" as the count is pressed; "All families closed" and "All families open"; the
@@ -106,7 +110,7 @@ waiting means reading the dots down the whole list.
 | Today                                   | Every roadmap, every family open, at a fixed 256px; the fold button alone on the top row; the count leads to the next roadmap with changes, in turn.                                                                                                                                                                                                                                                                                                                         | Nothing to learn. Every roadmap is one press away, and the order never changes.                                                                                                                                                                                                                                                                                            | A long list to scan and scroll on every switch; long titles wrap at 256px; which roadmaps wait to publish is read from dots, one at a time.                                                                                                                                                                                                                                                                                                                                                                                                   |
 | A. Search, families and a width to drag | A search box tops the navigation, with the fold button to its right; folded, it is a spyglass that opens the navigation ready to type. Each family's name is a button with a chevron at its end, down while open and right while closed; above the first, "Close all" closes every family, and "Open all" opens them once all are closed. The right edge drags, and by keyboard is a window splitter. With two or more roadmaps changed, the count narrows the list to them. | A roadmap is a few letters away; families the Product Lead doesn't lead fold away and stay folded on this device. The count shows every roadmap waiting at once, and its dots and the pressed state say why the list is short. Long titles get room. The search row stays put as the list scrolls. On a phone the drawer keeps the count, the search and Close on one row. | Four new controls in a narrow column. A closed family can hide where the Product Lead is going, so choosing a roadmap opens its family. The count changes kind at two (a link with one, a button with more), which a screen reader user may notice. The rail ignores the search and the narrowing, and shows no scrollbar, so only its cut-off last mark says it scrolls. The drag is drawn by hand here; built, it would come from a library or Base UI's own, and feel different. Dragging on a touch screen at 1024px or wider is untried. |
 
-**Recommendation**: design A, as the owner asked for it, with decisions 1 to 17 below
+**Recommendation**: design A, as the owner asked for it, with decisions 1 to 19 below
 settled first. Decisions 6 (what the search compares) and 9 (the count with one roadmap)
 change the most if answered the other way.
 
@@ -134,6 +138,8 @@ decision it reopens. No record holds open questions on this yet.
 | 15  | The top row stays in place as the list scrolls, inside the navigation's landmark. Today the fold button scrolls away with the list, outside the landmark.                                                                                                                                                                                                                   | (a) as drawn; (b) as today                                                                                                                                                            |
 | 16  | Close all and Open all (added at the owner's request; the placement was left to the agent): one button, "Close all" while any family is open and "Open all" once all are closed, at the end of its own row above the first family. It shows only while the families are listed whole, so not while narrowed or in the rail, and it closes the current roadmap's family too. | (a) as drawn; (b) in the top row beside the search, which leaves the search too narrow at 208px; (c) two buttons, both always shown; (d) closing all but the current roadmap's family |
 | 17  | The rail shows no scrollbar (at the owner's request) and still scrolls by wheel, touch and focus. The open navigation and the drawer keep theirs.                                                                                                                                                                                                                           | (a) as drawn; (b) no scrollbar in the open navigation either                                                                                                                          |
+| 18  | The drawer opens with focus on Close menu (added in review), not on the search, its first control, which would open a phone's keyboard on every visit.                                                                                                                                                                                                                      | (a) as drawn; (b) on the search                                                                                                                                                       |
+| 19  | The count's edges (added in review): the rail's circle opens the navigation narrowed whether or not the count was pressed, and carries no pressed state; the drawer's count leaves the desktop's fold alone; a blank search neither lets the count go nor announces anything.                                                                                               | (a) as drawn; (b) the circle toggles as the count does                                                                                                                                |
 
 ## Outcome
 
@@ -145,12 +151,12 @@ prototype draws it. For decision 1 the agent made
 of four stories, departing from (a) by giving the count's narrowing a story of its own,
 since it reopens STY-055 D5 and depends on both the search and closed families:
 
-| Decisions             | Record                                                                                                            |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| 6, 11, 12, 14, 15, 17 | [STY-061](../backlog/EPC-014-a-navigation-that-scales/STY-061-find-a-roadmap-by-searching-the-navigation.md)      |
-| 2, 3, 4, 5, 7, 16     | [STY-062](../backlog/EPC-014-a-navigation-that-scales/STY-062-close-the-families-they-dont-need.md)               |
-| 8, 9, 10, 11, 12      | [STY-063](../backlog/EPC-014-a-navigation-that-scales/STY-063-show-only-the-roadmaps-with-unpublished-changes.md) |
-| 4 (the width), 13     | [STY-064](../backlog/EPC-014-a-navigation-that-scales/STY-064-drag-the-navigation-to-the-width-they-want.md)      |
+| Decisions                 | Record                                                                                                            |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| 6, 11, 12, 14, 15, 17, 18 | [STY-061](../backlog/EPC-014-a-navigation-that-scales/STY-061-find-a-roadmap-by-searching-the-navigation.md)      |
+| 2, 3, 4, 5, 7, 16         | [STY-062](../backlog/EPC-014-a-navigation-that-scales/STY-062-close-the-families-they-dont-need.md)               |
+| 8, 9, 10, 11, 12, 19      | [STY-063](../backlog/EPC-014-a-navigation-that-scales/STY-063-show-only-the-roadmaps-with-unpublished-changes.md) |
+| 4 (the width), 13         | [STY-064](../backlog/EPC-014-a-navigation-that-scales/STY-064-drag-the-navigation-to-the-width-they-want.md)      |
 
 _Not yet drawn_ is written into the stories' scenarios: Welsh (each story's last
 scenario), the navigation before the roadmaps are read (STY-061 S11), the drawer as a

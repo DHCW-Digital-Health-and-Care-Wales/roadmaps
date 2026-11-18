@@ -1,9 +1,7 @@
-import { Link } from "@tanstack/react-router"
 import { PlusIcon } from "lucide-react"
 import { useRef, useState, type Ref } from "react"
 import { useTranslation } from "react-i18next"
 
-import { textLinkClasses } from "@/components/layout/text-link-classes"
 import { Button } from "@/components/ui/button"
 import { useSessionAction } from "@/features/auth/session-action"
 
@@ -22,9 +20,9 @@ const TITLE_ID = "roadmaps-title"
 
 /**
  * The home page once there is (or was) a session: the roadmaps with loading, empty,
- * error and expired states, a link to the families, categories and organisations
- * (STY-029), and "Add a roadmap" once the list has loaded, which opens the roadmap
- * dialog and then the roadmap it added (STY-041). While expired, roadmaps loaded earlier
+ * error and expired states under a title, the count, then "Add a roadmap" (once the list
+ * has loaded; it opens the roadmap dialog and then the roadmap it added, STY-041) and
+ * Refresh on one row (STY-058). While expired, roadmaps loaded earlier
  * stay visible under a Reconnect prompt and nothing refetches until the user reconnects;
  * Refresh and "Add a roadmap" ask to reconnect first, then carry on (STY-057).
  */
@@ -72,22 +70,11 @@ export function RoadmapsPage() {
 
   return (
     <section aria-labelledby={TITLE_ID}>
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div className="flex flex-col gap-1.5 lg:shrink-0">
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-1.5">
           <h1 id={TITLE_ID} className="text-heading-xl">
             {t("roadmaps.title")}
           </h1>
-          <p className="text-pretty text-muted-foreground">
-            {t("roadmaps.description")}
-          </p>
-          <p>
-            <Link to="/families" className={textLinkClasses}>
-              {t("roadmaps.familiesLink")}
-            </Link>
-          </p>
-        </div>
-        {/* Wraps before the page would scroll sideways: the Welsh is the longer. */}
-        <div className="flex flex-wrap items-center gap-3 lg:justify-end">
           {roadmaps && roadmaps.length > 0 && (
             <p className="text-body-xs text-muted-foreground tabular-nums">
               {unpublished > 0
@@ -98,8 +85,11 @@ export function RoadmapsPage() {
                 : t("roadmaps.count", { count: roadmaps.length })}
             </p>
           )}
-          <RefreshButton fetching={isFetching} onRefresh={reload} />
+        </div>
+        {/* Wraps before the page would scroll sideways: the Welsh is the longer. */}
+        <div className="flex flex-wrap items-center gap-3">
           {addButton(toolbarAdd)}
+          <RefreshButton fetching={isFetching} onRefresh={reload} />
         </div>
       </div>
 

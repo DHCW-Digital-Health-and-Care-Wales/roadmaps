@@ -180,7 +180,7 @@ drawn. The decisions and round 4's refinements went to
 
 | Decisions                                          | Record                                                                                                   |
 | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| 1 (the list's frames), 4, 5 (the families page), 9 | [STY-058](../backlog/EPC-013-tidy-page-tops/STY-058-a-tidy-top-to-the-roadmap-list.md)                   |
+| 1 (the list's frames), 4, 5 (the families page), 9 | [STY-058](../backlog/_archive/EPC-013-tidy-page-tops/STY-058-a-tidy-top-to-the-roadmap-list.md)          |
 | 1, 3, 5, 6, 10, 11; the header block's refinements | [STY-059](../backlog/EPC-013-tidy-page-tops/STY-059-a-roadmaps-page-opens-on-one-header-block.md)        |
 | 2, 7, 8, 12; the stuck strip's and foot bar's      | [STY-060](../backlog/EPC-013-tidy-page-tops/STY-060-one-row-of-controls-at-the-top-and-once-scrolled.md) |
 

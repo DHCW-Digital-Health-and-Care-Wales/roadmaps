@@ -1,13 +1,9 @@
 - main:
   - region "Eich mapiau trywydd":
     - heading "Eich mapiau trywydd" [level=1]
-    - paragraph: Pob map trywydd, wedi'i gyhoeddi neu beidio.
-    - paragraph:
-      - link "Teuluoedd, categorïau a sefydliadau":
-        - /url: /#/families
     - paragraph: 3 map trywydd, 1 heb ei gyhoeddi
-    - button "Adnewyddu"
     - button "Ychwanegu map trywydd"
+    - button "Adnewyddu"
     - alert:
       - text: Mae eich sesiwn wedi dod i ben Ailgysylltwch â Google i lwytho eich mapiau trywydd diweddaraf.
       - button "Ailgysylltu"

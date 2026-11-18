@@ -87,8 +87,11 @@ describe("RoadmapsPage", () => {
       main().getByRole("heading", { level: 1, name: "Your roadmaps" }),
     ).toBeInTheDocument()
     expect(
-      main().getByText("Every roadmap, published or not."),
-    ).toBeInTheDocument()
+      main().queryByText("Every roadmap, published or not."),
+    ).not.toBeInTheDocument()
+    expect(
+      main().queryByRole("link", { name: /^Families/ }),
+    ).not.toBeInTheDocument()
     expect(await main().findByText("3 roadmaps")).toBeInTheDocument()
     expect(cardNames()).toEqual([
       "Product A roadmap",
@@ -102,6 +105,26 @@ describe("RoadmapsPage", () => {
     expect(repository.listRoadmaps.mock.calls[0]?.[0]?.signal).toBeInstanceOf(
       AbortSignal,
     )
+  })
+
+  it("puts Add a roadmap, then Refresh, then the first roadmap in the Tab order (STY-058 S5)", async () => {
+    const user = userEvent.setup()
+    await renderWithProviders({
+      authState: connected,
+      repository: scriptedRepository(roadmaps),
+    })
+    await main().findByText("3 roadmaps")
+    const heading = main().getByRole("heading", { level: 1 })
+    const [first] = main().getAllByRole("link", { name: /roadmap$/ })
+
+    // The header and the closed navigation hold stops of their own before the page.
+    await user.click(heading)
+    await user.tab()
+    expect(main().getByRole("button", { name: "Add a roadmap" })).toHaveFocus()
+    await user.tab()
+    expect(main().getByRole("button", { name: "Refresh" })).toHaveFocus()
+    await user.tab()
+    expect(first).toHaveFocus()
   })
 
   describe("grouping by product family", () => {

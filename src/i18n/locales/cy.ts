@@ -143,7 +143,6 @@ export const cy = {
   },
   roadmaps: {
     title: "Eich mapiau trywydd",
-    description: "Pob map trywydd, wedi'i gyhoeddi neu beidio.",
     refresh: "Adnewyddu",
     more: "Mwy",
     loading: "Wrthi'n llwytho mapiau trywydd…",

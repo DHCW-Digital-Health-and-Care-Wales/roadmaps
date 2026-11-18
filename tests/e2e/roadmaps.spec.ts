@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test"
+import type { Locator, Page } from "@playwright/test"
 
 import {
   EXAMPLE_INDEX_ROWS,
@@ -454,4 +454,121 @@ test("makes a roadmap out of step match its lists, telling a published one first
   const [names = [], productA = []] = index?.rows ?? []
   expect(productA[names.indexOf("Colour")]).toBe("#12a3c9")
   expect(productA[names.indexOf("Family (cy)")]).toBe("Cofnod Sengl")
+})
+
+test.describe("the top of the roadmap list (STY-058)", () => {
+  const WIDTHS = [375, 640, 820, 1024, 1280] as const
+
+  // A class a button gains or loses at 640px arrives a frame late otherwise.
+  test.use({ reducedMotion: "reduce" })
+
+  async function boxOf(locator: Locator) {
+    const box = await locator.boundingBox()
+    if (!box) throw new Error("A part of the list's top has no box")
+    return box
+  }
+
+  /** The 3 roadmaps, 1 not published: title, count, then Add a roadmap and Refresh. */
+  async function openList(page: Page, width: number) {
+    await page.setViewportSize({ width, height: 800 })
+    await page.goto("./")
+    await connect(page)
+    await expect(roadmapCards(page)).toHaveText(EXAMPLE_TITLES)
+    const main = page.getByRole("main")
+    const heading = main.getByRole("heading", { level: 1 })
+    const count = main.getByText("3 roadmaps, 1 not published")
+    const add = main.getByRole("button", { name: "Add a roadmap" })
+    const refresh = main.getByRole("button", { name: "Refresh" })
+    return { main, heading, count, add, refresh }
+  }
+
+  for (const width of WIDTHS) {
+    test(`stacks the title, the count and one row of actions on one left edge at ${String(width)}px (S1, S2)`, async ({
+      page,
+    }) => {
+      const { main, heading, count, add, refresh } = await openList(page, width)
+
+      const [h, c, a, r, first] = await Promise.all([
+        boxOf(heading),
+        boxOf(count),
+        boxOf(add),
+        boxOf(refresh),
+        boxOf(main.getByRole("heading", { level: 2 }).first()),
+      ])
+      // A column: title, count, the row of actions, then the first family's heading.
+      expect(c.y).toBeGreaterThanOrEqual(h.y + h.height)
+      expect(a.y).toBeGreaterThanOrEqual(c.y + c.height)
+      expect(first.y).toBeGreaterThanOrEqual(a.y + a.height)
+      // One left edge.
+      expect(c.x).toBeCloseTo(h.x, 0)
+      expect(a.x).toBeCloseTo(h.x, 0)
+      expect(first.x).toBeCloseTo(h.x, 0)
+      // Add a roadmap then Refresh, on one row, both 40px high.
+      expect(r.x).toBeGreaterThan(a.x + a.width)
+      expect(r.y).toBeCloseTo(a.y, 0)
+      expect(a.height).toBeCloseTo(40, 0)
+      expect(r.height).toBeCloseTo(40, 0)
+      // Add a roadmap is as wide as its label, never the page's.
+      expect(a.width).toBeLessThan(260)
+    })
+  }
+
+  test("Refresh is a 40px icon button named Refresh on a phone, labelled from 640px (S3)", async ({
+    page,
+  }) => {
+    const phone = await openList(page, 375)
+    const icon = await phone.refresh.boundingBox()
+    expect(icon?.width).toBeCloseTo(40, 0)
+    expect(icon?.height).toBeCloseTo(40, 0)
+    await expect(phone.refresh).toHaveAccessibleName("Refresh")
+    // Neither the filler nor the families link is under the title.
+    await expect(
+      phone.main.getByText("Every roadmap, published or not."),
+    ).toHaveCount(0)
+    await expect(
+      phone.main.getByRole("link", {
+        name: "Families, categories and organisations",
+      }),
+    ).toHaveCount(0)
+    // The label is there for assistive technology, not drawn.
+    const label = await phone.refresh.getByText("Refresh").boundingBox()
+    expect(label?.width ?? 0).toBeLessThanOrEqual(1)
+
+    await page.setViewportSize({ width: 640, height: 800 })
+    const labelled = await phone.refresh.boundingBox()
+    expect(labelled?.width).toBeGreaterThan(70)
+    expect(
+      (await phone.refresh.getByText("Refresh").boundingBox())?.width ?? 0,
+    ).toBeGreaterThan(40)
+    await expect(phone.refresh).toHaveAccessibleName("Refresh")
+    await expect(phone.refresh).toHaveText("Refresh")
+  })
+
+  test("in Cymraeg at 375px the actions fit on one row with no sideways scroll, and Tab goes Add, Refresh, the first roadmap (S5)", async ({
+    page,
+  }) => {
+    await useLanguage(page, "cy")
+    await page.setViewportSize({ width: 375, height: 800 })
+    await page.goto("./")
+    await connect(page, "Cysylltu â Google")
+    const main = page.getByRole("main")
+    const add = main.getByRole("button", { name: "Ychwanegu map trywydd" })
+    const refresh = main.getByRole("button", { name: "Adnewyddu" })
+    await expect(add).toBeVisible()
+
+    const [a, r] = await Promise.all([add.boundingBox(), refresh.boundingBox()])
+    expect(r?.y).toBeCloseTo(a?.y ?? NaN, 0)
+    expect((r?.x ?? 0) + (r?.width ?? 0)).toBeLessThanOrEqual(375)
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth - window.innerWidth,
+      ),
+    ).toBeLessThanOrEqual(0)
+
+    await add.focus()
+    await page.keyboard.press("Tab")
+    await expect(refresh).toBeFocused()
+    await page.keyboard.press("Tab")
+    await expect(roadmapCards(page).first()).toBeFocused()
+  })
 })

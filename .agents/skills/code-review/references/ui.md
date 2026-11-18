@@ -17,15 +17,17 @@ working order, and grade and report findings as it sets.
   deploy only from `main` (`actionlint` clean).
 - **Live regions.** Trace each `role=status`, `role=alert` and `aria-live`
   region (page notices, the session warning's announcements) through every
-  change of state. A region in the accessibility tree speaks any change inside
-  it: new text, swapped nodes or a remount; an alert also speaks as it renders.
-  Check that it is in the tree when the news comes, not in a closed drawer's or
+  change of state. A region in the accessibility tree speaks new text or
+  swapped nodes inside it; an alert also speaks as it renders, while a polite
+  region that mounts holding its text may say nothing. Check that a polite
+  region is in the tree before the news comes, not in a closed drawer's or
   dialog's portal, nor outside an open modal, which Base UI hides from all but
-  `[aria-live]` elements. Each change that is news leaves it text to speak, the
-  last change gone included. Other changes stay out of it: a swapped visible
-  entry or a language switch is not news, and an `sr-only` announcer kept apart
-  from the visible text stays quiet through them. A repeated message is spoken
-  again through a new node (a fresh `key`) or a remount.
+  `[aria-live]` elements. News leaves it text to speak, an emptying included (it says none
+  is left rather than clearing). A swapped visible entry or a language switch
+  is not news: an `sr-only` announcer holds the text it said and stays quiet
+  through them, while visible status text follows the language and is re-read.
+  A repeated message is spoken again through a new node inside a region that
+  stays mounted (a fresh `key`), or by remounting an alert.
 - **Localisation and copy (ADR-008).** UI copy comes from catalogue keys
   mapped from codes (``t(`errors.${error.kind}`)``,
   ``t(`auth.status.${state.status}`)``); domain and infrastructure emit codes,

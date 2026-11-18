@@ -3,9 +3,11 @@
 // the pinned release): bold text, 4px corners, a 2px bottom bar (`shadow-control`), and
 // half opacity with no bar when disabled, including a button that stays focusable
 // (`data-disabled`). Variants: `default` (primary), `secondary` (white, grey border and bar),
-// `destructive` (DHCW's solid red warning button), `ghost` and `header` (white on the navy
-// header band, with DHCW's grey border and a lighter hover); upstream's `outline`, `link`
-// and the xs/lg sizes are gone, so a group is always 40px (`default`) or 32px (`sm`).
+// `destructive` (DHCW's solid red warning button), `ghost`, `header` (white on the navy
+// header band, with DHCW's grey border and a lighter hover) and `navigation` (white on
+// the navy navigation with no border, DHCW's active blue on hover, as its links are);
+// upstream's `outline`, `link` and the xs/lg sizes are gone, so a group is always 40px
+// (`default`) or 32px (`sm`).
 // focus-visible:focus-fill for upstream's ring, and no `dark:` overrides, which would beat
 // the focus fill in the dark theme. Hovers are --primary-hover, --muted and
 // --destructive-hover (the fill is --destructive-fill, as --destructive is the text red);
@@ -29,6 +31,7 @@ const buttonVariants = cva(
         ghost: "text-foreground hover:bg-muted aria-expanded:bg-muted",
         header:
           "border-header-border text-header-foreground hover:bg-header-hover aria-expanded:bg-header-hover",
+        navigation: "text-sidebar-foreground hover:bg-sidebar-accent",
       },
       size: {
         default:

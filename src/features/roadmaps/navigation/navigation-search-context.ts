@@ -3,9 +3,10 @@ import { createContext, use } from "react"
 import type { RoadmapGroup } from "../group-roadmaps"
 
 /**
- * The navigation's search and what it lists (STY-061), held above the routes' pages and
- * shared by the navigation beside the page and in the drawer, so it lasts while the
- * Product Lead moves between pages and as the drawer closes, not past a reload (D3).
+ * The navigation's search and what it lists (STY-061), and the families it keeps closed
+ * (STY-062), held above the routes' pages and shared by the navigation beside the page
+ * and in the drawer, so it lasts while the Product Lead moves between pages and as the
+ * drawer closes. The search does not last past a reload (D3); the closed families do.
  */
 export interface NavigationSearch {
   /** Every group of roadmaps, as the list orders them; `null` until they are read. */
@@ -28,6 +29,17 @@ export interface NavigationSearch {
   clear: () => void
   /** Asks for focus in the search as it next shows: the rail's spyglass opens it (S9). */
   requestFocus: () => void
+  /** The families closed, by `RoadmapGroup.key`; remembered on this device (STY-062 D4). */
+  closed: ReadonlySet<string>
+  /** Every family is closed: the button over them opens them rather than closes. */
+  allClosed: boolean
+  /** Closes the family if it is open, and opens it if it is closed (STY-062 S1). */
+  toggleFamily: (key: string) => void
+  /**
+   * Closes every family, or opens every one once all are closed (STY-062 S3), telling a
+   * screen reader which.
+   */
+  toggleAllFamilies: () => void
   /**
    * Takes the request for focus, if there is one, clearing it: only the search box,
    * once, as it shows.

@@ -179,6 +179,14 @@ export const cy = {
         noMatch: "Does dim mapiau trywydd yn cyfateb i “{{query}}”",
         showingAll: "Yn dangos pob map trywydd",
       },
+      families: {
+        closeAll: "Cau pob un",
+        closeAllName: "Cau pob un o'r teuluoedd",
+        openAll: "Agor pob un",
+        openAllName: "Agor pob un o'r teuluoedd",
+        allClosed: "Pob teulu ar gau",
+        allOpened: "Pob teulu ar agor",
+      },
     },
     familiesLink: "Teuluoedd, categorïau a sefydliadau",
     lists: {

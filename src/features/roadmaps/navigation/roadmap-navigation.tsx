@@ -1,9 +1,18 @@
 import { useParams } from "@tanstack/react-router"
-import { GlobeIcon, LayoutGridIcon } from "lucide-react"
+import {
+  ChevronDownIcon,
+  ChevronRightIcon,
+  ChevronsDownUpIcon,
+  ChevronsUpDownIcon,
+  GlobeIcon,
+  LayoutGridIcon,
+} from "lucide-react"
 import { useId, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 
 import type { NavigationForm } from "@/components/layout/app-shell"
+import { UnpublishedDot } from "@/components/layout/unpublished-dot"
+import { Button } from "@/components/ui/button"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { localise } from "@/domain/roadmap/localised-text"
 import { useLanguage } from "@/i18n"
@@ -37,6 +46,11 @@ export interface RoadmapNavigationProps {
  * In full, it lists only the roadmaps its search finds, each with the part found
  * underlined, or says none match (STY-061 S1–S4); the rail lists every roadmap whatever
  * the search (D4). All roadmaps, the count and the families page always show.
+ *
+ * Listed whole, each family's name is a button that closes and opens its roadmaps, with
+ * "Close all" above them (STY-062 S1, S3); narrowed by the search, a closed family shows
+ * what it holds under a plain heading (S6), and the rail lists every roadmap, with no
+ * family control (S7).
  */
 export function RoadmapNavigation({ form }: RoadmapNavigationProps) {
   const { t } = useTranslation()
@@ -46,6 +60,9 @@ export function RoadmapNavigation({ form }: RoadmapNavigationProps) {
   const named = namesFamilies(groups)
   const searched = !rail && search.key !== ""
   const listed = searched ? search.found : groups
+  // Only the whole list in full has families to close, where there are some and they have
+  // names.
+  const foldable = !rail && !searched && named && groups.length > 0
   const { changes } = usePendingChanges()
   const changed = useMemo(() => new Set(changes.keys()), [changes])
   const currentId = useParams({
@@ -84,16 +101,29 @@ export function RoadmapNavigation({ form }: RoadmapNavigationProps) {
           })}
         </p>
       ) : (
-        listed.map((group) => (
-          <RoadmapGroupLinks
-            key={group.key}
-            group={group}
-            named={named}
-            rail={rail}
-            changed={changed}
-            searchKey={searched ? search.key : ""}
-          />
-        ))
+        <>
+          {foldable && (
+            <CloseAllFamilies
+              allClosed={search.allClosed}
+              onPress={search.toggleAllFamilies}
+            />
+          )}
+          {listed.map((group) => (
+            <RoadmapGroupLinks
+              key={group.key}
+              group={group}
+              named={named}
+              rail={rail}
+              changed={changed}
+              searchKey={searched ? search.key : ""}
+              closable={foldable}
+              closed={foldable && search.closed.has(group.key)}
+              onToggle={() => {
+                search.toggleFamily(group.key)
+              }}
+            />
+          ))}
+        </>
       )}
       <ul className="flex flex-col gap-1 border-t border-sidebar-border pt-3">
         <NavigationLink
@@ -118,57 +148,136 @@ interface RoadmapGroupLinksProps {
   changed: ReadonlySet<string>
   /** What the search compares (`searchKey`), underlined where a title holds it. */
   searchKey: string
+  /** The family's name is a button that closes its list, rather than a heading. */
+  closable: boolean
+  /** Its list is put away; only while `closable`. */
+  closed: boolean
+  onToggle: () => void
 }
 
-/** One family's roadmaps, in a list named for the family. */
+/**
+ * One family's roadmaps, in a list named for the family: under its button while the
+ * families can close, put away while it is closed, and else under a plain heading.
+ */
 function RoadmapGroupLinks({
   group,
   named,
   rail,
   changed,
   searchKey,
+  closable,
+  closed,
+  onToggle,
 }: RoadmapGroupLinksProps) {
+  const { t } = useTranslation()
   const language = useLanguage()
   const groupName = useGroupName()
   const nameId = useId()
+  const listId = useId()
+  const name = groupName(group)
+  // A closed family keeps a dot while a roadmap inside has unpublished changes (S2).
+  const unpublished = closed && group.roadmaps.some((r) => changed.has(r.id))
   return (
     <div className="flex flex-col gap-1">
-      {named && (
-        // The list's name: read with the list, not again before it.
-        <p
-          id={nameId}
-          aria-hidden="true"
-          className={cn(
-            "px-2 text-body-xs font-bold wrap-anywhere",
-            rail && "sr-only",
-          )}
+      {closable ? (
+        <Button
+          variant="navigation"
+          size="sm"
+          aria-expanded={!closed}
+          aria-controls={closed ? undefined : listId}
+          aria-label={
+            unpublished ? t("roadmaps.navigation.changed", { name }) : undefined
+          }
+          onClick={onToggle}
+          className="h-auto min-h-8 w-full justify-start gap-2 py-1 text-start font-bold whitespace-normal"
         >
-          {groupName(group)}
-        </p>
+          <span id={nameId} className="min-w-0 wrap-anywhere">
+            {name}
+          </span>
+          {unpublished && (
+            // As an entry's dot (`dotClasses`), the button being the group in focus.
+            <UnpublishedDot className="bg-focus group-focus-visible/button:bg-focus-foreground" />
+          )}
+          {closed ? (
+            <ChevronRightIcon aria-hidden="true" className="ms-auto" />
+          ) : (
+            <ChevronDownIcon aria-hidden="true" className="ms-auto" />
+          )}
+        </Button>
+      ) : (
+        named && (
+          // The list's name: read with the list, not again before it.
+          <p
+            id={nameId}
+            aria-hidden="true"
+            className={cn(
+              "px-2 text-body-xs font-bold wrap-anywhere",
+              rail && "sr-only",
+            )}
+          >
+            {name}
+          </p>
+        )
       )}
-      <ul
-        aria-labelledby={named ? nameId : undefined}
-        className="flex flex-col gap-1"
+      {!closed && (
+        <ul
+          id={listId}
+          aria-labelledby={named ? nameId : undefined}
+          className="flex flex-col gap-1"
+        >
+          {group.roadmaps.map((roadmap) => {
+            const title = localise(roadmap.title, language)
+            return (
+              <NavigationLink
+                key={roadmap.id}
+                to="/roadmaps/$roadmapId"
+                params={{ roadmapId: roadmap.id }}
+                rail={rail}
+                name={title}
+                mark={{
+                  colour: roadmap.colour,
+                  initials: roadmapInitials(title),
+                  unpublished: changed.has(roadmap.id),
+                  found: findIn(title, searchKey),
+                }}
+              />
+            )
+          })}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+interface CloseAllFamiliesProps {
+  /** Every family is closed: the button opens them. */
+  allClosed: boolean
+  onPress: () => void
+}
+
+/** "Close all", at the end of its own row above the families, "Open all" once all are closed (S3). */
+function CloseAllFamilies({ allClosed, onPress }: CloseAllFamiliesProps) {
+  const { t } = useTranslation()
+  const Icon = allClosed ? ChevronsUpDownIcon : ChevronsDownUpIcon
+  return (
+    <div className="-mb-2 flex justify-end">
+      <Button
+        variant="navigation"
+        size="sm"
+        aria-label={t(
+          allClosed
+            ? "roadmaps.navigation.families.openAllName"
+            : "roadmaps.navigation.families.closeAllName",
+        )}
+        onClick={onPress}
       >
-        {group.roadmaps.map((roadmap) => {
-          const title = localise(roadmap.title, language)
-          return (
-            <NavigationLink
-              key={roadmap.id}
-              to="/roadmaps/$roadmapId"
-              params={{ roadmapId: roadmap.id }}
-              rail={rail}
-              name={title}
-              mark={{
-                colour: roadmap.colour,
-                initials: roadmapInitials(title),
-                unpublished: changed.has(roadmap.id),
-                found: findIn(title, searchKey),
-              }}
-            />
-          )
-        })}
-      </ul>
+        <Icon aria-hidden="true" />
+        {t(
+          allClosed
+            ? "roadmaps.navigation.families.openAll"
+            : "roadmaps.navigation.families.closeAll",
+        )}
+      </Button>
     </div>
   )
 }

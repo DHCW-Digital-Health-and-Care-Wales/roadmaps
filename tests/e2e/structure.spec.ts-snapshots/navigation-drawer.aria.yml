@@ -7,14 +7,18 @@
       - listitem:
         - link "All roadmaps":
           - /url: /#/
+    - button "Close all families": Close all
+    - button "Medicines & Diagnostics" [expanded]
     - list "Medicines & Diagnostics":
       - listitem:
         - link "Product B roadmap":
           - /url: /#/roadmaps/productb
+    - button "Single Record" [expanded]
     - list "Single Record":
       - listitem:
         - link "Product A roadmap":
           - /url: /#/roadmaps/producta
+    - button "No product family" [expanded]
     - list "No product family":
       - listitem:
         - link "Product C roadmap":

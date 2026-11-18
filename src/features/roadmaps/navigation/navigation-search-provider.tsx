@@ -17,15 +17,18 @@ import {
   type NavigationSearch,
   NavigationSearchContext,
 } from "./navigation-search-context"
+import { useClosedFamilies } from "./use-closed-families"
 
 /** How long typing pauses before a screen reader is told how many match (S6). */
 export const TYPING_PAUSE_MS = 600
 
 /**
- * Holds the navigation's search (STY-061), above the shell, so the navigation beside the
- * page and in the drawer share it and it lasts between pages (D3). Its live region says
- * what the search finds once typing pauses (S6), and that every roadmap shows once it is
- * cleared (S5); it is always in the page, as the drawer the search may be in is not.
+ * Holds the navigation's search (STY-061) and its closed families (STY-062), above the
+ * shell, so the navigation beside the page and in the drawer share them and they last
+ * between pages (D3). Its live region says what the search finds once typing pauses (S6),
+ * that every roadmap shows once it is cleared (S5), and that every family closed or
+ * opened (STY-062 S3); it is always in the page, as the drawer the search may be in is
+ * not. Going to a roadmap opens its family (STY-062 S5, D5).
  */
 export function NavigationSearchProvider({
   children,
@@ -53,6 +56,8 @@ export function NavigationSearchProvider({
     () => narrowGroups(groups ?? [], key, language),
     [groups, key, language],
   )
+
+  const families = useClosedFamilies(groups)
 
   const say = (text: string) => {
     setSaid((last) => ({ text, times: last.times + 1 }))
@@ -86,6 +91,19 @@ export function NavigationSearchProvider({
       setQuery("")
       setTyped(0)
       say(t("roadmaps.navigation.search.showingAll"))
+    },
+    closed: families.closed,
+    allClosed: families.allClosed,
+    toggleFamily: families.toggleFamily,
+    toggleAllFamilies: () => {
+      say(
+        t(
+          families.allClosed
+            ? "roadmaps.navigation.families.allOpened"
+            : "roadmaps.navigation.families.allClosed",
+        ),
+      )
+      families.toggleAll()
     },
     requestFocus: () => {
       focusOnShow.current = true

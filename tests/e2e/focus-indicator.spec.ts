@@ -473,6 +473,17 @@ for (const theme of THEMES) {
       await expect(current).toHaveAttribute("aria-current", "page")
       await tabTo(page, current, "Shift+Tab")
       await expectIndicator(current, colours, "fill")
+      // The family buttons and "Close all" take it too (STY-062 S8).
+      const family = navigation.getByRole("button", {
+        name: "Medicines & Diagnostics",
+      })
+      await tabTo(page, family, "Shift+Tab")
+      await expectIndicator(family, colours, "fill")
+      const closeAll = navigation.getByRole("button", {
+        name: "Close all families",
+      })
+      await tabTo(page, closeAll, "Shift+Tab")
+      await expectIndicator(closeAll, colours, "fill")
       const fold = page.getByRole("button", { name: "Fold the navigation" })
       await tabTo(page, fold, "Shift+Tab")
       await expectIndicator(fold, colours, "fill")

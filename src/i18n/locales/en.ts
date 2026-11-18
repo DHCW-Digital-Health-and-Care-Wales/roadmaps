@@ -198,6 +198,18 @@ export const en = {
         /** Said once the search is cleared (S5). */
         showingAll: "Showing all roadmaps",
       },
+      /** Closing and opening the families in the navigation (STY-062). */
+      families: {
+        /** The button's words while any family is open, and what a screen reader names it (S3). */
+        closeAll: "Close all",
+        closeAllName: "Close all families",
+        /** Its words once every family is closed. */
+        openAll: "Open all",
+        openAllName: "Open all families",
+        /** Said as the button is pressed (S3). */
+        allClosed: "All families closed",
+        allOpened: "All families open",
+      },
     },
     /** A roadmap whose own family or category differs from the lists' (STY-027 S4, S8). */
     lists: {

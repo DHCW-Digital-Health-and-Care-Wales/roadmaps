@@ -27,7 +27,7 @@ const looks = {
 /**
  * Interrupts (`alert`) only with news the user didn't cause and nothing else announces: a
  * failure. A closed popup was the user's own doing, and a confirmation is announced by the
- * connection status, so those are notes.
+ * connection status (visible to no one), so those are notes.
  */
 function announces(notice: Notice): boolean {
   return notice.kind !== "confirmed" && notice.code !== "popup-closed"
@@ -36,9 +36,9 @@ function announces(notice: Notice): boolean {
 /**
  * The outcome of connecting, disconnecting or staying connected, at the top of the page in
  * view, whichever page started it (no toasts: DHCW has none). A failure stays until the
- * next attempt, the session's end or a dismissal. A confirmation clears itself after a
- * short dwell, paused while it is hovered or holds focus, and on the next page; the
- * connection status in the header keeps the state.
+ * next attempt, the session's end or a dismissal. A confirmation, of a disconnect only
+ * (a connect shows itself, STY-056 D3), clears itself after a short dwell, paused while it
+ * is hovered or holds focus, and on the next page.
  */
 export function AuthNotice() {
   const { notice, version, dismiss } = useAuthNotice()

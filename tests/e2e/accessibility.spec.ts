@@ -29,6 +29,7 @@ import {
   refusal,
 } from "./fixtures/roadmap-page"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
+import { disconnectFromHeader } from "./fixtures/account-menu"
 
 const [header = []] = EXAMPLE_INDEX_ROWS
 
@@ -829,10 +830,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await form.getByRole("textbox", { name: "Title" }).fill("A clearer card")
       await form.getByRole("button", { name: "Done" }).click()
 
-      await page
-        .getByRole("banner")
-        .getByRole("button", { name: "Disconnect" })
-        .click()
+      await disconnectFromHeader(page)
       const question = page.getByRole("alertdialog")
       await expect(question).toBeVisible()
       await expectNoAxeViolations(page, theme)

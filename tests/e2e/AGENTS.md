@@ -35,6 +35,15 @@ End-to-end tests of the production build, with Google faked (ADR-006).
   control's text or accessible name, grep `tests/e2e` for the old text and run every
   spec that reaches the control, or the whole suite when it is in the shell.
 
+- The header has no Connect or Disconnect button: `chooseFromAccountMenu` and
+  `disconnectFromHeader` (`fixtures/account-menu.ts`) drive its account menu. Answer the
+  reconnect dialog with `reconnectDialog` and `reconnectButton` (`fixtures/dialogs.ts`).
+- At 1280px the navigation stands beside the page and its links share names with the
+  list's and the cards': scope a page's own to `main`. Playwright matches a role's name
+  by substring, so name "More" `exact`.
+- Run a layout check with `reducedMotion: "reduce"` too: transitions last 0.01ms, so a
+  class a bar gains arrives a frame late. Measure its border box.
+
 ## Look checks
 
 The DHCW look is held without screenshots: aria snapshots, computed styles and focus
@@ -53,8 +62,6 @@ tours.
   `GITHUB_REPOSITORY=DHCW-Digital-Health-and-Care-Wales/roadmaps-editor`.
 - Snapshot a `main`, header, menu, dialog, form or notice, never the footer, whose
   version changes per build.
-- The "Connected" notice clears itself after eight seconds: a test that snapshots or
-  tabs past it calls `holdConnectedNotice(page)` right after connecting.
 - Compare a computed style with the token it comes from, `tokenColour(page, "--token")`
   (`fixtures/look.ts`), never a copied colour.
 - The focus tours need every tab stop to match `focus-fill`, `focus-ring` or

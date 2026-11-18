@@ -3,10 +3,9 @@ import { createRootRoute, Outlet } from "@tanstack/react-router"
 import { AppShell } from "@/components/layout/app-shell"
 import { LanguageSwitcher } from "@/components/layout/language-switcher"
 import { NotFoundPage } from "@/components/layout/not-found-page"
-import { ThemeToggle } from "@/components/theme/theme-toggle"
+import { AccountMenu } from "@/features/auth/components/account-menu"
 import { AuthNotice } from "@/features/auth/components/auth-notice"
 import { ConnectionStatus } from "@/features/auth/components/connection-status"
-import { HeaderAuthButton } from "@/features/auth/components/header-auth-button"
 import { DisconnectQuestion } from "@/features/roadmaps/editing/disconnect-question"
 import { useChangedRoadmapCount } from "@/features/roadmaps/editing/pending-changes-context"
 import { RoadmapNavigation } from "@/features/roadmaps/navigation/roadmap-navigation"
@@ -25,8 +24,7 @@ function RootLayout() {
           <>
             <ConnectionStatus />
             <LanguageSwitcher />
-            <ThemeToggle />
-            <HeaderAuthButton />
+            <AccountMenu />
           </>
         }
         navigation={(form) => <RoadmapNavigation form={form} />}

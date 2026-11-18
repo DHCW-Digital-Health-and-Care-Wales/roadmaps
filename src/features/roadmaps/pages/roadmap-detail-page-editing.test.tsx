@@ -51,6 +51,7 @@ import {
   refreshRoadmap,
 } from "../testing/roadmap-page"
 import { expectWriteHold, refreshHold } from "../testing/write-hold"
+import { disconnectFromHeader } from "@/features/auth/testing/account-menu"
 
 const roadmaps: Roadmap[] = [
   createTestRoadmap("producta", "Product A roadmap", {
@@ -1176,11 +1177,7 @@ describe("Disconnecting with pending changes (STY-025)", () => {
   it("disconnects at once when nothing is pending", async () => {
     const { user, authClient } = await renderPage()
 
-    await user.click(
-      within(screen.getByRole("banner")).getByRole("button", {
-        name: "Disconnect",
-      }),
-    )
+    await disconnectFromHeader(user)
 
     expect(screen.queryByRole("alertdialog")).toBeNull()
     expect(authClient.disconnect).toHaveBeenCalledTimes(1)
@@ -1190,11 +1187,7 @@ describe("Disconnecting with pending changes (STY-025)", () => {
     const { user, authClient } = await renderPage()
     await editTitle(user, "First item", "First, edited")
 
-    await user.click(
-      within(screen.getByRole("banner")).getByRole("button", {
-        name: "Disconnect",
-      }),
-    )
+    await disconnectFromHeader(user)
     const question = within(
       screen.getByRole("alertdialog", { name: "Keep your changes?" }),
     )
@@ -1208,11 +1201,7 @@ describe("Disconnecting with pending changes (STY-025)", () => {
     const { user, authClient, router } = await renderPage()
     await editTitle(user, "First item", "First, edited")
 
-    await user.click(
-      within(screen.getByRole("banner")).getByRole("button", {
-        name: "Disconnect",
-      }),
-    )
+    await disconnectFromHeader(user)
     await user.click(
       screen.getByRole("button", { name: "Keep changes and disconnect" }),
     )
@@ -1241,11 +1230,7 @@ describe("Disconnecting with pending changes (STY-025)", () => {
     const { user, authClient, router } = await renderPage()
     await editTitle(user, "First item", "First, edited")
 
-    await user.click(
-      within(screen.getByRole("banner")).getByRole("button", {
-        name: "Disconnect",
-      }),
-    )
+    await disconnectFromHeader(user)
     await user.click(
       screen.getByRole("button", { name: "Discard changes and disconnect" }),
     )

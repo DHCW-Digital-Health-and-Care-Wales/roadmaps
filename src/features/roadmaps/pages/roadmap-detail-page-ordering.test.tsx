@@ -28,6 +28,7 @@ import {
   openConflictReview,
   refreshRoadmap,
 } from "../testing/roadmap-page"
+import { disconnectFromHeader } from "@/features/auth/testing/account-menu"
 
 /**
  * A Product Lead reorders a placement's items from each card's Move menu (STY-050): the
@@ -337,11 +338,7 @@ describe("A pending order at the placement's heading (S3)", () => {
     await main().findByRole("heading", { level: 3, name: "Delta" })
     await chooseFromMenu(user, "Delta", "To the top")
 
-    await user.click(
-      within(screen.getByRole("banner")).getByRole("button", {
-        name: "Disconnect",
-      }),
-    )
+    await disconnectFromHeader(user)
     await user.click(
       screen.getByRole("button", { name: "Keep changes and disconnect" }),
     )

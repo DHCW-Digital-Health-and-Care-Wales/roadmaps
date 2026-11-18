@@ -12,7 +12,7 @@ const copy = {
     home: "Roadmap Editor home",
     shortHome: "Roadmaps home",
     connect: "Connect Google",
-    disconnect: "Disconnect",
+    account: "Account",
     copyright: "© Digital Health and Care Wales",
   },
   cy: {
@@ -20,7 +20,7 @@ const copy = {
     home: "Golygydd Mapiau Trywydd hafan",
     shortHome: "Mapiau Trywydd hafan",
     connect: "Cysylltu â Google",
-    disconnect: "Datgysylltu",
+    account: "Cyfrif",
     copyright: "© Iechyd a Gofal Digidol Cymru",
   },
 } as const
@@ -40,7 +40,7 @@ for (const language of ["en", "cy"] as const) {
       await useLanguage(page, language)
     })
 
-    test("a navy header shows the DHCW logo, then the controls in order (S1)", async ({
+    test("a navy header shows the DHCW logo, then the language and the account menu (STY-056 S1, S2)", async ({
       page,
     }) => {
       await page.setViewportSize({ width: 1280, height: 800 })
@@ -63,16 +63,21 @@ for (const language of ["en", "cy"] as const) {
       // Not sticky: it scrolls away with the page (D4).
       await expect(banner).toHaveCSS("position", "static")
 
-      // Left to right: the home link, the status chip, then the three buttons.
+      // Left to right: the home link, the language, then the account menu: no chip, and
+      // no Connect or Disconnect button of its own (the connection is announced only).
+      await expect(banner.getByRole("button")).toHaveCount(2)
       const xs = await Promise.all(
         [
           banner.getByRole("link", { name: c.home, exact: true }),
-          banner.getByRole("status"),
-          ...[0, 1, 2].map((index) => banner.getByRole("button").nth(index)),
+          banner.getByRole("button").first(),
+          banner.getByRole("button", { name: c.account }),
         ].map(async (locator) => (await locator.boundingBox())?.x ?? NaN),
       )
       expect(xs).toEqual([...xs].sort((a, b) => a - b))
-      expect(new Set(xs).size).toBe(5)
+      expect(new Set(xs).size).toBe(3)
+      const status = banner.getByRole("status")
+      await expect(status).toBeAttached()
+      expect((await status.boundingBox())?.width ?? 0).toBeLessThanOrEqual(1)
     })
 
     test("the narrow header keeps its rules at 375px (S2, D6)", async ({
@@ -87,14 +92,16 @@ for (const language of ["en", "cy"] as const) {
       await expect(roadmapCards(page)).toHaveCount(3)
       const banner = page.getByRole("banner")
 
-      // The icon, the short name and only Disconnect; the status is still announced.
+      // The icon, the short name and the two 32px buttons; the status is still announced.
       const icon = banner.getByRole("img", { name: c.logo })
       await expect(icon).toBeVisible()
       expect((await icon.boundingBox())?.width ?? 0).toBeLessThan(48)
       await expect(
-        banner.getByRole("button", { name: c.disconnect }),
+        banner.getByRole("button", { name: c.account }),
       ).toBeVisible()
-      await expect(banner.getByRole("button", { name: c.connect })).toBeHidden()
+      await expect(banner.getByRole("button", { name: c.connect })).toHaveCount(
+        0,
+      )
       await expect(banner.getByRole("status")).not.toBeEmpty()
       await expect(banner.getByRole("status")).toBeAttached()
     })
@@ -158,8 +165,9 @@ for (const language of ["en", "cy"] as const) {
           ],
         )
         expect(scrollWidth).toBeLessThanOrEqual(clientWidth)
-        // Beside the menu button, in Cymraeg, it may wrap, but never past two lines.
-        expect(lines).toBeLessThanOrEqual(2)
+        // Beside the menu button and the two header buttons, in Cymraeg too (S4), it
+        // stays on one line: the account menu gave the room back (STY-056).
+        expect(lines).toBeLessThanOrEqual(1)
         expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0)
       })
     }

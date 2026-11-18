@@ -39,6 +39,7 @@ import {
   openConflictReview,
 } from "../testing/roadmap-page"
 import { expectWriteHold, refreshHold } from "../testing/write-hold"
+import { disconnectFromHeader } from "@/features/auth/testing/account-menu"
 
 const roadmaps: Roadmap[] = [
   createTestRoadmap("producta", "Product A roadmap"),
@@ -528,11 +529,7 @@ describe("A new item is one pending change (STY-046 S5)", () => {
 
     expect(main().getByText("1 unpublished change")).toBeVisible()
     expect(leave()).toBe(true)
-    await user.click(
-      within(screen.getByRole("banner")).getByRole("button", {
-        name: "Disconnect",
-      }),
-    )
+    await disconnectFromHeader(user)
     await user.click(
       within(
         screen.getByRole("alertdialog", { name: "Keep your changes?" }),

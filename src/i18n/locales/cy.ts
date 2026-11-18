@@ -52,6 +52,7 @@ export const cy = {
   },
   layout: {
     skipToContent: "Neidio i'r prif gynnwys",
+    account: "Cyfrif",
     homeSuffix: "hafan",
     logoAlt: "Iechyd a Gofal Digidol Cymru",
     /** Said after a link's name when it opens another tab. */
@@ -120,7 +121,6 @@ export const cy = {
         "Mae eich porwr wedi rhwystro ffenestr Google. Caniatewch ffenestri naid ar gyfer y wefan hon a rhowch gynnig arall arni.",
     },
     notifications: {
-      connected: "Wedi cysylltu â Google",
       disconnected: "Wedi datgysylltu o Google",
     },
     renewal: {

@@ -12,8 +12,8 @@ export type AuthNotice =
   | ConnectFailure
   /** "Stay connected" didn't work. The session carries on until it ends. */
   | { readonly kind: "renewal-failed"; readonly code: AuthErrorCode }
-  /** The user's own connect or disconnect worked. */
-  | { readonly kind: "confirmed"; readonly code: "connected" | "disconnected" }
+  /** The user's own disconnect worked. Connecting needs none: the page itself shows it. */
+  | { readonly kind: "confirmed"; readonly code: "disconnected" }
 
 type Confirmation = Extract<AuthNotice, { kind: "confirmed" }>["code"]
 
@@ -28,17 +28,13 @@ function failureIn(state: AuthState): AuthNotice | null {
 }
 
 /**
- * The confirmation a transition deserves: connecting worked, or the user ended a session.
- * A renewal (`connected` to `connected`) and an expiry confirm nothing.
+ * The confirmation a transition deserves: the user ended a session. Connecting, a
+ * renewal (`connected` to `connected`) and an expiry confirm nothing (STY-056 D3).
  */
 function confirmationOf(
   before: AuthState,
   after: AuthState,
 ): Confirmation | null {
-  // Only `connect()` leads into `connected`; React may not render `connecting` first.
-  if (after.status === "connected" && before.status !== "connected") {
-    return "connected"
-  }
   // Disconnecting is the only way into `ready` from a session without a `lastError`.
   if (
     after.status === "ready" &&

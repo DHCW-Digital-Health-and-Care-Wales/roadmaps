@@ -12,13 +12,10 @@ import {
   EXAMPLE_SPREADSHEET_WITH_LISTS,
   withRoadmapIndex,
 } from "./fixtures/fake-sheets"
-import {
-  holdConnectedNotice,
-  type Language,
-  useLanguage,
-} from "./fixtures/look"
+import { type Language, useLanguage } from "./fixtures/look"
 import { openConflictReview, refusal } from "./fixtures/roadmap-page"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
+import { disconnectFromHeader } from "./fixtures/account-menu"
 
 // The structure of the key screens, held as aria snapshots in
 // `structure.spec.ts-snapshots/` (STY-018). Run `pnpm test:e2e --update-snapshots` after
@@ -57,12 +54,6 @@ async function connectTo(page: Page, language: Language) {
   await connect(page, CONNECT[language])
 }
 
-/** Connects and keeps the "Connected" notice, which each such screen shows, on screen. */
-async function connectAndHold(page: Page, language: Language) {
-  await connectTo(page, language)
-  await holdConnectedNotice(page)
-}
-
 for (const language of ["en", "cy"] as const) {
   test.describe(`in ${language === "en" ? "English" : "Cymraeg"}`, () => {
     test.beforeEach(async ({ page }) => {
@@ -89,7 +80,7 @@ for (const language of ["en", "cy"] as const) {
     })
 
     test("main page, roadmaps", async ({ page }) => {
-      await connectAndHold(page, language)
+      await connectTo(page, language)
       await expect(roadmapCards(page)).toHaveCount(3)
 
       await expectStructure(
@@ -100,7 +91,7 @@ for (const language of ["en", "cy"] as const) {
 
     test("main page, no roadmaps", async ({ page, sheets }) => {
       sheets.spreadsheet = withRoadmapIndex([HEADER])
-      await connectAndHold(page, language)
+      await connectTo(page, language)
       const main = page.getByRole("main")
       await expect(main.getByRole("heading", { level: 2 })).toBeVisible()
 
@@ -110,7 +101,7 @@ for (const language of ["en", "cy"] as const) {
     test("main page, a failed load", async ({ page, sheets }) => {
       // 403 is not retried, so no back-off to wait out.
       sheets.failWith(403)
-      await connectAndHold(page, language)
+      await connectTo(page, language)
       const main = page.getByRole("main")
       await expect(main.getByRole("alert")).toBeVisible()
 
@@ -160,7 +151,6 @@ for (const language of ["en", "cy"] as const) {
 test("a roadmap's detail page", async ({ page }) => {
   await page.goto("./#/roadmaps/producta")
   await connect(page)
-  await holdConnectedNotice(page)
   await expect(
     page.getByRole("heading", {
       level: 3,
@@ -174,7 +164,7 @@ test("a roadmap's detail page", async ({ page }) => {
 test.describe("editing a roadmap (STY-025)", () => {
   const ITEM = "Example card with every column"
 
-  /** Opens Product A with its "Connected" notice dismissed, then edits the item's title. */
+  /** Opens Product A, then edits the item's title. */
   async function openWithAChange(page: Page) {
     await page.goto("./#/roadmaps/producta")
     await connect(page)
@@ -182,10 +172,6 @@ test.describe("editing a roadmap (STY-025)", () => {
     await expect(
       main.getByRole("heading", { level: 3, name: ITEM }),
     ).toBeVisible()
-    await main
-      .getByRole("note")
-      .getByRole("button", { name: "Dismiss message" })
-      .click()
     const dialog = await openEditItemDialog(page, ITEM)
     await dialog.getByRole("textbox", { name: "Title" }).fill("A clearer card")
     await dialog.getByRole("button", { name: "Done" }).click()
@@ -399,10 +385,7 @@ test.describe("editing a roadmap (STY-025)", () => {
     page,
   }) => {
     const main = await openWithAChange(page)
-    await page
-      .getByRole("banner")
-      .getByRole("button", { name: "Disconnect" })
-      .click()
+    await disconnectFromHeader(page)
     const question = page.getByRole("alertdialog")
     await expect(question).toBeVisible()
     await expectStructure(question, "edit-disconnect-question.aria.yml")
@@ -447,6 +430,29 @@ test("the language menu, open", async ({ page }) => {
   await expect(menu).toBeVisible()
 
   await expectStructure(menu, "language-menu.aria.yml")
+})
+
+test("the account menu, open: connected, then signed out (STY-056)", async ({
+  page,
+}) => {
+  await page.goto("./")
+  const account = page.getByRole("banner").getByRole("button", {
+    name: "Account",
+  })
+  await account.click()
+  await expectStructure(
+    page.getByRole("menu"),
+    "account-menu-signed-out.aria.yml",
+  )
+  await page.keyboard.press("Escape")
+
+  await connect(page)
+  await expect(roadmapCards(page)).toHaveCount(3)
+  await account.click()
+  await expectStructure(
+    page.getByRole("menu"),
+    "account-menu-connected.aria.yml",
+  )
 })
 
 test("the session warning", async ({ page, gis }) => {

@@ -5,7 +5,7 @@
   roadmaps named in Disconnect's question (D2)
 - **Type**: Feature
 - **Area**: Features/UI + i18n (en + cy) + E2E
-- **Epic**: [EPC-012-app-shell-and-navigation](../../EPC-012-app-shell-and-navigation/README.md)
+- **Epic**: [EPC-012-app-shell-and-navigation](../README.md)
 - **Depends on**: STY-054 (hard: the count lives in its navigation and on its menu
   button)
 - **Binding ADRs**: ADR-012, ADR-010, ADR-008

@@ -1,5 +1,11 @@
 # EPC-012 delivery notes
 
+What agents delivering or reviewing this epic's stories needed; see `docs/AGENTS.md`.
+The epic is closed (STY-056): its notes on the reconnect dialog's and the account menu's
+test helpers, on jsdom's media queries and the navigation's shared link names, and on
+layout checks under reduced motion moved to `src/features/roadmaps/AGENTS.md` and
+`tests/e2e/AGENTS.md`.
+
 - An action that needs a session (a write, a read, Refresh) wraps its handler in
   `useSessionAction(action)` (`features/auth/session-action.ts`) and calls the result
   with the pressed control (`event.currentTarget`, or a form's
@@ -12,10 +18,6 @@
   `await` before it.
 - A new Refresh refetch passes `JOIN_READ` (`hooks/roadmap-queries.ts`), so a Refresh
   that asked to reconnect joins the reads reconnecting starts.
-- Component tests answer the reconnect dialog with `findReconnectDialog()` and
-  `reconnectFromDialog(user)` (`features/auth/testing/reconnect-dialog.ts`); E2E with
-  `reconnectDialog(page, language)` and `reconnectButton(page, language)`
-  (`tests/e2e/fixtures/dialogs.ts`).
 - A roadmap's title row is `RoadmapTitleRow` (`components/roadmap-title-row.tsx`) inside
   `StickyHeader` (`components/layout/sticky-header.tsx`), which renders its children
   with `stuck`. Slim a control by its props or classes, in place: moving it to another
@@ -32,10 +34,6 @@
   (`usePinning`): jsdom matches no media query, so nothing pins in component tests, and
   layout is held in `tests/e2e/roadmap-controls.spec.ts` and
   `placement-navigation.spec.ts`.
-- Under reduced motion, `globals.css` gives every element a 0.01ms transition, so a
-  padding or border a class adds arrives a frame late: measure a pinned bar's border
-  box (`useMeasuredHeight` observes it), and run a layout check in E2E with
-  `reducedMotion: "reduce"` too, since the E2E config runs without it.
 - A menu item whose action moves focus runs it once the menu has closed
   (`useMenuChoice`, `lib/use-menu-choice.ts`), as More's items and "Jump to"'s do, so
   focus is not handed back to the trigger after it.
@@ -46,8 +44,7 @@
 - Component tests reach More, Refresh, the conflict review and the folded About
   (`openAbout`, `aboutField`) through `testing/roadmap-page.ts`; E2E through
   `fixtures/roadmap-page.ts`, which also opens a long roadmap (`openLongRoadmap`) and
-  checks focus clear of the bars (`focusClearOfBars`). Playwright matches a role's
-  name by substring: "More" finds "Show more" too, so name it `exact`.
+  checks focus clear of the bars (`focusClearOfBars`).
 - The shell's navigation is `RoadmapNavigation` (`features/roadmaps/navigation/`),
   drawn by `AppShell` in a `form`: `full` beside the page from `DESKTOP_WIDTH` or in the
   drawer below it, `rail` folded. Below it the menu button (`NavigationMenuButton`)
@@ -58,14 +55,17 @@
   shell's page column's padding, inside the row the navigation sticks in. A destination
   is a `NavigationLink`, its `mark` an icon, a roadmap's initials (and whether it has
   unpublished changes) or a count.
-- jsdom matches no media query, so component tests render a phone, its navigation in
-  the closed drawer; `matchMediaQueries(DESKTOP_WIDTH)` (`src/test/media-query.ts`)
-  renders it beside the page. E2E runs at 1280px, the navigation beside the page: its
-  links share names with the cards' and the list's links, so scope a page's own to
-  `main`, and a `filter({ has })` to a locator relative to the item.
-- The top bar is a size container narrower than the screen beside the navigation: a
-  control in it that follows width uses a container variant (`@max-5xl:`), not a
-  viewport one. Its service name may wrap to two lines in Cymraeg until STY-056.
+- The top bar holds the language (`LanguageSwitcher`) and `AccountMenu`
+  (`features/auth/components/`): the theme (`ThemeMenuItem`) and the session's one action,
+  Disconnect while connected, otherwise Connect or Reconnect. Connect's `connect()` runs
+  in the item's click (ADR-003), Disconnect's request once the menu has closed
+  (`useMenuChoice`, as it may open a dialog). The connection shows only as
+  `ConnectionStatus`, a live region visible to no one; a connect shows no notice, a
+  disconnect still does. The service name holds one line at every width in both
+  languages (`tests/e2e/shell.spec.ts`): a wider header control breaks that.
+  `chooseFromAccountMenu(user, name)` and `disconnectFromHeader(user)`
+  (`features/auth/testing/account-menu.ts`) drive the menu in component tests, and
+  `fixtures/account-menu.ts` in E2E.
 - Unpublished changes in the shell (STY-055): the navigation's dot is `UnpublishedDot`
   (`components/layout/`), its count a `NavigationLink` under "All roadmaps", or text
   where it leads nowhere. What a screen reader is told is `UnpublishedAnnouncement`, a

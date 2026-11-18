@@ -5,7 +5,7 @@
   current one
 - **Type**: Feature
 - **Area**: Features/UI + i18n (en + cy) + E2E
-- **Epic**: [EPC-012-app-shell-and-navigation](../../EPC-012-app-shell-and-navigation/README.md)
+- **Epic**: [EPC-012-app-shell-and-navigation](../README.md)
 - **Depends on**: STY-052 (hard: "Jump to" lives in its sticky title row, D5)
 - **Binding ADRs**: ADR-011, ADR-012, ADR-010, ADR-008
 - **Suggested model**: Opus — in-page navigation with scroll position, focus and

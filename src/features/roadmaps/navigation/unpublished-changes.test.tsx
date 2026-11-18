@@ -14,6 +14,7 @@ import { roadmapKeys } from "../hooks/roadmap-queries"
 import { holdCall } from "../testing/held-call"
 import { createInMemoryRoadmapRepository } from "../testing/in-memory-roadmap-repository"
 import { editItemText } from "../testing/item-dialog"
+import { disconnectFromHeader } from "@/features/auth/testing/account-menu"
 
 // STY-055: which roadmaps have unpublished changes, from any page: a dot on each in the
 // shell's navigation and under "All roadmaps" how many, which leads to them (S1 to S4,
@@ -268,11 +269,7 @@ describe("on a desktop", () => {
     const { user, router } = await renderShell()
     await change(user, router, "producta", "A item")
 
-    await user.click(
-      within(screen.getByRole("banner")).getByRole("button", {
-        name: "Disconnect",
-      }),
-    )
+    await disconnectFromHeader(user)
     await user.click(
       screen.getByRole("button", { name: "Keep changes and disconnect" }),
     )
@@ -368,11 +365,7 @@ describe("in Welsh", () => {
 
 describe("Disconnect's question (D2)", () => {
   async function askToDisconnect(user: ReturnType<typeof userEvent.setup>) {
-    await user.click(
-      within(screen.getByRole("banner")).getByRole("button", {
-        name: "Disconnect",
-      }),
-    )
+    await disconnectFromHeader(user)
     return within(await screen.findByRole("alertdialog"))
   }
 

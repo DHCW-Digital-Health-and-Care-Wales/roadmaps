@@ -18,8 +18,13 @@ test("the landing page introduces the app and offers to connect", async ({
   await expect(
     page.getByRole("main").getByRole("button", { name: "Connect Google" }),
   ).toBeEnabled()
+  // The account menu offers it too, and the header shows nothing of the connection.
+  await page
+    .getByRole("banner")
+    .getByRole("button", { name: "Account" })
+    .click()
   await expect(
-    page.getByRole("banner").getByRole("button", { name: "Connect Google" }),
+    page.getByRole("menuitem", { name: "Connect Google" }),
   ).toBeEnabled()
   expect(sheets.tokens).toEqual([])
 })

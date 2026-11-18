@@ -3,7 +3,7 @@
 - **Status**: Done — delivered in its PR, which awaits the owner's merge
 - **Type**: Feature
 - **Area**: Features/UI + i18n (en + cy) + E2E
-- **Epic**: [EPC-012-app-shell-and-navigation](../../EPC-012-app-shell-and-navigation/README.md)
+- **Epic**: [EPC-012-app-shell-and-navigation](../README.md)
 - **Depends on**: none. STY-052 depends on it (STY-052's Publish is its first caller,
   drawn in the EPC-012 UX prototypes), so it is delivered first
 - **Binding ADRs**: ADR-003, ADR-012, ADR-008, ADR-010

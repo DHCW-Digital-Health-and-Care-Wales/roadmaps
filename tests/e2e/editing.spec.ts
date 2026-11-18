@@ -22,6 +22,7 @@ import {
   refusal,
 } from "./fixtures/roadmap-page"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
+import { disconnectFromHeader } from "./fixtures/account-menu"
 
 /**
  * A Product Lead edits a roadmap's English and publishes it, or saves it when the roadmap
@@ -143,10 +144,7 @@ test("Disconnect asks first, and kept changes wait for the next connection (S14)
   await openRoadmap(page, "producta", ITEM)
   await editTitle(page, ITEM, "A clearer first card")
 
-  await page
-    .getByRole("banner")
-    .getByRole("button", { name: "Disconnect" })
-    .click()
+  await disconnectFromHeader(page)
   const question = page.getByRole("alertdialog")
   await expect(question).toContainText("Keep your changes?")
   await question

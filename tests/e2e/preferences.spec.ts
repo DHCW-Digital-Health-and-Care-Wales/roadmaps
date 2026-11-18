@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test"
 
+import { chooseFromAccountMenu } from "./fixtures/account-menu"
 import { expect, roadmapCards, test } from "./fixtures/test"
 
 test("the theme toggle switches to dark, and the choice persists", async ({
@@ -9,12 +10,12 @@ test("the theme toggle switches to dark, and the choice persists", async ({
   await page.goto("./")
   await expect(html).not.toHaveClass(/\bdark\b/)
 
-  await page.getByRole("button", { name: "Switch to dark theme" }).click()
+  await chooseFromAccountMenu(page, "Switch to dark theme")
 
   await expect(html).toHaveClass(/\bdark\b/)
   await page.reload()
   await expect(html).toHaveClass(/\bdark\b/)
-  await page.getByRole("button", { name: "Switch to light theme" }).click()
+  await chooseFromAccountMenu(page, "Switch to light theme")
   await expect(html).not.toHaveClass(/\bdark\b/)
 })
 

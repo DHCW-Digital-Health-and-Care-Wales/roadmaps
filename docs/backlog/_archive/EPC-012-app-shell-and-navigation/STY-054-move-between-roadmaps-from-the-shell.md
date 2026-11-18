@@ -4,7 +4,7 @@
   families page, beside the page and folding to a rail on a desktop, a drawer on a phone
 - **Type**: Feature + Docs
 - **Area**: Features/UI + Routing + i18n (en + cy) + E2E + Docs
-- **Epic**: [EPC-012-app-shell-and-navigation](../../EPC-012-app-shell-and-navigation/README.md)
+- **Epic**: [EPC-012-app-shell-and-navigation](../README.md)
 - **Depends on**: STY-052 (preferred order: its phone menu button sits in STY-052's
   sticky strip, D8)
 - **Binding ADRs**: ADR-010 _Deferred: the dashboard shell_, ADR-004, ADR-008, ADR-002

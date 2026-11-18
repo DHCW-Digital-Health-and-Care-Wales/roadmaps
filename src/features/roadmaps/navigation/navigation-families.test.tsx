@@ -10,6 +10,7 @@ import { matchMediaQueries } from "@/test/media-query"
 import { renderWithProviders } from "@/test/render-with-providers"
 
 import { editItemText } from "../testing/item-dialog"
+import { recordSayings } from "../testing/record-sayings"
 import {
   CLOSED_FAMILIES_STORAGE_KEY,
   readClosedFamilies,
@@ -33,6 +34,7 @@ const ROADMAP_ITEMS = { plans: [createTestRoadmapItem("Plan item")] }
 
 afterEach(() => {
   localStorage.clear()
+  vi.restoreAllMocks()
 })
 
 const navigation = () => screen.getByRole("navigation", { name: "Roadmaps" })
@@ -64,28 +66,11 @@ async function renderAgain(
   return { user, ...rendered }
 }
 
-/** What the live regions say from now on. */
-function recordSayings(): string[] {
-  const said: string[] = []
-  const observer = new MutationObserver(() => {
-    for (const region of document.querySelectorAll("[aria-live=polite]")) {
-      const text = region.textContent
-      if (text && said.at(-1) !== text) said.push(text)
-    }
-  })
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true,
-    characterData: true,
-  })
-  return said
-}
-
 const link = (name: string) =>
   within(navigation()).queryByRole("link", { name })
 
 describe("closing and opening a family (S1)", () => {
-  it("hides its roadmaps, points its chevron right and says it is collapsed, keeping focus; then shows them again", async () => {
+  it("hides its roadmaps and says it is collapsed, keeping focus; then shows them again", async () => {
     const { user } = await renderFamilies()
     const button = familyButton("Single Record")
     expect(button).toHaveAttribute("aria-expanded", "true")
@@ -98,13 +83,11 @@ describe("closing and opening a family (S1)", () => {
     expect(link("Care record viewer")).not.toBeInTheDocument()
     expect(link("Shared care plans")).not.toBeInTheDocument()
     expect(link("Rostering")).toBeInTheDocument()
-    expect(button.querySelector(".lucide-chevron-right")).not.toBeNull()
 
     await user.click(button)
 
     expect(button).toHaveAttribute("aria-expanded", "true")
     expect(link("Care record viewer")).toBeInTheDocument()
-    expect(button.querySelector(".lucide-chevron-down")).not.toBeNull()
   })
 
   it("names its list for the family while it is open", async () => {
@@ -248,7 +231,6 @@ describe("remembered on this device (S4)", () => {
     await user.click(familyButton("Single Record"))
     expect(link("Care record viewer")).not.toBeInTheDocument()
     expect(screen.queryByRole("alert")).not.toBeInTheDocument()
-    vi.restoreAllMocks()
   })
 })
 

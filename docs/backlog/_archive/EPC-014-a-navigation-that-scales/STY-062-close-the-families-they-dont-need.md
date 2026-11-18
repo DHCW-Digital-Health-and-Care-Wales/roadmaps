@@ -121,11 +121,13 @@ key needs no migration.
 
 ### Departures
 
-- **The closed families live in `NavigationSearchProvider`** (agent): the provider's name
-  now undersells it, but it already holds the groups, the shell's second live region and
-  the state shared by the sidebar and the drawer, and the epic says to extend it, so
-  `closed`, `toggleFamily` and `toggleAllFamilies` join `useNavigationSearch()` rather
-  than a second provider.
+- **The closed families reach the navigation through `NavigationSearchProvider`**
+  (agent): the provider already holds the groups, the shell's second live region and the
+  state shared by the sidebar and the drawer, and the epic says to extend it, so `closed`,
+  `allClosed`, `toggleFamily` and `toggleAllFamilies` join `useNavigationSearch()`
+  rather than a second provider. The state itself (storage, arrival) is the
+  `useClosedFamilies` hook the provider composes, so the provider is not named for what
+  it holds but does not hold the logic.
 - **A `navigation` variant of `Button`** (agent): white on navy with DHCW's active blue on
   hover, no border. `ghost` with class overrides hid the focus fill, since an
   `aria-expanded` background beat `focus-visible:focus-fill`; the focus tour caught it.
@@ -143,19 +145,21 @@ key needs no migration.
 - **Arriving opens the family once per arrival** (agent, D5): the provider compares the
   current roadmap and its family with the last it handled while rendering, so closing the
   current roadmap's family afterwards (its button, or "Close all", S3) is not undone, and
-  a refetch or a language change, which keep the family's key, do not reopen it.
+  a refetch or a language change, which keep the family's key, do not reopen it. Disconnect
+  and connect again on a roadmap's page counts as arriving, since the roadmaps are read anew.
 - **A reload ends the session** (agent): the E2E scenarios that reload connect again, as
   the Product Lead does; the closed families are read from storage before they do.
 
 ### Contract for dependents
 
-- `useNavigationSearch()` also gives `closed` (a set of `RoadmapGroup.key`),
+- `useNavigationSearch()` also gives `closed` (a set of `RoadmapGroup.key`), `allClosed`,
   `toggleFamily(key)` and `toggleAllFamilies()` (says "All families closed" or "All
   families open" in the search's live region). `RoadmapNavigation` shows a family as a
   button only while the list is whole, in full and names families (`foldable`); STY-063's
   narrowing must leave `foldable` false and show closed families' roadmaps as the search
   does (`narrowGroups` already ignores `closed`).
-- `closed-families.ts` (`features/roadmaps/navigation/`): `readClosedFamilies`,
+- `use-closed-families.ts` holds the closed set and its arrival rule;
+  `closed-families.ts` (`features/roadmaps/navigation/`): `readClosedFamilies`,
   `storeClosedFamilies` and `CLOSED_FAMILIES_STORAGE_KEY` (`roadmaps.navigation.closed`, a
   JSON array of family keys; an unreadable value reads as none closed, with no error shown).
 - Catalogue keys `roadmaps.navigation.families.*` (closeAll, closeAllName, openAll,

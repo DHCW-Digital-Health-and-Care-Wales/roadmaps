@@ -10,6 +10,7 @@ import { matchMediaQueries } from "@/test/media-query"
 import { renderWithProviders } from "@/test/render-with-providers"
 
 import { expectOpeningFocus } from "../testing/opening-focus"
+import { recordSayings } from "../testing/record-sayings"
 
 // STY-061: the search at the top of the shell's navigation, narrowing the roadmaps as
 // the Product Lead types, on a desktop unless a test says otherwise. What the navigation
@@ -71,26 +72,6 @@ function linkNames() {
   return within(navigation())
     .getAllByRole("link")
     .map((link) => link.textContent)
-}
-
-/**
- * Everything the page's live regions say from now on, in order: the search's and the
- * shell's, which are always in the page.
- */
-function recordSayings(): string[] {
-  const said: string[] = []
-  const observer = new MutationObserver(() => {
-    for (const region of document.querySelectorAll("[aria-live=polite]")) {
-      const text = region.textContent
-      if (text && said.at(-1) !== text) said.push(text)
-    }
-  })
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true,
-    characterData: true,
-  })
-  return said
 }
 
 describe("the navigation's search", () => {

@@ -6,24 +6,18 @@ import {
   useRef,
   useState,
 } from "react"
-import { useParams } from "@tanstack/react-router"
 import { useTranslation } from "react-i18next"
 
 import { useLanguage } from "@/i18n"
 
 import { groupRoadmaps } from "../group-roadmaps"
 import { useRoadmaps } from "../hooks/use-roadmaps"
-import { readClosedFamilies, storeClosedFamilies } from "./closed-families"
 import { narrowGroups, searchKey } from "./narrow-roadmaps"
 import {
   type NavigationSearch,
   NavigationSearchContext,
 } from "./navigation-search-context"
-
-/** `keys` but for `key`. */
-function without(keys: ReadonlySet<string>, key: string): ReadonlySet<string> {
-  return new Set([...keys].filter((other) => other !== key))
-}
+import { useClosedFamilies } from "./use-closed-families"
 
 /** How long typing pauses before a screen reader is told how many match (S6). */
 export const TYPING_PAUSE_MS = 600
@@ -49,12 +43,7 @@ export function NavigationSearchProvider({
   const [typed, setTyped] = useState(0)
   // What was last said, and how many times, so the same words are said again.
   const [said, setSaid] = useState({ text: "", times: 0 })
-  const [closed, setClosed] = useState(readClosedFamilies)
   const focusOnShow = useRef(false)
-  const currentId = useParams({
-    strict: false,
-    select: (params) => params.roadmapId,
-  })
 
   const groups = useMemo(
     () => (roadmaps ? groupRoadmaps(roadmaps, language) : null),
@@ -68,25 +57,7 @@ export function NavigationSearchProvider({
     [groups, key, language],
   )
 
-  useEffect(() => {
-    storeClosedFamilies(closed)
-  }, [closed])
-  // Arriving on a roadmap's page, by any route, opens its family once the roadmaps are
-  // read; closing it afterwards, by its button or "Close all", is the Product Lead's.
-  const currentFamily = groups?.find((group) =>
-    group.roadmaps.some((roadmap) => roadmap.id === currentId),
-  )?.key
-  // Starts from no page, so a page already open as the provider mounts counts as arrived.
-  const [arrival, setArrival] = useState<{
-    id: string | undefined
-    family: string | undefined
-  }>({ id: undefined, family: undefined })
-  if (arrival.id !== currentId || arrival.family !== currentFamily) {
-    setArrival({ id: currentId, family: currentFamily })
-    if (currentFamily !== undefined && closed.has(currentFamily)) {
-      setClosed(without(closed, currentFamily))
-    }
-  }
+  const families = useClosedFamilies(groups)
 
   const say = (text: string) => {
     setSaid((last) => ({ text, times: last.times + 1 }))
@@ -121,21 +92,18 @@ export function NavigationSearchProvider({
       setTyped(0)
       say(t("roadmaps.navigation.search.showingAll"))
     },
-    closed,
-    toggleFamily: (key) => {
-      setClosed(
-        closed.has(key) ? without(closed, key) : new Set([...closed, key]),
-      )
-    },
+    closed: families.closed,
+    allClosed: families.allClosed,
+    toggleFamily: families.toggleFamily,
     toggleAllFamilies: () => {
-      const keys = (groups ?? []).map((group) => group.key)
-      const opens = keys.every((key) => closed.has(key))
-      setClosed(opens ? new Set() : new Set(keys))
       say(
-        opens
-          ? t("roadmaps.navigation.families.allOpened")
-          : t("roadmaps.navigation.families.allClosed"),
+        t(
+          families.allClosed
+            ? "roadmaps.navigation.families.allOpened"
+            : "roadmaps.navigation.families.allClosed",
+        ),
       )
+      families.toggleAll()
     },
     requestFocus: () => {
       focusOnShow.current = true

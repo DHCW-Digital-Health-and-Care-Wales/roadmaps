@@ -31,6 +31,8 @@ export interface NavigationSearch {
   requestFocus: () => void
   /** The families closed, by `RoadmapGroup.key`; remembered on this device (STY-062 D4). */
   closed: ReadonlySet<string>
+  /** Every family is closed: the button over them opens them rather than closes. */
+  allClosed: boolean
   /** Closes the family if it is open, and opens it if it is closed (STY-062 S1). */
   toggleFamily: (key: string) => void
   /**

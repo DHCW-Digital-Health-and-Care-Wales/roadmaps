@@ -104,7 +104,7 @@ export function RoadmapNavigation({ form }: RoadmapNavigationProps) {
         <>
           {foldable && (
             <CloseAllFamilies
-              allClosed={groups.every((group) => search.closed.has(group.key))}
+              allClosed={search.allClosed}
               onPress={search.toggleAllFamilies}
             />
           )}
@@ -195,6 +195,7 @@ function RoadmapGroupLinks({
             {name}
           </span>
           {unpublished && (
+            // As an entry's dot (`dotClasses`), the button being the group in focus.
             <UnpublishedDot className="bg-focus group-focus-visible/button:bg-focus-foreground" />
           )}
           {closed ? (

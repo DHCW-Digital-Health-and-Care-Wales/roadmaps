@@ -18,15 +18,12 @@ export async function tabTo(
 ) {
   for (let presses = 0; presses < limit; presses += 1) {
     await page.keyboard.press(key)
-    const focus = await target.evaluate((element) =>
-      element === document.activeElement
-        ? "target"
-        : document.activeElement === document.body
-          ? "left"
-          : "elsewhere",
-    )
-    if (focus === "target") return
-    if (focus === "left") {
+    const { onTarget, leftThePage } = await target.evaluate((element) => ({
+      onTarget: element === document.activeElement,
+      leftThePage: document.activeElement === document.body,
+    }))
+    if (onTarget) return
+    if (leftThePage) {
       throw new Error(
         "Tabbing left the page before reaching the target: start from a control before it",
       )

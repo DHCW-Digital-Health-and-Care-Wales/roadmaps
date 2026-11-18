@@ -23,7 +23,8 @@ the skill should offer the shape, and when.
 
 ## Measurement
 
-At commit `1af519f`, from the STY-065 session of 2026-11-18:
+From the STY-065 session of 2026-11-18, whose prototype was never committed, so the
+counts are that session's runs and cannot be reproduced at a commit:
 
 | Area                                | Measurement                                                               | Verdict                      |
 | ----------------------------------- | ------------------------------------------------------------------------- | ---------------------------- |

@@ -115,17 +115,19 @@ any file under `.agents/skills/` or `.claude/agents/`) in two cases:
 - **The owner asked for the change**: the Summary or acceptance criteria of
   the record it delivers, as they stand on the base branch, or the owner's
   own request, names it.
-- **It is a correction**: the delivery's own change makes a line there false
-  (an example quoting copy it renames, a name, path or command it moves), and
-  the edit states the same rule with the true fact. The PR body lists each
-  correction, so a reviewer can check that it changes no rule.
+- **It is a correction**: the edit makes a false line true without changing
+  what the line asks an agent to do, such as an example quoting copy the
+  delivery renames, a name, path or command it moves, or a dead pointer. The
+  PR body's Decisions lists each correction, so a reviewer can check that it
+  changes no rule.
 
-Any other guide change in a delivery is **incidental**: one that adds a rule
-or a pattern, or changes what a line asks an agent to do, however its
-Delivery section explains it. Only a retrospective makes it, in its own PR,
-so the owner sees every change that can alter future delivery. The delivery
-names each such learning for rungs 4 and 5 in its handoff for the
-retrospective to weigh.
+Any other guide change in a delivery is **incidental**, however its Delivery
+section explains it: a rule or pattern added, removed or reworded. Only a
+retrospective makes it, in its own PR, so the owner sees every change that
+can alter future delivery. The delivery names in its handoff, for the
+retrospective to weigh, each such learning for rungs 4 and 5, and each guide
+line its change makes false that no correction can make true, such as a rule
+about something the delivery removes.
 
 ## How to write it
 

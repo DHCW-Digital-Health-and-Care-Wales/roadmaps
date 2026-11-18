@@ -70,6 +70,12 @@ leads to each. It changes nothing about how changes are kept or published.
 - **D6** (agent, 2026-11-18): while the roadmaps are unread (not connected, loading,
   or a list that failed) the count shows as text that leads nowhere, over hiding it: the
   changes outlive Disconnect (STY-025 S14), and S1 says from any page.
+- **D7** (owner, 2026-11-18, navigation UX analysis decision 9; delivered by
+  [STY-063](../../EPC-014-a-navigation-that-scales/STY-063-show-only-the-roadmaps-with-unpublished-changes.md)):
+  with two or more roadmaps changed, the count is a button that shows only them, and
+  every roadmap when pressed again, instead of leading to each in turn. Changes D5 for
+  two or more; S2 then holds by the narrowed list and the dots. With one, D5 stands; D6
+  stands at any count.
 
 ## Out of scope
 

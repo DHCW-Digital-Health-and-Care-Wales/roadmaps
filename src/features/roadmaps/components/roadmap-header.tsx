@@ -175,8 +175,8 @@ export function RoadmapHeader({
           <div
             key="details"
             className={layoutClasses.details}
-            // Stuck, from after it, the block lets go to show it in place; from
-            // before, Tab passes it by.
+            // Stuck, a control here reached from after it makes the block let go and
+            // show it; from before, Tab passes it by.
             {...(stuck ? LEFT_OUT : {})}
           >
             {details}

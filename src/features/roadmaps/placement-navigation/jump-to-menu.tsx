@@ -22,11 +22,10 @@ export interface JumpToMenuProps {
  * "Jump to", the jump control narrower than a tablet, beside "Add an item" in a
  * roadmap's header and after More once stuck (STY-065 S7): a menu of the page's jump
  * targets, each with its count and pending mark, the current one ticked. The button
- * names the current one once the page has reached it
- * ("Jump to: Later", STY-053 S3, D8), on one line, the name cut where the row is short
- * of room (STY-060 S5); its accessible name and the open list keep it whole. It fills
- * what holds it. A jump waits for the menu to close, so focus lands on the heading and
- * stays there.
+ * names the current one once the page has reached it ("Jump to: Later", STY-053 S3,
+ * D8), on one line, the name cut where the row is short of room (STY-060 S5); its
+ * accessible name and the open list keep it whole. It fills what holds it. A jump
+ * waits for the menu to close, so focus lands on the heading and stays there.
  */
 export function JumpToMenu({
   navigation: { summaries, current, jump },

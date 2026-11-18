@@ -42,7 +42,7 @@ What a roadmap says about the product it is for: its vision, service description
 family and category. A roadmap's page shows them on request, and the roadmap dialog
 edits them with the roadmap's title, status label, product lead and last updated date
 (STY-065).
-_Avoid_: About this roadmap, roadmap details (the list of a roadmap's facts on its page)
+_Avoid_: About this roadmap
 
 **Short name**:
 The name a Product Lead gives a roadmap when adding it, such as "Community Nursing":

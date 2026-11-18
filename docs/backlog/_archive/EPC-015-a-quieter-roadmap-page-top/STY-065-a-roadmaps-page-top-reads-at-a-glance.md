@@ -177,7 +177,6 @@ when it shows, then the placement links, as they are drawn
   "Roadmap title", in the roadmap dialog and in "Add a roadmap": a roadmap's title is
   the name of the product it is for. Changes D6 and S9's "Roadmap title", and STY-041's
   label; left blank it says "Enter a product name". "Roadmap last updated" stands (D5).
-
 - **D13** (agent, 2026-11-18, correctness review round 1): from 768px the stuck strip
   holds its hidden details between More and the placement links, where D8 puts them in
   the page's order. Shift+Tab from the first link therefore lets the strip go to show
@@ -235,7 +234,7 @@ changes and the conflict review.
   `openProductDetails`, `openEditRoadmapDialog` (opens the details first)
   (`features/roadmaps/testing/`). E2E: `openProductDetails`, `openEditRoadmapDialog`,
   `openEditRoadmapDialogFromMore`, `contentRight` (`tests/e2e/fixtures/`);
-  `focusClearOfBars` now reads once the bars have held still.
+  `focusClearOfBars` now reads once the bars have held still, and says so when they never do.
 - **Data source**: nothing written changes.
 
 ### Scenario evidence

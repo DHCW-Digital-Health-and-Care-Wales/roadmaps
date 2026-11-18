@@ -183,12 +183,13 @@ const NEVER_SETTLED = "the pinned bars never held still"
  * them. Read once the bars have settled after the scroll that focusing caused: a header
  * that has just stuck passes through a frame or two at a height it then leaves (its
  * title changes size as it sticks), and the page follows it, so the bars' bottom and
- * top and the scroll are read until they have held for several frames.
+ * top and the scroll are read until they have held for several frames. Bars still
+ * moving after two seconds are reported as such, not read.
  */
 export async function focusClearOfBars(page: Page): Promise<string | null> {
   const settled = await page.evaluate(
     () =>
-      new Promise<boolean>((settled) => {
+      new Promise<boolean>((resolve) => {
         const STILL_FRAMES = 5
         const MAX_FRAMES = 120
         const place = () => {
@@ -208,8 +209,8 @@ export async function focusClearOfBars(page: Page): Promise<string | null> {
           still = now === last ? still + 1 : 0
           last = now
           frames += 1
-          if (still >= STILL_FRAMES) settled(true)
-          else if (frames >= MAX_FRAMES) settled(false)
+          if (still >= STILL_FRAMES) resolve(true)
+          else if (frames >= MAX_FRAMES) resolve(false)
           else requestAnimationFrame(frame)
         }
         requestAnimationFrame(frame)

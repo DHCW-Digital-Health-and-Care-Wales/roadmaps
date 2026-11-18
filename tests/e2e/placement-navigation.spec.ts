@@ -17,10 +17,10 @@ import {
 import { expect, test } from "./fixtures/test"
 
 /**
- * STY-053: a roadmap's page reaches any placement from its header, by "Jump to" narrower
- * than a tablet or a row of links from one (768px, STY-065 S6, S7), each with its count and pending
- * mark; the page marks which placement it is in; and "Product details" folds to one
- * line.
+ * STY-053: a roadmap's page reaches any placement from its header, by "Jump to"
+ * narrower than a tablet or a row of links from one (768px, STY-065 S6, S7), each with
+ * its count and pending mark; the page marks which placement it is in; and "Product
+ * details" folds to one line.
  */
 
 const DESKTOP = { width: 1280, height: 800 }

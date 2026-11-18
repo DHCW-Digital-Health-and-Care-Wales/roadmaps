@@ -8,7 +8,7 @@
 - **Epic**: [EPC-014-a-navigation-that-scales](../../EPC-014-a-navigation-that-scales/README.md)
 - **Depends on**: none
 - **Binding ADRs**: ADR-010, ADR-008, ADR-005, ADR-002
-- **Delivered**: _the PR, once open_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/155
 - **Suggested model**: Opus — state shared by the sidebar, the rail and the drawer
   across pages, a live region, and the shell's top row rebuilt
 

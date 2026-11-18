@@ -87,10 +87,10 @@ export function NavigationSearchProvider({
       setTyped(0)
       say(t("roadmaps.navigation.search.showingAll"))
     },
-    focusWhenShown: () => {
+    requestFocus: () => {
       focusOnShow.current = true
     },
-    takesFocus: () => {
+    takeFocusRequest: () => {
       const takes = focusOnShow.current
       focusOnShow.current = false
       return takes

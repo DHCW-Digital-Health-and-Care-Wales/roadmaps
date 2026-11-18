@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test"
 
+import type { FakeSheets } from "./fixtures/fake-sheets"
 import { type Language, useLanguage } from "./fixtures/look"
 import { NAVIGATION_WORLD } from "./fixtures/navigation-world"
 import { connect, expect, test } from "./fixtures/test"
@@ -42,13 +43,13 @@ function searchBox(page: Page, language: Language = "en"): Locator {
 
 /** The navigation's list, which scrolls under its top row. */
 function navigationList(page: Page): Locator {
-  return navigation(page).locator(":scope > div").last()
+  return navigation(page).locator("[data-slot=navigation-list]")
 }
 
 /** Connects with the sample world's 14 roadmaps, on the home page. */
 async function openWorld(
   page: Page,
-  sheets: { spreadsheet: unknown },
+  sheets: FakeSheets,
   language: Language = "en",
 ) {
   sheets.spreadsheet = NAVIGATION_WORLD

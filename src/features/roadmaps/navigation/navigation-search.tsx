@@ -35,7 +35,7 @@ export function NavigationSearchBox({
         size="icon"
         className="w-full"
         onClick={() => {
-          search.focusWhenShown()
+          search.requestFocus()
           onOpenNavigation()
         }}
       >
@@ -58,7 +58,7 @@ export function NavigationSearchBox({
       <Input
         ref={(element) => {
           input.current = element
-          if (element && search.takesFocus()) element.focus()
+          if (element && search.takeFocusRequest()) element.focus()
         }}
         type="search"
         autoComplete="off"

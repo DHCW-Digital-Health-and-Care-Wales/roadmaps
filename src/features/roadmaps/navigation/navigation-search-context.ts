@@ -19,14 +19,20 @@ export interface NavigationSearch {
    * while the roadmaps are unread (`groups` is `null`) and the search does not show.
    */
   key: string
-  /** Typing in the search: once typing pauses, a screen reader is told how many match. */
+  /**
+   * Typing in the search: sets `query`, and restarts the pause after which a screen
+   * reader is told how many match (S6).
+   */
   type: (query: string) => void
   /** Empties the search, telling a screen reader every roadmap shows (S5). */
   clear: () => void
-  /** Moves focus to the search as it next shows: the rail's spyglass opens it (S9). */
-  focusWhenShown: () => void
-  /** Whether a search box now showing takes focus, asked once as it shows. */
-  takesFocus: () => boolean
+  /** Asks for focus in the search as it next shows: the rail's spyglass opens it (S9). */
+  requestFocus: () => void
+  /**
+   * Takes the request for focus, if there is one, clearing it: only the search box,
+   * once, as it shows.
+   */
+  takeFocusRequest: () => boolean
 }
 
 /** Provided by `NavigationSearchProvider`; read it through `useNavigationSearch`. */

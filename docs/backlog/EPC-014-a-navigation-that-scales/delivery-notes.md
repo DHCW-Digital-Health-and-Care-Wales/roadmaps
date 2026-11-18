@@ -9,5 +9,5 @@
 - What the navigation lists is `useNavigationSearch()`'s `groups` and `found`
   (`narrow-roadmaps.ts`); a new narrowing extends the provider and `narrowGroups`
   rather than filtering in `RoadmapNavigation`.
-- The shell's top row is `NavigationLandmark`'s `top`; its list is the landmark's last
-  child, the element that scrolls.
+- The shell's top row is `NavigationLandmark`'s `top`; its list, the element that
+  scrolls, is `[data-slot=navigation-list]`.

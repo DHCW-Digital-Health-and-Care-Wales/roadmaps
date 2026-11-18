@@ -243,6 +243,23 @@ roadmaps.navigation.all        All roadmaps
 roadmaps.navigation.changed    Product A roadmap, unpublished changes
 ```
 
+## Navigation search
+
+**Shape:** the box is named for what it searches ("Search roadmaps"), which also names
+the rail's spyglass; its placeholder is the bare verb. Nothing found quotes what was
+typed, in curly quotes. What a live region says, and nothing shows, is a short fact
+with no verb of ours: how many match, beginning with the number, or "Showing all
+roadmaps" once the narrowing lets go.
+
+```
+roadmaps.navigation.search.label        Search roadmaps
+roadmaps.navigation.search.placeholder  Search
+roadmaps.navigation.search.clear        Clear search
+roadmaps.navigation.search.found        3 roadmaps match
+roadmaps.navigation.search.noMatch      No roadmaps match “xyz”
+roadmaps.navigation.search.showingAll   Showing all roadmaps
+```
+
 ## Publish and save
 
 **Shape:** "Publish changes" on a published roadmap, "Save changes" on one that is

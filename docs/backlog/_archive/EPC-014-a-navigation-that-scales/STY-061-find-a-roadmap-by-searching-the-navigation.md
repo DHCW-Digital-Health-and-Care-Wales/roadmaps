@@ -183,14 +183,14 @@ Roadmap titles are `LocalisedText`, read with `localise(title, language)`.
   `useNavigationSearch()`: `groups` (every group, `null` until the roadmaps are read),
   `found` (the groups the search narrows to), `query`, `key` (`searchKey(query)`, blank
   while `groups` is `null`, so a search kept past Disconnect narrows nothing),
-  `type`, `clear` (says "Showing all roadmaps"), `focusWhenShown` and `takesFocus`. The
+  `type`, `clear` (says "Showing all roadmaps"), `requestFocus` and `takeFocusRequest`. The
   count's narrowing (STY-063) belongs here too: it empties the search, and a blank
   search cleared under it says nothing.
 - `narrow-roadmaps.ts`: `searchKey`, `findIn` and `narrowGroups`, the one rule for what
   a search finds; STY-062 lets a closed family show what the search finds in it.
 - `AppShell` takes `navigationSearch(form, openNavigation)`, drawn at the start of the
-  top row; `NavigationLandmark` takes `top` and `rail`, its list the landmark's last
-  child, which scrolls under the row.
+  top row; `NavigationLandmark` takes `top` and `rail`, its list
+  (`[data-slot=navigation-list]`) scrolling under the row.
 - Catalogue keys `roadmaps.navigation.search.*` (label, placeholder, clear, found,
   noMatch, showingAll).
 - E2E: `tests/e2e/fixtures/navigation-world.ts` (`NAVIGATION_WORLD`), the analysis's 14

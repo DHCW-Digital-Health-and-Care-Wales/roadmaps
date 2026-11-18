@@ -65,10 +65,11 @@ the next free number across the live tree, `_archive/` and open PRs' files
   its reviewers make, a fixture or seam its stories share. The first delivery
   with such a note creates it; every delivery agent and reviewer on the epic
   reads it. Keep each note a short bullet, current, not a story's history
-  (that is the record's Delivery and its PR). When the epic closes, move each
-  note that holds repo-wide to its narrowest home
-  (`docs/operations/authoring-agent-instructions.md`, _Where it goes_), then
-  archive the file with the epic, in the delivery that archives it.
+  (that is the record's Delivery and its PR). When the epic closes, the
+  delivery that archives it moves each note that holds repo-wide to its
+  narrowest home (`docs/operations/authoring-agent-instructions.md`, _Where it
+  goes_), handing one whose home is a guide file to its retrospective, and
+  archives the file with the epic.
 - The bootstrap stories in `_archive/EPC-001-bootstrap/` predate the templates and keep
   their legacy format.
 

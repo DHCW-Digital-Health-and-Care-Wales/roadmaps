@@ -109,6 +109,16 @@ Read the `AGENTS.md` along each changed path's directory ancestry, including
 referenced cross-area conventions; explicit conditional navigation avoids
 loading unrelated rules.
 
+A delivery PR changes a **guide file** (an `AGENTS.md` or `CLAUDE.md`, or
+any file under `.agents/skills/` or `.claude/agents/`) only when the owner
+asked for that change: the Summary or acceptance criteria of the record it
+delivers, as they stand on the base branch, or the owner's own request,
+names it. Any other guide change in a delivery is **incidental**, however
+its Delivery section explains it, and only a retrospective makes it, in its
+own PR, so the owner sees every change that can alter future delivery. The
+delivery names each such learning for rungs 4 and 5, and each guide line it
+makes false, in its handoff for the retrospective to weigh.
+
 ## How to write it
 
 - Imperative, present tense: "Route every user-facing string through `t()`…",

@@ -81,6 +81,8 @@ export interface NavigationDrawerProps {
   handle: NavigationDrawerHandle
   /** Where focus goes once a link in the drawer is chosen: the page it leads to. */
   page: RefObject<HTMLElement | null>
+  /** The search, sharing the top row with Close menu (STY-061 S10, D5). */
+  search: ReactNode
   children: ReactNode
 }
 
@@ -100,15 +102,19 @@ function isPlainLinkClick(event: MouseEvent): boolean {
  * The navigation as a drawer over the page, from the screen's left edge (STY-054 S5): a
  * modal dialog, so focus stays in it while it is open. Closing it returns focus to the
  * menu button that opened it, unless a link was chosen: then it closes and focus moves
- * to the page, as on any navigation (S1).
+ * to the page, as on any navigation (S1). Its top row holds the search and Close menu,
+ * so "Menu" names it without showing (STY-061 D5); it opens with focus on Close menu, so
+ * a phone's keyboard stays shut until the search is chosen (D7).
  */
 export function NavigationDrawer({
   handle,
   page,
+  search,
   children,
 }: NavigationDrawerProps) {
   const { t } = useTranslation()
   const chosen = useRef(false)
+  const closeButton = useRef<HTMLButtonElement>(null)
   // Back to the menu button that opened it, unless a link was chosen. Read more than once
   // as it closes, so the choice clears only as it opens. Base UI would move on from
   // `<main>` to its first tabbable element, so focus is moved to the page once closed.
@@ -125,24 +131,42 @@ export function NavigationDrawer({
       }}
     >
       <SheetContent
-        className="overflow-y-auto border-r border-sidebar-border bg-sidebar text-sidebar-foreground"
+        className="border-r border-sidebar-border bg-sidebar text-sidebar-foreground"
         onClick={(event) => {
           if (!isPlainLinkClick(event)) return
           chosen.current = true
           handle.close()
         }}
+        initialFocus={closeButton}
         finalFocus={returnToMenuButton}
       >
-        <div className="flex items-center justify-between gap-3 px-4 pt-3">
-          <SheetTitle className="text-heading-xs">
-            {t("layout.navigation.menu")}
-          </SheetTitle>
-          <SheetClose render={<Button variant="header" size="icon-sm" />}>
-            <XIcon aria-hidden="true" />
-            <span className="sr-only">{t("layout.navigation.closeMenu")}</span>
-          </SheetClose>
-        </div>
-        <NavigationLandmark>{children}</NavigationLandmark>
+        <SheetTitle className="sr-only">
+          {t("layout.navigation.menu")}
+        </SheetTitle>
+        <NavigationLandmark
+          top={
+            <>
+              {search}
+              <SheetClose
+                ref={closeButton}
+                render={
+                  <Button
+                    variant="header"
+                    size="icon"
+                    className="ms-auto shrink-0"
+                  />
+                }
+              >
+                <XIcon aria-hidden="true" />
+                <span className="sr-only">
+                  {t("layout.navigation.closeMenu")}
+                </span>
+              </SheetClose>
+            </>
+          }
+        >
+          {children}
+        </NavigationLandmark>
       </SheetContent>
     </Sheet>
   )

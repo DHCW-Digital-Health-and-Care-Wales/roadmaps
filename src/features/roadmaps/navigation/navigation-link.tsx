@@ -11,6 +11,7 @@ import {
 import { cn } from "@/lib/utils"
 
 import { RoadmapSwatch } from "../components/roadmap-swatch"
+import type { FoundPart } from "./narrow-roadmaps"
 
 /** What marks a destination beside its name, and alone in a rail. */
 export type NavigationMark =
@@ -18,12 +19,14 @@ export type NavigationMark =
   | { icon: ReactNode }
   /**
    * A roadmap's colour as a strip, and in a rail its initials in place of its title; a dot
-   * after it while it has unpublished changes (STY-055 D1), which its name then says.
+   * after it while it has unpublished changes (STY-055 D1), which its name then says; in
+   * full, the part of its title the navigation's search found, underlined (STY-061 S1).
    */
   | {
       colour: string | null
       initials: string
       unpublished?: boolean
+      found?: FoundPart | null
     }
   /** A number in a circle in a rail, and a dot beside the name in full. */
   | { count: number }
@@ -151,12 +154,26 @@ function EntryLabel({ rail, name, mark, spoken }: EntryLabelProps) {
             aria-hidden={unpublished || undefined}
             className="min-w-0 wrap-break-word"
           >
-            {name}
+            <FoundName name={name} found={mark.found ?? null} />
           </span>
           {unpublished && <span className="sr-only">{spoken}</span>}
         </>
       )}
       {unpublished && <EntryDot rail={rail} />}
+    </>
+  )
+}
+
+/** A name with the part a search found underlined, read as the name alone. */
+function FoundName({ name, found }: { name: string; found: FoundPart | null }) {
+  if (!found) return name
+  return (
+    <>
+      {name.slice(0, found.start)}
+      <span className="underline decoration-2 underline-offset-3">
+        {name.slice(found.start, found.end)}
+      </span>
+      {name.slice(found.end)}
     </>
   )
 }

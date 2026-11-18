@@ -1,7 +1,8 @@
 - dialog "Menu":
   - heading "Menu" [level=2]
-  - button "Close menu"
   - navigation "Roadmaps":
+    - searchbox "Search roadmaps"
+    - button "Close menu"
     - list:
       - listitem:
         - link "All roadmaps":

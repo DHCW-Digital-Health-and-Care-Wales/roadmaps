@@ -166,6 +166,19 @@ export const cy = {
     navigation: {
       all: "Pob map trywydd",
       changed: "{{name}}, newidiadau heb eu cyhoeddi",
+      search: {
+        label: "Chwilio mapiau trywydd",
+        placeholder: "Chwilio",
+        clear: "Clirio'r chwilio",
+        found_zero: "Dim mapiau trywydd yn cyfateb",
+        found_one: "{{count, number}} map trywydd yn cyfateb",
+        found_two: "{{count, number}} fap trywydd yn cyfateb",
+        found_few: "{{count, number}} map trywydd yn cyfateb",
+        found_many: "{{count, number}} map trywydd yn cyfateb",
+        found_other: "{{count, number}} o fapiau trywydd yn cyfateb",
+        noMatch: "Does dim mapiau trywydd yn cyfateb i “{{query}}”",
+        showingAll: "Yn dangos pob map trywydd",
+      },
     },
     familiesLink: "Teuluoedd, categorïau a sefydliadau",
     lists: {

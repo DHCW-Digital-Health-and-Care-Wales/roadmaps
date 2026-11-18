@@ -212,6 +212,34 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expectNoAxeViolations(page, theme)
     })
 
+    test("the navigation's search: narrowed with a part underlined, then matching nothing, and in the drawer (STY-061)", async ({
+      page,
+    }) => {
+      await page.goto("./")
+      await connect(page)
+      const navigation = page.getByRole("navigation", { name: "Roadmaps" })
+      const search = navigation.getByRole("searchbox", {
+        name: "Search roadmaps",
+      })
+      await search.fill("product a")
+      await expect(navigation.getByRole("link")).toHaveCount(3)
+      await expectNoAxeViolations(page, theme)
+
+      await search.fill("xyz")
+      await expect(
+        navigation.getByText("No roadmaps match “xyz”"),
+      ).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+
+      await page.setViewportSize({ width: 375, height: 800 })
+      await page
+        .getByRole("banner")
+        .getByRole("button", { name: "Menu" })
+        .click()
+      await expect(page.getByRole("dialog", { name: "Menu" })).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+    })
+
     for (const [language, connectName, itemTitle] of [
       ["en", "Connect Google", "Example card with every column"],
       ["cy", "Cysylltu â Google", "Cerdyn enghreifftiol gyda phob colofn"],

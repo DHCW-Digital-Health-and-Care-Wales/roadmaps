@@ -2,7 +2,7 @@
 
 - **Status**: Active — the owner asked on 2026-11-18 to deliver the navigation UX
   prototype as drawn, choosing its chevrons and the count's new behaviour
-- **Progress**: 0 of 4 terminal; next selectable: STY-061; blocked on: nothing
+- **Progress**: 1 of 4 terminal; next selectable: STY-062; blocked on: nothing
 - **Binding ADRs**: ADR-010, ADR-008, ADR-005, ADR-002
 
 ## Summary
@@ -148,12 +148,12 @@ links and buttons, `focus-ring` on the search).
 
 ## Stories
 
-| ID      | Story                                                                                                                         | Area                               | Depends on                                                                                                            | State |
-| ------- | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ----- |
-| STY-061 | [A Product Lead finds a roadmap by searching the navigation](STY-061-find-a-roadmap-by-searching-the-navigation.md)           | Features/UI + i18n (en + cy) + E2E | —                                                                                                                     |       |
-| STY-062 | [A Product Lead closes the families they don't need](STY-062-close-the-families-they-dont-need.md)                            | Features/UI + i18n (en + cy) + E2E | STY-061                                                                                                               |       |
-| STY-063 | [A Product Lead shows only the roadmaps with unpublished changes](STY-063-show-only-the-roadmaps-with-unpublished-changes.md) | Features/UI + i18n (en + cy) + E2E | STY-061, STY-062                                                                                                      |       |
-| STY-064 | [A Product Lead drags the navigation to the width they want](STY-064-drag-the-navigation-to-the-width-they-want.md)           | Features/UI + i18n (en + cy) + E2E | STY-061, [STY-060](../EPC-013-tidy-page-tops/STY-060-one-row-of-controls-at-the-top-and-once-scrolled.md) (preferred) |       |
+| ID      | Story                                                                                                                                                            | Area                               | Depends on                                                                                                            | State |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ----- |
+| STY-061 | [A Product Lead finds a roadmap by searching the navigation](../_archive/EPC-014-a-navigation-that-scales/STY-061-find-a-roadmap-by-searching-the-navigation.md) | Features/UI + i18n (en + cy) + E2E | —                                                                                                                     | ✅    |
+| STY-062 | [A Product Lead closes the families they don't need](STY-062-close-the-families-they-dont-need.md)                                                               | Features/UI + i18n (en + cy) + E2E | STY-061                                                                                                               |       |
+| STY-063 | [A Product Lead shows only the roadmaps with unpublished changes](STY-063-show-only-the-roadmaps-with-unpublished-changes.md)                                    | Features/UI + i18n (en + cy) + E2E | STY-061, STY-062                                                                                                      |       |
+| STY-064 | [A Product Lead drags the navigation to the width they want](STY-064-drag-the-navigation-to-the-width-they-want.md)                                              | Features/UI + i18n (en + cy) + E2E | STY-061, [STY-060](../EPC-013-tidy-page-tops/STY-060-one-row-of-controls-at-the-top-and-once-scrolled.md) (preferred) |       |
 
 ## Sequencing
 

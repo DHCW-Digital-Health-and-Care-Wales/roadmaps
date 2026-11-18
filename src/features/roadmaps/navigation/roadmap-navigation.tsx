@@ -9,15 +9,12 @@ import { localise } from "@/domain/roadmap/localised-text"
 import { useLanguage } from "@/i18n"
 import { cn } from "@/lib/utils"
 
-import {
-  groupRoadmaps,
-  namesFamilies,
-  type RoadmapGroup,
-} from "../group-roadmaps"
+import { namesFamilies, type RoadmapGroup } from "../group-roadmaps"
 import { useGroupName } from "../hooks/use-group-name"
 import { usePendingChanges } from "../editing/pending-changes-context"
-import { useRoadmaps } from "../hooks/use-roadmaps"
+import { findIn } from "./narrow-roadmaps"
 import { NavigationLink, NavigationText } from "./navigation-link"
+import { useNavigationSearch } from "./navigation-search-context"
 import { nextChangedRoadmap } from "./next-changed-roadmap"
 import { roadmapInitials } from "./roadmap-initials"
 
@@ -36,17 +33,19 @@ export interface RoadmapNavigationProps {
  * It says, from every page, which roadmaps have unpublished changes (STY-055): a dot on
  * each, and under "All roadmaps" how many, which leads to one of them. Changes are held
  * for the tab, so the count shows while the roadmaps are unread, as text alone.
+ *
+ * In full, it lists only the roadmaps its search finds, each with the part found
+ * underlined, or says none match (STY-061 S1–S4); the rail lists every roadmap whatever
+ * the search (D4). All roadmaps, the count and the families page always show.
  */
 export function RoadmapNavigation({ form }: RoadmapNavigationProps) {
   const { t } = useTranslation()
-  const language = useLanguage()
-  const { data: roadmaps } = useRoadmaps()
-  const groups = useMemo(
-    () => (roadmaps ? groupRoadmaps(roadmaps, language) : []),
-    [roadmaps, language],
-  )
+  const search = useNavigationSearch()
+  const groups = search.groups ?? []
   const rail = form === "rail"
   const named = namesFamilies(groups)
+  const searched = !rail && search.key !== ""
+  const listed = searched ? search.found : groups
   const { changes } = usePendingChanges()
   const changed = useMemo(() => new Set(changes.keys()), [changes])
   const currentId = useParams({
@@ -78,15 +77,24 @@ export function RoadmapNavigation({ form }: RoadmapNavigationProps) {
           rail={rail}
         />
       </div>
-      {groups.map((group) => (
-        <RoadmapGroupLinks
-          key={group.key}
-          group={group}
-          named={named}
-          rail={rail}
-          changed={changed}
-        />
-      ))}
+      {searched && listed.length === 0 ? (
+        <p className="px-2 text-body-xs wrap-anywhere">
+          {t("roadmaps.navigation.search.noMatch", {
+            query: search.query.trim(),
+          })}
+        </p>
+      ) : (
+        listed.map((group) => (
+          <RoadmapGroupLinks
+            key={group.key}
+            group={group}
+            named={named}
+            rail={rail}
+            changed={changed}
+            searchKey={searched ? search.key : ""}
+          />
+        ))
+      )}
       <ul className="flex flex-col gap-1 border-t border-sidebar-border pt-3">
         <NavigationLink
           to="/families"
@@ -108,6 +116,8 @@ interface RoadmapGroupLinksProps {
   rail: boolean
   /** The roadmaps with unpublished changes, by id. */
   changed: ReadonlySet<string>
+  /** What the search compares (`searchKey`), underlined where a title holds it. */
+  searchKey: string
 }
 
 /** One family's roadmaps, in a list named for the family. */
@@ -116,6 +126,7 @@ function RoadmapGroupLinks({
   named,
   rail,
   changed,
+  searchKey,
 }: RoadmapGroupLinksProps) {
   const language = useLanguage()
   const groupName = useGroupName()
@@ -152,6 +163,7 @@ function RoadmapGroupLinks({
                 colour: roadmap.colour,
                 initials: roadmapInitials(title),
                 unpublished: changed.has(roadmap.id),
+                found: findIn(title, searchKey),
               }}
             />
           )

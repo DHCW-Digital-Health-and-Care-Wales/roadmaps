@@ -7,7 +7,7 @@
 - **Epic**: [EPC-013-tidy-page-tops](README.md)
 - **Depends on**: STY-059 (hard: the header block and the control row it builds)
 - **Binding ADRs**: ADR-010, ADR-008, ADR-012
-- **Delivered**: <PR URL>
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/158
 - **Suggested model**: Opus — the sticky strip, the jump control and the foot bar
   across three widths and two languages, with pinned insets and focus
 

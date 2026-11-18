@@ -110,8 +110,9 @@ Excluded:
   choices of position in every Move menu, and "Undo order" (STY-050 S15).
 - **A phone has the compact view too** (decision 9), since the phone's scroll is the
   longest.
-- **Kept on this device**, as the navigation's fold, width and closed families are
-  (STY-054 D5): one choice for every roadmap, not sent anywhere. Nothing new is read
+- **Kept on this device, across sessions**, as the navigation's fold, width and closed
+  families are (STY-054 D5): one choice for every roadmap, not sent anywhere (decision
+  11). Nothing new is read
   from or written to the data source, and the public site sees no change.
 - The app's look, from its own tokens (ADR-010). Copy is draft English in the
   product's voice, reusing the catalogue's strings; the new words are "Cards",
@@ -209,7 +210,7 @@ board and the table.
 | 8   | Where an item's actions are in compact.                                                                                                                                                                                                                                                                                                              | (a) Move and Edit on every item, "Undo changes" and Remove in the opened item (A, as drawn); (b) every action on every item; (c) one "…" menu on each item holding them all                                                                                                                    |
 | 9   | Whether a phone has the compact view.                                                                                                                                                                                                                                                                                                                | (a) yes, as drawn; (b) a desktop and tablet only                                                                                                                                                                                                                                               |
 | 10  | The board's order (C only): Now, Next and Later first, then the three sections. Reopens STY-021 D1, the six placements in the public site's order, and leaves the placement links in an order the page no longer has.                                                                                                                                | (a) horizons, then sections, as drawn, the links unchanged; (b) the same, the links reordered to match; (c) Recently delivered as a strip above the board, so the page's order holds                                                                                                           |
-| 11  | Whether the view is kept, and for what.                                                                                                                                                                                                                                                                                                              | (a) on this device, for every roadmap, as the navigation's fold is (STY-054 D5), as drawn; (b) on this device, for each roadmap; (c) for the visit only                                                                                                                                        |
+| 11  | Whether the view is kept, and for what.                                                                                                                                                                                                                                                                                                              | (a) on this device, across sessions, for every roadmap, as the navigation's fold is (STY-054 D5): the owner's answer; (b) on this device, for each roadmap; (c) for the visit only                                                                                                             |
 | 12  | What switching does to the page. The three parts of (a) can be chosen apart.                                                                                                                                                                                                                                                                         | (a) the placement the page was in stays at the top, focus stays on the switch, and items opened are closed, as drawn; (b) the page returns to its top                                                                                                                                          |
 | 13  | What the switch is. The app has no control of this kind yet; the DHCW design system has a button group and tabs (`dhcw-design-system`, `src/components/actions/_button-group.scss` and `src/components/content/_tabs.scss`). The owner turned down tabs for a roadmap's placements (STY-053 D1); tabs here would switch the view, not the placement. | (a) a group of two buttons, the view in use pressed (D from 768px and F, as drawn), from the design system's button group; (b) tabs; (c) one button, "Compact view", pressed or not, at every width (D's phone, as drawn)                                                                      |
 | 14  | The table's column headings (B only).                                                                                                                                                                                                                                                                                                                | (a) repeated in each placement, as drawn; (b) once, stuck under the header                                                                                                                                                                                                                     |
@@ -228,21 +229,23 @@ board and the table.
 
 ## Outcome
 
-On 2026-11-18, over three replies, the owner answered three rows, asked for the frames
+On 2026-11-18, over four replies, the owner answered four rows, asked for the frames
 to follow the top of the page as STY-065 left it, and asked for journey 3:
 
 | Decision  | Answer                                                                                                                                                                                                    |
 | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 3         | (a): design A, rows.                                                                                                                                                                                      |
 | 6         | (d), the owner's own: a row shows only the title and, where there is room, the start of the description, cut with "…". It never wraps and never grows, so Move and Edit are always in view.               |
+| 11        | The view chosen is remembered for the user across sessions. The app does not know who is using it (the glossary's Connection), so that is (a): kept on this device, as the navigation's fold is.          |
 | 18        | (b), after seeing a phone's titles cut on one line: on a phone a row shows as many lines as its title needs.                                                                                              |
 | Journey 3 | The owner's request: the card view stops a long text field after three lines, with "…" and a "Show more" link, or similar, that shows the rest. Design G draws it; decisions 22 to 26 are its open rules. |
 
 The agent took what follows from those, to draw them: the row loses its phase, which an
 opened row shows with the other fields; a phone's row shows no description, since its
 line has no room for one (18 (c) asks); and on a phone the pending tag and an unplaced
-item's flag sit under the title, in words (decisions 19 and 20). The owner's replies
-went on with a roadmap's page, so the frames keep decision 2 (a). Rows 10 and 14 fell
+item's flag sit under the title, in words (decisions 19 and 20). Decision 11's "for every
+roadmap" is the agent's reading too: the owner said the view, not a roadmap's view. The
+owner's replies went on with a roadmap's page, so the frames keep decision 2 (a). Rows 10 and 14 fell
 away with the board and the table.
 
 No record holds these yet: decision 1 is open, and so are 4 (where the switch is) and

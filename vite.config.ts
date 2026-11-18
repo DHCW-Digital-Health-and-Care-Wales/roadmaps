@@ -60,6 +60,7 @@ export default defineConfig({
     include: [
       "src/**/*.test.{ts,tsx}",
       "build/**/*.test.ts",
+      "scripts/**/*.test.ts",
       "tests/fixtures/**/*.test.ts",
     ],
     setupFiles: ["./src/test/setup.ts"],

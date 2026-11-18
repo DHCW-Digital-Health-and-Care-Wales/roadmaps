@@ -33,26 +33,33 @@ port_in_use() {
 
 # A symlink lock rather than flock(1), which macOS lacks: `ln -s` creates it
 # atomically with its owner's pid as the target, so a waiter breaks only a lock
-# whose process has died — never a slow one — by renaming it aside. Best
-# effort: two waiters breaking the same dead lock at once can still overlap.
+# whose process has died, never a slow one.
 lock() {
   local tries=0 owner
   mkdir -p "$REGISTRY"
   until ln -s "$$" "$LOCK" 2>/dev/null; do
     owner="$(readlink "$LOCK" 2>/dev/null || true)"
-    if [ -n "$owner" ] && ! kill -0 "$owner" 2>/dev/null \
-      && [ "$(readlink "$LOCK" 2>/dev/null)" = "$owner" ]; then
-      mv -f "$LOCK" "$LOCK.stale.$$" 2>/dev/null && rm -f "$LOCK.stale.$$"
+    if [ -n "$owner" ] && ! kill -0 "$owner" 2>/dev/null; then
+      break_dead_lock "$owner"
       continue
     fi
     tries=$((tries + 1))
     [ "$tries" -lt 600 ] || {
-      echo "worktree: registry lock held by pid ${owner:-?}; remove $LOCK if no worktree command is running" >&2
+      echo "worktree: registry lock held by pid ${owner:-?}; remove $LOCK and $LOCK.break if no worktree command is running" >&2
       exit 1
     }
     sleep 0.1
   done
   trap unlock EXIT
+}
+
+# Removes the lock if the dead owner still holds it. Under a second lock, so a
+# waiter that saw the dead owner never removes the lock another waiter has
+# taken since: it re-reads the owner first.
+break_dead_lock() {
+  ln -s "$$" "$LOCK.break" 2>/dev/null || return 0
+  [ "$(readlink "$LOCK" 2>/dev/null || true)" = "$1" ] && rm -f "$LOCK"
+  rm -f "$LOCK.break"
 }
 
 unlock() {
@@ -63,7 +70,8 @@ unlock() {
 # Each slot file holds its worktree's path. A worktree deleted without
 # `teardown` — its path gone, and git no longer listing it — has its slot freed
 # here, under the lock. A path git still lists (moved by hand, or on an
-# unmounted disk) keeps its slot.
+# unmounted disk) keeps its slot. A `git worktree move` unlists the old path,
+# so a moved worktree reruns setup to claim a slot under its new path.
 reap_stale_slots() {
   local file path listed
   listed="$(git -C "$ROOT" worktree list --porcelain 2>/dev/null || true)"
@@ -117,7 +125,7 @@ release_slot() {
 }
 
 # Claims (or confirms) the slot and rewrites .env.worktree from it, so the
-# file can never name a slot the registry has given to someone else.
+# file names the slot the registry holds for this path.
 ensure_env() {
   lock
   claim_slot

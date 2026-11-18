@@ -38,6 +38,14 @@ export interface AppShellProps {
   /** The navigation's destinations in `form`, composed by the root route. */
   navigation: (form: NavigationForm) => ReactNode
   /**
+   * The navigation's search in `form`, at the start of its top row, composed by the root
+   * route (STY-061); `openNavigation` opens a rail, remembered as open, for its spyglass.
+   */
+  navigationSearch: (
+    form: NavigationForm,
+    openNavigation: () => void,
+  ) => ReactNode
+  /**
    * How many roadmaps have unpublished changes: the menu buttons carry a dot and say so
    * while it is above 0 (STY-055 D4), and a screen reader is told when it changes (S4).
    * The navigation draws its own count. A prop, not a context from the route, so a shell
@@ -119,6 +127,7 @@ function useNavigationFolded() {
 export function AppShell({
   headerActions,
   navigation,
+  navigationSearch,
   unpublishedRoadmaps,
   children,
 }: AppShellProps) {
@@ -129,6 +138,10 @@ export function AppShell({
   const desktop = useMediaQuery(DESKTOP_WIDTH)
   const [folded, setFolded] = useNavigationFolded()
   const [drawer] = useState(createSheetHandle)
+  const form: NavigationForm = folded ? "rail" : "full"
+  const openNavigation = () => {
+    setFolded(false)
+  }
 
   return (
     <NavigationDrawerContext value={desktop ? null : drawer}>
@@ -151,11 +164,19 @@ export function AppShell({
           </a>
           <UnpublishedAnnouncement count={unpublishedRoadmaps} />
           {desktop ? (
-            <NavigationSidebar folded={folded} onFoldedChange={setFolded}>
-              {navigation(folded ? "rail" : "full")}
+            <NavigationSidebar
+              folded={folded}
+              onFoldedChange={setFolded}
+              search={navigationSearch(form, openNavigation)}
+            >
+              {navigation(form)}
             </NavigationSidebar>
           ) : (
-            <NavigationDrawer handle={drawer} page={main}>
+            <NavigationDrawer
+              handle={drawer}
+              page={main}
+              search={navigationSearch("full", openNavigation)}
+            >
               {navigation("full")}
             </NavigationDrawer>
           )}

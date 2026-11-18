@@ -1,4 +1,6 @@
 - navigation "Roadmaps":
+  - searchbox "Search roadmaps"
+  - button "Fold the navigation"
   - list:
     - listitem:
       - link "All roadmaps":

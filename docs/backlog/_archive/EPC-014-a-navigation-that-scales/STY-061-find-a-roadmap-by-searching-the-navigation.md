@@ -1,12 +1,14 @@
 # STY-061: A Product Lead finds a roadmap by searching the navigation
 
-- **Status**: Proposed — the owner asked on 2026-11-18 to deliver the navigation UX
-  prototype as drawn
+- **Status**: Done — a search tops the navigation, narrowing the roadmaps by title or
+  family as the Product Lead types; a spyglass in the rail, and in the drawer beside
+  Close menu
 - **Type**: Feature
 - **Area**: Features/UI + i18n (en + cy) + E2E
-- **Epic**: [EPC-014-a-navigation-that-scales](README.md)
+- **Epic**: [EPC-014-a-navigation-that-scales](../../EPC-014-a-navigation-that-scales/README.md)
 - **Depends on**: none
 - **Binding ADRs**: ADR-010, ADR-008, ADR-005, ADR-002
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/155
 - **Suggested model**: Opus — state shared by the sidebar, the rail and the drawer
   across pages, a live region, and the shell's top row rebuilt
 
@@ -153,3 +155,66 @@ Roadmap titles are `LocalisedText`, read with `localise(title, language)`.
 - Closing families, and a search that finds roadmaps in closed families: STY-062.
 - The count's narrowing, which empties the search: STY-063.
 - The navigation's width: STY-064.
+
+## Delivery
+
+### Departures
+
+- **The live region is the search's own** (agent): S6 and S5 are said by a polite
+  region that `NavigationSearchProvider` holds beside the shell in the root route,
+  always in the page and outside the drawer, as the epic's _What a screen reader is
+  told_ asks; it is a second region beside the shell's `UnpublishedAnnouncement`, not
+  that one, since the search's state lives in the roadmaps feature, above the shell.
+- **A roadmap with no family is found by its title alone** (agent, D2): the prototype
+  also matched "No product family", the heading of the roadmaps with none; D2 compares
+  a roadmap's family's name, which such a roadmap does not have.
+- **The search is a searchbox, not a `search` landmark** (agent): the prototype's
+  `form role="search"` was named "Roadmaps", as the navigation landmark it sits in is;
+  the search box is named "Search roadmaps" inside that landmark instead.
+- **Close menu grows from 32px to 40px** (agent), the search's height, so the drawer's
+  top row is one height; the drawer's "Menu" title is hidden even before the roadmaps
+  are read (S11), keeping one shape for the row.
+- **The spyglass has no tooltip** (agent), as the fold button beside it has none.
+
+### Contract for dependents
+
+- `NavigationSearchProvider` (`features/roadmaps/navigation/navigation-search-provider.tsx`)
+  wraps `AppShell` in `routes/__root.tsx` and holds the search; read it with
+  `useNavigationSearch()`: `groups` (every group, `null` until the roadmaps are read),
+  `found` (the groups the search narrows to), `query`, `key` (`searchKey(query)`, blank
+  while `groups` is `null`, so a search kept past Disconnect narrows nothing),
+  `type`, `clear` (says "Showing all roadmaps"), `requestFocus` and `takeFocusRequest`. The
+  count's narrowing (STY-063) belongs here too: it empties the search, and a blank
+  search cleared under it says nothing.
+- `narrow-roadmaps.ts`: `searchKey`, `findIn` and `narrowGroups`, the one rule for what
+  a search finds; STY-062 lets a closed family show what the search finds in it.
+- `AppShell` takes `navigationSearch(form, openNavigation)`, drawn at the start of the
+  top row; `NavigationLandmark` takes `top` and `rail`, its list
+  (`[data-slot=navigation-list]`) scrolling under the row.
+- Catalogue keys `roadmaps.navigation.search.*` (label, placeholder, clear, found,
+  noMatch, showingAll).
+- E2E: `tests/e2e/fixtures/navigation-world.ts` (`NAVIGATION_WORLD`), the analysis's 14
+  roadmaps; the page has two polite live regions, so a spec finds one by its text.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                         |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `navigation-search.test.tsx` (`narrows the list … underlined`); `navigation-search.spec.ts` (`narrows the list …`)              |
+| S2, S3   | `narrow-roadmaps.test.ts`; `navigation-search.test.tsx` (`finds titles without case or accents`, `… by the family's name`)      |
+| S4       | `navigation-search.test.tsx` (`says when no roadmap matches, and shows no family`)                                              |
+| S5       | `navigation-search.test.tsx` (`empties on Escape …`, `empties from its clear button …`)                                         |
+| S6       | `navigation-search.test.tsx` (`tells a screen reader how many match once …`); `navigation-search.spec.ts`                       |
+| S7       | `navigation-search.test.tsx` (`lasts while moving between pages`); a reload starts empty: state is React state only             |
+| S8       | `navigation-search.test.tsx` (`leads the top row …`); `navigation-search.spec.ts` (`keeps the search and the fold button …`)    |
+| S9       | `navigation-search.test.tsx` (`folded to a rail`); `navigation-search.spec.ts` (`folded, scrolls its rail with no scrollbar …`) |
+| S10      | `navigation-search.test.tsx` (`in the phone's drawer`); `navigation-search.spec.ts` (`shares the drawer's top row …`)           |
+| S11      | `navigation-search.test.tsx` (`does not show before the roadmaps are read …`); `navigation-signed-out.aria.yml`                 |
+| S12      | `navigation-search.test.tsx` (`speaks Welsh …`); `navigation-search.spec.ts` (`fits its Cymraeg …`); focus tours; screenshots   |
+
+Tests followed the code (layout and behaviour, not a pending-edit rule); each was shown
+red by breaking the finished code, then restored: no family match (S3), Escape left to
+the drawer (S10), no typing pause (S6), no `initialFocus` (S10, D7), no focus request
+(S9), no underline (S1), in `navigation-search.test.tsx`; and in
+`navigation-search.spec.ts`, a landmark without `min-h-0 flex-1` and a rail with its
+scrollbar (S8, S9).

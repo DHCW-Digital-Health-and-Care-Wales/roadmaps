@@ -177,10 +177,11 @@ test.describe("on a desktop", () => {
 
     await expect(one).toBeHidden()
     // Nothing shows; the shell tells a screen reader that none is left.
-    await expect(page.locator("[aria-live=polite]")).toHaveText(
-      "No roadmaps have unpublished changes",
-    )
-    await expect(page.locator("[aria-live=polite]")).toHaveClass(/sr-only/)
+    const said = page.locator("[aria-live=polite]", {
+      hasText: "No roadmaps have unpublished changes",
+    })
+    await expect(said).toBeAttached()
+    await expect(said).toHaveClass(/sr-only/)
     await expect(
       navigation(page).getByRole("link", { name: /unpublished changes/ }),
     ).toHaveCount(0)

@@ -183,6 +183,21 @@ export const en = {
       all: "All roadmaps",
       /** A roadmap with unpublished changes: its title, then what its dot shows (STY-055 D1). */
       changed: "{{name}}, unpublished changes",
+      /** The search at the top of the navigation (STY-061). */
+      search: {
+        /** The search box's name, and the rail's spyglass that opens it (S9). */
+        label: "Search roadmaps",
+        placeholder: "Search",
+        clear: "Clear search",
+        /** Said once typing pauses (S6). */
+        found_zero: "No roadmaps match",
+        found_one: "{{count, number}} roadmap matches",
+        found_other: "{{count, number}} roadmaps match",
+        /** In place of the families while nothing matches (S4). */
+        noMatch: "No roadmaps match “{{query}}”",
+        /** Said once the search is cleared (S5). */
+        showingAll: "Showing all roadmaps",
+      },
     },
     /** A roadmap whose own family or category differs from the lists' (STY-027 S4, S8). */
     lists: {

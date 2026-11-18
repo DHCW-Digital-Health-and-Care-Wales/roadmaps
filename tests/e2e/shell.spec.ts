@@ -146,11 +146,20 @@ for (const language of ["en", "cy"] as const) {
           })
           .locator("span")
           .first()
-        const [scrollWidth, clientWidth] = await name.evaluate((element) => [
-          element.scrollWidth,
-          element.clientWidth,
-        ])
+        const [scrollWidth, clientWidth, lines] = await name.evaluate(
+          (element) => [
+            element.scrollWidth,
+            element.clientWidth,
+            // A flex item is one box: count its lines by its line height.
+            Math.round(
+              element.getBoundingClientRect().height /
+                parseFloat(getComputedStyle(element).lineHeight),
+            ),
+          ],
+        )
         expect(scrollWidth).toBeLessThanOrEqual(clientWidth)
+        // Beside the menu button, in Cymraeg, it may wrap, but never past two lines.
+        expect(lines).toBeLessThanOrEqual(2)
         expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0)
       })
     }
@@ -197,9 +206,10 @@ test("a phase banner names the phase, with no feedback link when none is set (S3
   await expect(page.getByRole("link", { name: /Give feedback/ })).toHaveCount(0)
 })
 
+// From a desktop's width the page sits beside the navigation, 256px wide (STY-054).
 test.describe("DHCW's container and spacing (S6)", () => {
   for (const [width, left] of [
-    [1280, 80],
+    [1280, 256 + 40],
     [375, 16],
   ] as const) {
     test(`pages are left aligned at ${String(left)}px from the edge at ${String(width)}px`, async ({
@@ -234,10 +244,10 @@ test.describe("DHCW's container and spacing (S6)", () => {
     await page.setViewportSize({ width: 1920, height: 900 })
     await page.goto("./")
 
-    // (1920 - 1200) / 2 margin, plus 40px of padding.
+    // The navigation, then (1920 - 256 - 1200) / 2 margin, plus 40px of padding.
     expect(
       (await page.getByRole("heading", { level: 1 }).boundingBox())?.x,
-    ).toBe(400)
+    ).toBe(256 + 232 + 40)
   })
 })
 

@@ -202,7 +202,7 @@ roadmap" in the title row), not as the last line below has it.
 - [EPC-012](../backlog/EPC-012-app-shell-and-navigation/README.md),
   [STY-052](../backlog/_archive/EPC-012-app-shell-and-navigation/STY-052-keep-a-roadmaps-controls-in-view.md),
   [STY-053](../backlog/_archive/EPC-012-app-shell-and-navigation/STY-053-jump-between-a-roadmaps-placements.md)
-  and [STY-054](../backlog/EPC-012-app-shell-and-navigation/STY-054-move-between-roadmaps-from-the-shell.md)
+  and [STY-054](../backlog/_archive/EPC-012-app-shell-and-navigation/STY-054-move-between-roadmaps-from-the-shell.md)
   (the side rail, D1), and
   [STY-057](../backlog/_archive/EPC-012-app-shell-and-navigation/STY-057-reconnect-from-the-action-that-needs-it.md)
   (the reconnect dialog, for every action that needs a session).

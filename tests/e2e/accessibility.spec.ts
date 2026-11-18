@@ -40,7 +40,19 @@ type Theme = "light" | "dark"
 async function expectNoAxeViolations(
   page: Page,
   theme: Theme,
-  { only }: { only?: string } = {},
+  {
+    only,
+    menuOpen = false,
+  }: {
+    only?: string
+    /**
+     * A menu is open: Base UI's focus guards, hidden and tabbable while it is, return
+     * focus to its trigger. axe passes them only when something covers the screen's
+     * centre, its sign of a modal open, so a trigger scrolled to the centre (as two
+     * columns of cards beside the navigation put a Move button, STY-054) fails them.
+     */
+    menuOpen?: boolean
+  } = {},
 ) {
   const html = page.locator("html")
   await (theme === "dark"
@@ -48,6 +60,7 @@ async function expectNoAxeViolations(
     : expect(html).not.toHaveClass(/\bdark\b/))
   let builder = new AxeBuilder({ page }).withTags(WCAG_TAGS)
   if (only) builder = builder.include(only)
+  if (menuOpen) builder = builder.exclude("[data-base-ui-focus-guard]")
   const { violations } = await builder.analyze()
   const summary = violations.map(({ id, nodes }) => ({
     id,
@@ -149,6 +162,52 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expect(
         main.getByRole("button", { name: "Show less" }),
       ).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+    })
+
+    test("the shell's navigation beside a roadmap's page, then folded to its rail with a tooltip shown (STY-054)", async ({
+      page,
+    }) => {
+      await page.goto("./#/roadmaps/producta")
+      await connect(page)
+      const navigation = page.getByRole("navigation", { name: "Roadmaps" })
+      await expect(
+        navigation.getByRole("link", { name: "Product A roadmap" }),
+      ).toHaveAttribute("aria-current", "page")
+      // Once the items are read: until then "Add an item" is unavailable.
+      await expect(
+        page.getByRole("heading", {
+          level: 3,
+          name: "Example card with every column",
+        }),
+      ).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+
+      await page.getByRole("button", { name: "Fold the navigation" }).click()
+      await navigation.getByRole("link", { name: "Product B roadmap" }).hover()
+      await expect(page.locator("[data-slot=tooltip-content]")).toHaveText(
+        "Product B roadmap",
+      )
+      await expectNoAxeViolations(page, theme)
+    })
+
+    test("the shell's navigation as a drawer on a phone (STY-054 S5)", async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 375, height: 800 })
+      await page.goto("./#/roadmaps/producta")
+      await connect(page)
+      await expect(
+        page.getByRole("heading", {
+          level: 3,
+          name: "Example card with every column",
+        }),
+      ).toBeVisible()
+      await page
+        .getByRole("banner")
+        .getByRole("button", { name: "Menu" })
+        .click()
+      await expect(page.getByRole("dialog", { name: "Menu" })).toBeVisible()
       await expectNoAxeViolations(page, theme)
     })
 
@@ -407,7 +466,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       const main = page.getByRole("main")
       await main.getByRole("button", { name: "Move Discovery card" }).click()
       await expect(page.getByRole("menu")).toBeVisible()
-      await expectNoAxeViolations(page, theme)
+      await expectNoAxeViolations(page, theme, { menuOpen: true })
 
       await page.getByRole("menuitem", { name: "Recently delivered" }).click()
       await expect(page.getByRole("menu")).toHaveCount(0)

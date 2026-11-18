@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 
-import { groupRoadmaps } from "./group-roadmaps"
+import { groupRoadmaps, namesFamilies } from "./group-roadmaps"
 
 const family = (en: string, cy = "") => ({ en, cy })
 
@@ -187,5 +187,28 @@ describe("groupRoadmaps", () => {
 
     expect(groups).toHaveLength(3)
     expect(new Set(groups.map(({ key }) => key)).size).toBe(3)
+  })
+})
+
+describe("namesFamilies", () => {
+  it("names the families when any roadmap has one", () => {
+    const groups = groupRoadmaps(
+      [
+        createTestRoadmap("producta", "Product A roadmap", {
+          family: family("Single Record"),
+        }),
+        createTestRoadmap("productc", "Product C roadmap"),
+      ],
+      "en",
+    )
+    expect(namesFamilies(groups)).toBe(true)
+  })
+
+  it("names none when no roadmap has a family: one list, unnamed", () => {
+    const groups = groupRoadmaps(
+      [createTestRoadmap("productc", "Product C roadmap")],
+      "en",
+    )
+    expect(namesFamilies(groups)).toBe(false)
   })
 })

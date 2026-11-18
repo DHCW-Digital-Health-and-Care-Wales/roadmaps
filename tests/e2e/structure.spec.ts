@@ -490,4 +490,28 @@ test.describe("the shell", () => {
     )
     await expectStructure(header, "header-connected-cy.aria.yml")
   })
+
+  test("the navigation: signed out, on a roadmap's page, folded, and as a phone's drawer (STY-054)", async ({
+    page,
+  }) => {
+    await page.goto("./")
+    const navigation = page.getByRole("navigation", { name: "Roadmaps" })
+    await expectStructure(navigation, "navigation-signed-out.aria.yml")
+
+    await page.goto("./#/roadmaps/producta")
+    await connect(page)
+    await expect(
+      navigation.getByRole("link", { name: "Product A roadmap" }),
+    ).toHaveAttribute("aria-current", "page")
+    await expectStructure(navigation, "navigation.aria.yml")
+
+    await page.getByRole("button", { name: "Fold the navigation" }).click()
+    await expectStructure(navigation, "navigation-folded.aria.yml")
+
+    await page.setViewportSize({ width: 375, height: 800 })
+    await page.getByRole("banner").getByRole("button", { name: "Menu" }).click()
+    const drawer = page.getByRole("dialog", { name: "Menu" })
+    await expect(drawer).toBeVisible()
+    await expectStructure(drawer, "navigation-drawer.aria.yml")
+  })
 })

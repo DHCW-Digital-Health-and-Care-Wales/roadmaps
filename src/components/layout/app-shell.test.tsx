@@ -22,6 +22,7 @@ const copy = {
     opensInNewTab: "(opens in a new tab)",
     copyright: "© Digital Health and Care Wales",
     version: "Version 1.2.3+abc1234",
+    menu: "Menu",
   },
   cy: {
     logo: "Iechyd a Gofal Digidol Cymru",
@@ -35,6 +36,7 @@ const copy = {
     opensInNewTab: "(yn agor mewn tab newydd)",
     copyright: "© Iechyd a Gofal Digidol Cymru",
     version: "Fersiwn 1.2.3+abc1234",
+    menu: "Dewislen",
   },
 } as const satisfies Record<Language, unknown>
 
@@ -70,21 +72,27 @@ describe.each(["en", "cy"] as const)("the shell in %s", (language) => {
       expect(home).toHaveTextContent(c.shortName)
     })
 
-    it("lists the controls in order: status, language, theme, auth", async () => {
+    it("lists the controls in order: menu, home link, status, language, theme, auth", async () => {
       await renderWithProviders({ language, appInfo, authState: connected })
 
       const header = within(screen.getByRole("banner"))
       const status = header.getByRole("status")
+      const home = header.getByRole("link")
       const controls = header.getAllByRole("button")
-      expect(controls).toHaveLength(3)
-      const [language_, theme, auth] = controls
-      const follows = (a: Node, b: Node | undefined) =>
+      expect(controls).toHaveLength(4)
+      const [menu, language_, theme, auth] = controls
+      const follows = (a: Node | undefined, b: Node | undefined) =>
         Boolean(
-          b && a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING,
+          a &&
+          b &&
+          a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING,
         )
+      expect(menu).toHaveAccessibleName(c.menu)
+      expect(follows(menu, home)).toBe(true)
+      expect(follows(home, status)).toBe(true)
       expect(follows(status, language_)).toBe(true)
-      expect(follows(language_ as Node, theme)).toBe(true)
-      expect(follows(theme as Node, auth)).toBe(true)
+      expect(follows(language_, theme)).toBe(true)
+      expect(follows(theme, auth)).toBe(true)
     })
   })
 

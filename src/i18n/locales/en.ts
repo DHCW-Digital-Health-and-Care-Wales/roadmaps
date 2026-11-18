@@ -67,6 +67,18 @@ export const en = {
       text: "This is a new service. Your feedback will help us improve it.",
       feedback: "Give feedback",
     },
+    /** The shell's navigation (STY-054): beside the page, or in a drawer on a phone. */
+    navigation: {
+      /** The navigation landmark's name. */
+      label: "Roadmaps",
+      /** The button that opens the drawer, and the drawer's title. */
+      menu: "Menu",
+      closeMenu: "Close menu",
+      /** The desktop navigation's button, folding it to a rail of icons (D5). */
+      fold: "Fold the navigation",
+      /** The same button while folded. */
+      unfold: "Open the navigation",
+    },
     footer: {
       copyright: "© Digital Health and Care Wales",
       repository: "View on GitHub",
@@ -155,6 +167,11 @@ export const en = {
     familiesLink: "Families, categories and organisations",
     /** The heading over the roadmaps in no product family, when others have one. */
     noFamily: "No product family",
+    /** The shell's navigation's own entries (STY-054); its roadmaps are their titles. */
+    navigation: {
+      /** The link to the roadmap list, the home page (D4). */
+      all: "All roadmaps",
+    },
     /** A roadmap whose own family or category differs from the lists' (STY-027 S4, S8). */
     lists: {
       outOfStep: "Doesn't match its family or category",

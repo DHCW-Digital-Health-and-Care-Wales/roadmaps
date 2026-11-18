@@ -17,17 +17,18 @@ const tagVariants = {
 
 /**
  * A live tag naming the connection state, in a bordered chip for the navy header. It never
- * names the user: a token proves access, not identity (ADR-003). Below `lg` it is visually
- * hidden, but still announced: the header has no room for it beside the logo and the
- * service name, and the auth action on screen (Disconnect, or the page's Connect or
- * Reconnect) shows the state.
+ * names the user: a token proves access, not identity (ADR-003). While the header is
+ * narrower than a desktop's screen (64rem, the header being a size container that the
+ * desktop navigation narrows), it is visually hidden, but still announced: the header has
+ * no room for it beside the logo and the service name, and the auth action on screen
+ * (Disconnect, or the page's Connect or Reconnect) shows the state.
  */
 export function ConnectionStatus() {
   const { t } = useTranslation()
   const { status } = useAuth().state
 
   return (
-    <span className="inline-flex min-h-10 items-center rounded-lg border border-header-border px-1 max-lg:sr-only">
+    <span className="inline-flex min-h-10 items-center rounded-lg border border-header-border px-1 @max-5xl:sr-only">
       <Badge variant={tagVariants[status]} role="status">
         {t(`auth.status.${status}`)}
       </Badge>

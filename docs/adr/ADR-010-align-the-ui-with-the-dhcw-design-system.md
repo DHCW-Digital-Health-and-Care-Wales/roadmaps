@@ -4,7 +4,8 @@
   dark mode, compact type scale, logo permitted, sidebar deferred, enforce tokens, the
   other recommendations). Partly supersedes ADR-005: its _Visual direction_ bullet only;
   the rest of ADR-005 stands.
-- Date: 2026-11-10 (amended in STY-015: menu-item focus; in STY-016: DHCW's logo lockup)
+- Date: 2026-11-10 (amended in STY-015: menu-item focus; in STY-016: DHCW's logo lockup;
+  in STY-054: the dashboard shell adopted)
 
 ## Context
 
@@ -87,11 +88,34 @@ _Visual direction_ bullet of [ADR-005](ADR-005-ui-stack-shadcn-base-ui-tailwind-
 - **Deferred: the dashboard shell** (navy left-hand navigation and a top bar of chips).
   Adopt it in the first record that adds a second top-level destination or the roadmap
   editor, with the roadmaps in its navigation, and amend this ADR then.
+
+  Amended by STY-054 (D2–D11): adopted, as below (_STY-054 amendments_).
+
 - **Rejected:**
   - loading `nhsw.css`: global element styles and a second component system;
   - compiling DHCW's Sass for its tokens: a Sass toolchain to read about forty values;
   - DHCW's desktop type scale;
   - dropping dark mode.
+
+### STY-054 amendments
+
+The dashboard shell is adopted (STY-054 D2): the trigger above passed with STY-029's
+families page and EPC-005's editor.
+
+- **Navigation:** DHCW's navy left-hand navigation (the `--sidebar-*` tokens, the same
+  in both themes) lists all the roadmaps, each roadmap by family with its colour, and
+  the families, categories and organisations, marking the current page (D3).
+- **Desktop:** from `lg` it stands at the left, full height as the page scrolls past
+  (D7), and folds to a rail of icons and initials, the choice kept in browser storage as
+  a convenience (D5). Its width, `--navigation-width`, is set in `globals.css`; the bars
+  pinned to the screen start after it. Card grids take their columns from the room they
+  have (container queries), so a 1280px desktop has two open and three folded.
+- **Narrower:** a drawer over the page (a Base UI dialog), opened by a menu button at the
+  start of the top bar and of a roadmap's sticky strip (D8, D9).
+- **Top bar:** DHCW's navy header is the top bar (D9), in place of DHCW's white top bar
+  of chips, holding the header's controls (D2; STY-056 reshapes them); it and the phase
+  banner scroll away (D7).
+- The roadmap list stays the home page (D4).
 
 ## Consequences
 

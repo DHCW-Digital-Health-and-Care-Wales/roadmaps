@@ -19,9 +19,10 @@
 - A roadmap's title row is `RoadmapTitleRow` (`components/roadmap-title-row.tsx`) inside
   `StickyHeader` (`components/layout/sticky-header.tsx`), which renders its children
   with `stuck`. Slim a control by its props or classes, in place: moving it to another
-  parent remounts it, and focus on it is lost as the row sticks. STY-054's phone menu
-  button joins this row; "Jump to" comes in by its `jumpTo` slot, among the controls on
-  a desktop (`DESKTOP_WIDTH`, 1024px) and in a row of its own below that.
+  parent remounts it, and focus on it is lost as the row sticks. Stuck, the row starts
+  with the shell's menu button (`NavigationMenuButton`) wherever there is a drawer;
+  "Jump to" comes in by its `jumpTo` slot, among the controls on a desktop
+  (`DESKTOP_WIDTH`, 1024px) and in a row of its own below that.
 - A bar pinned to the screen publishes its height through `usePinnedInset`
   (`components/layout/pinning.ts`), which `globals.css` turns into `scroll-padding`, so
   a focused control or a jumped-to heading stays clear of it. The top inset is the
@@ -47,3 +48,18 @@
   `fixtures/roadmap-page.ts`, which also opens a long roadmap (`openLongRoadmap`) and
   checks focus clear of the bars (`focusClearOfBars`). Playwright matches a role's
   name by substring: "More" finds "Show more" too, so name it `exact`.
+- The shell's navigation is `RoadmapNavigation` (`features/roadmaps/navigation/`),
+  drawn by `AppShell` in a `form`: `full` beside the page from `DESKTOP_WIDTH` or in the
+  drawer below it, `rail` folded. Below it the menu button (`NavigationMenuButton`)
+  starts the top bar and the stuck strip; STY-055's dots join both. A bar pinned to the
+  screen starts at `left-(--navigation-width)`, and the room the foot leaves at the
+  page's end is the shell's page column's padding, inside the row the navigation sticks
+  in. A destination is a `NavigationLink`, its `mark` an icon or a roadmap's initials.
+- jsdom matches no media query, so component tests render a phone, its navigation in
+  the closed drawer; `matchMediaQueries(DESKTOP_WIDTH)` (`src/test/media-query.ts`)
+  renders it beside the page. E2E runs at 1280px, the navigation beside the page: its
+  links share names with the cards' and the list's links, so scope a page's own to
+  `main`, and a `filter({ has })` to a locator relative to the item.
+- The top bar is a size container narrower than the screen beside the navigation: a
+  control in it that follows width uses a container variant (`@max-5xl:`), not a
+  viewport one. Its service name may wrap to two lines in Cymraeg until STY-056.

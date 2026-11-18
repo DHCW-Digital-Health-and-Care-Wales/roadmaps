@@ -1,15 +1,39 @@
 import { useLocation } from "@tanstack/react-router"
-import { useEffect, useRef, type ReactNode, type RefObject } from "react"
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from "react"
 import { useTranslation } from "react-i18next"
+
+import { createSheetHandle } from "@/components/ui/sheet"
+import { DESKTOP_WIDTH, useMediaQuery } from "@/lib/use-media-query"
 
 import { AppFooter } from "./app-footer"
 import { AppHeader } from "./app-header"
+import { NavigationDrawer, NavigationMenuButton } from "./navigation-drawer"
+import { NavigationDrawerContext } from "./navigation-drawer-context"
+import {
+  readNavigationFolded,
+  storeNavigationFolded,
+} from "./navigation-preference"
+import { NavigationSidebar } from "./navigation-sidebar"
 import { PageContainer } from "./page-container"
 import { PhaseBanner } from "./phase-banner"
+
+/**
+ * How the navigation is drawn: in `full`, beside the page or in its drawer, or folded to
+ * a `rail` of icons, each named for assistive technology (STY-054 D5).
+ */
+export type NavigationForm = "full" | "rail"
 
 export interface AppShellProps {
   /** Header controls, composed by the root route. */
   headerActions: ReactNode
+  /** The navigation's destinations in `form`, composed by the root route. */
+  navigation: (form: NavigationForm) => ReactNode
   children: ReactNode
 }
 
@@ -62,46 +86,89 @@ function useRescueFocus(target: RefObject<HTMLElement | null>) {
 }
 
 /**
- * Page frame: skip link, DHCW header, phase banner, the main landmark (which keeps focus)
- * and footer. Every page sits in DHCW's wide container with its main-wrapper spacing, so a
+ * The navigation's fold on a desktop, remembered on this device (STY-054 D5).
+ */
+function useNavigationFolded() {
+  const [folded, setFolded] = useState(readNavigationFolded)
+  const fold = (next: boolean) => {
+    setFolded(next)
+    storeNavigationFolded(next)
+  }
+  return [folded, fold] as const
+}
+
+/**
+ * Page frame, DHCW's dashboard shell (ADR-010, STY-054): skip link, the navigation, then
+ * DHCW's header as its top bar, phase banner, the main landmark (which keeps focus) and
+ * footer. Every page sits in DHCW's wide container with its main-wrapper spacing, so a
  * page renders its content only.
  *
- * There is no sidebar yet. The dashboard shell, with the roadmaps in its navigation and the
- * header's chips in its top bar, comes with the first record that adds a second top-level
- * destination or the roadmap editor: see ADR-010, "Deferred: the dashboard shell".
+ * On a desktop the navigation stands at the left, full height as the page scrolls past
+ * (D7), open or folded to a rail; `--navigation-width` says how wide, so the bars pinned
+ * to the screen start where it ends. Narrower, it is a drawer, opened by the menu button
+ * at the start of the top bar and of a roadmap's sticky strip (D8, D9).
  */
-export function AppShell({ headerActions, children }: AppShellProps) {
+export function AppShell({
+  headerActions,
+  navigation,
+  children,
+}: AppShellProps) {
   const { t } = useTranslation()
   const main = useRef<HTMLElement>(null)
   useFocusOnNavigation(main)
   useRescueFocus(main)
+  const desktop = useMediaQuery(DESKTOP_WIDTH)
+  const [folded, setFolded] = useNavigationFolded()
+  const [drawer] = useState(createSheetHandle)
 
   return (
-    <div className="flex min-h-svh flex-col">
-      <a
-        href={`#${MAIN_ID}`}
-        className="sr-only z-50 rounded-lg text-body-xs font-bold focus:not-sr-only focus:fixed focus:top-2 focus:left-4 focus:focus-fill focus:px-3 focus:py-2 md:focus:left-10"
-        onClick={(event) => {
-          // Hash history owns the URL fragment, so move focus without navigating.
-          event.preventDefault()
-          main.current?.focus()
-        }}
+    <NavigationDrawerContext value={desktop ? null : drawer}>
+      <div
+        className="flex min-h-svh"
+        // Sets `--navigation-width` (globals.css) while the navigation stands beside the page.
+        data-navigation={desktop ? (folded ? "folded" : "open") : undefined}
       >
-        {t("layout.skipToContent")}
-      </a>
-      <AppHeader actions={headerActions} />
-      <PhaseBanner />
-      <main
-        ref={main}
-        id={MAIN_ID}
-        tabIndex={-1}
-        className="flex flex-1 flex-col outline-none"
-      >
-        <PageContainer className="flex flex-1 flex-col pt-6 pb-8 sm:pt-8">
-          {children}
-        </PageContainer>
-      </main>
-      <AppFooter />
-    </div>
+        <a
+          href={`#${MAIN_ID}`}
+          className="sr-only z-50 rounded-lg text-body-xs font-bold focus:not-sr-only focus:fixed focus:top-2 focus:left-4 focus:focus-fill focus:px-3 focus:py-2 md:focus:left-10"
+          onClick={(event) => {
+            // Hash history owns the URL fragment, so move focus without navigating.
+            event.preventDefault()
+            main.current?.focus()
+          }}
+        >
+          {t("layout.skipToContent")}
+        </a>
+        {desktop ? (
+          <NavigationSidebar folded={folded} onFoldedChange={setFolded}>
+            {navigation(folded ? "rail" : "full")}
+          </NavigationSidebar>
+        ) : (
+          <NavigationDrawer handle={drawer} page={main}>
+            {navigation("full")}
+          </NavigationDrawer>
+        )}
+        {/* Its foot clears the pinned foot's height, inside the row the navigation
+            sticks in, so the navigation stays full height to the page's end (D7). */}
+        <div className="flex min-w-0 flex-1 flex-col pb-(--pinned-bottom)">
+          <AppHeader
+            start={<NavigationMenuButton variant="header" />}
+            actions={headerActions}
+          />
+          <PhaseBanner />
+          <main
+            ref={main}
+            id={MAIN_ID}
+            tabIndex={-1}
+            className="flex flex-1 flex-col outline-none"
+          >
+            <PageContainer className="flex flex-1 flex-col pt-6 pb-8 sm:pt-8">
+              {children}
+            </PageContainer>
+          </main>
+          <AppFooter />
+        </div>
+      </div>
+    </NavigationDrawerContext>
   )
 }

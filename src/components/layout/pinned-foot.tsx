@@ -17,12 +17,13 @@ export interface PinnedFootProps {
 const IN_FLOW = "max-w-none px-0 md:px-0"
 
 /**
- * What a page keeps at the foot of the screen, as a band across it, from the page's top
- * (STY-052 D10): it takes no room in the page's flow, its height keeping focus clear of
- * it and leaving room at the end of the page (`usePinnedInset`). It never covers more
- * than half the screen: the notices scroll inside it, the bar always in view (D14).
- * Where the viewport is too short (`usePinning`) it stays where it is in the page's
- * flow. With nothing in it, it shows nothing.
+ * What a page keeps at the foot of the screen, as a band across it beside the shell's
+ * navigation, from the page's top (STY-052 D10): it takes no room in the page's flow,
+ * its height keeping focus clear of it and leaving room at the end of the page
+ * (`usePinnedInset`). It never covers more than half the screen: the notices scroll
+ * inside it, the bar always in view (D14). Where the viewport is too short
+ * (`usePinning`) it stays where it is in the page's flow. With nothing in it, it shows
+ * nothing.
  */
 export function PinnedFoot({ notices, bar }: PinnedFootProps) {
   const pinning = usePinning()
@@ -36,7 +37,8 @@ export function PinnedFoot({ notices, bar }: PinnedFootProps) {
       data-pinned={pinning || undefined}
       className={cn(
         "flex flex-col border-t-4 border-status-info-border bg-background pb-3 [&:not(:has([data-slot=page-container]>*))]:hidden",
-        pinning && "fixed inset-x-0 bottom-0 z-40 max-h-1/2",
+        pinning &&
+          "fixed right-0 bottom-0 left-(--navigation-width) z-40 max-h-1/2",
       )}
     >
       <div

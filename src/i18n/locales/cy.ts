@@ -61,6 +61,13 @@ export const cy = {
       text: "Mae hwn yn wasanaeth newydd. Bydd eich adborth yn ein helpu i'w wella.",
       feedback: "Rhoi adborth",
     },
+    navigation: {
+      label: "Mapiau trywydd",
+      menu: "Dewislen",
+      closeMenu: "Cau'r ddewislen",
+      fold: "Plygu'r llywio",
+      unfold: "Agor y llywio",
+    },
     footer: {
       copyright: "© Iechyd a Gofal Digidol Cymru",
       repository: "Gweld ar GitHub",
@@ -144,6 +151,9 @@ export const cy = {
     countWithUnpublished:
       '$t(roadmaps.count, {"count": {{total}} }), $t(roadmaps.unpublishedCount, {"count": {{unpublished}} })',
     noFamily: "Dim teulu cynnyrch",
+    navigation: {
+      all: "Pob map trywydd",
+    },
     familiesLink: "Teuluoedd, categorïau a sefydliadau",
     lists: {
       outOfStep: "Yn wahanol i'w deulu neu gategori",

@@ -1,0 +1,21 @@
+- navigation "Roadmaps":
+  - list:
+    - listitem:
+      - link "All roadmaps":
+        - /url: /#/
+  - list "Medicines & Diagnostics":
+    - listitem:
+      - link "PB Product B roadmap":
+        - /url: /#/roadmaps/productb
+  - list "Single Record":
+    - listitem:
+      - link "PA Product A roadmap":
+        - /url: /#/roadmaps/producta
+  - list "No product family":
+    - listitem:
+      - link "PC Product C roadmap":
+        - /url: /#/roadmaps/productc
+  - list:
+    - listitem:
+      - link "Families, categories and organisations":
+        - /url: /#/families

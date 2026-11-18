@@ -79,7 +79,8 @@ export default defineConfig(
     files: ["src/**/*.{ts,tsx}"],
     extends: [
       reactHooks.configs.flat["recommended-latest"],
-      reactRefresh.configs.vite(),
+      // TanStack Router's `createLink` makes a link component (`NavigationLink`).
+      reactRefresh.configs.vite({ extraHOCs: ["createLink"] }),
       jsxA11y.configs.recommended,
     ],
     languageOptions: {

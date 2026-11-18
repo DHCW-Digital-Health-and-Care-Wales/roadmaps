@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query"
 import { LockKeyholeIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
-import { BackLink } from "@/components/layout/back-link"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ConnectButton } from "@/features/auth/components/connect-button"
 import { useAuth } from "@/features/auth/use-auth"
@@ -115,8 +114,7 @@ export function FamiliesPage() {
 
   return (
     <section aria-labelledby={TITLE_ID}>
-      <BackLink to="/">{t("roadmaps.detail.back")}</BackLink>
-      <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex flex-col gap-1.5">
           <h1 id={TITLE_ID} className="text-heading-xl">
             {t("roadmaps.families.title")}

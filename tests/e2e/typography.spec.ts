@@ -53,9 +53,6 @@ for (const width of WIDTHS) {
     expect(await typeOf(main.getByRole("heading", { level: 1 }))).toBe(
       "32px/38px 700 normal",
     )
-    expect(
-      await typeOf(main.getByText("Every roadmap, published or not.")),
-    ).toBe("16px/24px 400 normal")
     expect(await typeOf(main.getByText("3 roadmaps, 1 not published"))).toBe(
       "14px/20px 400 normal",
     )

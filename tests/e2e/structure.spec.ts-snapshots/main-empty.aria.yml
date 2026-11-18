@@ -1,12 +1,8 @@
 - main:
   - region "Your roadmaps":
     - heading "Your roadmaps" [level=1]
-    - paragraph: Every roadmap, published or not.
-    - paragraph:
-      - link "Families, categories and organisations":
-        - /url: /#/families
-    - button "Refresh"
     - button "Add a roadmap"
+    - button "Refresh"
     - heading "No roadmaps yet" [level=2]
     - text: The connected spreadsheet doesn't list any roadmaps yet.
     - button "Add a roadmap"

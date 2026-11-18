@@ -1,13 +1,9 @@
 - main:
   - region "Your roadmaps":
     - heading "Your roadmaps" [level=1]
-    - paragraph: Every roadmap, published or not.
-    - paragraph:
-      - link "Families, categories and organisations":
-        - /url: /#/families
     - paragraph: 3 roadmaps, 1 not published
-    - button "Refresh"
     - button "Add a roadmap"
+    - button "Refresh"
     - heading "Medicines & Diagnostics" [level=2]
     - list "Medicines & Diagnostics":
       - listitem:

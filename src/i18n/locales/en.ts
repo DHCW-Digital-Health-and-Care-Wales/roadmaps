@@ -161,7 +161,6 @@ export const en = {
   },
   roadmaps: {
     title: "Your roadmaps",
-    description: "Every roadmap, published or not.",
     refresh: "Refresh",
     /** A roadmap's menu of its less frequent actions, in its title row (STY-052 D6). */
     more: "More",

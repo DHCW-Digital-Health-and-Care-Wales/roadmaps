@@ -43,8 +43,9 @@ function indexCell(
 async function openPage(page: Page) {
   await page.goto("./")
   await connect(page)
+  // The navigation leads here; the list no longer links to it (STY-058).
   await page
-    .getByRole("main")
+    .getByRole("navigation")
     .getByRole("link", { name: "Families, categories and organisations" })
     .click()
   await expect(

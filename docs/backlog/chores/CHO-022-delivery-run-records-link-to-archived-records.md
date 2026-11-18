@@ -7,7 +7,8 @@
 - **Epic**: standalone
 - **Depends on**: none
 - **Binding ADRs**: none
-- **Suggested model**: Haiku — fourteen path edits and one line deleted from a test
+- **Suggested model**: Haiku — fourteen path edits, two exemptions removed and the
+  list's comment trimmed to the templates
 
 ## Summary
 
@@ -16,12 +17,13 @@ not exist, so a record's move to `_archive/` can no longer break the links into 
 unnoticed. Two delivery-run records were already broken when the check arrived. It
 exempts them by path for now, so they and the links they hold go unchecked. Done looks
 like: each of their fourteen links points at the record's archived path, their two
-entries leave `EXEMPT_PATHS`, and the test passes.
+entries leave `EXEMPT_PATHS`, its comment names only the templates, and the test
+passes.
 
 ## Measurement
 
-At commit `0f7b22c`, with the two exemptions removed, the test reports these broken
-links. Each target now sits under `docs/backlog/_archive/`, in the same `chores/` or
+With the two exemptions removed, the test reports these broken links in the records
+as they stand at commit `0f7b22c`. Each target now sits under `docs/backlog/_archive/`, in the same `chores/` or
 `defects/` folder.
 
 | Record (`docs/analysis/delivery-runs/`)           | Broken links | Targets                                                               |

@@ -284,6 +284,40 @@ for (const [width, height] of [
   })
 }
 
+for (const [width, height] of [
+  [1280, 900],
+  [375, 812],
+] as const) {
+  test(`opens and closes a row by a press on its text at ${String(width)}px (STY-069)`, async ({
+    page,
+    sheets,
+  }) => {
+    await page.setViewportSize({ width, height })
+    await openWithItems(page, sheets, withItems(...ITEMS), "Last")
+    await chooseCompact(page)
+    const row = rowOf(page, "Short")
+    const chevron = row.getByRole("button", {
+      name: /^(Show|Hide) the rest of/,
+    })
+
+    await row.getByRole("heading").click()
+    await expect(chevron).toHaveAttribute("aria-expanded", "true")
+    await row.getByRole("heading").click()
+    await expect(chevron).toHaveAttribute("aria-expanded", "false")
+
+    if (width >= 768) {
+      // The start of the description, and the room beside it, open the row too.
+      await row.locator("p").click()
+      await expect(chevron).toHaveAttribute("aria-expanded", "true")
+      await row.getByRole("heading").click()
+    }
+
+    // Move and Edit are their own controls: Move opens its menu, the row stays closed.
+    await row.getByRole("button", { name: /^Move / }).click()
+    await expect(chevron).toHaveAttribute("aria-expanded", "false")
+  })
+}
+
 test("keeps the placement the page was in at the top as the view changes, focus on the switch (S3)", async ({
   page,
   sheets,

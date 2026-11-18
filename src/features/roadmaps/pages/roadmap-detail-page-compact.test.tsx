@@ -1,4 +1,4 @@
-import { act, screen, waitFor, within } from "@testing-library/react"
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
@@ -316,6 +316,59 @@ describe("an opened row (S6, S9)", () => {
     expect(
       main().queryByRole("button", { name: /^Hide the rest of/ }),
     ).toBeNull()
+  })
+
+  it("opens and closes by a press on its title, or on its description from a tablet's width (STY-069)", async () => {
+    const { user } = await renderPage()
+    await chooseCompact(user)
+
+    await user.click(main().getByRole("heading", { name: "First now" }))
+    expect(
+      main().getByRole("button", { name: "Hide the rest of First now" }),
+    ).toHaveAttribute("aria-expanded", "true")
+    expect(within(itemOf("First now")).getByText("Phase")).toBeVisible()
+
+    await user.click(main().getByRole("heading", { name: "First now" }))
+    expect(chevron("First now")).toHaveAttribute("aria-expanded", "false")
+
+    await user.click(main().getByText("Not yet placed."))
+    expect(
+      main().getByRole("button", { name: "Hide the rest of Someday item" }),
+    ).toHaveAttribute("aria-expanded", "true")
+    // The opened row's fields are no part of what opens it.
+    await user.click(
+      within(itemOf("Someday item")).getByText("Not yet placed."),
+    )
+    expect(
+      main().getByRole("button", { name: "Hide the rest of Someday item" }),
+    ).toHaveAttribute("aria-expanded", "true")
+  })
+
+  it("opens by a press on its title on a phone too", async () => {
+    const { user } = await renderPage({ phone: true })
+    await user.click(main().getByRole("button", { name: "Compact view" }))
+
+    await user.click(main().getByRole("heading", { name: "Last now" }))
+
+    expect(
+      main().getByRole("button", { name: "Hide the rest of Last now" }),
+    ).toHaveAttribute("aria-expanded", "true")
+  })
+
+  it("stays closed when the press ends a selection of its text", async () => {
+    const { user } = await renderPage()
+    await chooseCompact(user)
+    const heading = main().getByRole("heading", { name: "First now" })
+
+    // The click a drag ends with, its text selected. user-event's pointer would clear
+    // a real selection, and its `getSelection` reads empty here, so the selection is
+    // stubbed.
+    vi.spyOn(window, "getSelection").mockReturnValue({
+      toString: () => "First now",
+    } as Selection)
+    fireEvent.click(heading)
+
+    expect(chevron("First now")).toHaveAttribute("aria-expanded", "false")
   })
 
   it("ends in Undo changes for an item with pending edits, which drops them, focus going to its Edit", async () => {

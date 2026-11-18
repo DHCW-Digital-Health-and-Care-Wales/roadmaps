@@ -177,7 +177,8 @@ its label; its size is the budget for the item's text.
 
 **Compact view**:
 The second view of a roadmap's page, in which each item is a row under the same headings
-that opens in place to its other fields; Cards is the view first seen (STY-067). A
+that opens in place to its other fields, by its chevron or a press on its text
+(STY-069); Cards is the view first seen (STY-067). A
 **row** of it is an item shown that way, never an item's position.
 _Avoid_: List view, table
 

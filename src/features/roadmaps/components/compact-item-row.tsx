@@ -30,7 +30,7 @@ export interface CompactItemRowProps {
 
 /**
  * A roadmap item as a row of the compact view (STY-067): a chevron that opens the row
- * in place, its title as a heading, then Move and Edit, always at the row's end. From
+ * in place, as does a press on its text (STY-069), its title as a heading, then Move and Edit, always at the row's end. From
  * a tablet's width one line that never wraps (S4): the title, then the start of its
  * description in the room the title leaves, each cut with an ellipsis, then an
  * unplaced item's flag, cut within a quarter of the line, and the pending tag; each
@@ -57,6 +57,12 @@ export function CompactItemRow({
   const description = item.description && localise(item.description, language)
   const horizon = item.writtenHorizon
   const wholeClasses = "wrap-break-word whitespace-pre-line"
+  // The text opens the row too (STY-069), for a pointer; the chevron stays the one
+  // control for a keyboard or a screen reader, so the text takes no role or focus.
+  function toggleByText() {
+    // A drag across the text to copy it ends in a click, which asks for nothing.
+    if (!window.getSelection()?.toString()) setOpen(!open)
+  }
 
   return (
     <li className="border-t first:border-t-0">
@@ -92,7 +98,11 @@ export function CompactItemRow({
         </Button>
         {wide ? (
           <>
-            <div className="flex min-w-0 flex-1 items-baseline gap-3 py-1">
+            {/* eslint-disable-next-line jsx-a11y-x/click-events-have-key-events, jsx-a11y-x/no-static-element-interactions -- the chevron is the keyboard's control */}
+            <div
+              onClick={toggleByText}
+              className="flex min-w-0 flex-1 cursor-pointer items-baseline gap-3 py-1"
+            >
               <h3
                 className={cn(
                   "min-w-0 text-body font-bold",
@@ -117,7 +127,11 @@ export function CompactItemRow({
             {tag && <div className="flex shrink-0">{tag}</div>}
           </>
         ) : (
-          <div className="flex min-w-0 flex-1 flex-col items-start gap-1.5 py-1">
+          // eslint-disable-next-line jsx-a11y-x/click-events-have-key-events, jsx-a11y-x/no-static-element-interactions -- the chevron is the keyboard's control
+          <div
+            onClick={toggleByText}
+            className="flex min-w-0 flex-1 cursor-pointer flex-col items-start gap-1.5 py-1"
+          >
             <h3 className={cn("text-body font-bold", wholeClasses)}>{title}</h3>
             {horizon !== null && <HorizonFlag writtenHorizon={horizon} />}
             {tag}

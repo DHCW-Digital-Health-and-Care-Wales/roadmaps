@@ -59,12 +59,12 @@ export interface RoadmapHeaderProps {
  * It sticks at the top of the screen once the page has scrolled past it (STY-052 S1,
  * D5), slimmed to the title and the controls, in the same order: the title cut with an
  * ellipsis, its full text still its name, "Jump to" cut where the row is still short of
- * room, and on a phone "Add an item" an icon (D18). Stuck, the facts, the Publish row and
- * `about` are visually hidden, never unmounted, so About keeps its state, and More holds
- * "Publish roadmap" at every width (STY-059 D7); a control among them reached by Tab or
- * a screen reader scrolls the page back to the top, so the block lets go and shows it.
- * The row starts with the shell's menu button, so the navigation is one press away
- * (STY-054 D8).
+ * room, and on a phone "Add an item" an icon (D18). Stuck, the facts, the Publish row
+ * and `about` are visually hidden, never unmounted, so About keeps its state, and More
+ * holds "Publish roadmap" at every width (STY-059 D7); a control among them reached by
+ * Tab or a screen reader scrolls the page back to the top, so the block lets go and
+ * shows it. The row starts with the shell's menu button, so the navigation is one press
+ * away (STY-054 D8).
  */
 export function RoadmapHeader({
   roadmap,

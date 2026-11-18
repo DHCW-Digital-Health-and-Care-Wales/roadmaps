@@ -2,7 +2,7 @@ import { type ReactNode, useRef } from "react"
 
 import { cn } from "@/lib/utils"
 
-import { LEFT_OUT_SELECTOR } from "./left-out"
+import { controlAfter, LEFT_OUT_SELECTOR } from "./left-out"
 import { PageContainer } from "./page-container"
 import {
   useMeasuredHeight,
@@ -27,7 +27,8 @@ export interface StickyHeaderProps {
  * `children` (STY-052 D5). Its place in the page keeps the height it had there, so
  * nothing below it moves as it sticks or lets go. It never sticks where the viewport is
  * too short (`usePinning`), and while stuck its height keeps focus clear of it
- * (`usePinnedInset`). Focus reaching a part it leaves out lets it go (`LEFT_OUT`).
+ * (`usePinnedInset`). Focus reaching a part it leaves out lets it go, or passes it by
+ * when tabbed into from before (`LEFT_OUT`).
  */
 export function StickyHeader({ children }: StickyHeaderProps) {
   const pinning = usePinning()
@@ -47,9 +48,19 @@ export function StickyHeader({ children }: StickyHeaderProps) {
         data-slot="sticky-header"
         data-stuck={stuck || undefined}
         onFocus={(event) => {
-          if (stuck && event.target.closest(LEFT_OUT_SELECTOR)) {
-            place.current?.scrollIntoView({ block: "start" })
+          const part = stuck && event.target.closest(LEFT_OUT_SELECTOR)
+          if (!part) return
+          const from = event.relatedTarget
+          // Tabbed into from before it, as from the menu button: on to what it shows.
+          if (
+            from &&
+            part.compareDocumentPosition(from) &
+              Node.DOCUMENT_POSITION_PRECEDING
+          ) {
+            controlAfter(part, event.currentTarget)?.focus()
+            return
           }
+          place.current?.scrollIntoView({ block: "start" })
         }}
         className={cn(
           stuck &&

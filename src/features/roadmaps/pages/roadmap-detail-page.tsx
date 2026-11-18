@@ -159,14 +159,14 @@ interface RoadmapViewProps {
 }
 
 /**
- * A listed roadmap: its header block, with its facts, what it is about and its controls,
- * which sticks as the page scrolls (STY-052, STY-059), a notice when it was just added
- * (STY-041 S5), then, once its items are shown, a row of links to its placements, which
- * "Jump to" in the header reaches too (STY-053 D5), and its items, each showing its
- * pending English (STY-025). At the foot of the screen, what publishing or unpublishing
- * it came to (STY-035, STY-052 D21) and its pending changes with Publish. The title
- * stays whatever happens to the items. It holds the page's one item dialog, which "Add an item" and
- * each item's Edit open.
+ * A listed roadmap: its header block, with its facts, what it is about and its
+ * controls, which sticks as the page scrolls (STY-052, STY-059), a notice when it was
+ * just added (STY-041 S5), then, once its items are shown, a row of links to its
+ * placements, which "Jump to" in the header reaches too (STY-053 D5), and its items,
+ * each showing its pending English (STY-025). At the foot of the screen, what
+ * publishing or unpublishing it came to (STY-035, STY-052 D21) and its pending changes
+ * with Publish. The title stays whatever happens to the items. It holds the page's one
+ * item dialog, which "Add an item" and each item's Edit open.
  */
 function RoadmapView({
   roadmap,

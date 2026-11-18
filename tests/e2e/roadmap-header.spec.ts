@@ -211,3 +211,27 @@ test("reaches About's Edit by Shift+Tab from the stuck row, the block letting go
   await expect(edit).toBeInViewport()
   expect((await boxOf(edit)).height).toBe(40)
 })
+
+test("tabs on from the stuck row's menu button to Add an item, the row staying stuck (S7)", async ({
+  page,
+  sheets,
+}) => {
+  await page.setViewportSize({ width: 820, height: 800 })
+  await openLongRoadmap(page, sheets, { tab: "ProductC" })
+  const main = page.getByRole("main")
+  await main
+    .getByRole("heading", { level: 2, name: "Later", exact: true })
+    .evaluate((heading) => {
+      heading.scrollIntoView({ block: "center" })
+    })
+  const stuck = page.locator("[data-stuck]")
+  await expect(stuck).toBeVisible()
+  const top = await page.evaluate(() => window.scrollY)
+
+  await stuck.getByRole("button", { name: "Menu", exact: true }).focus()
+  await page.keyboard.press("Tab")
+
+  await expect(main.getByRole("button", { name: "Add an item" })).toBeFocused()
+  await expect(stuck).toBeVisible()
+  expect(await page.evaluate(() => window.scrollY)).toBe(top)
+})

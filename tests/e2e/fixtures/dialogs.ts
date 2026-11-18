@@ -143,8 +143,8 @@ export function editRoadmapButton(
 }
 
 /**
- * Opens the roadmap dialog on the roadmap whose page is open, from About's Edit, back at
- * the top of the page: once the header has stuck, About is not in it (STY-059). As
+ * Opens the roadmap dialog on the roadmap whose page is open, from About's Edit, back
+ * at the top of the page: once the header has stuck, About is not in it (STY-059). As
  * `openAddRoadmapDialog`, a spec whose spreadsheet has the family and category lists
  * passes `offersLists`; one on the Welsh interface passes its `language`.
  */

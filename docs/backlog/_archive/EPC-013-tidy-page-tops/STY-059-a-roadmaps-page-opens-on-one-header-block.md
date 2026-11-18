@@ -138,12 +138,14 @@ facts on its line. The facts are shared with the list's card as `roadmaps.facts.
   Changed tag, "Undo changes" and Edit.
 - **Stuck, the facts, the Publish row and About are visually hidden, not removed**
   (agent, S6, S8, D7): the strip shows only the title and the controls, as today, but a
-  keyboard or screen reader that reaches one of them (Shift+Tab from Add an item, say)
-  scrolls the page back to the header's place, so the block lets go and shows it there.
-  Hidden outright, About's Edit could not be reached until the page was scrolled up.
+  keyboard or screen reader that reaches one of them from after it (Shift+Tab from Add
+  an item, say) scrolls the page back to the header's place, so the block lets go and
+  shows it there; Tab from before it (the strip's menu button) passes it by, on to Add
+  an item, the strip staying stuck. Hidden outright, About's Edit could not be reached
+  until the page was scrolled up.
 - **A roadmap with no date shows no "Updated" fact** (agent, S2): the facts show each
   only when the roadmap has it, so STY-036 S1's "No date" in the open About goes with
-  About's date field. The roadmap dialog still edits the date.
+  About's date field (STY-036 D12 records it). The roadmap dialog still edits the date.
 - **"Jump to" keeps today's width per width** (agent, S7, _Out of scope_): a full row
   below 1024px and its label's width from 1024px, and the row of placement links stays
   under the header block; STY-060 shapes both. "None wider than its label" holds for
@@ -164,8 +166,9 @@ facts on its line. The facts are shared with the list's card as `roadmaps.facts.
   Add an item, More, then `jumpTo` from 1024px, with `jumpTo` in a row of its own below.
   Stuck, the middle part takes `sr-only` and `LEFT_OUT` (`components/layout/left-out.ts`);
   STY-060 reshapes the stuck strip around the same three parts.
-- **`StickyHeader`** scrolls back to its place when focus lands in a `LEFT_OUT` part while
-  stuck.
+- **`StickyHeader`**, while stuck, scrolls back to its place when focus lands in a
+  `LEFT_OUT` part from after it or from nowhere, and sends focus on past the part
+  (`controlAfter`) when it arrives from before it.
 - **More** holds "Publish roadmap" only once stuck, and "Unpublish roadmap" always, for a
   published roadmap.
 - **`EditControls`** takes `size` (`sm` by default; About's are 40px).
@@ -192,11 +195,12 @@ spec in `tests/e2e/`.
 | S4       | `roadmap-about.test.tsx` (closed, a heading holding the disclosure; expands in place, `aria-expanded`; 44px text control, underlined on hover; fields); e2e `roadmap-page.spec.ts` "About opens in place under a rule, with a 40px Edit…"                                                                                                                        |
 | S5       | `roadmap-about.test.tsx` "tags a pending change beside the disclosure while closed…"; e2e `roadmap-page.spec.ts` "About holds “Changed” beside its disclosure, closed or open, and “Undo changes” once open…"                                                                                                                                                    |
 | S6       | `hp` "puts the Not published tag and a 40px Publish roadmap under the facts…" and "holds Unpublish roadmap in More…"; e2e `roadmap-header.spec.ts` "shows Not published and Publish roadmap under the facts…"; `roadmap-controls.spec.ts` "moves Publish roadmap into More once the row sticks, at every width…"; `publishing-roadmap.spec.ts` publishes from it |
-| S7       | `hp` "reaches Add an item, More and Jump to by Tab after Edit…"; e2e `roadmap-header.spec.ts` (order and Tab after Edit at each width); `placement-navigation.spec.ts` "keeps every control of the stuck row on screen…"                                                                                                                                         |
+| S7       | `hp` "reaches Add an item, More and Jump to by Tab after Edit…"; e2e `roadmap-header.spec.ts` (order and Tab after Edit at each width; "tabs on from the stuck row's menu button to Add an item…"); `left-out.test.ts`; `placement-navigation.spec.ts` "keeps every control of the stuck row on screen…"                                                         |
 | S8       | e2e `roadmap-header.spec.ts` in Cymraeg at 375, 820 and 1280px (no sideways scroll, nothing past the right edge) and "reaches About's Edit by Shift+Tab from the stuck row…"; `placement-navigation.spec.ts` "keeps About closed, so the first placement starts on the first screen at 1280×800"                                                                 |
 
 Every test above followed working code. Each was shown red by breaking it: Add an item
 after More, Publish roadmap back in More and the phone title at today's size (four `hp`
 tests); the Changed tag shown open and a field key renamed (three About tests); the
 "Status:" label dropped (three facts tests); and `StickyHeader`'s scroll back removed
-(the Shift+Tab spec, the strip staying stuck).
+(the Shift+Tab spec, the strip staying stuck); and the pass-by on Tab from before
+removed (the menu-button spec, focus left on the hidden part).

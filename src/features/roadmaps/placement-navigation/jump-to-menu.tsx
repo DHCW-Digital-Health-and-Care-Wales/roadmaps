@@ -19,11 +19,11 @@ export interface JumpToMenuProps {
 }
 
 /**
- * "Jump to", after More in a roadmap's header (STY-053 D5, STY-059 S7): a menu of the page's jump targets,
- * each with its count and pending mark, the current one ticked. The button names the
- * current one once the page has reached it ("Jump to: Later", S3, D8). Narrower than a
- * desktop it runs across the page, in a row of its own. A jump waits for the menu to
- * close, so focus lands on the heading and stays there.
+ * "Jump to", after More in a roadmap's header (STY-053 D5, STY-059 S7): a menu of the
+ * page's jump targets, each with its count and pending mark, the current one ticked. The
+ * button names the current one once the page has reached it ("Jump to: Later", S3, D8).
+ * Narrower than a desktop it runs across the page, in a row of its own. A jump waits for
+ * the menu to close, so focus lands on the heading and stays there.
  */
 export function JumpToMenu({
   navigation: { summaries, current, jump },

@@ -86,7 +86,6 @@ is thin
   dragged narrow, or a widest that follows the window.
 - **D3** (agent, 2026-11-18, analysis decision 4 (a)): the width is remembered on this
   device, as the fold is (STY-054 D5).
-
 - **D4** (agent, 2026-11-18, the Starting point's weighing): the edge is a separator built
   on the WAI-ARIA window splitter pattern, not shadcn's `resizable`. `react-resizable-panels`
   sizes panels in percentages of a group it lays out itself; the navigation is a sticky
@@ -125,6 +124,11 @@ set in `globals.css` and gives the card columns at 1280px: this delivery amends 
   pointer, S8), with a 2px line under a pointer or while dragged and the navigation's own
   `focus-fill` when keyed. The sidebar takes `z-41`, above the pinned bars' `z-40`, so the
   half of the edge outside it is not covered by a bar.
+- **The focus fill is the whole 12px edge** (agent): the navigation's own `focus-fill`, as
+  its buttons take it, not the prototype's 6px bar with dark flanks; half of it lies on the
+  navy and half on the page, so it shows against both.
+- **A drag cut short is settled when the edge goes** (agent, review): a window narrowed
+  below a desktop mid-drag removes the edge, and the width it had reached is kept.
 - **`aria-valuetext` is "256 pixels wide"** (agent), the prototype's words, in Welsh
   "256 picsel o led"; the separator is named "Resize the navigation" ("Newid lled y
   llywio").
@@ -148,16 +152,16 @@ set in `globals.css` and gives the card columns at 1280px: this delivery amends 
 
 ### Scenario evidence
 
-| Scenario | Held by                                                                                                                                                                                                                                                                                                                    |
-| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1       | `navigation-resize-handle.test.tsx` (`widens with the pointer …`); `app-shell-navigation.test.tsx` (`follows the edge …`); `navigation-width.spec.ts` (`widens with the pointer …`, the cursor in `shows the edge can be dragged …`); screenshots                                                                          |
-| S2       | `navigation-preference.test.ts` (`keeps a width within 208px and 400px …`, `reads %j as %i`); `navigation-resize-handle.test.tsx`; `navigation-width.spec.ts` (`widens with the pointer …`)                                                                                                                                |
-| S3       | `navigation-resize-handle.test.tsx` (`goes back to 256px on a double-click`); `navigation-width.spec.ts` (`… on a double-click`)                                                                                                                                                                                           |
-| S4       | `navigation-resize-handle.test.tsx` (`is a vertical separator …`, `moves 16px by the arrows …`); `app-shell-navigation.test.tsx` (`… an edge that is its last stop`); `navigation-width.spec.ts` (`is moved by the keyboard …`, with the focus fill); `focus-indicator.spec.ts` (the tour); axe in `accessibility.spec.ts` |
-| S5       | `navigation-preference.test.ts` (`the navigation's width`); `app-shell-navigation.test.tsx` (`is as wide as last left …`, `is 256px where the stored width is not readable`); `navigation-width.spec.ts` (`is remembered across a reload and a fold …`, `is 256px, with no error, where browser storage …`)                |
-| S6       | `app-shell-navigation.test.tsx` (`has no edge in a rail`, `has no edge, and keeps the width it has …`); `navigation-width.spec.ts` (`has no edge in the rail …`, `has no edge in the phone's drawer`)                                                                                                                      |
-| S7       | `navigation-width.spec.ts` (`keeps a roadmap's page in the 624px left at 1024px`, in `en` and `cy`, with the pinned strip starting at 400px); screenshots                                                                                                                                                                  |
-| S8       | `navigation-width.spec.ts` (`under a finger …`, real touch events through the browser's protocol, the hit area 24px)                                                                                                                                                                                                       |
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                         |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `navigation-resize-handle.test.tsx` (`widens with the pointer …`); `app-shell-navigation.test.tsx` (`follows the edge …`); `navigation-width.spec.ts` (`widens with the pointer …`, the cursor in `shows the edge can be dragged …`); screenshots                                                                                                                               |
+| S2       | `navigation-preference.test.ts` (`keeps a width within 208px and 400px …`, `reads %j as %i`); `navigation-resize-handle.test.tsx`; `navigation-width.spec.ts` (`widens with the pointer …`)                                                                                                                                                                                     |
+| S3       | `navigation-resize-handle.test.tsx` (`goes back to 256px on a double-click`); `navigation-width.spec.ts` (`… on a double-click`)                                                                                                                                                                                                                                                |
+| S4       | `navigation-resize-handle.test.tsx` (`is a vertical separator …`, `moves 16px by the arrows …`); `app-shell-navigation.test.tsx` (`… an edge that is its last stop`); `navigation-width.spec.ts` (`is moved by the keyboard …`, with the focus fill); `focus-indicator.spec.ts` (the tour); axe in `accessibility.spec.ts`                                                      |
+| S5       | `navigation-resize-handle.test.tsx` (`settles a drag cut short …`); `navigation-preference.test.ts` (`the navigation's width`); `app-shell-navigation.test.tsx` (`is as wide as last left …`, `is 256px where the stored width is not readable`); `navigation-width.spec.ts` (`is remembered across a reload and a fold …`, `is 256px, with no error, where browser storage …`) |
+| S6       | `app-shell-navigation.test.tsx` (`has no edge in a rail`, `has no edge, and keeps the width it has …`); `navigation-width.spec.ts` (`has no edge in the rail …`, `has no edge in the phone's drawer`)                                                                                                                                                                           |
+| S7       | `navigation-width.spec.ts` (`keeps a roadmap's page in the 624px left at 1024px`, in `en` and `cy`, with the pinned strip starting at 400px); screenshots                                                                                                                                                                                                                       |
+| S8       | `navigation-width.spec.ts` (`under a finger …`, real touch events through the browser's protocol, the hit area 24px)                                                                                                                                                                                                                                                            |
 
 Tests followed the code (layout and behaviour, not a pending-edit rule); each was shown red
-by breaking the finished code, then restored: the drag not clamped (S2), no double-click reset (S3), no handling of a cancelled pointer (S8), a stored width not clamped (S5) and the edge drawn in the rail (S6), in `navigation-resize-handle.test.tsx`, `navigation-preference.test.ts` and `app-shell-navigation.test.tsx`.
+by breaking the finished code, then restored: the drag not clamped (S2), no double-click reset (S3), no handling of a cancelled pointer (S8), a stored width not clamped (S5) and the edge drawn in the rail (S6) and no settling when the edge goes mid-drag (S5), in `navigation-resize-handle.test.tsx`, `navigation-preference.test.ts` and `app-shell-navigation.test.tsx`.

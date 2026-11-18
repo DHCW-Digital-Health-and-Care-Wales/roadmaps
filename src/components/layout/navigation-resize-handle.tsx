@@ -1,4 +1,10 @@
-import { useRef, useState, type KeyboardEvent, type PointerEvent } from "react"
+import {
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type PointerEvent,
+} from "react"
 import { useTranslation } from "react-i18next"
 
 import { cn } from "@/lib/utils"
@@ -39,6 +45,23 @@ export function NavigationResizeHandle({
   // Where the drag began and the width it asked for last; `null` while none is under way.
   const drag = useRef<{ x: number; width: number; latest: number } | null>(null)
   const [dragging, setDragging] = useState(false)
+
+  // The edge goes with the open navigation (a window narrowed below a desktop, a tablet
+  // turned) and takes its pointer's release with it: settle a drag cut short there, so the
+  // width it reached is the one kept.
+  const settle = useRef(onResizeEnd)
+  useEffect(() => {
+    settle.current = onResizeEnd
+  })
+  useEffect(
+    () => () => {
+      const current = drag.current
+      if (!current) return
+      drag.current = null
+      settle.current(current.latest)
+    },
+    [],
+  )
 
   const keyTo = (event: KeyboardEvent) => {
     switch (event.key) {

@@ -1,6 +1,14 @@
 import { act, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  onTestFinished,
+  vi,
+} from "vitest"
 
 import { DESKTOP_WIDTH } from "@/lib/use-media-query"
 import { matchMediaQueries } from "@/test/media-query"
@@ -189,6 +197,14 @@ describe("on a desktop", () => {
     beforeEach(() => {
       // jsdom has no pointer capture.
       Element.prototype.setPointerCapture = vi.fn()
+      onTestFinished(() => {
+        // @ts-expect-error -- jsdom has none: put it back as it was
+        delete Element.prototype.setPointerCapture
+      })
+      onTestFinished(() => {
+        // @ts-expect-error -- jsdom has none: put it back as it was
+        delete Element.prototype.setPointerCapture
+      })
     })
 
     it("is 256px, with an edge that is its last stop (S4)", async () => {

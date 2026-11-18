@@ -1,7 +1,7 @@
 import { screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { useState } from "react"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { beforeEach, describe, expect, it, onTestFinished, vi } from "vitest"
 
 import { renderWithI18n } from "@/test/render-with-i18n"
 
@@ -32,6 +32,10 @@ beforeEach(() => {
   ended.mockClear()
   // jsdom has no pointer capture.
   Element.prototype.setPointerCapture = vi.fn()
+  onTestFinished(() => {
+    // @ts-expect-error -- jsdom has none: put it back as it was
+    delete Element.prototype.setPointerCapture
+  })
 })
 
 describe("the edge", () => {
@@ -106,6 +110,28 @@ describe("the edge", () => {
     edge().dispatchEvent(new PointerEvent("pointercancel", { bubbles: true }))
 
     expect(ended).toHaveBeenCalledExactlyOnceWith(280)
+  })
+
+  it("settles a drag cut short when the edge goes, so the width it reached is kept (S5)", async () => {
+    const user = userEvent.setup()
+    const { unmount } = renderWithI18n(<Harness />)
+
+    await user.pointer([
+      { keys: "[MouseLeft>]", target: edge(), coords: { clientX: 256 } },
+      { coords: { clientX: 320 } },
+    ])
+    expect(ended).not.toHaveBeenCalled()
+    unmount()
+
+    expect(ended).toHaveBeenCalledExactlyOnceWith(320)
+  })
+
+  it("settles nothing when it goes with no drag under way", () => {
+    const { unmount } = renderWithI18n(<Harness />)
+
+    unmount()
+
+    expect(ended).not.toHaveBeenCalled()
   })
 
   it("goes back to 256px on a double-click (S3)", async () => {

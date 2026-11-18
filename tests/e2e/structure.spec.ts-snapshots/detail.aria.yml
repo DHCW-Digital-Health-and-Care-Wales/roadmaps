@@ -1,15 +1,16 @@
 - main:
-  - link "Back to roadmaps":
-    - /url: /#/
   - heading "Product A roadmap" [level=1]
-  - button "Jump to"
-  - button "More"
-  - button "Add an item"
+  - list "Roadmap details":
+    - listitem: "Status: Beta"
+    - listitem: "Product lead: Alex Jones"
+    - listitem: Updated 1 October 2026
   - region "About this roadmap":
-    - heading "About this roadmap" [level=2]
-    - text: "Beta Product lead: Alex Jones Updated 1 October 2026"
-    - button "Show more"
+    - heading "About this roadmap" [level=2]:
+      - button "About this roadmap"
     - button "Edit About this roadmap"
+  - button "Add an item"
+  - button "More"
+  - button "Jump to"
   - navigation "Horizons and sections":
     - list:
       - listitem:

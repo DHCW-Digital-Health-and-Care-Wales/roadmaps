@@ -14,7 +14,7 @@ import {
   withRoadmapIndex,
 } from "./fixtures/fake-sheets"
 import { type Language, useLanguage } from "./fixtures/look"
-import { openConflictReview, refusal } from "./fixtures/roadmap-page"
+import { goToList, openConflictReview, refusal } from "./fixtures/roadmap-page"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 // The structure of the key screens, held as aria snapshots in
@@ -393,7 +393,7 @@ test.describe("editing a roadmap (STY-025)", () => {
     await question
       .getByRole("button", { name: "Keep changes and disconnect" })
       .click()
-    await main.getByRole("link", { name: "Back to roadmaps" }).click()
+    await goToList(page)
     await expect(
       main.getByText("Changes to 1 roadmap are waiting"),
     ).toBeVisible()

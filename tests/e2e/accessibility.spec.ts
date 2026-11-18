@@ -24,6 +24,7 @@ import { useLanguage, useTheme } from "./fixtures/look"
 import {
   aboutField,
   conflictReview,
+  goToList,
   moreButton,
   openAbout,
   openConflictReview,
@@ -160,9 +161,6 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
         window.scrollTo(0, 0)
       })
       await openAbout(page)
-      await expect(
-        main.getByRole("button", { name: "Show less" }),
-      ).toBeVisible()
       await expectNoAxeViolations(page, theme)
     })
 
@@ -838,7 +836,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await question
         .getByRole("button", { name: "Keep changes and disconnect" })
         .click()
-      await main.getByRole("link", { name: "Back to roadmaps" }).click()
+      await goToList(page)
       await expect(
         main.getByText("Changes to 1 roadmap are waiting"),
       ).toBeVisible()

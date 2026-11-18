@@ -21,7 +21,7 @@ function main() {
 }
 
 describe("RoadmapDetailPage", () => {
-  it("names the roadmap, with a way back", async () => {
+  it("names the roadmap, with no link back: the navigation leads to the list (STY-059 S1, D3)", async () => {
     await renderWithProviders({
       path: "/roadmaps/productb",
       authState: connected,
@@ -35,24 +35,8 @@ describe("RoadmapDetailPage", () => {
       }),
     ).toBeInTheDocument()
     expect(
-      main().getByRole("link", { name: "Back to roadmaps" }),
-    ).toHaveAttribute("href", "/")
-  })
-
-  it("goes back by a real link with a decorative chevron, not a button (STY-015 S5)", async () => {
-    await renderWithProviders({
-      path: "/roadmaps/productb",
-      authState: connected,
-      roadmaps,
-    })
-
-    const back = await main().findByRole("link", { name: "Back to roadmaps" })
-    expect(back).toHaveAttribute("data-slot", "back-link")
-    expect(back).not.toHaveAttribute("role")
-    expect(back.querySelector("svg")).toHaveAttribute("aria-hidden", "true")
-    expect(
-      main().queryByRole("button", { name: "Back to roadmaps" }),
-    ).toBeNull()
+      main().queryByRole("link", { name: "Back to roadmaps" }),
+    ).not.toBeInTheDocument()
   })
 
   it("opens from its card", async () => {
@@ -105,8 +89,8 @@ describe("RoadmapDetailPage", () => {
       main().getByText("This roadmap doesn't exist or is no longer listed."),
     ).toBeInTheDocument()
     expect(
-      main().getAllByRole("link", { name: "Back to roadmaps" }),
-    ).toHaveLength(2)
+      main().getByRole("link", { name: "Back to roadmaps" }),
+    ).toHaveAttribute("href", "/")
   })
 
   it("asks to connect when not connected", async () => {

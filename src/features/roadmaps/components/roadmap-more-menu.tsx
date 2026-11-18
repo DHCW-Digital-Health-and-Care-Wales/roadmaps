@@ -25,9 +25,9 @@ export interface RoadmapMoreMenuProps {
 }
 
 /**
- * "More", in a roadmap's title row: Refresh, which reads the page's roadmap data again,
- * and "Unpublish roadmap", or "Publish roadmap" where the row has no room for it
- * (STY-052 D6, D19). An item's action waits for the menu to close, so focus is back on
+ * "More", in a roadmap's header: Refresh, which reads the page's roadmap data again,
+ * and "Unpublish roadmap", or "Publish roadmap" once the header has stuck (STY-052 D6,
+ * STY-059 D7). An item's action waits for the menu to close, so focus is back on
  * More, where what it opens returns it. After the session has expired each asks to
  * reconnect first, then carries on (STY-057).
  */

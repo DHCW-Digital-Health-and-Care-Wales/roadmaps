@@ -37,8 +37,10 @@ import { expectOpeningFocus } from "../testing/opening-focus"
 import {
   aboutField,
   chooseFromMore,
+  goToList,
   openAbout,
   refreshRoadmap,
+  roadmapFacts,
 } from "../testing/roadmap-page"
 import { expectWriteHold, refreshHold } from "../testing/write-hold"
 
@@ -454,8 +456,8 @@ describe("adding a roadmap from the list (STY-041)", () => {
       expect(
         main().getByRole("button", { name: "Publish roadmap" }),
       ).toBeInTheDocument()
+      expect(roadmapFacts()).toHaveTextContent("Product lead: Sam Evans")
       const about = await openAbout(user)
-      expect(aboutField(about, "Product lead")).toHaveTextContent("Sam Evans")
       expect(aboutField(about, "Family")).toHaveTextContent(
         "Medicines & Diagnostics",
       )
@@ -475,7 +477,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
       await submit(user)
       await findRoadmapPage()
 
-      await user.click(main().getByRole("link", { name: "Back to roadmaps" }))
+      await goToList(user)
 
       expect(
         await main().findByText("3 roadmaps, 2 not published"),
@@ -502,7 +504,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
 
       expect(main().queryByText(/was added/)).not.toBeInTheDocument()
       expect(router.state.location.pathname).toBe("/roadmaps/community-nursing")
-      await user.click(main().getByRole("link", { name: "Back to roadmaps" }))
+      await goToList(user)
       await user.click(
         await main().findByRole("link", { name: "Community Nursing roadmap" }),
       )
@@ -519,7 +521,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
         /was added/,
       )
 
-      await user.click(main().getByRole("link", { name: "Back to roadmaps" }))
+      await goToList(user)
       await main().findAllByRole("list")
       act(() => {
         router.history.back()
@@ -609,7 +611,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
         await main().findByRole("link", { name: "Patient Summary roadmap" }),
       )
       await main().findByRole("heading", { name: "Shared summary view" })
-      await user.click(main().getByRole("link", { name: "Back to roadmaps" }))
+      await goToList(user)
       removePatientSummary(repository)
       await user.click(await main().findByRole("button", { name: "Refresh" }))
       await main().findByText("1 roadmap")

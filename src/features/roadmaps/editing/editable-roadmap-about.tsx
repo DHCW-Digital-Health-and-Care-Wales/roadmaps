@@ -26,11 +26,11 @@ export interface EditableRoadmapAboutProps {
 }
 
 /**
- * What the roadmap is about, folded to one line until shown in full (STY-053 S6), with
- * its pending English shown and tagged, and an Edit that opens the roadmap dialog on it
+ * What the roadmap is about, a disclosure closed until pressed (STY-059 S4), with its
+ * pending English shown and tagged, and an Edit that opens the roadmap dialog on it
  * (STY-043): its title, status, product lead, vision and service description (STY-025
  * S5), its family and category (STY-028), and when it was last updated (STY-036). Done
- * keeps the edits pending; the panel stays as it is behind the dialog.
+ * keeps the edits pending; the disclosure stays as it is behind the dialog.
  */
 export function EditableRoadmapAbout({ roadmap }: EditableRoadmapAboutProps) {
   const { t } = useTranslation()
@@ -73,10 +73,11 @@ export function EditableRoadmapAbout({ roadmap }: EditableRoadmapAboutProps) {
         roadmap={shown}
         changed={changed}
         actions={(open) => (
-          // Folded, its one line carries the Changed tag; "Undo changes" waits for it
-          // to open (STY-053 S6).
+          // Closed, the disclosure carries the Changed tag; "Undo changes" waits for it
+          // to open (STY-059 S5).
           <EditControls
             subject={t("roadmaps.about.title")}
+            size="default"
             pending={open && changed ? "changed" : undefined}
             editButton={editButton}
             onEdit={() => {

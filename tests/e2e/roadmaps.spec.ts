@@ -7,7 +7,7 @@ import {
   withRoadmapIndex,
 } from "./fixtures/fake-sheets"
 import { useLanguage } from "./fixtures/look"
-import { aboutField, openAbout } from "./fixtures/roadmap-page"
+import { aboutField, goToList, openAbout } from "./fixtures/roadmap-page"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 /**
@@ -108,7 +108,7 @@ test("a card opens the address of its public page, and Back returns to the list 
   ).toBeVisible()
   await expect(page.getByRole("main")).toBeFocused()
 
-  await page.getByRole("link", { name: "Back to roadmaps" }).click()
+  await goToList(page)
   await expect(roadmapCards(page)).toHaveText(EXAMPLE_TITLES)
   await expect(page.getByRole("main")).toBeFocused()
   // The detail page and the list share one cached load; only the items were read anew.

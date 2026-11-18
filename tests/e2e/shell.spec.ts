@@ -238,8 +238,11 @@ test.describe("DHCW's container and spacing (S6)", () => {
       await roadmapCards(page).first().click()
       await expect(h1).toHaveText("Product B roadmap")
       expect((await h1.boundingBox())?.x).toBe(left)
-      const back = page.getByRole("link", { name: "Back to roadmaps" })
-      expect((await back.boundingBox())?.x).toBe(left)
+      // The header block's every row on the one left edge (STY-059 S1).
+      const disclosure = page
+        .getByRole("main")
+        .getByRole("button", { name: "About this roadmap", exact: true })
+      expect((await disclosure.boundingBox())?.x).toBe(left)
 
       await page.goto("./#/nowhere")
       await expect(h1).toHaveText("Page not found")

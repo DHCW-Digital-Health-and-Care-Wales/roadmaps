@@ -6,12 +6,22 @@ import { expectOpeningFocus } from "./opening-focus"
 
 type User = ReturnType<typeof userEvent.setup>
 
-// A roadmap's page as STY-052 and STY-053 shaped it: Refresh and "Unpublish roadmap" (or
-// "Publish roadmap" on a phone's stuck row) in the title row's More, a publish someone
-// else's changes stopped reviewed in a dialog, opened from its notice at the foot, and
-// "About this roadmap" folded to one line until its "Show more".
+// A roadmap's page as STY-052, STY-053 and STY-059 shaped it: Refresh and "Unpublish
+// roadmap" (or "Publish roadmap" once the header has stuck) in its More, a publish
+// someone else's changes stopped reviewed in a dialog, opened from its notice at the
+// foot, and "About this roadmap" a disclosure, closed until pressed. No back link: the
+// header's name leads to the list.
 
-/** The title row's More, which opens the menu. */
+/** Goes back to the roadmap list by the header's name, its home link (STY-059 D3). */
+export async function goToList(user: User) {
+  await user.click(
+    within(screen.getByRole("banner")).getByRole("link", {
+      name: /(home|hafan)$/,
+    }),
+  )
+}
+
+/** The header's More, which opens the menu. */
 export function moreButton(): HTMLElement {
   return within(screen.getByRole("main")).getByRole("button", { name: "More" })
 }
@@ -81,16 +91,30 @@ function findAbout(): Promise<HTMLElement> {
 }
 
 /**
- * Opens "About this roadmap" with its "Show more", unless it is open already, and
- * returns it, its fields shown.
+ * Opens "About this roadmap" by its disclosure, unless it is open already, and returns
+ * it, its fields shown.
  */
 export async function openAbout(user: User): Promise<HTMLElement> {
   const about = await findAbout()
-  const showMore = within(about).queryByRole("button", {
-    name: /Show more|Dangos mwy/,
+  const disclosure = within(about).getByRole("button", {
+    name: /^(About this roadmap|Ynglŷn â'r map trywydd hwn)$/,
   })
-  if (showMore) await user.click(showMore)
+  if (disclosure.getAttribute("aria-expanded") !== "true") {
+    await user.click(disclosure)
+  }
   return about
+}
+
+const FACTS = { name: /^(Roadmap details|Manylion y map trywydd)$/ }
+
+/** The roadmap's facts under its title, "Roadmap details" (STY-059 S2). */
+export function roadmapFacts(): HTMLElement {
+  return within(screen.getByRole("main")).getByRole("list", FACTS)
+}
+
+/** The roadmap's facts, once the roadmap has been read. */
+export function findRoadmapFacts(): Promise<HTMLElement> {
+  return within(screen.getByRole("main")).findByRole("list", FACTS)
 }
 
 /** What the opened About shows under `term`, or null when it has no such field. */

@@ -24,11 +24,13 @@ const PHONE = { width: 375, height: 812 }
 const COPY = {
   en: {
     jumpTo: "Jump to",
+    more: "More",
     links: "Horizons and sections",
     later: "Later",
   },
   cy: {
     jumpTo: "Neidio i",
+    more: "Mwy",
     links: "Gorwelion ac adrannau",
     later: "Hwyrach",
   },
@@ -243,7 +245,7 @@ test("reaches the unplaced items, and an empty placement, which says it has none
   await expect(jumpTo(page)).toHaveAccessibleName("Jump to: Not doing")
 })
 
-test("folds About to one line, so the first placement starts on the first screen at 1280×800 (S6)", async ({
+test("keeps About closed, so the first placement starts on the first screen at 1280×800 (S6, STY-059 S8)", async ({
   page,
   sheets,
 }) => {
@@ -251,10 +253,9 @@ test("folds About to one line, so the first placement starts on the first screen
   await openLongRoadmap(page, sheets)
 
   const region = about(page)
-  await expect(region).toContainText("Product lead: Alex Jones")
   await expect(region.getByRole("term")).toHaveCount(0)
-  // One line: its heading, facts and buttons in a single row at 1280px.
-  expect((await region.boundingBox())?.height).toBeLessThan(80)
+  // One row: its disclosure and Edit, at 1280px.
+  expect((await region.boundingBox())?.height).toBeLessThan(50)
   expect(
     await topOf(placementHeading(page, "Recently delivered")),
   ).toBeLessThan(DESKTOP.height)
@@ -331,11 +332,38 @@ for (const { width, language, placement, publish } of [
       `${COPY[language].jumpTo}: ${placement}`,
     )
     const row = page.locator("[data-stuck]")
-    await expect(row.getByRole("button", { name: publish })).toBeVisible()
+    const buttons = row.getByRole("button")
+    // The row's buttons it shows: each the element its centre hits, not one of the
+    // parts it leaves out of sight (STY-059).
+    const shown = await buttons.evaluateAll((all) =>
+      all.flatMap((button, index) => {
+        const box = button.getBoundingClientRect()
+        const hit = document.elementFromPoint(
+          box.left + box.width / 2,
+          box.top + box.height / 2,
+        )
+        return hit !== null && button.contains(hit) ? [index] : []
+      }),
+    )
+    // Once stuck, More holds it (STY-059 D7).
+    const names = await Promise.all(
+      shown.map((index) => buttons.nth(index).innerText()),
+    )
+    expect(names).toContain(COPY[language].more)
+    expect(names).not.toContain(publish)
+    await row
+      .getByRole("button", { name: COPY[language].more, exact: true })
+      .click()
+    await expect(
+      page.getByRole("menu").getByRole("menuitem", { name: publish }),
+    ).toBeVisible()
+    await page.keyboard.press("Escape")
+    await expect(page.getByRole("menu")).toBeHidden()
 
     // The stuck row is `position: fixed`: a control past its edge never widens the
     // page, so the `scrollWidth` check below passes over it.
-    for (const control of await row.getByRole("button").all()) {
+    for (const index of shown) {
+      const control = buttons.nth(index)
       await expect(control, await control.innerText()).toBeInViewport({
         ratio: 1,
       })

@@ -46,8 +46,10 @@ import {
 import {
   closeConflictReview,
   findRefusal,
+  goToList,
   moreButton,
   openAbout,
+  roadmapFacts,
   openConflictReview,
   refreshRoadmap,
 } from "../testing/roadmap-page"
@@ -425,8 +427,9 @@ describe("Editing what a roadmap is about (STY-025)", () => {
         about.getByRole("button", { name: "Edit About this roadmap" }),
       ).toHaveFocus()
     })
-    await openAbout(user)
-    expect(about.getByText("Alex Jones")).toBeInTheDocument()
+    expect(
+      within(roadmapFacts()).getByText("Product lead: Alex Jones"),
+    ).toBeInTheDocument()
     expect(main().getByText("2 unpublished changes")).toBeInTheDocument()
   })
 
@@ -568,7 +571,7 @@ describe("Keeping a roadmap's changes (STY-025)", () => {
     const { user, router } = await renderPage()
     await editTitle(user, "First item", "First, edited")
 
-    await user.click(main().getByRole("link", { name: "Back to roadmaps" }))
+    await goToList(user)
     await main().findByRole("link", { name: "Product A roadmap" })
     expect(
       listCard("Product A roadmap").getByText("Unpublished changes"),
@@ -978,7 +981,7 @@ describe("Publishing a roadmap's changes (STY-025)", () => {
 
     expect(await main().findByText("Changes saved")).toBeInTheDocument()
 
-    await user.click(main().getByRole("link", { name: "Back to roadmaps" }))
+    await goToList(user)
     await main().findByRole("link", { name: "Product C roadmap" })
     expect(
       listCard("Product C roadmap").queryByText(/Changes to save/),
@@ -992,7 +995,7 @@ describe("Publishing a roadmap's changes (STY-025)", () => {
     })
     await editTitle(user, "Product C item", "Product C, edited")
 
-    await user.click(main().getByRole("link", { name: "Back to roadmaps" }))
+    await goToList(user)
     await main().findByRole("link", { name: "Product C roadmap" })
 
     expect(

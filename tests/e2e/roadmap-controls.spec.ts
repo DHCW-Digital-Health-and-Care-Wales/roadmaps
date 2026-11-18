@@ -47,6 +47,26 @@ async function editTitle(page: Page, from: string, language: Language = "en") {
   await expect(form).toBeHidden()
 }
 
+/** The text of each control the stuck row shows: not those it hides (STY-059 D7). */
+function shownInStuckRow(page: Page): Promise<string[]> {
+  return page
+    .locator("[data-stuck]")
+    .getByRole("button")
+    .evaluateAll((buttons) =>
+      buttons
+        // Shown: the button itself is what its centre hits, not a visually hidden one.
+        .filter((button) => {
+          const box = button.getBoundingClientRect()
+          const hit = document.elementFromPoint(
+            box.left + box.width / 2,
+            box.top + box.height / 2,
+          )
+          return hit !== null && button.contains(hit)
+        })
+        .map((button) => button.textContent.trim()),
+    )
+}
+
 /** Scrolls the placement heading `name` to the top of the page's content. */
 async function scrollTo(page: Page, name: string) {
   await page
@@ -263,7 +283,7 @@ for (const [edge, key] of [
   })
 }
 
-test("keeps Publish roadmap in a desktop's stuck row, and moves it into More on a phone's, where Add an item is an icon (D15, D18, D19)", async ({
+test("moves Publish roadmap into More once the row sticks, at every width, where on a phone Add an item is an icon (D18, STY-059 S6, D7)", async ({
   page,
   sheets,
 }) => {
@@ -275,10 +295,13 @@ test("keeps Publish roadmap in a desktop's stuck row, and moves it into More on 
   const more = main.getByRole("button", { name: "More", exact: true })
   const menuItems = page.getByRole("menu").getByRole("menuitem")
   await expect(publishRoadmap).toBeVisible()
+  await more.click()
+  await expect(menuItems).toHaveText(["Refresh"])
+  await page.keyboard.press("Escape")
 
   await scrollTo(page, "Later")
 
-  await expect(publishRoadmap).toHaveCount(0)
+  expect(await shownInStuckRow(page)).not.toContain("Publish roadmap")
   await expect(addItem).toBeInViewport()
   await expect(addItem).toHaveCSS("width", "40px")
   await more.click()
@@ -288,10 +311,10 @@ test("keeps Publish roadmap in a desktop's stuck row, and moves it into More on 
   await page.setViewportSize(DESKTOP)
 
   await expect(page.locator("[data-stuck]")).toBeVisible()
-  await expect(publishRoadmap).toBeInViewport()
+  expect(await shownInStuckRow(page)).not.toContain("Publish roadmap")
   await expect(addItem).toHaveText("Add an item")
   await more.click()
-  await expect(menuItems).toHaveText(["Refresh"])
+  await expect(menuItems).toHaveText(["Refresh", "Publish roadmap"])
 })
 
 test("keeps the count, Publish and Discard in view under a notice too long for the room at the foot of a phone (D14)", async ({

@@ -224,6 +224,8 @@ export const cy = {
       added: "Cafodd {{title}} ei ychwanegu. Dydy e ddim wedi'i gyhoeddi eto.",
     },
     facts: {
+      name: "Manylion y map trywydd",
+      status: "Statws:",
       productLead: "Arweinydd cynnyrch: {{name}}",
       updated: "Diweddarwyd {{date}}",
     },
@@ -254,17 +256,11 @@ export const cy = {
       title: "Ynglŷn â'r map trywydd hwn",
       empty: "Does dim byd am y map trywydd hwn eto.",
       fields: {
-        statusLabel: "Statws",
-        productLead: "Arweinydd cynnyrch",
         vision: "Gweledigaeth",
         serviceDescription: "Disgrifiad o'r gwasanaeth",
         family: "Teulu",
         category: "Categori",
-        lastUpdated: "Diweddarwyd ddiwethaf",
       },
-      showMore: "Dangos mwy",
-      showLess: "Dangos llai",
-      noDate: "Dim dyddiad",
     },
     jumpTo: {
       menu: "Neidio i",

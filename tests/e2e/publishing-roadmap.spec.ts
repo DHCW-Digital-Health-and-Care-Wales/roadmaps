@@ -6,7 +6,7 @@ import {
   withRoadmapIndex,
   withTabItems,
 } from "./fixtures/fake-sheets"
-import { chooseFromMore } from "./fixtures/roadmap-page"
+import { chooseFromMore, goToList } from "./fixtures/roadmap-page"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 /**
@@ -75,7 +75,7 @@ test("publishes a roadmap by its Enabled cell alone, then the page and list show
   const [index] = sheets.spreadsheet
   expect(indexCell(index?.rows, "ProductC", "Enabled")).toBe("Yes")
 
-  await page.getByRole("link", { name: "Back to roadmaps" }).click()
+  await goToList(page)
   await expect(roadmapCards(page)).toHaveCount(3)
   await expect(page.getByText("3 roadmaps", { exact: true })).toBeVisible()
   await expect(
@@ -202,6 +202,10 @@ test("says so while no item has a recognised horizon, until a pending move gives
 
   await main.getByRole("button", { name: "Move Work coming soon" }).click()
   await page.getByRole("menuitem", { name: "Next" }).click()
+  // Back at the top, beside the Not published tag (STY-059 S6).
+  await page.evaluate(() => {
+    window.scrollTo(0, 0)
+  })
   await main.getByRole("button", { name: "Publish roadmap" }).click()
   await expect(dialog).toContainText("Your unsaved change goes public with it.")
   await expect(dialog).not.toContainText(NO_ITEMS_LINE)

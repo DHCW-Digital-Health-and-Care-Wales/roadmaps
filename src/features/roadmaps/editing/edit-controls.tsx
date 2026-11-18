@@ -54,6 +54,8 @@ export interface EditControlsProps {
    */
   editable?: boolean
   editButton: RefObject<HTMLButtonElement | null>
+  /** The buttons' size: `sm` on a card, as default; 40px beside About (STY-059 D6). */
+  size?: "default" | "sm"
   /** A control between the drop button and Edit, such as an item's Move menu (STY-031). */
   move?: ReactNode
   onEdit: () => void
@@ -70,6 +72,7 @@ export function EditControls({
   pending,
   editable = true,
   editButton,
+  size = "sm",
   move,
   onEdit,
   onDrop,
@@ -85,7 +88,7 @@ export function EditControls({
         {pending && (
           <Button
             variant="secondary"
-            size="sm"
+            size={size}
             disabled={!editable}
             focusableWhenDisabled
             onClick={onDrop}
@@ -99,7 +102,7 @@ export function EditControls({
         <Button
           ref={editButton}
           variant="secondary"
-          size="sm"
+          size={size}
           disabled={!editable}
           focusableWhenDisabled
           onClick={onEdit}

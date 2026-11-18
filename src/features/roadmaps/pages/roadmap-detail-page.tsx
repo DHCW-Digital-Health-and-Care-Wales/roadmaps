@@ -4,7 +4,6 @@ import { LockKeyholeIcon, MapPinOffIcon } from "lucide-react"
 import { useCallback, useMemo, useRef } from "react"
 import { useTranslation } from "react-i18next"
 
-import { BackLink } from "@/components/layout/back-link"
 import { buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { localise } from "@/domain/roadmap/localised-text"
@@ -17,7 +16,7 @@ import { cn } from "@/lib/utils"
 
 import { AddedRoadmapNotice } from "../components/added-roadmap-notice"
 import { MatchListsAction } from "../components/match-lists-action"
-import { RoadmapTitleRow } from "../components/roadmap-title-row"
+import { RoadmapHeader } from "../components/roadmap-header"
 import {
   RoadmapItems,
   type RoadmapItemsProps,
@@ -62,14 +61,9 @@ export interface RoadmapDetailPageProps {
  * for the items.
  */
 export function RoadmapDetailPage({ roadmapId }: RoadmapDetailPageProps) {
-  const { t } = useTranslation()
-
   return (
     <section>
-      <BackLink to="/">{t("roadmaps.detail.back")}</BackLink>
-      <div className="mt-6">
-        <RoadmapDetail roadmapId={roadmapId} />
-      </div>
+      <RoadmapDetail roadmapId={roadmapId} />
     </section>
   )
 }
@@ -165,13 +159,13 @@ interface RoadmapViewProps {
 }
 
 /**
- * A listed roadmap: its title row, which sticks as the page scrolls (STY-052), a notice
- * when it was just added (STY-041 S5), what it is about, folded to one line (STY-053
- * S6), then, once its items are shown, a row of links to its placements, which "Jump
- * to" in the title row reaches too (D5), and its items, each showing its pending English
- * (STY-025). At the foot of the screen, what publishing or unpublishing it came to
- * (STY-035, STY-052 D21) and its pending changes with Publish. The title stays whatever
- * happens to the items. It holds the page's one item dialog, which "Add an item" and
+ * A listed roadmap: its header block, with its facts, what it is about and its controls,
+ * which sticks as the page scrolls (STY-052, STY-059), a notice when it was just added
+ * (STY-041 S5), then, once its items are shown, a row of links to its placements, which
+ * "Jump to" in the header reaches too (STY-053 D5), and its items, each showing its
+ * pending English (STY-025). At the foot of the screen, what publishing or unpublishing
+ * it came to (STY-035, STY-052 D21) and its pending changes with Publish. The title
+ * stays whatever happens to the items. It holds the page's one item dialog, which "Add an item" and
  * each item's Edit open.
  */
 function RoadmapView({
@@ -237,12 +231,14 @@ function RoadmapView({
             retrying={listFetching}
           />
         )}
-        <RoadmapTitleRow
+        <RoadmapHeader
           roadmap={roadmap}
+          shown={shown}
           title={title}
           titleChanged={Boolean(changes?.roadmap.title)}
           heading={heading}
           publishedState={publishedState}
+          about={<EditableRoadmapAbout roadmap={roadmap} />}
           fetching={
             listFetching || items.isFetching || organisations.isFetching
           }
@@ -283,10 +279,7 @@ function RoadmapView({
           <AddedRoadmapNotice title={title} onDismiss={addedNotice.dismiss} />
         )}
       </div>
-      <div className="flex flex-col gap-4">
-        <EditableRoadmapAbout roadmap={roadmap} />
-        {placementsShown && <PlacementLinks navigation={navigation} />}
-      </div>
+      {placementsShown && <PlacementLinks navigation={navigation} />}
       <RoadmapItemsArea
         roadmapId={roadmap.id}
         listFetching={listFetching}

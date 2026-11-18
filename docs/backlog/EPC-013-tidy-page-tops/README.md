@@ -2,7 +2,7 @@
 
 - **Status**: Active — the owner chose design G and accepted every decision of the
   page headers UX analysis on 2026-11-18
-- **Progress**: 1 of 3 terminal; next selectable: STY-059; blocked on: nothing
+- **Progress**: 2 of 3 terminal; next selectable: STY-060; blocked on: nothing
 - **Binding ADRs**: ADR-010, ADR-008, ADR-012, ADR-004, ADR-002
 
 ## Summary
@@ -126,11 +126,11 @@ As EPC-012's contract of the same name: `scroll-padding` at each pinned height
 
 ## Stories
 
-| ID      | Story                                                                                                            | Area                               | Depends on | State |
-| ------- | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ---------- | ----- |
-| STY-058 | [A tidy top to the roadmap list](../_archive/EPC-013-tidy-page-tops/STY-058-a-tidy-top-to-the-roadmap-list.md)   | Features/UI + i18n (en + cy) + E2E | —          | ✅    |
-| STY-059 | [A roadmap's page opens on one header block](STY-059-a-roadmaps-page-opens-on-one-header-block.md)               | Features/UI + i18n (en + cy) + E2E | —          |       |
-| STY-060 | [One row of controls, at the top and once scrolled](STY-060-one-row-of-controls-at-the-top-and-once-scrolled.md) | Features/UI + i18n (en + cy) + E2E | STY-059    |       |
+| ID      | Story                                                                                                                                 | Area                               | Depends on | State |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ---------- | ----- |
+| STY-058 | [A tidy top to the roadmap list](../_archive/EPC-013-tidy-page-tops/STY-058-a-tidy-top-to-the-roadmap-list.md)                        | Features/UI + i18n (en + cy) + E2E | —          | ✅    |
+| STY-059 | [A roadmap's page opens on one header block](../_archive/EPC-013-tidy-page-tops/STY-059-a-roadmaps-page-opens-on-one-header-block.md) | Features/UI + i18n (en + cy) + E2E | —          | ✅    |
+| STY-060 | [One row of controls, at the top and once scrolled](STY-060-one-row-of-controls-at-the-top-and-once-scrolled.md)                      | Features/UI + i18n (en + cy) + E2E | STY-059    |       |
 
 ## Sequencing
 

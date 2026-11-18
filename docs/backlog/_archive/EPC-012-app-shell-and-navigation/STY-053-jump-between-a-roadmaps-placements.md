@@ -100,7 +100,7 @@ scroll
   wrap it at 1280px; "Jump to" reads alone until a placement is in view; jumping moves
   focus and scrolls without changing the address (ADR-004).
 - **D9** (owner, 2026-11-18, page headers UX analysis decisions 2 and 3; delivered by
-  [STY-059](../../EPC-013-tidy-page-tops/STY-059-a-roadmaps-page-opens-on-one-header-block.md) and
+  [STY-059](../EPC-013-tidy-page-tops/STY-059-a-roadmaps-page-opens-on-one-header-block.md) and
   [STY-060](../../EPC-013-tidy-page-tops/STY-060-one-row-of-controls-at-the-top-and-once-scrolled.md)): one jump
   control per width, "Jump to" below 1024px and the links from 1024px, at the top and
   once stuck (changes D5); the facts sit under the title and About is a disclosure

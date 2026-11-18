@@ -11,8 +11,8 @@ export interface PlacementLinksProps {
 }
 
 /**
- * A row of links to the page's jump targets, under "About this roadmap" and scrolling
- * away with it (STY-053 D5), each with its count and pending mark, the current one bold
+ * A row of links to the page's jump targets, under the header block and scrolling away
+ * with it (STY-053 D5, STY-059), each with its count and pending mark, the current one bold
  * and underlined. On a phone the row scrolls inside itself, never the page (S7). A link
  * jumps without changing the address, as the skip link does (D8, ADR-004); its address
  * is the page's own, since the router owns the fragment, so one opened in a new tab

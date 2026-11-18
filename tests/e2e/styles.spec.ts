@@ -56,13 +56,19 @@ for (const theme of THEMES) {
       )
     })
 
-    test("a text link uses the link token", async ({ page }) => {
+    test("a text control uses the link token", async ({ page }) => {
       await page.goto("./#/roadmaps/producta")
       await connect(page)
-      const back = page.getByRole("link", { name: "Back to roadmaps" })
-      await expect(back).toBeVisible()
+      // About's disclosure, a text button (STY-059 S4).
+      const disclosure = page
+        .getByRole("main")
+        .getByRole("button", { name: "About this roadmap", exact: true })
+      await expect(disclosure).toBeVisible()
 
-      await expect(back).toHaveCSS("color", await tokenColour(page, "--link"))
+      await expect(disclosure).toHaveCSS(
+        "color",
+        await tokenColour(page, "--link"),
+      )
     })
   })
 }

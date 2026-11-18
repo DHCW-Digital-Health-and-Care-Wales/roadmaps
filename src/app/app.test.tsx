@@ -378,7 +378,9 @@ describe("routes", () => {
     ).toBeInTheDocument()
     expect(screen.getByRole("main")).toHaveFocus()
 
-    await user.click(main().getByRole("link", { name: "Back to roadmaps" }))
+    await user.click(
+      header().getByRole("link", { name: /Roadmap Editor home$/ }),
+    )
     expect(
       await main().findByRole("heading", { level: 1, name: "Your roadmaps" }),
     ).toBeInTheDocument()

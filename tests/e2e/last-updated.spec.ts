@@ -1,7 +1,7 @@
 import type { Page } from "@playwright/test"
 
 import { openEditRoadmapDialog } from "./fixtures/dialogs"
-import { openAbout } from "./fixtures/roadmap-page"
+import { roadmapFacts } from "./fixtures/roadmap-page"
 import { connect, expect, test } from "./fixtures/test"
 
 /**
@@ -35,15 +35,14 @@ test("publishes a date picked in the roadmap dialog as YYYY-MM-DD text (S2, S8)"
 }) => {
   await open(page, "productb", "Product B roadmap")
   const main = page.getByRole("main")
-  const about = await openAbout(page)
-  await expect(about).toContainText("Last updated15 September 2026")
+  await expect(roadmapFacts(page)).toContainText("Updated 15 September 2026")
 
   const editing = await openEditRoadmapDialog(page)
   const field = editing.getByLabel("Last updated")
   await expect(field).toHaveValue("2026-09-15")
   await field.fill("2026-11-10")
   await editing.getByRole("button", { name: "Done" }).click()
-  await expect(about).toContainText("Last updated10 November 2026")
+  await expect(roadmapFacts(page)).toContainText("Updated 10 November 2026")
   await expect(main.getByText("1 unpublished change")).toBeVisible()
   expect(sheets.writes).toEqual([])
 
@@ -130,8 +129,7 @@ test.describe("today, by the browser's clock (D11)", () => {
     await expect(
       main.getByText(/^Product C roadmap is published\./),
     ).toBeVisible()
-    const about = await openAbout(page)
-    await expect(about).toContainText("Last updated2 July 2026")
+    await expect(roadmapFacts(page)).toContainText("Updated 2 July 2026")
     expect(sheets.writes).toHaveLength(1)
     const [index] = sheets.spreadsheet
     expect(indexCell(index?.rows, "ProductC", "Enabled")).toBe("Yes")

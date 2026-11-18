@@ -351,6 +351,16 @@ export const en = {
       targetPending_other:
         "{{name}}, {{count, number}} items, unpublished changes",
     },
+    /**
+     * The switch between a roadmap's two views of its items (STY-067): from a tablet's
+     * width a group of two buttons named `label`, narrower one button, `compactView`.
+     */
+    view: {
+      label: "View",
+      cards: "Cards",
+      compact: "Compact",
+      compactView: "Compact view",
+    },
     /** A roadmap's items, on its page. */
     items: {
       loading: "Loading roadmap items…",
@@ -397,6 +407,14 @@ export const en = {
        * rest in place (STY-066). The button's name is its words, then `of` for the field:
        * "Show more of the description of First item".
        */
+      /**
+       * A row of the compact view: its chevron, which opens it to the item's other
+       * fields, named for the item (STY-067 S6).
+       */
+      row: {
+        show: "Show the rest of {{item}}",
+        hide: "Hide the rest of {{item}}",
+      },
       cut: {
         more: "Show more",
         less: "Show less",

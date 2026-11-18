@@ -322,6 +322,12 @@ export const cy = {
       targetPending_other:
         "{{name}}, {{count, number}} o eitemau, newidiadau heb eu cyhoeddi",
     },
+    view: {
+      label: "Golwg",
+      cards: "Cardiau",
+      compact: "Cryno",
+      compactView: "Golwg gryno",
+    },
     items: {
       loading: "Wrthi'n llwytho eitemau'r map trywydd…",
       loadFailed: "Doedd dim modd llwytho eitemau'r map trywydd hwn",
@@ -357,6 +363,10 @@ export const cy = {
         tags: "Tagiau",
         organisations: "Sefydliadau",
         details: "Manylion",
+      },
+      row: {
+        show: "Dangos gweddill {{item}}",
+        hide: "Cuddio gweddill {{item}}",
       },
       cut: {
         more: "Dangos mwy",

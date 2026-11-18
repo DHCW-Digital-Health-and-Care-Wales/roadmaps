@@ -17,7 +17,9 @@ import type { PublishedState } from "../editing/use-published-state"
 import { JumpToMenu } from "../placement-navigation/jump-to-menu"
 import { PlacementLinks } from "../placement-navigation/placement-links"
 import type { PlacementNavigation } from "../placement-navigation/use-placement-navigation"
+import type { ItemsView } from "../hooks/use-items-view"
 import { AddItemButton } from "./add-item-button"
+import { ItemsViewSwitch } from "./items-view-switch"
 import { ListMismatchBadges } from "./list-mismatch-badges"
 import { NotPublishedNotice } from "./not-published-notice"
 import { RoadmapMoreMenu } from "./roadmap-more-menu"
@@ -45,6 +47,9 @@ export interface RoadmapHeaderProps {
   onAddItem: () => void
   /** The placement navigation, while the page has placements to jump to (STY-053). */
   navigation?: PlacementNavigation | undefined
+  /** The view the items show in, and the choice of the other (STY-067 S1, S2). */
+  itemsView: ItemsView
+  onChooseView: (view: ItemsView) => void
 }
 
 /**
@@ -96,17 +101,19 @@ const LAYOUT_CLASSES = {
  * a roadmap not published, the Not published notice with "Publish roadmap" (S4); then
  * the jump control.
  *
- * From a tablet's width the actions sit at the end of the title's row, where they stay
- * once stuck, and the jump control is the row of placement links, the same at the top
- * and once stuck (S6). Narrower, More is "…" at the end of the title's row, and "Add
- * an item" and "Jump to" share the row under the details, "Jump to" growing to the
- * edge (S7).
+ * From a tablet's width the actions sit at the end of the title's row, after the switch
+ * between the items' views (STY-067 S1), where they stay once stuck, and the jump
+ * control is the row of placement links, the same at the top and once stuck (S6).
+ * Narrower, More is "…" at the end of the title's row, and "Add an item", "Jump to"
+ * and the switch's one button, "Compact view", share the row under the details, "Jump
+ * to" growing to fill it (S7, STY-067 S2).
  *
  * It sticks at the top of the screen once the page has scrolled past it (STY-052 S1,
  * D5), slimmed to the title and the controls (STY-060 S3, S4): narrower than a tablet
- * two rows, the menu button and the title, then the controls, "Jump to" growing to the
- * edge, and on a phone the title cut after two lines and Add an item and More icons
- * (D2); from a tablet the title with Add an item and More on its right, then the links.
+ * two rows, the menu button and the title, then the controls, "Jump to" growing to fill
+ * the row before "Compact view", and on a phone the title cut after two lines and Add an
+ * item and More icons (D2); from a tablet the title with the switch, Add an item and
+ * More on its right, then the links.
  * Its full title stays its name. Stuck, the details and the notice are visually
  * hidden, never unmounted, so the product details keep their state, and More holds
  * "Publish roadmap" at every width (STY-059 D7). A control among them reached from
@@ -134,6 +141,8 @@ export function RoadmapHeader({
   canAddItem,
   onAddItem,
   navigation,
+  itemsView,
+  onChooseView,
 }: RoadmapHeaderProps) {
   const phone = !useMediaQuery(WIDER_THAN_A_PHONE)
   const tablet = useMediaQuery(TABLET_WIDTH)
@@ -146,8 +155,16 @@ export function RoadmapHeader({
           : tablet
             ? LAYOUT_CLASSES.tablet
             : LAYOUT_CLASSES.narrow
+        const viewSwitch = (
+          <ItemsViewSwitch
+            view={itemsView}
+            onChoose={onChooseView}
+            single={!tablet}
+          />
+        )
         const controls = (
           <div key="controls" className={layoutClasses.controls}>
+            {tablet && viewSwitch}
             <AddItemButton
               ref={addItemButton}
               compact={stuck && phone}
@@ -164,9 +181,16 @@ export function RoadmapHeader({
               // In the Not published notice at the top, in More once stuck (D7).
               publishedState={notPublished && !stuck ? null : publishedState}
             />
-            {navigation && !tablet && (
-              <div className={cn("flex min-w-0", layoutClasses.jumpTo)}>
-                <JumpToMenu navigation={navigation} />
+            {!tablet && (
+              // "Jump to" fills the room up to "Compact view", at the row's end.
+              <div
+                className={cn(
+                  "flex min-w-0 justify-end gap-3",
+                  layoutClasses.jumpTo,
+                )}
+              >
+                {navigation && <JumpToMenu navigation={navigation} />}
+                {viewSwitch}
               </div>
             )}
           </div>

@@ -1,7 +1,7 @@
 import type { RefetchOptions } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { LockKeyholeIcon, MapPinOffIcon } from "lucide-react"
-import { useCallback, useMemo, useRef } from "react"
+import { useCallback, useLayoutEffect, useMemo, useRef } from "react"
 import { useTranslation } from "react-i18next"
 
 import { buttonVariants } from "@/components/ui/button"
@@ -44,11 +44,13 @@ import { useRoadmapEdit } from "../editing/use-roadmap-edit"
 import { hasGroupedItems } from "../group-roadmap-items"
 import { JOIN_READ } from "../hooks/roadmap-queries"
 import { useAddedRoadmapNotice } from "../hooks/use-added-roadmap"
+import { type ItemsView, useItemsView } from "../hooks/use-items-view"
 import { useOrganisations } from "../hooks/use-organisations"
 import { isRoadmapGone, useRoadmapItems } from "../hooks/use-roadmap-items"
 import { useRoadmapLists } from "../hooks/use-roadmap-lists"
 import { useRoadmap } from "../hooks/use-roadmaps"
 import { useRoadmapsProblem } from "../hooks/use-roadmaps-problem"
+import type { JumpTarget } from "../placement-navigation/jump-targets"
 import { usePlacementNavigation } from "../placement-navigation/use-placement-navigation"
 
 export interface RoadmapDetailPageProps {
@@ -166,7 +168,9 @@ interface RoadmapViewProps {
  * foot of the screen, what publishing or unpublishing it came to (STY-035, STY-052 D21)
  * and its pending changes with Publish. The title stays whatever happens to the items.
  * It holds the page's one item dialog, which "Add an item" and each item's Edit open,
- * and its roadmap dialog, which the product details' Edit and More open.
+ * and its roadmap dialog, which the product details' Edit and More open. The items
+ * show in the view last chosen on this device, and a view chosen keeps the placement
+ * the page was in at the top of the screen (STY-067 S3, S11).
  */
 function RoadmapView({
   roadmap,
@@ -185,6 +189,19 @@ function RoadmapView({
   const pageItems = usePageItems(roadmap.id, items.data)
   const groups = useMemo(() => groupPageItems(pageItems), [pageItems])
   const navigation = usePlacementNavigation(groups, changes?.orders)
+  const [itemsView, setItemsView] = useItemsView()
+  // The placement the page was in as another view was chosen, once it is drawn.
+  const keptInView = useRef<JumpTarget | null>(null)
+  const chooseView = (view: ItemsView) => {
+    keptInView.current = navigation.current
+    setItemsView(view)
+  }
+  const { align } = navigation
+  useLayoutEffect(() => {
+    const target = keptInView.current
+    keptInView.current = null
+    if (target) align(target)
+  }, [itemsView, align])
   // As the items area shows its placements, each with a heading to jump to: once both
   // reads are in, with an item to show (`RoadmapItemsArea`, `RoadmapItems`).
   const placementsShown =
@@ -256,6 +273,8 @@ function RoadmapView({
             itemDialog.add()
           }}
           navigation={placementsShown ? navigation : undefined}
+          itemsView={itemsView}
+          onChooseView={chooseView}
         />
         {/* Next in the page's order, where it stays on a short screen: elsewhere it
             pins to the foot (STY-052 S6). */}
@@ -291,6 +310,7 @@ function RoadmapView({
         roadmapId={roadmap.id}
         listFetching={listFetching}
         groups={groups}
+        view={itemsView}
         itemDialog={itemDialog}
         onItemRemoved={focusAddItem}
       />
@@ -300,7 +320,7 @@ function RoadmapView({
 
 interface RoadmapItemsAreaProps extends Pick<
   RoadmapItemsProps,
-  "roadmapId" | "groups" | "itemDialog" | "onItemRemoved"
+  "roadmapId" | "groups" | "view" | "itemDialog" | "onItemRemoved"
 > {
   /** The roadmap list is being read, as it is again once the roadmap is gone (D11). */
   listFetching: boolean
@@ -354,7 +374,8 @@ function RoadmapItemsArea({
       </div>
     )
   }
-  if (gone) return listFetching ? <RoadmapItemsSkeleton /> : null
+  if (gone)
+    return listFetching ? <RoadmapItemsSkeleton view={page.view} /> : null
   if (expired) return null
   if (problem) {
     return (
@@ -367,5 +388,5 @@ function RoadmapItemsArea({
       />
     )
   }
-  return <RoadmapItemsSkeleton />
+  return <RoadmapItemsSkeleton view={page.view} />
 }

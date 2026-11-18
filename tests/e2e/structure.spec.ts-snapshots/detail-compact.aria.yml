@@ -1,0 +1,123 @@
+- main:
+  - heading "Product A roadmap" [level=1]
+  - group "View":
+    - button "Cards"
+    - button "Compact" [pressed]
+  - button "Add an item"
+  - button "More"
+  - region "Product details":
+    - list "Roadmap details":
+      - listitem: "Status: Beta"
+      - listitem: "Product lead: Alex Jones"
+      - listitem: Updated 1 October 2026
+      - listitem:
+        - heading "Product details" [level=2]:
+          - button "Product details"
+  - navigation "Horizons and sections":
+    - list:
+      - listitem:
+        - link "Recently delivered, 1 item":
+          - /url: /#/roadmaps/producta
+      - listitem:
+        - link "Now, 3 items":
+          - /url: /#/roadmaps/producta
+      - listitem:
+        - link "Next, 1 item":
+          - /url: /#/roadmaps/producta
+      - listitem:
+        - link "Later, 2 items":
+          - /url: /#/roadmaps/producta
+      - listitem:
+        - link "Delivered this year, 1 item":
+          - /url: /#/roadmaps/producta
+      - listitem:
+        - link "Not doing, 1 item":
+          - /url: /#/roadmaps/producta
+  - status
+  - heading "Recently delivered" [level=2]
+  - list "Recently delivered":
+    - listitem:
+      - button "Show the rest of Recently shipped work"
+      - heading "Recently shipped work" [level=3]
+      - paragraph: Something we shipped in the last few weeks.
+      - button "Move Recently shipped work"
+      - button "Edit Recently shipped work"
+  - heading "Now" [level=2]
+  - list "Now":
+    - listitem:
+      - button "Hide the rest of Example card with every column" [expanded]
+      - heading "Example card with every column" [level=3]
+      - button "Move Example card with every column"
+      - button "Edit Example card with every column"
+      - term: Phase
+      - definition: Beta
+      - term: Description
+      - definition: What this work is. Keep it to a sentence or two.
+      - term: Expected outcome
+      - definition: What changes for users when it is done.
+      - term: Tags
+      - definition: Service X, Service Y
+      - term: Organisations
+      - definition: Cardiff and Vale, Swansea Bay
+      - term: Details
+      - definition:
+        - list:
+          - listitem:
+            - text: First bullet point
+            - list:
+              - listitem:
+                - text: Start a line with "-" to nest it under the line above
+                - list:
+                  - listitem: Use two dashes to nest it again
+          - listitem: Another top-level bullet point
+        - button "Show more of the details of Example card with every column"
+    - listitem:
+      - button "Show the rest of Minimal card"
+      - heading "Minimal card" [level=3]
+      - paragraph: Only Title and Horizon are required; everything else is optional.
+      - button "Move Minimal card"
+      - button "Edit Minimal card"
+    - listitem:
+      - button "Show the rest of Card awaiting release"
+      - heading "Card awaiting release" [level=3]
+      - paragraph: Work that is finished and waiting to go live.
+      - button "Move Card awaiting release"
+      - button "Edit Card awaiting release"
+  - heading "Next" [level=2]
+  - list "Next":
+    - listitem:
+      - button "Show the rest of Card being explored"
+      - heading "Card being explored" [level=3]
+      - paragraph: Work we expect to pick up soon.
+      - button "Move Card being explored"
+      - button "Edit Card being explored"
+  - heading "Later" [level=2]
+  - list "Later":
+    - listitem:
+      - button "Show the rest of Discovery card"
+      - heading "Discovery card" [level=3]
+      - paragraph: The Phase column is a free-text tag shown above the title.
+      - button "Move Discovery card"
+      - button "Edit Discovery card"
+    - listitem:
+      - button "Show the rest of Longer-term idea"
+      - heading "Longer-term idea" [level=3]
+      - paragraph: Direction we expect to take as we learn more.
+      - button "Move Longer-term idea"
+      - button "Edit Longer-term idea"
+  - heading "Delivered this year" [level=2]
+  - list "Delivered this year":
+    - listitem:
+      - button "Show the rest of Earlier delivery this year"
+      - heading "Earlier delivery this year" [level=3]
+      - paragraph: Something we delivered earlier in the year.
+      - button "Move Earlier delivery this year"
+      - button "Edit Earlier delivery this year"
+  - heading "Not doing" [level=2]
+  - list "Not doing":
+    - listitem:
+      - button "Show the rest of Something we are not doing"
+      - heading "Something we are not doing" [level=3]
+      - paragraph: Explain why this is out of scope for now.
+      - button "Move Something we are not doing"
+      - button "Edit Something we are not doing"

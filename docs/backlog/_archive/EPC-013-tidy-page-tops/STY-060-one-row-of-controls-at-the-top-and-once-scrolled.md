@@ -106,7 +106,7 @@ foot bar, and below 500px nothing pins, as today (STY-052 D18)
 - **D7** (owner, 2026-11-18, compact view UX analysis decision 4): the stuck strip
   gains the switch between the Cards and compact views: before Add an item from 768px,
   and as one button after "Jump to" narrower
-  ([STY-067](../../EPC-016-a-roadmaps-items-at-a-glance/STY-067-a-compact-view-of-a-roadmaps-items.md)
+  ([STY-067](../EPC-016-a-roadmaps-items-at-a-glance/STY-067-a-compact-view-of-a-roadmaps-items.md)
   D5). Changes: S3 and S4, once STY-067 is delivered.
 
 ## Starting point

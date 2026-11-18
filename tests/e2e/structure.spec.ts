@@ -188,6 +188,27 @@ test("a roadmap's product details open, and More with its Edit product details (
   await expectStructure(page.getByRole("menu"), "roadmap-more-menu.aria.yml")
 })
 
+test("a roadmap's items in the compact view, a row opened (STY-067)", async ({
+  page,
+}) => {
+  await page.goto("./#/roadmaps/producta")
+  await connect(page)
+  const main = page.getByRole("main")
+  await main.getByRole("button", { name: "Compact", exact: true }).click()
+  await main
+    .getByRole("button", {
+      name: "Show the rest of Example card with every column",
+    })
+    .click()
+  await expect(
+    main.getByRole("button", {
+      name: "Hide the rest of Example card with every column",
+    }),
+  ).toBeVisible()
+
+  await expectStructure(main, "detail-compact.aria.yml")
+})
+
 test("a roadmap not published reads Not published once, in a notice with Publish roadmap (STY-065 S4)", async ({
   page,
 }) => {

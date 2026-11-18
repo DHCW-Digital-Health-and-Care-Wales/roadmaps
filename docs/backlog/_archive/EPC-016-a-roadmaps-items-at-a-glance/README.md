@@ -1,8 +1,8 @@
 # EPC-016: A roadmap's items at a glance — every item a full card, however long
 
-- **Status**: Active — two stories from the compact view UX analysis, with the owner's
+- **Status**: Done — two stories from the compact view UX analysis, with the owner's
   answers of 2026-11-18
-- **Progress**: 1 of 2 terminal (STY-066); next selectable: STY-067; blocked on: nothing
+- **Progress**: 2 of 2 terminal (STY-066, STY-067)
 - **Binding ADRs**: ADR-002, ADR-005, ADR-008, ADR-010, ADR-011
 
 ## Summary
@@ -26,7 +26,7 @@ None.
 
 Audited at `2e073ee` on 2026-11-18, from captures of the app at 1280px and 375px and
 the frames of the
-[compact view UX analysis](../../analysis/roadmap-compact-view-ux-analysis.md), which
+[compact view UX analysis](../../../analysis/roadmap-compact-view-ux-analysis.md), which
 draw a sample roadmap of 18 items at the app's sizes.
 
 ### F1 — The page is as long as its items' text
@@ -87,10 +87,10 @@ the catalogue's own where it has one: "Move", "Edit", "Undo changes", "Remove",
 
 ## Stories
 
-| ID      | Story                                                                                                                                                                         | Area                               | Depends on | State |
-| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ---------- | ----- |
-| STY-066 | [A Product Lead reads cards of a like height, however long an item's text](../_archive/EPC-016-a-roadmaps-items-at-a-glance/STY-066-a-long-field-is-cut-after-three-lines.md) | Features/UI + i18n (en + cy) + E2E | —          | ✅    |
-| STY-067 | [A Product Lead sees a roadmap's items as compact rows, and switches back to cards](STY-067-a-compact-view-of-a-roadmaps-items.md)                                            | Features/UI + i18n (en + cy) + E2E | STY-066    |       |
+| ID      | Story                                                                                                                              | Area                               | Depends on | State |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ---------- | ----- |
+| STY-066 | [A Product Lead reads cards of a like height, however long an item's text](STY-066-a-long-field-is-cut-after-three-lines.md)       | Features/UI + i18n (en + cy) + E2E | —          | ✅    |
+| STY-067 | [A Product Lead sees a roadmap's items as compact rows, and switches back to cards](STY-067-a-compact-view-of-a-roadmaps-items.md) | Features/UI + i18n (en + cy) + E2E | STY-066    | ✅    |
 
 ## Sequencing
 
@@ -112,10 +112,10 @@ None.
 
 ## Related
 
-- [Compact view UX analysis](../../analysis/roadmap-compact-view-ux-analysis.md) and
+- [Compact view UX analysis](../../../analysis/roadmap-compact-view-ux-analysis.md) and
   its prototype page; its _Outcome_ maps each decision to a story here
-- [STY-021](../_archive/EPC-004-roadmap-items/STY-021-roadmap-page-shows-items.md),
+- [STY-021](../EPC-004-roadmap-items/STY-021-roadmap-page-shows-items.md),
   whose S2 and D3 these stories change
-- [STY-065](../_archive/EPC-015-a-quieter-roadmap-page-top/STY-065-a-roadmaps-page-top-reads-at-a-glance.md),
+- [STY-065](../EPC-015-a-quieter-roadmap-page-top/STY-065-a-roadmaps-page-top-reads-at-a-glance.md),
   which set the top of the page the switch joins
-- [Product Lead persona](../personas/product-lead.md), A1, A2 and A11
+- [Product Lead persona](../../personas/product-lead.md), A1, A2 and A11

@@ -16,6 +16,7 @@ import {
   ROADMAP_PLACEMENTS,
   type RoadmapPlacement,
 } from "@/domain/roadmap/roadmap-placement"
+import { cn } from "@/lib/utils"
 
 import type { OrderMove } from "./pending-orders"
 
@@ -42,6 +43,8 @@ export interface MoveMenuProps {
   button: RefObject<HTMLButtonElement | null>
   /** Held shut, though focusable: the item can't be moved for now. */
   disabled?: boolean
+  /** Its icon alone, still named "Move", as on a phone's compact row (STY-067 S5). */
+  iconOnly?: boolean
   onMove: (placement: RoadmapPlacement) => void
   onReorder: (to: OrderMove) => void
 }
@@ -67,6 +70,7 @@ export function MoveMenu({
   position,
   button,
   disabled = false,
+  iconOnly = false,
   onMove,
   onReorder,
 }: MoveMenuProps) {
@@ -78,10 +82,19 @@ export function MoveMenu({
       <DropdownMenuTrigger
         ref={button}
         disabled={disabled}
-        render={<Button variant="secondary" size="sm" focusableWhenDisabled />}
+        render={
+          <Button
+            variant="secondary"
+            size={iconOnly ? "icon-sm" : "sm"}
+            focusableWhenDisabled
+          />
+        }
       >
         <ArrowRightLeftIcon data-icon="inline-start" aria-hidden="true" />
-        {t("roadmaps.edit.move")} <span className="sr-only">{subject}</span>
+        <span className={cn(iconOnly && "sr-only")}>
+          {t("roadmaps.edit.move")}
+        </span>{" "}
+        <span className="sr-only">{subject}</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-auto">
         {position && placement && (

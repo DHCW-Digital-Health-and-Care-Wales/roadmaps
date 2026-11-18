@@ -1,5 +1,8 @@
 - main:
   - heading "Product A roadmap" [level=1]
+  - group "View":
+    - button "Cards" [pressed]
+    - button "Compact"
   - button "Add an item"
   - button "More"
   - region "Product details":

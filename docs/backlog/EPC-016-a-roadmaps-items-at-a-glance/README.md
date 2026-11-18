@@ -1,9 +1,8 @@
 # EPC-016: A roadmap's items at a glance — every item a full card, however long
 
-- **Status**: Active — two stories from the compact view UX analysis; the owner chose
-  the designs, and four smaller questions wait
-- **Progress**: 0 of 2 terminal; next selectable: none; blocked on: the open questions
-  of STY-066 and STY-067
+- **Status**: Active — two stories from the compact view UX analysis, with the owner's
+  answers of 2026-11-18
+- **Progress**: 0 of 2 terminal; next selectable: STY-066; blocked on: nothing
 - **Binding ADRs**: ADR-002, ADR-005, ADR-008, ADR-010, ADR-011
 
 ## Summary
@@ -11,7 +10,7 @@
 A roadmap's page shows each item as a card holding every field it has. That is right
 for reading one item and stays the page's first view. It is wrong for seeing the plan:
 a roadmap of 18 items runs to about 8 screens on a desktop and over 12 on a phone, and
-one long description makes its card, and the card beside it, as tall as it likes. This
+one long description makes its card, and its row of cards, as tall as it likes. This
 epic gives the Product Lead two things. A card cuts any field that runs past three
 lines, with "Show more" to read the rest. And a compact view, chosen by a switch beside
 Add an item and More and remembered on the device, shows each item as a row: its title
@@ -21,14 +20,7 @@ what the public site shows.
 
 ## Owner decisions waiting
 
-- [STY-066 Q1](STY-066-a-long-field-is-cut-after-three-lines.md#open-questions) — what
-  tells a Product Lead an item says too much, once a card hides it
-- [STY-066 Q2](STY-066-a-long-field-is-cut-after-three-lines.md#open-questions) —
-  whether the link and a row's chevron share one wording
-- [STY-067 Q1](STY-067-a-compact-view-of-a-roadmaps-items.md#open-questions) — what
-  the two views are called
-- [STY-067 Q2](STY-067-a-compact-view-of-a-roadmaps-items.md#open-questions) —
-  whether a phone's row shows a line of the description
+None.
 
 ## Findings
 
@@ -47,9 +39,9 @@ and the foot bar. Two cards are in view at once on a desktop and one on a phone.
 ### F2 — One long field sets a card's height, and its neighbour's
 
 Nothing limits what a Product Lead writes (persona A11), and a field's text wraps
-without limit. A description of 85 words makes a card about 400px tall on a desktop;
-the card beside it stretches to match, mostly empty. On a phone that one card is more
-than a screen.
+without limit. A description of 85 words makes a card about 500px tall on a desktop,
+and every card of its row stretches to the tallest. On a phone that one card is about
+a screen.
 
 ### F3 — An order is hard to follow among tall cards
 
@@ -109,8 +101,8 @@ STY-067 needs it on the default branch.
 
 - The table and the board the analysis drew: the owner chose rows. Either could be a
   third choice of the switch if Product Leads ask for it.
-- A limit on what a Product Lead may write (persona A11): a later record. STY-066 Q1
-  asks only what the editor says meanwhile.
+- A limit on what a Product Lead may write (persona A11): a later record. Meanwhile
+  "Show more" is the sign that an item says too much (STY-066 D3).
 - Filtering or sorting a roadmap's items, and dragging one: no record asks for them.
 - The roadmap list's cards.
 

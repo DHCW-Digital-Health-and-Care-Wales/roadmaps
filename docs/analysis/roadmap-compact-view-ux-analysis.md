@@ -8,8 +8,8 @@
 - **Scope**: the items area of a roadmap's page (`RoadmapItems`, `EditableItemCard`,
   `RoadmapItemCard`, `CardGrid`) and the top of the page (`RoadmapHeader`), on a desktop
   and a phone. It comes from the owner's request of 2026-11-18 to explore the idea. The
-  owner answered the same day, and the answers are in
-  [EPC-016](../backlog/EPC-016-a-roadmaps-items-at-a-glance/README.md) (_Outcome_).
+  owner answered the same day: the answers are in _Outcome_, and in the stories of
+  [EPC-016](../backlog/EPC-016-a-roadmaps-items-at-a-glance/README.md).
   Base `2e073ee`: the frames were first drawn at `b6aaea0`, and redrawn after STY-065
   changed the top of the page. Only documents and one prototype page were added: no
   application code. The skill asks for its stylesheet to be corrected where the app
@@ -108,8 +108,8 @@ Excluded:
   the choices of position in every Move menu, and "Undo order" (STY-050 S15).
 - **A phone has the compact view too** (decision 9), since the phone's scroll is the
   longest.
-- **Kept on this device, across sessions**, as the navigation's fold, width and closed
-  families are (STY-054 D5): one choice for every roadmap, not sent anywhere (decision
+- **Kept on this device, across sessions**, as the navigation's fold is (STY-054 D5),
+  and its width and closed families since: one choice for every roadmap, not sent anywhere (decision
   11). Nothing new is read from or written to the data source, and the public site
   sees no change.
 - **An item's fields are no longer all on the page, whole.** STY-021 D3 puts every
@@ -119,7 +119,7 @@ Excluded:
   product's voice, reusing the catalogue's strings. The new words are "Cards",
   "Compact", "View" and "Compact view" for the switch; "Show the rest of…" and "Hide
   the rest of…" before an item's title, on a row's chevron; and "Show more" and "Show
-  less" under a cut field (decision 27 asks about the two pairs).
+  less" under a cut field (decision 27 keeps the two pairs).
 
 ## 1. Read and work a roadmap in a compact view
 
@@ -170,16 +170,16 @@ the fallback.
 
 No limit is set on what a Product Lead writes (persona A11), and a card shows every
 field whole (STY-021 D3), so one long description makes its card as tall as it likes.
-On a desktop the card beside it stretches to match, mostly empty; on a phone the one
-card is more than a screen. The owner asked for one design, so it is set beside
+On a desktop the cards of a row stretch to the tallest; on a phone the one card is
+about a screen. The owner asked for one design, so it is set beside
 today's card with the same text: a description of about 85 words, seven lines of a
 desktop's card; an expected outcome of about 50 words, five lines; and six lines of
 details.
 
-| Design                                | Idea                                                                                                                                                                                                                                                                                                                                                                                              | Strengths                                                                                                                                                                                                                            | Risks                                                                                                                                                                                                                                                                                                                                                           |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Today                                 | A card shows each field whole, however long.                                                                                                                                                                                                                                                                                                                                                      | Nothing is hidden. A card that has outgrown its budget looks it, which is the cue to shorten the text.                                                                                                                               | One item's text sets the height of its card and of the card beside it. A long roadmap gets longer, and the cards stop reading as a set.                                                                                                                                                                                                                         |
-| G. A long field cut after three lines | Any field that runs past three lines shows three: a description or an expected outcome ends in an ellipsis, and a list of details stops after its third line, a nested line counting as one. "Show more" under it shows the field whole in place, and then reads "Show less". A field of three lines or fewer is as today, with no link. An opened row of the compact view follows the same rule. | A card's height stays near its neighbours', whatever was written. The first three lines are in view, and the rest is one press away, where it is. Short items, which are most, do not change. One rule for a card and an opened row. | The cue that an item says too much is quieter: the card no longer shows its excess, though the public site still will (decision 25). One more control for each long field, up to three on a card. Three lines hold fewer words on a phone than on a desktop. A list cut after three lines can stop part way through a nested group, with no ellipsis to say so. |
+| Design                                | Idea                                                                                                                                                                                                                                                                                                                                                                                              | Strengths                                                                                                                                                                                                                            | Risks                                                                                                                                                                                                                                                                                                                                              |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Today                                 | A card shows each field whole, however long.                                                                                                                                                                                                                                                                                                                                                      | Nothing is hidden. A card that has outgrown its budget looks it, which is the cue to shorten the text.                                                                                                                               | One item's text sets the height of its card and of the card beside it. A long roadmap gets longer, and the cards stop reading as a set.                                                                                                                                                                                                            |
+| G. A long field cut after three lines | Any field that runs past three lines shows three: a description or an expected outcome ends in an ellipsis, and a list of details stops after its third line, a nested line counting as one. "Show more" under it shows the field whole in place, and then reads "Show less". A field of three lines or fewer is as today, with no link. An opened row of the compact view follows the same rule. | A card's height stays near its neighbours', whatever was written. The first three lines are in view, and the rest is one press away, where it is. Short items, which are most, do not change. One rule for a card and an opened row. | The cue that an item says too much is quieter: the card no longer shows its excess, though the public site still will (decision 25). One more control for each long field of a card. Three lines hold fewer words on a phone than on a desktop. A list cut after three lines can stop part way through a nested group, with no ellipsis to say so. |
 
 **Recommendation**: **G**, as the owner asked for it. Decision 25 matters most of what
 is left: the cut tidies the editor's page and does nothing for the public reader, who
@@ -203,11 +203,11 @@ answered, which the agent took to draw the frames, and which are still open.
 | 8   | Where an item's actions are in compact.                                                                                                                                                                                                                                                                                                              | (a) Move and Edit on every item, "Undo changes" and Remove in the opened item, as drawn; (b) every action on every item; (c) one "…" menu on each item holding them all                                                                            |
 | 9   | Whether a phone has the compact view.                                                                                                                                                                                                                                                                                                                | (a) yes, as drawn; (b) a desktop and tablet only                                                                                                                                                                                                   |
 | 10  | The board's order (C only). Fell away with the board.                                                                                                                                                                                                                                                                                                | —                                                                                                                                                                                                                                                  |
-| 11  | Whether the view is kept, and for what.                                                                                                                                                                                                                                                                                                              | (a) on this device, across sessions, for every roadmap, as the navigation's fold is (STY-054 D5); (b) on this device, for each roadmap; (c) for the visit only                                                                                     |
+| 11  | Whether the view is kept, and for what.                                                                                                                                                                                                                                                                                                              | (a) on this device, across sessions, for every roadmap, as the navigation's fold is (STY-054 D5), as drawn; (b) on this device, for each roadmap; (c) for the visit only                                                                           |
 | 12  | What switching does to the page. The three parts of (a) can be chosen apart.                                                                                                                                                                                                                                                                         | (a) the placement the page was in stays at the top, focus stays on the switch, and items opened are closed; (b) the page returns to its top                                                                                                        |
 | 13  | What the switch is. The app has no control of this kind yet; the DHCW design system has a button group and tabs (`dhcw-design-system`, `src/components/actions/_button-group.scss` and `src/components/content/_tabs.scss`). The owner turned down tabs for a roadmap's placements (STY-053 D1); tabs here would switch the view, not the placement. | (a) a group of two buttons, the view in use pressed, from the design system's button group, and narrower than 768px one button, "Compact view", pressed or not: D, as drawn; (b) tabs; (c) the one button at every width                           |
 | 14  | The table's column headings (B only). Fell away with the table.                                                                                                                                                                                                                                                                                      | —                                                                                                                                                                                                                                                  |
-| 15  | The words for the glossary. "Item card" is defined as "a roadmap item as shown on a roadmap", which compact makes untrue.                                                                                                                                                                                                                            | (a) add "compact view", and say an item card is an item as the Cards view shows it, with the story that builds it; (b) now                                                                                                                         |
+| 15  | The words for the glossary. "Item card" is defined as "a roadmap item as shown on a roadmap", which compact makes untrue.                                                                                                                                                                                                                            | (a) add "compact view", and say an item card is an item as the Cards view shows it, in the story that builds it; (b) in the glossary now, before the story                                                                                         |
 | 16  | Which view a Product Lead sees before they have chosen.                                                                                                                                                                                                                                                                                              | (a) Cards, on every device, as drawn; (b) compact on a phone, where the scroll is longest, and Cards on a desktop                                                                                                                                  |
 | 17  | Whether a compact item's buttons keep their words.                                                                                                                                                                                                                                                                                                   | (a) Move and Edit in words on a desktop's row and as icons on a phone; "Undo changes" and Remove in words in an opened item, as drawn; (b) words everywhere, at the cost of a line on a phone; (c) icons everywhere                                |
 | 18  | A phone's row. A desktop's line never wraps; a phone's has room for about 20 characters of a title.                                                                                                                                                                                                                                                  | (a) one line on a phone too, the title cut; (b) on a phone the title takes the lines it needs, with no description, as drawn; (c) as (b), with one line of the description under the title, cut with an ellipsis                                   |
@@ -223,38 +223,40 @@ answered, which the agent took to draw the frames, and which are still open.
 
 ## Outcome
 
-On 2026-11-18, over six replies, the owner chose the designs, answered the rows below
-and asked for the work to be written into the backlog. It is
+On 2026-11-18, over seven replies, the owner chose the designs, answered the rows
+below and asked for the work to be written into the backlog. It is
 [EPC-016](../backlog/EPC-016-a-roadmaps-items-at-a-glance/README.md):
 [STY-066](../backlog/EPC-016-a-roadmaps-items-at-a-glance/STY-066-a-long-field-is-cut-after-three-lines.md)
 for journey 3, and
 [STY-067](../backlog/EPC-016-a-roadmaps-items-at-a-glance/STY-067-a-compact-view-of-a-roadmaps-items.md)
-for journeys 1 and 2.
+for journeys 1 and 2. No row is left open.
 
 **The owner's answers**
 
-| Decision  | Answer                                                                                                                                                                                                                           | Record     |
-| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
-| 1         | Write these into the backlog. The agent made it an epic of two stories, since the cut stands without the compact view.                                                                                                           | EPC-016    |
-| 3         | (a): design A, rows.                                                                                                                                                                                                             | STY-067 D1 |
-| 6         | (d), the owner's own: a row shows only the title and, where there is room, the start of the description, cut with "…". It does not wrap or grow, so Move and Edit are always in view. Decision 18 then changed this for a phone. | STY-067 D2 |
-| 18        | (b), after seeing a phone's titles cut on one line: on a phone a row shows as many lines as its title needs.                                                                                                                     | STY-067 D3 |
-| 11        | The view chosen is remembered for the user across sessions. The app does not know who is using it (the glossary's Connection), so that is (a), kept on this device.                                                              | STY-067 D4 |
-| 4         | (a): design D, the switch with the page's actions. Decision 13 (a) follows, since D draws its control.                                                                                                                           | STY-067 D5 |
-| Journey 3 | The card view stops a long text field after three lines, with "…" and a "Show more" link, or similar, that expands the rest. That is design G, and decision 23 (a).                                                              | STY-066 D1 |
-| 22        | The cut applies to any text field that can be long, the description, the expected outcome and the details among them. The agent drew that as (c): by length, whatever the field.                                                 | STY-066 D2 |
-| 26        | (a): the cut applies in the compact view too, when a row is opened.                                                                                                                                                              | STY-067 D6 |
+| Decision  | Answer                                                                                                                                                                                                                           | Record         |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
+| 1         | Write these into the backlog. The agent made it an epic of two stories, since the cut stands without the compact view.                                                                                                           | EPC-016        |
+| 3         | (a): design A, rows.                                                                                                                                                                                                             | STY-067 D1     |
+| 6         | (d), the owner's own: a row shows only the title and, where there is room, the start of the description, cut with "…". It does not wrap or grow, so Move and Edit are always in view. Decision 18 then changed this for a phone. | STY-067 D2     |
+| 18        | (b): on a phone a row shows as many lines as its title needs, after seeing a phone's titles cut on one line; and, asked, no line of the description under it.                                                                    | STY-067 D3, D8 |
+| 11        | The view chosen is remembered for the user across sessions. The app does not know who is using it (the glossary's Connection), so that is (a), kept on this device.                                                              | STY-067 D4     |
+| 4         | (a): design D, the switch with the page's actions.                                                                                                                                                                               | STY-067 D5     |
+| 5         | (a): Cards and Compact.                                                                                                                                                                                                          | STY-067 D7     |
+| Journey 3 | The card view stops a long text field after three lines, with "…" and a "Show more" link, or similar, that expands the rest. That is design G, and decision 23 (a).                                                              | STY-066 D1     |
+| 22        | The cut applies to any text field that can be long, the description, the expected outcome and the details among them. The agent drew that as (c): by length, whatever the field.                                                 | STY-066 D2, D5 |
+| 26        | (a): the cut applies in the compact view too, when a row is opened.                                                                                                                                                              | STY-067 D6     |
+| 25        | (a): nothing more says an item is too long; "Show more" is the sign.                                                                                                                                                             | STY-066 D3     |
+| 27        | (a): the two wordings stay, "Show the rest of" on a row and "Show more" on a field.                                                                                                                                              | STY-066 D4     |
 
-**What the agent took, to draw the frames**: decisions 2, 7, 8, 9, 12, 16, 17, 19, 20,
-21 and 24, each option (a), and 15 (a). Choosing A did not answer these; they are the
-parts of A, D and G the owner has seen drawn and not spoken to. Each is an agent's
-decision in its story, which the owner can reopen. From the owner's row the agent also
-took that a row shows no phase, and that a phone's row shows no description.
+**What the agent took, to draw the frames**: option (a) of decisions 7, 8, 9, 12, 13,
+16, 17, 19, 20, 21 and 24, and 15 (a). Choosing A, D and G did not answer these; they
+are the parts the owner has seen drawn and not spoken to. STY-067 D9 to D13 and STY-066
+D5 to D8 record them, for the owner to reopen. Decision 2 (a), a roadmap's page, is the
+stories' scope. From the owner's row the agent also took that a row shows no phase;
+from the cut, that a list of details stops after its third line with no ellipsis, and
+that a control's name changes as it opens.
 
-**Still open, for the owner**: decisions 5 (the views' names), 18 (c) (a line of the
-description on a phone), 25 (what says an item is too long) and 27 (the words for
-opening). Each is an open question of its story. Rows 10 and 14 fell away with the
-board and the table.
+Rows 10 and 14 fell away with the board and the table.
 
 ## Not yet drawn
 
@@ -279,10 +281,6 @@ board and the table.
 - Any option not marked "as drawn", and the rules a still frame cannot show: decisions
   11, 12 and 24. Earlier rounds drew 3 (b) and (c), 4 (b) and (c), 6 (a) and (b), 7
   (c), 18 (a), 19 (c) and 22 (a), in frames since removed or replaced.
-- Whether a row's chevron and a field's link need both a name that changes and their
-  expanded state, for a screen reader.
-- Short cards: A's row drawn as cards in today's grid. It saves less room than rows
-  and reads across, which an order reads against.
 
 ## What does not change
 

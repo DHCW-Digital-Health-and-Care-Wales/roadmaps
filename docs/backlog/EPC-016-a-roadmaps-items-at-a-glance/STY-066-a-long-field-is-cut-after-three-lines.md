@@ -1,7 +1,7 @@
 # STY-066: A Product Lead reads cards of a like height, however long an item's text
 
-- **Status**: Needs grilling — the owner asked for it and chose what is cut; Q1 and Q2
-  wait for an answer
+- **Status**: Proposed — the owner asked for it, chose what is cut and answered both
+  questions on 2026-11-18
 - **Type**: Feature + Copy
 - **Area**: Features/UI + i18n (en + cy) + E2E
 - **Epic**: [EPC-016-a-roadmaps-items-at-a-glance](README.md)
@@ -12,13 +12,12 @@
 
 ## Summary
 
-A card shows every field whole, so one long description makes its card, and the card
-beside it, as tall as it likes. This story cuts any field of a card that runs past
-three lines: a description or an expected outcome ends in "…", a list of details stops
-after its third line, and "Show more" under it shows the rest in place, then reads
-"Show less". A short field is as it is today. It does not limit what a Product Lead may
-write, and the public site still shows the whole text. Waiting on the owner: what tells
-a Product Lead an item says too much, and the wording of the link.
+A card shows every field whole, so one long description makes its card as tall as it
+likes, and its row of cards with it. This story cuts any field of a card that runs
+past three lines: a description or an expected outcome ends in "…", a list of details
+stops after its third line, and "Show more" under it shows the rest in place, then
+reads "Show less". A short field is as it is today. Not in it: a limit on what a
+Product Lead may write. The public site still shows the whole text.
 
 ## Scope
 
@@ -56,8 +55,8 @@ as a line
 
 **Given** a field cut as in S1, S2 or S3
 **When** the Product Lead presses "Show more"
-**Then** the field shows whole, where it is, and the link reads "Show less"
-**And** focus stays on the link, which reads as expanded to a screen reader
+**Then** the field shows whole, where it is, and the control reads "Show less"
+**And** focus stays on the control, which reads as expanded to a screen reader
 **And** "Show less" cuts it again
 
 ### S5: A short field is as today
@@ -67,7 +66,7 @@ as a line
 **Then** each shows whole, with no ellipsis and no "Show more"
 **And** a field's line breaks still show as line breaks
 
-### S6: The link says what it shows more of
+### S6: The control says what it shows more of
 
 **Given** two cards with long descriptions, or one card with three long fields
 **When** a screen reader lists the page's controls
@@ -97,25 +96,13 @@ lines
 **When** a card with a long field shows
 **Then** "Show more" and "Show less" are in Welsh, nothing scrolls sideways, and axe
 reports no WCAG 2.2 AA violation
-**And** the link takes the focus style of a text link
+**And** "Show more" is a button drawn as a text link, with a text link's focus style
 
-## Open questions
+## Tests
 
-- **Q1**: What tells a Product Lead that an item says too much, once the card hides
-  it? _Today a card that has outgrown its budget looks it. Cut, it looks like any
-  other, and the public site still shows the whole text._
-  - (a) Nothing more: "Show more" is the sign (recommended) — the smallest change. A
-    limit on what can be written is a later record (persona A11).
-  - (b) The item dialog says so: a hint under a field that passes what a card shows —
-    the Product Lead is told as they write, where they can shorten it. Adds a rule for
-    "too long" to the form.
-- **Q2**: Is the link "Show more"? _STY-067's row opens by a chevron named "Show the
-  rest of" then the item's title, so one page has two wordings for showing what is
-  hidden._
-  - (a) "Show more" and "Show less" here, "Show the rest of" on a row (recommended) —
-    a row opens to other fields, a link to more of one, and the words say which.
-  - (b) "Show more" and "Show less" for both, each named for what it opens — one
-    wording to learn. A row's name then reads "Show more of" then the title.
+S7 needs a browser: jsdom lays nothing out, so whether a field passes three lines is
+only true in Playwright, at 375px and 1280px and with the navigation folded. S1 to S6
+and S8 hold as component tests once the measure is given to them.
 
 ## Decisions
 
@@ -126,14 +113,23 @@ reports no WCAG 2.2 AA violation
 - **D2** (owner, 2026-11-18, analysis decision 22): the cut applies to any text field
   that can be long, the description, the expected outcome and the details among them.
   Adds S2, S3.
-- **D3** (agent, 2026-11-18, from D2): the rule is by length, not by field: any field
+- **D3** (owner, 2026-11-18, analysis decision 25): nothing more tells a Product Lead
+  an item says too much; "Show more" is the sign. A hint in the item dialog, and a
+  limit on what can be written, stay out.
+- **D4** (owner, 2026-11-18, analysis decision 27): the control reads "Show more" and
+  "Show less", beside "Show the rest of" on a compact row (STY-067), over one wording
+  for both.
+- **D5** (agent, 2026-11-18, from D2): the rule is by length, not by field: any field
   under a label that passes three lines is cut, so long tags or organisations are too,
   over a list of named fields. The title is never cut.
-- **D4** (agent, 2026-11-18, from D2): a list of details stops after its third line
+- **D6** (agent, 2026-11-18, from D2): a list of details stops after its third line
   with no ellipsis, since each detail shown is whole, over cutting a detail mid-line.
-- **D5** (agent, 2026-11-18, analysis decision 24): a field shown whole stays so until
+- **D7** (agent, 2026-11-18, analysis decision 24): a field shown whole stays so until
   "Show less" or until the page is left or its view changed, over keeping it on the
   device.
+- **D8** (agent, 2026-11-18): the control's words change as it opens and it reads as
+  expanded too, as the item form's opening fields do, over a fixed name: its words are
+  on the page, and say what a press will do.
 
 ## Starting point
 

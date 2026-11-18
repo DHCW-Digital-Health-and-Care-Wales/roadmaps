@@ -1,7 +1,7 @@
 # STY-067: A Product Lead sees a roadmap's items as compact rows, and switches back to cards
 
-- **Status**: Needs grilling — the owner chose rows, what a row shows and where the
-  switch is; Q1 and Q2 wait for an answer
+- **Status**: Proposed — the owner chose rows, what a row shows and where the switch
+  is, and answered both questions on 2026-11-18
 - **Type**: Feature + Copy
 - **Area**: Features/UI + i18n (en + cy) + E2E
 - **Epic**: [EPC-016-a-roadmaps-items-at-a-glance](README.md)
@@ -14,19 +14,19 @@
 
 As cards, a roadmap of 18 items is about 8 screens on a desktop and 12 on a phone. This
 story adds a compact view, chosen by a switch beside Add an item and More and
-remembered on the device across sessions. Each item is a row under the same headings:
-on a desktop one line that never wraps, the title then the start of the description,
-cut with "…"; on a phone the title on the lines it needs. Move and Edit are always in
-view, and a row opens in place to its other fields, a long one cut as a card cuts it.
-Cards stay the first view. Not in it: a table or a board. Waiting on the owner: the
-views' names, and whether a phone's row shows a line of the description.
+remembered on the device. Each item is a row under the same headings, showing its
+title and, on a desktop, the start of its description; Move and Edit are always in
+view, and a row opens in place to its other fields. Cards stay the first view. Not in
+it: a table or a board, which the owner set aside.
 
 ## Scope
 
 `features/roadmaps` (the items area, and the top of the page for the switch), a stored
 choice of view on the device beside the navigation's, and `i18n/`. Nothing in `domain/`
 or `infrastructure/`: no read or write of the data source changes. `docs/GLOSSARY.md`
-gains the compact view, and "item card" becomes an item as the Cards view shows it.
+gains the compact view, "item card" becomes an item as the Cards view shows it, and a
+row of the compact view is told apart from the "row" the glossary avoids for a
+position.
 
 ## Acceptance criteria
 
@@ -159,17 +159,11 @@ an item from 768px; headings run h1, h2, h3; nothing scrolls sideways or passes 
 right edge, with a long title beside the switch
 **And** axe reports no WCAG 2.2 AA violation
 
-## Open questions
+## Tests
 
-- **Q1**: What are the two views called?
-  - (a) Cards and Compact (recommended) — "compact" is your word for it, and holds if
-    another layout is ever added.
-  - (b) Cards and List — names what the Product Lead sees.
-- **Q2**: Does a phone's row show any of the description? _On a phone the title takes
-  the row's lines._
-  - (a) No (recommended) — the shortest page: about 3¾ screens for 18 items.
-  - (b) One line of it under the title, cut with "…" — says what an item is without
-    opening it, at about one line more for every row.
+S4 needs a browser: that a row stays one line, cuts its description and keeps Move and
+Edit in view is layout, which jsdom does not do. So do S1 and S2 beside a long title
+and in Cymraeg, at each width of S13. The rest hold as component tests.
 
 ## Decisions
 
@@ -184,26 +178,34 @@ right edge, with a long title beside the switch
   the user across sessions. The app does not know who is using it, so it is kept on the
   device, as the navigation's fold is. Adds S11.
 - **D5** (owner, 2026-11-18, analysis decision 4): the switch is design D, with the
-  page's actions. Adds S1, S2. Changes STY-065 S1, S6, S7 and S10: the title's row
-  gains the switch, before Add an item in the Tab order, and a phone's row of Add an
-  item and "Jump to" gains the button.
+  page's actions. Adds S1, S2. Changes STY-065 S1, S6, S7 and S10, and STY-060 S3 and
+  S4: the title's row and the stuck strip gain the switch, before Add an item in the
+  Tab order, and a phone's row of Add an item and "Jump to" gains the button.
 - **D6** (owner, 2026-11-18, analysis decision 26): STY-066's cut applies in the
   compact view too, when a row is opened. Adds S7.
-- **D7** (agent, 2026-11-18, analysis decisions 7 and 8): a row opens in place, any
+- **D7** (owner, 2026-11-18, analysis decision 5): the views are Cards and Compact,
+  over Cards and List.
+- **D8** (owner, 2026-11-18, analysis decision 18 (c)): a phone's row shows no line of
+  the description under its title.
+- **D9** (agent, 2026-11-18, analysis decisions 7 and 8): a row opens in place, any
   number at once, over one at a time; Move and Edit are on every row, and "Undo
   changes" and Remove in the opened row, over a menu holding them all.
-- **D8** (agent, 2026-11-18, from D2 and D3; analysis decisions 19 and 20): a row
+- **D10** (agent, 2026-11-18, from D2 and D3; analysis decisions 19 and 20): a row
   shows no phase, which an opened row shows with the other fields; a phone's pending
   tag and an unplaced item's flag sit under the title, in words, over an icon alone in
   the line.
-- **D9** (agent, 2026-11-18, analysis decisions 11, 12 and 16): one choice for every
-  roadmap, over one for each; switching keeps the placement in view and closes opened
-  rows; Cards is the first view on every device.
-- **D10** (agent, 2026-11-18): "a desktop's row" starts at 768px, where the top of the
-  page changes its layout (STY-065 D7), so the switch and the row change together.
-- **D11** (agent, 2026-11-18, analysis decision 13): the switch is two buttons in a
-  group, the view in use pressed, over tabs, which the owner turned down for the
-  placements (STY-053 D1) and which would say the views are separate pages.
+- **D11** (agent, 2026-11-18, analysis decisions 9, 12 and 16): a phone has the compact
+  view; one choice for every roadmap, over one for each; switching keeps the placement
+  in view and closes opened rows; Cards is the first view on every device.
+- **D12** (agent, 2026-11-18, analysis decisions 17 and 21): Move and Edit are words on
+  a desktop's row and icons on a phone, over words everywhere; the start of the
+  description is its text from its first word, over its first sentence.
+- **D13** (agent, 2026-11-18, analysis decisions 13 and 15): the switch is two buttons
+  in a group, the view in use pressed, over tabs, which the owner turned down for the
+  placements (STY-053 D1); "a desktop" starts at 768px, where the top of the page
+  changes (STY-065 D7); the glossary changes with this story, not before.
+- **D14** (agent, 2026-11-18): the chevron's name changes as the row opens and it reads
+  as expanded too, as the item form's opening fields do, over a fixed name.
 
 ## Starting point
 

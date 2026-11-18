@@ -103,6 +103,11 @@ foot bar, and below 500px nothing pins, as today (STY-052 D18)
   "Jump to" narrower; from 768px Add an item and More sit at the end of the title's
   row at the top too; narrower, Add an item and "Jump to" share a row and More sits
   beside the title. Changes S1, S2 and S4's 820px strip, and D1 and D4.
+- **D7** (owner, 2026-11-18, compact view UX analysis decision 4): the stuck strip
+  gains the switch between the Cards and compact views: before Add an item from 768px,
+  and as one button after "Jump to" narrower
+  ([STY-067](../../EPC-016-a-roadmaps-items-at-a-glance/STY-067-a-compact-view-of-a-roadmaps-items.md)
+  D5). Changes: S3 and S4, once STY-067 is delivered.
 
 ## Starting point
 

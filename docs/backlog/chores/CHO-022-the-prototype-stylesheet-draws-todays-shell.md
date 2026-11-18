@@ -16,17 +16,19 @@
 `.agents/skills/ux-prototypes/assets/mock.css` and to correct the stylesheet where the
 app has moved on, so the next prototype starts from the app as it is. Since EPC-012
 the app's desktop has a navigation beside the page, a header that sticks and a foot
-bar that pins, and `mock.css` draws none of them. Each frames page of a roadmap's
-page has redrawn them in its own shared styles instead, which are not committed, so
-the next author starts again from captures. Done looks like: a roadmap's page, at
+bar that pins, and `mock.css` draws none of them. Each prototype page that shows
+the shell has redrawn it in its own styles instead. Those styles are committed only
+inside each assembled page, mixed with its designs' own, so the next author picks
+them out of a page or starts again from captures. Done looks like: a roadmap's page, at
 the top and once scrolled, drawn from `mock.css` alone and matching captures of the
 app at 1280px and 375px, and `references/frames.md` naming the frame that holds it.
 
 ## Measurement
 
 At `b6aaea0`, comparing `mock.css` with captures of the app (Product A, Google faked,
-1280px and 375px) and with the shared styles the compact view analysis wrote
-(`docs/analysis/roadmap-compact-view-ux-analysis.md`).
+1280px and 375px) and with the styles the compact view page carries: the `<style>` block of
+`docs/analysis/roadmap-compact-view-ux-analysis/roadmap-compact-view-ux-prototypes.html`,
+from `.frame .dk` on, which is where to start.
 
 | Area                               | Measurement                                                                                                                                                                                                           | Verdict                                         |
 | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
@@ -36,7 +38,7 @@ At `b6aaea0`, comparing `mock.css` with captures of the app (Product A, Google f
 | A roadmap's header block           | Not drawn: the facts, About this roadmap, the row of controls, the placement links and "Jump to", and the header once stuck, on a desktop and on a phone                                                              | Add                                             |
 | The pinned foot bar                | `.pend` draws a bar above the page, as before STY-052; the app pins it to the foot of the screen                                                                                                                      | Replace                                         |
 | Small buttons                      | `.btn.sm` has an 8px gap, 12px of padding and a 16px icon; the app's has a 6px gap, 8px of padding on an icon's side and a 14px icon, so a card's Changed tag and its three buttons wrap where the app's fit one line | Correct                                         |
-| Pages that carried their own shell | The page headers, navigation and compact view analyses: three in three days                                                                                                                                           | Recurs with every prototype of a roadmap's page |
+| Pages that carried their own shell | The page headers, navigation and compact view analyses, all on 18 November 2026                                                                                                                                       | Recurs with every prototype of a roadmap's page |
 | `assets/component-page.html`       | Not compared                                                                                                                                                                                                          | Compare its header and buttons too              |
 
 ## Acceptance criteria

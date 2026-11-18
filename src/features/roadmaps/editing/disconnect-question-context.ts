@@ -1,16 +1,7 @@
 import { createContext } from "react"
 
-import type { Roadmap } from "@/domain/roadmap/roadmap"
-
-/** What Disconnect asked about: the roadmaps with changes when it was asked. */
-export interface DisconnectQuestionSubject {
-  count: number
-  /** Those of them the roadmap list holds, none while it is unread. */
-  roadmaps: readonly Roadmap[]
-}
-
 /** The question Disconnect asks while changes are pending, and what answers it. */
-export interface DisconnectQuestionState extends DisconnectQuestionSubject {
+export interface DisconnectQuestionState {
   open: boolean
   onKeep: () => void
   onDiscard: () => void

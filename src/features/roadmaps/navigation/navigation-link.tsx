@@ -16,9 +16,16 @@ import { RoadmapSwatch } from "../components/roadmap-swatch"
 export type NavigationMark =
   /** A page's icon, shown in both forms. */
   | { icon: ReactNode }
-  /** A roadmap's colour as a strip, and in a rail its initials in place of its title. */
-  | { colour: string | null; initials: string }
-  /** How many roadmaps have unpublished changes: a dot beside the name, and in a rail the number. */
+  /**
+   * A roadmap's colour as a strip, and in a rail its initials in place of its title; a dot
+   * after it while it has unpublished changes (STY-055 D1), which its name then says.
+   */
+  | {
+      colour: string | null
+      initials: string
+      unpublished?: boolean
+    }
+  /** A number in a circle in a rail, and a dot beside the name in full. */
   | { count: number }
 
 /** What every entry takes, a link or the text that stands where one cannot lead. */
@@ -27,8 +34,6 @@ interface NavigationEntryShape {
   rail: boolean
   name: string
   mark: NavigationMark
-  /** The roadmap has unpublished changes (STY-055 D1): a dot, and its name says so. */
-  unpublished?: boolean
 }
 
 // Its classes are the navigation's own, so the anchor takes none from a caller.
@@ -53,24 +58,25 @@ function boxClasses(rail: boolean): string {
 
 /**
  * A link on navy: white, DHCW's active blue on hover, yellow when focused, and bold for
- * the current page.
+ * the current page. Its dot turns dark while the link is yellow (`EntryDot`).
  */
 function linkClasses(rail: boolean): string {
   return cn(
     boxClasses(rail),
-    "outline-none hover:bg-sidebar-accent focus-visible:focus-fill aria-[current=page]:font-bold",
+    "group/entry outline-none hover:bg-sidebar-accent focus-visible:focus-fill aria-[current=page]:font-bold",
   )
 }
 
 /**
- * The dot of an entry with unpublished changes: DHCW's yellow on navy, at the end of the
- * name, and in a rail at the corner of the mark.
+ * The dot of an entry with unpublished changes: DHCW's yellow on navy, dark on the
+ * link's own yellow when it is focused, at the end of the name, and in a rail at the
+ * corner of the mark.
  */
 function EntryDot({ rail }: { rail: boolean }) {
   return (
     <UnpublishedDot
       className={cn(
-        "bg-focus",
+        "bg-focus group-focus-visible/entry:bg-focus-foreground",
         rail ? "absolute top-1.5 right-1.5" : "ms-auto",
       )}
     />
@@ -81,25 +87,23 @@ function EntryDot({ rail }: { rail: boolean }) {
  * What a screen reader reads, and a tooltip says, for an entry: its name, and for a
  * roadmap with unpublished changes the whole phrase, as its dot shows nothing in words.
  */
-function useSpokenName({
-  name,
-  unpublished,
-}: Pick<NavigationEntryShape, "name" | "unpublished">): string {
+function useSpokenName({ name, mark }: NavigationEntryShape): string {
   const { t } = useTranslation()
-  return unpublished ? t("roadmaps.navigation.changed", { name }) : name
+  return "unpublished" in mark && mark.unpublished
+    ? t("roadmaps.navigation.changed", { name })
+    : name
+}
+
+interface EntryLabelProps extends NavigationEntryShape {
+  /** What a screen reader reads where the name is shown in part or with a dot. */
+  spoken: string
 }
 
 /**
  * What the entry shows: its mark and name; in a rail, its mark alone, a page's name read
  * after its icon and a roadmap's title after the initials that begin its name.
  */
-function EntryLabel({
-  rail,
-  name,
-  mark,
-  unpublished = false,
-}: NavigationEntryShape) {
-  const spoken = useSpokenName({ name, unpublished })
+function EntryLabel({ rail, name, mark, spoken }: EntryLabelProps) {
   if ("icon" in mark) {
     return (
       <>
@@ -124,11 +128,12 @@ function EntryLabel({
       </>
     ) : (
       <>
-        <UnpublishedDot className="bg-focus" />
+        <UnpublishedDot className="bg-focus group-focus-visible/entry:bg-focus-foreground" />
         <span className="min-w-0 wrap-break-word">{name}</span>
       </>
     )
   }
+  const unpublished = mark.unpublished === true
   return (
     <>
       <RoadmapSwatch colour={mark.colour} />
@@ -154,28 +159,29 @@ function EntryLabel({
   )
 }
 
+interface EntryItemProps extends NavigationEntryShape {
+  /** The entry's element around its label: a link, or the text of one. */
+  around: (label: ReactNode) => ReactElement
+}
+
 /**
- * One destination's list entry: `children` in full; in a rail they show as a mark, with
- * the name in a tooltip as it is pointed at or focused.
+ * One destination's list entry: its mark and name in full; in a rail its mark, with its
+ * name in a tooltip as it is pointed at or focused.
  */
-function EntryItem({
-  rail,
-  tooltip,
-  children,
-}: {
-  rail: boolean
-  tooltip: string
-  children: ReactElement
-}) {
+function EntryItem({ rail, name, mark, around }: EntryItemProps) {
+  const spoken = useSpokenName({ rail, name, mark })
+  const entry = around(
+    <EntryLabel rail={rail} name={name} mark={mark} spoken={spoken} />,
+  )
   return (
     <li className={entryClasses}>
       {rail ? (
         <Tooltip>
-          <TooltipTrigger render={children} />
-          <TooltipContent side="right">{tooltip}</TooltipContent>
+          <TooltipTrigger render={entry} />
+          <TooltipContent side="right">{spoken}</TooltipContent>
         </Tooltip>
       ) : (
-        children
+        entry
       )}
     </li>
   )
@@ -190,21 +196,19 @@ function NavigationEntry({
   rail,
   name,
   mark,
-  unpublished = false,
   ...anchor
 }: NavigationEntryProps) {
-  const tooltip = useSpokenName({ name, unpublished })
   return (
-    <EntryItem rail={rail} tooltip={tooltip}>
-      <a {...anchor} className={linkClasses(rail)}>
-        <EntryLabel
-          rail={rail}
-          name={name}
-          mark={mark}
-          unpublished={unpublished}
-        />
-      </a>
-    </EntryItem>
+    <EntryItem
+      rail={rail}
+      name={name}
+      mark={mark}
+      around={(label) => (
+        <a {...anchor} className={linkClasses(rail)}>
+          {label}
+        </a>
+      )}
+    />
   )
 }
 
@@ -212,25 +216,15 @@ export const NavigationLink = createLink(NavigationEntry)
 
 /**
  * An entry that says something and leads nowhere, drawn as a link is: the count of
- * unpublished changes while the roadmaps it would lead to are unread.
+ * unpublished changes while there is no roadmap to lead to.
  */
-export function NavigationText({
-  rail,
-  name,
-  mark,
-  unpublished = false,
-}: NavigationEntryShape) {
-  const tooltip = useSpokenName({ name, unpublished })
+export function NavigationText({ rail, name, mark }: NavigationEntryShape) {
   return (
-    <EntryItem rail={rail} tooltip={tooltip}>
-      <span className={boxClasses(rail)}>
-        <EntryLabel
-          rail={rail}
-          name={name}
-          mark={mark}
-          unpublished={unpublished}
-        />
-      </span>
-    </EntryItem>
+    <EntryItem
+      rail={rail}
+      name={name}
+      mark={mark}
+      around={(label) => <span className={boxClasses(rail)}>{label}</span>}
+    />
   )
 }

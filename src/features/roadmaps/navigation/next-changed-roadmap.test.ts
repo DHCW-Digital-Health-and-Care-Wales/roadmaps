@@ -15,8 +15,10 @@ describe("nextChangedRoadmap", () => {
     expect(nextChangedRoadmap(changed, "c")).toBe("a")
   })
 
-  it("leads to the only one, even from it", () => {
-    expect(nextChangedRoadmap(["a"], "a")).toBe("a")
+  it("leads to the only one from any page but its own", () => {
+    expect(nextChangedRoadmap(["a"], undefined)).toBe("a")
+    expect(nextChangedRoadmap(["a"], "b")).toBe("a")
+    expect(nextChangedRoadmap(["a"], "a")).toBeUndefined()
   })
 
   it("leads nowhere without a roadmap with changes", () => {

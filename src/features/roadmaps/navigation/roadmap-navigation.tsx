@@ -1,6 +1,6 @@
 import { useParams } from "@tanstack/react-router"
 import { GlobeIcon, LayoutGridIcon } from "lucide-react"
-import { useId, useMemo } from "react"
+import { useId, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import type { NavigationForm } from "@/components/layout/app-shell"
@@ -48,6 +48,7 @@ export function RoadmapNavigation({ form }: RoadmapNavigationProps) {
   const rail = form === "rail"
   const named = namesFamilies(groups)
   const { changes } = usePendingChanges()
+  const changed = useMemo(() => new Set(changes.keys()), [changes])
   const currentId = useParams({
     strict: false,
     select: (params) => params.roadmapId,
@@ -55,7 +56,7 @@ export function RoadmapNavigation({ form }: RoadmapNavigationProps) {
   // In the navigation's order, so the count steps through them as the Product Lead reads.
   const withChanges = groups
     .flatMap((group) => group.roadmaps)
-    .filter((roadmap) => changes.has(roadmap.id))
+    .filter((roadmap) => changed.has(roadmap.id))
     .map((roadmap) => roadmap.id)
 
   const destinations = (
@@ -72,7 +73,7 @@ export function RoadmapNavigation({ form }: RoadmapNavigationProps) {
           />
         </ul>
         <UnpublishedTotal
-          count={changes.size}
+          count={changed.size}
           leadsTo={nextChangedRoadmap(withChanges, currentId)}
           rail={rail}
         />
@@ -83,7 +84,7 @@ export function RoadmapNavigation({ form }: RoadmapNavigationProps) {
           group={group}
           named={named}
           rail={rail}
-          changed={changes}
+          changed={changed}
         />
       ))}
       <ul className="flex flex-col gap-1 border-t border-sidebar-border pt-3">
@@ -105,8 +106,8 @@ interface RoadmapGroupLinksProps {
   /** The family's name names the list: shown in full, not in a rail. */
   named: boolean
   rail: boolean
-  /** Whose roadmaps have unpublished changes, by id. */
-  changed: ReadonlyMap<string, unknown>
+  /** The roadmaps with unpublished changes, by id. */
+  changed: ReadonlySet<string>
 }
 
 /** One family's roadmaps, in a list named for the family. */
@@ -147,10 +148,10 @@ function RoadmapGroupLinks({
               params={{ roadmapId: roadmap.id }}
               rail={rail}
               name={title}
-              unpublished={changed.has(roadmap.id)}
               mark={{
                 colour: roadmap.colour,
                 initials: roadmapInitials(title),
+                unpublished: changed.has(roadmap.id),
               }}
             />
           )
@@ -163,7 +164,7 @@ function RoadmapGroupLinks({
 interface UnpublishedTotalProps {
   /** How many roadmaps have unpublished changes. */
   count: number
-  /** The roadmap it leads to, once the roadmaps are read. */
+  /** The roadmap it leads to, if there is one to lead to. */
   leadsTo: string | undefined
   rail: boolean
 }
@@ -172,11 +173,14 @@ interface UnpublishedTotalProps {
  * How many roadmaps have unpublished changes, none shown while there are none (S3). It
  * leads to one of them, and the dots mark each (S2). The region around it speaks when the
  * number changes, which is when a roadmap gains its first change or loses its last, not on
- * every edit (S4); it is there, empty, before that. A live region, not a `status`, which
- * the page's own notices are found by.
+ * every edit (S4); it is there, empty, before that, and says that none is left, to
+ * screen readers alone, once the last has gone. A live region, not a `status`, which the
+ * page's own notices are found by.
  */
 function UnpublishedTotal({ count, leadsTo, rail }: UnpublishedTotalProps) {
   const { t } = useTranslation()
+  const [hadChanges, setHadChanges] = useState(false)
+  if (count > 0 && !hadChanges) setHadChanges(true)
   const entry = {
     rail,
     name: t("layout.navigation.unpublished", { count }),
@@ -184,7 +188,7 @@ function UnpublishedTotal({ count, leadsTo, rail }: UnpublishedTotalProps) {
   }
   return (
     <div aria-live="polite" aria-atomic="true">
-      {count > 0 && (
+      {count > 0 ? (
         <ul className="mt-1 flex flex-col gap-1">
           {leadsTo === undefined ? (
             <NavigationText {...entry} />
@@ -196,6 +200,8 @@ function UnpublishedTotal({ count, leadsTo, rail }: UnpublishedTotalProps) {
             />
           )}
         </ul>
+      ) : (
+        hadChanges && <p className="sr-only">{entry.name}</p>
       )}
     </div>
   )

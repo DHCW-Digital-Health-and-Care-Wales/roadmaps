@@ -62,11 +62,11 @@ leads to each. It changes nothing about how changes are kept or published.
   carries a dot while any roadmap has unpublished changes, its accessible name saying
   how many; inside the drawer, the dots and total show as on a desktop. This is how S1
   holds on a phone.
-
 - **D5** (agent, 2026-11-18): the count leads to one roadmap, the next with changes
   after the one open in the navigation's order and round to the first, over leading to
   the first always (which reaches one) or opening a list of them (a second surface in a
-  rail). Choosing it again reaches each in turn, and the dots say which (S2).
+  rail). Choosing it again reaches each in turn, and the dots say which (S2). Where that
+  is the roadmap open, as when it is the only one, the count leads nowhere.
 - **D6** (agent, 2026-11-18): while the roadmaps are unread (not connected, loading,
   or a list that failed) the count shows as text that leads nowhere, over hiding it: the
   changes outlive Disconnect (STY-025 S14), and S1 says from any page.
@@ -84,6 +84,9 @@ leads to each. It changes nothing about how changes are kept or published.
   navigation reach any directly.
 - **The count shows as text while the roadmaps are unread** (agent, D6): not connected,
   loading or a failed list leaves nothing to lead to, so it is a plain entry (`NavigationText`).
+- **A screen reader is told once none is left** (agent, review round 1): the count shows
+  nothing at zero (S3), so its region holds a visually hidden "No roadmaps have
+  unpublished changes" once there has been a count, to announce the change to none (S4).
 - **The count's region is `aria-live="polite"`, not `role="status"`** (agent, found
   here): a second `status` on every page made 21 specs that find the page's notice by
   that role ambiguous; the region is the same to a screen reader.
@@ -97,6 +100,9 @@ leads to each. It changes nothing about how changes are kept or published.
   dot (`JumpTargetLabel`); `isPlainClick` (`lib/`) is the drawer's plain-click test, now
   also the question's; `MAIN_ID` moved to `main-landmark.ts` so the question can name the
   page it focuses.
+- **A dot stays visible when its entry is focused** (agent, review round 1): the entry's
+  yellow focus fill would hide DHCW's yellow dot, so the dot turns dark while its link
+  or the menu button is focused.
 - **Rail: a count in a circle** (agent): the rail shows the number in a bordered circle
   and each roadmap's dot at the corner of its initials, as the chosen frames draw it.
 
@@ -106,8 +112,9 @@ leads to each. It changes nothing about how changes are kept or published.
   `useChangedRoadmapCount()`), which `NavigationMenuButton` reads from
   `UnpublishedRoadmapsContext`: a dot while above 0 and the name "Menu, 2 roadmaps have
   unpublished changes". STY-056's reshaped top bar keeps the button and its context.
-- **`NavigationLink` and `NavigationText`** take `unpublished`; a roadmap with a dot is
-  named "Title, unpublished changes" (`roadmaps.navigation.changed`).
+- **`NavigationLink` and `NavigationText`** take a `mark`; a roadmap's mark has
+  `unpublished`, and a roadmap with a dot is named "Title, unpublished changes"
+  (`roadmaps.navigation.changed`).
 - **Copy**: `layout.navigation.unpublished` (the count, six Welsh forms),
   `layout.navigation.menuUnpublished`, `roadmaps.navigation.changed`.
 - **Data source**: nothing written changes; the store and its rules are as ADR-012 has
@@ -118,15 +125,15 @@ leads to each. It changes nothing about how changes are kept or published.
 `unp` is `src/features/roadmaps/navigation/unpublished-changes.test.tsx`; `e2e` is
 `tests/e2e/unpublished-changes.spec.ts`.
 
-| Scenario | Held by                                                                                                                                                                                                                                                 |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1       | unp "says how many roadmaps have unpublished changes from the families page, and marks each"; e2e the same, with the dot's colour; e2e "carries a dot on the menu button…" (D4)                                                                         |
-| S2       | unp "leads to each roadmap with changes in turn, round to the first"; `next-changed-roadmap.test.ts`; e2e "leads from the count to each roadmap with changes in turn" (focus on the page)                                                               |
-| S3       | unp "shows no count and no dot while nothing is pending" and "drops the count and the dot as a roadmap's last change goes"; e2e both                                                                                                                    |
-| S4       | unp "speaks only when the number changes, not on a second edit of a roadmap" (no mutation of the live region on the second edit; the region is the same element throughout)                                                                             |
-| D2       | unp "Disconnect's question" (names each as a link; closes on choosing one, connection and changes kept, focus on the page; stays open for a modified click; no list before the roadmaps are read); e2e the same; `structure` `edit-disconnect-question` |
-| D3       | unp "keeps the dots and the count folded to a rail"; e2e the same                                                                                                                                                                                       |
-| D4       | unp "on a phone" (name and dot, plain while nothing is pending, the drawer's dots and count); e2e the menu button, the sticky strip's button, and Cymraeg at 375px with no sideways scroll; unp "in Welsh" for each plural form and name                |
+| Scenario | Held by                                                                                                                                                                                                                                                                                      |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | unp "says how many roadmaps have unpublished changes from the families page, and marks each"; e2e the same, with the dot's colour; e2e "carries a dot on the menu button…" (D4)                                                                                                              |
+| S2       | unp "leads to each roadmap with changes in turn, round to the first"; `next-changed-roadmap.test.ts`; e2e "leads from the count to each roadmap with changes in turn" (focus on the page)                                                                                                    |
+| S3       | unp "shows no count and no dot while nothing is pending" and "drops the count and the dot as a roadmap's last change goes"; e2e both                                                                                                                                                         |
+| S4       | unp "speaks only when the number changes, not on a second edit of a roadmap" (no mutation of the live region on the second edit; the region is the same element throughout) and "drops the count and the dot as a roadmap's last change goes" (the none-left text)                           |
+| D2       | unp "Disconnect's question" (names each as a link; closes on choosing one, connection and changes kept, focus on the page; stays open for a modified click; no list while the roadmaps are read again; follows the changes while open); e2e the same; `structure` `edit-disconnect-question` |
+| D3       | unp "keeps the dots and the count folded to a rail"; e2e the same                                                                                                                                                                                                                            |
+| D4       | unp "on a phone" (name and dot, plain while nothing is pending, the drawer's dots and count); e2e the menu button, the sticky strip's button, and Cymraeg at 375px with no sideways scroll; unp "in Welsh" for each plural form and name                                                     |
 
 These followed working code, each shown red by breaking it: the count's wrap-around
 fails `next-changed-roadmap.test.ts` and the e2e "in turn"; the menu button's name

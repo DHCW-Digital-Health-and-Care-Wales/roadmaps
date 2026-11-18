@@ -239,6 +239,7 @@ layout.navigation.label        Roadmaps
 layout.navigation.fold         Fold the navigation
 layout.navigation.closeMenu    Close menu
 layout.navigation.unpublished  2 roadmaps have unpublished changes
+layout.navigation.menuUnpublished  Menu, 2 roadmaps have unpublished changes
 roadmaps.navigation.all        All roadmaps
 roadmaps.navigation.changed    Product A roadmap, unpublished changes
 ```

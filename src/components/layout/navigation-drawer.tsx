@@ -63,7 +63,7 @@ export function NavigationMenuButton({ variant }: NavigationMenuButtonProps) {
           className={cn(
             "absolute top-1 right-1 size-2.5 ring-2",
             variant === "header"
-              ? "bg-focus ring-header"
+              ? "bg-focus ring-header group-focus-visible/button:bg-focus-foreground"
               : "bg-status-info-border ring-background",
           )}
         />

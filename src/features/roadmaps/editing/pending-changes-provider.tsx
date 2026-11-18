@@ -17,10 +17,7 @@ import { DisconnectRequestContext } from "@/features/auth/disconnect-request"
 import { useAuth } from "@/features/auth/use-auth"
 
 import { roadmapKeys } from "../hooks/roadmap-queries"
-import {
-  DisconnectQuestionContext,
-  type DisconnectQuestionSubject,
-} from "./disconnect-question-context"
+import { DisconnectQuestionContext } from "./disconnect-question-context"
 import { reconcileItems, reconcileRoadmap } from "./pending-changes"
 import { PendingChangesContext } from "./pending-changes-context"
 import {
@@ -50,11 +47,6 @@ export function PendingChangesProvider({
     ),
   )
   const [asking, setAsking] = useState(false)
-  // Kept after the question closes, so its text does not change as it fades.
-  const [asked, setAsked] = useState<DisconnectQuestionSubject>({
-    count: 0,
-    roadmaps: [],
-  })
   const { disconnect } = useAuth()
 
   useEffect(() => reconcileOnRead(queryClient, store), [queryClient, store])
@@ -66,18 +58,10 @@ export function PendingChangesProvider({
     disconnect()
   }
   const requestDisconnect = () => {
-    const { changes } = store.getSnapshot()
-    if (changes.size === 0) {
+    if (store.getSnapshot().changes.size === 0) {
       leave()
       return
     }
-    // As the list shows them, those it holds: none before the roadmaps are read.
-    const listed =
-      queryClient.getQueryData<readonly Roadmap[]>(roadmapKeys.list()) ?? []
-    setAsked({
-      count: changes.size,
-      roadmaps: listed.filter(({ id }) => changes.has(id)),
-    })
     setAsking(true)
   }
 
@@ -87,7 +71,6 @@ export function PendingChangesProvider({
         <DisconnectQuestionContext
           value={{
             open: asking,
-            ...asked,
             onKeep: leave,
             onDiscard: () => {
               store.discardAll()

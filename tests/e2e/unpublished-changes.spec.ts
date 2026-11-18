@@ -86,9 +86,28 @@ test.describe("on a desktop", () => {
       navigation(page).getByRole("link", { name: "Product C roadmap" }),
     ).toBeVisible()
     // The dot is DHCW's yellow on the navy navigation.
-    await expect(withDot.locator(".size-2")).toHaveCSS(
+    await expect(withDot.locator("[data-slot=unpublished-dot]")).toHaveCSS(
       "background-color",
       await tokenColour(page, "--focus"),
+    )
+  })
+
+  test("keeps the dot in view while its entry is focused, dark on the yellow focus fill (D1)", async ({
+    page,
+  }) => {
+    await twoChangedThenFamilies(page)
+    const entry = navigation(page).getByRole("link", {
+      name: "Product A roadmap, unpublished changes",
+    })
+
+    await entry.focus()
+    await page.keyboard.press("Shift+Tab")
+    await page.keyboard.press("Tab")
+
+    await expect(entry).toBeFocused()
+    await expect(entry.locator("[data-slot=unpublished-dot]")).toHaveCSS(
+      "background-color",
+      await tokenColour(page, "--focus-foreground"),
     )
   })
 
@@ -141,9 +160,8 @@ test.describe("on a desktop", () => {
     await page.goto("./#/roadmaps/producta")
     await connect(page)
     await change(page, "producta", A_ITEM)
-    const one = navigation(page).getByRole("link", {
-      name: "1 roadmap has unpublished changes",
-    })
+    // On the one roadmap with changes, the count has nowhere else to lead.
+    const one = navigation(page).getByText("1 roadmap has unpublished changes")
     await expect(one).toBeVisible()
 
     await page
@@ -156,9 +174,13 @@ test.describe("on a desktop", () => {
       .click()
 
     await expect(one).toBeHidden()
-    await expect(navigation(page).getByText(/unpublished changes/)).toHaveCount(
-      0,
-    )
+    // Nothing shows; a screen reader is told that none is left.
+    await expect(
+      navigation(page).getByText("No roadmaps have unpublished changes"),
+    ).toHaveClass(/sr-only/)
+    await expect(
+      navigation(page).getByRole("link", { name: /unpublished changes/ }),
+    ).toHaveCount(0)
   })
 
   test("names the roadmaps in Disconnect's question, each a link to it (D2)", async ({
@@ -214,7 +236,7 @@ test.describe("on a phone", () => {
       name: "Menu, 2 roadmaps have unpublished changes",
     })
     await expect(menu).toBeVisible()
-    await expect(menu.locator(".size-2\\.5")).toHaveCSS(
+    await expect(menu.locator("[data-slot=unpublished-dot]")).toHaveCSS(
       "background-color",
       await tokenColour(page, "--focus"),
     )

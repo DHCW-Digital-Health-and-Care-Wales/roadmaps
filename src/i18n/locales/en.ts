@@ -83,6 +83,7 @@ export const en = {
        * list of them in the Disconnect question, and the menu button's name, which adds
        * it to "Menu" while there are any (D4).
        */
+      unpublished_zero: "No roadmaps have unpublished changes",
       unpublished_one: "{{count, number}} roadmap has unpublished changes",
       unpublished_other: "{{count, number}} roadmaps have unpublished changes",
       menuUnpublished:

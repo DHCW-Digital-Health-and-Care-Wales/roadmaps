@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router"
-import { use, useEffect, useRef } from "react"
+import { use, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { MAIN_ID } from "@/components/layout/main-landmark"
@@ -18,26 +18,43 @@ import { localise } from "@/domain/roadmap/localised-text"
 import { useLanguage } from "@/i18n"
 import { isPlainClick } from "@/lib/plain-click"
 
+import { useRoadmaps } from "../hooks/use-roadmaps"
 import { DisconnectQuestionContext } from "./disconnect-question-context"
+import { usePendingChanges } from "./pending-changes-context"
 
 /**
  * Disconnect with pending edits: keep them for the next connection, discard, or stay. It
  * names each roadmap with changes, as a link to it (STY-055 D2); choosing one closes the
  * question, leaving the changes and the connection as they are, and moves focus to the
- * page it opens.
+ * page it opens. What it names follows the changes while it is open, as a read can
+ * drop a roadmap's; once it closes it keeps what it showed, so its text does not change
+ * as it fades.
  */
 export function DisconnectQuestion() {
   const { t } = useTranslation()
   const language = useLanguage()
   const question = use(DisconnectQuestionContext)
+  const { changes } = usePendingChanges()
+  const { data: listed } = useRoadmaps()
   const chosen = useRef(false)
   const open = question?.open === true
+  const current = useMemo(
+    () => ({
+      count: changes.size,
+      // As the list shows them, those it holds: none before the roadmaps are read.
+      roadmaps: (listed ?? []).filter(({ id }) => changes.has(id)),
+    }),
+    [changes, listed],
+  )
+  const [shown, setShown] = useState(current)
+  if (open && shown !== current) setShown(current)
   useEffect(() => {
     if (open) chosen.current = false
   }, [open])
   if (!question) return null
 
-  const { count, roadmaps, onKeep, onDiscard, onCancel } = question
+  const { onKeep, onDiscard, onCancel } = question
+  const { count, roadmaps } = shown
   return (
     <AlertDialog
       open={open}

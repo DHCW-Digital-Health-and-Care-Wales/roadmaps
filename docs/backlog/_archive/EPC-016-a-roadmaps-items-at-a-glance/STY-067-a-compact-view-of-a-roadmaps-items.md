@@ -207,6 +207,8 @@ and in Cymraeg, at each width of S13. The rest hold as component tests.
   changes (STY-065 D7); the glossary changes with this story, not before.
 - **D14** (agent, 2026-11-18): the chevron's name changes as the row opens and it reads
   as expanded too, as the item form's opening fields do, over a fixed name.
+- **D15** (owner, 2026-11-18): "Neidio i" cut to "Nei…" on a phone in Cymraeg at 375px
+  is accepted, over a shorter Welsh "Ychwanegu eitem" or the switch in More (design E).
 
 ## Starting point
 
@@ -238,7 +240,7 @@ title's row the switch takes about 220px: at 768px a title is left about 220px.
 - **S2**: on a phone in Cymraeg at 375px, "Ychwanegu eitem" and "Golwg gryno" leave
   "Neidio i" cut to "Nei…" at the top, before any placement is named, where S2 expects
   only a placement's name cut. The analysis named this risk for design D, with the
-  switch in More (design E) as the fallback; left to the owner in the PR (agent).
+  switch in More (design E) as the fallback; the owner accepted it (D15).
 - **S2**: where the page has no placements to jump to (no items yet, or while they are
   read), "Compact view" sits alone at the end of the row of Add an item (agent).
 - **S4**: on a desktop's line an unplaced item's flag takes at most a quarter of the

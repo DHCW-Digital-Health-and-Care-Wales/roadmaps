@@ -231,15 +231,16 @@ const STYLE_FORM_MESSAGE =
 const PAINT_MESSAGE =
   "Literal colour in an SVG attribute: use currentColor with a semantic text-* class (ADR-010)."
 
-/**
- * A class list reaches an element by a `className` attribute or `cn()`'s arguments. A
- * variable there is linted only when its name matches `CLASSES_VARIABLE`: STY-052's
- * `IN_FLOW` and STY-054's `ITEM_CLASSES` and `ROADMAP_ROWS` went unlinted that way.
- * Review by 2027-02-16 whether it has caught any since.
- */
+/** A variable lint reads classes from: `…Classes`, or one of the plugin's default names. */
+const LINTED_VARIABLE = String.raw`${CLASSES_VARIABLE}|^classNames?$|^styles?$`
+/** Where a class list reaches an element: a `className` attribute's value, `cn()`'s arguments. */
 const CLASS_VALUE = String.raw`:matches(JSXAttribute[name.name="className"] > JSXExpressionContainer > .expression, CallExpression[callee.name="cn"] > .arguments)`
-/** A variable passed there that lint never reads: not `…Classes`, nor a `className`. */
-const UNLINTED_CLASSES = String.raw`Identifier:not([name=/${CLASSES_VARIABLE}|^className$|^undefined$/])`
+/** A part of a value that is itself the value: a branch a condition chooses, not its test. */
+const VALUE_PART = String.raw`:matches(ConditionalExpression > .consequent, ConditionalExpression > .alternate, LogicalExpression > .right, LogicalExpression[operator!="&&"] > .left, TemplateLiteral > .expressions, ArrayExpression > .elements)`
+/** A class value, or a part of one, two levels deep (`a && (b ? ROWS : "")`). */
+const CLASS_VALUES = `:matches(${CLASS_VALUE}, ${CLASS_VALUE} > ${VALUE_PART}, ${CLASS_VALUE} > ${VALUE_PART} > ${VALUE_PART})`
+/** A name lint reads no classes from, alone or as a lookup's root (`INDENTS[level]`). */
+const UNLINTED_NAME = String.raw`:matches(Identifier:not([name=/${LINTED_VARIABLE}|^undefined$/]), MemberExpression:not([object.name=/${LINTED_VARIABLE}/], [property.name=/${LINTED_VARIABLE}/]))`
 
 /** `no-restricted-syntax`: design values that bypass classes (S4). */
 const backDoors = [
@@ -296,10 +297,14 @@ const backDoors = [
       "A --nhsw-* or --app-dark-* primitive outside globals.css: use the semantic token built on it (ADR-010).",
   },
   {
-    // The value itself, `className={ROWS}`, or one a condition chooses, not its test.
-    selector: `:matches(${UNLINTED_CLASSES}${CLASS_VALUE}, ${CLASS_VALUE} > ${UNLINTED_CLASSES}:matches(.consequent, .alternate, .right))`,
+    // Lint reads a variable's classes by its name alone, so a class list in any other
+    // variable went unchecked: STY-052's `IN_FLOW`, STY-054's `ITEM_CLASSES` and
+    // `ROADMAP_ROWS`. Not covered: a name passed to `cva()` or `…Variants({ className })`,
+    // or a callback's parameter named `…Classes`. Review by 2027-02-16 whether it has
+    // caught any since.
+    selector: `${UNLINTED_NAME}${CLASS_VALUES}`,
     message:
-      "Class list in a variable lint cannot see: name it …Classes, in camelCase, so lint checks its classes (ADR-010).",
+      "Class list in a variable lint cannot read: name the variable …Classes, so lint checks its classes (ADR-010).",
   },
 ]
 

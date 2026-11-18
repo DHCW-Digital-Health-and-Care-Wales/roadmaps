@@ -9,9 +9,11 @@ const buttonVariants = cva("")
 const active = true
 const base = {}
 const ROWS = "auto-rows-fr"
+const ROWS_BY = ["auto-rows-fr"]
 const ITEM_CLASSES = "rounded-lg"
 const rowClasses = "auto-rows-fr"
 const className: string | undefined = undefined
+const classNames = "auto-rows-fr"
 
 export const s1UnknownClasses = [
   <div className="bg-red-500" />, // ✗ Unknown class detected: bg-red-500
@@ -154,16 +156,22 @@ export const s4BackDoors = [
 ]
 
 export const s4ClassVariables = [
-  <div className={ROWS} />, // ✗ Class list in a variable lint cannot see
-  <div className={ITEM_CLASSES} />, // ✗ Class list in a variable lint cannot see
-  <div className={cn("p-2", ROWS)} />, // ✗ Class list in a variable lint cannot see
-  <div className={cn("p-2", active && ROWS)} />, // ✗ Class list in a variable lint cannot see
-  <div className={cn(active ? "p-2" : ROWS)} />, // ✗ Class list in a variable lint cannot see
-  <div className={active ? ROWS : undefined} />, // ✗ Class list in a variable lint cannot see
+  <div className={ROWS} />, // ✗ Class list in a variable lint cannot read
+  <div className={ITEM_CLASSES} />, // ✗ Class list in a variable lint cannot read
+  <div className={cn("p-2", ROWS)} />, // ✗ Class list in a variable lint cannot read
+  <div className={cn("p-2", active && ROWS)} />, // ✗ Class list in a variable lint cannot read
+  <div className={cn(active ? "p-2" : ROWS)} />, // ✗ Class list in a variable lint cannot read
+  <div className={active ? ROWS : undefined} />, // ✗ Class list in a variable lint cannot read
+  <div className={cn("p-2", ROWS_BY[0])} />, // ✗ Class list in a variable lint cannot read
+  <div className={`p-2 ${ROWS}`} />, // ✗ Class list in a variable lint cannot read
+  <div className={cn(["p-2", ROWS])} />, // ✗ Class list in a variable lint cannot read
+  <div className={cn(ROWS || "p-2")} />, // ✗ Class list in a variable lint cannot read
+  <div className={cn(active && (active ? ROWS : "p-2"))} />, // ✗ Class list in a variable lint cannot read
   <div className={rowClasses} />,
-  <div className={cn("p-2", active && rowClasses, className)} />,
+  <div className={cn("p-2", active && rowClasses, className, classNames)} />,
   <div className={active ? rowClasses : undefined} />,
   <div className={cn(active ? "p-2" : "p-3", stateClasses.idle)} />,
+  <div className={`p-2 ${rowClasses}`} />,
 ]
 
 const layoutStyle: React.CSSProperties = { color: "red" } // ✗ Design property in an inline style

@@ -33,8 +33,8 @@
     heavy commands and reviewers ran one at a time, every lane kept. During STY-064, a
     delivery PR edits no guide file (any `AGENTS.md`, `CLAUDE.md`, skill or agent
     definition); only a retrospective does, in its own PR. After capture the owner
-    narrowed it to incidental guide changes: a delivery makes a guide change its record's
-    Summary or acceptance criteria, or the owner's request, names.
+    narrowed it to incidental guide changes: a delivery makes a guide change that its
+    record's Summary or acceptance criteria, or the owner's request, names.
 - Outcome: completed. Four stories merged; EPC-014 is Done and archived with STY-064. Every
   per-item retro was a no-op, so no retro PR was raised. This record's PR also writes the
   owner's guide-file rule into the repository.
@@ -181,12 +181,11 @@ already record, appeared in STY-062's and STY-063's full E2E runs and passed alo
   (`docs/operations/authoring-agent-instructions.md`, _Where it goes_) defines a guide file
   and an incidental change to one, and states the rule. `delegation.md` tells a delivery
   PR's reviewers to report an incidental guide change as a blocker; `pr-watch.md`'s Done
-  list checks the PR's file list before merging. The two
-  instructions that led deliveries to edit guide files, the epic-close sweep in
-  `docs/AGENTS.md` and the copywriter skill's patterns line, now hand those edits to the
-  retrospective, as does the quality-review lens on text a change makes false, which asked
-  for the same edit. `orchestrate`'s brief needs no line: every delivery agent reads
-  `delegation.md`. Considered and left as they are:
+  list checks the PR's file list before merging. The two instructions that led deliveries
+  to edit guide files, the epic-close sweep in `docs/AGENTS.md` and the copywriter skill's
+  patterns line, now hand those edits to the retrospective, as does the quality-review lens
+  on text a change makes false, which asked for the same edit. `orchestrate`'s brief needs
+  no line: every delivery agent reads `delegation.md`. Considered and left as they are:
   - Outgoing orchestrators recorded their retro in the run handoff, not in their own report
     file. Nothing was lost, since each was a no-op; one-off.
   - The second full gate: two data points with a base move confounding one.

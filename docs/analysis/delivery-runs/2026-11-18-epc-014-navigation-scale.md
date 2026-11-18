@@ -116,8 +116,7 @@ already record, appeared in STY-062's and STY-063's full E2E runs and passed alo
   fda3f12, merged as 82bd14f. Reviews ended at 377ccc5; fda3f12 is record-only.
 - Timing: delivery 66 (12:49–13:55): reading and before captures 3, implementation 8,
   verification 15, after captures and review round 1 9, fixes, rebase and second full gate
-  11, round 2 and Sol's final pass 18, retaken captures and PR 1. CI wait 6, PR to merge
-  10. Total 76.
+  11, round 2 and Sol's final pass 18, retaken captures and PR 1. CI wait 6, PR to merge 10. Total 76.
 - Reviews: 5 tasks (round 1 in three lanes; Sonnet's re-check; Sol's final fresh pass).
   Accepted: 1 P3, 3 🟡 and 5 💭, fixed, plus a double announcement found as a handed-off
   note and fixed with a regression test. Declined: 2 💭 and 1 note.

@@ -29,6 +29,7 @@ moves to `_archive/`, where its row here still points.
 | [EPC-012 App shell and navigation](_archive/EPC-012-app-shell-and-navigation/README.md)                  | STY-052–STY-057: keep a roadmap's controls and pending changes in view, jump between its placements, move between roadmaps from the shell, see unpublished changes app-wide, a quieter header, and reconnect from the action that needs it      | Done   |
 | [EPC-013 Tidy page tops](_archive/EPC-013-tidy-page-tops/README.md)                                      | STY-058–STY-060: one stack on one left edge at the top of the roadmap list and a roadmap's page, one row of controls at the top and once scrolled, no back links (design G of the page headers UX analysis)                                     | Done   |
 | [EPC-014 A navigation that scales](_archive/EPC-014-a-navigation-that-scales/README.md)                  | STY-061–STY-064: search the navigation, close families one at a time or all together, show only the roadmaps with unpublished changes, and drag its width (the navigation UX analysis's prototype)                                              | Done   |
+| [EPC-015 A quieter top to a roadmap's page](_archive/EPC-015-a-quieter-roadmap-page-top/README.md)       | STY-065: the top of a roadmap's page in three rows (actions on the title's row, one line of facts ending in "Product details", the jump control), one Not published notice, a dismissible Beta banner                                           | Done   |
 
 ## Chores
 

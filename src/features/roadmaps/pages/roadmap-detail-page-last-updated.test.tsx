@@ -45,8 +45,12 @@ function main() {
   return within(screen.getByRole("main"))
 }
 
-function about() {
-  return within(main().getByRole("region", { name: /^(About|Ynglŷn)/ }))
+function productDetails() {
+  return within(
+    main().getByRole("region", {
+      name: /^(Product details|Manylion y cynnyrch)/,
+    }),
+  )
 }
 
 async function renderPage({
@@ -69,7 +73,7 @@ async function renderPage({
 /** Opens the roadmap dialog and gives its date field. */
 async function openDateField(user: User) {
   const form = await openEditRoadmapDialog(user)
-  return form.getByLabelText("Last updated")
+  return form.getByLabelText("Roadmap last updated")
 }
 
 /** Presses the open dialog's button named `name`: a Done it refuses, or Today. */
@@ -131,12 +135,12 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
     expect(
       within(roadmapFacts()).getByText("Updated 10 November 2026"),
     ).toBeInTheDocument()
-    expect(about().getByText("Changed")).toBeInTheDocument()
+    expect(productDetails().getByText("Changed")).toBeInTheDocument()
     expect(main().getByText("1 unpublished change")).toBeInTheDocument()
     await user.click(main().getByRole("button", { name: "Publish changes" }))
     expect(
       within(screen.getByRole("alertdialog")).getByRole("listitem"),
-    ).toHaveTextContent("About this roadmapLast updated")
+    ).toHaveTextContent("Product detailsRoadmap last updated")
     expect(write).not.toHaveBeenCalled()
   })
 
@@ -210,7 +214,9 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
     expect(field).toHaveAccessibleDescription(
       "Error: Enter a real date, or clear the field",
     )
-    expect(editRoadmapDialog().getByLabelText("Last updated")).toBe(field)
+    expect(editRoadmapDialog().getByLabelText("Roadmap last updated")).toBe(
+      field,
+    )
     expect(screen.queryByText(/unpublished change/)).toBeNull()
   })
 
@@ -351,7 +357,7 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
 
     const review = await openConflictReview(user)
     expect(within(review).getByText(/: /, { selector: "p" })).toHaveTextContent(
-      "About this roadmap: Last updated",
+      "Product details: Roadmap last updated",
     )
     expect(
       within(review)
@@ -360,7 +366,7 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
     ).toEqual(["10 November 2026", "1 November 2026"])
     expect(
       within(review).getByRole("button", {
-        name: "Keep mine About this roadmap: Last updated",
+        name: "Keep mine Product details: Roadmap last updated",
       }),
     ).toBeInTheDocument()
   })
@@ -386,7 +392,7 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
     await user.keyboard("{Escape}")
 
     const form = await openEditRoadmapDialog(user, "cy")
-    const field = form.getByLabelText("Diweddarwyd ddiwethaf")
+    const field = form.getByLabelText("Diweddarwyd y map trywydd ddiwethaf")
     pick(field, "2026-11-20")
     await user.click(form.getByRole("button", { name: "Gorffen" }))
     expect(field).toHaveAccessibleDescription(

@@ -23,11 +23,12 @@ import {
 } from "./fixtures/fake-sheets"
 import { useLanguage, useTheme } from "./fixtures/look"
 import {
-  aboutField,
+  productDetailsField,
   conflictReview,
   goToList,
   moreButton,
-  openAbout,
+  openLongRoadmap,
+  openProductDetails,
   openConflictReview,
   refusal,
 } from "./fixtures/roadmap-page"
@@ -136,7 +137,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expectNoAxeViolations(page, theme)
     })
 
-    test("a roadmap's placement navigation on a phone: Jump to open with a change pending, a placement jumped to in the stuck strip, then About open (STY-053, STY-060)", async ({
+    test("a roadmap's placement navigation on a phone: Jump to open with a change pending, a placement jumped to in the stuck strip, then Product details open (STY-053, STY-060)", async ({
       page,
     }) => {
       await page.setViewportSize({ width: 375, height: 812 })
@@ -164,9 +165,37 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await page.evaluate(() => {
         window.scrollTo(0, 0)
       })
-      await openAbout(page)
+      await openProductDetails(page)
       await expectNoAxeViolations(page, theme)
     })
+
+    for (const width of [1280, 375]) {
+      test(`the top of a roadmap not published at ${String(width)}px: its notice, Product details open, More open, then the banner dismissed (STY-065 S2, S3, S4, S5, S8)`, async ({
+        page,
+        sheets,
+      }) => {
+        await page.setViewportSize({ width, height: 900 })
+        await openLongRoadmap(page, sheets, { tab: "ProductC" })
+        const main = page.getByRole("main")
+        await expect(
+          main.getByRole("button", { name: "Publish roadmap" }),
+        ).toBeVisible()
+        await expectNoAxeViolations(page, theme)
+
+        await openProductDetails(page)
+        await expectNoAxeViolations(page, theme)
+
+        await moreButton(page).click()
+        await expect(page.getByRole("menu")).toBeVisible()
+        await expectNoAxeViolations(page, theme, { menuOpen: true })
+        await page.keyboard.press("Escape")
+        await expect(page.getByRole("menu")).toBeHidden()
+
+        await page.getByRole("button", { name: "Dismiss message" }).click()
+        await expect(page.locator("[data-slot=phase-banner]")).toHaveCount(0)
+        await expectNoAxeViolations(page, theme)
+      })
+    }
 
     test("the shell's navigation beside a roadmap's page, then folded to its rail with a tooltip shown (STY-054)", async ({
       page,
@@ -361,10 +390,12 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await form.getByRole("button", { name: "Done" }).click()
       const editing = await openEditRoadmapDialog(page)
       await expectNoAxeViolations(page, theme)
-      const roadmapTitle = editing.getByRole("textbox", { name: "Title" })
+      const roadmapTitle = editing.getByRole("textbox", {
+        name: "Product name",
+      })
       await roadmapTitle.fill("")
       await editing.getByRole("button", { name: "Done" }).click()
-      await expect(editing.getByText("Enter a title")).toBeVisible()
+      await expect(editing.getByText("Enter a product name")).toBeVisible()
       await expectNoAxeViolations(page, theme)
       await roadmapTitle.fill("Product A, renamed")
       await editing.getByRole("button", { name: "Done" }).click()
@@ -807,8 +838,8 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expectNoAxeViolations(page, theme)
 
       await editing.getByRole("button", { name: "Done" }).click()
-      const about = await openAbout(page)
-      await expect(aboutField(about, "Family")).toContainText(
+      const details = await openProductDetails(page)
+      await expect(productDetailsField(details, "Family")).toContainText(
         "Medicines & Diagnostics",
       )
       await expectNoAxeViolations(page, theme)
@@ -848,7 +879,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
     }) => {
       sheets.spreadsheet = EXAMPLE_SPREADSHEET_WITH_LISTS
       const dialog = await openAddRoadmapDialog(page, { offersLists: true })
-      const title = dialog.getByRole("textbox", { name: "Title" })
+      const title = dialog.getByRole("textbox", { name: "Product name" })
       const shortName = dialog.getByRole("textbox", { name: "Short name" })
       const add = dialog.getByRole("button", { name: "Add roadmap" })
       // Every attempt reads the list again, behind the dialog: a check waits for
@@ -862,7 +893,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       // Refused: a blank title, and a short name a tab already has.
       await shortName.fill("Families")
       await add.click()
-      await expect(dialog.getByText("Enter a title")).toBeVisible()
+      await expect(dialog.getByText("Enter a product name")).toBeVisible()
       await title.fill("Community Nursing roadmap")
       await add.click()
       await expect(
@@ -940,7 +971,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await page.goto("./#/roadmaps/producta")
       await connect(page, "Cysylltu â Google")
       const main = page.getByRole("main")
-      const about = "Ynglŷn â'r map trywydd hwn"
+      const productDetails = "Manylion y cynnyrch"
       const editing = await openEditRoadmapDialog(page, { language: "cy" })
       await editing
         .getByRole("textbox", { name: "Gweledigaeth (Saesneg)" })
@@ -991,7 +1022,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       // offers to publish.
       await expect(
         review.getByRole("button", {
-          name: `Cadw fy un i ${about}: Gweledigaeth (Saesneg)`,
+          name: `Cadw fy un i ${productDetails}: Gweledigaeth (Saesneg)`,
         }),
       ).toBeFocused()
       await page.keyboard.press("Enter")

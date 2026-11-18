@@ -2,6 +2,7 @@ import type { Page } from "@playwright/test"
 
 import {
   openEditItemDialog,
+  openEditRoadmapDialogFromMore,
   reconnectButton,
   reconnectDialog,
 } from "./fixtures/dialogs"
@@ -147,6 +148,26 @@ test("Refresh asks to reconnect, then reads the page once (S1, D1)", async ({
     sheets.reads.slice(reads).filter((read) => read === "values:ProductA"),
   ).toHaveLength(1)
   await expect(main.getByText("1 unpublished change")).toBeVisible()
+})
+
+test("More's Edit product details never asks to reconnect, keeping the edits pending and writing nothing (STY-065 S5, D10)", async ({
+  page,
+  gis,
+  sheets,
+}) => {
+  const main = await expireWithAChange(page)
+  const requests = gis.tokenRequests.length
+
+  const dialog = await openEditRoadmapDialogFromMore(page)
+  await expect(reconnectDialog(page)).toHaveCount(0)
+  await dialog.getByRole("textbox", { name: "Product lead" }).fill("Sam Evans")
+  await dialog.getByRole("button", { name: "Done" }).click()
+
+  await expect(dialog).toBeHidden()
+  await expect(moreButton(page)).toBeFocused()
+  await expect(main.getByText("2 unpublished changes")).toBeVisible()
+  expect(gis.tokenRequests).toHaveLength(requests)
+  expect(sheets.writes).toEqual([])
 })
 
 test("in Welsh, by keyboard: the dialog keeps focus, and Escape gives it back (S6)", async ({

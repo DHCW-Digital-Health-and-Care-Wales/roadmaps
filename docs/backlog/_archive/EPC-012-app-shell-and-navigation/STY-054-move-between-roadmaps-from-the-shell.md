@@ -111,6 +111,10 @@ Cymraeg
   row holds the search and Close menu, so "Menu" names the drawer without showing
   (STY-061 D5); the width runs from 208px to 400px, remembered as D5's fold is (STY-064
   D2, D3). Changes S5's drawer, whose dialog behaviour stands.
+- **D15** (owner, 2026-11-18, review of STY-065's prototype; delivered by
+  [STY-065](../EPC-015-a-quieter-roadmap-page-top/STY-065-a-roadmaps-page-top-reads-at-a-glance.md)): the phase
+  banner can be dismissed until the app is next loaded. It still scrolls away with the
+  page while it shows (D7).
 
 ## Out of scope
 

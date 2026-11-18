@@ -1,0 +1,17 @@
+- region "Product details":
+  - list "Roadmap details":
+    - listitem: "Status: Beta"
+    - listitem: "Product lead: Alex Jones"
+    - listitem: Updated 1 October 2026
+    - listitem:
+      - heading "Product details" [level=2]:
+        - button "Product details" [expanded]
+  - term: Vision
+  - definition: A short, ambitious statement of where Product A is heading. Leave blank to show a general intro sentence instead.
+  - term: Service description
+  - definition: What Product A does and who it helps. Also used as the summary on the landing page card.
+  - term: Family
+  - definition: Single Record
+  - term: Category
+  - definition: GP & Community Services
+  - button "Edit Product details"

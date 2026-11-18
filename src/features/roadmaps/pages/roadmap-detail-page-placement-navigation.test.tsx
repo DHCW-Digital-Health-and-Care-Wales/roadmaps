@@ -6,7 +6,7 @@ import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 import type { Language } from "@/i18n"
-import { DESKTOP_WIDTH } from "@/lib/use-media-query"
+import { TABLET_WIDTH } from "@/lib/use-media-query"
 import { connected } from "@/test/connected-state"
 import { matchMediaQueries } from "@/test/media-query"
 import { renderWithProviders } from "@/test/render-with-providers"
@@ -32,15 +32,15 @@ function main() {
 }
 
 /**
- * Renders the page on a phone, where "Jump to" is the jump control, or on a `desktop`,
- * where the row of links is (STY-060 S1).
+ * Renders the page on a phone, where "Jump to" is the jump control, or from a `tablet`'s width,
+ * where the row of links is (STY-065 S6, S7).
  */
 async function renderPage({
   pageItems = items,
   language,
-  desktop = false,
-}: { pageItems?: RoadmapItem[]; language?: Language; desktop?: boolean } = {}) {
-  if (desktop) matchMediaQueries(DESKTOP_WIDTH)
+  tablet = false,
+}: { pageItems?: RoadmapItem[]; language?: Language; tablet?: boolean } = {}) {
+  if (tablet) matchMediaQueries(TABLET_WIDTH)
   const user = userEvent.setup()
   await renderWithProviders({
     path: "/roadmaps/producta",
@@ -61,7 +61,7 @@ function jumpToButton(name: string | RegExp = "Jump to") {
   return main().getByRole("button", { name })
 }
 
-/** The row of placement links, a desktop's jump control. */
+/** The row of placement links, the jump control from a tablet's width. */
 function links() {
   return main().getByRole("navigation", { name: "Horizons and sections" })
 }
@@ -97,14 +97,14 @@ describe("Jumping between a roadmap's placements (STY-053)", () => {
     expectNames(within(menu).getAllByRole("menuitem"), EVERY_TARGET)
   })
 
-  it("lists them in the links on a desktop (S2, S4, S5, D3)", async () => {
-    await renderPage({ desktop: true })
+  it("lists them in the links from a tablet's width (S2, S4, S5, D3)", async () => {
+    await renderPage({ tablet: true })
 
     expectNames(within(links()).getAllByRole("link"), EVERY_TARGET)
   })
 
   it("leaves the unplaced items out while there are none (S4)", async () => {
-    await renderPage({ pageItems: items.slice(0, 3), desktop: true })
+    await renderPage({ pageItems: items.slice(0, 3), tablet: true })
 
     expect(within(links()).getAllByRole("link")[0]).toHaveAccessibleName(
       "Recently delivered, no items",
@@ -130,8 +130,8 @@ describe("Jumping between a roadmap's placements (STY-053)", () => {
     ).toHaveAccessibleName("Now, 2 items")
   })
 
-  it("marks where a change is pending in the links on a desktop (S2)", async () => {
-    const user = await renderPage({ desktop: true })
+  it("marks where a change is pending in the links from a tablet's width (S2)", async () => {
+    const user = await renderPage({ tablet: true })
 
     await editItemText(
       user,
@@ -169,7 +169,7 @@ describe("Jumping between a roadmap's placements (STY-053)", () => {
   })
 
   it("moves focus to the heading from a link, marks it the current one, and keeps the address (S1, S3, D8)", async () => {
-    const user = await renderPage({ desktop: true })
+    const user = await renderPage({ tablet: true })
     const address = window.location.href
     const link = within(links()).getByRole("link", {
       name: /^Not on the public roadmap/,
@@ -216,7 +216,7 @@ describe("Jumping between a roadmap's placements (STY-053)", () => {
   })
 
   it("reaches an empty placement, which says it has none (S5)", async () => {
-    const user = await renderPage({ desktop: true })
+    const user = await renderPage({ tablet: true })
 
     await user.click(within(links()).getByRole("link", { name: /^Not doing/ }))
 
@@ -230,9 +230,9 @@ describe("Jumping between a roadmap's placements (STY-053)", () => {
     )
   })
 
-  for (const desktop of [false, true]) {
-    it(`shows no navigation for a roadmap with no items, which has nowhere to jump${desktop ? ", on a desktop" : ""}`, async () => {
-      await renderPage({ pageItems: [], desktop })
+  for (const tablet of [false, true]) {
+    it(`shows no navigation for a roadmap with no items, which has nowhere to jump${tablet ? ", from a tablet's width" : ""}`, async () => {
+      await renderPage({ pageItems: [], tablet })
 
       expect(
         main().queryByRole("button", { name: /^Jump to/ }),
@@ -260,8 +260,8 @@ describe("Jumping between a roadmap's placements (STY-053)", () => {
     ).toBeInTheDocument()
   })
 
-  it("is Welsh in the links on a desktop (S7)", async () => {
-    await renderPage({ language: "cy", desktop: true })
+  it("is Welsh in the links from a tablet's width (S7)", async () => {
+    await renderPage({ language: "cy", tablet: true })
 
     expect(
       within(

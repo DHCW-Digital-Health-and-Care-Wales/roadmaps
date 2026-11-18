@@ -3,11 +3,11 @@
   - paragraph: Nothing was published. Choose which to keep for each, then publish again.
   - list:
     - listitem:
-      - paragraph: "About this roadmap: Vision"
+      - paragraph: "Product details: Vision"
       - term: Your change
       - definition: My vision.
       - term: Current text
       - definition: Their vision.
-      - 'button "Keep mine About this roadmap: Vision"'
-      - 'button "Use theirs About this roadmap: Vision"'
+      - 'button "Keep mine Product details: Vision"'
+      - 'button "Use theirs Product details: Vision"'
   - button "Close"

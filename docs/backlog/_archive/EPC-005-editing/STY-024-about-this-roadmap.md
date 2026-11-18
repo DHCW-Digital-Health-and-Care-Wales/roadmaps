@@ -81,6 +81,10 @@ S1–S3 are component tests; S4 extends the detail page's tests; S5 updates
   its snapshot change can be reviewed on their own, and to run beside STY-022.
 - **D4** (owner, 2026-11-13, EPC-008 grilling round 1 Q5): `Last updated` is also
   shown, and editable, in the block (it stays on the list card) → STY-036, which supersedes D2 for that field.
+- **D5** (owner, 2026-11-18; delivered by
+  [STY-065](../EPC-015-a-quieter-roadmap-page-top/STY-065-a-roadmaps-page-top-reads-at-a-glance.md)): "About this
+  roadmap" is renamed "Product details" ("Manylion y cynnyrch"), since what it holds is
+  about the product the roadmap is for.
 
 ## Out of scope
 

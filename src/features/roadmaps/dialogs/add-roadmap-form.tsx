@@ -94,7 +94,7 @@ export function AddRoadmapForm({
         id={`${id}-title`}
         label={t("roadmaps.edit.roadmapFields.title")}
         hint={t("roadmaps.add.titleHint")}
-        error={problems.title && t("roadmaps.edit.titleRequired")}
+        error={problems.title && t("roadmaps.edit.productNameRequired")}
       >
         {(control) => (
           <Input

@@ -281,7 +281,9 @@ function FieldConflictItem({
     return value
   }
   const target = t("roadmaps.publish.notice.refused.target", {
-    subject: item ? localise(item.title, language) : t("roadmaps.about.title"),
+    subject: item
+      ? localise(item.title, language)
+      : t("roadmaps.productDetails.title"),
     field:
       conflict.subject === "item"
         ? t(`roadmaps.edit.itemFields.${conflict.field}`)

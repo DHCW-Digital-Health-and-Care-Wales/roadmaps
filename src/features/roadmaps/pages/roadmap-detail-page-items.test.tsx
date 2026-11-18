@@ -22,16 +22,16 @@ import {
 } from "../testing/in-memory-roadmap-repository"
 import { expectOpeningFocus } from "../testing/opening-focus"
 import {
-  aboutField,
+  productDetailsField,
   goToList,
   moreButton,
-  openAbout,
+  openProductDetails,
   openMore,
   refreshRoadmap,
 } from "../testing/roadmap-page"
 
 // The roadmap's own text comes first, above the items.
-const ABOUT_HEADING = "About this roadmap"
+const PRODUCT_DETAILS_HEADING = "Product details"
 
 const roadmaps: Roadmap[] = [
   createTestRoadmap("producta", "Product A roadmap"),
@@ -201,7 +201,7 @@ describe("RoadmapDetailPage items", () => {
       main()
         .getAllByRole("heading", { level: 2 })
         .map((heading) => heading.textContent),
-    ).toEqual([ABOUT_HEADING, ...PLACEMENT_HEADINGS])
+    ).toEqual([PRODUCT_DETAILS_HEADING, ...PLACEMENT_HEADINGS])
     expect(titlesUnder("Now")).toEqual([
       "Example card with every column",
       "Minimal card",
@@ -265,7 +265,7 @@ describe("RoadmapDetailPage items", () => {
       main()
         .getAllByRole("heading", { level: 2 })
         .map((heading) => heading.textContent),
-    ).toEqual([ABOUT_HEADING, ...PLACEMENT_HEADINGS])
+    ).toEqual([PRODUCT_DETAILS_HEADING, ...PLACEMENT_HEADINGS])
     // What follows a placement's heading, and whatever sits beside it.
     const under = (name: string) =>
       main().getByRole("heading", { level: 2, name }).parentElement
@@ -284,7 +284,7 @@ describe("RoadmapDetailPage items", () => {
       .getAllByRole("heading", { level: 2 })
       .map((heading) => heading.textContent)
     expect(headings).toEqual([
-      ABOUT_HEADING,
+      PRODUCT_DETAILS_HEADING,
       "Not on the public roadmap",
       ...PLACEMENT_HEADINGS,
     ])
@@ -329,7 +329,7 @@ describe("RoadmapDetailPage items", () => {
         .getAllByRole("heading", { level: 2 })
         .map((heading) => heading.textContent),
     ).toEqual([
-      "Ynglŷn â'r map trywydd hwn",
+      "Manylion y cynnyrch",
       "Wedi'u cyflawni'n ddiweddar",
       "Nawr",
       "Nesaf",
@@ -682,8 +682,8 @@ describe("RoadmapDetailPage items", () => {
     })
   })
 
-  describe("the Not published badge (S15)", () => {
-    it("shows under an unpublished roadmap's title, with Publish roadmap beside it (STY-059 S6)", async () => {
+  describe("the Not published notice (S15)", () => {
+    it("shows under an unpublished roadmap's facts, not beside its title, with Publish roadmap at its end (STY-065 S4)", async () => {
       await renderRoadmap("productc", { productc: productBItems })
 
       const title = await main().findByRole("heading", {
@@ -691,8 +691,9 @@ describe("RoadmapDetailPage items", () => {
         name: "Product C roadmap",
       })
       expect(title.parentElement).toHaveTextContent(/^Product C roadmap$/)
-      expect(main().getByText("Not published").parentElement).toHaveTextContent(
-        /^Not publishedPublish roadmap$/,
+      const notice = main().getByText("Not published").closest("p")
+      expect(notice?.parentElement).toHaveTextContent(
+        "Not publishedThe public site doesn't show this roadmap.Publish roadmap",
       )
     })
 
@@ -741,9 +742,13 @@ describe("RoadmapDetailPage items", () => {
     expect(title.parentElement).toHaveTextContent(
       /^Product A roadmapDoesn't match its family or categoryFamily isn't listed$/,
     )
-    const about = await openAbout(userEvent.setup())
-    expect(aboutField(about, "Family")).toHaveTextContent("Single Record")
-    expect(aboutField(about, "Category")).toHaveTextContent("Clinical")
+    const details = await openProductDetails(userEvent.setup())
+    expect(productDetailsField(details, "Family")).toHaveTextContent(
+      "Single Record",
+    )
+    expect(productDetailsField(details, "Category")).toHaveTextContent(
+      "Clinical",
+    )
     unmount()
 
     await renderWithProviders({
@@ -757,12 +762,16 @@ describe("RoadmapDetailPage items", () => {
       await main().findByText("Yn wahanol i'w deulu neu gategori"),
     ).toBeInTheDocument()
     expect(main().getByText("Teulu heb ei restru")).toBeInTheDocument()
-    const aboutCy = await openAbout(userEvent.setup())
-    expect(aboutField(aboutCy, "Teulu")).toHaveTextContent("Cofnod Sengl")
-    expect(aboutField(aboutCy, "Categori")).toHaveTextContent("Clinigol")
+    const detailsCy = await openProductDetails(userEvent.setup())
+    expect(productDetailsField(detailsCy, "Teulu")).toHaveTextContent(
+      "Cofnod Sengl",
+    )
+    expect(productDetailsField(detailsCy, "Categori")).toHaveTextContent(
+      "Clinigol",
+    )
   })
 
-  it("shows no family or category in About for a roadmap with neither a family nor a category (STY-027 S4)", async () => {
+  it("shows no family or category in the product details for a roadmap with neither a family nor a category (STY-027 S4)", async () => {
     await renderWithProviders({
       path: "/roadmaps/producta",
       authState: connected,
@@ -771,9 +780,9 @@ describe("RoadmapDetailPage items", () => {
     })
 
     await main().findByRole("heading", { level: 1, name: "Product A roadmap" })
-    const about = await openAbout(userEvent.setup())
-    expect(aboutField(about, "Family")).toBeNull()
-    expect(aboutField(about, "Category")).toBeNull()
+    const details = await openProductDetails(userEvent.setup())
+    expect(productDetailsField(details, "Family")).toBeNull()
+    expect(productDetailsField(details, "Category")).toBeNull()
   })
 
   it("says a roadmap removed since the list loaded is not found (S16)", async () => {

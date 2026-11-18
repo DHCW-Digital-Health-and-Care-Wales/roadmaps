@@ -32,9 +32,17 @@ _Avoid_: Viewer, front end, website
 **Roadmap**:
 A product's public plan, in the Now / Next / Later format, managed by its Product Lead.
 Each roadmap is one row of the **roadmap index** (ADR-009). Its identity is its **short
-name**, which outlives the data source. A Product Lead adds one from the roadmap list;
-it is written at once and starts not published (STY-040).
+name**, which outlives the data source. Its title is the name of the product it is for,
+so the editor labels it "Product name" (STY-065). A Product Lead adds one from the
+roadmap list; it is written at once and starts not published (STY-040).
 _Avoid_: Sheet, worksheet, tab, board
+
+**Product details**:
+What a roadmap says about the product it is for: its vision, service description,
+family and category. A roadmap's page shows them on request, and the roadmap dialog
+edits them with the roadmap's title, status label, product lead and last updated date
+(STY-065).
+_Avoid_: About this roadmap
 
 **Short name**:
 The name a Product Lead gives a roadmap when adding it, such as "Community Nursing":
@@ -156,7 +164,8 @@ _Avoid_: Clash, merge conflict
 The date a roadmap says it was last updated, which the public site shows. The Product
 Lead sets it as a pending edit, or marks it as today when publishing or saving ("Mark as
 updated today"); publishing changes it only then. It is never after today, by the
-Product Lead's own clock (STY-036).
+Product Lead's own clock (STY-036). Among the product details the editor labels it
+"Roadmap last updated", since it is the roadmap's date, not the product's (STY-065).
 _Avoid_: Last modified, published date, last published
 
 **Stale roadmap** _(planned)_:

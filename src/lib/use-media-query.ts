@@ -3,6 +3,9 @@ import { useCallback, useSyncExternalStore } from "react"
 /** Tailwind's `sm` as a media query: a viewport wider than a phone's. */
 export const WIDER_THAN_A_PHONE = "(min-width: 40rem)"
 
+/** Tailwind's `md` as a media query: a tablet's width, where a page header has a row's room. */
+export const TABLET_WIDTH = "(min-width: 48rem)"
+
 /** Tailwind's `lg` as a media query: a desktop's width, wider than a tablet's. */
 export const DESKTOP_WIDTH = "(min-width: 64rem)"
 

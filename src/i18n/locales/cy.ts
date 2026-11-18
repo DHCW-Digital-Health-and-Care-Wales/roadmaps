@@ -147,6 +147,7 @@ export const cy = {
     title: "Eich mapiau trywydd",
     refresh: "Adnewyddu",
     more: "Mwy",
+    editDetails: "Golygu manylion y cynnyrch",
     loading: "Wrthi'n llwytho mapiau trywydd…",
     // Small numerals take a singular noun, and "dau" (2) softens "map" to "fap";
     // larger counts read naturally as "o" plus the softened plural.
@@ -208,7 +209,7 @@ export const cy = {
       familyNotListed: "Teulu heb ei restru",
       match: {
         /** Beside a family the list doesn't have, which "Make it match" can't fix (S3). */
-        chooseFamily: "Dewiswch ei deulu o dan Ynglŷn â'r map trywydd hwn.",
+        chooseFamily: "Dewiswch ei deulu o dan Manylion y cynnyrch.",
         action: "Gwneud iddo gyfateb",
         confirm: {
           title: "Gwneud i {{title}} gyfateb i'w deulu a'i gategori?",
@@ -265,6 +266,8 @@ export const cy = {
       updated: "Diweddarwyd {{date}}",
     },
     notPublished: "Heb ei gyhoeddi",
+    notPublishedNote:
+      "Dydy'r wefan gyhoeddus ddim yn dangos y map trywydd hwn.",
     empty: {
       title: "Dim mapiau trywydd eto",
       description:
@@ -287,9 +290,9 @@ export const cy = {
       removedDescription:
         "Cafodd y map trywydd hwn ei dynnu o'r rhestr, felly doedd dim modd cadw eich newidiadau iddo.",
     },
-    about: {
-      title: "Ynglŷn â'r map trywydd hwn",
-      empty: "Does dim byd am y map trywydd hwn eto.",
+    productDetails: {
+      title: "Manylion y cynnyrch",
+      empty: "Does dim manylion cynnyrch eto.",
       fields: {
         vision: "Gweledigaeth",
         serviceDescription: "Disgrifiad o'r gwasanaeth",
@@ -364,6 +367,7 @@ export const cy = {
       new: "Newydd",
       remove: "Tynnu",
       titleRequired: "Rhowch deitl",
+      productNameRequired: "Rhowch enw'r cynnyrch",
       placementRequired: "Dewiswch orwel neu adran",
       errorPrefix: "Gwall:",
       itemFields: {
@@ -531,16 +535,16 @@ export const cy = {
         },
         added: "Ychwanegwyd “{{title}}”.",
       },
-      roadmapHeading: "Golygu'r map trywydd hwn",
+      roadmapHeading: "Golygu manylion y cynnyrch",
       roadmapFields: {
-        title: "Teitl (Saesneg)",
+        title: "Enw'r cynnyrch (Saesneg)",
         statusLabel: "Statws (Saesneg)",
         productLead: "Arweinydd cynnyrch",
         vision: "Gweledigaeth (Saesneg)",
         serviceDescription: "Disgrifiad o'r gwasanaeth (Saesneg)",
         familyId: "Teulu",
         categoryId: "Categori",
-        lastUpdated: "Diweddarwyd ddiwethaf",
+        lastUpdated: "Diweddarwyd y map trywydd ddiwethaf",
       },
       today: "Heddiw",
       dateInFuture: "Rhowch ddyddiad heddiw neu un cynharach",

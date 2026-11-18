@@ -30,9 +30,9 @@ import {
   openEditRoadmapDialog,
 } from "../testing/roadmap-dialog"
 import {
-  aboutField,
+  productDetailsField,
   closeConflictReview,
-  openAbout,
+  openProductDetails,
   openConflictReview,
   refreshRoadmap,
 } from "../testing/roadmap-page"
@@ -109,7 +109,10 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
     await user.selectOptions(family, MEDICINES_AND_DIAGNOSTICS.id)
     await confirmRoadmapEdit(user)
 
-    const shownFamily = aboutField(await openAbout(user), "Family")
+    const shownFamily = productDetailsField(
+      await openProductDetails(user),
+      "Family",
+    )
     expect(shownFamily).toHaveTextContent("Medicines & Diagnostics")
     // The family's swatch sits before its name.
     expect(shownFamily?.firstElementChild).toHaveStyle({
@@ -136,9 +139,9 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
     ])
     await confirmRoadmapEdit(user)
 
-    expect(aboutField(await openAbout(user), "Family")).toHaveTextContent(
-      "Legacy family",
-    )
+    expect(
+      productDetailsField(await openProductDetails(user), "Family"),
+    ).toHaveTextContent("Legacy family")
     expect(main().queryByText(/unpublished change/)).toBeNull()
   })
 
@@ -166,8 +169,8 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
     )
     vi.spyOn(repository, "listRoadmaps").mockImplementation(held)
 
-    // The dialog is modal, so About is opened, and the Refresh asked for, before it opens.
-    const about = await openAbout(user)
+    // The dialog is modal, so the product details are opened, and the Refresh asked for, before it opens.
+    const details = await openProductDetails(user)
     await refreshRoadmap(user)
     const form = await openEditRoadmapDialog(user)
     const family = await select(form, "Family")
@@ -177,15 +180,17 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
       await released
     })
     await vi.waitFor(() => {
-      expect(aboutField(about, "Family")).toHaveTextContent("Single Record")
+      expect(productDetailsField(details, "Family")).toHaveTextContent(
+        "Single Record",
+      )
     })
 
     expect(family).toHaveValue(UNLISTED_FAMILY)
     expect(optionsOf(family)).toContain("Legacy family (not listed)")
     await confirmRoadmapEdit(user)
-    expect(aboutField(await openAbout(user), "Family")).toHaveTextContent(
-      "Single Record",
-    )
+    expect(
+      productDetailsField(await openProductDetails(user), "Family"),
+    ).toHaveTextContent("Single Record")
     expect(main().queryByText(/unpublished change/)).toBeNull()
   })
 
@@ -232,7 +237,9 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
     await user.selectOptions(category, "No category")
     await confirmRoadmapEdit(user)
 
-    expect(aboutField(await openAbout(user), "Category")).toBeNull()
+    expect(
+      productDetailsField(await openProductDetails(user), "Category"),
+    ).toBeNull()
     expect(main().getByText("1 unpublished change")).toBeInTheDocument()
   })
 
@@ -255,9 +262,9 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
     await vi.waitFor(() => {
       expect(main().queryByText(/unpublished change/)).toBeNull()
     })
-    expect(aboutField(await openAbout(user), "Family")).toHaveTextContent(
-      "Medicines & Diagnostics",
-    )
+    expect(
+      productDetailsField(await openProductDetails(user), "Family"),
+    ).toHaveTextContent("Medicines & Diagnostics")
   })
 
   it("holds the family at its value while the list is read", async () => {
@@ -364,17 +371,17 @@ describe("Choosing a roadmap's family and category (STY-028)", () => {
     for (const name of ["Family", "Category"]) {
       await user.click(
         within(review).getByRole("button", {
-          name: `Use theirs About this roadmap: ${name}`,
+          name: `Use theirs Product details: ${name}`,
         }),
       )
     }
     await closeConflictReview(user, review)
 
-    const about = await openAbout(user)
-    expect(aboutField(about, "Family")).toHaveTextContent(
+    const details = await openProductDetails(user)
+    expect(productDetailsField(details, "Family")).toHaveTextContent(
       "Medicines & Diagnostics",
     )
-    expect(aboutField(about, "Category")).toHaveTextContent(
+    expect(productDetailsField(details, "Category")).toHaveTextContent(
       "Tests, Scans & Results",
     )
     expect(main().queryByText(/unpublished change/)).toBeNull()

@@ -19,9 +19,9 @@ import {
 } from "./fixtures/fake-sheets"
 import { useLanguage } from "./fixtures/look"
 import {
-  aboutField,
+  productDetailsField,
   goToList,
-  openAbout,
+  openProductDetails,
   roadmapFacts,
 } from "./fixtures/roadmap-page"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
@@ -52,7 +52,7 @@ test("a Product Lead adds a roadmap and lands on its page (S1–S3, S5)", async 
 
   const shortName = dialog.getByRole("textbox", { name: "Short name" })
   await dialog
-    .getByRole("textbox", { name: "Title" })
+    .getByRole("textbox", { name: "Product name" })
     .fill("Community Nursing roadmap")
   await expect(shortName).toHaveValue("Community Nursing")
   await expect(
@@ -92,11 +92,11 @@ test("a Product Lead adds a roadmap and lands on its page (S1–S3, S5)", async 
   await expect(
     main.getByRole("button", { name: "Publish roadmap" }),
   ).toBeEnabled()
-  const about = await openAbout(page)
-  await expect(aboutField(about, "Family")).toContainText(
+  const details = await openProductDetails(page)
+  await expect(productDetailsField(details, "Family")).toContainText(
     "Medicines & Diagnostics",
   )
-  await expect(aboutField(about, "Category")).toHaveText(
+  await expect(productDetailsField(details, "Category")).toHaveText(
     "GP & Community Services",
   )
   await expect(roadmapFacts(page)).toContainText("Product lead: Sam Evans")
@@ -145,7 +145,7 @@ test("the empty list offers Add a roadmap too, and lists the first roadmap (S1, 
   ).toBeVisible()
   await expect(dialog.getByRole("combobox")).toHaveCount(0)
   await dialog
-    .getByRole("textbox", { name: "Title" })
+    .getByRole("textbox", { name: "Product name" })
     .fill("Community Nursing roadmap")
   await dialog.getByRole("button", { name: "Add roadmap" }).click()
 
@@ -183,7 +183,7 @@ test("Cancel and Escape close the dialog and drop what was typed; a click outsid
   page,
 }) => {
   const dialog = await openAddRoadmapDialog(page)
-  const title = dialog.getByRole("textbox", { name: "Title" })
+  const title = dialog.getByRole("textbox", { name: "Product name" })
   const open = addRoadmapButtons(page)
 
   await title.fill("Community Nursing roadmap")
@@ -212,7 +212,7 @@ test("a short name in use is said at its field, before sending and by the write 
   sheets,
 }) => {
   const dialog = await openAddRoadmapDialog(page)
-  const title = dialog.getByRole("textbox", { name: "Title" })
+  const title = dialog.getByRole("textbox", { name: "Product name" })
   const shortName = dialog.getByRole("textbox", { name: "Short name" })
   const add = dialog.getByRole("button", { name: "Add roadmap" })
   const inUse = dialog.getByText(
@@ -254,7 +254,7 @@ test("a spreadsheet with no template says who can put it right, keeping what was
   )
   const dialog = await openAddRoadmapDialog(page)
   await dialog
-    .getByRole("textbox", { name: "Title" })
+    .getByRole("textbox", { name: "Product name" })
     .fill("Community Nursing roadmap")
 
   await dialog.getByRole("button", { name: "Add roadmap" }).click()
@@ -264,9 +264,9 @@ test("a spreadsheet with no template says who can put it right, keeping what was
   await expect(alert).toContainText(
     "The template for new roadmaps is missing or isn't in the expected format in the spreadsheet. Ask the spreadsheet owner to check it.",
   )
-  await expect(dialog.getByRole("textbox", { name: "Title" })).toHaveValue(
-    "Community Nursing roadmap",
-  )
+  await expect(
+    dialog.getByRole("textbox", { name: "Product name" }),
+  ).toHaveValue("Community Nursing roadmap")
   await expect(dialog.getByRole("textbox", { name: "Short name" })).toHaveValue(
     "Community Nursing",
   )
@@ -280,7 +280,7 @@ test.describe("an expired session (S11)", () => {
   }) => {
     await page.clock.install()
     const dialog = await openAddRoadmapDialog(page)
-    const title = dialog.getByRole("textbox", { name: "Title" })
+    const title = dialog.getByRole("textbox", { name: "Product name" })
     await title.fill("Community Nursing roadmap")
 
     // The warning opens over the dialog; leaving it leaves the dialog as it was.
@@ -320,7 +320,7 @@ test.describe("an expired session (S11)", () => {
   }) => {
     const dialog = await openAddRoadmapDialog(page)
     await dialog
-      .getByRole("textbox", { name: "Title" })
+      .getByRole("textbox", { name: "Product name" })
       .fill("Community Nursing roadmap")
     const add = dialog.getByRole("button", { name: "Add roadmap" })
 
@@ -330,9 +330,9 @@ test.describe("an expired session (S11)", () => {
     await expect(dialog.getByRole("alert")).toContainText(
       "Your session expired before it could be added. Try again.",
     )
-    await expect(dialog.getByRole("textbox", { name: "Title" })).toHaveValue(
-      "Community Nursing roadmap",
-    )
+    await expect(
+      dialog.getByRole("textbox", { name: "Product name" }),
+    ).toHaveValue("Community Nursing roadmap")
 
     await add.click()
     await reconnectButton(page).click()
@@ -340,6 +340,21 @@ test.describe("an expired session (S11)", () => {
     await expect(main.getByText(ADDED)).toBeVisible()
     expect(sheets.writes).toHaveLength(1)
   })
+})
+
+test("labels the title of a roadmap Product name, as the roadmap dialog does, not the item dialog's Title (STY-065 S9)", async ({
+  page,
+  sheets,
+}) => {
+  sheets.spreadsheet = EXAMPLE_SPREADSHEET_WITH_LISTS
+  const dialog = await openAddRoadmapDialog(page, { offersLists: true })
+
+  await expect(
+    dialog.getByRole("textbox", { name: "Product name", exact: true }),
+  ).toBeFocused()
+  await expect(
+    dialog.getByRole("textbox", { name: "Title", exact: true }),
+  ).toHaveCount(0)
 })
 
 test("adding a roadmap in Welsh (S10)", async ({ page, sheets }) => {
@@ -353,13 +368,18 @@ test("adding a roadmap in Welsh (S10)", async ({ page, sheets }) => {
   const dialog = await openDialog(
     page,
     main.getByRole("button", { name: "Ychwanegu map trywydd" }),
-    { title: "Ychwanegu map trywydd", firstField: "Teitl (Saesneg)" },
+    {
+      title: "Ychwanegu map trywydd",
+      firstField: "Enw'r cynnyrch (Saesneg)",
+    },
   )
   await dialog.getByRole("button", { name: "Ychwanegu'r map trywydd" }).click()
-  await expect(dialog.getByText("Rhowch deitl")).toBeVisible()
+  await expect(dialog.getByText("Rhowch enw'r cynnyrch")).toBeVisible()
   await expect(dialog.getByText("Rhowch enw byr")).toBeVisible()
 
-  const title = dialog.getByRole("textbox", { name: "Teitl (Saesneg)" })
+  const title = dialog.getByRole("textbox", {
+    name: "Enw'r cynnyrch (Saesneg)",
+  })
   await expect(title).toBeFocused()
   // An English title: only its final "roadmap" is dropped.
   await title.fill("Community Nursing roadmap")

@@ -105,6 +105,10 @@ scroll
   control per width, "Jump to" below 1024px and the links from 1024px, at the top and
   once stuck (changes D5); the facts sit under the title and About is a disclosure
   beside its Edit (changes D2 and D6).
+- **D10** (owner, 2026-11-18, review of STY-065's prototype; delivered by
+  [STY-065](../EPC-015-a-quieter-roadmap-page-top/STY-065-a-roadmaps-page-top-reads-at-a-glance.md)): the jump
+  control switches at 768px, not 1024px (changes D9); "About this roadmap" is renamed
+  "Product details", and the facts and its disclosure share one line.
 
 ## Out of scope
 

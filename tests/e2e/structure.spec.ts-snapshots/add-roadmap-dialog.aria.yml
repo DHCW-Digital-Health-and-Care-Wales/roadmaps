@@ -1,10 +1,10 @@
 - dialog "Add a roadmap":
   - heading "Add a roadmap" [level=2]
   - form "Add a roadmap":
-    - text: Title
+    - text: Product name
     - paragraph: The name the public site shows.
-    - paragraph: "Error: Enter a title"
-    - textbox "Title" [invalid]
+    - paragraph: "Error: Enter a product name"
+    - textbox "Product name" [invalid]
     - text: Short name
     - paragraph: Its public address will end “producta”. It can't be changed here later.
     - paragraph: "Error: This short name is already in use. Choose another."

@@ -35,10 +35,10 @@ import {
 } from "../testing/roadmap-dialog"
 import { expectOpeningFocus } from "../testing/opening-focus"
 import {
-  aboutField,
+  productDetailsField,
   chooseFromMore,
   goToList,
-  openAbout,
+  openProductDetails,
   refreshRoadmap,
   roadmapFacts,
 } from "../testing/roadmap-page"
@@ -121,7 +121,7 @@ async function choose(user: UserEvent, field: string, option: string) {
 async function fillIn(user: UserEvent) {
   const form = dialog()
   await user.type(
-    form.getByRole("textbox", { name: "Title" }),
+    form.getByRole("textbox", { name: "Product name" }),
     "Community Nursing roadmap",
   )
   await choose(user, "Category", "GP & Community Services")
@@ -169,7 +169,9 @@ describe("adding a roadmap from the list (STY-041)", () => {
       expect(others).toEqual([])
       await user.click(inPanel)
 
-      await expectOpeningFocus(dialog().getByRole("textbox", { name: "Title" }))
+      await expectOpeningFocus(
+        dialog().getByRole("textbox", { name: "Product name" }),
+      )
     })
 
     it.each([
@@ -254,7 +256,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
 
     const form = await openDialog(user)
 
-    const title = form.getByRole("textbox", { name: "Title" })
+    const title = form.getByRole("textbox", { name: "Product name" })
     await expectOpeningFocus(title)
     expect(title).toBeRequired()
     expect(title).toHaveAccessibleDescription("The name the public site shows.")
@@ -289,7 +291,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
       )
 
       await user.type(
-        form.getByRole("textbox", { name: "Title" }),
+        form.getByRole("textbox", { name: "Product name" }),
         "Community Nursing roadmap",
       )
 
@@ -302,7 +304,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
     it("no longer follows the title once it is changed", async () => {
       const { user } = await renderList()
       const form = await openDialog(user)
-      const title = form.getByRole("textbox", { name: "Title" })
+      const title = form.getByRole("textbox", { name: "Product name" })
       const shortName = form.getByRole("textbox", { name: "Short name" })
       await user.type(title, "Community Nursing roadmap")
 
@@ -330,11 +332,11 @@ describe("adding a roadmap from the list (STY-041)", () => {
 
       await submit(user)
 
-      const title = form.getByRole("textbox", { name: "Title" })
+      const title = form.getByRole("textbox", { name: "Product name" })
       expect(title).toHaveFocus()
       expect(title).toBeInvalid()
       expect(title).toHaveAccessibleDescription(
-        "The name the public site shows. Error: Enter a title",
+        "The name the public site shows. Error: Enter a product name",
       )
       const shortName = form.getByRole("textbox", { name: "Short name" })
       expect(shortName).toBeInvalid()
@@ -351,7 +353,10 @@ describe("adding a roadmap from the list (STY-041)", () => {
     ])("refuses the short name %j", async (typed, message) => {
       const { user } = await renderList()
       const form = await openDialog(user)
-      await user.type(form.getByRole("textbox", { name: "Title" }), "Nursing")
+      await user.type(
+        form.getByRole("textbox", { name: "Product name" }),
+        "Nursing",
+      )
       const shortName = form.getByRole("textbox", { name: "Short name" })
       await user.clear(shortName)
       await user.type(shortName, typed)
@@ -370,7 +375,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
       const { user } = await renderList(repository)
       const form = await openDialog(user)
       await user.type(
-        form.getByRole("textbox", { name: "Title" }),
+        form.getByRole("textbox", { name: "Product name" }),
         "Outpatient booking",
       )
 
@@ -388,7 +393,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
       const { user } = await renderList()
       const form = await openDialog(user)
       await submit(user)
-      const title = form.getByRole("textbox", { name: "Title" })
+      const title = form.getByRole("textbox", { name: "Product name" })
       expect(title).toBeInvalid()
 
       await user.type(title, "Community Nursing roadmap")
@@ -413,9 +418,9 @@ describe("adding a roadmap from the list (STY-041)", () => {
       const button = form.getByRole("button", { name: "Add roadmap" })
       expect(button).toHaveAttribute("aria-busy", "true")
       expect(button).toHaveAttribute("aria-disabled", "true")
-      expect(form.getByRole("textbox", { name: "Title" })).toHaveAttribute(
-        "readonly",
-      )
+      expect(
+        form.getByRole("textbox", { name: "Product name" }),
+      ).toHaveAttribute("readonly")
       expect(form.getByRole("textbox", { name: "Short name" })).toHaveAttribute(
         "readonly",
       )
@@ -457,11 +462,11 @@ describe("adding a roadmap from the list (STY-041)", () => {
         main().getByRole("button", { name: "Publish roadmap" }),
       ).toBeInTheDocument()
       expect(roadmapFacts()).toHaveTextContent("Product lead: Sam Evans")
-      const about = await openAbout(user)
-      expect(aboutField(about, "Family")).toHaveTextContent(
+      const details = await openProductDetails(user)
+      expect(productDetailsField(details, "Family")).toHaveTextContent(
         "Medicines & Diagnostics",
       )
-      expect(aboutField(about, "Category")).toHaveTextContent(
+      expect(productDetailsField(details, "Category")).toHaveTextContent(
         "GP & Community Services",
       )
       expect(
@@ -565,9 +570,11 @@ describe("adding a roadmap from the list (STY-041)", () => {
       await user.click(
         await main().findByRole("link", { name: "Patient Summary roadmap" }),
       )
-      await main().findByRole("button", { name: "Edit About this roadmap" })
-      const about = await openEditRoadmapDialog(user)
-      await user.type(about.getByRole("textbox", { name: "Title" }), " draft")
+      const form = await openEditRoadmapDialog(user)
+      await user.type(
+        form.getByRole("textbox", { name: "Product name" }),
+        " draft",
+      )
       await confirmRoadmapEdit(user)
       removePatientSummary(repository)
       await refreshRoadmap(user)
@@ -581,7 +588,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
 
       await openDialog(user)
       await user.type(
-        dialog().getByRole("textbox", { name: "Title" }),
+        dialog().getByRole("textbox", { name: "Product name" }),
         "Patient Summary roadmap",
       )
       await submit(user)
@@ -618,7 +625,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
 
       await openDialog(user)
       await user.type(
-        dialog().getByRole("textbox", { name: "Title" }),
+        dialog().getByRole("textbox", { name: "Product name" }),
         "Patient Summary roadmap",
       )
       await submit(user)
@@ -655,7 +662,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
         /Error: This short name is already in use\. Choose another\.$/,
       )
       expect(shortName).toHaveValue("Community Nursing")
-      expect(form.getByRole("textbox", { name: "Title" })).toHaveValue(
+      expect(form.getByRole("textbox", { name: "Product name" })).toHaveValue(
         "Community Nursing roadmap",
       )
       expect(
@@ -720,7 +727,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
           .getAllByRole("option")
           .map((option) => option.textContent),
       ).toEqual(["No category", "Tests, Scans & Results"])
-      expect(form.getByRole("textbox", { name: "Title" })).toHaveValue(
+      expect(form.getByRole("textbox", { name: "Product name" })).toHaveValue(
         "Community Nursing roadmap",
       )
     })
@@ -810,7 +817,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
           .getAllByRole("option")
           .map((option) => option.textContent),
       ).toEqual(["No family", "Single Record"])
-      expect(form.getByRole("textbox", { name: "Title" })).toHaveValue(
+      expect(form.getByRole("textbox", { name: "Product name" })).toHaveValue(
         "Community Nursing roadmap",
       )
       await submit(user)
@@ -854,7 +861,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
         const alert = within(await form.findByRole("alert"))
         expect(alert.getByText("Couldn't add the roadmap")).toBeInTheDocument()
         expect(alert.getByText(message)).toBeInTheDocument()
-        expect(form.getByRole("textbox", { name: "Title" })).toHaveValue(
+        expect(form.getByRole("textbox", { name: "Product name" })).toHaveValue(
           "Community Nursing roadmap",
         )
         expect(form.getByRole("textbox", { name: "Short name" })).toHaveValue(
@@ -961,7 +968,9 @@ describe("adding a roadmap from the list (STY-041)", () => {
           expect(button).toHaveFocus()
         })
         await user.click(button)
-        expect(dialog().getByRole("textbox", { name: "Title" })).toHaveValue("")
+        expect(
+          dialog().getByRole("textbox", { name: "Product name" }),
+        ).toHaveValue("")
         expect(
           dialog().getByRole("textbox", { name: "Product lead" }),
         ).toHaveValue("")
@@ -1022,7 +1031,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
     const form = dialog("Ychwanegu map trywydd")
 
     await user.type(
-      form.getByRole("textbox", { name: "Teitl (Saesneg)" }),
+      form.getByRole("textbox", { name: "Enw'r cynnyrch (Saesneg)" }),
       "Map trywydd Nyrsio Cymunedol roadmap",
     )
 
@@ -1092,7 +1101,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
       )
 
       expect(add).toHaveFocus()
-      expect(form.getByRole("textbox", { name: "Title" })).toHaveValue(
+      expect(form.getByRole("textbox", { name: "Product name" })).toHaveValue(
         "Community Nursing roadmap",
       )
       expect(form.getByRole("textbox", { name: "Product lead" })).toHaveValue(

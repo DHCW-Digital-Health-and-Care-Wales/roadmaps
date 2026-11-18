@@ -2,13 +2,13 @@ import type { Locator, Page } from "@playwright/test"
 
 import { openEditItemDialog, openEditRoadmapDialog } from "./fixtures/dialogs"
 import { withTabItems } from "./fixtures/fake-sheets"
-import { boxOf, scrollsSideways } from "./fixtures/layout"
+import { boxOf, contentRight, scrollsSideways } from "./fixtures/layout"
 import type { Language } from "./fixtures/look"
 import {
   focusClearOfBars,
   jumpTo,
   LEFT_THE_CONTENT,
-  openAbout,
+  openProductDetails,
   openLongRoadmap,
   openRoadmapIn,
   placementLinks,
@@ -17,9 +17,10 @@ import {
 import { expect, test } from "./fixtures/test"
 
 /**
- * STY-060: a roadmap's page keeps one row of controls, at the top and once scrolled:
- * one jump control per width, "Jump to" below 1024px and the placement links from it;
- * the stuck strip shaped per width; and the pending changes' foot bar on one row.
+ * STY-060 and STY-065: a roadmap's page keeps one row of controls, at the top and once
+ * scrolled: one jump control per width, "Jump to" narrower than 768px and the placement
+ * links from it (STY-065 D7); the stuck strip shaped per width; and the pending
+ * changes' foot bar on one row.
  */
 
 const COPY = {
@@ -60,22 +61,6 @@ function button(page: Page, name: string): Locator {
   return page.getByRole("main").getByRole("button", { name, exact: true })
 }
 
-/** The right edge of the page's content, where a control may run to. */
-async function contentRight(page: Page): Promise<number> {
-  return page
-    .getByRole("main")
-    .getByRole("heading", { level: 1 })
-    .evaluate((title) => {
-      const content = title.closest("[data-slot=page-container]")
-      if (!content) throw new Error("No page container")
-      const style = getComputedStyle(content)
-      return (
-        content.getBoundingClientRect().right -
-        Number.parseFloat(style.paddingRight)
-      )
-    })
-}
-
 /** Retitles items, leaving a change pending for each. */
 async function editItems(
   page: Page,
@@ -113,8 +98,8 @@ async function scrollInto(page: Page, name: string) {
 for (const language of ["en", "cy"] as const) {
   const copy = COPY[language]
   for (const width of [375, 640, 768, 820, 1024, 1280]) {
-    const desktop = width >= 1024
-    test(`shows one jump control at ${String(width)}px in ${language}, the same at the top and once stuck (S1)`, async ({
+    const tablet = width >= 768
+    test(`shows one jump control at ${String(width)}px in ${language}, the same at the top and once stuck (STY-060 S1, STY-065 S6, S7, D7)`, async ({
       page,
       sheets,
     }) => {
@@ -122,10 +107,10 @@ for (const language of ["en", "cy"] as const) {
       await openLongRoadmap(page, sheets, { language })
       const strip = page.locator("[data-stuck]")
 
-      if (desktop) {
+      if (tablet) {
         await expect(placementLinks(page, language)).toBeVisible()
         await expect(jumpTo(page, language)).toHaveCount(0)
-        // Under Add an item and More.
+        // Under Add an item and More, which end the title's row.
         const more = await boxOf(button(page, copy.more))
         expect(
           (await boxOf(placementLinks(page, language))).y,
@@ -137,7 +122,7 @@ for (const language of ["en", "cy"] as const) {
 
       await scrollInto(page, copy.next)
 
-      if (desktop) {
+      if (tablet) {
         const shown = strip.getByRole("navigation", { name: copy.links })
         await expect(shown).toBeInViewport({ ratio: 1 })
         await expect(shown.getByRole("link")).toHaveCount(6)
@@ -166,27 +151,36 @@ for (const language of ["en", "cy"] as const) {
   }
 }
 
-test("puts Add an item and More on a phone's row, each its label's width, and Jump to across the row below (S2)", async ({
+test("puts More at the end of the title's row on a phone, and Add an item and Jump to on one row below, Jump to across the rest (STY-065 S7)", async ({
   page,
   sheets,
 }) => {
   await page.setViewportSize({ width: 375, height: 800 })
   await openLongRoadmap(page, sheets)
 
+  const title = await boxOf(
+    page.getByRole("main").getByRole("heading", { level: 1 }),
+  )
   const add = await boxOf(button(page, "Add an item"))
   const more = await boxOf(button(page, "More"))
   const jump = await boxOf(jumpTo(page))
-  expect(more.y).toBe(add.y)
-  expect(more.x).toBeGreaterThan(add.right)
-  // Each as wide as its label: together well short of the row.
-  expect(more.right).toBeLessThan((await contentRight(page)) - 60)
-  expect(jump.y).toBeGreaterThanOrEqual(add.bottom)
-  expect(jump.x).toBe(add.x)
+  // More is "…" with a chevron, named More, at the end of the title's row.
+  await expect(button(page, "More").locator("svg")).toHaveCount(2)
+  expect(more.width).toBeLessThan(70)
+  expect(more.y).toBeLessThan(title.bottom)
+  expect(Math.abs(more.right - (await contentRight(page)))).toBeLessThan(1)
+  // Add an item as wide as its label, Jump to growing to the edge.
+  expect(jump.y).toBe(add.y)
+  expect(jump.x).toBeGreaterThan(add.right)
+  expect(add.width).toBeLessThan(160)
+  expect(add.y).toBeGreaterThanOrEqual(more.bottom)
   expect(Math.abs(jump.right - (await contentRight(page)))).toBeLessThan(1)
+  expect(add.height).toBe(40)
+  expect(jump.height).toBe(40)
 })
 
 for (const language of ["en", "cy"] as const) {
-  test(`puts Add an item, More and Jump to on one row on an iPad, Jump to growing to the edge, in ${language} (S2)`, async ({
+  test(`puts Add an item and More at the end of the title's row on an iPad, the links under, in ${language} (STY-065 S6)`, async ({
     page,
     sheets,
   }) => {
@@ -194,18 +188,24 @@ for (const language of ["en", "cy"] as const) {
     await openLongRoadmap(page, sheets, { language })
     const copy = COPY[language]
 
+    const title = await boxOf(
+      page.getByRole("main").getByRole("heading", { level: 1 }),
+    )
     const add = await boxOf(button(page, copy.addItem))
     const more = await boxOf(button(page, copy.more))
-    const jump = await boxOf(jumpTo(page, language))
+    const links = await boxOf(placementLinks(page, language))
     expect(more.y).toBe(add.y)
-    expect(jump.y).toBe(add.y)
-    expect(jump.x).toBeGreaterThan(more.right)
-    expect(Math.abs(jump.right - (await contentRight(page)))).toBeLessThan(1)
-    expect(jump.height).toBe(40)
+    expect(more.x).toBeGreaterThan(add.right)
+    expect(add.y).toBeLessThan(title.bottom)
+    expect(Math.abs(more.right - (await contentRight(page)))).toBeLessThan(1)
+    expect(links.y).toBeGreaterThanOrEqual(more.bottom)
+    await expect(jumpTo(page, language)).toHaveCount(0)
+    expect(add.height).toBe(40)
+    expect(more.height).toBe(40)
   })
 }
 
-test("keeps a phone's top to the screen's width with About open on a long address (S2)", async ({
+test("keeps a phone's top to the screen's width with Product details open on a long address (STY-060 S2, STY-065 S10)", async ({
   page,
   sheets,
 }) => {
@@ -220,14 +220,14 @@ test("keeps a phone's top to the screen's width with About open on a long addres
   await dialog.getByRole("button", { name: "Done" }).click()
   await expect(dialog).toBeHidden()
 
-  await openAbout(page)
+  await openProductDetails(page)
 
   await jumpTo(page).scrollIntoViewIfNeeded()
   await expect(jumpTo(page)).toBeInViewport({ ratio: 1 })
   expect(await scrollsSideways(page)).toBe(false)
 })
 
-test("keeps a 360px phone's top to the screen's width in Cymraeg, Jump to naming the unplaced items (S2, S5)", async ({
+test("keeps a 360px phone's top to the screen's width in Cymraeg, Jump to naming the unplaced items (STY-060 S2, S5, STY-065 S10)", async ({
   page,
   sheets,
 }) => {
@@ -264,7 +264,7 @@ test("shapes a phone's stuck strip as two rows: the menu button and the title cu
   await page.setViewportSize({ width: 375, height: 812 })
   await openLongRoadmap(page, sheets)
   const dialog = await openEditRoadmapDialog(page)
-  await dialog.getByRole("textbox", { name: "Title" }).fill(LONG_TITLE)
+  await dialog.getByRole("textbox", { name: "Product name" }).fill(LONG_TITLE)
   await dialog.getByRole("button", { name: "Done" }).click()
   await expect(dialog).toBeHidden()
   await editItems(page, ["Planned work 2"])
@@ -317,70 +317,53 @@ test("shapes a phone's stuck strip as two rows: the menu button and the title cu
   expect(await scrollsSideways(page)).toBe(false)
 })
 
-test("shapes an iPad's stuck strip as the phone's two rows, Add an item and More labelled (S4)", async ({
-  page,
-  sheets,
-}) => {
-  await page.setViewportSize({ width: 820, height: 1180 })
-  await openLongRoadmap(page, sheets)
+for (const width of [820, 1280]) {
+  test(`shapes the stuck strip at ${String(width)}px as the title with Add an item and More on its right, then the links (STY-060 S4, D4, STY-065 S6, D7)`, async ({
+    page,
+    sheets,
+  }) => {
+    await page.setViewportSize({ width, height: 800 })
+    await openLongRoadmap(page, sheets)
+    // At the top, Add an item and More end the title's row, on the right.
+    const topMore = await boxOf(button(page, "More"))
+    expect(Math.abs(topMore.right - (await contentRight(page)))).toBeLessThan(1)
 
-  await scrollInto(page, "Next")
+    await scrollInto(page, "Next")
 
-  const strip = page.locator("[data-stuck]")
-  const title = await boxOf(strip.getByRole("heading", { level: 1 }))
-  const addButton = strip.getByRole("button", { name: "Add an item" })
-  const moreButton = strip.getByRole("button", { name: "More", exact: true })
-  await expect(addButton).toHaveText("Add an item")
-  await expect(moreButton).toHaveText("More")
-  const [add, more, jump] = [
-    await boxOf(addButton),
-    await boxOf(moreButton),
-    await boxOf(strip.getByRole("button", { name: "Jump to: Next" })),
-  ]
-  expect(add.y).toBeGreaterThanOrEqual(title.bottom)
-  expect(more.y).toBe(add.y)
-  expect(jump.y).toBe(add.y)
-  expect(add.width).toBeGreaterThan(100)
-  expect(Math.abs(jump.right - (await contentRight(page)))).toBeLessThan(1)
-})
-
-test("shapes a desktop's stuck strip as the title with Add an item and More on its right, then the links (S4, D4)", async ({
-  page,
-  sheets,
-}) => {
-  await page.setViewportSize({ width: 1280, height: 800 })
-  await openLongRoadmap(page, sheets)
-  // At the top, Add an item and More start the row, on the left.
-  const titleAtTop = await boxOf(
-    page.getByRole("main").getByRole("heading", { level: 1 }),
-  )
-  expect((await boxOf(button(page, "Add an item"))).x).toBe(titleAtTop.x)
-
-  await scrollInto(page, "Next")
-
-  const strip = page.locator("[data-stuck]")
-  const title = await boxOf(strip.getByRole("heading", { level: 1 }))
-  const add = await boxOf(strip.getByRole("button", { name: "Add an item" }))
-  const more = await boxOf(
-    strip.getByRole("button", { name: "More", exact: true }),
-  )
-  const row = await boxOf(
-    strip.getByRole("navigation", { name: COPY.en.links }),
-  )
-  expect(add.x).toBeGreaterThan(title.right)
-  expect(more.x).toBeGreaterThan(add.right)
-  expect(Math.abs(more.right - (await contentRight(page)))).toBeLessThan(1)
-  // One row: the title's middle level with the buttons'.
-  const middle = (box: { y: number; height: number }) => box.y + box.height / 2
-  expect(Math.abs(middle(title) - middle(add))).toBeLessThan(1)
-  expect(row.y).toBeGreaterThanOrEqual(Math.max(title.bottom, add.bottom))
-  // On the title's left edge: the navigation is beside the page, so no menu button.
-  expect(row.x).toBe(title.x)
-  await expect(strip.getByRole("link", { name: /^Next,/ })).toHaveAttribute(
-    "aria-current",
-    "location",
-  )
-})
+    const strip = page.locator("[data-stuck]")
+    const title = await boxOf(strip.getByRole("heading", { level: 1 }))
+    const add = await boxOf(strip.getByRole("button", { name: "Add an item" }))
+    const more = await boxOf(
+      strip.getByRole("button", { name: "More", exact: true }),
+    )
+    const row = await boxOf(
+      strip.getByRole("navigation", { name: COPY.en.links }),
+    )
+    await expect(strip.getByRole("button", { name: "Add an item" })).toHaveText(
+      "Add an item",
+    )
+    await expect(
+      strip.getByRole("button", { name: "More", exact: true }),
+    ).toHaveText("More")
+    expect(add.x).toBeGreaterThan(title.right)
+    expect(more.x).toBeGreaterThan(add.right)
+    expect(Math.abs(more.right - (await contentRight(page)))).toBeLessThan(1)
+    // One row: the title's middle level with the buttons'.
+    const middle = (box: { y: number; height: number }) =>
+      box.y + box.height / 2
+    expect(Math.abs(middle(title) - middle(add))).toBeLessThan(1)
+    expect(row.y).toBeGreaterThanOrEqual(Math.max(title.bottom, add.bottom))
+    // On the strip's left edge: the menu button's beside a drawer, else the title's.
+    const menuButtons = strip.getByRole("button", { name: /^Menu/ })
+    const edge = width < 1024 ? (await boxOf(menuButtons.first())).x : title.x
+    expect(row.x).toBe(edge)
+    await expect(strip.getByRole("link", { name: /^Next,/ })).toHaveAttribute(
+      "aria-current",
+      "location",
+    )
+    await expect(jumpTo(page)).toHaveCount(0)
+  })
+}
 
 test("keeps a stuck Jump to on one line in Cymraeg on a phone, the longest placement's name cut but whole in its name and the list (S5)", async ({
   page,
@@ -500,7 +483,7 @@ for (const [device, size] of [
     await openLongRoadmap(page, sheets)
     await editItems(page, ["Planned work 1", "Planned work 2"])
 
-    if (size.width >= 1024) {
+    if (size.width >= 768) {
       await placementLinks(page)
         .getByRole("link", { name: /^Later,/ })
         .click()

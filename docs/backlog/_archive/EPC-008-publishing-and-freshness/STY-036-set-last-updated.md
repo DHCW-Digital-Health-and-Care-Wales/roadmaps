@@ -149,6 +149,10 @@ already reads `Yes`, where the date is still written.
   "No date" is gone. Changes S1. Its evidence is now `roadmap-facts.test.tsx` and the
   page tests "shows the date in the facts under the title…" and "leaves the date out
   of the facts for a roadmap with none".
+- **D13** (owner, 2026-11-18; delivered by
+  [STY-065](../EPC-015-a-quieter-roadmap-page-top/STY-065-a-roadmaps-page-top-reads-at-a-glance.md)): the date
+  field, and the name the publish dialog and the conflict review give it, read "Roadmap
+  last updated", so it is not read as the product's among the product details.
 
 ## Out of scope
 

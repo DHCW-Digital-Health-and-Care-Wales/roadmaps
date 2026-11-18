@@ -167,6 +167,8 @@ export const en = {
     refresh: "Refresh",
     /** A roadmap's menu of its less frequent actions, in its header (STY-052 D6). */
     more: "More",
+    /** In More: opens the roadmap dialog, as Edit in "Product details" does (STY-065 S5). */
+    editDetails: "Edit product details",
     loading: "Loading roadmaps…",
     count_zero: "No roadmaps",
     count_one: "{{count, number}} roadmap",
@@ -225,7 +227,7 @@ export const en = {
       /** Fixing a roadmap whose copied family or category cells differ from the lists (STY-030). */
       match: {
         /** Beside a family the list doesn't have, which "Make it match" can't fix (S3). */
-        chooseFamily: "Choose its family under About this roadmap.",
+        chooseFamily: "Choose its family under Product details.",
         action: "Make it match",
         confirm: {
           title: "Make {{title}} match its family and category?",
@@ -257,7 +259,7 @@ export const en = {
       shortNameHint:
         "It ends the roadmap's public address. It can't be changed here later.",
       note: "It starts not published, with no items. The public site doesn't show it until you publish it.",
-      /** Why a field can't be sent, or was refused (S4, S6); a blank title is `roadmaps.edit.titleRequired`. */
+      /** Why a field can't be sent, or was refused (S4, S6); a blank title is `roadmaps.edit.productNameRequired`. */
       errors: {
         shortName: {
           blank: "Enter a short name",
@@ -277,17 +279,19 @@ export const en = {
       /** On the new roadmap's page (S5). */
       added: "{{title}} was added. It isn't published yet.",
     },
-    /** A roadmap's facts, on its card and under the title of its page (STY-059 S2). */
+    /** A roadmap's facts, on its card and under the title of its page (STY-065 S2). */
     facts: {
       /** Names the list of facts on a roadmap's page. */
       name: "Roadmap details",
-      /** Before the status label's tag, so it is not read as the service's phase. */
+      /** Before the status label, so it is not read as the service's phase. */
       status: "Status:",
       productLead: "Product lead: {{name}}",
       updated: "Updated {{date}}",
     },
-    /** A roadmap's badge, on its card and its page. */
+    /** A roadmap's badge on its card, and the title of its page's notice. */
     notPublished: "Not published",
+    /** Under "Not published" in its page's notice, beside "Publish roadmap" (STY-065 S4). */
+    notPublishedNote: "The public site doesn't show this roadmap.",
     empty: {
       title: "No roadmaps yet",
       description: "The connected spreadsheet doesn't list any roadmaps yet.",
@@ -308,10 +312,13 @@ export const en = {
       removedDescription:
         "This roadmap was removed from the list, so your changes to it couldn't be kept.",
     },
-    /** What the roadmap is about, in a disclosure on its page (STY-059 S4). */
-    about: {
-      title: "About this roadmap",
-      empty: "There's nothing about this roadmap yet.",
+    /**
+     * What the product a roadmap is for is about, in a disclosure on the roadmap's page
+     * (STY-065 S3).
+     */
+    productDetails: {
+      title: "Product details",
+      empty: "There are no product details yet.",
       fields: {
         vision: "Vision",
         serviceDescription: "Service description",
@@ -320,15 +327,15 @@ export const en = {
       },
     },
     /**
-     * A roadmap's placement navigation (STY-053): the header's "Jump to" below a desktop,
-     * its row of links from one (STY-060).
+     * A roadmap's placement navigation (STY-053): the header's "Jump to" narrower than a
+     * tablet, its row of links from one (STY-065 S6, S7).
      */
     jumpTo: {
       /** The menu button, before the page has reached a placement (D8). */
       menu: "Jump to",
       /** The menu button, naming the placement the page is in (S3). */
       current: "Jump to: {{name}}",
-      /** Names the row of placement links, a desktop's jump control. */
+      /** Names the row of placement links, the jump control from a tablet's width. */
       links: "Horizons and sections",
       /**
        * A placement or the unplaced items, for screen readers: its name, how many items
@@ -403,6 +410,8 @@ export const en = {
       new: "New",
       remove: "Remove",
       titleRequired: "Enter a title",
+      /** A roadmap's title, labelled "Product name", left blank. */
+      productNameRequired: "Enter a product name",
       /** A new item with no horizon or section chosen (STY-046 S2). */
       placementRequired: "Choose a horizon or section",
       /** Read before an error message by assistive technology. */
@@ -613,17 +622,19 @@ export const en = {
         /** Announced in the dialog after "Add and start another". */
         added: "“{{title}}” was added.",
       },
-      /** Heads the roadmap dialog while it edits what a roadmap is about (STY-043). */
-      roadmapHeading: "Edit this roadmap",
+      /** Heads the roadmap dialog while it edits the product details (STY-043). */
+      roadmapHeading: "Edit product details",
       roadmapFields: {
-        title: "Title",
+        /** The roadmap's title, which is the name of the product it is for. */
+        title: "Product name",
         statusLabel: "Status",
         productLead: "Product lead",
         vision: "Vision",
         serviceDescription: "Service description",
         familyId: "Family",
         categoryId: "Category",
-        lastUpdated: "Last updated",
+        /** Says it is the roadmap's date, among fields about the product. */
+        lastUpdated: "Roadmap last updated",
       } satisfies Record<EditableRoadmapField, string>,
       /** Fills a date field with today's date (STY-036 S3). */
       today: "Today",
@@ -777,7 +788,7 @@ export const en = {
             publish: "Choose which to keep for each, then publish again.",
             save: "Choose which to keep for each, then save again.",
           },
-          /** A field to decide: "First item: Title", or "About this roadmap: Vision". */
+          /** A field to decide: "First item: Title", or "Product details: Vision". */
           target: "{{subject}}: {{field}}",
           yours: "Your change",
           theirs: "Current text",

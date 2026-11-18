@@ -1,7 +1,8 @@
 import type { Page } from "@playwright/test"
 
 import { tokenColour, useLanguage } from "./fixtures/look"
-import { expect, roadmapCards, test } from "./fixtures/test"
+import { roadmapFacts } from "./fixtures/roadmap-page"
+import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 // The DHCW staff-service shell (STY-016): navy header with the logo, phase banner, footer,
 // DHCW's container and the skip link.
@@ -214,6 +215,57 @@ test("a phase banner names the phase, with no feedback link when none is set (S3
   await expect(page.getByRole("link", { name: /Give feedback/ })).toHaveCount(0)
 })
 
+for (const language of ["en", "cy"] as const) {
+  const dismiss = language === "en" ? "Dismiss message" : "Cau'r neges"
+  const connectName = copy[language].connect
+  test(`dismissing the phase banner removes it from every page, focus on the content, until the app is loaded again, storing nothing, in ${language} (STY-065 S8)`, async ({
+    page,
+  }) => {
+    if (language !== "en") await useLanguage(page, language)
+    await page.goto("./")
+    const banner = page.locator("[data-slot=phase-banner]")
+    await expect(banner).toBeVisible()
+    const storage = () =>
+      page.evaluate(() => ({
+        local: Object.entries(localStorage).sort(),
+        session: Object.entries(sessionStorage).sort(),
+        cookie: document.cookie,
+      }))
+    const before = await storage()
+
+    // The button is the last of the banner's, at its right end.
+    const button = banner.getByRole("button", { name: dismiss })
+    await expect(banner.getByRole("button")).toHaveCount(1)
+    const bannerBox = await banner.boundingBox()
+    const buttonBox = await button.boundingBox()
+    expect((buttonBox?.x ?? 0) + (buttonBox?.width ?? 0)).toBeGreaterThan(
+      (bannerBox?.x ?? 0) + (bannerBox?.width ?? 0) - 40,
+    )
+
+    await button.click()
+
+    await expect(banner).toHaveCount(0)
+    await expect(page.getByRole("main")).toBeFocused()
+    expect(await storage()).toEqual(before)
+
+    // Away on the roadmap list and a roadmap's page, reached inside the app.
+    await connect(page, connectName)
+    await expect(roadmapCards(page)).toHaveCount(3)
+    await expect(banner).toHaveCount(0)
+    await roadmapCards(page).first().click()
+    await expect(page).toHaveURL(/#\/roadmaps\/\w+/)
+    await expect(banner).toHaveCount(0)
+    await page.goBack()
+    await expect(roadmapCards(page)).toHaveCount(3)
+    await expect(banner).toHaveCount(0)
+
+    // Loaded again, it is back, and the page remembers nothing of the dismissal.
+    await page.reload()
+    await expect(banner).toBeVisible()
+    await expect(banner.getByRole("button", { name: dismiss })).toBeVisible()
+  })
+}
+
 // From a desktop's width the page sits beside the navigation, 256px wide (STY-054).
 test.describe("DHCW's container and spacing (S6)", () => {
   for (const [width, left] of [
@@ -238,11 +290,8 @@ test.describe("DHCW's container and spacing (S6)", () => {
       await roadmapCards(page).first().click()
       await expect(h1).toHaveText("Product B roadmap")
       expect((await h1.boundingBox())?.x).toBe(left)
-      // The header block's every row on the one left edge (STY-059 S1).
-      const disclosure = page
-        .getByRole("main")
-        .getByRole("button", { name: "About this roadmap", exact: true })
-      expect((await disclosure.boundingBox())?.x).toBe(left)
+      // The header block's facts line on the one left edge (STY-065 S1).
+      expect((await roadmapFacts(page).boundingBox())?.x).toBe(left)
 
       await page.goto("./#/nowhere")
       await expect(h1).toHaveText("Page not found")

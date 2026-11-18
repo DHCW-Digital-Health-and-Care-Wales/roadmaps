@@ -6,7 +6,7 @@
   the rest of ADR-005 stands.
 - Date: 2026-11-10 (amended in STY-015: menu-item focus; in STY-016: DHCW's logo lockup;
   in STY-054: the dashboard shell adopted; in STY-054's retro: class lists in variables
-  lint cannot read)
+  lint cannot read; in STY-065: the phase banner can be dismissed)
 
 ## Context
 
@@ -123,6 +123,13 @@ families page and EPC-005's editor.
   of chips, holding the language and an account menu (D2; STY-056); it and the phase
   banner scroll away (D7).
 - The roadmap list stays the home page (D4).
+
+### STY-065 amendments
+
+- **Staff deviation:** the phase banner can be dismissed (STY-065 D4), where DHCW's
+  stays. It is in the way on internal staff's second and later visits; it returns
+  each time the app is loaded, and nothing is stored to remember the choice. The rest
+  of the banner, and that it scrolls away, stand.
 
 ## Consequences
 

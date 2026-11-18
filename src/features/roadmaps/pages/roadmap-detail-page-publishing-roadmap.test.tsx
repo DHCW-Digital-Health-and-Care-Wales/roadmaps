@@ -72,7 +72,7 @@ async function renderPage({
     ...(language ? { language } : {}),
   })
   const main = within(screen.getByRole("main"))
-  // The items are read once a heading follows About's: a placement's, or "No items yet".
+  // The items are read once a heading follows the product details': a placement's, or "No items yet".
   await waitFor(() => {
     expect(main.getAllByRole("heading", { level: 2 }).length).toBeGreaterThan(1)
   })
@@ -303,7 +303,7 @@ describe("publishing or unpublishing a roadmap (STY-035)", () => {
       within(dialog)
         .getAllByRole("listitem")
         .map(({ textContent }) => textContent),
-    ).toEqual(["About this roadmapStatus"])
+    ).toEqual(["Product detailsStatus"])
     await user.click(
       within(dialog).getByRole("button", { name: "Save and publish" }),
     )

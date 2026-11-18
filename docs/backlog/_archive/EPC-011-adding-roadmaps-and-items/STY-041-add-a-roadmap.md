@@ -177,6 +177,10 @@ phone width; S6 and S7 can be component tests against the in-memory double.
   has expired; pressed, each asks to reconnect first, then carries on. Changes: S1 ("the
   button is unavailable") and S11 ("with Add roadmap unavailable"); STY-057's Delivery
   says what else S11 loses.
+- **D12** (owner, 2026-11-18; delivered by
+  [STY-065](../EPC-015-a-quieter-roadmap-page-top/STY-065-a-roadmaps-page-top-reads-at-a-glance.md)): the title
+  field is labelled "Product name", the label it shares with the roadmap dialog's
+  editing form, and left blank it says "Enter a product name".
 
 ## Starting point
 

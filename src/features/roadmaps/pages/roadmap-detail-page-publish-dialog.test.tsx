@@ -112,7 +112,7 @@ describe("A dialog that publishes closes showing what it asked (DEF-010 S1)", ()
   it("does not offer 'Mark as updated today' as it closes after a pending date", async () => {
     const { user } = await renderPage("/roadmaps/producta")
     const form = await openEditRoadmapDialog(user)
-    fireEvent.change(form.getByLabelText("Last updated"), {
+    fireEvent.change(form.getByLabelText("Roadmap last updated"), {
       target: { value: "2026-11-10" },
     })
     await confirmRoadmapEdit(user)
@@ -134,7 +134,7 @@ describe("A dialog that publishes closes showing what it asked (DEF-010 S1)", ()
   it("does not offer 'Mark as updated today' as 'Publish roadmap' closes after a pending date", async () => {
     const { user } = await renderPage("/roadmaps/productc")
     const form = await openEditRoadmapDialog(user)
-    fireEvent.change(form.getByLabelText("Last updated"), {
+    fireEvent.change(form.getByLabelText("Roadmap last updated"), {
       target: { value: "2026-11-10" },
     })
     await confirmRoadmapEdit(user)

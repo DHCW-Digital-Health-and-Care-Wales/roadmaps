@@ -115,7 +115,7 @@ async function renderPage({
     repository,
     ...(language ? { language } : {}),
   })
-  // The items are read once a heading follows About's: a placement's, or "No items yet".
+  // The items are read once a heading follows the product details': a placement's, or "No items yet".
   await waitFor(() => {
     expect(main().getAllByRole("heading", { level: 2 }).length).toBeGreaterThan(
       1,
@@ -1195,7 +1195,7 @@ describe("An empty roadmap (STY-046 S8)", () => {
       main()
         .getAllByRole("heading", { level: 2 })
         .map(({ textContent }) => textContent),
-    ).toEqual(["About this roadmap", ...PLACEMENT_HEADINGS])
+    ).toEqual(["Product details", ...PLACEMENT_HEADINGS])
     expect(titlesUnder("Later")).toEqual([CLINIC])
     expect(addItemButtons()).toHaveLength(1)
     await waitFor(() => {

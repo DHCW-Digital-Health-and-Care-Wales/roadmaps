@@ -21,7 +21,7 @@ function main() {
 }
 
 describe("RoadmapDetailPage", () => {
-  it("names the roadmap, with no link back: the navigation leads to the list (STY-059 S1, D3)", async () => {
+  it("names the roadmap, with no link back: the navigation leads to the list (STY-059 D3, STY-065 S1)", async () => {
     await renderWithProviders({
       path: "/roadmaps/productb",
       authState: connected,
@@ -147,11 +147,11 @@ describe("RoadmapDetailPage", () => {
       main().getByRole("heading", { level: 1, name: "Product B roadmap" }),
     ).toBeInTheDocument()
     expect(
-      main().getByRole("region", { name: "About this roadmap" }),
+      main().getByRole("region", { name: "Product details" }),
     ).toBeInTheDocument()
   })
 
-  it("shows no about block while the list loads", async () => {
+  it("shows no product details while the list loads", async () => {
     await renderWithProviders({
       path: "/roadmaps/productb",
       authState: connected,
@@ -164,7 +164,7 @@ describe("RoadmapDetailPage", () => {
     expect(main().queryByRole("region")).toBeNull()
   })
 
-  it("shows no about block when the list failed", async () => {
+  it("shows no product details when the list failed", async () => {
     await renderWithProviders({
       path: "/roadmaps/productb",
       authState: connected,

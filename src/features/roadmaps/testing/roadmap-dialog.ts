@@ -9,31 +9,36 @@ import {
   openEditDialog,
   retype,
 } from "./edit-dialog"
+import { openProductDetails } from "./roadmap-page"
 
 /** What the roadmap dialog's editing form is found by, in each language. */
 const NAMES = {
   en: {
-    edit: "Edit About this roadmap",
-    heading: "Edit this roadmap",
+    edit: "Edit Product details",
+    heading: "Edit product details",
     done: DONE.en,
   },
   cy: {
-    edit: "Golygu Ynglŷn â'r map trywydd hwn",
-    heading: "Golygu'r map trywydd hwn",
+    edit: "Golygu Manylion y cynnyrch",
+    heading: "Golygu manylion y cynnyrch",
     done: DONE.cy,
   },
 } as const satisfies Record<Language, object>
 
-/** The roadmap dialog editing what a roadmap is about (test code only), which must be open. */
+/** The roadmap dialog editing a roadmap's product details (test code only), which must be open. */
 export function editRoadmapDialog(language: Language = "en") {
   return editDialog(NAMES[language])
 }
 
-/** Opens it from "About this roadmap"'s Edit, on a roadmap's page. */
-export function openEditRoadmapDialog(
+/**
+ * Opens it from the Edit that ends "Product details", on a roadmap's page, opening the
+ * details first unless they are open.
+ */
+export async function openEditRoadmapDialog(
   user: UserEvent,
   language: Language = "en",
 ) {
+  await openProductDetails(user)
   return openEditDialog(user, NAMES[language].edit, NAMES[language])
 }
 

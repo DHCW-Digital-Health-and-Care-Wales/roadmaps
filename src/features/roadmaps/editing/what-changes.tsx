@@ -35,7 +35,7 @@ export function WhatChanges({ changes }: WhatChangesProps) {
         ? [
             edited(
               "roadmap",
-              t("roadmaps.about.title"),
+              t("roadmaps.productDetails.title"),
               part.fields.map((field) =>
                 t(`roadmaps.edit.roadmapFields.${field}`),
               ),

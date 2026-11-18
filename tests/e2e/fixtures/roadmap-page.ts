@@ -4,16 +4,18 @@ import { EXAMPLE_SPREADSHEET, type FakeTab, withTabRows } from "./fake-sheets"
 import { type Language, useLanguage } from "./look"
 import { connect, expect } from "./test"
 
-// A roadmap's page as STY-052, STY-053, STY-059 and STY-060 shaped it: Refresh and
-// "Unpublish roadmap" in the header's More, a publish someone else's changes stopped
-// reviewed in a dialog, opened from its notice at the foot, "About this roadmap" a
-// disclosure, closed until pressed, and one jump control per width. No back link: the
-// header's name leads to the list.
+// A roadmap's page as STY-052, STY-053, STY-059, STY-060 and STY-065 shaped it: the
+// title with Add an item and More, Edit product details, Refresh and "Unpublish
+// roadmap" in More, a publish someone else's changes stopped reviewed in a dialog,
+// opened from its notice at the foot, "Product details" a disclosure ending the facts
+// line, closed until pressed, and one jump control per width: "Jump to" narrower than
+// 768px, the placement links from it. No back link: the header's name leads to the
+// list.
 
 const COPY = {
   en: {
     connect: "Connect Google",
-    about: "About this roadmap",
+    productDetails: "Product details",
     facts: "Roadmap details",
     home: "home",
     jumpTo: "Jump to",
@@ -25,7 +27,7 @@ const COPY = {
   },
   cy: {
     connect: "Cysylltu â Google",
-    about: "Ynglŷn â'r map trywydd hwn",
+    productDetails: "Manylion y cynnyrch",
     facts: "Manylion y map trywydd",
     home: "hafan",
     jumpTo: "Neidio i",
@@ -172,18 +174,50 @@ export function openLongRoadmap(
 
 export const LEFT_THE_CONTENT = "focus left the page's content"
 
+/** What `focusClearOfBars` says of bars or a scroll still moving after two seconds. */
+const NEVER_SETTLED = "the pinned bars never held still"
+
 /**
  * What hides the focused control in the page's content, if anything: it should be wholly
  * in view between the bars pinned at the top and the foot of the screen, or in one of
- * them. Read once the bars have settled after the scroll that focusing caused.
+ * them. Read once the bars have settled after the scroll that focusing caused: a header
+ * that has just stuck passes through a frame or two at a height it then leaves (its
+ * title changes size as it sticks), and the page follows it, so the bars' bottom and
+ * top and the scroll are read until they have held for several frames. Bars still
+ * moving after two seconds are reported as such, not read.
  */
 export async function focusClearOfBars(page: Page): Promise<string | null> {
-  await page.evaluate(
+  const settled = await page.evaluate(
     () =>
-      new Promise((settled) => {
-        requestAnimationFrame(() => requestAnimationFrame(settled))
+      new Promise<boolean>((resolve) => {
+        const STILL_FRAMES = 5
+        const MAX_FRAMES = 120
+        const place = () => {
+          const header = document.querySelector("[data-stuck]")
+          const foot = document.querySelector("[data-pinned]")
+          return [
+            window.scrollY,
+            header?.getBoundingClientRect().bottom ?? 0,
+            foot?.getBoundingClientRect().top ?? 0,
+          ].join()
+        }
+        let last = place()
+        let still = 0
+        let frames = 0
+        const frame = () => {
+          const now = place()
+          still = now === last ? still + 1 : 0
+          last = now
+          frames += 1
+          if (still >= STILL_FRAMES) resolve(true)
+          else if (frames >= MAX_FRAMES) resolve(false)
+          else requestAnimationFrame(frame)
+        }
+        requestAnimationFrame(frame)
       }),
   )
+  // Bars that never hold still are a fault of their own, not a frame to read.
+  if (!settled) return NEVER_SETTLED
   return page.evaluate((leftTheContent) => {
     const focused = document.activeElement
     if (!(focused instanceof HTMLElement) || !focused.closest("main")) {
@@ -206,63 +240,66 @@ export async function focusClearOfBars(page: Page): Promise<string | null> {
   }, LEFT_THE_CONTENT)
 }
 
-/** The header's "Jump to", a jump control below a desktop, whatever placement it names. */
+/**
+ * The header's "Jump to", the jump control narrower than a tablet (768px), whatever
+ * placement it names (STY-065 S7).
+ */
 export function jumpTo(page: Page, language: Language = "en"): Locator {
   return page
     .getByRole("main")
     .getByRole("button", { name: new RegExp(`^${COPY[language].jumpTo}`) })
 }
 
-/** The row of placement links, a desktop's jump control (STY-060 S1). */
+/** The row of placement links, the jump control from a tablet's width (STY-065 S6). */
 export function placementLinks(page: Page, language: Language = "en"): Locator {
   return page
     .getByRole("main")
     .getByRole("navigation", { name: COPY[language].links })
 }
 
-/** "About this roadmap", in the page's content. */
-export function about(page: Page, language: Language = "en"): Locator {
+/** "Product details", in the page's content. */
+export function productDetails(page: Page, language: Language = "en"): Locator {
   return page
     .getByRole("main")
-    .getByRole("region", { name: COPY[language].about })
+    .getByRole("region", { name: COPY[language].productDetails })
 }
 
-/** The disclosure that opens and closes "About this roadmap" (STY-059 S4). */
-export function aboutDisclosure(
+/** The disclosure that ends the facts line and opens and closes "Product details" (STY-065 S3). */
+export function productDetailsDisclosure(
   page: Page,
   language: Language = "en",
 ): Locator {
-  return about(page, language).getByRole("button", {
-    name: COPY[language].about,
+  return productDetails(page, language).getByRole("button", {
+    name: COPY[language].productDetails,
     exact: true,
   })
 }
 
 /**
- * Opens "About this roadmap" by its disclosure, unless it is open already, and returns
+ * Opens "Product details" by its disclosure, unless it is open already, and returns
  * it, its fields shown.
  */
-export async function openAbout(
+export async function openProductDetails(
   page: Page,
   language: Language = "en",
 ): Promise<Locator> {
-  const disclosure = aboutDisclosure(page, language)
+  const disclosure = productDetailsDisclosure(page, language)
   if ((await disclosure.getAttribute("aria-expanded")) !== "true") {
     await disclosure.click()
   }
   await expect(disclosure).toHaveAttribute("aria-expanded", "true")
-  return about(page, language)
+  return productDetails(page, language)
 }
 
-/** The roadmap's facts under its title, "Roadmap details" (STY-059 S2). */
+/** The roadmap's facts under its title, "Roadmap details" (STY-065 S2). */
 export function roadmapFacts(page: Page, language: Language = "en"): Locator {
   return page
     .getByRole("main")
     .getByRole("list", { name: COPY[language].facts, exact: true })
 }
 
-/** What the opened About shows under `term`. */
-export function aboutField(region: Locator, term: string): Locator {
+/** What the opened "Product details" shows under `term`. */
+export function productDetailsField(region: Locator, term: string): Locator {
   return region
     .getByRole("term")
     .filter({ hasText: term })
@@ -271,7 +308,8 @@ export function aboutField(region: Locator, term: string): Locator {
 
 /**
  * The buttons the stuck row shows, each the element its centre hits: not those of the
- * parts it leaves out of sight, the facts, the Publish row and About (STY-059).
+ * parts it leaves out of sight, the facts, the Not published notice and the product
+ * details (STY-059).
  */
 export async function shownInStuckRow(page: Page): Promise<Locator[]> {
   const buttons = page.locator("[data-stuck]").getByRole("button")

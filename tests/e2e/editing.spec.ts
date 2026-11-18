@@ -17,9 +17,9 @@ import {
 } from "./fixtures/fake-sheets"
 import { useLanguage } from "./fixtures/look"
 import {
-  aboutField,
+  productDetailsField,
   goToList,
-  openAbout,
+  openProductDetails,
   openConflictReview,
   refusal,
 } from "./fixtures/roadmap-page"
@@ -281,14 +281,14 @@ function changedCells(
   ]
 }
 
-/** Edits the roadmap's English vision in the roadmap dialog, leaving About open. */
+/** Edits the roadmap's English vision in the roadmap dialog, leaving Product details open. */
 async function editVision(page: Page, to: string) {
   const dialog = await openEditRoadmapDialog(page)
   await dialog.getByRole("textbox", { name: "Vision" }).fill(to)
   await dialog.getByRole("button", { name: "Done" }).click()
-  // The vision shows in About once opened, and stays open.
-  const about = await openAbout(page)
-  await expect(about.getByText(to)).toBeVisible()
+  // The vision shows in Product details once opened, and stays open.
+  const details = await openProductDetails(page)
+  await expect(details.getByText(to)).toBeVisible()
 }
 
 test.describe("a co-lead's change (STY-026)", () => {
@@ -319,11 +319,11 @@ test.describe("a co-lead's change (STY-026)", () => {
     const review = await openConflictReview(page)
     await expect(review.getByRole("listitem")).toHaveCount(2)
     await expect(review.getByRole("listitem").first()).toContainText(
-      /About this roadmap: Vision.*Your change.*My vision\..*Current text.*Their vision\./,
+      /Product details: Vision.*Your change.*My vision\..*Current text.*Their vision\./,
     )
 
     await review
-      .getByRole("button", { name: "Keep mine About this roadmap: Vision" })
+      .getByRole("button", { name: "Keep mine Product details: Vision" })
       .click()
     await expect(
       review.getByRole("button", { name: "Keep mine My first card: Title" }),
@@ -358,6 +358,34 @@ test.describe("a co-lead's change (STY-026)", () => {
       page.getByRole("heading", { level: 3, name: "Their first card" }),
     ).toBeVisible()
     await expect(page.getByRole("main").getByText("My vision.")).toBeVisible()
+  })
+
+  test("names a roadmap's own date among its product details, in the review, as Product details: Roadmap last updated (STY-065 S9)", async ({
+    page,
+    sheets,
+  }) => {
+    await openRoadmap(page, "producta", ITEM)
+    await publishOnce(page)
+    const dialog = await openEditRoadmapDialog(page)
+    await dialog.getByLabel("Roadmap last updated").fill("2026-11-10")
+    await dialog.getByRole("button", { name: "Done" }).click()
+    await expect(dialog).toBeHidden()
+    sheets.coLead("Roadmaps", "ProductA", "Last updated", "2026-10-05")
+
+    await confirmPublish(page, "Publish")
+
+    const review = await openConflictReview(page)
+    await expect(review.getByRole("listitem")).toHaveCount(1)
+    await expect(
+      review.getByRole("button", {
+        name: "Keep mine Product details: Roadmap last updated",
+      }),
+    ).toBeVisible()
+    await expect(
+      review.getByRole("button", {
+        name: "Use theirs Product details: Roadmap last updated",
+      }),
+    ).toBeVisible()
   })
 
   test("removing an item discards only the changes to it, naming it (S5)", async ({
@@ -465,14 +493,14 @@ test.describe("a family and category (STY-028)", () => {
     await dialog.getByRole("button", { name: "Done" }).click()
 
     const main = page.getByRole("main")
-    const about = await openAbout(page)
-    const family = aboutField(about, "Family")
+    const details = await openProductDetails(page)
+    const family = productDetailsField(details, "Family")
     await expect(family).toContainText("Medicines & Diagnostics")
     await expect(family.locator("span[style]").first()).toHaveCSS(
       "background-color",
       "rgb(0, 103, 71)",
     )
-    await expect(aboutField(about, "Category")).toHaveText(
+    await expect(productDetailsField(details, "Category")).toHaveText(
       "Tests, Scans & Results",
     )
     await expect(main.getByText("2 unpublished changes")).toBeVisible()
@@ -561,7 +589,7 @@ test.describe("a family and category (STY-028)", () => {
     await expect(refusal(page)).toBeFocused()
     const review = await openConflictReview(page)
     await expect(review.getByRole("listitem")).toContainText(
-      /About this roadmap: Family.*Your change.*No family.*Current text.*Medicines & Diagnostics/,
+      /Product details: Family.*Your change.*No family.*Current text.*Medicines & Diagnostics/,
     )
     expect(sheets.writes).toHaveLength(0)
   })

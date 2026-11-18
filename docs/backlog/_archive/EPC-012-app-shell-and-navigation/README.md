@@ -193,3 +193,6 @@ top bar) prefers to.
   under the title
 - [Roadmap page shell UX analysis](../../../analysis/roadmap-page-shell-ux-analysis.md):
   five mock-ups for STY-052 and STY-053
+- [Page headers UX analysis](../../../analysis/page-headers-ux-analysis.md): design G
+  for the tops of the roadmap list and a roadmap's page, after STY-056, built by
+  [EPC-013](../../EPC-013-tidy-page-tops/README.md)

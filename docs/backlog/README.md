@@ -27,6 +27,7 @@ moves to `_archive/`, where its row here still points.
 | [EPC-010 Item details](_archive/EPC-010-item-details/README.md)                                          | STY-039: write, nest, reorder and remove an item's details, the nested list the public site shows under “What this covers”, in its edit form (editor A, an outline, chosen from three prototypes)                                               | Done   |
 | [EPC-011 Adding roadmaps and items](EPC-011-adding-roadmaps-and-items/README.md)                         | STY-040–STY-051: add a roadmap from the list, written at once and not published, and add items on its page, pending until published; one dialog adds and edits a roadmap, one an item; reorder a placement's items; removing recorded for later | Active |
 | [EPC-012 App shell and navigation](_archive/EPC-012-app-shell-and-navigation/README.md)                  | STY-052–STY-057: keep a roadmap's controls and pending changes in view, jump between its placements, move between roadmaps from the shell, see unpublished changes app-wide, a quieter header, and reconnect from the action that needs it      | Done   |
+| [EPC-013 Tidy page tops](EPC-013-tidy-page-tops/README.md)                                               | STY-058–STY-060: one stack on one left edge at the top of the roadmap list and a roadmap's page, one row of controls at the top and once scrolled, no back links (design G of the page headers UX analysis)                                     | Active |
 
 ## Chores
 

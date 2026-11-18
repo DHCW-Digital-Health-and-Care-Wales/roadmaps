@@ -76,6 +76,10 @@ connect
 - **D7** (agent, 2026-11-18): the menu is named "Account", from D1's wording, with a
   person-in-a-circle icon over a gear: the app never names who is connected, but the
   menu holds the session's action; "Cyfrif" in Cymraeg.
+- **D8** (owner, 2026-11-18, review of STY-065's prototype; delivered by
+  [STY-065](../EPC-015-a-quieter-roadmap-page-top/STY-065-a-roadmaps-page-top-reads-at-a-glance.md)): the phase
+  banner can be dismissed until the app is next loaded, and ADR-010 gains an amendment
+  for it. Changes D2, which left the banner as it was with no amendment.
 
 ## Out of scope
 

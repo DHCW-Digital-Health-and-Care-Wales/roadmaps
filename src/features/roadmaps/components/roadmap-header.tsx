@@ -48,6 +48,48 @@ export interface RoadmapHeaderProps {
 }
 
 /**
+ * Where each part of the block sits, by layout: `stuck`, slimmed at the top of the
+ * screen; `tablet`, in the page from 768px; `narrow`, in the page below that, where the
+ * controls' wrapper gives way so each control takes a cell of the block's grid, More
+ * beside the title and the rest under the details.
+ */
+const LAYOUT_CLASSES = {
+  stuck: {
+    // From a tablet: the title, the controls on its right, then the links across.
+    block:
+      "grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-center",
+    title: "",
+    // Out of sight but still reachable (`LEFT_OUT`).
+    details: "sr-only",
+    controls: "flex min-w-0 items-start gap-3",
+    addItem: "",
+    more: "",
+    jumpTo: "flex-1",
+    links: "border-b-0 md:col-span-2",
+  },
+  tablet: {
+    block: "grid-cols-[minmax(0,1fr)_auto] gap-x-3",
+    title: "row-start-1 flex-wrap",
+    details: "col-span-2 row-start-2 mt-1 flex flex-col gap-3",
+    controls: "flex min-w-0 items-start gap-3",
+    addItem: "",
+    more: "",
+    jumpTo: "flex-1",
+    links: "col-span-2 mt-3",
+  },
+  narrow: {
+    block: "grid-cols-[auto_minmax(0,1fr)_auto] gap-x-3",
+    title: "col-span-2 row-start-1 flex-wrap",
+    details: "col-span-3 row-start-2 mt-1 flex flex-col gap-3",
+    controls: "contents",
+    addItem: "row-start-3 mt-4",
+    more: "col-start-3 row-start-1",
+    jumpTo: "col-span-2 col-start-2 row-start-3 mt-4",
+    links: "",
+  },
+} as const
+
+/**
  * The top of a roadmap's page (STY-065 S1): its title, with a badge when it is out of
  * step with the family or category list (STY-027 S4, S8) and a Changed tag; its
  * actions, "Add an item" (STY-046 S1) and More (STY-052 D6); `details`, one line; for
@@ -94,44 +136,36 @@ export function RoadmapHeader({
   navigation,
 }: RoadmapHeaderProps) {
   const phone = !useMediaQuery(WIDER_THAN_A_PHONE)
-  const wide = useMediaQuery(TABLET_WIDTH)
+  const tablet = useMediaQuery(TABLET_WIDTH)
   const notPublished = !roadmap.published
   return (
     <StickyHeader>
       {(stuck) => {
-        // In the page, narrower than a tablet, each control takes its own place in
-        // the block's grid: More beside the title, the rest under the details.
-        const placed = !stuck && !wide
+        const layoutClasses = stuck
+          ? LAYOUT_CLASSES.stuck
+          : tablet
+            ? LAYOUT_CLASSES.tablet
+            : LAYOUT_CLASSES.narrow
         const controls = (
-          <div
-            key="controls"
-            className={cn(
-              placed ? "contents" : "flex min-w-0 items-start gap-3",
-            )}
-          >
+          <div key="controls" className={layoutClasses.controls}>
             <AddItemButton
               ref={addItemButton}
               compact={stuck && phone}
               disabled={!canAddItem}
               onAdd={onAddItem}
-              className={cn(placed && "row-start-3 mt-4")}
+              className={layoutClasses.addItem}
             />
             <RoadmapMoreMenu
               fetching={fetching}
               onRefresh={onRefresh}
               onEdit={onEditRoadmap}
-              compact={stuck ? phone : !wide}
-              className={cn(placed && "col-start-3 row-start-1")}
+              compact={stuck ? phone : !tablet}
+              className={layoutClasses.more}
               // In the Not published notice at the top, in More once stuck (D7).
               publishedState={notPublished && !stuck ? null : publishedState}
             />
-            {navigation && !wide && (
-              <div
-                className={cn(
-                  "flex min-w-0",
-                  placed ? "col-span-2 col-start-2 row-start-3 mt-4" : "flex-1",
-                )}
-              >
+            {navigation && !tablet && (
+              <div className={cn("flex min-w-0", layoutClasses.jumpTo)}>
                 <JumpToMenu navigation={navigation} />
               </div>
             )}
@@ -140,12 +174,9 @@ export function RoadmapHeader({
         const detailsBlock = (
           <div
             key="details"
-            // Stuck, out of sight but still reachable: from after it, the block lets
-            // go to show it in place; from before, Tab passes it by.
-            className={cn(
-              stuck ? "sr-only" : "row-start-2 mt-1 flex flex-col gap-3",
-              !stuck && (wide ? "col-span-2" : "col-span-3"),
-            )}
+            className={layoutClasses.details}
+            // Stuck, from after it, the block lets go to show it in place; from
+            // before, Tab passes it by.
             {...(stuck ? LEFT_OUT : {})}
           >
             {details}
@@ -157,22 +188,11 @@ export function RoadmapHeader({
           </div>
         )
         return (
-          <div
-            className={cn(
-              "grid",
-              stuck
-                ? // From a tablet: the title, the controls on its right, then the links.
-                  "grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-center"
-                : wide
-                  ? "grid-cols-[minmax(0,1fr)_auto] gap-x-3"
-                  : "grid-cols-[auto_minmax(0,1fr)_auto] gap-x-3",
-            )}
-          >
+          <div className={cn("grid", layoutClasses.block)}>
             <div
               className={cn(
                 "flex min-w-0 items-center gap-x-3 gap-y-2",
-                !stuck && "row-start-1 flex-wrap",
-                placed && "col-span-2",
+                layoutClasses.title,
               )}
             >
               {stuck && <NavigationMenuButton variant="secondary" />}
@@ -196,14 +216,13 @@ export function RoadmapHeader({
                 </>
               )}
             </div>
-            {/* In the order they are drawn, as far as one order can be (D8). */}
-            {wide ? [controls, detailsBlock] : [detailsBlock, controls]}
-            {navigation && wide && (
+            {/* In the order they are drawn, as far as one order can be (D8). React
+                puts focus back on a control the change of order moves. */}
+            {tablet ? [controls, detailsBlock] : [detailsBlock, controls]}
+            {navigation && tablet && (
               <PlacementLinks
                 navigation={navigation}
-                className={cn(
-                  stuck ? "border-b-0 md:col-span-2" : "col-span-2 mt-3",
-                )}
+                className={layoutClasses.links}
               />
             )}
           </div>

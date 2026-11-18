@@ -127,7 +127,7 @@ families page and EPC-005's editor.
 ### STY-065 amendments
 
 - **Staff deviation:** the phase banner can be dismissed (STY-065 D4), where DHCW's
-  stays. It is internal staff's second and later visits it is in the way of; it returns
+  stays. It is in the way on internal staff's second and later visits; it returns
   each time the app is loaded, and nothing is stored to remember the choice. The rest
   of the banner, and that it scrolls away, stand.
 

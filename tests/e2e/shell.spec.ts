@@ -239,7 +239,7 @@ for (const language of ["en", "cy"] as const) {
     const bannerBox = await banner.boundingBox()
     const buttonBox = await button.boundingBox()
     expect((buttonBox?.x ?? 0) + (buttonBox?.width ?? 0)).toBeGreaterThan(
-      (bannerBox?.width ?? 0) - 40,
+      (bannerBox?.x ?? 0) + (bannerBox?.width ?? 0) - 40,
     )
 
     await button.click()

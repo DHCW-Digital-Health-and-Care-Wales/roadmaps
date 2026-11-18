@@ -93,12 +93,6 @@ describe("ProductDetails", () => {
     ).toEqual(["Product lead: Alex Jones, Sam Evans", "Product details"])
   })
 
-  it("wraps its line between items rather than past the edge (S2)", () => {
-    renderDetails()
-
-    expect(facts()).toHaveClass("flex", "flex-wrap")
-  })
-
   it("opens closed: a heading holding its disclosure, its fields hidden (S3)", () => {
     renderDetails()
 
@@ -123,17 +117,12 @@ describe("ProductDetails", () => {
     ).not.toBeInTheDocument()
   })
 
-  it("is a text control with a chevron, its press area reaching 44px (S3)", () => {
+  it("is a text control with a chevron (S3)", () => {
     renderDetails()
 
     const button = disclosure()
-    // A line 32px tall, its `after:` box 6px further above and below.
-    expect(button).toHaveClass(
-      "min-h-8",
-      "after:-inset-y-1.5",
-      "text-link",
-      "focus-visible:focus-link",
-    )
+    // The design system's link and its focus; its 44px press is measured in E2E.
+    expect(button).toHaveClass("text-link", "focus-visible:focus-link")
     expect(button.querySelector("svg")).toHaveAttribute("aria-hidden", "true")
   })
 

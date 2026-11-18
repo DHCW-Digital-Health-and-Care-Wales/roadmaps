@@ -174,6 +174,9 @@ export function openLongRoadmap(
 
 export const LEFT_THE_CONTENT = "focus left the page's content"
 
+/** What `focusClearOfBars` says of bars or a scroll still moving after two seconds. */
+const NEVER_SETTLED = "the pinned bars never held still"
+
 /**
  * What hides the focused control in the page's content, if anything: it should be wholly
  * in view between the bars pinned at the top and the foot of the screen, or in one of
@@ -183,9 +186,9 @@ export const LEFT_THE_CONTENT = "focus left the page's content"
  * top and the scroll are read until they have held for several frames.
  */
 export async function focusClearOfBars(page: Page): Promise<string | null> {
-  await page.evaluate(
+  const settled = await page.evaluate(
     () =>
-      new Promise<void>((settled) => {
+      new Promise<boolean>((settled) => {
         const STILL_FRAMES = 5
         const MAX_FRAMES = 120
         const place = () => {
@@ -205,12 +208,15 @@ export async function focusClearOfBars(page: Page): Promise<string | null> {
           still = now === last ? still + 1 : 0
           last = now
           frames += 1
-          if (still >= STILL_FRAMES || frames >= MAX_FRAMES) settled()
+          if (still >= STILL_FRAMES) settled(true)
+          else if (frames >= MAX_FRAMES) settled(false)
           else requestAnimationFrame(frame)
         }
         requestAnimationFrame(frame)
       }),
   )
+  // Bars that never hold still are a fault of their own, not a frame to read.
+  if (!settled) return NEVER_SETTLED
   return page.evaluate((leftTheContent) => {
     const focused = document.activeElement
     if (!(focused instanceof HTMLElement) || !focused.closest("main")) {
@@ -233,14 +239,17 @@ export async function focusClearOfBars(page: Page): Promise<string | null> {
   }, LEFT_THE_CONTENT)
 }
 
-/** The header's "Jump to", a jump control below a desktop, whatever placement it names. */
+/**
+ * The header's "Jump to", the jump control narrower than a tablet (768px), whatever
+ * placement it names (STY-065 S7).
+ */
 export function jumpTo(page: Page, language: Language = "en"): Locator {
   return page
     .getByRole("main")
     .getByRole("button", { name: new RegExp(`^${COPY[language].jumpTo}`) })
 }
 
-/** The row of placement links, a desktop's jump control (STY-060 S1). */
+/** The row of placement links, the jump control from a tablet's width (STY-065 S6). */
 export function placementLinks(page: Page, language: Language = "en"): Locator {
   return page
     .getByRole("main")

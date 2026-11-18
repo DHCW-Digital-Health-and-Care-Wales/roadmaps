@@ -408,6 +408,32 @@ test("shows the title in the large heading size on a phone, and today's from 640
   expect(Number.parseFloat(wider)).toBeGreaterThan(Number.parseFloat(phone))
 })
 
+for (const [control, from, to] of [
+  ["Product details", 375, 820],
+  ["Add an item", 375, 820],
+  ["Add an item", 820, 375],
+  ["More", 820, 375],
+] as const) {
+  test(`keeps focus on ${control} as the window goes from ${String(from)}px to ${String(to)}px and the block changes its order (D8)`, async ({
+    page,
+    sheets,
+  }) => {
+    await page.setViewportSize({ width: from, height: 800 })
+    await openLongRoadmap(page, sheets)
+    const focused = page
+      .getByRole("main")
+      .getByRole("button", { name: control, exact: true })
+    await focused.focus()
+    await expect(focused).toBeFocused()
+
+    await page.setViewportSize({ width: to, height: 800 })
+
+    // The row of links stands in for "Jump to" from 768px: the layout has changed.
+    await expect(placementLinks(page)).toHaveCount(to >= 768 ? 1 : 0)
+    await expect(focused).toBeFocused()
+  })
+}
+
 test("reaches Product details by Shift+Tab from the stuck row's links, the block letting go to show it in place (STY-059 S8, D7, STY-065 D8)", async ({
   page,
   sheets,

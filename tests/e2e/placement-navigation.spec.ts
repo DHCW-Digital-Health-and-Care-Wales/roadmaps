@@ -17,8 +17,8 @@ import {
 import { expect, test } from "./fixtures/test"
 
 /**
- * STY-053: a roadmap's page reaches any placement from its header, by "Jump to" below
- * a desktop or a row of links from one (STY-060 S1), each with its count and pending
+ * STY-053: a roadmap's page reaches any placement from its header, by "Jump to" narrower
+ * than a tablet or a row of links from one (768px, STY-065 S6, S7), each with its count and pending
  * mark; the page marks which placement it is in; and "Product details" folds to one
  * line.
  */
@@ -97,8 +97,8 @@ for (const [device, size] of [
   ["a phone", PHONE],
 ] as const) {
   // The links from 768px, "Jump to" narrower (STY-065 S6, S7, D7).
-  const desktop = size.width >= 768
-  test(`jumps to Later from ${desktop ? "its link" : '"Jump to"'}, its heading under the stuck row, focused, the address unchanged, on ${device} (S1, D8, STY-065 D7)`, async ({
+  const tablet = size.width >= 768
+  test(`jumps to Later from ${tablet ? "its link" : '"Jump to"'}, its heading under the stuck row, focused, the address unchanged, on ${device} (S1, D8, STY-065 D7)`, async ({
     page,
     sheets,
   }) => {
@@ -106,7 +106,7 @@ for (const [device, size] of [
     await openLongRoadmap(page, sheets)
     const address = page.url()
 
-    if (desktop) {
+    if (tablet) {
       await placementLinks(page)
         .getByRole("link", { name: /^Later,/ })
         .click()
@@ -126,7 +126,7 @@ for (const [device, size] of [
     await expect(
       page.getByRole("list", { name: "Later" }).getByRole("listitem").first(),
     ).toBeInViewport()
-    if (desktop) {
+    if (tablet) {
       await expect(row.getByRole("link", { name: /^Later,/ })).toHaveAttribute(
         "aria-current",
         "location",

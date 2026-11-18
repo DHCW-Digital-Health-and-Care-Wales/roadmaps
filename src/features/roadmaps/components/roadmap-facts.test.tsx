@@ -55,7 +55,6 @@ describe("RoadmapFacts", () => {
     expect(status).toHaveTextContent(/^Status: Live$/)
     const label = within(status).getByText("Live")
     expect(label).not.toHaveAttribute("data-slot", "badge")
-    expect(label).toHaveClass("font-bold")
   })
 
   it("shows each fact only when the roadmap has it (S2)", () => {

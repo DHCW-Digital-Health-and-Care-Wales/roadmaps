@@ -55,7 +55,10 @@ export interface EditControlsProps {
    */
   editable?: boolean
   editButton: RefObject<HTMLButtonElement | null>
-  /** `sm` (32px) by default, for a card; `default` (40px) beside About (STY-059 D6). */
+  /**
+   * `sm` (32px) by default, for a card; `default` (40px) at the foot of the open
+   * product details (STY-065 S3).
+   */
   size?: "default" | "sm"
   /** Where the buttons sit from 640px: at the row's `end` by default, as on a card. */
   align?: "start" | "end"

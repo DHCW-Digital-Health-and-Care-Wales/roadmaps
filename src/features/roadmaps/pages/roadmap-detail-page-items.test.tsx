@@ -31,7 +31,7 @@ import {
 } from "../testing/roadmap-page"
 
 // The roadmap's own text comes first, above the items.
-const ABOUT_HEADING = "Product details"
+const PRODUCT_DETAILS_HEADING = "Product details"
 
 const roadmaps: Roadmap[] = [
   createTestRoadmap("producta", "Product A roadmap"),
@@ -201,7 +201,7 @@ describe("RoadmapDetailPage items", () => {
       main()
         .getAllByRole("heading", { level: 2 })
         .map((heading) => heading.textContent),
-    ).toEqual([ABOUT_HEADING, ...PLACEMENT_HEADINGS])
+    ).toEqual([PRODUCT_DETAILS_HEADING, ...PLACEMENT_HEADINGS])
     expect(titlesUnder("Now")).toEqual([
       "Example card with every column",
       "Minimal card",
@@ -265,7 +265,7 @@ describe("RoadmapDetailPage items", () => {
       main()
         .getAllByRole("heading", { level: 2 })
         .map((heading) => heading.textContent),
-    ).toEqual([ABOUT_HEADING, ...PLACEMENT_HEADINGS])
+    ).toEqual([PRODUCT_DETAILS_HEADING, ...PLACEMENT_HEADINGS])
     // What follows a placement's heading, and whatever sits beside it.
     const under = (name: string) =>
       main().getByRole("heading", { level: 2, name }).parentElement
@@ -284,7 +284,7 @@ describe("RoadmapDetailPage items", () => {
       .getAllByRole("heading", { level: 2 })
       .map((heading) => heading.textContent)
     expect(headings).toEqual([
-      ABOUT_HEADING,
+      PRODUCT_DETAILS_HEADING,
       "Not on the public roadmap",
       ...PLACEMENT_HEADINGS,
     ])
@@ -762,11 +762,11 @@ describe("RoadmapDetailPage items", () => {
       await main().findByText("Yn wahanol i'w deulu neu gategori"),
     ).toBeInTheDocument()
     expect(main().getByText("Teulu heb ei restru")).toBeInTheDocument()
-    const aboutCy = await openProductDetails(userEvent.setup())
-    expect(productDetailsField(aboutCy, "Teulu")).toHaveTextContent(
+    const detailsCy = await openProductDetails(userEvent.setup())
+    expect(productDetailsField(detailsCy, "Teulu")).toHaveTextContent(
       "Cofnod Sengl",
     )
-    expect(productDetailsField(aboutCy, "Categori")).toHaveTextContent(
+    expect(productDetailsField(detailsCy, "Categori")).toHaveTextContent(
       "Clinigol",
     )
   })

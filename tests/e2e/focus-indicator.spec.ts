@@ -285,7 +285,7 @@ for (const theme of THEMES) {
       await addItem(page, "Choose a clinic closer to home", "Next")
       await expect(main.getByText("2 unpublished changes")).toBeVisible()
       // From the page's top, as the tour's stops are named: no placement link is
-      // current yet (STY-053 S3), the links a desktop's jump control (STY-060 S1).
+      // current yet (STY-053 S3), the links the jump control from 768px (STY-065 S6).
       await page.evaluate(() => {
         window.scrollTo(0, 0)
       })

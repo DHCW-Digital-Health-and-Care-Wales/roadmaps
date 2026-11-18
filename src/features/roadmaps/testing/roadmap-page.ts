@@ -6,11 +6,12 @@ import { expectOpeningFocus } from "./opening-focus"
 
 type User = ReturnType<typeof userEvent.setup>
 
-// A roadmap's page as STY-052, STY-053 and STY-059 shaped it: Refresh and "Unpublish
-// roadmap" (or "Publish roadmap" once the header has stuck) in its More, a publish
-// someone else's changes stopped reviewed in a dialog, opened from its notice at the
-// foot, and "Product details" a disclosure, closed until pressed. No back link: the
-// header's name leads to the list.
+// A roadmap's page as STY-052, STY-053, STY-059 and STY-065 shaped it: "Edit product
+// details", Refresh and "Unpublish roadmap" (or "Publish roadmap" once the header has
+// stuck) in its More, a publish someone else's changes stopped reviewed in a dialog,
+// opened from its notice at the foot, and "Product details" a disclosure, closed until
+// pressed, ending the list of the roadmap's facts. No back link: the header's name
+// leads to the list.
 
 /** Goes back to the roadmap list by the header's name, its home link (STY-059 D3). */
 export async function goToList(user: User) {

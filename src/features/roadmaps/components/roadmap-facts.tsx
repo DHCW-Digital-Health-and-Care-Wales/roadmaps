@@ -12,8 +12,8 @@ export interface RoadmapFactsProps {
 /**
  * A roadmap's facts, as items of the list under its title (STY-065 S2): its status,
  * read "Status:" then its label so it is not taken for the service's phase, its product
- * lead and when it was last updated, each only when it has one. Plain text, quieter
- * than the title, the status label alone in the text's own weight and colour.
+ * lead and when it was last updated, each only when it has one. Plain text in the
+ * muted colour, the status label alone bold and in the text's colour.
  */
 export function RoadmapFacts({ roadmap }: RoadmapFactsProps) {
   const { t } = useTranslation()

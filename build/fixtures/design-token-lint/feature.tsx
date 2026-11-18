@@ -39,6 +39,8 @@ export const s1UnknownClasses = [
   buttonVariants({ variant: "ghost", size: "sm", className: "-ml-2.5 text-muted-foreground" }),
 ]
 
+export const TONE_CLASSES = "bg-zinc-500" // ✗ Unknown class detected: bg-zinc-500
+
 export const stateClasses = {
   idle: "bg-zinc-400", // ✗ Unknown class detected: bg-zinc-400
   busy: "bg-status-warning-fg",
@@ -161,7 +163,6 @@ export const s4BackDoors = [
 
 export const s4ClassVariables = [
   <div className={ROWS} />, // ✗ Class list in a variable lint cannot read
-  <div className={ITEM_CLASSES} />, // ✗ Class list in a variable lint cannot read
   <div className={cn("p-2", ROWS)} />, // ✗ Class list in a variable lint cannot read
   <div className={cn("p-2", active && ROWS)} />, // ✗ Class list in a variable lint cannot read
   <div className={cn(active ? "p-2" : ROWS)} />, // ✗ Class list in a variable lint cannot read
@@ -174,6 +175,7 @@ export const s4ClassVariables = [
   <div className={cn(styles.idle)} />, // ✗ Class list in a variable lint cannot read
   <div className={TONE.idleClasses} />, // ✗ Class list in a variable lint cannot read
   <div className={rowClasses} />,
+  <div className={cn("p-2", active && ITEM_CLASSES)} />,
   <div className={cn("p-2", active && rowClasses, className, classNames)} />,
   <div className={active ? rowClasses : undefined} />,
   <div className={cn(active ? "p-2" : "p-3", stateClasses.idle)} />,

@@ -49,7 +49,8 @@ _Visual direction_ bullet of [ADR-005](ADR-005-ui-stack-shadcn-base-ui-tailwind-
     - literal colours in SVG attributes;
     - primitives referenced outside `globals.css`;
     - a class list reaching `className` or `cn()` through a variable lint cannot read:
-      one named neither `…Classes` nor a name the plugin reads by default.
+      one whose name ends neither `Classes` nor `_CLASSES` and is not one the plugin
+      reads by default.
   - Class merging (`cn`) is configured with the custom text and shadow names, so it
     never drops a type size as if it were a colour (tested).
   - _Exception:_ the one colour that comes from data, a roadmap's own colour

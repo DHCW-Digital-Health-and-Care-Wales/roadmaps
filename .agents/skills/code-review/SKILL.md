@@ -112,12 +112,12 @@ Do not spend findings on these; check only that the change does not evade them
   `dark:` colours, ad-hoc focus styles and design properties in inline styles
   or SVG paint attributes, in `src/**` (not tests). It reads classes only
   where the plugin looks by default (`className`, `cn()`, `cva()` …), in a
-  `…Variants({ className })` call and in variables named `…Classes`, and
-  rejects a variable of any other name in a `className` or `cn()` value. It
-  reads styles only in a `style` attribute (which must hold an object
-  literal) or an object typed `CSSProperties`. A class string held anywhere
-  else, such as a variable passed to `cva()`, or a style object under another
-  prop, is unchecked.
+  `…Variants({ className })` call and in variables named `…Classes` or
+  `…_CLASSES`, and rejects a variable of any other name in a `className` or
+  `cn()` value. It reads styles only in a `style` attribute (which must hold
+  an object literal) or an object typed `CSSProperties`. A class string held
+  anywhere else, such as a variable passed to `cva()`, or a style object under
+  another prop, is unchecked.
 - `@typescript-eslint` strict-type-checked rules (no `any`, unsafe calls,
   floating promises, `unbound-method`), React Hooks rules and `jsx-a11y`
   basics. Catalogue parity is a `pnpm typecheck` error (`cy.ts` is

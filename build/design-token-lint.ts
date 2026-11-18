@@ -174,13 +174,13 @@ const OWN_FOCUS_RESTRICTION: Restriction = {
   message: `Only a focus utility styles focus here: ${FOCUS_HINT}`,
 }
 
-/** A variable whose strings lint reads as classes. */
-const CLASSES_VARIABLE = String.raw`^\w*[cC]lasses$`
+/** A variable whose strings lint reads as classes: `rowClasses`, or a constant `ROW_CLASSES`. */
+const CLASSES_VARIABLE = String.raw`^\w*(?:[cC]lasses|_CLASSES)$`
 
 /**
  * Class lists are linted where the plugin finds them by default (`className`, `cn()`,
  * `cva()` …), in the `className` a cva helper takes (`buttonVariants({ className })`),
- * and in variables named `…Classes`, e.g. a map from state to classes.
+ * and in variables named `…Classes` or `…_CLASSES`, e.g. a map from state to classes.
  */
 const selectors = [
   ...getDefaultSelectors(),
@@ -231,7 +231,7 @@ const STYLE_FORM_MESSAGE =
 const PAINT_MESSAGE =
   "Literal colour in an SVG attribute: use currentColor with a semantic text-* class (ADR-010)."
 
-/** A variable lint reads classes from: `…Classes`, or one of the plugin's default names. */
+/** A variable lint reads classes from: `CLASSES_VARIABLE`, or one of the plugin's default names. */
 const LINTED_VARIABLE = String.raw`${CLASSES_VARIABLE}|^classNames?$|^styles?$`
 /** Where a class list reaches an element: a `className` attribute's value, `cn()`'s arguments. */
 const CLASS_VALUE = String.raw`:matches(JSXAttribute[name.name="className"] > JSXExpressionContainer > .expression, CallExpression[callee.name="cn"] > .arguments)`
@@ -241,8 +241,8 @@ const VALUE_PART = String.raw`:matches(ConditionalExpression > .consequent, Cond
 const CLASS_VALUES = `:matches(${CLASS_VALUE}, ${CLASS_VALUE} > ${VALUE_PART}, ${CLASS_VALUE} > ${VALUE_PART} > ${VALUE_PART})`
 /**
  * A name lint reads no classes from, alone or as a lookup's root (`INDENTS[level]`).
- * Only `…Classes` is read as a map, one level down too; a forwarded `props.className`
- * was linted where it was written.
+ * Only a `CLASSES_VARIABLE` is read as a map, one level down too; a forwarded
+ * `props.className` was linted where it was written.
  */
 const UNLINTED_NAME = String.raw`:matches(Identifier:not([name=/${LINTED_VARIABLE}|^undefined$/]), MemberExpression:not([object.name=/${CLASSES_VARIABLE}/], [object.object.name=/${CLASSES_VARIABLE}/], [property.name="className"]))`
 
@@ -302,13 +302,13 @@ const backDoors = [
   },
   {
     // Lint reads a variable's classes by its name alone, so a class list in any other
-    // variable went unchecked: STY-052's `IN_FLOW`, STY-054's `ITEM_CLASSES` and
-    // `ROADMAP_ROWS`. Not covered: a name passed to `cva()` or `…Variants({ className })`,
-    // a callback's parameter or a function named `…Classes`, a cast, a spread, and a
-    // third level of nesting. Review by 2027-02-16 whether it has caught any since.
+    // variable went unchecked: STY-052's `IN_FLOW` and STY-054's `ROADMAP_ROWS`. Not
+    // covered: a name passed to `cva()` or `…Variants({ className })`, a callback's
+    // parameter or a function named `…Classes`, a cast, a spread, and a third level of
+    // nesting. Review by 2027-02-16 whether it has caught any since.
     selector: `${UNLINTED_NAME}${CLASS_VALUES}`,
     message:
-      "Class list in a variable lint cannot read: name the variable …Classes, so lint checks its classes (ADR-010).",
+      "Class list in a variable lint cannot read: name the variable …Classes or …_CLASSES, so lint checks its classes (ADR-010).",
   },
 ]
 

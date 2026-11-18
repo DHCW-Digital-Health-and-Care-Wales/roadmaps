@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright"
 import type { Locator, Page } from "@playwright/test"
 
-import { openEditRoadmapDialog } from "./fixtures/dialogs"
+import { openEditItemDialog, openEditRoadmapDialog } from "./fixtures/dialogs"
 import { tabTo } from "./fixtures/keyboard"
 import { boxOf, contentRight, scrollsSideways } from "./fixtures/layout"
 import {
@@ -153,6 +153,38 @@ test.describe("a desktop's row (S4)", () => {
     ).toBeLessThan(4)
     expect((await boxOf(row)).height).toBeLessThanOrEqual(50)
   })
+
+  for (const width of [768, 1024]) {
+    test(`keeps a flagged row's title in view and its Edit within the list at ${String(width)}px in Cymraeg, a Changed tag beside the flag`, async ({
+      page,
+      sheets,
+    }) => {
+      await page.setViewportSize({ width, height: 900 })
+      await openWithItems(page, sheets, withItems(...ITEMS), "Last", "cy")
+      const form = await openEditItemDialog(page, "Someday", "cy")
+      await form
+        .getByRole("textbox", { name: "Disgrifiad (Saesneg)" })
+        .fill("Changed, and not yet placed.")
+      await form.getByRole("button", { name: COPY.cy.done }).click()
+      await expect(form).toBeHidden()
+      await chooseCompact(page, "cy")
+
+      const row = rowOf(page, "Someday")
+      const line = await boxOf(row)
+      expect(line.height).toBeLessThanOrEqual(50)
+      // The flag gives way, cut, before the title does.
+      const title = await boxOf(row.getByRole("heading"))
+      expect(title.width).toBeGreaterThan(60)
+      const flag = row.getByText("Dydy'r gorwel “Soon” ddim yn cael ei adnabod")
+      await expect(flag).toHaveCSS("text-overflow", "ellipsis")
+      await expect(row.getByText("Wedi newid")).toBeVisible()
+      const edit = await boxOf(
+        row.getByRole("button", { name: "Golygu Someday" }),
+      )
+      expect(edit.right).toBeLessThanOrEqual(line.right)
+      expect(await scrollsSideways(page)).toBe(false)
+    })
+  }
 })
 
 test.describe("a phone's row (S5)", () => {
@@ -166,15 +198,14 @@ test.describe("a phone's row (S5)", () => {
 
     const row = rowOf(page, LONG_ITEM_TITLE)
     const title = row.getByRole("heading")
-    expect(
-      await title.evaluate((h3) => ({
-        lines: Math.round(
-          h3.clientHeight / Number.parseFloat(getComputedStyle(h3).lineHeight),
-        ),
-        cut: h3.scrollWidth > h3.clientWidth,
-      })),
-    ).toMatchObject({ cut: false })
-    expect((await boxOf(title)).height).toBeGreaterThan(48)
+    const shown = await title.evaluate((h3) => ({
+      lines: Math.round(
+        h3.clientHeight / Number.parseFloat(getComputedStyle(h3).lineHeight),
+      ),
+      cut: h3.scrollWidth > h3.clientWidth,
+    }))
+    expect(shown.cut).toBe(false)
+    expect(shown.lines).toBeGreaterThan(2)
     await expect(row.locator("p")).toHaveCount(0)
 
     const someday = rowOf(page, "Someday")
@@ -274,6 +305,40 @@ test("keeps the placement the page was in at the top as the view changes, focus 
   await strip.getByRole("button", { name: "Cards", exact: true }).click()
   await expect(later).toBeInViewport()
   expect(Math.abs((await boxOf(later)).y - top)).toBeLessThan(4)
+})
+
+test("leaves the page where it is when the view in use is pressed, as the stuck header later changes height (S3)", async ({
+  page,
+  sheets,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await openWithItems(page, sheets, withItems(...ITEMS), "Last")
+  const heading = (name: string) =>
+    main(page).getByRole("heading", { level: 2, name, exact: true })
+  await heading("Later").evaluate((element) => {
+    element.scrollIntoView({ block: "start" })
+  })
+  const strip = page.locator("[data-stuck]")
+  await expect(strip).toBeVisible()
+  await strip.getByRole("button", { name: "Cards", exact: true }).click()
+
+  // Back up the page, the strip still stuck.
+  await page.evaluate(() => {
+    window.scrollBy(0, -300)
+  })
+  await expect(strip).toBeVisible()
+  // Narrower, the stuck links wrap onto another line and the strip grows.
+  const tall = (await boxOf(strip)).height
+  await page.setViewportSize({ width: 820, height: 900 })
+  await expect.poll(async () => (await boxOf(strip)).height).not.toBe(tall)
+
+  // Later stays where the scroll left it, not pulled back under the strip.
+  await expect
+    .poll(
+      async () =>
+        (await boxOf(heading("Later"))).y - (await boxOf(strip)).bottom,
+    )
+    .toBeGreaterThan(100)
 })
 
 test("remembers the view on another roadmap and after a reload (S11)", async ({

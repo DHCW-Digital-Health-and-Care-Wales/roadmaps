@@ -403,11 +403,6 @@ export const en = {
         details: "Details",
       },
       /**
-       * A field of a card that runs past three lines is cut, with a button that shows the
-       * rest in place (STY-066). The button's name is its words, then `of` for the field:
-       * "Show more of the description of First item".
-       */
-      /**
        * A row of the compact view: its chevron, which opens it to the item's other
        * fields, named for the item (STY-067 S6).
        */
@@ -415,6 +410,11 @@ export const en = {
         show: "Show the rest of {{item}}",
         hide: "Hide the rest of {{item}}",
       },
+      /**
+       * A field of a card that runs past three lines is cut, with a button that shows the
+       * rest in place (STY-066). The button's name is its words, then `of` for the field:
+       * "Show more of the description of First item".
+       */
       cut: {
         more: "Show more",
         less: "Show less",

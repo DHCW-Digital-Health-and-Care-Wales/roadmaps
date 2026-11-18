@@ -6,7 +6,6 @@ import type { Organisation } from "@/domain/roadmap/organisation"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import type { RoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 import { useLanguage } from "@/i18n"
-import { TABLET_WIDTH, useMediaQuery } from "@/lib/use-media-query"
 
 import { CompactItemRow } from "../components/compact-item-row"
 import { RoadmapItemCard } from "../components/roadmap-item-card"
@@ -110,7 +109,6 @@ export function EditableItem({
   const editButton = dialogOpener ?? ownEditButton
   const moveButton = useRef<HTMLButtonElement>(null)
   const title = localise(shown.title, language)
-  const wide = useMediaQuery(TABLET_WIDTH)
   const pending = isNew ? "new" : entry && "changed"
 
   // A layout effect, so focus lands before the shell would rescue it to `<main>`.
@@ -177,9 +175,8 @@ export function EditableItem({
       <CompactItemRow
         item={shown}
         organisations={organisations}
-        wide={wide}
         tag={pending && <PendingTag pending={pending} subject={title} />}
-        actions={
+        actions={(wide) => (
           <>
             {moveMenu(!wide)}
             <EditButton
@@ -191,7 +188,7 @@ export function EditableItem({
               onEdit={edit}
             />
           </>
-        }
+        )}
         drop={
           pending && (
             <DropButton

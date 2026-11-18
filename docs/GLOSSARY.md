@@ -87,7 +87,7 @@ _Avoid_: Rank, priority, sort order, row order
 
 **Position**:
 An item's place in its placement's order, counted from the top: "4 of 4".
-_Avoid_: Rank, row (a compact view's item), index
+_Avoid_: Rank, row, index
 
 **Roadmap item**:
 One piece of work on a roadmap: a title, a description, expected outcomes, tags and any
@@ -176,10 +176,9 @@ A roadmap item as the Cards view of a roadmap's page shows it, every field it ha
 its label; its size is the budget for the item's text.
 
 **Compact view**:
-The second view of a roadmap's page, chosen by its switch and kept on the device, in
-which each item is a row under the same headings that opens in place to its other
-fields (STY-067); Cards is the view first seen. A **row** of it is an item shown that
-way, never an item's position.
+The second view of a roadmap's page, in which each item is a row under the same headings
+that opens in place to its other fields; Cards is the view first seen (STY-067). A
+**row** of it is an item shown that way, never an item's position.
 _Avoid_: List view, table
 
 **Roadmap list**:

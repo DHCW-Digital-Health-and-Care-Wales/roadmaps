@@ -1,8 +1,6 @@
-import { TriangleAlertIcon } from "lucide-react"
 import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
-import { Badge } from "@/components/ui/badge"
 import { localise, type LocalisedText } from "@/domain/roadmap/localised-text"
 import type { Organisation } from "@/domain/roadmap/organisation"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
@@ -96,23 +94,5 @@ export function ItemFields({
         </div>
       ))}
     </dl>
-  )
-}
-
-/**
- * What is wrong with an unplaced item's horizon, as written (STY-021 D4): none, or one
- * the public site does not recognise.
- */
-export function HorizonFlag({ writtenHorizon }: { writtenHorizon: string }) {
-  const { t } = useTranslation()
-  return (
-    <Badge variant="warning">
-      <TriangleAlertIcon data-icon="inline-start" aria-hidden="true" />
-      {writtenHorizon === ""
-        ? t("roadmaps.items.unplaced.noHorizon")
-        : t("roadmaps.items.unplaced.unknownHorizon", {
-            horizon: writtenHorizon,
-          })}
-    </Badge>
   )
 }

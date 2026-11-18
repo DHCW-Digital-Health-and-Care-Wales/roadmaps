@@ -190,9 +190,12 @@ function RoadmapView({
   const groups = useMemo(() => groupPageItems(pageItems), [pageItems])
   const navigation = usePlacementNavigation(groups, changes?.orders)
   const [itemsView, setItemsView] = useItemsView()
-  // The placement the page was in as another view was chosen, once it is drawn.
+  // The placement the page was in as another view was chosen, until it is drawn: set
+  // only by a change of view, so the effect's other runs, as `align` follows the
+  // pinned header's height, find none.
   const keptInView = useRef<JumpTarget | null>(null)
   const chooseView = (view: ItemsView) => {
+    if (view === itemsView) return
     keptInView.current = navigation.current
     setItemsView(view)
   }

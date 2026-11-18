@@ -229,7 +229,7 @@ describe("a row (S4, S5, S10)", () => {
       "Edit First now two",
     ])
     // An item with no description shows its title alone.
-    expect(itemOf("Last now").querySelector("p")).toBeNull()
+    expect(within(itemOf("Last now")).queryByRole("paragraph")).toBeNull()
   })
 
   it("shows, on a phone, the title with no description, the tag under it, and Move and Edit as icons", async () => {

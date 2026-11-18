@@ -7,20 +7,23 @@ import { localise } from "@/domain/roadmap/localised-text"
 import type { Organisation } from "@/domain/roadmap/organisation"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { useLanguage } from "@/i18n"
+import { TABLET_WIDTH, useMediaQuery } from "@/lib/use-media-query"
 import { cn } from "@/lib/utils"
 
-import { HorizonFlag, ItemFields } from "./item-fields"
+import { HorizonFlag } from "./horizon-flag"
+import { ItemFields } from "./item-fields"
 
 export interface CompactItemRowProps {
   item: RoadmapItem
   /** The organisation list, which the item's `organisationIds` name (ADR-014). */
   organisations: readonly Organisation[]
-  /** Whether the row is a desktop's one line, or a phone's title on its lines. */
-  wide: boolean
   /** Its pending tag, "Changed" or "New", if it has one. */
   tag?: ReactNode
-  /** Move and Edit, at the row's end. */
-  actions: ReactNode
+  /**
+   * Move and Edit, at the row's end: in words on a desktop's line (`wide`), as icons on
+   * a phone's (D12).
+   */
+  actions: (wide: boolean) => ReactNode
   /** "Undo changes" or Remove, at the foot of the opened row, if the item has one. */
   drop?: ReactNode
 }
@@ -28,10 +31,10 @@ export interface CompactItemRowProps {
 /**
  * A roadmap item as a row of the compact view (STY-067): a chevron that opens the row
  * in place, its title as a heading, then Move and Edit, always at the row's end. From
- * a tablet's width (`wide`) one line that never wraps (S4): the title, then the start
- * of its description in the room the title leaves, each cut with an ellipsis, then an
- * unplaced item's flag and the pending tag; the title's whole text is still its
- * heading's. Narrower, the title on the lines it needs, with no description, and the
+ * a tablet's width one line that never wraps (S4): the title, then the start of its
+ * description in the room the title leaves, each cut with an ellipsis, then an
+ * unplaced item's flag, cut to a quarter of the line, and the pending tag; each keeps
+ * its whole text for assistive technology. Narrower, the title on the lines it needs, with no description, and the
  * flag and the tag under it (S5, D10).
  *
  * Opened, its title shows whole, then every field the item has, as a card labels and
@@ -41,7 +44,6 @@ export interface CompactItemRowProps {
 export function CompactItemRow({
   item,
   organisations,
-  wide,
   tag,
   actions,
   drop,
@@ -49,12 +51,11 @@ export function CompactItemRow({
   const { t } = useTranslation()
   const language = useLanguage()
   const id = useId()
+  const wide = useMediaQuery(TABLET_WIDTH)
   const [open, setOpen] = useState(false)
   const title = localise(item.title, language)
   const description = item.description && localise(item.description, language)
-  const flag = item.writtenHorizon !== null && (
-    <HorizonFlag writtenHorizon={item.writtenHorizon} />
-  )
+  const horizon = item.writtenHorizon
   const wholeClasses = "wrap-break-word whitespace-pre-line"
 
   return (
@@ -106,23 +107,29 @@ export function CompactItemRow({
                 </p>
               )}
             </div>
-            {flag && <div className="flex shrink-0 py-1">{flag}</div>}
+            {horizon !== null && (
+              // Gives way before the title, which keeps three quarters of the line.
+              <div className="flex max-w-1/4 min-w-0 py-1">
+                <HorizonFlag writtenHorizon={horizon} cut />
+              </div>
+            )}
             {tag && <div className="flex shrink-0 py-1">{tag}</div>}
           </>
         ) : (
           <div className="flex min-w-0 flex-1 flex-col items-start gap-1.5 py-1">
             <h3 className={cn("text-body font-bold", wholeClasses)}>{title}</h3>
-            {flag}
+            {horizon !== null && <HorizonFlag writtenHorizon={horizon} />}
             {tag}
           </div>
         )}
-        <div className="flex shrink-0 gap-2">{actions}</div>
+        <div className="flex shrink-0 gap-2">{actions(wide)}</div>
       </div>
       {open && (
         <div
           id={id}
           className={cn(
             "flex flex-col gap-3",
+            // Under the title: the row's left padding, the 32px chevron and the gap.
             wide ? "pr-4 pb-4 pl-13" : "pr-3 pb-3 pl-11",
           )}
         >

@@ -5,7 +5,8 @@ import type { Organisation } from "@/domain/roadmap/organisation"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { useLanguage } from "@/i18n"
 
-import { HorizonFlag, ItemFields } from "./item-fields"
+import { HorizonFlag } from "./horizon-flag"
+import { ItemFields } from "./item-fields"
 
 export interface RoadmapItemCardProps {
   item: RoadmapItem

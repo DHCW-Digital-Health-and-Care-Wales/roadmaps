@@ -93,7 +93,8 @@ report in the conversation only.
      diff: README, ADRs, `AGENTS.md` guides, `delivery-notes.md`, workflows,
      scripts and config that a changed command, key, route or default now
      makes false; grep for the old form. In a delivery PR, a guide file made
-     false goes to its handoff for the retrospective, not into the diff.
+     false goes to its handoff for the retrospective, unless its record
+     names that change.
    - **Inconsistent failure.** A helper returning `null` where its sibling
      throws; a broad `catch` that swallows or turns an abort into an error; an
      `AppError` kind chosen differently for the same cause in two adapters;

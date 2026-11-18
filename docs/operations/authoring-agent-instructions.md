@@ -109,13 +109,14 @@ Read the `AGENTS.md` along each changed path's directory ancestry, including
 referenced cross-area conventions; explicit conditional navigation avoids
 loading unrelated rules.
 
-A delivery PR, the one delivering a story, defect or chore, leaves every
-**guide file** (an `AGENTS.md` or `CLAUDE.md`, or any file under
-`.agents/skills/` or `.claude/agents/`) as it found it; only its
-retrospective edits one, in its own PR, so the owner sees every change that
-can alter future delivery. The delivery names each learning for rungs 4 and
-5, and each guide line it makes false, in its handoff for the retrospective
-to weigh.
+A delivery PR changes a **guide file** (an `AGENTS.md` or `CLAUDE.md`, or
+any file under `.agents/skills/` or `.claude/agents/`) only when the owner
+asked for that change: its record's scope, or the owner's request, names it.
+Any other guide change in a delivery is **incidental**, and only a
+retrospective makes it, in its own PR, so the owner sees every change that
+can alter future delivery. The delivery names each such learning for rungs 4
+and 5, and each guide line it makes false, in its handoff for the
+retrospective to weigh.
 
 ## How to write it
 

@@ -100,9 +100,10 @@ Google message: the domain and infrastructure layers emit codes (`AppError.kind`
 
 Canonical patterns for each surface built so far are in
 `references/patterns.md`, one heading per surface. A delivery that sets a new
-pattern names it in its handoff, and its retrospective adds it, since only a
-retrospective edits a skill (`docs/operations/authoring-agent-instructions.md`,
-_Where it goes_). Start from the shape rather than from a blank line.
+pattern names it in its handoff, and its retrospective adds it, since a
+delivery makes no incidental skill change
+(`docs/operations/authoring-agent-instructions.md`, _Where it goes_). Start
+from the shape rather than from a blank line.
 
 ## Working order
 

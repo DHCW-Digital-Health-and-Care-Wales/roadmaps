@@ -58,6 +58,7 @@ moves to `_archive/`, where its row here still points.
 | [CHO-021](_archive/chores/CHO-021-the-prototype-check-gives-reviewers-frames-and-text.md) | The prototype page check writes a screenshot per artboard and a text extract, and step 8 hands both to reviewers                    | Done           |
 | [CHO-022](chores/CHO-022-the-prototype-stylesheet-draws-todays-shell.md)                  | The `ux-prototypes` stylesheet draws a roadmap's page in today's shell: the navigation, the stuck header and the pinned foot bar    | Proposed       |
 | [CHO-023](chores/CHO-023-prototype-a-layout-in-the-apps-own-code.md)                      | Whether the `ux-prototypes` skill offers a prototype built in the app's own code, as STY-065's was                                  | Needs grilling |
+| [CHO-024](chores/CHO-024-the-session-warning-draws-its-x-as-a-dialog-does.md)             | The session warning's corner X is level with its title and drawn once, as a dialog's is                                             | Proposed       |
 
 Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status token.
 

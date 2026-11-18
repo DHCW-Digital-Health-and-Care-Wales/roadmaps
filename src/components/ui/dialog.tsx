@@ -7,8 +7,8 @@
 // left-aligned, the title is DHCW's `text-heading-m` and the description body text;
 // buttons sit inline in their DOM order, wrapping on a phone. Upstream's corner close
 // button is kept, with one departure: its hidden "Close" is the caller's `closeLabel`,
-// since `components/ui` carries no copy. It scrolls with the title, which keeps clear of
-// it. Upstream's footer "Close", backdrop blur and muted footer band are gone.
+// since `components/ui` carries no copy. The title keeps clear of it (`pe-10`) and both
+// scroll together. Upstream's footer "Close", backdrop blur and muted footer band are gone.
 // `DialogClose` is the secondary button.
 import * as React from "react"
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
@@ -74,6 +74,7 @@ function DialogContent({
   closeLabel: string
   /** A write is under way: the button waits, as the form's Cancel does. */
   closeDisabled?: boolean
+  /** Upstream's switch. Off, `DialogTitle` still keeps its `pe-10` clear of the corner. */
   showCloseButton?: boolean
 }) {
   return (
@@ -92,6 +93,9 @@ function DialogContent({
           <DialogPrimitive.Close
             data-slot="dialog-close-button"
             disabled={closeDisabled}
+            // Its 32px square ends 16px from the edge, so its icon ends where the form's
+            // content does (the popup's `p-6`); `top-5.5` centres it on the title's row,
+            // and `DialogTitle`'s `pe-10` leaves it room.
             render={
               <Button
                 variant="ghost"

@@ -9,7 +9,7 @@
 - **Binding ADRs**: ADR-008, ADR-010, ADR-011
 - **Suggested model**: Sonnet — one component gains a cut that depends on measured
   height, with its copy and tests
-- **Delivered**: <PR URL>
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/168
 
 ## Summary
 

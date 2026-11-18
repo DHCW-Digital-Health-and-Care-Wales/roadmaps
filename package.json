@@ -23,6 +23,7 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:docs": "vitest run build/markdown-links.test.ts build/agent-guides.test.ts",
     "test:e2e": "playwright test",
     "worktree:setup": "./scripts/worktree/worktree.sh setup",
     "worktree:info": "./scripts/worktree/worktree.sh info",

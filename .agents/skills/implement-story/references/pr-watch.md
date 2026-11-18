@@ -12,7 +12,7 @@ not done.
 **Done** means all of these hold on the latest head:
 
 - every check on it (the CI/CD workflow's `Verify` and `E2E (Playwright)`
-  jobs, and any other), required or not, has succeeded or was skipped by its
+  jobs, or `Docs` on a documentation-only PR, and any other), required or not, has succeeded or was skipped by its
   own conditions, and none is pending; confirm the push's run with
   `gh run list --commit <head-sha>`;
 - GitHub reports the PR mergeable, with no conflict;

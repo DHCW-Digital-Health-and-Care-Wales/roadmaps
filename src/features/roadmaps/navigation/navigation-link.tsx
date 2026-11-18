@@ -1,5 +1,6 @@
 import { createLink } from "@tanstack/react-router"
-import type { ComponentProps, ReactElement, ReactNode } from "react"
+import { ListFilterIcon } from "lucide-react"
+import type { ComponentProps, ReactElement, ReactNode, Ref } from "react"
 import { useTranslation } from "react-i18next"
 
 import { UnpublishedDot } from "@/components/layout/unpublished-dot"
@@ -28,8 +29,11 @@ export type NavigationMark =
       unpublished?: boolean
       found?: FoundPart | null
     }
-  /** A number in a circle in a rail, and a dot beside the name in full. */
-  | { count: number }
+  /**
+   * A number in a circle in a rail, and a dot beside the name in full; `filters` ends it
+   * with a filter's icon in full, for the count that narrows the list (STY-063).
+   */
+  | { count: number; filters?: boolean }
 
 /** What every entry takes, a link or the text that stands where one cannot lead. */
 interface NavigationEntryShape {
@@ -46,10 +50,12 @@ interface NavigationEntryProps
     NavigationEntryShape {}
 
 /**
- * The entry holding the current page is DHCW's active blue. The entry carries it, not
- * the link: on the link it would sort after the focus fill and hide it.
+ * The entry holding the current page, or a pressed button, is DHCW's active blue. The
+ * entry carries it, not the link: on the link it would sort after the focus fill and hide
+ * it.
  */
-const entryClasses = "rounded-lg has-[[aria-current=page]]:bg-sidebar-accent"
+const entryClasses =
+  "rounded-lg has-[[aria-current=page]]:bg-sidebar-accent has-[[aria-pressed=true]]:bg-sidebar-accent"
 
 /** What a link and the text beside the links share: their size and place for the mark. */
 function boxClasses(rail: boolean): string {
@@ -135,6 +141,12 @@ function EntryLabel({ rail, name, mark, spoken }: EntryLabelProps) {
       <>
         <UnpublishedDot className={dotClasses} />
         <span className="min-w-0 wrap-break-word">{name}</span>
+        {mark.filters && (
+          <ListFilterIcon
+            aria-hidden="true"
+            className="ms-auto size-4 shrink-0"
+          />
+        )}
       </>
     )
   }
@@ -235,7 +247,7 @@ export const NavigationLink = createLink(NavigationEntry)
 
 /**
  * An entry that says something and leads nowhere, drawn as a link is: the count of
- * unpublished changes while there is no roadmap to lead to.
+ * unpublished changes while there is no roadmap to lead to, and no button to press.
  */
 export function NavigationText({ rail, name, mark }: NavigationEntryShape) {
   return (
@@ -244,6 +256,47 @@ export function NavigationText({ rail, name, mark }: NavigationEntryShape) {
       name={name}
       mark={mark}
       around={(label) => <span className={boxClasses(rail)}>{label}</span>}
+    />
+  )
+}
+
+interface NavigationButtonProps extends NavigationEntryShape {
+  /** Whether it is pressed, to sight and to a screen reader; none in a rail, where pressing always opens. */
+  pressed: boolean | undefined
+  onPress: () => void
+  /** Takes focus as it shows, where the Product Lead pressed its rail form. */
+  ref?: Ref<HTMLButtonElement>
+}
+
+/**
+ * An entry that does something rather than leads somewhere, drawn as a link is, and
+ * pressed or not as a toggle: the count of unpublished changes while two or more
+ * roadmaps have them, which shows only those roadmaps (STY-063).
+ */
+export function NavigationButton({
+  rail,
+  name,
+  mark,
+  pressed,
+  onPress,
+  ref,
+}: NavigationButtonProps) {
+  return (
+    <EntryItem
+      rail={rail}
+      name={name}
+      mark={mark}
+      around={(label) => (
+        <button
+          ref={ref}
+          type="button"
+          aria-pressed={pressed}
+          onClick={onPress}
+          className={cn(linkClasses(rail), "w-full text-start")}
+        >
+          {label}
+        </button>
+      )}
     />
   )
 }

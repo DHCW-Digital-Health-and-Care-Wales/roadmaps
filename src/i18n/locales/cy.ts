@@ -179,6 +179,18 @@ export const cy = {
         noMatch: "Does dim mapiau trywydd yn cyfateb i “{{query}}”",
         showingAll: "Yn dangos pob map trywydd",
       },
+      showingChanged_zero:
+        "Dim mapiau trywydd â newidiadau heb eu cyhoeddi i'w dangos",
+      showingChanged_one:
+        "Yn dangos y map trywydd â newidiadau heb eu cyhoeddi yn unig",
+      showingChanged_two:
+        "Yn dangos y {{count, number}} fap trywydd â newidiadau heb eu cyhoeddi yn unig",
+      showingChanged_few:
+        "Yn dangos y {{count, number}} map trywydd â newidiadau heb eu cyhoeddi yn unig",
+      showingChanged_many:
+        "Yn dangos y {{count, number}} map trywydd â newidiadau heb eu cyhoeddi yn unig",
+      showingChanged_other:
+        "Yn dangos y {{count, number}} o fapiau trywydd â newidiadau heb eu cyhoeddi yn unig",
       families: {
         closeAll: "Cau pob un",
         closeAllName: "Cau pob un o'r teuluoedd",

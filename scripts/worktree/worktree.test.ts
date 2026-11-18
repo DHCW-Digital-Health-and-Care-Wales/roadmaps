@@ -61,6 +61,8 @@ async function setup(
 ): Promise<number> {
   await run(join(root, "scripts", "worktree", "worktree.sh"), ["setup"], {
     env: { ...env, ...extraEnv },
+    // Kills a hung script, which would otherwise outlive the test and spin on.
+    timeout: 30_000,
   })
   return slotOf(root)
 }

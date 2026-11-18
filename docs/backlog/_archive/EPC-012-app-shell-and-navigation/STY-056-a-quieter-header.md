@@ -10,7 +10,7 @@
 - **Binding ADRs**: ADR-010, ADR-003, ADR-008
 - **Suggested model**: Sonnet — rearranges existing controls; ADR-003's synchronous
   connect is the one trap
-- **Delivered**: _(the PR's address is added once it exists)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/147
 
 ## Summary
 

@@ -214,6 +214,25 @@ export function addItemButtons(page: Page, language: Language = "en"): Locator {
 }
 
 /**
+ * Gives a roadmap one pending change: opens its page and retitles the item `item`, so the
+ * roadmap has unpublished changes.
+ */
+export async function changeItem(
+  page: Page,
+  roadmapId: string,
+  item: string,
+): Promise<void> {
+  await page.goto(`./#/roadmaps/${roadmapId}`)
+  await expect(
+    page.getByRole("main").getByRole("heading", { level: 3, name: item }),
+  ).toBeVisible()
+  const form = await openEditItemDialog(page, item)
+  await form.getByRole("textbox", { name: "Title" }).fill(`${item}, edited`)
+  await form.getByRole("button", { name: "Done" }).click()
+  await expect(form).toBeHidden()
+}
+
+/**
  * Opens the item dialog to add an item, from "Add an item" with the page's actions, or
  * from `opener`.
  */

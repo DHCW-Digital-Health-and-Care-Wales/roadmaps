@@ -2,6 +2,7 @@ import type { Locator, Page } from "@playwright/test"
 
 import {
   addItem,
+  changeItem,
   openAddItemDialog,
   openAddRoadmapDialog,
   openEditItemDialog,
@@ -383,18 +384,8 @@ for (const theme of THEMES) {
     }) => {
       await page.goto("./#/roadmaps/producta")
       await connect(page)
-      for (const [roadmapId, item] of [
-        ["producta", "Example card with every column"],
-        ["productb", "Building the core service"],
-      ] as const) {
-        await page.goto(`./#/roadmaps/${roadmapId}`)
-        const form = await openEditItemDialog(page, item)
-        await form
-          .getByRole("textbox", { name: "Title" })
-          .fill(`${item}, edited`)
-        await form.getByRole("button", { name: "Done" }).click()
-        await expect(form).toBeHidden()
-      }
+      await changeItem(page, "producta", "Example card with every column")
+      await changeItem(page, "productb", "Building the core service")
       await page.goto("./#/families")
       const colours = await focusColours(page)
       const count = page

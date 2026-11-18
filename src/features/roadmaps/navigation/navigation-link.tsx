@@ -261,7 +261,10 @@ export function NavigationText({ rail, name, mark }: NavigationEntryShape) {
 }
 
 interface NavigationButtonProps extends NavigationEntryShape {
-  /** Whether it is pressed, to sight and to a screen reader; none in a rail, where pressing always opens. */
+  /**
+   * Whether it is pressed, to sight and to a screen reader; none in a rail, where pressing
+   * always opens.
+   */
   pressed: boolean | undefined
   onPress: () => void
   /** Takes focus as it shows, where the Product Lead pressed its rail form. */

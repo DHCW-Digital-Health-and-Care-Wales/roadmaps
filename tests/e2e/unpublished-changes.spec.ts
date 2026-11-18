@@ -1,7 +1,7 @@
 import type { Page } from "@playwright/test"
 
 import { disconnectFromHeader } from "./fixtures/account-menu"
-import { openEditItemDialog } from "./fixtures/dialogs"
+import { changeItem, openEditItemDialog } from "./fixtures/dialogs"
 import { tokenColour } from "./fixtures/look"
 import { openLongRoadmap } from "./fixtures/roadmap-page"
 import { connect, expect, test } from "./fixtures/test"
@@ -22,24 +22,12 @@ const navigation = (page: Page) =>
 const A_ITEM = "Example card with every column"
 const B_ITEM = "Building the core service"
 
-/** Gives a roadmap one pending change, by retitling the item `item` on its page. */
-async function change(page: Page, roadmapId: string, item: string) {
-  await page.goto(`./#/roadmaps/${roadmapId}`)
-  await expect(
-    page.getByRole("main").getByRole("heading", { level: 3, name: item }),
-  ).toBeVisible()
-  const form = await openEditItemDialog(page, item)
-  await form.getByRole("textbox", { name: "Title" }).fill(`${item}, edited`)
-  await form.getByRole("button", { name: "Done" }).click()
-  await expect(form).toBeHidden()
-}
-
 /** Two roadmaps with changes, then the families page, connected. */
 async function twoChangedThenFamilies(page: Page) {
   await page.goto("./#/roadmaps/producta")
   await connect(page)
-  await change(page, "producta", A_ITEM)
-  await change(page, "productb", B_ITEM)
+  await changeItem(page, "producta", A_ITEM)
+  await changeItem(page, "productb", B_ITEM)
   await page.goto("./#/families")
   await expect(
     page.getByRole("main").getByRole("heading", { level: 1 }),
@@ -119,7 +107,7 @@ test.describe("on a desktop", () => {
   }) => {
     await page.goto("./#/roadmaps/producta")
     await connect(page)
-    await change(page, "productb", B_ITEM)
+    await changeItem(page, "productb", B_ITEM)
     await page.goto("./#/families")
     const lead = navigation(page).getByRole("link", {
       name: "1 roadmap has unpublished changes",
@@ -162,7 +150,7 @@ test.describe("on a desktop", () => {
   }) => {
     await page.goto("./#/roadmaps/producta")
     await connect(page)
-    await change(page, "producta", A_ITEM)
+    await changeItem(page, "producta", A_ITEM)
     // On the one roadmap with changes, the count has nowhere else to lead.
     const one = navigation(page).getByText("1 roadmap has unpublished changes")
     await expect(one).toBeVisible()

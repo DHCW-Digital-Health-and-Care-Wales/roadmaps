@@ -7,7 +7,7 @@
 - **Epic**: [EPC-014-a-navigation-that-scales](README.md)
 - **Depends on**: STY-061 (preferred order), STY-060 (preferred order)
 - **Binding ADRs**: ADR-010, ADR-008, ADR-005
-- **Delivered**: (pending)
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/162
 - **Suggested model**: Sonnet — a window splitter on the sidebar's edge, with the pinned
   bars following a width they already read
 

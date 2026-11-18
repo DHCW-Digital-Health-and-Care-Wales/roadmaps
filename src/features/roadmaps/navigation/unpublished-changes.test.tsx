@@ -221,6 +221,26 @@ describe("on a desktop", () => {
     expect(region).toHaveTextContent(total(2))
   })
 
+  it("does not speak again as the language changes (S4)", async () => {
+    matchMediaQueries(DESKTOP_WIDTH)
+    const { user, router, i18n } = await renderShell()
+    await change(user, router, "producta", "A item")
+    const mutations: MutationRecord[] = []
+    const observer = new MutationObserver((records) => {
+      mutations.push(...records)
+    })
+    observer.observe(announcement(), {
+      childList: true,
+      characterData: true,
+      subtree: true,
+    })
+
+    await act(() => i18n.changeLanguage("cy"))
+    observer.disconnect()
+
+    expect(mutations).toEqual([])
+  })
+
   it("keeps the dots and the count folded to a rail (D3)", async () => {
     matchMediaQueries(DESKTOP_WIDTH)
     localStorage.setItem("roadmaps.navigation", "folded")

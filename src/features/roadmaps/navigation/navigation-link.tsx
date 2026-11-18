@@ -67,18 +67,17 @@ function linkClasses(rail: boolean): string {
   )
 }
 
+/** DHCW's yellow on navy, dark on the link's own yellow while it is focused. */
+const dotColour = "bg-focus group-focus-visible/entry:bg-focus-foreground"
+
 /**
- * The dot of an entry with unpublished changes: DHCW's yellow on navy, dark on the
- * link's own yellow when it is focused, at the end of the name, and in a rail at the
- * corner of the mark.
+ * The dot of an entry with unpublished changes, at the end of the name, and in a rail at
+ * the corner of the mark.
  */
 function EntryDot({ rail }: { rail: boolean }) {
   return (
     <UnpublishedDot
-      className={cn(
-        "bg-focus group-focus-visible/entry:bg-focus-foreground",
-        rail ? "absolute top-1.5 right-1.5" : "ms-auto",
-      )}
+      className={cn(dotColour, rail ? "absolute top-1.5 right-1.5" : "ms-auto")}
     />
   )
 }
@@ -128,7 +127,7 @@ function EntryLabel({ rail, name, mark, spoken }: EntryLabelProps) {
       </>
     ) : (
       <>
-        <UnpublishedDot className="bg-focus group-focus-visible/entry:bg-focus-foreground" />
+        <UnpublishedDot className={dotColour} />
         <span className="min-w-0 wrap-break-word">{name}</span>
       </>
     )

@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router"
-import { use, useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { MAIN_ID } from "@/components/layout/main-landmark"
@@ -15,45 +15,63 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { localise } from "@/domain/roadmap/localised-text"
+import type { Roadmap } from "@/domain/roadmap/roadmap"
 import { useLanguage } from "@/i18n"
 import { isPlainClick } from "@/lib/plain-click"
 
 import { useRoadmaps } from "../hooks/use-roadmaps"
-import { DisconnectQuestionContext } from "./disconnect-question-context"
+import { useDisconnectQuestion } from "./disconnect-question-context"
 import { usePendingChanges } from "./pending-changes-context"
 
+/** The roadmaps with changes, and how many there are. */
+interface ChangedRoadmaps {
+  count: number
+  /** Those of them the roadmap list holds, none while it is unread. */
+  roadmaps: readonly Roadmap[]
+}
+
 /**
- * Disconnect with pending edits: keep them for the next connection, discard, or stay. It
- * names each roadmap with changes, as a link to it (STY-055 D2); choosing one closes the
- * question, leaving the changes and the connection as they are, and moves focus to the
- * page it opens. What it names follows the changes while it is open, as a read can
- * drop a roadmap's; once it closes it keeps what it showed, so its text does not change
- * as it fades.
+ * The roadmaps with changes while the question `open`, following them as a read drops
+ * one; once it closes, what it showed, so its text does not change as it fades.
  */
-export function DisconnectQuestion() {
-  const { t } = useTranslation()
-  const language = useLanguage()
-  const question = use(DisconnectQuestionContext)
+function useChangedRoadmaps(open: boolean): {
+  shown: ChangedRoadmaps
+  current: ChangedRoadmaps
+} {
   const { changes } = usePendingChanges()
   const { data: listed } = useRoadmaps()
-  const chosen = useRef(false)
-  const open = question?.open === true
   const current = useMemo(
     () => ({
       count: changes.size,
-      // As the list shows them, those it holds: none before the roadmaps are read.
       roadmaps: (listed ?? []).filter(({ id }) => changes.has(id)),
     }),
     [changes, listed],
   )
   const [shown, setShown] = useState(current)
   if (open && shown !== current) setShown(current)
+  return { shown, current }
+}
+
+/**
+ * Disconnect with pending edits: keep them for the next connection, discard, or stay. It
+ * names each roadmap with changes, as a link to it (STY-055 D2); choosing one closes the
+ * question, leaving the changes and the connection as they are, and moves focus to the
+ * page it opens. Should a read leave nothing to keep while it is open, it disconnects, as
+ * Disconnect does at once with nothing pending.
+ */
+export function DisconnectQuestion() {
+  const { t } = useTranslation()
+  const language = useLanguage()
+  const { open, onKeep, onDiscard, onCancel } = useDisconnectQuestion()
+  const { shown, current } = useChangedRoadmaps(open)
+  const chosen = useRef(false)
   useEffect(() => {
     if (open) chosen.current = false
   }, [open])
-  if (!question) return null
-
-  const { onKeep, onDiscard, onCancel } = question
+  const nothingToKeep = open && current.count === 0
+  useEffect(() => {
+    if (nothingToKeep) onKeep()
+  }, [nothingToKeep, onKeep])
   const { count, roadmaps } = shown
   return (
     <AlertDialog

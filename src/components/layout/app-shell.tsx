@@ -23,6 +23,7 @@ import {
 import { NavigationSidebar } from "./navigation-sidebar"
 import { PageContainer } from "./page-container"
 import { PhaseBanner } from "./phase-banner"
+import { UnpublishedAnnouncement } from "./unpublished-announcement"
 import { UnpublishedRoadmapsContext } from "./unpublished-roadmaps-context"
 
 /**
@@ -38,7 +39,9 @@ export interface AppShellProps {
   navigation: (form: NavigationForm) => ReactNode
   /**
    * How many roadmaps have unpublished changes: the menu buttons carry a dot and say so
-   * while it is above 0 (STY-055 D4). The navigation draws its own count.
+   * while it is above 0 (STY-055 D4), and a screen reader is told when it changes (S4).
+   * The navigation draws its own count. A prop, not a context from the route, so a shell
+   * without a count is a type error.
    */
   unpublishedRoadmaps: number
   children: ReactNode
@@ -146,6 +149,7 @@ export function AppShell({
           >
             {t("layout.skipToContent")}
           </a>
+          <UnpublishedAnnouncement count={unpublishedRoadmaps} />
           {desktop ? (
             <NavigationSidebar folded={folded} onFoldedChange={setFolded}>
               {navigation(folded ? "rail" : "full")}

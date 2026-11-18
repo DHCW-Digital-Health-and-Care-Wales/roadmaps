@@ -1,6 +1,6 @@
 import { useParams } from "@tanstack/react-router"
 import { GlobeIcon, LayoutGridIcon } from "lucide-react"
-import { useId, useMemo, useState } from "react"
+import { useId, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 
 import type { NavigationForm } from "@/components/layout/app-shell"
@@ -54,7 +54,7 @@ export function RoadmapNavigation({ form }: RoadmapNavigationProps) {
     select: (params) => params.roadmapId,
   })
   // In the navigation's order, so the count steps through them as the Product Lead reads.
-  const withChanges = groups
+  const changedInOrder = groups
     .flatMap((group) => group.roadmaps)
     .filter((roadmap) => changed.has(roadmap.id))
     .map((roadmap) => roadmap.id)
@@ -74,7 +74,7 @@ export function RoadmapNavigation({ form }: RoadmapNavigationProps) {
         </ul>
         <UnpublishedTotal
           count={changed.size}
-          leadsTo={nextChangedRoadmap(withChanges, currentId)}
+          leadsTo={nextChangedRoadmap(changedInOrder, currentId)}
           rail={rail}
         />
       </div>
@@ -171,38 +171,29 @@ interface UnpublishedTotalProps {
 
 /**
  * How many roadmaps have unpublished changes, none shown while there are none (S3). It
- * leads to one of them, and the dots mark each (S2). The region around it speaks when the
- * number changes, which is when a roadmap gains its first change or loses its last, not on
- * every edit (S4); it is there, empty, before that, and says that none is left, to
- * screen readers alone, once the last has gone. A live region, not a `status`, which the
- * page's own notices are found by.
+ * leads to one of them, and the dots mark each (S2); where there is none else to lead to,
+ * it says so as text. What a screen reader is told of the number is the shell's
+ * (`UnpublishedAnnouncement`), which this drawer may not be in.
  */
 function UnpublishedTotal({ count, leadsTo, rail }: UnpublishedTotalProps) {
   const { t } = useTranslation()
-  const [hadChanges, setHadChanges] = useState(false)
-  if (count > 0 && !hadChanges) setHadChanges(true)
+  if (count === 0) return null
   const entry = {
     rail,
     name: t("layout.navigation.unpublished", { count }),
     mark: { count },
   }
   return (
-    <div aria-live="polite" aria-atomic="true">
-      {count > 0 ? (
-        <ul className="mt-1 flex flex-col gap-1">
-          {leadsTo === undefined ? (
-            <NavigationText {...entry} />
-          ) : (
-            <NavigationLink
-              to="/roadmaps/$roadmapId"
-              params={{ roadmapId: leadsTo }}
-              {...entry}
-            />
-          )}
-        </ul>
+    <ul className="mt-1 flex flex-col gap-1">
+      {leadsTo === undefined ? (
+        <NavigationText {...entry} />
       ) : (
-        hadChanges && <p className="sr-only">{entry.name}</p>
+        <NavigationLink
+          to="/roadmaps/$roadmapId"
+          params={{ roadmapId: leadsTo }}
+          {...entry}
+        />
       )}
-    </div>
+    </ul>
   )
 }

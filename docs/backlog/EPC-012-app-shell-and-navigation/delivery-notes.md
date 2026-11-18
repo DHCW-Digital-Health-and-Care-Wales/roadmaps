@@ -67,11 +67,13 @@
   control in it that follows width uses a container variant (`@max-5xl:`), not a
   viewport one. Its service name may wrap to two lines in Cymraeg until STY-056.
 - Unpublished changes in the shell (STY-055): the navigation's dot is `UnpublishedDot`
-  (`components/layout/`), its count a `NavigationLink` under "All roadmaps" inside an
-  `aria-live="polite"` region that is always there, empty without changes, so it speaks
-  when the number changes and not on an edit. It is no `role="status"`: the specs find
-  the page's own notices by that role. The count's target is `nextChangedRoadmap`. A
-  roadmap with a dot is named "Title, unpublished changes", so a spec finds it by that
-  name, and by the plain title while it has none. Disconnect's question is
-  `DisconnectQuestion`, rendered by the root route since its links need the router; its
-  state is held by `PendingChangesProvider`, above the router.
+  (`components/layout/`), its count a `NavigationLink` under "All roadmaps", or text
+  where it leads nowhere. What a screen reader is told is `UnpublishedAnnouncement`, a
+  live region `AppShell` always renders, since the navigation is not in the page while
+  a phone's drawer is closed; it speaks when the number changes, not on an edit. It is
+  no `role="status"`: the specs find the page's own notices by that role. The count's
+  target is `nextChangedRoadmap`. A roadmap with a dot is named "Title, unpublished
+  changes", so a spec finds it by that name, and by the plain title while it has none.
+  Disconnect's question is `DisconnectQuestion`, rendered by the root route since its
+  links need the router; `PendingChangesProvider`, above the router, holds whether it is
+  open.

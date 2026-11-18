@@ -33,12 +33,19 @@ const ROADMAP_ITEMS = {
 }
 
 const navigation = () => screen.getByRole("navigation", { name: "Roadmaps" })
-/** The live region that says the count, empty while there is none. */
-function countRegion(): HTMLElement {
-  const region = navigation().querySelector<HTMLElement>("[aria-live=polite]")
-  if (!region) throw new Error("The navigation has no live region")
+/** The shell's live region that says the count, empty until there has been one. */
+function announcement(): HTMLElement {
+  const region = document.querySelector<HTMLElement>("[aria-live=polite]")
+  if (!region) throw new Error("The shell has no live region")
   return region
 }
+/** The navigation's entry for the count: a link, or text where it leads nowhere. */
+const countEntry = () =>
+  within(navigation()).queryByText(/^\d+ roadmaps? ha(s|ve) unpublished/)
+const countLink = () =>
+  within(navigation()).getByRole("link", {
+    name: /^\d+ roadmaps? ha(s|ve) unpublished changes$/,
+  })
 const total = (count: number) =>
   count === 1
     ? "1 roadmap has unpublished changes"
@@ -85,7 +92,8 @@ describe("on a desktop", () => {
     await renderShell()
 
     await within(navigation()).findByRole("link", { name: "Product A roadmap" })
-    expect(countRegion()).toBeEmptyDOMElement()
+    expect(announcement()).toBeEmptyDOMElement()
+    expect(countEntry()).not.toBeInTheDocument()
     expect(
       within(navigation()).queryByText(/unpublished changes/),
     ).not.toBeInTheDocument()
@@ -96,7 +104,8 @@ describe("on a desktop", () => {
     const { user, router } = await renderShell()
     await changeTwo(user, router)
 
-    expect(within(countRegion()).getByRole("link")).toHaveTextContent(total(2))
+    expect(countLink()).toHaveTextContent(total(2))
+    expect(announcement()).toHaveTextContent(total(2))
     const nav = within(navigation())
     expect(
       nav.getByRole("link", { name: "Product A roadmap, unpublished changes" }),
@@ -120,7 +129,7 @@ describe("on a desktop", () => {
     matchMediaQueries(DESKTOP_WIDTH)
     const { user, router } = await renderShell()
     await changeTwo(user, router)
-    const count = () => within(countRegion()).getByRole("link")
+    const count = countLink
 
     expect(count()).toHaveAttribute("href", "/roadmaps/producta")
     await user.click(count())
@@ -135,7 +144,7 @@ describe("on a desktop", () => {
     matchMediaQueries(DESKTOP_WIDTH)
     const { user, router } = await renderShell()
     await change(user, router, "producta", "A item")
-    expect(countRegion()).toHaveTextContent(total(1))
+    expect(announcement()).toHaveTextContent(total(1))
 
     await user.click(
       within(screen.getByRole("main")).getByRole("button", {
@@ -150,9 +159,11 @@ describe("on a desktop", () => {
 
     // Nothing shows, and a screen reader is told that none is left.
     await waitFor(() => {
-      expect(countRegion()).toHaveTextContent("No roadmaps have unpublished")
+      expect(announcement()).toHaveTextContent("No roadmaps have unpublished")
     })
-    expect(within(countRegion()).queryByRole("link")).not.toBeInTheDocument()
+    expect(
+      within(navigation()).queryByRole("link", { name: /^\d+ roadmaps? ha/ }),
+    ).not.toBeInTheDocument()
     expect(
       within(navigation()).getByRole("link", { name: "Product A roadmap" }),
     ).toBeInTheDocument()
@@ -164,8 +175,10 @@ describe("on a desktop", () => {
     await change(user, router, "producta", "A item")
 
     const nav = within(navigation())
-    expect(within(countRegion()).queryByRole("link")).not.toBeInTheDocument()
-    expect(countRegion()).toHaveTextContent(total(1))
+    expect(
+      within(navigation()).queryByRole("link", { name: /^\d+ roadmaps? ha/ }),
+    ).not.toBeInTheDocument()
+    expect(announcement()).toHaveTextContent(total(1))
     await waitFor(() => {
       expect(
         nav
@@ -175,12 +188,12 @@ describe("on a desktop", () => {
     })
   })
 
-  it("speaks only when the number changes, not on a second edit of a roadmap (S4)", async () => {
+  it("speaks only when the number changes, not on a second edit or as the Product Lead moves between pages (S4)", async () => {
     matchMediaQueries(DESKTOP_WIDTH)
     const { user, router } = await renderShell()
-    const region = countRegion()
+    const region = announcement()
     await change(user, router, "producta", "A item")
-    expect(region).toBe(countRegion())
+    expect(region).toBe(announcement())
     expect(region).toHaveTextContent(total(1))
 
     const mutations: MutationRecord[] = []
@@ -193,6 +206,14 @@ describe("on a desktop", () => {
       subtree: true,
     })
     await editItemText(user, "A item, edited", "Title", "A item, edited again")
+    // The count's entry in the navigation turns to text and back as its roadmap opens.
+    await act(() => router.navigate({ to: "/families" }))
+    await act(() =>
+      router.navigate({
+        to: "/roadmaps/$roadmapId",
+        params: { roadmapId: "producta" },
+      }),
+    )
     observer.disconnect()
 
     expect(mutations).toEqual([])
@@ -241,8 +262,10 @@ describe("on a desktop", () => {
         within(navigation()).queryByRole("link", { name: "Product A roadmap" }),
       ).not.toBeInTheDocument()
     })
-    expect(countRegion()).toHaveTextContent(total(1))
-    expect(within(countRegion()).queryByRole("link")).not.toBeInTheDocument()
+    expect(announcement()).toHaveTextContent(total(1))
+    expect(
+      within(navigation()).queryByRole("link", { name: /^\d+ roadmaps? ha/ }),
+    ).not.toBeInTheDocument()
   })
 })
 
@@ -268,6 +291,19 @@ describe("on a phone", () => {
     ).toBeInTheDocument()
     await change(user, router, "productb", "B item")
     expect(menuButton(`Menu, ${total(2)}`)).toBeInTheDocument()
+  })
+
+  it("tells a screen reader of the count with the drawer closed (S4, D4)", async () => {
+    const { user, router } = await renderShell()
+    expect(announcement()).toBeEmptyDOMElement()
+
+    await change(user, router, "producta", "A item")
+    expect(announcement()).toHaveTextContent(total(1))
+    await change(user, router, "productb", "B item")
+    expect(announcement()).toHaveTextContent(total(2))
+    expect(
+      screen.queryByRole("navigation", { name: "Roadmaps" }),
+    ).not.toBeInTheDocument()
   })
 
   it("shows the dots and the count inside the drawer (D4)", async () => {
@@ -354,7 +390,7 @@ describe("Disconnect's question (D2)", () => {
       expect(screen.getByRole("main")).toHaveFocus()
     })
     expect(authClient.disconnect).not.toHaveBeenCalled()
-    expect(countRegion()).toHaveTextContent(total(2))
+    expect(announcement()).toHaveTextContent(total(2))
   })
 
   it("stays open for a link opened elsewhere, with a modifier key", async () => {
@@ -395,6 +431,22 @@ describe("Disconnect's question (D2)", () => {
     expect(
       question.getByText(/You've changed 1 roadmap without publishing/),
     ).toBeInTheDocument()
+  })
+
+  it("disconnects when a read leaves nothing to keep while it is open", async () => {
+    matchMediaQueries(DESKTOP_WIDTH)
+    const { user, router, queryClient, authClient } = await renderShell()
+    await change(user, router, "producta", "A item")
+    await askToDisconnect(user)
+
+    act(() => {
+      queryClient.setQueryData(roadmapKeys.list(), [])
+    })
+
+    await waitFor(() => {
+      expect(authClient.disconnect).toHaveBeenCalledTimes(1)
+    })
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument()
   })
 
   it("keeps its count and names none while the roadmaps are being read again", async () => {

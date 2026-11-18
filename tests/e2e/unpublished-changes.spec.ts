@@ -100,6 +100,7 @@ test.describe("on a desktop", () => {
       name: "Product A roadmap, unpublished changes",
     })
 
+    // Reached by the keyboard, as `:focus-visible` needs: a script's focus() alone is not.
     await entry.focus()
     await page.keyboard.press("Shift+Tab")
     await page.keyboard.press("Tab")
@@ -174,10 +175,11 @@ test.describe("on a desktop", () => {
       .click()
 
     await expect(one).toBeHidden()
-    // Nothing shows; a screen reader is told that none is left.
-    await expect(
-      navigation(page).getByText("No roadmaps have unpublished changes"),
-    ).toHaveClass(/sr-only/)
+    // Nothing shows; the shell tells a screen reader that none is left.
+    await expect(page.locator("[aria-live=polite]")).toHaveText(
+      "No roadmaps have unpublished changes",
+    )
+    await expect(page.locator("[aria-live=polite]")).toHaveClass(/sr-only/)
     await expect(
       navigation(page).getByRole("link", { name: /unpublished changes/ }),
     ).toHaveCount(0)

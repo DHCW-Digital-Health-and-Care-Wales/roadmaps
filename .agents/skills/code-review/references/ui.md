@@ -17,17 +17,14 @@ working order, and grade and report findings as it sets.
   deploy only from `main` (`actionlint` clean).
 - **Live regions.** Trace each `role=status`, `role=alert` and `aria-live`
   region (page notices, the session warning's announcements) through every
-  change of state. A region in the accessibility tree speaks new text or
-  swapped nodes inside it; an alert also speaks as it renders, while a polite
-  region that mounts holding its text may say nothing. Check that a polite
-  region is in the tree before the news comes, not in a closed drawer's or
-  dialog's portal, nor outside an open modal, which Base UI hides from all but
-  `[aria-live]` elements. News leaves it text to speak, an emptying included (it says none
-  is left rather than clearing). A swapped visible entry or a language switch
-  is not news: an `sr-only` announcer holds the text it said and stays quiet
-  through them, while visible status text follows the language and is re-read.
-  A repeated message is spoken again through a new node inside a region that
-  stays mounted (a fresh `key`), or by remounting an alert.
+  change of state. Check that a polite region is in the accessibility tree
+  before its news comes: not in a closed drawer's or dialog's portal, nor
+  outside an open modal, where Base UI hides all but `[aria-live]` elements.
+  News leaves it text to speak, so an emptying says none is left rather than
+  clearing. A swapped visible entry or a language switch is not news: an
+  `sr-only` announcer keeps the text it said. A repeated message is spoken
+  again through a new node in a mounted region (a fresh `key`), or a
+  remounted alert.
 - **Localisation and copy (ADR-008).** UI copy comes from catalogue keys
   mapped from codes (``t(`errors.${error.kind}`)``,
   ``t(`auth.status.${state.status}`)``); domain and infrastructure emit codes,
@@ -59,6 +56,6 @@ working order, and grade and report findings as it sets.
 - **Responsive layout.** Check a changed screen at 375 px and 200% zoom, and a
   changed row of controls in Welsh at the widths
   `.agents/skills/implement-story/references/validation.md` sets for visible UI,
-  where each wider layout arrives at its narrowest. For a stuck or pinned bar,
-  whose overflow a `scrollWidth` check misses, the evidence is as
-  `tests/e2e/AGENTS.md` sets.
+  where each wider layout arrives at its narrowest. A stuck or pinned bar is
+  `position: fixed`, so a page `scrollWidth` check misses its overflow: its
+  evidence is each control in the viewport.

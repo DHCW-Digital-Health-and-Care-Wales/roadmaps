@@ -333,6 +333,8 @@ for (const { width, language, placement, publish } of [
     const row = page.locator("[data-stuck]")
     await expect(row.getByRole("button", { name: publish })).toBeVisible()
 
+    // The stuck row is `position: fixed`: a control past its edge never widens the
+    // page, so the `scrollWidth` check below passes over it.
     for (const control of await row.getByRole("button").all()) {
       await expect(control, await control.innerText()).toBeInViewport({
         ratio: 1,

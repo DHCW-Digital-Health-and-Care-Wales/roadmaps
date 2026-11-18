@@ -66,10 +66,6 @@ tours.
   `GITHUB_REPOSITORY=DHCW-Digital-Health-and-Care-Wales/roadmaps-editor`.
 - Snapshot a `main`, header, menu, dialog, form or notice, never the footer, whose
   version changes per build.
-- A stuck or pinned bar is `position: fixed`, so a control past its edge never widens
-  the page and a `scrollWidth` check passes. Once the bar is stuck or pinned, hold each
-  control it keeps in view (a pinned foot's bar, not its scrolling notices) with
-  `toBeInViewport({ ratio: 1 })`.
 - Compare a computed style with the token it comes from, `tokenColour(page, "--token")`
   (`fixtures/look.ts`), never a copied colour.
 - The focus tours need every tab stop to match `focus-fill`, `focus-ring` or

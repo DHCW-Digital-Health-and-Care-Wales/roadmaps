@@ -238,6 +238,32 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expectNoAxeViolations(page, theme)
     })
 
+    test("the navigation's families: one closed, all closed, and in the drawer (STY-062)", async ({
+      page,
+    }) => {
+      await page.goto("./")
+      await connect(page)
+      const navigation = page.getByRole("navigation", { name: "Roadmaps" })
+      await navigation.getByRole("button", { name: "Single Record" }).click()
+      await expectNoAxeViolations(page, theme)
+
+      await navigation
+        .getByRole("button", { name: "Close all families" })
+        .click()
+      await expect(
+        navigation.getByRole("button", { name: "Open all families" }),
+      ).toBeFocused()
+      await expectNoAxeViolations(page, theme)
+
+      await page.setViewportSize({ width: 375, height: 800 })
+      await page
+        .getByRole("banner")
+        .getByRole("button", { name: "Menu" })
+        .click()
+      await expect(page.getByRole("dialog", { name: "Menu" })).toBeVisible()
+      await expectNoAxeViolations(page, theme)
+    })
+
     for (const [language, connectName, itemTitle] of [
       ["en", "Connect Google", "Example card with every column"],
       ["cy", "Cysylltu â Google", "Cerdyn enghreifftiol gyda phob colofn"],

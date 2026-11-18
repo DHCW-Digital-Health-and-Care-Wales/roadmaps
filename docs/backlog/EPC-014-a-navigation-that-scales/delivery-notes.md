@@ -11,3 +11,11 @@
   rather than filtering in `RoadmapNavigation`.
 - The shell's top row is `NavigationLandmark`'s `top`; its list, the element that
   scrolls, is `[data-slot=navigation-list]`.
+- The closed families are `useNavigationSearch()`'s `closed`, `toggleFamily` and
+  `toggleAllFamilies`; a new narrowing keeps `foldable` (`roadmap-navigation.tsx`) false
+  so families show as plain headings, and `narrowGroups` already ignores `closed`.
+- A reload ends the Google session: an E2E scenario that reloads connects again before
+  reading the navigation. A family's storage key is `nameKey` of its English name, so
+  "Single Record" is `singlerecord`.
+- A button on the navy navigation is `Button variant="navigation"`; `ghost` with class
+  overrides hides the focus fill.

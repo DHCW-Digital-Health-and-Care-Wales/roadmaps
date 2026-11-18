@@ -260,6 +260,25 @@ roadmaps.navigation.search.noMatch      No roadmaps match “xyz”
 roadmaps.navigation.search.showingAll   Showing all roadmaps
 ```
 
+## Navigation families
+
+**Shape:** a family's name is its own button, so no verb of ours; the one button over
+them says what it does to every family, "Close all" while any is open and "Open all" once
+all are closed, and its accessible name adds the noun ("Close all families") so the words
+shown are inside it. Where a language cannot continue the visible words (Cymraeg), the
+visible label and the name are both whole. A closed family with changes reuses the
+roadmap's phrase, "Single Record, unpublished changes". What a live region says is a
+short fact: "All families closed".
+
+```
+roadmaps.navigation.families.closeAll      Close all
+roadmaps.navigation.families.closeAllName  Close all families
+roadmaps.navigation.families.openAll       Open all
+roadmaps.navigation.families.openAllName   Open all families
+roadmaps.navigation.families.allClosed     All families closed
+roadmaps.navigation.families.allOpened     All families open
+```
+
 ## Publish and save
 
 **Shape:** "Publish changes" on a published roadmap, "Save changes" on one that is

@@ -317,7 +317,7 @@ finding, so those lines are left out below. Each primary PR gained its record-on
     delivered. CHO-016 puts the reviewer's model and effort to the owner.
   - `main` moved under the run twice (#77, #91), each costing a rebase and a gate.
   - Tests followed the code in part on STY-040 and STY-047, the standing question of
-    [CHO-008](../../backlog/chores/CHO-008-settle-the-test-first-rule.md).
+    [CHO-008](../../backlog/_archive/chores/CHO-008-settle-the-test-first-rule.md).
 - Orchestration retro, in this record's PR: `metrics.md` is removed from `orchestrate` and
   `run-summary.md`. It held no entries in this run or in EPC-007's, was not kept in
   EPC-008's and stopped part-way in EPC-003's; each record was built from the progress
@@ -333,21 +333,21 @@ finding, so those lines are left out below. Each primary PR gained its record-on
   - The orchestrators' missing `merge` and `ci-wait` log lines: GitHub holds those times.
 - Follow-up work, the owner's, now the queue is done:
   - Check the two writes against a real test spreadsheet:
-    [CHO-010](../../backlog/chores/CHO-010-check-adding-a-roadmap-against-a-real-spreadsheet.md)
+    [CHO-010](../../backlog/_archive/chores/CHO-010-check-adding-a-roadmap-against-a-real-spreadsheet.md)
     and
-    [CHO-015](../../backlog/chores/CHO-015-check-adding-an-item-against-a-real-spreadsheet.md).
+    [CHO-015](../../backlog/_archive/chores/CHO-015-check-adding-an-item-against-a-real-spreadsheet.md).
   - Triage
-    [DEF-008](../../backlog/defects/DEF-008-focus-is-lost-after-add-a-roadmap-closes-in-safari.md),
-    [DEF-009](../../backlog/defects/DEF-009-a-published-new-item-is-not-shown-when-the-read-after-it-fails.md)
+    [DEF-008](../../backlog/_archive/defects/DEF-008-focus-is-lost-after-add-a-roadmap-closes-in-safari.md),
+    [DEF-009](../../backlog/_archive/defects/DEF-009-a-published-new-item-is-not-shown-when-the-read-after-it-fails.md)
     and
-    [DEF-010](../../backlog/defects/DEF-010-a-publishing-dialog-changes-what-it-shows-once-written.md).
-    [DEF-007](../../backlog/defects/DEF-007-status-panels-have-rounded-corners.md) is also
+    [DEF-010](../../backlog/_archive/defects/DEF-010-a-publishing-dialog-changes-what-it-shows-once-written.md).
+    [DEF-007](../../backlog/_archive/defects/DEF-007-status-panels-have-rounded-corners.md) is also
     still Needs triage; the last handoffs' lists dropped it.
   - Decide
     [CHO-016](../../backlog/chores/CHO-016-the-quality-reviewer-reads-the-whole-diff.md)
     (Needs grilling).
   - Close
-    [CHO-007](../../backlog/chores/CHO-007-rebase-an-open-date-form-after-marking-updated.md)?
+    [CHO-007](../../backlog/_archive/chores/CHO-007-rebase-an-open-date-form-after-marking-updated.md)?
     Its path is now reachable only if the dialog opens while a publish is being written.
   - A fluent read of the Welsh, all machine-assisted: "Eitem newydd" (STY-047), "Golygu'r
     eitem hon" (STY-044) and STY-046's ten strings, with the reviewers' doubts in #89's
@@ -356,8 +356,8 @@ finding, so those lines are left out below. Each primary PR gained its record-on
   - Other records the run raised:
     [DEF-006](../../backlog/_archive/defects/DEF-006-a-refused-reconnect-drops-the-add-a-roadmap-dialog.md)
     (Won't fix, archived),
-    [CHO-012](../../backlog/chores/CHO-012-the-other-tests-use-the-shared-fixtures.md) and
-    [CHO-013](../../backlog/chores/CHO-013-the-page-focus-tour-tells-its-stops-apart.md)
+    [CHO-012](../../backlog/_archive/chores/CHO-012-the-other-tests-use-the-shared-fixtures.md) and
+    [CHO-013](../../backlog/_archive/chores/CHO-013-the-page-focus-tour-tells-its-stops-apart.md)
     (Proposed), and
     [CHO-014](../../backlog/chores/CHO-014-slim-the-e2e-suite.md) (Proposed; not to be
     selected until its measurements grow).

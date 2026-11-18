@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { CardGrid } from "./card-grid"
 
 /** Varied widths, so the placeholder reads as names rather than a pattern. */
-const NAME_WIDTHS = ["w-3/5", "w-2/5", "w-1/2", "w-2/3", "w-1/3", "w-3/5"]
+const nameWidthClasses = ["w-3/5", "w-2/5", "w-1/2", "w-2/3", "w-1/3", "w-3/5"]
 
 /** Placeholder cards shaped like the real cards, announced once as loading. */
 export function RoadmapGridSkeleton() {
@@ -16,7 +16,7 @@ export function RoadmapGridSkeleton() {
       <span className="sr-only">{t("roadmaps.loading")}</span>
       {/* Rows as even as the cards', so loading does not shift the layout. */}
       <CardGrid aria-hidden="true" evenRows>
-        {NAME_WIDTHS.map((width, index) => (
+        {nameWidthClasses.map((widthClasses, index) => (
           <li
             // Static placeholders: the index is a stable key.
             key={index}
@@ -24,7 +24,7 @@ export function RoadmapGridSkeleton() {
           >
             <Skeleton className="w-1.5 shrink-0 rounded-full" />
             <div className="flex flex-1 flex-col gap-2.5">
-              <Skeleton className={`h-4 ${width}`} />
+              <Skeleton className={`h-4 ${widthClasses}`} />
               <Skeleton className="h-3 w-1/3" />
               <Skeleton className="h-3 w-full" />
               <Skeleton className="h-3 w-4/5" />

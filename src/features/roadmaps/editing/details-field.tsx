@@ -158,7 +158,7 @@ const ACTIONS: readonly {
 ]
 
 /** The indent of each level a detail can show at. */
-const INDENTS = ["pl-0", "pl-5", "pl-10"] as const
+const indentClasses = ["pl-0", "pl-5", "pl-10"] as const
 
 interface DetailsEditorProps {
   lines: readonly EditorLine[]
@@ -501,7 +501,7 @@ function DetailsEditor({
               key={line.id}
               className={cn(
                 "flex items-start gap-1.5",
-                INDENTS[line.level],
+                indentClasses[line.level],
                 line.id === selected?.id && "bg-muted",
               )}
             >

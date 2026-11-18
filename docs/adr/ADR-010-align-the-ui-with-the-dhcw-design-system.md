@@ -5,7 +5,8 @@
   other recommendations). Partly supersedes ADR-005: its _Visual direction_ bullet only;
   the rest of ADR-005 stands.
 - Date: 2026-11-10 (amended in STY-015: menu-item focus; in STY-016: DHCW's logo lockup;
-  in STY-054: the dashboard shell adopted)
+  in STY-054: the dashboard shell adopted; in STY-054's retro: class lists in variables
+  lint cannot read)
 
 ## Context
 
@@ -46,7 +47,10 @@ _Visual direction_ bullet of [ADR-005](ADR-005-ui-stack-shadcn-base-ui-tailwind-
     - design properties in inline `style` (colour, font family, size and weight, line height,
       letter-spacing, radius, shadow), while layout properties stay allowed;
     - literal colours in SVG attributes;
-    - primitives referenced outside `globals.css`.
+    - primitives referenced outside `globals.css`;
+    - a class list reaching `className` or `cn()` through a variable lint cannot read:
+      one whose name ends neither `Classes` nor `_CLASSES` and is not one the plugin
+      reads by default.
   - Class merging (`cn`) is configured with the custom text and shadow names, so it
     never drops a type size as if it were a colour (tested).
   - _Exception:_ the one colour that comes from data, a roadmap's own colour

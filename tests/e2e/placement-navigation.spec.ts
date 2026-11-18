@@ -333,18 +333,13 @@ for (const { width, language, placement, publish } of [
     const row = page.locator("[data-stuck]")
     await expect(row.getByRole("button", { name: publish })).toBeVisible()
 
-    const outside = await row.getByRole("button").evaluateAll((buttons) =>
-      buttons
-        .filter((button) => {
-          const box = button.getBoundingClientRect()
-          // The layout's width, so a scroll bar hides no overflow.
-          return (
-            box.left < 0 || box.right > document.documentElement.clientWidth
-          )
-        })
-        .map((button) => button.textContent),
-    )
-    expect(outside).toEqual([])
+    // The stuck row is `position: fixed`: a control past its edge never widens the
+    // page, so the `scrollWidth` check below passes over it.
+    for (const control of await row.getByRole("button").all()) {
+      await expect(control, await control.innerText()).toBeInViewport({
+        ratio: 1,
+      })
+    }
     expect(
       await page.evaluate(
         () =>

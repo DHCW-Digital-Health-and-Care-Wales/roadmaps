@@ -7,6 +7,7 @@
 - **Epic**: [EPC-013-tidy-page-tops](../../EPC-013-tidy-page-tops/README.md)
 - **Depends on**: none
 - **Binding ADRs**: ADR-010, ADR-008
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/151
 - **Suggested model**: Sonnet — a layout change on two pages with copy removed, no
   new behaviour
 

@@ -153,13 +153,10 @@ function itemOf(title: string) {
   return item
 }
 
-/** A nested list as text: each entry's own text, with its sub-list's entries after it. */
+/** A nested list as text: each entry's own text (its block), with its sub-list's entries after it. */
 function outline(list: Element): unknown[] {
   return [...list.children].map((entry) => {
-    const own = [...entry.childNodes]
-      .filter((node) => node.nodeType === Node.TEXT_NODE)
-      .map((node) => node.textContent)
-      .join("")
+    const own = entry.querySelector(":scope > div")?.textContent ?? ""
     const sub = entry.querySelector(":scope > ul")
     return sub ? [own, outline(sub)] : own
   })
@@ -239,7 +236,7 @@ describe("RoadmapDetailPage items", () => {
       /^Cardiff and Vale, Swansea Bay$/,
     )
 
-    const details = field("Details")?.querySelector(":scope > ul")
+    const details = field("Details")?.querySelector("ul")
     expect(details && outline(details)).toEqual([
       ["First bullet point", [["Nested once", ["Nested twice"]]]],
       "Another top-level bullet point",

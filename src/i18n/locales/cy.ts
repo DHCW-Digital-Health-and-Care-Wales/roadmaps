@@ -358,6 +358,18 @@ export const cy = {
         organisations: "Sefydliadau",
         details: "Manylion",
       },
+      cut: {
+        more: "Dangos mwy",
+        less: "Dangos llai",
+        of: {
+          phase: "o'r cam ar gyfer {{item}}",
+          description: "o'r disgrifiad ar gyfer {{item}}",
+          expectedOutcome: "o'r canlyniad disgwyliedig ar gyfer {{item}}",
+          tags: "o'r tagiau ar gyfer {{item}}",
+          organisations: "o'r sefydliadau ar gyfer {{item}}",
+          details: "o'r manylion ar gyfer {{item}}",
+        },
+      },
     },
     edit: {
       edit: "Golygu",

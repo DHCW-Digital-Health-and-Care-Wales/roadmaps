@@ -392,6 +392,23 @@ export const en = {
         organisations: "Organisations",
         details: "Details",
       },
+      /**
+       * A field of a card that runs past three lines is cut, with a button that shows the
+       * rest in place (STY-066). The button's name is its words, then `of` for the field:
+       * "Show more of the description of First item".
+       */
+      cut: {
+        more: "Show more",
+        less: "Show less",
+        of: {
+          phase: "of the phase of {{item}}",
+          description: "of the description of {{item}}",
+          expectedOutcome: "of the expected outcome of {{item}}",
+          tags: "of the tags of {{item}}",
+          organisations: "of the organisations of {{item}}",
+          details: "of the details of {{item}}",
+        },
+      },
     },
     /** Editing a roadmap's English text, kept pending until published or saved. */
     edit: {

@@ -24,6 +24,7 @@ export function RefreshButton({ fetching, onRefresh }: RefreshButtonProps) {
       variant="secondary"
       disabled={fetching}
       focusableWhenDisabled
+      // The last class beats the size's padding for an icon at the start.
       className="max-sm:w-10 max-sm:gap-0 max-sm:px-0 max-sm:has-data-[icon=inline-start]:px-0"
       aria-busy={fetching}
       onClick={(event) => {

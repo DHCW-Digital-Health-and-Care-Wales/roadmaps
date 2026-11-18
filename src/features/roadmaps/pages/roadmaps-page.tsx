@@ -70,22 +70,24 @@ export function RoadmapsPage() {
 
   return (
     <section aria-labelledby={TITLE_ID}>
-      <div className="flex flex-col gap-1.5">
-        <h1 id={TITLE_ID} className="text-heading-xl">
-          {t("roadmaps.title")}
-        </h1>
-        {roadmaps && roadmaps.length > 0 && (
-          <p className="text-body-xs text-muted-foreground tabular-nums">
-            {unpublished > 0
-              ? t("roadmaps.countWithUnpublished", {
-                  total: roadmaps.length,
-                  unpublished,
-                })
-              : t("roadmaps.count", { count: roadmaps.length })}
-          </p>
-        )}
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-1.5">
+          <h1 id={TITLE_ID} className="text-heading-xl">
+            {t("roadmaps.title")}
+          </h1>
+          {roadmaps && roadmaps.length > 0 && (
+            <p className="text-body-xs text-muted-foreground tabular-nums">
+              {unpublished > 0
+                ? t("roadmaps.countWithUnpublished", {
+                    total: roadmaps.length,
+                    unpublished,
+                  })
+                : t("roadmaps.count", { count: roadmaps.length })}
+            </p>
+          )}
+        </div>
         {/* Wraps before the page would scroll sideways: the Welsh is the longer. */}
-        <div className="mt-2.5 flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           {addButton(toolbarAdd)}
           <RefreshButton fetching={isFetching} onRefresh={reload} />
         </div>

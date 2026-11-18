@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test"
+import type { Locator, Page } from "@playwright/test"
 
 import {
   EXAMPLE_INDEX_ROWS,
@@ -459,6 +459,15 @@ test("makes a roadmap out of step match its lists, telling a published one first
 test.describe("the top of the roadmap list (STY-058)", () => {
   const WIDTHS = [375, 640, 820, 1024, 1280] as const
 
+  // A class a button gains or loses at 640px arrives a frame late otherwise.
+  test.use({ reducedMotion: "reduce" })
+
+  async function boxOf(locator: Locator) {
+    const box = await locator.boundingBox()
+    if (!box) throw new Error("A part of the list's top has no box")
+    return box
+  }
+
   /** The 3 roadmaps, 1 not published: title, count, then Add a roadmap and Refresh. */
   async function openList(page: Page, width: number) {
     await page.setViewportSize({ width, height: 800 })
@@ -479,20 +488,13 @@ test.describe("the top of the roadmap list (STY-058)", () => {
     }) => {
       const { main, heading, count, add, refresh } = await openList(page, width)
 
-      const [h, c, a, r, first] = await Promise.all(
-        [
-          heading,
-          count,
-          add,
-          refresh,
-          main.getByRole("heading", { level: 2 }).first(),
-        ].map(async (locator) => {
-          const box = await locator.boundingBox()
-          if (!box) throw new Error("A part of the list's top has no box")
-          return box
-        }),
-      )
-      if (!h || !c || !a || !r || !first) throw new Error("No box")
+      const [h, c, a, r, first] = await Promise.all([
+        boxOf(heading),
+        boxOf(count),
+        boxOf(add),
+        boxOf(refresh),
+        boxOf(main.getByRole("heading", { level: 2 }).first()),
+      ])
       // A column: title, count, the row of actions, then the first family's heading.
       expect(c.y).toBeGreaterThanOrEqual(h.y + h.height)
       expect(a.y).toBeGreaterThanOrEqual(c.y + c.height)
@@ -508,15 +510,6 @@ test.describe("the top of the roadmap list (STY-058)", () => {
       expect(r.height).toBeCloseTo(40, 0)
       // Add a roadmap is as wide as its label, never the page's.
       expect(a.width).toBeLessThan(260)
-      // Neither the filler nor the families link is under the title.
-      await expect(
-        main.getByText("Every roadmap, published or not."),
-      ).toHaveCount(0)
-      await expect(
-        main.getByRole("link", {
-          name: "Families, categories and organisations",
-        }),
-      ).toHaveCount(0)
     })
   }
 
@@ -528,6 +521,15 @@ test.describe("the top of the roadmap list (STY-058)", () => {
     expect(icon?.width).toBeCloseTo(40, 0)
     expect(icon?.height).toBeCloseTo(40, 0)
     await expect(phone.refresh).toHaveAccessibleName("Refresh")
+    // Neither the filler nor the families link is under the title.
+    await expect(
+      phone.main.getByText("Every roadmap, published or not."),
+    ).toHaveCount(0)
+    await expect(
+      phone.main.getByRole("link", {
+        name: "Families, categories and organisations",
+      }),
+    ).toHaveCount(0)
     // The label is there for assistive technology, not drawn.
     const label = await phone.refresh.getByText("Refresh").boundingBox()
     expect(label?.width ?? 0).toBeLessThanOrEqual(1)

@@ -1,6 +1,6 @@
 # CHO-014: The E2E suite holds geometry, and repeats a run, only where that proves something
 
-- **Status**: Proposed — asked for by the owner (D1); measured here, no test changed yet; not to be selected until its measurements grow (D4); the focus tours stay in both themes (D7)
+- **Status**: Proposed — asked for by the owner (D1); measured here, no test changed yet; not to be selected until its measurements grow (D4); the focus tours stay in both themes (D7); S6 edits guide files, which a delivery PR now leaves to a retrospective, so ask the owner how it lands
 - **Type**: Refactor
 - **Area**: E2E (tests only)
 - **Epic**: standalone

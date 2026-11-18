@@ -2,7 +2,8 @@
 
 - **Status**: In progress — S1 in the backlog triage PR; S2 measured STY-051 and STY-050
   (Delivery), each read whole in one pass, and three earlier reviews over 100,000
-  characters after D1 are still unmeasured
+  characters after D1 are still unmeasured; a move to Opus under D1 edits guide files,
+  which a delivery PR now leaves to a retrospective, so ask the owner how it lands
 - **Type**: Chore
 - **Area**: Docs (agent definitions and skills)
 - **Epic**: standalone

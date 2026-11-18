@@ -52,10 +52,11 @@
 
 ## Items
 
-Durations are elapsed minutes. Every story PR drew no comment and no review on GitHub. CI
-(Verify, E2E) passed first time on every head pushed, so bot status at readiness was
-completed on the current head for all four. Each PR's opening push was followed within a
-minute by its record-only Delivered commit, the standard second push. No report or log
+Durations are elapsed minutes; a phase list leaves out short gaps between stages. Every
+story PR drew no comment and no review on GitHub. Each PR's opening push was followed
+within a minute by its record-only Delivered commit, the standard second push, whose CI run
+superseded the first. CI (Verify, E2E) passed on every run that completed, first time, so
+bot status at readiness was completed on the current head for all four. No report or log
 records a usage limit. A load-induced focus-assertion flake, the class DEF-013 and CHO-018
 already record, appeared in STY-062's and STY-063's full E2E runs and passed alone.
 
@@ -92,8 +93,8 @@ already record, appeared in STY-062's and STY-063's full E2E runs and passed alo
   [#157](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/157),
   1b96248, merged as 3266624. Reviews ended at 7cb5eef; 1b96248 is record-only.
 - Timing: delivery 50 (11:49–12:39): reading and before captures 2, implementation 4,
-  verification 15, review round 1 6, fixes and second full gate 13, after captures, round 2
-  and final pass 5. CI wait 7, PR to merge 9. Total 58.
+  verification 15, a 5-minute gap, review round 1 6, fixes and second full gate 13, after
+  captures, round 2 and final pass 5. CI wait 7, PR to merge 9. Total 58.
 - Reviews: 5 tasks (round 1 in three lanes; Sonnet's re-check; Sol's final fresh pass, run
   because a fix moved the closed-family state into a hook). Accepted: no P0–P3; 4 🟡 and
   5 💭, fixed. Declined: 1 💭 and 1 Opus note.
@@ -115,7 +116,7 @@ already record, appeared in STY-062's and STY-063's full E2E runs and passed alo
   fda3f12, merged as 82bd14f. Reviews ended at 377ccc5; fda3f12 is record-only.
 - Timing: delivery 66 (12:49–13:55): reading and before captures 3, implementation 8,
   verification 15, after captures and review round 1 9, fixes, rebase and second full gate
-  11, round 2 and Sol's final pass 18. CI wait 6, PR to merge 10. Total 76.
+  11, round 2 and Sol's final pass 18, retaken captures and PR 1. CI wait 6, PR to merge 10. Total 76.
 - Reviews: 5 tasks (round 1 in three lanes; Sonnet's re-check; Sol's final fresh pass).
   Accepted: 1 P3, 3 🟡 and 5 💭, fixed, plus a double announcement found as a handed-off
   note and fixed with a regression test. Declined: 2 💭 and 1 note.
@@ -177,18 +178,21 @@ already record, appeared in STY-062's and STY-063's full E2E runs and passed alo
 - Orchestration retro, in this record's PR: the owner's guide-file rule. The authoring guide
   (`docs/operations/authoring-agent-instructions.md`, _Where it goes_) defines a guide file
   and states the rule. `delegation.md` tells a delivery PR's reviewers to report one as a
-  blocker; `pr-watch.md`'s Done list checks the PR's file list before merging. The two
+  blocker; `pr-watch.md`'s Done list checks the PR's file list before merging. The three
   instructions that led deliveries to edit guide files now hand those edits to the
-  retrospective: the epic-close sweep in `docs/AGENTS.md` and the copywriter skill's
-  patterns line. `orchestrate`'s brief needs no line: every delivery agent reads
+  retrospective: the epic-close sweep in `docs/AGENTS.md`, the copywriter skill's patterns
+  line and the quality-review lens on text a change makes false. `orchestrate`'s brief needs no line: every delivery agent reads
   `delegation.md`. Considered and left as they are:
   - Outgoing orchestrators recorded their retro in the run handoff, not in their own report
     file. Nothing was lost, since each was a no-op; one-off.
   - The second full gate: two data points with a base move confounding one.
 - Follow-up work, the owner's:
-  - Decide whether a chore whose scope is itself a guide change, such as
-    [CHO-016](../../backlog/chores/CHO-016-the-quality-reviewer-reads-the-whole-diff.md),
-    is delivered by a retrospective under the new rule or is exempt from it.
+  - Decide how a chore whose scope is itself a guide change lands under the new rule: by a
+    retrospective, or exempt.
+    [CHO-016](../../backlog/chores/CHO-016-the-quality-reviewer-reads-the-whole-diff.md)
+    (a move to Opus) and
+    [CHO-014](../../backlog/chores/CHO-014-slim-the-e2e-suite.md) (S6) are the two live
+    ones; each Status now asks.
 - Next comparison: on the next queue with an epic close or new copy, whether any delivery
   PR's file list holds a guide file, and how long the retros take to land the patterns and
   notes the deliveries hand them.

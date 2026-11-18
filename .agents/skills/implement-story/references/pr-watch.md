@@ -20,7 +20,7 @@ not done.
 - the reviewers `delegation.md` sets have passed the latest head, or the last
   reviewed head differs from it only by fixes that _Review rounds_ exempts
   from review and the PR body's Review record lists, with no open P0/P1;
-- a delivery PR's file list (`gh pr view <n> --json files`) holds no guide
+- a delivery PR's file list (`gh pr diff <n> --name-only`) holds no guide
   file (`docs/operations/authoring-agent-instructions.md`, _Where it goes_);
 - every review, review comment or issue comment that raises a finding or asks
   a question is resolved, either fixed and pushed or answered on its thread

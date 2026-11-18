@@ -3,6 +3,7 @@ import type { Locator, Page } from "@playwright/test"
 import { openEditItemDialog } from "./fixtures/dialogs"
 import { type FakeTab, withTabItems } from "./fixtures/fake-sheets"
 import { tabTo } from "./fixtures/keyboard"
+import { scrollsSideways } from "./fixtures/layout"
 import type { Language } from "./fixtures/look"
 import {
   about,
@@ -333,11 +334,7 @@ test("is used by keyboard alone, in Cymraeg on a 375px phone, with no sideways s
 
   // "Jump to" alone: no row of links on a phone (STY-060 S1).
   await expect(placementLinks(page, "cy")).toHaveCount(0)
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= window.innerWidth,
-    ),
-  ).toBe(true)
+  expect(await scrollsSideways(page)).toBe(false)
 })
 
 // The longest name but the first placement's, which sits too close under the header
@@ -396,12 +393,6 @@ for (const { width, language, placement, publish } of [
         ratio: 1,
       })
     }
-    expect(
-      await page.evaluate(
-        () =>
-          document.documentElement.scrollWidth <=
-          document.documentElement.clientWidth,
-      ),
-    ).toBe(true)
+    expect(await scrollsSideways(page)).toBe(false)
   })
 }

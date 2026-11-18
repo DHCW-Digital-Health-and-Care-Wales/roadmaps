@@ -9,6 +9,7 @@
 - **Binding ADRs**: ADR-010, ADR-008, ADR-012, ADR-002
 - **Suggested model**: Opus — it reshapes the header block around the sticky strip, the
   roadmap dialog's two openers and the page's order at three widths, in two languages
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/166
 
 ## Summary
 

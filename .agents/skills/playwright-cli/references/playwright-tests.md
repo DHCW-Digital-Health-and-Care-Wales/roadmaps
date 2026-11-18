@@ -1,6 +1,6 @@
 # Running Playwright Tests
 
-To run Playwright tests, use `pnpm test:e2e` (it builds, serves on port 4173 and fakes Google; see `tests/e2e/AGENTS.md`), or `pnpm exec playwright test` for flags such as a single spec. To avoid opening the interactive html report, use `PLAYWRIGHT_HTML_OPEN=never` environment variable.
+To run Playwright tests, use `pnpm test:e2e` (it builds, serves on the checkout's preview port and fakes Google; see `tests/e2e/AGENTS.md`), or `pnpm exec playwright test` for flags such as a single spec. To avoid opening the interactive html report, use `PLAYWRIGHT_HTML_OPEN=never` environment variable.
 
 ```bash
 # Run all tests

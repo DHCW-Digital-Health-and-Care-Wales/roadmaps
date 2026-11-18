@@ -23,7 +23,10 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "worktree:setup": "./scripts/worktree/worktree.sh setup",
+    "worktree:info": "./scripts/worktree/worktree.sh info",
+    "worktree:teardown": "./scripts/worktree/worktree.sh teardown"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

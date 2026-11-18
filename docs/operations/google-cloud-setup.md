@@ -30,6 +30,8 @@ OAuth client. These steps use the Google Cloud console's _Google Auth Platform_ 
      no trailing slash):
      - `http://localhost:5173` (`pnpm dev`)
      - `http://localhost:4173` (optional: `pnpm preview`)
+     - optional: `http://localhost:21010`, `21020` and so on, to sign in from a parallel
+       worktree's `pnpm dev` (README, _Parallel worktrees_)
      - `https://dhcw-digital-health-and-care-wales.github.io` (production; **not**
        `https://dhcw-digital-health-and-care-wales.github.io/roadmaps-editor`, which
        Google rejects as it has a path)

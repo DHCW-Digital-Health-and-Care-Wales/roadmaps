@@ -41,6 +41,12 @@ note_if_behind_default_branch() {
 }
 note_if_behind_default_branch
 
+# A parallel worktree serves on its own ports (scripts/worktree/worktree.sh).
+if [ -f .env.worktree ]; then
+  echo "==> This worktree has its own ports, not 5173 and 4173:"
+  ./scripts/worktree/worktree.sh info || true
+fi
+
 # Only prepare remote (web) sessions; a local checkout is set up by its owner.
 if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
   exit 0

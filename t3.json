@@ -1,0 +1,28 @@
+{
+  "$schema": "https://t3.codes/schema/t3.json",
+  "defaultThreadEnvMode": "worktree",
+  "scripts": [
+    {
+      "name": "Setup worktree",
+      "command": "./scripts/worktree/worktree.sh setup",
+      "icon": "configure",
+      "runOnWorktreeCreate": true,
+      "async": false
+    },
+    {
+      "name": "Start dev server",
+      "command": "pnpm dev",
+      "icon": "play"
+    },
+    {
+      "name": "Worktree ports",
+      "command": "pnpm worktree:info",
+      "icon": "debug"
+    },
+    {
+      "name": "Tear down worktree",
+      "command": "pnpm worktree:teardown",
+      "icon": "configure"
+    }
+  ]
+}

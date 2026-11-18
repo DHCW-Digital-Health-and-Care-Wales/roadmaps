@@ -28,9 +28,10 @@ Report executed test counts and failures; zero tests or a skipped check is not
 validation. Preserve runner exit status when redirecting output. Capture
 verbose logs in a temporary path and summarize the evidence.
 
-`pnpm test:e2e` builds and serves the app on port 4173 and reuses a server
+`pnpm test:e2e` builds and serves the app on port 4173 (in a parallel
+worktree, its `PREVIEW_PORT`: `pnpm worktree:info`) and reuses a server
 already listening there locally: stop a stale `pnpm preview` first
-(`fuser -k 4173/tcp`).
+(`fuser -k <port>/tcp`).
 
 Run a suite you will wait for in the foreground with a long enough command
 timeout. To work alongside a suite, start it in the background and make sure

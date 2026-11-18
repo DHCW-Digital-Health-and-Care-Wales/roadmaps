@@ -23,8 +23,8 @@ passes.
 ## Measurement
 
 With the two exemptions removed, the test reports these broken links in the records
-as they stand at commit `0f7b22c`. Each target now sits under `docs/backlog/_archive/`, in the same `chores/` or
-`defects/` folder.
+as they stand at commit `0f7b22c`. Each target now sits under `docs/backlog/_archive/`,
+in the same `chores/` or `defects/` folder.
 
 | Record (`docs/analysis/delivery-runs/`)           | Broken links | Targets                                                               |
 | ------------------------------------------------- | ------------ | --------------------------------------------------------------------- |

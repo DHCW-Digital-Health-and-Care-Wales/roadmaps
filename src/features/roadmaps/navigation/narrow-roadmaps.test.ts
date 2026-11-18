@@ -58,6 +58,12 @@ describe("findIn", () => {
     expect(part && text.slice(part.start, part.end)).toBe("Care")
   })
 
+  it("runs a title's spaces together, as the search's are and the page shows them", () => {
+    const text = "Shared  care plans"
+    const part = findIn(text, searchKey("shared care"))
+    expect(part && text.slice(part.start, part.end)).toBe("Shared  care")
+  })
+
   it("finds nothing for a blank search or a missing one", () => {
     expect(findIn("Care record viewer", "")).toBeNull()
     expect(findIn("Care record viewer", "xyz")).toBeNull()

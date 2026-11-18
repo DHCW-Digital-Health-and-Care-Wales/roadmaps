@@ -38,9 +38,12 @@ export function findIn(text: string, key: string): FoundPart | null {
   const ends: number[] = []
   let index = 0
   for (const character of text) {
-    const parts = fold(character)
+    let parts = fold(character)
     const end = index + character.length
-    // An accent written apart from its letter folds to nothing: it ends that letter.
+    // Spaces run together, as the search's do and the page shows them.
+    if (parts === " " && folded.endsWith(" ")) parts = ""
+    // An accent written apart from its letter folds to nothing, as does a space after
+    // another: it ends the character before it.
     if (parts === "" && ends.length > 0) ends[ends.length - 1] = end
     folded += parts
     starts.push(...Array<number>(parts.length).fill(index))

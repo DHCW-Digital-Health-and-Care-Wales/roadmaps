@@ -114,12 +114,11 @@ describe("RoadmapsPage", () => {
       repository: scriptedRepository(roadmaps),
     })
     await main().findByText("3 roadmaps")
-    const headings = main().getAllByRole("heading", { level: 1 })
-    expect(headings).toHaveLength(1)
+    const heading = main().getByRole("heading", { level: 1 })
     const [first] = main().getAllByRole("link", { name: /roadmap$/ })
 
     // The header and the closed navigation hold stops of their own before the page.
-    await user.click(headings[0] as HTMLElement)
+    await user.click(heading)
     await user.tab()
     expect(main().getByRole("button", { name: "Add a roadmap" })).toHaveFocus()
     await user.tab()

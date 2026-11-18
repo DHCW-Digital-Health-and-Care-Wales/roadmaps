@@ -35,8 +35,8 @@ navigating: the app is light until the user chooses dark (ADR-005), so
 `colorScheme: "dark"` alone captures the light theme.
 
 Cover desktop (1280 px) and phone (375 px), light and dark mode where relevant,
-in English. Capture Welsh (`cy`) only when the record or the owner asks for it;
-tests and review hold Welsh widths without it. Save captures under
+in English, and in Welsh (`cy`) only when the record or the owner asks for it.
+Save captures under
 `.artifacts/screenshots/<record-id>/` at the root of your checkout (git-ignored)
 with descriptive names, e.g. `s1-roadmaps-desktop-dark-en-after.png`.
 

@@ -30,6 +30,7 @@ moves to `_archive/`, where its row here still points.
 | [EPC-013 Tidy page tops](_archive/EPC-013-tidy-page-tops/README.md)                                      | STY-058–STY-060: one stack on one left edge at the top of the roadmap list and a roadmap's page, one row of controls at the top and once scrolled, no back links (design G of the page headers UX analysis)                                     | Done   |
 | [EPC-014 A navigation that scales](_archive/EPC-014-a-navigation-that-scales/README.md)                  | STY-061–STY-064: search the navigation, close families one at a time or all together, show only the roadmaps with unpublished changes, and drag its width (the navigation UX analysis's prototype)                                              | Done   |
 | [EPC-015 A quieter top to a roadmap's page](_archive/EPC-015-a-quieter-roadmap-page-top/README.md)       | STY-065: the top of a roadmap's page in three rows (actions on the title's row, one line of facts ending in "Product details", the jump control), one Not published notice, a dismissible Beta banner                                           | Done   |
+| [EPC-016 A roadmap's items at a glance](EPC-016-a-roadmaps-items-at-a-glance/README.md)                  | STY-066–STY-067: a card cuts a field that runs past three lines, with "Show more"; a compact view shows each item as a row, chosen by a switch beside Add an item and kept on the device (designs A, D and G of the compact view UX analysis)   | Active |
 
 ## Chores
 
@@ -54,6 +55,7 @@ moves to `_archive/`, where its row here still points.
 | [CHO-019](chores/CHO-019-check-a-published-move-against-a-real-spreadsheet.md)            | Check STY-051's write (a moved item's row moved, with its cell write, in one request) against a real test spreadsheet               | Proposed       |
 | [CHO-020](chores/CHO-020-check-a-published-order-against-a-real-spreadsheet.md)           | Check STY-050's write (a placement's rows reordered, and a new item's row inserted, in one request) against a real test spreadsheet | Proposed       |
 | [CHO-021](_archive/chores/CHO-021-the-prototype-check-gives-reviewers-frames-and-text.md) | The prototype page check writes a screenshot per artboard and a text extract, and step 8 hands both to reviewers                    | Done           |
+| [CHO-022](chores/CHO-022-the-prototype-stylesheet-draws-todays-shell.md)                  | The `ux-prototypes` stylesheet draws a roadmap's page in today's shell: the navigation, the stuck header and the pinned foot bar    | Proposed       |
 | [CHO-023](chores/CHO-023-prototype-a-layout-in-the-apps-own-code.md)                      | Whether the `ux-prototypes` skill offers a prototype built in the app's own code, as STY-065's was                                  | Needs grilling |
 
 Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status token.

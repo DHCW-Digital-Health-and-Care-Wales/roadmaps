@@ -215,6 +215,11 @@ h1, which comes from the list before the items arrive: it must wait for an item 
   D1): Refresh stays available while the session has expired; pressed, it asks to
   reconnect first, then reads. Changes: S14 ("unavailable but focusable when not
   connected").
+- **D14** (owner, 2026-11-18, compact view UX analysis, _Outcome_): a field past three
+  lines is cut, with "Show more" to read the rest (STY-066), and a compact view shows
+  an item as a row, its other fields a press away (STY-067), both in
+  [EPC-016](../../EPC-016-a-roadmaps-items-at-a-glance/README.md). Changes: S2 and D3,
+  by which every field shows whole, once each is delivered.
 
 ## Starting point
 

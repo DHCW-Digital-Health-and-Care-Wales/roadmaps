@@ -135,9 +135,10 @@ set in `globals.css` and gives the card columns at 1280px: this delivery amends 
 - **A touch drag is caught only while the pointer can be captured** (agent): if the browser
   has already lost the pointer, `setPointerCapture` throws and the drag does not start.
 - **The record's own Status** is `Done`, and as this is the epic's last story the epic
-  (README, `delivery-notes.md`) moves to `_archive/` with it: `tests/e2e/AGENTS.md` takes
-  the notes that hold beyond the epic (the navigation world, the reload, the two live
-  regions); the rest were this epic's code seams, which their code comments hold.
+  (README, `delivery-notes.md`) moves to `_archive/` with it. The notes that hold beyond the epic
+  (the navigation world, the reload, the two live regions) are proposed to the
+  retrospective for `tests/e2e/AGENTS.md`, since a delivery PR edits no guide; the rest were
+  this epic's code seams, which their code comments hold.
 
 ### Contract for dependents
 

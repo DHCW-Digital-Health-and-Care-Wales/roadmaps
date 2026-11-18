@@ -41,11 +41,6 @@ End-to-end tests of the production build, with Google faked (ADR-006).
 - At 1280px the navigation stands beside the page and its links share names with the
   list's and the cards': scope a page's own to `main`. Playwright matches a role's name
   by substring, so name "More" `exact`.
-- Use `NAVIGATION_WORLD` (`fixtures/navigation-world.ts`) for a navigation scenario's data.
-- A reload ends the Google session: a scenario that reloads calls `connect` again before
-  reading the page.
-- The page holds two polite live regions, the shell's count and the navigation search's:
-  find one by its text, never as the only `[aria-live=polite]`.
 - Run a layout check with `reducedMotion: "reduce"` too: transitions last 0.01ms, so a
   class a bar gains arrives a frame late. Measure its border box.
 

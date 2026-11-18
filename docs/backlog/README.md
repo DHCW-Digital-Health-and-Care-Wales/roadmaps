@@ -54,6 +54,7 @@ moves to `_archive/`, where its row here still points.
 | [CHO-019](chores/CHO-019-check-a-published-move-against-a-real-spreadsheet.md)            | Check STY-051's write (a moved item's row moved, with its cell write, in one request) against a real test spreadsheet               | Proposed       |
 | [CHO-020](chores/CHO-020-check-a-published-order-against-a-real-spreadsheet.md)           | Check STY-050's write (a placement's rows reordered, and a new item's row inserted, in one request) against a real test spreadsheet | Proposed       |
 | [CHO-021](_archive/chores/CHO-021-the-prototype-check-gives-reviewers-frames-and-text.md) | The prototype page check writes a screenshot per artboard and a text extract, and step 8 hands both to reviewers                    | Done           |
+| [CHO-022](chores/CHO-022-the-prototype-stylesheet-draws-todays-shell.md)                  | The `ux-prototypes` stylesheet draws a roadmap's page in today's shell: the navigation, the stuck header and the pinned foot bar    | Proposed       |
 | [CHO-023](chores/CHO-023-prototype-a-layout-in-the-apps-own-code.md)                      | Whether the `ux-prototypes` skill offers a prototype built in the app's own code, as STY-065's was                                  | Needs grilling |
 
 Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status token.

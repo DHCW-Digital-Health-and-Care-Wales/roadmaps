@@ -31,9 +31,10 @@
     orchestration retro Opus 5.5 at high effort. No lane moved to another model.
   - Owner's changes during the run: from STY-061 on, the machine was under heavy load, so
     heavy commands and reviewers ran one at a time, every lane kept. During STY-064, a
-    delivery PR makes no incidental guide change (to any `AGENTS.md`, `CLAUDE.md`, skill
-    or agent definition); only a retrospective does, in its own PR. After capture the owner
-    narrowed it: a delivery whose record or request names a guide change makes it.
+    delivery PR edits no guide file (any `AGENTS.md`, `CLAUDE.md`, skill or agent
+    definition); only a retrospective does, in its own PR. After capture the owner
+    narrowed it to incidental guide changes: a delivery makes a guide change its record's
+    Summary or acceptance criteria, or the owner's request, names.
 - Outcome: completed. Four stories merged; EPC-014 is Done and archived with STY-064. Every
   per-item retro was a no-op, so no retro PR was raised. This record's PR also writes the
   owner's guide-file rule into the repository.
@@ -179,7 +180,8 @@ already record, appeared in STY-062's and STY-063's full E2E runs and passed alo
 - Orchestration retro, in this record's PR: the owner's guide-file rule. The authoring guide
   (`docs/operations/authoring-agent-instructions.md`, _Where it goes_) defines a guide file
   and an incidental change to one, and states the rule. `delegation.md` tells a delivery
-  PR's reviewers to report an incidental guide change as a blocker; `pr-watch.md`'s Done list checks the PR's file list before merging. The two
+  PR's reviewers to report an incidental guide change as a blocker; `pr-watch.md`'s Done
+  list checks the PR's file list before merging. The two
   instructions that led deliveries to edit guide files, the epic-close sweep in
   `docs/AGENTS.md` and the copywriter skill's patterns line, now hand those edits to the
   retrospective, as does the quality-review lens on text a change makes false, which asked
@@ -193,5 +195,5 @@ already record, appeared in STY-062's and STY-063's full E2E runs and passed alo
   [CHO-014](../../backlog/chores/CHO-014-slim-the-e2e-suite.md)'s S6, makes it in its own
   delivery.
 - Next comparison: on the next queue with an epic close or new copy, whether any delivery
-  PR's file list holds an incidental guide change, and how long the retros take to land the patterns and
-  notes the deliveries hand them.
+  PR's file list holds an incidental guide change, and how long the retros take to land
+  the patterns and notes the deliveries hand them.

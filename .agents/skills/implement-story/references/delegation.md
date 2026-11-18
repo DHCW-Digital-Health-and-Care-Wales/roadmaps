@@ -57,9 +57,9 @@ the input or workflow in this repository that produces it. A finding without
 one is a decline candidate. Ask too for each part of the pinned diff the
 reviewer left unread, by path and lines, which Dispatch step 5 gives to a
 fresh reviewer: a reviewer not asked may report a diff it read in part as
-read. Tell a delivery PR's reviewers to report each incidental guide change in
-its diff, one its record or the owner's request does not name, as a blocker
-(P1 or 🔴) (`docs/operations/authoring-agent-instructions.md`, _Where it
+read. Tell a delivery PR's reviewers to report each incidental guide change
+in its diff as a blocker (P1 or 🔴), as
+`docs/operations/authoring-agent-instructions.md` defines one (_Where it
 goes_).
 
 For role-specific briefs, use `.claude/agents/mechanical-worker.md`,

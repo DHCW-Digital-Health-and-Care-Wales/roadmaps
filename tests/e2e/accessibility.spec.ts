@@ -12,6 +12,7 @@ import {
   openEditRoadmapDialog,
   publishOnce,
   reconnectButton,
+  reviewFooterClose,
 } from "./fixtures/dialogs"
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
 import {
@@ -1030,7 +1031,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
         review.getByRole("button", { name: "Cyhoeddi'r newidiadau" }),
       ).toBeFocused()
       await page.keyboard.press("Tab")
-      await expect(review.getByRole("button", { name: "Cau" })).toBeFocused()
+      await expect(reviewFooterClose(review)).toBeFocused()
       await page.keyboard.press("Enter")
       await expect(review).toHaveCount(0)
       await expect(

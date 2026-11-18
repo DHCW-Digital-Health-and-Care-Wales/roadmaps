@@ -7,6 +7,7 @@ import {
   editItemButton,
   openAddItemDialog,
   openEditItemDialog,
+  reviewFooterClose,
 } from "./fixtures/dialogs"
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
 import { withTabItems } from "./fixtures/fake-sheets"
@@ -312,7 +313,7 @@ test("the publish dialog lists a new item beside an edit; a co-lead's conflict p
   await expect(review).toContainText(
     "Every change is decided. Publish when you're ready.",
   )
-  await review.getByRole("button", { name: "Close" }).click()
+  await reviewFooterClose(review).click()
   await expect(review).toBeHidden()
   await expect(newTag(itemCard(page, CLINIC), CLINIC)).toBeVisible()
   await expect(main.getByText("1 unpublished change")).toBeVisible()

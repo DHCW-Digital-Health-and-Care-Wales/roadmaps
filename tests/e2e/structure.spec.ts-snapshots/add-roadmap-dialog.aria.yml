@@ -24,3 +24,4 @@
     - paragraph: It starts not published, with no items. The public site doesn't show it until you publish it.
     - button "Add roadmap"
     - button "Cancel"
+  - button "Close"

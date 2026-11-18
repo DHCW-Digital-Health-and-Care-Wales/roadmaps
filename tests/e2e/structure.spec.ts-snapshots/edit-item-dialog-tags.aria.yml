@@ -45,3 +45,4 @@
     - paragraph: No details
     - button "Done"
     - button "Cancel"
+  - button "Close"

@@ -34,3 +34,4 @@
     - button "Add item"
     - button "Add and start another"
     - button "Cancel"
+  - button "Close"

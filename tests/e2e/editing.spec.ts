@@ -5,6 +5,7 @@ import {
   openEditItemDialog,
   openEditRoadmapDialog,
   publishOnce,
+  reviewFooterClose,
 } from "./fixtures/dialogs"
 import {
   EXAMPLE_INDEX_ROWS,
@@ -337,7 +338,7 @@ test.describe("a co-lead's change (STY-026)", () => {
     await expect(
       review.getByRole("button", { name: "Publish changes" }),
     ).toBeFocused()
-    await review.getByRole("button", { name: "Close" }).click()
+    await reviewFooterClose(review).click()
     await expect(review).toBeHidden()
     const action = page
       .getByRole("main")
@@ -976,7 +977,7 @@ test.describe("reordering a placement's items (STY-050)", () => {
       await expect(review).toContainText(
         "Every change is decided. Publish when you're ready.",
       )
-      await review.getByRole("button", { name: "Close" }).click()
+      await reviewFooterClose(review).click()
       await expect(review).toBeHidden()
       const publishAgain = main.getByRole("button", { name: "Publish changes" })
       await expect(publishAgain).toBeFocused()
@@ -1018,8 +1019,8 @@ test.describe("reordering a placement's items (STY-050)", () => {
     await expect(review).toContainText(
       "Every change is decided. Nothing is left to publish.",
     )
-    await expect(review.getByRole("button", { name: "Close" })).toBeFocused()
-    await review.getByRole("button", { name: "Close" }).click()
+    await expect(reviewFooterClose(review)).toBeFocused()
+    await reviewFooterClose(review).click()
 
     await expect(review).toBeHidden()
     await expect(main.getByRole("heading", { level: 1 })).toBeFocused()
@@ -1539,7 +1540,7 @@ test.describe("editing an item's tags (STY-037)", () => {
     await expect(review).toContainText(
       "Every change is decided. Nothing is left to publish.",
     )
-    await review.getByRole("button", { name: "Close" }).click()
+    await reviewFooterClose(review).click()
     await expect(review).toBeHidden()
     await expect(main.getByText("Changed")).toHaveCount(0)
     // Its tags are now shown, not changed (S20).
@@ -1961,7 +1962,7 @@ test.describe("editing an item's details (STY-039)", () => {
     await expect(review).toContainText(
       "Every change is decided. Nothing is left to publish.",
     )
-    await review.getByRole("button", { name: "Close" }).click()
+    await reviewFooterClose(review).click()
     await expect(review).toBeHidden()
     await expect(main.getByText("Changed")).toHaveCount(0)
     // Its details are now shown, not changed (S18).

@@ -6,10 +6,13 @@
 // width from the foot of the screen (EPC-011, _The dialogs_). The header and footer are
 // left-aligned, the title is DHCW's `text-heading-m` and the description body text;
 // buttons sit inline in their DOM order, wrapping on a phone. Upstream's corner close
-// button and footer "Close" (both carry copy, which `components/ui` never does),
-// backdrop blur and muted footer band are gone. `DialogClose` is the secondary button.
+// button is kept, with one departure: its hidden "Close" is the caller's `closeLabel`,
+// since `components/ui` carries no copy. The title keeps clear of it (`pe-10`) and both
+// scroll together. Upstream's footer "Close", backdrop blur and muted footer band are gone.
+// `DialogClose` is the secondary button.
 import * as React from "react"
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
+import { XIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 import { Button } from "@/components/ui/button"
@@ -59,7 +62,21 @@ function DialogOverlay({
   )
 }
 
-function DialogContent({ className, ...props }: DialogPrimitive.Popup.Props) {
+function DialogContent({
+  className,
+  children,
+  closeLabel,
+  closeDisabled = false,
+  showCloseButton = true,
+  ...props
+}: DialogPrimitive.Popup.Props & {
+  /** The corner close button's name, for a screen reader: it shows an icon only. */
+  closeLabel: string
+  /** A write is under way: the button waits, as the form's Cancel does. */
+  closeDisabled?: boolean
+  /** Upstream's switch. Off, `DialogTitle` still keeps its `pe-10` clear of the corner. */
+  showCloseButton?: boolean
+}) {
   return (
     <DialogPortal>
       <DialogOverlay />
@@ -70,7 +87,29 @@ function DialogContent({ className, ...props }: DialogPrimitive.Popup.Props) {
           className,
         )}
         {...props}
-      />
+      >
+        {children}
+        {showCloseButton && (
+          <DialogPrimitive.Close
+            data-slot="dialog-close-button"
+            disabled={closeDisabled}
+            // Its 32px square ends 16px from the edge, so its icon ends where the form's
+            // content does (the popup's `p-6`); `top-5.5` centres it on the title's row,
+            // and `DialogTitle`'s `pe-10` leaves it room.
+            render={
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className="absolute top-5.5 right-4"
+              />
+            }
+          >
+            <XIcon aria-hidden="true" />
+            {/* The label continues no visible name: it is the whole of the button's. */}
+            <span className="sr-only">{closeLabel}</span>
+          </DialogPrimitive.Close>
+        )}
+      </DialogPrimitive.Popup>
     </DialogPortal>
   )
 }
@@ -99,7 +138,7 @@ function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn("text-heading-m text-pretty", className)}
+      className={cn("pe-10 text-heading-m text-pretty", className)}
       {...props}
     />
   )

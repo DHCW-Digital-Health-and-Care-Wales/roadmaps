@@ -211,9 +211,13 @@ async function expectDialogTour(page: Page, dialog: Locator) {
     .locator(`:is(${CONTROLS}, [tabindex]${IN_TAB_ORDER})`)
     .filter({ visible: true })
     .all()
-  const [first] = stops
-  if (!first) throw new Error("The dialog has no tab stops")
+  const first = stops.at(0)
+  const last = stops.at(-1)
+  if (!first || !last) throw new Error("The dialog has no tab stops")
   expect(stops.length, "the dialog's tab stops").toBeGreaterThan(3)
+  // Its close button, drawn last, is the tour's last stop: Tab from it wraps to the first
+  // field (STY-068 S6).
+  await expect(last).toHaveAttribute("data-slot", "dialog-close-button")
 
   for (const stop of stops) {
     const isButton = await stop.evaluate(

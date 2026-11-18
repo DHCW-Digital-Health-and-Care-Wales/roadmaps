@@ -124,10 +124,10 @@ one possible place without a new kind of write: after the last row.
   builds the roadmap dialog in its adding form. STY-043 gives the same dialog its
   editing form; STY-044 builds the item dialog in its editing form and STY-046 gives it
   its adding form. Each pair is one component, not two.
-- **Closing** (owner): Cancel and Escape close a dialog and drop what was typed,
-  without asking; a click outside it does nothing. On a phone a dialog fills the
-  width from the foot of the screen and scrolls. A story cites this rule and tests
-  it; it does not restate it.
+- **Closing** (owner): Cancel, Escape and the close button at its top right (EPC-017)
+  close a dialog and drop what was typed, without asking; a click outside it does
+  nothing. On a phone a dialog fills the width from the foot of the screen and
+  scrolls. A story cites this rule and tests it; it does not restate it.
 - **An expired session** (owner) keeps the dialog and its text. A dialog is modal, so
   nothing behind it can be reached: one that writes at once (adding a roadmap)
   offers Reconnect inside itself (STY-041 S11); one whose Done or "Add item" only

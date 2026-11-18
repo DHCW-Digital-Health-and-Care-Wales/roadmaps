@@ -67,3 +67,15 @@ export async function expectDialogClosed() {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
   })
 }
+
+/**
+ * The close button in the corner of `dialog` (STY-068), named "Close" as a footer Close
+ * is; the two are told apart by their slots.
+ */
+export function cornerClose(dialog: HTMLElement): HTMLElement {
+  const close = within(dialog)
+    .getAllByRole("button", { name: "Close" })
+    .find((button) => button.dataset.slot === "dialog-close-button")
+  if (!close) throw new Error("The dialog has no close button in its corner")
+  return close
+}

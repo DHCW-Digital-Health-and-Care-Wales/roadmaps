@@ -31,6 +31,7 @@ moves to `_archive/`, where its row here still points.
 | [EPC-014 A navigation that scales](_archive/EPC-014-a-navigation-that-scales/README.md)                  | STY-061–STY-064: search the navigation, close families one at a time or all together, show only the roadmaps with unpublished changes, and drag its width (the navigation UX analysis's prototype)                                              | Done   |
 | [EPC-015 A quieter top to a roadmap's page](_archive/EPC-015-a-quieter-roadmap-page-top/README.md)       | STY-065: the top of a roadmap's page in three rows (actions on the title's row, one line of facts ending in "Product details", the jump control), one Not published notice, a dismissible Beta banner                                           | Done   |
 | [EPC-016 A roadmap's items at a glance](EPC-016-a-roadmaps-items-at-a-glance/README.md)                  | STY-066–STY-067: a card cuts a field that runs past three lines, with "Show more"; a compact view shows each item as a row, chosen by a switch beside Add an item and kept on the device (designs A, D and G of the compact view UX analysis)   | Active |
+| [EPC-017 Closing a dialog from its top](_archive/EPC-017-closing-a-dialog-from-its-top/README.md)        | STY-068: a close button (X) at the top right of a dialog, in view as it opens on a phone, closing as Cancel does                                                                                                                                | Done   |
 
 ## Chores
 
@@ -57,6 +58,7 @@ moves to `_archive/`, where its row here still points.
 | [CHO-021](_archive/chores/CHO-021-the-prototype-check-gives-reviewers-frames-and-text.md) | The prototype page check writes a screenshot per artboard and a text extract, and step 8 hands both to reviewers                    | Done           |
 | [CHO-022](chores/CHO-022-the-prototype-stylesheet-draws-todays-shell.md)                  | The `ux-prototypes` stylesheet draws a roadmap's page in today's shell: the navigation, the stuck header and the pinned foot bar    | Proposed       |
 | [CHO-023](chores/CHO-023-prototype-a-layout-in-the-apps-own-code.md)                      | Whether the `ux-prototypes` skill offers a prototype built in the app's own code, as STY-065's was                                  | Needs grilling |
+| [CHO-024](chores/CHO-024-the-session-warning-draws-its-x-as-a-dialog-does.md)             | The session warning's corner X is level with its title and drawn once, as a dialog's is                                             | Proposed       |
 
 Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status token.
 

@@ -39,3 +39,4 @@
     - paragraph: These details have Welsh versions, so they can't be changed here yet.
     - button "Done"
     - button "Cancel"
+  - button "Close"

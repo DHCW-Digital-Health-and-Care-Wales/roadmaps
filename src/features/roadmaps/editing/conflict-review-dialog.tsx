@@ -122,6 +122,7 @@ export function ConflictReviewDialog({
       <DialogContent
         initialFocus={() => focus.firstOpen() ?? true}
         finalFocus={finalFocus}
+        closeLabel={t("common.close")}
       >
         <DialogHeader>
           <DialogTitle>

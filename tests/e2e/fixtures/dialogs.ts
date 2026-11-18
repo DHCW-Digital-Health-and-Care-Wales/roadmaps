@@ -99,6 +99,19 @@ export async function openDialog(
 }
 
 /**
+ * The close button in the corner of `dialog` (STY-068). A dialog's footer Close, and the
+ * conflict review's, carry its name too, so both are found by their slots.
+ */
+export function cornerClose(dialog: Locator): Locator {
+  return dialog.locator('[data-slot="dialog-close-button"]')
+}
+
+/** The conflict review's Close in its foot, which its corner close button repeats. */
+export function reviewFooterClose(review: Locator): Locator {
+  return review.locator('[data-slot="dialog-close"]')
+}
+
+/**
  * Clicks the dimmed page above `dialog` and beside it, wherever it sits: a click
  * outside a form dialog does nothing, which the caller then shows.
  */

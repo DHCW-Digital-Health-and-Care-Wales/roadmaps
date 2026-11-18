@@ -46,7 +46,9 @@ export function NavigationSearchProvider({
     () => (roadmaps ? groupRoadmaps(roadmaps, language) : null),
     [roadmaps, language],
   )
-  const key = searchKey(query)
+  // The search narrows only while it shows: kept from before Disconnect, it waits for
+  // the roadmaps to be read again (S11).
+  const key = groups ? searchKey(query) : ""
   const found = useMemo(
     () => narrowGroups(groups ?? [], key, language),
     [groups, key, language],

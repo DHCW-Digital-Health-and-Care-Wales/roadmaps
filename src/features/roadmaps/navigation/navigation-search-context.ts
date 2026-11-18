@@ -14,7 +14,10 @@ export interface NavigationSearch {
   found: readonly RoadmapGroup[]
   /** What the search holds, as typed. */
   query: string
-  /** `query` as the search compares it (`searchKey`); blank narrows nothing. */
+  /**
+   * `query` as the search compares it (`searchKey`); blank narrows nothing, as it is
+   * while the roadmaps are unread (`groups` is `null`) and the search does not show.
+   */
   key: string
   /** Typing in the search: once typing pauses, a screen reader is told how many match. */
   type: (query: string) => void

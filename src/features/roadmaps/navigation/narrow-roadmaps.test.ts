@@ -52,6 +52,12 @@ describe("findIn", () => {
     expect(part && text.slice(part.start, part.end)).toBe("Caffé")
   })
 
+  it("finds the part after a character written in two code units, such as an emoji", () => {
+    const text = "🩺 Care record viewer"
+    const part = findIn(text, searchKey("care"))
+    expect(part && text.slice(part.start, part.end)).toBe("Care")
+  })
+
   it("finds nothing for a blank search or a missing one", () => {
     expect(findIn("Care record viewer", "")).toBeNull()
     expect(findIn("Care record viewer", "xyz")).toBeNull()

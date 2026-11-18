@@ -32,7 +32,8 @@ export interface FoundPart {
 export function findIn(text: string, key: string): FoundPart | null {
   if (key === "") return null
   let folded = ""
-  // The index in `text` that each character of `folded` comes from, and where it ends.
+  // Where in `text` each code unit of `folded` comes from, and where that character
+  // ends: by code unit, as `indexOf` counts, so an emoji before a match shifts nothing.
   const starts: number[] = []
   const ends: number[] = []
   let index = 0
@@ -41,11 +42,9 @@ export function findIn(text: string, key: string): FoundPart | null {
     const end = index + character.length
     // An accent written apart from its letter folds to nothing: it ends that letter.
     if (parts === "" && ends.length > 0) ends[ends.length - 1] = end
-    for (const part of parts) {
-      folded += part
-      starts.push(index)
-      ends.push(end)
-    }
+    folded += parts
+    starts.push(...Array<number>(parts.length).fill(index))
+    ends.push(...Array<number>(parts.length).fill(end))
     index = end
   }
   const at = folded.indexOf(key)

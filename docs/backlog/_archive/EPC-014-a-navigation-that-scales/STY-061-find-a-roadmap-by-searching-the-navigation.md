@@ -181,7 +181,8 @@ Roadmap titles are `LocalisedText`, read with `localise(title, language)`.
 - `NavigationSearchProvider` (`features/roadmaps/navigation/navigation-search-provider.tsx`)
   wraps `AppShell` in `routes/__root.tsx` and holds the search; read it with
   `useNavigationSearch()`: `groups` (every group, `null` until the roadmaps are read),
-  `found` (the groups the search narrows to), `query`, `key` (`searchKey(query)`),
+  `found` (the groups the search narrows to), `query`, `key` (`searchKey(query)`, blank
+  while `groups` is `null`, so a search kept past Disconnect narrows nothing),
   `type`, `clear` (says "Showing all roadmaps"), `focusWhenShown` and `takesFocus`. The
   count's narrowing (STY-063) belongs here too: it empties the search, and a blank
   search cleared under it says nothing.

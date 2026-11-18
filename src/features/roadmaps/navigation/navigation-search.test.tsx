@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it } from "vitest"
 
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
+import { disconnectFromHeader } from "@/features/auth/testing/account-menu"
 import { DESKTOP_WIDTH } from "@/lib/use-media-query"
 import { connected } from "@/test/connected-state"
 import { matchMediaQueries } from "@/test/media-query"
@@ -316,6 +317,25 @@ describe("the navigation's search", () => {
         .getAllByRole("button")
         .map((b) => b.textContent),
     ).toEqual(["Open the navigation"])
+  })
+
+  it("narrows nothing once the roadmaps are no longer read, as after Disconnect (S11)", async () => {
+    const user = userEvent.setup()
+    await renderSearch()
+    await user.type(searchBox(), "care")
+
+    await disconnectFromHeader(user)
+
+    await waitFor(() => {
+      expect(
+        within(navigation()).queryByRole("searchbox"),
+      ).not.toBeInTheDocument()
+    })
+    expect(within(navigation()).queryByText(/No roadmaps match/)).toBeNull()
+    expect(linkNames()).toEqual([
+      "All roadmaps",
+      "Families, categories and organisations",
+    ])
   })
 
   it("speaks Welsh, finding a roadmap by its Welsh title (S12)", async () => {

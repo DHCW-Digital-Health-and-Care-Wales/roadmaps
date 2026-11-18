@@ -54,10 +54,11 @@ tours.
   deliberate change run `pnpm test:e2e structure.spec.ts --update-snapshots` and review
   the YAML diff. That flag never writes a _new_ snapshot: use `--update-snapshots=all`,
   check `git status` lists it, and restore the others it rewrote with
-  `git checkout -- <file>`. In each snapshot it writes, an update drops checks: the
-  patterns and `text: ""` it writes fail `build/aria-snapshot-literals.test.ts`, and text
-  that is a control's only child is dropped (`button "Publish changes": Publish` to
-  `button "Publish changes"`) and fails the next run. Put back the literal where the
+  `git checkout -- <file>`. In each snapshot it writes, an update drops checks.
+  `build/aria-snapshot-literals.test.ts` fails the patterns and `text: ""` it writes in
+  place of a literal; text that is a control's only child is dropped
+  (`button "Publish changes": Publish` to `button "Publish changes"`), which fails the
+  next run. Put back the literal where the
   fixtures fix the value and each control's text, then commit.
 - CI serves under `/roadmaps-editor/`: after changing the structure snapshots, run them
   once with

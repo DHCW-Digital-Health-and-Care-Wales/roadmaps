@@ -121,12 +121,14 @@ agent and `<run-folder>/progress/<ITEM>-handoff.md`.
    reviewer grandchildren, waits for them, fixes findings and opens the
    reviewed PR. The delegation reference owns reviewer re-check rounds.
 2. Save returned IDs/link and pending state. If the runtime can schedule a
-   wake-up for this session, set a fallback wake every 15 minutes, prompting a
-   check of that child, and save its ID in `run-handoff.md`; it catches a
-   completion notification that never arrives. After independent work is
-   exhausted, end the turn; the child's completion resumes this session. A
-   yielded turn with live descendants is not a completed item; use no other
-   polling, sleep loops or timeout workarounds.
+   wake-up for this session, such as a recurring task that posts to it, set
+   a fallback wake every 15 minutes, prompting a check of that child, and
+   save its ID in `run-handoff.md`. Set one for every child, whatever
+   earlier items' notifications did: a final hand-back's notification can
+   go missing after the child's interim ones arrived. After independent
+   work is exhausted, end the turn; the child's completion resumes this
+   session. A yielded turn with live descendants is not a completed item;
+   use no other polling, sleep loops or timeout workarounds.
    - On a fallback wake or an interim completion, ask the user each
      `owner-question` in the progress log that `run-handoff.md` does not list
      as asked, then list it there with the time, and later the answer. Send

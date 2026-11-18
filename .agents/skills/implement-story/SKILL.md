@@ -173,8 +173,10 @@ callers and rules; they do not edit or switch the shared checkout. Keep their
 reports separate. Resolve findings, fixing each at its cause and wherever it
 recurs, rather than only for the reported trigger or at the reported line:
 ask what else reaches that cause and test it too; for a changed term or
-label, search the changed files and both catalogues for the old form. Repeat affected checks, commit
-fixes and re-review the new head in the lanes and rounds `delegation.md` sets.
+label, search the changed files and both catalogues for the old form; for a
+changed behaviour, search the code, tests and records for lines that describe
+the old behaviour and correct them. Repeat affected checks, commit fixes and
+re-review the new head in the lanes and rounds `delegation.md` sets.
 An unavailable reviewer is a stated limitation, not an invented independent
 review.
 

@@ -14,7 +14,7 @@ export interface PinnedFootProps {
 }
 
 /** In the page's flow, the page's own container frames it already. */
-const IN_FLOW = "max-w-none px-0 md:px-0"
+const inFlowClasses = "max-w-none px-0 md:px-0"
 
 /**
  * What a page keeps at the foot of the screen, as a band across it beside the shell's
@@ -49,13 +49,13 @@ export function PinnedFoot({ notices, bar }: PinnedFootProps) {
         )}
       >
         <PageContainer
-          className={cn("flex flex-col gap-3 pt-3", !pinning && IN_FLOW)}
+          className={cn("flex flex-col gap-3 pt-3", !pinning && inFlowClasses)}
         >
           {notices}
         </PageContainer>
       </div>
       <PageContainer
-        className={cn("shrink-0 pt-3 empty:hidden", !pinning && IN_FLOW)}
+        className={cn("shrink-0 pt-3 empty:hidden", !pinning && inFlowClasses)}
       >
         {bar}
       </PageContainer>

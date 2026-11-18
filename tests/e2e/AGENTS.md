@@ -54,14 +54,22 @@ tours.
   deliberate change run `pnpm test:e2e structure.spec.ts --update-snapshots` and review
   the YAML diff. That flag never writes a _new_ snapshot: use `--update-snapshots=all`,
   check `git status` lists it, and restore the others it rewrote with
-  `git checkout -- <file>`. In each snapshot it writes, an update turns a number of two
-  or more digits into a pattern (`1 October 2026` to `/1 October \d+/`): put the literal
-  back where the fixtures fix the value, then commit.
+  `git checkout -- <file>`. In each snapshot it writes, an update drops checks. A number
+  of two or more digits becomes a pattern (`1 October 2026` to `/1 October \d+/`) that
+  matches any number. Text that is part of a control's name becomes `text: ""` beside
+  another child, such as a link's `/url`, and matches any text; as the only child it is
+  dropped (`button "Publish changes": Publish` to `button "Publish changes"`), which
+  fails the next run. Put back the literal where the fixtures fix the value and each
+  control's text, then commit.
 - CI serves under `/roadmaps-editor/`: after changing the structure snapshots, run them
   once with
   `GITHUB_REPOSITORY=DHCW-Digital-Health-and-Care-Wales/roadmaps-editor`.
 - Snapshot a `main`, header, menu, dialog, form or notice, never the footer, whose
   version changes per build.
+- A stuck or pinned bar is `position: fixed`, so a control past its edge never widens
+  the page and a `scrollWidth` check passes. Once the bar is stuck or pinned, hold each
+  control it keeps in view (a pinned foot's bar, not its scrolling notices) with
+  `toBeInViewport({ ratio: 1 })`.
 - Compare a computed style with the token it comes from, `tokenColour(page, "--token")`
   (`fixtures/look.ts`), never a copied colour.
 - The focus tours need every tab stop to match `focus-fill`, `focus-ring` or

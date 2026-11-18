@@ -113,9 +113,11 @@ Do not spend findings on these; check only that the change does not evade them
   or SVG paint attributes, in `src/**` (not tests). It reads classes only
   where the plugin looks by default (`className`, `cn()`, `cva()` …), in a
   `…Variants({ className })` call and in variables named `…Classes`, and
-  styles only in a `style` attribute (which must hold an object literal) or
-  an object typed `CSSProperties`. A class string held anywhere else, or a
-  style object under another prop, is unchecked.
+  rejects a variable of any other name in a `className` or `cn()` value. It
+  reads styles only in a `style` attribute (which must hold an object
+  literal) or an object typed `CSSProperties`. A class string held anywhere
+  else, such as a variable passed to `cva()`, or a style object under another
+  prop, is unchecked.
 - `@typescript-eslint` strict-type-checked rules (no `any`, unsafe calls,
   floating promises, `unbound-method`), React Hooks rules and `jsx-a11y`
   basics. Catalogue parity is a `pnpm typecheck` error (`cy.ts` is

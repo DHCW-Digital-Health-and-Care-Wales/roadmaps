@@ -3,7 +3,8 @@
 - **Date**: 2026-11-18
 - **Question**: a roadmap's page shows every item as a full card. What should a compact
   view of it show, how is the rest of an item reached from it, and where does a Product
-  Lead switch between the two?
+  Lead switch between the two? And, from the owner's later request: how does a card
+  keep its height when a text field runs long?
 - **Scope**: the items area of a roadmap's page (`RoadmapItems`, `EditableItemCard`,
   `CardGrid`) and the top of the page (`RoadmapHeader`), on a desktop and a phone. It
   comes from the owner's request of 2026-11-18 to explore the idea, with no record yet,
@@ -20,8 +21,8 @@
   static mock-ups at a desktop (1280px wide, the navigation open) and a phone (375px),
   each labelled with its moment and where keyboard focus is. The shape is frames
   because the question is what the page shows and where things go, not how a control
-  feels under the hand. It holds today's cards, design A as the owner chose it, and
-  designs D to F. The first round's frames of A, B and C were removed once the owner
+  feels under the hand. It holds today's cards, design A as the owner chose it,
+  designs D to F, and design G. The first round's frames of A, B and C were removed once the owner
   chose; the tables below describe them.
 - **Sample world**: invented. On Wednesday 18 November 2026 Sam Evans, a Product Lead,
   opens Appointment booking, which she co-leads with Rhian Morgan. It is published, in
@@ -29,7 +30,8 @@
   It has 18 items: 1 with no recognised horizon (written "Soon"), Recently delivered 1,
   Now 5, Next 4, Later 4, Delivered this year 3 and Not doing 0. It has 3 unpublished
   changes: the first Now item's description is edited, the last Next item is new, and
-  Later's order is changed. Planted: a long title, "patient" beside "Patients",
+  Later's order is changed. Planted: a long title, a description of about 85 words on one Now item and an
+  expected outcome of about 50 on the next, "patient" beside "Patients",
   a new item with only a title, four items with no phase, an unplaced item and an empty
   placement. The navigation holds the navigation analysis's 14 roadmaps, every family
   closed but Citizen Services.
@@ -65,11 +67,13 @@ an 800px desktop window and of an 812px phone.
 | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
 | 1. Read and work a roadmap in a compact view | see the whole roadmap; see what is pending; read the rest of an item; move an item to another placement or within its order; edit one; undo a change or remove a new item; scroll with the header stuck | none yet; builds on STY-021, STY-025, STY-031, STY-046, STY-050, STY-052 |
 | 2. Switch between cards and compact          | find the switch; switch; keep the choice                                                                                                                                                                | none yet; builds on STY-059, STY-060, STY-065                            |
+| 3. Keep a long card in hand                  | read a card whose text runs long; read the rest; put it away again                                                                                                                                      | none yet; builds on STY-021                                              |
 
 Journey 1 relies on the persona's A1 (short visits), A2 (desktop first, a phone for
 small jobs) and, for the pending marks, A9 and A10 (nothing is public until
 published). Journey 2 relies on A1: a choice made once should not be made again each
-visit.
+visit. Journey 3 relies on A11: the card's size is the budget for an item's text, and no
+limit is enforced yet.
 
 Excluded:
 
@@ -85,7 +89,7 @@ Excluded:
 ## What every design shares
 
 - **Cards stay, and are what everyone sees first** (decision 16). Compact is a second
-  view of the same page, chosen by the Product Lead. Nothing about the card changes.
+  view of the same page, chosen by the Product Lead. Journey 3 alone changes the card.
 - **The page around the items is today's**: the top of the page and its stuck form
   (STY-059, STY-060, STY-065), the placement links and "Jump to" with their counts and pending
   dots (STY-053), the pinned foot bar with its count, Publish and Discard (STY-052),
@@ -168,6 +172,24 @@ round drew the switch on the header as it was; these frames draw it on today's.
 used, and the long page is where the switch is wanted. If the title's row proves too
 tight for a long title, or the phone's stuck row in Welsh, E is the fallback.
 
+## 3. Keep a long card in hand
+
+No limit is set on what a Product Lead writes (persona A11), and a card shows every
+field whole (STY-021 D3), so one long description makes its card as tall as it likes.
+On a desktop the card beside it stretches to match, mostly empty; on a phone the one
+card is more than a screen. The owner asked for one design, so it is set beside today's
+card with the same text: a description of about 85 words, and an expected outcome a
+little over three lines.
+
+| Design                                    | Idea                                                                                                                                                                                                                                                                     | Strengths                                                                                                                                                                                     | Risks                                                                                                                                                                                                                                                                                                                                 |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Today                                     | A card shows each field whole, however long.                                                                                                                                                                                                                             | Nothing is hidden. A card that has outgrown its budget looks it, which is the cue to shorten the text.                                                                                        | One item's text sets the height of its card and of the card beside it. A long roadmap gets longer, and the cards stop reading as a set.                                                                                                                                                                                               |
+| G. Cards: long text cut after three lines | A card's description and expected outcome each show three lines at most; a longer one ends in an ellipsis, with "Show more" under it. Pressed, the field shows whole in place and the link reads "Show less". A field of three lines or fewer is as today, with no link. | A card's height stays near its neighbours', whatever was written. The first three lines are in view, and the rest is one press away, where it is. Short items, which are most, do not change. | The cue that an item says too much is quieter: the card no longer shows its excess, though the public site still will (decision 25). One more control on a long card, and two when both fields are long. Three lines hold fewer words on a phone than on a desktop. Details, tags and organisations can still run long (decision 22). |
+
+**Recommendation**: **G**, as the owner asked for it, with decisions 22 to 26 settled
+first. Decision 25 matters most: the cut tidies the editor's page and does nothing for
+the public reader, who still meets the whole text.
+
 ## Decisions needed
 
 No record holds open questions on this yet. Each row is a choice between designs, a
@@ -198,17 +220,23 @@ board and the table.
 | 19  | The pending tag in a row.                                                                                                                                                                                                                                                                                                                            | (a) "Changed" or "New" in words: in the line on a desktop, under the title on a phone, as drawn; (b) a dot, as the placement links mark a pending change; (c) its icon alone on a phone, in the line                                                                                           |
 | 20  | An unplaced item's flag ("Horizon “Soon” isn't recognised") in a row.                                                                                                                                                                                                                                                                                | (a) in the line on a desktop, where it takes the description's room, and under the title on a phone, as drawn; (b) in the opened row alone, the group's heading saying what is wrong                                                                                                           |
 | 21  | What the start of the description is, on a desktop's line.                                                                                                                                                                                                                                                                                           | (a) its text from its first word, cut where the line ends, as drawn; (b) its first sentence or line break at most                                                                                                                                                                              |
+| 22  | Which of a card's fields are cut when long.                                                                                                                                                                                                                                                                                                          | (a) the description and the expected outcome, each after three lines, as drawn; (b) the details too, after three; (c) every field, the title among them                                                                                                                                        |
+| 23  | Where the rest is read.                                                                                                                                                                                                                                                                                                                              | (a) in place: "Show more" opens the field and becomes "Show less", focus staying on it, as drawn; (b) in the item dialog, by Edit; (c) "Show more" opens the whole card, every long field at once                                                                                              |
+| 24  | Whether a field shown whole stays so.                                                                                                                                                                                                                                                                                                                | (a) until "Show less", or until the page is left or its view changed, as drawn; (b) kept on this device                                                                                                                                                                                        |
+| 25  | What tells a Product Lead an item says too much (persona A11), now a card hides it.                                                                                                                                                                                                                                                                  | (a) nothing more: "Show more" is the sign; (b) the item dialog says when a field passes what a card shows; (c) a limit on what can be written, which is a later record                                                                                                                         |
+| 26  | Whether a row opened in the compact view cuts long text as a card does.                                                                                                                                                                                                                                                                              | (a) yes, the same rule wherever a field shows; (b) no: opening a row is already the press to read it whole                                                                                                                                                                                     |
 
 ## Outcome
 
-On 2026-11-18 the owner answered three rows, in two replies, and asked for the frames
-to follow the top of the page as STY-065 left it:
+On 2026-11-18, over three replies, the owner answered three rows, asked for the frames
+to follow the top of the page as STY-065 left it, and asked for journey 3:
 
-| Decision | Answer                                                                                                                                                                                      |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 3        | (a): design A, rows.                                                                                                                                                                        |
-| 6        | (d), the owner's own: a row shows only the title and, where there is room, the start of the description, cut with "…". It never wraps and never grows, so Move and Edit are always in view. |
-| 18       | (b), after seeing a phone's titles cut on one line: on a phone a row shows as many lines as its title needs.                                                                                |
+| Decision  | Answer                                                                                                                                                                                                    |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 3         | (a): design A, rows.                                                                                                                                                                                      |
+| 6         | (d), the owner's own: a row shows only the title and, where there is room, the start of the description, cut with "…". It never wraps and never grows, so Move and Edit are always in view.               |
+| 18        | (b), after seeing a phone's titles cut on one line: on a phone a row shows as many lines as its title needs.                                                                                              |
+| Journey 3 | The owner's request: the card view stops a long text field after three lines, with "…" and a "Show more" link, or similar, that shows the rest. Design G draws it; decisions 22 to 26 are its open rules. |
 
 The agent took what follows from those, to draw them: the row loses its phase, which an
 opened row shows with the other fields; a phone's row shows no description, since its
@@ -236,11 +264,13 @@ the rest.
 - A roadmap not published, whose top has the Not published notice with "Publish
   roadmap" (STY-065 S4), and whose foot bar says "changes to save".
 - "Product details" opened, above a compact list.
+- G with both of one card's fields long, and its "Show more" as a screen reader hears
+  it: the frames name it "Show more of the description of" then the item's title.
 - The moment the view changes, and the status message a screen reader hears.
 - The options no frame draws: 2 (b) and (c), 3 (b), (c) and (d), 4 (d), 5 (b), 6 (a),
   (b) and (c), 7 (b) and (c), 8 (b) and (c), 9 (b), 11 (b) and (c), 12 (b), 13 (b),
-  13 (c) from 768px, 16 (b), 17 (b) and (c), 18 (c), 19 (b) and (c), 20 (b) and
-  21 (b). A second round drew 18 (a) and 19 (c), a phone's row on one line, which the
+  13 (c) from 768px, 16 (b), 17 (b) and (c), 18 (c), 19 (b) and (c), 20 (b), 21 (b),
+  22 (b) and (c), 23 (b) and (c), 24 (b), 25 (b) and (c), and 26 (a) and (b). A second round drew 18 (a) and 19 (c), a phone's row on one line, which the
   owner turned down. The first round drew 3 (b) and (c), 6 (a) and (b) and 7 (c); those frames
   were removed.
 - For a screen reader: E's "View" naming its two choices as a group, and whether a
@@ -250,8 +280,11 @@ the rest.
 
 ## What does not change
 
-- The Cards view, the card and its text budget; the item dialog; the Move menu's
-  choices and what they do (ADR-014, STY-050).
+- A card with no long field, and its text budget; the item dialog; the Move menu's
+  choices and what they do (ADR-014, STY-050). Design G changes STY-021 D3 for a long
+  field alone.
+- What a Product Lead may write, and what the public site shows: cutting a card's text
+  is the editor's display only.
 - What is pending, how it is counted and published (ADR-012). A view changes no
   pending edit, and a pending edit shows in both.
 - The top of the page, the placement navigation and the foot bar, except for where the

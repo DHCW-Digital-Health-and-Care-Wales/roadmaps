@@ -1,6 +1,6 @@
 # STY-068: A Product Lead closes a dialog from its top corner, without scrolling to Cancel
 
-- **Status**: Proposed — scope and look settled by the owner's grilling of 2026-11-18
+- **Status**: Done — delivered in the PR below; the owner's grilling of 2026-11-18 settled scope and look
 - **Type**: Feature
 - **Area**: Features/UI + i18n (en + cy) + E2E
 - **Epic**: EPC-017-closing-a-dialog-from-its-top
@@ -8,6 +8,7 @@
 - **Binding ADRs**: ADR-005, ADR-008, ADR-010
 - **Suggested model**: Sonnet — one control in one shared dialog, behaviour already
   set by EPC-011
+- **Delivered**: _(add on delivery)_
 
 ## Summary
 
@@ -113,3 +114,53 @@ expected tours.
 - Asking before dropping typed text, from the X or Cancel: EPC-011 _Closing_ settles it
   as "without asking"; a change would be a new story for both.
 - The navigation drawer: it already has an X ("Close menu").
+
+## Delivery
+
+### Departures
+
+- **D6**: `DialogContent` takes the corner button's hidden name as a required
+  `closeLabel`, and a `closeDisabled` for S5, besides upstream's `showCloseButton`
+  (default true); the button is `ghost`, `icon-sm`, placed `top-5.5 right-4` so its
+  icon ends where the form's right edge does and its centre is the title's, and
+  `DialogTitle` gains `pe-10` to keep clear of it (agent: the owner's "title keeps clear
+  of it"). It is `DialogContent`'s last child, so it is the last Tab stop (S6).
+- **S7**: the conflict review now holds two buttons named "Close", its footer's and the
+  corner's, as D5 sets one name for both. Tests tell them apart by their slots
+  (`dialog-close` the footer's, `dialog-close-button` the corner's); no spec or test
+  queries the bare name "Close" in a review any more (agent).
+- **S7**: held by a component test only, not E2E: the review's setup is a co-lead's
+  conflict through the page's publish, which `editing.spec.ts` already walks to the
+  footer Close (agent).
+
+### Contract for dependents
+
+- **`DialogContent`** (`components/ui/dialog.tsx`): every `Dialog` shows the corner
+  close button, so a new `Dialog` passes `closeLabel={t("common.close")}`;
+  `AlertDialogContent` has none (S8). `closeDisabled` holds it while a write is under
+  way, as `FormDialog`'s `busy` does.
+- **Test hooks**: the button is named "Close" ("Cau"); its slot is
+  `dialog-close-button`. Unit: `cornerClose(dialog)` (`features/roadmaps/testing/edit-dialog.ts`)
+  and `reviewFooterClose(review)` (`testing/roadmap-page.ts`). E2E: `cornerClose` and
+  `reviewFooterClose` in `fixtures/dialogs.ts`. A query for the name "Close" in a
+  `Dialog` finds two buttons in the conflict review.
+- **Data source**: nothing read or written changes.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                        |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| S1, S9   | `tests/e2e/closing-a-dialog.spec.ts` (`on a phone, the close button is at the title's row…`, `on a desktop, …`); screenshots in the PR                                                                                         |
+| S2       | `closing-a-dialog.spec.ts` (`the close button closes the item dialog as Cancel does…`); `form-dialog.test.tsx` (`closes the dialog as Cancel does, through the caller`)                                                        |
+| S3       | `closing-a-dialog.spec.ts` (`every form dialog has it (S3)`, four tests)                                                                                                                                                       |
+| S4       | `closing-a-dialog.spec.ts` (`it is a button named Close…`, `it is named Cau in the Welsh interface`); `form-dialog.test.tsx` (`is named for the %s interface`); `dialog.test.tsx` (`is a button named by the caller's label…`) |
+| S5       | `adding-a-roadmap.spec.ts` (`…the fields are held, and the dialog stays…`); `roadmaps-page-adding.test.tsx` (`shows it is working, holding the fields…`); `form-dialog.test.tsx` (`waits while a write is under way…`)         |
+| S6       | `closing-a-dialog.spec.ts` (`Tab from the last control in the footer wraps…`); `focus-indicator.spec.ts`: every dialog tour (`expectDialogTour`) now ends on the close button, which shows the fill like each button stop      |
+| S7       | `roadmap-detail-page-editing.test.tsx` (`closes from the review's corner close button…`)                                                                                                                                       |
+| S8       | `closing-a-dialog.spec.ts` (`an alert dialog has no close button`); `dialog.test.tsx` (`AlertDialogContent has no close button`)                                                                                               |
+
+The component and unit tests were written after the code and each shown red by breaking
+the finished code: `disabled` dropped (S5, three tests), the label fixed to English
+(Welsh S4), `showCloseButton={false}` on the review (S7), the button drawn before the
+form (S6). The icon's `aria-hidden` has no red: lucide sets it itself, so the S4 test
+holds either way and the explicit attribute only follows the app's other icons.

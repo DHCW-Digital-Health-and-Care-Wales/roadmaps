@@ -43,3 +43,4 @@
       - button "Undo removing A third"
     - button "Done"
     - button "Cancel"
+  - button "Close"

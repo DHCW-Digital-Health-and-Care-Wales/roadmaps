@@ -22,7 +22,7 @@ import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
 import { roadmapKeys } from "../hooks/roadmap-queries"
-import { expectDialogClosed } from "../testing/edit-dialog"
+import { cornerClose, expectDialogClosed } from "../testing/edit-dialog"
 import { holdCall } from "../testing/held-call"
 import {
   createInMemoryRoadmapRepository,
@@ -427,6 +427,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
       expect(form.getByRole("combobox", { name: "Family" })).toBeDisabled()
       expect(form.getByRole("combobox", { name: "Category" })).toBeDisabled()
       expect(form.getByRole("button", { name: "Cancel" })).toBeDisabled()
+      expect(cornerClose(screen.getByRole("dialog"))).toBeDisabled()
       // Neither a second click nor Escape gets past the write.
       await user.click(button)
       await user.keyboard("{Escape}")

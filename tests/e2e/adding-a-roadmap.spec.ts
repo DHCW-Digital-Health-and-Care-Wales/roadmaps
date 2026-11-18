@@ -5,6 +5,7 @@ import {
   addRoadmapButtons,
   addRoadmapDialog,
   clickOutside,
+  cornerClose,
   openAddRoadmapDialog,
   openDialog,
   reconnectButton,
@@ -81,6 +82,7 @@ test("a Product Lead adds a roadmap and lands on its page (S1–S3, S5)", async 
   await expect(add).toHaveAttribute("aria-busy", "true")
   await expect(shortName).toHaveAttribute("readonly", "")
   await expect(dialog.getByRole("button", { name: "Cancel" })).toBeDisabled()
+  await expect(cornerClose(dialog)).toBeDisabled()
   await page.keyboard.press("Escape")
   await expect(dialog).toBeVisible()
   release()

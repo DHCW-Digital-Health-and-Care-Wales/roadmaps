@@ -22,7 +22,7 @@ import { AppError } from "@/lib/errors"
 import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
-import { expectDialogClosed } from "../testing/edit-dialog"
+import { cornerClose, expectDialogClosed } from "../testing/edit-dialog"
 import { holdCall } from "../testing/held-call"
 import { holdRefresh } from "../testing/held-refresh"
 import {
@@ -51,6 +51,7 @@ import {
   openProductDetails,
   openConflictReview,
   refreshRoadmap,
+  reviewFooterClose,
   roadmapFacts,
 } from "../testing/roadmap-page"
 import { expectWriteHold, refreshHold } from "../testing/write-hold"
@@ -1408,6 +1409,24 @@ describe("A co-lead's changes (STY-026)", () => {
     expect(within(reopened).getAllByRole("listitem")).toHaveLength(1)
   })
 
+  it("closes from the review's corner close button as its Close does, focus back on Review the changes (STY-068 S7)", async () => {
+    const repository = coLeadRepository()
+    const { user } = await renderPage({ repository })
+    await editTitle(user, "First item", "First, mine")
+    await editVision(user, "My vision.")
+    changeBoth(repository)
+    await publish(user)
+    const dialog = await review(user)
+
+    await user.click(cornerClose(dialog))
+    await expectDialogClosed()
+
+    const notice = await findRefusal()
+    expect(
+      within(notice).getByRole("button", { name: "Review the changes" }),
+    ).toHaveFocus()
+  })
+
   it("keeps mine or uses theirs, field by field, moving focus on to the next and then to Publish (S2, S3)", async () => {
     const repository = coLeadRepository()
     const { user } = await renderPage({ repository })
@@ -1483,7 +1502,10 @@ describe("A co-lead's changes (STY-026)", () => {
     expect(dialog).toHaveTextContent(
       "Every change is decided. Nothing is left to publish.",
     )
-    expect(within(dialog).getAllByRole("button")).toHaveLength(1)
+    expect(within(dialog).getAllByRole("button")).toEqual([
+      reviewFooterClose(dialog),
+      cornerClose(dialog),
+    ])
     await closeConflictReview(user, dialog)
     await expectOpeningFocus(
       main().getByRole("heading", { level: 1, name: "Product A roadmap" }),
@@ -1718,8 +1740,11 @@ describe("A co-lead's changes (STY-026)", () => {
     expect(dialog).toHaveTextContent(
       "Someone else has removed or changed “Second item”, so your changes to it couldn't be kept.Every change is decided. Nothing is left to publish.",
     )
-    const close = within(dialog).getByRole("button", { name: "Close" })
-    expect(within(dialog).getAllByRole("button")).toEqual([close])
+    const close = reviewFooterClose(dialog)
+    expect(within(dialog).getAllByRole("button")).toEqual([
+      close,
+      cornerClose(dialog),
+    ])
     expect(close).toHaveFocus()
     await closeConflictReview(user, dialog)
     await expectOpeningFocus(

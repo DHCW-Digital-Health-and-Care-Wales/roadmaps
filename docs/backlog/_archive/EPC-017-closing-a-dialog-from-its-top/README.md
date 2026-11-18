@@ -1,7 +1,7 @@
 # EPC-017: Closing a dialog from its top — Cancel sits a scroll away on a phone
 
-- **Status**: Active — one story, raised and grilled by the owner on 2026-11-18
-- **Progress**: 0 of 1 terminal; next selectable: STY-068; blocked on: nothing
+- **Status**: Done — one story, raised and grilled by the owner on 2026-11-18, delivered
+- **Progress**: 1 of 1 terminal (STY-068)
 - **Binding ADRs**: ADR-005, ADR-008, ADR-010
 
 ## Summary
@@ -60,4 +60,4 @@ the fourth, not a new pattern.
 
 | ID      | Story                                                                               | Area               | Depends on | State |
 | ------- | ----------------------------------------------------------------------------------- | ------------------ | ---------- | ----- |
-| STY-068 | [Close a dialog from its top corner](STY-068-close-a-dialog-from-its-top-corner.md) | Features/UI + i18n | —          |       |
+| STY-068 | [Close a dialog from its top corner](STY-068-close-a-dialog-from-its-top-corner.md) | Features/UI + i18n | —          | ✅    |

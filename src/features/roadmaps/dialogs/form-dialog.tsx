@@ -1,4 +1,5 @@
 import { useId, type ReactNode, type RefObject } from "react"
+import { useTranslation } from "react-i18next"
 
 import {
   Dialog,
@@ -16,7 +17,10 @@ export interface FormDialogProps {
    * fields meanwhile, so both are told by the same write.
    */
   busy?: boolean
-  /** Cancel or Escape was chosen: the caller closes it, dropping what was typed. */
+  /**
+   * Cancel, the close button or Escape was chosen: the caller closes it, dropping what
+   * was typed.
+   */
   onClose: () => void
   /**
    * The control that opens it, where focus goes as it closes. Required: left to itself
@@ -34,9 +38,9 @@ export interface FormDialogProps {
 /**
  * A form in a dialog, as EPC-011's _The dialogs_ sets for every one: modal, named by its
  * heading, with focus in its first field as it opens and back on the control that opened
- * it as it closes (its `opener`). Cancel and Escape close it; a click outside does
- * nothing. On a phone it fills the width from the foot of the screen, and it scrolls when
- * it is taller than the screen.
+ * it as it closes (its `opener`). Cancel, the close button at its top right and Escape
+ * close it; a click outside does nothing. On a phone it fills the width from the foot of
+ * the screen, and it scrolls when it is taller than the screen.
  */
 export function FormDialog({
   open,
@@ -46,6 +50,7 @@ export function FormDialog({
   opener,
   children,
 }: FormDialogProps) {
+  const { t } = useTranslation()
   const titleId = useId()
   return (
     <Dialog
@@ -55,7 +60,11 @@ export function FormDialog({
         if (!next && !busy) onClose()
       }}
     >
-      <DialogContent finalFocus={opener}>
+      <DialogContent
+        finalFocus={opener}
+        closeLabel={t("common.close")}
+        closeDisabled={busy}
+      >
         <DialogHeader>
           <DialogTitle id={titleId}>{title}</DialogTitle>
         </DialogHeader>

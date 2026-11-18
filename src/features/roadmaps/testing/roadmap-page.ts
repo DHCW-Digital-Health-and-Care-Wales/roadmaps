@@ -78,9 +78,21 @@ export async function openConflictReview(user: User): Promise<HTMLElement> {
   return review
 }
 
+/**
+ * The review's Close in its foot. A dialog's corner close button is named "Close" too
+ * (STY-068), so the two are told apart by their slots.
+ */
+export function reviewFooterClose(review: HTMLElement): HTMLElement {
+  const close = within(review)
+    .getAllByRole("button", { name: "Close" })
+    .find((button) => button.dataset.slot === "dialog-close")
+  if (!close) throw new Error("The review has no Close in its foot")
+  return close
+}
+
 /** Closes the review with its Close, then waits for it to leave the page. */
 export async function closeConflictReview(user: User, review: HTMLElement) {
-  await user.click(within(review).getByRole("button", { name: "Close" }))
+  await user.click(reviewFooterClose(review))
   await waitFor(() => {
     expect(review).not.toBeInTheDocument()
   })

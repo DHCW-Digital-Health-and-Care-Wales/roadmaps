@@ -10,11 +10,17 @@ fork or a custom domain. The decision behind it is
 dispatch:
 
 ```
-verify ──┐   typecheck · lint · format:check · test · build
-         ├──► deploy   (push to main only: deploy-pages → github-pages environment)
-e2e ─────┘   Playwright (Chromium cached per Playwright version)
+          ┌──► docs     (documentation-only PR: format:check · test:docs)
+changes ──┤
+          ├──► verify ──┐   typecheck · lint · format:check · test · build
+          │             ├──► deploy   (push to main only: deploy-pages → github-pages environment)
+          └──► e2e ─────┘   Playwright (Chromium cached per Playwright version)
 ```
 
+- `changes` classifies a pull request's files. When every changed file is Markdown or
+  under `docs/`, only `docs` runs: Prettier and the Markdown tests (links, agent
+  guides). Any other file, a push to `main` or a manual run skips `docs` and runs
+  `verify` and `e2e`.
 - `verify` and `e2e` run in parallel. On a push to `main`, `verify` also reads the Pages
   configuration, checks the build's base path against it and uploads `dist/` as the Pages
   artifact.

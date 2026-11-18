@@ -453,6 +453,7 @@ pnpm typecheck      # tsc -b over app, config and E2E projects
 pnpm lint           # ESLint, zero warnings allowed (includes layering, i18n and design-token rules)
 pnpm format:check   # Prettier (pnpm format to fix)
 pnpm test           # Vitest unit + component tests; no network, no Google
+pnpm test:docs      # the Markdown tests alone (links, agent guides), as CI runs on a docs-only PR
 pnpm build          # production build into dist/
 
 pnpm exec playwright install --with-deps chromium   # once per @playwright/test version

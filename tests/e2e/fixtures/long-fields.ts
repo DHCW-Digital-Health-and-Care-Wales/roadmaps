@@ -1,8 +1,8 @@
 import type { Locator, Page } from "@playwright/test"
 
 import { EXAMPLE_SPREADSHEET, type FakeTab, withTabRows } from "./fake-sheets"
-import { type Language, useLanguage } from "./look"
-import { connect, expect } from "./test"
+import { type Language } from "./look"
+import { openRoadmapIn } from "./roadmap-page"
 
 // A roadmap page whose items have long fields, for the cut after three lines (STY-066).
 
@@ -42,23 +42,19 @@ export function withItems(
 }
 
 /** Opens Product A with `spreadsheet`, in `language`, once the item titled `last` shows. */
-export async function openWithItems(
+export function openWithItems(
   page: Page,
   sheets: { spreadsheet: readonly FakeTab[] },
   spreadsheet: readonly FakeTab[],
   last: string,
   language: Language = "en",
 ): Promise<void> {
-  sheets.spreadsheet = spreadsheet
-  if (language !== "en") await useLanguage(page, language)
-  await page.goto("./#/roadmaps/producta")
-  await connect(
-    page,
-    language === "en" ? "Connect Google" : "Cysylltu â Google",
-  )
-  await expect(
-    page.getByRole("main").getByRole("heading", { level: 3, name: last }),
-  ).toBeVisible()
+  return openRoadmapIn(page, sheets, {
+    spreadsheet,
+    tab: "ProductA",
+    lastCard: last,
+    language,
+  })
 }
 
 /** The card of the item titled `title`. */

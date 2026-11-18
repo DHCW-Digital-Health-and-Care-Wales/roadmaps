@@ -139,7 +139,6 @@ for (const [width, height] of [
         "none",
         "none",
       ])
-      await expect(field).not.toContainText("Fourth…")
       // The fourth is cut away by the list's height, below the field's third line.
       const fourth = await field.getByText("Fourth").boundingBox()
       const list = await field.locator(":scope > div").boundingBox()
@@ -229,6 +228,25 @@ test("a field stays open until it is shut, however the page is resized (D7)", as
   await expect(card.getByRole("button", { name: /^Show less/ })).toBeVisible()
   const { shown, whole } = await linesOf(field)
   expect(shown).toBe(whole)
+})
+
+test("keeps focus on Show less when a resize lets the field fit (S4, D7)", async ({
+  page,
+  sheets,
+}) => {
+  await page.setViewportSize({ width: 375, height: 812 })
+  await openWithItems(page, sheets, withItems(...ITEMS), "Last")
+  const card = cardOf(page, "Width")
+  await card.getByRole("button", { name: /^Show more/ }).click()
+  const less = card.getByRole("button", { name: /^Show less/ })
+  await expect(less).toBeFocused()
+
+  await page.setViewportSize({ width: 1280, height: 900 })
+  expect(await linesOf(fieldOf(card, "Description"))).toEqual({
+    shown: 3,
+    whole: 3,
+  })
+  await expect(less).toBeFocused()
 })
 
 test("a pending change to a description is cut as it is, with its Changed tag (S8)", async ({

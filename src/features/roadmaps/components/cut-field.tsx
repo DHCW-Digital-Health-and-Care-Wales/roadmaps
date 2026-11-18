@@ -1,11 +1,4 @@
-import {
-  useId,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type ReactNode,
-  type RefObject,
-} from "react"
+import { useId, useLayoutEffect, useRef, useState, type RefObject } from "react"
 import { useTranslation } from "react-i18next"
 
 import { textLinkClasses } from "@/components/layout/text-link-classes"
@@ -79,15 +72,16 @@ function detailCuts(list: HTMLElement): string {
  */
 function useMeasure(
   element: RefObject<HTMLElement | null>,
-  content: unknown,
+  content: string,
   measure: (element: HTMLElement) => string,
 ): string {
   const [measured, setMeasured] = useState("")
   useLayoutEffect(() => {
     const current = element.current
     if (!current) return
+    let ended = false
     const read = () => {
-      setMeasured(measure(current))
+      if (!ended) setMeasured(measure(current))
     }
     read()
     if (typeof ResizeObserver === "undefined") return
@@ -95,6 +89,7 @@ function useMeasure(
     observer.observe(current)
     void document.fonts.ready.then(read)
     return () => {
+      ended = true
       observer.disconnect()
     }
   }, [element, content, measure])
@@ -139,14 +134,15 @@ export interface CutFieldProps {
    * assistive technology: "of the description of First item".
    */
   subject: string
-  children: ReactNode
+  children: string
 }
 
 /**
  * A text field's value, cut after three lines when it runs past them, with an ellipsis,
  * and a button under it that shows the rest in place and cuts it again (STY-066). A
  * field of three lines or fewer shows as it is, with no button. Opened it stays so until
- * it is shut or the card goes (D7). The text keeps its line breaks, which the field's
+ * it is shut or the card goes (D7), with its button, though the field then fits, so
+ * focus is not lost to a resize. The text keeps its line breaks, which the field's
  * own class passes on.
  */
 export function CutField({ subject, children }: CutFieldProps) {
@@ -160,7 +156,7 @@ export function CutField({ subject, children }: CutFieldProps) {
       <div ref={value} id={id} className={cn(!open && "line-clamp-3")}>
         {children}
       </div>
-      {runsPast && (
+      {(runsPast || open) && (
         <CutControl
           controls={id}
           open={open}
@@ -191,7 +187,7 @@ export function CutDetails({ details, subject }: CutDetailsProps) {
   const id = useId()
   const list = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
-  const cuts = useMeasure(list, details, detailCuts)
+  const cuts = useMeasure(list, JSON.stringify(details), detailCuts)
   const cutAtThree = cuts !== "" && !open
 
   return (
@@ -206,7 +202,7 @@ export function CutDetails({ details, subject }: CutDetailsProps) {
           textClass={(index) => (cutAtThree ? clampOf(cuts, index) : undefined)}
         />
       </div>
-      {cuts !== "" && (
+      {(cuts !== "" || open) && (
         <CutControl
           controls={id}
           open={open}

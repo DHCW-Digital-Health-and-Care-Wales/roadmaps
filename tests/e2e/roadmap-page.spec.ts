@@ -350,7 +350,7 @@ for (const theme of THEMES) {
     expect(button.x).toBeGreaterThan(opener.x + opener.width)
     expect(button.y + button.height).toBeLessThanOrEqual(firstField.y)
     // The fields sit in place, behind a rule in the border's colour.
-    const fields = about.getByRole("term").first().locator("xpath=../../..")
+    const fields = about.locator("[data-slot=collapsible-content]")
     await expect(fields).toHaveCSS("border-left-style", "solid")
     await expect(fields).toHaveCSS(
       "border-left-color",

@@ -7,7 +7,6 @@ import type { Language } from "./fixtures/look"
 import {
   about,
   focusClearOfBars,
-  namesShownInStuckRow,
   openLongRoadmap,
   openRoadmapIn,
   shownInStuckRow,
@@ -336,7 +335,7 @@ for (const { width, language, placement, publish } of [
     const row = page.locator("[data-stuck]")
     const shown = await shownInStuckRow(page)
     // Once stuck, More holds it (STY-059 D7).
-    const names = await namesShownInStuckRow(page)
+    const names = await Promise.all(shown.map((button) => button.innerText()))
     expect(names).toContain(COPY[language].more)
     expect(names).not.toContain(publish)
     await row

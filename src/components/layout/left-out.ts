@@ -28,9 +28,10 @@ export function controlAfter(
 
 /**
  * Where focus that has just landed on `target`, from `from`, goes while the header in
- * `container` is stuck: `release`, so the header lets go, when `target` is in a left-out
- * part and focus came from after it or from nowhere; the control past the part when it
- * came from before it, as Tab from the strip's menu button does; nowhere else, `null`.
+ * `container` is stuck: `release`, so the header lets go, when `target` is in a
+ * left-out part and focus came from after it or from nowhere; the control past the part
+ * when it came from before it, as Tab from the strip's menu button does; `null` outside
+ * a part, or when no control follows it.
  */
 export function leftOutFocus(
   target: Element,

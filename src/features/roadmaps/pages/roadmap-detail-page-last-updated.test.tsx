@@ -371,7 +371,10 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
       language: "cy",
     })
 
-    expect(await findRoadmapFacts()).not.toHaveTextContent(/Diweddarwyd/)
+    // The facts in Welsh, with no date fact for a roadmap with none (STY-059 S2).
+    const facts = await findRoadmapFacts()
+    expect(facts).toHaveTextContent("Arweinydd cynnyrch: Sam Evans")
+    expect(facts).not.toHaveTextContent(/Diweddarwyd/)
     await user.click(
       main().getByRole("button", { name: "Cyhoeddi'r map trywydd" }),
     )

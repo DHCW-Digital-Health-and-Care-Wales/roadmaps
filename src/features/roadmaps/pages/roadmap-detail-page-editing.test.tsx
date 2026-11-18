@@ -49,9 +49,9 @@ import {
   goToList,
   moreButton,
   openAbout,
-  roadmapFacts,
   openConflictReview,
   refreshRoadmap,
+  roadmapFacts,
 } from "../testing/roadmap-page"
 import { expectWriteHold, refreshHold } from "../testing/write-hold"
 

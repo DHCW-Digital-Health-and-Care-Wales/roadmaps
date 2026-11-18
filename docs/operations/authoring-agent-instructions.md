@@ -124,10 +124,10 @@ any file under `.agents/skills/` or `.claude/agents/`) in two cases:
 Any other guide change in a delivery is **incidental**, however its Delivery
 section explains it: a rule or pattern added, removed or reworded. Only a
 retrospective makes it, in its own PR, so the owner sees every change that
-can alter future delivery. The delivery names in its handoff, for the
-retrospective to weigh, each such learning for rungs 4 and 5, and each guide
-line its change makes false that no correction can make true, such as a rule
-about something the delivery removes.
+can alter future delivery. The delivery's handoff names, for the
+retrospective to weigh, each learning for rungs 4 and 5 and each guide line
+its change makes false that no correction can make true, such as a rule about
+something the delivery removes.
 
 ## How to write it
 

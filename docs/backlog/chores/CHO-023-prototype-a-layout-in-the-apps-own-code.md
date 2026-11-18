@@ -23,8 +23,9 @@ the skill should offer the shape, and when.
 
 ## Measurement
 
-From the STY-065 session of 2026-11-18, whose prototype was never committed, so the
-counts are that session's runs and cannot be reproduced at a commit:
+The first and third rows are from the STY-065 session of 2026-11-18, whose prototype
+was never committed, so they cannot be reproduced at a commit. The second is from the
+[page headers UX analysis](../../analysis/page-headers-ux-analysis.md) and EPC-013:
 
 | Area                                | Measurement                                                               | Verdict                      |
 | ----------------------------------- | ------------------------------------------------------------------------- | ---------------------------- |

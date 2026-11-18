@@ -15,7 +15,7 @@
 A card shows every field whole, so one long description makes its card as tall as it
 likes, and its row of cards with it. This story cuts any field of a card that runs
 past three lines: a description or an expected outcome ends in "…", a list of details
-stops after its third line, and "Show more" under it shows the rest in place, then
+stops at its third line, and "Show more" under it shows the rest in place, then
 reads "Show less". A short field is as it is today. Not in it: a limit on what a
 Product Lead may write. The public site still shows the whole text.
 
@@ -43,13 +43,15 @@ more than three lines of its card
 more"
 **And** each long field of a card opens without the others
 
-### S3: A long list of details stops after its third line (owner, D2)
+### S3: A long list of details is cut at its third line (owner, D2)
 
-**Given** an item whose details run to more than three lines, a nested detail counting
-as a line
+**Given** an item whose details take more than three lines of its card as drawn,
+counting every line a detail wraps onto and every nested detail
 **When** the page shows
-**Then** its first three lines show, with their nesting, then "Show more"
-**And** no ellipsis is added to a detail that is shown whole
+**Then** three lines of the list show, with their nesting, then "Show more"
+**And** a detail the cut falls within ends in an ellipsis on the third line; where the
+cut falls between two details, the last one shown is whole and gains none
+**And** one detail long enough to wrap past three lines is cut the same way
 
 ### S4: "Show more" shows the rest in place (owner, D1)
 
@@ -100,8 +102,9 @@ reports no WCAG 2.2 AA violation
 
 ## Tests
 
-S7 needs a browser: jsdom lays nothing out, so whether a field passes three lines is
-only true in Playwright, at 375px and 1280px and with the navigation folded. S1 to S6
+S3 and S7 need a browser: jsdom lays nothing out, so whether a field passes three
+lines, and where a wrapped detail is cut, is only true in Playwright, at 375px and
+1280px and with the navigation folded. S1 to S6
 and S8 hold as component tests once the measure is given to them.
 
 ## Decisions
@@ -122,8 +125,10 @@ and S8 hold as component tests once the measure is given to them.
 - **D5** (agent, 2026-11-18, from D2): the rule is by length, not by field: any field
   under a label that passes three lines is cut, so long tags or organisations are too,
   over a list of named fields. The title is never cut.
-- **D6** (agent, 2026-11-18, from D2): a list of details stops after its third line
-  with no ellipsis, since each detail shown is whole, over cutting a detail mid-line.
+- **D6** (agent, 2026-11-18, from D2; correctness review): a list of details is cut
+  by the lines it takes as drawn, as running text is, so a long detail that wraps is
+  cut within itself, over counting each detail as one line, which would let one long
+  detail fill the card.
 - **D7** (agent, 2026-11-18, analysis decision 24): a field shown whole stays so until
   "Show less" or until the page is left or its view changed, over keeping it on the
   device.
@@ -139,7 +144,7 @@ lines depends on the card's width, which follows the room the page has, not the
 window (`CardGrid`), and changes as the navigation folds or is dragged.
 `EditableItemCard` gives the card the item with its pending edits applied, so S8 needs
 nothing of the pending state. Details are a nested list of up to three levels
-(`DetailList`).
+(`DetailList`), so their cut is a height across list items, not one element's.
 
 ## Out of scope
 

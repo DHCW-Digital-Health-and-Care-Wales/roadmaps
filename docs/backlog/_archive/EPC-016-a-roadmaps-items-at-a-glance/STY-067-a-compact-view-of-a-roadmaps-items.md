@@ -234,6 +234,10 @@ title's row the switch takes about 220px: at 768px a title is left about 220px.
   with a 2px dark inner ring, the button transparent over it, as the navigation's pressed
   entry is: on the button the grey would hide the focus fill (`src/styles/AGENTS.md`).
   Focused, the pressed button shows the fill inside the ring (agent).
+- **S2**: on a phone in Cymraeg at 375px, "Ychwanegu eitem" and "Golwg gryno" leave
+  "Neidio i" cut to "Nei…" at the top, before any placement is named, where S2 expects
+  only a placement's name cut. The analysis named this risk for design D, with the
+  switch in More (design E) as the fallback; left to the owner in the PR (agent).
 - **S2**: where the page has no placements to jump to (no items yet, or while they are
   read), "Compact view" sits alone at the end of the row of Add an item (agent).
 - **S4**: on a desktop's line an unplaced item's flag takes at most a quarter of the

@@ -239,8 +239,12 @@ const CLASS_VALUE = String.raw`:matches(JSXAttribute[name.name="className"] > JS
 const VALUE_PART = String.raw`:matches(ConditionalExpression > .consequent, ConditionalExpression > .alternate, LogicalExpression > .right, LogicalExpression[operator!="&&"] > .left, TemplateLiteral > .expressions, ArrayExpression > .elements)`
 /** A class value, or a part of one, two levels deep (`a && (b ? ROWS : "")`). */
 const CLASS_VALUES = `:matches(${CLASS_VALUE}, ${CLASS_VALUE} > ${VALUE_PART}, ${CLASS_VALUE} > ${VALUE_PART} > ${VALUE_PART})`
-/** A name lint reads no classes from, alone or as a lookup's root (`INDENTS[level]`). */
-const UNLINTED_NAME = String.raw`:matches(Identifier:not([name=/${LINTED_VARIABLE}|^undefined$/]), MemberExpression:not([object.name=/${LINTED_VARIABLE}/], [property.name=/${LINTED_VARIABLE}/]))`
+/**
+ * A name lint reads no classes from, alone or as a lookup's root (`INDENTS[level]`).
+ * Only `…Classes` is read as a map, one level down too; a forwarded `props.className`
+ * was linted where it was written.
+ */
+const UNLINTED_NAME = String.raw`:matches(Identifier:not([name=/${LINTED_VARIABLE}|^undefined$/]), MemberExpression:not([object.name=/${CLASSES_VARIABLE}/], [object.object.name=/${CLASSES_VARIABLE}/], [property.name="className"]))`
 
 /** `no-restricted-syntax`: design values that bypass classes (S4). */
 const backDoors = [
@@ -300,8 +304,8 @@ const backDoors = [
     // Lint reads a variable's classes by its name alone, so a class list in any other
     // variable went unchecked: STY-052's `IN_FLOW`, STY-054's `ITEM_CLASSES` and
     // `ROADMAP_ROWS`. Not covered: a name passed to `cva()` or `…Variants({ className })`,
-    // or a callback's parameter named `…Classes`. Review by 2027-02-16 whether it has
-    // caught any since.
+    // a callback's parameter or a function named `…Classes`, a cast, a spread, and a
+    // third level of nesting. Review by 2027-02-16 whether it has caught any since.
     selector: `${UNLINTED_NAME}${CLASS_VALUES}`,
     message:
       "Class list in a variable lint cannot read: name the variable …Classes, so lint checks its classes (ADR-010).",

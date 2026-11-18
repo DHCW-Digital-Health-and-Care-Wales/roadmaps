@@ -14,6 +14,10 @@ const ITEM_CLASSES = "rounded-lg"
 const rowClasses = "auto-rows-fr"
 const className: string | undefined = undefined
 const classNames = "auto-rows-fr"
+const styles = { idle: "auto-rows-fr" }
+const TONE = { idleClasses: "auto-rows-fr" }
+const props = { className: "auto-rows-fr" }
+const nestedClasses = { idle: { text: "auto-rows-fr" } }
 
 export const s1UnknownClasses = [
   <div className="bg-red-500" />, // ✗ Unknown class detected: bg-red-500
@@ -167,11 +171,14 @@ export const s4ClassVariables = [
   <div className={cn(["p-2", ROWS])} />, // ✗ Class list in a variable lint cannot read
   <div className={cn(ROWS || "p-2")} />, // ✗ Class list in a variable lint cannot read
   <div className={cn(active && (active ? ROWS : "p-2"))} />, // ✗ Class list in a variable lint cannot read
+  <div className={cn(styles.idle)} />, // ✗ Class list in a variable lint cannot read
+  <div className={TONE.idleClasses} />, // ✗ Class list in a variable lint cannot read
   <div className={rowClasses} />,
   <div className={cn("p-2", active && rowClasses, className, classNames)} />,
   <div className={active ? rowClasses : undefined} />,
   <div className={cn(active ? "p-2" : "p-3", stateClasses.idle)} />,
   <div className={`p-2 ${rowClasses}`} />,
+  <div className={cn(props.className, nestedClasses.idle.text, stateClasses["busy"])} />,
 ]
 
 const layoutStyle: React.CSSProperties = { color: "red" } // ✗ Design property in an inline style

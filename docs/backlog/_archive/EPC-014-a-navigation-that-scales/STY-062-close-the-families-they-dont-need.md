@@ -142,7 +142,7 @@ key needs no migration.
   well as opening the listed ones.
 - **A closed family's list is not rendered** (agent), where the prototype also omits it;
   `aria-controls` is dropped while it is closed.
-- **Arriving opens the family once per arrival** (agent, D5): the provider compares the
+- **Arriving opens the family once per arrival** (agent, D5): `useClosedFamilies` compares the
   current roadmap and its family with the last it handled while rendering, so closing the
   current roadmap's family afterwards (its button, or "Close all", S3) is not undone, and
   a refetch or a language change, which keep the family's key, do not reopen it. Disconnect

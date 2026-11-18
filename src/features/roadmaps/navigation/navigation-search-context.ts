@@ -4,9 +4,9 @@ import type { RoadmapGroup } from "../group-roadmaps"
 
 /**
  * The navigation's search and what it lists (STY-061), and the families it keeps closed
- * (STY-062), held above the routes' pages and
- * shared by the navigation beside the page and in the drawer, so it lasts while the
- * Product Lead moves between pages and as the drawer closes, not past a reload (D3).
+ * (STY-062), held above the routes' pages and shared by the navigation beside the page
+ * and in the drawer, so it lasts while the Product Lead moves between pages and as the
+ * drawer closes. The search does not last past a reload (D3); the closed families do.
  */
 export interface NavigationSearch {
   /** Every group of roadmaps, as the list orders them; `null` until they are read. */

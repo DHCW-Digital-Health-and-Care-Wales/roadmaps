@@ -120,10 +120,10 @@ function useNavigationFolded() {
 }
 
 /**
- * The open navigation's width on a desktop, in px: dragged or keyed (`setWidth`), kept on
- * this device when the Product Lead lets go (`keepWidth`) (STY-064 D3). While `open` it
- * sets `--navigation-width` on `frame`, before the next paint, as `usePinnedInset` sets
- * its bars' heights, since an inline style may not carry a custom property (ADR-010).
+ * The open navigation's width on a desktop, in px, dragged or keyed (`setWidth`); its edge
+ * keeps it on this device when the Product Lead lets go (STY-064 D3). While `open` it sets
+ * `--navigation-width` on `frame`, before the next paint, as `usePinnedInset` sets its
+ * bars' heights, since an inline style may not carry a custom property (ADR-010).
  */
 function useNavigationWidth(
   frame: RefObject<HTMLElement | null>,
@@ -138,7 +138,7 @@ function useNavigationWidth(
       element.style.removeProperty("--navigation-width")
     }
   }, [frame, open, width])
-  return [width, setWidth, storeNavigationWidth] as const
+  return [width, setWidth] as const
 }
 
 /**
@@ -149,8 +149,9 @@ function useNavigationWidth(
  *
  * On a desktop the navigation stands at the left, full height as the page scrolls past
  * (D7), open or folded to a rail; `--navigation-width` says how wide (an open one's is
- * dragged, STY-064), so the bars pinned to the screen start where it ends. Narrower, it is a drawer, opened by the menu button
- * at the start of the top bar and of a roadmap's sticky strip (D8, D9).
+ * dragged, STY-064), so the bars pinned to the screen start where it ends. Narrower, it is
+ * a drawer, opened by the menu button at the start of the top bar and of a roadmap's
+ * sticky strip (D8, D9).
  */
 export function AppShell({
   headerActions,
@@ -166,10 +167,7 @@ export function AppShell({
   const desktop = useMediaQuery(DESKTOP_WIDTH)
   const [folded, setFolded] = useNavigationFolded()
   const frame = useRef<HTMLDivElement>(null)
-  const [width, setWidth, keepWidth] = useNavigationWidth(
-    frame,
-    desktop && !folded,
-  )
+  const [width, setWidth] = useNavigationWidth(frame, desktop && !folded)
   const [drawer] = useState(createSheetHandle)
   const form: NavigationForm = folded ? "rail" : "full"
   const openNavigation = () => {
@@ -204,7 +202,7 @@ export function AppShell({
               onFoldedChange={setFolded}
               width={width}
               onResize={setWidth}
-              onResizeEnd={keepWidth}
+              onResizeEnd={storeNavigationWidth}
               search={navigationSearch(form, openNavigation)}
             >
               {navigation(form, openNavigation)}

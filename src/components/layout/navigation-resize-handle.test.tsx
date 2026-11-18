@@ -1,14 +1,17 @@
 import { screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { useState } from "react"
-import { beforeEach, describe, expect, it, onTestFinished, vi } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 
+import { stubPointerCapture } from "@/test/pointer-capture"
 import { renderWithI18n } from "@/test/render-with-i18n"
 
 import { NavigationResizeHandle } from "./navigation-resize-handle"
 
 // The edge of the open navigation (STY-064): a window splitter. Its place in the shell,
 // the bars that follow it and what is remembered are held in `app-shell-navigation.test.tsx`.
+
+const ended = vi.fn<(width: number) => void>()
 
 function Harness({ start = 256 }: { start?: number }) {
   const [width, setWidth] = useState(start)
@@ -23,19 +26,13 @@ function Harness({ start = 256 }: { start?: number }) {
     </>
   )
 }
-const ended = vi.fn<(width: number) => void>()
 
 const edge = () =>
   screen.getByRole("separator", { name: "Resize the navigation" })
 
 beforeEach(() => {
   ended.mockClear()
-  // jsdom has no pointer capture.
-  Element.prototype.setPointerCapture = vi.fn()
-  onTestFinished(() => {
-    // @ts-expect-error -- jsdom has none: put it back as it was
-    delete Element.prototype.setPointerCapture
-  })
+  stubPointerCapture()
 })
 
 describe("the edge", () => {

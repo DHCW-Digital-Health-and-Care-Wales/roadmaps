@@ -28,8 +28,8 @@ export interface NavigationSidebarProps {
  * showing Lucide's `panel-left-close` while open and `panel-left-open` while folded
  * (D10, D11); it is one button throughout, so focus stays on it. It ends the top row,
  * after the search, which stays in view as the list scrolls (STY-061 S8); folded, the
- * row stacks the search's spyglass above it (S9). Open, its right edge is the last stop and
- * drags its width (STY-064); the rail has none.
+ * row stacks the search's spyglass above it (S9). Open, its right edge is the last stop
+ * and drags its width (STY-064); the rail has none.
  */
 export function NavigationSidebar({
   folded,

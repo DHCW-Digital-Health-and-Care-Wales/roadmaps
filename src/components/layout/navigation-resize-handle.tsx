@@ -78,6 +78,12 @@ export function NavigationResizeHandle({
     }
   }
 
+  // A change that is made at once: the width asked for is the width kept.
+  const setTo = (next: number) => {
+    onResize(next)
+    onResizeEnd(next)
+  }
+
   const finish = () => {
     const current = drag.current
     if (!current) return
@@ -129,16 +135,13 @@ export function NavigationResizeHandle({
       onPointerCancel={finish}
       onLostPointerCapture={finish}
       onDoubleClick={() => {
-        onResize(DEFAULT_NAVIGATION_WIDTH)
-        onResizeEnd(DEFAULT_NAVIGATION_WIDTH)
+        setTo(DEFAULT_NAVIGATION_WIDTH)
       }}
       onKeyDown={(event) => {
         const to = keyTo(event)
         if (to === null) return
         event.preventDefault()
-        const next = clampNavigationWidth(to)
-        onResize(next)
-        onResizeEnd(next)
+        setTo(clampNavigationWidth(to))
       }}
     >
       {/* The line shown under a pointer and while dragged, thinner than its hit area. */}

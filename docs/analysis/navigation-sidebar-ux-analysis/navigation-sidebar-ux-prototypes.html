@@ -1221,8 +1221,9 @@
             </li>
             <li>
               Choose Phone 375 and press Menu. The search and Close menu share
-              the top row. Press the count: the drawer stays open. Choose a
-              roadmap: it closes.
+              the top row, and focus starts on Close menu, so the phone's
+              keyboard stays shut. Press the count: the drawer stays open.
+              Choose a roadmap: it closes.
             </li>
             <li>
               On Laptop 1024, drag the navigation to its widest, and see how
@@ -1548,8 +1549,10 @@
             if (cleanQuery(text) !== "") state.onlyChanged = false
             draw()
             const query = cleanQuery(text)
-            if (query === "") say(ALL_TEXT, true)
-            else
+            // A blank search leaves the count's narrowing as it was.
+            if (query === "") {
+              if (!state.onlyChanged) say(ALL_TEXT, true)
+            } else
               say(
                 foundText(
                   listed(state).families.flatMap((f) => f.roadmaps).length,
@@ -1563,8 +1566,11 @@
             say(ALL_TEXT)
           },
           count() {
-            state.folded = false
-            if (state.onlyChanged) {
+            // From the rail, the circle always opens the navigation narrowed;
+            // in the drawer, the desktop's fold is left as it was.
+            const fromRail = state.folded && screenWidth >= DESKTOP
+            if (fromRail) state.folded = false
+            if (state.onlyChanged && !fromRail) {
               state.onlyChanged = false
               say(ALL_TEXT)
             } else {
@@ -1613,7 +1619,8 @@
           },
           menu() {
             state.drawerOpen = true
-            draw(`${id}-search`)
+            // Close menu, not the search, so a phone's keyboard stays shut.
+            draw("close")
           },
           closeMenu() {
             state.drawerOpen = false
@@ -2024,7 +2031,7 @@
                 {},
                 state.page === "all"
                   ? "14 roadmaps"
-                  : "5 families, 3 categories and 9 organisations",
+                  : "4 families, 3 categories and 9 organisations",
               ),
               h(
                 "div",

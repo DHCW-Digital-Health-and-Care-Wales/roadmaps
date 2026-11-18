@@ -14,8 +14,8 @@ Lead scrolls past the products they don't lead on every switch, and a long title
 Its count leads to one roadmap with changes at a time. This epic adds a search above the
 list, families that close (one at a time or all together), a count that shows only the
 roadmaps with changes, and an edge to drag the navigation's width. It leaves the
-navigation's entries, their order and marks, the rail and the phone's drawer as they
-are, and writes nothing new to the data source.
+navigation's entries, their order and marks, the rail's marks and the drawer's entries
+as they are, and writes nothing new to the data source.
 
 ## Owner decisions waiting
 
@@ -23,8 +23,8 @@ None.
 
 ## Findings
 
-Audited at `f46384c` on 2026-11-18, from the navigation UX analysis's captures of the
-shell at 1280px and 375px.
+Audited at `f46384c` on 2026-11-18 against the code and the running app at 1280px and
+375px (captures taken for the analysis, not kept).
 
 | Screen                      | The navigation today                                                                             |
 | --------------------------- | ------------------------------------------------------------------------------------------------ |
@@ -109,7 +109,8 @@ One rule decides what the navigation lists, and every story keeps it:
   all" does not show. Only one narrows at a time: pressing the count empties the search,
   and typing lets the count go.
 - The rail lists every roadmap, whole, whatever the search, the count or the closed
-  families; it names no family.
+  families; it shows no family heading or control, and each family's list keeps its
+  name for a screen reader, as today.
 - All roadmaps, the count and "Families, categories and organisations" always show.
 
 ### State the shell keeps
@@ -146,12 +147,12 @@ links and buttons, `focus-ring` on the search).
 
 ## Stories
 
-| ID      | Story                                                                                                                         | Area                               | Depends on          | State |
-| ------- | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ------------------- | ----- |
-| STY-061 | [A Product Lead finds a roadmap by searching the navigation](STY-061-find-a-roadmap-by-searching-the-navigation.md)           | Features/UI + i18n (en + cy) + E2E | —                   |       |
-| STY-062 | [A Product Lead closes the families they don't need](STY-062-close-the-families-they-dont-need.md)                            | Features/UI + i18n (en + cy) + E2E | STY-061             |       |
-| STY-063 | [A Product Lead shows only the roadmaps with unpublished changes](STY-063-show-only-the-roadmaps-with-unpublished-changes.md) | Features/UI + i18n (en + cy) + E2E | STY-061, STY-062    |       |
-| STY-064 | [A Product Lead drags the navigation to the width they want](STY-064-drag-the-navigation-to-the-width-they-want.md)           | Features/UI + i18n (en + cy) + E2E | STY-061 (preferred) |       |
+| ID      | Story                                                                                                                         | Area                               | Depends on                   | State |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ---------------------------- | ----- |
+| STY-061 | [A Product Lead finds a roadmap by searching the navigation](STY-061-find-a-roadmap-by-searching-the-navigation.md)           | Features/UI + i18n (en + cy) + E2E | —                            |       |
+| STY-062 | [A Product Lead closes the families they don't need](STY-062-close-the-families-they-dont-need.md)                            | Features/UI + i18n (en + cy) + E2E | STY-061                      |       |
+| STY-063 | [A Product Lead shows only the roadmaps with unpublished changes](STY-063-show-only-the-roadmaps-with-unpublished-changes.md) | Features/UI + i18n (en + cy) + E2E | STY-061, STY-062             |       |
+| STY-064 | [A Product Lead drags the navigation to the width they want](STY-064-drag-the-navigation-to-the-width-they-want.md)           | Features/UI + i18n (en + cy) + E2E | STY-061, STY-060 (preferred) |       |
 
 ## Sequencing
 
@@ -161,7 +162,9 @@ it, hard, since a search must find roadmaps in closed families. STY-063 follows 
 hard: pressing the count empties the search, and shows roadmaps in closed families.
 STY-064 touches the sidebar's frame and the pinned bars, not the list; it runs last to
 keep the sidebar's changes in one place at a time, though only its order after STY-061
-matters.
+matters within this epic. Across epics, it follows EPC-013's STY-060, which rebuilds
+the roadmap's stuck strip and the pending changes' foot bar that STY-064 S1 moves, so
+the two never change those bars at once.
 
 ## Out of scope
 

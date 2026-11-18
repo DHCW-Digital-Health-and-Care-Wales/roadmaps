@@ -94,6 +94,8 @@ search
 **Given** a 375px phone with the drawer open
 **When** the Product Lead looks at its top
 **Then** the search and Close menu share one row, and the drawer is still named "Menu"
+**And** focus starts on Close menu, so the phone's keyboard stays shut until they choose
+the search
 **And** choosing a roadmap closes the drawer, and the search holds its text when the
 drawer opens again
 **And** Escape in a search with text clears it; in an empty search it closes the drawer
@@ -133,6 +135,9 @@ themes
   row stays in place inside the landmark. Changes STY-054's drawer and fold button row.
 - **D6** (agent, 2026-11-18): no search before the roadmaps are read, over a search that
   can find nothing, as STY-054 S4 offers nothing that would fail.
+- **D7** (agent, 2026-11-18, code review): the drawer opens with focus on Close menu,
+  over the search, its first control, which would open a phone's keyboard on every
+  visit.
 
 ## Starting point
 

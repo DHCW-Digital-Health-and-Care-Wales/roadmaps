@@ -5,7 +5,7 @@
 - **Type**: Feature
 - **Area**: Features/UI + i18n (en + cy) + E2E
 - **Epic**: [EPC-014-a-navigation-that-scales](README.md)
-- **Depends on**: STY-061 (preferred order)
+- **Depends on**: STY-061 (preferred order), STY-060 (preferred order)
 - **Binding ADRs**: ADR-010, ADR-008, ADR-005
 - **Suggested model**: Sonnet — a window splitter on the sidebar's edge, with the pinned
   bars following a width they already read
@@ -68,6 +68,13 @@ focus staying on it and the navigation's focus style showing
 **Then** a roadmap's page keeps its cards and controls in the 624px left, with no
 sideways scroll, in English and Cymraeg
 
+### S8: By touch
+
+**Given** a touch screen 1024px or wider, such as a tablet held sideways
+**When** the Product Lead drags the edge with a finger
+**Then** it widens and narrows as with a pointer, the edge easy to catch though its line
+is thin
+
 ## Decisions
 
 - **D1** (owner, 2026-11-18, request): on a desktop the navigation's width is set by
@@ -87,7 +94,8 @@ the same property. shadcn's `resizable` wraps `react-resizable-panels`, which si
 panels in percentages of a group, not a px custom property that fixed bars outside the
 group read: weigh it against a separator built on the WAI-ARIA window splitter pattern
 before choosing, and record the choice (ADR-005 bars a hand-rolled primitive that
-competes with one the stack offers).
+competes with one the stack offers). ADR-010's STY-054 amendment says the width is
+set in `globals.css` and gives the card columns at 1280px: this delivery amends it.
 
 ## Out of scope
 

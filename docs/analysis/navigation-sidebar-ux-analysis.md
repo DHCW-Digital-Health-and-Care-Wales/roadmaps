@@ -8,7 +8,7 @@
   `NavigationDrawer`) on a desktop, folded to its rail, and as a phone's drawer. It comes
   from the owner's request of 2026-11-18, with no record yet. The owner asked for one
   design, so this analysis compares the design with today's navigation, not with other
-  designs. Base `f46384c`. Only documents and one prototype page were added; no
+  designs, in one section for its three journey groups, which share one screen. Base `f46384c`. Only documents and one prototype page were added; no
   application code, and no correction to the skill's stylesheet or starter.
 - **Prototypes**: one self-contained page, a **working component**,
   [`navigation-sidebar-ux-prototypes.html`](navigation-sidebar-ux-analysis/navigation-sidebar-ux-prototypes.html).
@@ -120,7 +120,7 @@ decision it reopens. No record holds open questions on this yet.
 | 1   | Where the work goes: no epic or story holds it.                                                                                                                                                                                                                                                                                                                             | (a) a new epic of three stories (search; families that close; width), with the count's narrowing in the search story; (b) one story; (c) one story per bullet of the request          |
 | 2   | The family's icon: the request says it "changes depending on whether the nav is open or closed". The prototype reads that as the family open or closed.                                                                                                                                                                                                                     | (a) chevron down while open, right while closed, as drawn; (b) chevron up while open, down while closed; (c) the icon follows the navigation's fold, as the words could also mean     |
 | 3   | What the family's button is: the prototype makes the whole name the button, its chevron at the end.                                                                                                                                                                                                                                                                         | (a) the whole name, as drawn; (b) the chevron alone, the name a heading                                                                                                               |
-| 4   | Whether closed families are remembered.                                                                                                                                                                                                                                                                                                                                     | (a) on this device, as the fold is (STY-054 D5), as drawn; (b) for the visit only                                                                                                     |
+| 4   | Whether closed families and the width are remembered.                                                                                                                                                                                                                                                                                                                       | (a) on this device, as the fold is (STY-054 D5), as drawn; (b) for the visit only                                                                                                     |
 | 5   | A closed family holding a roadmap with changes.                                                                                                                                                                                                                                                                                                                             | (a) keeps a dot on its name, read as "unpublished changes", as drawn; (b) nothing                                                                                                     |
 | 6   | What the search compares.                                                                                                                                                                                                                                                                                                                                                   | (a) the title and the family's name, without case or accents, as drawn; (b) the title alone; (c) both languages' titles, so a Welsh title is found from the English interface         |
 | 7   | A search with a closed family.                                                                                                                                                                                                                                                                                                                                              | (a) finds roadmaps in closed families, which come back closed once cleared, as drawn; (b) searches open families only                                                                 |
@@ -139,10 +139,11 @@ decision it reopens. No record holds open questions on this yet.
 
 On 2026-11-18 the owner chose the chevrons as drawn (decision 2 (a)), accepted the
 count's change to STY-055 D5 (decision 9), and asked for the prototype to be delivered
-as drawn. The agent took option (a) of every other decision, as the prototype draws it;
-decision 1's (a) made
-[EPC-014 A navigation that scales](../backlog/EPC-014-a-navigation-that-scales/README.md),
-with the count's narrowing as a story of its own:
+as drawn. The agent took option (a) of every other decision but the first, as the
+prototype draws it. For decision 1 the agent made
+[EPC-014 A navigation that scales](../backlog/EPC-014-a-navigation-that-scales/README.md)
+of four stories, departing from (a) by giving the count's narrowing a story of its own,
+since it reopens STY-055 D5 and depends on both the search and closed families:
 
 | Decisions             | Record                                                                                                            |
 | --------------------- | ----------------------------------------------------------------------------------------------------------------- |
@@ -154,7 +155,8 @@ with the count's narrowing as a story of its own:
 _Not yet drawn_ is written into the stories' scenarios: Welsh (each story's last
 scenario), the navigation before the roadmaps are read (STY-061 S11), the drawer as a
 dialog (STY-061 S10, unchanged from STY-054 S5), the pinned bars following the width
-(STY-064 S1, S7). A shortcut to the search stays out of scope.
+(STY-064 S1, S7), a touch screen 1024px or wider (STY-064 S8). A shortcut to the search
+stays out of scope.
 
 ## Not yet drawn
 

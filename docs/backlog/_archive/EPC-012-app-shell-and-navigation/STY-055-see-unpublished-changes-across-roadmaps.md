@@ -74,8 +74,8 @@ leads to each. It changes nothing about how changes are kept or published.
   [STY-063](../../EPC-014-a-navigation-that-scales/STY-063-show-only-the-roadmaps-with-unpublished-changes.md)):
   with two or more roadmaps changed, the count is a button that shows only them, and
   every roadmap when pressed again, instead of leading to each in turn. Changes D5 for
-  two or more; S2 then holds by the narrowed list and the dots. With one, D5 and D6
-  stand.
+  two or more; S2 then holds by the narrowed list and the dots. With one, D5 stands; D6
+  stands at any count.
 
 ## Out of scope
 

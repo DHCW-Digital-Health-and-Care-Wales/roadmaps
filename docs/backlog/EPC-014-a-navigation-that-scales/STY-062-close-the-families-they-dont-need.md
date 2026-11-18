@@ -6,7 +6,7 @@
 - **Area**: Features/UI + i18n (en + cy) + E2E
 - **Epic**: [EPC-014-a-navigation-that-scales](README.md)
 - **Depends on**: STY-061 (hard, must be on the default branch)
-- **Binding ADRs**: ADR-010, ADR-008, ADR-005
+- **Binding ADRs**: ADR-010, ADR-008, ADR-005, ADR-013
 - **Suggested model**: Sonnet — a disclosure per family and one for all, remembered as
   the fold is
 
@@ -41,7 +41,8 @@ one of their roadmaps. A search still finds roadmaps in closed families.
 **Given** every family open
 **When** the Product Lead presses "Close all", above the first family
 **Then** every family closes, the current roadmap's too, and the button becomes "Open
-all" with focus on it
+all" with focus on it; a screen reader names them "Close all families" and "Open all
+families"
 **And** a screen reader is told every family is closed
 **When** they open one family alone
 **Then** the button is "Close all" again
@@ -76,9 +77,10 @@ does not show
 
 **Given** the navigation folded to its rail, with families closed
 **When** the Product Lead looks at it
-**Then** every roadmap's mark shows, and no family control
-**And** where every roadmap is in one group, so the navigation names no family (STY-054
-D3), there is no family button and no "Close all"
+**Then** every roadmap's mark shows, with no family heading or control, and each
+family's list keeps its name for a screen reader
+**And** where no roadmap has a family, so the navigation names no family
+(`namesFamilies`), there is no family button and no "Close all"
 
 ### S8: On a phone, in Welsh, by keyboard
 

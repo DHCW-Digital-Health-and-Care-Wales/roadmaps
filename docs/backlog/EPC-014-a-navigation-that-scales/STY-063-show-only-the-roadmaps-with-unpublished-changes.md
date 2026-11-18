@@ -43,6 +43,7 @@ name, Shared care plans among them
 **Given** the count pressed
 **When** the Product Lead types in the search
 **Then** the count is no longer pressed, and the search narrows the list (STY-061)
+**And** spaces alone leave the count pressed, and nothing is announced
 
 ### S4: Fewer than two left
 
@@ -63,12 +64,13 @@ text
 **Given** the count pressed
 **When** the Product Lead chooses Carers' register
 **Then** its page opens, and the navigation still shows only the roadmaps with changes
-**And** on a 375px phone, pressing the count leaves the drawer open, and choosing a
-roadmap closes it
+**And** on a 375px phone, pressing the count leaves the drawer open and the desktop's
+fold as it was, and choosing a roadmap closes the drawer
 
 ### S7: From the rail
 
-**Given** the navigation folded to its rail, three roadmaps changed
+**Given** the navigation folded to its rail, three roadmaps changed, the count pressed
+or not
 **When** the Product Lead presses the count's circle
 **Then** the navigation opens, remembered as open, with only those three showing and
 the count pressed
@@ -81,6 +83,13 @@ the count pressed
 **Then** its text and the pressed state fit with no sideways scroll, it is reached and
 worked by keyboard with the navigation's focus styles, and its pressed state is visible
 on navy in both themes
+
+### S9: While the roadmaps are unread
+
+**Given** three roadmaps with unpublished changes, and the Product Lead disconnected or
+the list failed to load
+**When** they look at the navigation
+**Then** the count is text, as STY-055 D6 says, and nothing to press
 
 ## Decisions
 

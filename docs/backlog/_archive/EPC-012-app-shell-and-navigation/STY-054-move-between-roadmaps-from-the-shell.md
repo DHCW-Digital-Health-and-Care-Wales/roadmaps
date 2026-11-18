@@ -103,11 +103,14 @@ Cymraeg
   both; changes the departure that kept them.
 - **D13** (owner, 2026-11-18, navigation UX analysis; delivered by
   [EPC-014](../../EPC-014-a-navigation-that-scales/README.md)): the navigation gains a
-  search in its top row beside the fold button, which moves inside the landmark and
-  stays in view as the list scrolls; the drawer's top row holds the search and Close
-  menu, so "Menu" names it without showing (STY-061); families close (STY-062); the open
-  navigation's width is dragged from 208px to 400px, remembered as D5's fold is
-  (STY-064). Changes D5 (a fixed width) and the drawer's visible title.
+  search in its top row with the fold button to its right, a spyglass when folded
+  (STY-061); families close one at a time or all together (STY-062); on a desktop its
+  width is dragged (STY-064). Changes D5's fixed width.
+- **D14** (agent, 2026-11-18, navigation UX analysis decisions 13 to 15 (a)): the top
+  row moves inside the landmark and stays in view as the list scrolls; the drawer's top
+  row holds the search and Close menu, so "Menu" names the drawer without showing
+  (STY-061 D5); the width runs from 208px to 400px, remembered as D5's fold is (STY-064
+  D2, D3). Changes S5's drawer, whose dialog behaviour stands.
 
 ## Out of scope
 

@@ -167,6 +167,12 @@ announced and shown in view, and focus goes to it as it does today
   items, after Close their notice ("Some changes couldn't be kept") sits at the foot in
   the bar's place until dismissed, as D21 places an outcome with nothing pending.
   Refines D17 for that case.
+- **D24** (owner, 2026-11-18, page headers UX analysis decisions 6, 7 and 8; delivered
+  by [STY-059](../../EPC-013-tidy-page-tops/STY-059-a-roadmaps-page-opens-on-one-header-block.md) and
+  [STY-060](../../EPC-013-tidy-page-tops/STY-060-one-row-of-controls-at-the-top-and-once-scrolled.md)): "Publish
+  roadmap" moves beside the Not published tag, and into More once stuck at every width
+  (changes D15 and D19); once stuck on a phone More is an icon too (extends D18); the
+  phone's foot bar is one row.
 
 ## Out of scope
 

@@ -176,13 +176,13 @@ What moved the scores:
 On 2026-11-18 the owner kept round 4's page, removed rounds 1 to 3's, and accepted
 every decision above as posed: option (a) of each, which for decision 12 is G as
 drawn. The decisions and round 4's refinements went to
-[EPC-013 Tidy page tops](../backlog/EPC-013-tidy-page-tops/README.md):
+[EPC-013 Tidy page tops](../backlog/_archive/EPC-013-tidy-page-tops/README.md):
 
-| Decisions                                          | Record                                                                                                     |
-| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| 1 (the list's frames), 4, 5 (the families page), 9 | [STY-058](../backlog/_archive/EPC-013-tidy-page-tops/STY-058-a-tidy-top-to-the-roadmap-list.md)            |
-| 1, 3, 5, 6, 10, 11; the header block's refinements | [STY-059](../backlog/_archive/EPC-013-tidy-page-tops/STY-059-a-roadmaps-page-opens-on-one-header-block.md) |
-| 2, 7, 8, 12; the stuck strip's and foot bar's      | [STY-060](../backlog/EPC-013-tidy-page-tops/STY-060-one-row-of-controls-at-the-top-and-once-scrolled.md)   |
+| Decisions                                          | Record                                                                                                            |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| 1 (the list's frames), 4, 5 (the families page), 9 | [STY-058](../backlog/_archive/EPC-013-tidy-page-tops/STY-058-a-tidy-top-to-the-roadmap-list.md)                   |
+| 1, 3, 5, 6, 10, 11; the header block's refinements | [STY-059](../backlog/_archive/EPC-013-tidy-page-tops/STY-059-a-roadmaps-page-opens-on-one-header-block.md)        |
+| 2, 7, 8, 12; the stuck strip's and foot bar's      | [STY-060](../backlog/_archive/EPC-013-tidy-page-tops/STY-060-one-row-of-controls-at-the-top-and-once-scrolled.md) |
 
 Moving the Not published tag onto the status line (Opus, round 4) was left out: the
 owner accepted decision 6 as posed. The changes to STY-052, STY-053 and STY-054 are

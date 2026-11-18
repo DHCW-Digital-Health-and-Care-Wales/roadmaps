@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button"
 
 import type { PublishAction } from "./pending-changes-store"
 
+/** On a phone, the buttons' padding trimmed to give the count room (STY-060 D5). */
+const phonePaddingClasses = "max-sm:px-3"
+
 export interface PendingBarProps {
   action: PublishAction
   /** How many changes are pending. */
@@ -25,8 +28,9 @@ export interface PendingBarProps {
 /**
  * A roadmap's pending changes at the foot of the screen (STY-052 S2): their count, then
  * Publish (or Save, STY-025 S11) and Discard, short labels whose names say what they
- * act on, "Publish changes" and "Discard all changes" (D11, D18). The count keeps a row
- * of its own on a phone.
+ * act on, "Publish changes" and "Discard all changes" (D11, D18). One row at every
+ * width (STY-060 S6, D3): on a phone the count wraps where it must, and Publish drops its
+ * icon and both buttons some padding, to give it room (D5).
  */
 export function PendingBar({
   action,
@@ -40,22 +44,27 @@ export function PendingBar({
 }: PendingBarProps) {
   const { t } = useTranslation()
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <p className="font-bold" role="status">
+    <div className="flex items-center justify-between gap-3">
+      <p className="min-w-0 font-bold" role="status">
         {t(`roadmaps.publish.pending.${action}`, { count })}
       </p>
-      <div className="flex flex-wrap gap-3">
+      <div className="flex shrink-0 gap-3">
         <Button
           ref={publishButton}
           disabled={publishHeld}
           focusableWhenDisabled
           aria-busy={publishing}
           aria-label={t(`roadmaps.publish.action.${action}`)}
+          className={phonePaddingClasses}
           onClick={(event) => {
             onPublish(event.currentTarget)
           }}
         >
-          <UploadIcon data-icon="inline-start" aria-hidden="true" />
+          <UploadIcon
+            data-icon="inline-start"
+            aria-hidden="true"
+            className="max-sm:hidden"
+          />
           {t(`roadmaps.publish.bar.${action}`)}
         </Button>
         <Button
@@ -63,6 +72,7 @@ export function PendingBar({
           disabled={discardHeld}
           focusableWhenDisabled
           aria-label={t("roadmaps.publish.discardAll")}
+          className={phonePaddingClasses}
           onClick={onDiscard}
         >
           {t("roadmaps.publish.bar.discard")}

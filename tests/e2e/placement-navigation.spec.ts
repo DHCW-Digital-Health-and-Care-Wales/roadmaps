@@ -14,12 +14,14 @@ import {
 import { expect, test } from "./fixtures/test"
 
 /**
- * STY-053: a roadmap's page reaches any placement from "Jump to" in its header, or
- * from a row of links under "About this roadmap", each with its count and pending mark;
- * the page marks which placement it is in; and "About this roadmap" folds to one line.
+ * STY-053: a roadmap's page reaches any placement from its header, by "Jump to" below
+ * a desktop or a row of links from one (STY-060 S1), each with its count and pending
+ * mark; the page marks which placement it is in; and "About this roadmap" folds to one
+ * line.
  */
 
 const DESKTOP = { width: 1280, height: 800 }
+const IPAD = { width: 820, height: 1180 }
 const PHONE = { width: 375, height: 812 }
 
 const COPY = {
@@ -44,7 +46,7 @@ function jumpTo(page: Page, language: Language = "en"): Locator {
     .getByRole("button", { name: new RegExp(`^${COPY[language].jumpTo}`) })
 }
 
-/** The row of links under "About this roadmap". */
+/** The row of placement links, a desktop's jump control. */
 function links(page: Page, language: Language = "en"): Locator {
   return page
     .getByRole("main")
@@ -104,9 +106,11 @@ async function topOf(locator: Locator): Promise<number> {
 
 for (const [device, size] of [
   ["a desktop", DESKTOP],
+  ["an iPad", IPAD],
   ["a phone", PHONE],
 ] as const) {
-  test(`jumps to Later from "Jump to", its heading under the stuck row, focused, the address unchanged, on ${device} (S1, D8)`, async ({
+  const desktop = size.width >= DESKTOP.width
+  test(`jumps to Later from ${desktop ? "its link" : '"Jump to"'}, its heading under the stuck row, focused, the address unchanged, on ${device} (S1, D8)`, async ({
     page,
     sheets,
   }) => {
@@ -114,7 +118,13 @@ for (const [device, size] of [
     await openLongRoadmap(page, sheets)
     const address = page.url()
 
-    await jumpFromMenu(page, "Later")
+    if (desktop) {
+      await links(page)
+        .getByRole("link", { name: /^Later,/ })
+        .click()
+    } else {
+      await jumpFromMenu(page, "Later")
+    }
 
     const later = placementHeading(page, "Later")
     await expect(later).toBeFocused()
@@ -128,7 +138,14 @@ for (const [device, size] of [
     await expect(
       page.getByRole("list", { name: "Later" }).getByRole("listitem").first(),
     ).toBeInViewport()
-    await expect(jumpTo(page)).toHaveAccessibleName("Jump to: Later")
+    if (desktop) {
+      await expect(row.getByRole("link", { name: /^Later,/ })).toHaveAttribute(
+        "aria-current",
+        "location",
+      )
+    } else {
+      await expect(jumpTo(page)).toHaveAccessibleName("Jump to: Later")
+    }
     expect(page.url()).toBe(address)
   })
 }
@@ -152,7 +169,7 @@ test.describe("with reduced motion", () => {
   })
 })
 
-test("jumps from the links under About, and from a heading jumped to, on to the next (S1)", async ({
+test("jumps from the links at the top, and from the stuck row's links on to the next (S1, STY-060 S1)", async ({
   page,
   sheets,
 }) => {
@@ -165,21 +182,29 @@ test("jumps from the links under About, and from a heading jumped to, on to the 
   await expect(placementHeading(page, "Next")).toBeFocused()
   expect(await focusClearOfBars(page)).toBeNull()
 
-  await jumpFromMenu(page, "Delivered this year")
+  await page
+    .locator("[data-stuck]")
+    .getByRole("link", { name: /^Delivered this year,/ })
+    .click()
   await expect(placementHeading(page, "Delivered this year")).toBeFocused()
   expect(await focusClearOfBars(page)).toBeNull()
 })
 
-test("shows each placement's count and marks those with pending changes (S2)", async ({
+/** Retitles "Now item 3", leaving a change pending in Now. */
+async function editNowItem(page: Page) {
+  const form = await openEditItemDialog(page, "Now item 3")
+  await form.getByRole("textbox", { name: "Title" }).fill("Now item three")
+  await form.getByRole("button", { name: "Done" }).click()
+  await expect(form).toBeHidden()
+}
+
+test("shows each placement's count in the links and marks those with pending changes (S2)", async ({
   page,
   sheets,
 }) => {
   await page.setViewportSize(DESKTOP)
   await openSmallRoadmap(page, sheets)
-  const form = await openEditItemDialog(page, "Now item 3")
-  await form.getByRole("textbox", { name: "Title" }).fill("Now item three")
-  await form.getByRole("button", { name: "Done" }).click()
-  await expect(form).toBeHidden()
+  await editNowItem(page)
 
   const now = links(page).getByRole("link", { name: /^Now,/ })
   await expect(now).toHaveAccessibleName("Now, 7 items, unpublished changes")
@@ -187,18 +212,32 @@ test("shows each placement's count and marks those with pending changes (S2)", a
   await expect(
     links(page).getByRole("link", { name: /^Next,/ }),
   ).toHaveAccessibleName("Next, 2 items")
-
-  await jumpTo(page).click()
-  await expect(
-    page.getByRole("menu").getByRole("menuitem", { name: /^Now,/ }),
-  ).toHaveAccessibleName("Now, 7 items, unpublished changes")
 })
 
-test("marks the placement the page is in, to sight and to a screen reader, and none at the top (S3, D8)", async ({
+test("shows each placement's count in Jump to and marks those with pending changes (S2)", async ({
   page,
   sheets,
 }) => {
-  await page.setViewportSize(DESKTOP)
+  await page.setViewportSize(IPAD)
+  await openSmallRoadmap(page, sheets)
+  await editNowItem(page)
+
+  await jumpTo(page).click()
+  const menu = page.getByRole("menu")
+  await expect(
+    menu.getByRole("menuitem", { name: /^Now,/ }),
+  ).toHaveAccessibleName("Now, 7 items, unpublished changes")
+  await expect(menu.getByRole("menuitem", { name: /^Now,/ })).toContainText("7")
+  await expect(
+    menu.getByRole("menuitem", { name: /^Next,/ }),
+  ).toHaveAccessibleName("Next, 2 items")
+})
+
+test("marks the placement the page is in, in Jump to, and none at the top (S3, D8)", async ({
+  page,
+  sheets,
+}) => {
+  await page.setViewportSize(IPAD)
   await openLongRoadmap(page, sheets)
   await expect(jumpTo(page)).toHaveAccessibleName("Jump to")
 
@@ -217,9 +256,28 @@ test("marks the placement the page is in, to sight and to a screen reader, and n
     window.scrollTo(0, 0)
   })
   await expect(jumpTo(page)).toHaveAccessibleName("Jump to")
-  await expect(
-    links(page).getByRole("link", { name: /^Next,/ }),
-  ).not.toHaveAttribute("aria-current")
+})
+
+test("marks the placement the page is in, in the links, and none at the top (S3, D8)", async ({
+  page,
+  sheets,
+}) => {
+  await page.setViewportSize(DESKTOP)
+  await openLongRoadmap(page, sheets)
+  const next = links(page).getByRole("link", { name: /^Next,/ })
+  await expect(next).not.toHaveAttribute("aria-current")
+
+  // Scrolled by hand: Next's heading just under the stuck row, as it sticks.
+  await placementHeading(page, "Next").evaluate((heading) => {
+    heading.scrollIntoView({ block: "start" })
+  })
+  await expect(next).toHaveAttribute("aria-current", "location")
+  await expect(next).toHaveCSS("font-weight", "700")
+
+  await page.evaluate(() => {
+    window.scrollTo(0, 0)
+  })
+  await expect(next).not.toHaveAttribute("aria-current")
 })
 
 test("reaches the unplaced items, and an empty placement, which says it has none (S4, S5)", async ({
@@ -238,12 +296,16 @@ test("reaches the unplaced items, and an empty placement, which says it has none
     placementHeading(page, "Not on the public roadmap"),
   ).toBeFocused()
 
-  await jumpFromMenu(page, "Not doing")
+  await links(page)
+    .getByRole("link", { name: /^Not doing,/ })
+    .click()
   await expect(placementHeading(page, "Not doing")).toBeFocused()
   await expect(
     page.getByRole("main").getByText("No items", { exact: true }).last(),
   ).toBeInViewport()
-  await expect(jumpTo(page)).toHaveAccessibleName("Jump to: Not doing")
+  await expect(
+    links(page).getByRole("link", { name: /^Not doing,/ }),
+  ).toHaveAttribute("aria-current", "location")
 })
 
 test("keeps About closed, so the first placement starts on the first screen at 1280×800 (S6, STY-059 S8)", async ({
@@ -283,34 +345,28 @@ test("is used by keyboard alone, in Cymraeg on a 375px phone, with no sideways s
   await expect(placementHeading(page, COPY.cy.later)).toBeFocused()
   await expect(jumpTo(page, "cy")).toHaveAccessibleName("Neidio i: Hwyrach")
 
-  for (const link of await links(page, "cy").getByRole("link").all()) {
-    await expect(link).toHaveAccessibleName(/^.+, (dim eitemau|\d+ .*eitem)/)
-  }
+  // "Jump to" alone: no row of links on a phone (STY-060 S1).
+  await expect(links(page, "cy")).toHaveCount(0)
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true)
-  // The links scroll inside their row; Tab brings each into view. Backwards from the
-  // heading jumped to, the last link is reached before the rest.
-  const notDoing = links(page, "cy").getByRole("link").last()
-  await tabTo(page, notDoing, "Shift+Tab", 40)
-  await expect(notDoing).toBeInViewport()
-  await page.keyboard.press("Enter")
-  await expect(placementHeading(page, "Ddim yn bwrw ymlaen")).toBeFocused()
 })
 
+// The longest name but the first placement's, which sits too close under the header
+// for a jump to it to stick the row; S5 of STY-060 holds the first in the strip.
 for (const { width, language, placement, publish } of [
   {
     width: 768,
     language: "cy",
-    placement: "Wedi'u cyflawni'n ddiweddar",
+    placement: "Wedi'u cyflawni eleni",
     publish: "Cyhoeddi'r map trywydd",
   },
   {
     width: 640,
     language: "cy",
-    placement: "Wedi'u cyflawni'n ddiweddar",
+    placement: "Wedi'u cyflawni eleni",
     publish: "Cyhoeddi'r map trywydd",
   },
   {

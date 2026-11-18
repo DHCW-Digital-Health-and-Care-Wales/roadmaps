@@ -278,14 +278,16 @@ for (const theme of THEMES) {
       // And one new item: its card's Remove (STY-046).
       await addItem(page, "Choose a clinic closer to home", "Next")
       await expect(main.getByText("2 unpublished changes")).toBeVisible()
-      // From the page's top, as the tour's stops are named: "Jump to" names the
-      // placement the page has scrolled into (STY-053 S3).
+      // From the page's top, as the tour's stops are named: no placement link is
+      // current yet (STY-053 S3), the links a desktop's jump control (STY-060 S1).
       await page.evaluate(() => {
         window.scrollTo(0, 0)
       })
       await expect(
-        main.getByRole("button", { name: "Jump to", exact: true }),
-      ).toBeVisible()
+        main
+          .getByRole("navigation", { name: "Horizons and sections" })
+          .locator("[aria-current]"),
+      ).toHaveCount(0)
 
       await expectEveryStopShowsAnIndicator(page)
     })

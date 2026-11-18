@@ -10,7 +10,6 @@
     - button "Edit About this roadmap"
   - button "Add an item"
   - button "More"
-  - button "Jump to"
   - navigation "Horizons and sections":
     - list:
       - listitem:

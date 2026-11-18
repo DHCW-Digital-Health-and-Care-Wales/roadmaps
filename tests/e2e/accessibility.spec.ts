@@ -135,9 +135,10 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expectNoAxeViolations(page, theme)
     })
 
-    test("a roadmap's placement navigation: Jump to open with a change pending, a placement jumped to, then About open (STY-053)", async ({
+    test("a roadmap's placement navigation on a phone: Jump to open with a change pending, a placement jumped to in the stuck strip, then About open (STY-053, STY-060)", async ({
       page,
     }) => {
+      await page.setViewportSize({ width: 375, height: 812 })
       await page.goto("./#/roadmaps/producta")
       await connect(page)
       const form = await openEditItemDialog(page, "Minimal card")
@@ -149,12 +150,14 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await main.getByRole("button", { name: /^Jump to/ }).click()
       const menu = page.getByRole("menu")
       await expect(menu).toBeVisible()
-      await expectNoAxeViolations(page, theme)
+      await expectNoAxeViolations(page, theme, { menuOpen: true })
 
       await menu.getByRole("menuitem", { name: /^Later,/ }).click()
       await expect(
         main.getByRole("heading", { level: 2, name: "Later", exact: true }),
       ).toBeFocused()
+      // The stuck strip, its Add an item and More icons (STY-060 S3).
+      await expect(page.locator("[data-stuck]")).toBeVisible()
       await expectNoAxeViolations(page, theme)
 
       await page.evaluate(() => {

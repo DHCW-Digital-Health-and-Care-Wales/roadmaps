@@ -264,7 +264,7 @@ for (const [edge, key] of [
   })
 }
 
-test("moves Publish roadmap into More once the row sticks, at every width, where on a phone Add an item is an icon (D18, STY-059 S6, D7)", async ({
+test("moves Publish roadmap into More once the row sticks, at every width, where on a phone Add an item and More are icons (D18, STY-059 S6, D7, STY-060 D2)", async ({
   page,
   sheets,
 }) => {
@@ -285,6 +285,7 @@ test("moves Publish roadmap into More once the row sticks, at every width, where
   expect(await namesShownInStuckRow(page)).not.toContain("Publish roadmap")
   await expect(addItem).toBeInViewport()
   await expect(addItem).toHaveCSS("width", "40px")
+  await expect(more.getByText("More")).toHaveClass(/sr-only/)
   await more.click()
   await expect(menuItems).toHaveText(["Refresh", "Publish roadmap"])
   await page.keyboard.press("Escape")
@@ -294,6 +295,7 @@ test("moves Publish roadmap into More once the row sticks, at every width, where
   await expect(page.locator("[data-stuck]")).toBeVisible()
   expect(await namesShownInStuckRow(page)).not.toContain("Publish roadmap")
   await expect(addItem).toHaveText("Add an item")
+  await expect(more.getByText("More")).not.toHaveClass(/sr-only/)
   await more.click()
   await expect(menuItems).toHaveText(["Refresh", "Publish roadmap"])
 })
@@ -393,12 +395,13 @@ test("fits the pinned controls in Cymraeg on a 375px phone, cutting no label (S7
     ).toBe(true)
   }
   await expect(main.getByText("1 newid heb ei gyhoeddi")).toBeInViewport()
-  // Stuck, the title is cut with an ellipsis where it must be, its name kept.
+  // Stuck, the title is cut with an ellipsis after two lines, its name kept (STY-060
+  // S3).
   const title = main.getByRole("heading", {
     level: 1,
     name: "Product A roadmap",
   })
-  await expect(title).toHaveCSS("text-overflow", "ellipsis")
+  await expect(title).toHaveCSS("-webkit-line-clamp", "2")
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth,

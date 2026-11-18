@@ -281,8 +281,8 @@ A frames page is assembled, so ask each reviewer to read it through every
 artboard screenshot and every section of `page-text.txt`, opening the markup
 for what those cannot show, and to list the artboards and sections it left
 unread: those, not line ranges of the page, are the unread part `delegation.md`
-gives a fresh reviewer. A working component's script and styles are written by
-hand, and are read as code.
+gives a fresh reviewer. A working component's page is written by hand and read
+as code, apart from the tokens and review chrome its starter copies in.
 
 ## Delegation
 

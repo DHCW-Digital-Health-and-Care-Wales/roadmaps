@@ -1,0 +1,284 @@
+import type { Page } from "@playwright/test"
+
+import { openEditItemDialog } from "./fixtures/dialogs"
+import { tokenColour } from "./fixtures/look"
+import { openLongRoadmap } from "./fixtures/roadmap-page"
+import { connect, expect, test } from "./fixtures/test"
+
+/**
+ * STY-055: which roadmaps have unpublished changes, from any page. The shell's navigation
+ * marks each with a dot and says how many under "All roadmaps", leading to them (D1); a
+ * rail keeps both (D3); on a phone the menu button carries a dot and says how many (D4);
+ * and Disconnect's question names the roadmaps, each a link (D2).
+ */
+
+const DESKTOP = { width: 1280, height: 800 }
+const PHONE = { width: 375, height: 812 }
+
+const navigation = (page: Page) =>
+  page.getByRole("navigation", { name: "Roadmaps" })
+
+const A_ITEM = "Example card with every column"
+const B_ITEM = "Building the core service"
+
+/** Gives a roadmap one pending change, by retitling the item `item` on its page. */
+async function change(page: Page, roadmapId: string, item: string) {
+  await page.goto(`./#/roadmaps/${roadmapId}`)
+  await expect(
+    page.getByRole("main").getByRole("heading", { level: 3, name: item }),
+  ).toBeVisible()
+  const form = await openEditItemDialog(page, item)
+  await form.getByRole("textbox", { name: "Title" }).fill(`${item}, edited`)
+  await form.getByRole("button", { name: "Done" }).click()
+  await expect(form).toBeHidden()
+}
+
+/** Two roadmaps with changes, then the families page, connected. */
+async function twoChangedThenFamilies(page: Page) {
+  await page.goto("./#/roadmaps/producta")
+  await connect(page)
+  await change(page, "producta", A_ITEM)
+  await change(page, "productb", B_ITEM)
+  await page.goto("./#/families")
+  await expect(
+    page.getByRole("main").getByRole("heading", { level: 1 }),
+  ).toBeVisible()
+}
+
+const count = (page: Page) =>
+  navigation(page).getByRole("link", {
+    name: "2 roadmaps have unpublished changes",
+  })
+
+test.describe("on a desktop", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.setViewportSize(DESKTOP)
+  })
+
+  test("shows no count while nothing is pending (S3)", async ({ page }) => {
+    await page.goto("./#/families")
+    await connect(page)
+
+    await expect(
+      navigation(page).getByRole("link", { name: "Product A roadmap" }),
+    ).toBeVisible()
+    await expect(navigation(page).getByText(/unpublished changes/)).toHaveCount(
+      0,
+    )
+  })
+
+  test("says on the families page how many roadmaps have unpublished changes, and marks each with a dot (S1, D1)", async ({
+    page,
+  }) => {
+    await twoChangedThenFamilies(page)
+
+    await expect(count(page)).toBeVisible()
+    const withDot = navigation(page).getByRole("link", {
+      name: "Product A roadmap, unpublished changes",
+    })
+    await expect(withDot).toBeVisible()
+    await expect(
+      navigation(page).getByRole("link", {
+        name: "Product B roadmap, unpublished changes",
+      }),
+    ).toBeVisible()
+    await expect(
+      navigation(page).getByRole("link", { name: "Product C roadmap" }),
+    ).toBeVisible()
+    // The dot is DHCW's yellow on the navy navigation.
+    await expect(withDot.locator(".size-2")).toHaveCSS(
+      "background-color",
+      await tokenColour(page, "--focus"),
+    )
+  })
+
+  test("leads from the count to each roadmap with changes in turn (S2)", async ({
+    page,
+  }) => {
+    await twoChangedThenFamilies(page)
+    const heading = (name: string) =>
+      page.getByRole("main").getByRole("heading", { level: 1, name })
+    // In the navigation's order, whichever it is.
+    const dotted = await navigation(page)
+      .getByRole("link", { name: /, unpublished changes$/ })
+      .evaluateAll((links) =>
+        // A name shown and the phrase read, one after the other: the title once.
+        links.map((link) => /Product \w roadmap/.exec(link.textContent)?.[0]),
+      )
+    expect(dotted).toHaveLength(2)
+    const [first = "", second = ""] = dotted
+
+    await count(page).click()
+    await expect(heading(first)).toBeVisible()
+    await expect(page.getByRole("main")).toBeFocused()
+    await count(page).click()
+    await expect(heading(second)).toBeVisible()
+    await count(page).click()
+    await expect(heading(first)).toBeVisible()
+  })
+
+  test("keeps the count and the dots when the navigation is folded to a rail (D3)", async ({
+    page,
+  }) => {
+    await twoChangedThenFamilies(page)
+
+    await page.getByRole("button", { name: "Fold the navigation" }).click()
+
+    await expect(count(page).locator("[aria-hidden]")).toHaveText("2")
+    await expect(
+      navigation(page).getByRole("link", {
+        name: "PA Product A roadmap, unpublished changes",
+      }),
+    ).toBeVisible()
+    await expect(
+      navigation(page).getByRole("link", { name: "PC Product C roadmap" }),
+    ).toBeVisible()
+  })
+
+  test("drops the count as the changes are published or discarded (S3)", async ({
+    page,
+  }) => {
+    await page.goto("./#/roadmaps/producta")
+    await connect(page)
+    await change(page, "producta", A_ITEM)
+    const one = navigation(page).getByRole("link", {
+      name: "1 roadmap has unpublished changes",
+    })
+    await expect(one).toBeVisible()
+
+    await page
+      .getByRole("main")
+      .getByRole("button", { name: "Discard all changes" })
+      .click()
+    await page
+      .getByRole("alertdialog")
+      .getByRole("button", { name: "Discard all changes" })
+      .click()
+
+    await expect(one).toBeHidden()
+    await expect(navigation(page).getByText(/unpublished changes/)).toHaveCount(
+      0,
+    )
+  })
+
+  test("names the roadmaps in Disconnect's question, each a link to it (D2)", async ({
+    page,
+  }) => {
+    await twoChangedThenFamilies(page)
+
+    await page
+      .getByRole("banner")
+      .getByRole("button", { name: "Disconnect" })
+      .click()
+    const question = page.getByRole("alertdialog")
+    await expect(
+      question.getByRole("list", {
+        name: "2 roadmaps have unpublished changes",
+      }),
+    ).toBeVisible()
+    await question.getByRole("link", { name: "Product B roadmap" }).click()
+
+    await expect(question).toBeHidden()
+    await expect(
+      page
+        .getByRole("main")
+        .getByRole("heading", { level: 1, name: "Product B roadmap" }),
+    ).toBeVisible()
+    await expect(page.getByRole("main")).toBeFocused()
+    // Still connected, and the changes are still there.
+    await expect(
+      page.getByRole("banner").getByRole("button", { name: "Disconnect" }),
+    ).toBeVisible()
+    await expect(count(page)).toBeVisible()
+  })
+})
+
+test.describe("on a phone", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.setViewportSize(PHONE)
+  })
+
+  const horizontalOverflow = (page: Page) =>
+    page.evaluate(
+      () =>
+        document.documentElement.scrollWidth -
+        document.documentElement.clientWidth,
+    )
+
+  test("carries a dot on the menu button and says how many, and the drawer shows the dots and the count (D4)", async ({
+    page,
+  }) => {
+    await twoChangedThenFamilies(page)
+
+    const menu = page.getByRole("banner").getByRole("button", {
+      name: "Menu, 2 roadmaps have unpublished changes",
+    })
+    await expect(menu).toBeVisible()
+    await expect(menu.locator(".size-2\\.5")).toHaveCSS(
+      "background-color",
+      await tokenColour(page, "--focus"),
+    )
+    await menu.click()
+
+    await expect(page.getByRole("dialog", { name: "Menu" })).toBeVisible()
+    await expect(count(page)).toBeVisible()
+    await expect(
+      navigation(page).getByRole("link", {
+        name: "Product A roadmap, unpublished changes",
+      }),
+    ).toBeVisible()
+  })
+
+  test("carries the dot on the button in a roadmap's sticky strip too (D4)", async ({
+    page,
+    sheets,
+  }) => {
+    await openLongRoadmap(page, sheets)
+    const form = await openEditItemDialog(page, "Planned work 3")
+    await form
+      .getByRole("textbox", { name: "Title" })
+      .fill("Planned work 3, edited")
+    await form.getByRole("button", { name: "Done" }).click()
+    await expect(form).toBeHidden()
+    await page
+      .getByRole("heading", { level: 2, name: "Later", exact: true })
+      .evaluate((heading) => {
+        heading.scrollIntoView({ block: "center" })
+      })
+
+    const strip = page.locator("[data-stuck]")
+    await expect(
+      strip.getByRole("button", {
+        name: "Menu, 1 roadmap has unpublished changes",
+      }),
+    ).toBeVisible()
+  })
+
+  test("fits in Cymraeg: the menu button says how many, and nothing scrolls sideways (D4)", async ({
+    page,
+  }) => {
+    await twoChangedThenFamilies(page)
+
+    await page.getByRole("button", { name: /^Language/ }).click()
+    await page.getByRole("menuitemradio", { name: "Cymraeg" }).click()
+
+    const menu = page.getByRole("banner").getByRole("button", {
+      name: "Dewislen, 2 fap trywydd â newidiadau heb eu cyhoeddi",
+    })
+    await expect(menu).toBeVisible()
+    expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0)
+    await menu.click()
+    const drawer = page.getByRole("dialog", { name: "Dewislen" })
+    await expect(drawer).toBeVisible()
+    const entry = drawer.getByRole("link", {
+      name: "2 fap trywydd â newidiadau heb eu cyhoeddi",
+    })
+    await expect(entry).toBeVisible()
+    const box = await drawer.boundingBox()
+    const link = await entry.boundingBox()
+    expect((link?.x ?? 0) + (link?.width ?? 0)).toBeLessThanOrEqual(
+      (box?.x ?? 0) + (box?.width ?? 0),
+    )
+    expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0)
+  })
+})

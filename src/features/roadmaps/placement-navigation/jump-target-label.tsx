@@ -1,6 +1,8 @@
 import { TriangleAlertIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
+import { UnpublishedDot } from "@/components/layout/unpublished-dot"
+
 import { jumpTargetName, type JumpTargetSummary } from "./jump-targets"
 
 /**
@@ -31,12 +33,7 @@ export function JumpTargetLabel({
       >
         {count}
       </span>
-      {pending && (
-        <span
-          aria-hidden="true"
-          className="size-2 shrink-0 rounded-full bg-status-info-border"
-        />
-      )}
+      {pending && <UnpublishedDot className="bg-status-info-border" />}
       <span className="sr-only">
         {t(
           pending ? "roadmaps.jumpTo.targetPending" : "roadmaps.jumpTo.target",

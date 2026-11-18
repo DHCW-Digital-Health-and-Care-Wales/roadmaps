@@ -67,6 +67,19 @@ export const cy = {
       closeMenu: "Cau'r ddewislen",
       fold: "Plygu'r llywio",
       unfold: "Agor y llywio",
+      unpublished_zero: "Dim mapiau trywydd â newidiadau heb eu cyhoeddi",
+      unpublished_one:
+        "{{count, number}} map trywydd â newidiadau heb eu cyhoeddi",
+      unpublished_two:
+        "{{count, number}} fap trywydd â newidiadau heb eu cyhoeddi",
+      unpublished_few:
+        "{{count, number}} map trywydd â newidiadau heb eu cyhoeddi",
+      unpublished_many:
+        "{{count, number}} map trywydd â newidiadau heb eu cyhoeddi",
+      unpublished_other:
+        "{{count, number}} o fapiau trywydd â newidiadau heb eu cyhoeddi",
+      menuUnpublished:
+        '$t(layout.navigation.menu), $t(layout.navigation.unpublished, {"count": {{roadmaps}} })',
     },
     footer: {
       copyright: "© Iechyd a Gofal Digidol Cymru",
@@ -153,6 +166,7 @@ export const cy = {
     noFamily: "Dim teulu cynnyrch",
     navigation: {
       all: "Pob map trywydd",
+      changed: "{{name}}, newidiadau heb eu cyhoeddi",
     },
     familiesLink: "Teuluoedd, categorïau a sefydliadau",
     lists: {

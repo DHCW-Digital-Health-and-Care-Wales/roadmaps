@@ -228,13 +228,19 @@ An empty placement still has a count, so both `target` and `targetPending` have
 the list, each roadmap by its title, "Families, categories and organisations"; a
 family names its roadmaps' list. A button that hides or shows the navigation names
 what pressing it does ("Fold the navigation", "Open the navigation"); a phone's button,
-and the drawer it opens, are "Menu", closed by "Close menu".
+and the drawer it opens, are "Menu", closed by "Close menu". Unpublished changes are
+said as a count of roadmaps, beginning with the number the rail shows ("2 roadmaps have
+unpublished changes"); a roadmap with some is its title, then "unpublished changes", and
+the menu button adds the count to "Menu" while there are any ("Menu, 2 roadmaps have
+unpublished changes").
 
 ```
 layout.navigation.label        Roadmaps
 layout.navigation.fold         Fold the navigation
 layout.navigation.closeMenu    Close menu
+layout.navigation.unpublished  2 roadmaps have unpublished changes
 roadmaps.navigation.all        All roadmaps
+roadmaps.navigation.changed    Product A roadmap, unpublished changes
 ```
 
 ## Publish and save

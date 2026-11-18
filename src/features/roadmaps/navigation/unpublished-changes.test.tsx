@@ -1,0 +1,358 @@
+import { act, screen, waitFor, within } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
+import { describe, expect, it } from "vitest"
+
+import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
+import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
+import { createI18n } from "@/i18n"
+import { DESKTOP_WIDTH } from "@/lib/use-media-query"
+import { connected } from "@/test/connected-state"
+import { matchMediaQueries } from "@/test/media-query"
+import { renderWithProviders } from "@/test/render-with-providers"
+
+import { editItemText } from "../testing/item-dialog"
+
+// STY-055: which roadmaps have unpublished changes, from any page: a dot on each in the
+// shell's navigation and under "All roadmaps" how many, which leads to them (S1 to S4,
+// D1, D3); the phone's menu button saying so (D4); and the Disconnect question naming
+// them (D2). What the roadmaps feature keeps and shows of the changes is held elsewhere.
+
+const family = { en: "Care Closer to Home", cy: "Gofal yn Nes at Adref" }
+const ROADMAPS = [
+  createTestRoadmap("producta", "Product A roadmap", { family }),
+  createTestRoadmap("productb", "Product B roadmap", { family }),
+  createTestRoadmap("productc", "Product C roadmap"),
+]
+const ROADMAP_ITEMS = {
+  producta: [createTestRoadmapItem("A item", { id: "a-1" })],
+  productb: [createTestRoadmapItem("B item", { id: "b-1" })],
+  productc: [createTestRoadmapItem("C item", { id: "c-1" })],
+}
+
+const navigation = () => screen.getByRole("navigation", { name: "Roadmaps" })
+/** The live region that says the count, empty while there is none. */
+function status(): HTMLElement {
+  const region = navigation().querySelector<HTMLElement>("[aria-live=polite]")
+  if (!region) throw new Error("The navigation has no live region")
+  return region
+}
+const total = (count: number) =>
+  count === 1
+    ? "1 roadmap has unpublished changes"
+    : `${String(count)} roadmaps have unpublished changes`
+
+async function renderShell(
+  options: Parameters<typeof renderWithProviders>[0] = {},
+) {
+  const user = userEvent.setup()
+  const rendered = await renderWithProviders({
+    authState: connected,
+    roadmaps: ROADMAPS,
+    roadmapItems: ROADMAP_ITEMS,
+    path: "/families",
+    ...options,
+  })
+  return { user, ...rendered }
+}
+
+/** Opens a roadmap and changes the title of its one item, so it has a pending change. */
+async function change(
+  user: ReturnType<typeof userEvent.setup>,
+  router: { navigate: (options: { to: string }) => Promise<void> },
+  roadmapId: string,
+  item: string,
+) {
+  await act(() => router.navigate({ to: `/roadmaps/${roadmapId}` }))
+  await screen.findByRole("heading", { level: 3, name: item })
+  await editItemText(user, item, "Title", `${item}, edited`)
+}
+
+async function changeTwo(
+  user: ReturnType<typeof userEvent.setup>,
+  router: Parameters<typeof change>[1],
+) {
+  await change(user, router, "producta", "A item")
+  await change(user, router, "productb", "B item")
+  await act(() => router.navigate({ to: "/families" }))
+}
+
+describe("on a desktop", () => {
+  it("shows no count and no dot while nothing is pending (S3)", async () => {
+    matchMediaQueries(DESKTOP_WIDTH)
+    await renderShell()
+
+    await within(navigation()).findByRole("link", { name: "Product A roadmap" })
+    expect(status()).toBeEmptyDOMElement()
+    expect(
+      within(navigation()).queryByText(/unpublished changes/),
+    ).not.toBeInTheDocument()
+  })
+
+  it("says how many roadmaps have unpublished changes from the families page, and marks each (S1, D1)", async () => {
+    matchMediaQueries(DESKTOP_WIDTH)
+    const { user, router } = await renderShell()
+    await changeTwo(user, router)
+
+    expect(within(status()).getByRole("link")).toHaveTextContent(total(2))
+    const nav = within(navigation())
+    expect(
+      nav.getByRole("link", { name: "Product A roadmap, unpublished changes" }),
+    ).toBeInTheDocument()
+    expect(
+      nav.getByRole("link", { name: "Product B roadmap, unpublished changes" }),
+    ).toBeInTheDocument()
+    expect(
+      nav.getByRole("link", { name: "Product C roadmap" }),
+    ).toBeInTheDocument()
+    // The dot is shape alone; the name says it in words.
+    const dot = (name: string) =>
+      nav.getByRole("link", { name }).querySelector(".size-2")
+    expect(dot("Product A roadmap, unpublished changes")).toBeInTheDocument()
+    expect(dot("Product C roadmap")).toBeNull()
+  })
+
+  it("leads to each roadmap with changes in turn, round to the first (S2)", async () => {
+    matchMediaQueries(DESKTOP_WIDTH)
+    const { user, router } = await renderShell()
+    await changeTwo(user, router)
+    const count = () => within(status()).getByRole("link")
+
+    expect(count()).toHaveAttribute("href", "/roadmaps/producta")
+    await user.click(count())
+    await screen.findByRole("heading", { level: 1, name: "Product A roadmap" })
+    expect(count()).toHaveAttribute("href", "/roadmaps/productb")
+    await user.click(count())
+    await screen.findByRole("heading", { level: 1, name: "Product B roadmap" })
+    expect(count()).toHaveAttribute("href", "/roadmaps/producta")
+  })
+
+  it("drops the count and the dot as a roadmap's last change goes (S3)", async () => {
+    matchMediaQueries(DESKTOP_WIDTH)
+    const { user, router } = await renderShell()
+    await change(user, router, "producta", "A item")
+    expect(status()).toHaveTextContent(total(1))
+
+    await user.click(
+      within(screen.getByRole("main")).getByRole("button", {
+        name: "Discard all changes",
+      }),
+    )
+    await user.click(
+      within(await screen.findByRole("alertdialog")).getByRole("button", {
+        name: "Discard all changes",
+      }),
+    )
+
+    await waitFor(() => {
+      expect(status()).toBeEmptyDOMElement()
+    })
+    expect(
+      within(navigation()).getByRole("link", { name: "Product A roadmap" }),
+    ).toBeInTheDocument()
+  })
+
+  it("speaks only when the number changes, not on a second edit of a roadmap (S4)", async () => {
+    matchMediaQueries(DESKTOP_WIDTH)
+    const { user, router } = await renderShell()
+    const region = status()
+    await change(user, router, "producta", "A item")
+    expect(region).toBe(status())
+    expect(region).toHaveTextContent(total(1))
+
+    const mutations: MutationRecord[] = []
+    const observer = new MutationObserver((records) => {
+      mutations.push(...records)
+    })
+    observer.observe(region, {
+      childList: true,
+      characterData: true,
+      subtree: true,
+    })
+    await editItemText(user, "A item, edited", "Title", "A item, edited again")
+    observer.disconnect()
+
+    expect(mutations).toEqual([])
+    await change(user, router, "productb", "B item")
+    expect(region).toHaveTextContent(total(2))
+  })
+
+  it("keeps the dots and the count folded to a rail (D3)", async () => {
+    matchMediaQueries(DESKTOP_WIDTH)
+    localStorage.setItem("roadmaps.navigation", "folded")
+    const { user, router } = await renderShell()
+    await changeTwo(user, router)
+
+    expect(
+      within(navigation()).getByRole("link", { name: total(2) }),
+    ).toHaveTextContent("2")
+    expect(
+      within(navigation()).getByRole("link", {
+        name: /^PA Product A roadmap, unpublished changes$/,
+      }),
+    ).toBeInTheDocument()
+    expect(
+      within(navigation()).getByRole("link", {
+        name: /^PC Product C roadmap$/,
+      }),
+    ).toBeInTheDocument()
+    localStorage.clear()
+  })
+
+  it("says it as text alone while the roadmaps are not read, as after Disconnect keeps the changes", async () => {
+    matchMediaQueries(DESKTOP_WIDTH)
+    const { user, router } = await renderShell()
+    await change(user, router, "producta", "A item")
+
+    await user.click(
+      within(screen.getByRole("banner")).getByRole("button", {
+        name: "Disconnect",
+      }),
+    )
+    await user.click(
+      screen.getByRole("button", { name: "Keep changes and disconnect" }),
+    )
+
+    await waitFor(() => {
+      expect(
+        within(navigation()).queryByRole("link", { name: "Product A roadmap" }),
+      ).not.toBeInTheDocument()
+    })
+    expect(status()).toHaveTextContent(total(1))
+    expect(within(status()).queryByRole("link")).not.toBeInTheDocument()
+  })
+})
+
+describe("on a phone", () => {
+  const menuButton = (name: string) =>
+    within(screen.getByRole("banner")).getByRole("button", { name })
+
+  it("has a plain menu button while nothing is pending, and says how many once something is (D4)", async () => {
+    const { user, router } = await renderShell()
+    expect(menuButton("Menu")).toBeInTheDocument()
+
+    // The dot is shape alone, named by the button.
+    expect(menuButton("Menu").querySelector(".size-2\\.5")).toBeNull()
+
+    await change(user, router, "producta", "A item")
+    expect(menuButton(`Menu, ${total(1)}`)).toBeInTheDocument()
+    expect(
+      menuButton(`Menu, ${total(1)}`).querySelector(".size-2\\.5"),
+    ).toBeInTheDocument()
+    await change(user, router, "productb", "B item")
+    expect(menuButton(`Menu, ${total(2)}`)).toBeInTheDocument()
+  })
+
+  it("shows the dots and the count inside the drawer (D4)", async () => {
+    const { user, router } = await renderShell()
+    await changeTwo(user, router)
+
+    await user.click(menuButton(`Menu, ${total(2)}`))
+
+    const drawer = await screen.findByRole("dialog", { name: "Menu" })
+    const nav = within(within(drawer).getByRole("navigation"))
+    expect(nav.getByRole("link", { name: total(2) })).toBeInTheDocument()
+    expect(
+      nav.getByRole("link", { name: "Product A roadmap, unpublished changes" }),
+    ).toBeInTheDocument()
+  })
+})
+
+describe("in Welsh", () => {
+  const { t } = createI18n({ language: "cy" })
+
+  it("names the count with the noun in its right form, and the menu button with it", () => {
+    expect(t("layout.navigation.unpublished", { count: 1 })).toBe(
+      "1 map trywydd â newidiadau heb eu cyhoeddi",
+    )
+    expect(t("layout.navigation.unpublished", { count: 2 })).toBe(
+      "2 fap trywydd â newidiadau heb eu cyhoeddi",
+    )
+    expect(t("layout.navigation.unpublished", { count: 7 })).toBe(
+      "7 o fapiau trywydd â newidiadau heb eu cyhoeddi",
+    )
+    expect(t("layout.navigation.menuUnpublished", { roadmaps: 2 })).toBe(
+      "Dewislen, 2 fap trywydd â newidiadau heb eu cyhoeddi",
+    )
+  })
+
+  it("names a roadmap with a dot", () => {
+    expect(t("roadmaps.navigation.changed", { name: "Product A" })).toBe(
+      "Product A, newidiadau heb eu cyhoeddi",
+    )
+  })
+})
+
+describe("Disconnect's question (D2)", () => {
+  async function askToDisconnect(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(
+      within(screen.getByRole("banner")).getByRole("button", {
+        name: "Disconnect",
+      }),
+    )
+    return within(await screen.findByRole("alertdialog"))
+  }
+
+  it("names each roadmap with unpublished changes as a link to it", async () => {
+    matchMediaQueries(DESKTOP_WIDTH)
+    const { user, router } = await renderShell()
+    await changeTwo(user, router)
+
+    const question = await askToDisconnect(user)
+
+    const list = question.getByRole("list", { name: total(2) })
+    expect(
+      within(list)
+        .getAllByRole("link")
+        .map((link) => [link.textContent, link.getAttribute("href")]),
+    ).toEqual([
+      ["Product A roadmap", "/roadmaps/producta"],
+      ["Product B roadmap", "/roadmaps/productb"],
+    ])
+  })
+
+  it("closes on choosing one, leaving the connection and the changes, and moves focus to its page", async () => {
+    matchMediaQueries(DESKTOP_WIDTH)
+    const { user, router, authClient } = await renderShell()
+    await changeTwo(user, router)
+
+    const question = await askToDisconnect(user)
+    await user.click(question.getByRole("link", { name: "Product B roadmap" }))
+
+    await waitFor(() => {
+      expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument()
+    })
+    expect(router.state.location.pathname).toBe("/roadmaps/productb")
+    await waitFor(() => {
+      expect(screen.getByRole("main")).toHaveFocus()
+    })
+    expect(authClient.disconnect).not.toHaveBeenCalled()
+    expect(status()).toHaveTextContent(total(2))
+  })
+
+  it("stays open for a link opened elsewhere, with a modifier key", async () => {
+    matchMediaQueries(DESKTOP_WIDTH)
+    const { user, router } = await renderShell()
+    await changeTwo(user, router)
+
+    const question = await askToDisconnect(user)
+    await user.keyboard("{Control>}")
+    await user.click(question.getByRole("link", { name: "Product B roadmap" }))
+    await user.keyboard("{/Control}")
+
+    expect(screen.getByRole("alertdialog")).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe("/families")
+  })
+
+  it("keeps its count and no list before the roadmaps are read", async () => {
+    matchMediaQueries(DESKTOP_WIDTH)
+    const { user, router, queryClient } = await renderShell()
+    await change(user, router, "producta", "A item")
+    queryClient.removeQueries({ queryKey: ["roadmaps", "list"], exact: false })
+
+    const question = await askToDisconnect(user)
+
+    expect(
+      question.getByText(/You've changed 1 roadmap without publishing/),
+    ).toBeInTheDocument()
+  })
+})

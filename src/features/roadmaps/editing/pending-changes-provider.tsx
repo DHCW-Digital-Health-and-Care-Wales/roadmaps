@@ -10,24 +10,17 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react"
-import { useTranslation } from "react-i18next"
 
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { DisconnectRequestContext } from "@/features/auth/disconnect-request"
 import { useAuth } from "@/features/auth/use-auth"
 
 import { roadmapKeys } from "../hooks/roadmap-queries"
+import {
+  DisconnectQuestionContext,
+  type DisconnectQuestionSubject,
+} from "./disconnect-question-context"
 import { reconcileItems, reconcileRoadmap } from "./pending-changes"
 import { PendingChangesContext } from "./pending-changes-context"
 import {
@@ -43,8 +36,9 @@ export interface PendingChangesProviderProps {
  * Holds every roadmap's pending edits for the life of the tab (ADR-012), outside the
  * query cache so Disconnect does not drop them. It drops, after each fresh read, every
  * change the data source already holds; asks before the tab is closed while any change
- * is pending; and asks, on Disconnect, whether to keep them. The store settles each
- * roadmap's pending orders against its items as cached (STY-050).
+ * is pending; and holds the question Disconnect asks, whether to keep them, which
+ * `DisconnectQuestion` puts to the Product Lead from inside the router. The store settles
+ * each roadmap's pending orders against its items as cached (STY-050).
  */
 export function PendingChangesProvider({
   children,
@@ -57,7 +51,10 @@ export function PendingChangesProvider({
   )
   const [asking, setAsking] = useState(false)
   // Kept after the question closes, so its text does not change as it fades.
-  const [roadmapCount, setRoadmapCount] = useState(0)
+  const [asked, setAsked] = useState<DisconnectQuestionSubject>({
+    count: 0,
+    roadmaps: [],
+  })
   const { disconnect } = useAuth()
 
   useEffect(() => reconcileOnRead(queryClient, store), [queryClient, store])
@@ -69,31 +66,40 @@ export function PendingChangesProvider({
     disconnect()
   }
   const requestDisconnect = () => {
-    const pending = store.getSnapshot().changes.size
-    if (pending === 0) {
+    const { changes } = store.getSnapshot()
+    if (changes.size === 0) {
       leave()
       return
     }
-    setRoadmapCount(pending)
+    // As the list shows them, those it holds: none before the roadmaps are read.
+    const listed =
+      queryClient.getQueryData<readonly Roadmap[]>(roadmapKeys.list()) ?? []
+    setAsked({
+      count: changes.size,
+      roadmaps: listed.filter(({ id }) => changes.has(id)),
+    })
     setAsking(true)
   }
 
   return (
     <PendingChangesContext value={store}>
       <DisconnectRequestContext value={requestDisconnect}>
-        {children}
-        <DisconnectQuestion
-          open={asking}
-          roadmapCount={roadmapCount}
-          onKeep={leave}
-          onDiscard={() => {
-            store.discardAll()
-            leave()
+        <DisconnectQuestionContext
+          value={{
+            open: asking,
+            ...asked,
+            onKeep: leave,
+            onDiscard: () => {
+              store.discardAll()
+              leave()
+            },
+            onCancel: () => {
+              setAsking(false)
+            },
           }}
-          onCancel={() => {
-            setAsking(false)
-          }}
-        />
+        >
+          {children}
+        </DisconnectQuestionContext>
       </DisconnectRequestContext>
     </PendingChangesContext>
   )
@@ -163,47 +169,4 @@ function useLeaveWarning(store: PendingChangesStore) {
       window.removeEventListener("beforeunload", ask)
     }
   }, [pending])
-}
-
-interface DisconnectQuestionProps {
-  open: boolean
-  roadmapCount: number
-  onKeep: () => void
-  onDiscard: () => void
-  onCancel: () => void
-}
-
-/** Disconnect with pending edits: keep them for the next connection, discard, or stay. */
-function DisconnectQuestion({
-  open,
-  roadmapCount,
-  onKeep,
-  onDiscard,
-  onCancel,
-}: DisconnectQuestionProps) {
-  const { t } = useTranslation()
-  return (
-    <AlertDialog
-      open={open}
-      onOpenChange={(next) => {
-        if (!next) onCancel()
-      }}
-    >
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{t("roadmaps.disconnect.title")}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {t("roadmaps.disconnect.description", { count: roadmapCount })}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <Button onClick={onKeep}>{t("roadmaps.disconnect.keep")}</Button>
-          <Button variant="destructive" onClick={onDiscard}>
-            {t("roadmaps.disconnect.discard")}
-          </Button>
-          <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  )
 }

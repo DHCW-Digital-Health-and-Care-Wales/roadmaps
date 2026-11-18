@@ -35,3 +35,15 @@ export function useRoadmapChanges(
 ): RoadmapChanges | undefined {
   return usePendingChanges().changes.get(roadmapId)
 }
+
+/**
+ * How many roadmaps have pending changes, re-rendering only when that number changes: for
+ * what shows the count and nothing of the changes (STY-055).
+ */
+export function useChangedRoadmapCount(): number {
+  const store = usePendingChangesStore()
+  return useSyncExternalStore(
+    store.subscribe,
+    () => store.getSnapshot().changes.size,
+  )
+}

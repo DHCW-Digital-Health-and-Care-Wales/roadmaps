@@ -15,6 +15,17 @@ working order, and grade and report findings as it sets.
   not-found state, not a crash), that links keep working on reload, and that
   workflow changes keep least-privilege permissions, pinned action SHAs and a
   deploy only from `main` (`actionlint` clean).
+- **Live regions.** Trace each `role=status`, `role=alert` and `aria-live`
+  region (page notices, the session warning's announcements) through every
+  change of state. A region in the accessibility tree speaks any change inside
+  it: new text, swapped nodes or a remount; an alert also speaks as it renders.
+  Check that it is in the tree when the news comes, not in a closed drawer's or
+  dialog's portal, nor outside an open modal, which Base UI hides from all but
+  `[aria-live]` elements. Each change that is news leaves it text to speak, the
+  last change gone included. Other changes stay out of it: a swapped visible
+  entry or a language switch is not news, and an `sr-only` announcer kept apart
+  from the visible text stays quiet through them. A repeated message is spoken
+  again through a new node (a fresh `key`) or a remount.
 - **Localisation and copy (ADR-008).** UI copy comes from catalogue keys
   mapped from codes (``t(`errors.${error.kind}`)``,
   ``t(`auth.status.${state.status}`)``); domain and infrastructure emit codes,
@@ -35,14 +46,8 @@ working order, and grade and report findings as it sets.
   Base UI `render={<Link/>}` button adds `role="button"`). A visual no-op needs
   computed-style or visual evidence. Hold UI to WCAG 2.2 AA: accessible names
   that contain their visible text (the language switcher's "Language English"
-  keeps a space node), native structure and landmarks, live regions (`role=status`
-  and `role=alert` usage, page notices, the session warning's announcements;
-  trace each through every change of state, since a region speaks only a change
-  to its text while mounted: it is mounted when the news comes, not in a closed
-  drawer's or dialog's portal; every state leaves it text to speak, the last
-  change gone included; its text changes only when the news does, not as nodes
-  inside it swap, the language changes or it remounts; a repeated message is
-  spoken again), `aria-busy`, focus order and visible focus,
+  keeps a space node), native structure and landmarks, live regions (above),
+  `aria-busy`, focus order and visible focus,
   focus management in `AppShell` (focus moves to `<main>` after in-app
   navigation, and when the focused control inside `<main>` is removed; the skip
   link focuses `<main>` because hash history owns the fragment), menu and dialog

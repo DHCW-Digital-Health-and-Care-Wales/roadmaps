@@ -41,6 +41,13 @@ note_if_behind_default_branch() {
 }
 note_if_behind_default_branch
 
+# A parallel worktree serves on its own ports (scripts/worktree/worktree.sh).
+if [ -f .env.worktree ]; then
+  dev_port=$(sed -n 's/^DEV_PORT=//p' .env.worktree)
+  preview_port=$(sed -n 's/^PREVIEW_PORT=//p' .env.worktree)
+  echo "==> This worktree's ports: pnpm dev on :$dev_port; pnpm preview and pnpm test:e2e on :$preview_port, not 5173 and 4173."
+fi
+
 # Only prepare remote (web) sessions; a local checkout is set up by its owner.
 if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
   exit 0

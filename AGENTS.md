@@ -54,14 +54,15 @@ Rules no lint catches:
 - `pnpm dev` needs `.env.local` (`cp .env.example .env.local`); a local _build_ override
   goes in `.env.production.local`, since builds prefer `.env.production`.
 - `pnpm test:e2e` builds and serves on port 4173, reusing a server already there
-  locally; install the browser once per Playwright version with
+  locally; a parallel worktree uses its own ports instead (`pnpm worktree:info`;
+  README, _Parallel worktrees_); install the browser once per Playwright version with
   `pnpm exec playwright install --with-deps chromium`.
 - Before a PR, run the checks implement-story's `references/validation.md` sets
   for the kind of change.
 - In a shared checkout, or a scratch directory whose `node_modules` links to it, run
   binaries as `./node_modules/.bin/<tool>`: `pnpm exec` there can reinstall and prune
   the shared `node_modules`.
-- Stop a process by its PID or port (`fuser -k 4173/tcp`), never by a name pattern:
+- Stop a process by its PID or port (`fuser -k <port>/tcp`), never by a name pattern:
   worktrees share one host, and a pattern kill stops their servers too.
 
 ## Conventions

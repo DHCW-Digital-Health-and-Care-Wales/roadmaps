@@ -7,10 +7,13 @@ import { defineConfig } from "vitest/config"
 
 import { resolveBasePath } from "./build/resolve-base-path.ts"
 import { resolveBuildVersion } from "./build/resolve-build-version.ts"
+import { resolveDevPorts } from "./build/resolve-dev-ports.ts"
 
 const { version } = JSON.parse(
   readFileSync(new URL("./package.json", import.meta.url), "utf8"),
 ) as { version: string }
+// A parallel worktree's own ports (scripts/worktree/worktree.sh), else 5173 and 4173.
+const ports = resolveDevPorts(new URL("./.env.worktree", import.meta.url))
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -29,6 +32,10 @@ export default defineConfig({
   resolve: {
     tsconfigPaths: true,
   },
+  // Strict, so a busy port fails instead of drifting onto another worktree's port or
+  // onto an origin the OAuth client does not list.
+  server: { port: ports.dev, strictPort: true },
+  preview: { port: ports.preview, strictPort: true },
   build: {
     // Long-lived chunks: app code changes on every deploy, React and the other
     // dependencies only when upgraded, so returning visitors re-download only the app.

@@ -393,6 +393,28 @@ pnpm dev                     # http://localhost:5173
 
 `pnpm build && pnpm preview` serves the production build at <http://localhost:4173>.
 
+### Parallel worktrees (T3 Code)
+
+Several worktrees can each run their own dev server and E2E suite on one host. `t3.json`
+runs `pnpm worktree:setup` when T3 Code creates a worktree. The setup claims a numbered
+slot, writes the slot's ports to `.env.worktree`, installs dependencies and creates
+`.env.local`. Slot _n_ owns `21000 + 10n` for `pnpm dev` and `21000 + 10n + 1` for
+`pnpm preview` and `pnpm test:e2e`; `vite.config.ts` and `playwright.config.ts` read the
+file (`build/resolve-dev-ports.ts`). A checkout without it keeps 5173 and 4173.
+
+```sh
+pnpm worktree:info      # this worktree's ports
+pnpm worktree:teardown  # stop its servers, free the slot
+```
+
+Slots are tracked in `~/.local/state/roadmaps-editor/worktree-slots`. A worktree removed
+without a teardown (`git worktree remove`, or deleted and then `git worktree prune`d)
+has its slot reclaimed by the next setup. Real Google sign-in works only on an origin
+the OAuth client lists, so sign in from a checkout on 5173, or add the worktree's
+`http://localhost:<dev port>` to the client's origins
+([Google Cloud setup](docs/operations/google-cloud-setup.md)). The E2E suite fakes
+Google, so it runs on any slot.
+
 ### Environment configuration
 
 Configuration is public (an OAuth client ID and a spreadsheet ID are not secrets) and is
@@ -430,13 +452,14 @@ pnpm test           # Vitest unit + component tests; no network, no Google
 pnpm build          # production build into dist/
 
 pnpm exec playwright install --with-deps chromium   # once per @playwright/test version
-pnpm test:e2e       # builds, serves with vite preview on :4173, fakes GIS + Sheets
+pnpm test:e2e       # builds, serves with vite preview on :4173 (a worktree's own port), fakes GIS + Sheets
 ```
 
 The E2E suite is hermetic: Google's script and the Sheets API are faked in the browser,
 and any request to another origin fails the test, as does an access token written to
 storage, cookies, the URL or the console at any point. It reuses a server already listening on
-port 4173 locally, so stop any stale `pnpm preview` first. Live Google integration can
+its port (4173, or the worktree's `PREVIEW_PORT`) locally, so stop any stale
+`pnpm preview` first. Live Google integration can
 only be checked by hand
 ([how](docs/operations/google-cloud-setup.md#check-it-against-the-real-google)). See `tests/e2e/AGENTS.md` for the
 fixtures.

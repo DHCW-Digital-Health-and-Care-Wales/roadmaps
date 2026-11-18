@@ -101,7 +101,8 @@ Carry forward what earlier items learned, for example:
   `pr-watch.md` only when authorized;
 - that the merge method is squash, merged branches are deleted, and
   `git fetch --prune` comes before reusing the branch name;
-- that `pnpm test:e2e` builds and serves on port 4173 and reuses a server
+- that `pnpm test:e2e` builds and serves on port 4173, or a parallel
+  worktree's own `PREVIEW_PORT` (`pnpm worktree:info`), and reuses a server
   already there locally, so a stale `pnpm preview` must be stopped first;
 - that it creates the `delegation.md` handoff record when its branch is
   cut, before the first heavy command, and keeps it current at

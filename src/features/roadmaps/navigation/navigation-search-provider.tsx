@@ -118,6 +118,8 @@ export function NavigationSearchProvider({
       say(t("roadmaps.navigation.showingChanged", { count: changes.size }))
     },
     showEveryRoadmap: () => {
+      // Spaces typed just before leave no pending saying to repeat it.
+      setTyped(0)
       setPressed(false)
       say(t("roadmaps.navigation.search.showingAll"))
     },

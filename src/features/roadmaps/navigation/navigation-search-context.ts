@@ -7,9 +7,9 @@ export type NavigationFocusTarget = "search" | "count"
 
 /**
  * The navigation's search and what it lists (STY-061), the families it keeps closed
- * (STY-062) and whether the count of unpublished changes narrows it (STY-063), held above the routes' pages and shared by the navigation beside the page
- * and in the drawer, so it lasts while the Product Lead moves between pages and as the
- * drawer closes. The search and the narrowing by the count do not last past a reload (D3,
+ * (STY-062) and whether the count of unpublished changes narrows it (STY-063), held above
+ * the routes' pages and shared by the navigation beside the page and in the drawer, so it
+ * lasts while the Product Lead moves between pages and as the drawer closes. The search and the narrowing by the count do not last past a reload (D3,
  * STY-063 D4); the closed families do.
  */
 export interface NavigationSearch {

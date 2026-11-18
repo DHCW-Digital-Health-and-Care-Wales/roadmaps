@@ -30,10 +30,10 @@ export type NavigationMark =
       found?: FoundPart | null
     }
   /**
-   * A number in a circle in a rail, and a dot beside the name in full; `filters` ends it
+   * A number in a circle in a rail, and a dot beside the name in full; `narrows` ends it
    * with a filter's icon in full, for the count that narrows the list (STY-063).
    */
-  | { count: number; filters?: boolean }
+  | { count: number; narrows?: boolean }
 
 /** What every entry takes, a link or the text that stands where one cannot lead. */
 interface NavigationEntryShape {
@@ -141,7 +141,7 @@ function EntryLabel({ rail, name, mark, spoken }: EntryLabelProps) {
       <>
         <UnpublishedDot className={dotClasses} />
         <span className="min-w-0 wrap-break-word">{name}</span>
-        {mark.filters && (
+        {mark.narrows && (
           <ListFilterIcon
             aria-hidden="true"
             className="ms-auto size-4 shrink-0"
@@ -271,7 +271,9 @@ interface NavigationButtonProps extends NavigationEntryShape {
 /**
  * An entry that does something rather than leads somewhere, drawn as a link is, and
  * pressed or not as a toggle: the count of unpublished changes while two or more
- * roadmaps have them, which shows only those roadmaps (STY-063).
+ * roadmaps have them, which shows only those roadmaps (STY-063). A plain `<button>` in the
+ * links' classes, not `Button variant="navigation"`, whose bold type and press shift would
+ * set it apart from the entries around it.
  */
 export function NavigationButton({
   rail,

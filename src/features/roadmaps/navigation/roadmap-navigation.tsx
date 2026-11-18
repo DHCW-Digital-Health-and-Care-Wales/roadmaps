@@ -83,7 +83,7 @@ export function RoadmapNavigation({
     select: (params) => params.roadmapId,
   })
   // Where the count leads while one roadmap has changes, and it is not the page open.
-  const onlyChangedId =
+  const soleChangedId =
     changed.size === 1
       ? groups
           .flatMap((group) => group.roadmaps)
@@ -105,24 +105,9 @@ export function RoadmapNavigation({
         </ul>
         <UnpublishedTotal
           count={changed.size}
-          leadsTo={onlyChangedId === currentId ? undefined : onlyChangedId}
-          // Two or more roadmaps with changes, once the roadmaps are read, are to narrow to.
-          narrows={search.groups !== null && changed.size >= 2}
-          pressed={search.onlyChanged}
-          onPress={() => {
-            if (rail) {
-              // The circle always opens the navigation narrowed, with focus on the count
-              // (S7).
-              search.requestFocus("count")
-              search.showChanged()
-              onOpenNavigation()
-            } else if (search.onlyChanged) {
-              search.showEveryRoadmap()
-            } else {
-              search.showChanged()
-            }
-          }}
+          leadsTo={soleChangedId === currentId ? undefined : soleChangedId}
           rail={rail}
+          onOpenNavigation={onOpenNavigation}
         />
       </div>
       {searched && listed.length === 0 ? (
@@ -318,12 +303,9 @@ interface UnpublishedTotalProps {
   count: number
   /** The one roadmap with changes it leads to, if it is not the page open. */
   leadsTo: string | undefined
-  /** It shows only the roadmaps with changes, rather than leads to one. */
-  narrows: boolean
-  /** Whether it shows only them now. */
-  pressed: boolean
-  onPress: () => void
   rail: boolean
+  /** Opens a rail, remembered as open, as its circle is pressed (S7). */
+  onOpenNavigation: () => void
 }
 
 /**
@@ -338,18 +320,30 @@ interface UnpublishedTotalProps {
 function UnpublishedTotal({
   count,
   leadsTo,
-  narrows,
-  pressed,
-  onPress,
   rail,
+  onOpenNavigation,
 }: UnpublishedTotalProps) {
   const { t } = useTranslation()
   const search = useNavigationSearch()
   if (count === 0) return null
+  // Two or more roadmaps with changes, once the roadmaps are read, are to narrow to.
+  const narrows = search.groups !== null && count >= 2
   const entry = {
     rail,
     name: t("layout.navigation.unpublished", { count }),
-    mark: { count, filters: narrows },
+    mark: { count, narrows },
+  }
+  const press = () => {
+    if (rail) {
+      // The circle always opens the navigation narrowed, with focus on the count (S7).
+      search.requestFocus("count")
+      search.showChanged()
+      onOpenNavigation()
+    } else if (search.onlyChanged) {
+      search.showEveryRoadmap()
+    } else {
+      search.showChanged()
+    }
   }
   return (
     <ul className="mt-1 flex flex-col gap-1">
@@ -359,8 +353,8 @@ function UnpublishedTotal({
           ref={(element) => {
             if (element && search.takeFocusRequest("count")) element.focus()
           }}
-          pressed={rail ? undefined : pressed}
-          onPress={onPress}
+          pressed={rail ? undefined : search.onlyChanged}
+          onPress={press}
         />
       ) : leadsTo === undefined ? (
         <NavigationText {...entry} />

@@ -160,7 +160,7 @@ story, where "the next" is always that roadmap: delete what no longer earns its 
   `"search" | "count"` (`NavigationFocusTarget`). `narrowToRoadmaps(groups, ids)` is in
   `narrow-roadmaps.ts`.
 - `NavigationButton` (`navigation-link.tsx`) is an entry that presses, beside
-  `NavigationLink` and `NavigationText`; a `count` mark takes `filters`. An entry holding a
+  `NavigationLink` and `NavigationText`; a `count` mark takes `narrows`. An entry holding a
   pressed button takes the current page's fill.
 - Catalogue key `roadmaps.navigation.showingChanged` (plural, said as the count narrows the
   list); "Showing all roadmaps" is reused for S2.
@@ -168,17 +168,17 @@ story, where "the next" is always that roadmap: delete what no longer earns its 
 
 ### Scenario evidence
 
-| Scenario | Held by                                                                                                                                                                                                                              |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| S1       | `changed-roadmaps-only.test.tsx` (`shows only the roadmaps with changes …`); `navigation-changed.spec.ts` (`shows only the roadmaps with changes … (S1, S2)`); `narrow-roadmaps.test.ts` (`narrowToRoadmaps`)                        |
-| S2       | `changed-roadmaps-only.test.tsx` (`shows every roadmap again …`, `keeps the closed families …`); `navigation-changed.spec.ts` (as S1)                                                                                                |
-| S3       | `changed-roadmaps-only.test.tsx` (`lets go as the Product Lead types …`, `keeps the count pressed for spaces alone …`); `navigation-changed.spec.ts` (`lets the count go …`)                                                         |
-| S4       | `changed-roadmaps-only.test.tsx` (`shows every roadmap, and leads to the one left …`)                                                                                                                                                |
-| S5       | `unpublished-changes.test.tsx` (`leads to the roadmap with changes while it is the only one …`); `unpublished-changes.spec.ts` (`leads from the count to the one roadmap …`)                                                         |
-| S6       | `changed-roadmaps-only.test.tsx` (`lasts while moving between pages`, `the count in the drawer on a phone`); `navigation-changed.spec.ts` (`lets the count go … lasts while moving`, `leaves the drawer open …`)                     |
-| S7       | `changed-roadmaps-only.test.tsx` (`the count folded to a rail`); `navigation-changed.spec.ts` (`opens the folded navigation narrowed …`)                                                                                             |
-| S8       | `changed-roadmaps-only.test.tsx` (`in Welsh`); `navigation-changed.spec.ts` (Cymraeg at the narrowest, the drawer in the dark at 375px); axe in `accessibility.spec.ts`; focus tour in `focus-indicator.spec.ts`; screenshots        |
-| S9       | `unpublished-changes.test.tsx` (`says it as text alone while the roadmaps are not read …`); `changed-roadmaps-only.test.tsx` (`is text, with nothing to press …`); `navigation-changed.spec.ts` (`is text, with nothing to press …`) |
+| Scenario | Held by                                                                                                                                                                                                                                                                               |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `changed-roadmaps-only.test.tsx` (`shows only the roadmaps with changes …`); `navigation-changed.spec.ts` (`shows only the roadmaps with changes … (S1, S2)`); `narrow-roadmaps.test.ts` (`narrowToRoadmaps`)                                                                         |
+| S2       | `changed-roadmaps-only.test.tsx` (`shows every roadmap again …`, `keeps the closed families …`); `navigation-changed.spec.ts` (as S1)                                                                                                                                                 |
+| S3       | `changed-roadmaps-only.test.tsx` (`lets go as the Product Lead types …`, `keeps the count pressed for spaces alone …`); `navigation-changed.spec.ts` (`lets the count go …`)                                                                                                          |
+| S4       | `changed-roadmaps-only.test.tsx` (`shows every roadmap, and leads to the one left …`)                                                                                                                                                                                                 |
+| S5       | `unpublished-changes.test.tsx` (`leads to the roadmap with changes while it is the only one …`); `unpublished-changes.spec.ts` (`leads from the count to the one roadmap …`)                                                                                                          |
+| S6       | `changed-roadmaps-only.test.tsx` (`lasts while moving between pages`, `the count in the drawer on a phone`); `navigation-changed.spec.ts` (`lets the count go … lasts while moving`, `leaves the drawer open …`)                                                                      |
+| S7       | `changed-roadmaps-only.test.tsx` (`the count folded to a rail`); `navigation-changed.spec.ts` (`opens the folded navigation narrowed …`)                                                                                                                                              |
+| S8       | `changed-roadmaps-only.test.tsx` (`in Welsh`); `navigation-changed.spec.ts` (Cymraeg at the narrowest, the drawer in the dark at 375px); axe in `accessibility.spec.ts`; `focus-indicator.spec.ts` (`the navigation's count takes the fill …`, by keyboard, both themes); screenshots |
+| S9       | `unpublished-changes.test.tsx` (`says it as text alone while the roadmaps are not read …`); `changed-roadmaps-only.test.tsx` (`is text, with nothing to press …`); `navigation-changed.spec.ts` (`is text, with nothing to press …`)                                                  |
 
 Tests followed the code (layout and behaviour, not a pending-edit rule); each was shown red
 by breaking the finished code, then restored: typing not letting the count go (S3), the

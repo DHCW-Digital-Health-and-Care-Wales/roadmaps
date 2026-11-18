@@ -378,6 +378,41 @@ for (const theme of THEMES) {
       await expectEveryStopShowsAnIndicator(page)
     })
 
+    test("the navigation's count takes the fill and keeps it once pressed (STY-063 S8)", async ({
+      page,
+    }) => {
+      await page.goto("./#/roadmaps/producta")
+      await connect(page)
+      for (const [roadmapId, item] of [
+        ["producta", "Example card with every column"],
+        ["productb", "Building the core service"],
+      ] as const) {
+        await page.goto(`./#/roadmaps/${roadmapId}`)
+        const form = await openEditItemDialog(page, item)
+        await form
+          .getByRole("textbox", { name: "Title" })
+          .fill(`${item}, edited`)
+        await form.getByRole("button", { name: "Done" }).click()
+        await expect(form).toBeHidden()
+      }
+      await page.goto("./#/families")
+      const colours = await focusColours(page)
+      const count = page
+        .getByRole("navigation", { name: "Roadmaps" })
+        .getByRole("button", { name: "2 roadmaps have unpublished changes" })
+
+      await tabTo(page, count)
+      await expectIndicator(count, colours, "fill")
+      await page.keyboard.press("Enter")
+
+      await expect(count).toHaveAttribute("aria-pressed", "true")
+      // The pressed entry's blue gives way to the fill, as the current page's does.
+      await expectIndicator(count, colours, "fill")
+      await page.keyboard.press("Space")
+      await expect(count).toHaveAttribute("aria-pressed", "false")
+      await expectIndicator(count, colours, "fill")
+    })
+
     test("each kind of control shows the indicator it is meant to", async ({
       page,
     }) => {

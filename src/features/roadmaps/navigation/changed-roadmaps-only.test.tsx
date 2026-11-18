@@ -172,6 +172,29 @@ describe("the count on a desktop", () => {
     expect(screen.queryByText("Showing all roadmaps")).not.toBeInTheDocument()
   })
 
+  it("says every roadmap shows once, though spaces were typed just before pressing it again (S2, S3)", async () => {
+    matchMediaQueries(DESKTOP_WIDTH)
+    const { user } = await renderChanged()
+    await user.click(count())
+    // Each saying is a new span, so words said again are new to a screen reader.
+    let sayings = 0
+    const observer = new MutationObserver((records) => {
+      for (const record of records) {
+        for (const node of record.addedNodes) {
+          if (node.textContent === "Showing all roadmaps") sayings += 1
+        }
+      }
+    })
+    observer.observe(document.body, { childList: true, subtree: true })
+
+    await user.type(searchBox(), "  ")
+    await user.click(count())
+    await new Promise((resolve) => setTimeout(resolve, TYPING_PAUSE_MS + 200))
+    observer.disconnect()
+
+    expect(sayings).toBe(1)
+  })
+
   it("shows every roadmap, and leads to the one left with changes, once fewer than two have changes (S4)", async () => {
     matchMediaQueries(DESKTOP_WIDTH)
     const { user, router } = await renderChanged()

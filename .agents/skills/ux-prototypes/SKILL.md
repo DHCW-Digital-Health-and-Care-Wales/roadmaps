@@ -264,7 +264,7 @@ Deliver through the PR path in `.agents/skills/implement-story/SKILL.md`. Brief 
 `.agents/skills/implement-story/references/delegation.md`, giving each the
 committed page and analysis, with step 7's `page-text.txt` and per-artboard
 screenshots (a working component's design screenshots) by their scratchpad
-paths, to read beside the page's markup, plus:
+paths, plus:
 
 - **`code-reviewer`**: the inventory, the scenario trace and the sample sheet,
   by their scratchpad paths.
@@ -276,6 +276,13 @@ paths, to read beside the page's markup, plus:
   check the correction against.
 - **`quality-reviewer`**: the analysis rules, the glossary and the copywriter
   voice.
+
+A frames page is assembled, so ask each reviewer to read it through every
+artboard screenshot and every section of `page-text.txt`, opening the markup
+for what those cannot show, and to list the artboards and sections it left
+unread: those, not line ranges of the page, are the unread part `delegation.md`
+gives a fresh reviewer. A working component's script and styles are written by
+hand, and are read as code.
 
 ## Delegation
 

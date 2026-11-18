@@ -7,6 +7,7 @@ import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { ContractWrite } from "@/domain/roadmap/testing/contract-write"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
+import { disconnectFromHeader } from "@/features/auth/testing/account-menu"
 import { findReconnectDialog } from "@/features/auth/testing/reconnect-dialog"
 import type { Language } from "@/i18n"
 import { AppError } from "@/lib/errors"
@@ -528,11 +529,7 @@ describe("A new item is one pending change (STY-046 S5)", () => {
 
     expect(main().getByText("1 unpublished change")).toBeVisible()
     expect(leave()).toBe(true)
-    await user.click(
-      within(screen.getByRole("banner")).getByRole("button", {
-        name: "Disconnect",
-      }),
-    )
+    await disconnectFromHeader(user)
     await user.click(
       within(
         screen.getByRole("alertdialog", { name: "Keep your changes?" }),

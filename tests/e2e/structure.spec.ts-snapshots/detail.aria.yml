@@ -1,7 +1,4 @@
 - main:
-  - note:
-    - text: Connected to Google
-    - button "Dismiss message"
   - link "Back to roadmaps":
     - /url: /#/
   - heading "Product A roadmap" [level=1]

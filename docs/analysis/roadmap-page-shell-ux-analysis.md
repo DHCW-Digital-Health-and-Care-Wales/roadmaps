@@ -8,7 +8,7 @@
   [STY-052](../backlog/_archive/EPC-012-app-shell-and-navigation/STY-052-keep-a-roadmaps-controls-in-view.md)
   and
   [STY-053](../backlog/_archive/EPC-012-app-shell-and-navigation/STY-053-jump-between-a-roadmaps-placements.md)
-  of [EPC-012](../backlog/EPC-012-app-shell-and-navigation/README.md), after two rounds
+  of [EPC-012](../backlog/_archive/EPC-012-app-shell-and-navigation/README.md), after two rounds
   of grilling (STY-052 D1–D9, STY-053 D1–D4). Base `242f683`. Only documents and one
   prototype page were added; no application code. (Since then, four rounds and a
   review settled both stories, and a second page draws the chosen design: see
@@ -199,7 +199,7 @@ roadmap" in the title row), not as the last line below has it.
 
 ## Related
 
-- [EPC-012](../backlog/EPC-012-app-shell-and-navigation/README.md),
+- [EPC-012](../backlog/_archive/EPC-012-app-shell-and-navigation/README.md),
   [STY-052](../backlog/_archive/EPC-012-app-shell-and-navigation/STY-052-keep-a-roadmaps-controls-in-view.md),
   [STY-053](../backlog/_archive/EPC-012-app-shell-and-navigation/STY-053-jump-between-a-roadmaps-placements.md)
   and [STY-054](../backlog/_archive/EPC-012-app-shell-and-navigation/STY-054-move-between-roadmaps-from-the-shell.md)

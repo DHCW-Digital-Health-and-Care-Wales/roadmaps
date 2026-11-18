@@ -113,7 +113,7 @@ families page and EPC-005's editor.
 - **Narrower:** a drawer over the page (a Base UI dialog), opened by a menu button at the
   start of the top bar and of a roadmap's sticky strip (D8, D9).
 - **Top bar:** DHCW's navy header is the top bar (D9), in place of DHCW's white top bar
-  of chips, holding the header's controls (D2; STY-056 reshapes them); it and the phase
+  of chips, holding the language and an account menu (D2; STY-056); it and the phase
   banner scroll away (D7).
 - The roadmap list stays the home page (D4).
 

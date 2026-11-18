@@ -8,7 +8,7 @@ import {
   AlertDescription,
   AlertTitle,
 } from "@/components/ui/alert"
-import { AuthButton } from "@/features/auth/components/auth-button"
+import { ConnectButton } from "@/features/auth/components/connect-button"
 import { usePendingChanges } from "@/features/roadmaps/editing/pending-changes-context"
 
 const TITLE_ID = "start-title"
@@ -48,7 +48,7 @@ export function StartPage() {
 
       <InsetText className="mt-6">{t("landing.source")}</InsetText>
 
-      <AuthButton className="mt-6 w-full sm:w-auto" />
+      <ConnectButton className="mt-6 w-full sm:w-auto" />
       <p className="mt-4 max-w-2xl text-body-xs text-pretty text-muted-foreground">
         {t("landing.accessNote")}
       </p>

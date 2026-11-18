@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright"
 import type { Page } from "@playwright/test"
 
+import { disconnectFromHeader } from "./fixtures/account-menu"
 import {
   addItem,
   addItemButtons,
@@ -829,10 +830,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await form.getByRole("textbox", { name: "Title" }).fill("A clearer card")
       await form.getByRole("button", { name: "Done" }).click()
 
-      await page
-        .getByRole("banner")
-        .getByRole("button", { name: "Disconnect" })
-        .click()
+      await disconnectFromHeader(page)
       const question = page.getByRole("alertdialog")
       await expect(question).toBeVisible()
       await expectNoAxeViolations(page, theme)

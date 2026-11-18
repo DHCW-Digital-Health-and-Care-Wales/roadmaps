@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { RoadmapRepository } from "@/domain/roadmap/roadmap-repository"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
+import { disconnectFromHeader } from "@/features/auth/testing/account-menu"
 import { findReconnectDialog } from "@/features/auth/testing/reconnect-dialog"
 import { AppError } from "@/lib/errors"
 import { connected } from "@/test/connected-state"
@@ -542,11 +543,7 @@ describe("RoadmapsPage", () => {
     })
     await main().findByText("3 roadmaps")
 
-    await user.click(
-      within(screen.getByRole("banner")).getByRole("button", {
-        name: "Disconnect",
-      }),
-    )
+    await disconnectFromHeader(user)
 
     expect(queryClient.getQueryData(roadmapKeys.list())).toBeUndefined()
     expect(

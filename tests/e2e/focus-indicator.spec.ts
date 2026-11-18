@@ -9,12 +9,7 @@ import {
 } from "./fixtures/dialogs"
 import { EXAMPLE_SPREADSHEET_WITH_LISTS } from "./fixtures/fake-sheets"
 import { tabTo } from "./fixtures/keyboard"
-import {
-  holdConnectedNotice,
-  THEMES,
-  tokenColour,
-  useTheme,
-} from "./fixtures/look"
+import { THEMES, tokenColour, useTheme } from "./fixtures/look"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 // DHCW's yellow focus indicator (ADR-010). Its contrast in both themes is held by
@@ -258,8 +253,6 @@ for (const theme of THEMES) {
     }) => {
       await page.goto("./")
       await connect(page)
-      // Held, so the tour's stops include the notice's dismiss button however long it takes.
-      await holdConnectedNotice(page)
       await expect(roadmapCards(page)).toHaveCount(3)
 
       await expectEveryStopShowsAnIndicator(page)
@@ -275,11 +268,6 @@ for (const theme of THEMES) {
       await expect(
         main.getByRole("heading", { level: 3, name: item }),
       ).toBeVisible()
-      // Dismissed, so the notice cannot clear itself partway through the tour.
-      await main
-        .getByRole("note")
-        .getByRole("button", { name: "Dismiss message" })
-        .click()
       // One change pending: "Undo changes" and the publish bar.
       const form = await openEditItemDialog(page, item)
       await form.getByRole("textbox", { name: "Title" }).fill("A clearer card")
@@ -374,10 +362,6 @@ for (const theme of THEMES) {
       await expect(
         main.getByRole("heading", { level: 3, name: "Minimal card" }),
       ).toBeVisible()
-      await main
-        .getByRole("note")
-        .getByRole("button", { name: "Dismiss message" })
-        .click()
       const editing = await openEditRoadmapDialog(page)
       await editing.getByRole("textbox", { name: "Vision" }).fill("My vision.")
       await editing.getByRole("button", { name: "Done" }).click()
@@ -415,16 +399,8 @@ for (const theme of THEMES) {
 
       await connect(page)
       await expect(roadmapCards(page)).toHaveCount(3)
-      // Held, away from the cards, so no card is hovered either.
-      await holdConnectedNotice(page)
-
-      // The "Connected" notice's dismiss button, first in the page.
-      const notice = main.getByRole("note")
-      await expect(notice).toHaveText("Connected to Google")
-      const dismiss = notice.getByRole("button", { name: "Dismiss message" })
-      await tabTo(page, dismiss)
-      await expectIndicator(dismiss, colours, "fill")
-
+      // No notice follows a connect (STY-056 S1): the header's controls come first.
+      await expect(main.getByRole("note")).toHaveCount(0)
       const language = banner.getByRole("button", { name: "Language English" })
       // Connecting moves focus to the main content; the header is behind it.
       await tabTo(page, language, "Shift+Tab")
@@ -439,6 +415,23 @@ for (const theme of THEMES) {
       await expect(welsh).toBeFocused()
       // Menu items take the fill, as a DHCW link or button does (STY-015 D5).
       await expectIndicator(welsh, colours, "fill")
+      await page.keyboard.press("Escape")
+
+      const account = banner.getByRole("button", { name: "Account" })
+      await tabTo(page, account)
+      await expectIndicator(account, colours, "fill")
+      await page.keyboard.press("Enter")
+      // Named for the theme it switches to.
+      const theme = page.getByRole("menuitem", {
+        name: /^Switch to (dark|light) theme$/,
+      })
+      await expect(theme).toBeFocused()
+      await expectIndicator(theme, colours, "fill")
+      // Then the session's action, Disconnect while connected.
+      const disconnect = page.getByRole("menuitem", { name: "Disconnect" })
+      await page.keyboard.press("ArrowDown")
+      await expect(disconnect).toBeFocused()
+      await expectIndicator(disconnect, colours, "fill")
       await page.keyboard.press("Escape")
 
       const refresh = main.getByRole("button", { name: "Refresh" })

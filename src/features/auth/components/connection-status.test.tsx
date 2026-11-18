@@ -12,28 +12,24 @@ const expiresAt = Date.now() + 3_600_000
 
 describe("ConnectionStatus", () => {
   it.each([
-    [{ status: "initializing" }, "Getting ready…", "neutral"],
-    [{ status: "ready" }, "Not connected", "neutral"],
-    [{ status: "connecting" }, "Connecting…", "warning"],
-    [{ status: "connected", expiresAt }, "Google connected", "success"],
-    [{ status: "expired" }, "Session expired", "warning"],
-    [
-      { status: "error", error: "access-denied" },
-      "Connection failed",
-      "danger",
-    ],
-  ] as const satisfies readonly (readonly [AuthState, string, string])[])(
-    "shows %j as a %s tag in the %s colours, always with text",
-    (state, text, variant) => {
+    [{ status: "initializing" }, "Getting ready…"],
+    [{ status: "ready" }, "Not connected"],
+    [{ status: "connecting" }, "Connecting…"],
+    [{ status: "connected", expiresAt }, "Google connected"],
+    [{ status: "expired" }, "Session expired"],
+    [{ status: "error", error: "access-denied" }, "Connection failed"],
+  ] as const satisfies readonly (readonly [AuthState, string])[])(
+    "announces %j as %s, to assistive technology only (STY-056 S1)",
+    (state, text) => {
       renderWithI18n(
         <AuthProvider client={createFakeAuthClient(state)}>
           <ConnectionStatus />
         </AuthProvider>,
       )
 
-      const tag = screen.getByRole("status")
-      expect(tag).toHaveTextContent(text)
-      expect(tag).toHaveClass(`bg-status-${variant}-bg`, "border")
+      const status = screen.getByRole("status")
+      expect(status).toHaveTextContent(text)
+      expect(status).toHaveClass("sr-only")
     },
   )
 })

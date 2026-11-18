@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test"
 
+import { disconnectFromHeader } from "./fixtures/account-menu"
 import { openEditItemDialog } from "./fixtures/dialogs"
 import { tokenColour } from "./fixtures/look"
 import { openLongRoadmap } from "./fixtures/roadmap-page"
@@ -190,10 +191,7 @@ test.describe("on a desktop", () => {
   }) => {
     await twoChangedThenFamilies(page)
 
-    await page
-      .getByRole("banner")
-      .getByRole("button", { name: "Disconnect" })
-      .click()
+    await disconnectFromHeader(page)
     const question = page.getByRole("alertdialog")
     await expect(
       question.getByRole("list", {
@@ -210,9 +208,9 @@ test.describe("on a desktop", () => {
     ).toBeVisible()
     await expect(page.getByRole("main")).toBeFocused()
     // Still connected, and the changes are still there.
-    await expect(
-      page.getByRole("banner").getByRole("button", { name: "Disconnect" }),
-    ).toBeVisible()
+    await expect(page.getByRole("banner").getByRole("status")).toHaveText(
+      "Google connected",
+    )
     await expect(count(page)).toBeVisible()
   })
 })

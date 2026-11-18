@@ -60,7 +60,8 @@ needs an OAuth access token with scope `https://www.googleapis.com/auth/spreadsh
   clears memory, and the app removes all auth-scoped query data
   (`queryClient.removeQueries`, wired through the client's `onDisconnect` option).
 - We never claim to know who the user is: the token proves authorisation, not identity.
-  The header shows "Google connected", not a name or email.
+  The header says "Google connected" to a screen reader only (STY-056 D3), never a name
+  or email.
 
 ### STY-017 amendments
 

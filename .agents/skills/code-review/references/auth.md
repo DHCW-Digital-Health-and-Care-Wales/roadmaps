@@ -26,4 +26,4 @@ working order, and grade and report findings as it sets.
   run synchronously inside the click or key handler: any `await`, timeout,
   effect, `setState`-then-effect hop or prior async call before it gets the
   popup blocked. Trace the handler from the event, through wrappers such as
-  `useAuth().connect` and `AuthButton`, to the GIS call.
+  `useAuth().connect`, `useConnectAction` and `AccountMenu`, to the GIS call.

@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import type { AuthState } from "@/domain/auth/auth-client"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
+import { disconnectFromHeader } from "@/features/auth/testing/account-menu"
 import { renderWithProviders } from "@/test/render-with-providers"
 
 import { CONFIRMATION_DWELL_MS } from "../use-notice-dwell"
@@ -215,18 +216,17 @@ describe("the page notice (S5: a renewal that fails)", () => {
 })
 
 describe("the page notice (S2: confirmations)", () => {
-  it("confirms connecting and disconnecting where the user is looking", async () => {
+  it("confirms disconnecting where the user is looking, but not connecting (STY-056 S1)", async () => {
     const user = userEvent.setup()
     await renderWithProviders({ roadmaps })
 
     await user.click(main().getByRole("button", { name: "Connect Google" }))
-    expect(main().getByRole("note")).toHaveTextContent("Connected to Google")
+    expect(
+      await main().findByRole("link", { name: "Product A roadmap" }),
+    ).toBeInTheDocument()
+    expect(main().queryByRole("note")).not.toBeInTheDocument()
 
-    await user.click(
-      within(screen.getByRole("banner")).getByRole("button", {
-        name: "Disconnect",
-      }),
-    )
+    await disconnectFromHeader(user)
     expect(main().getByRole("note")).toHaveTextContent(
       "Disconnected from Google",
     )
@@ -252,9 +252,14 @@ describe("the page notice (S2: confirmations)", () => {
 
   it("is not repeated by an expiry, and clears on the next page", async () => {
     const user = userEvent.setup()
-    const { authClient, router } = await renderWithProviders({ roadmaps })
-    await user.click(main().getByRole("button", { name: "Connect Google" }))
-    expect(main().getByRole("note")).toHaveTextContent("Connected to Google")
+    const { authClient, router } = await renderWithProviders({
+      authState: connected(),
+      roadmaps,
+    })
+    await disconnectFromHeader(user)
+    expect(main().getByRole("note")).toHaveTextContent(
+      "Disconnected from Google",
+    )
 
     await act(() =>
       router.navigate({
@@ -269,6 +274,9 @@ describe("the page notice (S2: confirmations)", () => {
     expect(main().queryByRole("note")).not.toBeInTheDocument()
 
     act(() => {
+      authClient.setState(connected())
+    })
+    act(() => {
       authClient.setState({ status: "expired" })
     })
     expect(main().queryByRole("note")).not.toBeInTheDocument()
@@ -281,20 +289,22 @@ describe("the page notice (S2: confirmations clear themselves)", () => {
   })
 
   /**
-   * Renders the start page, then (on fake timers) connects. Rendering happens on real
+   * Renders a connected page, then (on fake timers) disconnects. Rendering happens on real
    * timers, as the router loads on them; events are fired directly, since user-event's
    * wrapper waits on a timer Vitest's fake timers never run.
    */
-  async function renderConnected() {
-    const setup = await renderWithProviders({ roadmaps })
+  async function renderDisconnected() {
+    const setup = await renderWithProviders({
+      authState: connected(),
+      roadmaps,
+    })
     vi.useFakeTimers({ now: Date.now() })
     act(() => {
-      setup.authClient.setState({ status: "connecting" })
+      setup.authClient.setState({ status: "ready" })
     })
-    act(() => {
-      setup.authClient.setState(connected())
-    })
-    expect(main().getByRole("note")).toHaveTextContent("Connected to Google")
+    expect(main().getByRole("note")).toHaveTextContent(
+      "Disconnected from Google",
+    )
     return setup
   }
 
@@ -308,8 +318,8 @@ describe("the page notice (S2: confirmations clear themselves)", () => {
     return main().queryByRole("note")
   }
 
-  it("clears a confirmation after its dwell, leaving the status in the header", async () => {
-    await renderConnected()
+  it("clears a confirmation after its dwell, leaving the status for assistive technology", async () => {
+    await renderDisconnected()
 
     advance(CONFIRMATION_DWELL_MS - 1)
     expect(note()).toBeInTheDocument()
@@ -318,11 +328,11 @@ describe("the page notice (S2: confirmations clear themselves)", () => {
     expect(note()).not.toBeInTheDocument()
     expect(
       within(screen.getByRole("banner")).getByRole("status"),
-    ).toHaveTextContent("Google connected")
+    ).toHaveTextContent("Not connected")
   })
 
   it("waits while the pointer is over it, and starts again once it leaves", async () => {
-    await renderConnected()
+    await renderDisconnected()
     const notice = main().getByRole("note")
 
     fireEvent.pointerEnter(notice)
@@ -337,7 +347,7 @@ describe("the page notice (S2: confirmations clear themselves)", () => {
   })
 
   it("waits while focus is inside it, and starts again once focus leaves", async () => {
-    await renderConnected()
+    await renderDisconnected()
     const dismiss = main().getByRole("button", { name: "Dismiss message" })
 
     act(() => {
@@ -356,9 +366,12 @@ describe("the page notice (S2: confirmations clear themselves)", () => {
   })
 
   it("gives a newer confirmation a full dwell of its own", async () => {
-    const { authClient } = await renderConnected()
+    const { authClient } = await renderDisconnected()
     advance(CONFIRMATION_DWELL_MS - 1_000)
 
+    act(() => {
+      authClient.setState(connected())
+    })
     act(() => {
       authClient.setState({ status: "ready" })
     })
@@ -370,18 +383,18 @@ describe("the page notice (S2: confirmations clear themselves)", () => {
   })
 
   it("keeps its dwell through an unrelated re-render", async () => {
-    const { i18n } = await renderConnected()
+    const { i18n } = await renderDisconnected()
     advance(CONFIRMATION_DWELL_MS - 1_000)
 
     await act(() => i18n.changeLanguage("cy"))
-    expect(note()).toHaveTextContent("Wedi cysylltu â Google")
+    expect(note()).toHaveTextContent("Wedi datgysylltu o Google")
     advance(1_000)
 
     expect(note()).not.toBeInTheDocument()
   })
 
   it("never clears a failure, even one that replaced a confirmation", async () => {
-    const { authClient } = await renderConnected()
+    const { authClient } = await renderDisconnected()
     advance(CONFIRMATION_DWELL_MS - 1_000)
 
     act(() => {

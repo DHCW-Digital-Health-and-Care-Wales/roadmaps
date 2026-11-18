@@ -1,0 +1,4 @@
+- menu "Account":
+  - menuitem "Switch to dark theme"
+  - separator
+  - menuitem "Connect Google"

@@ -6,6 +6,10 @@ import { afterEach, describe, expect, it } from "vitest"
 import type { AuthState } from "@/domain/auth/auth-client"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { authScopedQueryKey } from "@/features/auth/auth-scoped-queries"
+import {
+  disconnectFromHeader,
+  openAccountMenu,
+} from "@/features/auth/testing/account-menu"
 import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
@@ -46,7 +50,7 @@ describe("landing page", () => {
     expect(main().getByRole("button", { name: "Connect Google" })).toBeEnabled()
   })
 
-  it("connects from the start page, confirms it and shows the roadmaps", async () => {
+  it("connects from the start page and shows the roadmaps", async () => {
     const user = userEvent.setup()
     const { authClient } = await renderWithProviders()
 
@@ -56,7 +60,8 @@ describe("landing page", () => {
     expect(
       await screen.findByRole("heading", { level: 1, name: "Your roadmaps" }),
     ).toBeInTheDocument()
-    expect(main().getByRole("note")).toHaveTextContent("Connected to Google")
+    // The roadmaps show it: no notice follows a connect (STY-056 S1).
+    expect(main().queryByRole("note")).not.toBeInTheDocument()
   })
 
   it("waits, still focusable, while Google loads", async () => {
@@ -101,9 +106,7 @@ describe("landing page", () => {
 
 describe("header", () => {
   it.each<[AuthState, string, string]>([
-    [{ status: "initializing" }, "Getting ready…", "Connect Google"],
     [{ status: "ready" }, "Not connected", "Connect Google"],
-    [{ status: "connecting" }, "Connecting…", "Connect Google"],
     [connected, "Google connected", "Disconnect"],
     [{ status: "expired" }, "Session expired", "Reconnect"],
     [
@@ -111,12 +114,36 @@ describe("header", () => {
       "Connection failed",
       "Connect Google",
     ],
-  ])("reflects the %j auth state", async (authState, status, action) => {
-    await renderWithProviders({ authState })
+  ])(
+    "announces the %j auth state, shows nothing of it, and offers its action in the menu",
+    async (authState, status, action) => {
+      const user = userEvent.setup()
+      await renderWithProviders({ authState })
 
-    expect(header().getByRole("status")).toHaveTextContent(status)
-    expect(header().getByRole("button", { name: action })).toBeInTheDocument()
-  })
+      const announcement = header().getByRole("status")
+      expect(announcement).toHaveTextContent(status)
+      expect(announcement).toHaveClass("sr-only")
+      const menu = await openAccountMenu(user)
+      expect(menu.getByRole("menuitem", { name: action })).toBeEnabled()
+    },
+  )
+
+  it.each<[AuthState, string]>([
+    [{ status: "initializing" }, "Getting ready…"],
+    [{ status: "connecting" }, "Connecting…"],
+  ])(
+    "waits, in the menu, while the auth state is %j",
+    async (authState, status) => {
+      const user = userEvent.setup()
+      await renderWithProviders({ authState })
+
+      expect(header().getByRole("status")).toHaveTextContent(status)
+      const menu = await openAccountMenu(user)
+      expect(
+        menu.getByRole("menuitem", { name: "Connect Google" }),
+      ).toHaveAttribute("aria-disabled", "true")
+    },
+  )
 
   it("follows auth state changes", async () => {
     const { authClient } = await renderWithProviders()
@@ -128,6 +155,25 @@ describe("header", () => {
     expect(header().getByRole("status")).toHaveTextContent("Connecting…")
   })
 
+  it("holds the theme and the session's action in one menu, with the language beside it (STY-056 D1, S2)", async () => {
+    const user = userEvent.setup()
+    await renderWithProviders({ authState: connected })
+
+    const menu = await openAccountMenu(user)
+
+    expect(menu.getAllByRole("menuitem")).toHaveLength(2)
+    expect(
+      menu.getByRole("menuitem", { name: "Switch to dark theme" }),
+    ).toBeInTheDocument()
+    expect(
+      menu.getByRole("menuitem", { name: "Disconnect" }),
+    ).toBeInTheDocument()
+    expect(
+      header().getByRole("button", { name: "Language English" }),
+    ).toBeVisible()
+    expect(header().queryByRole("button", { name: "Disconnect" })).toBeNull()
+  })
+
   it("disconnects, clearing only auth-scoped queries, and confirms it", async () => {
     const user = userEvent.setup()
     const { authClient, queryClient } = await renderWithProviders({
@@ -137,7 +183,7 @@ describe("header", () => {
     queryClient.setQueryData(scopedKey, ["cached"])
     queryClient.setQueryData(["public"], "kept")
 
-    await user.click(header().getByRole("button", { name: "Disconnect" }))
+    await disconnectFromHeader(user)
 
     expect(authClient.disconnect).toHaveBeenCalledOnce()
     expect(queryClient.getQueryData(scopedKey)).toBeUndefined()
@@ -153,10 +199,11 @@ describe("header", () => {
     await renderWithProviders()
 
     await user.click(main().getByRole("button", { name: "Connect Google" }))
-    await user.click(header().getByRole("button", { name: "Disconnect" }))
+    await disconnectFromHeader(user)
+    await user.click(main().getByRole("button", { name: "Connect Google" }))
+    await disconnectFromHeader(user)
 
     expect(main().getAllByRole("note")).toHaveLength(1)
-    expect(main().queryByText("Connected to Google")).not.toBeInTheDocument()
   })
 
   it("announces a failed connection on the page, but not a closed popup", async () => {
@@ -295,24 +342,21 @@ describe("routes", () => {
     })
   })
 
-  it("leaves focus alone when the focused control stays", async () => {
+  it("connects from the account menu, which keeps focus as its item changes", async () => {
     const user = userEvent.setup()
-    await renderWithProviders({
+    const { authClient } = await renderWithProviders({
       roadmaps: [createTestRoadmap("producta", "Product A roadmap")],
     })
-    const headerConnect = header().getByRole("button", {
-      name: "Connect Google",
-    })
-    headerConnect.focus()
 
-    await user.keyboard("{Enter}")
+    const menu = await openAccountMenu(user)
+    await user.click(menu.getByRole("menuitem", { name: "Connect Google" }))
 
+    // Called inside the click, so the browser would allow Google's popup (ADR-003).
+    expect(authClient.connect).toHaveBeenCalledOnce()
     expect(
       await main().findByRole("link", { name: "Product A roadmap" }),
     ).toBeInTheDocument()
-    // The same header button, now Disconnect.
-    expect(headerConnect).toHaveFocus()
-    expect(headerConnect).toHaveAccessibleName("Disconnect")
+    expect(header().getByRole("button", { name: "Account" })).toHaveFocus()
   })
 
   it("moves focus to the new page's content after navigating, not on first load", async () => {

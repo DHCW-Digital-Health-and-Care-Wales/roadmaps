@@ -107,11 +107,10 @@ the screen for the outcome of publishing its changes, or of publishing or
 unpublishing the roadmap. A failure stays until the next
 attempt or the reader dismisses it. A confirmation clears itself after a few
 seconds (waiting while it is hovered or focused), or sooner on the next change
-or page, so write it to be read at a glance; the header's status keeps the
-state. A new notice replaces the old one.
+or page, so write it to be read at a glance. Only a disconnect is confirmed: a
+connect shows itself in the page's roadmaps. A new notice replaces the old one.
 
 ```
-auth.notifications.connected     Connected to Google
 auth.notifications.disconnected  Disconnected from Google
 auth.errors.popup-blocked        Your browser blocked the Google window. Allow pop-ups for this site and try again.
 ```
@@ -312,7 +311,8 @@ roadmaps.hold.reconnect             Reconnect to refresh your roadmaps.
 
 ## Status label
 
-**Shape:** a short noun phrase or past participle, no full stop.
+**Shape:** a short noun phrase or past participle, no full stop. Shown to no one: a
+live region tells a screen reader when the connection's state changes.
 
 ```
 auth.status.ready      Not connected

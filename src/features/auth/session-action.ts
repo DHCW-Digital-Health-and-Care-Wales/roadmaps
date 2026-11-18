@@ -19,8 +19,11 @@ export const ReconnectRequestContext = createContext<
  * Wraps an action that needs a session, such as a write or a read (STY-057): while
  * connected it runs at once; otherwise the reconnect dialog asks to reconnect first and,
  * once reconnected, the action carries on, as its component then renders it. Call the
- * result with the control pressed, where focus returns. An action whose component has
- * gone by then does not carry on.
+ * result with the control pressed (`event.currentTarget`, or a form's
+ * `event.nativeEvent.submitter`), where focus returns. An action whose component has
+ * gone by then does not carry on. Wrap every such handler, wherever its control sits (a
+ * pinned bar, a menu, the navigation), and never disable the control while the session
+ * has ended: the reconnect dialog is how it asks.
  */
 export function useSessionAction(
   action: () => void,

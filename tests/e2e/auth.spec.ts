@@ -1,3 +1,9 @@
+import type { Page } from "@playwright/test"
+
+import {
+  chooseFromAccountMenu,
+  disconnectFromHeader,
+} from "./fixtures/account-menu"
 import { sessionMs, type TokenOutcome } from "./fixtures/fake-gis"
 import { EXAMPLE_INDEX_ROWS, withRoadmapIndex } from "./fixtures/fake-sheets"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
@@ -53,8 +59,15 @@ const failures: {
   },
 ]
 
+/** Presses Connect where `from` has it: on the page, or in the header's account menu. */
+function pressConnect(page: Page, from: "the start page" | "the account menu") {
+  return from === "the account menu"
+    ? chooseFromAccountMenu(page, "Connect Google")
+    : connect(page)
+}
+
 for (const { name, outcome, status, notice, role } of failures) {
-  for (const from of ["the start page", "the header"] as const) {
+  for (const from of ["the start page", "the account menu"] as const) {
     test(`connecting from ${from} fails gracefully when ${name}`, async ({
       page,
       gis,
@@ -62,15 +75,7 @@ for (const { name, outcome, status, notice, role } of failures) {
     }) => {
       gis.respondWith(outcome)
       await page.goto("./")
-      const button =
-        from === "the header"
-          ? page
-              .getByRole("banner")
-              .getByRole("button", { name: "Connect Google" })
-          : page
-              .getByRole("main")
-              .getByRole("button", { name: "Connect Google" })
-      await button.click()
+      await pressConnect(page, from)
 
       // The reason stays on the page in view, above its heading; no toast.
       const main = page.getByRole("main")
@@ -88,13 +93,13 @@ for (const { name, outcome, status, notice, role } of failures) {
       await expect(main).toBeFocused()
 
       // Trying again works.
-      await button.click()
+      await pressConnect(page, from)
       await expect(roadmapCards(page)).toHaveCount(3)
     })
   }
 }
 
-test("a failed reconnect from the header shows why over the expired roadmaps", async ({
+test("a failed reconnect from the account menu shows why over the expired roadmaps", async ({
   page,
   gis,
 }) => {
@@ -107,10 +112,7 @@ test("a failed reconnect from the header shows why over the expired roadmaps", a
   await expect(main.getByText("Your session has expired")).toBeVisible()
 
   gis.respondWith({ type: "popup-blocked" })
-  await page
-    .getByRole("banner")
-    .getByRole("button", { name: "Reconnect" })
-    .click()
+  await chooseFromAccountMenu(page, "Reconnect")
 
   await expect(
     main
@@ -123,25 +125,27 @@ test("a failed reconnect from the header shows why over the expired roadmaps", a
 /** A confirmation's dwell before it clears itself (`CONFIRMATION_DWELL_MS`). */
 const CONFIRMATION_DWELL_MS = 8_000
 
-test("a confirmation clears itself; a failure stays", async ({ page, gis }) => {
+test("connecting shows no notice; a disconnect's confirmation clears itself, a failure stays (STY-056 S1)", async ({
+  page,
+  gis,
+}) => {
   await page.clock.install()
   await page.goto("./")
   await connect(page)
   const main = page.getByRole("main")
-  const confirmation = main.getByRole("note")
-  await expect(confirmation).toHaveText("Connected to Google")
+  await expect(roadmapCards(page)).toHaveCount(3)
+  await expect(main.getByRole("note")).toHaveCount(0)
+  // Nothing of the connection shows, but a screen reader is told.
+  const status = page.getByRole("banner").getByRole("status")
+  await expect(status).toHaveText("Google connected")
 
+  await disconnectFromHeader(page)
+  const confirmation = main.getByRole("note")
+  await expect(confirmation).toHaveText("Disconnected from Google")
   await page.clock.fastForward(CONFIRMATION_DWELL_MS)
   await expect(confirmation).toHaveCount(0)
-  // The header keeps the state.
-  await expect(page.getByRole("banner").getByRole("status")).toHaveText(
-    "Google connected",
-  )
+  await expect(status).toHaveText("Not connected")
 
-  await page
-    .getByRole("banner")
-    .getByRole("button", { name: "Disconnect" })
-    .click()
   gis.respondWith({ type: "access-denied" })
   await connect(page)
   const failure = main.getByRole("alert")
@@ -201,10 +205,7 @@ test("disconnecting revokes the token and forgets the roadmaps", async ({
   await connect(page)
   await expect(roadmapCards(page)).toHaveCount(3)
 
-  await page
-    .getByRole("banner")
-    .getByRole("button", { name: "Disconnect" })
-    .click()
+  await disconnectFromHeader(page)
 
   await expect(roadmapCards(page)).toHaveCount(0)
   await expect(

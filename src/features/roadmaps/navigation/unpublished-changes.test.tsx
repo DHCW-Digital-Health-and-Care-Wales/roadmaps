@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest"
 
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
+import { disconnectFromHeader } from "@/features/auth/testing/account-menu"
 import { createI18n } from "@/i18n"
 import { DESKTOP_WIDTH } from "@/lib/use-media-query"
 import { connected } from "@/test/connected-state"
@@ -268,11 +269,7 @@ describe("on a desktop", () => {
     const { user, router } = await renderShell()
     await change(user, router, "producta", "A item")
 
-    await user.click(
-      within(screen.getByRole("banner")).getByRole("button", {
-        name: "Disconnect",
-      }),
-    )
+    await disconnectFromHeader(user)
     await user.click(
       screen.getByRole("button", { name: "Keep changes and disconnect" }),
     )
@@ -368,11 +365,7 @@ describe("in Welsh", () => {
 
 describe("Disconnect's question (D2)", () => {
   async function askToDisconnect(user: ReturnType<typeof userEvent.setup>) {
-    await user.click(
-      within(screen.getByRole("banner")).getByRole("button", {
-        name: "Disconnect",
-      }),
-    )
+    await disconnectFromHeader(user)
     return within(await screen.findByRole("alertdialog"))
   }
 

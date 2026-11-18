@@ -15,11 +15,11 @@ export interface AppHeaderProps {
    */
   start?: ReactNode
   /**
-   * Controls on the right: status, preferences and the auth action. A button here takes
+   * Controls on the right: the language and the account menu. A button here takes
    * `variant="header"` (the default navy vanishes on the band). The row is tight in
-   * Cymraeg from 375px to `lg`, where the service name wraps beside the menu button
-   * rather than be cut, which `tests/e2e/shell.spec.ts` guards: a wider control can push
-   * it past two lines or scroll the page sideways.
+   * Cymraeg at 375px, where the service name must stay on one line beside the menu
+   * button, which `tests/e2e/shell.spec.ts` guards: a wider control can push it onto a
+   * second or scroll the page sideways.
    */
   actions: ReactNode
 }
@@ -35,9 +35,7 @@ export function AppHeader({ start, actions }: AppHeaderProps) {
   const nameId = useId()
 
   return (
-    // A size container: beside the desktop navigation it is narrower than the screen,
-    // and its controls follow its own width (`ConnectionStatus`).
-    <header className="@container bg-header text-header-foreground">
+    <header className="bg-header text-header-foreground">
       <PageContainer className="flex min-h-16 items-center gap-1 py-3 sm:gap-3">
         {start}
         <Link

@@ -1,3 +1,4 @@
+import { openAccountMenu } from "./fixtures/account-menu"
 import { expect, test } from "./fixtures/test"
 
 test("the landing page introduces the app and offers to connect", async ({
@@ -18,8 +19,10 @@ test("the landing page introduces the app and offers to connect", async ({
   await expect(
     page.getByRole("main").getByRole("button", { name: "Connect Google" }),
   ).toBeEnabled()
+  // The account menu offers it too, and the header shows nothing of the connection.
+  const menu = await openAccountMenu(page)
   await expect(
-    page.getByRole("banner").getByRole("button", { name: "Connect Google" }),
+    menu.getByRole("menuitem", { name: "Connect Google" }),
   ).toBeEnabled()
   expect(sheets.tokens).toEqual([])
 })

@@ -5,5 +5,4 @@
     - text: ""
   - status: Google connected
   - button "Language English"
-  - button "Switch to dark theme"
-  - button "Disconnect"
+  - button "Account"

@@ -1,10 +1,9 @@
 # EPC-012: App shell and navigation — the controls that matter scroll away, the plumbing stays
 
-- **Status**: Active — proposed by the owner on 2026-11-17 from a UX review of the
+- **Status**: Done — proposed by the owner on 2026-11-17 from a UX review of the
   shell; the owner chose STY-052's and STY-053's designs from their prototypes and
   answered every story's questions in four grilling rounds and a review round
-- **Progress**: 5 of 6 terminal (STY-057, STY-052, STY-053, STY-054, STY-055); next
-  selectable: STY-056, not blocked; blocked on: nothing
+- **Progress**: 6 of 6 terminal (STY-057, STY-052, STY-053, STY-054, STY-055, STY-056)
 - **Binding ADRs**: ADR-010, ADR-008, ADR-005, ADR-012, ADR-002, ADR-003, ADR-004
 
 ## Summary
@@ -144,14 +143,14 @@ handler with no `await` before it (ADR-003).
 
 ## Stories
 
-| ID      | Story                                                                                                                                      | Area                                | Depends on | State |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------- | ---------- | ----- |
-| STY-052 | [Keep a roadmap's controls in view](../_archive/EPC-012-app-shell-and-navigation/STY-052-keep-a-roadmaps-controls-in-view.md)              | Features/UI + i18n (en + cy) + E2E  | STY-057    | ✅    |
-| STY-053 | [Jump between a roadmap's placements](../_archive/EPC-012-app-shell-and-navigation/STY-053-jump-between-a-roadmaps-placements.md)          | Features/UI + i18n (en + cy) + E2E  | STY-052    | ✅    |
-| STY-054 | [Move between roadmaps from the shell](../_archive/EPC-012-app-shell-and-navigation/STY-054-move-between-roadmaps-from-the-shell.md)       | Features/UI + Routing + i18n + Docs | —          | ✅    |
-| STY-055 | [See unpublished changes across roadmaps](../_archive/EPC-012-app-shell-and-navigation/STY-055-see-unpublished-changes-across-roadmaps.md) | Features/UI + i18n (en + cy) + E2E  | STY-054    | ✅    |
-| STY-056 | [A quieter header](STY-056-a-quieter-header.md)                                                                                            | Features/UI + i18n (en + cy) + E2E  | —          |       |
-| STY-057 | [Reconnect from the action that needs it](../_archive/EPC-012-app-shell-and-navigation/STY-057-reconnect-from-the-action-that-needs-it.md) | Features/UI + i18n (en + cy) + E2E  | —          | ✅    |
+| ID      | Story                                                                                         | Area                                | Depends on | State |
+| ------- | --------------------------------------------------------------------------------------------- | ----------------------------------- | ---------- | ----- |
+| STY-052 | [Keep a roadmap's controls in view](STY-052-keep-a-roadmaps-controls-in-view.md)              | Features/UI + i18n (en + cy) + E2E  | STY-057    | ✅    |
+| STY-053 | [Jump between a roadmap's placements](STY-053-jump-between-a-roadmaps-placements.md)          | Features/UI + i18n (en + cy) + E2E  | STY-052    | ✅    |
+| STY-054 | [Move between roadmaps from the shell](STY-054-move-between-roadmaps-from-the-shell.md)       | Features/UI + Routing + i18n + Docs | —          | ✅    |
+| STY-055 | [See unpublished changes across roadmaps](STY-055-see-unpublished-changes-across-roadmaps.md) | Features/UI + i18n (en + cy) + E2E  | STY-054    | ✅    |
+| STY-056 | [A quieter header](STY-056-a-quieter-header.md)                                               | Features/UI + i18n (en + cy) + E2E  | —          | ✅    |
+| STY-057 | [Reconnect from the action that needs it](STY-057-reconnect-from-the-action-that-needs-it.md) | Features/UI + i18n (en + cy) + E2E  | —          | ✅    |
 
 ## Sequencing
 
@@ -181,16 +180,16 @@ top bar) prefers to.
 
 ## Defects
 
-- [DEF-018](../defects/DEF-018-reconnecting-on-a-roadmap-s-page-reads-the-roadmap-list-twice.md):
+- [DEF-018](../../defects/DEF-018-reconnecting-on-a-roadmap-s-page-reads-the-roadmap-list-twice.md):
   reconnecting on a roadmap's page reads the roadmap list twice. Needs triage; found by
   STY-057's delivery, and on the default branch before it.
 
 ## Related
 
-- [ADR-010](../../adr/ADR-010-align-the-ui-with-the-dhcw-design-system.md), _Deferred:
+- [ADR-010](../../../adr/ADR-010-align-the-ui-with-the-dhcw-design-system.md), _Deferred:
   the dashboard shell_
-- [Product Lead persona](../personas/product-lead.md)
-- [EPC-005 Editing](../_archive/EPC-005-editing/README.md), which put the pending bar
+- [Product Lead persona](../../personas/product-lead.md)
+- [EPC-005 Editing](../EPC-005-editing/README.md), which put the pending bar
   under the title
-- [Roadmap page shell UX analysis](../../analysis/roadmap-page-shell-ux-analysis.md):
+- [Roadmap page shell UX analysis](../../../analysis/roadmap-page-shell-ux-analysis.md):
   five mock-ups for STY-052 and STY-053

@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test"
 
+import { disconnectFromHeader } from "./fixtures/account-menu"
 import {
   openEditItemDialog,
   openEditRoadmapDialog,
@@ -143,10 +144,7 @@ test("Disconnect asks first, and kept changes wait for the next connection (S14)
   await openRoadmap(page, "producta", ITEM)
   await editTitle(page, ITEM, "A clearer first card")
 
-  await page
-    .getByRole("banner")
-    .getByRole("button", { name: "Disconnect" })
-    .click()
+  await disconnectFromHeader(page)
   const question = page.getByRole("alertdialog")
   await expect(question).toContainText("Keep your changes?")
   await question

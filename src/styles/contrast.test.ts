@@ -157,7 +157,7 @@ describe("contrast", () => {
       },
     )
 
-    // The header is navy in both themes: its chip and button borders are controls, and
+    // The header is navy in both themes: its buttons' borders are controls, and
     // the focus indicator's yellow part is what shows on it.
     it("the header's borders and focus indicator are at least 3:1 on it", () => {
       expect(ratio("header-border", "header")).toBeGreaterThanOrEqual(

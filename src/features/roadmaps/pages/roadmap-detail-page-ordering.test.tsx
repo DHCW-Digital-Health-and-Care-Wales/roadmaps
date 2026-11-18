@@ -6,6 +6,7 @@ import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import type { RoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
+import { disconnectFromHeader } from "@/features/auth/testing/account-menu"
 import type { Language } from "@/i18n"
 import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
@@ -337,11 +338,7 @@ describe("A pending order at the placement's heading (S3)", () => {
     await main().findByRole("heading", { level: 3, name: "Delta" })
     await chooseFromMenu(user, "Delta", "To the top")
 
-    await user.click(
-      within(screen.getByRole("banner")).getByRole("button", {
-        name: "Disconnect",
-      }),
-    )
+    await disconnectFromHeader(user)
     await user.click(
       screen.getByRole("button", { name: "Keep changes and disconnect" }),
     )

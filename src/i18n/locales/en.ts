@@ -56,6 +56,8 @@ export const en = {
   },
   layout: {
     skipToContent: "Skip to main content",
+    /** The header's menu of the theme and the session's action (STY-056). */
+    account: "Account",
     /** Said after the service name in the home link's name: "Roadmap Editor home". */
     homeSuffix: "home",
     /** The DHCW logo's alternative text: the organisation's name. */
@@ -130,7 +132,6 @@ export const en = {
     } satisfies Record<AuthErrorCode, string>,
     /** Confirmations, shown as a notice at the top of the page (no toasts). */
     notifications: {
-      connected: "Connected to Google",
       disconnected: "Disconnected from Google",
     },
     /** A failed "Stay connected": the reason (`auth.errors.*`) goes between the two. */

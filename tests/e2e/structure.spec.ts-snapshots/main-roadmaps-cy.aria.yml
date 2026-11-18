@@ -1,7 +1,4 @@
 - main:
-  - note:
-    - text: Wedi cysylltu â Google
-    - button "Cau'r neges"
   - region "Eich mapiau trywydd":
     - heading "Eich mapiau trywydd" [level=1]
     - paragraph: Pob map trywydd, wedi'i gyhoeddi neu beidio.

@@ -4,7 +4,7 @@
 // half opacity with no bar when disabled, including a button that stays focusable
 // (`data-disabled`). Variants: `default` (primary), `secondary` (white, grey border and bar),
 // `destructive` (DHCW's solid red warning button), `ghost` and `header` (white on the navy
-// header band, with the chips' border and a lighter hover); upstream's `outline`, `link`
+// header band, with DHCW's grey border and a lighter hover); upstream's `outline`, `link`
 // and the xs/lg sizes are gone, so a group is always 40px (`default`) or 32px (`sm`).
 // focus-visible:focus-fill for upstream's ring, and no `dark:` overrides, which would beat
 // the focus fill in the dark theme. Hovers are --primary-hover, --muted and

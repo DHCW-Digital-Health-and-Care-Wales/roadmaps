@@ -1,11 +1,14 @@
 import type { Locator, Page } from "@playwright/test"
 
 import { openEditItemDialog, openEditRoadmapDialog } from "./fixtures/dialogs"
+import { withTabItems } from "./fixtures/fake-sheets"
 import type { Language } from "./fixtures/look"
 import {
   focusClearOfBars,
   LEFT_THE_CONTENT,
+  openAbout,
   openLongRoadmap,
+  openRoadmapIn,
   shownInStuckRow,
 } from "./fixtures/roadmap-page"
 import { expect, test } from "./fixtures/test"
@@ -227,6 +230,58 @@ for (const language of ["en", "cy"] as const) {
     expect(jump.height).toBe(40)
   })
 }
+
+test("keeps a phone's top to the screen's width with About open on a long address (S2)", async ({
+  page,
+  sheets,
+}) => {
+  await page.setViewportSize({ width: 375, height: 812 })
+  await openLongRoadmap(page, sheets)
+  const dialog = await openEditRoadmapDialog(page)
+  await dialog
+    .getByRole("textbox", { name: "Vision" })
+    .fill(
+      "See https://digitalhealth.wales/our-services/national-data-resource/roadmap-and-releases",
+    )
+  await dialog.getByRole("button", { name: "Done" }).click()
+  await expect(dialog).toBeHidden()
+
+  await openAbout(page)
+
+  await jumpTo(page).scrollIntoViewIfNeeded()
+  await expect(jumpTo(page)).toBeInViewport({ ratio: 1 })
+  expect(await scrollsSideways(page)).toBe(false)
+})
+
+test("keeps a 360px phone's top to the screen's width in Cymraeg, Jump to naming the unplaced items (S2, S5)", async ({
+  page,
+  sheets,
+}) => {
+  await page.setViewportSize({ width: 360, height: 800 })
+  await openRoadmapIn(page, sheets, {
+    spreadsheet: withTabItems(
+      "ProductA",
+      ["Leaflets in plain language", "Soon"],
+      ["Now item", "Now"],
+      ["Later item", "Later"],
+    ),
+    tab: "ProductA",
+    lastCard: "Later item",
+    language: "cy",
+  })
+
+  await jumpTo(page, "cy").click()
+  await page
+    .getByRole("menuitem", { name: /^Ddim ar y map trywydd cyhoeddus,/ })
+    .click()
+
+  const jump = jumpTo(page, "cy")
+  await expect(jump).toHaveAccessibleName(
+    "Neidio i: Ddim ar y map trywydd cyhoeddus",
+  )
+  await expect(jump).toBeInViewport({ ratio: 1 })
+  expect(await scrollsSideways(page)).toBe(false)
+})
 
 test("shapes a phone's stuck strip as two rows: the menu button and the title cut after two lines, then +, … and Jump to (S3)", async ({
   page,

@@ -152,7 +152,9 @@ strip's layout, including "keeps every control of the stuck row on screen" at 64
   buttons `px-3`.
 - **For STY-064** (the navigation's width): the links wrap and "Jump to" cuts its
   placement's name, so a narrower page column keeps every control on the screen;
-  `tests/e2e/control-row.spec.ts` holds it at 375px to 1280px with the navigation open.
+  `tests/e2e/control-row.spec.ts` holds it from 375px to 1280px, the navigation beside
+  the page at 1024px and 1280px. The header's grid is one shrinkable column
+  (`grid-cols-1`), so no content widens it past the page.
 - **Catalogue**: no key added or removed; the comments on `roadmaps.jumpTo` say which
   width shows which control.
 - **Test hooks**: `tests/e2e/control-row.spec.ts`; the `detail` structure snapshot, at
@@ -164,15 +166,15 @@ strip's layout, including "keeps every control of the stuck row on screen" at 64
 `src/features/roadmaps/pages/roadmap-detail-page-header.test.tsx`; `pn` is
 `src/features/roadmaps/pages/roadmap-detail-page-placement-navigation.test.tsx`.
 
-| Scenario | Held by                                                                                                                                                                                                                                                                                                                                     |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1       | `cr` "shows one jump control at {375,640,768,820,1024,1280}px in {en,cy}, the same at the top and once stuck"; `hp` "One jump control per width (STY-060)" (three tests) and "reaches Add an item, More, then the placement links by Tab after Edit on a desktop"; `pn` (menu on a phone, links on a desktop); `structure.spec.ts` `detail` |
-| S2       | `cr` "puts Add an item and More on a phone's row…" and "puts Add an item, More and Jump to on one row on an iPad…" in en and cy; `roadmap-header.spec.ts` "opens on one header block on one left edge…"                                                                                                                                     |
-| S3       | `cr` "shapes a phone's stuck strip as two rows…"; `roadmap-controls.spec.ts` "moves Publish roadmap into More once the row sticks… Add an item and More are icons" and "fits the pinned controls in Cymraeg on a 375px phone…"; `accessibility.spec.ts` "a roadmap's placement navigation on a phone…"                                      |
-| S4       | `cr` "shapes an iPad's stuck strip as the phone's two rows…" and "shapes a desktop's stuck strip as the title with Add an item and More on its right, then the links"                                                                                                                                                                       |
-| S5       | `cr` "keeps a stuck Jump to on one line in Cymraeg on a phone…"; `placement-navigation.spec.ts` "keeps every control of the stuck row on screen at {768,640}px…"                                                                                                                                                                            |
-| S6       | `cr` "puts the count, Publish and Discard on one row at {375,820,1280}px in {en,cy}" and "keeps Save, for a roadmap not published, on the phone's one row…"; STY-052's specs for what each does                                                                                                                                             |
-| S7       | `cr` "keeps the heading jumped to and each control tabbed to clear of the strip and the foot bar on {a phone,an iPad,a desktop}" and "pins nothing below 500px of height…"; `roadmap-controls.spec.ts` (S5, S6); `placement-navigation.spec.ts` (jumps at three widths)                                                                     |
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                          |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| S1       | `cr` "shows one jump control at {375,640,768,820,1024,1280}px in {en,cy}, the same at the top and once stuck"; `hp` "One jump control per width (STY-060)" (three tests) and "reaches Add an item, More, then the placement links by Tab after Edit on a desktop"; `pn` (menu on a phone, links on a desktop); `structure.spec.ts` `detail`      |
+| S2       | `cr` "puts Add an item and More on a phone's row…" and "puts Add an item, More and Jump to on one row on an iPad…" in en and cy; `cr` "keeps a phone's top to the screen's width with About open on a long address" and "…in Cymraeg, Jump to naming the unplaced items"; `roadmap-header.spec.ts` "opens on one header block on one left edge…" |
+| S3       | `cr` "shapes a phone's stuck strip as two rows…"; `roadmap-controls.spec.ts` "moves Publish roadmap into More once the row sticks… Add an item and More are icons" and "fits the pinned controls in Cymraeg on a 375px phone…"; `accessibility.spec.ts` "a roadmap's placement navigation on a phone…"                                           |
+| S4       | `cr` "shapes an iPad's stuck strip as the phone's two rows…" and "shapes a desktop's stuck strip as the title with Add an item and More on its right, then the links"                                                                                                                                                                            |
+| S5       | `cr` "keeps a stuck Jump to on one line in Cymraeg on a phone…"; `placement-navigation.spec.ts` "keeps every control of the stuck row on screen at {768,640}px…"                                                                                                                                                                                 |
+| S6       | `cr` "puts the count, Publish and Discard on one row at {375,820,1280}px in {en,cy}" and "keeps Save, for a roadmap not published, on the phone's one row…"; STY-052's specs for what each does                                                                                                                                                  |
+| S7       | `cr` "keeps the heading jumped to and each control tabbed to clear of the strip and the foot bar on {a phone,an iPad,a desktop}" and "pins nothing below 500px of height…"; `roadmap-controls.spec.ts` (S5, S6); `placement-navigation.spec.ts` (jumps at three widths)                                                                          |
 
 Every test above followed working code. Each new or rewritten one was shown red by
 breaking it:
@@ -193,4 +195,6 @@ breaking it:
 - The stuck strip's top inset dropped: `cr` S7 at all three widths.
 
 `cr` "pins nothing below 500px of height…" guards STY-052 D18's `usePinning`, which this
-story does not change.
+story does not change. The two "keeps a phone's top to the screen's width…" tests guard
+review round 1's concern that the header's grid could grow past a phone; it did not in
+Chromium before the `grid-cols-1` hardening either, so they passed both ways.

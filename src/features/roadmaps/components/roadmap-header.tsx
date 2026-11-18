@@ -96,7 +96,8 @@ export function RoadmapHeader({
       {(stuck) => (
         <div
           className={cn(
-            "grid",
+            // One column no wider than the page, whatever its content's widest word.
+            "grid grid-cols-1",
             // Stuck on a desktop: the title, Add an item and More on its right, then
             // the links across both.
             stuck

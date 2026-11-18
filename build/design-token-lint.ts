@@ -174,6 +174,9 @@ const OWN_FOCUS_RESTRICTION: Restriction = {
   message: `Only a focus utility styles focus here: ${FOCUS_HINT}`,
 }
 
+/** A variable whose strings lint reads as classes. */
+const CLASSES_VARIABLE = String.raw`^\w*[cC]lasses$`
+
 /**
  * Class lists are linted where the plugin finds them by default (`className`, `cn()`,
  * `cva()` …), in the `className` a cva helper takes (`buttonVariants({ className })`),
@@ -188,7 +191,7 @@ const selectors = [
   },
   {
     kind: "variable",
-    name: String.raw`^\w*[cC]lasses$`,
+    name: CLASSES_VARIABLE,
     match: [{ type: "strings" }, { type: "objectValues" }],
   },
 ]
@@ -227,6 +230,16 @@ const STYLE_FORM_MESSAGE =
   "Write an inline style as an object literal in its style attribute, without spreads, so lint can check its properties (ADR-010)."
 const PAINT_MESSAGE =
   "Literal colour in an SVG attribute: use currentColor with a semantic text-* class (ADR-010)."
+
+/**
+ * A class list reaches an element by a `className` attribute or `cn()`'s arguments. A
+ * variable there is linted only when its name matches `CLASSES_VARIABLE`: STY-052's
+ * `IN_FLOW` and STY-054's `ITEM_CLASSES` and `ROADMAP_ROWS` went unlinted that way.
+ * Review by 2027-02-16 whether it has caught any since.
+ */
+const CLASS_VALUE = String.raw`:matches(JSXAttribute[name.name="className"] > JSXExpressionContainer > .expression, CallExpression[callee.name="cn"] > .arguments)`
+/** A variable passed there that lint never reads: not `…Classes`, nor a `className`. */
+const UNLINTED_CLASSES = String.raw`Identifier:not([name=/${CLASSES_VARIABLE}|^className$|^undefined$/])`
 
 /** `no-restricted-syntax`: design values that bypass classes (S4). */
 const backDoors = [
@@ -281,6 +294,12 @@ const backDoors = [
     selector: `:matches(Literal[value=${PRIMITIVE}], TemplateElement[value.raw=${PRIMITIVE}])`,
     message:
       "A --nhsw-* or --app-dark-* primitive outside globals.css: use the semantic token built on it (ADR-010).",
+  },
+  {
+    // The value itself, `className={ROWS}`, or one a condition chooses, not its test.
+    selector: `:matches(${UNLINTED_CLASSES}${CLASS_VALUE}, ${CLASS_VALUE} > ${UNLINTED_CLASSES}:matches(.consequent, .alternate, .right))`,
+    message:
+      "Class list in a variable lint cannot see: name it …Classes, in camelCase, so lint checks its classes (ADR-010).",
   },
 ]
 

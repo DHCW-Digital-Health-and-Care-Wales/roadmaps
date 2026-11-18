@@ -46,9 +46,10 @@ specs of any journey it changes; with those green, commit it and start the next
 round's reviewers. Every head you push gets the full gate first, on its
 current base: fetch the base before that gate and rebase when it has moved
 (`pull-requests.md`, _Update a branch_), since a base found moved at the push
-costs the gate again. A head that
-differs from one that passed it only in Markdown other than an `AGENTS.md`
-needs just its table rows: of the gate, only `pnpm format:check` reads it.
+costs the gate again. A head that differs from one that passed it only in
+Markdown needs just its table rows: of the gate, only `pnpm format:check`
+reads Markdown, and `build/agent-guides.test.ts` the `AGENTS.md` guides. A
+rebase onto a base that changed only Markdown makes such a head.
 
 CI is the shared merge gate, and independent review covers requirements and
 judgement beyond deterministic checks. Never rely on one as a replacement for

@@ -8,6 +8,10 @@ import { cn } from "@/lib/utils"
 const buttonVariants = cva("")
 const active = true
 const base = {}
+const ROWS = "auto-rows-fr"
+const ITEM_CLASSES = "rounded-lg"
+const rowClasses = "auto-rows-fr"
+const className: string | undefined = undefined
 
 export const s1UnknownClasses = [
   <div className="bg-red-500" />, // ✗ Unknown class detected: bg-red-500
@@ -147,6 +151,19 @@ export const s4BackDoors = [
   <svg fill="none" stroke="currentColor" />,
   <div className="bg-(--nhsw-link-colour)" />, // ✗ primitive outside globals.css
   <span style={{ "--x": "var(--app-dark-link)" } as React.CSSProperties} />, // ✗ primitive outside globals.css
+]
+
+export const s4ClassVariables = [
+  <div className={ROWS} />, // ✗ Class list in a variable lint cannot see
+  <div className={ITEM_CLASSES} />, // ✗ Class list in a variable lint cannot see
+  <div className={cn("p-2", ROWS)} />, // ✗ Class list in a variable lint cannot see
+  <div className={cn("p-2", active && ROWS)} />, // ✗ Class list in a variable lint cannot see
+  <div className={cn(active ? "p-2" : ROWS)} />, // ✗ Class list in a variable lint cannot see
+  <div className={active ? ROWS : undefined} />, // ✗ Class list in a variable lint cannot see
+  <div className={rowClasses} />,
+  <div className={cn("p-2", active && rowClasses, className)} />,
+  <div className={active ? rowClasses : undefined} />,
+  <div className={cn(active ? "p-2" : "p-3", stateClasses.idle)} />,
 ]
 
 const layoutStyle: React.CSSProperties = { color: "red" } // ✗ Design property in an inline style

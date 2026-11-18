@@ -96,6 +96,7 @@ describe("markdown links", () => {
       "```ts",
       "[i](missing.md), since a fence with a language closes nothing",
       "````",
+      "See [the record](record.md) and its `Status`.",
       "A lone ` reaches no further than its paragraph.",
       "",
       "After it, [a link](after.md) and its `code`.",
@@ -113,6 +114,7 @@ describe("markdown links", () => {
       "guide.md",
       "nested.md",
       "between.md",
+      "record.md",
       "after.md",
     ])
   })

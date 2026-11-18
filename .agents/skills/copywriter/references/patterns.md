@@ -143,7 +143,7 @@ button is **Done**, never "Save", which names the write on a roadmap that is not
 published; Cancel leaves the form. A required field's error is an instruction:
 `roadmaps.edit.titleRequired` "Enter a title". What holds a pending change is tagged
 "Changed"; Undo is "Undo changes" plus its subject. A form in a dialog is headed by
-the verb and what it edits ("Edit this roadmap"), as an add dialog is.
+the verb and what it edits ("Edit product details"), as an add dialog is.
 
 ## Add dialog
 
@@ -389,8 +389,8 @@ it, so no card carries an empty label. A date is written out from the catalogue'
 names (`formatCalendarDate`), never numerically.
 
 A list of facts is named for what it holds ("Roadmap details"), not after a control
-beside it; a fact whose value is a tag leads with its label ("Status:"), so a status of
-"Beta" is not taken for the service's phase banner.
+beside it; a fact whose value could be read as something else leads with its label
+("Status:"), so a status of "Beta" is not taken for the service's phase banner.
 
 ## Accessible names
 

@@ -92,10 +92,11 @@ report in the conversation only.
      including "left for S0n" or "TODO" after the story closed. Beyond the
      diff: README, ADRs, `AGENTS.md` guides, `delivery-notes.md`, workflows,
      scripts and config that a changed command, key, route or default now
-     makes false; grep for the old form. In a delivery PR, fixing a guide file
-     made false is an incidental guide change unless the owner named it
-     (`docs/operations/authoring-agent-instructions.md`, _Where it goes_):
-     it goes to the handoff for the retrospective.
+     makes false; grep for the old form. In a delivery PR, a guide file made
+     false takes a correction that states the same rule with the true fact;
+     an edit that adds or changes a rule is an incidental guide change
+     (`docs/operations/authoring-agent-instructions.md`, _Where it goes_)
+     and goes to the handoff for the retrospective.
    - **Inconsistent failure.** A helper returning `null` where its sibling
      throws; a broad `catch` that swallows or turns an abort into an error; an
      `AppError` kind chosen differently for the same cause in two adapters;

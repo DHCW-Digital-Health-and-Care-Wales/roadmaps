@@ -429,7 +429,8 @@ for (const theme of THEMES) {
         .getByRole("navigation", { name: "Roadmaps" })
         .getByRole("button", { name: "2 roadmaps have unpublished changes" })
 
-      await tabTo(page, count)
+      // The navigation comes before the page, where the navigation left focus.
+      await tabTo(page, count, "Shift+Tab")
       await expectIndicator(count, colours, "fill")
       await page.keyboard.press("Enter")
 

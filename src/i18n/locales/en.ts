@@ -312,13 +312,16 @@ export const en = {
         category: "Category",
       },
     },
-    /** A roadmap's placement navigation: the header's menu and the links (STY-053). */
+    /**
+     * A roadmap's placement navigation (STY-053): the header's "Jump to" below a desktop,
+     * its row of links from one (STY-060).
+     */
     jumpTo: {
       /** The menu button, before the page has reached a placement (D8). */
       menu: "Jump to",
       /** The menu button, naming the placement the page is in (S3). */
       current: "Jump to: {{name}}",
-      /** Names the row of links under "About this roadmap". */
+      /** Names the row of placement links, a desktop's jump control. */
       links: "Horizons and sections",
       /**
        * A placement or the unplaced items, for screen readers: its name, how many items

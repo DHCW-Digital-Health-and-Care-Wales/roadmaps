@@ -4,7 +4,7 @@
   published row, About this roadmap with Edit, then Add an item, More and "Jump to"
 - **Type**: Feature
 - **Area**: Features/UI + i18n (en + cy) + E2E
-- **Epic**: [EPC-013-tidy-page-tops](../../EPC-013-tidy-page-tops/README.md)
+- **Epic**: [EPC-013-tidy-page-tops](README.md)
 - **Depends on**: none
 - **Binding ADRs**: ADR-010, ADR-008, ADR-012
 - **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/156

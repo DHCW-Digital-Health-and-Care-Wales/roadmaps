@@ -1,8 +1,8 @@
 # EPC-013: Tidy page tops — every control is there, but nothing lines up
 
-- **Status**: Active — the owner chose design G and accepted every decision of the
-  page headers UX analysis on 2026-11-18
-- **Progress**: 2 of 3 terminal; next selectable: STY-060; blocked on: nothing
+- **Status**: Done — the owner chose design G and accepted every decision of the page
+  headers UX analysis on 2026-11-18
+- **Progress**: 3 of 3 terminal (STY-058, STY-059, STY-060)
 - **Binding ADRs**: ADR-010, ADR-008, ADR-012, ADR-004, ADR-002
 
 ## Summary
@@ -15,7 +15,7 @@ control shows twice, About is a boxed panel between the controls and the items, 
 duplicate the navigation, and the controls change order and edge from row to row. This
 epic gives each page one stack on one left edge, with one row of controls in one order
 at the top and once scrolled (design G of the
-[page headers UX analysis](../../analysis/page-headers-ux-analysis.md)). It moves
+[page headers UX analysis](../../../analysis/page-headers-ux-analysis.md)). It moves
 controls, not data, and leaves the item card, the navigation and the header as they
 are.
 
@@ -94,7 +94,7 @@ Once scrolled on a phone, the strip holds the menu button, the title, More, + an
 
 ### The prototype is the reference
 
-[`page-headers-ux-prototypes.html`](../../analysis/page-headers-ux-analysis/page-headers-ux-prototypes.html),
+[`page-headers-ux-prototypes.html`](../../../analysis/page-headers-ux-analysis/page-headers-ux-prototypes.html),
 design G, draws every moment these stories build: the list, a roadmap's top, About and
 More open, "Jump to" open at the top and once stuck, the end of the page, a roadmap not
 published, Welsh on a phone, an iPad and a desktop, and a short screen. Where a story
@@ -126,11 +126,11 @@ As EPC-012's contract of the same name: `scroll-padding` at each pinned height
 
 ## Stories
 
-| ID      | Story                                                                                                                                 | Area                               | Depends on | State |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ---------- | ----- |
-| STY-058 | [A tidy top to the roadmap list](../_archive/EPC-013-tidy-page-tops/STY-058-a-tidy-top-to-the-roadmap-list.md)                        | Features/UI + i18n (en + cy) + E2E | —          | ✅    |
-| STY-059 | [A roadmap's page opens on one header block](../_archive/EPC-013-tidy-page-tops/STY-059-a-roadmaps-page-opens-on-one-header-block.md) | Features/UI + i18n (en + cy) + E2E | —          | ✅    |
-| STY-060 | [One row of controls, at the top and once scrolled](STY-060-one-row-of-controls-at-the-top-and-once-scrolled.md)                      | Features/UI + i18n (en + cy) + E2E | STY-059    |       |
+| ID      | Story                                                                                                            | Area                               | Depends on | State |
+| ------- | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ---------- | ----- |
+| STY-058 | [A tidy top to the roadmap list](STY-058-a-tidy-top-to-the-roadmap-list.md)                                      | Features/UI + i18n (en + cy) + E2E | —          | ✅    |
+| STY-059 | [A roadmap's page opens on one header block](STY-059-a-roadmaps-page-opens-on-one-header-block.md)               | Features/UI + i18n (en + cy) + E2E | —          | ✅    |
+| STY-060 | [One row of controls, at the top and once scrolled](STY-060-one-row-of-controls-at-the-top-and-once-scrolled.md) | Features/UI + i18n (en + cy) + E2E | STY-059    | ✅    |
 
 ## Sequencing
 
@@ -151,9 +151,9 @@ None.
 
 ## Related
 
-- [Page headers UX analysis](../../analysis/page-headers-ux-analysis.md), with its
+- [Page headers UX analysis](../../../analysis/page-headers-ux-analysis.md), with its
   _Outcome_
-- [EPC-012 App shell and navigation](../_archive/EPC-012-app-shell-and-navigation/README.md),
+- [EPC-012 App shell and navigation](../EPC-012-app-shell-and-navigation/README.md),
   whose STY-052, STY-053 and STY-054 these stories change
-- [ADR-010](../../adr/ADR-010-align-the-ui-with-the-dhcw-design-system.md)
-- [Product Lead persona](../personas/product-lead.md)
+- [ADR-010](../../../adr/ADR-010-align-the-ui-with-the-dhcw-design-system.md)
+- [Product Lead persona](../../personas/product-lead.md)

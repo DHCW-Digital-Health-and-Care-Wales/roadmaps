@@ -76,6 +76,18 @@ function inDocumentOrder(elements: HTMLElement[]): boolean {
   })
 }
 
+/** Tab reaches each of `stops`, in order, after About's Edit. */
+async function expectTabsAfterEdit(
+  user: ReturnType<typeof userEvent.setup>,
+  stops: HTMLElement[],
+) {
+  button("Edit About this roadmap").focus()
+  for (const stop of stops) {
+    await user.tab()
+    expect(document.activeElement).toBe(stop)
+  }
+}
+
 /** The page's button named exactly `name`. */
 const button = (name: string) =>
   main().getByRole("button", { name: (accessible) => accessible === name })
@@ -159,18 +171,25 @@ describe("A roadmap's header block (STY-059)", () => {
     ).toEqual(["Refresh"])
   })
 
-  it("reaches Add an item, More and Jump to by Tab after Edit, on a desktop too (S7)", async () => {
+  it("reaches Add an item, More and Jump to by Tab after Edit (S7)", async () => {
+    const user = await renderPage(demographics)
+
+    await expectTabsAfterEdit(user, [
+      button("Add an item"),
+      button("More"),
+      button("Jump to"),
+    ])
+  })
+
+  it("reaches Add an item, More, then the placement links by Tab after Edit on a desktop (S7, STY-060 S1)", async () => {
     matchMediaQueries(DESKTOP_WIDTH)
     const user = await renderPage(demographics)
 
-    button("Edit About this roadmap").focus()
-    const reached: (string | null)[] = []
-    for (let press = 0; press < 3; press++) {
-      await user.tab()
-      reached.push(document.activeElement?.textContent ?? null)
-    }
-
-    expect(reached).toEqual(["Add an item", "More", "Jump to"])
+    await expectTabsAfterEdit(user, [
+      button("Add an item"),
+      button("More"),
+      main().getByRole("link", { name: "Recently delivered, no items" }),
+    ])
   })
 
   it("is in Welsh (S8)", async () => {
@@ -185,5 +204,36 @@ describe("A roadmap's header block (STY-059)", () => {
     expect(main().getByText("Heb ei gyhoeddi").parentElement).toHaveTextContent(
       /^Heb ei gyhoeddiCyhoeddi'r map trywydd$/,
     )
+  })
+})
+
+describe("One jump control per width (STY-060)", () => {
+  it("is Jump to below a desktop, with no row of placement links (S1)", async () => {
+    await renderPage(demographics)
+
+    expect(button("Jump to")).toBeInTheDocument()
+    expect(main().queryByRole("navigation")).toBeNull()
+  })
+
+  it("is the row of placement links from a desktop, after More, with no Jump to (S1)", async () => {
+    matchMediaQueries(DESKTOP_WIDTH)
+    await renderPage(demographics)
+
+    const links = main().getByRole("navigation", {
+      name: "Horizons and sections",
+    })
+    expect(inDocumentOrder([button("More"), links])).toBe(true)
+    expect(within(links).getAllByRole("link")).toHaveLength(6)
+    expect(main().queryByRole("button", { name: /^Jump to/ })).toBeNull()
+  })
+
+  it("is the same in Welsh (S1)", async () => {
+    matchMediaQueries(DESKTOP_WIDTH)
+    await renderPage(demographics, { language: "cy" })
+
+    expect(
+      main().getByRole("navigation", { name: "Gorwelion ac adrannau" }),
+    ).toBeInTheDocument()
+    expect(main().queryByRole("button", { name: /^Neidio i/ })).toBeNull()
   })
 })

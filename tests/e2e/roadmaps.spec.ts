@@ -1,4 +1,4 @@
-import type { Locator, Page } from "@playwright/test"
+import type { Page } from "@playwright/test"
 
 import {
   EXAMPLE_INDEX_ROWS,
@@ -6,6 +6,7 @@ import {
   roadmapRow,
   withRoadmapIndex,
 } from "./fixtures/fake-sheets"
+import { boxOf } from "./fixtures/layout"
 import { useLanguage } from "./fixtures/look"
 import { aboutField, goToList, openAbout } from "./fixtures/roadmap-page"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
@@ -461,12 +462,6 @@ test.describe("the top of the roadmap list (STY-058)", () => {
 
   // A class a button gains or loses at 640px arrives a frame late otherwise.
   test.use({ reducedMotion: "reduce" })
-
-  async function boxOf(locator: Locator) {
-    const box = await locator.boundingBox()
-    if (!box) throw new Error("A part of the list's top has no box")
-    return box
-  }
 
   /** The 3 roadmaps, 1 not published: title, count, then Add a roadmap and Refresh. */
   async function openList(page: Page, width: number) {

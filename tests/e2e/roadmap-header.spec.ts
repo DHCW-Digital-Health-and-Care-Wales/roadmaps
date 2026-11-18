@@ -1,5 +1,6 @@
-import type { Locator, Page } from "@playwright/test"
+import type { Page } from "@playwright/test"
 
+import { boxOf } from "./fixtures/layout"
 import type { Language } from "./fixtures/look"
 import {
   aboutDisclosure,
@@ -11,7 +12,8 @@ import { expect, test } from "./fixtures/test"
 /**
  * STY-059: a roadmap's page opens on one header block on one left edge: the title, its
  * facts, the Not published tag with Publish roadmap for a roadmap not published, About
- * this roadmap with its Edit, then Add an item, More and "Jump to".
+ * this roadmap with its Edit, then Add an item, More and the jump control: "Jump to"
+ * below a desktop, the row of placement links from one (STY-060).
  */
 
 const WIDTHS = [
@@ -27,6 +29,7 @@ const COPY = {
     addItem: "Add an item",
     more: "More",
     jumpTo: "Jump to",
+    links: "Horizons and sections",
     notPublished: "Not published",
     publish: "Publish roadmap",
   },
@@ -36,21 +39,13 @@ const COPY = {
     addItem: "Ychwanegu eitem",
     more: "Mwy",
     jumpTo: "Neidio i",
+    links: "Gorwelion ac adrannau",
     notPublished: "Heb ei gyhoeddi",
     publish: "Cyhoeddi'r map trywydd",
   },
 } as const satisfies Record<Language, unknown>
 
-async function boxOf(locator: Locator) {
-  const box = await locator.boundingBox()
-  if (!box) throw new Error("Not laid out")
-  return box
-}
-
-/**
- * Each control of the header block that passes the layout's right edge, by its text.
- * The row of placement links scrolls within itself, and is STY-060's.
- */
+/** Each control of the header block that passes the layout's right edge, by its text. */
 function pastTheRightEdge(page: Page): Promise<string[]> {
   return page
     .locator("[data-slot=sticky-header]")
@@ -87,7 +82,12 @@ for (const language of ["en", "cy"] as const) {
       const edit = await boxOf(button(copy.edit))
       const add = await boxOf(button(copy.addItem))
       const more = await boxOf(button(copy.more))
-      const jumpTo = await boxOf(button(copy.jumpTo))
+      const desktop = width >= 1024
+      // The jump control: "Jump to" below a desktop, the links from one (STY-060).
+      const jumpControl = desktop
+        ? main.getByRole("navigation", { name: copy.links })
+        : button(copy.jumpTo)
+      const jumpTo = await boxOf(jumpControl)
 
       // Top to bottom: the title, the facts, About with Edit beside it, the controls.
       expect(facts.y).toBeGreaterThanOrEqual(title.y + title.height)
@@ -97,8 +97,7 @@ for (const language of ["en", "cy"] as const) {
       )
       // One left edge.
       for (const box of [facts, disclosure, add]) expect(box.x).toBe(title.x)
-      // Add an item, More, then "Jump to", none wider than its label but "Jump to"
-      // below a desktop, which STY-060 shapes.
+      // Add an item, More, then the jump control.
       expect(more.x).toBeGreaterThan(add.x)
       expect(jumpTo.x > more.x || jumpTo.y > more.y).toBe(true)
       expect(add.height).toBe(40)
@@ -128,11 +127,15 @@ for (const language of ["en", "cy"] as const) {
       if (width < 640) expect(second.y).toBeGreaterThan(first.y + first.height)
       else expect(Math.abs(middle(second) - middle(first))).toBeLessThan(1)
 
-      // Tab reaches Add an item, More and "Jump to" in that order after Edit.
+      // Tab reaches Add an item, More and the jump control in that order after Edit.
       await button(copy.edit).focus()
-      for (const name of [copy.addItem, copy.more, copy.jumpTo]) {
+      for (const control of [
+        button(copy.addItem),
+        button(copy.more),
+        desktop ? jumpControl.getByRole("link").first() : jumpControl,
+      ]) {
         await page.keyboard.press("Tab")
-        await expect(button(name)).toBeFocused()
+        await expect(control).toBeFocused()
       }
     })
 

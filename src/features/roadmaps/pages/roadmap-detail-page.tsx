@@ -47,8 +47,6 @@ import { isRoadmapGone, useRoadmapItems } from "../hooks/use-roadmap-items"
 import { useRoadmapLists } from "../hooks/use-roadmap-lists"
 import { useRoadmap } from "../hooks/use-roadmaps"
 import { useRoadmapsProblem } from "../hooks/use-roadmaps-problem"
-import { JumpToMenu } from "../placement-navigation/jump-to-menu"
-import { PlacementLinks } from "../placement-navigation/placement-links"
 import { usePlacementNavigation } from "../placement-navigation/use-placement-navigation"
 
 export interface RoadmapDetailPageProps {
@@ -160,13 +158,12 @@ interface RoadmapViewProps {
 
 /**
  * A listed roadmap: its header block, with its facts, what it is about and its
- * controls, which sticks as the page scrolls (STY-052, STY-059), a notice when it was
- * just added (STY-041 S5), then, once its items are shown, a row of links to its
- * placements, which "Jump to" in the header reaches too (STY-053 D5), and its items,
- * each showing its pending English (STY-025). At the foot of the screen, what
- * publishing or unpublishing it came to (STY-035, STY-052 D21) and its pending changes
- * with Publish. The title stays whatever happens to the items. It holds the page's one
- * item dialog, which "Add an item" and each item's Edit open.
+ * controls, among them the placement navigation once its items are shown, which sticks
+ * as the page scrolls (STY-052, STY-059, STY-060), a notice when it was just added
+ * (STY-041 S5), then its items, each showing its pending English (STY-025). At the
+ * foot of the screen, what publishing or unpublishing it came to (STY-035, STY-052 D21)
+ * and its pending changes with Publish. The title stays whatever happens to the items.
+ * It holds the page's one item dialog, which "Add an item" and each item's Edit open.
  */
 function RoadmapView({
   roadmap,
@@ -248,7 +245,7 @@ function RoadmapView({
           onAddItem={() => {
             itemDialog.add()
           }}
-          jumpTo={placementsShown && <JumpToMenu navigation={navigation} />}
+          navigation={placementsShown ? navigation : undefined}
         />
         {/* Next in the page's order, where it stays on a short screen: elsewhere it
             pins to the foot (STY-052 S6). */}
@@ -279,7 +276,6 @@ function RoadmapView({
           <AddedRoadmapNotice title={title} onDismiss={addedNotice.dismiss} />
         )}
       </div>
-      {placementsShown && <PlacementLinks navigation={navigation} />}
       <RoadmapItemsArea
         roadmapId={roadmap.id}
         listFetching={listFetching}

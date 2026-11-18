@@ -100,7 +100,8 @@ export function MatchListsAction({ roadmap }: MatchListsActionProps) {
   const confirm = useSessionAction(write)
 
   return (
-    <div className="flex flex-col gap-4">
+    // Empty, it takes no gap in the page's column.
+    <div className="flex flex-col gap-4 empty:hidden">
       {canMatchLists(roadmap) && (
         <div>
           <Button

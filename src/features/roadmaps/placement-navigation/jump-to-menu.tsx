@@ -19,11 +19,13 @@ export interface JumpToMenuProps {
 }
 
 /**
- * "Jump to", after More in a roadmap's header (STY-053 D5, STY-059 S7): a menu of the
- * page's jump targets, each with its count and pending mark, the current one ticked. The
- * button names the current one once the page has reached it ("Jump to: Later", S3, D8).
- * Narrower than a desktop it runs across the page, in a row of its own. A jump waits for
- * the menu to close, so focus lands on the heading and stays there.
+ * "Jump to", the jump control below a desktop, after More in a roadmap's header (STY-060
+ * S1): a menu of the page's jump targets, each with its count and pending mark, the
+ * current one ticked. The button names the current one once the page has reached it
+ * ("Jump to: Later", STY-053 S3, D8), on one line, the name cut where the row is short
+ * of room (STY-060 S5); its accessible name and the open list keep it whole. It fills
+ * what holds it. A jump waits for the menu to close, so focus lands on the heading and
+ * stays there.
  */
 export function JumpToMenu({
   navigation: { summaries, current, jump },
@@ -37,9 +39,8 @@ export function JumpToMenu({
         render={
           <Button
             variant="secondary"
-            // It gives way first in a row short of room, cutting its label; full
-            // width in a row of its own, below `DESKTOP_WIDTH` (lg).
-            className="w-full min-w-0 shrink justify-between lg:w-auto"
+            // It gives way first in a row short of room, cutting its label.
+            className="w-full min-w-0 shrink justify-between"
           />
         }
       >

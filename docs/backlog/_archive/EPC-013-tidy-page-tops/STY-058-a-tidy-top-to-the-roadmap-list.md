@@ -4,7 +4,7 @@
   actions; the families page has no back link (D1–D4)
 - **Type**: Feature
 - **Area**: Features/UI + i18n (en + cy) + E2E
-- **Epic**: [EPC-013-tidy-page-tops](../../EPC-013-tidy-page-tops/README.md)
+- **Epic**: [EPC-013-tidy-page-tops](README.md)
 - **Depends on**: none
 - **Binding ADRs**: ADR-010, ADR-008
 - **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/151

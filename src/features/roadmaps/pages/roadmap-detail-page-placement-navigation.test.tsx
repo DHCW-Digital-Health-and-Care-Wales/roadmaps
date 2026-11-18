@@ -6,7 +6,9 @@ import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 import type { Language } from "@/i18n"
+import { DESKTOP_WIDTH } from "@/lib/use-media-query"
 import { connected } from "@/test/connected-state"
+import { matchMediaQueries } from "@/test/media-query"
 import { renderWithProviders } from "@/test/render-with-providers"
 
 import { createInMemoryRoadmapRepository } from "../testing/in-memory-roadmap-repository"
@@ -29,10 +31,16 @@ function main() {
   return within(screen.getByRole("main"))
 }
 
+/**
+ * Renders the page on a phone, where "Jump to" is the jump control, or on a `desktop`,
+ * where the row of links is (STY-060 S1).
+ */
 async function renderPage({
   pageItems = items,
   language,
-}: { pageItems?: RoadmapItem[]; language?: Language } = {}) {
+  desktop = false,
+}: { pageItems?: RoadmapItem[]; language?: Language; desktop?: boolean } = {}) {
+  if (desktop) matchMediaQueries(DESKTOP_WIDTH)
   const user = userEvent.setup()
   await renderWithProviders({
     path: "/roadmaps/producta",
@@ -53,7 +61,7 @@ function jumpToButton(name: string | RegExp = "Jump to") {
   return main().getByRole("button", { name })
 }
 
-/** The row of links under "About this roadmap". */
+/** The row of placement links, a desktop's jump control. */
 function links() {
   return main().getByRole("navigation", { name: "Horizons and sections" })
 }
@@ -82,24 +90,48 @@ const EVERY_TARGET = [
 ]
 
 describe("Jumping between a roadmap's placements (STY-053)", () => {
-  it("lists the unplaced items and all six placements with their counts, in the menu and the links (S2, S4, S5, D3, D5)", async () => {
+  it("lists the unplaced items and all six placements with their counts in Jump to's menu (S2, S4, S5, D3)", async () => {
     const user = await renderPage()
 
-    expectNames(within(links()).getAllByRole("link"), EVERY_TARGET)
     const menu = await openJumpTo(user)
     expectNames(within(menu).getAllByRole("menuitem"), EVERY_TARGET)
   })
 
+  it("lists them in the links on a desktop (S2, S4, S5, D3)", async () => {
+    await renderPage({ desktop: true })
+
+    expectNames(within(links()).getAllByRole("link"), EVERY_TARGET)
+  })
+
   it("leaves the unplaced items out while there are none (S4)", async () => {
-    await renderPage({ pageItems: items.slice(0, 3) })
+    await renderPage({ pageItems: items.slice(0, 3), desktop: true })
 
     expect(within(links()).getAllByRole("link")[0]).toHaveAccessibleName(
       "Recently delivered, no items",
     )
   })
 
-  it("marks where a change is pending, in the menu and the links (S2)", async () => {
+  it("marks where a change is pending in the menu (S2)", async () => {
     const user = await renderPage()
+
+    await editItemText(
+      user,
+      "Online booking",
+      "Title",
+      "Online booking for all",
+    )
+
+    const menu = await openJumpTo(user)
+    expect(
+      within(menu).getByRole("menuitem", { name: /^Later/ }),
+    ).toHaveAccessibleName("Later, 1 item, unpublished changes")
+    expect(
+      within(menu).getByRole("menuitem", { name: /^Now/ }),
+    ).toHaveAccessibleName("Now, 2 items")
+  })
+
+  it("marks where a change is pending in the links on a desktop (S2)", async () => {
+    const user = await renderPage({ desktop: true })
 
     await editItemText(
       user,
@@ -114,10 +146,6 @@ describe("Jumping between a roadmap's placements (STY-053)", () => {
     expect(
       within(links()).getByRole("link", { name: /^Now/ }),
     ).toHaveAccessibleName("Now, 2 items")
-    const menu = await openJumpTo(user)
-    expect(
-      within(menu).getByRole("menuitem", { name: /^Later/ }),
-    ).toHaveAccessibleName("Later, 1 item, unpublished changes")
   })
 
   it("moves focus to the placement's heading from the menu, and names it the current one (S1, S3)", async () => {
@@ -131,9 +159,6 @@ describe("Jumping between a roadmap's placements (STY-053)", () => {
       expect(later).toHaveFocus()
     })
     expect(jumpToButton("Jump to: Later")).toBeInTheDocument()
-    expect(
-      within(links()).getByRole("link", { name: /^Later/ }),
-    ).toHaveAttribute("aria-current", "location")
 
     await user.click(jumpToButton("Jump to: Later"))
     expect(
@@ -143,8 +168,8 @@ describe("Jumping between a roadmap's placements (STY-053)", () => {
     ).toHaveAttribute("aria-current", "location")
   })
 
-  it("moves focus to the heading from a link, without changing the address (S1, D8)", async () => {
-    const user = await renderPage()
+  it("moves focus to the heading from a link, marks it the current one, and keeps the address (S1, S3, D8)", async () => {
+    const user = await renderPage({ desktop: true })
     const address = window.location.href
     const link = within(links()).getByRole("link", {
       name: /^Not on the public roadmap/,
@@ -163,17 +188,23 @@ describe("Jumping between a roadmap's placements (STY-053)", () => {
         name: "Not on the public roadmap",
       }),
     ).toHaveFocus()
+    expect(link).toHaveAttribute("aria-current", "location")
     expect(window.location.href).toBe(address)
   })
 
   it("names no placement once the one jumped to has gone from the page (S3)", async () => {
     const user = await renderPage()
+    const menu = await openJumpTo(user)
     await user.click(
-      within(links()).getByRole("link", { name: /^Not on the public roadmap/ }),
+      within(menu).getByRole("menuitem", {
+        name: /^Not on the public roadmap/,
+      }),
     )
-    expect(
-      jumpToButton("Jump to: Not on the public roadmap"),
-    ).toBeInTheDocument()
+    await waitFor(() => {
+      expect(
+        jumpToButton("Jump to: Not on the public roadmap"),
+      ).toBeInTheDocument()
+    })
 
     // Its one item given a placement, the unplaced items go.
     await user.click(main().getByRole("button", { name: "Move Someday item" }))
@@ -185,7 +216,7 @@ describe("Jumping between a roadmap's placements (STY-053)", () => {
   })
 
   it("reaches an empty placement, which says it has none (S5)", async () => {
-    const user = await renderPage()
+    const user = await renderPage({ desktop: true })
 
     await user.click(within(links()).getByRole("link", { name: /^Not doing/ }))
 
@@ -199,25 +230,25 @@ describe("Jumping between a roadmap's placements (STY-053)", () => {
     )
   })
 
-  it("shows no navigation for a roadmap with no items, which has nowhere to jump", async () => {
-    await renderPage({ pageItems: [] })
+  for (const desktop of [false, true]) {
+    it(`shows no navigation for a roadmap with no items, which has nowhere to jump${desktop ? ", on a desktop" : ""}`, async () => {
+      await renderPage({ pageItems: [], desktop })
 
-    expect(
-      main().queryByRole("button", { name: /^Jump to/ }),
-    ).not.toBeInTheDocument()
-    expect(main().queryByRole("navigation")).not.toBeInTheDocument()
-  })
+      expect(
+        main().queryByRole("button", { name: /^Jump to/ }),
+      ).not.toBeInTheDocument()
+      expect(main().queryByRole("navigation")).not.toBeInTheDocument()
+    })
+  }
 
-  it("is Welsh, its names and counts (S7)", async () => {
+  it("is Welsh, its names and counts, in Jump to (S7)", async () => {
     const user = await renderPage({ language: "cy" })
 
-    expect(
-      within(
-        main().getByRole("navigation", { name: "Gorwelion ac adrannau" }),
-      ).getByRole("link", { name: /^Nawr/ }),
-    ).toHaveAccessibleName("Nawr, 2 eitem")
     await user.click(main().getByRole("button", { name: "Neidio i" }))
     const menu = await screen.findByRole("menu")
+    expect(
+      within(menu).getByRole("menuitem", { name: /^Nawr/ }),
+    ).toHaveAccessibleName("Nawr, 2 eitem")
     await user.click(within(menu).getByRole("menuitem", { name: /^Hwyrach/ }))
     await waitFor(() => {
       expect(
@@ -227,5 +258,15 @@ describe("Jumping between a roadmap's placements (STY-053)", () => {
     expect(
       main().getByRole("button", { name: "Neidio i: Hwyrach" }),
     ).toBeInTheDocument()
+  })
+
+  it("is Welsh in the links on a desktop (S7)", async () => {
+    await renderPage({ language: "cy", desktop: true })
+
+    expect(
+      within(
+        main().getByRole("navigation", { name: "Gorwelion ac adrannau" }),
+      ).getByRole("link", { name: /^Nawr/ }),
+    ).toHaveAccessibleName("Nawr, 2 eitem")
   })
 })

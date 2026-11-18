@@ -1,4 +1,4 @@
-import { ChevronDownIcon, RefreshCwIcon } from "lucide-react"
+import { ChevronDownIcon, EllipsisIcon, RefreshCwIcon } from "lucide-react"
 import { useRef } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -22,19 +22,25 @@ export interface RoadmapMoreMenuProps {
   onRefresh: () => void
   /** Publishing or unpublishing the roadmap, when More offers it. */
   publishedState: PublishedState | null
+  /**
+   * An ellipsis and its chevron, still named "More", as in a phone's stuck header
+   * (STY-060 D2, D5).
+   */
+  compact?: boolean
 }
 
 /**
  * "More", in a roadmap's header: Refresh, which reads the page's roadmap data again,
  * and "Unpublish roadmap", or "Publish roadmap" once the header has stuck (STY-052 D6,
- * STY-059 D7). An item's action waits for the menu to close, so focus is back on
- * More, where what it opens returns it. After the session has expired each asks to
- * reconnect first, then carries on (STY-057).
+ * STY-059 D7), shown as "…" where `compact`. An item's action waits for the menu to
+ * close, so focus is back on More, where what it opens returns it. After the session
+ * has expired each asks to reconnect first, then carries on (STY-057).
  */
 export function RoadmapMoreMenu({
   fetching,
   onRefresh,
   publishedState,
+  compact = false,
 }: RoadmapMoreMenuProps) {
   const { t } = useTranslation()
   const trigger = useRef<HTMLButtonElement>(null)
@@ -54,16 +60,22 @@ export function RoadmapMoreMenu({
       <DropdownMenuTrigger
         ref={trigger}
         aria-busy={fetching}
-        render={<Button variant="secondary" />}
+        render={
+          <Button variant="secondary" className={cn(compact && "gap-1")} />
+        }
       >
-        {fetching && (
+        {fetching ? (
           <RefreshCwIcon
             data-icon="inline-start"
             aria-hidden="true"
             className="animate-spin"
           />
+        ) : (
+          compact && (
+            <EllipsisIcon data-icon="inline-start" aria-hidden="true" />
+          )
         )}
-        {t("roadmaps.more")}
+        <span className={cn(compact && "sr-only")}>{t("roadmaps.more")}</span>
         <ChevronDownIcon data-icon="inline-end" aria-hidden="true" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-auto">

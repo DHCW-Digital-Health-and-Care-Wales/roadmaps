@@ -57,7 +57,9 @@ the input or workflow in this repository that produces it. A finding without
 one is a decline candidate. Ask too for each part of the pinned diff the
 reviewer left unread, by path and lines, which Dispatch step 5 gives to a
 fresh reviewer: a reviewer not asked may report a diff it read in part as
-read.
+read. Tell a delivery PR's reviewers to report any guide file in its diff as
+a blocker (P1 or 🔴), since only a retrospective edits one
+(`docs/operations/authoring-agent-instructions.md`, _Where it goes_).
 
 For role-specific briefs, use `.claude/agents/mechanical-worker.md`,
 `.claude/agents/quality-reviewer.md` and `.claude/agents/code-reviewer.md`. The

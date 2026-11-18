@@ -35,7 +35,8 @@ navigating: the app is light until the user chooses dark (ADR-005), so
 `colorScheme: "dark"` alone captures the light theme.
 
 Cover desktop (1280 px) and phone (375 px), light and dark mode where relevant,
-and Welsh (`cy`) where copy changed. Save captures under
+in English. Capture Welsh (`cy`) only when the record or the owner asks for it;
+tests and review hold Welsh widths without it. Save captures under
 `.artifacts/screenshots/<record-id>/` at the root of your checkout (git-ignored)
 with descriptive names, e.g. `s1-roadmaps-desktop-dark-en-after.png`.
 
@@ -70,8 +71,7 @@ after captures a risk points at, and fix what looks wrong before publishing:
 - A layout or behaviour change: read a mix of light and dark, desktop and
   phone, on the screens most likely to break; read more once one shows a
   problem.
-- Skip the Welsh twin of a screen you read, unless its longer copy may
-  overflow.
+- Of any Welsh captures, read only those whose longer copy may overflow.
 - Read a before capture only to diagnose a problem in an after capture or in
   the capture itself.
 

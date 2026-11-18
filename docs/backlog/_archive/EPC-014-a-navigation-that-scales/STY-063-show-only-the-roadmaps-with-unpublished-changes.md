@@ -7,7 +7,7 @@
 - **Epic**: [EPC-014-a-navigation-that-scales](../../EPC-014-a-navigation-that-scales/README.md)
 - **Depends on**: STY-061 (hard, must be on the default branch), STY-062 (hard)
 - **Binding ADRs**: ADR-010, ADR-008, ADR-012
-- **Delivered**: _(set once the PR is open)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/161
 - **Suggested model**: Sonnet — the count's link becomes a toggle on the narrowing
   STY-061 builds
 

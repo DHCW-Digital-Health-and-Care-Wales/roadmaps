@@ -21,16 +21,22 @@ const EXEMPT_PATHS = new Set([
 ])
 
 /**
- * What a document shows rather than says, so its links are examples. An indented code
- * block is still read: its indent is a nested list's too.
+ * What a document shows rather than says, so its links are examples, read in the
+ * document's order so each ends where it does. An indented code block is still prose
+ * here: its indent is a nested list's too.
  */
-const NOT_PROSE = [
-  // A fence of backticks or tildes, closed by one at least as long, or by the end.
-  /^[ \t]*(`{3,}|~{3,})[^\n]*\n[\s\S]*?(?:^[ \t]*\1|(?![\s\S]))/gm,
-  /<!--[\s\S]*?-->/g,
-  // A code span, closed by as many backticks as open it, within its paragraph.
-  /(?<!`)(`+)(?!`)(?:(?!\n[ \t]*\n)[\s\S])*?(?<!`)\1(?!`)/g,
-]
+const NOT_PROSE = new RegExp(
+  [
+    // A fence of backticks or tildes, closed by a bare one at least as long, or by the end.
+    /^[ \t]*(?<fence>(?<mark>`|~)\k<mark>{2,})[^\n]*\n[\s\S]*?(?:^[ \t]*\k<fence>\k<mark>*[ \t]*$|(?![\s\S]))/,
+    /<!--[\s\S]*?-->/,
+    // A code span, closed by as many backticks as open it, within its paragraph.
+    /(?<!`)(?<ticks>`+)(?!`)(?:(?!\n[ \t]*\n)[\s\S])*?(?<!`)\k<ticks>(?!`)/,
+  ]
+    .map((pattern) => pattern.source)
+    .join("|"),
+  "gm",
+)
 /**
  * An inline link or image: its destination, in `<>` or bare (which may hold balanced
  * brackets), then an optional title.
@@ -42,10 +48,7 @@ const NOT_A_RELATIVE_FILE = /^(?:[a-z][a-z+.-]*:|#|\/)/i
 
 /** The relative file targets of a document's inline links and images, in its prose. */
 function relativeTargets(markdown: string): string[] {
-  const prose = NOT_PROSE.reduce(
-    (text, code) => text.replace(code, ""),
-    markdown,
-  )
+  const prose = markdown.replace(NOT_PROSE, "")
   return [...prose.matchAll(INLINE_LINK)]
     .map(([, bracketed, bare]) => bracketed ?? bare ?? "")
     .filter((target) => !NOT_A_RELATIVE_FILE.test(target))
@@ -88,11 +91,16 @@ describe("markdown links", () => {
       "   ````",
       "   - [a nested item](nested.md)",
       "",
+      "Write `<!--` to open a comment, [a link between](between.md), and `-->` to close.",
+      "```md",
+      "```ts",
+      "[i](missing.md), since a fence with a language closes nothing",
+      "````",
       "A lone ` reaches no further than its paragraph.",
       "",
       "After it, [a link](after.md) and its `code`.",
       "```md",
-      "[i](missing.md), in a fence left open",
+      "[j](missing.md), in a fence left open",
     ].join("\n")
 
     expect(relativeTargets(markdown)).toEqual([
@@ -104,6 +112,7 @@ describe("markdown links", () => {
       "notes_(old).md",
       "guide.md",
       "nested.md",
+      "between.md",
       "after.md",
     ])
   })

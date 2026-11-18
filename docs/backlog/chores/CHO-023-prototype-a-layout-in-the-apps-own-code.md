@@ -17,7 +17,7 @@ ends in an analysis and a PR. For STY-065 the owner asked for one prototype and
 screenshots to iterate on, so it was built in the app's own code instead, captured with
 Google faked at 375px, 820px and 1280px, and never drawn as frames. The owner settled
 it in three rounds of screenshots, and the delivery started from that code. The frames
-route had drawn the same area a day earlier (design G, four critique rounds); built, the
+route had drawn the same area earlier that day (design G, four critique rounds); built, the
 owner called the result a jumble. One delivery is thin evidence, so this asks whether
 the skill should offer the shape, and when.
 

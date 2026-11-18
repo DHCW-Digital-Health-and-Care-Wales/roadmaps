@@ -36,6 +36,7 @@ import {
 import { expectOpeningFocus } from "../testing/opening-focus"
 import {
   closeConflictReview,
+  goToList,
   moreButton,
   openConflictReview,
 } from "../testing/roadmap-page"
@@ -139,7 +140,7 @@ describe("“Add an item” on a roadmap's page (STY-046 S1)", () => {
     const buttons = addItemButtons()
     expect(buttons).toHaveLength(1)
     expect(buttons[0]).toHaveAttribute("aria-disabled", "false")
-    // In the title row, beside More.
+    // In the header, beside More.
     expect(buttons[0]?.parentElement).toBe(moreButton().parentElement)
   })
 
@@ -537,7 +538,7 @@ describe("A new item is one pending change (STY-046 S5)", () => {
     )
     expect(authClient.disconnect).not.toHaveBeenCalled()
 
-    await user.click(main().getByRole("link", { name: "Back to roadmaps" }))
+    await goToList(user)
     const link = await main().findByRole("link", { name: "Product A roadmap" })
     expect(link).toHaveAccessibleDescription(/Unpublished changes/)
   })

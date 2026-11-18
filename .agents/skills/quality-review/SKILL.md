@@ -132,7 +132,7 @@ report in the conversation only.
      primitive, never Radix), ADR-005 and root `AGENTS.md`: theme tokens
      (ADR-010) over raw colours, `cn(buttonVariants())` for
      links styled as buttons, existing layout pieces (`AppShell`, `StatusPanel`,
-     `BackLink`) over near-copies, sentence-case copy. Verify a suggested
+     `StickyHeader`) over near-copies, sentence-case copy. Verify a suggested
      token, variant or hook exists before recommending it; demand no
      speculative alias or hook.
    - **Left in a touched file.** A violation the change's touched files

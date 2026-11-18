@@ -18,6 +18,7 @@ import {
 import { useLanguage } from "./fixtures/look"
 import {
   aboutField,
+  goToList,
   openAbout,
   openConflictReview,
   refusal,
@@ -151,10 +152,7 @@ test("Disconnect asks first, and kept changes wait for the next connection (S14)
     .getByRole("button", { name: "Keep changes and disconnect" })
     .click()
 
-  await page
-    .getByRole("main")
-    .getByRole("link", { name: "Back to roadmaps" })
-    .click()
+  await goToList(page)
   await expect(
     page.getByRole("main").getByText("Changes to 1 roadmap are waiting"),
   ).toBeVisible()

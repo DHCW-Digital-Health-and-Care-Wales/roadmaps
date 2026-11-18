@@ -33,15 +33,20 @@ function renderAbout(
   return user
 }
 
-/** Renders the panel and opens it with its "Show more". */
+/** The disclosure, which opens and closes it. */
+function disclosure(
+  name: RegExp | string = /^(About this roadmap|Ynglŷn â'r map trywydd hwn)$/,
+) {
+  return within(about()).getByRole("button", { name })
+}
+
+/** Renders it and opens it by its disclosure. */
 async function renderOpen(
   props: Partial<RoadmapAboutProps> = {},
   language: Language = "en",
 ) {
   const user = renderAbout(props, language)
-  await user.click(
-    within(about()).getByRole("button", { name: /Show more|Dangos mwy/ }),
-  )
+  await user.click(disclosure())
   return user
 }
 
@@ -55,122 +60,126 @@ const definitions = () =>
     .map((value) => value.textContent)
 
 describe("RoadmapAbout", () => {
-  it("opens folded to one line: status, product lead and when it was last updated (STY-053 S6)", () => {
+  it("opens closed: a heading holding its disclosure, its fields hidden (STY-059 S4)", () => {
     renderAbout()
 
     const region = about()
-    expect(within(region).getByRole("heading", { level: 2 })).toHaveTextContent(
-      "About this roadmap",
-    )
-    expect(region).toHaveTextContent(
-      "BetaProduct lead: Alex Jones, Sam EvansUpdated 2 October 2026",
-    )
+    const heading = within(region).getByRole("heading", { level: 2 })
+    expect(heading).toHaveTextContent("About this roadmap")
+    expect(heading).toContainElement(disclosure())
+    expect(disclosure()).toHaveAttribute("aria-expanded", "false")
+    expect(region).toHaveTextContent(/^About this roadmap$/)
     expect(within(region).queryByRole("term")).not.toBeInTheDocument()
-    expect(region).not.toHaveTextContent("What Product A does.")
-    expect(
-      within(region).getByRole("button", { name: "Show more" }),
-    ).toHaveAttribute("aria-expanded", "false")
   })
 
-  it("leaves out of its one line what the roadmap doesn't have", () => {
-    renderAbout({
-      roadmap: { ...productA, statusLabel: null, lastUpdated: null },
-    })
+  it("expands in place, reading as expanded, and closes again (S4)", async () => {
+    const user = await renderOpen()
 
-    expect(about()).toHaveTextContent(
-      /^About this roadmapProduct lead: Alex Jones, Sam EvansShow more$/,
+    expect(disclosure()).toHaveAttribute("aria-expanded", "true")
+    expect(within(about()).getByText("What Product A does.")).toBeVisible()
+
+    await user.click(disclosure())
+    expect(disclosure()).toHaveAttribute("aria-expanded", "false")
+    expect(
+      within(about()).queryByText("What Product A does."),
+    ).not.toBeInTheDocument()
+  })
+
+  it("is a text control at least 44px tall with a chevron, underlined on hover (S4)", () => {
+    renderAbout()
+
+    const button = disclosure()
+    expect(button).toHaveClass(
+      "min-h-11",
+      "text-link",
+      "focus-visible:focus-link",
+    )
+    expect(button.querySelector("svg")).toHaveAttribute("aria-hidden", "true")
+    expect(button.querySelector("span")).toHaveClass(
+      "group-hover/about:underline",
     )
   })
 
-  it("tags a pending change on its one line, and not once open (S6)", async () => {
+  it("tags a pending change beside the disclosure while closed, and leaves it to its controls once open (STY-059 S5)", async () => {
     const user = renderAbout({ changed: true })
 
     expect(within(about()).getByText("Changed")).toBeVisible()
 
-    await user.click(within(about()).getByRole("button", { name: "Show more" }))
+    await user.click(disclosure())
     expect(within(about()).queryByText("Changed")).not.toBeInTheDocument()
   })
 
-  it("shows each field under its label once open, family and category among them, keeping line breaks, then the date (STY-036 S1, STY-053 D6)", async () => {
+  it("shows the vision, service description, family and category under their labels once open, keeping line breaks (S4)", async () => {
     await renderOpen()
 
-    expect(
-      within(about()).getByRole("button", { name: "Show less" }),
-    ).toHaveAttribute("aria-expanded", "true")
     expect(terms()).toEqual([
-      "Status",
-      "Product lead",
-      "Family",
-      "Category",
       "Vision",
       "Service description",
-      "Last updated",
+      "Family",
+      "Category",
     ])
     expect(definitions()).toEqual([
-      "Beta",
-      "Alex Jones, Sam Evans",
-      "Single Record",
-      "GP & Community Services",
       "First line\nSecond line",
       "What Product A does.",
-      "2 October 2026",
+      "Single Record",
+      "GP & Community Services",
     ])
     expect(within(about()).getByText(/First line/)).toHaveClass(
       "whitespace-pre-line",
     )
-    // Its one line gives way to the fields.
-    expect(about()).not.toHaveTextContent("Product lead: Alex Jones")
+    // The facts under the title hold the rest.
+    expect(about()).not.toHaveTextContent(/Beta|Alex Jones|October/)
   })
 
   it("leaves out empty fields and their labels", async () => {
     await renderOpen({
-      roadmap: { ...productA, vision: null, productLead: null, family: null },
+      roadmap: { ...productA, vision: null, family: null },
     })
 
-    expect(terms()).toEqual([
-      "Status",
-      "Category",
-      "Service description",
-      "Last updated",
-    ])
+    expect(terms()).toEqual(["Service description", "Category"])
   })
 
-  it("says there is nothing yet when every field is empty, and that it has no date (STY-036 S1)", async () => {
+  it("says there is nothing yet when every field is empty", async () => {
     await renderOpen({
-      roadmap: createTestRoadmap("producta", "Product A roadmap"),
+      roadmap: {
+        ...productA,
+        vision: null,
+        serviceDescription: null,
+        family: null,
+        category: null,
+      },
     })
 
     expect(about()).toHaveTextContent("There's nothing about this roadmap yet.")
-    expect(definitions()).toEqual(["No date"])
+    expect(within(about()).queryByRole("term")).not.toBeInTheDocument()
   })
 
-  it("shows its controls in the heading's row, as they suit it folded or open, ahead of the fields (STY-042 S1)", async () => {
+  it("shows its controls beside the disclosure, as they suit it closed or open, ahead of the fields (STY-059 S4)", async () => {
     const user = renderAbout({
       actions: (open) => (
-        <button type="button">{open ? "Edit open" : "Edit folded"}</button>
+        <button type="button">{open ? "Edit open" : "Edit closed"}</button>
       ),
     })
     const region = about()
-    const headingRow = within(region).getByRole("heading", { level: 2 })
-      .parentElement?.parentElement
-    expect(headingRow).toContainElement(
-      within(region).getByRole("button", { name: "Edit folded" }),
+    const row = within(region).getByRole("heading", { level: 2 }).parentElement
+    expect(row).toContainElement(
+      within(region).getByRole("button", { name: "Edit closed" }),
     )
 
-    await user.click(within(region).getByRole("button", { name: "Show more" }))
+    await user.click(disclosure())
 
     expect(
-      within(region).queryByRole("button", { name: "Edit folded" }),
+      within(region).queryByRole("button", { name: "Edit closed" }),
     ).not.toBeInTheDocument()
     const edit = within(region).getByRole("button", { name: "Edit open" })
-    expect(headingRow).toContainElement(edit)
+    expect(row).toContainElement(edit)
     const [firstLabel] = within(region).getAllByRole("term")
     expect(firstLabel && edit.compareDocumentPosition(firstLabel)).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     )
   })
 
-  it("is Welsh where the roadmap has Welsh, field by field, and shows the lead as written", async () => {
+  it("is Welsh where the roadmap has Welsh, field by field", async () => {
     await renderOpen(
       {
         roadmap: {
@@ -181,26 +190,18 @@ describe("RoadmapAbout", () => {
       "cy",
     )
 
-    expect(
-      within(about()).getByRole("heading", { level: 2 }),
-    ).toHaveTextContent("Ynglŷn â'r map trywydd hwn")
+    expect(disclosure()).toHaveAttribute("aria-expanded", "true")
     expect(terms()).toEqual([
-      "Statws",
-      "Arweinydd cynnyrch",
-      "Teulu",
-      "Categori",
       "Gweledigaeth",
       "Disgrifiad o'r gwasanaeth",
-      "Diweddarwyd ddiwethaf",
+      "Teulu",
+      "Categori",
     ])
     expect(definitions()).toEqual([
-      "Beta",
-      "Alex Jones, Sam Evans",
-      "Cofnod Sengl",
-      "GP & Community Services",
       "Gweledigaeth Gymraeg",
       "What Product A does.",
-      "2 Hydref 2026",
+      "Cofnod Sengl",
+      "GP & Community Services",
     ])
   })
 })

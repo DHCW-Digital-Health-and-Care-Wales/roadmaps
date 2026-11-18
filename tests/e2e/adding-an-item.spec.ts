@@ -12,6 +12,7 @@ import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
 import { withTabItems } from "./fixtures/fake-sheets"
 import { useLanguage } from "./fixtures/look"
 import {
+  goToList,
   openConflictReview,
   refreshRoadmap,
   refusal,
@@ -167,7 +168,7 @@ test("a Product Lead adds an item in the item dialog, pending until published (S
   // Refresh keeps it; the roadmap list marks the roadmap.
   await refreshRoadmap(page)
   await expect(newTag(card, CLINIC)).toBeVisible()
-  await main.getByRole("link", { name: "Back to roadmaps" }).click()
+  await goToList(page)
   await expect(
     main.getByRole("link", { name: "Product A roadmap" }),
   ).toHaveAccessibleDescription(/Unpublished changes/)

@@ -162,7 +162,7 @@ export const en = {
   roadmaps: {
     title: "Your roadmaps",
     refresh: "Refresh",
-    /** A roadmap's menu of its less frequent actions, in its title row (STY-052 D6). */
+    /** A roadmap's menu of its less frequent actions, in its header (STY-052 D6). */
     more: "More",
     loading: "Loading roadmaps…",
     count_zero: "No roadmaps",
@@ -258,8 +258,12 @@ export const en = {
       /** On the new roadmap's page (S5). */
       added: "{{title}} was added. It isn't published yet.",
     },
-    /** A roadmap's facts, on its card and in "About this roadmap" while it is folded. */
+    /** A roadmap's facts, on its card and under the title of its page (STY-059 S2). */
     facts: {
+      /** Names the list of facts on a roadmap's page. */
+      name: "Roadmap details",
+      /** Before the status label's tag, so it is not read as the service's phase. */
+      status: "Status:",
       productLead: "Product lead: {{name}}",
       updated: "Updated {{date}}",
     },
@@ -285,26 +289,18 @@ export const en = {
       removedDescription:
         "This roadmap was removed from the list, so your changes to it couldn't be kept.",
     },
-    /** The roadmap's own text, on its page. */
+    /** What the roadmap is about, in a disclosure on its page (STY-059 S4). */
     about: {
       title: "About this roadmap",
       empty: "There's nothing about this roadmap yet.",
       fields: {
-        statusLabel: "Status",
-        productLead: "Product lead",
         vision: "Vision",
         serviceDescription: "Service description",
         family: "Family",
         category: "Category",
-        lastUpdated: "Last updated",
       },
-      /** Unfolds the panel from its one line, and folds it again (STY-053 S6). */
-      showMore: "Show more",
-      showLess: "Show less",
-      /** In place of the date, for a roadmap with none (STY-036 S1). */
-      noDate: "No date",
     },
-    /** A roadmap's placement navigation: the title row's menu and the links (STY-053). */
+    /** A roadmap's placement navigation: the header's menu and the links (STY-053). */
     jumpTo: {
       /** The menu button, before the page has reached a placement (D8). */
       menu: "Jump to",

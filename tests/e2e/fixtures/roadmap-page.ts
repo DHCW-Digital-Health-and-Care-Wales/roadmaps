@@ -4,15 +4,17 @@ import { EXAMPLE_SPREADSHEET, type FakeTab, withTabRows } from "./fake-sheets"
 import { type Language, useLanguage } from "./look"
 import { connect, expect } from "./test"
 
-// A roadmap's page as STY-052 and STY-053 shaped it: Refresh and "Unpublish roadmap" in
-// the title row's More, a publish someone else's changes stopped reviewed in a dialog,
-// opened from its notice at the foot, and "About this roadmap" folded to one line.
+// A roadmap's page as STY-052, STY-053 and STY-059 shaped it: Refresh and "Unpublish
+// roadmap" in the header's More, a publish someone else's changes stopped reviewed in a
+// dialog, opened from its notice at the foot, and "About this roadmap" a disclosure,
+// closed until pressed. No back link: the header's name leads to the list.
 
 const COPY = {
   en: {
     connect: "Connect Google",
-    showMore: "Show more",
     about: "About this roadmap",
+    facts: "Roadmap details",
+    home: "home",
     more: "More",
     refresh: "Refresh",
     review: "Review the changes",
@@ -20,8 +22,9 @@ const COPY = {
   },
   cy: {
     connect: "Cysylltu â Google",
-    showMore: "Dangos mwy",
     about: "Ynglŷn â'r map trywydd hwn",
+    facts: "Manylion y map trywydd",
+    home: "hafan",
     more: "Mwy",
     refresh: "Adnewyddu",
     review: "Adolygu'r newidiadau",
@@ -29,7 +32,18 @@ const COPY = {
   },
 } as const satisfies Record<Language, Record<string, string>>
 
-/** The title row's More, which opens the menu. */
+/** Goes back to the roadmap list by the header's name, its home link (STY-059 D3). */
+export async function goToList(
+  page: Page,
+  language: Language = "en",
+): Promise<void> {
+  await page
+    .getByRole("banner")
+    .getByRole("link", { name: new RegExp(`${COPY[language].home}$`) })
+    .click()
+}
+
+/** The header's More, which opens the menu. */
 export function moreButton(page: Page, language: Language = "en"): Locator {
   return page
     .getByRole("main")
@@ -194,19 +208,38 @@ export function about(page: Page, language: Language = "en"): Locator {
     .getByRole("region", { name: COPY[language].about })
 }
 
+/** The disclosure that opens and closes "About this roadmap" (STY-059 S4). */
+export function aboutDisclosure(
+  page: Page,
+  language: Language = "en",
+): Locator {
+  return about(page, language).getByRole("button", {
+    name: COPY[language].about,
+    exact: true,
+  })
+}
+
 /**
- * Opens "About this roadmap" with its "Show more", unless it is open already, and
- * returns it, its fields shown.
+ * Opens "About this roadmap" by its disclosure, unless it is open already, and returns
+ * it, its fields shown.
  */
 export async function openAbout(
   page: Page,
   language: Language = "en",
 ): Promise<Locator> {
-  const region = about(page, language)
-  const showMore = region.getByRole("button", { name: COPY[language].showMore })
-  if (await showMore.isVisible()) await showMore.click()
-  await expect(region.getByRole("term").first()).toBeVisible()
-  return region
+  const disclosure = aboutDisclosure(page, language)
+  if ((await disclosure.getAttribute("aria-expanded")) !== "true") {
+    await disclosure.click()
+  }
+  await expect(disclosure).toHaveAttribute("aria-expanded", "true")
+  return about(page, language)
+}
+
+/** The roadmap's facts under its title, "Roadmap details" (STY-059 S2). */
+export function roadmapFacts(page: Page, language: Language = "en"): Locator {
+  return page
+    .getByRole("main")
+    .getByRole("list", { name: COPY[language].facts, exact: true })
 }
 
 /** What the opened About shows under `term`. */
@@ -215,4 +248,32 @@ export function aboutField(region: Locator, term: string): Locator {
     .getByRole("term")
     .filter({ hasText: term })
     .locator("xpath=following-sibling::dd[1]")
+}
+
+/**
+ * The buttons the stuck row shows, each the element its centre hits: not those of the
+ * parts it leaves out of sight, the facts, the Publish row and About (STY-059).
+ */
+export async function shownInStuckRow(page: Page): Promise<Locator[]> {
+  const buttons = page.locator("[data-stuck]").getByRole("button")
+  const shown = await buttons.evaluateAll((all) =>
+    all.flatMap((button, index) => {
+      const box = button.getBoundingClientRect()
+      const hit = document.elementFromPoint(
+        box.left + box.width / 2,
+        box.top + box.height / 2,
+      )
+      return hit !== null && button.contains(hit) ? [index] : []
+    }),
+  )
+  return shown.map((index) => buttons.nth(index))
+}
+
+/** The names of the buttons the stuck row shows (`shownInStuckRow`). */
+export async function namesShownInStuckRow(page: Page): Promise<string[]> {
+  return Promise.all(
+    (await shownInStuckRow(page)).map(
+      async (button) => (await button.textContent())?.trim() ?? "",
+    ),
+  )
 }

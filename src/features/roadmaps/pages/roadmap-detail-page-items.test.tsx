@@ -23,6 +23,7 @@ import {
 import { expectOpeningFocus } from "../testing/opening-focus"
 import {
   aboutField,
+  goToList,
   moreButton,
   openAbout,
   openMore,
@@ -481,7 +482,7 @@ describe("RoadmapDetailPage items", () => {
       })
       await main().findByRole("alert")
 
-      await user.click(main().getByRole("link", { name: "Back to roadmaps" }))
+      await goToList(user)
 
       expect(
         await main().findByText("3 roadmaps, 1 not published"),
@@ -682,15 +683,16 @@ describe("RoadmapDetailPage items", () => {
   })
 
   describe("the Not published badge (S15)", () => {
-    it("shows beside an unpublished roadmap's title", async () => {
+    it("shows under an unpublished roadmap's title, with Publish roadmap beside it (STY-059 S6)", async () => {
       await renderRoadmap("productc", { productc: productBItems })
 
       const title = await main().findByRole("heading", {
         level: 1,
         name: "Product C roadmap",
       })
-      expect(title.parentElement).toHaveTextContent(
-        /^Product C roadmapNot published$/,
+      expect(title.parentElement).toHaveTextContent(/^Product C roadmap$/)
+      expect(main().getByText("Not published").parentElement).toHaveTextContent(
+        /^Not publishedPublish roadmap$/,
       )
     })
 

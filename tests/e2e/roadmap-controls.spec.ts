@@ -10,12 +10,13 @@ import type { Language } from "./fixtures/look"
 import {
   focusClearOfBars,
   LEFT_THE_CONTENT,
+  namesShownInStuckRow,
   openLongRoadmap,
 } from "./fixtures/roadmap-page"
 import { expect, test } from "./fixtures/test"
 
 /**
- * STY-052: as a roadmap's page scrolls, its title row sticks at the top of the screen
+ * STY-052: as a roadmap's page scrolls, its header sticks at the top of the screen
  * and its pending changes pin at the foot; a publish's outcome shows there, and
  * nothing pinned hides what has focus. Where the screen is too short, nothing pins.
  */
@@ -263,7 +264,7 @@ for (const [edge, key] of [
   })
 }
 
-test("keeps Publish roadmap in a desktop's stuck row, and moves it into More on a phone's, where Add an item is an icon (D15, D18, D19)", async ({
+test("moves Publish roadmap into More once the row sticks, at every width, where on a phone Add an item is an icon (D18, STY-059 S6, D7)", async ({
   page,
   sheets,
 }) => {
@@ -275,10 +276,13 @@ test("keeps Publish roadmap in a desktop's stuck row, and moves it into More on 
   const more = main.getByRole("button", { name: "More", exact: true })
   const menuItems = page.getByRole("menu").getByRole("menuitem")
   await expect(publishRoadmap).toBeVisible()
+  await more.click()
+  await expect(menuItems).toHaveText(["Refresh"])
+  await page.keyboard.press("Escape")
 
   await scrollTo(page, "Later")
 
-  await expect(publishRoadmap).toHaveCount(0)
+  expect(await namesShownInStuckRow(page)).not.toContain("Publish roadmap")
   await expect(addItem).toBeInViewport()
   await expect(addItem).toHaveCSS("width", "40px")
   await more.click()
@@ -288,10 +292,10 @@ test("keeps Publish roadmap in a desktop's stuck row, and moves it into More on 
   await page.setViewportSize(DESKTOP)
 
   await expect(page.locator("[data-stuck]")).toBeVisible()
-  await expect(publishRoadmap).toBeInViewport()
+  expect(await namesShownInStuckRow(page)).not.toContain("Publish roadmap")
   await expect(addItem).toHaveText("Add an item")
   await more.click()
-  await expect(menuItems).toHaveText(["Refresh"])
+  await expect(menuItems).toHaveText(["Refresh", "Publish roadmap"])
 })
 
 test("keeps the count, Publish and Discard in view under a notice too long for the room at the foot of a phone (D14)", async ({

@@ -21,8 +21,9 @@ import {
 } from "../testing/roadmap-dialog"
 import {
   chooseFromMore,
-  openAbout,
+  findRoadmapFacts,
   openConflictReview,
+  roadmapFacts,
 } from "../testing/roadmap-page"
 
 const productA = createTestRoadmap("producta", "Product A roadmap", {
@@ -31,6 +32,7 @@ const productA = createTestRoadmap("producta", "Product A roadmap", {
 })
 const draft = createTestRoadmap("productc", "Product C roadmap", {
   published: false,
+  productLead: "Sam Evans",
 })
 const items = {
   producta: [createTestRoadmapItem("First item", { id: "item-1" })],
@@ -99,20 +101,20 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
     vi.unstubAllEnvs()
   })
 
-  it("shows the date in the About block as the list card does (S1)", async () => {
-    const { user } = await renderPage()
+  it("shows the date in the facts under the title as the list card does (S1, STY-059 S2)", async () => {
+    await renderPage()
 
-    await openAbout(user)
-    expect(about().getByText("Last updated")).toBeInTheDocument()
-    expect(about().getByText("2 October 2026")).toBeInTheDocument()
+    expect(
+      await within(await findRoadmapFacts()).findByText(
+        "Updated 2 October 2026",
+      ),
+    ).toBeInTheDocument()
   })
 
-  it("shows that a roadmap has no date (S1)", async () => {
-    const { user } = await renderPage({ path: "/roadmaps/productc" })
+  it("leaves the date out of the facts for a roadmap with none (S1, STY-059 S2)", async () => {
+    await renderPage({ path: "/roadmaps/productc" })
 
-    await openAbout(user)
-    expect(about().getByText("Last updated")).toBeInTheDocument()
-    expect(about().getByText("No date")).toBeInTheDocument()
+    expect(await findRoadmapFacts()).not.toHaveTextContent(/Updated/)
   })
 
   it("keeps a picked date pending, tagged and listed, writing nothing (S2)", async () => {
@@ -126,8 +128,9 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
     expect(field).toHaveValue("2026-11-10")
     await confirmRoadmapEdit(user)
 
-    await openAbout(user)
-    expect(about().getByText("10 November 2026")).toBeInTheDocument()
+    expect(
+      within(roadmapFacts()).getByText("Updated 10 November 2026"),
+    ).toBeInTheDocument()
     expect(about().getByText("Changed")).toBeInTheDocument()
     expect(main().getByText("1 unpublished change")).toBeInTheDocument()
     await user.click(main().getByRole("button", { name: "Publish changes" }))
@@ -216,8 +219,7 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
 
     pick(await openDateField(user), "")
     await confirmRoadmapEdit(user)
-    await openAbout(user)
-    expect(about().getByText("No date")).toBeInTheDocument()
+    expect(roadmapFacts()).not.toHaveTextContent(/Updated/)
     await publish(user, "Publish changes")
 
     await vi.waitFor(async () => {
@@ -369,9 +371,10 @@ describe("Setting when a roadmap was last updated (STY-036)", () => {
       language: "cy",
     })
 
-    await openAbout(user)
-    expect(about().queryByText("Diweddarwyd ddiwethaf")).toBeInTheDocument()
-    expect(about().queryByText("Dim dyddiad")).toBeInTheDocument()
+    // The facts in Welsh, with no date fact for a roadmap with none (STY-059 S2).
+    const facts = await findRoadmapFacts()
+    expect(facts).toHaveTextContent("Arweinydd cynnyrch: Sam Evans")
+    expect(facts).not.toHaveTextContent(/Diweddarwyd/)
     await user.click(
       main().getByRole("button", { name: "Cyhoeddi'r map trywydd" }),
     )

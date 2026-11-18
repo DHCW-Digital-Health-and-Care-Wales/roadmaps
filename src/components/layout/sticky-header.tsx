@@ -2,6 +2,7 @@ import { type ReactNode, useRef } from "react"
 
 import { cn } from "@/lib/utils"
 
+import { leftOutFocus } from "./left-out"
 import { PageContainer } from "./page-container"
 import {
   useMeasuredHeight,
@@ -14,7 +15,8 @@ export interface StickyHeaderProps {
   /**
    * The header, drawn slim while `stuck`: one set of controls, never a copy. Slim a
    * control by its props or classes, in place: moving it to another parent remounts it,
-   * and focus on it is lost as the row sticks.
+   * and focus on it is lost as the row sticks. A part it leaves out visually but keeps
+   * reachable carries `LEFT_OUT` (`./left-out`) while stuck.
    */
   children: (stuck: boolean) => ReactNode
 }
@@ -25,7 +27,8 @@ export interface StickyHeaderProps {
  * `children` (STY-052 D5). Its place in the page keeps the height it had there, so
  * nothing below it moves as it sticks or lets go. It never sticks where the viewport is
  * too short (`usePinning`), and while stuck its height keeps focus clear of it
- * (`usePinnedInset`).
+ * (`usePinnedInset`). Focus reaching a part it leaves out lets it go, or passes it by
+ * when tabbed into from before (`LEFT_OUT`).
  */
 export function StickyHeader({ children }: StickyHeaderProps) {
   const pinning = usePinning()
@@ -44,6 +47,19 @@ export function StickyHeader({ children }: StickyHeaderProps) {
         ref={header}
         data-slot="sticky-header"
         data-stuck={stuck || undefined}
+        onFocus={(event) => {
+          if (!stuck) return
+          const next = leftOutFocus(
+            event.target,
+            event.relatedTarget,
+            event.currentTarget,
+          )
+          if (next === "release") {
+            place.current?.scrollIntoView({ block: "start" })
+          } else {
+            next?.focus()
+          }
+        }}
         className={cn(
           stuck &&
             "fixed top-0 right-0 left-(--navigation-width) z-40 border-b-4 border-border bg-background py-3",

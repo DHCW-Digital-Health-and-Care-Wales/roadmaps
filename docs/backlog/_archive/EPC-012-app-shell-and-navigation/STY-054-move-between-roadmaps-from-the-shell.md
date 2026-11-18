@@ -98,7 +98,7 @@ Cymraeg
   while open is unchanged.
 - **D12** (owner, 2026-11-18, page headers UX analysis decisions 4 and 5; delivered by
   [STY-058](../../_archive/EPC-013-tidy-page-tops/STY-058-a-tidy-top-to-the-roadmap-list.md) and
-  [STY-059](../../EPC-013-tidy-page-tops/STY-059-a-roadmaps-page-opens-on-one-header-block.md)): "Back to
+  [STY-059](../EPC-013-tidy-page-tops/STY-059-a-roadmaps-page-opens-on-one-header-block.md)): "Back to
   roadmaps" and the list's link to the families page go, since the navigation holds
   both; changes the departure that kept them.
 - **D13** (owner, 2026-11-18, navigation UX analysis; delivered by

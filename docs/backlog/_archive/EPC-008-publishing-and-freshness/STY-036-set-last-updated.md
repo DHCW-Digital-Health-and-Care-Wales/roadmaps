@@ -142,6 +142,13 @@ already reads `Yes`, where the date is still written.
   and D3's limit → the browser's local date, not Europe/London. Replaces D9. S3, S4,
   S6. The code that works out "today" carries a comment naming CHO-005, which sends
   the date to the future database API in UTC.
+- **D12** (agent, 2026-11-18, delivered by
+  [STY-059](../EPC-013-tidy-page-tops/STY-059-a-roadmaps-page-opens-on-one-header-block.md)
+  S2): the page shows the date as "Updated …" in the roadmap's facts under its title,
+  as the list card does, not in About; a roadmap with none shows no date fact, so
+  "No date" is gone. Changes S1. Its evidence is now `roadmap-facts.test.tsx` and the
+  page tests "shows the date in the facts under the title…" and "leaves the date out
+  of the facts for a roadmap with none".
 
 ## Out of scope
 

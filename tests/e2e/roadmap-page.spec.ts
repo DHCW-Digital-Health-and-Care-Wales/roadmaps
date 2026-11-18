@@ -11,7 +11,13 @@ import {
   withTabRows,
 } from "./fixtures/fake-sheets"
 import { THEMES, tokenColour, useLanguage, useTheme } from "./fixtures/look"
-import { openAbout, refreshRoadmap } from "./fixtures/roadmap-page"
+import {
+  aboutDisclosure,
+  goToList,
+  openAbout,
+  refreshRoadmap,
+  roadmapFacts,
+} from "./fixtures/roadmap-page"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 const ABOUT_HEADING = "About this roadmap"
@@ -71,20 +77,18 @@ async function expectProductA(page: Page) {
     ABOUT_HEADING,
     ...PLACEMENT_HEADINGS,
   ])
+  await expect(roadmapFacts(page).getByRole("listitem")).toHaveText([
+    "Status: Beta",
+    "Product lead: Alex Jones",
+    "Updated 1 October 2026",
+  ])
   const about = await openAbout(page)
   await expect(about.getByRole("term")).toHaveText([
-    "Status",
-    "Product lead",
-    "Family",
-    "Category",
     "Vision",
     "Service description",
-    "Last updated",
+    "Family",
+    "Category",
   ])
-  await expect(about.getByRole("definition").first()).toHaveText("Beta")
-  await expect(about.getByRole("definition").last()).toHaveText(
-    "1 October 2026",
-  )
   await expect(titlesUnder(page, "Now")).toHaveText([
     "Example card with every column",
     "Minimal card",
@@ -289,22 +293,29 @@ test.describe("when the items can't be read (S8)", () => {
     )
     await expect(panel.getByRole("button")).toHaveCount(0)
 
-    await page.getByRole("link", { name: "Back to roadmaps" }).click()
+    await goToList(page)
     await expect(roadmapCards(page)).toHaveCount(3)
     await expect(page.getByRole("alert")).toHaveCount(0)
   })
 })
 
-test("About's panel holds “Changed” and “Undo changes”, which returns focus to Edit (STY-042 S1)", async ({
+test("About holds “Changed” beside its disclosure, closed or open, and “Undo changes” once open, which returns focus to Edit (STY-042 S1, STY-059 S5)", async ({
   page,
 }) => {
   await openProductA(page)
-  const about = await openAbout(page)
 
   // Once, not per theme: the edit is made in the roadmap dialog (STY-043).
   const dialog = await openEditRoadmapDialog(page)
   await dialog.getByRole("textbox", { name: "Product lead" }).fill("Sam Evans")
   await dialog.getByRole("button", { name: "Done" }).click()
+  const closed = page
+    .getByRole("main")
+    .getByRole("region", { name: ABOUT_HEADING })
+  await expect(closed.getByText("Changed", { exact: true })).toBeVisible()
+  await expect(
+    closed.getByRole("button", { name: `Undo changes ${ABOUT_HEADING}` }),
+  ).toHaveCount(0)
+  const about = await openAbout(page)
   await expect(about.getByText("Changed", { exact: true })).toBeVisible()
   await about
     .getByRole("button", { name: `Undo changes ${ABOUT_HEADING}` })
@@ -314,32 +325,37 @@ test("About's panel holds “Changed” and “Undo changes”, which returns fo
 })
 
 for (const theme of THEMES) {
-  test(`About is a bordered panel with Edit beside its heading, in the ${theme} theme (STY-042 S1, S4)`, async ({
+  test(`About opens in place under a rule, with a 40px Edit beside its disclosure, in the ${theme} theme (STY-059 S4)`, async ({
     page,
   }) => {
     await useTheme(page, theme)
     await openProductA(page)
-    // Open, so the first field shows below the heading.
+    const disclosure = aboutDisclosure(page)
+    await expect(disclosure).toHaveAttribute("aria-expanded", "false")
+    // A text control at least 44px tall, underlined on hover.
+    expect((await disclosure.boundingBox())?.height).toBeGreaterThanOrEqual(44)
+    const label = disclosure.getByText(ABOUT_HEADING)
+    await expect(label).toHaveCSS("text-decoration-line", "none")
+    await disclosure.hover()
+    await expect(label).toHaveCSS("text-decoration-line", "underline")
+
     const about = await openAbout(page)
     const edit = about.getByRole("button", { name: `Edit ${ABOUT_HEADING}` })
-
-    await expect(about).toHaveCSS("border-top-style", "solid")
-    await expect(about).toHaveCSS(
-      "border-top-color",
-      await tokenColour(page, "--border"),
-    )
-    await expect(about).toHaveCSS(
-      "background-color",
-      await tokenColour(page, "--card"),
-    )
-    // Beside the heading, above the first field: not at the panel's foot.
-    const heading = await about.getByRole("heading").boundingBox()
+    expect((await edit.boundingBox())?.height).toBe(40)
+    // Beside the disclosure, above the first field.
+    const opener = await disclosure.boundingBox()
     const button = await edit.boundingBox()
     const firstField = await about.getByRole("term").first().boundingBox()
-    if (!heading || !button || !firstField) throw new Error("Not laid out")
-    expect(button.x).toBeGreaterThan(heading.x + heading.width)
-    expect(button.y).toBeLessThan(heading.y + heading.height)
+    if (!opener || !button || !firstField) throw new Error("Not laid out")
+    expect(button.x).toBeGreaterThan(opener.x + opener.width)
     expect(button.y + button.height).toBeLessThanOrEqual(firstField.y)
+    // The fields sit in place, behind a rule in the border's colour.
+    const fields = about.locator("[data-slot=collapsible-content]")
+    await expect(fields).toHaveCSS("border-left-style", "solid")
+    await expect(fields).toHaveCSS(
+      "border-left-color",
+      await tokenColour(page, "--border"),
+    )
   })
 
   test(`a roadmap with no items shows a compact dashed panel, which holds "Add an item", in the ${theme} theme (STY-042 S2, S4; STY-046 S8)`, async ({

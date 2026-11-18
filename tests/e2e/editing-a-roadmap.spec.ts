@@ -8,7 +8,7 @@ import {
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
 import { EXAMPLE_SPREADSHEET_WITH_LISTS } from "./fixtures/fake-sheets"
 import { useLanguage } from "./fixtures/look"
-import { aboutField, openAbout } from "./fixtures/roadmap-page"
+import { aboutField, openAbout, roadmapFacts } from "./fixtures/roadmap-page"
 import { connect, expect, test } from "./fixtures/test"
 
 /**
@@ -131,8 +131,8 @@ test("Cancel and Escape close the dialog and drop what was typed, keeping the ed
   await expect(dialog).toBeHidden()
   await expect(editRoadmapButton(page)).toBeFocused()
 
+  await expect(roadmapFacts(page)).toContainText("Status: Beta")
   const about = await openAbout(page)
-  await expect(about.getByText("Beta")).toBeVisible()
   await expect(about.getByText(VISION)).toBeVisible()
   await expect(main.getByText("1 unpublished change")).toBeVisible()
 })

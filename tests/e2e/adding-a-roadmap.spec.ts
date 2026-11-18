@@ -18,7 +18,12 @@ import {
   withRoadmapIndex,
 } from "./fixtures/fake-sheets"
 import { useLanguage } from "./fixtures/look"
-import { aboutField, openAbout } from "./fixtures/roadmap-page"
+import {
+  aboutField,
+  goToList,
+  openAbout,
+  roadmapFacts,
+} from "./fixtures/roadmap-page"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 const [HEADER = []] = EXAMPLE_INDEX_ROWS
@@ -94,14 +99,14 @@ test("a Product Lead adds a roadmap and lands on its page (S1–S3, S5)", async 
   await expect(aboutField(about, "Category")).toHaveText(
     "GP & Community Services",
   )
-  await expect(about.getByText("Sam Evans")).toBeVisible()
+  await expect(roadmapFacts(page)).toContainText("Product lead: Sam Evans")
   await expect(
     main.getByRole("heading", { name: "No items yet" }),
   ).toBeVisible()
   // One write: the roadmap's entry and its empty roadmap together.
   expect(sheets.writes).toHaveLength(1)
 
-  await main.getByRole("link", { name: "Back to roadmaps" }).click()
+  await goToList(page)
   await expect(page.getByText("4 roadmaps, 2 not published")).toBeVisible()
   await expect(
     main
@@ -145,7 +150,7 @@ test("the empty list offers Add a roadmap too, and lists the first roadmap (S1, 
   await dialog.getByRole("button", { name: "Add roadmap" }).click()
 
   await expectNewRoadmapPage(page)
-  await main.getByRole("link", { name: "Back to roadmaps" }).click()
+  await goToList(page)
   await expect(roadmapCards(page)).toHaveText(["Community Nursing roadmap"])
   await expect(page.getByText("1 roadmap, 1 not published")).toBeVisible()
 })

@@ -456,9 +456,13 @@ for (const theme of THEMES) {
       )
 
       await page.keyboard.press("Enter")
-      const back = main.getByRole("link", { name: "Back to roadmaps" })
-      await tabTo(page, back)
-      await expectIndicator(back, colours, "link")
+      // About's disclosure, a text control, takes the link's (STY-059 S4).
+      const disclosure = main.getByRole("button", {
+        name: "About this roadmap",
+        exact: true,
+      })
+      await tabTo(page, disclosure)
+      await expectIndicator(disclosure, colours, "link")
 
       // The navigation's links and its fold button take the fill, the current page's
       // link too, its blue giving way (STY-054).

@@ -132,7 +132,6 @@ expected tours.
 - **S7**: held by a component test only, not E2E: the review's setup is a co-lead's
   conflict through the page's publish, which `editing.spec.ts` already walks to the
   footer Close (agent).
-
 - **S8**: the session warning, an alert dialog, already draws a corner X of its own
   (`AlertDialogCancel`, "Close"), which this story leaves; S8 holds for the other eight
   alert dialogs, and its E2E test checks the Publish dialog. CHO-024 records drawing

@@ -40,6 +40,9 @@ definition shared with `DialogContent`'s (or deliberately left, with a Decisions
 
 ## Decisions
 
+- **D1** (agent, 2026-11-18): a chore though the X moves 6px, since the change is one
+  definition drawn once, and the move is its side effect; the owner may make it a story.
+
 ## Out of scope
 
 - Giving every alert dialog an X: STY-068 D1 leaves the others without.

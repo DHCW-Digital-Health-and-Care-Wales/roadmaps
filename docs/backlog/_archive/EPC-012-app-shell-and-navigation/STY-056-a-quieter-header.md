@@ -91,6 +91,9 @@ connect
 - **A service name on one line at every width** (agent, S4): with the chip, theme button
   and Disconnect gone the name fits one line in both languages from 375px, where STY-054
   allowed two until this story; `tests/e2e/shell.spec.ts` holds one.
+- **`AuthButton` became `ConnectButton`** (agent, review round 1): its Disconnect branch
+  and `variant="header"` served only the deleted header button, so it is the pages'
+  Connect alone.
 - **The top bar is no longer a size container** (agent): its only user was the chip's
   `@max-5xl:` variant.
 
@@ -100,7 +103,9 @@ connect
   (`components/theme/`) and one session item: Disconnect while connected (run once the
   menu has closed, since it may ask a question), Connect, or Reconnect after expiry
   (calls `connect()` in the click; waiting, disabled, while the session loads or connects).
-  `ThemeToggle` and `HeaderAuthButton` are gone; `AuthButton` still serves the pages.
+  `ThemeToggle` and `HeaderAuthButton` are gone. `AuthButton`, now only the pages'
+  Connect, is `ConnectButton`; it and the menu's item share `useConnectAction` (label,
+  busy, `connect`).
 - **`ConnectionStatus`** is `role="status"` with `sr-only`, in the header, for assistive
   technology only.
 - **`auth.notifications.connected` is gone**; the notice hook confirms a disconnect only.

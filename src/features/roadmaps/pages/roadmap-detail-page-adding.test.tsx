@@ -7,6 +7,7 @@ import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { ContractWrite } from "@/domain/roadmap/testing/contract-write"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
+import { disconnectFromHeader } from "@/features/auth/testing/account-menu"
 import { findReconnectDialog } from "@/features/auth/testing/reconnect-dialog"
 import type { Language } from "@/i18n"
 import { AppError } from "@/lib/errors"
@@ -39,7 +40,6 @@ import {
   openConflictReview,
 } from "../testing/roadmap-page"
 import { expectWriteHold, refreshHold } from "../testing/write-hold"
-import { disconnectFromHeader } from "@/features/auth/testing/account-menu"
 
 const roadmaps: Roadmap[] = [
   createTestRoadmap("producta", "Product A roadmap"),

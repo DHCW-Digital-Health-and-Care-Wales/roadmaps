@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test"
 
+import { disconnectFromHeader, openAccountMenu } from "./fixtures/account-menu"
 import {
   openAddItemDialog,
   openAddRoadmapDialog,
@@ -15,7 +16,6 @@ import {
 import { type Language, useLanguage } from "./fixtures/look"
 import { openConflictReview, refusal } from "./fixtures/roadmap-page"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
-import { disconnectFromHeader } from "./fixtures/account-menu"
 
 // The structure of the key screens, held as aria snapshots in
 // `structure.spec.ts-snapshots/` (STY-018). Run `pnpm test:e2e --update-snapshots` after
@@ -436,21 +436,16 @@ test("the account menu, open: connected, then signed out (STY-056)", async ({
   page,
 }) => {
   await page.goto("./")
-  const account = page.getByRole("banner").getByRole("button", {
-    name: "Account",
-  })
-  await account.click()
   await expectStructure(
-    page.getByRole("menu"),
+    await openAccountMenu(page),
     "account-menu-signed-out.aria.yml",
   )
   await page.keyboard.press("Escape")
 
   await connect(page)
   await expect(roadmapCards(page)).toHaveCount(3)
-  await account.click()
   await expectStructure(
-    page.getByRole("menu"),
+    await openAccountMenu(page),
     "account-menu-connected.aria.yml",
   )
 })

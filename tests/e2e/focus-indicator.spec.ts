@@ -427,6 +427,11 @@ for (const theme of THEMES) {
       })
       await expect(theme).toBeFocused()
       await expectIndicator(theme, colours, "fill")
+      // Then the session's action, Disconnect while connected.
+      const disconnect = page.getByRole("menuitem", { name: "Disconnect" })
+      await page.keyboard.press("ArrowDown")
+      await expect(disconnect).toBeFocused()
+      await expectIndicator(disconnect, colours, "fill")
       await page.keyboard.press("Escape")
 
       const refresh = main.getByRole("button", { name: "Refresh" })

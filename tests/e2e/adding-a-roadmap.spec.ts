@@ -297,7 +297,7 @@ test.describe("an expired session (S11)", () => {
     const add = dialog.getByRole("button", { name: "Add roadmap" })
     await expect(add).toBeEnabled()
     await add.click()
-    // The header's and the page's Reconnect are behind the dialogs, out of reach.
+    // The page's Reconnect is behind the dialogs, out of reach.
     const reconnect = page.getByRole("button", { name: "Reconnect" })
     await expect(reconnect).toHaveCount(1)
     await expect(reconnectButton(page)).toBeFocused()

@@ -1,10 +1,10 @@
 import type { Page } from "@playwright/test"
 
+import { disconnectFromHeader } from "./fixtures/account-menu"
 import { openEditItemDialog } from "./fixtures/dialogs"
 import { tokenColour } from "./fixtures/look"
 import { openLongRoadmap } from "./fixtures/roadmap-page"
 import { connect, expect, test } from "./fixtures/test"
-import { disconnectFromHeader } from "./fixtures/account-menu"
 
 /**
  * STY-055: which roadmaps have unpublished changes, from any page. The shell's navigation

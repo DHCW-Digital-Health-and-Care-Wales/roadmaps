@@ -6,7 +6,10 @@ import { afterEach, describe, expect, it } from "vitest"
 import type { AuthState } from "@/domain/auth/auth-client"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { authScopedQueryKey } from "@/features/auth/auth-scoped-queries"
-import { disconnectFromHeader } from "@/features/auth/testing/account-menu"
+import {
+  disconnectFromHeader,
+  openAccountMenu,
+} from "@/features/auth/testing/account-menu"
 import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
@@ -101,28 +104,19 @@ describe("landing page", () => {
   })
 })
 
-/** Opens the header's account menu and returns it. */
-async function openAccountMenu(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(header().getByRole("button", { name: "Account" }))
-  return within(await screen.findByRole("menu"))
-}
-
 describe("header", () => {
-  it.each<[AuthState, string, string, boolean]>([
-    [{ status: "initializing" }, "Getting ready…", "Connect Google", false],
-    [{ status: "ready" }, "Not connected", "Connect Google", true],
-    [{ status: "connecting" }, "Connecting…", "Connect Google", false],
-    [connected, "Google connected", "Disconnect", true],
-    [{ status: "expired" }, "Session expired", "Reconnect", true],
+  it.each<[AuthState, string, string]>([
+    [{ status: "ready" }, "Not connected", "Connect Google"],
+    [connected, "Google connected", "Disconnect"],
+    [{ status: "expired" }, "Session expired", "Reconnect"],
     [
       { status: "error", error: "unknown" },
       "Connection failed",
       "Connect Google",
-      true,
     ],
   ])(
     "announces the %j auth state, shows nothing of it, and offers its action in the menu",
-    async (authState, status, action, enabled) => {
+    async (authState, status, action) => {
       const user = userEvent.setup()
       await renderWithProviders({ authState })
 
@@ -130,9 +124,24 @@ describe("header", () => {
       expect(announcement).toHaveTextContent(status)
       expect(announcement).toHaveClass("sr-only")
       const menu = await openAccountMenu(user)
-      const item = menu.getByRole("menuitem", { name: action })
-      if (enabled) expect(item).toBeEnabled()
-      else expect(item).toHaveAttribute("aria-disabled", "true")
+      expect(menu.getByRole("menuitem", { name: action })).toBeEnabled()
+    },
+  )
+
+  it.each<[AuthState, string]>([
+    [{ status: "initializing" }, "Getting ready…"],
+    [{ status: "connecting" }, "Connecting…"],
+  ])(
+    "waits, in the menu, while the auth state is %j",
+    async (authState, status) => {
+      const user = userEvent.setup()
+      await renderWithProviders({ authState })
+
+      expect(header().getByRole("status")).toHaveTextContent(status)
+      const menu = await openAccountMenu(user)
+      expect(
+        menu.getByRole("menuitem", { name: "Connect Google" }),
+      ).toHaveAttribute("aria-disabled", "true")
     },
   )
 

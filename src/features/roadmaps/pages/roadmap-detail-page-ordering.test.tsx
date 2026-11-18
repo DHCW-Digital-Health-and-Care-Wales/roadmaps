@@ -6,6 +6,7 @@ import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import type { RoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
+import { disconnectFromHeader } from "@/features/auth/testing/account-menu"
 import type { Language } from "@/i18n"
 import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
@@ -28,7 +29,6 @@ import {
   openConflictReview,
   refreshRoadmap,
 } from "../testing/roadmap-page"
-import { disconnectFromHeader } from "@/features/auth/testing/account-menu"
 
 /**
  * A Product Lead reorders a placement's items from each card's Move menu (STY-050): the

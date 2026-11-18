@@ -3,7 +3,7 @@ import type { Page } from "@playwright/test"
 import { chooseFromAccountMenu } from "./fixtures/account-menu"
 import { expect, roadmapCards, test } from "./fixtures/test"
 
-test("the theme toggle switches to dark, and the choice persists", async ({
+test("the theme menu item switches to dark, and the choice persists", async ({
   page,
 }) => {
   const html = page.locator("html")

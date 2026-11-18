@@ -14,6 +14,7 @@ import { useMenuChoice } from "@/lib/use-menu-choice"
 
 import { useRequestDisconnect } from "../disconnect-request"
 import { useAuth } from "../use-auth"
+import { useConnectAction } from "../use-connect-action"
 
 /**
  * The header's menu of what a Product Lead seldom changes: the theme, and the session's
@@ -26,7 +27,7 @@ export function AccountMenu() {
   const disconnect = useRequestDisconnect()
   // Disconnect may ask a question in a dialog: it waits for the menu to close, so the
   // dialog's focus is not handed back to the trigger from under it.
-  const { choose, onOpenChangeComplete } = useMenuChoice(disconnect)
+  const { choose, onOpenChangeComplete } = useMenuChoice<undefined>(disconnect)
 
   return (
     <DropdownMenu onOpenChangeComplete={onOpenChangeComplete}>
@@ -63,17 +64,21 @@ interface SessionMenuItemProps {
 /** Disconnect, Reconnect after expiry or Connect: the one action the session needs. */
 function SessionMenuItem({ onDisconnect }: SessionMenuItemProps) {
   const { t } = useTranslation()
-  const { state, connect } = useAuth()
+  const connected = useAuth().state.status === "connected"
+  const { labelKey, busy, connect } = useConnectAction()
 
-  if (state.status === "connected") {
+  if (connected) {
     return (
-      <DropdownMenuItem onClick={onDisconnect}>
+      <DropdownMenuItem
+        onClick={() => {
+          onDisconnect()
+        }}
+      >
         {t("auth.disconnect")}
       </DropdownMenuItem>
     )
   }
 
-  const busy = state.status === "initializing" || state.status === "connecting"
   return (
     <DropdownMenuItem
       disabled={busy}
@@ -81,7 +86,7 @@ function SessionMenuItem({ onDisconnect }: SessionMenuItemProps) {
       onClick={connect}
     >
       {busy && <LoaderCircleIcon aria-hidden="true" className="animate-spin" />}
-      {t(state.status === "expired" ? "auth.reconnect" : "auth.connect")}
+      {t(labelKey)}
     </DropdownMenuItem>
   )
 }

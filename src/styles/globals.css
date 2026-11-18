@@ -169,7 +169,7 @@
   --status-danger-border: var(--nhsw-tag-red-ink);
 
   /* The navy header band, the same in both themes (STY-016 D4): DHCW's page-background
-     blue, with white text and the chips' grey border. Its controls hover a step lighter. */
+     blue, with white text and DHCW's grey border. Its controls hover a step lighter. */
   --header: var(--nhsw-page-background-blue);
   --header-foreground: var(--nhsw-exceptional-text-colour);
   --header-hover: var(--nhsw-colour-button-primary-hover);

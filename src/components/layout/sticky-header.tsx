@@ -11,7 +11,11 @@ import {
 } from "./pinning"
 
 export interface StickyHeaderProps {
-  /** The header, drawn slim while `stuck`: one set of controls, never a copy. */
+  /**
+   * The header, drawn slim while `stuck`: one set of controls, never a copy. Slim a
+   * control by its props or classes, in place: moving it to another parent remounts it,
+   * and focus on it is lost as the row sticks.
+   */
   children: (stuck: boolean) => ReactNode
 }
 

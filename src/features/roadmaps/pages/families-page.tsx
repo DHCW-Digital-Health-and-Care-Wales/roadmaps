@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next"
 
 import { BackLink } from "@/components/layout/back-link"
 import { Skeleton } from "@/components/ui/skeleton"
-import { AuthButton } from "@/features/auth/components/auth-button"
+import { ConnectButton } from "@/features/auth/components/connect-button"
 import { useAuth } from "@/features/auth/use-auth"
 
 import { RefreshButton } from "../components/refresh-button"
@@ -87,7 +87,7 @@ export function FamiliesPage() {
           icon={<LockKeyholeIcon />}
           title={t("roadmaps.families.title")}
           description={t("roadmaps.families.connectPrompt")}
-          action={<AuthButton />}
+          action={<ConnectButton />}
         />
       )
     }

@@ -77,14 +77,14 @@ unverifiable; quote it for a mismatch and show the implementation path.
 
 - Trace each scenario through every auth state (`initializing`, `ready`,
   `connecting`, `connected`, `expired`, `error`), width, language, theme and
-  entry point it names (the header button, the hero button, a deep link, a
+  entry point it names (the account menu, the hero button, a deep link, a
   reload) to the control the user meets, including what completes a branch that
   hands off or defers. Where a change replaces a surface, carried-over behavior
   may be what the story changes.
 - Look for omitted refusal and expiry branches, empty and loading states, a
   failed read shown as "no results", an error shown as an empty list, mobile
-  layouts that drop a control (below `sm` the header keeps only Disconnect, so
-  every signed-out view needs its own Connect/Reconnect), and behavior beyond
+  layouts that drop a control (the header's account menu offers Connect or
+  Reconnect, but a signed-out page still needs its own), and behavior beyond
   the request. Scope growth is a finding only when it creates a concrete risk
   or contradicts the request.
 

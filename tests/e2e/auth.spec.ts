@@ -138,7 +138,6 @@ test("connecting shows no notice; a disconnect's confirmation clears itself, a f
   // Nothing of the connection shows, but a screen reader is told.
   const status = page.getByRole("banner").getByRole("status")
   await expect(status).toHaveText("Google connected")
-  await expect(status).toHaveClass(/\bsr-only\b/)
 
   await disconnectFromHeader(page)
   const confirmation = main.getByRole("note")

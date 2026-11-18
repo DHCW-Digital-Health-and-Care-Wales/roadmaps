@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest"
 
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
+import { disconnectFromHeader } from "@/features/auth/testing/account-menu"
 import { createI18n } from "@/i18n"
 import { DESKTOP_WIDTH } from "@/lib/use-media-query"
 import { connected } from "@/test/connected-state"
@@ -14,7 +15,6 @@ import { roadmapKeys } from "../hooks/roadmap-queries"
 import { holdCall } from "../testing/held-call"
 import { createInMemoryRoadmapRepository } from "../testing/in-memory-roadmap-repository"
 import { editItemText } from "../testing/item-dialog"
-import { disconnectFromHeader } from "@/features/auth/testing/account-menu"
 
 // STY-055: which roadmaps have unpublished changes, from any page: a dot on each in the
 // shell's navigation and under "All roadmaps" how many, which leads to them (S1 to S4,

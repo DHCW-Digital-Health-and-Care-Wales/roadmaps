@@ -9,7 +9,7 @@ import { buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { localise } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
-import { AuthButton } from "@/features/auth/components/auth-button"
+import { ConnectButton } from "@/features/auth/components/connect-button"
 import { useAuth } from "@/features/auth/use-auth"
 import { useLanguage } from "@/i18n"
 import type { AppError } from "@/lib/errors"
@@ -128,7 +128,7 @@ function RoadmapDetail({ roadmapId }: RoadmapDetailPageProps) {
         title={t("roadmaps.detail.title")}
         titleAs="h1"
         description={t("roadmaps.detail.connectPrompt")}
-        action={<AuthButton />}
+        action={<ConnectButton />}
       />
     )
   }

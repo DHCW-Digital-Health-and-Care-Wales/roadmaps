@@ -108,7 +108,7 @@ unpublishing the roadmap. A failure stays until the next
 attempt or the reader dismisses it. A confirmation clears itself after a few
 seconds (waiting while it is hovered or focused), or sooner on the next change
 or page, so write it to be read at a glance. Only a disconnect is confirmed: a
-connect shows itself in the page's roadmaps (STY-056 D3). A new notice replaces the old one.
+connect shows itself in the page's roadmaps. A new notice replaces the old one.
 
 ```
 auth.notifications.disconnected  Disconnected from Google
@@ -313,7 +313,7 @@ roadmaps.hold.reconnect             Reconnect to refresh your roadmaps.
 
 **Shape:** a short noun phrase or past participle, no full stop. Shown to no one: a
 live region tells a screen reader the connection's state, as the header has no chip
-for it (STY-056 D3).
+for it.
 
 ```
 auth.status.ready      Not connected

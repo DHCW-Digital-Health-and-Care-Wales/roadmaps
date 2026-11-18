@@ -12,6 +12,7 @@ import type {
 import type { ContractWrite } from "@/domain/roadmap/testing/contract-write"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
+import { disconnectFromHeader } from "@/features/auth/testing/account-menu"
 import {
   findReconnectDialog,
   reconnectFromDialog,
@@ -51,7 +52,6 @@ import {
   refreshRoadmap,
 } from "../testing/roadmap-page"
 import { expectWriteHold, refreshHold } from "../testing/write-hold"
-import { disconnectFromHeader } from "@/features/auth/testing/account-menu"
 
 const roadmaps: Roadmap[] = [
   createTestRoadmap("producta", "Product A roadmap", {

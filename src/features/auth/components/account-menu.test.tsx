@@ -9,6 +9,7 @@ import { connected } from "@/test/connected-state"
 import { renderWithI18n } from "@/test/render-with-i18n"
 
 import { AuthProvider } from "../auth-provider"
+import { openAccountMenu } from "../testing/account-menu"
 import { createFakeAuthClient } from "../testing/fake-auth-client"
 import { AccountMenu } from "./account-menu"
 
@@ -26,12 +27,7 @@ async function openMenu(
     </AuthProvider>,
     { language },
   )
-  await user.click(
-    screen.getByRole("button", {
-      name: language === "cy" ? "Cyfrif" : "Account",
-    }),
-  )
-  await screen.findByRole("menu")
+  await openAccountMenu(user, language === "cy" ? "Cyfrif" : "Account")
   return { user, client }
 }
 

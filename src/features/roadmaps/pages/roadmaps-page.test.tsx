@@ -5,13 +5,13 @@ import { describe, expect, it, vi } from "vitest"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { RoadmapRepository } from "@/domain/roadmap/roadmap-repository"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
+import { disconnectFromHeader } from "@/features/auth/testing/account-menu"
 import { findReconnectDialog } from "@/features/auth/testing/reconnect-dialog"
 import { AppError } from "@/lib/errors"
 import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
 import { roadmapKeys } from "../hooks/roadmap-queries"
-import { disconnectFromHeader } from "@/features/auth/testing/account-menu"
 
 const roadmaps: Roadmap[] = [
   createTestRoadmap("producta", "Product A roadmap"),

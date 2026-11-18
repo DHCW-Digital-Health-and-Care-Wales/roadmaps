@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test"
 
+import { disconnectFromHeader } from "./fixtures/account-menu"
 import {
   openEditItemDialog,
   openEditRoadmapDialog,
@@ -22,7 +23,6 @@ import {
   refusal,
 } from "./fixtures/roadmap-page"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
-import { disconnectFromHeader } from "./fixtures/account-menu"
 
 /**
  * A Product Lead edits a roadmap's English and publishes it, or saves it when the roadmap

@@ -4,7 +4,7 @@
   publish's outcome shows; the review opens in a dialog
 - **Type**: Feature
 - **Area**: Features/UI + i18n (en + cy) + E2E
-- **Epic**: [EPC-012-app-shell-and-navigation](../README.md)
+- **Epic**: [EPC-012-app-shell-and-navigation](README.md)
 - **Depends on**: STY-057 (hard: S8 as D4 changes it needs its reconnect dialog)
 - **Binding ADRs**: ADR-012, ADR-010, ADR-008, ADR-005
 - **Suggested model**: Opus — sticky layout against focus, zoom, dialogs and Welsh

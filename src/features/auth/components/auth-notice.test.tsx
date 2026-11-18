@@ -4,10 +4,10 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import type { AuthState } from "@/domain/auth/auth-client"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
+import { disconnectFromHeader } from "@/features/auth/testing/account-menu"
 import { renderWithProviders } from "@/test/render-with-providers"
 
 import { CONFIRMATION_DWELL_MS } from "../use-notice-dwell"
-import { disconnectFromHeader } from "@/features/auth/testing/account-menu"
 
 const HOUR_MS = 60 * 60 * 1000
 const connected = (): Extract<AuthState, { status: "connected" }> => ({

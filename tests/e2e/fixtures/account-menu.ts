@@ -1,12 +1,24 @@
-import type { Page } from "@playwright/test"
+import type { Locator, Page } from "@playwright/test"
 
 import type { Language } from "./look"
 
 const TRIGGER_NAME = { en: "Account", cy: "Cyfrif" } as const
 
+/** Opens the header's account menu (STY-056) and returns the menu. */
+export async function openAccountMenu(
+  page: Page,
+  language: Language = "en",
+): Promise<Locator> {
+  await page
+    .getByRole("banner")
+    .getByRole("button", { name: TRIGGER_NAME[language] })
+    .click()
+  return page.getByRole("menu")
+}
+
 /**
- * Chooses the item named `name` in the header's account menu (STY-056): the theme, and
- * the session's action, whose name follows the connection (Connect Google, Reconnect,
+ * Chooses the item named `name` in the header's account menu: the theme, and the
+ * session's action, whose name follows the connection (Connect Google, Reconnect,
  * Disconnect). `language` names the trigger; the caller gives the item's name.
  */
 export async function chooseFromAccountMenu(
@@ -14,11 +26,8 @@ export async function chooseFromAccountMenu(
   name: string,
   language: Language = "en",
 ): Promise<void> {
-  await page
-    .getByRole("banner")
-    .getByRole("button", { name: TRIGGER_NAME[language] })
-    .click()
-  await page.getByRole("menuitem", { name }).click()
+  const menu = await openAccountMenu(page, language)
+  await menu.getByRole("menuitem", { name }).click()
 }
 
 /** Disconnects from the header's account menu; it may ask about unpublished changes first. */

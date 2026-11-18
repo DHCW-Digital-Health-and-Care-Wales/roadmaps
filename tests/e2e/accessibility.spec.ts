@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright"
 import type { Page } from "@playwright/test"
 
+import { disconnectFromHeader } from "./fixtures/account-menu"
 import {
   addItem,
   addItemButtons,
@@ -29,7 +30,6 @@ import {
   refusal,
 } from "./fixtures/roadmap-page"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
-import { disconnectFromHeader } from "./fixtures/account-menu"
 
 const [header = []] = EXAMPLE_INDEX_ROWS
 

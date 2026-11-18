@@ -43,6 +43,8 @@ export function NavigationSidebar({
   const { t } = useTranslation()
   const FoldIcon = folded ? PanelLeftOpenIcon : PanelLeftCloseIcon
   return (
+    // `z-41`: above the pinned bars' `z-40`, so the half of the edge outside the sidebar
+    // is not covered by a bar.
     <div
       data-slot="navigation-sidebar"
       className="sticky top-0 z-41 flex h-svh w-(--navigation-width) shrink-0 flex-col self-start border-r border-sidebar-border bg-sidebar text-sidebar-foreground"

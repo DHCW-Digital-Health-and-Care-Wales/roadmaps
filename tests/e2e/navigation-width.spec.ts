@@ -40,6 +40,10 @@ const COPY = {
 const edge = (page: Page, language: Language = "en"): Locator =>
   page.getByRole("separator", { name: COPY[language].resize })
 
+function navigation(page: Page): Locator {
+  return page.getByRole("navigation", { name: COPY.en.navigation })
+}
+
 /** The navigation's width on the screen, and where the page and its pinned bars start. */
 async function widths(page: Page) {
   return page.evaluate(() => {
@@ -293,7 +297,3 @@ test.describe("under a finger", () => {
     expect(box.width).toBeGreaterThanOrEqual(24)
   })
 })
-
-function navigation(page: Page): Locator {
-  return page.getByRole("navigation", { name: COPY.en.navigation })
-}

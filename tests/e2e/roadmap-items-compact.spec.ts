@@ -54,6 +54,11 @@ const LONG_ITEM_TITLE = `A title longer than any line: ${words(30)}`
 
 const ITEMS = [
   { Title: "Someday", Horizon: "Soon", Description: "Not yet placed." },
+  {
+    Title: "Far off",
+    Horizon: "Sometime after the new financial year, once funded",
+    Description: "A horizon written long.",
+  },
   { Title: "Short", Description: "What this is, in a sentence." },
   { Title: "No description" },
   { Title: "Long description", Description: words(80), Phase: "Beta" },
@@ -111,8 +116,8 @@ test.describe("a desktop's row (S4)", () => {
 
       for (const row of await itemsOf(page).all()) {
         const line = await boxOf(row)
-        // One line: a row no taller than its controls and padding.
-        expect(line.height).toBeLessThanOrEqual(50)
+        // One line: a row no taller than its controls and padding, flagged or not.
+        expect(line.height).toBeLessThanOrEqual(49)
         expect(line.right).toBeLessThanOrEqual(right + 1)
         for (const name of [/^Move /, /^Edit /]) {
           const control = row.getByRole("button", { name })
@@ -151,7 +156,7 @@ test.describe("a desktop's row (S4)", () => {
     expect(
       Math.abs(flag.y + flag.height / 2 - (title.y + title.height / 2)),
     ).toBeLessThan(4)
-    expect((await boxOf(row)).height).toBeLessThanOrEqual(50)
+    expect((await boxOf(row)).height).toBeLessThanOrEqual(49)
   })
 
   for (const width of [768, 1024]) {
@@ -171,13 +176,19 @@ test.describe("a desktop's row (S4)", () => {
 
       const row = rowOf(page, "Someday")
       const line = await boxOf(row)
-      expect(line.height).toBeLessThanOrEqual(50)
+      expect(line.height).toBeLessThanOrEqual(49)
       // The flag gives way, cut, before the title does.
       const title = await boxOf(row.getByRole("heading"))
       expect(title.width).toBeGreaterThan(60)
       const flag = row.getByText("Dydy'r gorwel “Soon” ddim yn cael ei adnabod")
       await expect(flag).toHaveCSS("text-overflow", "ellipsis")
       await expect(row.getByText("Wedi newid")).toBeVisible()
+      // Opened, the flag shows whole.
+      await row.getByRole("button", { name: "Dangos gweddill Someday" }).click()
+      expect(
+        await flag.evaluate((text) => text.scrollWidth <= text.clientWidth),
+      ).toBe(true)
+      await expect(flag).not.toHaveCSS("text-overflow", "ellipsis")
       const edit = await boxOf(
         row.getByRole("button", { name: "Golygu Someday" }),
       )

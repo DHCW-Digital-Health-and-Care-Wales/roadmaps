@@ -33,12 +33,12 @@ export interface CompactItemRowProps {
  * in place, its title as a heading, then Move and Edit, always at the row's end. From
  * a tablet's width one line that never wraps (S4): the title, then the start of its
  * description in the room the title leaves, each cut with an ellipsis, then an
- * unplaced item's flag, cut to a quarter of the line, and the pending tag; each keeps
- * its whole text for assistive technology. Narrower, the title on the lines it needs, with no description, and the
- * flag and the tag under it (S5, D10).
+ * unplaced item's flag, cut within a quarter of the line, and the pending tag; each
+ * keeps its whole text for assistive technology. Narrower, the title on the lines it
+ * needs, with no description, and the flag and the tag under it (S5, D10).
  *
- * Opened, its title shows whole, then every field the item has, as a card labels and
- * cuts them (S6, S7), and `drop`. Each row opens and closes by itself; it starts closed,
+ * Opened, its title and its flag show whole, then every field the item has, as a card
+ * labels and cuts them (S6, S7), and `drop`. Each row opens and closes by itself; it starts closed,
  * as the view does when it is drawn again (D11). A list item, for a list of rows.
  */
 export function CompactItemRow({
@@ -108,12 +108,13 @@ export function CompactItemRow({
               )}
             </div>
             {horizon !== null && (
-              // Gives way before the title, which keeps three quarters of the line.
-              <div className="flex max-w-1/4 min-w-0 py-1">
-                <HorizonFlag writtenHorizon={horizon} cut />
+              // A quarter of the line at most, so the title keeps its room: cut on one
+              // line while the row is closed, wrapping once it is opened.
+              <div className="flex max-w-1/4 min-w-0">
+                <HorizonFlag writtenHorizon={horizon} cut={!open} />
               </div>
             )}
-            {tag && <div className="flex shrink-0 py-1">{tag}</div>}
+            {tag && <div className="flex shrink-0">{tag}</div>}
           </>
         ) : (
           <div className="flex min-w-0 flex-1 flex-col items-start gap-1.5 py-1">

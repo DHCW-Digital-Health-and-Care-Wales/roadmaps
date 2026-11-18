@@ -237,9 +237,10 @@ title's row the switch takes about 220px: at 768px a title is left about 220px.
 - **S2**: where the page has no placements to jump to (no items yet, or while they are
   read), "Compact view" sits alone at the end of the row of Add an item (agent).
 - **S4**: on a desktop's line an unplaced item's flag takes at most a quarter of the
-  line and is cut with an ellipsis where it runs past it, its whole text still read, so
-  a long Welsh flag beside a pending tag leaves the title its room; on a card, and on a
-  phone's row, it wraps as before (agent).
+  line and, while the row is closed, is cut with an ellipsis where it runs past it, its
+  whole text still read, so a long horizon, or a Welsh flag beside a pending tag, leaves
+  the title its room; opened, the flag wraps whole within its quarter. On a card, and on
+  a phone's row, it wraps as before (agent).
 - **S4, S5**: "a desktop" is the viewport's width from 768px (`TABLET_WIDTH`), as the top
   of the page's, not the list's room: beside the open navigation at 1024px the line is
   narrower, and still one line (agent, D13).
@@ -293,7 +294,7 @@ opened row's "Undo changes" and Remove dropped (three tests), a desktop's row wi
 description, the switch left out from 768px (19 tests); in Playwright, the view's change
 not realigning the page (S3) and a description not cut (S4); after review, the pressed
 view realigning later (S3) and the flag drawn whole in Welsh beside a Changed tag, which
-left the title no room (S4, two widths). The header's specs for
+left the title no room (S4, two widths); and the opened row's flag cut (S6). The header's specs for
 STY-059 S7, STY-060 S3 and STY-065 S1, S7 and S10 changed with D5: the switch before Add
 an item from 768px, and "Compact view" after "Jump to" narrower. The aria snapshots
 `detail` and `detail-not-published` gain the switch.

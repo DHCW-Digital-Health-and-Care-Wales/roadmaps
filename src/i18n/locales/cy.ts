@@ -68,6 +68,8 @@ export const cy = {
       closeMenu: "Cau'r ddewislen",
       fold: "Plygu'r llywio",
       unfold: "Agor y llywio",
+      resize: "Newid lled y llywio",
+      width: "{{width}} picsel o led",
       unpublished_zero: "Dim mapiau trywydd â newidiadau heb eu cyhoeddi",
       unpublished_one:
         "{{count, number}} map trywydd â newidiadau heb eu cyhoeddi",

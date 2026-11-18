@@ -5,7 +5,7 @@
   Close menu
 - **Type**: Feature
 - **Area**: Features/UI + i18n (en + cy) + E2E
-- **Epic**: [EPC-014-a-navigation-that-scales](../../EPC-014-a-navigation-that-scales/README.md)
+- **Epic**: [EPC-014-a-navigation-that-scales](README.md)
 - **Depends on**: none
 - **Binding ADRs**: ADR-010, ADR-008, ADR-005, ADR-002
 - **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/155

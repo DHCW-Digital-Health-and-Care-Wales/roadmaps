@@ -147,7 +147,7 @@ On 2026-11-18 the owner chose the chevrons as drawn (decision 2 (a)), accepted t
 count's change to STY-055 D5 (decision 9), and asked for the prototype to be delivered
 as drawn. The agent took option (a) of every other decision but the first, as the
 prototype draws it. For decision 1 the agent made
-[EPC-014 A navigation that scales](../backlog/EPC-014-a-navigation-that-scales/README.md)
+[EPC-014 A navigation that scales](../backlog/_archive/EPC-014-a-navigation-that-scales/README.md)
 of four stories, departing from (a) by giving the count's narrowing a story of its own,
 since it reopens STY-055 D5 and depends on both the search and closed families:
 
@@ -156,7 +156,7 @@ since it reopens STY-055 D5 and depends on both the search and closed families:
 | 6, 11, 12, 14, 15, 17, 18 | [STY-061](../backlog/_archive/EPC-014-a-navigation-that-scales/STY-061-find-a-roadmap-by-searching-the-navigation.md)      |
 | 2, 3, 4, 5, 7, 16         | [STY-062](../backlog/_archive/EPC-014-a-navigation-that-scales/STY-062-close-the-families-they-dont-need.md)               |
 | 8, 9, 10, 11, 12, 19      | [STY-063](../backlog/_archive/EPC-014-a-navigation-that-scales/STY-063-show-only-the-roadmaps-with-unpublished-changes.md) |
-| 4 (the width), 13         | [STY-064](../backlog/EPC-014-a-navigation-that-scales/STY-064-drag-the-navigation-to-the-width-they-want.md)               |
+| 4 (the width), 13         | [STY-064](../backlog/_archive/EPC-014-a-navigation-that-scales/STY-064-drag-the-navigation-to-the-width-they-want.md)      |
 
 _Not yet drawn_ is written into the stories' scenarios: Welsh (each story's last
 scenario), the navigation before the roadmaps are read (STY-061 S11), the drawer as a

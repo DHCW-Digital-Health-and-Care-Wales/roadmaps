@@ -80,6 +80,9 @@ export const en = {
       fold: "Fold the navigation",
       /** The same button while folded. */
       unfold: "Open the navigation",
+      /** The edge that sets the open navigation's width (STY-064): its name, and what it says it is. */
+      resize: "Resize the navigation",
+      width: "{{width}} pixels wide",
       /**
        * How many roadmaps have unpublished changes (STY-055): the navigation's count, the
        * list of them in the Disconnect question, and the menu button's name, which adds

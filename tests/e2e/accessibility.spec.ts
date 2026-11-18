@@ -440,7 +440,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
 
       // "Publish roadmap" on a phone, listing the new item that goes with it (STY-047).
       await addItem(page, "Choose a clinic closer to home", "Now")
-      // The new card is on screen, so the title row is stuck and has moved "Publish
+      // The new card is on screen, so the header is stuck and has moved "Publish
       // roadmap" into More: back at the top, it is a button again.
       await page.evaluate(() => {
         window.scrollTo(0, 0)

@@ -11,7 +11,7 @@ export interface AddItemButtonProps {
   /** The roadmap's items are not read, so none can be added to them yet. */
   disabled?: boolean
   /**
-   * An icon alone, still named "Add an item", as in a phone's stuck title row (STY-052
+   * An icon alone, still named "Add an item", as in a phone's stuck header (STY-052
    * D18).
    */
   compact?: boolean

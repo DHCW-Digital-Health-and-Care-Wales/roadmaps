@@ -54,7 +54,7 @@ export interface EditControlsProps {
    */
   editable?: boolean
   editButton: RefObject<HTMLButtonElement | null>
-  /** The buttons' size: `sm` on a card, as default; 40px beside About (STY-059 D6). */
+  /** `sm` (32px) by default, for a card; `default` (40px) beside About (STY-059 D6). */
   size?: "default" | "sm"
   /** A control between the drop button and Edit, such as an item's Move menu (STY-031). */
   move?: ReactNode

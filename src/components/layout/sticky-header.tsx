@@ -2,7 +2,7 @@ import { type ReactNode, useRef } from "react"
 
 import { cn } from "@/lib/utils"
 
-import { controlAfter, LEFT_OUT_SELECTOR } from "./left-out"
+import { leftOutFocus } from "./left-out"
 import { PageContainer } from "./page-container"
 import {
   useMeasuredHeight,
@@ -48,19 +48,17 @@ export function StickyHeader({ children }: StickyHeaderProps) {
         data-slot="sticky-header"
         data-stuck={stuck || undefined}
         onFocus={(event) => {
-          const part = stuck && event.target.closest(LEFT_OUT_SELECTOR)
-          if (!part) return
-          const from = event.relatedTarget
-          // Tabbed into from before it, as from the menu button: on to what it shows.
-          if (
-            from &&
-            part.compareDocumentPosition(from) &
-              Node.DOCUMENT_POSITION_PRECEDING
-          ) {
-            controlAfter(part, event.currentTarget)?.focus()
-            return
+          if (!stuck) return
+          const next = leftOutFocus(
+            event.target,
+            event.relatedTarget,
+            event.currentTarget,
+          )
+          if (next === "release") {
+            place.current?.scrollIntoView({ block: "start" })
+          } else {
+            next?.focus()
           }
-          place.current?.scrollIntoView({ block: "start" })
         }}
         className={cn(
           stuck &&

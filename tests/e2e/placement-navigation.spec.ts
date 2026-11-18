@@ -7,13 +7,15 @@ import type { Language } from "./fixtures/look"
 import {
   about,
   focusClearOfBars,
+  namesShownInStuckRow,
   openLongRoadmap,
   openRoadmapIn,
+  shownInStuckRow,
 } from "./fixtures/roadmap-page"
 import { expect, test } from "./fixtures/test"
 
 /**
- * STY-053: a roadmap's page reaches any placement from "Jump to" in its title row, or
+ * STY-053: a roadmap's page reaches any placement from "Jump to" in its header, or
  * from a row of links under "About this roadmap", each with its count and pending mark;
  * the page marks which placement it is in; and "About this roadmap" folds to one line.
  */
@@ -36,7 +38,7 @@ const COPY = {
   },
 } as const satisfies Record<Language, Record<string, string>>
 
-/** The title row's "Jump to", whatever placement it names. */
+/** The header's "Jump to", whatever placement it names. */
 function jumpTo(page: Page, language: Language = "en"): Locator {
   return page
     .getByRole("main")
@@ -105,7 +107,7 @@ for (const [device, size] of [
   ["a desktop", DESKTOP],
   ["a phone", PHONE],
 ] as const) {
-  test(`jumps to Later from "Jump to", its heading under the title row, focused, the address unchanged, on ${device} (S1, D8)`, async ({
+  test(`jumps to Later from "Jump to", its heading under the stuck row, focused, the address unchanged, on ${device} (S1, D8)`, async ({
     page,
     sheets,
   }) => {
@@ -118,7 +120,7 @@ for (const [device, size] of [
     const later = placementHeading(page, "Later")
     await expect(later).toBeFocused()
     expect(await focusClearOfBars(page)).toBeNull()
-    // Under the title row, not further down: Later's items are in view under it.
+    // Under the stuck row, not further down: Later's items are in view under it.
     const row = page.locator("[data-stuck]")
     const rowBottom = await row.evaluate(
       (element) => element.getBoundingClientRect().bottom,
@@ -135,7 +137,7 @@ for (const [device, size] of [
 test.describe("with reduced motion", () => {
   test.use({ reducedMotion: "reduce" })
 
-  test("jumps to a heading clear of the title row, as it sticks for the first time (S1)", async ({
+  test("jumps to a heading clear of the stuck row, as it sticks for the first time (S1)", async ({
     page,
     sheets,
   }) => {
@@ -201,7 +203,7 @@ test("marks the placement the page is in, to sight and to a screen reader, and n
   await openLongRoadmap(page, sheets)
   await expect(jumpTo(page)).toHaveAccessibleName("Jump to")
 
-  // Scrolled by hand: Next's heading just under the title row, as it sticks.
+  // Scrolled by hand: Next's heading just under the stuck row, as it sticks.
   await placementHeading(page, "Next").evaluate((heading) => {
     heading.scrollIntoView({ block: "start" })
   })
@@ -332,23 +334,9 @@ for (const { width, language, placement, publish } of [
       `${COPY[language].jumpTo}: ${placement}`,
     )
     const row = page.locator("[data-stuck]")
-    const buttons = row.getByRole("button")
-    // The row's buttons it shows: each the element its centre hits, not one of the
-    // parts it leaves out of sight (STY-059).
-    const shown = await buttons.evaluateAll((all) =>
-      all.flatMap((button, index) => {
-        const box = button.getBoundingClientRect()
-        const hit = document.elementFromPoint(
-          box.left + box.width / 2,
-          box.top + box.height / 2,
-        )
-        return hit !== null && button.contains(hit) ? [index] : []
-      }),
-    )
+    const shown = await shownInStuckRow(page)
     // Once stuck, More holds it (STY-059 D7).
-    const names = await Promise.all(
-      shown.map((index) => buttons.nth(index).innerText()),
-    )
+    const names = await namesShownInStuckRow(page)
     expect(names).toContain(COPY[language].more)
     expect(names).not.toContain(publish)
     await row
@@ -362,8 +350,7 @@ for (const { width, language, placement, publish } of [
 
     // The stuck row is `position: fixed`: a control past its edge never widens the
     // page, so the `scrollWidth` check below passes over it.
-    for (const index of shown) {
-      const control = buttons.nth(index)
+    for (const control of shown) {
       await expect(control, await control.innerText()).toBeInViewport({
         ratio: 1,
       })

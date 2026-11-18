@@ -249,3 +249,31 @@ export function aboutField(region: Locator, term: string): Locator {
     .filter({ hasText: term })
     .locator("xpath=following-sibling::dd[1]")
 }
+
+/**
+ * The buttons the stuck row shows, each the element its centre hits: not those of the
+ * parts it leaves out of sight, the facts, the Publish row and About (STY-059).
+ */
+export async function shownInStuckRow(page: Page): Promise<Locator[]> {
+  const buttons = page.locator("[data-stuck]").getByRole("button")
+  const shown = await buttons.evaluateAll((all) =>
+    all.flatMap((button, index) => {
+      const box = button.getBoundingClientRect()
+      const hit = document.elementFromPoint(
+        box.left + box.width / 2,
+        box.top + box.height / 2,
+      )
+      return hit !== null && button.contains(hit) ? [index] : []
+    }),
+  )
+  return shown.map((index) => buttons.nth(index))
+}
+
+/** The names of the buttons the stuck row shows (`shownInStuckRow`). */
+export async function namesShownInStuckRow(page: Page): Promise<string[]> {
+  return Promise.all(
+    (await shownInStuckRow(page)).map(
+      async (button) => (await button.textContent())?.trim() ?? "",
+    ),
+  )
+}

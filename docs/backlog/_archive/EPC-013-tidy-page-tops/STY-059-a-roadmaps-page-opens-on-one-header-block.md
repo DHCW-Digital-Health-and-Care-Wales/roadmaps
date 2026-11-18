@@ -166,9 +166,9 @@ facts on its line. The facts are shared with the list's card as `roadmaps.facts.
   Add an item, More, then `jumpTo` from 1024px, with `jumpTo` in a row of its own below.
   Stuck, the middle part takes `sr-only` and `LEFT_OUT` (`components/layout/left-out.ts`);
   STY-060 reshapes the stuck strip around the same three parts.
-- **`StickyHeader`**, while stuck, scrolls back to its place when focus lands in a
-  `LEFT_OUT` part from after it or from nowhere, and sends focus on past the part
-  (`controlAfter`) when it arrives from before it.
+- **`StickyHeader`**, while stuck, asks `leftOutFocus` (`left-out.ts`) where focus that
+  lands in a `LEFT_OUT` part goes: from after it or from nowhere, it scrolls back to its
+  place; from before it, focus goes on to the control past the part.
 - **More** holds "Publish roadmap" only once stuck, and "Unpublish roadmap" always, for a
   published roadmap.
 - **`EditControls`** takes `size` (`sm` by default; About's are 40px).
@@ -179,7 +179,8 @@ facts on its line. The facts are shared with the list's card as `roadmaps.facts.
 - **Test hooks**: `goToList` (both `testing/roadmap-page.ts` and
   `tests/e2e/fixtures/roadmap-page.ts`) goes back to the list by the header's home link;
   `openAbout` presses the disclosure; `roadmapFacts` finds the facts;
-  `openEditRoadmapDialog` (E2E) scrolls to the top first.
+  `openEditRoadmapDialog` (E2E) scrolls to the top first; `shownInStuckRow` and
+  `namesShownInStuckRow` (E2E) find the buttons the stuck row shows.
 - **Data source**: nothing written changes.
 
 ### Scenario evidence

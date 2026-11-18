@@ -10,12 +10,13 @@ import type { Language } from "./fixtures/look"
 import {
   focusClearOfBars,
   LEFT_THE_CONTENT,
+  namesShownInStuckRow,
   openLongRoadmap,
 } from "./fixtures/roadmap-page"
 import { expect, test } from "./fixtures/test"
 
 /**
- * STY-052: as a roadmap's page scrolls, its title row sticks at the top of the screen
+ * STY-052: as a roadmap's page scrolls, its header sticks at the top of the screen
  * and its pending changes pin at the foot; a publish's outcome shows there, and
  * nothing pinned hides what has focus. Where the screen is too short, nothing pins.
  */
@@ -45,26 +46,6 @@ async function editTitle(page: Page, from: string, language: Language = "en") {
   await form.getByRole("textbox", { name: copy.title }).fill(`${from}, edited`)
   await form.getByRole("button", { name: copy.done }).click()
   await expect(form).toBeHidden()
-}
-
-/** The text of each control the stuck row shows: not those it hides (STY-059 D7). */
-function shownInStuckRow(page: Page): Promise<string[]> {
-  return page
-    .locator("[data-stuck]")
-    .getByRole("button")
-    .evaluateAll((buttons) =>
-      buttons
-        // Shown: the button itself is what its centre hits, not a visually hidden one.
-        .filter((button) => {
-          const box = button.getBoundingClientRect()
-          const hit = document.elementFromPoint(
-            box.left + box.width / 2,
-            box.top + box.height / 2,
-          )
-          return hit !== null && button.contains(hit)
-        })
-        .map((button) => button.textContent.trim()),
-    )
 }
 
 /** Scrolls the placement heading `name` to the top of the page's content. */
@@ -301,7 +282,7 @@ test("moves Publish roadmap into More once the row sticks, at every width, where
 
   await scrollTo(page, "Later")
 
-  expect(await shownInStuckRow(page)).not.toContain("Publish roadmap")
+  expect(await namesShownInStuckRow(page)).not.toContain("Publish roadmap")
   await expect(addItem).toBeInViewport()
   await expect(addItem).toHaveCSS("width", "40px")
   await more.click()
@@ -311,7 +292,7 @@ test("moves Publish roadmap into More once the row sticks, at every width, where
   await page.setViewportSize(DESKTOP)
 
   await expect(page.locator("[data-stuck]")).toBeVisible()
-  expect(await shownInStuckRow(page)).not.toContain("Publish roadmap")
+  expect(await namesShownInStuckRow(page)).not.toContain("Publish roadmap")
   await expect(addItem).toHaveText("Add an item")
   await more.click()
   await expect(menuItems).toHaveText(["Refresh", "Publish roadmap"])

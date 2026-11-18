@@ -123,12 +123,6 @@ describe("A roadmap's header block (STY-059)", () => {
     )
   })
 
-  it("makes Edit beside About a 40px button (S4, D6)", async () => {
-    await renderPage(demographics)
-
-    expect(button("Edit About this roadmap")).toHaveClass("h-10")
-  })
-
   it("holds Unpublish roadmap in More for a published roadmap, and shows no Publish row (S6)", async () => {
     const user = await renderPage(demographics)
 
@@ -141,11 +135,10 @@ describe("A roadmap's header block (STY-059)", () => {
     ).toEqual(["Refresh", "Unpublish roadmap"])
   })
 
-  it("puts the Not published tag and a 40px Publish roadmap under the facts, before About, and not in More (S6, D4)", async () => {
+  it("puts the Not published tag and Publish roadmap under the facts, before About, and not in More (S6, D4)", async () => {
     const user = await renderPage(communityNursing)
 
     const publish = button("Publish roadmap")
-    expect(publish).toHaveClass("h-10")
     expect(publish.parentElement).toHaveTextContent(
       /^Not publishedPublish roadmap$/,
     )

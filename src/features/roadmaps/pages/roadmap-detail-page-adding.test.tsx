@@ -140,7 +140,7 @@ describe("“Add an item” on a roadmap's page (STY-046 S1)", () => {
     const buttons = addItemButtons()
     expect(buttons).toHaveLength(1)
     expect(buttons[0]).toHaveAttribute("aria-disabled", "false")
-    // In the title row, beside More.
+    // In the header, beside More.
     expect(buttons[0]?.parentElement).toBe(moreButton().parentElement)
   })
 

@@ -61,10 +61,11 @@ export interface RoadmapHeaderProps {
  * ellipsis, its full text still its name, "Jump to" cut where the row is still short of
  * room, and on a phone "Add an item" an icon (D18). Stuck, the facts, the Publish row
  * and `about` are visually hidden, never unmounted, so About keeps its state, and More
- * holds "Publish roadmap" at every width (STY-059 D7); a control among them reached by
- * Tab or a screen reader scrolls the page back to the top, so the block lets go and
- * shows it. The row starts with the shell's menu button, so the navigation is one press
- * away (STY-054 D8).
+ * holds "Publish roadmap" at every width (STY-059 D7). A control among them reached
+ * from after it, by Shift+Tab or a screen reader, scrolls the page back, so the block
+ * lets go and shows it; tabbed into from before, focus goes on past it (`LEFT_OUT`).
+ * The row starts with the shell's menu button, so the navigation is one press away
+ * (STY-054 D8).
  */
 export function RoadmapHeader({
   roadmap,
@@ -124,8 +125,8 @@ export function RoadmapHeader({
               )}
             </div>
             <div
-              // Stuck, out of sight but still reached by Tab or a screen reader, which
-              // lets the block go to show it in place.
+              // Stuck, out of sight but still reachable: from after it, the block lets
+              // go to show it in place; from before, Tab passes it by.
               className={cn("flex flex-col gap-1", stuck && "sr-only")}
               {...(stuck ? LEFT_OUT : {})}
             >

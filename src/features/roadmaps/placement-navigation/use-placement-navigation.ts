@@ -27,9 +27,9 @@ export interface PlacementNavigation {
   /** The page's jump targets in page order, with their counts and pending marks. */
   summaries: readonly JumpTargetSummary[]
   /**
-   * The target whose part of the page is at the top of the screen, under the pinned
-   * title row (S3): the one last jumped to while the page stays where the jump left it,
-   * and none above the first (D8).
+   * The target whose part of the page is at the top of the screen, under the stuck
+   * header (S3): the one last jumped to while the page stays where the jump left it, and
+   * none above the first (D8).
    */
   current: JumpTarget | null
   /** Scrolls `target`'s heading to the top of the screen and moves focus to it (S1). */
@@ -46,7 +46,7 @@ interface Jump {
  * The placement navigation of a page whose items `groups` holds, with `orders`, the
  * roadmap's pending orders (`summariseJumpTargets`). It follows which target the page
  * is in, and jumps to one. A jump changes no address (D8, ADR-004): it scrolls the
- * target's heading clear of the pinned title row and focuses it. The first jump can
+ * target's heading clear of the pinned header and focuses it. The first jump can
  * come before the row has ever stuck, when its height is not yet known: once it is,
  * the heading is aligned again, unless the page has scrolled since.
  */
@@ -93,7 +93,7 @@ export function usePlacementNavigation(
     }
   }, [targets, top])
 
-  // The title row's height is known, or has changed: the jump's heading goes under it.
+  // The stuck header's height is known, or has changed: the jump's heading goes under it.
   useLayoutEffect(() => {
     const jump = lastJump.current
     if (jump) lastJump.current = alignHeading(jump.target, top)

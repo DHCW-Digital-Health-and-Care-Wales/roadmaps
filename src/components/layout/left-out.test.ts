@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { controlAfter } from "./left-out"
+import { controlAfter, leftOutFocus } from "./left-out"
 
 function strip(html: string): HTMLElement {
   const container = document.createElement("div")
@@ -32,5 +32,28 @@ describe("controlAfter", () => {
     if (!part) throw new Error("No part")
 
     expect(controlAfter(part, container)).toBeUndefined()
+  })
+})
+
+describe("leftOutFocus", () => {
+  const container = strip(`
+    <button>Menu</button>
+    <div data-left-out=""><button>Edit</button></div>
+    <button>Add an item</button>
+  `)
+  const [menu, edit, add] = [...container.querySelectorAll("button")]
+  if (!menu || !edit || !add) throw new Error("Not built")
+
+  it("passes the part by, on to the next control, when focus comes from before it", () => {
+    expect(leftOutFocus(edit, menu, container)).toBe(add)
+  })
+
+  it("lets the header go when focus comes from after the part, or from nowhere", () => {
+    expect(leftOutFocus(edit, add, container)).toBe("release")
+    expect(leftOutFocus(edit, null, container)).toBe("release")
+  })
+
+  it("leaves focus outside a part alone", () => {
+    expect(leftOutFocus(add, menu, container)).toBeNull()
   })
 })

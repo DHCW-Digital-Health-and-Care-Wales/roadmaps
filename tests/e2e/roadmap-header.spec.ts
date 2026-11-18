@@ -22,7 +22,6 @@ const WIDTHS = [
 
 const COPY = {
   en: {
-    title: { ProductA: "Product A roadmap", ProductC: "Product C roadmap" },
     status: "Status:",
     edit: "Edit About this roadmap",
     addItem: "Add an item",
@@ -32,7 +31,6 @@ const COPY = {
     publish: "Publish roadmap",
   },
   cy: {
-    title: { ProductA: "Product A roadmap", ProductC: "Product C roadmap" },
     status: "Statws:",
     edit: "Golygu Ynglŷn â'r map trywydd hwn",
     addItem: "Ychwanegu eitem",

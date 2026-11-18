@@ -352,10 +352,9 @@ roadmaps.countWithUnpublished   $t(roadmaps.count, …), $t(roadmaps.unpublished
 it, so no card carries an empty label. A date is written out from the catalogue's month
 names (`formatCalendarDate`), never numerically.
 
-A fact whose value is a tag reads its label, a colon, then the tag
-(`roadmaps.facts.status`: "Status:"), so a status of "Beta" is not taken for the
-service's phase banner. A list of facts is named for what it holds ("Roadmap details"),
-not after a control beside it.
+A list of facts is named for what it holds ("Roadmap details"), not after a control
+beside it; a fact whose value is a tag leads with its label ("Status:"), so a status of
+"Beta" is not taken for the service's phase banner.
 
 ## Accessible names
 

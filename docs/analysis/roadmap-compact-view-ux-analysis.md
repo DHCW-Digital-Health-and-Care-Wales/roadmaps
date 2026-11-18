@@ -226,7 +226,7 @@ answered, which the agent took to draw the frames, and which are still open.
 On 2026-11-18, over seven replies, the owner chose the designs, answered the rows
 below and asked for the work to be written into the backlog. It is
 [EPC-016](../backlog/EPC-016-a-roadmaps-items-at-a-glance/README.md):
-[STY-066](../backlog/EPC-016-a-roadmaps-items-at-a-glance/STY-066-a-long-field-is-cut-after-three-lines.md)
+[STY-066](../backlog/_archive/EPC-016-a-roadmaps-items-at-a-glance/STY-066-a-long-field-is-cut-after-three-lines.md)
 for journey 3, and
 [STY-067](../backlog/EPC-016-a-roadmaps-items-at-a-glance/STY-067-a-compact-view-of-a-roadmaps-items.md)
 for journeys 1 and 2. No row is left open.

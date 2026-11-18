@@ -10,7 +10,7 @@ import { useLanguage } from "@/i18n"
 
 import { localiseDetails } from "../localise-details"
 import { shortNamesOf } from "../sort-organisations"
-import { DetailList } from "./detail-list"
+import { CutDetails, CutField } from "./cut-field"
 
 export interface RoadmapItemCardProps {
   item: RoadmapItem
@@ -32,7 +32,8 @@ const fieldLabels = {
 
 /**
  * A roadmap item as plain text (ADR-011): its title as a heading, then each field it has
- * under a label, with no empty labels. Text keeps its line breaks; its organisations
+ * under a label, with no empty labels, each cut after three lines with "Show more" to
+ * read the rest (STY-066). Text keeps its line breaks; its organisations
  * show by short name, the national one first (ADR-014); an unplaced item says what is
  * wrong with its horizon. A list item, for a list of items.
  */
@@ -44,28 +45,43 @@ export function RoadmapItemCard({
   const { t } = useTranslation()
   const language = useLanguage()
   const text = (value: LocalisedText) => localise(value, language)
+  const title = text(item.title)
 
-  const fields: { key: string; label: string; value: ReactNode }[] = []
-  const add = (key: keyof typeof fieldLabels, value: ReactNode) => {
-    fields.push({ key, label: t(fieldLabels[key]), value })
+  const fields: { key: keyof typeof fieldLabels; value: ReactNode }[] = []
+  /** What a button under a cut field says it shows more of, for assistive technology. */
+  const cutSubject = (key: keyof typeof fieldLabels) =>
+    t(`roadmaps.items.cut.of.${key}`, { item: title })
+  // A text, cut after three lines when it runs past them.
+  const addText = (key: keyof typeof fieldLabels, value: string) => {
+    fields.push({
+      key,
+      value: <CutField subject={cutSubject(key)}>{value}</CutField>,
+    })
   }
-  if (item.phase) add("phase", text(item.phase))
-  if (item.description) add("description", text(item.description))
-  if (item.expectedOutcome) add("expectedOutcome", text(item.expectedOutcome))
-  if (item.tags.length > 0) add("tags", item.tags.map(text).join(", "))
+  if (item.phase) addText("phase", text(item.phase))
+  if (item.description) addText("description", text(item.description))
+  if (item.expectedOutcome) {
+    addText("expectedOutcome", text(item.expectedOutcome))
+  }
+  if (item.tags.length > 0) addText("tags", item.tags.map(text).join(", "))
   const named = shortNamesOf(organisations, item.organisationIds, language)
-  if (named.length > 0) add("organisations", named.join(", "))
+  if (named.length > 0) addText("organisations", named.join(", "))
   if (item.details.length > 0) {
-    add(
-      "details",
-      <DetailList details={localiseDetails(item.details, language)} />,
-    )
+    fields.push({
+      key: "details",
+      value: (
+        <CutDetails
+          details={localiseDetails(item.details, language)}
+          subject={cutSubject("details")}
+        />
+      ),
+    })
   }
 
   return (
     <li className="flex flex-col gap-3 border bg-card p-4 text-card-foreground shadow-card-bar">
       <h3 className="text-heading-xs wrap-break-word whitespace-pre-line">
-        {text(item.title)}
+        {title}
       </h3>
       {item.writtenHorizon !== null && (
         <Badge variant="warning">
@@ -79,9 +95,9 @@ export function RoadmapItemCard({
       )}
       {fields.length > 0 && (
         <dl className="flex flex-col gap-2.5 text-body-xs">
-          {fields.map(({ key, label, value }) => (
+          {fields.map(({ key, value }) => (
             <div key={key} className="flex flex-col gap-0.5">
-              <dt className="font-bold">{label}</dt>
+              <dt className="font-bold">{t(fieldLabels[key])}</dt>
               <dd className="wrap-break-word whitespace-pre-line">{value}</dd>
             </div>
           ))}

@@ -68,6 +68,7 @@
                 - list:
                   - listitem: Use two dashes to nest it again
           - listitem: Another top-level bullet point
+        - button "Show more of the details of Example card with every column"
       - button "Move Example card with every column"
       - button "Edit Example card with every column"
     - listitem:

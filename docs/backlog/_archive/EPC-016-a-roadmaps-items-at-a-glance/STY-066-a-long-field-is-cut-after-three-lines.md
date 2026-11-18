@@ -1,14 +1,15 @@
 # STY-066: A Product Lead reads cards of a like height, however long an item's text
 
-- **Status**: Proposed — the owner asked for it, chose what is cut and answered both
+- **Status**: Done — the owner asked for it, chose what is cut and answered both
   questions on 2026-11-18
 - **Type**: Feature + Copy
 - **Area**: Features/UI + i18n (en + cy) + E2E
-- **Epic**: [EPC-016-a-roadmaps-items-at-a-glance](README.md)
+- **Epic**: [EPC-016-a-roadmaps-items-at-a-glance](../../EPC-016-a-roadmaps-items-at-a-glance/README.md)
 - **Depends on**: none
 - **Binding ADRs**: ADR-008, ADR-010, ADR-011
 - **Suggested model**: Sonnet — one component gains a cut that depends on measured
   height, with its copy and tests
+- **Delivered**: <PR URL>
 
 ## Summary
 
@@ -152,3 +153,64 @@ nothing of the pending state. Details are a nested list of up to three levels
 - The title, which stays whole.
 - The compact view's rows: STY-067, whose opened row shows these fields.
 - The public site, which shows the whole text.
+
+## Delivery
+
+### Departures
+
+- **S3, S4, S7**: a text field is cut by the browser's `line-clamp`; a list of details
+  is not, since Chrome ends the third line in an ellipsis even where a detail ends
+  there. The list is held to three lines by its height (`3lh`) and only the detail the
+  cut falls within is clamped, to the lines it has left, measured from each detail's
+  `scrollHeight` (agent: the way S3's second "And" is met).
+- **S3**: `DetailList` drops the 2px its nested lists had above them (`[&_ul]:mt-0.5`)
+  and draws each detail's text in a block of its own, `div[data-detail]`, wherever the
+  list is shown: three lines are three line heights only with no margin between them,
+  and a detail's lines are measured from its own block (agent; a 2px change to the
+  dialog's and the conflict review's lists).
+- **S6**: the control's name is its words, a space, then the field and item as visually
+  hidden text, "Show more of the description of First item"; two items with the same
+  title have controls of the same name (agent; the title is the item's only name).
+
+### Contract for dependents
+
+- **STY-067's opened row** shows a card's fields through `RoadmapItemCard`'s own cut, or
+  composes them from `CutField` (a text) and `CutDetails` (a list of details) in
+  `features/roadmaps/components/cut-field.tsx`: each takes the `subject` its control is
+  named for (`roadmaps.items.cut.of.<field>`, with `{{item}}`) and holds its own open
+  state, which ends with the component (D7).
+- **Catalogue keys**: `roadmaps.items.cut.more`, `.less` and `.of.<field>` (phase,
+  description, expectedOutcome, tags, organisations, details).
+- **Measure**: a field is cut when its content is more than three of its element's lines
+  tall (`scrollHeight`, so open or cut gives the same answer), read as the layout is
+  made and again when the element's width changes or the fonts are ready. The element's
+  own box is held at three lines, so its size never feeds back into the answer.
+- **Test hooks**: the control's accessible name, "Show more of the description of
+  <title>". Unit: jsdom lays nothing out, so `roadmap-item-card.test.tsx` gives the
+  lines (`drawLines`). E2E: `fixtures/long-fields.ts` (`withItems`, `openWithItems`,
+  `cardOf`, `fieldOf`, `linesOf`, `words`, `THREE_LINES_WIDE`).
+- **Data source**: nothing read or written changes.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                                                       |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `components/roadmap-item-card.test.tsx` (`cuts a description past three lines…`); `tests/e2e/roadmap-items-cut.spec.ts` (`a long description shows three lines…`, at 1280px and 375px)                                                                        |
+| S2       | `roadmap-item-card.test.tsx` (`cuts each long field apart from the others`); `roadmap-items-cut.spec.ts` (`a long expected outcome is cut on its own`)                                                                                                        |
+| S3       | `roadmap-items-cut.spec.ts` (`a list of details is cut at its third line, between details…`, `a detail the cut falls within ends in an ellipsis…`, `one detail that wraps past three lines…`); `roadmap-item-card.test.tsx` (`a card's long list of details`) |
+| S4       | `roadmap-item-card.test.tsx` (`shows the rest in place and cuts it again, focus staying on the control`); `roadmap-items-cut.spec.ts` (`a long description shows three lines, then opens in place and shuts`, `a list opens whole and cuts again`)            |
+| S5       | `roadmap-item-card.test.tsx` (`shows a short field whole…`); `roadmap-items-cut.spec.ts` (`a short field shows whole, with its line breaks`)                                                                                                                  |
+| S6       | `roadmap-item-card.test.tsx` (`names two items' controls apart`); `roadmap-items-cut.spec.ts` (`names each control for its field and item`)                                                                                                                   |
+| S7       | `roadmap-items-cut.spec.ts` (`the cut follows the card's width: the window and the navigation's fold`, `a field stays open until it is shut, however the page is resized`)                                                                                    |
+| S8       | `roadmap-items-cut.spec.ts` (`a pending change to a description is cut as it is, with its Changed tag`)                                                                                                                                                       |
+| S9       | `roadmap-item-card.test.tsx` (`says Show more and Show less in Welsh…`); `roadmap-items-cut.spec.ts` (`in Welsh at 375px`, `has no axe violation in the … theme at …px`); the button is a text link: `textLinkClasses`, `focus-visible:focus-link`            |
+
+Each unit test was shown red by breaking the finished code (the control's hidden
+subject removed, the control always drawn, no clamp on a text, the detail clamp ignoring
+where the cut falls) and green with the code restored; a Playwright test may follow the
+code. The S7 E2E test was shown red by never observing the element's width. The existing test of a card's
+details (`roadmap-detail-page-items.test.tsx`) reads each detail's text from its block.
+
+The example roadmap's first card has a list of details of more than three lines, so
+its aria snapshots in `structure.spec.ts-snapshots/` (`detail`, `edit-item-changed`) gain
+its "Show more of the details of …" button.

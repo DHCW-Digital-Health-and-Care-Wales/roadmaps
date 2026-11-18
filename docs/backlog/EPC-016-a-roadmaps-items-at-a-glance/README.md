@@ -2,7 +2,7 @@
 
 - **Status**: Active — two stories from the compact view UX analysis, with the owner's
   answers of 2026-11-18
-- **Progress**: 0 of 2 terminal; next selectable: STY-066; blocked on: nothing
+- **Progress**: 1 of 2 terminal (STY-066); next selectable: STY-067; blocked on: nothing
 - **Binding ADRs**: ADR-002, ADR-005, ADR-008, ADR-010, ADR-011
 
 ## Summary
@@ -87,10 +87,10 @@ the catalogue's own where it has one: "Move", "Edit", "Undo changes", "Remove",
 
 ## Stories
 
-| ID      | Story                                                                                                                              | Area                               | Depends on | State |
-| ------- | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ---------- | ----- |
-| STY-066 | [A Product Lead reads cards of a like height, however long an item's text](STY-066-a-long-field-is-cut-after-three-lines.md)       | Features/UI + i18n (en + cy) + E2E | —          |       |
-| STY-067 | [A Product Lead sees a roadmap's items as compact rows, and switches back to cards](STY-067-a-compact-view-of-a-roadmaps-items.md) | Features/UI + i18n (en + cy) + E2E | STY-066    |       |
+| ID      | Story                                                                                                                                                                         | Area                               | Depends on | State |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ---------- | ----- |
+| STY-066 | [A Product Lead reads cards of a like height, however long an item's text](../_archive/EPC-016-a-roadmaps-items-at-a-glance/STY-066-a-long-field-is-cut-after-three-lines.md) | Features/UI + i18n (en + cy) + E2E | —          | ✅    |
+| STY-067 | [A Product Lead sees a roadmap's items as compact rows, and switches back to cards](STY-067-a-compact-view-of-a-roadmaps-items.md)                                            | Features/UI + i18n (en + cy) + E2E | STY-066    |       |
 
 ## Sequencing
 

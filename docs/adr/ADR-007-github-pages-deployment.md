@@ -2,7 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-11-10 (amended in STY-008: artifact built by Verify, base-path guard, no CNAME,
-  SHA-pinned actions, Node 26; STY-009: vendor chunks)
+  SHA-pinned actions, Node 26; STY-009: vendor chunks; later: docs-only PRs run a Docs job)
 
 ## Decision
 
@@ -14,6 +14,10 @@
   `actions/deploy-pages`. Permissions: `contents: read` globally; `pages: write`,
   `id-token: write` on the deploy job only. `concurrency: pages` (no cancel-in-progress
   for deploys). Details in the STY-008 amendments below.
+- A pull request whose changed files are all Markdown or under `docs/` runs a `docs` job
+  (format check and the Markdown tests) instead of `verify` and `e2e`; a `changes` job
+  decides. Pushes to `main` and manual runs always run the full suite, so every deploy
+  is fully checked.
 - Vite `base` resolution, in order: explicit `VITE_BASE_PATH`; else `/` if the
   `PAGES_CUSTOM_DOMAIN` repository variable is set (a custom domain); else derived from
   `GITHUB_REPOSITORY` (`owner/owner.github.io` -> `/`, otherwise `/<repo>/`); else `/`.

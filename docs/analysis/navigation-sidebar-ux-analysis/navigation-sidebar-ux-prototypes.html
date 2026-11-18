@@ -1,0 +1,2548 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Navigation prototype</title>
+    <style>
+      /* The review page's own chrome. It sets no background, so it sits on whatever
+         shows it; each design draws inside a .stage that has its own. */
+      html,
+      body {
+        margin: 0;
+      }
+      /* Wide enough for the shell at 1280px on its stage;
+         the prose keeps a reading measure. */
+      .page {
+        max-width: 1360px;
+        margin: 0 auto;
+        padding: 8px 16px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        font-family: system-ui, "Segoe UI", Arial, sans-serif;
+        font-size: 15px;
+        line-height: 1.5;
+      }
+      .page * {
+        box-sizing: border-box;
+      }
+      .page h1 {
+        margin: 0;
+        font-size: 20px;
+        line-height: 1.3;
+      }
+      /* The chrome's rules name the chrome's own elements, never a bare p or ol:
+         a design's markup sits inside .page too. */
+      .intro > *,
+      .page figure > p {
+        max-width: 728px;
+      }
+      .intro p,
+      .intro ol,
+      .page figure > p,
+      .page pre {
+        margin: 0;
+      }
+      .intro,
+      .page figure {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin: 0;
+        min-width: 0;
+      }
+      .intro ol {
+        padding-left: 22px;
+      }
+      .page summary {
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .page details > :not(summary) {
+        margin-top: 8px;
+      }
+      .page pre {
+        font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+        font-size: 13px;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        border-left: 3px solid currentColor;
+        padding-left: 10px;
+      }
+      .controls,
+      .controls > div,
+      .caption {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        align-items: center;
+      }
+      .caption {
+        justify-content: space-between;
+      }
+      .seg {
+        display: inline-flex;
+        flex-wrap: wrap;
+        border: 1px solid currentColor;
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .seg button,
+      .again {
+        appearance: none;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        padding: 5px 10px;
+        cursor: pointer;
+      }
+      .seg button[aria-pressed="true"] {
+        background: #1b365d;
+        color: #fff;
+      }
+      .again {
+        border: 1px solid currentColor;
+        border-radius: 6px;
+        font-size: 13px;
+        padding: 3px 9px;
+      }
+      .caption h2 {
+        margin: 0;
+        font-size: 17px;
+        line-height: 1.3;
+      }
+      .sr {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+      }
+
+      /* The review chrome, written here by scripts/component-page.mjs from
+         assets/review-chrome.css: the bar of designs and the Options panel. */
+      /* The review page's chrome, shared by both shapes and built by
+   review-chrome.js: a one-line bar of links to every journey and design, and a
+   floating panel holding the page's .controls. It draws in system colours, so
+   it reads on any page and never on a design's tokens.
+   Under automation, or with ?capture in the URL, both sit in the page's flow,
+   so they neither cover a design in a screenshot nor intercept a click. */
+      .review-bar {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        display: flex;
+        gap: 4px;
+        align-items: center;
+        overflow-x: auto;
+        white-space: nowrap;
+        scrollbar-width: thin;
+        padding: 6px 12px;
+        border-bottom: 1px solid GrayText;
+        background: Canvas;
+        color: CanvasText;
+        font:
+          13px/1.4 system-ui,
+          "Segoe UI",
+          Arial,
+          sans-serif;
+      }
+      .review-bar a {
+        flex: none;
+        color: LinkText;
+        text-decoration: none;
+      }
+      .review-bar a:hover {
+        text-decoration: underline;
+      }
+      .review-bar .review-group {
+        display: inline-flex;
+        flex: none;
+        gap: 3px;
+        align-items: center;
+      }
+      .review-bar .review-group + .review-group {
+        margin-left: 10px;
+        padding-left: 10px;
+        border-left: 1px solid GrayText;
+      }
+      .review-bar .review-journey {
+        max-width: 28ch;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-right: 3px;
+        font-weight: 600;
+        color: CanvasText;
+      }
+      .review-bar .review-design {
+        min-width: 22px;
+        max-width: 16ch;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 0 5px;
+        border: 1px solid currentColor;
+        border-radius: 4px;
+        text-align: center;
+      }
+      .review-bar .review-design[aria-current="location"] {
+        background: LinkText;
+        color: Canvas;
+      }
+      .review-bar a:focus-visible,
+      .review-options button:focus-visible {
+        outline: 3px solid Highlight;
+        outline-offset: 1px;
+      }
+
+      .review-options {
+        position: fixed;
+        right: 12px;
+        bottom: 12px;
+        z-index: 30;
+        display: flex;
+        flex-direction: column-reverse;
+        align-items: flex-end;
+        gap: 6px;
+        max-width: calc(100% - 24px);
+        font:
+          15px/1.5 system-ui,
+          "Segoe UI",
+          Arial,
+          sans-serif;
+        color: CanvasText;
+      }
+      .review-options > .review-options-toggle {
+        appearance: none;
+        padding: 4px 12px;
+        border: 1px solid GrayText;
+        border-radius: 999px;
+        background: Canvas;
+        color: CanvasText;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgb(0 0 0 / 0.25);
+        cursor: pointer;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .review-options > .review-options-body {
+        max-width: 640px;
+        max-height: 50vh;
+        overflow: auto;
+        padding: 10px 12px;
+        border: 1px solid GrayText;
+        border-radius: 8px;
+        background: Canvas;
+        box-shadow: 0 4px 16px rgb(0 0 0 / 0.25);
+      }
+      .review-options .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        align-items: center;
+      }
+      .review-options > .review-options-body[hidden] {
+        display: none;
+      }
+
+      /* Room below the last design, so the pill never covers its end. */
+      .review-floating body {
+        padding-bottom: 56px;
+      }
+
+      @media (max-width: 639px) {
+        .review-bar .review-journey {
+          max-width: 18ch;
+        }
+        .review-options > .review-options-body {
+          max-height: 40vh;
+        }
+      }
+
+      .review-inline .review-bar {
+        position: static;
+      }
+      .review-inline .review-options {
+        display: none;
+      }
+
+      @media print {
+        .review-bar,
+        .review-options {
+          display: none;
+        }
+      }
+
+      /* The app's theme, written here by scripts/component-page.mjs from
+         src/styles/globals.css: every token under its own name, on each stage. */
+      .stage {
+        --nhsw-primary-text-colour: #212b32;
+        --nhsw-secondary-text-colour: #4c6272;
+        --nhsw-exceptional-text-colour: #ffffff;
+        --nhsw-link-colour: #005aa8;
+        --nhsw-link-hover-colour: #7c2855;
+        --nhsw-primary-button: #1b365d;
+        --nhsw-primary-button-shadow: #0e1b2f;
+        --nhsw-colour-button-primary-hover: #32598a;
+        --nhsw-delete-button: #d5281b;
+        --nhsw-colour-button-delete-hover: #902419;
+        --nhsw-page-background-white: #ffffff;
+        --nhsw-page-background-grey: #f0f4f5;
+        --nhsw-page-background-blue: #1b365d;
+        --nhsw-secondary-border-colour: #4c6272;
+        --nhsw-grey-border-colour: #d8dde0;
+        --nhsw-colour-choice-hover-ring: #afb8bf;
+        --nhsw-focus-colour: #ffeb3b;
+        --nhsw-focus-text-colour: #212b32;
+        --nhsw-tag-grey-background: #dbe0e3;
+        --nhsw-tag-grey-ink: #354550;
+        --nhsw-tag-blue-background: #ccdff1;
+        --nhsw-tag-blue-ink: #004281;
+        --nhsw-tag-green-background: #cce5d8;
+        --nhsw-tag-green-ink: #004c23;
+        --nhsw-tag-yellow-background: #fff59d;
+        --nhsw-tag-yellow-ink: #4d4712;
+        --nhsw-tag-red-background: #f7d4d1;
+        --nhsw-tag-red-ink: #6b140e;
+        --nhsw-tag-pink-background: #efd3e3;
+        --nhsw-dashboard-nav-active: #0056b3;
+        --nhsw-dashboard-nav-divider: rgba(255, 255, 255, 0.2);
+        --nhsw-date-picker-dialog-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        --nhsw-timeout-modal-backdrop: rgba(11, 12, 12, 0.6);
+        --nhsw-font-family-base: Roboto, Arial, sans-serif;
+        --nhsw-font-weight-bold: 700;
+        --nhsw-font-size-h1-mobile: 2rem;
+        --nhsw-line-height-h1-mobile: 2.375rem;
+        --nhsw-font-size-h2-mobile: 1.6875rem;
+        --nhsw-line-height-h2-mobile: 2.0625rem;
+        --nhsw-font-size-h3-mobile: 1.375rem;
+        --nhsw-line-height-h3-mobile: 1.8125rem;
+        --nhsw-font-size-h4-mobile: 1.1875rem;
+        --nhsw-line-height-h4-mobile: 1.6875rem;
+        --nhsw-font-size-h5-mobile: 1rem;
+        --nhsw-line-height-h5-mobile: 1.5rem;
+        --nhsw-font-size-body-mobile: 1rem;
+        --nhsw-line-height-body-mobile: 1.5rem;
+        --nhsw-font-size-body-extra-small: 0.875rem;
+        --nhsw-line-height-body-extra-small: 1.25rem;
+        --nhsw-border-radius: 4px;
+      }
+      .stage {
+        --app-dark-surface: #13233c;
+        --app-dark-link: #8ab8e6;
+        --app-dark-destructive: #f0857a;
+      }
+      .stage {
+        color-scheme: light;
+        --background: var(--nhsw-page-background-white);
+        --foreground: var(--nhsw-primary-text-colour);
+        --card: var(--nhsw-page-background-white);
+        --card-foreground: var(--nhsw-primary-text-colour);
+        --popover: var(--nhsw-page-background-white);
+        --popover-foreground: var(--nhsw-primary-text-colour);
+        --primary: var(--nhsw-primary-button);
+        --primary-foreground: var(--nhsw-exceptional-text-colour);
+        --primary-hover: var(--nhsw-colour-button-primary-hover);
+        --secondary: var(--nhsw-page-background-grey);
+        --secondary-foreground: var(--nhsw-primary-text-colour);
+        --secondary-hover: var(--nhsw-tag-grey-background);
+        --muted: var(--nhsw-page-background-grey);
+        --muted-foreground: var(--nhsw-secondary-text-colour);
+        --accent: var(--nhsw-page-background-grey);
+        --accent-foreground: var(--nhsw-primary-text-colour);
+        --destructive: var(--nhsw-delete-button);
+        --destructive-fill: var(--nhsw-delete-button);
+        --destructive-foreground: var(--nhsw-exceptional-text-colour);
+        --destructive-hover: var(--nhsw-colour-button-delete-hover);
+        --border: var(--nhsw-grey-border-colour);
+        --input: var(--nhsw-secondary-border-colour);
+        --ring: var(--focus);
+        --radius: var(--nhsw-border-radius);
+        --link: var(--nhsw-link-colour);
+        --link-hover: var(--nhsw-link-hover-colour);
+        --focus: var(--nhsw-focus-colour);
+        --focus-foreground: var(--nhsw-focus-text-colour);
+        --control-shadow: var(--nhsw-primary-button-shadow);
+        --popup-shadow: var(--nhsw-date-picker-dialog-shadow);
+        --overlay: var(--nhsw-timeout-modal-backdrop);
+        --status-neutral-bg: var(--nhsw-tag-grey-background);
+        --status-neutral-fg: var(--nhsw-tag-grey-ink);
+        --status-neutral-border: var(--nhsw-tag-grey-ink);
+        --status-info-bg: var(--nhsw-tag-blue-background);
+        --status-info-fg: var(--nhsw-tag-blue-ink);
+        --status-info-border: var(--nhsw-tag-blue-ink);
+        --status-success-bg: var(--nhsw-tag-green-background);
+        --status-success-fg: var(--nhsw-tag-green-ink);
+        --status-success-border: var(--nhsw-tag-green-ink);
+        --status-warning-bg: var(--nhsw-tag-yellow-background);
+        --status-warning-fg: var(--nhsw-tag-yellow-ink);
+        --status-warning-border: var(--nhsw-tag-yellow-ink);
+        --status-danger-bg: var(--nhsw-tag-red-background);
+        --status-danger-fg: var(--nhsw-tag-red-ink);
+        --status-danger-border: var(--nhsw-tag-red-ink);
+        --header: var(--nhsw-page-background-blue);
+        --header-foreground: var(--nhsw-exceptional-text-colour);
+        --header-hover: var(--nhsw-colour-button-primary-hover);
+        --header-border: var(--nhsw-grey-border-colour);
+        --sidebar: var(--nhsw-page-background-blue);
+        --sidebar-foreground: var(--nhsw-exceptional-text-colour);
+        --sidebar-primary: var(--nhsw-exceptional-text-colour);
+        --sidebar-primary-foreground: var(--nhsw-page-background-blue);
+        --sidebar-accent: var(--nhsw-dashboard-nav-active);
+        --sidebar-accent-foreground: var(--nhsw-exceptional-text-colour);
+        --sidebar-border: var(--nhsw-dashboard-nav-divider);
+        --sidebar-ring: var(--focus);
+      }
+      .stage.dark {
+        color-scheme: dark;
+        --background: var(--nhsw-primary-button-shadow);
+        --foreground: var(--nhsw-page-background-grey);
+        --card: var(--app-dark-surface);
+        --card-foreground: var(--nhsw-page-background-grey);
+        --popover: var(--app-dark-surface);
+        --popover-foreground: var(--nhsw-page-background-grey);
+        --primary: var(--nhsw-colour-button-primary-hover);
+        --primary-foreground: var(--nhsw-exceptional-text-colour);
+        --primary-hover: var(--nhsw-primary-button);
+        --secondary: var(--nhsw-page-background-blue);
+        --secondary-foreground: var(--nhsw-page-background-grey);
+        --secondary-hover: var(--nhsw-colour-button-primary-hover);
+        --muted: var(--nhsw-page-background-blue);
+        --muted-foreground: var(--nhsw-colour-choice-hover-ring);
+        --accent: var(--nhsw-page-background-blue);
+        --accent-foreground: var(--nhsw-page-background-grey);
+        --destructive: var(--app-dark-destructive);
+        --border: var(--nhsw-secondary-border-colour);
+        --input: var(--nhsw-colour-choice-hover-ring);
+        --link: var(--app-dark-link);
+        --link-hover: var(--nhsw-tag-pink-background);
+        --control-shadow: var(--nhsw-secondary-border-colour);
+        --status-neutral-bg: var(--nhsw-tag-grey-ink);
+        --status-neutral-fg: var(--nhsw-tag-grey-background);
+        --status-neutral-border: var(--nhsw-tag-grey-background);
+        --status-info-bg: var(--nhsw-tag-blue-ink);
+        --status-info-fg: var(--nhsw-tag-blue-background);
+        --status-info-border: var(--nhsw-tag-blue-background);
+        --status-success-bg: var(--nhsw-tag-green-ink);
+        --status-success-fg: var(--nhsw-tag-green-background);
+        --status-success-border: var(--nhsw-tag-green-background);
+        --status-warning-bg: var(--nhsw-tag-yellow-ink);
+        --status-warning-fg: var(--nhsw-tag-yellow-background);
+        --status-warning-border: var(--nhsw-tag-yellow-background);
+        --status-danger-bg: var(--nhsw-tag-red-ink);
+        --status-danger-fg: var(--nhsw-tag-red-background);
+        --status-danger-border: var(--nhsw-tag-red-background);
+      }
+      .stage {
+        --font-sans: "Roboto Variable", var(--nhsw-font-family-base);
+        --font-heading: var(--font-sans);
+        --text-heading-xl: var(--nhsw-font-size-h1-mobile);
+        --text-heading-xl--line-height: var(--nhsw-line-height-h1-mobile);
+        --text-heading-xl--font-weight: var(--nhsw-font-weight-bold);
+        --text-heading-l: var(--nhsw-font-size-h2-mobile);
+        --text-heading-l--line-height: var(--nhsw-line-height-h2-mobile);
+        --text-heading-l--font-weight: var(--nhsw-font-weight-bold);
+        --text-heading-m: var(--nhsw-font-size-h3-mobile);
+        --text-heading-m--line-height: var(--nhsw-line-height-h3-mobile);
+        --text-heading-m--font-weight: var(--nhsw-font-weight-bold);
+        --text-heading-s: var(--nhsw-font-size-h4-mobile);
+        --text-heading-s--line-height: var(--nhsw-line-height-h4-mobile);
+        --text-heading-s--font-weight: var(--nhsw-font-weight-bold);
+        --text-heading-xs: var(--nhsw-font-size-h5-mobile);
+        --text-heading-xs--line-height: var(--nhsw-line-height-h5-mobile);
+        --text-heading-xs--font-weight: var(--nhsw-font-weight-bold);
+        --text-body: var(--nhsw-font-size-body-mobile);
+        --text-body--line-height: var(--nhsw-line-height-body-mobile);
+        --text-body-xs: var(--nhsw-font-size-body-extra-small);
+        --text-body-xs--line-height: var(--nhsw-line-height-body-extra-small);
+        --shadow-control: 0 2px 0 var(--control-shadow);
+        --shadow-control-edge: 0 2px 0 var(--input);
+        --shadow-card-bar: 0 4px 0 var(--border);
+        --shadow-popup: var(--popup-shadow);
+        --color-background: var(--background);
+        --color-foreground: var(--foreground);
+        --color-card: var(--card);
+        --color-card-foreground: var(--card-foreground);
+        --color-popover: var(--popover);
+        --color-popover-foreground: var(--popover-foreground);
+        --color-primary: var(--primary);
+        --color-primary-foreground: var(--primary-foreground);
+        --color-primary-hover: var(--primary-hover);
+        --color-secondary: var(--secondary);
+        --color-secondary-foreground: var(--secondary-foreground);
+        --color-secondary-hover: var(--secondary-hover);
+        --color-muted: var(--muted);
+        --color-muted-foreground: var(--muted-foreground);
+        --color-accent: var(--accent);
+        --color-accent-foreground: var(--accent-foreground);
+        --color-destructive: var(--destructive);
+        --color-destructive-fill: var(--destructive-fill);
+        --color-destructive-foreground: var(--destructive-foreground);
+        --color-destructive-hover: var(--destructive-hover);
+        --color-border: var(--border);
+        --color-input: var(--input);
+        --color-ring: var(--ring);
+        --color-overlay: var(--overlay);
+        --color-link: var(--link);
+        --color-link-hover: var(--link-hover);
+        --color-focus: var(--focus);
+        --color-focus-foreground: var(--focus-foreground);
+        --color-status-neutral-bg: var(--status-neutral-bg);
+        --color-status-neutral-fg: var(--status-neutral-fg);
+        --color-status-neutral-border: var(--status-neutral-border);
+        --color-status-info-bg: var(--status-info-bg);
+        --color-status-info-fg: var(--status-info-fg);
+        --color-status-info-border: var(--status-info-border);
+        --color-status-success-bg: var(--status-success-bg);
+        --color-status-success-fg: var(--status-success-fg);
+        --color-status-success-border: var(--status-success-border);
+        --color-status-warning-bg: var(--status-warning-bg);
+        --color-status-warning-fg: var(--status-warning-fg);
+        --color-status-warning-border: var(--status-warning-border);
+        --color-status-danger-bg: var(--status-danger-bg);
+        --color-status-danger-fg: var(--status-danger-fg);
+        --color-status-danger-border: var(--status-danger-border);
+        --color-header: var(--header);
+        --color-header-foreground: var(--header-foreground);
+        --color-header-hover: var(--header-hover);
+        --color-header-border: var(--header-border);
+        --color-sidebar: var(--sidebar);
+        --color-sidebar-foreground: var(--sidebar-foreground);
+        --color-sidebar-primary: var(--sidebar-primary);
+        --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+        --color-sidebar-accent: var(--sidebar-accent);
+        --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+        --color-sidebar-border: var(--sidebar-border);
+        --color-sidebar-ring: var(--sidebar-ring);
+        --radius-sm: calc(var(--radius) * 0.6);
+        --radius-md: calc(var(--radius) * 0.8);
+        --radius-lg: var(--radius);
+        --radius-xl: calc(var(--radius) * 1.4);
+        --radius-2xl: calc(var(--radius) * 1.8);
+        --radius-3xl: calc(var(--radius) * 2.2);
+        --radius-4xl: calc(var(--radius) * 2.6);
+      }
+
+      /* A stage is the app's page behind the host. The host keeps the width the
+         Screen switch gives it: a stage too narrow for it scrolls sideways. */
+      .stage {
+        display: flex;
+        overflow-x: auto;
+        padding: 16px;
+        border: 1px solid var(--border);
+        background: var(--background);
+        color: var(--foreground);
+        font-family: var(--font-sans);
+        font-size: var(--text-body);
+        line-height: var(--text-body--line-height);
+      }
+      .host {
+        position: relative;
+        flex: none;
+        width: var(--host-w, 1280px);
+        margin-inline: auto;
+      }
+      /* On a phone the stage runs edge to edge, so a 375px phone draws the
+         shell as the app does. */
+      @media (max-width: 639px) {
+        .stage {
+          margin-inline: -16px;
+          border-inline: 0;
+          padding-inline: 0;
+        }
+      }
+
+      /* The app's controls, drawn as the app draws them and named as
+         assets/mock.css names them. */
+      .inp {
+        width: 100%;
+        min-height: 40px;
+        padding: 8px;
+        border: 2px solid var(--input);
+        border-radius: 0;
+        background: var(--background);
+        color: var(--foreground);
+        font: inherit;
+      }
+      .inp:focus-visible {
+        outline: 3px solid var(--focus);
+        outline-offset: 0;
+        border-color: var(--focus-foreground);
+        box-shadow: inset 0 0 0 2px var(--focus-foreground);
+      }
+      /* The secondary button; .p is the primary. */
+      .btn {
+        appearance: none;
+        height: 40px;
+        padding: 0 16px;
+        border: 1px solid var(--input);
+        border-radius: var(--radius);
+        background: var(--background);
+        color: var(--foreground);
+        font: inherit;
+        font-weight: 700;
+        box-shadow: var(--shadow-control-edge);
+        cursor: pointer;
+      }
+      .btn:hover {
+        background: var(--muted);
+      }
+      .btn.p {
+        border-color: var(--primary);
+        background: var(--primary);
+        color: var(--primary-foreground);
+        box-shadow: var(--shadow-control);
+      }
+      .btn.p:hover {
+        background: var(--primary-hover);
+      }
+      .btn:focus-visible {
+        outline: 3px solid transparent;
+        outline-offset: 0;
+        border-color: transparent;
+        background: var(--focus);
+        color: var(--focus-foreground);
+        box-shadow: 0 2px 0 var(--focus-foreground);
+      }
+
+      /* ---- The host: the app's shell, its navigation and a page beside it ---- */
+      .shell {
+        position: relative;
+        display: flex;
+        height: 640px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        background: var(--background);
+      }
+      .shell svg {
+        flex: none;
+        width: 20px;
+        height: 20px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .nav {
+        position: relative;
+        flex: none;
+        display: flex;
+        flex-direction: column;
+        width: var(--nav-w, 256px);
+        border-right: 1px solid var(--sidebar-border);
+        background: var(--sidebar);
+        color: var(--sidebar-foreground);
+      }
+      .nav.rail {
+        width: 64px;
+      }
+      /* The top row stays in place as the list scrolls under it. */
+      .nav-top {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        padding: 12px 8px 8px;
+      }
+      .rail .nav-top {
+        flex-direction: column;
+      }
+      .nav-list {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 4px 8px 16px;
+      }
+      /* Folded, the rail still scrolls by wheel, touch and focus, but shows
+         no scrollbar: in 64px one would take a third of the marks' room. */
+      .rail .nav-list {
+        scrollbar-width: none;
+      }
+      .rail .nav-list::-webkit-scrollbar {
+        display: none;
+      }
+      .nav ul {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .nav ul.foot {
+        border-top: 1px solid var(--sidebar-border);
+        padding-top: 12px;
+      }
+
+      /* The header's icon button on navy (variant "header", size "icon"). */
+      .hbtn {
+        appearance: none;
+        flex: none;
+        display: inline-grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        border: 1px solid var(--header-border);
+        border-radius: var(--radius);
+        background: transparent;
+        color: var(--header-foreground);
+        cursor: pointer;
+      }
+      .hbtn:hover,
+      .hbtn[aria-expanded="true"] {
+        background: var(--header-hover);
+      }
+      .hbtn:focus-visible,
+      .entry:focus-visible,
+      .fam-toggle:focus-visible,
+      .fam-all button:focus-visible,
+      .clear:focus-visible {
+        outline: 3px solid transparent;
+        border-color: transparent;
+        background: var(--focus);
+        color: var(--focus-foreground);
+        box-shadow: 0 2px 0 var(--focus-foreground);
+      }
+
+      /* The search: the app's input, on navy, with its icon and a clear button. */
+      .search {
+        position: relative;
+        flex: 1;
+        min-width: 0;
+        margin: 0;
+      }
+      .search .inp {
+        height: 40px;
+        min-height: 40px;
+        padding-inline: 34px;
+      }
+      .search .inp::-webkit-search-cancel-button {
+        display: none;
+      }
+      .search > svg {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        width: 18px;
+        height: 18px;
+        color: var(--muted-foreground);
+        pointer-events: none;
+      }
+      .clear {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        display: grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border: 0;
+        border-radius: var(--radius);
+        background: transparent;
+        color: var(--foreground);
+        cursor: pointer;
+      }
+      .clear:hover {
+        background: var(--muted);
+      }
+      .clear svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      /* A destination: a link, the count's button, or the count's text. */
+      .nav li {
+        border-radius: var(--radius-lg, 8px);
+      }
+      .nav li:has([aria-current="page"]),
+      .nav li:has([aria-pressed="true"]) {
+        background: var(--sidebar-accent);
+      }
+      .entry {
+        position: relative;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        width: 100%;
+        min-height: 40px;
+        padding: 8px;
+        border: 0;
+        border-radius: var(--radius-lg, 8px);
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        text-align: start;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      span.entry {
+        cursor: default;
+      }
+      a.entry:hover,
+      button.entry:hover {
+        background: var(--sidebar-accent);
+      }
+      .entry[aria-current="page"] {
+        font-weight: 700;
+      }
+      .entry .name {
+        min-width: 0;
+        overflow-wrap: break-word;
+      }
+      .entry .end {
+        margin-inline-start: auto;
+      }
+      .entry .end svg {
+        width: 16px;
+        height: 16px;
+      }
+      .rail .entry {
+        justify-content: center;
+        padding-inline: 4px;
+      }
+      .entry mark {
+        background: transparent;
+        color: inherit;
+        text-decoration: underline;
+        text-decoration-thickness: 2px;
+        text-underline-offset: 3px;
+      }
+      .dot {
+        flex: none;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--focus);
+      }
+      .entry:focus-visible .dot,
+      .fam-toggle:focus-visible .dot {
+        background: var(--focus-foreground);
+      }
+      .rail .entry .dot.corner {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+      }
+      .swatch {
+        flex: none;
+        width: 6px;
+        height: 20px;
+        border: 1px solid var(--sidebar-foreground);
+        border-radius: 3px;
+        background: var(--c);
+      }
+      .initials {
+        font-size: var(--text-body-xs);
+        font-weight: 700;
+      }
+      .circle {
+        display: inline-grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        border: 1px solid var(--sidebar-border);
+        border-radius: 50%;
+        font-size: var(--text-body-xs);
+        font-weight: 700;
+      }
+
+      /* A family: its name is a button that opens and closes its roadmaps. */
+      .fam {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .fam-name,
+      .fam-toggle {
+        margin: 0;
+        padding: 4px 8px;
+        font-size: var(--text-body-xs);
+        line-height: var(--text-body-xs--line-height);
+        font-weight: 700;
+        overflow-wrap: anywhere;
+      }
+      .fam-toggle {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        width: 100%;
+        min-height: 32px;
+        border: 0;
+        border-radius: var(--radius-lg, 8px);
+        background: transparent;
+        color: inherit;
+        font-family: inherit;
+        text-align: start;
+        cursor: pointer;
+      }
+      .fam-toggle:hover {
+        background: var(--sidebar-accent);
+      }
+      /* Close all and Open all: one small button at the end of its own row,
+         above the first family. */
+      .fam-all {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: -8px;
+      }
+      .fam-all button {
+        display: inline-flex;
+        gap: 4px;
+        align-items: center;
+        min-height: 32px;
+        padding: 4px 8px;
+        border: 0;
+        border-radius: var(--radius-lg, 8px);
+        background: transparent;
+        color: inherit;
+        font-family: inherit;
+        font-size: var(--text-body-xs);
+        line-height: var(--text-body-xs--line-height);
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .fam-all button:hover {
+        background: var(--sidebar-accent);
+      }
+      .fam-all svg {
+        width: 16px;
+        height: 16px;
+      }
+      .fam-toggle .name {
+        min-width: 0;
+      }
+      .fam-toggle .dot {
+        margin-inline-start: auto;
+      }
+      .fam-toggle svg {
+        width: 16px;
+        height: 16px;
+      }
+      .fam-toggle .name + svg {
+        margin-inline-start: auto;
+      }
+      .none {
+        margin: 0;
+        padding: 0 8px;
+        font-size: var(--text-body-xs);
+        line-height: var(--text-body-xs--line-height);
+      }
+
+      /* The edge to drag. Wider than it looks, so it is easy to catch. */
+      .handle {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        right: -6px;
+        z-index: 2;
+        width: 12px;
+        cursor: col-resize;
+        touch-action: none;
+        outline: none;
+      }
+      .handle::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 5px;
+        width: 2px;
+        background: transparent;
+      }
+      .handle::before {
+        content: "";
+        position: absolute;
+        top: calc(50% - 20px);
+        left: 3px;
+        width: 6px;
+        height: 40px;
+        border-radius: 3px;
+        background: transparent;
+      }
+      .handle:hover::after,
+      .handle.dragging::after {
+        background: var(--sidebar-accent);
+      }
+      .handle:hover::before,
+      .handle.dragging::before {
+        background: var(--sidebar-accent);
+      }
+      .handle:focus-visible::after {
+        left: 3px;
+        width: 6px;
+        background: var(--focus);
+        box-shadow:
+          -2px 0 0 var(--focus-foreground),
+          2px 0 0 var(--focus-foreground);
+      }
+      .shell.resizing {
+        cursor: col-resize;
+        user-select: none;
+      }
+
+      /* The rail's names, shown as each mark is pointed at or focused. */
+      .tip {
+        position: absolute;
+        z-index: 5;
+        max-width: 240px;
+        padding: 4px 8px;
+        border-radius: var(--radius);
+        background: var(--foreground);
+        color: var(--background);
+        font-size: var(--text-body-xs);
+        line-height: var(--text-body-xs--line-height);
+        pointer-events: none;
+      }
+
+      /* The page beside the navigation. */
+      .side {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .topbar {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        min-height: 64px;
+        padding: 12px 16px;
+        background: var(--header);
+        color: var(--header-foreground);
+        font-weight: 700;
+      }
+      .topbar .hbtn {
+        position: relative;
+      }
+      .topbar .hbtn .dot {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+      }
+      .main {
+        flex: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        padding: 24px 16px;
+        outline: none;
+      }
+      @media (min-width: 640px) {
+        .shell:not(.phone) .main {
+          padding-inline: 40px;
+        }
+      }
+      .main h3 {
+        margin: 0;
+        font-size: var(--text-heading-xl);
+        line-height: var(--text-heading-xl--line-height);
+        overflow-wrap: break-word;
+      }
+      .main p {
+        margin: 0;
+      }
+      .main .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+      }
+      .ghost {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 16px;
+      }
+      .ghost span {
+        height: 120px;
+        border: 1px solid var(--border);
+        background: var(--card);
+        box-shadow: var(--shadow-card-bar);
+      }
+
+      /* On a phone, the navigation is a drawer over the page. */
+      .scrim {
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+        background: color-mix(in srgb, var(--foreground) 50%, transparent);
+      }
+      .drawer {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 4;
+        width: min(300px, calc(100% - 48px));
+        display: flex;
+        flex-direction: column;
+        background: var(--sidebar);
+        color: var(--sidebar-foreground);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <div class="intro">
+        <h1>The navigation: one working design to try</h1>
+        <p>
+          The shell's navigation, working, beside a page of the app. It adds a
+          search at the top that narrows the roadmaps as you type, with the fold
+          button on the same row; families that open and close from their name;
+          an edge you drag to set its width on a desktop; and, while more than
+          one roadmap has unpublished changes, a count you press to show just
+          those roadmaps.
+        </p>
+        <!-- The page's switches. On screen they float in the Options panel,
+             in reach beside every design. -->
+        <div class="controls">
+          <div>
+            <span id="theme-label">Theme</span>
+            <span class="seg" role="group" aria-labelledby="theme-label">
+              <button type="button" data-theme="light" aria-pressed="true">
+                Light
+              </button>
+              <button type="button" data-theme="dark" aria-pressed="false">
+                Dark
+              </button>
+            </span>
+          </div>
+          <div>
+            <!-- Each button names a screen; data-width is the window's width,
+                 which the shell fills. Under 1024px the navigation is a drawer
+                 (DESKTOP_WIDTH); from 1024px it stands beside the page.
+                 data-phone marks the screen a phone opens on. -->
+            <span id="screen-label">Screen</span>
+            <span class="seg" role="group" aria-labelledby="screen-label">
+              <button
+                type="button"
+                data-width="375"
+                data-phone
+                aria-pressed="false"
+              >
+                Phone 375
+              </button>
+              <button type="button" data-width="1023" aria-pressed="false">
+                Tablet 1023
+              </button>
+              <button type="button" data-width="1024" aria-pressed="false">
+                Laptop 1024
+              </button>
+              <button type="button" data-width="1280" aria-pressed="true">
+                Monitor 1280
+              </button>
+            </span>
+            <span>The window is <span id="host-width">1280</span>px wide.</span>
+          </div>
+          <div>
+            <span id="changes-label">Unpublished changes</span>
+            <span class="seg" role="group" aria-labelledby="changes-label">
+              <button type="button" data-changes="none" aria-pressed="false">
+                None
+              </button>
+              <button type="button" data-changes="one" aria-pressed="false">
+                One roadmap
+              </button>
+              <button type="button" data-changes="three" aria-pressed="true">
+                Three roadmaps
+              </button>
+            </span>
+          </div>
+        </div>
+        <details open>
+          <summary>Things to try in each</summary>
+          <ol>
+            <li>
+              Drag the navigation's right edge to make it wider, then narrower.
+              It stops at 208px and at 400px. Double-click the edge to put it
+              back to 256px.
+            </li>
+            <li>
+              Close "Single Record" with the arrow at the end of its name. It
+              keeps a dot, since Shared care plans inside it has unpublished
+              changes. Open it again.
+            </li>
+            <li>
+              Type "prescri" in the search: a roadmap from each of two families.
+              Then try "care", which finds Carers' register as well as the two
+              care roadmaps, and "ffon", which finds Ffôn Iechyd helpline
+              without its accent.
+            </li>
+            <li>
+              Type "single": a family's name finds all its roadmaps. Type "xyz"
+              to see nothing found, then press Escape or the cross to clear the
+              search.
+            </li>
+            <li>
+              Press "Close all" above the families: every family closes, and the
+              button becomes "Open all". Open Single Record alone with its
+              arrow: the button says "Close all" again. Press it, then "Open
+              all".
+            </li>
+            <li>
+              Close "Single Record", then search "shared". The closed family's
+              roadmap is found. Clear the search: the family is still closed.
+            </li>
+            <li>
+              Type "care", then press "3 roadmaps have unpublished changes". The
+              search clears and only those three show. Press it again: every
+              roadmap shows, and "care" does not come back.
+            </li>
+            <li>
+              Press the count, then start typing in the search: the count lets
+              go, and the search takes over.
+            </li>
+            <li>
+              With the count pressed, open Electronic prescribing and press
+              Discard changes: two are left, still shown alone. Discard another:
+              with one left, the count goes back to leading to it.
+            </li>
+            <li>
+              Set Unpublished changes to "One roadmap": the count leads to that
+              roadmap, as it does today, and does not narrow the list.
+            </li>
+            <li>
+              Press the fold button. The search becomes a spyglass, and the rail
+              scrolls without a scrollbar. Press the spyglass, and the
+              navigation opens with the search ready to type in. Fold again and
+              press the count's circle.
+            </li>
+            <li>
+              Choose Phone 375 and press Menu. The search and Close menu share
+              the top row. Press the count: the drawer stays open. Choose a
+              roadmap: it closes.
+            </li>
+            <li>
+              On Laptop 1024, drag the navigation to its widest, and see how
+              much room the page keeps.
+            </li>
+            <li>
+              Do it all with the keyboard alone. The edge is the navigation's
+              last stop: press the left and right arrows, Home and End. Then try
+              the dark theme.
+            </li>
+          </ol>
+        </details>
+        <details>
+          <summary>The sample</summary>
+          <pre id="sample"></pre>
+        </details>
+      </div>
+
+      <figure id="pa" aria-labelledby="pa-name">
+        <div class="caption">
+          <h2 id="pa-name">A. Search, families and a width to drag</h2>
+          <button type="button" class="again" data-again="pa">
+            Start again <span class="sr">design A</span>
+          </button>
+        </div>
+        <p>
+          A search box tops the navigation, with the fold button to its right;
+          folded, it is a spyglass. Each family's name opens and closes its
+          roadmaps. The right edge drags. With more than one roadmap changed,
+          the count is a button that narrows the list to them.
+        </p>
+        <div class="stage"><div class="host" id="pa-host"></div></div>
+        <details open>
+          <summary>What the navigation keeps, and what it says</summary>
+          <pre id="pa-readout"></pre>
+        </details>
+      </figure>
+    </main>
+
+    <script>
+      // ---- The sample world ----
+      /** The families in the navigation's order, each roadmap with its colour. */
+      const FAMILIES = [
+        {
+          key: "citizen",
+          name: "Citizen Services",
+          roadmaps: [
+            ["booking", "Appointment booking", "#00857a"],
+            ["ffon", "Ffôn Iechyd helpline", "#00857a"],
+            ["messaging", "Patient messaging", "#00857a"],
+            ["prescriptions", "Prescriptions online", "#00857a"],
+          ],
+        },
+        {
+          key: "medicines",
+          name: "Medicines & Diagnostics",
+          roadmaps: [
+            ["eprescribing", "Electronic prescribing", "#2e7d32"],
+            ["pathology", "Pathology results", "#2e7d32"],
+            ["radiology", "Radiology requests", "#2e7d32"],
+          ],
+        },
+        {
+          key: "single",
+          name: "Single Record",
+          roadmaps: [
+            ["viewer", "Care record viewer", "#5c6bc0"],
+            ["notes", "Clinical notes", "#5c6bc0"],
+            ["careplans", "Shared care plans", "#5c6bc0"],
+          ],
+        },
+        {
+          key: "workforce",
+          name: "Workforce",
+          roadmaps: [
+            ["rostering", "Rostering", "#b85c00"],
+            ["directory", "Staff directory", "#b85c00"],
+          ],
+        },
+        {
+          key: "none",
+          name: "No product family",
+          roadmaps: [
+            ["carers", "Carers' register", "#c2185b"],
+            [
+              "proms",
+              "Patient-reported outcome measures collection",
+              "#c2185b",
+            ],
+          ],
+        },
+      ].map((family) => ({
+        ...family,
+        roadmaps: family.roadmaps.map(([id, title, colour]) => ({
+          id,
+          title,
+          colour,
+          family: family.key,
+        })),
+      }))
+      const ROADMAPS = FAMILIES.flatMap((family) => family.roadmaps)
+      const byId = (id) => ROADMAPS.find((roadmap) => roadmap.id === id)
+      const familyOf = (id) => FAMILIES.find((f) => f.key === byId(id).family)
+      /** Which roadmaps have unpublished changes, by the Unpublished changes switch. */
+      const CHANGES = {
+        none: [],
+        one: ["eprescribing"],
+        three: ["eprescribing", "careplans", "carers"],
+      }
+      let changesMode = "three"
+      const DEFAULT_WIDTH = 256
+      const MIN_WIDTH = 208
+      const MAX_WIDTH = 400
+      const STEP = 16
+      /** From this window width the navigation stands beside the page. */
+      const DESKTOP = 1024
+
+      function initialState() {
+        return {
+          page: "careplans",
+          changed: new Set(CHANGES[changesMode]),
+          width: DEFAULT_WIDTH,
+          folded: false,
+          closedFamilies: new Set(),
+          query: "",
+          onlyChanged: false,
+          drawerOpen: false,
+          said: "",
+        }
+      }
+
+      // ---- The rules every screen shares: pure, with no page in them ----
+      /** One character as a search compares it: no accent, lower case. */
+      const foldChar = (c) =>
+        c.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase()
+      const fold = (text) => [...text].map(foldChar).join("")
+      /** Typed text as the search compares it. */
+      const cleanQuery = (text) => fold(text).replace(/\s+/g, " ").trim()
+      const clampWidth = (width) =>
+        Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, Math.round(width)))
+
+      /**
+       * Where `query` falls in `title`, as [before, match, after], or null.
+       * It compares without accents, so "ffon" finds "Ffôn".
+       */
+      function findIn(title, query) {
+        const chars = [...title]
+        let folded = ""
+        const at = []
+        chars.forEach((c, i) => {
+          for (const f of foldChar(c)) {
+            folded += f
+            at.push(i)
+          }
+        })
+        const start = folded.indexOf(query)
+        if (query === "" || start < 0) return null
+        const from = at[start]
+        const to = at[start + query.length - 1] + 1
+        return [
+          chars.slice(0, from).join(""),
+          chars.slice(from, to).join(""),
+          chars.slice(to).join(""),
+        ]
+      }
+
+      /** A roadmap is found by its title, or by its family's name. */
+      const isFound = (roadmap, family, query) =>
+        fold(roadmap.title).includes(query) || fold(family.name).includes(query)
+
+      /**
+       * What the navigation lists: every family, or while the count is pressed
+       * only the roadmaps with changes, or while there is a search only those
+       * it finds. Narrowed, a family with nothing to show is left out, and a
+       * closed family shows what it holds.
+       */
+      function listed(state) {
+        const query = cleanQuery(state.query)
+        const keep = state.onlyChanged
+          ? (roadmap) => state.changed.has(roadmap.id)
+          : query
+            ? (roadmap, family) => isFound(roadmap, family, query)
+            : null
+        if (!keep) return { narrowed: false, families: FAMILIES }
+        return {
+          narrowed: true,
+          families: FAMILIES.map((family) => ({
+            ...family,
+            roadmaps: family.roadmaps.filter((r) => keep(r, family)),
+          })).filter((family) => family.roadmaps.length > 0),
+        }
+      }
+
+      /**
+       * What the count of unpublished changes is: nothing with none; with one,
+       * a link to it, or text on its own page, as today; with more, a button
+       * that shows only them.
+       */
+      function countKind(state) {
+        if (state.changed.size === 0) return "none"
+        if (state.changed.size === 1)
+          return state.changed.has(state.page) ? "text" : "link"
+        return "button"
+      }
+
+      /** Whether every family is closed: then the button opens them all. */
+      const allClosed = (state) =>
+        FAMILIES.every((family) => state.closedFamilies.has(family.key))
+
+      const plural = (n, one, other) => (n === 1 ? one : other)
+      const countText = (n) =>
+        n === 0
+          ? "No roadmaps have unpublished changes"
+          : `${n} ${plural(n, "roadmap has", "roadmaps have")} unpublished changes`
+      const foundText = (n) =>
+        n === 0
+          ? "No roadmaps match"
+          : `${n} ${plural(n, "roadmap matches", "roadmaps match")}`
+      const onlyChangedText = (n) =>
+        `Showing the ${n} roadmaps with unpublished changes`
+      const ALL_TEXT = "Showing all roadmaps"
+      const initials = (title) =>
+        title
+          .split(/\s+/)
+          .slice(0, 2)
+          .map((word) => [...word][0])
+          .join("")
+          .toUpperCase()
+      const pageName = (page) =>
+        page === "all"
+          ? "All roadmaps"
+          : page === "families"
+            ? "Families, categories and organisations"
+            : byId(page).title
+
+      // ---- Drawing ----
+      /** An element with its attributes, listeners (`onclick`) and children. */
+      function h(tag, attributes = {}, ...children) {
+        const element = document.createElement(tag)
+        for (const [name, value] of Object.entries(attributes)) {
+          if (value === undefined || value === false) continue
+          if (name.startsWith("on")) element[name] = value
+          else element.setAttribute(name, value === true ? "" : value)
+        }
+        element.append(...children.flat(Infinity).filter((c) => c != null))
+        return element
+      }
+      const ICONS = {
+        search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+        x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+        fold: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="m16 15-3-3 3-3"/>',
+        unfold:
+          '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="m14 9 3 3-3 3"/>',
+        open: '<path d="m6 9 6 6 6-6"/>',
+        closed: '<path d="m9 18 6-6-6-6"/>',
+        grid: '<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>',
+        globe:
+          '<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
+        menu: '<path d="M4 12h16"/><path d="M4 6h16"/><path d="M4 18h16"/>',
+        filter: '<path d="M3 6h18"/><path d="M7 12h10"/><path d="M10 18h4"/>',
+        closeAll: '<path d="m7 20 5-5 5 5"/><path d="m7 4 5 5 5-5"/>',
+        openAll: '<path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/>',
+      }
+      function icon(name) {
+        const svg = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "svg",
+        )
+        svg.setAttribute("viewBox", "0 0 24 24")
+        svg.setAttribute("aria-hidden", "true")
+        svg.innerHTML = ICONS[name]
+        return svg
+      }
+      const sr = (text) => h("span", { class: "sr" }, text)
+
+      // ---- The design ----
+      /**
+       * The shell, drawn whole from `state` on every change. Each control
+       * carries a `data-fk`, so focus goes back to it, or to where the app
+       * would put it, after the redraw.
+       */
+      function designA(id, host) {
+        let state = initialState()
+        const frame = h("div")
+        // Outside the redraw, so what it says is announced once.
+        const live = h("div", {
+          class: "sr",
+          "aria-live": "polite",
+          "aria-atomic": "true",
+        })
+        const tip = h("div", {
+          class: "tip",
+          "aria-hidden": "true",
+          hidden: true,
+        })
+        host.replaceChildren(frame, live, tip)
+        let screenWidth = 1280
+        let sayTimer
+        const readout = document.getElementById(`${id}-readout`)
+
+        function say(text, later = false) {
+          clearTimeout(sayTimer)
+          const speak = () => {
+            state.said = text
+            live.textContent = text
+            showReadout()
+          }
+          // While typing, said once the typing pauses.
+          if (later) sayTimer = setTimeout(speak, 600)
+          else speak()
+        }
+        function setChanged(next) {
+          const before = state.changed.size
+          state.changed = next
+          if (next.size < 2) state.onlyChanged = false
+          if (next.size !== before) say(countText(next.size))
+        }
+
+        // -- What the Product Lead does --
+        const act = {
+          type(text) {
+            state.query = text
+            if (cleanQuery(text) !== "") state.onlyChanged = false
+            draw()
+            const query = cleanQuery(text)
+            if (query === "") say(ALL_TEXT, true)
+            else
+              say(
+                foundText(
+                  listed(state).families.flatMap((f) => f.roadmaps).length,
+                ),
+                true,
+              )
+          },
+          clear() {
+            state.query = ""
+            draw(`${id}-search`)
+            say(ALL_TEXT)
+          },
+          count() {
+            state.folded = false
+            if (state.onlyChanged) {
+              state.onlyChanged = false
+              say(ALL_TEXT)
+            } else {
+              state.query = ""
+              state.onlyChanged = true
+              say(onlyChangedText(state.changed.size))
+            }
+            draw("count")
+          },
+          fold() {
+            state.folded = !state.folded
+            draw("fold")
+          },
+          spyglass() {
+            state.folded = false
+            draw(`${id}-search`)
+          },
+          allFamilies() {
+            if (allClosed(state)) state.closedFamilies.clear()
+            else state.closedFamilies = new Set(FAMILIES.map((f) => f.key))
+            draw("all-families")
+            say(allClosed(state) ? "All families closed" : "All families open")
+          },
+          family(key) {
+            if (state.closedFamilies.has(key)) state.closedFamilies.delete(key)
+            else state.closedFamilies.add(key)
+            draw(`family-${key}`)
+          },
+          go(page) {
+            state.page = page
+            if (byId(page)) state.closedFamilies.delete(byId(page).family)
+            state.drawerOpen = false
+            draw("main")
+          },
+          discard() {
+            const next = new Set(state.changed)
+            next.delete(state.page)
+            setChanged(next)
+            draw("make")
+          },
+          make() {
+            const next = new Set(state.changed)
+            next.add(state.page)
+            setChanged(next)
+            draw("discard")
+          },
+          menu() {
+            state.drawerOpen = true
+            draw(`${id}-search`)
+          },
+          closeMenu() {
+            state.drawerOpen = false
+            draw("menu")
+          },
+          width(width, focus) {
+            state.width = clampWidth(width)
+            draw(focus)
+          },
+        }
+
+        // -- The navigation's parts --
+        function searchBox() {
+          const input = h("input", {
+            id: `${id}-search`,
+            "data-fk": `${id}-search`,
+            class: "inp",
+            type: "search",
+            autocomplete: "off",
+            spellcheck: "false",
+            placeholder: "Search",
+            "aria-label": "Search roadmaps",
+            value: state.query,
+          })
+          input.value = state.query
+          input.oninput = () => act.type(input.value)
+          input.onkeydown = (event) => {
+            if (event.key !== "Escape") return
+            if (state.query !== "") {
+              event.preventDefault()
+              event.stopPropagation()
+              act.clear()
+            }
+          }
+          return h(
+            "form",
+            {
+              class: "search",
+              role: "search",
+              "aria-label": "Roadmaps",
+              onsubmit: (event) => event.preventDefault(),
+            },
+            icon("search"),
+            input,
+            state.query !== ""
+              ? h(
+                  "button",
+                  {
+                    type: "button",
+                    class: "clear",
+                    "data-fk": "clear",
+                    onclick: act.clear,
+                  },
+                  icon("x"),
+                  sr("Clear search"),
+                )
+              : null,
+          )
+        }
+
+        function topRow(rail, closeButton) {
+          if (rail)
+            return h(
+              "div",
+              { class: "nav-top" },
+              h(
+                "button",
+                {
+                  type: "button",
+                  class: "hbtn",
+                  "data-fk": "spyglass",
+                  "data-tip": "Search roadmaps",
+                  onclick: act.spyglass,
+                },
+                icon("search"),
+                sr("Search roadmaps"),
+              ),
+              h(
+                "button",
+                {
+                  type: "button",
+                  class: "hbtn",
+                  "data-fk": "fold",
+                  onclick: act.fold,
+                },
+                icon("unfold"),
+                sr("Open the navigation"),
+              ),
+            )
+          return h(
+            "div",
+            { class: "nav-top" },
+            searchBox(),
+            closeButton ??
+              h(
+                "button",
+                {
+                  type: "button",
+                  class: "hbtn",
+                  "data-fk": "fold",
+                  onclick: act.fold,
+                },
+                icon("fold"),
+                sr("Fold the navigation"),
+              ),
+          )
+        }
+
+        /** A link to a page, its mark and name; in a rail its mark alone. */
+        function link(page, rail, label, extra = {}) {
+          return h(
+            "a",
+            {
+              href: "#",
+              class: "entry",
+              "data-fk": `go-${page}`,
+              "aria-current": state.page === page ? "page" : undefined,
+              onclick: (event) => {
+                event.preventDefault()
+                act.go(page)
+              },
+              ...extra,
+            },
+            label,
+          )
+        }
+
+        function pageLink(page, iconName, name, rail) {
+          return h(
+            "li",
+            {},
+            link(
+              page,
+              rail,
+              [
+                icon(iconName),
+                rail ? sr(name) : h("span", { class: "name" }, name),
+              ],
+              rail ? { "data-tip": name } : {},
+            ),
+          )
+        }
+
+        function roadmapLink(roadmap, rail, query) {
+          const changed = state.changed.has(roadmap.id)
+          const spoken = changed
+            ? `${roadmap.title}, unpublished changes`
+            : roadmap.title
+          const swatch = h("span", {
+            class: "swatch",
+            style: `--c: ${roadmap.colour}`,
+          })
+          if (rail)
+            return h(
+              "li",
+              {},
+              link(
+                roadmap.id,
+                rail,
+                [
+                  swatch,
+                  h("span", { class: "initials" }, initials(roadmap.title)),
+                  " ",
+                  sr(spoken),
+                  changed
+                    ? h("span", { class: "dot corner", "aria-hidden": "true" })
+                    : null,
+                ],
+                { "data-tip": spoken },
+              ),
+            )
+          const parts = query ? findIn(roadmap.title, query) : null
+          const name = parts
+            ? [parts[0], h("mark", {}, parts[1]), parts[2]]
+            : [roadmap.title]
+          return h(
+            "li",
+            {},
+            link(roadmap.id, rail, [
+              swatch,
+              h(
+                "span",
+                { class: "name", "aria-hidden": changed ? "true" : undefined },
+                name,
+              ),
+              changed ? sr(spoken) : null,
+              changed
+                ? h("span", { class: "dot end", "aria-hidden": "true" })
+                : null,
+            ]),
+          )
+        }
+
+        function countEntry(rail) {
+          const kind = countKind(state)
+          if (kind === "none") return null
+          const n = state.changed.size
+          const text = countText(n)
+          const mark = rail
+            ? [
+                h(
+                  "span",
+                  { class: "circle", "aria-hidden": "true" },
+                  String(n),
+                ),
+                sr(text),
+              ]
+            : [
+                h("span", { class: "dot", "aria-hidden": "true" }),
+                h("span", { class: "name" }, text),
+              ]
+          let entry
+          if (kind === "button")
+            entry = h(
+              "button",
+              {
+                type: "button",
+                class: "entry",
+                "data-fk": "count",
+                "aria-pressed": String(state.onlyChanged),
+                "data-tip": rail ? text : undefined,
+                onclick: act.count,
+              },
+              mark,
+              rail ? null : h("span", { class: "end" }, icon("filter")),
+            )
+          else if (kind === "link") {
+            const [only] = state.changed
+            entry = link(only, rail, mark, rail ? { "data-tip": text } : {})
+            entry.removeAttribute("aria-current")
+            entry.dataset.fk = "count"
+          } else
+            entry = h(
+              "span",
+              { class: "entry", "data-tip": rail ? text : undefined },
+              mark,
+            )
+          return h("ul", { style: "margin-top: 4px" }, h("li", {}, entry))
+        }
+
+        function familyBlock(family, rail, narrowed, query) {
+          const listId = `${id}-family-${family.key}`
+          const links = family.roadmaps.map((r) => roadmapLink(r, rail, query))
+          if (rail) return h("ul", {}, links)
+          if (narrowed)
+            return h(
+              "div",
+              { class: "fam" },
+              h("p", { class: "fam-name", "aria-hidden": "true" }, family.name),
+              h("ul", { "aria-label": family.name }, links),
+            )
+          const closed = state.closedFamilies.has(family.key)
+          const changedInside = family.roadmaps.some((r) =>
+            state.changed.has(r.id),
+          )
+          return h(
+            "div",
+            { class: "fam" },
+            h(
+              "button",
+              {
+                type: "button",
+                class: "fam-toggle",
+                "data-fk": `family-${family.key}`,
+                "aria-expanded": String(!closed),
+                "aria-controls": closed ? undefined : listId,
+                onclick: () => act.family(family.key),
+              },
+              h("span", { class: "name" }, family.name),
+              closed && changedInside
+                ? [
+                    h("span", { class: "dot", "aria-hidden": "true" }),
+                    sr(", unpublished changes"),
+                  ]
+                : null,
+              icon(closed ? "closed" : "open"),
+            ),
+            closed
+              ? null
+              : h("ul", { id: listId, "aria-label": family.name }, links),
+          )
+        }
+
+        /**
+         * Closes every family, or opens them all once all are closed. Shown
+         * only while the families are listed whole, not narrowed or in a rail.
+         */
+        function allFamiliesButton() {
+          const open = allClosed(state)
+          return h(
+            "div",
+            { class: "fam-all" },
+            h(
+              "button",
+              {
+                type: "button",
+                "data-fk": "all-families",
+                onclick: act.allFamilies,
+              },
+              icon(open ? "openAll" : "closeAll"),
+              open ? "Open all" : "Close all",
+              " ",
+              sr("families"),
+            ),
+          )
+        }
+
+        function destinations(rail) {
+          // The rail lists every roadmap: it has no search, and no family names.
+          const { narrowed, families } = rail
+            ? { narrowed: false, families: FAMILIES }
+            : listed(state)
+          const query = state.onlyChanged ? "" : cleanQuery(state.query)
+          return h(
+            "div",
+            { class: "nav-list" },
+            h(
+              "div",
+              {},
+              h("ul", {}, pageLink("all", "grid", "All roadmaps", rail)),
+              countEntry(rail),
+            ),
+            narrowed && families.length === 0
+              ? h(
+                  "p",
+                  { class: "none" },
+                  `No roadmaps match "${state.query.trim()}"`,
+                )
+              : [
+                  rail || narrowed ? null : allFamiliesButton(),
+                  families.map((f) => familyBlock(f, rail, narrowed, query)),
+                ],
+            h(
+              "ul",
+              { class: "foot" },
+              pageLink(
+                "families",
+                "globe",
+                "Families, categories and organisations",
+                rail,
+              ),
+            ),
+          )
+        }
+
+        function resizeHandle(nav) {
+          const handle = h("div", {
+            class: "handle",
+            role: "separator",
+            tabindex: "0",
+            "data-fk": "handle",
+            "aria-label": "Resize the navigation",
+            "aria-orientation": "vertical",
+            "aria-valuemin": String(MIN_WIDTH),
+            "aria-valuemax": String(MAX_WIDTH),
+            "aria-valuenow": String(state.width),
+            "aria-valuetext": `${state.width} pixels wide`,
+          })
+          let start = null
+          handle.onpointerdown = (event) => {
+            if (event.button !== 0) return
+            event.preventDefault()
+            handle.setPointerCapture(event.pointerId)
+            start = { x: event.clientX, width: state.width }
+            handle.classList.add("dragging")
+            frame.firstChild.classList.add("resizing")
+          }
+          handle.onpointermove = (event) => {
+            if (!start) return
+            state.width = clampWidth(start.width + event.clientX - start.x)
+            nav.style.setProperty("--nav-w", `${state.width}px`)
+            handle.setAttribute("aria-valuenow", String(state.width))
+            handle.setAttribute("aria-valuetext", `${state.width} pixels wide`)
+            showReadout()
+          }
+          handle.onpointerup = handle.onpointercancel = () => {
+            if (!start) return
+            start = null
+            // The width is already drawn: redrawing would replace the edge
+            // between the two clicks of a double-click.
+            handle.classList.remove("dragging")
+            frame.firstChild.classList.remove("resizing")
+            showReadout()
+          }
+          handle.ondblclick = () => act.width(DEFAULT_WIDTH)
+          handle.onkeydown = (event) => {
+            const to = {
+              ArrowLeft: state.width - STEP,
+              ArrowRight: state.width + STEP,
+              Home: MIN_WIDTH,
+              End: MAX_WIDTH,
+            }[event.key]
+            if (to === undefined) return
+            event.preventDefault()
+            act.width(to, "handle")
+          }
+          return handle
+        }
+
+        // -- The page beside it --
+        function page(phone) {
+          const roadmap = byId(state.page)
+          let body
+          if (!roadmap)
+            body = [
+              h(
+                "p",
+                {},
+                state.page === "all"
+                  ? "14 roadmaps"
+                  : "5 families, 3 categories and 9 organisations",
+              ),
+              h(
+                "div",
+                { class: "ghost", "aria-hidden": "true" },
+                h("span"),
+                h("span"),
+                h("span"),
+              ),
+            ]
+          else if (state.changed.has(roadmap.id))
+            body = h(
+              "div",
+              { class: "row" },
+              h("p", {}, h("strong", {}, "1 unpublished change")),
+              h(
+                "button",
+                {
+                  type: "button",
+                  class: "btn",
+                  "data-fk": "discard",
+                  onclick: act.discard,
+                },
+                "Discard changes",
+              ),
+            )
+          else
+            body = h(
+              "div",
+              { class: "row" },
+              h("p", {}, "No unpublished changes"),
+              h(
+                "button",
+                {
+                  type: "button",
+                  class: "btn",
+                  "data-fk": "make",
+                  onclick: act.make,
+                },
+                "Make a change",
+              ),
+            )
+          const n = state.changed.size
+          return h(
+            "div",
+            { class: "side" },
+            h(
+              "div",
+              { class: "topbar" },
+              phone
+                ? h(
+                    "button",
+                    {
+                      type: "button",
+                      class: "hbtn",
+                      "data-fk": "menu",
+                      "aria-expanded": String(state.drawerOpen),
+                      onclick: act.menu,
+                    },
+                    icon("menu"),
+                    n > 0
+                      ? h("span", { class: "dot", "aria-hidden": "true" })
+                      : null,
+                    sr(n > 0 ? `Menu, ${countText(n)}` : "Menu"),
+                  )
+                : null,
+              h("span", {}, "Roadmap Editor"),
+            ),
+            h(
+              "div",
+              { class: "main", tabindex: "-1", "data-fk": "main" },
+              h("h3", {}, pageName(state.page)),
+              body,
+              roadmap
+                ? h(
+                    "div",
+                    { class: "ghost", "aria-hidden": "true" },
+                    h("span"),
+                    h("span"),
+                  )
+                : null,
+            ),
+          )
+        }
+
+        // -- The whole shell --
+        function shell() {
+          const phone = screenWidth < DESKTOP
+          if (phone) {
+            const parts = [page(true)]
+            if (state.drawerOpen) {
+              const close = h(
+                "button",
+                {
+                  type: "button",
+                  class: "hbtn",
+                  "data-fk": "close",
+                  onclick: act.closeMenu,
+                },
+                icon("x"),
+                sr("Close menu"),
+              )
+              const drawer = h(
+                "div",
+                {
+                  class: "nav drawer",
+                  role: "dialog",
+                  "aria-modal": "true",
+                  "aria-label": "Menu",
+                },
+                h(
+                  "nav",
+                  { "aria-label": "Roadmaps", style: "display: contents" },
+                  topRow(false, close),
+                  destinations(false),
+                ),
+              )
+              drawer.onkeydown = (event) => {
+                if (event.key === "Escape") act.closeMenu()
+              }
+              parts.push(
+                h("div", { class: "scrim", onclick: act.closeMenu }),
+                drawer,
+              )
+            }
+            return h("div", { class: "shell phone" }, parts)
+          }
+          const rail = state.folded
+          const nav = h("div", {
+            class: rail ? "nav rail" : "nav",
+            style: `--nav-w: ${state.width}px`,
+          })
+          nav.append(
+            h(
+              "nav",
+              { "aria-label": "Roadmaps", style: "display: contents" },
+              topRow(rail),
+              destinations(rail),
+            ),
+          )
+          if (!rail) nav.append(resizeHandle(nav))
+          return h("div", { class: "shell" }, nav, page(false))
+        }
+
+        /**
+         * Draws the shell, then puts focus on `focus` (a data-fk), or back on
+         * the control that had it; null leaves focus alone.
+         */
+        function draw(focus) {
+          const active = host.contains(document.activeElement)
+            ? document.activeElement
+            : null
+          const key = focus === undefined ? active?.dataset?.fk : focus
+          const caret =
+            active?.tagName === "INPUT" ? active.selectionStart : null
+          tip.hidden = true
+          frame.replaceChildren(shell())
+          if (key) {
+            const target =
+              frame.querySelector(`[data-fk="${key}"]`) ??
+              (focus !== undefined
+                ? frame.querySelector('[data-fk="main"]')
+                : null)
+            target?.focus({ preventScroll: true })
+            if (target?.tagName === "INPUT") {
+              const at = caret ?? target.value.length
+              target.setSelectionRange(at, at)
+            }
+          }
+          showReadout()
+        }
+
+        function showReadout() {
+          const { narrowed, families } = listed(state)
+          const shown = families.flatMap((f) => f.roadmaps).length
+          const closed = FAMILIES.filter((f) =>
+            state.closedFamilies.has(f.key),
+          ).map((f) => f.name)
+          readout.textContent = [
+            `Page open: ${pageName(state.page)}`,
+            `Navigation width: ${state.width}px (remembered on this device)`,
+            `Folded to a rail: ${state.folded ? "yes" : "no"} (remembered on this device)`,
+            `Closed families: ${closed.length ? closed.join(", ") : "none"} (remembered on this device)`,
+            `Search: ${state.query === "" ? "empty" : `"${state.query}"`}`,
+            `Only roadmaps with changes: ${state.onlyChanged ? "on" : "off"}`,
+            `Roadmaps listed: ${narrowed ? shown : ROADMAPS.length} of ${ROADMAPS.length}`,
+            `Unpublished changes: ${
+              state.changed.size
+                ? ROADMAPS.filter((r) => state.changed.has(r.id))
+                    .map((r) => r.title)
+                    .join(", ")
+                : "none"
+            }`,
+            `Last said to a screen reader: ${state.said ? `"${state.said}"` : "nothing yet"}`,
+          ].join("\n")
+        }
+
+        // The rail's names, in a tooltip as each mark is pointed at or focused.
+        function showTip(event) {
+          const target = event.target.closest?.("[data-tip]")
+          if (!target || !frame.querySelector(".rail")) {
+            tip.hidden = true
+            return
+          }
+          const box = target.getBoundingClientRect()
+          const base = host.getBoundingClientRect()
+          tip.textContent = target.dataset.tip
+          tip.hidden = false
+          tip.style.left = `${box.right - base.left + 8}px`
+          tip.style.top = `${box.top - base.top + box.height / 2 - tip.offsetHeight / 2}px`
+        }
+        frame.addEventListener("pointerover", showTip)
+        frame.addEventListener("focusin", showTip)
+        frame.addEventListener("pointerleave", () => (tip.hidden = true))
+        frame.addEventListener("focusout", () => (tip.hidden = true))
+
+        draw(null)
+        return {
+          reset() {
+            clearTimeout(sayTimer)
+            state = initialState()
+            live.textContent = ""
+            draw(null)
+          },
+          screen(width) {
+            screenWidth = width
+            state.drawerOpen = false
+            draw(null)
+          },
+          changes(mode) {
+            changesMode = mode
+            state.changed = new Set(CHANGES[mode])
+            state.onlyChanged = false
+            draw(null)
+          },
+        }
+      }
+
+      // ---- The page: the design's figure ----
+      const design = designA("pa", document.getElementById("pa-host"))
+      document
+        .querySelector('[data-again="pa"]')
+        .addEventListener("click", () => design.reset())
+
+      // ---- The page's own controls ----
+      document.getElementById("sample").textContent = [
+        "Today: 18 November 2026. The Product Lead is on Shared care plans.",
+        "",
+        ...FAMILIES.map(
+          (f) => `${f.name}: ${f.roadmaps.map((r) => r.title).join("; ")}`,
+        ),
+        "",
+        "Unpublished changes (three): Electronic prescribing, Shared care plans, Carers' register.",
+        "Unpublished changes (one): Electronic prescribing.",
+        "",
+        "Planted: 'care' is in two titles and inside 'Carers'; 'prescri' spans two families;",
+        "'ffon' finds 'Ffôn' without its accent; 'single' and 'record' find a family by its name;",
+        "'Care record viewer' and \"Carers' register\" share the initials CR in the rail;",
+        "one title is long enough to wrap at 208px.",
+      ].join("\n")
+      function bindSwitch(attribute, apply) {
+        const buttons = document.querySelectorAll(`[data-${attribute}]`)
+        for (const button of buttons) {
+          button.addEventListener("click", () => {
+            for (const other of buttons)
+              other.setAttribute("aria-pressed", String(other === button))
+            apply(button.dataset[attribute])
+          })
+        }
+      }
+      bindSwitch("theme", (theme) => {
+        for (const stage of document.querySelectorAll(".stage"))
+          stage.classList.toggle("dark", theme === "dark")
+      })
+      bindSwitch("width", (width) => {
+        for (const stage of document.querySelectorAll(".stage"))
+          stage.style.setProperty("--host-w", `${width}px`)
+        document.getElementById("host-width").textContent = width
+        design.screen(Number(width))
+      })
+      bindSwitch("changes", (mode) => design.changes(mode))
+      // Someone reading on a phone starts with the phone's screen.
+      if (matchMedia("(max-width: 639px)").matches)
+        document.querySelector("[data-phone]")?.click()
+    </script>
+    <script>
+      // The review page's chrome, shared by both shapes (review-chrome.css styles it).
+      // A bar of links to every journey and design, one line that scrolls sideways,
+      // and a floating Options panel that holds the page's .controls, so a switch is
+      // in reach beside any design. A design is a figure[id] not inside another; its
+      // journey is the section[id] holding it, or the page's h1. A design's link reads
+      // the letter that starts its caption ("A. Outline", "B2 — …"), or its
+      // data-short; a journey's, its heading up to " — ".
+      // Under automation, or with ?capture in the URL, the bar stays at the top of
+      // the page and the controls stay where the page put them, so neither covers a
+      // design in a screenshot; ?float shows the floating chrome there too.
+      ;(() => {
+        const params = new URLSearchParams(location.search)
+        const inline =
+          params.has("capture") || (navigator.webdriver && !params.has("float"))
+        if (inline) document.documentElement.classList.add("review-inline")
+
+        const designs = [...document.querySelectorAll("figure[id]")].filter(
+          (figure) => !figure.parentElement.closest("figure[id]"),
+        )
+        if (designs.length === 0) return
+        const text = (element) =>
+          element?.textContent.replace(/\s+/g, " ").trim()
+        const heading = document.querySelector("h1")
+        if (heading && !heading.id) heading.id = "review-top"
+
+        const groups = new Map()
+        for (const figure of designs) {
+          const section = figure.closest("section[id]")
+          const key = section ?? heading
+          if (!groups.has(key)) groups.set(key, [])
+          groups.get(key).push(figure)
+        }
+
+        function link(href, label, className, title) {
+          const a = document.createElement("a")
+          a.href = href
+          a.className = className
+          a.textContent = label
+          a.title = title ?? label
+          return a
+        }
+
+        const bar = document.createElement("nav")
+        bar.className = "review-bar"
+        bar.setAttribute("aria-label", "Journeys and designs")
+        const designLinks = new Map()
+        for (const [owner, figures] of groups) {
+          const group = document.createElement("span")
+          group.className = "review-group"
+          if (owner) {
+            const title = text(owner.querySelector("h1, h2") ?? owner)
+            owner.classList.add("review-target")
+            group.append(
+              link(
+                `#${owner.id}`,
+                title.split(" — ")[0],
+                "review-journey",
+                title,
+              ),
+            )
+          }
+          for (const figure of figures) {
+            const caption =
+              text(figure.querySelector("figcaption, h2, h3")) ?? ""
+            const short =
+              figure.dataset.short ??
+              caption.match(/^([A-Z][0-9]*)(?:\.|:|\s[—–-])\s/)?.[1] ??
+              caption
+            const a = link(
+              `#${figure.id}`,
+              short || figure.id,
+              "review-design",
+              caption || figure.id,
+            )
+            a.setAttribute("aria-label", caption || figure.id)
+            figure.classList.add("review-target")
+            designLinks.set(figure, a)
+            group.append(a)
+          }
+          bar.append(group)
+        }
+        document.body.prepend(bar)
+
+        // A link's target lands below the bar, not under it.
+        const style = document.createElement("style")
+        document.head.append(style)
+        const fitTargets = () => {
+          style.textContent = `.review-target{scroll-margin-top:${bar.offsetHeight + 8}px}`
+        }
+        fitTargets()
+        addEventListener("resize", fitTargets)
+
+        // The bar marks the design in view, and scrolls itself to show its link.
+        let current
+        // A design whose link was followed stays marked, even where the page cannot
+        // scroll it to the top, until the reader scrolls on their own.
+        let pinned
+        /** The design whose top has passed a third of the way down, or the last at the page's foot. */
+        function designInView() {
+          if (pinned) return pinned
+          const root = document.documentElement
+          if (
+            root.scrollTop > 0 &&
+            scrollY + innerHeight >= root.scrollHeight - 2
+          )
+            return designs.at(-1)
+          const line = Math.max(bar.offsetHeight + 16, innerHeight / 3)
+          let inView = designs[0]
+          for (const figure of designs)
+            if (figure.getBoundingClientRect().top <= line) inView = figure
+          return inView
+        }
+        function markCurrent(inView = designInView()) {
+          if (inView === current) return
+          designLinks.get(current)?.removeAttribute("aria-current")
+          current = inView
+          const a = designLinks.get(current)
+          a.setAttribute("aria-current", "location")
+          // Show the link's group from its start, or as much of it as keeps the
+          // link itself in view.
+          const right = a.offsetLeft + a.offsetWidth
+          if (
+            a.offsetLeft < bar.scrollLeft ||
+            right > bar.scrollLeft + bar.clientWidth
+          )
+            bar.scrollLeft = Math.max(
+              a.parentElement.offsetLeft - 4,
+              right - bar.clientWidth + 8,
+            )
+        }
+        let queued = false
+        addEventListener(
+          "scroll",
+          () => {
+            if (queued) return
+            queued = true
+            requestAnimationFrame(() => {
+              queued = false
+              markCurrent()
+            })
+          },
+          { passive: true },
+        )
+        addEventListener("resize", () => markCurrent())
+        bar.addEventListener("click", (event) => {
+          const a = event.target.closest("a")
+          pinned = designs.find((f) => designLinks.get(f) === a)
+          markCurrent()
+        })
+        for (const type of ["wheel", "touchstart", "keydown"])
+          addEventListener(type, () => (pinned = undefined), { passive: true })
+        markCurrent()
+
+        const controls = document.querySelector(".controls")
+        if (inline || !controls) return
+
+        // The Options panel: a pill that names the current choices, opening the
+        // page's controls above it. The pill comes first, so Tab moves from it into
+        // the controls; the panel's column runs in reverse to draw them above.
+        document.documentElement.classList.add("review-floating")
+        const panel = document.createElement("div")
+        panel.className = "review-options"
+        const body = document.createElement("div")
+        body.className = "review-options-body"
+        body.id = "review-options-body"
+        body.hidden = true
+        body.setAttribute("role", "group")
+        body.setAttribute("aria-label", "Options")
+        const toggle = document.createElement("button")
+        toggle.type = "button"
+        toggle.className = "review-options-toggle"
+        toggle.setAttribute("aria-controls", body.id)
+        toggle.setAttribute("aria-expanded", "false")
+        controls.replaceWith(panel)
+        body.append(controls)
+        panel.append(toggle, body)
+
+        function summarise() {
+          const chosen = [
+            ...[
+              ...controls.querySelectorAll('button[aria-pressed="true"]'),
+            ].map(text),
+            ...[...controls.querySelectorAll("select")].map((select) =>
+              text(select.selectedOptions[0]),
+            ),
+            ...[...controls.querySelectorAll("input:checked")].map(
+              (input) => text(input.labels?.[0]) ?? input.value,
+            ),
+          ].filter(Boolean)
+          const arrow = document.createElement("span")
+          arrow.setAttribute("aria-hidden", "true")
+          arrow.textContent = body.hidden ? "▴ " : "▾ "
+          toggle.replaceChildren(
+            arrow,
+            `Options${chosen.length ? `: ${chosen.join(" · ")}` : ""}`,
+          )
+        }
+        function setOpen(open) {
+          body.hidden = !open
+          toggle.setAttribute("aria-expanded", String(open))
+          summarise()
+        }
+        toggle.addEventListener("click", () => setOpen(body.hidden))
+        panel.addEventListener("keydown", (event) => {
+          if (event.key !== "Escape" || body.hidden) return
+          setOpen(false)
+          toggle.focus()
+        })
+        addEventListener("pointerdown", (event) => {
+          if (!body.hidden && !panel.contains(event.target)) setOpen(false)
+        })
+
+        // A switch that changes the page's height, such as Zoom or Screen, keeps the
+        // design in view where it was: its top is noted before the switch's own
+        // handler runs (capturing), and restored after it (bubbling).
+        let anchor
+        const noteAnchor = () => {
+          const figure = designInView()
+          anchor = { figure, top: figure.getBoundingClientRect().top }
+        }
+        const afterSwitch = () => {
+          summarise()
+          if (anchor)
+            scrollBy(0, anchor.figure.getBoundingClientRect().top - anchor.top)
+          anchor = undefined
+          markCurrent()
+        }
+        for (const type of ["click", "change"]) {
+          controls.addEventListener(type, noteAnchor, true)
+          controls.addEventListener(type, afterSwitch)
+        }
+        summarise()
+      })()
+    </script>
+  </body>
+</html>

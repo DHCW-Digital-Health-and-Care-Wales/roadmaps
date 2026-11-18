@@ -58,8 +58,9 @@ one is a decline candidate. Ask too for each part of the pinned diff the
 reviewer left unread, by path and lines, which Dispatch step 5 gives to a
 fresh reviewer: a reviewer not asked may report a diff it read in part as
 read. Tell a delivery PR's reviewers to report each incidental guide change
-in its diff as a blocker (P1 or 🔴), as
-`docs/operations/authoring-agent-instructions.md` defines one (_Where it
+in its diff as a blocker (P1 or 🔴), and to check that each correction to a
+guide file changes no rule, as
+`docs/operations/authoring-agent-instructions.md` defines them (_Where it
 goes_).
 
 For role-specific briefs, use `.claude/agents/mechanical-worker.md`,

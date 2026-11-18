@@ -99,9 +99,10 @@ Google message: the domain and infrastructure layers emit codes (`AppError.kind`
 ## Shapes to copy
 
 Canonical patterns for each surface built so far are in
-`references/patterns.md`, one heading per surface. A delivery that sets a new
-pattern names it in its handoff, and its retrospective adds it, since a
-delivery makes no incidental skill change
+`references/patterns.md`, one heading per surface. A delivery corrects an
+example there that its copy change makes false. One that sets a new pattern
+names it in its handoff, and its retrospective adds it, since a delivery
+makes no incidental skill change
 (`docs/operations/authoring-agent-instructions.md`, _Where it goes_). Start
 from the shape rather than from a blank line.
 

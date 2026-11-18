@@ -429,7 +429,9 @@ for (const theme of THEMES) {
         .getByRole("navigation", { name: "Roadmaps" })
         .getByRole("button", { name: "2 roadmaps have unpublished changes" })
 
-      await tabTo(page, count)
+      // The count sits before the page's controls, and focus is still in the page
+      // after the hash change, so Shift+Tab reaches it.
+      await tabTo(page, count, "Shift+Tab")
       await expectIndicator(count, colours, "fill")
       await page.keyboard.press("Enter")
 

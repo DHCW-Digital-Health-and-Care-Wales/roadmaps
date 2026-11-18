@@ -110,14 +110,24 @@ referenced cross-area conventions; explicit conditional navigation avoids
 loading unrelated rules.
 
 A delivery PR changes a **guide file** (an `AGENTS.md` or `CLAUDE.md`, or
-any file under `.agents/skills/` or `.claude/agents/`) only when the owner
-asked for that change: the Summary or acceptance criteria of the record it
-delivers, as they stand on the base branch, or the owner's own request,
-names it. Any other guide change in a delivery is **incidental**, however
-its Delivery section explains it, and only a retrospective makes it, in its
-own PR, so the owner sees every change that can alter future delivery. The
-delivery names each such learning for rungs 4 and 5, and each guide line it
-makes false, in its handoff for the retrospective to weigh.
+any file under `.agents/skills/` or `.claude/agents/`) in two cases:
+
+- **The owner asked for the change**: the Summary or acceptance criteria of
+  the record it delivers, as they stand on the base branch, or the owner's
+  own request, names it.
+- **It is a correction**: the edit makes a false line true without changing
+  what the line asks an agent to do, such as an example quoting copy the
+  delivery renames, a name, path or command it moves, or a dead pointer. The
+  PR body's Decisions lists each correction, so a reviewer can check that it
+  changes no rule.
+
+Any other guide change in a delivery is **incidental**, however its Delivery
+section explains it: a rule or pattern added, removed or reworded. Only a
+retrospective makes it, in its own PR, so the owner sees every change that
+can alter future delivery. The delivery's handoff names, for the
+retrospective to weigh, each learning for rungs 4 and 5 and each guide line
+its change makes false that no correction can make true, such as a rule about
+something the delivery removes.
 
 ## How to write it
 

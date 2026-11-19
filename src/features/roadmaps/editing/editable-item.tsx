@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, type RefObject } from "react"
+import { type FocusEvent, type RefObject, useLayoutEffect, useRef } from "react"
 import { useTranslation } from "react-i18next"
 
 import { undoRemoval } from "@/domain/roadmap/item-removal"
@@ -19,6 +19,8 @@ import {
   RemoveButton,
 } from "./edit-controls"
 import { MoveMenu } from "./move-menu"
+import { MovedLabel } from "./moved-label"
+import { type ItemMove, type MovedMark, revealMoved } from "./moved-mark"
 import { dropPageItem, editPageItem, type PageItem } from "./page-items"
 import {
   usePendingChanges,
@@ -46,6 +48,10 @@ export interface EditableItemProps {
   order?: { at: number; count: number } | undefined
   /** Says a status message: where the item now is in its placement's order (S2). */
   onAnnounce: (message: string) => void
+  /** The moved mark, when the item carries it (STY-071). */
+  mark?: MovedMark | undefined
+  /** The Move menu moved the item, to `to`: it takes the moved mark. */
+  onMoved: (item: PageItem, move: ItemMove, to: RoadmapPlacement) => void
   /** Which control takes focus as the item renders, once; see `onFocusRequest`. */
   focusRequest?: ItemControl | undefined
   /**
@@ -80,8 +86,10 @@ export type ItemControl = "edit" | "move" | "remove" | "undo-removal"
  * roadmap is being published (S15). An item added and not yet published is tagged
  * "New" instead; what Edit and Move change is part of it (STY-046 S6). An item removed
  * shows where it did, struck through and tagged "Removed", with "Undo removal", which
- * brings back its edits too, and its Move and Edit held (STY-049 S2, S3, D6). Nothing
- * is written until the roadmap is published.
+ * brings back its edits too, and its Move and Edit held (STY-049 S2, S3, D6). The item
+ * moved last carries the moved mark (STY-071), and the page scrolls to it, once, as
+ * focus comes to it after the move (S4). Nothing is written until the roadmap is
+ * published.
  */
 export function EditableItem({
   roadmapId,
@@ -92,6 +100,8 @@ export function EditableItem({
   position,
   order,
   onAnnounce,
+  mark,
+  onMoved,
   focusRequest,
   onFocusRequest,
   onFocused,
@@ -130,15 +140,26 @@ export function EditableItem({
       remove: removeButton,
       "undo-removal": undoRemovalButton,
     }[focusRequest]
-    control.current?.focus()
+    // Focus on Move follows a move, whose mark scrolls the page to the item, gliding.
+    control.current?.focus({ preventScroll: focusRequest === "move" })
     onFocused()
   }, [focusRequest, editButton, onFocused])
+  // The mark the page last scrolled to: each move's once, as focus first comes to it.
+  const revealed = useRef<MovedMark | null>(null)
+  const reveal = (event: FocusEvent<HTMLLIElement>) => {
+    if (!mark || revealed.current === mark) return
+    revealed.current = mark
+    revealMoved(event.currentTarget)
+  }
+  const label = (shortens: boolean) =>
+    mark && <MovedLabel move={mark.move} shortens={shortens} />
 
   const move = (placement: RoadmapPlacement) => {
     if (!editable) return
     store.update(roadmapId, (changes) =>
       editPageItem(changes, items, pageItem, position, { placement }),
     )
+    onMoved(pageItem, { kind: "placement", from: shown.placement }, placement)
     onFocusRequest(position, "move")
   }
   const reorder = (to: OrderMove) => {
@@ -147,6 +168,8 @@ export function EditableItem({
       reorderItem(changes, items, position, to),
     )
     const at = positionAfter(order.at, order.count, to)
+    if (shown.placement !== null)
+      onMoved(pageItem, { kind: to }, shown.placement)
     onAnnounce(
       t(`roadmaps.edit.order.moved.${to}`, {
         position: at + 1,
@@ -209,6 +232,8 @@ export function EditableItem({
         struck={removal !== undefined}
         reveal={focusRequest === "remove" || focusRequest === "undo-removal"}
         tag={pending && <PendingTag pending={pending} subject={title} />}
+        mark={label(true)}
+        onFocus={reveal}
         actions={(wide) => (
           <>
             {moveMenu(!wide)}
@@ -243,6 +268,8 @@ export function EditableItem({
       item={shown}
       organisations={organisations}
       struck={removal !== undefined}
+      mark={label(false)}
+      onFocus={reveal}
       actions={
         <EditControls
           subject={title}

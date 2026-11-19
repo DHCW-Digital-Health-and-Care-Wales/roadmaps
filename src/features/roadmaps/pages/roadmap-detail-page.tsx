@@ -26,6 +26,7 @@ import { RoadmapsErrorState } from "../components/roadmaps-error-state"
 import { StatusPanel } from "../components/status-panel"
 import { RoadmapDialog } from "../dialogs/roadmap-dialog"
 import { EditableProductDetails } from "../editing/editable-product-details"
+import { useMovedMark } from "../editing/moved-mark"
 import { groupPageItems, usePageItems } from "../editing/page-items"
 import {
   applyRoadmapChanges,
@@ -171,7 +172,8 @@ interface RoadmapViewProps {
  * It holds the page's one item dialog, which "Add an item" and each item's Edit open,
  * and its roadmap dialog, which the product details' Edit and More open. The items
  * show in the view last chosen on this device, and a view chosen keeps the placement
- * the page was in at the top of the screen (STY-067 S3, S11).
+ * the page was in at the top of the screen (STY-067 S3, S11). It holds the moved mark
+ * too, which any move sets, the dialog's included (STY-071).
  */
 function RoadmapView({
   roadmap,
@@ -217,12 +219,14 @@ function RoadmapView({
   const roadmapEdit = useRoadmapEdit(roadmap, shown)
   const publishedStateNotice = useRef<HTMLDivElement>(null)
   const publishNotice = useRef<HTMLDivElement>(null)
+  const movedMark = useMovedMark(roadmap.id, pageItems)
   const itemDialog = useItemDialog({
     roadmap,
     items: items.data,
     organisations: organisations.data,
     pageItems,
     addItemButton,
+    onMoved: movedMark.moved,
   })
   // The page's own "Add an item" is always there, where a removed item's card is not.
   const focusAddItem = useCallback(() => {
@@ -317,6 +321,7 @@ function RoadmapView({
         groups={groups}
         view={itemsView}
         itemDialog={itemDialog}
+        movedMark={movedMark}
         action={publishAction(roadmap)}
         onItemRemoved={focusAddItem}
       />
@@ -331,6 +336,7 @@ interface RoadmapItemsAreaProps extends Pick<
   | "groups"
   | "view"
   | "itemDialog"
+  | "movedMark"
   | "action"
   | "onItemRemoved"
 > {

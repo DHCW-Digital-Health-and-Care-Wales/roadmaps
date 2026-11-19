@@ -284,6 +284,15 @@
   --shadow-control-edge: 0 2px 0 var(--input);
   /* The grey bar under a clickable card (DHCW's `.nhsw-card` with a title link). */
   --shadow-card-bar: 0 4px 0 var(--border);
+  /* The moved mark's edge (STY-071): a bar over the card's own left padding and a ring
+     round it, so nothing in it shifts, its grey bar kept under the ring. */
+  --shadow-moved-mark:
+    inset 6px 0 0 var(--status-success-border),
+    0 0 0 2px var(--status-success-border), 0 6px 0 var(--border);
+  /* The same on a compact row, whose list draws the rule between rows. */
+  --shadow-moved-mark-row:
+    inset 4px 0 0 var(--status-success-border),
+    0 0 0 2px var(--status-success-border);
   --shadow-popup: var(--popup-shadow);
 
   --color-background: var(--background);

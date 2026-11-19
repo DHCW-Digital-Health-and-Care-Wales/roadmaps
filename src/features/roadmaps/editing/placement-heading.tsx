@@ -20,6 +20,8 @@ export interface PlacementHeadingProps {
   id: string
   /** Says a status message: that the placement's order was undone. */
   onAnnounce: (message: string) => void
+  /** The placement's order was undone: an item marked as moved there loses its mark. */
+  onUndone: (placement: RoadmapPlacement) => void
 }
 
 /**
@@ -34,6 +36,7 @@ export function PlacementHeading({
   placement,
   id,
   onAnnounce,
+  onUndone,
 }: PlacementHeadingProps) {
   const { t } = useTranslation()
   const store = usePendingChangesStore()
@@ -48,6 +51,7 @@ export function PlacementHeading({
   const undo = () => {
     if (held) return
     store.update(roadmapId, (changes) => undoOrder(changes, placement))
+    onUndone(placement)
     heading.current?.focus()
     onAnnounce(t("roadmaps.edit.order.undone", { placement: name }))
   }

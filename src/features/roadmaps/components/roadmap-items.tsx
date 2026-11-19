@@ -5,9 +5,11 @@ import { useTranslation } from "react-i18next"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Organisation } from "@/domain/roadmap/organisation"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
+import type { RoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 
 import { ItemDialog } from "../dialogs/item-dialog"
 import { EditableItem, type ItemControl } from "../editing/editable-item"
+import type { ItemMove, MovedMark, PageMovedMark } from "../editing/moved-mark"
 import type { PageItem } from "../editing/page-items"
 import type { PublishAction } from "../editing/pending-changes-store"
 import { PlacementHeading } from "../editing/placement-heading"
@@ -42,6 +44,8 @@ export interface RoadmapItemsProps {
   view: ItemsView
   /** The page's one item dialog (`useItemDialog`). */
   itemDialog: PageItemDialog
+  /** The page's moved mark (`useMovedMark`, STY-071). */
+  movedMark: PageMovedMark
   /** Whether the roadmap's changes are published or saved, as Remove's question says. */
   action: PublishAction
   /** A new item was removed, its card or row with it: focus needs somewhere to go (S6). */
@@ -64,6 +68,9 @@ export interface RoadmapItemsProps {
  * and order (`view`, STY-067 S3). An item's Remove asks first, in the page's one
  * removal dialog, drawn here too (STY-049 S1). A removed item shows where it did, but
  * is no stop of its placement's order: the others' positions count without it (S8).
+ * The item moved last carries the moved mark (STY-071); a move to another placement
+ * from the Move menu is said in the status line too, with the item's position there,
+ * last (S5).
  */
 export function RoadmapItems({
   roadmapId,
@@ -73,6 +80,7 @@ export function RoadmapItems({
   groups,
   view,
   itemDialog,
+  movedMark,
   action,
   onItemRemoved,
 }: RoadmapItemsProps) {
@@ -102,7 +110,27 @@ export function RoadmapItems({
     pageItems,
     onFocusRequest: cardHandlers.requestFocus,
     onNewItemRemoved: onItemRemoved,
+    onMoved: movedMark.moved,
   })
+  const moved = (item: PageItem, move: ItemMove, to: RoadmapPlacement) => {
+    movedMark.moved(item, move, to)
+    if (move.kind !== "placement") return
+    // Last of the items there that count in its order (STY-051 S1, STY-049 S8).
+    const there = placements.find(({ placement }) => placement === to)
+    const count =
+      (there?.items.filter(({ item: each }) => each.removal === undefined)
+        .length ?? 0) + 1
+    cardHandlers.announce(
+      t(
+        move.from === null ? "roadmaps.edit.placedIn" : "roadmaps.edit.movedTo",
+        {
+          placement: t(`roadmaps.items.placements.${to}`),
+          position: count,
+          count,
+        },
+      ),
+    )
+  }
   const panelAddButton = useRef<HTMLButtonElement>(null)
 
   const list = (
@@ -120,6 +148,8 @@ export function RoadmapItems({
       labelledBy={labelledBy}
       focus={focus}
       cardHandlers={cardHandlers}
+      mark={movedMark.mark}
+      onMoved={moved}
       onEdit={itemDialog.edit}
       onRemove={removalDialog.ask}
       dialogAt={itemDialog.cardAt}
@@ -177,6 +207,7 @@ export function RoadmapItems({
                   placement={placement}
                   id={id}
                   onAnnounce={cardHandlers.announce}
+                  onUndone={movedMark.orderUndone}
                 />
                 {placed.length > 0 ? (
                   list(placed, id, true)
@@ -238,6 +269,9 @@ interface ItemListProps {
     focused: () => void
     announce: (text: string) => void
   }
+  /** The item moved last, if one is marked. */
+  mark: MovedMark | null
+  onMoved: (item: PageItem, move: ItemMove, to: RoadmapPlacement) => void
   onEdit: (position: number) => void
   onRemove: (position: number) => void
   /** Where, among the page's items, the one is that holds `dialogOpener`. */
@@ -256,6 +290,8 @@ function ItemList({
   labelledBy,
   focus,
   cardHandlers,
+  mark,
+  onMoved,
   onEdit,
   onRemove,
   dialogAt,
@@ -278,6 +314,8 @@ function ItemList({
           position={position}
           order={orderOf(ordered, stopAt.get(position), stops.length)}
           onAnnounce={cardHandlers.announce}
+          mark={mark?.key === pageItem.key ? mark : undefined}
+          onMoved={onMoved}
           focusRequest={
             focus?.position === position ? focus.control : undefined
           }

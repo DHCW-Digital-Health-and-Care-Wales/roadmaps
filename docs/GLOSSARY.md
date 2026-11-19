@@ -186,7 +186,7 @@ that opens in place to its other fields, by its chevron or a press on its text
 **row** of it is an item shown that way, never an item's position.
 _Avoid_: List view, table
 
-**Moved mark** _(planned)_:
+**Moved mark**:
 The edge and label on the item a Product Lead moved last, saying how it moved ("Moved
 up", "Moved from Now", "Placed"), until the next move, or until the move is undone,
 published or gone from the page (STY-071 S8). Display only: never a pending edit, and

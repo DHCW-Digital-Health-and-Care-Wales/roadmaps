@@ -64,6 +64,7 @@ moves to `_archive/`, where its row here still points.
 | [CHO-024](chores/CHO-024-the-session-warning-draws-its-x-as-a-dialog-does.md)             | The session warning's corner X is level with its title and drawn once, as a dialog's is                                             | Proposed       |
 | [CHO-025](chores/CHO-025-check-a-published-removal-against-a-real-spreadsheet.md)         | Check STY-070's write (a removed item's row deleted, or the last one cleared, in one request) against a real test spreadsheet       | Proposed       |
 | [CHO-026](chores/CHO-026-a-dialogs-scrolling-header-can-be-scrolled-by-keyboard.md)       | A dialog's header that scrolls by itself at the pinned sizes can be scrolled from the keyboard, and axe holds it                    | Proposed       |
+| [CHO-027](chores/CHO-027-a-settled-thread-keeps-a-shared-checkouts-ports.md)              | Settling a thread stops tearing down the ports and servers of a checkout the next orchestrated item still uses                      | Needs grilling |
 
 Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status token.
 

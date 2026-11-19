@@ -459,7 +459,9 @@
    attribute, not on `:root:active-view-transition-type(…)`, because Chrome restyles no
    descendant when the type starts to match, though it does when an attribute changes.
    It is `display: none`, not `visibility: hidden`, because the menu transitions all
-   its properties as it closes, so a transitioning `visibility` stays visible. */
+   its properties as it closes (`DropdownMenuContent`'s `duration-100`, with
+   `transition-property` left at `all`), so a transitioning `visibility` stays
+   visible. */
 [data-travelling] [data-slot="dropdown-menu-content"][data-closed] {
   display: none;
 }

@@ -8,7 +8,7 @@
 - **Binding ADRs**: ADR-002, ADR-005, ADR-008, ADR-010
 - **Suggested model**: Sonnet — a placement on the existing dialog and a stored
   toggle, both with precedents (theme, compact view)
-- **Delivered**: (the PR below, once raised)
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/198
 
 ## Summary
 

@@ -67,6 +67,7 @@ export function CompactItemRow({
   const description = item.description && localise(item.description, language)
   const horizon = item.writtenHorizon
   const wholeClasses = "wrap-break-word whitespace-pre-line"
+
   return (
     <Collapsible
       open={open}

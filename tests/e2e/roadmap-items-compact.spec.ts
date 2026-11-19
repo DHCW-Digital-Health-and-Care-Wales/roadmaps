@@ -287,21 +287,36 @@ for (const [width, height] of [
 /**
  * Presses where `target` is drawn, as a pointer does. A row's text sits under the
  * chevron's stretch, so a locator's own click, which waits for the text to receive the
- * press, would never land.
+ * press, would never land: `force` presses its centre without that wait, and without
+ * the wait for it to hold still. Playwright scrolls only to the nearest edge, which can
+ * leave the target under the stuck header. So the target is brought to the middle and
+ * left until two frames draw it in one place, as the header changes height with the
+ * scroll.
  */
-async function pressOn(page: Page, target: Locator) {
-  await target.evaluate((element) => {
+async function pressOn(target: Locator) {
+  await target.evaluate(async (element) => {
     element.scrollIntoView({ block: "center" })
+    let drawn = ""
+    for (let frame = 0; frame < 60; frame += 1) {
+      await new Promise((frameReady) => requestAnimationFrame(frameReady))
+      const now = JSON.stringify(element.getBoundingClientRect())
+      if (now === drawn) return
+      drawn = now
+    }
   })
-  const { x, y, width, height } = await boxOf(target)
-  await page.mouse.click(x + width / 2, y + height / 2)
+  await target.click({ force: true })
+}
+
+/** A row's chevron, whatever its name says it will do. */
+function rowChevron(row: Locator): Locator {
+  return row.getByRole("button", { name: /^(Show|Hide) the rest of/ })
 }
 
 for (const [width, height] of [
   [1280, 900],
   [375, 812],
 ] as const) {
-  test(`opens and closes a row by a press on its text at ${String(width)}px (STY-069)`, async ({
+  test(`opens and closes a row by a press on its line at ${String(width)}px (STY-069)`, async ({
     page,
     sheets,
   }) => {
@@ -309,33 +324,49 @@ for (const [width, height] of [
     await openWithItems(page, sheets, withItems(...ITEMS), "Last")
     await chooseCompact(page)
     const row = rowOf(page, "Short")
-    const chevron = row.getByRole("button", {
-      name: /^(Show|Hide) the rest of/,
-    })
+    const chevron = rowChevron(row)
 
     await expect(chevron).toHaveCSS("cursor", "pointer")
-    await pressOn(page, row.getByRole("heading"))
+    await pressOn(row.getByRole("heading"))
     await expect(chevron).toHaveAttribute("aria-expanded", "true")
-    await pressOn(page, row.getByRole("heading"))
+    // The opened row's fields are below the line, outside the stretch.
+    await pressOn(fieldOf(row, "Description"))
+    await expect(chevron).toHaveAttribute("aria-expanded", "true")
+    await pressOn(row.getByRole("heading"))
     await expect(chevron).toHaveAttribute("aria-expanded", "false")
 
     if (width >= 768) {
-      // The start of the description, and the room beside it, open the row too.
-      await pressOn(page, row.locator("p"))
+      // The start of the description opens the row too.
+      await pressOn(row.locator("p"))
       await expect(chevron).toHaveAttribute("aria-expanded", "true")
-      await pressOn(page, row.getByRole("heading"))
+      await pressOn(row.getByRole("heading"))
+      await expect(chevron).toHaveAttribute("aria-expanded", "false")
     }
 
     // An unplaced item's flag is under the stretch too.
     const flagged = rowOf(page, "Someday")
-    await pressOn(page, flagged.getByText(/isn't recognised/))
-    await expect(
-      flagged.getByRole("button", { name: /^(Show|Hide) the rest of/ }),
-    ).toHaveAttribute("aria-expanded", "true")
+    await pressOn(flagged.getByText(/isn't recognised/))
+    await expect(rowChevron(flagged)).toHaveAttribute("aria-expanded", "true")
+  })
 
-    // Move and Edit are their own controls: Move opens its menu, the row stays closed.
+  test(`leaves a row as it is when Move or Edit is pressed at ${String(width)}px (STY-069)`, async ({
+    page,
+    sheets,
+  }) => {
+    await page.setViewportSize({ width, height })
+    await openWithItems(page, sheets, withItems(...ITEMS), "Last")
+    await chooseCompact(page)
+    const row = rowOf(page, "Short")
+
     await row.getByRole("button", { name: /^Move / }).click()
-    await expect(chevron).toHaveAttribute("aria-expanded", "false")
+    await expect(rowChevron(row)).toHaveAttribute("aria-expanded", "false")
+    await page.keyboard.press("Escape")
+
+    await row.getByRole("button", { name: /^Edit / }).click()
+    await expect(page.getByRole("dialog")).toBeVisible()
+    await page.keyboard.press("Escape")
+    await expect(page.getByRole("dialog")).toBeHidden()
+    await expect(rowChevron(row)).toHaveAttribute("aria-expanded", "false")
   })
 }
 

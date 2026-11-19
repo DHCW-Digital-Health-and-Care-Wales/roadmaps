@@ -35,14 +35,14 @@ description, or its flag or pending tag, or the room between them
 **Then** the row closes, and its chevron reads "Show the rest of" then the title
 **And** a press on an opened row's fields, below the line, opens or closes nothing
 
-### S3: What else is pressed is unchanged
+### S3: What else is pressed is unchanged (owner, D1)
 
 **Given** a row
 **When** the Product Lead presses Move, Edit or the chevron
 **Then** each does what it did (STY-067 S6, S8), and a press on Move or Edit does not
 open the row
 
-### S4: A keyboard and a screen reader are as before (D2)
+### S4: A keyboard and a screen reader are as before (owner, D3)
 
 **Given** the compact view
 **When** a keyboard or a screen reader reaches a row
@@ -53,21 +53,22 @@ AA violation
 
 ## Decisions
 
-- **D1** (owner, 2026-11-18): a press on the text opens the row, and a second press
-  closes it, as the chevron does. Adds S1, S2. Changes STY-067 S6, which names the
-  chevron as the control.
-- **D2** (owner, 2026-11-19): the chevron is a shadcn Collapsible's trigger, stretched
-  across the line by an overlay with Move and Edit above it, over a click handler on
-  the text or a button around the title. It follows Product details' pattern, adds no
-  second control or name to a row, and needs no lint exception. Collapsible over
-  Accordion: rows open independently, so a group's single root, its arrow keys between
-  triggers and its heading wrapper are unused.
-- **D3** (owner, 2026-11-19): a row's text can't be selected, since the overlay covers
-  it, over a handler that keeps it selectable and needs an `eslint-disable`. A Product
-  Lead copies a title from its dialog or card.
-- **D4** (agent, 2026-11-18): the story joins EPC-016, whose compact view it finishes,
+- **D1** (owner, 2026-11-18, the request that added this story): a press on the text
+  opens the row, and a second press closes it, as the chevron does. Adds S1, S2.
+  Changes STY-067 S6, which names the chevron as the control.
+- **D2** (agent, 2026-11-18): the story joins EPC-016, whose compact view it finishes,
   over a new one-story epic; the epic stays Done, as the story is delivered in the PR
   that adds it.
+- **D3** (owner, 2026-11-19, the review of the first build, which pressed a click
+  handler on the text): the chevron is a shadcn Collapsible's trigger, stretched across
+  the line by an overlay with Move and Edit above it, over a handler on the text or a
+  button around the title. It follows Product details' pattern, adds no second control
+  or name to a row, and needs no lint exception. Collapsible over Accordion: rows open
+  independently, so a group's single root, its arrow keys between triggers and its
+  heading wrapper are unused. Changes S4.
+- **D4** (owner, 2026-11-19, D3's trade): a row's text can't be selected, since the
+  overlay covers it, over a handler that keeps it selectable and needs an
+  `eslint-disable`. A Product Lead copies a title from its dialog or card.
 
 ## Out of scope
 
@@ -79,8 +80,7 @@ AA violation
 
 ### Departures
 
-- **S1**: the area is the whole line but Move and Edit, so a flag or a pending tag
-  opens the row on a desktop too, which the first reading of S1 left out (agent).
+None.
 
 ### Contract for dependents
 
@@ -94,14 +94,18 @@ AA violation
   `roadmap-items-compact.spec.ts`): the text sits under the overlay, so a locator's own
   click, which waits for the text to receive the press, never lands. jsdom lays nothing
   out, so a component test can't press the overlay.
+- Hovering anywhere on the line fills the chevron, as the overlay is part of the button:
+  it shows what a press will do.
 
 ### Scenario evidence
 
-| Scenario | Held by                                                                                                                                                                                                            |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| S1, S2   | `roadmap-items-compact.spec.ts` (`opens and closes a row by a press on its text at 1280px/375px`: the title, from 768px the description, an unplaced item's flag)                                                  |
-| S3       | the same test ends on Move, the row closed; Edit sits in the same block as Move, above the overlay; the existing chevron, Move and Edit component tests                                                            |
-| S4       | the same test's cursor check; `roadmap-items-compact.spec.ts` (`the keyboard`, `has no axe violation in the compact view…`) and the component tests of the chevron's names and expanded state, unchanged and green |
+| Scenario | Held by                                                                                                                                                                                                                        |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| S1, S2   | `roadmap-items-compact.spec.ts` (`opens and closes a row by a press on its line at 1280px/375px`: the title, from 768px the description, an unplaced item's flag, and a press on an opened row's field, which changes nothing) |
+| S3       | `roadmap-items-compact.spec.ts` (`leaves a row as it is when Move or Edit is pressed at …px`); the existing chevron, Move and Edit component tests                                                                             |
+| S4       | the same Playwright test's cursor check; `roadmap-items-compact.spec.ts` (`the keyboard`, `has no axe violation in the compact view…`) and the component tests of the chevron's names and expanded state, unchanged and green  |
 
-The Playwright test was written after the code and shown red by removing the overlay
-(both widths: the row stayed closed).
+The press tests were written after the code and shown red by removing the overlay (the
+row stayed closed). A press on the room beside the text or on a pending tag has no test
+of its own: the overlay is one box over the line, which the title, the description and
+the flag each show.

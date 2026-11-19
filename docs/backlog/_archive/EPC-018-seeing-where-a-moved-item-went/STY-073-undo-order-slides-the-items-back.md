@@ -7,7 +7,7 @@
 - **Depends on**: STY-072 (hard: its transition)
 - **Binding ADRs**: ADR-002, ADR-010
 - **Suggested model**: Sonnet — STY-072's transition, started from one more control
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/197
 
 ## Summary
 

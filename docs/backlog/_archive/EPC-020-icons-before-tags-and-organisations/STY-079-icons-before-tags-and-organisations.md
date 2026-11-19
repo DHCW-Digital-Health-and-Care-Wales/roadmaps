@@ -8,7 +8,7 @@
 - **Binding ADRs**: ADR-008, ADR-010
 - **Suggested model**: Sonnet — one small icon component placed at eight known sites, the
   rules already settled
-- **Delivered**: _the PR, added once it exists_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/203
 
 ## Summary
 

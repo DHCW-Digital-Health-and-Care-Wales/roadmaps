@@ -95,13 +95,13 @@ pending
 
 **Given** a marked item
 **When** the Product Lead chooses "Undo order" on the placement it is in, or an "Undo
-changes" or "Discard all" that puts it back where it was before the move; publishes
-the roadmap, and the publish succeeds; removes the item; the roadmap is read again without the move (as after
-taking a co-lead's version); or leaves the page
+changes" or "Discard all" that changes where the item shows; publishes the roadmap,
+and the publish succeeds; removes the item; the roadmap is read again without the move
+(as after taking a co-lead's version); or leaves the page
 **Then** no item is marked
-**And** "Undo order" on another placement, or "Undo changes" on an item moved within
-its placement (which undoes its fields and leaves the order pending, STY-050), keeps
-the mark
+**And** "Undo order" on another placement, or "Undo changes" that leaves the item where
+it shows (an item moved only within its placement: it undoes its fields and leaves the
+order pending, STY-050), keeps the mark
 
 ### S9: The mark in Welsh and in the dark theme
 
@@ -144,10 +144,10 @@ layout.
   reader, since focus returns to Edit with its name; S5 is the Move menu's.
 - **D12** (agent, 2026-11-19, review): D4's "an undo that puts it back" read
   literally: "Undo changes" undoes an item's fields and placement, never its place in
-  an order (STY-050), so it clears the mark only when it reverses the move; "Undo
-  order" clears it on the item's own placement, as the owner said, even where a
-  moved-in item stays last. A refused or failed publish leaves the move pending and
-  keeps the mark (D9).
+  an order (STY-050), so it clears the mark only when it changes where the item shows,
+  as when it takes back a move to another placement; "Undo order" clears it on the
+  item's own placement, as the owner said, even where a moved-in item stays last. A
+  refused or failed publish leaves the move pending and keeps the mark (D9).
 - **D13** (owner, 2026-11-19, confirmed summary): removing the marked item clears the
   mark, though a removed published item still shows, struck through (STY-049).
 - **D14** (agent, 2026-11-19, review): the edge must not shift the item's content or

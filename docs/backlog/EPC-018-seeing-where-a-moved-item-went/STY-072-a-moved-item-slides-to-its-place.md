@@ -101,8 +101,8 @@ Audited at `e75d846` against react-dom 19.3.1's source:
   transition), so the second move is not delayed.
 - A moved item is drawn anew in another list (`RoadmapItems`' focus request), so the
   two ends pair by a shared `view-transition-name`. Do not use the card key: an item
-  read without an ID keys by position and its text (`item-card-keys.ts`), which
-  changes as it moves, and React escapes an invalid name with `btoa`, which throws on
+  read without an ID keys by its read position and text (`item-card-keys.ts`), which
+  changes on a re-read, and React escapes an invalid name with `btoa`, which throws on
   any character outside Latin-1 ("Tŷ", an en dash). Name it from the item's ID,
   sanitised, and give an item without one no name, so it shows at once, marked.
 - `globals.css`'s reduced-motion rule does not reach `::view-transition-*`, so S4's

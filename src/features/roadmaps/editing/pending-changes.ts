@@ -364,12 +364,12 @@ export function settlePublished(
   sent: RoadmapChanges,
 ): RoadmapChanges {
   const sentIds = new Set(sent.newItems.map(({ id }) => id))
-  const removed = (entry: ItemTarget) =>
+  const isRemoved = (entry: ItemTarget) =>
     sent.removals.some((each) => sameTarget(each, entry))
   return {
     roadmap: settleFields(changes.roadmap, sent.roadmap),
     items: changes.items.flatMap((entry) => {
-      if (removed(entry)) return []
+      if (isRemoved(entry)) return []
       const sentEntry = sent.items.find((each) => sameTarget(each, entry))
       if (!sentEntry) return [entry]
       const fields = settleFields(entry.fields, sentEntry.fields)
@@ -383,7 +383,7 @@ export function settlePublished(
       ({ placement }) =>
         !sent.orders.some((each) => each.placement === placement),
     ),
-    removals: changes.removals.filter((entry) => !removed(entry)),
+    removals: changes.removals.filter((entry) => !isRemoved(entry)),
   }
 }
 

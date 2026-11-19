@@ -138,11 +138,11 @@ const REQUIRED_FIELDS: ReadonlySet<string> = new Set(["title"])
  * beneath the removal published with it or not at all, and it takes no ID and no place
  * in a move or an order, unless a co-lead changed any of its fields, which is a
  * conflict, or it can't be found; one whose ID no row holds is removed already
- * (`planRemovals`, STY-070). Throws `AppError('unknown')` for a
- * blank title, a placement that is none of the six, an organisation the list doesn't
- * hold, a `Last updated` that is no `YYYY-MM-DD` date or two new items with one ID,
- * which callers never send, and `AppError('invalid-data')` for a family or category
- * chosen while its list is missing.
+ * (`planRemovals`, STY-070). Throws `AppError('unknown')` for a blank title, a
+ * placement that is none of the six, an organisation the list doesn't hold, a `Last
+ * updated` that is no `YYYY-MM-DD` date or two new items with one ID, which callers
+ * never send, and `AppError('invalid-data')` for a family or category chosen while its
+ * list is missing.
  */
 export function planRoadmapPublish(
   changes: RoadmapChanges,
@@ -235,7 +235,7 @@ export function planRoadmapPublish(
   missingItems.push(...removals.missing)
   const orders = plannedOrders(changes, snapshot, {
     movedTo,
-    left: [...missingItems, ...removals.gone],
+    notFound: [...missingItems, ...removals.gone],
     removed,
     newItems,
   })
@@ -324,7 +324,7 @@ function sameSlots(a: readonly Slot[], b: readonly Slot[]): boolean {
  * is to hold, those it holds bar any moved out (`movedTo`, the found items with a
  * placement pending, in the order moved) or `removed`, by index, then the items moved
  * in and the `newItems` written. An item edited or removed that is no longer found or
- * already gone (`left`) has left both orders, so one that differs by it alone is no
+ * already gone (`notFound`) has left both orders, so one that differs by it alone is no
  * conflict.
  */
 function plannedOrders(
@@ -332,12 +332,12 @@ function plannedOrders(
   snapshot: RoadmapSnapshot,
   {
     movedTo,
-    left,
+    notFound,
     removed,
     newItems,
   }: {
     movedTo: ReadonlyMap<number, string>
-    left: readonly ItemTarget[]
+    notFound: readonly ItemTarget[]
     removed: ReadonlySet<number>
     newItems: PublishWrites["newItems"]
   },
@@ -345,7 +345,7 @@ function plannedOrders(
   const conflicts: OrderConflict[] = []
   const targets: OrderTarget[] = []
   const found = (entry: OrderedItem) =>
-    !left.some(({ item, position }) =>
+    !notFound.some(({ item, position }) =>
       entry.id === null
         ? item.id === null && position === entry.position
         : item.id === entry.id,
@@ -487,9 +487,9 @@ export function heldWrites(
   // Held by one without an ID only once every other write is.
   let heldIfOthersAre = false
   for (const removal of writes.removals) {
-    const removed = heldRemoval(removal, snapshot.items, snapshot.takenIds)
-    if (removed === "if-others-held") heldIfOthersAre = true
-    else held.push(removed)
+    const verdict = heldRemoval(removal, snapshot.items, snapshot.takenIds)
+    if (verdict === "if-others-held") heldIfOthersAre = true
+    else held.push(verdict)
   }
   // A row the read skips (its title cleared since) may still hold an item's write.
   const unread = writes.items.some(

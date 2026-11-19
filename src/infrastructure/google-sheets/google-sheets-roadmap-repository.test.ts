@@ -3094,7 +3094,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
           ?.rows.slice(1)
           .map(([title]) => title)
       /** The item titled `title` in `loaded`, removed where it was read. */
-      const removalOf = (loaded: readonly RoadmapItem[], title: string) => {
+      const removalFor = (loaded: readonly RoadmapItem[], title: string) => {
         const position = loaded.findIndex((item) => item.title.en === title)
         const item = loaded[position]
         if (item === undefined) throw new Error(`No item ${title}`)
@@ -3113,7 +3113,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
         await expect(
           repository.publishRoadmapChanges("producta", {
             ...NO_CHANGES,
-            removals: [removalOf(loaded, "B")],
+            removals: [removalFor(loaded, "B")],
           }),
         ).resolves.toEqual({ status: "published" })
 
@@ -3141,16 +3141,16 @@ describe("GoogleSheetsRoadmapRepository", () => {
             roadmap: { statusLabel: { base: "Beta", value: "Live" } },
             items: [
               {
-                ...removalOf(loaded, "A"),
+                ...removalFor(loaded, "A"),
                 fields: { phase: { base: "", value: "Live" } },
               },
               {
-                ...removalOf(loaded, "B"),
+                ...removalFor(loaded, "B"),
                 fields: { placement: { base: "next", value: "later" } },
               },
             ],
             newItems: [NEW_CLINIC],
-            removals: [removalOf(loaded, "A"), removalOf(loaded, "D")],
+            removals: [removalFor(loaded, "A"), removalFor(loaded, "D")],
           }),
         ).resolves.toEqual({ status: "published" })
 
@@ -3206,7 +3206,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
               ],
             },
           ],
-          removals: [removalOf(loaded, "C")],
+          removals: [removalFor(loaded, "C")],
         })
 
         const [body] = spreadsheet.bodies
@@ -3236,7 +3236,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
 
         await repository.publishRoadmapChanges("producta", {
           ...NO_CHANGES,
-          removals: [removalOf(loaded, "Removed")],
+          removals: [removalFor(loaded, "Removed")],
         })
 
         expect(spreadsheet.bodies).toEqual([
@@ -3281,7 +3281,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
             await expect(
               repository.publishRoadmapChanges("producta", {
                 ...NO_CHANGES,
-                removals: kept.map((title) => removalOf(loaded, title)),
+                removals: kept.map((title) => removalFor(loaded, title)),
               }),
             ).resolves.toEqual({ status: "published" })
 
@@ -3303,7 +3303,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
           await repository.publishRoadmapChanges("producta", {
             ...NO_CHANGES,
             newItems: [NEW_CLINIC],
-            removals: [removalOf(loaded, "A"), removalOf(loaded, "B")],
+            removals: [removalFor(loaded, "A"), removalFor(loaded, "B")],
           })
 
           const [body] = spreadsheet.bodies
@@ -3325,7 +3325,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
 
           await repository.publishRoadmapChanges("producta", {
             ...NO_CHANGES,
-            removals: [removalOf(loaded, "A")],
+            removals: [removalFor(loaded, "A")],
           })
 
           expect(spreadsheet.bodies).toEqual([{ requests: [deleteRow(1)] }])
@@ -3346,7 +3346,7 @@ describe("GoogleSheetsRoadmapRepository", () => {
           )
           const repository = httpRepository()
           const loaded = await repository.listRoadmapItems("producta")
-          const removal = removalOf(loaded, "Removed")
+          const removal = removalFor(loaded, "Removed")
           const spreadsheet = serveStatefulSpreadsheet(tabsOf(0, ...after))
 
           await expect(

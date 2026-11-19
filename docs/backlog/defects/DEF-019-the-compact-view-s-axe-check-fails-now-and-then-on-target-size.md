@@ -9,6 +9,7 @@
 - **Binding ADRs**: none
 - **Suggested model**: Sonnet — one spec, a stress run under load, and either a wait
   for the view to settle or a real target-size fault to fix
+- **Delivered**: _(add on delivery)_
 
 ## Summary
 
@@ -30,7 +31,9 @@ view in the light theme at 375px (S13)" passes.
 **Actual**: once in one full run it failed with `["target-size"]`; rerunning the spec
 passed, and
 `./node_modules/.bin/playwright test tests/e2e/roadmap-items-compact.spec.ts -g "light theme at 375px" --repeat-each=20 --workers=6`
-passed 20 of 20. The failing run's report was not kept.
+passed 20 of 20; the screens it checks are the same at `c4e3934` on the default
+branch, where a stress run under load is the next step. The failing run's report was
+not kept.
 
 ## Cause
 

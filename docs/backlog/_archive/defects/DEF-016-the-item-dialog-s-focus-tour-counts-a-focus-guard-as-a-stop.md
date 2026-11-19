@@ -1,6 +1,6 @@
 # DEF-016: The item dialog's focus tour counts a focus guard as a stop
 
-- **Status**: Needs triage — found by DEF-015 delivery
+- **Status**: Done
 - **Severity**: Low — an E2E run fails now and then on a change that does not touch
   the dialog, and a rerun passes; no user is affected
 - **Area**: E2E
@@ -56,4 +56,30 @@ all 24 times
 
 ## Decisions
 
-## Delivery _(add on delivery; as in `story.md`)_
+- **D1** (owner, 2026-11-19, request "Fix DEF-016"): fix — a flaky Playwright run can
+  fail any PR.
+
+## Delivery
+
+The cause was as stated. In `expectEveryStopShowsAnIndicator`
+(`tests/e2e/focus-indicator.spec.ts`) the tour skips a press that lands on a Base UI
+focus guard (`data-base-ui-focus-guard`) as it already skips one that leaves focus on
+`body`: the next Tab moves on, and the guard is neither counted nor given an indicator
+check. The four page tours never meet a guard, so they behave as before.
+
+### Departures
+
+- **Test-first by reproduction** (agent): the red is the stress run at the default
+  branch, not a new test; the helper is the test.
+- **No screenshots** (agent): no visible UI changes.
+
+### Contract for dependents
+
+A tour of a dialog goes through `expectEveryStopShowsAnIndicator(page, dialog)`; it
+never counts a focus guard as a stop.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                                                       |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | Before the change, `playwright test tests/e2e/focus-indicator.spec.ts -g "item dialog, its fields" --repeat-each=12` failed 2 of 24, each showing `page: span ` in place of `page: input Title`. After it, two runs of the same command passed 24 of 24 each. |

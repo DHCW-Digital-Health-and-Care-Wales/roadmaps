@@ -82,10 +82,11 @@ Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status toke
 | [DEF-013](_archive/defects/DEF-013-a-test-checks-the-roadmap-dialog-s-opening-focus-before-it-moves.md)            | A test checks the roadmap dialog's opening focus before it has moved                             | Done         |
 | [DEF-014](_archive/defects/DEF-014-publish-roadmap-carries-its-dialog-and-outcome-to-another-roadmap.md)           | "Publish roadmap" carries its dialog and outcome onto another roadmap's page                     | Done         |
 | [DEF-015](_archive/defects/DEF-015-a-write-the-editor-can-t-read-back-leaves-the-app-out-of-step.md)               | A write the editor can't read back leaves the app out of step with the data source               | Done         |
-| [DEF-016](defects/DEF-016-the-item-dialog-s-focus-tour-counts-a-focus-guard-as-a-stop.md)                          | The item dialog's focus tour counts a focus guard as a stop                                      | Needs triage |
+| [DEF-016](_archive/defects/DEF-016-the-item-dialog-s-focus-tour-counts-a-focus-guard-as-a-stop.md)                 | The item dialog's focus tour counts a focus guard as a stop                                      | Done         |
 | [DEF-017](defects/DEF-017-an-edit-made-while-a-publish-moves-its-item-is-reported-as-removed.md)                   | An edit made while a publish moves its item's row is reported as removed, for an item with no ID | Needs triage |
 | [DEF-018](defects/DEF-018-reconnecting-on-a-roadmap-s-page-reads-the-roadmap-list-twice.md)                        | Reconnecting on a roadmap's page reads the roadmap list twice                                    | Needs triage |
 | [DEF-019](defects/DEF-019-the-compact-view-s-axe-check-fails-now-and-then-on-target-size.md)                       | The compact view's accessibility check fails now and then on target size                         | Needs triage |
+| [DEF-020](defects/DEF-020-the-compact-view-s-press-on-a-row-test-fails-now-and-then.md)                            | The compact view's press-on-a-row test fails now and then                                        | Needs triage |
 
 A defect found during delivery is recorded in `defects/` with
 Status `Needs triage` and listed here until the owner triages it.

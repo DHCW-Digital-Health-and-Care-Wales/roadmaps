@@ -283,9 +283,9 @@ flowchart LR
   a write the editor can't read back leaves the app out of step with the data source;
   it holds the whole app until a Refresh succeeds, replacing DEF-009's keep-pending
   rules. Done (owner, 2026-11-15); from the grilling of DEF-011 to DEF-014.
-- [DEF-016](../defects/DEF-016-the-item-dialog-s-focus-tour-counts-a-focus-guard-as-a-stop.md):
+- [DEF-016](../_archive/defects/DEF-016-the-item-dialog-s-focus-tour-counts-a-focus-guard-as-a-stop.md):
   the item dialog's focus tour counts a focus guard as a stop, so an E2E run fails now
-  and then. Needs triage; found by DEF-015's delivery.
+  and then. Done (owner, 2026-11-19); found by DEF-015's delivery.
 - [DEF-017](../defects/DEF-017-an-edit-made-while-a-publish-moves-its-item-is-reported-as-removed.md):
   an edit made while a publish moves its item's row is reported as removed, for an
   item that has never had an ID. Needs triage; found by STY-051's review.

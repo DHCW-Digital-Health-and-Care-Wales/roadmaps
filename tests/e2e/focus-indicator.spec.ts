@@ -180,8 +180,15 @@ async function expectEveryStopShowsAnIndicator(
     presses += 1
   ) {
     await page.keyboard.press("Tab")
-    // Past the last stop focus leaves the page; the next Tab starts again at its top.
-    if (await page.evaluate(() => document.activeElement === document.body)) {
+    // Past the last stop focus leaves the page, or rests on a dialog's focus guard until
+    // it hands focus to the first stop; the next Tab starts again at the top.
+    if (
+      await page.evaluate(
+        () =>
+          document.activeElement === document.body ||
+          document.activeElement?.hasAttribute("data-base-ui-focus-guard"),
+      )
+    ) {
       continue
     }
     const focused = page.locator(":focus")

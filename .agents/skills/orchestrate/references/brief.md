@@ -129,9 +129,11 @@ Carry forward what earlier items learned, for example:
   `docs/backlog/defects/`, link it from the owning epic's `## Defects`
   (`docs/AGENTS.md`) and name it in the report by its ID. Fix none outside
   the named items.
-- **Attribution**: follow the session's commit trailer, PR and comment footer
-  rules. Model identifiers are measurement evidence only in run summaries
-  and scratch logs, not attribution in product code or narrative.
+- **Attribution**: each agent ends its commits, PRs and comments with the
+  trailer and footer its own runtime sets, since a child may run another
+  model than yours; name no model or trailer here. Model identifiers are
+  measurement evidence only in run summaries and scratch logs, not
+  attribution in product code or narrative.
 
 ## Progress log
 

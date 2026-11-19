@@ -225,9 +225,11 @@ Audited at `3cd6b8f`.
   "Move to Not doing" the main button, as Disconnect's question has them.
 - **Where Remove sits** (agent): on a card, after "Undo changes" and before Move, where
   a new item's Remove already was; in the compact view, at the foot of the opened row,
-  with "Undo changes" and "Undo removal" (STY-067). A published item's Remove works
-  while a publish is under way, as Edit does; "Undo removal", and a new item's
-  controls, wait for it (`discardable`), since a removal sent can't be called back.
+  with "Undo changes" and "Undo removal" (STY-067). Remove and "Undo removal" wait
+  while a publish of the roadmap is under way, as a new item's controls do
+  (`discardable`): a removal sent can't be called back, and one made meanwhile would
+  keep the item as read before the publish, so the next publish would take what it
+  wrote for a co-lead's change (found by review round 1). Edit does not wait.
 - **S8: the removed item keeps its slot in a pending order** (agent): it shows there,
   but is no stop of a move within it: the others' positions count without it (the
   Move menu's "In Now: 2 of 2"), and they move around it (`reorderItem`).

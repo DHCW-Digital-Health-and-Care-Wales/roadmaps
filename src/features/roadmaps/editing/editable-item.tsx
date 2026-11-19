@@ -107,6 +107,8 @@ export function EditableItem({
   const isNew = pageItem.newItemId !== undefined
   // Nothing is behind a new item, or a removal: once it is sent, a change to it would be
   // lost as the read after the publish settles it, so it waits, as "Discard all" does.
+  // So does Remove: a removal made meanwhile would keep the item as read before the
+  // publish, and take what it wrote for a co-lead's change.
   const publishing = !discardable(snapshot, roadmapId)
   const changeable = !isNew || !publishing
   const editable = changeable && !removal
@@ -168,7 +170,7 @@ export function EditableItem({
     onFocusRequest(position, "edit")
   }
   const remove = () => {
-    if (changeable) onRemove(position)
+    if (!publishing) onRemove(position)
   }
 
   const moveMenu = (iconOnly: boolean) => (
@@ -191,7 +193,7 @@ export function EditableItem({
   const removeControl = !removal && (
     <RemoveButton
       subject={title}
-      disabled={!changeable}
+      disabled={publishing}
       size="sm"
       button={removeButton}
       onRemove={remove}

@@ -16,6 +16,7 @@ import { matchMediaQueries } from "@/test/media-query"
 import { renderWithProviders } from "@/test/render-with-providers"
 
 import { cornerClose, expectDialogClosed } from "../testing/edit-dialog"
+import { holdCall } from "../testing/held-call"
 import { holdRefresh } from "../testing/held-refresh"
 import {
   createInMemoryRoadmapRepository,
@@ -256,6 +257,38 @@ describe("A confirmed removal (S2)", () => {
     expect(removed.queryByRole("button", { name: `Remove ${FAX}` })).toBeNull()
     expect(main().getByText("1 unpublished change")).toBeVisible()
     expect(await storedTitles(repository)).toContain(FAX)
+  })
+})
+
+describe("While a publish of the roadmap is under way", () => {
+  it("holds Remove, and Undo removal: a removal made or undone then would miss what the publish settles", async () => {
+    const { user, repository } = await renderPage()
+    await changePhase(user, "Online form", "Live")
+    await confirmRemoval(user, "Status updates")
+    const { held, release, released } = holdCall(
+      repository.publishRoadmapChanges.bind(repository),
+    )
+    vi.spyOn(repository, "publishRoadmapChanges").mockImplementation(held)
+
+    await user.click(main().getByRole("button", { name: "Publish changes" }))
+    await user.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", {
+        name: "Publish changes",
+      }),
+    )
+    await waitFor(() => {
+      expect(held).toHaveBeenCalled()
+    })
+
+    for (const name of [`Remove ${FAX}`, "Undo removal Status updates"]) {
+      expect(
+        screen.getByRole("button", { name, hidden: true }),
+      ).toHaveAttribute("aria-disabled", "true")
+    }
+    await act(async () => {
+      release()
+      await released
+    })
   })
 })
 

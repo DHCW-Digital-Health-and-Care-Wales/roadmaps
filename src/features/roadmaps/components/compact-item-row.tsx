@@ -139,7 +139,7 @@ export function CompactItemRow({
             {horizon !== null && (
               // A quarter of the line at most, so the title keeps its room: cut on one
               // line while the row is closed, wrapping once it is opened.
-              <div className="flex max-w-1/4 min-w-0">
+              <div className={cn("flex max-w-1/4 min-w-0", struckClasses)}>
                 <HorizonFlag writtenHorizon={horizon} cut={!open} />
               </div>
             )}
@@ -152,7 +152,11 @@ export function CompactItemRow({
             >
               {title}
             </h3>
-            {horizon !== null && <HorizonFlag writtenHorizon={horizon} />}
+            {horizon !== null && (
+              <div className={struckClasses}>
+                <HorizonFlag writtenHorizon={horizon} />
+              </div>
+            )}
             {tag}
           </div>
         )}

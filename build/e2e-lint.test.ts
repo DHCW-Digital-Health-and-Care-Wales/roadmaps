@@ -33,6 +33,23 @@ describe("e2e lint rules", () => {
     ])
   })
 
+  it.each([
+    [
+      "a template literal",
+      "await client.send(`Emulation.setCPUThrottlingRate`, { rate: 6 })",
+    ],
+    [
+      "a template literal with an expression",
+      "await client.send(`${domain}.setCPUThrottlingRate`, { rate: 6 })",
+    ],
+    [
+      "a method name held in a variable",
+      `const method = "Emulation.setCPUThrottlingRate"\nawait client.send(method, { rate: 6 })`,
+    ],
+  ])("reports %s", async (_name, code) => {
+    expect(await lint(code, "tests/e2e/press.spec.ts")).toHaveLength(1)
+  })
+
   it("leaves a test that drives a Chrome DevTools command for other reasons", async () => {
     const code = `await client.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [] })`
     expect(await lint(code, "tests/e2e/touch.spec.ts")).toEqual([])

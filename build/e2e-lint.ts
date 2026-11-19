@@ -14,7 +14,8 @@ export const e2eRules: Linter.Config[] = [
       "no-restricted-syntax": [
         "error",
         {
-          selector: "Literal[value=/CPUThrottlingRate/]",
+          selector:
+            ":matches(Literal[value=/CPUThrottlingRate/], TemplateElement[value.cooked=/CPUThrottlingRate/])",
           message:
             "Do not slow the CPU in a test, nor load it with busy work: redden a race by sampling frames, holding a request or moving page.clock.",
         },

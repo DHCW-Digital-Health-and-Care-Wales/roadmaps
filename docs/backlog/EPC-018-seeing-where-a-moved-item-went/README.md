@@ -12,7 +12,8 @@ A Product Lead moves items with each item's Move menu, or by its "Horizon or sec
 in the item dialog. The move itself is right and stays. What is wrong is that nothing
 on the page shows where the item went: two neighbours that read alike swap with no
 visible change, and a move to another placement lands off the screen, unmarked. This
-epic marks the item last moved, in words, until the next move or an undo (STY-071);
+epic marks the item last moved, in words, until the next move or the move is undone
+or published (STY-071);
 lets the item glide to its new place, so the eye follows it (STY-072); and lets the
 items glide back on "Undo order" (STY-073). It leaves what a move does, what is
 written and what the public site shows. The same motion for adding, removing and
@@ -82,7 +83,7 @@ animation and transition on `*, ::before, ::after` to 0.01ms under
 selector does not reach the `::view-transition-*` pseudo-elements, so the slides gate
 on reduced motion themselves (STY-072 S4).
 
-### Motion is built with React's `ViewTransition`
+### Motion is built on the View Transitions API
 
 The slides use React's `ViewTransition` (in React 19.3) over the browser's View
 Transitions API, or that API directly where React's cannot reach (STY-072 D6): no new

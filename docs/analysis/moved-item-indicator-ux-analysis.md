@@ -145,10 +145,10 @@ publishing writes; the public site.
 ## Outcome
 
 On 2026-11-19 the owner chose **C then B**, drawn as design E on the prototype page:
-C's slide, then B's mark. Two changes to B followed, and the page's B and E were
-redrawn with them, so the table's B text above is B as first drawn: the mark gives no position ("Moved up", not "Moved up · 2 of
-4"), and a compact row too narrow for the whole label shows its arrow and "Moved"
-only. The grilling that followed answered every row of _Decisions needed_:
+C's slide, then B's mark. Two changes to B followed: the mark gives no position
+("Moved up", not "Moved up · 2 of 4"), and a compact row too narrow for the whole label
+shows its arrow and "Moved" only. The page's B and E were redrawn with them; the table
+above keeps B as first drawn. The grilling that followed answered every row of _Decisions needed_:
 
 | Decision                                     | Answer                                                                                                              | Where it went            |
 | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------ |
@@ -166,8 +166,3 @@ for an unplaced item (D7); the slide built with React's `ViewTransition` (STY-07
 and travelling the whole way across placements (D2), but not for a move from the
 dialog (D3); "Undo order" travels back (STY-073); and the same motion for adding,
 removing and discarding is an idea to grill (STY-074).
-
-Review then corrected the page's order rules to the app's (STY-050, STY-051): an item
-moved in and then reordered makes its placement's order pending, an item moved back to
-its own placement takes its place as last read, and "Undo order" clears the mark only
-on the item's own placement.

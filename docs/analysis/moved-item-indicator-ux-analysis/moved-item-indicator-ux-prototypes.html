@@ -969,7 +969,7 @@
       }
       .row.marked {
         box-shadow:
-          inset 6px 0 0 var(--status-success-border),
+          inset 4px 0 0 var(--status-success-border),
           0 0 0 2px var(--status-success-border);
       }
 
@@ -1362,6 +1362,8 @@
       })
 
       // ---- The rules every design shares: pure, with no page in them ----
+      // A placement's order follows the app's (STY-050, STY-051): its default
+      // is the items as read, then those moved in, in the order they arrived.
       /**
        * The page's lists, copied. Each also carries, out of sight of its
        * entries, `arrived`: the items moved into a placement that is not their

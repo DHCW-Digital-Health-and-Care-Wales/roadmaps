@@ -18,7 +18,7 @@ and "Discard all", which STY-074 holds as an idea.
 
 ## Acceptance criteria
 
-### S1: The items travel back (owner, D1)
+### S1: The items travel back (owner, D1; D2)
 
 **Given** Now's order pending, after moves, with an item moved in from Next and an item
 added and not yet published among Now's items
@@ -28,10 +28,11 @@ added and not yet published among Now's items
 items, last, in the order they arrived
 **And** every other pending edit stays: the moved-in item's placement, the new item,
 and any item's changed fields
-**And** no item is marked, and STY-071's mark, where it was in Now, is gone
+**And** no item is newly marked: a mark on an item in Now is cleared, and one
+elsewhere stays (STY-071 S8)
 **And** focus goes to Now's heading and "Order of Now undone" is said, as today
 
-### S2: No travel where none is wanted
+### S2: No travel where none is wanted (D2)
 
 **Given** the system asks for reduced motion, or the browser has no view transitions
 **When** the Product Lead chooses "Undo order"
@@ -41,6 +42,10 @@ and any item's changed fields
 
 - **D1** (owner, 2026-11-19, grilling round 3 follow-up and round 4 Q1): "Undo order"
   travels back, in this epic; no item is marked after it.
+- **D2** (agent, 2026-11-19, review): S1 and S2 first said "published order"; "Undo
+  order" in fact gives the default order (STY-050, STY-051), so they say where it
+  puts the items; the story changes no behaviour of the undo. A mark elsewhere stays,
+  as STY-071 S8 has it.
 
 ## Out of scope
 

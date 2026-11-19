@@ -14,7 +14,8 @@
 The mark says where an item went; this story shows it going. After a choice in the
 Move menu, the item lifts and glides from where it was to where it lands, the items it
 passes moving aside, and, for a move to another placement, the page scrolls with it.
-Then STY-071's mark shows. It uses React's `ViewTransition`, with no new dependency.
+Then STY-071's mark shows. It uses React's `ViewTransition`, or the browser's API
+directly (D6), with no new dependency.
 Not in it: a move from the item dialog, which only marks, and reduced motion, which
 never travels.
 
@@ -82,9 +83,10 @@ transition) rather than pixel positions in flight. S4 by emulating reduced motio
   `ViewTransition`, over a hand-built slide, AutoAnimate (no travel between lists) and
   Motion (about 30 KB and an ADR).
 - **D6** (agent, 2026-11-19, review): where React's `ViewTransition` cannot animate a
-  sync-store update, the browser's `document.startViewTransition` with `flushSync` is
-  the same API with no dependency, so it keeps D5's intent; the delivery says which it
-  used.
+  sync-store update, `document.startViewTransition` with `flushSync`: the same browser
+  API under React's, not the hand-built measuring slide D5 rejected, nor moving the
+  store off `useSyncExternalStore` for this alone. Delivery says which it used; the
+  owner may veto it.
 
 ## Starting point
 

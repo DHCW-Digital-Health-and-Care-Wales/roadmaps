@@ -14,18 +14,19 @@
 After a move, nothing on the page shows which item moved: a swap of two alike items
 looks like no change, and a move to another placement lands out of sight. This story
 marks the item last moved with an edge and a label, "Moved up", "Moved from Now" or
-"Placed", in Cards and Compact alike, until the next move or an undo; scrolls the page
+"Placed", in Cards and Compact alike, until the next move or the move is undone or
+published; scrolls the page
 to it; and says a move to another placement to a screen reader. Not in it: the item
 travelling to its place (STY-072).
 
 ## Scope
 
 `features/roadmaps` (the items area and the item's card and row) and `i18n/`. Nothing
-in `domain/` or `infrastructure/`. `docs/GLOSSARY.md` gains the moved mark.
+in `domain/` or `infrastructure/`. `docs/GLOSSARY.md` drops _(planned)_ from the moved mark's entry.
 
 ## Acceptance criteria
 
-### S1: A move within a placement marks the item (owner, D1, D4)
+### S1: A move within a placement marks the item (owner, D1, D4; D14)
 
 **Given** a placement of four items, nothing marked
 **When** the Product Lead chooses "Up one", "Down one", "To the top" or "To the bottom"
@@ -38,7 +39,7 @@ and a label with an arrow saying "Moved up", "Moved down", "Moved to the top" or
 shifts and a card keeps its foot bar
 **And** no other item is marked
 
-### S2: A move to another placement marks the item (owner, D2, D7)
+### S2: A move to another placement marks the item (owner, D2, D7; D15)
 
 **Given** an item in Now
 **When** the Product Lead moves it to Later, from its Move menu or by changing "Horizon
@@ -91,13 +92,13 @@ opens or closes a row, scrolls, or the roadmap is read again with the move still
 pending
 **Then** the item keeps its mark
 
-### S8: What clears the mark (owner, D4, D9)
+### S8: What clears the mark (owner, D4, D9, D13; D12)
 
 **Given** a marked item
 **When** the Product Lead chooses "Undo order" on the placement it is in, or an "Undo
-changes" or "Discard all" that changes where the item shows; publishes the roadmap,
-and the publish succeeds; removes the item; the roadmap is read again without the move
-(as after taking a co-lead's version); or leaves the page
+changes" or "Discard all" that changes where the item shows; publishes the roadmap
+successfully; removes the item; the roadmap is read again without the move (as after
+taking a co-lead's version); or leaves the page
 **Then** no item is marked
 **And** "Undo order" on another placement, or "Undo changes" that leaves the item where
 it shows (an item moved only within its placement: it undoes its fields and leaves the
@@ -142,16 +143,18 @@ layout.
   blue of pending tags.
 - **D11** (agent, 2026-11-19): a move from the dialog says nothing new to a screen
   reader, since focus returns to Edit with its name; S5 is the Move menu's.
-- **D12** (agent, 2026-11-19, review): D4's "an undo that puts it back" read
-  literally: "Undo changes" undoes an item's fields and placement, never its place in
-  an order (STY-050), so it clears the mark only when it changes where the item shows,
-  as when it takes back a move to another placement; "Undo order" clears it on the
-  item's own placement, as the owner said, even where a moved-in item stays last. A
-  refused or failed publish leaves the move pending and keeps the mark (D9).
-- **D13** (owner, 2026-11-19, confirmed summary): removing the marked item clears the
+- **D12** (agent, 2026-11-19, review): D4's "an undo that puts it back", read literally:
+  "Undo changes" never undoes a place in an order (STY-050), so it clears the mark only
+  when it changes where the item shows; "Undo order" clears it on the item's own
+  placement, as the owner said, even where a moved-in item stays last. A refused or
+  failed publish leaves the move pending, and the mark (D9).
+- **D13** (owner, 2026-11-19, confirmed in the review of the grilling summary): removing the marked item clears the
   mark, though a removed published item still shows, struck through (STY-049).
 - **D14** (agent, 2026-11-19, review): the edge must not shift the item's content or
-  hide a card's foot bar (S1), as the prototype's first draw did.
+  hide a card's foot bar (S1).
+- **D15** (agent, 2026-11-19, review): S2's "Changed" and "New" tags stay where they
+  show today, in a card's foot or a row's line; the mark's place is S3's, so an item
+  can carry both.
 
 ## Starting point
 

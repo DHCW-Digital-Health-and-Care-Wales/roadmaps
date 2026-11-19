@@ -1,6 +1,7 @@
 import { useId, type ReactNode, type RefObject } from "react"
 import { useTranslation } from "react-i18next"
 
+import { useEditSurface } from "@/components/edit-surface/use-edit-surface"
 import {
   Dialog,
   DialogContent,
@@ -42,7 +43,9 @@ export interface FormDialogProps {
  * close it; a click outside does nothing. On a phone it fills the width from the foot of
  * the screen, and it scrolls when it is taller than the screen, as one piece. Where there
  * is room (`DialogContent`), the heading and the close button stay at the top and the
- * form's buttons at the foot while its fields scroll.
+ * form's buttons at the foot while its fields scroll. A Product Lead who chose to edit in
+ * a side panel (STY-077) has it open along the right of the screen instead, the same
+ * dialog placed elsewhere.
  */
 export function FormDialog({
   open,
@@ -54,6 +57,7 @@ export function FormDialog({
 }: FormDialogProps) {
   const { t } = useTranslation()
   const titleId = useId()
+  const { surface } = useEditSurface()
   return (
     <Dialog
       open={open}
@@ -66,6 +70,7 @@ export function FormDialog({
         finalFocus={opener}
         closeLabel={t("common.close")}
         closeDisabled={busy}
+        position={surface === "panel" ? "right" : "center"}
       >
         <DialogHeader>
           <DialogTitle id={titleId}>{title}</DialogTitle>

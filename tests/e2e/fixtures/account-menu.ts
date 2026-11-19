@@ -17,8 +17,8 @@ export async function openAccountMenu(
 }
 
 /**
- * Chooses the item named `name` in the header's account menu: the theme, and the
- * session's action, whose name follows the connection (Connect Google, Reconnect,
+ * Chooses the item named `name` in the header's account menu: the theme, where the
+ * forms open (STY-077), and the session's action, whose name follows the connection (Connect Google, Reconnect,
  * Disconnect). `language` names the trigger; the caller gives the item's name.
  */
 export async function chooseFromAccountMenu(

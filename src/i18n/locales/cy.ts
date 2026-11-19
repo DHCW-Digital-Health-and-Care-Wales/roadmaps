@@ -998,6 +998,10 @@ export const cy = {
     switchToDark: "Newid i'r thema dywyll",
     switchToLight: "Newid i'r thema olau",
   },
+  editSurface: {
+    useSidePanel: "Golygu mewn panel ochr",
+    useDialog: "Golygu mewn deialog",
+  },
   language: {
     label: "Iaith",
   },

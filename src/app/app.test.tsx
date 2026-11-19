@@ -155,15 +155,18 @@ describe("header", () => {
     expect(header().getByRole("status")).toHaveTextContent("Connecting…")
   })
 
-  it("holds the theme and the session's action in one menu, with the language beside it (STY-056 D1, S2)", async () => {
+  it("holds the theme, where the forms open and the session's action in one menu, with the language beside it (STY-056 D1, S2)", async () => {
     const user = userEvent.setup()
     await renderWithProviders({ authState: connected })
 
     const menu = await openAccountMenu(user)
 
-    expect(menu.getAllByRole("menuitem")).toHaveLength(2)
+    expect(menu.getAllByRole("menuitem")).toHaveLength(3)
     expect(
       menu.getByRole("menuitem", { name: "Switch to dark theme" }),
+    ).toBeInTheDocument()
+    expect(
+      menu.getByRole("menuitem", { name: "Edit in a side panel" }),
     ).toBeInTheDocument()
     expect(
       menu.getByRole("menuitem", { name: "Disconnect" }),

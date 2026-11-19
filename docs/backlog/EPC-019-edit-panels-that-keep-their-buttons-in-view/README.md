@@ -1,8 +1,8 @@
 # EPC-019: Edit panels that keep their buttons in view — a long form scrolls its buttons away
 
 - **Status**: Active — raised and grilled by the owner on 2026-11-19
-- **Progress**: 1 of 3 terminal (STY-076); next selectable: STY-077; blocked on: STY-078
-  waits for the side-panel trial
+- **Progress**: 2 of 3 terminal (STY-076, STY-077); next selectable: none; blocked on: STY-078
+  waits for the owner's trial of the side panel
 - **Binding ADRs**: ADR-005, ADR-008, ADR-010
 
 ## Summary
@@ -74,8 +74,9 @@ They differ only in where the popup sits and how it animates. A side panel is th
    least 640px wide, the item and roadmap forms open as a modal side panel at the
    right: full height, 32rem wide, page dimmed, sliding in. The panel follows the
    same pinning rule (F3; STY-077).
-4. A side panel is `DialogContent` with a placement, not a new component: `FormDialog`
-   chooses the placement from the preference and nothing else changes (F3; STY-077 D7).
+4. A side panel is `DialogContent` with a position, not a new component: `FormDialog`
+   chooses the position from the preference and nothing else changes (F3; STY-077 D7,
+   which named the prop `placement` before it was built as `position`).
 5. **Unchanged:** alert dialogs. They are short and are left by their answers.
 6. **Unchanged:** closing (EPC-011, _The dialogs_, _Closing_). Cancel, Escape and the X
    drop what was typed, a click outside does nothing, and a dialog stays while its
@@ -109,7 +110,7 @@ glossary keeps "sheet" away from the Product Lead's words.
 | ID      | Story                                                                                                                                                                                   | Area                     | Depends on | State |
 | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ | ---------- | ----- |
 | STY-076 | [A dialog's title and buttons stay in view while its form scrolls](../_archive/EPC-019-edit-panels-that-keep-their-buttons-in-view/STY-076-a-dialogs-title-and-buttons-stay-in-view.md) | Features/UI + E2E        | —          | ✅    |
-| STY-077 | [A Product Lead edits in a side panel, chosen in the account menu](STY-077-edit-in-a-side-panel.md)                                                                                     | Features/UI + i18n + E2E | STY-076    |       |
+| STY-077 | [A Product Lead edits in a side panel, chosen in the account menu](../_archive/EPC-019-edit-panels-that-keep-their-buttons-in-view/STY-077-edit-in-a-side-panel.md)                     | Features/UI + i18n + E2E | STY-076    | ✅    |
 | STY-078 | [Settle on one way to edit after the trial](STY-078-settle-on-one-way-to-edit-after-the-trial.md)                                                                                       | Features/UI              | STY-077    |       |
 
 ## Sequencing

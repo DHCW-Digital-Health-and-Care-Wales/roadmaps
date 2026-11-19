@@ -24,10 +24,10 @@ The decision is the owner's and waits on the trial.
 
 _Not acceptance criteria._
 
-- Side panel kept, toggle gone: `FormDialog` always sets the right placement; remove
-  the preference, its menu item, its two strings and its key. A stored value is simply
-  no longer read.
-- Dialog kept, toggle gone: remove the right placement from `DialogContent` and the
+- Side panel kept, toggle gone: `FormDialog` always sets `position="right"`; remove the
+  preference (`components/edit-surface/`), its menu item, its two strings and its key. A
+  stored value is simply no longer read.
+- Dialog kept, toggle gone: remove the `right` position from `DialogContent` and the
   same preference pieces.
 - Both kept: drop the trial wording from EPC-019 and STY-077's Status, and close this
   as Won't do.

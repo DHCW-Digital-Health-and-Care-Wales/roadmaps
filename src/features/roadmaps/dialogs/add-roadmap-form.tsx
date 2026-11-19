@@ -4,7 +4,12 @@ import { useTranslation } from "react-i18next"
 
 import { InsetText } from "@/components/layout/inset-text"
 import { Button } from "@/components/ui/button"
-import { DialogClose, DialogFooter } from "@/components/ui/dialog"
+import {
+  DialogBody,
+  DialogClose,
+  DialogFooter,
+  DialogForm,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import {
@@ -35,9 +40,10 @@ export interface AddRoadmapFormProps {
  * the title and shown with the public address it gives, then a family, a category and a
  * product lead, each optional. "Add roadmap" writes at once: it shows it is working and
  * holds the fields until the write answers. What can't be sent, or is refused, is said
- * at its field, with focus on the first; a failure is said above the buttons, where the
- * Product Lead is looking (S7). After the session has expired, "Add roadmap" asks to
- * reconnect first, then adds what the form then holds (STY-057).
+ * at its field, with focus on the first; a failure is said in the footer above the
+ * buttons, where the Product Lead is looking and which stays in view (S7, STY-076 S5).
+ * After the session has expired, "Add roadmap" asks to reconnect first, then adds what
+ * the form then holds (STY-057).
  */
 export function AddRoadmapForm({
   labelledBy,
@@ -84,118 +90,116 @@ export function AddRoadmapForm({
 
   const address = shortNameAddress(values.shortName)
   return (
-    <form
-      aria-labelledby={labelledBy}
-      noValidate
-      onSubmit={submit}
-      className="flex flex-col gap-4"
-    >
-      <FormField
-        id={`${id}-title`}
-        label={t("roadmaps.edit.roadmapFields.title")}
-        hint={t("roadmaps.add.titleHint")}
-        error={problems.title && t("roadmaps.edit.productNameRequired")}
-      >
-        {(control) => (
-          <Input
-            ref={controlRef("title")}
-            value={values.title}
-            required
-            autoComplete="off"
-            // What is being added stays what the form shows.
-            readOnly={busy}
-            {...control}
-            onChange={(event) => {
-              form.change("title", event.target.value)
-            }}
-          />
-        )}
-      </FormField>
-      <FormField
-        id={`${id}-shortName`}
-        label={t("roadmaps.add.shortName")}
-        hint={
-          address
-            ? t("roadmaps.add.addressHint", { address })
-            : t("roadmaps.add.shortNameHint")
-        }
-        error={
-          problems.shortName &&
-          t(`roadmaps.add.errors.shortName.${problems.shortName}`, {
-            max: SHORT_NAME_MAX_LENGTH,
-          })
-        }
-      >
-        {(control) => (
-          <Input
-            ref={controlRef("shortName")}
-            value={values.shortName}
-            required
-            autoComplete="off"
-            spellCheck={false}
-            readOnly={busy}
-            {...control}
-            onChange={(event) => {
-              form.change("shortName", event.target.value)
-            }}
-          />
-        )}
-      </FormField>
-      {choices.fields.map(({ name, label, options, disabled, fixed }) => {
-        const error =
-          problems[name] && t(`roadmaps.add.errors.notListed.${name}`)
-        return options ? (
-          <ChoiceField
-            key={name}
-            ref={controlRef(name)}
-            id={`${id}-${name}`}
-            label={label}
-            options={options}
-            value={values[name]}
-            disabled={busy || disabled}
-            error={error}
-            onChange={(value) => {
-              form.change(name, value)
-            }}
-          />
-        ) : (
-          fixed && (
-            <FixedField
+    <DialogForm aria-labelledby={labelledBy} noValidate onSubmit={submit}>
+      <DialogBody>
+        <FormField
+          id={`${id}-title`}
+          label={t("roadmaps.edit.roadmapFields.title")}
+          hint={t("roadmaps.add.titleHint")}
+          error={problems.title && t("roadmaps.edit.productNameRequired")}
+        >
+          {(control) => (
+            <Input
+              ref={controlRef("title")}
+              value={values.title}
+              required
+              autoComplete="off"
+              // What is being added stays what the form shows.
+              readOnly={busy}
+              {...control}
+              onChange={(event) => {
+                form.change("title", event.target.value)
+              }}
+            />
+          )}
+        </FormField>
+        <FormField
+          id={`${id}-shortName`}
+          label={t("roadmaps.add.shortName")}
+          hint={
+            address
+              ? t("roadmaps.add.addressHint", { address })
+              : t("roadmaps.add.shortNameHint")
+          }
+          error={
+            problems.shortName &&
+            t(`roadmaps.add.errors.shortName.${problems.shortName}`, {
+              max: SHORT_NAME_MAX_LENGTH,
+            })
+          }
+        >
+          {(control) => (
+            <Input
+              ref={controlRef("shortName")}
+              value={values.shortName}
+              required
+              autoComplete="off"
+              spellCheck={false}
+              readOnly={busy}
+              {...control}
+              onChange={(event) => {
+                form.change("shortName", event.target.value)
+              }}
+            />
+          )}
+        </FormField>
+        {choices.fields.map(({ name, label, options, disabled, fixed }) => {
+          const error =
+            problems[name] && t(`roadmaps.add.errors.notListed.${name}`)
+          return options ? (
+            <ChoiceField
               key={name}
               ref={controlRef(name)}
+              id={`${id}-${name}`}
               label={label}
-              {...fixed}
+              options={options}
+              value={values[name]}
+              disabled={busy || disabled}
               error={error}
+              onChange={(value) => {
+                form.change(name, value)
+              }}
             />
+          ) : (
+            fixed && (
+              <FixedField
+                key={name}
+                ref={controlRef(name)}
+                label={label}
+                {...fixed}
+                error={error}
+              />
+            )
           )
-        )
-      })}
-      <FormField
-        id={`${id}-productLead`}
-        label={t("roadmaps.edit.roadmapFields.productLead")}
-      >
-        {(control) => (
-          <Input
-            value={values.productLead}
-            autoComplete="off"
-            readOnly={busy}
-            {...control}
-            onChange={(event) => {
-              form.change("productLead", event.target.value)
-            }}
+        })}
+        <FormField
+          id={`${id}-productLead`}
+          label={t("roadmaps.edit.roadmapFields.productLead")}
+        >
+          {(control) => (
+            <Input
+              value={values.productLead}
+              autoComplete="off"
+              readOnly={busy}
+              {...control}
+              onChange={(event) => {
+                form.change("productLead", event.target.value)
+              }}
+            />
+          )}
+        </FormField>
+        <InsetText className="py-2 pl-4">
+          <p>{t("roadmaps.add.note")}</p>
+        </InsetText>
+      </DialogBody>
+      <DialogFooter>
+        {form.failure && (
+          <AddRoadmapFailed
+            failure={form.failure}
+            onDismiss={form.dismissFailure}
+            className="basis-full"
           />
         )}
-      </FormField>
-      <InsetText className="py-2 pl-4">
-        <p>{t("roadmaps.add.note")}</p>
-      </InsetText>
-      {form.failure && (
-        <AddRoadmapFailed
-          failure={form.failure}
-          onDismiss={form.dismissFailure}
-        />
-      )}
-      <DialogFooter>
         <Button
           type="submit"
           disabled={busy}
@@ -215,6 +219,6 @@ export function AddRoadmapForm({
           {t("common.cancel")}
         </DialogClose>
       </DialogFooter>
-    </form>
+    </DialogForm>
   )
 }

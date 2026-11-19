@@ -40,7 +40,9 @@ export interface FormDialogProps {
  * heading, with focus in its first field as it opens and back on the control that opened
  * it as it closes (its `opener`). Cancel, the close button at its top right and Escape
  * close it; a click outside does nothing. On a phone it fills the width from the foot of
- * the screen, and it scrolls when it is taller than the screen.
+ * the screen, and it scrolls when it is taller than the screen, as one piece. Where there
+ * is room (`DialogContent`), the heading and the close button stay at the top and the
+ * form's buttons at the foot while its fields scroll.
  */
 export function FormDialog({
   open,

@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
+  DialogBody,
   DialogClose,
   DialogContent,
   DialogDescription,
@@ -141,54 +142,56 @@ export function ConflictReviewDialog({
           </DialogTitle>
           <DialogDescription>{description.join(" ")}</DialogDescription>
         </DialogHeader>
-        {deciding && (
-          <ul className="flex flex-col gap-4">
-            {conflicts.map((each) => {
-              switch (each.kind) {
-                case "order":
-                  return (
-                    <OrderConflictItem
-                      key={each.key}
-                      open={each}
-                      pageItems={pageItems}
-                      {...decision(each)}
-                    />
-                  )
-                case "removal":
-                  return (
-                    <RemovalConflictItem
-                      key={each.key}
-                      open={each}
-                      {...decision(each)}
-                    />
-                  )
-                default:
-                  return (
-                    <FieldConflictItem
-                      key={each.key}
-                      open={each}
-                      {...decision(each)}
-                    />
-                  )
-              }
-            })}
-          </ul>
-        )}
-        {!deciding && (
-          <>
-            <RemovedItems
-              removed={removed}
-              hasPendingChanges={hasPendingChanges}
-            />
-            <p className="font-bold">
-              {t(
-                hasPendingChanges
-                  ? `roadmaps.publish.notice.refused.decided.${action}`
-                  : `roadmaps.publish.notice.refused.nothingLeft.${action}`,
-              )}
-            </p>
-          </>
-        )}
+        <DialogBody>
+          {deciding && (
+            <ul className="flex flex-col gap-4">
+              {conflicts.map((each) => {
+                switch (each.kind) {
+                  case "order":
+                    return (
+                      <OrderConflictItem
+                        key={each.key}
+                        open={each}
+                        pageItems={pageItems}
+                        {...decision(each)}
+                      />
+                    )
+                  case "removal":
+                    return (
+                      <RemovalConflictItem
+                        key={each.key}
+                        open={each}
+                        {...decision(each)}
+                      />
+                    )
+                  default:
+                    return (
+                      <FieldConflictItem
+                        key={each.key}
+                        open={each}
+                        {...decision(each)}
+                      />
+                    )
+                }
+              })}
+            </ul>
+          )}
+          {!deciding && (
+            <>
+              <RemovedItems
+                removed={removed}
+                hasPendingChanges={hasPendingChanges}
+              />
+              <p className="font-bold">
+                {t(
+                  hasPendingChanges
+                    ? `roadmaps.publish.notice.refused.decided.${action}`
+                    : `roadmaps.publish.notice.refused.nothingLeft.${action}`,
+                )}
+              </p>
+            </>
+          )}
+        </DialogBody>
         <DialogFooter>
           {!deciding && hasPendingChanges && (
             <Button ref={publish} onClick={onPublish}>

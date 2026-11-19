@@ -5,6 +5,10 @@
 @import "@fontsource-variable/roboto";
 
 @custom-variant dark (&:is(.dark *));
+/* A screen with room for a dialog to pin its header and footer and scroll only its body
+   (EPC-019): `sm` wide and 500px tall, the height `components/layout/pinning.ts` pins the
+   page's bars at. Narrower or shorter, a dialog scrolls as one piece. */
+@custom-variant pinned (@media (width >= 40rem) and (height >= 500px));
 
 /*
  * Three tiers (ADR-010; src/styles/AGENTS.md):

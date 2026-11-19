@@ -106,6 +106,14 @@ export function cornerClose(dialog: Locator): Locator {
   return dialog.locator('[data-slot="dialog-close-button"]')
 }
 
+/** Whether `locator` lies wholly within the screen as it is now scrolled. */
+export async function isInView(page: Page, locator: Locator): Promise<boolean> {
+  const box = await locator.boundingBox()
+  const size = page.viewportSize()
+  if (!box || !size) throw new Error("No box or viewport")
+  return box.y >= 0 && box.y + box.height <= size.height
+}
+
 /** The conflict review's Close in its foot, which its corner close button repeats. */
 export function reviewFooterClose(review: Locator): Locator {
   return review.locator('[data-slot="dialog-close"]')

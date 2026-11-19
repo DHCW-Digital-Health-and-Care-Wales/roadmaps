@@ -1,6 +1,6 @@
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import type { RoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
@@ -8,7 +8,9 @@ import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 import { disconnectFromHeader } from "@/features/auth/testing/account-menu"
 import type { Language } from "@/i18n"
+import { REDUCED_MOTION } from "@/lib/use-media-query"
 import { connected } from "@/test/connected-state"
+import { matchMediaQueries } from "@/test/media-query"
 import { renderWithProviders } from "@/test/render-with-providers"
 
 import { holdCall } from "../testing/held-call"
@@ -29,6 +31,10 @@ import {
   openConflictReview,
   refreshRoadmap,
 } from "../testing/roadmap-page"
+import {
+  withoutViewTransitions,
+  withViewTransitions,
+} from "../testing/view-transitions"
 
 /**
  * A Product Lead reorders a placement's items from each card's Move menu (STY-050): the
@@ -295,6 +301,57 @@ describe("A pending order at the placement's heading (S3)", () => {
     expect(main().getByText("Order of Now undone")).toBeInTheDocument()
     expect(main().queryByText("Order changed")).toBeNull()
     expect(main().queryByText(/unpublished change/)).toBeNull()
+  })
+
+  describe("where the items travel back (STY-073)", () => {
+    afterEach(withoutViewTransitions)
+
+    it("“Undo order” draws the default order as one travel within the placement, the other pending edits kept, and marks no item", async () => {
+      const { user } = await renderPage()
+      await chooseFromMenu(user, "Delta", "To the top")
+      // Added before Echo is moved in, yet the undo puts Echo, moved in, before it.
+      await addItem(user, "New clinic", "Now")
+      await chooseFromMenu(user, "Echo", "Now")
+      await chooseFromMenu(user, "New clinic", "To the top")
+      expect(titlesUnder("Now")[0]).toBe("New clinic")
+      const { started } = withViewTransitions()
+
+      await user.click(main().getByRole("button", { name: "Undo order Now" }))
+
+      // Not drawn until the browser has drawn the page as it was.
+      expect(titlesUnder("Now")[0]).toBe("New clinic")
+      await waitFor(() => {
+        expect(titlesUnder("Now")).toEqual([
+          "Alpha",
+          "Bravo",
+          "Charlie",
+          "Delta",
+          "Echo",
+          "New clinic",
+        ])
+      })
+      expect(started).toEqual([["item-move"]])
+      expect(
+        main().getByRole("heading", { level: 2, name: "Now" }),
+      ).toHaveFocus()
+      expect(main().getByText("Order of Now undone")).toBeInTheDocument()
+      expect(main().queryByText("Order changed")).toBeNull()
+      // The move in and the new item stay, as pending edits of their own.
+      expect(main().getByText("2 unpublished changes")).toBeInTheDocument()
+      expect(main().queryAllByText(/^(Moved |Placed)/)).toEqual([])
+    })
+
+    it("“Undo order” draws the default order at once where the system asks for reduced motion", async () => {
+      const { user } = await renderPage()
+      await chooseFromMenu(user, "Delta", "To the top")
+      const { started } = withViewTransitions()
+      matchMediaQueries(REDUCED_MOTION)
+
+      await user.click(main().getByRole("button", { name: "Undo order Now" }))
+
+      expect(titlesUnder("Now")).toEqual(["Alpha", "Bravo", "Charlie", "Delta"])
+      expect(started).toEqual([])
+    })
   })
 
   it("is no change once reordered back to the order the page shows without it (D12)", async () => {

@@ -76,7 +76,8 @@ export interface RoadmapItemsProps {
  * The item moved last carries the moved mark (STY-071); a move to another placement
  * from the Move menu is said in the status line too, with where it shows there (S5).
  * A move from the Move menu travels there first, across lists too, each item paired
- * with itself by its view transition name (STY-072).
+ * with itself by its view transition name (STY-072), and so do a placement's items on
+ * "Undo order" (STY-073).
  */
 export function RoadmapItems({
   roadmapId,

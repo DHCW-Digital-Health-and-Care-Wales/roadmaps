@@ -23,6 +23,10 @@ import {
 } from "../testing/item-dialog"
 import { confirmRemoval } from "../testing/removal-dialog"
 import { moreButton, refreshRoadmap } from "../testing/roadmap-page"
+import {
+  withoutViewTransitions,
+  withViewTransitions,
+} from "../testing/view-transitions"
 
 /**
  * The moved mark (STY-071): the item a Product Lead moved last shows an edge and a
@@ -249,39 +253,12 @@ describe("The page scrolls to the moved item (S4)", () => {
 })
 
 describe("The page scrolls to an item that travelled (STY-072)", () => {
-  afterEach(() => {
-    vi.unstubAllGlobals()
-    Reflect.deleteProperty(document, "startViewTransition")
-  })
+  afterEach(withoutViewTransitions)
 
   it("though focus came back to its Move before the move was drawn", async () => {
     // A browser that draws the move a while after it was chosen, as a view transition
     // does: the menu has handed focus back to Move by then.
-    vi.stubGlobal(
-      "ViewTransition",
-      class {
-        get types() {
-          return new Set<string>()
-        }
-      },
-    )
-    Object.defineProperty(document, "startViewTransition", {
-      configurable: true,
-      value: (options: StartViewTransitionOptions) => {
-        const finished = new Promise<void>((resolve) => {
-          setTimeout(() => {
-            options.update?.()
-            resolve()
-          }, 50)
-        })
-        return {
-          finished,
-          ready: finished,
-          updateCallbackDone: finished,
-          skipTransition: vi.fn(),
-        }
-      },
-    })
+    withViewTransitions()
     const { user } = await renderPage()
     const scrolled = vi.spyOn(Element.prototype, "scrollIntoView")
     const move = main().getByRole("button", { name: "Move Delta" })

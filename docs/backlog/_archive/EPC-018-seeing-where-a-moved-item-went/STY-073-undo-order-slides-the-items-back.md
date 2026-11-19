@@ -71,9 +71,12 @@ None. "Undo order" calls STY-072's `travel` with `"within"`, from `PlacementHead
 - No item is raised: only the item `EditableItem` moves carries `moved-item`, which
   `globals.css` raises, so the items an undo moves all travel alike.
 - A component test of a travel installs `withViewTransitions`
-  (`features/roadmaps/testing/view-transitions.ts`), which draws each update 50 ms after
-  it is asked for and records its types; install it after the test's own setup moves,
-  or each is drawn late too. `moved-mark.test.tsx`'s own stub now uses it.
+  (`features/roadmaps/testing/view-transitions.ts`), the one stub of the API: it draws
+  each update `delay` ms after it is asked for (50, or 0 for at once), or at once and
+  finishes only on `ends` with `held`, and its spy records each transition's types.
+  Install it after the test's own setup moves, or each is drawn late too.
+  `item-travel.test.ts` and `roadmap-detail-page-moved-mark.test.tsx` use it too, in
+  place of the stubs they each had.
 
 ### Scenario evidence
 

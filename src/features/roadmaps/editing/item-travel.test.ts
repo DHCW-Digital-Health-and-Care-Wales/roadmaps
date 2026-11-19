@@ -6,6 +6,10 @@ import { REDUCED_MOTION } from "@/lib/use-media-query"
 import { matchMediaQueries } from "@/test/media-query"
 
 import { pageItemsOf } from "../testing/page-items"
+import {
+  withoutViewTransitions,
+  withViewTransitions,
+} from "../testing/view-transitions"
 import { travel, travelNames } from "./item-travel"
 
 const read = (...ids: (string | null)[]) =>
@@ -50,45 +54,11 @@ describe("travel (STY-072)", () => {
 
   afterEach(() => {
     update.mockReset()
-    vi.unstubAllGlobals()
-    Reflect.deleteProperty(document, "startViewTransition")
+    withoutViewTransitions()
   })
 
-  /**
-   * A browser with view transitions and their types, recording each started; each
-   * finishes as soon as it starts, unless `held`, until its `end` is called.
-   */
-  function withViewTransitions({ held = false } = {}) {
-    const ends: (() => void)[] = []
-    const start = vi.fn((options: StartViewTransitionOptions) => {
-      options.update?.()
-      const finished = held
-        ? new Promise<void>((resolve) => ends.push(resolve))
-        : Promise.resolve()
-      return {
-        finished,
-        ready: Promise.resolve(),
-        updateCallbackDone: Promise.resolve(),
-        skipTransition: vi.fn(),
-      }
-    })
-    vi.stubGlobal(
-      "ViewTransition",
-      class {
-        get types() {
-          return new Set<string>()
-        }
-      },
-    )
-    Object.defineProperty(document, "startViewTransition", {
-      configurable: true,
-      value: start,
-    })
-    return Object.assign(start, { ends })
-  }
-
   it("makes the move as a view transition typed by how far it goes", () => {
-    const start = withViewTransitions()
+    const start = withViewTransitions({ delay: 0 })
 
     travel("within", update)
     travel("across", update)
@@ -119,7 +89,7 @@ describe("travel (STY-072)", () => {
   })
 
   it("makes the move at once where the system asks for reduced motion (S4)", () => {
-    const start = withViewTransitions()
+    const start = withViewTransitions({ delay: 0 })
     matchMediaQueries(REDUCED_MOTION)
 
     travel("within", update)

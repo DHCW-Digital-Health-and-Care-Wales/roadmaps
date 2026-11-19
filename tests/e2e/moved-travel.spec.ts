@@ -21,7 +21,8 @@ import { expect, test } from "./fixtures/test"
  * asserted: each transition the page starts is recorded as it runs (its types, each
  * item's group, the scroll), and the page as it lands. Only an item with an ID travels,
  * so each test publishes once first, which gives every item one ("Minimal card" is "A
- * minimal card" from then on).
+ * minimal card" from then on). STY-073 holds "Undo order" to the same: the items travel
+ * back to where it puts them, none raised or marked.
  */
 
 const DESKTOP = { width: 1280, height: 812 }
@@ -404,20 +405,14 @@ test.describe("“Undo order” makes the items travel back (STY-073 S1)", () =>
     await chooseFromMenu(page, "Card being explored", "Now")
     await chooseFromMenu(page, "Card being explored", "To the top")
     await landed(page)
-    expect(await nowTitles(page)).toEqual([
+    const titles = await nowTitles(page)
+    expect(titles).toEqual([
       "Card being explored",
       "Example card with every column",
       "A minimal card",
       "Card awaiting release",
     ])
-    const names = await Promise.all(
-      [
-        "Card being explored",
-        "Example card with every column",
-        "A minimal card",
-        "Card awaiting release",
-      ].map((title) => nameOf(page, title)),
-    )
+    const names = await Promise.all(titles.map((title) => nameOf(page, title)))
     const before = (await travels(page)).length
 
     await undoOrder(page).click()

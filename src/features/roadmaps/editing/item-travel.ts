@@ -5,8 +5,9 @@ import { REDUCED_MOTION } from "@/lib/use-media-query"
 import type { PageItem } from "./page-items"
 
 /**
- * How far a move from the Move menu takes its item: within its placement, about 0.4
- * seconds, or to another, about 0.7, the page scrolling with it (STY-072 S1, S2).
+ * How far a change takes the items it moves: within a placement, about 0.4 seconds, or
+ * to another, about 0.7, the page scrolling with it (STY-072 S1, S2). A move from the
+ * Move menu is either; "Undo order" is within (STY-073).
  * `globals.css` times each by the transition's type.
  */
 export type TravelKind = "within" | "across"
@@ -23,9 +24,10 @@ const TRAVELLING = "data-travelling"
 let current: ViewTransition | null = null
 
 /**
- * Makes a move from the Move menu, `update`, as a view transition: the moved item
- * travels from where it was to where it lands, the items it passes moving aside, then
- * shows its mark (STY-072, D6). The pending edits are read through
+ * Makes a change to where items show, `update`, as a view transition: from the Move
+ * menu, the moved item travels from where it was to where it lands, the items it passes
+ * moving aside, then shows its mark; on "Undo order" (STY-073), each item travels to
+ * where the undo puts it, none marked (STY-072, D6). The pending edits are read through
  * `useSyncExternalStore`, whose updates are sync, so React's own `ViewTransition`
  * never animates them: the browser's API runs `update` once it has drawn the page as it
  * was, and `flushSync` draws the move, focus and mark included, before it draws the

@@ -28,6 +28,11 @@ Report executed test counts and failures; zero tests or a skipped check is not
 validation. Preserve runner exit status when redirecting output. Capture
 verbose logs in a temporary path and summarize the evidence.
 
+A test your change does not touch that fails in a gate run and passes when its
+file is run alone, on the same head, is a flake: add the run to its defect, or
+record one (`docs/AGENTS.md`), then run the gate's commands after the one that
+failed rather than the whole gate again.
+
 `pnpm test:e2e` builds and serves the app on port 4173 (in a parallel
 worktree, its `PREVIEW_PORT`: `pnpm worktree:info`) and reuses a server
 already listening there locally: stop a stale `pnpm preview` first

@@ -9,6 +9,9 @@ export const TABLET_WIDTH = "(min-width: 48rem)"
 /** Tailwind's `lg` as a media query: a desktop's width, wider than a tablet's. */
 export const DESKTOP_WIDTH = "(min-width: 64rem)"
 
+/** Where the system asks for reduced motion: nothing glides or travels. */
+export const REDUCED_MOTION = "(prefers-reduced-motion: reduce)"
+
 /** Whether the viewport matches a media `query`, following it as the viewport changes. */
 export function useMediaQuery(query: string): boolean {
   const subscribe = useCallback(

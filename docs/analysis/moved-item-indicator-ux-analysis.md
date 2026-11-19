@@ -162,8 +162,9 @@ above keeps B as first drawn. The grilling that followed answered every row of _
 
 The grilling added: every move marks, the item dialog's included (STY-071 D2); the
 label sits under a card's title (D5) and shortens by the list's width (D6); "Placed"
-for an unplaced item (D7); the slide built with React's `ViewTransition` (STY-072 D5)
-and travelling the whole way across placements (D2), but not for a move from the
-dialog (D3); "Undo order" travels back (STY-073); and the same motion for adding,
-removing and discarding is an idea to grill (STY-074). After STY-071 was delivered,
+for an unplaced item (D7); the slide built on the View Transitions API, with no new
+dependency (STY-072 D5; the browser's API directly, D6), and travelling the whole way
+across placements (D2), but not for a move from the dialog (D3); "Undo order" travels
+back (STY-073); and the same motion for adding, removing and discarding is an idea to
+grill (STY-074). After STY-071 was delivered,
 the owner moved a card's label to its foot, beside the pending tag (STY-075 D1).

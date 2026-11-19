@@ -444,3 +444,40 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* A move from the Move menu, as the item travels to where it lands (STY-072,
+   `item-travel.ts`): the items, named by their IDs, glide from where they were, the one
+   moved raised above the others, in about 0.4 seconds within a placement and 0.7 to
+   another. The rest of the page is not captured: it shows as it is at once, and stays
+   live. The travel is drawn only in the room between the stuck header and the foot bar,
+   so they stay above it as they do when nothing moves, and take clicks and taps; a press
+   in the room ends the travel (`travel`, D7). The menu the move was chosen from goes at
+   once (`DropdownMenuContent`, closing, while `travel` sets `data-travelling`). The
+   reduced-motion rule above does not reach these pseudo-elements: no transition starts
+   where the system asks for reduced motion (S4). */
+[data-travelling] [data-slot="dropdown-menu-content"][data-closed] {
+  display: none;
+}
+:root:active-view-transition-type(item-move, item-move-across) {
+  view-transition-name: none;
+  &::view-transition {
+    clip-path: inset(var(--pinned-top) 0 var(--pinned-bottom));
+  }
+  &::view-transition-group(*),
+  &::view-transition-old(*),
+  &::view-transition-new(*) {
+    animation-duration: 0.4s;
+    animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  &::view-transition-group(*.moved-item) {
+    z-index: 1;
+    box-shadow: var(--shadow-popup);
+  }
+}
+:root:active-view-transition-type(item-move-across) {
+  &::view-transition-group(*),
+  &::view-transition-old(*),
+  &::view-transition-new(*) {
+    animation-duration: 0.7s;
+  }
+}

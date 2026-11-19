@@ -26,6 +26,11 @@ export interface RoadmapItemCardProps {
    * mark's edge round the card.
    */
   mark?: ReactNode
+  /**
+   * The view transition name its travel after a move pairs it by (STY-072,
+   * `travelNames`); with the moved `mark`, it travels raised above the others.
+   */
+  travelName?: string | undefined
   /** Focus has come to one of its controls. */
   onFocus?: FocusEventHandler<HTMLLIElement> | undefined
 }
@@ -44,6 +49,7 @@ export function RoadmapItemCard({
   actions,
   struck = false,
   mark,
+  travelName,
   onFocus,
 }: RoadmapItemCardProps) {
   const language = useLanguage()
@@ -51,8 +57,11 @@ export function RoadmapItemCard({
     <li
       className={cn(
         "flex flex-col gap-3 border bg-card p-4 text-card-foreground",
-        mark ? "relative z-1 shadow-moved-mark" : "shadow-card-bar",
+        mark
+          ? "relative z-1 shadow-moved-mark [view-transition-class:moved-item]"
+          : "shadow-card-bar",
       )}
+      style={{ viewTransitionName: travelName }}
       onFocus={onFocus}
     >
       <div className={cn("flex flex-col gap-3", struck && STRUCK_TEXT_CLASSES)}>

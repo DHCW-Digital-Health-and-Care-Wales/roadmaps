@@ -47,6 +47,11 @@ export interface CompactItemRowProps {
    * before it, with the mark's edge round the row.
    */
   mark?: ReactNode
+  /**
+   * The view transition name its travel after a move pairs it by (STY-072,
+   * `travelNames`); with the moved `mark`, it travels raised above the others.
+   */
+  travelName?: string | undefined
   /** Focus has come to one of its controls. */
   onFocus?: FocusEventHandler<HTMLLIElement> | undefined
 }
@@ -80,6 +85,7 @@ export function CompactItemRow({
   struck = false,
   reveal = false,
   mark,
+  travelName,
   onFocus,
 }: CompactItemRowProps) {
   const { t } = useTranslation()
@@ -101,9 +107,12 @@ export function CompactItemRow({
       render={
         <li
           className={cn(
-            "border-t first:border-t-0",
-            mark && "relative z-1 shadow-moved-mark-row",
+            // Opaque, as its list is, so it hides the rows it passes as it travels.
+            "border-t bg-card first:border-t-0",
+            mark &&
+              "relative z-1 shadow-moved-mark-row [view-transition-class:moved-item]",
           )}
+          style={{ viewTransitionName: travelName }}
           onFocus={onFocus}
         />
       }

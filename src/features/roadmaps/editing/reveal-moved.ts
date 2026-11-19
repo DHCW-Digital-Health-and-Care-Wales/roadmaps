@@ -1,3 +1,5 @@
+import { REDUCED_MOTION } from "@/lib/use-media-query"
+
 /** How long a reveal follows the pinned bars as they settle after a move. */
 const SETTLING_MS = 1000
 
@@ -13,7 +15,7 @@ const SETTLING_MS = 1000
  * to it, away from where focus went (an "Undo order" just after the move).
  */
 export function revealMoved(item: Element): () => void {
-  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  const reduced = window.matchMedia(REDUCED_MOTION).matches
   const reveal = () => {
     item.scrollIntoView({
       block: "nearest",

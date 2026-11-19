@@ -58,6 +58,9 @@ involved: it has no transition but the chevron's turn.
 
 - **D1** (owner, 2026-11-19, triage in the orchestrator's session): fix, high priority
   — it reproduces on the default branch and slows every delivery's E2E run.
+- **D2** (owner, 2026-11-19, PR #180): no CPU load in the test suite. The press test
+  runs at the page's own speed; the slowed CPU is a one-off stress check, recorded in
+  Scenario evidence, not a step of the test.
 
 ## Delivery
 
@@ -67,16 +70,15 @@ pinned foot (`--pinned-top`, `--pinned-bottom`), as the third press's heading is
 the Description it pressed before sits a line below it. A target outside that room is
 still brought to the middle and waited on until two frames draw it still. The header's
 own 49 px excursion is a product fault in its own right, recorded as DEF-021, not fixed
-here: a user is unlikely to press in the one or two frames it lasts. The test also
-runs with the CPU slowed fourfold, so the load S1 asks for is part of the suite, not a
-flag on a run.
+here: a user is unlikely to press in the one or two frames it lasts. The test runs at
+the page's own speed (D2); the load S1 asks for was a one-off stress run.
 
 ### Departures
 
 - **Test-first by reproduction** (agent): as DEF-016's, the red is the stress run at the
-  default branch with the slowed CPU, which fails now and then rather than every time;
-  the helper is the test. The slowed CPU is the first commit; the helper's fix the
-  second.
+  default branch, which fails now and then rather than every time; the helper is the
+  test. The first commit slowed the test's CPU to show the red more often; a later
+  commit took that out (D2), so the suite carries no load.
 - **No screenshots** (agent): no visible UI changes.
 
 ### Contract for dependents
@@ -87,6 +89,6 @@ after the header's state changes with a scroll still meets DEF-021 until it is f
 
 ### Scenario evidence
 
-| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| S1       | Before the fix, with the CPU slowed fourfold, `playwright test tests/e2e/roadmap-items-compact.spec.ts -g "opens and closes a row by a press on its line" --repeat-each=60 --workers=8` (both widths) failed 4 of 120, each at the third press with `aria-expanded` still `"true"`. After it, the same command passed 120 of 120 in two runs, and 180 of 180 with the axe test beside it. The whole suite, `playwright test`, passed 551 of 551. |
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | Before the fix, with the CPU slowed fourfold, `playwright test tests/e2e/roadmap-items-compact.spec.ts -g "opens and closes a row by a press on its line" --repeat-each=60 --workers=8` (both widths) failed 4 of 120, each at the third press with `aria-expanded` still `"true"`. After it, the same command passed 120 of 120 in two runs, and 180 of 180 with the axe test beside it. The whole suite, `playwright test`, passed 551 of 551. Without the slowed CPU (D2), the press test at 1280 px failed 6 of 30 at the default branch (`--repeat-each=30 --workers=8`, the axe test beside it); after the fix, both widths and the axe test passed 150 of 150 with `--repeat-each=50 --workers=8`. |

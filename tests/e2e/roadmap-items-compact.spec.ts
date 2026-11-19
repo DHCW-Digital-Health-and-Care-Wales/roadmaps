@@ -318,15 +318,6 @@ async function pressOn(target: Locator) {
   await target.click({ force: true })
 }
 
-/**
- * Slows the page's CPU, as a busy run of the whole suite does, so a press that races
- * the page's own settling loses more often (DEF-020).
- */
-async function loadTheCpu(page: Page) {
-  const session = await page.context().newCDPSession(page)
-  await session.send("Emulation.setCPUThrottlingRate", { rate: 4 })
-}
-
 /** A row's chevron, whatever its name says it will do. */
 function rowChevron(row: Locator): Locator {
   return row.getByRole("button", { name: /^(Show|Hide) the rest of/ })
@@ -340,7 +331,6 @@ for (const [width, height] of [
     page,
     sheets,
   }) => {
-    await loadTheCpu(page)
     await page.setViewportSize({ width, height })
     await openWithItems(page, sheets, withItems(...ITEMS), "Last")
     await chooseCompact(page)

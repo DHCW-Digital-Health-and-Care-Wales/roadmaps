@@ -151,7 +151,7 @@
   [#199](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/199),
   merged as `2c800ab`: a load flake proven not caused by the change goes on from the
   failed command instead of rerunning the gate, and
-  [DEF-022](../../backlog/defects/DEF-022-page-tests-time-out-when-the-host-is-busy.md)
+  [DEF-022](../../backlog/_archive/defects/DEF-022-page-tests-time-out-when-the-host-is-busy.md)
   records the page tests' timeouts on a busy host (Needs triage). 4 reviewer tasks
   (Opus and Sol, two rounds): P2 ×1 (raised by both), P3 ×7, fixed; two declined.
 - Evidence limits: no usage units; reviewer durations not reported.
@@ -179,7 +179,7 @@
     cost the owner may later pay a `Proposed` chore; the delivery recorded none, and
     the handoffs carried it as "consider logging as a defect". The owner decides
     whether to record it;
-  - [DEF-022](../../backlog/defects/DEF-022-page-tests-time-out-when-the-host-is-busy.md)
+  - [DEF-022](../../backlog/_archive/defects/DEF-022-page-tests-time-out-when-the-host-is-busy.md)
     awaits triage, and STY-074 its grilling.
 - Next comparison: the final fresh pass found P2s after round 2 on both Opus items
   whose fixes changed logic (three on STY-071, one on STY-072), and none ran on the

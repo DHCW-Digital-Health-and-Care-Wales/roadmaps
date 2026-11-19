@@ -1,6 +1,6 @@
 # DEF-020: The compact view's press-on-a-row test fails now and then
 
-- **Status**: Needs triage — found by DEF-016 delivery
+- **Status**: In progress — t3/def-020-018-row-press-and-reconnect-reads
 - **Severity**: Low — an E2E run fails now and then on a change that does not touch
   the compact view, and a rerun passes; no user is known to be affected
 - **Area**: E2E
@@ -47,3 +47,6 @@ press misses the stretched line.
 **Then** the row closes, and a stress run of the test passes every time
 
 ## Decisions
+
+- **D1** (owner, 2026-11-19, triage in the orchestrator's session): fix, high priority
+  — it reproduces on the default branch and slows every delivery's E2E run.

@@ -1,6 +1,6 @@
 # DEF-018: Reconnecting on a roadmap's page reads the roadmap list twice
 
-- **Status**: Needs triage — found by STY-057 delivery
+- **Status**: In progress — t3/def-020-018-row-press-and-reconnect-reads
 - **Severity**: Low — two extra requests to the data source per reconnect; nothing
   shown is wrong
 - **Area**: Features/UI
@@ -50,3 +50,9 @@ invalidation that refetches.
 **Given** a roadmap's page open when the session expired
 **When** the Product Lead reconnects
 **Then** the roadmap list is read once and the roadmap's items once
+
+## Decisions
+
+- **D1** (owner, 2026-11-19, triage in the orchestrator's session): fix, low priority,
+  timeboxed to 60 minutes of investigation; if the cause is not verified and a fix in
+  hand by then, stop and hand back the findings for the owner to decide.

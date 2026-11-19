@@ -192,24 +192,26 @@ Above "Move to", an item in a placement of two or more has its position as a hea
 in numerals ("In Now: 4 of 4"; in Welsh the heading alone, "Nawr: 4 o 4"), then where
 it can go: "To the top", "Up one", "Down one", "To the bottom". What a move came to is
 a status line: the move, then the new position ("Moved up. 3 of 4."; to another
-placement, where it lands: "Moved to Later. 2 of 2."). A changed order
-is the placement's, tagged at its heading ("Order changed") with an undo named for
-what it undoes ("Undo order"), and one line in "What changes".
+placement, where it lands: "Moved to Later. 2 of 2."; given its first placement,
+"Placed in Now. 3 of 3."). A changed order is the placement's, tagged at its heading
+("Order changed") with an undo named for what it undoes ("Undo order"), and one line
+in "What changes".
 
 ```
 roadmaps.edit.order.position       In {{placement}}: {{position}} of {{count}}
 roadmaps.edit.order.moved.top      Moved to the top. {{position}} of {{count}}.
+roadmaps.edit.movedTo              Moved to {{placement}}. {{position}} of {{count}}.
 roadmaps.edit.order.changed        Order changed
 roadmaps.edit.order.undone         Order of {{placement}} undone
 ```
 
 ## Moved mark
 
-**Shape:** a badge on the item last moved, saying how it moved, in the past tense and
-with no position, which the status line says: "Moved up", "Moved to the top", "Moved
-from Now", "Placed". Where the list is too narrow, the badge cuts to its arrow and
-"Moved", in one key of its own; a label that is no "Moved" and already as short
-("Placed") shows whole.
+**Shape:** the item last moved carries a label saying how it moved, in the past tense
+and with no position, which the status line says: "Moved up", "Moved to the top",
+"Moved from Now", "Placed". Where a compact list is too narrow, the label cuts to its
+arrow and "Moved", in one key of its own; a label that is no "Moved" and already as
+short ("Placed") shows whole.
 
 ```
 roadmaps.edit.movedMark.up     Moved up

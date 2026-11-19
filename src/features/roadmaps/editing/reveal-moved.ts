@@ -8,9 +8,11 @@ const SETTLING_MS = 1000
  * menu or dialog closing lets go of the page's scroll a moment later, and a foot bar the
  * move brought, or a header sticking as the page glides, sets its height on the document
  * (`usePinnedInset`) a few frames on. So the page is scrolled two frames on, and again
- * as the document's style changes, for a second.
+ * as the document's style changes, for a second, unless the returned `stop` is called
+ * first: once the item has lost its mark, a bar going must not scroll the page back
+ * to it, away from where focus went (an "Undo order" just after the move).
  */
-export function revealMoved(item: Element) {
+export function revealMoved(item: Element): () => void {
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
   const reveal = () => {
     item.scrollIntoView({
@@ -23,10 +25,14 @@ export function revealMoved(item: Element) {
     attributes: true,
     attributeFilter: ["style"],
   })
-  setTimeout(() => {
-    settling.disconnect()
-  }, SETTLING_MS)
-  requestAnimationFrame(() => {
-    requestAnimationFrame(reveal)
+  let frame = requestAnimationFrame(() => {
+    frame = requestAnimationFrame(reveal)
   })
+  const stop = () => {
+    settling.disconnect()
+    cancelAnimationFrame(frame)
+    clearTimeout(settled)
+  }
+  const settled = setTimeout(stop, SETTLING_MS)
+  return stop
 }

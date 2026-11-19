@@ -95,9 +95,10 @@ export interface PageItemDialog {
  * the values pending, each edited from the item as the dialog opened on it, or as part
  * of a new item (STY-046 S6), and marks an item it moves (STY-071 S2). Adding, it is on
  * no item: "Add item" and "Add and start another" keep a new item pending, and the
- * first closes the dialog with focus going to the new item's card. Cancel, the close button and Escape send focus back to the
- * "Add an item" that opened it, or to the page's own once an item has taken an empty
- * roadmap's panel's place, and its button with it.
+ * first closes the dialog with focus going to the new item's card. Cancel, the close
+ * button and Escape send focus back to the "Add an item" that opened it, or to the
+ * page's own once an item has taken an empty roadmap's panel's place, and its button
+ * with it.
  */
 export function useItemDialog({
   roadmap,

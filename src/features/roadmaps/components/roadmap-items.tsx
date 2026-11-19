@@ -73,8 +73,7 @@ export interface RoadmapItemsProps {
  * removal dialog, drawn here too (STY-049 S1). A removed item shows where it did, but
  * is no stop of its placement's order: the others' positions count without it (S8).
  * The item moved last carries the moved mark (STY-071); a move to another placement
- * from the Move menu is said in the status line too, with the item's position there,
- * last (S5).
+ * from the Move menu is said in the status line too, with where it shows there (S5).
  */
 export function RoadmapItems({
   roadmapId,

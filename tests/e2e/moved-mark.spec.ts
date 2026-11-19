@@ -165,6 +165,51 @@ test.describe("the page scrolls to the moved item (S4)", () => {
   })
 })
 
+test("“Undo order” at once after a move leaves focus on its heading, in view: the reveal stops with the mark (S4, S8)", async ({
+  page,
+  sheets,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" })
+  const now = Array.from({ length: 20 }, (_, at): [string, string] => [
+    `Now item ${String(at + 1)}`,
+    "Now",
+  ])
+  sheets.spreadsheet = withTabItems(
+    "ProductA",
+    ["Minimal card", "Next"],
+    ...now,
+  )
+  await page.setViewportSize(DESKTOP)
+  await page.goto("./#/roadmaps/producta")
+  await connect(page)
+  const last = itemOf(page, "Now item 20")
+  await expect(last).toBeAttached()
+  await chooseFromMenu(page, "Now item 20", "To the top")
+  await expect.poll(() => inRoom(last)).toBe(true)
+
+  await main(page).getByRole("button", { name: "Undo order Now" }).click()
+
+  const heading = main(page).getByRole("heading", { level: 2, name: "Now" })
+  await expect(heading).toBeFocused()
+  // Nothing is pending: the foot bar goes, which the reveal of a mark still
+  // showing would follow, two frames on.
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        document.documentElement.style.getPropertyValue("--pinned-bottom"),
+      ),
+    )
+    .toMatch(/^(0px)?$/)
+  await page.evaluate(
+    () =>
+      new Promise((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(resolve))
+      }),
+  )
+  await expect(heading).toBeInViewport()
+  await expect(heading).toBeFocused()
+})
+
 test.describe("the mark's look", () => {
   test.use({ reducedMotion: "reduce" })
 

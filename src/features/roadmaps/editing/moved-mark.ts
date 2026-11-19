@@ -53,7 +53,7 @@ export interface PageMovedMark {
 
 interface MarkState {
   readonly mark: MovedMark
-  /** Where the item shows: as the move left it, or as the last read that kept it. */
+  /** Where the item shows: as the move left it, or as it last showed with it kept. */
   readonly where: ShownPlace
   /** When the roadmap's items were last read as the mark was set or kept. */
   readonly readAt: number
@@ -77,13 +77,14 @@ export interface MovedMarkOptions {
  * The moved mark of a roadmap's page (STY-071): display state, held by the page, never
  * a pending edit, so it goes as the page does (S8). Every move marks its item, from the
  * Move menu, the item dialog or Remove's question (D2, D16), and the next move takes it
- * (S6). It stays while the item shows where the move left it: through a change of view,
- * edits and opened rows (S7), and goes once the item shows anywhere else, as "Undo
- * changes" or "Discard all" may put it (S8). A read keeps it while its move is still
- * pending and clears it otherwise (D9), so a move that came to no change keeps its mark
- * until the next read (D17). "Undo order" on the placement it is in clears it, even
- * where the item stays last there (D12), as do removing the item, its going from the
- * page and a successful publish (S8).
+ * (S6). It stays through a change of view, edits and opened rows (S7). Once the item
+ * shows somewhere else, or the roadmap is read again, it stays only while its move is
+ * still pending, something pending keeping the item where the move put it (D9, D17):
+ * "Undo changes", "Discard all" or a read that puts it back clears it (S8). So a move
+ * that came to no change keeps its mark until something moves the item or the next
+ * read. "Undo order" on the placement it is in clears it, even where the item stays
+ * last there (D12), as do removing the item, its going from the page and a successful
+ * publish (S8).
  */
 export function useMovedMark({
   roadmapId,
@@ -99,22 +100,24 @@ export function useMovedMark({
   const [state, setState] = useState<MarkState | null>(null)
 
   if (state) {
-    const { key, move, to } = state.mark
+    const { key, to } = state.mark
     const where = shownPlace(groups, key)
     const published = notice !== state.notice && notice?.kind === "published"
+    const read = readAt !== state.readAt
     // Adjusting state while rendering, as React documents for state that follows props.
     if (!where || published) setState(null)
-    else if (readAt !== state.readAt) {
+    else if (read || !samePlace(where, state.where)) {
+      // Its move is pending while the item is in the placement the move left it in and
+      // something pending puts it where it shows there: the whole of a new item, its own
+      // pending placement, or the placement's order.
       const item = pageItems.find((each) => each.key === key)
       const pending =
         where.placement === to &&
-        (move.kind === "placement"
-          ? // A new item's placement is its own; one read has a pending move to it.
-            item?.newItemId !== undefined ||
-            item?.entry?.fields.placement !== undefined
-          : hasPendingOrder(changes?.orders, to))
+        (item?.newItemId !== undefined ||
+          item?.entry?.fields.placement !== undefined ||
+          hasPendingOrder(changes?.orders, to))
       setState(pending ? { ...state, where, readAt } : null)
-    } else if (!samePlace(where, state.where)) setState(null)
+    }
   }
 
   return {

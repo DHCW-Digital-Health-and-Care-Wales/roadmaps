@@ -1,4 +1,10 @@
-import { type FocusEvent, type RefObject, useLayoutEffect, useRef } from "react"
+import {
+  type FocusEvent,
+  type RefObject,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+} from "react"
 import { useTranslation } from "react-i18next"
 
 import { undoRemoval } from "@/domain/roadmap/item-removal"
@@ -148,12 +154,21 @@ export function EditableItem({
     control.current?.focus({ preventScroll: focusRequest === "move" })
     onFocused()
   }, [focusRequest, editButton, onFocused])
-  // The mark the page last scrolled to: each move's once, as focus first comes to it.
+  // The mark the page last scrolled to: each move's once, as focus first comes to it,
+  // and only while the item carries it.
   const revealed = useRef<MovedMark | null>(null)
+  const stopReveal = useRef<(() => void) | null>(null)
+  useEffect(
+    () => () => {
+      stopReveal.current?.()
+      stopReveal.current = null
+    },
+    [mark],
+  )
   const reveal = (event: FocusEvent<HTMLLIElement>) => {
     if (!mark || revealed.current === mark) return
     revealed.current = mark
-    revealMoved(event.currentTarget)
+    stopReveal.current = revealMoved(event.currentTarget)
   }
   const label = (shortens: boolean) =>
     mark && <MovedLabel move={mark.move} shortens={shortens} />

@@ -22,7 +22,7 @@ import {
   openEditItemDialog,
 } from "../testing/item-dialog"
 import { confirmRemoval } from "../testing/removal-dialog"
-import { refreshRoadmap } from "../testing/roadmap-page"
+import { moreButton, refreshRoadmap } from "../testing/roadmap-page"
 
 /**
  * The moved mark (STY-071): the item a Product Lead moved last shows an edge and a
@@ -325,6 +325,19 @@ describe("What keeps the mark (S7)", () => {
     expect(marked()).toEqual([["Delta", "Moved up"]])
   })
 
+  it("is kept when another item, new, is removed from before it, its move still pending (D17)", async () => {
+    const { user } = await renderPage()
+    await addItem(user, "Kilo", "Later")
+    await addItem(user, "Lima", "Next")
+    await chooseFromMenu(user, "Lima", "Later")
+    expect(titlesUnder("Later")).toEqual(["Solo", "Kilo", "Lima"])
+
+    await confirmRemoval(user, "Kilo")
+
+    expect(titlesUnder("Later")).toEqual(["Solo", "Lima"])
+    expect(marked()).toEqual([["Lima", "Moved from Next"]])
+  })
+
   it("is kept by a refused publish (D12)", async () => {
     const { user, repository } = await renderPage()
     await chooseFromMenu(user, "Delta", "Up one")
@@ -397,6 +410,18 @@ describe("What clears the mark (S8)", () => {
     expect(marked()).toEqual([])
   })
 
+  it("is cleared by “Undo changes” that puts the item back into a placement whose order is pending", async () => {
+    const { user } = await renderPage()
+    await chooseFromMenu(user, "Delta", "To the top")
+    await chooseFromMenu(user, "Alpha", "Later")
+    expect(marked()).toEqual([["Alpha", "Moved from Now"]])
+
+    await user.click(main().getByRole("button", { name: "Undo changes Alpha" }))
+
+    expect(titlesUnder("Now")).toContain("Alpha")
+    expect(marked()).toEqual([])
+  })
+
   it("is cleared by “Discard all”", async () => {
     const { user } = await renderPage()
     await chooseFromMenu(user, "Delta", "Up one")
@@ -413,6 +438,12 @@ describe("What clears the mark (S8)", () => {
     await chooseFromMenu(user, "Alpha", "Later")
     await chooseFromMenu(user, "Alpha", "Now")
     expect(titlesUnder("Now")).toEqual(["Delta", "Bravo", "Charlie", "Alpha"])
+    expect(marked()).toEqual([["Alpha", "Moved from Later"]])
+    // Read again, the order still puts Alpha last: its move is still pending (S7).
+    await refreshRoadmap(user)
+    await vi.waitFor(() => {
+      expect(moreButton()).not.toHaveAttribute("aria-busy", "true")
+    })
     expect(marked()).toEqual([["Alpha", "Moved from Later"]])
 
     await confirm(user, "Discard all changes")

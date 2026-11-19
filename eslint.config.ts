@@ -9,6 +9,7 @@ import globals from "globals"
 import tseslint from "typescript-eslint"
 
 import { designTokenRules } from "./build/design-token-lint.ts"
+import { e2eRules } from "./build/e2e-lint.ts"
 
 /** Forbid imports of the given `src/` layers, via the `@/` alias or relative paths. */
 function layers(...names: string[]) {
@@ -200,5 +201,7 @@ export default defineConfig(
   },
   // Off-brand styling fails lint (ADR-010): build/design-token-lint.ts.
   ...designTokenRules,
+  // A Playwright test never slows the machine: build/e2e-lint.ts.
+  ...e2eRules,
   prettier,
 )

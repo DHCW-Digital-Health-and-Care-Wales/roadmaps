@@ -20,6 +20,7 @@ import {
   type FieldChange,
   isChoiceField,
   type ItemChanges,
+  type ItemRemoval,
   type ItemTarget,
   itemValue,
   type ItemValues,
@@ -204,6 +205,25 @@ export function matchItemChanges(
       pendingValues(entry),
     )
     if (index >= 0 && !matched.has(index)) matched.set(index, entry)
+  }
+  return matched
+}
+
+/**
+ * Which removal removes which of `items`, by index, found as an edited item is
+ * (`findEditedItem`): an item with an ID by its ID, one with none at its place holding
+ * what was loaded. A removal matching nothing is left out: its item is gone, or a
+ * co-lead changed or moved it, and the next publish says so (ADR-012 Option 13); no
+ * other item is taken for it.
+ */
+export function matchRemovals(
+  items: readonly RoadmapItem[],
+  changes: RoadmapChanges | undefined,
+): ReadonlyMap<number, ItemRemoval> {
+  const matched = new Map<number, ItemRemoval>()
+  for (const removal of changes?.removals ?? []) {
+    const index = findEditedItem(items, NO_REPEATED_IDS, removal, [])
+    if (index >= 0 && !matched.has(index)) matched.set(index, removal)
   }
   return matched
 }
@@ -434,9 +454,10 @@ export function publishesNoItems(
 ): boolean {
   if (pendingNewItems(items, changes).length > 0) return false
   const entries = matchItemChanges(items, changes)
+  const removals = matchRemovals(items, changes)
   return items.every(
     (item, position) =>
-      removalOf(changes, { item, position }) !== undefined ||
+      removals.has(position) ||
       applyItemChanges(item, entries.get(position)).placement === null,
   )
 }

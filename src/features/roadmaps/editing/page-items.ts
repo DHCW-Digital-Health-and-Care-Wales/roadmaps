@@ -1,6 +1,5 @@
 import { useMemo } from "react"
 
-import { removalOf } from "@/domain/roadmap/item-removal"
 import { editNewItem, removeNewItem } from "@/domain/roadmap/new-item"
 import type {
   ItemChanges,
@@ -19,6 +18,7 @@ import {
   applyItemChanges,
   editItem,
   matchItemChanges,
+  matchRemovals,
   pendingNewItems,
   shownNewItem,
   type SinceOpened,
@@ -96,6 +96,7 @@ export function pageItemsOf(
   keyOf: (position: number) => string | undefined,
 ): PageItem[] {
   const entries = matchItemChanges(items, changes)
+  const removals = matchRemovals(items, changes)
   const turns = shownTurns(items, changes)
   return [
     ...items.flatMap((item, position): PageItem[] => {
@@ -108,7 +109,7 @@ export function pageItemsOf(
           item,
           shown: applyItemChanges(item, entry),
           entry,
-          removal: removalOf(changes, { item, position }),
+          removal: removals.get(position),
           newItemId: undefined,
           turn: turns[position],
         },

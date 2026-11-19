@@ -644,6 +644,35 @@ describe("A read that lands while the dialog is open", () => {
     expect(card(FAX).getByText("Removed")).toBeVisible()
   })
 
+  it.each([
+    ["Cancel", "Cancel", `Remove ${FAX}`],
+    ["Remove", "Remove", `Undo removal ${FAX}`],
+  ])(
+    "sends focus into a compact row a co-lead's move drew afresh, shut, on %s",
+    async (_name, choice, focused) => {
+      matchMediaQueries(TABLET_WIDTH)
+      const { user, repository } = await renderPage()
+      await user.click(main().getByRole("button", { name: "Compact" }))
+      await user.click(
+        main().getByRole("button", { name: `Show the rest of ${FAX}` }),
+      )
+      const letGo = await holdRefresh(user, repository)
+      await askToRemove(user, FAX)
+
+      repository.coLead((_roadmaps, itemsOf) => {
+        const fax = itemsOf("producta").find(({ title }) => title.en === FAX)
+        if (fax) fax.placement = "later"
+      })
+      await letGo()
+      await user.click(removalDialog(FAX).getByRole("button", { name: choice }))
+      await expectDialogClosed()
+
+      await waitFor(() => {
+        expect(main().getByRole("button", { name: focused })).toHaveFocus()
+      })
+    },
+  )
+
   it("closes it once the item has gone", async () => {
     const { user, repository } = await renderPage()
     const letGo = await holdRefresh(user, repository)

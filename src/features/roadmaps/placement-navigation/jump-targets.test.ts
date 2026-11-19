@@ -121,4 +121,15 @@ describe("summariseJumpTargets", () => {
       summarise(read, removeItem(NO_CHANGES, item("Next A", "next"), 1))[2],
     ).toEqual({ target: "next", count: 0, pending: true })
   })
+
+  it("marks no other item removed when one without an ID is no longer where it was read (STY-049 S2, S4)", () => {
+    const fax = item("Fax", "next")
+    const removed = removeItem(NO_CHANGES, fax, 0)
+    // A co-lead put another item without an ID above it.
+    const read = [item("Inserted", "next"), fax]
+
+    const next = summarise(read, removed)[2]
+
+    expect(next).toEqual({ target: "next", count: 2, pending: false })
+  })
 })

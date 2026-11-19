@@ -1214,6 +1214,19 @@ describe("a removed item (STY-070)", () => {
     ])
   })
 
+  it("counts an item without an ID that is no longer where it was read as no removed item's (STY-049 S4)", () => {
+    const fax = createTestRoadmapItem("Fax")
+    const inserted = createTestRoadmapItem("Inserted")
+
+    expect(publishesNoItems([fax], removeItem(NO_CHANGES, fax, 0))).toBe(true)
+    expect(
+      publishesNoItems([inserted, fax], removeItem(NO_CHANGES, fax, 1)),
+    ).toBe(false)
+    expect(publishesNoItems([inserted], removeItem(NO_CHANGES, fax, 0))).toBe(
+      false,
+    )
+  })
+
   it("leaves the public site no items once every placed item is removed (STY-049 S4)", () => {
     const unplaced = createTestRoadmapItem("Unplaced", {
       placement: null,

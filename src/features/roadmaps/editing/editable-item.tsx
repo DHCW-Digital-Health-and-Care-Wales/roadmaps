@@ -207,6 +207,7 @@ export function EditableItem({
         item={shown}
         organisations={organisations}
         struck={removal !== undefined}
+        reveal={focusRequest === "remove" || focusRequest === "undo-removal"}
         tag={pending && <PendingTag pending={pending} subject={title} />}
         actions={(wide) => (
           <>

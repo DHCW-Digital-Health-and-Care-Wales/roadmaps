@@ -37,6 +37,11 @@ export interface CompactItemRowProps {
    * (STY-049 S2): its controls are not.
    */
   struck?: boolean
+  /**
+   * Opens the row, shut or not, as focus is sent to a control at its foot: one drawn
+   * afresh in another list, as a read that moves its item draws it, starts shut.
+   */
+  reveal?: boolean
 }
 
 /**
@@ -65,11 +70,14 @@ export function CompactItemRow({
   actions,
   drop,
   struck = false,
+  reveal = false,
 }: CompactItemRowProps) {
   const { t } = useTranslation()
   const language = useLanguage()
   const wide = useMediaQuery(TABLET_WIDTH)
   const [open, setOpen] = useState(false)
+  // Adjusting state while rendering, as React documents for state that follows props.
+  if (reveal && !open) setOpen(true)
   const title = localise(item.title, language)
   const description = item.description && localise(item.description, language)
   const horizon = item.writtenHorizon

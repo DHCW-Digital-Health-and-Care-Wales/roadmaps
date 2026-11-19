@@ -5,7 +5,6 @@
  * read; the store settles every change by them (`settleOrders`).
  */
 
-import { removalOf } from "@/domain/roadmap/item-removal"
 import {
   arrangedOrder,
   findOrderedItems,
@@ -27,6 +26,7 @@ import {
 import { groupRoadmapItems } from "../group-roadmap-items"
 import {
   matchItemChanges,
+  matchRemovals,
   moveTurn,
   newItemTurn,
   pendingNewItems,
@@ -58,6 +58,7 @@ function placedItems(
   changes: RoadmapChanges | undefined,
 ): PlacedItem[] {
   const entries = matchItemChanges(items, changes)
+  const removals = matchRemovals(items, changes)
   return [
     ...items.map((item, position): PlacedItem => {
       const entry = entries.get(position)
@@ -69,7 +70,7 @@ function placedItems(
             ? movedTo
             : item.placement,
         arrival: moveTurn(changes, entry),
-        removed: removalOf(changes, { item, position }) !== undefined,
+        removed: removals.has(position),
       }
     }),
     ...pendingNewItems(items, changes).map(

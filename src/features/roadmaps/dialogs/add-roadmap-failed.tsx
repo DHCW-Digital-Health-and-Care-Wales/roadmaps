@@ -9,6 +9,8 @@ import { writeFailureMessage } from "../write-failure-message"
 export interface AddRoadmapFailedProps {
   failure: AppError
   onDismiss: () => void
+  /** Where it sits: the form's footer, above the buttons. */
+  className?: string
 }
 
 /**
@@ -18,11 +20,13 @@ export interface AddRoadmapFailedProps {
 export function AddRoadmapFailed({
   failure,
   onDismiss,
+  className,
 }: AddRoadmapFailedProps) {
   const { t } = useTranslation()
   return (
     <DismissibleNotice
       role="alert"
+      className={className}
       variant="destructive"
       Icon={CircleAlertIcon}
       title={t("roadmaps.add.failed.title")}

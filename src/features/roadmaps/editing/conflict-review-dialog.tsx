@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
+  DialogBody,
   DialogClose,
   DialogContent,
   DialogDescription,
@@ -23,6 +24,7 @@ import { isRoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 import { formatCalendarDate, useLanguage } from "@/i18n"
 
 import { DetailList } from "../components/detail-list"
+import { FieldName } from "../components/field-name"
 import { useOrganisations } from "../hooks/use-organisations"
 import {
   describeOrganisations,
@@ -141,54 +143,56 @@ export function ConflictReviewDialog({
           </DialogTitle>
           <DialogDescription>{description.join(" ")}</DialogDescription>
         </DialogHeader>
-        {deciding && (
-          <ul className="flex flex-col gap-4">
-            {conflicts.map((each) => {
-              switch (each.kind) {
-                case "order":
-                  return (
-                    <OrderConflictItem
-                      key={each.key}
-                      open={each}
-                      pageItems={pageItems}
-                      {...decision(each)}
-                    />
-                  )
-                case "removal":
-                  return (
-                    <RemovalConflictItem
-                      key={each.key}
-                      open={each}
-                      {...decision(each)}
-                    />
-                  )
-                default:
-                  return (
-                    <FieldConflictItem
-                      key={each.key}
-                      open={each}
-                      {...decision(each)}
-                    />
-                  )
-              }
-            })}
-          </ul>
-        )}
-        {!deciding && (
-          <>
-            <RemovedItems
-              removed={removed}
-              hasPendingChanges={hasPendingChanges}
-            />
-            <p className="font-bold">
-              {t(
-                hasPendingChanges
-                  ? `roadmaps.publish.notice.refused.decided.${action}`
-                  : `roadmaps.publish.notice.refused.nothingLeft.${action}`,
-              )}
-            </p>
-          </>
-        )}
+        <DialogBody>
+          {deciding && (
+            <ul className="flex flex-col gap-4">
+              {conflicts.map((each) => {
+                switch (each.kind) {
+                  case "order":
+                    return (
+                      <OrderConflictItem
+                        key={each.key}
+                        open={each}
+                        pageItems={pageItems}
+                        {...decision(each)}
+                      />
+                    )
+                  case "removal":
+                    return (
+                      <RemovalConflictItem
+                        key={each.key}
+                        open={each}
+                        {...decision(each)}
+                      />
+                    )
+                  default:
+                    return (
+                      <FieldConflictItem
+                        key={each.key}
+                        open={each}
+                        {...decision(each)}
+                      />
+                    )
+                }
+              })}
+            </ul>
+          )}
+          {!deciding && (
+            <>
+              <RemovedItems
+                removed={removed}
+                hasPendingChanges={hasPendingChanges}
+              />
+              <p className="font-bold">
+                {t(
+                  hasPendingChanges
+                    ? `roadmaps.publish.notice.refused.decided.${action}`
+                    : `roadmaps.publish.notice.refused.nothingLeft.${action}`,
+                )}
+              </p>
+            </>
+          )}
+        </DialogBody>
         <DialogFooter>
           {!deciding && hasPendingChanges && (
             <Button ref={publish} onClick={onPublish}>
@@ -246,6 +250,22 @@ function Decision({
   )
 }
 
+/**
+ * What a conflict is about, as its lead-in and the name of its field make it: `shown`
+ * in the line above the values, with the field's icon before the name when it has one,
+ * and `plain`, the same words alone, for the buttons' hidden words (STY-079 D2, D5).
+ */
+function conflictTarget(lead: string, name: string, field?: string) {
+  return {
+    shown: (
+      <>
+        {lead} <FieldName field={field}>{name}</FieldName>
+      </>
+    ),
+    plain: `${lead} ${name}`,
+  }
+}
+
 /** One conflict of the review: what it is about, the two values, then the choice. */
 function ConflictItem({
   target,
@@ -253,7 +273,7 @@ function ConflictItem({
   theirs,
   children,
 }: {
-  target: string
+  target: ReactNode
   yours: { label: string; value: ReactNode }
   theirs: { label: string; value: ReactNode }
   children: ReactNode
@@ -297,18 +317,21 @@ function FieldConflictItem({
     }
     return value
   }
-  const target = t("roadmaps.publish.notice.refused.target", {
-    subject: item
-      ? localise(item.title, language)
-      : t("roadmaps.productDetails.title"),
-    field:
-      conflict.subject === "item"
-        ? t(`roadmaps.edit.itemFields.${conflict.field}`)
-        : t(`roadmaps.edit.roadmapFields.${conflict.field}`),
-  })
+  const target = conflictTarget(
+    t("roadmaps.publish.notice.refused.targetLead", {
+      subject: item
+        ? localise(item.title, language)
+        : t("roadmaps.productDetails.title"),
+    }),
+    conflict.subject === "item"
+      ? t(`roadmaps.edit.itemFields.${conflict.field}`)
+      : t(`roadmaps.edit.roadmapFields.${conflict.field}`),
+    // A roadmap's field never has an icon.
+    conflict.subject === "item" ? conflict.field : undefined,
+  )
   return (
     <ConflictItem
-      target={target}
+      target={target.shown}
       yours={{
         label: t("roadmaps.publish.notice.refused.yours"),
         value: shown(yours),
@@ -335,13 +358,13 @@ function FieldConflictItem({
               onClick={onUseTheirs}
             >
               {t("roadmaps.publish.notice.refused.discardMine")}{" "}
-              <span className="sr-only">{target}</span>
+              <span className="sr-only">{target.plain}</span>
             </Button>
           </div>
         </>
       ) : (
         <Decision
-          target={target}
+          target={target.plain}
           firstButton={firstButton}
           onKeepMine={onKeepMine}
           onUseTheirs={onUseTheirs}
@@ -418,7 +441,9 @@ function RemovalConflictItem({
               return (
                 <div key={field} className="flex flex-col gap-0.5">
                   <dt className="font-bold">
-                    {t(`roadmaps.edit.itemFields.${field}`)}
+                    <FieldName field={field}>
+                      {t(`roadmaps.edit.itemFields.${field}`)}
+                    </FieldName>
                   </dt>
                   <dd>
                     {current === "" && !notes.unknownCodes ? (
@@ -479,14 +504,16 @@ function OrderConflictItem({
   pageItems: readonly PageItem[]
 }) {
   const { t } = useTranslation()
-  const target = t("roadmaps.publish.notice.refused.target", {
-    subject: t(`roadmaps.items.placements.${conflict.placement}`),
-    field: t("roadmaps.publish.notice.refused.orderField"),
-  })
+  const target = conflictTarget(
+    t("roadmaps.publish.notice.refused.targetLead", {
+      subject: t(`roadmaps.items.placements.${conflict.placement}`),
+    }),
+    t("roadmaps.publish.notice.refused.orderField"),
+  )
   const orders = reviewedOrders(conflict, pageItems)
   return (
     <ConflictItem
-      target={target}
+      target={target.shown}
       yours={{
         label: t("roadmaps.publish.notice.refused.yourOrder"),
         value: <OrderList lines={orders.yours} />,
@@ -497,7 +524,7 @@ function OrderConflictItem({
       }}
     >
       <Decision
-        target={target}
+        target={target.plain}
         firstButton={firstButton}
         onKeepMine={onKeepMine}
         onUseTheirs={onUseTheirs}

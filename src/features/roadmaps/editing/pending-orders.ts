@@ -253,6 +253,14 @@ export function positionAfter(
   return at < 0 || at >= count ? from : at
 }
 
+/** Whether `orders`, a roadmap's pending orders, hold one for `placement`. */
+export function hasPendingOrder(
+  orders: readonly PlacementOrder[] | undefined,
+  placement: RoadmapPlacement,
+): boolean {
+  return orders?.some((order) => order.placement === placement) ?? false
+}
+
 /** `changes` without the placement's pending order ("Undo order", STY-050 S3). */
 export function undoOrder(
   changes: RoadmapChanges,

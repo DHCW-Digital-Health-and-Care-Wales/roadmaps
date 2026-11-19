@@ -1,6 +1,6 @@
 # DEF-016: The item dialog's focus tour counts a focus guard as a stop
 
-- **Status**: Needs triage — found by DEF-015 delivery
+- **Status**: Done
 - **Severity**: Low — an E2E run fails now and then on a change that does not touch
   the dialog, and a rerun passes; no user is affected
 - **Area**: E2E
@@ -8,7 +8,7 @@
 - **Depends on**: none
 - **Binding ADRs**: none
 - **Suggested model**: Sonnet — one test helper, and a stress run to show it holds
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/179
 
 ## Summary
 
@@ -56,4 +56,32 @@ all 24 times
 
 ## Decisions
 
-## Delivery _(add on delivery; as in `story.md`)_
+- **D1** (owner, 2026-11-19, request "Fix DEF-016"): fix — a flaky Playwright run can
+  fail any PR.
+
+## Delivery
+
+The cause was as stated. In `expectEveryStopShowsAnIndicator`
+(`tests/e2e/focus-indicator.spec.ts`) a press that lands on a Base UI focus guard
+(`data-base-ui-focus-guard`) waits until the dialog has handed focus on, a frame later,
+and counts the stop it lands on: the guard is never a stop, and Title, the first stop,
+belongs to that lap. Pressing Tab again at once would skip Title and rely on the next
+lap for it (found by the review). The four page tours never meet a guard, so they
+behave as before.
+
+### Departures
+
+- **Test-first by reproduction** (agent): the red is the stress run at the default
+  branch, not a new test; the helper is the test.
+- **No screenshots** (agent): no visible UI changes.
+
+### Contract for dependents
+
+A tour of a dialog goes through `expectEveryStopShowsAnIndicator(page, dialog)`; it
+never counts a focus guard as a stop.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                                                                                                        |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | Before the change, `playwright test tests/e2e/focus-indicator.spec.ts -g "item dialog, its fields" --repeat-each=12` failed 2 of 24, each showing `page: span ` in place of `page: input Title`. After it, two runs of the same command passed 24 of 24 each, and 60 of 60 with eight workers loading the CPU. |

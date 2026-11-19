@@ -466,7 +466,7 @@ test("makes a roadmap out of step match its lists, telling a published one first
 test.describe("the top of the roadmap list (STY-058)", () => {
   const WIDTHS = [375, 640, 820, 1024, 1280] as const
 
-  // A class a button gains or loses at 640px arrives a frame late otherwise.
+  // A class a button gains or loses at 640px takes its transition's time to arrive otherwise.
   test.use({ reducedMotion: "reduce" })
 
   /** The 3 roadmaps, 1 not published: title, count, then Add a roadmap and Refresh. */

@@ -1,7 +1,10 @@
 import AxeBuilder from "@axe-core/playwright"
 import type { Page } from "@playwright/test"
 
-import { disconnectFromHeader } from "./fixtures/account-menu"
+import {
+  chooseFromAccountMenu,
+  disconnectFromHeader,
+} from "./fixtures/account-menu"
 import {
   addItem,
   askToRemove,
@@ -139,6 +142,26 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expectNoAxeViolations(page, theme)
     })
 
+    test("the item dialog as a side panel, a laptop's and a short window's (STY-077)", async ({
+      page,
+    }) => {
+      await page.goto("./#/roadmaps/producta")
+      await connect(page)
+      await expect(
+        page.getByRole("heading", { level: 3, name: "Minimal card" }),
+      ).toBeVisible()
+      await chooseFromAccountMenu(page, "Edit in a side panel")
+
+      const panel = await openEditItemDialog(page, "Minimal card")
+      await expectNoAxeViolations(page, theme)
+      await page.keyboard.press("Escape")
+      await expect(panel).toBeHidden()
+
+      await page.setViewportSize({ width: 844, height: 390 })
+      await openEditItemDialog(page, "Minimal card")
+      await expectNoAxeViolations(page, theme)
+    })
+
     test("a roadmap's placement navigation on a phone: Jump to open with a change pending, a placement jumped to in the stuck strip, then Product details open (STY-053, STY-060)", async ({
       page,
     }) => {
@@ -172,6 +195,31 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
     })
 
     for (const width of [1280, 375]) {
+      test(`an item moved to Later, marked, as a card and as a compact row at ${String(width)}px (STY-071)`, async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width, height: 812 })
+        await page.goto("./#/roadmaps/producta")
+        await connect(page)
+        const main = page.getByRole("main")
+        await main
+          .getByRole("button", { name: "Move Minimal card", exact: true })
+          .click()
+        await page.getByRole("menuitem", { name: "Later", exact: true }).click()
+        await expect(main.getByText("Moved from Now")).toBeVisible()
+        await expectNoAxeViolations(page, theme)
+
+        await main
+          .getByRole("button", {
+            name: width >= 768 ? "Compact" : "Compact view",
+          })
+          .click()
+        await expect(
+          main.getByRole("button", { name: "Show the rest of Minimal card" }),
+        ).toBeVisible()
+        await expectNoAxeViolations(page, theme)
+      })
+
       test(`the top of a roadmap not published at ${String(width)}px: its notice, Product details open, More open, then the banner dismissed (STY-065 S2, S3, S4, S5, S8)`, async ({
         page,
         sheets,

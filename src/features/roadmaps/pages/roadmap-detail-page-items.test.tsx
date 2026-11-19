@@ -16,6 +16,7 @@ import { AppError } from "@/lib/errors"
 import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
+import { fieldTerm } from "../testing/field-term"
 import {
   createInMemoryRoadmapRepository,
   type InMemoryRoadmapItems,
@@ -220,9 +221,9 @@ describe("RoadmapDetailPage items", () => {
       level: 3,
       name: "Example card with every column",
     })
-    const item = within(itemOf("Example card with every column"))
     const field = (label: string) =>
-      item.getByText(label, { selector: "dt" }).nextElementSibling
+      fieldTerm(itemOf("Example card with every column"), label)
+        ?.nextElementSibling
     expect(field("Phase")).toHaveTextContent("Beta")
     expect(field("Description")?.textContent).toBe(
       "What this work is.\nKeep it to a sentence or two.",
@@ -334,9 +335,9 @@ describe("RoadmapDetailPage items", () => {
       "Wedi'u cyflawni eleni",
       "Ddim yn bwrw ymlaen",
     ])
-    const item = within(itemOf("Cerdyn enghreifftiol gyda phob colofn"))
     const field = (label: string) =>
-      item.getByText(label, { selector: "dt" }).nextElementSibling
+      fieldTerm(itemOf("Cerdyn enghreifftiol gyda phob colofn"), label)
+        ?.nextElementSibling
     expect(field("Disgrifiad")).toHaveTextContent("Beth yw’r gwaith hwn.")
     expect(field("Tagiau")).toHaveTextContent("Gwasanaeth X, Gwasanaeth Y")
     expect(field("Sefydliadau")).toHaveTextContent(

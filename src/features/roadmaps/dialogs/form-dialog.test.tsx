@@ -1,8 +1,10 @@
 import { screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { createRef } from "react"
-import { describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
+import { EDIT_SURFACE_STORAGE_KEY } from "@/components/edit-surface/edit-surface-preference"
+import { EditSurfaceProvider } from "@/components/edit-surface/edit-surface-provider"
 import { renderWithI18n } from "@/test/render-with-i18n"
 
 import { FormDialog } from "./form-dialog"
@@ -12,15 +14,17 @@ function renderDialog(
 ) {
   const { busy = false, language, onClose = vi.fn() } = props
   renderWithI18n(
-    <FormDialog
-      open
-      title="A form"
-      busy={busy}
-      onClose={onClose}
-      opener={createRef()}
-    >
-      {() => <input aria-label="First field" />}
-    </FormDialog>,
+    <EditSurfaceProvider>
+      <FormDialog
+        open
+        title="A form"
+        busy={busy}
+        onClose={onClose}
+        opener={createRef()}
+      >
+        {() => <input aria-label="First field" />}
+      </FormDialog>
+    </EditSurfaceProvider>,
     { language },
   )
   return onClose
@@ -52,5 +56,31 @@ describe("FormDialog's close button (STY-068)", () => {
 
     expect(close).toBeDisabled()
     expect(onClose).not.toHaveBeenCalled()
+  })
+})
+
+describe("FormDialog's position (STY-077)", () => {
+  afterEach(() => {
+    localStorage.clear()
+  })
+
+  it("is centred until a Product Lead chooses the side panel (D1)", () => {
+    renderDialog()
+
+    expect(screen.getByRole("dialog")).toHaveAttribute(
+      "data-position",
+      "center",
+    )
+  })
+
+  it("opens along the right once the side panel is chosen, with the same form and close button (S2)", async () => {
+    localStorage.setItem(EDIT_SURFACE_STORAGE_KEY, "panel")
+    const onClose = renderDialog()
+
+    const dialog = screen.getByRole("dialog", { name: "A form" })
+    expect(dialog).toHaveAttribute("data-position", "right")
+    expect(screen.getByRole("textbox", { name: "First field" })).toBeVisible()
+    await userEvent.click(screen.getByRole("button", { name: "Close" }))
+    expect(onClose).toHaveBeenCalledOnce()
   })
 })

@@ -6,6 +6,7 @@ import { server } from "@/test/msw-server"
 
 // jsdom does not implement scrolling; TanStack Router calls it on navigation.
 window.scrollTo = () => undefined
+Element.prototype.scrollIntoView = () => undefined
 
 // Nor media queries, nor layout: no query matches, so nothing pins (`usePinning`).
 window.matchMedia = (query) => {

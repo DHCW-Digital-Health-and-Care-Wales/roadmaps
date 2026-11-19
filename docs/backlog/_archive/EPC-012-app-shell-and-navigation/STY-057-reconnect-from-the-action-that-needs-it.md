@@ -116,7 +116,7 @@ control
   unavailable, during the reads it shows; a family or category list read it doesn't
   show is joined rather than restarted, which reads the same. Reconnecting on a
   roadmap's page already reads the list twice:
-  [DEF-018](../../defects/DEF-018-reconnecting-on-a-roadmap-s-page-reads-the-roadmap-list-twice.md).
+  [DEF-018](../defects/DEF-018-reconnecting-on-a-roadmap-s-page-reads-the-roadmap-list-twice.md).
 - **A refused reconnect on the roadmap list leaves it for the start page** (agent): a
   refusal is the auth state `error`, and `/` shows the start page for it, as any failed
   connection has since the first sign-in story. The reconnect dialog stays, saying why,

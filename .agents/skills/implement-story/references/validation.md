@@ -28,17 +28,34 @@ Report executed test counts and failures; zero tests or a skipped check is not
 validation. Preserve runner exit status when redirecting output. Capture
 verbose logs in a temporary path and summarize the evidence.
 
+A test that times out at its budget in a gate run and passes when its file runs
+alone, on the same head, is a flake only if your change has not slowed it: an
+open defect records it timing out without your change and its time alone is
+close to the time recorded there, or it times out the same way on your base.
+Add the run to that defect, or record one (`docs/AGENTS.md`, with
+`pnpm format:check && pnpm test:docs`), then run the gate's commands after the
+one that failed; with them green, the head has passed the full gate. Classify
+any other failure that passes alone as `pr-watch.md` does (_Each event or
+observation_).
+
 `pnpm test:e2e` builds and serves the app on port 4173 (in a parallel
 worktree, its `PREVIEW_PORT`: `pnpm worktree:info`) and reuses a server
 already listening there locally: stop a stale `pnpm preview` first
 (`fuser -k <port>/tcp`).
 
-Run a suite you will wait for in the foreground with a long enough command
-timeout. To work alongside a suite, start it in the background and make sure
-you are notified, or check its exit status, before relying on it. Detach only a
-run that must outlast the session, with output and exit status in a log
-(`setsid nohup sh -c '<cmd>; echo "exit=$?"' > /tmp/<name>.log 2>&1 &`), and
-read that log before relying on it.
+Give a suite you wait for in the foreground a command timeout longer than its
+run; under host load the Vitest run alone outlasts a runtime's default (2
+minutes in Claude Code). For a run that can outlast the runtime's longest
+foreground timeout, the full gate among them: where the runtime wakes you when
+a background command completes, start it in the background with its exit
+status in its output and yield until it completes, once independent work is
+exhausted, as for a reviewer (`delegation.md`, _Dispatch and completion_, step
+3); otherwise run its commands as separate foreground calls, each within that
+timeout. To work alongside a suite, start it in the background, and read its
+exit status before relying on it.
+Detach only a run that must outlast the session, with output and exit status
+in a log (`setsid nohup sh -c '<cmd>; echo "exit=$?"' > /tmp/<name>.log 2>&1 &`),
+and read that log before relying on it.
 
 A fix made between review rounds, before it is pushed, needs the tests of its
 changed files and their consumers (`pnpm exec vitest related --run <files>`),

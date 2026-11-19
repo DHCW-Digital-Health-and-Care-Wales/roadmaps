@@ -1,6 +1,6 @@
 # DEF-019: The compact view's accessibility check fails now and then on target size
 
-- **Status**: Needs triage — found by STY-070 delivery
+- **Status**: Won't fix — owner, 2026-11-19 (D1); archived. Found by STY-070 delivery
 - **Severity**: Low — an E2E run fails now and then on a change that does not touch
   the compact view, and a rerun passes; no user is known to be affected
 - **Area**: E2E
@@ -37,10 +37,10 @@ not kept.
 
 ## Cause
 
-Not known. Suspected: the check runs before the compact rows have settled, as
+Not known. Suspected: the check runs before the compact rows have settled. The same
+full run failed
 [DEF-016](DEF-016-the-item-dialog-s-focus-tour-counts-a-focus-guard-as-a-stop.md)'s
-focus tour reads focus before the dialog has moved it; the same full run failed
-DEF-016's test too.
+test too, whose cause was a focus guard, not timing, so that run does not point to one.
 
 ## Acceptance criteria
 
@@ -52,3 +52,8 @@ DEF-016's test too.
 has settled
 
 ## Decisions
+
+- **D1** (owner, 2026-11-19, triage in the orchestrator's session): Won't fix; reopen
+  if it recurs. It has failed once, off the default branch, and its test passed 30 of 30
+  in a stress run at `a6a9683` and 60 of 60 under load in the DEF-020+018 delivery. The
+  suite carries no CPU load (DEF-020 D2), so S1's loaded run is not a test step.

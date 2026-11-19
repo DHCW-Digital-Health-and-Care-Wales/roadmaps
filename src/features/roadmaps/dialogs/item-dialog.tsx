@@ -103,16 +103,22 @@ function AddItemForms({
     })
   }
   return (
-    <div>
+    // Pinned, a column that can shrink, so the form's body scrolls between the pinned
+    // parts, and grows, so the form's buttons stay at the foot of a full-height side
+    // panel; the line saying what was added stays in view, its title cut at three lines.
+    <div className="flex flex-col pinned:min-h-0 pinned:grow">
       <div role="status">
         {last && (
           <DismissibleNotice
             role="note"
             variant="success"
             Icon={CircleCheckIcon}
-            className="mb-4"
+            // Pinned, it sits under the header, in step with the body's padding.
+            className="mb-4 pinned:mx-6 pinned:mt-4 pinned:mb-0 pinned:w-auto"
           >
-            <p>{t("roadmaps.edit.addItem.added", { title: last.title })}</p>
+            <p className="pinned:line-clamp-3 pinned:wrap-anywhere">
+              {t("roadmaps.edit.addItem.added", { title: last.title })}
+            </p>
           </DismissibleNotice>
         )}
       </div>

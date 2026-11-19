@@ -16,6 +16,8 @@ export const SHADOW_TOKENS = [
   "control",
   "control-edge",
   "card-bar",
+  "moved-mark",
+  "moved-mark-row",
   "popup",
 ] as const
 

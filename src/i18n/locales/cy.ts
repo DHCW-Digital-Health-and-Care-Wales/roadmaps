@@ -545,6 +545,19 @@ export const cy = {
       },
       move: "Symud",
       moveTo: "Symud i",
+      movedTo:
+        "Symudwyd i {{placement}}. {{position, number}} o {{count, number}}.",
+      placedIn:
+        "Gosodwyd o dan {{placement}}. {{position, number}} o {{count, number}}.",
+      movedMark: {
+        top: "Symudwyd i'r brig",
+        up: "Symudwyd i fyny",
+        down: "Symudwyd i lawr",
+        bottom: "Symudwyd i'r gwaelod",
+        from: "Symudwyd o {{placement}}",
+        placed: "Gosodwyd",
+        short: "Symudwyd",
+      },
       order: {
         position: "{{placement}}: {{position, number}} o {{count, number}}",
         toTop: "I'r brig",
@@ -742,7 +755,7 @@ export const cy = {
               "Dewiswch pa un i'w gadw ar gyfer pob un, yna cyhoeddwch eto.",
             save: "Dewiswch pa un i'w gadw ar gyfer pob un, yna cadwch eto.",
           },
-          target: "{{subject}}: {{field}}",
+          targetLead: "{{subject}}:",
           yours: "Eich newid",
           theirs: "Testun presennol",
           orderField: "Trefn",
@@ -984,6 +997,10 @@ export const cy = {
   theme: {
     switchToDark: "Newid i'r thema dywyll",
     switchToLight: "Newid i'r thema olau",
+  },
+  editSurface: {
+    useSidePanel: "Golygu mewn panel ochr",
+    useDialog: "Golygu mewn deialog",
   },
   language: {
     label: "Iaith",

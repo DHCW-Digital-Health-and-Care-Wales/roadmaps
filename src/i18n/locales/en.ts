@@ -56,7 +56,7 @@ export const en = {
   },
   layout: {
     skipToContent: "Skip to main content",
-    /** The header's menu of the theme and the session's action (STY-056). */
+    /** The header's menu of the theme, where the forms open and the session's action (STY-056, STY-077). */
     account: "Account",
     /** Said after the service name in the home link's name: "Roadmap Editor home". */
     homeSuffix: "home",
@@ -638,6 +638,34 @@ export const en = {
       move: "Move",
       /** Heads the list of places an item can move to. */
       moveTo: "Move to",
+      /**
+       * Said once an item has moved to another placement from its Move menu, with where
+       * it shows there (STY-071 S5).
+       */
+      movedTo:
+        "Moved to {{placement}}. {{position, number}} of {{count, number}}.",
+      /** Said once an unplaced item is given a placement from its Move menu. */
+      placedIn:
+        "Placed in {{placement}}. {{position, number}} of {{count, number}}.",
+      /**
+       * The moved mark's label on the item last moved, saying how it moved (STY-071):
+       * no position, which the status line says.
+       */
+      movedMark: {
+        top: "Moved to the top",
+        up: "Moved up",
+        down: "Moved down",
+        bottom: "Moved to the bottom",
+        /** An item moved to another placement: "Moved from Now". */
+        from: "Moved from {{placement}}",
+        /** An unplaced item given a placement. */
+        placed: "Placed",
+        /**
+         * All a "Moved" label shows, after its arrow, in a list too narrow for it (S3);
+         * "Placed" shows whole (D19).
+         */
+        short: "Moved",
+      },
       /** A placement's order, changed from an item's Move menu (STY-050). */
       order: {
         /** Heads the Move menu's choices of position: "In Now: 4 of 4". */
@@ -849,8 +877,11 @@ export const en = {
             publish: "Choose which to keep for each, then publish again.",
             save: "Choose which to keep for each, then save again.",
           },
-          /** A field to decide: "First item: Title", or "Product details: Vision". */
-          target: "{{subject}}: {{field}}",
+          /**
+           * What leads the line naming a field to decide, before the field's name:
+           * "First item:", or "Product details:" (the name is a node, for its icon).
+           */
+          targetLead: "{{subject}}:",
           yours: "Your change",
           theirs: "Current text",
           /** A placement's order to decide, as its field: "Now: Order" (STY-050). */
@@ -1109,6 +1140,14 @@ export const en = {
   theme: {
     switchToDark: "Switch to dark theme",
     switchToLight: "Switch to light theme",
+  },
+  /**
+   * The account menu's item that switches where the forms open (STY-077), named for what
+   * it switches to.
+   */
+  editSurface: {
+    useSidePanel: "Edit in a side panel",
+    useDialog: "Edit in a dialog",
   },
   language: {
     label: "Language",

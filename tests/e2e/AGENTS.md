@@ -7,9 +7,11 @@ End-to-end tests of the production build, with Google faked (ADR-006).
   nothing from `src/`: tests drive the app as a user does, through roles and copy.
 - `gis` (`fixtures/fake-gis.ts`) plays Google Identity Services and `sheets`
   (`fixtures/fake-sheets.ts`) the Sheets API, over the example spreadsheet in
-  `tests/fixtures/sheets/`; their docblocks are the API. A list load reads `metadata`
-  then `values:<first tab>`; a roadmap's items add `values:<its tab>`; a publish is one
-  `batchUpdate`, recorded in `sheets.writes`, never in `reads`.
+  `tests/fixtures/sheets/`; their docblocks are the API. A list load reads `metadata`,
+  then `values:<first tab>` and a `Families` or `Categories` tab's; a roadmap's items
+  read all of those again, then add `values:<its tab>` (ADR-011), so a roadmap's page
+  is five reads on the example spreadsheet; a publish is one `batchUpdate`, recorded
+  in `sheets.writes`, never in `reads`.
 - Anything the real APIs would reject, any request to another origin, and any access
   token reaching storage, cookies, the URL or the console fail the test at teardown.
   Add a new external dependency to the fakes, never to the guard.
@@ -41,8 +43,8 @@ End-to-end tests of the production build, with Google faked (ADR-006).
 - At 1280px the navigation stands beside the page and its links share names with the
   list's and the cards': scope a page's own to `main`. Playwright matches a role's name
   by substring, so name "More" `exact`.
-- Run a layout check with `reducedMotion: "reduce"` too: transitions last 0.01ms, so a
-  class a bar gains arrives a frame late. Measure its border box.
+- Run a layout check with `reducedMotion: "reduce"` too: no transition runs, so a class
+  a bar gains takes effect in its own frame. Measure its border box.
 
 ## Look checks
 

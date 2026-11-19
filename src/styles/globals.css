@@ -5,6 +5,10 @@
 @import "@fontsource-variable/roboto";
 
 @custom-variant dark (&:is(.dark *));
+/* A screen with room for a dialog to pin its header and footer and scroll only its body
+   (EPC-019): `sm` wide and 500px tall, the height `components/layout/pinning.ts` pins the
+   page's bars at. Narrower or shorter, a dialog scrolls as one piece. */
+@custom-variant pinned (@media (width >= 40rem) and (height >= 500px));
 
 /*
  * Three tiers (ADR-010; src/styles/AGENTS.md):
@@ -284,6 +288,15 @@
   --shadow-control-edge: 0 2px 0 var(--input);
   /* The grey bar under a clickable card (DHCW's `.nhsw-card` with a title link). */
   --shadow-card-bar: 0 4px 0 var(--border);
+  /* The moved mark's edge (STY-071): a bar over the card's own left padding and a ring
+     round it, so nothing in it shifts, its grey bar kept under the ring. */
+  --shadow-moved-mark:
+    inset 6px 0 0 var(--status-success-border),
+    0 0 0 2px var(--status-success-border), 0 6px 0 var(--border);
+  /* The same on a compact row, whose list draws the rule between rows. */
+  --shadow-moved-mark-row:
+    inset 4px 0 0 var(--status-success-border),
+    0 0 0 2px var(--status-success-border);
   --shadow-popup: var(--popup-shadow);
 
   --color-background: var(--background);
@@ -420,14 +433,63 @@
   }
 }
 
-/* Respect reduced motion everywhere, including generated components and dialogs. */
+/* Respect reduced motion everywhere, including generated components and dialogs. A
+   transition runs for no time rather than a short one: one of 0.01ms on the initial
+   `transition-property: all` still draws the old padding, margin and size for a frame or
+   two, so a header letting go of the top would show its links narrower and the items below it
+   jump. */
 @media (prefers-reduced-motion: reduce) {
   *,
   ::before,
   ::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    transition: none !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* A move from the Move menu, as the item travels to where it lands (STY-072,
+   `item-travel.ts`), and "Undo order", as the items travel back (STY-073): the items,
+   named by their IDs, glide from where they were, the one moved, where there is one,
+   raised above the others, in about 0.4 seconds within a placement and 0.7 to
+   another. The rest of the page is not captured: it shows as it is at once, and stays
+   live. The travel is drawn only in the room between the stuck header and the foot bar,
+   so they stay above it as they do when nothing moves, and take clicks and taps; a press
+   in the room ends the travel (`travel`, D7). The menu the move was chosen from goes at
+   once (the rule below). The reduced-motion rule above does not reach these
+   pseudo-elements: no transition starts where the system asks for reduced motion
+   (S4). */
+/* A closing menu is not shown while `travel` sets `data-travelling`. It keys on that
+   attribute, not on `:root:active-view-transition-type(…)`, because Chrome restyles no
+   descendant when the type starts to match, though it does when an attribute changes.
+   It is `display: none`, not `visibility: hidden`, because the menu transitions all
+   its properties as it closes (`DropdownMenuContent`'s `duration-100`, with
+   `transition-property` left at `all`), so a transitioning `visibility` stays
+   visible. */
+[data-travelling] [data-slot="dropdown-menu-content"][data-closed] {
+  display: none;
+}
+:root:active-view-transition-type(item-move, item-move-across) {
+  view-transition-name: none;
+  &::view-transition {
+    clip-path: inset(var(--pinned-top) 0 var(--pinned-bottom));
+  }
+  &::view-transition-group(*),
+  &::view-transition-old(*),
+  &::view-transition-new(*) {
+    animation-duration: 0.4s;
+    animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  &::view-transition-group(*.moved-item) {
+    z-index: 1;
+    box-shadow: var(--shadow-popup);
+  }
+}
+:root:active-view-transition-type(item-move-across) {
+  &::view-transition-group(*),
+  &::view-transition-old(*),
+  &::view-transition-new(*) {
+    animation-duration: 0.7s;
   }
 }

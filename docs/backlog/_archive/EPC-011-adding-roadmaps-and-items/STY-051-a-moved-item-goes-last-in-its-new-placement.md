@@ -231,7 +231,7 @@ Audited at `881ea16`.
   home: the Product Lead's own edit, made while their publish is being written, to an
   item with no ID whose row that publish moves, is dropped at the next publish as
   "removed or changed".
-  [DEF-017](../../defects/DEF-017-an-edit-made-while-a-publish-moves-its-item-is-reported-as-removed.md)
+  [DEF-017](../defects/DEF-017-an-edit-made-while-a-publish-moves-its-item-is-reported-as-removed.md)
   records it for the owner, not fixed here: how such an item is found is ADR-012's
   rule (Options 11, 13).
 - **The Sheets fake refuses a move to just after the row too** (agent): a

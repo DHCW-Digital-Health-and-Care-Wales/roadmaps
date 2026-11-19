@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/collapsible"
 
 export interface OpeningFieldProps {
-  label: string
+  label: ReactNode
   /**
    * Names the field after its button's "Change", "Add" or "Close", for assistive
    * technology: "organisations".

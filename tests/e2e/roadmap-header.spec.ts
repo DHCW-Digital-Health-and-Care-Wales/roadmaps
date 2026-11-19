@@ -509,3 +509,75 @@ test("tabs on from the stuck row's menu button to the switch, then Add an item, 
   await expect(stuck).toBeVisible()
   expect(await page.evaluate(() => window.scrollY)).toBe(top)
 })
+
+/**
+ * Scrolls a page whose header is stuck up until the header lets go, and says what the
+ * header's height and a row of the items below it were in each frame from the first
+ * with the header back in the page, so a frame that draws it at a size it then leaves
+ * shows as a second value. A row's place is its top in the document.
+ */
+async function sizesAfterLetGo(
+  page: Page,
+): Promise<{ letGo: boolean; heights: number[]; rowTops: number[] }> {
+  const stuck = page.locator("[data-stuck]")
+  await page
+    .getByRole("main")
+    .getByRole("heading", { level: 2, name: "Later", exact: true })
+    .evaluate((heading) => {
+      heading.scrollIntoView({ block: "center" })
+    })
+  await expect(stuck).toBeVisible()
+  return page.evaluate(
+    () =>
+      new Promise((resolve) => {
+        const header = document.querySelector("[data-slot=sticky-header]")
+        const row = document.querySelector("main li h3")
+        if (!header?.parentElement || !row) throw new Error("Nothing to sample")
+        const { parentElement: place } = header
+        const heights: number[] = []
+        const rowTops: number[] = []
+        let letGo = false
+        let frames = 0
+        const frame = () => {
+          if (frames === 0) {
+            // A little of the header's place back in view, as a scroll up leaves it.
+            const placeTop = place.getBoundingClientRect().top + scrollY
+            scrollTo({ top: placeTop - 20, behavior: "instant" })
+          }
+          letGo ||= !header.hasAttribute("data-stuck")
+          if (letGo) {
+            heights.push(header.getBoundingClientRect().height)
+            rowTops.push(row.getBoundingClientRect().top + scrollY)
+          }
+          frames += 1
+          if (frames < 30) requestAnimationFrame(frame)
+          else resolve({ letGo, heights, rowTops })
+        }
+        requestAnimationFrame(frame)
+      }),
+  )
+}
+
+test.describe("letting go on a scroll up, with reduced motion (DEF-021 S1)", () => {
+  test.use({ reducedMotion: "reduce" })
+
+  for (const [width, height] of [
+    [375, 812],
+    [768, 800],
+    [1280, 900],
+  ] as const) {
+    test(`draws the header and the items below it at one size from the frame it lets go, at ${String(width)}px`, async ({
+      page,
+      sheets,
+    }) => {
+      await page.setViewportSize({ width, height })
+      await openLongRoadmap(page, sheets)
+
+      const { letGo, heights, rowTops } = await sizesAfterLetGo(page)
+
+      expect(letGo).toBe(true)
+      expect([...new Set(heights)]).toHaveLength(1)
+      expect([...new Set(rowTops)]).toHaveLength(1)
+    })
+  }
+})

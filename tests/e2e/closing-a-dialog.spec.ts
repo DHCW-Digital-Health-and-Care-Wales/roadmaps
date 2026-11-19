@@ -6,6 +6,7 @@ import {
   cornerClose,
   editItemButton,
   editRoadmapButton,
+  isInView,
   openAddItemDialog,
   openAddRoadmapDialog,
   openEditItemDialog,
@@ -17,7 +18,8 @@ import { connect, expect, test } from "./fixtures/test"
 /**
  * A Product Lead closes a form dialog from the close button at its top right (STY-068),
  * against the fake Sheets API: it shows as the dialog opens, at every width, closes as
- * Cancel does, and scrolls away with the title. The conflict review's own is held in
+ * Cancel does, and on a phone scrolls away with the title (a laptop's stays pinned with
+ * it, STY-076). The conflict review's own is held in
  * `roadmap-detail-page-editing.test.tsx`.
  */
 
@@ -34,19 +36,11 @@ async function openProductA(page: Page, language: "en" | "cy" = "en") {
   ).toBeVisible()
 }
 
-/** Whether `locator` lies wholly within the screen as it is now scrolled. */
-async function isInView(page: Page, locator: Locator): Promise<boolean> {
-  const box = await locator.boundingBox()
-  const size = page.viewportSize()
-  if (!box || !size) throw new Error("No box or viewport")
-  return box.y >= 0 && box.y + box.height <= size.height
-}
-
 for (const [size, viewport] of [
   ["a phone", PHONE],
   ["a desktop", DESKTOP],
 ] as const) {
-  test(`on ${size}, the close button is at the title's row, top right, as the item dialog opens, and scrolls away with the title (S1, S9)`, async ({
+  test(`on ${size}, the close button is at the title's row, top right, as the item dialog opens, and on a phone scrolls away with the title (S1, S9)`, async ({
     page,
   }) => {
     await page.setViewportSize(viewport)
@@ -77,13 +71,13 @@ for (const [size, viewport] of [
     )
     expect(room).toBeLessThanOrEqual(box.x)
 
-    // Scrolled to the foot, the title and the close button have gone and Cancel is there.
+    // Scrolled to the foot, a phone's title and close button have gone, as one piece with
+    // the form; a desktop's are pinned (STY-076), so they stay with Cancel.
     const cancel = dialog.getByRole("button", { name: "Cancel" })
     await cancel.scrollIntoViewIfNeeded()
-    if (viewport === PHONE) {
-      expect(await isInView(page, close)).toBe(false)
-      expect(await isInView(page, title)).toBe(false)
-    }
+    const pinned = viewport === DESKTOP
+    expect(await isInView(page, close)).toBe(pinned)
+    expect(await isInView(page, title)).toBe(pinned)
     await expect(cancel).toBeInViewport()
   })
 }

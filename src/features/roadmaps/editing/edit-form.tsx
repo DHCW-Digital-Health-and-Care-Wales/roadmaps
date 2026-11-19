@@ -11,7 +11,12 @@ import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { DialogClose, DialogFooter } from "@/components/ui/dialog"
+import {
+  DialogBody,
+  DialogClose,
+  DialogFooter,
+  DialogForm,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { isCalendarDate } from "@/domain/roadmap/calendar-date"
@@ -22,6 +27,7 @@ import {
 } from "@/domain/roadmap/item-details"
 import { tagsOf, tagsValue } from "@/domain/roadmap/roadmap-changes"
 
+import { FieldName } from "../components/field-name"
 import { FormField } from "../components/form-field"
 import { ChoiceField, type ChoiceOption } from "./choice-field"
 import { DetailsField } from "./details-field"
@@ -216,165 +222,162 @@ export function EditForm<F extends string>({
   }
 
   return (
-    <form
-      aria-labelledby={labelledBy}
-      noValidate
-      onSubmit={submit}
-      className="flex flex-col gap-4"
-    >
-      {fields.map((field) => {
-        const controlId = `${id}-${field.name}`
-        const change = (value: string) => {
-          setValues((current) => ({ ...current, [field.name]: value }))
-        }
-        const error: FieldError | undefined = errors[field.name]
-        const message = error && t(`roadmaps.edit.${error}`)
-        if (field.fixed) {
-          return (
-            <FixedField key={field.name} label={field.label} {...field.fixed} />
-          )
-        }
-        if (field.options && field.many) {
-          const { options } = field
-          const { ofValue, toValue, summary, none, subject } = field.many
-          const chosen = ofValue(values[field.name])
-          const ticked = new Set(chosen)
-          const toggle = (option: string, checked: boolean) => {
-            setValues((current) => {
-              const next = new Set(ofValue(current[field.name]))
-              if (checked) next.add(option)
-              else next.delete(option)
-              return { ...current, [field.name]: toValue([...next]) }
-            })
+    <DialogForm aria-labelledby={labelledBy} noValidate onSubmit={submit}>
+      <DialogBody>
+        {fields.map((field) => {
+          const controlId = `${id}-${field.name}`
+          const change = (value: string) => {
+            setValues((current) => ({ ...current, [field.name]: value }))
           }
+          // The name of a field that has an icon carries it (STY-079).
+          const name = <FieldName field={field.name}>{field.label}</FieldName>
+          const error: FieldError | undefined = errors[field.name]
+          const message = error && t(`roadmaps.edit.${error}`)
+          if (field.fixed) {
+            return <FixedField key={field.name} label={name} {...field.fixed} />
+          }
+          if (field.options && field.many) {
+            const { options } = field
+            const { ofValue, toValue, summary, none, subject } = field.many
+            const chosen = ofValue(values[field.name])
+            const ticked = new Set(chosen)
+            const toggle = (option: string, checked: boolean) => {
+              setValues((current) => {
+                const next = new Set(ofValue(current[field.name]))
+                if (checked) next.add(option)
+                else next.delete(option)
+                return { ...current, [field.name]: toValue([...next]) }
+              })
+            }
+            return (
+              <OpeningField
+                key={field.name}
+                label={name}
+                subject={subject}
+                summary={summary(chosen) || null}
+                none={none}
+                hint={field.hint}
+              >
+                {(focusOnOpen) =>
+                  options.map((option, index) => (
+                    <label
+                      key={option.value}
+                      className="flex min-h-10 cursor-pointer items-center gap-3"
+                    >
+                      <Checkbox
+                        ref={index === 0 ? focusOnOpen : undefined}
+                        checked={ticked.has(option.value)}
+                        disabled={field.disabled}
+                        onCheckedChange={(checked) => {
+                          toggle(option.value, checked)
+                        }}
+                      />
+                      <span className="min-w-0 wrap-break-word">
+                        {option.label}
+                      </span>
+                    </label>
+                  ))
+                }
+              </OpeningField>
+            )
+          }
+          if (field.tags) {
+            return (
+              <TagsField
+                key={field.name}
+                label={name}
+                // What the form holds, so a field drawn again shows what Done keeps.
+                initial={tagsOf(values[field.name])}
+                inUse={field.tags.inUse}
+                onChange={(tags) => {
+                  change(tagsValue(tags))
+                }}
+              />
+            )
+          }
+          if (field.details) {
+            return (
+              <DetailsField
+                key={field.name}
+                label={field.label}
+                // What the form holds, so a field drawn again shows what Done keeps.
+                initial={detailsOf(values[field.name])}
+                asListed={
+                  values[field.name] === opened[field.name]
+                    ? field.details.asListed
+                    : null
+                }
+                onChange={(details) => {
+                  change(detailsValue(details))
+                }}
+              />
+            )
+          }
+          if (field.options) {
+            return (
+              <ChoiceField
+                key={field.name}
+                ref={controlRef(field.name)}
+                id={controlId}
+                label={field.label}
+                options={field.options}
+                value={values[field.name]}
+                disabled={field.disabled}
+                error={message}
+                onChange={change}
+              />
+            )
+          }
+          const { date } = field
+          const Control = field.multiline ? Textarea : Input
           return (
-            <OpeningField
+            <FormField
               key={field.name}
-              label={field.label}
-              subject={subject}
-              summary={summary(chosen) || null}
-              none={none}
-              hint={field.hint}
-            >
-              {(focusOnOpen) =>
-                options.map((option, index) => (
-                  <label
-                    key={option.value}
-                    className="flex min-h-10 cursor-pointer items-center gap-3"
-                  >
-                    <Checkbox
-                      ref={index === 0 ? focusOnOpen : undefined}
-                      checked={ticked.has(option.value)}
-                      disabled={field.disabled}
-                      onCheckedChange={(checked) => {
-                        toggle(option.value, checked)
-                      }}
-                    />
-                    <span className="min-w-0 wrap-break-word">
-                      {option.label}
-                    </span>
-                  </label>
-                ))
-              }
-            </OpeningField>
-          )
-        }
-        if (field.tags) {
-          return (
-            <TagsField
-              key={field.name}
-              label={field.label}
-              // What the form holds, so a field drawn again shows what Done keeps.
-              initial={tagsOf(values[field.name])}
-              inUse={field.tags.inUse}
-              onChange={(tags) => {
-                change(tagsValue(tags))
-              }}
-            />
-          )
-        }
-        if (field.details) {
-          return (
-            <DetailsField
-              key={field.name}
-              label={field.label}
-              // What the form holds, so a field drawn again shows what Done keeps.
-              initial={detailsOf(values[field.name])}
-              asListed={
-                values[field.name] === opened[field.name]
-                  ? field.details.asListed
-                  : null
-              }
-              onChange={(details) => {
-                change(detailsValue(details))
-              }}
-            />
-          )
-        }
-        if (field.options) {
-          return (
-            <ChoiceField
-              key={field.name}
-              ref={controlRef(field.name)}
               id={controlId}
               label={field.label}
-              options={field.options}
-              value={values[field.name]}
-              disabled={field.disabled}
               error={message}
-              onChange={change}
-            />
-          )
-        }
-        const { date } = field
-        const Control = field.multiline ? Textarea : Input
-        return (
-          <FormField
-            key={field.name}
-            id={controlId}
-            label={field.label}
-            error={message}
-          >
-            {(control) =>
-              date ? (
-                <div className="flex flex-wrap items-center gap-3">
-                  <Input
+            >
+              {(control) =>
+                date ? (
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Input
+                      ref={controlRef(field.name)}
+                      type="date"
+                      max={date.today()}
+                      value={values[field.name]}
+                      className="w-auto"
+                      {...control}
+                      onFocus={redraw}
+                      onChange={(event) => {
+                        change(event.target.value)
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => {
+                        change(date.today())
+                      }}
+                    >
+                      {t("roadmaps.edit.today")}
+                    </Button>
+                  </div>
+                ) : (
+                  <Control
                     ref={controlRef(field.name)}
-                    type="date"
-                    max={date.today()}
                     value={values[field.name]}
-                    className="w-auto"
                     {...control}
-                    onFocus={redraw}
                     onChange={(event) => {
                       change(event.target.value)
                     }}
                   />
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => {
-                      change(date.today())
-                    }}
-                  >
-                    {t("roadmaps.edit.today")}
-                  </Button>
-                </div>
-              ) : (
-                <Control
-                  ref={controlRef(field.name)}
-                  value={values[field.name]}
-                  {...control}
-                  onChange={(event) => {
-                    change(event.target.value)
-                  }}
-                />
-              )
-            }
-          </FormField>
-        )
-      })}
-      {note}
+                )
+              }
+            </FormField>
+          )
+        })}
+        {note}
+      </DialogBody>
       <DialogFooter>
         <Button type="submit">{confirmLabel ?? t("roadmaps.edit.done")}</Button>
         {another && (
@@ -391,7 +394,7 @@ export function EditForm<F extends string>({
         )}
         <DialogClose type="button">{t("common.cancel")}</DialogClose>
       </DialogFooter>
-    </form>
+    </DialogForm>
   )
 }
 

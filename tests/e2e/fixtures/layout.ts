@@ -17,6 +17,46 @@ export async function boxOf(locator: Locator): Promise<Box> {
   return { ...box, right: box.x + box.width, bottom: box.y + box.height }
 }
 
+/**
+ * The boxes of `locators` in the viewport, all read in one step. Read one at a time, they
+ * are of different moments: the page may be scrolling to an item that was just moved.
+ */
+export async function boxesOf<Locators extends Locator[]>(
+  ...locators: Locators
+): Promise<{ [At in keyof Locators]: Box }> {
+  const first = locators[0]
+  if (!first) return [] as unknown as { [At in keyof Locators]: Box }
+  const handles = await Promise.all(
+    locators.map((locator) => locator.elementHandle()),
+  )
+  try {
+    const boxes = await first.page().evaluate(
+      (elements) =>
+        elements.map((element) => {
+          const { x, y, width, height, right, bottom } =
+            element.getBoundingClientRect()
+          return { x, y, width, height, right, bottom }
+        }),
+      handles,
+    )
+    // One box for each locator, in order.
+    return boxes as unknown as { [At in keyof Locators]: Box }
+  } finally {
+    await Promise.all(handles.map((handle) => handle.dispose()))
+  }
+}
+
+/** The middle of `box`, down the viewport. */
+export const centre = (box: Box): number => box.y + box.height / 2
+
+/**
+ * Whether `box` is level with `other` (centres within 4px), or `other` is wholly under
+ * it: where a row of controls wraps, `box` the tags and `other` the buttons that follow.
+ */
+export function levelWithOrUnder(box: Box, other: Box): boolean {
+  return Math.abs(centre(box) - centre(other)) < 4 || other.y >= box.bottom
+}
+
 /** Whether the page scrolls sideways. */
 export function scrollsSideways(page: Page): Promise<boolean> {
   return page.evaluate(

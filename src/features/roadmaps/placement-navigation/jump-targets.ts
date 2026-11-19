@@ -4,6 +4,7 @@ import type { PlacementOrder } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 
 import type { PageItem } from "../editing/page-items"
+import { hasPendingOrder } from "../editing/pending-orders"
 import type { Positioned, RoadmapItemGroups } from "../group-roadmap-items"
 
 /** Where a roadmap's page can be jumped to: a placement, or its unplaced items. */
@@ -42,11 +43,7 @@ export function summariseJumpTargets(
   return [
     ...(unplaced.length > 0 ? [summary("unplaced", unplaced)] : []),
     ...placements.map(({ placement, items }) =>
-      summary(
-        placement,
-        items,
-        orders.some((order) => order.placement === placement),
-      ),
+      summary(placement, items, hasPendingOrder(orders, placement)),
     ),
   ]
 }

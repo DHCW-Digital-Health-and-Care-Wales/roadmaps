@@ -10,6 +10,7 @@ import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
 import { expectDialogClosed } from "../testing/edit-dialog"
+import { fieldTerm } from "../testing/field-term"
 import {
   createInMemoryRoadmapRepository,
   type InMemoryRoadmapRepository,
@@ -62,8 +63,8 @@ function card(title: string) {
 /** The item's organisations as its card shows them, or `null` for none. */
 function organisationsOf(title: string) {
   return (
-    within(card(title)).queryByText("Organisations", { selector: "dt" })
-      ?.nextElementSibling?.textContent ?? null
+    fieldTerm(card(title), "Organisations")?.nextElementSibling?.textContent ??
+    null
   )
 }
 
@@ -260,7 +261,7 @@ describe("Choosing an item's organisations (STY-034)", () => {
 
     const review = await openConflictReview(user)
     const conflict = within(within(review).getByRole("listitem"))
-    expect(conflict.getByText(/: /, { selector: "p" })).toHaveTextContent(
+    expect(conflict.getByText(/:$/, { selector: "p" })).toHaveTextContent(
       "Online booking: Organisations",
     )
     expect(

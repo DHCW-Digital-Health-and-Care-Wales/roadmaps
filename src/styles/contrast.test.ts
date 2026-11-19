@@ -124,6 +124,15 @@ describe("contrast", () => {
       expect(ratio(fg, bg)).toBeGreaterThanOrEqual(TEXT_MINIMUM)
     })
 
+    it.each(["background", "card"])(
+      "the moved mark's edge (--status-success-border) on %s is at least 3:1",
+      (surface) => {
+        expect(ratio("status-success-border", surface)).toBeGreaterThanOrEqual(
+          NON_TEXT_MINIMUM,
+        )
+      },
+    )
+
     it.each(SURFACES)(
       "a control boundary (--input) on %s is at least 3:1",
       (surface) => {

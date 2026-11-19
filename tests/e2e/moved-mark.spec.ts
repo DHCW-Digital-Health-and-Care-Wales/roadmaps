@@ -1,7 +1,8 @@
-import type { Locator, Page } from "@playwright/test"
+import type { Locator } from "@playwright/test"
 
 import { openEditItemDialog } from "./fixtures/dialogs"
 import { withTabItems } from "./fixtures/fake-sheets"
+import { boxesOf, levelWithOrUnder } from "./fixtures/layout"
 import {
   type Language,
   tokenColour,
@@ -15,6 +16,7 @@ import {
   itemOf,
   main,
   moveButton,
+  openProductA,
 } from "./fixtures/moved-items"
 import { connect, expect, test } from "./fixtures/test"
 
@@ -35,19 +37,6 @@ const COPY = {
   cy: { upOne: "I fyny un", movedUp: "Symudwyd i fyny", short: "Symudwyd" },
 } as const satisfies Record<Language, Record<string, string>>
 
-async function open(
-  page: Page,
-  size: { width: number; height: number },
-  language: Language = "en",
-) {
-  await page.setViewportSize(size)
-  await page.goto("./#/roadmaps/producta")
-  await connect(page, language === "cy" ? "Cysylltu â Google" : undefined)
-  await expect(
-    main(page).getByRole("heading", { level: 3, name: "Minimal card" }),
-  ).toBeVisible()
-}
-
 /** A computed `box-shadow` layer in `colour` whose lengths match `lengths`. */
 function shadowOf(colour: string, lengths: RegExp): RegExp {
   const escaped = colour.replace(/[()]/g, "\\$&")
@@ -66,7 +55,7 @@ test.describe("the page scrolls to the moved item (S4)", () => {
       page,
     }) => {
       await page.emulateMedia({ reducedMotion: motion })
-      await open(page, DESKTOP)
+      await openProductA(page, DESKTOP)
       const later = main(page).getByRole("list", { name: "Later", exact: true })
       expect(await inRoom(later)).toBe(false)
 
@@ -84,7 +73,7 @@ test.describe("the page scrolls to the moved item (S4)", () => {
     page,
   }) => {
     await page.emulateMedia({ reducedMotion: "reduce" })
-    await open(page, PHONE)
+    await openProductA(page, PHONE)
     const form = await openEditItemDialog(page, "Minimal card")
     await form
       .getByRole("combobox", { name: "Horizon or section" })
@@ -157,7 +146,7 @@ test.describe("the mark's look", () => {
       page,
     }) => {
       await useTheme(page, theme)
-      await open(page, DESKTOP)
+      await openProductA(page, DESKTOP)
       const card = itemOf(page, "Minimal card")
       const title = card.getByRole("heading", { level: 3 })
       const offset = async () => {
@@ -177,22 +166,14 @@ test.describe("the mark's look", () => {
       const label = card.getByText("Moved up", { exact: true })
       await expect(label).toBeVisible()
       expect(await offset()).toEqual(before)
-      // At the foot, not under the title: with the card's buttons, level or above them.
-      const [labelBox, titleBox, moveBox] = await Promise.all([
-        label.boundingBox(),
-        title.boundingBox(),
-        moveButton(page, "Minimal card").boundingBox(),
-      ])
-      const labelCentre = (labelBox?.y ?? 0) + (labelBox?.height ?? 0) / 2
-      expect(labelBox?.y ?? 0).toBeGreaterThan(
-        (titleBox?.y ?? 0) + (titleBox?.height ?? 0) - 1,
+      // At the foot, not under the title: below the card's fields, with its buttons.
+      const [labelBox, moveBox, lastField] = await boxesOf(
+        label,
+        moveButton(page, "Minimal card"),
+        card.locator("dd").last(),
       )
-      expect(
-        Math.abs(
-          labelCentre - ((moveBox?.y ?? 0) + (moveBox?.height ?? 0) / 2),
-        ) < 4 ||
-          (moveBox?.y ?? 0) >= (labelBox?.y ?? 0) + (labelBox?.height ?? 0),
-      ).toBe(true)
+      expect(labelBox.y).toBeGreaterThan(lastField.bottom - 1)
+      expect(levelWithOrUnder(labelBox, moveBox)).toBe(true)
       const shadow = await card.evaluate(
         (element) => getComputedStyle(element).boxShadow,
       )
@@ -218,7 +199,7 @@ test.describe("the mark's look", () => {
         page,
       }) => {
         await useLanguage(page, language)
-        await open(page, size, language)
+        await openProductA(page, size, language)
         await chooseCompact(page, language)
         const copy = COPY[language]
         const row = itemOf(page, "Minimal card")
@@ -260,7 +241,7 @@ test.describe("the mark's look", () => {
       ["Someday", "Soon"],
       ["Minimal card", "Now"],
     )
-    await open(page, PHONE)
+    await openProductA(page, PHONE)
     await chooseCompact(page)
     const row = itemOf(page, "Someday")
 

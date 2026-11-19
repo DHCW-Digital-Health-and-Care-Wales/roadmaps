@@ -133,10 +133,6 @@ Measured at `bd635d9` with Playwright (Chromium), an item moved from Now to Late
 
 ### Departures
 
-- Tests: the Tests section names `moved-mark.spec.ts`'s card check; it now asserts the
-  label at the card's foot. The new geometry is in `tests/e2e/item-tags.spec.ts`, and one
-  assertion in `moved-travel.spec.ts` holds the tags' place at the end of a STY-072
-  travel, agent.
 - The desktop row's flag and tags sit `pt-0.75` from the top of the line, not centred, to
   keep the place they have closed: a 26px badge on the line's 32px. The row aligns its
   line from the top in both states. Routine, agent.
@@ -152,11 +148,11 @@ Measured at `bd635d9` with Playwright (Chromium), an item moved from Now to Late
 
 ### Scenario evidence
 
-| Scenario | Held by                                                                                                                                                                                                                                                        |
-| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1       | `item-tags.spec.ts` (`a card on a desktop` and `on a phone`: label, then "Changed", one line at the foot, nothing under the title; the label alone for "Moved down"); `moved-mark.spec.ts` (the card's label at the foot); `moved-travel.spec.ts` (`to Later`) |
-| S2       | `item-tags.spec.ts` (`a card on a phone`; `wraps the second tag under the first`)                                                                                                                                                                              |
-| S3       | `item-tags.spec.ts` (`a phone's compact row`: one line under the title, closed and opened; the flag on its own line above)                                                                                                                                     |
-| S4       | `item-tags.spec.ts` (`a desktop's compact row`: label, tag, flag, chevron, title, Move and Edit at the same height closed, opened and closed again, with and without reduced motion; a title that wraps; "New")                                                |
-| S5       | `item-tags.spec.ts` (`shows “Removed” alone`, in a card and a compact row)                                                                                                                                                                                     |
-| Red      | The new spec run against the unchanged `src/`: 13 of its 18 tests failed. Layout tests, written after the code, so a break of finished code, not test-first evidence.                                                                                          |
+| Scenario | Held by                                                                                                                                                                                                                                                                                              |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `item-tags.spec.ts` (`a card on a desktop` and `on a phone`: label, then "Changed" or "New", one line at the foot below the fields; the label alone for "Moved down"); `moved-mark.spec.ts` (the card's label at the foot); `moved-travel.spec.ts` (`to Later`: the tags together as the item lands) |
+| S2       | `item-tags.spec.ts` (`a card on a phone`; `a narrow card`: the second tag wraps under the first)                                                                                                                                                                                                     |
+| S3       | `item-tags.spec.ts` (`a phone's compact row`: one line under the title, closed and opened; the flag on its own line above)                                                                                                                                                                           |
+| S4       | `item-tags.spec.ts` (`a desktop's compact row`: label, tag, flag, chevron, title, Move and Edit at the same height closed, opened and closed again, with and without reduced motion; a title that wraps; "New")                                                                                      |
+| S5       | `item-tags.spec.ts` (`shows “Removed” alone`, in a card and a compact row)                                                                                                                                                                                                                           |
+| Red      | The new spec run against the unchanged `src/` fails its card, phone-row and desktop-row tests. Layout tests, written after the code, so a break of finished code, not test-first evidence.                                                                                                           |

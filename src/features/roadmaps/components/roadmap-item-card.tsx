@@ -39,9 +39,8 @@ export interface RoadmapItemCardProps {
  * A roadmap item as plain text (ADR-011), as the Cards view shows it: its title as a
  * heading, an unplaced item's flag saying what is wrong with its horizon, then each
  * field it has (`ItemFields`), cut after three lines (STY-066), struck through when
- * `struck`. A `marked` card has the moved mark's edge over its own border
- * and padding, so nothing in it shifts (STY-071 S1). A list item, for a list of
- * items.
+ * `struck`. A `marked` card has the moved mark's edge over its own border and
+ * padding, so nothing in it shifts (STY-071 S1). A list item, for a list of items.
  */
 export function RoadmapItemCard({
   item,

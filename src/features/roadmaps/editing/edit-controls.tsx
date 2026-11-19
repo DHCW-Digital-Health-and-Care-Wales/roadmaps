@@ -217,8 +217,8 @@ export interface EditControlsProps {
 
 /**
  * The moved mark's label, if the item carries it, then "Changed", "New" or "Removed",
- * together; then "Undo changes" or "Undo removal" while something
- * can be dropped, then `remove`, `move` and Edit.
+ * together; then "Undo changes" or "Undo removal" while something can be dropped, then
+ * `remove`, `move` and Edit.
  */
 export function EditControls({
   subject,

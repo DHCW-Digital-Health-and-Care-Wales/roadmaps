@@ -2,7 +2,7 @@ import type { Locator, Page } from "@playwright/test"
 
 import { addItem, confirmRemoval, openEditItemDialog } from "./fixtures/dialogs"
 import { withTabItems } from "./fixtures/fake-sheets"
-import { type Box, boxOf } from "./fixtures/layout"
+import { type Box, boxesOf, boxOf, levelWithOrUnder } from "./fixtures/layout"
 import { openWithItems, withItems, words } from "./fixtures/long-fields"
 import {
   chooseCompact,
@@ -10,6 +10,7 @@ import {
   itemOf,
   main,
   moveButton,
+  openProductA,
 } from "./fixtures/moved-items"
 import { connect, expect, test } from "./fixtures/test"
 
@@ -32,15 +33,6 @@ const tagOf = (item: Locator, text: RegExp | string): Locator =>
 const MOVED = /^(Moved|Placed)/
 const centre = (box: Box) => box.y + box.height / 2
 
-async function open(page: Page, size: { width: number; height: number }) {
-  await page.setViewportSize(size)
-  await page.goto("./#/roadmaps/producta")
-  await connect(page)
-  await expect(
-    main(page).getByRole("heading", { level: 3, name: "Minimal card" }),
-  ).toBeVisible()
-}
-
 for (const [device, size] of [
   ["a desktop", DESKTOP],
   ["a phone", PHONE],
@@ -51,58 +43,54 @@ for (const [device, size] of [
     test("shows “Moved from Now”, then “Changed”, side by side at its foot, before its buttons, nothing under the title", async ({
       page,
     }) => {
-      await open(page, size)
+      await openProductA(page, size)
       await chooseFromMenu(page, "Minimal card", "Later")
       const card = itemOf(page, "Minimal card")
 
-      const moved = await boxOf(tagOf(card, "Moved from Now"))
-      const changed = await boxOf(tagOf(card, "Changed"))
-      const title = await boxOf(card.getByRole("heading", { level: 3 }))
-      const undo = await boxOf(
-        card.getByRole("button", { name: "Undo changes Minimal card" }),
-      )
-      const edit = await boxOf(
-        card.getByRole("button", { name: "Edit Minimal card" }),
-      )
+      const [moved, changed, title, undo, edit, whole, lastField] =
+        await boxesOf(
+          tagOf(card, "Moved from Now"),
+          tagOf(card, "Changed"),
+          card.getByRole("heading", { level: 3 }),
+          card.getByRole("button", { name: "Undo changes Minimal card" }),
+          card.getByRole("button", { name: "Edit Minimal card" }),
+          card,
+          card.locator("dd").last(),
+        )
       // One line, the label first, a gap between them and nothing else.
       expect(Math.abs(centre(moved) - centre(changed))).toBeLessThan(1)
       expect(changed.x - moved.right).toBeGreaterThan(0)
       expect(changed.x - moved.right).toBeLessThan(16)
       // Not under the title: at the foot, below every field the card shows.
       expect(moved.y).toBeGreaterThan(title.bottom)
-      const fields = card.locator("dd")
-      if ((await fields.count()) > 0) {
-        expect(moved.y).toBeGreaterThan((await boxOf(fields.last())).bottom - 1)
-      }
+      expect(moved.y).toBeGreaterThan(lastField.bottom - 1)
       // The buttons follow the tags: on their line, or wrapped under them.
-      const level =
-        Math.abs(centre(moved) - centre(undo)) < 4 && changed.right < undo.x
-      expect(level || undo.y >= moved.bottom).toBe(true)
-      expect(edit.bottom).toBeLessThanOrEqual((await boxOf(card)).bottom)
+      expect(levelWithOrUnder(moved, undo)).toBe(true)
+      expect(edit.bottom).toBeLessThanOrEqual(whole.bottom)
     })
 
     test("shows the label alone at its foot for an item moved within its placement", async ({
       page,
     }) => {
-      await open(page, size)
+      await openProductA(page, size)
       await chooseFromMenu(page, "Minimal card", "Down one")
       const card = itemOf(page, "Minimal card")
 
-      const moved = await boxOf(tagOf(card, "Moved down"))
+      await expect(tagOf(card, "Moved down")).toBeVisible()
       await expect(tagOf(card, "Changed")).toHaveCount(0)
-      expect(moved.y).toBeGreaterThan(
-        (await boxOf(card.getByRole("heading", { level: 3 }))).bottom,
+      const [moved, move, lastField] = await boxesOf(
+        tagOf(card, "Moved down"),
+        moveButton(page, "Minimal card"),
+        card.locator("dd").last(),
       )
-      const move = await boxOf(moveButton(page, "Minimal card"))
-      expect(
-        Math.abs(centre(moved) - centre(move)) < 4 || move.y >= moved.bottom,
-      ).toBe(true)
+      expect(moved.y).toBeGreaterThan(lastField.bottom - 1)
+      expect(levelWithOrUnder(moved, move)).toBe(true)
     })
 
     test("shows “Removed” alone, and no label, where “Changed” shows", async ({
       page,
     }) => {
-      await open(page, size)
+      await openProductA(page, size)
       await chooseFromMenu(page, "Minimal card", "Down one")
       await confirmRemoval(page, "Minimal card")
       const card = itemOf(page, "Minimal card")
@@ -112,27 +100,50 @@ for (const [device, size] of [
       await expect(tagOf(card, "Changed")).toHaveCount(0)
     })
 
-    test("wraps the second tag under the first, with nothing between them, where one line can't hold both", async ({
+    test("shows “Moved from Next”, then “New”, for a new item that is marked", async ({
       page,
     }) => {
-      await page.setViewportSize({ width: 320, height: 800 })
-      await page.goto("./#/roadmaps/producta")
-      await connect(page)
-      await chooseFromMenu(page, "Minimal card", "Later")
-      // The card's room narrowed to less than the two tags need.
-      const card = itemOf(page, "Minimal card")
-      await card.evaluate((element) => {
-        element.style.width = "180px"
-      })
+      await openProductA(page, size)
+      await addItem(page, "Added item", "Next")
+      await chooseFromMenu(page, "Added item", "Later")
+      const card = itemOf(page, "Added item")
 
-      const moved = await boxOf(tagOf(card, "Moved from Now"))
-      const changed = await boxOf(tagOf(card, "Changed"))
-      expect(changed.y).toBeGreaterThan(moved.bottom - 1)
-      expect(Math.abs(changed.x - moved.x)).toBeLessThan(1)
-      expect(changed.y - moved.bottom).toBeLessThan(12)
+      await expect(tagOf(card, "Moved from Next")).toBeVisible()
+      await expect(tagOf(card, "New")).toBeVisible()
+      const [moved, added] = await boxesOf(
+        tagOf(card, "Moved from Next"),
+        tagOf(card, "New"),
+      )
+      expect(Math.abs(centre(moved) - centre(added))).toBeLessThan(1)
+      expect(moved.right).toBeLessThan(added.x)
     })
   })
 }
+
+test.describe("a narrow card (S2)", () => {
+  test.use({ reducedMotion: "reduce" })
+
+  test("wraps the second tag under the first, with nothing between them, where one line can't hold both", async ({
+    page,
+  }) => {
+    await openProductA(page, { width: 320, height: 800 })
+    await chooseFromMenu(page, "Minimal card", "Later")
+    // The card's room narrowed to less than the two tags need.
+    const card = itemOf(page, "Minimal card")
+    await card.evaluate((element) => {
+      element.style.width = "180px"
+    })
+
+    await expect(tagOf(card, "Changed")).toBeVisible()
+    const [moved, changed] = await boxesOf(
+      tagOf(card, "Moved from Now"),
+      tagOf(card, "Changed"),
+    )
+    expect(changed.y).toBeGreaterThan(moved.bottom - 1)
+    expect(Math.abs(changed.x - moved.x)).toBeLessThan(1)
+    expect(changed.y - moved.bottom).toBeLessThan(12)
+  })
+})
 
 test.describe("a phone's compact row (S3)", () => {
   test.use({ reducedMotion: "reduce" })
@@ -140,7 +151,7 @@ test.describe("a phone's compact row (S3)", () => {
   test("shows the label and “Changed” on one line under the title, closed and opened", async ({
     page,
   }) => {
-    await open(page, PHONE)
+    await openProductA(page, PHONE)
     await chooseCompact(page)
     await chooseFromMenu(page, "Minimal card", "Later")
     const row = itemOf(page, "Minimal card")
@@ -150,9 +161,11 @@ test.describe("a phone's compact row (S3)", () => {
         await row.getByRole("button", { name: /^Show/ }).click()
         await expect(row.getByRole("button", { name: /^Hide/ })).toBeVisible()
       }
-      const moved = await boxOf(tagOf(row, MOVED))
-      const changed = await boxOf(tagOf(row, "Changed"))
-      const title = await boxOf(row.getByRole("heading", { level: 3 }))
+      const [moved, changed, title] = await boxesOf(
+        tagOf(row, MOVED),
+        tagOf(row, "Changed"),
+        row.getByRole("heading", { level: 3 }),
+      )
       expect(Math.abs(centre(moved) - centre(changed))).toBeLessThan(1)
       expect(moved.x).toBeLessThan(changed.x)
       expect(moved.y).toBeGreaterThan(title.bottom - 1)
@@ -184,8 +197,10 @@ test.describe("a phone's compact row (S3)", () => {
     await chooseCompact(page)
     const row = itemOf(page, "Someday")
 
-    const flag = await boxOf(tagOf(row, /isn't recognised/))
-    const changed = await boxOf(tagOf(row, "Changed"))
+    const [flag, changed] = await boxesOf(
+      tagOf(row, /isn't recognised/),
+      tagOf(row, "Changed"),
+    )
     expect(changed.y).toBeGreaterThan(flag.bottom - 1)
   })
 })
@@ -194,7 +209,7 @@ test.describe("a phone's compact row (S3)", () => {
  * Where a row's parts sit, from the row's top, to a tenth of a pixel, all read at once:
  * the page may be scrolling to the item meanwhile.
  */
-async function placesIn(row: Locator, title: string, page: Page) {
+async function placesIn(page: Page, row: Locator, title: string) {
   const parts = {
     chevron: row.getByRole("button", { name: /^(Show|Hide)/ }),
     title: row.getByRole("heading", { level: 3 }),
@@ -227,37 +242,40 @@ async function placesIn(row: Locator, title: string, page: Page) {
   return Object.fromEntries(names.map((name, at) => [name, tops[at]]))
 }
 
-for (const motion of ["reduce", "no-preference"] as const) {
-  test.describe(`a desktop's compact row, with ${motion === "reduce" ? "" : "no "}reduced motion (S4)`, () => {
-    test.use({ reducedMotion: motion })
+/** Opens `row`, closes it, and expects each part where it was when closed. */
+async function expectStill(page: Page, row: Locator, title: string) {
+  // The move is drawn (a view transition may delay it): its tag is on the row.
+  await expect(tagOf(row, /^(Changed|New|Removed)/)).toBeVisible()
+  const closed = await placesIn(page, row, title)
+  expect(closed.pending).not.toBeNull()
+  await row.getByRole("button", { name: /^Show/ }).click()
+  await expect(row.getByRole("button", { name: /^Hide/ })).toBeVisible()
+  await expect.poll(() => placesIn(page, row, title)).toEqual(closed)
+  await row.getByRole("button", { name: /^Hide/ }).click()
+  await expect(row.getByRole("button", { name: /^Show/ })).toBeVisible()
+  await expect.poll(() => placesIn(page, row, title)).toEqual(closed)
+  return closed
+}
 
-    /** Opens `row`, closes it, and expects each part where it was when closed. */
-    async function expectStill(page: Page, row: Locator, title: string) {
-      const closed = await placesIn(row, title, page)
-      expect(closed.pending).not.toBeNull()
-      await row.getByRole("button", { name: /^Show/ }).click()
-      await expect(row.getByRole("button", { name: /^Hide/ })).toBeVisible()
-      await expect.poll(() => placesIn(row, title, page)).toEqual(closed)
-      await row.getByRole("button", { name: /^Hide/ }).click()
-      await expect(row.getByRole("button", { name: /^Show/ })).toBeVisible()
-      await expect.poll(() => placesIn(row, title, page)).toEqual(closed)
-      return closed
-    }
+for (const motion of ["reduce", "no-preference"] as const) {
+  test.describe(`a desktop's compact row, reducedMotion ${motion} (S4)`, () => {
+    test.use({ reducedMotion: motion })
 
     test("keeps the label and “Changed” at the height they have closed, level with the line, as it opens and closes", async ({
       page,
     }) => {
-      await open(page, DESKTOP)
+      await openProductA(page, DESKTOP)
       await chooseCompact(page)
       await chooseFromMenu(page, "Minimal card", "Later")
       const row = itemOf(page, "Minimal card")
+      await expect(tagOf(row, MOVED)).toBeVisible()
 
       const closed = await expectStill(page, row, "Minimal card")
       // Centred on the line's 32px, as the row has them closed.
-      const [moved, line] = await Promise.all([
-        boxOf(tagOf(row, MOVED)),
-        boxOf(row.getByRole("button", { name: /^Show/ })),
-      ])
+      const [moved, line] = await boxesOf(
+        tagOf(row, MOVED),
+        row.getByRole("button", { name: /^Hide|^Show/ }),
+      )
       expect(Math.abs(centre(moved) - centre(line))).toBeLessThan(1)
       expect(closed.moved).toBe(closed.pending)
     })
@@ -293,7 +311,7 @@ for (const motion of ["reduce", "no-preference"] as const) {
     test("keeps a “New” tag still, and “Removed”, which has no label", async ({
       page,
     }) => {
-      await open(page, DESKTOP)
+      await openProductA(page, DESKTOP)
       await chooseCompact(page)
       await addItem(page, "Added item", "Later")
       const added = itemOf(page, "Added item")

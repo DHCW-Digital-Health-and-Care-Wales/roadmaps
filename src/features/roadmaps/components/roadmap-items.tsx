@@ -8,7 +8,13 @@ import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 
 import { ItemDialog } from "../dialogs/item-dialog"
 import { EditableItem, type ItemControl } from "../editing/editable-item"
-import type { PageItem } from "../editing/page-items"
+import type { MarkMoved, MovedMark, PageMovedMark } from "../editing/moved-mark"
+import {
+  groupPageItemsWith,
+  type PageItem,
+  placeInOrder,
+} from "../editing/page-items"
+import { usePendingChangesStore } from "../editing/pending-changes-context"
 import type { PublishAction } from "../editing/pending-changes-store"
 import { PlacementHeading } from "../editing/placement-heading"
 import { RemovalDialog } from "../editing/removal-dialog"
@@ -42,6 +48,8 @@ export interface RoadmapItemsProps {
   view: ItemsView
   /** The page's one item dialog (`useItemDialog`). */
   itemDialog: PageItemDialog
+  /** The page's moved mark (`useMovedMark`, STY-071). */
+  movedMark: PageMovedMark
   /** Whether the roadmap's changes are published or saved, as Remove's question says. */
   action: PublishAction
   /** A new item was removed, its card or row with it: focus needs somewhere to go (S6). */
@@ -64,6 +72,8 @@ export interface RoadmapItemsProps {
  * and order (`view`, STY-067 S3). An item's Remove asks first, in the page's one
  * removal dialog, drawn here too (STY-049 S1). A removed item shows where it did, but
  * is no stop of its placement's order: the others' positions count without it (S8).
+ * The item moved last carries the moved mark (STY-071); a move to another placement
+ * from the Move menu is said in the status line too, with where it shows there (S5).
  */
 export function RoadmapItems({
   roadmapId,
@@ -73,10 +83,12 @@ export function RoadmapItems({
   groups,
   view,
   itemDialog,
+  movedMark,
   action,
   onItemRemoved,
 }: RoadmapItemsProps) {
   const { t } = useTranslation()
+  const store = usePendingChangesStore()
   const { unplaced, placements } = groups
   const [said, setSaid] = useState<{ serial: number; text: string }>()
   // A moved item is drawn anew, in another list, so focus is handed to it here.
@@ -102,7 +114,35 @@ export function RoadmapItems({
     pageItems,
     onFocusRequest: cardHandlers.requestFocus,
     onNewItemRemoved: onItemRemoved,
+    onMoved: movedMark.moved,
   })
+  // A move from the Move menu marks the item and, to another placement, is said with
+  // where it now shows there (S5), from the store the move has just changed. A move
+  // within one is said by the item (`EditableItem`); one from a dialog says nothing new
+  // (D11, D16).
+  const movedByMenu: MarkMoved = (item, move, to) => {
+    movedMark.moved(item, move, to)
+    if (move.kind !== "placement") return
+    const place = placeInOrder(
+      groupPageItemsWith(
+        items,
+        store.getSnapshot().changes.get(roadmapId),
+        pageItems,
+      ),
+      item.key,
+    )
+    if (!place) return
+    cardHandlers.announce(
+      t(
+        move.from === null ? "roadmaps.edit.placedIn" : "roadmaps.edit.movedTo",
+        {
+          placement: t(`roadmaps.items.placements.${to}`),
+          position: place.at + 1,
+          count: place.count,
+        },
+      ),
+    )
+  }
   const panelAddButton = useRef<HTMLButtonElement>(null)
 
   const list = (
@@ -120,6 +160,8 @@ export function RoadmapItems({
       labelledBy={labelledBy}
       focus={focus}
       cardHandlers={cardHandlers}
+      mark={movedMark.mark}
+      onMovedByMenu={movedByMenu}
       onEdit={itemDialog.edit}
       onRemove={removalDialog.ask}
       dialogAt={itemDialog.cardAt}
@@ -177,6 +219,7 @@ export function RoadmapItems({
                   placement={placement}
                   id={id}
                   onAnnounce={cardHandlers.announce}
+                  onUndone={movedMark.orderUndone}
                 />
                 {placed.length > 0 ? (
                   list(placed, id, true)
@@ -238,6 +281,9 @@ interface ItemListProps {
     focused: () => void
     announce: (text: string) => void
   }
+  /** The item moved last, if one is marked. */
+  mark: MovedMark | null
+  onMovedByMenu: MarkMoved
   onEdit: (position: number) => void
   onRemove: (position: number) => void
   /** Where, among the page's items, the one is that holds `dialogOpener`. */
@@ -256,6 +302,8 @@ function ItemList({
   labelledBy,
   focus,
   cardHandlers,
+  mark,
+  onMovedByMenu,
   onEdit,
   onRemove,
   dialogAt,
@@ -278,6 +326,8 @@ function ItemList({
           position={position}
           order={orderOf(ordered, stopAt.get(position), stops.length)}
           onAnnounce={cardHandlers.announce}
+          mark={mark?.key === pageItem.key ? mark : undefined}
+          onMovedByMenu={onMovedByMenu}
           focusRequest={
             focus?.position === position ? focus.control : undefined
           }

@@ -11,7 +11,7 @@ import {
   usePendingChangesStore,
 } from "./pending-changes-context"
 import { discardable } from "./pending-changes-store"
-import { undoOrder } from "./pending-orders"
+import { hasPendingOrder, undoOrder } from "./pending-orders"
 
 export interface PlacementHeadingProps {
   roadmapId: string
@@ -20,6 +20,8 @@ export interface PlacementHeadingProps {
   id: string
   /** Says a status message: that the placement's order was undone. */
   onAnnounce: (message: string) => void
+  /** The placement's order was undone: an item marked as moved there loses its mark. */
+  onUndone: (placement: RoadmapPlacement) => void
 }
 
 /**
@@ -34,20 +36,23 @@ export function PlacementHeading({
   placement,
   id,
   onAnnounce,
+  onUndone,
 }: PlacementHeadingProps) {
   const { t } = useTranslation()
   const store = usePendingChangesStore()
   const snapshot = usePendingChanges()
   const heading = useRef<HTMLHeadingElement>(null)
   const name = t(`roadmaps.items.placements.${placement}`)
-  const reordered = snapshot.changes
-    .get(roadmapId)
-    ?.orders.some((order) => order.placement === placement)
+  const reordered = hasPendingOrder(
+    snapshot.changes.get(roadmapId)?.orders,
+    placement,
+  )
   const held = !discardable(snapshot, roadmapId)
 
   const undo = () => {
     if (held) return
     store.update(roadmapId, (changes) => undoOrder(changes, placement))
+    onUndone(placement)
     heading.current?.focus()
     onAnnounce(t("roadmaps.edit.order.undone", { placement: name }))
   }

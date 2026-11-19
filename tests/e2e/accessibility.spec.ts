@@ -172,6 +172,31 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
     })
 
     for (const width of [1280, 375]) {
+      test(`an item moved to Later, marked, as a card and as a compact row at ${String(width)}px (STY-071)`, async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width, height: 812 })
+        await page.goto("./#/roadmaps/producta")
+        await connect(page)
+        const main = page.getByRole("main")
+        await main
+          .getByRole("button", { name: "Move Minimal card", exact: true })
+          .click()
+        await page.getByRole("menuitem", { name: "Later", exact: true }).click()
+        await expect(main.getByText("Moved from Now")).toBeVisible()
+        await expectNoAxeViolations(page, theme)
+
+        await main
+          .getByRole("button", {
+            name: width >= 768 ? "Compact" : "Compact view",
+          })
+          .click()
+        await expect(
+          main.getByRole("button", { name: "Show the rest of Minimal card" }),
+        ).toBeVisible()
+        await expectNoAxeViolations(page, theme)
+      })
+
       test(`the top of a roadmap not published at ${String(width)}px: its notice, Product details open, More open, then the banner dismissed (STY-065 S2, S3, S4, S5, S8)`, async ({
         page,
         sheets,

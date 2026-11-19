@@ -638,6 +638,34 @@ export const en = {
       move: "Move",
       /** Heads the list of places an item can move to. */
       moveTo: "Move to",
+      /**
+       * Said once an item has moved to another placement from its Move menu, with where
+       * it shows there (STY-071 S5).
+       */
+      movedTo:
+        "Moved to {{placement}}. {{position, number}} of {{count, number}}.",
+      /** Said once an unplaced item is given a placement from its Move menu. */
+      placedIn:
+        "Placed in {{placement}}. {{position, number}} of {{count, number}}.",
+      /**
+       * The moved mark's label on the item last moved, saying how it moved (STY-071):
+       * no position, which the status line says.
+       */
+      movedMark: {
+        top: "Moved to the top",
+        up: "Moved up",
+        down: "Moved down",
+        bottom: "Moved to the bottom",
+        /** An item moved to another placement: "Moved from Now". */
+        from: "Moved from {{placement}}",
+        /** An unplaced item given a placement. */
+        placed: "Placed",
+        /**
+         * All a "Moved" label shows, after its arrow, in a list too narrow for it (S3);
+         * "Placed" shows whole (D19).
+         */
+        short: "Moved",
+      },
       /** A placement's order, changed from an item's Move menu (STY-050). */
       order: {
         /** Heads the Move menu's choices of position: "In Now: 4 of 4". */

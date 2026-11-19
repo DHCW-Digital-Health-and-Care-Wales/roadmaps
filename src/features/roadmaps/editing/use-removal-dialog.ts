@@ -6,6 +6,7 @@ import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { useLanguage } from "@/i18n"
 
 import type { ItemControl } from "./editable-item"
+import type { MarkMoved } from "./moved-mark"
 import { dropPageItem, editPageItem, type PageItem } from "./page-items"
 import { usePendingChangesStore } from "./pending-changes-context"
 import type { PublishAction } from "./pending-changes-store"
@@ -42,6 +43,11 @@ export interface RemovalDialogOptions {
   onFocusRequest: (position: number, control: ItemControl) => void
   /** A new item was removed, its card or row with it: focus needs somewhere to go. */
   onNewItemRemoved: () => void
+  /**
+   * "Move to Not doing" moved the item: it takes the moved mark, with nothing new said
+   * (STY-071 D16); the Move menu's own also says where it lands.
+   */
+  onMoved: MarkMoved
 }
 
 /** The page's one removal dialog, as `useRemovalDialog` gives it. */
@@ -60,9 +66,10 @@ export interface PageRemovalDialog {
  * a card, as it does the item dialog: it finds its item again by its card's key after
  * every read, so it stays open on an item whose card moves to another list, and closes
  * when the item has gone. "Move to Not doing" makes a pending move, as the Move menu
- * does, with focus then on the item's Move; Remove removes an item the roadmap holds,
- * pending, with focus on its "Undo removal" (S2), or drops a new one at once (S10);
- * Cancel, the close button and Escape change nothing, with focus back on its Remove.
+ * does, marked as moved (STY-071), with focus then on the item's Move; Remove removes
+ * an item the roadmap holds, pending, with focus on its "Undo removal" (S2), or drops a
+ * new one at once (S10); Cancel, the close button and Escape change nothing, with focus
+ * back on its Remove.
  */
 export function useRemovalDialog({
   roadmapId,
@@ -71,6 +78,7 @@ export function useRemovalDialog({
   pageItems,
   onFocusRequest,
   onNewItemRemoved,
+  onMoved,
 }: RemovalDialogOptions): PageRemovalDialog {
   const store = usePendingChangesStore()
   const language = useLanguage()
@@ -95,6 +103,13 @@ export function useRemovalDialog({
         ? removeItem(changes, found.item, at)
         : dropPageItem(changes, items, found, at)
     })
+    if (choice === "not-doing") {
+      onMoved(
+        found,
+        { kind: "placement", from: found.shown.placement },
+        "not-doing",
+      )
+    }
     setOpening({ ...opening, open: false, choice, asked: found })
   }
   const closed = () => {

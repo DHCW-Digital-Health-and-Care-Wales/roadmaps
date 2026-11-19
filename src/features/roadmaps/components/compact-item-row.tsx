@@ -1,5 +1,5 @@
 import { ChevronRightIcon } from "lucide-react"
-import { useState, type ReactNode } from "react"
+import { type FocusEventHandler, type ReactNode, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
@@ -42,6 +42,13 @@ export interface CompactItemRowProps {
    * afresh in another list, as a read that moves its item draws it, starts shut.
    */
   reveal?: boolean
+  /**
+   * The moved mark's label, on the item last moved (STY-071): where the pending tag is,
+   * before it, with the mark's edge round the row.
+   */
+  mark?: ReactNode
+  /** Focus has come to one of its controls. */
+  onFocus?: FocusEventHandler<HTMLLIElement> | undefined
 }
 
 /**
@@ -49,9 +56,10 @@ export interface CompactItemRowProps {
  * in place, its title as a heading, then Move and Edit, always at the row's end. From
  * a tablet's width one line that never wraps (S4): the title, then the start of its
  * description in the room the title leaves, each cut with an ellipsis, then an
- * unplaced item's flag, cut within a quarter of the line, and the pending tag; each
- * keeps its whole text for assistive technology. Narrower, the title on the lines it
- * needs, with no description, and the flag and the tag under it (S5, D10).
+ * unplaced item's flag, cut within a quarter of the line, and the moved mark's label and
+ * the pending tag (STY-071 S3); each keeps its whole text for assistive technology.
+ * Narrower, the title on the lines it needs, with no description, and the flag, the
+ * label and the tag under it (S5, D10).
  *
  * The chevron is a Collapsible's trigger, stretched across the whole line (STY-069), so
  * a press anywhere on it but Move and Edit opens and closes the row, and the chevron is
@@ -71,6 +79,8 @@ export function CompactItemRow({
   drop,
   struck = false,
   reveal = false,
+  mark,
+  onFocus,
 }: CompactItemRowProps) {
   const { t } = useTranslation()
   const language = useLanguage()
@@ -88,7 +98,15 @@ export function CompactItemRow({
     <Collapsible
       open={open}
       onOpenChange={setOpen}
-      render={<li className="border-t first:border-t-0" />}
+      render={
+        <li
+          className={cn(
+            "border-t first:border-t-0",
+            mark && "relative z-1 shadow-moved-mark-row",
+          )}
+          onFocus={onFocus}
+        />
+      }
     >
       <div
         className={cn(
@@ -151,7 +169,12 @@ export function CompactItemRow({
                 <HorizonFlag writtenHorizon={horizon} cut={!open} />
               </div>
             )}
-            {tag && <div className="flex shrink-0">{tag}</div>}
+            {(mark ?? tag) && (
+              <div className="flex shrink-0 gap-2">
+                {mark}
+                {tag}
+              </div>
+            )}
           </>
         ) : (
           <div className="flex min-w-0 flex-1 flex-col items-start gap-1.5 py-1">
@@ -165,6 +188,7 @@ export function CompactItemRow({
                 <HorizonFlag writtenHorizon={horizon} />
               </div>
             )}
+            {mark}
             {tag}
           </div>
         )}

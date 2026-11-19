@@ -1,4 +1,10 @@
-import { useLayoutEffect, useRef, type RefObject } from "react"
+import {
+  type FocusEvent,
+  type RefObject,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+} from "react"
 import { useTranslation } from "react-i18next"
 
 import { undoRemoval } from "@/domain/roadmap/item-removal"
@@ -19,6 +25,8 @@ import {
   RemoveButton,
 } from "./edit-controls"
 import { MoveMenu } from "./move-menu"
+import { MovedLabel } from "./moved-label"
+import type { MarkMoved, MovedMark } from "./moved-mark"
 import { dropPageItem, editPageItem, type PageItem } from "./page-items"
 import {
   usePendingChanges,
@@ -26,6 +34,7 @@ import {
 } from "./pending-changes-context"
 import { discardable } from "./pending-changes-store"
 import { type OrderMove, positionAfter, reorderItem } from "./pending-orders"
+import { revealMoved } from "./reveal-moved"
 
 export interface EditableItemProps {
   roadmapId: string
@@ -46,6 +55,13 @@ export interface EditableItemProps {
   order?: { at: number; count: number } | undefined
   /** Says a status message: where the item now is in its placement's order (S2). */
   onAnnounce: (message: string) => void
+  /** The moved mark, when the item carries it (STY-071). */
+  mark?: MovedMark | undefined
+  /**
+   * The Move menu moved the item: it takes the moved mark, and a move to another
+   * placement is said where it lands (STY-071 S5).
+   */
+  onMovedByMenu: MarkMoved
   /** Which control takes focus as the item renders, once; see `onFocusRequest`. */
   focusRequest?: ItemControl | undefined
   /**
@@ -80,8 +96,10 @@ export type ItemControl = "edit" | "move" | "remove" | "undo-removal"
  * roadmap is being published (S15). An item added and not yet published is tagged
  * "New" instead; what Edit and Move change is part of it (STY-046 S6). An item removed
  * shows where it did, struck through and tagged "Removed", with "Undo removal", which
- * brings back its edits too, and its Move and Edit held (STY-049 S2, S3, D6). Nothing
- * is written until the roadmap is published.
+ * brings back its edits too, and its Move and Edit held (STY-049 S2, S3, D6). The item
+ * moved last carries the moved mark (STY-071), and the page scrolls to it, once, as
+ * focus comes to it after the move (S4). Nothing is written until the roadmap is
+ * published.
  */
 export function EditableItem({
   roadmapId,
@@ -92,6 +110,8 @@ export function EditableItem({
   position,
   order,
   onAnnounce,
+  mark,
+  onMovedByMenu,
   focusRequest,
   onFocusRequest,
   onFocused,
@@ -130,14 +150,40 @@ export function EditableItem({
       remove: removeButton,
       "undo-removal": undoRemovalButton,
     }[focusRequest]
-    control.current?.focus()
+    // Focus on Move follows a move, whose mark scrolls the page to the item, gliding.
+    control.current?.focus({ preventScroll: focusRequest === "move" })
     onFocused()
   }, [focusRequest, editButton, onFocused])
+  // The page scrolls to each mark once, as focus first comes to the item, and stops
+  // following the bars once the item no longer carries it.
+  const revealing = useRef<{ mark: MovedMark; stop: () => void } | null>(null)
+  useEffect(
+    () => () => {
+      // Its own reveal only: the next mark's may have started before this runs.
+      if (mark && revealing.current?.mark === mark) {
+        revealing.current.stop()
+        revealing.current = null
+      }
+    },
+    [mark],
+  )
+  const reveal = (event: FocusEvent<HTMLLIElement>) => {
+    if (!mark || revealing.current?.mark === mark) return
+    revealing.current?.stop()
+    revealing.current = { mark, stop: revealMoved(event.currentTarget) }
+  }
+  const label = (shortens: boolean) =>
+    mark && <MovedLabel move={mark.move} shortens={shortens} />
 
   const move = (placement: RoadmapPlacement) => {
     if (!editable) return
     store.update(roadmapId, (changes) =>
       editPageItem(changes, items, pageItem, position, { placement }),
+    )
+    onMovedByMenu(
+      pageItem,
+      { kind: "placement", from: shown.placement },
+      placement,
     )
     onFocusRequest(position, "move")
   }
@@ -147,6 +193,8 @@ export function EditableItem({
       reorderItem(changes, items, position, to),
     )
     const at = positionAfter(order.at, order.count, to)
+    if (shown.placement !== null)
+      onMovedByMenu(pageItem, { kind: to }, shown.placement)
     onAnnounce(
       t(`roadmaps.edit.order.moved.${to}`, {
         position: at + 1,
@@ -209,6 +257,8 @@ export function EditableItem({
         struck={removal !== undefined}
         reveal={focusRequest === "remove" || focusRequest === "undo-removal"}
         tag={pending && <PendingTag pending={pending} subject={title} />}
+        mark={label(true)}
+        onFocus={reveal}
         actions={(wide) => (
           <>
             {moveMenu(!wide)}
@@ -243,6 +293,8 @@ export function EditableItem({
       item={shown}
       organisations={organisations}
       struck={removal !== undefined}
+      mark={label(false)}
+      onFocus={reveal}
       actions={
         <EditControls
           subject={title}

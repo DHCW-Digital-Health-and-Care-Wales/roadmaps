@@ -33,12 +33,19 @@ worktree, its `PREVIEW_PORT`: `pnpm worktree:info`) and reuses a server
 already listening there locally: stop a stale `pnpm preview` first
 (`fuser -k <port>/tcp`).
 
-Run a suite you will wait for in the foreground with a long enough command
-timeout. To work alongside a suite, start it in the background and make sure
-you are notified, or check its exit status, before relying on it. Detach only a
-run that must outlast the session, with output and exit status in a log
-(`setsid nohup sh -c '<cmd>; echo "exit=$?"' > /tmp/<name>.log 2>&1 &`), and
-read that log before relying on it.
+Give a suite you wait for in the foreground a command timeout longer than its
+run; under host load the Vitest run alone outlasts a runtime's default (2
+minutes in Claude Code). For a run that can outlast the runtime's longest
+foreground timeout, the full gate among them: where the runtime wakes you when
+a background command completes, start it in the background with its exit
+status in its output and yield until it completes, once independent work is
+exhausted, as for a reviewer (`delegation.md`, _Dispatch and completion_, step
+3); otherwise run its commands as separate foreground calls, each within that
+timeout. To work alongside a suite, start it in the background, and read its
+exit status before relying on it.
+Detach only a run that must outlast the session, with output and exit status
+in a log (`setsid nohup sh -c '<cmd>; echo "exit=$?"' > /tmp/<name>.log 2>&1 &`),
+and read that log before relying on it.
 
 A fix made between review rounds, before it is pushed, needs the tests of its
 changed files and their consumers (`pnpm exec vitest related --run <files>`),

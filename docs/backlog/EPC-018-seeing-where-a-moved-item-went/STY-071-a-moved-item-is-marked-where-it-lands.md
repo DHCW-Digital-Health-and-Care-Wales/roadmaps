@@ -34,6 +34,8 @@ in an item's Move menu
 and a label with an arrow saying "Moved up", "Moved down", "Moved to the top" or
 "Moved to the bottom"
 **And** the label gives no position
+**And** the edge sits over the item's own border and padding, so nothing in the item
+shifts and a card keeps its foot bar
 **And** no other item is marked
 
 ### S2: A move to another placement marks the item (owner, D2, D7)
@@ -41,10 +43,10 @@ and a label with an arrow saying "Moved up", "Moved down", "Moved to the top" or
 **Given** an item in Now
 **When** the Product Lead moves it to Later, from its Move menu or by changing "Horizon
 or section" in the item dialog and saving
-**Then** the item, last in Later, shows the mark labelled "Moved from Now", beside its
-"Changed" tag
+**Then** the item, last in Later, shows the mark labelled "Moved from Now", placed as
+S3 says, with its "Changed" tag where it shows today
 **And** an unplaced item given a placement either way is labelled "Placed"
-**And** a new item, not yet published, keeps its "New" tag beside the mark
+**And** a new item, not yet published, keeps its "New" tag where it shows today
 
 ### S3: Where the label sits (owner, D5, D6)
 
@@ -92,10 +94,14 @@ pending
 ### S8: What clears the mark (owner, D4, D9)
 
 **Given** a marked item
-**When** the Product Lead chooses "Undo order" on its placement, "Undo changes" on it,
-or "Discard all"; publishes the roadmap; removes the item; the roadmap is read again
-without the move (as after taking a co-lead's version); or leaves the page
+**When** the Product Lead chooses "Undo order" on the placement it is in, or an "Undo
+changes" or "Discard all" that puts it back where it was before the move; publishes
+the roadmap, and the publish succeeds; removes the item; the roadmap is read again without the move (as after
+taking a co-lead's version); or leaves the page
 **Then** no item is marked
+**And** "Undo order" on another placement, or "Undo changes" on an item moved within
+its placement (which undoes its fields and leaves the order pending, STY-050), keeps
+the mark
 
 ### S9: The mark in Welsh and in the dark theme
 
@@ -113,7 +119,7 @@ layout.
 
 ## Decisions
 
-- **D1** (owner, 2026-11-19, analysis): design E: B's mark, then C's slide (STY-072).
+- **D1** (owner, 2026-11-19, analysis): design E: C's slide (STY-072), then B's mark.
 - **D2** (owner, 2026-11-19, grilling round 1 Q2): every move marks, the item dialog's
   "Horizon or section" included.
 - **D3** (owner, 2026-11-19, grilling round 2 Q1): a move to another placement is said
@@ -136,6 +142,16 @@ layout.
   blue of pending tags.
 - **D11** (agent, 2026-11-19): a move from the dialog says nothing new to a screen
   reader, since focus returns to Edit with its name; S5 is the Move menu's.
+- **D12** (agent, 2026-11-19, review): D4's "an undo that puts it back" read
+  literally: "Undo changes" undoes an item's fields and placement, never its place in
+  an order (STY-050), so it clears the mark only when it reverses the move; "Undo
+  order" clears it on the item's own placement, as the owner said, even where a
+  moved-in item stays last. A refused or failed publish leaves the move pending and
+  keeps the mark (D9).
+- **D13** (owner, 2026-11-19, confirmed summary): removing the marked item clears the
+  mark, though a removed published item still shows, struck through (STY-049).
+- **D14** (agent, 2026-11-19, review): the edge must not shift the item's content or
+  hide a card's foot bar (S1), as the prototype's first draw did.
 
 ## Starting point
 

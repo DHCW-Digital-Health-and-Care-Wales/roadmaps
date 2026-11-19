@@ -1,4 +1,4 @@
-# Seeing where a moved item went: four working designs
+# Seeing where a moved item went: four designs, and the one chosen
 
 - **Date**: 2026-11-19
 - **Question**: once a Product Lead moves an item, by "Up one", "Down one", "To the
@@ -9,8 +9,9 @@
   [STY-051](../backlog/_archive/EPC-011-adding-roadmaps-and-items/STY-051-a-moved-item-goes-last-in-its-new-placement.md),
   [STY-067](../backlog/_archive/EPC-016-a-roadmaps-items-at-a-glance/STY-067-a-compact-view-of-a-roadmaps-items.md)).
   No record asks this yet: the owner raised it on 2026-11-19 and asked to see
-  alternatives beyond a highlight or a border. Base `3cd6b8f`. Only this analysis and
-  one prototype page were added; no application code.
+  alternatives beyond a highlight or a border. Drawn at `3cd6b8f`, re-audited at
+  `e75d846` for the records. Only this analysis and one prototype page were added; no
+  application code, and no correction to the skill's stylesheet or starter.
 - **Outcome**: the owner chose design E, C then B, on 2026-11-19; see _Outcome_.
 - **Prototypes**: [`moved-item-indicator-ux-analysis/moved-item-indicator-ux-prototypes.html`](moved-item-indicator-ux-analysis/moved-item-indicator-ux-prototypes.html),
   one self-contained page, open in a browser. Its shape is a **working component**:
@@ -27,7 +28,7 @@
 ## The problem today
 
 After a move the page draws the item in its new place and puts focus on its Move
-(STY-050 S5). A screen reader hears "Moved down. 2 of 4." from a status line. A
+(STY-050 S2). A screen reader hears "Moved down. 2 of 4." from a status line. A
 sighted Product Lead sees almost nothing:
 
 - Focus shows only by keyboard. After a click or a tap, Move takes focus with no
@@ -108,9 +109,15 @@ existing stories do not supply. No Accepted ADR is reopened: copy stays in `t()`
 
 ## Not yet drawn
 
-- The Welsh copy for "Moved down · 2 of 4", "Moved from Now · 2 of 2", "Moved to
-  Later. 2 of 2." and D's links: draft English here, settled with the copywriter skill
-  in the build.
+- The Welsh copy for the mark's labels, full and short ("Moved up", "Moved from Now",
+  "Placed", "Moved"), the new status lines ("Moved to Later. 2 of 2.", "Placed in Now.
+  3 of 3.") and D's links: draft English here, settled with the copywriter skill in
+  the build.
+- From the grilling, after the page was drawn: "Undo order" travelling back
+  (STY-073), since E's undo redraws at once; the "Placed" label (STY-071 D7), since
+  the sample has no unplaced item; a move from the item dialog, which marks and does
+  not travel (STY-071 D2, STY-072 D3); and a second move taking over a travel in
+  flight (STY-072 D4), which the page's hand-built slide does not interrupt cleanly.
 - The app's stuck header and pinned foot bar: the prototype's window scrolls within its
   own frame, so how the scroll keeps the item clear of them (the app's
   `scroll-padding`) is for the build.
@@ -137,8 +144,9 @@ publishing writes; the public site.
 
 ## Outcome
 
-On 2026-11-19 the owner chose **C then B**, drawn as design E on the prototype page,
-with two changes to B: the mark gives no position ("Moved up", not "Moved up · 2 of
+On 2026-11-19 the owner chose **C then B**, drawn as design E on the prototype page:
+C's slide, then B's mark. Two changes to B followed, and the page's B and E were
+redrawn with them, so the table's B text above is B as first drawn: the mark gives no position ("Moved up", not "Moved up · 2 of
 4"), and a compact row too narrow for the whole label shows its arrow and "Moved"
 only. The grilling that followed answered every row of _Decisions needed_:
 
@@ -158,3 +166,8 @@ for an unplaced item (D7); the slide built with React's `ViewTransition` (STY-07
 and travelling the whole way across placements (D2), but not for a move from the
 dialog (D3); "Undo order" travels back (STY-073); and the same motion for adding,
 removing and discarding is an idea to grill (STY-074).
+
+Review then corrected the page's order rules to the app's (STY-050, STY-051): an item
+moved in and then reordered makes its placement's order pending, an item moved back to
+its own placement takes its place as last read, and "Undo order" clears the mark only
+on the item's own placement.

@@ -959,17 +959,18 @@
       }
 
       /* ---- B. Marked until the next move ---- */
+      /* The edge sits over the item's own padding, so nothing in it shifts. */
       .marked {
         box-shadow:
           inset 6px 0 0 var(--status-success-border),
-          0 0 0 2px var(--status-success-border);
+          0 0 0 2px var(--status-success-border),
+          var(--shadow-card-bar);
         z-index: 1;
       }
-      .card.marked {
-        padding-left: 22px;
-      }
-      .row.marked .row-line {
-        padding-left: 12px;
+      .row.marked {
+        box-shadow:
+          inset 6px 0 0 var(--status-success-border),
+          0 0 0 2px var(--status-success-border);
       }
 
       /* ---- C. Slide into place ---- */
@@ -977,7 +978,7 @@
         z-index: 5;
         box-shadow:
           0 0 0 3px var(--status-info-border),
-          0 12px 24px rgb(0 0 0 / 0.25);
+          var(--shadow-popup);
       }
       .landed {
         animation: landed 1.6s ease-out forwards;
@@ -1061,9 +1062,10 @@
           as the room a screen gives it. Every Move menu works: move an item up,
           down, to the top or bottom of its placement, or to another placement,
           and watch what tells you where it went. Every design scrolls the moved
-          item into view, puts focus on its Move and says its new position to a
-          screen reader, as the app does today; they differ in what a sighted
-          Product Lead sees.
+          item into view and puts focus on its Move, and says what the move came
+          to, as the app does for a move within a placement; a move to another
+          placement adds a line. They differ in what a sighted Product Lead
+          sees.
         </p>
         <p>
           A fades a highlight after a moment; B marks the item, in words, until
@@ -1350,18 +1352,31 @@
         },
       }
       /** The roadmap as last read: published on 14 November, nothing pending. */
-      const LOADED = {
+      const LOADED = clone({
         "recently-delivered": [],
         now: ["n1", "n2", "n3", "n4"],
         next: ["x1", "x2"],
         later: ["l1"],
         "delivered-this-year": [],
         "not-doing": [],
-      }
+      })
 
       // ---- The rules every design shares: pure, with no page in them ----
-      const clone = (lists) =>
-        Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, [...v]]))
+      /**
+       * The page's lists, copied. Each also carries, out of sight of its
+       * entries, `arrived`: the items moved into a placement that is not their
+       * own, in the order they arrived (STY-051), which its default order needs.
+       */
+      function clone(lists) {
+        const next = Object.fromEntries(
+          Object.entries(lists).map(([k, v]) => [k, [...v]]),
+        )
+        const arrived = Object.fromEntries(
+          PLACEMENTS.map(([p]) => [p, [...(lists.arrived?.[p] ?? [])]]),
+        )
+        Object.defineProperty(next, "arrived", { value: arrived })
+        return next
+      }
       const placementOf = (lists, id) =>
         Object.keys(lists).find((p) => lists[p].includes(id))
       /** Where "To the top", "Up one", "Down one" and "To the bottom" put an item. */
@@ -1372,26 +1387,50 @@
         return count - 1
       }
       /**
+       * A placement's default order, with no pending order of its own: its items
+       * as last read, then those moved in, in the order they arrived (STY-051).
+       */
+      function defaultOrder(lists, placement) {
+        return [
+          ...LOADED[placement].filter((id) => lists[placement].includes(id)),
+          ...lists.arrived[placement].filter((id) =>
+            lists[placement].includes(id),
+          ),
+        ]
+      }
+      /** Whether a placement's order is pending: its items shown out of their default order (STY-050). */
+      function orderChanged(lists, placement) {
+        return lists[placement].join() !== defaultOrder(lists, placement).join()
+      }
+      /**
        * The page after a move: `to` is a choice of position in its placement, or
-       * another placement, where it lands last (STY-051). It returns the lists
-       * and the move, which every design draws from.
+       * another placement. An item moved to another placement lands last there
+       * (STY-051 S1); moved back to its own, it takes its place as last read
+       * again (S2), where that placement's order is not pending. It returns the
+       * lists and the move, which every design draws from.
        */
       function applyMove(lists, id, to) {
         const next = clone(lists)
         const from = placementOf(next, id)
         const at = next[from].indexOf(id)
-        next[from].splice(at, 1)
         let placement = from
-        let newAt
         let kind = to
         if (["top", "up", "down", "bottom"].includes(to)) {
-          newAt = positionAfter(at, lists[from].length, to)
-          next[from].splice(newAt, 0, id)
+          next[from].splice(at, 1)
+          next[from].splice(positionAfter(at, lists[from].length, to), 0, id)
         } else {
           placement = to
           kind = "placement"
+          const pendingThere = orderChanged(lists, to)
+          next[from].splice(at, 1)
+          next.arrived[from] = next.arrived[from].filter((each) => each !== id)
+          // A placement left with no order out of step drops it, as the app's
+          // store settles an order.
+          if (!orderChanged(next, from)) next[from] = defaultOrder(next, from)
+          const home = placementOf(LOADED, id) === to
+          if (!home) next.arrived[to].push(id)
           next[to].push(id)
-          newAt = next[to].length - 1
+          if (home && !pendingThere) next[to] = defaultOrder(next, to)
         }
         return {
           lists: next,
@@ -1399,30 +1438,18 @@
             id,
             kind,
             from: { placement: from, at, count: lists[from].length },
-            to: { placement, at: newAt, count: next[placement].length },
+            to: {
+              placement,
+              at: next[placement].indexOf(id),
+              count: next[placement].length,
+            },
           },
         }
       }
-      /** Whether a placement's order differs from the one last read (STY-050). */
-      function orderChanged(lists, placement) {
-        const was = LOADED[placement].filter((id) =>
-          lists[placement].includes(id),
-        )
-        const now = lists[placement].filter((id) =>
-          LOADED[placement].includes(id),
-        )
-        return was.join() !== now.join()
-      }
-      /** "Undo order": the placement's items back in the order last read, any moved in last. */
+      /** "Undo order": the placement back in its default order; every other pending edit stays. */
       function undoOrder(lists, placement) {
         const next = clone(lists)
-        const kept = LOADED[placement].filter((id) =>
-          lists[placement].includes(id),
-        )
-        const added = lists[placement].filter(
-          (id) => !LOADED[placement].includes(id),
-        )
-        next[placement] = [...kept, ...added]
+        next[placement] = defaultOrder(lists, placement)
         return next
       }
       /** What a screen reader hears after a move: today's copy, and a new line for another placement. */
@@ -1434,7 +1461,6 @@
         if (move.kind === "bottom") return `Moved to the bottom. ${n}.`
         return `Moved to ${NAME[move.to.placement]}. ${n}.`
       }
-      /** The short form of the same, as B's tag shows it. */
       /** What B's tag says after "Moved": with no position, as the owner chose. */
       function tagRest(move) {
         return {
@@ -1846,7 +1872,7 @@
       // ---- The designs ----
       /**
        * Each design keeps the page's lists, draws the area, and after a move shows
-       * where the item went. The shared parts are the same in all four: the moved
+       * where the item went. The shared parts are the same in all five: the moved
        * item scrolled into view, focus on its Move, and the status line.
        */
       function makeDesign(prefix, mark) {
@@ -1866,7 +1892,8 @@
           },
           undo(p) {
             lists = undoOrder(lists, p)
-            last = undefined
+            // The mark goes only where this undo moved its item.
+            if (last && placementOf(lists, last.id) === p) last = undefined
             lastSaid = `Order of ${NAME[p]} undone`
             draw(false)
             const heading = document.getElementById(`${prefix}-h-${p}`)

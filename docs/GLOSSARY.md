@@ -186,10 +186,11 @@ that opens in place to its other fields, by its chevron or a press on its text
 **row** of it is an item shown that way, never an item's position.
 _Avoid_: List view, table
 
-**Moved mark**:
+**Moved mark** _(planned)_:
 The edge and label on the item a Product Lead moved last, saying how it moved ("Moved
-up", "Moved from Now", "Placed"), until the next move or an undo that puts it back
-(STY-071). Display only: never a pending edit, and never published.
+up", "Moved from Now", "Placed"), until it is cleared (STY-071 S8): by the next move,
+an undo that puts it back, publishing or leaving the page. Display only: never a
+pending edit, and never published.
 _Avoid_: Highlight, moved tag (a **tag** is the item's own label)
 
 **Roadmap list**:

@@ -81,12 +81,32 @@ transition) rather than pixel positions in flight. S4 by emulating reduced motio
 - **D5** (owner, 2026-11-19, grilling round 3 Q2 and its follow-up): React's
   `ViewTransition`, over a hand-built slide, AutoAnimate (no travel between lists) and
   Motion (about 30 KB and an ADR).
+- **D6** (agent, 2026-11-19, review): where React's `ViewTransition` cannot animate a
+  sync-store update, the browser's `document.startViewTransition` with `flushSync` is
+  the same API with no dependency, so it keeps D5's intent; the delivery says which it
+  used.
 
 ## Starting point
 
-Audited at `e75d846`: React 19.3.1 exports `ViewTransition` and `addTransitionType`.
-A moved item is drawn anew in another list (`RoadmapItems`' focus request), so the two
-ends share a transition by the item's key as its `name`.
+Audited at `e75d846` against react-dom 19.3.1's source:
+
+- React exports `ViewTransition` and `addTransitionType`, but starts a view transition
+  only for a transition lane. Pending edits are read through `useSyncExternalStore`
+  (`pending-changes-context.ts`), whose updates are always sync, so a `store.update`
+  never animates, even inside `startTransition`. The move must reach the page on a
+  transition lane (a transition-lane mirror of the store, or `useDeferredValue`), or
+  be wrapped in `document.startViewTransition` with `flushSync` (D6).
+- React holds a new commit until a running view transition finishes. For S3, skip the
+  running one first (`ViewTransition.skipTransition()` on the document's active
+  transition), so the second move is not delayed.
+- A moved item is drawn anew in another list (`RoadmapItems`' focus request), so the
+  two ends pair by a shared `view-transition-name`. Do not use the card key: an item
+  read without an ID keys by position and its text (`item-card-keys.ts`), which
+  changes as it moves, and React escapes an invalid name with `btoa`, which throws on
+  any character outside Latin-1 ("Tŷ", an en dash). Name it from the item's ID,
+  sanitised, and give an item without one no name, so it shows at once, marked.
+- `globals.css`'s reduced-motion rule does not reach `::view-transition-*`, so S4's
+  gate is the code's.
 
 ## Out of scope
 

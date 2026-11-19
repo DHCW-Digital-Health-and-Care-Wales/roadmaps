@@ -31,7 +31,7 @@ which draws the page's items area with every Move menu working.
 ### F1 — After a click or a tap, nothing marks the moved item
 
 After a move the item takes focus on its Move (`EditableItem`'s `onFocusRequest`,
-STY-050 S5), but focus is drawn only for the keyboard (`focus-visible`). The status
+STY-050 S2), but focus is drawn only for the keyboard (`focus-visible`). The status
 line that says "Moved down. 2 of 4." is `sr-only` (`RoadmapItems`). A mouse or touch
 user sees the page redrawn, nothing more.
 
@@ -57,7 +57,7 @@ left says it went, and the status line says nothing (only `reorder` announces).
 3. A move from the Move menu shows the item travelling from where it was to where it
    lands, the items it passes moving aside, across placements too; then the mark
    (F2, F3). STY-072.
-4. "Undo order" shows the items travelling back to their published order (F2).
+4. "Undo order" shows the items travelling to where it puts them (F2).
    STY-073.
 5. **Unchanged:** the Move menu, its choices, where a moved item lands, the item
    dialog; the pending edits a move makes, "Order changed", "Undo order", "Changed",
@@ -70,22 +70,24 @@ left says it went, and the status line says nothing (only `reorder` announces).
 
 The moved mark is the page's own state, never a pending edit: it changes nothing kept,
 counted, written or published, and it does not survive leaving the page or a reload.
-At most one item carries it. It is shown while the item is still where the move put
-it, so an undo or a re-read that puts the item elsewhere clears it, and a re-read that
-leaves the move pending keeps it.
+At most one item carries it. What clears it and what keeps it is STY-071's S7 and S8:
+the owner's list, not a rule derived from where the item stands.
 
 ### Reduced motion
 
 Where the Product Lead's system asks for reduced motion, nothing travels and the page
-jumps rather than glides; the mark shows as it always does. `globals.css` already cuts
-every animation and transition to 0.01ms under `prefers-reduced-motion`, so a mark
-must never depend on an animation to be seen.
+jumps rather than glides; the mark shows as it always does. `globals.css` cuts every
+animation and transition on `*, ::before, ::after` to 0.01ms under
+`prefers-reduced-motion`, so a mark must never depend on an animation to be seen. That
+selector does not reach the `::view-transition-*` pseudo-elements, so the slides gate
+on reduced motion themselves (STY-072 S4).
 
 ### Motion is built with React's `ViewTransition`
 
 The slides use React's `ViewTransition` (in React 19.3) over the browser's View
-Transitions API: no new dependency, so ADR-005 is not reopened. A browser without the
-API shows the move at once, marked.
+Transitions API, or that API directly where React's cannot reach (STY-072 D6): no new
+dependency, so ADR-005 is not reopened. A browser without the API shows the move at
+once, marked.
 
 ### Copy
 

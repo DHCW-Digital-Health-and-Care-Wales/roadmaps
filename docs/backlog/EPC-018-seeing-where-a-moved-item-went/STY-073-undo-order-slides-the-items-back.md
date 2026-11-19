@@ -10,18 +10,24 @@
 
 ## Summary
 
-"Undo order" puts a placement's items back in their published order at once, which
-can look like nothing happened. This story lets each item travel back to its place, as
-a move does, then leaves the page as published. Not in it: marking the items, since
-nothing is left to find; and "Discard all", which STY-074 holds as an idea.
+"Undo order" puts a placement's items back in their default order at once (those
+last read, then those moved in or added), which can look like nothing happened. This
+story lets each item travel to where the undo puts it, as a move does; what "Undo
+order" does is unchanged. Not in it: marking the items, since nothing is left to find;
+and "Discard all", which STY-074 holds as an idea.
 
 ## Acceptance criteria
 
 ### S1: The items travel back (owner, D1)
 
-**Given** Now's order pending, after moves
+**Given** Now's order pending, after moves, with an item moved in from Next and an item
+added and not yet published among Now's items
 **When** the Product Lead chooses "Undo order" beside Now's heading
-**Then** each item out of place travels to its published place, in about 0.4 seconds
+**Then** each item travels, in about 0.4 seconds, to where "Undo order" puts it today
+(STY-050): Now's items as last read in their read order, then the moved-in and new
+items, last, in the order they arrived
+**And** every other pending edit stays: the moved-in item's placement, the new item,
+and any item's changed fields
 **And** no item is marked, and STY-071's mark, where it was in Now, is gone
 **And** focus goes to Now's heading and "Order of Now undone" is said, as today
 
@@ -29,7 +35,7 @@ nothing is left to find; and "Discard all", which STY-074 holds as an idea.
 
 **Given** the system asks for reduced motion, or the browser has no view transitions
 **When** the Product Lead chooses "Undo order"
-**Then** the items show at once in their published order, as today
+**Then** the items show at once where "Undo order" puts them, as today
 
 ## Decisions
 

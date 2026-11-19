@@ -11,8 +11,9 @@ import {
   itemOf,
   main,
   moveButton,
+  openProductA,
 } from "./fixtures/moved-items"
-import { connect, expect, test } from "./fixtures/test"
+import { expect, test } from "./fixtures/test"
 
 /**
  * STY-072: after a choice in the Move menu, the item travels from where it was to where
@@ -109,12 +110,7 @@ const nameOf = (page: Page, title: string) =>
   )
 
 async function open(page: Page) {
-  await page.setViewportSize(DESKTOP)
-  await page.goto("./#/roadmaps/producta")
-  await connect(page)
-  await expect(
-    main(page).getByRole("heading", { level: 3, name: "Minimal card" }),
-  ).toBeVisible()
+  await openProductA(page, DESKTOP)
   await publishOnce(page)
 }
 

@@ -46,12 +46,14 @@ export async function boxesOf<Locators extends Locator[]>(
   }
 }
 
+/** The middle of `box`, down the viewport. */
+export const centre = (box: Box): number => box.y + box.height / 2
+
 /**
- * Whether `box` is level with `other` (centres within 4px), or wholly under it: where a
- * row of controls wraps, the next line.
+ * Whether `box` is level with `other` (centres within 4px), or `other` is wholly under
+ * it: where a row of controls wraps, `box` the tags and `other` the buttons that follow.
  */
 export function levelWithOrUnder(box: Box, other: Box): boolean {
-  const centre = (each: Box) => each.y + each.height / 2
   return Math.abs(centre(box) - centre(other)) < 4 || other.y >= box.bottom
 }
 

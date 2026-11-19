@@ -2,7 +2,7 @@ import type { Locator, Page } from "@playwright/test"
 
 import { addItem, confirmRemoval, openEditItemDialog } from "./fixtures/dialogs"
 import { withTabItems } from "./fixtures/fake-sheets"
-import { type Box, boxesOf, boxOf, levelWithOrUnder } from "./fixtures/layout"
+import { boxesOf, boxOf, centre, levelWithOrUnder } from "./fixtures/layout"
 import { openWithItems, withItems, words } from "./fixtures/long-fields"
 import {
   chooseCompact,
@@ -31,7 +31,6 @@ const tagOf = (item: Locator, text: RegExp | string): Locator =>
   item.locator('[data-slot="badge"]').filter({ hasText: text })
 
 const MOVED = /^(Moved|Placed)/
-const centre = (box: Box) => box.y + box.height / 2
 
 for (const [device, size] of [
   ["a desktop", DESKTOP],

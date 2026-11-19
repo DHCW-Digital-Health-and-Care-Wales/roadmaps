@@ -119,9 +119,9 @@ centred on the line
 
 **Given** the editor in Welsh
 **When** each place in S1–S8 shows
-**Then** each site's Welsh label (the card's "Tagiau" and "Sefydliadau", the form's, the
-review's and "What changes"'s "Tagiau (Saesneg)" and "Sefydliadau") has the same icon
-before it
+**Then** each site's Welsh label has the same icon before it: "Tagiau" on the card and
+on the form's locked tags, "Tagiau (Saesneg)" on the form's editable field, in the review
+and in "What changes", and "Sefydliadau" for Organisations everywhere
 **And** the rebuilt refusal line reads as natural Welsh, with the icon before the field
 name, written with the `copywriter` skill
 

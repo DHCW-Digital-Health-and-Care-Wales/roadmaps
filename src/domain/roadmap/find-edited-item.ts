@@ -8,7 +8,7 @@ import {
   EDITABLE_ITEM_FIELDS,
   type EditableItemField,
   isItemTextField,
-  type ItemChanges,
+  type ItemTarget,
   type ItemTextField,
   itemValue,
   itemWelsh,
@@ -16,7 +16,7 @@ import {
 import type { RoadmapItem } from "./roadmap-item"
 
 /**
- * The edited item's index in `items`, or -1: by its ID, the first item holding it,
+ * The edited (or removed) item's index in `items`, or -1: by its ID, the first item holding it,
  * which must still hold what was loaded when `repeatedIds` has the ID; with no ID, at
  * its position, which must hold exactly what was loaded. Either may instead hold that
  * content with the pending values, written by a publish whose answer was lost.
@@ -24,7 +24,7 @@ import type { RoadmapItem } from "./roadmap-item"
 export function findEditedItem(
   items: readonly RoadmapItem[],
   repeatedIds: ReadonlySet<string>,
-  { item, position }: ItemChanges,
+  { item, position }: ItemTarget,
   pending: PendingItemValues,
 ): number {
   const index =

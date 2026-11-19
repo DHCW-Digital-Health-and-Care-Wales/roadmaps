@@ -190,8 +190,9 @@ type IndexCells = readonly (readonly [RoadmapIndexWriteColumn, string])[]
  * `Families` and `Categories` tabs that link each roadmap to its family and category
  * (ADR-013). A roadmap's items take one more read, of the tab its index row names
  * (ADR-011). A publish makes those reads, then one all-or-nothing `batchUpdate`
- * (ADR-012), which also moves the row of each moved item (STY-051) and appends a row
- * for each new item (STY-045); so does adding or changing a family (STY-029), and
+ * (ADR-012), which also moves the row of each moved item (STY-051), appends a row
+ * for each new item (STY-045) and deletes the row of each item removed (STY-070); so
+ * does adding or changing a family (STY-029), and
  * adding a roadmap, which also reads the `Template` tab's header (STY-040).
  */
 export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
@@ -263,8 +264,9 @@ export class GoogleSheetsRoadmapRepository implements RoadmapRepository {
    * (ADR-012): each changed cell, then the row of each moved item, to last in its new
    * placement (STY-051) or to where its placement's pending order has it (STY-050), then
    * a row for each new item, inserted where such an order has it or else put by Google
-   * after the last row any value uses as it applies the write. A write whose answer is
-   * lost is settled by one more read (Option 16).
+   * after the last row any value uses as it applies the write, then the row of each
+   * item removed, deleted (STY-070). A write whose answer is lost is settled by one
+   * more read (Option 16).
    */
   async publishRoadmapChanges(
     roadmapId: string,
@@ -1064,7 +1066,8 @@ function snapshotOf({
  * first, then headers, then cells, at the rows as read, then each moved item's row
  * (STY-051, STY-050), then a row for each new item: inserted just before the item a
  * pending order puts after it, or else appended after the tab's last row in use
- * (STY-045, STY-050 S8).
+ * (STY-045, STY-050 S8), then each removed item's row deleted, or cleared when it
+ * would leave the tab no row that is not frozen (STY-070).
  */
 function batchRequests(
   read: RoadmapRead,
@@ -1117,6 +1120,7 @@ function batchRequests(
     if (before === undefined) tab.append(cells)
     else tab.insert(rowOf(before), cells)
   }
+  for (const { index: i } of writes.removals) tab.remove(rowOf(i))
   return [...index.requests(), ...tab.requests()]
 }
 

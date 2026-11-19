@@ -130,12 +130,14 @@ list (ADR-014).
 _Avoid_: Health board (only some are), customer
 
 **Pending edit**:
-A change to a roadmap or roadmap item, a new item, or a placement's order, that
-the Product Lead has made but not yet published or saved; the public site does not show
-it. It is kept in this browser tab, in memory, through an expired session, Reconnect
-and, if the Product Lead chooses, Disconnect. A change is kept with the value it was edited from, which a
-co-lead's change is found by; a new item has none, so it never conflicts with one. It
-is lost on closing the tab, after asking (ADR-012).
+A change to a roadmap or roadmap item, a new item, a placement's order, or the removal
+of an item, that the Product Lead has made but not yet published or saved; the public
+site does not show it. It is kept in this browser tab, in memory, through an expired
+session, Reconnect and, if the Product Lead chooses, Disconnect. A change is kept with
+the value it was edited from, which a co-lead's change is found by; a removal with the
+item as loaded; a new item has none, so it never conflicts with one. A removed item's
+other changes wait beneath its removal until it is undone (STY-070). It is lost on
+closing the tab, after asking (ADR-012).
 _Avoid_: Unsaved change, draft (drafts are a later feature)
 
 **Publish**:
@@ -156,8 +158,10 @@ _Avoid_: Publish (for a roadmap that is not published), store
 A field, or a placement's order, a co-lead changed in the data source, to a different
 value, after the Product Lead loaded what they have edited. Any change a co-lead makes
 to a placement's items is one to its order: a reorder, or an item added, moved in,
-moved out or removed (STY-050). Publishing stops until, for each conflict, the
-Product Lead keeps their change or uses the co-lead's (ADR-012).
+moved out or removed (STY-050). Any change a co-lead makes to a field of an item the
+Product Lead has removed is one to the removal; a reorder alone is not (STY-070).
+Publishing stops until, for each conflict, the Product Lead keeps their change or uses
+the co-lead's (ADR-012).
 _Avoid_: Clash, merge conflict
 
 **Last updated**:

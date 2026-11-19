@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 
+import { removeItem } from "@/domain/roadmap/item-removal"
 import { addNewItem } from "@/domain/roadmap/new-item"
 import { planRoadmapPublish } from "@/domain/roadmap/publish-plan"
 import {
@@ -1151,5 +1152,33 @@ describe("a new item (STY-045)", () => {
         addingItems(NEW_CLINIC),
       ),
     ).toBe(true)
+  })
+})
+
+describe("a removed item (STY-070)", () => {
+  const edited = editItem(NO_CHANGES, undefined, first, 0, { phase: "Beta" })
+  const removed = removeItem(removeItem(edited, first, 0), second, 1)
+
+  it("is no longer pending once the publish it was sent in lands, with the edits beneath it, and one removed since is (S1)", () => {
+    const sent = removeItem(edited, first, 0)
+    const since = editItem(removed, undefined, second, 1, { phase: "Live" })
+
+    const settled = settlePublished(since, sent)
+
+    expect(settled.removals).toEqual([{ item: second, position: 1 }])
+    expect(settled.items.map(({ item }) => item)).toEqual([second])
+  })
+
+  it("is no longer pending over a read that no longer holds its ID, while one without an ID follows its item (S5)", () => {
+    const secondRead = { ...second, id: "secondid" }
+
+    expect(
+      reconcileItems(removed, [createTestRoadmapItem("Other"), secondRead])
+        .removals,
+    ).toEqual([{ item: secondRead, position: 1 }])
+    expect(reconcileItems(removed, [first, secondRead]).removals).toEqual([
+      { item: first, position: 0 },
+      { item: secondRead, position: 1 },
+    ])
   })
 })

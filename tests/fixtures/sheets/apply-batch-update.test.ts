@@ -935,3 +935,75 @@ describe("applyBatchUpdate inserting a row in a roadmap's tab (STY-050)", () => 
     ])
   })
 })
+
+describe("applyBatchUpdate removing a roadmap tab's rows (STY-070)", () => {
+  /** Product A's tab, which the index's row names: a frozen header and three item rows. */
+  const items = (): GridTab => ({
+    ...productA(),
+    rows: [
+      ["Title", "Horizon"],
+      ["A", "Now"],
+      ["B", "Next"],
+      ["C", "Later"],
+    ],
+    rowCount: 4,
+    frozenRowCount: 1,
+  })
+  const deleteRow = (sheetId: number, startIndex: number) => ({
+    deleteDimension: {
+      range: {
+        sheetId,
+        dimension: "ROWS",
+        startIndex,
+        endIndex: startIndex + 1,
+      },
+    },
+  })
+  const clearRow = (sheetId: number, startRowIndex: number) => ({
+    updateCells: {
+      range: { sheetId, startRowIndex, endRowIndex: startRowIndex + 1 },
+      fields: "*",
+    },
+  })
+
+  it("deletes a row of a roadmap's own tab, and clears one, with no violation", () => {
+    const result = applyBatchUpdate([index(), items()], {
+      requests: [deleteRow(10, 3), clearRow(10, 1)],
+    })
+
+    expect(result).toEqual({
+      tabs: [
+        index(),
+        {
+          ...items(),
+          rows: [["Title", "Horizon"], [], ["B", "Next"]],
+          rowCount: 3,
+        },
+      ],
+      violations: [],
+    })
+  })
+
+  it("rejects the whole body, as Google does, for every row that is not frozen deleted", () => {
+    expect(
+      applyBatchUpdate([index(), items()], {
+        requests: [deleteRow(10, 3), deleteRow(10, 2), deleteRow(10, 1)],
+      }),
+    ).toMatchObject({ error: expect.any(String) as string })
+  })
+
+  it("records a row deleted or cleared in a tab but a roadmap's own, or its header, as a violation", () => {
+    const violationsOf = (...requests: unknown[]) =>
+      applyBatchUpdate([index(), items()], { requests }).violations
+
+    expect(violationsOf(deleteRow(0, 1))).toEqual([
+      "deleteDimension on Roadmaps, not a tab this batchUpdate copied or a roadmap's own",
+    ])
+    expect(violationsOf(clearRow(0, 1))).toEqual([
+      "updateCells over a range on Roadmaps, not a tab this batchUpdate copied or a roadmap's own",
+    ])
+    expect(violationsOf(deleteRow(10, 0))).toEqual([
+      "deleteDimension of ProductA's header row",
+    ])
+  })
+})

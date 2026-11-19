@@ -142,3 +142,16 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   (`getByRole("status").filter({ hasText })`), never as the page's only status.
 - **A card's Move menu opens on a position**, when its placement shows two items or
   more: a test that steps through the menu by keyboard counts those choices first.
+- **A removal is `RoadmapChanges.removals`** (STY-070; its _Contract for dependents_,
+  archived, says what `removeItem`, `undoRemoval`, `removalOf`, `removeAnyway` and
+  `reconcileRemovals` do). A hand-written `RoadmapChanges` or `PublishWrites` needs
+  `removals`: spread `NO_CHANGES`. A removed item's edits stay in `items`, beneath the
+  removal, and only the publish plan skips them so far: whatever counts or shows an
+  item's changes asks `removalOf` first.
+- **A refusal may hold a removal**: its `missingItems` an `ItemRemoval`, which has no
+  `fields`, and its `conflicts` a `RemovalConflict` (`subject: "removal"`), which
+  `openConflicts` leaves out until the review draws it (STY-049).
+- **The Sheets fake allows deleting and clearing a roadmap tab's rows** (STY-070), as
+  it does a tab the same write copied, and refuses, as Google does, a write that
+  deletes every row that is not frozen; a test whose tab has a frozen header sets
+  `frozenRowCount` on it (`apply-batch-update.ts`).

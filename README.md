@@ -171,8 +171,22 @@ it writes the `Families` tab only as below.
   reordered placement in its order. A new item is
   written with the roadmap's other changes or not at all, and is not written again
   once a row of the tab holds its `Item ID` (STY-045);
+- a removed item: its row deleted (`deleteDimension`), with every cell it holds, its
+  Welsh and unknown columns included, its formatting and the references to it. Rows are
+  deleted after every cell write, row move, insert and append, the bottom row first,
+  each where those requests leave it, so no other row's cells are rewritten. An item
+  without an `Item ID` is found by its position, as an edited one is, and is deleted
+  without being given one. When the removed rows are every row of the tab's grid below
+  its frozen header, as removing every item of a roadmap the editor created is (its
+  grid is its header and a row per item), the top removed row is cleared instead, of
+  every cell, its format and dropdown too, as a copied `Template`'s first row is, since
+  Google keeps one row that is not frozen in every tab; a row without a title is no
+  item, so the roadmap reads with none. A row appended or inserted in the same write is
+  such a row, and then every removed row is deleted. A removal writes nothing when a
+  co-lead has changed any of the item's fields since it was loaded, and counts as done
+  when no row of the tab holds its `Item ID` (STY-070);
 - an `Item ID` for every item row it reads (one with a title) that has none, or repeats
-  another row's: eight random
+  another row's, but a row it deletes: eight random
   lower-case letters and digits starting with a letter, such as `k7q2xwbn`;
 - a chosen family: the index row's `Family ID`, `Family`, `Family (cy)` and `Colour`,
   copied from the `Families` tab as read at publish (`Colour` lower case, as

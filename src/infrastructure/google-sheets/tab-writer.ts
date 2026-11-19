@@ -96,6 +96,7 @@ export type BatchRequest =
       }
     }
   | {
+      /** Rows taken out of the grid, all they hold with them (STY-040, STY-070). */
       deleteDimension: {
         range: {
           sheetId: number
@@ -113,13 +114,17 @@ export type RowDestination = { after: number } | { before: number }
 const INSERTED_ROW = 0
 
 /**
- * Collects one tab's cell writes, row moves, inserted rows and appended rows. A column
- * the header lacks is added after the last column any row uses, with its English header
- * (ADR-012 Option 9), the grid growing to hold it; no existing column moves.
+ * Collects one tab's cell writes, row moves, inserted rows, appended rows and removed
+ * rows. A column the header lacks is added after the last column any row uses, with its
+ * English header (ADR-012 Option 9), the grid growing to hold it; no existing column
+ * moves.
  */
 export class TabWriter<Column extends string> {
   readonly #sheetId: number
   readonly #columnCount: number
+  /** Every row of the grid, the header and any blank rows below the last read included. */
+  readonly #rowCount: number
+  readonly #frozenRowCount: number
   readonly #columns: Map<Column, number>
   #width: number
   readonly #headers: BatchRequest[] = []
@@ -132,6 +137,8 @@ export class TabWriter<Column extends string> {
   readonly #order: number[]
   readonly #inserted: BatchRequest[] = []
   readonly #appended: BatchRequest[] = []
+  /** The rows to remove, numbered as `write` numbers them. */
+  readonly #removed = new Set<number>()
 
   constructor(
     { properties, rows }: TabRows,
@@ -142,6 +149,8 @@ export class TabWriter<Column extends string> {
     // Google drops trailing blank cells, so a row's length is where its last value ends.
     this.#width = Math.max(0, ...rows.map((row) => row.length))
     this.#columnCount = properties.gridProperties?.columnCount ?? this.#width
+    this.#rowCount = properties.gridProperties?.rowCount ?? rows.length
+    this.#frozenRowCount = properties.gridProperties?.frozenRowCount ?? 0
     this.#order = rows.map((_, index) => index + 1)
   }
 
@@ -252,8 +261,27 @@ export class TabWriter<Column extends string> {
   }
 
   /**
+   * Removes spreadsheet row `row`, a row as the tab was read, numbered as `write`
+   * numbers it (STY-070): the row is deleted (`deleteDimension`) with all it holds, once
+   * every other request has applied, where the moves and inserts leave it. Rows are
+   * removed the bottom row first, so each is still where those requests left it. Google
+   * keeps one row that is not frozen in every tab, so when no other would be left, and
+   * no row is appended, the top removed row that is not frozen is cleared of every cell
+   * instead, its format and checks too, as a copied `Template`'s is (STY-040, STY-070
+   * S3).
+   */
+  remove(row: number): void {
+    if (!this.#order.includes(row)) {
+      throw new AppError("unknown", {
+        message: "A row to remove is none the tab was read with",
+      })
+    }
+    this.#removed.add(row)
+  }
+
+  /**
    * Growing the grid first, then headers, then cells, then row moves, then inserted
-   * rows, each with its cells, then appended rows (STY-050 S8).
+   * rows, each with its cells, then appended rows (STY-050 S8), then removed rows.
    */
   requests(): BatchRequest[] {
     const grow = this.#width - this.#columnCount
@@ -274,7 +302,44 @@ export class TabWriter<Column extends string> {
       ...this.#moves,
       ...this.#inserted,
       ...this.#appended,
+      ...this.#removals(),
     ]
+  }
+
+  /** The removed rows, each where every other request leaves it, the bottom row first. */
+  #removals(): BatchRequest[] {
+    const places = [...this.#removed]
+      .map((row) => this.#order.indexOf(row))
+      .sort((a, b) => b - a)
+    const inserted = this.#order.filter((row) => row === INSERTED_ROW).length
+    const unfrozen = places.filter((place) => place >= this.#frozenRowCount)
+    const noRowLeft =
+      this.#appended.length === 0 &&
+      unfrozen.length >= this.#rowCount + inserted - this.#frozenRowCount
+    const cleared = noRowLeft ? unfrozen.at(-1) : undefined
+    return places.map((place): BatchRequest =>
+      place === cleared
+        ? {
+            updateCells: {
+              range: {
+                sheetId: this.#sheetId,
+                startRowIndex: place,
+                endRowIndex: place + 1,
+              },
+              fields: "*",
+            },
+          }
+        : {
+            deleteDimension: {
+              range: {
+                sheetId: this.#sheetId,
+                dimension: "ROWS",
+                startIndex: place,
+                endIndex: place + 1,
+              },
+            },
+          },
+    )
   }
 
   /** Where `column` is, adding it with its header when the tab has none. */

@@ -45,9 +45,10 @@ export interface FakeTab {
 /**
  * A read the app makes: the tab list (`metadata`), the values of the tab with this
  * title (`values:Roadmaps`), or the header row alone of the `Template` tab
- * (`header:Template`). A list load is the tab list, then the first tab's values; a
- * roadmap's items read both again, then add its own tab's values (ADR-011); adding a
- * roadmap reads the index and the lists, then the `Template`'s header (STY-040).
+ * (`header:Template`). A list load is the tab list, then the first tab's values and
+ * those of a `Families` or `Categories` tab; a roadmap's items read all of those
+ * again, then add its own tab's values (ADR-011); adding a roadmap reads the index and
+ * the lists, then the `Template`'s header (STY-040).
  */
 export type SheetsRead = "metadata" | `values:${string}` | `header:${string}`
 

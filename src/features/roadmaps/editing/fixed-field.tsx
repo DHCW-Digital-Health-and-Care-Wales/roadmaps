@@ -3,7 +3,7 @@ import { useId, type ReactNode, type Ref } from "react"
 import { FieldError } from "../components/field-error"
 
 export interface FixedFieldProps {
-  label: string
+  label: ReactNode
   text: ReactNode
   /** Why it can't be changed. */
   notice: string

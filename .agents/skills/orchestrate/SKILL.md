@@ -140,10 +140,14 @@ agent and `<run-folder>/progress/<ITEM>-handoff.md`.
      record-only commit to the item's PR while it is open; once it is
      merged, name the answer in the item's retrospective brief, and that
      PR adds the entry.
-   - On a fallback wake, read the child's handoff record and the progress
-     log. If they record its final hand-back (the reviewed PR or a blocker),
-     read its result and continue from item 3. Otherwise end the turn; the
-     next wake checks again.
+   - On a fallback wake or an interim completion, read the child's handoff
+     record and the progress log. If they record its final hand-back (the
+     reviewed PR or a blocker), read its result and continue from item 3.
+     Otherwise read the child's status from the runtime: a child terminal
+     (`delegation.md`) without that hand-back has stalled, since no
+     completion will wake it, so message it to continue from its handoff
+     where the runtime can, else replace it from there. Then end the turn;
+     the next wake checks again.
    - Delete the fallback wake once the child's final hand-back reaches this
      session by either path. A yield's interim completion keeps it running.
    - On a completion that reports the child failed, read its status from the

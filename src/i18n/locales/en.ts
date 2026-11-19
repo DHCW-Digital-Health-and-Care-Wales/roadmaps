@@ -877,8 +877,11 @@ export const en = {
             publish: "Choose which to keep for each, then publish again.",
             save: "Choose which to keep for each, then save again.",
           },
-          /** A field to decide: "First item: Title", or "Product details: Vision". */
-          target: "{{subject}}: {{field}}",
+          /**
+           * What leads the line naming a field to decide, before the field's name:
+           * "First item:", or "Product details:" (the name is a node, for its icon).
+           */
+          targetLead: "{{subject}}:",
           yours: "Your change",
           theirs: "Current text",
           /** A placement's order to decide, as its field: "Now: Order" (STY-050). */

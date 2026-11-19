@@ -1,3 +1,4 @@
+import { Fragment, type ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
 import { localise } from "@/domain/roadmap/localised-text"
@@ -5,6 +6,7 @@ import type { RoadmapChanges } from "@/domain/roadmap/roadmap-changes"
 import { ROADMAP_PLACEMENTS } from "@/domain/roadmap/roadmap-placement"
 import { useLanguage } from "@/i18n"
 
+import { FieldName } from "../components/field-name"
 import { changedParts } from "./pending-changes"
 import { hasPendingOrder } from "./pending-orders"
 
@@ -13,9 +15,33 @@ export interface WhatChangesProps {
   changes: RoadmapChanges
 }
 
-/** The line of a part that is edited: its name, then the names of its changed fields. */
-function edited(key: string, name: string, fields: readonly string[]) {
-  return { key, name, change: fields.join(", ") }
+/** One line of the list: a part's name, then what changed in it. */
+interface ListedChange {
+  key: string
+  name: string
+  change: ReactNode
+}
+
+/**
+ * The line of a part that is edited: its name, then the names of its changed fields,
+ * separated by commas, each a node so a field's icon can stand before its name
+ * (STY-079 S7).
+ */
+function edited(
+  key: string,
+  name: string,
+  fields: readonly { field: string; name: ReactNode }[],
+): ListedChange {
+  return {
+    key,
+    name,
+    change: fields.map((each, index) => (
+      <Fragment key={each.field}>
+        {index > 0 && ", "}
+        {each.name}
+      </Fragment>
+    )),
+  }
 }
 
 /**
@@ -31,16 +57,17 @@ export function WhatChanges({ changes }: WhatChangesProps) {
   const { t } = useTranslation()
   const language = useLanguage()
   const parts = changedParts(changes)
-  const listed = [
+  const listed: ListedChange[] = [
     ...parts.flatMap((part) =>
       part.kind === "roadmap"
         ? [
             edited(
               "roadmap",
               t("roadmaps.productDetails.title"),
-              part.fields.map((field) =>
-                t(`roadmaps.edit.roadmapFields.${field}`),
-              ),
+              part.fields.map((field) => ({
+                field,
+                name: t(`roadmaps.edit.roadmapFields.${field}`),
+              })),
             ),
           ]
         : [],
@@ -59,9 +86,14 @@ export function WhatChanges({ changes }: WhatChangesProps) {
             edited(
               `item-${String(part.position)}`,
               localise(part.item.title, language),
-              part.fields.map((field) =>
-                t(`roadmaps.edit.itemFields.${field}`),
-              ),
+              part.fields.map((field) => ({
+                field,
+                name: (
+                  <FieldName field={field}>
+                    {t(`roadmaps.edit.itemFields.${field}`)}
+                  </FieldName>
+                ),
+              })),
             ),
           ]
         // An item removed is one change, whatever is pending beneath it (STY-049 S5).

@@ -1,7 +1,7 @@
 # EPC-020: Icons before Tags and Organisations — two lists of labels read as plain text
 
-- **Status**: Active — one story, raised and grilled by the owner on 2026-11-19
-- **Progress**: 0 of 1 terminal; next selectable: STY-079; blocked on: none
+- **Status**: Done — one story, raised and grilled by the owner on 2026-11-19, delivered
+- **Progress**: 1 of 1 terminal (STY-079)
 - **Binding ADRs**: ADR-008, ADR-010
 
 ## Summary
@@ -68,7 +68,7 @@ written with the `copywriter` skill in English and Welsh (ADR-008).
 
 | ID      | Story                                                                                                                 | Area               | Depends on | State |
 | ------- | --------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------- | ----- |
-| STY-079 | [A tag icon before "Tags" and a building icon before "Organisations"](STY-079-icons-before-tags-and-organisations.md) | Features/UI + i18n | —          |       |
+| STY-079 | [A tag icon before "Tags" and a building icon before "Organisations"](STY-079-icons-before-tags-and-organisations.md) | Features/UI + i18n | —          | ✅    |
 
 ## Sequencing
 
@@ -87,7 +87,7 @@ None.
 
 ## Related
 
-- [EPC-009](../_archive/EPC-009-item-tags/README.md): the tags field and its card text
-- [EPC-007](../_archive/EPC-007-item-placement-and-organisations/README.md): the
+- [EPC-009](../EPC-009-item-tags/README.md): the tags field and its card text
+- [EPC-007](../EPC-007-item-placement-and-organisations/README.md): the
   organisations the item names
 - ADR-010 (DHCW look): why the icon takes the label's colour

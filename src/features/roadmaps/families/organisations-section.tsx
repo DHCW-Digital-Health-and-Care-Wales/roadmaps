@@ -4,6 +4,7 @@ import { localise } from "@/domain/roadmap/localised-text"
 import type { Organisation } from "@/domain/roadmap/organisation"
 import { useLanguage } from "@/i18n"
 
+import { FieldName } from "../components/field-name"
 import { sortOrganisations } from "../sort-organisations"
 
 /**
@@ -26,7 +27,9 @@ export function OrganisationsSection({
     >
       <div className="flex flex-col gap-1.5">
         <h2 id="organisations-heading" className="text-heading-l">
-          {t("roadmaps.families.organisations.heading")}
+          <FieldName field="organisations">
+            {t("roadmaps.families.organisations.heading")}
+          </FieldName>
         </h2>
         <p className="text-muted-foreground">
           {t("roadmaps.families.organisations.description")}

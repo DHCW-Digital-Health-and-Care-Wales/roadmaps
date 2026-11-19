@@ -24,7 +24,7 @@ known.
 
 On DEF-016's branch (no screen changed from the default branch at `dd19400`):
 
-1. `./node_modules/.bin/playwright test tests/e2e/roadmap-items-compact.spec.ts -g "opens and closes a row by a press" --repeat-each=4`
+1. `./node_modules/.bin/playwright test tests/e2e/roadmap-items-compact.spec.ts -g "opens and closes a row by a press on its line at 1280px" --repeat-each=4`
 
 **Expected**: all 4 runs pass.
 **Actual**: 1 of 4 failed (3 passed) at the last of its first three presses, with

@@ -104,6 +104,10 @@ to give out, so the longer wait slows only a test that is already failing.
 
 ### Departures
 
+- **Cause confirmed** (agent): the Cause above was suspected. The first page test of
+  each file also paid for lazy route loading (above); the rest is jsdom time that
+  follows the host's load.
+
 - **No screenshots** (agent): the fix changes test configuration only; no screen
   changes.
 - **The suite has 3,018 tests, not the record's 2,996** (agent): stories merged since
@@ -119,6 +123,6 @@ lazy-loading (pending) state; none does today, and the E2E suite runs the split 
 
 ### Scenario evidence
 
-| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1       | At base `02e8e41`, two full `vitest run`s at once (load 5.6 before, peak 20) failed 13 and 2 of 3,018: 12 `findBy` waits and 3 test timeouts. With the fix, three times from load under 2 (1.98, 1.94, 1.81), each beside a second full run, peak load 20.9 to 21.0: all six runs passed 3,018 of 3,018. Their slowest page tests took 5.5 to 6.4 s (`changed-roadmaps-only` S1), with `roadmap-detail-page-moving` and `-adding` at 5.1 to 5.4 s; `scripts/worktree/worktree.test.ts`'s 20 s test has its own budget. |
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| S1       | At base `02e8e41`, two full `vitest run`s at once (load 5.6 before, peak 20) failed 13 and 2 of 3,018: 12 `findBy` waits and 3 test timeouts. With the fix, three times from load under 2 (1.98, 1.94, 1.81), each beside a second full run, peak load 20.9 to 21.0: all six runs passed 3,018 of 3,018. Their slowest page tests took 5.5 to 6.4 s (`changed-roadmaps-only` S1), with `roadmap-detail-page-moving` and `-adding` at 5.1 to 5.4 s; `scripts/worktree/worktree.test.ts`'s slowest test, at about 20 s, sets its own budget. |

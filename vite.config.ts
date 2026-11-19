@@ -24,8 +24,9 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(resolveBuildVersion(version, process.env)),
   },
   plugins: [
-    // Must come before the React plugin (TanStack Router docs). Vitest loads every route
-    // with the router, so a file's first test does not pay to load its pages (DEF-022).
+    // Must come before the React plugin (TanStack Router docs). Under Vitest, routes load
+    // eagerly, with no code splitting, so a file's first test does not pay to import its
+    // pages (DEF-022).
     tanstackRouter({ target: "react", autoCodeSplitting: !process.env.VITEST }),
     react(),
     tailwindcss(),

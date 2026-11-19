@@ -8,6 +8,7 @@ import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 
 import { ItemDialog } from "../dialogs/item-dialog"
 import { EditableItem, type ItemControl } from "../editing/editable-item"
+import { travelNames } from "../editing/item-travel"
 import type { MarkMoved, MovedMark, PageMovedMark } from "../editing/moved-mark"
 import {
   groupPageItemsWith,
@@ -74,6 +75,8 @@ export interface RoadmapItemsProps {
  * is no stop of its placement's order: the others' positions count without it (S8).
  * The item moved last carries the moved mark (STY-071); a move to another placement
  * from the Move menu is said in the status line too, with where it shows there (S5).
+ * A move from the Move menu travels there first, across lists too, each item paired
+ * with itself by its view transition name (STY-072).
  */
 export function RoadmapItems({
   roadmapId,
@@ -144,6 +147,7 @@ export function RoadmapItems({
     )
   }
   const panelAddButton = useRef<HTMLButtonElement>(null)
+  const names = useMemo(() => travelNames(pageItems), [pageItems])
 
   const list = (
     placed: readonly Positioned<PageItem>[],
@@ -161,6 +165,7 @@ export function RoadmapItems({
       focus={focus}
       cardHandlers={cardHandlers}
       mark={movedMark.mark}
+      travelNames={names}
       onMovedByMenu={movedByMenu}
       onEdit={itemDialog.edit}
       onRemove={removalDialog.ask}
@@ -283,6 +288,8 @@ interface ItemListProps {
   }
   /** The item moved last, if one is marked. */
   mark: MovedMark | null
+  /** Each item's view transition name, by card key (`travelNames`, STY-072). */
+  travelNames: ReadonlyMap<string, string>
   onMovedByMenu: MarkMoved
   onEdit: (position: number) => void
   onRemove: (position: number) => void
@@ -303,6 +310,7 @@ function ItemList({
   focus,
   cardHandlers,
   mark,
+  travelNames,
   onMovedByMenu,
   onEdit,
   onRemove,
@@ -327,6 +335,7 @@ function ItemList({
           order={orderOf(ordered, stopAt.get(position), stops.length)}
           onAnnounce={cardHandlers.announce}
           mark={mark?.key === pageItem.key ? mark : undefined}
+          travelName={travelNames.get(pageItem.key)}
           onMovedByMenu={onMovedByMenu}
           focusRequest={
             focus?.position === position ? focus.control : undefined

@@ -24,6 +24,7 @@ import {
   PendingTag,
   RemoveButton,
 } from "./edit-controls"
+import { travel } from "./item-travel"
 import { MoveMenu } from "./move-menu"
 import { MovedLabel } from "./moved-label"
 import type { MarkMoved, MovedMark } from "./moved-mark"
@@ -57,6 +58,11 @@ export interface EditableItemProps {
   onAnnounce: (message: string) => void
   /** The moved mark, when the item carries it (STY-071). */
   mark?: MovedMark | undefined
+  /**
+   * The view transition name its card or row travels by after a move from its Move
+   * menu (`travelNames`, STY-072); none for an item that shows at once where it lands.
+   */
+  travelName?: string | undefined
   /**
    * The Move menu moved the item: it takes the moved mark, and a move to another
    * placement is said where it lands (STY-071 S5).
@@ -98,7 +104,8 @@ export type ItemControl = "edit" | "move" | "remove" | "undo-removal"
  * shows where it did, struck through and tagged "Removed", with "Undo removal", which
  * brings back its edits too, and its Move and Edit held (STY-049 S2, S3, D6). The item
  * moved last carries the moved mark (STY-071), and the page scrolls to it, once, as
- * focus comes to it after the move (S4). Nothing is written until the roadmap is
+ * focus comes to it after the move (S4); after a move from its Move menu it travels
+ * there first, raised above the items it passes (STY-072). Nothing is written until the roadmap is
  * published.
  */
 export function EditableItem({
@@ -111,6 +118,7 @@ export function EditableItem({
   order,
   onAnnounce,
   mark,
+  travelName,
   onMovedByMenu,
   focusRequest,
   onFocusRequest,
@@ -175,34 +183,40 @@ export function EditableItem({
   const label = (shortens: boolean) =>
     mark && <MovedLabel move={mark.move} shortens={shortens} />
 
+  // A move from the Move menu travels to where it lands (STY-072); one from a dialog
+  // does not (D3).
   const move = (placement: RoadmapPlacement) => {
     if (!editable) return
-    store.update(roadmapId, (changes) =>
-      editPageItem(changes, items, pageItem, position, { placement }),
-    )
-    onMovedByMenu(
-      pageItem,
-      { kind: "placement", from: shown.placement },
-      placement,
-    )
-    onFocusRequest(position, "move")
+    travel("across", () => {
+      store.update(roadmapId, (changes) =>
+        editPageItem(changes, items, pageItem, position, { placement }),
+      )
+      onMovedByMenu(
+        pageItem,
+        { kind: "placement", from: shown.placement },
+        placement,
+      )
+      onFocusRequest(position, "move")
+    })
   }
   const reorder = (to: OrderMove) => {
     if (!order || publishing || removal) return
-    store.update(roadmapId, (changes) =>
-      reorderItem(changes, items, position, to),
-    )
-    const at = positionAfter(order.at, order.count, to)
-    if (shown.placement !== null)
-      onMovedByMenu(pageItem, { kind: to }, shown.placement)
-    onAnnounce(
-      t(`roadmaps.edit.order.moved.${to}`, {
-        position: at + 1,
-        count: order.count,
-      }),
-    )
-    // It is drawn again in its new place: focus goes back to its Move.
-    onFocusRequest(position, "move")
+    travel("within", () => {
+      store.update(roadmapId, (changes) =>
+        reorderItem(changes, items, position, to),
+      )
+      const at = positionAfter(order.at, order.count, to)
+      if (shown.placement !== null)
+        onMovedByMenu(pageItem, { kind: to }, shown.placement)
+      onAnnounce(
+        t(`roadmaps.edit.order.moved.${to}`, {
+          position: at + 1,
+          count: order.count,
+        }),
+      )
+      // It is drawn again in its new place: focus goes back to its Move.
+      onFocusRequest(position, "move")
+    })
   }
   const drop = () => {
     if (!droppable) return
@@ -258,6 +272,7 @@ export function EditableItem({
         reveal={focusRequest === "remove" || focusRequest === "undo-removal"}
         tag={pending && <PendingTag pending={pending} subject={title} />}
         mark={label(true)}
+        travelName={travelName}
         onFocus={reveal}
         actions={(wide) => (
           <>
@@ -294,6 +309,7 @@ export function EditableItem({
       organisations={organisations}
       struck={removal !== undefined}
       mark={label(false)}
+      travelName={travelName}
       onFocus={reveal}
       actions={
         <EditControls

@@ -44,7 +44,7 @@ End-to-end tests of the production build, with Google faked (ADR-006).
   list's and the cards': scope a page's own to `main`. Playwright matches a role's name
   by substring, so name "More" `exact`.
 - Run a layout check with `reducedMotion: "reduce"` too: no transition runs, so a class
-  a bar gains takes effect in its own frame.
+  a bar gains takes effect in its own frame. Measure its border box.
 
 ## Look checks
 

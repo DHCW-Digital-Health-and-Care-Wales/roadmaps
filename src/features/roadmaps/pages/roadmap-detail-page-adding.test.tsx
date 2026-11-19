@@ -34,7 +34,7 @@ import {
   openEditItemDialog,
 } from "../testing/item-dialog"
 import { expectOpeningFocus } from "../testing/opening-focus"
-import { removeItem } from "../testing/removal-dialog"
+import { confirmRemoval } from "../testing/removal-dialog"
 import {
   closeConflictReview,
   goToList,
@@ -663,7 +663,7 @@ describe("A new item before it is published (STY-046 S6)", () => {
     await addItem(user, CLINIC, "Next")
     await addItem(user, CHECK_IN, "Next")
 
-    await removeItem(user, CLINIC)
+    await confirmRemoval(user, CLINIC)
 
     expect(titlesUnder("Next")).toEqual(["Text reminders", CHECK_IN])
     await waitFor(() => {
@@ -672,7 +672,7 @@ describe("A new item before it is published (STY-046 S6)", () => {
     expect(main().getByText("1 unpublished change")).toBeVisible()
     expect(main().queryByText("Removed")).toBeNull()
 
-    await removeItem(user, CHECK_IN)
+    await confirmRemoval(user, CHECK_IN)
 
     expect(main().queryByText(/unpublished change/)).toBeNull()
     await waitFor(() => {
@@ -1206,7 +1206,7 @@ describe("An empty roadmap (STY-046 S8)", () => {
       ).toHaveFocus()
     })
 
-    await removeItem(user, CLINIC)
+    await confirmRemoval(user, CLINIC)
 
     expect(
       main().getByRole("heading", { level: 2, name: "No items yet" }),

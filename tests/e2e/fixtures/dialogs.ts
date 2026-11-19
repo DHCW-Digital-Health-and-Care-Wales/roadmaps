@@ -321,7 +321,7 @@ export async function askToRemove(
  * Removes the item titled `title`, from its card's or row's Remove and the dialog's
  * Remove, and waits for the dialog to go.
  */
-export async function removeItem(
+export async function confirmRemoval(
   page: Page,
   title: string,
   language: Language = "en",

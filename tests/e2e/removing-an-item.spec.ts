@@ -7,7 +7,7 @@ import {
   clickOutside,
   cornerClose,
   publishOnce,
-  removeItem,
+  confirmRemoval,
 } from "./fixtures/dialogs"
 import { openConflictReview } from "./fixtures/roadmap-page"
 import { connect, expect, test } from "./fixtures/test"
@@ -134,7 +134,7 @@ test("a co-lead's change to a removed item is reviewed; Remove anyway then delet
   await openProductA(page)
   const main = page.getByRole("main")
   await publishOnce(page)
-  await removeItem(page, EXPLORED)
+  await confirmRemoval(page, EXPLORED)
   sheets.coLead("ProductA", EXPLORED, "Description", "Their reason")
 
   await main.getByRole("button", { name: "Publish changes" }).click()

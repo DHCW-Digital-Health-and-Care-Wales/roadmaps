@@ -459,7 +459,7 @@ export const en = {
           save: "It leaves the roadmap when you save.",
           new: "It's new, so it goes straight away.",
         },
-        /** With "Move to Not doing", which an item in Not doing or unplaced isn't offered (S11). */
+        /** Said beside "Move to Not doing", unless the item is in Not doing or unplaced (S11). */
         notDoing: {
           publish:
             "To show readers the work was dropped, move it to Not doing instead.",
@@ -884,6 +884,12 @@ export const en = {
             yours: "Removed",
             removeAnyway: "Remove anyway",
             keepItem: "Keep the item",
+            /**
+             * Under a field whose Welsh changed, or whose horizon as written changed
+             * while it is unplaced: what only the item shows, which the English may not.
+             */
+            welsh: "In Welsh: {{text}}",
+            writtenAs: "Written as “{{horizon}}”",
           },
           /** `title` is the item's title as it was loaded. */
           removed:

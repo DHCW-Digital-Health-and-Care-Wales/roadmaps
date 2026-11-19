@@ -7,7 +7,7 @@ import {
   editItemButton,
   openAddItemDialog,
   openEditItemDialog,
-  removeItem,
+  confirmRemoval,
   reviewFooterClose,
 } from "./fixtures/dialogs"
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
@@ -384,7 +384,7 @@ test("“Add and start another” keeps the dialog open; a new item is edited, m
   await expect(main.getByText("2 unpublished changes")).toBeVisible()
 
   // Remove asks first, then drops it at once (STY-049 S10); focus goes to "Add an item".
-  await removeItem(page, CLINIC)
+  await confirmRemoval(page, CLINIC)
   await expect(
     main.getByRole("heading", { level: 3, name: CLINIC }),
   ).toHaveCount(0)

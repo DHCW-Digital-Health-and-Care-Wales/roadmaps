@@ -31,6 +31,8 @@ export interface RoadmapItemsProps {
   /** The roadmap's items as last read. */
   items: readonly RoadmapItem[]
   organisations: readonly Organisation[]
+  /** The page's items, by position (`usePageItems`). */
+  pageItems: readonly PageItem[]
   /**
    * Those items as the page shows them, then the items new to it, by placement
    * (`groupPageItems`).
@@ -67,6 +69,7 @@ export function RoadmapItems({
   roadmapId,
   items,
   organisations,
+  pageItems,
   groups,
   view,
   itemDialog,
@@ -92,7 +95,6 @@ export function RoadmapItems({
     }),
     [],
   )
-  const pageItems = useMemo(() => byPosition(groups), [groups])
   const removalDialog = useRemovalDialog({
     roadmapId,
     action,
@@ -202,15 +204,16 @@ export function RoadmapItems({
   )
 }
 
-/** The page's items, each at its position, from where `groups` shows them. */
-function byPosition({
-  unplaced,
-  placements,
-}: RoadmapItemGroups<PageItem>): PageItem[] {
-  const all = [unplaced, ...placements.map(({ items }) => items)].flat()
-  const pageItems: PageItem[] = []
-  for (const { item, position } of all) pageItems[position] = item
-  return pageItems
+/**
+ * An item's place among its placement's items, `at` of `count`: none for an unplaced
+ * item, which is in no order, or a removed one, which has no place in it.
+ */
+function orderOf(
+  ordered: boolean,
+  at: number | undefined,
+  count: number,
+): { at: number; count: number } | undefined {
+  return ordered && at !== undefined ? { at, count } : undefined
 }
 
 /** The control of the item at `position` that focus goes to as it next renders. */
@@ -261,6 +264,7 @@ function ItemList({
   const List = view === "compact" ? CompactList : CardGrid
   // A removed item has no place in its placement's order (STY-049 S8).
   const stops = placed.filter(({ item }) => item.removal === undefined)
+  const stopAt = new Map(stops.map(({ position }, at) => [position, at]))
   return (
     <List aria-labelledby={labelledBy}>
       {placed.map(({ item: pageItem, position }) => (
@@ -272,14 +276,7 @@ function ItemList({
           organisations={organisations}
           view={view}
           position={position}
-          order={
-            ordered && pageItem.removal === undefined
-              ? {
-                  at: stops.findIndex((each) => each.position === position),
-                  count: stops.length,
-                }
-              : undefined
-          }
+          order={orderOf(ordered, stopAt.get(position), stops.length)}
           onAnnounce={cardHandlers.announce}
           focusRequest={
             focus?.position === position ? focus.control : undefined

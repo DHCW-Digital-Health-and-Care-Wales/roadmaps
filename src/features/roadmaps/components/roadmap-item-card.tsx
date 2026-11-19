@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils"
 
 import { HorizonFlag } from "./horizon-flag"
 import { ItemFields } from "./item-fields"
+import { STRUCK_TEXT_CLASSES } from "./struck-text"
 
 export interface RoadmapItemCardProps {
   item: RoadmapItem
@@ -37,12 +38,7 @@ export function RoadmapItemCard({
   const language = useLanguage()
   return (
     <li className="flex flex-col gap-3 border bg-card p-4 text-card-foreground shadow-card-bar">
-      <div
-        className={cn(
-          "flex flex-col gap-3",
-          struck && "text-muted-foreground line-through",
-        )}
-      >
+      <div className={cn("flex flex-col gap-3", struck && STRUCK_TEXT_CLASSES)}>
         <h3 className="text-heading-xs wrap-break-word whitespace-pre-line">
           {localise(item.title, language)}
         </h3>

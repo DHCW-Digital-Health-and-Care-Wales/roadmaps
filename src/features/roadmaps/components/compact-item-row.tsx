@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils"
 
 import { HorizonFlag } from "./horizon-flag"
 import { ItemFields } from "./item-fields"
+import { STRUCK_TEXT_CLASSES } from "./struck-text"
 
 export interface CompactItemRowProps {
   item: RoadmapItem
@@ -29,11 +30,8 @@ export interface CompactItemRowProps {
    * a phone's (D12).
    */
   actions: (wide: boolean) => ReactNode
-  /**
-   * "Undo changes", Remove or "Undo removal", at the foot of the opened row, if the
-   * item has one.
-   */
-  drop?: ReactNode
+  /** "Undo changes" and Remove, or "Undo removal", at the foot of the opened row. */
+  drop: ReactNode
   /**
    * Whether its text is struck through, as an item removed and not yet published is
    * (STY-049 S2): its controls are not.
@@ -56,9 +54,9 @@ export interface CompactItemRowProps {
  * stretch, so it can't be selected.
  *
  * Opened, its title and its flag show whole, then every field the item has, as a card
- * labels and cuts them (S6, S7), and `drop`. Its text is struck through when `struck`. Each row opens and closes by itself; it
- * starts closed, as the view does when it is drawn again (D11). A list item, for a
- * list of rows.
+ * labels and cuts them (S6, S7), and `drop`. Its text is struck through when `struck`.
+ * Each row opens and closes by itself; it starts closed, as the view does when it is
+ * drawn again (D11). A list item, for a list of rows.
  */
 export function CompactItemRow({
   item,
@@ -76,7 +74,7 @@ export function CompactItemRow({
   const description = item.description && localise(item.description, language)
   const horizon = item.writtenHorizon
   const wholeClasses = "wrap-break-word whitespace-pre-line"
-  const struckClasses = struck && "text-muted-foreground line-through"
+  const struckClasses = struck ? STRUCK_TEXT_CLASSES : undefined
 
   return (
     <Collapsible
@@ -167,14 +165,14 @@ export function CompactItemRow({
           wide ? "pr-4 pb-4 pl-13" : "pr-3 pb-3 pl-11",
         )}
       >
-        <div className={cn(struckClasses)}>
+        <div className={struckClasses}>
           <ItemFields
             item={item}
             organisations={organisations}
             columns={wide}
           />
         </div>
-        {drop && <div className="flex">{drop}</div>}
+        <div className="flex">{drop}</div>
       </CollapsibleContent>
     </Collapsible>
   )

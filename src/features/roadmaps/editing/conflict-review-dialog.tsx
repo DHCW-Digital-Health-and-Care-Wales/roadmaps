@@ -30,6 +30,7 @@ import {
   type OpenFieldConflict,
   type OpenOrderConflict,
   type OpenRemovalConflict,
+  removalFieldNotes,
 } from "./conflicts"
 import { type OrderLine, reviewedOrders } from "./order-review"
 import type { PageItem } from "./page-items"
@@ -65,12 +66,12 @@ export interface ConflictReviewDialogProps {
  * the page, which does not move (STY-052 D12): each field they changed that the
  * Product Lead also changed (`FieldConflictItem`), each placement's order
  * (`OrderConflictItem`, STY-050) and each item removed that they changed
- * (`RemovalConflictItem`, STY-049 S6), to keep or give up one by one, focus starting on the
- * first's Keep mine and moving to the next's as each is decided (D18). Tags or details
- * that have gained Welsh versions can only be given up (STY-037 S22, STY-039 S19). Once
- * every one is decided it names what was lost with removed items (D17) and says so,
- * with "Publish changes", focused, while anything is left to publish (D16), or Close
- * alone (D22).
+ * (`RemovalConflictItem`, STY-049 S6), to keep or give up one by one, focus starting
+ * on the first's Keep mine and moving to the next's as each is decided (D18). Tags or
+ * details that have gained Welsh versions can only be given up (STY-037 S22, STY-039
+ * S19). Once every one is decided it names what was lost with removed items (D17) and
+ * says so, with "Publish changes", focused, while anything is left to publish (D16), or
+ * Close alone (D22).
  */
 export function ConflictReviewDialog({
   open,
@@ -353,16 +354,17 @@ function FieldConflictItem({
 /**
  * An item's field's value as the review shows it: details as the nested list they will
  * read as, a placement by its heading, organisations as `describeOrganisations` names
- * them, and text as it is.
+ * them, with any codes the list doesn't know, and text as it is.
  */
 function useShownItemValue(): (
   field: EditableItemField,
   value: string,
+  unknownCodes?: readonly string[],
 ) => ReactNode {
   const { t } = useTranslation()
   const language = useLanguage()
   const { data: organisations } = useOrganisations()
-  return (field, value) => {
+  return (field, value, unknownCodes = []) => {
     switch (field) {
       case "details":
         // None reads "No text", as any other field does.
@@ -372,7 +374,12 @@ function useShownItemValue(): (
           ? t(`roadmaps.items.placements.${value}`)
           : t("roadmaps.items.unplaced.title")
       case "organisationIds":
-        return describeOrganisations(value, organisations, language)
+        return [
+          describeOrganisations(value, organisations, language),
+          ...unknownCodes,
+        ]
+          .filter((each) => each !== "")
+          .join(", ")
       default:
         return value
     }
@@ -406,20 +413,40 @@ function RemovalConflictItem({
         label: t("roadmaps.publish.notice.refused.theirs"),
         value: (
           <dl className="flex flex-col gap-2">
-            {conflict.fields.map(({ field, current }) => (
-              <div key={field} className="flex flex-col gap-0.5">
-                <dt className="font-bold">
-                  {t(`roadmaps.edit.itemFields.${field}`)}
-                </dt>
-                <dd>
-                  {current === "" ? (
-                    <i>{t("roadmaps.publish.notice.refused.empty")}</i>
-                  ) : (
-                    itemValue(field, current)
+            {conflict.fields.map(({ field, current }) => {
+              const notes = removalFieldNotes(conflict, field)
+              const removal = "roadmaps.publish.notice.refused.removal"
+              return (
+                <div key={field} className="flex flex-col gap-0.5">
+                  <dt className="font-bold">
+                    {t(`roadmaps.edit.itemFields.${field}`)}
+                  </dt>
+                  <dd>
+                    {current === "" && !notes.unknownCodes ? (
+                      <i>{t("roadmaps.publish.notice.refused.empty")}</i>
+                    ) : (
+                      itemValue(field, current, notes.unknownCodes)
+                    )}
+                  </dd>
+                  {notes.writtenHorizon !== undefined && (
+                    <dd>
+                      {t(`${removal}.writtenAs`, {
+                        horizon: notes.writtenHorizon,
+                      })}
+                    </dd>
                   )}
-                </dd>
-              </div>
-            ))}
+                  {notes.welsh !== undefined && (
+                    <dd className="whitespace-pre-line">
+                      {t(`${removal}.welsh`, {
+                        text:
+                          notes.welsh ||
+                          t("roadmaps.publish.notice.refused.empty"),
+                      })}
+                    </dd>
+                  )}
+                </div>
+              )
+            })}
           </dl>
         ),
       }}

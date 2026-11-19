@@ -160,7 +160,7 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   (`useRemovalDialog`, drawn by `RoadmapItems`), found again by card key after every
   read, as the item dialog is (STY-049). It moves no focus as it closes: the page
   sends it to the card's control the choice leaves (`ItemControl`). Tests go through
-  `askToRemove` and `removeItem`: in Vitest `features/roadmaps/testing/removal-dialog.ts`,
+  `askToRemove` and `confirmRemoval`: in Vitest `features/roadmaps/testing/removal-dialog.ts`,
   in Playwright `tests/e2e/fixtures/dialogs.ts`.
 - **The Sheets fake allows deleting and clearing a roadmap tab's rows** (STY-070), as
   it does a tab the same write copied, and refuses, as Google does, a write that

@@ -313,6 +313,7 @@ function RoadmapView({
       <RoadmapItemsArea
         roadmapId={roadmap.id}
         listFetching={listFetching}
+        pageItems={pageItems}
         groups={groups}
         view={itemsView}
         itemDialog={itemDialog}
@@ -325,7 +326,13 @@ function RoadmapView({
 
 interface RoadmapItemsAreaProps extends Pick<
   RoadmapItemsProps,
-  "roadmapId" | "groups" | "view" | "itemDialog" | "action" | "onItemRemoved"
+  | "roadmapId"
+  | "pageItems"
+  | "groups"
+  | "view"
+  | "itemDialog"
+  | "action"
+  | "onItemRemoved"
 > {
   /** The roadmap list is being read, as it is again once the roadmap is gone (D11). */
   listFetching: boolean

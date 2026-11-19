@@ -110,6 +110,8 @@ export function EditableItem({
   const publishing = !discardable(snapshot, roadmapId)
   const changeable = !isNew || !publishing
   const editable = changeable && !removal
+  // A removal sent can't be called back, so "Undo removal" waits too.
+  const droppable = removal ? !publishing : changeable
   const ownEditButton = useRef<HTMLButtonElement>(null)
   const editButton = dialogOpener ?? ownEditButton
   const moveButton = useRef<HTMLButtonElement>(null)
@@ -153,8 +155,8 @@ export function EditableItem({
     onFocusRequest(position, "move")
   }
   const drop = () => {
+    if (!droppable) return
     if (removal) {
-      if (publishing) return
       store.update(roadmapId, (changes) => undoRemoval(changes, removal))
       onFocusRequest(position, "remove")
       return
@@ -195,16 +197,7 @@ export function EditableItem({
       onRemove={remove}
     />
   )
-  const dropControl = (
-    <DropButton
-      subject={title}
-      pending={pending}
-      disabled={removal ? publishing : !changeable}
-      size="sm"
-      button={removal ? undoRemovalButton : undefined}
-      onDrop={drop}
-    />
-  )
+  const dropButton = removal ? undoRemovalButton : undefined
 
   if (view === "compact") {
     return (
@@ -228,7 +221,14 @@ export function EditableItem({
         )}
         drop={
           <div className="flex flex-wrap gap-2">
-            {dropControl}
+            <DropButton
+              subject={title}
+              pending={pending}
+              disabled={!droppable}
+              size="sm"
+              button={dropButton}
+              onDrop={drop}
+            />
             {removeControl}
           </div>
         }
@@ -245,9 +245,9 @@ export function EditableItem({
           subject={title}
           pending={pending}
           editable={editable}
-          droppable={removal ? !publishing : changeable}
+          droppable={droppable}
           editButton={editButton}
-          dropButton={removal ? undoRemovalButton : undefined}
+          dropButton={dropButton}
           remove={removeControl}
           move={moveMenu(false)}
           onEdit={edit}

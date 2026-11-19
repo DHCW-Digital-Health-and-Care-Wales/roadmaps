@@ -22,6 +22,7 @@ import {
   discardItems,
   keepMine,
   openConflicts,
+  removalFieldNotes,
   takeTheirs,
   withCurrentItemText,
   withCurrentRoadmapText,
@@ -636,6 +637,55 @@ describe("a removal's conflict (STY-070 S4)", () => {
       ["removal", "removal-first"],
       ["field", "item-second-title"],
     ])
+  })
+
+  it("closes a field's conflict of an item since removed: its edit counts for nothing beneath the removal (STY-049 S3)", () => {
+    const titleConflict = conflictOn(first, "title", "First, theirs")
+
+    expect(openConflicts([titleConflict], removing)).toEqual([])
+    expect(openConflicts([titleConflict], changes)).toHaveLength(1)
+  })
+
+  it("shows the item as the publish read it on the page, unless a read since changed it (STY-049 S6)", () => {
+    const items = [first.item, second.item]
+
+    const shown = withCurrentItemText(items, [conflict], items)
+
+    expect(shown[0]).toBe(current)
+    expect(shown[1]).toBe(items[1])
+    const newer = { ...first.item, title: { en: "Newer", cy: "" } }
+    expect(withCurrentItemText([newer], [conflict], items)[0]).toBe(newer)
+  })
+
+  it("notes what a field's English may not show: its Welsh, a horizon as written, unknown codes (STY-049 S6)", () => {
+    const loaded = createTestRoadmapItem("Fourth", {
+      id: "fourth",
+      placement: null,
+      writtenHorizon: "Soon",
+      description: { en: "Same", cy: "" },
+    })
+    const changed: RemovalConflict = {
+      subject: "removal",
+      removal: { item: loaded, position: 3 },
+      current: {
+        ...loaded,
+        writtenHorizon: "Someday",
+        description: { en: "Same", cy: "Yr un" },
+        unknownOrganisationCodes: ["MARS"],
+      },
+      fields: [],
+    }
+
+    expect(removalFieldNotes(changed, "description")).toEqual({
+      welsh: "Yr un",
+    })
+    expect(removalFieldNotes(changed, "placement")).toEqual({
+      writtenHorizon: "Someday",
+    })
+    expect(removalFieldNotes(changed, "organisationIds")).toEqual({
+      unknownCodes: ["MARS"],
+    })
+    expect(removalFieldNotes(changed, "title")).toEqual({})
   })
 
   it("is closed by Remove anyway, Keep the item, or a removal no longer pending", () => {

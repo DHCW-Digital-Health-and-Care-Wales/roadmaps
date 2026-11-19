@@ -15,7 +15,7 @@ import { renderWithProviders } from "@/test/render-with-providers"
 import { ITEMS_VIEW_STORAGE_KEY } from "../hooks/use-items-view"
 import { expectDialogClosed } from "../testing/edit-dialog"
 import { holdCall } from "../testing/held-call"
-import { removeItem } from "../testing/removal-dialog"
+import { confirmRemoval } from "../testing/removal-dialog"
 import {
   createInMemoryRoadmapRepository,
   type InMemoryRoadmapRepository,
@@ -346,7 +346,7 @@ describe("an opened row (S6, S9)", () => {
     await user.click(
       row.getByRole("button", { name: "Show the rest of Brand new" }),
     )
-    await removeItem(user, "Brand new")
+    await confirmRemoval(user, "Brand new")
 
     expect(
       main().queryByRole("heading", { level: 3, name: "Brand new" }),

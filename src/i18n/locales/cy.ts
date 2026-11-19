@@ -760,6 +760,8 @@ export const cy = {
             yours: "Wedi'i thynnu",
             removeAnyway: "Tynnu beth bynnag",
             keepItem: "Cadw'r eitem",
+            welsh: "Yn Gymraeg: {{text}}",
+            writtenAs: "Wedi'i ysgrifennu fel “{{horizon}}”",
           },
           removed:
             "Mae rhywun arall wedi tynnu neu newid “{{title}}”, felly doedd dim modd cadw eich newidiadau iddo.",

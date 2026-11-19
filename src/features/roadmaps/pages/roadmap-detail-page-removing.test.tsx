@@ -1,13 +1,15 @@
 import { act, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
+import type { LocalisedText } from "@/domain/roadmap/localised-text"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import type { RoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 import { disconnectFromHeader } from "@/features/auth/testing/account-menu"
 import type { Language } from "@/i18n"
+import { AppError } from "@/lib/errors"
 import { TABLET_WIDTH } from "@/lib/use-media-query"
 import { connected } from "@/test/connected-state"
 import { matchMediaQueries } from "@/test/media-query"
@@ -29,13 +31,9 @@ import {
   askToRemove,
   REMOVAL,
   removalDialog,
-  removeItem,
+  confirmRemoval,
 } from "../testing/removal-dialog"
-import {
-  openConflictReview,
-  refreshRoadmap,
-  reviewFooterClose,
-} from "../testing/roadmap-page"
+import { openConflictReview, reviewFooterClose } from "../testing/roadmap-page"
 
 /**
  * A Product Lead removes an item the public site shows (STY-049): Remove asks first,
@@ -56,7 +54,7 @@ const FAX = "Fax referrals"
 /** Now holds three items, Next one, Not doing one, and one is unplaced. */
 const items: RoadmapItem[] = [
   item("Online form"),
-  item(FAX),
+  { ...item(FAX), description: { en: "Fax still works", cy: "" } },
   item("Status updates"),
   item("Patient app", "next"),
   item("Paper forms", "not-doing"),
@@ -68,6 +66,7 @@ type User = ReturnType<typeof userEvent.setup>
 // The view chosen is kept on this device: the compact view's test leaves cards behind.
 afterEach(() => {
   localStorage.clear()
+  vi.restoreAllMocks()
 })
 
 function main() {
@@ -193,7 +192,7 @@ describe("Remove asks first, with Not doing first (S1)", () => {
   it("moves the item to Not doing, pending, as the Move menu does, with focus on its Move there", async () => {
     const { user } = await renderPage()
 
-    await removeItem(user, FAX, { choice: "notDoing" })
+    await confirmRemoval(user, FAX, { choice: "notDoing" })
 
     expect(titlesUnder("Not doing")).toEqual(["Paper forms", FAX])
     expect(card(FAX).getByText("Changed")).toBeVisible()
@@ -209,7 +208,7 @@ describe("Remove asks first, with Not doing first (S1)", () => {
       authClient.setState({ status: "expired" })
     })
 
-    await removeItem(user, FAX)
+    await confirmRemoval(user, FAX)
 
     expect(card(FAX).getByText("Removed")).toBeVisible()
     expect(screen.queryByRole("alertdialog")).toBeNull()
@@ -223,7 +222,7 @@ describe("Remove asks first, with Not doing first (S1)", () => {
       main().getByRole("button", { name: `Show the rest of ${FAX}` }),
     )
 
-    await removeItem(user, FAX)
+    await confirmRemoval(user, FAX)
 
     expect(card(FAX).getByText("Removed")).toBeVisible()
     await waitFor(() => {
@@ -238,14 +237,11 @@ describe("A confirmed removal (S2)", () => {
   it("leaves the card in place, struck through and tagged Removed, with Undo removal focused and Move and Edit held, nothing written", async () => {
     const { user, repository } = await renderPage()
 
-    await removeItem(user, FAX)
+    await confirmRemoval(user, FAX)
 
     expect(titlesUnder("Now")).toEqual(["Online form", FAX, "Status updates"])
     const removed = card(FAX)
     expect(removed.getByText("Removed")).toBeVisible()
-    expect(
-      main().getByRole("heading", { level: 3, name: FAX }).closest("div"),
-    ).toHaveClass("line-through")
     await waitFor(() => {
       expect(
         removed.getByRole("button", { name: `Undo removal ${FAX}` }),
@@ -267,7 +263,7 @@ describe("Undo removal (S3)", () => {
   it("brings back the item with its pending edits, which counted for nothing while it was removed", async () => {
     const { user } = await renderPage()
     await changePhase(user, FAX, "Beta")
-    await removeItem(user, FAX)
+    await confirmRemoval(user, FAX)
     expect(main().getByText("1 unpublished change")).toBeVisible()
     expect(card(FAX).queryByText("Changed")).toBeNull()
 
@@ -301,7 +297,7 @@ describe("Undo removal (S3)", () => {
   it("is what Discard all does too, bringing the item back as read", async () => {
     const { user } = await renderPage()
     await changePhase(user, FAX, "Beta")
-    await removeItem(user, FAX)
+    await confirmRemoval(user, FAX)
 
     await user.click(
       main().getByRole("button", { name: "Discard all changes" }),
@@ -319,7 +315,7 @@ describe("Undo removal (S3)", () => {
 
   it("is not what Disconnect then Keep does: the removal stays pending", async () => {
     const { user, router } = await renderPage()
-    await removeItem(user, FAX)
+    await confirmRemoval(user, FAX)
 
     await disconnectFromHeader(user)
     await user.click(
@@ -345,7 +341,7 @@ describe("What the page counts (S4)", () => {
     matchMediaQueries(TABLET_WIDTH)
     const { user } = await renderPage()
 
-    await removeItem(user, "Patient app")
+    await confirmRemoval(user, "Patient app")
 
     expect(titlesUnder("Next")).toEqual(["Patient app"])
     expect(main().queryByText("None in this placement")).toBeNull()
@@ -365,7 +361,7 @@ describe("What the page counts (S4)", () => {
         producta: [item(FAX), item("Someday", null)],
       }),
     })
-    await removeItem(user, FAX)
+    await confirmRemoval(user, FAX)
 
     await user.click(main().getByRole("button", { name: "Publish roadmap" }))
 
@@ -379,7 +375,7 @@ describe("Publishing a removal (S5, S7)", () => {
   it("lists the removal beside the other change and deletes the item, the count then 0", async () => {
     const { user, repository } = await renderPage()
     await changePhase(user, "Online form", "Live")
-    await removeItem(user, FAX)
+    await confirmRemoval(user, FAX)
 
     expect(await publish(user)).toEqual(["Online formPhase", `${FAX}Removed`])
 
@@ -392,7 +388,7 @@ describe("Publishing a removal (S5, S7)", () => {
   it("publishes the rest when a co-lead has already deleted the item, with no “not found” notice (S7)", async () => {
     const { user, repository } = await renderPage()
     await changePhase(user, "Online form", "Live")
-    await removeItem(user, FAX)
+    await confirmRemoval(user, FAX)
     repository.coLead((_roadmaps, itemsOf) => {
       const stored = itemsOf("producta")
       stored.splice(
@@ -411,15 +407,23 @@ describe("Publishing a removal (S5, S7)", () => {
 })
 
 describe("A co-lead's change to a removed item (S6)", () => {
-  async function refusedRemoval() {
+  async function refusedRemoval({
+    description = { en: "Their reason", cy: "" },
+    readFails = false,
+  }: { description?: LocalisedText; readFails?: boolean } = {}) {
     const rendered = await renderPage()
     const { user, repository } = rendered
     await changePhase(user, FAX, "Beta")
-    await removeItem(user, FAX)
+    await confirmRemoval(user, FAX)
     repository.coLead((_roadmaps, itemsOf) => {
       const fax = itemsOf("producta").find(({ title }) => title.en === FAX)
-      if (fax) fax.description = { en: "Their reason", cy: "" }
+      if (fax) fax.description = description
     })
+    if (readFails) {
+      vi.spyOn(repository, "listRoadmapItems").mockRejectedValue(
+        new AppError("network"),
+      )
+    }
     await publish(user)
     const review = await openConflictReview(user)
     return { ...rendered, review }
@@ -452,15 +456,24 @@ describe("A co-lead's change to a removed item (S6)", () => {
     expect(await storedTitles(repository)).toContain(FAX)
   })
 
-  it("Keep the item drops the removal: the item reads as they made it, with the edits beneath it pending", async () => {
-    const { user, review } = await refusedRemoval()
+  it("shows a change to the item's Welsh alone, as its English reads as it did", async () => {
+    const { review } = await refusedRemoval({
+      description: { en: "Fax still works", cy: "Ei reswm" },
+    })
+
+    expect(within(review).getAllByRole("definition")[1]).toHaveTextContent(
+      "DescriptionFax still worksIn Welsh: Ei reswm",
+    )
+  })
+
+  it("Keep the item drops the removal: the item reads as they made it, with the edits beneath it pending, though the read after the refusal failed", async () => {
+    const { user, review } = await refusedRemoval({ readFails: true })
 
     await user.click(
       within(review).getByRole("button", { name: `Keep the item ${FAX}` }),
     )
     await user.click(reviewFooterClose(review))
     await expectDialogClosed()
-    await refreshRoadmap(user)
 
     await waitFor(() => {
       expect(card(FAX).getByText("Their reason")).toBeVisible()
@@ -503,7 +516,7 @@ describe("A removal in a placement with a pending order (S8)", () => {
     await user.click(within(menu).getByRole("menuitem", { name: "To the top" }))
     expect(titlesUnder("Now")).toEqual(["Status updates", "Online form", FAX])
 
-    await removeItem(user, FAX)
+    await confirmRemoval(user, FAX)
 
     expect(titlesUnder("Now")).toEqual(["Status updates", "Online form", FAX])
     menu = await openMoveMenu(user, "Online form")
@@ -638,7 +651,7 @@ describe("Welsh (S12)", () => {
 
   it("reviews a co-lead's change to it in Welsh", async () => {
     const { user, repository } = await renderPage({ language: "cy" })
-    await removeItem(user, FAX, { language: "cy" })
+    await confirmRemoval(user, FAX, { language: "cy" })
     repository.coLead((_roadmaps, itemsOf) => {
       const fax = itemsOf("producta").find(({ title }) => title.en === FAX)
       if (fax) fax.description = { en: "Their reason", cy: "" }

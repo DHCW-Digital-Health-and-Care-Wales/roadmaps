@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 
+import { removeItem } from "@/domain/roadmap/item-removal"
 import { addNewItem } from "@/domain/roadmap/new-item"
 import { orderedItem } from "@/domain/roadmap/placement-order"
 import {
@@ -160,5 +161,17 @@ describe("reviewedOrders (STY-050 S11)", () => {
       expect(titles(found)).toEqual(["Their first", "Second"])
       expect(titles(yours)).toEqual(["Second", "Their first"])
     })
+  })
+
+  it("leaves out of Keep mine's order an item removed, which publishing deletes, though the order found holds it (STY-049 S8)", () => {
+    const pending = settleOrders(removeItem(reordered, a, 0), current)
+
+    const { yours, theirs: found } = reviewedOrders(
+      conflict,
+      pageItemsOf(current, pending),
+    )
+
+    expect(titles(yours)).toEqual(["B", "E"])
+    expect(titles(found)).toEqual(["A", "B", "E"])
   })
 })

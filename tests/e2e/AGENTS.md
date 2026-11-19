@@ -43,8 +43,8 @@ End-to-end tests of the production build, with Google faked (ADR-006).
 - At 1280px the navigation stands beside the page and its links share names with the
   list's and the cards': scope a page's own to `main`. Playwright matches a role's name
   by substring, so name "More" `exact`.
-- Run a layout check with `reducedMotion: "reduce"` too: transitions last 0.01ms, so a
-  class a bar gains arrives a frame late. Measure its border box.
+- Run a layout check with `reducedMotion: "reduce"` too: no transition runs, so a class
+  a bar gains takes effect in its own frame.
 
 ## Look checks
 

@@ -420,14 +420,18 @@
   }
 }
 
-/* Respect reduced motion everywhere, including generated components and dialogs. */
+/* Respect reduced motion everywhere, including generated components and dialogs. A
+   transition runs for no time rather than a short one: one of 0.01ms on the initial
+   `transition-property: all` still draws the old padding, margin and size for a frame or
+   two, so a header letting go of the top would show its links 80px narrower and the
+   items below it jump. */
 @media (prefers-reduced-motion: reduce) {
   *,
   ::before,
   ::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    transition: none !important;
     scroll-behavior: auto !important;
   }
 }

@@ -291,9 +291,8 @@ for (const [width, height] of [
  * receive the press, or to hold still. Playwright scrolls only to the nearest edge, which can
  * leave the target under the stuck header or the pinned foot, so a target outside the
  * room they leave is brought to the middle and left until two frames draw it in one
- * place. One already in that room is not scrolled: a scroll that lets the header go
- * moves the rows below it for a frame or two after the scroll has stopped (DEF-021),
- * after the frames that found the target still.
+ * place. One already in that room is not scrolled: it needs none, and a scroll that
+ * lets the header go changes what the page draws above the target.
  */
 async function pressOn(target: Locator) {
   await target.evaluate(async (element) => {

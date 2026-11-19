@@ -54,15 +54,18 @@ and append has applied, not its re-read row number; an item without an ID is fou
 its position, as an edited one is, and is removed without being given one; no other
 row's cells are rewritten
 
-### S3: The tab's last item row is cleared, not deleted (D2)
+### S3: A tab is never left without a non-frozen row (D2)
 
-**Given** a tab whose only non-frozen row in use is the removed item's, such as a
-roadmap the editor created (its copied `Template` keeps one row below the header)
+**Given** removals whose rows are every non-frozen row of the tab's grid as it stands
+after every move, insert and append, such as removing all the items of a roadmap the
+editor created (its grid is the frozen header and one row per item)
 **When** the roadmap is published
-**Then** that row's cells are cleared instead of the row being deleted, since Google
-refuses to delete every non-frozen row, and the publish succeeds
+**Then** the top removed row is cleared, every cell of it, instead of being deleted,
+and the other removed rows are deleted, since Google refuses to delete every
+non-frozen row; the publish succeeds
 **And** a row left without a title is no item (ADR-011), so the roadmap reads with no
-items
+items; when an append or insert in the same write leaves another non-frozen row, every
+removed row is deleted
 
 ### S4: A co-lead's change to the item is a conflict (STY-049 D2)
 
@@ -108,7 +111,8 @@ item
 
 S2–S6 need the adapter against MSW, asserting the requests sent and their order, with
 a removal alone, with edits, a move, a pending order and a new item, with a removed
-row below an inserted or moved one, with the only item of a copied `Template` tab,
+row below an inserted or moved one, with every item of a copied `Template` tab
+removed (one item, and several), with that and a new item in the same write,
 and with an item without an ID that a co-lead edited or moved a row past.
 
 ## Decisions
@@ -116,11 +120,12 @@ and with an item without an ID that a co-lead edited or moved a row past.
 - **D1** (owner, 2026-11-19, STY-049 grilling, Decision 8): the write is its own story
   ahead of STY-049's screen, as STY-040 and STY-045 were, and owns README _What the
   editor writes_ and the ADR-012 amendment.
-- **D2** (agent, 2026-11-19, review of the grilling's PR): the tab's last non-frozen
-  item row is cleared, not deleted (S3), over inserting a blank row first: Google
-  refuses to delete every non-frozen row, which would refuse a removal STY-049 D9 says
-  works as today; clearing writes only the cells the editor writes, so a column it
-  does not read keeps its value on that row.
+- **D2** (agent, 2026-11-19, review of the grilling's PR): when the deletions would
+  leave the grid no non-frozen row, the top removed row is cleared whole, not deleted
+  (S3), over inserting a blank row first: Google refuses to delete every non-frozen
+  row, which would refuse a removal STY-049 D9 says works as today. Clearing every
+  cell, Welsh and unknown columns included, leaves what a delete would: nothing of the
+  item.
 - **D3** (agent, 2026-11-19, review of the grilling's PR): "already gone" is "no row
   holds its ID" (S5), over every Option 13 rule: an item without an ID, or with a
   repeated ID, is also "not found" when a co-lead edits it or moves a row past it

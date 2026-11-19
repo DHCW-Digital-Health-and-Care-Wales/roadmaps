@@ -105,8 +105,9 @@ one possible place without a new kind of write: after the last row.
    when the public would see a roadmap with no items (F4). STY-042, STY-046.
 7. **Unchanged:** ADR-012's per-roadmap, all-or-nothing publish, its conflict rules and
    Refresh, apart from a removal's (item 9); what each field writes (README, _What the
-   editor writes_), apart from the row moves of item 8 and the row deletes of item 9; English only; Move on an item's card; who may edit (anyone
-   connected, ADR-012 Option 14).
+   editor writes_), apart from the row moves of item 8 and the row deletes of item 9;
+   English only; Move on an item's card; who may edit (anyone connected, ADR-012
+   Option 14).
 8. A moved item goes last in its new placement, and publishing moves its row (STY-051).
    A Product Lead reorders a placement's items from each card's Move menu; the order is
    a pending edit of the placement, written as row moves, and a co-lead's change to the

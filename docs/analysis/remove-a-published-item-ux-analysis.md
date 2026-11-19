@@ -4,7 +4,7 @@
 - **Question**: how should a Product Lead remove an item that the public site already
   shows, and what should they see when it is published? The designs give the owner
   something to look at before answering
-  [STY-049](../backlog/EPC-011-adding-roadmaps-and-items/STY-049-remove-a-published-item.md#open-questions)'s
+  [STY-049](../backlog/EPC-011-adding-roadmaps-and-items/STY-049-remove-a-published-item.md#decisions)'s
   Q1–Q3.
 - **Scope**: the roadmap's page in this editor: the item's card, what the card opens,
   the pending bar, the publish dialog and the conflict review. The public site is out
@@ -141,6 +141,19 @@ is answered (b). No add-ons.
   the one addition, and that change to the data source's format is stated by
   whichever story supplies the write (Decision 8).
 - English only. Who may edit (ADR-012 Option 14).
+
+## Outcome
+
+Owner, 2026-11-19, grilling recorded in
+[STY-049](../backlog/EPC-011-adding-roadmaps-and-items/STY-049-remove-a-published-item.md#decisions):
+a removal is pending, shown in place struck through with Undo (A1), but Remove first
+asks, offering "Move to Not doing" as its first action (A2's question, without its
+write at once); Move and Edit stay visible and disabled on a removed card. A co-lead's
+change is a conflict in the existing review (B1). Decisions 5–9 went as recommended,
+Decision 6 included; Decision 8 made the write its own story,
+[STY-070](../backlog/EPC-011-adding-roadmaps-and-items/STY-070-the-repository-publishes-a-removed-item.md).
+A new item's Remove asks the same question. No frames were redrawn: the build's
+screenshots are reviewed instead.
 
 ## Related
 

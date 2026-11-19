@@ -185,6 +185,12 @@ the empty roadmap, in both themes and at phone width.
   reconnect first, then opens the dialog. It is still unavailable while the items can't
   be read. Changes: S1 ("unavailable while not connected, while the session has
   expired").
+- **D16** (owner, 2026-11-19, STY-049 grilling, recorded by
+  [STY-049](../../EPC-011-adding-roadmaps-and-items/STY-049-remove-a-published-item.md)
+  D4, D11): a new item's Remove asks first, in the dialog a published item's Remove
+  opens, with "Move to Not doing" first, then drops it at once; and a published item's
+  card gains Remove. Changes: S6 ("Remove drops the item without asking"; "no card of
+  an item the data source holds has Remove"). STY-049 delivers it.
 
 ## Out of scope
 

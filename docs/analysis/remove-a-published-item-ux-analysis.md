@@ -142,6 +142,19 @@ is answered (b). No add-ons.
   whichever story supplies the write (Decision 8).
 - English only. Who may edit (ADR-012 Option 14).
 
+## Outcome
+
+Owner, 2026-11-19, grilling recorded in
+[STY-049](../backlog/EPC-011-adding-roadmaps-and-items/STY-049-remove-a-published-item.md#decisions):
+a removal is pending, shown in place struck through with Undo (A1), but Remove first
+asks, offering "Move to Not doing" as its first action (A2's question, without its
+write at once); Move and Edit stay visible and disabled on a removed card. A co-lead's
+change is a conflict in the existing review (B1). Decisions 5–9 went as recommended,
+Decision 6 included; Decision 8 made the write its own story,
+[STY-070](../backlog/EPC-011-adding-roadmaps-and-items/STY-070-the-repository-publishes-a-removed-item.md).
+A new item's Remove asks the same question. No frames were redrawn: the build's
+screenshots are reviewed instead.
+
 ## Related
 
 - [STY-049](../backlog/EPC-011-adding-roadmaps-and-items/STY-049-remove-a-published-item.md):

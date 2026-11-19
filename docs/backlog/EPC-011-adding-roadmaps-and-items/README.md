@@ -1,9 +1,10 @@
 # EPC-011: Adding roadmaps and items — started here, not in the spreadsheet, in one dialog each
 
 - **Status**: Active — grilled with the owner on 2026-11-14; STY-040 to STY-047
-  delivered; reordering settled on 2026-11-16 as STY-051 then STY-050, both delivered
-- **Progress**: 10 of 12 terminal; next selectable: none;
-  blocked on: STY-048 and STY-049 wait for grilling
+  delivered; reordering settled on 2026-11-16 as STY-051 then STY-050, both delivered;
+  removing a published item grilled on 2026-11-19 as STY-070 then STY-049
+- **Progress**: 10 of 13 terminal; next selectable: STY-070;
+  blocked on: STY-049 needs STY-070; STY-048 waits for grilling
 - **Binding ADRs**: ADR-012, ADR-011, ADR-009, ADR-013, ADR-014, ADR-002, ADR-003, ADR-005,
   ADR-006, ADR-010, ADR-008
 
@@ -17,17 +18,15 @@ Both are added in a dialog, and the owner asked that editing converge on the sam
 dialogs: one for a roadmap, adding it or editing "About this roadmap" ("Product
 details" since STY-065), and one for an
 item. The in-place edit forms go. A Product Lead can also put a placement's items in
-the order they want (STY-051, STY-050). Removing a roadmap and removing a published
-item are recorded for later.
+the order they want (STY-051, STY-050), and remove a published item, pending until
+published (STY-070, STY-049). Removing a roadmap is recorded for later.
 
 ## Owner decisions waiting
 
 - [STY-048](STY-048-remove-a-roadmap.md#open-questions) — how a roadmap is removed, and
   what happens to its items
-- [STY-049](STY-049-remove-a-published-item.md#open-questions) — whether removing an
-  item is pending, what "Not doing" is for, and how a removal meets a pending order
 
-None blocks STY-040 to STY-047, STY-050 or STY-051.
+None blocks any other story.
 
 ## Findings
 
@@ -144,8 +143,9 @@ pending edit: a new item, and every change made in either dialog's editing form.
 
 STY-040, STY-045, STY-051 and STY-050 each change README _What the editor writes_ in
 their own PR and say so in the PR, since the format is a contract with the public site.
-No other story changes a write, but STY-048 and STY-049 will once grilled. STY-051 and STY-050 change no column or cell format:
-they move and insert rows, whose order the public site already reads.
+STY-070 changes it too: publishing deletes a removed item's row. No other story changes
+a write, but STY-048 will once grilled. STY-051 and STY-050 change no column or cell
+format: they move and insert rows, whose order the public site already reads.
 
 ### ADR amendments
 
@@ -162,6 +162,8 @@ they move and insert rows, whose order the public site already reads.
   moved item goes last, and its row moves) and ADR-012 (how rows are moved, the
   protected-row refusal, and an order as a pending edit) in place, on the owner's
   choice (STY-051 D5). Each story checks its build against those amendments.
+- STY-070 amends ADR-012 (a removal is a pending edit; its row is deleted last; its
+  conflict, its "already gone" and its lost answer), citing STY-049's Decisions.
 
 ### Refactoring and code quality come first
 
@@ -198,9 +200,10 @@ edit** and **Conflict** extended to orders, by the PR that wrote STY-050 and STY
 | STY-046 | [A Product Lead adds an item](../_archive/EPC-011-adding-roadmaps-and-items/STY-046-add-an-item.md)                                                                         | Features/UI + i18n (en + cy) + E2E                                  | STY-042, STY-044, STY-045 | ✅    |
 | STY-047 | [The publish dialog names the new items](../_archive/EPC-011-adding-roadmaps-and-items/STY-047-a-new-item-in-the-publish-dialog.md)                                         | Features/UI + i18n (en + cy) + E2E                                  | STY-046                   | ✅    |
 | STY-048 | [A Product Lead removes a roadmap](STY-048-remove-a-roadmap.md)                                                                                                             | to be decided                                                       | —                         |       |
-| STY-049 | [A Product Lead removes a published item](STY-049-remove-a-published-item.md)                                                                                               | to be decided                                                       | —                         |       |
+| STY-049 | [A Product Lead removes a published item](STY-049-remove-a-published-item.md)                                                                                               | Features/UI + i18n (en + cy) + E2E                                  | STY-070                   |       |
 | STY-050 | [A Product Lead reorders the items in a placement](../_archive/EPC-011-adding-roadmaps-and-items/STY-050-reorder-items-in-a-placement.md)                                   | Domain + Infrastructure + Features/UI + i18n (en + cy) + E2E + Docs | STY-051                   | ✅    |
 | STY-051 | [A moved item goes last in its new placement](../_archive/EPC-011-adding-roadmaps-and-items/STY-051-a-moved-item-goes-last-in-its-new-placement.md)                         | Domain + Infrastructure + Features/UI + i18n (en + cy) + E2E + Docs | —                         | ✅    |
+| STY-070 | [The repository publishes a removed item](STY-070-the-repository-publishes-a-removed-item.md)                                                                               | Domain + Infrastructure + Docs                                      | —                         |       |
 
 ## Sequencing
 
@@ -210,11 +213,11 @@ screen that uses it, and keeps its contract documents, which must change with it
 STY-042, STY-043, STY-044, STY-046 and STY-047 all change the roadmap's page, so none
 runs beside another. STY-041 brings the dialog primitive that STY-043 and STY-044
 need; STY-043 prefers STY-042 first, which puts Edit beside the About heading.
-STY-048 and STY-049 wait for grilling; when grilled, STY-048 follows STY-040 and
-STY-049 follows STY-046, by preference. STY-051 comes before STY-050 (owner,
+STY-048 waits for grilling; when grilled, it follows STY-040, by preference. STY-070
+comes before STY-049 (owner, 2026-11-19): the write ahead of its screen. STY-051 comes before STY-050 (owner,
 2026-11-16): it brings the row moves STY-050 builds on, and is usable on its own. Both
 change the publish plan and the roadmap's page, so neither runs beside the other or
-beside STY-049.
+beside STY-070 or STY-049, nor do those two beside each other.
 
 ```mermaid
 flowchart LR
@@ -224,6 +227,7 @@ flowchart LR
   STY-042 -.-> STY-043
   STY-045 --> STY-046 --> STY-047
   STY-051 --> STY-050
+  STY-070 --> STY-049
 ```
 
 ## Out of scope
@@ -310,8 +314,10 @@ flowchart LR
   twelve mock-ups over four journeys. Outcome: a dialog for adding a roadmap, landing on
   the new roadmap; a dialog for adding an item; one panel on an empty roadmap.
 - [`docs/analysis/remove-a-published-item-ux-analysis.md`](../../analysis/remove-a-published-item-ux-analysis.md):
-  six designs over two journeys for STY-049, drawing every option of its Q1–Q3; no
-  outcome yet.
+  six designs over two journeys for STY-049, drawing every option of its Q1–Q3.
+  Outcome: A1's pending struck card, behind a confirmation that offers Not doing first
+  (A2's question), and B1's conflict review; the write split out as STY-070. Recorded
+  in STY-049's Decisions.
 - [`docs/analysis/reorder-items-ux-analysis.md`](../../analysis/reorder-items-ux-analysis.md):
   nine mock-ups over three journeys, for STY-050. Outcome: "To the top", "Up one",
   "Down one" and "To the bottom" in each card's Move menu; "Order changed" and "Undo

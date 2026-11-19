@@ -8,7 +8,7 @@
 - **Binding ADRs**: ADR-005, ADR-010
 - **Suggested model**: Sonnet — one shared primitive and two forms, with the rules
   already settled
-- **Delivered**: _(the PR, added once it exists)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/194
 
 ## Summary
 

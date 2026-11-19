@@ -289,13 +289,23 @@ for (const [width, height] of [
  * chevron's stretch, so a locator's own click, which waits for the text to receive the
  * press, would never land: `force` presses its centre without waiting for the text to
  * receive the press, or to hold still. Playwright scrolls only to the nearest edge, which can
- * leave the target under the stuck header. So the target is brought to the middle and
- * left until two frames draw it in one place, as the header changes height with the
- * scroll.
+ * leave the target under the stuck header or the pinned foot, so a target outside the
+ * room they leave is brought to the middle and left until two frames draw it in one
+ * place. One already in that room is not scrolled: a scroll that lets the header go
+ * moves the rows below it for a frame or two after the scroll has stopped (DEF-021),
+ * after the frames that found the target still.
  */
 async function pressOn(target: Locator) {
   await target.evaluate(async (element) => {
-    element.scrollIntoView({ block: "center" })
+    const page = getComputedStyle(document.documentElement)
+    const clear = (name: string) => parseFloat(page.getPropertyValue(name)) || 0
+    const { top, bottom } = element.getBoundingClientRect()
+    if (
+      top < clear("--pinned-top") ||
+      bottom > innerHeight - clear("--pinned-bottom")
+    ) {
+      element.scrollIntoView({ block: "center" })
+    }
     let drawn = ""
     for (let frame = 0; frame < 60; frame += 1) {
       await new Promise((frameReady) => requestAnimationFrame(frameReady))

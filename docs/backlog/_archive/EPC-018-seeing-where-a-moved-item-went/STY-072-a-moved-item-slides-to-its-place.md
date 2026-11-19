@@ -9,6 +9,7 @@
 - **Binding ADRs**: ADR-002, ADR-005, ADR-010
 - **Suggested model**: Opus — a view transition across two lists, with focus, scroll
   and the stuck header to keep in step
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/190
 
 ## Summary
 

@@ -153,7 +153,7 @@ test.describe("the mark's look", () => {
   test.use({ reducedMotion: "reduce" })
 
   for (const theme of ["light", "dark"] as const) {
-    test(`a card's edge is the success tone round it, over its own padding, its grey bar kept, its label under the title (S1, S3, S9: ${theme})`, async ({
+    test(`a card's edge is the success tone round it, over its own padding, its grey bar kept, its label at the foot (S1, S3, S9; STY-075 S1: ${theme})`, async ({
       page,
     }) => {
       await useTheme(page, theme)
@@ -177,13 +177,22 @@ test.describe("the mark's look", () => {
       const label = card.getByText("Moved up", { exact: true })
       await expect(label).toBeVisible()
       expect(await offset()).toEqual(before)
-      const [labelBox, titleBox] = await Promise.all([
+      // At the foot, not under the title: with the card's buttons, level or above them.
+      const [labelBox, titleBox, moveBox] = await Promise.all([
         label.boundingBox(),
         title.boundingBox(),
+        moveButton(page, "Minimal card").boundingBox(),
       ])
+      const labelCentre = (labelBox?.y ?? 0) + (labelBox?.height ?? 0) / 2
       expect(labelBox?.y ?? 0).toBeGreaterThan(
         (titleBox?.y ?? 0) + (titleBox?.height ?? 0) - 1,
       )
+      expect(
+        Math.abs(
+          labelCentre - ((moveBox?.y ?? 0) + (moveBox?.height ?? 0) / 2),
+        ) < 4 ||
+          (moveBox?.y ?? 0) >= (labelBox?.y ?? 0) + (labelBox?.height ?? 0),
+      ).toBe(true)
       const shadow = await card.evaluate(
         (element) => getComputedStyle(element).boxShadow,
       )

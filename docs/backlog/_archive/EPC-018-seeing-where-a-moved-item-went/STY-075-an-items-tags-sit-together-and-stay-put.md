@@ -1,13 +1,14 @@
 # STY-075: A Product Lead sees an item's tags together, and still as a row opens
 
-- **Status**: Proposed — the owner asked for it and answered its questions on
-  2026-11-19, after seeing STY-071's mark in use (D1–D5)
+- **Status**: Done — the owner asked for it and answered its questions on 2026-11-19,
+  after seeing STY-071's mark in use (D1–D5)
 - **Type**: Feature
 - **Area**: Features/UI + E2E
-- **Epic**: [EPC-018-seeing-where-a-moved-item-went](README.md)
+- **Epic**: [EPC-018-seeing-where-a-moved-item-went](../../EPC-018-seeing-where-a-moved-item-went/README.md)
 - **Depends on**: STY-071 (hard: the mark it moves)
 - **Binding ADRs**: ADR-002, ADR-010
 - **Suggested model**: Sonnet — layout in two components, held by Playwright geometry
+- **Delivered**: _the PR URL, once raised_
 
 ## Summary
 
@@ -127,3 +128,35 @@ Measured at `bd635d9` with Playwright (Chromium), an item moved from Now to Late
   form, D6, D7, D10, D19.
 - A card's horizon flag, which stays under its title: it says what is wrong with the
   item, not what is pending.
+
+## Delivery
+
+### Departures
+
+- Tests: the Tests section names `moved-mark.spec.ts`'s card check; it now asserts the
+  label at the card's foot. The new geometry is in `tests/e2e/item-tags.spec.ts`, and one
+  assertion in `moved-travel.spec.ts` holds the tags' place at the end of a STY-072
+  travel, agent.
+- The desktop row's flag and tags sit `pt-0.75` from the top of the line, not centred, to
+  keep the place they have closed: a 26px badge on the line's 32px. The row aligns its
+  line from the top in both states. Routine, agent.
+
+### Contract for dependents
+
+- `RoadmapItemCard` takes `marked` (the mark's edge, a boolean) where it took `mark` (the
+  label); `EditControls` takes `mark`, the label, drawn before the pending tag in one
+  wrapping group. `CompactItemRow` still takes `mark` as the label.
+- A desktop compact row's flag and tags carry `ON_THE_LINE_CLASSES`
+  (`compact-item-row.tsx`): a new item on that line takes the same offset, or it jumps as
+  the row opens.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                                                        |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `item-tags.spec.ts` (`a card on a desktop` and `on a phone`: label, then "Changed", one line at the foot, nothing under the title; the label alone for "Moved down"); `moved-mark.spec.ts` (the card's label at the foot); `moved-travel.spec.ts` (`to Later`) |
+| S2       | `item-tags.spec.ts` (`a card on a phone`; `wraps the second tag under the first`)                                                                                                                                                                              |
+| S3       | `item-tags.spec.ts` (`a phone's compact row`: one line under the title, closed and opened; the flag on its own line above)                                                                                                                                     |
+| S4       | `item-tags.spec.ts` (`a desktop's compact row`: label, tag, flag, chevron, title, Move and Edit at the same height closed, opened and closed again, with and without reduced motion; a title that wraps; "New")                                                |
+| S5       | `item-tags.spec.ts` (`shows “Removed” alone`, in a card and a compact row)                                                                                                                                                                                     |
+| Red      | The new spec run against the unchanged `src/`: 13 of its 18 tests failed. Layout tests, written after the code, so a break of finished code, not test-first evidence.                                                                                          |

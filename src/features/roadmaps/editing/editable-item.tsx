@@ -332,7 +332,7 @@ export function EditableItem({
       item={shown}
       organisations={organisations}
       struck={removal !== undefined}
-      mark={label(false)}
+      marked={mark !== undefined}
       travelName={travelName}
       onFocus={reveal}
       actions={
@@ -344,6 +344,7 @@ export function EditableItem({
           editButton={editButton}
           dropButton={dropButton}
           remove={removeControl}
+          mark={label(false)}
           move={moveMenu(false)}
           onEdit={edit}
           onDrop={drop}

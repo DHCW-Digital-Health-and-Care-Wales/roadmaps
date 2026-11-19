@@ -2,6 +2,7 @@ import type { Locator, Page } from "@playwright/test"
 
 import { openEditItemDialog, publishOnce } from "./fixtures/dialogs"
 import { withTabItems } from "./fixtures/fake-sheets"
+import { boxOf } from "./fixtures/layout"
 import { tokenColour } from "./fixtures/look"
 import {
   chooseCompact,
@@ -279,6 +280,13 @@ test.describe("a move to another placement travels the whole way (S2)", () => {
     await expect(card.getByText("Moved from Now")).toBeVisible()
     await expect.poll(() => inRoom(card)).toBe(true)
     await expect(moveButton(page, "A minimal card")).toBeFocused()
+    // It ends with its tags together at its foot (STY-075 S1), as it lands.
+    const [moved, changed] = await Promise.all([
+      boxOf(card.getByText("Moved from Now")),
+      boxOf(card.getByText("Changed", { exact: true })),
+    ])
+    expect(Math.abs(moved.y - changed.y)).toBeLessThan(1)
+    expect(moved.right).toBeLessThan(changed.x)
   })
 })
 

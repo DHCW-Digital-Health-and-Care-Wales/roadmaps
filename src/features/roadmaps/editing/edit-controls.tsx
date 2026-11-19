@@ -206,6 +206,8 @@ export interface EditControlsProps {
   align?: "start" | "end"
   /** An item's Remove, after the drop button (STY-049). */
   remove?: ReactNode
+  /** The moved mark's label, before the tag, beside it (STY-075 S1). */
+  mark?: ReactNode
   /** A control between Remove and Edit, such as an item's Move menu (STY-031). */
   move?: ReactNode
   onEdit: () => void
@@ -214,7 +216,8 @@ export interface EditControlsProps {
 }
 
 /**
- * "Changed", "New" or "Removed", then "Undo changes" or "Undo removal" while something
+ * The moved mark's label, if the item carries it, then "Changed", "New" or "Removed",
+ * together; then "Undo changes" or "Undo removal" while something
  * can be dropped, then `remove`, `move` and Edit.
  */
 export function EditControls({
@@ -227,13 +230,20 @@ export function EditControls({
   size = "sm",
   align = "end",
   remove,
+  mark,
   move,
   onEdit,
   onDrop,
 }: EditControlsProps) {
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-      <PendingTag pending={pending} subject={subject} />
+      {(mark ?? pending) && (
+        // Together: where one line can't hold both, the second wraps under the first.
+        <div className="flex flex-wrap items-center gap-2">
+          {mark}
+          <PendingTag pending={pending} subject={subject} />
+        </div>
+      )}
       <div
         className={cn("flex flex-wrap gap-2", align === "end" && "sm:ml-auto")}
       >

@@ -14,9 +14,10 @@
 // `pinned` variant in globals.css) the header and footer stay put, each set apart by a
 // hairline, and only the body scrolls, so the title, the close button and the buttons
 // stay in view. Narrower or shorter, the whole popup scrolls as one piece, as it did
-// before, and the padding stays the popup's. A header over two fifths of the screen (a very
-// long title) scrolls itself, so the footer stays in view. A dialog with no body (a question: its
-// description is in the header) has one hairline between its header and its footer.
+// before, and the padding stays the popup's. A header over two fifths of the screen (a
+// very long title) scrolls itself, so the footer stays in view. A dialog with no body (a
+// question: its description is in the header) has one hairline between its header and
+// its footer.
 import * as React from "react"
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { XIcon } from "lucide-react"

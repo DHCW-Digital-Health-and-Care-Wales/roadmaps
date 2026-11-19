@@ -144,6 +144,10 @@ popup's `overflow-y-auto` moves to the body at the pinned sizes only. Tailwind's
 - **S2**: a header over two fifths of the screen (an item with a very long title, in the
   removal question) scrolls itself, at the pinned sizes, so the footer's buttons stay in
   view; the other dialogs' headers are never that tall (agent, from review).
+- **S2**: the add-item dialog's line saying an item was added (after "Add and start
+  another") stays outside the form, so its live region is announced at once, and is
+  not in the scrolling body: pinned, it sits under the header in a band of at most a
+  quarter of the screen that scrolls when a long title fills it (agent, from review).
 - **Starting point**: the `<form>` became `DialogForm` (a `form` slot in `dialog.tsx`)
   rather than each form carrying `flex min-h-0 flex-col` itself, so the two forms and
   any later one share the column (agent, routine structure).
@@ -167,20 +171,22 @@ popup's `overflow-y-auto` moves to the body at the pinned sizes only. Tailwind's
 
 ### Scenario evidence
 
-| Scenario | Held by                                                                                                                                                                                                                                                                                                             |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1       | `tests/e2e/pinned-dialog.spec.ts` (`on a laptop, a long form's title, close button and buttons stay in view…`); `closing-a-dialog.spec.ts` (`on a desktop, the close button …`); screenshots in the PR                                                                                                              |
-| S2       | `pinned-dialog.spec.ts` (`…stays its content's height and shows no scrollbar when its content fits`, the removal question; `the add-item dialog pins too…`; `…a removal question about an item with a very long title…`); the conflict review and the roadmap dialog share `DialogContent` with the two it measures |
-| S3, S4   | `pinned-dialog.spec.ts` (`on a phone, …`, `on a phone held landscape, …`)                                                                                                                                                                                                                                           |
-| S5       | `pinned-dialog.spec.ts` (`…a failed Add a roadmap is said in the footer…`); `roadmaps-page-adding.test.tsx` (`says it in the footer, above Add roadmap and Cancel…`)                                                                                                                                                |
-| S6       | `roadmap-detail-page-adding.test.tsx` (`keeps the note about being unpublished with the fields…`); `pinned-dialog.spec.ts` (`the note about an item being added unpublished …`)                                                                                                                                     |
-| S7       | `pinned-dialog.spec.ts` (`a field that takes focus scrolls into the body…`); `dialog.test.tsx` (`tabs through the header, the body and the footer in DOM order…`); `closing-a-dialog.spec.ts` (`Tab from the last control in the footer wraps…`, unchanged)                                                         |
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                          |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| S1       | `tests/e2e/pinned-dialog.spec.ts` (`on a laptop, a long form's title, close button and buttons stay in view…`); `closing-a-dialog.spec.ts` (`on a desktop, the close button …`); screenshots in the PR                                                                                                                                           |
+| S2       | `pinned-dialog.spec.ts` (`…stays its content's height and shows no scrollbar when its content fits`, the removal question; `the add-item dialog pins too…`; `…a removal question about an item with a very long title…`); the conflict review and the roadmap dialog share `DialogContent` with the two it measures                              |
+| S3, S4   | `pinned-dialog.spec.ts` (`on a phone, …`, `on a phone held landscape, …`)                                                                                                                                                                                                                                                                        |
+| S5       | `pinned-dialog.spec.ts` (`…a failed Add a roadmap is said in the footer…`); `roadmaps-page-adding.test.tsx` (`says it in the footer, above Add roadmap and Cancel…`)                                                                                                                                                                             |
+| S6       | `roadmap-detail-page-adding.test.tsx` (`keeps the note about being unpublished with the fields…`); `pinned-dialog.spec.ts` (`the note about an item being added unpublished …`)                                                                                                                                                                  |
+| S7       | `pinned-dialog.spec.ts` (`a field that takes focus scrolls into the body…`); `dialog.test.tsx` (`tabs from the body to the footer, then to the close button, in DOM order (S7)`: the header holds no control, and the X follows the footer in the DOM); `closing-a-dialog.spec.ts` (`Tab from the last control in the footer wraps…`, unchanged) |
 
 Geometry, tests and the layout were written after the code, then each shown red by
 breaking the finished code: the `pinned` variant set to a width no screen has (S1, S2
 and S5 fail; S3 and S4 pass, as the phone is unchanged), the failure drawn outside
 the footer (the component test for S5), the add-item dialog's wrapper left as a plain
-block (its test) and the header's `max-h` removed (the long-title test). The S6 and S7 tests hold the layout as built
+block (its test), the header's `max-h` removed (the long-title test) and the add-item wrapper's
+`min-h-0` unconditional with the added-note band unbounded and `w-auto` dropped (four tests: the
+laptop one, the long-title one and the phone and landscape padding ones). The S6 and S7 tests hold the layout as built
 and were not shown red: S6's note was never in the footer, so its test guards a later
 change; S7's clear-of-the-bars result follows from the parts being flex siblings, not
 overlays.

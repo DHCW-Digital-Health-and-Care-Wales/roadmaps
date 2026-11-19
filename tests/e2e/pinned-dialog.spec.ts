@@ -32,6 +32,23 @@ async function openItem(page: Page): Promise<Locator> {
   return openEditItemDialog(page, ITEM)
 }
 
+/** Whether `inner`'s box lies wholly inside `outer`'s, on both axes. */
+async function expectWithin(outer: Locator, inner: Locator): Promise<void> {
+  const [outerBox, innerBox] = await Promise.all([
+    outer.boundingBox(),
+    inner.boundingBox(),
+  ])
+  if (!outerBox || !innerBox) throw new Error("No box")
+  expect(innerBox.x).toBeGreaterThanOrEqual(outerBox.x)
+  expect(innerBox.x + innerBox.width).toBeLessThanOrEqual(
+    outerBox.x + outerBox.width,
+  )
+  expect(innerBox.y).toBeGreaterThanOrEqual(outerBox.y)
+  expect(innerBox.y + innerBox.height).toBeLessThanOrEqual(
+    outerBox.y + outerBox.height,
+  )
+}
+
 const slot = (dialog: Locator, name: string) =>
   dialog.locator(`[data-slot="${name}"]`)
 
@@ -185,13 +202,13 @@ test("on a laptop, the note about an item being added unpublished is the end of 
   const note = dialog.getByText(
     "It stays unpublished until you choose “Publish changes”.",
   )
+  await expect(note).toHaveCount(1)
   await expect(
-    slot(dialog, "dialog-body").getByText(/stays unpublished/),
-  ).toBeVisible()
+    slot(dialog, "dialog-body").locator(":scope > :last-child"),
+  ).toContainText("It stays unpublished")
   await expect(
     slot(dialog, "dialog-footer").getByText(/stays unpublished/),
   ).toHaveCount(0)
-  await expect(note).toHaveCount(1)
 })
 
 test("on a laptop, a field that takes focus scrolls into the body, clear of the pinned header and footer (S7)", async ({
@@ -245,6 +262,7 @@ test("on a laptop, the add-item dialog pins too: its buttons stay in view while 
   const added = dialog.getByRole("status").getByText("was added.")
   await expect(added).toBeVisible()
   expect(await isInView(page, added)).toBe(true)
+  await expectWithin(dialog, dialog.getByRole("status").getByRole("note"))
   for (const part of parts) expect(await isInView(page, part)).toBe(true)
   expect(
     await body.evaluate(
@@ -281,3 +299,63 @@ test("on the smallest pinned screen, a removal question about an item with a ver
     expect(await isInView(page, part)).toBe(true)
   }
 })
+
+test("on the smallest pinned screen, the add-item dialog keeps its buttons in view after an item with a very long title is added (S2)", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 640, height: 500 })
+  await page.goto("./#/roadmaps/producta")
+  await connect(page)
+  const dialog = await openAddItemDialog(page)
+  await dialog.getByRole("textbox", { name: "Title" }).fill(words(200))
+  await dialog
+    .getByRole("combobox", { name: "Horizon or section" })
+    .selectOption({ label: "Next" })
+
+  await dialog.getByRole("button", { name: "Add and start another" }).click()
+
+  const status = dialog.getByRole("status")
+  await expect(status.getByRole("note")).toBeVisible()
+  expect(
+    await status.evaluate(
+      (element) => element.scrollHeight > element.clientHeight,
+    ),
+  ).toBe(true)
+  for (const part of [
+    dialog.getByRole("heading", { name: "Add an item" }),
+    dialog.getByRole("button", { name: "Add item", exact: true }),
+    dialog.getByRole("button", { name: "Cancel" }),
+  ]) {
+    expect(await isInView(page, part)).toBe(true)
+  }
+})
+
+for (const [size, viewport] of [
+  ["a phone", PHONE],
+  ["a phone held landscape", LANDSCAPE],
+] as const) {
+  test(`on ${size}, the add-item dialog scrolls as one piece, with its padding under the buttons (S3, S4)`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport)
+    await page.goto("./#/roadmaps/producta")
+    await connect(page)
+    const dialog = await openAddItemDialog(page)
+    const cancel = dialog.getByRole("button", { name: "Cancel" })
+
+    await cancel.scrollIntoViewIfNeeded()
+    await dialog.evaluate((element) => {
+      element.scrollTop = element.scrollHeight
+    })
+
+    const [dialogBox, cancelBox] = await Promise.all([
+      dialog.boundingBox(),
+      cancel.boundingBox(),
+    ])
+    if (!dialogBox || !cancelBox) throw new Error("No box")
+    // The popup's 24px padding, less its 1px border.
+    expect(
+      dialogBox.y + dialogBox.height - (cancelBox.y + cancelBox.height),
+    ).toBeGreaterThanOrEqual(23)
+  })
+}

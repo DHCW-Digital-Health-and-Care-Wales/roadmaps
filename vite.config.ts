@@ -24,8 +24,9 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(resolveBuildVersion(version, process.env)),
   },
   plugins: [
-    // Must come before the React plugin (TanStack Router docs).
-    tanstackRouter({ target: "react", autoCodeSplitting: true }),
+    // Must come before the React plugin (TanStack Router docs). Vitest loads every route
+    // with the router, so a file's first test does not pay to load its pages (DEF-022).
+    tanstackRouter({ target: "react", autoCodeSplitting: !process.env.VITEST }),
     react(),
     tailwindcss(),
   ],
@@ -64,6 +65,10 @@ export default defineConfig({
       "tests/fixtures/**/*.test.ts",
     ],
     setupFiles: ["./src/test/setup.ts"],
+    // A page test drives the whole app in jsdom: up to 3 s on an idle host, and two to
+    // three times that on a busy one. The budget catches a hang, not a slow page
+    // (DEF-022); Testing Library's waits are set in the setup file.
+    testTimeout: 15_000,
     // Vitest empties the stylesheets it doesn't process, `?raw` imports included; the
     // token tests read the text of every stylesheet in src/ and of the pinned DHCW
     // release's Sass.

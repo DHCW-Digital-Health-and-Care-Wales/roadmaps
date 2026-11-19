@@ -1,8 +1,12 @@
 import "@testing-library/jest-dom/vitest"
-import { cleanup } from "@testing-library/react"
+import { cleanup, configure } from "@testing-library/react"
 import { afterAll, afterEach, beforeAll } from "vitest"
 
 import { server } from "@/test/msw-server"
+
+// `findBy` and `waitFor` wait 1 s by default, which a page test's render outlasts on a
+// busy host (DEF-022).
+configure({ asyncUtilTimeout: 3_000 })
 
 // jsdom does not implement scrolling; TanStack Router calls it on navigation.
 window.scrollTo = () => undefined

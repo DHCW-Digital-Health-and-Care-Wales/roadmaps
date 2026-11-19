@@ -1,6 +1,6 @@
 # DEF-022: Page tests time out when the host is busy
 
-- **Status**: Needs triage — found by the STY-073 retro
+- **Status**: Done
 - **Severity**: Low — a full unit run fails on a change that does not touch the
   failing tests, and costs a rerun; no user is affected
 - **Area**: Features/UI
@@ -75,4 +75,50 @@ them the budget they need, and why that budget is not hiding a slow page.
 
 ## Decisions
 
-## Delivery _(add on delivery; as in `story.md`)_
+- **D1** (owner, 2026-11-19, triage): fix it; the owner's request to fix DEF-022
+  took it out of Needs triage.
+
+## Delivery
+
+The tests now run in less time and have a budget that fits a busy host:
+
+- **Faster: routes load with the router under Vitest.** `vite.config.ts` turns off the
+  TanStack Router plugin's `autoCodeSplitting` when `VITEST` is set. With it on, each
+  route's page loaded lazily on first render, so the first page test of every file paid
+  0.4 to 0.7 s to load modules inside its budget: run alone, S1 of
+  `roadmap-detail-page-editing` fell from 1,847 to 1,119 ms and S1 of
+  `roadmap-detail-page-moving` from 1,555 to 810 ms. In a full run on an idle host
+  (load 1.9), the slowest page test fell from 3,515 to 2,913 ms, tests over 2 s from 41
+  to 16 and over 2.5 s from 14 to 4. The build still splits routes.
+- **Budget: 15 s per test, 3 s per Testing Library wait.** `testTimeout: 15_000` in
+  `vite.config.ts`, and `configure({ asyncUtilTimeout: 3_000 })` in
+  `src/test/setup.ts`. Beside a second full run, the slowest page test took 6.4 s and
+  `findBy` waits passed within 3 s.
+
+**Why the budget hides no slow page.** A page test's time is jsdom running React and
+`userEvent`, and it moves with the host's load, not with the page: the same test took
+2.2 s alone, 2.9 to 3.5 s in a full run and 6.4 s beside a second one, on the same
+code. A 5 s budget never measured the page's speed; it tripped on load. The budget is a
+hang detector, and a hang still fails, at 15 s. No test expects a `findBy` or `waitFor`
+to give out, so the longer wait slows only a test that is already failing.
+
+### Departures
+
+- **No screenshots** (agent): the fix changes test configuration only; no screen
+  changes.
+- **The suite has 3,018 tests, not the record's 2,996** (agent): stories merged since
+  `b00765a` added them.
+- **Red shown on the base, not by a new test** (agent): the defect is a run under load,
+  which no unit test can hold. Its red is the Reproduce run on the base, below.
+
+### Contract for dependents
+
+A unit or component test has 15 s, and a `findBy` or `waitFor` 3 s unless it sets its
+own. Route components load eagerly under Vitest, so a test cannot see a route's
+lazy-loading (pending) state; none does today, and the E2E suite runs the split build.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | At base `02e8e41`, two full `vitest run`s at once (load 5.6 before, peak 20) failed 13 and 2 of 3,018: 12 `findBy` waits and 3 test timeouts. With the fix, three times from load under 2 (1.98, 1.94, 1.81), each beside a second full run, peak load 20.9 to 21.0: all six runs passed 3,018 of 3,018. Their slowest page tests took 5.5 to 6.4 s (`changed-roadmaps-only` S1), with `roadmap-detail-page-moving` and `-adding` at 5.1 to 5.4 s; `scripts/worktree/worktree.test.ts`'s 20 s test has its own budget. |

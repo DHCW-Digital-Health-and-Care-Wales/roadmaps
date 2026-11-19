@@ -5,9 +5,9 @@ import { vi } from "vitest"
  * spy, which records each transition started, and `ends`, which finishes those held.
  * Each transition draws its update `delay` ms after it was asked for, as a view
  * transition does, or at once with a `delay` of 0; with `held`, it draws it at once and
- * finishes only when its `end` is called. Undo it with `withoutViewTransitions`.
- * Call it after a test's setup moves, or each of those is drawn late too, and the next
- * is chosen before it has landed.
+ * finishes only when its entry in `ends` is called (`delay` is ignored). Undo it with
+ * `withoutViewTransitions`. Call it after a test's setup moves, or each of those is
+ * drawn late too, and the next is chosen before it has landed.
  */
 export function withViewTransitions({ delay = 50, held = false } = {}) {
   vi.stubGlobal(

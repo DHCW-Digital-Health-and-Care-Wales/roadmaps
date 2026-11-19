@@ -26,8 +26,8 @@ let current: ViewTransition | null = null
 /**
  * Makes a change to where items show, `update`, as a view transition: from the Move
  * menu, the moved item travels from where it was to where it lands, the items it passes
- * moving aside, then shows its mark; on "Undo order" (STY-073), each item travels to
- * where the undo puts it, none marked (STY-072, D6). The pending edits are read through
+ * moving aside, then shows its mark (STY-072, D6); on "Undo order" (STY-073), each item
+ * travels to where the undo puts it, none marked. The pending edits are read through
  * `useSyncExternalStore`, whose updates are sync, so React's own `ViewTransition`
  * never animates them: the browser's API runs `update` once it has drawn the page as it
  * was, and `flushSync` draws the move, focus and mark included, before it draws the

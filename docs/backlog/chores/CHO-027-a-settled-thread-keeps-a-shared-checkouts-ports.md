@@ -77,3 +77,9 @@ or 4173; a main checkout and CI keep the canonical ports
   The README says today that such a checkout keeps 5173 and 4173.
 
 ## Decisions
+
+- **D1** (owner, 2026-11-19, the owner's review of the open PRs): Q1 (a). The owner has
+  turned off _run on settle_ for _Tear down worktree_. The setting was there so that
+  nothing lingers on an old thread, so a settled worktree's slot and servers now stay
+  held until someone runs `pnpm worktree:teardown`; the owner may want another way to
+  clear them. Q2 stays open.

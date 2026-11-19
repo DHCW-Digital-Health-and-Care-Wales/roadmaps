@@ -548,7 +548,7 @@ export const cy = {
       movedTo:
         "Symudwyd i {{placement}}. {{position, number}} o {{count, number}}.",
       placedIn:
-        "Gosodwyd yn {{placement}}. {{position, number}} o {{count, number}}.",
+        "Gosodwyd o dan {{placement}}. {{position, number}} o {{count, number}}.",
       movedMark: {
         top: "Symudwyd i'r brig",
         up: "Symudwyd i fyny",

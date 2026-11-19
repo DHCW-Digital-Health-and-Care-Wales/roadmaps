@@ -5,15 +5,12 @@ import type { Organisation } from "@/domain/roadmap/organisation"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import type { ItemValues, NewItem } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
-import {
-  isRoadmapPlacement,
-  type RoadmapPlacement,
-} from "@/domain/roadmap/roadmap-placement"
+import { isRoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 
 import type { AfterAdding, ItemDialogProps } from "../dialogs/item-dialog"
 import type { OpenedItem } from "../dialogs/item-form"
 import { tagsInUse } from "./item-tags"
-import type { ItemMove } from "./moved-mark"
+import type { MarkMoved } from "./moved-mark"
 import { editPageItem, newItemCardKey, type PageItem } from "./page-items"
 import { usePendingChangesStore } from "./pending-changes-context"
 import { publishAction } from "./pending-changes-store"
@@ -55,8 +52,11 @@ export interface ItemDialogOptions {
   pageItems: readonly PageItem[]
   /** "Add an item" with the page's actions: the one that is always there. */
   addItemButton: RefObject<HTMLElement | null>
-  /** Done moved the item to another placement: it takes the moved mark (STY-071 D2). */
-  onMoved: (item: PageItem, move: ItemMove, to: RoadmapPlacement) => void
+  /**
+   * Done moved the item to another placement: it takes the moved mark, with nothing new
+   * said, as focus goes back to its Edit (STY-071 D2, D11).
+   */
+  onMoved: MarkMoved
 }
 
 /** The page's one item dialog, as `useItemDialog` gives it. */
@@ -93,9 +93,9 @@ export interface PageItemDialog {
  * it stays open on an item whose card moves to another list (STY-044 S7) and closes
  * when the item has gone or another has taken its place, as its card does; Done keeps
  * the values pending, each edited from the item as the dialog opened on it, or as part
- * of a new item (STY-046 S6), and marks an item it moves (STY-071 S2). Adding, it is on no item: "Add item" and "Add and start
- * another" keep a new item pending, and the first closes the dialog with focus going
- * to the new item's card. Cancel, the close button and Escape send focus back to the
+ * of a new item (STY-046 S6), and marks an item it moves (STY-071 S2). Adding, it is on
+ * no item: "Add item" and "Add and start another" keep a new item pending, and the
+ * first closes the dialog with focus going to the new item's card. Cancel, the close button and Escape send focus back to the
  * "Add an item" that opened it, or to the page's own once an item has taken an empty
  * roadmap's panel's place, and its button with it.
  */

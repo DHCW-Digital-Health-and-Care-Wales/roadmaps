@@ -8,6 +8,7 @@ import type {
   RoadmapChanges,
 } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
+import type { RoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 
 import { useItemCardKeys } from "../components/item-card-keys"
 import {
@@ -143,6 +144,61 @@ export function groupPageItems(
     ({ shown }) => shown.placement,
     ({ turn }) => turn,
   )
+}
+
+/**
+ * The page's items grouped as `changes` show them, keyed as `pageItems` are: for what
+ * must know where a change puts an item before the page has drawn it.
+ */
+export function groupPageItemsWith(
+  items: readonly RoadmapItem[],
+  changes: RoadmapChanges | undefined,
+  pageItems: readonly PageItem[],
+): RoadmapItemGroups<PageItem> {
+  return groupPageItems(
+    pageItemsOf(items, changes, (position) => pageItems[position]?.key),
+  )
+}
+
+/**
+ * Where an item shows on the page: its placement, `null` while unplaced, and its place
+ * among the items shown there, a removed one counted, as it still shows.
+ */
+export interface ShownPlace {
+  readonly placement: RoadmapPlacement | null
+  readonly index: number
+}
+
+/** Where the page's item keyed `key` shows in `groups`; none once it is removed or gone. */
+export function shownPlace(
+  { unplaced, placements }: RoadmapItemGroups<PageItem>,
+  key: string,
+): ShownPlace | undefined {
+  for (const { placement, items } of [
+    { placement: null, items: unplaced },
+    ...placements,
+  ]) {
+    const index = items.findIndex(({ item }) => item.key === key)
+    const found = items[index]?.item
+    if (found) return found.removal ? undefined : { placement, index }
+  }
+  return undefined
+}
+
+/**
+ * The place of the page's item keyed `key` in its placement's order, `at` of `count`,
+ * as `groups` show them: a removed item is no stop of it (STY-049 S8).
+ */
+export function placeInOrder(
+  { placements }: RoadmapItemGroups<PageItem>,
+  key: string,
+): { at: number; count: number } | undefined {
+  for (const { items } of placements) {
+    const stops = items.filter(({ item }) => item.removal === undefined)
+    const at = stops.findIndex(({ item }) => item.key === key)
+    if (at >= 0) return { at, count: stops.length }
+  }
+  return undefined
 }
 
 /**

@@ -639,8 +639,8 @@ export const en = {
       /** Heads the list of places an item can move to. */
       moveTo: "Move to",
       /**
-       * Said once an item has moved to another placement from its Move menu, with its
-       * position there, last (STY-071 S5).
+       * Said once an item has moved to another placement from its Move menu, with where
+       * it shows there (STY-071 S5).
        */
       movedTo:
         "Moved to {{placement}}. {{position, number}} of {{count, number}}.",
@@ -660,7 +660,10 @@ export const en = {
         from: "Moved from {{placement}}",
         /** An unplaced item given a placement. */
         placed: "Placed",
-        /** All a "Moved" label shows, after its arrow, in a list too narrow for it (S3). */
+        /**
+         * All a "Moved" label shows, after its arrow, in a list too narrow for it (S3);
+         * "Placed" shows whole (D19).
+         */
         short: "Moved",
       },
       /** A placement's order, changed from an item's Move menu (STY-050). */

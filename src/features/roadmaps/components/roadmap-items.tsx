@@ -5,12 +5,16 @@ import { useTranslation } from "react-i18next"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Organisation } from "@/domain/roadmap/organisation"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
-import type { RoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 
 import { ItemDialog } from "../dialogs/item-dialog"
 import { EditableItem, type ItemControl } from "../editing/editable-item"
-import type { ItemMove, MovedMark, PageMovedMark } from "../editing/moved-mark"
-import type { PageItem } from "../editing/page-items"
+import type { MarkMoved, MovedMark, PageMovedMark } from "../editing/moved-mark"
+import {
+  groupPageItemsWith,
+  type PageItem,
+  placeInOrder,
+} from "../editing/page-items"
+import { usePendingChangesStore } from "../editing/pending-changes-context"
 import type { PublishAction } from "../editing/pending-changes-store"
 import { PlacementHeading } from "../editing/placement-heading"
 import { RemovalDialog } from "../editing/removal-dialog"
@@ -85,6 +89,7 @@ export function RoadmapItems({
   onItemRemoved,
 }: RoadmapItemsProps) {
   const { t } = useTranslation()
+  const store = usePendingChangesStore()
   const { unplaced, placements } = groups
   const [said, setSaid] = useState<{ serial: number; text: string }>()
   // A moved item is drawn anew, in another list, so focus is handed to it here.
@@ -112,21 +117,29 @@ export function RoadmapItems({
     onNewItemRemoved: onItemRemoved,
     onMoved: movedMark.moved,
   })
-  const moved = (item: PageItem, move: ItemMove, to: RoadmapPlacement) => {
+  // A move from the Move menu marks the item and, to another placement, is said with
+  // where it now shows there (S5), from the store the move has just changed. A move
+  // within one is said by the item (`EditableItem`); one from a dialog says nothing new
+  // (D11, D16).
+  const movedByMenu: MarkMoved = (item, move, to) => {
     movedMark.moved(item, move, to)
     if (move.kind !== "placement") return
-    // Last of the items there that count in its order (STY-051 S1, STY-049 S8).
-    const there = placements.find(({ placement }) => placement === to)
-    const count =
-      (there?.items.filter(({ item: each }) => each.removal === undefined)
-        .length ?? 0) + 1
+    const place = placeInOrder(
+      groupPageItemsWith(
+        items,
+        store.getSnapshot().changes.get(roadmapId),
+        pageItems,
+      ),
+      item.key,
+    )
+    if (!place) return
     cardHandlers.announce(
       t(
         move.from === null ? "roadmaps.edit.placedIn" : "roadmaps.edit.movedTo",
         {
           placement: t(`roadmaps.items.placements.${to}`),
-          position: count,
-          count,
+          position: place.at + 1,
+          count: place.count,
         },
       ),
     )
@@ -149,7 +162,7 @@ export function RoadmapItems({
       focus={focus}
       cardHandlers={cardHandlers}
       mark={movedMark.mark}
-      onMoved={moved}
+      onMovedByMenu={movedByMenu}
       onEdit={itemDialog.edit}
       onRemove={removalDialog.ask}
       dialogAt={itemDialog.cardAt}
@@ -271,7 +284,7 @@ interface ItemListProps {
   }
   /** The item moved last, if one is marked. */
   mark: MovedMark | null
-  onMoved: (item: PageItem, move: ItemMove, to: RoadmapPlacement) => void
+  onMovedByMenu: MarkMoved
   onEdit: (position: number) => void
   onRemove: (position: number) => void
   /** Where, among the page's items, the one is that holds `dialogOpener`. */
@@ -291,7 +304,7 @@ function ItemList({
   focus,
   cardHandlers,
   mark,
-  onMoved,
+  onMovedByMenu,
   onEdit,
   onRemove,
   dialogAt,
@@ -315,7 +328,7 @@ function ItemList({
           order={orderOf(ordered, stopAt.get(position), stops.length)}
           onAnnounce={cardHandlers.announce}
           mark={mark?.key === pageItem.key ? mark : undefined}
-          onMoved={onMoved}
+          onMovedByMenu={onMovedByMenu}
           focusRequest={
             focus?.position === position ? focus.control : undefined
           }

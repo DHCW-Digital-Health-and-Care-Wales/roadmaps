@@ -159,15 +159,18 @@ layout.
 - **D16** (agent, 2026-11-19, delivery): Remove's "Move to Not doing" (STY-049) is a
   move, so it marks the item, as D2's "every move" says; like the dialog it says
   nothing new (D11), since S5 is the Move menu's.
-- **D17** (agent, 2026-11-19, delivery): a move that is no change, as "Down one" after
-  "Up one" or a move back to the placement the item was read in, still marks it (S6).
-  With nothing pending to lose, that mark is kept until the next move, "Undo order" on
-  its placement, publishing, removing the item or leaving; "Undo changes" and "Discard
-  all" leave it, since neither changes where it shows (S8's words).
+- **D17** (agent, 2026-11-19, delivery and review): S8's "changes where the item shows"
+  is the item's placement or its place among the items shown there: any change but a
+  read that moves it clears the mark, "Undo changes" or "Discard all" (another item's
+  "Undo changes" that shifts it included). A read keeps the mark only while its move is
+  still pending (D9): one that came to no change, as "Down one" after "Up one", is
+  marked (S6) until the next read, or anything else that clears a mark.
 - **D18** (agent, 2026-11-19, delivery): a compact list narrower than 56rem (896px),
   the prototype's 900px, cuts the label (S3, D6). Measured beside the open navigation
   at its default width: 688px at 1024px (cut), 944px at 1280px (whole), 343px on a
   375px phone (cut); a navigation dragged wider at 1280px cuts it too.
+- **D19** (agent, 2026-11-19, review): S3's cut to the arrow and "Moved" is for the
+  "Moved …" labels; "Placed" is no "Moved", and as short, so it shows whole.
 
 ## Starting point
 
@@ -195,20 +198,25 @@ clear of both.
 
 ### Contract for dependents
 
-- `useMovedMark(roadmapId, pageItems)` (`editing/moved-mark.ts`) holds the mark in
-  `RoadmapView`, the page: `{ mark, moved(item, move, to), orderUndone(placement) }`.
+- `useMovedMark({ roadmapId, items, readAt, pageItems, groups })`
+  (`editing/moved-mark.ts`) holds the mark in `RoadmapView`, the page, and gives
+  `mark`, `moved(item, move, to)` and `orderUndone(placement)`; `readAt` is the items
+  query's `dataUpdatedAt`, so a read is told from a change.
   `mark` is `{ key, move, to }`, the item's card key, `ItemMove` (an `OrderMove`, or
   `{ kind: "placement", from }`, `from` `null` for an unplaced item) and the placement
-  the move left it in. Every move calls `moved`: `EditableItem`'s Move menu (through
-  `RoadmapItems`, which says a move to another placement in the status line),
-  `useItemDialog`'s Done and `useRemovalDialog`'s "Move to Not doing". A slide
-  (STY-072) can key its transition on `mark`: each move sets a new object.
-- What clears it is derived on each render from the page's items and the store, by
-  React's "adjusting state while rendering": the item gone or removed, a new
-  "published" notice, or, once its move has been seen pending, the move no longer
-  pending (its placement's order, or the item's own pending placement). "Undo order"
-  calls `orderUndone` (`PlacementHeading`'s `onUndone`).
-- `revealMoved(item)` scrolls the marked item into the room between the pinned bars,
+  the move left it in. Every move calls `moved` (`MarkMoved`): `EditableItem`'s
+  `onMovedByMenu` (through `RoadmapItems`, which says a move to another placement in
+  the status line, where it lands), `useItemDialog`'s Done and `useRemovalDialog`'s
+  "Move to Not doing". A slide (STY-072) can key its transition on `mark`: each move
+  sets a new object.
+- `moved` records where the item shows (`shownPlace`: its placement and place there)
+  from the store the move has just changed (`groupPageItemsWith`), before the page
+  draws it. Each render then clears the mark, by React's "adjusting state while
+  rendering", once the item is gone or removed, a new "published" notice shows, or it
+  shows anywhere else (D17); a new `readAt` keeps it, at its new place, only while its
+  move is pending (the placement's order, or the item's own pending placement, D9).
+  "Undo order" calls `orderUndone` (`PlacementHeading`'s `onUndone`).
+- `revealMoved(item)` (`editing/reveal-moved.ts`) scrolls the marked item into the room between the pinned bars,
   two frames after focus first reaches it, and again as the document's style changes
   for a second (`SETTLING_MS`): a foot bar the first change brings measures itself, and
   a menu's or dialog's scroll lock lets go, only then. Focus sent to Move after a move
@@ -223,17 +231,14 @@ clear of both.
 
 ### Scenario evidence
 
-| Scenario | Held by                                                                                                                                                                                                                                   |
-| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1       | `roadmap-detail-page-moved-mark.test.tsx` (`A move within a placement`); `moved-mark.spec.ts` (`a card's edge is the success tone round it, over its own padding, its grey bar kept, its label under the title`, light and dark)          |
-| S2       | `roadmap-detail-page-moved-mark.test.tsx` (`A move to another placement`: Move menu, dialog, "Placed" both ways, "New" kept, "Move to Not doing")                                                                                         |
-| S3       | `moved-mark.spec.ts` (the card test's label under the title; `a compact row's label is cut … / whole …` at 375px, 1024px and 1280px, English and Welsh, the whole label one pixel and read)                                               |
-| S4       | `moved-mark.spec.ts` (`the page scrolls to the moved item`: Move menu to Later with and without reduced motion, focus on Move; the dialog on a phone, focus on Edit), green over three repeats                                            |
-| S5       | `roadmap-detail-page-moved-mark.test.tsx` ("Moved to Later. 2 of 2.", "Placed in Now. 5 of 5.", nothing from the dialog); in-placement lines held unchanged by `roadmap-detail-page-ordering.test.tsx`                                    |
-| S6       | `roadmap-detail-page-moved-mark.test.tsx` (`One mark`)                                                                                                                                                                                    |
-| S7       | `roadmap-detail-page-moved-mark.test.tsx` (`What keeps the mark`: views and rows, edits, Refresh, another "Undo order", "Undo changes" within a placement, a refused publish)                                                             |
-| S8       | `roadmap-detail-page-moved-mark.test.tsx` (`What clears the mark`: own "Undo order", one moved into, "Undo changes", "Discard all", publish, removal, a Refresh holding the move, leaving)                                                |
-| S9       | `roadmap-detail-page-moved-mark.test.tsx` (`The mark in Welsh`); `moved-mark.spec.ts` (Welsh full and short; dark edge by `tokenColour`); `contrast.test.ts` (the edge on background and card, 3:1, both themes); `accessibility.spec.ts` |
-
-The page tests were written first: 27 of 27 failed on the base, `d048984`, with the
-test file run against it, and pass on the build.
+| Scenario | Held by                                                                                                                                                                                                                                                                                     |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `roadmap-detail-page-moved-mark.test.tsx` (`A move within a placement`); `moved-mark.spec.ts` (`a card's edge is the success tone round it, over its own padding, its grey bar kept, its label under the title`, light and dark)                                                            |
+| S2       | `roadmap-detail-page-moved-mark.test.tsx` (`A move to another placement`: Move menu, dialog, "Placed" both ways, "New" kept, "Move to Not doing")                                                                                                                                           |
+| S3       | `moved-mark.spec.ts` (the card test's label under the title; `a compact row's label is cut … / whole …` at 375px, 1024px and 1280px, English and Welsh, the whole label one pixel and read; "Placed" whole on a phone, D19)                                                                 |
+| S4       | `moved-mark.spec.ts` (`the page scrolls to the moved item`: Move menu to Later with and without reduced motion, focus on Move; the dialog on a phone, focus on Edit), green over three repeats                                                                                              |
+| S5       | `roadmap-detail-page-moved-mark.test.tsx` ("Moved to Later. 2 of 2.", "Placed in Now. 5 of 5.", back where it was read, before a new item, nothing from the dialog); in-placement lines held unchanged by `roadmap-detail-page-ordering.test.tsx`                                           |
+| S6       | `roadmap-detail-page-moved-mark.test.tsx` (`One mark`)                                                                                                                                                                                                                                      |
+| S7       | `roadmap-detail-page-moved-mark.test.tsx` (`What keeps the mark`: views and rows, edits, Refresh, another "Undo order", "Undo changes" within a placement, a refused publish; `A failed publish`)                                                                                           |
+| S8       | `roadmap-detail-page-moved-mark.test.tsx` (`What clears the mark`: own "Undo order", one moved into, "Undo changes", "Discard all" and one after a move back, publish, "Publish roadmap", removal, a Refresh holding the move, finding the item gone or after a move to no change, leaving) |
+| S9       | `roadmap-detail-page-moved-mark.test.tsx` (`The mark in Welsh`); `moved-mark.spec.ts` (Welsh full and short; dark edge by `tokenColour`); `contrast.test.ts` (the edge on background and card, 3:1, both themes); `accessibility.spec.ts`                                                   |

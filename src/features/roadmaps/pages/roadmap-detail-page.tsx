@@ -219,7 +219,13 @@ function RoadmapView({
   const roadmapEdit = useRoadmapEdit(roadmap, shown)
   const publishedStateNotice = useRef<HTMLDivElement>(null)
   const publishNotice = useRef<HTMLDivElement>(null)
-  const movedMark = useMovedMark(roadmap.id, pageItems)
+  const movedMark = useMovedMark({
+    roadmapId: roadmap.id,
+    items: items.data,
+    readAt: items.dataUpdatedAt,
+    pageItems,
+    groups,
+  })
   const itemDialog = useItemDialog({
     roadmap,
     items: items.data,

@@ -20,7 +20,7 @@ import {
 } from "./edit-controls"
 import { MoveMenu } from "./move-menu"
 import { MovedLabel } from "./moved-label"
-import { type ItemMove, type MovedMark, revealMoved } from "./moved-mark"
+import type { MarkMoved, MovedMark } from "./moved-mark"
 import { dropPageItem, editPageItem, type PageItem } from "./page-items"
 import {
   usePendingChanges,
@@ -28,6 +28,7 @@ import {
 } from "./pending-changes-context"
 import { discardable } from "./pending-changes-store"
 import { type OrderMove, positionAfter, reorderItem } from "./pending-orders"
+import { revealMoved } from "./reveal-moved"
 
 export interface EditableItemProps {
   roadmapId: string
@@ -50,8 +51,11 @@ export interface EditableItemProps {
   onAnnounce: (message: string) => void
   /** The moved mark, when the item carries it (STY-071). */
   mark?: MovedMark | undefined
-  /** The Move menu moved the item, to `to`: it takes the moved mark. */
-  onMoved: (item: PageItem, move: ItemMove, to: RoadmapPlacement) => void
+  /**
+   * The Move menu moved the item: it takes the moved mark, and a move to another
+   * placement is said where it lands (STY-071 S5).
+   */
+  onMovedByMenu: MarkMoved
   /** Which control takes focus as the item renders, once; see `onFocusRequest`. */
   focusRequest?: ItemControl | undefined
   /**
@@ -101,7 +105,7 @@ export function EditableItem({
   order,
   onAnnounce,
   mark,
-  onMoved,
+  onMovedByMenu,
   focusRequest,
   onFocusRequest,
   onFocused,
@@ -159,7 +163,11 @@ export function EditableItem({
     store.update(roadmapId, (changes) =>
       editPageItem(changes, items, pageItem, position, { placement }),
     )
-    onMoved(pageItem, { kind: "placement", from: shown.placement }, placement)
+    onMovedByMenu(
+      pageItem,
+      { kind: "placement", from: shown.placement },
+      placement,
+    )
     onFocusRequest(position, "move")
   }
   const reorder = (to: OrderMove) => {
@@ -169,7 +177,7 @@ export function EditableItem({
     )
     const at = positionAfter(order.at, order.count, to)
     if (shown.placement !== null)
-      onMoved(pageItem, { kind: to }, shown.placement)
+      onMovedByMenu(pageItem, { kind: to }, shown.placement)
     onAnnounce(
       t(`roadmaps.edit.order.moved.${to}`, {
         position: at + 1,

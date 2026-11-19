@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test"
 
 import { openEditItemDialog } from "./fixtures/dialogs"
+import { withTabItems } from "./fixtures/fake-sheets"
 import {
   type Language,
   tokenColour,
@@ -24,7 +25,6 @@ const DESKTOP = { width: 1280, height: 812 }
 const COPY = {
   en: {
     move: "Move",
-    later: "Later",
     upOne: "Up one",
     movedUp: "Moved up",
     short: "Moved",
@@ -33,7 +33,6 @@ const COPY = {
   },
   cy: {
     move: "Symud",
-    later: "Hwyrach",
     upOne: "I fyny un",
     movedUp: "Symudwyd i fyny",
     short: "Symudwyd",
@@ -108,6 +107,12 @@ async function inRoom(item: Locator): Promise<boolean> {
     const box = element.getBoundingClientRect()
     return box.top >= top - 1 && box.bottom <= bottom + 1
   })
+}
+
+/** A computed `box-shadow` layer in `colour` whose lengths match `lengths`. */
+function shadowOf(colour: string, lengths: RegExp): RegExp {
+  const escaped = colour.replace(/[()]/g, "\\$&")
+  return new RegExp(`${escaped} ${lengths.source}`)
 }
 
 /** The part of a label a sighted reader sees when it is cut: its "Moved". */
@@ -200,9 +205,10 @@ test.describe("the mark's look", () => {
       )
       const success = await tokenColour(page, "--status-success-border")
       const border = await tokenColour(page, "--border")
-      expect(shadow).toContain(`${success} 6px 0px 0px 0px inset`)
-      expect(shadow).toContain(`${success} 0px 0px 0px 2px`)
-      expect(shadow).toContain(`${border} 0px 6px 0px 0px`)
+      // A bar inside its edge, a ring round it, and the grey bar still under it.
+      expect(shadow).toMatch(shadowOf(success, /[1-9]\d*px 0px 0px 0px inset/))
+      expect(shadow).toMatch(shadowOf(success, /0px 0px 0px [1-9]\d*px/))
+      expect(shadow).toMatch(shadowOf(border, /0px [1-9]\d*px 0px 0px/))
       // Only the item moved is marked.
       await expect(main(page).getByText(/^Moved [^.]+$/)).toHaveCount(1)
     })
@@ -238,8 +244,11 @@ test.describe("the mark's look", () => {
         }
         expect(
           await row.evaluate((element) => getComputedStyle(element).boxShadow),
-        ).toContain(
-          `${await tokenColour(page, "--status-success-border")} 4px 0px 0px 0px inset`,
+        ).toMatch(
+          shadowOf(
+            await tokenColour(page, "--status-success-border"),
+            /[1-9]\d*px 0px 0px 0px inset/,
+          ),
         )
         // The row's line is still one line on a desktop: Move and Edit in view.
         await expect(
@@ -248,4 +257,23 @@ test.describe("the mark's look", () => {
       })
     }
   }
+
+  test("a compact row's “Placed” shows whole in a list too narrow for “Moved up” (D19)", async ({
+    page,
+    sheets,
+  }) => {
+    sheets.spreadsheet = withTabItems(
+      "ProductA",
+      ["Someday", "Soon"],
+      ["Minimal card", "Now"],
+    )
+    await open(page, PHONE)
+    await chooseCompact(page)
+    const row = itemOf(page, "Someday")
+
+    await chooseFromMenu(page, "Someday", "Now")
+
+    await expect(row.getByText("Placed", { exact: true })).toBeVisible()
+    await expect(shortPart(row)).toHaveCount(0)
+  })
 })

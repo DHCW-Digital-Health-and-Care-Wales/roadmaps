@@ -24,7 +24,8 @@ export interface MovedLabelProps {
   /**
    * Whether it is cut to its arrow and "Moved" in a list too narrow for it, as a compact
    * list is under 56rem (STY-071 S3, D6): judged by the nearest `@container`, the list's
-   * own width, not the screen's. A screen reader still reads the whole label.
+   * own width, not the screen's. A screen reader still reads the whole label. "Placed"
+   * is never cut: it is no "Moved" (D19).
    */
   shortens?: boolean
 }

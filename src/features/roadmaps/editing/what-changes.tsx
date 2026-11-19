@@ -6,6 +6,7 @@ import { ROADMAP_PLACEMENTS } from "@/domain/roadmap/roadmap-placement"
 import { useLanguage } from "@/i18n"
 
 import { changedParts } from "./pending-changes"
+import { hasPendingOrder } from "./pending-orders"
 
 export interface WhatChangesProps {
   /** The roadmap's pending changes, which a dialog asks before writing. */
@@ -45,7 +46,7 @@ export function WhatChanges({ changes }: WhatChangesProps) {
         : [],
     ),
     ...ROADMAP_PLACEMENTS.filter((placement) =>
-      changes.orders.some((order) => order.placement === placement),
+      hasPendingOrder(changes.orders, placement),
     ).map((placement) => ({
       key: `order-${placement}`,
       name: t(`roadmaps.items.placements.${placement}`),

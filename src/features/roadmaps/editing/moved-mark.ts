@@ -1,11 +1,21 @@
 import { useState } from "react"
 
+import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import type { RoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 
-import type { PageItem } from "./page-items"
-import { usePendingChanges } from "./pending-changes-context"
+import type { RoadmapItemGroups } from "../group-roadmap-items"
+import {
+  groupPageItemsWith,
+  type PageItem,
+  type ShownPlace,
+  shownPlace,
+} from "./page-items"
+import {
+  usePendingChanges,
+  usePendingChangesStore,
+} from "./pending-changes-context"
 import type { PublishNotice } from "./pending-changes-store"
-import type { OrderMove } from "./pending-orders"
+import { hasPendingOrder, type OrderMove } from "./pending-orders"
 
 /**
  * How an item was moved: within its placement, by the Move menu's choice of position, or
@@ -24,112 +34,112 @@ export interface MovedMark {
   readonly to: RoadmapPlacement
 }
 
+/** Marks the page's item `item`, just moved `move`, to `to`. */
+export type MarkMoved = (
+  item: PageItem,
+  move: ItemMove,
+  to: RoadmapPlacement,
+) => void
+
 /** The page's moved mark, as `useMovedMark` gives it. */
 export interface PageMovedMark {
   /** The item marked, if one is. */
   readonly mark: MovedMark | null
-  /** An item was moved, to `to`: it takes the mark, from any other (S6). */
-  readonly moved: (item: PageItem, move: ItemMove, to: RoadmapPlacement) => void
+  /** An item was moved: it takes the mark, from any other (S6). */
+  readonly moved: MarkMoved
   /** "Undo order" undid `placement`'s order: an item marked there loses its mark. */
   readonly orderUndone: (placement: RoadmapPlacement) => void
 }
 
 interface MarkState {
   readonly mark: MovedMark
-  /**
-   * Whether its move has been seen pending. A move can be no change, one that puts an
-   * item back in the order or the placement it was read in: that mark is kept until
-   * something else clears it, where one whose move was pending goes with the move.
-   */
-  readonly held: boolean
+  /** Where the item shows: as the move left it, or as the last read that kept it. */
+  readonly where: ShownPlace
+  /** When the roadmap's items were last read as the mark was set or kept. */
+  readonly readAt: number
   /** The roadmap's publish notice as the move was made: a new "published" clears it. */
   readonly notice: PublishNotice | undefined
+}
+
+export interface MovedMarkOptions {
+  roadmapId: string
+  /** The roadmap's items as last read; `undefined` until they are. */
+  items: readonly RoadmapItem[] | undefined
+  /** When they were (the query's `dataUpdatedAt`): a new time is a read. */
+  readAt: number
+  /** The page's items (`usePageItems`). */
+  pageItems: readonly PageItem[]
+  /** Those items as the page shows them (`groupPageItems`). */
+  groups: RoadmapItemGroups<PageItem>
 }
 
 /**
  * The moved mark of a roadmap's page (STY-071): display state, held by the page, never
  * a pending edit, so it goes as the page does (S8). Every move marks its item, from the
- * Move menu, the item dialog or Remove's question (D2). It stays through a change of
- * view, edits, opened rows and a read that leaves its move pending (S7, D9), and goes
- * with the next move (S6); with "Undo order" on the placement it is in, even one the
- * item was moved into and stays last in (D12); once its move is no longer pending, as
- * "Undo changes" that puts the item back, "Discard all" or a read that holds the move
- * leave it; once the item is removed or gone; and once the roadmap is published (S8).
+ * Move menu, the item dialog or Remove's question (D2, D16), and the next move takes it
+ * (S6). It stays while the item shows where the move left it: through a change of view,
+ * edits and opened rows (S7), and goes once the item shows anywhere else, as "Undo
+ * changes" or "Discard all" may put it (S8). A read keeps it while its move is still
+ * pending and clears it otherwise (D9), so a move that came to no change keeps its mark
+ * until the next read (D17). "Undo order" on the placement it is in clears it, even
+ * where the item stays last there (D12), as do removing the item, its going from the
+ * page and a successful publish (S8).
  */
-export function useMovedMark(
-  roadmapId: string,
-  pageItems: readonly PageItem[],
-): PageMovedMark {
+export function useMovedMark({
+  roadmapId,
+  items,
+  readAt,
+  pageItems,
+  groups,
+}: MovedMarkOptions): PageMovedMark {
+  const store = usePendingChangesStore()
   const snapshot = usePendingChanges()
   const notice = snapshot.notices.get(roadmapId)
   const changes = snapshot.changes.get(roadmapId)
   const [state, setState] = useState<MarkState | null>(null)
 
   if (state) {
-    const item = marked(pageItems, state.mark)
-    const shown = item !== undefined && item.removal === undefined
-    const where = shown && item.shown.placement === state.mark.to
-    const pending =
-      where &&
-      (state.mark.move.kind === "placement"
-        ? // A new item's placement is its own; one read has a pending move to it.
-          item.newItemId !== undefined ||
-          item.entry?.fields.placement !== undefined
-        : changes?.orders.some(({ placement }) => placement === state.mark.to))
+    const { key, move, to } = state.mark
+    const where = shownPlace(groups, key)
     const published = notice !== state.notice && notice?.kind === "published"
     // Adjusting state while rendering, as React documents for state that follows props.
-    if (!shown || published || (state.held && !pending)) setState(null)
-    else if (pending && !state.held) setState({ ...state, held: true })
+    if (!where || published) setState(null)
+    else if (readAt !== state.readAt) {
+      const item = pageItems.find((each) => each.key === key)
+      const pending =
+        where.placement === to &&
+        (move.kind === "placement"
+          ? // A new item's placement is its own; one read has a pending move to it.
+            item?.newItemId !== undefined ||
+            item?.entry?.fields.placement !== undefined
+          : hasPendingOrder(changes?.orders, to))
+      setState(pending ? { ...state, where, readAt } : null)
+    } else if (!samePlace(where, state.where)) setState(null)
   }
 
-  const moved = (item: PageItem, move: ItemMove, to: RoadmapPlacement) => {
-    setState({ mark: { key: item.key, move, to }, held: false, notice })
+  return {
+    mark: state?.mark ?? null,
+    moved: (item, move, to) => {
+      // Where the move put it, from the store the move has just changed: the page has
+      // not drawn it yet.
+      const after = groupPageItemsWith(
+        items ?? [],
+        store.getSnapshot().changes.get(roadmapId),
+        pageItems,
+      )
+      const where = shownPlace(after, item.key)
+      setState(
+        where
+          ? { mark: { key: item.key, move, to }, where, readAt, notice }
+          : null,
+      )
+    },
+    orderUndone: (placement) => {
+      if (state?.where.placement === placement) setState(null)
+    },
   }
-  const orderUndone = (placement: RoadmapPlacement) => {
-    if (state && marked(pageItems, state.mark)?.shown.placement === placement) {
-      setState(null)
-    }
-  }
-  return { mark: state?.mark ?? null, moved, orderUndone }
 }
 
-/** The page's item that carries `mark`, if it is still there. */
-function marked(
-  pageItems: readonly PageItem[],
-  mark: MovedMark,
-): PageItem | undefined {
-  return pageItems.find(({ key }) => key === mark.key)
-}
-
-/** How long a reveal follows the pinned bars as they settle after a move. */
-const SETTLING_MS = 1000
-
-/**
- * Scrolls the page until `item`, just moved, is in the room between the pinned header
- * and foot bar, which `scroll-padding` keeps clear: gliding, or in one jump where the
- * system asks for reduced motion (STY-071 S4, D8). The bars may still be settling: a
- * menu or dialog closing lets go of the page's scroll a moment later, and a foot bar the
- * move brought, or a header sticking as the page glides, sets its height on the document
- * (`usePinnedInset`) a few frames on. So the page is scrolled two frames on, and again
- * as the document's style changes, for a second.
- */
-export function revealMoved(item: Element) {
-  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  const reveal = () => {
-    item.scrollIntoView({
-      block: "nearest",
-      behavior: reduced ? "instant" : "smooth",
-    })
-  }
-  const settling = new MutationObserver(reveal)
-  settling.observe(document.documentElement, {
-    attributes: true,
-    attributeFilter: ["style"],
-  })
-  setTimeout(() => {
-    settling.disconnect()
-  }, SETTLING_MS)
-  requestAnimationFrame(() => {
-    requestAnimationFrame(reveal)
-  })
+function samePlace(a: ShownPlace, b: ShownPlace): boolean {
+  return a.placement === b.placement && a.index === b.index
 }

@@ -7,6 +7,7 @@ import type { RoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 import type { Language } from "@/i18n"
+import { AppError } from "@/lib/errors"
 import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
@@ -163,6 +164,26 @@ describe("A move to another placement (S2, S5)", () => {
     expect(main().getByText("Moved to Later. 2 of 2.")).toBeInTheDocument()
   })
 
+  it("says where an item moved back to the placement it was read in shows: its place as read", async () => {
+    const { user } = await renderPage()
+    await chooseFromMenu(user, "Alpha", "Later")
+
+    await chooseFromMenu(user, "Alpha", "Now")
+
+    expect(titlesUnder("Now")).toEqual(["Alpha", "Bravo", "Charlie", "Delta"])
+    expect(main().getByText("Moved to Now. 1 of 4.")).toBeInTheDocument()
+  })
+
+  it("says where an item moved into a placement holding a new item shows: before it (STY-051 S1)", async () => {
+    const { user } = await renderPage()
+    await addItem(user, "Kilo", "Later")
+
+    await chooseFromMenu(user, "Alpha", "Later")
+
+    expect(titlesUnder("Later")).toEqual(["Solo", "Alpha", "Kilo"])
+    expect(main().getByText("Moved to Later. 2 of 3.")).toBeInTheDocument()
+  })
+
   it("marks an item moved by the item dialog the same way, saying nothing new (D11)", async () => {
     const { user } = await renderPage()
 
@@ -172,16 +193,13 @@ describe("A move to another placement (S2, S5)", () => {
     expect(main().queryByText(/^Moved to /)).toBeNull()
   })
 
-  it.each([
-    ["menu", "Now"],
-    ["dialog", "Now"],
-  ] as const)(
+  it.each(["menu", "dialog"] as const)(
     "labels an unplaced item given a placement by its %s “Placed”",
-    async (way, to) => {
+    async (way) => {
       const { user } = await renderPage()
 
-      if (way === "menu") await chooseFromMenu(user, "Someday", to)
-      else await moveWithDialog(user, "Someday", to)
+      if (way === "menu") await chooseFromMenu(user, "Someday", "Now")
+      else await moveWithDialog(user, "Someday", "Now")
 
       expect(marked()).toEqual([["Someday", "Placed"]])
       if (way === "menu") {
@@ -324,6 +342,26 @@ describe("What keeps the mark (S7)", () => {
   })
 })
 
+describe("A failed publish (D12)", () => {
+  it("keeps the mark, the move still pending", async () => {
+    const { user, repository } = await renderPage()
+    vi.spyOn(repository, "publishRoadmapChanges").mockRejectedValue(
+      new AppError("network"),
+    )
+    await chooseFromMenu(user, "Delta", "Up one")
+
+    await confirm(user, "Publish changes")
+
+    await waitFor(() => {
+      expect(
+        main().getByRole("button", { name: "Publish changes" }),
+      ).not.toHaveAttribute("aria-disabled", "true")
+    })
+    expect(main().getByText("Order changed")).toBeInTheDocument()
+    expect(marked()).toEqual([["Delta", "Moved up"]])
+  })
+})
+
 describe("What clears the mark (S8)", () => {
   it("is cleared by “Undo order” on the item's placement", async () => {
     const { user } = await renderPage()
@@ -367,6 +405,76 @@ describe("What clears the mark (S8)", () => {
     await confirm(user, "Discard all changes")
 
     expect(marked()).toEqual([])
+  })
+
+  it("is cleared by “Discard all” that puts an item moved back to its placement where it was read", async () => {
+    const { user } = await renderPage()
+    await chooseFromMenu(user, "Delta", "To the top")
+    await chooseFromMenu(user, "Alpha", "Later")
+    await chooseFromMenu(user, "Alpha", "Now")
+    expect(titlesUnder("Now")).toEqual(["Delta", "Bravo", "Charlie", "Alpha"])
+    expect(marked()).toEqual([["Alpha", "Moved from Later"]])
+
+    await confirm(user, "Discard all changes")
+
+    expect(titlesUnder("Now")).toEqual(["Alpha", "Bravo", "Charlie", "Delta"])
+    expect(marked()).toEqual([])
+  })
+
+  it("is cleared by a Refresh after a move that came to no change (D9, D17)", async () => {
+    const { user } = await renderPage()
+    await chooseFromMenu(user, "Delta", "Up one")
+    await chooseFromMenu(user, "Delta", "Down one")
+    expect(marked()).toEqual([["Delta", "Moved down"]])
+
+    await refreshRoadmap(user)
+
+    await waitFor(() => {
+      expect(marked()).toEqual([])
+    })
+  })
+
+  it("is cleared by a Refresh that finds the item gone", async () => {
+    const { user, repository } = await renderPage()
+    await chooseFromMenu(user, "Alpha", "Later")
+    repository.coLead((_list, itemsOf) => {
+      itemsOf("producta").splice(0, 1)
+    })
+
+    await refreshRoadmap(user)
+
+    await waitFor(() => {
+      expect(
+        main().queryByRole("heading", { level: 3, name: "Alpha" }),
+      ).toBeNull()
+    })
+    expect(marked()).toEqual([])
+  })
+
+  it("is cleared by “Publish roadmap” on a roadmap not published, after a move that came to no change", async () => {
+    const draft = createTestRoadmap("producta", "Product A roadmap", {
+      published: false,
+    })
+    const { user } = await renderPage({
+      repository: createInMemoryRoadmapRepository([draft], {
+        producta: items,
+      }),
+    })
+    await chooseFromMenu(user, "Delta", "Up one")
+    await chooseFromMenu(user, "Delta", "Down one")
+    expect(marked()).toEqual([["Delta", "Moved down"]])
+
+    await user.click(main().getByRole("button", { name: "Publish roadmap" }))
+    await user.click(
+      within(await screen.findByRole("alertdialog")).getByRole("button", {
+        name: "Publish roadmap",
+      }),
+    )
+
+    await main().findByText(/^Product A roadmap is published\./)
+    await waitFor(() => {
+      expect(marked()).toEqual([])
+    })
   })
 
   it("is cleared by a successful publish", async () => {

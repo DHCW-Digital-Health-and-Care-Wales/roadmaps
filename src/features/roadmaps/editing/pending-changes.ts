@@ -7,7 +7,7 @@
  */
 
 import { findEditedItem } from "@/domain/roadmap/find-edited-item"
-import { reconcileRemovals } from "@/domain/roadmap/item-removal"
+import { reconcileRemovals, removalOf } from "@/domain/roadmap/item-removal"
 import { englishDetails } from "@/domain/roadmap/item-details"
 import type { LocalisedText } from "@/domain/roadmap/localised-text"
 import { dropPublishedNewItems } from "@/domain/roadmap/new-item"
@@ -440,19 +440,24 @@ export function publishesNoItems(
 
 /**
  * How many changes are pending, what the page counts as unpublished changes: each field
- * edited, each new item as one, whatever fields it has, and each placement's order as
- * one, however many of its items moved (STY-050).
+ * edited, each new item as one, whatever fields it has, each placement's order as one,
+ * however many of its items moved (STY-050), and each removal as one, its item's edits
+ * beneath it none (STY-049 D5).
  */
 export function countChanges(changes: RoadmapChanges | undefined): number {
   if (!changes) return 0
   return (
     Object.keys(changes.roadmap).length +
     changes.items.reduce(
-      (count, entry) => count + Object.keys(entry.fields).length,
+      (count, entry) =>
+        removalOf(changes, entry)
+          ? count
+          : count + Object.keys(entry.fields).length,
       0,
     ) +
     changes.newItems.length +
-    changes.orders.length
+    changes.orders.length +
+    changes.removals.length
   )
 }
 

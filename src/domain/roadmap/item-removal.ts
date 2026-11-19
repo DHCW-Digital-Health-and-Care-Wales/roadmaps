@@ -79,10 +79,10 @@ export function removalOf(
 /**
  * `changes` after a fresh read of the roadmap's items (STY-070 S5): a removal of an item
  * with an ID that no item read holds is done, whoever removed it, and is no longer
- * pending; one found follows its item to its place in the read, and takes its ID if it
- * had none, keeping the item as loaded, its base. One without an ID that is not found
- * is kept, as an edit is: the next publish says it can't be found (D3). `changes`
- * itself when nothing changes.
+ * pending, nor are the item's edits beneath it; one found follows its item to its
+ * place in the read, and takes its ID if it had none, keeping the item as loaded, its
+ * base. One without an ID that is not found is kept, as an edit is: the next publish
+ * says it can't be found (D3). `changes` itself when nothing changes.
  */
 export function reconcileRemovals(
   changes: RoadmapChanges,
@@ -90,9 +90,13 @@ export function reconcileRemovals(
 ): RoadmapChanges {
   if (changes.removals.length === 0) return changes
   const read = new Set(items.flatMap(({ id }) => (id === null ? [] : [id])))
+  const done: ItemRemoval[] = []
   const removals = changes.removals.flatMap((removal): ItemRemoval[] => {
     const { item, position } = removal
-    if (item.id !== null && !read.has(item.id)) return []
+    if (item.id !== null && !read.has(item.id)) {
+      done.push(removal)
+      return []
+    }
     const index = findEditedItem(items, new Set(), removal, [])
     const found = items[index]
     if (found === undefined) return [removal]
@@ -100,10 +104,19 @@ export function reconcileRemovals(
     if (index === position && id === item.id) return [removal]
     return [{ item: { ...item, id }, position: index }]
   })
-  return removals.length === changes.removals.length &&
+  if (
+    removals.length === changes.removals.length &&
     removals.every((each, at) => each === changes.removals[at])
-    ? changes
-    : { ...changes, removals }
+  ) {
+    return changes
+  }
+  return {
+    ...changes,
+    items: changes.items.filter(
+      (entry) => !done.some((removal) => sameTarget(removal, entry)),
+    ),
+    removals,
+  }
 }
 
 /** What publishing a roadmap's removals comes to, over a fresh read of its items. */

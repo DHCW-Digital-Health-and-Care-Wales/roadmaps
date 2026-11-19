@@ -178,7 +178,9 @@ Audited at `3cd6b8f`.
   `removeAnyway`, `reconcileRemovals` and `planRemovals`. `features/` gains only what
   the type change forces or S1, S4 and S5 need of the pending-edit rules:
   `settlePublished` drops a sent removal with its item's edits, `reconcileItems` calls
-  `reconcileRemovals`, `discardItems` drops a missing removal with its item's edits,
+  `reconcileRemovals`, `countChanges` counts a removal (or the store would forget a
+  roadmap whose only change is one), `discardItems` drops a missing removal with its
+  item's edits,
   and "Keep mine" and "Use theirs" on a removal's conflict are "Remove anyway" and
   "Keep the item". `sameTarget` moved from `pending-changes.ts` to the domain, as
   `planRemovals` needs it.
@@ -200,11 +202,12 @@ Audited at `3cd6b8f`.
   `undoRemoval(changes, target)` drops it, by `sameTarget`; `removalOf(changes,
 target)` says whether an item is removed. Neither touches `items` or `orders`.
 - **An item's edits stay in `RoadmapChanges.items` beneath its removal**: the publish
-  plan skips them, but nothing in `features/` hides them yet. `countChanges`,
-  `changedParts`, `matchItemChanges`, `applyItemChanges`, `publishesNoItems`, the
-  jump navigation's counts and the pending order the page draws still count or show a
-  removed item and its edits as before: STY-049 (S2 to S4, S8) makes each skip them,
-  with `removalOf`.
+  plan skips them, and `countChanges` counts the removal as one and its item's edits
+  as none (STY-049 D5), so the store keeps a roadmap whose only change is a removal
+  and a publish sends it. Nothing else in `features/` hides them yet: `changedParts`,
+  `matchItemChanges`, `applyItemChanges`, `publishesNoItems`, the jump navigation's
+  counts and the pending order the page draws still show a removed item and its edits
+  as before: STY-049 (S2 to S4, S8) makes each skip them, with `removalOf`.
 - **A refusal can carry a `RemovalConflict`** (`subject: "removal"`: the `removal`
   given, the `current` item read and each changed `field` with its `base` and
   `current`), and a missing removal in `missingItems`, which then holds
@@ -214,7 +217,8 @@ target)` says whether an item is removed. Neither touches `items` or `orders`.
   item becomes the base) and `takeTheirs` is "Keep the item" (`undoRemoval`).
   `discardItems` drops a missing removal and its item's edits.
 - **Refresh and publish settle a removal**: `reconcileItems` drops one whose item, with
-  an ID, the read no longer holds, and moves one found to its new position;
+  an ID, the read no longer holds, with its item's edits, and moves one found to its
+  new position;
   `settlePublished` drops a sent one with its item's edits.
 - **`PublishWrites.removals`** (`{ index, item }`, the item as the publish read it)
   are deleted last; `heldWrites` judges each with `heldRemoval`. A hand-written
@@ -228,7 +232,7 @@ target)` says whether an item is removed. Neither touches `items` or `orders`.
 
 | Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1       | `src/domain/roadmap/item-removal.test.ts` (`removeItem and undoRemoval`); `src/domain/roadmap/publish-plan.test.ts` (`publishes none of the item's edits…`, `leaves the removed item out of its placement's pending order`); `src/features/roadmaps/editing/pending-changes.test.ts` (`a removed item (STY-070)`); contract `deletes it in the one write with every other change…`, `leaves the removed item out of its placement's pending order (S1)`                                                                                                                                                                                                                                                           |
+| S1       | `src/domain/roadmap/item-removal.test.ts` (`removeItem and undoRemoval`); `pending-changes-store.test.ts` (`keeps a roadmap whose only change is a removal (STY-070 S1)`); `pending-changes.test.ts` (`is one pending change, its item's edits beneath it none (STY-049 D5)`); `src/domain/roadmap/publish-plan.test.ts` (`publishes none of the item's edits…`, `leaves the removed item out of its placement's pending order`); `src/features/roadmaps/editing/pending-changes.test.ts` (`a removed item (STY-070)`); contract `deletes it in the one write with every other change…`, `leaves the removed item out of its placement's pending order (S1)`                                                      |
 | S2       | `publish-plan.test.ts` (`a removed item (STY-070)`); `google-sheets-roadmap-repository.test.ts` (`a removed item's row (STY-070)`: alone, last after cells, a move and an append, below an inserted row, without an ID)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | S3       | `google-sheets-roadmap-repository.test.ts` (`every row of a copied Template's grid (S3)`: one item, several, beside an append, a spare row); `tests/fixtures/sheets/apply-batch-update.test.ts` (`applyBatchUpdate removing a roadmap tab's rows (STY-070)`); contract `leaves the roadmap no items but new ones…`                                                                                                                                                                                                                                                                                                                                                                                                |
 | S4       | `publish-plan.test.ts` (`a co-lead's change to the item (S4)`, `finds it by its ID wherever a co-lead's reorder has put it…`); `item-removal.test.ts` (`removeAnyway`); `src/features/roadmaps/editing/conflicts.test.ts` (`a removal's conflict (STY-070 S4)`); contract `a co-lead's change to the item (S4)`                                                                                                                                                                                                                                                                                                                                                                                                   |

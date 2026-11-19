@@ -146,8 +146,8 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   archived, says what `removeItem`, `undoRemoval`, `removalOf`, `removeAnyway` and
   `reconcileRemovals` do). A hand-written `RoadmapChanges` or `PublishWrites` needs
   `removals`: spread `NO_CHANGES`. A removed item's edits stay in `items`, beneath the
-  removal, and only the publish plan skips them so far: whatever counts or shows an
-  item's changes asks `removalOf` first.
+  removal, and only the publish plan and `countChanges` skip them so far: whatever
+  else counts or shows an item's changes asks `removalOf` first.
 - **A refusal may hold a removal**: its `missingItems` an `ItemRemoval`, which has no
   `fields`, and its `conflicts` a `RemovalConflict` (`subject: "removal"`), which
   `openConflicts` leaves out until the review draws it (STY-049).

@@ -1159,6 +1159,12 @@ describe("a removed item (STY-070)", () => {
   const edited = editItem(NO_CHANGES, undefined, first, 0, { phase: "Beta" })
   const removed = removeItem(removeItem(edited, first, 0), second, 1)
 
+  it("is one pending change, its item's edits beneath it none (STY-049 D5)", () => {
+    expect(countChanges(edited)).toBe(1)
+    expect(countChanges(removeItem(edited, first, 0))).toBe(1)
+    expect(countChanges(removed)).toBe(2)
+  })
+
   it("is no longer pending once the publish it was sent in lands, with the edits beneath it, and one removed since is (S1)", () => {
     const sent = removeItem(edited, first, 0)
     const since = editItem(removed, undefined, second, 1, { phase: "Live" })
@@ -1172,10 +1178,14 @@ describe("a removed item (STY-070)", () => {
   it("is no longer pending over a read that no longer holds its ID, while one without an ID follows its item (S5)", () => {
     const secondRead = { ...second, id: "secondid" }
 
-    expect(
-      reconcileItems(removed, [createTestRoadmapItem("Other"), secondRead])
-        .removals,
-    ).toEqual([{ item: secondRead, position: 1 }])
+    const reconciled = reconcileItems(removed, [
+      createTestRoadmapItem("Other"),
+      secondRead,
+    ])
+
+    expect(reconciled.removals).toEqual([{ item: secondRead, position: 1 }])
+    // The edit beneath the removal of the item gone goes with it (review round 1).
+    expect(reconciled.items).toEqual([])
     expect(reconcileItems(removed, [first, secondRead]).removals).toEqual([
       { item: first, position: 0 },
       { item: secondRead, position: 1 },

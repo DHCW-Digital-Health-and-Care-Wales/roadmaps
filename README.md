@@ -183,7 +183,8 @@ it writes the `Families` tab only as below.
   Google keeps one row that is not frozen in every tab; a row without a title is no
   item, so the roadmap reads with none. A row appended or inserted in the same write is
   such a row, and then every removed row is deleted. A removal writes nothing when a
-  co-lead has changed any of the item's fields since it was loaded, and counts as done
+  co-lead has changed any field of the item the editor edits (its English text, its
+  placement, tags, organisations or details) since it was loaded, and counts as done
   when no row of the tab holds its `Item ID` (STY-070);
 - an `Item ID` for every item row it reads (one with a title) that has none, or repeats
   another row's, but a row it deletes: eight random

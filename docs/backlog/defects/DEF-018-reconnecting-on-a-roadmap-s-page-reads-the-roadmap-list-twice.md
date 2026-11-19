@@ -1,6 +1,6 @@
 # DEF-018: Reconnecting on a roadmap's page reads the roadmap list twice
 
-- **Status**: Needs grilling — cause found by DEF-020+018 delivery; the owner chooses what remains (D2)
+- **Status**: Needs grilling — cause found by DEF-020+018 delivery; the owner chooses (D2)
 - **Severity**: Low — two extra requests to the data source per reconnect; nothing
   shown is wrong
 - **Area**: Features/UI

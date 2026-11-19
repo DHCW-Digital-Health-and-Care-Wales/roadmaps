@@ -42,8 +42,8 @@ the Description had left it, and the roadmap header, which had stuck, let go. Fo
 or two as it did so its placement links wrapped, 49 px taller (DEF-021), after the two
 frames the helper waited on had drawn the heading still and before Playwright worked
 out where to press. Sampled in the page on a failing run, the pointer events were at
-`y=557`, where the heading had been in that frame, and their target was the
-Description's `div`, with the heading back at `y=496`. The row's own height is not
+`y=557`, the heading's middle in that frame, and their target was the
+Description's `div`, with the heading's top back at `y=496`. The row's own height is not
 involved: it has no transition but the chevron's turn.
 
 ## Acceptance criteria
@@ -67,8 +67,9 @@ pinned foot (`--pinned-top`, `--pinned-bottom`), as the third press's heading is
 the Description it pressed before sits a line below it. A target outside that room is
 still brought to the middle and waited on until two frames draw it still. The header's
 own 49 px excursion is a product fault in its own right, recorded as DEF-021, not fixed
-here: a user is unlikely to press in the one or two frames it lasts. The test also runs with the CPU slowed
-fourfold, so the load S1 asks for is part of the suite, not a flag on a run.
+here: a user is unlikely to press in the one or two frames it lasts. The test also
+runs with the CPU slowed fourfold, so the load S1 asks for is part of the suite, not a
+flag on a run.
 
 ### Departures
 
@@ -81,8 +82,8 @@ fourfold, so the load S1 asks for is part of the suite, not a flag on a run.
 ### Contract for dependents
 
 `pressOn` (`tests/e2e/roadmap-items-compact.spec.ts`) scrolls only a target not wholly
-clear of the stuck header, the pinned foot and the viewport. A test that presses a row after the header's state
-changes with a scroll still meets DEF-021 until it is fixed.
+clear of the stuck header, the pinned foot and the viewport. A test that presses a row
+after the header's state changes with a scroll still meets DEF-021 until it is fixed.
 
 ### Scenario evidence
 

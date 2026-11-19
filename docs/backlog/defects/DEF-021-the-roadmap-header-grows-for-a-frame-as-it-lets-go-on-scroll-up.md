@@ -1,8 +1,9 @@
 # DEF-021: The roadmap header grows for a frame as it lets go on scroll up, moving the items
 
 - **Status**: Needs triage — found by DEF-020 delivery
-- **Severity**: Low — the items below the header jump 49 px for a frame or two as it
-  lets go; nothing is lost, and a press that lands in that frame misses its target
+- **Severity**: Low — the items below the header jump 6 to 49 px for a frame or two as
+  it lets go, by how many placements its links hold; nothing is lost, and a press that
+  lands in that frame misses its target
 - **Area**: Features/UI
 - **Epic**: standalone
 - **Depends on**: none
@@ -46,13 +47,13 @@ down and back; at 375×812 with the spec's items the header is 158 then 152 px, 
 ## Cause
 
 Not verified. What was measured: in the frame after `data-stuck` goes, the in-flow
-header's links are 864 px wide, 80 px short of the 944 px they have a frame later, and
-the settled width is the same before and after, so something that gives the width, or
-takes 80 px of it, arrives a frame late. 80 px is the container's two margins
-(`md:px-10` in `PageContainer`), so a suspect is the class that drops them while the
-header is in the page (`StickyHeader`), not the links' own text; a row of links as long
-as the spec's merely makes the narrower frame visible by wrapping. Not told apart from
-the links' current, bold link changing a frame late.
+header's links are 864 px wide, 80 px short of the 944 px they have a frame later, which
+is also their width in the stuck frames before it. 80 px is the container's two margins
+(`md:px-10` in `PageContainer`), but the class that drops them while the header is in
+the page changes in the same render as `data-stuck`, so what arrives a frame late is
+something else, such as the timing of `useScrolledPast` and `useMeasuredHeight`. A row
+of links as long as the spec's merely makes the narrower frame visible by wrapping. Not
+told apart from the links' current, bold link changing a frame late.
 
 - `rg -n 'PageContainer|max-w-none' src/components/layout/sticky-header.tsx` — the
   container whose margins differ between stuck and in the page.

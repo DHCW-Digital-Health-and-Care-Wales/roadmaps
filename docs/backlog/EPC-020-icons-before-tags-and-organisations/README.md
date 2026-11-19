@@ -21,15 +21,15 @@ None.
 
 Audited at `b968cd2` on 2026-11-19.
 
-| Where the words are drawn              | Built on                                 | Drawn as            |
-| -------------------------------------- | ---------------------------------------- | ------------------- |
-| Card, opened compact row               | `ItemFields` (`dt`)                      | Bold label          |
-| Add and Edit item form                 | `EditForm` (`FormField`, `OpeningField`) | Field label         |
-| Locked Welsh tags in the form          | `FixedField`                             | Bold label          |
-| Conflict review, "Current text"        | `ConflictReviewDialog` (`dt`)            | Bold label          |
-| Conflict review, target line           | `ConflictItem` (`target`)                | One translated line |
-| "What changes"                         | `WhatChanges` (`change`)                 | Joined string       |
-| Families, categories and organisations | `OrganisationsSection` (`h2`)            | Heading             |
+| Where the words are drawn                | Built on                      | Drawn as            |
+| ---------------------------------------- | ----------------------------- | ------------------- |
+| Card, opened compact row                 | `ItemFields` (`dt`)           | Bold label          |
+| Add and Edit item form                   | `EditForm` (`OpeningField`)   | Field label         |
+| Locked Welsh tags in the form            | `FixedField`                  | Bold label          |
+| A removal's "Current text" in the review | `RemovalConflictItem` (`dt`)  | Bold label          |
+| An edit's target line in the review      | `ConflictItem` (`target`)     | One translated line |
+| "What changes"                           | `WhatChanges` (`change`)      | Joined string       |
+| Families, categories and organisations   | `OrganisationsSection` (`h2`) | Heading             |
 
 `rg -n "items\.fields\.(tags|organisations)|itemFields\.|families\.organisations\.heading" src -g '!*.test.*'`
 reproduces the table.

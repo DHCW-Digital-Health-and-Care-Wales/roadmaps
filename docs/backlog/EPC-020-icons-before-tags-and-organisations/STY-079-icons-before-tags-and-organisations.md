@@ -61,17 +61,26 @@ versions, so its Tags field is shown but locked
 "Tags" included
 **And** the locked field's note and a field's error messages read as they do today
 
-### S5: The conflict review shows them in its "Current text" list and its target line (owner, D1, D5)
+### S5: A refused edit's target line shows them (owner, D1, D5)
 
-**Given** a refused publish where a co-lead changed an item's tags and organisations
+**Given** a refused publish where a co-lead changed the Tags of an item the Product Lead
+also changed, and another conflict on its Organisations
 **When** the Product Lead opens the review
-**Then** the "Current text" list's "Tags" and "Organisations" labels have their icons
-**And** a conflict's visible target line reads "First item: " then the icon then "Tags",
-likewise for "Organisations"; every other field's line reads as today
+**Then** the first conflict's visible target line reads "First item: " then the tag icon
+then "Tags", and the other's reads "First item: " then the building-complex icon then
+"Organisations"; every other field's line reads as today
 **And** the hidden words that name "Keep mine" and "Use theirs" stay plain text, with no
 icon (D2)
 
-### S6: "What changes" shows them in its lines (owner, D1, D5)
+### S6: A refused removal's "Current text" list shows them (owner, D1)
+
+**Given** a refused publish where the Product Lead removed an item that a co-lead changed
+the tags and organisations of
+**When** the Product Lead opens the review
+**Then** its "Current text" list's "Tags" and "Organisations" labels have their icons
+**And** the list's other labels have none, and its words and order are as today
+
+### S7: "What changes" shows them in its lines (owner, D1, D5)
 
 **Given** a roadmap with an item whose title, tags and organisations are changed
 **When** the Product Lead opens the publish dialog's "What changes"
@@ -80,7 +89,7 @@ icon (D2)
 **And** the commas between them, the other parts' lines and the order of the lines are
 as today
 
-### S7: The Families page's "Organisations" heading shows the icon (owner, D1)
+### S8: The Families page's "Organisations" heading shows the icon (owner, D1)
 
 **Given** the Families, categories and organisations page
 **When** it shows its "Organisations" section
@@ -88,35 +97,38 @@ as today
 **And** the section is still named "Organisations", by its heading, and the other
 headings on the page have no icon
 
-### S8: The icons say nothing to a screen reader (owner, D2)
+### S9: The icons say nothing to a screen reader (owner, D2)
 
-**Given** any place S1–S7 draws an icon
+**Given** any place S1–S8 draws an icon
 **When** assistive technology reads it
 **Then** the icon is hidden from it, and every name and label that said "Tags" or
 "Organisations" says the same words as before
 **And** no string is added to the catalogues for the icons
 
-### S9: The icon looks like part of its label (owner, D4)
+### S10: The icon looks like part of its label (owner, D3, D4)
 
-**Given** any place S1–S7 draws an icon, in the light and dark themes, at a phone's width
+**Given** any place S1–S8 draws an icon, in the light and dark themes, at a phone's width
 **When** the label shows
 **Then** the icon is the label's colour, as tall as its text, with a small gap, and
 centred on the line
 **And** it never sits alone on a line apart from its word: the two wrap together
 **And** it has no colour of its own, so it follows the label in any theme
+**And** no other field's label has an icon at any of these places (D3)
 
-### S10: Welsh shows the same icons (D1)
+### S11: Welsh shows the same icons (D1)
 
 **Given** the editor in Welsh
-**When** each place in S1–S7 shows
-**Then** the Welsh label ("Tagiau", "Sefydliadau") has the same icon before it
+**When** each place in S1–S8 shows
+**Then** each site's Welsh label (the card's "Tagiau" and "Sefydliadau", the form's, the
+review's and "What changes"'s "Tagiau (Saesneg)" and "Sefydliadau") has the same icon
+before it
 **And** the rebuilt refusal line reads as natural Welsh, with the icon before the field
 name, written with the `copywriter` skill
 
 ## Tests _(optional)_
 
-Component tests hold S1–S8 at each site, read by accessible name so an icon that leaked
-into a name fails them. S9 and S10 are observed in the running app in both themes, at a
+Component tests hold S1–S9 at each site, read by accessible name so an icon that leaked
+into a name fails them. S10 and S11 are observed in the running app in both themes, at a
 phone's width and in Welsh, and the evidence goes in Delivery.
 
 ## Decisions
@@ -124,20 +136,20 @@ phone's width and in Welsh, and the evidence goes in Delivery.
 - **D1** (owner, 2026-11-19, grilling round 1 Q1): which places get the icons → all
   four chosen: the item card and opened compact row, the Add and Edit item form, the
   conflict review and "What changes" lists, and the Families page's "Organisations"
-  heading. Sets S1–S7.
+  heading. Sets S1–S8.
 - **D2** (owner, 2026-11-19, grilling round 1 Q2): what assistive technology says →
   the icon is decorative and hidden; every accessible name stays "Tags" or
-  "Organisations". Sets S5, S8.
+  "Organisations". Sets S5, S9.
 - **D3** (owner, 2026-11-19, grilling round 1 Q3): other fields → no, only these two.
-  Sets S1.
+  Sets S1, S10.
 - **D4** (owner, 2026-11-19, grilling round 1 Q4): how it looks → the label's colour,
-  the heading's text height, a small gap, centred on the line; no new token. Sets S7,
-  S9.
+  the label's text height, a small gap, centred on the line; no new token. Sets S8,
+  S10.
 - **D5** (owner, 2026-11-19, grilling round 2): the two places that name a field inside
   a line of text (the refusal's "First item: Tags", and "What changes") → the icon
   goes in the line too, over leaving them plain. Their field names stop being plain
   strings, and the refusal's `target` wording is rebuilt in English and Welsh. Sets
-  S5, S6, S10.
+  S5, S7, S11.
 - **D6** (agent, 2026-11-19): a one-story epic, EPC-020, with no `Depends on`, over
   waiting for STY-075 or STY-076, because neither changes the field labels this story
   touches. They overlap only in files the owner's other deliveries may be editing:
@@ -148,15 +160,20 @@ phone's width and in Welsh, and the evidence goes in Delivery.
 _Audited at `b968cd2`._
 
 - **A label is a `string` almost everywhere.** `EditFormField.label` runs into
-  `FormField`, `FixedField`, `OpeningField` and `TagsField`, and the same two words come
-  from `roadmaps.items.fields.*` (the card), `roadmaps.edit.itemFields.*` (the form,
-  the review and "What changes") and `roadmaps.families.organisations.heading`. The icon
-  goes where a label is drawn, chosen by the field, not into the catalogue string.
+  `OpeningField` (Organisations directly, Tags through `TagsField`) and `FixedField`.
+  The same two words come from `roadmaps.items.fields.*` (the card, and the form's locked
+  Welsh tags), `roadmaps.edit.itemFields.*` (the form's other labels, the review and
+  "What changes") and `roadmaps.families.organisations.heading`. The icon goes where a
+  label is drawn, chosen by the field, not by the catalogue key, or the locked field is
+  missed (S4).
+- **Only a removal's review lists field labels.** An edit conflict's "Current text" is
+  a bare value under its target line; the "Current text" `dl` of labels belongs to
+  `RemovalConflictItem`, so S5 and S6 are two conflicts, never one.
 - **The conflict review's `target` is used twice.** `ConflictItem` draws it visibly
   (a bold line) and again inside a `sr-only` span on "Keep mine" and "Use theirs". Only
   the visible line gets the icon (S5, D2): the hidden words stay a string.
 - **"What changes" joins its fields into one string** (`fields.join(", ")`), so it has
-  to become a list of nodes to carry the icons (S6).
+  to become a list of nodes to carry the icons (S7).
 - **Both icons are in the installed lucide-react (1.70.0):** `TagIcon` and
   `BuildingComplexIcon`. The app draws its icons as `XIcon`, `ArrowRightLeftIcon`
   and the like with `aria-hidden="true"`.

@@ -7,12 +7,10 @@ export type EditSurface = "dialog" | "panel"
  */
 export const EDIT_SURFACE_STORAGE_KEY = "roadmaps.edit.surface"
 
-const PANEL = "panel"
-
 /** The surface last chosen in this browser; a dialog where nothing readable is kept. */
 export function readEditSurface(): EditSurface {
   try {
-    return localStorage.getItem(EDIT_SURFACE_STORAGE_KEY) === PANEL
+    return localStorage.getItem(EDIT_SURFACE_STORAGE_KEY) === "panel"
       ? "panel"
       : "dialog"
   } catch {
@@ -27,8 +25,10 @@ export function readEditSurface(): EditSurface {
 export function storeEditSurface(surface: EditSurface): boolean {
   try {
     if (surface === "panel") {
-      localStorage.setItem(EDIT_SURFACE_STORAGE_KEY, PANEL)
-    } else localStorage.removeItem(EDIT_SURFACE_STORAGE_KEY)
+      localStorage.setItem(EDIT_SURFACE_STORAGE_KEY, "panel")
+    } else {
+      localStorage.removeItem(EDIT_SURFACE_STORAGE_KEY)
+    }
     return true
   } catch {
     return false

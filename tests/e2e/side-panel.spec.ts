@@ -57,6 +57,16 @@ async function expectPanel(page: Page, dialog: Locator) {
 const slot = (dialog: Locator, name: string) =>
   dialog.locator(`[data-slot="${name}"]`)
 
+/** Whether the dialog's buttons end where the dialog does, however short its form. */
+async function expectFooterAtFoot(dialog: Locator) {
+  const [footer, panel] = await Promise.all([
+    slot(dialog, "dialog-footer").boundingBox(),
+    dialog.boundingBox(),
+  ])
+  if (!footer || !panel) throw new Error("No box")
+  expect(footer.y + footer.height).toBeCloseTo(panel.y + panel.height, 0)
+}
+
 test("the account menu offers the side panel, and the way back, and the choice survives a reload (S1, S5, S6)", async ({
   page,
 }) => {
@@ -135,12 +145,7 @@ test("on a tall screen, a form that fits still has its buttons at the panel's fo
   for (const open of forms) {
     const dialog = await open()
     await expectPanel(page, dialog)
-    const [footer, panel] = await Promise.all([
-      slot(dialog, "dialog-footer").boundingBox(),
-      dialog.boundingBox(),
-    ])
-    if (!footer || !panel) throw new Error("No box")
-    expect(footer.y + footer.height).toBeCloseTo(panel.y + panel.height, 0)
+    await expectFooterAtFoot(dialog)
     await page.keyboard.press("Escape")
     await expect(dialog).toBeHidden()
   }
@@ -155,12 +160,7 @@ test("on a tall screen, Add a roadmap's buttons are at the panel's foot (S2)", a
   const dialog = await openAddRoadmapDialog(page)
 
   await expectPanel(page, dialog)
-  const [footer, panel] = await Promise.all([
-    slot(dialog, "dialog-footer").boundingBox(),
-    dialog.boundingBox(),
-  ])
-  if (!footer || !panel) throw new Error("No box")
-  expect(footer.y + footer.height).toBeCloseTo(panel.y + panel.height, 0)
+  await expectFooterAtFoot(dialog)
 })
 
 test("on a laptop, every form dialog is a panel, and a question is still centred (S3)", async ({

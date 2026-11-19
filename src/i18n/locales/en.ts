@@ -56,7 +56,7 @@ export const en = {
   },
   layout: {
     skipToContent: "Skip to main content",
-    /** The header's menu of the theme and the session's action (STY-056). */
+    /** The header's menu of the theme, where the forms open and the session's action (STY-056, STY-077). */
     account: "Account",
     /** Said after the service name in the home link's name: "Roadmap Editor home". */
     homeSuffix: "home",

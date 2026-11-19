@@ -74,8 +74,9 @@ They differ only in where the popup sits and how it animates. A side panel is th
    least 640px wide, the item and roadmap forms open as a modal side panel at the
    right: full height, 32rem wide, page dimmed, sliding in. The panel follows the
    same pinning rule (F3; STY-077).
-4. A side panel is `DialogContent` with a placement, not a new component: `FormDialog`
-   chooses the placement from the preference and nothing else changes (F3; STY-077 D7).
+4. A side panel is `DialogContent` with a position, not a new component: `FormDialog`
+   chooses the position from the preference and nothing else changes (F3; STY-077 D7,
+   which named the prop `placement` before it was built as `position`).
 5. **Unchanged:** alert dialogs. They are short and are left by their answers.
 6. **Unchanged:** closing (EPC-011, _The dialogs_, _Closing_). Cancel, Escape and the X
    drop what was typed, a click outside does nothing, and a dialog stays while its

@@ -155,7 +155,7 @@ describe("header", () => {
     expect(header().getByRole("status")).toHaveTextContent("Connecting…")
   })
 
-  it("holds the theme and the session's action in one menu, with the language beside it (STY-056 D1, S2)", async () => {
+  it("holds the theme, where the forms open and the session's action in one menu, with the language beside it (STY-056 D1, S2)", async () => {
     const user = userEvent.setup()
     await renderWithProviders({ authState: connected })
 

@@ -64,7 +64,7 @@ describe("FormDialog's position (STY-077)", () => {
     localStorage.clear()
   })
 
-  it("is centred until a Product Lead chooses the side panel (S1)", () => {
+  it("is centred until a Product Lead chooses the side panel (D1)", () => {
     renderDialog()
 
     expect(screen.getByRole("dialog")).toHaveAttribute(

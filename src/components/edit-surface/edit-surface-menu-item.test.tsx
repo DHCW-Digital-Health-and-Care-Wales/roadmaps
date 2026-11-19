@@ -11,9 +11,9 @@ import type { Language } from "@/i18n"
 import { renderWithI18n } from "@/test/render-with-i18n"
 
 import { EditSurfaceMenuItem } from "./edit-surface-menu-item"
-import { useEditSurface } from "./use-edit-surface"
 import { EDIT_SURFACE_STORAGE_KEY } from "./edit-surface-preference"
 import { EditSurfaceProvider } from "./edit-surface-provider"
+import { useEditSurface } from "./use-edit-surface"
 
 /** What a form dialog reads: where the forms open now. */
 function Surface() {

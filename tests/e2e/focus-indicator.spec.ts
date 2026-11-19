@@ -180,17 +180,20 @@ async function expectEveryStopShowsAnIndicator(
     presses += 1
   ) {
     await page.keyboard.press("Tab")
-    // Past the last stop focus leaves the page, or rests on a dialog's focus guard until
-    // it hands focus to the first stop; the next Tab starts again at the top.
-    if (
-      await page.evaluate(
-        () =>
-          document.activeElement === document.body ||
-          document.activeElement?.hasAttribute("data-base-ui-focus-guard"),
-      )
-    ) {
+    // Past the last stop focus leaves the page; the next Tab starts again at its top.
+    if (await page.evaluate(() => document.activeElement === document.body)) {
       continue
     }
+    // Past a dialog's last stop focus rests on its focus guard, which hands it to the
+    // first stop a frame later: the guard is no stop, and the first stop is this lap's.
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            !document.activeElement?.hasAttribute("data-base-ui-focus-guard"),
+        ),
+      )
+      .toBe(true)
     const focused = page.locator(":focus")
     const stop = await focused.evaluate(describeElement)
     await expect

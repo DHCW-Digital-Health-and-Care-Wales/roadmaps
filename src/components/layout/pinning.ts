@@ -65,8 +65,8 @@ export function usePinnedHeight(edge: Edge): number {
 
 /**
  * `element`'s height while `measuring`, as it last was: kept once measuring stops. Its
- * border box is watched, so padding or a border that arrives late, as a reduced-motion
- * transition brings them in, is measured too.
+ * border box is watched, so the padding and border an element gains as it sticks are
+ * measured too.
  */
 export function useMeasuredHeight(
   element: RefObject<HTMLElement | null>,

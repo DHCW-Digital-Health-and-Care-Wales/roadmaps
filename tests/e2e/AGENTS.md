@@ -8,7 +8,8 @@ End-to-end tests of the production build, with Google faked (ADR-006).
 - `gis` (`fixtures/fake-gis.ts`) plays Google Identity Services and `sheets`
   (`fixtures/fake-sheets.ts`) the Sheets API, over the example spreadsheet in
   `tests/fixtures/sheets/`; their docblocks are the API. A list load reads `metadata`
-  then `values:<first tab>`; a roadmap's items add `values:<its tab>`; a publish is one
+  then `values:<first tab>`; a roadmap's items read both again, then add
+  `values:<its tab>`, so a roadmap's page is five reads (ADR-011); a publish is one
   `batchUpdate`, recorded in `sheets.writes`, never in `reads`.
 - Anything the real APIs would reject, any request to another origin, and any access
   token reaching storage, cookies, the URL or the console fail the test at teardown.

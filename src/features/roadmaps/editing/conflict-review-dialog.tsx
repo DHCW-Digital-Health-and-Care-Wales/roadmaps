@@ -415,7 +415,6 @@ function RemovalConflictItem({
           <dl className="flex flex-col gap-2">
             {conflict.fields.map(({ field, current }) => {
               const notes = removalFieldNotes(conflict, field)
-              const removal = "roadmaps.publish.notice.refused.removal"
               return (
                 <div key={field} className="flex flex-col gap-0.5">
                   <dt className="font-bold">
@@ -430,14 +429,14 @@ function RemovalConflictItem({
                   </dd>
                   {notes.writtenHorizon !== undefined && (
                     <dd>
-                      {t(`${removal}.writtenAs`, {
+                      {t("roadmaps.publish.notice.refused.removal.writtenAs", {
                         horizon: notes.writtenHorizon,
                       })}
                     </dd>
                   )}
                   {notes.welsh !== undefined && (
                     <dd className="whitespace-pre-line">
-                      {t(`${removal}.welsh`, {
+                      {t("roadmaps.publish.notice.refused.removal.welsh", {
                         text:
                           notes.welsh ||
                           t("roadmaps.publish.notice.refused.empty"),

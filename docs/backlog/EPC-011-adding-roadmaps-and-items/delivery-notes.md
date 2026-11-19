@@ -78,7 +78,9 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   way** (`discardable`, the rule "Discard all" has). Once the publish answers, either
   a read holds the item, which takes its place, or the whole app is held until a
   Refresh does (DEF-015, `features/roadmaps/write-hold/`), so nothing can change a
-  new item that may be published unseen.
+  new item that may be published unseen. A published item's Remove and "Undo removal"
+  wait too (STY-049): a removal made meanwhile would keep the item as read before the
+  publish.
 - **Each dialog's tests go through its helpers**: in Vitest
   `features/roadmaps/testing/roadmap-dialog.ts` and `item-dialog.ts`, which share
   `edit-dialog.ts` (with `expectDialogClosed` for a dialog closed another way than

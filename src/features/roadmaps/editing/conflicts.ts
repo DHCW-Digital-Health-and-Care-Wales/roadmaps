@@ -251,26 +251,40 @@ export function removalFieldNotes(
   }
 }
 
-/** An item's Welsh for `field`, as one text: tags comma separated, details by line. */
+/**
+ * An item's Welsh for `field`, as one text, `""` for none: tags comma separated and
+ * details by line, each entry in its place, a blank one as a dash, so Welsh that moved
+ * between entries reads as the change it is.
+ */
 function welshOf(item: RoadmapItem, field: EditableItemField): string {
   switch (field) {
     case "placement":
     case "organisationIds":
       return ""
     case "tags":
-      return item.tags
-        .map(({ cy }) => cy)
-        .filter((tag) => tag !== "")
-        .join(", ")
+      return entriesOf(
+        item.tags.map(({ cy }) => cy),
+        ", ",
+      )
     case "details":
-      return item.details
-        .map(({ text }) => text.cy)
-        .filter((line) => line !== "")
-        .join("\n")
+      return entriesOf(
+        item.details.map(({ text }) => text.cy),
+        "\n",
+      )
     default:
       return item[field]?.cy ?? ""
   }
 }
+
+/** Welsh entries in their places, a blank one as a dash; `""` when all are blank. */
+function entriesOf(welsh: readonly string[], separator: string): string {
+  return welsh.every((each) => each === "")
+    ? ""
+    : welsh.map((each) => each || BLANK_ENTRY).join(separator)
+}
+
+/** A blank entry among Welsh tags or details, as the review shows it. */
+const BLANK_ENTRY = "—"
 
 /** `changes` with `conflict`'s field updated by `update`; `undefined` drops it. */
 function withConflictField(

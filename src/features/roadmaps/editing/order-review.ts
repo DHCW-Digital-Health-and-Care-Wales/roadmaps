@@ -22,8 +22,8 @@ export interface OrderLine {
  * `yours`, what "Keep mine" would publish, the placement's items the Product Lead
  * knows in their order, with the items a co-lead added or moved in last and those they
  * removed or moved out gone, as are those the Product Lead removed (STY-049 S8); and
- * `theirs`, the order the publish found. An item the
- * page holds is shown by the title the page shows, so it reads the same in both.
+ * `theirs`, the order the publish found. An item the page holds is shown by the title
+ * the page shows, so it reads the same in both.
  *
  * The page may not hold what the publish found, when the read after it failed. So an
  * item the publish found is looked for among the page's as any item of an order is

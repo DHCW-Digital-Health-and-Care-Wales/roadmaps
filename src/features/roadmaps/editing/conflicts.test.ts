@@ -688,6 +688,45 @@ describe("a removal's conflict (STY-070 S4)", () => {
     expect(removalFieldNotes(changed, "title")).toEqual({})
   })
 
+  it("notes Welsh tags or details that moved between entries, the English as it was, a blank one as a dash", () => {
+    const loaded = createTestRoadmapItem("Fifth", {
+      id: "fifth",
+      tags: [
+        { en: "Patients", cy: "Cleifion" },
+        { en: "Visitors", cy: "" },
+      ],
+      hasWelshTags: true,
+      details: [
+        { text: { en: "One", cy: "Un" }, level: 1 },
+        { text: { en: "Two", cy: "" }, level: 1 },
+      ],
+      hasWelshDetails: true,
+    })
+    const moved: RemovalConflict = {
+      subject: "removal",
+      removal: { item: loaded, position: 4 },
+      current: {
+        ...loaded,
+        tags: [
+          { en: "Patients", cy: "" },
+          { en: "Visitors", cy: "Cleifion" },
+        ],
+        details: [
+          { text: { en: "One", cy: "" }, level: 1 },
+          { text: { en: "Two", cy: "Un" }, level: 1 },
+        ],
+      },
+      fields: [],
+    }
+
+    expect(removalFieldNotes(moved, "tags")).toEqual({
+      welsh: "—, Cleifion",
+    })
+    expect(removalFieldNotes(moved, "details")).toEqual({
+      welsh: "—\nUn",
+    })
+  })
+
   it("is closed by Remove anyway, Keep the item, or a removal no longer pending", () => {
     expect(openConflicts([conflict], keepMine(removing, conflict))).toEqual([])
     expect(openConflicts([conflict], takeTheirs(removing, conflict))).toEqual(

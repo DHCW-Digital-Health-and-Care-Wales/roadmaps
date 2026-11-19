@@ -9,6 +9,7 @@
 - **Binding ADRs**: ADR-012, ADR-011, ADR-014, ADR-002, ADR-006
 - **Suggested model**: Opus — deletes rows inside the all-or-nothing publish, after
   moves and inserts, with an item-level conflict and its lost-answer settlement
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/175
 
 ## Summary
 

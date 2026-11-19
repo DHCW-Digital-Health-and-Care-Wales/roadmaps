@@ -284,6 +284,19 @@ for (const [width, height] of [
   })
 }
 
+/**
+ * Presses where `target` is drawn, as a pointer does. A row's text sits under the
+ * chevron's stretch, so a locator's own click, which waits for the text to receive the
+ * press, would never land.
+ */
+async function pressOn(page: Page, target: Locator) {
+  await target.evaluate((element) => {
+    element.scrollIntoView({ block: "center" })
+  })
+  const { x, y, width, height } = await boxOf(target)
+  await page.mouse.click(x + width / 2, y + height / 2)
+}
+
 for (const [width, height] of [
   [1280, 900],
   [375, 812],
@@ -300,21 +313,25 @@ for (const [width, height] of [
       name: /^(Show|Hide) the rest of/,
     })
 
-    await expect(row.getByRole("heading").locator("..")).toHaveCSS(
-      "cursor",
-      "pointer",
-    )
-    await row.getByRole("heading").click()
+    await expect(chevron).toHaveCSS("cursor", "pointer")
+    await pressOn(page, row.getByRole("heading"))
     await expect(chevron).toHaveAttribute("aria-expanded", "true")
-    await row.getByRole("heading").click()
+    await pressOn(page, row.getByRole("heading"))
     await expect(chevron).toHaveAttribute("aria-expanded", "false")
 
     if (width >= 768) {
       // The start of the description, and the room beside it, open the row too.
-      await row.locator("p").click()
+      await pressOn(page, row.locator("p"))
       await expect(chevron).toHaveAttribute("aria-expanded", "true")
-      await row.getByRole("heading").click()
+      await pressOn(page, row.getByRole("heading"))
     }
+
+    // An unplaced item's flag is under the stretch too.
+    const flagged = rowOf(page, "Someday")
+    await pressOn(page, flagged.getByText(/isn't recognised/))
+    await expect(
+      flagged.getByRole("button", { name: /^(Show|Hide) the rest of/ }),
+    ).toHaveAttribute("aria-expanded", "true")
 
     // Move and Edit are their own controls: Move opens its menu, the row stays closed.
     await row.getByRole("button", { name: /^Move / }).click()

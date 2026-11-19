@@ -6,56 +6,49 @@
 - **Epic**: [EPC-016-a-roadmaps-items-at-a-glance](README.md)
 - **Depends on**: STY-067 (hard: the compact view and its rows)
 - **Binding ADRs**: ADR-002, ADR-010
-- **Suggested model**: Sonnet — one handler on one component, with its tests
+- **Suggested model**: Sonnet — one component moves onto an existing primitive, with its tests
 - **Delivered**: _(the PR; added once it exists)_
 
 ## Summary
 
 In the compact view a row opens only by its small chevron at the start of the line,
-which is a poor target for a finger or a mouse. This story makes the row's text open
-it too: pressing a row's title, or on a desktop the start of its description or the
-room beside it, opens the row in place, and pressing again closes it. The chevron stays
-as it is, and stays the one control a keyboard or a screen reader reaches. Not in it:
-the row's controls (Move, Edit) or its other fields opening it.
+which is a poor target for a finger or a mouse. This story makes the whole line open
+it: pressing a row's title, its description on a desktop, its flag or tag, or the room
+beside them opens the row in place, and pressing again closes it. The chevron stays,
+and stays the one control a keyboard or a screen reader reaches. Not in it: Move,
+Edit or the opened row's fields opening it. The cost is that a row's text can no longer
+be selected.
 
 ## Acceptance criteria
 
-### S1: A press on the text opens the row (owner, D1)
+### S1: A press on the line opens the row (owner, D1)
 
 **Given** a row of the compact view, closed
-**When** the Product Lead presses its title, or, from 768px, the start of its
-description or the room between the text and the row's tag
+**When** the Product Lead presses its title or, from 768px, the start of its
+description, or its flag or pending tag, or the room between them
 **Then** the row opens in place as it does by its chevron (STY-067 S6)
-**And** on a phone the same holds for the title and what sits under it, its flag and
-its pending tag
 
 ### S2: A second press closes it (owner, D1)
 
 **Given** a row opened by its text or by its chevron
-**When** the Product Lead presses its title again
+**When** the Product Lead presses its line again
 **Then** the row closes, and its chevron reads "Show the rest of" then the title
-**And** a press on an opened row's fields, below the title, opens or closes nothing
+**And** a press on an opened row's fields, below the line, opens or closes nothing
 
 ### S3: What else is pressed is unchanged
 
 **Given** a row
-**When** the Product Lead presses Move or Edit, or the chevron
+**When** the Product Lead presses Move, Edit or the chevron
 **Then** each does what it did (STY-067 S6, S8), and a press on Move or Edit does not
 open the row
 
-### S4: Selecting the text does not open it
-
-**Given** a row, closed
-**When** the Product Lead drags across its title to copy it
-**Then** the row stays closed
-
-### S5: A keyboard and a screen reader are as before
+### S4: A keyboard and a screen reader are as before (D2)
 
 **Given** the compact view
 **When** a keyboard or a screen reader reaches a row
 **Then** the chevron is its one control to open it, in the same order, with the same
-names; the text is no stop and takes no role
-**And** a pointer over the text shows the pointer cursor, and axe reports no WCAG 2.2
+names and the same expanded state; the text is no stop and takes no role
+**And** a pointer over the line shows the pointer cursor, and axe reports no WCAG 2.2
 AA violation
 
 ## Decisions
@@ -63,11 +56,15 @@ AA violation
 - **D1** (owner, 2026-11-18): a press on the text opens the row, and a second press
   closes it, as the chevron does. Adds S1, S2. Changes STY-067 S6, which names the
   chevron as the control.
-- **D2** (agent, 2026-11-18): the text takes no role and no focus, over a button or a
-  link around the title, which would add a second stop and a second name to every row;
-  the chevron already carries the state (STY-067 D14).
-- **D3** (agent, 2026-11-18): a press that ends a selection of text opens nothing (S4),
-  over opening on every click, so a Product Lead can copy a title.
+- **D2** (owner, 2026-11-19): the chevron is a shadcn Collapsible's trigger, stretched
+  across the line by an overlay with Move and Edit above it, over a click handler on
+  the text or a button around the title. It follows Product details' pattern, adds no
+  second control or name to a row, and needs no lint exception. Collapsible over
+  Accordion: rows open independently, so a group's single root, its arrow keys between
+  triggers and its heading wrapper are unused.
+- **D3** (owner, 2026-11-19): a row's text can't be selected, since the overlay covers
+  it, over a handler that keeps it selectable and needs an `eslint-disable`. A Product
+  Lead copies a title from its dialog or card.
 - **D4** (agent, 2026-11-18): the story joins EPC-016, whose compact view it finishes,
   over a new one-story epic; the epic stays Done, as the story is delivered in the PR
   that adds it.
@@ -76,28 +73,35 @@ AA violation
 
 - The Cards view: its card has no row to open.
 - A press on an opened row's fields, or on Move, Edit, "Undo changes" or Remove.
+- Selecting a row's text.
 
 ## Delivery
 
 ### Departures
 
-None.
+- **S1**: the area is the whole line but Move and Edit, so a flag or a pending tag
+  opens the row on a desktop too, which the first reading of S1 left out (agent).
 
 ### Contract for dependents
 
-- No new key, prop or stored value. `CompactItemRow` opens by `toggleByText`, on the
-  element holding the title (and, on a desktop, the description); its `aria-expanded`
-  chevron is unchanged.
+- `CompactItemRow` is a `Collapsible` (`@/components/ui/collapsible`) rendered as its
+  list item: the chevron is its `CollapsibleTrigger`, whose `after` overlay covers the
+  line (`relative` on the line), and the opened fields are its `CollapsibleContent`, so
+  an opened row is mounted only while open. Move and Edit sit in a `relative z-10`
+  block. The trigger's press nudge is off, since a transform would make the button the
+  overlay's box and a press would miss.
+- A test that presses a row's text clicks where it is drawn (`pressOn`, in
+  `roadmap-items-compact.spec.ts`): the text sits under the overlay, so a locator's own
+  click, which waits for the text to receive the press, never lands. jsdom lays nothing
+  out, so a component test can't press the overlay.
 
 ### Scenario evidence
 
-| Scenario                     | Held by                                                                                                                                                                                                                                                              |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1, S2                       | `pages/roadmap-detail-page-compact.test.tsx` (`opens and closes by a press on its title, or on its description…`, `opens by a press on its title on a phone too`); `roadmap-items-compact.spec.ts` (`opens and closes a row by a press on its text at 1280px/375px`) |
-| S3                           | `roadmap-items-compact.spec.ts` (the same test ends on Move, the row closed); Edit sits in the same block as Move, outside the text; the existing                                                                                                                    |
-| chevron, Move and Edit tests |
-| S4                           | `roadmap-detail-page-compact.test.tsx` (`stays closed when the press ends a selection of its text`)                                                                                                                                                                  |
-| S5                           | `roadmap-items-compact.spec.ts` (the cursor on the text, `the keyboard`, `has no axe violation in the compact view…`), the last two unchanged and green                                                                                                              |
+| Scenario | Held by                                                                                                                                                                                                            |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| S1, S2   | `roadmap-items-compact.spec.ts` (`opens and closes a row by a press on its text at 1280px/375px`: the title, from 768px the description, an unplaced item's flag)                                                  |
+| S3       | the same test ends on Move, the row closed; Edit sits in the same block as Move, above the overlay; the existing chevron, Move and Edit component tests                                                            |
+| S4       | the same test's cursor check; `roadmap-items-compact.spec.ts` (`the keyboard`, `has no axe violation in the compact view…`) and the component tests of the chevron's names and expanded state, unchanged and green |
 
-Each test was written after the code and shown red by breaking it: the selection guard
-removed (S4), and the handler made to do nothing (S1, S2, both Playwright tests).
+The Playwright test was written after the code and shown red by removing the overlay
+(both widths: the row stayed closed).

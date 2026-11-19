@@ -209,8 +209,8 @@ and in Cymraeg, at each width of S13. The rest hold as component tests.
   as expanded too, as the item form's opening fields do, over a fixed name.
 - **D15** (owner, 2026-11-18): "Neidio i" cut to "Nei…" on a phone in Cymraeg at 375px
   is accepted, over a shorter Welsh "Ychwanegu eitem" or the switch in More (design E).
-- **D16** (owner, 2026-11-18, STY-069 D1): a press on a row's title or, from 768px, its
-  description also opens and closes it, beside the chevron S6 names. Adds STY-069 S1, S2.
+- **D16** (owner, 2026-11-18, STY-069 D1): a press on a row's line, but Move and Edit,
+  also opens and closes it, beside the chevron S6 names. Adds STY-069 S1, S2.
 
 ## Starting point
 

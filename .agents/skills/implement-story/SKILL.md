@@ -180,8 +180,8 @@ label, search the changed files and both catalogues for the old form; for a
 changed behaviour, search the code, tests and records for lines that describe
 the old behaviour and correct them. Run the checks `references/validation.md`
 sets for a fix between review rounds, commit the fixes and re-review the new
-head in the lanes and rounds `delegation.md` sets; the gate it sets for a
-pushed head waits for the push.
+head in the lanes and rounds `delegation.md` sets; the gate `validation.md`
+sets for a pushed head waits for the push.
 An unavailable reviewer is a stated limitation, not an invented independent
 review.
 

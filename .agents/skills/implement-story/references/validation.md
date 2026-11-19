@@ -35,14 +35,14 @@ already listening there locally: stop a stale `pnpm preview` first
 
 Give a suite you wait for in the foreground a command timeout longer than its
 run; under host load the Vitest run alone outlasts a runtime's default (2
-minutes in Claude Code). Start a run that can outlast the runtime's longest
-foreground timeout, the full gate among them, in the background with its exit
-status in its output. Where the runtime wakes you when a background command
-completes, yield until it does, once independent work is exhausted, as for a
-reviewer (`delegation.md`, _Dispatch and completion_, step 3); otherwise run
-the gate's commands as separate foreground calls, each within the cap. To work
-alongside a suite, start it the same way, and read its exit status before
-relying on it.
+minutes in Claude Code). For a run that can outlast the runtime's longest
+foreground timeout, the full gate among them: where the runtime wakes you when
+a background command completes, start it in the background with its exit
+status in its output and yield until it completes, once independent work is
+exhausted, as for a reviewer (`delegation.md`, _Dispatch and completion_, step
+3); otherwise run its commands as separate foreground calls, each within that
+timeout. To work alongside a suite, start it in the background, and read its
+exit status before relying on it.
 Detach only a run that must outlast the session, with output and exit status
 in a log (`setsid nohup sh -c '<cmd>; echo "exit=$?"' > /tmp/<name>.log 2>&1 &`),
 and read that log before relying on it.

@@ -13,13 +13,10 @@
 - The mark is checked again whenever its item shows somewhere new (STY-071 D17): a
   slide must not change the page's items or the store on its way, or the mark it ends
   on is judged against that in-between state.
-- A slide is `travel(kind, update)` (`editing/item-travel.ts`): the browser's view
-  transition, `flushSync` drawing `update`, styled by its types in `globals.css`. Only
-  an item with an ID has a view transition name, and the example spreadsheet's items
-  get theirs only when first published: an E2E test of a slide calls `publishOnce`
-  first, or nothing travels.
-- An element a view transition captures takes no click or tap while it travels, so the
-  page root is left uncaptured and `::view-transition` is clipped to the room between
-  the pinned bars; a press on the travelling items skips that travel (STY-072 D7).
-  Playwright reports `<html>` intercepting a click there: press the page first, or
-  drive the keyboard.
+- A slide is `travel` (`editing/item-travel.ts`; STY-072's Contract for dependents).
+  Only an item with an ID travels, and the example spreadsheet's items get theirs only
+  when first published: an E2E test of a slide calls `publishOnce` first, or nothing
+  travels.
+- A view transition's captured elements take no press, so the travel is drawn only
+  between the pinned bars, and a press there skips it (STY-072 D7). Playwright reports
+  `<html>` intercepting a click there: press the page first, or drive the keyboard.

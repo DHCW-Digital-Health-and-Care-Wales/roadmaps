@@ -2,12 +2,11 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 import { addingItems, NEW_CLINIC } from "@/domain/roadmap/testing/test-new-item"
+import { REDUCED_MOTION } from "@/lib/use-media-query"
 import { matchMediaQueries } from "@/test/media-query"
 
 import { pageItemsOf } from "../testing/page-items"
 import { travel, travelNames } from "./item-travel"
-
-const REDUCED_MOTION = "(prefers-reduced-motion: reduce)"
 
 const read = (...ids: (string | null)[]) =>
   ids.map((id, at) => createTestRoadmapItem(`Item ${String(at)}`, { id }))
@@ -55,18 +54,23 @@ describe("travel (STY-072)", () => {
     Reflect.deleteProperty(document, "startViewTransition")
   })
 
-  /** A browser with view transitions and their types, recording each started. */
-  function withViewTransitions() {
-    const finished = Promise.resolve()
-    const transition = {
-      finished,
-      ready: finished,
-      updateCallbackDone: finished,
-      skipTransition: vi.fn(),
-    }
+  /**
+   * A browser with view transitions and their types, recording each started; each
+   * finishes as soon as it starts, unless `held`, until its `end` is called.
+   */
+  function withViewTransitions({ held = false } = {}) {
+    const ends: (() => void)[] = []
     const start = vi.fn((options: StartViewTransitionOptions) => {
       options.update?.()
-      return transition
+      const finished = held
+        ? new Promise<void>((resolve) => ends.push(resolve))
+        : Promise.resolve()
+      return {
+        finished,
+        ready: Promise.resolve(),
+        updateCallbackDone: Promise.resolve(),
+        skipTransition: vi.fn(),
+      }
     })
     vi.stubGlobal(
       "ViewTransition",
@@ -80,7 +84,7 @@ describe("travel (STY-072)", () => {
       configurable: true,
       value: start,
     })
-    return start
+    return Object.assign(start, { ends })
   }
 
   it("makes the move as a view transition typed by how far it goes", () => {
@@ -94,6 +98,24 @@ describe("travel (STY-072)", () => {
       ["item-move-across"],
     ])
     expect(update).toHaveBeenCalledTimes(2)
+  })
+
+  it("marks the document as travelling until the last travel started settles, which an earlier one's settling leaves", async () => {
+    const { ends } = withViewTransitions({ held: true })
+    const travelling = () =>
+      document.documentElement.hasAttribute("data-travelling")
+
+    travel("within", update)
+    travel("within", update)
+    expect(travelling()).toBe(true)
+    ends[0]?.()
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(travelling()).toBe(true)
+    ends[1]?.()
+    await vi.waitFor(() => {
+      expect(travelling()).toBe(false)
+    })
   })
 
   it("makes the move at once where the system asks for reduced motion (S4)", () => {

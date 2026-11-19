@@ -93,10 +93,13 @@ transition) rather than pixel positions in flight. S4 by emulating reduced motio
   anything when the whole page is captured. So the page itself is not captured: it
   shows as it is at once and stays live, and the travel is drawn only in the room
   between the stuck header and the foot bar, which stay above it and take presses. A
-  press on the travelling items ends the travel at once, as S3's second move does, and
-  is swallowed; the next press reaches them. The keyboard reaches every control as the
-  items travel. So S3's "no control is held" holds for the keyboard and the bars; a
-  pointer's first press on the items ends the travel instead.
+  press anywhere in that room, on the travelling items or on a control beside them
+  ("Undo order", "Add an item", the navigation beside the page), ends the travel at
+  once, as S3's second move does, and is swallowed; the next press reaches the page.
+  Where the viewport is too short for the bars to pin, the room is the whole screen.
+  The keyboard reaches every control as the items travel. So S3's "no control is held"
+  holds for the keyboard and the pinned bars; a pointer's first press in the room ends
+  the travel instead.
 
 ## Starting point
 
@@ -131,15 +134,18 @@ Audited at `e75d846` against react-dom 19.3.1's source:
 
 - D6 is the path built: `document.startViewTransition` with `flushSync`, typed by how
   far the move goes, with no React `ViewTransition`.
-- S3, for a pointer: the first press on the travelling items ends the travel rather
-  than reaching the control under it (D7). The keyboard, the stuck header and the foot
-  bar reach every control as the items travel.
+- S3, for a pointer: the first press in the room between the pinned bars, on the
+  travelling items or beside them, ends the travel rather than reaching the control
+  under it (D7). The keyboard, the stuck header and the foot bar reach every control as
+  the items travel.
 - The travel is drawn between the stuck header and the foot bar only (D7): an item
   passing under a bar is hidden there, as it is when nothing moves.
 - A new item, which has no ID until published, travels by its ID among the new items
   (`newItemId`): the Starting point's "from the item's ID" read for one, agent.
 - The menu the move was chosen from goes at once as the travel starts, rather than
   fading: a live page under the transition left it drawn, unfaded, until it ended.
+- A compact row is drawn opaque, as its list is, so the raised row hides those it
+  passes.
 
 ### Contract for dependents
 
@@ -147,7 +153,9 @@ Audited at `e75d846` against react-dom 19.3.1's source:
   typed `item-move` (`kind` `"within"`, 0.4 seconds) or `item-move-across`
   (`"across"`, 0.7), `flushSync` drawing it; it calls `update` at once where the
   system asks for reduced motion or the browser has no view transitions with types.
-  Starting one skips any running (S3); a press on the travelling items skips its own.
+  Starting one skips any running (S3); a press between the pinned bars skips its own.
+  While a travel runs, the document carries `data-travelling`, which only the last
+  travel started removes as it settles.
   `EditableItem`'s `move` and `reorder` call it; "Undo order" (STY-073) can call it
   with `"within"`.
 - `travelNames(pageItems)` gives each item's view transition name by card key, from
@@ -157,20 +165,26 @@ Audited at `e75d846` against react-dom 19.3.1's source:
   `RoadmapItemCard` and `CompactItemRow` set it as `view-transition-name`, with the
   class `moved-item` while they carry the mark, which raises the item moved.
 - `globals.css` styles the travel by its types: the root not captured, the
-  `::view-transition` clipped to `--pinned-top` and `--pinned-bottom`, a closing menu
-  hidden, the durations and easing, the raised item's z-index and shadow.
-- E2E: `tests/e2e/moved-travel.spec.ts` records each transition the page starts
+  `::view-transition` clipped to `--pinned-top` and `--pinned-bottom`, the durations
+  and easing, the raised item's z-index and shadow; and, under `data-travelling`, a
+  closing menu not shown (Chrome restyles no descendant as
+  `:active-view-transition-type` starts to match, and a transitioning `visibility`
+  stays visible, so it is `display: none`). `REDUCED_MOTION` (`@/lib/use-media-query`)
+  is the query `travel` and `revealMoved` gate on.
+- E2E: `tests/e2e/fixtures/moved-items.ts` holds the moved-item helpers both
+  `moved-mark.spec.ts` and `moved-travel.spec.ts` use (`itemOf`, `moveButton`,
+  `chooseFromMenu`, `chooseCompact`, `inRoom`). `tests/e2e/moved-travel.spec.ts` records each transition the page starts
   (`recordTravels`: its types, each group's duration and z-index, the scroll) and
   holds one in flight (`holdInFlight`). Only items with an ID travel, so a test
   publishes once first (`publishOnce`).
 
 ### Scenario evidence
 
-| Scenario | Held by                                                                                                                                                                                                                                                                                     |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1       | `moved-travel.spec.ts` (`a move within a placement travels`: each of the four choices in Cards and Compact, typed `item-move`, the moved item's group 400 ms and raised, the passed item's group, its new place, the mark, focus on Move); `item-travel.test.ts` (typed by how far it goes) |
-| S2       | `moved-travel.spec.ts` (`to Later, below the screen`: typed `item-move-across`, 700 ms, the page scrolling while it travels, last in Later, "Moved from Now", in the room between the bars, focus on Move)                                                                                  |
-| S3       | `moved-travel.spec.ts` (`a move from the keyboard while an item travels …`: the first ended as the second began, both moves made, one mark; `no control is held …`: the foot bar's Publish hit as it travels, a press ends the travel, the next move travels)                               |
-| S4       | `moved-travel.spec.ts` (`no travel where none is wanted`: reduced motion, a browser without view transitions, the item dialog); `item-travel.test.ts` (reduced motion, no API)                                                                                                              |
-| S5       | `moved-travel.spec.ts` (`nothing else travels`: an edit, a view switch, an opened row and a publish start none)                                                                                                                                                                             |
-| Names    | `item-travel.test.ts` (`travelNames`: IDs and new items' IDs, none without one, none for a repeated ID, distinct names for "Tŷ–1" and its written form)                                                                                                                                     |
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                               |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `moved-travel.spec.ts` (`a move within a placement travels`: each of the four choices in Cards and Compact, typed `item-move`, the menu gone as it begins, the moved item's group 400 ms and raised, the passed item's group, its new place, the mark, focus on Move, the row or card opaque); `item-travel.test.ts` (typed by how far it goes; `data-travelling` kept until the last travel settles) |
+| S2       | `moved-travel.spec.ts` (`to Later, below the screen`: typed `item-move-across`, 700 ms, the page scrolling while it travels, last in Later, "Moved from Now", in the room between the bars, focus on Move)                                                                                                                                                                                            |
+| S3       | `moved-travel.spec.ts` (`a move from the keyboard while an item travels …`: the first ended as the second began, both moves made, one mark; `no control is held …`: the foot bar's Publish hit as it travels, a press ends the travel, the next move travels)                                                                                                                                         |
+| S4       | `moved-travel.spec.ts` (`no travel where none is wanted`: reduced motion, a browser without view transitions, the item dialog); `item-travel.test.ts` (reduced motion, no API)                                                                                                                                                                                                                        |
+| S5       | `moved-travel.spec.ts` (`nothing else travels`: an edit, a view switch, an opened row and a publish start none)                                                                                                                                                                                                                                                                                       |
+| Names    | `item-travel.test.ts` (`travelNames`: IDs and new items' IDs, none without one, none for a repeated ID, distinct names for "Tŷ–1" and its written form)                                                                                                                                                                                                                                               |

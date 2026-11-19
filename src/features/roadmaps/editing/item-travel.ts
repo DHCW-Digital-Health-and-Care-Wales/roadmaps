@@ -1,5 +1,7 @@
 import { flushSync } from "react-dom"
 
+import { REDUCED_MOTION } from "@/lib/use-media-query"
+
 import type { PageItem } from "./page-items"
 
 /**
@@ -14,6 +16,12 @@ const TRAVEL_TYPES = {
   across: "item-move-across",
 } as const satisfies Record<TravelKind, string>
 
+/** Set on the document while items travel. */
+const TRAVELLING = "data-travelling"
+
+/** The travel last started, which alone clears `TRAVELLING` as it settles. */
+let current: ViewTransition | null = null
+
 /**
  * Makes a move from the Move menu, `update`, as a view transition: the moved item
  * travels from where it was to where it lands, the items it passes moving aside, then
@@ -22,7 +30,7 @@ const TRAVEL_TYPES = {
  * never animates them: the browser's API runs `update` once it has drawn the page as it
  * was, and `flushSync` draws the move, focus and mark included, before it draws the
  * page as it is. A move made while another travels skips that one, which ends at once
- * where it lands, and plays from there (S3), as a press on the travelling items does.
+ * where it lands, and plays from there (S3), as a press between the pinned bars does.
  * Where the system asks for reduced motion or the browser has no view transitions with
  * types, nothing travels: the move shows at once (S4).
  */
@@ -31,20 +39,31 @@ export function travel(kind: TravelKind, update: () => void): void {
     update()
     return
   }
+  // `globals.css` hides a closing menu while items travel: Chrome restyles no
+  // descendant as `:active-view-transition-type` starts to match, but an attribute it
+  // does.
+  const root = document.documentElement
+  root.setAttribute(TRAVELLING, "")
   const transition = document.startViewTransition({
     update: () => {
       flushSync(update)
     },
     types: [TRAVEL_TYPES[kind]],
   })
-  // The items are drawn by the transition as they travel, so none takes a click or a
-  // tap: a press ends this travel at once, and the next reaches the page.
+  // The transition draws the room between the pinned bars as the items travel, so
+  // nothing there takes a click or a tap: a press there ends this travel at once, and
+  // the next reaches the page (D7).
   const press = (event: PointerEvent) => {
-    if (event.target === document.documentElement) transition.skipTransition()
+    if (event.target === root) transition.skipTransition()
   }
   document.addEventListener("pointerdown", press, { capture: true })
+  current = transition
   const settled = () => {
     document.removeEventListener("pointerdown", press, { capture: true })
+    // Its own only: the next travel may have begun before this one settles.
+    if (current !== transition) return
+    current = null
+    root.removeAttribute(TRAVELLING)
   }
   transition.finished.then(settled, settled)
 }
@@ -54,7 +73,7 @@ function canTravel(): boolean {
     "startViewTransition" in document &&
     "ViewTransition" in window &&
     "types" in ViewTransition.prototype &&
-    !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    !window.matchMedia(REDUCED_MOTION).matches
   )
 }
 

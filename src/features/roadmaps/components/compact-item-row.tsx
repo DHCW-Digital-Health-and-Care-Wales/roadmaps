@@ -107,7 +107,8 @@ export function CompactItemRow({
       render={
         <li
           className={cn(
-            "border-t first:border-t-0",
+            // Opaque, as its list is, so it hides the rows it passes as it travels.
+            "border-t bg-card first:border-t-0",
             mark &&
               "relative z-1 shadow-moved-mark-row [view-transition-class:moved-item]",
           )}

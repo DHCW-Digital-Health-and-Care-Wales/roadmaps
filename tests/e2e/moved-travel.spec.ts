@@ -1,6 +1,15 @@
 import type { Locator, Page } from "@playwright/test"
 
 import { openEditItemDialog, publishOnce } from "./fixtures/dialogs"
+import { tokenColour } from "./fixtures/look"
+import {
+  chooseCompact,
+  chooseFromMenu,
+  inRoom,
+  itemOf,
+  main,
+  moveButton,
+} from "./fixtures/moved-items"
 import { connect, expect, test } from "./fixtures/test"
 
 /**
@@ -20,6 +29,8 @@ interface Travel {
   /** Each group's name, its duration in ms and its z-index, as the travel began. */
   groups: { name: string; duration: number; zIndex: string }[]
   scrollAtReady: number
+  /** Whether a menu showed as the travel began. */
+  menuShown: boolean
   scrollAtEnd: number | null
   /** When it ended, whether it ran out or was skipped; `null` while it runs. */
   endedAt: number | null
@@ -46,6 +57,7 @@ async function recordTravels(page: Page, { withoutApi = false } = {}) {
         types: [...transition.types],
         groups: [],
         scrollAtReady: 0,
+        menuShown: false,
         scrollAtEnd: null,
         endedAt: null,
         readyAt: null,
@@ -55,6 +67,9 @@ async function recordTravels(page: Page, { withoutApi = false } = {}) {
         () => {
           travel.readyAt = performance.now()
           travel.scrollAtReady = window.scrollY
+          travel.menuShown = [
+            ...document.querySelectorAll('[role="menu"]'),
+          ].some((menu) => getComputedStyle(menu).visibility !== "hidden")
           for (const animation of document.getAnimations()) {
             const effect = animation.effect as KeyframeEffect | null
             const name = /^::view-transition-group\((.+)\)$/.exec(
@@ -85,17 +100,6 @@ async function recordTravels(page: Page, { withoutApi = false } = {}) {
 const travels = (page: Page) =>
   page.evaluate(() => (window as unknown as { __travels: Travel[] }).__travels)
 
-const main = (page: Page) => page.getByRole("main")
-
-function itemOf(page: Page, title: string): Locator {
-  return main(page)
-    .getByRole("listitem")
-    .filter({ has: page.getByRole("heading", { level: 3, name: title }) })
-}
-
-const moveButton = (page: Page, title: string) =>
-  main(page).getByRole("button", { name: `Move ${title}`, exact: true })
-
 /** The view transition name the card or row of the item titled `title` has. */
 const nameOf = (page: Page, title: string) =>
   itemOf(page, title).evaluate(
@@ -110,33 +114,6 @@ async function open(page: Page) {
     main(page).getByRole("heading", { level: 3, name: "Minimal card" }),
   ).toBeVisible()
   await publishOnce(page)
-}
-
-async function chooseCompact(page: Page) {
-  await main(page).getByRole("button", { name: "Compact" }).click()
-  await expect(
-    main(page)
-      .getByRole("button", { name: /^Show the rest of/ })
-      .first(),
-  ).toBeVisible()
-}
-
-async function chooseFromMenu(page: Page, title: string, choice: string) {
-  await moveButton(page, title).click()
-  await page.getByRole("menuitem", { name: choice, exact: true }).click()
-}
-
-/** Whether the item lies wholly in the room between the stuck header and foot bar. */
-async function inRoom(item: Locator): Promise<boolean> {
-  return item.evaluate((element) => {
-    const style = getComputedStyle(document.documentElement)
-    const top = parseFloat(style.getPropertyValue("--pinned-top")) || 0
-    const bottom =
-      window.innerHeight -
-      (parseFloat(style.getPropertyValue("--pinned-bottom")) || 0)
-    const box = element.getBoundingClientRect()
-    return box.top >= top - 1 && box.bottom <= bottom + 1
-  })
 }
 
 /** The item's place in the page, unmoved by the page's scroll. */
@@ -200,6 +177,8 @@ test.describe("a move within a placement travels (S1)", () => {
         const [travel, ...more] = await travels(page)
         expect(more).toEqual([])
         expect(travel?.types).toEqual(["item-move"])
+        // The menu it was chosen from went as it began.
+        expect(travel?.menuShown).toBe(false)
         const group = (name: string) =>
           travel?.groups.find((each) => each.name === name)
         expect(group(movedName)).toMatchObject({ duration: 400, zIndex: "1" })
@@ -210,6 +189,12 @@ test.describe("a move within a placement travels (S1)", () => {
           itemOf(page, moved).getByText(mark, { exact: true }),
         ).toBeAttached()
         await expect(moveButton(page, moved)).toBeFocused()
+        // Opaque, as a card is, so it hides the items it passes as it travels.
+        expect(
+          await itemOf(page, moved).evaluate(
+            (element) => getComputedStyle(element).backgroundColor,
+          ),
+        ).toBe(await tokenColour(page, "--card"))
       })
     }
   }

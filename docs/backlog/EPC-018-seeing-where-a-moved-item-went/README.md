@@ -93,8 +93,8 @@ on reduced motion themselves (STY-072 S4).
 The slides use the browser's View Transitions API directly, since React's
 `ViewTransition` cannot animate the pending edits' sync updates (STY-072 D6): no new
 dependency, so ADR-005 is not reopened. A browser without the API shows the move at
-once, marked. While items travel, a pointer's press on them ends the travel, and the
-next reaches them (STY-072 D7).
+once, marked. While items travel, a pointer's press between the pinned bars ends the
+travel, and the next reaches the page (STY-072 D7).
 
 ### Copy
 

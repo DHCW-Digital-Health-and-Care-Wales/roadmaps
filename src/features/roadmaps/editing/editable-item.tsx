@@ -105,8 +105,8 @@ export type ItemControl = "edit" | "move" | "remove" | "undo-removal"
  * brings back its edits too, and its Move and Edit held (STY-049 S2, S3, D6). The item
  * moved last carries the moved mark (STY-071), and the page scrolls to it, once, as
  * focus comes to it after the move (S4); after a move from its Move menu it travels
- * there first, raised above the items it passes (STY-072). Nothing is written until the roadmap is
- * published.
+ * there first, raised above the items it passes (STY-072). Nothing is written until the
+ * roadmap is published.
  */
 export function EditableItem({
   roadmapId,

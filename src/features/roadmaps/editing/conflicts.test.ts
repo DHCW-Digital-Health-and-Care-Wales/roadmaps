@@ -625,6 +625,27 @@ describe("a removal's conflict (STY-070 S4)", () => {
   }
   const removing: RoadmapChanges = { ...changes, removals: [removal] }
 
+  it("is open while the removal is pending from the item as loaded, among the items in their order (STY-049 S6)", () => {
+    const secondConflict = conflictOn(second, "title", "Second, theirs")
+
+    expect(
+      openConflicts([secondConflict, conflict], removing).map(
+        ({ key, kind }) => [kind, key],
+      ),
+    ).toEqual([
+      ["removal", "removal-first"],
+      ["field", "item-second-title"],
+    ])
+  })
+
+  it("is closed by Remove anyway, Keep the item, or a removal no longer pending", () => {
+    expect(openConflicts([conflict], keepMine(removing, conflict))).toEqual([])
+    expect(openConflicts([conflict], takeTheirs(removing, conflict))).toEqual(
+      [],
+    )
+    expect(openConflicts([conflict], changes)).toEqual([])
+  })
+
   it("keeps the removal from the item found on Keep mine, Remove anyway", () => {
     expect(keepMine(removing, conflict)).toEqual({
       ...changes,

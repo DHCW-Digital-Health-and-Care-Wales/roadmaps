@@ -13,7 +13,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { detailsOf } from "@/domain/roadmap/item-details"
-import { type Conflict, isChoiceField } from "@/domain/roadmap/roadmap-changes"
+import {
+  type Conflict,
+  type EditableItemField,
+  isChoiceField,
+} from "@/domain/roadmap/roadmap-changes"
 import { localise, type LocalisedText } from "@/domain/roadmap/localised-text"
 import { isRoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 import { formatCalendarDate, useLanguage } from "@/i18n"
@@ -25,6 +29,7 @@ import {
   type OpenConflict,
   type OpenFieldConflict,
   type OpenOrderConflict,
+  type OpenRemovalConflict,
 } from "./conflicts"
 import { type OrderLine, reviewedOrders } from "./order-review"
 import type { PageItem } from "./page-items"
@@ -41,7 +46,7 @@ export interface ConflictReviewDialogProps {
   /** Where focus goes as the dialog closes: `true` back to what opened it. */
   finalFocus: () => HTMLElement | boolean
   action: PublishAction
-  /** The fields and orders still to decide, in page order. */
+  /** The fields, orders and removals still to decide, in page order. */
   conflicts: readonly OpenConflict[]
   /** The page's items, which an order's items are drawn from (`reviewedOrders`). */
   pageItems: readonly PageItem[]
@@ -58,8 +63,9 @@ export interface ConflictReviewDialogProps {
 /**
  * The review of a publish someone else's changes stopped (STY-026), in a dialog over
  * the page, which does not move (STY-052 D12): each field they changed that the
- * Product Lead also changed (`FieldConflictItem`), and each placement's order
- * (`OrderConflictItem`, STY-050), to keep or give up one by one, focus starting on the
+ * Product Lead also changed (`FieldConflictItem`), each placement's order
+ * (`OrderConflictItem`, STY-050) and each item removed that they changed
+ * (`RemovalConflictItem`, STY-049 S6), to keep or give up one by one, focus starting on the
  * first's Keep mine and moving to the next's as each is decided (D18). Tags or details
  * that have gained Welsh versions can only be given up (STY-037 S22, STY-039 S19). Once
  * every one is decided it names what was lost with removed items (D17) and says so,
@@ -83,7 +89,7 @@ export function ConflictReviewDialog({
   const { t } = useTranslation()
   const deciding = conflicts.length > 0
   const choosing = conflicts.some(
-    (each) => each.kind === "order" || !each.conflict.gainedWelsh,
+    (each) => each.kind !== "field" || !each.conflict.gainedWelsh,
   )
   const publish = useRef<HTMLButtonElement>(null)
   const close = useRef<HTMLButtonElement>(null)
@@ -136,22 +142,35 @@ export function ConflictReviewDialog({
         </DialogHeader>
         {deciding && (
           <ul className="flex flex-col gap-4">
-            {conflicts.map((each) =>
-              each.kind === "order" ? (
-                <OrderConflictItem
-                  key={each.key}
-                  open={each}
-                  pageItems={pageItems}
-                  {...decision(each)}
-                />
-              ) : (
-                <FieldConflictItem
-                  key={each.key}
-                  open={each}
-                  {...decision(each)}
-                />
-              ),
-            )}
+            {conflicts.map((each) => {
+              switch (each.kind) {
+                case "order":
+                  return (
+                    <OrderConflictItem
+                      key={each.key}
+                      open={each}
+                      pageItems={pageItems}
+                      {...decision(each)}
+                    />
+                  )
+                case "removal":
+                  return (
+                    <RemovalConflictItem
+                      key={each.key}
+                      open={each}
+                      {...decision(each)}
+                    />
+                  )
+                default:
+                  return (
+                    <FieldConflictItem
+                      key={each.key}
+                      open={each}
+                      {...decision(each)}
+                    />
+                  )
+              }
+            })}
           </ul>
         )}
         {!deciding && (
@@ -195,23 +214,32 @@ interface DecisionProps {
   onUseTheirs: () => void
 }
 
-/** "Keep mine" and "Use theirs", each named for what it decides (`target`). */
+/**
+ * "Keep mine" and "Use theirs", or what `labels` calls them, each named for what it
+ * decides (`target`).
+ */
 function Decision({
   target,
+  labels,
   firstButton,
   onKeepMine,
   onUseTheirs,
-}: DecisionProps & { target: string }) {
+}: DecisionProps & {
+  target: string
+  labels?: { keepMine: string; useTheirs: string }
+}) {
   const { t } = useTranslation()
+  const { keepMine, useTheirs } = labels ?? {
+    keepMine: t("roadmaps.publish.notice.refused.keepMine"),
+    useTheirs: t("roadmaps.publish.notice.refused.useTheirs"),
+  }
   return (
     <div className="flex flex-wrap gap-3">
       <Button size="sm" ref={firstButton} onClick={onKeepMine}>
-        {t("roadmaps.publish.notice.refused.keepMine")}{" "}
-        <span className="sr-only">{target}</span>
+        {keepMine} <span className="sr-only">{target}</span>
       </Button>
       <Button size="sm" variant="secondary" onClick={onUseTheirs}>
-        {t("roadmaps.publish.notice.refused.useTheirs")}{" "}
-        <span className="sr-only">{target}</span>
+        {useTheirs} <span className="sr-only">{target}</span>
       </Button>
     </div>
   )
@@ -259,24 +287,11 @@ function FieldConflictItem({
   const { describe } = useRoadmapChoices(
     conflict.subject === "roadmap" && isChoiceField(conflict.field),
   )
-  const { data: organisations } = useOrganisations()
+  const itemValue = useShownItemValue()
   const shown = (value: string): ReactNode => {
-    if (conflict.subject === "item" && conflict.field === "details") {
-      // None reads "No text", as any other field does.
-      return value === "" ? "" : <DetailList details={detailsOf(value)} />
-    }
-    if (conflict.subject === "roadmap" && isChoiceField(conflict.field)) {
-      return describe(conflict.field, value)
-    }
-    if (conflict.subject === "item" && conflict.field === "placement") {
-      return isRoadmapPlacement(value)
-        ? t(`roadmaps.items.placements.${value}`)
-        : t("roadmaps.items.unplaced.title")
-    }
-    if (conflict.subject === "item" && conflict.field === "organisationIds") {
-      return describeOrganisations(value, organisations, language)
-    }
-    if (conflict.subject === "roadmap" && conflict.field === "lastUpdated") {
+    if (conflict.subject === "item") return itemValue(conflict.field, value)
+    if (isChoiceField(conflict.field)) return describe(conflict.field, value)
+    if (conflict.field === "lastUpdated") {
       return formatCalendarDate(value, t) ?? value
     }
     return value
@@ -331,6 +346,94 @@ function FieldConflictItem({
           onUseTheirs={onUseTheirs}
         />
       )}
+    </ConflictItem>
+  )
+}
+
+/**
+ * An item's field's value as the review shows it: details as the nested list they will
+ * read as, a placement by its heading, organisations as `describeOrganisations` names
+ * them, and text as it is.
+ */
+function useShownItemValue(): (
+  field: EditableItemField,
+  value: string,
+) => ReactNode {
+  const { t } = useTranslation()
+  const language = useLanguage()
+  const { data: organisations } = useOrganisations()
+  return (field, value) => {
+    switch (field) {
+      case "details":
+        // None reads "No text", as any other field does.
+        return value === "" ? "" : <DetailList details={detailsOf(value)} />
+      case "placement":
+        return isRoadmapPlacement(value)
+          ? t(`roadmaps.items.placements.${value}`)
+          : t("roadmaps.items.unplaced.title")
+      case "organisationIds":
+        return describeOrganisations(value, organisations, language)
+      default:
+        return value
+    }
+  }
+}
+
+/**
+ * An item removed that a co-lead changed (STY-049 S6): "Removed", the Product Lead's
+ * change, beside each field they changed, as it now reads, with "Remove anyway" and
+ * "Keep the item". A field whose value reads as it did changed in what only the item
+ * shows, such as its Welsh, and is listed all the same.
+ */
+function RemovalConflictItem({
+  open: { conflict },
+  firstButton,
+  onKeepMine,
+  onUseTheirs,
+}: DecisionProps & { open: OpenRemovalConflict }) {
+  const { t } = useTranslation()
+  const language = useLanguage()
+  const itemValue = useShownItemValue()
+  const target = localise(conflict.removal.item.title, language)
+  return (
+    <ConflictItem
+      target={target}
+      yours={{
+        label: t("roadmaps.publish.notice.refused.yours"),
+        value: t("roadmaps.publish.notice.refused.removal.yours"),
+      }}
+      theirs={{
+        label: t("roadmaps.publish.notice.refused.theirs"),
+        value: (
+          <dl className="flex flex-col gap-2">
+            {conflict.fields.map(({ field, current }) => (
+              <div key={field} className="flex flex-col gap-0.5">
+                <dt className="font-bold">
+                  {t(`roadmaps.edit.itemFields.${field}`)}
+                </dt>
+                <dd>
+                  {current === "" ? (
+                    <i>{t("roadmaps.publish.notice.refused.empty")}</i>
+                  ) : (
+                    itemValue(field, current)
+                  )}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        ),
+      }}
+    >
+      <Decision
+        target={target}
+        labels={{
+          keepMine: t("roadmaps.publish.notice.refused.removal.removeAnyway"),
+          useTheirs: t("roadmaps.publish.notice.refused.removal.keepItem"),
+        }}
+        firstButton={firstButton}
+        onKeepMine={onKeepMine}
+        onUseTheirs={onUseTheirs}
+      />
     </ConflictItem>
   )
 }

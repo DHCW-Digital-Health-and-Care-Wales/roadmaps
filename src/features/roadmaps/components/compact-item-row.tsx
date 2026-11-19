@@ -29,8 +29,16 @@ export interface CompactItemRowProps {
    * a phone's (D12).
    */
   actions: (wide: boolean) => ReactNode
-  /** "Undo changes" or Remove, at the foot of the opened row, if the item has one. */
+  /**
+   * "Undo changes", Remove or "Undo removal", at the foot of the opened row, if the
+   * item has one.
+   */
   drop?: ReactNode
+  /**
+   * Whether its text is struck through, as an item removed and not yet published is
+   * (STY-049 S2): its controls are not.
+   */
+  struck?: boolean
 }
 
 /**
@@ -48,7 +56,7 @@ export interface CompactItemRowProps {
  * stretch, so it can't be selected.
  *
  * Opened, its title and its flag show whole, then every field the item has, as a card
- * labels and cuts them (S6, S7), and `drop`. Each row opens and closes by itself; it
+ * labels and cuts them (S6, S7), and `drop`. Its text is struck through when `struck`. Each row opens and closes by itself; it
  * starts closed, as the view does when it is drawn again (D11). A list item, for a
  * list of rows.
  */
@@ -58,6 +66,7 @@ export function CompactItemRow({
   tag,
   actions,
   drop,
+  struck = false,
 }: CompactItemRowProps) {
   const { t } = useTranslation()
   const language = useLanguage()
@@ -67,6 +76,7 @@ export function CompactItemRow({
   const description = item.description && localise(item.description, language)
   const horizon = item.writtenHorizon
   const wholeClasses = "wrap-break-word whitespace-pre-line"
+  const struckClasses = struck && "text-muted-foreground line-through"
 
   return (
     <Collapsible
@@ -108,7 +118,12 @@ export function CompactItemRow({
         </CollapsibleTrigger>
         {wide ? (
           <>
-            <div className="flex min-w-0 flex-1 items-baseline gap-3 py-1">
+            <div
+              className={cn(
+                "flex min-w-0 flex-1 items-baseline gap-3 py-1",
+                struckClasses,
+              )}
+            >
               <h3
                 className={cn(
                   "min-w-0 text-body font-bold",
@@ -134,7 +149,11 @@ export function CompactItemRow({
           </>
         ) : (
           <div className="flex min-w-0 flex-1 flex-col items-start gap-1.5 py-1">
-            <h3 className={cn("text-body font-bold", wholeClasses)}>{title}</h3>
+            <h3
+              className={cn("text-body font-bold", wholeClasses, struckClasses)}
+            >
+              {title}
+            </h3>
             {horizon !== null && <HorizonFlag writtenHorizon={horizon} />}
             {tag}
           </div>
@@ -148,7 +167,13 @@ export function CompactItemRow({
           wide ? "pr-4 pb-4 pl-13" : "pr-3 pb-3 pl-11",
         )}
       >
-        <ItemFields item={item} organisations={organisations} columns={wide} />
+        <div className={cn(struckClasses)}>
+          <ItemFields
+            item={item}
+            organisations={organisations}
+            columns={wide}
+          />
+        </div>
         {drop && <div className="flex">{drop}</div>}
       </CollapsibleContent>
     </Collapsible>

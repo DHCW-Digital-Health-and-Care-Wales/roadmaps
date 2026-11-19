@@ -425,8 +425,8 @@ export function pendingNewItems(
 
 /**
  * Whether publishing `changes` leaves the public site nothing of `items` to show: none
- * is in a horizon or section, counting a pending move (STY-042 D4), and no item is new,
- * which is always in one (STY-046 D9).
+ * is in a horizon or section, counting a pending move (STY-042 D4), or each that is
+ * is removed (STY-049 D9), and no item is new, which is always in one (STY-046 D9).
  */
 export function publishesNoItems(
   items: readonly RoadmapItem[],
@@ -435,7 +435,9 @@ export function publishesNoItems(
   if (pendingNewItems(items, changes).length > 0) return false
   const entries = matchItemChanges(items, changes)
   return items.every(
-    (item, at) => applyItemChanges(item, entries.get(at)).placement === null,
+    (item, position) =>
+      removalOf(changes, { item, position }) !== undefined ||
+      applyItemChanges(item, entries.get(position)).placement === null,
   )
 }
 
@@ -636,28 +638,47 @@ export type ChangedPart =
       readonly item: RoadmapItem
       readonly fields: EditableItemField[]
     }
+  | {
+      /** An item removed (STY-049): no field of it is a change of its own. */
+      readonly kind: "removal"
+      readonly position: number
+      /** The item as it was read when removed. */
+      readonly item: RoadmapItem
+    }
+
+type ItemPart = Exclude<ChangedPart, { kind: "roadmap" }>
 
 /**
  * What a publish changes of what the roadmap holds: its own text first, then its items
- * in their order. The items new to it are no part of these: `changes.newItems`.
+ * in their order, each edited or removed; the edits beneath a removal are none of
+ * them (STY-049 D5). The items new to it are no part of these: `changes.newItems`.
  */
 export function changedParts(changes: RoadmapChanges): ChangedPart[] {
   const roadmapFields = changedRoadmapFields(changes)
+  const items: ItemPart[] = [
+    ...changes.items.flatMap((entry): ItemPart[] =>
+      removalOf(changes, entry)
+        ? []
+        : [
+            {
+              kind: "item",
+              position: entry.position,
+              item: applyItemChanges(entry.item, entry),
+              fields: changedItemFields(entry),
+            },
+          ],
+    ),
+    ...changes.removals.map(({ item, position }): ItemPart => ({
+      kind: "removal",
+      position,
+      item,
+    })),
+  ]
   return [
     ...(roadmapFields.length > 0
       ? [{ kind: "roadmap", fields: roadmapFields } as const]
       : []),
-    ...[...changes.items]
-      .sort((a, b) => a.position - b.position)
-      .map(
-        (entry) =>
-          ({
-            kind: "item",
-            position: entry.position,
-            item: applyItemChanges(entry.item, entry),
-            fields: changedItemFields(entry),
-          }) as const,
-      ),
+    ...items.sort((a, b) => a.position - b.position),
   ]
 }
 

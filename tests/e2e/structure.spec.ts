@@ -2,10 +2,12 @@ import type { Locator, Page } from "@playwright/test"
 
 import { disconnectFromHeader, openAccountMenu } from "./fixtures/account-menu"
 import {
+  askToRemove,
   openAddItemDialog,
   openAddRoadmapDialog,
   openEditItemDialog,
   openEditRoadmapDialog,
+  publishOnce,
 } from "./fixtures/dialogs"
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
 import {
@@ -334,7 +336,9 @@ test.describe("editing a roadmap (STY-025)", () => {
 
   test("an item's Move menu (STY-031)", async ({ page }) => {
     const main = await openWithAChange(page)
-    await main.getByRole("button", { name: "Move A clearer card" }).click()
+    await main
+      .getByRole("button", { name: "Move A clearer card", exact: true })
+      .click()
 
     const menu = page.getByRole("menu")
     await expect(menu).toBeVisible()
@@ -425,7 +429,7 @@ test.describe("editing a roadmap (STY-025)", () => {
       .click()
     await expect(main.getByText(/^Changes published\./)).toBeVisible()
     await main
-      .getByRole("button", { name: "Move Card awaiting release" })
+      .getByRole("button", { name: "Move Card awaiting release", exact: true })
       .click()
     await page.getByRole("menuitem", { name: "To the top" }).click()
     sheets.coLead("ProductA", "Card being explored", "Horizon", "Now")
@@ -437,6 +441,34 @@ test.describe("editing a roadmap (STY-025)", () => {
 
     const review = await openConflictReview(page)
     await expectStructure(review, "edit-order-conflict-review.aria.yml")
+  })
+
+  test("an item's removal: the question Remove asks, the removed card, then a co-lead's change to review (STY-049)", async ({
+    page,
+    sheets,
+  }) => {
+    await page.goto("./#/roadmaps/producta")
+    await connect(page)
+    const main = page.getByRole("main")
+    // The first publish gives every item its ID: only then can a co-lead's change be told.
+    await publishOnce(page)
+    const dialog = await askToRemove(page, "Card being explored")
+    await expectStructure(dialog, "remove-item-question.aria.yml")
+    await dialog.getByRole("button", { name: "Remove", exact: true }).click()
+    await expect(dialog).toBeHidden()
+    const card = main.getByRole("listitem").filter({
+      has: page.getByRole("heading", { name: "Card being explored" }),
+    })
+    await expectStructure(card, "remove-item-removed.aria.yml")
+
+    sheets.coLead("ProductA", "Card being explored", "Phase", "Beta")
+    await main.getByRole("button", { name: "Publish changes" }).click()
+    const publish = page.getByRole("alertdialog")
+    await expectStructure(publish, "remove-item-publish-dialog.aria.yml")
+    await publish.getByRole("button", { name: "Publish changes" }).click()
+    await expect(refusal(page)).toBeFocused()
+    const review = await openConflictReview(page)
+    await expectStructure(review, "remove-item-conflict-review.aria.yml")
   })
 
   test("Disconnect's question, then the start page's waiting note", async ({

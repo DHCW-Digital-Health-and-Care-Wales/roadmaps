@@ -109,12 +109,14 @@ test("counts a change made far down the page at once, focus following the card c
   await scrollTo(page, "Later")
   const main = page.getByRole("main")
 
-  await main.getByRole("button", { name: "Move Planned work 3" }).click()
+  await main
+    .getByRole("button", { name: "Move Planned work 3", exact: true })
+    .click()
   await page.getByRole("menuitem", { name: "Next" }).click()
 
   await expect(main.getByText("1 unpublished change")).toBeInViewport()
   await expect(
-    main.getByRole("button", { name: "Move Planned work 3" }),
+    main.getByRole("button", { name: "Move Planned work 3", exact: true }),
   ).toBeFocused()
   expect(await focusClearOfBars(page)).toBeNull()
 })
@@ -185,7 +187,7 @@ test("keeps every control focused by Tab, forwards and backwards, clear of the b
   await scrollTo(page, "Next")
   await page
     .getByRole("main")
-    .getByRole("button", { name: "Move Planned work 2" })
+    .getByRole("button", { name: "Move Planned work 2", exact: true })
     .focus()
 
   // Down through Later, then back up to the top of the page's content.
@@ -260,7 +262,7 @@ for (const [edge, key] of [
     await expect(
       page
         .getByRole("main")
-        .getByRole("button", { name: "Move Planned work 7" }),
+        .getByRole("button", { name: "Move Planned work 7", exact: true }),
     ).toBeFocused()
     expect(await focusClearOfBars(page)).toBeNull()
   })

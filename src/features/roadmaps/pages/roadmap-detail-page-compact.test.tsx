@@ -15,6 +15,7 @@ import { renderWithProviders } from "@/test/render-with-providers"
 import { ITEMS_VIEW_STORAGE_KEY } from "../hooks/use-items-view"
 import { expectDialogClosed } from "../testing/edit-dialog"
 import { holdCall } from "../testing/held-call"
+import { removeItem } from "../testing/removal-dialog"
 import {
   createInMemoryRoadmapRepository,
   type InMemoryRoadmapRepository,
@@ -335,7 +336,7 @@ describe("an opened row (S6, S9)", () => {
     expect(within(itemOf("Last now")).queryByText("Changed")).toBeNull()
   })
 
-  it("ends in Remove for an item added and not yet published, tagged New, which drops it", async () => {
+  it("ends in Remove for an item added and not yet published, tagged New, which drops it once asked", async () => {
     const { user } = await renderPage()
     await chooseCompact(user)
     await addItem(user, "Brand new", "Next")
@@ -345,7 +346,7 @@ describe("an opened row (S6, S9)", () => {
     await user.click(
       row.getByRole("button", { name: "Show the rest of Brand new" }),
     )
-    await user.click(main().getByRole("button", { name: "Remove Brand new" }))
+    await removeItem(user, "Brand new")
 
     expect(
       main().queryByRole("heading", { level: 3, name: "Brand new" }),

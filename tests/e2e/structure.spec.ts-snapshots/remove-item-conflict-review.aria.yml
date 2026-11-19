@@ -1,0 +1,16 @@
+- dialog "Someone else has changed this roadmap too":
+  - heading "Someone else has changed this roadmap too" [level=2]
+  - paragraph: Nothing was published. Choose which to keep for each, then publish again.
+  - list:
+    - listitem:
+      - paragraph: Card being explored
+      - term: Your change
+      - definition: Removed
+      - term: Current text
+      - definition:
+        - term: Phase
+        - definition: Beta
+      - button "Remove anyway Card being explored"
+      - button "Keep the item Card being explored"
+  - button "Close"
+  - button "Close"

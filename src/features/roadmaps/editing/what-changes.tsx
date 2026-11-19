@@ -19,8 +19,9 @@ function edited(key: string, name: string, fields: readonly string[]) {
 
 /**
  * "What changes", in a dialog that asks before a roadmap's pending changes are written:
- * each changed part by name with its changed fields, then each new item by its title,
- * marked as new (STY-025 S9, STY-047 S1), in the page's order. A placement whose order
+ * each changed part by name with its changed fields, each item removed marked as
+ * removed (STY-049 S5), then each new item by its title, marked as new (STY-025 S9,
+ * STY-047 S1), in the page's order. A placement whose order
  * is pending is one line, by its heading: the new order is not listed (STY-050 S6).
  * One list, whatever is pending: the roadmap's own text, the placements reordered, the
  * items the roadmap holds, then the new ones.
@@ -50,9 +51,10 @@ export function WhatChanges({ changes }: WhatChangesProps) {
       name: t(`roadmaps.items.placements.${placement}`),
       change: t("roadmaps.edit.order.changed"),
     })),
-    ...parts.flatMap((part) =>
-      part.kind === "item"
-        ? [
+    ...parts.flatMap((part) => {
+      switch (part.kind) {
+        case "item":
+          return [
             edited(
               `item-${String(part.position)}`,
               localise(part.item.title, language),
@@ -61,8 +63,19 @@ export function WhatChanges({ changes }: WhatChangesProps) {
               ),
             ),
           ]
-        : [],
-    ),
+        // An item removed is one change, whatever is pending beneath it (STY-049 S5).
+        case "removal":
+          return [
+            {
+              key: `removal-${String(part.position)}`,
+              name: localise(part.item.title, language),
+              change: t("roadmaps.publish.dialog.removed"),
+            },
+          ]
+        default:
+          return []
+      }
+    }),
     // A new item is English alone, and no field of it is a change of its own.
     ...changes.newItems.map(({ id, values }) => ({
       key: `new-${id}`,

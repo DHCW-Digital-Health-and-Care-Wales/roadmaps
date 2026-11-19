@@ -1191,4 +1191,45 @@ describe("a removed item (STY-070)", () => {
       { item: secondRead, position: 1 },
     ])
   })
+  it("is listed as removed at its item's place, as read, its edits beneath it not listed (STY-049 S3, S5)", () => {
+    const changes = editItem(
+      removeItem(edited, second, 1),
+      undefined,
+      second,
+      1,
+      { title: "Two" },
+    )
+
+    expect(changedParts(removeItem(changes, first, 0))).toEqual([
+      { kind: "removal", position: 0, item: first },
+      { kind: "removal", position: 1, item: second },
+    ])
+    expect(changedParts(edited)).toEqual([
+      {
+        kind: "item",
+        position: 0,
+        item: { ...first, phase: { en: "Beta", cy: "" } },
+        fields: ["phase"],
+      },
+    ])
+  })
+
+  it("leaves the public site no items once every placed item is removed (STY-049 S4)", () => {
+    const unplaced = createTestRoadmapItem("Unplaced", {
+      placement: null,
+      writtenHorizon: "Soon",
+    })
+    const read = [first, unplaced]
+
+    expect(publishesNoItems(read, removeItem(NO_CHANGES, first, 0))).toBe(true)
+    expect(publishesNoItems(read, edited)).toBe(false)
+    // An edit beneath a removal places nothing.
+    const placed = editItem(NO_CHANGES, undefined, unplaced, 0, {
+      placement: "now",
+    })
+    expect(publishesNoItems([unplaced], placed)).toBe(false)
+    expect(publishesNoItems([unplaced], removeItem(placed, unplaced, 0))).toBe(
+      true,
+    )
+  })
 })

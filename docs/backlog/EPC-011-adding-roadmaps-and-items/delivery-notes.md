@@ -146,11 +146,22 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   archived, says what `removeItem`, `undoRemoval`, `removalOf`, `removeAnyway` and
   `reconcileRemovals` do). A hand-written `RoadmapChanges` or `PublishWrites` needs
   `removals`: spread `NO_CHANGES`. A removed item's edits stay in `items`, beneath the
-  removal, and only the publish plan and `countChanges` skip them so far: whatever
-  else counts or shows an item's changes asks `removalOf` first.
+  removal, where nothing counts or lists them (`countChanges`, `changedParts`,
+  `publishesNoItems`, the jump counts, the publish plan): whatever else counts or
+  shows an item's changes asks `removalOf` first, or reads `PageItem.removal`
+  (STY-049). A removed card shows as it did before, struck through, in its place,
+  which it keeps in a pending order; it is no stop of a move within that order
+  (`reorderItem`, the Move menu's position).
 - **A refusal may hold a removal**: its `missingItems` an `ItemRemoval`, which has no
   `fields`, and its `conflicts` a `RemovalConflict` (`subject: "removal"`), which
-  `openConflicts` leaves out until the review draws it (STY-049).
+  the review draws as an `OpenRemovalConflict` (STY-049 S6). Code that reads an
+  `OpenConflict` narrows by its `kind`.
+- **An item's Remove asks first, in the page's one removal dialog**
+  (`useRemovalDialog`, drawn by `RoadmapItems`), found again by card key after every
+  read, as the item dialog is (STY-049). It moves no focus as it closes: the page
+  sends it to the card's control the choice leaves (`ItemControl`). Tests go through
+  `askToRemove` and `removeItem`: in Vitest `features/roadmaps/testing/removal-dialog.ts`,
+  in Playwright `tests/e2e/fixtures/dialogs.ts`.
 - **The Sheets fake allows deleting and clearing a roadmap tab's rows** (STY-070), as
   it does a tab the same write copied, and refuses, as Google does, a write that
   deletes every row that is not frozen; a test whose tab has a frozen header sets

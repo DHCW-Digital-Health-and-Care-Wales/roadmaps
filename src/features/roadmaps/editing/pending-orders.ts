@@ -5,6 +5,7 @@
  * read; the store settles every change by them (`settleOrders`).
  */
 
+import { removalOf } from "@/domain/roadmap/item-removal"
 import {
   arrangedOrder,
   findOrderedItems,
@@ -41,6 +42,11 @@ interface PlacedItem {
   readonly placement: RoadmapPlacement | null
   /** Its turn among those that show last without an order (`PageItem`, STY-051). */
   readonly arrival: number | undefined
+  /**
+   * Whether it is removed (STY-049 S8): it keeps its place in an order, and shows
+   * there, but is no stop of a move within it.
+   */
+  readonly removed: boolean
 }
 
 /**
@@ -63,6 +69,7 @@ function placedItems(
             ? movedTo
             : item.placement,
         arrival: moveTurn(changes, entry),
+        removed: removalOf(changes, { item, position }) !== undefined,
       }
     }),
     ...pendingNewItems(items, changes).map(
@@ -72,6 +79,7 @@ function placedItems(
           ? values.placement
           : null,
         arrival: newItemTurn(changes, added),
+        removed: false,
       }),
     ),
   ]
@@ -178,8 +186,9 @@ export function settleOrders(
 /**
  * `changes` with the page's item at `position` moved within its placement (STY-050
  * S2): the placement's order, as the page shows it, becomes pending, with the order
- * `items` read it in as its base, unless one is pending already. `changes` itself for
- * an unplaced item, or a move that leaves the item where it is.
+ * `items` read it in as its base, unless one is pending already. A removed item is no
+ * stop of the move, and keeps its place in the order (STY-049 S8). `changes` itself
+ * for an unplaced or removed item, or a move that leaves the item where it is.
  */
 export function reorderItem(
   changes: RoadmapChanges,
@@ -190,17 +199,22 @@ export function reorderItem(
   const placed = placedItems(items, changes)
   const moved = placed[position]
   const placement = moved?.placement ?? null
-  if (!moved || placement === null) return changes
+  if (!moved || placement === null || moved.removed) return changes
   const pending = changes.orders.find((each) => each.placement === placement)
   const shown = arrangedOrder(
     pending?.items ?? [],
     ownOrders(placed)(placement),
     sameOrderedItem,
   )
-  const from = shown.indexOf(moved.ordered)
-  const at = positionAfter(from, shown.length, to)
+  const removed = new Set(
+    placed.flatMap(({ ordered, removed }) => (removed ? [ordered] : [])),
+  )
+  const stops = shown.filter((each) => !removed.has(each))
+  const from = stops.indexOf(moved.ordered)
+  const at = positionAfter(from, stops.length, to)
   if (from < 0 || at === from) return changes
-  const others = shown.filter((each) => each !== moved.ordered)
+  const others = stops.filter((each) => each !== moved.ordered)
+  const reordered = [...others.slice(0, at), moved.ordered, ...others.slice(at)]
   const order: PlacementOrder = {
     placement,
     base:
@@ -209,7 +223,10 @@ export function reorderItem(
         .slice(0, items.length)
         .filter((_, index) => items[index]?.placement === placement)
         .map(({ ordered }) => ordered),
-    items: [...others.slice(0, at), moved.ordered, ...others.slice(at)],
+    // Each removed item where it was, the others in their new order around it.
+    items: shown.map((each) =>
+      removed.has(each) ? each : (reordered.shift() ?? each),
+    ),
   }
   return settleOrders(
     {

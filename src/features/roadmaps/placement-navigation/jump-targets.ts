@@ -12,7 +12,7 @@ export type JumpTarget = RoadmapPlacement | "unplaced"
 /** A jump target as the placement navigation shows it (STY-053 S2, S4, S5). */
 export interface JumpTargetSummary {
   target: JumpTarget
-  /** How many items the page shows there. */
+  /** How many items the page shows there, bar those removed: what will be published. */
   count: number
   /** Whether one of them, or the placement's order, has a pending change. */
   pending: boolean
@@ -21,8 +21,9 @@ export interface JumpTargetSummary {
 /**
  * The page's jump targets in page order, with their items as `groups` shows them and
  * `orders`, the roadmap's pending orders: the unplaced items first, while there are
- * some (S4), then all six placements, an empty one with 0 (D3). A placement is marked
- * pending where an item it shows is edited or new, or its order is pending; an item a
+ * some (S4), then all six placements, an empty one with 0 (D3). A removed item is not
+ * counted, as it won't be published (STY-049 S4). A placement is marked pending where
+ * an item it shows is edited, new or removed, or its order is pending; an item a
  * pending move put there marks it, and not the placement it left.
  */
 export function summariseJumpTargets(
@@ -35,7 +36,7 @@ export function summariseJumpTargets(
     reordered = false,
   ): JumpTargetSummary => ({
     target,
-    count: items.length,
+    count: items.filter(({ item }) => item.removal === undefined).length,
     pending: reordered || items.some(({ item }) => isPending(item)),
   })
   return [
@@ -50,9 +51,12 @@ export function summariseJumpTargets(
   ]
 }
 
-/** Whether the page's item has a pending change: edits, or the whole of a new item. */
-function isPending({ entry, newItemId }: PageItem): boolean {
-  return entry !== undefined || newItemId !== undefined
+/**
+ * Whether the page's item has a pending change: edits, the whole of a new item, or its
+ * removal.
+ */
+function isPending({ entry, newItemId, removal }: PageItem): boolean {
+  return entry !== undefined || newItemId !== undefined || removal !== undefined
 }
 
 /**

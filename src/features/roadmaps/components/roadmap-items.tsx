@@ -9,8 +9,11 @@ import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { ItemDialog } from "../dialogs/item-dialog"
 import { EditableItem, type ItemControl } from "../editing/editable-item"
 import type { PageItem } from "../editing/page-items"
+import type { PublishAction } from "../editing/pending-changes-store"
 import { PlacementHeading } from "../editing/placement-heading"
+import { RemovalDialog } from "../editing/removal-dialog"
 import type { PageItemDialog } from "../editing/use-item-dialog"
+import { useRemovalDialog } from "../editing/use-removal-dialog"
 import {
   hasGroupedItems,
   type Positioned,
@@ -37,6 +40,8 @@ export interface RoadmapItemsProps {
   view: ItemsView
   /** The page's one item dialog (`useItemDialog`). */
   itemDialog: PageItemDialog
+  /** Whether the roadmap's changes are published or saved, as Remove's question says. */
+  action: PublishAction
   /** A new item was removed, its card or row with it: focus needs somewhere to go (S6). */
   onItemRemoved: () => void
 }
@@ -54,7 +59,9 @@ export interface RoadmapItemsProps {
  * placement and "Undo order" came to is said in a status line. Edit on an item, and
  * "Add an item", open the page's one item dialog, which is drawn here. The items show
  * as cards, or as the compact view's rows, under the same headings in the same groups
- * and order (`view`, STY-067 S3).
+ * and order (`view`, STY-067 S3). An item's Remove asks first, in the page's one
+ * removal dialog, drawn here too (STY-049 S1). A removed item shows where it did, but
+ * is no stop of its placement's order: the others' positions count without it (S8).
  */
 export function RoadmapItems({
   roadmapId,
@@ -63,6 +70,7 @@ export function RoadmapItems({
   groups,
   view,
   itemDialog,
+  action,
   onItemRemoved,
 }: RoadmapItemsProps) {
   const { t } = useTranslation()
@@ -78,13 +86,21 @@ export function RoadmapItems({
       focused: () => {
         setFocus(null)
       },
-      removed: onItemRemoved,
       announce: (text: string) => {
         setSaid((last) => ({ serial: (last?.serial ?? 0) + 1, text }))
       },
     }),
-    [onItemRemoved],
+    [],
   )
+  const pageItems = useMemo(() => byPosition(groups), [groups])
+  const removalDialog = useRemovalDialog({
+    roadmapId,
+    action,
+    items,
+    pageItems,
+    onFocusRequest: cardHandlers.requestFocus,
+    onNewItemRemoved: onItemRemoved,
+  })
   const panelAddButton = useRef<HTMLButtonElement>(null)
 
   const list = (
@@ -103,6 +119,7 @@ export function RoadmapItems({
       focus={focus}
       cardHandlers={cardHandlers}
       onEdit={itemDialog.edit}
+      onRemove={removalDialog.ask}
       dialogAt={itemDialog.cardAt}
       dialogOpener={itemDialog.cardOpener}
     />
@@ -175,8 +192,25 @@ export function RoadmapItems({
       {itemDialog.drawn && (
         <ItemDialog key={itemDialog.drawn.key} {...itemDialog.drawn.props} />
       )}
+      {removalDialog.drawn && (
+        <RemovalDialog
+          key={removalDialog.drawn.key}
+          {...removalDialog.drawn.props}
+        />
+      )}
     </>
   )
+}
+
+/** The page's items, each at its position, from where `groups` shows them. */
+function byPosition({
+  unplaced,
+  placements,
+}: RoadmapItemGroups<PageItem>): PageItem[] {
+  const all = [unplaced, ...placements.map(({ items }) => items)].flat()
+  const pageItems: PageItem[] = []
+  for (const { item, position } of all) pageItems[position] = item
+  return pageItems
 }
 
 /** The control of the item at `position` that focus goes to as it next renders. */
@@ -199,10 +233,10 @@ interface ItemListProps {
   cardHandlers: {
     requestFocus: (position: number, control: ItemControl) => void
     focused: () => void
-    removed: () => void
     announce: (text: string) => void
   }
   onEdit: (position: number) => void
+  onRemove: (position: number) => void
   /** Where, among the page's items, the one is that holds `dialogOpener`. */
   dialogAt: number
   /** The ref that item gives its Edit (`EditableItem`). */
@@ -220,13 +254,16 @@ function ItemList({
   focus,
   cardHandlers,
   onEdit,
+  onRemove,
   dialogAt,
   dialogOpener,
 }: ItemListProps) {
   const List = view === "compact" ? CompactList : CardGrid
+  // A removed item has no place in its placement's order (STY-049 S8).
+  const stops = placed.filter(({ item }) => item.removal === undefined)
   return (
     <List aria-labelledby={labelledBy}>
-      {placed.map(({ item: pageItem, position }, at) => (
+      {placed.map(({ item: pageItem, position }) => (
         <EditableItem
           key={pageItem.key}
           roadmapId={roadmapId}
@@ -235,7 +272,14 @@ function ItemList({
           organisations={organisations}
           view={view}
           position={position}
-          order={ordered ? { at, count: placed.length } : undefined}
+          order={
+            ordered && pageItem.removal === undefined
+              ? {
+                  at: stops.findIndex((each) => each.position === position),
+                  count: stops.length,
+                }
+              : undefined
+          }
           onAnnounce={cardHandlers.announce}
           focusRequest={
             focus?.position === position ? focus.control : undefined
@@ -243,7 +287,7 @@ function ItemList({
           onFocusRequest={cardHandlers.requestFocus}
           onFocused={cardHandlers.focused}
           onEdit={onEdit}
-          onRemoved={cardHandlers.removed}
+          onRemove={onRemove}
           dialogOpener={dialogAt === position ? dialogOpener : undefined}
         />
       ))}

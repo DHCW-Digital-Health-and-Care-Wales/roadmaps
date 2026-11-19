@@ -4,6 +4,7 @@ import type { Page } from "@playwright/test"
 import { disconnectFromHeader } from "./fixtures/account-menu"
 import {
   addItem,
+  askToRemove,
   changeItem,
   addItemButtons,
   openAddItemDialog,
@@ -575,6 +576,40 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expectNoAxeViolations(page, theme, { only: "[role=alertdialog]" })
     })
 
+    test("an item's removal: the question Remove asks, the removed card, then a co-lead's change to review, on a phone (STY-049)", async ({
+      page,
+      sheets,
+    }) => {
+      await page.setViewportSize({ width: 375, height: 812 })
+      await page.goto("./#/roadmaps/producta")
+      await connect(page)
+      const main = page.getByRole("main")
+      await publishOnce(page)
+
+      const dialog = await askToRemove(page, "Card being explored")
+      await expectNoAxeViolations(page, theme)
+      await dialog.getByRole("button", { name: "Remove", exact: true }).click()
+      await expect(
+        main.getByRole("button", { name: "Undo removal Card being explored" }),
+      ).toBeFocused()
+      await expectNoAxeViolations(page, theme)
+
+      sheets.coLead("ProductA", "Card being explored", "Phase", "Beta")
+      await main.getByRole("button", { name: "Publish changes" }).click()
+      const publish = page.getByRole("alertdialog")
+      await expect(publish).toContainText("Removed")
+      await expectNoAxeViolations(page, theme)
+      await publish.getByRole("button", { name: "Publish changes" }).click()
+      await expect(refusal(page)).toBeFocused()
+      const review = await openConflictReview(page)
+      await expect(
+        review.getByRole("button", {
+          name: "Remove anyway Card being explored",
+        }),
+      ).toBeFocused()
+      await expectNoAxeViolations(page, theme)
+    })
+
     test("an item's Move menu, then the moved item and an unplaced item's form (STY-031)", async ({
       page,
       sheets,
@@ -583,7 +618,9 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await page.goto("./#/roadmaps/producta")
       await connect(page)
       const main = page.getByRole("main")
-      await main.getByRole("button", { name: "Move Discovery card" }).click()
+      await main
+        .getByRole("button", { name: "Move Discovery card", exact: true })
+        .click()
       await expect(page.getByRole("menu")).toBeVisible()
       await expectNoAxeViolations(page, theme, { menuOpen: true })
 
@@ -609,10 +646,13 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await publishOnce(page)
 
       await main
-        .getByRole("button", { name: "Move Card awaiting release" })
+        .getByRole("button", {
+          name: "Move Card awaiting release",
+          exact: true,
+        })
         .click()
       await expect(page.getByRole("menu")).toContainText("In Now: 3 of 3")
-      await expectNoAxeViolations(page, theme)
+      await expectNoAxeViolations(page, theme, { menuOpen: true })
 
       await page.getByRole("menuitem", { name: "To the top" }).click()
       await expect(

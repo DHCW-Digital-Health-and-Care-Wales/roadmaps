@@ -7,7 +7,12 @@
  * whether it is still open. The two orders the review draws are `order-review.ts`'s.
  */
 
-import { removeAnyway, undoRemoval } from "@/domain/roadmap/item-removal"
+import { changedFields } from "@/domain/roadmap/find-edited-item"
+import {
+  removalOf,
+  removeAnyway,
+  undoRemoval,
+} from "@/domain/roadmap/item-removal"
 import {
   sameItemAcrossReads,
   sameOrder,
@@ -22,6 +27,7 @@ import {
   type ItemChanges,
   type ItemTarget,
   type OrderConflict,
+  type RemovalConflict,
   type RoadmapChanges,
   type RoadmapChoiceField,
   isChoiceField,
@@ -67,8 +73,19 @@ export interface OpenOrderConflict {
   readonly key: string
 }
 
+/**
+ * An item removed that a co-lead changed, still to decide (STY-049 S6): the review
+ * draws each field they changed, with "Remove anyway" and "Keep the item".
+ */
+export interface OpenRemovalConflict {
+  readonly kind: "removal"
+  readonly conflict: RemovalConflict
+  readonly key: string
+}
+
 /** A conflict still to decide, as the review shows it. */
-export type OpenConflict = OpenFieldConflict | OpenOrderConflict
+export type OpenConflict =
+  OpenFieldConflict | OpenOrderConflict | OpenRemovalConflict
 
 /** Where the roadmap's own text sorts among the edited items: before them all. */
 const ROADMAP_FIRST = -1
@@ -92,11 +109,12 @@ function pendingOf(
  * The conflicts of `conflicts` still open over `changes`, the roadmap's text first, then
  * items in their order, a placement's order just before the first of its items (STY-050
  * S11), or, with none of them in conflict, after every item, in page order. One is open
- * while its field is pending and not yet edited from the co-lead's text, or its order
- * is pending and not yet from the order found. Keep mine, Use theirs, undoing the edit
- * or a read that finds the roadmap already holding it each close it. Tags or details
- * that have gained Welsh versions can't be kept (STY-037 S22, STY-039 S19), so theirs
- * stays open until the change is given up.
+ * while its field is pending and not yet edited from the co-lead's text, its order is
+ * pending and not yet from the order found, or its item's removal is pending and not
+ * yet from the item found (STY-049 S6). Keep mine, Use theirs, undoing the edit or the
+ * removal, or a read that finds the roadmap already holding it each close it. Tags or
+ * details that have gained Welsh versions can't be kept (STY-037 S22, STY-039 S19), so
+ * theirs stays open until the change is given up.
  */
 export function openConflicts(
   conflicts: readonly Conflict[],
@@ -108,9 +126,24 @@ export function openConflicts(
     open: OpenConflict
   }
   const fields = conflicts.flatMap((conflict): Sorted[] => {
-    // An item removed that a co-lead changed is reviewed from STY-049.
-    if (conflict.subject === "order" || conflict.subject === "removal")
-      return []
+    if (conflict.subject === "order") return []
+    if (conflict.subject === "removal") {
+      const removal = removalOf(changes, conflict.removal)
+      if (
+        !removal ||
+        changedFields(removal.item, conflict.current).length === 0
+      )
+        return []
+      const target = removal.item.id ?? `at-${String(removal.position)}`
+      return [
+        {
+          at: removal.position,
+          // Before the item's own fields, though none of them is pending beneath it.
+          fieldAt: -1,
+          open: { kind: "removal", conflict, key: `removal-${target}` },
+        },
+      ]
+    }
     const { change, entry } = pendingOf(changes, conflict)
     if (!change) return []
     if (!conflict.gainedWelsh && change.base === conflict.current) return []
@@ -158,9 +191,7 @@ export function openConflicts(
     if (!order || sameOrder(order.base, found, sameItemAcrossReads)) return []
     const first = Math.min(
       ...fields.flatMap(({ at, open }) =>
-        open.kind === "field" && open.item?.placement === conflict.placement
-          ? [at]
-          : [],
+        placementOf(open) === conflict.placement ? [at] : [],
       ),
     )
     return [
@@ -177,6 +208,13 @@ export function openConflicts(
       (a, b) => (a.at === b.at ? 0 : a.at - b.at) || a.fieldAt - b.fieldAt,
     )
     .map(({ open: each }) => each)
+}
+
+/** Where the item of an open field's or removal's conflict shows: none for the roadmap. */
+function placementOf(open: OpenConflict): RoadmapItem["placement"] {
+  if (open.kind === "field") return open.item?.placement ?? null
+  if (open.kind === "removal") return open.conflict.removal.item.placement
+  return null
 }
 
 /** `changes` with `conflict`'s field updated by `update`; `undefined` drops it. */

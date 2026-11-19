@@ -91,7 +91,7 @@ Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status toke
 | [DEF-019](_archive/defects/DEF-019-the-compact-view-s-axe-check-fails-now-and-then-on-target-size.md)              | The compact view's accessibility check fails now and then on target size                         | Won't fix    |
 | [DEF-020](_archive/defects/DEF-020-the-compact-view-s-press-on-a-row-test-fails-now-and-then.md)                   | The compact view's press-on-a-row test fails now and then                                        | Done         |
 | [DEF-021](_archive/defects/DEF-021-the-roadmap-header-grows-for-a-frame-as-it-lets-go-on-scroll-up.md)             | The roadmap header grows for a frame as it lets go on scroll up, moving the items                | Done         |
-| [DEF-022](defects/DEF-022-the-slowest-page-tests-time-out-when-the-host-is-busy.md)                                | The slowest page tests time out when the host is busy                                            | Needs triage |
+| [DEF-022](defects/DEF-022-page-tests-time-out-when-the-host-is-busy.md)                                            | Page tests time out when the host is busy                                                        | Needs triage |
 
 A defect found during delivery is recorded in `defects/` with
 Status `Needs triage` and listed here until the owner triages it.

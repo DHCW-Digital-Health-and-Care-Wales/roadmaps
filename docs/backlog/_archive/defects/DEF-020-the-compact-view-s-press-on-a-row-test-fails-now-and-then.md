@@ -9,7 +9,7 @@
 - **Binding ADRs**: none
 - **Suggested model**: Sonnet — one spec, a stress run under load, and either a wait
   for the row to settle or a real fault in the row's press to fix
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/180
 
 ## Summary
 

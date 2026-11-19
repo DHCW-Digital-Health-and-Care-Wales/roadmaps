@@ -1,8 +1,8 @@
 # EPC-016: A roadmap's items at a glance — every item a full card, however long
 
 - **Status**: Done — two stories from the compact view UX analysis, with the owner's
-  answers of 2026-11-18
-- **Progress**: 2 of 2 terminal (STY-066, STY-067)
+  answers of 2026-11-18, and a follow-up, STY-069
+- **Progress**: 3 of 3 terminal (STY-066, STY-067, STY-069)
 - **Binding ADRs**: ADR-002, ADR-005, ADR-008, ADR-010, ADR-011
 
 ## Summary
@@ -87,15 +87,17 @@ the catalogue's own where it has one: "Move", "Edit", "Undo changes", "Remove",
 
 ## Stories
 
-| ID      | Story                                                                                                                              | Area                               | Depends on | State |
-| ------- | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ---------- | ----- |
-| STY-066 | [A Product Lead reads cards of a like height, however long an item's text](STY-066-a-long-field-is-cut-after-three-lines.md)       | Features/UI + i18n (en + cy) + E2E | —          | ✅    |
-| STY-067 | [A Product Lead sees a roadmap's items as compact rows, and switches back to cards](STY-067-a-compact-view-of-a-roadmaps-items.md) | Features/UI + i18n (en + cy) + E2E | STY-066    | ✅    |
+| ID      | Story                                                                                                                                  | Area                               | Depends on | State |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ---------- | ----- |
+| STY-066 | [A Product Lead reads cards of a like height, however long an item's text](STY-066-a-long-field-is-cut-after-three-lines.md)           | Features/UI + i18n (en + cy) + E2E | —          | ✅    |
+| STY-067 | [A Product Lead sees a roadmap's items as compact rows, and switches back to cards](STY-067-a-compact-view-of-a-roadmaps-items.md)     | Features/UI + i18n (en + cy) + E2E | STY-066    | ✅    |
+| STY-069 | [A Product Lead opens a compact row by pressing its text, not only its chevron](STY-069-a-compact-row-opens-by-a-press-on-its-text.md) | Features/UI + E2E                  | STY-067    | ✅    |
 
 ## Sequencing
 
 STY-066, then STY-067: an opened row shows a card's fields with STY-066's cut, so
-STY-067 needs it on the default branch.
+STY-067 needs it on the default branch. STY-069, a follow-up the owner asked for after
+STY-067 was delivered, needs STY-067's rows.
 
 ## Out of scope
 

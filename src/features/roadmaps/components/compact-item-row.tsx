@@ -1,8 +1,13 @@
 import { ChevronRightIcon } from "lucide-react"
-import { useId, useState, type ReactNode } from "react"
+import { useState, type ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 import { localise } from "@/domain/roadmap/localised-text"
 import type { Organisation } from "@/domain/roadmap/organisation"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
@@ -37,9 +42,15 @@ export interface CompactItemRowProps {
  * keeps its whole text for assistive technology. Narrower, the title on the lines it
  * needs, with no description, and the flag and the tag under it (S5, D10).
  *
+ * The chevron is a Collapsible's trigger, stretched across the whole line (STY-069), so
+ * a press anywhere on it but Move and Edit opens and closes the row, and the chevron is
+ * still the one control a keyboard or a screen reader reaches. The text sits under the
+ * stretch, so it can't be selected.
+ *
  * Opened, its title and its flag show whole, then every field the item has, as a card
- * labels and cuts them (S6, S7), and `drop`. Each row opens and closes by itself; it starts closed,
- * as the view does when it is drawn again (D11). A list item, for a list of rows.
+ * labels and cuts them (S6, S7), and `drop`. Each row opens and closes by itself; it
+ * starts closed, as the view does when it is drawn again (D11). A list item, for a
+ * list of rows.
  */
 export function CompactItemRow({
   item,
@@ -50,7 +61,6 @@ export function CompactItemRow({
 }: CompactItemRowProps) {
   const { t } = useTranslation()
   const language = useLanguage()
-  const id = useId()
   const wide = useMediaQuery(TABLET_WIDTH)
   const [open, setOpen] = useState(false)
   const title = localise(item.title, language)
@@ -59,10 +69,14 @@ export function CompactItemRow({
   const wholeClasses = "wrap-break-word whitespace-pre-line"
 
   return (
-    <li className="border-t first:border-t-0">
+    <Collapsible
+      open={open}
+      onOpenChange={setOpen}
+      render={<li className="border-t first:border-t-0" />}
+    >
       <div
         className={cn(
-          "flex",
+          "relative flex",
           wide
             ? cn(
                 "min-h-12 gap-3 py-2 pr-3 pl-2",
@@ -71,14 +85,16 @@ export function CompactItemRow({
             : "items-start gap-2 py-2 pr-2 pl-1",
         )}
       >
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-expanded={open}
-          aria-controls={open ? id : undefined}
-          onClick={() => {
-            setOpen(!open)
-          }}
+        <CollapsibleTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              // The stretch: an overlay across the line, under Move and Edit. The base
+              // button's press nudge would make it the overlay's box, so it is off.
+              className="cursor-pointer after:absolute after:inset-0 active:not-aria-[haspopup]:translate-none"
+            />
+          }
         >
           <ChevronRightIcon
             aria-hidden="true"
@@ -89,7 +105,7 @@ export function CompactItemRow({
               item: title,
             })}
           </span>
-        </Button>
+        </CollapsibleTrigger>
         {wide ? (
           <>
             <div className="flex min-w-0 flex-1 items-baseline gap-3 py-1">
@@ -123,25 +139,18 @@ export function CompactItemRow({
             {tag}
           </div>
         )}
-        <div className="flex shrink-0 gap-2">{actions(wide)}</div>
+        <div className="relative z-10 flex shrink-0 gap-2">{actions(wide)}</div>
       </div>
-      {open && (
-        <div
-          id={id}
-          className={cn(
-            "flex flex-col gap-3",
-            // Under the title: the row's left padding, the 32px chevron and the gap.
-            wide ? "pr-4 pb-4 pl-13" : "pr-3 pb-3 pl-11",
-          )}
-        >
-          <ItemFields
-            item={item}
-            organisations={organisations}
-            columns={wide}
-          />
-          {drop && <div className="flex">{drop}</div>}
-        </div>
-      )}
-    </li>
+      <CollapsibleContent
+        className={cn(
+          "flex flex-col gap-3",
+          // Under the title: the row's left padding, the 32px chevron and the gap.
+          wide ? "pr-4 pb-4 pl-13" : "pr-3 pb-3 pl-11",
+        )}
+      >
+        <ItemFields item={item} organisations={organisations} columns={wide} />
+        {drop && <div className="flex">{drop}</div>}
+      </CollapsibleContent>
+    </Collapsible>
   )
 }

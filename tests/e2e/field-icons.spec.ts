@@ -30,7 +30,7 @@ for (const [device, size] of [
       const [labelBox, iconBox, wordBox] = await boxesOf(
         term,
         term.locator(`svg.${icon}`),
-        term.locator("span > span"),
+        term.getByText(label, { exact: true }),
       )
       // Before the word, with a small gap, level with its line.
       expect(iconBox.right).toBeLessThan(wordBox.x)

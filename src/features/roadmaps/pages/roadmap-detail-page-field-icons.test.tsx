@@ -119,13 +119,11 @@ describe("a card (S1)", () => {
     const organisations = fieldTerm(card, "Organisations")
     expect(tags && iconsIn(tags)).toEqual(["tag"])
     expect(organisations && iconsIn(organisations)).toEqual(["building"])
-    expect(tags?.firstElementChild?.firstElementChild).toBe(
-      tags?.querySelector("svg"),
-    )
-    for (const label of ["Description"]) {
-      const term = fieldTerm(card, label)
-      expect(term && iconsIn(term)).toEqual([])
-    }
+    // The icon comes before the word.
+    const drawn = tags?.innerHTML ?? ""
+    expect(drawn.indexOf("<svg")).toBeGreaterThanOrEqual(0)
+    expect(drawn.indexOf("<svg")).toBeLessThan(drawn.indexOf(">Tags<"))
+    expect(iconsIn(fieldTerm(card, "Description"))).toEqual([])
   })
 
   it("shows no label, and so no icon, for what the item lacks", async () => {
@@ -299,7 +297,7 @@ describe("What changes (S7)", () => {
       .getAllByRole("listitem")
       .find((each) => each.textContent.startsWith("Video clinics"))
     expect(line?.textContent).toBe("Video clinics!Title, Tags, Organisations")
-    const fields = line?.querySelector("span.block")
+    const fields = line?.lastElementChild
     expect(iconsIn(fields)).toEqual(["tag", "building"])
   })
 })

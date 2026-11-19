@@ -14,8 +14,8 @@ import type { Language } from "@/i18n"
 import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
-import { holdRefresh, readAgain } from "../testing/held-refresh"
 import { fieldTerm } from "../testing/field-term"
+import { holdRefresh, readAgain } from "../testing/held-refresh"
 import {
   createInMemoryRoadmapRepository,
   type InMemoryRoadmapRepository,

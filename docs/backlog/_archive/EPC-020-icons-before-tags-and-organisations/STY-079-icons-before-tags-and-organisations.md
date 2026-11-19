@@ -217,7 +217,9 @@ _Audited at `b968cd2`._
 
 - **`FieldName`** (`features/roadmaps/components/field-name.tsx`) takes `field`
   (optional) and the name as children; a field with no icon renders its children
-  unchanged. A new field that should carry an icon is one line in its table.
+  unchanged. A new field that should carry an icon is one line in its table, and, in an
+  edit form, a field that opens, is fixed or is tags: `EditForm` hands `FieldName` the
+  label of those three kinds only.
 - **`roadmaps.publish.notice.refused.targetLead`** replaces `…refused.target`.
 - **Data source**: nothing read or written changes.
 

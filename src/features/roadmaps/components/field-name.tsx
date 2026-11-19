@@ -13,7 +13,7 @@ const ICONS = {
 } as const
 
 function isIconField(field: string): field is keyof typeof ICONS {
-  return field in ICONS
+  return Object.hasOwn(ICONS, field)
 }
 
 export interface FieldNameProps {

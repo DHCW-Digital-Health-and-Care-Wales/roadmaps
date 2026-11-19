@@ -16,11 +16,11 @@ import { AppError } from "@/lib/errors"
 import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
+import { fieldTerm } from "../testing/field-term"
 import {
   createInMemoryRoadmapRepository,
   type InMemoryRoadmapItems,
 } from "../testing/in-memory-roadmap-repository"
-import { fieldTerm } from "../testing/field-term"
 import { expectOpeningFocus } from "../testing/opening-focus"
 import {
   productDetailsField,

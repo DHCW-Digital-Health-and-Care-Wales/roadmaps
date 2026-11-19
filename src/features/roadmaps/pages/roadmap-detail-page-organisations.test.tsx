@@ -11,8 +11,8 @@ import { AppError } from "@/lib/errors"
 import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
-import { createInMemoryRoadmapRepository } from "../testing/in-memory-roadmap-repository"
 import { fieldTerm } from "../testing/field-term"
+import { createInMemoryRoadmapRepository } from "../testing/in-memory-roadmap-repository"
 import { refreshRoadmap } from "../testing/roadmap-page"
 
 const roadmaps = [createTestRoadmap("producta", "Product A roadmap")]

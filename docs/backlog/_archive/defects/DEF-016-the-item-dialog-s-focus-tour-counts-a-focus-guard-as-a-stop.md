@@ -8,7 +8,7 @@
 - **Depends on**: none
 - **Binding ADRs**: none
 - **Suggested model**: Sonnet — one test helper, and a stress run to show it holds
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/179
 
 ## Summary
 

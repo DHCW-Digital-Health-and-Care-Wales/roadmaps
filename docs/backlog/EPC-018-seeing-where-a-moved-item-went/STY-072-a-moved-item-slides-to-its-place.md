@@ -4,7 +4,8 @@
 - **Type**: Feature
 - **Area**: Features/UI + E2E
 - **Epic**: [EPC-018-seeing-where-a-moved-item-went](README.md)
-- **Depends on**: STY-071 (hard: the mark it ends on)
+- **Depends on**: STY-071 (hard: the mark it ends on), STY-075 (preferred order: the
+  tags' place the slide ends on)
 - **Binding ADRs**: ADR-002, ADR-005, ADR-010
 - **Suggested model**: Opus — a view transition across two lists, with focus, scroll
   and the stuck header to keep in step

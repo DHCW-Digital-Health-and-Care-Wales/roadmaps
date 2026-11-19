@@ -7,6 +7,7 @@ import {
   editItemButton,
   openAddItemDialog,
   openEditItemDialog,
+  confirmRemoval,
   reviewFooterClose,
 } from "./fixtures/dialogs"
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
@@ -196,9 +197,6 @@ test("a Product Lead adds an item in the item dialog, pending until published (S
     CLINIC,
   ])
   await expect(newTag(card, CLINIC)).toHaveCount(0)
-  await expect(
-    card.getByRole("button", { name: `Remove ${CLINIC}` }),
-  ).toHaveCount(0)
   await expect(main.getByText(/unpublished change/)).toHaveCount(0)
 })
 
@@ -385,16 +383,13 @@ test("“Add and start another” keeps the dialog open; a new item is edited, m
   ])
   await expect(main.getByText("2 unpublished changes")).toBeVisible()
 
-  // Remove drops it without asking; focus goes to "Add an item".
-  await main.getByRole("button", { name: `Remove ${CLINIC}` }).click()
-  await expect(page.getByRole("alertdialog")).toHaveCount(0)
+  // Remove asks first, then drops it at once (STY-049 S10); focus goes to "Add an item".
+  await confirmRemoval(page, CLINIC)
   await expect(
     main.getByRole("heading", { level: 3, name: CLINIC }),
   ).toHaveCount(0)
   await expect(addItemButtons(page)).toBeFocused()
   await expect(main.getByText("1 unpublished change")).toBeVisible()
-  // No item the roadmap already holds has Remove.
-  await expect(main.getByRole("button", { name: /^Remove / })).toHaveCount(1)
   expect(sheets.writes).toEqual([])
 })
 

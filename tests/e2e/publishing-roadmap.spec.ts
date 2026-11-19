@@ -200,7 +200,9 @@ test("says so while no item has a recognised horizon, until a pending move gives
   await expect(dialog).toContainText(NO_ITEMS_LINE)
   await dialog.getByRole("button", { name: "Cancel" }).click()
 
-  await main.getByRole("button", { name: "Move Work coming soon" }).click()
+  await main
+    .getByRole("button", { name: "Move Work coming soon", exact: true })
+    .click()
   await page.getByRole("menuitem", { name: "Next" }).click()
   // Back at the top, beside the Not published tag (STY-059 S6).
   await page.evaluate(() => {

@@ -3,6 +3,7 @@ import { useMemo } from "react"
 import { editNewItem, removeNewItem } from "@/domain/roadmap/new-item"
 import type {
   ItemChanges,
+  ItemRemoval,
   ItemValues,
   RoadmapChanges,
 } from "@/domain/roadmap/roadmap-changes"
@@ -17,6 +18,7 @@ import {
   applyItemChanges,
   editItem,
   matchItemChanges,
+  matchRemovals,
   pendingNewItems,
   shownNewItem,
   type SinceOpened,
@@ -39,8 +41,16 @@ export interface PageItem {
   readonly item: RoadmapItem
   /** As the page shows it: as it will read once the roadmap's changes are published. */
   readonly shown: RoadmapItem
-  /** The pending edits of an item the roadmap holds, if it has any. */
+  /**
+   * The pending edits of an item the roadmap holds, if it has any: beneath its removal,
+   * if it is removed, where they count for nothing until it is undone (STY-049 D5).
+   */
   readonly entry: ItemChanges | undefined
+  /**
+   * Its removal, if the roadmap holds it and it is removed (STY-049): it shows where
+   * it did, as it did, struck through, until it is published or undone.
+   */
+  readonly removal: ItemRemoval | undefined
   /** Its ID among the roadmap's new items, when it is one: added and not published. */
   readonly newItemId: string | undefined
   /**
@@ -69,32 +79,55 @@ export function usePageItems(
 ): readonly PageItem[] {
   const changes = useRoadmapChanges(roadmapId)
   const keys = useItemCardKeys(items)
-  return useMemo(() => {
-    const entries = matchItemChanges(items, changes)
-    const turns = shownTurns(items, changes)
-    return [
-      ...items.flatMap((item, at): PageItem[] => {
-        const key = keys[at]
-        // Never: `useItemCardKeys` gives a key for each item, by its position.
-        if (key === undefined) return []
-        const entry = entries.get(at)
-        const shown = applyItemChanges(item, entry)
-        const turn = turns[at]
-        return [{ key, item, shown, entry, newItemId: undefined, turn }]
-      }),
-      ...pendingNewItems(items, changes).map((newItem, added): PageItem => {
-        const item = shownNewItem(newItem)
-        return {
-          key: newItemCardKey(newItem.id),
+  return useMemo(
+    () => pageItemsOf(items, changes, (position) => keys[position]),
+    [items, changes, keys],
+  )
+}
+
+/**
+ * The page's items over `items` with `changes`, as `usePageItems` gives them: `keyOf`
+ * gives the card key of the item read at a position, which only an item without one
+ * goes without.
+ */
+export function pageItemsOf(
+  items: readonly RoadmapItem[],
+  changes: RoadmapChanges | undefined,
+  keyOf: (position: number) => string | undefined,
+): PageItem[] {
+  const entries = matchItemChanges(items, changes)
+  const removals = matchRemovals(items, changes)
+  const turns = shownTurns(items, changes)
+  return [
+    ...items.flatMap((item, position): PageItem[] => {
+      const key = keyOf(position)
+      if (key === undefined) return []
+      const entry = entries.get(position)
+      return [
+        {
+          key,
           item,
-          shown: item,
-          entry: undefined,
-          newItemId: newItem.id,
-          turn: turns[items.length + added],
-        }
-      }),
-    ]
-  }, [items, changes, keys])
+          shown: applyItemChanges(item, entry),
+          entry,
+          removal: removals.get(position),
+          newItemId: undefined,
+          turn: turns[position],
+        },
+      ]
+    }),
+    ...pendingNewItems(items, changes).map((newItem, added): PageItem => {
+      const item = shownNewItem(newItem)
+      return {
+        key: newItemCardKey(newItem.id),
+        item,
+        shown: item,
+        entry: undefined,
+        removal: undefined,
+        newItemId: newItem.id,
+        turn: turns[items.length + added],
+      }
+    }),
+  ]
 }
 
 /**

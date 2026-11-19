@@ -444,6 +444,30 @@ export const en = {
        */
       new: "New",
       remove: "Remove",
+      /**
+       * The tag on an item removed and not yet published, and what puts it back; the
+       * button is followed by the item's title, for assistive technology (STY-049).
+       */
+      removed: "Removed",
+      undoRemoval: "Undo removal",
+      /** The question Remove asks first, Not doing offered first (STY-049 S1). */
+      removal: {
+        title: "Remove “{{title}}”?",
+        /** When the item goes: published, saved, or at once for a new item (S9, S10). */
+        when: {
+          publish: "It leaves the public roadmap when you publish.",
+          save: "It leaves the roadmap when you save.",
+          new: "It's new, so it goes straight away.",
+        },
+        /** Said beside "Move to Not doing", unless the item is in Not doing or unplaced (S11). */
+        notDoing: {
+          publish:
+            "To show readers the work was dropped, move it to Not doing instead.",
+          save: "To show the work was dropped, move it to Not doing instead.",
+        },
+        moveToNotDoing: "Move to Not doing",
+        confirm: "Remove",
+      },
       titleRequired: "Enter a title",
       /** A roadmap's title, labelled "Product name", left blank. */
       productNameRequired: "Enter a product name",
@@ -793,6 +817,8 @@ export const en = {
         changes: "What changes",
         /** Under the title of an item that is new, in place of its changed fields. */
         newItem: "New item",
+        /** Under the title of an item removed, in place of its changed fields (STY-049 S5). */
+        removed: "Removed",
       },
       /**
        * The tick box that sets the roadmap's `Last updated` to today in the same write,
@@ -849,6 +875,22 @@ export const en = {
             "These details now have Welsh versions, so they can't be changed here yet.",
           /** Followed by the field, for assistive technology. */
           discardMine: "Discard my change",
+          /**
+           * An item removed that someone else changed (STY-049 S6): "Removed" is the
+           * Product Lead's change, beside each field changed; each button is followed by
+           * the item's title, for assistive technology.
+           */
+          removal: {
+            yours: "Removed",
+            removeAnyway: "Remove anyway",
+            keepItem: "Keep the item",
+            /**
+             * Under a field whose Welsh changed, or whose horizon as written changed
+             * while it is unplaced: what only the item shows, which the English may not.
+             */
+            welsh: "In Welsh: {{text}}",
+            writtenAs: "Written as “{{horizon}}”",
+          },
           /** `title` is the item's title as it was loaded. */
           removed:
             "Someone else has removed or changed “{{title}}”, so your changes to it couldn't be kept.",

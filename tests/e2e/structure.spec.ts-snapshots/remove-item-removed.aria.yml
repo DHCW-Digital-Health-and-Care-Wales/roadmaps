@@ -1,0 +1,14 @@
+- listitem:
+  - heading "Card being explored" [level=3]
+  - term: Phase
+  - definition: Alpha
+  - term: Description
+  - definition: Work we expect to pick up soon.
+  - term: Expected outcome
+  - definition: What we hope this will achieve.
+  - term: Organisations
+  - definition: Betsi Cadwaladr, Hywel Dda
+  - text: Removed Card being explored
+  - button "Undo removal Card being explored"
+  - button "Move Card being explored" [disabled]
+  - button "Edit Card being explored" [disabled]

@@ -573,7 +573,9 @@ test.describe("the keyboard (S13)", () => {
       row.getByRole("button", { name: "Hide the rest of Short" }),
     ).toBeFocused()
     await page.keyboard.press("Tab")
-    await expect(row.getByRole("button", { name: "Move Short" })).toBeFocused()
+    await expect(
+      row.getByRole("button", { name: "Move Short", exact: true }),
+    ).toBeFocused()
     await page.keyboard.press("Tab")
     await expect(row.getByRole("button", { name: "Edit Short" })).toBeFocused()
 

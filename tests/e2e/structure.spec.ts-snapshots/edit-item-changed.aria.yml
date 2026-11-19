@@ -24,5 +24,6 @@
     - button "Show more of the details of A clearer card"
   - text: Changed
   - button "Undo changes A clearer card"
+  - button "Remove A clearer card"
   - button "Move A clearer card"
   - button "Edit A clearer card"

@@ -631,7 +631,7 @@ test.describe("moving an item (STY-031)", () => {
   async function moveWithMenu(page: Page, title: string, to: string) {
     await page
       .getByRole("main")
-      .getByRole("button", { name: `Move ${title}` })
+      .getByRole("button", { name: `Move ${title}`, exact: true })
       .click()
     await page.getByRole("menuitem", { name: to, exact: true }).click()
   }
@@ -765,7 +765,7 @@ test.describe("moving an item (STY-031)", () => {
     await openRoadmap(page, "producta", ITEM)
     const move = page
       .getByRole("main")
-      .getByRole("button", { name: "Move Discovery card" })
+      .getByRole("button", { name: "Move Discovery card", exact: true })
 
     await move.focus()
     await page.keyboard.press("Enter")
@@ -791,7 +791,9 @@ test.describe("reordering a placement's items (STY-050)", () => {
       .getByRole("heading", { level: 3 })
   }
   const moveButton = (page: Page, title: string) =>
-    page.getByRole("main").getByRole("button", { name: `Move ${title}` })
+    page
+      .getByRole("main")
+      .getByRole("button", { name: `Move ${title}`, exact: true })
   const nowRows = (tabs: readonly FakeTab[]) => {
     const [header = [], ...rows] =
       tabs.find(({ title }) => title === "ProductA")?.rows ?? []

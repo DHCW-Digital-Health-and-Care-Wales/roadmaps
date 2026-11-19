@@ -388,6 +388,24 @@ export const cy = {
       changed: "Wedi newid",
       new: "Newydd",
       remove: "Tynnu",
+      removed: "Wedi'i thynnu",
+      undoRemoval: "Dadwneud y tynnu",
+      removal: {
+        title: "Tynnu “{{title}}”?",
+        when: {
+          publish:
+            "Bydd yn gadael y map trywydd cyhoeddus pan fyddwch chi'n cyhoeddi.",
+          save: "Bydd yn gadael y map trywydd pan fyddwch chi'n cadw.",
+          new: "Mae'n newydd, felly bydd yn mynd ar unwaith.",
+        },
+        notDoing: {
+          publish:
+            "I ddangos i ddarllenwyr bod y gwaith wedi'i ollwng, symudwch hi i Ddim yn bwrw ymlaen yn lle hynny.",
+          save: "I ddangos bod y gwaith wedi'i ollwng, symudwch hi i Ddim yn bwrw ymlaen yn lle hynny.",
+        },
+        moveToNotDoing: "Symud i Ddim yn bwrw ymlaen",
+        confirm: "Tynnu",
+      },
       titleRequired: "Rhowch deitl",
       productNameRequired: "Rhowch enw'r cynnyrch",
       placementRequired: "Dewiswch orwel neu adran",
@@ -700,6 +718,7 @@ export const cy = {
         },
         changes: "Beth sy'n newid",
         newItem: "Eitem newydd",
+        removed: "Wedi'i thynnu",
       },
       markUpdated: "Nodi ei fod wedi'i ddiweddaru heddiw",
       notice: {
@@ -737,6 +756,13 @@ export const cy = {
           welshDetails:
             "Mae fersiynau Cymraeg o'r manylion hyn erbyn hyn, felly does dim modd eu newid yma eto.",
           discardMine: "Gwaredu fy newid",
+          removal: {
+            yours: "Wedi'i thynnu",
+            removeAnyway: "Tynnu beth bynnag",
+            keepItem: "Cadw'r eitem",
+            welsh: "Yn Gymraeg: {{text}}",
+            writtenAs: "Wedi'i ysgrifennu fel “{{horizon}}”",
+          },
           removed:
             "Mae rhywun arall wedi tynnu neu newid “{{title}}”, felly doedd dim modd cadw eich newidiadau iddo.",
           otherKept: "Mae eich newidiadau eraill wedi'u cadw yn y tab hwn.",

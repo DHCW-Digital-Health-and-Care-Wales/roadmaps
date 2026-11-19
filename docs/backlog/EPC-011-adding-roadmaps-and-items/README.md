@@ -2,10 +2,10 @@
 
 - **Status**: Active — grilled with the owner on 2026-11-14; STY-040 to STY-047
   delivered; reordering settled on 2026-11-16 as STY-051 then STY-050, both delivered;
-  removing a published item grilled on 2026-11-19 as STY-070 then STY-049; STY-070
+  removing a published item grilled on 2026-11-19 as STY-070 then STY-049, both
   delivered
-- **Progress**: 11 of 13 terminal; next selectable: STY-049, once STY-070 is on the
-  default branch; blocked on: STY-048 waits for grilling
+- **Progress**: 12 of 13 terminal; next selectable: none; blocked on: STY-048 waits for
+  grilling
 - **Binding ADRs**: ADR-012, ADR-011, ADR-009, ADR-013, ADR-014, ADR-002, ADR-003, ADR-005,
   ADR-006, ADR-010, ADR-008
 
@@ -208,7 +208,7 @@ STY-070 extends **Pending edit** and **Conflict** to a removal.
 | STY-046 | [A Product Lead adds an item](../_archive/EPC-011-adding-roadmaps-and-items/STY-046-add-an-item.md)                                                                         | Features/UI + i18n (en + cy) + E2E                                  | STY-042, STY-044, STY-045 | ✅    |
 | STY-047 | [The publish dialog names the new items](../_archive/EPC-011-adding-roadmaps-and-items/STY-047-a-new-item-in-the-publish-dialog.md)                                         | Features/UI + i18n (en + cy) + E2E                                  | STY-046                   | ✅    |
 | STY-048 | [A Product Lead removes a roadmap](STY-048-remove-a-roadmap.md)                                                                                                             | to be decided                                                       | —                         |       |
-| STY-049 | [A Product Lead removes a published item](STY-049-remove-a-published-item.md)                                                                                               | Features/UI + i18n (en + cy) + E2E                                  | STY-070                   |       |
+| STY-049 | [A Product Lead removes a published item](../_archive/EPC-011-adding-roadmaps-and-items/STY-049-remove-a-published-item.md)                                                 | Features/UI + i18n (en + cy) + E2E                                  | STY-070                   | ✅    |
 | STY-050 | [A Product Lead reorders the items in a placement](../_archive/EPC-011-adding-roadmaps-and-items/STY-050-reorder-items-in-a-placement.md)                                   | Domain + Infrastructure + Features/UI + i18n (en + cy) + E2E + Docs | STY-051                   | ✅    |
 | STY-051 | [A moved item goes last in its new placement](../_archive/EPC-011-adding-roadmaps-and-items/STY-051-a-moved-item-goes-last-in-its-new-placement.md)                         | Domain + Infrastructure + Features/UI + i18n (en + cy) + E2E + Docs | —                         | ✅    |
 | STY-070 | [The repository publishes a removed item](../_archive/EPC-011-adding-roadmaps-and-items/STY-070-the-repository-publishes-a-removed-item.md)                                 | Domain + Infrastructure + Docs                                      | —                         | ✅    |

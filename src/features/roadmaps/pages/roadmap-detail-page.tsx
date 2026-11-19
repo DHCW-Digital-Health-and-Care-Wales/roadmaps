@@ -35,6 +35,7 @@ import {
   usePendingChanges,
   useRoadmapChanges,
 } from "../editing/pending-changes-context"
+import { publishAction } from "../editing/pending-changes-store"
 import { PublishedStateDialog } from "../editing/published-state-dialog"
 import { PublishedStateNotice } from "../editing/published-state-notice"
 import { RoadmapPublishing } from "../editing/roadmap-publishing"
@@ -312,9 +313,11 @@ function RoadmapView({
       <RoadmapItemsArea
         roadmapId={roadmap.id}
         listFetching={listFetching}
+        pageItems={pageItems}
         groups={groups}
         view={itemsView}
         itemDialog={itemDialog}
+        action={publishAction(roadmap)}
         onItemRemoved={focusAddItem}
       />
     </div>
@@ -323,7 +326,13 @@ function RoadmapView({
 
 interface RoadmapItemsAreaProps extends Pick<
   RoadmapItemsProps,
-  "roadmapId" | "groups" | "view" | "itemDialog" | "onItemRemoved"
+  | "roadmapId"
+  | "pageItems"
+  | "groups"
+  | "view"
+  | "itemDialog"
+  | "action"
+  | "onItemRemoved"
 > {
   /** The roadmap list is being read, as it is again once the roadmap is gone (D11). */
   listFetching: boolean

@@ -7,7 +7,15 @@
  * whether it is still open. The two orders the review draws are `order-review.ts`'s.
  */
 
-import { removeAnyway, undoRemoval } from "@/domain/roadmap/item-removal"
+import {
+  changedFields,
+  findEditedItem,
+} from "@/domain/roadmap/find-edited-item"
+import {
+  removalOf,
+  removeAnyway,
+  undoRemoval,
+} from "@/domain/roadmap/item-removal"
 import {
   sameItemAcrossReads,
   sameOrder,
@@ -22,6 +30,7 @@ import {
   type ItemChanges,
   type ItemTarget,
   type OrderConflict,
+  type RemovalConflict,
   type RoadmapChanges,
   type RoadmapChoiceField,
   isChoiceField,
@@ -67,8 +76,19 @@ export interface OpenOrderConflict {
   readonly key: string
 }
 
+/**
+ * An item removed that a co-lead changed, still to decide (STY-049 S6): the review
+ * draws each field they changed, with "Remove anyway" and "Keep the item".
+ */
+export interface OpenRemovalConflict {
+  readonly kind: "removal"
+  readonly conflict: RemovalConflict
+  readonly key: string
+}
+
 /** A conflict still to decide, as the review shows it. */
-export type OpenConflict = OpenFieldConflict | OpenOrderConflict
+export type OpenConflict =
+  OpenFieldConflict | OpenOrderConflict | OpenRemovalConflict
 
 /** Where the roadmap's own text sorts among the edited items: before them all. */
 const ROADMAP_FIRST = -1
@@ -92,11 +112,12 @@ function pendingOf(
  * The conflicts of `conflicts` still open over `changes`, the roadmap's text first, then
  * items in their order, a placement's order just before the first of its items (STY-050
  * S11), or, with none of them in conflict, after every item, in page order. One is open
- * while its field is pending and not yet edited from the co-lead's text, or its order
- * is pending and not yet from the order found. Keep mine, Use theirs, undoing the edit
- * or a read that finds the roadmap already holding it each close it. Tags or details
- * that have gained Welsh versions can't be kept (STY-037 S22, STY-039 S19), so theirs
- * stays open until the change is given up.
+ * while its field is pending and not yet edited from the co-lead's text, its order is
+ * pending and not yet from the order found, or its item's removal is pending and not
+ * yet from the item found (STY-049 S6). Keep mine, Use theirs, undoing the edit or the
+ * removal, or a read that finds the roadmap already holding it each close it. Tags or
+ * details that have gained Welsh versions can't be kept (STY-037 S22, STY-039 S19), so
+ * theirs stays open until the change is given up.
  */
 export function openConflicts(
   conflicts: readonly Conflict[],
@@ -108,9 +129,24 @@ export function openConflicts(
     open: OpenConflict
   }
   const fields = conflicts.flatMap((conflict): Sorted[] => {
-    // An item removed that a co-lead changed is reviewed from STY-049.
-    if (conflict.subject === "order" || conflict.subject === "removal")
-      return []
+    if (conflict.subject === "order") return []
+    if (conflict.subject === "removal") {
+      const removal = removalOf(changes, conflict.removal)
+      if (
+        !removal ||
+        changedFields(removal.item, conflict.current).length === 0
+      )
+        return []
+      const target = removal.item.id ?? `at-${String(removal.position)}`
+      return [
+        {
+          at: removal.position,
+          // Before the item's own fields, though none of them is pending beneath it.
+          fieldAt: -1,
+          open: { kind: "removal", conflict, key: `removal-${target}` },
+        },
+      ]
+    }
     const { change, entry } = pendingOf(changes, conflict)
     if (!change) return []
     if (!conflict.gainedWelsh && change.base === conflict.current) return []
@@ -129,8 +165,9 @@ export function openConflicts(
         },
       ]
     }
-    // A pending item change is always in an entry.
-    if (!entry) return []
+    // A pending item change is always in an entry; one beneath a removal counts for
+    // nothing until the removal is undone (STY-049 D5).
+    if (!entry || removalOf(changes, entry)) return []
     // An item without an ID yet is told apart by its place.
     const target = entry.item.id ?? `at-${String(entry.position)}`
     return [
@@ -158,9 +195,7 @@ export function openConflicts(
     if (!order || sameOrder(order.base, found, sameItemAcrossReads)) return []
     const first = Math.min(
       ...fields.flatMap(({ at, open }) =>
-        open.kind === "field" && open.item?.placement === conflict.placement
-          ? [at]
-          : [],
+        placementOf(open) === conflict.placement ? [at] : [],
       ),
     )
     return [
@@ -178,6 +213,78 @@ export function openConflicts(
     )
     .map(({ open: each }) => each)
 }
+
+/** Where the item of an open field's or removal's conflict shows: none for the roadmap. */
+function placementOf(open: OpenConflict): RoadmapItem["placement"] {
+  if (open.kind === "field") return open.item?.placement ?? null
+  if (open.kind === "removal") return open.conflict.removal.item.placement
+  return null
+}
+
+/**
+ * What a removal's conflict found in `field` that its English value may not show
+ * (STY-049 S6): the field's Welsh, if it changed, `""` for none; an unplaced item's
+ * horizon as written, if it changed; and the organisation codes the list doesn't know,
+ * if they changed.
+ */
+export function removalFieldNotes(
+  { removal: { item: loaded }, current }: RemovalConflict,
+  field: EditableItemField,
+): {
+  welsh?: string
+  writtenHorizon?: string
+  unknownCodes?: readonly string[]
+} {
+  const welsh = welshOf(current, field)
+  const codes = current.unknownOrganisationCodes
+  return {
+    ...(welsh !== welshOf(loaded, field) && { welsh }),
+    ...(field === "placement" &&
+      current.writtenHorizon !== loaded.writtenHorizon &&
+      current.writtenHorizon !== null && {
+        writtenHorizon: current.writtenHorizon,
+      }),
+    ...(field === "organisationIds" &&
+      codes.join(",") !== loaded.unknownOrganisationCodes.join(",") && {
+        unknownCodes: codes,
+      }),
+  }
+}
+
+/**
+ * An item's Welsh for `field`, as one text, `""` for none: tags comma separated and
+ * details by line, each entry in its place, a blank one as a dash, so Welsh that moved
+ * between entries reads as the change it is.
+ */
+function welshOf(item: RoadmapItem, field: EditableItemField): string {
+  switch (field) {
+    case "placement":
+    case "organisationIds":
+      return ""
+    case "tags":
+      return entriesOf(
+        item.tags.map(({ cy }) => cy),
+        ", ",
+      )
+    case "details":
+      return entriesOf(
+        item.details.map(({ text }) => text.cy),
+        "\n",
+      )
+    default:
+      return item[field]?.cy ?? ""
+  }
+}
+
+/** Welsh entries in their places, a blank one as a dash; `""` when all are blank. */
+function entriesOf(welsh: readonly string[], separator: string): string {
+  return welsh.every((each) => each === "")
+    ? ""
+    : welsh.map((each) => each || BLANK_ENTRY).join(separator)
+}
+
+/** A blank entry among Welsh tags or details, as the review shows it. */
+const BLANK_ENTRY = "—"
 
 /** `changes` with `conflict`'s field updated by `update`; `undefined` drops it. */
 function withConflictField(
@@ -342,9 +449,43 @@ function isNamed(
  * `withCurrentRoadmapText` does; an item not in `since` is left as it is. An item a
  * co-lead unplaced shows as having no horizon, and one whose tags or details gained
  * Welsh versions as having them, so its form no longer changes them (STY-037 S20, S22;
- * STY-039 S18, S19).
+ * STY-039 S18, S19). An item removed that a co-lead changed shows whole as the publish
+ * read it, unless a read since changed it (STY-049 S6), so "Keep the item" shows it as
+ * it now reads.
  */
 export function withCurrentItemText(
+  items: readonly RoadmapItem[],
+  conflicts: readonly Conflict[],
+  since: readonly RoadmapItem[] | undefined,
+): RoadmapItem[] {
+  return withCurrentRemovedItems(
+    withCurrentFields(items, conflicts, since),
+    conflicts,
+    since,
+  )
+}
+
+/** `withCurrentItemText` for the items removed that a co-lead changed. */
+function withCurrentRemovedItems(
+  items: readonly RoadmapItem[],
+  conflicts: readonly Conflict[],
+  since: readonly RoadmapItem[] | undefined,
+): RoadmapItem[] {
+  const shown = [...items]
+  for (const conflict of conflicts) {
+    if (conflict.subject !== "removal" || !since) continue
+    const at = findEditedItem(items, new Set(), conflict.removal, [])
+    const was = since[findEditedItem(since, new Set(), conflict.removal, [])]
+    const item = items[at]
+    if (item && was && changedFields(item, was).length === 0) {
+      shown[at] = conflict.current
+    }
+  }
+  return shown
+}
+
+/** `withCurrentItemText` for the fields of the items edited. */
+function withCurrentFields(
   items: readonly RoadmapItem[],
   conflicts: readonly Conflict[],
   since: readonly RoadmapItem[] | undefined,

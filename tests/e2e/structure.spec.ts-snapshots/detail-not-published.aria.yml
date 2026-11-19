@@ -48,6 +48,7 @@
       - definition: Alpha
       - term: Description
       - definition: This roadmap is disabled on the Roadmaps tab, so this tab is never read.
+      - button "Remove Unpublished work"
       - button "Move Unpublished work"
       - button "Edit Unpublished work"
   - heading "Next" [level=2]

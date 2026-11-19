@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 
+import { removeItem } from "@/domain/roadmap/item-removal"
 import { addNewItem } from "@/domain/roadmap/new-item"
 import {
   NO_CHANGES,
@@ -111,5 +112,24 @@ describe("summariseJumpTargets", () => {
     expect(
       summarise(read, reordered).find(({ target }) => target === "now"),
     ).toEqual({ target: "now", count: 2, pending: true })
+  })
+
+  it("leaves a removed item out of its placement's count, and marks the placement (STY-049 S4)", () => {
+    const read = [item("Now A"), item("Next A", "next")]
+
+    expect(
+      summarise(read, removeItem(NO_CHANGES, item("Next A", "next"), 1))[2],
+    ).toEqual({ target: "next", count: 0, pending: true })
+  })
+
+  it("marks no other item removed when one without an ID is no longer where it was read (STY-049 S2, S4)", () => {
+    const fax = item("Fax", "next")
+    const removed = removeItem(NO_CHANGES, fax, 0)
+    // A co-lead put another item without an ID above it.
+    const read = [item("Inserted", "next"), fax]
+
+    const next = summarise(read, removed)[2]
+
+    expect(next).toEqual({ target: "next", count: 2, pending: false })
   })
 })

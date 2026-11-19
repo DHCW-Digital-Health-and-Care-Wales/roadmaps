@@ -142,7 +142,9 @@ export function showCurrentText(
         ),
     )
   }
-  if (conflicts.some((conflict) => conflict.subject === "item")) {
+  if (
+    conflicts.some(({ subject }) => subject === "item" || subject === "removal")
+  ) {
     patchQueryData<readonly RoadmapItem[]>(
       queryClient,
       roadmapKeys.items(roadmapId),

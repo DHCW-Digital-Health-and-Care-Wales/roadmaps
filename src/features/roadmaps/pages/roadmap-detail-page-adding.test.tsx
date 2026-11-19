@@ -34,6 +34,7 @@ import {
   openEditItemDialog,
 } from "../testing/item-dialog"
 import { expectOpeningFocus } from "../testing/opening-focus"
+import { confirmRemoval } from "../testing/removal-dialog"
 import {
   closeConflictReview,
   goToList,
@@ -657,26 +658,26 @@ describe("A new item before it is published (STY-046 S6)", () => {
     })
   })
 
-  it("is dropped by Remove without asking, focus going to “Add an item”; no item the roadmap holds has Remove", async () => {
+  it("is dropped by Remove once asked (STY-049 S10), focus going to “Add an item”", async () => {
     const { user } = await renderPage()
     await addItem(user, CLINIC, "Next")
     await addItem(user, CHECK_IN, "Next")
-    expect(
-      main().queryByRole("button", { name: "Remove Online booking" }),
-    ).toBeNull()
-    expect(main().getAllByRole("button", { name: /^Remove / })).toHaveLength(2)
 
-    await user.click(main().getByRole("button", { name: `Remove ${CLINIC}` }))
+    await confirmRemoval(user, CLINIC)
 
-    expect(screen.queryByRole("alertdialog")).toBeNull()
     expect(titlesUnder("Next")).toEqual(["Text reminders", CHECK_IN])
-    expect(addItemButtons()[0]).toHaveFocus()
+    await waitFor(() => {
+      expect(addItemButtons()[0]).toHaveFocus()
+    })
     expect(main().getByText("1 unpublished change")).toBeVisible()
+    expect(main().queryByText("Removed")).toBeNull()
 
-    await user.click(main().getByRole("button", { name: `Remove ${CHECK_IN}` }))
+    await confirmRemoval(user, CHECK_IN)
 
     expect(main().queryByText(/unpublished change/)).toBeNull()
-    expect(addItemButtons()[0]).toHaveFocus()
+    await waitFor(() => {
+      expect(addItemButtons()[0]).toHaveFocus()
+    })
   })
 })
 
@@ -691,9 +692,10 @@ describe("Publishing a new item (STY-046 S7)", () => {
     expect(titlesUnder("Next")).toEqual(["Text reminders", CLINIC])
     const published = card(CLINIC)
     expect(published.queryByText("New")).toBeNull()
+    // Removed now, it would leave the public roadmap when published (STY-049).
     expect(
-      published.queryByRole("button", { name: `Remove ${CLINIC}` }),
-    ).toBeNull()
+      published.getByRole("button", { name: `Remove ${CLINIC}` }),
+    ).toBeVisible()
     expect(
       published.getByRole("button", { name: `Edit ${CLINIC}` }),
     ).toBeVisible()
@@ -1204,12 +1206,14 @@ describe("An empty roadmap (STY-046 S8)", () => {
       ).toHaveFocus()
     })
 
-    await user.click(main().getByRole("button", { name: `Remove ${CLINIC}` }))
+    await confirmRemoval(user, CLINIC)
 
     expect(
       main().getByRole("heading", { level: 2, name: "No items yet" }),
     ).toBeVisible()
-    expect(addItemButtons()[0]).toHaveFocus()
+    await waitFor(() => {
+      expect(addItemButtons()[0]).toHaveFocus()
+    })
   })
 })
 

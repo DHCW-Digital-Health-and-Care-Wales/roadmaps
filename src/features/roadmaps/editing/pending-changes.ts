@@ -20,6 +20,7 @@ import {
   type FieldChange,
   isChoiceField,
   type ItemChanges,
+  type ItemRemoval,
   type ItemTarget,
   itemValue,
   type ItemValues,
@@ -204,6 +205,25 @@ export function matchItemChanges(
       pendingValues(entry),
     )
     if (index >= 0 && !matched.has(index)) matched.set(index, entry)
+  }
+  return matched
+}
+
+/**
+ * Which removal removes which of `items`, by index, found as an edited item is
+ * (`findEditedItem`): an item with an ID by its ID, one with none at its place holding
+ * what was loaded. A removal matching nothing is left out: its item is gone, or a
+ * co-lead changed or moved it, and the next publish says so (ADR-012 Option 13); no
+ * other item is taken for it.
+ */
+export function matchRemovals(
+  items: readonly RoadmapItem[],
+  changes: RoadmapChanges | undefined,
+): ReadonlyMap<number, ItemRemoval> {
+  const matched = new Map<number, ItemRemoval>()
+  for (const removal of changes?.removals ?? []) {
+    const index = findEditedItem(items, NO_REPEATED_IDS, removal, [])
+    if (index >= 0 && !matched.has(index)) matched.set(index, removal)
   }
   return matched
 }
@@ -425,8 +445,8 @@ export function pendingNewItems(
 
 /**
  * Whether publishing `changes` leaves the public site nothing of `items` to show: none
- * is in a horizon or section, counting a pending move (STY-042 D4), and no item is new,
- * which is always in one (STY-046 D9).
+ * is in a horizon or section, counting a pending move (STY-042 D4), or each that is
+ * is removed (STY-049 D9), and no item is new, which is always in one (STY-046 D9).
  */
 export function publishesNoItems(
   items: readonly RoadmapItem[],
@@ -434,8 +454,11 @@ export function publishesNoItems(
 ): boolean {
   if (pendingNewItems(items, changes).length > 0) return false
   const entries = matchItemChanges(items, changes)
+  const removals = matchRemovals(items, changes)
   return items.every(
-    (item, at) => applyItemChanges(item, entries.get(at)).placement === null,
+    (item, position) =>
+      removals.has(position) ||
+      applyItemChanges(item, entries.get(position)).placement === null,
   )
 }
 
@@ -636,28 +659,47 @@ export type ChangedPart =
       readonly item: RoadmapItem
       readonly fields: EditableItemField[]
     }
+  | {
+      /** An item removed (STY-049): no field of it is a change of its own. */
+      readonly kind: "removal"
+      readonly position: number
+      /** The item as it was read when removed. */
+      readonly item: RoadmapItem
+    }
+
+type ItemPart = Exclude<ChangedPart, { kind: "roadmap" }>
 
 /**
  * What a publish changes of what the roadmap holds: its own text first, then its items
- * in their order. The items new to it are no part of these: `changes.newItems`.
+ * in their order, each edited or removed; the edits beneath a removal are none of
+ * them (STY-049 D5). The items new to it are no part of these: `changes.newItems`.
  */
 export function changedParts(changes: RoadmapChanges): ChangedPart[] {
   const roadmapFields = changedRoadmapFields(changes)
+  const items: ItemPart[] = [
+    ...changes.items.flatMap((entry): ItemPart[] =>
+      removalOf(changes, entry)
+        ? []
+        : [
+            {
+              kind: "item",
+              position: entry.position,
+              item: applyItemChanges(entry.item, entry),
+              fields: changedItemFields(entry),
+            },
+          ],
+    ),
+    ...changes.removals.map(({ item, position }): ItemPart => ({
+      kind: "removal",
+      position,
+      item,
+    })),
+  ]
   return [
     ...(roadmapFields.length > 0
       ? [{ kind: "roadmap", fields: roadmapFields } as const]
       : []),
-    ...[...changes.items]
-      .sort((a, b) => a.position - b.position)
-      .map(
-        (entry) =>
-          ({
-            kind: "item",
-            position: entry.position,
-            item: applyItemChanges(entry.item, entry),
-            fields: changedItemFields(entry),
-          }) as const,
-      ),
+    ...items.sort((a, b) => a.position - b.position),
   ]
 }
 

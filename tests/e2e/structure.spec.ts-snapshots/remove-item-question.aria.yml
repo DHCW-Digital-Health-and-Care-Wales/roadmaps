@@ -1,0 +1,7 @@
+- dialog "Remove “Card being explored”?":
+  - heading "Remove “Card being explored”?" [level=2]
+  - paragraph: It leaves the public roadmap when you publish. To show readers the work was dropped, move it to Not doing instead.
+  - button "Move to Not doing"
+  - button "Remove"
+  - button "Cancel"
+  - button "Close"

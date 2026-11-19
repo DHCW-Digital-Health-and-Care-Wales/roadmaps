@@ -22,6 +22,7 @@ import {
   discardItems,
   keepMine,
   openConflicts,
+  removalFieldNotes,
   takeTheirs,
   withCurrentItemText,
   withCurrentRoadmapText,
@@ -624,6 +625,115 @@ describe("a removal's conflict (STY-070 S4)", () => {
     fields: [{ field: "phase", base: "", current: "Beta" }],
   }
   const removing: RoadmapChanges = { ...changes, removals: [removal] }
+
+  it("is open while the removal is pending from the item as loaded, among the items in their order (STY-049 S6)", () => {
+    const secondConflict = conflictOn(second, "title", "Second, theirs")
+
+    expect(
+      openConflicts([secondConflict, conflict], removing).map(
+        ({ key, kind }) => [kind, key],
+      ),
+    ).toEqual([
+      ["removal", "removal-first"],
+      ["field", "item-second-title"],
+    ])
+  })
+
+  it("closes a field's conflict of an item since removed: its edit counts for nothing beneath the removal (STY-049 S3)", () => {
+    const titleConflict = conflictOn(first, "title", "First, theirs")
+
+    expect(openConflicts([titleConflict], removing)).toEqual([])
+    expect(openConflicts([titleConflict], changes)).toHaveLength(1)
+  })
+
+  it("shows the item as the publish read it on the page, unless a read since changed it (STY-049 S6)", () => {
+    const items = [first.item, second.item]
+
+    const shown = withCurrentItemText(items, [conflict], items)
+
+    expect(shown[0]).toBe(current)
+    expect(shown[1]).toBe(items[1])
+    const newer = { ...first.item, title: { en: "Newer", cy: "" } }
+    expect(withCurrentItemText([newer], [conflict], items)[0]).toBe(newer)
+  })
+
+  it("notes what a field's English may not show: its Welsh, a horizon as written, unknown codes (STY-049 S6)", () => {
+    const loaded = createTestRoadmapItem("Fourth", {
+      id: "fourth",
+      placement: null,
+      writtenHorizon: "Soon",
+      description: { en: "Same", cy: "" },
+    })
+    const changed: RemovalConflict = {
+      subject: "removal",
+      removal: { item: loaded, position: 3 },
+      current: {
+        ...loaded,
+        writtenHorizon: "Someday",
+        description: { en: "Same", cy: "Yr un" },
+        unknownOrganisationCodes: ["MARS"],
+      },
+      fields: [],
+    }
+
+    expect(removalFieldNotes(changed, "description")).toEqual({
+      welsh: "Yr un",
+    })
+    expect(removalFieldNotes(changed, "placement")).toEqual({
+      writtenHorizon: "Someday",
+    })
+    expect(removalFieldNotes(changed, "organisationIds")).toEqual({
+      unknownCodes: ["MARS"],
+    })
+    expect(removalFieldNotes(changed, "title")).toEqual({})
+  })
+
+  it("notes Welsh tags or details that moved between entries, the English as it was, a blank one as a dash", () => {
+    const loaded = createTestRoadmapItem("Fifth", {
+      id: "fifth",
+      tags: [
+        { en: "Patients", cy: "Cleifion" },
+        { en: "Visitors", cy: "" },
+      ],
+      hasWelshTags: true,
+      details: [
+        { text: { en: "One", cy: "Un" }, level: 1 },
+        { text: { en: "Two", cy: "" }, level: 1 },
+      ],
+      hasWelshDetails: true,
+    })
+    const moved: RemovalConflict = {
+      subject: "removal",
+      removal: { item: loaded, position: 4 },
+      current: {
+        ...loaded,
+        tags: [
+          { en: "Patients", cy: "" },
+          { en: "Visitors", cy: "Cleifion" },
+        ],
+        details: [
+          { text: { en: "One", cy: "" }, level: 1 },
+          { text: { en: "Two", cy: "Un" }, level: 1 },
+        ],
+      },
+      fields: [],
+    }
+
+    expect(removalFieldNotes(moved, "tags")).toEqual({
+      welsh: "—, Cleifion",
+    })
+    expect(removalFieldNotes(moved, "details")).toEqual({
+      welsh: "—\nUn",
+    })
+  })
+
+  it("is closed by Remove anyway, Keep the item, or a removal no longer pending", () => {
+    expect(openConflicts([conflict], keepMine(removing, conflict))).toEqual([])
+    expect(openConflicts([conflict], takeTheirs(removing, conflict))).toEqual(
+      [],
+    )
+    expect(openConflicts([conflict], changes)).toEqual([])
+  })
 
   it("keeps the removal from the item found on Keep mine, Remove anyway", () => {
     expect(keepMine(removing, conflict)).toEqual({

@@ -21,8 +21,9 @@ export interface OrderLine {
  * The two orders the review shows for `conflict`, from `pageItems`, the page's items:
  * `yours`, what "Keep mine" would publish, the placement's items the Product Lead
  * knows in their order, with the items a co-lead added or moved in last and those they
- * removed or moved out gone; and `theirs`, the order the publish found. An item the
- * page holds is shown by the title the page shows, so it reads the same in both.
+ * removed or moved out gone, as are those the Product Lead removed (STY-049 S8); and
+ * `theirs`, the order the publish found. An item the page holds is shown by the title
+ * the page shows, so it reads the same in both.
  *
  * The page may not hold what the publish found, when the read after it failed. So an
  * item the publish found is looked for among the page's as any item of an order is
@@ -64,6 +65,9 @@ export function reviewedOrders(
   // The Product Lead's own: moved to where the page shows it, or new.
   const placedByThem = ({ entry, newItemId }: PageItem) =>
     newItemId !== undefined || entry?.fields.placement !== undefined
+  // An item removed is deleted, so it is in no order "Keep mine" publishes (STY-049 S8).
+  const removed = (pageItem: PageItem | undefined) =>
+    pageItem?.removal !== undefined
 
   const shown =
     groupRoadmapItems(
@@ -73,12 +77,16 @@ export function reviewedOrders(
     )
       .placements.find(({ placement }) => placement === conflict.placement)
       ?.items.map(({ item }) => item)
-      .filter((pageItem) => wasFound(pageItem) || placedByThem(pageItem)) ?? []
+      .filter(
+        (pageItem) =>
+          !removed(pageItem) && (wasFound(pageItem) || placedByThem(pageItem)),
+      ) ?? []
   // One the page never read is a co-lead's; one it shows elsewhere is theirs too,
   // moved in since, unless the Product Lead moved it out.
   const added = found.filter(
     ({ known }) =>
-      known === undefined || (!shown.includes(known) && !placedByThem(known)),
+      known === undefined ||
+      (!shown.includes(known) && !placedByThem(known) && !removed(known)),
   )
   return {
     yours: [

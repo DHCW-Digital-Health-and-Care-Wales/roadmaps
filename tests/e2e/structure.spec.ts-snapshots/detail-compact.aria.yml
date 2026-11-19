@@ -71,6 +71,7 @@
                   - listitem: Use two dashes to nest it again
           - listitem: Another top-level bullet point
         - button "Show more of the details of Example card with every column"
+      - button "Remove Example card with every column"
     - listitem:
       - button "Show the rest of Minimal card"
       - heading "Minimal card" [level=3]

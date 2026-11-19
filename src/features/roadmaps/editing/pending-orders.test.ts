@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 
+import { removeItem, undoRemoval } from "@/domain/roadmap/item-removal"
 import { addNewItem } from "@/domain/roadmap/new-item"
 import { orderedItem } from "@/domain/roadmap/placement-order"
 import {
@@ -268,6 +269,40 @@ describe("a pending order and the Product Lead's other changes (S4, S5)", () => 
 
     expect(undone.items).toEqual([])
     expect(undone.orders).toEqual(reordered.orders)
+  })
+})
+
+describe("a removed item in a pending order (STY-049 S8)", () => {
+  const reordered = reorderItem(NO_CHANGES, items, at("D"), "top")
+  const removed = removeItem(reordered, b, at("B"))
+
+  it("keeps its place in the order, where it still shows, so Undo puts it back there", () => {
+    expect(shown(removed)).toEqual(["D", "A", "B", "C"])
+    expect(removed.orders).toEqual(reordered.orders)
+    expect(shown(undoRemoval(removed, { item: b, position: at("B") }))).toEqual(
+      ["D", "A", "B", "C"],
+    )
+  })
+
+  it("is no stop of a move within the placement: the others move as if it were not there", () => {
+    // C goes up one past A, not past the removed B.
+    const moved = reorderItem(removed, items, at("C"), "up")
+    expect(shown(moved)).toEqual(["D", "C", "B", "A"])
+    expect(shown(reorderItem(removed, items, at("A"), "down"))).toEqual([
+      "D",
+      "C",
+      "B",
+      "A",
+    ])
+    // A last among those left is at the bottom already.
+    expect(
+      reorderItem(removeItem(NO_CHANGES, d, at("D")), items, at("C"), "bottom")
+        .orders,
+    ).toEqual([])
+  })
+
+  it("is moved by no reorder of its own", () => {
+    expect(reorderItem(removed, items, at("B"), "top")).toBe(removed)
   })
 })
 

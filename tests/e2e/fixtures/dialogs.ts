@@ -273,6 +273,66 @@ export function addItemButtons(page: Page, language: Language = "en"): Locator {
     .getByRole("button", { name: ADD_ITEM[language].opener, exact: true })
 }
 
+/** The question an item's Remove asks first (STY-049), in each language. */
+const REMOVAL = {
+  en: { opener: "Remove", confirm: "Remove", notDoing: "Move to Not doing" },
+  cy: {
+    opener: "Tynnu",
+    confirm: "Tynnu",
+    notDoing: "Symud i Ddim yn bwrw ymlaen",
+  },
+} as const satisfies Record<
+  Language,
+  { opener: string; confirm: string; notDoing: string }
+>
+
+/** The removal dialog asking about the item titled `title`, open or not. */
+export function removalDialog(
+  page: Page,
+  title: string,
+  language: Language = "en",
+): Locator {
+  const heading = language === "en" ? "Remove" : "Tynnu"
+  return page.getByRole("dialog", { name: `${heading} “${title}”?` })
+}
+
+/**
+ * Chooses Remove on the item titled `title` and returns the dialog it opens, once
+ * focus is on its first button: the dialog is ready then.
+ */
+export async function askToRemove(
+  page: Page,
+  title: string,
+  language: Language = "en",
+): Promise<Locator> {
+  await page
+    .getByRole("main")
+    .getByRole("button", {
+      name: `${REMOVAL[language].opener} ${title}`,
+      exact: true,
+    })
+    .click()
+  const dialog = removalDialog(page, title, language)
+  await expect(dialog.getByRole("button").first()).toBeFocused()
+  return dialog
+}
+
+/**
+ * Removes the item titled `title`, from its card's or row's Remove and the dialog's
+ * Remove, and waits for the dialog to go.
+ */
+export async function confirmRemoval(
+  page: Page,
+  title: string,
+  language: Language = "en",
+): Promise<void> {
+  const dialog = await askToRemove(page, title, language)
+  await dialog
+    .getByRole("button", { name: REMOVAL[language].confirm, exact: true })
+    .click()
+  await expect(dialog).toBeHidden()
+}
+
 /**
  * Gives a roadmap one pending change: opens its page and retitles the item `item`, so the
  * roadmap has unpublished changes.

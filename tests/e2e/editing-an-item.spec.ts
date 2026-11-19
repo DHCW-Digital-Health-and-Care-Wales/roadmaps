@@ -84,7 +84,9 @@ test("a Product Lead edits an item in the item dialog, the edits pending until p
   await expect(
     card.getByRole("button", { name: `Undo changes ${ITEM}` }),
   ).toBeEnabled()
-  await expect(card.getByRole("button", { name: `Move ${ITEM}` })).toBeVisible()
+  await expect(
+    card.getByRole("button", { name: `Move ${ITEM}`, exact: true }),
+  ).toBeVisible()
   // Focus is on the card's Edit, in the list the card now is in.
   await expect(card.getByRole("button", { name: `Edit ${ITEM}` })).toBeFocused()
   await expect(

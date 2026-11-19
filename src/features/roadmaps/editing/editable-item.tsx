@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, type RefObject } from "react"
 import { useTranslation } from "react-i18next"
 
+import { undoRemoval } from "@/domain/roadmap/item-removal"
 import { localise } from "@/domain/roadmap/localised-text"
 import type { Organisation } from "@/domain/roadmap/organisation"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
@@ -15,6 +16,7 @@ import {
   EditButton,
   EditControls,
   PendingTag,
+  RemoveButton,
 } from "./edit-controls"
 import { MoveMenu } from "./move-menu"
 import { dropPageItem, editPageItem, type PageItem } from "./page-items"
@@ -55,8 +57,8 @@ export interface EditableItemProps {
   onFocused: () => void
   /** Edit was chosen: the page opens the item dialog on the item at `position`. */
   onEdit: (position: number) => void
-  /** Remove was chosen and the item, a new one, has gone, its card or row with it. */
-  onRemoved: () => void
+  /** Remove was chosen: the page asks first, about the item at `position` (STY-049). */
+  onRemove: (position: number) => void
   /**
    * Given to the item the dialog edits, or has just added, to hold its Edit: focus goes
    * there as the dialog closes, whichever list the item is then in.
@@ -65,19 +67,21 @@ export interface EditableItemProps {
 }
 
 /** A control of an item's card or row that focus can return to. */
-export type ItemControl = "edit" | "move"
+export type ItemControl = "edit" | "move" | "remove" | "undo-removal"
 
 /**
  * An item, as a card or as a row of the compact view (`view`, STY-067 S8, S9), with its
  * pending English, placement, tags, organisations and details shown and tagged, an
- * Edit that opens the item dialog on it (STY-044), a Move menu (STY-031 S1, S2) and,
- * while it has pending changes, "Undo changes": in an opened row, for a row. The Move
- * menu also puts it elsewhere in its placement's order, at once, which is the
- * placement's change, not the item's: it is not tagged for it (STY-050 S2, S3), and the
- * choices wait while the roadmap is being published (S15). An item added and not yet
- * published is tagged "New" instead, with Remove, which drops it without asking; what
- * Edit and Move change is part of it (STY-046 S6). Nothing is written until the
- * roadmap is published.
+ * Edit that opens the item dialog on it (STY-044), a Move menu (STY-031 S1, S2), Remove,
+ * which the page asks about first (STY-049 S1), and, while it has pending changes,
+ * "Undo changes": in an opened row, for a row, as Remove is. The Move menu also puts it
+ * elsewhere in its placement's order, at once, which is the placement's change, not the
+ * item's: it is not tagged for it (STY-050 S2, S3), and the choices wait while the
+ * roadmap is being published (S15). An item added and not yet published is tagged
+ * "New" instead; what Edit and Move change is part of it (STY-046 S6). An item removed
+ * shows where it did, struck through and tagged "Removed", with "Undo removal", which
+ * brings back its edits too, and its Move and Edit held (STY-049 S2, S3, D6). Nothing
+ * is written until the roadmap is published.
  */
 export function EditableItem({
   roadmapId,
@@ -92,42 +96,53 @@ export function EditableItem({
   onFocusRequest,
   onFocused,
   onEdit,
-  onRemoved,
+  onRemove,
   dialogOpener,
 }: EditableItemProps) {
   const { t } = useTranslation()
   const language = useLanguage()
   const store = usePendingChangesStore()
   const snapshot = usePendingChanges()
-  const { shown, entry } = pageItem
+  const { shown, entry, removal } = pageItem
   const isNew = pageItem.newItemId !== undefined
-  // Nothing is behind a new item: once it is sent, a change to it would be lost as the
-  // item read takes its place, so it waits, as "Discard all" does.
+  // Nothing is behind a new item, or a removal: once it is sent, a change to it would be
+  // lost as the read after the publish settles it, so it waits, as "Discard all" does.
+  // So does Remove: a removal made meanwhile would keep the item as read before the
+  // publish, and take what it wrote for a co-lead's change.
   const publishing = !discardable(snapshot, roadmapId)
   const changeable = !isNew || !publishing
+  const editable = changeable && !removal
+  // A removal sent can't be called back, so "Undo removal" waits too.
+  const droppable = removal ? !publishing : changeable
   const ownEditButton = useRef<HTMLButtonElement>(null)
   const editButton = dialogOpener ?? ownEditButton
   const moveButton = useRef<HTMLButtonElement>(null)
+  const removeButton = useRef<HTMLButtonElement>(null)
+  const undoRemovalButton = useRef<HTMLButtonElement>(null)
   const title = localise(shown.title, language)
-  const pending = isNew ? "new" : entry && "changed"
-
+  const pending = isNew ? "new" : removal ? "removed" : entry && "changed"
   // A layout effect, so focus lands before the shell would rescue it to `<main>`.
   useLayoutEffect(() => {
     if (focusRequest === undefined) return
-    const control = focusRequest === "move" ? moveButton : editButton
+    const control = {
+      edit: editButton,
+      move: moveButton,
+      remove: removeButton,
+      "undo-removal": undoRemovalButton,
+    }[focusRequest]
     control.current?.focus()
     onFocused()
   }, [focusRequest, editButton, onFocused])
 
   const move = (placement: RoadmapPlacement) => {
-    if (!changeable) return
+    if (!editable) return
     store.update(roadmapId, (changes) =>
       editPageItem(changes, items, pageItem, position, { placement }),
     )
     onFocusRequest(position, "move")
   }
   const reorder = (to: OrderMove) => {
-    if (!order || publishing) return
+    if (!order || publishing || removal) return
     store.update(roadmapId, (changes) =>
       reorderItem(changes, items, position, to),
     )
@@ -142,14 +157,20 @@ export function EditableItem({
     onFocusRequest(position, "move")
   }
   const drop = () => {
-    if (!changeable) return
+    if (!droppable) return
+    if (removal) {
+      store.update(roadmapId, (changes) => undoRemoval(changes, removal))
+      onFocusRequest(position, "remove")
+      return
+    }
     store.update(roadmapId, (changes) =>
       dropPageItem(changes, items, pageItem, position),
     )
-    // A new item has gone. "Undo changes" goes with the changes, and the item may go
-    // to another list.
-    if (isNew) onRemoved()
-    else onFocusRequest(position, "edit")
+    // "Undo changes" goes with the changes, and the item may go to another list.
+    onFocusRequest(position, "edit")
+  }
+  const remove = () => {
+    if (!publishing) onRemove(position)
   }
 
   const moveMenu = (iconOnly: boolean) => (
@@ -160,28 +181,40 @@ export function EditableItem({
         order && order.count > 1 ? { ...order, held: publishing } : undefined
       }
       button={moveButton}
-      disabled={!changeable}
+      disabled={!editable}
       iconOnly={iconOnly}
       onMove={move}
       onReorder={reorder}
     />
   )
   const edit = () => {
-    if (changeable) onEdit(position)
+    if (editable) onEdit(position)
   }
+  const removeControl = !removal && (
+    <RemoveButton
+      subject={title}
+      disabled={publishing}
+      size="sm"
+      button={removeButton}
+      onRemove={remove}
+    />
+  )
+  const dropButton = removal ? undoRemovalButton : undefined
 
   if (view === "compact") {
     return (
       <CompactItemRow
         item={shown}
         organisations={organisations}
+        struck={removal !== undefined}
+        reveal={focusRequest === "remove" || focusRequest === "undo-removal"}
         tag={pending && <PendingTag pending={pending} subject={title} />}
         actions={(wide) => (
           <>
             {moveMenu(!wide)}
             <EditButton
               subject={title}
-              disabled={!changeable}
+              disabled={!editable}
               size="sm"
               iconOnly={!wide}
               button={editButton}
@@ -190,15 +223,17 @@ export function EditableItem({
           </>
         )}
         drop={
-          pending && (
+          <div className="flex flex-wrap gap-2">
             <DropButton
               subject={title}
               pending={pending}
-              disabled={!changeable}
+              disabled={!droppable}
               size="sm"
+              button={dropButton}
               onDrop={drop}
             />
-          )
+            {removeControl}
+          </div>
         }
       />
     )
@@ -207,12 +242,16 @@ export function EditableItem({
     <RoadmapItemCard
       item={shown}
       organisations={organisations}
+      struck={removal !== undefined}
       actions={
         <EditControls
           subject={title}
           pending={pending}
-          editable={changeable}
+          editable={editable}
+          droppable={droppable}
           editButton={editButton}
+          dropButton={dropButton}
+          remove={removeControl}
           move={moveMenu(false)}
           onEdit={edit}
           onDrop={drop}

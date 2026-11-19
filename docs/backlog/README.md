@@ -86,7 +86,7 @@ Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status toke
 | [DEF-017](defects/DEF-017-an-edit-made-while-a-publish-moves-its-item-is-reported-as-removed.md)                   | An edit made while a publish moves its item's row is reported as removed, for an item with no ID | Needs triage |
 | [DEF-018](defects/DEF-018-reconnecting-on-a-roadmap-s-page-reads-the-roadmap-list-twice.md)                        | Reconnecting on a roadmap's page reads the roadmap list twice                                    | Needs triage |
 | [DEF-019](defects/DEF-019-the-compact-view-s-axe-check-fails-now-and-then-on-target-size.md)                       | The compact view's accessibility check fails now and then on target size                         | Needs triage |
-| [DEF-020](defects/DEF-020-the-compact-view-s-press-on-a-row-test-fails-now-and-then.md)                            | The compact view's press-on-a-row test fails now and then                                        | Needs triage |
+| [DEF-020](_archive/defects/DEF-020-the-compact-view-s-press-on-a-row-test-fails-now-and-then.md)                   | The compact view's press-on-a-row test fails now and then                                        | Done         |
 | [DEF-021](defects/DEF-021-the-roadmap-header-grows-for-a-frame-as-it-lets-go-on-scroll-up.md)                      | The roadmap header grows for a frame as it lets go on scroll up, moving the items                | Needs triage |
 
 A defect found during delivery is recorded in `defects/` with

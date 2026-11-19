@@ -14,6 +14,7 @@ import type { Language } from "@/i18n"
 import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
+import { fieldTerm } from "../testing/field-term"
 import { holdRefresh, readAgain } from "../testing/held-refresh"
 import {
   createInMemoryRoadmapRepository,
@@ -74,10 +75,7 @@ function card(title: string) {
 
 /** The item's tags as its card's Tags line shows them, or `null` with no line. */
 function tagsLineOf(title: string) {
-  return (
-    within(card(title)).queryByText("Tags", { selector: "dt" })
-      ?.nextElementSibling?.textContent ?? null
-  )
+  return fieldTerm(card(title), "Tags")?.nextElementSibling?.textContent ?? null
 }
 
 async function renderPage({
@@ -675,7 +673,7 @@ describe("Editing an item's tags (STY-037)", () => {
 
     const review = await openConflictReview(user)
     const conflict = within(within(review).getByRole("listitem"))
-    expect(conflict.getByText(/: /, { selector: "p" })).toHaveTextContent(
+    expect(conflict.getByText(/:$/, { selector: "p" })).toHaveTextContent(
       "Video clinics: Tags",
     )
     expect(
@@ -990,7 +988,7 @@ describe("An item with Welsh tags (STY-037 S20, S22)", () => {
 
     const review = await openConflictReview(user)
     const conflict = within(within(review).getByRole("listitem"))
-    expect(conflict.getByText(/: /, { selector: "p" })).toHaveTextContent(
+    expect(conflict.getByText(/:$/, { selector: "p" })).toHaveTextContent(
       "English only: Tags",
     )
     expect(

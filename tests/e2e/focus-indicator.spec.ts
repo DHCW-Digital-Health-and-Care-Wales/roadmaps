@@ -511,7 +511,14 @@ for (const theme of THEMES) {
       })
       await expect(theme).toBeFocused()
       await expectIndicator(theme, colours, "fill")
-      // Then the session's action, Disconnect while connected.
+      // Then where the forms open (STY-077), and the session's action, Disconnect
+      // while connected.
+      const editSurface = page.getByRole("menuitem", {
+        name: "Edit in a side panel",
+      })
+      await page.keyboard.press("ArrowDown")
+      await expect(editSurface).toBeFocused()
+      await expectIndicator(editSurface, colours, "fill")
       const disconnect = page.getByRole("menuitem", { name: "Disconnect" })
       await page.keyboard.press("ArrowDown")
       await expect(disconnect).toBeFocused()

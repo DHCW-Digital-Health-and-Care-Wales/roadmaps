@@ -104,8 +104,9 @@ function AddItemForms({
   }
   return (
     // Pinned, a column that can shrink, so the form's body scrolls between the pinned
-    // parts; the line saying what was added stays in view, its title cut at three lines.
-    <div className="flex flex-col pinned:min-h-0">
+    // parts, and grows, so the form's buttons stay at the foot of a full-height side
+    // panel; the line saying what was added stays in view, its title cut at three lines.
+    <div className="flex flex-col pinned:min-h-0 pinned:grow">
       <div role="status">
         {last && (
           <DismissibleNotice

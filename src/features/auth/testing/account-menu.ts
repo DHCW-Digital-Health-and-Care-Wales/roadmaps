@@ -19,8 +19,8 @@ export async function openAccountMenu(
 }
 
 /**
- * Chooses `name` in the header's account menu (test code only): the theme, and the
- * session's action, Disconnect while connected.
+ * Chooses `name` in the header's account menu (test code only): the theme, where the
+ * forms open, and the session's action, Disconnect while connected.
  */
 export async function chooseFromAccountMenu(
   user: UserEvent,

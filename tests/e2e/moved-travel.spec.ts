@@ -21,7 +21,8 @@ import { expect, test } from "./fixtures/test"
  * asserted: each transition the page starts is recorded as it runs (its types, each
  * item's group, the scroll), and the page as it lands. Only an item with an ID travels,
  * so each test publishes once first, which gives every item one ("Minimal card" is "A
- * minimal card" from then on).
+ * minimal card" from then on). STY-073 holds "Undo order" to the same: the items travel
+ * back to where it puts them, none raised or marked.
  */
 
 const DESKTOP = { width: 1280, height: 812 }
@@ -380,6 +381,153 @@ test.describe("a second move takes over (S3)", () => {
     await expect(
       itemOf(page, "A minimal card").getByText("Moved up", { exact: true }),
     ).toBeVisible()
+  })
+})
+
+/** Now's items' titles, in the order the page shows them. */
+const nowTitles = (page: Page) =>
+  main(page)
+    .getByRole("list", { name: "Now", exact: true })
+    .getByRole("heading", { level: 3 })
+    .allTextContents()
+
+const undoOrder = (page: Page) =>
+  main(page).getByRole("button", { name: "Undo order Now" })
+
+test.describe("“Undo order” makes the items travel back (STY-073 S1)", () => {
+  test.use({ reducedMotion: "no-preference" })
+
+  test("each item travels, in about 0.4 seconds and none raised, to where the order read puts it, the item moved in last, no item marked, the other edits kept, focus on Now's heading", async ({
+    page,
+  }) => {
+    await recordTravels(page)
+    await open(page)
+    await chooseFromMenu(page, "Card being explored", "Now")
+    await chooseFromMenu(page, "Card being explored", "To the top")
+    await landed(page)
+    const titles = await nowTitles(page)
+    expect(titles).toEqual([
+      "Card being explored",
+      "Example card with every column",
+      "A minimal card",
+      "Card awaiting release",
+    ])
+    const names = await Promise.all(titles.map((title) => nameOf(page, title)))
+    const before = (await travels(page)).length
+
+    await undoOrder(page).click()
+    await landed(page)
+
+    const [undone, ...more] = (await travels(page)).slice(before)
+    expect(more).toEqual([])
+    expect(undone?.types).toEqual(["item-move"])
+    expect(undone?.menuShown).toBe(false)
+    for (const name of names) {
+      const group = undone?.groups.find((each) => each.name === name)
+      expect(group).toMatchObject({ duration: 400 })
+      expect(group?.zIndex).not.toBe("1")
+    }
+    expect(await nowTitles(page)).toEqual([
+      "Example card with every column",
+      "A minimal card",
+      "Card awaiting release",
+      "Card being explored",
+    ])
+    await expect(main(page).getByText(/^Moved [^.]+$/)).toHaveCount(0)
+    await expect(
+      main(page).getByRole("heading", { level: 2, name: "Now" }),
+    ).toBeFocused()
+    await expect(main(page).getByText("Order of Now undone")).toBeAttached()
+    // The move in is still a change of its own.
+    await expect(main(page).getByText("Order changed")).toBeHidden()
+    await expect(
+      itemOf(page, "Card being explored").getByText("Changed", {
+        exact: true,
+      }),
+    ).toBeVisible()
+  })
+
+  test("a mark on an item elsewhere stays", async ({ page }) => {
+    await recordTravels(page)
+    await open(page)
+    await chooseFromMenu(page, "Card awaiting release", "To the top")
+    await chooseFromMenu(page, "A minimal card", "Later")
+    await landed(page)
+
+    await undoOrder(page).click()
+    await landed(page)
+
+    await expect(
+      itemOf(page, "A minimal card").getByText("Moved from Now"),
+    ).toBeVisible()
+    await expect(main(page).getByText(/^Moved [^.]+$/)).toHaveCount(1)
+  })
+
+  test("in the compact view too", async ({ page }) => {
+    await recordTravels(page)
+    await open(page)
+    await chooseCompact(page)
+    await chooseFromMenu(page, "Card awaiting release", "To the top")
+    await landed(page)
+    const before = (await travels(page)).length
+
+    await undoOrder(page).click()
+    await landed(page)
+
+    expect(
+      (await travels(page)).slice(before).map((each) => each.types),
+    ).toEqual([["item-move"]])
+    expect(await nowTitles(page)).toEqual([
+      "Example card with every column",
+      "A minimal card",
+      "Card awaiting release",
+    ])
+  })
+})
+
+test.describe("“Undo order” with no travel where none is wanted (STY-073 S2)", () => {
+  test("where the system asks for reduced motion, the items show at once where it puts them", async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    await recordTravels(page)
+    await open(page)
+    await chooseFromMenu(page, "Card awaiting release", "To the top")
+
+    await undoOrder(page).click()
+
+    await expect(
+      main(page).getByRole("heading", { level: 2, name: "Now" }),
+    ).toBeFocused()
+    expect(await nowTitles(page)).toEqual([
+      "Example card with every column",
+      "A minimal card",
+      "Card awaiting release",
+    ])
+    expect(await travels(page)).toEqual([])
+  })
+
+  test.describe(() => {
+    test.use({ reducedMotion: "no-preference" })
+
+    test("in a browser without view transitions, the items show at once where it puts them", async ({
+      page,
+    }) => {
+      await recordTravels(page, { withoutApi: true })
+      await open(page)
+      await chooseFromMenu(page, "Card awaiting release", "To the top")
+
+      await undoOrder(page).click()
+
+      await expect(
+        main(page).getByRole("heading", { level: 2, name: "Now" }),
+      ).toBeFocused()
+      expect(await nowTitles(page)).toEqual([
+        "Example card with every column",
+        "A minimal card",
+        "Card awaiting release",
+      ])
+    })
   })
 })
 

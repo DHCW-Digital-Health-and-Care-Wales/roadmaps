@@ -11,6 +11,7 @@ import { AppError } from "@/lib/errors"
 import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
+import { fieldTerm } from "../testing/field-term"
 import { createInMemoryRoadmapRepository } from "../testing/in-memory-roadmap-repository"
 import { refreshRoadmap } from "../testing/roadmap-page"
 
@@ -22,8 +23,7 @@ async function organisationsOf(title: string) {
     await screen.findByRole("heading", { level: 3, name: title })
   ).closest("li")
   if (!card) throw new Error(`No card for ${title}`)
-  return within(card).getByText("Organisations", { selector: "dt" })
-    .nextElementSibling?.textContent
+  return fieldTerm(card, "Organisations")?.nextElementSibling?.textContent
 }
 
 function render(repository: RoadmapRepository, language: "en" | "cy" = "en") {
@@ -61,8 +61,7 @@ describe("RoadmapDetailPage organisations (STY-032)", () => {
       })
     ).closest("li")
     expect(
-      within(card as HTMLElement).getByText("Sefydliadau", { selector: "dt" })
-        .nextElementSibling,
+      fieldTerm(card as HTMLElement, "Sefydliadau")?.nextElementSibling,
     ).toHaveTextContent("All Wales, Cardiff and Vale, Swansea Bay")
   })
 

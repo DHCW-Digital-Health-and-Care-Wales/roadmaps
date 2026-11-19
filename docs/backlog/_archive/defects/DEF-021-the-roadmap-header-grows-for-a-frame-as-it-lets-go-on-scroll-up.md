@@ -10,7 +10,7 @@
 - **Binding ADRs**: none
 - **Suggested model**: Sonnet — a layout trace of one frame, then a fix in the header or
   its links
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/183
 
 ## Summary
 

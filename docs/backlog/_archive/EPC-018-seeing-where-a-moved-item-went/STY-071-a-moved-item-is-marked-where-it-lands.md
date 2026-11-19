@@ -8,7 +8,7 @@
 - **Binding ADRs**: ADR-002, ADR-008, ADR-010
 - **Suggested model**: Opus — page state that must follow pending edits through undo,
   publish and re-read, in two views and two languages
-- **Delivered**: <PR URL>
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/186
 
 ## Summary
 

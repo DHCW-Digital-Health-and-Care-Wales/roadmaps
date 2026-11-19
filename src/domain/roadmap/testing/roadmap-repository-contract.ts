@@ -19,6 +19,7 @@ import { CO_LEAD_VALUE, type ContractWrite } from "./contract-write"
 import { categoriesOf, familiesOf } from "./linked-lists"
 import { describeMovedItems } from "./moved-item-contract"
 import { describeNewItems } from "./new-item-contract"
+import { describeRemovedItems } from "./removed-item-contract"
 import { describePlacementOrders } from "./placement-order-contract"
 import { describeNewRoadmap } from "./new-roadmap-contract"
 import { describePublishedState } from "./published-state-contract"
@@ -406,6 +407,7 @@ export function describeRoadmapRepositoryContract(
     describeMovedItems(setup)
     describeNewItems(setup)
     describePlacementOrders(setup)
+    describeRemovedItems(setup)
     describeNewRoadmap(setup)
     describeFamilyChanges(setup)
     describeListMatch(setup)

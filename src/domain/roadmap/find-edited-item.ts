@@ -8,7 +8,7 @@ import {
   EDITABLE_ITEM_FIELDS,
   type EditableItemField,
   isItemTextField,
-  type ItemChanges,
+  type ItemTarget,
   type ItemTextField,
   itemValue,
   itemWelsh,
@@ -16,15 +16,16 @@ import {
 import type { RoadmapItem } from "./roadmap-item"
 
 /**
- * The edited item's index in `items`, or -1: by its ID, the first item holding it,
- * which must still hold what was loaded when `repeatedIds` has the ID; with no ID, at
- * its position, which must hold exactly what was loaded. Either may instead hold that
- * content with the pending values, written by a publish whose answer was lost.
+ * The edited or removed item's index in `items`, or -1: by its ID, the first item
+ * holding it, which must still hold what was loaded when `repeatedIds` has the ID;
+ * with no ID, at its position, which must hold exactly what was loaded. Either may
+ * instead hold that content with the pending values, written by a publish whose answer
+ * was lost.
  */
 export function findEditedItem(
   items: readonly RoadmapItem[],
   repeatedIds: ReadonlySet<string>,
-  { item, position }: ItemChanges,
+  { item, position }: ItemTarget,
   pending: PendingItemValues,
 ): number {
   const index =
@@ -118,6 +119,38 @@ function sameContent(
         itemWelsh(current, key) === itemWelsh(loaded, key))
     )
   })
+}
+
+/**
+ * Each field, in the form's order, whose content differs between two reads of an item,
+ * as `itemHoldsLoaded` compares content: its English and Welsh, a placement with its
+ * horizon as written, organisations as a set with the codes the list doesn't know, and
+ * tags and details with their Welsh, details as the list the card shows (STY-070 S4).
+ */
+export function changedFields(
+  loaded: RoadmapItem,
+  current: RoadmapItem,
+): EditableItemField[] {
+  return EDITABLE_ITEM_FIELDS.filter(
+    (field) =>
+      !sameValue(fieldContent(loaded, field), fieldContent(current, field)),
+  )
+}
+
+/** All an item holds for `field`, as `changedFields` compares it. */
+function fieldContent(item: RoadmapItem, field: EditableItemField): unknown {
+  switch (field) {
+    case "placement":
+      return [item.placement, item.writtenHorizon]
+    case "tags":
+      return [item.tags, item.hasWelshTags]
+    case "organisationIds":
+      return [itemValue(item, field), item.unknownOrganisationCodes]
+    case "details":
+      return [shownDetails(item), item.hasWelshDetails]
+    default:
+      return item[field]
+  }
 }
 
 /**

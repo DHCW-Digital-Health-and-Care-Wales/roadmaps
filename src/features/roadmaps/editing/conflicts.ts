@@ -7,6 +7,7 @@
  * whether it is still open. The two orders the review draws are `order-review.ts`'s.
  */
 
+import { removeAnyway, undoRemoval } from "@/domain/roadmap/item-removal"
 import {
   sameItemAcrossReads,
   sameOrder,
@@ -19,6 +20,7 @@ import {
   type FieldChange,
   type FieldConflict,
   type ItemChanges,
+  type ItemTarget,
   type OrderConflict,
   type RoadmapChanges,
   type RoadmapChoiceField,
@@ -27,6 +29,7 @@ import {
   NO_CHANGES,
   organisationIdsOf,
   roadmapValue,
+  sameTarget,
 } from "@/domain/roadmap/roadmap-changes"
 import type { ContentLanguage } from "@/domain/roadmap/localised-text"
 import type { Organisation } from "@/domain/roadmap/organisation"
@@ -40,7 +43,6 @@ import {
   applyItemChanges,
   applyRoadmapChanges,
   matchItemChanges,
-  sameTarget,
 } from "./pending-changes"
 
 /** A field's conflict still to decide, as the review shows it. */
@@ -106,7 +108,9 @@ export function openConflicts(
     open: OpenConflict
   }
   const fields = conflicts.flatMap((conflict): Sorted[] => {
-    if (conflict.subject === "order") return []
+    // An item removed that a co-lead changed is reviewed from STY-049.
+    if (conflict.subject === "order" || conflict.subject === "removal")
+      return []
     const { change, entry } = pendingOf(changes, conflict)
     if (!change) return []
     if (!conflict.gainedWelsh && change.base === conflict.current) return []
@@ -213,12 +217,14 @@ function withConflictField(
  * "Keep mine": the pending change stays, now edited from the co-lead's text, so the
  * next publish writes it, and still stops for any later change by a co-lead (D3). An
  * order stays pending from the order found: the next publish writes the Product Lead's
- * order of the items they know, a co-lead's last (STY-050 S12).
+ * order of the items they know, a co-lead's last (STY-050 S12). A removal stays, from
+ * the item found: "Remove anyway" (STY-070 S4).
  */
 export function keepMine(
   changes: RoadmapChanges,
   conflict: Conflict,
 ): RoadmapChanges {
+  if (conflict.subject === "removal") return removeAnyway(changes, conflict)
   if (conflict.subject === "order") {
     const base = conflict.current.map(({ item }) => item)
     return {
@@ -236,12 +242,16 @@ export function keepMine(
 
 /**
  * "Use theirs": the pending change is dropped, leaving the co-lead's text, or their
- * order.
+ * order. A removal is dropped, leaving the item as they made it, with the edits
+ * beneath the removal pending again: "Keep the item" (STY-070 S4).
  */
 export function takeTheirs(
   changes: RoadmapChanges,
   conflict: Conflict,
 ): RoadmapChanges {
+  if (conflict.subject === "removal") {
+    return undoRemoval(changes, conflict.removal)
+  }
   if (conflict.subject === "order") {
     return {
       ...changes,
@@ -254,22 +264,31 @@ export function takeTheirs(
 }
 
 /**
- * `changes` without the entries of `missing`, items a publish could no longer find: each
- * by the item it was loaded with, which edits made while publishing keep, or, once a
- * read has moved it, by its ID.
+ * `changes` without the edits and removals of `missing`, items a publish could no
+ * longer find (ADR-012 Option 13): each by the item it was loaded with, which edits
+ * made while publishing keep, or, once a read has moved it, by its ID. An edit or a
+ * removal of the same item goes with either.
  */
 export function discardItems(
   changes: RoadmapChanges,
-  missing: readonly ItemChanges[],
+  missing: readonly ItemTarget[],
 ): RoadmapChanges {
-  const gone = (entry: ItemChanges) =>
+  const gone = (entry: ItemTarget) =>
     missing.some(
       (each) =>
         each.item === entry.item ||
         (each.item.id !== null && each.item.id === entry.item.id),
     )
-  const items = changes.items.filter((entry) => !gone(entry))
-  return items.length === changes.items.length ? changes : { ...changes, items }
+  const removed = changes.removals.filter(gone)
+  const removals = changes.removals.filter((entry) => !removed.includes(entry))
+  const items = changes.items.filter(
+    (entry) =>
+      !gone(entry) && !removed.some((removal) => sameTarget(removal, entry)),
+  )
+  return items.length === changes.items.length &&
+    removals.length === changes.removals.length
+    ? changes
+    : { ...changes, items, removals }
 }
 
 /** What `conflict` found its field holds, as a change from its base. */

@@ -151,7 +151,7 @@ asks, offering "Move to Not doing" as its first action (A2's question, without i
 write at once); Move and Edit stay visible and disabled on a removed card. A co-lead's
 change is a conflict in the existing review (B1). Decisions 5–9 went as recommended,
 Decision 6 included; Decision 8 made the write its own story,
-[STY-070](../backlog/EPC-011-adding-roadmaps-and-items/STY-070-the-repository-publishes-a-removed-item.md).
+[STY-070](../backlog/_archive/EPC-011-adding-roadmaps-and-items/STY-070-the-repository-publishes-a-removed-item.md).
 A new item's Remove asks the same question. No frames were redrawn: the build's
 screenshots are reviewed instead.
 

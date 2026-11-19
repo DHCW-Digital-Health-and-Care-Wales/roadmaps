@@ -59,6 +59,7 @@ moves to `_archive/`, where its row here still points.
 | [CHO-022](chores/CHO-022-the-prototype-stylesheet-draws-todays-shell.md)                  | The `ux-prototypes` stylesheet draws a roadmap's page in today's shell: the navigation, the stuck header and the pinned foot bar    | Proposed       |
 | [CHO-023](chores/CHO-023-prototype-a-layout-in-the-apps-own-code.md)                      | Whether the `ux-prototypes` skill offers a prototype built in the app's own code, as STY-065's was                                  | Needs grilling |
 | [CHO-024](chores/CHO-024-the-session-warning-draws-its-x-as-a-dialog-does.md)             | The session warning's corner X is level with its title and drawn once, as a dialog's is                                             | Proposed       |
+| [CHO-025](chores/CHO-025-check-a-published-removal-against-a-real-spreadsheet.md)         | Check STY-070's write (a removed item's row deleted, or the last one cleared, in one request) against a real test spreadsheet       | Proposed       |
 
 Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status token.
 
@@ -84,6 +85,7 @@ Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status toke
 | [DEF-016](defects/DEF-016-the-item-dialog-s-focus-tour-counts-a-focus-guard-as-a-stop.md)                          | The item dialog's focus tour counts a focus guard as a stop                                      | Needs triage |
 | [DEF-017](defects/DEF-017-an-edit-made-while-a-publish-moves-its-item-is-reported-as-removed.md)                   | An edit made while a publish moves its item's row is reported as removed, for an item with no ID | Needs triage |
 | [DEF-018](defects/DEF-018-reconnecting-on-a-roadmap-s-page-reads-the-roadmap-list-twice.md)                        | Reconnecting on a roadmap's page reads the roadmap list twice                                    | Needs triage |
+| [DEF-019](defects/DEF-019-the-compact-view-s-axe-check-fails-now-and-then-on-target-size.md)                       | The compact view's accessibility check fails now and then on target size                         | Needs triage |
 
 A defect found during delivery is recorded in `defects/` with
 Status `Needs triage` and listed here until the owner triages it.

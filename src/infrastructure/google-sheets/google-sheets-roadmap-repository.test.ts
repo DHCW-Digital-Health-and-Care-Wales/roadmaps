@@ -3050,6 +3050,320 @@ describe("GoogleSheetsRoadmapRepository", () => {
       })
     })
 
+    describe("a removed item's row (STY-070)", () => {
+      const HEADER = ["Title", "Horizon", "Item ID", "Title (cy)", "Notes"]
+      /** A row of `HEADER`'s tab: an item with an ID made of its title. */
+      const row = (title: string, horizon: string, ...more: string[]) => [
+        title,
+        horizon,
+        `${title.toLowerCase()}idxxxxxx`.slice(0, 8),
+        ...more,
+      ]
+      /** `rows` under `HEADER`, frozen, its grid `spare` rows taller. */
+      const tabsOf = (spare: number, ...rows: string[][]): FakeTab[] => [
+        gridTab("Roadmaps", EXAMPLE_ROWS, 0),
+        {
+          ...gridTab("ProductA", [HEADER, ...rows], 10, 1),
+          rowCount: rows.length + 1 + spare,
+          frozenRowCount: 1,
+        },
+      ]
+      const deleteRow = (startIndex: number) => ({
+        deleteDimension: {
+          range: {
+            sheetId: 10,
+            dimension: "ROWS",
+            startIndex,
+            endIndex: startIndex + 1,
+          },
+        },
+      })
+      const clearRow = (startRowIndex: number) => ({
+        updateCells: {
+          range: { sheetId: 10, startRowIndex, endRowIndex: startRowIndex + 1 },
+          fields: "*",
+        },
+      })
+      const kinds = (body: unknown) =>
+        (body as BatchUpdateBody).requests.map(
+          (request) => Object.keys(request)[0],
+        )
+      const titles = (spreadsheet: { tabs: () => FakeTab[] }) =>
+        spreadsheet
+          .tabs()[1]
+          ?.rows.slice(1)
+          .map(([title]) => title)
+      /** The item titled `title` in `loaded`, removed where it was read. */
+      const removalFor = (loaded: readonly RoadmapItem[], title: string) => {
+        const position = loaded.findIndex((item) => item.title.en === title)
+        const item = loaded[position]
+        if (item === undefined) throw new Error(`No item ${title}`)
+        return { item, position }
+      }
+
+      it("sends one deleteDimension for its row, and writes no cell of any other (S2)", async () => {
+        const a = row("A", "Now", "Ch", "=B3")
+        const c = row("C", "Later", "", "kept")
+        const spreadsheet = serveStatefulSpreadsheet(
+          tabsOf(1, a, row("B", "Next"), c),
+        )
+        const repository = httpRepository()
+        const loaded = await repository.listRoadmapItems("producta")
+
+        await expect(
+          repository.publishRoadmapChanges("producta", {
+            ...NO_CHANGES,
+            removals: [removalFor(loaded, "B")],
+          }),
+        ).resolves.toEqual({ status: "published" })
+
+        expect(spreadsheet.bodies).toEqual([{ requests: [deleteRow(2)] }])
+        expect(spreadsheet.tabs()[1]?.rows).toEqual([HEADER, a, c])
+      })
+
+      it("deletes its row last, after every cell, move and append, the lowest first, its own edits unwritten (S1, S2)", async () => {
+        const spreadsheet = serveStatefulSpreadsheet(
+          tabsOf(
+            2,
+            row("A", "Now"),
+            row("B", "Next"),
+            row("C", "Now"),
+            row("D", "Later"),
+            row("E", "Later"),
+          ),
+        )
+        const repository = httpRepository()
+        const loaded = await repository.listRoadmapItems("producta")
+
+        await expect(
+          repository.publishRoadmapChanges("producta", {
+            ...NO_CHANGES,
+            roadmap: { statusLabel: { base: "Beta", value: "Live" } },
+            items: [
+              {
+                ...removalFor(loaded, "A"),
+                fields: { phase: { base: "", value: "Live" } },
+              },
+              {
+                ...removalFor(loaded, "B"),
+                fields: { placement: { base: "next", value: "later" } },
+              },
+            ],
+            newItems: [NEW_CLINIC],
+            removals: [removalFor(loaded, "A"), removalFor(loaded, "D")],
+          }),
+        ).resolves.toEqual({ status: "published" })
+
+        expect(spreadsheet.bodies).toHaveLength(1)
+        const [body] = spreadsheet.bodies
+        expect(kinds(body)).toEqual([
+          "updateCells",
+          "updateCells",
+          "moveDimension",
+          "appendCells",
+          "deleteDimension",
+          "deleteDimension",
+        ])
+        // B moved after E: D, below A, is deleted where B's move left it.
+        expect((body as BatchUpdateBody).requests.slice(-2)).toEqual([
+          deleteRow(3),
+          deleteRow(1),
+        ])
+        expect(titles(spreadsheet)).toEqual([
+          "C",
+          "E",
+          "B",
+          "Choose a clinic closer to home",
+        ])
+      })
+
+      it("deletes a row below one inserted for a new item where the insert leaves it (S2)", async () => {
+        const spreadsheet = serveStatefulSpreadsheet(
+          tabsOf(1, row("A", "Now"), row("B", "Now"), row("C", "Now")),
+        )
+        const repository = httpRepository()
+        const loaded = await repository.listRoadmapItems("producta")
+        const ordered = loaded.map((item, position) =>
+          orderedItem(item, position),
+        )
+
+        await repository.publishRoadmapChanges("producta", {
+          ...NO_CHANGES,
+          newItems: [
+            {
+              ...NEW_CLINIC,
+              values: { ...NEW_CLINIC.values, placement: "now" },
+            },
+          ],
+          orders: [
+            {
+              placement: "now",
+              base: ordered,
+              items: [
+                { id: NEW_CLINIC.id },
+                ...ordered.filter((_, at) => at !== 0),
+                ...ordered.slice(0, 1),
+              ],
+            },
+          ],
+          removals: [removalFor(loaded, "C")],
+        })
+
+        const [body] = spreadsheet.bodies
+        expect(kinds(body)).toEqual([
+          "moveDimension",
+          "insertDimension",
+          "updateCells",
+          "updateCells",
+          "updateCells",
+          "deleteDimension",
+        ])
+        expect((body as BatchUpdateBody).requests.at(-1)).toEqual(deleteRow(4))
+        expect(titles(spreadsheet)).toEqual([
+          "Choose a clinic closer to home",
+          "B",
+          "A",
+        ])
+      })
+
+      it("removes an item without an ID at its position without giving it one, while another without one gets one (S2)", async () => {
+        const spreadsheet = serveStatefulSpreadsheet(
+          tabsOf(0, ["Kept", "Now"], ["Removed", "Now"], row("C", "Now")),
+        )
+        const repository = httpRepository()
+        const loaded = await repository.listRoadmapItems("producta")
+        nextItemIds.push("newidaaa")
+
+        await repository.publishRoadmapChanges("producta", {
+          ...NO_CHANGES,
+          removals: [removalFor(loaded, "Removed")],
+        })
+
+        expect(spreadsheet.bodies).toEqual([
+          {
+            requests: [
+              {
+                updateCells: {
+                  start: { sheetId: 10, rowIndex: 1, columnIndex: 2 },
+                  rows: [
+                    {
+                      values: [
+                        { userEnteredValue: { stringValue: "newidaaa" } },
+                      ],
+                    },
+                  ],
+                  fields: "userEnteredValue",
+                },
+              },
+              deleteRow(2),
+            ],
+          },
+        ])
+      })
+
+      describe("every row of a copied Template's grid (S3)", () => {
+        it.each([
+          ["one item", ["A"], [clearRow(1)]],
+          [
+            "several",
+            ["A", "B", "C"],
+            [deleteRow(3), deleteRow(2), clearRow(1)],
+          ],
+        ])(
+          "clears the top removed row, every cell, and deletes the rest, for %s",
+          async (_, kept, requests) => {
+            const spreadsheet = serveStatefulSpreadsheet(
+              tabsOf(0, ...kept.map((title) => row(title, "Now", "Welsh"))),
+            )
+            const repository = httpRepository()
+            const loaded = await repository.listRoadmapItems("producta")
+
+            await expect(
+              repository.publishRoadmapChanges("producta", {
+                ...NO_CHANGES,
+                removals: kept.map((title) => removalFor(loaded, title)),
+              }),
+            ).resolves.toEqual({ status: "published" })
+
+            expect(spreadsheet.bodies).toEqual([{ requests }])
+            expect(spreadsheet.tabs()[1]?.rows).toEqual([HEADER, []])
+            await expect(
+              repository.listRoadmapItems("producta"),
+            ).resolves.toEqual([])
+          },
+        )
+
+        it("deletes every removed row when a new item's row is appended in the same write", async () => {
+          const spreadsheet = serveStatefulSpreadsheet(
+            tabsOf(0, row("A", "Now"), row("B", "Now")),
+          )
+          const repository = httpRepository()
+          const loaded = await repository.listRoadmapItems("producta")
+
+          await repository.publishRoadmapChanges("producta", {
+            ...NO_CHANGES,
+            newItems: [NEW_CLINIC],
+            removals: [removalFor(loaded, "A"), removalFor(loaded, "B")],
+          })
+
+          const [body] = spreadsheet.bodies
+          expect((body as BatchUpdateBody).requests.slice(-2)).toEqual([
+            deleteRow(2),
+            deleteRow(1),
+          ])
+          expect(titles(spreadsheet)).toEqual([
+            "Choose a clinic closer to home",
+          ])
+        })
+
+        it("deletes each removed row of a grid with a spare row below", async () => {
+          const spreadsheet = serveStatefulSpreadsheet(
+            tabsOf(1, row("A", "Now")),
+          )
+          const repository = httpRepository()
+          const loaded = await repository.listRoadmapItems("producta")
+
+          await repository.publishRoadmapChanges("producta", {
+            ...NO_CHANGES,
+            removals: [removalFor(loaded, "A")],
+          })
+
+          expect(spreadsheet.bodies).toEqual([{ requests: [deleteRow(1)] }])
+        })
+      })
+
+      it.each([
+        [
+          "a co-lead edited",
+          [["Removed", "Now", "", "Gwaredwyd"], row("C", "Now")],
+        ],
+        ["a co-lead moved a row past", [row("C", "Now"), ["Removed", "Now"]]],
+      ])(
+        "sends nothing for an item without an ID that %s, saying it can't be found (D3, S5)",
+        async (_, after) => {
+          serveStatefulSpreadsheet(
+            tabsOf(0, ["Removed", "Now"], row("C", "Now")),
+          )
+          const repository = httpRepository()
+          const loaded = await repository.listRoadmapItems("producta")
+          const removal = removalFor(loaded, "Removed")
+          const spreadsheet = serveStatefulSpreadsheet(tabsOf(0, ...after))
+
+          await expect(
+            repository.publishRoadmapChanges("producta", {
+              ...NO_CHANGES,
+              removals: [removal],
+            }),
+          ).resolves.toEqual({
+            status: "refused",
+            conflicts: [],
+            missingItems: [removal],
+          })
+          expect(spreadsheet.bodies).toEqual([])
+        },
+      )
+    })
+
     describe("failures and cancellation (S10)", () => {
       it("rejects with unauthenticated, writing nothing, when the session ends before the write", async () => {
         const spreadsheet = serveStatefulSpreadsheet(exampleTabs())

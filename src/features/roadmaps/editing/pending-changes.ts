@@ -3,9 +3,11 @@
  * keeps, what a fresh read or a publish drops, and how an edit finds its item again. Pure
  * functions over `RoadmapChanges`; the store applies them. A new item is added, edited
  * and removed by `domain/roadmap/new-item.ts`; how it shows is here (`shownNewItem`).
+ * An item the roadmap holds is removed by `domain/roadmap/item-removal.ts`.
  */
 
 import { findEditedItem } from "@/domain/roadmap/find-edited-item"
+import { reconcileRemovals, removalOf } from "@/domain/roadmap/item-removal"
 import { englishDetails } from "@/domain/roadmap/item-details"
 import type { LocalisedText } from "@/domain/roadmap/localised-text"
 import { dropPublishedNewItems } from "@/domain/roadmap/new-item"
@@ -18,6 +20,7 @@ import {
   type FieldChange,
   isChoiceField,
   type ItemChanges,
+  type ItemTarget,
   itemValue,
   type ItemValues,
   type NewItem,
@@ -25,6 +28,7 @@ import {
   type RoadmapChanges,
   type RoadmapChoiceField,
   roadmapValue,
+  sameTarget,
   tagsOf,
   UNLISTED_FAMILY,
 } from "@/domain/roadmap/roadmap-changes"
@@ -78,13 +82,6 @@ function dropHeld<F extends string>(
 
 function isEmpty(fields: object): boolean {
   return Object.keys(fields).length === 0
-}
-
-/** Whether two entries edit the same item: by its ID, or by its place with none. */
-export function sameTarget(a: ItemChanges, b: ItemChanges): boolean {
-  return a.item.id !== null || b.item.id !== null
-    ? a.item.id === b.item.id
-    : a.position === b.position
 }
 
 /**
@@ -246,13 +243,18 @@ function noChoiceHeld(
  * found is kept as it was. Bases stay as they were, and so does the content an entry
  * was loaded with, which a publish checks a repeated ID by (ADR-012): the entry only
  * takes the item's ID if it had none, and the value of each field it drops. A new item
- * the read holds is no longer pending (`dropPublishedNewItems`).
+ * the read holds is no longer pending (`dropPublishedNewItems`), nor is a removal of an
+ * item it no longer holds, with that item's edits, and a removal found follows its item
+ * (`reconcileRemovals`).
  */
 export function reconcileItems(
   changes: RoadmapChanges,
   items: readonly RoadmapItem[],
 ): RoadmapChanges {
-  return reconcileEdits(dropPublishedNewItems(changes, items), items)
+  return reconcileEdits(
+    reconcileRemovals(dropPublishedNewItems(changes, items), items),
+    items,
+  )
 }
 
 /** `reconcileItems` for the edits to the items the roadmap already held. */
@@ -354,16 +356,21 @@ function settleFields<F extends string>(
  * `changes` once `sent` is published: each edit still as it was sent is gone, and any
  * made meanwhile is kept, edited from what was published. A new item that was sent is
  * gone too, and one added meanwhile is kept. So is a placement's order that was sent:
- * none is made meanwhile, as the order controls wait for the publish (STY-050 S15).
+ * none is made meanwhile, as the order controls wait for the publish (STY-050 S15). A
+ * removal that was sent is gone, with every edit of its item, which is no more; one
+ * made meanwhile is kept.
  */
 export function settlePublished(
   changes: RoadmapChanges,
   sent: RoadmapChanges,
 ): RoadmapChanges {
   const sentIds = new Set(sent.newItems.map(({ id }) => id))
+  const isRemoved = (entry: ItemTarget) =>
+    sent.removals.some((each) => sameTarget(each, entry))
   return {
     roadmap: settleFields(changes.roadmap, sent.roadmap),
     items: changes.items.flatMap((entry) => {
+      if (isRemoved(entry)) return []
       const sentEntry = sent.items.find((each) => sameTarget(each, entry))
       if (!sentEntry) return [entry]
       const fields = settleFields(entry.fields, sentEntry.fields)
@@ -377,6 +384,7 @@ export function settlePublished(
       ({ placement }) =>
         !sent.orders.some((each) => each.placement === placement),
     ),
+    removals: changes.removals.filter((entry) => !isRemoved(entry)),
   }
 }
 
@@ -433,19 +441,24 @@ export function publishesNoItems(
 
 /**
  * How many changes are pending, what the page counts as unpublished changes: each field
- * edited, each new item as one, whatever fields it has, and each placement's order as
- * one, however many of its items moved (STY-050).
+ * edited, each new item as one, whatever fields it has, each placement's order as one,
+ * however many of its items moved (STY-050), and each removal as one, its item's edits
+ * beneath it none (STY-049 D5).
  */
 export function countChanges(changes: RoadmapChanges | undefined): number {
   if (!changes) return 0
   return (
     Object.keys(changes.roadmap).length +
     changes.items.reduce(
-      (count, entry) => count + Object.keys(entry.fields).length,
+      (count, entry) =>
+        removalOf(changes, entry)
+          ? count
+          : count + Object.keys(entry.fields).length,
       0,
     ) +
     changes.newItems.length +
-    changes.orders.length
+    changes.orders.length +
+    changes.removals.length
   )
 }
 

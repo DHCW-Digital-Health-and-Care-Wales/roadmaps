@@ -5,6 +5,8 @@
   ID, a write whose result never arrives, trimming). Amends ADR-002 (a write call) and ADR-011 (item identity);
   extends ADR-009 (the editor writes to the roadmap index). STY-051 and STY-050
   amendments: owner, 2026-11-16, on the wayfinder map "Reordering a placement's items".
+  STY-070 amendments: owner, 2026-11-19, STY-049's grilling (its D1, D2, D5, D7, D8,
+  D12), with STY-070 D2 and D3 the agent's.
 - Date: 2026-11-11 (amended in ADR-013: family and category become choosable; `Family (cy)`
   is copied; amended in ADR-014: an item's placement and organisations become editable;
   amended by STY-035: a roadmap's published state is written on its own; amended by
@@ -16,7 +18,8 @@
   amended by DEF-015: a write that can't be read back holds the app until a Refresh,
   and what a database API's write must return;
   amended by STY-051: publishing moves a moved item's row, and a protected row refuses it;
-  amended by STY-050: a placement's order is a pending edit, written as row moves)
+  amended by STY-050: a placement's order is a pending edit, written as row moves;
+  amended by STY-070: a removal is a pending edit, published by deleting the item's row)
 
 ## Context
 
@@ -432,6 +435,41 @@ Decided with the owner on 2026-11-16, on the same map.
 - **The order is the domain's** (ADR-002 stands): `RoadmapChanges` carries each
   placement's pending order and `RoadmapRepository` gains no call; rows stay inside
   infrastructure.
+
+### STY-070 amendments
+
+Decided with the owner on 2026-11-19, in STY-049's grilling; the decisions cited are
+STY-049's unless named otherwise.
+
+- **A removal is a pending edit of an item the roadmap holds** (D1): shown in place
+  until the roadmap is published, then its row is deleted in the same all-or-nothing
+  `batchUpdate`. This amends _Pending edits and publishing_: a publish now deletes rows
+  too. It holds the item as loaded and its position, so it is found again as an edited
+  item is (_Finding what to write_). The item's pending edits stay beneath it,
+  unpublished and uncounted, and come back when it is undone (D5); it leaves any
+  pending order of its placement, and undoing it puts it back where it was (D8).
+  "Discard all" drops it, and Disconnect then Keep keeps it, with its base.
+- **Its row is deleted last** (D8): after every cell and `Item ID` write, move, insert
+  and append, the bottom row first, each where those requests leave it, so no item
+  needs an ID to be removed and an item without one is never given one. When the
+  removed rows are every non-frozen row of the grid, the top one is cleared of every
+  cell instead, since Google keeps one non-frozen row in every tab (STY-070 D2, agent).
+- **A co-lead's change to the item is a conflict** (D2): anything a field of it holds
+  that differs from what was loaded, its placement and its Welsh included, publishes
+  nothing, and the review shows each such field, current beside the removal. A co-lead's reorder of the
+  placement alone is not one. Keeping the removal makes the current item its base;
+  keeping the item drops the removal, and its edits are then compared as any edit is.
+- **An item already gone counts as removed** (D7): one with an `Item ID` that no row of
+  the tab holds is no longer pending, at publish or on Refresh, and the rest publishes.
+  Option 13 still refuses one without an ID whose position no longer holds what was
+  loaded, and one whose repeated ID's first row no longer does, since a co-lead's edit
+  makes either "not found" too (STY-070 D3, agent).
+- **A lost answer** (Option 16, D12): a removal counts as written when no row holds its
+  item's ID or, for an item without one, when its position no longer holds the loaded
+  content and every other write is found written. A batch found wholly unwritten is
+  `network`; anything else is unconfirmed.
+- **The removal is the domain's** (ADR-002 stands): `RoadmapChanges` carries each
+  removal and `RoadmapRepository` gains no call; rows stay inside infrastructure.
 
 ## Options (owner's choice marked ✅, 2026-11-11)
 

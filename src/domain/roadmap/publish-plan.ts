@@ -11,6 +11,7 @@ import { findEditedItem } from "./find-edited-item"
 import { detailsOf, detailsValue } from "./item-details"
 import { type ItemMove, planItemMoves } from "./item-moves"
 import { createItemId, createUnusedId } from "./item-id"
+import { heldRemoval, planRemovals } from "./item-removal"
 import { arrangedOrder, findOrderedItems, orderedItem } from "./placement-order"
 import type { Roadmap } from "./roadmap"
 import {
@@ -22,6 +23,8 @@ import {
   type FieldChange,
   isChoiceField,
   type ItemChanges,
+  type ItemRemoval,
+  type ItemTarget,
   itemValue,
   type OrderConflict,
   type OrderedItem,
@@ -31,6 +34,7 @@ import {
   type RoadmapChanges,
   type RoadmapChoiceField,
   roadmapValue,
+  sameTarget,
   tagsOf,
   tagsValue,
 } from "./roadmap-changes"
@@ -67,8 +71,18 @@ export interface PublishWrites {
     field: EditableItemField
     value: string
   }[]
-  /** New IDs, for items with none: they go with any other write (ADR-012 Option 6). */
+  /**
+   * New IDs, for items with none: they go with any other write (ADR-012 Option 6), but
+   * to an item removed, whose row is deleted.
+   */
   ids: { index: number; id: string }[]
+  /**
+   * The items removed (STY-070), each by its index and as read there: their rows are
+   * deleted after every other write, the bottom row first, so each is deleted where the
+   * moves and new items leave it. A write whose answer was lost is judged by the item,
+   * by its ID or, with none, by what its index then holds (`heldRemoval`).
+   */
+  removals: { index: number; item: RoadmapItem }[]
   /**
    * The items to move, in the order to make the moves, after every value above is
    * written: one whose placement is written that is not yet last in it (STY-051), and
@@ -120,11 +134,15 @@ const REQUIRED_FIELDS: ReadonlySet<string> = new Set(["title"])
  * changes give the moves (`planItemMoves`, STY-051), unless the placement's order is
  * pending: its items are then put in that order, the items a co-lead added or moved in
  * last, a new item among them inserted, unless a co-lead changed the placement's items
- * too, which is a conflict (STY-050). Throws `AppError('unknown')` for a
- * blank title, a placement that is none of the six, an organisation the list doesn't
- * hold, a `Last updated` that is no `YYYY-MM-DD` date or two new items with one ID,
- * which callers never send, and `AppError('invalid-data')` for a family or category
- * chosen while its list is missing.
+ * too, which is a conflict (STY-050). A removed item's row is deleted, its edits
+ * beneath the removal published with it or not at all, and it takes no ID and no place
+ * in a move or an order, unless a co-lead changed any of its fields, which is a
+ * conflict, or it can't be found; one whose ID no row holds is removed already
+ * (`planRemovals`, STY-070). Throws `AppError('unknown')` for a blank title, a
+ * placement that is none of the six, an organisation the list doesn't hold, a
+ * `Last updated` that is no `YYYY-MM-DD` date or two new items with one ID, which
+ * callers never send, and `AppError('invalid-data')` for a family or category chosen
+ * while its list is missing.
  */
 export function planRoadmapPublish(
   changes: RoadmapChanges,
@@ -135,8 +153,10 @@ export function planRoadmapPublish(
     return { kind: "settled", outcome: { status: "roadmap-not-found" } }
   }
   const newItems = newItemWrites(changes.newItems, snapshot)
+  const removals = planRemovals(changes.removals, snapshot)
+  const removed = new Set(removals.found.map(({ index }) => index))
   const conflicts: Conflict[] = []
-  const missingItems: ItemChanges[] = []
+  const missingItems: (ItemChanges | ItemRemoval)[] = []
   // Where each item found is to be, by its index: only those with a placement pending.
   const movedTo = new Map<number, string>()
   const roadmapWrites: PublishWrites["roadmap"] = []
@@ -166,6 +186,10 @@ export function planRoadmapPublish(
   }
 
   for (const itemChanges of changes.items) {
+    // An item's edits stay beneath its removal, unpublished (STY-049 D5).
+    if (changes.removals.some((each) => sameTarget(each, itemChanges))) {
+      continue
+    }
     const pending = EDITABLE_ITEM_FIELDS.flatMap((field) => {
       const change = pendingValue(field, itemChanges.fields[field], snapshot)
       return change === null ? [] : [{ field, ...change }]
@@ -207,9 +231,12 @@ export function planRoadmapPublish(
     }
   }
 
+  conflicts.push(...removals.conflicts)
+  missingItems.push(...removals.missing)
   const orders = plannedOrders(changes, snapshot, {
     movedTo,
-    missingItems,
+    notFound: [...missingItems, ...removals.gone],
+    removed,
     newItems,
   })
   conflicts.push(...orders.conflicts)
@@ -220,7 +247,10 @@ export function planRoadmapPublish(
     }
   }
   const moves = planItemMoves(
-    snapshot.items.map(({ placement }) => placement),
+    // A row to delete is in no placement, so nothing moves past it or after it.
+    snapshot.items.map(({ placement }, index) =>
+      removed.has(index) ? null : placement,
+    ),
     itemWrites.flatMap(({ index, field, value }) =>
       field === "placement" ? [{ index, placement: value }] : [],
     ),
@@ -233,11 +263,12 @@ export function planRoadmapPublish(
     roadmapWrites.length === 0 &&
     itemWrites.length === 0 &&
     newItems.length === 0 &&
-    moves.length === 0
+    moves.length === 0 &&
+    removed.size === 0
   ) {
     return { kind: "settled", outcome: { status: "published" } }
   }
-  const ids = newIds(snapshot, newItems, createId)
+  const ids = newIds(snapshot, newItems, removed, createId)
   const newIdAt = new Map(ids.map(({ index, id }) => [index, id]))
   const idAt = (index: number) => {
     const id = snapshot.items[index]?.id ?? newIdAt.get(index)
@@ -251,6 +282,7 @@ export function planRoadmapPublish(
       roadmap: roadmapWrites,
       items: itemWrites.map((write) => ({ ...write, id: idAt(write.index) })),
       ids,
+      removals: removals.found,
       moves,
       newItems: orderedNewItems(newItems, orders.targets),
       orders: orders.targets
@@ -290,27 +322,30 @@ function sameSlots(a: readonly Slot[], b: readonly Slot[]): boolean {
  * S10): a placement's items as read are in neither the order's base nor the order to
  * write. That order is `arrangedOrder`'s: the pending one over the items the placement
  * is to hold, those it holds bar any moved out (`movedTo`, the found items with a
- * placement pending, in the order moved), then the items moved in and the `newItems`
- * written. An edited item no longer found (`missingItems`) has left both orders, so
- * one that differs by it alone is no conflict.
+ * placement pending, in the order moved) or `removed`, by index, then the items moved
+ * in and the `newItems` written. An item edited or removed that is no longer found or
+ * already gone (`notFound`) has left both orders, so one that differs by it alone is no
+ * conflict.
  */
 function plannedOrders(
   changes: RoadmapChanges,
   snapshot: RoadmapSnapshot,
   {
     movedTo,
-    missingItems,
+    notFound,
+    removed,
     newItems,
   }: {
     movedTo: ReadonlyMap<number, string>
-    missingItems: readonly ItemChanges[]
+    notFound: readonly ItemTarget[]
+    removed: ReadonlySet<number>
     newItems: PublishWrites["newItems"]
   },
 ): { conflicts: OrderConflict[]; targets: OrderTarget[] } {
   const conflicts: OrderConflict[] = []
   const targets: OrderTarget[] = []
   const found = (entry: OrderedItem) =>
-    !missingItems.some(({ item, position }) =>
+    !notFound.some(({ item, position }) =>
       entry.id === null
         ? item.id === null && position === entry.position
         : item.id === entry.id,
@@ -333,7 +368,11 @@ function plannedOrders(
       item.placement === placement ? [index] : [],
     )
     const present: Slot[] = [
-      ...was.filter((index) => (movedTo.get(index) ?? placement) === placement),
+      ...was.filter(
+        (index) =>
+          !removed.has(index) &&
+          (movedTo.get(index) ?? placement) === placement,
+      ),
       ...[...movedTo.keys()].filter(
         (index) =>
           movedTo.get(index) === placement &&
@@ -416,7 +455,7 @@ function orderedNewItems(
  * when its placement is: the write is all or nothing, so no place is looked at (STY-051
  * S8). A placement's order is held when the placement's items are in it and not held
  * when they are in the order they had; in any other, as after a co-lead's change, it
- * can't be told (STY-050 S14).
+ * can't be told (STY-050 S14). A removal is held as `heldRemoval` judges it (STY-070 S6).
  */
 export function heldWrites(
   writes: PublishWrites,
@@ -445,12 +484,19 @@ export function heldWrites(
     ...writes.ids.map(({ id }) => snapshot.takenIds.has(id)),
     ...writes.newItems.map(({ id }) => snapshot.takenIds.has(id)),
   ]
+  // Held by one without an ID only once every other write is.
+  let heldIfOthersAre = false
+  for (const removal of writes.removals) {
+    const verdict = heldRemoval(removal, snapshot.items, snapshot.takenIds)
+    if (verdict === "if-others-held") heldIfOthersAre = true
+    else held.push(verdict)
+  }
   // A row the read skips (its title cleared since) may still hold an item's write.
   const unread = writes.items.some(
     ({ id }) => withId(id) === undefined && snapshot.takenIds.has(id),
   )
   if (!unread && held.every(Boolean)) return "all"
-  return unread || held.some(Boolean) ? "some" : "none"
+  return unread || heldIfOthersAre || held.some(Boolean) ? "some" : "none"
 }
 
 /**
@@ -546,17 +592,18 @@ function listedOrganisationIdsValue(
 }
 
 /**
- * A new ID for every item without one, none repeating an ID the roadmap holds or one a
- * new item is written with.
+ * A new ID for every item without one but those `removed`, by index, none repeating an
+ * ID the roadmap holds or one a new item is written with.
  */
 function newIds(
   snapshot: RoadmapSnapshot,
   newItems: PublishWrites["newItems"],
+  removed: ReadonlySet<number>,
   createId: () => string,
 ): PublishWrites["ids"] {
   const taken = new Set([...snapshot.takenIds, ...newItems.map(({ id }) => id)])
   return snapshot.items.flatMap(({ id }, index) => {
-    if (id !== null) return []
+    if (id !== null || removed.has(index)) return []
     const next = createUnusedId(taken, createId)
     taken.add(next)
     return [{ index, id: next }]

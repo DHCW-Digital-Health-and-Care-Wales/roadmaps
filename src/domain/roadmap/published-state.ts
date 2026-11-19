@@ -19,6 +19,7 @@ import type {
   EditableRoadmapField,
   Conflict,
   ItemChanges,
+  ItemRemoval,
   RoadmapChanges,
 } from "./roadmap-changes"
 
@@ -67,7 +68,7 @@ export type PublishedStateOutcome =
   | {
       status: "refused"
       conflicts: Conflict[]
-      missingItems: ItemChanges[]
+      missingItems: (ItemChanges | ItemRemoval)[]
     }
 
 /** One index row with the roadmap's id, as just read, kept by the list or not. */
@@ -266,14 +267,18 @@ function editedFields(
 
 /**
  * Whether any pending edit is sent: a field of the roadmap's, an item's changes, a new
- * item, or a placement's order.
+ * item, a placement's order or a removal.
  */
 function hasChanges(change: PublishedStateChange): boolean {
   const sent = change.published ? change.changes : undefined
   return (
     editedFields(change).size > 0 ||
     (sent !== undefined &&
-      sent.items.length + sent.newItems.length + sent.orders.length > 0)
+      sent.items.length +
+        sent.newItems.length +
+        sent.orders.length +
+        sent.removals.length >
+        0)
   )
 }
 

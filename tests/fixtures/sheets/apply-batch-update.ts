@@ -209,9 +209,10 @@ const HORIZON_VALUES = new Set([
  *   `Horizon` the public site reads or an `Item ID`, in the editor's format, that no
  *   other row of the tab holds, or with a cell under no header;
  * - a copy of a tab but `Template`, or placed anywhere but after the last tab;
- * - a tab unhidden or its frozen rows changed, rows deleted or cells cleared, but in a
- *   tab the same body copied; that tab hidden, its header row unfrozen, deleted or
- *   cleared;
+ * - a tab unhidden or its frozen rows changed, but in a tab the same body copied; that
+ *   tab hidden or its header row unfrozen;
+ * - rows deleted or cleared, but in a tab the same body copied or a roadmap's own tab
+ *   (STY-070); a header row deleted or cleared;
  * - rows moved in a tab but a roadmap's own, a header row moved or rows moved above
  *   it, or columns moved (STY-051);
  * - a row inserted in a tab but a roadmap's own, above its header row, several at once,
@@ -296,6 +297,20 @@ class Batch {
     if (!this.#copies.has(sheetId)) {
       this.violations.push(
         `${request} on ${tab.title}, not a tab this batchUpdate copied`,
+      )
+    }
+    return tab
+  }
+
+  /**
+   * The tab whose rows `request` deletes or clears: one this body copied, or a roadmap's
+   * own, whose removed items' rows go (STY-070); any other is a violation.
+   */
+  #rowsTab(sheetId: number, request: string): GridTab {
+    const tab = this.#tab(sheetId, request)
+    if (!this.#copies.has(sheetId) && !this.#isRoadmapTab(tab)) {
+      this.violations.push(
+        `${request} on ${tab.title}, not a tab this batchUpdate copied or a roadmap's own`,
       )
     }
     return tab
@@ -511,7 +526,7 @@ class Batch {
   #deleteDimension({
     range: { sheetId, dimension, startIndex, endIndex },
   }: RequestOf<"deleteDimension">): void {
-    const tab = this.#copy(sheetId, "deleteDimension")
+    const tab = this.#rowsTab(sheetId, "deleteDimension")
     if (dimension !== "ROWS") {
       this.violations.push(`deleteDimension of ${dimension}, not ROWS`)
       return
@@ -647,7 +662,7 @@ class Batch {
     range: { sheetId, startRowIndex, endRowIndex },
     fields,
   }: Extract<RequestOf<"updateCells">, { range: unknown }>): void {
-    const tab = this.#copy(sheetId, "updateCells over a range")
+    const tab = this.#rowsTab(sheetId, "updateCells over a range")
     if (
       startRowIndex < 0 ||
       startRowIndex >= endRowIndex ||

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 
+import { removeItem } from "@/domain/roadmap/item-removal"
 import { addNewItem } from "@/domain/roadmap/new-item"
 import { NO_CHANGES } from "@/domain/roadmap/roadmap-changes"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
@@ -35,6 +36,17 @@ describe("createPendingChangesStore", () => {
     expect(store.getSnapshot().changes.get("producta")?.newItems).toHaveLength(
       1,
     )
+  })
+
+  it("keeps a roadmap whose only change is a removal (STY-070 S1)", () => {
+    const store = createPendingChangesStore()
+    const item = createTestRoadmapItem("Fax referrals", { id: "faxidxxx" })
+
+    store.update("producta", (changes) => removeItem(changes, item, 0))
+
+    expect(store.getSnapshot().changes.get("producta")?.removals).toEqual([
+      { item, position: 0 },
+    ])
   })
 
   describe("a pending order (STY-050)", () => {

@@ -1,7 +1,7 @@
 # STY-049: A Product Lead removes a published item
 
-- **Status**: Proposed — grilled with the owner on 2026-11-19; waits for STY-070's
-  write
+- **Status**: Proposed — grilled with the owner on 2026-11-19; STY-070's write
+  delivered, its _Contract for dependents_ the API this story builds on
 - **Type**: Feature
 - **Area**: Features/UI + i18n (en + cy) + E2E
 - **Epic**: [EPC-011-adding-roadmaps-and-items](README.md)

@@ -222,7 +222,7 @@ function retireDecided(
   let retired: Map<string, PublishNotice> | undefined
   for (const [roadmapId, notice] of notices) {
     if (notice.kind !== "refused") continue
-    const open = new Set(
+    const open = new Set<Conflict>(
       openConflicts(notice.conflicts, changes.get(roadmapId)).map(
         ({ conflict }) => conflict,
       ),

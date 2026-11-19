@@ -68,6 +68,7 @@ describe("planRoadmapPublish", () => {
           { index: 1, id: "newidaaa" },
           { index: 2, id: "newidbbb" },
         ],
+        removals: [],
         moves: [],
         orders: [],
         newItems: [],
@@ -208,6 +209,7 @@ describe("planRoadmapPublish", () => {
           ],
           items: [],
           ids: [],
+          removals: [],
           moves: [],
           orders: [],
           newItems: [],
@@ -306,6 +308,7 @@ describe("planRoadmapPublish", () => {
             { index: 0, id: "bookingx", field: "placement", value: "now" },
           ],
           ids: [],
+          removals: [],
           moves: [],
           orders: [],
           newItems: [],
@@ -385,6 +388,7 @@ describe("planRoadmapPublish", () => {
             { index: 0, id: "bookingx", field: "placement", value: "now" },
           ],
           ids: [],
+          removals: [],
           moves: [{ index: 0, after: 2 }],
           orders: [],
           newItems: [],
@@ -401,6 +405,7 @@ describe("planRoadmapPublish", () => {
           items: [
             { index: 2, id: "bookingx", field: "placement", value: "now" },
           ],
+          removals: [],
           moves: [],
           orders: [],
         })
@@ -430,6 +435,7 @@ describe("planRoadmapPublish", () => {
 
         expect(plan.kind === "write" && plan.writes).toMatchObject({
           items: [],
+          removals: [],
           moves: [],
           orders: [],
         })
@@ -876,6 +882,7 @@ describe("planRoadmapPublish", () => {
           roadmap: [{ field: "lastUpdated", value }],
           items: [],
           ids: [],
+          removals: [],
           moves: [],
           orders: [],
           newItems: [],
@@ -919,6 +926,7 @@ describe("planRoadmapPublish", () => {
           roadmap: [{ field: "lastUpdated", value: "2026-11-13" }],
           items: [],
           ids: [],
+          removals: [],
           moves: [],
           orders: [],
           newItems: [],
@@ -994,6 +1002,7 @@ describe("planRoadmapPublish", () => {
           roadmap: [],
           items: [],
           ids: [],
+          removals: [],
           moves: [],
           orders: [],
           newItems: [
@@ -1067,6 +1076,7 @@ describe("planRoadmapPublish", () => {
           roadmap: [{ field: "vision", value: "A vision" }],
           items: [{ index: 0, id: "bookingx", field: "phase", value: "Beta" }],
           ids: [{ index: 1, id: "newidaaa" }],
+          removals: [],
           moves: [],
           orders: [],
           newItems: [expect.objectContaining({ id: "ckn7q2xw" })],
@@ -1190,6 +1200,7 @@ describe("heldWrites", () => {
     roadmap: [{ field: "vision", value: "A vision" }],
     items: [{ index: 0, id: "newidaaa", field: "phase", value: "Live" }],
     ids: [{ index: 0, id: "newidaaa" }],
+    removals: [],
     moves: [],
     orders: [],
     newItems: [],
@@ -1227,6 +1238,7 @@ describe("heldWrites", () => {
       roadmap: [],
       items: [{ index: 0, id: "newidaaa", field: "phase", value: "Live" }],
       ids: [{ index: 0, id: "newidaaa" }],
+      removals: [],
       moves: [],
       orders: [],
       newItems: [],
@@ -1243,6 +1255,7 @@ describe("heldWrites", () => {
       roadmap: [],
       items: [{ index: 0, id: "bookingx", field: "placement", value: "now" }],
       ids: [],
+      removals: [],
       moves: [{ index: 0, after: 1 }],
       orders: [],
       newItems: [],
@@ -1297,6 +1310,7 @@ describe("heldWrites", () => {
             roadmap: [],
             items: [],
             ids: [],
+            removals: [],
             moves: [],
             orders: [],
             newItems: withNewItem.newItems,
@@ -1367,6 +1381,7 @@ describe("a placement's pending order (STY-050)", () => {
         roadmap: [],
         items: [],
         ids: [],
+        removals: [],
         moves: [{ index: 3, before: 0 }],
         newItems: [],
         orders: [
@@ -1404,6 +1419,7 @@ describe("a placement's pending order (STY-050)", () => {
           { index: 0, id: "newidaaa" },
           { index: 1, id: "newidbbb" },
         ],
+        removals: [],
         moves: [{ index: 0, after: 1 }],
         newItems: [],
         orders: [
@@ -1564,6 +1580,7 @@ describe("a placement's pending order (STY-050)", () => {
     ).toMatchObject({
       kind: "write",
       writes: {
+        removals: [],
         moves: [{ index: 2, before: 0 }],
         orders: [
           {
@@ -1613,6 +1630,7 @@ describe("a placement's pending order (STY-050)", () => {
             { index: 1, id: idOf("X"), field: "placement", value: "now" },
           ],
           ids: [],
+          removals: [],
           moves: [{ index: 0, after: 1 }],
           newItems: [],
           orders: [
@@ -1642,6 +1660,7 @@ describe("a placement's pending order (STY-050)", () => {
       ).toMatchObject({
         kind: "write",
         writes: {
+          removals: [],
           moves: [
             { index: 0, after: 2 },
             { index: 1, after: 3 },
@@ -1676,6 +1695,7 @@ describe("a placement's pending order (STY-050)", () => {
           roadmap: [],
           items: [],
           ids: [],
+          removals: [],
           moves: [],
           newItems: [{ id: NEW_CLINIC.id, fields: newFields, before: 2 }],
           orders: [
@@ -1699,6 +1719,7 @@ describe("a placement's pending order (STY-050)", () => {
       expect(plan).toMatchObject({
         kind: "write",
         writes: {
+          removals: [],
           moves: [{ index: 0, after: 1 }],
           newItems: [{ id: NEW_CLINIC.id, fields: newFields }],
           orders: [{ items: [idOf("B"), idOf("A"), NEW_CLINIC.id] }],
@@ -1736,6 +1757,7 @@ describe("a placement's pending order (STY-050)", () => {
       expect(plan).toMatchObject({
         kind: "write",
         writes: {
+          removals: [],
           moves: [],
           newItems: [
             { id: "thirdidx", before: 0 },
@@ -1772,6 +1794,7 @@ describe("a placement's pending order (STY-050)", () => {
       roadmap: [],
       items: [],
       ids: [],
+      removals: [],
       moves: [{ index: 3, before: 0 }],
       newItems: [],
       orders: [
@@ -1819,6 +1842,7 @@ describe("a placement's pending order (STY-050)", () => {
           { index: 0, id: "newidaaa" },
           { index: 1, id: "newidbbb" },
         ],
+        removals: [],
         moves: [{ index: 0, after: 1 }],
         orders: [
           {
@@ -1839,6 +1863,578 @@ describe("a placement's pending order (STY-050)", () => {
           ]),
         ),
       ).toBe("all")
+    })
+  })
+})
+
+describe("a removed item (STY-070)", () => {
+  const item = (title: string, placement: RoadmapPlacement = "now") =>
+    createTestRoadmapItem(title, {
+      id: `${title.toLowerCase()}idxxxx`,
+      placement,
+    })
+  const a = item("A")
+  const b = item("B")
+  const c = item("C")
+  const idOf = (title: string) => `${title.toLowerCase()}idxxxx`
+  const removing = (
+    removals: RoadmapChanges["removals"],
+    changes: Partial<RoadmapChanges> = {},
+  ): RoadmapChanges => ({ ...NO_CHANGES, ...changes, removals })
+  /** A write of `removals` alone, and of nothing else. */
+  const removalsOnly = (
+    removals: PublishWrites["removals"],
+    writes: Partial<PublishWrites> = {},
+  ) => ({
+    kind: "write",
+    writes: {
+      roadmap: [],
+      items: [],
+      ids: [],
+      removals,
+      moves: [],
+      newItems: [],
+      orders: [],
+      ...writes,
+    },
+  })
+
+  it("deletes the item's row, found by its ID (S2)", () => {
+    expect(
+      planRoadmapPublish(
+        removing([{ item: b, position: 1 }]),
+        snapshotOf([a, b, c]),
+        idsOf(),
+      ),
+    ).toEqual(removalsOnly([{ index: 1, item: b }]))
+  })
+
+  it("finds it by its ID wherever a co-lead's reorder has put it, which is no conflict (S4)", () => {
+    expect(
+      planRoadmapPublish(
+        removing([{ item: b, position: 1 }]),
+        snapshotOf([b, c, a]),
+        idsOf(),
+      ),
+    ).toEqual(removalsOnly([{ index: 0, item: b }]))
+  })
+
+  it("publishes none of the item's edits, which stay beneath the removal (S1)", () => {
+    const edit: ItemChanges = {
+      item: b,
+      position: 1,
+      fields: {
+        phase: { base: "", value: "Live" },
+        placement: { base: "now", value: "later" },
+      },
+    }
+
+    expect(
+      planRoadmapPublish(
+        removing([{ item: b, position: 1 }], { items: [edit] }),
+        snapshotOf([a, b, c]),
+        idsOf(),
+      ),
+    ).toEqual(removalsOnly([{ index: 1, item: b }]))
+  })
+
+  it("removes an item without an ID at its position, giving it none, while every other item without one gets one (S2)", () => {
+    const first = createTestRoadmapItem("First")
+    const second = createTestRoadmapItem("Second")
+
+    expect(
+      planRoadmapPublish(
+        removing([{ item: second, position: 1 }]),
+        snapshotOf([first, second]),
+        idsOf("newidaaa", "newidbbb"),
+      ),
+    ).toEqual(
+      removalsOnly([{ index: 1, item: second }], {
+        ids: [{ index: 0, id: "newidaaa" }],
+      }),
+    )
+  })
+
+  it("deletes several, each with the roadmap's other changes in the one write (S2)", () => {
+    const plan = planRoadmapPublish(
+      removing(
+        [
+          { item: c, position: 2 },
+          { item: a, position: 0 },
+        ],
+        { roadmap: { vision: { base: "", value: "A vision" } } },
+      ),
+      snapshotOf([a, b, c]),
+      idsOf(),
+    )
+
+    expect(plan).toEqual(
+      removalsOnly(
+        [
+          { index: 2, item: c },
+          { index: 0, item: a },
+        ],
+        { roadmap: [{ field: "vision", value: "A vision" }] },
+      ),
+    )
+  })
+
+  describe("a co-lead's change to the item (S4)", () => {
+    it.each<[string, Partial<RoadmapItem>, string, string, string]>([
+      [
+        "its description",
+        { description: { en: "Theirs", cy: "" } },
+        "description",
+        "",
+        "Theirs",
+      ],
+      ["its horizon", { placement: "later" }, "placement", "now", "later"],
+      ["its tags", { tags: [{ en: "Carers", cy: "" }] }, "tags", "", "Carers"],
+    ])(
+      "refuses the publish when they changed %s, loaded beside current",
+      (_, changed, field, base, current) => {
+        const theirs = { ...b, ...changed }
+        const removal = { item: b, position: 1 }
+
+        expect(
+          planRoadmapPublish(
+            removing([removal], {
+              roadmap: { vision: { base: "", value: "A vision" } },
+            }),
+            snapshotOf([a, theirs, c]),
+            idsOf(),
+          ),
+        ).toEqual({
+          kind: "settled",
+          outcome: {
+            status: "refused",
+            conflicts: [
+              {
+                subject: "removal",
+                removal,
+                current: theirs,
+                fields: [{ field, base, current }],
+              },
+            ],
+            missingItems: [],
+          },
+        })
+      },
+    )
+
+    it.each<[string, Partial<RoadmapItem>, Partial<RoadmapItem>, string]>([
+      [
+        "its Welsh alone",
+        { title: { en: "B", cy: "B" } },
+        { title: { en: "B", cy: "B, wedi'i ailenwi" } },
+        "title",
+      ],
+      [
+        "the horizon written of an item still unplaced",
+        { placement: null, writtenHorizon: "Soon" },
+        { placement: null, writtenHorizon: "Someday" },
+        "placement",
+      ],
+      [
+        "a code the organisation list doesn't know",
+        { unknownOrganisationCodes: [] },
+        { unknownOrganisationCodes: ["XYZ"] },
+        "organisationIds",
+      ],
+      [
+        "its tags' Welsh",
+        { tags: [{ en: "Carers", cy: "" }] },
+        { tags: [{ en: "Carers", cy: "Gofalwyr" }], hasWelshTags: true },
+        "tags",
+      ],
+    ])(
+      "refuses the publish when they changed %s, which the field's English doesn't show (STY-049 D2)",
+      (_, loaded, changed, field) => {
+        const mine = { ...b, ...loaded }
+        const theirs = { ...mine, ...changed }
+        const removal = { item: mine, position: 1 }
+
+        const plan = planRoadmapPublish(
+          removing([removal]),
+          snapshotOf([a, theirs, c]),
+          idsOf(),
+        )
+
+        expect(plan.kind === "settled" && plan.outcome).toMatchObject({
+          status: "refused",
+          conflicts: [
+            {
+              subject: "removal",
+              removal,
+              current: theirs,
+              fields: [{ field }],
+            },
+          ],
+        })
+      },
+    )
+
+    it("gives the removal itself, with each field changed in the form's order", () => {
+      const theirs = {
+        ...b,
+        title: { en: "B, renamed", cy: "" },
+        phase: { en: "Beta", cy: "" },
+      }
+      const removal = { item: b, position: 1 }
+
+      const plan = planRoadmapPublish(
+        removing([removal]),
+        snapshotOf([a, theirs]),
+        idsOf(),
+      )
+
+      expect(plan.kind === "settled" && plan.outcome).toEqual({
+        status: "refused",
+        conflicts: [
+          {
+            subject: "removal",
+            removal,
+            current: theirs,
+            fields: [
+              { field: "title", base: "B", current: "B, renamed" },
+              { field: "phase", base: "", current: "Beta" },
+            ],
+          },
+        ],
+        missingItems: [],
+      })
+      expect(
+        plan.kind === "settled" &&
+          plan.outcome.status === "refused" &&
+          plan.outcome.conflicts[0]?.subject === "removal" &&
+          plan.outcome.conflicts[0].removal,
+      ).toBe(removal)
+    })
+  })
+
+  describe("an item already gone (S5)", () => {
+    it("counts one whose ID no row holds as removed, and publishes the rest", () => {
+      expect(
+        planRoadmapPublish(
+          removing([{ item: b, position: 1 }], {
+            roadmap: { vision: { base: "", value: "A vision" } },
+          }),
+          snapshotOf([a, c]),
+          idsOf(),
+        ),
+      ).toEqual(
+        removalsOnly([], {
+          roadmap: [{ field: "vision", value: "A vision" }],
+        }),
+      )
+    })
+
+    it("writes nothing when it was the only change", () => {
+      expect(
+        planRoadmapPublish(
+          removing([{ item: b, position: 1 }]),
+          snapshotOf([a, c]),
+          idsOf(),
+        ),
+      ).toEqual({ kind: "settled", outcome: { status: "published" } })
+    })
+
+    it("refuses one whose ID a row the read skips still holds", () => {
+      const removal = { item: b, position: 1 }
+
+      expect(
+        planRoadmapPublish(
+          removing([removal]),
+          snapshotOf([a, c], [idOf("B")]),
+          idsOf(),
+        ),
+      ).toEqual({
+        kind: "settled",
+        outcome: { status: "refused", conflicts: [], missingItems: [removal] },
+      })
+    })
+
+    it.each<[string, RoadmapItem[]]>([
+      [
+        "a co-lead edited",
+        [
+          createTestRoadmapItem("First"),
+          createTestRoadmapItem("Second", { phase: { en: "Beta", cy: "" } }),
+        ],
+      ],
+      [
+        "a co-lead moved a row past",
+        [createTestRoadmapItem("Second"), createTestRoadmapItem("First")],
+      ],
+      ["a co-lead deleted", [createTestRoadmapItem("First")]],
+    ])("refuses one without an ID that %s, as not found (D3)", (_, current) => {
+      const removal = {
+        item: createTestRoadmapItem("Second"),
+        position: 1,
+      }
+
+      expect(
+        planRoadmapPublish(removing([removal]), snapshotOf(current), idsOf()),
+      ).toEqual({
+        kind: "settled",
+        outcome: {
+          status: "refused",
+          conflicts: [],
+          missingItems: [removal],
+        },
+      })
+    })
+
+    it("refuses one with a repeated ID whose first row no longer holds what was loaded (D3)", () => {
+      const removal = { item: b, position: 1 }
+      const theirs = { ...b, phase: { en: "Beta", cy: "" } }
+
+      expect(
+        planRoadmapPublish(
+          removing([removal]),
+          {
+            ...snapshotOf([a, theirs, { ...b, id: null }]),
+            repeatedIds: new Set([idOf("B")]),
+          },
+          idsOf("newidaaa"),
+        ),
+      ).toEqual({
+        kind: "settled",
+        outcome: { status: "refused", conflicts: [], missingItems: [removal] },
+      })
+    })
+
+    it("removes the first row of a repeated ID that still holds what was loaded, giving the copy a new one", () => {
+      expect(
+        planRoadmapPublish(
+          removing([{ item: b, position: 1 }]),
+          {
+            ...snapshotOf([a, b, { ...b, id: null }]),
+            repeatedIds: new Set([idOf("B")]),
+          },
+          idsOf("newidaaa"),
+        ),
+      ).toEqual(
+        removalsOnly([{ index: 1, item: b }], {
+          ids: [{ index: 2, id: "newidaaa" }],
+        }),
+      )
+    })
+  })
+
+  describe("with a move, a pending order and a new item (S1, S2)", () => {
+    it("moves no row for the removed item, which a moved item need not pass", () => {
+      const moving = item("M", "next")
+
+      expect(
+        planRoadmapPublish(
+          removing([{ item: b, position: 2 }], {
+            items: [
+              {
+                item: moving,
+                position: 1,
+                fields: { placement: { base: "next", value: "now" } },
+              },
+            ],
+          }),
+          snapshotOf([a, moving, b]),
+          idsOf(),
+        ),
+      ).toEqual(
+        removalsOnly([{ index: 2, item: b }], {
+          items: [
+            { index: 1, id: idOf("M"), field: "placement", value: "now" },
+          ],
+        }),
+      )
+    })
+
+    it("leaves the removed item out of its placement's pending order", () => {
+      const order: PlacementOrder = {
+        placement: "now",
+        base: [{ id: idOf("A") }, { id: idOf("B") }, { id: idOf("C") }],
+        items: [{ id: idOf("C") }, { id: idOf("B") }, { id: idOf("A") }],
+      }
+
+      expect(
+        planRoadmapPublish(
+          removing([{ item: b, position: 1 }], { orders: [order] }),
+          snapshotOf([a, b, c]),
+          idsOf(),
+        ),
+      ).toEqual(
+        removalsOnly([{ index: 1, item: b }], {
+          moves: [{ index: 0, after: 2 }],
+          orders: [
+            {
+              placement: "now",
+              items: [idOf("C"), idOf("A")],
+              was: [idOf("A"), idOf("B"), idOf("C")],
+            },
+          ],
+        }),
+      )
+    })
+
+    it("writes only the removal for an order the removal alone makes", () => {
+      const order: PlacementOrder = {
+        placement: "now",
+        base: [{ id: idOf("A") }, { id: idOf("B") }],
+        items: [{ id: idOf("B") }, { id: idOf("A") }],
+      }
+
+      expect(
+        planRoadmapPublish(
+          removing([{ item: b, position: 1 }], { orders: [order] }),
+          snapshotOf([a, b]),
+          idsOf(),
+        ),
+      ).toEqual(
+        removalsOnly([{ index: 1, item: b }], {
+          orders: [
+            {
+              placement: "now",
+              items: [idOf("A")],
+              was: [idOf("A"), idOf("B")],
+            },
+          ],
+        }),
+      )
+    })
+
+    it("sees no co-lead change to an order in an item already gone", () => {
+      const order: PlacementOrder = {
+        placement: "now",
+        base: [{ id: idOf("A") }, { id: idOf("B") }, { id: idOf("C") }],
+        items: [{ id: idOf("C") }, { id: idOf("B") }, { id: idOf("A") }],
+      }
+
+      expect(
+        planRoadmapPublish(
+          removing([{ item: b, position: 1 }], { orders: [order] }),
+          snapshotOf([a, c]),
+          idsOf(),
+        ),
+      ).toEqual(
+        removalsOnly([], {
+          moves: [{ index: 0, after: 1 }],
+          orders: [
+            {
+              placement: "now",
+              items: [idOf("C"), idOf("A")],
+              was: [idOf("A"), idOf("C")],
+            },
+          ],
+        }),
+      )
+    })
+
+    it("inserts a new item before the next item the order keeps, never before the removed one", () => {
+      const order: PlacementOrder = {
+        placement: "now",
+        base: [{ id: idOf("A") }, { id: idOf("B") }, { id: idOf("C") }],
+        items: [
+          { id: idOf("A") },
+          { id: NEW_CLINIC.id },
+          { id: idOf("B") },
+          { id: idOf("C") },
+        ],
+      }
+      const clinic: NewItem = {
+        ...NEW_CLINIC,
+        values: { ...NEW_CLINIC.values, placement: "now" },
+      }
+
+      const plan = planRoadmapPublish(
+        removing([{ item: b, position: 1 }], {
+          orders: [order],
+          newItems: [clinic],
+        }),
+        snapshotOf([a, b, c]),
+        idsOf(),
+      )
+
+      expect(plan.kind === "write" && plan.writes.newItems).toEqual([
+        expect.objectContaining({ id: NEW_CLINIC.id, before: 2 }),
+      ])
+      expect(plan.kind === "write" && plan.writes.removals).toEqual([
+        { index: 1, item: b },
+      ])
+    })
+  })
+})
+
+describe("heldWrites with a removed item (STY-070 S6)", () => {
+  const a = createTestRoadmapItem("A", { id: "aidxxxxx" })
+  const b = createTestRoadmapItem("B", { id: "bidxxxxx" })
+  const nothing: PublishWrites = {
+    roadmap: [],
+    items: [],
+    ids: [],
+    removals: [],
+    moves: [],
+    orders: [],
+    newItems: [],
+  }
+  const written = { ...roadmap, vision: { en: "A vision", cy: "" } }
+  const withVision: PublishWrites = {
+    ...nothing,
+    roadmap: [{ field: "vision", value: "A vision" }],
+  }
+
+  it("holds a removal with an ID when no row holds the ID", () => {
+    const writes = { ...withVision, removals: [{ index: 1, item: b }] }
+
+    expect(heldWrites(writes, { ...snapshotOf([a]), roadmap: written })).toBe(
+      "all",
+    )
+    expect(heldWrites(writes, snapshotOf([a, b]))).toBe("none")
+    expect(heldWrites(writes, snapshotOf([a]))).toBe("some")
+    expect(
+      heldWrites(writes, { ...snapshotOf([a, b]), roadmap: written }),
+    ).toBe("some")
+    // A row the read skips (its title cleared since) still holds it.
+    expect(
+      heldWrites(writes, {
+        ...snapshotOf([a], ["bidxxxxx"]),
+        roadmap: written,
+      }),
+    ).toBe("some")
+  })
+
+  describe("an item without an ID", () => {
+    const first = createTestRoadmapItem("First")
+    const second = createTestRoadmapItem("Second")
+    const third = createTestRoadmapItem("Third")
+    const removing = { ...nothing, removals: [{ index: 1, item: second }] }
+
+    it("is held when its position no longer holds what was loaded, alone", () => {
+      expect(heldWrites(removing, snapshotOf([first, third]))).toBe("all")
+      expect(heldWrites(removing, snapshotOf([first]))).toBe("all")
+      expect(heldWrites(removing, snapshotOf([first, second, third]))).toBe(
+        "none",
+      )
+    })
+
+    it("is held only when every other write is found written", () => {
+      const writes = {
+        ...withVision,
+        removals: [{ index: 1, item: second }],
+      }
+
+      expect(
+        heldWrites(writes, { ...snapshotOf([first, third]), roadmap: written }),
+      ).toBe("all")
+      expect(heldWrites(writes, snapshotOf([first, third]))).toBe("some")
+      expect(heldWrites(writes, snapshotOf([first, second, third]))).toBe(
+        "none",
+      )
+      expect(
+        heldWrites(writes, {
+          ...snapshotOf([first, second, third]),
+          roadmap: written,
+        }),
+      ).toBe("some")
     })
   })
 })

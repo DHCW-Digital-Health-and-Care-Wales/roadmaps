@@ -251,6 +251,11 @@ export function createInMemoryRoadmapRepository(
       const next = before === undefined ? undefined : asRead[before]
       stored.splice(next ? stored.indexOf(next) : stored.length, 0, item)
     }
+    // Last, as the Google adapter deletes a removed item's row (STY-070).
+    for (const { index } of writes.removals) {
+      const at = stored.findIndex((each) => each === asRead[index])
+      if (at >= 0) stored.splice(at, 1)
+    }
   }
 
   /** A row as `findPublishedStateRow` reads it. */

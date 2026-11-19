@@ -228,13 +228,41 @@ export function markedUpdated(
   }
 }
 
-/** One item's pending changes, with what is needed to find it again (ADR-012). */
-export interface ItemChanges {
+/**
+ * An item the roadmap held when last loaded, with what is needed to find it again in a
+ * later read (ADR-012, _Finding what to write_): by its ID, or with none at its place,
+ * holding what it held.
+ */
+export interface ItemTarget {
   /** The item as last loaded. */
   item: RoadmapItem
   /** Its 0-based place among the roadmap's items when last loaded. */
   position: number
+}
+
+/** One item's pending changes, with what is needed to find it again (ADR-012). */
+export interface ItemChanges extends ItemTarget {
   fields: Partial<Record<EditableItemField, FieldChange>>
+}
+
+/**
+ * An item the roadmap holds that the Product Lead has removed and not yet published
+ * (STY-070): publishing deletes its row. Its `item` is the base a co-lead's change is
+ * found by, as a field's is: any field of it a co-lead changes since is a conflict
+ * (STY-049 D2). An edit of the item stays in `RoadmapChanges.items`, beneath the
+ * removal: it is neither published nor counted while the item is removed, and is
+ * pending again once the removal is undone (STY-049 D5).
+ */
+export type ItemRemoval = ItemTarget
+
+/**
+ * Whether two items of one read's changes, an edit's or a removal's, are one item: by
+ * its ID, or by its place with none.
+ */
+export function sameTarget(a: ItemTarget, b: ItemTarget): boolean {
+  return a.item.id !== null || b.item.id !== null
+    ? a.item.id === b.item.id
+    : a.position === b.position
 }
 
 /**
@@ -286,16 +314,20 @@ export interface PlacementOrder {
 
 /**
  * Every pending change to one roadmap: its own fields, its items', the items new to it,
- * in the order they were added, and the order of each placement reordered, one a
- * placement (ADR-012). The items moved to another placement are in the order they were
- * moved, whatever else of `items` lies between: publishing puts them last there in that
- * order (STY-051 D3), unless the placement's order says where (STY-050).
+ * in the order they were added, the order of each placement reordered, one a
+ * placement, and the items removed, one an item (ADR-012). The items moved to another
+ * placement are in the order they were moved, whatever else of `items` lies between:
+ * publishing puts them last there in that order (STY-051 D3), unless the placement's
+ * order says where (STY-050). A removed item stays in any order that names it, so
+ * undoing the removal puts it back where it was, but leaves the order as published
+ * (STY-070 S1).
  */
 export interface RoadmapChanges {
   roadmap: Partial<Record<EditableRoadmapField, FieldChange>>
   items: readonly ItemChanges[]
   newItems: readonly NewItem[]
   orders: readonly PlacementOrder[]
+  removals: readonly ItemRemoval[]
 }
 
 /** A roadmap with nothing pending. */
@@ -304,6 +336,7 @@ export const NO_CHANGES: RoadmapChanges = {
   items: [],
   newItems: [],
   orders: [],
+  removals: [],
 }
 
 /**
@@ -343,8 +376,31 @@ export interface OrderConflict {
   current: readonly { item: OrderedItem; title: LocalisedText }[]
 }
 
-/** What stops a publish for review: a field or an order a co-lead changed too. */
-export type Conflict = FieldConflict | OrderConflict
+/**
+ * An item removed that a co-lead changed since it was loaded (STY-049 D2, STY-070 S4):
+ * anything a field of it holds, its placement and its Welsh included, differs from the
+ * removal's `item`. A co-lead's reorder of its placement alone is none.
+ */
+export interface RemovalConflict {
+  subject: "removal"
+  /** The very removal given. */
+  removal: ItemRemoval
+  /** The item as the publish read it. */
+  current: RoadmapItem
+  /**
+   * Each field the co-lead changed, in the form's order, with its value (`itemValue`)
+   * as loaded beside as read. A field whose two values are the same changed in what
+   * only `current` shows: its Welsh, an unplaced item's horizon as written, or an
+   * organisation code the list doesn't know.
+   */
+  fields: { field: EditableItemField; base: string; current: string }[]
+}
+
+/**
+ * What stops a publish for review: a field or an order a co-lead changed too, or an
+ * item removed that they changed.
+ */
+export type Conflict = FieldConflict | OrderConflict | RemovalConflict
 
 /**
  * What publishing a roadmap's changes came to. Every outcome but `published` wrote
@@ -361,12 +417,12 @@ export type PublishOutcome =
   /** The roadmap is no longer listed; nothing was written. */
   | { status: "roadmap-not-found" }
   /**
-   * A co-lead's change conflicts, or an edited item can no longer be found; nothing was
-   * written, a new item neither, which is never one of either. `missingItems` are the
-   * very `ItemChanges` given.
+   * A co-lead's change conflicts, or an item edited or removed can no longer be found;
+   * nothing was written, a new item neither, which is never one of either.
+   * `missingItems` are the very `ItemChanges` and `ItemRemoval`s given.
    */
   | {
       status: "refused"
       conflicts: Conflict[]
-      missingItems: ItemChanges[]
+      missingItems: (ItemChanges | ItemRemoval)[]
     }

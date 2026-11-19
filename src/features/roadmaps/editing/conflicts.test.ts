@@ -4,8 +4,10 @@ import { orderedItem } from "@/domain/roadmap/placement-order"
 import {
   type FieldConflict,
   type ItemChanges,
+  type ItemRemoval,
   NO_CHANGES,
   type OrderConflict,
+  type RemovalConflict,
   type RoadmapChanges,
 } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
@@ -609,5 +611,54 @@ describe("an order conflict (STY-050)", () => {
 
     expect(taken.orders.map(({ placement }) => placement)).toEqual(["next"])
     expect(taken.roadmap).toBe(both.roadmap)
+  })
+})
+
+describe("a removal's conflict (STY-070 S4)", () => {
+  const removal: ItemRemoval = { item: first.item, position: 0 }
+  const current = { ...first.item, phase: { en: "Beta", cy: "" } }
+  const conflict: RemovalConflict = {
+    subject: "removal",
+    removal,
+    current,
+    fields: [{ field: "phase", base: "", current: "Beta" }],
+  }
+  const removing: RoadmapChanges = { ...changes, removals: [removal] }
+
+  it("keeps the removal from the item found on Keep mine, Remove anyway", () => {
+    expect(keepMine(removing, conflict)).toEqual({
+      ...changes,
+      removals: [{ item: current, position: 0 }],
+    })
+  })
+
+  it("drops the removal on Use theirs, Keep the item, the edits beneath it pending again", () => {
+    const kept = takeTheirs(removing, conflict)
+
+    expect(kept).toEqual(changes)
+    expect(kept.items).toBe(changes.items)
+  })
+
+  it("discards the removal of an item not found, with the edits beneath it", () => {
+    const unidentified: ItemChanges = {
+      item: createTestRoadmapItem("Third"),
+      position: 2,
+      fields: { title: { base: "Third", value: "Third, mine" } },
+    }
+    const missing: ItemRemoval = { item: unidentified.item, position: 2 }
+    const pending: RoadmapChanges = {
+      ...NO_CHANGES,
+      items: [
+        second,
+        { ...unidentified, item: createTestRoadmapItem("Third") },
+      ],
+      removals: [removal, missing],
+    }
+
+    expect(discardItems(pending, [missing])).toEqual({
+      ...NO_CHANGES,
+      items: [second],
+      removals: [removal],
+    })
   })
 })

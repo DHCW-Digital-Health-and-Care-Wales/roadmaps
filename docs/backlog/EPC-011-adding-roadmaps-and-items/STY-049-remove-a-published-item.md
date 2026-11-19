@@ -38,8 +38,9 @@ Remove gains the same dialog (amends STY-046). No repository change: STY-070.
 public roadmap when Sam publishes while Not doing shows readers the work was dropped,
 and offers "Move to Not doing" first, then "Remove", then Cancel
 **And** "Move to Not doing" makes a pending move, as the Move menu does; Cancel, Escape
-and the top-corner close change nothing; the dialog follows the epic's _Closing_ and
-focus rules
+and the top-corner close change nothing; the dialog follows the epic's _Closing_, focus
+and _An expired session_ rules: it only keeps a pending edit, so it works while the
+session has expired
 
 ### S2: A confirmed removal is pending, struck through, with Undo (D1, D6)
 
@@ -90,8 +91,8 @@ edits Sam had under it pending; "Remove anyway" keeps the removal for the next p
 
 ### S7: An item already gone counts as removed (D7)
 
-**Given** Alex has deleted the row of "Fax referrals" by hand, and Sam publishes its
-removal with another change
+**Given** Alex has deleted the row of "Fax referrals", an item with an ID, by hand,
+and Sam publishes its removal with another change
 **When** the publish runs
 **Then** the other change is published and the removal is no longer pending, with no
 "not found" notice for it
@@ -162,7 +163,9 @@ its _Decisions needed_ row.
 - **D6** (owner): a removed card or row shows Undo, with Move and Edit visible but
   disabled, over hiding them or a read-only open.
 - **D7** (owner, Decision 6): an item already gone at publish counts as removed and
-  the rest publishes, over Option 13's "not found" refusal.
+  the rest publishes, over Option 13's "not found" refusal. Narrowed by STY-070 D3
+  (agent): "gone" is no row holding its ID; an item without one that can't be found
+  keeps Option 13's refusal, since a co-lead's edit also makes it "not found".
 - **D8** (owner, Q4 and Decision 7): the removed item leaves its placement's pending
   order; the row is deleted last in the batch, bottom first, so no item needs an ID
   to be removed. Over refusing a removal while an order is pending.
@@ -175,7 +178,8 @@ its _Decisions needed_ row.
 - **D12** (owner, settled here rather than left to STY-070): a lost answer counts the
   removal written when no row holds the item's ID, or, without an ID, when its
   position no longer holds the loaded content and every other write is found
-  written; anything else is unconfirmed and opens the DEF-015 hold.
+  written; nothing written is `network`, as Option 16 has it; anything else is
+  unconfirmed and opens the DEF-015 hold.
 - **D13** (owner, Decision 8): the write is STY-070, ahead of this story.
 - **D14** (owner): no new prototype round: the designs predate STY-065 to STY-068 and
   the dialog as decided, and the build's before/after screenshots are reviewed

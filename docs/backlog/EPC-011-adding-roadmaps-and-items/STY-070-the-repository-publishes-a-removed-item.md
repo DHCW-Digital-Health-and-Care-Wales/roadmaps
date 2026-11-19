@@ -30,7 +30,7 @@ screen and no copy, beyond what the type change forces on the pending-edit rules
 
 ## Acceptance criteria
 
-### S1: A removal is part of a roadmap's pending changes (STY-049 Q1, D5)
+### S1: A removal is part of a roadmap's pending changes (STY-049 D1, D5, D8)
 
 **Given** a roadmap's pending changes and an item the roadmap as read holds, with or
 without an ID, with or without pending field edits
@@ -41,7 +41,7 @@ can be found again as an edited item is (ADR-012, _Finding what to write_)
 with it, and come back when the removal is undone; the item leaves any pending order
 of its placement, and undoing the removal puts it back where it was in that order
 
-### S2: Publishing deletes its row, last (STY-049 Q4, Decision 7)
+### S2: Publishing deletes its row, last (STY-049 D8)
 
 **Given** pending changes that remove "Fax referrals" and also edit cells, move or
 reorder rows and add new rows
@@ -49,10 +49,22 @@ reorder rows and add new rows
 **Then** the same all-or-nothing `batchUpdate` deletes the item's row with
 `deleteDimension`, after every cell and `Item ID` write, move, insert and append,
 removed rows bottom first, so every other request keeps the re-read's row numbers
-**And** an item without an ID is found by its position, as an edited one is, and is
-removed without being given one; no other row's cells are rewritten
+**And** each deletion targets the removed row where it sits once every move, insert
+and append has applied, not its re-read row number; an item without an ID is found by
+its position, as an edited one is, and is removed without being given one; no other
+row's cells are rewritten
 
-### S3: A co-lead's change to the item is a conflict (STY-049 Q2)
+### S3: The tab's last item row is cleared, not deleted (D2)
+
+**Given** a tab whose only non-frozen row in use is the removed item's, such as a
+roadmap the editor created (its copied `Template` keeps one row below the header)
+**When** the roadmap is published
+**Then** that row's cells are cleared instead of the row being deleted, since Google
+refuses to delete every non-frozen row, and the publish succeeds
+**And** a row left without a title is no item (ADR-011), so the roadmap reads with no
+items
+
+### S4: A co-lead's change to the item is a conflict (STY-049 D2)
 
 **Given** a pending removal, and a re-read in which any field the editor reads of
 that item (its `Horizon` included) differs from what was loaded
@@ -63,43 +75,58 @@ each changed field, loaded beside current
 anyway" makes the current row the base and keeps the removal, and "Keep the item"
 drops the removal, leaving its field edits pending to be compared as any edit is
 
-### S4: An item already gone counts as removed (STY-049 Decision 6)
+### S5: An item already gone counts as removed (STY-049 D7)
 
-**Given** a pending removal, and a re-read in which the item can no longer be found
-(ADR-012 Option 13's rules)
+**Given** a pending removal of an item with an ID, and a re-read in which no row of
+the tab holds that ID
 **When** the roadmap is published, or Refresh reads it
 **Then** the removal is no longer pending, as a pending field the re-read already
 holds is not, and the rest of the changes publish
-**And** Option 13 still refuses an edited item that is gone, when it is not removed
+**And** an item without an ID whose position no longer holds what was loaded, or
+whose repeated ID's first row no longer does, is not taken as removed: Option 13
+applies (D3), so nothing is published and Sam is told which item; Option 13 still
+refuses an edited item that is gone
 
-### S5: A lost answer is settled for a removal (STY-049 D12)
+### S6: A lost answer is settled for a removal (STY-049 D12)
 
 **Given** a publish carrying a removal whose answer never arrives (ADR-012 Option 16)
 **When** the adapter re-reads the roadmap
 **Then** the removal counts as written when no row holds the item's ID, or, for an
 item without an ID, when its position no longer holds the loaded content and every
 other write is found written
-**And** anything else, or a failed re-read, is unconfirmed and opens the DEF-015 hold
+**And** a batch found wholly unwritten is `network`, as Option 16 has it; anything
+else, or a failed re-read, is unconfirmed and opens the DEF-015 hold
 
-### S6: Both implementations keep the contract
+### S7: Both implementations keep the contract
 
 **Given** the repository contract test
 **When** it runs against the Sheets adapter and the in-memory double
-**Then** S2 to S5 hold for both, and `listRoadmapItems` no longer returns a removed
+**Then** S2 to S6 hold for both, and `listRoadmapItems` no longer returns a removed
 item
 
 ## Tests
 
-S2–S5 need the adapter against MSW, asserting the requests sent and their order, with
-a removal alone, with edits, a move, a pending order and a new item, and with an item
-without an ID below a moved row.
+S2–S6 need the adapter against MSW, asserting the requests sent and their order, with
+a removal alone, with edits, a move, a pending order and a new item, with a removed
+row below an inserted or moved one, with the only item of a copied `Template` tab,
+and with an item without an ID that a co-lead edited or moved a row past.
 
 ## Decisions
 
 - **D1** (owner, 2026-11-19, STY-049 grilling, Decision 8): the write is its own story
   ahead of STY-049's screen, as STY-040 and STY-045 were, and owns README _What the
   editor writes_ and the ADR-012 amendment.
-- Every other rule here is STY-049's Decisions (D1, D2, D5, D6, D7, D12), which this
+- **D2** (agent, 2026-11-19, review of the grilling's PR): the tab's last non-frozen
+  item row is cleared, not deleted (S3), over inserting a blank row first: Google
+  refuses to delete every non-frozen row, which would refuse a removal STY-049 D9 says
+  works as today; clearing writes only the cells the editor writes, so a column it
+  does not read keeps its value on that row.
+- **D3** (agent, 2026-11-19, review of the grilling's PR): "already gone" is "no row
+  holds its ID" (S5), over every Option 13 rule: an item without an ID, or with a
+  repeated ID, is also "not found" when a co-lead edits it or moves a row past it
+  (STY-051 D8, DEF-017), and taking that as removed would drop the removal silently,
+  past STY-049 D2's conflict, while the item stays public. The owner may overrule.
+- Every other rule here is STY-049's Decisions (D1, D2, D5, D7, D8, D12), which this
   story builds.
 
 ## Starting point

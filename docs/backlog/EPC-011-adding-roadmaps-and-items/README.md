@@ -104,8 +104,8 @@ one possible place without a new kind of write: after the last row.
 6. A roadmap with no items shows one panel with the button, and the publish dialog says
    when the public would see a roadmap with no items (F4). STY-042, STY-046.
 7. **Unchanged:** ADR-012's per-roadmap, all-or-nothing publish, its conflict rules and
-   Refresh; what each field writes (README, _What the editor writes_), apart from the
-   row moves of item 8; English only; Move on an item's card; who may edit (anyone
+   Refresh, apart from a removal's (item 9); what each field writes (README, _What the
+   editor writes_), apart from the row moves of item 8 and the row deletes of item 9; English only; Move on an item's card; who may edit (anyone
    connected, ADR-012 Option 14).
 8. A moved item goes last in its new placement, and publishing moves its row (STY-051).
    A Product Lead reorders a placement's items from each card's Move menu; the order is
@@ -114,6 +114,11 @@ one possible place without a new kind of write: after the last row.
    the wayfinder map
    [Reordering a placement's items](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/102),
    whose tickets each story's Decisions cite.
+9. A Product Lead removes a published item from its card, after a question that offers
+   Not doing first; the removal is pending, struck through with Undo, and publishing
+   deletes its row, last in the write. A co-lead's change to the item is a conflict,
+   and an item already gone counts as removed (STY-070, the write; STY-049, the
+   screen). Settled in the grilling of 2026-11-19.
 
 ## Shared assumptions and contracts
 
@@ -186,6 +191,7 @@ STY-040 adds **Short name** and brings **Roadmap**, **Published roadmap** and
 **Worksheet** (the `Template` entry) up to date. STY-045 brings **Pending edit** and
 **Roadmap item** up to date. **Order** and **Position** were added, and **Pending
 edit** and **Conflict** extended to orders, by the PR that wrote STY-050 and STY-051.
+STY-070 extends **Pending edit** and **Conflict** to a removal.
 
 ## Stories
 

@@ -4,7 +4,7 @@
 - **Question**: how should a Product Lead remove an item that the public site already
   shows, and what should they see when it is published? The designs give the owner
   something to look at before answering
-  [STY-049](../backlog/EPC-011-adding-roadmaps-and-items/STY-049-remove-a-published-item.md#open-questions)'s
+  [STY-049](../backlog/EPC-011-adding-roadmaps-and-items/STY-049-remove-a-published-item.md#decisions)'s
   Q1–Q3.
 - **Scope**: the roadmap's page in this editor: the item's card, what the card opens,
   the pending bar, the publish dialog and the conflict review. The public site is out

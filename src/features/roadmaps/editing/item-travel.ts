@@ -39,9 +39,8 @@ export function travel(kind: TravelKind, update: () => void): void {
     update()
     return
   }
-  // `globals.css` hides a closing menu while items travel: Chrome restyles no
-  // descendant as `:active-view-transition-type` starts to match, but an attribute it
-  // does.
+  // `globals.css` hides a closing menu while items travel, keyed on this attribute
+  // (its comment says why).
   const root = document.documentElement
   root.setAttribute(TRAVELLING, "")
   const transition = document.startViewTransition({

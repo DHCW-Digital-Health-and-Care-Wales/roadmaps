@@ -7,7 +7,15 @@ import {
   AlertDialogContent,
   AlertDialogTitle,
 } from "./alert-dialog"
-import { Dialog, DialogContent, DialogFooter, DialogTitle } from "./dialog"
+import {
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogFooter,
+  DialogForm,
+  DialogHeader,
+  DialogTitle,
+} from "./dialog"
 
 describe("DialogContent's corner close button (STY-068)", () => {
   it("is a button named by the caller's label, its icon hidden from assistive technology (S4)", () => {
@@ -78,6 +86,67 @@ describe("DialogContent's corner close button (STY-068)", () => {
     )
 
     expect(screen.queryByRole("button")).not.toBeInTheDocument()
+  })
+})
+
+describe("a dialog's header, body and footer (STY-076)", () => {
+  it("keeps the body and the footer in the form, so Done submits it, and the header outside it (S1)", () => {
+    render(
+      <Dialog open>
+        <DialogContent closeLabel="Close">
+          <DialogHeader>
+            <DialogTitle>Title</DialogTitle>
+          </DialogHeader>
+          <DialogForm aria-label="Form">
+            <DialogBody>
+              <input aria-label="Field" />
+            </DialogBody>
+            <DialogFooter>
+              <button type="submit">Done</button>
+            </DialogFooter>
+          </DialogForm>
+        </DialogContent>
+      </Dialog>,
+    )
+
+    const form = screen.getByRole("form", { name: "Form" })
+    expect(form).toContainElement(
+      screen.getByRole("textbox", { name: "Field" }),
+    )
+    expect(form).toContainElement(screen.getByRole("button", { name: "Done" }))
+    expect(form).not.toContainElement(
+      screen.getByRole("heading", { name: "Title" }),
+    )
+  })
+
+  it("tabs through the header, the body and the footer in DOM order, then the close button (S7)", async () => {
+    render(
+      <Dialog open>
+        <DialogContent closeLabel="Close" initialFocus={false}>
+          <DialogHeader>
+            <DialogTitle>Title</DialogTitle>
+          </DialogHeader>
+          <DialogForm aria-label="Form">
+            <DialogBody>
+              <input aria-label="Field" />
+            </DialogBody>
+            <DialogFooter>
+              <button type="submit">Done</button>
+            </DialogFooter>
+          </DialogForm>
+        </DialogContent>
+      </Dialog>,
+    )
+
+    const order: string[] = []
+    const field = screen.getByRole("textbox", { name: "Field" })
+    field.focus()
+    for (let step = 0; step < 2; step++) {
+      await userEvent.tab()
+      order.push(document.activeElement?.textContent ?? "")
+    }
+
+    expect(order).toEqual(["Done", "Close"])
   })
 })
 

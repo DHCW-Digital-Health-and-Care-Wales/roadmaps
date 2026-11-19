@@ -46,7 +46,7 @@ for (const [size, viewport] of [
   ["a phone", PHONE],
   ["a desktop", DESKTOP],
 ] as const) {
-  test(`on ${size}, the close button is at the title's row, top right, as the item dialog opens, and scrolls away with the title (S1, S9)`, async ({
+  test(`on ${size}, the close button is at the title's row, top right, as the item dialog opens, and on a phone scrolls away with the title (S1, S9)`, async ({
     page,
   }) => {
     await page.setViewportSize(viewport)
@@ -77,13 +77,13 @@ for (const [size, viewport] of [
     )
     expect(room).toBeLessThanOrEqual(box.x)
 
-    // Scrolled to the foot, the title and the close button have gone and Cancel is there.
+    // Scrolled to the foot, a phone's title and close button have gone, as one piece with
+    // the form; a desktop's are pinned (STY-076), so they stay with Cancel.
     const cancel = dialog.getByRole("button", { name: "Cancel" })
     await cancel.scrollIntoViewIfNeeded()
-    if (viewport === PHONE) {
-      expect(await isInView(page, close)).toBe(false)
-      expect(await isInView(page, title)).toBe(false)
-    }
+    const pinned = viewport === DESKTOP
+    expect(await isInView(page, close)).toBe(pinned)
+    expect(await isInView(page, title)).toBe(pinned)
     await expect(cancel).toBeInViewport()
   })
 }

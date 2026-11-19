@@ -1,13 +1,14 @@
 # STY-076: A Product Lead keeps a dialog's title and buttons in view while its form scrolls
 
-- **Status**: Proposed — grilled with the owner on 2026-11-19
+- **Status**: Done — delivered in the PR below; the owner's grilling of 2026-11-19 settled scope and look
 - **Type**: Feature
 - **Area**: Features/UI + E2E
-- **Epic**: [EPC-019-edit-panels-that-keep-their-buttons-in-view](README.md)
+- **Epic**: [EPC-019-edit-panels-that-keep-their-buttons-in-view](../../EPC-019-edit-panels-that-keep-their-buttons-in-view/README.md)
 - **Depends on**: none
 - **Binding ADRs**: ADR-005, ADR-010
 - **Suggested model**: Sonnet — one shared primitive and two forms, with the rules
   already settled
+- **Delivered**: _(the PR, added once it exists)_
 
 ## Summary
 
@@ -104,6 +105,10 @@ tests with the shared dialog fixtures (CHO-011). Axe stays clean.
   pinned footer, above its buttons.
 - **D6** (agent, 2026-11-19): the adding item's note stays in the body. It is
   information shown as the form opens, not an answer to a press.
+- **D7** (agent, 2026-11-19, delivery): a dialog whose parts are only a header and a
+  footer (the removal question, whose description is in the header) shows one hairline
+  between them, drawn by the footer, rather than two touching. The question keeps its
+  description in the header, not in a body, so its spacing is unchanged at every size.
 
 ## Starting point
 
@@ -118,3 +123,51 @@ popup's `overflow-y-auto` moves to the body at the pinned sizes only. Tailwind's
 
 - The side panel (STY-077), which reuses this layout.
 - Alert dialogs (EPC-019, _Out of scope_).
+
+## Delivery
+
+### Departures
+
+- **S5**: on a phone and a short window, where the popup scrolls as one piece, the
+  adding form's failure sits in the footer too, so it is 12px (`gap-3`) above the
+  buttons and not the 16px of the form's other gaps (agent: the footer is one flex row
+  that wraps, and one place for the notice is simpler than a second layout).
+- **Starting point**: the `<form>` became `DialogForm` (a `form` slot in `dialog.tsx`)
+  rather than each form carrying `flex min-h-0 flex-col` itself, so the two forms and
+  any later one share the column (agent, routine structure).
+
+### Contract for dependents
+
+- **`pinned` variant** (`styles/globals.css`): `sm` wide and 500px tall,
+  `@media (width >= 40rem) and (height >= 500px)`. STY-077's side panel uses it for the
+  same parts.
+- **`dialog.tsx`**: `DialogContent` is header, body and footer. Place `DialogHeader` and
+  `DialogFooter` as before; put what scrolls in `DialogBody`; a form is `DialogForm`
+  holding its `DialogBody` and `DialogFooter` (its header stays outside, in
+  `FormDialog`). Slots: `dialog-header`, `dialog-body`, `dialog-form`, `dialog-footer`.
+  At the pinned size the popup is `overflow-hidden` with no padding; each part carries
+  its own, so a dialog added without the parts has none.
+- **The X** stays a child of the popup, so it is pinned with the header at the pinned
+  size and scrolls with the popup below it.
+- **`AddRoadmapFailed`** takes a `className`; it is the footer's first child.
+- **E2E**: `pinned-dialog.spec.ts` measures by slot. Data source: nothing read or
+  written changes.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                                                     |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `tests/e2e/pinned-dialog.spec.ts` (`on a laptop, a long form's title, close button and buttons stay in view…`); `closing-a-dialog.spec.ts` (`on a desktop, the close button …`); screenshots in the PR                                                      |
+| S2       | `pinned-dialog.spec.ts` (`…stays its content's height and shows no scrollbar when its content fits`, the removal question); the conflict review and the roadmap dialog share `DialogContent` with the two it measures                                       |
+| S3, S4   | `pinned-dialog.spec.ts` (`on a phone, …`, `on a phone held landscape, …`)                                                                                                                                                                                   |
+| S5       | `pinned-dialog.spec.ts` (`…a failed Add a roadmap is said in the footer…`); `roadmaps-page-adding.test.tsx` (`says it in the footer, above Add roadmap and Cancel…`)                                                                                        |
+| S6       | `roadmap-detail-page-adding.test.tsx` (`keeps the note about being unpublished with the fields…`); `pinned-dialog.spec.ts` (`the note about an item being added unpublished …`)                                                                             |
+| S7       | `pinned-dialog.spec.ts` (`a field that takes focus scrolls into the body…`); `dialog.test.tsx` (`tabs through the header, the body and the footer in DOM order…`); `closing-a-dialog.spec.ts` (`Tab from the last control in the footer wraps…`, unchanged) |
+
+Geometry, tests and the layout were written after the code, then each shown red by
+breaking the finished code: the `pinned` variant set to a width no screen has (S1, S2
+and S5 fail; S3 and S4 pass, as the phone is unchanged) and the failure drawn outside
+the footer (the component test for S5). The S6 and S7 tests hold the layout as built
+and were not shown red: S6's note was never in the footer, so its test guards a later
+change; S7's clear-of-the-bars result follows from the parts being flex siblings, not
+overlays.

@@ -293,6 +293,23 @@ describe("The item dialog, adding (STY-046 S2)", () => {
     expect(form.getByRole("status")).toBeEmptyDOMElement()
   })
 
+  it("keeps the note about being unpublished with the fields, not in the footer (STY-076 S6)", async () => {
+    const { user } = await renderPage()
+
+    const form = await openAddItemDialog(user)
+
+    const note = form.getByText(
+      "It stays unpublished until you choose “Publish changes”.",
+    )
+    expect(note.closest('[data-slot="dialog-body"]')).not.toBeNull()
+    expect(note.closest('[data-slot="dialog-footer"]')).toBeNull()
+    expect(
+      form
+        .getByRole("button", { name: "Add item" })
+        .closest('[data-slot="dialog-footer"]'),
+    ).not.toBeNull()
+  })
+
   it("says when it is saved, on a roadmap that isn't published", async () => {
     const { user } = await renderPage({ path: "/roadmaps/productc" })
 

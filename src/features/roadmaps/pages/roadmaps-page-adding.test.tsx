@@ -872,6 +872,27 @@ describe("adding a roadmap from the list (STY-041)", () => {
       },
     )
 
+    it("says it in the footer, above Add roadmap and Cancel, where it stays in view (STY-076 S5)", async () => {
+      const { user } = await renderList(
+        repositoryWith({ write: { fails: "forbidden" } }),
+      )
+      const form = await openDialog(user)
+      await fillIn(user)
+
+      await submit(user)
+
+      const alert = await form.findByRole("alert")
+      const footer = alert.closest('[data-slot="dialog-footer"]')
+      expect(footer).not.toBeNull()
+      expect(footer).toContainElement(
+        form.getByRole("button", { name: "Add roadmap" }),
+      )
+      expect(footer).toContainElement(
+        form.getByRole("button", { name: "Cancel" }),
+      )
+      expect(footer?.firstElementChild).toBe(alert)
+    })
+
     it("says a rate-limited write can be tried again", async () => {
       const addRoadmap = vi
         .fn<RoadmapRepository["addRoadmap"]>()

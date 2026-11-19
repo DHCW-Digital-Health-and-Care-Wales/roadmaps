@@ -8,7 +8,7 @@
 - **Depends on**: STY-071 (hard: the mark it moves)
 - **Binding ADRs**: ADR-002, ADR-010
 - **Suggested model**: Sonnet — layout in two components, held by Playwright geometry
-- **Delivered**: _the PR URL, once raised_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/192
 
 ## Summary
 

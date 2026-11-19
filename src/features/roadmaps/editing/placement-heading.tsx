@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import type { RoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 
 import { ChangedTag } from "./edit-controls"
+import { travel } from "./item-travel"
 import {
   usePendingChanges,
   usePendingChangesStore,
@@ -28,8 +29,8 @@ export interface PlacementHeadingProps {
  * A placement's heading on a roadmap's page and, while its order is pending, the
  * "Order changed" tag and "Undo order" beside it, as an item's card shows "Changed" and
  * "Undo changes" (STY-050 S3). "Undo order" goes with the order it undoes, so focus
- * goes to the heading, and a status message says so; it waits while the roadmap is
- * being published (S15).
+ * goes to the heading, and a status message says so; its items travel to where it puts
+ * them (`travel`, STY-073); it waits while the roadmap is being published (S15).
  */
 export function PlacementHeading({
   roadmapId,
@@ -51,10 +52,14 @@ export function PlacementHeading({
 
   const undo = () => {
     if (held) return
-    store.update(roadmapId, (changes) => undoOrder(changes, placement))
-    onUndone(placement)
-    heading.current?.focus()
-    onAnnounce(t("roadmaps.edit.order.undone", { placement: name }))
+    // The items travel to where the undo puts them, as a move within a placement does
+    // (STY-073); none is newly marked.
+    travel("within", () => {
+      store.update(roadmapId, (changes) => undoOrder(changes, placement))
+      onUndone(placement)
+      heading.current?.focus()
+      onAnnounce(t("roadmaps.edit.order.undone", { placement: name }))
+    })
   }
 
   return (

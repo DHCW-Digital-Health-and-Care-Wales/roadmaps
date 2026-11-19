@@ -2,8 +2,8 @@
 
 - **Status**: Active — design E of the moved item UX analysis (C's slide, then B's
   mark), grilled with the owner on 2026-11-19
-- **Progress**: 3 of 5 terminal (STY-071, STY-072, STY-075); next selectable: STY-073;
-  blocked on: STY-074's grilling (an idea, not needed by the others)
+- **Progress**: 4 of 5 terminal (STY-071, STY-072, STY-073, STY-075); next selectable:
+  none; blocked on: STY-074's grilling (an idea, not needed by the others)
 - **Binding ADRs**: ADR-002, ADR-005, ADR-008, ADR-010
 
 ## Summary
@@ -107,7 +107,7 @@ Each new string is in both catalogues (ADR-008), in the product's voice, through
 | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------- | ---------------------------- | ----- |
 | STY-071 | [A Product Lead sees which item they moved, and where it went](../_archive/EPC-018-seeing-where-a-moved-item-went/STY-071-a-moved-item-is-marked-where-it-lands.md)            | Features/UI + i18n (en + cy) + E2E | —                            | ✅    |
 | STY-072 | [A Product Lead sees a moved item travel to its new place](../_archive/EPC-018-seeing-where-a-moved-item-went/STY-072-a-moved-item-slides-to-its-place.md)                     | Features/UI + E2E                  | STY-071, STY-075 (preferred) | ✅    |
-| STY-073 | [A Product Lead sees the items travel back when they undo an order](STY-073-undo-order-slides-the-items-back.md)                                                               | Features/UI + E2E                  | STY-072                      |       |
+| STY-073 | [A Product Lead sees the items travel back when they undo an order](../_archive/EPC-018-seeing-where-a-moved-item-went/STY-073-undo-order-slides-the-items-back.md)            | Features/UI + E2E                  | STY-072                      | ✅    |
 | STY-074 | [The same motion when adding, removing and discarding items](STY-074-the-same-motion-when-adding-removing-and-discarding.md)                                                   | Features/UI                        | STY-072                      |       |
 | STY-075 | [A Product Lead sees an item's tags together, and still as a row opens](../_archive/EPC-018-seeing-where-a-moved-item-went/STY-075-an-items-tags-sit-together-and-stay-put.md) | Features/UI + E2E                  | STY-071                      | ✅    |
 

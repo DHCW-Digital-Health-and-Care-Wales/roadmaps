@@ -450,8 +450,9 @@
 }
 
 /* A move from the Move menu, as the item travels to where it lands (STY-072,
-   `item-travel.ts`): the items, named by their IDs, glide from where they were, the one
-   moved raised above the others, in about 0.4 seconds within a placement and 0.7 to
+   `item-travel.ts`), and "Undo order", as the items travel back (STY-073): the items,
+   named by their IDs, glide from where they were, the one moved, where there is one,
+   raised above the others, in about 0.4 seconds within a placement and 0.7 to
    another. The rest of the page is not captured: it shows as it is at once, and stays
    live. The travel is drawn only in the room between the stuck header and the foot bar,
    so they stay above it as they do when nothing moves, and take clicks and taps; a press

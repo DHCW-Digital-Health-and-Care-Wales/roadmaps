@@ -9,7 +9,7 @@
 - **Binding ADRs**: none
 - **Suggested model**: Sonnet — the page tests' timings under load, and either faster
   setups or budgets (the test's and Testing Library's waits) that fit them
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/204
 
 ## Summary
 

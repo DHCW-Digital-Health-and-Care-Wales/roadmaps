@@ -9,7 +9,7 @@
 - **Binding ADRs**: ADR-012, ADR-011, ADR-014, ADR-008, ADR-010, ADR-005
 - **Suggested model**: Opus — a new pending state across the card, compact row,
   counts, publish dialog and conflict review
-- **Delivered**: <PR URL>
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/177
 
 ## Summary
 

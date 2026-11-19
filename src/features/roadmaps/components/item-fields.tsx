@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils"
 import { localiseDetails } from "../localise-details"
 import { shortNamesOf } from "../sort-organisations"
 import { CutDetails, CutField } from "./cut-field"
+import { FieldName } from "./field-name"
 
 /** Each field's label, in the order the fields are shown. */
 const fieldLabels = {
@@ -89,7 +90,9 @@ export function ItemFields({
     >
       {fields.map(({ key, value }) => (
         <div key={key} className="flex flex-col gap-0.5">
-          <dt className="font-bold">{t(fieldLabels[key])}</dt>
+          <dt className="font-bold">
+            <FieldName field={key}>{t(fieldLabels[key])}</FieldName>
+          </dt>
           <dd className="wrap-break-word whitespace-pre-line">{value}</dd>
         </div>
       ))}

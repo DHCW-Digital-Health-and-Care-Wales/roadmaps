@@ -1,6 +1,6 @@
 # STY-079: A Product Lead sees a tag icon before "Tags" and a building icon before "Organisations"
 
-- **Status**: Proposed — grilled with the owner on 2026-11-19 (D1–D5)
+- **Status**: Done — delivered in the PR below; grilled with the owner on 2026-11-19 (D1–D5)
 - **Type**: Feature
 - **Area**: Features/UI + i18n (en + cy)
 - **Epic**: [EPC-020-icons-before-tags-and-organisations](README.md)
@@ -8,6 +8,7 @@
 - **Binding ADRs**: ADR-008, ADR-010
 - **Suggested model**: Sonnet — one small icon component placed at eight known sites, the
   rules already settled
+- **Delivered**: _the PR, added once it exists_
 
 ## Summary
 
@@ -185,3 +186,55 @@ _Audited at `b968cd2`._
 - **Icons on a tag itself or an organisation's name.** Only the heading is marked, not
   the badges or names under it.
 - **A stronger or accent-coloured icon.** The owner chose the label's own colour (D4).
+
+## Delivery
+
+### Departures
+
+- **S5, S11 (the refusal's wording)**: the `target` key, `"{{subject}}: {{field}}"`, is
+  replaced by `targetLead`, `"{{subject}}:"`, in both catalogues; the field's name is
+  drawn after it as a node, so the icon can stand before it, and the words the buttons'
+  hidden text reads are built from the same two parts. The English and Welsh read
+  exactly as they did ("First item: Tags", "Eitem gyntaf: Tagiau (Saesneg)"): the
+  copywriter's judgement was that the wording needs no change, only its shape, and
+  that a lead-in with no placeholder for the name is the plainest shape for a name that
+  is not a string (agent, routine; D5 expected the wording to be rebuilt, and it was,
+  as a shape).
+- **Scope**: the icon is chosen by the field's name in `FieldName`
+  (`components/field-name.tsx`), a field's `name` or a card's key, so the form,
+  the card, the review and "What changes" share one table (`tags`, `organisations`,
+  `organisationIds`). `EditFormField.label` stays a string; `EditForm` wraps the label
+  of a field that opens, is fixed or is tags, so the locked Welsh tags are not missed
+  (S4). `OpeningField`, `TagsField` and `FixedField` take their `label` as a node.
+- **Tests**: the page tests are written after the code and shown red by breaking it
+  (below), not test-first. Existing tests that read a label by `getByText(…, { selector:
+"dt" })` or a target line by `/: /` read a label whose words now sit in a span of
+  their own: they read it through `fieldTerm` (`testing/field-term.ts`) and `/:$/`.
+- **S9**: lucide gives its icons `aria-hidden="true"` itself; `FieldName` sets it too, as
+  the app's other icons do, so the property does not rest on the library's default.
+
+### Contract for dependents
+
+- **`FieldName`** (`features/roadmaps/components/field-name.tsx`) takes `field`
+  (optional) and the name as children; a field with no icon renders its children
+  unchanged. A new field that should carry an icon is one line in its table.
+- **`roadmaps.publish.notice.refused.targetLead`** replaces `…refused.target`.
+- **Data source**: nothing read or written changes.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                        |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1, S9   | `roadmap-detail-page-field-icons.test.tsx` (`a card (S1)`)                                                                                                     |
+| S2       | `roadmap-detail-page-field-icons.test.tsx` (`an opened compact row (S2)`)                                                                                      |
+| S3, S4   | `roadmap-detail-page-field-icons.test.tsx` (`the item form (S3, S4)`, the Add form, the locked Welsh tags)                                                     |
+| S5, S6   | `roadmap-detail-page-field-icons.test.tsx` (`the review of a refused publish (S5, S6)`): the line's icon, the buttons' hidden words plain, a removal's labels  |
+| S7       | `roadmap-detail-page-field-icons.test.tsx` (`What changes (S7)`)                                                                                               |
+| S8       | `families-page.test.tsx` (`draws the building icon before its heading…`)                                                                                       |
+| S10      | `tests/e2e/field-icons.spec.ts` (level with the word, as tall as its text, the label's colour, at 1280 and 375 px); observed in both themes in the screenshots |
+| S11      | `roadmap-detail-page-field-icons.test.tsx` (`the Welsh interface (S11)`); `tests/e2e/field-icons.spec.ts` (Welsh card)                                         |
+
+Shown red by breaking the finished code: `FieldName` returning its children with no
+icon fails ten of the new tests across the card, compact row, forms, review, "What
+changes" and Families. Dropping `aria-hidden` from `FieldName` fails none, since lucide
+sets it itself (above).

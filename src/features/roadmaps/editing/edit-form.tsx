@@ -27,6 +27,7 @@ import {
 } from "@/domain/roadmap/item-details"
 import { tagsOf, tagsValue } from "@/domain/roadmap/roadmap-changes"
 
+import { FieldName } from "../components/field-name"
 import { FormField } from "../components/form-field"
 import { ChoiceField, type ChoiceOption } from "./choice-field"
 import { DetailsField } from "./details-field"
@@ -228,16 +229,12 @@ export function EditForm<F extends string>({
           const change = (value: string) => {
             setValues((current) => ({ ...current, [field.name]: value }))
           }
+          // The name of a field that has an icon carries it (STY-079).
+          const name = <FieldName field={field.name}>{field.label}</FieldName>
           const error: FieldError | undefined = errors[field.name]
           const message = error && t(`roadmaps.edit.${error}`)
           if (field.fixed) {
-            return (
-              <FixedField
-                key={field.name}
-                label={field.label}
-                {...field.fixed}
-              />
-            )
+            return <FixedField key={field.name} label={name} {...field.fixed} />
           }
           if (field.options && field.many) {
             const { options } = field
@@ -255,7 +252,7 @@ export function EditForm<F extends string>({
             return (
               <OpeningField
                 key={field.name}
-                label={field.label}
+                label={name}
                 subject={subject}
                 summary={summary(chosen) || null}
                 none={none}
@@ -288,7 +285,7 @@ export function EditForm<F extends string>({
             return (
               <TagsField
                 key={field.name}
-                label={field.label}
+                label={name}
                 // What the form holds, so a field drawn again shows what Done keeps.
                 initial={tagsOf(values[field.name])}
                 inUse={field.tags.inUse}

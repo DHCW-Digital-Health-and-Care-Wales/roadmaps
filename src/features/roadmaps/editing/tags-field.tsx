@@ -13,6 +13,7 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  type ReactNode,
 } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -40,7 +41,7 @@ import { RowButton, RowProbe } from "./tag-row-buttons"
 import { useRowIcons } from "./use-row-icons"
 
 export interface TagsFieldProps {
-  label: string
+  label: ReactNode
   /** The item's tags as the form opened, in order. */
   initial: readonly string[]
   /** The tags the roadmap's other items carry, to offer (S3). */

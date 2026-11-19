@@ -755,7 +755,7 @@ export const cy = {
               "Dewiswch pa un i'w gadw ar gyfer pob un, yna cyhoeddwch eto.",
             save: "Dewiswch pa un i'w gadw ar gyfer pob un, yna cadwch eto.",
           },
-          target: "{{subject}}: {{field}}",
+          targetLead: "{{subject}}:",
           yours: "Eich newid",
           theirs: "Testun presennol",
           orderField: "Trefn",

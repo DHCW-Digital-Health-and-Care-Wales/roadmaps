@@ -37,10 +37,10 @@ not kept.
 
 ## Cause
 
-Not known. Suspected: the check runs before the compact rows have settled, as
+Not known. Suspected: the check runs before the compact rows have settled. The same
+full run failed
 [DEF-016](../_archive/defects/DEF-016-the-item-dialog-s-focus-tour-counts-a-focus-guard-as-a-stop.md)'s
-focus tour reads focus before the dialog has moved it; the same full run failed
-DEF-016's test too.
+test too, whose cause was a focus guard, not timing, so that run does not point to one.
 
 ## Acceptance criteria
 

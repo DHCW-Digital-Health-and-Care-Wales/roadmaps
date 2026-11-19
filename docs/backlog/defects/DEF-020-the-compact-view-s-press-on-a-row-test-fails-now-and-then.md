@@ -36,9 +36,7 @@ next step.
 
 Not known. Suspected: `pressOn` waits for its target to stop moving, but the row's
 height is still changing from the previous press when the next one lands, so the
-press misses the stretched line, as
-[DEF-016](../_archive/defects/DEF-016-the-item-dialog-s-focus-tour-counts-a-focus-guard-as-a-stop.md)'s
-focus tour read focus before the dialog had moved it.
+press misses the stretched line.
 
 ## Acceptance criteria
 

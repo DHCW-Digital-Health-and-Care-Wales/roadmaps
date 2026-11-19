@@ -156,56 +156,69 @@ placement set. Axe stays clean in both placements.
 
 ### Departures
 
-- **Scope**: the preference is `EditPlacement` (`"dialog" | "panel"`) in
-  `src/components/edit-placement/` (preference, context, provider, menu item), provided
-  by `AppProviders` beside the theme, and stored under `roadmaps.edit.placement` as
-  `panel`; a dialog removes the key (agent, routine naming; the record fixed the
-  location, not the names).
-- **S2**: pinned, `DialogBody` and `DialogForm` also `grow`, so the footer sits at the
-  foot of a full-height panel when the form is short (the roadmap forms), where a
-  centred dialog sizes itself to its content and nothing changes (agent: "its buttons at
-  the foot" needs it; the STY-076 pinned layout is otherwise unchanged).
+- **D7**: the prop on `DialogContent` is `position` (`"center" | "right"`), not
+  `placement`, and the preference is `EditSurface` (`"dialog" | "panel"`): the glossary
+  gives **Placement** to where an item appears, and the code and records use that word
+  (agent, from review).
+- **Scope**: the preference is in `src/components/edit-surface/` (preference, context,
+  `use-edit-surface`, provider, menu item), provided by `AppProviders` beside the theme,
+  and stored under `roadmaps.edit.surface` as `panel`; a dialog removes the key (agent,
+  routine naming; the record fixed the location, not the names).
+- **S6**: a side panel the browser can't keep is not chosen: where storage can't be
+  written the menu's choice does nothing and the forms stay dialogs, as the criterion
+  says. The theme, the compact view and the navigation's fold apply their choice for the
+  visit instead; this one does not, since S6 names the fallback (agent, from review).
+- **S2**: pinned, `DialogBody`, `DialogForm` and the add-item wrapper (`AddItemForms`)
+  also `grow`, so the footer sits at the foot of a full-height panel when the form is
+  short (the roadmap forms, or any form on a tall screen), where a centred dialog sizes
+  itself to its content and nothing changes (agent: "its buttons at the foot" needs it;
+  the STY-076 pinned layout is otherwise unchanged).
 - **S1**: icons are lucide's `PanelRightIcon` (the offer) and `AppWindowIcon` (the way
   back) (agent).
 - **S4, S9**: held by `side-panel.spec.ts` against the same fake Sheets and GIS as the
   dialog's own specs, not by parametrising the shared dialog fixtures: the fixtures
-  open a dialog by its heading and focus, which a panel shares, so only the placement
+  open a dialog by its heading and focus, which a panel shares, so only the surface
   switch (`useSidePanel` in `fixtures/look.ts`) was added (agent, routine).
 - **Tests**: the geometry and component tests were written after the code, then shown
-  red by breaking it (below), not test-first.
+  red by breaking it (below), not test-first; the two review fixes (S6's failed write,
+  the add-item wrapper's growth) had their test written and seen red first.
 - **Copy**: the Welsh is machine-assisted, as ever (README, _Languages_): "Golygu mewn
-  panel ochr" and "Golygu mewn deialog".
+  panel ochr" and "Golygu mewn deialog". "Dialog" is not otherwise a reader-facing word
+  here; S5 fixed the wording, so a plainer one is the owner's call.
 
 ### Contract for dependents
 
-- **`DialogContent`** takes `placement?: "center" | "right"` (default `"center"`), set
-  as `data-placement` on the popup. Only `FormDialog` sets it. `right` is the popup
+- **`DialogContent`** takes `position?: "center" | "right"` (default `"center"`), set
+  as `data-position` on the popup. Only `FormDialog` sets it. `right` is the popup
   along the right edge from `sm` up, full height, `max-w-lg`, sliding in from the right
-  (`sm:slide-in-from-right-10`); under `sm` both placements are the bottom sheet.
-- **`useEditPlacement()`** (`components/edit-placement/`) gives `{ placement,
-setPlacement }` and throws outside `EditPlacementProvider`; a test rendering a
-  `FormDialog` wraps it in the provider (`renderWithProviders` already does).
-- **STY-078** removes the losing placement, `EditPlacementProvider`, the menu item, the
-  `editPlacement` strings and the `roadmaps.edit.placement` key.
+  (`sm:slide-in-from-right-10`); under `sm` both positions are the bottom sheet.
+- **`useEditSurface()`** (`components/edit-surface/`) gives `{ surface, setSurface }` and
+  throws outside `EditSurfaceProvider`; a test rendering a `FormDialog` wraps it in the
+  provider (`renderWithProviders` already does).
+- **STY-078** removes the losing surface, `EditSurfaceProvider`, the menu item, the
+  `editSurface` strings and the `roadmaps.edit.surface` key.
 - **Data source**: nothing read or written changes.
 
 ### Scenario evidence
 
-| Scenario | Held by                                                                                                                                                                                                                    |
-| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1       | `edit-placement-menu-item.test.tsx` (`offers the side panel, with an icon…`, `closes the menu and hands focus back…`); `side-panel.spec.ts` (`the account menu offers the side panel…`); the account menu's aria snapshots |
-| S2       | `side-panel.spec.ts` (`on a laptop, an item's form is a panel…`, `a short form's buttons are still at the panel's foot`); `form-dialog.test.tsx`                                                                           |
-| S3       | `side-panel.spec.ts` (`every form dialog is a panel, and a question is still centred`)                                                                                                                                     |
-| S4       | `side-panel.spec.ts` (`a click on the dimmed page does nothing; Cancel, Escape and the close button close the panel…`)                                                                                                     |
-| S5, S6   | `edit-placement-menu-item.test.tsx` (the way back, the kept choice, an unknown value, storage failing to read and to write); `side-panel.spec.ts` (the reload)                                                             |
-| S7, S8   | `side-panel.spec.ts` (`on a phone, …`, `on a short, wide screen, …`) at 390×844 and 844×390                                                                                                                                |
-| S9       | `side-panel.spec.ts` (`the session warning shows centred above the panel…`)                                                                                                                                                |
-| S10      | `side-panel.spec.ts` (`with reduced motion the panel shows in place…`): no animation runs longer than a frame                                                                                                              |
-| S11      | `edit-placement-menu-item.test.tsx` (`names both ways in Welsh`); `side-panel.spec.ts` (`in Welsh, …`)                                                                                                                     |
+| Scenario | Held by                                                                                                                                                                                                                                                                |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `edit-surface-menu-item.test.tsx` (`offers the side panel, with an icon…`, `closes the menu and hands focus back…`); `side-panel.spec.ts` (`the account menu offers the side panel…`); the account menu's aria snapshots; `focus-indicator.spec.ts` (the item's focus) |
+| S2       | `side-panel.spec.ts` (`on a laptop, an item's form is a panel…`, `on a tall screen, a form that fits still has its buttons at the panel's foot…`, `…Add a roadmap's buttons…`); `form-dialog.test.tsx`                                                                 |
+| S3       | `side-panel.spec.ts` (`every form dialog is a panel, and a question is still centred`)                                                                                                                                                                                 |
+| S4       | `side-panel.spec.ts` (`a click on the dimmed page does nothing; Cancel, Escape and the close button close the panel…`)                                                                                                                                                 |
+| S5, S6   | `edit-surface-menu-item.test.tsx` (the way back, the kept choice, an unknown value, storage failing to read and to write); `side-panel.spec.ts` (the reload)                                                                                                           |
+| S7, S8   | `side-panel.spec.ts` (`on a phone, …`, `on a short, wide screen, …`) at 390×844 and 844×390                                                                                                                                                                            |
+| S9       | `side-panel.spec.ts` (`the session warning shows centred above the panel…`)                                                                                                                                                                                            |
+| S10      | `side-panel.spec.ts` (`with reduced motion the panel shows in place…`): no animation runs longer than a frame                                                                                                                                                          |
+| S11      | `edit-surface-menu-item.test.tsx` (`names both ways in Welsh`); `side-panel.spec.ts` (`in Welsh, …`)                                                                                                                                                                   |
 
 Shown red by breaking the finished code: `FormDialog` always setting `center` (the
-`form-dialog.test.tsx` placement test and seven of `side-panel.spec.ts`'s ten tests
-fail), and the stored value never read as `panel` (`keeps the choice in this browser`).
-The phone, reduced-motion and short-window tests pass either way, as those cases are the
-dialog's own layout; they guard a later change. Axe: `accessibility.spec.ts` (`the item dialog as a side
-panel…`) opens the panel at 1280px and 844×390 in both themes with no violations.
+`form-dialog.test.tsx` surface test and seven of `side-panel.spec.ts`'s original ten
+tests fail), and the stored value never read as `panel` (`keeps the choice in this
+browser`). The review fixes were red first: a failed write left the panel chosen (the
+component test), and the add-item wrapper without `grow` left the footer 259px short of
+the panel's foot at 1366×1300 (`on a tall screen, a form that fits…`). The phone,
+reduced-motion and short-window tests pass either way, as those cases are the dialog's
+own layout; they guard a later change. Axe: `accessibility.spec.ts` (`the item dialog as
+a side panel…`) opens the panel at 1280px and 844×390 in both themes with no violations.

@@ -120,11 +120,37 @@ test("on a laptop, an item's form is a panel along the right with its title, clo
   ).not.toBe("rgba(0, 0, 0, 0)")
 })
 
-test("on a laptop, a short form's buttons are still at the panel's foot (S2)", async ({
+test("on a tall screen, a form that fits still has its buttons at the panel's foot, whichever form it is (S2, S3)", async ({
   page,
 }) => {
   await useSidePanel(page)
-  await page.setViewportSize(LAPTOP)
+  await page.setViewportSize({ width: 1366, height: 1300 })
+  await openProductA(page)
+  const forms = [
+    () => openEditItemDialog(page, ITEM),
+    () => openAddItemDialog(page),
+    () => openEditRoadmapDialog(page),
+  ]
+
+  for (const open of forms) {
+    const dialog = await open()
+    await expectPanel(page, dialog)
+    const [footer, panel] = await Promise.all([
+      slot(dialog, "dialog-footer").boundingBox(),
+      dialog.boundingBox(),
+    ])
+    if (!footer || !panel) throw new Error("No box")
+    expect(footer.y + footer.height).toBeCloseTo(panel.y + panel.height, 0)
+    await page.keyboard.press("Escape")
+    await expect(dialog).toBeHidden()
+  }
+})
+
+test("on a tall screen, Add a roadmap's buttons are at the panel's foot (S2)", async ({
+  page,
+}) => {
+  await useSidePanel(page)
+  await page.setViewportSize({ width: 1366, height: 1300 })
 
   const dialog = await openAddRoadmapDialog(page)
 

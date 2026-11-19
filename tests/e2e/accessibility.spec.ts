@@ -142,7 +142,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expectNoAxeViolations(page, theme)
     })
 
-    test("the item dialog as a side panel, a laptop's and a short window's, and the account menu offering it (STY-077)", async ({
+    test("the item dialog as a side panel, a laptop's and a short window's (STY-077)", async ({
       page,
     }) => {
       await page.goto("./#/roadmaps/producta")

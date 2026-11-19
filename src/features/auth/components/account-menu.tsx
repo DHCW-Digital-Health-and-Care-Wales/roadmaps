@@ -1,7 +1,7 @@
 import { CircleUserRoundIcon, LoaderCircleIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
-import { EditPlacementMenuItem } from "@/components/edit-placement/edit-placement-menu-item"
+import { EditSurfaceMenuItem } from "@/components/edit-surface/edit-surface-menu-item"
 import { ThemeMenuItem } from "@/components/theme/theme-menu-item"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,10 +18,11 @@ import { useAuth } from "../use-auth"
 import { useConnectAction } from "../use-connect-action"
 
 /**
- * The header's menu of what a Product Lead seldom changes: the theme, where the forms open, and the session's
- * one action, Disconnect while connected, otherwise Connect (Reconnect after expiry). The
- * state itself is not shown: only a session that needs action asks for it (STY-056 D3).
- * It stays on screen as the session changes, so focus is never lost with its item.
+ * The header's menu of what a Product Lead seldom changes: the theme, where the forms
+ * open, and the session's one action, Disconnect while connected, otherwise Connect
+ * (Reconnect after expiry). The state itself is not shown: only a session that needs
+ * action asks for it (STY-056 D3). It stays on screen as the session changes, so focus is
+ * never lost with its item.
  */
 export function AccountMenu() {
   const { t } = useTranslation()
@@ -47,7 +48,7 @@ export function AccountMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-auto">
         <ThemeMenuItem />
-        <EditPlacementMenuItem />
+        <EditSurfaceMenuItem />
         <DropdownMenuSeparator />
         <SessionMenuItem
           onDisconnect={() => {

@@ -2,7 +2,7 @@ import { screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it } from "vitest"
 
-import { EditPlacementProvider } from "@/components/edit-placement/edit-placement-provider"
+import { EditSurfaceProvider } from "@/components/edit-surface/edit-surface-provider"
 import { ThemeProvider } from "@/components/theme/theme-provider"
 import type { AuthState } from "@/domain/auth/auth-client"
 import type { Language } from "@/i18n"
@@ -23,9 +23,9 @@ async function openMenu(
   renderWithI18n(
     <AuthProvider client={client}>
       <ThemeProvider>
-        <EditPlacementProvider>
+        <EditSurfaceProvider>
           <AccountMenu />
-        </EditPlacementProvider>
+        </EditSurfaceProvider>
       </ThemeProvider>
     </AuthProvider>,
     { language },

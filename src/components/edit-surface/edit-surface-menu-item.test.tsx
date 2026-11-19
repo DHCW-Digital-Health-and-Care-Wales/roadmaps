@@ -10,27 +10,27 @@ import {
 import type { Language } from "@/i18n"
 import { renderWithI18n } from "@/test/render-with-i18n"
 
-import { EditPlacementMenuItem } from "./edit-placement-menu-item"
-import { useEditPlacement } from "./edit-placement-context"
-import { EDIT_PLACEMENT_STORAGE_KEY } from "./edit-placement-preference"
-import { EditPlacementProvider } from "./edit-placement-provider"
+import { EditSurfaceMenuItem } from "./edit-surface-menu-item"
+import { useEditSurface } from "./use-edit-surface"
+import { EDIT_SURFACE_STORAGE_KEY } from "./edit-surface-preference"
+import { EditSurfaceProvider } from "./edit-surface-provider"
 
 /** What a form dialog reads: where the forms open now. */
-function Placement() {
-  return <p data-testid="placement">{useEditPlacement().placement}</p>
+function Surface() {
+  return <p data-testid="surface">{useEditSurface().surface}</p>
 }
 
 function renderMenu(language?: Language) {
   return renderWithI18n(
-    <EditPlacementProvider>
-      <Placement />
+    <EditSurfaceProvider>
+      <Surface />
       <DropdownMenu>
         <DropdownMenuTrigger>Menu</DropdownMenuTrigger>
         <DropdownMenuContent>
-          <EditPlacementMenuItem />
+          <EditSurfaceMenuItem />
         </DropdownMenuContent>
       </DropdownMenu>
-    </EditPlacementProvider>,
+    </EditSurfaceProvider>,
     { language },
   )
 }
@@ -39,9 +39,9 @@ async function openMenu(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole("button", { name: "Menu" }))
 }
 
-const placement = () => screen.getByTestId("placement").textContent
+const surface = () => screen.getByTestId("surface").textContent
 
-describe("EditPlacementMenuItem (STY-077)", () => {
+describe("EditSurfaceMenuItem (STY-077)", () => {
   afterEach(() => {
     localStorage.clear()
     vi.restoreAllMocks()
@@ -56,7 +56,7 @@ describe("EditPlacementMenuItem (STY-077)", () => {
       name: "Edit in a side panel",
     })
 
-    expect(placement()).toBe("dialog")
+    expect(surface()).toBe("dialog")
     expect(item.querySelector("svg")).toHaveAttribute("aria-hidden", "true")
   })
 
@@ -69,7 +69,7 @@ describe("EditPlacementMenuItem (STY-077)", () => {
       await screen.findByRole("menuitem", { name: "Edit in a side panel" }),
     )
 
-    expect(placement()).toBe("panel")
+    expect(surface()).toBe("panel")
     await waitFor(() => {
       expect(screen.queryByRole("menu")).not.toBeInTheDocument()
     })
@@ -89,8 +89,8 @@ describe("EditPlacementMenuItem (STY-077)", () => {
       await screen.findByRole("menuitem", { name: "Edit in a dialog" }),
     )
 
-    expect(placement()).toBe("dialog")
-    expect(localStorage.getItem(EDIT_PLACEMENT_STORAGE_KEY)).toBeNull()
+    expect(surface()).toBe("dialog")
+    expect(localStorage.getItem(EDIT_SURFACE_STORAGE_KEY)).toBeNull()
   })
 
   it("keeps the choice in this browser, so a reload still opens the panel (S6)", async () => {
@@ -100,23 +100,23 @@ describe("EditPlacementMenuItem (STY-077)", () => {
     await user.click(
       await screen.findByRole("menuitem", { name: "Edit in a side panel" }),
     )
-    expect(localStorage.getItem(EDIT_PLACEMENT_STORAGE_KEY)).toBe("panel")
+    expect(localStorage.getItem(EDIT_SURFACE_STORAGE_KEY)).toBe("panel")
     first.unmount()
 
     renderMenu()
     await openMenu(user)
 
-    expect(placement()).toBe("panel")
+    expect(surface()).toBe("panel")
     expect(
       await screen.findByRole("menuitem", { name: "Edit in a dialog" }),
     ).toBeInTheDocument()
   })
 
   it("ignores an unknown stored value (S6)", () => {
-    localStorage.setItem(EDIT_PLACEMENT_STORAGE_KEY, "drawer")
+    localStorage.setItem(EDIT_SURFACE_STORAGE_KEY, "drawer")
     renderMenu()
 
-    expect(placement()).toBe("dialog")
+    expect(surface()).toBe("dialog")
   })
 
   it("opens forms as dialogs where storage can't be read, and reports nothing (S6)", () => {
@@ -125,11 +125,11 @@ describe("EditPlacementMenuItem (STY-077)", () => {
     })
     renderMenu()
 
-    expect(placement()).toBe("dialog")
+    expect(surface()).toBe("dialog")
     expect(screen.queryByRole("alert")).not.toBeInTheDocument()
   })
 
-  it("applies a choice for this visit where storage can't be written, and reports nothing (S6)", async () => {
+  it("keeps forms opening as dialogs where storage can't be written, and reports nothing (S6)", async () => {
     const user = userEvent.setup()
     vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
       throw new DOMException("full", "QuotaExceededError")
@@ -141,7 +141,7 @@ describe("EditPlacementMenuItem (STY-077)", () => {
       await screen.findByRole("menuitem", { name: "Edit in a side panel" }),
     )
 
-    expect(placement()).toBe("panel")
+    expect(surface()).toBe("dialog")
     expect(screen.queryByRole("alert")).not.toBeInTheDocument()
   })
 

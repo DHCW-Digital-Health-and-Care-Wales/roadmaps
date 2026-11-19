@@ -1,7 +1,7 @@
 import { useId, type ReactNode, type RefObject } from "react"
 import { useTranslation } from "react-i18next"
 
-import { useEditPlacement } from "@/components/edit-placement/edit-placement-context"
+import { useEditSurface } from "@/components/edit-surface/use-edit-surface"
 import {
   Dialog,
   DialogContent,
@@ -57,7 +57,7 @@ export function FormDialog({
 }: FormDialogProps) {
   const { t } = useTranslation()
   const titleId = useId()
-  const { placement } = useEditPlacement()
+  const { surface } = useEditSurface()
   return (
     <Dialog
       open={open}
@@ -70,7 +70,7 @@ export function FormDialog({
         finalFocus={opener}
         closeLabel={t("common.close")}
         closeDisabled={busy}
-        placement={placement === "panel" ? "right" : "center"}
+        position={surface === "panel" ? "right" : "center"}
       >
         <DialogHeader>
           <DialogTitle id={titleId}>{title}</DialogTitle>

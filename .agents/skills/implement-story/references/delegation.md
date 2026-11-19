@@ -45,8 +45,8 @@ transcripts into the main context.
 
 Use a fresh reviewer with only the brief for each review. Rebase the branch
 onto the current base (`pull-requests.md`, _Update a branch_), re-run the
-verification, and only then pin the SHAs, or the base-to-head diff shows work
-that merged meanwhile as a revert. Include the user requirements and record, base/head SHAs, the diff command, relevant
+checks `validation.md` sets for that head, and only then pin the SHAs, or the
+base-to-head diff shows work that merged meanwhile as a revert. Include the user requirements and record, base/head SHAs, the diff command, relevant
 verification results, PR metadata the reviewer cannot fetch itself, and the
 authoritative skill path. Omit the implementation conversation and claimed
 verdict. A reviewer must inspect requirements and surrounding code before

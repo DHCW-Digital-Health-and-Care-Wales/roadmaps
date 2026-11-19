@@ -146,8 +146,10 @@ popup's `overflow-y-auto` moves to the body at the pinned sizes only. Tailwind's
   view; the other dialogs' headers are never that tall (agent, from review).
 - **S2**: the add-item dialog's line saying an item was added (after "Add and start
   another") stays outside the form, so its live region is announced at once, and is
-  not in the scrolling body: pinned, it sits under the header in a band of at most a
-  quarter of the screen that scrolls when a long title fills it (agent, from review).
+  not in the scrolling body: pinned, it sits under the header and its repeated title is
+  cut at three lines, so a very long title cannot take the form's room (agent, from
+  review). A scrolling band was tried and dropped: axe flags a scroll area with nothing
+  focusable in it (`scrollable-region-focusable`).
 - **Starting point**: the `<form>` became `DialogForm` (a `form` slot in `dialog.tsx`)
   rather than each form carrying `flex min-h-0 flex-col` itself, so the two forms and
   any later one share the column (agent, routine structure).
@@ -185,7 +187,7 @@ breaking the finished code: the `pinned` variant set to a width no screen has (S
 and S5 fail; S3 and S4 pass, as the phone is unchanged), the failure drawn outside
 the footer (the component test for S5), the add-item dialog's wrapper left as a plain
 block (its test), the header's `max-h` removed (the long-title test) and the add-item wrapper's
-`min-h-0` unconditional with the added-note band unbounded and `w-auto` dropped (four tests: the
+`min-h-0` unconditional with the added-note's title uncut and `w-auto` dropped (four tests: the
 laptop one, the long-title one and the phone and landscape padding ones). The S6 and S7 tests hold the layout as built
 and were not shown red: S6's note was never in the footer, so its test guards a later
 change; S7's clear-of-the-bars result follows from the parts being flex siblings, not

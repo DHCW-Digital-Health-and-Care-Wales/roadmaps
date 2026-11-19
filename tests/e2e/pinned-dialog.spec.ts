@@ -314,13 +314,12 @@ test("on the smallest pinned screen, the add-item dialog keeps its buttons in vi
 
   await dialog.getByRole("button", { name: "Add and start another" }).click()
 
-  const status = dialog.getByRole("status")
-  await expect(status.getByRole("note")).toBeVisible()
-  expect(
-    await status.evaluate(
-      (element) => element.scrollHeight > element.clientHeight,
-    ),
-  ).toBe(true)
+  const note = dialog.getByRole("status").getByRole("note")
+  await expect(note).toBeVisible()
+  // Its title is cut at three lines, so it leaves the form its room.
+  const box = await note.boundingBox()
+  if (!box) throw new Error("No box")
+  expect(box.height).toBeLessThan(120)
   for (const part of [
     dialog.getByRole("heading", { name: "Add an item" }),
     dialog.getByRole("button", { name: "Add item", exact: true }),

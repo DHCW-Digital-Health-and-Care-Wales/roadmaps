@@ -104,12 +104,9 @@ function AddItemForms({
   }
   return (
     // Pinned, a column that can shrink, so the form's body scrolls between the pinned
-    // parts; the line saying what was added is kept in view, and scrolls if it is long.
+    // parts; the line saying what was added stays in view, its title cut at three lines.
     <div className="flex flex-col pinned:min-h-0">
-      <div
-        role="status"
-        className="pinned:max-h-[25dvh] pinned:overflow-y-auto"
-      >
+      <div role="status">
         {last && (
           <DismissibleNotice
             role="note"
@@ -118,7 +115,9 @@ function AddItemForms({
             // Pinned, it sits under the header, in step with the body's padding.
             className="mb-4 pinned:mx-6 pinned:mt-4 pinned:mb-0 pinned:w-auto"
           >
-            <p>{t("roadmaps.edit.addItem.added", { title: last.title })}</p>
+            <p className="pinned:line-clamp-3 pinned:wrap-anywhere">
+              {t("roadmaps.edit.addItem.added", { title: last.title })}
+            </p>
           </DismissibleNotice>
         )}
       </div>

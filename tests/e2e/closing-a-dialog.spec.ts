@@ -5,6 +5,7 @@ import {
   changeItem,
   cornerClose,
   editItemButton,
+  isInView,
   editRoadmapButton,
   openAddItemDialog,
   openAddRoadmapDialog,
@@ -17,7 +18,8 @@ import { connect, expect, test } from "./fixtures/test"
 /**
  * A Product Lead closes a form dialog from the close button at its top right (STY-068),
  * against the fake Sheets API: it shows as the dialog opens, at every width, closes as
- * Cancel does, and scrolls away with the title. The conflict review's own is held in
+ * Cancel does, and on a phone scrolls away with the title (a laptop's stays pinned with
+ * it, STY-076). The conflict review's own is held in
  * `roadmap-detail-page-editing.test.tsx`.
  */
 
@@ -32,14 +34,6 @@ async function openProductA(page: Page, language: "en" | "cy" = "en") {
   await expect(
     page.getByRole("heading", { level: 3, name: ITEM }),
   ).toBeVisible()
-}
-
-/** Whether `locator` lies wholly within the screen as it is now scrolled. */
-async function isInView(page: Page, locator: Locator): Promise<boolean> {
-  const box = await locator.boundingBox()
-  const size = page.viewportSize()
-  if (!box || !size) throw new Error("No box or viewport")
-  return box.y >= 0 && box.y + box.height <= size.height
 }
 
 for (const [size, viewport] of [

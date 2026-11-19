@@ -14,7 +14,8 @@
 // `pinned` variant in globals.css) the header and footer stay put, each set apart by a
 // hairline, and only the body scrolls, so the title, the close button and the buttons
 // stay in view. Narrower or shorter, the whole popup scrolls as one piece, as it did
-// before, and the padding stays the popup's. A dialog with no body (a question: its
+// before, and the padding stays the popup's. A header over two fifths of the screen (a very
+// long title) scrolls itself, so the footer stays in view. A dialog with no body (a question: its
 // description is in the header) has one hairline between its header and its footer.
 import * as React from "react"
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
@@ -126,7 +127,7 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="dialog-header"
       className={cn(
-        "flex flex-col gap-2 text-left pinned:shrink-0 pinned:border-b pinned:border-border pinned:px-6 pinned:pt-6 pinned:pb-4 pinned:has-[+[data-slot=dialog-footer]]:border-b-0",
+        "flex flex-col gap-2 text-left pinned:max-h-[40dvh] pinned:shrink-0 pinned:overflow-y-auto pinned:border-b pinned:border-border pinned:px-6 pinned:pt-6 pinned:pb-4 pinned:has-[+[data-slot=dialog-footer]]:border-b-0",
         className,
       )}
       {...props}
@@ -170,7 +171,7 @@ function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="dialog-footer"
       className={cn(
-        "flex flex-wrap gap-3 pinned:shrink-0 pinned:border-t pinned:border-border pinned:px-6 pinned:py-4",
+        "flex flex-wrap gap-3 pinned:shrink-0 pinned:border-t pinned:border-border pinned:px-6 pinned:pt-4 pinned:pb-6",
         className,
       )}
       {...props}

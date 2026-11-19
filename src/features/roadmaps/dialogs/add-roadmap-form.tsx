@@ -40,9 +40,10 @@ export interface AddRoadmapFormProps {
  * the title and shown with the public address it gives, then a family, a category and a
  * product lead, each optional. "Add roadmap" writes at once: it shows it is working and
  * holds the fields until the write answers. What can't be sent, or is refused, is said
- * at its field, with focus on the first; a failure is said in the footer above the buttons, where
- * the Product Lead is looking and which stays in view (S7, STY-076 S5). After the session has expired, "Add roadmap" asks to
- * reconnect first, then adds what the form then holds (STY-057).
+ * at its field, with focus on the first; a failure is said in the footer above the
+ * buttons, where the Product Lead is looking and which stays in view (S7, STY-076 S5).
+ * After the session has expired, "Add roadmap" asks to reconnect first, then adds what
+ * the form then holds (STY-057).
  */
 export function AddRoadmapForm({
   labelledBy,

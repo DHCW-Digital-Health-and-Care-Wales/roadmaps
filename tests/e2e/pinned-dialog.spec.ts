@@ -3,10 +3,12 @@ import type { Locator, Page } from "@playwright/test"
 import {
   askToRemove,
   cornerClose,
+  isInView,
   openAddItemDialog,
   openAddRoadmapDialog,
   openEditItemDialog,
 } from "./fixtures/dialogs"
+import { words } from "./fixtures/long-fields"
 import { connect, expect, test } from "./fixtures/test"
 
 /**
@@ -41,14 +43,6 @@ function edges(locator: Locator) {
   })
 }
 
-/** Whether `locator` lies wholly within the screen as it is now scrolled. */
-async function isInView(page: Page, locator: Locator): Promise<boolean> {
-  const box = await locator.boundingBox()
-  const size = page.viewportSize()
-  if (!box || !size) throw new Error("No box or viewport")
-  return box.y >= 0 && box.y + box.height <= size.height
-}
-
 test("on a laptop, a long form's title, close button and buttons stay in view while its fields scroll (S1)", async ({
   page,
 }) => {
@@ -76,6 +70,15 @@ test("on a laptop, a long form's title, close button and buttons stay in view wh
     expect(await isInView(page, part)).toBe(true)
   }
   expect(await body.evaluate((element) => element.scrollTop > 0)).toBe(true)
+
+  // Neither pinned part is squeezed by the form: nothing of them is out of reach.
+  for (const part of ["dialog-header", "dialog-footer"]) {
+    expect(
+      await slot(dialog, part).evaluate(
+        (element) => element.scrollHeight <= element.clientHeight,
+      ),
+    ).toBe(true)
+  }
 
   // A hairline sets the header and the footer apart, on the dialog's white.
   expect((await edges(slot(dialog, "dialog-header"))).bottom).toBe("1px")
@@ -208,4 +211,73 @@ test("on a laptop, a field that takes focus scrolls into the body, clear of the 
   if (!lastBox || !header || !footer) throw new Error("No box")
   expect(lastBox.y).toBeGreaterThanOrEqual(header.y + header.height)
   expect(lastBox.y + lastBox.height).toBeLessThanOrEqual(footer.y)
+})
+
+test("on a laptop, the add-item dialog pins too: its buttons stay in view while its fields scroll, and so does the note after an item is added (S1, S2)", async ({
+  page,
+}) => {
+  await page.setViewportSize(LAPTOP)
+  await page.goto("./#/roadmaps/producta")
+  await connect(page)
+  const dialog = await openAddItemDialog(page)
+  const body = slot(dialog, "dialog-body")
+  const parts = [
+    dialog.getByRole("heading", { name: "Add an item" }),
+    cornerClose(dialog),
+    dialog.getByRole("button", { name: "Add item", exact: true }),
+    dialog.getByRole("button", { name: "Add and start another" }),
+    dialog.getByRole("button", { name: "Cancel" }),
+  ]
+
+  expect(
+    await body.evaluate(
+      (element) => element.scrollHeight > element.clientHeight,
+    ),
+  ).toBe(true)
+  for (const part of parts) expect(await isInView(page, part)).toBe(true)
+
+  await dialog.getByRole("textbox", { name: "Title" }).fill("Another item")
+  await dialog
+    .getByRole("combobox", { name: "Horizon or section" })
+    .selectOption({ label: "Next" })
+  await dialog.getByRole("button", { name: "Add and start another" }).click()
+
+  const added = dialog.getByRole("status").getByText("was added.")
+  await expect(added).toBeVisible()
+  expect(await isInView(page, added)).toBe(true)
+  for (const part of parts) expect(await isInView(page, part)).toBe(true)
+  expect(
+    await body.evaluate(
+      (element) => element.scrollHeight > element.clientHeight,
+    ),
+  ).toBe(true)
+})
+
+test("on the smallest pinned screen, a removal question about an item with a very long title keeps its buttons in view (S2)", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 640, height: 500 })
+  await page.goto("./#/roadmaps/producta")
+  await connect(page)
+  const form = await openEditItemDialog(page, ITEM)
+  const title = `Long ${words(80)}`
+  await form.getByRole("textbox", { name: "Title" }).fill(title)
+  await form.getByRole("button", { name: "Done" }).click()
+  await expect(form).toBeHidden()
+
+  const dialog = await askToRemove(page, title)
+
+  const header = slot(dialog, "dialog-header")
+  expect(
+    await header.evaluate(
+      (element) => element.scrollHeight > element.clientHeight,
+    ),
+  ).toBe(true)
+  for (const part of [
+    cornerClose(dialog),
+    dialog.getByRole("button", { name: "Remove", exact: true }),
+    dialog.getByRole("button", { name: "Cancel" }),
+  ]) {
+    expect(await isInView(page, part)).toBe(true)
+  }
 })

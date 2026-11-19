@@ -119,7 +119,7 @@ describe("a dialog's header, body and footer (STY-076)", () => {
     )
   })
 
-  it("tabs through the header, the body and the footer in DOM order, then the close button (S7)", async () => {
+  it("tabs from the body to the footer, then to the close button, in DOM order (S7)", async () => {
     render(
       <Dialog open>
         <DialogContent closeLabel="Close" initialFocus={false}>

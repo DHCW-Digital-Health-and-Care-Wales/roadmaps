@@ -103,14 +103,16 @@ function AddItemForms({
     })
   }
   return (
-    <div>
+    // A column that can shrink, so the form's body scrolls between the pinned parts.
+    <div className="flex min-h-0 flex-col">
       <div role="status">
         {last && (
           <DismissibleNotice
             role="note"
             variant="success"
             Icon={CircleCheckIcon}
-            className="mb-4"
+            // Pinned, it sits under the header, in step with the body's padding.
+            className="mb-4 pinned:mx-6 pinned:mt-4 pinned:mb-0"
           >
             <p>{t("roadmaps.edit.addItem.added", { title: last.title })}</p>
           </DismissibleNotice>

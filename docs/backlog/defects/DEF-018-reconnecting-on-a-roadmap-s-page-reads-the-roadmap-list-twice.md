@@ -1,6 +1,6 @@
 # DEF-018: Reconnecting on a roadmap's page reads the roadmap list twice
 
-- **Status**: In progress — t3/def-020-018-row-press-and-reconnect-reads
+- **Status**: Needs triage — cause found by DEF-020+018 delivery; the owner decides what remains (D2)
 - **Severity**: Low — two extra requests to the data source per reconnect; nothing
   shown is wrong
 - **Area**: Features/UI
@@ -43,6 +43,16 @@ invalidation that refetches.
 
 - `rg -n 'roadmapKeys.list\(\)|useRoadmaps\(|useRoadmap\(' src/features --glob '!*.test.*'`
 
+**Verified, at `a6a9683`** (agent, DEF-020+018 delivery): the suspicion above is wrong.
+With a subscription on the query cache, a reconnect from the alert starts one fetch each
+of the list, the items and the organisations: no observer restarts the list's read, and
+nothing invalidates it. The two list reads in the Actual are not two fetches of one
+query. A roadmap's items are read by `listRoadmapItems`, which re-reads the tab list and
+the roadmap index on every call, then the roadmap's tab, so a roadmap's page is five
+requests: `metadata`, `values:Roadmaps` for the list, then `metadata`, `values:Roadmaps`,
+`values:ProductA` for the items (ADR-011, Option 3, which rejected remembering each id's
+tab). A first load of the page, with no session ending, reads the same five. The Expected is therefore not what the repository does at any load.
+
 ## Acceptance criteria
 
 ### S1: Reconnecting reads each thing once
@@ -56,3 +66,10 @@ invalidation that refetches.
 - **D1** (owner, 2026-11-19, triage in the orchestrator's session): fix, low priority,
   timeboxed to 60 minutes of investigation; if the cause is not verified and a fix in
   hand by then, stop and hand back the findings for the owner to decide.
+- **D2** (agent, 2026-11-19, DEF-020+018 delivery): no change made. The doubled reads are
+  every load's, by ADR-011 Option 3, not a reconnect fault, so S1 holds for the queries
+  and fails for the requests. Remaining, for the owner: Won't fix (accepted, the
+  requests are the price of finding a renamed tab at once; reopen if the quota is hit);
+  or a chore to read the items from the list's own index read, which needs a successor
+  to ADR-011 Option 3 and a repository change. An E2E count of a page's reads is left
+  unwritten until one is chosen, since either one fixes what it would hold.

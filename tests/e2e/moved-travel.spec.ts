@@ -69,7 +69,7 @@ async function recordTravels(page: Page, { withoutApi = false } = {}) {
           travel.scrollAtReady = window.scrollY
           travel.menuShown = [
             ...document.querySelectorAll('[role="menu"]'),
-          ].some((menu) => getComputedStyle(menu).visibility !== "hidden")
+          ].some((menu) => menu.checkVisibility())
           for (const animation of document.getAnimations()) {
             const effect = animation.effect as KeyframeEffect | null
             const name = /^::view-transition-group\((.+)\)$/.exec(
@@ -294,7 +294,7 @@ test.describe("a second move takes over (S3)", () => {
     await expect(move).toBeFocused()
   })
 
-  test("no control is held: the bars take a click as an item travels, and a press on the items ends the travel, so the next reaches them", async ({
+  test("no control is held: the bars take a click as an item travels, and a press between the bars ends the travel, so the next reaches the page", async ({
     page,
   }) => {
     await recordTravels(page)

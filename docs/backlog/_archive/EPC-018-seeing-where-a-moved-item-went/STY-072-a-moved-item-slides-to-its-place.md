@@ -173,10 +173,11 @@ Audited at `e75d846` against react-dom 19.3.1's source:
   is the query `travel` and `revealMoved` gate on.
 - E2E: `tests/e2e/fixtures/moved-items.ts` holds the moved-item helpers both
   `moved-mark.spec.ts` and `moved-travel.spec.ts` use (`itemOf`, `moveButton`,
-  `chooseFromMenu`, `chooseCompact`, `inRoom`). `tests/e2e/moved-travel.spec.ts` records each transition the page starts
-  (`recordTravels`: its types, each group's duration and z-index, the scroll) and
-  holds one in flight (`holdInFlight`). Only items with an ID travel, so a test
-  publishes once first (`publishOnce`).
+  `chooseFromMenu`, `chooseCompact`, `inRoom`).
+- E2E: `tests/e2e/moved-travel.spec.ts` records each transition the page starts
+  (`recordTravels`: its types, each group's duration and z-index, whether a menu
+  showed, the scroll) and holds one in flight (`holdInFlight`). Only items with an ID
+  travel, so a test publishes once first (`publishOnce`).
 
 ### Scenario evidence
 
@@ -184,7 +185,7 @@ Audited at `e75d846` against react-dom 19.3.1's source:
 | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | S1       | `moved-travel.spec.ts` (`a move within a placement travels`: each of the four choices in Cards and Compact, typed `item-move`, the menu gone as it begins, the moved item's group 400 ms and raised, the passed item's group, its new place, the mark, focus on Move, the row or card opaque); `item-travel.test.ts` (typed by how far it goes; `data-travelling` kept until the last travel settles) |
 | S2       | `moved-travel.spec.ts` (`to Later, below the screen`: typed `item-move-across`, 700 ms, the page scrolling while it travels, last in Later, "Moved from Now", in the room between the bars, focus on Move)                                                                                                                                                                                            |
-| S3       | `moved-travel.spec.ts` (`a move from the keyboard while an item travels …`: the first ended as the second began, both moves made, one mark; `no control is held …`: the foot bar's Publish hit as it travels, a press ends the travel, the next move travels)                                                                                                                                         |
+| S3       | `moved-travel.spec.ts` (`a move from the keyboard while an item travels …`: the first ended as the second began, both moves made, one mark; `no control is held …`: the foot bar's Publish hit as it travels, a press between the bars ends the travel, the next move travels)                                                                                                                        |
 | S4       | `moved-travel.spec.ts` (`no travel where none is wanted`: reduced motion, a browser without view transitions, the item dialog); `item-travel.test.ts` (reduced motion, no API)                                                                                                                                                                                                                        |
 | S5       | `moved-travel.spec.ts` (`nothing else travels`: an edit, a view switch, an opened row and a publish start none)                                                                                                                                                                                                                                                                                       |
 | Names    | `item-travel.test.ts` (`travelNames`: IDs and new items' IDs, none without one, none for a repeated ID, distinct names for "Tŷ–1" and its written form)                                                                                                                                                                                                                                               |

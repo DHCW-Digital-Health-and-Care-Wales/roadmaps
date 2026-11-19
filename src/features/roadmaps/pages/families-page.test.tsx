@@ -650,6 +650,25 @@ describe("FamiliesPage organisations (STY-033)", () => {
     expect(headings).toEqual(["Families", "Categories", "Organisations"])
   })
 
+  it("draws the building icon before its heading, hidden from assistive technology, and no other heading an icon (STY-079 S8, S9)", async () => {
+    await organisationsSection()
+
+    const headings = main().getAllByRole("heading", { level: 2 })
+    expect(
+      headings.map((heading) => [
+        heading.textContent,
+        Array.from(heading.querySelectorAll("svg")).map((icon) => [
+          icon.getAttribute("aria-hidden"),
+          icon.classList.contains("lucide-building-complex"),
+        ]),
+      ]),
+    ).toEqual([
+      ["Families", []],
+      ["Categories", []],
+      ["Organisations", [["true", true]]],
+    ])
+  })
+
   it("shows the Welsh full names, sorted as Welsh (S3)", async () => {
     const section = await organisationsSection({ language: "cy" })
 

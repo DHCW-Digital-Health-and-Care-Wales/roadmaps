@@ -16,8 +16,8 @@ itself (`DialogHeader`, `pinned:max-h-[40dvh] pinned:overflow-y-auto`), so a ver
 item title cannot push the buttons out of view. The removal question's header holds only
 its title and description, so the scroll area has nothing focusable in it: where the
 browser does not make such a scroller focusable, a keyboard user cannot read the rest of
-the title, and axe flags it (`scrollable-region-focusable`), as it did a scrolling band
-STY-076 tried and dropped. STY-076 declined it as reachable only with a very long title.
+the title, and axe would flag it (`scrollable-region-focusable`), as it did a scrolling
+band STY-076 tried and dropped. STY-076 declined it as reachable only with a very long title.
 Done is a header that a keyboard user can scroll whenever it scrolls, with the axe spec
 holding that state.
 
@@ -32,8 +32,8 @@ At commit `08c2e3f`.
 | `pinned-dialog.spec.ts`      | at 640×500 an item titled with 80 words makes the removal question's header scroll (`…a removal question … very long title…`) | reachable with a long title         |
 | `accessibility.spec.ts`      | no scenario opens a dialog whose header scrolls                                                                               | axe has not looked at the state     |
 
-To measure first: which of the supported browsers move focus to a scroller with no
-focusable content on Tab, so the fix covers those that do not.
+To measure first: whether axe flags that state, and which of the supported browsers move
+focus to a scroller with no focusable content on Tab, so the fix covers those that do not.
 
 ## Acceptance criteria
 

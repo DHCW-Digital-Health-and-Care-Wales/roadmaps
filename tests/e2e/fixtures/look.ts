@@ -12,6 +12,13 @@ export async function useTheme(page: Page, theme: Theme) {
   }, theme)
 }
 
+/** Starts the page opening its forms as a side panel, as if the user had chosen it earlier (STY-077). */
+export async function useSidePanel(page: Page) {
+  await page.addInitScript(() => {
+    localStorage.setItem("roadmaps.edit.placement", "panel")
+  })
+}
+
 /** Starts the page in `language`, as if the user had chosen it earlier. */
 export async function useLanguage(page: Page, language: Language) {
   await page.addInitScript((value) => {

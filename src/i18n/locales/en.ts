@@ -1138,6 +1138,11 @@ export const en = {
     switchToDark: "Switch to dark theme",
     switchToLight: "Switch to light theme",
   },
+  /** The account menu's item that switches where the forms open (STY-077), named for what it switches to. */
+  editPlacement: {
+    useSidePanel: "Edit in a side panel",
+    useDialog: "Edit in a dialog",
+  },
   language: {
     label: "Language",
   },

@@ -161,9 +161,12 @@ describe("header", () => {
 
     const menu = await openAccountMenu(user)
 
-    expect(menu.getAllByRole("menuitem")).toHaveLength(2)
+    expect(menu.getAllByRole("menuitem")).toHaveLength(3)
     expect(
       menu.getByRole("menuitem", { name: "Switch to dark theme" }),
+    ).toBeInTheDocument()
+    expect(
+      menu.getByRole("menuitem", { name: "Edit in a side panel" }),
     ).toBeInTheDocument()
     expect(
       menu.getByRole("menuitem", { name: "Disconnect" }),

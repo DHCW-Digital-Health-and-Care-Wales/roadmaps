@@ -2,6 +2,7 @@ import { screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it } from "vitest"
 
+import { EditPlacementProvider } from "@/components/edit-placement/edit-placement-provider"
 import { ThemeProvider } from "@/components/theme/theme-provider"
 import type { AuthState } from "@/domain/auth/auth-client"
 import type { Language } from "@/i18n"
@@ -22,7 +23,9 @@ async function openMenu(
   renderWithI18n(
     <AuthProvider client={client}>
       <ThemeProvider>
-        <AccountMenu />
+        <EditPlacementProvider>
+          <AccountMenu />
+        </EditPlacementProvider>
       </ThemeProvider>
     </AuthProvider>,
     { language },
@@ -32,12 +35,15 @@ async function openMenu(
 }
 
 describe("AccountMenu", () => {
-  it("offers the theme and Disconnect while connected (S2)", async () => {
+  it("offers the theme, where the forms open and Disconnect while connected (S2)", async () => {
     const { user, client } = await openMenu(connected)
 
-    expect(screen.getAllByRole("menuitem")).toHaveLength(2)
+    expect(screen.getAllByRole("menuitem")).toHaveLength(3)
     expect(
       screen.getByRole("menuitem", { name: "Switch to dark theme" }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole("menuitem", { name: "Edit in a side panel" }),
     ).toBeInTheDocument()
     await user.click(screen.getByRole("menuitem", { name: "Disconnect" }))
 

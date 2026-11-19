@@ -18,6 +18,11 @@
 // very long title) scrolls itself, so the footer stays in view. A dialog with no body (a
 // question: its description is in the header) has one hairline between its header and
 // its footer.
+//
+// `placement="right"` (STY-077) sets the same dialog along the screen's right edge, full
+// height and as wide, sliding in as the navigation drawer does. It is a placement, not a
+// second component: the forms, the pinned parts and the close button serve both. Under
+// `sm` it is the dialog's bottom sheet either way, so a phone is unchanged.
 import * as React from "react"
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { XIcon } from "lucide-react"
@@ -70,12 +75,21 @@ function DialogOverlay({
   )
 }
 
+/** What a placement adds from `sm` up to the popup's phone layout, the bottom sheet. */
+const PLACEMENT_CLASSES = {
+  center:
+    "sm:inset-x-4 sm:top-1/2 sm:bottom-auto sm:max-w-lg sm:-translate-y-1/2 sm:rounded-lg sm:data-open:zoom-in-95 sm:data-closed:zoom-out-95",
+  right:
+    "sm:inset-y-0 sm:right-0 sm:left-auto sm:mx-0 sm:h-full sm:max-h-none sm:w-full sm:max-w-lg sm:rounded-none sm:border-y-0 sm:border-r-0 sm:data-open:slide-in-from-right-10 sm:data-closed:slide-out-to-right-10",
+} as const satisfies Record<"center" | "right", string>
+
 function DialogContent({
   className,
   children,
   closeLabel,
   closeDisabled = false,
   showCloseButton = true,
+  placement = "center",
   ...props
 }: DialogPrimitive.Popup.Props & {
   /** The corner close button's name, for a screen reader: it shows an icon only. */
@@ -84,14 +98,18 @@ function DialogContent({
   closeDisabled?: boolean
   /** Upstream's switch. Off, `DialogTitle` still keeps its `pe-10` clear of the corner. */
   showCloseButton?: boolean
+  /** Where it sits from `sm` up: in the middle of the screen, or along its right edge. */
+  placement?: "center" | "right"
 }) {
   return (
     <DialogPortal>
       <DialogOverlay />
       <DialogPrimitive.Popup
         data-slot="dialog-content"
+        data-placement={placement}
         className={cn(
-          "fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[calc(100dvh-2rem)] flex-col gap-4 overflow-y-auto rounded-t-lg border border-border bg-popover p-6 text-popover-foreground shadow-popup duration-100 outline-none sm:inset-x-4 sm:top-1/2 sm:bottom-auto sm:max-w-lg sm:-translate-y-1/2 sm:rounded-lg data-open:animate-in data-open:fade-in-0 sm:data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 sm:data-closed:zoom-out-95 pinned:gap-0 pinned:overflow-hidden pinned:p-0",
+          "fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[calc(100dvh-2rem)] flex-col gap-4 overflow-y-auto rounded-t-lg border border-border bg-popover p-6 text-popover-foreground shadow-popup duration-100 outline-none data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0 pinned:gap-0 pinned:overflow-hidden pinned:p-0",
+          PLACEMENT_CLASSES[placement],
           className,
         )}
         {...props}
@@ -142,7 +160,7 @@ function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="dialog-body"
       className={cn(
-        "flex flex-col gap-4 pinned:min-h-0 pinned:overflow-y-auto pinned:px-6 pinned:py-4",
+        "flex flex-col gap-4 pinned:min-h-0 pinned:grow pinned:overflow-y-auto pinned:px-6 pinned:py-4",
         className,
       )}
       {...props}
@@ -159,7 +177,7 @@ function DialogForm({ className, ...props }: React.ComponentProps<"form">) {
     <form
       data-slot="dialog-form"
       className={cn(
-        "flex flex-col gap-4 pinned:min-h-0 pinned:gap-0",
+        "flex flex-col gap-4 pinned:min-h-0 pinned:grow pinned:gap-0",
         className,
       )}
       {...props}

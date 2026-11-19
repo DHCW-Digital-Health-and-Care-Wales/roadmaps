@@ -8,9 +8,12 @@
  * that order (STY-049 D5, D8), so undoing the removal brings both back.
  */
 
-import { findEditedItem, itemHoldsLoaded } from "./find-edited-item"
 import {
-  EDITABLE_ITEM_FIELDS,
+  changedFields,
+  findEditedItem,
+  itemHoldsLoaded,
+} from "./find-edited-item"
+import {
   type ItemRemoval,
   type ItemTarget,
   itemValue,
@@ -143,8 +146,9 @@ interface RemovalSnapshot {
  * an ID no row holds is gone, which counts as removed (S5); one with an ID a row the
  * read skips still holds, one without an ID whose position no longer holds what was
  * loaded, and one whose repeated ID's first row no longer does are missing (D3). An
- * item found whose fields differ from what was loaded is a conflict (S4); one found
- * anywhere else in its roadmap is not.
+ * item found that holds anything else than was loaded, in any field, its Welsh
+ * included, is a conflict (`changedFields`, S4); one found anywhere else in its
+ * roadmap is not.
  */
 export function planRemovals(
   removals: readonly ItemRemoval[],
@@ -170,11 +174,11 @@ export function planRemovals(
       else planned.missing.push(removal)
       continue
     }
-    const fields = EDITABLE_ITEM_FIELDS.flatMap((field) => {
-      const base = itemValue(removal.item, field)
-      const now = itemValue(current, field)
-      return base === now ? [] : [{ field, base, current: now }]
-    })
+    const fields = changedFields(removal.item, current).map((field) => ({
+      field,
+      base: itemValue(removal.item, field),
+      current: itemValue(current, field),
+    }))
     if (fields.length > 0) {
       planned.conflicts.push({ subject: "removal", removal, current, fields })
     } else {

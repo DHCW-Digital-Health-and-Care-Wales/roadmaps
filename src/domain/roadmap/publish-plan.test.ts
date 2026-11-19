@@ -2022,6 +2022,58 @@ describe("a removed item (STY-070)", () => {
       },
     )
 
+    it.each<[string, Partial<RoadmapItem>, Partial<RoadmapItem>, string]>([
+      [
+        "its Welsh alone",
+        { title: { en: "B", cy: "B" } },
+        { title: { en: "B", cy: "B, wedi'i ailenwi" } },
+        "title",
+      ],
+      [
+        "the horizon written of an item still unplaced",
+        { placement: null, writtenHorizon: "Soon" },
+        { placement: null, writtenHorizon: "Someday" },
+        "placement",
+      ],
+      [
+        "a code the organisation list doesn't know",
+        { unknownOrganisationCodes: [] },
+        { unknownOrganisationCodes: ["XYZ"] },
+        "organisationIds",
+      ],
+      [
+        "its tags' Welsh",
+        { tags: [{ en: "Carers", cy: "" }] },
+        { tags: [{ en: "Carers", cy: "Gofalwyr" }], hasWelshTags: true },
+        "tags",
+      ],
+    ])(
+      "refuses the publish when they changed %s, which the field's English doesn't show (STY-049 D2)",
+      (_, loaded, changed, field) => {
+        const mine = { ...b, ...loaded }
+        const theirs = { ...mine, ...changed }
+        const removal = { item: mine, position: 1 }
+
+        const plan = planRoadmapPublish(
+          removing([removal]),
+          snapshotOf([a, theirs, c]),
+          idsOf(),
+        )
+
+        expect(plan.kind === "settled" && plan.outcome).toMatchObject({
+          status: "refused",
+          conflicts: [
+            {
+              subject: "removal",
+              removal,
+              current: theirs,
+              fields: [{ field }],
+            },
+          ],
+        })
+      },
+    )
+
     it("gives the removal itself, with each field changed in the form's order", () => {
       const theirs = {
         ...b,

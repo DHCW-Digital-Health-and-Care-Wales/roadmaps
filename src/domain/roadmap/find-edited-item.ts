@@ -122,6 +122,38 @@ function sameContent(
 }
 
 /**
+ * Each field, in the form's order, whose content differs between two reads of an item,
+ * as `itemHoldsLoaded` compares content: its English and Welsh, a placement with its
+ * horizon as written, organisations as a set with the codes the list doesn't know, and
+ * tags and details with their Welsh, details as the list the card shows (STY-070 S4).
+ */
+export function changedFields(
+  loaded: RoadmapItem,
+  current: RoadmapItem,
+): EditableItemField[] {
+  return EDITABLE_ITEM_FIELDS.filter(
+    (field) =>
+      !sameValue(fieldContent(loaded, field), fieldContent(current, field)),
+  )
+}
+
+/** All an item holds for `field`, as `changedFields` compares it. */
+function fieldContent(item: RoadmapItem, field: EditableItemField): unknown {
+  switch (field) {
+    case "placement":
+      return [item.placement, item.writtenHorizon]
+    case "tags":
+      return [item.tags, item.hasWelshTags]
+    case "organisationIds":
+      return [itemValue(item, field), item.unknownOrganisationCodes]
+    case "details":
+      return [shownDetails(item), item.hasWelshDetails]
+    default:
+      return item[field]
+  }
+}
+
+/**
  * Whether a field's Welsh is known both as loaded and as edited to `value`: a read
  * leaves out the Welsh of a field with no English.
  */

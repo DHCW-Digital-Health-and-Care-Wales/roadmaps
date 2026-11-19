@@ -160,13 +160,13 @@ Audited at `3cd6b8f`.
 
 ### Departures
 
-- **S4: "any field the editor reads" is each field the editor edits** (agent), the
-  eight of `EDITABLE_ITEM_FIELDS`, compared as a publish compares an edit
-  (`itemValue`): its English text, its placement, its tags in order, its
-  organisations as a set and its details as the list they show as. A co-lead's change
-  to Welsh text alone, or to the written horizon of an item that stays unplaced, is no
-  conflict, since the review shows each changed field beside its current value and
-  those have no field to show. The owner may overrule in this PR.
+- **S4: "any field the editor reads" is all a field holds** (agent): its English and
+  Welsh, a placement with its horizon as written, organisations with the codes the list
+  doesn't know, tags and details with their Welsh (`changedFields`). The conflict gives
+  each changed field's English value as loaded and as read; one whose English reads
+  the same changed in what only the item read shows, which the review (STY-049 S6)
+  takes from `current`. A first build compared English alone; Sol's review held that
+  to D2's words.
 - **S5: an ID that only a row the read skips holds** (agent): a row a co-lead cleared
   of its title still holds the ID, so the publish finds the item neither gone nor
   present and refuses it as not found (Option 13), as it does an edited item there.
@@ -180,8 +180,7 @@ Audited at `3cd6b8f`.
   `settlePublished` drops a sent removal with its item's edits, `reconcileItems` calls
   `reconcileRemovals`, `countChanges` counts a removal (or the store would forget a
   roadmap whose only change is one), `discardItems` drops a missing removal with its
-  item's edits,
-  and "Keep mine" and "Use theirs" on a removal's conflict are "Remove anyway" and
+  item's edits, and "Keep mine" and "Use theirs" on a removal's conflict are "Remove anyway" and
   "Keep the item". `sameTarget` moved from `pending-changes.ts` to the domain, as
   `planRemovals` needs it.
 - **Test order** (agent): the publish plan's tests, and `settlePublished`'s and
@@ -216,8 +215,8 @@ target)` says whether an item is removed. Neither touches `items` or `orders`.
   conflict and form. `keepMine` on it is "Remove anyway" (`removeAnyway`: the current
   item becomes the base) and `takeTheirs` is "Keep the item" (`undoRemoval`).
   `discardItems` drops a missing removal and its item's edits.
-- **Refresh and publish settle a removal**: `reconcileItems` drops one whose item, with
-  an ID, the read no longer holds, with its item's edits, and moves one found to its
+- **Refresh and publish settle a removal**: `reconcileItems` drops one whose item (with
+  an ID) the read no longer holds, along with that item's edits, and moves one found to its
   new position;
   `settlePublished` drops a sent one with its item's edits.
 - **`PublishWrites.removals`** (`{ index, item }`, the item as the publish read it)
@@ -235,7 +234,7 @@ target)` says whether an item is removed. Neither touches `items` or `orders`.
 | S1       | `src/domain/roadmap/item-removal.test.ts` (`removeItem and undoRemoval`); `pending-changes-store.test.ts` (`keeps a roadmap whose only change is a removal (STY-070 S1)`); `pending-changes.test.ts` (`is one pending change, its item's edits beneath it none (STY-049 D5)`); `src/domain/roadmap/publish-plan.test.ts` (`publishes none of the item's edits…`, `leaves the removed item out of its placement's pending order`); `src/features/roadmaps/editing/pending-changes.test.ts` (`a removed item (STY-070)`); contract `deletes it in the one write with every other change…`, `leaves the removed item out of its placement's pending order (S1)`                                                      |
 | S2       | `publish-plan.test.ts` (`a removed item (STY-070)`); `google-sheets-roadmap-repository.test.ts` (`a removed item's row (STY-070)`: alone, last after cells, a move and an append, below an inserted row, without an ID)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | S3       | `google-sheets-roadmap-repository.test.ts` (`every row of a copied Template's grid (S3)`: one item, several, beside an append, a spare row); `tests/fixtures/sheets/apply-batch-update.test.ts` (`applyBatchUpdate removing a roadmap tab's rows (STY-070)`); contract `leaves the roadmap no items but new ones…`                                                                                                                                                                                                                                                                                                                                                                                                |
-| S4       | `publish-plan.test.ts` (`a co-lead's change to the item (S4)`, `finds it by its ID wherever a co-lead's reorder has put it…`); `item-removal.test.ts` (`removeAnyway`); `src/features/roadmaps/editing/conflicts.test.ts` (`a removal's conflict (STY-070 S4)`); contract `a co-lead's change to the item (S4)`                                                                                                                                                                                                                                                                                                                                                                                                   |
+| S4       | `publish-plan.test.ts` (`a co-lead's change to the item (S4)`, its Welsh, an unplaced item's written horizon, an unknown organisation code and Welsh tags included, `finds it by its ID wherever a co-lead's reorder has put it…`); `item-removal.test.ts` (`removeAnyway`); `src/features/roadmaps/editing/conflicts.test.ts` (`a removal's conflict (STY-070 S4)`); contract `a co-lead's change to the item (S4)`, its Welsh title alone included                                                                                                                                                                                                                                                              |
 | S5       | `publish-plan.test.ts` (`an item already gone (S5)`); `item-removal.test.ts` (`reconcileRemovals`); `pending-changes.test.ts` (`is no longer pending over a read…`); `conflicts.test.ts` (`discards the removal of an item not found…`); adapter `sends nothing for an item without an ID that…`; contract `an item already gone (S5)`                                                                                                                                                                                                                                                                                                                                                                            |
 | S6       | `publish-plan.test.ts` (`heldWrites with a removed item (STY-070 S6)`); contract `a write whose answer is lost (S6)`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | S7       | `src/domain/roadmap/testing/removed-item-contract.ts`, run by `in-memory-roadmap-repository.test.ts` and `google-sheets-roadmap-repository.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |

@@ -139,10 +139,10 @@ const REQUIRED_FIELDS: ReadonlySet<string> = new Set(["title"])
  * in a move or an order, unless a co-lead changed any of its fields, which is a
  * conflict, or it can't be found; one whose ID no row holds is removed already
  * (`planRemovals`, STY-070). Throws `AppError('unknown')` for a blank title, a
- * placement that is none of the six, an organisation the list doesn't hold, a `Last
- * updated` that is no `YYYY-MM-DD` date or two new items with one ID, which callers
- * never send, and `AppError('invalid-data')` for a family or category chosen while its
- * list is missing.
+ * placement that is none of the six, an organisation the list doesn't hold, a
+ * `Last updated` that is no `YYYY-MM-DD` date or two new items with one ID, which
+ * callers never send, and `AppError('invalid-data')` for a family or category chosen
+ * while its list is missing.
  */
 export function planRoadmapPublish(
   changes: RoadmapChanges,

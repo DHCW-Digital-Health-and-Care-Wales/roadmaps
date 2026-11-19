@@ -199,6 +199,13 @@ export function describeRemovedItems(
           "Referrals by secure email.",
         ],
         ["its horizon", { placement: "later" }, "placement", "now", "later"],
+        [
+          "its Welsh title alone",
+          { title: { en: "Fax referrals", cy: "Atgyfeiriadau ffacs" } },
+          "title",
+          "Fax referrals",
+          "Fax referrals",
+        ],
       ])(
         "writes nothing when they changed %s, and says which field, loaded beside current",
         async (_, changed, field, base, current) => {

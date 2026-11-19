@@ -378,8 +378,8 @@ export interface OrderConflict {
 
 /**
  * An item removed that a co-lead changed since it was loaded (STY-049 D2, STY-070 S4):
- * any field of it, its placement included, differs from the removal's `item`. A
- * co-lead's reorder of its placement alone is none.
+ * anything a field of it holds, its placement and its Welsh included, differs from the
+ * removal's `item`. A co-lead's reorder of its placement alone is none.
  */
 export interface RemovalConflict {
   subject: "removal"
@@ -387,7 +387,12 @@ export interface RemovalConflict {
   removal: ItemRemoval
   /** The item as the publish read it. */
   current: RoadmapItem
-  /** Each field the co-lead changed, in the form's order, as loaded beside as read. */
+  /**
+   * Each field the co-lead changed, in the form's order, with its value (`itemValue`)
+   * as loaded beside as read. A field whose two values are the same changed in what
+   * only `current` shows: its Welsh, an unplaced item's horizon as written, or an
+   * organisation code the list doesn't know.
+   */
   fields: { field: EditableItemField; base: string; current: string }[]
 }
 

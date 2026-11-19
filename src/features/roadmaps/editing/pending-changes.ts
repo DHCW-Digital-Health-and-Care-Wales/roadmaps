@@ -244,7 +244,8 @@ function noChoiceHeld(
  * was loaded with, which a publish checks a repeated ID by (ADR-012): the entry only
  * takes the item's ID if it had none, and the value of each field it drops. A new item
  * the read holds is no longer pending (`dropPublishedNewItems`), nor is a removal of an
- * item it no longer holds, and a removal found follows its item (`reconcileRemovals`).
+ * item it no longer holds, with that item's edits, and a removal found follows its item
+ * (`reconcileRemovals`).
  */
 export function reconcileItems(
   changes: RoadmapChanges,

@@ -1184,7 +1184,7 @@ describe("a removed item (STY-070)", () => {
     ])
 
     expect(reconciled.removals).toEqual([{ item: secondRead, position: 1 }])
-    // The edit beneath the removal of the item gone goes with it (review round 1).
+    // S5: the edits beneath the removal of an item gone go with it.
     expect(reconciled.items).toEqual([])
     expect(reconcileItems(removed, [first, secondRead]).removals).toEqual([
       { item: first, position: 0 },

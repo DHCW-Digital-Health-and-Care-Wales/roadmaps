@@ -454,9 +454,9 @@ STY-049's unless named otherwise.
   needs an ID to be removed and an item without one is never given one. When the
   removed rows are every non-frozen row of the grid, the top one is cleared of every
   cell instead, since Google keeps one non-frozen row in every tab (STY-070 D2, agent).
-- **A co-lead's change to the item is a conflict** (D2): any field the editor edits,
-  its placement included, that differs from what was loaded publishes nothing, and the
-  review shows each such field, current beside the removal. A co-lead's reorder of the
+- **A co-lead's change to the item is a conflict** (D2): anything a field of it holds
+  that differs from what was loaded, its placement and its Welsh included, publishes
+  nothing, and the review shows each such field, current beside the removal. A co-lead's reorder of the
   placement alone is not one. Keeping the removal makes the current item its base;
   keeping the item drops the removal, and its edits are then compared as any edit is.
 - **An item already gone counts as removed** (D7): one with an `Item ID` that no row of

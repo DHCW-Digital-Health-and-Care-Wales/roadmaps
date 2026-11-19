@@ -41,15 +41,16 @@ working order, and grade and report findings as it sets.
   `cn(buttonVariants())`; shadcn `Alert` forces icon colour with
   `*:[svg]:text-current`; Base UI's `focusableWhenDisabled` sets
   `data-disabled`, not `:disabled`, so `disabled:` variants do not apply; a
-  Base UI `render={<Link/>}` button adds `role="button"`). A visual no-op needs
-  computed-style or visual evidence. Hold UI to WCAG 2.2 AA: accessible names
-  that contain their visible text (the language switcher's "Language English"
-  keeps a space node), native structure and landmarks, live regions (above),
-  `aria-busy`, focus order and visible focus,
-  focus management in `AppShell` (focus moves to `<main>` after in-app
-  navigation, and when the focused control inside `<main>` is removed; the skip
-  link focuses `<main>` because hash history owns the fragment), menu and dialog
-  keyboard behavior, contrast in light and dark, and
+  Base UI `render={<Link/>}` button adds `role="button"`). A visual no-op, or a
+  rule that carries behaviour (hiding, showing, raising), needs computed-style
+  or visual evidence: a selector that never matches passes every test that does
+  not look. Hold UI to WCAG 2.2 AA: accessible names that contain their visible
+  text (the language switcher's "Language English" keeps a space node), native
+  structure and landmarks, live regions (above), `aria-busy`, focus order and
+  visible focus, focus management in `AppShell` (focus moves to `<main>` after
+  in-app navigation, and when the focused control inside `<main>` is removed;
+  the skip link focuses `<main>` because hash history owns the fragment), menu
+  and dialog keyboard behavior, contrast in light and dark, and
   `prefers-reduced-motion`. Components under `components/ui/` stay close to
   upstream shadcn (Base UI flavour, no Radix); hand-rolled competing primitives
   are a finding.

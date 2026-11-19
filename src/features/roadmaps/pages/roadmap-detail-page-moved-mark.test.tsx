@@ -230,6 +230,24 @@ describe("A move to another placement (S2, S5)", () => {
   })
 })
 
+describe("The page scrolls to the moved item (S4)", () => {
+  it("as focus comes to it after a move within its list, the first move's included", async () => {
+    const { user } = await renderPage()
+    const scrolled = vi.spyOn(Element.prototype, "scrollIntoView")
+
+    await chooseFromMenu(user, "Delta", "To the top")
+    // Two frames on, once the menu has let go of the page.
+    for (let frame = 0; frame < 3; frame++) {
+      await new Promise((resolve) => requestAnimationFrame(resolve))
+    }
+
+    const delta = main()
+      .getByRole("heading", { level: 3, name: "Delta" })
+      .closest("li")
+    expect(scrolled.mock.contexts).toContain(delta)
+  })
+})
+
 describe("One mark (S6)", () => {
   it("goes to the item moved next", async () => {
     const { user } = await renderPage()
@@ -457,6 +475,21 @@ describe("What clears the mark (S8)", () => {
     await chooseFromMenu(user, "Delta", "Up one")
     await chooseFromMenu(user, "Delta", "Down one")
     expect(marked()).toEqual([["Delta", "Moved down"]])
+
+    await refreshRoadmap(user)
+
+    await waitFor(() => {
+      expect(marked()).toEqual([])
+    })
+  })
+
+  it("is cleared by a Refresh after a move within a placement that came to no change, though the item's move there is still pending", async () => {
+    const { user } = await renderPage()
+    await chooseFromMenu(user, "Delta", "Later")
+    await chooseFromMenu(user, "Alpha", "Later")
+    await chooseFromMenu(user, "Alpha", "Up one")
+    await chooseFromMenu(user, "Alpha", "Down one")
+    expect(marked()).toEqual([["Alpha", "Moved down"]])
 
     await refreshRoadmap(user)
 

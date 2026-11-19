@@ -100,7 +100,7 @@ export function useMovedMark({
   const [state, setState] = useState<MarkState | null>(null)
 
   if (state) {
-    const { key, to } = state.mark
+    const { key, move, to } = state.mark
     const where = shownPlace(groups, key)
     const published = notice !== state.notice && notice?.kind === "published"
     const read = readAt !== state.readAt
@@ -108,14 +108,18 @@ export function useMovedMark({
     if (!where || published) setState(null)
     else if (read || !samePlace(where, state.where)) {
       // Its move is pending while the item is in the placement the move left it in and
-      // something pending puts it where it shows there: the whole of a new item, its own
-      // pending placement, or the placement's order.
+      // what the move made is still pending: a move within it, the placement's order; a
+      // move to it, the whole of a new item, its own pending placement, or, for one moved
+      // back where it was read, the order that keeps it where it went.
       const item = pageItems.find((each) => each.key === key)
+      const ordered = hasPendingOrder(changes?.orders, to)
       const pending =
         where.placement === to &&
-        (item?.newItemId !== undefined ||
-          item?.entry?.fields.placement !== undefined ||
-          hasPendingOrder(changes?.orders, to))
+        (move.kind !== "placement"
+          ? ordered
+          : item?.newItemId !== undefined ||
+            item?.entry?.fields.placement !== undefined ||
+            ordered)
       setState(pending ? { ...state, where, readAt } : null)
     }
   }

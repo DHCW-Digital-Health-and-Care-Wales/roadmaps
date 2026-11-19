@@ -154,21 +154,23 @@ export function EditableItem({
     control.current?.focus({ preventScroll: focusRequest === "move" })
     onFocused()
   }, [focusRequest, editButton, onFocused])
-  // The mark the page last scrolled to: each move's once, as focus first comes to it,
-  // and only while the item carries it.
-  const revealed = useRef<MovedMark | null>(null)
-  const stopReveal = useRef<(() => void) | null>(null)
+  // The page scrolls to each mark once, as focus first comes to the item, and stops
+  // following the bars once the item no longer carries it.
+  const revealing = useRef<{ mark: MovedMark; stop: () => void } | null>(null)
   useEffect(
     () => () => {
-      stopReveal.current?.()
-      stopReveal.current = null
+      // Its own reveal only: the next mark's may have started before this runs.
+      if (mark && revealing.current?.mark === mark) {
+        revealing.current.stop()
+        revealing.current = null
+      }
     },
     [mark],
   )
   const reveal = (event: FocusEvent<HTMLLIElement>) => {
-    if (!mark || revealed.current === mark) return
-    revealed.current = mark
-    stopReveal.current = revealMoved(event.currentTarget)
+    if (!mark || revealing.current?.mark === mark) return
+    revealing.current?.stop()
+    revealing.current = { mark, stop: revealMoved(event.currentTarget) }
   }
   const label = (shortens: boolean) =>
     mark && <MovedLabel move={mark.move} shortens={shortens} />

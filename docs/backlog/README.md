@@ -32,6 +32,7 @@ moves to `_archive/`, where its row here still points.
 | [EPC-015 A quieter top to a roadmap's page](_archive/EPC-015-a-quieter-roadmap-page-top/README.md)       | STY-065: the top of a roadmap's page in three rows (actions on the title's row, one line of facts ending in "Product details", the jump control), one Not published notice, a dismissible Beta banner                                           | Done   |
 | [EPC-016 A roadmap's items at a glance](_archive/EPC-016-a-roadmaps-items-at-a-glance/README.md)         | STY-066–STY-067, STY-069: a card cuts a field that runs past three lines, with "Show more"; a compact view shows items as rows, chosen by a switch beside Add an item and kept on the device (designs A, D, G of the compact view UX analysis)  | Done   |
 | [EPC-017 Closing a dialog from its top](_archive/EPC-017-closing-a-dialog-from-its-top/README.md)        | STY-068: a close button (X) at the top right of a dialog, in view as it opens on a phone, closing as Cancel does                                                                                                                                | Done   |
+| [EPC-018 Seeing where a moved item went](EPC-018-seeing-where-a-moved-item-went/README.md)               | STY-071–STY-074: mark the item last moved until the next move or an undo, let it travel to its new place, let "Undo order" travel back; the same motion elsewhere is an idea to grill (design E of the moved item UX analysis)                  | Active |
 
 ## Chores
 

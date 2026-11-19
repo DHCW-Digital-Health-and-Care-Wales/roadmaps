@@ -1,0 +1,2361 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Moved item indicator</title>
+    <style>
+      /* The review page's own chrome. It sets no background, so it sits on whatever
+         shows it; each design draws inside a .stage that has its own. */
+      html,
+      body {
+        margin: 0;
+      }
+      /* As wide as the app's page, so a host the width of a page fits its stage;
+         the prose keeps a reading measure. */
+      .page {
+        max-width: 1232px;
+        margin: 0 auto;
+        padding: 8px 16px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        font-family: system-ui, "Segoe UI", Arial, sans-serif;
+        font-size: 15px;
+        line-height: 1.5;
+      }
+      .page * {
+        box-sizing: border-box;
+      }
+      .page h1 {
+        margin: 0;
+        font-size: 20px;
+        line-height: 1.3;
+      }
+      /* The chrome's rules name the chrome's own elements, never a bare p or ol:
+         a design's markup sits inside .page too. */
+      .intro > *,
+      .page figure > p {
+        max-width: 728px;
+      }
+      .intro p,
+      .intro ol,
+      .page figure > p,
+      .page pre {
+        margin: 0;
+      }
+      .intro,
+      .page figure {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin: 0;
+        min-width: 0;
+      }
+      .intro ol {
+        padding-left: 22px;
+      }
+      .page summary {
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .page details > :not(summary) {
+        margin-top: 8px;
+      }
+      .page pre {
+        font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+        font-size: 13px;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        border-left: 3px solid currentColor;
+        padding-left: 10px;
+      }
+      .controls,
+      .controls > div,
+      .caption {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        align-items: center;
+      }
+      .caption {
+        justify-content: space-between;
+      }
+      .seg {
+        display: inline-flex;
+        flex-wrap: wrap;
+        border: 1px solid currentColor;
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .seg button,
+      .again {
+        appearance: none;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        padding: 5px 10px;
+        cursor: pointer;
+      }
+      .seg button[aria-pressed="true"] {
+        background: #1b365d;
+        color: #fff;
+      }
+      .again {
+        border: 1px solid currentColor;
+        border-radius: 6px;
+        font-size: 13px;
+        padding: 3px 9px;
+      }
+      .caption h2 {
+        margin: 0;
+        font-size: 17px;
+        line-height: 1.3;
+      }
+      .sr {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+      }
+
+      /* The review chrome, written here by scripts/component-page.mjs from
+         assets/review-chrome.css: the bar of designs and the Options panel. */
+      /* The review page's chrome, shared by both shapes and built by
+   review-chrome.js: a one-line bar of links to every journey and design, and a
+   floating panel holding the page's .controls. It draws in system colours, so
+   it reads on any page and never on a design's tokens.
+   Under automation, or with ?capture in the URL, both sit in the page's flow,
+   so they neither cover a design in a screenshot nor intercept a click. */
+      .review-bar {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        display: flex;
+        gap: 4px;
+        align-items: center;
+        overflow-x: auto;
+        white-space: nowrap;
+        scrollbar-width: thin;
+        padding: 6px 12px;
+        border-bottom: 1px solid GrayText;
+        background: Canvas;
+        color: CanvasText;
+        font:
+          13px/1.4 system-ui,
+          "Segoe UI",
+          Arial,
+          sans-serif;
+      }
+      .review-bar a {
+        flex: none;
+        color: LinkText;
+        text-decoration: none;
+      }
+      .review-bar a:hover {
+        text-decoration: underline;
+      }
+      .review-bar .review-group {
+        display: inline-flex;
+        flex: none;
+        gap: 3px;
+        align-items: center;
+      }
+      .review-bar .review-group + .review-group {
+        margin-left: 10px;
+        padding-left: 10px;
+        border-left: 1px solid GrayText;
+      }
+      .review-bar .review-journey {
+        max-width: 28ch;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-right: 3px;
+        font-weight: 600;
+        color: CanvasText;
+      }
+      .review-bar .review-design {
+        min-width: 22px;
+        max-width: 16ch;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 0 5px;
+        border: 1px solid currentColor;
+        border-radius: 4px;
+        text-align: center;
+      }
+      .review-bar .review-design[aria-current="location"] {
+        background: LinkText;
+        color: Canvas;
+      }
+      .review-bar a:focus-visible,
+      .review-options button:focus-visible {
+        outline: 3px solid Highlight;
+        outline-offset: 1px;
+      }
+
+      .review-options {
+        position: fixed;
+        right: 12px;
+        bottom: 12px;
+        z-index: 30;
+        display: flex;
+        flex-direction: column-reverse;
+        align-items: flex-end;
+        gap: 6px;
+        max-width: calc(100% - 24px);
+        font:
+          15px/1.5 system-ui,
+          "Segoe UI",
+          Arial,
+          sans-serif;
+        color: CanvasText;
+      }
+      .review-options > .review-options-toggle {
+        appearance: none;
+        padding: 4px 12px;
+        border: 1px solid GrayText;
+        border-radius: 999px;
+        background: Canvas;
+        color: CanvasText;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgb(0 0 0 / 0.25);
+        cursor: pointer;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .review-options > .review-options-body {
+        max-width: 640px;
+        max-height: 50vh;
+        overflow: auto;
+        padding: 10px 12px;
+        border: 1px solid GrayText;
+        border-radius: 8px;
+        background: Canvas;
+        box-shadow: 0 4px 16px rgb(0 0 0 / 0.25);
+      }
+      .review-options .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        align-items: center;
+      }
+      .review-options > .review-options-body[hidden] {
+        display: none;
+      }
+
+      /* Room below the last design, so the pill never covers its end. */
+      .review-floating body {
+        padding-bottom: 56px;
+      }
+
+      @media (max-width: 639px) {
+        .review-bar .review-journey {
+          max-width: 18ch;
+        }
+        .review-options > .review-options-body {
+          max-height: 40vh;
+        }
+      }
+
+      .review-inline .review-bar {
+        position: static;
+      }
+      .review-inline .review-options {
+        display: none;
+      }
+
+      @media print {
+        .review-bar,
+        .review-options {
+          display: none;
+        }
+      }
+
+      /* The app's theme, written here by scripts/component-page.mjs from
+         src/styles/globals.css: every token under its own name, on each stage. */
+      .stage {
+        --nhsw-primary-text-colour: #212b32;
+        --nhsw-secondary-text-colour: #4c6272;
+        --nhsw-exceptional-text-colour: #ffffff;
+        --nhsw-link-colour: #005aa8;
+        --nhsw-link-hover-colour: #7c2855;
+        --nhsw-primary-button: #1b365d;
+        --nhsw-primary-button-shadow: #0e1b2f;
+        --nhsw-colour-button-primary-hover: #32598a;
+        --nhsw-delete-button: #d5281b;
+        --nhsw-colour-button-delete-hover: #902419;
+        --nhsw-page-background-white: #ffffff;
+        --nhsw-page-background-grey: #f0f4f5;
+        --nhsw-page-background-blue: #1b365d;
+        --nhsw-secondary-border-colour: #4c6272;
+        --nhsw-grey-border-colour: #d8dde0;
+        --nhsw-colour-choice-hover-ring: #afb8bf;
+        --nhsw-focus-colour: #ffeb3b;
+        --nhsw-focus-text-colour: #212b32;
+        --nhsw-tag-grey-background: #dbe0e3;
+        --nhsw-tag-grey-ink: #354550;
+        --nhsw-tag-blue-background: #ccdff1;
+        --nhsw-tag-blue-ink: #004281;
+        --nhsw-tag-green-background: #cce5d8;
+        --nhsw-tag-green-ink: #004c23;
+        --nhsw-tag-yellow-background: #fff59d;
+        --nhsw-tag-yellow-ink: #4d4712;
+        --nhsw-tag-red-background: #f7d4d1;
+        --nhsw-tag-red-ink: #6b140e;
+        --nhsw-tag-pink-background: #efd3e3;
+        --nhsw-dashboard-nav-active: #0056b3;
+        --nhsw-dashboard-nav-divider: rgba(255, 255, 255, 0.2);
+        --nhsw-date-picker-dialog-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        --nhsw-timeout-modal-backdrop: rgba(11, 12, 12, 0.6);
+        --nhsw-font-family-base: Roboto, Arial, sans-serif;
+        --nhsw-font-weight-bold: 700;
+        --nhsw-font-size-h1-mobile: 2rem;
+        --nhsw-line-height-h1-mobile: 2.375rem;
+        --nhsw-font-size-h2-mobile: 1.6875rem;
+        --nhsw-line-height-h2-mobile: 2.0625rem;
+        --nhsw-font-size-h3-mobile: 1.375rem;
+        --nhsw-line-height-h3-mobile: 1.8125rem;
+        --nhsw-font-size-h4-mobile: 1.1875rem;
+        --nhsw-line-height-h4-mobile: 1.6875rem;
+        --nhsw-font-size-h5-mobile: 1rem;
+        --nhsw-line-height-h5-mobile: 1.5rem;
+        --nhsw-font-size-body-mobile: 1rem;
+        --nhsw-line-height-body-mobile: 1.5rem;
+        --nhsw-font-size-body-extra-small: 0.875rem;
+        --nhsw-line-height-body-extra-small: 1.25rem;
+        --nhsw-border-radius: 4px;
+      }
+      .stage {
+        --app-dark-surface: #13233c;
+        --app-dark-link: #8ab8e6;
+        --app-dark-destructive: #f0857a;
+      }
+      .stage {
+        color-scheme: light;
+        --background: var(--nhsw-page-background-white);
+        --foreground: var(--nhsw-primary-text-colour);
+        --card: var(--nhsw-page-background-white);
+        --card-foreground: var(--nhsw-primary-text-colour);
+        --popover: var(--nhsw-page-background-white);
+        --popover-foreground: var(--nhsw-primary-text-colour);
+        --primary: var(--nhsw-primary-button);
+        --primary-foreground: var(--nhsw-exceptional-text-colour);
+        --primary-hover: var(--nhsw-colour-button-primary-hover);
+        --secondary: var(--nhsw-page-background-grey);
+        --secondary-foreground: var(--nhsw-primary-text-colour);
+        --secondary-hover: var(--nhsw-tag-grey-background);
+        --muted: var(--nhsw-page-background-grey);
+        --muted-foreground: var(--nhsw-secondary-text-colour);
+        --accent: var(--nhsw-page-background-grey);
+        --accent-foreground: var(--nhsw-primary-text-colour);
+        --destructive: var(--nhsw-delete-button);
+        --destructive-fill: var(--nhsw-delete-button);
+        --destructive-foreground: var(--nhsw-exceptional-text-colour);
+        --destructive-hover: var(--nhsw-colour-button-delete-hover);
+        --border: var(--nhsw-grey-border-colour);
+        --input: var(--nhsw-secondary-border-colour);
+        --ring: var(--focus);
+        --radius: var(--nhsw-border-radius);
+        --link: var(--nhsw-link-colour);
+        --link-hover: var(--nhsw-link-hover-colour);
+        --focus: var(--nhsw-focus-colour);
+        --focus-foreground: var(--nhsw-focus-text-colour);
+        --control-shadow: var(--nhsw-primary-button-shadow);
+        --popup-shadow: var(--nhsw-date-picker-dialog-shadow);
+        --overlay: var(--nhsw-timeout-modal-backdrop);
+        --status-neutral-bg: var(--nhsw-tag-grey-background);
+        --status-neutral-fg: var(--nhsw-tag-grey-ink);
+        --status-neutral-border: var(--nhsw-tag-grey-ink);
+        --status-info-bg: var(--nhsw-tag-blue-background);
+        --status-info-fg: var(--nhsw-tag-blue-ink);
+        --status-info-border: var(--nhsw-tag-blue-ink);
+        --status-success-bg: var(--nhsw-tag-green-background);
+        --status-success-fg: var(--nhsw-tag-green-ink);
+        --status-success-border: var(--nhsw-tag-green-ink);
+        --status-warning-bg: var(--nhsw-tag-yellow-background);
+        --status-warning-fg: var(--nhsw-tag-yellow-ink);
+        --status-warning-border: var(--nhsw-tag-yellow-ink);
+        --status-danger-bg: var(--nhsw-tag-red-background);
+        --status-danger-fg: var(--nhsw-tag-red-ink);
+        --status-danger-border: var(--nhsw-tag-red-ink);
+        --header: var(--nhsw-page-background-blue);
+        --header-foreground: var(--nhsw-exceptional-text-colour);
+        --header-hover: var(--nhsw-colour-button-primary-hover);
+        --header-border: var(--nhsw-grey-border-colour);
+        --sidebar: var(--nhsw-page-background-blue);
+        --sidebar-foreground: var(--nhsw-exceptional-text-colour);
+        --sidebar-primary: var(--nhsw-exceptional-text-colour);
+        --sidebar-primary-foreground: var(--nhsw-page-background-blue);
+        --sidebar-accent: var(--nhsw-dashboard-nav-active);
+        --sidebar-accent-foreground: var(--nhsw-exceptional-text-colour);
+        --sidebar-border: var(--nhsw-dashboard-nav-divider);
+        --sidebar-ring: var(--focus);
+      }
+      .stage.dark {
+        color-scheme: dark;
+        --background: var(--nhsw-primary-button-shadow);
+        --foreground: var(--nhsw-page-background-grey);
+        --card: var(--app-dark-surface);
+        --card-foreground: var(--nhsw-page-background-grey);
+        --popover: var(--app-dark-surface);
+        --popover-foreground: var(--nhsw-page-background-grey);
+        --primary: var(--nhsw-colour-button-primary-hover);
+        --primary-foreground: var(--nhsw-exceptional-text-colour);
+        --primary-hover: var(--nhsw-primary-button);
+        --secondary: var(--nhsw-page-background-blue);
+        --secondary-foreground: var(--nhsw-page-background-grey);
+        --secondary-hover: var(--nhsw-colour-button-primary-hover);
+        --muted: var(--nhsw-page-background-blue);
+        --muted-foreground: var(--nhsw-colour-choice-hover-ring);
+        --accent: var(--nhsw-page-background-blue);
+        --accent-foreground: var(--nhsw-page-background-grey);
+        --destructive: var(--app-dark-destructive);
+        --border: var(--nhsw-secondary-border-colour);
+        --input: var(--nhsw-colour-choice-hover-ring);
+        --link: var(--app-dark-link);
+        --link-hover: var(--nhsw-tag-pink-background);
+        --control-shadow: var(--nhsw-secondary-border-colour);
+        --status-neutral-bg: var(--nhsw-tag-grey-ink);
+        --status-neutral-fg: var(--nhsw-tag-grey-background);
+        --status-neutral-border: var(--nhsw-tag-grey-background);
+        --status-info-bg: var(--nhsw-tag-blue-ink);
+        --status-info-fg: var(--nhsw-tag-blue-background);
+        --status-info-border: var(--nhsw-tag-blue-background);
+        --status-success-bg: var(--nhsw-tag-green-ink);
+        --status-success-fg: var(--nhsw-tag-green-background);
+        --status-success-border: var(--nhsw-tag-green-background);
+        --status-warning-bg: var(--nhsw-tag-yellow-ink);
+        --status-warning-fg: var(--nhsw-tag-yellow-background);
+        --status-warning-border: var(--nhsw-tag-yellow-background);
+        --status-danger-bg: var(--nhsw-tag-red-ink);
+        --status-danger-fg: var(--nhsw-tag-red-background);
+        --status-danger-border: var(--nhsw-tag-red-background);
+      }
+      .stage {
+        --font-sans: "Roboto Variable", var(--nhsw-font-family-base);
+        --font-heading: var(--font-sans);
+        --text-heading-xl: var(--nhsw-font-size-h1-mobile);
+        --text-heading-xl--line-height: var(--nhsw-line-height-h1-mobile);
+        --text-heading-xl--font-weight: var(--nhsw-font-weight-bold);
+        --text-heading-l: var(--nhsw-font-size-h2-mobile);
+        --text-heading-l--line-height: var(--nhsw-line-height-h2-mobile);
+        --text-heading-l--font-weight: var(--nhsw-font-weight-bold);
+        --text-heading-m: var(--nhsw-font-size-h3-mobile);
+        --text-heading-m--line-height: var(--nhsw-line-height-h3-mobile);
+        --text-heading-m--font-weight: var(--nhsw-font-weight-bold);
+        --text-heading-s: var(--nhsw-font-size-h4-mobile);
+        --text-heading-s--line-height: var(--nhsw-line-height-h4-mobile);
+        --text-heading-s--font-weight: var(--nhsw-font-weight-bold);
+        --text-heading-xs: var(--nhsw-font-size-h5-mobile);
+        --text-heading-xs--line-height: var(--nhsw-line-height-h5-mobile);
+        --text-heading-xs--font-weight: var(--nhsw-font-weight-bold);
+        --text-body: var(--nhsw-font-size-body-mobile);
+        --text-body--line-height: var(--nhsw-line-height-body-mobile);
+        --text-body-xs: var(--nhsw-font-size-body-extra-small);
+        --text-body-xs--line-height: var(--nhsw-line-height-body-extra-small);
+        --shadow-control: 0 2px 0 var(--control-shadow);
+        --shadow-control-edge: 0 2px 0 var(--input);
+        --shadow-card-bar: 0 4px 0 var(--border);
+        --shadow-popup: var(--popup-shadow);
+        --color-background: var(--background);
+        --color-foreground: var(--foreground);
+        --color-card: var(--card);
+        --color-card-foreground: var(--card-foreground);
+        --color-popover: var(--popover);
+        --color-popover-foreground: var(--popover-foreground);
+        --color-primary: var(--primary);
+        --color-primary-foreground: var(--primary-foreground);
+        --color-primary-hover: var(--primary-hover);
+        --color-secondary: var(--secondary);
+        --color-secondary-foreground: var(--secondary-foreground);
+        --color-secondary-hover: var(--secondary-hover);
+        --color-muted: var(--muted);
+        --color-muted-foreground: var(--muted-foreground);
+        --color-accent: var(--accent);
+        --color-accent-foreground: var(--accent-foreground);
+        --color-destructive: var(--destructive);
+        --color-destructive-fill: var(--destructive-fill);
+        --color-destructive-foreground: var(--destructive-foreground);
+        --color-destructive-hover: var(--destructive-hover);
+        --color-border: var(--border);
+        --color-input: var(--input);
+        --color-ring: var(--ring);
+        --color-overlay: var(--overlay);
+        --color-link: var(--link);
+        --color-link-hover: var(--link-hover);
+        --color-focus: var(--focus);
+        --color-focus-foreground: var(--focus-foreground);
+        --color-status-neutral-bg: var(--status-neutral-bg);
+        --color-status-neutral-fg: var(--status-neutral-fg);
+        --color-status-neutral-border: var(--status-neutral-border);
+        --color-status-info-bg: var(--status-info-bg);
+        --color-status-info-fg: var(--status-info-fg);
+        --color-status-info-border: var(--status-info-border);
+        --color-status-success-bg: var(--status-success-bg);
+        --color-status-success-fg: var(--status-success-fg);
+        --color-status-success-border: var(--status-success-border);
+        --color-status-warning-bg: var(--status-warning-bg);
+        --color-status-warning-fg: var(--status-warning-fg);
+        --color-status-warning-border: var(--status-warning-border);
+        --color-status-danger-bg: var(--status-danger-bg);
+        --color-status-danger-fg: var(--status-danger-fg);
+        --color-status-danger-border: var(--status-danger-border);
+        --color-header: var(--header);
+        --color-header-foreground: var(--header-foreground);
+        --color-header-hover: var(--header-hover);
+        --color-header-border: var(--header-border);
+        --color-sidebar: var(--sidebar);
+        --color-sidebar-foreground: var(--sidebar-foreground);
+        --color-sidebar-primary: var(--sidebar-primary);
+        --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+        --color-sidebar-accent: var(--sidebar-accent);
+        --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+        --color-sidebar-border: var(--sidebar-border);
+        --color-sidebar-ring: var(--sidebar-ring);
+        --radius-sm: calc(var(--radius) * 0.6);
+        --radius-md: calc(var(--radius) * 0.8);
+        --radius-lg: var(--radius);
+        --radius-xl: calc(var(--radius) * 1.4);
+        --radius-2xl: calc(var(--radius) * 1.8);
+        --radius-3xl: calc(var(--radius) * 2.2);
+        --radius-4xl: calc(var(--radius) * 2.6);
+      }
+
+      /* A stage is the app's page behind the host. The host keeps the width the
+         Screen switch gives it: a stage too narrow for it scrolls sideways. */
+      .stage {
+        display: flex;
+        overflow-x: auto;
+        padding: 16px;
+        border: 1px solid var(--border);
+        background: var(--background);
+        color: var(--foreground);
+        font-family: var(--font-sans);
+        font-size: var(--text-body);
+        line-height: var(--text-body--line-height);
+      }
+      .host {
+        flex: none;
+        width: var(--host-w, 360px);
+        margin-inline: auto;
+      }
+      /* On a phone the stage runs edge to edge, so its 16px padding is the
+         app's own page padding and a 375px phone draws the host as the app
+         does. */
+      @media (max-width: 639px) {
+        .stage {
+          margin-inline: -16px;
+          border-inline: 0;
+        }
+      }
+
+      /* The app's controls, drawn as the app draws them and named as
+         assets/mock.css names them. Keep these: every design uses them. */
+      .inp {
+        width: 100%;
+        min-height: 40px;
+        padding: 8px;
+        border: 2px solid var(--input);
+        border-radius: 0;
+        background: var(--background);
+        color: var(--foreground);
+        font: inherit;
+      }
+      .inp:focus-visible {
+        outline: 3px solid var(--focus);
+        outline-offset: 0;
+        border-color: var(--focus-foreground);
+        box-shadow: inset 0 0 0 2px var(--focus-foreground);
+      }
+      /* The secondary button; .p is the primary. */
+      .btn {
+        appearance: none;
+        height: 40px;
+        padding: 0 16px;
+        border: 1px solid var(--input);
+        border-radius: var(--radius);
+        background: var(--background);
+        color: var(--foreground);
+        font: inherit;
+        font-weight: 700;
+        box-shadow: var(--shadow-control-edge);
+        cursor: pointer;
+      }
+      .btn:hover {
+        background: var(--muted);
+      }
+      .btn.p {
+        border-color: var(--primary);
+        background: var(--primary);
+        color: var(--primary-foreground);
+        box-shadow: var(--shadow-control);
+      }
+      .btn.p:hover {
+        background: var(--primary-hover);
+      }
+      .btn.sm {
+        height: 32px;
+        padding: 0 12px;
+        font-size: var(--text-body-xs);
+      }
+      .btn:focus-visible {
+        outline: 3px solid transparent;
+        outline-offset: 0;
+        border-color: transparent;
+        background: var(--focus);
+        color: var(--focus-foreground);
+        box-shadow: 0 2px 0 var(--focus-foreground);
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      /* The host: a roadmap's items area, its placements under their headings,
+         in a window as tall as a screen's room between the stuck header and
+         the foot bar, so a move to another placement has to scroll. */
+      .host {
+        position: relative;
+        height: var(--host-h, 560px);
+        overflow-y: auto;
+        container-type: inline-size;
+        border: 1px dashed var(--border);
+        padding: 4px;
+      }
+      .placements {
+        display: flex;
+        flex-direction: column;
+        gap: 40px;
+        padding: 4px 4px 24px;
+      }
+      .placement {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .placement-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 12px;
+      }
+      .placement-head h2 {
+        margin: 0;
+        font-size: var(--text-heading-m);
+        line-height: var(--text-heading-m--line-height);
+        font-weight: var(--text-heading-m--font-weight);
+      }
+      .placement-head h2:focus-visible {
+        outline: 3px solid var(--focus);
+        box-shadow: 0 0 0 6px var(--focus-foreground);
+      }
+      .none {
+        margin: 0;
+        color: var(--muted-foreground);
+      }
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        width: fit-content;
+        padding: 2px 8px;
+        border: 1px solid var(--status-info-border);
+        background: var(--status-info-bg);
+        color: var(--status-info-fg);
+        font-size: var(--text-body-xs);
+        line-height: var(--text-body-xs--line-height);
+        font-weight: 700;
+      }
+      .tag.moved {
+        white-space: nowrap;
+        border-color: var(--status-success-border);
+        background: var(--status-success-bg);
+        color: var(--status-success-fg);
+      }
+      .link-btn {
+        appearance: none;
+        border: 0;
+        padding: 0;
+        background: none;
+        color: var(--link);
+        font: inherit;
+        text-decoration: underline;
+        cursor: pointer;
+      }
+      .link-btn:focus-visible {
+        outline: 3px solid transparent;
+        background: var(--focus);
+        color: var(--focus-foreground);
+        box-shadow: 0 4px 0 var(--focus-foreground);
+        text-decoration: none;
+      }
+
+      /* Cards: one, two, then three across, as CardGrid draws them. */
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      @container (min-width: 576px) {
+        .grid {
+          grid-template-columns: 1fr 1fr;
+          gap: 20px;
+        }
+      }
+      @container (min-width: 1024px) {
+        .grid {
+          grid-template-columns: 1fr 1fr 1fr;
+        }
+      }
+      .card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 16px;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--card-foreground);
+        box-shadow: var(--shadow-card-bar);
+      }
+      .card h3 {
+        margin: 0;
+        font-size: var(--text-heading-xs);
+        line-height: var(--text-heading-xs--line-height);
+        font-weight: var(--text-heading-xs--font-weight);
+        overflow-wrap: break-word;
+      }
+      .card dl {
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .card dt {
+        font-weight: 700;
+      }
+      .card dd {
+        margin: 0;
+      }
+      .card .foot {
+        margin-top: auto;
+        padding-top: 4px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+      }
+
+      /* Compact rows, as CompactList and CompactItemRow draw them. */
+      .rows {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--card-foreground);
+      }
+      .row {
+        position: relative;
+        border-top: 1px solid var(--border);
+        background: var(--card);
+      }
+      .row:first-child {
+        border-top: 0;
+      }
+      .row-line {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 8px 8px 8px 4px;
+      }
+      .row-main {
+        display: flex;
+        flex: 1;
+        min-width: 0;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+        padding: 4px 0;
+      }
+      .row h3 {
+        margin: 0;
+        font-size: var(--text-body);
+        line-height: var(--text-body--line-height);
+        font-weight: 700;
+        overflow-wrap: break-word;
+      }
+      .row .desc {
+        display: none;
+        margin: 0;
+        color: var(--muted-foreground);
+        font-size: var(--text-body-xs);
+        line-height: var(--text-body-xs--line-height);
+      }
+      .row-open {
+        padding: 0 12px 12px 44px;
+      }
+      .row-open p {
+        margin: 0;
+      }
+      .row-acts {
+        display: flex;
+        flex: none;
+        gap: 8px;
+      }
+      @container (min-width: 600px) {
+        .row-line {
+          align-items: center;
+          gap: 12px;
+          min-height: 48px;
+          padding: 8px 12px 8px 8px;
+        }
+        .row-main {
+          flex-direction: row;
+          align-items: baseline;
+          gap: 12px;
+        }
+        .row h3 {
+          flex: none;
+          max-width: 60%;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .row .desc {
+          display: block;
+          flex: 1;
+          min-width: 0;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .row-open {
+          padding-left: 52px;
+        }
+      }
+      .icon-btn {
+        width: 32px;
+        padding: 0;
+      }
+      .chev {
+        appearance: none;
+        flex: none;
+        width: 32px;
+        height: 32px;
+        border: 0;
+        border-radius: var(--radius);
+        background: transparent;
+        color: var(--foreground);
+        font: inherit;
+        cursor: pointer;
+      }
+      .chev:hover {
+        background: var(--muted);
+      }
+      .chev:focus-visible {
+        outline: 3px solid transparent;
+        background: var(--focus);
+        color: var(--focus-foreground);
+        box-shadow: 0 2px 0 var(--focus-foreground);
+      }
+      .chev[aria-expanded="true"] svg {
+        transform: rotate(90deg);
+      }
+      svg.i {
+        width: 16px;
+        height: 16px;
+        vertical-align: -3px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .btn .i {
+        margin-right: 6px;
+      }
+      .icon-btn .i {
+        margin: 0;
+      }
+
+      /* The Move menu, as DropdownMenu draws it. */
+      .menu-wrap {
+        position: relative;
+        display: inline-flex;
+      }
+      .menu {
+        position: absolute;
+        z-index: 20;
+        top: calc(100% + 4px);
+        right: 0;
+        min-width: 200px;
+        margin: 0;
+        padding: 4px;
+        list-style: none;
+        border: 1px solid var(--border);
+        background: var(--popover);
+        color: var(--popover-foreground);
+        box-shadow: var(--shadow-popup);
+      }
+      .menu .label {
+        padding: 6px 8px;
+        color: var(--muted-foreground);
+        font-size: var(--text-body-xs);
+        font-weight: 700;
+      }
+      .menu .sep {
+        height: 1px;
+        margin: 4px -4px;
+        background: var(--border);
+      }
+      .menu [role="menuitem"] {
+        padding: 6px 8px;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .menu [role="menuitem"]:hover,
+      .menu [role="menuitem"]:focus {
+        outline: none;
+        background: var(--focus);
+        color: var(--focus-foreground);
+      }
+
+      /* ---- A. Glow that fades ---- */
+      .glow {
+        animation: glow 3s ease-out forwards;
+      }
+      @keyframes glow {
+        0%,
+        40% {
+          background: var(--status-info-bg);
+          box-shadow:
+            0 0 0 3px var(--status-info-border),
+            var(--shadow-card-bar);
+        }
+        100% {
+          background: var(--card);
+        }
+      }
+      .reduce .glow {
+        animation: none;
+        background: var(--status-info-bg);
+        box-shadow:
+          0 0 0 3px var(--status-info-border),
+          var(--shadow-card-bar);
+      }
+
+      /* ---- B. Marked until the next move ---- */
+      .marked {
+        box-shadow:
+          inset 6px 0 0 var(--status-success-border),
+          0 0 0 2px var(--status-success-border);
+        z-index: 1;
+      }
+      .card.marked {
+        padding-left: 22px;
+      }
+      .row.marked .row-line {
+        padding-left: 12px;
+      }
+
+      /* ---- C. Slide into place ---- */
+      .travelling {
+        z-index: 5;
+        box-shadow:
+          0 0 0 3px var(--status-info-border),
+          0 12px 24px rgb(0 0 0 / 0.25);
+      }
+      .landed {
+        animation: landed 1.6s ease-out forwards;
+      }
+      @keyframes landed {
+        0% {
+          box-shadow:
+            0 0 0 3px var(--status-info-border),
+            var(--shadow-card-bar);
+        }
+        100% {
+          box-shadow:
+            0 0 0 0 transparent,
+            var(--shadow-card-bar);
+        }
+      }
+      .reduce .landed {
+        animation: none;
+        box-shadow:
+          0 0 0 3px var(--status-info-border),
+          var(--shadow-card-bar);
+      }
+
+      /* ---- D. A trace where it was ---- */
+      .ghost {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 4px;
+        min-height: 48px;
+        padding: 8px 12px;
+        border: 2px dashed var(--muted-foreground);
+        background: transparent;
+        color: var(--muted-foreground);
+        font-size: var(--text-body-xs);
+        line-height: var(--text-body-xs--line-height);
+      }
+      .rows .ghost {
+        border-width: 2px 0 0;
+        border-top: 2px dashed var(--muted-foreground);
+        min-height: 36px;
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: wrap;
+        padding: 6px 12px 6px 44px;
+      }
+      /* In a grid the trace is a strip across the row, not a card's cell. */
+      .grid .ghost {
+        grid-column: 1 / -1;
+      }
+      .ghost-note {
+        margin: 0;
+        font-size: var(--text-body-xs);
+        line-height: var(--text-body-xs--line-height);
+      }
+      .row .ghost-note {
+        padding: 0 12px 10px 44px;
+      }
+      .ghost b {
+        color: var(--foreground);
+      }
+      .traced {
+        box-shadow:
+          0 0 0 2px var(--status-info-border),
+          var(--shadow-card-bar);
+        z-index: 1;
+      }
+      .readout-said {
+        font-style: italic;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <div class="intro">
+        <h1>
+          Seeing where a moved item went: four designs, and the one chosen
+        </h1>
+        <p>
+          Each design is the items area of a roadmap's page, in a window as tall
+          as the room a screen gives it. Every Move menu works: move an item up,
+          down, to the top or bottom of its placement, or to another placement,
+          and watch what tells you where it went. Every design scrolls the moved
+          item into view, puts focus on its Move and says its new position to a
+          screen reader, as the app does today; they differ in what a sighted
+          Product Lead sees.
+        </p>
+        <p>
+          A fades a highlight after a moment; B marks the item, in words, until
+          the next move; C shows the items travelling to their new places; D
+          leaves a trace where the item was. E is the owner's choice of
+          2026-11-19: C's slide, then B's mark.
+        </p>
+        <div class="controls">
+          <div>
+            <span id="theme-label">Theme</span>
+            <span class="seg" role="group" aria-labelledby="theme-label">
+              <button type="button" data-theme="light" aria-pressed="true">
+                Light
+              </button>
+              <button type="button" data-theme="dark" aria-pressed="false">
+                Dark
+              </button>
+            </span>
+          </div>
+          <div>
+            <!-- How wide the app draws the items area on each screen, with
+                 the navigation open from 1024px: one card across on a phone,
+                 two from 576px of room, three from 1024px. -->
+            <span id="screen-label">Screen</span>
+            <span class="seg" role="group" aria-labelledby="screen-label">
+              <button
+                type="button"
+                data-width="343"
+                data-screen="375"
+                data-height="520"
+                data-phone
+                aria-pressed="false"
+              >
+                Phone 375
+              </button>
+              <button
+                type="button"
+                data-width="704"
+                data-screen="1024"
+                data-height="560"
+                aria-pressed="false"
+              >
+                Laptop 1024
+              </button>
+              <button
+                type="button"
+                data-width="960"
+                data-screen="1280"
+                data-height="600"
+                aria-pressed="true"
+              >
+                Monitor 1280
+              </button>
+              <button
+                type="button"
+                data-width="1168"
+                data-screen="1440"
+                data-height="640"
+                aria-pressed="false"
+              >
+                Wide 1440, navigation folded
+              </button>
+            </span>
+            <span
+              >The items area is <span id="host-width">960</span>px wide.</span
+            >
+          </div>
+          <div>
+            <span id="view-label">View</span>
+            <span class="seg" role="group" aria-labelledby="view-label">
+              <button type="button" data-view="cards" aria-pressed="true">
+                Cards
+              </button>
+              <button type="button" data-view="compact" aria-pressed="false">
+                Compact
+              </button>
+            </span>
+          </div>
+          <div>
+            <span id="motion-label">Motion</span>
+            <span class="seg" role="group" aria-labelledby="motion-label">
+              <button type="button" data-motion="full" aria-pressed="true">
+                Full
+              </button>
+              <button type="button" data-motion="reduce" aria-pressed="false">
+                Reduced
+              </button>
+            </span>
+          </div>
+        </div>
+        <details open>
+          <summary>Things to try in each</summary>
+          <ol>
+            <li>
+              In Now, move “Text reminders before every appointment” Down one.
+              Its neighbour, “Text reminders before every video appointment”,
+              reads almost the same: can you tell, at a glance, which one moved?
+            </li>
+            <li>
+              Move “Check in from your phone on arrival” To the top, then
+              straight back To the bottom: two moves close together.
+            </li>
+            <li>
+              Move “See your place on the waiting list” to Later. It lands last
+              there, out of sight: does the design take you to it, and can you
+              find your way back?
+            </li>
+            <li>Switch to the Compact view and do the same three.</li>
+            <li>
+              After a move, look away for five seconds, then look back: is it
+              still clear which item moved?
+            </li>
+            <li>
+              Do it all by keyboard alone: Tab to a Move, Enter, the arrow keys,
+              Enter.
+            </li>
+            <li>
+              Try it on the phone, with Motion set to Reduced, and in the dark
+              theme.
+            </li>
+            <li>Choose “Undo order” beside Now’s heading after a move.</li>
+          </ol>
+        </details>
+        <details>
+          <summary>The sample</summary>
+          <pre id="sample"></pre>
+        </details>
+      </div>
+      <figure id="pa" aria-labelledby="pa-name">
+        <div class="caption">
+          <h2 id="pa-name">A. Glow that fades</h2>
+          <button type="button" class="again" data-again="pa">
+            Start again <span class="sr">design A</span>
+          </button>
+        </div>
+        <p>
+          The moved item lights up in its new place, with a tinted background
+          and a thick border, then fades back to an ordinary card over about
+          three seconds.
+        </p>
+        <div class="stage"><div class="host" id="pa-host"></div></div>
+        <details>
+          <summary>What this design keeps as the pending edit</summary>
+          <pre id="pa-readout"></pre>
+        </details>
+      </figure>
+      <figure id="pb" aria-labelledby="pb-name">
+        <div class="caption">
+          <h2 id="pb-name">B. Marked until the next move</h2>
+          <button type="button" class="again" data-again="pb">
+            Start again <span class="sr">design B</span>
+          </button>
+        </div>
+        <p>
+          The moved item keeps a bold edge and a tag saying what happened to it,
+          “Moved up”, until another item is moved or the order is undone.
+          Nothing fades, so a glance away loses nothing.
+        </p>
+        <div class="stage"><div class="host" id="pb-host"></div></div>
+        <details>
+          <summary>What this design keeps as the pending edit</summary>
+          <pre id="pb-readout"></pre>
+        </details>
+      </figure>
+      <figure id="pc" aria-labelledby="pc-name">
+        <div class="caption">
+          <h2 id="pc-name">C. Slide into place</h2>
+          <button type="button" class="again" data-again="pc">
+            Start again <span class="sr">design C</span>
+          </button>
+        </div>
+        <p>
+          The moved item lifts and glides from where it was to where it lands,
+          while the items it passes slide aside, then its outline fades. The eye
+          follows the item itself. With reduced motion it does not travel: it
+          lands outlined, as A does.
+        </p>
+        <div class="stage"><div class="host" id="pc-host"></div></div>
+        <details>
+          <summary>What this design keeps as the pending edit</summary>
+          <pre id="pc-readout"></pre>
+        </details>
+      </figure>
+      <figure id="pd" aria-labelledby="pd-name">
+        <div class="caption">
+          <h2 id="pd-name">D. A trace where it was</h2>
+          <button type="button" class="again" data-again="pd">
+            Start again <span class="sr">design D</span>
+          </button>
+        </div>
+        <p>
+          A dashed outline stays where the item was, saying what moved and where
+          to, and the item is outlined where it landed, until the next move. A
+          move to another placement leaves the trace behind with “Show it”, and
+          the landed item a “Back to Now” link.
+        </p>
+        <div class="stage"><div class="host" id="pd-host"></div></div>
+        <details>
+          <summary>What this design keeps as the pending edit</summary>
+          <pre id="pd-readout"></pre>
+        </details>
+      </figure>
+      <figure id="pe" aria-labelledby="pe-name">
+        <div class="caption">
+          <h2 id="pe-name">E. Chosen: slide into place, then marked</h2>
+          <button type="button" class="again" data-again="pe">
+            Start again <span class="sr">design E</span>
+          </button>
+        </div>
+        <p>
+          The owner's choice, C then B. The moved item glides to its place, then
+          keeps B's edge and tag, “Moved up”, until another item is moved or the
+          order is undone. In a compact row on a screen of 1024px or less the
+          tag is its arrow and “Moved”. With reduced motion it does not travel:
+          it lands marked, as B.
+        </p>
+        <div class="stage"><div class="host" id="pe-host"></div></div>
+        <details>
+          <summary>What this design keeps as the pending edit</summary>
+          <pre id="pe-readout"></pre>
+        </details>
+      </figure>
+    </main>
+    <script>
+      // ---- The sample world ----
+      const PLACEMENTS = [
+        ["recently-delivered", "Recently delivered"],
+        ["now", "Now"],
+        ["next", "Next"],
+        ["later", "Later"],
+        ["delivered-this-year", "Delivered this year"],
+        ["not-doing", "Not doing"],
+      ]
+      const NAME = Object.fromEntries(PLACEMENTS)
+      const ITEMS = {
+        n1: {
+          title: "Text reminders before every appointment",
+          description:
+            "We send a text two days before each appointment, with the time, the place and how to change it.",
+          outcome: "Fewer missed appointments, and fewer calls to change one.",
+          tags: "Reminders, Texts",
+        },
+        n2: {
+          title: "Text reminders before every video appointment",
+          description:
+            "We send a text the day before a video appointment, with the link to join and how to test your device.",
+          outcome: "Fewer video appointments lost to a broken link.",
+          tags: "Reminders, Video",
+        },
+        n3: {
+          title: "See your place on the waiting list",
+          description:
+            "Check where you are on a waiting list, and roughly how long you have left to wait.",
+          outcome: "Fewer calls asking how long the wait is.",
+          tags: "Waiting lists",
+        },
+        n4: {
+          title: "Check in from your phone on arrival",
+          description:
+            "Scan the code in reception to tell the clinic you have arrived, without queuing at the desk.",
+          outcome: "Shorter queues at reception.",
+          tags: "Check-in",
+        },
+        x1: {
+          title: "Change or cancel an appointment online",
+          description:
+            "Move or cancel an appointment from the link in your letter, any time of day.",
+          outcome: "Slots freed sooner for someone else.",
+          tags: "Appointments",
+        },
+        x2: {
+          title: "Choose a time that suits you",
+          description:
+            "Pick from the times the clinic has free, in place of a time chosen for you.",
+          outcome: "Fewer appointments rearranged.",
+          tags: "Appointments",
+        },
+        l1: {
+          title: "Book a follow-up before you leave clinic",
+          description:
+            "Book your next appointment at the desk or on your phone before you go home.",
+          outcome: "No wait for a follow-up letter.",
+          tags: "Appointments",
+        },
+      }
+      /** The roadmap as last read: published on 14 November, nothing pending. */
+      const LOADED = {
+        "recently-delivered": [],
+        now: ["n1", "n2", "n3", "n4"],
+        next: ["x1", "x2"],
+        later: ["l1"],
+        "delivered-this-year": [],
+        "not-doing": [],
+      }
+
+      // ---- The rules every design shares: pure, with no page in them ----
+      const clone = (lists) =>
+        Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, [...v]]))
+      const placementOf = (lists, id) =>
+        Object.keys(lists).find((p) => lists[p].includes(id))
+      /** Where "To the top", "Up one", "Down one" and "To the bottom" put an item. */
+      function positionAfter(at, count, to) {
+        if (to === "top") return 0
+        if (to === "up") return at - 1
+        if (to === "down") return at + 1
+        return count - 1
+      }
+      /**
+       * The page after a move: `to` is a choice of position in its placement, or
+       * another placement, where it lands last (STY-051). It returns the lists
+       * and the move, which every design draws from.
+       */
+      function applyMove(lists, id, to) {
+        const next = clone(lists)
+        const from = placementOf(next, id)
+        const at = next[from].indexOf(id)
+        next[from].splice(at, 1)
+        let placement = from
+        let newAt
+        let kind = to
+        if (["top", "up", "down", "bottom"].includes(to)) {
+          newAt = positionAfter(at, lists[from].length, to)
+          next[from].splice(newAt, 0, id)
+        } else {
+          placement = to
+          kind = "placement"
+          next[to].push(id)
+          newAt = next[to].length - 1
+        }
+        return {
+          lists: next,
+          move: {
+            id,
+            kind,
+            from: { placement: from, at, count: lists[from].length },
+            to: { placement, at: newAt, count: next[placement].length },
+          },
+        }
+      }
+      /** Whether a placement's order differs from the one last read (STY-050). */
+      function orderChanged(lists, placement) {
+        const was = LOADED[placement].filter((id) =>
+          lists[placement].includes(id),
+        )
+        const now = lists[placement].filter((id) =>
+          LOADED[placement].includes(id),
+        )
+        return was.join() !== now.join()
+      }
+      /** "Undo order": the placement's items back in the order last read, any moved in last. */
+      function undoOrder(lists, placement) {
+        const next = clone(lists)
+        const kept = LOADED[placement].filter((id) =>
+          lists[placement].includes(id),
+        )
+        const added = lists[placement].filter(
+          (id) => !LOADED[placement].includes(id),
+        )
+        next[placement] = [...kept, ...added]
+        return next
+      }
+      /** What a screen reader hears after a move: today's copy, and a new line for another placement. */
+      function said(move) {
+        const n = `${move.to.at + 1} of ${move.to.count}`
+        if (move.kind === "top") return `Moved to the top. ${n}.`
+        if (move.kind === "up") return `Moved up. ${n}.`
+        if (move.kind === "down") return `Moved down. ${n}.`
+        if (move.kind === "bottom") return `Moved to the bottom. ${n}.`
+        return `Moved to ${NAME[move.to.placement]}. ${n}.`
+      }
+      /** The short form of the same, as B's tag shows it. */
+      /** What B's tag says after "Moved": with no position, as the owner chose. */
+      function tagRest(move) {
+        return {
+          top: "to the top",
+          up: "up",
+          down: "down",
+          bottom: "to the bottom",
+          placement: `from ${NAME[move.from.placement]}`,
+        }[move.kind]
+      }
+      const tagText = (move) => `Moved ${tagRest(move)}`
+      /**
+       * Whether B's tag shows only its arrow and "Moved": a compact row on a
+       * screen of 1024px or less, where the whole tag wraps (owner, 2026-11-19).
+       * The rest stays for assistive technology.
+       */
+      const shortTag = (host, view) =>
+        view === "compact" &&
+        Number(host.closest(".stage").dataset.screen) <= 1024
+      /** B's tag, its arrow saying which way the item went. */
+      function movedTag(move, short) {
+        const arrow =
+          {
+            top: ICONS.top,
+            up: ICONS.up,
+            down: ICONS.down,
+            bottom: ICONS.bottom,
+          }[move.kind] ?? ICONS.move
+        return h(
+          "span",
+          { class: "tag moved" },
+          icon(arrow),
+          short
+            ? h(
+                "span",
+                {},
+                "Moved",
+                " ",
+                h("span", { class: "sr" }, tagRest(move)),
+              )
+            : tagText(move),
+        )
+      }
+      /** The pending edits, as the readout shows them. */
+      function written(lists, lastSaid) {
+        const lines = []
+        for (const [p, name] of PLACEMENTS) {
+          if (lists[p].length === 0 && LOADED[p].length === 0) continue
+          const flag = orderChanged(lists, p) ? "   [Order changed]" : ""
+          lines.push(`${name}${flag}`)
+          lists[p].forEach((id, i) => {
+            const changed = !LOADED[p].includes(id)
+              ? "   [Changed: moved here]"
+              : ""
+            lines.push(`  ${i + 1}. ${ITEMS[id].title}${changed}`)
+          })
+        }
+        const pending =
+          PLACEMENTS.filter(([p]) => orderChanged(lists, p)).length +
+          Object.keys(ITEMS).filter(
+            (id) => placementOf(lists, id) !== placementOf(LOADED, id),
+          ).length
+        lines.push("", `Unpublished changes: ${pending}`)
+        if (lastSaid) lines.push(`Said to a screen reader: “${lastSaid}”`)
+        return lines.join("\n")
+      }
+
+      // ---- Drawing ----
+      function h(tag, attributes = {}, ...children) {
+        const element = document.createElement(tag)
+        for (const [name, value] of Object.entries(attributes)) {
+          if (value === undefined || value === false) continue
+          if (name.startsWith("on")) element[name] = value
+          else element.setAttribute(name, value)
+        }
+        element.append(...children.filter((c) => c !== null && c !== undefined))
+        return element
+      }
+      const SVG = "http://www.w3.org/2000/svg"
+      function icon(d) {
+        const svg = document.createElementNS(SVG, "svg")
+        svg.setAttribute("viewBox", "0 0 24 24")
+        svg.setAttribute("class", "i")
+        svg.setAttribute("aria-hidden", "true")
+        for (const each of d.split("|")) {
+          const path = document.createElementNS(SVG, "path")
+          path.setAttribute("d", each)
+          svg.append(path)
+        }
+        return svg
+      }
+      const ICONS = {
+        move: "M8 3 4 7l4 4|M4 7h16|m16 21 4-4-4-4|M20 17H4",
+        edit: "M12 20h9|M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z",
+        chev: "m9 18 6-6-6-6",
+        pencil: "M12 20h9|M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z",
+        arrow: "M5 12h14|m12 5 7 7-7 7",
+        up: "M12 19V5|m5 12 7-7 7 7",
+        down: "M12 5v14|m19 12-7 7-7-7",
+        top: "M5 3h14|M12 21V7|m6 13 6-6 6 6",
+        bottom: "M5 21h14|M12 3v14|m18 11-6 6-6-6",
+      }
+      const reduced = (host) =>
+        host.closest(".stage").classList.contains("reduce") ||
+        matchMedia("(prefers-reduced-motion: reduce)").matches
+      const viewOf = (host) =>
+        host.closest(".stage").dataset.view === "compact" ? "compact" : "cards"
+      /** Scrolls the host, the screen's room, to show `element`, as the app's focus would. */
+      function reveal(host, element, smooth) {
+        const top =
+          element.getBoundingClientRect().top -
+          host.getBoundingClientRect().top +
+          host.scrollTop
+        const bottom = top + element.offsetHeight
+        const view = host.scrollTop
+        if (top >= view + 8 && bottom <= view + host.clientHeight - 8) return
+        host.scrollTo({
+          top: Math.max(0, top - 48),
+          behavior: smooth ? "smooth" : "auto",
+        })
+      }
+
+      /** The Move menu: a menu button, its menu built on opening, worked by keyboard too. */
+      function moveMenu(prefix, id, lists, iconOnly, onChoose) {
+        const title = ITEMS[id].title
+        const placement = placementOf(lists, id)
+        const at = lists[placement].indexOf(id)
+        const count = lists[placement].length
+        const button = h(
+          "button",
+          {
+            type: "button",
+            class: iconOnly ? "btn sm icon-btn" : "btn sm",
+            "aria-haspopup": "menu",
+            "aria-expanded": "false",
+            "data-move": id,
+          },
+          icon(ICONS.move),
+          iconOnly ? h("span", { class: "sr" }, "Move") : "Move",
+          " ",
+          h("span", { class: "sr" }, title),
+        )
+        const wrap = h("span", { class: "menu-wrap" }, button)
+        let menu
+        function close(focus) {
+          if (!menu) return
+          menu.remove()
+          menu = undefined
+          button.setAttribute("aria-expanded", "false")
+          if (focus) button.focus()
+        }
+        function open(last) {
+          const items = []
+          const item = (label, value) => {
+            const li = h(
+              "li",
+              {
+                role: "menuitem",
+                tabindex: "-1",
+                onclick: () => {
+                  close(false)
+                  onChoose(id, value)
+                },
+              },
+              label,
+            )
+            items.push(li)
+            return li
+          }
+          const parts = []
+          if (count > 1) {
+            parts.push(
+              h(
+                "li",
+                { role: "presentation", class: "label" },
+                `In ${NAME[placement]}: ${at + 1} of ${count}`,
+              ),
+            )
+            if (at > 0)
+              parts.push(item("To the top", "top"), item("Up one", "up"))
+            if (at < count - 1)
+              parts.push(
+                item("Down one", "down"),
+                item("To the bottom", "bottom"),
+              )
+            parts.push(h("li", { role: "separator", class: "sep" }))
+          }
+          parts.push(
+            h("li", { role: "presentation", class: "label" }, "Move to"),
+          )
+          for (const [p, name] of PLACEMENTS)
+            if (p !== placement) parts.push(item(name, p))
+          menu = h(
+            "ul",
+            {
+              role: "menu",
+              class: "menu",
+              id: `${prefix}-menu-${id}`,
+              "aria-label": `Move ${title}`,
+              onkeydown: (event) => {
+                const i = items.indexOf(document.activeElement)
+                if (event.key === "ArrowDown")
+                  items[(i + 1) % items.length].focus()
+                else if (event.key === "ArrowUp")
+                  items[(i - 1 + items.length) % items.length].focus()
+                else if (event.key === "Home") items[0].focus()
+                else if (event.key === "End") items.at(-1).focus()
+                else if (event.key === "Escape") close(true)
+                else if (event.key === "Tab") close(false)
+                else if (event.key === "Enter" || event.key === " ")
+                  document.activeElement.click()
+                else return
+                event.preventDefault()
+              },
+              onfocusout: (event) => {
+                if (!wrap.contains(event.relatedTarget)) close(false)
+              },
+            },
+            ...parts,
+          )
+          wrap.append(menu)
+          button.setAttribute("aria-expanded", "true")
+          button.setAttribute("aria-controls", menu.id)
+          ;(last ? items.at(-1) : items[0]).focus()
+        }
+        button.onclick = () => (menu ? close(true) : open(false))
+        button.onkeydown = (event) => {
+          if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+            event.preventDefault()
+            open(event.key === "ArrowUp")
+          }
+        }
+        return wrap
+      }
+
+      /** An item as a card or a compact row, with its Move and Edit. */
+      function drawItem(prefix, id, lists, view, wide, onChoose, extras) {
+        const item = ITEMS[id]
+        const moved = placementOf(lists, id) !== placementOf(LOADED, id)
+        const changedTag = moved
+          ? h("span", { class: "tag" }, icon(ICONS.pencil), "Changed")
+          : null
+        const edit = (iconOnly) =>
+          h(
+            "button",
+            {
+              type: "button",
+              class: iconOnly ? "btn sm icon-btn" : "btn sm",
+            },
+            icon(ICONS.edit),
+            iconOnly ? h("span", { class: "sr" }, "Edit") : "Edit",
+            " ",
+            h("span", { class: "sr" }, item.title),
+          )
+        if (view === "cards") {
+          return h(
+            "li",
+            { class: `card ${extras.cls ?? ""}`, "data-item": id },
+            h("h3", {}, item.title),
+            extras.tag ?? null,
+            h(
+              "dl",
+              {},
+              h(
+                "div",
+                {},
+                h("dt", {}, "Description"),
+                h("dd", {}, item.description),
+              ),
+              h(
+                "div",
+                {},
+                h("dt", {}, "Expected outcomes"),
+                h("dd", {}, item.outcome),
+              ),
+              h("div", {}, h("dt", {}, "Tags"), h("dd", {}, item.tags)),
+            ),
+            extras.below ?? null,
+            h(
+              "div",
+              { class: "foot" },
+              moveMenu(prefix, id, lists, false, onChoose),
+              edit(false),
+              changedTag,
+            ),
+          )
+        }
+        const openId = `${prefix}-row-${id}`
+        const opened = h(
+          "div",
+          { class: "row-open", id: openId, hidden: "" },
+          h("p", {}, item.description),
+        )
+        const chev = h(
+          "button",
+          {
+            type: "button",
+            class: "chev",
+            "aria-expanded": "false",
+            "aria-controls": openId,
+            onclick: () => {
+              const isOpen = chev.getAttribute("aria-expanded") === "true"
+              chev.setAttribute("aria-expanded", String(!isOpen))
+              opened.hidden = isOpen
+              chev.querySelector(".sr").textContent =
+                `${isOpen ? "Show" : "Hide"} the rest of ${item.title}`
+            },
+          },
+          icon(ICONS.chev),
+          h("span", { class: "sr" }, `Show the rest of ${item.title}`),
+        )
+        return h(
+          "li",
+          { class: `row ${extras.cls ?? ""}`, "data-item": id },
+          h(
+            "div",
+            { class: "row-line" },
+            chev,
+            h(
+              "div",
+              { class: "row-main" },
+              h("h3", {}, item.title),
+              h("p", { class: "desc" }, item.description),
+              extras.tag ?? null,
+              changedTag,
+            ),
+            h(
+              "div",
+              { class: "row-acts" },
+              moveMenu(prefix, id, lists, !wide, onChoose),
+              edit(!wide),
+            ),
+          ),
+          extras.below ?? null,
+          opened,
+        )
+      }
+
+      /**
+       * Draws the whole items area. A design passes `decorate(id)` for extra parts
+       * of an item, and `ghostFor(placement)` for D's trace; it marks after.
+       */
+      function drawArea(prefix, host, lists, handlers, design = {}) {
+        const view = viewOf(host)
+        const wide = host.clientWidth >= 600
+        const area = h("div", { class: "placements" })
+        // Today's live status line, there from the start.
+        const status = h("p", { role: "status", class: "sr" })
+        area.append(status)
+        for (const [p, name] of PLACEMENTS) {
+          const headingId = `${prefix}-h-${p}`
+          const head = h(
+            "div",
+            { class: "placement-head" },
+            h("h2", { id: headingId, tabindex: "-1" }, name),
+          )
+          if (orderChanged(lists, p)) {
+            head.append(
+              h("span", { class: "tag" }, icon(ICONS.pencil), "Order changed"),
+              h(
+                "button",
+                {
+                  type: "button",
+                  class: "btn sm",
+                  onclick: () => handlers.undo(p),
+                },
+                "Undo order",
+                " ",
+                h("span", { class: "sr" }, name),
+              ),
+            )
+          }
+          const section = h("div", { class: "placement" }, head)
+          const ids = lists[p]
+          const ghost = design.ghostFor?.(p, view)
+          if (ids.length === 0 && !ghost) {
+            section.append(h("p", { class: "none" }, "No items"))
+          } else {
+            const list = h("ul", {
+              class: view === "cards" ? "grid" : "rows",
+              "aria-labelledby": headingId,
+            })
+            ids.forEach((id) =>
+              list.append(
+                drawItem(
+                  prefix,
+                  id,
+                  lists,
+                  view,
+                  wide,
+                  handlers.choose,
+                  design.decorate?.(id, view) ?? {},
+                ),
+              ),
+            )
+            if (ghost)
+              list.insertBefore(ghost.element, list.children[ghost.at] ?? null)
+            section.append(list)
+          }
+          area.append(section)
+        }
+        host.replaceChildren(area)
+        return {
+          status,
+          find: (id) => host.querySelector(`[data-item="${id}"]`),
+        }
+      }
+
+      // ---- The designs ----
+      /**
+       * Each design keeps the page's lists, draws the area, and after a move shows
+       * where the item went. The shared parts are the same in all four: the moved
+       * item scrolled into view, focus on its Move, and the status line.
+       */
+      function makeDesign(prefix, mark) {
+        const host = document.getElementById(`${prefix}-host`)
+        const readout = document.getElementById(`${prefix}-readout`)
+        let lists = clone(LOADED)
+        let last // the last move, while a design still shows it
+        let lastSaid
+        const handlers = {
+          choose(id, to) {
+            const before = mark.before?.(host)
+            const result = applyMove(lists, id, to)
+            lists = result.lists
+            last = result.move
+            lastSaid = said(last)
+            draw(true, before)
+          },
+          undo(p) {
+            lists = undoOrder(lists, p)
+            last = undefined
+            lastSaid = `Order of ${NAME[p]} undone`
+            draw(false)
+            const heading = document.getElementById(`${prefix}-h-${p}`)
+            heading.focus({ preventScroll: true })
+            reveal(host, heading, false)
+          },
+        }
+        function draw(afterMove, before) {
+          const drawn = drawArea(prefix, host, lists, handlers, {
+            decorate: (id, view) => mark.decorate?.(id, view, last, host) ?? {},
+            ghostFor: (p, view) =>
+              mark.ghostFor?.(p, view, last, lists, (id) => {
+                const el = drawn.find(id)
+                el.querySelector("[data-move]").focus({ preventScroll: true })
+                reveal(host, el, !reduced(host))
+              }),
+          })
+          readout.textContent = written(lists, lastSaid)
+          if (!afterMove || !last) return
+          const element = drawn.find(last.id)
+          element.querySelector("[data-move]").focus({ preventScroll: true })
+          // A new node, so a message said twice is said twice.
+          drawn.status.replaceChildren(h("span", {}, lastSaid))
+          mark.after?.(host, element, last, before)
+        }
+        function start() {
+          lists = clone(LOADED)
+          last = undefined
+          lastSaid = undefined
+          host.scrollTop = 0
+          draw(false)
+        }
+        document
+          .querySelector(`[data-again="${prefix}"]`)
+          .addEventListener("click", start)
+        return { start, redraw: () => draw(false) }
+      }
+
+      // A. Glow that fades: a class that plays once, removed after.
+      const designA = {
+        after(host, element, move) {
+          reveal(host, element, !reduced(host))
+          element.classList.add("glow")
+          // With reduced motion the glow holds, then goes, with no fade.
+          setTimeout(() => element.classList.remove("glow"), 3000)
+        },
+      }
+
+      // B. Marked until the next move: the mark is drawn from the last move.
+      const designB = {
+        decorate(id, view, last, host) {
+          if (!last || last.id !== id) return {}
+          return { cls: "marked", tag: movedTag(last, shortTag(host, view)) }
+        },
+        after(host, element) {
+          reveal(host, element, !reduced(host))
+        },
+      }
+
+      // C. Slide into place: each item's place is noted before the move, and
+      // every item that changed place travels from there (FLIP).
+      const designC = {
+        before(host) {
+          const places = new Map()
+          const origin = host.getBoundingClientRect()
+          for (const el of host.querySelectorAll("[data-item]")) {
+            const r = el.getBoundingClientRect()
+            places.set(el.dataset.item, {
+              x: r.left - origin.left,
+              y: r.top - origin.top + host.scrollTop,
+            })
+          }
+          return places
+        },
+        landed: true,
+        after(host, element, move, places) {
+          const landed = this.landed
+          if (reduced(host) || !places) {
+            reveal(host, element, false)
+            if (!landed) return
+            element.classList.add("landed")
+            setTimeout(() => element.classList.remove("landed"), 2000)
+            return
+          }
+          // Scroll to where it lands first, measured before anything is moved back.
+          reveal(host, element, true)
+          const origin = host.getBoundingClientRect()
+          const travel = []
+          for (const el of host.querySelectorAll("[data-item]")) {
+            const was = places.get(el.dataset.item)
+            if (!was) continue
+            const r = el.getBoundingClientRect()
+            const dx = was.x - (r.left - origin.left)
+            const dy = was.y - (r.top - origin.top + host.scrollTop)
+            if (Math.abs(dx) < 1 && Math.abs(dy) < 1) continue
+            el.style.transition = "none"
+            el.style.transform = `translate(${dx}px, ${dy}px)`
+            travel.push(el)
+          }
+          element.classList.add("travelling")
+          const far = move.kind === "placement"
+          const ms = far ? 700 : 450
+          requestAnimationFrame(() => {
+            for (const el of travel) {
+              el.style.transition = `transform ${ms}ms cubic-bezier(0.2, 0.8, 0.2, 1)`
+              el.style.transform = ""
+            }
+          })
+          setTimeout(() => {
+            for (const el of travel) el.style.transition = ""
+            element.classList.remove("travelling")
+            if (landed) element.classList.add("landed")
+          }, ms + 20)
+        },
+      }
+
+      // E. The owner's choice: C's slide, then B's mark until the next move;
+      // with reduced motion, B alone.
+      const designE = {
+        before: designC.before,
+        decorate: designB.decorate,
+        landed: false,
+        after: designC.after,
+      }
+
+      // D. A trace where it was, and the item outlined where it landed.
+      const designD = {
+        decorate(id, view, last) {
+          if (!last || last.id !== id) return {}
+          if (last.kind !== "placement") return { cls: "traced" }
+          return {
+            cls: "traced",
+            below: h(
+              "p",
+              {
+                class: "ghost-note",
+              },
+              `Moved from ${NAME[last.from.placement]}. `,
+              h(
+                "button",
+                {
+                  type: "button",
+                  class: "link-btn",
+                  "data-back": last.from.placement,
+                },
+                `Back to ${NAME[last.from.placement]}`,
+              ),
+            ),
+          }
+        },
+        ghostFor(p, view, last, lists, showItem) {
+          if (!last || last.from.placement !== p) return undefined
+          const title = ITEMS[last.id].title
+          // The item that followed it before the move, among those still here.
+          const follower = lists[p].filter((id) => id !== last.id)[last.from.at]
+          const far = last.kind === "placement"
+          const element = h(
+            "li",
+            // Within a placement the status line has said it; across, "Show it" is a control.
+            { class: "ghost", "aria-hidden": far ? undefined : "true" },
+            h("span", {}, "Was here: ", h("b", {}, title)),
+            far
+              ? h(
+                  "span",
+                  {},
+                  `Moved to ${NAME[last.to.placement]}. `,
+                  h(
+                    "button",
+                    {
+                      type: "button",
+                      class: "link-btn",
+                      onclick: () => showItem(last.id),
+                    },
+                    "Show it",
+                  ),
+                )
+              : h(
+                  "span",
+                  {},
+                  `${tagText(last)} · ${last.to.at + 1} of ${last.to.count}`,
+                ),
+          )
+          const at =
+            follower === undefined
+              ? lists[p].length
+              : lists[p].indexOf(follower)
+          return { element, at }
+        },
+        after(host, element) {
+          reveal(host, element, !reduced(host))
+          const back = element.querySelector("[data-back]")
+          if (back)
+            back.onclick = () => {
+              const ghost = host.querySelector(".ghost")
+              const heading = ghost.closest(".placement").querySelector("h2")
+              heading.focus({ preventScroll: true })
+              reveal(host, ghost, !reduced(host))
+            }
+        },
+      }
+      // ---- The page: one figure per design ----
+      const designs = [
+        makeDesign("pa", designA),
+        makeDesign("pb", designB),
+        makeDesign("pc", designC),
+        makeDesign("pd", designD),
+        makeDesign("pe", designE),
+      ]
+      for (const design of designs) design.start()
+
+      // ---- The page's own controls ----
+      document.getElementById("sample").textContent = [
+        "Thursday 19 November 2026. Sam Evans, Product Lead, opens Outpatient Booking:",
+        "published on Saturday 14 November, nothing pending.",
+        "",
+        written(LOADED),
+        "",
+        "Planted: Now's first two items read almost alike, title and description,",
+        "so a swap of the two changes little on screen.",
+        "Later is out of sight below Now and Next, so a move there has to scroll.",
+      ].join("\n")
+      function bindSwitch(attribute, apply) {
+        const buttons = document.querySelectorAll(`[data-${attribute}]`)
+        for (const button of buttons) {
+          button.addEventListener("click", () => {
+            for (const other of buttons)
+              other.setAttribute("aria-pressed", String(other === button))
+            for (const stage of document.querySelectorAll(".stage"))
+              apply(stage, button.dataset[attribute], button)
+            for (const design of designs) design.redraw()
+          })
+        }
+      }
+      bindSwitch("theme", (stage, theme) =>
+        stage.classList.toggle("dark", theme === "dark"),
+      )
+      bindSwitch("width", (stage, width, button) => {
+        stage.style.setProperty("--host-w", `${width}px`)
+        stage.style.setProperty("--host-h", `${button.dataset.height}px`)
+        stage.dataset.screen = button.dataset.screen
+        document.getElementById("host-width").textContent = width
+      })
+      bindSwitch("view", (stage, view) => (stage.dataset.view = view))
+      bindSwitch("motion", (stage, motion) =>
+        stage.classList.toggle("reduce", motion === "reduce"),
+      )
+      for (const stage of document.querySelectorAll(".stage")) {
+        stage.style.setProperty("--host-w", "960px")
+        stage.style.setProperty("--host-h", "600px")
+        stage.dataset.screen = "1280"
+      }
+      for (const design of designs) design.redraw()
+      if (matchMedia("(max-width: 639px)").matches)
+        document.querySelector("[data-phone]")?.click()
+    </script>
+    <script>
+      // The review page's chrome, shared by both shapes (review-chrome.css styles it).
+      // A bar of links to every journey and design, one line that scrolls sideways,
+      // and a floating Options panel that holds the page's .controls, so a switch is
+      // in reach beside any design. A design is a figure[id] not inside another; its
+      // journey is the section[id] holding it, or the page's h1. A design's link reads
+      // the letter that starts its caption ("A. Outline", "B2 — …"), or its
+      // data-short; a journey's, its heading up to " — ".
+      // Under automation, or with ?capture in the URL, the bar stays at the top of
+      // the page and the controls stay where the page put them, so neither covers a
+      // design in a screenshot; ?float shows the floating chrome there too.
+      ;(() => {
+        const params = new URLSearchParams(location.search)
+        const inline =
+          params.has("capture") || (navigator.webdriver && !params.has("float"))
+        if (inline) document.documentElement.classList.add("review-inline")
+
+        const designs = [...document.querySelectorAll("figure[id]")].filter(
+          (figure) => !figure.parentElement.closest("figure[id]"),
+        )
+        if (designs.length === 0) return
+        const text = (element) =>
+          element?.textContent.replace(/\s+/g, " ").trim()
+        const heading = document.querySelector("h1")
+        if (heading && !heading.id) heading.id = "review-top"
+
+        const groups = new Map()
+        for (const figure of designs) {
+          const section = figure.closest("section[id]")
+          const key = section ?? heading
+          if (!groups.has(key)) groups.set(key, [])
+          groups.get(key).push(figure)
+        }
+
+        function link(href, label, className, title) {
+          const a = document.createElement("a")
+          a.href = href
+          a.className = className
+          a.textContent = label
+          a.title = title ?? label
+          return a
+        }
+
+        const bar = document.createElement("nav")
+        bar.className = "review-bar"
+        bar.setAttribute("aria-label", "Journeys and designs")
+        const designLinks = new Map()
+        for (const [owner, figures] of groups) {
+          const group = document.createElement("span")
+          group.className = "review-group"
+          if (owner) {
+            const title = text(owner.querySelector("h1, h2") ?? owner)
+            owner.classList.add("review-target")
+            group.append(
+              link(
+                `#${owner.id}`,
+                title.split(" — ")[0],
+                "review-journey",
+                title,
+              ),
+            )
+          }
+          for (const figure of figures) {
+            const caption =
+              text(figure.querySelector("figcaption, h2, h3")) ?? ""
+            const short =
+              figure.dataset.short ??
+              caption.match(/^([A-Z][0-9]*)(?:\.|:|\s[—–-])\s/)?.[1] ??
+              caption
+            const a = link(
+              `#${figure.id}`,
+              short || figure.id,
+              "review-design",
+              caption || figure.id,
+            )
+            a.setAttribute("aria-label", caption || figure.id)
+            figure.classList.add("review-target")
+            designLinks.set(figure, a)
+            group.append(a)
+          }
+          bar.append(group)
+        }
+        document.body.prepend(bar)
+
+        // A link's target lands below the bar, not under it.
+        const style = document.createElement("style")
+        document.head.append(style)
+        const fitTargets = () => {
+          style.textContent = `.review-target{scroll-margin-top:${bar.offsetHeight + 8}px}`
+        }
+        fitTargets()
+        addEventListener("resize", fitTargets)
+
+        // The bar marks the design in view, and scrolls itself to show its link.
+        let current
+        // A design whose link was followed stays marked, even where the page cannot
+        // scroll it to the top, until the reader scrolls on their own.
+        let pinned
+        /** The design whose top has passed a third of the way down, or the last at the page's foot. */
+        function designInView() {
+          if (pinned) return pinned
+          const root = document.documentElement
+          if (
+            root.scrollTop > 0 &&
+            scrollY + innerHeight >= root.scrollHeight - 2
+          )
+            return designs.at(-1)
+          const line = Math.max(bar.offsetHeight + 16, innerHeight / 3)
+          let inView = designs[0]
+          for (const figure of designs)
+            if (figure.getBoundingClientRect().top <= line) inView = figure
+          return inView
+        }
+        function markCurrent(inView = designInView()) {
+          if (inView === current) return
+          designLinks.get(current)?.removeAttribute("aria-current")
+          current = inView
+          const a = designLinks.get(current)
+          a.setAttribute("aria-current", "location")
+          // Show the link's group from its start, or as much of it as keeps the
+          // link itself in view.
+          const right = a.offsetLeft + a.offsetWidth
+          if (
+            a.offsetLeft < bar.scrollLeft ||
+            right > bar.scrollLeft + bar.clientWidth
+          )
+            bar.scrollLeft = Math.max(
+              a.parentElement.offsetLeft - 4,
+              right - bar.clientWidth + 8,
+            )
+        }
+        let queued = false
+        addEventListener(
+          "scroll",
+          () => {
+            if (queued) return
+            queued = true
+            requestAnimationFrame(() => {
+              queued = false
+              markCurrent()
+            })
+          },
+          { passive: true },
+        )
+        addEventListener("resize", () => markCurrent())
+        bar.addEventListener("click", (event) => {
+          const a = event.target.closest("a")
+          pinned = designs.find((f) => designLinks.get(f) === a)
+          markCurrent()
+        })
+        for (const type of ["wheel", "touchstart", "keydown"])
+          addEventListener(type, () => (pinned = undefined), { passive: true })
+        markCurrent()
+
+        const controls = document.querySelector(".controls")
+        if (inline || !controls) return
+
+        // The Options panel: a pill that names the current choices, opening the
+        // page's controls above it. The pill comes first, so Tab moves from it into
+        // the controls; the panel's column runs in reverse to draw them above.
+        document.documentElement.classList.add("review-floating")
+        const panel = document.createElement("div")
+        panel.className = "review-options"
+        const body = document.createElement("div")
+        body.className = "review-options-body"
+        body.id = "review-options-body"
+        body.hidden = true
+        body.setAttribute("role", "group")
+        body.setAttribute("aria-label", "Options")
+        const toggle = document.createElement("button")
+        toggle.type = "button"
+        toggle.className = "review-options-toggle"
+        toggle.setAttribute("aria-controls", body.id)
+        toggle.setAttribute("aria-expanded", "false")
+        controls.replaceWith(panel)
+        body.append(controls)
+        panel.append(toggle, body)
+
+        function summarise() {
+          const chosen = [
+            ...[
+              ...controls.querySelectorAll('button[aria-pressed="true"]'),
+            ].map(text),
+            ...[...controls.querySelectorAll("select")].map((select) =>
+              text(select.selectedOptions[0]),
+            ),
+            ...[...controls.querySelectorAll("input:checked")].map(
+              (input) => text(input.labels?.[0]) ?? input.value,
+            ),
+          ].filter(Boolean)
+          const arrow = document.createElement("span")
+          arrow.setAttribute("aria-hidden", "true")
+          arrow.textContent = body.hidden ? "▴ " : "▾ "
+          toggle.replaceChildren(
+            arrow,
+            `Options${chosen.length ? `: ${chosen.join(" · ")}` : ""}`,
+          )
+        }
+        function setOpen(open) {
+          body.hidden = !open
+          toggle.setAttribute("aria-expanded", String(open))
+          summarise()
+        }
+        toggle.addEventListener("click", () => setOpen(body.hidden))
+        panel.addEventListener("keydown", (event) => {
+          if (event.key !== "Escape" || body.hidden) return
+          setOpen(false)
+          toggle.focus()
+        })
+        addEventListener("pointerdown", (event) => {
+          if (!body.hidden && !panel.contains(event.target)) setOpen(false)
+        })
+
+        // A switch that changes the page's height, such as Zoom or Screen, keeps the
+        // design in view where it was: its top is noted before the switch's own
+        // handler runs (capturing), and restored after it (bubbling).
+        let anchor
+        const noteAnchor = () => {
+          const figure = designInView()
+          anchor = { figure, top: figure.getBoundingClientRect().top }
+        }
+        const afterSwitch = () => {
+          summarise()
+          if (anchor)
+            scrollBy(0, anchor.figure.getBoundingClientRect().top - anchor.top)
+          anchor = undefined
+          markCurrent()
+        }
+        for (const type of ["click", "change"]) {
+          controls.addEventListener(type, noteAnchor, true)
+          controls.addEventListener(type, afterSwitch)
+        }
+        summarise()
+      })()
+    </script>
+  </body>
+</html>

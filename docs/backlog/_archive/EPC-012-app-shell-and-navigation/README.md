@@ -180,8 +180,8 @@ top bar) prefers to.
 
 ## Defects
 
-- [DEF-018](../../defects/DEF-018-reconnecting-on-a-roadmap-s-page-reads-the-roadmap-list-twice.md):
-  reconnecting on a roadmap's page reads the roadmap list twice. Needs triage; found by
+- [DEF-018](../defects/DEF-018-reconnecting-on-a-roadmap-s-page-reads-the-roadmap-list-twice.md):
+  reconnecting on a roadmap's page reads the roadmap list twice. Won't fix (by design, ADR-011 Option 3); found by
   STY-057's delivery, and on the default branch before it.
 
 ## Related

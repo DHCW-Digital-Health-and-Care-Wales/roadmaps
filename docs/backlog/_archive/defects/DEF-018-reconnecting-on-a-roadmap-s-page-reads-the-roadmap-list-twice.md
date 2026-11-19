@@ -1,6 +1,6 @@
 # DEF-018: Reconnecting on a roadmap's page reads the roadmap list twice
 
-- **Status**: Needs grilling — cause found by DEF-020+018 delivery; the owner chooses (D2)
+- **Status**: Won't fix — owner, 2026-11-19 (D3); archived
 - **Severity**: Low — two extra requests to the data source per reconnect; nothing
   shown is wrong
 - **Area**: Features/UI
@@ -70,7 +70,7 @@ the repository does at any load.
 - Is the doubled index read accepted (Won't fix: the requests are the price of finding
   a renamed tab at once), or is it worth a chore to read a roadmap's items from the
   list's own index read, which needs a successor to ADR-011 Option 3 and a repository
-  change?
+  change? Answered by D3: Won't fix.
 
 ## Decisions
 
@@ -86,3 +86,8 @@ the repository does at any load.
   `tests/e2e/AGENTS.md` that a roadmap's items "add `values:<its tab>`" is the likely
   source of the wrong Expected: the items add the tab list and the index read too; left
   for a retrospective, not edited here.
+- **D3** (owner, 2026-11-19, PR #180): Won't fix. The two extra requests on each load
+  of a roadmap's page are the price ADR-011 Option 3 chose for finding a renamed tab at
+  once, and they sit well inside Google's per-minute read limits. Reopen if a Product
+  Lead hits a read limit. The corrected count of a page's reads is in
+  `tests/e2e/AGENTS.md` (the DEF-020+018 retrospective).

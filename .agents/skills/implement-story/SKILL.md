@@ -178,8 +178,9 @@ recurs, rather than only for the reported trigger or at the reported line:
 ask what else reaches that cause and test it too; for a changed term or
 label, search the changed files and both catalogues for the old form; for a
 changed behaviour, search the code, tests and records for lines that describe
-the old behaviour and correct them. Repeat affected checks, commit fixes and
-re-review the new head in the lanes and rounds `delegation.md` sets.
+the old behaviour and correct them. Run the fixes' targeted checks
+(`references/validation.md`), commit them and re-review the new head in the
+lanes and rounds `delegation.md` sets; the full gate waits for the head you push.
 An unavailable reviewer is a stated limitation, not an invented independent
 review.
 

@@ -63,6 +63,7 @@ moves to `_archive/`, where its row here still points.
 | [CHO-023](chores/CHO-023-prototype-a-layout-in-the-apps-own-code.md)                      | Whether the `ux-prototypes` skill offers a prototype built in the app's own code, as STY-065's was                                  | Needs grilling |
 | [CHO-024](chores/CHO-024-the-session-warning-draws-its-x-as-a-dialog-does.md)             | The session warning's corner X is level with its title and drawn once, as a dialog's is                                             | Proposed       |
 | [CHO-025](chores/CHO-025-check-a-published-removal-against-a-real-spreadsheet.md)         | Check STY-070's write (a removed item's row deleted, or the last one cleared, in one request) against a real test spreadsheet       | Proposed       |
+| [CHO-026](chores/CHO-026-a-dialogs-scrolling-header-can-be-scrolled-by-keyboard.md)       | A dialog's header that scrolls by itself at the pinned sizes can be scrolled from the keyboard, and axe holds it                    | Proposed       |
 
 Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status token.
 

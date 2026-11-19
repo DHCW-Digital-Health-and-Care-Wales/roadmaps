@@ -950,6 +950,19 @@
           background: var(--card);
         }
       }
+      /* The system's reduced motion, as the page's Motion switch: no fade. */
+      @media (prefers-reduced-motion: reduce) {
+        .glow,
+        .landed {
+          animation: none;
+          box-shadow:
+            0 0 0 3px var(--status-info-border),
+            var(--shadow-card-bar);
+        }
+        .glow {
+          background: var(--status-info-bg);
+        }
+      }
       .reduce .glow {
         animation: none;
         background: var(--status-info-bg);
@@ -1278,9 +1291,9 @@
         <p>
           The owner's choice, C then B. The moved item glides to its place, then
           keeps B's edge and tag, “Moved up”, until another item is moved or the
-          order is undone. In a compact row on a screen of 1024px or less the
-          tag is its arrow and “Moved”. With reduced motion it does not travel:
-          it lands marked, as B.
+          order is undone. In a compact list too narrow for the whole tag, as on
+          a 1024px screen, the tag is its arrow and “Moved”. With reduced motion
+          it does not travel: it lands marked, as B.
         </p>
         <div class="stage"><div class="host" id="pe-host"></div></div>
         <details>
@@ -1476,12 +1489,13 @@
       const tagText = (move) => `Moved ${tagRest(move)}`
       /**
        * Whether B's tag shows only its arrow and "Moved": a compact row on a
-       * screen of 1024px or less, where the whole tag wraps (owner, 2026-11-19).
+       * screen of 1024px or less, where the whole tag wraps (owner, 2026-11-19):
+       * judged by the list's own width (STY-071 D6), here under 900px, so a
+       * navigation dragged wide at 1280px shortens it too.
        * The rest stays for assistive technology.
        */
       const shortTag = (host, view) =>
-        view === "compact" &&
-        Number(host.closest(".stage").dataset.screen) <= 1024
+        view === "compact" && host.clientWidth < 900
       /** B's tag, its arrow saying which way the item went. */
       function movedTag(move, short) {
         const arrow =
@@ -1809,9 +1823,6 @@
         const view = viewOf(host)
         const wide = host.clientWidth >= 600
         const area = h("div", { class: "placements" })
-        // Today's live status line, there from the start.
-        const status = h("p", { role: "status", class: "sr" })
-        area.append(status)
         for (const [p, name] of PLACEMENTS) {
           const headingId = `${prefix}-h-${p}`
           const head = h(
@@ -1866,7 +1877,6 @@
         }
         host.replaceChildren(area)
         return {
-          status,
           find: (id) => host.querySelector(`[data-item="${id}"]`),
         }
       }
@@ -1880,6 +1890,12 @@
       function makeDesign(prefix, mark) {
         const host = document.getElementById(`${prefix}-host`)
         const readout = document.getElementById(`${prefix}-readout`)
+        // Today's live status line: one per design, there from the start and
+        // never redrawn, so what it says is announced.
+        const status = h("p", { role: "status", class: "sr" })
+        host.after(status)
+        /** Says `text`, in a new node, so a message said twice is said twice. */
+        const say = (text) => status.replaceChildren(h("span", {}, text))
         let lists = clone(LOADED)
         let last // the last move, while a design still shows it
         let lastSaid
@@ -1898,6 +1914,7 @@
             if (last && placementOf(lists, last.id) === p) last = undefined
             lastSaid = `Order of ${NAME[p]} undone`
             draw(false)
+            say(lastSaid)
             const heading = document.getElementById(`${prefix}-h-${p}`)
             heading.focus({ preventScroll: true })
             reveal(host, heading, false)
@@ -1918,7 +1935,7 @@
           const element = drawn.find(last.id)
           element.querySelector("[data-move]").focus({ preventScroll: true })
           // A new node, so a message said twice is said twice.
-          drawn.status.replaceChildren(h("span", {}, lastSaid))
+          say(lastSaid)
           mark.after?.(host, element, last, before)
         }
         function start() {

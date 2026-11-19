@@ -35,7 +35,7 @@ description, or its flag or pending tag, or the room between them
 **Then** the row closes, and its chevron reads "Show the rest of" then the title
 **And** a press on an opened row's fields, below the line, opens or closes nothing
 
-### S3: What else is pressed is unchanged (owner, D1)
+### S3: What else is pressed is unchanged
 
 **Given** a row
 **When** the Product Lead presses Move, Edit or the chevron
@@ -99,13 +99,14 @@ None.
 
 ### Scenario evidence
 
-| Scenario | Held by                                                                                                                                                                                                                        |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| S1, S2   | `roadmap-items-compact.spec.ts` (`opens and closes a row by a press on its line at 1280px/375px`: the title, from 768px the description, an unplaced item's flag, and a press on an opened row's field, which changes nothing) |
-| S3       | `roadmap-items-compact.spec.ts` (`leaves a row as it is when Move or Edit is pressed at …px`); the existing chevron, Move and Edit component tests                                                                             |
-| S4       | the same Playwright test's cursor check; `roadmap-items-compact.spec.ts` (`the keyboard`, `has no axe violation in the compact view…`) and the component tests of the chevron's names and expanded state, unchanged and green  |
+| Scenario | Held by                                                                                                                                                                                                                                                                    |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1, S2   | `roadmap-items-compact.spec.ts` (`opens and closes a row by a press on its line at 1280px/375px`: the title, from 768px the description, an unplaced item's flag, and a press on an opened row's field, which changes nothing); the chevron's names in the component tests |
+| S3       | `roadmap-items-compact.spec.ts` (`leaves a row as it is when Move or Edit is pressed at …px`, with plain clicks, which wait for the button to receive the press); the existing chevron, Move and Edit component tests                                                      |
+| S4       | the same Playwright test's check of the chevron's cursor, which the overlay takes; `roadmap-items-compact.spec.ts` (`the keyboard`, `has no axe violation in the compact view…`) and the component tests of the chevron's names and expanded state, unchanged and green    |
 
-The press tests were written after the code and shown red by removing the overlay (the
-row stayed closed). A press on the room beside the text or on a pending tag has no test
-of its own: the overlay is one box over the line, which the title, the description and
-the flag each show.
+The title, description and flag presses were shown red by removing the overlay (the
+row stayed closed). The Move and Edit test was not: it holds when the overlay is gone,
+and would fail, its plain click timing out, if Move or Edit sat beneath it. A press on
+the room beside the text or on a pending tag has no test of its own: the overlay is one
+box over the line, which the title, the description and the flag each show.

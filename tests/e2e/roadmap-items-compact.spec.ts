@@ -287,8 +287,8 @@ for (const [width, height] of [
 /**
  * Presses where `target` is drawn, as a pointer does. A row's text sits under the
  * chevron's stretch, so a locator's own click, which waits for the text to receive the
- * press, would never land: `force` presses its centre without that wait, and without
- * the wait for it to hold still. Playwright scrolls only to the nearest edge, which can
+ * press, would never land: `force` presses its centre without waiting for the text to
+ * receive the press, or to hold still. Playwright scrolls only to the nearest edge, which can
  * leave the target under the stuck header. So the target is brought to the middle and
  * left until two frames draw it in one place, as the header changes height with the
  * scroll.
@@ -303,6 +303,7 @@ async function pressOn(target: Locator) {
       if (now === drawn) return
       drawn = now
     }
+    throw new Error("Never drawn in one place")
   })
   await target.click({ force: true })
 }
@@ -358,6 +359,8 @@ for (const [width, height] of [
     await chooseCompact(page)
     const row = rowOf(page, "Short")
 
+    // Plain clicks: each waits for its button to receive the press, which it would not
+    // do beneath the stretch.
     await row.getByRole("button", { name: /^Move / }).click()
     await expect(rowChevron(row)).toHaveAttribute("aria-expanded", "false")
     await page.keyboard.press("Escape")

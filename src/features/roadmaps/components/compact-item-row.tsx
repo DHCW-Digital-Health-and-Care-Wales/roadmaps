@@ -19,6 +19,14 @@ import { HorizonFlag } from "./horizon-flag"
 import { ItemFields } from "./item-fields"
 import { STRUCK_TEXT_CLASSES } from "./struck-text"
 
+/**
+ * Where a flag or a tag sits on a desktop's line: its 26px tag (a 20px line, 4px of
+ * padding, 2px of border) centred on the line's 32px, as a Move or an Edit fills it. Set
+ * from the top, not centred, so it stays put as the row opens and its title or flag wraps
+ * onto more lines (STY-075 S4).
+ */
+const ON_THE_LINE_CLASSES = "pt-0.75"
+
 export interface CompactItemRowProps {
   item: RoadmapItem
   /** The organisation list, which the item's `organisationIds` name (ADR-014). */
@@ -43,8 +51,8 @@ export interface CompactItemRowProps {
    */
   reveal?: boolean
   /**
-   * The moved mark's label, on the item last moved (STY-071): where the pending tag is,
-   * before it, with the mark's edge round the row.
+   * The moved mark's label, on the item last moved (STY-071): beside the pending tag,
+   * before it, on one line, with the mark's edge round the row.
    */
   mark?: ReactNode
   /**
@@ -63,8 +71,9 @@ export interface CompactItemRowProps {
  * description in the room the title leaves, each cut with an ellipsis, then an
  * unplaced item's flag, cut within a quarter of the line, and the moved mark's label and
  * the pending tag (STY-071 S3); each keeps its whole text for assistive technology.
- * Narrower, the title on the lines it needs, with no description, and the flag, the
- * label and the tag under it (S5, D10).
+ * Narrower, the title on the lines it needs, with no description, the flag under it, then
+ * the label and the tag together on one line (S5, D10; STY-075 S3). Nothing on a
+ * desktop's line moves as the row opens or closes (STY-075 S4).
  *
  * The chevron is a Collapsible's trigger, stretched across the whole line (STY-069), so
  * a press anywhere on it but Move and Edit opens and closes the row, and the chevron is
@@ -120,11 +129,10 @@ export function CompactItemRow({
       <div
         className={cn(
           "relative flex",
+          // Always from the top, so what sits on the line keeps its place as the row opens
+          // and its title wraps (STY-075 S4): see `ON_THE_LINE_CLASSES`.
           wide
-            ? cn(
-                "min-h-12 gap-3 py-2 pr-3 pl-2",
-                open ? "items-start" : "items-center",
-              )
+            ? "min-h-12 items-start gap-3 py-2 pr-3 pl-2"
             : "items-start gap-2 py-2 pr-2 pl-1",
         )}
       >
@@ -174,12 +182,18 @@ export function CompactItemRow({
             {horizon !== null && (
               // A quarter of the line at most, so the title keeps its room: cut on one
               // line while the row is closed, wrapping once it is opened.
-              <div className={cn("flex max-w-1/4 min-w-0", struckClasses)}>
+              <div
+                className={cn(
+                  "flex max-w-1/4 min-w-0",
+                  ON_THE_LINE_CLASSES,
+                  struckClasses,
+                )}
+              >
                 <HorizonFlag writtenHorizon={horizon} cut={!open} />
               </div>
             )}
             {(mark ?? tag) && (
-              <div className="flex shrink-0 gap-2">
+              <div className={cn("flex shrink-0 gap-2", ON_THE_LINE_CLASSES)}>
                 {mark}
                 {tag}
               </div>
@@ -197,8 +211,12 @@ export function CompactItemRow({
                 <HorizonFlag writtenHorizon={horizon} />
               </div>
             )}
-            {mark}
-            {tag}
+            {(mark ?? tag) && (
+              <div className="flex flex-wrap gap-2">
+                {mark}
+                {tag}
+              </div>
+            )}
           </div>
         )}
         <div className="relative z-10 flex shrink-0 gap-2">{actions(wide)}</div>

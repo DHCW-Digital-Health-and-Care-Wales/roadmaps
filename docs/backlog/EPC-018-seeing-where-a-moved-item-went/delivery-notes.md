@@ -20,3 +20,6 @@
 - A view transition's captured elements take no press, so the travel is drawn only
   between the pinned bars, and a press there skips it (STY-072 D7). Playwright reports
   `<html>` intercepting a click there: press the page first, or drive the keyboard.
+- A check of where parts of a moved item sit, with motion on, reads them in one
+  `page.evaluate` (`placesIn`, `item-tags.spec.ts`): the page glides to the item after a
+  move, so boxes read in separate awaits are from different scroll positions.

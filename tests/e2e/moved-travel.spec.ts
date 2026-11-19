@@ -2,6 +2,7 @@ import type { Locator, Page } from "@playwright/test"
 
 import { openEditItemDialog, publishOnce } from "./fixtures/dialogs"
 import { withTabItems } from "./fixtures/fake-sheets"
+import { boxesOf } from "./fixtures/layout"
 import { tokenColour } from "./fixtures/look"
 import {
   chooseCompact,
@@ -10,8 +11,9 @@ import {
   itemOf,
   main,
   moveButton,
+  openProductA,
 } from "./fixtures/moved-items"
-import { connect, expect, test } from "./fixtures/test"
+import { expect, test } from "./fixtures/test"
 
 /**
  * STY-072: after a choice in the Move menu, the item travels from where it was to where
@@ -108,12 +110,7 @@ const nameOf = (page: Page, title: string) =>
   )
 
 async function open(page: Page) {
-  await page.setViewportSize(DESKTOP)
-  await page.goto("./#/roadmaps/producta")
-  await connect(page)
-  await expect(
-    main(page).getByRole("heading", { level: 3, name: "Minimal card" }),
-  ).toBeVisible()
+  await openProductA(page, DESKTOP)
   await publishOnce(page)
 }
 
@@ -279,6 +276,13 @@ test.describe("a move to another placement travels the whole way (S2)", () => {
     await expect(card.getByText("Moved from Now")).toBeVisible()
     await expect.poll(() => inRoom(card)).toBe(true)
     await expect(moveButton(page, "A minimal card")).toBeFocused()
+    // It ends with its tags together at its foot (STY-075 S1), as it lands.
+    const [moved, changed] = await boxesOf(
+      card.getByText("Moved from Now"),
+      card.getByText("Changed", { exact: true }),
+    )
+    expect(Math.abs(moved.y - changed.y)).toBeLessThan(1)
+    expect(moved.right).toBeLessThan(changed.x)
   })
 })
 

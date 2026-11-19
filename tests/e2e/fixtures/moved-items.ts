@@ -1,7 +1,7 @@
 import type { Locator, Page } from "@playwright/test"
 
 import type { Language } from "./look"
-import { expect } from "./test"
+import { connect, expect } from "./test"
 
 // A roadmap's items as EPC-018 moves them: each with its Move menu, in Cards or the
 // compact view, the item moved scrolled into the room between the pinned bars
@@ -14,6 +14,23 @@ const COPY = {
 
 /** The page's own content, apart from the navigation beside it. */
 export const main = (page: Page): Locator => page.getByRole("main")
+
+/**
+ * Opens Product A's page at `size` and connects, in `language`, once its first card
+ * shows ("Minimal card").
+ */
+export async function openProductA(
+  page: Page,
+  size: { width: number; height: number },
+  language: Language = "en",
+): Promise<void> {
+  await page.setViewportSize(size)
+  await page.goto("./#/roadmaps/producta")
+  await connect(page, language === "cy" ? "Cysylltu â Google" : undefined)
+  await expect(
+    main(page).getByRole("heading", { level: 3, name: "Minimal card" }),
+  ).toBeVisible()
+}
 
 /** The card or row of the item titled `title`. */
 export function itemOf(page: Page, title: string): Locator {

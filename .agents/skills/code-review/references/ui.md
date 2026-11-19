@@ -41,10 +41,12 @@ working order, and grade and report findings as it sets.
   `cn(buttonVariants())`; shadcn `Alert` forces icon colour with
   `*:[svg]:text-current`; Base UI's `focusableWhenDisabled` sets
   `data-disabled`, not `:disabled`, so `disabled:` variants do not apply; a
-  Base UI `render={<Link/>}` button adds `role="button"`). A visual no-op needs
-  computed-style or visual evidence. Hold UI to WCAG 2.2 AA: accessible names
-  that contain their visible text (the language switcher's "Language English"
-  keeps a space node), native structure and landmarks, live regions (above),
+  Base UI `render={<Link/>}` button adds `role="button"`). A visual no-op, and a
+  rule that carries behaviour (hiding, showing or raising an element in some
+  state), needs computed-style or visual evidence: a selector that never
+  matches passes every test that does not look. Hold UI to WCAG 2.2 AA:
+  accessible names that contain their visible text (the language switcher's
+  "Language English" keeps a space node), native structure and landmarks, live regions (above),
   `aria-busy`, focus order and visible focus,
   focus management in `AppShell` (focus moves to `<main>` after in-app
   navigation, and when the focused control inside `<main>` is removed; the skip

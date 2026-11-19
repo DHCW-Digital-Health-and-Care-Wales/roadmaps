@@ -82,13 +82,15 @@ cannot be inferred safely, or a needed new or successor ADR, and ask the moment
 the question appears, at any step. Each option states what the build does now
 and what choosing it adds, removes or moves, so the chosen answer names its
 remaining work. Record each answer as an owner entry in the record's
-`## Decisions`. A delegated agent heads its handoff with the question and, in
-an orchestrate run, logs it as an `owner-question` note; otherwise, once its
-independent work is done, it asks through the runtime's pending-request tool,
-which its parent relays (`references/delegation.md`, Dispatch step 5).
-Continue independent work while waiting; an unanswered question is not
-approval. When only work that rests on the answer remains, hand back with it
-as a blocker.
+`## Decisions`. An answer covers only what was asked: when review or later work
+widens or changes what an answered decision commits to, ask again, saying what
+changed, and record that change as unanswered until the owner replies. A
+delegated agent heads its handoff with the question and, in an orchestrate run,
+logs it as an `owner-question` note; otherwise, once its independent work is
+done, it asks through the runtime's pending-request tool, which its parent
+relays (`references/delegation.md`, Dispatch step 5). Continue independent work
+while waiting; an unanswered question is not approval. When only work that
+rests on the answer remains, hand back with it as a blocker.
 
 Set the record's Status to `In progress — <branch or PR>`. Map each
 criterion to observable verification and identify affected layers (domain,

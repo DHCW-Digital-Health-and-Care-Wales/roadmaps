@@ -452,9 +452,12 @@
    live. The travel is drawn only in the room between the stuck header and the foot bar,
    so they stay above it as they do when nothing moves, and take clicks and taps; a press
    in the room ends the travel (`travel`, D7). The menu the move was chosen from goes at
-   once (`DropdownMenuContent`, closing, while `travel` sets `data-travelling`). The
-   reduced-motion rule above does not reach these pseudo-elements: no transition starts
-   where the system asks for reduced motion (S4). */
+   once (`DropdownMenuContent`, closing, while `travel` sets `data-travelling`): keyed
+   on that attribute because Chrome restyles no descendant as
+   `:active-view-transition-type` starts to match, and `display: none` because a
+   transitioning `visibility` stays visible. The reduced-motion rule above does not
+   reach these pseudo-elements: no transition starts where the system asks for reduced
+   motion (S4). */
 [data-travelling] [data-slot="dropdown-menu-content"][data-closed] {
   display: none;
 }

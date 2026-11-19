@@ -165,7 +165,10 @@ General lenses:
   3 s), duplicate submission and React StrictMode double effects (dev aborts and
   repeats the first fetch). Check effect dependencies, cleanup, and
   `useSyncExternalStore` snapshots (identity changes only on change; a
-  selector returning a fresh object each call loops). Where a dialog, menu,
+  selector returning a fresh object each call loops). Where a reaction waits
+  for an event (focus arriving, a mount, a transition ending), check whether
+  its state can already hold before it listens, so the event never comes: a
+  menu hands focus back before a deferred update lands. Where a dialog, menu,
   open form or pending action outlives the read that opened it, a refetch,
   expiry or route change must neither unmount it, swap the record it acts on,
   nor leave what it shows stale or at odds with what it will submit. Every

@@ -254,8 +254,6 @@ For each item report:
   or bots.
 
 Update `brief-common.md` with relevant learnings before the next item starts.
-A reviewer's usage limit is one: give its reset time and send that lane's
-reviews straight to its fallback provider until then.
 Update `run-handoff.md` with queue, task IDs, PR heads, policy, outcomes and
 next concrete action. Carry the compact record through context compaction.
 

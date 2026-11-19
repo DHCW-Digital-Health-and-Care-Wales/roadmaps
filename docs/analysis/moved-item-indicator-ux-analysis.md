@@ -165,4 +165,5 @@ label sits under a card's title (D5) and shortens by the list's width (D6); "Pla
 for an unplaced item (D7); the slide built with React's `ViewTransition` (STY-072 D5)
 and travelling the whole way across placements (D2), but not for a move from the
 dialog (D3); "Undo order" travels back (STY-073); and the same motion for adding,
-removing and discarding is an idea to grill (STY-074).
+removing and discarding is an idea to grill (STY-074). After STY-071 was delivered,
+the owner moved a card's label to its foot, beside the pending tag (STY-075 D1).

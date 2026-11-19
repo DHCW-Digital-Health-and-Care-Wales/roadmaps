@@ -174,6 +174,10 @@ layout.
   375px phone (cut); a navigation dragged wider at 1280px cuts it too.
 - **D19** (agent, 2026-11-19, review): S3's cut to the arrow and "Moved" is for the
   "Moved …" labels; "Placed" is no "Moved", and as short, so it shows whole.
+- **D20** (owner, 2026-11-19, after the delivery): S3's card label moves from under the
+  title to the card's foot, before the pending tag, and a phone's compact row puts the
+  label and the tag on one line; changes S3's Cards view and D5. Taken up by
+  [STY-075](../../EPC-018-seeing-where-a-moved-item-went/STY-075-an-items-tags-sit-together-and-stay-put.md).
 
 ## Starting point
 

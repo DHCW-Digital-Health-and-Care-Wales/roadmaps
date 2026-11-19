@@ -28,10 +28,15 @@ Report executed test counts and failures; zero tests or a skipped check is not
 validation. Preserve runner exit status when redirecting output. Capture
 verbose logs in a temporary path and summarize the evidence.
 
-A test your change does not touch that fails in a gate run and passes when its
-file is run alone, on the same head, is a flake: add the run to its defect, or
-record one (`docs/AGENTS.md`), then run the gate's commands after the one that
-failed rather than the whole gate again.
+A test that times out at its budget in a gate run and passes when its file runs
+alone, on the same head, is a flake only if your change has not slowed it: an
+open defect records it timing out without your change and its time alone is
+close to the time recorded there, or it times out the same way on your base.
+Add the run to that defect, or record one (`docs/AGENTS.md`, with
+`pnpm format:check && pnpm test:docs`), then run the gate's commands after the
+one that failed; with them green, the head has passed the full gate. Classify
+any other failure that passes alone as `pr-watch.md` does (_Each event or
+observation_).
 
 `pnpm test:e2e` builds and serves the app on port 4173 (in a parallel
 worktree, its `PREVIEW_PORT`: `pnpm worktree:info`) and reuses a server

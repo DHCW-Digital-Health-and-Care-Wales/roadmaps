@@ -16,8 +16,8 @@
 The three slowest component tests in the unit suite take 3.2 to 3.5 seconds of their
 5-second budget in a full run on an idle host. When the host is busy (load 15 to 20 on
 8 cores), they go over it and fail as timeouts. Each passes when its file runs alone.
-This happened in two deliveries in a row, on changes that did not touch them, and each
-cost a rerun of the suite. CI has not shown it.
+This happened in two deliveries in a row, on changes that edited none of these tests.
+Each had to rerun the failed files alone, and one also repeated its whole gate. CI has not shown it.
 
 ## Reproduce
 
@@ -40,23 +40,34 @@ on an idle host (load 1.9 before the run) passed 2,996 of 2,996. The slowest tes
 With only their three files run, at load 2.7, they took 2,225 ms, 1,702 ms and
 1,591 ms.
 
-**Expected**: the suite passes on a busy host.
-**Actual**: under load 15 or more, two of these three time out.
+To reproduce at `b00765a`, run the suite twice at once on 8 cores:
+
+1. `./node_modules/.bin/vitest run --reporter=json --outputFile=a.json &`
+2. `./node_modules/.bin/vitest run --reporter=json --outputFile=b.json`
+
+**Expected**: both runs pass 2,996 of 2,996.
+**Actual**: run on a host already at load 8.7 from other work, load peaked at 31.
+The runs failed 100 and 106 tests, in 16 and 17 files, all of them page and
+navigation component tests. 68 and 65 failed on the 5 s test budget. Most of the
+rest failed a Testing Library `findBy` wait (1 s by default), such as "Unable to
+find role="heading" and name "A item"". Under the gates' load of 15 to 20, only
+two tests timed out each time.
 
 ## Cause
 
 Suspected, not verified. These tests drive the whole roadmap page with
 `userEvent`, many steps per test. Vitest's default budget of 5,000 ms (no
-`testTimeout` in `vite.config.ts`'s `test` block) leaves them less than half their
-own time to spare. 41 tests take over 2 seconds in the idle run and 14 over 2.5, so the
-next slowest are near the same edge.
+`testTimeout` in `vite.config.ts`'s `test` block) leaves them 1.5 to 1.8 s to
+spare. 41 tests take over 2 seconds in the idle run and 14 over 2.5, so the
+next slowest are near the same edge. Under heavier load, the 1 s `findBy` waits in the
+same files give out too.
 
 ## Acceptance criteria
 
 ### S1: the slowest page tests pass on a busy host
 
-**Given** the unit suite run in full beside a busy process (load 15 or more on
-8 cores), three times,
+**Given** the unit suite run in full on 8 cores, three times, each beside a second
+full run as in Reproduce,
 **Then** every run passes, **And** Delivery says what made the tests faster or gave
 them the budget they need, and why that budget is not hiding a slow page.
 

@@ -1,6 +1,7 @@
 # DEF-017: An edit made while a publish moves its item's row is reported as removed
 
-- **Status**: Needs triage — found by STY-051 delivery (its correctness review)
+- **Status**: Won't fix — owner, 2026-11-19 (D1); archived. Found by STY-051 delivery
+  (its correctness review)
 - **Severity**: Low — one edit, typed in the second or two a publish takes, to an item
   that has never had an `Item ID`, is dropped with a notice that the item was removed
 - **Area**: Domain + Features/UI
@@ -23,9 +24,8 @@ is to make the edit again. STY-051 D8 records the same effect for a co-lead.
 
 ## Reproduce
 
-At `94b0063`, STY-051's delivery, not yet on the default branch (re-pin these steps
-to its merge commit at triage); before it no publish moved a row, so this did not
-happen. With the pending-edit rules alone
+At `bd435f0`, STY-051's merge commit on the default branch; before it no publish moved
+a row, so this did not happen. With the pending-edit rules alone
 (`src/features/roadmaps/editing/pending-changes.ts`) and the publish plan:
 
 1. A roadmap reads `X` (Later, no ID) then `A` (Now).
@@ -69,6 +69,13 @@ The scenarios wait for Q1: only (b) and (c) change what the build does.
     changes how an item without an ID is found (ADR-012 Options 11 and 13), which the
     owner chose as position plus content; needs an ADR amendment.
 
+  Answered by D1: (a).
+
 ## Decisions
+
+- **D1** (owner, 2026-11-19, triage in the orchestrator's session): Won't fix, Q1 (a),
+  as STY-051 D8 accepts the co-lead's case. The edit is dropped with the "removed or
+  changed" notice, at most once per item, since any publish gives every item an ID;
+  the workaround is to make the edit again. Reopen if a Product Lead reports it.
 
 ## Delivery _(add on delivery; as in `story.md`)_

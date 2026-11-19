@@ -286,9 +286,10 @@ flowchart LR
 - [DEF-016](../_archive/defects/DEF-016-the-item-dialog-s-focus-tour-counts-a-focus-guard-as-a-stop.md):
   the item dialog's focus tour counts a focus guard as a stop, so an E2E run fails now
   and then. Done (owner, 2026-11-19); found by DEF-015's delivery.
-- [DEF-017](../defects/DEF-017-an-edit-made-while-a-publish-moves-its-item-is-reported-as-removed.md):
+- [DEF-017](../_archive/defects/DEF-017-an-edit-made-while-a-publish-moves-its-item-is-reported-as-removed.md):
   an edit made while a publish moves its item's row is reported as removed, for an
-  item that has never had an ID. Needs triage; found by STY-051's review.
+  item that has never had an ID. Won't fix (owner, 2026-11-19, as STY-051 D8); found by
+  STY-051's review.
 
 ## Related
 

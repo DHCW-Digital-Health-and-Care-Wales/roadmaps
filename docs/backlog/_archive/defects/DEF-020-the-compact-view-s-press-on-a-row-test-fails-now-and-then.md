@@ -73,6 +73,11 @@ own 49 px excursion is a product fault in its own right, recorded as DEF-021, no
 here: a user is unlikely to press in the one or two frames it lasts. The test runs at
 the page's own speed (D2); the load S1 asks for was a one-off stress run.
 
+The links wrapping was the symptom, not the cause. DEF-021 (PR #183) traced it to the
+global reduced-motion rule, which this spec opts into: a 0.01 ms transition on every
+property drew the header's old padding and size for a frame or two as it let go. With
+that rule fixed the excursion is gone; `pressOn`'s narrower scroll stands on its own.
+
 ### Departures
 
 - **Test-first by reproduction** (agent): as DEF-016's, the red is the stress run at the

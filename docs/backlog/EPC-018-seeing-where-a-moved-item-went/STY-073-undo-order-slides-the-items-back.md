@@ -12,9 +12,9 @@
 
 "Undo order" puts a placement's items back in their default order at once (those
 last read, then those moved in, then those added), which can look like nothing
-happened. This story lets each item travel to where the undo puts it, as a move does; what "Undo
-order" does is unchanged. Not in it: marking the items, since nothing is left to find;
-and "Discard all", which STY-074 holds as an idea.
+happened. This story lets each item travel to where the undo puts it, as a move
+does; what "Undo order" does is unchanged. Not in it: marking the items, since nothing
+is left to find; and "Discard all", which STY-074 holds as an idea.
 
 ## Acceptance criteria
 

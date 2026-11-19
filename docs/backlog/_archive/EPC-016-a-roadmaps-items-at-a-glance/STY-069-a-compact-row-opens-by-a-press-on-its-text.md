@@ -7,7 +7,7 @@
 - **Depends on**: STY-067 (hard: the compact view and its rows)
 - **Binding ADRs**: ADR-002, ADR-010
 - **Suggested model**: Sonnet — one component moves onto an existing primitive, with its tests
-- **Delivered**: _(the PR; added once it exists)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/173
 
 ## Summary
 

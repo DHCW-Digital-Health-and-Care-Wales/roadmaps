@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test"
 
 import { openEditItemDialog, publishOnce } from "./fixtures/dialogs"
+import { withTabItems } from "./fixtures/fake-sheets"
 import { tokenColour } from "./fixtures/look"
 import {
   chooseCompact,
@@ -195,6 +196,51 @@ test.describe("a move within a placement travels (S1)", () => {
             (element) => getComputedStyle(element).backgroundColor,
           ),
         ).toBe(await tokenColour(page, "--card"))
+      })
+    }
+  }
+})
+
+test.describe("a long placement (S1, STY-071 S4)", () => {
+  test.use({ reducedMotion: "no-preference" })
+
+  for (const view of ["cards", "compact"] as const) {
+    for (const by of ["pointer", "keyboard"] as const) {
+      test(`“To the top” from far down, in ${view}, chosen by ${by}: it travels and lands in the room between the bars, focus on its Move`, async ({
+        page,
+        sheets,
+      }) => {
+        sheets.spreadsheet = withTabItems(
+          "ProductA",
+          ["Minimal card", "Next"],
+          ...Array.from({ length: 20 }, (_, at): [string, string] => [
+            `Now item ${String(at + 1)}`,
+            "Now",
+          ]),
+        )
+        await recordTravels(page)
+        await open(page)
+        if (view === "compact") await chooseCompact(page)
+        const last = itemOf(page, "Now item 20")
+
+        if (by === "pointer") {
+          await chooseFromMenu(page, "Now item 20", "To the top")
+        } else {
+          await moveButton(page, "Now item 20").focus()
+          await page.keyboard.press("Enter")
+          await page
+            .getByRole("menuitem", { name: "To the top", exact: true })
+            .focus()
+          await page.keyboard.press("Enter")
+        }
+        await landed(page)
+
+        expect((await travels(page)).map((each) => each.types)).toEqual([
+          ["item-move"],
+        ])
+        await expect(last.getByText("Moved to the top")).toBeAttached()
+        await expect.poll(() => inRoom(last)).toBe(true)
+        await expect(moveButton(page, "Now item 20")).toBeFocused()
       })
     }
   }

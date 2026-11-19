@@ -88,6 +88,23 @@ export interface EditableItemProps {
   dialogOpener?: RefObject<HTMLButtonElement | null> | undefined
 }
 
+/** The reveal of an item's mark under way (`revealMoved`), and how to stop it. */
+interface Revealing {
+  mark: MovedMark
+  stop: () => void
+}
+
+/** Scrolls the page to `item` for `mark`, once: a reveal of another mark stops. */
+function startReveal(
+  revealing: RefObject<Revealing | null>,
+  mark: MovedMark,
+  item: Element,
+): void {
+  if (revealing.current?.mark === mark) return
+  revealing.current?.stop()
+  revealing.current = { mark, stop: revealMoved(item) }
+}
+
 /** A control of an item's card or row that focus can return to. */
 export type ItemControl = "edit" | "move" | "remove" | "undo-removal"
 
@@ -164,7 +181,16 @@ export function EditableItem({
   }, [focusRequest, editButton, onFocused])
   // The page scrolls to each mark once, as focus first comes to the item, and stops
   // following the bars once the item no longer carries it.
-  const revealing = useRef<{ mark: MovedMark; stop: () => void } | null>(null)
+  const revealing = useRef<Revealing | null>(null)
+  // A move that travels is drawn a moment after it is chosen, and the menu may have
+  // handed focus back to Move by then: focus comes to the item before its mark does, so
+  // the mark starts the reveal (STY-072). After the focus request, which reveals once
+  // it moves focus.
+  useLayoutEffect(() => {
+    const item = moveButton.current?.closest("li")
+    if (mark && item?.contains(document.activeElement))
+      startReveal(revealing, mark, item)
+  }, [mark])
   useEffect(
     () => () => {
       // Its own reveal only: the next mark's may have started before this runs.
@@ -176,9 +202,7 @@ export function EditableItem({
     [mark],
   )
   const reveal = (event: FocusEvent<HTMLLIElement>) => {
-    if (!mark || revealing.current?.mark === mark) return
-    revealing.current?.stop()
-    revealing.current = { mark, stop: revealMoved(event.currentTarget) }
+    if (mark) startReveal(revealing, mark, event.currentTarget)
   }
   const label = (shortens: boolean) =>
     mark && <MovedLabel move={mark.move} shortens={shortens} />

@@ -248,6 +248,60 @@ describe("The page scrolls to the moved item (S4)", () => {
   })
 })
 
+describe("The page scrolls to an item that travelled (STY-072)", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    Reflect.deleteProperty(document, "startViewTransition")
+  })
+
+  it("though focus came back to its Move before the move was drawn", async () => {
+    // A browser that draws the move a while after it was chosen, as a view transition
+    // does: the menu has handed focus back to Move by then.
+    vi.stubGlobal(
+      "ViewTransition",
+      class {
+        get types() {
+          return new Set<string>()
+        }
+      },
+    )
+    Object.defineProperty(document, "startViewTransition", {
+      configurable: true,
+      value: (options: StartViewTransitionOptions) => {
+        const finished = new Promise<void>((resolve) => {
+          setTimeout(() => {
+            options.update?.()
+            resolve()
+          }, 50)
+        })
+        return {
+          finished,
+          ready: finished,
+          updateCallbackDone: finished,
+          skipTransition: vi.fn(),
+        }
+      },
+    })
+    const { user } = await renderPage()
+    const scrolled = vi.spyOn(Element.prototype, "scrollIntoView")
+    const move = main().getByRole("button", { name: "Move Delta" })
+
+    await chooseFromMenu(user, "Delta", "To the top")
+    await waitFor(() => {
+      expect(move).toHaveFocus()
+    })
+    await waitFor(() => {
+      expect(marked()).toEqual([["Delta", "Moved to the top"]])
+    })
+    for (let frame = 0; frame < 3; frame++) {
+      await new Promise((resolve) => requestAnimationFrame(resolve))
+    }
+
+    expect(titlesUnder("Now")[0]).toBe("Delta")
+    expect(scrolled.mock.contexts).toContain(move.closest("li"))
+  })
+})
+
 describe("One mark (S6)", () => {
   it("goes to the item moved next", async () => {
     const { user } = await renderPage()

@@ -2,7 +2,7 @@
 
 - **Status**: Active — design E of the moved item UX analysis (C's slide, then B's
   mark), grilled with the owner on 2026-11-19
-- **Progress**: 1 of 4 terminal (STY-071); next selectable: STY-072; blocked on:
+- **Progress**: 1 of 5 terminal (STY-071); next selectable: STY-072, STY-075; blocked on:
   STY-074's grilling (an idea, not needed by the others)
 - **Binding ADRs**: ADR-002, ADR-005, ADR-008, ADR-010
 
@@ -17,7 +17,9 @@ or published (STY-071);
 lets the item glide to its new place, so the eye follows it (STY-072); and lets the
 items glide back on "Undo order" (STY-073). It leaves what a move does, what is
 written and what the public site shows. The same motion for adding, removing and
-discarding is an idea to grill later (STY-074).
+discarding is an idea to grill later (STY-074). Once the mark was in use, the owner
+asked for an item's tags to sit together and keep still as a compact row opens
+(STY-075).
 
 ## Owner decisions waiting
 
@@ -60,7 +62,10 @@ left says it went, and the status line says nothing (only `reorder` announces).
    (F2, F3). STY-072.
 4. "Undo order" shows the items travelling to where it puts them (F2).
    STY-073.
-5. **Unchanged:** the Move menu, its choices, where a moved item lands, the item
+5. A card shows the mark's label at its foot, then its pending tag, and every compact
+   row keeps the two on one line and still as it opens or closes (owner, after
+   STY-071). STY-075.
+6. **Unchanged:** the Move menu, its choices, where a moved item lands, the item
    dialog; the pending edits a move makes, "Order changed", "Undo order", "Changed",
    "Undo changes", "Discard all"; focus after a move or a dialog; what is read, written
    and published.
@@ -97,18 +102,21 @@ Each new string is in both catalogues (ADR-008), in the product's voice, through
 
 ## Stories
 
-| ID      | Story                                                                                                                                                               | Area                               | Depends on | State |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ---------- | ----- |
-| STY-071 | [A Product Lead sees which item they moved, and where it went](../_archive/EPC-018-seeing-where-a-moved-item-went/STY-071-a-moved-item-is-marked-where-it-lands.md) | Features/UI + i18n (en + cy) + E2E | —          | ✅    |
-| STY-072 | [A Product Lead sees a moved item travel to its new place](STY-072-a-moved-item-slides-to-its-place.md)                                                             | Features/UI + E2E                  | STY-071    |       |
-| STY-073 | [A Product Lead sees the items travel back when they undo an order](STY-073-undo-order-slides-the-items-back.md)                                                    | Features/UI + E2E                  | STY-072    |       |
-| STY-074 | [The same motion when adding, removing and discarding items](STY-074-the-same-motion-when-adding-removing-and-discarding.md)                                        | Features/UI                        | STY-072    |       |
+| ID      | Story                                                                                                                                                               | Area                               | Depends on                   | State |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ---------------------------- | ----- |
+| STY-071 | [A Product Lead sees which item they moved, and where it went](../_archive/EPC-018-seeing-where-a-moved-item-went/STY-071-a-moved-item-is-marked-where-it-lands.md) | Features/UI + i18n (en + cy) + E2E | —                            | ✅    |
+| STY-072 | [A Product Lead sees a moved item travel to its new place](STY-072-a-moved-item-slides-to-its-place.md)                                                             | Features/UI + E2E                  | STY-071, STY-075 (preferred) |       |
+| STY-073 | [A Product Lead sees the items travel back when they undo an order](STY-073-undo-order-slides-the-items-back.md)                                                    | Features/UI + E2E                  | STY-072                      |       |
+| STY-074 | [The same motion when adding, removing and discarding items](STY-074-the-same-motion-when-adding-removing-and-discarding.md)                                        | Features/UI                        | STY-072                      |       |
+| STY-075 | [A Product Lead sees an item's tags together, and still as a row opens](STY-075-an-items-tags-sit-together-and-stay-put.md)                                         | Features/UI + E2E                  | STY-071                      |       |
 
 ## Sequencing
 
 STY-071, then STY-072, then STY-073, one at a time: STY-072 plays before the mark
 STY-071 draws, and STY-073 reuses STY-072's transition. STY-074 waits for grilling and
-is not needed to close the others.
+is not needed to close the others. STY-075 needs only STY-071 and touches no motion, so
+it can go at any point; before STY-072 is better, so the slide ends on the tags' final
+place.
 
 ## Out of scope
 

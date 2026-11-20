@@ -10,13 +10,14 @@ import type { Language } from "@/i18n"
 import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
+import { cornerClose, expectDialogClosed } from "../testing/edit-dialog"
 import { holdCall } from "../testing/held-call"
 import { holdRefresh } from "../testing/held-refresh"
 import {
   createInMemoryRoadmapRepository,
   type InMemoryRoadmapItems,
 } from "../testing/in-memory-roadmap-repository"
-import { editItemDialog } from "../testing/item-dialog"
+import { addItemDialog, editItemDialog } from "../testing/item-dialog"
 import { expectOpeningFocus } from "../testing/opening-focus"
 
 // Quick add (STY-080): each placement ends with "Add an item", which opens a title
@@ -36,6 +37,7 @@ const unplaced = createTestRoadmapItem("Someday", {
 })
 
 const HEARING = "Book a hearing test online"
+const CHECK_IN = "Check in from your phone"
 const PLACEMENTS = [
   "Recently delivered",
   "Now",
@@ -166,7 +168,7 @@ describe("Every placement ends with “Add an item” (S1)", () => {
 })
 
 describe("Its field (S2–S6)", () => {
-  it("opens in its place, focused, named for its placement, with Add and Cancel and no placeholder (S2)", async () => {
+  it("opens in its place, focused, named for its placement, with “Add more details”, Add and Cancel and no placeholder (S2; STY-081 S1)", async () => {
     const { user } = await renderPage()
 
     const input = await openField(user, "Next")
@@ -178,8 +180,10 @@ describe("Its field (S2–S6)", () => {
     expect(
       within(entry)
         .getAllByRole("button")
-        .map(({ textContent }) => textContent),
-    ).toEqual(["Add", "Cancel"])
+        .map(
+          (button) => button.getAttribute("aria-label") ?? button.textContent,
+        ),
+    ).toEqual(["Add more details", "Add", "Cancel"])
     expect(main().queryByRole("button", { name: /to Next$/ })).toBeNull()
   })
 
@@ -206,11 +210,11 @@ describe("Its field (S2–S6)", () => {
       expect(said(`“${HEARING}” was added to Next.`)).toBeDefined()
       expect(published).not.toHaveBeenCalled()
 
-      await user.type(field("Next"), "Check in from your phone{Enter}")
+      await user.type(field("Next"), `${CHECK_IN}{Enter}`)
       expect(titlesUnder("Next")).toEqual([
         "See your waiting time",
         HEARING,
-        "Check in from your phone",
+        CHECK_IN,
       ])
       expect(main().getByText("2 unpublished changes")).toBeVisible()
     },
@@ -235,11 +239,13 @@ describe("Its field (S2–S6)", () => {
     },
   )
 
-  it("stays open as Tab goes to its own Add and Cancel, and drops what was typed as Tab leaves it (S5)", async () => {
+  it("stays open as Tab goes to its own buttons, and drops what was typed as Tab leaves it (S5)", async () => {
     const { user } = await renderPage()
     const input = await openField(user, "Next")
     await user.type(input, HEARING)
 
+    await user.tab()
+    expect(moreDetails()).toHaveFocus()
     await user.tab()
     expect(main().getByRole("button", { name: "Add" })).toHaveFocus()
     await user.tab()
@@ -260,6 +266,8 @@ describe("Its field (S2–S6)", () => {
     await user.type(input, HEARING)
 
     await user.tab()
+    await user.tab()
+    expect(main().getByRole("button", { name: "Add" })).toHaveFocus()
     await user.keyboard("{Enter}")
 
     expect(titlesUnder("Next")).toEqual(["See your waiting time", HEARING])
@@ -318,7 +326,7 @@ describe("Its field (S2–S6)", () => {
 })
 
 describe("While a publish or a read is under way (S9)", () => {
-  it("adds pending items while a publish of the roadmap is under way, the page left and come back to, which stay pending once it settles", async () => {
+  it("adds pending items while a publish of the roadmap is under way, the page left and come back to, by title and in the dialog, which stay pending once it settles (STY-081 S5)", async () => {
     const { user, repository, router } = await renderPage()
     // The list, then back: so the page can be left and come back to by history.
     await act(() => router.navigate({ to: "/" }))
@@ -361,15 +369,28 @@ describe("While a publish or a read is under way (S9)", () => {
     expect(screen.queryByRole("alertdialog")).toBeNull()
     await user.type(await openField(user, "Next"), `${HEARING}{Enter}`)
     expect(titlesUnder("Next")).toEqual(["See your waiting time", HEARING])
+    // "Add more details" opens the dialog meanwhile, and adds there (STY-081 S5).
+    await user.type(field("Next"), CHECK_IN)
+    await user.click(moreDetails())
+    await user.click(addItemDialog().getByRole("button", { name: "Add item" }))
+    await expectDialogClosed()
+    expect(titlesUnder("Next")).toEqual([
+      "See your waiting time",
+      HEARING,
+      CHECK_IN,
+    ])
 
     await act(async () => {
       release()
       await released
     })
     expect(await main().findByText(/^Changes published\./)).toBeVisible()
-    expect(main().getByText("1 unpublished change")).toBeVisible()
-    expect(titlesUnder("Next")).toEqual(["See your waiting time", HEARING])
-    expect(field("Next")).toHaveValue("")
+    expect(main().getByText("2 unpublished changes")).toBeVisible()
+    expect(titlesUnder("Next")).toEqual([
+      "See your waiting time",
+      HEARING,
+      CHECK_IN,
+    ])
   })
 
   it("keeps an open field, and what was typed in it, as the items are read again", async () => {
@@ -440,5 +461,288 @@ describe("In Welsh (S13)", () => {
     await user.click(main().getByRole("button", { name: "Ychwanegu" }))
 
     expect(said(`Ychwanegwyd “${HEARING}” o dan Nesaf.`)).toBeDefined()
+  })
+})
+
+// "Add more details" (STY-081): the field's expand button opens the item dialog with
+// the title typed so far and the field's placement.
+
+const TYPED = " Book a  hearing test "
+const TIDIED = "Book a hearing test"
+
+function moreDetails() {
+  return main().getByRole("button", { name: "Add more details" })
+}
+
+/** Opens Next's field, types `typed` and chooses "Add more details". */
+async function expand(user: User, typed = TYPED) {
+  const input = await openField(user, "Next")
+  if (typed) await user.type(input, typed)
+  await user.click(moreDetails())
+  return addItemDialog()
+}
+
+/** Expects Next's field open, focused, holding `typed` with the cursor at its end. */
+async function expectFieldBack(typed: string) {
+  await expectOpeningFocus(field("Next"))
+  const input = field("Next")
+  expect(input).toHaveValue(typed)
+  if (!(input instanceof HTMLInputElement)) throw new Error("No input")
+  expect([input.selectionStart, input.selectionEnd]).toEqual([
+    typed.length,
+    typed.length,
+  ])
+}
+
+const CLOSINGS = [
+  [
+    "Cancel",
+    (user: User) =>
+      user.click(addItemDialog().getByRole("button", { name: "Cancel" })),
+  ],
+  ["Escape", (user: User) => user.keyboard("{Escape}")],
+  [
+    "the corner's Close",
+    (user: User) => user.click(cornerClose(screen.getByRole("dialog"))),
+  ],
+] as const
+
+describe("“Add more details” (STY-081 S1, S2)", () => {
+  it("is at the field's end, between the title and Add in the tab order (S1)", async () => {
+    const { user } = await renderPage()
+    const input = await openField(user, "Next")
+
+    expect(moreDetails()).toBeVisible()
+    await user.tab()
+    expect(moreDetails()).toHaveFocus()
+    await user.tab()
+    expect(main().getByRole("button", { name: "Add" })).toHaveFocus()
+    expect(input).toBeVisible()
+  })
+
+  it("opens the item dialog's adding form with the title tidied, Next chosen, every other field empty and focus at the title's end (S2)", async () => {
+    const { user } = await renderPage()
+
+    const dialog = await expand(user)
+
+    const title = dialog.getByRole("textbox", { name: "Title" })
+    expect(title).toHaveValue(TIDIED)
+    expect(
+      dialog.getByRole("combobox", { name: "Horizon or section" }),
+    ).toHaveValue("next")
+    for (const name of ["Description", "Expected outcome", "Phase"]) {
+      expect(dialog.getByRole("textbox", { name })).toHaveValue("")
+    }
+    for (const none of ["No tags", "No organisations", "No details"]) {
+      expect(dialog.getByText(none)).toBeVisible()
+    }
+    await expectOpeningFocus(title)
+    if (!(title instanceof HTMLInputElement)) throw new Error("No input")
+    expect([title.selectionStart, title.selectionEnd]).toEqual([
+      TIDIED.length,
+      TIDIED.length,
+    ])
+  })
+
+  it("opens with an empty title and Next chosen when nothing is typed (S2)", async () => {
+    const { user } = await renderPage()
+
+    const dialog = await expand(user, "")
+
+    expect(dialog.getByRole("textbox", { name: "Title" })).toHaveValue("")
+    expect(
+      dialog.getByRole("combobox", { name: "Horizon or section" }),
+    ).toHaveValue("next")
+  })
+})
+
+describe("Adding in the dialog (STY-081 S3, S7)", () => {
+  it("adds the item with everything written, last in the placement chosen, tagged New; the dialog and the field close, focus on its Edit (S3)", async () => {
+    const { user } = await renderPage()
+    const dialog = await expand(user)
+    await user.type(
+      dialog.getByRole("textbox", { name: "Description" }),
+      "Choose a time that suits you.",
+    )
+    await user.selectOptions(
+      dialog.getByRole("combobox", { name: "Horizon or section" }),
+      "Later",
+    )
+
+    await user.click(dialog.getByRole("button", { name: "Add item" }))
+
+    await expectDialogClosed()
+    expect(titlesUnder("Later")).toEqual([TIDIED])
+    expect(titlesUnder("Next")).toEqual(["See your waiting time"])
+    const card = main()
+      .getByRole("heading", { level: 3, name: TIDIED })
+      .closest("li")
+    if (!card) throw new Error("No card")
+    expect(within(card).getByText("New")).toBeVisible()
+    const edit = main().getByRole("button", { name: `Edit ${TIDIED}` })
+    await waitFor(() => {
+      expect(edit).toHaveFocus()
+    })
+    expect(queryField("Next")).toBeNull()
+    expect(main().getByText("1 unpublished change")).toBeVisible()
+    await user.click(edit)
+    expect(
+      editItemDialog().getByRole("textbox", { name: "Description" }),
+    ).toHaveValue("Choose a time that suits you.")
+  })
+
+  it("keeps the title as typed when it is added unchanged, last in Next (S3)", async () => {
+    const { user } = await renderPage()
+    const dialog = await expand(user)
+
+    await user.click(dialog.getByRole("button", { name: "Add item" }))
+
+    await expectDialogClosed()
+    expect(titlesUnder("Next")).toEqual(["See your waiting time", TIDIED])
+  })
+
+  it("keeps the dialog open, empty, on Next, after “Add and start another” (S3)", async () => {
+    const { user } = await renderPage()
+    const dialog = await expand(user)
+
+    await user.click(
+      dialog.getByRole("button", { name: "Add and start another" }),
+    )
+
+    const title = addItemDialog().getByRole("textbox", { name: "Title" })
+    await waitFor(() => {
+      expect(title).toHaveFocus()
+    })
+    expect(title).toHaveValue("")
+    expect(
+      addItemDialog().getByRole("combobox", { name: "Horizon or section" }),
+    ).toHaveValue("next")
+    expect(addItemDialog().getByRole("status")).toHaveTextContent(
+      `“${TIDIED}” was added.`,
+    )
+  })
+
+  it.each(CLOSINGS)(
+    "ends the run on %s after “Add and start another”: the field stays closed, focus on Next's “Add an item” (S7)",
+    async (_how, close) => {
+      const { user } = await renderPage()
+      const dialog = await expand(user)
+      await user.click(
+        dialog.getByRole("button", { name: "Add and start another" }),
+      )
+      await waitFor(() => {
+        expect(addItemDialog().getByRole("status")).not.toBeEmptyDOMElement()
+      })
+
+      await close(user)
+
+      await expectDialogClosed()
+      await waitFor(() => {
+        expect(quickAdd("Next")).toHaveFocus()
+      })
+      expect(queryField("Next")).toBeNull()
+      expect(titlesUnder("Next")).toEqual(["See your waiting time", TIDIED])
+    },
+  )
+})
+
+describe("Closing the dialog having added nothing (STY-081 S4)", () => {
+  it.each(CLOSINGS)(
+    "%s adds nothing and brings Next's field back, the title as typed, focused, the cursor at its end",
+    async (_how, close) => {
+      const { user } = await renderPage()
+      const input = await openField(user, "Next")
+      await user.type(input, TYPED)
+      // The cursor elsewhere in the title as it is expanded.
+      await user.keyboard("{Home}")
+      await user.click(moreDetails())
+      await user.type(
+        addItemDialog().getByRole("textbox", { name: "Description" }),
+        "Dropped",
+      )
+
+      await close(user)
+
+      await expectDialogClosed()
+      await expectFieldBack(TYPED)
+      expect(titlesUnder("Next")).toEqual(["See your waiting time"])
+      expect(main().queryByText(/unpublished change/)).toBeNull()
+    },
+  )
+
+  it("does nothing on a click outside the dialog", async () => {
+    const { user } = await renderPage()
+    await expand(user)
+
+    await user.click(document.body)
+
+    expect(addItemDialog().getByRole("textbox", { name: "Title" })).toHaveValue(
+      TIDIED,
+    )
+  })
+
+  it("brings the field back, with its title, over a read that lands while the dialog is open", async () => {
+    const { user, repository } = await renderPage()
+    const release = await holdRefresh(user, repository)
+    await expand(user)
+
+    await release()
+    await user.keyboard("{Escape}")
+
+    await expectDialogClosed()
+    await expectFieldBack(TYPED)
+  })
+
+  it("can be expanded again, and Enter in the field back adds the title as quick add does", async () => {
+    const { user } = await renderPage()
+    await expand(user)
+    await user.keyboard("{Escape}")
+    await expectFieldBack(TYPED)
+
+    await user.keyboard("{Enter}")
+
+    expect(titlesUnder("Next")).toEqual(["See your waiting time", TIDIED])
+    expect(field("Next")).toHaveValue("")
+  })
+})
+
+describe("While the session has expired (STY-081 S5)", () => {
+  it("opens the dialog without asking to reconnect, and adds there", async () => {
+    const { user, authClient } = await renderPage()
+    act(() => {
+      authClient.setState({ status: "expired" })
+    })
+
+    const dialog = await expand(user)
+    await user.click(dialog.getByRole("button", { name: "Add item" }))
+
+    await expectDialogClosed()
+    expect(screen.queryByRole("alertdialog")).toBeNull()
+    expect(titlesUnder("Next")).toEqual(["See your waiting time", TIDIED])
+  })
+})
+
+describe("In Welsh (STY-081 S6)", () => {
+  it("names the button, and the dialog it opens is the Welsh adding form", async () => {
+    const { user } = await renderPage({ language: "cy" })
+    await user.click(
+      main().getByRole("button", { name: "Ychwanegu eitem o dan Nesaf" }),
+    )
+    await user.type(
+      main().getByRole("textbox", { name: "Teitl eitem newydd o dan Nesaf" }),
+      TYPED,
+    )
+
+    await user.click(
+      main().getByRole("button", { name: "Ychwanegu rhagor o fanylion" }),
+    )
+
+    const dialog = addItemDialog("cy")
+    expect(
+      dialog.getByRole("textbox", { name: "Teitl (Saesneg)" }),
+    ).toHaveValue(TIDIED)
+    expect(
+      dialog.getByRole("combobox", { name: "Gorwel neu adran" }),
+    ).toHaveValue("next")
   })
 })

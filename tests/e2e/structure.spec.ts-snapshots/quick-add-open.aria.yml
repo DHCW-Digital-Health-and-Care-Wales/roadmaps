@@ -20,5 +20,6 @@
     - button "Edit Book a hearing test online"
   - listitem:
     - textbox "Title of a new item in Next"
+    - button "Add more details"
     - button "Add"
     - button "Cancel"

@@ -346,6 +346,7 @@ export const cy = {
         to: "o dan {{placement}}",
         field: "Teitl eitem newydd o dan {{placement}}",
         add: "Ychwanegu",
+        more: "Ychwanegu rhagor o fanylion",
         added: "Ychwanegwyd “{{title}}” o dan {{placement}}.",
       },
       // Nawr, Nesaf and Hwyrach are the public site's Welsh headings.

@@ -146,7 +146,7 @@ rounds; the answers are in the stories' Decisions.
   screen, no hint, an expand button “Add more details”. Recorded as
   [STY-080](../backlog/_archive/EPC-011-adding-roadmaps-and-items/STY-080-quick-add-items-where-they-go.md)
   (the control),
-  [STY-081](../backlog/EPC-011-adding-roadmaps-and-items/STY-081-expand-quick-add-into-the-item-dialog.md)
+  [STY-081](../backlog/_archive/EPC-011-adding-roadmaps-and-items/STY-081-expand-quick-add-into-the-item-dialog.md)
   (the expand button) and
   [STY-082](../backlog/EPC-011-adding-roadmaps-and-items/STY-082-the-publish-dialog-flags-a-title-only-item.md)
   (the publish dialog's flag for a title-only item).

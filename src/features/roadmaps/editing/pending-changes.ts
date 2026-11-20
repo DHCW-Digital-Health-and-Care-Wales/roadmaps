@@ -34,10 +34,7 @@ import {
   UNLISTED_FAMILY,
 } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
-import {
-  isRoadmapPlacement,
-  type RoadmapPlacement,
-} from "@/domain/roadmap/roadmap-placement"
+import { isRoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 
 import type { RoadmapLists } from "../hooks/use-roadmap-lists"
 
@@ -619,11 +616,11 @@ const BLANK_ITEM: RoadmapItem = {
 }
 
 /**
- * An item with nothing in it, which the item dialog's adding form starts from: in
- * `placement`, or in none, which a new item can't keep (ADR-014).
+ * An item with nothing in it but `values`, which the item dialog's adding form starts
+ * from: in no placement unless they give one, which a new item can't keep (ADR-014).
  */
-export function blankItem(placement: RoadmapPlacement | null): RoadmapItem {
-  return placement ? withValues(BLANK_ITEM, { placement }) : BLANK_ITEM
+export function blankItem(values: ItemValues = {}): RoadmapItem {
+  return withValues(BLANK_ITEM, values)
 }
 
 /**

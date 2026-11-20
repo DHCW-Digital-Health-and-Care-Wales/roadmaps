@@ -323,9 +323,10 @@ not; the count beside it matches ("2 unpublished changes", "1 change to save"). 
 check is a question title naming the step ("Publish these changes?"), then what
 follows for the public (the nightly note, or "nothing will be public"), then "What
 changes": each subject by name with its changed fields, then each new item by its
-title, with "New item" where an edit's changed fields go. Its confirm button repeats
-the step. "Publish roadmap" lists the same under its sentence about the changes that
-go public with it.
+title, with "New item" where an edit's changed fields go, or "New item, title only" for
+one with nothing but its title and placement: one line, never a second mark. Its
+confirm button repeats the step. "Publish roadmap" lists the same under its sentence
+about the changes that go public with it.
 
 The bar pinned at the foot of a roadmap's page shortens its buttons to the verb,
 "Publish" (or "Save") and "Discard", each the start of its accessible name, "Publish

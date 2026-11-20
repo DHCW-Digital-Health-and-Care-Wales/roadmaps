@@ -78,7 +78,7 @@ control
   it does today.
 - **D3** (owner, 2026-11-17, EPC-012 grilling round 3; answers former Q3 with (a)): Edit and Move, which
   change only pending edits, never ask to reconnect.
-- **D4** (owner, 2026-11-20, quick add grilling R4 Q1, recorded by
+- **D4** (owner, 2026-11-20, quick add round 4 Q1, recorded by
   [STY-080](../../EPC-011-adding-roadmaps-and-items/STY-080-quick-add-items-where-they-go.md)
   D7): "Add an item" leaves D1's list. Adding an item changes only pending edits, so it
   never asks to reconnect, as D3 has Edit and Move. STY-080 delivers it.

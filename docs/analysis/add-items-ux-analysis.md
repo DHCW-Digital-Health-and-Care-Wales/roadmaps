@@ -5,33 +5,34 @@
   ([STY-046](../backlog/_archive/EPC-011-adding-roadmaps-and-items/STY-046-add-an-item.md)),
   which other ways in should a Product Lead have for adding items to a roadmap? The
   designs give the owner something to look at before any record is written.
-- **Scope**: the roadmap's page in this editor and the dialogs it opens. The public
-  site is out of scope. No record holds this question yet; it starts here.
+- **Scope**: the roadmap's page in this editor and the dialogs it opens. The public site
+  is out of scope. No record holds this question yet; it starts here.
 - **Base**: `cc32b48`.
 - **Shape**: frames, plus a working component for E. Each design is a static desktop
   frame (1280px, navigation open) and phone frame (375px) for each moment, on
-  [one page](add-items-ux-analysis/add-items-ux-prototypes.html). E, quick add, is
-  about how a field behaves under the keyboard, so it also has
+  [one page](add-items-ux-analysis/add-items-ux-prototypes.html). E, quick add, is about
+  how a field behaves under the keyboard, so it also has
   [a working version](add-items-ux-analysis/quick-add-ux-prototype.html) to type into,
-  in the cards and compact views, at the widths the app gives a placement's list
-  (343px to 1120px, measured in the app). The stories that followed the decision are named in the Outcome. The page draws today's shell in its own shared styles, as
-  three earlier pages did, since the skill's stylesheet still draws the app before
-  EPC-012 ([CHO-022](../backlog/chores/CHO-022-the-prototype-stylesheet-draws-todays-shell.md)).
+  in the cards and compact views, at the widths the app gives a placement's list (343px
+  to 1120px, measured in the app). The stories that followed the decision are named in
+  the Outcome. The page draws today's shell in its own shared styles, as three earlier
+  pages did, since the skill's stylesheet still draws the app before EPC-012
+  ([CHO-022](../backlog/chores/CHO-022-the-prototype-stylesheet-draws-todays-shell.md)).
 - **Sample world**: 20 November 2026. Sam Rees leads Appointments roadmap (family
   Planned care, published, Updated 4 November 2026) with seven items: one in Recently
-  delivered, two in Now, one each in Next, Later, Delivered this year and Not doing,
-  and no unpublished changes until a design adds. Waiting list roadmap, in the same
-  family, holds four items (two in Now, one in Next, one in Later) that design D
-  copies from. Every count a frame shows is derived from those rows.
+  delivered, two in Now, one each in Next, Later, Delivered this year and Not doing, and
+  no unpublished changes until a design adds. Waiting list roadmap, in the same family,
+  holds four items (two in Now, one in Next, one in Later) that design D copies from.
+  Every count a frame shows is derived from those rows.
 
 ## Readers and where they are
 
 Sam, a Product Lead, on a desktop most weeks and a phone now and then
 ([persona](../backlog/personas/product-lead.md)). The designs lean on three of its
-answers: visits are short, about 30 minutes a week (A1), so adding several items in
-one go matters; the desktop comes first (A2); and work often arrives as a list from
-a planning session or a sister product's roadmap, which today is retyped item by
-item. Connecting to Google stays out of the designs.
+answers: visits are short, about 30 minutes a week (A1), so adding several items in one
+go matters; the desktop comes first (A2); and work often arrives as a list from a
+planning session or a sister product's roadmap, which today is retyped item by item.
+Connecting to Google stays out of the designs.
 
 ## Journeys covered
 
@@ -46,21 +47,21 @@ data source holds rather than how a Product Lead adds; the empty roadmap's panel
 
 ## What every design shares
 
-- Today's "Add an item" button and item dialog stay, with "Add item" and "Add and
-  start another" (STY-046 D1, D5). Each design adds one way in beside them.
-- A new item is what STY-046 and the glossary make it: a pending edit with a title
-  and a placement, last in its placement, tagged "New", with Remove, Move and Edit,
-  counted one unpublished change per item (S5), and public only once published.
+- Today's "Add an item" button and item dialog stay, with "Add item" and "Add and start
+  another" (STY-046 D1, D5). Each design adds one way in beside them.
+- A new item is what STY-046 and the glossary make it: a pending edit with a title and a
+  placement, last in its placement, tagged "New", with Remove, Move and Edit, counted
+  one unpublished change per item (S5), and public only once published.
 - Focus lands on the new card's Edit after adding (S3); after adding several, on the
   first one's. E departs: focus stays in a fresh title field, for the next item.
-- The navigation's dot and "1 roadmap has unpublished changes", the placement link's
-  dot and count, and the pinned foot bar show the change as they do today.
+- The navigation's dot and "1 roadmap has unpublished changes", the placement link's dot
+  and count, and the pinned foot bar show the change as they do today.
 
 ## 1. Add items to a roadmap
 
 Sam has new work to put on Appointments roadmap. Sometimes it is one item and Sam
-already knows its horizon; sometimes it is close to an item already there; sometimes
-it is a list from a planning session; sometimes a sister roadmap already has it.
+already knows its horizon; sometimes it is close to an item already there; sometimes it
+is a list from a planning session; sometimes a sister roadmap already has it.
 
 | Design                  | Idea                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Strengths                                                                                                                                                                                                                                                  | Risks                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -70,13 +71,13 @@ it is a list from a planning session; sometimes a sister roadmap already has it.
 | D. From another roadmap | The same split button's menu adds "Items from another roadmap". A dialog picks a roadmap, ticks its items, and puts the copies in the same horizon or section or one chosen. Copies are this roadmap's own.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Shared work across a family (an All Wales service in two products) is written once, whole. Copies carry tags and organisations, which then join the tags offered here.                                                                                     | Reads a second roadmap inside a dialog. Two roadmaps then say the same thing independently and drift. Copies an item from a roadmap Sam may not lead, which co-leads may not expect (A12). A filter or search is needed once a roadmap is long.                                                                                                                                                                                                                                                                                           |
 | E. Quick add            | Each horizon and section ends with a quiet “Add an item” (“Add the first item” in an empty placement): a light dashed card in the cards view, a grey row in the compact view (named “Add an item to Next” to a screen reader). Choosing it puts a title field in its place, focused, with an expand button at its end and Add and Cancel on every screen: under the field in the cards view and on a phone, beside it in the compact view on wider screens. Add or Enter adds the item last in that placement, title only and tagged New, and opens a fresh field after it. Cancel or Escape, or leaving the field by click, tap or Tab, drops what is typed and puts “Add an item” back. No hint and no text inside the field: Enter and Escape are what a keyboard user expects, and Add and Cancel say the rest. The expand button opens the full item dialog with the title typed so far and the placement chosen; Cancel there brings the field back with its title. On a phone the keyboard's return key adds too, and the field scrolls itself and its buttons clear of the keyboard (checked by the owner on an iPhone 17). In the compact view the + sits under the rows' chevrons and its label in line with their titles, and the open field fills the row from its left edge. Only the title is asked, in both views. | The fastest way to put several titles down where they belong, without a dialog or a choice of horizon. The field sits where the item will land. One control does one item or ten. Every action is a visible button, whether or not a keyboard is attached. | Brings back quick add, which the owner weighed and set aside on 2026-11-14 (STY-046 D1, design 3C): items start as titles alone, need a second visit each, and can be published that way. Leaving the field drops a typed title without asking, so a stray click loses it. The open field is taller than “Add an item”, so it closes only once a press elsewhere has landed, or what was pressed would move from under the pointer. Six more controls on the page. Muted, it can be missed; the page’s own button stays the plain way in. |
 
-**Recommendation**: E as the primary. E does what A and C each do in part: it adds
-where the item will go, and it adds a run of titles fast, with nothing new but one
-field. A's preset dialog is then needed only if the owner wants a horizon chosen for
-the page's own "Add an item" too. E's risks are the ones to settle before a story:
-whether a title-only item may be published (_Decisions needed_ 5) and whether leaving
-the field should drop a typed title (12). B and D are worth it only if owners report
-sibling and shared items often; D's drift between roadmaps makes it the last to take.
+**Recommendation**: E as the primary. E does what A and C each do in part: it adds where
+the item will go, and it adds a run of titles fast, with nothing new but one field. A's
+preset dialog is then needed only if the owner wants a horizon chosen for the page's own
+"Add an item" too. E's risks are the ones to settle before a story: whether a title-only
+item may be published (_Decisions needed_ 5) and whether leaving the field should drop a
+typed title (12). B and D are worth it only if owners report sibling and shared items
+often; D's drift between roadmaps makes it the last to take.
 
 ## Decisions needed
 
@@ -95,7 +96,7 @@ sibling and shared items often; D's drift between roadmaps makes it the last to 
 | 11  | E's quick add control: on every placement (drawn), or only the three horizons; and whether it replaces “No items” under an empty placement. E reopens STY-046 D1, which set quick add aside, and D11 and D13 on how many add controls a page has.                                                                                                                                                                                                             | E; STY-046 D1, D11, D13     |
 | 12  | What leaving E's field does with a typed title: drop it (drawn, as the owner asked), keep it as a draft until the field is opened again, or add it as Enter would. Tab drops it too, so a keyboard user who tabs on loses it; on a phone, Tab lands on Add and Cancel first.                                                                                                                                                                                  | E; rule given by the owner  |
 | 13  | E's Enter with nothing typed, or only spaces, adds nothing and keeps the field open (drawn). Spaces are run together and trimmed; a title the roadmap already has is added as it is (drawn), where C marks it.                                                                                                                                                                                                                                                | E; rules chosen for drawing |
-| 14  | Where focus goes after E adds: the fresh field (drawn, as the owner asked), over the new card's Edit (STY-046 S3). A screen reader hears “‘Book a hearing test online’ added to Next. 1 unpublished change.”                                                                                                                                                                                                                                                  | E; STY-046 S3               |
+| 14  | Where focus goes after E adds: the fresh field (drawn, as the owner asked), over the new card's Edit (STY-046 S3). A screen reader hears “‘Book a hearing test online’ added to Next. 1 unpublished change.” Decided: “‘Book a hearing test online’ was added to Next.” (STY-080 D8).                                                                                                                                                                         | E; STY-046 S3               |
 | 15  | Add and Cancel show on every screen (drawn, as the owner chose), since a page cannot tell whether a keyboard is attached: `pointer` and `hover` media queries describe the mouse or finger, not the keyboard, and an iPad with or without a keyboard case can look the same; a keyboard is known only once it is used. Some iPad keyboards have no Escape key. Placeholder text inside the field, and a hint under it, were tried and dropped.                | E; owner's request          |
 | 16  | E's expand button: what it opens (drawn: the item dialog, as “Add an item” does, with the title and the placement filled in), its name (drafted: “Open the full form”; decided: “Add more details”), and where its “Add item” leaves focus (drawn: the new card's Edit, as STY-046 S3 has it, so the run of quick adds ends there). Cancel or Escape brings the field back with what was typed.                                                               | E; owner's request          |
 | 17  | Button sizes: Move and Edit on a card are 32px tall in the app, and the page's own buttons and a form's 40px. E's Add and Cancel are drawn at 40px, as a form's are, so they look larger than the card's buttons beside them.                                                                                                                                                                                                                                 | E; measured in the app      |
@@ -104,26 +105,27 @@ sibling and shared items often; D's drift between roadmaps makes it the last to 
 
 ## Not yet drawn
 
-- Not connected, an expired session (STY-046 D15: the button asks to reconnect
-  first) and items that can't be read, for every new control.
+- Not connected, an expired session (STY-046 D15: the button asks to reconnect first)
+  and items that can't be read, for every new control.
 - Errors: D's read of another roadmap failing; C's paste holding nothing but blank
   lines.
-- The compact view for A to D, the empty roadmap's panel, and a roadmap not yet published
-  ("Save changes" in place of "Publish changes", STY-046 D12).
+- The compact view for A to D, the empty roadmap's panel, and a roadmap not yet
+  published ("Save changes" in place of "Publish changes", STY-046 D12).
 - Welsh widths ("Ychwanegu at Nawr"), the dark theme, and keyboard order through the
   split button and C's and D's ticked lists.
 - The publish dialog after adding several items.
 - A long title in E's field.
-- E's field restored with its title after the expanded dialog is cancelled (STY-081 S4), and the field left by a click, a tap or Tab: drawn only in the working version. E's working version
-  has Remove on a new item; its Move, Edit, Publish and Discard are drawn without
-  working.
+- E's field restored with its title after the expanded dialog is cancelled (STY-081 S4),
+  and the field left by a click, a tap or Tab: drawn only in the working version.
+- E's working version: a new card's Remove drops it at once (the app asks first); Move,
+  Edit, a published card's Remove, Publish and Discard are drawn without working.
 
 ## What does not change
 
 - The item dialog's fields and rules, and "Add item" and "Add and start another".
 - What a new item is, how it is counted, removed and published (STY-045, STY-046,
-  STY-047), and what is written to the data source: each design adds new items
-  exactly as one "Add item" does.
+  STY-047), and what is written to the data source: each design adds new items exactly
+  as one "Add item" does.
 - The public site.
 
 ## Related
@@ -143,12 +145,13 @@ rounds; the answers are in the stories' Decisions.
   first item” in an empty placement, in place of “No items”), Add and Cancel on every
   screen, no hint, an expand button “Add more details”. Recorded as
   [STY-080](../backlog/EPC-011-adding-roadmaps-and-items/STY-080-quick-add-items-where-they-go.md)
-  (the control), [STY-081](../backlog/EPC-011-adding-roadmaps-and-items/STY-081-expand-quick-add-into-the-item-dialog.md)
+  (the control),
+  [STY-081](../backlog/EPC-011-adding-roadmaps-and-items/STY-081-expand-quick-add-into-the-item-dialog.md)
   (the expand button) and
   [STY-082](../backlog/EPC-011-adding-roadmaps-and-items/STY-082-the-publish-dialog-flags-a-title-only-item.md)
   (the publish dialog's flag for a title-only item).
-- **Decisions needed**: 5 → STY-082 D1, D2; 11 → STY-080 D1, D2, D6; 12 → STY-080 D4;
-  13 → STY-080 S6; 14 → STY-080 S3; 15 → STY-080 D3; 16 → STY-081 D2, D3; 17 and 19 →
+- **Decisions needed**: 5 → STY-082 D1, D2; 11 → STY-080 D1, D2, D6; 12 → STY-080 D4; 13
+  → STY-080 S6; 14 → STY-080 S3; 15 → STY-080 D3; 16 → STY-081 D2, D3; 17 and 19 →
   STY-080 D5; 18 → STY-080 D2. A new answer: adding works while the session has expired,
   for the page's “Add an item” too (STY-080 D7, changing STY-057 D1 and STY-046 D15).
 - **A to D are not taken**: A and C are covered by E; B (copy an item) and D (from

@@ -26,71 +26,69 @@ and a placement to start from (`features/`); copy in both catalogues; E2E.
 
 ### S1: The field has "Add more details" at its end (quick add round 2 Q2)
 
-**Given** a quick add field is open, in either view, on any screen
-**When** Sam looks at it, or hovers its end
-**Then** an icon button inside the field's end is named "Add more details", with the
-same words as its tooltip, and is in the tab order between the field and Add
+**Given** a quick add field is open, in either view, on any screen **When** Sam looks at
+it, or hovers its end **Then** an icon button inside the field's end is named "Add more
+details", with the same words as its tooltip, and is in the tab order between the field
+and Add
 
 ### S2: It opens the item dialog with the title and placement
 
-**Given** Sam has typed `␣Book␣a␣␣hearing test␣` (␣ a space) in Next's field
-**When** Sam chooses "Add more details"
-**Then** the item dialog opens in its adding form with "Book a hearing test" as its
-title, Next chosen, every other field empty, and focus at the end of the title
-**And** with nothing typed, it opens with an empty title and Next chosen
+**Given** Sam has typed `␣Book␣a␣␣hearing test␣` (␣ a space) in Next's field **When**
+Sam chooses "Add more details" **Then** the item dialog opens in its adding form with
+"Book a hearing test" as its title, Next chosen, every other field empty, and focus at
+the end of the title **And** with nothing typed, it opens with an empty title and Next
+chosen
 
 ### S3: Adding there ends the run (quick add round 2 Q3)
 
-**Given** that dialog
-**When** Sam writes a description and chooses "Add item"
-**Then** the item is added with everything written, last in the placement chosen in the
-dialog, tagged "New", the dialog closes, and focus is on the new card's Edit, as STY-046
-S3 has it; the quick add field is closed
-**And** "Add and start another" keeps the dialog open as STY-046 S4 does
+**Given** that dialog **When** Sam writes a description and chooses "Add item" **Then**
+the item is added with everything written, last in the placement chosen in the dialog,
+tagged "New", the dialog closes, and focus is on the new card's Edit, as STY-046 S3 has
+it; the quick add field is closed **And** "Add and start another" keeps the dialog open
+as STY-046 S4 does
 
 ### S4: Cancelling brings the field back
 
-**Given** that dialog, opened from Next's field with a title typed
-**When** Sam chooses Cancel, presses Escape or closes it from its corner, having added
-nothing in it
-**Then** nothing is added, the dialog closes, and Next's field is open again with the
-title as typed, focused, with the cursor at its end
-**And** a click outside the dialog does nothing, as for every dialog (the epic's _The
-dialogs_)
+**Given** that dialog, opened from Next's field with a title typed **When** Sam chooses
+Cancel, presses Escape or closes it from its corner, having added nothing in it **Then**
+nothing is added, the dialog closes, and Next's field is open again with the title as
+typed, focused, with the cursor at its end **And** a click outside the dialog does
+nothing, as for every dialog (the epic's _The dialogs_)
+
+### S5: Available as quick add is
+
+**Given** the session has expired, or a publish is under way **When** Sam chooses "Add
+more details" **Then** it opens the dialog without asking to reconnect, as quick add
+does (STY-080 D7) **And** before the items are first read, or when that read fails,
+there is no field to expand (STY-080 S8)
+
+### S6: Welsh and assistive technology
+
+**Given** the interface is in Welsh, or Sam uses a screen reader **When** Sam reaches
+the button and opens the dialog **Then** its name and tooltip are in Welsh, and axe
+finds nothing in the field or the dialog
 
 ### S7: Closing after "Add and start another" ends the run (D4)
 
 **Given** the dialog opened from Next's field with "Book a hearing test", and Sam has
-chosen "Add and start another", so that item is added and the form is empty
-**When** Sam chooses Cancel, presses Escape or closes it from its corner
-**Then** the dialog closes, the quick add field stays closed, and focus is on the last
-added card's Edit, as closing after "Add and start another" does today
-
-### S5: Available as quick add is
-
-**Given** the session has expired, or a publish is under way
-**When** Sam chooses "Add more details"
-**Then** it opens the dialog without asking to reconnect, as quick add does (STY-080 D7)
-**And** while the items can't be read there is no field to expand
-
-### S6: Welsh and assistive technology
-
-**Given** the interface is in Welsh, or Sam uses a screen reader
-**When** Sam reaches the button and opens the dialog
-**Then** its name and tooltip are in Welsh, and axe finds nothing in the field or the
-dialog
+chosen "Add and start another", so that item is added and the form is empty **When** Sam
+chooses Cancel, presses Escape or closes it from its corner **Then** the dialog closes,
+the quick add field stays closed, and focus is on Next's "Add an item", the control the
+run started from, as closing after "Add and start another" returns focus today to the
+"Add an item" that opened the dialog
 
 ## Decisions
 
-- **D1** (owner, 2026-11-20, prototype review): an expand button at the end of the
-  quick add field opens the full item dialog, with any partly typed title filled in.
-- **D2** (owner, 2026-11-20, quick add round 2 Q2): named "Add more details", over "Open the full form"
-  and "Open in the item dialog".
+- **D1** (owner, 2026-11-20, prototype review): an expand button at the end of the quick
+  add field opens the full item dialog, with any partly typed title filled in.
+- **D2** (owner, 2026-11-20, quick add round 2 Q2): named "Add more details", over "Open
+  the full form" and "Open in the item dialog".
 - **D3** (owner, 2026-11-20, quick add round 2 Q3): adding in the dialog leaves focus on
   the new card's Edit, over reopening a fresh quick add field.
 - **D4** (agent, 2026-11-20, from review): once the dialog has added an item, closing it
-  ends the run as D3 does, over bringing the field back with a title already added,
-  which Enter would add twice. The owner may prefer the field back, empty.
+  ends the run, with focus on the placement's "Add an item", over bringing the field
+  back with a title already added, which Enter would add twice. The owner may prefer the
+  field back, empty.
 
 ## Starting point
 

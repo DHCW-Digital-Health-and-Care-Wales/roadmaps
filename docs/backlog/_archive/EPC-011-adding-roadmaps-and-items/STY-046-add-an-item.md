@@ -191,17 +191,15 @@ the empty roadmap, in both themes and at phone width.
   opens, with "Move to Not doing" first, then drops it at once; and a published item's
   card gains Remove. Changes: S6 ("Remove drops the item without asking"; "no card of
   an item the data source holds has Remove"). STY-049 delivers it.
-- **D17** (owner, 2026-11-20, quick add grilling R4 Q1, recorded by
+- **D17** (owner, 2026-11-20, quick add round 4 Q1, recorded by
   [STY-080](../../EPC-011-adding-roadmaps-and-items/STY-080-quick-add-items-where-they-go.md)
   D7): adding writes nothing until publishing, so "Add an item" works while the session
   has expired, without asking to reconnect, as Edit and Move do. Changes: D15. STY-080
   delivers it.
-- **D18** (owner, 2026-11-20, quick add analysis, recorded by
-  [STY-080](../../EPC-011-adding-roadmaps-and-items/STY-080-quick-add-items-where-they-go.md)
-  D1, D6): quick add, which D1 set aside, is taken as well as the button: each
-  placement ends with "Add an item", a title field that adds a new item there. The
-  page's button and the empty roadmap's panel stay (D11, D13). Changes: D1. STY-080
-  delivers it.
+- **D18** (owner, 2026-11-20, quick add analysis, recorded by STY-080 D1, D6): quick
+  add, which D1 set aside, is taken beside the button: each placement ends with "Add an
+  item", a title field that adds a new item there. The page's button and the empty
+  roadmap's panel stay (D11, D13). Changes: D1. STY-080 delivers it.
 
 ## Out of scope
 

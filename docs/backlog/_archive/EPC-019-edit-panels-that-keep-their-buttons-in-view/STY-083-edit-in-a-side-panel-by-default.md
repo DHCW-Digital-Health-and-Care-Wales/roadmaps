@@ -7,7 +7,7 @@
 - **Depends on**: STY-077 (hard: the side panel and its toggle)
 - **Binding ADRs**: ADR-005, ADR-010
 - **Suggested model**: Sonnet — a flipped default in one preference, with its tests and fixtures
-- **Delivered**: _added once the PR exists_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/207
 
 ## Summary
 

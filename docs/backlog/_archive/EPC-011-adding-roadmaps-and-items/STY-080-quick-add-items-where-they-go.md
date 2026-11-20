@@ -9,6 +9,7 @@
 - **Binding ADRs**: ADR-012, ADR-014, ADR-011, ADR-005, ADR-008, ADR-010
 - **Suggested model**: Opus — a new inline control in both views of a page many tests
   read, with focus, blur and layout rules that are easy to get subtly wrong
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/206
 
 ## Summary
 

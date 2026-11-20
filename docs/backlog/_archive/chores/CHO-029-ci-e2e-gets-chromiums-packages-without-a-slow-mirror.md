@@ -79,7 +79,8 @@ the version mismatch
   on failure (the product-roadmaps public site's pattern), over a Vitest test comparing
   the tag with package.json. The step fails only when the image lacks the Chromium the
   installed Playwright needs, so a patch bump that keeps the browser revision does not
-  force an image bump, and a wrong digest for the tag is caught too.
+  force an image bump (a stale digest then passes), and an image that cannot launch it
+  is caught whatever its tag says.
 
 ## Out of scope
 
@@ -104,9 +105,7 @@ with that instruction when it does not. Local runs still install Chromium
 
 ### Scenario evidence
 
-- **S1**: _(CI run, below)_
-- **S2**: with the repository mounted in the 1.65.0 image, the check step's script
-  exits 1 with Playwright's "Please update docker image as well … required:
-  mcr.microsoft.com/playwright:v1.64.1-noble" and the step's own
-  `::error::Update the Playwright image tag and digest in .github/workflows/ci.yml to
-v1.64.1.`; in the 1.64.1 image it exits 0.
+| Scenario | Held by                                                                                                                                                                                                                         |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | _(CI run, below)_                                                                                                                                                                                                               |
+| S2       | The check step's script, with the repository mounted in the 1.65.0 image, exits 1 with Playwright's "Please update docker image as well" and the step's `::error::` naming v1.64.1; in the 1.64.1 image it exits 0 (local run). |

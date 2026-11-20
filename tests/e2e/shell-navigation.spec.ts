@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test"
 
 import { openEditItemDialog } from "./fixtures/dialogs"
+import { settledBoxes } from "./fixtures/layout"
 import { tokenColour, type Language, useLanguage } from "./fixtures/look"
 import { EXAMPLE_SPREADSHEET, type FakeTab } from "./fixtures/fake-sheets"
 import { openLongRoadmap, openRoadmapIn } from "./fixtures/roadmap-page"
@@ -257,15 +258,11 @@ test.describe("on a phone", () => {
       ).toBeFocused()
       // It fits: nothing scrolls sideways, and its links fit inside it.
       expect(await horizontalOverflow(page)).toBe(0)
-      const box = await drawer.boundingBox()
-      const families = await navLink(
-        page,
-        copy.families,
-        language,
-      ).boundingBox()
-      expect((families?.x ?? 0) + (families?.width ?? 0)).toBeLessThanOrEqual(
-        (box?.x ?? 0) + (box?.width ?? 0),
+      const [box, families] = await settledBoxes(
+        drawer,
+        navLink(page, copy.families, language),
       )
+      expect(families.right).toBeLessThanOrEqual(box.right)
 
       await page.keyboard.press("Escape")
       await expect(drawer).toBeHidden()

@@ -12,6 +12,7 @@ import {
   openEditItemDialog,
   openEditRoadmapDialog,
 } from "./fixtures/dialogs"
+import { centre, settledBoxes } from "./fixtures/layout"
 import { useLanguage } from "./fixtures/look"
 import { connect, expect, test } from "./fixtures/test"
 
@@ -52,17 +53,10 @@ for (const [size, viewport] of [
     await expect(close).toBeVisible()
     expect(await isInView(page, close)).toBe(true)
     await expect(dialog.getByRole("textbox", { name: "Title" })).toBeFocused()
-    const [box, titleBox, dialogBox] = await Promise.all([
-      close.boundingBox(),
-      title.boundingBox(),
-      dialog.boundingBox(),
-    ])
-    if (!box || !titleBox || !dialogBox) throw new Error("No box")
+    const [box, titleBox, dialogBox] = await settledBoxes(close, title, dialog)
     // At the dialog's right edge, level with the title, which keeps clear of it.
-    expect(dialogBox.x + dialogBox.width - (box.x + box.width)).toBeLessThan(32)
-    expect(
-      Math.abs(box.y + box.height / 2 - (titleBox.y + titleBox.height / 2)),
-    ).toBeLessThan(8)
+    expect(dialogBox.right - box.right).toBeLessThan(32)
+    expect(Math.abs(centre(box) - centre(titleBox))).toBeLessThan(8)
     // The title's text has room up to the close button, and no further.
     const room = await title.evaluate(
       (heading) =>

@@ -46,6 +46,54 @@ export async function boxesOf<Locators extends Locator[]>(
   }
 }
 
+/**
+ * Resolves once every animation on the page that ends has ended. A dialog is ready as
+ * focus reaches its first field, before it has slid or zoomed in: reduced motion cuts
+ * that to 0.01 ms, but the first keyframe still holds until the next frame, which a
+ * loaded runner delays (DEF-025). Animations that never end, a spinner's, are left.
+ */
+export async function animationsDone(page: Page): Promise<void> {
+  await page.evaluate(async () => {
+    const running = () =>
+      document
+        .getAnimations()
+        .filter(
+          (animation) =>
+            animation.playState === "running" &&
+            Number.isFinite(
+              Number(animation.effect?.getComputedTiming().endTime),
+            ),
+        )
+    for (let ending = running(); ending.length > 0; ending = running()) {
+      await Promise.allSettled(ending.map((animation) => animation.finished))
+    }
+  })
+}
+
+/**
+ * The boxes of `locators` in the viewport, all read in one step once the page's
+ * animations have ended (`animationsDone`). Read a popup's geometry with this, a
+ * dialog's, a drawer's or a menu's, and `boxesOf` for what does not animate in.
+ */
+export async function settledBoxes<Locators extends Locator[]>(
+  ...locators: Locators
+): Promise<{ [At in keyof Locators]: Box }> {
+  const first = locators[0]
+  if (first) await animationsDone(first.page())
+  const boxes = await boxesOf(...locators)
+  // `boxesOf` reads a hidden element's box as zeros, where `boundingBox()` gave none.
+  if ((boxes as Box[]).some((box) => box.width === 0 && box.height === 0)) {
+    throw new Error("Not laid out")
+  }
+  return boxes
+}
+
+/** `locator`'s box in the viewport once the page's animations have ended. */
+export async function settledBox(locator: Locator): Promise<Box> {
+  const [box] = await settledBoxes(locator)
+  return box
+}
+
 /** The middle of `box`, down the viewport. */
 export const centre = (box: Box): number => box.y + box.height / 2
 

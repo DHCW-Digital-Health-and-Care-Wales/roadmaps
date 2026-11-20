@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test"
 
+import { settledBox } from "./layout"
 import type { Language } from "./look"
 import { moreButton, openProductDetails } from "./roadmap-page"
 import { connect, expect, roadmapCards } from "./test"
@@ -108,10 +109,10 @@ export function cornerClose(dialog: Locator): Locator {
 
 /** Whether `locator` lies wholly within the screen as it is now scrolled. */
 export async function isInView(page: Page, locator: Locator): Promise<boolean> {
-  const box = await locator.boundingBox()
+  const box = await settledBox(locator)
   const size = page.viewportSize()
-  if (!box || !size) throw new Error("No box or viewport")
-  return box.y >= 0 && box.y + box.height <= size.height
+  if (!size) throw new Error("No viewport")
+  return box.y >= 0 && box.bottom <= size.height
 }
 
 /** The conflict review's Close in its foot, which its corner close button repeats. */
@@ -124,8 +125,7 @@ export function reviewFooterClose(review: Locator): Locator {
  * outside a form dialog does nothing, which the caller then shows.
  */
 export async function clickOutside(page: Page, dialog: Locator): Promise<void> {
-  const box = await dialog.boundingBox()
-  if (!box) throw new Error("The dialog has no box")
+  const box = await settledBox(dialog)
   const spots = [
     { x: box.x + box.width / 2, y: box.y / 2 },
     { x: box.x / 2, y: box.y + box.height / 2 },

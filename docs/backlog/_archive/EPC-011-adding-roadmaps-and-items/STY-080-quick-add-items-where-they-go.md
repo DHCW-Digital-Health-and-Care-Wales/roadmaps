@@ -1,10 +1,10 @@
 # STY-080: A Product Lead adds items where they will go, by title alone (quick add)
 
-- **Status**: Proposed — grilled with the owner on 2026-11-20 from design E of the
-  add-items analysis; ready to select
+- **Status**: Done — delivered in its PR; grilled with the owner on 2026-11-20 from
+  design E of the add-items analysis
 - **Type**: Feature
 - **Area**: Features/UI + i18n (en + cy) + E2E
-- **Epic**: EPC-011-adding-roadmaps-and-items
+- **Epic**: [EPC-011-adding-roadmaps-and-items](../../EPC-011-adding-roadmaps-and-items/README.md)
 - **Depends on**: none (STY-046 and STY-047 are delivered)
 - **Binding ADRs**: ADR-012, ADR-014, ADR-011, ADR-005, ADR-008, ADR-010
 - **Suggested model**: Opus — a new inline control in both views of a page many tests
@@ -197,3 +197,65 @@ Audited at `cc32b48`:
 - Expanding the field into the item dialog: STY-081.
 - Flagging a title-only item before publishing: STY-082.
 - Quick add on an empty roadmap, which keeps its panel (STY-046 D3, D13).
+
+## Delivery
+
+### Departures
+
+- **S9: no field is open while a publish is under way** (agent): the publish dialog
+  is modal until the publish has settled and the items are read again, and opening
+  it moves focus out of any open field, which drops it (S5). Quick add consults no
+  publish state, so it is offered throughout, as the page's "Add an item" is; what
+  S9 asks of an open field is held by a read that lands while one is open, a
+  Refresh's, which redraws the page as the publish's own read does.
+- **S11 covers the empty roadmap's "Add an item" too** (agent): the page's button and
+  the empty panel's are one component (`AddItemButton`), so neither asks to reconnect;
+  D7's reason, that adding writes nothing until a publish, holds for both.
+- **The control's focus is the ring, not the fill** (agent): it is drawn as a dashed
+  card, or a row of the compact view, and takes `focus-ring` as the cards and the
+  prototype do; its buttons, Add and Cancel, take the fill.
+- **S6: spaces are run together by quick add alone** (agent): the item dialog still
+  only trims, as STY-046 has it; no domain rule changed.
+- **S7 was not checked on a device** in this delivery: the field scrolls itself into
+  view (`block: "nearest"`) as it opens and after each add, and its title field's
+  return key is `enterkeyhint="enter"`, as in the prototype the owner checked on an
+  iPhone 17.
+
+### Contract for dependents
+
+- **Quick add is `QuickAdd`** (`features/roadmaps/editing/quick-add.tsx`), the last
+  item of each placement's list in both views (`RoadmapItems`); the unplaced items'
+  list has none. It holds its own open state and title, so a read that redraws the
+  page keeps it open with what was typed; a change of view starts it shut. It adds
+  through `addNewItem` with `{ title, placement }` alone, so a quick-added item is a
+  `NewItem` whose other values are `""`: STY-082 reads that.
+- **Every placement is a list now**, an empty one holding only its quick add, so a
+  test that counted lists, or took a list's last item for its last card, filters by
+  the item heading (`moved-travel.spec.ts`).
+- **A press elsewhere closes the field once it ends** (`afterThePress`), after its
+  click has landed; a press on the field's own Add or Cancel (and on STY-081's expand)
+  keeps focus in the title by preventing the press's default.
+- **"Add an item" and quick add ask for no session** (D7): `AddItemButton` no longer
+  wraps `useSessionAction`.
+
+### Scenario evidence
+
+Page tests are in `src/features/roadmaps/pages/roadmap-detail-page-quick-add.test.tsx`
+unless named otherwise; Playwright's in `tests/e2e/quick-add.spec.ts`.
+
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                      |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| S1       | `ends each of the six placements, in the cards view…` and `…compact view…`; `roadmap-detail-page-items.test.tsx`, `-compact.test.tsx` and `-placement-navigation.test.tsx` (no "No items"); Playwright `an empty placement offers its first item…`, `placement-navigation.spec.ts`; `structure.spec.ts` (`detail`, `detail-compact`, `detail-not-published`) |
+| S2       | `opens in its place, focused…`; Playwright `the field's layout (S2)` in Welsh at 375, 640, 768, 1024 and 1280px, both views: Add and Cancel 40px, under or beside the field, inside the list                                                                                                                                                                 |
+| S3       | `adds the title last in its placement… on Enter` and `…on Add`; Playwright `adds a run of items by title in the cards view…` and `…compact view…` (no write until Publish); `structure.spec.ts` (`quick-add-open`)                                                                                                                                           |
+| S4       | `drops what was typed on Escape…` and `…on Cancel…`; Playwright `Cancel drops what was typed…` and the run's Escape                                                                                                                                                                                                                                          |
+| S5       | `stays open as Tab goes to its own Add and Cancel…`, `drops what was typed when a click lands elsewhere`; Playwright `a press on another placement's “Add an item” opens its field, as Next's closes` at 375px                                                                                                                                               |
+| S6       | `adds nothing for an empty title or spaces…`; Playwright `an empty placement offers its first item…`                                                                                                                                                                                                                                                         |
+| S7       | Not run: a device check (Departures)                                                                                                                                                                                                                                                                                                                         |
+| S8       | `is not there before the items are read…`                                                                                                                                                                                                                                                                                                                    |
+| S9       | `keeps an open field, and what was typed in it, as the items are read again`; Playwright `a field open as the items are read again…` (Departures)                                                                                                                                                                                                            |
+| S10      | `opens the field and adds pending items without asking to reconnect`; Playwright `adds while the session has expired…; Publish still asks`                                                                                                                                                                                                                   |
+| S11      | `roadmap-detail-page-adding.test.tsx` (`opens the dialog at once while not connected…`), expired and connecting; `adding-an-item.spec.ts` (`the dialog stays through the session's end…`)                                                                                                                                                                    |
+| S12      | `is a new item like any other: Edit opens the dialog on its title alone…`; the Playwright run publishes two quick-added items                                                                                                                                                                                                                                |
+| S13      | `In Welsh (S13)`; Playwright `the field's layout` in Welsh; `has no axe violation with a field open…` in both themes and views; `focus-indicator.spec.ts`'s page tours, whose stops now include each placement's control, every name differing                                                                                                               |
+| Red      | The page tests were written first and failed before `QuickAdd` existed (16 of 17; S8's passed, as nothing was drawn). S11's test failed against `AddItemButton` still wrapping `useSessionAction`                                                                                                                                                            |

@@ -340,6 +340,14 @@ export const cy = {
           "Ychwanegwch yr hyn mae'r cynnyrch yn ei wneud nawr, nesaf ac yn hwyrach.",
       },
       noneInPlacement: "Dim eitemau",
+      quickAdd: {
+        open: "Ychwanegu eitem",
+        first: "Ychwanegu'r eitem gyntaf",
+        to: "o dan {{placement}}",
+        field: "Teitl eitem newydd o dan {{placement}}",
+        add: "Ychwanegu",
+        added: "Ychwanegwyd “{{title}}” o dan {{placement}}.",
+      },
       // Nawr, Nesaf and Hwyrach are the public site's Welsh headings.
       placements: {
         "recently-delivered": "Wedi'u cyflawni'n ddiweddar",

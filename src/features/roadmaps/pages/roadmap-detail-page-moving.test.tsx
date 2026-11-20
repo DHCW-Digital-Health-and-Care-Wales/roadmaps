@@ -116,7 +116,13 @@ describe("Moving an item (STY-031)", () => {
         "Last now",
         "Online booking",
       ])
-      expect(main().queryByRole("list", { name: "Later" })).toBeNull()
+      // Later holds only its quick add (STY-080).
+      expect(
+        within(main().getByRole("list", { name: "Later" })).queryAllByRole(
+          "heading",
+          { level: 3 },
+        ),
+      ).toHaveLength(0)
       expect(within(card("Online booking")).getByText("Changed")).toBeVisible()
       expect(main().getByText("1 unpublished change")).toBeInTheDocument()
       expect(write).not.toHaveBeenCalled()

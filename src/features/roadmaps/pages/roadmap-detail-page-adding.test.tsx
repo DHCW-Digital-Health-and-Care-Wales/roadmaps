@@ -8,7 +8,6 @@ import type { ContractWrite } from "@/domain/roadmap/testing/contract-write"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 import { disconnectFromHeader } from "@/features/auth/testing/account-menu"
-import { findReconnectDialog } from "@/features/auth/testing/reconnect-dialog"
 import type { Language } from "@/i18n"
 import { AppError } from "@/lib/errors"
 import { connected } from "@/test/connected-state"
@@ -231,7 +230,7 @@ describe("“Add an item” on a roadmap's page (STY-046 S1)", () => {
   })
 
   it.each<AuthState>([{ status: "expired" }, { status: "connecting" }])(
-    "asks to reconnect while not connected, then opens the dialog (STY-057): $status",
+    "opens the dialog at once while not connected, without asking to reconnect, since adding writes nothing (STY-080 S11): $status",
     async (state) => {
       const { user, authClient } = await renderPage()
       act(() => {
@@ -241,16 +240,11 @@ describe("“Add an item” on a roadmap's page (STY-046 S1)", () => {
       const [button] = addItemButtons()
       expect(button).toHaveAttribute("aria-disabled", "false")
       if (button) await user.click(button)
-      await findReconnectDialog()
-      expect(screen.queryByRole("dialog")).toBeNull()
-
-      act(() => {
-        authClient.setState(connected)
-      })
 
       expect(
         await screen.findByRole("dialog", { name: "Add an item" }),
       ).toBeVisible()
+      expect(screen.queryByRole("alertdialog")).toBeNull()
     },
   )
 })

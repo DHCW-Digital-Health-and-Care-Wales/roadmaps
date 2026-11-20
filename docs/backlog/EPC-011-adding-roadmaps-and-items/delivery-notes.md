@@ -168,3 +168,8 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   it does a tab the same write copied, and refuses, as Google does, a write that
   deletes every row that is not frozen; a test whose tab has a frozen header sets
   `frozenRowCount` on it (`apply-batch-update.ts`).
+- **Quick add is `QuickAdd`, the last item of each placement's list** (STY-080; its
+  _Contract for dependents_, archived, says what it holds and adds). Every placement
+  is a list, an empty one holding only its quick add: a test takes a placement's last
+  card by its heading, never as the list's last item, and finds a quick add's control
+  by its whole name ("Add an item to Next"), since "Add an item" alone is the page's.

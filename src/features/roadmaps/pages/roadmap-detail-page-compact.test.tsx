@@ -248,7 +248,7 @@ describe("a row (S4, S5, S10)", () => {
     }
   })
 
-  it("lists the unplaced items first, flagged, with their note, and an empty placement says No items", async () => {
+  it("lists the unplaced items first, flagged, with their note, and an empty placement offers its first item (STY-080 S1)", async () => {
     const { user } = await renderPage()
     await chooseCompact(user)
 
@@ -268,9 +268,14 @@ describe("a row (S4, S5, S10)", () => {
         "Horizon “Soon” isn't recognised",
       ),
     ).toBeVisible()
-    // Next, Delivered this year and Not doing hold none.
-    expect(main().getAllByText("No items")).toHaveLength(4)
-    expect(main().queryByRole("list", { name: "Not doing" })).toBeNull()
+    // Four placements hold none: each offers its first item, in place of "No items".
+    expect(main().getAllByText("Add the first item")).toHaveLength(4)
+    expect(main().queryByText("No items")).toBeNull()
+    expect(
+      within(main().getByRole("list", { name: "Not doing" })).getByRole(
+        "button",
+      ),
+    ).toHaveAccessibleName("Add the first item to Not doing")
   })
 })
 

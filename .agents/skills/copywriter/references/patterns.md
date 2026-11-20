@@ -196,8 +196,8 @@ roadmaps.items.quickAdd.field  Title of a new item in {{placement}}
 roadmaps.items.quickAdd.added  “{{title}}” was added to {{placement}}.
 ```
 
-Welsh names a placement with "o dan" ("o dan {{placement}}"), as
-`roadmaps.edit.placedIn` does.
+In Welsh, what is added or placed goes "o dan" its placement ("o dan {{placement}}",
+as `roadmaps.edit.placedIn`); a move goes "i" it (`roadmaps.edit.movedTo`).
 
 ## Move menu
 

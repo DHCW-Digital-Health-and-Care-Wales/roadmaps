@@ -44,15 +44,12 @@ reviewers write no report files. Do not relay raw search dumps or whole
 transcripts into the main context.
 
 Use a fresh reviewer with only the brief for each review. Rebase the branch
-onto the current base (`pull-requests.md`, _Update a branch_) before pinning
-the SHAs, or the base-to-head diff shows work that merged meanwhile as a
-revert. Pin a head once it passes the checks `validation.md` sets for it;
-round 1's head needs only typecheck, lint and the unit tests, with the rest of
-the full gate running alongside, and a gate failure joins the round's
-findings. Include the user requirements and record, base/head SHAs, the diff
-command, relevant verification results, PR metadata the reviewer cannot fetch
-itself, and the authoritative skill path. Omit the implementation
-conversation and claimed verdict. A reviewer must inspect requirements and surrounding code before
+onto the current base (`pull-requests.md`, _Update a branch_), re-run the
+checks `validation.md` sets for that head, and only then pin the SHAs, or the
+base-to-head diff shows work that merged meanwhile as a revert. Include the user requirements and record, base/head SHAs, the diff command, relevant
+verification results, PR metadata the reviewer cannot fetch itself, and the
+authoritative skill path. Omit the implementation conversation and claimed
+verdict. A reviewer must inspect requirements and surrounding code before
 judging. Two labels on one review are not two independent reviewers.
 Cross-review handoffs contain evidence, not instructions to accept another
 verdict. Ask for findings ranked by severity, each with a _realistic trigger_:

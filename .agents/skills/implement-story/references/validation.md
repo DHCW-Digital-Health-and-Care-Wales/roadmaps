@@ -51,8 +51,10 @@ a background command completes, start it in the background with its exit
 status in its output and yield until it completes, once independent work is
 exhausted, as for a reviewer (`delegation.md`, _Dispatch and completion_, step
 3); otherwise run its commands as separate foreground calls, each within that
-timeout. To work alongside a suite, start it in the background, and read its
-exit status before relying on it.
+timeout. To work alongside a suite, start it in the background, leave the
+checkout's files as they are until it ends, since it reads them (a
+deliberate break or a fix made meanwhile fails it, or passes a tree that is
+not the head), and read its exit status before relying on it.
 Detach only a run that must outlast the session, with output and exit status
 in a log (`setsid nohup sh -c '<cmd>; echo "exit=$?"' > /tmp/<name>.log 2>&1 &`),
 and read that log before relying on it.

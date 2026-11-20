@@ -122,12 +122,11 @@ passes it. Any other behaviour (layout, copy, a review fix) may take its test
 after the code, once that test is shown red by breaking the finished code;
 record the red in Delivery's Scenario evidence. Red shown by breaking finished
 code proves a test discriminates, not that it came first: on a test-first
-change, report it as a departure, never as TDD evidence. Break code only while
-no suite runs in the background on the checkout, since that run reads the
-break and fails. Undo a break from a copy of the file saved before it:
-`git checkout -- <file>` puts back the last commit, without the uncommitted
-work around the break. A Playwright test may follow working code, since its
-selectors may not exist before; that order is no departure.
+change, report it as a departure, never as TDD evidence. Undo a break from a
+copy of the file saved before it: `git checkout -- <file>` puts back the last
+commit, without the uncommitted work around the break. A Playwright test may
+follow working code, since its selectors may not exist before; that order is no
+departure.
 
 A value with no behaviour of its own to assert (a retry count, a chunk group,
 a CI job graph) is evidenced by an observed run showing its effect, recorded in

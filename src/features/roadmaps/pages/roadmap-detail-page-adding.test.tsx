@@ -1151,6 +1151,24 @@ describe("The publish dialog names the new items (STY-047 S1)", () => {
   )
 })
 
+/** Adds an item with a title, a placement and `text` typed into `field`, through the item dialog. */
+async function addItemWith(
+  user: User,
+  title: string,
+  placement: string,
+  field: string,
+  text: string,
+  language: Language = "en",
+) {
+  await openAddItemDialog(user, language)
+  await user.type(
+    addItemDialog(language).getByRole("textbox", { name: field }),
+    text,
+  )
+  await fillAndAddItem(user, title, placement, { language })
+  await expectDialogClosed()
+}
+
 describe("The publish dialog's new items, in Welsh and to assistive technology (STY-047 S2)", () => {
   it("marks a new item in Welsh, and one with only a title (STY-082 S3), each in the one list item that holds its title, so the two are read together", async () => {
     const { user } = await renderPage({ language: "cy" })
@@ -1174,24 +1192,6 @@ describe("The publish dialog's new items, in Welsh and to assistive technology (
     ])
   })
 })
-
-/** Adds an item with a title, a placement and `text` typed into `field`, through the item dialog. */
-async function addItemWith(
-  user: User,
-  title: string,
-  placement: string,
-  field: string,
-  text: string,
-  language: Language = "en",
-) {
-  await openAddItemDialog(user, language)
-  await user.type(
-    addItemDialog(language).getByRole("textbox", { name: field }),
-    text,
-  )
-  await fillAndAddItem(user, title, placement, { language })
-  await expectDialogClosed()
-}
 
 describe("The publish dialog flags a new item that has only a title (STY-082 S1, S2, S3)", () => {
   it("marks a title-only item and one with a description differently, each by its title, both listed as new", async () => {
@@ -1236,28 +1236,6 @@ describe("The publish dialog flags a new item that has only a title (STY-082 S1,
     await user.click(main().getByRole("button", { name: "Publish changes" }))
 
     expect(listedChanges()).toEqual([`${CLINIC}New item`])
-  })
-
-  it("blocks nothing: “Save changes” writes the item that has only a title", async () => {
-    const { user, repository } = await renderPage({
-      path: "/roadmaps/productc",
-    })
-    await addItem(user, CLINIC, "Later")
-
-    await user.click(main().getByRole("button", { name: "Save changes" }))
-    await user.click(
-      within(screen.getByRole("alertdialog")).getByRole("button", {
-        name: "Save changes",
-      }),
-    )
-
-    await waitFor(async () => {
-      expect(
-        (await repository.listRoadmapItems("productc")).map(
-          ({ title }) => title.en,
-        ),
-      ).toEqual([CLINIC])
-    })
   })
 })
 

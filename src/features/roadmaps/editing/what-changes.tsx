@@ -50,10 +50,9 @@ function edited(
  * each changed part by name with its changed fields, each item removed marked as
  * removed (STY-049 S5), then each new item by its title, marked as new, and as having
  * only a title when it has no more (STY-025 S9, STY-047 S1, STY-082), in the page's
- * order. A placement whose order
- * is pending is one line, by its heading: the new order is not listed (STY-050 S6).
- * One list, whatever is pending: the roadmap's own text, the placements reordered, the
- * items the roadmap holds, then the new ones.
+ * order. A placement whose order is pending is one line, by its heading: the new order
+ * is not listed (STY-050 S6). One list, whatever is pending: the roadmap's own text, the
+ * placements reordered, the items the roadmap holds, then the new ones.
  */
 export function WhatChanges({ changes }: WhatChangesProps) {
   const { t } = useTranslation()

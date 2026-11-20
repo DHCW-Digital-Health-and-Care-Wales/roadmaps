@@ -16,7 +16,7 @@ the dot pushes that count left, so the counts no longer line up. Every row now k
 dot's place, empty where nothing is edited, so counts and dots each form one straight
 column whatever the Product Lead has edited. The warning icon on "Not on the public
 roadmap" moves into the tick's place, so every name starts at the same edge too. The
-row of links shown from 1024px stays as it is, and a screen reader hears the same as
+row of links shown from 768px stays as it is, and a screen reader hears the same as
 before.
 
 ## Scope
@@ -107,7 +107,7 @@ name today (EPC-021 F2).
 
 ## Out of scope
 
-- **The links from 1024px** (D3).
+- **The links from 768px** (D3).
 - **The dot's colour on a focused or highlighted row.** Unchanged here; STY-053 and
   STY-055 own it.
 
@@ -115,7 +115,10 @@ name today (EPC-021 F2).
 
 ### Departures
 
-None.
+- **S6, D3 ("1024px")**: the row of links shows from `TABLET_WIDTH`, 768px, as STY-053 and
+  STY-065 set it, not 1024px. The record's criterion keeps its wording; the build is
+  unchanged and S6 holds at the links' breakpoint. The Summary, Out of scope and the epic
+  say 768px. Agent, a routine correction.
 
 ### Contract for dependents
 

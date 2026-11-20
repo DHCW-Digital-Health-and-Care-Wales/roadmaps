@@ -6,12 +6,12 @@
 
 ## Summary
 
-The "Jump to" menu is the jump control below 1024px. Each row shows a place on the
+The "Jump to" menu is the jump control below 768px. Each row shows a place on the
 page, its item count and, while it holds unpublished changes, a dot. The dot appears
 only on edited rows, so their counts sit further left than the others and the column of
 counts zigzags. The warning icon on "Not on the public roadmap" does the same to that
 row's name. This epic gives each mark a fixed place, so names, counts and dots line up
-whatever is edited. The row of links shown from 1024px stays as it is.
+whatever is edited. The row of links shown from 768px stays as it is.
 
 ## Owner decisions waiting
 
@@ -41,7 +41,7 @@ right of the placement names.
    pending change, whether or not any row is edited (F1; STY-084 D1).
 2. In the menu, the unplaced row's warning icon takes the tick's place, so every name
    starts at one edge; the tick replaces it while that row is current (F2; STY-084 D2).
-3. **Unchanged:** the row of links from 1024px (STY-084 D3), what a screen reader reads
+3. **Unchanged:** the row of links from 768px (STY-084 D3), what a screen reader reads
    for each row, the dot's colour and the menu's order of targets.
 
 ## Shared assumptions and contracts
@@ -63,7 +63,7 @@ beside EPC-011, EPC-018 and EPC-019 deliveries.
 
 ## Out of scope
 
-- **The row of links from 1024px.** Links wrap side by side and form no columns; a kept
+- **The row of links from 768px.** Links wrap side by side and form no columns; a kept
   space there would read as uneven padding (STY-084 D3).
 - **Another mark for unpublished changes.** The dot stays the app's one mark for them
   (STY-053, STY-055).

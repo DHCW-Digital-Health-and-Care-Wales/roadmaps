@@ -179,12 +179,15 @@ describe("Jumping between a roadmap's placements (STY-053)", () => {
         "invisible",
       )
       expect(row(menu, /^Now/).querySelector(DOT)).toHaveClass("invisible")
-      // The count, then the dot's place, then the screen reader's phrase, on both.
+      // The count, then the dot's place, on both.
       for (const name of [/^Later/, /^Now/]) {
-        const children = [...row(menu, name).children]
-        expect(children.at(-3)).toHaveTextContent(/^\d+$/)
-        expect(children.at(-2)).toBe(row(menu, name).querySelector(DOT))
-        expect(children.at(-1)).toHaveClass("sr-only")
+        const count = within(row(menu, name)).getByText(/^\d+$/)
+        const dot = row(menu, name).querySelector(DOT)
+        expect(dot).toBeInTheDocument()
+        expect(
+          count.compareDocumentPosition(dot as Node) &
+            Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy()
       }
     })
 

@@ -186,8 +186,8 @@ item"; in an empty placement "Add the first item", in place of "No items"). An s
 continuation names its placement, so each control's name is unique on the page ("Add an
 item to Next"). The field it opens is named for what it holds and where ("Title of a new
 item in Next"), with no placeholder or hint, and confirmed by the bare verb ("Add").
-Each add is announced with its title and placement, as the pending add's confirmation
-is, the field staying open for the next.
+Each add is announced as the pending add's confirmation is, with its placement added,
+the field staying open for the next.
 
 ```
 roadmaps.items.quickAdd.first  Add the first item

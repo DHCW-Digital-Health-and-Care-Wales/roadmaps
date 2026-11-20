@@ -67,6 +67,7 @@ moves to `_archive/`, where its row here still points.
 | [CHO-027](chores/CHO-027-a-settled-thread-keeps-a-shared-checkouts-ports.md)              | Settling a thread stops tearing down the ports and servers of a checkout the next orchestrated item still uses                      | Needs grilling |
 | [CHO-028](chores/CHO-028-round-one-starts-alongside-the-full-gate.md)                     | Whether review round 1 starts while its head's full gate runs                                                                       | Needs grilling |
 | [CHO-029](chores/CHO-029-ci-e2e-gets-chromiums-packages-without-a-slow-mirror.md)         | CI's E2E job gets Chromium's system packages without waiting on a slow apt mirror                                                   | Proposed       |
+| [CHO-030](chores/CHO-030-e2e-flakes-are-found-by-a-stress-run-not-by-ci.md)               | E2E flakes of one kind (a check before the UI settles, a failure only under load) are found by an audit and a stress run            | Needs grilling |
 
 Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status token.
 

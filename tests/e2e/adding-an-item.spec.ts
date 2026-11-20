@@ -484,7 +484,7 @@ test("Cancel and Escape close the dialog and drop what was typed; a click outsid
   ).toHaveCount(0)
 })
 
-test("the dialog stays through the session's end, and “Add item” still adds (S9)", async ({
+test("the dialog stays through the session's end, and “Add item” still adds; “Add an item” then opens it without asking to reconnect (S9, STY-080 S11)", async ({
   page,
 }) => {
   await page.clock.install()
@@ -517,11 +517,14 @@ test("the dialog stays through the session's end, and “Add item” still adds 
   const main = page.getByRole("main")
   await expect(newTag(itemCard(page, CLINIC), CLINIC)).toBeVisible()
   await expect(main.getByText("1 unpublished change")).toBeVisible()
-  // Adding and publishing stay on offer: each asks to reconnect first (STY-057).
-  await expect(addItemButtons(page)).toBeEnabled()
+  // Publishing stays on offer, and asks to reconnect first (STY-057); adding writes
+  // nothing, so its dialog opens at once (STY-080 S11).
   await expect(
     main.getByRole("button", { name: "Publish changes" }),
   ).toBeEnabled()
+  await addItemButtons(page).click()
+  await expect(page.getByRole("dialog", { name: "Add an item" })).toBeVisible()
+  await expect(page.getByRole("alertdialog")).toHaveCount(0)
 })
 
 test("adding an item in Welsh (S9, STY-047 S2)", async ({ page }) => {

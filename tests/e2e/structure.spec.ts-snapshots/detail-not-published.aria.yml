@@ -39,7 +39,9 @@
           - /url: /#/roadmaps/productc
   - status
   - heading "Recently delivered" [level=2]
-  - paragraph: No items
+  - list "Recently delivered":
+    - listitem:
+      - button "Add the first item to Recently delivered"
   - heading "Now" [level=2]
   - list "Now":
     - listitem:
@@ -51,11 +53,21 @@
       - button "Remove Unpublished work"
       - button "Move Unpublished work"
       - button "Edit Unpublished work"
+    - listitem:
+      - button "Add an item to Now"
   - heading "Next" [level=2]
-  - paragraph: No items
+  - list "Next":
+    - listitem:
+      - button "Add the first item to Next"
   - heading "Later" [level=2]
-  - paragraph: No items
+  - list "Later":
+    - listitem:
+      - button "Add the first item to Later"
   - heading "Delivered this year" [level=2]
-  - paragraph: No items
+  - list "Delivered this year":
+    - listitem:
+      - button "Add the first item to Delivered this year"
   - heading "Not doing" [level=2]
-  - paragraph: No items
+  - list "Not doing":
+    - listitem:
+      - button "Add the first item to Not doing"

@@ -255,7 +255,7 @@ describe("RoadmapDetailPage items", () => {
     ).toBeInTheDocument()
   })
 
-  it("says so under a placement with no items (S3)", async () => {
+  it("offers the first item under a placement with no items (S3, STY-080 S1)", async () => {
     await renderRoadmap("productb", { productb: productBItems })
 
     await main().findByRole("heading", { level: 3, name: "Wider rollout" })
@@ -269,9 +269,10 @@ describe("RoadmapDetailPage items", () => {
       main().getByRole("heading", { level: 2, name }).parentElement
         ?.nextElementSibling
     for (const empty of ["Recently delivered", "Not doing"]) {
-      expect(under(empty)).toHaveTextContent("No items")
+      expect(under(empty)).toHaveTextContent("Add the first item")
     }
-    expect(under("Now")).not.toHaveTextContent("No items")
+    expect(under("Now")).not.toHaveTextContent("Add the first item")
+    expect(main().queryByText("No items")).toBeNull()
   })
 
   it("shows unplaced items first, flagged with what to fix (S4, S13)", async () => {

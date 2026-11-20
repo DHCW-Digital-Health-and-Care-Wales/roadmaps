@@ -374,8 +374,24 @@ export const en = {
         title: "No items yet",
         description: "Add what the product is doing now, next and later.",
       },
-      /** Under a horizon or section heading that has no items. */
+      /** A placement with no items, in a co-lead's review of its order. */
       noneInPlacement: "No items",
+      /**
+       * Ends each placement's items: opens a title field that adds an item there
+       * (STY-080).
+       */
+      quickAdd: {
+        open: "Add an item",
+        /** In place of `open`, in a placement that has no items. */
+        first: "Add the first item",
+        /** Continues `open` or `first` for assistive technology: "Add an item to Next". */
+        to: "to {{placement}}",
+        /** The title field's name, for assistive technology. */
+        field: "Title of a new item in {{placement}}",
+        add: "Add",
+        /** Said once an item is added, the field open for the next. */
+        added: "“{{title}}” was added to {{placement}}.",
+      },
       /** The headings, worded as the values a Product Lead types (D10). */
       placements: {
         "recently-delivered": "Recently delivered",

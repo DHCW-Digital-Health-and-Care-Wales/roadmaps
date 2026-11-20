@@ -144,7 +144,7 @@ rounds; the answers are in the stories' Decisions.
 - **E, quick add, is taken**, reworked through the prototype: “Add an item” (“Add the
   first item” in an empty placement, in place of “No items”), Add and Cancel on every
   screen, no hint, an expand button “Add more details”. Recorded as
-  [STY-080](../backlog/EPC-011-adding-roadmaps-and-items/STY-080-quick-add-items-where-they-go.md)
+  [STY-080](../backlog/_archive/EPC-011-adding-roadmaps-and-items/STY-080-quick-add-items-where-they-go.md)
   (the control),
   [STY-081](../backlog/EPC-011-adding-roadmaps-and-items/STY-081-expand-quick-add-into-the-item-dialog.md)
   (the expand button) and

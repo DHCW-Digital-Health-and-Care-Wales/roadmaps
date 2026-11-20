@@ -1,5 +1,11 @@
 import { TriangleAlertIcon } from "lucide-react"
-import { useMemo, useRef, useState, type RefObject } from "react"
+import {
+  type ReactNode,
+  type RefObject,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 import { useTranslation } from "react-i18next"
 
 import { Skeleton } from "@/components/ui/skeleton"
@@ -18,6 +24,7 @@ import {
 import { usePendingChangesStore } from "../editing/pending-changes-context"
 import type { PublishAction } from "../editing/pending-changes-store"
 import { PlacementHeading } from "../editing/placement-heading"
+import { QuickAdd } from "../editing/quick-add"
 import { RemovalDialog } from "../editing/removal-dialog"
 import type { PageItemDialog } from "../editing/use-item-dialog"
 import { useRemovalDialog } from "../editing/use-removal-dialog"
@@ -59,15 +66,16 @@ export interface RoadmapItemsProps {
 
 /**
  * A roadmap's items: those the public site leaves out first, flagged (D4), then all six
- * placements in the public site's order, each under its heading, saying when it has
- * none (D1); each heading is where the placement navigation jumps (STY-053). A roadmap
- * with no items, and none pending, has one dashed panel instead, saying what to add,
- * with "Add an item" (D5, STY-042 S2, STY-046 S8). Each item can be moved, and shows
- * its pending changes, in its pending placement (STY-025, STY-031), last there, in the
- * order moved (STY-051 S1); an item added and not yet published shows after those
- * (STY-046 S3). A placement whose order is pending shows its items in it, under a
- * heading that says so (`PlacementHeading`, STY-050 S3); what a move within a
- * placement and "Undo order" came to is said in a status line. Edit on an item, and
+ * placements in the public site's order, each under its heading and ending with its
+ * quick add, which adds an item there by its title (STY-080 S1); each heading is where
+ * the placement navigation jumps (STY-053). A roadmap with no items, and none pending,
+ * has one dashed panel instead, saying what to add, with "Add an item" (D5, STY-042
+ * S2, STY-046 S8). Each item can be moved, and shows its pending changes, in its
+ * pending placement (STY-025, STY-031), last there, in the order moved (STY-051 S1);
+ * an item added and not yet published shows after those (STY-046 S3). A placement
+ * whose order is pending shows its items in it, under a heading that says so
+ * (`PlacementHeading`, STY-050 S3); what a move within a placement and "Undo order"
+ * came to is said in a status line. Edit on an item, and
  * "Add an item", open the page's one item dialog, which is drawn here. The items show
  * as cards, or as the compact view's rows, under the same headings in the same groups
  * and order (`view`, STY-067 S3). An item's Remove asks first, in the page's one
@@ -154,6 +162,7 @@ export function RoadmapItems({
     placed: readonly Positioned<PageItem>[],
     labelledBy: string,
     ordered: boolean,
+    end?: ReactNode,
   ) => (
     <ItemList
       roadmapId={roadmapId}
@@ -172,6 +181,7 @@ export function RoadmapItems({
       onRemove={removalDialog.ask}
       dialogAt={itemDialog.cardAt}
       dialogOpener={itemDialog.cardOpener}
+      end={end}
     />
   )
 
@@ -227,12 +237,18 @@ export function RoadmapItems({
                   onAnnounce={cardHandlers.announce}
                   onUndone={movedMark.orderUndone}
                 />
-                {placed.length > 0 ? (
-                  list(placed, id, true)
-                ) : (
-                  <p className="text-muted-foreground">
-                    {t("roadmaps.items.noneInPlacement")}
-                  </p>
+                {list(
+                  placed,
+                  id,
+                  true,
+                  <QuickAdd
+                    roadmapId={roadmapId}
+                    items={items}
+                    placement={placement}
+                    view={view}
+                    first={placed.length === 0}
+                    onAnnounce={cardHandlers.announce}
+                  />,
                 )}
               </div>
             )
@@ -298,6 +314,8 @@ interface ItemListProps {
   dialogAt: number
   /** The ref that item gives its Edit (`EditableItem`). */
   dialogOpener: RefObject<HTMLButtonElement | null>
+  /** The list's last item, after the items: a placement's quick add. */
+  end?: ReactNode
 }
 
 function ItemList({
@@ -317,6 +335,7 @@ function ItemList({
   onRemove,
   dialogAt,
   dialogOpener,
+  end,
 }: ItemListProps) {
   const List = view === "compact" ? CompactList : CardGrid
   // A removed item has no place in its placement's order (STY-049 S8).
@@ -348,6 +367,7 @@ function ItemList({
           dialogOpener={dialogAt === position ? dialogOpener : undefined}
         />
       ))}
+      {end}
     </List>
   )
 }

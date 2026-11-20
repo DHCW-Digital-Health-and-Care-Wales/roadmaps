@@ -268,7 +268,7 @@ test("marks the placement the page is in, in the links, and none at the top (S3,
   await expect(next).not.toHaveAttribute("aria-current")
 })
 
-test("reaches the unplaced items, and an empty placement, which says it has none (S4, S5)", async ({
+test("reaches the unplaced items, and an empty placement, which offers its first item (S4, S5, STY-080 S1)", async ({
   page,
   sheets,
 }) => {
@@ -289,7 +289,9 @@ test("reaches the unplaced items, and an empty placement, which says it has none
     .click()
   await expect(placementHeading(page, "Not doing")).toBeFocused()
   await expect(
-    page.getByRole("main").getByText("No items", { exact: true }).last(),
+    page
+      .getByRole("main")
+      .getByRole("button", { name: "Add the first item to Not doing" }),
   ).toBeInViewport()
   await expect(
     placementLinks(page).getByRole("link", { name: /^Not doing,/ }),

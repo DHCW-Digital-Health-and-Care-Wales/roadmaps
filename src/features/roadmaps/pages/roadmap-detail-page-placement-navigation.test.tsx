@@ -215,7 +215,7 @@ describe("Jumping between a roadmap's placements (STY-053)", () => {
     })
   })
 
-  it("reaches an empty placement, which says it has none (S5)", async () => {
+  it("reaches an empty placement, which offers its first item (S5, STY-080 S1)", async () => {
     const user = await renderPage({ tablet: true })
 
     await user.click(within(links()).getByRole("link", { name: /^Not doing/ }))
@@ -226,7 +226,7 @@ describe("Jumping between a roadmap's placements (STY-053)", () => {
     })
     expect(notDoing).toHaveFocus()
     expect(notDoing.parentElement?.nextElementSibling).toHaveTextContent(
-      "No items",
+      "Add the first item",
     )
   })
 

@@ -42,6 +42,8 @@
       - paragraph: Something we shipped in the last few weeks.
       - button "Move Recently shipped work"
       - button "Edit Recently shipped work"
+    - listitem:
+      - button "Add an item to Recently delivered"
   - heading "Now" [level=2]
   - list "Now":
     - listitem:
@@ -84,6 +86,8 @@
       - paragraph: Work that is finished and waiting to go live.
       - button "Move Card awaiting release"
       - button "Edit Card awaiting release"
+    - listitem:
+      - button "Add an item to Now"
   - heading "Next" [level=2]
   - list "Next":
     - listitem:
@@ -92,6 +96,8 @@
       - paragraph: Work we expect to pick up soon.
       - button "Move Card being explored"
       - button "Edit Card being explored"
+    - listitem:
+      - button "Add an item to Next"
   - heading "Later" [level=2]
   - list "Later":
     - listitem:
@@ -106,6 +112,8 @@
       - paragraph: Direction we expect to take as we learn more.
       - button "Move Longer-term idea"
       - button "Edit Longer-term idea"
+    - listitem:
+      - button "Add an item to Later"
   - heading "Delivered this year" [level=2]
   - list "Delivered this year":
     - listitem:
@@ -114,6 +122,8 @@
       - paragraph: Something we delivered earlier in the year.
       - button "Move Earlier delivery this year"
       - button "Edit Earlier delivery this year"
+    - listitem:
+      - button "Add an item to Delivered this year"
   - heading "Not doing" [level=2]
   - list "Not doing":
     - listitem:
@@ -122,3 +132,5 @@
       - paragraph: Explain why this is out of scope for now.
       - button "Move Something we are not doing"
       - button "Edit Something we are not doing"
+    - listitem:
+      - button "Add an item to Not doing"

@@ -271,9 +271,13 @@ test.describe("a move to another placement travels the whole way (S2)", () => {
     // The page went on scrolling while the item travelled.
     expect(travel?.scrollAtEnd).toBeGreaterThan(travel?.scrollAtReady ?? 0)
     const card = itemOf(page, "A minimal card")
-    await expect(later.getByRole("listitem").last()).toContainText(
-      "A minimal card",
-    )
+    // Last of its items, before Later's quick add (STY-080).
+    await expect(
+      later
+        .getByRole("listitem")
+        .filter({ has: page.getByRole("heading", { level: 3 }) })
+        .last(),
+    ).toContainText("A minimal card")
     await expect(card.getByText("Moved from Now")).toBeVisible()
     await expect.poll(() => inRoom(card)).toBe(true)
     await expect(moveButton(page, "A minimal card")).toBeFocused()

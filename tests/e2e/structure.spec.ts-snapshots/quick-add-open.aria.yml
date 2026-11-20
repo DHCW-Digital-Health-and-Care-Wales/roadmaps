@@ -1,0 +1,24 @@
+- list "Next":
+  - listitem:
+    - heading "Card being explored" [level=3]
+    - term: Phase
+    - definition: Alpha
+    - term: Description
+    - definition: Work we expect to pick up soon.
+    - term: Expected outcome
+    - definition: What we hope this will achieve.
+    - term: Organisations
+    - definition: Betsi Cadwaladr, Hywel Dda
+    - button "Remove Card being explored"
+    - button "Move Card being explored"
+    - button "Edit Card being explored"
+  - listitem:
+    - heading "Book a hearing test online" [level=3]
+    - text: New Book a hearing test online
+    - button "Remove Book a hearing test online"
+    - button "Move Book a hearing test online"
+    - button "Edit Book a hearing test online"
+  - listitem:
+    - textbox "Title of a new item in Next"
+    - button "Add"
+    - button "Cancel"

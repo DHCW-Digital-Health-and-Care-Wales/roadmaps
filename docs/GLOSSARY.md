@@ -186,7 +186,7 @@ that opens in place to its other fields, by its chevron or a press on its text
 **row** of it is an item shown that way, never an item's position.
 _Avoid_: List view, table
 
-**Quick add** _(planned)_:
+**Quick add**:
 The "Add an item" control that ends each placement on a roadmap's page, in both views,
 and the title field it opens, where a Product Lead types a **new item**'s title and adds
 it there, one after another (STY-080). In an empty placement it reads "Add the first

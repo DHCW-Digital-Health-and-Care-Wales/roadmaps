@@ -211,6 +211,26 @@ test("a roadmap's items in the compact view, a row opened (STY-067)", async ({
   await expectStructure(main, "detail-compact.aria.yml")
 })
 
+test("a placement's quick add, its field open, after an item added (STY-080)", async ({
+  page,
+}) => {
+  await page.goto("./#/roadmaps/producta")
+  await connect(page)
+  const main = page.getByRole("main")
+  await main.getByRole("button", { name: "Add an item to Next" }).click()
+  const title = main.getByRole("textbox", {
+    name: "Title of a new item in Next",
+  })
+  await title.fill("Book a hearing test online")
+  await page.keyboard.press("Enter")
+  await expect(title).toHaveValue("")
+
+  await expectStructure(
+    main.getByRole("list", { name: "Next", exact: true }),
+    "quick-add-open.aria.yml",
+  )
+})
+
 test("a roadmap not published reads Not published once, in a notice with Publish roadmap (STY-065 S4)", async ({
   page,
 }) => {

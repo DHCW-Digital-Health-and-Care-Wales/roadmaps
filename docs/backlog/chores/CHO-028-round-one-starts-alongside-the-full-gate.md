@@ -27,16 +27,16 @@ guides say so.
 
 From the quick add orchestrated run's progress log and handoffs, outside the repository
 (UTC). STY-080's gate and round 1 ran on branch head `8882bd6`, squashed into `94d1e8c`;
-STY-081's on `beb0c3b`, squashed into `d6bbc69`:
+STY-081's on `beb0c3b`, squashed into `d6bbc69`. STY-075's row is from its run summary:
 
-| Area                   | Measurement                                                                                            | Verdict                  |
-| ---------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------ |
-| Gate on round 1's head | Started 12:22, finished about 12:35: typecheck, lint, format and 3034 unit tests passed; 11 E2E failed | failures already found   |
-| Round 1                | Started 12:25; Opus and quality reports by 12:41, Sol's by 12:42                                       | about 10 minutes earlier |
-| STY-081 gate           | Started 14:22:11, finished about 14:32: all green (3055 unit, 664 E2E)                                 | nothing to find          |
-| STY-081 round 1        | Started 14:22:47, before the unit tests (156 s) had finished; all three reports by 14:29               | about 10 minutes earlier |
-| STY-081 fixes          | Made after the gate ended, at 14:32, as `validation.md` sets for a background suite                    | rule held                |
-| Other runs             | No delivery record in `docs/analysis/delivery-runs/` reports round 1 started during its gate           | two observations         |
+| Area                   | Measurement                                                                                                                                             | Verdict                  |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| Gate on round 1's head | Started 12:22, finished about 12:35: typecheck, lint, format and 3034 unit tests passed; 11 E2E failed                                                  | failures already found   |
+| Round 1                | Started 12:25; Opus and quality reports by 12:41, Sol's by 12:42                                                                                        | about 10 minutes earlier |
+| STY-081 gate           | Started 14:22:11, finished about 14:32: all green (3055 unit, 664 E2E)                                                                                  | nothing to find          |
+| STY-081 round 1        | Started 14:22:47, before the unit tests (156 s) had finished; all three reports by 14:29                                                                | about 10 minutes earlier |
+| STY-081 fixes          | Made after the gate ended, at 14:32, as `validation.md` sets for a background suite                                                                     | rule held                |
+| STY-075 (EPC-018 run)  | Round 1 dispatched at 16:25, four minutes before the first full E2E run finished green (`docs/analysis/delivery-runs/2026-11-19-epc-018-moved-item.md`) | three observations       |
 
 ## Acceptance criteria
 
@@ -51,11 +51,11 @@ and when its fix is made
 
 - **Q1**: Should round 1 start alongside the full gate?
   - (a) No, as today (recommended): round 1 waits for the whole gate, and `delegation.md`'s
-    Worker contract names the full gate, since two deliveries in a row started round 1
-    during it. Each delivery keeps the wait, about 10 minutes in STY-080 and STY-081.
-    Two observations, neither with a gate failure that no reviewer found, are too few to
-    change when reviews start (`orchestrate`'s run-summary reference, _Evaluate after
-    real use_).
+    Worker contract names the full gate, since three deliveries (STY-075, STY-080,
+    STY-081) started round 1 during it. Each delivery keeps the wait, about 10 minutes in
+    STY-080 and STY-081. Three observations, none with a gate failure that no reviewer
+    found, are too few to change when reviews start (`orchestrate`'s run-summary
+    reference, _Evaluate after real use_).
   - (b) Yes, once typecheck, lint and the unit tests pass. A gate failure counts as a finding
     above P3, so its fix gets a re-check, and it is fixed only after the round's reviewers
     have reported. This saves the wait, adds a re-check whenever the gate fails, and changes

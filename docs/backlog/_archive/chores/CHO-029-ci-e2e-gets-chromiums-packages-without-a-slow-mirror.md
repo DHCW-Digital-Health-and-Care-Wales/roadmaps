@@ -1,7 +1,6 @@
 # CHO-029: CI's E2E job gets Chromium's system packages without waiting on a slow apt mirror
 
-- **Status**: Proposed — raised by STY-081's retrospective; CI's E2E job twice came within
-  2 minutes of its timeout while it waited on the runner's apt mirror
+- **Status**: Done
 - **Type**: Chore
 - **Area**: CI/CD
 - **Epic**: standalone
@@ -9,7 +8,7 @@
 - **Binding ADRs**: none
 - **Suggested model**: Sonnet — one job in `.github/workflows/ci.yml`, checked by observed
   runs
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/213
 
 ## Summary
 
@@ -72,7 +71,41 @@ the version mismatch
 
 ## Decisions
 
+- **D1** (owner, 2026-11-20, request): use a Playwright container for the E2E tests so
+  no Chromium or system packages are installed → option (a), the job runs in Playwright's
+  image. Changes: the install and cache steps go.
+- **D2** (agent, 2026-11-20): the image is pinned by tag and digest, as the actions are
+  pinned by SHA, and S2 is held by a step that launches Chromium and names the version
+  on failure (the product-roadmaps public site's pattern), over a Vitest test comparing
+  the tag with package.json. The step fails only when the image lacks the Chromium the
+  installed Playwright needs, so a patch bump that keeps the browser revision does not
+  force an image bump (a stale digest then passes), and an image that cannot launch it
+  is caught whatever its tag says.
+
 ## Out of scope
 
 - The flaky `moved-travel.spec.ts:207` keyboard case: it passed on retry, and the timing
   above does not depend on it.
+
+## Delivery
+
+### Departures
+
+None.
+
+### Contract for dependents
+
+The E2E job runs in `mcr.microsoft.com/playwright:v<version>-noble@sha256:<digest>`
+with `--ipc=host`, and installs no browser or system package. A Playwright bump
+changes the image tag and digest in `.github/workflows/ci.yml` with the version in
+`package.json` (`docker pull mcr.microsoft.com/playwright:v<version>-noble` prints
+the digest); the job's _Check the container has the Playwright browser_ step fails
+with that instruction when the image lacks the Chromium the installed Playwright needs. Local runs still install Chromium
+(`AGENTS.md`, _Commands_).
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                 |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | CI run https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/actions/runs/44772912803 (a manual run of the branch at `674d334`): the E2E job started 16:23:40 and `pnpm test:e2e` at 16:24:20, 40 s later, of which _Initialize containers_ (the image pull) took 21 s. Its steps include no apt step, no browser cache and no install of Chromium; the job took 11 min 2 s and passed. |
+| S2       | The check step's script, with the repository mounted in the 1.65.0 image, exits 1 with Playwright's "Please update docker image as well" and the step's `::error::` naming v1.64.1; in the 1.64.1 image it exits 0 (local run).                                                                                                                                                                         |

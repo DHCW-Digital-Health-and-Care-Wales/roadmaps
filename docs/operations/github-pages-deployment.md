@@ -14,7 +14,7 @@ dispatch:
 changes ──┤
           ├──► verify ──┐   typecheck · lint · format:check · test · build
           │             ├──► deploy   (push to main only: deploy-pages → github-pages environment)
-          └──► e2e ─────┘   Playwright (Chromium cached per Playwright version)
+          └──► e2e ─────┘   Playwright, in Playwright's pinned image
 ```
 
 - `changes` classifies a pull request's files. When every changed file is Markdown or
@@ -24,6 +24,12 @@ changes ──┤
 - `verify` and `e2e` run in parallel. On a push to `main`, `verify` also reads the Pages
   configuration, checks the build's base path against it and uploads `dist/` as the Pages
   artifact.
+- `e2e` runs in `mcr.microsoft.com/playwright:v<version>-noble`, pinned by digest, which holds
+  that version's Chromium and its system packages, so the job installs neither. A
+  `@playwright/test` bump changes the image tag and digest in `ci.yml` with it
+  (`docker pull mcr.microsoft.com/playwright:v<version>-noble` prints the digest); the job's
+  check step fails with that instruction when the image lacks the Chromium the installed
+  Playwright needs.
 - `deploy` runs only after both pass, and only for pushes to `main`. It does not check
   out or install anything; it publishes the artifact `verify` uploaded. It alone has
   `pages: write` and `id-token: write`; everything else is read-only.

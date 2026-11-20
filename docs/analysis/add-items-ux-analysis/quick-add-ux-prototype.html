@@ -1314,6 +1314,7 @@
           const attrs = {
             type: "button",
             class: "btn sm" + (narrow ? " sq" : ""),
+            "data-act": label,
           }
           if (onclick) attrs.onclick = onclick
           else attrs.onclick = () => {}
@@ -1360,7 +1361,7 @@
               {
                 type: "button",
                 class: "btn sm",
-                "data-edit": item.title,
+                "data-act": "Edit",
               },
               icon("edit"),
               "Edit",
@@ -1656,12 +1657,9 @@
           const cards = host
             .querySelector(`ul[aria-labelledby="${id}-h-${slug(p)}"]`)
             .querySelectorAll(":scope > li:not([data-qa])")
-          ;[...cards.item(cards.length - 1).querySelectorAll("button")]
-            .find(
-              (b) =>
-                b.textContent.includes("Edit") ||
-                b.getAttribute("aria-label")?.startsWith("Edit "),
-            )
+          cards
+            .item(cards.length - 1)
+            .querySelector('button[data-act="Edit"]')
             ?.focus()
         })
         dlg.addEventListener("close", () => {

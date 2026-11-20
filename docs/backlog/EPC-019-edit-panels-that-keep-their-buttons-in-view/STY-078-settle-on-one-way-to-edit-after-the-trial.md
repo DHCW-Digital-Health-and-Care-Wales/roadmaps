@@ -31,3 +31,10 @@ _Not acceptance criteria._
   same preference pieces.
 - Both kept: drop the trial wording from EPC-019 and STY-077's Status, and close this
   as Won't do.
+
+## Decisions
+
+- **D1** (owner, 2026-11-20, STY-083): the side panel is the default and the dialog the
+  opt-in, going forward. The toggle stays for now: this story still decides whether it,
+  or either way of editing, goes. Its rough shapes read with the stored value inverted:
+  a `dialog` stored, no `panel`, and "Edit in a dialog" as the menu's offer.

@@ -1,7 +1,7 @@
 # EPC-019: Edit panels that keep their buttons in view — a long form scrolls its buttons away
 
 - **Status**: Active — raised and grilled by the owner on 2026-11-19
-- **Progress**: 2 of 3 terminal (STY-076, STY-077); next selectable: none; blocked on: STY-078
+- **Progress**: 3 of 4 terminal (STY-076, STY-077, STY-083); next selectable: none; blocked on: STY-078
   waits for the owner's trial of the side panel
 - **Binding ADRs**: ADR-005, ADR-008, ADR-010
 
@@ -12,9 +12,10 @@ Done and Cancel out of view, and the title and its X with them. This epic splits
 `Dialog` into a pinned header, a scrolling middle and a pinned footer when the screen is
 large enough. A phone, and a short window, keep today's single scroll. It then trials a
 second way to edit: the item and roadmap forms open as a right-hand side panel instead
-of a centred dialog, chosen in the account menu and remembered in the browser. What
-closing does, and the alert dialogs, are unchanged. After the trial the owner keeps one
-way or both (STY-078).
+of a centred dialog, chosen in the account menu and remembered in the browser. It opens
+as a dialog until chosen (STY-077), then as the side panel until a dialog is chosen
+(STY-083). What closing does, and the alert dialogs, are unchanged. After the trial the
+owner keeps one way or both (STY-078).
 
 ## Owner decisions waiting
 
@@ -69,11 +70,12 @@ They differ only in where the popup sits and how it animates. A side panel is th
 2. A failure said after a press of the footer's button (adding a roadmap: a failed
    write, or an expired session with Reconnect) sits in the footer above its buttons.
    A form's information note (adding an item) stays in the body (STY-076).
-3. One preference, "Edit in a side panel", off by default, is toggled in the account
-   menu beside the theme and kept in this browser. While it is on and the screen is at
-   least 640px wide, the item and roadmap forms open as a modal side panel at the
-   right: full height, 32rem wide, page dimmed, sliding in. The panel follows the
-   same pinning rule (F3; STY-077).
+3. One preference, "Edit in a dialog", is toggled in the account menu beside the theme and
+   kept in this browser. The forms open as a modal side panel at the right unless it is
+   chosen, and the menu then offers "Edit in a side panel" to go back. While the panel is
+   in force and the screen is at least 640px wide, it is full height, 32rem wide, page
+   dimmed, sliding in, and follows the same pinning rule (F3; STY-077, whose first version
+   was off by default and named the preference "Edit in a side panel"; STY-083 flipped it).
 4. A side panel is `DialogContent` with a position, not a new component: `FormDialog`
    chooses the position from the preference and nothing else changes (F3; STY-077 D7,
    which named the prop `placement` before it was built as `position`).
@@ -111,12 +113,14 @@ glossary keeps "sheet" away from the Product Lead's words.
 | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ | ---------- | ----- |
 | STY-076 | [A dialog's title and buttons stay in view while its form scrolls](../_archive/EPC-019-edit-panels-that-keep-their-buttons-in-view/STY-076-a-dialogs-title-and-buttons-stay-in-view.md) | Features/UI + E2E        | —          | ✅    |
 | STY-077 | [A Product Lead edits in a side panel, chosen in the account menu](../_archive/EPC-019-edit-panels-that-keep-their-buttons-in-view/STY-077-edit-in-a-side-panel.md)                     | Features/UI + i18n + E2E | STY-076    | ✅    |
+| STY-083 | [The forms open in a side panel unless a Product Lead chooses a dialog](../_archive/EPC-019-edit-panels-that-keep-their-buttons-in-view/STY-083-edit-in-a-side-panel-by-default.md)     | Features/UI + E2E        | STY-077    | ✅    |
 | STY-078 | [Settle on one way to edit after the trial](STY-078-settle-on-one-way-to-edit-after-the-trial.md)                                                                                       | Features/UI              | STY-077    |       |
 
 ## Sequencing
 
 STY-076 first: it builds the three-part layout that STY-077's side panel reuses. STY-078
-is a Placeholder, promoted once the owner has tried the side panel.
+is a Placeholder, promoted once the owner has tried the side panel. STY-083, which the
+owner asked for once the trial had begun, made the side panel the default after STY-077.
 
 ## Out of scope
 

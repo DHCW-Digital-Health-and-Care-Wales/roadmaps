@@ -514,7 +514,7 @@ for (const theme of THEMES) {
       // Then where the forms open (STY-077), and the session's action, Disconnect
       // while connected.
       const editSurface = page.getByRole("menuitem", {
-        name: "Edit in a side panel",
+        name: "Edit in a dialog",
       })
       await page.keyboard.press("ArrowDown")
       await expect(editSurface).toBeFocused()

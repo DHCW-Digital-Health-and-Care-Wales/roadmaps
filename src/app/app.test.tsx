@@ -166,7 +166,7 @@ describe("header", () => {
       menu.getByRole("menuitem", { name: "Switch to dark theme" }),
     ).toBeInTheDocument()
     expect(
-      menu.getByRole("menuitem", { name: "Edit in a side panel" }),
+      menu.getByRole("menuitem", { name: "Edit in a dialog" }),
     ).toBeInTheDocument()
     expect(
       menu.getByRole("menuitem", { name: "Disconnect" }),

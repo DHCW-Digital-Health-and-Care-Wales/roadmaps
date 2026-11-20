@@ -43,7 +43,7 @@ describe("AccountMenu", () => {
       screen.getByRole("menuitem", { name: "Switch to dark theme" }),
     ).toBeInTheDocument()
     expect(
-      screen.getByRole("menuitem", { name: "Edit in a side panel" }),
+      screen.getByRole("menuitem", { name: "Edit in a dialog" }),
     ).toBeInTheDocument()
     await user.click(screen.getByRole("menuitem", { name: "Disconnect" }))
 

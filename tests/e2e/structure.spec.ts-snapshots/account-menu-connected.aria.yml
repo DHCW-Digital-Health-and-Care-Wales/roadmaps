@@ -1,5 +1,5 @@
 - menu "Account":
   - menuitem "Switch to dark theme"
-  - menuitem "Edit in a side panel"
+  - menuitem "Edit in a dialog"
   - separator
   - menuitem "Disconnect"

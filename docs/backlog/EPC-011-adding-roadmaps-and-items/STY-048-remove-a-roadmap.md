@@ -47,3 +47,14 @@ confirmation; README _What the editor writes_ and an ADR-012 amendment.
 - **Q4**: Where is the action, and how is it confirmed?
   - (a) On the roadmap's page, confirmed by typing its title (recommended).
   - (b) On the roadmap's page, with a plain confirmation.
+
+## Decisions
+
+- **D1** (owner, 2026-11-20, ADR-015 grilling round 1, Option 8): once the database
+  replaces Sheets, a roadmap is retired, never deleted: it leaves both apps, its
+  history stays readable, it can be restored, and its short name stays reserved. Q1
+  still stands for the Sheets data source; an answer there should not make retiring
+  harder later.
+- **D2** (owner, 2026-11-20, ADR-015 grilling round 6, Option 33): a retired roadmap
+  is seen in a retired view by its assigned leads and the tenant's admins, who read its
+  history and reinstate it.

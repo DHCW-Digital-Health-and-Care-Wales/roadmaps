@@ -7,13 +7,27 @@ import type { ItemValues, NewItem } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { isRoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 
-import type { AfterAdding, ItemDialogProps } from "../dialogs/item-dialog"
+import { firstMounted } from "@/lib/first-mounted"
+
+import type {
+  AddingStart,
+  AfterAdding,
+  ItemDialogProps,
+} from "../dialogs/item-dialog"
 import type { OpenedItem } from "../dialogs/item-form"
 import { tagsInUse } from "./item-tags"
 import type { MarkMoved } from "./moved-mark"
 import { editPageItem, newItemCardKey, type PageItem } from "./page-items"
 import { usePendingChangesStore } from "./pending-changes-context"
 import { publishAction } from "./pending-changes-store"
+
+/** A quick add field opening the dialog to add its item with more details (STY-081). */
+export interface ExpandedQuickAdd {
+  /** The title typed, tidied, and the field's placement: where the form starts. */
+  readonly start: AddingStart
+  /** The dialog has added an item: the field closes, its run over (S3, D4). */
+  readonly onAdded: () => void
+}
 
 /** What the dialog is opened to do: edit an item, or add one or more. */
 type Target =
@@ -25,8 +39,13 @@ type Target =
     }
   | {
       readonly form: "add"
-      /** The "Add an item" that opened it: the page's own, or an empty roadmap's. */
+      /**
+       * What opened it: the page's own "Add an item", an empty roadmap's, or a quick add,
+       * its field while it is open, else its "Add an item".
+       */
       readonly from: RefObject<HTMLElement | null>
+      /** The quick add it was opened from, if one was. */
+      readonly expanded: ExpandedQuickAdd | undefined
       /** The key of the card of the item "Add item" added as it closed the dialog. */
       readonly addedKey: string | null
     }
@@ -82,9 +101,13 @@ export interface PageItemDialog {
   readonly edit: (position: number) => void
   /**
    * Opens the dialog to add an item, from "Add an item" with the page's actions, or
-   * from `from`, an empty roadmap's own.
+   * from `from`: an empty roadmap's own, or a quick add field that is `expanded` into
+   * it, its form starting from what was typed there (STY-081).
    */
-  readonly add: (from?: RefObject<HTMLElement | null>) => void
+  readonly add: (
+    from?: RefObject<HTMLElement | null>,
+    expanded?: ExpandedQuickAdd,
+  ) => void
 }
 
 /**
@@ -96,9 +119,11 @@ export interface PageItemDialog {
  * of a new item (STY-046 S6), and marks an item it moves (STY-071 S2). Adding, it is on
  * no item: "Add item" and "Add and start another" keep a new item pending, and the
  * first closes the dialog with focus going to the new item's card. Cancel, the close
- * button and Escape send focus back to the "Add an item" that opened it, or to the
- * page's own once an item has taken an empty roadmap's panel's place, and its button
- * with it.
+ * button and Escape send focus back to what opened it, or to the page's own "Add an
+ * item" once that has gone, as an empty roadmap's panel goes when an item takes its
+ * place. Opened from a quick add field, the form starts on its title and placement; an
+ * item added closes the field, so closing goes back to its "Add an item", and closing
+ * with none added goes back to the field, its title as typed (STY-081 S3, S4, S7).
  */
 export function useItemDialog({
   roadmap,
@@ -173,6 +198,7 @@ export function useItemDialog({
     })
     const addedKey =
       then === "close" && newItem ? newItemCardKey(newItem.id) : null
+    if (opening.form === "add") opening.expanded?.onAdded()
     setOpening((current) =>
       current?.form === "add"
         ? { ...current, addedKey, open: then !== "close" }
@@ -192,16 +218,15 @@ export function useItemDialog({
         ? {
             ...shared,
             open: opening.open,
-            // The card of the item "Add item" has just added, else the "Add an item"
-            // that opened it. An empty roadmap's panel, and its button, go once the
+            // The card of the item "Add item" has just added, else what opened it while
+            // it is on the page. An empty roadmap's panel, and its button, go once the
             // page has an item, added here or read meanwhile: the page's own stays.
             opener:
               opening.addedKey !== null
                 ? cardOpener
-                : pageItems.length === 0
-                  ? opening.from
-                  : addItemButton,
+                : firstMounted(opening.from, addItemButton),
             action: publishAction(roadmap),
+            start: opening.expanded?.start,
             onAdd: added,
           }
         : edited
@@ -230,8 +255,8 @@ export function useItemDialog({
         opened: { read: target.item, shown: target.shown },
       })
     },
-    add: (from = addItemButton) => {
-      if (canAdd) open({ form: "add", from, addedKey: null })
+    add: (from = addItemButton, expanded) => {
+      if (canAdd) open({ form: "add", from, expanded, addedKey: null })
     },
   }
 }

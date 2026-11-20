@@ -20,6 +20,7 @@ const COPY = {
     first: (placement: string) => `Add the first item to ${placement}`,
     field: (placement: string) => `Title of a new item in ${placement}`,
     add: "Add",
+    more: "Add more details",
     cancel: "Cancel",
     compact: "Compact",
     compactView: "Compact view",
@@ -30,6 +31,7 @@ const COPY = {
     first: (placement: string) => `Ychwanegu'r eitem gyntaf o dan ${placement}`,
     field: (placement: string) => `Teitl eitem newydd o dan ${placement}`,
     add: "Ychwanegu",
+    more: "Ychwanegu rhagor o fanylion",
     cancel: "Canslo",
     compact: "Cryno",
     compactView: "Golwg gryno",
@@ -201,7 +203,7 @@ test.describe("on a touch screen", () => {
   })
 })
 
-test("Cancel drops what was typed; Tab to Add and Cancel keeps the field, and Tab past them drops it (S4, S5)", async ({
+test("Cancel drops what was typed; Tab to its buttons keeps the field, and Tab past them drops it (S4, S5; STY-081 S1)", async ({
   page,
   sheets,
 }) => {
@@ -217,6 +219,10 @@ test("Cancel drops what was typed; Tab to Add and Cancel keeps the field, and Ta
 
   await page.keyboard.press("Enter")
   await field(page, "Later").fill(HEARING)
+  await page.keyboard.press("Tab")
+  await expect(
+    main(page).getByRole("button", { name: COPY.en.more, exact: true }),
+  ).toBeFocused()
   await page.keyboard.press("Tab")
   await expect(
     main(page).getByRole("button", { name: "Add", exact: true }),
@@ -334,6 +340,98 @@ test("a field open as the items are read again stays open with what was typed in
   ])
 })
 
+// "Add more details" (STY-081): the field's expand button opens the item dialog with
+// the title typed so far and the field's placement.
+
+/** The value and cursor of a text field: [value, selection start, selection end]. */
+function textAndCursor(locator: Locator) {
+  return locator.evaluate((element) =>
+    element instanceof HTMLInputElement
+      ? [element.value, element.selectionStart, element.selectionEnd]
+      : [],
+  )
+}
+
+test("“Add more details” opens the item dialog on the title and placement; closing it brings the field back, adding there ends the run (STY-081 S1–S4, S7)", async ({
+  page,
+  sheets,
+}) => {
+  const typed = " Book a  hearing test "
+  const tidied = "Book a hearing test"
+  await openRoadmap(page, sheets)
+  await quickAdd(page, "Next").click()
+  await field(page, "Next").fill(typed)
+  await page.keyboard.press("Home")
+  const more = main(page).getByRole("button", { name: COPY.en.more })
+
+  await more.hover()
+  await expect(page.locator("[data-slot=tooltip-content]")).toHaveText(
+    COPY.en.more,
+  )
+  await more.click()
+
+  const dialog = page.getByRole("dialog", { name: "Add an item" })
+  const title = dialog.getByRole("textbox", { name: "Title" })
+  await expect(title).toBeFocused()
+  expect(await textAndCursor(title)).toEqual([
+    tidied,
+    tidied.length,
+    tidied.length,
+  ])
+  await expect(
+    dialog.getByRole("combobox", { name: "Horizon or section" }),
+  ).toHaveValue("next")
+  await expect(
+    dialog.getByRole("textbox", { name: "Description" }),
+  ).toHaveValue("")
+
+  // A click outside does nothing; Cancel brings the field back as typed (S4).
+  await page.mouse.click(5, 5)
+  await expect(dialog).toBeVisible()
+  await dialog.getByRole("button", { name: "Cancel" }).click()
+  await expect(dialog).toBeHidden()
+  await expect(field(page, "Next")).toBeFocused()
+  expect(await textAndCursor(field(page, "Next"))).toEqual([
+    typed,
+    typed.length,
+    typed.length,
+  ])
+
+  // Adding there ends the run, focus on the new card's Edit (S3).
+  await more.click()
+  await dialog
+    .getByRole("textbox", { name: "Description" })
+    .fill("Choose a time that suits you.")
+  await dialog.getByRole("button", { name: "Add item", exact: true }).click()
+  await expect(dialog).toBeHidden()
+  await expect(titlesUnder(page, "Next")).toHaveText([
+    "See your waiting time",
+    tidied,
+  ])
+  await expect(
+    main(page).getByRole("button", { name: `Edit ${tidied}` }),
+  ).toBeFocused()
+  await expect(field(page, "Next")).toHaveCount(0)
+
+  // Closing after "Add and start another" ends the run too (S7).
+  await quickAdd(page, "Later").click()
+  await field(page, "Later").fill(CHECK_IN)
+  await more.click()
+  await dialog
+    .getByRole("button", { name: "Add and start another", exact: true })
+    .click()
+  await expect(dialog.getByRole("status")).toContainText(CHECK_IN)
+  await page.keyboard.press("Escape")
+  await expect(dialog).toBeHidden()
+  await expect(quickAdd(page, "Later")).toBeFocused()
+  await expect(field(page, "Later")).toHaveCount(0)
+  await expect(titlesUnder(page, "Later")).toHaveText([
+    "Choose a clinic online",
+    CHECK_IN,
+  ])
+  expect(sheets.writes).toHaveLength(0)
+})
+
 test.describe("the field's layout (S2)", () => {
   for (const [width, beside] of [
     [375, false],
@@ -366,12 +464,22 @@ test.describe("the field's layout (S2)", () => {
           name: COPY.cy.next,
           exact: true,
         })
-        const [fieldBox, addBox, cancelBox, listBox] = await boxesOf(
+        const more = main(page).getByRole("button", {
+          name: COPY.cy.more,
+          exact: true,
+        })
+        const [fieldBox, addBox, cancelBox, listBox, moreBox] = await boxesOf(
           title,
           add,
           cancel,
           list,
+          more,
         )
+        // "Add more details" is inside the field's end (STY-081 S1).
+        expect(moreBox.right).toBeLessThan(fieldBox.right)
+        expect(moreBox.right).toBeGreaterThan(fieldBox.right - 8)
+        expect(moreBox.y).toBeGreaterThan(fieldBox.y)
+        expect(moreBox.bottom).toBeLessThan(fieldBox.bottom)
         expect(Math.round(addBox.height)).toBe(40)
         expect(Math.round(cancelBox.height)).toBe(40)
         if (view === "compact" && beside) {
@@ -410,5 +518,23 @@ for (const theme of ["light", "dark"] as const) {
       expect(results.violations).toEqual([])
       await page.keyboard.press("Escape")
     }
+  })
+
+  test(`has no axe violation in the dialog “Add more details” opens, in the ${theme} theme (STY-081 S6)`, async ({
+    page,
+    sheets,
+  }) => {
+    await useTheme(page, theme)
+    await openRoadmap(page, sheets)
+    await quickAdd(page, "Next").click()
+    await field(page, "Next").fill(HEARING)
+    await main(page).getByRole("button", { name: COPY.en.more }).click()
+    const dialog = page.getByRole("dialog", { name: "Add an item" })
+    await expect(dialog.getByRole("textbox", { name: "Title" })).toBeFocused()
+
+    const results = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+      .analyze()
+    expect(results.violations).toEqual([])
   })
 }

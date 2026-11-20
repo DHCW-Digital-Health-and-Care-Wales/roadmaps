@@ -47,7 +47,8 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   dialog can't find it by where focus was. A test clicks without focusing
   (`fireEvent.click`) to show it. `opener` is required, so the type check names a dialog
   that gives none. "Add a roadmap" falls back to the button beside Refresh when a read
-  removes the empty panel's.
+  removes the empty panel's; the item dialog to the page's "Add an item" once what
+  opened it has gone (`firstMounted`, STY-081).
 - **A read can land while a dialog is open**, and drop or change what the dialog
   lists, what opened it or what it will send: each dialog, and each thing one comes to
   show, gets a test of that read, written with it and not left to review. Nothing

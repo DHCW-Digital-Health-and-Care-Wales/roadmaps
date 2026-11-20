@@ -389,6 +389,8 @@ export const en = {
         /** The title field's name, for assistive technology. */
         field: "Title of a new item in {{placement}}",
         add: "Add",
+        /** The button inside the field's end that opens the item dialog, and its tooltip. */
+        more: "Add more details",
         /** Said once an item is added, the field open for the next. */
         added: "“{{title}}” was added to {{placement}}.",
       },

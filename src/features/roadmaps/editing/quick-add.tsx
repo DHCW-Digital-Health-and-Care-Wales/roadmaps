@@ -1,16 +1,29 @@
-import { PlusIcon } from "lucide-react"
-import { type SyntheticEvent, useEffect, useRef, useState } from "react"
+import { Maximize2Icon, PlusIcon } from "lucide-react"
+import {
+  type RefObject,
+  type SyntheticEvent,
+  useEffect,
+  useRef,
+  useState,
+} from "react"
 import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { addNewItem, checkNewItem } from "@/domain/roadmap/new-item"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import type { RoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
+import { firstMounted } from "@/lib/first-mounted"
 import { cn } from "@/lib/utils"
 
 import type { ItemsView } from "../hooks/use-items-view"
 import { usePendingChangesStore } from "./pending-changes-context"
+import type { ExpandedQuickAdd } from "./use-item-dialog"
 import { useLeaveAfterPress } from "./use-leave-after-press"
 
 export interface QuickAddProps {
@@ -25,6 +38,14 @@ export interface QuickAddProps {
   first: boolean
   /** Says a status message: what was added, and where. */
   onAnnounce: (message: string) => void
+  /**
+   * "Add more details" was chosen: opens the item dialog from `from`, the field while
+   * it is open and else its "Add an item", to add the item `expanded` (STY-081).
+   */
+  onExpand: (
+    from: RefObject<HTMLElement | null>,
+    expanded: ExpandedQuickAdd,
+  ) => void
 }
 
 /** A title as quick add keeps it: trimmed, its runs of spaces made one (S6). */
@@ -44,6 +65,11 @@ function tidyTitle(title: string): string {
  * move what was pressed (S5); focus the page takes itself, as the session warning does,
  * keeps it. A press on the field's own Add or Cancel keeps focus in the title. It
  * asks for no session, since it writes nothing until a publish (D7).
+ *
+ * "Add more details", inside the end of the title, opens the item dialog with the
+ * title, tidied, and the placement (STY-081 S1, S2). The field stays open behind it, as
+ * typed, for the dialog to return to, its cursor at the end, unless an item is added
+ * there, which closes it (S3, S4, S7).
  */
 export function QuickAdd({
   roadmapId,
@@ -52,6 +78,7 @@ export function QuickAdd({
   view,
   first,
   onAnnounce,
+  onExpand,
 }: QuickAddProps) {
   const { t } = useTranslation()
   const store = usePendingChangesStore()
@@ -103,6 +130,17 @@ export function QuickAdd({
         placement: placementName,
       }),
     )
+  }
+  const expand = () => {
+    // Back from a dialog that added nothing, the cursor is at the title's end (S4).
+    field.current?.setSelectionRange(title.length, title.length)
+    // The dialog goes back to the field, else to the control once the field has closed.
+    onExpand(firstMounted(field, control), {
+      start: { title: tidyTitle(title), placement },
+      onAdded: () => {
+        close(false)
+      },
+    })
   }
   const leave = useLeaveAfterPress(open, () => {
     close(false)
@@ -180,19 +218,39 @@ export function QuickAdd({
         )}
         onSubmit={add}
       >
-        <Input
-          ref={field}
-          value={title}
-          aria-label={t("roadmaps.items.quickAdd.field", {
-            placement: placementName,
-          })}
-          autoComplete="off"
-          enterKeyHint="enter"
-          className={cn(!cards && "md:flex-1")}
-          onChange={(event) => {
-            setTitle(event.target.value)
-          }}
-        />
+        <div className={cn("relative", !cards && "md:flex-1")}>
+          <Input
+            ref={field}
+            value={title}
+            aria-label={t("roadmaps.items.quickAdd.field", {
+              placement: placementName,
+            })}
+            autoComplete="off"
+            enterKeyHint="enter"
+            // Room for "Add more details" inside its end.
+            className="pr-11"
+            onChange={(event) => {
+              setTitle(event.target.value)
+            }}
+          />
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={t("roadmaps.items.quickAdd.more")}
+                  className="absolute top-1 right-1 text-muted-foreground hover:text-foreground"
+                  onClick={expand}
+                />
+              }
+            >
+              <Maximize2Icon aria-hidden="true" />
+            </TooltipTrigger>
+            <TooltipContent>{t("roadmaps.items.quickAdd.more")}</TooltipContent>
+          </Tooltip>
+        </div>
         <div className="flex flex-wrap gap-2">
           <Button type="submit">{t("roadmaps.items.quickAdd.add")}</Button>
           <Button

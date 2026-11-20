@@ -248,6 +248,7 @@ export function RoadmapItems({
                     view={view}
                     first={placed.length === 0}
                     onAnnounce={cardHandlers.announce}
+                    onExpand={itemDialog.add}
                   />,
                 )}
               </div>

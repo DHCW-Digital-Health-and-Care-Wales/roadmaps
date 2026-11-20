@@ -14,11 +14,13 @@
 
 The test that a keyboard "To the top" moves the last of 20 Now items, in the cards view,
 failed in CI twice since STY-080 merged, both times passing on a retry: on main after
-STY-080 (`94d1e8c`) and on STY-081's PR #209. Under load it fails locally about 1 run in 40. The product looks right. The test sets up with a publish, then focuses the item's
+STY-080 (`94d1e8c`) and on STY-081's PR #209. Under load it fails locally about 1 run
+in 40. The product looks right. The test sets up with a publish, then focuses the item's
 Move, presses Enter and chooses from its menu. Under load, the publish notice takes focus
-somewhere in that sequence: before the first Enter, so no menu opens, or after the move,
-so focus is not back on Move when the test checks it. With CI's retries the run still
-passes, so this costs time, not merges, and it can come back on any PR.
+anywhere in that sequence: before the first Enter, so no menu opens; before the choice,
+so nothing moves; or after the move, so focus is not back on Move when the test checks
+it. With CI's retries the run still passes, so this costs time, not merges, and it can
+come back on any PR.
 
 ## Reproduce
 
@@ -32,7 +34,8 @@ keyboard" (repeat 18) timed out at `moved-travel.spec.ts:231`, waiting for the
 "To the top" menu item. The page shows the "Changes published" notice holding focus.
 On PR #209, CI's first attempt failed the same way and its second at line 236, with no
 travel recorded. On main at `94d1e8c` it failed at line 241 instead: the move had
-landed, and the notice held focus where the test expected Move. With `--workers=4`, 30 runs of that case alone all passed.
+landed, and the notice held focus where the test expected Move. With `--workers=4`, 30
+runs of that case alone all passed.
 
 ## Cause
 
@@ -57,8 +60,9 @@ for every caller.
 ### S1: The test's keyboard move holds when the publish dialog finishes closing late
 
 **Given** the 20-item Now placement, opened and published as the spec does, with the
-publish dialog's close held until after `publishOnce` has returned (for example, its
-closing animation slowed by the test) **When** the keyboard "far down" cases run **Then**
-each passes; at `d6bbc69` the held close makes them fail every time
+publish dialog's close delayed so that it ends after `publishOnce` has returned but while
+the case's own steps still run (for example, its closing animation slowed by the test to
+end between `.focus()` and the closing focus check) **When** the keyboard "far down" cases
+run **Then** each passes; at `d6bbc69` the delay makes them fail every time
 
 ## Decisions

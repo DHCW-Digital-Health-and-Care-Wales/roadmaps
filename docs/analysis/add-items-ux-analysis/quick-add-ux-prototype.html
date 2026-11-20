@@ -1251,7 +1251,15 @@
           all.forEach((it, i) => {
             if (it.isNew)
               lines.push(
-                `New item in ${p}, ${i + 1} of ${all.length}: “${it.title}”\n  publishing writes its title and placement; description, outcome, tags and the rest stay empty`,
+                `New item in ${p}, ${i + 1} of ${all.length}: “${it.title}”\n  publishing writes its title and placement${
+                  [
+                    ["description", it.description],
+                    ["expected outcome", it.outcome],
+                  ]
+                    .filter(([, v]) => v)
+                    .map(([n]) => `, and its ${n}`)
+                    .join("") || ", and nothing else"
+                }`,
               )
           })
         }
@@ -1553,11 +1561,16 @@
             if (event.key === "Enter") {
               event.preventDefault()
               add()
-            } else if (event.key === "Escape") {
+            }
+          }
+          // Escape cancels from anywhere in the field: the title, expand, Add
+          // or Cancel.
+          slot.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") {
               event.preventDefault()
               close(p, slot, true)
             }
-          }
+          })
           slot.addEventListener("focusout", (event) => {
             if (redrawing || slot.contains(event.relatedTarget)) return
             // Left by a press elsewhere: the field closes once the press has
@@ -1639,13 +1652,16 @@
           dlg.close("added")
           draw()
           say(`“${item.title}” was added to ${p}.`)
-          // As "Add item" does today (STY-046 S3): focus on the new card's Edit.
-          ;[...host.querySelectorAll("button")]
+          // As "Add item" does today (STY-046 S3): focus on the new card's Edit,
+          // the last item of its placement, whatever its title.
+          const cards = host
+            .querySelector(`ul[aria-labelledby="${id}-h-${p}"]`)
+            .querySelectorAll(":scope > li:not([data-qa])")
+          ;[...cards.item(cards.length - 1).querySelectorAll("button")]
             .find(
               (b) =>
-                (b.textContent.includes("Edit") &&
-                  b.textContent.includes(item.title)) ||
-                b.getAttribute("aria-label") === `Edit ${item.title}`,
+                b.textContent.includes("Edit") ||
+                b.getAttribute("aria-label")?.startsWith("Edit "),
             )
             ?.focus()
         })

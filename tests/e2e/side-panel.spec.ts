@@ -11,9 +11,9 @@ import {
   openAddRoadmapDialog,
   openEditItemDialog,
   openEditRoadmapDialog,
-  settledBoxes,
 } from "./fixtures/dialogs"
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
+import { settledBoxes } from "./fixtures/layout"
 import { useLanguage } from "./fixtures/look"
 import { connect, expect, test } from "./fixtures/test"
 
@@ -39,7 +39,7 @@ async function openProductA(page: Page) {
 }
 
 /** The popup's box once it has opened, and the screen it sits on. */
-async function boxOf(page: Page, dialog: Locator) {
+async function panelBox(page: Page, dialog: Locator) {
   const [box] = await settledBoxes(dialog)
   const size = page.viewportSize()
   if (!size) throw new Error("No viewport")
@@ -48,7 +48,7 @@ async function boxOf(page: Page, dialog: Locator) {
 
 /** Whether the dialog sits along the right edge, full height, 32rem wide. */
 async function expectPanel(page: Page, dialog: Locator) {
-  const { box, size } = await boxOf(page, dialog)
+  const { box, size } = await panelBox(page, dialog)
   expect(box.x + box.width).toBeCloseTo(size.width, 0)
   expect(box.y).toBeCloseTo(0, 0)
   expect(box.height).toBeCloseTo(size.height, 0)
@@ -91,7 +91,7 @@ test("the account menu offers the dialog, and the way back, and the choice survi
     page.getByRole("heading", { level: 3, name: ITEM }),
   ).toBeVisible()
   const dialog = await openEditItemDialog(page, ITEM)
-  const { box, size } = await boxOf(page, dialog)
+  const { box, size } = await panelBox(page, dialog)
   expect(box.x + box.width).toBeLessThan(size.width)
   expect(box.height).toBeLessThan(size.height)
   await page.keyboard.press("Escape")
@@ -164,10 +164,12 @@ test("the panel's geometry is read once its opening slide has finished, however 
 
   const dialog = await openEditItemDialog(page, ITEM)
 
-  const sliding = await dialog.boundingBox()
-  const size = page.viewportSize()
-  if (!sliding || !size) throw new Error("No box or viewport")
-  expect(sliding.x + sliding.width).toBeGreaterThan(size.width + 40)
+  // The slide is still under way, so the reads below meet it as it is.
+  expect(
+    await dialog.evaluate((e) =>
+      e.getAnimations().some((a) => a.playState === "running"),
+    ),
+  ).toBe(true)
   await expectPanel(page, dialog)
   await expectFooterAtFoot(dialog)
 })
@@ -200,7 +202,7 @@ test("on a laptop, every form dialog is a panel, and a question is still centred
   await expect(roadmap).toBeHidden()
 
   const removal = await askToRemove(page, ITEM)
-  const { box, size } = await boxOf(page, removal)
+  const { box, size } = await panelBox(page, removal)
   expect(box.x + box.width).toBeLessThan(size.width)
   expect(box.height).toBeLessThan(size.height / 2)
 })
@@ -244,7 +246,7 @@ test("on a phone, the form rises from the foot at full width as the dialog does 
 
   const dialog = await openEditItemDialog(page, ITEM)
 
-  const { box, size } = await boxOf(page, dialog)
+  const { box, size } = await panelBox(page, dialog)
   expect(box.x).toBeCloseTo(0, 0)
   expect(box.width).toBeCloseTo(size.width, 0)
   expect(box.y + box.height).toBeCloseTo(size.height, 0)
@@ -290,7 +292,7 @@ test("the session warning shows centred above the panel, and focus returns into 
     name: "Your session is about to end",
   })
   await expect(warning).toBeVisible()
-  const { box, size } = await boxOf(page, warning)
+  const { box, size } = await panelBox(page, warning)
   expect(box.x + box.width / 2).toBeCloseTo(size.width / 2, -1)
   expect(
     await page.evaluate(
@@ -322,11 +324,12 @@ test("with reduced motion the panel shows in place, without sliding (S10)", asyn
   const dialog = page.getByRole("dialog", { name: "Edit this item" })
   await expect(dialog).toBeVisible()
   await expectPanel(page, dialog)
+  // Under way or ended, the slide's duration is the computed style's, in seconds.
   expect(
     await dialog.evaluate((e) =>
-      e
-        .getAnimations()
-        .every((a) => Number(a.effect?.getTiming().duration ?? 0) < 1),
+      getComputedStyle(e)
+        .animationDuration.split(",")
+        .every((duration) => Number.parseFloat(duration) < 0.001),
     ),
   ).toBe(true)
 })

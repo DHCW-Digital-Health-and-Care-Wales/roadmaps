@@ -11,9 +11,8 @@ import {
   openAddRoadmapDialog,
   openEditItemDialog,
   openEditRoadmapDialog,
-  settledBoxes,
 } from "./fixtures/dialogs"
-import { centre } from "./fixtures/layout"
+import { centre, settledBoxes } from "./fixtures/layout"
 import { useLanguage } from "./fixtures/look"
 import { connect, expect, test } from "./fixtures/test"
 

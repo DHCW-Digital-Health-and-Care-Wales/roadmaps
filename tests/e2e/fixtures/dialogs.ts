@@ -1,8 +1,7 @@
 import type { Locator, Page } from "@playwright/test"
 
+import { settledBoxes } from "./layout"
 import type { Language } from "./look"
-import type { Box } from "./layout"
-import { boxesOf } from "./layout"
 import { moreButton, openProductDetails } from "./roadmap-page"
 import { connect, expect, roadmapCards } from "./test"
 
@@ -108,48 +107,13 @@ export function cornerClose(dialog: Locator): Locator {
   return dialog.locator('[data-slot="dialog-close-button"]')
 }
 
-/**
- * Resolves once every animation on the page that ends has ended. A dialog is ready as
- * focus reaches its first field, before it has slid or zoomed in: reduced motion cuts
- * that to 0.01 ms, but the first keyframe still holds until the next frame, which a
- * loaded runner delays (DEF-025). Animations that never end, a spinner's, are left.
- */
-export async function animationsDone(page: Page): Promise<void> {
-  await page.evaluate(async () => {
-    const running = () =>
-      document
-        .getAnimations()
-        .filter(
-          (animation) =>
-            animation.playState === "running" &&
-            Number.isFinite(
-              Number(animation.effect?.getComputedTiming().endTime),
-            ),
-        )
-    for (let ending = running(); ending.length > 0; ending = running()) {
-      await Promise.allSettled(ending.map((animation) => animation.finished))
-    }
-  })
-}
-
-/**
- * The boxes of `locators` in the viewport, all read in one step once the page's
- * animations have ended (`animationsDone`): read a popup's geometry with this, or
- * `boxOf` of `fixtures/layout.ts` for what is not animating.
- */
-export async function settledBoxes<Locators extends Locator[]>(
-  ...locators: Locators
-): Promise<{ [At in keyof Locators]: Box }> {
-  const first = locators[0]
-  if (first) await animationsDone(first.page())
-  return boxesOf(...locators)
-}
-
 /** Whether `locator` lies wholly within the screen as it is now scrolled. */
 export async function isInView(page: Page, locator: Locator): Promise<boolean> {
   const [box] = await settledBoxes(locator)
   const size = page.viewportSize()
   if (!size) throw new Error("No viewport")
+  // A box of nothing is a hidden element's, which lies nowhere on the screen.
+  if (box.width === 0 && box.height === 0) throw new Error("Not laid out")
   return box.y >= 0 && box.bottom <= size.height
 }
 

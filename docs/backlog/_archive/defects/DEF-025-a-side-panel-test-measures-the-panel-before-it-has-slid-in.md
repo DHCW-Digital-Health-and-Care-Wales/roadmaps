@@ -69,26 +69,36 @@ past the screen's
 
 ## Delivery
 
-The cause was as stated, in the specs' helpers, not the panel. A new
-`animationsDone(page)` and `settledBoxes(...locators)` in `tests/e2e/fixtures/dialogs.ts`
-wait until every animation that ends has ended, then read the boxes of all the locators
-in one step (`boxesOf`). `side-panel.spec.ts`'s `boxOf` and `expectFooterAtFoot` read
-through it, so `expectPanel`'s ten calls, its footer check and the spec's other readers all
-wait.
+The cause was as stated, in the specs' helpers, not the panel. `animationsDone(page)` and
+`settledBoxes(...locators)` in `tests/e2e/fixtures/layout.ts` wait until every animation
+that ends has ended, then read the boxes of all the locators in one step (`boxesOf`).
+`side-panel.spec.ts`'s `panelBox` (was `boxOf`) and `expectFooterAtFoot` read through
+it, so `expectPanel`'s ten calls, its footer check and the spec's other readers all wait.
 
-The sweep found the same read in the shared fixtures and two more specs, and moved them
-to `settledBoxes`: `isInView` and `clickOutside` (`fixtures/dialogs.ts`, used by 7
-specs), the dialog boxes in `pinned-dialog.spec.ts` (five reads) and the close button's
-placement check in `closing-a-dialog.spec.ts`. Those two specs do not turn motion down,
-so a dialog there opens with a 100 ms zoom, and separate `boundingBox()` calls read it at
-different moments. Left alone, each for a reason: the Jump to menu's alignment test
+The sweep found the same read in the shared fixtures and four more specs, and moved them
+to `settledBoxes`: `isInView` and `clickOutside` (`fixtures/dialogs.ts`, used by 8
+specs), the dialog boxes in `pinned-dialog.spec.ts` (six reads), the close button's
+placement check in `closing-a-dialog.spec.ts`, and the navigation drawer's two checks
+that a link fits inside it (`shell-navigation.spec.ts`, `unpublished-changes.spec.ts`),
+which read the drawer's and the link's boxes in separate calls as it slid in over 200 ms.
+`pinned-dialog.spec.ts` and `closing-a-dialog.spec.ts` do not turn motion down, so a
+dialog there opens with a 100 ms zoom.
+
+Left alone, each for a reason: the Jump to menu's alignment test
 (`placement-navigation.spec.ts`) runs both motions on purpose and reads all its edges in
-one `evaluateAll`; `moved-travel.spec.ts` tests an animation; the other
-`boundingBox()` calls read cards, headers and rows, which do not animate in.
+one `evaluateAll`; `moved-travel.spec.ts` tests an animation; `editing.spec.ts`'s
+dialog reads (`:961`, `:1567`, `:1997`) compare boxes under one shared zoom or on a
+phone, where the dialog only fades; `navigation-search.spec.ts:173` compares `y` values,
+and a sheet slides only sideways; the other `boundingBox()` calls read cards, headers
+and rows.
 
 The other flakes in CHO-030's table (`item-tags` `:282`, the session warning at
 `side-panel` S9, `pinned-dialog` `:303`, `roadmap-controls` `:271`) were not shown to be
 this kind, and are left to that chore's audit.
+
+`isInView` throws on a box of nothing, as it did on a hidden element before, since
+`boxesOf` reads zeros there. S10 of the side panel spec now asserts the slide's computed
+duration, since waiting for the panel left no animation for its old check to inspect.
 
 ### Departures
 
@@ -97,23 +107,25 @@ this kind, and are left to that chore's audit.
   `animation-duration: 1.5s !important` after the page loads, so the panel is a tenth of
   its width off the screen for as long as the old helper took to read it. A CDP pause
   released from the test races the helper's own first calls, so the old helper could pass
-  it; the slowed slide fails the old helper every time. It shows the same measurement
-  CI saw.
-- **Sweep conversions without a red of their own** (agent): `isInView`, `clickOutside` and
-  the reads in `pinned-dialog.spec.ts` and `closing-a-dialog.spec.ts` follow the shared
-  helper; no test of theirs failed before the change, as none had failed in CI. The red
-  below is the helper's.
+  it; the slowed slide fails the old helper every time the test's own precondition, a
+  running animation, holds. Under a delay of over 1.5 s that precondition fails first,
+  so the test fails and says so, rather than passing. It shows the same measurement CI
+  saw.
+- **Sweep conversions without a red of their own** (agent): `isInView`, `clickOutside`
+  and the reads in the other specs follow the shared helper; no test of theirs failed
+  before the change, as none had failed in CI. The red is the helper's.
 - **No screenshots** (agent): no visible UI changes.
 
 ### Contract for dependents
 
-A spec that reads a popup's geometry, a dialog's or a menu's, calls `settledBoxes`
-(`tests/e2e/fixtures/dialogs.ts`), not `boundingBox()`: a dialog is ready as focus reaches
-its first field, before it has slid or zoomed in. `animationsDone` ignores animations
-that never end. CHO-030's guide rule on how a helper settles can name `settledBoxes`.
+A spec that reads a popup's geometry, a dialog's, a drawer's or a menu's, calls
+`settledBoxes` (`tests/e2e/fixtures/layout.ts`), not `boundingBox()`: a dialog is ready as
+focus reaches its first field, before it has slid or zoomed in. `animationsDone` ignores
+animations that never end. CHO-030's guide rule on how a helper settles can name
+`settledBoxes`.
 
 ### Scenario evidence
 
-| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| S1       | `side-panel.spec.ts`, "the panel's geometry is read once its opening slide has finished" (1366 × 1300, Edit item). Before the helpers changed it failed in `expectPanel`: the panel's right edge at 1413.9 against the screen's 1366, 47.9 px past it, the slide's offset as CI saw it. After it, the test passes, and the 7 specs that use the changed helpers pass 66 of 66 (`pnpm test:e2e side-panel pinned-dialog closing-a-dialog editing-an-item adding-an-item adding-a-roadmap editing-a-roadmap`). |
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                           |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `side-panel.spec.ts`, "the panel's geometry is read once its opening slide has finished" (1366 × 1300, Edit item). With `panelBox` reading `boundingBox()` as before the change, it fails in `expectPanel` with the panel's right edge past the screen's, as CI saw it; with `settledBoxes` it passes. The counts and the full run are in the PR. |

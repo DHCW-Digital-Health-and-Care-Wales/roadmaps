@@ -7,8 +7,8 @@ import {
   openAddItemDialog,
   openAddRoadmapDialog,
   openEditItemDialog,
-  settledBoxes,
 } from "./fixtures/dialogs"
+import { settledBoxes } from "./fixtures/layout"
 import { words } from "./fixtures/long-fields"
 import { connect, expect, test } from "./fixtures/test"
 
@@ -37,13 +37,9 @@ async function openItem(page: Page): Promise<Locator> {
 async function expectWithin(outer: Locator, inner: Locator): Promise<void> {
   const [outerBox, innerBox] = await settledBoxes(outer, inner)
   expect(innerBox.x).toBeGreaterThanOrEqual(outerBox.x)
-  expect(innerBox.x + innerBox.width).toBeLessThanOrEqual(
-    outerBox.x + outerBox.width,
-  )
+  expect(innerBox.right).toBeLessThanOrEqual(outerBox.right)
   expect(innerBox.y).toBeGreaterThanOrEqual(outerBox.y)
-  expect(innerBox.y + innerBox.height).toBeLessThanOrEqual(
-    outerBox.y + outerBox.height,
-  )
+  expect(innerBox.bottom).toBeLessThanOrEqual(outerBox.bottom)
 }
 
 const slot = (dialog: Locator, name: string) =>
@@ -311,8 +307,7 @@ test("on the smallest pinned screen, the add-item dialog keeps its buttons in vi
   const note = dialog.getByRole("status").getByRole("note")
   await expect(note).toBeVisible()
   // Its title is cut at three lines, so it leaves the form its room.
-  const box = await note.boundingBox()
-  if (!box) throw new Error("No box")
+  const [box] = await settledBoxes(note)
   expect(box.height).toBeLessThan(120)
   for (const part of [
     dialog.getByRole("heading", { name: "Add an item" }),

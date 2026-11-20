@@ -220,7 +220,9 @@ Audited at `cc32b48`:
   D7's reason, that adding writes nothing until a publish, holds for both.
 - **The control's focus is the ring, not the fill** (agent): it is drawn as a dashed
   card, or a row of the compact view, and takes `focus-ring` as the cards and the
-  prototype do; its buttons, Add and Cancel, take the fill.
+  prototype do; its buttons, Add and Cancel, take the fill. The ring now sets its border
+  solid (`globals.css`), so it is not drawn dashed over the card's quiet outline; every
+  other border it rings was solid already.
 - **S6: spaces are run together by quick add alone** (agent): the item dialog still
   only trims, as STY-046 has it; no domain rule changed.
 - **S5: leaving is a press, a tap or Tab** (agent, from review): focus the page takes

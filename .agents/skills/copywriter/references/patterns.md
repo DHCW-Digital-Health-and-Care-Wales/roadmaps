@@ -179,6 +179,26 @@ roadmaps.edit.addItem.added         “{{title}}” was added.
 roadmaps.items.empty.description    Add what the product is doing now, next and later.
 ```
 
+## Quick add
+
+**Shape:** a control repeated in each placement keeps the page opener's words ("Add an
+item"; in an empty placement "Add the first item", in place of "No items"). An sr-only
+continuation names its placement, so each control's name is unique on the page ("Add an
+item to Next"). The field it opens is named for what it holds and where ("Title of a new
+item in Next"), with no placeholder or hint, and confirmed by the bare verb ("Add").
+Each add is announced as the pending add's confirmation is, with its placement added,
+the field staying open for the next.
+
+```
+roadmaps.items.quickAdd.first  Add the first item
+roadmaps.items.quickAdd.to     to {{placement}}
+roadmaps.items.quickAdd.field  Title of a new item in {{placement}}
+roadmaps.items.quickAdd.added  “{{title}}” was added to {{placement}}.
+```
+
+In Welsh, what is added or placed goes "o dan" its placement ("o dan {{placement}}",
+as `roadmaps.edit.placedIn`); a move goes "i" it (`roadmaps.edit.movedTo`).
+
 ## Move menu
 
 **Shape:** a button that names its verb and, for assistive technology, its subject

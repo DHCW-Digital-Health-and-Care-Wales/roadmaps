@@ -21,7 +21,7 @@ focus; cause suspected, not proven) and DEF-025 (a side panel test measures the 
 before its slide has run). The same kind has shown in component tests (DEF-013 a
 dialog's opening focus; DEF-022 under load, not seen in CI; CHO-018 once in CI, on a
 clock tick), and `side-panel.spec.ts:256` (session warning) was seen to flake three
-times in CI, with no record. In CI, 10 of 28 E2E runs had a flaky test (Measurement).
+times in CI, with no record. In CI, 11 of 29 E2E runs had a flaky test (Measurement).
 DEF-021 was a real layout defect, not a test. Each flake costs a failed run, a retry and
 a retrospective. Done: the owner has chosen whether to look for the rest of the E2E kind
 on purpose, and the E2E guide says how a helper must settle. Component tests are out of
@@ -29,7 +29,7 @@ scope here (Out of scope).
 
 ## Measurement
 
-Not measured yet: measuring is the first step. At the delivery's commit, run these and
+The audit is not done yet: it is the first step. At the delivery's commit, run these and
 judge each hit by whether the next assertion can run before the thing it needs has
 finished (a notice taking focus, an animation ending, a menu opening):
 
@@ -40,16 +40,16 @@ finished (a notice taking focus, an animation ending, a menu opening):
 | Load              | `./node_modules/.bin/playwright test <spec> --repeat-each=20 --workers=12` per spec on an 8-core host (DEF-024's Reproduce used 40 repeats of one case); 44 specs at `843acf2`, so time it on one first | any failure that `--workers=4` does not show                               |
 
 Seen in CI so far: every finished CI run with an E2E job, 2026-11-19 18:14 to
-2026-11-20 17:09 UTC (28 runs, `gh run list --workflow ci.yml -L 60`), read from each
-E2E job's check-run annotations. All 10 runs with a flaky test passed on retry. Line
+2026-11-20 17:09 UTC (29 runs, `gh run list --workflow ci.yml -L 60`), read from each
+E2E job's check-run annotations. All 11 runs with a flaky test passed on retry. Line
 numbers are the spec's at that run:
 
 | Test                                                   | Runs with it flaky | Failure                                                               | Record  |
 | ------------------------------------------------------ | ------------------ | --------------------------------------------------------------------- | ------- |
 | `moved-travel.spec.ts:207` (keyboard "far down")       | 3                  | focus not on Move                                                     | DEF-024 |
-| `item-tags.spec.ts:282` (compact row, title wraps)     | 3                  | "Not laid out" (`fixtures/layout.ts` `boxOf`)                         | none    |
-| `side-panel.spec.ts:256`, then `:261` (S9)             | 3                  | the session warning still shown after it should close                 | none    |
-| `pinned-dialog.spec.ts:303` (long title added)         | 2                  | a dialog part not in view (line 328)                                  | none    |
+| `item-tags.spec.ts:282` (compact row, title wraps)     | 4                  | "Not laid out" (`fixtures/layout.ts` `boxOf`)                         | none    |
+| `side-panel.spec.ts:261`, then `:256` (S9)             | 3                  | the session warning still shown after it should close                 | none    |
+| `pinned-dialog.spec.ts:303` (long title added)         | 3                  | a dialog part not in view (line 328)                                  | none    |
 | `roadmap-controls.spec.ts:271` (Publish roadmap)       | 1                  | timeout waiting for a stuck row's button (`fixtures/roadmap-page.ts`) | none    |
 | `side-panel.spec.ts:134` (tall screen, form that fits) | 1                  | the panel measured mid-slide                                          | DEF-025 |
 
@@ -82,7 +82,8 @@ causes has arrived
 
 ## Out of scope
 
-DEF-024's own fix to `publishOnce`, the CI runner's package mirror (CHO-029), and Vitest
-component tests (DEF-013, DEF-022, CHO-018 were their own cases).
+DEF-024's own fix to `publishOnce`, DEF-025's to the side panel spec's helpers, the CI
+runner's package mirror (CHO-029), and Vitest component tests (DEF-013, DEF-022,
+CHO-018 were their own cases).
 
 ## Delivery _(add on delivery; as in `story.md`)_

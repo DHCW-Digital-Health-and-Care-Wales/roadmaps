@@ -48,11 +48,9 @@ the slide has run. `expectPanel` and `expectFooterAtFoot` then read boxes at onc
 reduced motion, `globals.css` cuts the animation to 0.01 ms, but its first keyframe still
 applies until the next frame.
 
-- `rg -n "boxOf\(|boundingBox\(\)" tests/e2e/side-panel.spec.ts`: `boxOf` (line 42) and
-  its 5 callers, lines 50 (`expectPanel`, 9 calls), 94, 182, 226 and 272, and
+- `rg -n "boxOf\(|boundingBox\(\)" tests/e2e/side-panel.spec.ts`: `boxOf` (lines 41–42)
+  and its 5 callers, lines 50 (`expectPanel`, 10 calls), 94, 182, 226 and 272, and
   `expectFooterAtFoot` (lines 63–64). Each measures a popup that animates in.
-- `moved-travel.spec.ts` (lines 77, 300) already waits on `document.getAnimations()`
-  before it measures.
 
 ## Acceptance criteria
 

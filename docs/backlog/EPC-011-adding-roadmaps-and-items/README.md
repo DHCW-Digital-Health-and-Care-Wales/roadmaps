@@ -311,6 +311,9 @@ flowchart LR
   a quick add title typed but not added is lost when a read leaves the roadmap with no
   items, and its panel takes the placements' place. Won't fix (owner, 2026-11-20): too
   rare, and a few words lost; found by STY-080's review.
+- [DEF-024](../defects/DEF-024-a-moved-item-test-presses-enter-before-the-publish-notice-takes-focus.md):
+  a moved item test presses Enter before the publish notice has taken focus, so E2E
+  fails now and then, seen in CI since STY-080. Needs triage; found by STY-081's retro.
 
 ## Related
 

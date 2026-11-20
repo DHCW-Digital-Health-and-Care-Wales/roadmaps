@@ -267,6 +267,7 @@ describe("Its field (S2–S6)", () => {
 
     await user.tab()
     await user.tab()
+    expect(main().getByRole("button", { name: "Add" })).toHaveFocus()
     await user.keyboard("{Enter}")
 
     expect(titlesUnder("Next")).toEqual(["See your waiting time", HEARING])

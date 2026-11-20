@@ -100,17 +100,19 @@ function AddItemForms({
   const [last, setLast] = useState<LastAdded | null>(null)
   // No horizon is chosen to start with, unless quick add chose one; the next form keeps
   // the last one's (D4, D5).
-  const begun = {
-    placement: (last ? last.placement : start?.placement) ?? "",
-    ...(!last && start && { title: start.title }),
-  } satisfies ItemValues
+  const begun: ItemValues = last
+    ? { placement: last.placement ?? "" }
+    : {
+        placement: start?.placement ?? "",
+        ...(start && { title: start.title }),
+      }
   const item = blankItem(begun)
   const add = (then: AfterAdding) => (changed: ItemValues) => {
     // The form gives the values changed since it opened, so not those it began with.
     const values = { ...begun, ...changed }
     onAdd(values, then)
     if (then === "close") return
-    const { title = "", placement } = values
+    const { title = "", placement = "" } = values
     setLast({
       count: (last?.count ?? 0) + 1,
       title,

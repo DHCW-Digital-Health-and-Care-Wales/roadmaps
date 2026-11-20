@@ -122,8 +122,6 @@ there is no way yet to hand it a title and a placement. The dialog is given its 
 - **S6's axe checks are in `quick-add.spec.ts`**, beside STY-080's for the open field,
   not in `accessibility.spec.ts`, in both themes; the Welsh tooltip shares the name's
   key, so the Welsh name's test holds it.
-- **S2's cursor at the title's end is checked in Chromium only**: the dialog's first
-  focus leaves it there, as the Playwright journey reads; jsdom does the same.
 - **`blankItem` takes the values a new item starts with** (agent), in place of a
   placement alone, so the adding form starts from a title too.
 

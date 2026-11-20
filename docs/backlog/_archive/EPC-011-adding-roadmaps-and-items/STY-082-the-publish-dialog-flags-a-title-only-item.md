@@ -8,7 +8,7 @@
   order)
 - **Binding ADRs**: ADR-012, ADR-008, ADR-010
 - **Suggested model**: Sonnet — one marker on a list the publish dialog already draws
-- **Delivered**: _PR URL, set once the PR is open_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/216
 
 ## Summary
 

@@ -746,3 +746,19 @@ describe("In Welsh (STY-081 S6)", () => {
     ).toHaveValue("next")
   })
 })
+
+describe("The publish dialog flags what quick add makes (STY-082 S1)", () => {
+  it("marks an item added by title alone, as new and with only a title, as an item added in the item dialog with a title alone is", async () => {
+    const { user } = await renderPage()
+    await user.click(quickAdd("Next"))
+    await user.type(field("Next"), HEARING)
+    await user.keyboard("{Enter}")
+
+    await user.click(main().getByRole("button", { name: "Publish changes" }))
+
+    const dialog = within(screen.getByRole("alertdialog"))
+    expect(
+      dialog.getAllByRole("listitem").map(({ textContent }) => textContent),
+    ).toEqual([`${HEARING}New item, title only`])
+  })
+})

@@ -3,7 +3,7 @@
   - paragraph: The public site shows them after its next nightly update.
   - heading "What changes" [level=3]
   - list:
-    - listitem: Choose a clinic closer to home New item
+    - listitem: Choose a clinic closer to home New item, title only
   - checkbox "Mark as updated today"
   - text: Mark as updated today
   - button "Publish changes"

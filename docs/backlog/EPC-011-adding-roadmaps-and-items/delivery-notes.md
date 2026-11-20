@@ -175,3 +175,6 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   card by its heading, never as the list's last item, and finds a quick add's control
   by its whole name ("Add an item to Next"). Playwright matches a name by substring, so
   the page's own "Add an item" is found `exact`, or every quick add matches too.
+- **A test that adds an item by title and placement alone** (`addItem`, quick add)
+  expects its line in the publish dialog to read "New item, title only" (STY-082); one
+  with any other field, an expected outcome or a phase among them, reads "New item".

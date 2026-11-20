@@ -71,6 +71,18 @@ function checkedValues(input: ItemValues): NewItem["values"] {
 }
 
 /**
+ * Whether a new item holds only a title and a placement, every other field none
+ * (STY-082 D3): however it was added, by quick add or the item dialog. A field added to
+ * `EDITABLE_ITEM_FIELDS` counts without a change here.
+ */
+export function hasOnlyTitle({ values }: NewItem): boolean {
+  return EDITABLE_ITEM_FIELDS.every(
+    (field) =>
+      field === "title" || field === "placement" || values[field] === "",
+  )
+}
+
+/**
  * `changes` with a new item added after those already pending, from input `checkNewItem`
  * passed. Its ID is made now, in the `Item ID` format: one that none of `items`, the
  * roadmap's items as read, has, nor any other new item. Throws for input `checkNewItem`

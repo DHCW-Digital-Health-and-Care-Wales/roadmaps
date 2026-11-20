@@ -287,7 +287,7 @@ test("the publish dialog lists a new item beside an edit; a co-lead's conflict p
   )
   await expect(listedChanges(page)).toHaveText([
     `${EDITED}Description`,
-    `${CLINIC}New item`,
+    `${CLINIC}New item, title only`,
   ])
   await dialog.getByRole("button", { name: "Publish changes" }).click()
 
@@ -442,7 +442,9 @@ test("an empty roadmap's panel holds “Add an item”; its first item brings th
   await expect(question).toHaveAccessibleDescription(
     "It shows on the public site after its next nightly update. Your unsaved change goes public with it.",
   )
-  await expect(listedChanges(page)).toHaveText([`${CLINIC}New item`])
+  await expect(listedChanges(page)).toHaveText([
+    `${CLINIC}New item, title only`,
+  ])
   await question.getByRole("button", { name: "Save and publish" }).click()
   await expect(
     main.getByText(/^Changes saved and Product C roadmap published\./),
@@ -571,5 +573,43 @@ test("adding an item in Welsh (S9, STY-047 S2)", async ({ page }) => {
   await expect(
     page.getByRole("alertdialog").getByRole("heading", { level: 3 }),
   ).toHaveText("Beth sy'n newid")
-  await expect(listedChanges(page)).toHaveText([`${CLINIC}Eitem newydd`])
+  await expect(listedChanges(page)).toHaveText([
+    `${CLINIC}Eitem newydd, teitl yn unig`,
+  ])
+})
+
+test("the publish dialog marks a new item that has only a title, and publishing writes it as it writes any (STY-082 S1, S2)", async ({
+  page,
+  sheets,
+}) => {
+  await openRoadmap(page, "producta")
+  const main = page.getByRole("main")
+  await addItem(page, CLINIC, "Next")
+  const dialog = await openAddItemDialog(page)
+  await dialog.getByRole("textbox", { name: "Title" }).fill(CHECK_IN)
+  await dialog
+    .getByRole("textbox", { name: "Description" })
+    .fill("Check in without queuing.")
+  await dialog
+    .getByRole("combobox", { name: "Horizon or section" })
+    .selectOption({ label: "Next" })
+  await dialog.getByRole("button", { name: "Add item", exact: true }).click()
+  await expect(dialog).toBeHidden()
+
+  // Both are listed as new, and the one with only a title says so.
+  await main.getByRole("button", { name: "Publish changes" }).click()
+  await expect(listedChanges(page)).toHaveText([
+    `${CLINIC}New item, title only`,
+    `${CHECK_IN}New item`,
+  ])
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: "Publish changes" })
+    .click()
+  await expect(main.getByText(/^Changes published\./)).toBeVisible()
+  expect(sheets.writes).toHaveLength(1)
+  expect(appendedRows(sheets.writes[0])).toEqual([
+    expect.arrayContaining([CLINIC, "Next"]),
+    expect.arrayContaining([CHECK_IN, "Next", "Check in without queuing."]),
+  ])
 })

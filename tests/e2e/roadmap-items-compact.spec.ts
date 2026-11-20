@@ -494,7 +494,7 @@ test.describe("the switch beside a long title (S1, S2, S13)", () => {
           if (tablet) {
             const group = within.getByRole("group", { name: copy.view })
             const add = await boxOf(
-              within.getByRole("button", { name: copy.addItem }),
+              within.getByRole("button", { name: copy.addItem, exact: true }),
             )
             const more = await boxOf(
               within.getByRole("button", { name: copy.more, exact: true }),

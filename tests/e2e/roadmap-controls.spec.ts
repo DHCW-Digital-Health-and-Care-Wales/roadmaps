@@ -78,7 +78,7 @@ for (const [device, size] of [
       main.getByRole("heading", { level: 1, name: "Product A roadmap" }),
     ).toBeInViewport()
     await expect(
-      main.getByRole("button", { name: "Add an item" }),
+      main.getByRole("button", { name: "Add an item", exact: true }),
     ).toBeInViewport()
     await expect(main.getByText("1 unpublished change")).toBeInViewport()
     await expect(
@@ -276,7 +276,7 @@ test("moves Publish roadmap into More once the row sticks, at every width, where
   await openLongRoadmap(page, sheets, { tab: "ProductC" })
   const main = page.getByRole("main")
   const publishRoadmap = main.getByRole("button", { name: "Publish roadmap" })
-  const addItem = main.getByRole("button", { name: "Add an item" })
+  const addItem = main.getByRole("button", { name: "Add an item", exact: true })
   const more = main.getByRole("button", { name: "More", exact: true })
   const menuItems = page.getByRole("menu").getByRole("menuitem")
   await expect(publishRoadmap).toBeVisible()
@@ -398,7 +398,7 @@ test("fits the pinned controls in Cymraeg on a 375px phone, cutting no label (S7
   const main = page.getByRole("main")
   const controls = [
     main.getByRole("button", { name: "Mwy", exact: true }),
-    main.getByRole("button", { name: "Ychwanegu eitem" }),
+    main.getByRole("button", { name: "Ychwanegu eitem", exact: true }),
     main.getByRole("button", { name: "Cyhoeddi'r newidiadau" }),
     main.getByRole("button", { name: "Gwaredu pob newid" }),
   ]

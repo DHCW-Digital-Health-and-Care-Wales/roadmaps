@@ -10,6 +10,7 @@ import type { Language } from "@/i18n"
 import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
+import { holdCall } from "../testing/held-call"
 import { holdRefresh } from "../testing/held-refresh"
 import {
   createInMemoryRoadmapRepository,
@@ -298,6 +299,60 @@ describe("Its field (S2–S6)", () => {
 })
 
 describe("While a publish or a read is under way (S9)", () => {
+  it("adds pending items while a publish of the roadmap is under way, the page left and come back to, which stay pending once it settles", async () => {
+    const { user, repository, router } = await renderPage()
+    // The list, then back: so the page can be left and come back to by history.
+    await act(() => router.navigate({ to: "/" }))
+    act(() => {
+      router.history.back()
+    })
+    await main().findByRole("heading", { level: 3, name: "Online booking" })
+    const { held, release, released } = holdCall(
+      repository.publishRoadmapChanges.bind(repository),
+    )
+    vi.spyOn(repository, "publishRoadmapChanges").mockImplementation(held)
+    await user.type(await openField(user, "Now"), "First new item{Enter}")
+    await user.keyboard("{Escape}")
+    await user.click(main().getByRole("button", { name: "Publish changes" }))
+    await user.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", {
+        name: "Publish changes",
+      }),
+    )
+    expect(held).toHaveBeenCalled()
+
+    // The publish dialog is modal while it writes: Back leaves the page, Forward
+    // returns to it, the publish still under way.
+    act(() => {
+      router.history.forward()
+    })
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("heading", {
+          level: 3,
+          name: "Online booking",
+          hidden: true,
+        }),
+      ).toBeNull()
+    })
+    act(() => {
+      router.history.back()
+    })
+    await main().findByRole("heading", { level: 3, name: "Online booking" })
+    expect(screen.queryByRole("alertdialog")).toBeNull()
+    await user.type(await openField(user, "Next"), `${HEARING}{Enter}`)
+    expect(titlesUnder("Next")).toEqual(["See your waiting time", HEARING])
+
+    await act(async () => {
+      release()
+      await released
+    })
+    expect(await main().findByText(/^Changes published\./)).toBeVisible()
+    expect(main().getByText("1 unpublished change")).toBeVisible()
+    expect(titlesUnder("Next")).toEqual(["See your waiting time", HEARING])
+    expect(field("Next")).toHaveValue("")
+  })
+
   it("keeps an open field, and what was typed in it, as the items are read again", async () => {
     const { user, repository } = await renderPage()
     const release = await holdRefresh(user, repository)

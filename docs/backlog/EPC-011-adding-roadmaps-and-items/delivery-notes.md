@@ -172,4 +172,5 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   _Contract for dependents_, archived, says what it holds and adds). Every placement
   is a list, an empty one holding only its quick add: a test takes a placement's last
   card by its heading, never as the list's last item, and finds a quick add's control
-  by its whole name ("Add an item to Next"), since "Add an item" alone is the page's.
+  by its whole name ("Add an item to Next"). Playwright matches a name by substring, so
+  the page's own "Add an item" is found `exact`, or every quick add matches too.

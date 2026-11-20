@@ -505,7 +505,9 @@ test("tabs on from the stuck row's menu button to the switch, then Add an item, 
   ).toBeFocused()
   await page.keyboard.press("Tab")
   await page.keyboard.press("Tab")
-  await expect(main.getByRole("button", { name: "Add an item" })).toBeFocused()
+  await expect(
+    main.getByRole("button", { name: "Add an item", exact: true }),
+  ).toBeFocused()
   await expect(stuck).toBeVisible()
   expect(await page.evaluate(() => window.scrollY)).toBe(top)
 })

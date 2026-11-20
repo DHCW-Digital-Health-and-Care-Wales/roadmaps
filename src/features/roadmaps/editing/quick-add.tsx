@@ -1,22 +1,17 @@
 import { PlusIcon } from "lucide-react"
-import {
-  type FocusEvent,
-  type SyntheticEvent,
-  useEffect,
-  useRef,
-  useState,
-} from "react"
+import { type SyntheticEvent, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { addNewItem } from "@/domain/roadmap/new-item"
+import { addNewItem, checkNewItem } from "@/domain/roadmap/new-item"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import type { RoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 import { cn } from "@/lib/utils"
 
 import type { ItemsView } from "../hooks/use-items-view"
 import { usePendingChangesStore } from "./pending-changes-context"
+import { useLeaveAfterPress } from "./use-leave-after-press"
 
 export interface QuickAddProps {
   roadmapId: string
@@ -38,57 +33,15 @@ function tidyTitle(title: string): string {
 }
 
 /**
- * Whether a mouse button or a finger is down, while `watching`: a field left by a press
- * waits for the press to end before it closes (S5).
- */
-function usePressUnderway(watching: boolean) {
-  const pressing = useRef(false)
-  useEffect(() => {
-    if (!watching) return
-    const press = () => {
-      pressing.current = true
-    }
-    const release = () => {
-      pressing.current = false
-    }
-    window.addEventListener("pointerdown", press, true)
-    window.addEventListener("pointerup", release, true)
-    window.addEventListener("pointercancel", release, true)
-    return () => {
-      window.removeEventListener("pointerdown", press, true)
-      window.removeEventListener("pointerup", release, true)
-      window.removeEventListener("pointercancel", release, true)
-      pressing.current = false
-    }
-  }, [watching])
-  return pressing
-}
-
-/** Calls `then` once the press under way has ended, after its click has landed. */
-function afterThePress(then: () => void) {
-  const ended = new AbortController()
-  const end = () => {
-    ended.abort()
-    setTimeout(then)
-  }
-  for (const type of ["pointerup", "pointercancel"]) {
-    window.addEventListener(type, end, {
-      capture: true,
-      signal: ended.signal,
-    })
-  }
-}
-
-/**
  * Quick add (STY-080): the last of a placement's cards or rows, "Add an item", or "Add
  * the first item" in a placement that has none, named for its placement (S1). Chosen,
  * a title field takes its place, focused, with Add and Cancel (S2). Enter, or Add,
  * keeps a new item with that title alone pending, last in the placement, says so, and
  * leaves the field open and empty for the next (S3); an empty title adds nothing (S6).
  * Escape and Cancel drop what was typed and bring the control back, focused (S4).
- * Leaving the field drops it too: a press elsewhere closes it only once the press has
- * ended, so the page shrinking under the pointer cannot move what was pressed (S5). A
- * press on the field's own Add or Cancel keeps focus in the title. It asks for no
+ * Leaving the field drops it too, once a press that left it has landed
+ * (`useLeaveAfterPress`), so the page shrinking under the pointer cannot move what was
+ * pressed (S5). A press on the field's own Add or Cancel keeps focus in the title. It asks for no
  * session, since it writes nothing until a publish (D7).
  */
 export function QuickAdd({
@@ -110,7 +63,6 @@ export function QuickAdd({
   const control = useRef<HTMLButtonElement>(null)
   // Whether the control takes focus back as the field closes: not when it was left.
   const returnFocus = useRef(false)
-  const pressing = usePressUnderway(open)
   const placementName = t(`roadmaps.items.placements.${placement}`)
 
   useEffect(() => {
@@ -128,15 +80,15 @@ export function QuickAdd({
   }, [open, added])
 
   const close = (focusControl: boolean) => {
-    // A blur as the closing field leaves the page does not take back Escape's focus.
-    returnFocus.current ||= focusControl
+    returnFocus.current = focusControl
     setTitle("")
     setOpen(false)
   }
   const add = (event: SyntheticEvent) => {
     event.preventDefault()
     const tidied = tidyTitle(title)
-    if (tidied === "") return
+    // A blank title adds nothing, and the field stays (S6).
+    if (checkNewItem({ title: tidied, placement }).problems.title) return
     store.update(roadmapId, (changes) =>
       addNewItem(changes, { title: tidied, placement }, items),
     )
@@ -151,21 +103,9 @@ export function QuickAdd({
       }),
     )
   }
-  const leave = (event: FocusEvent<HTMLLIElement>) => {
-    const to = event.relatedTarget
-    if (to instanceof Node && event.currentTarget.contains(to)) return
-    // The window lost focus, not the field, which has it back on return.
-    if (!document.hasFocus()) return
-    if (!pressing.current) {
-      close(false)
-      return
-    }
-    afterThePress(() => {
-      // Pressed back into the field meanwhile.
-      if (entry.current?.contains(document.activeElement)) return
-      close(false)
-    })
-  }
+  const leave = useLeaveAfterPress(open, () => {
+    close(false)
+  })
   // A press anywhere in the field but its title keeps focus in the title.
   const keepFocus = (event: SyntheticEvent) => {
     if (event.target !== field.current) event.preventDefault()

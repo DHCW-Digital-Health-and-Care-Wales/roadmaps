@@ -175,6 +175,32 @@ test("a press on another placement's “Add an item” opens its field, as Next'
   await expect(titlesUnder(page, "Next")).toHaveText(["See your waiting time"])
 })
 
+test.describe("on a touch screen", () => {
+  test.use({ hasTouch: true, viewport: { width: 375, height: 812 } })
+
+  test("a tap on another placement's “Add an item” opens its field, as Next's closes, in the compact view (S5)", async ({
+    page,
+    sheets,
+  }) => {
+    await openRoadmap(page, sheets)
+    await chooseCompact(page)
+
+    await quickAdd(page, "Next").tap()
+    await field(page, "Next").fill(HEARING)
+    const later = quickAdd(page, "Later")
+    await later.scrollIntoViewIfNeeded()
+    // A tap moves focus once the finger has lifted, and Next's field is taller than
+    // its control: the field closes only after the tap's click has landed.
+    await later.tap()
+
+    await expect(field(page, "Later")).toBeFocused()
+    await expect(field(page, "Next")).toHaveCount(0)
+    await expect(titlesUnder(page, "Next")).toHaveText([
+      "See your waiting time",
+    ])
+  })
+})
+
 test("Cancel drops what was typed; Tab to Add and Cancel keeps the field, and Tab past them drops it (S4, S5)", async ({
   page,
   sheets,

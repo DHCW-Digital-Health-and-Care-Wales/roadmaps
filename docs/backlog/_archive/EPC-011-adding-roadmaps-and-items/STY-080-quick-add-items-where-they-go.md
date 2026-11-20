@@ -165,6 +165,11 @@ prototype.
 - **D8** (agent, 2026-11-20, from review): the announcement follows the existing
   "“{{title}}” was added." pattern with the placement, "“{{title}}” was added to
   {{placement}}.", over "added to Next" without "was".
+- **D9** (owner, 2026-11-20, from review): a quick add title typed but not added may be
+  lost when a read leaves the roadmap with no items, and its panel takes the placements'
+  place: too rare, and a few words lost. Recorded as
+  [DEF-023](../defects/DEF-023-an-open-quick-add-title-is-lost-when-a-read-leaves-the-roadmap-with-no-items.md),
+  Won't fix.
 
 ## Starting point
 

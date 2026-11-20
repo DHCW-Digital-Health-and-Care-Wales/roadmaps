@@ -307,6 +307,10 @@ flowchart LR
   an edit made while a publish moves its item's row is reported as removed, for an
   item that has never had an ID. Won't fix (owner, 2026-11-19, as STY-051 D8); found by
   STY-051's review.
+- [DEF-023](../_archive/defects/DEF-023-an-open-quick-add-title-is-lost-when-a-read-leaves-the-roadmap-with-no-items.md):
+  a quick add title typed but not added is lost when a read leaves the roadmap with no
+  items, and its panel takes the placements' place. Won't fix (owner, 2026-11-20): too
+  rare, and a few words lost; found by STY-080's review.
 
 ## Related
 

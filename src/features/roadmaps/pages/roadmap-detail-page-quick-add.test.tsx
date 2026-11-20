@@ -280,6 +280,25 @@ describe("Its field (S2–S6)", () => {
     expect(titlesUnder("Next")).toEqual(["See your waiting time"])
   })
 
+  it("stays open, with what was typed, when the page takes focus itself, as the session warning does (S5)", async () => {
+    const { user } = await renderPage()
+    const input = await openField(user, "Next")
+    await user.type(input, HEARING)
+
+    act(() => {
+      main().getByRole("button", { name: "More" }).focus()
+    })
+    // A leave waits a task: let one pass.
+    await act(() => new Promise((resolve) => setTimeout(resolve)))
+
+    expect(field("Next")).toHaveValue(HEARING)
+    act(() => {
+      field("Next").focus()
+    })
+    await user.keyboard("{Enter}")
+    expect(titlesUnder("Next")).toEqual(["See your waiting time", HEARING])
+  })
+
   it("adds nothing for an empty title or spaces, staying open; runs spaces together; adds a repeated title as typed (S6)", async () => {
     const { user } = await renderPage()
     const input = await openField(user, "Next")
@@ -321,8 +340,8 @@ describe("While a publish or a read is under way (S9)", () => {
     )
     expect(held).toHaveBeenCalled()
 
-    // The publish dialog is modal while it writes: Back leaves the page, Forward
-    // returns to it, the publish still under way.
+    // The publish dialog is modal while it writes: Forward to the list leaves the
+    // page, Back returns to it, the publish still under way.
     act(() => {
       router.history.forward()
     })

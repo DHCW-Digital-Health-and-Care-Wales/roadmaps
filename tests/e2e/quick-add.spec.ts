@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright"
 import type { Locator, Page } from "@playwright/test"
 
 import { reconnectDialog } from "./fixtures/dialogs"
-import { sessionMs } from "./fixtures/fake-gis"
+import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
 import { type FakeTab, withTabItems } from "./fixtures/fake-sheets"
 import { boxesOf } from "./fixtures/layout"
 import { type Language, useTheme } from "./fixtures/look"
@@ -230,6 +230,34 @@ test("Cancel drops what was typed; Tab to Add and Cancel keeps the field, and Ta
   await expect(quickAdd(page, "Later")).toBeVisible()
   await expect(titlesUnder(page, "Later")).toHaveText([
     "Choose a clinic online",
+  ])
+})
+
+test("the session warning, opening as a title is typed, leaves the field and its title (S5)", async ({
+  page,
+  sheets,
+}) => {
+  await page.clock.install()
+  await openRoadmap(page, sheets)
+  await quickAdd(page, "Next").click()
+  await field(page, "Next").fill(HEARING)
+
+  await page.clock.fastForward(sessionMs() - SESSION_WARNING_MS)
+  const warning = page.getByRole("alertdialog", {
+    name: "Your session is about to end",
+  })
+  await expect(
+    warning.getByRole("button", { name: "Stay connected" }),
+  ).toBeFocused()
+  await page.keyboard.press("Escape")
+  await expect(warning).toBeHidden()
+
+  await expect(field(page, "Next")).toHaveValue(HEARING)
+  await field(page, "Next").focus()
+  await page.keyboard.press("Enter")
+  await expect(titlesUnder(page, "Next")).toHaveText([
+    "See your waiting time",
+    HEARING,
   ])
 })
 

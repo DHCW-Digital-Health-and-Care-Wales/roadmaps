@@ -39,10 +39,11 @@ function tidyTitle(title: string): string {
  * keeps a new item with that title alone pending, last in the placement, says so, and
  * leaves the field open and empty for the next (S3); an empty title adds nothing (S6).
  * Escape and Cancel drop what was typed and bring the control back, focused (S4).
- * Leaving the field drops it too, once a press that left it has landed
- * (`useLeaveAfterPress`), so the page shrinking under the pointer cannot move what was
- * pressed (S5). A press on the field's own Add or Cancel keeps focus in the title. It asks for no
- * session, since it writes nothing until a publish (D7).
+ * Leaving the field, by a press elsewhere or Tab, drops it too, once a press that left
+ * it has landed (`useLeaveAfterPress`), so the page shrinking under the pointer cannot
+ * move what was pressed (S5); focus the page takes itself, as the session warning does,
+ * keeps it. A press on the field's own Add or Cancel keeps focus in the title. It
+ * asks for no session, since it writes nothing until a publish (D7).
  */
 export function QuickAdd({
   roadmapId,
@@ -162,7 +163,8 @@ export function QuickAdd({
           ? "border border-dashed border-input bg-card p-4"
           : "border-t p-2 first:border-t-0",
       )}
-      onBlur={leave}
+      onFocus={leave.onFocus}
+      onBlur={leave.onBlur}
       onKeyDown={(event) => {
         if (event.key !== "Escape") return
         event.preventDefault()

@@ -1,0 +1,2022 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Quick add prototype</title>
+    <style>
+      /* The review page's own chrome. It sets no background, so it sits on whatever
+         shows it; each design draws inside a .stage that has its own. */
+      html,
+      body {
+        margin: 0;
+      }
+      /* As wide as the app's page, so a host the width of a page fits its stage;
+         the prose keeps a reading measure. */
+      .page {
+        max-width: 1232px;
+        margin: 0 auto;
+        padding: 8px 16px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        font-family: system-ui, "Segoe UI", Arial, sans-serif;
+        font-size: 15px;
+        line-height: 1.5;
+      }
+      .page * {
+        box-sizing: border-box;
+      }
+      .page h1 {
+        margin: 0;
+        font-size: 20px;
+        line-height: 1.3;
+      }
+      /* The chrome's rules name the chrome's own elements, never a bare p or ol:
+         a design's markup sits inside .page too. */
+      .intro > *,
+      .page figure > p {
+        max-width: 728px;
+      }
+      .intro p,
+      .intro ol,
+      .page figure > p,
+      .page pre {
+        margin: 0;
+      }
+      .intro,
+      .page figure {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin: 0;
+        min-width: 0;
+      }
+      .intro ol {
+        padding-left: 22px;
+      }
+      .page summary {
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .page details > :not(summary) {
+        margin-top: 8px;
+      }
+      .page pre {
+        font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+        font-size: 13px;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        border-left: 3px solid currentColor;
+        padding-left: 10px;
+      }
+      .controls,
+      .controls > div,
+      .caption {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        align-items: center;
+      }
+      .caption {
+        justify-content: space-between;
+      }
+      .seg {
+        display: inline-flex;
+        flex-wrap: wrap;
+        border: 1px solid currentColor;
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .seg button,
+      .again {
+        appearance: none;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        padding: 5px 10px;
+        cursor: pointer;
+      }
+      .seg button[aria-pressed="true"] {
+        background: #1b365d;
+        color: #fff;
+      }
+      .again {
+        border: 1px solid currentColor;
+        border-radius: 6px;
+        font-size: 13px;
+        padding: 3px 9px;
+      }
+      .caption h2 {
+        margin: 0;
+        font-size: 17px;
+        line-height: 1.3;
+      }
+      .sr {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+      }
+
+      /* The review chrome, written here by scripts/component-page.mjs from
+         assets/review-chrome.css: the bar of designs and the Options panel. */
+      /* The review page's chrome, shared by both shapes and built by
+   review-chrome.js: a one-line bar of links to every journey and design, and a
+   floating panel holding the page's .controls. It draws in system colours, so
+   it reads on any page and never on a design's tokens.
+   Under automation, or with ?capture in the URL, both sit in the page's flow,
+   so they neither cover a design in a screenshot nor intercept a click. */
+      .review-bar {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        display: flex;
+        gap: 4px;
+        align-items: center;
+        overflow-x: auto;
+        white-space: nowrap;
+        scrollbar-width: thin;
+        padding: 6px 12px;
+        border-bottom: 1px solid GrayText;
+        background: Canvas;
+        color: CanvasText;
+        font:
+          13px/1.4 system-ui,
+          "Segoe UI",
+          Arial,
+          sans-serif;
+      }
+      .review-bar a {
+        flex: none;
+        color: LinkText;
+        text-decoration: none;
+      }
+      .review-bar a:hover {
+        text-decoration: underline;
+      }
+      .review-bar .review-group {
+        display: inline-flex;
+        flex: none;
+        gap: 3px;
+        align-items: center;
+      }
+      .review-bar .review-group + .review-group {
+        margin-left: 10px;
+        padding-left: 10px;
+        border-left: 1px solid GrayText;
+      }
+      .review-bar .review-journey {
+        max-width: 28ch;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-right: 3px;
+        font-weight: 600;
+        color: CanvasText;
+      }
+      .review-bar .review-design {
+        min-width: 22px;
+        max-width: 16ch;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 0 5px;
+        border: 1px solid currentColor;
+        border-radius: 4px;
+        text-align: center;
+      }
+      .review-bar .review-design[aria-current="location"] {
+        background: LinkText;
+        color: Canvas;
+      }
+      .review-bar a:focus-visible,
+      .review-options button:focus-visible {
+        outline: 3px solid Highlight;
+        outline-offset: 1px;
+      }
+
+      .review-options {
+        position: fixed;
+        right: 12px;
+        bottom: 12px;
+        z-index: 30;
+        display: flex;
+        flex-direction: column-reverse;
+        align-items: flex-end;
+        gap: 6px;
+        max-width: calc(100% - 24px);
+        font:
+          15px/1.5 system-ui,
+          "Segoe UI",
+          Arial,
+          sans-serif;
+        color: CanvasText;
+      }
+      .review-options > .review-options-toggle {
+        appearance: none;
+        padding: 4px 12px;
+        border: 1px solid GrayText;
+        border-radius: 999px;
+        background: Canvas;
+        color: CanvasText;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgb(0 0 0 / 0.25);
+        cursor: pointer;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .review-options > .review-options-body {
+        max-width: 640px;
+        max-height: 50vh;
+        overflow: auto;
+        padding: 10px 12px;
+        border: 1px solid GrayText;
+        border-radius: 8px;
+        background: Canvas;
+        box-shadow: 0 4px 16px rgb(0 0 0 / 0.25);
+      }
+      .review-options .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        align-items: center;
+      }
+      .review-options > .review-options-body[hidden] {
+        display: none;
+      }
+
+      /* Room below the last design, so the pill never covers its end. */
+      .review-floating body {
+        padding-bottom: 56px;
+      }
+
+      @media (max-width: 639px) {
+        .review-bar .review-journey {
+          max-width: 18ch;
+        }
+        .review-options > .review-options-body {
+          max-height: 40vh;
+        }
+      }
+
+      .review-inline .review-bar {
+        position: static;
+      }
+      .review-inline .review-options {
+        display: none;
+      }
+
+      @media print {
+        .review-bar,
+        .review-options {
+          display: none;
+        }
+      }
+
+      /* The app's theme, written here by scripts/component-page.mjs from
+         src/styles/globals.css: every token under its own name, on each stage. */
+      .stage {
+        --nhsw-primary-text-colour: #212b32;
+        --nhsw-secondary-text-colour: #4c6272;
+        --nhsw-exceptional-text-colour: #ffffff;
+        --nhsw-link-colour: #005aa8;
+        --nhsw-link-hover-colour: #7c2855;
+        --nhsw-primary-button: #1b365d;
+        --nhsw-primary-button-shadow: #0e1b2f;
+        --nhsw-colour-button-primary-hover: #32598a;
+        --nhsw-delete-button: #d5281b;
+        --nhsw-colour-button-delete-hover: #902419;
+        --nhsw-page-background-white: #ffffff;
+        --nhsw-page-background-grey: #f0f4f5;
+        --nhsw-page-background-blue: #1b365d;
+        --nhsw-secondary-border-colour: #4c6272;
+        --nhsw-grey-border-colour: #d8dde0;
+        --nhsw-colour-choice-hover-ring: #afb8bf;
+        --nhsw-focus-colour: #ffeb3b;
+        --nhsw-focus-text-colour: #212b32;
+        --nhsw-tag-grey-background: #dbe0e3;
+        --nhsw-tag-grey-ink: #354550;
+        --nhsw-tag-blue-background: #ccdff1;
+        --nhsw-tag-blue-ink: #004281;
+        --nhsw-tag-green-background: #cce5d8;
+        --nhsw-tag-green-ink: #004c23;
+        --nhsw-tag-yellow-background: #fff59d;
+        --nhsw-tag-yellow-ink: #4d4712;
+        --nhsw-tag-red-background: #f7d4d1;
+        --nhsw-tag-red-ink: #6b140e;
+        --nhsw-tag-pink-background: #efd3e3;
+        --nhsw-dashboard-nav-active: #0056b3;
+        --nhsw-dashboard-nav-divider: rgba(255, 255, 255, 0.2);
+        --nhsw-date-picker-dialog-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        --nhsw-timeout-modal-backdrop: rgba(11, 12, 12, 0.6);
+        --nhsw-font-family-base: Roboto, Arial, sans-serif;
+        --nhsw-font-weight-bold: 700;
+        --nhsw-font-size-h1-mobile: 2rem;
+        --nhsw-line-height-h1-mobile: 2.375rem;
+        --nhsw-font-size-h2-mobile: 1.6875rem;
+        --nhsw-line-height-h2-mobile: 2.0625rem;
+        --nhsw-font-size-h3-mobile: 1.375rem;
+        --nhsw-line-height-h3-mobile: 1.8125rem;
+        --nhsw-font-size-h4-mobile: 1.1875rem;
+        --nhsw-line-height-h4-mobile: 1.6875rem;
+        --nhsw-font-size-h5-mobile: 1rem;
+        --nhsw-line-height-h5-mobile: 1.5rem;
+        --nhsw-font-size-body-mobile: 1rem;
+        --nhsw-line-height-body-mobile: 1.5rem;
+        --nhsw-font-size-body-extra-small: 0.875rem;
+        --nhsw-line-height-body-extra-small: 1.25rem;
+        --nhsw-border-radius: 4px;
+      }
+      .stage {
+        --app-dark-surface: #13233c;
+        --app-dark-link: #8ab8e6;
+        --app-dark-destructive: #f0857a;
+      }
+      .stage {
+        color-scheme: light;
+        --background: var(--nhsw-page-background-white);
+        --foreground: var(--nhsw-primary-text-colour);
+        --card: var(--nhsw-page-background-white);
+        --card-foreground: var(--nhsw-primary-text-colour);
+        --popover: var(--nhsw-page-background-white);
+        --popover-foreground: var(--nhsw-primary-text-colour);
+        --primary: var(--nhsw-primary-button);
+        --primary-foreground: var(--nhsw-exceptional-text-colour);
+        --primary-hover: var(--nhsw-colour-button-primary-hover);
+        --secondary: var(--nhsw-page-background-grey);
+        --secondary-foreground: var(--nhsw-primary-text-colour);
+        --secondary-hover: var(--nhsw-tag-grey-background);
+        --muted: var(--nhsw-page-background-grey);
+        --muted-foreground: var(--nhsw-secondary-text-colour);
+        --accent: var(--nhsw-page-background-grey);
+        --accent-foreground: var(--nhsw-primary-text-colour);
+        --destructive: var(--nhsw-delete-button);
+        --destructive-fill: var(--nhsw-delete-button);
+        --destructive-foreground: var(--nhsw-exceptional-text-colour);
+        --destructive-hover: var(--nhsw-colour-button-delete-hover);
+        --border: var(--nhsw-grey-border-colour);
+        --input: var(--nhsw-secondary-border-colour);
+        --ring: var(--focus);
+        --radius: var(--nhsw-border-radius);
+        --link: var(--nhsw-link-colour);
+        --link-hover: var(--nhsw-link-hover-colour);
+        --focus: var(--nhsw-focus-colour);
+        --focus-foreground: var(--nhsw-focus-text-colour);
+        --control-shadow: var(--nhsw-primary-button-shadow);
+        --popup-shadow: var(--nhsw-date-picker-dialog-shadow);
+        --overlay: var(--nhsw-timeout-modal-backdrop);
+        --status-neutral-bg: var(--nhsw-tag-grey-background);
+        --status-neutral-fg: var(--nhsw-tag-grey-ink);
+        --status-neutral-border: var(--nhsw-tag-grey-ink);
+        --status-info-bg: var(--nhsw-tag-blue-background);
+        --status-info-fg: var(--nhsw-tag-blue-ink);
+        --status-info-border: var(--nhsw-tag-blue-ink);
+        --status-success-bg: var(--nhsw-tag-green-background);
+        --status-success-fg: var(--nhsw-tag-green-ink);
+        --status-success-border: var(--nhsw-tag-green-ink);
+        --status-warning-bg: var(--nhsw-tag-yellow-background);
+        --status-warning-fg: var(--nhsw-tag-yellow-ink);
+        --status-warning-border: var(--nhsw-tag-yellow-ink);
+        --status-danger-bg: var(--nhsw-tag-red-background);
+        --status-danger-fg: var(--nhsw-tag-red-ink);
+        --status-danger-border: var(--nhsw-tag-red-ink);
+        --header: var(--nhsw-page-background-blue);
+        --header-foreground: var(--nhsw-exceptional-text-colour);
+        --header-hover: var(--nhsw-colour-button-primary-hover);
+        --header-border: var(--nhsw-grey-border-colour);
+        --sidebar: var(--nhsw-page-background-blue);
+        --sidebar-foreground: var(--nhsw-exceptional-text-colour);
+        --sidebar-primary: var(--nhsw-exceptional-text-colour);
+        --sidebar-primary-foreground: var(--nhsw-page-background-blue);
+        --sidebar-accent: var(--nhsw-dashboard-nav-active);
+        --sidebar-accent-foreground: var(--nhsw-exceptional-text-colour);
+        --sidebar-border: var(--nhsw-dashboard-nav-divider);
+        --sidebar-ring: var(--focus);
+      }
+      .stage.dark {
+        color-scheme: dark;
+        --background: var(--nhsw-primary-button-shadow);
+        --foreground: var(--nhsw-page-background-grey);
+        --card: var(--app-dark-surface);
+        --card-foreground: var(--nhsw-page-background-grey);
+        --popover: var(--app-dark-surface);
+        --popover-foreground: var(--nhsw-page-background-grey);
+        --primary: var(--nhsw-colour-button-primary-hover);
+        --primary-foreground: var(--nhsw-exceptional-text-colour);
+        --primary-hover: var(--nhsw-primary-button);
+        --secondary: var(--nhsw-page-background-blue);
+        --secondary-foreground: var(--nhsw-page-background-grey);
+        --secondary-hover: var(--nhsw-colour-button-primary-hover);
+        --muted: var(--nhsw-page-background-blue);
+        --muted-foreground: var(--nhsw-colour-choice-hover-ring);
+        --accent: var(--nhsw-page-background-blue);
+        --accent-foreground: var(--nhsw-page-background-grey);
+        --destructive: var(--app-dark-destructive);
+        --border: var(--nhsw-secondary-border-colour);
+        --input: var(--nhsw-colour-choice-hover-ring);
+        --link: var(--app-dark-link);
+        --link-hover: var(--nhsw-tag-pink-background);
+        --control-shadow: var(--nhsw-secondary-border-colour);
+        --status-neutral-bg: var(--nhsw-tag-grey-ink);
+        --status-neutral-fg: var(--nhsw-tag-grey-background);
+        --status-neutral-border: var(--nhsw-tag-grey-background);
+        --status-info-bg: var(--nhsw-tag-blue-ink);
+        --status-info-fg: var(--nhsw-tag-blue-background);
+        --status-info-border: var(--nhsw-tag-blue-background);
+        --status-success-bg: var(--nhsw-tag-green-ink);
+        --status-success-fg: var(--nhsw-tag-green-background);
+        --status-success-border: var(--nhsw-tag-green-background);
+        --status-warning-bg: var(--nhsw-tag-yellow-ink);
+        --status-warning-fg: var(--nhsw-tag-yellow-background);
+        --status-warning-border: var(--nhsw-tag-yellow-background);
+        --status-danger-bg: var(--nhsw-tag-red-ink);
+        --status-danger-fg: var(--nhsw-tag-red-background);
+        --status-danger-border: var(--nhsw-tag-red-background);
+      }
+      .stage {
+        --font-sans: "Roboto Variable", var(--nhsw-font-family-base);
+        --font-heading: var(--font-sans);
+        --text-heading-xl: var(--nhsw-font-size-h1-mobile);
+        --text-heading-xl--line-height: var(--nhsw-line-height-h1-mobile);
+        --text-heading-xl--font-weight: var(--nhsw-font-weight-bold);
+        --text-heading-l: var(--nhsw-font-size-h2-mobile);
+        --text-heading-l--line-height: var(--nhsw-line-height-h2-mobile);
+        --text-heading-l--font-weight: var(--nhsw-font-weight-bold);
+        --text-heading-m: var(--nhsw-font-size-h3-mobile);
+        --text-heading-m--line-height: var(--nhsw-line-height-h3-mobile);
+        --text-heading-m--font-weight: var(--nhsw-font-weight-bold);
+        --text-heading-s: var(--nhsw-font-size-h4-mobile);
+        --text-heading-s--line-height: var(--nhsw-line-height-h4-mobile);
+        --text-heading-s--font-weight: var(--nhsw-font-weight-bold);
+        --text-heading-xs: var(--nhsw-font-size-h5-mobile);
+        --text-heading-xs--line-height: var(--nhsw-line-height-h5-mobile);
+        --text-heading-xs--font-weight: var(--nhsw-font-weight-bold);
+        --text-body: var(--nhsw-font-size-body-mobile);
+        --text-body--line-height: var(--nhsw-line-height-body-mobile);
+        --text-body-xs: var(--nhsw-font-size-body-extra-small);
+        --text-body-xs--line-height: var(--nhsw-line-height-body-extra-small);
+        --shadow-control: 0 2px 0 var(--control-shadow);
+        --shadow-control-edge: 0 2px 0 var(--input);
+        --shadow-card-bar: 0 4px 0 var(--border);
+        --shadow-moved-mark:
+          inset 6px 0 0 var(--status-success-border),
+          0 0 0 2px var(--status-success-border), 0 6px 0 var(--border);
+        --shadow-moved-mark-row:
+          inset 4px 0 0 var(--status-success-border),
+          0 0 0 2px var(--status-success-border);
+        --shadow-popup: var(--popup-shadow);
+        --color-background: var(--background);
+        --color-foreground: var(--foreground);
+        --color-card: var(--card);
+        --color-card-foreground: var(--card-foreground);
+        --color-popover: var(--popover);
+        --color-popover-foreground: var(--popover-foreground);
+        --color-primary: var(--primary);
+        --color-primary-foreground: var(--primary-foreground);
+        --color-primary-hover: var(--primary-hover);
+        --color-secondary: var(--secondary);
+        --color-secondary-foreground: var(--secondary-foreground);
+        --color-secondary-hover: var(--secondary-hover);
+        --color-muted: var(--muted);
+        --color-muted-foreground: var(--muted-foreground);
+        --color-accent: var(--accent);
+        --color-accent-foreground: var(--accent-foreground);
+        --color-destructive: var(--destructive);
+        --color-destructive-fill: var(--destructive-fill);
+        --color-destructive-foreground: var(--destructive-foreground);
+        --color-destructive-hover: var(--destructive-hover);
+        --color-border: var(--border);
+        --color-input: var(--input);
+        --color-ring: var(--ring);
+        --color-overlay: var(--overlay);
+        --color-link: var(--link);
+        --color-link-hover: var(--link-hover);
+        --color-focus: var(--focus);
+        --color-focus-foreground: var(--focus-foreground);
+        --color-status-neutral-bg: var(--status-neutral-bg);
+        --color-status-neutral-fg: var(--status-neutral-fg);
+        --color-status-neutral-border: var(--status-neutral-border);
+        --color-status-info-bg: var(--status-info-bg);
+        --color-status-info-fg: var(--status-info-fg);
+        --color-status-info-border: var(--status-info-border);
+        --color-status-success-bg: var(--status-success-bg);
+        --color-status-success-fg: var(--status-success-fg);
+        --color-status-success-border: var(--status-success-border);
+        --color-status-warning-bg: var(--status-warning-bg);
+        --color-status-warning-fg: var(--status-warning-fg);
+        --color-status-warning-border: var(--status-warning-border);
+        --color-status-danger-bg: var(--status-danger-bg);
+        --color-status-danger-fg: var(--status-danger-fg);
+        --color-status-danger-border: var(--status-danger-border);
+        --color-header: var(--header);
+        --color-header-foreground: var(--header-foreground);
+        --color-header-hover: var(--header-hover);
+        --color-header-border: var(--header-border);
+        --color-sidebar: var(--sidebar);
+        --color-sidebar-foreground: var(--sidebar-foreground);
+        --color-sidebar-primary: var(--sidebar-primary);
+        --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+        --color-sidebar-accent: var(--sidebar-accent);
+        --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+        --color-sidebar-border: var(--sidebar-border);
+        --color-sidebar-ring: var(--sidebar-ring);
+        --radius-sm: calc(var(--radius) * 0.6);
+        --radius-md: calc(var(--radius) * 0.8);
+        --radius-lg: var(--radius);
+        --radius-xl: calc(var(--radius) * 1.4);
+        --radius-2xl: calc(var(--radius) * 1.8);
+        --radius-3xl: calc(var(--radius) * 2.2);
+        --radius-4xl: calc(var(--radius) * 2.6);
+      }
+
+      /* A stage is the app's page behind the host. The host keeps the width the
+         Screen switch gives it: a stage too narrow for it scrolls sideways. */
+      .stage {
+        display: flex;
+        overflow-x: auto;
+        padding: 16px;
+        border: 1px solid var(--border);
+        background: var(--background);
+        color: var(--foreground);
+        font-family: var(--font-sans);
+        font-size: var(--text-body);
+        line-height: var(--text-body--line-height);
+      }
+      .host {
+        flex: none;
+        width: var(--host-w, 360px);
+        margin-inline: auto;
+      }
+      /* On a phone the stage runs edge to edge, so its 16px padding is the
+         app's own page padding and a 375px phone draws the host as the app
+         does. */
+      @media (max-width: 639px) {
+        .stage {
+          margin-inline: -16px;
+          border-inline: 0;
+        }
+      }
+
+      /* The app's controls, drawn as the app draws them and named as
+         assets/mock.css names them. Keep these: every design uses them. */
+      .inp {
+        width: 100%;
+        min-height: 40px;
+        padding: 8px;
+        border: 2px solid var(--input);
+        border-radius: 0;
+        background: var(--background);
+        color: var(--foreground);
+        font: inherit;
+      }
+      .inp:focus-visible {
+        outline: 3px solid var(--focus);
+        outline-offset: 0;
+        border-color: var(--focus-foreground);
+        box-shadow: inset 0 0 0 2px var(--focus-foreground);
+      }
+      /* The secondary button; .p is the primary. */
+      .btn {
+        appearance: none;
+        height: 40px;
+        padding: 0 16px;
+        border: 1px solid var(--input);
+        border-radius: var(--radius);
+        background: var(--background);
+        color: var(--foreground);
+        font: inherit;
+        font-weight: 700;
+        box-shadow: var(--shadow-control-edge);
+        cursor: pointer;
+      }
+      .btn:hover {
+        background: var(--muted);
+      }
+      .btn.p {
+        border-color: var(--primary);
+        background: var(--primary);
+        color: var(--primary-foreground);
+        box-shadow: var(--shadow-control);
+      }
+      .btn.p:hover {
+        background: var(--primary-hover);
+      }
+      .btn.sm {
+        height: 32px;
+        padding: 0 12px;
+        font-size: var(--text-body-xs);
+      }
+      .btn:focus-visible {
+        outline: 3px solid transparent;
+        outline-offset: 0;
+        border-color: transparent;
+        background: var(--focus);
+        color: var(--focus-foreground);
+        box-shadow: 0 2px 0 var(--focus-foreground);
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      /* The host: a roadmap's page from one horizon's heading down, at the
+         width the app gives a placement's list, with the foot bar under it. */
+      .host {
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+      }
+      .host h2 {
+        margin: 0;
+        font-size: var(--text-heading-m, 24px);
+        line-height: 1.25;
+      }
+      .host h3 {
+        margin: 0;
+        font-size: var(--text-body);
+        line-height: var(--text-body--line-height);
+        overflow-wrap: anywhere;
+      }
+      .plc {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .ic {
+        width: 16px;
+        height: 16px;
+        flex: none;
+      }
+      .grid {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr));
+        gap: 20px;
+      }
+      .card {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 16px;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--card-foreground);
+        box-shadow: var(--shadow-card-bar);
+        min-width: 0;
+      }
+      .card.isnew {
+        border-color: var(--status-info-border);
+      }
+      dl.f {
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: var(--text-body-xs);
+        line-height: var(--text-body-xs--line-height);
+      }
+      dl.f dt {
+        font-weight: 700;
+        margin-top: 6px;
+      }
+      dl.f dd {
+        margin: 0;
+      }
+      .foot {
+        margin-top: auto;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 12px;
+      }
+      .foot .actions {
+        margin-left: auto;
+      }
+      .narrow .foot .actions {
+        margin-left: 0;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .btn.sm {
+        padding: 0 10px;
+      }
+      .btn.sq {
+        width: 32px;
+        padding: 0;
+        justify-content: center;
+      }
+      .btn[aria-disabled="true"] {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .bdg {
+        display: inline-flex;
+        padding: 2px 8px;
+        border: 1px solid var(--status-info-border);
+        background: var(--status-info-bg);
+        color: var(--status-info-fg);
+        font-size: var(--text-body-xs);
+        line-height: var(--text-body-xs--line-height);
+        font-weight: 700;
+      }
+      /* Quick add in the cards view: a quiet dashed card. */
+      .qa-card {
+        display: flex;
+        min-height: 120px;
+      }
+      .narrow .qa-card {
+        min-height: 104px;
+      }
+      .qa-btn {
+        appearance: none;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        padding: 16px;
+        border: 1px dashed var(--border);
+        background: transparent;
+        color: var(--muted-foreground);
+        font: inherit;
+        cursor: pointer;
+      }
+      .qa-btn:hover {
+        color: var(--foreground);
+        border-color: var(--input);
+      }
+      .qa-btn:focus-visible,
+      .qa-row-btn:focus-visible {
+        outline: 3px solid var(--focus);
+        outline-offset: 0;
+        box-shadow: inset 0 0 0 2px var(--focus-foreground);
+      }
+      .qa-entry {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        gap: 6px;
+        padding: 16px;
+        border: 1px dashed var(--input);
+        background: var(--card);
+      }
+      .qa-hint {
+        font-size: var(--text-body-xs);
+        line-height: var(--text-body-xs--line-height);
+        color: var(--muted-foreground);
+      }
+      /* The compact view: a bordered list of rows, and quick add as its last. */
+      .clist {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        border: 1px solid var(--border);
+        background: var(--card);
+      }
+      .crow {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 48px;
+        padding: 4px 12px 4px 8px;
+        border-bottom: 1px solid var(--border);
+      }
+      .crow.isnew {
+        box-shadow: inset 4px 0 0 var(--status-info-border);
+      }
+      .cexp {
+        display: grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        flex: none;
+        transform: rotate(-90deg);
+      }
+      .cmain {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+      }
+      .cmain h3 {
+        flex: none;
+        max-width: 100%;
+      }
+      .cdesc {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: var(--muted-foreground);
+        font-size: var(--text-body-xs);
+      }
+      .narrow .cmain {
+        flex-direction: column;
+        gap: 4px;
+      }
+      .narrow .cmain h3 {
+        flex: 1 1 auto;
+      }
+      .narrow .cdesc {
+        display: none;
+      }
+      .qa-row,
+      .qa-row-entry {
+        min-height: 48px;
+      }
+      .qa-row {
+        padding: 4px;
+      }
+      .qa-row-btn {
+        appearance: none;
+        width: 100%;
+        min-height: 40px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding: 0 8px 0 12px;
+        border: 0;
+        background: transparent;
+        color: var(--muted-foreground);
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+      .qa-row-btn:hover {
+        color: var(--foreground);
+      }
+      /* In the compact view the field fills the row from its left edge, with
+         Add and Cancel beside it; on a phone they go under it. */
+      .qa-row-entry {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px;
+      }
+      .qa-row-entry .qa-field {
+        flex: 1;
+      }
+      .narrow .qa-row-entry {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      /* The field, with its expand button inside its end. */
+      .qa-field {
+        position: relative;
+        min-width: 0;
+      }
+      .qa-field .inp {
+        padding-right: 44px;
+      }
+      .qa-expand {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        bottom: 4px;
+        width: 36px;
+        display: grid;
+        place-items: center;
+        border: 0;
+        border-radius: var(--radius);
+        background: transparent;
+        color: var(--muted-foreground);
+        cursor: pointer;
+      }
+      .qa-expand:hover {
+        color: var(--foreground);
+        background: var(--muted);
+      }
+      .qa-expand:focus-visible {
+        outline: 3px solid transparent;
+        background: var(--focus);
+        color: var(--focus-foreground);
+      }
+      /* On a phone, Add and Cancel sit under the field, which keeps the width. */
+      .qa-acts {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+      }
+      .narrow .qa-entry {
+        gap: 8px;
+      }
+      /* The item dialog. */
+      .idlg {
+        width: min(512px, calc(100vw - 32px));
+        max-height: calc(100dvh - 32px);
+        padding: 0;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--popover);
+        color: var(--popover-foreground);
+        box-shadow: var(--shadow-popup);
+        font-family: var(--font-sans);
+      }
+      .idlg::backdrop {
+        background: rgb(0 0 0 / 0.5);
+      }
+      .idlg form {
+        display: flex;
+        flex-direction: column;
+      }
+      .dhd {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px 12px 24px;
+        border-bottom: 1px solid var(--border);
+      }
+      .dhd h2 {
+        margin: 0;
+        font-size: 22px;
+      }
+      .dx {
+        width: 40px;
+        padding: 0;
+        border: 0;
+        box-shadow: none;
+        font-size: 22px;
+      }
+      .dbody {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        padding: 16px 24px;
+      }
+      .fld {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-weight: 700;
+      }
+      .fld .inp {
+        font-weight: 400;
+      }
+      .dbody .qa-hint {
+        margin: 0;
+      }
+      .dfoot {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 16px 24px;
+        border-top: 1px solid var(--border);
+      }
+      .qa-row-entry .inp {
+        min-height: 40px;
+        padding-block: 6px;
+      }
+      .pfoot {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 0;
+        border-top: 4px solid var(--primary);
+        font-weight: 700;
+      }
+      .pfoot.none {
+        border-top-color: var(--border);
+        font-weight: 400;
+        color: var(--muted-foreground);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <div class="intro">
+        <h1>Quick add: a title typed where the item will go</h1>
+        <p>
+          Design E of the
+          <a href="add-items-ux-prototypes.html">add items frames</a>, as a
+          working control. Each horizon and section ends with a quiet “Add an
+          item” (“Add the first item” where it has none). Choosing it opens a
+          title field in its place. Enter, or Add, adds the item there, title
+          only, and opens a fresh field for the next. Escape, Cancel, or leaving
+          the field any other way, drops what is typed and puts “Add an item”
+          back. Add and Cancel show on every screen, since a page cannot tell
+          whether a keyboard with an Escape key is attached: under the field in
+          the cards view and on a phone, beside it in the compact view on a
+          wider screen. The expand button at the end of the field, “Add more
+          details”, opens the item dialog with the title typed so far; Cancel
+          there brings the field back as it was. Try it in the cards view and
+          the compact view. Remove on a new card drops it at once here; the app
+          asks first (STY-049). Move, Edit, a published card's Remove, Publish
+          and Discard are drawn but do nothing. In the compact view, as in the
+          app, Remove is at the foot of an opened row, which this page does not
+          draw. The dialog draws only the title, description, expected outcome
+          and the three placements this page has; the app's has phase, tags,
+          organisations and details too, and “Add and start another”. Move and
+          Edit are 32px tall, as in the app; a form's buttons are 40px.
+        </p>
+        <div class="controls">
+          <div>
+            <span id="theme-label">Theme</span>
+            <span class="seg" role="group" aria-labelledby="theme-label">
+              <button type="button" data-theme="light" aria-pressed="true">
+                Light
+              </button>
+              <button type="button" data-theme="dark" aria-pressed="false">
+                Dark
+              </button>
+            </span>
+          </div>
+          <div>
+            <span id="view-label">View</span>
+            <span class="seg" role="group" aria-labelledby="view-label">
+              <button type="button" data-view="cards" aria-pressed="true">
+                Cards
+              </button>
+              <button type="button" data-view="compact" aria-pressed="false">
+                Compact
+              </button>
+            </span>
+          </div>
+          <div>
+            <!-- How wide the app draws a placement's list, measured in the
+                 running app with the navigation open: one card across under
+                 600px, two to 1099px, then three. -->
+            <span id="screen-label">Screen</span>
+            <span class="seg" role="group" aria-labelledby="screen-label">
+              <button
+                type="button"
+                data-width="343"
+                data-phone
+                aria-pressed="false"
+              >
+                Phone 375
+              </button>
+              <button type="button" data-width="608" aria-pressed="false">
+                Small tablet 640
+              </button>
+              <button type="button" data-width="688" aria-pressed="false">
+                Laptop 1024
+              </button>
+              <button type="button" data-width="944" aria-pressed="true">
+                Monitor 1280
+              </button>
+              <button type="button" data-width="1120" aria-pressed="false">
+                Wide 1600
+              </button>
+            </span>
+            <span>The list is <span id="host-width">944</span>px wide.</span>
+          </div>
+        </div>
+        <details open>
+          <summary>Things to try</summary>
+          <ol>
+            <li>
+              Choose “Add an item” under Next, type “Book a hearing test online”
+              and press Enter. Type “Change your appointment by text” and press
+              Enter again. Then press Escape.
+            </li>
+            <li>
+              Type a title, then click somewhere else, or press Tab: nothing is
+              added and “Add an item” comes back.
+            </li>
+            <li>
+              While typing under Next, choose “Add an item” under Later: Next's
+              title is dropped and Later's field opens.
+            </li>
+            <li>Press Enter with nothing typed, or only spaces.</li>
+            <li>
+              Add “ see your waiting time ”, which Next already has, in other
+              words with extra spaces.
+            </li>
+            <li>Remove a new item from its card.</li>
+            <li>
+              On Phone 375, add two items with the Add button, then Cancel. Type
+              a title and Tab onto Add: the field stays open.
+            </li>
+            <li>
+              Type “Book a hearing test”, choose the expand button at the end of
+              the field, write a description and choose “Add item”. Do it again
+              and choose Cancel, or press Escape: the field comes back with the
+              title in it.
+            </li>
+            <li>Switch to Compact and do the same.</li>
+            <li>
+              Look at Not doing, which has no items: it offers “Add the first
+              item”. Add one there.
+            </li>
+            <li>
+              Do it all with the keyboard alone, on the phone, and in the dark
+              theme.
+            </li>
+          </ol>
+        </details>
+        <details>
+          <summary>The sample</summary>
+          <pre id="sample"></pre>
+        </details>
+      </div>
+      <figure id="pe" aria-labelledby="pe-name">
+        <div class="caption">
+          <h2 id="pe-name">E. Quick add</h2>
+          <button type="button" class="again" data-again="pe">
+            Start again <span class="sr">design E</span>
+          </button>
+        </div>
+        <p>
+          A title is all it asks. The item is pending like any new item, last in
+          its placement and tagged New, and its other fields are written later
+          with Edit.
+        </p>
+        <div class="stage">
+          <div class="host" id="pe-host"></div>
+          <dialog class="idlg" id="pe-dialog" aria-labelledby="pe-dlg-h">
+            <form method="dialog">
+              <div class="dhd">
+                <h2 id="pe-dlg-h">Add an item</h2>
+                <button
+                  type="submit"
+                  class="btn dx"
+                  value="cancel"
+                  aria-label="Close"
+                  formnovalidate
+                >
+                  ×
+                </button>
+              </div>
+              <div class="dbody">
+                <label class="fld"
+                  ><span>Title</span
+                  ><input class="inp" name="title" autocomplete="off"
+                /></label>
+                <label class="fld"
+                  ><span>Description</span
+                  ><textarea class="inp" name="description" rows="3"></textarea>
+                </label>
+                <label class="fld"
+                  ><span>Expected outcome</span
+                  ><textarea class="inp" name="outcome" rows="3"></textarea>
+                </label>
+                <label class="fld"
+                  ><span>Horizon or section</span
+                  ><select class="inp" name="placement">
+                    <option>Next</option>
+                    <option>Later</option>
+                    <option>Not doing</option>
+                  </select></label
+                >
+                <p class="qa-hint">
+                  It stays unpublished until you choose “Publish changes”.
+                </p>
+              </div>
+              <div class="dfoot">
+                <button type="submit" class="btn p" value="add">
+                  Add item
+                </button>
+                <button type="submit" class="btn" value="cancel" formnovalidate>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </dialog>
+        </div>
+        <p class="sr" role="status" id="pe-status"></p>
+        <details open>
+          <summary>What this design keeps as pending edits</summary>
+          <pre id="pe-readout"></pre>
+        </details>
+      </figure>
+    </main>
+    <script>
+      // ---- The sample world: Appointments roadmap, Next and Later ----
+      const INITIAL = {
+        Next: [
+          {
+            title: "See your waiting time",
+            phase: "Alpha",
+            description:
+              "See roughly how long you will wait for your first appointment.",
+            outcome: "Fewer calls to ask how long is left.",
+            tags: ["Waiting lists"],
+            orgs: ["Hywel Dda"],
+          },
+        ],
+        Later: [
+          {
+            title: "Bring a carer into your booking",
+            description:
+              "Let someone you trust book and change appointments for you.",
+            outcome: "Carers can help without sharing a login.",
+            tags: ["Carers"],
+          },
+        ],
+        "Not doing": [],
+      }
+      const PLACEMENTS = ["Next", "Later", "Not doing"]
+      /** A placement as an id part: "Not doing" gives "not-doing". */
+      const slug = (p) => p.toLowerCase().replace(/\s+/g, "-")
+
+      // ---- The rules: pure, with no page in them ----
+      /** A typed title as kept: spaces run together and trimmed. */
+      const clean = (text) => text.replace(/\s+/g, " ").trim()
+      /** Enter adds only a title with something in it; an empty one adds nothing. */
+      const canAdd = (text) => clean(text) !== ""
+      /** A new item: its title and placement, and nothing else yet. */
+      const newItem = (text) => ({ title: clean(text), isNew: true })
+      const pendingCount = (world) =>
+        PLACEMENTS.reduce(
+          (n, p) => n + world[p].filter((it) => it.isNew).length,
+          0,
+        )
+      const changes = (n) =>
+        n === 1 ? "1 unpublished change" : `${n} unpublished changes`
+      /** The readout: each pending new item, and what publishing writes for it. */
+      function written(world) {
+        const lines = []
+        for (const p of PLACEMENTS) {
+          const all = world[p]
+          all.forEach((it, i) => {
+            if (it.isNew)
+              lines.push(
+                `New item in ${p}, ${i + 1} of ${all.length}: “${it.title}”\n  publishing writes its title and placement${
+                  [
+                    ["description", it.description],
+                    ["expected outcome", it.outcome],
+                  ]
+                    .filter(([, v]) => v)
+                    .map(([n]) => `, and its ${n}`)
+                    .join("") || ", and nothing else"
+                }`,
+              )
+          })
+        }
+        return lines.length
+          ? `${changes(lines.length)}\n\n${lines.join("\n")}`
+          : "No unpublished changes"
+      }
+
+      // ---- Drawing ----
+      function h(tag, attributes = {}, ...children) {
+        const element = document.createElement(tag)
+        for (const [name, value] of Object.entries(attributes)) {
+          if (name.startsWith("on")) element[name] = value
+          else element.setAttribute(name, value)
+        }
+        element.append(...children)
+        return element
+      }
+      const ICONS = {
+        plus: '<path d="M12 5v14M5 12h14"/>',
+        chev: '<path d="m6 9 6 6 6-6"/>',
+        edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/>',
+        move: '<path d="M4 8h14l-3-3M20 16H6l3 3"/>',
+        trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
+        x: '<path d="M6 6l12 12M18 6 6 18"/>',
+        expand: '<path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/>',
+      }
+      function icon(name) {
+        const span = document.createElement("span")
+        span.innerHTML = `<svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]}</svg>`
+        return span.firstChild
+      }
+
+      // ---- The design ----
+      function designE(id, host, readout, status) {
+        let world = structuredClone(INITIAL)
+        // Set while the host is redrawn, so the field's blur on removal is not
+        // taken for the Product Lead leaving it.
+        let redrawing = false
+        // Whether a mouse button or finger is down, so a field left by a press
+        // waits for the press to land before it closes.
+        let pointerDown = false
+        addEventListener("pointerdown", () => (pointerDown = true), true)
+        addEventListener("pointerup", () => (pointerDown = false), true)
+        const compact = () =>
+          host.closest(".stage").classList.contains("compact")
+        const say = (text) => {
+          status.textContent = ""
+          setTimeout(() => (status.textContent = text), 50)
+        }
+
+        function action(label, name, title, onclick, narrow) {
+          const attrs = {
+            type: "button",
+            class: "btn sm" + (narrow ? " sq" : ""),
+            "data-act": label,
+          }
+          if (onclick) attrs.onclick = onclick
+          else attrs.onclick = () => {}
+          if (narrow) attrs["aria-label"] = `${label} ${title}`
+          return narrow
+            ? h("button", attrs, icon(name))
+            : h(
+                "button",
+                attrs,
+                icon(name),
+                label,
+                " ",
+                h("span", { class: "sr" }, title),
+              )
+        }
+        const remover = (p, item) => () => {
+          world[p] = world[p].filter((it) => it !== item)
+          draw()
+          say(`“${item.title}” removed.`)
+          document.getElementById(`${id}-qa-${slug(p)}`)?.focus()
+        }
+
+        function card(p, item) {
+          const fields = []
+          const pair = (name, value) =>
+            value && fields.push(h("dt", {}, name), h("dd", {}, value))
+          pair("Phase", item.phase)
+          pair("Description", item.description)
+          pair("Expected outcome", item.outcome)
+          pair("Tags", item.tags?.join(", "))
+          pair("Organisations", item.orgs?.join(", "))
+          const acts = h(
+            "div",
+            { class: "actions" },
+            action(
+              "Remove",
+              "trash",
+              item.title,
+              item.isNew ? remover(p, item) : null,
+            ),
+            action("Move", "move", item.title),
+            h(
+              "button",
+              {
+                type: "button",
+                class: "btn sm",
+                "data-act": "Edit",
+              },
+              icon("edit"),
+              "Edit",
+              " ",
+              h("span", { class: "sr" }, item.title),
+            ),
+          )
+          return h(
+            "li",
+            { class: "card" + (item.isNew ? " isnew" : "") },
+            h("h3", {}, item.title),
+            ...(fields.length ? [h("dl", { class: "f" }, ...fields)] : []),
+            h(
+              "div",
+              { class: "foot" },
+              ...(item.isNew
+                ? [
+                    h(
+                      "span",
+                      { class: "bdg" },
+                      "New",
+                      h("span", { class: "sr" }, " " + item.title),
+                    ),
+                  ]
+                : []),
+              acts,
+            ),
+          )
+        }
+
+        function row(p, item, narrow) {
+          const tag = item.isNew
+            ? h(
+                "span",
+                { class: "bdg" },
+                "New",
+                h("span", { class: "sr" }, " " + item.title),
+              )
+            : ""
+          return h(
+            "li",
+            { class: "crow" + (item.isNew ? " isnew" : "") },
+            h(
+              "button",
+              {
+                type: "button",
+                class: "btn sm sq",
+                "aria-expanded": "false",
+                "aria-label": `Show the rest of ${item.title}`,
+                style: "border:0;box-shadow:none;background:transparent",
+              },
+              h("span", { class: "cexp" }, icon("chev")),
+            ),
+            h(
+              "div",
+              { class: "cmain" },
+              h("h3", {}, item.title),
+              narrow
+                ? tag
+                : h("span", { class: "cdesc" }, item.description ?? ""),
+            ),
+            narrow ? "" : tag,
+            h(
+              "div",
+              { class: "actions" },
+              action("Move", "move", item.title, null, narrow),
+              action("Edit", "edit", item.title, null, narrow),
+            ),
+          )
+        }
+
+        /**
+         * The placeholder for a placement: "Add an item", or "Add the first
+         * item" where the placement has none, in place of today's "No items".
+         */
+        function placeholder(p) {
+          const label = [
+            icon("plus"),
+            h(
+              "span",
+              {},
+              world[p].length ? "Add an item" : "Add the first item",
+            ),
+            " ",
+            h("span", { class: "sr" }, `to ${p}`),
+          ]
+          return compact()
+            ? h(
+                "li",
+                { class: "qa-row", "data-qa": p },
+                h(
+                  "button",
+                  {
+                    type: "button",
+                    class: "qa-row-btn",
+                    id: `${id}-qa-${slug(p)}`,
+                    onclick: () => open(p),
+                  },
+                  ...label,
+                ),
+              )
+            : h(
+                "li",
+                { class: "qa-card", "data-qa": p },
+                h(
+                  "button",
+                  {
+                    type: "button",
+                    class: "qa-btn",
+                    id: `${id}-qa-${slug(p)}`,
+                    onclick: () => open(p),
+                  },
+                  ...label,
+                ),
+              )
+        }
+
+        /**
+         * The title field that takes the placeholder's place, with an expand
+         * button at its end that opens the full item dialog, and Add and
+         * Cancel under it.
+         */
+        function entry(p, value = "") {
+          // Add and Cancel show on every screen: a page cannot tell whether a
+          // keyboard with an Escape key is attached (a tablet may have none).
+          // Enter and Escape work too, without a hint: a keyboard user expects them.
+          const input = h("input", {
+            class: "inp",
+            id: `${id}-title-${slug(p)}`,
+            "aria-label": `Title of a new item in ${p}`,
+            autocomplete: "off",
+            enterkeyhint: "enter",
+          })
+          input.value = value
+          function add() {
+            if (!canAdd(input.value)) {
+              input.focus()
+              return
+            }
+            const item = newItem(input.value)
+            world[p] = [...world[p], item]
+            draw()
+            say(`“${item.title}” was added to ${p}.`)
+            open(p)
+          }
+          // A press on a button of the field's own keeps focus in the field,
+          // so the field is not dropped as the press begins.
+          const keep = (event) => event.preventDefault()
+          const expand = h(
+            "button",
+            {
+              type: "button",
+              class: "qa-expand",
+              "aria-label": "Add more details",
+              title: "Add more details",
+              onpointerdown: keep,
+              onmousedown: keep,
+              onclick: () => openDialog(p, slot, input.value),
+            },
+            icon("expand"),
+          )
+          const field = h("div", { class: "qa-field" }, input, expand)
+          const below = h(
+            "div",
+            { class: "qa-acts" },
+            h(
+              "button",
+              {
+                type: "button",
+                class: "btn p",
+                onpointerdown: keep,
+                onmousedown: keep,
+                onclick: add,
+              },
+              "Add",
+            ),
+            h(
+              "button",
+              {
+                type: "button",
+                class: "btn",
+                onpointerdown: keep,
+                onmousedown: keep,
+                onclick: () => close(p, slot, true),
+              },
+              "Cancel",
+            ),
+          )
+          const slot = compact()
+            ? h("li", { class: "qa-row-entry", "data-qa": p }, field, below)
+            : h(
+                "li",
+                { class: "qa-card", "data-qa": p },
+                h("div", { class: "qa-entry" }, field, below),
+              )
+          input.onkeydown = (event) => {
+            if (event.key === "Enter") {
+              event.preventDefault()
+              add()
+            }
+          }
+          // Escape cancels from anywhere in the field: the title, expand, Add
+          // or Cancel.
+          slot.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") {
+              event.preventDefault()
+              close(p, slot, true)
+            }
+          })
+          slot.addEventListener("focusout", (event) => {
+            if (redrawing || slot.contains(event.relatedTarget)) return
+            // Left by a press elsewhere: the field closes once the press has
+            // landed, so the page moving up as it shrinks cannot move what was
+            // pressed out from under the pointer.
+            if (pointerDown)
+              addEventListener(
+                "pointerup",
+                () => setTimeout(() => close(p, slot, false)),
+                { once: true, capture: true },
+              )
+            else close(p, slot, false)
+          })
+          return [slot, input]
+        }
+
+        function open(p, value = "") {
+          const slot = host.querySelector(`[data-qa="${p}"]`)
+          const [next, input] = entry(p, value)
+          redrawing = true
+          slot.replaceWith(next)
+          redrawing = false
+          input.focus()
+          input.setSelectionRange(value.length, value.length)
+          // On a phone the keyboard covers the foot of the screen: bring the
+          // whole field, its buttons too, into view.
+          next.scrollIntoView({ block: "nearest" })
+        }
+        function close(p, slot, focus) {
+          if (!slot.isConnected) return
+          const back = placeholder(p)
+          redrawing = true
+          slot.replaceWith(back)
+          redrawing = false
+          if (focus) back.querySelector("button").focus()
+        }
+
+        // ---- The full item dialog, opened from the field's expand button ----
+        const dlg = document.getElementById(`${id}-dialog`)
+        const form = dlg.querySelector("form")
+        const fields = {
+          title: form.elements.namedItem("title"),
+          description: form.elements.namedItem("description"),
+          outcome: form.elements.namedItem("outcome"),
+          placement: form.elements.namedItem("placement"),
+        }
+        let from = null
+        function openDialog(p, slot, value) {
+          from = { p, value }
+          // The field goes; Cancel brings it back with what was typed.
+          redrawing = true
+          slot.replaceWith(placeholder(p))
+          redrawing = false
+          form.reset()
+          fields.title.value = clean(value)
+          fields.placement.value = p
+          dlg.showModal()
+          fields.title.focus()
+          fields.title.setSelectionRange(
+            fields.title.value.length,
+            fields.title.value.length,
+          )
+        }
+        form.addEventListener("submit", (event) => {
+          event.preventDefault()
+          if (event.submitter?.value === "cancel") return dlg.close("cancel")
+          if (!canAdd(fields.title.value)) {
+            fields.title.focus()
+            return
+          }
+          const p = fields.placement.value
+          const item = {
+            ...newItem(fields.title.value),
+            description: clean(fields.description.value) || undefined,
+            outcome: clean(fields.outcome.value) || undefined,
+          }
+          world[p] = [...world[p], item]
+          from = null
+          dlg.close("added")
+          draw()
+          say(`“${item.title}” was added to ${p}.`)
+          // As "Add item" does today (STY-046 S3): focus on the new card's Edit,
+          // the last item of its placement, whatever its title.
+          const cards = host
+            .querySelector(`ul[aria-labelledby="${id}-h-${slug(p)}"]`)
+            .querySelectorAll(":scope > li:not([data-qa])")
+          cards
+            .item(cards.length - 1)
+            .querySelector('button[data-act="Edit"]')
+            ?.focus()
+        })
+        dlg.addEventListener("close", () => {
+          if (dlg.returnValue === "added" || !from) return
+          const { p, value } = from
+          from = null
+          open(p, value)
+        })
+
+        function draw() {
+          const narrow = host.clientWidth < 600
+          host.classList.toggle("narrow", narrow)
+          host.style.setProperty(
+            "--cols",
+            narrow ? 1 : host.clientWidth >= 1100 ? 3 : 2,
+          )
+          const sections = PLACEMENTS.map((p) =>
+            h(
+              "section",
+              { class: "plc", "aria-labelledby": `${id}-h-${slug(p)}` },
+              h("h2", { id: `${id}-h-${slug(p)}` }, p),
+              h(
+                "ul",
+                {
+                  class: compact() ? "clist" : "grid",
+                  "aria-labelledby": `${id}-h-${slug(p)}`,
+                },
+                ...world[p].map((it) =>
+                  (compact() ? row : card)(p, it, narrow),
+                ),
+                placeholder(p),
+              ),
+            ),
+          )
+          const n = pendingCount(world)
+          const foot = h(
+            "div",
+            { class: "pfoot" + (n ? "" : " none") },
+            h("span", {}, n ? changes(n) : "No unpublished changes"),
+            n
+              ? h(
+                  "div",
+                  { class: "actions" },
+                  h(
+                    "button",
+                    {
+                      type: "button",
+                      class: "btn p",
+                      "aria-disabled": "true",
+                      "aria-label": "Publish changes",
+                    },
+                    "Publish",
+                  ),
+                  h(
+                    "button",
+                    {
+                      type: "button",
+                      class: "btn",
+                      "aria-disabled": "true",
+                      "aria-label": "Discard all changes",
+                    },
+                    "Discard",
+                  ),
+                )
+              : "",
+          )
+          redrawing = true
+          host.replaceChildren(...sections, foot)
+          redrawing = false
+          readout.textContent = written(world)
+        }
+
+        return {
+          draw,
+          reset() {
+            world = structuredClone(INITIAL)
+            draw()
+          },
+        }
+      }
+
+      // ---- The page ----
+      const e = designE(
+        "pe",
+        document.getElementById("pe-host"),
+        document.getElementById("pe-readout"),
+        document.getElementById("pe-status"),
+      )
+      document
+        .querySelector('[data-again="pe"]')
+        .addEventListener("click", () => e.reset())
+      document.getElementById("sample").textContent =
+        "Appointments roadmap, published, no unpublished changes.\n\n" +
+        PLACEMENTS.map(
+          (p) => `${p}\n` + INITIAL[p].map((it) => `  ${it.title}`).join("\n"),
+        ).join("\n\n")
+
+      function bindSwitch(attribute, apply) {
+        const buttons = document.querySelectorAll(`[data-${attribute}]`)
+        for (const button of buttons) {
+          button.addEventListener("click", () => {
+            for (const other of buttons)
+              other.setAttribute("aria-pressed", String(other === button))
+            for (const stage of document.querySelectorAll(".stage"))
+              apply(stage, button.dataset[attribute])
+            e.draw()
+          })
+        }
+      }
+      bindSwitch("theme", (stage, theme) =>
+        stage.classList.toggle("dark", theme === "dark"),
+      )
+      bindSwitch("view", (stage, view) =>
+        stage.classList.toggle("compact", view === "compact"),
+      )
+      bindSwitch("width", (stage, width) => {
+        stage.style.setProperty("--host-w", `${width}px`)
+        document.getElementById("host-width").textContent = width
+      })
+      document.querySelector('[data-width="944"]').click()
+      if (matchMedia("(max-width: 639px)").matches)
+        document.querySelector("[data-phone]")?.click()
+    </script>
+    <script>
+      // The review page's chrome, shared by both shapes (review-chrome.css styles it).
+      // A bar of links to every journey and design, one line that scrolls sideways,
+      // and a floating Options panel that holds the page's .controls, so a switch is
+      // in reach beside any design. A design is a figure[id] not inside another; its
+      // journey is the section[id] holding it, or the page's h1. A design's link reads
+      // the letter that starts its caption ("A. Outline", "B2 — …"), or its
+      // data-short; a journey's, its heading up to " — ".
+      // Under automation, or with ?capture in the URL, the bar stays at the top of
+      // the page and the controls stay where the page put them, so neither covers a
+      // design in a screenshot; ?float shows the floating chrome there too.
+      ;(() => {
+        const params = new URLSearchParams(location.search)
+        const inline =
+          params.has("capture") || (navigator.webdriver && !params.has("float"))
+        if (inline) document.documentElement.classList.add("review-inline")
+
+        const designs = [...document.querySelectorAll("figure[id]")].filter(
+          (figure) => !figure.parentElement.closest("figure[id]"),
+        )
+        if (designs.length === 0) return
+        const text = (element) =>
+          element?.textContent.replace(/\s+/g, " ").trim()
+        const heading = document.querySelector("h1")
+        if (heading && !heading.id) heading.id = "review-top"
+
+        const groups = new Map()
+        for (const figure of designs) {
+          const section = figure.closest("section[id]")
+          const key = section ?? heading
+          if (!groups.has(key)) groups.set(key, [])
+          groups.get(key).push(figure)
+        }
+
+        function link(href, label, className, title) {
+          const a = document.createElement("a")
+          a.href = href
+          a.className = className
+          a.textContent = label
+          a.title = title ?? label
+          return a
+        }
+
+        const bar = document.createElement("nav")
+        bar.className = "review-bar"
+        bar.setAttribute("aria-label", "Journeys and designs")
+        const designLinks = new Map()
+        for (const [owner, figures] of groups) {
+          const group = document.createElement("span")
+          group.className = "review-group"
+          if (owner) {
+            const title = text(owner.querySelector("h1, h2") ?? owner)
+            owner.classList.add("review-target")
+            group.append(
+              link(
+                `#${owner.id}`,
+                title.split(" — ")[0],
+                "review-journey",
+                title,
+              ),
+            )
+          }
+          for (const figure of figures) {
+            const caption =
+              text(figure.querySelector("figcaption, h2, h3")) ?? ""
+            const short =
+              figure.dataset.short ??
+              caption.match(/^([A-Z][0-9]*)(?:\.|:|\s[—–-])\s/)?.[1] ??
+              caption
+            const a = link(
+              `#${figure.id}`,
+              short || figure.id,
+              "review-design",
+              caption || figure.id,
+            )
+            a.setAttribute("aria-label", caption || figure.id)
+            figure.classList.add("review-target")
+            designLinks.set(figure, a)
+            group.append(a)
+          }
+          bar.append(group)
+        }
+        document.body.prepend(bar)
+
+        // A link's target lands below the bar, not under it.
+        const style = document.createElement("style")
+        document.head.append(style)
+        const fitTargets = () => {
+          style.textContent = `.review-target{scroll-margin-top:${bar.offsetHeight + 8}px}`
+        }
+        fitTargets()
+        addEventListener("resize", fitTargets)
+
+        // The bar marks the design in view, and scrolls itself to show its link.
+        let current
+        // A design whose link was followed stays marked, even where the page cannot
+        // scroll it to the top, until the reader scrolls on their own.
+        let pinned
+        /** The design whose top has passed a third of the way down, or the last at the page's foot. */
+        function designInView() {
+          if (pinned) return pinned
+          const root = document.documentElement
+          if (
+            root.scrollTop > 0 &&
+            scrollY + innerHeight >= root.scrollHeight - 2
+          )
+            return designs.at(-1)
+          const line = Math.max(bar.offsetHeight + 16, innerHeight / 3)
+          let inView = designs[0]
+          for (const figure of designs)
+            if (figure.getBoundingClientRect().top <= line) inView = figure
+          return inView
+        }
+        function markCurrent(inView = designInView()) {
+          if (inView === current) return
+          designLinks.get(current)?.removeAttribute("aria-current")
+          current = inView
+          const a = designLinks.get(current)
+          a.setAttribute("aria-current", "location")
+          // Show the link's group from its start, or as much of it as keeps the
+          // link itself in view.
+          const right = a.offsetLeft + a.offsetWidth
+          if (
+            a.offsetLeft < bar.scrollLeft ||
+            right > bar.scrollLeft + bar.clientWidth
+          )
+            bar.scrollLeft = Math.max(
+              a.parentElement.offsetLeft - 4,
+              right - bar.clientWidth + 8,
+            )
+        }
+        let queued = false
+        addEventListener(
+          "scroll",
+          () => {
+            if (queued) return
+            queued = true
+            requestAnimationFrame(() => {
+              queued = false
+              markCurrent()
+            })
+          },
+          { passive: true },
+        )
+        addEventListener("resize", () => markCurrent())
+        bar.addEventListener("click", (event) => {
+          const a = event.target.closest("a")
+          pinned = designs.find((f) => designLinks.get(f) === a)
+          markCurrent()
+        })
+        for (const type of ["wheel", "touchstart", "keydown"])
+          addEventListener(type, () => (pinned = undefined), { passive: true })
+        markCurrent()
+
+        const controls = document.querySelector(".controls")
+        if (inline || !controls) return
+
+        // The Options panel: a pill that names the current choices, opening the
+        // page's controls above it. The pill comes first, so Tab moves from it into
+        // the controls; the panel's column runs in reverse to draw them above.
+        document.documentElement.classList.add("review-floating")
+        const panel = document.createElement("div")
+        panel.className = "review-options"
+        const body = document.createElement("div")
+        body.className = "review-options-body"
+        body.id = "review-options-body"
+        body.hidden = true
+        body.setAttribute("role", "group")
+        body.setAttribute("aria-label", "Options")
+        const toggle = document.createElement("button")
+        toggle.type = "button"
+        toggle.className = "review-options-toggle"
+        toggle.setAttribute("aria-controls", body.id)
+        toggle.setAttribute("aria-expanded", "false")
+        controls.replaceWith(panel)
+        body.append(controls)
+        panel.append(toggle, body)
+
+        function summarise() {
+          const chosen = [
+            ...[
+              ...controls.querySelectorAll('button[aria-pressed="true"]'),
+            ].map(text),
+            ...[...controls.querySelectorAll("select")].map((select) =>
+              text(select.selectedOptions[0]),
+            ),
+            ...[...controls.querySelectorAll("input:checked")].map(
+              (input) => text(input.labels?.[0]) ?? input.value,
+            ),
+          ].filter(Boolean)
+          const arrow = document.createElement("span")
+          arrow.setAttribute("aria-hidden", "true")
+          arrow.textContent = body.hidden ? "▴ " : "▾ "
+          toggle.replaceChildren(
+            arrow,
+            `Options${chosen.length ? `: ${chosen.join(" · ")}` : ""}`,
+          )
+        }
+        function setOpen(open) {
+          body.hidden = !open
+          toggle.setAttribute("aria-expanded", String(open))
+          summarise()
+        }
+        toggle.addEventListener("click", () => setOpen(body.hidden))
+        panel.addEventListener("keydown", (event) => {
+          if (event.key !== "Escape" || body.hidden) return
+          setOpen(false)
+          toggle.focus()
+        })
+        addEventListener("pointerdown", (event) => {
+          if (!body.hidden && !panel.contains(event.target)) setOpen(false)
+        })
+
+        // A switch that changes the page's height, such as Zoom or Screen, keeps the
+        // design in view where it was: its top is noted before the switch's own
+        // handler runs (capturing), and restored after it (bubbling).
+        let anchor
+        const noteAnchor = () => {
+          const figure = designInView()
+          anchor = { figure, top: figure.getBoundingClientRect().top }
+        }
+        const afterSwitch = () => {
+          summarise()
+          if (anchor)
+            scrollBy(0, anchor.figure.getBoundingClientRect().top - anchor.top)
+          anchor = undefined
+          markCurrent()
+        }
+        for (const type of ["click", "change"]) {
+          controls.addEventListener(type, noteAnchor, true)
+          controls.addEventListener(type, afterSwitch)
+        }
+        summarise()
+      })()
+    </script>
+  </body>
+</html>

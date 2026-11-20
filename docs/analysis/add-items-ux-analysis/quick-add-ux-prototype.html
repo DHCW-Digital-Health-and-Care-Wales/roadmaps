@@ -1022,8 +1022,10 @@
           asks first (STY-049). Move, Edit, a published card's Remove, Publish
           and Discard are drawn but do nothing. In the compact view, as in the
           app, Remove is at the foot of an opened row, which this page does not
-          draw. Move and Edit are 32px tall, as in the app; a form's buttons are
-          40px.
+          draw. The dialog draws only the title, description, expected outcome
+          and the three placements this page has; the app's has phase, tags,
+          organisations and details too, and “Add and start another”. Move and
+          Edit are 32px tall, as in the app; a form's buttons are 40px.
         </p>
         <div class="controls">
           <div>
@@ -1176,11 +1178,6 @@
                   </select></label
                 >
                 <p class="qa-hint">
-                  Phase, tags, organisations and details are in the app's dialog
-                  too; this prototype leaves them out, and offers only the three
-                  placements it draws.
-                </p>
-                <p class="qa-hint">
                   It stays unpublished until you choose “Publish changes”.
                 </p>
               </div>
@@ -1228,6 +1225,8 @@
         "Not doing": [],
       }
       const PLACEMENTS = ["Next", "Later", "Not doing"]
+      /** A placement as an id part: "Not doing" gives "not-doing". */
+      const slug = (p) => p.toLowerCase().replace(/\s+/g, "-")
 
       // ---- The rules: pure, with no page in them ----
       /** A typed title as kept: spaces run together and trimmed. */
@@ -1334,7 +1333,7 @@
           world[p] = world[p].filter((it) => it !== item)
           draw()
           say(`“${item.title}” removed.`)
-          document.getElementById(`${id}-qa-${p}`)?.focus()
+          document.getElementById(`${id}-qa-${slug(p)}`)?.focus()
         }
 
         function card(p, item) {
@@ -1457,7 +1456,7 @@
                   {
                     type: "button",
                     class: "qa-row-btn",
-                    id: `${id}-qa-${p}`,
+                    id: `${id}-qa-${slug(p)}`,
                     onclick: () => open(p),
                   },
                   ...label,
@@ -1471,7 +1470,7 @@
                   {
                     type: "button",
                     class: "qa-btn",
-                    id: `${id}-qa-${p}`,
+                    id: `${id}-qa-${slug(p)}`,
                     onclick: () => open(p),
                   },
                   ...label,
@@ -1490,7 +1489,7 @@
           // Enter and Escape work too, without a hint: a keyboard user expects them.
           const input = h("input", {
             class: "inp",
-            id: `${id}-title-${p}`,
+            id: `${id}-title-${slug(p)}`,
             "aria-label": `Title of a new item in ${p}`,
             autocomplete: "off",
             enterkeyhint: "enter",
@@ -1655,7 +1654,7 @@
           // As "Add item" does today (STY-046 S3): focus on the new card's Edit,
           // the last item of its placement, whatever its title.
           const cards = host
-            .querySelector(`ul[aria-labelledby="${id}-h-${p}"]`)
+            .querySelector(`ul[aria-labelledby="${id}-h-${slug(p)}"]`)
             .querySelectorAll(":scope > li:not([data-qa])")
           ;[...cards.item(cards.length - 1).querySelectorAll("button")]
             .find(
@@ -1682,13 +1681,13 @@
           const sections = PLACEMENTS.map((p) =>
             h(
               "section",
-              { class: "plc", "aria-labelledby": `${id}-h-${p}` },
-              h("h2", { id: `${id}-h-${p}` }, p),
+              { class: "plc", "aria-labelledby": `${id}-h-${slug(p)}` },
+              h("h2", { id: `${id}-h-${slug(p)}` }, p),
               h(
                 "ul",
                 {
                   class: compact() ? "clist" : "grid",
-                  "aria-labelledby": `${id}-h-${p}`,
+                  "aria-labelledby": `${id}-h-${slug(p)}`,
                 },
                 ...world[p].map((it) =>
                   (compact() ? row : card)(p, it, narrow),
@@ -1708,12 +1707,22 @@
                   { class: "actions" },
                   h(
                     "button",
-                    { type: "button", class: "btn p", "aria-disabled": "true" },
+                    {
+                      type: "button",
+                      class: "btn p",
+                      "aria-disabled": "true",
+                      "aria-label": "Publish changes",
+                    },
                     "Publish",
                   ),
                   h(
                     "button",
-                    { type: "button", class: "btn", "aria-disabled": "true" },
+                    {
+                      type: "button",
+                      class: "btn",
+                      "aria-disabled": "true",
+                      "aria-label": "Discard all changes",
+                    },
                     "Discard",
                   ),
                 )

@@ -7,6 +7,7 @@ import {
   openAddItemDialog,
   openAddRoadmapDialog,
   openEditItemDialog,
+  settledBoxes,
 } from "./fixtures/dialogs"
 import { words } from "./fixtures/long-fields"
 import { connect, expect, test } from "./fixtures/test"
@@ -34,11 +35,7 @@ async function openItem(page: Page): Promise<Locator> {
 
 /** Whether `inner`'s box lies wholly inside `outer`'s, on both axes. */
 async function expectWithin(outer: Locator, inner: Locator): Promise<void> {
-  const [outerBox, innerBox] = await Promise.all([
-    outer.boundingBox(),
-    inner.boundingBox(),
-  ])
-  if (!outerBox || !innerBox) throw new Error("No box")
+  const [outerBox, innerBox] = await settledBoxes(outer, inner)
   expect(innerBox.x).toBeGreaterThanOrEqual(outerBox.x)
   expect(innerBox.x + innerBox.width).toBeLessThanOrEqual(
     outerBox.x + outerBox.width,
@@ -113,8 +110,7 @@ test("on a laptop, the dialog stays its content's height and shows no scrollbar 
   ).toBeVisible()
   const dialog = await askToRemove(page, ITEM)
 
-  const box = await dialog.boundingBox()
-  if (!box) throw new Error("No box")
+  const [box] = await settledBoxes(dialog)
   expect(box.height).toBeLessThan(LAPTOP.height / 2)
   expect(
     await dialog.evaluate(
@@ -180,12 +176,11 @@ test("on a laptop, a failed Add a roadmap is said in the footer above Add roadma
   await expect(alert).toContainText("Your session expired")
   await expect(slot(dialog, "dialog-footer").getByRole("alert")).toBeVisible()
   expect(await isInView(page, alert)).toBe(true)
-  const [alertBox, addBox] = await Promise.all([
-    alert.boundingBox(),
-    dialog.getByRole("button", { name: "Add roadmap" }).boundingBox(),
-  ])
-  if (!alertBox || !addBox) throw new Error("No box")
-  expect(alertBox.y + alertBox.height).toBeLessThanOrEqual(addBox.y)
+  const [alertBox, addBox] = await settledBoxes(
+    alert,
+    dialog.getByRole("button", { name: "Add roadmap" }),
+  )
+  expect(alertBox.bottom).toBeLessThanOrEqual(addBox.y)
   await expect(
     dialog.getByRole("textbox", { name: "Product name" }),
   ).toHaveValue("Community Nursing roadmap")
@@ -220,14 +215,13 @@ test("on a laptop, a field that takes focus scrolls into the body, clear of the 
 
   await last.focus()
 
-  const [lastBox, header, footer] = await Promise.all([
-    last.boundingBox(),
-    slot(dialog, "dialog-header").boundingBox(),
-    slot(dialog, "dialog-footer").boundingBox(),
-  ])
-  if (!lastBox || !header || !footer) throw new Error("No box")
-  expect(lastBox.y).toBeGreaterThanOrEqual(header.y + header.height)
-  expect(lastBox.y + lastBox.height).toBeLessThanOrEqual(footer.y)
+  const [lastBox, header, footer] = await settledBoxes(
+    last,
+    slot(dialog, "dialog-header"),
+    slot(dialog, "dialog-footer"),
+  )
+  expect(lastBox.y).toBeGreaterThanOrEqual(header.bottom)
+  expect(lastBox.bottom).toBeLessThanOrEqual(footer.y)
 })
 
 test("on a laptop, the add-item dialog pins too: its buttons stay in view while its fields scroll, and so does the note after an item is added (S1, S2)", async ({
@@ -347,14 +341,8 @@ for (const [size, viewport] of [
       element.scrollTop = element.scrollHeight
     })
 
-    const [dialogBox, cancelBox] = await Promise.all([
-      dialog.boundingBox(),
-      cancel.boundingBox(),
-    ])
-    if (!dialogBox || !cancelBox) throw new Error("No box")
+    const [dialogBox, cancelBox] = await settledBoxes(dialog, cancel)
     // The popup's 24px padding, less its 1px border.
-    expect(
-      dialogBox.y + dialogBox.height - (cancelBox.y + cancelBox.height),
-    ).toBeGreaterThanOrEqual(23)
+    expect(dialogBox.bottom - cancelBox.bottom).toBeGreaterThanOrEqual(23)
   })
 }

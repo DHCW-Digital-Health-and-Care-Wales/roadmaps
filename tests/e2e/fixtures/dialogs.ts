@@ -1,6 +1,8 @@
 import type { Locator, Page } from "@playwright/test"
 
 import type { Language } from "./look"
+import type { Box } from "./layout"
+import { boxesOf } from "./layout"
 import { moreButton, openProductDetails } from "./roadmap-page"
 import { connect, expect, roadmapCards } from "./test"
 
@@ -106,12 +108,49 @@ export function cornerClose(dialog: Locator): Locator {
   return dialog.locator('[data-slot="dialog-close-button"]')
 }
 
+/**
+ * Resolves once every animation on the page that ends has ended. A dialog is ready as
+ * focus reaches its first field, before it has slid or zoomed in: reduced motion cuts
+ * that to 0.01 ms, but the first keyframe still holds until the next frame, which a
+ * loaded runner delays (DEF-025). Animations that never end, a spinner's, are left.
+ */
+export async function animationsDone(page: Page): Promise<void> {
+  await page.evaluate(async () => {
+    const running = () =>
+      document
+        .getAnimations()
+        .filter(
+          (animation) =>
+            animation.playState === "running" &&
+            Number.isFinite(
+              Number(animation.effect?.getComputedTiming().endTime),
+            ),
+        )
+    for (let ending = running(); ending.length > 0; ending = running()) {
+      await Promise.allSettled(ending.map((animation) => animation.finished))
+    }
+  })
+}
+
+/**
+ * The boxes of `locators` in the viewport, all read in one step once the page's
+ * animations have ended (`animationsDone`): read a popup's geometry with this, or
+ * `boxOf` of `fixtures/layout.ts` for what is not animating.
+ */
+export async function settledBoxes<Locators extends Locator[]>(
+  ...locators: Locators
+): Promise<{ [At in keyof Locators]: Box }> {
+  const first = locators[0]
+  if (first) await animationsDone(first.page())
+  return boxesOf(...locators)
+}
+
 /** Whether `locator` lies wholly within the screen as it is now scrolled. */
 export async function isInView(page: Page, locator: Locator): Promise<boolean> {
-  const box = await locator.boundingBox()
+  const [box] = await settledBoxes(locator)
   const size = page.viewportSize()
-  if (!box || !size) throw new Error("No box or viewport")
-  return box.y >= 0 && box.y + box.height <= size.height
+  if (!size) throw new Error("No viewport")
+  return box.y >= 0 && box.bottom <= size.height
 }
 
 /** The conflict review's Close in its foot, which its corner close button repeats. */
@@ -124,8 +163,7 @@ export function reviewFooterClose(review: Locator): Locator {
  * outside a form dialog does nothing, which the caller then shows.
  */
 export async function clickOutside(page: Page, dialog: Locator): Promise<void> {
-  const box = await dialog.boundingBox()
-  if (!box) throw new Error("The dialog has no box")
+  const [box] = await settledBoxes(dialog)
   const spots = [
     { x: box.x + box.width / 2, y: box.y / 2 },
     { x: box.x / 2, y: box.y + box.height / 2 },

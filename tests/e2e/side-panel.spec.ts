@@ -11,6 +11,7 @@ import {
   openAddRoadmapDialog,
   openEditItemDialog,
   openEditRoadmapDialog,
+  settledBoxes,
 } from "./fixtures/dialogs"
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
 import { useLanguage } from "./fixtures/look"
@@ -37,11 +38,11 @@ async function openProductA(page: Page) {
   ).toBeVisible()
 }
 
-/** The popup's box, and the screen it sits on. */
+/** The popup's box once it has opened, and the screen it sits on. */
 async function boxOf(page: Page, dialog: Locator) {
-  const box = await dialog.boundingBox()
+  const [box] = await settledBoxes(dialog)
   const size = page.viewportSize()
-  if (!box || !size) throw new Error("No box or viewport")
+  if (!size) throw new Error("No viewport")
   return { box, size }
 }
 
@@ -59,12 +60,11 @@ const slot = (dialog: Locator, name: string) =>
 
 /** Whether the dialog's buttons end where the dialog does, however short its form. */
 async function expectFooterAtFoot(dialog: Locator) {
-  const [footer, panel] = await Promise.all([
-    slot(dialog, "dialog-footer").boundingBox(),
-    dialog.boundingBox(),
-  ])
-  if (!footer || !panel) throw new Error("No box")
-  expect(footer.y + footer.height).toBeCloseTo(panel.y + panel.height, 0)
+  const [footer, panel] = await settledBoxes(
+    slot(dialog, "dialog-footer"),
+    dialog,
+  )
+  expect(footer.bottom).toBeCloseTo(panel.bottom, 0)
 }
 
 test("the account menu offers the dialog, and the way back, and the choice survives a reload (S1, S2, S3, S4)", async ({
@@ -149,6 +149,27 @@ test("on a tall screen, a form that fits still has its buttons at the panel's fo
     await page.keyboard.press("Escape")
     await expect(dialog).toBeHidden()
   }
+})
+
+test("the panel's geometry is read once its opening slide has finished, however late a frame comes (DEF-025 S1)", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1366, height: 1300 })
+  await openProductA(page)
+  // Reduced motion cuts the slide to 0.01 ms, but its first keyframe holds until the
+  // next frame, which a loaded runner delays. A slow slide holds that start for as long.
+  await page.addStyleTag({
+    content: "*, ::before, ::after { animation-duration: 1.5s !important }",
+  })
+
+  const dialog = await openEditItemDialog(page, ITEM)
+
+  const sliding = await dialog.boundingBox()
+  const size = page.viewportSize()
+  if (!sliding || !size) throw new Error("No box or viewport")
+  expect(sliding.x + sliding.width).toBeGreaterThan(size.width + 40)
+  await expectPanel(page, dialog)
+  await expectFooterAtFoot(dialog)
 })
 
 test("on a tall screen, Add a roadmap's buttons are at the panel's foot (S2)", async ({

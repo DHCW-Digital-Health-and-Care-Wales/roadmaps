@@ -15,10 +15,10 @@
 ## Summary
 
 E2E tests that act before the UI has settled have been found one CI failure at a time.
-Two are confirmed: DEF-016 (the item dialog's focus tour counted a focus guard, found in
+Two are confirmed flakes: DEF-016 (the item dialog's focus tour counted a focus guard, found in
 local runs) and DEF-024 (`publishOnce` returns before the publish notice takes focus;
 cause suspected, not proven). The same kind has shown in component tests (DEF-013 a
-dialog's opening focus; DEF-022 and CHO-018 under load or a clock tick, neither seen in CI)
+dialog's opening focus; DEF-022 under load, not seen in CI; CHO-018 once in CI, on a clock tick)
 and `side-panel.spec.ts:256` (session warning) was seen to flake twice in CI, with no
 record. DEF-021 was a real layout defect, not a test. Each flake costs a failed run, a
 retry and a retrospective. Done: the owner has chosen whether to look for the rest of the
@@ -31,11 +31,11 @@ Not measured yet: measuring is the first step. At the delivery's commit, run the
 judge each hit by whether the next assertion can run before the thing it needs has
 finished (a notice taking focus, an animation ending, a menu opening):
 
-| Area              | Search or run                                                                                                                                                                                    | How to judge a hit                                                         |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
-| Shared helpers    | read each export of `tests/e2e/fixtures/` that triggers a close, publish or navigation                                                                                                           | it returns before the focus or notice its action causes has arrived        |
-| Focus right after | `rg -n -B3 -e '\.focus\(\)' -e toBeFocused tests/e2e`                                                                                                                                            | the line before is a click, keypress or helper that moves focus on its own |
-| Load              | `./node_modules/.bin/playwright test <spec> --repeat-each=20 --workers=12` per spec on an 8-core host (DEF-024's Reproduce used 40 repeats of one case); about 47 specs, so time it on one first | any failure that `--workers=4` does not show                               |
+| Area              | Search or run                                                                                                                                                                                           | How to judge a hit                                                         |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Shared helpers    | read each export of `tests/e2e/fixtures/` that triggers a close, publish or navigation                                                                                                                  | it returns before the focus or notice its action causes has arrived        |
+| Focus right after | `rg -n -B3 -e '\.focus\(\)' -e toBeFocused tests/e2e`                                                                                                                                                   | the line before is a click, keypress or helper that moves focus on its own |
+| Load              | `./node_modules/.bin/playwright test <spec> --repeat-each=20 --workers=12` per spec on an 8-core host (DEF-024's Reproduce used 40 repeats of one case); 44 specs at `843acf2`, so time it on one first | any failure that `--workers=4` does not show                               |
 
 ## Acceptance criteria
 

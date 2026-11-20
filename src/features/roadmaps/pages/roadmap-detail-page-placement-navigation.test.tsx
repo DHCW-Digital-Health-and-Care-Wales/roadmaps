@@ -148,6 +148,122 @@ describe("Jumping between a roadmap's placements (STY-053)", () => {
     ).toHaveAccessibleName("Now, 2 items")
   })
 
+  describe("lines up its marks (STY-084)", () => {
+    const WARNING = "svg.lucide-triangle-alert"
+    const TICK = "svg.lucide-check"
+    const DOT = '[data-slot="unpublished-dot"]'
+
+    function row(menu: HTMLElement, name: RegExp) {
+      return within(menu).getByRole("menuitem", { name })
+    }
+
+    it("keeps the dot's place on every row, hidden where nothing is pending (S2, D1)", async () => {
+      const user = await renderPage()
+
+      const menu = await openJumpTo(user)
+      const dots = within(menu)
+        .getAllByRole("menuitem")
+        .map((item) => item.querySelector(DOT))
+      expect(dots).toHaveLength(7)
+      dots.forEach((dot) => {
+        expect(dot).toHaveClass("invisible")
+      })
+    })
+
+    it("shows the dot only on a row with a pending change, the others keeping its place (S1)", async () => {
+      const user = await renderPage()
+      await editItemText(user, "Online booking", "Title", "Online booking 2")
+
+      const menu = await openJumpTo(user)
+      expect(row(menu, /^Later/).querySelector(DOT)).not.toHaveClass(
+        "invisible",
+      )
+      expect(row(menu, /^Now/).querySelector(DOT)).toHaveClass("invisible")
+      // The count, then the dot's place, then the screen reader's phrase, on both.
+      for (const name of [/^Later/, /^Now/]) {
+        const children = [...row(menu, name).children]
+        expect(children.at(-3)).toHaveTextContent(/^\d+$/)
+        expect(children.at(-2)).toBe(row(menu, name).querySelector(DOT))
+        expect(children.at(-1)).toHaveClass("sr-only")
+      }
+    })
+
+    it("puts the warning in the tick's place on the unplaced row, and the tick on the current one (S3, D2)", async () => {
+      const user = await renderPage()
+      // Scrolled to Now.
+      const menu = await openJumpTo(user)
+      await user.click(row(menu, /^Now/))
+      await waitFor(() => {
+        expect(jumpToButton("Jump to: Now")).toBeInTheDocument()
+      })
+      await user.click(jumpToButton("Jump to: Now"))
+      const open = await screen.findByRole("menu")
+
+      const unplaced = row(open, /^Not on the public roadmap/)
+      expect(unplaced.firstElementChild).toHaveAttribute("aria-hidden", "true")
+      expect(unplaced.firstElementChild).toHaveClass("lucide-triangle-alert")
+      expect(unplaced.querySelectorAll(WARNING)).toHaveLength(1)
+      expect(unplaced.querySelector(TICK)).toBeNull()
+      expect(row(open, /^Now/).firstElementChild).toHaveClass("lucide-check")
+      expect(row(open, /^Now/).firstElementChild).not.toHaveClass("invisible")
+      // Every other row keeps an empty place for it.
+      expect(row(open, /^Next/).firstElementChild).toHaveClass("invisible")
+      expect(row(open, /^Next/).querySelector(WARNING)).toBeNull()
+    })
+
+    it("shows the tick, not the warning, on the unplaced row while it is current (S4, D2)", async () => {
+      const user = await renderPage()
+      const menu = await openJumpTo(user)
+      await user.click(row(menu, /^Not on the public roadmap/))
+      await waitFor(() => {
+        expect(
+          jumpToButton("Jump to: Not on the public roadmap"),
+        ).toBeInTheDocument()
+      })
+      await user.click(jumpToButton("Jump to: Not on the public roadmap"))
+
+      const unplaced = row(
+        await screen.findByRole("menu"),
+        /^Not on the public roadmap/,
+      )
+      expect(unplaced.firstElementChild).toHaveClass("lucide-check")
+      expect(unplaced.firstElementChild).not.toHaveClass("invisible")
+      expect(unplaced.querySelector(WARNING)).toBeNull()
+    })
+
+    it("reads each row as before, the empty place and the warning unannounced (S5)", async () => {
+      const user = await renderPage()
+      await editItemText(user, "Online booking", "Title", "Online booking 2")
+
+      const menu = await openJumpTo(user)
+      expectNames(within(menu).getAllByRole("menuitem"), [
+        "Not on the public roadmap, 1 item",
+        "Recently delivered, no items",
+        "Now, 2 items",
+        "Next, no items",
+        "Later, 1 item, unpublished changes",
+        "Delivered this year, no items",
+        "Not doing, no items",
+      ])
+      for (const item of within(menu).getAllByRole("menuitem")) {
+        for (const mark of item.querySelectorAll("svg, " + DOT)) {
+          expect(mark).toHaveAttribute("aria-hidden", "true")
+        }
+      }
+    })
+
+    it("leaves the links with no place for a dot, and the warning before the name (S6, D3)", async () => {
+      await renderPage({ tablet: true })
+
+      expect(links().querySelector(DOT)).toBeNull()
+      const unplaced = within(links()).getByRole("link", {
+        name: /^Not on the public roadmap/,
+      })
+      expect(unplaced.firstElementChild).toHaveClass("lucide-triangle-alert")
+      expect(links().querySelector(TICK)).toBeNull()
+    })
+  })
+
   it("moves focus to the placement's heading from the menu, and names it the current one (S1, S3)", async () => {
     const user = await renderPage()
 

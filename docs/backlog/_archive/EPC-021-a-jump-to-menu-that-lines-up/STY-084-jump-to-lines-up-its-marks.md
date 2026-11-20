@@ -1,6 +1,6 @@
 # STY-084: A Product Lead sees "Jump to" line up its names, counts and dots
 
-- **Status**: Proposed — grilled with the owner on 2026-11-20 (D1–D3)
+- **Status**: Done
 - **Type**: Feature
 - **Area**: Features/UI
 - **Epic**: [EPC-021-a-jump-to-menu-that-lines-up](README.md)
@@ -110,3 +110,28 @@ name today (EPC-021 F2).
 - **The links from 1024px** (D3).
 - **The dot's colour on a focused or highlighted row.** Unchanged here; STY-053 and
   STY-055 own it.
+
+## Delivery
+
+### Departures
+
+None.
+
+### Contract for dependents
+
+`JumpTargetLabel` takes `inMenu`: the menu then owns the leading mark (`LeadingMark` in
+`jump-to-menu.tsx`: tick, else the unplaced warning, else an empty place) and the label
+keeps the dot's place on every row, `invisible` where nothing is pending. Without it, as
+in the links, the label is as before.
+
+### Scenario evidence
+
+| Scenario   | Held by                                                                                                                                                      |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| S1         | `tests/e2e/placement-navigation.spec.ts` (`lines up the open menu's names, counts and dots…`), red when the hidden dot's place was `hidden`: counts 16px out |
+| S2, S3, S4 | `roadmap-detail-page-placement-navigation.test.tsx` (`lines up its marks`), four tests red with the implementation reverted                                  |
+| S5, S6     | same suite (`reads each row as before…`, `leaves the links with no place for a dot…`); they pass before and after, as regression guards                      |
+| S7         | before/after screenshots in Welsh, `.artifacts/screenshots/STY-084/sty084-menu-cy-*`                                                                         |
+
+The layout tests took their red from breaking finished code, after the code, as the
+record's Tests section allows; none was test-first.

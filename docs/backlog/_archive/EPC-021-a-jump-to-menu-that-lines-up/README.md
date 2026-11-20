@@ -1,7 +1,7 @@
 # EPC-021: A "Jump to" menu that lines up — the edited mark pushes counts out of line
 
-- **Status**: Active — one story, raised and grilled by the owner on 2026-11-20
-- **Progress**: 0 of 1 terminal; next selectable: STY-084
+- **Status**: Done — one story, raised and grilled by the owner on 2026-11-20, delivered
+- **Progress**: 1 of 1 terminal (STY-084)
 - **Binding ADRs**: ADR-008, ADR-010
 
 ## Summary
@@ -54,7 +54,7 @@ No string is added or changed.
 
 | ID      | Story                                                                                  | Area        | Depends on | State |
 | ------- | -------------------------------------------------------------------------------------- | ----------- | ---------- | ----- |
-| STY-084 | ["Jump to" lines up its names, counts and dots](STY-084-jump-to-lines-up-its-marks.md) | Features/UI | —          |       |
+| STY-084 | ["Jump to" lines up its names, counts and dots](STY-084-jump-to-lines-up-its-marks.md) | Features/UI | —          | ✅    |
 
 ## Sequencing
 
@@ -74,6 +74,6 @@ None.
 
 ## Related
 
-- [EPC-012](../_archive/EPC-012-app-shell-and-navigation/README.md): STY-053 built the
+- [EPC-012](../EPC-012-app-shell-and-navigation/README.md): STY-053 built the
   menu, its counts and dots; STY-055 the dot app-wide
 - ADR-010 (DHCW look): the dot's and the count's tokens

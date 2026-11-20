@@ -13,8 +13,8 @@
 ## Summary
 
 The test that a keyboard "To the top" moves the last of 20 Now items, in the cards view,
-failed in CI twice since STY-080 merged, both times passing on a retry: on main after
-STY-080 (`94d1e8c`) and on STY-081's PR #209. Under load it fails locally about 1 run
+failed in CI three times since STY-080 merged, each time passing on a retry: on main
+after STY-080 (`94d1e8c`), on STY-081's PR #209 and on STY-082's PR #216. Under load it fails locally about 1 run
 in 40. The product looks right. The test sets up with a publish, then focuses the item's
 Move, presses Enter and chooses from its menu. Under load, the publish notice takes focus
 anywhere in that sequence: before the first Enter, so no menu opens; before the choice,

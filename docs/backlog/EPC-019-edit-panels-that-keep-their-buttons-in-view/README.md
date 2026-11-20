@@ -136,7 +136,9 @@ owner asked for once the trial had begun, made the side panel the default after 
 
 ## Defects
 
-None.
+- [DEF-025](../defects/DEF-025-a-side-panel-test-measures-the-panel-before-it-has-slid-in.md):
+  a side panel test measures the panel before it has slid in, so E2E fails now and
+  then, seen in CI on PR #216. Needs triage; found by STY-082's retro.
 
 ## Related
 

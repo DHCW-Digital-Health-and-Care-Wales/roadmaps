@@ -29,12 +29,12 @@ At commit `d6bbc69`. The source is the E2E job's step timings in the last 40 CI 
 E2E jobs, from 2026-11-19 18:14 to 2026-11-20 14:48 UTC; `gh api
 repos/<repo>/actions/runs/<id>/jobs`), with the job logs of PRs #206, #207 and #209:
 
-| Area                                     | Measurement                                                                                                                                    | Verdict                    |
-| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
-| "Install Chromium's system dependencies" | 8–19 s in 15 of 18 successful runs, 66 s once; 477 s (PR #206) and 478 s (PR #209), each "Fetched 21.9 MB in 7min 4xs" for the same 9 packages | intermittent, about 1 in 9 |
-| E2E job total                            | 482–703 s normally; 1100 s (18 min 20 s) in both slow runs, against `timeout-minutes: 20`                                                      | 100 s from a timeout       |
-| `pnpm test:e2e` in the slow runs         | 9.9 min, 663 passed with 1 flaky in #209 (`moved-travel.spec.ts:207`, retried), 659 passed in #206                                             | not the cause              |
-| A run beside a slow one                  | PR #207's E2E job started 13:34:21, beside #206's; its install step took 13 s                                                                  | per runner, not per hour   |
+| Area                                     | Measurement                                                                                                                                              | Verdict                    |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| "Install Chromium's system dependencies" | 8–19 s in 15 of 18 successful runs, 66 s once; 477 s (PR #206) and 478 s (PR #209), "Fetched 21.9 MB in 7min 48s" and "in 7min 51s", the same 9 packages | intermittent, about 1 in 9 |
+| E2E job total                            | 482–703 s normally; 1100 s (18 min 20 s) in both slow runs, against `timeout-minutes: 20`                                                                | 100 s from a timeout       |
+| `pnpm test:e2e` in the slow runs         | 9.9 min, 663 passed with 1 flaky in #209 (`moved-travel.spec.ts:207`, retried), 659 passed in #206                                                       | not the cause              |
+| A run beside a slow one                  | PR #207's E2E job started 13:34:21, beside #206's; its install step took 13 s                                                                            | per runner, not per hour   |
 
 ## Scope
 
@@ -44,8 +44,9 @@ system packages, a technical choice, recorded as a Decision:
 - (a) Run the job in Playwright's image for the pinned version
   (`mcr.microsoft.com/playwright:v<version>-<ubuntu>`), which already holds Chromium and
   its packages (recommended). This drops both install steps and the browser cache. The
-  image tag repeats the `@playwright/test` version, and Dependabot's npm update of the
-  package leaves the tag as it is, so S2 needs a check that compares the two.
+  image tag repeats the `@playwright/test` version, which is bumped by hand (Dependabot
+  updates only the workflow's actions), so S2 needs a check that compares the two. The
+  image pull is new time before the first step, so S1 counts it.
 - (b) Cache the 9 `.deb` files, keyed on the Playwright version and the runner image,
   and install them from the cache. This keeps the job on the runner. Restoring
   root-owned apt archives takes its own step.
@@ -60,7 +61,8 @@ The evidence for each is an observed CI run, recorded in Delivery.
 
 **Given** a pull request run whose browser cache is warm **When** the E2E job runs **Then**
 no step downloads Chromium's system packages from the runner's apt mirror, and the job's
-time before `pnpm test:e2e` is no longer than today's usual run (about 30 s)
+time before `pnpm test:e2e`, an image pull included, is under 2 minutes (about 30 s
+today, 8 minutes in a slow run)
 
 ### S2: A Playwright bump keeps the browser and its packages in step
 

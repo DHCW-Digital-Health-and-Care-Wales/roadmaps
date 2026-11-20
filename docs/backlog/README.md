@@ -97,7 +97,7 @@ Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status toke
 | [DEF-021](_archive/defects/DEF-021-the-roadmap-header-grows-for-a-frame-as-it-lets-go-on-scroll-up.md)              | The roadmap header grows for a frame as it lets go on scroll up, moving the items                | Done         |
 | [DEF-022](_archive/defects/DEF-022-page-tests-time-out-when-the-host-is-busy.md)                                    | Page tests time out when the host is busy                                                        | Done         |
 | [DEF-023](_archive/defects/DEF-023-an-open-quick-add-title-is-lost-when-a-read-leaves-the-roadmap-with-no-items.md) | An open quick add title is lost when a read leaves the roadmap with no items                     | Won't fix    |
-| [DEF-024](defects/DEF-024-a-moved-item-test-presses-enter-before-the-publish-notice-takes-focus.md)                 | A moved item test presses Enter before the publish notice has taken focus                        | Needs triage |
+| [DEF-024](defects/DEF-024-a-moved-item-test-moves-focus-before-the-publish-notice-takes-it.md)                      | A moved item test moves focus before the publish notice has taken it                             | Needs triage |
 
 A defect found during delivery is recorded in `defects/` with
 Status `Needs triage` and listed here until the owner triages it.

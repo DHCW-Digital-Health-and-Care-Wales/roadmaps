@@ -5,6 +5,10 @@ behind an `ApiRoadmapRepository`; the UI, hooks and routes do not change (ADR-00
 port is `RoadmapRepository` in `src/domain/roadmap/roadmap-repository.ts`: read its
 doc comments first, since they are the contract.
 
+The database behind the API is decided by ADR-015: scoped by tenant, keeping every
+version as change sets and snapshots, with a private scratch, a shared draft and
+publications. EPC-022 builds it and this adapter.
+
 1. **Adapter.** Create `src/infrastructure/roadmaps-api/` with:
    - a small HTTP client that uses `fetch`, passes the caller's `signal` through, and maps
      failures to `AppError` kinds the same way the Sheets client does (401 →

@@ -281,6 +281,50 @@ never shows. A new item's is made when the item is added, and written with its r
 (ADR-012). Only infrastructure and setup documentation use this term.
 _Avoid_: Row number, key
 
+### Tenancy and history
+
+Planned with the database that replaces the spreadsheet (ADR-015).
+
+**Tenant** _(planned)_:
+An NHS Wales organisation that keeps its own roadmaps, lists and people in this tool;
+DHCW is the first. Nothing one tenant holds is visible to another.
+_Avoid_: Organisation (a body a roadmap item's work is for), account, workspace
+
+**Assignment** _(planned)_:
+A Product Lead's right to edit one roadmap. Admins edit every roadmap without one. Not
+the roadmap's public "Product Lead" text.
+_Avoid_: Ownership, lead (as a permission)
+
+**Scratch** _(planned)_:
+A person's own unsaved edits to one roadmap, kept for them alone until they save or
+discard them, or until they expire. Never public, never history.
+_Avoid_: Pending edit (the browser-held edits of the spreadsheet era), draft
+
+**Draft** _(planned)_:
+A roadmap's saved content that is not yet published, shared by its assigned leads; each
+save adds to it.
+_Avoid_: Pending edit, working copy
+
+**Change set** _(planned)_:
+One saved step by one person: a save, a publish, a restore, a list or access change.
+History is the list of a roadmap's change sets, each saying who, when and what changed.
+_Avoid_: Commit, revision (its number), audit entry
+
+**Snapshot** _(planned)_:
+A roadmap, or a tenant's lists, exactly as it stood after one change set; every past
+version is one.
+_Avoid_: Backup, copy
+
+**Publication** _(planned)_:
+The snapshot of a roadmap the public site shows, chosen by publishing; unpublishing
+leaves a roadmap with none.
+_Avoid_: Release, live version
+
+**Retired** _(planned)_:
+Of a roadmap or a list entry: taken out of use but kept, with its history and its name,
+and able to be reinstated. Nothing a roadmap shows is deleted.
+_Avoid_: Deleted, archived, removed
+
 ### Connection
 
 Plumbing: these terms matter while Google is the data source, and copy keeps them out of

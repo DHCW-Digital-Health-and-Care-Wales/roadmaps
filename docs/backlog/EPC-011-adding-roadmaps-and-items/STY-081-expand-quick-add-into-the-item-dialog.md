@@ -24,7 +24,7 @@ and a placement to start from (`features/`); copy in both catalogues; E2E.
 
 ## Acceptance criteria
 
-### S1: The field has "Add more details" at its end (grilling R2 Q2)
+### S1: The field has "Add more details" at its end (quick add round 2 Q2)
 
 **Given** a quick add field is open, in either view, on any screen
 **When** Sam looks at it, or hovers its end
@@ -33,13 +33,13 @@ same words as its tooltip, and is in the tab order between the field and Add
 
 ### S2: It opens the item dialog with the title and placement
 
-**Given** Sam has typed " Book a hearing test " in Next's field
+**Given** Sam has typed `␣Book␣a␣␣hearing test␣` (␣ a space) in Next's field
 **When** Sam chooses "Add more details"
 **Then** the item dialog opens in its adding form with "Book a hearing test" as its
 title, Next chosen, every other field empty, and focus at the end of the title
 **And** with nothing typed, it opens with an empty title and Next chosen
 
-### S3: Adding there ends the run (grilling R2 Q3)
+### S3: Adding there ends the run (quick add round 2 Q3)
 
 **Given** that dialog
 **When** Sam writes a description and chooses "Add item"
@@ -51,9 +51,20 @@ S3 has it; the quick add field is closed
 ### S4: Cancelling brings the field back
 
 **Given** that dialog, opened from Next's field with a title typed
-**When** Sam chooses Cancel, presses Escape, closes it from its corner or clicks outside
+**When** Sam chooses Cancel, presses Escape or closes it from its corner, having added
+nothing in it
 **Then** nothing is added, the dialog closes, and Next's field is open again with the
 title as typed, focused, with the cursor at its end
+**And** a click outside the dialog does nothing, as for every dialog (the epic's _The
+dialogs_)
+
+### S7: Closing after "Add and start another" ends the run (D4)
+
+**Given** the dialog opened from Next's field with "Book a hearing test", and Sam has
+chosen "Add and start another", so that item is added and the form is empty
+**When** Sam chooses Cancel, presses Escape or closes it from its corner
+**Then** the dialog closes, the quick add field stays closed, and focus is on the last
+added card's Edit, as closing after "Add and start another" does today
 
 ### S5: Available as quick add is
 
@@ -73,10 +84,13 @@ dialog
 
 - **D1** (owner, 2026-11-20, prototype review): an expand button at the end of the
   quick add field opens the full item dialog, with any partly typed title filled in.
-- **D2** (owner, 2026-11-20, R2 Q2): named "Add more details", over "Open the full form"
+- **D2** (owner, 2026-11-20, quick add round 2 Q2): named "Add more details", over "Open the full form"
   and "Open in the item dialog".
-- **D3** (owner, 2026-11-20, R2 Q3): adding in the dialog leaves focus on the new card's
-  Edit, over reopening a fresh quick add field.
+- **D3** (owner, 2026-11-20, quick add round 2 Q3): adding in the dialog leaves focus on
+  the new card's Edit, over reopening a fresh quick add field.
+- **D4** (agent, 2026-11-20, from review): once the dialog has added an item, closing it
+  ends the run as D3 does, over bringing the field back with a title already added,
+  which Enter would add twice. The owner may prefer the field back, empty.
 
 ## Starting point
 

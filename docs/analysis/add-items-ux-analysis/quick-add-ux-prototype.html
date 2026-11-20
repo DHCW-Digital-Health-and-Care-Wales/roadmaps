@@ -881,7 +881,6 @@
         position: relative;
         min-width: 0;
       }
-      /* In a row (the compact view) the field takes the room left. */
       .qa-field .inp {
         padding-right: 44px;
       }
@@ -914,9 +913,6 @@
         flex-wrap: wrap;
         align-items: center;
         gap: 8px;
-      }
-      .qa-acts .qa-hint {
-        margin-left: 4px;
       }
       .narrow .qa-entry {
         gap: 8px;
@@ -987,10 +983,6 @@
         min-height: 40px;
         padding-block: 6px;
       }
-      .none-line {
-        margin: 0;
-        color: var(--muted-foreground);
-      }
       .pfoot {
         display: flex;
         flex-wrap: wrap;
@@ -1015,18 +1007,22 @@
         <p>
           Design E of the
           <a href="add-items-ux-prototypes.html">add items frames</a>, as a
-          working control. Each horizon and section ends with a quiet “Quick
-          add”. Choosing it opens a title field in its place. Enter adds the
-          item there, title only, and opens a fresh field for the next. Escape,
-          or leaving the field any other way, drops what is typed and puts “Add
-          item” back. Add and Cancel sit under the field on every screen, since
-          a page cannot tell whether a keyboard with an Escape key is attached;
-          Enter and Escape do the same, without a hint. The expand button at the
-          end of the field opens the full item dialog with the title typed so
-          far; Cancel there brings the field back as it was. Try it in the cards
-          view and the compact view. Remove works on a new item; Move, Edit,
-          Publish and Discard are drawn but do nothing here. Move and Edit are
-          32px tall, as in the app; the page's own buttons and a form's are
+          working control. Each horizon and section ends with a quiet “Add an
+          item” (“Add the first item” where it has none). Choosing it opens a
+          title field in its place. Enter, or Add, adds the item there, title
+          only, and opens a fresh field for the next. Escape, Cancel, or leaving
+          the field any other way, drops what is typed and puts “Add an item”
+          back. Add and Cancel show on every screen, since a page cannot tell
+          whether a keyboard with an Escape key is attached: under the field in
+          the cards view and on a phone, beside it in the compact view on a
+          wider screen. The expand button at the end of the field, “Add more
+          details”, opens the item dialog with the title typed so far; Cancel
+          there brings the field back as it was. Try it in the cards view and
+          the compact view. Remove on a new card drops it at once here; the app
+          asks first (STY-049). Move, Edit, a published card's Remove, Publish
+          and Discard are drawn but do nothing. In the compact view, as in the
+          app, Remove is at the foot of an opened row, which this page does not
+          draw. Move and Edit are 32px tall, as in the app; a form's buttons are
           40px.
         </p>
         <div class="controls">
@@ -1110,14 +1106,14 @@
             </li>
             <li>
               Type “Book a hearing test”, choose the expand button at the end of
-              the field, write a description and choose “Add an item”. Do it
-              again and choose Cancel, or press Escape: the field comes back
-              with the title in it.
+              the field, write a description and choose “Add item”. Do it again
+              and choose Cancel, or press Escape: the field comes back with the
+              title in it.
             </li>
             <li>Switch to Compact and do the same.</li>
             <li>
-              Look at Not doing, which has no items, with each “Empty placement”
-              setting; add an item there.
+              Look at Not doing, which has no items: it offers “Add the first
+              item”. Add one there.
             </li>
             <li>
               Do it all with the keyboard alone, on the phone, and in the dark
@@ -1181,7 +1177,7 @@
                 >
                 <p class="qa-hint">
                   Phase, tags, organisations and details are in the app's dialog
-                  too; this prototype leaves them out, and offers only the two
+                  too; this prototype leaves them out, and offers only the three
                   placements it draws.
                 </p>
                 <p class="qa-hint">
@@ -1333,7 +1329,7 @@
           document.getElementById(`${id}-qa-${p}`)?.focus()
         }
 
-        function card(p, item, narrow) {
+        function card(p, item) {
           const fields = []
           const pair = (name, value) =>
             value && fields.push(h("dt", {}, name), h("dd", {}, value))
@@ -1345,9 +1341,12 @@
           const acts = h(
             "div",
             { class: "actions" },
-            ...(item.isNew
-              ? [action("Remove", "trash", item.title, remover(p, item))]
-              : []),
+            action(
+              "Remove",
+              "trash",
+              item.title,
+              item.isNew ? remover(p, item) : null,
+            ),
             action("Move", "move", item.title),
             h(
               "button",
@@ -1420,17 +1419,6 @@
             h(
               "div",
               { class: "actions" },
-              ...(item.isNew
-                ? [
-                    action(
-                      "Remove",
-                      "trash",
-                      item.title,
-                      remover(p, item),
-                      narrow,
-                    ),
-                  ]
-                : []),
               action("Move", "move", item.title, null, narrow),
               action("Edit", "edit", item.title, null, narrow),
             ),
@@ -1508,9 +1496,7 @@
             const item = newItem(input.value)
             world[p] = [...world[p], item]
             draw()
-            say(
-              `“${item.title}” added to ${p}. ${changes(pendingCount(world))}.`,
-            )
+            say(`“${item.title}” was added to ${p}.`)
             open(p)
           }
           // A press on a button of the field's own keeps focus in the field,
@@ -1652,7 +1638,7 @@
           from = null
           dlg.close("added")
           draw()
-          say(`“${item.title}” added to ${p}. ${changes(pendingCount(world))}.`)
+          say(`“${item.title}” was added to ${p}.`)
           // As "Add item" does today (STY-046 S3): focus on the new card's Edit.
           ;[...host.querySelectorAll("button")]
             .find(

@@ -100,7 +100,7 @@ one possible place without a new kind of write: after the last row.
    About field and no short name (F5). STY-043.
 4. One item dialog adds and edits: the card's in-place form goes, and Edit opens the
    dialog with today's fields (F5). STY-044.
-5. A Product Lead adds an item from one "Add an item" button on the roadmap's page. The
+5. A Product Lead adds an item from the "Add an item" button on the roadmap's page. The
    item is pending, tagged "New", until the roadmap is published or saved, when it is
    written after the roadmap's last item (F3, F6). STY-045 (the write), STY-046 (the
    dialog), STY-047 (the publish dialog).
@@ -123,6 +123,11 @@ one possible place without a new kind of write: after the last row.
    deletes its row, last in the write. A co-lead's change to the item is a conflict,
    and an item already gone counts as removed (STY-070, the write; STY-049, the
    screen). Settled in the grilling of 2026-11-19.
+10. Quick add: each placement ends with "Add an item", which opens a title field in its
+    place; Enter adds a new item there, title only, and opens the next field; leaving
+    drops it. Its expand button opens the item dialog with the title and placement, and
+    the publish dialog flags a new item with only a title. Adding never asks to
+    reconnect. STY-080 (the control), STY-081 (the expand), STY-082 (the flag).
 
 ## Shared assumptions and contracts
 
@@ -187,7 +192,8 @@ Reviewers hold each PR to this.
 
 "Round n" is the grilling on adding a roadmap; "items round n" is the one on adding
 an item, which also settled the dialogs. Both were on 2026-11-14, and each story's
-Decisions cite the round and question an answer came from.
+Decisions cite the round and question an answer came from. "Quick add round n" is the
+grilling of 2026-11-20 on quick add (STY-080 to STY-082).
 
 ### Glossary
 
@@ -195,7 +201,8 @@ STY-040 adds **Short name** and brings **Roadmap**, **Published roadmap** and
 **Worksheet** (the `Template` entry) up to date. STY-045 brings **Pending edit** and
 **Roadmap item** up to date. **Order** and **Position** were added, and **Pending
 edit** and **Conflict** extended to orders, by the PR that wrote STY-050 and STY-051.
-STY-070 extends **Pending edit** and **Conflict** to a removal.
+STY-070 extends **Pending edit** and **Conflict** to a removal. **Quick add** was added,
+planned, by the PR that wrote STY-080 to STY-082.
 
 ## Stories
 
@@ -230,10 +237,7 @@ STY-048 waits for grilling; when grilled, it follows STY-040, by preference. STY
 comes before STY-049 (owner, 2026-11-19): the write ahead of its screen. STY-051 comes before STY-050 (owner,
 2026-11-16): it brings the row moves STY-050 builds on, and is usable on its own. Both
 change the publish plan and the roadmap's page, so neither runs beside the other or
-beside STY-070 or STY-049, nor do those two beside each other. Quick add (owner,
-2026-11-20) delivers STY-080, then STY-081, then STY-082, one at a time: STY-080 and
-STY-081 change the roadmap's page and the item dialog, and STY-082 reads the new items
-STY-080 makes title-only.
+beside STY-070 or STY-049, nor do those two beside each other. Quick add (owner, 2026-11-20) delivers STY-080, then STY-081, then STY-082, one at a time: each depends on STY-080, STY-080 and STY-081 change the roadmap's page and the item dialog, and STY-082 reads the new items STY-080 makes title-only.
 
 ```mermaid
 flowchart LR
@@ -245,7 +249,7 @@ flowchart LR
   STY-051 --> STY-050
   STY-070 --> STY-049
   STY-080 --> STY-081
-  STY-080 -.-> STY-082
+  STY-080 --> STY-082
 ```
 
 ## Out of scope

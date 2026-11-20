@@ -3,8 +3,8 @@
 - **Status**: Active — grilled with the owner on 2026-11-14; STY-040 to STY-047
   delivered; reordering settled on 2026-11-16 as STY-051 then STY-050, both delivered;
   removing a published item grilled on 2026-11-19 as STY-070 then STY-049, both
-  delivered
-- **Progress**: 12 of 13 terminal; next selectable: none; blocked on: STY-048 waits for
+  delivered; quick add grilled on 2026-11-20 as STY-080 to STY-082
+- **Progress**: 12 of 16 terminal; next selectable: STY-080; blocked on: STY-048 waits for
   grilling
 - **Binding ADRs**: ADR-012, ADR-011, ADR-009, ADR-013, ADR-014, ADR-002, ADR-003, ADR-005,
   ADR-006, ADR-010, ADR-008
@@ -20,7 +20,9 @@ dialogs: one for a roadmap, adding it or editing "About this roadmap" ("Product
 details" since STY-065), and one for an
 item. The in-place edit forms go. A Product Lead can also put a placement's items in
 the order they want (STY-051, STY-050), and remove a published item, pending until
-published (STY-070, STY-049). Removing a roadmap is recorded for later.
+published (STY-070, STY-049). Quick add, a title field ending each placement, adds
+items where they will go, one after another (STY-080 to STY-082). Removing a roadmap is
+recorded for later.
 
 ## Owner decisions waiting
 
@@ -212,6 +214,9 @@ STY-070 extends **Pending edit** and **Conflict** to a removal.
 | STY-050 | [A Product Lead reorders the items in a placement](../_archive/EPC-011-adding-roadmaps-and-items/STY-050-reorder-items-in-a-placement.md)                                   | Domain + Infrastructure + Features/UI + i18n (en + cy) + E2E + Docs | STY-051                   | ✅    |
 | STY-051 | [A moved item goes last in its new placement](../_archive/EPC-011-adding-roadmaps-and-items/STY-051-a-moved-item-goes-last-in-its-new-placement.md)                         | Domain + Infrastructure + Features/UI + i18n (en + cy) + E2E + Docs | —                         | ✅    |
 | STY-070 | [The repository publishes a removed item](../_archive/EPC-011-adding-roadmaps-and-items/STY-070-the-repository-publishes-a-removed-item.md)                                 | Domain + Infrastructure + Docs                                      | —                         | ✅    |
+| STY-080 | [A Product Lead adds items where they will go, by title alone (quick add)](STY-080-quick-add-items-where-they-go.md)                                                        | Features/UI + i18n (en + cy) + E2E                                  | —                         |       |
+| STY-081 | [A quick add title opens in the item dialog for its other details](STY-081-expand-quick-add-into-the-item-dialog.md)                                                        | Features/UI + i18n (en + cy) + E2E                                  | STY-080                   |       |
+| STY-082 | [The publish dialog flags a new item that has only a title](STY-082-the-publish-dialog-flags-a-title-only-item.md)                                                          | Features/UI + i18n (en + cy) + E2E                                  | STY-080 (preferred)       |       |
 
 ## Sequencing
 
@@ -225,7 +230,10 @@ STY-048 waits for grilling; when grilled, it follows STY-040, by preference. STY
 comes before STY-049 (owner, 2026-11-19): the write ahead of its screen. STY-051 comes before STY-050 (owner,
 2026-11-16): it brings the row moves STY-050 builds on, and is usable on its own. Both
 change the publish plan and the roadmap's page, so neither runs beside the other or
-beside STY-070 or STY-049, nor do those two beside each other.
+beside STY-070 or STY-049, nor do those two beside each other. Quick add (owner,
+2026-11-20) delivers STY-080, then STY-081, then STY-082, one at a time: STY-080 and
+STY-081 change the roadmap's page and the item dialog, and STY-082 reads the new items
+STY-080 makes title-only.
 
 ```mermaid
 flowchart LR
@@ -236,6 +244,8 @@ flowchart LR
   STY-045 --> STY-046 --> STY-047
   STY-051 --> STY-050
   STY-070 --> STY-049
+  STY-080 --> STY-081
+  STY-080 -.-> STY-082
 ```
 
 ## Out of scope
@@ -335,6 +345,10 @@ flowchart LR
   "Down one" and "To the bottom" in each card's Move menu; "Order changed" and "Undo
   order" beside the placement's heading; one line in the publish dialog. Recorded in
   STY-050's Decisions (D3–D7).
+- [`docs/analysis/add-items-ux-analysis.md`](../../analysis/add-items-ux-analysis.md):
+  five ways to add items beyond the one "Add an item" button, and a working version of
+  quick add. Outcome: E, quick add, grilled into STY-080 to STY-082 on 2026-11-20; A to D
+  are not taken.
 - `docs/analysis/roadmaps-tab-format.md` and `docs/analysis/roadmap-tab-format.md`: the
   roadmap index and roadmap tab formats, and the `Template` tab.
 - [EPC-008](../_archive/EPC-008-publishing-and-freshness/README.md): "Publish roadmap",

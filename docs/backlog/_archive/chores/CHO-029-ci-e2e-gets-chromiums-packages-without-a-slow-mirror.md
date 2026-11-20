@@ -100,12 +100,12 @@ with `--ipc=host`, and installs no browser or system package. A Playwright bump
 changes the image tag and digest in `.github/workflows/ci.yml` with the version in
 `package.json` (`docker pull mcr.microsoft.com/playwright:v<version>-noble` prints
 the digest); the job's _Check the container has the Playwright browser_ step fails
-with that instruction when it does not. Local runs still install Chromium
+with that instruction when the image lacks the Chromium the installed Playwright needs. Local runs still install Chromium
 (`AGENTS.md`, _Commands_).
 
 ### Scenario evidence
 
 | Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                 |
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1       | CI run https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/actions/runs/44772912803 (a manual run of the branch at `674d334`): the E2E job started 16:23:40 and `pnpm test:e2e` at 16:24:20, 40 s later, of which _Initialize containers_ (the image pull) took 21 s. Its steps include no apt step, no browser cache and no install of Chromium; the job took 11 min 2 s and passed. |     |
+| S1       | CI run https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/actions/runs/44772912803 (a manual run of the branch at `674d334`): the E2E job started 16:23:40 and `pnpm test:e2e` at 16:24:20, 40 s later, of which _Initialize containers_ (the image pull) took 21 s. Its steps include no apt step, no browser cache and no install of Chromium; the job took 11 min 2 s and passed. |
 | S2       | The check step's script, with the repository mounted in the 1.65.0 image, exits 1 with Playwright's "Please update docker image as well" and the step's `::error::` naming v1.64.1; in the 1.64.1 image it exits 0 (local run).                                                                                                                                                                         |

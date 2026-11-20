@@ -9,7 +9,7 @@
 - **Binding ADRs**: none
 - **Suggested model**: Sonnet — a wait in two helpers of one spec, shown by a paused
   animation
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/218
 
 ## Summary
 

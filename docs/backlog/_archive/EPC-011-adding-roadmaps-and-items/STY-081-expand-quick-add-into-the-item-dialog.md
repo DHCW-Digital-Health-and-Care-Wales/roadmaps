@@ -8,6 +8,7 @@
 - **Binding ADRs**: ADR-012, ADR-014, ADR-008, ADR-010
 - **Suggested model**: Opus — the item dialog has never taken initial values, and its
   focus and closing rules must hold with a field to come back to
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/209
 
 ## Summary
 

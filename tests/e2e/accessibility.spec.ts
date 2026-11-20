@@ -1,10 +1,7 @@
 import AxeBuilder from "@axe-core/playwright"
 import type { Page } from "@playwright/test"
 
-import {
-  chooseFromAccountMenu,
-  disconnectFromHeader,
-} from "./fixtures/account-menu"
+import { disconnectFromHeader } from "./fixtures/account-menu"
 import {
   addItem,
   askToRemove,
@@ -26,7 +23,7 @@ import {
   withRoadmapIndex,
   withTabItems,
 } from "./fixtures/fake-sheets"
-import { useLanguage, useTheme } from "./fixtures/look"
+import { useDialog, useLanguage, useTheme } from "./fixtures/look"
 import {
   productDetailsField,
   conflictReview,
@@ -142,7 +139,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expectNoAxeViolations(page, theme)
     })
 
-    test("the item dialog as a side panel, a laptop's and a short window's (STY-077)", async ({
+    test("the item form as a side panel, a laptop's and a short window's (STY-077)", async ({
       page,
     }) => {
       await page.goto("./#/roadmaps/producta")
@@ -150,7 +147,6 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expect(
         page.getByRole("heading", { level: 3, name: "Minimal card" }),
       ).toBeVisible()
-      await chooseFromAccountMenu(page, "Edit in a side panel")
 
       const panel = await openEditItemDialog(page, "Minimal card")
       await expectNoAxeViolations(page, theme)
@@ -159,6 +155,21 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
 
       await page.setViewportSize({ width: 844, height: 390 })
       await openEditItemDialog(page, "Minimal card")
+      await expectNoAxeViolations(page, theme)
+    })
+
+    test("the item form as a dialog, once a Product Lead chooses it (STY-083)", async ({
+      page,
+    }) => {
+      await useDialog(page)
+      await page.goto("./#/roadmaps/producta")
+      await connect(page)
+      await expect(
+        page.getByRole("heading", { level: 3, name: "Minimal card" }),
+      ).toBeVisible()
+
+      await openEditItemDialog(page, "Minimal card")
+
       await expectNoAxeViolations(page, theme)
     })
 

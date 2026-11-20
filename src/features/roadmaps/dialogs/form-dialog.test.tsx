@@ -64,21 +64,22 @@ describe("FormDialog's position (STY-077)", () => {
     localStorage.clear()
   })
 
-  it("is centred until a Product Lead chooses the side panel (D1)", () => {
-    renderDialog()
-
-    expect(screen.getByRole("dialog")).toHaveAttribute(
-      "data-position",
-      "center",
-    )
-  })
-
-  it("opens along the right once the side panel is chosen, with the same form and close button (S2)", async () => {
-    localStorage.setItem(EDIT_SURFACE_STORAGE_KEY, "panel")
+  it("opens along the right until a Product Lead chooses a dialog (STY-083 S1)", async () => {
     const onClose = renderDialog()
 
     const dialog = screen.getByRole("dialog", { name: "A form" })
     expect(dialog).toHaveAttribute("data-position", "right")
+    expect(screen.getByRole("textbox", { name: "First field" })).toBeVisible()
+    await userEvent.click(screen.getByRole("button", { name: "Close" }))
+    expect(onClose).toHaveBeenCalledOnce()
+  })
+
+  it("is centred once a dialog is chosen, with the same form and close button (STY-083 S2)", async () => {
+    localStorage.setItem(EDIT_SURFACE_STORAGE_KEY, "dialog")
+    const onClose = renderDialog()
+
+    const dialog = screen.getByRole("dialog", { name: "A form" })
+    expect(dialog).toHaveAttribute("data-position", "center")
     expect(screen.getByRole("textbox", { name: "First field" })).toBeVisible()
     await userEvent.click(screen.getByRole("button", { name: "Close" }))
     expect(onClose).toHaveBeenCalledOnce()

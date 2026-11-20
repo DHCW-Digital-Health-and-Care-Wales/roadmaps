@@ -13,12 +13,12 @@ import {
   openEditRoadmapDialog,
 } from "./fixtures/dialogs"
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
-import { useLanguage, useSidePanel } from "./fixtures/look"
+import { useLanguage } from "./fixtures/look"
 import { connect, expect, test } from "./fixtures/test"
 
 /**
- * A Product Lead who chose "Edit in a side panel" in the account menu has the item and
- * roadmap forms open along the right of the screen instead of in the middle (STY-077).
+ * The item and roadmap forms open along the right of the screen, unless a Product Lead
+ * chose "Edit in a dialog" in the account menu (STY-077, STY-083).
  * Geometry, so one run at each size, in English and the light theme (CHO-014).
  */
 
@@ -67,17 +67,19 @@ async function expectFooterAtFoot(dialog: Locator) {
   expect(footer.y + footer.height).toBeCloseTo(panel.y + panel.height, 0)
 }
 
-test("the account menu offers the side panel, and the way back, and the choice survives a reload (S1, S5, S6)", async ({
+test("the account menu offers the dialog, and the way back, and the choice survives a reload (S1, S2, S3, S4)", async ({
   page,
 }) => {
   await page.setViewportSize(LAPTOP)
   await openProductA(page)
+  await expectPanel(page, await openEditItemDialog(page, ITEM))
+  await page.keyboard.press("Escape")
   const menu = await openAccountMenu(page)
   await expect(
-    menu.getByRole("menuitem", { name: "Edit in a dialog" }),
+    menu.getByRole("menuitem", { name: "Edit in a side panel" }),
   ).toHaveCount(0)
 
-  await menu.getByRole("menuitem", { name: "Edit in a side panel" }).click()
+  await menu.getByRole("menuitem", { name: "Edit in a dialog" }).click()
 
   await expect(menu).toBeHidden()
   await expect(
@@ -88,21 +90,20 @@ test("the account menu offers the side panel, and the way back, and the choice s
   await expect(
     page.getByRole("heading", { level: 3, name: ITEM }),
   ).toBeVisible()
-  await expectPanel(page, await openEditItemDialog(page, ITEM))
-  await page.keyboard.press("Escape")
-
-  await chooseFromAccountMenu(page, "Edit in a dialog")
-
   const dialog = await openEditItemDialog(page, ITEM)
   const { box, size } = await boxOf(page, dialog)
   expect(box.x + box.width).toBeLessThan(size.width)
   expect(box.height).toBeLessThan(size.height)
+  await page.keyboard.press("Escape")
+
+  await chooseFromAccountMenu(page, "Edit in a side panel")
+
+  await expectPanel(page, await openEditItemDialog(page, ITEM))
 })
 
 test("on a laptop, an item's form is a panel along the right with its title, close button and buttons in view while its fields scroll (S2)", async ({
   page,
 }) => {
-  await useSidePanel(page)
   await page.setViewportSize(LAPTOP)
   await openProductA(page)
 
@@ -133,7 +134,6 @@ test("on a laptop, an item's form is a panel along the right with its title, clo
 test("on a tall screen, a form that fits still has its buttons at the panel's foot, whichever form it is (S2, S3)", async ({
   page,
 }) => {
-  await useSidePanel(page)
   await page.setViewportSize({ width: 1366, height: 1300 })
   await openProductA(page)
   const forms = [
@@ -154,7 +154,6 @@ test("on a tall screen, a form that fits still has its buttons at the panel's fo
 test("on a tall screen, Add a roadmap's buttons are at the panel's foot (S2)", async ({
   page,
 }) => {
-  await useSidePanel(page)
   await page.setViewportSize({ width: 1366, height: 1300 })
 
   const dialog = await openAddRoadmapDialog(page)
@@ -166,7 +165,6 @@ test("on a tall screen, Add a roadmap's buttons are at the panel's foot (S2)", a
 test("on a laptop, every form dialog is a panel, and a question is still centred (S3)", async ({
   page,
 }) => {
-  await useSidePanel(page)
   await page.setViewportSize(LAPTOP)
   await openProductA(page)
 
@@ -189,7 +187,6 @@ test("on a laptop, every form dialog is a panel, and a question is still centred
 test("on a laptop, a click on the dimmed page does nothing; Cancel, Escape and the close button close the panel and drop what was typed, focus back on Edit (S4)", async ({
   page,
 }) => {
-  await useSidePanel(page)
   await page.setViewportSize(LAPTOP)
   await openProductA(page)
   let dialog = await openEditItemDialog(page, ITEM)
@@ -221,7 +218,6 @@ test("on a laptop, a click on the dimmed page does nothing; Cancel, Escape and t
 test("on a phone, the form rises from the foot at full width as the dialog does (S7)", async ({
   page,
 }) => {
-  await useSidePanel(page)
   await page.setViewportSize(PHONE)
   await openProductA(page)
 
@@ -237,7 +233,6 @@ test("on a phone, the form rises from the foot at full width as the dialog does 
 test("on a short, wide screen, the panel is at the right and scrolls as one piece (S8)", async ({
   page,
 }) => {
-  await useSidePanel(page)
   await page.setViewportSize(LANDSCAPE)
   await openProductA(page)
 
@@ -261,7 +256,6 @@ test("on a short, wide screen, the panel is at the right and scrolls as one piec
 test("the session warning shows centred above the panel, and focus returns into the panel when it closes (S9)", async ({
   page,
 }) => {
-  await useSidePanel(page)
   await page.clock.install()
   await page.setViewportSize(LAPTOP)
   await openProductA(page)
@@ -296,7 +290,6 @@ test("the session warning shows centred above the panel, and focus returns into 
 test("with reduced motion the panel shows in place, without sliding (S10)", async ({
   page,
 }) => {
-  await useSidePanel(page)
   await page.setViewportSize(LAPTOP)
   await openProductA(page)
 
@@ -317,7 +310,7 @@ test("with reduced motion the panel shows in place, without sliding (S10)", asyn
   ).toBe(true)
 })
 
-test("in Welsh, the menu names both ways in Welsh and the panel opens (S11)", async ({
+test("in Welsh, the menu names both ways in Welsh and the panel opens (S11, STY-083 S1)", async ({
   page,
 }) => {
   await useLanguage(page, "cy")
@@ -328,12 +321,13 @@ test("in Welsh, the menu names both ways in Welsh and the panel opens (S11)", as
     page.getByRole("heading", { level: 3, name: ITEM }),
   ).toBeVisible()
 
-  await chooseFromAccountMenu(page, "Golygu mewn panel ochr", "cy")
+  await expectPanel(page, await openEditItemDialog(page, ITEM, "cy"))
+  await page.keyboard.press("Escape")
+
+  await chooseFromAccountMenu(page, "Golygu mewn deialog", "cy")
 
   const menu = await openAccountMenu(page, "cy")
   await expect(
-    menu.getByRole("menuitem", { name: "Golygu mewn deialog" }),
+    menu.getByRole("menuitem", { name: "Golygu mewn panel ochr" }),
   ).toBeVisible()
-  await page.keyboard.press("Escape")
-  await expectPanel(page, await openEditItemDialog(page, ITEM, "cy"))
 })

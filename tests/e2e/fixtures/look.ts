@@ -12,10 +12,10 @@ export async function useTheme(page: Page, theme: Theme) {
   }, theme)
 }
 
-/** Starts the page opening its forms as a side panel, as if the user had chosen it earlier (STY-077). */
-export async function useSidePanel(page: Page) {
+/** Starts the page opening its forms as dialogs, as if the user had chosen it earlier (STY-083). */
+export async function useDialog(page: Page) {
   await page.addInitScript(() => {
-    localStorage.setItem("roadmaps.edit.surface", "panel")
+    localStorage.setItem("roadmaps.edit.surface", "dialog")
   })
 }
 

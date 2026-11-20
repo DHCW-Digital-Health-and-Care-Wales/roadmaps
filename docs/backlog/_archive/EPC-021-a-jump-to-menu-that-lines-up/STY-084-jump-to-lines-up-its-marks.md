@@ -7,7 +7,7 @@
 - **Depends on**: none
 - **Binding ADRs**: ADR-008, ADR-010
 - **Suggested model**: Sonnet — one shared label and one menu, every rule settled
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/212
 
 ## Summary
 

@@ -1,6 +1,6 @@
 import type { Locator, Page } from "@playwright/test"
 
-import { settledBoxes } from "./layout"
+import { settledBox } from "./layout"
 import type { Language } from "./look"
 import { moreButton, openProductDetails } from "./roadmap-page"
 import { connect, expect, roadmapCards } from "./test"
@@ -109,11 +109,9 @@ export function cornerClose(dialog: Locator): Locator {
 
 /** Whether `locator` lies wholly within the screen as it is now scrolled. */
 export async function isInView(page: Page, locator: Locator): Promise<boolean> {
-  const [box] = await settledBoxes(locator)
+  const box = await settledBox(locator)
   const size = page.viewportSize()
   if (!size) throw new Error("No viewport")
-  // A box of nothing is a hidden element's, which lies nowhere on the screen.
-  if (box.width === 0 && box.height === 0) throw new Error("Not laid out")
   return box.y >= 0 && box.bottom <= size.height
 }
 
@@ -127,7 +125,7 @@ export function reviewFooterClose(review: Locator): Locator {
  * outside a form dialog does nothing, which the caller then shows.
  */
 export async function clickOutside(page: Page, dialog: Locator): Promise<void> {
-  const [box] = await settledBoxes(dialog)
+  const box = await settledBox(dialog)
   const spots = [
     { x: box.x + box.width / 2, y: box.y / 2 },
     { x: box.x / 2, y: box.y + box.height / 2 },

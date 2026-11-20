@@ -8,7 +8,7 @@ import {
   openAddRoadmapDialog,
   openEditItemDialog,
 } from "./fixtures/dialogs"
-import { settledBoxes } from "./fixtures/layout"
+import { settledBox, settledBoxes } from "./fixtures/layout"
 import { words } from "./fixtures/long-fields"
 import { connect, expect, test } from "./fixtures/test"
 
@@ -106,7 +106,7 @@ test("on a laptop, the dialog stays its content's height and shows no scrollbar 
   ).toBeVisible()
   const dialog = await askToRemove(page, ITEM)
 
-  const [box] = await settledBoxes(dialog)
+  const box = await settledBox(dialog)
   expect(box.height).toBeLessThan(LAPTOP.height / 2)
   expect(
     await dialog.evaluate(
@@ -307,7 +307,7 @@ test("on the smallest pinned screen, the add-item dialog keeps its buttons in vi
   const note = dialog.getByRole("status").getByRole("note")
   await expect(note).toBeVisible()
   // Its title is cut at three lines, so it leaves the form its room.
-  const [box] = await settledBoxes(note)
+  const box = await settledBox(note)
   expect(box.height).toBeLessThan(120)
   for (const part of [
     dialog.getByRole("heading", { name: "Add an item" }),

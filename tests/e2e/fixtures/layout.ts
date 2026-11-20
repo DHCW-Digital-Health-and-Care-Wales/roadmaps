@@ -80,7 +80,18 @@ export async function settledBoxes<Locators extends Locator[]>(
 ): Promise<{ [At in keyof Locators]: Box }> {
   const first = locators[0]
   if (first) await animationsDone(first.page())
-  return boxesOf(...locators)
+  const boxes = await boxesOf(...locators)
+  // `boxesOf` reads a hidden element's box as zeros, where `boundingBox()` gave none.
+  if ((boxes as Box[]).some((box) => box.width === 0 && box.height === 0)) {
+    throw new Error("Not laid out")
+  }
+  return boxes
+}
+
+/** `locator`'s box in the viewport once the page's animations have ended. */
+export async function settledBox(locator: Locator): Promise<Box> {
+  const [box] = await settledBoxes(locator)
+  return box
 }
 
 /** The middle of `box`, down the viewport. */

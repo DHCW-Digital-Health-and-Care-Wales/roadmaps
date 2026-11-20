@@ -73,7 +73,7 @@ The cause was as stated, in the specs' helpers, not the panel. `animationsDone(p
 `settledBoxes(...locators)` in `tests/e2e/fixtures/layout.ts` wait until every animation
 that ends has ended, then read the boxes of all the locators in one step (`boxesOf`).
 `side-panel.spec.ts`'s `panelBox` (was `boxOf`) and `expectFooterAtFoot` read through
-it, so `expectPanel`'s ten calls, its footer check and the spec's other readers all wait.
+it, so `expectPanel`'s callers, its footer check and the spec's other readers all wait.
 
 The sweep found the same read in the shared fixtures and four more specs, and moved them
 to `settledBoxes`: `isInView` and `clickOutside` (`fixtures/dialogs.ts`, used by 8
@@ -93,12 +93,16 @@ and a sheet slides only sideways; the other `boundingBox()` calls read cards, he
 and rows.
 
 The other flakes in CHO-030's table (`item-tags` `:282`, the session warning at
-`side-panel` S9, `pinned-dialog` `:303`, `roadmap-controls` `:271`) were not shown to be
-this kind, and are left to that chore's audit.
+`side-panel` S9, `roadmap-controls` `:271`) were not shown to be this kind, and are left
+to that chore's audit.
+The `pinned-dialog` `:303` flake, "a dialog part not in view" after a long title is
+added, is touched: its `isInView` calls and its note's box now settle. Whether that was
+its cause is not shown, so the audit counts it as touched, not fixed.
 
-`isInView` throws on a box of nothing, as it did on a hidden element before, since
-`boxesOf` reads zeros there. S10 of the side panel spec now asserts the slide's computed
-duration, since waiting for the panel left no animation for its old check to inspect.
+`settledBoxes` throws "Not laid out" on a box of nothing, as `boundingBox()` gave none
+for a hidden element, since `boxesOf` reads zeros there. S10 of the side panel spec now
+asserts the slide's computed duration, since waiting for the panel left no animation for
+its old check to inspect.
 
 ### Departures
 
@@ -107,10 +111,10 @@ duration, since waiting for the panel left no animation for its old check to ins
   `animation-duration: 1.5s !important` after the page loads, so the panel is a tenth of
   its width off the screen for as long as the old helper took to read it. A CDP pause
   released from the test races the helper's own first calls, so the old helper could pass
-  it; the slowed slide fails the old helper every time the test's own precondition, a
-  running animation, holds. Under a delay of over 1.5 s that precondition fails first,
-  so the test fails and says so, rather than passing. It shows the same measurement CI
-  saw.
+  it; the slowed slide fails the old helper whenever the test's own precondition, a
+  running animation, holds. Where a delay of over 1.5 s means it does not, the test
+  fails on that precondition and says so, rather than passing. It shows the same
+  measurement CI saw.
 - **Sweep conversions without a red of their own** (agent): `isInView`, `clickOutside`
   and the reads in the other specs follow the shared helper; no test of theirs failed
   before the change, as none had failed in CI. The red is the helper's.

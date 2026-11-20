@@ -13,7 +13,7 @@ import {
   openEditRoadmapDialog,
 } from "./fixtures/dialogs"
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
-import { settledBoxes } from "./fixtures/layout"
+import { settledBox, settledBoxes } from "./fixtures/layout"
 import { useLanguage } from "./fixtures/look"
 import { connect, expect, test } from "./fixtures/test"
 
@@ -40,7 +40,7 @@ async function openProductA(page: Page) {
 
 /** The popup's box once it has opened, and the screen it sits on. */
 async function panelBox(page: Page, dialog: Locator) {
-  const [box] = await settledBoxes(dialog)
+  const box = await settledBox(dialog)
   const size = page.viewportSize()
   if (!size) throw new Error("No viewport")
   return { box, size }

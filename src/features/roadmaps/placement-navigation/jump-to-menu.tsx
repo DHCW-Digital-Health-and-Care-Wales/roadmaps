@@ -1,4 +1,4 @@
-import { CheckIcon, ChevronDownIcon } from "lucide-react"
+import { CheckIcon, ChevronDownIcon, TriangleAlertIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
@@ -66,15 +66,42 @@ export function JumpToMenu({
                 choose(summary.target)
               }}
             >
-              <CheckIcon
-                aria-hidden="true"
-                className={isCurrent ? undefined : "invisible"}
+              <LeadingMark
+                isCurrent={isCurrent}
+                unplaced={summary.target === "unplaced"}
               />
-              <JumpTargetLabel summary={summary} />
+              <JumpTargetLabel summary={summary} inMenu />
             </DropdownMenuItem>
           )
         })}
       </DropdownMenuContent>
     </DropdownMenu>
+  )
+}
+
+/**
+ * The mark every row keeps before its name, so names start at one edge (STY-084 D2): the
+ * tick on the current row, else the warning icon on the unplaced one, else an empty place.
+ */
+function LeadingMark({
+  isCurrent,
+  unplaced,
+}: {
+  isCurrent: boolean
+  unplaced: boolean
+}) {
+  if (!isCurrent && unplaced) {
+    return (
+      <TriangleAlertIcon
+        aria-hidden="true"
+        className="text-status-warning-fg"
+      />
+    )
+  }
+  return (
+    <CheckIcon
+      aria-hidden="true"
+      className={isCurrent ? undefined : "invisible"}
+    />
   )
 }

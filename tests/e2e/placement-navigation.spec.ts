@@ -178,10 +178,10 @@ test("jumps from the links at the top, and from the stuck row's links on to the 
   expect(await focusClearOfBars(page)).toBeNull()
 })
 
-/** Retitles "Now item 3", leaving a change pending in Now. */
-async function editNowItem(page: Page) {
-  const form = await openEditItemDialog(page, "Now item 3")
-  await form.getByRole("textbox", { name: "Title" }).fill("Now item three")
+/** Retitles `title`'s item, leaving a change pending where it stands. */
+async function retitle(page: Page, title: string) {
+  const form = await openEditItemDialog(page, title)
+  await form.getByRole("textbox", { name: "Title" }).fill(`${title} edited`)
   await form.getByRole("button", { name: "Done" }).click()
   await expect(form).toBeHidden()
 }
@@ -192,7 +192,7 @@ test("shows each placement's count in the links and marks those with pending cha
 }) => {
   await page.setViewportSize(DESKTOP)
   await openSmallRoadmap(page, sheets)
-  await editNowItem(page)
+  await retitle(page, "Now item 3")
 
   const now = placementLinks(page).getByRole("link", { name: /^Now,/ })
   await expect(now).toHaveAccessibleName("Now, 7 items, unpublished changes")
@@ -208,7 +208,7 @@ test("shows each placement's count in Jump to and marks those with pending chang
 }) => {
   await page.setViewportSize(PHONE)
   await openSmallRoadmap(page, sheets)
-  await editNowItem(page)
+  await retitle(page, "Now item 3")
 
   await jumpTo(page).click()
   const menu = page.getByRole("menu")
@@ -220,6 +220,47 @@ test("shows each placement's count in Jump to and marks those with pending chang
     menu.getByRole("menuitem", { name: /^Next,/ }),
   ).toHaveAccessibleName("Next, 2 items")
 })
+
+for (const motion of ["reduce", "no-preference"] as const) {
+  test.describe(`the open menu, reducedMotion ${motion}`, () => {
+    test.use({ reducedMotion: motion })
+
+    test("lines up the open menu's names, counts and dots whatever is edited, on a phone (STY-084 S1, S3)", async ({
+      page,
+      sheets,
+    }) => {
+      await page.setViewportSize(PHONE)
+      await openSmallRoadmap(page, sheets)
+      await retitle(page, "Next item 1")
+      await retitle(page, "Later item")
+
+      await jumpTo(page).click()
+      const items = page.getByRole("menu").getByRole("menuitem")
+      await expect(items).toHaveCount(7)
+      // Each row's name, count and dot's place, by their left and right edges; the dot's
+      // place is kept hidden on the rows with nothing pending.
+      const edges = await items.evaluateAll((rows) =>
+        rows.map((row) => {
+          const dot = row.querySelector('[data-slot="unpublished-dot"]')
+          const spans = [...row.querySelectorAll("span:not(.sr-only)")]
+          const name = spans.find((span) => /\D/.test(span.textContent))
+          const count = spans.find((span) => /^\d+$/.test(span.textContent))
+          if (!dot || !count || !name) throw new Error("A row lacks a mark")
+          return {
+            name: name.getBoundingClientRect().left,
+            count: count.getBoundingClientRect().right,
+            dot: dot.getBoundingClientRect().left,
+          }
+        }),
+      )
+      expect(edges).toHaveLength(7)
+      for (const column of ["name", "count", "dot"] as const) {
+        const [first, ...rest] = edges.map((row) => row[column])
+        for (const edge of rest) expect(edge).toBeCloseTo(first ?? 0, 1)
+      }
+    })
+  })
+}
 
 test("marks the placement the page is in, in Jump to, and none at the top (S3, D8)", async ({
   page,

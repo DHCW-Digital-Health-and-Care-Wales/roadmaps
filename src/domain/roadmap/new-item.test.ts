@@ -7,6 +7,7 @@ import {
   checkNewItem,
   dropPublishedNewItems,
   editNewItem,
+  hasOnlyTitle,
   removeNewItem,
 } from "./new-item"
 import {
@@ -284,5 +285,37 @@ describe("a new item, before it is published (STY-046 S6)", () => {
       newItems: [{ id: "secondnw", values: reminders }],
     })
     expect(removeNewItem(changes, "gonegone")).toBe(changes)
+  })
+})
+
+describe("hasOnlyTitle (STY-082 S1, D3)", () => {
+  const titleOnly: NewItem = { id: "titleonl", values: clinicValues }
+
+  it("is true for a title and a placement alone, whichever the placement", () => {
+    expect(hasOnlyTitle(titleOnly)).toBe(true)
+    expect(
+      hasOnlyTitle({
+        ...titleOnly,
+        values: { ...clinicValues, placement: "not-doing" },
+      }),
+    ).toBe(true)
+  })
+
+  it.each<[string, ItemValues]>([
+    ["a description", { description: "Pick where you are seen." }],
+    ["an expected outcome", { expectedOutcome: "Shorter journeys" }],
+    ["a phase", { phase: "Discovery" }],
+    ["tags", { tags: "Patients" }],
+    ["organisations", { organisationIds: "national" }],
+    ["details", { details: "Outpatients" }],
+  ])("is false for a title and %s", (_name, values) => {
+    expect(
+      hasOnlyTitle({ ...titleOnly, values: { ...clinicValues, ...values } }),
+    ).toBe(false)
+  })
+
+  it("counts a field of spaces as empty, as `checkNewItem` trims it", () => {
+    const { values } = checkNewItem({ ...clinic, description: "  " })
+    expect(hasOnlyTitle({ id: "titleonl", values })).toBe(true)
   })
 })

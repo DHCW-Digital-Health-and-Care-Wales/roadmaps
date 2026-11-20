@@ -3,8 +3,8 @@
 - **Status**: Active — grilled with the owner on 2026-11-14; STY-040 to STY-047
   delivered; reordering settled on 2026-11-16 as STY-051 then STY-050, both delivered;
   removing a published item grilled on 2026-11-19 as STY-070 then STY-049, both
-  delivered; quick add grilled on 2026-11-20 as STY-080 to STY-082, STY-080 and STY-081 delivered
-- **Progress**: 14 of 16 terminal; next selectable: STY-082 once STY-081 is merged;
+  delivered; quick add grilled on 2026-11-20 as STY-080 to STY-082, all delivered
+- **Progress**: 15 of 16 terminal; next selectable: none;
   blocked on: STY-048 waits for grilling
 - **Binding ADRs**: ADR-012, ADR-011, ADR-009, ADR-013, ADR-014, ADR-002, ADR-003, ADR-005,
   ADR-006, ADR-010, ADR-008
@@ -223,7 +223,7 @@ planned, by the PR that wrote STY-080 to STY-082.
 | STY-070 | [The repository publishes a removed item](../_archive/EPC-011-adding-roadmaps-and-items/STY-070-the-repository-publishes-a-removed-item.md)                                 | Domain + Infrastructure + Docs                                      | —                         | ✅    |
 | STY-080 | [A Product Lead adds items where they will go, by title alone (quick add)](../_archive/EPC-011-adding-roadmaps-and-items/STY-080-quick-add-items-where-they-go.md)          | Features/UI + i18n (en + cy) + E2E                                  | —                         | ✅    |
 | STY-081 | [A quick add title opens in the item dialog for its other details](../_archive/EPC-011-adding-roadmaps-and-items/STY-081-expand-quick-add-into-the-item-dialog.md)          | Features/UI + i18n (en + cy) + E2E                                  | STY-080                   | ✅    |
-| STY-082 | [The publish dialog flags a new item that has only a title](STY-082-the-publish-dialog-flags-a-title-only-item.md)                                                          | Features/UI + i18n (en + cy) + E2E                                  | STY-080                   |       |
+| STY-082 | [The publish dialog flags a new item that has only a title](../_archive/EPC-011-adding-roadmaps-and-items/STY-082-the-publish-dialog-flags-a-title-only-item.md)            | Features/UI + i18n (en + cy) + E2E                                  | STY-080                   | ✅    |
 
 ## Sequencing
 

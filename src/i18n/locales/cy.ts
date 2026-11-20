@@ -740,6 +740,7 @@ export const cy = {
         },
         changes: "Beth sy'n newid",
         newItem: "Eitem newydd",
+        newItemTitleOnly: "Eitem newydd, teitl yn unig",
         removed: "Wedi'i thynnu",
       },
       markUpdated: "Nodi ei fod wedi'i ddiweddaru heddiw",

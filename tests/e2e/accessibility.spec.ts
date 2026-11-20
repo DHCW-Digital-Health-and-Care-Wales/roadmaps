@@ -595,7 +595,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       // The publish dialog, listing the new item as new (STY-047 S2).
       await main.getByRole("button", { name: "Publish changes" }).click()
       await expect(
-        page.getByRole("alertdialog").getByText("New item"),
+        page.getByRole("alertdialog").getByText("New item, title only"),
       ).toBeVisible()
       await expectNoAxeViolations(page, theme)
     })
@@ -630,7 +630,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
         .getByRole("button", { name: "Publish roadmap" })
         .click()
       await expect(
-        page.getByRole("alertdialog").getByText("New item"),
+        page.getByRole("alertdialog").getByText("New item, title only"),
       ).toBeVisible()
       await expectNoAxeViolations(page, theme, { only: "[role=alertdialog]" })
     })

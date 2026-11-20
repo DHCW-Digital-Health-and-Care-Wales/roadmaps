@@ -2,6 +2,7 @@ import { Fragment, type ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
 import { localise } from "@/domain/roadmap/localised-text"
+import { hasOnlyTitle } from "@/domain/roadmap/new-item"
 import type { RoadmapChanges } from "@/domain/roadmap/roadmap-changes"
 import { ROADMAP_PLACEMENTS } from "@/domain/roadmap/roadmap-placement"
 import { useLanguage } from "@/i18n"
@@ -47,11 +48,11 @@ function edited(
 /**
  * "What changes", in a dialog that asks before a roadmap's pending changes are written:
  * each changed part by name with its changed fields, each item removed marked as
- * removed (STY-049 S5), then each new item by its title, marked as new (STY-025 S9,
- * STY-047 S1), in the page's order. A placement whose order
- * is pending is one line, by its heading: the new order is not listed (STY-050 S6).
- * One list, whatever is pending: the roadmap's own text, the placements reordered, the
- * items the roadmap holds, then the new ones.
+ * removed (STY-049 S5), then each new item by its title, marked as new, and as having
+ * only a title when it has no more (STY-025 S9, STY-047 S1, STY-082), in the page's
+ * order. A placement whose order is pending is one line, by its heading: the new order
+ * is not listed (STY-050 S6). One list, whatever is pending: the roadmap's own text, the
+ * placements reordered, the items the roadmap holds, then the new ones.
  */
 export function WhatChanges({ changes }: WhatChangesProps) {
   const { t } = useTranslation()
@@ -110,10 +111,13 @@ export function WhatChanges({ changes }: WhatChangesProps) {
       }
     }),
     // A new item is English alone, and no field of it is a change of its own.
-    ...changes.newItems.map(({ id, values }) => ({
-      key: `new-${id}`,
-      name: values.title,
-      change: t("roadmaps.publish.dialog.newItem"),
+    // One with only a title says so, whichever way it was added (STY-082).
+    ...changes.newItems.map((newItem) => ({
+      key: `new-${newItem.id}`,
+      name: newItem.values.title,
+      change: hasOnlyTitle(newItem)
+        ? t("roadmaps.publish.dialog.newItemTitleOnly")
+        : t("roadmaps.publish.dialog.newItem"),
     })),
   ]
 

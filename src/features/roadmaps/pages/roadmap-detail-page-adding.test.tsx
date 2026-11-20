@@ -943,7 +943,7 @@ describe("The publish dialog names the new items (STY-047 S1)", () => {
 
     expect(listedChanges()).toEqual([
       "Online bookingDescription",
-      `${CLINIC}New item`,
+      `${CLINIC}New item, title only`,
     ])
   })
 
@@ -955,8 +955,8 @@ describe("The publish dialog names the new items (STY-047 S1)", () => {
     await user.click(main().getByRole("button", { name: "Publish changes" }))
 
     expect(listedChanges()).toEqual([
-      `${CLINIC}New item`,
-      `${CHECK_IN}New item`,
+      `${CLINIC}New item, title only`,
+      `${CHECK_IN}New item, title only`,
     ])
   })
 
@@ -975,7 +975,7 @@ describe("The publish dialog names the new items (STY-047 S1)", () => {
     ).toBeVisible()
     expect(listedChanges()).toEqual([
       "Longer-term ideaDescription",
-      `${CLINIC}New item`,
+      `${CLINIC}New item, title only`,
     ])
   })
 
@@ -997,7 +997,7 @@ describe("The publish dialog names the new items (STY-047 S1)", () => {
     )
     expect(listedChanges()).toEqual([
       "Longer-term ideaDescription",
-      `${CLINIC}New item`,
+      `${CLINIC}New item, title only`,
     ])
     expect(
       within(question).getByRole("button", { name: "Save and publish" }),
@@ -1034,7 +1034,7 @@ describe("The publish dialog names the new items (STY-047 S1)", () => {
     })
     const letGo = await holdRefresh(user, repository)
     await user.click(main().getByRole("button", { name: "Publish roadmap" }))
-    expect(listedChanges()).toEqual([`${CLINIC}New item`])
+    expect(listedChanges()).toEqual([`${CLINIC}New item, title only`])
 
     await letGo()
 
@@ -1151,16 +1151,91 @@ describe("The publish dialog names the new items (STY-047 S1)", () => {
   )
 })
 
+/** Adds an item with a title, a placement and `text` typed into `field`, through the item dialog. */
+async function addItemWith(
+  user: User,
+  title: string,
+  placement: string,
+  field: string,
+  text: string,
+  language: Language = "en",
+) {
+  await openAddItemDialog(user, language)
+  await user.type(
+    addItemDialog(language).getByRole("textbox", { name: field }),
+    text,
+  )
+  await fillAndAddItem(user, title, placement, { language })
+  await expectDialogClosed()
+}
+
 describe("The publish dialog's new items, in Welsh and to assistive technology (STY-047 S2)", () => {
-  it("marks a new item in Welsh, in the one list item that holds its title, so the two are read together", async () => {
+  it("marks a new item in Welsh, and one with only a title (STY-082 S3), each in the one list item that holds its title, so the two are read together", async () => {
     const { user } = await renderPage({ language: "cy" })
     await addItem(user, CLINIC, "Nesaf", "cy")
+    await addItemWith(
+      user,
+      CHECK_IN,
+      "Nesaf",
+      "Disgrifiad (Saesneg)",
+      "Mewngofnodi heb giwio.",
+      "cy",
+    )
 
     await user.click(
       main().getByRole("button", { name: "Cyhoeddi'r newidiadau" }),
     )
 
-    expect(listedChanges("Beth sy'n newid")).toEqual([`${CLINIC}Eitem newydd`])
+    expect(listedChanges("Beth sy'n newid")).toEqual([
+      `${CLINIC}Eitem newydd, teitl yn unig`,
+      `${CHECK_IN}Eitem newydd`,
+    ])
+  })
+})
+
+describe("The publish dialog flags a new item that has only a title (STY-082 S1, S2, S3)", () => {
+  it("marks a title-only item and one with a description differently, each by its title, both listed as new", async () => {
+    const { user } = await renderPage()
+    await addItem(user, CLINIC, "Next")
+    await addItemWith(
+      user,
+      CHECK_IN,
+      "Next",
+      "Description",
+      "Check in without queuing.",
+    )
+
+    await user.click(main().getByRole("button", { name: "Publish changes" }))
+
+    expect(listedChanges()).toEqual([
+      `${CLINIC}New item, title only`,
+      `${CHECK_IN}New item`,
+    ])
+  })
+
+  it("does not mark an item whose only text is its expected outcome", async () => {
+    const { user } = await renderPage()
+    await addItemWith(
+      user,
+      CLINIC,
+      "Next",
+      "Expected outcome",
+      "Shorter journeys.",
+    )
+
+    await user.click(main().getByRole("button", { name: "Publish changes" }))
+
+    expect(listedChanges()).toEqual([`${CLINIC}New item`])
+  })
+
+  it("stops marking an item once a description is added to it", async () => {
+    const { user } = await renderPage()
+    await addItem(user, CLINIC, "Next")
+    await editItemText(user, CLINIC, "Description", "Pick where you are seen.")
+
+    await user.click(main().getByRole("button", { name: "Publish changes" }))
+
+    expect(listedChanges()).toEqual([`${CLINIC}New item`])
   })
 })
 

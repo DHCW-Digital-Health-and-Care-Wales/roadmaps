@@ -6,7 +6,7 @@
  * are rules of a roadmap, whatever screen adds one; how an edit is kept and finds its
  * item again is `features/roadmaps/editing/pending-changes.ts`, whose `reconcileItems`
  * calls `dropPublishedNewItems`. The item dialog and a new item's card call the rest
- * (STY-046).
+ * (STY-046); the publish dialog's list calls `hasOnlyTitle` (STY-082).
  */
 
 import { AppError } from "@/lib/errors"
@@ -68,6 +68,18 @@ function checkedValues(input: ItemValues): NewItem["values"] {
     })
   }
   return values
+}
+
+/**
+ * Whether a new item holds only a title and a placement, every other field none
+ * (STY-082 D3): however it was added, by quick add or the item dialog. A field added to
+ * `EDITABLE_ITEM_FIELDS` counts without a change here.
+ */
+export function hasOnlyTitle({ values }: NewItem): boolean {
+  return EDITABLE_ITEM_FIELDS.every(
+    (field) =>
+      field === "title" || field === "placement" || values[field] === "",
+  )
 }
 
 /**

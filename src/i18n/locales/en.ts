@@ -863,6 +863,8 @@ export const en = {
         changes: "What changes",
         /** Under the title of an item that is new, in place of its changed fields. */
         newItem: "New item",
+        /** In place of `newItem` for a new item with only a title (STY-082). */
+        newItemTitleOnly: "New item, title only",
         /** Under the title of an item removed, in place of its changed fields (STY-049 S5). */
         removed: "Removed",
       },

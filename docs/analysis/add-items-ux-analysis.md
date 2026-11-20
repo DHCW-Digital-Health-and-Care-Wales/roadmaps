@@ -148,7 +148,7 @@ rounds; the answers are in the stories' Decisions.
   (the control),
   [STY-081](../backlog/_archive/EPC-011-adding-roadmaps-and-items/STY-081-expand-quick-add-into-the-item-dialog.md)
   (the expand button) and
-  [STY-082](../backlog/EPC-011-adding-roadmaps-and-items/STY-082-the-publish-dialog-flags-a-title-only-item.md)
+  [STY-082](../backlog/_archive/EPC-011-adding-roadmaps-and-items/STY-082-the-publish-dialog-flags-a-title-only-item.md)
   (the publish dialog's flag for a title-only item).
 - **Decisions needed**: 5 → STY-082 D1, D2; 11 → STY-080 D1, D2, D6; 12 → STY-080 D4; 13
   → STY-080 S6; 14 → STY-080 S3; 15 → STY-080 D3; 16 → STY-081 D2, D3; 17 and 19 →

@@ -7,26 +7,24 @@
 - **Epic**: standalone
 - **Depends on**: none
 - **Binding ADRs**: none
-- **Suggested model**: Sonnet — a few lines across `delegation.md` and `validation.md`,
-  once the owner chooses
+- **Suggested model**: Sonnet — a few lines across `delegation.md`, `validation.md` and
+  implement-story step 3's Completion, once the owner chooses
 - **Delivered**: _(add on delivery)_
 
 ## Summary
 
-`delegation.md` (Worker contract) has a delivery re-run the checks `validation.md` sets for
-a head, and only then pin it for review, so round 1 waits for the full gate. STY-080's
-delivery started round 1 about 3 minutes into a full gate on the same head, with the base
-unmoved. The gate's only failures (11 E2E tests finding "Add an item" by substring) matched
-a round 1 reviewer's finding and were fixed in round 1's fix commit, so starting early lost
-no review and saved about 10 minutes of a 92-minute delivery. Allowing it in general has a
-cost the STY-080 retrospective's review raised: a gate failure no reviewer reported starts no
-re-check, so a test-only fix for it reaches the push unreviewed, and a fix made while
-reviewers read the checkout changes what they read. Done: the owner has chosen whether round
-1 may start alongside the gate, and on what terms, and the guides say so.
+Round 1 waits for its head's full gate (`delegation.md`, Worker contract). STY-080's
+delivery started it about 3 minutes into that gate instead; the gate's only failures
+matched a round 1 finding, so nothing was lost and about 10 minutes were saved. As a
+rule it has a cost: a gate failure no reviewer reported starts no re-check, so a
+test-only fix for it reaches the push unreviewed, and a fix made while reviewers read
+the checkout changes what they read. Done: the owner has chosen whether round 1 may start
+alongside the gate, and on what terms, and the guides say so.
 
 ## Measurement
 
-At `94d1e8c`, from the STY-080 run's progress log (UTC):
+From the STY-080 orchestrated run's progress log and handoff, outside the repository (UTC);
+the gate and round 1 ran on branch head `8882bd6`, squashed into `94d1e8c`:
 
 | Area                   | Measurement                                                                                            | Verdict                  |
 | ---------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------ |
@@ -46,8 +44,10 @@ and when its fix is made
 ## Open questions
 
 - **Q1**: Should round 1 start alongside the full gate?
-  - (a) No, as today: round 1 waits for the whole gate. Nothing changes; each delivery keeps
-    the wait, about 10 minutes in STY-080.
+  - (a) No, as today (recommended): round 1 waits for the whole gate. Nothing changes; each
+    delivery keeps the wait, about 10 minutes in STY-080. One observation is too few to
+    change when reviews start (`orchestrate`'s run-summary reference, _Evaluate after
+    real use_).
   - (b) Yes, once typecheck, lint and the unit tests pass. A gate failure counts as a finding
     above P3, so its fix gets a re-check, and it is fixed only after the round's reviewers
     have reported. This saves the wait, adds a re-check whenever the gate fails, and changes

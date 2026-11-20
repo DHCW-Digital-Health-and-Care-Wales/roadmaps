@@ -8,7 +8,7 @@
 - **Binding ADRs**: none
 - **Suggested model**: Sonnet — one job in `.github/workflows/ci.yml`, checked by observed
   runs
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/213
 
 ## Summary
 

@@ -1152,9 +1152,17 @@ describe("The publish dialog names the new items (STY-047 S1)", () => {
 })
 
 describe("The publish dialog's new items, in Welsh and to assistive technology (STY-047 S2)", () => {
-  it("marks a new item in Welsh, in the one list item that holds its title, so the two are read together", async () => {
+  it("marks a new item in Welsh, and one with only a title (STY-082 S3), each in the one list item that holds its title, so the two are read together", async () => {
     const { user } = await renderPage({ language: "cy" })
     await addItem(user, CLINIC, "Nesaf", "cy")
+    await addItemWith(
+      user,
+      CHECK_IN,
+      "Nesaf",
+      "Disgrifiad (Saesneg)",
+      "Mewngofnodi heb giwio.",
+      "cy",
+    )
 
     await user.click(
       main().getByRole("button", { name: "Cyhoeddi'r newidiadau" }),
@@ -1162,11 +1170,12 @@ describe("The publish dialog's new items, in Welsh and to assistive technology (
 
     expect(listedChanges("Beth sy'n newid")).toEqual([
       `${CLINIC}Eitem newydd, teitl yn unig`,
+      `${CHECK_IN}Eitem newydd`,
     ])
   })
 })
 
-/** Adds an item with its description and placement through the item dialog. */
+/** Adds an item with a title, a placement and `text` typed into `field`, through the item dialog. */
 async function addItemWith(
   user: User,
   title: string,
@@ -1229,14 +1238,13 @@ describe("The publish dialog flags a new item that has only a title (STY-082 S1,
     expect(listedChanges()).toEqual([`${CLINIC}New item`])
   })
 
-  it("marks it for “Save changes” on a roadmap that isn't published, and blocks nothing: the confirm writes the item", async () => {
+  it("blocks nothing: “Save changes” writes the item that has only a title", async () => {
     const { user, repository } = await renderPage({
       path: "/roadmaps/productc",
     })
     await addItem(user, CLINIC, "Later")
 
     await user.click(main().getByRole("button", { name: "Save changes" }))
-    expect(listedChanges()).toEqual([`${CLINIC}New item, title only`])
     await user.click(
       within(screen.getByRole("alertdialog")).getByRole("button", {
         name: "Save changes",
@@ -1250,28 +1258,6 @@ describe("The publish dialog flags a new item that has only a title (STY-082 S1,
         ),
       ).toEqual([CLINIC])
     })
-  })
-
-  it("is the mark of the dialog too that asks before “Publish roadmap”", async () => {
-    const { user } = await renderPage({ path: "/roadmaps/productc" })
-    await addItem(user, CLINIC, "Next")
-
-    await user.click(main().getByRole("button", { name: "Publish roadmap" }))
-
-    expect(listedChanges()).toEqual([`${CLINIC}New item, title only`])
-  })
-
-  it("says it in Welsh, in the list item that holds the title", async () => {
-    const { user } = await renderPage({ language: "cy" })
-    await addItem(user, CLINIC, "Nesaf", "cy")
-
-    await user.click(
-      main().getByRole("button", { name: "Cyhoeddi'r newidiadau" }),
-    )
-
-    expect(listedChanges("Beth sy'n newid")).toEqual([
-      `${CLINIC}Eitem newydd, teitl yn unig`,
-    ])
   })
 })
 

@@ -6,7 +6,7 @@
  * are rules of a roadmap, whatever screen adds one; how an edit is kept and finds its
  * item again is `features/roadmaps/editing/pending-changes.ts`, whose `reconcileItems`
  * calls `dropPublishedNewItems`. The item dialog and a new item's card call the rest
- * (STY-046).
+ * (STY-046); the publish dialog's list calls `hasOnlyTitle` (STY-082).
  */
 
 import { AppError } from "@/lib/errors"

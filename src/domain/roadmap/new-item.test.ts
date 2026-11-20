@@ -314,7 +314,7 @@ describe("hasOnlyTitle (STY-082 S1, D3)", () => {
     ).toBe(false)
   })
 
-  it("is the same for an item the item dialog made as for one quick add did", () => {
+  it("counts a field of spaces as empty, as `checkNewItem` trims it", () => {
     const { values } = checkNewItem({ ...clinic, description: "  " })
     expect(hasOnlyTitle({ id: "titleonl", values })).toBe(true)
   })

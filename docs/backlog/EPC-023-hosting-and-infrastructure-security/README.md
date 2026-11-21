@@ -117,7 +117,9 @@ lives:_
   manual step; no service account keys.
 - **Separate identities for planning and applying infrastructure**, each with
   least-privilege custom roles; production deploys through a protected GitHub
-  environment whose required reviewers the ruleset's bypass cannot self-approve.
+  environment whose required reviewers the ruleset's bypass cannot self-approve. Agent
+  sessions hold the bypass actor's credential (STY-087 D9), so the reviewer's
+  independence from it is a point for this epic's grilling.
 - **Organisation policies**: no service account keys, no public IP on Cloud SQL,
   resource locations limited to the UK. Public access is granted only where it is meant
   to be (the public read, and the editor's service once it is behind the load balancer),

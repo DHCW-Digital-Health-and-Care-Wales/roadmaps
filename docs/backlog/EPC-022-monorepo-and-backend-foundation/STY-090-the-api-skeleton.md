@@ -5,7 +5,7 @@
 - **Type**: Feature
 - **Area**: API + CI/CD
 - **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
-- **Depends on**: STY-086 (hard), STY-087 (preferred order)
+- **Depends on**: STY-086 (hard), STY-087 (hard: its hooks and gate, which the API joins)
 - **Binding ADRs**: ADR-017, ADR-016 §Workspace tooling, §CI
 - **Suggested model**: Opus — the conventions every later API story copies
 
@@ -32,5 +32,5 @@ _Not acceptance criteria._
   each exclusion with its reason.
 - Compose `postgres:18` and the worktree script's API port and database container;
   `t3.json`; root `api:*` scripts.
-- ruff in lint-staged and ty before push; the API's CI job, added to the ruleset's
-  required checks; Dependabot for uv; `apps/api/AGENTS.md`.
+- ruff in lefthook's commit hook and ty before push (STY-087 D7); the API's CI job,
+  feeding the _CI result_ gate (STY-087 D5); Dependabot for uv, with STY-087's cooldown; `apps/api/AGENTS.md`.

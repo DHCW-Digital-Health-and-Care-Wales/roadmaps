@@ -17,15 +17,18 @@ under its own verdict. It runs as the security lane that
 Invoke as `/threat-review [target]`, with targets as `code-review` takes them. Report
 in the conversation only: do not post, change code or files, merge, contact anyone, or
 probe a real service, account or secret. Reading live platform state is evidence, not
-probing: read-only `gh api` GETs of the organisation's repositories (settings,
-rulesets, environments, collaborators and the caller's own permissions) may settle a
-claim; leave credentials and their status unread.
+probing: `gh api` GETs of the organisation's repositories (settings, rulesets,
+environments, collaborators and the caller's own permissions) may settle a claim, with
+any query in the URL, since `-f`, `-F` or `--input` turns the call into a POST. The
+value or use of a secret, token or key stays out of reach.
 
 ## Working order
 
-1. **Pin the scope**: the brief's base and head SHAs, or the target resolved against
-   its merge-base, read with `git show` and `git diff` in a read-only checkout. Read
-   every changed line, docs included, and name in the report any you left unread.
+1. **Pin the scope**: the brief's base and head SHAs; otherwise the target resolved
+   against its merge-base, with working-tree and untracked files when the target is
+   defaulted. Keep the checkout read-only (`git show <sha>:<path>`); an empty scope is
+   nothing to review, not a pass. Read every changed line, docs included: a diff read
+   through `head`, `cut` or a filter, or cut by output length, has lines unread.
 2. **Model the change's threats.** From the diff and the records it cites, write down,
    briefly, before judging:
    - **Assets** it touches: a session, a token or ID token, an invitation, a person's
@@ -52,8 +55,7 @@ claim; leave credentials and their status unread.
    (ADR-020), with infrastructure-held protections in EPC-023; the root `AGENTS.md` rules on
    tokens and untrusted data. An accepted ADR's risks, and the exceptions it states (a
    value it lets travel in a URL, a request it exempts from a rule), are the owner's:
-   not findings unless the change widens them. A stated risk or claim the change
-   makes false is a finding against the record.
+   not findings unless the change widens them or makes their statement false.
 4. **Apply the lenses**: every general lens, then each area lens the change reaches.
    For each asset and actor, show the control that stops the actor, or report its
    absence.
@@ -84,11 +86,17 @@ claim; leave credentials and their status unread.
   the PR. A value in a URL, which request logs and history keep, only where an
   accepted ADR allows it and says what bounds it. Personal data minimised and its
   retention stated (ADR-018).
+- **Reconnaissance.** The repository is public: no change hands a reader targeting
+  detail they could not get otherwise, such as how many or which accounts hold
+  privileged access, internal hostnames, addresses or account and project IDs beyond
+  what a deployment needs, or a step-by-step path through a weakness still open. A
+  record states the risk's class and its control, not the detail an attacker would
+  use.
 - **Abuse and availability.** What an anonymous caller can make the service write,
   compute or send; what limits it (the edge, ADR-020); what a provider outage stops.
 - **Who else holds it.** For each control a record names by a person or role (the
-  owner's bypass, an approver, a deploy identity), list every holder of that
-  credential, agent sessions and machines included, and show what binds each.
+  owner's bypass, an approver, a deploy identity), list every holder of the credential
+  that role carries, agent sessions and machines included, and show what binds each.
 - **Proportionality.** A control's cost against this tool's scale (a handful of editors
   per tenant): a cheaper control with the same assurance is a finding; a missing
   expensive one with no realistic actor is not.
@@ -117,9 +125,9 @@ Each names a class of defect; the ADR holds the rule it is judged against.
 - **CI and supply chain** (ADR-007 _Supply chain_, ADR-016): a workflow that runs untrusted code with secrets or
   write permissions; an action not pinned by SHA; cloud identity not conditioned on
   repository, ref and environment; a new dependency unmaintained, unproven or just
-  released. In CI's design: a path filter that fails open; a gate that passes on a job
-  that never ran; a required check any writer can post; a bypass that is the routine
-  path; a route for new dependency versions that skips the cooldown.
+  released, or taken with no release-age wait. In CI's design: a path filter that fails
+  open; a gate that passes on a job that never ran; a required check any writer can
+  post; a bypass that is the routine path.
 - **Infrastructure** (ADR-020, EPC-023): a grant wider than its job; a
   long-lived key; a database reachable from outside; an action no log attributes, or
   a log readable by more people than need it; real data outside production.
@@ -137,9 +145,10 @@ Each names a class of defect; the ADR holds the rule it is judged against.
 | P2       | A defence-in-depth gap with a plausible actor, or a security claim in code or a record that is wrong                                    |
 | P3       | Hardening, an unstated residual risk, or a disproportionate control                                                                     |
 
-Choose priority from what the actor gains and how easily they reach it, judged against
-what the change or record claims, not only against today's state. No quota: return no
-findings when none is established.
+Choose priority from what the actor gains and how easily they reach it. A control a
+record says is in place but is not is graded by what the actor gains once it is relied
+on, even when nothing regresses today. No quota: return no findings when none is
+established.
 
 ## Report format
 
@@ -155,7 +164,7 @@ Findings
   Control: <the control that is missing, wrong or unverified; the record or ADR it breaks>
   Evidence: <code trace, primary source with link, or check run; confidence>
   Fix: <smallest control that closes it and the test or scenario that proves it, or the
-       residual risk the owner would accept; give both when either is legitimate>
+       residual risk the owner would accept; give both when both would close it>
 
 Verification: <sources and checks actually used; what could not be verified>
 Not findings: <attacks considered and dropped, and why; or None>

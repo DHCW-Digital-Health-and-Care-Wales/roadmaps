@@ -1,10 +1,9 @@
 # EPC-022: Monorepo and backend foundation — an API and its database beside the Sheets editor
 
-- **Status**: Active — every binding ADR is accepted (owner, 2026-11-21); the
-  placeholders' acceptance criteria, then the schema, identity and endpoint stories, are
-  written next
-- **Progress**: 0 of 10 terminal; next selectable: none; blocked on: STY-085's acceptance
-  criteria
+- **Status**: Active — every binding ADR is accepted (owner, 2026-11-21); STY-085 to
+  STY-088 are Proposed, and the other placeholders' acceptance criteria, then the
+  schema, identity and endpoint stories, are written next
+- **Progress**: 0 of 11 terminal; next selectable: STY-085
 - **Binding ADRs**: ADR-015, ADR-016, ADR-017, ADR-018, ADR-019, ADR-020, ADR-002
 
 ## Summary
@@ -86,7 +85,8 @@ Owner answers of 2026-11-21 (monorepo grilling), drafted into ADR-016 and ADR-01
 8. **The repository is renamed `roadmaps` first**, on its own; the old editor address
    gets no redirect, and leads are told the new one.
 9. **`main` is protected** by `product-roadmaps`' ruleset, applied repository-wide, with
-   required checks and signed commits; the owner keeps bypass.
+   required checks and signed commits; the owner keeps bypass. Amended in STY-087's
+   grilling: squash only, bypass through pull requests only, one gate check.
 10. **Workspace tooling, CI and agent guides**: ADR-016 _Workspace tooling_, _CI_,
     _Agent guides_.
 11. **The API stack**: ADR-017, including the public read (no key, open CORS, OGL v3.0,
@@ -113,8 +113,10 @@ ADR-020._
 
 ### Workspace commands
 
-Root scripts delegate to an app with `pnpm --filter <app>`; the API's run through uv
-from its own directory. A story that adds a command adds its root script.
+Root scripts that run one app carry its prefix (`editor:dev`, later `site:` and `api:`)
+and delegate with `pnpm --filter`; `lint`, `typecheck`, `test`, `build`,
+`format:check` and `test:docs` run across the workspace (STY-086 D1). The API's run
+through uv from its own directory. A story that adds a command adds its root script.
 
 ### The API's conventions
 
@@ -125,22 +127,24 @@ the seeder for any table it creates.
 
 ## Stories
 
-| ID      | Story                                                                                               | Area                   | Depends on  | State |
-| ------- | --------------------------------------------------------------------------------------------------- | ---------------------- | ----------- | ----- |
-| STY-085 | [Rename the repository to roadmaps](STY-085-rename-the-repository-to-roadmaps.md)                   | CI/CD + Docs           | —           |       |
-| STY-086 | [Move the editor into apps/editor](STY-086-move-the-editor-into-a-pnpm-workspace.md)                | CI/CD + Docs           | STY-085     |       |
-| STY-087 | [Workspace tooling and the ruleset](STY-087-workspace-tooling-and-the-main-ruleset.md)              | CI/CD                  | STY-086     |       |
-| STY-088 | [Bring the public site in](STY-088-bring-the-public-site-into-the-workspace.md)                     | CI/CD + Docs           | STY-087     |       |
-| STY-089 | [One copy of the spreadsheet fixtures](STY-089-one-copy-of-the-spreadsheet-fixtures.md)             | Infrastructure + CI/CD | STY-088     |       |
-| STY-090 | [The API skeleton](STY-090-the-api-skeleton.md)                                                     | API + CI/CD            | STY-086     |       |
-| STY-091 | [Migrations, tenant listener, test harness](STY-091-migrations-tenant-listener-and-test-harness.md) | API                    | STY-090     |       |
-| STY-092 | [The OpenAPI contract and schemas](STY-092-the-openapi-contract-and-generated-schemas.md)           | API + Infrastructure   | STY-090     |       |
-| STY-093 | [A deterministic seeder](STY-093-a-deterministic-seeder.md)                                         | API                    | STY-091     |       |
-| STY-094 | [Ask for access to a tenant](STY-094-ask-for-access-to-a-tenant.md)                                 | API                    | invitations |       |
+| ID      | Story                                                                                                 | Area                   | Depends on  | State |
+| ------- | ----------------------------------------------------------------------------------------------------- | ---------------------- | ----------- | ----- |
+| STY-085 | [Rename the repository to roadmaps](STY-085-rename-the-repository-to-roadmaps.md)                     | CI/CD + Docs           | —           |       |
+| STY-086 | [Move the editor into apps/editor](STY-086-move-the-editor-into-a-pnpm-workspace.md)                  | CI/CD + Docs           | STY-085     |       |
+| STY-087 | [Workspace tooling and the ruleset](STY-087-workspace-tooling-and-the-main-ruleset.md)                | CI/CD                  | STY-086     |       |
+| STY-088 | [Bring the public site in](STY-088-bring-the-public-site-into-the-workspace.md)                       | CI/CD + Docs           | STY-087     |       |
+| STY-089 | [One copy of the spreadsheet fixtures](STY-089-one-copy-of-the-spreadsheet-fixtures.md)               | Infrastructure + CI/CD | STY-088     |       |
+| STY-090 | [The API skeleton](STY-090-the-api-skeleton.md)                                                       | API + CI/CD            | STY-086     |       |
+| STY-091 | [Migrations, tenant listener, test harness](STY-091-migrations-tenant-listener-and-test-harness.md)   | API                    | STY-090     |       |
+| STY-092 | [The OpenAPI contract and schemas](STY-092-the-openapi-contract-and-generated-schemas.md)             | API + Infrastructure   | STY-090     |       |
+| STY-093 | [A deterministic seeder](STY-093-a-deterministic-seeder.md)                                           | API                    | STY-091     |       |
+| STY-094 | [Ask for access to a tenant](STY-094-ask-for-access-to-a-tenant.md)                                   | API                    | invitations |       |
+| STY-095 | [The public site adopts the conventions](STY-095-the-public-site-adopts-the-workspace-conventions.md) | Features/UI + i18n     | STY-088     |       |
 
-_All Placeholders until their acceptance criteria are written: ADR-016 (STY-085–STY-089)
-and ADR-017 (STY-090–STY-093) are accepted.
-STY-094 is a Placeholder until the invitation story exists.
+_STY-085 to STY-088 are Proposed. STY-089 to STY-093 are Placeholders until their
+acceptance criteria are written: ADR-016 (STY-089) and ADR-017 (STY-090–STY-093) are
+accepted. STY-094 is a Placeholder until the invitation story exists, and STY-095 until
+STY-088 shows what the imported site holds.
 Candidate scope, to split next: the first schema
 and its enforcement suite; people, identities, memberships, roles, assignments and
 invitations, with ADR-019's authorisation suite; the threat model, then sign-in with
@@ -153,11 +157,12 @@ is a later story._
 ## Sequencing
 
 The rename (STY-085) comes first, then the workspace move (STY-086), which stays one
-change. Then two tracks run in parallel: the repository's (STY-087, then STY-088 into
-a protected `main`, then STY-089) and the API's (STY-090, then STY-091 and STY-092 in
-either order, with STY-093 after STY-091). STY-090 and STY-087 both change `ci.yml`
-and the Dependabot file: whichever lands second rebases onto the other, and so does
-CHO-031 (supply-chain checks), delivered beside STY-087. The threat model comes before
+change, with no other editor-code pull request open while it is in flight (STY-086
+D8). Then two tracks run in parallel: the repository's (STY-087, then STY-088 into a
+protected `main`, then STY-089 and STY-095 in either order) and the API's (STY-090,
+then STY-091 and STY-092 in either order, with STY-093 after STY-091). STY-090 and
+STY-087 both change `ci.yml` and the Dependabot file: whichever lands second rebases
+onto the other, and so does CHO-031 (supply-chain checks), delivered beside STY-087. The threat model comes before
 any identity story (ADR-018); STY-094 follows the invitation story. The schema
 stories follow STY-093, adding their factories; the editor's adapter follows STY-092.
 

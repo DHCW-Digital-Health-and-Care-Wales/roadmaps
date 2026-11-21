@@ -3,7 +3,9 @@
 - Status: Accepted — owner, 2026-11-21; drafted from the owner's answers in the
   EPC-022 monorepo grilling (2026-11-21). ADR-007 is amended by the stories that make
   each part true (_Consequences_).
-- Date: 2026-11-21
+- Date: 2026-11-21 (amended in STY-087: squash merges only, a bypass through pull
+  requests only, one gate check, the owner the only code owner; STY-088: the shared
+  ESLint base comes with STY-095)
 
 ## Context
 
@@ -108,6 +110,28 @@ moves the public site to the API's read later, with each tenant under its own ad
 - **`shamefully-hoist`:** imports work that a package never declared, until the wrong
   copy resolves.
 - **A shared ESLint package:** an abstraction before there is duplication to share.
+
+### STY-087 amendments
+
+From the owner's STY-087 grilling (2026-11-21); the rest of _Who may change `main`_
+stands.
+
+- **Squash merges only**, not squash and rebase as copied: GitHub signs a squash
+  commit, and its docs do not say it signs a rebase merge's commits. STY-088's history
+  merge goes through the owner's bypass.
+- **The owner's bypass applies only through a pull request**, so nobody pushes straight
+  to `main`; the owner merges agents' pull requests, opened under the owner's account,
+  through it.
+- **One required check**, an always-run gate job that every CI job feeds, since a
+  required job skipped by path counts as passed.
+- **`CODEOWNERS` names only the owner** (`* @collisdigital`).
+- **The ruleset is kept as JSON in the repository** and applied by the owner.
+
+### STY-088 amendments
+
+From the owner's STY-088 grilling (2026-11-21): the public site arrives on the
+workspace's toolchain with its own code conventions, and STY-095 converges it on the
+editor's. The root `eslint.base.ts` is extracted then, not on arrival.
 
 ## Consequences
 

@@ -68,8 +68,10 @@ lives:_
   environment for the editor and the API, and a public-only service for the public read
   until the load balancer exists; then the load balancer fronts them, names its hosts
   with no default backend, and the services' `run.app` addresses are disabled. **The public read's host** behind a CDN that caches
-  current publications, purged on publish, unpublish and redaction, so redacted content
-  does not stay cached.
+  current publications, purged on publish, unpublish, redaction and any change to a
+  tenant's lists, so redacted content does not stay cached and a renamed family,
+  category or tag goes public at once, as ADR-015 Option 2 requires (checked by renaming
+  one without republishing).
 - **Cloud Armor**: per-address rate limits on the API's sign-in routes and on the public
   read, with a global per-address ceiling; request logging on. Preconfigured WAF rules
   and Adaptive Protection only if they earn their cost on a JSON API at this scale; if

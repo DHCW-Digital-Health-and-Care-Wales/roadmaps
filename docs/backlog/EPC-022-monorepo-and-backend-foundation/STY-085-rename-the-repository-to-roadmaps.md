@@ -11,8 +11,8 @@
 ## Summary
 
 The repository becomes `roadmaps`, ahead of the workspace move, so the editor opens at
-`/roadmaps/` instead of `/roadmaps-editor/`. Product Leads are told the new address
-first; the old one gets no redirect. Nothing in the editor changes.
+`/roadmaps/` instead of `/roadmaps-editor/`. Product Leads are told the new address; the
+old one gets no redirect. Nothing in the editor changes.
 
 ## Why this is a placeholder
 
@@ -27,4 +27,5 @@ _Not acceptance criteria._
 - One pull request updates every name and address: README badge and links, docs and
   runbooks, the worktree registry path, the E2E base path and the base-path guard's
   expectations.
-- ADR-007's amendment for the new base path; leads are sent the new address.
+- ADR-007's amendment for the new base path (ADR-016 _Consequences_); leads are sent
+  the new address.

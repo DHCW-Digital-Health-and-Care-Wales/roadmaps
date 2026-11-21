@@ -47,7 +47,7 @@ marked _(optional)_ when it would be empty.
   promotes it>
 - **Type**: Feature | Refactor | Copy | Docs (`+` to combine)
 - **Area**: Domain | Infrastructure | Features/UI | Routing | i18n (en + cy) |
-  E2E | CI/CD | Docs (`+` to combine)
+  E2E | CI/CD | API | Docs (`+` to combine)
 - **Epic**: <epic folder, e.g. EPC-002-roadmap-detail>
 - **Depends on**: STY-{nnn} (hard, must be on the default branch), STY-{nnn}
   (preferred order) | none

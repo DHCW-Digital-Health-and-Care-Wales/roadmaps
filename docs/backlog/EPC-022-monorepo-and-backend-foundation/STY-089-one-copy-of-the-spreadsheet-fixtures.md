@@ -11,8 +11,8 @@
 ## Summary
 
 The editor copies the public site's fake-data spreadsheet CSVs today. One copy replaces
-both, read by the editor's Sheets adapter tests and the public site's parser tests, so a
-change to the format fails both apps in the same pull request.
+both, read by the editor's tests and the public site's parser tests, so a change to the
+format fails both apps in the same pull request.
 
 ## Why this is a placeholder
 
@@ -22,5 +22,7 @@ ADR-016 is Proposed.
 
 _Not acceptance criteria._
 
-- One fixture folder, its licence and README kept; both apps' tests read it.
-- The editor's copy and its provenance note go.
+- One fixture folder, its licence and README kept; both apps' unit tests and the
+  editor's E2E Sheets fake read it.
+- The editor's copied CSVs and their provenance note go; its own `Template.csv` moves
+  into the shared folder or stays beside the editor's tests.

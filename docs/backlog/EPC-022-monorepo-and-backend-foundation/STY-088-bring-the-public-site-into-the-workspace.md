@@ -22,11 +22,14 @@ ADR-016 is Proposed.
 
 _Not acceptance criteria._
 
-- Freeze `product-roadmaps`; merge its history as unrelated, then `git mv` into
-  `apps/public-site` (merge commits allowed for that pull request only).
-- pnpm, Node 26, the root Prettier style (the reformat commit in
-  `.git-blame-ignore-revs`); the root `eslint.base.ts`; its CI jobs (checks, E2E,
-  Lighthouse) and `check-sheet.yml`; its guide as `apps/public-site/AGENTS.md`.
-- Compare the built output before and after; then `product-roadmaps`' workflow checks
-  out this repository and builds the subfolder; its open Dependabot PRs closed; its
-  README points here.
+- Freeze `product-roadmaps`. On a branch of its history, `git mv` everything into
+  `apps/public-site`, then merge it with `--allow-unrelated-histories` (ADR-016 _The
+  public site_), so its root files never collide with the workspace's. An owner widens
+  the merge setting and the ruleset's merge methods for that pull request, or merges
+  through bypass, and restores both.
+- The toolchain change and the reformat commit; the root `eslint.base.ts`; its CI jobs
+  (checks, E2E in its Playwright container, Lighthouse); its guide as
+  `apps/public-site/AGENTS.md`.
+- Compare the built output before and after. Then `product-roadmaps`' deploy and
+  `check-sheet.yml` workflows check out this repository; its open Dependabot pull
+  requests close; its README points here; ADR-007's amendment for the public site.

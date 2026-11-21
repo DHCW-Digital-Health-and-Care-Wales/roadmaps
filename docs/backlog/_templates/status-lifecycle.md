@@ -74,9 +74,13 @@ stateDiagram-v2
 
 ## Epics
 
-`Active` | `Done` (every row terminal) | `Won't do` (owner) — a Won't do epic
-stays in place with its stories each closed as Won't do or Superseded. A Done
-epic moves to `_archive/{epic}/`.
+`Needs grilling` | `Active` | `Done` (every row terminal) | `Won't do` (owner).
+
+- **Needs grilling**: an owner decision blocks the epic's design or story split; Owner
+  decisions waiting lists them. Its stories, if any, are not selectable. It becomes
+  Active once those decisions are taken, in the change that records them.
+- A Won't do epic stays in place with its stories each closed as Won't do or
+  Superseded. A Done epic moves to `_archive/{epic}/`.
 
 ## ADRs
 

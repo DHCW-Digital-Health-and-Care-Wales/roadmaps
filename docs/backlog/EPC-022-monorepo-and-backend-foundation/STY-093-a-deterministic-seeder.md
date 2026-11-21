@@ -1,27 +1,28 @@
-# STY-093: A deterministic seeder fills a local database with plausible roadmaps
+# STY-093: A deterministic seeder fills a local database, growing with each schema story
 
-- **Status**: Placeholder — promoted once ADR-017 is accepted and the first schema exists
+- **Status**: Placeholder — promoted once ADR-017 is accepted
 - **Type**: Feature
-- **Area**: Infrastructure
+- **Area**: API
 - **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
 - **Depends on**: STY-091 (hard)
 - **Binding ADRs**: ADR-017 §Operation
-- **Suggested model**: Sonnet — factories over a known schema
+- **Suggested model**: Sonnet — a small harness the schema stories extend
 
 ## Summary
 
-A developer runs one command and the local database holds a DHCW tenant, people with
-roles, and roadmaps with items in Now, Next and Later, in English and Welsh, the same
-every time. It refuses any environment but local and test, and grows with each schema
-story.
+A developer runs one command and the local database is filled with the same plausible
+fake data every time, in English and Welsh. It starts with the DHCW tenant; each schema
+story that follows adds its own factories (people, roles, roadmaps, items), so local
+data grows from the start.
 
 ## Why this is a placeholder
 
-ADR-017 is Proposed, and the seeder needs the first schema.
+ADR-017 is Proposed.
 
 ## Rough shape of the work
 
 _Not acceptance criteria._
 
-- Factories with a fixed Faker seed; Welsh from a hand-written phrase list.
-- An environment guard; a root `api:seed` script.
+- The command and a root `api:seed` script; a fixed seed; a hand-written Welsh phrase
+  list; the DHCW tenant.
+- Proposed defaults: factories with Faker; refusing any environment but local and test.

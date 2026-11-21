@@ -10,10 +10,9 @@
 
 ## Summary
 
-The workspace gets its shared tooling: version catalogs, one Prettier config, commit and
-push hooks, CI as jobs per app with workflow linting, and Dependabot for pnpm. `main`
-gets the ruleset copied from `product-roadmaps`, with required checks and signed
-commits, so the public site's code arrives into a protected branch.
+The workspace gets the shared tooling ADR-016 sets for the two TypeScript apps, CI as
+jobs per app, and the ruleset on `main`, so the public site's code arrives into a
+protected branch. Nothing changes for Product Leads.
 
 ## Why this is a placeholder
 
@@ -23,8 +22,11 @@ ADR-016 is Proposed.
 
 _Not acceptance criteria._
 
-- pnpm `catalog:` entries; strict resolution; root `.prettierrc.json`.
-- Husky and lint-staged (commit: Prettier, ESLint; push: typecheck).
-- `ci.yml`: a `changes` job by path, fixed job names, actionlint and zizmor.
-- Dependabot for pnpm beside GitHub Actions, grouped monthly.
-- The ruleset and `CODEOWNERS` (an owner applies them), named in the PR as manual steps.
+- ADR-016 _Workspace tooling_ for what exists now: catalogs, the root Prettier config,
+  hooks for Prettier, ESLint and typecheck (ruff and ty join with STY-090), Dependabot
+  for pnpm.
+- ADR-016 _CI_: the `changes` job and fixed job names; consider one always-run gate
+  job for the ruleset to require, since a job skipped because `changes` failed also
+  counts as passed.
+- The ruleset and `CODEOWNERS`, applied by an owner and named in the pull request as
+  manual steps; ADR-007's amendment for CI per app.

@@ -1,6 +1,6 @@
 # EPC-022: Monorepo and backend foundation — an API and its database beside the Sheets editor
 
-- **Status**: Needs grilling — the repository and API foundation is split (STY-085–093);
+- **Status**: Needs grilling — the repository and API foundation is split (STY-085–STY-093);
   the schema and endpoint stories wait on the identity and authorisation ADRs
 - **Progress**: 0 of 9 terminal; next selectable: none; blocked on: accepting ADR-016 and
   ADR-017
@@ -10,10 +10,11 @@
 
 The editor reads and writes one Google spreadsheet, a temporary data source (ADR-002).
 This epic makes the repository a monorepo, renamed `roadmaps`, that also takes in the
-public site, and establishes the backend that will replace it: a Python FastAPI service over the PostgreSQL 18 database ADR-015 designs, scoped by
-tenant, keeping every version, with private scratch, shared drafts, publications,
-people, roles and assignments. Google Sheets stays the deployed data source throughout,
-so Product Leads see no change; the API is developed, tested and run locally beside it,
+public site, and establishes the backend that will replace the spreadsheet: a Python
+FastAPI service over the PostgreSQL 18 database ADR-015 designs, scoped by tenant,
+keeping every version, with private scratch, shared drafts, publications, people, roles
+and assignments. Google Sheets stays the deployed data source throughout, so Product
+Leads see no change beyond the editor's new address; the API is developed, tested and run locally beside it,
 and the editor can be built against either data source, as the composition root
 chooses (ADR-002). The editor's new editing model (scratch, draft, permissions), the
 switch of the deployed editor to the API, and the infrastructure as code for its
@@ -47,7 +48,7 @@ Greenfield for the backend; the precedent is the editor's own seams, audited at
   with the editor's new editing model.
 
 For the repository and the public site, audited at `5d8c58d` (this repository) and
-`6128b5f` (`product-roadmaps`) on 2026-11-21:
+`2548219` (`product-roadmaps`) on 2026-11-21:
 
 - The public site is a static Vite site prerendered from a snapshot of the spreadsheet,
   on npm and Node 24, published nightly and on a push to Pages at `/product-roadmaps/`.
@@ -57,18 +58,23 @@ For the repository and the public site, audited at `5d8c58d` (this repository) a
   own repository; every organisation site shares one origin.
 - This repository's `main` is unprotected and allows only squash and rebase merges;
   `product-roadmaps` requires code-owner review on `main`.
+- `product-roadmaps`' ruleset allows only squash and rebase merges, so the public site's
+  history merge needs it widened for one pull request, or the owner's bypass.
 - The `postgres:18` image keeps its data under `/var/lib/postgresql/18/docker` and
   refuses a mount at the old `/var/lib/postgresql/data`.
+- ty, evaluated on 2026-11-21 (0.0.107 on Python 3.15.0, with SQLAlchemy 2.1.9, FastAPI
+  and Pydantic), reported no false positives and the same errors as mypy strict on a
+  sample of typed models, `select()` tuples, a session listener and a route.
 
 ## Design
 
 Owner answers of 2026-11-20 (ADR-015 grilling, rounds 1–7):
 
-1. **Layout**: `apps/editor` (today's app, moved) and `apps/api`. The move is the
-   epic's first story and one mechanical change, with docs, skills, configs, worktree
-   scripts and CI paths updated together; it was chosen over keeping the editor at the
-   root. _Amended by 7 and 8: the layout adds `apps/public-site` and
-   `packages/api-types`, and the rename comes before the move._
+1. **Layout**: `apps/editor` (today's app, moved), `apps/public-site`, `apps/api` and
+   `packages/api-types` (ADR-016, amended 2026-11-21 from `apps/editor` and `apps/api`).
+   The move is one mechanical change, with docs, skills, configs, worktree scripts and
+   CI paths updated together, chosen over keeping the editor at the root; the rename
+   comes before it.
 2. **The editor's API adapter and a build-time data source switch are in this epic**,
    running the shared contract suite against the API; Sheets stays the deployed source.
 3. **The database is ADR-015**, delivered with its enforcement suite (ADR-015 _What
@@ -82,19 +88,16 @@ Owner answers of 2026-11-20 (ADR-015 grilling, rounds 1–7):
 
 Owner answers of 2026-11-21 (monorepo grilling), drafted into ADR-016 and ADR-017:
 
-7. **The public site joins now** (ADR-016 _The public site_): its history merged into
-   `apps/public-site`, on pnpm, Node 26 and the root Prettier style;
-   `product-roadmaps` keeps publishing it, nightly and by hand, from this repository's
-   `main` head. The two apps share one copy of the spreadsheet fixtures, and no contract
-   package.
+7. **The public site joins now** (ADR-016 _The public site_), and `product-roadmaps`
+   keeps publishing it, nightly and by hand, from this repository's `main` head.
 8. **The repository is renamed `roadmaps` first**, on its own; the old editor address
    gets no redirect, and leads are told the new one.
 9. **`main` is protected** by `product-roadmaps`' ruleset, applied repository-wide, with
    required checks and signed commits; the owner keeps bypass.
-10. **Workspace tooling and CI** as ADR-016: pnpm alone with catalogs, one Prettier
-    config, ESLint per app, commit and push hooks, one `ci.yml` with jobs per app,
-    Dependabot for Actions, pnpm and uv, E2E inside each app, a guide per app.
-11. **The API stack** as ADR-017, with a deterministic seeder from the skeleton onwards.
+10. **Workspace tooling, CI and agent guides**: ADR-016 _Workspace tooling_, _CI_,
+    _Agent guides_.
+11. **The API stack**: ADR-017, including the public read (no key, open CORS, OGL v3.0,
+    current publications only) and the seeder, which starts right after the migrations.
 
 _The schema and endpoint design is written once the identity and authorisation ADRs
 exist._
@@ -108,8 +111,10 @@ from its own directory. A story that adds a command adds its root script.
 
 ### The API's conventions
 
-Every API story follows ADR-017's layering, error envelope and test harness, and adds
-its error codes to the editor's catalogue in English and Welsh in the same change.
+Every API story follows ADR-017's layering, error envelope and test harness. A story
+that adds an error code maps it in the editor's API adapter (ADR-017 _Errors_), with
+copy in English and Welsh when it needs a new `AppError` kind, and adds factories to
+the seeder for any table it creates.
 
 ## Stories
 
@@ -120,25 +125,27 @@ its error codes to the editor's catalogue in English and Welsh in the same chang
 | STY-087 | [Workspace tooling and the ruleset](STY-087-workspace-tooling-and-the-main-ruleset.md)              | CI/CD                  | STY-086    |       |
 | STY-088 | [Bring the public site in](STY-088-bring-the-public-site-into-the-workspace.md)                     | CI/CD + Docs           | STY-087    |       |
 | STY-089 | [One copy of the spreadsheet fixtures](STY-089-one-copy-of-the-spreadsheet-fixtures.md)             | Infrastructure + CI/CD | STY-088    |       |
-| STY-090 | [The API skeleton](STY-090-the-api-skeleton.md)                                                     | CI/CD + Docs           | STY-086    |       |
-| STY-091 | [Migrations, tenant listener, test harness](STY-091-migrations-tenant-listener-and-test-harness.md) | Infrastructure + CI/CD | STY-090    |       |
-| STY-092 | [The OpenAPI contract and schemas](STY-092-the-openapi-contract-and-generated-schemas.md)           | Infrastructure + CI/CD | STY-090    |       |
-| STY-093 | [A deterministic seeder](STY-093-a-deterministic-seeder.md)                                         | Infrastructure         | STY-091    |       |
+| STY-090 | [The API skeleton](STY-090-the-api-skeleton.md)                                                     | API + CI/CD            | STY-086    |       |
+| STY-091 | [Migrations, tenant listener, test harness](STY-091-migrations-tenant-listener-and-test-harness.md) | API                    | STY-090    |       |
+| STY-092 | [The OpenAPI contract and schemas](STY-092-the-openapi-contract-and-generated-schemas.md)           | API + Infrastructure   | STY-090    |       |
+| STY-093 | [A deterministic seeder](STY-093-a-deterministic-seeder.md)                                         | API                    | STY-091    |       |
 
-_All Placeholders until ADR-016 (STY-085–089) and ADR-017 (STY-090–093) are accepted.
+_All Placeholders until ADR-016 (STY-085–STY-089) and ADR-017 (STY-090–STY-093) are
+accepted.
 Candidate scope, to split after the identity and authorisation ADRs: the first schema
 and its enforcement suite; people, memberships, roles and assignments; the scratch, draft,
 save, publish and restore path; the API's endpoints for the roadmap repository's
-calls and for the public site's read; the import of the spreadsheet's data; and the
+calls and for the public read; the import of the spreadsheet's data; and the
 editor's API adapter with its build-time switch._
 
 ## Sequencing
 
 The rename (STY-085) comes first, then the workspace move (STY-086), which stays one
 change. Then two tracks run in parallel: the repository's (STY-087, then STY-088 into
-a protected `main`, then STY-089) and the API's (STY-090, then STY-091 and STY-092,
-then STY-093). The schema stories follow STY-091; the editor's adapter follows
-STY-092.
+a protected `main`, then STY-089) and the API's (STY-090, then STY-091 and STY-092 in
+either order, with STY-093 after STY-091). STY-090 and STY-087 both change `ci.yml`
+and the Dependabot file: whichever lands second rebases onto the other. The schema
+stories follow STY-093, adding their factories; the editor's adapter follows STY-092.
 
 ## Out of scope
 
@@ -150,9 +157,8 @@ STY-092.
 - Infrastructure as code and provisioned environments: a later epic, handed a service
   that runs locally and in CI.
 - Live presence and real-time updates.
-- A cross-repository deploy trigger, Google Cloud hosting and custom domains: the
-  infrastructure epic, before `product-roadmaps`' schedule lapses (ADR-016
-  _Consequences_).
+- Google Cloud hosting and custom domains: the infrastructure epic. A
+  cross-repository deploy trigger was rejected (ADR-016), not deferred.
 
 ## Defects
 

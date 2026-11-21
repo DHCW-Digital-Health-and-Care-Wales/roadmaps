@@ -1,8 +1,8 @@
 # ADR-019: The API authorises every route by a declared policy, from a permission catalogue in code and three shipped roles
 
-- Status: Proposed — drafted from the owner's answers in the identity and authorisation
-  grilling (2026-11-21) and their answers to its review, for the owner's acceptance; the
-  options chosen are marked ✅.
+- Status: Accepted — owner, 2026-11-21 ("I accept the ADRs (all those in the epic so far)", on PR #222); drafted from the owner's answers in the identity and
+  authorisation grilling (2026-11-21) and their answers to its review; the options
+  chosen are marked ✅.
 - Date: 2026-11-21
 
 ## Context
@@ -162,7 +162,7 @@ The analysis behind both is
 - **A Viewer is a new kind of user** the editor has not had: everything is read-only
   for them, and the editor's switch-over epic designs that.
 - **The editor's interface shows permissions as hints only**; the API decides.
-- **ADR-015 is amended** when this is accepted:
+- **ADR-015 is amended** (its _ADR-018 and ADR-019 amendments_):
   - ADR-015 Option 22: the Product Lead role also holds `roadmaps:edit` and `roadmaps:publish`;
     an admin's right to edit every roadmap (ADR-015 Option 23) is the `roadmaps:edit-any`
     permission.

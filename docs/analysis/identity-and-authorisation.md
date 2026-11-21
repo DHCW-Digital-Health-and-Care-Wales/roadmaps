@@ -369,7 +369,7 @@ and an SBOM.
 
 The owner answered the decisions in the grilling of 2026-11-21, after an independent
 review of this analysis, and answered the questions its drafts' review raised. The
-answers are drafted into three Proposed ADRs, for the owner's acceptance:
+answers are three ADRs, accepted by the owner on 2026-11-21:
 
 - [ADR-018](../adr/ADR-018-sign-in-through-the-api-with-a-server-side-session.md),
   identity: D1, D3–D9, D12;

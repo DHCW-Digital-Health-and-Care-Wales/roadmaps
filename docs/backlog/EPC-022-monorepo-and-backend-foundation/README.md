@@ -1,9 +1,10 @@
 # EPC-022: Monorepo and backend foundation — an API and its database beside the Sheets editor
 
-- **Status**: Needs grilling — the repository and API foundation is split (STY-085–STY-093);
-  the schema, identity and endpoint stories wait on accepting ADR-018 to ADR-020
-- **Progress**: 0 of 10 terminal; next selectable: none; blocked on: accepting ADR-016 and
-  ADR-017
+- **Status**: Needs grilling — every binding ADR is accepted (owner, 2026-11-21); the
+  placeholders' acceptance criteria, then the schema, identity and endpoint stories, are
+  written next
+- **Progress**: 0 of 10 terminal; next selectable: none; blocked on: STY-085's acceptance
+  criteria
 - **Binding ADRs**: ADR-015, ADR-016, ADR-017, ADR-018, ADR-019, ADR-020, ADR-002
 
 ## Summary
@@ -22,20 +23,7 @@ environments are later epics.
 
 ## Owner decisions waiting
 
-- [ADR-016](../../adr/ADR-016-one-pnpm-workspace-for-the-editor-public-site-and-api.md)
-  — Proposed: accept the workspace, the rename and the public site's move
-- [ADR-017](../../adr/ADR-017-the-api-is-synchronous-fastapi-over-sqlalchemy-and-psycopg.md)
-  — Proposed: accept the API stack
-- [ADR-018](../../adr/ADR-018-sign-in-through-the-api-with-a-server-side-session.md)
-  — Proposed: accept sign-in through the API (Google Workspace, then Entra) with a
-  server-side session, its amendments to ADR-015, and superseding ADR-003 for the API
-  data source
-- [ADR-019](../../adr/ADR-019-the-api-authorises-every-route-from-a-permission-catalogue-in-code.md)
-  — Proposed: accept the permission catalogue, the shipped roles and how the API
-  enforces them, and its amendments to ADR-015
-- [ADR-020](../../adr/ADR-020-the-editor-and-the-api-share-one-origin.md) — Proposed:
-  accept one origin for the editor and the API, the public read's own host and the API's
-  HTTP hardening, and its amendment to ADR-017
+None. ADR-016 to ADR-020 were accepted on 2026-11-21.
 
 ## Findings
 
@@ -118,8 +106,8 @@ its drafts), from the
 15. **Supply-chain checks**: CHO-031, beside STY-087.
 16. **Infrastructure-held protections**: EPC-023, a placeholder.
 
-_The schema, identity and endpoint stories are written once ADR-018 to ADR-020 are
-accepted._
+_The schema, identity and endpoint stories are written next, from ADR-015 and ADR-018 to
+ADR-020._
 
 ## Shared assumptions and contracts
 
@@ -150,11 +138,10 @@ the seeder for any table it creates.
 | STY-093 | [A deterministic seeder](STY-093-a-deterministic-seeder.md)                                         | API                    | STY-091     |       |
 | STY-094 | [Ask for access to a tenant](STY-094-ask-for-access-to-a-tenant.md)                                 | API                    | invitations |       |
 
-_All Placeholders until ADR-016 (STY-085–STY-089) and ADR-017 (STY-090–STY-093) are
-accepted.
-STY-094 is a Placeholder until ADR-018 and ADR-019 are accepted and the invitation
-story exists.
-Candidate scope, to split once ADR-018 to ADR-020 are accepted: the first schema
+_All Placeholders until their acceptance criteria are written: ADR-016 (STY-085–STY-089)
+and ADR-017 (STY-090–STY-093) are accepted.
+STY-094 is a Placeholder until the invitation story exists.
+Candidate scope, to split next: the first schema
 and its enforcement suite; people, identities, memberships, roles, assignments and
 invitations, with ADR-019's authorisation suite; the threat model, then sign-in with
 Google and the mock provider, sessions and signing out (ADR-018); the scratch, draft,

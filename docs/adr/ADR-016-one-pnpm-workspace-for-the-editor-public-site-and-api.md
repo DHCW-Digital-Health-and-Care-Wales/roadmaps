@@ -1,8 +1,8 @@
 # ADR-016: One pnpm workspace holds the editor, the public site and the API
 
-- Status: Proposed — drafted from the owner's answers in the EPC-022 monorepo grilling
-  (2026-11-21), for the owner's acceptance. Once accepted, ADR-007 is amended by the
-  stories that make each part true (_Consequences_).
+- Status: Accepted — owner, 2026-11-21 ("I accept the ADRs (all those in the epic so far)", on PR #222); drafted from the owner's answers in the EPC-022 monorepo
+  grilling (2026-11-21). ADR-007 is amended by the stories that make each part true
+  (_Consequences_).
 - Date: 2026-11-21
 
 ## Context

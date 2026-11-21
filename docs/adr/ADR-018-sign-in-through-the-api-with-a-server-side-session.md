@@ -1,10 +1,9 @@
 # ADR-018: People sign in through the API and hold a server-side session
 
-- Status: Proposed — drafted from the owner's answers in the identity and authorisation
-  grilling (2026-11-21) and their answers to its review, for the owner's acceptance; the
-  options chosen are marked ✅. Once accepted, it supersedes ADR-003 for the API data
-  source; ADR-003 stands for the Sheets adapter until the deployed editor switches to
-  the API.
+- Status: Accepted — owner, 2026-11-21 ("I accept the ADRs (all those in the epic so far)", on PR #222); drafted from the owner's answers in the identity and
+  authorisation grilling (2026-11-21) and their answers to its review; the options
+  chosen are marked ✅. It supersedes ADR-003 for the API data source; ADR-003 stands for
+  the Sheets adapter until the deployed editor switches to the API.
 - Date: 2026-11-21
 
 ## Context
@@ -287,7 +286,7 @@ shape it:
   every role; up to 10 hours of access for a leaver whose session is open; no step-up on
   Google; on a shared desk, the last person's Google account one click away after
   signing out.
-- **ADR-015 is amended** when this is accepted:
+- **ADR-015 is amended** (its _ADR-018 and ADR-019 amendments_):
   - ADR-015 Option 11: an identity is `(issuer, subject)`; only the person attaches one; the
     person (never their last) or a platform operator removes one, never a tenant admin.
   - _Tenancy_: sessions and sign-in transactions join the shared tables; the closed list
@@ -298,8 +297,8 @@ shape it:
     reads; creating, revoking and redeeming one are access change sets.
   - ADR-015 Option 27: the platform audit log also records a person disabled and invitations a
     platform job issues.
-- **ADR-003's Status becomes** "Superseded by ADR-018 for the API data source; stands
-  for the Sheets adapter" on acceptance, with its row in `docs/adr/README.md`.
+- **ADR-003's Status is** "Superseded by ADR-018 for the API data source; stands
+  for the Sheets adapter", with its row in `docs/adr/README.md`.
 - **`docs/operations/replacing-google-sheets.md`** changes with the API adapter: no
   CORS and no `Authorization` header (ADR-020), and no `getAccessToken`.
 - **The `AuthClient` port, the session warning (STY-017) and the reconnect-from-action

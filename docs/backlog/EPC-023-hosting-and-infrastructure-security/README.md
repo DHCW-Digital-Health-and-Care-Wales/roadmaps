@@ -3,8 +3,7 @@
 - **Status**: Needs grilling — a placeholder holding the infrastructure-held protections
   found while designing identity and authorisation, until the infrastructure epic is
   planned (owner, 2026-11-21)
-- **Progress**: 0 of 0 terminal; next selectable: none; blocked on: EPC-022's API, and
-  accepting ADR-018, ADR-019 and ADR-020
+- **Progress**: 0 of 0 terminal; next selectable: none; blocked on: EPC-022's API
 - **Binding ADRs**: ADR-015, ADR-016, ADR-017, ADR-018, ADR-019, ADR-020, ADR-007
 
 ## Summary
@@ -21,9 +20,6 @@ candidate scope below is a list of findings, not a plan.
 
 ## Owner decisions waiting
 
-- [ADR-020](../../adr/ADR-020-the-editor-and-the-api-share-one-origin.md) — Proposed:
-  accepting it settles the hosting shape below (one Cloud Run service, a load balancer
-  once the editor has its domain)
 - The editor's domain, and who owns its DNS
 - Who in NHS Wales approves the Entra app registration, and the lead time
 - Where security alerts go: DHCW's security monitoring, and who answers them
@@ -42,14 +38,14 @@ Greenfield. The inputs, audited at `86afe40` on 2026-11-21:
   as their own step under a role with DDL rights, scheduled jobs as CLI commands called
   by an external scheduler, and "abuse is met by caching and rate limiting where the API
   is hosted" for the public read.
-- ADR-018 (Proposed): sign-in through the API with Google, then Entra admitting any
+- ADR-018 (Accepted): sign-in through the API with Google, then Entra admitting any
   valid NHS Wales directory user (no app-specific Conditional Access or group
   assignment); security events to the structured log, for export; retention defaults
   run by scheduled jobs; OIDC codes in callback URLs reach request logs.
-- ADR-019 (Proposed): platform operations as one-command Cloud Run jobs that only named
+- ADR-019 (Accepted): platform operations as one-command Cloud Run jobs that only named
   principals may start, under their own service account and database role, the
   principal taken from Cloud Audit Logs.
-- ADR-020 (Proposed): the editor and API on one origin in every environment, one Cloud
+- ADR-020 (Accepted): the editor and API on one origin in every environment, one Cloud
   Run service serving both until the domain exists, routed by host from the public
   read; the API sets the editor's document headers; rate limits at the edge.
 - A Cloud Run job runs as its service account and cannot see who started it; starting

@@ -1,6 +1,7 @@
 # STY-087: Workspace tooling, CI per app and the ruleset on main
 
-- **Status**: Placeholder — promoted once ADR-016 is accepted
+- **Status**: Placeholder — ADR-016 accepted (owner, 2026-11-21); promoted once its
+  acceptance criteria are written
 - **Type**: Refactor
 - **Area**: CI/CD
 - **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
@@ -16,7 +17,7 @@ protected branch. Nothing changes for Product Leads.
 
 ## Why this is a placeholder
 
-ADR-016 is Proposed.
+ADR-016 is accepted (2026-11-21), but the acceptance criteria are not yet written.
 
 ## Rough shape of the work
 

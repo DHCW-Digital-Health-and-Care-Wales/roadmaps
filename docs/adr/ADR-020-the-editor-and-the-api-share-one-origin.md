@@ -1,7 +1,7 @@
 # ADR-020: The editor and the API share one origin, behind edge rate limits and strict response headers; the public read has its own host
 
-- Status: Proposed — drafted from the owner's answers in the identity and authorisation
-  grilling (2026-11-21), for the owner's acceptance; the options chosen are marked ✅.
+- Status: Accepted — owner, 2026-11-21 ("I accept the ADRs (all those in the epic so far)", on PR #222); drafted from the owner's answers in the identity and
+  authorisation grilling (2026-11-21); the options chosen are marked ✅.
 - Date: 2026-11-21
 
 ## Context
@@ -66,7 +66,7 @@ and gave the editor's endpoints a CORS allow-list. Each Cloud Run service has it
 - **ADR-007's GitHub Pages deployment of the editor** ends with the switch-over: the ADR
   that switches the data source supersedes it, as ADR-015 _Consequences_ sets for the
   Sheets-era ADRs; until then the deployed Sheets editor stays on GitHub Pages.
-- **ADR-017 is amended** when this is accepted: no CORS for the editor's endpoints; the
+- **ADR-017 is amended** (its _ADR-020 amendments_): no CORS for the editor's endpoints; the
   API serves the editor's files and document headers; the response rules above.
 - **ADR-016's custom domain** stays a precondition of switching the deployed editor to
   the API; the deployed Sheets editor stays on GitHub Pages until then.

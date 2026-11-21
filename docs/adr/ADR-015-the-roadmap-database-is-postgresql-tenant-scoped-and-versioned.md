@@ -5,7 +5,8 @@
   Cloud); a detailed history of who changed what, where, over many versions, with all
   past content viewable; nothing may preclude a tenancy per NHS Wales organisation;
   technical detail is settled during EPC-022.
-- Date: 2026-11-20
+- Date: 2026-11-20 (amended by ADR-018 and ADR-019, 2026-11-21: identities, sessions,
+  invitations, definer functions, permissions and platform jobs)
 
 ## Context
 
@@ -313,7 +314,37 @@ application's own role, and prove:
 
 EPC-022 names the suite.
 
-## Consequences
+### ADR-018 and ADR-019 amendments
+
+Accepted by the owner on 2026-11-21 with ADR-018 (identity) and ADR-019
+(authorisation). Where these bullets differ from the text above, they hold; the rest
+stands.
+
+- **Sign-in identities** (Option 11): an identity is `(issuer, subject)`, never an
+  email. Only the person attaches one, through a guarded link (ADR-018); the person
+  (never their last) or a platform operator removes one, never a tenant admin.
+- **Shared tables** (_Tenancy_): sessions and sign-in transactions join `tenants`,
+  `people` and identities, each with row-level security.
+- **Definer functions** (_Tenancy_): beside the four above, the closed list gains
+  ADR-018's functions for sign-in transactions, sessions, the invitation lookup,
+  redemption and the retention purges, and ADR-019's platform procedures (issuing an
+  operator invitation, disabling a person and revoking their sessions, removing an
+  identity). These new functions are owned by a dedicated no-login role with only the
+  grants each needs, not by the schema owner.
+- **Invitations** (_People, access and permissions_): an invitation names an address,
+  not a person, until it is redeemed, rather than being a pending membership the
+  person-keyed policy reads; creating, revoking and redeeming one are access change
+  sets. A tenant keeps at least one admin, and admins review members every six months.
+- **The platform audit log** (Option 27) also records a person disabled and invitations
+  a platform job issues; it stays append-only and is never purged.
+- **Permissions** (Options 16, 22, 23, 33): the Product Lead role also holds
+  `roadmaps:edit` and `roadmaps:publish`; an admin's right to edit every roadmap is the
+  `roadmaps:edit-any` permission; a co-lead must hold `roadmaps:edit`, and a lead may
+  unassign themselves, even as the last; retired roadmaps are seen by their assigned
+  leads and holders of `roadmaps:edit-any`, and retired or reinstated by assigned
+  holders of `roadmaps:edit`.
+- **Roles** (_Roles, operation and data protection_): platform jobs run under their
+  own database role and service account.
 
 - One write path: every draft, list and access write opens a change set and ends in the
   commit function. It must stay the only path; a second one would write unrecorded

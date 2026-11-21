@@ -31,7 +31,7 @@ The analysis behind both is
 
   | Permission           | Allows                                                                 |
   | -------------------- | ---------------------------------------------------------------------- |
-  | `roadmaps:create`    | adding a roadmap, which assigns its adder to it                        |
+  | `roadmaps:create`    | adding a roadmap; an adder holding `roadmaps:edit` is assigned to it   |
   | `roadmaps:edit`      | editing, retiring and reinstating a roadmap the holder is assigned to  |
   | `roadmaps:edit-any`  | the same on every roadmap, without an assignment                       |
   | `roadmaps:publish`   | publishing and unpublishing a roadmap the holder may edit              |
@@ -61,8 +61,11 @@ The analysis behind both is
   (ADR-015 Option 33). A scratch stays its owner's alone (ADR-015).
 - **Editing a roadmap** (its scratch, saving, discarding, restoring a past version,
   retiring and reinstating it; Options 6, 15) needs `roadmaps:edit` and an assignment to
-  it, or `roadmaps:edit-any`. A member demoted to Viewer keeps their assignment rows but
-  can no longer edit.
+  it, or `roadmaps:edit-any`. **An assigned lead**, everywhere in this ADR, is a member
+  with an assignment to the roadmap who holds `roadmaps:edit` now: a member demoted to
+  Viewer keeps their assignment rows but is no longer an assigned lead, so cannot edit,
+  see the roadmap once retired, or add co-leads. An admin adding a roadmap is not
+  assigned to it, since `roadmaps:edit-any` already covers it.
 - **Publishing and unpublishing need `roadmaps:publish` and the right to edit that
   roadmap** (Option 2): any assigned Product Lead publishes, as today. Publishing stays
   its own permission and its own change set, so a later approval step (a second person
@@ -100,7 +103,13 @@ The analysis behind both is
   escalations.
 - **Each job is one command**: its entrypoint is that command, so overriding its
   arguments at run time cannot run another; it validates its arguments, and writes them
-  with its execution ID to the platform audit log. Platform jobs run under their own
+  with its execution ID to the platform audit log. Run-time overrides also cover
+  environment variables, so a job takes no security-relevant setting from its
+  environment (configuration is baked into the image or mounted as a secret) and refuses
+  to start when an unexpected variable is set. Operators hold only the role that runs a
+  job with overrides, on each job, never one that can change a job's image or command;
+  whoever can deploy is in effect a platform operator, and a change to a job raises an
+  alert (EPC-023). Platform jobs run under their own
   service account and database role, separate from the API's and the purge jobs', and
   write only through platform definer procedures.
 - **Who ran a job is taken from Cloud Audit Logs**, not typed on the command line:
@@ -163,10 +172,11 @@ The analysis behind both is
     `roadmaps:edit-any`, and retired or reinstated by holders of `roadmaps:edit`
     assigned to them.
   - _People, access and permissions_: the last-admin rule and the access review.
-  - _Roles, operation and data protection_: a platform role for platform jobs, and the
-    closed list of definer functions gains the platform procedures (create a tenant,
-    issue an operator invitation, disable a person and revoke their sessions, remove an
-    identity).
+  - _Roles, operation and data protection_: a platform role and service account for
+    platform jobs.
+  - _Tenancy_: beside the existing tenant procedure, the closed list of definer
+    functions gains the platform procedures (issue an operator invitation, disable a
+    person and revoke their sessions, remove an identity).
 - **Follow-on work**: EPC-022's schema story for people, memberships, roles and
   assignments with the enforcement suite above; the editor's new editing model (a later
   epic) builds the screens for members, assignments, the access review and the Viewer.

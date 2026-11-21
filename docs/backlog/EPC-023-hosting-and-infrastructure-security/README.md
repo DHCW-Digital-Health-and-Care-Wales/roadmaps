@@ -68,9 +68,10 @@ lives:_
   under a modern SSL policy, HTTP redirected to HTTPS, and HSTS; preload only if the
   domain is a registrable one of the editor's own. DNS ownership named, with CAA records
   and DNSSEC.
-- **The service and the load balancer** ADR-020 describes: one Cloud Run service per
-  environment, fronted by the load balancer once the domain exists, when the service's
-  `run.app` addresses are disabled. **The public read's host** behind a CDN that caches
+- **The services and the load balancer** ADR-020 describes: one Cloud Run service per
+  environment for the editor and the API, and a public-only service for the public read
+  until the load balancer exists; then the load balancer fronts them, names its hosts
+  with no default backend, and the services' `run.app` addresses are disabled. **The public read's host** behind a CDN that caches
   current publications, purged on publish, unpublish and redaction, so redacted content
   does not stay cached.
 - **Cloud Armor**: per-address rate limits on the API's sign-in routes and on the public
@@ -132,7 +133,9 @@ lives:_
   for two or three operators) rather than standing; Cloud Run's Data Access audit logs
   enabled and exported with Admin Activity logs to a retention-locked bucket, so the
   job's execution ID recorded in the platform audit log joins to the principal who
-  started it, shown on a real job before go-live; a written break-glass procedure.
+  started it, shown on a real job before go-live; operators granted only the role that
+  runs a job with overrides, on each job; an alert on any change to a job, since the
+  deploy identity is in effect a platform operator; a written break-glass procedure.
 - **Scheduled jobs**: Cloud Scheduler starts the API's purge jobs (sessions, sign-in
   transactions, invitations, ADR-018) and the scratch expiry (ADR-015).
 - **Security alerting** from the API's structured security events (ADR-018) and the
@@ -171,8 +174,9 @@ once, since its approval has its own lead time.
 - The API's own protections (sessions, CSRF, route policies, the invitation cap,
   security events, the editor's document headers while it serves them): ADR-018,
   ADR-019, ADR-020 and EPC-022's stories.
-- SCIM provisioning from Entra: over-built for a handful of editors per tenant; group
-  assignment and the access review (ADR-019) keep access current. Reconsider if a
+- SCIM provisioning from Entra: dropped, over-built for a handful of editors per
+  tenant; the invitation is the gate and the access review (ADR-019) keeps memberships
+  current. Reconsider if a
   tenant grows to hundreds of members.
 - Switching the deployed editor to the API: its own later epic, which this one enables.
 

@@ -302,8 +302,25 @@ tenant's first admin, a platform operator), redeemed by that person signing in w
 link; the only way into a tenant (ADR-018).
 _Avoid_: Sign-up, registration
 
+**Membership** _(planned)_:
+A person's place in one tenant, with the roles they hold there; a person can have
+memberships in several tenants (ADR-015, ADR-019).
+_Avoid_: Account, seat
+
+**Sign-in identity** _(planned)_:
+One account a person signs in with, at Google or in the NHS Wales directory, known by
+its issuer and that issuer's ID for it, never by email; a person can have more than
+one (ADR-018).
+_Avoid_: Login, account, user
+
+**Platform operator** _(planned)_:
+A DHCW engineer who runs the platform's jobs, such as creating a tenant; holds no tenant
+access unless invited like anyone else (ADR-019).
+_Avoid_: Admin (a tenant's role), superuser
+
 **Admin** _(planned)_:
-A tenant's role that holds every permission and edits every roadmap (ADR-019).
+A tenant's role that holds every permission but `roadmaps:edit`, and edits every
+roadmap (ADR-019).
 _Avoid_: Owner, superuser, operator (someone who runs the platform, not a tenant)
 
 **Viewer** _(planned)_:
@@ -349,7 +366,8 @@ _Avoid_: Deleted, archived, removed
 ### Connection
 
 Plumbing: these terms matter while Google is the data source, and copy keeps them out of
-the Product Lead's way.
+the Product Lead's way. With the API, people sign in and hold a server-side session
+instead (ADR-018), and these terms retire with the Sheets adapter.
 
 **Connection**:
 The user's authorisation for the app to read and write the data source on their

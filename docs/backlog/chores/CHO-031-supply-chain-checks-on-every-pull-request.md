@@ -16,8 +16,8 @@
 The repository is public and is about to gain a Python API, a second app and an
 identity layer, but nothing checks its dependencies for known vulnerabilities, holds
 back a just-published package version, scans the code statically beyond lint, or stops
-a secret at push. ADR-016 (STY-087) adds actionlint, zizmor and Dependabot for pnpm and
-uv, and ADR-017 ruff's `S` rules; this chore adds the rest, for what the repository holds
+a secret at push. STY-087 adds actionlint, zizmor and Dependabot for pnpm, STY-090
+Dependabot for uv (ADR-016), and ADR-017 ruff's `S` rules; this chore adds the rest, for what the repository holds
 when it is delivered, so the API's first dependencies arrive under the checks (analysis
 [identity and authorisation](../../analysis/identity-and-authorisation.md), F9). Done
 means each check below runs on a pull request, or is a repository setting that is on,

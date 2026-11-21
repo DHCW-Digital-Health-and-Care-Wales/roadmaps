@@ -28,7 +28,8 @@ environments are later epics.
   — Proposed: accept the API stack
 - [ADR-018](../../adr/ADR-018-sign-in-through-the-api-with-a-server-side-session.md)
   — Proposed: accept sign-in through the API (Google Workspace, then Entra) with a
-  server-side session, and its amendments to ADR-015 and ADR-017
+  server-side session, its amendments to ADR-015, and superseding ADR-003 for the API
+  data source
 - [ADR-019](../../adr/ADR-019-the-api-authorises-every-route-from-a-permission-catalogue-in-code.md)
   — Proposed: accept the permission catalogue, the shipped roles and how the API
   enforces them, and its amendments to ADR-015
@@ -136,18 +137,18 @@ the seeder for any table it creates.
 
 ## Stories
 
-| ID      | Story                                                                                               | Area                   | Depends on | State |
-| ------- | --------------------------------------------------------------------------------------------------- | ---------------------- | ---------- | ----- |
-| STY-085 | [Rename the repository to roadmaps](STY-085-rename-the-repository-to-roadmaps.md)                   | CI/CD + Docs           | —          |       |
-| STY-086 | [Move the editor into apps/editor](STY-086-move-the-editor-into-a-pnpm-workspace.md)                | CI/CD + Docs           | STY-085    |       |
-| STY-087 | [Workspace tooling and the ruleset](STY-087-workspace-tooling-and-the-main-ruleset.md)              | CI/CD                  | STY-086    |       |
-| STY-088 | [Bring the public site in](STY-088-bring-the-public-site-into-the-workspace.md)                     | CI/CD + Docs           | STY-087    |       |
-| STY-089 | [One copy of the spreadsheet fixtures](STY-089-one-copy-of-the-spreadsheet-fixtures.md)             | Infrastructure + CI/CD | STY-088    |       |
-| STY-090 | [The API skeleton](STY-090-the-api-skeleton.md)                                                     | API + CI/CD            | STY-086    |       |
-| STY-091 | [Migrations, tenant listener, test harness](STY-091-migrations-tenant-listener-and-test-harness.md) | API                    | STY-090    |       |
-| STY-092 | [The OpenAPI contract and schemas](STY-092-the-openapi-contract-and-generated-schemas.md)           | API + Infrastructure   | STY-090    |       |
-| STY-093 | [A deterministic seeder](STY-093-a-deterministic-seeder.md)                                         | API                    | STY-091    |       |
-| STY-094 | [Ask for access to a tenant](STY-094-ask-for-access-to-a-tenant.md)                                 | API + Features/UI      | —          |       |
+| ID      | Story                                                                                               | Area                   | Depends on  | State |
+| ------- | --------------------------------------------------------------------------------------------------- | ---------------------- | ----------- | ----- |
+| STY-085 | [Rename the repository to roadmaps](STY-085-rename-the-repository-to-roadmaps.md)                   | CI/CD + Docs           | —           |       |
+| STY-086 | [Move the editor into apps/editor](STY-086-move-the-editor-into-a-pnpm-workspace.md)                | CI/CD + Docs           | STY-085     |       |
+| STY-087 | [Workspace tooling and the ruleset](STY-087-workspace-tooling-and-the-main-ruleset.md)              | CI/CD                  | STY-086     |       |
+| STY-088 | [Bring the public site in](STY-088-bring-the-public-site-into-the-workspace.md)                     | CI/CD + Docs           | STY-087     |       |
+| STY-089 | [One copy of the spreadsheet fixtures](STY-089-one-copy-of-the-spreadsheet-fixtures.md)             | Infrastructure + CI/CD | STY-088     |       |
+| STY-090 | [The API skeleton](STY-090-the-api-skeleton.md)                                                     | API + CI/CD            | STY-086     |       |
+| STY-091 | [Migrations, tenant listener, test harness](STY-091-migrations-tenant-listener-and-test-harness.md) | API                    | STY-090     |       |
+| STY-092 | [The OpenAPI contract and schemas](STY-092-the-openapi-contract-and-generated-schemas.md)           | API + Infrastructure   | STY-090     |       |
+| STY-093 | [A deterministic seeder](STY-093-a-deterministic-seeder.md)                                         | API                    | STY-091     |       |
+| STY-094 | [Ask for access to a tenant](STY-094-ask-for-access-to-a-tenant.md)                                 | API                    | invitations |       |
 
 _All Placeholders until ADR-016 (STY-085–STY-089) and ADR-017 (STY-090–STY-093) are
 accepted.
@@ -195,6 +196,9 @@ None.
 - [ADR-015](../../adr/ADR-015-the-roadmap-database-is-postgresql-tenant-scoped-and-versioned.md),
   [ADR-016](../../adr/ADR-016-one-pnpm-workspace-for-the-editor-public-site-and-api.md),
   [ADR-017](../../adr/ADR-017-the-api-is-synchronous-fastapi-over-sqlalchemy-and-psycopg.md),
+  [ADR-018](../../adr/ADR-018-sign-in-through-the-api-with-a-server-side-session.md),
+  [ADR-019](../../adr/ADR-019-the-api-authorises-every-route-from-a-permission-catalogue-in-code.md),
+  [ADR-020](../../adr/ADR-020-the-editor-and-the-api-share-one-origin.md),
   [ADR-002](../../adr/ADR-002-layered-architecture-and-repository-boundary.md)
 - [Identity and authorisation analysis](../../analysis/identity-and-authorisation.md)
 - [EPC-023](../EPC-023-hosting-and-infrastructure-security/README.md) — hosting and

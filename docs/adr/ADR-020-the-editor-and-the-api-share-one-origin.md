@@ -1,4 +1,4 @@
-# ADR-020: The editor and the API share one origin; the public read has its own host
+# ADR-020: The editor and the API share one origin, behind edge rate limits and strict response headers; the public read has its own host
 
 - Status: Proposed — drafted from the owner's answers in the identity and authorisation
   grilling (2026-11-21), for the owner's acceptance; the options chosen are marked ✅.
@@ -27,11 +27,14 @@ and gave the editor's endpoints a CORS allow-list. Each Cloud Run service has it
     `run.app` addresses are disabled.
 - **The editor's endpoints send no CORS headers at all**, replacing ADR-017's
   allow-list.
-- **The public read has its own host**, with open CORS and no cookies (ADR-017). While
-  one service answers on both hosts, it routes by host: session and editor routes answer
-  only on the editor's host, public routes only on the public host. The host allow-list
-  names exactly those hosts, so a service's other addresses (legacy and tag URLs) are
-  refused.
+- **The public read has its own host**, with open CORS and no cookies (ADR-017). Before
+  the load balancer it is a second Cloud Run service from the same image, started in a
+  public-only mode that serves no session or editor route. Behind the load balancer, one
+  service may answer on both hosts and routes by host: session and editor routes answer
+  only on the editor's host, public routes only on the public host; the load balancer
+  has no default backend for a host it does not name. The API reads the `Host` header
+  only, never `X-Forwarded-Host`, and its allow-list names exactly the hosts it serves,
+  so a service's other addresses (legacy and tag URLs) are refused.
 - **A state-changing request needs same-origin proof**: `Sec-Fetch-Site: same-origin`,
   or, where a browser sends no Fetch Metadata, an `Origin` equal to the editor's; else it
   is refused. A body must be `application/json`. The sign-in callback is the one
@@ -60,6 +63,9 @@ and gave the editor's endpoints a CORS allow-list. Each Cloud Run service has it
 
 - **One deploy carries both apps** in each environment, until and after the load
   balancer: the editor's build is part of the API's image.
+- **ADR-007's GitHub Pages deployment of the editor** ends with the switch-over: the ADR
+  that switches the data source supersedes it, as ADR-015 _Consequences_ sets for the
+  Sheets-era ADRs; until then the deployed Sheets editor stays on GitHub Pages.
 - **ADR-017 is amended** when this is accepted: no CORS for the editor's endpoints; the
   API serves the editor's files and document headers; the response rules above.
 - **ADR-016's custom domain** stays a precondition of switching the deployed editor to

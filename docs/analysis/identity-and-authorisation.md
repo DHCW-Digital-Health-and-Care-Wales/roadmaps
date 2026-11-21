@@ -1,9 +1,9 @@
 # Identity and authorisation for the roadmaps API
 
 How people sign in to the API that replaces the spreadsheet, how the API knows who
-they are and what they may do, and which checks prove it. It feeds two ADRs that
-EPC-022 waits for: an identity ADR (successor to ADR-003) and an authorisation ADR
-(ADR-015 Options 16, 17, 19–23, 35). Security is the owner's first priority for both.
+they are and what they may do, and which checks prove it. It was written for the
+identity ADR (successor to ADR-003) and the authorisation ADR (ADR-015 Options 16, 17,
+19–23, 35) that EPC-022 waits for; its decisions became three ADRs (_Outcome_). Security is the owner's first priority for both.
 
 - **This repository:** audited at `86afe40` on 2026-11-21: ADR-003, ADR-015 (Accepted),
   ADR-016 and ADR-017 (Proposed), `.github/`, `docs/operations/google-cloud-setup.md`.
@@ -380,7 +380,8 @@ answers are drafted into three Proposed ADRs, for the owner's acceptance:
 
 D14 is [CHO-031](../backlog/chores/CHO-031-supply-chain-checks-on-every-pull-request.md);
 D15 is [EPC-023](../backlog/EPC-023-hosting-and-infrastructure-security/README.md).
-D8 (step-up) went to the identity ADR, not the authorisation ADR the table names.
+D8 (step-up) went to the identity ADR, not the authorisation ADR the table names; D2
+and D13 went to ADR-020, split from the identity ADR.
 
 Where the ADRs depart from the Recommendation above:
 
@@ -420,6 +421,12 @@ Where the ADRs depart from the Recommendation above:
   one Cloud Run service serves the editor and the API, routed by host from the public
   read.
 - **`AuthClient` is reshaped** (36), losing its token, rather than keeping its shape.
+- **The server's timeouts end a session** (D7, 10): the cookie still has no expiry
+  attribute, but a browser that restores sessions keeps it, so it does not end with the
+  browser.
+- **Linking is guarded** against a session someone else is using: one identity per
+  issuer, Entra only, from a session under ten minutes old, revoking the person's other
+  sessions, with removal barred for seven days.
 - **SCIM is dropped** (18): group assignment is not used, and the access review keeps
   memberships current.
 - **Sign-in hardening added**: a callback per provider bound to its issuer, against

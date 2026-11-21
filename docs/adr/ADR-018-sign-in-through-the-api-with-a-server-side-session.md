@@ -77,18 +77,22 @@ shape it:
   invitation). The API stores the state, nonce, PKCE verifier, issuer, purpose, a return
   path checked against an allow-list (no open redirect), and, for `link`, the session
   and person that started it, or, for `redeem`, the invitation; for ten minutes, behind a
-  `__Host-` cookie with `SameSite=Lax` (the provider's redirect back is a cross-site
-  navigation, so the `Strict` session cookie does not arrive with it).
+  `__Host-` cookie named for the transaction, so two tabs signing in do not overwrite
+  each other, with `SameSite=Lax` (the provider's redirect back is a cross-site
+  navigation, so the `Strict` session cookie does not arrive with it). The start answers
+  with the provider's authorisation address, and the editor navigates to it.
+- **The callback lands on a static editor page**, which then asks "who am I": the new
+  `Strict` cookie is not sent on the redirect that a cross-site navigation began.
 - **The callback is the one state-changing `GET`**, exempt from ADR-020's same-origin
   rule because it is bound instead by the transaction cookie, the single-use state, the
   nonce and PKCE. A missing, reused or expired state is refused, which also defeats
   login CSRF.
-- **At the callback, by purpose:**
-  - `sign-in`: the identity must belong to a person, who must not be disabled; else
-    refused (below).
-  - `link`: the session that started it must still be live; the new identity is
-    attached to its person; an identity that already belongs to anyone else is refused,
-    never moved or merged. The session ID is replaced.
+- **At every callback, whatever its purpose**: the person must not be disabled; a
+  Google identity is refused for a person who holds an Entra identity; and for `redeem`,
+  the callback's issuer must be the provider the invitation names.
+- **Then, by purpose:**
+  - `sign-in`: the identity must belong to a person; else refused (below).
+  - `link`: as _Linking identities_ below; the session ID is replaced.
   - `redeem`: any existing session is ignored; the invitation binds to the identity the
     provider returned (below), and a new session replaces any old one.
 - **The transaction table is the only database write anonymous traffic can cause**,
@@ -133,14 +137,18 @@ shape it:
 - **An invitation is a single-use link and a matching verified email** (Option 5): a
   256-bit token, stored only as its SHA-256 hash, expiring after seven days, naming the
   tenant, the invited address, its provider and the roles. The token travels in the
-  link's URL fragment to an editor route, which posts it to the API, so it reaches no
-  request log or `Referer`. It is redeemed by a sign-in whose verified email (Google:
-  `email` with `email_verified`; Entra: the claim chosen in the Entra spike) equals the
-  invited address, compared case-folded. A forwarded link alone, or a spoofed email
-  alone, admits nobody.
+  link's URL fragment to an editor route, so it reaches no request log or `Referer`;
+  that route clears the fragment, shows which tenant is inviting and who invited, and
+  posts the token to the API only when the person accepts, so nobody joins a tenant
+  without seeing which. It is redeemed by a sign-in whose verified email (Google:
+  `email` with `email_verified`; Entra: a claim the directory controls, chosen in the
+  Entra spike, which blocks Entra invitations until it settles) equals the invited
+  address, compared case-folded. A forwarded link alone, or a spoofed email alone,
+  admits nobody.
 - **Redemption consumes the token atomically**, and is refused, with one code, when the
   invitation is redeemed, revoked or expired, when its inviter no longer holds
-  `members:manage`, or when its tenant or a role it names no longer exists. When the
+  `members:manage` (an invitation a platform job issued has no such inviter, and an
+  operator revokes it), or when its tenant or a role it names no longer exists. When the
   returned identity already belongs to a person, the membership is added to that person;
   otherwise the person, the identity and the membership are created together.
 - **An invitation is part of the tenant's access**: creating, revoking and redeeming one
@@ -158,6 +166,22 @@ shape it:
   does**. A tenant admin does neither: people are shared across tenants, so an admin of
   one tenant attaching or removing an identity would take over, or lock out, a person's
   access to another. A tenant admin ends a membership instead.
+- **Linking is guarded against a session someone else is using**, at a shared desk or
+  through a stolen cookie, since a linked Entra identity would lock the person's Google
+  sign-in out:
+  - a person holds at most one identity per issuer, and only an Entra identity can be
+    linked;
+  - the session that starts a `link` must itself be under ten minutes old, so the
+    person has just signed in;
+  - an identity that already belongs to anyone else is refused, never moved or merged;
+  - linking revokes the person's other sessions and shows the new identity, with its
+    time, on their account page;
+  - for seven days after a link, the person cannot remove an identity, and a session
+    started with the newer identity never can; a platform operator undoes a hostile
+    link.
+
+  A walk-up on a desk left signed in remains a residual risk, as signing out's does.
+
 - **Production may start on Google** (Option 2). When Entra works, each person links
   their NHS Wales Microsoft account while signed in with Google, and from then on
   **signs in with Entra only**: their Google sign-in is refused (Option 11). New
@@ -173,6 +197,9 @@ shape it:
   cookie, only its SHA-256 hash stored, with the person, the identity and time of the
   sign-in, last activity, an idle and an absolute expiry, and revocation; no IP address
   or user agent. It is found by hash through a definer function.
+- **A state-changing request carries the person the editor believes is signed in**, and
+  the API refuses it when the session's person differs, so a form held across a
+  sign-in by someone else can never be saved as theirs.
 - **The cookie is `__Host-`, `Secure`, `HttpOnly`, `SameSite=Strict` and `Path=/`, with
   no expiry attribute.** A browser that restores sessions keeps it, so the server's
   timeouts, not the browser, end a session.
@@ -200,7 +227,8 @@ shape it:
 ### The editor
 
 - **The editor's `AuthClient` is reshaped for the API data source**: `connect()` posts
-  the sign-in start for the chosen provider and follows its redirect; the state comes
+  the sign-in start for the chosen provider and navigates to the authorisation address
+  it returns; the state comes
   from a "who am I" call; the access token leaves the port, so no token reaches the
   browser at all (ADR-016 kept tokens in memory). A 401 moves the state to `expired`.
 - **Expiry keeps an open form for its own person** (Option 15): two minutes before the
@@ -219,11 +247,18 @@ shape it:
 - **New shared tables** (an ADR-015 _Tenancy_ amendment): sessions and sign-in
   transactions, each with row-level security, reached only through their definer
   functions and by the person they belong to.
-- **New definer functions**, each owned by the schema owner with a policy admitting it
-  (forced row-level security binds a table's owner too), a pinned `search_path` and
-  `EXECUTE` revoked from `PUBLIC`: the session lookup, the transaction lookup, the
-  invitation lookup by token hash, and redemption, which creates the person, identity,
-  membership and session with no person or tenant yet set.
+- **New definer functions**, each owned by a dedicated no-login role with only the
+  grants it needs and policies scoped to that role (not the schema owner, which holds
+  DDL rights; forced row-level security binds an owner too), a pinned `search_path` and
+  `EXECUTE` revoked from `PUBLIC`: creating a sign-in transaction and looking it up;
+  creating, looking up, extending and revoking a session (one person's, or every session
+  started with a Google identity at the cut-over); the invitation lookup by token hash;
+  redemption; and the purges of transactions, sessions and invitations the retention
+  jobs run. Redemption takes only the token's
+  hash and the validated issuer, subject, email and name; it locks the invitation row
+  and takes the tenant, the roles and the inviter from it; and it creates the person,
+  identity, membership and session with no person or tenant yet set, recording the
+  access change set with the new person as its actor.
 - **Shared-table writes go to the platform audit log** (ADR-015 Option 27): a person
   created, an identity linked or removed, a person disabled, invitations a platform job
   issues. It stays append-only and is never purged.
@@ -256,7 +291,8 @@ shape it:
   - ADR-015 Option 11: an identity is `(issuer, subject)`; only the person attaches one; the
     person (never their last) or a platform operator removes one, never a tenant admin.
   - _Tenancy_: sessions and sign-in transactions join the shared tables; the closed list
-    of definer functions gains the four above.
+    of definer functions gains those above, owned by a dedicated no-login role rather
+    than the schema owner (_Roles, operation and data protection_).
   - _People, access and permissions_: an invitation names an address, not a person,
     until it is redeemed, rather than being a pending membership the person-keyed policy
     reads; creating, revoking and redeeming one are access change sets.

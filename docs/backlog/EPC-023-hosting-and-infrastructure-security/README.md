@@ -26,7 +26,8 @@ candidate scope below is a list of findings, not a plan.
 
 ## Findings
 
-Greenfield. The inputs, audited at `86afe40` on 2026-11-21:
+Greenfield. The inputs, as of 2026-11-21 (ADR-015 to ADR-017 at `86afe40`; ADR-018 to
+ADR-020 as accepted that day):
 
 - ADR-015 binds Cloud SQL for PostgreSQL 18 in `europe-west2`, backups and
   point-in-time recovery in the UK, roles that never bypass row-level security, and

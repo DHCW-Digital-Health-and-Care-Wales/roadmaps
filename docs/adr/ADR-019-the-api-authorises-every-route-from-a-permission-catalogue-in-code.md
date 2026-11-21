@@ -1,6 +1,6 @@
 # ADR-019: The API authorises every route by a declared policy, from a permission catalogue in code and three shipped roles
 
-- Status: Accepted — owner, 2026-11-21 ("I accept the ADRs (all those in the epic so far)", on PR #222); drafted from the owner's answers in the identity and
+- Status: Accepted — owner, 2026-11-21 ("I accept the ADRs (all those in the epic so far)", in the session delivering PR #222); drafted from the owner's answers in the identity and
   authorisation grilling (2026-11-21) and their answers to its review; the options
   chosen are marked ✅.
 - Date: 2026-11-21
@@ -170,7 +170,7 @@ The analysis behind both is
     as the last lead.
   - ADR-015 Option 33: retired roadmaps are seen by their assigned leads and holders of
     `roadmaps:edit-any`, and retired or reinstated by holders of `roadmaps:edit`
-    assigned to them.
+    assigned to them and by holders of `roadmaps:edit-any`.
   - _People, access and permissions_: the last-admin rule and the access review.
   - _Roles, operation and data protection_: a platform role and service account for
     platform jobs.

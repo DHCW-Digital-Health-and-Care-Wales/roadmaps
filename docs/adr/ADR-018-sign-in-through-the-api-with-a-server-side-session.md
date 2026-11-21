@@ -1,6 +1,6 @@
 # ADR-018: People sign in through the API and hold a server-side session
 
-- Status: Accepted — owner, 2026-11-21 ("I accept the ADRs (all those in the epic so far)", on PR #222); drafted from the owner's answers in the identity and
+- Status: Accepted — owner, 2026-11-21 ("I accept the ADRs (all those in the epic so far)", in the session delivering PR #222); drafted from the owner's answers in the identity and
   authorisation grilling (2026-11-21) and their answers to its review; the options
   chosen are marked ✅. It supersedes ADR-003 for the API data source; ADR-003 stands for
   the Sheets adapter until the deployed editor switches to the API.

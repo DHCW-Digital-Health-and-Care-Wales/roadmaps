@@ -3,7 +3,7 @@
 How people sign in to the API that replaces the spreadsheet, how the API knows who
 they are and what they may do, and which checks prove it. It was written for the
 identity ADR (successor to ADR-003) and the authorisation ADR (ADR-015 Options 16, 17,
-19–23, 35) that EPC-022 waits for; its decisions became three ADRs (_Outcome_). Security is the owner's first priority for both.
+19–23, 35) that EPC-022 waited for; its decisions became three ADRs (_Outcome_). Security is the owner's first priority for both.
 
 - **This repository:** audited at `86afe40` on 2026-11-21: ADR-003, ADR-015 (Accepted),
   ADR-016 and ADR-017 (Proposed), `.github/`, `docs/operations/google-cloud-setup.md`.

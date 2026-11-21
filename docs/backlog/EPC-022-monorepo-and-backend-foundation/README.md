@@ -1,6 +1,6 @@
 # EPC-022: Monorepo and backend foundation — an API and its database beside the Sheets editor
 
-- **Status**: Needs grilling — every binding ADR is accepted (owner, 2026-11-21); the
+- **Status**: Active — every binding ADR is accepted (owner, 2026-11-21); the
   placeholders' acceptance criteria, then the schema, identity and endpoint stories, are
   written next
 - **Progress**: 0 of 10 terminal; next selectable: none; blocked on: STY-085's acceptance

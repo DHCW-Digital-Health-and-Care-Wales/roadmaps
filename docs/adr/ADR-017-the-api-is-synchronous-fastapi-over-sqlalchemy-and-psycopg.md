@@ -1,6 +1,6 @@
 # ADR-017: The API is synchronous FastAPI on Python 3.15, over SQLAlchemy and psycopg 3
 
-- Status: Accepted — owner, 2026-11-21 ("I accept the ADRs (all those in the epic so far)", on PR #222); drafted from the owner's answers in the EPC-022 monorepo
+- Status: Accepted — owner, 2026-11-21 ("I accept the ADRs (all those in the epic so far)", in the session delivering PR #222); drafted from the owner's answers in the EPC-022 monorepo
   grilling (2026-11-21). Python 3.15 and PostgreSQL 18 were fixed by the owner on
   2026-11-20 (ADR-015). Amended by ADR-020 (_ADR-020 amendments_).
 - Date: 2026-11-21 (amended by ADR-020: CORS, serving the editor, response rules)
@@ -146,8 +146,10 @@ receives with `zod/mini`, and chooses copy from `AppError.kind` (ADR-002, ADR-00
 - **The editor's endpoints send no CORS headers**, replacing _The public read_'s strict
   allow-list: the editor and the API share one origin (ADR-020).
 - **The API serves the editor's built files and sets their document headers** in hosted
-  environments, until the load balancer fronts the same service (ADR-020).
-- **Every response that is not public** carries `Cache-Control: no-store`; requests
+  environments, before and after the load balancer fronts the same service (ADR-020).
+- **Every response that is not public** carries `Cache-Control: no-store`; every
+  response carries `nosniff`, `Content-Security-Policy: default-src 'none';
+frame-ancestors 'none'` and a same-origin resource policy; requests
   have a body limit; validation errors leave out the submitted input; production has no
   `/docs` or live OpenAPI route (ADR-020).
 - Everything else here stands.

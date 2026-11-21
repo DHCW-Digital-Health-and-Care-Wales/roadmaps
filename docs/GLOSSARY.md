@@ -290,6 +290,17 @@ An NHS Wales organisation that keeps its own roadmaps, lists and people in this 
 DHCW is the first. Nothing one tenant holds is visible to another.
 _Avoid_: Organisation (a body a roadmap item's work is for), account, workspace
 
+**Directory** _(planned)_:
+Microsoft's register of people who can sign in with a work account; NHS Wales has one
+for every organisation. Microsoft calls it a tenant, but it never says which of this
+tool's tenants someone belongs to (ADR-018).
+_Avoid_: Tenant (for Microsoft's), Entra tenant
+
+**Invitation** _(planned)_:
+A tenant admin's offer of a membership to one email address, redeemed by that person
+signing in with the link; the only way into a tenant (ADR-018).
+_Avoid_: Sign-up, registration
+
 **Assignment** _(planned)_:
 A Product Lead's right to edit one roadmap. Admins edit every roadmap without one. Not
 the roadmap's public "Product Lead" text.

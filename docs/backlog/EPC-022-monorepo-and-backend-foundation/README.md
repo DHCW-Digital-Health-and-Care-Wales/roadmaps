@@ -1,10 +1,10 @@
 # EPC-022: Monorepo and backend foundation — an API and its database beside the Sheets editor
 
 - **Status**: Needs grilling — the repository and API foundation is split (STY-085–STY-093);
-  the schema and endpoint stories wait on the identity and authorisation ADRs
+  the schema, identity and endpoint stories wait on accepting ADR-018 and ADR-019
 - **Progress**: 0 of 9 terminal; next selectable: none; blocked on: accepting ADR-016 and
   ADR-017
-- **Binding ADRs**: ADR-015, ADR-016, ADR-017, ADR-002
+- **Binding ADRs**: ADR-015, ADR-016, ADR-017, ADR-018, ADR-019, ADR-002
 
 ## Summary
 
@@ -26,11 +26,12 @@ environments are later epics.
   — Proposed: accept the workspace, the rename and the public site's move
 - [ADR-017](../../adr/ADR-017-the-api-is-synchronous-fastapi-over-sqlalchemy-and-psycopg.md)
   — Proposed: accept the API stack
-- An identity ADR (successor to ADR-003) — sign-in with both Microsoft and Google (owner,
-  2026-11-20), linking identities as ADR-015 Option 11 holds them; ADR-016 adds tokens
-  in memory and a custom domain for the editor before it switches to the API
-- An authorisation ADR — the permission catalogue, the shipped roles and how the API
-  checks them and who assigns leads (ADR-015 Options 16, 17, 19–23)
+- [ADR-018](../../adr/ADR-018-sign-in-through-the-api-with-a-server-side-session.md)
+  — Proposed: accept sign-in through the API (Google Workspace, then Entra) with a
+  server-side session, and its amendments to ADR-015 and ADR-017
+- [ADR-019](../../adr/ADR-019-the-api-authorises-every-route-from-a-permission-catalogue-in-code.md)
+  — Proposed: accept the permission catalogue, the shipped roles and how the API
+  enforces them, and its amendment to ADR-015
 
 ## Findings
 
@@ -99,8 +100,20 @@ Owner answers of 2026-11-21 (monorepo grilling), drafted into ADR-016 and ADR-01
 11. **The API stack**: ADR-017, including the public read (no key, open CORS, OGL v3.0,
     current publications only) and the seeder, which starts right after the migrations.
 
-_The schema and endpoint design is written once the identity and authorisation ADRs
-exist._
+Owner answers of 2026-11-21 (identity and authorisation grilling), drafted into
+ADR-018 and ADR-019 from the
+[identity and authorisation analysis](../../analysis/identity-and-authorisation.md):
+
+12. **Sign-in**: through the API, with DHCW's Google Workspace first and Entra next,
+    after which Google is retired; an opaque server-side session; a person exists only
+    once an invitation is redeemed (ADR-018).
+13. **Authorisation**: a permission catalogue in code, Admin, Product Lead and Viewer,
+    every route declaring a policy, every request naming its tenant (ADR-019).
+14. **Supply-chain checks**: CHO-031, beside STY-087.
+15. **Infrastructure-held protections**: EPC-023, a placeholder.
+
+_The schema, identity and endpoint stories are written once ADR-018 and ADR-019 are
+accepted._
 
 ## Shared assumptions and contracts
 
@@ -132,11 +145,14 @@ the seeder for any table it creates.
 
 _All Placeholders until ADR-016 (STY-085–STY-089) and ADR-017 (STY-090–STY-093) are
 accepted.
-Candidate scope, to split after the identity and authorisation ADRs: the first schema
-and its enforcement suite; people, memberships, roles and assignments; the scratch, draft,
-save, publish and restore path; the API's endpoints for the roadmap repository's
-calls and for the public read; the import of the spreadsheet's data; and the
-editor's API adapter with its build-time switch._
+Candidate scope, to split once ADR-018 and ADR-019 are accepted: the first schema
+and its enforcement suite; people, identities, memberships, roles, assignments and
+invitations, with ADR-019's authorisation suite; the threat model, then sign-in with
+Google and the mock provider, sessions and signing out (ADR-018); the scratch, draft,
+save, publish and restore path; the API's endpoints for the roadmap repository's calls
+and for the public read; the import of the spreadsheet's data; and the editor's API
+adapter with its build-time switch, signing in through the API. Entra, with its spike,
+is a later story._
 
 ## Sequencing
 
@@ -155,9 +171,10 @@ stories follow STY-093, adding their factories; the editor's adapter follows STY
 - Switching the deployed editor to the API, retiring the Sheets adapter, and moving
   the public site to the API's read: after an environment exists.
 - Infrastructure as code and provisioned environments: a later epic, handed a service
-  that runs locally and in CI.
+  that runs locally and in CI; [EPC-023](../EPC-023-hosting-and-infrastructure-security/README.md)
+  holds its place and the protections found for it.
 - Live presence and real-time updates.
-- Google Cloud hosting and custom domains: the infrastructure epic. A
+- Google Cloud hosting and custom domains: the infrastructure epic (EPC-023). A
   cross-repository deploy trigger was rejected (ADR-016), not deferred.
 
 ## Defects
@@ -170,7 +187,12 @@ None.
   [ADR-016](../../adr/ADR-016-one-pnpm-workspace-for-the-editor-public-site-and-api.md),
   [ADR-017](../../adr/ADR-017-the-api-is-synchronous-fastapi-over-sqlalchemy-and-psycopg.md),
   [ADR-002](../../adr/ADR-002-layered-architecture-and-repository-boundary.md)
+- [Identity and authorisation analysis](../../analysis/identity-and-authorisation.md)
+- [EPC-023](../EPC-023-hosting-and-infrastructure-security/README.md) — hosting and
+  infrastructure security, a placeholder
 - [Replacing Google Sheets](../../operations/replacing-google-sheets.md)
 - [STY-048](../EPC-011-adding-roadmaps-and-items/STY-048-remove-a-roadmap.md) —
   removing a roadmap, bound by ADR-015 Option 8
 - [CHO-005](../chores/CHO-005-send-last-updated-to-the-api-in-utc.md)
+- [CHO-031](../chores/CHO-031-supply-chain-checks-on-every-pull-request.md) —
+  supply-chain checks, beside STY-087

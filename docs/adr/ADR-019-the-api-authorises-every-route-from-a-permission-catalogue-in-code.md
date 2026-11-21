@@ -1,8 +1,8 @@
 # ADR-019: The API authorises every route by a declared policy, from a permission catalogue in code and three shipped roles
 
-- Status: Accepted — owner, 2026-11-21 ("I accept the ADRs (all those in the epic so far)", in the session delivering PR #222); drafted from the owner's answers in the identity and
-  authorisation grilling (2026-11-21) and their answers to its review; the options
-  chosen are marked ✅.
+- Status: Accepted — owner, 2026-11-21; drafted from the owner's answers in the
+  identity and authorisation grilling (2026-11-21) and their answers to its review;
+  the options chosen are marked ✅.
 - Date: 2026-11-21
 
 ## Context

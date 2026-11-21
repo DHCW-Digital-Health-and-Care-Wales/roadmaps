@@ -1,8 +1,8 @@
 # ADR-017: The API is synchronous FastAPI on Python 3.15, over SQLAlchemy and psycopg 3
 
-- Status: Accepted — owner, 2026-11-21 ("I accept the ADRs (all those in the epic so far)", in the session delivering PR #222); drafted from the owner's answers in the EPC-022 monorepo
-  grilling (2026-11-21). Python 3.15 and PostgreSQL 18 were fixed by the owner on
-  2026-11-20 (ADR-015). Amended by ADR-020 (_ADR-020 amendments_).
+- Status: Accepted — owner, 2026-11-21; drafted from the owner's answers in the
+  EPC-022 monorepo grilling (2026-11-21). Python 3.15 and PostgreSQL 18 were fixed by
+  the owner on 2026-11-20 (ADR-015). Amended by ADR-020 (_ADR-020 amendments_).
 - Date: 2026-11-21 (amended by ADR-020: CORS, serving the editor, response rules)
 
 ## Context

@@ -1,7 +1,7 @@
 # ADR-020: The editor and the API share one origin, behind edge rate limits and strict response headers; the public read has its own host
 
-- Status: Accepted — owner, 2026-11-21 ("I accept the ADRs (all those in the epic so far)", in the session delivering PR #222); drafted from the owner's answers in the identity and
-  authorisation grilling (2026-11-21); the options chosen are marked ✅.
+- Status: Accepted — owner, 2026-11-21; drafted from the owner's answers in the
+  identity and authorisation grilling (2026-11-21); the options chosen are marked ✅.
 - Date: 2026-11-21
 
 ## Context

@@ -19,8 +19,8 @@ in the conversation only: do not post, change code or files, merge, contact anyo
 probe a real service, account or secret. Reading live platform state is evidence, not
 probing: `gh api` GETs of the organisation's repositories (settings, rulesets,
 environments, collaborators and the caller's own permissions) may settle a claim, with
-any query in the URL, since `-f`, `-F` or `--input` turns the call into a POST. The
-value or use of a secret, token or key stays out of reach.
+any query in the URL, since `-f`, `-F` or `--input` turns the call into a POST. Leave
+secrets, tokens and keys unread, values and metadata alike.
 
 ## Working order
 
@@ -87,11 +87,12 @@ value or use of a secret, token or key stays out of reach.
   accepted ADR allows it and says what bounds it. Personal data minimised and its
   retention stated (ADR-018).
 - **Reconnaissance.** The repository is public: no change hands a reader targeting
-  detail they could not get otherwise, such as how many or which accounts hold
-  privileged access, internal hostnames, addresses or account and project IDs beyond
-  what a deployment needs, or a step-by-step path through a weakness still open. A
-  record states the risk's class and its control, not the detail an attacker would
-  use.
+  detail, such as how many or which accounts hold privileged access, internal
+  hostnames, network addresses or account and project IDs beyond what a deployment
+  needs, or a step-by-step path through a weakness still open. A record states the
+  risk's class and its control, not the detail an attacker would use. Grade it P3
+  unless the detail also opens a P0–P2 path; the fix removes it, and says so when it
+  is already in a pushed commit.
 - **Abuse and availability.** What an anonymous caller can make the service write,
   compute or send; what limits it (the edge, ADR-020); what a provider outage stops.
 - **Who else holds it.** For each control a record names by a person or role (the

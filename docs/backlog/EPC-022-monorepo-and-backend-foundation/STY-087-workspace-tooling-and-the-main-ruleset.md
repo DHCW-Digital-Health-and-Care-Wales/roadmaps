@@ -25,7 +25,8 @@ _Not acceptance criteria._
 - ADR-016 _Workspace tooling_ for what exists now: catalogs, the root Prettier config,
   hooks for Prettier, ESLint and typecheck (ruff and ty join with STY-090), Dependabot
   for pnpm.
-- ADR-016 _CI_: the `changes` job and fixed job names; consider one always-run gate
+- ADR-016 _CI_: actionlint, and zizmor with every audit on (each finding fixed or
+  justified inline; CHO-031 leaves this here); the `changes` job and fixed job names; consider one always-run gate
   job for the ruleset to require, since a job skipped because `changes` failed also
   counts as passed.
 - The ruleset and `CODEOWNERS`, applied by an owner and named in the pull request as

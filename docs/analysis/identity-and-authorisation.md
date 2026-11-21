@@ -10,7 +10,7 @@ EPC-022 waits for: an identity ADR (successor to ADR-003) and an authorisation A
 - **Owner direction:** sign-in with both Microsoft and Google (2026-11-20); Google
   today, Microsoft Entra ID with single sign-on through the NHS Wales directory later
   (2026-11-21); security is a critical priority, following current best practice.
-- **Standards read:** OAuth 2.0 for Browser-Based Applications (RFC 10017, BCP 212,
+- **Standards read:** OAuth 2.0 for Browser-Based Applications (RFC 10017,
   August 2026), the OAuth 2.0 Security BCP (RFC 9700), OWASP ASVS 5.0 (V3 web frontend
   security, V6 authentication, V7 session management, V8 authorisation, V10 OAuth and
   OIDC, V16 logging), the OWASP API Security Top 10
@@ -91,10 +91,11 @@ the person and tenant per transaction anyway (ADR-017 _Tenant and person_).
   require assignment, so only an assigned group can sign in at all. The token reports
   the methods used (`amr`, or an authentication context in `acrs`); which claim a v2.0
   ID token carries for this registration needs confirming in a spike.
-- **Google:** a Workspace organisation can enforce 2-Step Verification, but Google's ID
-  token does not report it, and documents neither `max_age` nor an `auth_time` claim, so
-  the API can prove neither MFA nor a recent sign-in. A consumer account enforces nothing
-  the app can see. DHCW has a Google Workspace, which today's editor's Google sign-in
+- **Google:** a Workspace organisation can enforce 2-Step Verification. Google's ID
+  token reports the time and method of a sign-in (`auth_time`, `amr`) only through its
+  security bundle, for published, verified apps that enable it, and Google offers no
+  documented way to force a fresh sign-in. A consumer account enforces nothing the app
+  can see. DHCW has a Google Workspace, which today's editor's Google sign-in
   uses (owner, 2026-11-21).
 
 ### F8 — Sheets sign-in stays as it is until the switch-over
@@ -109,7 +110,8 @@ Google API scope.
 The repository is public. Present or decided: ESLint, Dependabot for Actions (ADR-016
 adds pnpm and uv), actionlint and zizmor (ADR-016), ruff with its security (`S`) and
 banned-API rules (ADR-017), SHA-pinned actions and `contents: read` workflow
-permissions. Absent: a vulnerability audit of the lockfiles, secret scanning in CI,
+permissions; secret scanning is on. Absent: push protection, a vulnerability audit of
+the lockfiles,
 static analysis beyond lint (CodeQL is free for public repositories), dependency review
 on pull requests, a release cooldown on new package versions, container image scanning
 and an SBOM.
@@ -365,43 +367,64 @@ and an SBOM.
 
 ## Outcome
 
-The owner answered every decision in the grilling of 2026-11-21, after an independent
-review of this analysis. The answers are drafted into
-[ADR-018](../adr/ADR-018-sign-in-through-the-api-with-a-server-side-session.md)
-(identity: D1–D7, D9, D12, D13) and
-[ADR-019](../adr/ADR-019-the-api-authorises-every-route-from-a-permission-catalogue-in-code.md)
-(authorisation: D8, D10, D11, and the permission catalogue and roles), both Proposed for
-the owner's acceptance; D14 is
-[CHO-031](../backlog/chores/CHO-031-supply-chain-checks-on-every-pull-request.md); D15 is
-[EPC-023](../backlog/EPC-023-hosting-and-infrastructure-security/README.md).
+The owner answered the decisions in the grilling of 2026-11-21, after an independent
+review of this analysis, and answered the questions its drafts' review raised. The
+answers are drafted into three Proposed ADRs, for the owner's acceptance:
 
-Where the ADRs depart from the Recommendation above, after the review and the owner's
-answers:
+- [ADR-018](../adr/ADR-018-sign-in-through-the-api-with-a-server-side-session.md),
+  identity: D1, D3–D9, D12;
+- [ADR-019](../adr/ADR-019-the-api-authorises-every-route-from-a-permission-catalogue-in-code.md),
+  authorisation: D10, D11, and the permission catalogue and roles;
+- [ADR-020](../adr/ADR-020-the-editor-and-the-api-share-one-origin.md), origins and the
+  API's HTTP hardening: D2, D13.
+
+D14 is [CHO-031](../backlog/chores/CHO-031-supply-chain-checks-on-every-pull-request.md);
+D15 is [EPC-023](../backlog/EPC-023-hosting-and-infrastructure-security/README.md).
+D8 (step-up) went to the identity ADR, not the authorisation ADR the table names.
+
+Where the ADRs depart from the Recommendation above:
 
 - **The tenant is named by every request**, not held in the session (14): a switch in
   one tab would silently retarget another.
 - **A person record is created only when an invitation is redeemed** (15, 20): a sign-in
-  with neither is refused and writes nothing.
+  with neither is refused and writes nothing. Asking for access is a later story
+  (STY-094). A tenant's first and replacement admins are invited by a platform job, so
+  there is no second way in.
+- **The invitation token travels in a URL fragment**, posted by the editor, so it
+  reaches no request log; redemption is atomic, and void once the inviter has lost
+  `members:manage`. Invitations are access change sets.
 - **No MFA requirement in the API** (7): the owner relies on each provider's own policy
-  for now; the API refuses nothing on an MFA claim, since Entra's v2.0 ID token carries
-  none by default. Entra's Conditional Access and assignment are the control there.
-- **No step-up on Google** (22), which proves no recent sign-in (F7); an Entra
-  authentication context later.
-- **Identities**: a tenant admin neither attaches nor removes one (16); the person or a
-  platform operator removes one. Production may start on Google, then each person links
-  their Entra identity and Google sign-in stops on an announced date.
-- **Signing out** forces the provider's account picker at the next sign-in (12), since
-  a restored browser session or a still-signed-in provider would hand the next person
-  at a shared desk the last one's account; "expiry loses nothing" (11) held only for
-  saved edits, so signing in again opens a new tab and keeps an open form.
-- **Platform jobs** record their execution ID, joined to Cloud Audit Logs for the
-  principal (23): a Cloud Run job cannot see who started it.
-- **Rate limits live at the edge** (26): the API counts nothing in PostgreSQL, and
-  unauthenticated failures go to logs, not the database (24).
-- **Before a custom domain**, one Cloud Run service serves the editor and the API (29).
+  for now. **Entra admits any valid NHS Wales directory user**, with no app-specific
+  Conditional Access or group assignment (D3, answered in the review): the invitation is
+  the gate.
+- **No step-up on Google** (22), which offers no documented way to force a fresh sign-in
+  (F7); an Entra authentication context later.
+- **Identities** (16): a tenant admin neither attaches nor removes one; the person or a
+  platform operator removes one. A sign-in's purpose (sign in, link, redeem) is bound to
+  its transaction, since the `Strict` session cookie does not arrive with the provider's
+  redirect. Production may start on Google; then each person links Entra and signs in
+  with Entra only, and Google stops for everyone on an announced date.
+- **Signing out** (12) asks Google for its account picker and Entra for a fresh sign-in;
+  on Google the last person's account stays one click away on a shared desk, an accepted
+  risk. "Expiry loses nothing" (11) held only for saved edits: signing in again opens a
+  new tab, and the original tab keeps its form only for the same person.
+- **Security events go to the structured log**, exported by EPC-023, not to a database
+  table (24, D12); the platform audit log stays append-only; step-up and refusals by
+  policy are not separate events.
+- **Platform jobs** (23) are one command each, under their own service account and
+  database role; the principal comes from Cloud Run's Data Access audit logs, joined by
+  execution ID.
+- **Rate limits live at the edge** (26): the API counts nothing in PostgreSQL; the
+  sign-in transaction table is the one write anonymous traffic can cause.
+- **Origins and hardening are their own ADR** (29–31, ADR-020); before a custom domain,
+  one Cloud Run service serves the editor and the API, routed by host from the public
+  read.
+- **`AuthClient` is reshaped** (36), losing its token, rather than keeping its shape.
+- **SCIM is dropped** (18): group assignment is not used, and the access review keeps
+  memberships current.
 - **Sign-in hardening added**: a callback per provider bound to its issuer, against
-  mix-up; `response_mode=query`; JWKS refetched on an unknown key and failing closed; the
-  issuer allow-list in code, so the mock provider cannot be admitted in production.
-- **The permission catalogue** gains `roadmaps:publish` (any assigned Product Lead, as
-  today, keeping room for a second approver), a Viewer role, and the shipped roles only
-  until a tenant needs to edit them.
+  mix-up; JWKS refetched on an unknown key and failing closed; the mock provider refused
+  on Cloud Run.
+- **The permission catalogue** gains `roadmaps:edit`, `roadmaps:edit-any` and
+  `roadmaps:publish`, a Viewer role, and the shipped roles only until a tenant needs to
+  edit them; co-leads are Product Leads.

@@ -5,9 +5,9 @@
 - **Type**: Chore
 - **Area**: CI/CD
 - **Epic**: [EPC-022-monorepo-and-backend-foundation](../EPC-022-monorepo-and-backend-foundation/README.md)
-- **Depends on**: STY-087 (soft: both change `ci.yml` and `.github/dependabot.yml`;
-  whichever lands second rebases); the `uv.lock` audit and cooldown wait for STY-090
-- **Binding ADRs**: ADR-016 §Workspace tooling, §CI; ADR-017 §Tooling
+- **Depends on**: none; it changes `ci.yml` and `.github/dependabot.yml`, as STY-087 and
+  STY-090 do, so whichever lands later rebases
+- **Binding ADRs**: none
 - **Suggested model**: Sonnet — configuration with known shapes, observed in runs
 - **Delivered**: _(add on delivery)_
 
@@ -16,28 +16,27 @@
 The repository is public and is about to gain a Python API, a second app and an
 identity layer, but nothing checks its dependencies for known vulnerabilities, holds
 back a just-published package version, scans the code statically beyond lint, or stops
-a secret at push. ADR-016 adds actionlint, zizmor and Dependabot for pnpm and uv, and
-ADR-017 ruff's `S` rules; this chore adds the rest, so the API's first dependencies
-arrive under the checks (analysis
-[identity and authorisation](../../analysis/identity-and-authorisation.md), F9 and
-recommendation 34). Done means each check below runs on a pull request, or is a
-repository setting that is on, observed once.
+a secret at push. ADR-016 (STY-087) adds actionlint, zizmor and Dependabot for pnpm and
+uv, and ADR-017 ruff's `S` rules; this chore adds the rest, for what the repository holds
+when it is delivered, so the API's first dependencies arrive under the checks (analysis
+[identity and authorisation](../../analysis/identity-and-authorisation.md), F9). Done
+means each check below runs on a pull request, or is a repository setting that is on,
+observed once.
 
 ## Measurement
 
 At commit `86afe40`, 2026-11-21 (`gh api repos/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor`
 `--jq .security_and_analysis`, `.github/`):
 
-| Area                         | Measurement                                                     | Verdict               |
-| ---------------------------- | --------------------------------------------------------------- | --------------------- |
-| Secret scanning              | enabled                                                         | keep                  |
-| Push protection              | disabled                                                        | turn on               |
-| Dependabot security updates  | disabled; `dependabot.yml` updates GitHub Actions only, monthly | turn on               |
-| CodeQL                       | default setup not configured                                    | add                   |
-| Dependency review on PRs     | none in `ci.yml`                                                | add                   |
-| Lockfile vulnerability audit | none for `pnpm-lock.yaml`; no `uv.lock` yet                     | add                   |
-| Release cooldown             | none in Dependabot, pnpm or uv                                  | add                   |
-| Workflow lint                | none yet; ADR-016 adds actionlint and zizmor (STY-087)          | every zizmor audit on |
+| Area                         | Measurement                                                     | Verdict |
+| ---------------------------- | --------------------------------------------------------------- | ------- |
+| Secret scanning              | enabled                                                         | keep    |
+| Push protection              | disabled                                                        | turn on |
+| Dependabot security updates  | disabled; `dependabot.yml` updates GitHub Actions only, monthly | turn on |
+| CodeQL                       | default setup not configured                                    | add     |
+| Dependency review on PRs     | none in `ci.yml`                                                | add     |
+| Lockfile vulnerability audit | none for `pnpm-lock.yaml`; no `uv.lock` yet                     | add     |
+| Release cooldown             | none in Dependabot, pnpm or uv                                  | add     |
 
 ## Acceptance criteria
 
@@ -48,31 +47,27 @@ on a scratch branch is blocked; the run of it is recorded in Delivery.
 
 ### S2: A pull request that adds a vulnerable dependency fails
 
-The dependency review action and an OSV audit of `pnpm-lock.yaml` (and `uv.lock`, once
-STY-090 creates it) run on every pull request that changes a lockfile, and a known
-vulnerable version fails the job; observed on a scratch pull request.
+The dependency review action runs on every pull request that changes a lockfile and
+fails on a known vulnerable version, observed on a scratch pull request. An OSV audit of
+every lockfile the repository holds runs weekly and on `main`, so a vulnerability
+disclosed in an existing dependency is found too.
 
 ### S3: The code is scanned statically
 
-CodeQL runs for JavaScript/TypeScript, GitHub Actions and, once the API exists, Python,
-on pull requests and on `main`.
+CodeQL runs for every language the repository holds (JavaScript/TypeScript and GitHub
+Actions; Python once the API exists), on pull requests and on `main`.
 
 ### S4: A just-published version waits before it is taken
 
-Dependabot's `cooldown`, pnpm's `minimumReleaseAge` and uv's `exclude-newer` hold back a
-newly published version for a set number of days, with the exceptions (security
-updates) Dependabot allows; the settings are in the repository and the number of days
-is stated beside them.
+Dependabot's `cooldown`, pnpm's `minimumReleaseAge` (set in minutes) and, once the API
+exists, uv's `exclude-newer` (with the uv version pinned, since relative values are
+recent) hold back a newly published version for a stated number of days. A security
+update younger than the window still lands: Dependabot's cooldown exempts security
+updates, and pnpm's `minimumReleaseAgeExclude`, or a manual bump, covers its side.
 
 ### S5: Dependabot raises security updates
 
-Dependabot security updates are on, and `dependabot.yml` covers pnpm (and uv with
-STY-090) as ADR-016 sets.
-
-### S6: zizmor runs with every audit
-
-zizmor, added by STY-087, runs with no audit disabled; any finding is fixed or carries
-an inline justification.
+Dependabot security updates are on in the repository's settings.
 
 ## Decisions
 
@@ -82,6 +77,8 @@ an inline justification.
 
 ## Out of scope
 
+- zizmor with every audit on, and Dependabot's pnpm and uv ecosystems: STY-087 and
+  STY-090 (ADR-016).
 - Container image scanning, an SBOM and build provenance: with the first container
   build (EPC-023).
 - Mutation testing.

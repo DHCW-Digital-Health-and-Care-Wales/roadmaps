@@ -1,21 +1,23 @@
 # ADR-019: The API authorises every route by a declared policy, from a permission catalogue in code and three shipped roles
 
 - Status: Proposed — drafted from the owner's answers in the identity and authorisation
-  grilling (2026-11-21), for the owner's acceptance; the options chosen are marked ✅.
+  grilling (2026-11-21) and their answers to its review, for the owner's acceptance; the
+  options chosen are marked ✅.
 - Date: 2026-11-21
 
 ## Context
 
 ADR-015 holds who may do what in the database and has the API check it on every
-request, while row-level security isolates tenants (Option 20). It fixes the outline:
-a fixed permission catalogue in the application, bundled into roles each tenant defines,
-with room for a direct grant later (Option 19); editing a roadmap needs an assignment to
-it (Option 13), except for admins, who edit every roadmap (Option 23); an admin assigns
-leads, or an assigned lead adds co-leads (Option 16); any Product Lead adds a roadmap
-and is assigned to it (Option 17); the Product Lead role holds `roadmaps:create` and
-`tags:edit`, and every other permission is admin-only by default (Option 22); platform
-operators create tenants (Option 21). It left the catalogue, the roles and how the API
-enforces them to this ADR (Option 35). Who a person is, and their session, are ADR-018's.
+request, while row-level security isolates tenants (ADR-015 Option 20). It fixes the
+outline: a fixed permission catalogue in the application, bundled into roles each tenant
+defines, with room for a direct grant later (ADR-015 Option 19); editing a roadmap needs
+an assignment to it (ADR-015 Option 13), except for admins, who edit every roadmap
+(ADR-015 Option 23); an admin assigns leads, or an assigned lead adds co-leads (ADR-015
+Option 16); any Product Lead adds a roadmap and is assigned to it (ADR-015 Option 17);
+the Product Lead role holds `roadmaps:create` and `tags:edit`, and every other
+permission is admin-only by default (ADR-015 Option 22); platform operators create
+tenants (ADR-015 Option 21). It left the catalogue, the roles and how the API enforces
+them to this ADR (ADR-015 Option 35). Who a person is, and their session, are ADR-018's.
 The analysis behind both is
 [identity and authorisation](../analysis/identity-and-authorisation.md).
 
@@ -30,6 +32,8 @@ The analysis behind both is
   | Permission           | Allows                                                                 |
   | -------------------- | ---------------------------------------------------------------------- |
   | `roadmaps:create`    | adding a roadmap, which assigns its adder to it                        |
+  | `roadmaps:edit`      | editing, retiring and reinstating a roadmap the holder is assigned to  |
+  | `roadmaps:edit-any`  | the same on every roadmap, without an assignment                       |
   | `roadmaps:publish`   | publishing and unpublishing a roadmap the holder may edit              |
   | `tags:edit`          | adding a tag and renaming one                                          |
   | `lists:edit`         | families, categories and organisations; retiring and reinstating a tag |
@@ -38,32 +42,36 @@ The analysis behind both is
   | `content:redact`     | redaction (ADR-015 Options 9, 34; the database checks it too)          |
   | `tenant:settings`    | the tenant's name and public address                                   |
 
-- **Three shipped roles** (Options 4, 5):
-  - **Admin**: every permission, and edits every roadmap without an assignment.
-  - **Product Lead**: `roadmaps:create`, `roadmaps:publish` and `tags:edit`.
+- **Three shipped roles** (Options 4, 5, 15):
+  - **Admin**: every permission except `roadmaps:edit`, which `roadmaps:edit-any`
+    covers.
+  - **Product Lead**: `roadmaps:create`, `roadmaps:edit`, `roadmaps:publish` and
+    `tags:edit`.
   - **Viewer**: no permission.
 - **Tenants cannot edit roles yet** (Option 3): every tenant gets the shipped roles; the
   schema already holds roles as rows naming permissions, so a role editor (and a
   `roles:manage` permission) arrives when a tenant needs one, as ADR-015 Option 19
   allows.
 
-### What every member, and every assigned lead, may do
+### What members and assigned leads may do
 
-- **Every member reads everything in their tenant** (Option 1): every roadmap, its
-  published version, its shared draft and its history, read-only. A scratch stays its
-  owner's alone (ADR-015).
-- **An assigned lead, or an admin, edits a roadmap**: the scratch, saving, discarding
-  and restoring a past version (ADR-015 Options 3, 13, 23).
+- **Every member reads their tenant's current roadmaps** (Option 1): each roadmap's
+  published version, its shared draft and its history, read-only. Retired roadmaps are
+  the exception, seen by their assigned leads and by holders of `roadmaps:edit-any`
+  (ADR-015 Option 33). A scratch stays its owner's alone (ADR-015).
+- **Editing a roadmap** (its scratch, saving, discarding, restoring a past version,
+  retiring and reinstating it; Options 6, 15) needs `roadmaps:edit` and an assignment to
+  it, or `roadmaps:edit-any`. A member demoted to Viewer keeps their assignment rows but
+  can no longer edit.
 - **Publishing and unpublishing need `roadmaps:publish` and the right to edit that
   roadmap** (Option 2): any assigned Product Lead publishes, as today. Publishing stays
   its own permission and its own change set, so a later approval step (a second person
   approving a publish) is a role change and a new rule, not a rework.
-- **An assigned lead, or an admin, retires and reinstates a roadmap** (Option 6);
-  retired roadmaps are seen by their leads and the tenant's admins (ADR-015 Option 33).
-- **Assignments** (Option 7): an admin assigns or unassigns anyone; an assigned lead
-  adds a co-lead from the tenant's members (ADR-015 Option 16) and may unassign
-  themselves, even as the last lead, after which only admins edit that roadmap; a lead
-  cannot unassign another lead.
+- **Assignments** (Options 7, 16): only a member holding `roadmaps:edit` can be
+  assigned. Holders of `assignments:manage` assign and unassign anyone; an assigned lead
+  adds a co-lead from those members (ADR-015 Option 16) and may unassign themselves,
+  even as the last lead, after which only holders of `roadmaps:edit-any` edit that
+  roadmap; a lead cannot unassign another lead.
 - **Lists are the admins'** (Option 8): families, categories and organisations need
   `lists:edit`, as does retiring or reinstating a tag; a Product Lead adds and renames
   tags (`tags:edit`) and chooses a roadmap's family and category. On the API, the
@@ -76,8 +84,8 @@ The analysis behind both is
 
 - **A tenant keeps at least one admin** (Option 10): the API refuses to end the last
   admin's membership or remove their role, checked under the access scope's lock. If the
-  only admin's account is gone, a platform operator job appoints the replacement the
-  tenant names, recorded in the platform audit log. Tenants are advised to keep two.
+  only admin's account is gone, a platform job invites the replacement the tenant names
+  (ADR-018). Tenants are advised to keep two.
 - **An access review every six months** (Option 11): the members page shows each
   member's last sign-in; admins are prompted to confirm or remove each member, and each
   confirmation is an access change set. People who move between NHS Wales organisations
@@ -86,39 +94,49 @@ The analysis behind both is
 ### Platform operators
 
 - **Platform operations are CLI commands run as Cloud Run jobs that only named Google
-  Cloud principals may start** (Option 12): creating a tenant and its first admin,
-  appointing a replacement admin, disabling a person (sign-in refused, sessions revoked
-  across every tenant), removing an identity (ADR-018) and redaction escalations.
-- **Who ran a job is taken from Cloud Audit Logs**, not typed on the command line: the
-  platform audit log records the job's execution ID, which joins to the audit log entry
-  naming the principal that started it, kept in a retention-locked log bucket (EPC-023).
+  Cloud principals may start** (Option 12): creating a tenant and inviting its first
+  admin, inviting a replacement admin, disabling a person (sign-in refused and sessions
+  revoked across every tenant), removing an identity (ADR-018) and redaction
+  escalations.
+- **Each job is one command**: its entrypoint is that command, so overriding its
+  arguments at run time cannot run another; it validates its arguments, and writes them
+  with its execution ID to the platform audit log. Platform jobs run under their own
+  service account and database role, separate from the API's and the purge jobs', and
+  write only through platform definer procedures.
+- **Who ran a job is taken from Cloud Audit Logs**, not typed on the command line:
+  starting a Cloud Run job is logged as a Data Access write, so those logs are enabled
+  and exported to a retention-locked bucket (EPC-023), where the execution ID joins to
+  the principal. An access change a job makes (an invitation) is an access change set by
+  a platform actor named for the job's execution.
 - **No operator web surface and no impersonation**, not even read-only: support works
   from what the person shares on screen. An operator holds no tenant access unless
   invited like anyone else.
 
 ### Enforcement
 
-- **Every route declares exactly one policy**: public, signed in (a person, no tenant),
-  or a named permission in a named tenant (Option 13). A custom route class refuses to
-  register a route without one, so the app refuses to start; the default is deny. The
-  public routes are a reviewed list in code.
+- **Every route declares exactly one policy** (Option 13): public; signed in (a person,
+  no tenant); a member of the named tenant; or a named permission in the named tenant.
+  Object checks (an assignment, a retired roadmap) sit in services on top. A custom
+  route class refuses to register an API route without a policy, so the app refuses to
+  start; a test walks every route the app holds, of every type (mounted static files
+  included), and fails on one it cannot classify. The public routes are a reviewed list
+  in code.
 - **Every tenant route names its tenant** in the request (Option 14): the editor's
   address carries it, and one dependency checks it against the person's membership and
-  sets it for the transaction (ADR-017). A tenant held in the session is rejected: a
-  switch in one tab would silently retarget another, and new items could land in the
-  wrong tenant.
-- **Object-level checks live in services**: an edit checks the assignment (or the admin
-  role) on the roadmap named. Row-level security isolates tenants beneath the
-  repositories' tenant filter. An ID from another tenant answers 404, never 403, so
-  existence does not leak.
+  sets it for the transaction (ADR-017). A non-member naming a tenant gets 404, as an ID
+  from another tenant does, so a tenant's existence does not leak. A tenant held in the
+  session is rejected: a switch in one tab would silently retarget another, and new
+  items could land in the wrong tenant.
+- **Row-level security isolates tenants** beneath the repositories' tenant filter.
 - **Tests prove it**:
   - every route has a policy, and the public list matches the reviewed list;
-  - a role-by-route matrix, generated from the catalogue and the shipped roles: each
-    role, a member with no role, a non-member and an anonymous caller against every
-    route's expected answer;
+  - a role-by-route matrix, generated from the catalogue and the shipped roles: Admin,
+    Product Lead, Viewer, a member with no role, a non-member and an anonymous caller,
+    against every route's expected answer;
   - a cross-tenant sweep: every tenant route called with another tenant's IDs answers
     404 and changes nothing;
-  - an unassigned lead is refused every edit route, and a Viewer every write;
+  - an unassigned Product Lead is refused every edit route, a Viewer every write, and a
+    Viewer can never be assigned;
   - the last admin cannot be removed;
   - every table has row-level security enabled and forced, with a policy; the
     application's role does not bypass it, owns nothing, and cannot change the platform
@@ -135,24 +153,36 @@ The analysis behind both is
 - **A Viewer is a new kind of user** the editor has not had: everything is read-only
   for them, and the editor's switch-over epic designs that.
 - **The editor's interface shows permissions as hints only**; the API decides.
-- **ADR-015 is amended** when this is accepted: Option 16 gains "a lead may unassign
-  themselves, even as the last lead"; the last-admin rule and the access review join
-  _People, access and permissions_.
+- **ADR-015 is amended** when this is accepted:
+  - ADR-015 Option 22: the Product Lead role also holds `roadmaps:edit` and `roadmaps:publish`;
+    an admin's right to edit every roadmap (ADR-015 Option 23) is the `roadmaps:edit-any`
+    permission.
+  - ADR-015 Option 16: a co-lead must hold `roadmaps:edit`; a lead may unassign themselves, even
+    as the last lead.
+  - ADR-015 Option 33: retired roadmaps are seen by their assigned leads and holders of
+    `roadmaps:edit-any`, and retired or reinstated by holders of `roadmaps:edit`
+    assigned to them.
+  - _People, access and permissions_: the last-admin rule and the access review.
+  - _Roles, operation and data protection_: a platform role for platform jobs, and the
+    closed list of definer functions gains the platform procedures (create a tenant,
+    issue an operator invitation, disable a person and revoke their sessions, remove an
+    identity).
 - **Follow-on work**: EPC-022's schema story for people, memberships, roles and
   assignments with the enforcement suite above; the editor's new editing model (a later
   epic) builds the screens for members, assignments, the access review and the Viewer.
 
 ## Options (owner's choice marked ✅, 2026-11-21)
 
-1. **Who reads** — ✅ every member reads every roadmap, draft and history. Lost: drafts
-   to assignees only (harder co-ordination across products); assigned roadmaps only.
+1. **Who reads** — ✅ every member reads every current roadmap, draft and history.
+   Lost: drafts to assignees only (harder co-ordination across products); assigned
+   roadmaps only.
 2. **Publishing** — ✅ any assigned lead, as today, keeping room for a second person to
    approve later. Lost: an admin-only publish permission; a two-person rule now.
 3. **Editable roles** — ✅ the shipped roles only at first. Lost: a role editor before
    anyone needs one.
 4. **A read-only role** — ✅ Viewer. Lost: making onlookers Product Leads.
 5. **Product Lead** — ✅ `roadmaps:create` and `tags:edit` (ADR-015 Option 22), plus
-   `roadmaps:publish` (Option 2).
+   `roadmaps:publish` (Option 2) and `roadmaps:edit` (Option 15).
 6. **Retiring a roadmap** — ✅ assigned leads and admins. Lost: admins only; leads
    retire and admins reinstate.
 7. **Unassigning** — ✅ a lead unassigns themselves, even as the last; an admin
@@ -163,7 +193,7 @@ The analysis behind both is
    families and categories, as today; leads retiring tags; leads only adding tags.
 9. **The member list** — ✅ names and roles to all, the rest to admins. Lost: admins
    only, with leads picking co-leads by exact search.
-10. **The last admin** — ✅ a guard, and an operator job appoints a replacement. Lost:
+10. **The last admin** — ✅ a guard, and an operator job invites a replacement. Lost:
     requiring two admins.
 11. **Movers** — ✅ last sign-in shown and a six-monthly review. Lost: memberships
     lapsing when unused (surprises occasional editors); last sign-in only.
@@ -174,3 +204,9 @@ The analysis behind both is
     generated tests. Lost: per-route guards and spot tests.
 14. **Which tenant a request is for** — ✅ every request names it. Lost: held in the
     session.
+15. **Editing as a permission** — ✅ `roadmaps:edit` with an assignment, and
+    `roadmaps:edit-any` for admins (review answer). Lost: a role change ending
+    assignments, with admins' edit-all a rule on the role's name (breaks when roles
+    become editable).
+16. **Co-leads** — ✅ an assigned lead adds co-leads, from members holding
+    `roadmaps:edit` only (review answer). Lost: admins only (amends ADR-015 Option 16).

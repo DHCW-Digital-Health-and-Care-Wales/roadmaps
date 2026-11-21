@@ -4,8 +4,8 @@
   found while designing identity and authorisation, until the infrastructure epic is
   planned (owner, 2026-11-21)
 - **Progress**: 0 of 0 terminal; next selectable: none; blocked on: EPC-022's API, and
-  accepting ADR-018 and ADR-019
-- **Binding ADRs**: ADR-015, ADR-016, ADR-017, ADR-018, ADR-019, ADR-007
+  accepting ADR-018, ADR-019 and ADR-020
+- **Binding ADRs**: ADR-015, ADR-016, ADR-017, ADR-018, ADR-019, ADR-020, ADR-007
 
 ## Summary
 
@@ -14,19 +14,18 @@ environments they run in, Google Cloud hosting and custom domains are left to a 
 epic (EPC-022 _Out of scope_). This is that epic, opened early as a placeholder so
 nothing found before then is lost. Several protections the identity and authorisation
 design relies on cannot be held by application code: the editor's own domain, per-address
-rate limits and WAF rules, private networking for the database, the provider
-registrations with Entra's Conditional Access, CI's cloud identity, who ran a platform
-job, and alerting on security events. Product Leads see none of this beyond a new
+rate limits, private networking for the database, the provider registrations, CI's
+cloud identity, who ran a platform job, and alerting on security events. Product Leads see none of this beyond a new
 address for the editor. Stories are written when the epic is planned; until then the
 candidate scope below is a list of findings, not a plan.
 
 ## Owner decisions waiting
 
-- The hosting shape: Cloud Run, with a global external Application Load Balancer once
-  the editor has its domain, is assumed below, not decided
+- [ADR-020](../../adr/ADR-020-the-editor-and-the-api-share-one-origin.md) — Proposed:
+  accepting it settles the hosting shape below (one Cloud Run service, a load balancer
+  once the editor has its domain)
 - The editor's domain, and who owns its DNS
-- Who in NHS Wales approves the Entra app registration and its Conditional Access, and
-  the lead time (ADR-018 _Consequences_)
+- Who in NHS Wales approves the Entra app registration, and the lead time
 - Where security alerts go: DHCW's security monitoring, and who answers them
 
 ## Findings
@@ -43,14 +42,18 @@ Greenfield. The inputs, audited at `86afe40` on 2026-11-21:
   as their own step under a role with DDL rights, scheduled jobs as CLI commands called
   by an external scheduler, and "abuse is met by caching and rate limiting where the API
   is hosted" for the public read.
-- ADR-018 (Proposed) puts the editor and API on one origin in every environment, one
-  Cloud Run service serving both until the domain exists, the public read on its own
-  host; rate limits at the edge; Entra enforcing MFA and assignment; retention defaults
-  run by scheduled jobs.
-- ADR-019 (Proposed) makes platform operations Cloud Run jobs that only named principals
-  may start, the principal taken from Cloud Audit Logs.
-- A Cloud Run job runs as its service account and cannot see who started it; only
-  Cloud Audit Logs record the caller.
+- ADR-018 (Proposed): sign-in through the API with Google, then Entra admitting any
+  valid NHS Wales directory user (no app-specific Conditional Access or group
+  assignment); security events to the structured log, for export; retention defaults
+  run by scheduled jobs; OIDC codes in callback URLs reach request logs.
+- ADR-019 (Proposed): platform operations as one-command Cloud Run jobs that only named
+  principals may start, under their own service account and database role, the
+  principal taken from Cloud Audit Logs.
+- ADR-020 (Proposed): the editor and API on one origin in every environment, one Cloud
+  Run service serving both until the domain exists, routed by host from the public
+  read; the API sets the editor's document headers; rate limits at the edge.
+- A Cloud Run job runs as its service account and cannot see who started it; starting
+  one is logged as a Data Access write, which is off by default.
 - HSTS preload applies only to a registrable domain, not a subdomain of a shared one;
   `Clear-Site-Data: "cookies"` clears every site on the registrable domain.
 
@@ -65,31 +68,29 @@ lives:_
   under a modern SSL policy, HTTP redirected to HTTPS, and HSTS; preload only if the
   domain is a registrable one of the editor's own. DNS ownership named, with CAA records
   and DNSSEC.
-- **One origin for the editor and the API** (ADR-018): one Cloud Run service per
-  environment serving both, fronted by the load balancer once the domain exists; then
-  the service's default `run.app` address is disabled. **The public read on its own
-  host**, behind a CDN that caches current publications, purged on publish, unpublish
-  and redaction, so redacted content does not stay cached.
-- **The editor's document headers**: set by the API while it serves the editor (ADR-018);
-  a strict CSP, with Trusted Types trialled report-only first, `frame-ancestors 'none'`,
-  HSTS, a cross-origin opener policy, a referrer policy and a permissions policy.
+- **The service and the load balancer** ADR-020 describes: one Cloud Run service per
+  environment, fronted by the load balancer once the domain exists, when the service's
+  `run.app` addresses are disabled. **The public read's host** behind a CDN that caches
+  current publications, purged on publish, unpublish and redaction, so redacted content
+  does not stay cached.
 - **Cloud Armor**: per-address rate limits on the API's sign-in routes and on the public
-  read, with a global per-address ceiling; preconfigured WAF rules evaluated in preview
-  before they enforce, with path normalisation tested so an encoded path cannot dodge a
-  rule; request logging on. Adaptive Protection only if its tier is worth the cost at
-  this scale.
+  read, with a global per-address ceiling; request logging on. Preconfigured WAF rules
+  and Adaptive Protection only if they earn their cost on a JSON API at this scale; if
+  adopted, evaluated in preview first, with path normalisation tested so an encoded path
+  cannot dodge a rule.
 - **Cloud Run ingress** limited to internal traffic and the load balancer once there is
   one; a capped instance count, so abuse costs money only up to a limit; budget alerts.
-- **Egress** limited to what the API calls: the providers' discovery, key and token
-  endpoints, and Google Cloud's own services.
+- **Egress**: the API calls only pinned provider URLs and Google Cloud; filtering by
+  name needs a paid proxy, so a VPC routing only to Google's and Microsoft's ranges, or
+  an accepted risk, is the proportionate choice.
 
 ### Identity providers
 
-- **The Entra app registration in the NHS Wales directory**, single-tenant: assignment
-  required to a group of the app's users; Conditional Access requiring MFA, and
-  phishing-resistant methods for tenant admins; an authentication context for access
-  changes and redaction (ADR-018); a federated credential or certificate in place of a
-  client secret; redirect URIs only for real environments.
+- **The Entra app registration in the NHS Wales directory**, single-tenant, admitting
+  any valid user (no group assignment or app-specific Conditional Access, ADR-018); a
+  federated credential or certificate in place of a client secret; redirect URIs only
+  for real environments; an authentication context once ADR-018 is amended for step-up
+  with Entra.
 - **The Google OAuth client for sign-in**, Internal to DHCW's Workspace and separate
   from ADR-003's Sheets client; redirect URIs only for real environments, never
   `localhost` in production.
@@ -100,7 +101,8 @@ lives:_
   database password exists, the application's and the migrations' roles as separate
   service accounts; point-in-time recovery in every environment that holds real data;
   backups in a UK location, checked at provisioning (ADR-015); a customer-managed key
-  decided with the data protection assessment; Data Access audit logs on.
+  decided with the data protection assessment; Data Access audit logs on; request-log
+  access restricted, since callback URLs carry OIDC codes.
 - **A restore drill**, run and recorded before go-live and after any change to backups,
   since a restore bypasses the history's immutability triggers.
 - **Secret Manager** for the Google client secret and any Entra certificate, read by the
@@ -126,18 +128,22 @@ lives:_
 ### Operations
 
 - **Platform jobs** (ADR-019): the right to start each limited to named principals,
-  granted just in time (Privileged Access Manager) rather than standing; Admin Activity
-  audit logs exported to a retention-locked bucket, so the job's execution ID recorded
-  in the platform audit log joins to the principal who started it; a written break-glass
-  procedure.
+  granted just in time (Privileged Access Manager, or a two-person IAM grant procedure
+  for two or three operators) rather than standing; Cloud Run's Data Access audit logs
+  enabled and exported with Admin Activity logs to a retention-locked bucket, so the
+  job's execution ID recorded in the platform audit log joins to the principal who
+  started it, shown on a real job before go-live; a written break-glass procedure.
 - **Scheduled jobs**: Cloud Scheduler starts the API's purge jobs (sessions, sign-in
   transactions, invitations, ADR-018) and the scratch expiry (ADR-015).
-- **Security alerting** from the API's structured events and the edge's logs: bursts of
+- **Security alerting** from the API's structured security events (ADR-018) and the
+  edge's logs: bursts of
   refused sign-ins, cross-tenant or policy refusals, mass session revocations, any
   platform audit entry, Cloud Armor denials, 429 spikes; routed to whoever DHCW's
   security monitoring names.
-- **Retention**: security events exported to a log bucket with a retention lock, for the
-  period the data protection assessment sets.
+- **Two stores, two retentions**: the platform audit log stays in the database,
+  append-only and never purged (ADR-015, ADR-018); the API's security events and the
+  request and audit logs are exported to a log bucket with a retention lock, two years
+  until the data protection assessment sets it (ADR-018).
 - **The OpenTelemetry collector redacts** as a second layer behind the API's own
   redaction.
 - **Mail authentication** (SPF, DKIM, DMARC) if the API comes to send invitations.
@@ -164,7 +170,7 @@ once, since its approval has its own lead time.
 
 - The API's own protections (sessions, CSRF, route policies, the invitation cap,
   security events, the editor's document headers while it serves them): ADR-018,
-  ADR-019 and EPC-022's stories.
+  ADR-019, ADR-020 and EPC-022's stories.
 - SCIM provisioning from Entra: over-built for a handful of editors per tenant; group
   assignment and the access review (ADR-019) keep access current. Reconsider if a
   tenant grows to hundreds of members.
@@ -180,6 +186,7 @@ None.
 - [EPC-022](../EPC-022-monorepo-and-backend-foundation/README.md)
 - [ADR-018](../../adr/ADR-018-sign-in-through-the-api-with-a-server-side-session.md),
   [ADR-019](../../adr/ADR-019-the-api-authorises-every-route-from-a-permission-catalogue-in-code.md),
+  [ADR-020](../../adr/ADR-020-the-editor-and-the-api-share-one-origin.md),
   [ADR-015](../../adr/ADR-015-the-roadmap-database-is-postgresql-tenant-scoped-and-versioned.md),
   [ADR-016](../../adr/ADR-016-one-pnpm-workspace-for-the-editor-public-site-and-api.md),
   [ADR-017](../../adr/ADR-017-the-api-is-synchronous-fastapi-over-sqlalchemy-and-psycopg.md),

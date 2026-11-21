@@ -1,10 +1,10 @@
 # EPC-022: Monorepo and backend foundation — an API and its database beside the Sheets editor
 
 - **Status**: Needs grilling — the repository and API foundation is split (STY-085–STY-093);
-  the schema, identity and endpoint stories wait on accepting ADR-018 and ADR-019
-- **Progress**: 0 of 9 terminal; next selectable: none; blocked on: accepting ADR-016 and
+  the schema, identity and endpoint stories wait on accepting ADR-018 to ADR-020
+- **Progress**: 0 of 10 terminal; next selectable: none; blocked on: accepting ADR-016 and
   ADR-017
-- **Binding ADRs**: ADR-015, ADR-016, ADR-017, ADR-018, ADR-019, ADR-002
+- **Binding ADRs**: ADR-015, ADR-016, ADR-017, ADR-018, ADR-019, ADR-020, ADR-002
 
 ## Summary
 
@@ -31,7 +31,10 @@ environments are later epics.
   server-side session, and its amendments to ADR-015 and ADR-017
 - [ADR-019](../../adr/ADR-019-the-api-authorises-every-route-from-a-permission-catalogue-in-code.md)
   — Proposed: accept the permission catalogue, the shipped roles and how the API
-  enforces them, and its amendment to ADR-015
+  enforces them, and its amendments to ADR-015
+- [ADR-020](../../adr/ADR-020-the-editor-and-the-api-share-one-origin.md) — Proposed:
+  accept one origin for the editor and the API, the public read's own host and the API's
+  HTTP hardening, and its amendment to ADR-017
 
 ## Findings
 
@@ -100,19 +103,21 @@ Owner answers of 2026-11-21 (monorepo grilling), drafted into ADR-016 and ADR-01
 11. **The API stack**: ADR-017, including the public read (no key, open CORS, OGL v3.0,
     current publications only) and the seeder, which starts right after the migrations.
 
-Owner answers of 2026-11-21 (identity and authorisation grilling), drafted into
-ADR-018 and ADR-019 from the
+Owner answers of 2026-11-21 (identity and authorisation grilling, and the review of
+its drafts), from the
 [identity and authorisation analysis](../../analysis/identity-and-authorisation.md):
 
 12. **Sign-in**: through the API, with DHCW's Google Workspace first and Entra next,
     after which Google is retired; an opaque server-side session; a person exists only
-    once an invitation is redeemed (ADR-018).
+    once an invitation is redeemed (ADR-018); asking for access later (STY-094).
 13. **Authorisation**: a permission catalogue in code, Admin, Product Lead and Viewer,
     every route declaring a policy, every request naming its tenant (ADR-019).
-14. **Supply-chain checks**: CHO-031, beside STY-087.
-15. **Infrastructure-held protections**: EPC-023, a placeholder.
+14. **Origins**: the editor and the API on one origin in every environment, the public
+    read on its own host (ADR-020).
+15. **Supply-chain checks**: CHO-031, beside STY-087.
+16. **Infrastructure-held protections**: EPC-023, a placeholder.
 
-_The schema, identity and endpoint stories are written once ADR-018 and ADR-019 are
+_The schema, identity and endpoint stories are written once ADR-018 to ADR-020 are
 accepted._
 
 ## Shared assumptions and contracts
@@ -142,10 +147,13 @@ the seeder for any table it creates.
 | STY-091 | [Migrations, tenant listener, test harness](STY-091-migrations-tenant-listener-and-test-harness.md) | API                    | STY-090    |       |
 | STY-092 | [The OpenAPI contract and schemas](STY-092-the-openapi-contract-and-generated-schemas.md)           | API + Infrastructure   | STY-090    |       |
 | STY-093 | [A deterministic seeder](STY-093-a-deterministic-seeder.md)                                         | API                    | STY-091    |       |
+| STY-094 | [Ask for access to a tenant](STY-094-ask-for-access-to-a-tenant.md)                                 | API + Features/UI      | —          |       |
 
 _All Placeholders until ADR-016 (STY-085–STY-089) and ADR-017 (STY-090–STY-093) are
 accepted.
-Candidate scope, to split once ADR-018 and ADR-019 are accepted: the first schema
+STY-094 is a Placeholder until ADR-018 and ADR-019 are accepted and the invitation
+story exists.
+Candidate scope, to split once ADR-018 to ADR-020 are accepted: the first schema
 and its enforcement suite; people, identities, memberships, roles, assignments and
 invitations, with ADR-019's authorisation suite; the threat model, then sign-in with
 Google and the mock provider, sessions and signing out (ADR-018); the scratch, draft,
@@ -160,7 +168,9 @@ The rename (STY-085) comes first, then the workspace move (STY-086), which stays
 change. Then two tracks run in parallel: the repository's (STY-087, then STY-088 into
 a protected `main`, then STY-089) and the API's (STY-090, then STY-091 and STY-092 in
 either order, with STY-093 after STY-091). STY-090 and STY-087 both change `ci.yml`
-and the Dependabot file: whichever lands second rebases onto the other. The schema
+and the Dependabot file: whichever lands second rebases onto the other, and so does
+CHO-031 (supply-chain checks), delivered beside STY-087. The threat model comes before
+any identity story (ADR-018); STY-094 follows the invitation story. The schema
 stories follow STY-093, adding their factories; the editor's adapter follows STY-092.
 
 ## Out of scope
@@ -170,12 +180,11 @@ stories follow STY-093, adding their factories; the editor's adapter follows STY
   API exists.
 - Switching the deployed editor to the API, retiring the Sheets adapter, and moving
   the public site to the API's read: after an environment exists.
-- Infrastructure as code and provisioned environments: a later epic, handed a service
-  that runs locally and in CI; [EPC-023](../EPC-023-hosting-and-infrastructure-security/README.md)
-  holds its place and the protections found for it.
+- Infrastructure as code, provisioned environments, Google Cloud hosting and custom
+  domains: [EPC-023](../EPC-023-hosting-and-infrastructure-security/README.md), handed
+  a service that runs locally and in CI. A cross-repository deploy trigger was rejected
+  (ADR-016), not deferred.
 - Live presence and real-time updates.
-- Google Cloud hosting and custom domains: the infrastructure epic (EPC-023). A
-  cross-repository deploy trigger was rejected (ADR-016), not deferred.
 
 ## Defects
 

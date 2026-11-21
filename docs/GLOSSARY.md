@@ -25,7 +25,7 @@ _Avoid_: Customer, end user
 **Public site**:
 The separate app that reads the shared data source and shows published roadmaps to
 public readers. This tool never renders it.
-_Avoid_: Viewer, front end, website
+_Avoid_: Viewer (a role in this tool), front end, website
 
 ### Roadmaps
 
@@ -291,15 +291,25 @@ DHCW is the first. Nothing one tenant holds is visible to another.
 _Avoid_: Organisation (a body a roadmap item's work is for), account, workspace
 
 **Directory** _(planned)_:
-Microsoft's register of people who can sign in with a work account; NHS Wales has one
-for every organisation. Microsoft calls it a tenant, but it never says which of this
-tool's tenants someone belongs to (ADR-018).
+Microsoft's register of people who can sign in with a work account; NHS Wales has one,
+shared by all its organisations. Microsoft calls it a tenant, but it never says which of
+this tool's tenants someone belongs to (ADR-018).
 _Avoid_: Tenant (for Microsoft's), Entra tenant
 
 **Invitation** _(planned)_:
-A tenant admin's offer of a membership to one email address, redeemed by that person
-signing in with the link; the only way into a tenant (ADR-018).
+An offer of a membership to one email address, made by a tenant admin (or, for a
+tenant's first admin, a platform operator), redeemed by that person signing in with the
+link; the only way into a tenant (ADR-018).
 _Avoid_: Sign-up, registration
+
+**Admin** _(planned)_:
+A tenant's role that holds every permission and edits every roadmap (ADR-019).
+_Avoid_: Owner, superuser, operator (someone who runs the platform, not a tenant)
+
+**Viewer** _(planned)_:
+A tenant's role that reads every current roadmap, draft and history and changes nothing
+(ADR-019).
+_Avoid_: Reader, guest
 
 **Assignment** _(planned)_:
 A Product Lead's right to edit one roadmap. Admins edit every roadmap without one. Not

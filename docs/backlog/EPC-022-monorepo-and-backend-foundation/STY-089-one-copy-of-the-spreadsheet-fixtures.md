@@ -25,5 +25,7 @@ _Not acceptance criteria._
 
 - One fixture folder, its licence and README kept; both apps' unit tests and the
   editor's E2E Sheets fake read it.
+- The shared folder sits outside either app's directory, so a format change runs both
+  apps' jobs (STY-087 S5).
 - The editor's copied CSVs and their provenance note go; its own `Template.csv` moves
   into the shared folder or stays beside the editor's tests.

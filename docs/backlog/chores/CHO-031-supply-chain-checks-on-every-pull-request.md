@@ -79,6 +79,10 @@ Dependabot security updates are on in the repository's settings.
   STY-087's if it lands first; this chore keeps pnpm's `minimumReleaseAge` and uv's
   `exclude-newer`. Once STY-087 has landed, every CI job this chore adds feeds the _CI
   result_ gate (STY-087 S3), so S2's failing dependency review blocks a merge.
+- **D3** (owner, 2026-11-21, review of the EPC-022 story records, STY-087 D9): agents
+  never change repository settings, so push protection (S1), CodeQL's default setup
+  (S3) and Dependabot security updates (S5) are owner steps the pull request names, and
+  the delivery observes each once it is on.
 
 ## Out of scope
 

@@ -51,8 +51,8 @@ repository's `main` is still at the imported head, so no commit there is lost
 
 **Given** the site built from `apps/public-site` on the workspace's toolchain (pnpm,
 Node 26, the root Prettier style) with the same example data, its npm lockfile
-converted with every resolved version kept (`pnpm import`), and the version comparison
-recorded in Delivery
+converted with every resolved version kept (`pnpm import`), and a comparison of its
+resolved versions with the final workspace lockfile recorded in Delivery
 **When** its output is compared with a build of `product-roadmaps`' frozen head
 **Then** every page's HTML is the same, apart from asset hashes, under
 `/product-roadmaps/`
@@ -63,7 +63,7 @@ this repository's `main`, observed live with the current sheet
 
 **Given** the `product-roadmaps` pull request merged
 **Then** it holds only its deploy and sheet-check workflows, an Actions-only
-`.github/dependabot.yml`, the feedback issue template, `CODEOWNERS`, `LICENSE` and a
+`.github/dependabot.yml` with STY-087's cooldown, the feedback issue template, `CODEOWNERS`, `LICENSE` and a
 README for sheet editors
 **And** its deploy runs nightly and by hand, with no push trigger, checks out this
 repository's `main` at its head and builds `apps/public-site`; its build job holds no
@@ -110,9 +110,13 @@ implement-story, the code half of its `CONTRIBUTING.md` becomes a root
 ### S8: product-roadmaps is protected as main is here (D8)
 
 **Given** the `product-roadmaps` pull request merged and the owner's steps done
-**Then** that repository's ruleset is STY-087's (squash only, signatures, the owner's
-bypass through pull requests only, one code-owner approval of the last push), its
-`CODEOWNERS` names only the owner, and its default workflow token is read-only
+**Then** that repository's ruleset is STY-087's less the required check, which it has
+no CI to report (squash only, signatures, the owner's bypass through pull requests
+only, one code-owner approval of the last push), kept as a second reviewed JSON file in
+this repository and compared with the live ruleset after the owner applies it, as
+STY-087 S8 does
+**And** its `CODEOWNERS` names only the owner, and its default workflow token is
+read-only
 **And** both workflows declare `permissions: contents: read` at the top, check out with
 `persist-credentials: false`, and name this repository and `refs/heads/main`
 literally
@@ -147,7 +151,8 @@ merges, with the run recorded in Delivery
   amendments_).
 - **D8** (owner, 2026-11-21, review of this record): `product-roadmaps`, which decides
   what the public site publishes, gets the protection STY-087 gives `main` here, the
-  owner its only code owner, a read-only default token and pinned, linted workflows.
+  owner its only code owner, a read-only default token, and workflows that name what
+  they check out literally and pass the linters.
   Over keeping both code owners there, or accepting the weaker protection. Shapes S8.
 
 ## Starting point

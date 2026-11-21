@@ -1,7 +1,7 @@
 # STY-087: Workspace tooling, CI per app and the ruleset on main
 
 - **Status**: Proposed — acceptance criteria written from the owner's STY-087 grilling
-  and the review of its record (2026-11-21, D1–D11)
+  and the review of its record (2026-11-21, D1–D12)
 - **Type**: Refactor
 - **Area**: CI/CD
 - **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
@@ -63,8 +63,8 @@ code owner (D4)
 **Then** _CI result_ passes
 **But when** any job it needs fails or is cancelled, `changes` included
 **Then** _CI result_ fails
-**And** the Repository job fails if any job in `ci.yml` other than deploy is missing
-from the gate's `needs` (D11)
+**And** the Repository job fails if any job in `ci.yml` other than deploy and the gate
+itself is missing from the gate's `needs`, observed with a job left out (D11)
 
 ### S4: The repository's checks run on every pull request (D6)
 
@@ -102,8 +102,9 @@ refuses the commit on an error
 **Given** the merged change
 **When** Dependabot's monthly run finds outdated pnpm dependencies
 **Then** it raises one grouped pull request for versions older than the cooldown,
-beside the grouped GitHub Actions update
-**And** its security updates are not held back by the cooldown
+beside the grouped GitHub Actions update, which waits out the same cooldown
+**And** every entry in `dependabot.yml` carries the cooldown, and security updates are
+not held back by it
 
 ### S8: The applied ruleset is the reviewed one (D1)
 
@@ -111,6 +112,15 @@ beside the grouped GitHub Actions update
 **When** the delivery reads the live ruleset with `gh api`
 **Then** its rules, bypass actors and conditions equal the file's, and Delivery records
 the comparison
+
+### S9: Every delivery agent reads the rule on merging and protections (D9)
+
+**Given** the merged change
+**When** any delivery agent starts work
+**Then** a guide it always reads (the root `AGENTS.md`) says agents never change
+rulesets, branch protections or repository settings, which are owner steps, and merge
+only a pull request the owner authorised, through the bypass, once _CI result_ has
+passed on the head they inspected
 
 ## Decisions
 
@@ -142,10 +152,14 @@ the comparison
   is recorded (ADR-016 _Consequences_), over a separate agent identity. The owner may
   authorise an agent to babysit and merge a pull request; that merge may use the bypass
   for that pull request alone. Agents never change rulesets, branch protections or
-  repository settings. Shapes Scope's guides.
+  repository settings. Shapes Scope's guides and S9.
 - **D10** (owner, 2026-11-21, review of this record): Dependabot's cooldown arrives
   with its pnpm entry, here, so no update runs without it; CHO-031 keeps pnpm's and
   uv's own release-age settings (CHO-031 D2). Shapes S7.
+- **D12** (agent, 2026-11-21, from the security re-check): the cooldown covers every
+  Dependabot entry, GitHub Actions included, over pnpm alone, since a compromised
+  action release reaches the deploy jobs. STY-088 and STY-090 carry it to their
+  entries. Shapes S7.
 - **D11** (agent, 2026-11-21, from the security review): the gate's check is pinned to
   GitHub Actions' integration, the path filter fails closed as today's does, a check
   keeps every job in the gate's `needs`, and the linters are pinned. Over an allow-list
@@ -164,8 +178,9 @@ repos/DHCW-Digital-Health-and-Care-Wales/product-roadmaps/rulesets/24720402`)
   for unattributed changes, merging by squash or rebase. Its one bypass actor is the
   owner, mode `always`.
 - This repository has only the enterprise's _Restrict Transfers_ ruleset; its settings
-  allow squash and rebase merges and delete merged branches. Eight accounts hold the
-  admin role on it, and on `product-roadmaps`; any of them can change a ruleset.
+  allow squash and rebase merges and delete merged branches. Eleven accounts, the
+  organisation's owners, hold the admin role on it and on `product-roadmaps`; any of
+  them can change a ruleset.
 - The credential agent sessions use reads `admin: true` on this repository, and the
   host's git configuration signs every commit with the owner's SSH key.
 - GitHub checks a test merge of the pull request's commits against a signatures rule,
@@ -180,6 +195,8 @@ repos/DHCW-Digital-Health-and-Care-Wales/product-roadmaps/rulesets/24720402`)
   and a required check can name the integration it must come from (`integration_id`
   in the [rules API](https://docs.github.com/en/rest/repos/rules)); confirm GitHub
   Actions' ID at delivery.
+- GitHub's Dependabot options reference lists `cooldown` for GitHub Actions and for
+  npm and Yarn, not pnpm by name; confirm it holds pnpm updates back at delivery.
 - `ci.yml`'s jobs are _Detect changes_, _Docs_ (docs-only pull requests), _Verify_,
   _E2E (Playwright)_ and _Deploy to GitHub Pages_. _Detect changes_ fails closed: it
   runs everything unless every changed file is documentation.

@@ -86,7 +86,9 @@ Owner answers of 2026-11-21 (monorepo grilling), drafted into ADR-016 and ADR-01
    gets no redirect, and leads are told the new one.
 9. **`main` is protected** by `product-roadmaps`' ruleset, applied repository-wide, with
    required checks and signed commits; the owner keeps bypass. Amended in STY-087's
-   grilling: squash only, bypass through pull requests only, one gate check.
+   grilling: squash only, bypass through pull requests only, one gate check; and in
+   its review: an agent merges only when the owner authorises it, and
+   `product-roadmaps` is protected as `main` is (STY-088 D8).
 10. **Workspace tooling, CI and agent guides**: ADR-016 _Workspace tooling_, _CI_,
     _Agent guides_.
 11. **The API stack**: ADR-017, including the public read (no key, open CORS, OGL v3.0,

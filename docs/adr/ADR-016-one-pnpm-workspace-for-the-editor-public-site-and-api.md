@@ -123,11 +123,11 @@ of _Who may change `main`_ and _CI_ stands.
 - **The owner's bypass applies only through a pull request**, so nobody pushes straight
   to `main`; the owner merges agents' pull requests, opened under the owner's account,
   through it.
-- **One required check**, an always-run gate job that every CI job feeds, reported by
-  GitHub Actions, since a required job skipped by path counts as passed. The ruleset
-  requires that one name, not each job's.
-- **A Repository job runs on every pull request** in place of the docs-only path class;
-  app jobs are skipped only when every changed file is documentation or another app's.
+- **One required check**, an always-run gate job that every CI job feeds, since a
+  required job skipped by path counts as passed. The ruleset requires that one name,
+  not each job's.
+- **A Repository job runs on every pull request** in place of the docs-only path
+  class.
 - **`CODEOWNERS` names only the owner** (`* @collisdigital`).
 - **The ruleset is kept as JSON in the repository** and applied by the owner.
 - **The owner may authorise an agent to merge a pull request**, through the bypass for
@@ -141,8 +141,8 @@ From the owner's STY-088 grilling and the review of its record (2026-11-21):
   and STY-095 converges it on the editor's. The root `eslint.base.ts` is extracted
   then, not on arrival.
 - `product-roadmaps`, which publishes the public site, gets the same protection as
-  `main` here: the same ruleset, the owner its only code owner, a read-only default
-  workflow token, and workflows that pin what they check out.
+  `main` here: the same ruleset, less the required check it has no CI to report, the owner its only code owner, a read-only default
+  workflow token, and workflows that name what they check out literally.
 
 ## Consequences
 
@@ -159,8 +159,9 @@ From the owner's STY-088 grilling and the review of its record (2026-11-21):
     the bypass actor, and sign as the owner (STY-087 D9): a misled agent, or a
     dependency running in its session, could merge past the gate or change the ruleset.
     Guides forbid both, and an agent merges only when the owner authorises it.
-- **Eight accounts hold the admin role** on this repository and on `product-roadmaps`,
-  and any of them can change a ruleset; STY-087 S8 compares the applied ruleset with
+- **Eleven accounts, the organisation's owners, hold the admin role** on this
+  repository and on `product-roadmaps`, which their settings cannot reduce, and any of
+  them can change a ruleset; STY-087 S8 compares the applied ruleset with
   the reviewed file once.
 - **The shared Pages origin** cannot tell the editor from the public site, which loads a
   third-party analytics script, or from any other organisation site. Tokens stay in

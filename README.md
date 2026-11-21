@@ -1,6 +1,6 @@
 # DHCW Roadmap Editor
 
-[![CI/CD](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/actions/workflows/ci.yml)
+[![CI/CD](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/actions/workflows/ci.yml)
 
 An internal tool for Digital Health and Care Wales (DHCW) staff: Product Leads use it to
 manage the public Now / Next / Later roadmaps of their products. A separate app, the
@@ -8,7 +8,7 @@ public site, reads the same data source and shows the published roadmaps. The
 [Product Lead persona](docs/backlog/personas/product-lead.md) describes who it is for.
 
 It is a static, frontend-only React app hosted on GitHub Pages:
-**<https://dhcw-digital-health-and-care-wales.github.io/roadmaps-editor/>**. You connect a
+**<https://dhcw-digital-health-and-care-wales.github.io/roadmaps/>**. You connect a
 Google account; the app reads the **roadmap index** (the first tab) of one Google
 Spreadsheet and lists each roadmap as a card, published or not. A roadmap's page shows
 its items, and a Product Lead edits the roadmap's and its items' English and publishes
@@ -380,7 +380,7 @@ shared contract test (`describeRoadmapRepositoryContract`), so swapping data sou
 change to the composition root and nothing else. Auth works the same way: the UI uses the
 `AuthClient` port, and only `infrastructure/google-identity/` touches the `google` global.
 
-Routing uses hash history (`/roadmaps-editor/#/roadmaps/producta`), so deep links survive a
+Routing uses hash history (`/roadmaps/#/roadmaps/producta`), so deep links survive a
 reload on GitHub Pages without a 404 fallback (ADR-004).
 
 ## Getting started
@@ -398,8 +398,8 @@ reload on GitHub Pages without a 404 fallback (ADR-004).
 ### Install and run
 
 ```sh
-git clone https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor.git
-cd roadmaps-editor
+git clone https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps.git
+cd roadmaps
 pnpm install --frozen-lockfile
 cp .env.example .env.local   # required: `pnpm dev` does not read .env.production
 pnpm dev                     # http://localhost:5173

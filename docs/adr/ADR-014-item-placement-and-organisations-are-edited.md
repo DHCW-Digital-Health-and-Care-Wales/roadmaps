@@ -83,10 +83,10 @@ database that replaces Sheets (ADR-002) will hold them as a table, linked to ite
 ### STY-051 amendments
 
 Decided with the owner on 2026-11-16, on the wayfinder map
-[Reordering a placement's items](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/102).
+[Reordering a placement's items](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/issues/102).
 
 - **A moved item goes last in its new placement** (map ticket
-  [Where does a moved item land, and where does a new item go?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/106)
+  [Where does a moved item land, and where does a new item go?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/issues/106)
   Q1, Q3, Q7): in all six placements, shown there as soon as it is moved, and written
   so. Publishing writes the `Horizon` cell and moves the item's row to just after the
   row of the placement's last item in the re-read, a co-lead's items included, which is
@@ -95,7 +95,7 @@ Decided with the owner on 2026-11-16, on the wayfinder map
   (agent, STY-051 D3, reading the rule move by move).
 - **Why the row now moves**: the rejected option's reason has gone. Reordering exists
   (STY-050, ADR-012 _STY-050 amendments_), and a check on a scratch copy of a roadmap
-  tab ([What do row moves do to a real roadmap tab?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/109))
+  tab ([What do row moves do to a real roadmap tab?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/issues/109))
   showed a moved row keeps its formatting, dropdown and the references to it. Lost
   (Q1): first in the placement (wrong for a demotion), the kept row (it can land
   mid-list, unpredictably) and a place chosen at move time (reordering covers it).

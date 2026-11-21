@@ -2,7 +2,8 @@
 
 - Status: Accepted
 - Date: 2026-11-10 (amended in STY-008: artifact built by Verify, base-path guard, no CNAME,
-  SHA-pinned actions, Node 26; STY-009: vendor chunks; later: docs-only PRs run a Docs job)
+  SHA-pinned actions, Node 26; STY-009: vendor chunks; later: docs-only PRs run a Docs job;
+  STY-085: the base path `/roadmaps/`)
 
 ## Decision
 
@@ -36,7 +37,7 @@
   default; `deploy` has only `pages: write` + `id-token: write`.
 - **Base path**: the resolver is `build/resolve-base-path.ts` (unit-tested), used by both
   `vite.config.ts` and `playwright.config.ts`. `GITHUB_REPOSITORY` is always set in
-  Actions, so the E2E job tests the production base path (`/roadmaps-editor/`) and local
+  Actions, so the E2E job tests the production base path (`/roadmaps/`) and local
   runs use `/`. `VITE_BASE_PATH` wins over `PAGES_CUSTOM_DOMAIN`. Blank values count as
   unset, since Actions expands an unset variable to `""`.
 - **`configure-pages` `base_path`** is a guard, not an input: after the build, `verify`
@@ -74,6 +75,14 @@
   about 48 kB of JavaScript instead of all ~650 kB, and no chunk reaches Vite's 500 kB warning.
   The warning limit is not raised. Zod is imported as `zod/mini` (ADR-002), which saved
   about 63 kB.
+
+### STY-085 amendment
+
+- **Base path `/roadmaps/`**: the repository is renamed `roadmaps` (ADR-016), so the
+  editor deploys under `/roadmaps/` instead of `/roadmaps-editor/`. The resolver is
+  unchanged: the new path still comes from `GITHUB_REPOSITORY`, and no path is written
+  into code or a workflow. The old address gets no redirect (ADR-016 _Rejected_); the
+  origin, and so the OAuth client's Authorised JavaScript origins, are unchanged.
 
 ## Consequences
 

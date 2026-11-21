@@ -44,7 +44,7 @@ No GitHub secrets are needed: the public config is committed in `.env.production
 
 ## First deployment
 
-Done once for `DHCW-Digital-Health-and-Care-Wales/roadmaps-editor`; repeat for a fork or a
+Done once for `DHCW-Digital-Health-and-Care-Wales/roadmaps`; repeat for a fork or a
 new repository.
 
 1. **Create the repository** on GitHub. Make it public, or use a plan that supports
@@ -60,7 +60,7 @@ new repository.
    `https://dhcw-digital-health-and-care-wales.github.io` is in the OAuth client's
    Authorised JavaScript origins (step 5 of
    [Google Cloud setup](google-cloud-setup.md#setup)).
-6. **Open** <https://dhcw-digital-health-and-care-wales.github.io/roadmaps-editor/>,
+6. **Open** <https://dhcw-digital-health-and-care-wales.github.io/roadmaps/>,
    choose **Connect Google**, pick an account (a test user, if the app is External and in
    Testing) and allow access to Google Sheets.
 7. **See your roadmaps:** one card per roadmap the spreadsheet's first tab lists
@@ -78,7 +78,7 @@ Vite's `base` set to `/<repo>/`. `build/resolve-base-path.ts` decides it, in thi
 4. `/` (local development).
 
 Playwright uses the same function for its `baseURL`, so CI's E2E run tests the app under
-`/roadmaps-editor/` exactly as deployed. Before uploading, `verify` checks the built
+`/roadmaps/` exactly as deployed. Before uploading, `verify` checks the built
 `index.html` against the `base_path` that `actions/configure-pages` reports and fails on a
 mismatch, rather than deploying a site whose assets 404. A fork deploys to
 `/<fork-name>/` automatically, but needs its own OAuth client and spreadsheet in

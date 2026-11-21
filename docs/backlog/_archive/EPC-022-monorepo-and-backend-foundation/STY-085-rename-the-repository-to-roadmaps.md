@@ -1,14 +1,14 @@
 # STY-085: Rename the repository to roadmaps, so the editor opens at /roadmaps/
 
-- **Status**: Proposed — acceptance criteria written from the owner's cut-over answers
-  (2026-11-21, D1–D2, D5)
+- **Status**: Done
 - **Type**: Refactor + Docs
 - **Area**: CI/CD + Docs
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
 - **Depends on**: none
 - **Binding ADRs**: ADR-016 §Layout and name, ADR-007
 - **Suggested model**: Sonnet — a sweep of names and addresses, then an observed
   cut-over
+- **Delivered**: _(the PR, added once it exists)_
 
 ## Summary
 
@@ -129,3 +129,27 @@ Audited at `cc11e44` on 2026-11-21:
 - Local clone directory names and T3 project paths: each developer's own.
 - A message to Product Leads: the owner's (D2).
 - Moving the worktree slot registry: STY-086 (D5).
+
+## Delivery
+
+### Departures
+
+None. S1 to S3 describe the live site after the cut-over (Scope steps 2 and 3), so a
+pull request reviewed under the old name can show only their preconditions; their
+observation on the deploy run and the live site is recorded after the owner renames
+and merges, as Scope step 3 sets.
+
+### Contract for dependents
+
+- STY-086 moves the worktree slot registry from `roadmaps-editor/` (D5); it is the only
+  live use of the old name outside history and the rename's own account.
+- GitHub redirects the old repository's git operations and links while no repository
+  takes the name `roadmaps-editor` (ADR-016 _Rejected_): no story creates one.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                                      |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1, S2   | observed on the live site after the cut-over (Scope step 3); before it, nothing in the editor names its address (`git grep` for `roadmaps-editor` in `src/`: no hits)                                                                        |
+| S3       | `build/resolve-base-path.test.ts` (`serves a project site under the repository name`) derives `/roadmaps/` from `GITHUB_REPOSITORY`; the full E2E suite run with `GITHUB_REPOSITORY=…/roadmaps`; the deploy run on `main` after the cut-over |
+| S4       | `git grep -n roadmaps-editor`, every hit in the exceptions S4 lists                                                                                                                                                                          |

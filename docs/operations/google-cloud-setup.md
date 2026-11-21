@@ -33,7 +33,7 @@ OAuth client. These steps use the Google Cloud console's _Google Auth Platform_ 
      - optional: `http://localhost:21010`, `21020` and so on, to sign in from a parallel
        worktree's `pnpm dev` (README, _Parallel worktrees_)
      - `https://dhcw-digital-health-and-care-wales.github.io` (production; **not**
-       `https://dhcw-digital-health-and-care-wales.github.io/roadmaps-editor`, which
+       `https://dhcw-digital-health-and-care-wales.github.io/roadmaps`, which
        Google rejects as it has a path)
    - **Authorised redirect URIs: leave empty.** The token model's popup returns the token
      to the opener page, so no redirect URI is involved; redirect URIs are only for the

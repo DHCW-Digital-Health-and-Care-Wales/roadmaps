@@ -62,9 +62,9 @@ tours.
   (`button "Publish changes": Publish` to `button "Publish changes"`), which fails the
   next run. Put back the literal where the
   fixtures fix the value and each control's text, then commit.
-- CI serves under `/roadmaps-editor/`: after changing the structure snapshots, run them
+- CI serves under `/roadmaps/`: after changing the structure snapshots, run them
   once with
-  `GITHUB_REPOSITORY=DHCW-Digital-Health-and-Care-Wales/roadmaps-editor`.
+  `GITHUB_REPOSITORY=DHCW-Digital-Health-and-Care-Wales/roadmaps`.
 - Snapshot a `main`, header, menu, dialog, form or notice, never the footer, whose
   version changes per build.
 - Compare a computed style with the token it comes from, `tokenColour(page, "--token")`

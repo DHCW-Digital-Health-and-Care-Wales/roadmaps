@@ -159,10 +159,9 @@ From the owner's STY-088 grilling and the review of its record (2026-11-21):
     the bypass actor, and sign as the owner (STY-087 D9): a misled agent, or a
     dependency running in its session, could merge past the gate or change the ruleset.
     Guides forbid both, and an agent merges only when the owner authorises it.
-- **Eleven accounts, the organisation's owners, hold the admin role** on this
-  repository and on `product-roadmaps`, which their settings cannot reduce, and any of
-  them can change a ruleset; STY-087 S8 compares the applied ruleset with
-  the reviewed file once.
+- **The organisation's owners hold the admin role** on this repository and on
+  `product-roadmaps`, which their settings cannot reduce, and any of them can change a
+  ruleset; STY-087 S8 compares the applied ruleset with the reviewed file once.
 - **The shared Pages origin** cannot tell the editor from the public site, which loads a
   third-party analytics script, or from any other organisation site. Tokens stay in
   memory only, and a custom domain for the editor is a precondition of switching the

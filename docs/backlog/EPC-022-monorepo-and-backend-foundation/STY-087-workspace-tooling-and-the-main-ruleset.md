@@ -178,11 +178,10 @@ repos/DHCW-Digital-Health-and-Care-Wales/product-roadmaps/rulesets/24720402`)
   for unattributed changes, merging by squash or rebase. Its one bypass actor is the
   owner, mode `always`.
 - This repository has only the enterprise's _Restrict Transfers_ ruleset; its settings
-  allow squash and rebase merges and delete merged branches. Eleven accounts, the
-  organisation's owners, hold the admin role on it and on `product-roadmaps`; any of
-  them can change a ruleset.
-- The credential agent sessions use reads `admin: true` on this repository, and the
-  host's git configuration signs every commit with the owner's SSH key.
+  allow squash and rebase merges and delete merged branches. The organisation's owners
+  hold the admin role on it and on `product-roadmaps`; any of them can change a
+  ruleset.
+- Agent sessions run with the owner's credential and sign as the owner (D9).
 - GitHub checks a test merge of the pull request's commits against a signatures rule,
   so one unsigned commit on a branch blocks even a squash merge, and asks someone who
   can bypass to merge it ([available rules for

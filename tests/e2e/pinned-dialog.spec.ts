@@ -10,6 +10,7 @@ import {
 } from "./fixtures/dialogs"
 import { settledBox, settledBoxes } from "./fixtures/layout"
 import { words } from "./fixtures/long-fields"
+import { useDialog } from "./fixtures/look"
 import { connect, expect, test } from "./fixtures/test"
 
 /**
@@ -317,6 +318,35 @@ test("on the smallest pinned screen, the add-item dialog keeps its buttons in vi
     expect(await isInView(page, part)).toBe(true)
   }
 })
+
+for (const surface of ["side panel", "dialog"] as const) {
+  test(`on the smallest pinned screen, the add-item ${surface} stays put when its buttons are scrolled into view`, async ({
+    page,
+  }) => {
+    // A scroll into view, as a click's retry makes, scrolls each box around its target:
+    // the pinned popup is none, or its title would leave the screen (DEF-026).
+    if (surface === "dialog") await useDialog(page)
+    await page.setViewportSize({ width: 640, height: 500 })
+    await page.goto("./#/roadmaps/producta")
+    await connect(page)
+    const dialog = await openAddItemDialog(page)
+    const parts = [
+      dialog.getByRole("heading", { name: "Add an item" }),
+      cornerClose(dialog),
+      dialog.getByRole("button", { name: "Add item", exact: true }),
+      dialog.getByRole("button", { name: "Cancel" }),
+    ]
+
+    for (const block of ["start", "center", "end"] as const) {
+      await dialog
+        .getByRole("button", { name: "Cancel" })
+        .evaluate((button, at) => {
+          button.scrollIntoView({ block: at })
+        }, block)
+      for (const part of parts) expect(await isInView(page, part)).toBe(true)
+    }
+  })
+}
 
 for (const [size, viewport] of [
   ["a phone", PHONE],

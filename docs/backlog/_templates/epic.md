@@ -24,7 +24,7 @@ waiting`). Agents read the rest: selection and orchestration read Stories
 
 # EPC-{nnn}: <name> — <the tension, in a phrase>
 
-- **Status**: Active | Done | Won't do — <one line>
+- **Status**: Needs grilling | Active | Done | Won't do — <one line>
 - **Progress**: <n> of <m> terminal; next selectable: STY-{nnn}; blocked on:
   <owner decision or prerequisite>
 - **Binding ADRs**: ADR-{nnn}, ADR-{nnn}

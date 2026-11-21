@@ -336,7 +336,7 @@ EPC-022 names the suite.
   updated a `date`.
 - STY-048 (removing a roadmap) is bound by Options 8 and 33: retired, never deleted, and
   reinstated from a retired view.
-- Follow-on records: the API stack ADR (the owner's); an identity ADR for Microsoft and
+- Follow-on records: the API stack ADR (ADR-017); an identity ADR for Microsoft and
   Google sign-in (successor to ADR-003); an authorisation ADR holding the permission
   catalogue, the shipped roles (Option 22) and who assigns leads (Options 16, 17);
   EPC-022 delivers the first schema and sets the scratch's expiry (Option 24).

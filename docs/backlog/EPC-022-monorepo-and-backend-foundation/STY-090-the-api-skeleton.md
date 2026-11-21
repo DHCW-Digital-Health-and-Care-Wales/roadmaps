@@ -5,7 +5,7 @@
 - **Type**: Feature
 - **Area**: API + CI/CD
 - **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
-- **Depends on**: STY-086 (hard), STY-087 (preferred order)
+- **Depends on**: STY-086 (hard), STY-087 (hard: its hooks and gate, which the API joins)
 - **Binding ADRs**: ADR-017, ADR-016 §Workspace tooling, §CI
 - **Suggested model**: Opus — the conventions every later API story copies
 

@@ -1,7 +1,7 @@
 # STY-088: Bring the public site into the workspace, still published at its address
 
 - **Status**: Proposed — acceptance criteria written from the owner's STY-088 grilling
-  (2026-11-21, D1–D7)
+  (2026-11-21, D1–D8)
 - **Type**: Refactor + Docs
 - **Area**: CI/CD + Docs
 - **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
@@ -15,7 +15,8 @@ The public site's code and history move into `apps/public-site`, on the workspac
 toolchain but keeping its own code conventions for now, and `product-roadmaps` keeps
 publishing it at `/product-roadmaps/` from a nightly and manual build of this
 repository's `main`. `product-roadmaps` is stripped to its deploy, its sheet check, the
-public feedback template and a README for sheet editors. The spreadsheet format gets
+public feedback template and a README for sheet editors, and protected as `main` is
+here. The spreadsheet format gets
 one description. The public sees no change; adopting the editor's conventions is
 STY-095.
 
@@ -28,24 +29,30 @@ STY-095.
   its CI go, and its deploy and sheet check build from this repository.
 - **Owner steps**, named in the pull request: allowing merge commits in _Settings_ for
   the import's pull request, merging it through the bypass, then turning merge commits
-  off again (D1); merging the `product-roadmaps` pull request; and a manual deploy run.
+  off again (D1); applying STY-087's ruleset to `product-roadmaps` and setting its
+  default workflow token to read-only (D8); merging the `product-roadmaps` pull
+  request; and a manual deploy run.
 
 ## Acceptance criteria
 
 ### S1: The public site's history arrives intact (D1)
 
-**Given** `product-roadmaps` frozen at its head
+**Given** `product-roadmaps` frozen at its head, the import branch cut from it
 **When** the import's pull request merges
 **Then** `main` holds every one of its commits with its original SHA and signature, its
 files under `apps/public-site/`, and `git log --follow` on a moved file reaches its
 first commit
 **And** the toolchain's reformat is a commit of its own, listed in
 `.git-blame-ignore-revs`
+**And** the `product-roadmaps` pull request strips the code only while that
+repository's `main` is still at the imported head, so no commit there is lost
 
 ### S2: The public sees the same site (D2)
 
 **Given** the site built from `apps/public-site` on the workspace's toolchain (pnpm,
-Node 26, the root Prettier style) with the same example data
+Node 26, the root Prettier style) with the same example data, its npm lockfile
+converted with every resolved version kept (`pnpm import`), and the version comparison
+recorded in Delivery
 **When** its output is compared with a build of `product-roadmaps`' frozen head
 **Then** every page's HTML is the same, apart from asset hashes, under
 `/product-roadmaps/`
@@ -55,8 +62,9 @@ this repository's `main`, observed live with the current sheet
 ### S3: product-roadmaps only deploys, checks the sheet and takes feedback (D3, D4)
 
 **Given** the `product-roadmaps` pull request merged
-**Then** it holds only its deploy and sheet-check workflows, the feedback issue
-template, `CODEOWNERS`, `LICENSE` and a README for sheet editors
+**Then** it holds only its deploy and sheet-check workflows, an Actions-only
+`.github/dependabot.yml`, the feedback issue template, `CODEOWNERS`, `LICENSE` and a
+README for sheet editors
 **And** its deploy runs nightly and by hand, with no push trigger, checks out this
 repository's `main` at its head and builds `apps/public-site`; its build job holds no
 Pages permission and its deploy job runs no project code (ADR-016)
@@ -67,8 +75,8 @@ only its Actions
 
 ### S4: The public site's checks run in CI by path
 
-**Given** a pull request that changes `apps/public-site/`, the lockfile, the
-workspace's configuration or a workflow
+**Given** a pull request that changes anything other than documentation or another
+app's directory, as STY-087 S5 sets for the editor
 **When** CI runs
 **Then** the public site's checks (typecheck, lint, unit tests, build), its E2E suite in
 its Playwright container and Lighthouse run, each feeding _CI result_ (STY-087)
@@ -99,6 +107,18 @@ and the root guide's routing table names it
 implement-story, the code half of its `CONTRIBUTING.md` becomes a root
 `CONTRIBUTING.md`, and its content half moves to `product-roadmaps`' README
 
+### S8: product-roadmaps is protected as main is here (D8)
+
+**Given** the `product-roadmaps` pull request merged and the owner's steps done
+**Then** that repository's ruleset is STY-087's (squash only, signatures, the owner's
+bypass through pull requests only, one code-owner approval of the last push), its
+`CODEOWNERS` names only the owner, and its default workflow token is read-only
+**And** both workflows declare `permissions: contents: read` at the top, check out with
+`persist-credentials: false`, and name this repository and `refs/heads/main`
+literally
+**And** both pass actionlint and zizmor with every audit before that pull request
+merges, with the run recorded in Delivery
+
 ## Decisions
 
 - **D1** (agent, 2026-11-21, from ADR-016 and STY-087 D3): the import's pull request
@@ -114,8 +134,9 @@ implement-story, the code half of its `CONTRIBUTING.md` becomes a root
   Shapes S3.
 - **D4** (owner, 2026-11-21, round 1): what stays in `product-roadmaps` → its deploy,
   sheet check, feedback template, `CODEOWNERS`, `LICENSE` and a README for sheet
-  editors that links to this repository for the code and the editor. Over leaving a
-  frozen copy of the code there. Shapes S3.
+  editors that links to this repository for the code and the editor, with an
+  Actions-only Dependabot file for its workflows. Over leaving a frozen copy of the
+  code there. Shapes S3.
 - **D5** (owner, 2026-11-21, round 2): the format → one description, in the root README,
   over each app describing it. Shapes S6.
 - **D6** (owner, 2026-11-21, round 1): its agent material → folded into this
@@ -124,6 +145,10 @@ implement-story, the code half of its `CONTRIBUTING.md` becomes a root
   shared TypeScript conventions out of the editor's guide (STY-086 D6) move to STY-095,
   when the conventions are shared, over extracting them here (ADR-016 _STY-088
   amendments_).
+- **D8** (owner, 2026-11-21, review of this record): `product-roadmaps`, which decides
+  what the public site publishes, gets the protection STY-087 gives `main` here, the
+  owner its only code owner, a read-only default token and pinned, linted workflows.
+  Over keeping both code owners there, or accepting the weaker protection. Shapes S8.
 
 ## Starting point
 
@@ -137,7 +162,13 @@ Audited at `product-roadmaps` `2548219` on 2026-11-21:
   files, 41 commits, all signed.
 - Workflows: `ci.yml` (check, E2E, Lighthouse via `npx --yes @lhci/cli@0.15.1`),
   `deploy.yml` (push, nightly at 02:00 UTC, manual; build and deploy split) and
-  `check-sheet.yml` (manual). Dependabot runs weekly for npm and Actions.
+  `check-sheet.yml` (manual). Dependabot runs weekly for npm and Actions. The
+  workflows set `contents: read` themselves and check out without
+  `persist-credentials: false`.
+- Its ruleset has no signatures rule and no required checks, its bypass is the owner
+  in mode `always`, its `CODEOWNERS` is `* @collisdigital @fireballxlV`, and its
+  default workflow token is read-write. Its `github-pages` environment deploys only
+  from `main`.
 - `src/lib/links.ts` builds the feedback link from the repository's URL and its
   `roadmap-feedback.md` template.
 - `index.html` loads Simple Analytics, the one third-party script its privacy rules

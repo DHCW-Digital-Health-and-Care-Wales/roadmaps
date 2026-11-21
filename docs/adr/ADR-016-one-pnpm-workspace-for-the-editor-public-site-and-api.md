@@ -4,8 +4,9 @@
   EPC-022 monorepo grilling (2026-11-21). ADR-007 is amended by the stories that make
   each part true (_Consequences_).
 - Date: 2026-11-21 (amended in STY-087: squash merges only, a bypass through pull
-  requests only, one gate check, the owner the only code owner; STY-088: the shared
-  ESLint base comes with STY-095)
+  requests only, one gate check, a Repository job on every pull request, the owner the
+  only code owner; STY-088: the shared ESLint base comes with STY-095, and
+  `product-roadmaps` protected as `main` is)
 
 ## Context
 
@@ -113,37 +114,54 @@ moves the public site to the API's read later, with each tenant under its own ad
 
 ### STY-087 amendments
 
-From the owner's STY-087 grilling (2026-11-21); the rest of _Who may change `main`_
-stands.
+From the owner's STY-087 grilling and the review of its record (2026-11-21); the rest
+of _Who may change `main`_ and _CI_ stands.
 
 - **Squash merges only**, not squash and rebase as copied: GitHub signs a squash
-  commit, and its docs do not say it signs a rebase merge's commits. STY-088's history
-  merge goes through the owner's bypass.
+  commit, and adds a rebase merge's commits without signature verification. STY-088's
+  history merge goes through the owner's bypass.
 - **The owner's bypass applies only through a pull request**, so nobody pushes straight
   to `main`; the owner merges agents' pull requests, opened under the owner's account,
   through it.
-- **One required check**, an always-run gate job that every CI job feeds, since a
-  required job skipped by path counts as passed.
+- **One required check**, an always-run gate job that every CI job feeds, reported by
+  GitHub Actions, since a required job skipped by path counts as passed. The ruleset
+  requires that one name, not each job's.
+- **A Repository job runs on every pull request** in place of the docs-only path class;
+  app jobs are skipped only when every changed file is documentation or another app's.
 - **`CODEOWNERS` names only the owner** (`* @collisdigital`).
 - **The ruleset is kept as JSON in the repository** and applied by the owner.
+- **The owner may authorise an agent to merge a pull request**, through the bypass for
+  that pull request alone; agents never change rulesets, protections or settings.
 
 ### STY-088 amendments
 
-From the owner's STY-088 grilling (2026-11-21): the public site arrives on the
-workspace's toolchain with its own code conventions, and STY-095 converges it on the
-editor's. The root `eslint.base.ts` is extracted then, not on arrival.
+From the owner's STY-088 grilling and the review of its record (2026-11-21):
+
+- The public site arrives on the workspace's toolchain with its own code conventions,
+  and STY-095 converges it on the editor's. The root `eslint.base.ts` is extracted
+  then, not on arrival.
+- `product-roadmaps`, which publishes the public site, gets the same protection as
+  `main` here: the same ruleset, the owner its only code owner, a read-only default
+  workflow token, and workflows that pin what they check out.
 
 ## Consequences
 
 - **Accepted risks:**
   - The nightly deploy builds `main`'s head whatever its state, and the owner's bypass
-    can merge past failing checks.
+    can merge past failing checks, review and signatures.
   - GitHub disables a public repository's scheduled workflow after 60 days without
     activity, and `product-roadmaps` will have none. Then neither merged changes nor
     published sheet edits reach the public site until someone re-enables it or the move
     to Google Cloud lands; the owner accepts this.
   - Required signatures apply to agents too: a cloud agent that cannot sign its commits
-    cannot have them merged.
+    can have them merged only through the owner's bypass.
+  - Agent sessions on the owner's machine run with the owner's credential, an admin and
+    the bypass actor, and sign as the owner (STY-087 D9): a misled agent, or a
+    dependency running in its session, could merge past the gate or change the ruleset.
+    Guides forbid both, and an agent merges only when the owner authorises it.
+- **Eight accounts hold the admin role** on this repository and on `product-roadmaps`,
+  and any of them can change a ruleset; STY-087 S8 compares the applied ruleset with
+  the reviewed file once.
 - **The shared Pages origin** cannot tell the editor from the public site, which loads a
   third-party analytics script, or from any other organisation site. Tokens stay in
   memory only, and a custom domain for the editor is a precondition of switching the

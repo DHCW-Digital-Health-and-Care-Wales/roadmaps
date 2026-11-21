@@ -56,10 +56,11 @@ package fails
 
 ### S3: The repository's checks run without the editor (D4)
 
-**Given** the root package's checks (Markdown links, the agent-guide budget, the
-worktree script's tests)
-**When** `pnpm test:docs` runs, as CI's docs-only job does
-**Then** it runs from the root package's own toolchain and scans the whole repository,
+**Given** the root package's checks: the Markdown link check and the agent-guide budget
+(`pnpm test:docs`, as CI's docs-only job runs them), and the worktree script's tests
+(in the root package's `test`)
+**When** they run
+**Then** they run from the root package's own toolchain and scan the whole repository,
 `apps/` included, with no import from `apps/editor`
 
 ### S4: A fresh worktree gets its ports and runs the editor (D5)
@@ -79,15 +80,20 @@ worktree's root, and `pnpm editor:test:e2e` uses the slot's preview port
 **And** `main` gains two commits from the pull request: one that only renames, and one
 that holds every other change
 
-### S6: Nothing live points at a moved path
+### S6: Nothing live points at a moved path or a renamed script
 
 **Given** the merged pull request
 **When** the Markdown link check runs and the live tree is searched for root-relative
 paths that moved (`src/`, `tests/`, `build/`, `public/`, `vite.config.ts`,
-`playwright.config.ts`, `eslint.config.ts`, `components.json`, `.env.*`)
-**Then** every link resolves and every live citation names its `apps/editor/` path,
-in guides, skills, their references, live records, ADRs, runbooks, `t3.json`, the
-session-start hook, CI and Dependabot
+`playwright.config.ts`, `eslint.config.ts`, `components.json`, `.env.example`,
+`.env.production`, `.env.local`) and for the scripts that were renamed (`pnpm dev`,
+`pnpm preview`, `pnpm test:e2e`, and `pnpm build` where it means the editor's build)
+**Then** every link resolves, every live citation of a moved path names its
+`apps/editor/` path, and every live command names its prefixed script, in guides,
+skills, their references, live records, ADRs, runbooks, the README, `t3.json`, the
+session-start hook, the worktree script, CI and Dependabot
+**And** what stays at the root keeps its root path: the Markdown link and agent-guide
+checks (D4) and `.env.worktree` (D5)
 **And** `docs/backlog/_archive/` and `docs/analysis/delivery-runs/` are unchanged
 
 ### S7: The guides split by area (D6)

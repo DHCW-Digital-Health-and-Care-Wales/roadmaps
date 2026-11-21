@@ -2,7 +2,7 @@
 
 - **Status**: Proposed — acceptance criteria written from the owner's cut-over answers
   (2026-11-21, D1–D2, D5)
-- **Type**: Docs
+- **Type**: Refactor + Docs
 - **Area**: CI/CD + Docs
 - **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
 - **Depends on**: none
@@ -66,9 +66,11 @@ passes against the Pages configuration, and `deploy` publishes it
 
 **Given** the merged pull request
 **When** the live tree is searched for `roadmaps-editor`
-**Then** it is found only in history: `docs/backlog/_archive/`,
-`docs/analysis/delivery-runs/`, a dated measurement (CHO-031 _Measurement_), and the
-epic's and this story's own account of the rename
+**Then** it is found only in history and in what names the old address on purpose:
+`docs/backlog/_archive/`, `docs/analysis/delivery-runs/`, a dated measurement (CHO-031
+_Measurement_), the epic's, ADR-016's and ADR-007's account of the rename, this story,
+and the worktree slot registry's path in `scripts/worktree/worktree.sh` and the README,
+which STY-086 moves (D5)
 **And** the README (badge, address, clone commands, the hash-history example), the
 package name and repository URL, `VITE_REPOSITORY_URL` in `.env.production` and
 `.env.example` (the footer's repository link), the runbooks, ADR-004's example, the
@@ -76,14 +78,6 @@ agent guides and skills, the base-path test inputs, and links to this repository
 issues and pull requests in live records all name `roadmaps` (D3)
 **And** ADR-007 is amended in place for the base path `/roadmaps/` (ADR-016
 _Consequences_)
-
-### S5: A developer's worktrees keep their ports
-
-**Given** a developer has worktrees whose slots were claimed before the rename
-**When** they pull the change and set up a new worktree
-**Then** the existing worktrees keep their slots and ports, and the new worktree claims
-a free slot, not one already held
-**And** the slot registry lives under a `roadmaps` state directory
 
 ## Decisions
 
@@ -99,10 +93,10 @@ a free slot, not one already held
   _Agent guides_).
 - **D4** (agent, 2026-11-21): the product's name in the interface, _DHCW Roadmap
   Editor_, is unchanged; only the repository and its address change.
-- **D5** (owner, 2026-11-21, STY-086 grilling round 2): S5 is dropped. Every existing
-  checkout and worktree is deleted after STY-086 merges, so the slot registry stays
-  under `roadmaps-editor/` here and moves in STY-086 (STY-086 D5, S4). S4's search
-  also finds the registry path in `scripts/worktree/worktree.sh` until then.
+- **D5** (owner, 2026-11-21, STY-086 grilling round 2): S5 (existing worktrees keep
+  their ports) is dropped. Every existing checkout and worktree is deleted after
+  STY-086 merges, so the slot registry stays under `roadmaps-editor/` here and moves in
+  STY-086 (STY-086 D5, S4); S4 excepts its path.
 
 ## Starting point
 

@@ -165,7 +165,7 @@ test("the session warning, opening as a title is typed, leaves the field and its
   ])
 })
 
-test("closing the item dialog “Add more details” opens sends focus back: to the field as typed after Cancel, to the new card's Edit after adding, to the placement's “Add an item” after “Add and start another” (STY-081 S3, S4, S7)", async ({
+test("focus returns once the dialog “Add more details” opens has closed: to the field as typed after Cancel, to the new card's Edit after adding, to the placement's “Add an item” after “Add and start another” (STY-081 S3, S4, S7)", async ({
   page,
   sheets,
 }) => {

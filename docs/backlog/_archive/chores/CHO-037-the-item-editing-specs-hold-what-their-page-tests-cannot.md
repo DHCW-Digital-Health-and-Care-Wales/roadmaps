@@ -86,10 +86,10 @@ row, an appended row, a removed row
   the nine specs take 133 runs and 189.6 s summed on CI there. After: 83 runs, 50
   fewer; the 65 test names that are gone or renamed took 102.5 s on CI there, of which
   the renamed and trimmed tests (the desktop runs, the double click, the closing loop,
-  the combined test) keep about 19 s, so about 80 s summed go. The record's ~140 s
+  the combined test) keep about 22 s, so about 80 s summed go. The record's ~140 s
   was measured at `9ee767b` against a 221 s baseline.
 - The nine specs go from 4,602 to 3,067 lines (1,872 deleted, 337 inserted);
-  `accessibility.spec.ts` gains 8 lines and the Vitest tests 105. Tests only.
+  `accessibility.spec.ts` gains 12 lines and the Vitest tests 104 (2 deleted). Tests only.
 - One round trip per kind of write remains (S1): a cell (`editing.spec.ts` "publishes a
   roadmap's changes in one write", and the combined test below), a new column
   ("adds a Labels column"), a moved row (the order test on a desktop, and

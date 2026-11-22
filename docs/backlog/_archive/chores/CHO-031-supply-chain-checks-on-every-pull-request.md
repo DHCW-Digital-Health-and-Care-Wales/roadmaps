@@ -88,8 +88,9 @@ Dependabot security updates are on in the repository's settings.
   weekly or on pull requests too. A finding fails its own run and holds back no merge
   or deploy; ADR-016 gains a CHO-031 amendment for the second workflow.
 - **D5** (owner, 2026-11-22, delivery question): GHSA-g3hv-75wg-m249 is recorded as
-  CHO-034 and fixed in its own thread now, over accepting it until 2027-01-15 or
-  leaving the audit failing; `osv-scanner.toml` ignores it until CHO-034 lands.
+  [CHO-034](../../chores/CHO-034-every-package-takes-minimatch-11.md) and fixed in its
+  own thread now, over accepting it until 2027-01-15 or leaving the audit failing;
+  `osv-scanner.toml` ignores it until CHO-034 lands.
 
 ## Out of scope
 

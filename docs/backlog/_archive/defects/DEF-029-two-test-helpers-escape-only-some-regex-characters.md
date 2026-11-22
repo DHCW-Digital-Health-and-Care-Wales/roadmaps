@@ -9,7 +9,7 @@
 - **Depends on**: none
 - **Binding ADRs**: none
 - **Suggested model**: Sonnet — one shared helper, its test and two call sites (D5)
-- **Delivered**: _(add on delivery)_
+- **Delivered**: [PR #244](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/244)
 
 ## Summary
 

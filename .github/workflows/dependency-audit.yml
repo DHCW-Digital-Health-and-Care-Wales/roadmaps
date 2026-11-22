@@ -1,0 +1,43 @@
+# Audits every lockfile the repository holds against the OSV database, weekly and on
+# each push to main, so a vulnerability disclosed in a dependency already merged is
+# found; a pull request's new dependencies are dependency review's, in ci.yml (CHO-031
+# S2). A workflow of its own, so a finding fails this run, which GitHub reports to the
+# commit's author or, on the schedule, to whoever last changed the cron, but neither
+# blocks a merge nor holds back a deploy. A finding accepted for a while is ignored in
+# osv-scanner.toml, with its reason and an expiry.
+name: Dependency audit
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "23 6 * * 1" # Mondays, 06:23 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  osv-scanner:
+    name: OSV audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Pinned by version and checksum, like actionlint in ci.yml. --recursive finds
+      # each lockfile, pnpm-lock.yaml and any an app adds.
+      - name: Audit every lockfile with OSV-Scanner
+        env:
+          OSV_SCANNER_VERSION: 2.7.1
+          OSV_SCANNER_SHA256: fb7dab19a8bd9bbe5c3189f09d4b7ee1820c9553a23bac202648a56efd2f6ee8
+        run: |
+          curl -sSfL -o "${RUNNER_TEMP}/osv-scanner" "https://github.com/google/osv-scanner/releases/download/v${OSV_SCANNER_VERSION}/osv-scanner_linux_amd64"
+          echo "${OSV_SCANNER_SHA256}  ${RUNNER_TEMP}/osv-scanner" | sha256sum --check --strict
+          chmod +x "${RUNNER_TEMP}/osv-scanner"
+          "${RUNNER_TEMP}/osv-scanner" scan source --recursive .

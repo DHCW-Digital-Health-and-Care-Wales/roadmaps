@@ -34,3 +34,6 @@ _Not acceptance criteria._
   `t3.json`; root `api:*` scripts.
 - ruff in lefthook's commit hook and ty before push (STY-087 D7); the API's CI job,
   feeding the _CI result_ gate (STY-087 D5); Dependabot for uv, with STY-087's cooldown; `apps/api/AGENTS.md`.
+- CHO-031's checks for Python: uv's `exclude-newer` of seven days, with the uv version
+  pinned (CHO-031 S4); CodeQL's default setup takes Python on once a Python file is
+  pushed, and the dependency audit finds `uv.lock` itself, so both are observed once.

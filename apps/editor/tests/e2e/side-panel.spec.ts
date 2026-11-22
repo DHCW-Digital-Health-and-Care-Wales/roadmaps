@@ -13,7 +13,7 @@ import {
   openEditRoadmapDialog,
 } from "./fixtures/dialogs"
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
-import { settledBox, settledBoxes } from "./fixtures/layout"
+import { boxOf, boxesOf } from "./fixtures/layout"
 import { useLanguage } from "./fixtures/look"
 import { connect, expect, test } from "./fixtures/test"
 
@@ -40,7 +40,7 @@ async function openProductA(page: Page) {
 
 /** The popup's box once it has opened, and the screen it sits on. */
 async function panelBox(page: Page, dialog: Locator) {
-  const box = await settledBox(dialog)
+  const box = await boxOf(dialog)
   const size = page.viewportSize()
   if (!size) throw new Error("No viewport")
   return { box, size }
@@ -49,7 +49,7 @@ async function panelBox(page: Page, dialog: Locator) {
 /** Whether the dialog sits along the right edge, full height, 32rem wide. */
 async function expectPanel(page: Page, dialog: Locator) {
   const { box, size } = await panelBox(page, dialog)
-  expect(box.x + box.width).toBeCloseTo(size.width, 0)
+  expect(box.right).toBeCloseTo(size.width, 0)
   expect(box.y).toBeCloseTo(0, 0)
   expect(box.height).toBeCloseTo(size.height, 0)
   expect(box.width).toBeCloseTo(512, 0)
@@ -60,10 +60,7 @@ const slot = (dialog: Locator, name: string) =>
 
 /** Whether the dialog's buttons end where the dialog does, however short its form. */
 async function expectFooterAtFoot(dialog: Locator) {
-  const [footer, panel] = await settledBoxes(
-    slot(dialog, "dialog-footer"),
-    dialog,
-  )
+  const [footer, panel] = await boxesOf(slot(dialog, "dialog-footer"), dialog)
   expect(footer.bottom).toBeCloseTo(panel.bottom, 0)
 }
 
@@ -72,8 +69,10 @@ test("the account menu offers the dialog, and the way back, and the choice survi
 }) => {
   await page.setViewportSize(LAPTOP)
   await openProductA(page)
-  await expectPanel(page, await openEditItemDialog(page, ITEM))
+  const panel = await openEditItemDialog(page, ITEM)
+  await expectPanel(page, panel)
   await page.keyboard.press("Escape")
+  await expect(panel).toBeHidden()
   const menu = await openAccountMenu(page)
   await expect(
     menu.getByRole("menuitem", { name: "Edit in a side panel" }),
@@ -92,9 +91,10 @@ test("the account menu offers the dialog, and the way back, and the choice survi
   ).toBeVisible()
   const dialog = await openEditItemDialog(page, ITEM)
   const { box, size } = await panelBox(page, dialog)
-  expect(box.x + box.width).toBeLessThan(size.width)
+  expect(box.right).toBeLessThan(size.width)
   expect(box.height).toBeLessThan(size.height)
   await page.keyboard.press("Escape")
+  await expect(dialog).toBeHidden()
 
   await chooseFromAccountMenu(page, "Edit in a side panel")
 
@@ -203,7 +203,7 @@ test("on a laptop, every form dialog is a panel, and a question is still centred
 
   const removal = await askToRemove(page, ITEM)
   const { box, size } = await panelBox(page, removal)
-  expect(box.x + box.width).toBeLessThan(size.width)
+  expect(box.right).toBeLessThan(size.width)
   expect(box.height).toBeLessThan(size.height / 2)
 })
 
@@ -249,7 +249,7 @@ test("on a phone, the form rises from the foot at full width as the dialog does 
   const { box, size } = await panelBox(page, dialog)
   expect(box.x).toBeCloseTo(0, 0)
   expect(box.width).toBeCloseTo(size.width, 0)
-  expect(box.y + box.height).toBeCloseTo(size.height, 0)
+  expect(box.bottom).toBeCloseTo(size.height, 0)
   expect(box.y).toBeGreaterThan(0)
 })
 
@@ -303,6 +303,10 @@ test("the session warning shows centred above the panel, and focus returns into 
       [box.x + box.width / 2, box.y + box.height / 2],
     ),
   ).toBe(true)
+  // Escape reaches the warning only once it holds focus, a frame after it shows.
+  await expect(
+    warning.getByRole("button", { name: "Stay connected" }),
+  ).toBeFocused()
   await page.keyboard.press("Escape")
   await expect(warning).toBeHidden()
   await expect(dialog).toBeVisible()
@@ -345,8 +349,10 @@ test("in Welsh, the menu names both ways in Welsh and the panel opens (S11, STY-
     page.getByRole("heading", { level: 3, name: ITEM }),
   ).toBeVisible()
 
-  await expectPanel(page, await openEditItemDialog(page, ITEM, "cy"))
+  const panel = await openEditItemDialog(page, ITEM, "cy")
+  await expectPanel(page, panel)
   await page.keyboard.press("Escape")
+  await expect(panel).toBeHidden()
 
   await chooseFromAccountMenu(page, "Golygu mewn deialog", "cy")
 

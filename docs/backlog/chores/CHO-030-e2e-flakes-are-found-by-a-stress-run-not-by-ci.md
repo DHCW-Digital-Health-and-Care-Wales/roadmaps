@@ -1,12 +1,10 @@
 # CHO-030: E2E flakes of one kind are found by an audit and a stress run, not one CI failure at a time
 
-- **Status**: Needs grilling — raised on the owner's question after STY-081's retrospective
-  (DEF-024); it adds a guide rule and, if the owner chooses (Q1 b), a stress script
+- **Status**: In progress — `t3/cho-030-raise-pr`
 - **Type**: Chore
 - **Area**: E2E + Docs
 - **Epic**: standalone
-- **Depends on**: none; DEF-024 (Needs triage) fixes `publishOnce` first, and until it
-  does the audit counts that flake as known
+- **Depends on**: none; DEF-024's fix to `publishOnce` is delivered here (D3)
 - **Binding ADRs**: none
 - **Suggested model**: Sonnet — a search over `apps/editor/tests/e2e`, a stress script run, and one
   guide line, once the owner chooses
@@ -92,11 +90,7 @@ and passes. Its search: `rg -n 'expectFieldBack\(' apps/editor/src`.
 
 ## Open questions
 
-- **Q1**: Is a stress run part of delivering a test change, or a one-off?
-  - (a) One-off, with the guide rule (recommended): the audit finds the existing cases and
-    the rule stops new helpers adding more.
-  - (b) A script (`pnpm test:e2e:stress`) a delivery runs on the specs it touched. It
-    catches new cases before CI, and adds a command and minutes to every test change.
+- **Q1**: Is a stress run part of delivering a test change, or a one-off? Answered: D2.
 
 ## Decisions
 
@@ -105,11 +99,19 @@ and passes. Its search: `rg -n 'expectFieldBack\(' apps/editor/src`.
   closes, before it has rendered again, over a fix of its own; its failures on `main`
   (Actions run `44968551783`) and on PR #231 passed on a re-run
   ([DEF-027](../_archive/defects/DEF-027-a-quick-add-test-looks-for-the-field-before-it-has-come-back.md)).
+- **D2** (owner, 2026-11-22, Q1): a one-off audit and stress run, not a stress run per
+  test change. Agents write tests that cannot act before the UI settles: the guide gains
+  the rules, and shared helpers that settle by construction are added, with the existing
+  tests moved onto them. Changes: S2 covers more than a closing or publishing helper.
+- **D3** (owner, 2026-11-22): this chore also delivers DEF-024, the fix to `publishOnce`,
+  over a delivery of its own; its S1 is held here
+  ([DEF-024](../defects/DEF-024-a-moved-item-test-moves-focus-before-the-publish-notice-takes-it.md)).
 
 ## Out of scope
 
-DEF-024's own fix to `publishOnce`, DEF-025's to the popups' box reads (`settledBoxes`), the CI
-runner's package mirror (CHO-029), and Vitest component tests (DEF-013, DEF-022,
-CHO-018 were their own cases), except DEF-027's, which D1 brings in.
+DEF-025's fix to the popups' box reads (`settledBoxes`), the CI runner's package mirror
+(CHO-029), and Vitest component tests (DEF-013, DEF-022, CHO-018 were their own cases),
+except DEF-027's, which D1 brings in. DEF-024's fix to `publishOnce` was out of scope
+until D3 brought it in.
 
 ## Delivery _(add on delivery; as in `story.md`)_

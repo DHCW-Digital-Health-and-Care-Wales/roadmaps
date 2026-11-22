@@ -1,6 +1,6 @@
 import type { Locator, Page } from "@playwright/test"
 
-import { settledBox } from "./layout"
+import { boxOf } from "./layout"
 import type { Language } from "./look"
 import { moreButton, openProductDetails } from "./roadmap-page"
 import { connect, expect, roadmapCards } from "./test"
@@ -109,7 +109,7 @@ export function cornerClose(dialog: Locator): Locator {
 
 /** Whether `locator` lies wholly within the screen as it is now scrolled. */
 export async function isInView(page: Page, locator: Locator): Promise<boolean> {
-  const box = await settledBox(locator)
+  const box = await boxOf(locator)
   const size = page.viewportSize()
   if (!size) throw new Error("No viewport")
   return box.y >= 0 && box.bottom <= size.height
@@ -125,7 +125,7 @@ export function reviewFooterClose(review: Locator): Locator {
  * outside a form dialog does nothing, which the caller then shows.
  */
 export async function clickOutside(page: Page, dialog: Locator): Promise<void> {
-  const box = await settledBox(dialog)
+  const box = await boxOf(dialog)
   const spots = [
     { x: box.x + box.width / 2, y: box.y / 2 },
     { x: box.x / 2, y: box.y + box.height / 2 },
@@ -395,6 +395,33 @@ export async function addItem(
 }
 
 /**
+ * Holds the publish dialog's closing until a second after its notice shows, as a loaded
+ * runner can: the notice takes focus only as the closing ends. Call before `goto`.
+ */
+export async function holdPublishDialogClosing(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    document.addEventListener("DOMContentLoaded", () => {
+      const hold = document.createElement("style")
+      hold.textContent =
+        '[data-slot="alert-dialog-content"][data-closed] { animation-play-state: paused !important; }'
+      document.head.append(hold)
+      const noticeShown = new MutationObserver(() => {
+        if (!document.body.textContent.includes("Changes published.")) return
+        noticeShown.disconnect()
+        setTimeout(() => {
+          hold.remove()
+        }, 1000)
+      })
+      noticeShown.observe(document.body, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+      })
+    })
+  })
+}
+
+/**
  * Publishes a first edit of Product A, "Minimal card" retitled "A minimal card", which
  * gives every item its ID: only an item with an ID can be found again, so only then
  * does a co-lead's change conflict.
@@ -405,11 +432,26 @@ export async function publishOnce(page: Page): Promise<void> {
   await form.getByRole("textbox", { name: "Title" }).fill("A minimal card")
   await form.getByRole("button", { name: "Done" }).click()
   await main.getByRole("button", { name: "Publish changes" }).click()
-  await page
-    .getByRole("alertdialog")
-    .getByRole("button", { name: "Publish changes" })
-    .click()
-  await expect(main.getByText(/^Changes published\./)).toBeVisible()
+  await confirmPublish(page)
+}
+
+/**
+ * Chooses Publish changes in the publish dialog and returns once the notice its outcome
+ * brings has focus: by default "Changes published". The notice takes focus only as the
+ * dialog finishes closing, after it shows, so a step taken on its showing can lose focus
+ * to it.
+ */
+export async function confirmPublish(
+  page: Page,
+  notice: Locator = page
+    .getByRole("main")
+    .getByRole("status")
+    .filter({ hasText: /^Changes published\./ }),
+): Promise<void> {
+  const dialog = page.getByRole("alertdialog")
+  await dialog.getByRole("button", { name: "Publish changes" }).click()
+  await expect(dialog).toBeHidden()
+  await expect(notice).toBeFocused()
 }
 
 /**

@@ -74,7 +74,7 @@ export async function openConflictReview(user: User): Promise<HTMLElement> {
     name: "Someone else has changed this roadmap too",
   })
   const [first] = within(review).getAllByRole("button")
-  if (first) await expectOpeningFocus(first)
+  if (first) await expectOpeningFocus(() => first)
   return review
 }
 

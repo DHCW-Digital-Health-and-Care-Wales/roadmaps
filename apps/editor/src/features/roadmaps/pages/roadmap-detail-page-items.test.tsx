@@ -650,7 +650,7 @@ describe("RoadmapDetailPage items", () => {
       })
       expect(listRoadmaps).toHaveBeenCalledTimes(2)
       expect(listRoadmapItems).toHaveBeenCalledTimes(2)
-      await expectOpeningFocus(moreButton())
+      await expectOpeningFocus(() => moreButton())
     })
 
     it("on the home page still reads only the roadmap list", async () => {

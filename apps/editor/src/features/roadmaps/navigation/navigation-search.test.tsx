@@ -275,7 +275,7 @@ describe("the navigation's search", () => {
         }),
       )
 
-      await expectOpeningFocus(searchBox())
+      await expectOpeningFocus(() => searchBox())
       // Remembered as open: the fold is forgotten.
       expect(localStorage.getItem("roadmaps.navigation")).toBeNull()
     })
@@ -363,7 +363,7 @@ describe("in the phone's drawer (S10, D5, D7)", () => {
     const drawer = await openDrawer(user)
 
     const close = within(drawer).getByRole("button", { name: "Close menu" })
-    await expectOpeningFocus(close)
+    await expectOpeningFocus(() => close)
     expect(within(navigation()).getByRole("searchbox")).toBeInTheDocument()
     expect(navigation()).toContainElement(close)
   })

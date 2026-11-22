@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright"
 import type { Locator, Page } from "@playwright/test"
 
-import { reconnectDialog } from "./fixtures/dialogs"
+import { confirmPublish, reconnectDialog } from "./fixtures/dialogs"
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
 import { type FakeTab, withTabItems } from "./fixtures/fake-sheets"
 import { boxesOf } from "./fixtures/layout"
@@ -142,11 +142,7 @@ for (const view of ["cards", "compact"] as const) {
     await expect(titlesUnder(page, "Next")).toHaveCount(3)
 
     await main(page).getByRole("button", { name: "Publish changes" }).click()
-    await page
-      .getByRole("alertdialog")
-      .getByRole("button", { name: "Publish changes" })
-      .click()
-    await expect(main(page).getByText(/^Changes published\./)).toBeVisible()
+    await confirmPublish(page)
     expect(sheets.writes).toHaveLength(1)
     await expect(titlesUnder(page, "Next")).toHaveText([
       "See your waiting time",
@@ -517,6 +513,7 @@ for (const theme of ["light", "dark"] as const) {
         .analyze()
       expect(results.violations).toEqual([])
       await page.keyboard.press("Escape")
+      await expect(field(page, "Next")).toHaveCount(0)
     }
   })
 

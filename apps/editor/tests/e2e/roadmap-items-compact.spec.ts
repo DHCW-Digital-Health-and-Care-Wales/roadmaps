@@ -372,7 +372,9 @@ for (const [width, height] of [
     // do beneath the stretch.
     await row.getByRole("button", { name: /^Move / }).click()
     await expect(rowChevron(row)).toHaveAttribute("aria-expanded", "false")
+    await expect(page.getByRole("menu")).toBeFocused()
     await page.keyboard.press("Escape")
+    await expect(page.getByRole("menu")).toBeHidden()
 
     await row.getByRole("button", { name: /^Edit / }).click()
     await expect(page.getByRole("dialog")).toBeVisible()

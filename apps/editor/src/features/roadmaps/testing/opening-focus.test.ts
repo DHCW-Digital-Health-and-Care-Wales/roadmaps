@@ -8,6 +8,13 @@ function field() {
   return input
 }
 
+/** The field, looked up as a test does, throwing while it is not there. */
+function findField() {
+  const input = document.querySelector("input")
+  if (!input) throw new Error("No field")
+  return input
+}
+
 describe("expectOpeningFocus", () => {
   afterEach(() => {
     document.body.replaceChildren()
@@ -20,14 +27,25 @@ describe("expectOpeningFocus", () => {
     }, 50)
 
     expect(input).not.toHaveFocus()
-    await expectOpeningFocus(input)
+    await expectOpeningFocus(findField)
 
     expect(input).toHaveFocus()
   })
 
-  it("fails when focus never reaches the field", async () => {
-    const input = field()
+  it("waits for a field that renders after it is first looked for, as one back from a closed dialog does", async () => {
+    setTimeout(() => {
+      field().focus()
+    }, 50)
 
-    await expect(expectOpeningFocus(input)).rejects.toThrow(/focus/i)
+    expect(() => findField()).toThrow("No field")
+    await expectOpeningFocus(findField)
+
+    expect(findField()).toHaveFocus()
+  })
+
+  it("fails when focus never reaches the field", async () => {
+    field()
+
+    await expect(expectOpeningFocus(findField)).rejects.toThrow(/focus/i)
   })
 })

@@ -174,7 +174,9 @@ describe("Editing an item's tags (STY-037)", () => {
 
     const { form, field } = await openTags(user, "Video clinics")
 
-    await expectOpeningFocus(field.getByRole("textbox", { name: "Add a tag" }))
+    await expectOpeningFocus(() =>
+      field.getByRole("textbox", { name: "Add a tag" }),
+    )
     expect(form.getByRole("button", { name: "Close tags" })).toHaveAttribute(
       "aria-expanded",
       "true",
@@ -197,7 +199,7 @@ describe("Editing an item's tags (STY-037)", () => {
     await user.click(form.getByRole("button", { name: "Newid tagiau" }))
     const field = within(form.getByRole("group", { name: "Tagiau (Saesneg)" }))
 
-    await expectOpeningFocus(
+    await expectOpeningFocus(() =>
       field.getByRole("textbox", { name: "Ychwanegu tag" }),
     )
     expect(
@@ -361,7 +363,7 @@ describe("Editing an item's tags (STY-037)", () => {
 
     await user.click(field.getByRole("button", { name: "Rename Patients" }))
     const name = field.getByRole("textbox", { name: "Rename Patients" })
-    await expectOpeningFocus(name)
+    await expectOpeningFocus(() => name)
     expect(name).toHaveValue("Patients")
     expect(field.getByRole("button", { name: "Update Patients" })).toBeVisible()
     expect(
@@ -611,7 +613,9 @@ describe("Editing an item's tags (STY-037)", () => {
     form.getByRole("button", { name: "Change tags" }).focus()
     await user.keyboard("{Enter}")
     const field = within(form.getByRole("group", { name: "Tags" }))
-    await expectOpeningFocus(field.getByRole("textbox", { name: "Add a tag" }))
+    await expectOpeningFocus(() =>
+      field.getByRole("textbox", { name: "Add a tag" }),
+    )
 
     await user.keyboard("Carers{Enter}")
     expect(rowsOf(field)).toEqual(["Patients", "Video consultations", "Carers"])

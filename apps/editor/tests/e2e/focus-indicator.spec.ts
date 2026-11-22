@@ -3,6 +3,7 @@ import type { Locator, Page } from "@playwright/test"
 import {
   addItem,
   changeItem,
+  confirmPublish,
   editRoadmapButton,
   openAddItemDialog,
   openAddRoadmapDialog,
@@ -421,11 +422,7 @@ for (const theme of THEMES) {
       await editing.getByRole("button", { name: "Done" }).click()
       sheets.coLead("Roadmaps", "ProductA", "Vision", "Their vision.")
       await main.getByRole("button", { name: "Publish changes" }).click()
-      await page
-        .getByRole("alertdialog")
-        .getByRole("button", { name: "Publish changes" })
-        .click()
-      await expect(main.getByRole("alert")).toBeFocused()
+      await confirmPublish(page, main.getByRole("alert"))
 
       await expectEveryStopShowsAnIndicator(page)
     })

@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test"
 
 import type { FakeSheets } from "./fixtures/fake-sheets"
+import { boxOf } from "./fixtures/layout"
 import { type Language, useLanguage } from "./fixtures/look"
 import { NAVIGATION_WORLD } from "./fixtures/navigation-world"
 import { openLongRoadmap } from "./fixtures/roadmap-page"
@@ -63,8 +64,7 @@ const navigationWidth = async (page: Page) => (await widths(page)).navigation
 
 /** Drags the edge by `by` px, to the right when positive, with the mouse. */
 async function drag(page: Page, by: number, language: Language = "en") {
-  const box = await edge(page, language).boundingBox()
-  if (!box) throw new Error("The edge has no box")
+  const box = await boxOf(edge(page, language))
   const x = box.x + box.width / 2
   const y = box.y + box.height / 2
   await page.mouse.move(x, y)
@@ -110,7 +110,7 @@ test.describe("on a desktop", () => {
     await drag(page, 64)
     expect(await navigationWidth(page)).toBe(320)
     const main = page.getByRole("main")
-    expect((await main.boundingBox())?.x).toBeGreaterThanOrEqual(320)
+    expect((await boxOf(main)).x).toBeGreaterThanOrEqual(320)
 
     await drag(page, 500)
     expect(await navigationWidth(page)).toBe(400)
@@ -282,8 +282,7 @@ test.describe("under a finger", () => {
         touchPoints: type === "touchEnd" ? [] : [{ x, y }],
       })
     }
-    const box = await edge(page).boundingBox()
-    if (!box) throw new Error("The edge has no box")
+    const box = await boxOf(edge(page))
     const y = box.y + 200
 
     await touch("touchStart", 256, y)

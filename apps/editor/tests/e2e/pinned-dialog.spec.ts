@@ -8,7 +8,7 @@ import {
   openAddRoadmapDialog,
   openEditItemDialog,
 } from "./fixtures/dialogs"
-import { settledBox, settledBoxes } from "./fixtures/layout"
+import { boxOf, boxesOf } from "./fixtures/layout"
 import { words } from "./fixtures/long-fields"
 import { useDialog } from "./fixtures/look"
 import { connect, expect, test } from "./fixtures/test"
@@ -36,7 +36,7 @@ async function openItem(page: Page): Promise<Locator> {
 
 /** Whether `inner`'s box lies wholly inside `outer`'s, on both axes. */
 async function expectWithin(outer: Locator, inner: Locator): Promise<void> {
-  const [outerBox, innerBox] = await settledBoxes(outer, inner)
+  const [outerBox, innerBox] = await boxesOf(outer, inner)
   expect(innerBox.x).toBeGreaterThanOrEqual(outerBox.x)
   expect(innerBox.right).toBeLessThanOrEqual(outerBox.right)
   expect(innerBox.y).toBeGreaterThanOrEqual(outerBox.y)
@@ -107,7 +107,7 @@ test("on a laptop, the dialog stays its content's height and shows no scrollbar 
   ).toBeVisible()
   const dialog = await askToRemove(page, ITEM)
 
-  const box = await settledBox(dialog)
+  const box = await boxOf(dialog)
   expect(box.height).toBeLessThan(LAPTOP.height / 2)
   expect(
     await dialog.evaluate(
@@ -173,7 +173,7 @@ test("on a laptop, a failed Add a roadmap is said in the footer above Add roadma
   await expect(alert).toContainText("Your session expired")
   await expect(slot(dialog, "dialog-footer").getByRole("alert")).toBeVisible()
   expect(await isInView(page, alert)).toBe(true)
-  const [alertBox, addBox] = await settledBoxes(
+  const [alertBox, addBox] = await boxesOf(
     alert,
     dialog.getByRole("button", { name: "Add roadmap" }),
   )
@@ -212,7 +212,7 @@ test("on a laptop, a field that takes focus scrolls into the body, clear of the 
 
   await last.focus()
 
-  const [lastBox, header, footer] = await settledBoxes(
+  const [lastBox, header, footer] = await boxesOf(
     last,
     slot(dialog, "dialog-header"),
     slot(dialog, "dialog-footer"),
@@ -308,7 +308,7 @@ test("on the smallest pinned screen, the add-item dialog keeps its buttons in vi
   const note = dialog.getByRole("status").getByRole("note")
   await expect(note).toBeVisible()
   // Its title is cut at three lines, so it leaves the form its room.
-  const box = await settledBox(note)
+  const box = await boxOf(note)
   expect(box.height).toBeLessThan(120)
   for (const part of [
     dialog.getByRole("heading", { name: "Add an item" }),
@@ -365,7 +365,7 @@ for (const [size, viewport] of [
       element.scrollTop = element.scrollHeight
     })
 
-    const [dialogBox, cancelBox] = await settledBoxes(dialog, cancel)
+    const [dialogBox, cancelBox] = await boxesOf(dialog, cancel)
     // The popup's 24px padding, less its 1px border.
     expect(dialogBox.bottom - cancelBox.bottom).toBeGreaterThanOrEqual(23)
   })

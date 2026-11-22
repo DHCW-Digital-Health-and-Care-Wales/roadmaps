@@ -193,7 +193,7 @@ describe("publishing or unpublishing a roadmap (STY-035)", () => {
     expect(within(dialog).queryByRole("list")).toBeNull()
     await user.click(within(dialog).getByRole("button", { name: "Cancel" }))
     expect((await repository.listRoadmaps())[0]?.published).toBe(false)
-    await expectOpeningFocus(
+    await expectOpeningFocus(() =>
       main.getByRole("button", { name: "Publish roadmap" }),
     )
 
@@ -204,7 +204,7 @@ describe("publishing or unpublishing a roadmap (STY-035)", () => {
       "Product A roadmap is published. The public site shows it after its next nightly update.",
     )
     expect(published).toBeVisible()
-    await expectOpeningFocus(noticeOf(published))
+    await expectOpeningFocus(() => noticeOf(published))
     expect(main.queryByText("Not published")).toBeNull()
     const menu = await openMore(user)
     expect(
@@ -224,7 +224,7 @@ describe("publishing or unpublishing a roadmap (STY-035)", () => {
     })
     await user.click(within(dialog).getByRole("button", { name: "Cancel" }))
 
-    await expectOpeningFocus(moreButton())
+    await expectOpeningFocus(() => moreButton())
     expect((await repository.listRoadmaps())[0]?.published).toBe(true)
   })
 
@@ -252,7 +252,7 @@ describe("publishing or unpublishing a roadmap (STY-035)", () => {
       /^Product A roadmap is unpublished\./,
     )
     expect(unpublished).toBeVisible()
-    await expectOpeningFocus(noticeOf(unpublished))
+    await expectOpeningFocus(() => noticeOf(unpublished))
     expect(main.getByText("Not published")).toBeVisible()
     expect((await repository.listRoadmaps())[0]?.published).toBe(false)
   })
@@ -331,7 +331,7 @@ describe("publishing or unpublishing a roadmap (STY-035)", () => {
     expect(refusal).toHaveTextContent(
       "Someone else has changed this roadmap too",
     )
-    await expectOpeningFocus(refusal)
+    await expectOpeningFocus(() => refusal)
     expect(
       main.getByRole("button", { name: "Publish roadmap" }),
     ).toHaveAttribute("aria-disabled", "true")

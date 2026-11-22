@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test"
 
 import {
+  confirmPublish,
   openEditItemDialog,
   openEditRoadmapDialogFromMore,
   reconnectButton,
@@ -85,8 +86,7 @@ test("Publish stays on offer, asks to reconnect, then asks to publish the change
   })
   await expect(confirm.getByText(EDITED)).toBeVisible()
   expect(sheets.writes).toEqual([])
-  await confirm.getByRole("button", { name: "Publish changes" }).click()
-  await expect(main.getByText(/^Changes published\./).first()).toBeVisible()
+  await confirmPublish(page)
   expect(sheets.writes).toHaveLength(1)
 })
 

@@ -3,7 +3,7 @@ import type { Locator, Page } from "@playwright/test"
 import { openEditItemDialog } from "./fixtures/dialogs"
 import { type FakeTab, withTabItems } from "./fixtures/fake-sheets"
 import { tabTo } from "./fixtures/keyboard"
-import { scrollsSideways } from "./fixtures/layout"
+import { boxOf, scrollsSideways } from "./fixtures/layout"
 import type { Language } from "./fixtures/look"
 import {
   productDetails,
@@ -86,9 +86,7 @@ function openSmallRoadmap(
 
 /** The top of `locator`'s box, in the viewport. */
 async function topOf(locator: Locator): Promise<number> {
-  const box = await locator.boundingBox()
-  if (!box) throw new Error("Not laid out")
-  return box.y
+  return (await boxOf(locator)).y
 }
 
 for (const [device, size] of [
@@ -279,7 +277,9 @@ test("marks the placement the page is in, in Jump to, and none at the top (S3, D
   await expect(
     page.getByRole("menu").getByRole("menuitem", { name: /^Next,/ }),
   ).toHaveAttribute("aria-current", "location")
+  await expect(page.getByRole("menu")).toBeFocused()
   await page.keyboard.press("Escape")
+  await expect(page.getByRole("menu")).toBeHidden()
 
   await page.evaluate(() => {
     window.scrollTo(0, 0)
@@ -349,7 +349,7 @@ test("keeps Product details closed, so the first placement starts on the first s
   const region = productDetails(page)
   await expect(region.getByRole("term")).toHaveCount(0)
   // One line: the facts ending in its disclosure, at 1280px.
-  expect((await region.boundingBox())?.height).toBeLessThan(50)
+  expect((await boxOf(region)).height).toBeLessThan(50)
   expect(
     await topOf(placementHeading(page, "Recently delivered")),
   ).toBeLessThan(DESKTOP.height)
@@ -437,6 +437,7 @@ for (const { width, language, placement, publish } of [
     await expect(
       page.getByRole("menu").getByRole("menuitem", { name: publish }),
     ).toBeVisible()
+    await expect(page.getByRole("menu")).toBeFocused()
     await page.keyboard.press("Escape")
     await expect(page.getByRole("menu")).toBeHidden()
 

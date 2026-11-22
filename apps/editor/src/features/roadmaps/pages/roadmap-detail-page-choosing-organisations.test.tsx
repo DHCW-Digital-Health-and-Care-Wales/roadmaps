@@ -364,7 +364,7 @@ describe("The Organisations field opens on request (STY-038)", () => {
     const boxes = group.getAllByRole("checkbox")
     expect(boxes).toHaveLength(7)
     expect(boxes[0]).toHaveAccessibleName("All Wales (National)")
-    await expectOpeningFocus(
+    await expectOpeningFocus(() =>
       group.getByRole("checkbox", { name: "All Wales (National)" }),
     )
     expect(
@@ -403,7 +403,7 @@ describe("The Organisations field opens on request (STY-038)", () => {
   it("moves focus to the button on shutting, where pressing a button does not focus it (S3)", async () => {
     const { user } = await renderPage()
     const group = await openOrganisations(user, "Video clinics")
-    await expectOpeningFocus(
+    await expectOpeningFocus(() =>
       group.getByRole("checkbox", { name: "All Wales (National)" }),
     )
     const form = editItemDialog()
@@ -539,7 +539,7 @@ describe("The Organisations field opens on request (STY-038)", () => {
 
     button().focus()
     await user.keyboard("{Enter}")
-    await expectOpeningFocus(
+    await expectOpeningFocus(() =>
       form.getByRole("checkbox", { name: "All Wales (National)" }),
     )
     await user.keyboard(" ")

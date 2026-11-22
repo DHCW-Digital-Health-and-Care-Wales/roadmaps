@@ -226,6 +226,7 @@ test("More lists Edit product details first, which opens the roadmap dialog with
     "Refresh",
     "Unpublish roadmap",
   ])
+  await expect(page.getByRole("menu")).toBeFocused()
   await page.keyboard.press("Escape")
   await expect(page.getByRole("menu")).toBeHidden()
 

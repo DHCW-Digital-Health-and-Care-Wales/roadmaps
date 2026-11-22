@@ -112,7 +112,7 @@ async function renderPage({
 
 async function openField(user: User, placement: string) {
   await user.click(quickAdd(placement))
-  await expectOpeningFocus(field(placement))
+  await expectOpeningFocus(() => field(placement))
   return field(placement)
 }
 
@@ -454,7 +454,7 @@ describe("In Welsh (S13)", () => {
     const input = main().getByRole("textbox", {
       name: "Teitl eitem newydd o dan Nesaf",
     })
-    await expectOpeningFocus(input)
+    await expectOpeningFocus(() => input)
     expect(main().getByRole("button", { name: "Canslo" })).toBeVisible()
 
     await user.type(input, HEARING)
@@ -484,7 +484,7 @@ async function expand(user: User, typed = TYPED) {
 
 /** Expects Next's field open, focused, holding `typed` with the cursor at its end. */
 async function expectFieldBack(typed: string) {
-  await expectOpeningFocus(field("Next"))
+  await expectOpeningFocus(() => field("Next"))
   const input = field("Next")
   expect(input).toHaveValue(typed)
   if (!(input instanceof HTMLInputElement)) throw new Error("No input")
@@ -536,7 +536,7 @@ describe("“Add more details” (STY-081 S1, S2)", () => {
     for (const none of ["No tags", "No organisations", "No details"]) {
       expect(dialog.getByText(none)).toBeVisible()
     }
-    await expectOpeningFocus(title)
+    await expectOpeningFocus(() => title)
     if (!(title instanceof HTMLInputElement)) throw new Error("No input")
     expect([title.selectionStart, title.selectionEnd]).toEqual([
       TIDIED.length,

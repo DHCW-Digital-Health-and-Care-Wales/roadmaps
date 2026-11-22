@@ -172,7 +172,7 @@ describe("Editing a roadmap's items (STY-025)", () => {
     const form = await openEditItemDialog(user, "First, edited")
 
     expect(form.getByRole("form", { name: "Edit this item" })).toBeVisible()
-    await expectOpeningFocus(form.getByRole("textbox", { name: "Title" }))
+    await expectOpeningFocus(() => form.getByRole("textbox", { name: "Title" }))
     expect(form.getByRole("textbox", { name: "Title" })).toHaveValue(
       "First, edited",
     )
@@ -402,7 +402,7 @@ describe("Editing a roadmap's product details (STY-025)", () => {
           (field) => (field as HTMLInputElement | HTMLTextAreaElement).value,
         ),
     ).toEqual(["Product A roadmap", "Live", "", "A clear vision.", ""])
-    await expectOpeningFocus(
+    await expectOpeningFocus(() =>
       form.getByRole("textbox", { name: "Product name" }),
     )
     await user.clear(form.getByRole("textbox", { name: "Product name" }))
@@ -1461,7 +1461,7 @@ describe("A co-lead's changes (STY-026)", () => {
     ).toHaveFocus()
     await closeConflictReview(user, dialog)
     const action = main().getByRole("button", { name: "Publish changes" })
-    await expectOpeningFocus(action)
+    await expectOpeningFocus(() => action)
     expect(action).toHaveAttribute("aria-disabled", "false")
     expect(main().queryByRole("alert")).toBeNull()
     expect(card("First, theirs").queryByText("Changed")).toBeNull()
@@ -1507,7 +1507,7 @@ describe("A co-lead's changes (STY-026)", () => {
       cornerClose(dialog),
     ])
     await closeConflictReview(user, dialog)
-    await expectOpeningFocus(
+    await expectOpeningFocus(() =>
       main().getByRole("heading", { level: 1, name: "Product A roadmap" }),
     )
 
@@ -1668,7 +1668,7 @@ describe("A co-lead's changes (STY-026)", () => {
     })
     expect(dialog).not.toBeInTheDocument()
     await user.click(within(confirm).getByRole("button", { name: "Cancel" }))
-    await expectOpeningFocus(
+    await expectOpeningFocus(() =>
       main().getByRole("button", { name: "Publish changes" }),
     )
     expect(main().getByText("1 unpublished change")).toBeInTheDocument()
@@ -1705,7 +1705,7 @@ describe("A co-lead's changes (STY-026)", () => {
     ).toHaveFocus()
     await closeConflictReview(user, dialog)
     const action = main().getByRole("button", { name: "Publish changes" })
-    await expectOpeningFocus(action)
+    await expectOpeningFocus(() => action)
     expect(action).toHaveAttribute("aria-disabled", "false")
     const notice = await findRefusal()
     expect(notice).toHaveTextContent(
@@ -1747,7 +1747,7 @@ describe("A co-lead's changes (STY-026)", () => {
     ])
     expect(close).toHaveFocus()
     await closeConflictReview(user, dialog)
-    await expectOpeningFocus(
+    await expectOpeningFocus(() =>
       main().getByRole("heading", { level: 1, name: "Product A roadmap" }),
     )
     expect(main().queryByText(/unpublished change/)).toBeNull()

@@ -120,12 +120,15 @@ test("dismissing the warning leaves the session to run out (S6)", async ({
   await page.keyboard.press("Escape")
 
   await expect(warning).toBeHidden()
-  await page.clock.fastForward(SESSION_WARNING_MS - 1_000)
+  // Short of the end by more than a loaded runner's steps take: the clock still runs
+  // in real time between them.
+  const SLACK_MS = 30_000
+  await page.clock.fastForward(SESSION_WARNING_MS - SLACK_MS)
   await expect(warning).toBeHidden()
   await expect(page.getByRole("banner").getByRole("status")).toHaveText(
     "Google connected",
   )
-  await page.clock.fastForward(1_000)
+  await page.clock.fastForward(SLACK_MS)
   await expect(page.getByRole("banner").getByRole("status")).toHaveText(
     "Session expired",
   )

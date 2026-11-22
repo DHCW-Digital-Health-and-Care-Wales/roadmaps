@@ -1,7 +1,7 @@
 import type { Locator, Page } from "@playwright/test"
 
 import { openEditItemDialog } from "./fixtures/dialogs"
-import { settledBoxes } from "./fixtures/layout"
+import { boxesOf, boxOf } from "./fixtures/layout"
 import { tokenColour, type Language, useLanguage } from "./fixtures/look"
 import { EXAMPLE_SPREADSHEET, type FakeTab } from "./fixtures/fake-sheets"
 import { openLongRoadmap, openRoadmapIn } from "./fixtures/roadmap-page"
@@ -135,21 +135,22 @@ test.describe("on a desktop", () => {
       })
     await expect(page.locator("[data-stuck]")).toBeVisible()
 
-    const sidebar = await page
-      .locator("[data-slot=navigation-sidebar]")
-      .boundingBox()
+    const bars = ["[data-stuck]", "[data-pinned]"]
+    const [sidebar, ...barBoxes] = await boxesOf(
+      page.locator("[data-slot=navigation-sidebar]"),
+      ...bars.map((bar) => page.locator(bar)),
+    )
     expect(sidebar).toMatchObject({ x: 0, y: 0, width: 256, height: 800 })
-    for (const bar of ["[data-stuck]", "[data-pinned]"]) {
-      const box = await page.locator(bar).boundingBox()
-      expect(box?.x, bar).toBe(256)
-      expect((box?.x ?? 0) + (box?.width ?? 0), bar).toBe(DESKTOP.width)
-    }
+    barBoxes.forEach((box, at) => {
+      expect(box.x, bars[at]).toBe(256)
+      expect(box.right, bars[at]).toBe(DESKTOP.width)
+    })
     // At the page's end too, below the room the pinned foot leaves.
     await page.evaluate(() => {
       window.scrollTo(0, document.documentElement.scrollHeight)
     })
     await expect
-      .poll(() => page.locator("[data-slot=navigation-sidebar]").boundingBox())
+      .poll(() => boxOf(page.locator("[data-slot=navigation-sidebar]")))
       .toMatchObject({ x: 0, y: 0, width: 256, height: 800 })
     // The top bar and phase banner have scrolled away.
     await expect(page.getByRole("banner")).not.toBeInViewport()
@@ -170,14 +171,14 @@ test.describe("on a desktop", () => {
             new Set(titles.map((title) => title.getBoundingClientRect().left))
               .size,
         )
-    expect((await sidebar.boundingBox())?.width).toBe(256)
+    expect((await boxOf(sidebar)).width).toBe(256)
     expect(await columns()).toBe(2)
 
     await page.getByRole("button", { name: COPY.en.fold }).click()
 
     const unfold = page.getByRole("button", { name: COPY.en.unfold })
     await expect(unfold).toBeFocused()
-    expect((await sidebar.boundingBox())?.width).toBe(64)
+    expect((await boxOf(sidebar)).width).toBe(64)
     expect(await columns()).toBe(3)
     // A roadmap shows its initials, named by them and its title.
     await expect(navLink(page, "PB Product B roadmap")).toHaveText(
@@ -187,11 +188,11 @@ test.describe("on a desktop", () => {
     await page.reload()
     await connect(page)
     await expect(unfold).toBeVisible()
-    expect((await sidebar.boundingBox())?.width).toBe(64)
+    expect((await boxOf(sidebar)).width).toBe(64)
 
     await unfold.click()
     await expect(page.getByRole("button", { name: COPY.en.fold })).toBeFocused()
-    expect((await sidebar.boundingBox())?.width).toBe(256)
+    expect((await boxOf(sidebar)).width).toBe(256)
   })
 
   test("before connecting, offers only all the roadmaps and the families page, each of which asks to connect (S4)", async ({
@@ -258,7 +259,7 @@ test.describe("on a phone", () => {
       ).toBeFocused()
       // It fits: nothing scrolls sideways, and its links fit inside it.
       expect(await horizontalOverflow(page)).toBe(0)
-      const [box, families] = await settledBoxes(
+      const [box, families] = await boxesOf(
         drawer,
         navLink(page, copy.families, language),
       )
@@ -283,8 +284,7 @@ test.describe("on a phone", () => {
     const strip = page.locator("[data-stuck]")
     await expect(strip).toBeVisible()
     const menu = strip.getByRole("button", { name: COPY.en.menu })
-    const box = await menu.boundingBox()
-    expect(box?.x).toBe(16)
+    expect((await boxOf(menu)).x).toBe(16)
 
     await menu.click()
     await page.getByRole("dialog", { name: COPY.en.menu }).waitFor()

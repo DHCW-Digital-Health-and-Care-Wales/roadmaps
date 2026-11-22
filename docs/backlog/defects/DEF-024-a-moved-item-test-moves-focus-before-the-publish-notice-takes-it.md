@@ -1,6 +1,6 @@
 # DEF-024: A moved item test moves focus before the publish notice has taken it
 
-- **Status**: Needs triage — found by STY-081's retro
+- **Status**: In progress — with CHO-030 (D1), `t3/cho-030-raise-pr`
 - **Severity**: Low — an E2E run fails now and then on a change that does not touch the
   move, and a retry passes; no user is affected
 - **Area**: E2E
@@ -70,3 +70,7 @@ end between `.focus()` and the closing focus check) **When** the keyboard "far d
 run **Then** each passes; at `d6bbc69` the delay makes them fail every time
 
 ## Decisions
+
+- **D1** (owner, 2026-11-22, CHO-030 delivery): delivered with CHO-030, whose shared
+  helpers settle by construction, over a delivery of its own
+  ([CHO-030](../chores/CHO-030-e2e-flakes-are-found-by-a-stress-run-not-by-ci.md)).

@@ -725,7 +725,7 @@ describe("A co-lead's change to the placement's items (S10–S13)", () => {
     expect(review).toHaveTextContent(
       "Every change is decided. Publish when you're ready.",
     )
-    await expectOpeningFocus(
+    await expectOpeningFocus(() =>
       within(review).getByRole("button", { name: "Publish changes" }),
     )
     await closeConflictReview(user, review)
@@ -733,7 +733,7 @@ describe("A co-lead's change to the placement's items (S10–S13)", () => {
     expect(main().queryByRole("alert")).toBeNull()
     expect(main().getByText("Order changed")).toBeInTheDocument()
     const action = main().getByRole("button", { name: "Publish changes" })
-    await expectOpeningFocus(action)
+    await expectOpeningFocus(() => action)
     await publish(user)
     expect(await main().findByText(/^Changes published\./)).toBeInTheDocument()
     expect(

@@ -2,6 +2,7 @@ import type { Locator, Page } from "@playwright/test"
 
 import { disconnectFromHeader } from "./fixtures/account-menu"
 import {
+  confirmPublish,
   openEditItemDialog,
   openEditRoadmapDialog,
   publishOnce,
@@ -16,6 +17,7 @@ import {
   withRoadmapIndex,
   withTabRows,
 } from "./fixtures/fake-sheets"
+import { boxesOf } from "./fixtures/layout"
 import { useLanguage } from "./fixtures/look"
 import {
   productDetailsField,
@@ -68,7 +70,7 @@ async function editTitle(page: Page, from: string, to: string) {
 }
 
 /** Opens the publish (or save) dialog and confirms it. */
-async function confirmPublish(page: Page, action: "Publish" | "Save") {
+async function chooseAndConfirm(page: Page, action: "Publish" | "Save") {
   await page
     .getByRole("main")
     .getByRole("button", { name: `${action} changes` })
@@ -88,7 +90,7 @@ test("publishes a roadmap's changes in one write, then shows the published text 
     page.getByRole("main").getByText("1 unpublished change"),
   ).toBeVisible()
 
-  await confirmPublish(page, "Publish")
+  await chooseAndConfirm(page, "Publish")
 
   await expect(page.getByRole("main").getByRole("status").first()).toHaveText(
     /Changes published\. The public site shows them after its next nightly update\./,
@@ -114,7 +116,7 @@ test("saves a roadmap that is not published (S11)", async ({
     page.getByRole("main").getByText("1 change to save"),
   ).toBeVisible()
 
-  await confirmPublish(page, "Save")
+  await chooseAndConfirm(page, "Save")
 
   await expect(page.getByRole("main").getByText("Changes saved")).toBeVisible()
   expect(sheets.writes).toHaveLength(1)
@@ -128,7 +130,7 @@ test("keeps the changes and says why when a publish fails, writing nothing (S13)
   await editTitle(page, ITEM, "A clearer first card")
   sheets.failWith(403)
 
-  await confirmPublish(page, "Publish")
+  await chooseAndConfirm(page, "Publish")
 
   const alert = page.getByRole("main").getByRole("alert")
   await expect(alert).toContainText("Couldn't publish your changes")
@@ -304,7 +306,7 @@ test.describe("a co-lead's change (STY-026)", () => {
     sheets.coLead("ProductA", ITEM, "Title", "Their first card")
     sheets.coLead("Roadmaps", "ProductA", "Vision", "Their vision.")
 
-    await confirmPublish(page, "Publish")
+    await chooseAndConfirm(page, "Publish")
 
     const notice = refusal(page)
     await expect(notice).toBeFocused()
@@ -345,7 +347,7 @@ test.describe("a co-lead's change (STY-026)", () => {
       .getByRole("button", { name: "Publish changes" })
     await expect(action).toBeFocused()
 
-    await confirmPublish(page, "Publish")
+    await chooseAndConfirm(page, "Publish")
 
     await expect(
       page.getByRole("main").getByText(/^Changes published\./),
@@ -373,7 +375,7 @@ test.describe("a co-lead's change (STY-026)", () => {
     await expect(dialog).toBeHidden()
     sheets.coLead("Roadmaps", "ProductA", "Last updated", "2026-10-05")
 
-    await confirmPublish(page, "Publish")
+    await chooseAndConfirm(page, "Publish")
 
     const review = await openConflictReview(page)
     await expect(review.getByRole("listitem")).toHaveCount(1)
@@ -399,7 +401,7 @@ test.describe("a co-lead's change (STY-026)", () => {
     await editTitle(page, "Discovery card", "My discovery card")
     sheets.coLead("ProductA", "Discovery card", "Title", null)
 
-    await confirmPublish(page, "Publish")
+    await chooseAndConfirm(page, "Publish")
 
     const review = page.getByRole("main").getByRole("alert")
     await expect(review).toBeFocused()
@@ -413,7 +415,7 @@ test.describe("a co-lead's change (STY-026)", () => {
     ).toBeVisible()
 
     await review.getByRole("button", { name: "Dismiss message" }).click()
-    await confirmPublish(page, "Publish")
+    await chooseAndConfirm(page, "Publish")
     await expect(
       page.getByRole("main").getByText(/^Changes published\./),
     ).toBeVisible()
@@ -432,7 +434,7 @@ test.describe("a co-lead's change (STY-026)", () => {
       EXAMPLE_INDEX_ROWS.filter(([sheet]) => sheet !== "ProductA"),
     )
 
-    await confirmPublish(page, "Publish")
+    await chooseAndConfirm(page, "Publish")
 
     await expect(
       page
@@ -507,7 +509,7 @@ test.describe("a family and category (STY-028)", () => {
     await expect(main.getByText("2 unpublished changes")).toBeVisible()
     expect(sheets.writes).toEqual([])
 
-    await confirmPublish(page, "Publish")
+    await chooseAndConfirm(page, "Publish")
 
     await expect(main.getByText(/^Changes published\./)).toBeVisible()
     expect(sheets.writes).toHaveLength(1)
@@ -533,7 +535,7 @@ test.describe("a family and category (STY-028)", () => {
       .selectOption("No family")
     await dialog.getByRole("button", { name: "Done" }).click()
 
-    await confirmPublish(page, "Publish")
+    await chooseAndConfirm(page, "Publish")
 
     await expect(
       page.getByRole("main").getByText(/^Changes published\./),
@@ -555,7 +557,7 @@ test.describe("a family and category (STY-028)", () => {
     await openRoadmap(page, "producta", ITEM)
     await editVision(page, "A sharper vision.")
 
-    await confirmPublish(page, "Publish")
+    await chooseAndConfirm(page, "Publish")
 
     await expect(
       page.getByRole("main").getByText(/^Changes published\./),
@@ -585,7 +587,7 @@ test.describe("a family and category (STY-028)", () => {
     await dialog.getByRole("button", { name: "Done" }).click()
     sheets.coLead("Roadmaps", "ProductA", "Family", "Medicines & Diagnostics")
 
-    await confirmPublish(page, "Publish")
+    await chooseAndConfirm(page, "Publish")
 
     await expect(refusal(page)).toBeFocused()
     const review = await openConflictReview(page)
@@ -660,7 +662,7 @@ test.describe("moving an item (STY-031)", () => {
     ).toBeVisible()
     expect(sheets.writes).toEqual([])
 
-    await confirmPublish(page, "Publish")
+    await chooseAndConfirm(page, "Publish")
     await expect(
       page.getByRole("main").getByText(/^Changes published\./),
     ).toBeVisible()
@@ -711,7 +713,7 @@ test.describe("moving an item (STY-031)", () => {
     await moveWithMenu(page, "Discovery card", "Recently delivered")
     sheets.refuseProtected()
 
-    await confirmPublish(page, "Publish")
+    await chooseAndConfirm(page, "Publish")
 
     const alert = page.getByRole("main").getByRole("alert")
     await expect(alert).toContainText("Couldn't publish your changes")
@@ -730,7 +732,7 @@ test.describe("moving an item (STY-031)", () => {
     expect(sheets.spreadsheet).toBe(before)
 
     // The owner lifts the protection: the same changes then publish.
-    await confirmPublish(page, "Publish")
+    await chooseAndConfirm(page, "Publish")
     await expect(
       page.getByRole("main").getByText(/^Changes published\./),
     ).toBeVisible()
@@ -746,7 +748,7 @@ test.describe("moving an item (STY-031)", () => {
     await moveWithMenu(page, ITEM, "Next")
     sheets.coLead("ProductA", ITEM, "Horizon", "Later")
 
-    await confirmPublish(page, "Publish")
+    await chooseAndConfirm(page, "Publish")
 
     await expect(refusal(page)).toBeFocused()
     const review = await openConflictReview(page)
@@ -862,8 +864,7 @@ test.describe("reordering a placement's items (STY-050)", () => {
       await expect(dialog.getByRole("listitem")).toHaveText([
         "NowOrder changed",
       ])
-      await dialog.getByRole("button", { name: "Publish changes" }).click()
-      await expect(main.getByText(/^Changes published\./)).toBeVisible()
+      await confirmPublish(page)
 
       // One row moved, whole; beside it only the Item ID any publish gives each row.
       expect(sheets.writes).toHaveLength(1)
@@ -922,7 +923,7 @@ test.describe("reordering a placement's items (STY-050)", () => {
       // A co-lead moves an item into Now meanwhile.
       sheets.coLead("ProductA", "Card being explored", "Horizon", "Now")
 
-      await confirmPublish(page, "Publish")
+      await chooseAndConfirm(page, "Publish")
 
       const notice = refusal(page)
       await expect(notice).toBeFocused()
@@ -958,13 +959,11 @@ test.describe("reordering a placement's items (STY-050)", () => {
         "Card being explored",
       ])
       // Side by side on a desktop, stacked on a phone, nothing scrolling sideways.
-      const yoursBox = await yours.boundingBox()
-      const theirsBox = await theirs.boundingBox()
-      if (!yoursBox || !theirsBox) throw new Error("Both orders are drawn")
+      const [yoursBox, theirsBox] = await boxesOf(yours, theirs)
       if (width === PHONE_WIDTH) {
-        expect(theirsBox.y).toBeGreaterThan(yoursBox.y + yoursBox.height)
+        expect(theirsBox.y).toBeGreaterThan(yoursBox.bottom)
       } else {
-        expect(theirsBox.x).toBeGreaterThan(yoursBox.x + yoursBox.width)
+        expect(theirsBox.x).toBeGreaterThan(yoursBox.right)
       }
       expect(
         await page.evaluate(
@@ -986,7 +985,7 @@ test.describe("reordering a placement's items (STY-050)", () => {
       await expect(publishAgain).not.toHaveAttribute("aria-disabled", "true")
       await expect(main.getByText("Order changed")).toBeVisible()
 
-      await confirmPublish(page, "Publish")
+      await chooseAndConfirm(page, "Publish")
       await expect(main.getByText(/^Changes published\./)).toBeVisible()
       expect(sheets.writes).toHaveLength(2)
       expect(nowRows(sheets.spreadsheet)).toEqual([
@@ -1014,7 +1013,7 @@ test.describe("reordering a placement's items (STY-050)", () => {
     await moveButton(page, LAST).click()
     await page.getByRole("menuitem", { name: "Up one" }).click()
     sheets.coLead("ProductA", "Card being explored", "Horizon", "Now")
-    await confirmPublish(page, "Publish")
+    await chooseAndConfirm(page, "Publish")
 
     const review = await openConflictReview(page)
     await review.getByRole("button", { name: "Use theirs Now: Order" }).click()
@@ -1076,7 +1075,7 @@ test.describe("choosing an item's organisations (STY-034)", () => {
     await expect(itemCard(page, ITEM).getByText("Changed")).toBeVisible()
     expect(sheets.writes).toEqual([])
 
-    await confirmPublish(page, "Publish")
+    await chooseAndConfirm(page, "Publish")
     await expect(
       page.getByRole("main").getByText(/^Changes published\./),
     ).toBeVisible()
@@ -1096,7 +1095,7 @@ test.describe("choosing an item's organisations (STY-034)", () => {
       "Powys (PTHB)",
       "Hywel Dda (HDUHB)",
     ])
-    await confirmPublish(page, "Save")
+    await chooseAndConfirm(page, "Save")
     await expect(
       page.getByRole("main").getByText("Changes saved"),
     ).toBeVisible()
@@ -1116,7 +1115,7 @@ test.describe("choosing an item's organisations (STY-034)", () => {
     await toggleOrganisations(page, ITEM, ["Powys (PTHB)"])
     sheets.coLead("ProductA", ITEM, "Organisations", "sbuhb, WAST")
 
-    await confirmPublish(page, "Publish")
+    await chooseAndConfirm(page, "Publish")
 
     await expect(refusal(page)).toBeFocused()
     const review = await openConflictReview(page)
@@ -1190,7 +1189,7 @@ test.describe("the Organisations field opens on request (STY-038)", () => {
       itemCard(page, ITEM).getByText("Cardiff and Vale, Powys, Swansea Bay"),
     ).toBeVisible()
     await expect(itemCard(page, ITEM).getByText("Changed")).toBeVisible()
-    await confirmPublish(page, "Publish")
+    await chooseAndConfirm(page, "Publish")
     await expect(
       page.getByRole("main").getByText(/^Changes published\./),
     ).toBeVisible()
@@ -1409,8 +1408,7 @@ test.describe("editing an item's tags (STY-037)", () => {
     await expect(dialog.getByRole("listitem")).toContainText(
       new RegExp(`${TAGGED}.*Tags`),
     )
-    await dialog.getByRole("button", { name: "Publish changes" }).click()
-    await expect(main.getByText(/^Changes published\./)).toBeVisible()
+    await confirmPublish(page)
     expect(changedCells(before, sheets.spreadsheet, "ProductA")).toEqual([
       `${TAGGED}: Labels = Video appointments, Service X, Carers`,
     ])
@@ -1436,7 +1434,7 @@ test.describe("editing an item's tags (STY-037)", () => {
       .getByRole("textbox", { name: "Add a tag" })
       .fill("Patients, Carers")
     await form.getByRole("button", { name: "Done" }).click()
-    await confirmPublish(page, "Save")
+    await chooseAndConfirm(page, "Save")
     await expect(
       page.getByRole("main").getByText("Changes saved"),
     ).toBeVisible()
@@ -1450,7 +1448,7 @@ test.describe("editing an item's tags (STY-037)", () => {
     await again.field.getByRole("button", { name: "Remove Patients" }).click()
     await again.field.getByRole("button", { name: "Remove Carers" }).click()
     await again.form.getByRole("button", { name: "Done" }).click()
-    await confirmPublish(page, "Save")
+    await chooseAndConfirm(page, "Save")
     await expect.poll(() => sheets.writes.length).toBe(2)
     expect(changedCells(before, sheets.spreadsheet, "ProductC")).toEqual([
       "header = Labels",
@@ -1468,7 +1466,7 @@ test.describe("editing an item's tags (STY-037)", () => {
     await form.getByRole("button", { name: "Done" }).click()
     sheets.coLead("ProductA", TAGGED, "Labels", "Service Z, Service Y")
 
-    await confirmPublish(page, "Publish")
+    await chooseAndConfirm(page, "Publish")
 
     await expect(refusal(page)).toBeFocused()
     const review = await openConflictReview(page)
@@ -1502,7 +1500,7 @@ test.describe("editing an item's tags (STY-037)", () => {
 
     await form.getByRole("textbox", { name: "Phase" }).fill("Live")
     await form.getByRole("button", { name: "Done" }).click()
-    await confirmPublish(page, "Publish")
+    await chooseAndConfirm(page, "Publish")
     await expect(main.getByText(/^Changes published\./)).toBeVisible()
     expect(changedCells(before, sheets.spreadsheet, "ProductA")).toEqual([
       `${ITEM}: Phase = Live`,
@@ -1521,7 +1519,7 @@ test.describe("editing an item's tags (STY-037)", () => {
     // One Welsh entry for two tags: it pairs with none, and still stops the write.
     sheets.coLead("ProductA", TAGGED, "Labels (cy)", "Gwasanaeth Y")
 
-    await confirmPublish(page, "Publish")
+    await chooseAndConfirm(page, "Publish")
 
     const main = page.getByRole("main")
     await expect(refusal(page)).toBeFocused()
@@ -1564,15 +1562,15 @@ test.describe("editing an item's tags (STY-037)", () => {
     const [short, wrapped] = await rows(field).all()
     if (!short || !wrapped) throw new Error("The item has two tags")
     for (const row of [short, wrapped]) {
-      const tag = await row.locator("span").first().boundingBox()
-      for (const button of await row.getByRole("button").all()) {
-        const box = await button.boundingBox()
+      const [tag, ...icons] = await boxesOf(
+        row.locator("span").first(),
+        ...(await row.getByRole("button").all()),
+      )
+      for (const box of icons) {
         // An icon, square, on its tag's row and inside the page.
-        expect(box?.width).toBe(box?.height)
-        expect(box?.y).toBeLessThan((tag?.y ?? 0) + (tag?.height ?? 0))
-        expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(
-          PHONE_WIDTH,
-        )
+        expect(box.width).toBe(box.height)
+        expect(box.y).toBeLessThan(tag.bottom)
+        expect(box.right).toBeLessThanOrEqual(PHONE_WIDTH)
       }
     }
     await expect(
@@ -1581,11 +1579,11 @@ test.describe("editing an item's tags (STY-037)", () => {
     await expect(
       short.getByRole("button", { name: "Remove Service Y" }),
     ).toHaveAttribute("title", "Remove")
-    const [shortBox, wrappedBox] = await Promise.all([
-      short.locator("span").first().boundingBox(),
-      wrapped.locator("span").first().boundingBox(),
-    ])
-    expect(wrappedBox?.height).toBeGreaterThan(shortBox?.height ?? 0)
+    const [shortBox, wrappedBox] = await boxesOf(
+      short.locator("span").first(),
+      wrapped.locator("span").first(),
+    )
+    expect(wrappedBox.height).toBeGreaterThan(shortBox.height)
     expect(await sideways(page)).toBe(0)
 
     // A rename keeps the icons, and its field and buttons fit too.
@@ -1772,8 +1770,7 @@ test.describe("editing an item's details (STY-039)", () => {
     await expect(dialog.getByRole("listitem")).toContainText(
       new RegExp(`${DETAILED}.*Details`),
     )
-    await dialog.getByRole("button", { name: "Publish changes" }).click()
-    await expect(main.getByText(/^Changes published\./)).toBeVisible()
+    await confirmPublish(page)
     expect(changedCells(before, sheets.spreadsheet, "ProductA")).toEqual([
       `${DETAILED}: Details = ${[
         SECOND,
@@ -1814,7 +1811,7 @@ test.describe("editing an item's details (STY-039)", () => {
       "Thursdays",
     ])
     await form.getByRole("button", { name: "Done" }).click()
-    await confirmPublish(page, "Save")
+    await chooseAndConfirm(page, "Save")
     await expect(
       page.getByRole("main").getByText("Changes saved"),
     ).toBeVisible()
@@ -1832,7 +1829,7 @@ test.describe("editing an item's details (STY-039)", () => {
       again.field.getByRole("textbox", { name: "Detail 1 of 1, top level" }),
     ).toBeFocused()
     await again.form.getByRole("button", { name: "Done" }).click()
-    await confirmPublish(page, "Save")
+    await chooseAndConfirm(page, "Save")
     await expect.poll(() => sheets.writes.length).toBe(2)
     expect(changedCells(before, sheets.spreadsheet, "ProductC")).toEqual([
       "header = Details",
@@ -1851,7 +1848,7 @@ test.describe("editing an item's details (STY-039)", () => {
     await form.getByRole("button", { name: "Done" }).click()
     sheets.coLead("ProductA", DETAILED, "Details", `${FIRST}\n- Their line`)
 
-    await confirmPublish(page, "Publish")
+    await chooseAndConfirm(page, "Publish")
 
     await expect(refusal(page)).toBeFocused()
     const review = await openConflictReview(page)
@@ -1893,7 +1890,7 @@ test.describe("editing an item's details (STY-039)", () => {
     await (await detail(again.field, "Three")).click()
     await again.field.getByRole("button", { name: "Remove Three" }).click()
     await again.form.getByRole("button", { name: "Done" }).click()
-    await confirmPublish(page, "Publish")
+    await chooseAndConfirm(page, "Publish")
     await expect(
       page.getByRole("main").getByText(/^Changes published\./),
     ).toBeVisible()
@@ -1924,7 +1921,7 @@ test.describe("editing an item's details (STY-039)", () => {
 
     await form.getByRole("textbox", { name: "Phase" }).fill("Live")
     await form.getByRole("button", { name: "Done" }).click()
-    await confirmPublish(page, "Publish")
+    await chooseAndConfirm(page, "Publish")
     await expect(main.getByText(/^Changes published\./)).toBeVisible()
     expect(changedCells(before, sheets.spreadsheet, "ProductA")).toEqual([
       `${ITEM}: Phase = Live`,
@@ -1944,7 +1941,7 @@ test.describe("editing an item's details (STY-039)", () => {
     // One Welsh line for two details: it pairs with none, and still stops the write.
     sheets.coLead("ProductA", DETAILED, "Details (cy)", "Beth oedd ynddo")
 
-    await confirmPublish(page, "Publish")
+    await chooseAndConfirm(page, "Publish")
 
     const main = page.getByRole("main")
     await expect(refusal(page)).toBeFocused()
@@ -1993,18 +1990,16 @@ test.describe("editing an item's details (STY-039)", () => {
     const { field } = await openDetails(page, DETAILED)
 
     const longDetail = await detail(field, long)
-    const [shortBox, longBox] = await Promise.all([
-      (await detail(field, FIRST)).boundingBox(),
-      longDetail.boundingBox(),
-    ])
+    const [shortBox, longBox] = await boxesOf(
+      await detail(field, FIRST),
+      longDetail,
+    )
     // Wrapped over several lines, all of it on show, inside the page.
-    expect(longBox?.height).toBeGreaterThan((shortBox?.height ?? 0) * 2)
+    expect(longBox.height).toBeGreaterThan(shortBox.height * 2)
     expect(
       await longDetail.evaluate((box) => box.scrollHeight <= box.clientHeight),
     ).toBe(true)
-    expect((longBox?.x ?? 0) + (longBox?.width ?? 0)).toBeLessThanOrEqual(
-      PHONE_WIDTH,
-    )
+    expect(longBox.right).toBeLessThanOrEqual(PHONE_WIDTH)
     expect(await sideways(page)).toBe(0)
 
     await longDetail.click()
@@ -2012,10 +2007,9 @@ test.describe("editing an item's details (STY-039)", () => {
       .getByRole("group", { name: "The detail selected" })
       .getByRole("button")
     await expect(buttons).toHaveCount(5)
-    for (const button of await buttons.all()) {
-      const box = await button.boundingBox()
-      expect(box?.x).toBeGreaterThanOrEqual(0)
-      expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(PHONE_WIDTH)
+    for (const box of await boxesOf(...(await buttons.all()))) {
+      expect(box.x).toBeGreaterThanOrEqual(0)
+      expect(box.right).toBeLessThanOrEqual(PHONE_WIDTH)
     }
     await expect(
       field.getByRole("button", { name: `Move down ${long}` }),

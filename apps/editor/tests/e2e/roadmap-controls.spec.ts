@@ -2,10 +2,12 @@ import type { Page } from "@playwright/test"
 
 import { sessionMs } from "./fixtures/fake-gis"
 import {
+  confirmPublish,
   openEditItemDialog,
   publishOnce,
   reconnectDialog,
 } from "./fixtures/dialogs"
+import { boxOf } from "./fixtures/layout"
 import type { Language } from "./fixtures/look"
 import {
   focusClearOfBars,
@@ -130,23 +132,19 @@ test("shows a publish's outcome at the foot, where it was published from, focus 
   await editTitle(page, "Planned work 3")
   await scrollTo(page, "Later")
   const later = page.getByRole("heading", { level: 2, name: "Later" })
-  const before = await later.boundingBox()
+  const before = await boxOf(later)
   const main = page.getByRole("main")
 
   await main.getByRole("button", { name: "Publish changes" }).click()
-  await page
-    .getByRole("alertdialog")
-    .getByRole("button", { name: "Publish changes" })
-    .click()
+  await confirmPublish(page)
 
   const outcome = main
     .getByRole("status")
     .filter({ hasText: /^Changes published\./ })
-  await expect(outcome).toBeFocused()
   await expect(outcome).toBeInViewport()
   await expect(main.getByText(/unpublished change/)).toHaveCount(0)
   // The page did not jump.
-  expect((await later.boundingBox())?.y).toBe(before?.y)
+  expect((await boxOf(later)).y).toBe(before.y)
 })
 
 test("stacks a failed publish's notice above the bar, which stays (S4, D14)", async ({
@@ -160,16 +158,12 @@ test("stacks a failed publish's notice above the bar, which stays (S4, D14)", as
   const main = page.getByRole("main")
   sheets.failWith(403)
 
-  await main.getByRole("button", { name: "Publish changes" }).click()
-  await page
-    .getByRole("alertdialog")
-    .getByRole("button", { name: "Publish changes" })
-    .click()
-
   const failure = main
     .getByRole("alert")
     .filter({ hasText: "Couldn't publish your changes" })
-  await expect(failure).toBeFocused()
+
+  await main.getByRole("button", { name: "Publish changes" }).click()
+  await confirmPublish(page, failure)
   await expect(failure).toBeInViewport()
   await expect(main.getByText("1 unpublished change")).toBeInViewport()
   await expect(
@@ -283,7 +277,9 @@ test("moves Publish roadmap into More once the row sticks, at every width, where
   await more.click()
   // The Not published notice holds Publish roadmap at the top (STY-065 S4).
   await expect(menuItems).toHaveText(["Edit product details", "Refresh"])
+  await expect(page.getByRole("menu")).toBeFocused()
   await page.keyboard.press("Escape")
+  await expect(page.getByRole("menu")).toBeHidden()
 
   await scrollTo(page, "Later")
 
@@ -291,21 +287,23 @@ test("moves Publish roadmap into More once the row sticks, at every width, where
   await expect(addItem).toBeInViewport()
   await expect(addItem).toHaveCSS("width", "40px")
   // An ellipsis and a chevron, its label hidden (STY-060 D2, D5).
-  expect((await more.boundingBox())?.width).toBeLessThan(70)
+  expect((await boxOf(more)).width).toBeLessThan(70)
   await more.click()
   await expect(menuItems).toHaveText([
     "Edit product details",
     "Refresh",
     "Publish roadmap",
   ])
+  await expect(page.getByRole("menu")).toBeFocused()
   await page.keyboard.press("Escape")
+  await expect(page.getByRole("menu")).toBeHidden()
 
   await page.setViewportSize(DESKTOP)
 
   await expect(page.locator("[data-stuck]")).toBeVisible()
   expect(await namesShownInStuckRow(page)).not.toContain("Publish roadmap")
   await expect(addItem).toHaveText("Add an item")
-  expect((await more.boundingBox())?.width).toBeGreaterThan(70)
+  expect((await boxOf(more)).width).toBeGreaterThan(70)
   await more.click()
   await expect(menuItems).toHaveText([
     "Edit product details",
@@ -329,16 +327,12 @@ test("keeps the count, Publish and Discard in view under a notice too long for t
   for (const title of removed) sheets.coLead("ProductA", title, "Title", null)
   const main = page.getByRole("main")
 
-  await main.getByRole("button", { name: "Publish changes" }).click()
-  await page
-    .getByRole("alertdialog")
-    .getByRole("button", { name: "Publish changes" })
-    .click()
-
   const notice = main
     .getByRole("alert")
     .filter({ hasText: "Some changes couldn't be kept" })
-  await expect(notice).toBeFocused()
+
+  await main.getByRole("button", { name: "Publish changes" }).click()
+  await confirmPublish(page, notice)
   await expect(notice.getByText(/^Someone else has removed/)).toHaveCount(6)
   for (const control of [
     main.getByText("1 unpublished change"),

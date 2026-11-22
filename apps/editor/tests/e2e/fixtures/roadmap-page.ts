@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test"
 
 import { EXAMPLE_SPREADSHEET, type FakeTab, withTabRows } from "./fake-sheets"
+import { animationsDone } from "./layout"
 import { type Language, useLanguage } from "./look"
 import { connect, expect } from "./test"
 
@@ -57,7 +58,10 @@ export function moreButton(page: Page, language: Language = "en"): Locator {
     .getByRole("button", { name: COPY[language].more, exact: true })
 }
 
-/** Opens More and chooses `item`. */
+/**
+ * Opens More and chooses `item`, returning once the menu has gone: the choice is acted
+ * on as it finishes closing.
+ */
 export async function chooseFromMore(
   page: Page,
   item: string,
@@ -178,16 +182,13 @@ export const LEFT_THE_CONTENT = "focus left the page's content"
 const NEVER_SETTLED = "the pinned bars never held still"
 
 /**
- * What hides the focused control in the page's content, if anything: it should be wholly
- * in view between the bars pinned at the top and the foot of the screen, or in one of
- * them. Read once the bars have settled after the scroll that focusing caused: a header
- * that has just stuck passes through a frame or two at a height it then leaves (its
- * title changes size as it sticks), and the page follows it, so the bars' bottom and
- * top and the scroll are read until they have held for several frames. Bars still
- * moving after two seconds are reported as such, not read.
+ * Whether the bars pinned at the top and the foot of the screen, and the page's scroll,
+ * have held still for several frames: a header that has just stuck passes through a
+ * frame or two at a height it then leaves (its title changes size as it sticks), and
+ * the page follows it. `false` when they are still moving after two seconds.
  */
-export async function focusClearOfBars(page: Page): Promise<string | null> {
-  const settled = await page.evaluate(
+export function barsHeldStill(page: Page): Promise<boolean> {
+  return page.evaluate(
     () =>
       new Promise<boolean>((resolve) => {
         const STILL_FRAMES = 5
@@ -216,6 +217,16 @@ export async function focusClearOfBars(page: Page): Promise<string | null> {
         requestAnimationFrame(frame)
       }),
   )
+}
+
+/**
+ * What hides the focused control in the page's content, if anything: it should be wholly
+ * in view between the bars pinned at the top and the foot of the screen, or in one of
+ * them. Read once the bars have held still after the scroll that focusing caused
+ * (`barsHeldStill`); bars still moving after two seconds are reported as such, not read.
+ */
+export async function focusClearOfBars(page: Page): Promise<string | null> {
+  const settled = await barsHeldStill(page)
   // Bars that never hold still are a fault of their own, not a frame to read.
   if (!settled) return NEVER_SETTLED
   return page.evaluate((leftTheContent) => {
@@ -309,28 +320,37 @@ export function productDetailsField(region: Locator, term: string): Locator {
 /**
  * The buttons the stuck row shows, each the element its centre hits: not those of the
  * parts it leaves out of sight, the facts, the Not published notice and the product
- * details (STY-059).
+ * details (STY-059). Read once the row has stuck, its bars have held still and nothing
+ * animates, a closing menu over it included.
  */
 export async function shownInStuckRow(page: Page): Promise<Locator[]> {
   const buttons = page.locator("[data-stuck]").getByRole("button")
-  const shown = await buttons.evaluateAll((all) =>
+  return (await readStuckRow(page)).map(({ index }) => buttons.nth(index))
+}
+
+/** The names of the buttons the stuck row shows (`shownInStuckRow`). */
+export async function namesShownInStuckRow(page: Page): Promise<string[]> {
+  return (await readStuckRow(page)).map(({ name }) => name)
+}
+
+/** Each button the stuck row shows, by its place among the row's buttons and its text. */
+async function readStuckRow(
+  page: Page,
+): Promise<{ index: number; name: string }[]> {
+  const row = page.locator("[data-stuck]")
+  await expect(row).toBeVisible()
+  if (!(await barsHeldStill(page))) throw new Error(NEVER_SETTLED)
+  await animationsDone(page)
+  return row.getByRole("button").evaluateAll((all) =>
     all.flatMap((button, index) => {
       const box = button.getBoundingClientRect()
       const hit = document.elementFromPoint(
         box.left + box.width / 2,
         box.top + box.height / 2,
       )
-      return hit !== null && button.contains(hit) ? [index] : []
+      return hit !== null && button.contains(hit)
+        ? [{ index, name: button.textContent.trim() }]
+        : []
     }),
-  )
-  return shown.map((index) => buttons.nth(index))
-}
-
-/** The names of the buttons the stuck row shows (`shownInStuckRow`). */
-export async function namesShownInStuckRow(page: Page): Promise<string[]> {
-  return Promise.all(
-    (await shownInStuckRow(page)).map(
-      async (button) => (await button.textContent())?.trim() ?? "",
-    ),
   )
 }

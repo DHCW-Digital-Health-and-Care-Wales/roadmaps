@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test"
 
-import { openEditRoadmapDialog } from "./fixtures/dialogs"
+import { confirmPublish, openEditRoadmapDialog } from "./fixtures/dialogs"
 import { roadmapFacts } from "./fixtures/roadmap-page"
 import { connect, expect, test } from "./fixtures/test"
 
@@ -55,9 +55,7 @@ test("publishes a date picked in the roadmap dialog as YYYY-MM-DD text (S2, S8)"
   await expect(
     dialog.getByRole("checkbox", { name: "Mark as updated today" }),
   ).toHaveCount(0)
-  await dialog.getByRole("button", { name: "Publish changes" }).click()
-
-  await expect(main.getByText(/^Changes published\./)).toBeVisible()
+  await confirmPublish(page)
   expect(sheets.writes).toHaveLength(1)
   const [index] = sheets.spreadsheet
   // Read back as displayed: written as text, it shows as it was written.
@@ -104,9 +102,7 @@ test.describe("today, by the browser's clock (D11)", () => {
     const box = dialog.getByRole("checkbox", { name: "Mark as updated today" })
     await expect(box).not.toBeChecked()
     await box.click()
-    await dialog.getByRole("button", { name: "Publish changes" }).click()
-
-    await expect(main.getByText(/^Changes published\./)).toBeVisible()
+    await confirmPublish(page)
     expect(sheets.writes).toHaveLength(1)
     const [index] = sheets.spreadsheet
     expect(indexCell(index?.rows, "ProductA", "Status label")).toBe("Live")

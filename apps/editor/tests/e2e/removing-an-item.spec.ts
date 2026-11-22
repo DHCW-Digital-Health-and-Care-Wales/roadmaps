@@ -5,11 +5,12 @@ import {
   addItemButtons,
   askToRemove,
   clickOutside,
+  confirmPublish,
   cornerClose,
   publishOnce,
   confirmRemoval,
 } from "./fixtures/dialogs"
-import { openConflictReview } from "./fixtures/roadmap-page"
+import { openConflictReview, refusal } from "./fixtures/roadmap-page"
 import { connect, expect, test } from "./fixtures/test"
 
 /**
@@ -117,8 +118,7 @@ for (const size of SIZES) {
     await expect(publish.getByRole("listitem")).toHaveText([
       `${EXPLORED}Removed`,
     ])
-    await publish.getByRole("button", { name: "Publish changes" }).click()
-    await expect(main.getByText(/^Changes published\./)).toBeVisible()
+    await confirmPublish(page)
     await expect(
       main.getByRole("heading", { level: 3, name: EXPLORED }),
     ).toHaveCount(0)
@@ -138,10 +138,7 @@ test("a co-lead's change to a removed item is reviewed; Remove anyway then delet
   sheets.coLead("ProductA", EXPLORED, "Description", "Their reason")
 
   await main.getByRole("button", { name: "Publish changes" }).click()
-  await page
-    .getByRole("alertdialog")
-    .getByRole("button", { name: "Publish changes" })
-    .click()
+  await confirmPublish(page, refusal(page))
   const review = await openConflictReview(page)
 
   await expect(review).toContainText("Nothing was published.")
@@ -159,11 +156,7 @@ test("a co-lead's change to a removed item is reviewed; Remove anyway then delet
     .click()
   await review.getByRole("button", { name: "Publish changes" }).click()
   await expect(review).toBeHidden()
-  await page
-    .getByRole("alertdialog")
-    .getByRole("button", { name: "Publish changes" })
-    .click()
-  await expect(main.getByText(/^Changes published\./)).toBeVisible()
+  await confirmPublish(page)
   expect(storedTitles(sheets)).not.toContain(EXPLORED)
 })
 

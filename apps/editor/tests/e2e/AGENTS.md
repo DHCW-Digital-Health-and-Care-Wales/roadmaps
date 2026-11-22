@@ -19,7 +19,8 @@ End-to-end tests of the production build, with Google faked (ADR-006).
   (`publishOnce` in `fixtures/dialogs.ts`) to give every item its ID, then calls
   `sheets.coLead`.
 - No sleeps. For back-off or expiry, `page.clock.install()` before `goto`, then
-  fast-forward; time still runs in real time until moved. Move the clock to a session's
+  fast-forward; time still runs in real time until moved, so a check just short of a
+  deadline stops short by more than a loaded runner's steps take. Move the clock to a session's
   end or its warning by `sessionMs()` and `SESSION_WARNING_MS` (`fixtures/fake-gis.ts`),
   never a sum written in the spec. The warning opens two minutes before a session ends
   and, being modal, hides the page from role queries: a grant shorter than about 180 s
@@ -45,6 +46,14 @@ End-to-end tests of the production build, with Google faked (ADR-006).
   by substring, so name "More" `exact`.
 - Run a layout check with `reducedMotion: "reduce"` too: no transition runs, so a class
   a bar gains takes effect in its own frame. Measure its border box.
+- What a step causes lands later, on a loaded runner much later: a popup takes focus a
+  frame after it shows, and Base UI returns focus, focuses a notice or acts on a menu's
+  choice only as the popup's closing animation ends. A helper that opens a popup returns
+  once focus is in it (`openDialog`); one that closes, chooses or confirms returns once
+  the popup has gone and the focus or notice it causes has arrived (`chooseFromMore`,
+  `confirmPublish`). A spec waits the same way before its next step acts: for focus in a
+  popup before keys go to it, and for the popup to go after Escape.
+- Read boxes compared with each other in one `boxesOf` call, so they are of one moment.
 
 ## Look checks
 

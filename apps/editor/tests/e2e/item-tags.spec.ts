@@ -298,6 +298,8 @@ for (const motion of ["reduce", "no-preference"] as const) {
       await chooseCompact(page)
       await chooseFromMenu(page, LONG_TITLE, "Later")
       const row = itemOf(page, LONG_TITLE)
+      // The move has landed: until then the row is the one it leaves.
+      await expect(tagOf(row, "Moved from Now")).toBeVisible()
       const closedHeight = (await boxOf(row)).height
 
       await expectStill(page, row, LONG_TITLE)

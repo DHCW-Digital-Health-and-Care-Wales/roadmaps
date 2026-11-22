@@ -1,6 +1,6 @@
-import type { RoadmapMeta } from '../lib/types';
-import { UI } from '../lib/strings';
-import { T } from './T';
+import type { RoadmapMeta } from "../lib/types"
+import { UI } from "../lib/strings"
+import { T } from "./T"
 
 /**
  * "Our value" section, placed directly beneath the intro (which holds "Our
@@ -8,7 +8,7 @@ import { T } from './T';
  * Google Sheet's roadmap list; the section is hidden when it is empty.
  */
 export function OurValue({ meta }: { meta: RoadmapMeta }) {
-  if (!meta.serviceDescription.en) return null;
+  if (!meta.serviceDescription.en) return null
 
   return (
     <section
@@ -28,5 +28,5 @@ export function OurValue({ meta }: { meta: RoadmapMeta }) {
         </p>
       </div>
     </section>
-  );
+  )
 }

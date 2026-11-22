@@ -1,13 +1,13 @@
-import type { OrgFilter } from '../lib/types';
-import type { SECTIONS } from '../lib/content';
+import type { OrgFilter } from "../lib/types"
+import type { SECTIONS } from "../lib/content"
 import {
   countInParentheses,
   placementHeadingId,
   type ShownItem,
-} from '../lib/roadmap-helpers';
-import { EmptyItems } from './EmptyItems';
-import { RoadmapCard } from './RoadmapCard';
-import { T } from './T';
+} from "../lib/roadmap-helpers"
+import { EmptyItems } from "./EmptyItems"
+import { RoadmapCard } from "./RoadmapCard"
+import { T } from "./T"
 
 /**
  * One of the fixed sections around the horizons: "Recently delivered", "Other
@@ -19,20 +19,20 @@ export function RoadmapSection({
   total,
   filter,
 }: {
-  section: (typeof SECTIONS)[number];
+  section: (typeof SECTIONS)[number]
   /** The items that match the organisation filter. */
-  items: ShownItem[];
+  items: ShownItem[]
   /** The number of items before filtering. */
-  total: number;
-  filter: OrgFilter;
+  total: number
+  filter: OrgFilter
 }) {
-  const headingId = placementHeadingId(section.id);
+  const headingId = placementHeadingId(section.id)
 
   return (
     <section aria-labelledby={headingId} className="page-section bg-surface">
       <div className="mx-auto max-w-content">
         <h2 id={headingId} className="text-2xl font-bold text-heading">
-          <T value={section.heading} />{' '}
+          <T value={section.heading} />{" "}
           <span className="text-lg font-normal text-ink-700">
             <T value={countInParentheses({ shown: items.length, total })} />
           </span>
@@ -60,5 +60,5 @@ export function RoadmapSection({
         )}
       </div>
     </section>
-  );
+  )
 }

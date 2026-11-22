@@ -1,11 +1,11 @@
-import { useEffect, useId, useState, type ReactNode } from 'react';
-import { useLanguage } from '../lib/i18n';
-import { UI } from '../lib/strings';
-import type { Localised } from '../lib/types';
-import { T } from './T';
+import { useEffect, useId, useState, type ReactNode } from "react"
+import { useLanguage } from "../lib/i18n"
+import { UI } from "../lib/strings"
+import type { Localised } from "../lib/types"
+import { T } from "./T"
 
 /** How long typing must pause before the result count is announced. */
-export const ANNOUNCE_DELAY_MS = 500;
+export const ANNOUNCE_DELAY_MS = 500
 
 /**
  * The search field, any `children` (the organisation filter), then a live
@@ -18,20 +18,20 @@ export function SearchBar({
   status,
   children,
 }: {
-  query: string;
-  onQueryChange: (query: string) => void;
+  query: string
+  onQueryChange: (query: string) => void
   /** The result count for a query. */
-  status: (query: string) => Localised;
-  children?: ReactNode;
+  status: (query: string) => Localised
+  children?: ReactNode
 }) {
-  const { tr } = useLanguage();
-  const id = useId();
+  const { tr } = useLanguage()
+  const id = useId()
   // The query the count is for; each keystroke restarts the wait.
-  const [announcedQuery, setAnnouncedQuery] = useState(query);
+  const [announcedQuery, setAnnouncedQuery] = useState(query)
   useEffect(() => {
-    const timer = setTimeout(() => setAnnouncedQuery(query), ANNOUNCE_DELAY_MS);
-    return () => clearTimeout(timer);
-  }, [query]);
+    const timer = setTimeout(() => setAnnouncedQuery(query), ANNOUNCE_DELAY_MS)
+    return () => clearTimeout(timer)
+  }, [query])
 
   return (
     <div
@@ -59,5 +59,5 @@ export function SearchBar({
         <T value={status(announcedQuery)} />
       </p>
     </div>
-  );
+  )
 }

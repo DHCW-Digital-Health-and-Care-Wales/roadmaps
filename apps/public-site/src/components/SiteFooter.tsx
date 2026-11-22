@@ -1,6 +1,6 @@
-import logoImage from '../assets/dhcw-logo.png';
-import { useLanguage } from '../lib/i18n';
-import { FEEDBACK_URL, REPO_URL } from '../lib/links';
+import logoImage from "../assets/dhcw-logo.png"
+import { useLanguage } from "../lib/i18n"
+import { FEEDBACK_URL, REPO_URL } from "../lib/links"
 import {
   dataPathFor,
   onNavigate,
@@ -8,20 +8,20 @@ import {
   useHasJs,
   withOrgFilter,
   type View,
-} from '../lib/router';
-import type { Localised, OrgFilter } from '../lib/types';
-import { UI } from '../lib/strings';
-import { T } from './T';
+} from "../lib/router"
+import type { Localised, OrgFilter } from "../lib/types"
+import { UI } from "../lib/strings"
+import { T } from "./T"
 
 interface FooterLink {
-  key: string;
-  href: string;
-  label: Localised;
+  key: string
+  href: string
+  label: Localised
   /**
    * `app` links switch the layout in place, so they need JavaScript; `route`
    * links are real pages that JavaScript opens without a reload.
    */
-  kind: 'external' | 'page' | 'app' | 'route';
+  kind: "external" | "page" | "app" | "route"
 }
 
 /**
@@ -35,63 +35,63 @@ export function SiteFooter({
   view,
   filter,
 }: {
-  dataSlug?: string;
-  view: View;
-  filter: OrgFilter;
+  dataSlug?: string
+  view: View
+  filter: OrgFilter
 }) {
-  const { lang, tr } = useLanguage();
-  const hasJs = useHasJs();
-  const toList = view !== 'list';
+  const { lang, tr } = useLanguage()
+  const hasJs = useHasJs()
+  const toList = view !== "list"
   const links: FooterLink[] = [
     {
-      key: 'feedback',
+      key: "feedback",
       href: FEEDBACK_URL,
       label: UI.giveFeedback,
-      kind: 'external',
+      kind: "external",
     },
     {
-      key: 'accessibility',
-      href: pathFor(lang, 'accessibility'),
+      key: "accessibility",
+      href: pathFor(lang, "accessibility"),
       label: UI.accessibilityHeading,
-      kind: 'route',
+      kind: "route",
     },
     {
-      key: 'privacy',
-      href: pathFor(lang, 'privacy'),
+      key: "privacy",
+      href: pathFor(lang, "privacy"),
       label: UI.privacyHeading,
-      kind: 'route',
+      kind: "route",
     },
     ...(dataSlug
       ? [
           {
-            key: 'data',
+            key: "data",
             href: dataPathFor(dataSlug),
             label: UI.roadmapData,
-            kind: 'page' as const,
+            kind: "page" as const,
           },
           ...(hasJs
             ? [
                 {
-                  key: 'layout',
+                  key: "layout",
                   href: withOrgFilter(
-                    `${pathFor(lang, dataSlug)}${toList ? '?view=list' : ''}`,
+                    `${pathFor(lang, dataSlug)}${toList ? "?view=list" : ""}`,
                     filter,
                   ),
                   label: toList ? UI.listViewLink : UI.cardViewLink,
-                  kind: 'app' as const,
+                  kind: "app" as const,
                 },
               ]
             : []),
         ]
       : []),
     {
-      key: 'licence',
+      key: "licence",
       href: `${REPO_URL}/blob/main/LICENSE`,
       label: UI.licence,
-      kind: 'external',
+      kind: "external",
     },
-    { key: 'github', href: REPO_URL, label: UI.onGitHub, kind: 'external' },
-  ];
+    { key: "github", href: REPO_URL, label: UI.onGitHub, kind: "external" },
+  ]
 
   return (
     <footer className="bg-nhs-wales-blue px-4 py-10 text-white sm:px-6">
@@ -108,15 +108,15 @@ export function SiteFooter({
                 <a
                   href={link.href}
                   onClick={
-                    link.kind === 'app'
+                    link.kind === "app"
                       ? onNavigate(link.href, { scroll: false })
-                      : link.kind === 'route'
+                      : link.kind === "route"
                         ? onNavigate(link.href)
                         : undefined
                   }
                   className="text-sm underline underline-offset-4 hover:no-underline"
-                  {...(link.kind === 'external'
-                    ? { target: '_blank', rel: 'noreferrer' }
+                  {...(link.kind === "external"
+                    ? { target: "_blank", rel: "noreferrer" }
                     : {})}
                 >
                   <T value={link.label} />
@@ -130,5 +130,5 @@ export function SiteFooter({
         </p>
       </div>
     </footer>
-  );
+  )
 }

@@ -7,37 +7,37 @@
  * breaks. In development we collect which strings are still missing Welsh so
  * the translation work is easy to complete later.
  */
-import { createContext, useContext } from 'react';
-import type { Route } from './router';
-import type { Localised } from './types';
+import { createContext, useContext } from "react"
+import type { Route } from "./router"
+import type { Localised } from "./types"
 
-export type Lang = 'cy' | 'en';
+export type Lang = "cy" | "en"
 
 /** Welsh first, as on other bilingual Welsh public sector sites. */
 export const LANGUAGES: { value: Lang; label: string }[] = [
-  { value: 'cy', label: 'Cymraeg' },
-  { value: 'en', label: 'English' },
-];
+  { value: "cy", label: "Cymraeg" },
+  { value: "en", label: "English" },
+]
 
 /**
  * The default interface language. English for now so content can be reviewed
  * quickly. To make the site Welsh-first later, flip this single value to 'cy'.
  */
-export const DEFAULT_LANGUAGE: Lang = 'en';
+export const DEFAULT_LANGUAGE: Lang = "en"
 
 /** Same-site storage key for remembering the choice without cookies. */
-export const LANG_STORAGE_KEY = 'dhcw-product-roadmaps-lang';
+export const LANG_STORAGE_KEY = "dhcw-product-roadmaps-lang"
 
-const missingWelsh = new Set<string>();
+const missingWelsh = new Set<string>()
 
 export function isLang(value: string | null): value is Lang {
-  return value === 'cy' || value === 'en';
+  return value === "cy" || value === "en"
 }
 
 /** Remembers a language chosen with the toggle, for visits to the site root. */
 export function rememberLang(lang: Lang) {
   try {
-    window.localStorage.setItem(LANG_STORAGE_KEY, lang);
+    window.localStorage.setItem(LANG_STORAGE_KEY, lang)
   } catch {
     // Storage may be unavailable (private mode); the URL still has the choice.
   }
@@ -49,13 +49,13 @@ export function rememberLang(lang: Lang) {
  */
 export function preferredLang(): Lang {
   try {
-    const stored = window.localStorage.getItem(LANG_STORAGE_KEY);
-    if (isLang(stored)) return stored;
+    const stored = window.localStorage.getItem(LANG_STORAGE_KEY)
+    if (isLang(stored)) return stored
   } catch {
     // Fall through when storage is unavailable.
   }
-  const welsh = navigator.languages.some((tag) => /^cy\b/i.test(tag));
-  return welsh ? 'cy' : DEFAULT_LANGUAGE;
+  const welsh = navigator.languages.some((tag) => /^cy\b/i.test(tag))
+  return welsh ? "cy" : DEFAULT_LANGUAGE
 }
 
 /**
@@ -63,7 +63,7 @@ export function preferredLang(): Lang {
  * when the requested language is empty.
  */
 export function t(value: Localised, lang: Lang): string {
-  return resolve(value, lang).text;
+  return resolve(value, lang).text
 }
 
 /** Like `t()`, but also reports which language the text is actually in. */
@@ -71,22 +71,22 @@ export function resolve(
   value: Localised,
   lang: Lang,
 ): { text: string; lang: Lang } {
-  const requested = value[lang];
-  if (requested && requested.trim() !== '') {
-    return { text: requested, lang };
+  const requested = value[lang]
+  if (requested && requested.trim() !== "") {
+    return { text: requested, lang }
   }
 
-  if (lang === 'cy' && import.meta.env.DEV) {
-    const english = value.en;
+  if (lang === "cy" && import.meta.env.DEV) {
+    const english = value.en
     if (english && !missingWelsh.has(english)) {
-      missingWelsh.add(english);
+      missingWelsh.add(english)
       console.warn(
         `[i18n] Missing Welsh translation, falling back to English: "${english}"`,
-      );
+      )
     }
   }
 
-  return { text: value.en, lang: 'en' };
+  return { text: value.en, lang: "en" }
 }
 
 /**
@@ -99,33 +99,33 @@ export function fill(
 ): Localised {
   const sub = (text: string, lang: Lang) =>
     text.replace(/\{(\w+)\}/g, (match, name: string) => {
-      const v = vars[name];
-      if (v === undefined) return match;
-      return typeof v === 'string' ? v : t(v, lang);
-    });
-  return { en: sub(value.en, 'en'), cy: sub(value.cy, 'cy') };
+      const v = vars[name]
+      if (v === undefined) return match
+      return typeof v === "string" ? v : t(v, lang)
+    })
+  return { en: sub(value.en, "en"), cy: sub(value.cy, "cy") }
 }
 
 /** The set of English strings still awaiting Welsh, for dev tooling. */
 export function getMissingWelsh(): string[] {
-  return Array.from(missingWelsh);
+  return Array.from(missingWelsh)
 }
 
 export interface LanguageContextValue {
-  lang: Lang;
-  route: Route;
-  tr: (value: Localised) => string;
+  lang: Lang
+  route: Route
+  tr: (value: Localised) => string
 }
 
-export const LanguageContext = createContext<LanguageContextValue | null>(null);
+export const LanguageContext = createContext<LanguageContextValue | null>(null)
 
 /** Access the active language and translation helper. */
 export function useLanguage(): LanguageContextValue {
-  const context = useContext(LanguageContext);
+  const context = useContext(LanguageContext)
   if (!context) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
+    throw new Error("useLanguage must be used within a LanguageProvider")
   }
-  return context;
+  return context
 }
 
 /**
@@ -134,13 +134,13 @@ export function useLanguage(): LanguageContextValue {
  * switch pronunciation (WCAG 3.1.2).
  */
 export function useResolved(value: Localised): {
-  text: string;
-  lang: Lang | undefined;
+  text: string
+  lang: Lang | undefined
 } {
-  const { lang } = useLanguage();
-  const resolved = resolve(value, lang);
+  const { lang } = useLanguage()
+  const resolved = resolve(value, lang)
   return {
     text: resolved.text,
     lang: resolved.lang === lang ? undefined : resolved.lang,
-  };
+  }
 }

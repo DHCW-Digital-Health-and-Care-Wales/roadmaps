@@ -1,18 +1,18 @@
-import { ArrowRight, Building2 } from 'lucide-react';
-import type { Roadmap, OrgFilter } from '../lib/types';
-import { fill, useLanguage } from '../lib/i18n';
-import { HORIZONS, organisation } from '../lib/content';
+import { ArrowRight, Building2 } from "lucide-react"
+import type { Roadmap, OrgFilter } from "../lib/types"
+import { fill, useLanguage } from "../lib/i18n"
+import { HORIZONS, organisation } from "../lib/content"
 import {
   countItems,
   countOf,
   filterItems,
   formatDate,
   roadmapSummary,
-} from '../lib/roadmap-helpers';
-import { onNavigate, pathFor, withOrgFilter } from '../lib/router';
-import { UI } from '../lib/strings';
-import { FamilyLabel } from './FamilyLabel';
-import { T } from './T';
+} from "../lib/roadmap-helpers"
+import { onNavigate, pathFor, withOrgFilter } from "../lib/router"
+import { UI } from "../lib/strings"
+import { FamilyLabel } from "./FamilyLabel"
+import { T } from "./T"
 
 /**
  * A landing page card linking to a roadmap. While filtered, it says how many
@@ -22,15 +22,15 @@ export function ProductCard({
   roadmap,
   filter,
 }: {
-  roadmap: Roadmap;
-  filter: OrgFilter;
+  roadmap: Roadmap
+  filter: OrgFilter
 }) {
-  const { lang } = useLanguage();
-  const href = withOrgFilter(pathFor(lang, roadmap.slug), filter);
-  const { meta } = roadmap;
-  const accent = meta.colour;
-  const summary = roadmapSummary(roadmap);
-  const headingId = `product-${roadmap.slug}`;
+  const { lang } = useLanguage()
+  const href = withOrgFilter(pathFor(lang, roadmap.slug), filter)
+  const { meta } = roadmap
+  const accent = meta.colour
+  const summary = roadmapSummary(roadmap)
+  const headingId = `product-${roadmap.slug}`
 
   return (
     <li
@@ -63,7 +63,7 @@ export function ProductCard({
                   ·
                 </span>
               ) : null}
-              <T value={UI.updated} />{' '}
+              <T value={UI.updated} />{" "}
               <time dateTime={meta.lastUpdated}>
                 {formatDate(meta.lastUpdated, lang)}
               </time>
@@ -77,7 +77,7 @@ export function ProductCard({
         ) : null}
         <h3
           id={headingId}
-          className={`${meta.family.en ? 'mt-1' : 'mt-3'} text-xl font-bold text-heading`}
+          className={`${meta.family.en ? "mt-1" : "mt-3"} text-xl font-bold text-heading`}
         >
           <a
             data-filter-focus=""
@@ -103,7 +103,7 @@ export function ProductCard({
               <span>
                 <strong className="font-semibold text-heading">
                   <T value={countOf(countItems(roadmap, filter))} />
-                </strong>{' '}
+                </strong>{" "}
                 <T
                   value={fill(UI.itemsFor, {
                     organisation: organisation(filter.org).short,
@@ -140,5 +140,5 @@ export function ProductCard({
         </p>
       </div>
     </li>
-  );
+  )
 }

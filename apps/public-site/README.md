@@ -1,4 +1,5 @@
 # product-roadmaps
+
 Experiment for hosting public product roadmaps (Alpha)
 
 A bilingual (English / Cymraeg) GitHub Pages site that publishes DHCW product
@@ -88,19 +89,19 @@ for bootstrapping a spreadsheet.
 
 **First tab (`Roadmaps`)**: one row per roadmap.
 
-| Column                | Use                                                              |
-| --------------------- | ---------------------------------------------------------------- |
-| `Sheet`               | Name of the tab holding this roadmap's cards. Required.          |
-| `Enabled`             | `Yes` publishes the roadmap. Anything else, or blank, leaves it out (case-sensitive; no Welsh). |
-| `Title`               | Page heading and landing page card name.                         |
-| `Category`            | Landing page group: one of the categories listed below, matched ignoring case and spaces. Blank puts the roadmap under "Other roadmaps". |
+| Column                | Use                                                                                                                                                                                                                                             |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Sheet`               | Name of the tab holding this roadmap's cards. Required.                                                                                                                                                                                         |
+| `Enabled`             | `Yes` publishes the roadmap. Anything else, or blank, leaves it out (case-sensitive; no Welsh).                                                                                                                                                 |
+| `Title`               | Page heading and landing page card name.                                                                                                                                                                                                        |
+| `Category`            | Landing page group: one of the categories listed below, matched ignoring case and spaces. Blank puts the roadmap under "Other roadmaps".                                                                                                        |
 | `Family`              | Optional product family, for example `Single Record`. Shown with a swatch in the roadmap's colour above the title on the landing page card and the roadmap page. The roadmap page's heading and title read `Single Record: Nursing Healthcare`. |
-| `Status label`        | Shown as text under the title on the roadmap page (`Status: Beta`) and above it on the landing page card, for example `Beta`. |
-| `Last updated`        | `YYYY-MM-DD` or `DD/MM/YYYY`.                                    |
-| `Colour`              | Hex highlight colour, for example `#325083`. Used on the landing page card and as the edge under the roadmap page's intro. |
-| `Vision`              | "Our vision", at the top of the roadmap page under the title. Leave blank to show a general intro sentence instead. |
-| `Service description` | "Our value" section and landing page summary. Blank hides it.    |
-| `Product Lead`        | "Product lead" under the title on the roadmap page. Blank hides it. |
+| `Status label`        | Shown as text under the title on the roadmap page (`Status: Beta`) and above it on the landing page card, for example `Beta`.                                                                                                                   |
+| `Last updated`        | `YYYY-MM-DD` or `DD/MM/YYYY`.                                                                                                                                                                                                                   |
+| `Colour`              | Hex highlight colour, for example `#325083`. Used on the landing page card and as the edge under the roadmap page's intro.                                                                                                                      |
+| `Vision`              | "Our vision", at the top of the roadmap page under the title. Leave blank to show a general intro sentence instead.                                                                                                                             |
+| `Service description` | "Our value" section and landing page summary. Blank hides it.                                                                                                                                                                                   |
+| `Product Lead`        | "Product lead" under the title on the roadmap page. Blank hides it.                                                                                                                                                                             |
 
 `Category` must be one of these, and the landing page shows them in this
 order (best set up as a dropdown with **Data → Data validation**):
@@ -121,16 +122,16 @@ category, roadmaps are sorted by title.
 
 **Roadmap tabs**: one row per card.
 
-| Column            | Use                                                                                         |
-| ----------------- | ------------------------------------------------------------------------------------------- |
-| `Title`           | Card heading. Required.                                                                     |
-| `Description`     | What the work is. Each line shows as its own paragraph; start lines with `- ` to make a bullet list. |
-| `Outcome`         | What changes when it is done. Optional. Lines and `- ` bullets work as in `Description`.    |
-| `Horizon`         | `Now`, `Next`, `Later`, `Recently delivered`, `Delivered this year` or `Not doing`. Required. |
-| `Phase`           | Free-text tag shown above the card title, for example `Discovery`.                          |
-| `Labels`          | Comma separated; each becomes a tag.                                                        |
-| `Organisations`   | Who the work is for: organisation codes from the list below, comma separated. Optional.     |
-| `Details`         | Expandable "What this covers" list. One bullet per line; start a line with `-` to nest it.  |
+| Column          | Use                                                                                                  |
+| --------------- | ---------------------------------------------------------------------------------------------------- |
+| `Title`         | Card heading. Required.                                                                              |
+| `Description`   | What the work is. Each line shows as its own paragraph; start lines with `- ` to make a bullet list. |
+| `Outcome`       | What changes when it is done. Optional. Lines and `- ` bullets work as in `Description`.             |
+| `Horizon`       | `Now`, `Next`, `Later`, `Recently delivered`, `Delivered this year` or `Not doing`. Required.        |
+| `Phase`         | Free-text tag shown above the card title, for example `Discovery`.                                   |
+| `Labels`        | Comma separated; each becomes a tag.                                                                 |
+| `Organisations` | Who the work is for: organisation codes from the list below, comma separated. Optional.              |
+| `Details`       | Expandable "What this covers" list. One bullet per line; start a line with `-` to nest it.           |
 
 `Organisations` takes these codes, matched ignoring case, spaces and punctuation:
 

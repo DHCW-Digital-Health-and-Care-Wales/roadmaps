@@ -1,6 +1,6 @@
-import type { InfoPageId } from './router';
-import { UI } from './strings';
-import type { Localised } from './types';
+import type { InfoPageId } from "./router"
+import { UI } from "./strings"
+import type { Localised } from "./types"
 
 /**
  * Accessibility statement (UK public sector sites need one) and privacy note
@@ -19,4 +19,4 @@ export const INFO_PAGES: Record<
     heading: UI.privacyHeading,
     paragraphs: [UI.privacyTracking, UI.privacyFonts],
   },
-};
+}

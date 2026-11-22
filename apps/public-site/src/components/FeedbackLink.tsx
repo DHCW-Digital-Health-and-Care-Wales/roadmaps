@@ -1,6 +1,6 @@
-import { FEEDBACK_URL } from '../lib/links';
-import { UI } from '../lib/strings';
-import { T } from './T';
+import { FEEDBACK_URL } from "../lib/links"
+import { UI } from "../lib/strings"
+import { T } from "./T"
 
 /** "Give feedback" in body text, opening the feedback issue form. */
 export function FeedbackLink() {
@@ -13,5 +13,5 @@ export function FeedbackLink() {
     >
       <T value={UI.giveFeedback} />
     </a>
-  );
+  )
 }

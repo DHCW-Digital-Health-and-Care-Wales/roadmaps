@@ -1,13 +1,13 @@
-import { useState } from 'react';
+import { useState } from "react"
 import {
   countItems,
   includesAllWales,
   itemsStatus,
-} from '../lib/roadmap-helpers';
-import { setOrgFilter } from '../lib/router';
-import { UI } from '../lib/strings';
-import { type Roadmap, NO_ORG_FILTER, type OrgFilter } from '../lib/types';
-import { T } from './T';
+} from "../lib/roadmap-helpers"
+import { setOrgFilter } from "../lib/router"
+import { UI } from "../lib/strings"
+import { type Roadmap, NO_ORG_FILTER, type OrgFilter } from "../lib/types"
+import { T } from "./T"
 
 /**
  * Under a filtered roadmap's intro: how many items are shown, and a button to
@@ -17,10 +17,10 @@ export function FilterBanner({
   roadmap,
   filter,
 }: {
-  roadmap: Roadmap;
-  filter: OrgFilter;
+  roadmap: Roadmap
+  filter: OrgFilter
 }) {
-  if (!filter.org) return null;
+  if (!filter.org) return null
 
   return (
     <div className="mt-6 max-w-3xl rounded-card border border-l-4 border-border border-l-action bg-surface p-4">
@@ -34,7 +34,7 @@ export function FilterBanner({
       <p className="mt-1 text-sm text-ink-700">
         {includesAllWales(filter) ? (
           <>
-            <T value={UI.includesAllWales} />{' '}
+            <T value={UI.includesAllWales} />{" "}
           </>
         ) : null}
         <T value={UI.filterHelp} />
@@ -42,16 +42,16 @@ export function FilterBanner({
       <button
         type="button"
         onClick={() => {
-          setOrgFilter(NO_ORG_FILTER);
+          setOrgFilter(NO_ORG_FILTER)
           // The banner goes, so move focus to the page heading.
-          document.getElementById('roadmap-title')?.focus();
+          document.getElementById("roadmap-title")?.focus()
         }}
         className="mt-3 text-sm font-medium text-action underline underline-offset-4 hover:decoration-2"
       >
         <T value={UI.showAllItems} />
       </button>
     </div>
-  );
+  )
 }
 
 /**
@@ -63,12 +63,12 @@ export function FilterAnnouncer({
   roadmap,
   filter,
 }: {
-  roadmap: Roadmap;
-  filter: OrgFilter;
+  roadmap: Roadmap
+  filter: OrgFilter
 }) {
-  const [initial] = useState(filter);
-  const [changed, setChanged] = useState(false);
-  if (!changed && filter !== initial) setChanged(true);
+  const [initial] = useState(filter)
+  const [changed, setChanged] = useState(false)
+  if (!changed && filter !== initial) setChanged(true)
 
   return (
     <p role="status" className="sr-only">
@@ -76,5 +76,5 @@ export function FilterAnnouncer({
         <T value={itemsStatus(countItems(roadmap, filter), filter)} />
       ) : null}
     </p>
-  );
+  )
 }

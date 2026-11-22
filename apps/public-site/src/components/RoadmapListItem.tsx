@@ -1,13 +1,13 @@
-import { useId } from 'react';
-import { ChevronDown } from 'lucide-react';
-import type { RoadmapItem } from '../lib/types';
-import { DETAILS_HEADING } from '../lib/content';
-import { isExpandable } from '../lib/roadmap-helpers';
-import { UI } from '../lib/strings';
-import { DetailList } from './DetailList';
-import { OrgPills } from './OrgPills';
-import { RichText } from './RichText';
-import { T } from './T';
+import { useId } from "react"
+import { ChevronDown } from "lucide-react"
+import type { RoadmapItem } from "../lib/types"
+import { DETAILS_HEADING } from "../lib/content"
+import { isExpandable } from "../lib/roadmap-helpers"
+import { UI } from "../lib/strings"
+import { DetailList } from "./DetailList"
+import { OrgPills } from "./OrgPills"
+import { RichText } from "./RichText"
+import { T } from "./T"
 
 /**
  * One row in the list view. The title opens the outcome and details when the
@@ -19,17 +19,17 @@ export function RoadmapListItem({
   open,
   onToggle,
 }: {
-  item: RoadmapItem;
-  open: boolean;
-  onToggle: () => void;
+  item: RoadmapItem
+  open: boolean
+  onToggle: () => void
 }) {
-  const panelId = useId();
-  const expandable = isExpandable(item);
+  const panelId = useId()
+  const expandable = isExpandable(item)
   const title = (
     <span className="text-lg font-bold">
       <T value={item.title} />
     </span>
-  );
+  )
 
   return (
     <li data-filter-card="" className="border-b border-border py-4">
@@ -47,7 +47,7 @@ export function RoadmapListItem({
             </span>
             <ChevronDown
               aria-hidden="true"
-              className={`mt-1 h-5 w-5 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}
+              className={`mt-1 h-5 w-5 shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
               strokeWidth={2.5}
             />
           </button>
@@ -110,5 +110,5 @@ export function RoadmapListItem({
         <OrgPills organisations={item.organisations} className="mt-2" />
       ) : null}
     </li>
-  );
+  )
 }

@@ -1,9 +1,9 @@
-import { ChevronDown } from 'lucide-react';
-import type { Roadmap, OrgFilter } from '../lib/types';
-import { HORIZONS, ROADMAP_DESCRIPTION, ROADMAP_HEADING } from '../lib/content';
-import { filterItems, placementHeadingId } from '../lib/roadmap-helpers';
-import { HorizonPhase } from './HorizonPhase';
-import { T } from './T';
+import { ChevronDown } from "lucide-react"
+import type { Roadmap, OrgFilter } from "../lib/types"
+import { HORIZONS, ROADMAP_DESCRIPTION, ROADMAP_HEADING } from "../lib/content"
+import { filterItems, placementHeadingId } from "../lib/roadmap-helpers"
+import { HorizonPhase } from "./HorizonPhase"
+import { T } from "./T"
 
 /**
  * The roadmap itself: a heading, followed by the three horizons stacked as a
@@ -16,11 +16,11 @@ export function RoadmapHorizons({
   roadmap,
   filter,
 }: {
-  roadmap: Roadmap;
-  filter: OrgFilter;
+  roadmap: Roadmap
+  filter: OrgFilter
 }) {
-  const headingId = 'roadmap-heading';
-  const lastIndex = HORIZONS.length - 1;
+  const headingId = "roadmap-heading"
+  const lastIndex = HORIZONS.length - 1
 
   return (
     <section aria-labelledby={headingId}>
@@ -54,5 +54,5 @@ export function RoadmapHorizons({
         ))}
       </ol>
     </section>
-  );
+  )
 }

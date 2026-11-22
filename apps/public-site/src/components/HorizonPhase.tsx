@@ -1,17 +1,17 @@
-import type { Localised, OrgFilter } from '../lib/types';
-import { countInParentheses, type ShownItem } from '../lib/roadmap-helpers';
-import { EmptyItems } from './EmptyItems';
-import { RoadmapCard } from './RoadmapCard';
-import { T } from './T';
+import type { Localised, OrgFilter } from "../lib/types"
+import { countInParentheses, type ShownItem } from "../lib/roadmap-helpers"
+import { EmptyItems } from "./EmptyItems"
+import { RoadmapCard } from "./RoadmapCard"
+import { T } from "./T"
 
 interface HorizonPhaseProps {
-  label: Localised;
+  label: Localised
   /** The items that match the organisation filter. */
-  items: ShownItem[];
+  items: ShownItem[]
   /** The number of items before filtering. */
-  total: number;
-  filter: OrgFilter;
-  headingId: string;
+  total: number
+  filter: OrgFilter
+  headingId: string
 }
 
 /**
@@ -42,7 +42,7 @@ export function HorizonPhase({
       >
         <span>
           <T value={label} />
-        </span>{' '}
+        </span>{" "}
         <span className="text-base font-normal text-white/80">
           <T value={countInParentheses({ shown: items.length, total })} />
         </span>
@@ -66,5 +66,5 @@ export function HorizonPhase({
         )}
       </div>
     </section>
-  );
+  )
 }

@@ -1,18 +1,18 @@
-import type { OrganisationId, Roadmap, OrgFilter } from '../lib/types';
-import { SECTIONS } from '../lib/content';
-import { filterItems, showsPlacement } from '../lib/roadmap-helpers';
-import type { View } from '../lib/router';
-import { RoadmapIntro } from '../components/RoadmapIntro';
-import { OrgFilterDisclosure } from '../components/OrgFilterDisclosure';
+import type { OrganisationId, Roadmap, OrgFilter } from "../lib/types"
+import { SECTIONS } from "../lib/content"
+import { filterItems, showsPlacement } from "../lib/roadmap-helpers"
+import type { View } from "../lib/router"
+import { RoadmapIntro } from "../components/RoadmapIntro"
+import { OrgFilterDisclosure } from "../components/OrgFilterDisclosure"
 import {
   FilterAnnouncer,
   FilterBanner,
-} from '../components/RoadmapFilterStatus';
-import { OurValue } from '../components/OurValue';
-import { HorizonExplainer } from '../components/HorizonExplainer';
-import { RoadmapSection } from '../components/RoadmapSection';
-import { RoadmapHorizons } from '../components/RoadmapHorizons';
-import { RoadmapList } from '../components/RoadmapList';
+} from "../components/RoadmapFilterStatus"
+import { OurValue } from "../components/OurValue"
+import { HorizonExplainer } from "../components/HorizonExplainer"
+import { RoadmapSection } from "../components/RoadmapSection"
+import { RoadmapHorizons } from "../components/RoadmapHorizons"
+import { RoadmapList } from "../components/RoadmapList"
 
 /**
  * A single product roadmap, built from one tab of the Google Sheet, showing
@@ -24,13 +24,13 @@ export function RoadmapPage({
   filter,
   organisations,
 }: {
-  roadmap: Roadmap;
-  view: View;
-  filter: OrgFilter;
+  roadmap: Roadmap
+  view: View
+  filter: OrgFilter
   /** The organisations the filter offers. */
-  organisations: readonly OrganisationId[];
+  organisations: readonly OrganisationId[]
 }) {
-  const sections = (placement: 'before' | 'after') =>
+  const sections = (placement: "before" | "after") =>
     SECTIONS.filter(
       (section) =>
         section.placement === placement &&
@@ -43,7 +43,7 @@ export function RoadmapPage({
         total={roadmap.items[section.id].length}
         filter={filter}
       />
-    ));
+    ))
 
   return (
     <>
@@ -65,11 +65,11 @@ export function RoadmapPage({
       <OurValue meta={roadmap.meta} />
       <HorizonExplainer view={view} />
 
-      {view === 'list' ? (
+      {view === "list" ? (
         <RoadmapList key={roadmap.slug} roadmap={roadmap} filter={filter} />
       ) : (
         <>
-          {sections('before')}
+          {sections("before")}
 
           <div
             id="roadmap"
@@ -80,9 +80,9 @@ export function RoadmapPage({
             </div>
           </div>
 
-          {sections('after')}
+          {sections("after")}
         </>
       )}
     </>
-  );
+  )
 }

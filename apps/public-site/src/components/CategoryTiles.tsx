@@ -2,12 +2,12 @@ import {
   categorySectionId,
   roadmapCount,
   type CategoryTile,
-} from '../lib/roadmap-helpers';
-import { UI } from '../lib/strings';
-import { CategoryIcon } from './CategoryIcon';
-import { T } from './T';
+} from "../lib/roadmap-helpers"
+import { UI } from "../lib/strings"
+import { CategoryIcon } from "./CategoryIcon"
+import { T } from "./T"
 
-const NAV_ID = 'categories';
+const NAV_ID = "categories"
 
 /**
  * Jump links to each category's section, with the number of matches. A
@@ -15,7 +15,7 @@ const NAV_ID = 'categories';
  * Nothing is shown if there are no tiles.
  */
 export function CategoryTiles({ tiles }: { tiles: CategoryTile[] }) {
-  if (tiles.length === 0) return null;
+  if (tiles.length === 0) return null
 
   return (
     <nav id={NAV_ID} aria-labelledby={`${NAV_ID}-heading`} className="mt-8">
@@ -29,7 +29,7 @@ export function CategoryTiles({ tiles }: { tiles: CategoryTile[] }) {
               <CategoryIcon category={category} size="small" />
               <span>
                 <span
-                  className={`block text-lg font-bold text-heading ${count ? 'group-hover:underline' : ''}`}
+                  className={`block text-lg font-bold text-heading ${count ? "group-hover:underline" : ""}`}
                 >
                   <T value={category.label} />
                 </span>
@@ -41,9 +41,9 @@ export function CategoryTiles({ tiles }: { tiles: CategoryTile[] }) {
                 </span>
               </span>
             </>
-          );
+          )
           const tileClass =
-            'flex h-full gap-3.5 rounded-card border border-border bg-surface px-5 py-4 text-ink-900 no-underline';
+            "flex h-full gap-3.5 rounded-card border border-border bg-surface px-5 py-4 text-ink-900 no-underline"
           return (
             <li key={category.id}>
               {count ? (
@@ -59,9 +59,9 @@ export function CategoryTiles({ tiles }: { tiles: CategoryTile[] }) {
                 </div>
               )}
             </li>
-          );
+          )
         })}
       </ul>
     </nav>
-  );
+  )
 }

@@ -1,8 +1,8 @@
-import { fill, LANGUAGES, useLanguage } from '../lib/i18n';
-import { pathFor } from '../lib/router';
-import { UI } from '../lib/strings';
-import { ArrowLink } from './ArrowLink';
-import { T } from './T';
+import { fill, LANGUAGES, useLanguage } from "../lib/i18n"
+import { pathFor } from "../lib/router"
+import { UI } from "../lib/strings"
+import { ArrowLink } from "./ArrowLink"
+import { T } from "./T"
 
 /**
  * An empty `slug` gives the generic message for the prerendered 404.html, in
@@ -10,7 +10,7 @@ import { T } from './T';
  * JavaScript.
  */
 export function NotFoundState({ slug }: { slug: string }) {
-  const { lang } = useLanguage();
+  const { lang } = useLanguage()
 
   return (
     <section className="bg-surface-subtle px-4 pb-16 pt-6 sm:px-6">
@@ -20,7 +20,7 @@ export function NotFoundState({ slug }: { slug: string }) {
             <T value={UI.notFoundHeading} />
           ) : (
             <>
-              <span lang="cy">{UI.notFoundHeading.cy}</span> /{' '}
+              <span lang="cy">{UI.notFoundHeading.cy}</span> /{" "}
               <span lang="en">{UI.notFoundHeading.en}</span>
             </>
           )}
@@ -52,5 +52,5 @@ export function NotFoundState({ slug }: { slug: string }) {
         )}
       </div>
     </section>
-  );
+  )
 }

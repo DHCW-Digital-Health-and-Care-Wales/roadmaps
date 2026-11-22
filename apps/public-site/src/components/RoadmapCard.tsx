@@ -1,11 +1,11 @@
-import { ChevronRight, Layers, Tag } from 'lucide-react';
-import { DETAILS_HEADING } from '../lib/content';
-import { UI } from '../lib/strings';
-import type { RoadmapItem } from '../lib/types';
-import { DetailList } from './DetailList';
-import { OrgPills } from './OrgPills';
-import { RichText } from './RichText';
-import { T } from './T';
+import { ChevronRight, Layers, Tag } from "lucide-react"
+import { DETAILS_HEADING } from "../lib/content"
+import { UI } from "../lib/strings"
+import type { RoadmapItem } from "../lib/types"
+import { DetailList } from "./DetailList"
+import { OrgPills } from "./OrgPills"
+import { RichText } from "./RichText"
+import { T } from "./T"
 
 /**
  * A single roadmap item. Shows the phase, title, description and outcome, then
@@ -17,17 +17,17 @@ export function RoadmapCard({
   item,
   headingLevel = 4,
 }: {
-  item: RoadmapItem;
-  headingLevel?: 3 | 4;
+  item: RoadmapItem
+  headingLevel?: 3 | 4
 }) {
-  const Heading = headingLevel === 3 ? 'h3' : 'h4';
-  const labels = item.labels ?? [];
+  const Heading = headingLevel === 3 ? "h3" : "h4"
+  const labels = item.labels ?? []
   // Each footer item has its own check below; keep this in step with them so a
   // card with none gets no empty footer.
   const hasFooter =
     item.details !== undefined ||
     labels.length > 0 ||
-    item.organisations !== undefined;
+    item.organisations !== undefined
 
   return (
     <article
@@ -101,7 +101,7 @@ export function RoadmapCard({
               />
               <span>
                 <span className="sr-only">
-                  <T value={UI.tags} />{' '}
+                  <T value={UI.tags} />{" "}
                 </span>
                 {labels.map((label, i) => (
                   // Each dot ends the topic before it, so a wrapped line never
@@ -120,7 +120,7 @@ export function RoadmapCard({
                           </span>
                         </>
                       ) : null}
-                    </span>{' '}
+                    </span>{" "}
                   </span>
                 ))}
               </span>
@@ -136,5 +136,5 @@ export function RoadmapCard({
         </div>
       ) : null}
     </article>
-  );
+  )
 }

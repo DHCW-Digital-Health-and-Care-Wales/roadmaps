@@ -1,11 +1,11 @@
-import { HORIZON_NOTE, HORIZONS } from '../lib/content';
-import type { View } from '../lib/router';
-import { placementHeadingId } from '../lib/roadmap-helpers';
-import { UI } from '../lib/strings';
-import { T } from './T';
+import { HORIZON_NOTE, HORIZONS } from "../lib/content"
+import type { View } from "../lib/router"
+import { placementHeadingId } from "../lib/roadmap-helpers"
+import { UI } from "../lib/strings"
+import { T } from "./T"
 
 const horizonLink =
-  'text-action underline underline-offset-4 hover:decoration-2';
+  "text-action underline underline-offset-4 hover:decoration-2"
 
 /**
  * Plain-English explainer of what Now, Next and Later mean, plus a note that
@@ -15,14 +15,14 @@ const horizonLink =
  * horizon name links to its section further down the page.
  */
 export function HorizonExplainer({ view }: { view: View }) {
-  const headingId = 'horizons-explainer-heading';
-  const note = <T value={HORIZON_NOTE} />;
+  const headingId = "horizons-explainer-heading"
+  const note = <T value={HORIZON_NOTE} />
 
   return (
     <section
       aria-labelledby={headingId}
       className={`page-section ${
-        view === 'list' ? 'bg-surface' : 'bg-surface-subtle'
+        view === "list" ? "bg-surface" : "bg-surface-subtle"
       }`}
     >
       <div className="mx-auto max-w-content">
@@ -30,7 +30,7 @@ export function HorizonExplainer({ view }: { view: View }) {
           <T value={UI.horizonsHeading} />
         </h2>
 
-        {view === 'list' ? (
+        {view === "list" ? (
           <div className="max-w-3xl">
             <p className="mt-4 leading-relaxed text-ink-700">{note}</p>
             <dl className="mt-6 divide-y divide-border border-y border-border">
@@ -78,5 +78,5 @@ export function HorizonExplainer({ view }: { view: View }) {
         )}
       </div>
     </section>
-  );
+  )
 }

@@ -1,9 +1,9 @@
-import { useLanguage } from '../lib/i18n';
-import { INFO_PAGES } from '../lib/info-pages';
-import { pathFor, type InfoPageId } from '../lib/router';
-import { UI } from '../lib/strings';
-import { ArrowLink } from '../components/ArrowLink';
-import { T } from '../components/T';
+import { useLanguage } from "../lib/i18n"
+import { INFO_PAGES } from "../lib/info-pages"
+import { pathFor, type InfoPageId } from "../lib/router"
+import { UI } from "../lib/strings"
+import { ArrowLink } from "../components/ArrowLink"
+import { T } from "../components/T"
 
 /**
  * The accessibility statement or privacy note, on a page of its own: the
@@ -12,9 +12,9 @@ import { T } from '../components/T';
  * link, as visitors may arrive here from anywhere.
  */
 export function InfoPage({ page }: { page: InfoPageId }) {
-  const { lang } = useLanguage();
-  const { heading, paragraphs } = INFO_PAGES[page];
-  const home = pathFor(lang, null);
+  const { lang } = useLanguage()
+  const { heading, paragraphs } = INFO_PAGES[page]
+  const home = pathFor(lang, null)
 
   return (
     <>
@@ -41,5 +41,5 @@ export function InfoPage({ page }: { page: InfoPageId }) {
         </div>
       </div>
     </>
-  );
+  )
 }

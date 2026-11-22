@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
-import type { RoadmapMeta } from '../lib/types';
-import { T } from './T';
+import type { ReactNode } from "react"
+import type { RoadmapMeta } from "../lib/types"
+import { T } from "./T"
 
 /**
  * A roadmap's family name beside a swatch in the roadmap's colour, shared by
@@ -9,14 +9,14 @@ import { T } from './T';
  */
 export function FamilyLabel({
   meta,
-  as: Tag = 'p',
-  className = '',
+  as: Tag = "p",
+  className = "",
   children,
 }: {
-  meta: Pick<RoadmapMeta, 'family' | 'colour'>;
-  as?: 'p' | 'span';
-  className?: string;
-  children?: ReactNode;
+  meta: Pick<RoadmapMeta, "family" | "colour">
+  as?: "p" | "span"
+  className?: string
+  children?: ReactNode
 }) {
   return (
     <Tag
@@ -32,5 +32,5 @@ export function FamilyLabel({
         {children}
       </span>
     </Tag>
-  );
+  )
 }

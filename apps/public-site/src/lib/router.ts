@@ -3,9 +3,9 @@ import {
   useState,
   useSyncExternalStore,
   type MouseEvent,
-} from 'react';
-import { isLang, type Lang } from './i18n';
-import { isOrganisationId, NO_ORG_FILTER, type OrgFilter } from './types';
+} from "react"
+import { isLang, type Lang } from "./i18n"
+import { isOrganisationId, NO_ORG_FILTER, type OrgFilter } from "./types"
 
 /**
  * Path routing: every page sits under its language, `<base><lang>/` for the
@@ -15,75 +15,75 @@ import { isOrganisationId, NO_ORG_FILTER, type OrgFilter } from './types';
  * scripts/prerender.ts without JavaScript). The URL hash stays free for in-page
  * links.
  */
-const BASE = import.meta.env.BASE_URL;
+const BASE = import.meta.env.BASE_URL
 
 /** `lang` is null outside a language folder; `slug` is null on a landing page. */
 export interface Route {
-  lang: Lang | null;
-  slug: string | null;
+  lang: Lang | null
+  slug: string | null
 }
 
 /** Pages that sit beside the roadmaps, under their own slugs. */
-export const INFO_PAGE_IDS = ['accessibility', 'privacy'] as const;
-export type InfoPageId = (typeof INFO_PAGE_IDS)[number];
+export const INFO_PAGE_IDS = ["accessibility", "privacy"] as const
+export type InfoPageId = (typeof INFO_PAGE_IDS)[number]
 
 export function isInfoPage(slug: string | null): slug is InfoPageId {
-  return INFO_PAGE_IDS.some((id) => id === slug);
+  return INFO_PAGE_IDS.some((id) => id === slug)
 }
 
 function decode(value: string) {
   try {
-    return decodeURIComponent(value);
+    return decodeURIComponent(value)
   } catch {
-    return value;
+    return value
   }
 }
 
 export function routeFromPath(pathname: string): Route {
-  if (!pathname.startsWith(BASE)) return { lang: null, slug: null };
+  if (!pathname.startsWith(BASE)) return { lang: null, slug: null }
   const path = pathname
     .slice(BASE.length)
-    .replace(/(^|\/)index\.html$/, '')
-    .replace(/\/+$/, '');
-  const [first, ...rest] = path.split('/');
-  const lang = isLang(first) ? first : null;
-  const slug = lang ? rest.join('/') : path;
-  return { lang, slug: slug ? decode(slug) : null };
+    .replace(/(^|\/)index\.html$/, "")
+    .replace(/\/+$/, "")
+  const [first, ...rest] = path.split("/")
+  const lang = isLang(first) ? first : null
+  const slug = lang ? rest.join("/") : path
+  return { lang, slug: slug ? decode(slug) : null }
 }
 
 /** A product page, or the landing page when `slug` is null or empty. */
 export function pathFor(lang: Lang, slug: string | null): string {
   return slug
     ? `${BASE}${lang}/${encodeURIComponent(slug)}/`
-    : `${BASE}${lang}/`;
+    : `${BASE}${lang}/`
 }
 
 /** A roadmap's published JSON, shared by both languages. */
 export function dataPathFor(slug: string): string {
-  return `${BASE}${encodeURIComponent(slug)}/roadmap.json`;
+  return `${BASE}${encodeURIComponent(slug)}/roadmap.json`
 }
 
 /** How a roadmap is laid out: cards by default, or a list with `?view=list`. */
-export type View = 'cards' | 'list';
+export type View = "cards" | "list"
 
 /** Only exactly `view=list` opts in, so anything else matches the prerender. */
 export function viewFromSearch(search: string): View {
-  return new URLSearchParams(search).get('view') === 'list' ? 'list' : 'cards';
+  return new URLSearchParams(search).get("view") === "list" ? "list" : "cards"
 }
 
 /** The current view. Always cards in the prerender, which has no URL. */
 export function useView(): View {
   const [view, setView] = useState<View>(() =>
-    typeof window === 'undefined'
-      ? 'cards'
+    typeof window === "undefined"
+      ? "cards"
       : viewFromSearch(window.location.search),
-  );
+  )
   useEffect(() => {
-    const onPop = () => setView(viewFromSearch(window.location.search));
-    window.addEventListener('popstate', onPop);
-    return () => window.removeEventListener('popstate', onPop);
-  }, []);
-  return view;
+    const onPop = () => setView(viewFromSearch(window.location.search))
+    window.addEventListener("popstate", onPop)
+    return () => window.removeEventListener("popstate", onPop)
+  }, [])
+  return view
 }
 
 /**
@@ -92,56 +92,56 @@ export function useView(): View {
  * the organisation is all of Wales itself.
  */
 export function orgFilterFromSearch(search: string): OrgFilter {
-  const params = new URLSearchParams(search);
-  const org = params.get('org');
-  if (!isOrganisationId(org)) return NO_ORG_FILTER;
+  const params = new URLSearchParams(search)
+  const org = params.get("org")
+  if (!isOrganisationId(org)) return NO_ORG_FILTER
   return {
     org,
-    includeNational: org === 'national' || params.get('all') !== 'no',
-  };
+    includeNational: org === "national" || params.get("all") !== "no",
+  }
 }
 
 /** `href` with the filter's params in place of any it had, keeping the rest. */
 export function withOrgFilter(href: string, filter: OrgFilter): string {
-  const [beforeHash, hash] = splitAt(href, '#');
-  const [path, query] = splitAt(beforeHash, '?');
-  const params = new URLSearchParams(query);
-  params.delete('org');
-  params.delete('all');
+  const [beforeHash, hash] = splitAt(href, "#")
+  const [path, query] = splitAt(beforeHash, "?")
+  const params = new URLSearchParams(query)
+  params.delete("org")
+  params.delete("all")
   if (filter.org) {
-    params.set('org', filter.org);
-    if (filter.org !== 'national' && !filter.includeNational) {
-      params.set('all', 'no');
+    params.set("org", filter.org)
+    if (filter.org !== "national" && !filter.includeNational) {
+      params.set("all", "no")
     }
   }
-  const search = params.toString();
-  return `${path}${search ? `?${search}` : ''}${hash ? `#${hash}` : ''}`;
+  const search = params.toString()
+  return `${path}${search ? `?${search}` : ""}${hash ? `#${hash}` : ""}`
 }
 
 function splitAt(value: string, separator: string): [string, string] {
-  const at = value.indexOf(separator);
-  return at === -1 ? [value, ''] : [value.slice(0, at), value.slice(at + 1)];
+  const at = value.indexOf(separator)
+  return at === -1 ? [value, ""] : [value.slice(0, at), value.slice(at + 1)]
 }
 
 const sameOrgFilter = (a: OrgFilter, b: OrgFilter) =>
-  a.org === b.org && a.includeNational === b.includeNational;
+  a.org === b.org && a.includeNational === b.includeNational
 
 const subscribePopState = (onChange: () => void) => {
-  window.addEventListener('popstate', onChange);
-  return () => window.removeEventListener('popstate', onChange);
-};
+  window.addEventListener("popstate", onChange)
+  return () => window.removeEventListener("popstate", onChange)
+}
 
 // useSyncExternalStore needs the same object until the filter changes.
-let lastSearch: string | null = null;
-let lastFilter = NO_ORG_FILTER;
+let lastSearch: string | null = null
+let lastFilter = NO_ORG_FILTER
 function currentOrgFilter(): OrgFilter {
-  const { search } = window.location;
+  const { search } = window.location
   if (search !== lastSearch) {
-    lastSearch = search;
-    const next = orgFilterFromSearch(search);
-    if (!sameOrgFilter(next, lastFilter)) lastFilter = next;
+    lastSearch = search
+    const next = orgFilterFromSearch(search)
+    if (!sameOrgFilter(next, lastFilter)) lastFilter = next
   }
-  return lastFilter;
+  return lastFilter
 }
 
 /**
@@ -153,7 +153,7 @@ export function useOrgFilter(): OrgFilter {
     subscribePopState,
     currentOrgFilter,
     () => NO_ORG_FILTER,
-  );
+  )
 }
 
 /**
@@ -161,16 +161,16 @@ export function useOrgFilter(): OrgFilter {
  * the page as it was rather than stepping through each change.
  */
 export function setOrgFilter(filter: OrgFilter) {
-  const { pathname, search, hash } = window.location;
+  const { pathname, search, hash } = window.location
   window.history.replaceState(
     window.history.state,
-    '',
+    "",
     withOrgFilter(`${pathname}${search}${hash}`, filter),
-  );
-  window.dispatchEvent(new PopStateEvent('popstate'));
+  )
+  window.dispatchEvent(new PopStateEvent("popstate"))
 }
 
-const subscribeNever = () => () => undefined;
+const subscribeNever = () => () => undefined
 
 /**
  * False in the prerender and while hydrating, so links that need JavaScript
@@ -181,16 +181,16 @@ export function useHasJs(): boolean {
     subscribeNever,
     () => true,
     () => false,
-  );
+  )
 }
 
 export function navigate(href: string, { scroll = true } = {}) {
-  const { pathname, search, hash } = window.location;
+  const { pathname, search, hash } = window.location
   if (href !== `${pathname}${search}${hash}`) {
-    window.history.pushState({}, '', href);
+    window.history.pushState({}, "", href)
   }
-  window.dispatchEvent(new PopStateEvent('popstate'));
-  if (scroll) window.scrollTo(0, 0);
+  window.dispatchEvent(new PopStateEvent("popstate"))
+  if (scroll) window.scrollTo(0, 0)
 }
 
 /** Click handler for links that should navigate without a full reload. */
@@ -202,29 +202,29 @@ export function onNavigate(href: string, options?: { scroll?: boolean }) {
       event.shiftKey ||
       event.button !== 0
     ) {
-      return;
+      return
     }
-    event.preventDefault();
-    navigate(href, options);
-  };
+    event.preventDefault()
+    navigate(href, options)
+  }
 }
 
 /** The current route. The prerender passes `server` because there is no URL. */
 export function useRoute(server?: Route): Route {
   const [route, setRoute] = useState(
     () => server ?? routeFromPath(window.location.pathname),
-  );
+  )
   useEffect(() => {
     const onPop = () => {
-      const next = routeFromPath(window.location.pathname);
+      const next = routeFromPath(window.location.pathname)
       setRoute((current) =>
         current.lang === next.lang && current.slug === next.slug
           ? current
           : next,
-      );
-    };
-    window.addEventListener('popstate', onPop);
-    return () => window.removeEventListener('popstate', onPop);
-  }, []);
-  return route;
+      )
+    }
+    window.addEventListener("popstate", onPop)
+    return () => window.removeEventListener("popstate", onPop)
+  }, [])
+  return route
 }

@@ -1,20 +1,19 @@
-import { useState } from 'react';
-import type { Roadmap, OrgFilter } from '../lib/types';
-import { fill, useLanguage } from '../lib/i18n';
+import { useState } from "react"
+import type { Roadmap, OrgFilter } from "../lib/types"
+import { fill, useLanguage } from "../lib/i18n"
 import {
   countInParentheses,
   isExpandable,
   placementHeadingId,
   roadmapGroups,
   showsPlacement,
-} from '../lib/roadmap-helpers';
-import { UI } from '../lib/strings';
-import { EmptyItems } from './EmptyItems';
-import { RoadmapListItem } from './RoadmapListItem';
-import { T } from './T';
+} from "../lib/roadmap-helpers"
+import { UI } from "../lib/strings"
+import { EmptyItems } from "./EmptyItems"
+import { RoadmapListItem } from "./RoadmapListItem"
+import { T } from "./T"
 
-const linkButton =
-  'text-action underline underline-offset-4 hover:decoration-2';
+const linkButton = "text-action underline underline-offset-4 hover:decoration-2"
 
 /**
  * The roadmap as a compact, text-first list: counts at a glance, then each
@@ -25,30 +24,30 @@ export function RoadmapList({
   roadmap,
   filter,
 }: {
-  roadmap: Roadmap;
-  filter: OrgFilter;
+  roadmap: Roadmap
+  filter: OrgFilter
 }) {
-  const { tr } = useLanguage();
-  const [open, setOpen] = useState<ReadonlySet<string>>(() => new Set());
+  const { tr } = useLanguage()
+  const [open, setOpen] = useState<ReadonlySet<string>>(() => new Set())
 
   const groups = roadmapGroups(roadmap, filter).filter((g) =>
     showsPlacement(g.id, g.total),
-  );
+  )
   // Keyed by the place in the unfiltered list, so rows stay open while filtering.
-  const keyOf = (id: string, index: number) => `${id}-${index}`;
+  const keyOf = (id: string, index: number) => `${id}-${index}`
   const expandable = groups.flatMap((g) =>
     g.items.flatMap(({ item, index }) =>
       isExpandable(item) ? [keyOf(g.id, index)] : [],
     ),
-  );
+  )
 
   const toggle = (key: string) => {
     setOpen((current) => {
-      const next = new Set(current);
-      if (!next.delete(key)) next.add(key);
-      return next;
-    });
-  };
+      const next = new Set(current)
+      if (!next.delete(key)) next.add(key)
+      return next
+    })
+  }
 
   return (
     <div
@@ -71,7 +70,7 @@ export function RoadmapList({
                         {g.items.length}
                         {g.items.length < g.total ? (
                           <span className="text-base font-normal text-ink-700">
-                            {' '}
+                            {" "}
                             <T
                               value={fill(UI.ofTotal, {
                                 total: String(g.total),
@@ -121,7 +120,7 @@ export function RoadmapList({
                 <T value={g.heading} />
                 {filter.org ? (
                   <>
-                    {' '}
+                    {" "}
                     <span className="text-lg font-normal text-ink-700">
                       <T
                         value={countInParentheses({
@@ -136,7 +135,7 @@ export function RoadmapList({
               {g.items.length > 0 ? (
                 <ul>
                   {g.items.map(({ item, index }) => {
-                    const key = keyOf(g.id, index);
+                    const key = keyOf(g.id, index)
                     return (
                       <RoadmapListItem
                         key={key}
@@ -144,7 +143,7 @@ export function RoadmapList({
                         open={open.has(key)}
                         onToggle={() => toggle(key)}
                       />
-                    );
+                    )
                   })}
                 </ul>
               ) : (
@@ -160,5 +159,5 @@ export function RoadmapList({
         </div>
       </div>
     </div>
-  );
+  )
 }

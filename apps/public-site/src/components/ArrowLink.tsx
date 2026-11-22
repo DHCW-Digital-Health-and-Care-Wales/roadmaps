@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
-import { ArrowRight } from 'lucide-react';
-import { onNavigate } from '../lib/router';
+import type { ReactNode } from "react"
+import { ArrowRight } from "lucide-react"
+import { onNavigate } from "../lib/router"
 
 /**
  * A link onward to another page in the site, ending with a right arrow.
@@ -10,13 +10,13 @@ import { onNavigate } from '../lib/router';
 export function ArrowLink({
   href,
   clientSide = true,
-  className = '',
+  className = "",
   children,
 }: {
-  href: string;
-  clientSide?: boolean;
-  className?: string;
-  children: ReactNode;
+  href: string
+  clientSide?: boolean
+  className?: string
+  children: ReactNode
 }) {
   return (
     <a
@@ -27,5 +27,5 @@ export function ArrowLink({
       {children}
       <ArrowRight className="h-4 w-4" aria-hidden="true" />
     </a>
-  );
+  )
 }

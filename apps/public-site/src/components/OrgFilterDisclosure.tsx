@@ -1,24 +1,24 @@
-import { useId, useRef, useState } from 'react';
-import { ChevronDown, ListFilter } from 'lucide-react';
+import { useId, useRef, useState } from "react"
+import { ChevronDown, ListFilter } from "lucide-react"
 import {
   ORGANISATION_GROUPS,
   ORGANISATION_GROUP_IDS,
   ORGANISATIONS,
   organisation,
-} from '../lib/content';
-import { ORG_FILTER_ID, ORG_SELECT_ID } from '../lib/focus';
-import { fill, useLanguage } from '../lib/i18n';
-import { setOrgFilter, useHasJs } from '../lib/router';
-import { UI } from '../lib/strings';
+} from "../lib/content"
+import { ORG_FILTER_ID, ORG_SELECT_ID } from "../lib/focus"
+import { fill, useLanguage } from "../lib/i18n"
+import { setOrgFilter, useHasJs } from "../lib/router"
+import { UI } from "../lib/strings"
 import {
   isOrganisationId,
   type OrganisationId,
   NO_ORG_FILTER,
   type OrgFilter,
-} from '../lib/types';
-import { T } from './T';
+} from "../lib/types"
+import { T } from "./T"
 
-const linkText = 'underline underline-offset-4 hover:decoration-2';
+const linkText = "underline underline-offset-4 hover:decoration-2"
 
 /**
  * "Filter by organisation": a quiet disclosure with a dropdown of the
@@ -30,13 +30,13 @@ export function OrgFilterDisclosure({
   filter,
   organisations,
   defaultOpen = false,
-  align = 'start',
-  className = '',
+  align = "start",
+  className = "",
 }: {
-  filter: OrgFilter;
+  filter: OrgFilter
   /** The organisations to offer, usually those with any work. */
-  organisations: readonly OrganisationId[];
-  defaultOpen?: boolean;
+  organisations: readonly OrganisationId[]
+  defaultOpen?: boolean
   /**
    * `end` puts the link and the panel against the right-hand edge, so the link
    * stays above the panel's right edge when it opens. It is for a caller that
@@ -44,21 +44,21 @@ export function OrgFilterDisclosure({
    * link: the link becomes a block that sits beside the float, and the panel
    * clears it to open underneath at full width.
    */
-  align?: 'start' | 'end';
-  className?: string;
+  align?: "start" | "end"
+  className?: string
 }) {
-  const { tr } = useLanguage();
-  const hasJs = useHasJs();
-  const id = useId();
-  const [open, setOpen] = useState(defaultOpen);
-  const selectRef = useRef<HTMLSelectElement>(null);
+  const { tr } = useLanguage()
+  const hasJs = useHasJs()
+  const id = useId()
+  const [open, setOpen] = useState(defaultOpen)
+  const selectRef = useRef<HTMLSelectElement>(null)
 
-  const { org, includeNational } = filter;
+  const { org, includeNational } = filter
   const options = ORGANISATIONS.filter(
     (o) => organisations.includes(o.id) || o.id === org,
-  );
-  if (!hasJs || options.length === 0) return null;
-  const end = align === 'end';
+  )
+  if (!hasJs || options.length === 0) return null
+  const end = align === "end"
 
   return (
     <details
@@ -70,7 +70,7 @@ export function OrgFilterDisclosure({
       {/* Icons sit on the first line of text (mt-0.5 centres a 16px icon in
           the 20px line), so they stay beside it when the label wraps. */}
       <summary
-        className={`${end ? 'ml-auto flex w-fit' : 'inline-flex'} cursor-pointer list-none items-start gap-1.5 rounded-sm text-sm font-medium text-action [&::-webkit-details-marker]:hidden`}
+        className={`${end ? "ml-auto flex w-fit" : "inline-flex"} cursor-pointer list-none items-start gap-1.5 rounded-sm text-sm font-medium text-action [&::-webkit-details-marker]:hidden`}
       >
         <ListFilter aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
         <span className={linkText}>
@@ -91,7 +91,7 @@ export function OrgFilterDisclosure({
       </summary>
 
       <div
-        className={`mt-3 max-w-xl rounded-card border border-border bg-surface p-4 ${end ? 'clear-both ml-auto' : ''}`}
+        className={`mt-3 max-w-xl rounded-card border border-border bg-surface p-4 ${end ? "clear-both ml-auto" : ""}`}
       >
         <label
           htmlFor={ORG_SELECT_ID}
@@ -106,19 +106,19 @@ export function OrgFilterDisclosure({
           id={ORG_SELECT_ID}
           ref={selectRef}
           aria-describedby={`${id}-org-hint`}
-          value={org ?? ''}
+          value={org ?? ""}
           onChange={(event) => {
-            const { value } = event.target;
+            const { value } = event.target
             setOrgFilter({
               org: isOrganisationId(value) ? value : null,
               includeNational,
-            });
+            })
           }}
           className="mt-1 w-full rounded-sm border-2 border-ink-700 bg-surface px-3 py-2 text-base"
         >
           <option value="">{tr(UI.allOrganisations)}</option>
           {ORGANISATION_GROUP_IDS.map((group) => {
-            const inGroup = options.filter((o) => o.group === group);
+            const inGroup = options.filter((o) => o.group === group)
             return inGroup.length > 0 ? (
               <optgroup key={group} label={tr(ORGANISATION_GROUPS[group])}>
                 {inGroup.map((o) => (
@@ -127,11 +127,11 @@ export function OrgFilterDisclosure({
                   </option>
                 ))}
               </optgroup>
-            ) : null;
+            ) : null
           })}
         </select>
 
-        {org && org !== 'national' ? (
+        {org && org !== "national" ? (
           <div className="mt-4 flex items-start gap-3">
             <input
               id={`${id}-all`}
@@ -159,9 +159,9 @@ export function OrgFilterDisclosure({
             <button
               type="button"
               onClick={() => {
-                setOrgFilter(NO_ORG_FILTER);
+                setOrgFilter(NO_ORG_FILTER)
                 // The button goes, so move focus to the dropdown.
-                selectRef.current?.focus();
+                selectRef.current?.focus()
               }}
               className={`text-sm font-medium text-action ${linkText}`}
             >
@@ -171,5 +171,5 @@ export function OrgFilterDisclosure({
         ) : null}
       </div>
     </details>
-  );
+  )
 }

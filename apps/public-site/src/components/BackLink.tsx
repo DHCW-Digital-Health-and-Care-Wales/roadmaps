@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import { onNavigate } from '../lib/router';
+import type { ReactNode } from "react"
+import { onNavigate } from "../lib/router"
 
 /**
  * A link back to a page within the site, led by a left chevron as in the DHCW
@@ -9,12 +9,12 @@ import { onNavigate } from '../lib/router';
  */
 export function BackLink({
   href,
-  className = '',
+  className = "",
   children,
 }: {
-  href: string;
-  className?: string;
-  children: ReactNode;
+  href: string
+  className?: string
+  children: ReactNode
 }) {
   return (
     <a
@@ -32,5 +32,5 @@ export function BackLink({
       </svg>
       {children}
     </a>
-  );
+  )
 }

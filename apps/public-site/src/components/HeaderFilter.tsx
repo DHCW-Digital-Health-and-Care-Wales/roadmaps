@@ -1,30 +1,30 @@
-import { ListFilter, X } from 'lucide-react';
-import { organisation } from '../lib/content';
+import { ListFilter, X } from "lucide-react"
+import { organisation } from "../lib/content"
 import {
   firstCardOnScreen,
   focusCard,
   keepInPlace,
   openOrgFilter,
   ORG_FILTER_ID,
-} from '../lib/focus';
-import { fill, useLanguage } from '../lib/i18n';
-import { setOrgFilter } from '../lib/router';
-import { UI } from '../lib/strings';
-import { type OrganisationId, NO_ORG_FILTER } from '../lib/types';
-import { T } from './T';
+} from "../lib/focus"
+import { fill, useLanguage } from "../lib/i18n"
+import { setOrgFilter } from "../lib/router"
+import { UI } from "../lib/strings"
+import { type OrganisationId, NO_ORG_FILTER } from "../lib/types"
+import { T } from "./T"
 
 /** Opens the filter panel, scrolling to it. */
-const openFilter = () => openOrgFilter({ scroll: true });
+const openFilter = () => openOrgFilter({ scroll: true })
 
 /**
  * Clears the filter, holding the first card on screen still and moving focus
  * into it, or to the filter if there is no card.
  */
 function clearFilter() {
-  const card = firstCardOnScreen();
-  keepInPlace(card, () => setOrgFilter(NO_ORG_FILTER));
+  const card = firstCardOnScreen()
+  keepInPlace(card, () => setOrgFilter(NO_ORG_FILTER))
   if (!focusCard(card)) {
-    document.querySelector<HTMLElement>(`#${ORG_FILTER_ID} summary`)?.focus();
+    document.querySelector<HTMLElement>(`#${ORG_FILTER_ID} summary`)?.focus()
   }
 }
 
@@ -33,8 +33,8 @@ function clearFilter() {
  * which opens the filter, and a button to clear it.
  */
 export function FilterChip({ org }: { org: OrganisationId }) {
-  const { tr } = useLanguage();
-  const { short } = organisation(org);
+  const { tr } = useLanguage()
+  const { short } = organisation(org)
 
   return (
     <div className="hidden sm:block">
@@ -65,7 +65,7 @@ export function FilterChip({ org }: { org: OrganisationId }) {
         </button>
       </div>
     </div>
-  );
+  )
 }
 
 /**
@@ -73,8 +73,8 @@ export function FilterChip({ org }: { org: OrganisationId }) {
  * of height `--filter-strip-height`, which index.css moves the page down by.
  */
 export function FilterStrip({ org }: { org: OrganisationId }) {
-  const { tr } = useLanguage();
-  const { short } = organisation(org);
+  const { tr } = useLanguage()
+  const { short } = organisation(org)
 
   return (
     <div
@@ -101,5 +101,5 @@ export function FilterStrip({ org }: { org: OrganisationId }) {
         <T value={UI.clear} />
       </button>
     </div>
-  );
+  )
 }

@@ -1,7 +1,7 @@
-import { useEffect, useState, type MouseEvent } from 'react';
-import { ChevronUp } from 'lucide-react';
-import { UI } from '../lib/strings';
-import { T } from './T';
+import { useEffect, useState, type MouseEvent } from "react"
+import { ChevronUp } from "lucide-react"
+import { UI } from "../lib/strings"
+import { T } from "./T"
 
 /**
  * Back-to-top button (from the Figma design). Appears after scrolling and
@@ -11,26 +11,26 @@ import { T } from './T';
  */
 export function BackToTop() {
   // Starts hidden so the prerendered HTML matches; shows on the first scroll.
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    const onScroll = () => setVisible(window.scrollY > 300);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+    const onScroll = () => setVisible(window.scrollY > 300)
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
 
   // iOS Safari doesn't reliably scroll to the empty, zero-size #top anchor (and
   // does nothing if the hash is already #top), so scroll explicitly. The href
   // stays as the fallback without JavaScript.
   const scrollToTop = (event: MouseEvent<HTMLAnchorElement>) => {
-    event.preventDefault();
+    event.preventDefault()
     // Preventing the default also skips the browser's focus-start update, so do it.
-    document.getElementById('top')?.focus({ preventScroll: true });
-    window.scrollTo({ top: 0, left: 0 });
-  };
+    document.getElementById("top")?.focus({ preventScroll: true })
+    window.scrollTo({ top: 0, left: 0 })
+  }
 
   if (!visible) {
-    return null;
+    return null
   }
 
   return (
@@ -44,5 +44,5 @@ export function BackToTop() {
         <T value={UI.backToTop} />
       </span>
     </a>
-  );
+  )
 }

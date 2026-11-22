@@ -1,13 +1,13 @@
-import type { ReactNode } from 'react';
-import type { RoadmapMeta, OrgFilter } from '../lib/types';
-import { useLanguage } from '../lib/i18n';
-import { ROADMAP_INTRO } from '../lib/content';
-import { formatDate } from '../lib/roadmap-helpers';
-import { pathFor, withOrgFilter } from '../lib/router';
-import { UI } from '../lib/strings';
-import { BackLink } from './BackLink';
-import { FamilyLabel } from './FamilyLabel';
-import { T } from './T';
+import type { ReactNode } from "react"
+import type { RoadmapMeta, OrgFilter } from "../lib/types"
+import { useLanguage } from "../lib/i18n"
+import { ROADMAP_INTRO } from "../lib/content"
+import { formatDate } from "../lib/roadmap-helpers"
+import { pathFor, withOrgFilter } from "../lib/router"
+import { UI } from "../lib/strings"
+import { BackLink } from "./BackLink"
+import { FamilyLabel } from "./FamilyLabel"
+import { T } from "./T"
 
 /**
  * Title section, rendered as the page's primary heading. A link back to all
@@ -26,46 +26,46 @@ export function RoadmapIntro({
   controls,
   children,
 }: {
-  meta: RoadmapMeta;
-  filter: OrgFilter;
-  controls?: ReactNode;
-  children?: ReactNode;
+  meta: RoadmapMeta
+  filter: OrgFilter
+  controls?: ReactNode
+  children?: ReactNode
 }) {
-  const { lang } = useLanguage();
-  const back = withOrgFilter(pathFor(lang, null), filter);
-  const metaItems: { key: string; content: ReactNode }[] = [];
+  const { lang } = useLanguage()
+  const back = withOrgFilter(pathFor(lang, null), filter)
+  const metaItems: { key: string; content: ReactNode }[] = []
   if (meta.statusLabel.en) {
     metaItems.push({
-      key: 'status',
+      key: "status",
       content: (
         <>
           <T value={UI.status} />: <T value={meta.statusLabel} />
         </>
       ),
-    });
+    })
   }
   if (meta.lastUpdated) {
     metaItems.push({
-      key: 'updated',
+      key: "updated",
       content: (
         <>
-          <T value={UI.lastUpdated} />:{' '}
+          <T value={UI.lastUpdated} />:{" "}
           <time dateTime={meta.lastUpdated}>
             {formatDate(meta.lastUpdated, lang)}
           </time>
         </>
       ),
-    });
+    })
   }
   if (meta.productLead) {
     metaItems.push({
-      key: 'lead',
+      key: "lead",
       content: (
         <>
           <T value={UI.productLead} />: {meta.productLead}
         </>
       ),
-    });
+    })
   }
 
   return (
@@ -107,7 +107,7 @@ export function RoadmapIntro({
                 <FamilyLabel meta={meta} as="span" className="mb-1">
                   {/* Not sr-only: its absolute position adds a space before the colon in the name. */}
                   <span className="[clip-path:inset(50%)]">:</span>
-                </FamilyLabel>{' '}
+                </FamilyLabel>{" "}
               </>
             ) : null}
             <T value={meta.title} />
@@ -154,5 +154,5 @@ export function RoadmapIntro({
         </div>
       </div>
     </section>
-  );
+  )
 }

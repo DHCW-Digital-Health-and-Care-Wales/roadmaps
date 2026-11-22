@@ -1,6 +1,6 @@
-import { LANGUAGES } from '../lib/i18n';
-import { UI } from '../lib/strings';
-import { T } from './T';
+import { LANGUAGES } from "../lib/i18n"
+import { UI } from "../lib/strings"
+import { T } from "./T"
 
 /**
  * GOV.UK-style phase banner at the top of every page: the beta tag with a line
@@ -31,5 +31,5 @@ export function PhaseBanner({ bilingual = false }: { bilingual?: boolean }) {
         </span>
       </p>
     </div>
-  );
+  )
 }

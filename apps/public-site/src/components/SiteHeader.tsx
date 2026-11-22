@@ -1,18 +1,18 @@
-import { useState } from 'react';
-import { Menu, X } from 'lucide-react';
-import logoImage from '../assets/dhcw-logo.png';
-import { useLanguage } from '../lib/i18n';
-import type { Localised, OrgFilter } from '../lib/types';
-import { onNavigate, pathFor, withOrgFilter } from '../lib/router';
-import { UI } from '../lib/strings';
-import { FilterChip, FilterStrip } from './HeaderFilter';
-import { LanguageToggle } from './LanguageToggle';
-import { T } from './T';
+import { useState } from "react"
+import { Menu, X } from "lucide-react"
+import logoImage from "../assets/dhcw-logo.png"
+import { useLanguage } from "../lib/i18n"
+import type { Localised, OrgFilter } from "../lib/types"
+import { onNavigate, pathFor, withOrgFilter } from "../lib/router"
+import { UI } from "../lib/strings"
+import { FilterChip, FilterStrip } from "./HeaderFilter"
+import { LanguageToggle } from "./LanguageToggle"
+import { T } from "./T"
 
 const NAV_LINKS: { href: string; label: Localised }[] = [
-  { href: '#about', label: UI.navAbout },
-  { href: '#roadmap', label: UI.navRoadmap },
-];
+  { href: "#about", label: UI.navAbout },
+  { href: "#roadmap", label: UI.navRoadmap },
+]
 
 /**
  * Brand header: NHS Wales Blue bar with the DHCW logo (linking to all
@@ -28,13 +28,13 @@ export function SiteHeader({
   filter,
   showSectionLinks = false,
 }: {
-  filter: OrgFilter;
-  showSectionLinks?: boolean;
+  filter: OrgFilter
+  showSectionLinks?: boolean
 }) {
-  const { lang, tr } = useLanguage();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const navLinks = showSectionLinks ? NAV_LINKS : [];
-  const home = withOrgFilter(pathFor(lang, null), filter);
+  const { lang, tr } = useLanguage()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const navLinks = showSectionLinks ? NAV_LINKS : []
+  const home = withOrgFilter(pathFor(lang, null), filter)
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 bg-nhs-wales-blue text-white shadow-md short:absolute">
@@ -118,5 +118,5 @@ export function SiteHeader({
         </nav>
       )}
     </header>
-  );
+  )
 }

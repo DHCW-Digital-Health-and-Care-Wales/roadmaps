@@ -1,18 +1,18 @@
-import { categorySectionId, type CategoryGroup } from '../lib/roadmap-helpers';
-import type { OrgFilter } from '../lib/types';
-import { CategoryIcon } from './CategoryIcon';
-import { ProductCard } from './ProductCard';
-import { T } from './T';
+import { categorySectionId, type CategoryGroup } from "../lib/roadmap-helpers"
+import type { OrgFilter } from "../lib/types"
+import { CategoryIcon } from "./CategoryIcon"
+import { ProductCard } from "./ProductCard"
+import { T } from "./T"
 
 /** One category's heading and roadmap cards. */
 export function CategorySection({
   group: { category, roadmaps },
   filter,
 }: {
-  group: CategoryGroup;
-  filter: OrgFilter;
+  group: CategoryGroup
+  filter: OrgFilter
 }) {
-  const id = categorySectionId(category);
+  const id = categorySectionId(category)
   return (
     <section
       id={id}
@@ -37,5 +37,5 @@ export function CategorySection({
         ))}
       </ul>
     </section>
-  );
+  )
 }

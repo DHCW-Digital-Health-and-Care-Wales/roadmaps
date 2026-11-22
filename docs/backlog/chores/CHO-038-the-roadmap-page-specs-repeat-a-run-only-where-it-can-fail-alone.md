@@ -17,7 +17,7 @@ The roadmap page's specs take 341 s of the E2E suite's 1,215 s summed. Most of w
 check is layout, which only a browser sees, and stays. But several tests run once per
 width, language or choice where the runs share one code path and cross no breakpoint,
 and a few assert what a Vitest page test asserts already. Cutting those saves about
-125 s and 900 lines. Done looks like: a run repeats only where the repeat can fail on
+120 s and 900 lines. Done looks like: a run repeats only where the repeat can fail on
 its own, and a position is checked only where it is an accessibility rule or decides
 what a user can reach.
 

@@ -15,7 +15,7 @@
 
 The test suite repeats itself. Re-measured at `9ee767b`, the Playwright suite takes
 10 min 20 s on CI, four times its first measurement, when the chore was parked (D4).
-About 36% of that time, and about 5,300 of its 19,077 lines, hold nothing a Vitest page
+About 35% of that time, and about 5,300 of its 19,077 lines, hold nothing a Vitest page
 test does not, or repeat a run that cannot fail alone; Vitest asserts some rules at
 several seams.
 The owner widened the chore to the whole suite (D8) and split it into sub-chores (D9),
@@ -36,13 +36,15 @@ same screens (D12); each sub-chore's Measurement names its candidates.
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------- | --------- |
 | The look checks           | `focus-indicator`, `accessibility`, `structure`, `styles`, `typography` (497 s)                                                                                                                                                 | ~65 s, ~180 lines    | Two page tours walk a page another tour walks; a few scans scan a state another scan holds                                 | CHO-036   |
 | Editing items             | `editing`, `adding-an-item`, `quick-add`, `editing-an-item`, `removing-an-item`, `item-tags`, `field-icons`, `closing-a-dialog`, `pinned-dialog` (221 s)                                                                        | ~140 s, ~1,900 lines | 52 tests whose every assertion a page test makes: a co-lead's change per field, a cell written per field, Welsh copy alone | CHO-037   |
-| The roadmap page          | `moved-travel`, `roadmap-items-compact`, `control-row`, `roadmap-header`, `roadmap-controls`, `roadmap-items-cut`, `placement-navigation`, `side-panel`, `roadmap-page`, `moved-mark`, `last-updated`, `roadmap-errors` (341 s) | ~125 s, ~900 lines   | Runs per width, language or choice that cross no breakpoint and take no other branch                                       | CHO-038   |
-| Shell, list, navigation   | `shell`, `shell-navigation`, `navigation-*`, `unpublished-changes`, `roadmaps`, `families`, `adding-a-roadmap`, `editing-a-roadmap`, `landing`, `preferences` (123 s)                                                           | ~82 s, ~1,900 lines  | Navigation, list and roadmap-dialog behaviour that page tests and the repository contract hold                             | CHO-039   |
+| The roadmap page          | `moved-travel`, `roadmap-items-compact`, `control-row`, `roadmap-header`, `roadmap-controls`, `roadmap-items-cut`, `placement-navigation`, `side-panel`, `roadmap-page`, `moved-mark`, `last-updated`, `roadmap-errors` (341 s) | ~120 s, ~900 lines   | Runs per width, language or choice that cross no breakpoint and take no other branch                                       | CHO-038   |
+| Shell, list, navigation   | `shell`, `shell-navigation`, `navigation-*`, `unpublished-changes`, `roadmaps`, `families`, `adding-a-roadmap`, `editing-a-roadmap`, `landing`, `preferences` (123 s)                                                           | ~80 s, ~1,900 lines  | Navigation, list and roadmap-dialog behaviour that page tests and the repository contract hold                             | CHO-039   |
 | Connecting and publishing | `auth`, `reconnect`, `session-warning`, `publishing-roadmap`, `sheets-writes` (33 s)                                                                                                                                            | ~26 s, ~430 lines    | Connect failures, session states and publish outcomes that component and page tests hold                                   | CHO-040   |
 | Vitest                    | Page, component, domain and editing-state tests                                                                                                                                                                                 | a few hundred lines  | One rule asserted through the page and in its unit test; page tests repeating each other                                   | CHO-041   |
 | Reflow                    | The sideways-scroll checks across the specs (S3)                                                                                                                                                                                | none; one helper     | One expression copied into many specs                                                                                      | CHO-042   |
 
-Together about 440 s of the 1,215 summed (36%), roughly 3.5 to 4 minutes off CI. The
+Together about 430 s of the 1,215 summed (35%), roughly 3.5 minutes off CI. The
+estimates count every cut and trim the audits proposed; each sub-chore's table lists
+its main candidates, not all of them. The
 Sheets adapter's own tests hold a further ~500 removable lines, left alone (D13).
 
 ### At `697fcc5` (first measured)

@@ -468,7 +468,7 @@ describe("organisation filter", () => {
       expect(next.getByText("Nothing for Cardiff and Vale here.")).toBeTruthy()
 
       fireEvent.click(next.getByRole("button", { name: "Show 1 hidden item" }))
-      expect(window.location.search).toBe(view.replace("&", "?"))
+      expect(window.location.search).toBe(view.replace(/^&/, "?"))
       // Focus moves to the item that takes the button's place.
       expect(document.activeElement).toBe(
         next.getByRole("heading", { name: "Card being explored" }),

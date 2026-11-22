@@ -295,7 +295,9 @@ describe("The item dialog, adding (STY-046 S2)", () => {
     const note = form.getByText(
       "It stays unpublished until you choose “Publish changes”.",
     )
-    expect(note.closest('[data-slot="dialog-body"]')).not.toBeNull()
+    const body = note.closest('[data-slot="dialog-body"]')
+    expect(body).not.toBeNull()
+    expect(body?.lastElementChild).toContainElement(note)
     expect(note.closest('[data-slot="dialog-footer"]')).toBeNull()
     expect(
       form
@@ -1149,6 +1151,49 @@ describe("The publish dialog names the new items (STY-047 S1)", () => {
       expect(main().getByText(pending)).toBeVisible()
     },
   )
+
+  it("publishes the new item once the conflict in the edit is decided", async () => {
+    const { user, repository } = await renderPage({
+      items: { producta: [booking, reminders] },
+    })
+    await addItem(user, CLINIC, "Next")
+    await editItemText(user, "Online booking", "Description", "Mine.")
+    repository.coLead((_roadmaps, itemsOf) => {
+      const item = itemsOf("producta").find(
+        ({ title }) => title.en === "Online booking",
+      )
+      if (!item) throw new Error("No item titled Online booking")
+      item.description = { en: "Theirs.", cy: "" }
+    })
+    await user.click(main().getByRole("button", { name: "Publish changes" }))
+    await user.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", {
+        name: "Publish changes",
+      }),
+    )
+    const review = await openConflictReview(user)
+    await user.click(
+      within(review).getByRole("button", {
+        name: "Use theirs Online booking: Description",
+      }),
+    )
+    await closeConflictReview(user, review)
+
+    await user.click(main().getByRole("button", { name: "Publish changes" }))
+    await user.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", {
+        name: "Publish changes",
+      }),
+    )
+
+    expect(await main().findByText(/^Changes published\./)).toBeVisible()
+    expect(
+      (await repository.listRoadmapItems("producta")).map(
+        ({ title }) => title.en,
+      ),
+    ).toContain(CLINIC)
+    expect(main().queryByText(/unpublished change/)).toBeNull()
+  })
 })
 
 /** Adds an item with a title, a placement and `text` typed into `field`, through the item dialog. */

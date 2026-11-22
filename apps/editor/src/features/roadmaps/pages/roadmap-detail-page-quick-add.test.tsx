@@ -325,6 +325,39 @@ describe("Its field (S2–S6)", () => {
   })
 })
 
+describe("An empty placement (S1, S6)", () => {
+  it("offers its first item in words, and a title typed there is tidied and added under it", async () => {
+    const { user } = await renderPage()
+    const first = quickAdd("Not doing")
+    expect(within(first).getByText("Add the first item")).toBeVisible()
+    expect(main().queryByText("No items", { exact: true })).toBeNull()
+
+    await user.click(first)
+    await user.keyboard("{Enter}")
+    await expectOpeningFocus(() => field("Not doing"))
+    await user.type(field("Not doing"), "  Paper   letters {Enter}")
+
+    expect(titlesUnder("Not doing")).toEqual(["Paper letters"])
+  })
+})
+
+describe("“Add more details” says what it does on hover", () => {
+  it("shows its name as a tooltip", async () => {
+    const { user } = await renderPage()
+    await openField(user, "Next")
+
+    await user.hover(main().getByRole("button", { name: "Add more details" }))
+
+    expect(
+      await waitFor(() => {
+        const tip = document.querySelector("[data-slot=tooltip-content]")
+        if (!tip) throw new Error("No tooltip yet")
+        return tip
+      }),
+    ).toHaveTextContent("Add more details")
+  })
+})
+
 describe("While a publish or a read is under way (S9)", () => {
   it("adds pending items while a publish of the roadmap is under way, the page left and come back to, by title and in the dialog, which stay pending once it settles (STY-081 S5)", async () => {
     const { user, repository, router } = await renderPage()

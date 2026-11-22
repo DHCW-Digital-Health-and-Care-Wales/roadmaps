@@ -67,57 +67,61 @@ for (const [device, size] of [
       expect(levelWithOrUnder(moved, undo)).toBe(true)
       expect(edit.bottom).toBeLessThanOrEqual(whole.bottom)
     })
-
-    test("shows the label alone at its foot for an item moved within its placement", async ({
-      page,
-    }) => {
-      await openProductA(page, size)
-      await chooseFromMenu(page, "Minimal card", "Down one")
-      const card = itemOf(page, "Minimal card")
-
-      await expect(tagOf(card, "Moved down")).toBeVisible()
-      await expect(tagOf(card, "Changed")).toHaveCount(0)
-      const [moved, move, lastField] = await boxesOf(
-        tagOf(card, "Moved down"),
-        moveButton(page, "Minimal card"),
-        card.locator("dd").last(),
-      )
-      expect(moved.y).toBeGreaterThan(lastField.bottom - 1)
-      expect(levelWithOrUnder(moved, move)).toBe(true)
-    })
-
-    test("shows “Removed” alone, and no label, where “Changed” shows", async ({
-      page,
-    }) => {
-      await openProductA(page, size)
-      await chooseFromMenu(page, "Minimal card", "Down one")
-      await confirmRemoval(page, "Minimal card")
-      const card = itemOf(page, "Minimal card")
-
-      await expect(tagOf(card, "Removed")).toBeVisible()
-      await expect(tagOf(card, MOVED)).toHaveCount(0)
-      await expect(tagOf(card, "Changed")).toHaveCount(0)
-    })
-
-    test("shows “Moved from Next”, then “New”, for a new item that is marked", async ({
-      page,
-    }) => {
-      await openProductA(page, size)
-      await addItem(page, "Added item", "Next")
-      await chooseFromMenu(page, "Added item", "Later")
-      const card = itemOf(page, "Added item")
-
-      await expect(tagOf(card, "Moved from Next")).toBeVisible()
-      await expect(tagOf(card, "New")).toBeVisible()
-      const [moved, added] = await boxesOf(
-        tagOf(card, "Moved from Next"),
-        tagOf(card, "New"),
-      )
-      expect(Math.abs(centre(moved) - centre(added))).toBeLessThan(1)
-      expect(moved.right).toBeLessThan(added.x)
-    })
   })
 }
+
+test.describe("a card on a desktop, where one run holds what the phone's cannot add (S1, S2)", () => {
+  test.use({ reducedMotion: "reduce" })
+
+  test("shows the label alone at its foot for an item moved within its placement", async ({
+    page,
+  }) => {
+    await openProductA(page, DESKTOP)
+    await chooseFromMenu(page, "Minimal card", "Down one")
+    const card = itemOf(page, "Minimal card")
+
+    await expect(tagOf(card, "Moved down")).toBeVisible()
+    await expect(tagOf(card, "Changed")).toHaveCount(0)
+    const [moved, move, lastField] = await boxesOf(
+      tagOf(card, "Moved down"),
+      moveButton(page, "Minimal card"),
+      card.locator("dd").last(),
+    )
+    expect(moved.y).toBeGreaterThan(lastField.bottom - 1)
+    expect(levelWithOrUnder(moved, move)).toBe(true)
+  })
+
+  test("shows “Removed” alone, and no label, where “Changed” shows", async ({
+    page,
+  }) => {
+    await openProductA(page, DESKTOP)
+    await chooseFromMenu(page, "Minimal card", "Down one")
+    await confirmRemoval(page, "Minimal card")
+    const card = itemOf(page, "Minimal card")
+
+    await expect(tagOf(card, "Removed")).toBeVisible()
+    await expect(tagOf(card, MOVED)).toHaveCount(0)
+    await expect(tagOf(card, "Changed")).toHaveCount(0)
+  })
+
+  test("shows “Moved from Next”, then “New”, for a new item that is marked", async ({
+    page,
+  }) => {
+    await openProductA(page, DESKTOP)
+    await addItem(page, "Added item", "Next")
+    await chooseFromMenu(page, "Added item", "Later")
+    const card = itemOf(page, "Added item")
+
+    await expect(tagOf(card, "Moved from Next")).toBeVisible()
+    await expect(tagOf(card, "New")).toBeVisible()
+    const [moved, added] = await boxesOf(
+      tagOf(card, "Moved from Next"),
+      tagOf(card, "New"),
+    )
+    expect(Math.abs(centre(moved) - centre(added))).toBeLessThan(1)
+    expect(moved.right).toBeLessThan(added.x)
+  })
+})
 
 test.describe("a narrow card (S2)", () => {
   test.use({ reducedMotion: "reduce" })
@@ -278,84 +282,88 @@ for (const motion of ["reduce", "no-preference"] as const) {
       expect(Math.abs(centre(moved) - centre(line))).toBeLessThan(1)
       expect(closed.moved).toBe(closed.pending)
     })
-
-    test("keeps them still when the title wraps onto more lines opened", async ({
-      page,
-      sheets,
-    }) => {
-      sheets.spreadsheet = withTabItems(
-        "ProductA",
-        [LONG_TITLE, "Now"],
-        ["Other", "Now"],
-        ["Later one", "Later"],
-      )
-      await page.setViewportSize(DESKTOP)
-      await page.goto("./#/roadmaps/producta")
-      await connect(page)
-      await expect(
-        main(page).getByRole("heading", { level: 3, name: LONG_TITLE }),
-      ).toBeVisible()
-      await chooseCompact(page)
-      await chooseFromMenu(page, LONG_TITLE, "Later")
-      const row = itemOf(page, LONG_TITLE)
-      // The move has landed: until then the row is the one it leaves.
-      await expect(tagOf(row, "Moved from Now")).toBeVisible()
-      const closedHeight = (await boxOf(row)).height
-
-      await expectStill(page, row, LONG_TITLE)
-      await row.getByRole("button", { name: /^Show/ }).click()
-      await expect(row.getByRole("button", { name: /^Hide/ })).toBeVisible()
-      // The title did wrap: the line grew.
-      expect((await boxOf(row)).height).toBeGreaterThan(closedHeight + 20)
-    })
-
-    test("keeps a “New” tag still, and “Removed”, which has no label", async ({
-      page,
-    }) => {
-      await openProductA(page, DESKTOP)
-      await chooseCompact(page)
-      await addItem(page, "Added item", "Later")
-      const added = itemOf(page, "Added item")
-      await expectStill(page, added, "Added item")
-
-      // Remove is at the foot of the opened row.
-      const removed = itemOf(page, "Minimal card")
-      await removed.getByRole("button", { name: /^Show/ }).click()
-      await confirmRemoval(page, "Minimal card")
-      // The row opens as focus goes to its "Undo removal": close it, to compare.
-      await removed.getByRole("button", { name: /^Hide/ }).click()
-      await expect(tagOf(removed, "Removed")).toBeVisible()
-      await expect(tagOf(removed, MOVED)).toHaveCount(0)
-      const closed = await expectStill(page, removed, "Minimal card")
-      expect(closed.moved).toBeNull()
-    })
-
-    test("starts an unplaced item's flag at the height it has closed, though opened it may wrap, and keeps “Changed” still beside it", async ({
-      page,
-      sheets,
-    }) => {
-      await page.setViewportSize({ width: 1024, height: 900 })
-      await openWithItems(
-        page,
-        sheets,
-        withItems({
-          Title: "Someday",
-          Horizon: "Sometime after the new financial year, once funded",
-          Description: "Not yet placed.",
-        }),
-        "Someday",
-      )
-      const form = await openEditItemDialog(page, "Someday")
-      await form
-        .getByRole("textbox", { name: "Description", exact: true })
-        .fill("Changed, and not yet placed.")
-      await form.getByRole("button", { name: "Done" }).click()
-      await expect(form).toBeHidden()
-      await chooseCompact(page)
-      const row = itemOf(page, "Someday")
-
-      const closed = await expectStill(page, row, "Someday")
-      expect(closed.flag).not.toBeNull()
-    })
   })
 }
+
+test.describe("a desktop's compact row, reducedMotion reduce (S4)", () => {
+  test.use({ reducedMotion: "reduce" })
+
+  test("keeps them still when the title wraps onto more lines opened", async ({
+    page,
+    sheets,
+  }) => {
+    sheets.spreadsheet = withTabItems(
+      "ProductA",
+      [LONG_TITLE, "Now"],
+      ["Other", "Now"],
+      ["Later one", "Later"],
+    )
+    await page.setViewportSize(DESKTOP)
+    await page.goto("./#/roadmaps/producta")
+    await connect(page)
+    await expect(
+      main(page).getByRole("heading", { level: 3, name: LONG_TITLE }),
+    ).toBeVisible()
+    await chooseCompact(page)
+    await chooseFromMenu(page, LONG_TITLE, "Later")
+    const row = itemOf(page, LONG_TITLE)
+    // The move has landed: until then the row is the one it leaves.
+    await expect(tagOf(row, "Moved from Now")).toBeVisible()
+    const closedHeight = (await boxOf(row)).height
+
+    await expectStill(page, row, LONG_TITLE)
+    await row.getByRole("button", { name: /^Show/ }).click()
+    await expect(row.getByRole("button", { name: /^Hide/ })).toBeVisible()
+    // The title did wrap: the line grew.
+    expect((await boxOf(row)).height).toBeGreaterThan(closedHeight + 20)
+  })
+
+  test("keeps a “New” tag still, and “Removed”, which has no label", async ({
+    page,
+  }) => {
+    await openProductA(page, DESKTOP)
+    await chooseCompact(page)
+    await addItem(page, "Added item", "Later")
+    const added = itemOf(page, "Added item")
+    await expectStill(page, added, "Added item")
+
+    // Remove is at the foot of the opened row.
+    const removed = itemOf(page, "Minimal card")
+    await removed.getByRole("button", { name: /^Show/ }).click()
+    await confirmRemoval(page, "Minimal card")
+    // The row opens as focus goes to its "Undo removal": close it, to compare.
+    await removed.getByRole("button", { name: /^Hide/ }).click()
+    await expect(tagOf(removed, "Removed")).toBeVisible()
+    await expect(tagOf(removed, MOVED)).toHaveCount(0)
+    const closed = await expectStill(page, removed, "Minimal card")
+    expect(closed.moved).toBeNull()
+  })
+
+  test("starts an unplaced item's flag at the height it has closed, though opened it may wrap, and keeps “Changed” still beside it", async ({
+    page,
+    sheets,
+  }) => {
+    await page.setViewportSize({ width: 1024, height: 900 })
+    await openWithItems(
+      page,
+      sheets,
+      withItems({
+        Title: "Someday",
+        Horizon: "Sometime after the new financial year, once funded",
+        Description: "Not yet placed.",
+      }),
+      "Someday",
+    )
+    const form = await openEditItemDialog(page, "Someday")
+    await form
+      .getByRole("textbox", { name: "Description", exact: true })
+      .fill("Changed, and not yet placed.")
+    await form.getByRole("button", { name: "Done" }).click()
+    await expect(form).toBeHidden()
+    await chooseCompact(page)
+    const row = itemOf(page, "Someday")
+
+    const closed = await expectStill(page, row, "Someday")
+    expect(closed.flag).not.toBeNull()
+  })
+})

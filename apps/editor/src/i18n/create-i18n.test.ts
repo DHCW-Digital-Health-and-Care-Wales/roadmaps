@@ -33,6 +33,22 @@ describe("createI18n", () => {
   })
 
   it.each([
+    [0, "Dim newidiadau heb eu cyhoeddi", "Dim newidiadau i'w cadw"],
+    [1, "1 newid heb ei gyhoeddi", "1 newid i'w gadw"],
+    [2, "2 newid heb eu cyhoeddi", "2 newid i'w cadw"],
+    [3, "3 newid heb eu cyhoeddi", "3 newid i'w cadw"],
+    [6, "6 newid heb eu cyhoeddi", "6 newid i'w cadw"],
+    [10, "10 o newidiadau heb eu cyhoeddi", "10 o newidiadau i'w cadw"],
+  ])(
+    "renders the Welsh plural form of a roadmap's pending changes for %i",
+    (count, publish, save) => {
+      const { t } = createI18n({ language: "cy" })
+      expect(t("roadmaps.publish.pending.publish", { count })).toBe(publish)
+      expect(t("roadmaps.publish.pending.save", { count })).toBe(save)
+    },
+  )
+
+  it.each([
     [0, "No roadmaps"],
     [1, "1 roadmap"],
     [2, "2 roadmaps"],

@@ -7,6 +7,7 @@ import {
   askToRemove,
   changeItem,
   addItemButtons,
+  clickOutside,
   confirmPublish,
   openAddItemDialog,
   openAddRoadmapDialog,
@@ -482,6 +483,12 @@ for (const theme of THEMES) {
       })
       await expect(hold).toBeVisible({ timeout: 15_000 })
       await expectNoAxeViolations(page, theme)
+
+      // Only a Refresh that reads ends the hold: a click outside it and Tab leave it.
+      await clickOutside(page, hold)
+      await page.keyboard.press("Tab")
+      await expect(hold).toBeVisible()
+      await expect(hold.getByRole("button", { name: "Refresh" })).toBeFocused()
 
       await hold.getByRole("button", { name: "Refresh" }).click()
       await expect(

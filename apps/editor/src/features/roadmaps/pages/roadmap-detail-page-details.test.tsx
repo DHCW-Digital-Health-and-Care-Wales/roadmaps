@@ -277,6 +277,11 @@ describe("Editing an item's details (STY-039)", () => {
       field.getByRole("button", { name: `Symud allan ${FOLLOW_UP}` }),
     )
     expect(status(field)).toBe("Mae eisoes ar y lefel uchaf.")
+    await user.click(field.getByRole("button", { name: `Tynnu ${FOLLOW_UP}` }))
+    expect(status(field)).toContain(`Tynnwyd “${FOLLOW_UP}”.`)
+    expect(
+      field.getByRole("button", { name: `Dadwneud tynnu ${FOLLOW_UP}` }),
+    ).toBeVisible()
   })
 
   it("keeps an added detail pending, on the card and in the publish dialog, writing nothing until published (S2, S14)", async () => {

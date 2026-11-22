@@ -183,26 +183,6 @@ test("on a laptop, a failed Add a roadmap is said in the footer above Add roadma
   ).toHaveValue("Community Nursing roadmap")
 })
 
-test("on a laptop, the note about an item being added unpublished is the end of the scrolling body, not in the footer (S6)", async ({
-  page,
-}) => {
-  await page.setViewportSize(LAPTOP)
-  await page.goto("./#/roadmaps/producta")
-  await connect(page)
-  const dialog = await openAddItemDialog(page)
-
-  const note = dialog.getByText(
-    "It stays unpublished until you choose “Publish changes”.",
-  )
-  await expect(note).toHaveCount(1)
-  await expect(
-    slot(dialog, "dialog-body").locator(":scope > :last-child"),
-  ).toContainText("It stays unpublished")
-  await expect(
-    slot(dialog, "dialog-footer").getByText(/stays unpublished/),
-  ).toHaveCount(0)
-})
-
 test("on a laptop, a field that takes focus scrolls into the body, clear of the pinned header and footer (S7)", async ({
   page,
 }) => {

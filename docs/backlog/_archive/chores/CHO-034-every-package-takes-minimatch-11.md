@@ -1,7 +1,6 @@
 # CHO-034: Every package takes minimatch 11, so the dependency audit finds nothing to ignore
 
-- **Status**: Proposed — the owner's request (2026-11-22, D1), found by CHO-031's
-  dependency audit
+- **Status**: Done
 - **Type**: Chore
 - **Area**: CI/CD
 - **Epic**: standalone
@@ -11,7 +10,7 @@
 - **Binding ADRs**: none
 - **Suggested model**: Opus — a dependency change across the lint tooling and a runtime
   package, with a pnpm override if upstream has not moved
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/238
 
 ## Summary
 
@@ -57,3 +56,35 @@ for it closes.
 - **D1** (owner, 2026-11-22, CHO-031 delivery): record the advisory in the backlog and
   fix it in its own thread now, rather than accept it in `osv-scanner.toml` until
   2027-01-15 or leave the audit failing.
+
+## Delivery
+
+### Departures
+
+- S1: typescript-eslint also takes a pnpm override, though 8.73.0 takes minimatch 11:
+  published 2026-11-16, it is under the week CHO-031's `minimumReleaseAge` (10080
+  minutes) asks for, so the catalog stays on ^8.72.1 and an override raises
+  `@typescript-eslint/typescript-estree`'s minimatch until the catalog moves (agent).
+  ESLint's bump to 10.15.0 (2026-11-13) clears the week, so it carries no override.
+- S2: CHO-031 has not landed, so `osv-scanner.toml` does not exist on `main` and there
+  is no entry to remove; the audit is observed with OSV-Scanner run by hand, as the
+  record's Depends on allows (agent).
+
+### Contract for dependents
+
+- CHO-031, if it lands after this chore, drops its GHSA-g3hv-75wg-m249 entry from
+  `osv-scanner.toml` (and the file, if that leaves it empty).
+- `pnpm-workspace.yaml`'s new `overrides` block sits where CHO-031's branch adds
+  `minimumReleaseAge`, after `catalog:`; whichever lands second keeps both blocks.
+- `pnpm-workspace.yaml` gains `overrides`, each with the condition that drops it. The
+  typescript-eslint one goes when its catalog entry reaches ^8.73.0, which Dependabot's
+  monthly pnpm update proposes.
+- The lockfile was resolved with `minimumReleaseAge` 10080, so every version this
+  chore adds is at least a week old and CHO-031's setting accepts it.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                        |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| S1       | observed run: `pnpm why minimatch -r` lists only minimatch 11.0.8; `pnpm lint` passes; `shadcn add card --dry-run --view` gives the same file as on the base                   |
+| S2       | observed run: OSV-Scanner v2.7.1 over the base lockfile reports GHSA-g3hv-75wg-m249 (minimatch 10.2.6) and over the head's finds nothing; the Dependabot alert closes on merge |

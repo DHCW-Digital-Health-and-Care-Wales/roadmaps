@@ -201,7 +201,7 @@ Audited at `product-roadmaps` `2548219` on 2026-11-21:
 
 - **S1**: the import branch is `product-roadmaps` at `2548219` plus one signed commit,
   `f6afeff`, that moves every file with `git mv` into `apps/public-site/`; the history
-  merge is `1bdb320`. What the workspace provides (the workflows, `.nvmrc`, the Prettier
+  merge is `f7a041e`. What the workspace provides (the workflows, `.nvmrc`, the Prettier
   settings, the licence) and what is not imported (the skills, the pull request
   template, `CODEOWNERS`, the feedback template, which stays in `product-roadmaps`) go
   in the next commit, and `CONTRIBUTING.md` moves to the root with `git mv` before it

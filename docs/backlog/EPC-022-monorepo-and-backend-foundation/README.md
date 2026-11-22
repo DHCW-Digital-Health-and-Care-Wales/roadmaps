@@ -144,9 +144,9 @@ the seeder for any table it creates.
 | STY-095 | [The public site adopts the conventions](STY-095-the-public-site-adopts-the-workspace-conventions.md)                                 | Features/UI + i18n     | STY-088     |       |
 
 _STY-085 is done; STY-086 to STY-088 are Proposed. STY-089 to STY-093 are
-Placeholders until their acceptance criteria are written: ADR-016 (STY-089) and ADR-017 (STY-090–STY-093) are
-accepted. STY-094 is a Placeholder until the invitation story exists, and STY-095 until
-STY-088 shows what the imported site holds.
+Placeholders until their acceptance criteria are written: ADR-016 (STY-089) and
+ADR-017 (STY-090–STY-093) are accepted. STY-094 is a Placeholder until the invitation
+story exists, and STY-095 until STY-088 shows what the imported site holds.
 Candidate scope, to split next: the first schema
 and its enforcement suite; people, identities, memberships, roles, assignments and
 invitations, with ADR-019's authorisation suite; the threat model, then sign-in with

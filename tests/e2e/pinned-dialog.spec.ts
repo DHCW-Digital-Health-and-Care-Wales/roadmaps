@@ -330,19 +330,18 @@ for (const surface of ["side panel", "dialog"] as const) {
     await page.goto("./#/roadmaps/producta")
     await connect(page)
     const dialog = await openAddItemDialog(page)
+    const cancel = dialog.getByRole("button", { name: "Cancel" })
     const parts = [
       dialog.getByRole("heading", { name: "Add an item" }),
       cornerClose(dialog),
       dialog.getByRole("button", { name: "Add item", exact: true }),
-      dialog.getByRole("button", { name: "Cancel" }),
+      cancel,
     ]
 
     for (const block of ["start", "center", "end"] as const) {
-      await dialog
-        .getByRole("button", { name: "Cancel" })
-        .evaluate((button, at) => {
-          button.scrollIntoView({ block: at })
-        }, block)
+      await cancel.evaluate((button, at) => {
+        button.scrollIntoView({ block: at })
+      }, block)
       for (const part of parts) expect(await isInView(page, part)).toBe(true)
     }
   })

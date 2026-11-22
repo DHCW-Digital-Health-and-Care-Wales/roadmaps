@@ -134,10 +134,10 @@ Audited at `cc11e44` on 2026-11-21:
 
 ### Departures
 
-None. S1 to S3 describe the live site after the cut-over (Scope steps 2 and 3), so a
-pull request reviewed under the old name can show only their preconditions; their
-observation on the deploy run and the live site is recorded after the owner renames
-and merges, as Scope step 3 sets.
+None. S1, S2 and S3's deploy are properties of the live site and the deploy run, which
+a pull request reviewed under the old name cannot show; Scope step 3 has them observed
+and recorded at the cut-over. The pull request holds S3's resolver test and E2E run
+under the new base path, and S4's search.
 
 ### Contract for dependents
 
@@ -148,8 +148,8 @@ and merges, as Scope step 3 sets.
 
 ### Scenario evidence
 
-| Scenario | Held by                                                                                                                                                                                                                                      |
-| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1, S2   | observed on the live site after the cut-over (Scope step 3); before it, nothing in the editor names its address (`git grep` for `roadmaps-editor` in `src/`: no hits)                                                                        |
-| S3       | `build/resolve-base-path.test.ts` (`serves a project site under the repository name`) derives `/roadmaps/` from `GITHUB_REPOSITORY`; the full E2E suite run with `GITHUB_REPOSITORY=…/roadmaps`; the deploy run on `main` after the cut-over |
-| S4       | `git grep -n roadmaps-editor`, every hit in the exceptions S4 lists                                                                                                                                                                          |
+| Scenario | Held by                                                                                                                                                                                                                                             |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1, S2   | the live site, observed at the cut-over (Scope step 3); nothing in the editor names its address (`git grep` for `roadmaps-editor` in `src/`: no hits)                                                                                               |
+| S3       | `build/resolve-base-path.test.ts` (`serves a project site under the repository name`) derives `/roadmaps/` from `GITHUB_REPOSITORY`; the full E2E suite run with `GITHUB_REPOSITORY=…/roadmaps`; the deploy run on `main`, observed at the cut-over |
+| S4       | `git grep -n roadmaps-editor`, every hit in the exceptions S4 lists                                                                                                                                                                                 |

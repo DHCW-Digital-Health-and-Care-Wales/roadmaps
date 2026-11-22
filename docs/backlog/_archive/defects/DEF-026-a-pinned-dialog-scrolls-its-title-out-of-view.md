@@ -45,6 +45,9 @@ Verified for the overflow and the scroll; suspected for the CI failure.
   positioned absolutely, and their containing block is the popup, not the body, so they
   escape the body's scrolling and reach 421 px past the popup's foot (on the add-item
   form at 640 × 500; `scrollHeight` 921 for a `clientHeight` of 500).
+- `rg -n 'pinned:overflow' src` — 3 sites, all in `src/components/ui/dialog.tsx`: the
+  popup (line 115, the one that hid its overflow), and the header and body (lines 153
+  and 167), which scroll on purpose. Every dialog and the side panel use this popup.
 - Suspected trigger in CI: a click whose hit check fails on a loaded runner is retried
   by Playwright with the target scrolled into view at another alignment, which scrolls
   every scroll box around it, the popup included. Find in page may do the same for a

@@ -2,8 +2,8 @@
 
 The first word(s) of a record's Status line is one token from the table for
 its type. Text after an em dash is a one-line note. Selection reads the token
-only. The bootstrap stories in `_archive/EPC-001-bootstrap/` keep their legacy
-statuses and are not rewritten.
+only, and passes over an umbrella chore (_Rules_). The bootstrap stories in
+`_archive/EPC-001-bootstrap/` keep their legacy statuses and are not rewritten.
 
 ## Stories, chores and defects
 
@@ -66,6 +66,10 @@ stateDiagram-v2
   included, state delivery (Done, ✅) and leave merge state to the PR: words
   about merging go stale the moment it merges. Dependents wait for the required
   behaviour on the default branch.
+- **An umbrella chore** (`chore.md`) is not selectable whatever its token:
+  selection takes one of its sub-chores, the records naming it as their Parent.
+  The PR that delivers the last of them also sets the umbrella Done, moves it to
+  `_archive/` and marks its row.
 - **Reopening** a Won't fix / Won't do: move the file back to the live tree,
   set Proposed or Needs grilling, and add a Decisions entry citing the
   trigger. The ID is kept.

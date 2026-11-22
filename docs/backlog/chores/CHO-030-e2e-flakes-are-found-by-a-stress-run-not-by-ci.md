@@ -86,10 +86,16 @@ causes has arrived
 
 ## Decisions
 
+- **D1** (owner, 2026-11-22, triage of DEF-027): this chore holds DEF-027's S1, a Vitest
+  component test that looks for quick add's field the moment the add-item dialog
+  closes, before it has rendered again, over a fix of its own; its failures on `main`
+  (Actions run `44968551783`) and on PR #231 passed on a re-run
+  ([DEF-027](../_archive/defects/DEF-027-a-quick-add-test-looks-for-the-field-before-it-has-come-back.md)).
+
 ## Out of scope
 
 DEF-024's own fix to `publishOnce`, DEF-025's to the side panel spec's helpers, the CI
 runner's package mirror (CHO-029), and Vitest component tests (DEF-013, DEF-022,
-CHO-018 were their own cases).
+CHO-018 were their own cases), except DEF-027's, which D1 brings in.
 
 ## Delivery _(add on delivery; as in `story.md`)_

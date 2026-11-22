@@ -28,6 +28,11 @@ overrides:
   "eslint-plugin-jsx-a11y-x>minimatch": ^11.0.1
   # Under shadcn's ts-morph 26. Drop when shadcn takes ts-morph 28 or later.
   "@ts-morph/common>minimatch": ^11.0.1
+  # basic-ftp below 6.2.4 has denials of service in its directory-listing parsers
+  # (GHSA-c475-qrg2-pj4r, GHSA-5pm8-86m8-9m6r, GHSA-r4jh-29pc-gfqr). get-uri 6, under
+  # @lhci/cli's proxy-agent, takes basic-ftp 5; get-uri 8 takes the fix. Lighthouse
+  # never fetches an ftp: address. Drop when @lhci/cli's tree takes get-uri 8 or later.
+  "get-uri>basic-ftp": ^6.2.4
 
 # A version published less than a week ago is neither resolved nor installed from the
 # lockfile, CI's frozen install included, as Dependabot's cooldown holds back its

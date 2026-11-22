@@ -52,7 +52,7 @@ End-to-end tests of the production build, with Google faked (ADR-006).
   once focus is in it (`openDialog`, `openAccountMenu`); one that closes, chooses or
   confirms returns once the popup has gone, by when what its closing causes has landed
   (`chooseFromMore`, `confirmPublish`, `escapeFrom`). A spec waits the same way before
-  its next step acts.
+  its next step acts, and presses Escape in a popup that holds focus with `escapeFrom`.
 - Read boxes compared with each other in one `boxesOf` call, so they are of one moment.
 
 ## Look checks

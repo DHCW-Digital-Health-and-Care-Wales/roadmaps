@@ -124,20 +124,20 @@ helpers wait for what their action causes, and the specs were moved onto them.
   (`apps/editor/tests/e2e/fixtures/layout.ts`) wait for every animation that ends to end,
   then read all their boxes in one step, retrying until each element is laid out. They
   took in `settledBox(es)`, which is gone. A lint rule (`build/e2e-lint.ts`) forbids
-  `boundingBox()` elsewhere in `tests/e2e`, and its 63 calls moved to these helpers, about
+  `boundingBox()` in `tests/e2e`, and its 63 calls moved to these helpers, about
   20 pairs of separate reads becoming one `boxesOf`.
 - **Helpers return once their effect has landed.** `confirmPublish`
   (`fixtures/dialogs.ts`) waits for the publish dialog to go and its outcome's notice to
   have focus. `publishOnce` and 29 inline confirmations in 11 specs use it (DEF-024);
   `editing.spec.ts`'s own `chooseAndConfirm`, which confirms Publish or Save for outcomes
   of every kind, waits for its dialog to go, by when the outcome has focus.
-  `openAccountMenu` waits for the menu and `chooseFromAccountMenu` for it to go.
+  `openAccountMenu` waits for the menu's focus and `chooseFromAccountMenu` for it to go.
   `shownInStuckRow` and `namesShownInStuckRow` read the row in one step, once it has stuck,
   its bars have held still (`barsHeldStill`, taken out of `focusClearOfBars`) and nothing
   animates.
 - **Specs wait before acting.** An Escape that closes a popup goes through `escapeFrom`
   (`fixtures/keyboard.ts`), which waits for focus in the popup, presses Escape and waits
-  for the popup to go: 31 calls in 17 specs. Five Escapes straight after `clickOutside`
+  for the popup to go: 30 calls in 16 specs. Five Escapes straight after `clickOutside`
   keep their own wait for the popup to go, as the click takes focus out of it. Three
   specs gained a specific wait: `item-tags` waits for the moved row's tag before
   measuring it, the side panel's S9 waits for the session warning's focus before Escape
@@ -157,7 +157,7 @@ What was searched and found, at `58564ac`:
 | Shared helpers    | `publishOnce` returned before the notice took focus (DEF-024); `chooseFromAccountMenu` returned with the menu still closing and its choice not yet acted on; `openAccountMenu` before the menu showed; the stuck row read its buttons before it had stuck, then re-found them by index (the `roadmap-controls.spec.ts:271` flake, suspected). The other dialog helpers already waited for focus or for the dialog to go | fixed in the helper, as above |
 | Focus right after | `moved-travel.spec.ts:227`, a scripted focus straight after `publishOnce` (DEF-024). The other 18 `.focus()` calls follow a settled step; about 290 `toBeFocused` retry                                                                                                                                                                                                                                                 | DEF-024's fix                 |
 | Popups' boxes     | Unsettled reads of the conflict review (`editing.spec.ts:961`), the search drawer (`navigation-search.spec.ts:173`), a card mid-move (`moved-mark.spec.ts:154`), a row mid-move (`item-tags.spec.ts:301`, the CI flake: it read the row the move leaves) and the page after a scroll (`roadmap-controls.spec.ts:133`)                                                                                                   | all read through `boxesOf`    |
-| Escape            | An Escape before the session warning had focus (`side-panel.spec.ts` S9, the CI flake: Escape reached the panel underneath), and 12 more Escapes acting while a popup still showed or closed                                                                                                                                                                                                                            | waits added                   |
+| Escape            | An Escape before the session warning had focus (`side-panel.spec.ts` S9, the CI flake: Escape reached the panel underneath), and 12 more Escapes acting while a popup still showed or closed; then every Escape that closes a popup moved onto `escapeFrom`                                                                                                                                                             | waits added                   |
 | Load              | See below                                                                                                                                                                                                                                                                                                                                                                                                               |                               |
 
 The load run took the record's command in two shards on the 8-core host, while another
@@ -211,15 +211,16 @@ longer follows the title once it is changed"). Both already wait, within the 3-s
 - Read a box with `boxOf` or `boxesOf` (`apps/editor/tests/e2e/fixtures/layout.ts`); a test
   that must measure mid-animation reads in `page.evaluate`, as `moved-travel.spec.ts`'s
   `placeOf` does.
+- Press Escape in a popup with `escapeFrom(popup)` (`fixtures/keyboard.ts`).
 - Confirm a publish with `confirmPublish(page, notice?)`; `holdPublishDialogClosing(page)`
   holds the dialog's closing, for a test of what waits for it.
 - `expectOpeningFocus` takes a function that finds the field.
 
 ### Scenario evidence
 
-| Scenario                | Held by                                                                                                                                                                                                                                                                               |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1                      | observed runs: the searches and load run above                                                                                                                                                                                                                                        |
-| S2                      | `apps/editor/tests/e2e/AGENTS.md`; the `boundingBox()` rule by `apps/editor/build/e2e-lint.test.ts` (`reports a box read by boundingBox() in a spec or a fixture`, `leaves boundingBox() to the layout fixture, which still forbids throttling`), each shown red by breaking its rule |
-| S3                      | `apps/editor/src/features/roadmaps/testing/opening-focus.test.ts` (`waits for a field that renders after it is first looked for, as one back from a closed dialog does`), red before the fix                                                                                          |
-| D2 (session warning S6) | `apps/editor/tests/e2e/session-warning.spec.ts` (`dismissing the warning leaves the session to run out (S6)`): with 2 s of real time added before the fast-forward, the old margin failed 3 of 3, the new passed 3 of 3                                                               |
+| Scenario                | Held by                                                                                                                                                                                                                 |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1                      | observed runs: the searches and load run above                                                                                                                                                                          |
+| S2                      | `apps/editor/tests/e2e/AGENTS.md`; the `boundingBox()` rule by `apps/editor/build/e2e-lint.test.ts` (`reports a box read by boundingBox() in a spec or a fixture`), shown red by breaking its rule                      |
+| S3                      | `apps/editor/src/features/roadmaps/testing/opening-focus.test.ts` (`waits for a field that renders after it is first looked for, as one back from a closed dialog does`), red before the fix                            |
+| D2 (session warning S6) | `apps/editor/tests/e2e/session-warning.spec.ts` (`dismissing the warning leaves the session to run out (S6)`): with 2 s of real time added before the fast-forward, the old margin failed 3 of 3, the new passed 3 of 3 |

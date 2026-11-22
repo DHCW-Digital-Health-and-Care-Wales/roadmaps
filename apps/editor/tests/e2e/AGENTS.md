@@ -65,8 +65,9 @@ End-to-end tests of the production build, with Google faked (ADR-006).
 - Hold a journey's behaviour in a Vitest page test, and give it a spec here only for
   what jsdom cannot see (layout, reflow, computed styles, focus and its indicator,
   Base UI's timing, the built bundle's routes, `beforeunload`, the clock, the popup
-  gesture) and for one round trip through the fakes per kind of write, asserting no
-  more than its page test cannot.
+  gesture, and the axe scans and aria snapshots of _Look checks_) and for one round
+  trip through the fakes per kind of write, asserting no more than its page test
+  cannot.
 - Run a journey once. Repeat it per theme for a colour, per language where Welsh copy
   can change the layout or a structure snapshot, and per width at a width each side of
   a breakpoint where the page offers different controls; assert in a repeat only what

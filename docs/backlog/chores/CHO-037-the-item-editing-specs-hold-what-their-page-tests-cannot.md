@@ -24,7 +24,8 @@ item-editing spec asserts what jsdom cannot see, and one round trip per kind of 
 
 At `9ee767b`, nine specs (`editing`, `adding-an-item`, `quick-add`, `editing-an-item`,
 `removing-an-item`, `item-tags`, `field-icons`, `closing-a-dialog`, `pinned-dialog`):
-106 tests, 134 runs. Candidates, with the Vitest test that holds each
+106 tests, 134 runs. Candidates, estimates re-read at delivery (CHO-014 D12), with the
+Vitest test that holds each
 (`roadmap-detail-page-<name>.test.tsx` as `<name>.test`):
 
 | Candidates                                                                                                                                                                                                                                                           | CI s | Held by                                                                                                                                                                                   | Verdict                                                                     |

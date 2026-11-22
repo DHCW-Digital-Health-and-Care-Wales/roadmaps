@@ -24,7 +24,8 @@ one publish through the fakes.
 ## Measurement
 
 At `9ee767b`, five specs (`auth`, `reconnect`, `session-warning`, `publishing-roadmap`,
-`sheets-writes`): 32 tests, one run each. Candidates:
+`sheets-writes`): 32 tests, one run each. Candidates, estimates re-read at delivery
+(CHO-014 D12):
 
 | Candidates                                                        | CI s | Held by                                                                                                                | Verdict                                                                    |
 | ----------------------------------------------------------------- | ---- | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |

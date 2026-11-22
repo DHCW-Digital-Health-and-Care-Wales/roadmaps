@@ -15,7 +15,7 @@
 
 The test suite repeats itself. Re-measured at `9ee767b`, the Playwright suite takes
 10 min 20 s on CI, four times its first measurement, when the chore was parked (D4).
-About 37% of that time, and about 5,300 of its 19,077 lines, hold nothing a Vitest page
+About 36% of that time, and about 5,300 of its 19,077 lines, hold nothing a Vitest page
 test does not, or repeat a run that cannot fail alone; Vitest asserts some rules at
 several seams.
 The owner widened the chore to the whole suite (D8) and split it into sub-chores (D9),
@@ -34,7 +34,7 @@ same screens (D12); each sub-chore's Measurement names its candidates.
 
 | Slice                     | Specs (summed CI s)                                                                                                                                                                                                             | Removable, estimated | What repeats                                                                                                               | Sub-chore |
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------- | --------- |
-| The look checks           | `focus-indicator`, `accessibility`, `structure`, `styles`, `typography` (497 s)                                                                                                                                                 | ~70 s, ~180 lines    | Two page tours walk a page another tour walks; a few scans scan a state another scan holds                                 | CHO-036   |
+| The look checks           | `focus-indicator`, `accessibility`, `structure`, `styles`, `typography` (497 s)                                                                                                                                                 | ~65 s, ~180 lines    | Two page tours walk a page another tour walks; a few scans scan a state another scan holds                                 | CHO-036   |
 | Editing items             | `editing`, `adding-an-item`, `quick-add`, `editing-an-item`, `removing-an-item`, `item-tags`, `field-icons`, `closing-a-dialog`, `pinned-dialog` (221 s)                                                                        | ~140 s, ~1,900 lines | 52 tests whose every assertion a page test makes: a co-lead's change per field, a cell written per field, Welsh copy alone | CHO-037   |
 | The roadmap page          | `moved-travel`, `roadmap-items-compact`, `control-row`, `roadmap-header`, `roadmap-controls`, `roadmap-items-cut`, `placement-navigation`, `side-panel`, `roadmap-page`, `moved-mark`, `last-updated`, `roadmap-errors` (341 s) | ~125 s, ~900 lines   | Runs per width, language or choice that cross no breakpoint and take no other branch                                       | CHO-038   |
 | Shell, list, navigation   | `shell`, `shell-navigation`, `navigation-*`, `unpublished-changes`, `roadmaps`, `families`, `adding-a-roadmap`, `editing-a-roadmap`, `landing`, `preferences` (123 s)                                                           | ~82 s, ~1,900 lines  | Navigation, list and roadmap-dialog behaviour that page tests and the repository contract hold                             | CHO-039   |
@@ -42,7 +42,7 @@ same screens (D12); each sub-chore's Measurement names its candidates.
 | Vitest                    | Page, component, domain and editing-state tests                                                                                                                                                                                 | a few hundred lines  | One rule asserted through the page and in its unit test; page tests repeating each other                                   | CHO-041   |
 | Reflow                    | The sideways-scroll checks across the specs (S3)                                                                                                                                                                                | none; one helper     | One expression copied into many specs                                                                                      | CHO-042   |
 
-Together about 445 s of the 1,215 summed (37%), roughly 3.5 to 4 minutes off CI. The
+Together about 440 s of the 1,215 summed (36%), roughly 3.5 to 4 minutes off CI. The
 Sheets adapter's own tests hold a further ~500 removable lines, left alone (D13).
 
 ### At `697fcc5` (first measured)
@@ -207,9 +207,7 @@ column, a token) rests on the Sheets or GIS adapter's own tests, which go with i
   well (unit and integration)" → adds S9. A rule the API takes over (ADR-015) gains
   the API's own tests then; retiring the editor's copy waits for the switch.
 - **D11** (owner, 2026-11-22, same session): "Then do S6s guide rule" → S6 is
-  delivered ahead of the sub-chores, in the PR that records D8 to D13. The Features
-  row of `validation.md` changes with the Visible UI row, since its "Playwright
-  coverage for each changed journey" asks for the same repeats.
+  delivered ahead of the sub-chores, in the PR that records D8 to D14.
 - **D12** (agent, 2026-11-22): the `9ee767b` measurement comes from six read-only
   audits by slice, two of their largest claims checked by hand; their verdicts are
   estimates, so each sub-chore re-reads every test it cuts (S5) rather than trusting
@@ -220,6 +218,10 @@ column, a token) rests on the Sheets or GIS adapter's own tests, which go with i
   the repository contract keeps running whole against the in-memory repository, since
   it proves the double the page tests use matches every adapter, the API's included
   (ADR-002). Reopen if Sheets is to stay.
+- **D14** (agent, 2026-11-22): S6 also changes the Features row of `validation.md`,
+  over the Visible UI row alone, since its "Playwright coverage for each changed
+  journey" asks for an E2E test of every journey, which is how the suite came to repeat
+  its page tests (S7).
 
 ## Out of scope
 

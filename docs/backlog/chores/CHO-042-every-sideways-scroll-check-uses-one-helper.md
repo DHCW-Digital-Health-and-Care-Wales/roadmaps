@@ -20,8 +20,8 @@ by hand in fifteen specs, though `apps/editor/tests/e2e/fixtures/layout.ts` expo
 
 ## Measurement
 
-At `9ee767b`, `rg -n 'scrollWidth' apps/editor/tests/e2e` finds 31 lines: one in the
-helper, 30 in fifteen specs, most of them `documentElement.scrollWidth` set against
+At `9ee767b`, `rg -n 'scrollWidth' apps/editor/tests/e2e` finds 32 lines: one in the
+helper, 31 in fifteen specs, most of them `documentElement.scrollWidth` set against
 the viewport's width. A hit measuring one element's own scroll is a different check
 and stays.
 

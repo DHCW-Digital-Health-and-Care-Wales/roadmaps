@@ -10,6 +10,9 @@
   at a named commit, so the agent that picks it up can tell which parts are
   still worth doing. Where measuring is the chore, say so and give the search
   and how to judge a hit instead of inventing numbers.
+- **A chore split into sub-chores is an umbrella**: each sub-chore takes the next
+  free ID and names it as its Parent; the umbrella's Status note names them, so
+  selection takes a sub-chore, and the umbrella is Done when they are.
 
 ---
 
@@ -20,6 +23,7 @@
 - **Area**: Domain | Infrastructure | Features/UI | Routing | i18n (en + cy) |
   E2E | CI/CD | Docs (`+` to combine)
 - **Epic**: <epic folder, e.g. EPC-002-roadmap-detail> | standalone
+- **Parent**: CHO-{nnn}, for a sub-chore of an umbrella chore _(optional)_
 - **Depends on**: none
 - **Binding ADRs**: none
 - **Suggested model**: Opus | Sonnet | Haiku — <the reason>

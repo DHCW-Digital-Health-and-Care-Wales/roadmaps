@@ -44,10 +44,13 @@ belongs in a comment at that site, where the next agent to touch it reads it.
   badly, and a later change makes it a lie in three files at once.
 - **Incident post-mortems.** What one PR or review got wrong goes where it lives: a
   check, or a comment at the site. The PR body records the story.
-- **Rules that hold only while one epic is in delivery**, such as an interim
-  reader to avoid until a later story replaces it, or a check its reviewers
-  make. They go in that epic's `docs/backlog/{epic}/delivery-notes.md`
-  (`docs/AGENTS.md`).
+- **Rules that hold for one PR, or only while one epic is in delivery**, such
+  as a condition worded for the pull request that adds it, an interim reader
+  to avoid until a later story replaces it, or a check its reviewers make. A
+  per-PR condition that recurs is written as the general rule ("only on a PR
+  the user authorised"); one that holds for a single PR goes in its record's
+  Delivery or its PR body, and one for an epic in that epic's
+  `docs/backlog/{epic}/delivery-notes.md` (`docs/AGENTS.md`).
 - **A delivery's history**: what changed, its decisions, its evidence. That is
   the record's Delivery section and its PR.
 - **Story, chore and defect IDs, and provenance stamps** such as

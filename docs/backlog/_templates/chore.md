@@ -10,9 +10,9 @@
   at a named commit, so the agent that picks it up can tell which parts are
   still worth doing. Where measuring is the chore, say so and give the search
   and how to judge a hit instead of inventing numbers.
-- **A chore split into sub-chores is an umbrella**: each sub-chore takes the next
-  free ID and names it as its Parent; the umbrella's Status note names them, so
-  selection takes a sub-chore, and the umbrella is Done when they are.
+- **A chore split into sub-chores is an umbrella**: each sub-chore takes its own
+  ID, never a letter suffix, and names it as its Parent; the umbrella's Status note
+  names them, and `status-lifecycle.md` says how it is selected and closed.
 
 ---
 

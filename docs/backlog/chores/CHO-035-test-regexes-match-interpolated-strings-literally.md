@@ -4,7 +4,7 @@
 - **Type**: Refactor
 - **Area**: E2E + Infrastructure
 - **Epic**: standalone
-- **Depends on**: [DEF-029](../defects/DEF-029-two-test-helpers-escape-only-some-regex-characters.md)
+- **Depends on**: [DEF-029](../_archive/defects/DEF-029-two-test-helpers-escape-only-some-regex-characters.md)
   (its shared escape helper)
 - **Binding ADRs**: none
 - **Suggested model**: Sonnet — a mechanical sweep with one helper

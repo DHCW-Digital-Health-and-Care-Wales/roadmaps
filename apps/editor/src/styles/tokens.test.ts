@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { FOCUS_UTILITIES, SHADOW_TOKENS, TEXT_TOKENS } from "@/lib/utils"
 
+import { escapeRegExp } from "../../tests/fixtures/escape-regexp"
 import css from "./globals.css?raw"
 import {
   hasColourLiteral,
@@ -39,7 +40,7 @@ function normalise(value: string): string {
  * following `$a: $b` aliases within the file.
  */
 function sassVariable(text: string, name: string): string | undefined {
-  const escaped = name.replace(/[$-]/g, "\\$&")
+  const escaped = escapeRegExp(name)
   const pattern = new RegExp(String.raw`^\s*${escaped}\s*:\s*(.+?)\s*;`, "gm")
   const value = [...text.matchAll(pattern)]
     .at(-1)?.[1]

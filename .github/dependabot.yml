@@ -1,10 +1,11 @@
 # Keeps the SHA-pinned actions in .github/workflows and the workspace's pnpm
 # dependencies current: one grouped pull request a month for each. Every entry waits
 # out a cooldown, so it proposes a version only once that is a week old (STY-087 D10,
-# D12); the transitive versions pnpm resolves beneath it wait only once CHO-031 sets
-# pnpm's minimumReleaseAge.
+# D12); pnpm's minimumReleaseAge (pnpm-workspace.yaml) holds the transitive versions it
+# resolves beneath one for as long (CHO-031 S4).
 # The cooldown does not hold back Dependabot's security updates, a repository setting
-# (CHO-031).
+# that is on (CHO-031 S5), but pnpm's minimumReleaseAge does: a security update younger
+# than a week fails CI's install until its versions are excluded there.
 version: 2
 updates:
   - package-ecosystem: github-actions

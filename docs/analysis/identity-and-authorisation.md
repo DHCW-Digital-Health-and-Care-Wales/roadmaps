@@ -378,7 +378,7 @@ answers are three ADRs, accepted by the owner on 2026-11-21:
 - [ADR-020](../adr/ADR-020-the-editor-and-the-api-share-one-origin.md), origins and the
   API's HTTP hardening: D2, D13.
 
-D14 is [CHO-031](../backlog/chores/CHO-031-supply-chain-checks-on-every-pull-request.md);
+D14 is [CHO-031](../backlog/_archive/chores/CHO-031-supply-chain-checks-on-every-pull-request.md);
 D15 is [EPC-023](../backlog/EPC-023-hosting-and-infrastructure-security/README.md).
 D8 (step-up) went to the identity ADR, not the authorisation ADR the table names; D2
 and D13 went to ADR-020, split from the identity ADR.

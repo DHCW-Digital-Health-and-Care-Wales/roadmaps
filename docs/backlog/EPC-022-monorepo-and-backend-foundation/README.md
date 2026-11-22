@@ -105,7 +105,7 @@ its drafts), from the
     every route declaring a policy, every request naming its tenant (ADR-019).
 14. **Origins**: the editor and the API on one origin in every environment, the public
     read on its own host (ADR-020).
-15. **Supply-chain checks**: CHO-031, beside STY-087.
+15. **Supply-chain checks**: CHO-031, done beside STY-087.
 16. **Infrastructure-held protections**: EPC-023, a placeholder.
 
 _The schema, identity and endpoint stories are written next, from ADR-015 and ADR-018 to
@@ -129,7 +129,8 @@ A new CI job joins the needs of the _CI result_ gate, which `build/ci-workflow.t
 checks, and an app's jobs run unless its output from `scripts/ci/classify-changes.sh` is
 `false`; STY-088 and STY-090 add their app's case, output and `--all` line, with tests. A package's commit check
 is a job in `lefthook.yml`; every Dependabot entry carries the 7-day cooldown (STY-087
-D12, D13).
+D12, D13), and pnpm resolves no version younger than a week (CHO-031). A new lockfile is
+audited weekly without a change to the audit, and uv takes a 7-day `exclude-newer`.
 
 ### The API's conventions
 
@@ -174,9 +175,8 @@ change, with no other editor-code pull request open while it is in flight (STY-0
 D8), then STY-087, whose hooks and gate the API joins. Then two tracks run in
 parallel: the repository's (STY-088 into a protected `main`, then STY-089 and STY-095
 in either order) and the API's (STY-090, then STY-091 and STY-092 in either order, with
-STY-093 after STY-091). CHO-031 (supply-chain checks), delivered beside STY-087, also
-changes `ci.yml` and the Dependabot file: whichever lands second rebases onto the
-other. The threat model comes before
+STY-093 after STY-091). CHO-031 (supply-chain checks) is done, beside STY-087. The
+threat model comes before
 any identity story (ADR-018); STY-094 follows the invitation story. The schema
 stories follow STY-093, adding their factories; the editor's adapter follows STY-092.
 
@@ -214,5 +214,5 @@ stories follow STY-093, adding their factories; the editor's adapter follows STY
 - [STY-048](../EPC-011-adding-roadmaps-and-items/STY-048-remove-a-roadmap.md) —
   removing a roadmap, bound by ADR-015 Option 8
 - [CHO-005](../chores/CHO-005-send-last-updated-to-the-api-in-utc.md)
-- [CHO-031](../chores/CHO-031-supply-chain-checks-on-every-pull-request.md) —
-  supply-chain checks, beside STY-087
+- [CHO-031](../_archive/chores/CHO-031-supply-chain-checks-on-every-pull-request.md) —
+  supply-chain checks, beside STY-087 ✅

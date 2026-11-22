@@ -1,0 +1,5 @@
+# Findings the dependency audit (.github/workflows/dependency-audit.yml) accepts for a
+# while, for every lockfile, each as an [[IgnoredVulns]] entry with its id, reason and
+# effectiveUntil, after which the audit fails on it again. Remove an entry once its fix
+# lands. Keep the file when it holds none: the audit reads it with --config, which fails
+# when the file is missing.

@@ -144,6 +144,17 @@ From the owner's STY-088 grilling and the review of its record (2026-11-21):
   `main` here: the same ruleset, less the required check it has no CI to report, the owner its only code owner, a read-only default
   workflow token, and workflows that name what they check out literally.
 
+### CHO-031 amendments
+
+From the owner's answer during CHO-031's delivery (2026-11-22, CHO-031 D4); the rest of
+_CI_ stands.
+
+- **A second workflow, `dependency-audit.yml`**, beside the one `ci.yml`: an OSV audit
+  of every lockfile, weekly and on each push to `main`, outside the _CI result_ gate,
+  so a vulnerability disclosed in a merged dependency fails that run and holds back no
+  merge or deploy. Dependency review, the check on pull requests, is a `ci.yml` job
+  that feeds the gate.
+
 ## Consequences
 
 - **Accepted risks:**

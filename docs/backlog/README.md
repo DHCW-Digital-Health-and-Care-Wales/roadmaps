@@ -71,10 +71,11 @@ moves to `_archive/`, where its row here still points.
 | [CHO-028](chores/CHO-028-round-one-starts-alongside-the-full-gate.md)                             | Whether review round 1 starts while its head's full gate runs                                                                       | Needs grilling |
 | [CHO-029](_archive/chores/CHO-029-ci-e2e-gets-chromiums-packages-without-a-slow-mirror.md)        | CI's E2E job gets Chromium's system packages without waiting on a slow apt mirror                                                   | Done           |
 | [CHO-030](_archive/chores/CHO-030-e2e-flakes-are-found-by-a-stress-run-not-by-ci.md)              | E2E flakes of one kind (a check before the UI settles, a failure only under load) are found by an audit and a stress run            | Done           |
-| [CHO-031](chores/CHO-031-supply-chain-checks-on-every-pull-request.md)                            | Supply-chain checks on every pull request (dependency review, an OSV audit, CodeQL, release cooldowns) and secrets refused at push  | Proposed       |
+| [CHO-031](_archive/chores/CHO-031-supply-chain-checks-on-every-pull-request.md)                   | Supply-chain checks on every pull request (dependency review, an OSV audit, CodeQL, release cooldowns) and secrets refused at push  | Done           |
 | [CHO-032](_archive/chores/CHO-032-a-security-review-for-a-pr-that-records-a-security-decision.md) | A security-relevant PR gets a security review lane (`threat-review`, Fable 5.2) beside correctness and quality                      | Done           |
 | [CHO-033](chores/CHO-033-the-markdown-link-check-checks-anchors.md)                               | The Markdown link check checks each link's anchor, not only its file                                                                | Proposed       |
 | [CHO-034](_archive/chores/CHO-034-every-package-takes-minimatch-11.md)                            | Every package takes minimatch 11, so the dependency audit finds nothing to ignore                                                   | Done           |
+| [CHO-035](chores/CHO-035-test-regexes-match-interpolated-strings-literally.md)                    | Test regexes match the strings they interpolate literally                                                                           | Proposed       |
 
 Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status token.
 
@@ -110,6 +111,7 @@ Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status toke
 | [DEF-026](_archive/defects/DEF-026-a-pinned-dialog-scrolls-its-title-out-of-view.md)                                | A pinned dialog can be scrolled so its title leaves the screen, out of reach                     | Done       |
 | [DEF-027](_archive/defects/DEF-027-a-quick-add-test-looks-for-the-field-before-it-has-come-back.md)                 | A quick add test looks for the field before it has come back                                     | Superseded |
 | [DEF-028](_archive/defects/DEF-028-a-fresh-clone-gets-no-git-hooks-from-pnpm-install.md)                            | A fresh clone gets no Git hooks from `pnpm install`                                              | Done       |
+| [DEF-029](defects/DEF-029-two-test-helpers-escape-only-some-regex-characters.md)                                    | Two test helpers escape only some regex characters, so CodeQL keeps two high alerts open         | Proposed   |
 
 A defect found during delivery is recorded in `defects/` with
 Status `Needs triage` and listed here until the owner triages it.

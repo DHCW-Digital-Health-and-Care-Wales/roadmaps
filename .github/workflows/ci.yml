@@ -1,6 +1,6 @@
 # CI for pull requests and main; deploys main to GitHub Pages once every check passes
-# (ADR-007). The Repository job runs every time, Dependency review on pull requests,
-# each app's jobs when the app can be affected, and CI result, the one check main's
+# (ADR-007). The Repository job runs every time, Dependency review on all but a push to
+# main, each app's jobs when the app can be affected, and CI result, the one check main's
 # ruleset requires, fails when any of them fails (.github/rulesets/main.json). Actions
 # are pinned to commit SHAs; Dependabot keeps them current.
 name: CI/CD
@@ -104,18 +104,22 @@ jobs:
   # A pull request that adds or changes a dependency to a version with a known
   # vulnerability fails, development dependencies included, since CI and every
   # developer's machine run them (CHO-031 S2). It reads GitHub's dependency graph of the
-  # base and the head, so it checks out nothing; a push to main skips it, and a
-  # vulnerability disclosed in a merged dependency is the dependency audit's
-  # (.github/workflows/dependency-audit.yml).
+  # base and the head, so it checks out nothing. A manual run compares its commit with
+  # main, so its CI result is no weaker than a pull request's on the same commit; a push
+  # to main skips it, and a vulnerability disclosed in a merged dependency is the
+  # dependency audit's (.github/workflows/dependency-audit.yml).
   dependency-review:
     name: Dependency review
-    if: github.event_name == 'pull_request'
+    if: github.event_name != 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
           fail-on-scopes: runtime, development, unknown
+          # Read only off pull_request events, where the action takes the pull request's.
+          base-ref: main
+          head-ref: ${{ github.sha }}
 
   editor-verify:
     name: "Editor: verify"
@@ -252,7 +256,7 @@ jobs:
   deploy:
     name: Deploy to GitHub Pages
     # CI result passes only when every check did, and on a push to main only Dependency
-    # review, a pull request's check, skips.
+    # review, which compares a change with main, skips.
     needs: [editor-verify, ci-result]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest

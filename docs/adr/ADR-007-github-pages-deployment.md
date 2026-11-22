@@ -101,6 +101,14 @@
   deploys. `verify` and `e2e` above are now `editor-verify` and `editor-e2e`, and
   `deploy` needs `ci-result` and `editor-verify`.
 
+### CHO-031 amendment
+
+- **Supply chain** (ADR-016's CHO-031 amendment): `ci.yml`'s Dependency review fails a
+  change that adds a dependency at a known vulnerable version, on pull requests and
+  manual runs, and feeds _CI result_; `dependency-audit.yml` audits every lockfile with
+  OSV-Scanner weekly and on each push to `main`, outside the gate. pnpm installs no
+  version younger than a week (`minimumReleaseAge`), CI's frozen install included.
+
 ## Consequences
 
 The production origin `https://<owner>.github.io` (or the custom domain) must be added to

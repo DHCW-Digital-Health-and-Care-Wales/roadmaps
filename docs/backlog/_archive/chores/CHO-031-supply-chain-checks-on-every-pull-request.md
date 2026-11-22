@@ -112,7 +112,9 @@ Dependabot security updates are on in the repository's settings.
   request and on `main` (agent).
 - **S2**: dependency review runs on every pull request, not only one that changes a
   lockfile: it compares GitHub's dependency graph of the base and the head, without a
-  checkout, and passes in seconds when nothing changed. It fails on development
+  checkout, and passes in seconds when nothing changed. A manual run compares its
+  commit with `main`, so the passing _CI result_ it posts on a pull request's commit is
+  no weaker than the pull request's own (security review's final pass). It fails on development
   dependencies too (`fail-on-scopes`), since CI and every developer run them, and the
   action's own default fails on runtime ones only. It is pinned to v5.0.0, as v5.0.1 is
   younger than the actions' seven-day cooldown (agent).
@@ -121,7 +123,9 @@ Dependabot security updates are on in the repository's settings.
   documentation says the graph detects no dependencies in that form. The SBOM lists
   607 packages, lockfile-only ones included, and the compare for #236 named lodash
   under `pnpm-lock.yaml`. Should the graph stop reading it, dependency review passes
-  without seeing a change, and the post-merge audit is the check left (agent).
+  without seeing a change and Dependabot's alerts and security updates (S5) go quiet
+  for every pnpm dependency, and the post-merge audit is the check left; the pull
+  request asks the owner to accept this residual (agent).
 - **S2**: the OSV audit is its own workflow, outside the gate (D4), and runs
   OSV-Scanner 2.7.1, pinned by version and checksum as actionlint is, with
   `--recursive`, so it finds `uv.lock` once the API adds it, and `--config`, since

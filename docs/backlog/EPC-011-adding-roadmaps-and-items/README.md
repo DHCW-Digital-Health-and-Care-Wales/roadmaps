@@ -346,7 +346,8 @@ flowchart LR
   test holds only geometry or repeats a run, as the owner asked after CHO-011 cut the
   add-a-roadmap journey to one run. STY-043 re-pointed the About tests at the roadmap
   dialog and ran About's panel behaviour once; STY-044 re-pointed the item-form tests
-  at the item dialog and kept the long tag and the long detail at one width.
+  at the item dialog and kept the long tag and the long detail at one width. It has since
+  widened to the whole test suite, delivered as CHO-036 to CHO-042 (its D8, D9).
 - [`docs/analysis/add-a-roadmap-ux-analysis.md`](../../analysis/add-a-roadmap-ux-analysis.md):
   twelve mock-ups over four journeys. Outcome: a dialog for adding a roadmap, landing on
   the new roadmap; a dialog for adding an item; one panel on an empty roadmap.

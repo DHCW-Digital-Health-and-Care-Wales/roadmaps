@@ -1,5 +1,7 @@
 import type { Page } from "@playwright/test"
 
+import { expect } from "./test"
+
 export type Theme = "light" | "dark"
 export const THEMES = ["light", "dark"] as const satisfies readonly Theme[]
 
@@ -10,6 +12,14 @@ export async function useTheme(page: Page, theme: Theme) {
   await page.addInitScript((value) => {
     localStorage.setItem("roadmaps.theme", value)
   }, theme)
+}
+
+/** The page is in `theme`: the root carries the `dark` class in the dark theme alone. */
+export async function expectTheme(page: Page, theme: Theme) {
+  const html = page.locator("html")
+  await (theme === "dark"
+    ? expect(html).toHaveClass(/\bdark\b/)
+    : expect(html).not.toHaveClass(/\bdark\b/))
 }
 
 /** Starts the page opening its forms as dialogs, as if the user had chosen it earlier (STY-083). */

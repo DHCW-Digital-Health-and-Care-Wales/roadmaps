@@ -1,6 +1,6 @@
 # CHO-036: The look checks tour and scan each state once
 
-- **Status**: Proposed — part of CHO-014 (its D9); the largest saving for the least work, so first
+- **Status**: Done
 - **Type**: Refactor
 - **Area**: E2E (tests only)
 - **Epic**: standalone
@@ -77,6 +77,71 @@ and removes it only on the owner's word, since CHO-014's S4 keeps every axe scan
 - **D1** (owner, 2026-11-22, CHO-014 D9): this chore is one of CHO-014's sub-chores,
   delivered alone.
 
+- **D2** (owner, 2026-11-22, this chore's PR, S2): the co-lead's review tour →
+  renamed for the refusal notice it tours; the review dialog's controls are not
+  toured.
+- **D3** (owner, 2026-11-22, this chore's PR, S3): "YES, remove the repeated axe
+  scans you list", each named in the PR with the scan that holds its state → the
+  four scans in Delivery are removed; every scan kept still runs in both themes
+  (CHO-014 S4).
+
 ## Out of scope
 
 - Running a tour or scan in one theme: the owner keeps both (CHO-014 D7).
+
+## Delivery
+
+### Departures
+
+- S1: the page tour's helper tours a range of stops (`expectStopsShowAnIndicator`, from
+  a first stop to a last), not a region by locator, since a stop of one page is no
+  child of one container (the header, the banner and the title block are siblings). A
+  stop it misses fails it: Tab lands on another stop, which is not the name expected.
+  A stop out of the Tab order by `tabindex="-1"` is, as in the whole-page tour,
+  left out of the stops found, not a miss.
+- S1: the not-published page tour keeps its four checks of one stop each and tours
+  two ranges: the header to the last placement link (header, banner, title, Product
+  details, Edit product details, Publish roadmap), then its empty section's button and
+  its first card's three buttons. Its other cards, its navigation and its footer are of
+  the kinds the tour of a change pending and the main page's tour walk.
+- S2: the test is named for the notice it tours (D2), and tours the notice's one stop,
+  "Review the changes", through the same helper; the rest of its page was the page
+  the tour of a change pending walks.
+- S3: of the candidates in Measurement, four scans go (D3). Not removed, since the
+  state each scans is no other scan's: the English scan of a roadmap's page on a phone
+  (no other scan at 375 px has the page with nothing pending), the drawer tails of the
+  navigation's search, families and count (each drawer holds a different list), and
+  the in-between states of the tags and details tests. The tags test's locked-form scan
+  stays as the one Welsh-locked scan.
+- The item dialog's shut tour stays: it holds the wrap to the first stop (Measurement:
+  optional).
+
+### Scans removed (S3, S5, S9)
+
+| Removed                                                                     | Held by                                                                                                                                                                                   |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `accessibility.spec.ts` "roadmap detail", both themes                       | the first scan of "the shell's navigation beside a roadmap's page", the same page and wait                                                                                                |
+| the Welsh-locked scan of "an item with no details…", both themes            | the Welsh-locked scan of "an item with no tags…": the same item's dialog, holding both notes. The note's text is asserted in `roadmap-detail-page-details.test.tsx` and `editing.spec.ts` |
+| the scan of the unplaced item's form in "an item's Move menu…", both themes | the first scan of "the item form as a side panel": the same dialog; the page behind it is the previous scan of the Move test                                                              |
+| the English run of "the header at 375px wide…", light                       | every full-page scan at 375 px in English, in both themes, such as "a roadmap's placement navigation on a phone": the header is the same one                                              |
+| `typography.spec.ts`, the body's font family                                | `styles.spec.ts` "the start page uses the header, button, page and font tokens", both themes                                                                                              |
+
+Each holder runs through the fakes, so it outlives the switch from Google Sheets.
+`accessibility.spec.ts` and `styles.spec.ts` now take `THEMES`, `Theme` and
+`expectTheme` from `fixtures/look.ts`.
+
+### Contract for dependents
+
+- `expectStopsShowAnIndicator(page, first, last?)` in `focus-indicator.spec.ts` tours
+  the stops from `first` to `last` of a page that another tour walks whole.
+- `expectTheme(page, theme)` in `fixtures/look.ts` is the check that the page is in the
+  theme asked for.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                               |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | observed run: with `More` given a positive `tabindex`, the scoped tour fails ("the stop reached, expected main: button More", reached "main: button Product details"), in both themes |
+| S2       | the renamed test passes in both themes                                                                                                                                                |
+| S3       | the PR lists each scan and its holder; the specs touched pass, both themes                                                                                                            |
+| S4       | the table above (S5, S9)                                                                                                                                                              |

@@ -15,7 +15,9 @@ import { escapeFrom, tabTo } from "./fixtures/keyboard"
 import { THEMES, tokenColour, useTheme } from "./fixtures/look"
 import {
   openLongRoadmap,
+  placementLinks,
   productDetailsDisclosure,
+  refusal,
 } from "./fixtures/roadmap-page"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
@@ -208,6 +210,55 @@ async function expectEveryStopShowsAnIndicator(
 }
 
 /**
+ * Tours the tab stops of a page from `first` to `last`, `first` alone when `last` is
+ * omitted, in the order of the page: each in turn shows one of the three indicators, and
+ * Tab from one lands on the next. The stops are those the page offers between the two,
+ * found first, so a stop the tour misses fails it, as one taken out of the Tab order
+ * does: Tab skips it to the next, and the stop it lands on is not the one expected. For
+ * the part of a page that no other tour walks; a page of its own stops is toured whole
+ * by `expectEveryStopShowsAnIndicator`.
+ */
+async function expectStopsShowAnIndicator(
+  page: Page,
+  first: Locator,
+  last: Locator = first,
+) {
+  const colours = await focusColours(page)
+  const names = await Promise.all(
+    (await tabStops(page).all()).map((stop) => stop.evaluate(describeElement)),
+  )
+  const start = names.indexOf(await first.evaluate(describeElement))
+  const end = names.indexOf(await last.evaluate(describeElement), start)
+  if (start === -1 || end === -1) {
+    throw new Error("The first or last stop is not a tab stop of the page")
+  }
+  const expected = names.slice(start, end + 1)
+  expect(
+    expected.filter((name, index) => expected.indexOf(name) !== index),
+    "the stops that share a name with another",
+  ).toEqual([])
+
+  // Taken from a control before it by the keyboard, so the focus is the keyboard's.
+  await first.focus()
+  await page.keyboard.press("Shift+Tab")
+  await page.keyboard.press("Tab")
+  for (const [index, name] of expected.entries()) {
+    const focused = page.locator(":focus")
+    await expect
+      .poll(() => focused.evaluate(describeElement), {
+        message: `the stop reached, expected ${name}`,
+      })
+      .toBe(name)
+    await expect
+      .poll(() => indicatorOf(focused, colours, 3), {
+        message: `the focus indicator of ${name}`,
+      })
+      .not.toBeNull()
+    if (index < expected.length - 1) await page.keyboard.press("Tab")
+  }
+}
+
+/**
  * Tours a form dialog from its first stop, where focus is as it opens: each stop in turn
  * shows its indicator, the fill on a button and the ring on a field, and Tab from the
  * last comes back to the first, since a dialog holds focus. The stops are the dialog's
@@ -313,7 +364,7 @@ for (const theme of THEMES) {
       await expectEveryStopShowsAnIndicator(page)
     })
 
-    test("every control on a roadmap not published, its product details open, shows DHCW's focus indicator, the banner's dismiss button and Publish roadmap among them (STY-065)", async ({
+    test("the controls only a roadmap not published has, its product details open, show DHCW's focus indicator, the banner's dismiss button and Publish roadmap among them (STY-065)", async ({
       page,
       sheets,
     }) => {
@@ -339,10 +390,21 @@ for (const theme of THEMES) {
       await tabTo(page, publish)
       await expectIndicator(publish, colours, "fill")
 
-      await page.evaluate(() => {
-        window.scrollTo(0, 0)
-      })
-      await expectEveryStopShowsAnIndicator(page)
+      // The page's own stops: its header, banner, title, product details and placement
+      // links, then its empty section's button and its first card's. The page's other
+      // cards, its navigation and its footer are of the kinds the tours above walk.
+      await expectStopsShowAnIndicator(
+        page,
+        page.getByRole("banner").getByRole("link"),
+        placementLinks(page).getByRole("link").last(),
+      )
+      await expectStopsShowAnIndicator(
+        page,
+        main.getByRole("button", {
+          name: "Add the first item to Recently delivered",
+        }),
+        main.getByRole("button", { name: "Edit Unpublished work" }),
+      )
     })
 
     test("every control in the item dialog, its fields shut and then open, shows DHCW's focus indicator (STY-044)", async ({
@@ -407,7 +469,7 @@ for (const theme of THEMES) {
       await expectDialogTour(page, dialog)
     })
 
-    test("every control in a co-lead's review shows DHCW's focus indicator (STY-026)", async ({
+    test("the notice of a publish a co-lead's change refused shows DHCW's focus indicator (STY-026)", async ({
       page,
       sheets,
     }) => {
@@ -424,7 +486,12 @@ for (const theme of THEMES) {
       await main.getByRole("button", { name: "Publish changes" }).click()
       await confirmPublish(page, main.getByRole("alert"))
 
-      await expectEveryStopShowsAnIndicator(page)
+      // The notice's stops are the only ones this page adds to the page of a change
+      // pending, whose tour walks the rest.
+      await expectStopsShowAnIndicator(
+        page,
+        refusal(page).getByRole("button", { name: "Review the changes" }),
+      )
     })
 
     test("the navigation's count takes the fill and keeps it once pressed (STY-063 S8)", async ({

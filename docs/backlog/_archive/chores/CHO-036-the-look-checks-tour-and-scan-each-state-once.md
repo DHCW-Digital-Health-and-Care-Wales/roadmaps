@@ -9,7 +9,7 @@
 - **Binding ADRs**: ADR-006, ADR-010
 - **Suggested model**: Sonnet — a scoped tour helper and a judgement per scan of
   whether its state is another scan's
-- **Delivered**: _(add on delivery)_
+- **Delivered**: [PR #248](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/248)
 
 ## Summary
 

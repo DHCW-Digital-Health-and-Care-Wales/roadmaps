@@ -54,10 +54,11 @@ End-to-end tests of the production build, with Google faked (ADR-006).
   (`chooseFromMore`, `confirmPublish`, `escapeFrom`). A spec waits the same way before
   its next step acts, and presses Escape in a popup that holds focus with `escapeFrom`.
 - Read boxes compared with each other in one `boxesOf` call, so they are of one moment.
-- Redden a race by holding what its step waits for, then asserting once, the moment the
-  helper returns: a closing animation paused by a style rule
-  (`holdPublishDialogClosing`), a request held with `page.route`, the clock left unmoved.
-  A delay that hopes a later step collides goes red only now and then.
+- Redden a race by holding what its step waits for, releasing it a while later, and
+  asserting once, the moment the helper returns: a closing animation paused by a style
+  rule (`holdPublishDialogClosing`), a request held with `page.route`, the clock paused
+  with `page.clock.pauseAt`. A delay that hopes a later step collides goes red only now
+  and then.
 
 ## Look checks
 

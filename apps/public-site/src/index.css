@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Tailwind builds utilities from every word it finds in the app's files. Markdown
+   is documentation, and a pull request that changes only Markdown skips the
+   site's CI jobs, so it must not change the stylesheet. */
+@source not "../**/*.md";
+
 /* The only copy of the design tokens. Tailwind builds utilities from them and
    also exposes them as CSS variables, for example var(--color-yellow). */
 @theme {

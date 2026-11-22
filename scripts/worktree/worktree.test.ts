@@ -164,13 +164,15 @@ describe("worktree.sh info", () => {
 
     const output = await info(root)
 
-    expect(output).toContain(
-      `editor:dev                       http://localhost:${String(base)}`,
+    expect(output).toMatch(
+      new RegExp(`editor:dev\\s+http://localhost:${String(base)}\\n`),
     )
-    expect(output).toContain(
-      `site:dev                         http://localhost:${String(base + 2)}/`,
+    expect(output).toMatch(
+      new RegExp(`site:dev\\s+http://localhost:${String(base + 2)}/`),
     )
-    expect(output).toContain(`http://localhost:${String(base + 3)}/`)
+    expect(output).toMatch(
+      new RegExp(`site:preview.*\\s+http://localhost:${String(base + 3)}/`),
+    )
   })
 
   it("asks for setup again when .env.worktree predates a port", async () => {

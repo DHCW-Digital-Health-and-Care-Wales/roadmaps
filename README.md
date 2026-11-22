@@ -174,19 +174,13 @@ not even fetched), and without an `Enabled` column no roadmaps are published. A 
 value with no matching tab, or a tab missing a required column, fails the sync, so the
 deploy fails and the previous site stays live.
 
-How the editor reads the same tabs, and the tabs only it reads:
-
-The **first tab**,
-whatever it is called and even when hidden, is the roadmap index: row 1 is the header and
-each other row is one roadmap. Its `Sheet` column (required) names the tab holding that
-roadmap's items; `Enabled` (exactly `Yes`), `Title`, `Category`, `Family`, `Status label`,
-`Last updated`, `Colour`, `Vision`, `Service description` and `Product Lead` are read
-when present, with `(cy)` columns for Welsh. The tab a row's `Sheet` names holds that
-roadmap's items, one per row, its columns found by their row-1 header in any order
-([ADR-011](docs/adr/ADR-011-roadmap-items-from-each-roadmaps-tab.md)). The `Template` tab
-is copied to start a roadmap, after its header row is read to check it; its other rows
-are never read and it is never changed. An optional `Item ID` column holds each item's identity
-([ADR-012](docs/adr/ADR-012-publishing-a-roadmaps-changes.md)); the public site ignores it.
+**What the editor adds.** The editor reads the first tab as the roadmap index whatever
+it is called, even when hidden, and finds a roadmap tab's columns by their row-1 header,
+in any order ([ADR-011](docs/adr/ADR-011-roadmap-items-from-each-roadmaps-tab.md)). The
+`Template` tab is copied to start a roadmap, after its header row is read to check it;
+its other rows are never read and it is never changed. An optional `Item ID` column holds
+each item's identity ([ADR-012](docs/adr/ADR-012-publishing-a-roadmaps-changes.md)); the
+public site ignores it.
 
 **Families and categories** are defined once, in a `Families` tab (`ID`, `Name`,
 `Name (cy)`, `Colour`) and a `Categories` tab (`ID`, `Name`, `Name (cy)`), neither of

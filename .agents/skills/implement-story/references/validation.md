@@ -6,7 +6,7 @@ The commands below identify families; the scripts remain authoritative. Run
 from the repository root.
 
 The full gate before a PR is
-`pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm build && pnpm editor:test:e2e`.
+`pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && ROADMAPS_DATA=e2e/fixtures/roadmaps.json pnpm build && pnpm editor:test:e2e`.
 The table says what each kind of change additionally needs.
 
 | Changed contract             | Required evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |

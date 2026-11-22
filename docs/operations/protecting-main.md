@@ -55,6 +55,8 @@ fields='{name, target, enforcement, conditions, bypass_actors, rules: (.rules | 
 diff <(jq -S "$fields" .github/rulesets/main.json) \
   <(gh api "repos/$repo/rulesets/$id" | jq -S "$fields")
 gh api "repos/$repo" --jq .allow_rebase_merge   # false once rebase merging is unticked
+gh api "repos/$repo/environments/github-pages/deployment-branch-policies" \
+  --jq '[.branch_policies[].name]'  # ["main"]: only main deploys
 ```
 
 Any of the organisation's owners can change a ruleset, so run the check after anyone
@@ -94,4 +96,6 @@ diff <(jq -S "$fields" .github/rulesets/product-roadmaps.json) \
   <(gh api "repos/$repo/rulesets/$id" | jq -S "$fields")
 gh api "repos/$repo" --jq .allow_rebase_merge  # false
 gh api "repos/$repo/actions/permissions/workflow" --jq .default_workflow_permissions  # read
+gh api "repos/$repo/environments/github-pages/deployment-branch-policies" \
+  --jq '[.branch_policies[].name]'  # ["main"]: a deploy run on another branch is refused
 ```

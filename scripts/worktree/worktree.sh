@@ -197,7 +197,7 @@ teardown() {
     local var
     for var in "${PORT_VARS[@]}"; do
       # A file written before a port was added lacks its line.
-      [ -n "${!var:-}" ] && stop_port "${!var}"
+      if [ -n "${!var:-}" ]; then stop_port "${!var}"; fi
     done
   fi
   lock

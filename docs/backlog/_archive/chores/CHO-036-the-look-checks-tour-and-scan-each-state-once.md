@@ -114,11 +114,15 @@ and removes it only on the owner's word, since CHO-014's S4 keeps every axe scan
   navigation's search, families and count (each drawer holds a different list), and
   the in-between states of the tags and details tests. The tags test's locked-form scan
   stays as the one Welsh-locked scan.
-- Two archived records cite a test this chore removes or renames, and stay as they
+- Four archived records cite a test this chore removes or renames, and stay as they
   were: DEF-002 S1's evidence names "the header at 375px wide in en" (its Welsh run,
-  and every English full-page scan at 375 px, still scan the header), and STY-039 names
+  and every English full-page scan at 375 px, still scan the header); STY-039 names
   "an item with no details, and one whose Welsh details can't be changed" (now "an item
-  with no details").
+  with no details"); STY-031 names "an item's Move menu, then the moved item and an
+  unplaced item's form" (now "…on a page with an unplaced item", the form's
+  placeholder asserted by `roadmap-detail-page-moving.test.tsx`); STY-021's S11 cites
+  the "roadmap detail" scan (held by the first scan of "the shell's navigation beside a
+  roadmap's page").
 - The item dialog's shut tour stays: it holds the wrap to the first stop (Measurement:
   optional).
 

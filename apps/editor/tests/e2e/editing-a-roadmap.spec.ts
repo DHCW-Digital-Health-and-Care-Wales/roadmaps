@@ -10,6 +10,7 @@ import {
 } from "./fixtures/dialogs"
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
 import { EXAMPLE_SPREADSHEET_WITH_LISTS } from "./fixtures/fake-sheets"
+import { escapeFrom } from "./fixtures/keyboard"
 import { useLanguage } from "./fixtures/look"
 import {
   moreButton,
@@ -162,11 +163,7 @@ test("the dialog stays through the session warning and the session's end, and Do
   const warning = page.getByRole("alertdialog", {
     name: "Your session is about to end",
   })
-  await expect(
-    warning.getByRole("button", { name: "Stay connected" }),
-  ).toBeFocused()
-  await page.keyboard.press("Escape")
-  await expect(warning).toBeHidden()
+  await escapeFrom(warning)
   await expect(vision).toHaveValue(VISION)
 
   await page.clock.fastForward(SESSION_WARNING_MS)
@@ -226,9 +223,7 @@ test("More lists Edit product details first, which opens the roadmap dialog with
     "Refresh",
     "Unpublish roadmap",
   ])
-  await expect(page.getByRole("menu")).toBeFocused()
-  await page.keyboard.press("Escape")
-  await expect(page.getByRole("menu")).toBeHidden()
+  await escapeFrom(page.getByRole("menu"))
 
   const dialog = await openEditRoadmapDialogFromMore(page)
   await dialog.getByRole("button", { name: "Cancel" }).click()

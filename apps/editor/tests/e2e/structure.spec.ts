@@ -16,6 +16,7 @@ import {
   EXAMPLE_SPREADSHEET_WITH_LISTS,
   withRoadmapIndex,
 } from "./fixtures/fake-sheets"
+import { escapeFrom } from "./fixtures/keyboard"
 import { type Language, useLanguage } from "./fixtures/look"
 import {
   goToList,
@@ -534,9 +535,7 @@ test("the account menu, open: connected, then signed out (STY-056)", async ({
   await page.goto("./")
   const menu = await openAccountMenu(page)
   await expectStructure(menu, "account-menu-signed-out.aria.yml")
-  await expect(menu).toBeFocused()
-  await page.keyboard.press("Escape")
-  await expect(menu).toBeHidden()
+  await escapeFrom(menu)
 
   await connect(page)
   await expect(roadmapCards(page)).toHaveCount(3)

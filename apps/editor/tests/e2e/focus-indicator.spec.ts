@@ -11,7 +11,7 @@ import {
   openEditRoadmapDialog,
 } from "./fixtures/dialogs"
 import { EXAMPLE_SPREADSHEET_WITH_LISTS } from "./fixtures/fake-sheets"
-import { tabTo } from "./fixtures/keyboard"
+import { escapeFrom, tabTo } from "./fixtures/keyboard"
 import { THEMES, tokenColour, useTheme } from "./fixtures/look"
 import {
   openLongRoadmap,
@@ -493,7 +493,7 @@ for (const theme of THEMES) {
       await expect(welsh).toBeFocused()
       // Menu items take the fill, as a DHCW link or button does (STY-015 D5).
       await expectIndicator(welsh, colours, "fill")
-      await page.keyboard.press("Escape")
+      await escapeFrom(page.getByRole("menu"))
       // Focus is back on the button once the menu has closed: Tab from inside the
       // closing menu would go round the whole page to reach the next control.
       await expect(language).toBeFocused()
@@ -520,7 +520,7 @@ for (const theme of THEMES) {
       await page.keyboard.press("ArrowDown")
       await expect(disconnect).toBeFocused()
       await expectIndicator(disconnect, colours, "fill")
-      await page.keyboard.press("Escape")
+      await escapeFrom(page.getByRole("menu"))
       await expect(account).toBeFocused()
 
       const refresh = main.getByRole("button", { name: "Refresh" })

@@ -13,6 +13,7 @@ import {
 } from "./fixtures/dialogs"
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
 import { withTabItems } from "./fixtures/fake-sheets"
+import { escapeFrom } from "./fixtures/keyboard"
 import { useLanguage } from "./fixtures/look"
 import {
   goToList,
@@ -414,8 +415,7 @@ test("an empty roadmap's panel holds “Add an item”; its first item brings th
     .selectOption({ label: "Now" })
   await dialog.getByRole("button", { name: "Add and start another" }).click()
   await expect(dialog.getByRole("status")).not.toBeEmpty()
-  await page.keyboard.press("Escape")
-  await expect(dialog).toBeHidden()
+  await escapeFrom(dialog)
   await expect(addItemButtons(page)).toBeFocused()
 
   await expect(main.getByRole("heading", { level: 2 })).toHaveText([
@@ -490,11 +490,7 @@ test("the dialog stays through the session's end, and “Add item” still adds;
   const warning = page.getByRole("alertdialog", {
     name: "Your session is about to end",
   })
-  await expect(
-    warning.getByRole("button", { name: "Stay connected" }),
-  ).toBeFocused()
-  await page.keyboard.press("Escape")
-  await expect(warning).toBeHidden()
+  await escapeFrom(warning)
 
   await page.clock.fastForward(SESSION_WARNING_MS)
   // Said by the page behind, which only its text can reach.

@@ -5,7 +5,7 @@ import { expect } from "./test"
 
 const TRIGGER_NAME = { en: "Account", cy: "Cyfrif" } as const
 
-/** Opens the header's account menu (STY-056) and returns the menu, once it shows. */
+/** Opens the header's account menu (STY-056) and returns the menu, once it has focus. */
 export async function openAccountMenu(
   page: Page,
   language: Language = "en",
@@ -15,7 +15,7 @@ export async function openAccountMenu(
     .getByRole("button", { name: TRIGGER_NAME[language] })
     .click()
   const menu = page.getByRole("menu")
-  await expect(menu).toBeVisible()
+  await expect(menu).toBeFocused()
   return menu
 }
 

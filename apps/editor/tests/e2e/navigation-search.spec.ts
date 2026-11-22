@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test"
 
 import type { FakeSheets } from "./fixtures/fake-sheets"
+import { escapeFrom } from "./fixtures/keyboard"
 import { boxesOf, boxOf } from "./fixtures/layout"
 import { type Language, useLanguage } from "./fixtures/look"
 import { NAVIGATION_WORLD } from "./fixtures/navigation-world"
@@ -178,8 +179,7 @@ test.describe("on a phone", () => {
     await expect(searchBox(page)).toHaveValue("")
     await expect(drawer).toBeVisible()
 
-    await page.keyboard.press("Escape")
-    await expect(drawer).toBeHidden()
+    await escapeFrom(drawer)
   })
 })
 

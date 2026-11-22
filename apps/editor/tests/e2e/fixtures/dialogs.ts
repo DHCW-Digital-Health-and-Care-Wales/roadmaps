@@ -394,19 +394,22 @@ export async function addItem(
   await expect(dialog).toBeHidden()
 }
 
+/** The start of the notice a publish that went through shows. */
+const PUBLISHED = "Changes published."
+
 /**
  * Holds the publish dialog's closing until a second after its notice shows, as a loaded
  * runner can: the notice takes focus only as the closing ends. Call before `goto`.
  */
 export async function holdPublishDialogClosing(page: Page): Promise<void> {
-  await page.addInitScript(() => {
+  await page.addInitScript((published) => {
     document.addEventListener("DOMContentLoaded", () => {
       const hold = document.createElement("style")
       hold.textContent =
         '[data-slot="alert-dialog-content"][data-closed] { animation-play-state: paused !important; }'
       document.head.append(hold)
       const noticeShown = new MutationObserver(() => {
-        if (!document.body.textContent.includes("Changes published.")) return
+        if (!document.body.textContent.includes(published)) return
         noticeShown.disconnect()
         setTimeout(() => {
           hold.remove()
@@ -418,7 +421,7 @@ export async function holdPublishDialogClosing(page: Page): Promise<void> {
         characterData: true,
       })
     })
-  })
+  }, PUBLISHED)
 }
 
 /**
@@ -446,7 +449,7 @@ export async function confirmPublish(
   notice: Locator = page
     .getByRole("main")
     .getByRole("status")
-    .filter({ hasText: /^Changes published\./ }),
+    .filter({ hasText: PUBLISHED }),
 ): Promise<void> {
   const dialog = page.getByRole("alertdialog")
   await dialog.getByRole("button", { name: "Publish changes" }).click()

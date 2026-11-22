@@ -1,5 +1,7 @@
 import type { Locator, Page } from "@playwright/test"
 
+import { expect } from "./test"
+
 /**
  * Presses Tab (or Shift+Tab, backwards) until `target` has focus, as a keyboard user
  * would, failing after `limit` presses, or once focus leaves the page: a target only
@@ -30,4 +32,19 @@ export async function tabTo(
     }
   }
   throw new Error("Tabbing never reached the target")
+}
+
+/**
+ * Presses Escape in `popup`, a menu, dialog or panel, once focus is in it, and returns
+ * once it has gone. A popup takes focus a frame after it shows, so an Escape pressed
+ * before then reaches what is under it; and what closing it causes lands as it goes.
+ */
+export async function escapeFrom(popup: Locator): Promise<void> {
+  await expect
+    .poll(() =>
+      popup.evaluate((element) => element.contains(document.activeElement)),
+    )
+    .toBe(true)
+  await popup.page().keyboard.press("Escape")
+  await expect(popup).toBeHidden()
 }

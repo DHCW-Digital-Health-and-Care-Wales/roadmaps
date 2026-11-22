@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test"
 
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
+import { escapeFrom } from "./fixtures/keyboard"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 /** Connects with a fake clock, loads the roadmaps, and reaches the warning. */
@@ -117,9 +118,7 @@ test("dismissing the warning leaves the session to run out (S6)", async ({
 }) => {
   const warning = await reachWarning(page)
 
-  await page.keyboard.press("Escape")
-
-  await expect(warning).toBeHidden()
+  await escapeFrom(warning)
   // Short of the end by more than a loaded runner's steps take: the clock still runs
   // in real time between them.
   const SLACK_MS = 30_000

@@ -252,6 +252,7 @@ test.describe("a long placement (S1, STY-071 S4)", () => {
   }
 })
 
+// `publishOnce`'s own test sits with the case whose scripted focus lost the race to it.
 test("publishing once hands over only when the notice has focus, however late the publish dialog closes (DEF-024 S1)", async ({
   page,
 }) => {

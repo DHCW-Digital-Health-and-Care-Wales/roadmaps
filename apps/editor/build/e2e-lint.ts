@@ -26,18 +26,11 @@ const noBoundingBox = {
     "Read a box with boxOf or boxesOf (tests/e2e/fixtures/layout.ts): they wait for the page's animations and for layout.",
 }
 
-const LAYOUT = "tests/e2e/fixtures/layout.ts"
-
 export const e2eRules: Linter.Config[] = [
   {
     files: ["tests/e2e/**/*.ts"],
     rules: {
       "no-restricted-syntax": ["error", noThrottling, noBoundingBox],
     },
-  },
-  // Last, so it takes the rule over for the one file that reads boxes itself.
-  {
-    files: [LAYOUT],
-    rules: { "no-restricted-syntax": ["error", noThrottling] },
   },
 ]

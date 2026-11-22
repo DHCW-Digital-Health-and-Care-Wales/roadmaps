@@ -24,6 +24,7 @@ import {
   withRoadmapIndex,
   withTabItems,
 } from "./fixtures/fake-sheets"
+import { escapeFrom } from "./fixtures/keyboard"
 import { useDialog, useLanguage, useTheme } from "./fixtures/look"
 import {
   productDetailsField,
@@ -151,8 +152,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
 
       const panel = await openEditItemDialog(page, "Minimal card")
       await expectNoAxeViolations(page, theme)
-      await page.keyboard.press("Escape")
-      await expect(panel).toBeHidden()
+      await escapeFrom(panel)
 
       await page.setViewportSize({ width: 844, height: 390 })
       await openEditItemDialog(page, "Minimal card")
@@ -250,9 +250,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
         await moreButton(page).click()
         await expect(page.getByRole("menu")).toBeVisible()
         await expectNoAxeViolations(page, theme, { menuOpen: true })
-        await expect(page.getByRole("menu")).toBeFocused()
-        await page.keyboard.press("Escape")
-        await expect(page.getByRole("menu")).toBeHidden()
+        await escapeFrom(page.getByRole("menu"))
 
         await page.getByRole("button", { name: "Dismiss message" }).click()
         await expect(page.locator("[data-slot=phase-banner]")).toHaveCount(0)

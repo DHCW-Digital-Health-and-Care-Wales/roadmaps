@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test"
 
 import { openEditItemDialog } from "./fixtures/dialogs"
+import { escapeFrom } from "./fixtures/keyboard"
 import { boxesOf, boxOf } from "./fixtures/layout"
 import { tokenColour, type Language, useLanguage } from "./fixtures/look"
 import { EXAMPLE_SPREADSHEET, type FakeTab } from "./fixtures/fake-sheets"
@@ -265,8 +266,7 @@ test.describe("on a phone", () => {
       )
       expect(families.right).toBeLessThanOrEqual(box.right)
 
-      await page.keyboard.press("Escape")
-      await expect(drawer).toBeHidden()
+      await escapeFrom(drawer)
       await expect(menu).toBeFocused()
     })
   }

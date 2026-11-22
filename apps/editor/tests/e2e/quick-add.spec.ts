@@ -4,6 +4,7 @@ import type { Locator, Page } from "@playwright/test"
 import { confirmPublish, reconnectDialog } from "./fixtures/dialogs"
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
 import { type FakeTab, withTabItems } from "./fixtures/fake-sheets"
+import { escapeFrom } from "./fixtures/keyboard"
 import { boxesOf } from "./fixtures/layout"
 import { type Language, useTheme } from "./fixtures/look"
 import { openRoadmapIn, refreshRoadmap } from "./fixtures/roadmap-page"
@@ -248,11 +249,7 @@ test("the session warning, opening as a title is typed, leaves the field and its
   const warning = page.getByRole("alertdialog", {
     name: "Your session is about to end",
   })
-  await expect(
-    warning.getByRole("button", { name: "Stay connected" }),
-  ).toBeFocused()
-  await page.keyboard.press("Escape")
-  await expect(warning).toBeHidden()
+  await escapeFrom(warning)
 
   await expect(field(page, "Next")).toHaveValue(HEARING)
   await field(page, "Next").focus()
@@ -417,8 +414,7 @@ test("“Add more details” opens the item dialog on the title and placement; c
     .getByRole("button", { name: "Add and start another", exact: true })
     .click()
   await expect(dialog.getByRole("status")).toContainText(CHECK_IN)
-  await page.keyboard.press("Escape")
-  await expect(dialog).toBeHidden()
+  await escapeFrom(dialog)
   await expect(quickAdd(page, "Later")).toBeFocused()
   await expect(field(page, "Later")).toHaveCount(0)
   await expect(titlesUnder(page, "Later")).toHaveText([

@@ -69,7 +69,11 @@ async function editTitle(page: Page, from: string, to: string) {
   await expect(itemCard(page, to).getByText("Changed")).toBeVisible()
 }
 
-/** Opens the publish (or save) dialog and confirms it. */
+/**
+ * Opens the publish (or save) dialog, confirms it and returns once it has gone: its
+ * outcome's notice, a success, a refusal or a failure, has focus by then, as the dialog
+ * sends focus there as it finishes closing.
+ */
 async function chooseAndConfirm(page: Page, action: "Publish" | "Save") {
   await page
     .getByRole("main")
@@ -78,6 +82,7 @@ async function chooseAndConfirm(page: Page, action: "Publish" | "Save") {
   const dialog = page.getByRole("alertdialog")
   await expect(dialog).toBeVisible()
   await dialog.getByRole("button", { name: `${action} changes` }).click()
+  await expect(dialog).toBeHidden()
 }
 
 test("publishes a roadmap's changes in one write, then shows the published text (S10)", async ({

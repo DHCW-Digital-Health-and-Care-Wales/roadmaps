@@ -8,6 +8,7 @@ import {
   reconnectDialog,
 } from "./fixtures/dialogs"
 import { sessionMs } from "./fixtures/fake-gis"
+import { escapeFrom } from "./fixtures/keyboard"
 import { useLanguage } from "./fixtures/look"
 import { moreButton, refreshRoadmap } from "./fixtures/roadmap-page"
 import { connect, expect, test } from "./fixtures/test"
@@ -192,8 +193,7 @@ test("in Welsh, by keyboard: the dialog keeps focus, and Escape gives it back (S
   await page.keyboard.press("Tab")
   await expect(reconnect).toBeFocused()
 
-  await page.keyboard.press("Escape")
-  await expect(dialog).toBeHidden()
+  await escapeFrom(dialog)
   await expect(publish).toBeFocused()
 
   await page.keyboard.press("Enter")

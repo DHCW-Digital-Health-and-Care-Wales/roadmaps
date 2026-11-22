@@ -80,8 +80,9 @@ run **Then** each passes; at `d6bbc69` the delay makes them fail every time
 The cause was as suspected. `publishOnce` (`apps/editor/tests/e2e/fixtures/dialogs.ts`)
 now ends with `confirmPublish`, which waits for the publish dialog to go and for the
 notice to have focus. That notice takes focus as the dialog finishes closing, in
-`onOpenChangeComplete`. CHO-030 moved every inline publish confirmation onto
-`confirmPublish` too, so the race is gone for every caller, not just this spec.
+`onOpenChangeComplete`. CHO-030 moved the inline publish confirmations onto
+`confirmPublish` too, and made `editing.spec.ts`'s own confirming helper wait for its
+dialog to go, so the race is gone for those callers, not just this spec.
 
 ### Departures
 

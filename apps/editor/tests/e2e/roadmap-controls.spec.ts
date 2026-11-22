@@ -7,6 +7,7 @@ import {
   publishOnce,
   reconnectDialog,
 } from "./fixtures/dialogs"
+import { escapeFrom } from "./fixtures/keyboard"
 import { boxOf } from "./fixtures/layout"
 import type { Language } from "./fixtures/look"
 import {
@@ -277,9 +278,7 @@ test("moves Publish roadmap into More once the row sticks, at every width, where
   await more.click()
   // The Not published notice holds Publish roadmap at the top (STY-065 S4).
   await expect(menuItems).toHaveText(["Edit product details", "Refresh"])
-  await expect(page.getByRole("menu")).toBeFocused()
-  await page.keyboard.press("Escape")
-  await expect(page.getByRole("menu")).toBeHidden()
+  await escapeFrom(page.getByRole("menu"))
 
   await scrollTo(page, "Later")
 
@@ -294,9 +293,7 @@ test("moves Publish roadmap into More once the row sticks, at every width, where
     "Refresh",
     "Publish roadmap",
   ])
-  await expect(page.getByRole("menu")).toBeFocused()
-  await page.keyboard.press("Escape")
-  await expect(page.getByRole("menu")).toBeHidden()
+  await escapeFrom(page.getByRole("menu"))
 
   await page.setViewportSize(DESKTOP)
 

@@ -100,9 +100,10 @@ and passes. Its search: `rg -n 'expectFieldBack\(' apps/editor/src`.
   (Actions run `44968551783`) and on PR #231 passed on a re-run
   ([DEF-027](../defects/DEF-027-a-quick-add-test-looks-for-the-field-before-it-has-come-back.md)).
 - **D2** (owner, 2026-11-22, Q1): a one-off audit and stress run, not a stress run per
-  test change. Agents write tests that cannot act before the UI settles: the guide gains
-  the rules, and shared helpers that settle by construction are added, with the existing
-  tests moved onto them. Changes: S2 covers more than a closing or publishing helper.
+  test change. Agents write tests that do not flake under load (mid-animation reads and
+  the like) in the first place: the guide gains whatever rules that needs, and shared
+  helpers that settle by construction are added, with the existing tests moved onto them.
+  Changes: S2 covers more than a closing or publishing helper.
 - **D3** (owner, 2026-11-22): this chore also delivers DEF-024, the fix to `publishOnce`,
   over a delivery of its own; its S1 is held here
   ([DEF-024](../defects/DEF-024-a-moved-item-test-moves-focus-before-the-publish-notice-takes-it.md)).
@@ -127,16 +128,21 @@ helpers wait for what their action causes, and the specs were moved onto them.
   20 pairs of separate reads becoming one `boxesOf`.
 - **Helpers return once their effect has landed.** `confirmPublish`
   (`fixtures/dialogs.ts`) waits for the publish dialog to go and its outcome's notice to
-  have focus. `publishOnce` and 27 inline confirmations in 12 specs use it (DEF-024).
+  have focus. `publishOnce` and 29 inline confirmations in 11 specs use it (DEF-024);
+  `editing.spec.ts`'s own `chooseAndConfirm`, which confirms Publish or Save for outcomes
+  of every kind, waits for its dialog to go, by when the outcome has focus.
   `openAccountMenu` waits for the menu and `chooseFromAccountMenu` for it to go.
   `shownInStuckRow` and `namesShownInStuckRow` read the row in one step, once it has stuck,
   its bars have held still (`barsHeldStill`, taken out of `focusClearOfBars`) and nothing
   animates.
-- **Specs wait before acting.** 13 Escapes now wait for focus in their popup first, or
-  for it to go after. Three specs gained a specific wait: `item-tags` waits for the moved
-  row's tag before measuring it, the side panel's S9 waits for the session warning's focus
-  before Escape, and `session-warning` S6 stops 30 s short of the session's end rather
-  than 1 s, as the installed clock runs in real time between steps.
+- **Specs wait before acting.** An Escape that closes a popup goes through `escapeFrom`
+  (`fixtures/keyboard.ts`), which waits for focus in the popup, presses Escape and waits
+  for the popup to go: 31 calls in 17 specs. Five Escapes straight after `clickOutside`
+  keep their own wait for the popup to go, as the click takes focus out of it. Three
+  specs gained a specific wait: `item-tags` waits for the moved row's tag before
+  measuring it, the side panel's S9 waits for the session warning's focus before Escape
+  (now `escapeFrom`), and `session-warning` S6 stops 30 s short of the session's end
+  rather than 1 s, as the installed clock runs in real time between steps.
 - **DEF-027's helper retries its lookup.** `expectOpeningFocus`
   (`apps/editor/src/features/roadmaps/testing/opening-focus.ts`) takes a function that
   finds the field and retries it with the focus check; its 42 calls pass one.

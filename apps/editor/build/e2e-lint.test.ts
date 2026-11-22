@@ -59,20 +59,12 @@ describe("e2e lint rules", () => {
     const code = "const box = await dialog.boundingBox()"
     for (const file of [
       "tests/e2e/press.spec.ts",
-      "tests/e2e/fixtures/dialogs.ts",
+      "tests/e2e/fixtures/layout.ts",
     ]) {
       expect((await lint(code, file)).map((m) => m.message)).toEqual([
         expect.stringContaining("Read a box with boxOf or boxesOf"),
       ])
     }
-  })
-
-  it("leaves boundingBox() to the layout fixture, which still forbids throttling", async () => {
-    const file = "tests/e2e/fixtures/layout.ts"
-    expect(await lint("const box = await locator.boundingBox()", file)).toEqual(
-      [],
-    )
-    expect(await lint(throttle, file)).toHaveLength(1)
   })
 
   it("leaves other code alone", async () => {

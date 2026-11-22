@@ -13,6 +13,7 @@ import {
   openEditRoadmapDialog,
 } from "./fixtures/dialogs"
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
+import { escapeFrom } from "./fixtures/keyboard"
 import { boxOf, boxesOf } from "./fixtures/layout"
 import { useLanguage } from "./fixtures/look"
 import { connect, expect, test } from "./fixtures/test"
@@ -71,8 +72,7 @@ test("the account menu offers the dialog, and the way back, and the choice survi
   await openProductA(page)
   const panel = await openEditItemDialog(page, ITEM)
   await expectPanel(page, panel)
-  await page.keyboard.press("Escape")
-  await expect(panel).toBeHidden()
+  await escapeFrom(panel)
   const menu = await openAccountMenu(page)
   await expect(
     menu.getByRole("menuitem", { name: "Edit in a side panel" }),
@@ -93,8 +93,7 @@ test("the account menu offers the dialog, and the way back, and the choice survi
   const { box, size } = await panelBox(page, dialog)
   expect(box.right).toBeLessThan(size.width)
   expect(box.height).toBeLessThan(size.height)
-  await page.keyboard.press("Escape")
-  await expect(dialog).toBeHidden()
+  await escapeFrom(dialog)
 
   await chooseFromAccountMenu(page, "Edit in a side panel")
 
@@ -146,8 +145,7 @@ test("on a tall screen, a form that fits still has its buttons at the panel's fo
     const dialog = await open()
     await expectPanel(page, dialog)
     await expectFooterAtFoot(dialog)
-    await page.keyboard.press("Escape")
-    await expect(dialog).toBeHidden()
+    await escapeFrom(dialog)
   }
 })
 
@@ -193,13 +191,11 @@ test("on a laptop, every form dialog is a panel, and a question is still centred
 
   const adding = await openAddItemDialog(page)
   await expectPanel(page, adding)
-  await page.keyboard.press("Escape")
-  await expect(adding).toBeHidden()
+  await escapeFrom(adding)
 
   const roadmap = await openEditRoadmapDialog(page)
   await expectPanel(page, roadmap)
-  await page.keyboard.press("Escape")
-  await expect(roadmap).toBeHidden()
+  await escapeFrom(roadmap)
 
   const removal = await askToRemove(page, ITEM)
   const { box, size } = await panelBox(page, removal)
@@ -303,12 +299,7 @@ test("the session warning shows centred above the panel, and focus returns into 
       [box.x + box.width / 2, box.y + box.height / 2],
     ),
   ).toBe(true)
-  // Escape reaches the warning only once it holds focus, a frame after it shows.
-  await expect(
-    warning.getByRole("button", { name: "Stay connected" }),
-  ).toBeFocused()
-  await page.keyboard.press("Escape")
-  await expect(warning).toBeHidden()
+  await escapeFrom(warning)
   await expect(dialog).toBeVisible()
   await expect(outcome).toHaveValue("Typed before the warning")
   await expect(dialog.locator(":focus")).toHaveCount(1)
@@ -351,8 +342,7 @@ test("in Welsh, the menu names both ways in Welsh and the panel opens (S11, STY-
 
   const panel = await openEditItemDialog(page, ITEM, "cy")
   await expectPanel(page, panel)
-  await page.keyboard.press("Escape")
-  await expect(panel).toBeHidden()
+  await escapeFrom(panel)
 
   await chooseFromAccountMenu(page, "Golygu mewn deialog", "cy")
 

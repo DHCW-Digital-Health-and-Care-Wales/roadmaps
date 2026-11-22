@@ -2,7 +2,7 @@ import type { Locator, Page } from "@playwright/test"
 
 import { openEditItemDialog } from "./fixtures/dialogs"
 import { type FakeTab, withTabItems } from "./fixtures/fake-sheets"
-import { tabTo } from "./fixtures/keyboard"
+import { escapeFrom, tabTo } from "./fixtures/keyboard"
 import { boxOf, scrollsSideways } from "./fixtures/layout"
 import type { Language } from "./fixtures/look"
 import {
@@ -277,9 +277,7 @@ test("marks the placement the page is in, in Jump to, and none at the top (S3, D
   await expect(
     page.getByRole("menu").getByRole("menuitem", { name: /^Next,/ }),
   ).toHaveAttribute("aria-current", "location")
-  await expect(page.getByRole("menu")).toBeFocused()
-  await page.keyboard.press("Escape")
-  await expect(page.getByRole("menu")).toBeHidden()
+  await escapeFrom(page.getByRole("menu"))
 
   await page.evaluate(() => {
     window.scrollTo(0, 0)
@@ -437,9 +435,7 @@ for (const { width, language, placement, publish } of [
     await expect(
       page.getByRole("menu").getByRole("menuitem", { name: publish }),
     ).toBeVisible()
-    await expect(page.getByRole("menu")).toBeFocused()
-    await page.keyboard.press("Escape")
-    await expect(page.getByRole("menu")).toBeHidden()
+    await escapeFrom(page.getByRole("menu"))
 
     // The stuck row is `position: fixed`: a control past its edge never widens the
     // page, so the `scrollWidth` check below passes over it.

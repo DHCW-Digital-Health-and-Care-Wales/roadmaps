@@ -153,3 +153,19 @@ under the new base path, and S4's search.
 | S1, S2   | the live site, observed at the cut-over (Scope step 3); nothing in the editor names its address (`git grep` for `roadmaps-editor` in `src/`: no hits)                                                                                               |
 | S3       | `build/resolve-base-path.test.ts` (`serves a project site under the repository name`) derives `/roadmaps/` from `GITHUB_REPOSITORY`; the full E2E suite run with `GITHUB_REPOSITORY=…/roadmaps`; the deploy run on `main`, observed at the cut-over |
 | S4       | `git grep -n roadmaps-editor`, every hit in the exceptions S4 lists                                                                                                                                                                                 |
+
+Observed at the cut-over on 2026-11-22 (Scope step 3). The owner renamed the
+repository, then merged the pull request (`2730f1e`), and every job of its run on
+`main` passed (Actions run `44967558607`).
+
+- **S1**: `/roadmaps/` loads its assets from `/roadmaps/assets/` (200). The owner
+  connected Google there with the existing OAuth client and saw their roadmaps. A deep
+  link is a hash route on that same page, and the origin is unchanged.
+- **S2**: `/roadmaps-editor/`, a deep link under it and its `assets/` answer 404, and
+  `gh repo view` of the old name resolves to `roadmaps`, so no repository holds it.
+  Between the rename and the deploy, about nine minutes, `/roadmaps/` served the old
+  build, whose assets pointed at `/roadmaps-editor/`: a blank page, as _Starting point_
+  expected.
+- **S3**: the run checked out the repository as `roadmaps`; Verify's base-path guard
+  ran with `PAGES_BASE_PATH: /roadmaps` and passed; E2E passed (669); and `deploy`
+  published to `https://dhcw-digital-health-and-care-wales.github.io/roadmaps/`.

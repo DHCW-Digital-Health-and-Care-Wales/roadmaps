@@ -9,7 +9,7 @@
   STY-090 do, so whichever lands later rebases
 - **Binding ADRs**: none
 - **Suggested model**: Sonnet — configuration with known shapes, observed in runs
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/239
 
 ## Summary
 

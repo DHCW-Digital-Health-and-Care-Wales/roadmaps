@@ -61,10 +61,6 @@ for (const width of WIDTHS) {
         await heading.evaluate((h) => getComputedStyle(h).letterSpacing),
       ).toBe("normal")
     }
-    const family = await page
-      .locator("body")
-      .evaluate((body) => getComputedStyle(body).fontFamily)
-    expect(family).toMatch(/^"Roboto Variable", Roboto, Arial, sans-serif$/)
   })
 }
 

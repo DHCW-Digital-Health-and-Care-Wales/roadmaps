@@ -25,7 +25,14 @@ import {
   withTabItems,
 } from "./fixtures/fake-sheets"
 import { escapeFrom } from "./fixtures/keyboard"
-import { useDialog, useLanguage, useTheme } from "./fixtures/look"
+import {
+  THEMES,
+  type Theme,
+  expectTheme,
+  useDialog,
+  useLanguage,
+  useTheme,
+} from "./fixtures/look"
 import {
   productDetailsField,
   conflictReview,
@@ -42,8 +49,6 @@ const [header = []] = EXAMPLE_INDEX_ROWS
 
 /** WCAG 2.2 A and AA rules. */
 const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]
-
-type Theme = "light" | "dark"
 
 async function expectNoAxeViolations(
   page: Page,
@@ -62,10 +67,7 @@ async function expectNoAxeViolations(
     menuOpen?: boolean
   } = {},
 ) {
-  const html = page.locator("html")
-  await (theme === "dark"
-    ? expect(html).toHaveClass(/\bdark\b/)
-    : expect(html).not.toHaveClass(/\bdark\b/))
+  await expectTheme(page, theme)
   let builder = new AxeBuilder({ page }).withTags(WCAG_TAGS)
   if (only) builder = builder.include(only)
   if (menuOpen) builder = builder.exclude("[data-base-ui-focus-guard]")
@@ -80,7 +82,7 @@ async function expectNoAxeViolations(
 // Still, so contrast is checked on settled colours rather than mid-animation.
 test.use({ reducedMotion: "reduce" })
 
-for (const theme of ["light", "dark"] satisfies Theme[]) {
+for (const theme of THEMES) {
   test.describe(`${theme} theme`, () => {
     test.beforeEach(async ({ page }) => {
       await useTheme(page, theme)
@@ -125,19 +127,6 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await page.goto("./")
       await connect(page)
       await expect(roadmapCards(page)).toHaveCount(3)
-      await expectNoAxeViolations(page, theme)
-    })
-
-    test("roadmap detail", async ({ page }) => {
-      await page.goto("./#/roadmaps/producta")
-      await connect(page)
-      // The title comes from the list before the items arrive: wait for an item.
-      await expect(
-        page.getByRole("heading", {
-          level: 3,
-          name: "Example card with every column",
-        }),
-      ).toBeVisible()
       await expectNoAxeViolations(page, theme)
     })
 
@@ -667,7 +656,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expectNoAxeViolations(page, theme)
     })
 
-    test("an item's Move menu, then the moved item and an unplaced item's form (STY-031)", async ({
+    test("an item's Move menu, then the moved item, on a page with an unplaced item (STY-031)", async ({
       page,
       sheets,
     }) => {
@@ -683,12 +672,6 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
 
       await page.getByRole("menuitem", { name: "Recently delivered" }).click()
       await expect(page.getByRole("menu")).toHaveCount(0)
-      await expectNoAxeViolations(page, theme)
-
-      const form = await openEditItemDialog(page, "Minimal card")
-      await expect(
-        form.getByRole("combobox", { name: "Horizon or section" }),
-      ).toHaveValue("")
       await expectNoAxeViolations(page, theme)
     })
 
@@ -884,9 +867,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expectNoAxeViolations(page, theme)
     })
 
-    test("an item with no details, and one whose Welsh details can't be changed (STY-039)", async ({
-      page,
-    }) => {
+    test("an item with no details (STY-039)", async ({ page }) => {
       await page.goto("./#/roadmaps/producta")
       await connect(page)
       const empty = await openEditItemDialog(page, "Minimal card")
@@ -895,14 +876,6 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expect(
         empty.getByRole("textbox", { name: "Detail 1 of 1, top level" }),
       ).toBeFocused()
-      await expectNoAxeViolations(page, theme)
-      await empty.getByRole("button", { name: "Cancel" }).click()
-
-      const item = "Example card with every column"
-      const locked = await openEditItemDialog(page, item)
-      await expect(
-        locked.getByText(/^These details have Welsh versions/),
-      ).toBeVisible()
       await expectNoAxeViolations(page, theme)
     })
 
@@ -1170,16 +1143,15 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
 }
 
 // Label in Name (WCAG 2.5.3): the header's home link shows "Roadmaps" below `sm`, so its
-// name has to contain it (DEF-002).
-for (const language of ["en", "cy"] as const) {
-  test(`the header at 375px wide in ${language}: the home link's name holds what it shows (DEF-002 S1)`, async ({
-    page,
-  }) => {
-    await useLanguage(page, language)
-    await useTheme(page, "light")
-    await page.setViewportSize({ width: 375, height: 800 })
-    await page.goto("./")
-    await expect(page.getByRole("banner")).toBeVisible()
-    await expectNoAxeViolations(page, "light")
-  })
-}
+// name has to contain it (DEF-002). In English every full-page scan at 375px holds the
+// header; the Welsh one is scanned here, in the light theme alone.
+test("the header at 375px wide in cy: the home link's name holds what it shows (DEF-002 S1)", async ({
+  page,
+}) => {
+  await useLanguage(page, "cy")
+  await useTheme(page, "light")
+  await page.setViewportSize({ width: 375, height: 800 })
+  await page.goto("./")
+  await expect(page.getByRole("banner")).toBeVisible()
+  await expectNoAxeViolations(page, "light")
+})

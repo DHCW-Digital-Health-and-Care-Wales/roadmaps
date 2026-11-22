@@ -1,5 +1,11 @@
 import { connect, expect, test } from "./fixtures/test"
-import { THEMES, tokenColour, tokenValue, useTheme } from "./fixtures/look"
+import {
+  THEMES,
+  expectTheme,
+  tokenColour,
+  tokenValue,
+  useTheme,
+} from "./fixtures/look"
 
 // The DHCW look's anchors, in both themes (STY-018): each computed style is compared
 // with the token it should come from, read from the stylesheet, so a component that
@@ -16,10 +22,7 @@ for (const theme of THEMES) {
       page,
     }) => {
       await page.goto("./")
-      const html = page.locator("html")
-      await (theme === "dark"
-        ? expect(html).toHaveClass(/\bdark\b/)
-        : expect(html).not.toHaveClass(/\bdark\b/))
+      await expectTheme(page, theme)
 
       await expect(page.getByRole("banner")).toHaveCSS(
         "background-color",

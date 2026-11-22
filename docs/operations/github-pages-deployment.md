@@ -11,6 +11,7 @@ dispatch:
 
 ```
 repository ────────────────────┐   every run: format:check · the root's typecheck, lint, tests · actionlint · zizmor
+dependency-review ─────────────┤   pull requests only: a dependency added at a known vulnerable version
           ┌──► editor-verify ──┤   typecheck · lint · test · build
 changes ──┤                    │
           └──► editor-e2e ─────┤   Playwright, in Playwright's pinned image
@@ -22,6 +23,13 @@ changes ──┤                    │
   editor's jobs skip only when every changed file is Markdown, under `docs/` or in
   another app's directory; any other file, a push to `main` or a manual run runs them.
 - `repository` runs on every run, whatever changed.
+- `dependency-review` runs on every pull request and fails when it adds or changes a
+  dependency, development ones included, to a version with a known vulnerability. A
+  vulnerability disclosed later in a merged dependency is found by the weekly
+  **Dependency audit** (`.github/workflows/dependency-audit.yml`), an OSV-Scanner run
+  over every lockfile, also on each push to `main`; it is outside the gate, so a
+  finding there fails its own run but blocks no merge or deploy. A finding accepted for
+  a while goes in `osv-scanner.toml`, with its reason and an expiry.
 - `ci-result` (_CI result_) runs after every other job, whatever they did, and fails if
   any failed or was cancelled; a job skipped by its paths passes. It is the one check
   `main`'s ruleset requires ([protecting main](protecting-main.md)), so a new job joins

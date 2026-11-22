@@ -1,0 +1,11 @@
+# Findings the dependency audit (.github/workflows/dependency-audit.yml) accepts for a
+# while, each with its reason and an expiry, after which it fails on them again. Remove
+# an entry once its fix lands.
+
+[[IgnoredVulns]]
+id = "GHSA-g3hv-75wg-m249"
+effectiveUntil = 2027-01-15T00:00:00Z
+reason = """minimatch 10 under ESLint, typescript-eslint and shadcn's ts-morph: \
+a denial of service through glob patterns, which here come only from the \
+repository's own configuration. The fix is minimatch 11, which their newer \
+releases take, as Dependabot's monthly update proposes."""

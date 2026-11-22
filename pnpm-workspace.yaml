@@ -27,6 +27,13 @@ overrides:
   # Under shadcn's ts-morph 26. Drop when shadcn takes ts-morph 28 or later.
   "@ts-morph/common>minimatch": ^11.0.1
 
+# pnpm resolves no version published less than a week ago, as Dependabot's cooldown
+# holds back its proposals (.github/dependabot.yml), so a compromised release is
+# usually found and pulled first (CHO-031 S4). In minutes. To take a security fix
+# younger than that, list it in minimumReleaseAgeExclude as <name>@<version>, with each
+# young package it brings, and remove the entries once they are a week old.
+minimumReleaseAge: 10080
+
 # Dependencies whose install scripts may run. lefthook's is denied: pnpm runs it only
 # when it first builds the package on a machine, so the root package's postinstall runs
 # it instead, on every install, to install the Git hooks (lefthook.yml); it skips

@@ -101,6 +101,22 @@ jobs:
           persona: auditor
           advanced-security: false
 
+  # A pull request that adds or changes a dependency to a version with a known
+  # vulnerability fails, development dependencies included, since CI and every
+  # developer's machine run them (CHO-031 S2). It reads GitHub's dependency graph of the
+  # base and the head, so it checks out nothing; a push to main skips it, and a
+  # vulnerability disclosed in a merged dependency is the dependency audit's
+  # (.github/workflows/dependency-audit.yml).
+  dependency-review:
+    name: Dependency review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-scopes: runtime, development, unknown
+
   editor-verify:
     name: "Editor: verify"
     needs: changes
@@ -217,7 +233,7 @@ jobs:
   # build/ci-workflow.test.ts fails when a job is missing from needs.
   ci-result:
     name: CI result
-    needs: [changes, repository, editor-verify, editor-e2e]
+    needs: [changes, repository, dependency-review, editor-verify, editor-e2e]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5

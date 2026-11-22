@@ -31,6 +31,7 @@
     "test": "pnpm repo:test && pnpm -r test",
     "test:docs": "vitest run build/markdown-links.test.ts build/agent-guides.test.ts",
     "build": "pnpm -r build",
+    "postinstall": "node node_modules/lefthook/postinstall.js",
     "worktree:setup": "./scripts/worktree/worktree.sh setup",
     "worktree:info": "./scripts/worktree/worktree.sh info",
     "worktree:teardown": "./scripts/worktree/worktree.sh teardown"

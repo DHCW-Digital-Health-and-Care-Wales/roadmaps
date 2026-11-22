@@ -13,7 +13,9 @@ catalog:
   typescript-eslint: ^8.72.1
   vitest: ^5.1.0
 
-# Dependencies whose install scripts may run. lefthook's installs the Git hooks
-# (lefthook.yml), and skips itself in CI.
+# Dependencies whose install scripts may run. lefthook's is denied: pnpm runs it only
+# when it first builds the package on a machine, so the root package's postinstall runs
+# it instead, on every install, to install the Git hooks (lefthook.yml); it skips
+# itself in CI.
 allowBuilds:
-  lefthook: true
+  lefthook: false

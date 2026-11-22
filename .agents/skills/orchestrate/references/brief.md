@@ -175,8 +175,8 @@ with the item's ID, full title and a 2–3 sentence summary of the work:
 - the outcome, PR URLs, merge SHAs where merged, and the default branch's
   final state;
 - what was delivered, departures, follow-ups and new defects;
-- a stage-timings table and, where the PR was babysat, the total CI wait and
-  the number of fix pushes;
+- a stage-timings table computed from its progress-log timestamps and, where
+  the PR was babysat, the total CI wait and the number of fix pushes;
 - every reviewer session: purpose, model actually run, duration and cost;
 - review findings by severity: fixed, excepted, and caught later by CI or
   bots;

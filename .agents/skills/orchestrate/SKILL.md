@@ -253,9 +253,9 @@ For each item report:
 - screenshots with captions where available;
 - delivery/reviewer identity and model, measured duration, tokens and cost
   when available, with absent usage marked partial;
-- stage timings, review rounds, findings fixed or excepted, and, where the PR
-  was babysat, CI wait and fix pushes, including findings first caught by CI
-  or bots.
+- stage timings from the progress log's and the PR's timestamps, review
+  rounds, findings fixed or excepted, and, where the PR was babysat, CI wait
+  and fix pushes, including findings first caught by CI or bots.
 
 Update `brief-common.md` with relevant learnings before the next item starts.
 Update `run-handoff.md` with queue, task IDs, PR heads, policy, outcomes and

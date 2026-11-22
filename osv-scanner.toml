@@ -1,11 +1,5 @@
 # Findings the dependency audit (.github/workflows/dependency-audit.yml) accepts for a
-# while, for every lockfile, each with its reason and an expiry, after which it fails on
-# them again. Remove an entry once its fix lands.
-
-[[IgnoredVulns]]
-id = "GHSA-g3hv-75wg-m249"
-effectiveUntil = 2027-01-15T00:00:00Z
-reason = """minimatch 10 under ESLint, typescript-eslint, eslint-plugin-jsx-a11y-x \
-and shadcn's ts-morph: a denial of service through glob patterns, which here come \
-only from the repository's own configuration. CHO-034 moves every package to \
-minimatch 11 and removes this entry."""
+# while, for every lockfile, each as an [[IgnoredVulns]] entry with its id, reason and
+# effectiveUntil, after which the audit fails on it again. Remove an entry once its fix
+# lands. Keep the file when it holds none: the audit reads it with --config, which fails
+# when the file is missing.

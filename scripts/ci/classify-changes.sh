@@ -13,7 +13,7 @@ if [ "${1:-}" = "--all" ]; then
 fi
 
 editor=false
-while IFS= read -r path; do
+while IFS= read -r path || [ -n "$path" ]; do
   case "$path" in
     "" | docs/* | *.md) ;;
     apps/editor/*) editor=true ;;

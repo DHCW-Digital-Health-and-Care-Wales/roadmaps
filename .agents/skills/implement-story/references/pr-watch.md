@@ -11,10 +11,9 @@ not done.
 
 **Done** means all of these hold on the latest head:
 
-- every check on it (the CI/CD workflow's jobs and their gate, _CI result_,
-  the one check `main`'s ruleset requires, and any other), required or not,
-  has succeeded or was skipped by its own conditions, and none is pending;
-  confirm the push's run with `gh run list --commit <head-sha>`;
+- every check on it, required or not, has succeeded or was skipped by its
+  own conditions, and none is pending; confirm the push's run with
+  `gh run list --commit <head-sha>`;
 - GitHub reports the PR mergeable, with no conflict;
 - the reviewers `delegation.md` sets have passed the latest head, or the last
   reviewed head differs from it only by fixes that _Review rounds_ exempts
@@ -35,7 +34,7 @@ for babysitting, report it done and ready for their review, and stop.
 - a draft PR, raised because reviews or checks were unavailable;
 - the same external or infrastructure failure after one diagnosed rerun;
 - a ruleset only a person can satisfy: every check is green, and the
-  session's credential cannot bypass `main`'s ruleset
+  session's credential cannot bypass the default branch's ruleset
   (`gh api repos/<owner>/<repo>/rulesets/<id> --jq .current_user_can_bypass`
   reads `never`);
 - a merge the API refuses for a reason other than a moved head. A refusal
@@ -118,14 +117,14 @@ authorized only for this PR workflow.
 ## Merge
 
 Re-read the current PR state (above) just before merging;
-anything new reopens the done check. Once _CI result_ has passed on that
-inspected head, squash-merge pinned to it, so a concurrent push makes the merge
-fail rather than land unreviewed, through the owner's bypass of `main`'s
-ruleset, for this PR alone:
-`gh pr merge <n> --squash --admin --match-head-commit <head-sha>`. Confirm the
-PR reads merged and record the merge SHA. Never approve, deploy, or change
-rulesets, branch protections or repository settings; a merge to `main` deploys
-GitHub Pages through CI on its own.
+anything new reopens the done check. Once the required checks have passed on
+that inspected head, squash-merge pinned to it, so a concurrent push makes the
+merge fail rather than land unreviewed:
+`gh pr merge <n> --squash --admin --match-head-commit <head-sha>`, where
+`--admin` merges through the owner's bypass; use it only on a PR the user
+authorised you to merge. Confirm the PR reads merged and record the merge SHA.
+Never approve, deploy, or change rulesets, branch protections or repository
+settings; a merge to `main` deploys GitHub Pages through CI on its own.
 
 After the merge, remove any watch. Reuse a branch name only once its PR is
 merged or closed, because one branch cannot carry two open PRs: run

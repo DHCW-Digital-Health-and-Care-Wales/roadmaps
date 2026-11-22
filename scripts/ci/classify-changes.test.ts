@@ -47,6 +47,14 @@ describe("classify-changes.sh", () => {
     expect(classify(...paths)).toBe("editor=true\n")
   })
 
+  it("reads a last path with no newline after it", () => {
+    const result = spawnSync(SCRIPT, {
+      input: "docs/a.md\npackage.json",
+      encoding: "utf8",
+    })
+    expect(result.stdout).toBe("editor=true\n")
+  })
+
   it("runs every app's jobs with --all, whatever the paths", () => {
     expect(run(["--all"], ["docs/a.md"])).toBe("editor=true\n")
   })

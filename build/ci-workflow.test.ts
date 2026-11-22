@@ -61,7 +61,24 @@ describe("ci.yml's CI result gate", () => {
   })
 
   it("passes before deploy publishes anything", () => {
-    expect([workflow.jobs.deploy?.needs ?? []].flat()).toContain(GATE)
+    const deploy = workflow.jobs.deploy
+
+    expect([deploy?.needs ?? []].flat()).toContain(GATE)
+    // A status function such as always() would run deploy past a failed gate.
+    expect(deploy?.if).not.toMatch(/always\(|failure\(|cancelled\(/)
+  })
+})
+
+describe("ci.yml's app jobs", () => {
+  it("skip only on an explicit false from the changes job, so a missing output runs them", () => {
+    const conditions = Object.values(workflow.jobs)
+      .map((job) => job.if ?? "")
+      .filter((condition) => condition.includes("needs.changes.outputs."))
+
+    expect(conditions).not.toEqual([])
+    for (const condition of conditions) {
+      expect(condition).toMatch(/^needs\.changes\.outputs\.[\w-]+ != 'false'$/)
+    }
   })
 
   it("is the one check main's ruleset requires, from GitHub Actions", () => {

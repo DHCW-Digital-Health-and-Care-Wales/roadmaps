@@ -1,6 +1,8 @@
 # Keeps the SHA-pinned actions in .github/workflows and the workspace's pnpm
 # dependencies current: one grouped pull request a month for each. Every entry waits
-# out a cooldown, so a version is taken only once it is a week old (STY-087 D10, D12).
+# out a cooldown, so it proposes a version only once that is a week old (STY-087 D10,
+# D12); the transitive versions pnpm resolves beneath it wait only once CHO-031 sets
+# pnpm's minimumReleaseAge.
 # The cooldown does not hold back Dependabot's security updates, a repository setting
 # (CHO-031).
 version: 2

@@ -16,7 +16,10 @@ request only: nobody pushes straight to `main`, and the owner merges a pull requ
 its conditions with `gh pr merge <n> --squash --admin`.
 
 _CI result_ is the gate job in `.github/workflows/ci.yml`
-([the workflow](github-pages-deployment.md#the-workflow)).
+([the workflow](github-pages-deployment.md#the-workflow)). A pull request's run takes
+that workflow from the pull request itself, so the check shows the change passed its
+own checks; the code owner's review of the diff is the control on what those checks
+are.
 
 ## Apply it
 
@@ -49,6 +52,7 @@ id="$(gh api "repos/$repo/rulesets" --jq '.[] | select(.name == "main-protection
 fields='{name, target, enforcement, conditions, bypass_actors, rules: (.rules | sort_by(.type))}'
 diff <(jq -S "$fields" .github/rulesets/main.json) \
   <(gh api "repos/$repo/rulesets/$id" | jq -S "$fields")
+gh api "repos/$repo" --jq .allow_rebase_merge   # false once rebase merging is unticked
 ```
 
 Any of the organisation's owners can change a ruleset, so run the check after anyone

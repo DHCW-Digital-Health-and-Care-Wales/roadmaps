@@ -126,8 +126,8 @@ script.
 ### CI and hooks
 
 A new CI job joins the needs of the _CI result_ gate, which `build/ci-workflow.test.ts`
-checks, and an app's jobs run on its output from `scripts/ci/classify-changes.sh`, which
-STY-088 and STY-090 extend with their app's case and a test. A package's commit check
+checks, and an app's jobs run unless its output from `scripts/ci/classify-changes.sh` is
+`false`; STY-088 and STY-090 add their app's case, output and `--all` line, with tests. A package's commit check
 is a job in `lefthook.yml`; every Dependabot entry carries the 7-day cooldown (STY-087
 D12, D13).
 

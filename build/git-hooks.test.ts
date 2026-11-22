@@ -21,6 +21,18 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest"
 const ROOT = join(import.meta.dirname, "..")
 const HOOKS = ["pre-commit", "pre-push"]
 
+/**
+ * The developer's own Git config left out: a global core.hooksPath, which lefthook
+ * declines to install into, would fail the test with nothing wrong in the repository.
+ */
+const ENV: NodeJS.ProcessEnv = {
+  ...process.env,
+  CI: undefined,
+  LEFTHOOK: undefined,
+  GIT_CONFIG_GLOBAL: "/dev/null",
+  GIT_CONFIG_NOSYSTEM: "1",
+}
+
 interface RootPackage {
   scripts: Record<string, string | undefined>
 }
@@ -29,7 +41,7 @@ let scratch: string
 
 beforeEach(() => {
   scratch = mkdtempSync(join(tmpdir(), "git-hooks-"))
-  execFileSync("git", ["init", "-q"], { cwd: scratch })
+  execFileSync("git", ["init", "-q"], { cwd: scratch, env: ENV })
   copyFileSync(join(ROOT, "lefthook.yml"), join(scratch, "lefthook.yml"))
 })
 
@@ -59,19 +71,12 @@ function postinstall(env: NodeJS.ProcessEnv): string[] {
   )
 }
 
-function withoutCi(): NodeJS.ProcessEnv {
-  const env = { ...process.env }
-  delete env.CI
-  delete env.LEFTHOOK
-  return env
-}
-
 describe("the root package's postinstall", () => {
   it("installs the commit and push hooks", () => {
-    expect(postinstall(withoutCi())).toEqual(HOOKS)
+    expect(postinstall(ENV)).toEqual(HOOKS)
   })
 
   it("installs none in CI", () => {
-    expect(postinstall({ ...withoutCi(), CI: "true" })).toEqual([])
+    expect(postinstall({ ...ENV, CI: "true" })).toEqual([])
   })
 })

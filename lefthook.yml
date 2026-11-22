@@ -1,6 +1,6 @@
-# Git hooks (ADR-016 Workspace tooling, STY-087 S6). `pnpm install` installs them
-# through lefthook's own install script, which skips itself in CI; `LEFTHOOK=0` skips
-# them for one command. CI runs the same checks in full.
+# Git hooks (ADR-016 Workspace tooling). `pnpm install` installs them through the root
+# package's postinstall, which runs lefthook's install script and skips itself in CI;
+# `LEFTHOOK=0` skips them for one command. CI runs the same checks in full.
 
 pre-commit:
   # In order: ESLint reads what Prettier has written.

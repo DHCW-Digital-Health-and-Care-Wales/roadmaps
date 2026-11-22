@@ -2,7 +2,7 @@ import type { Locator } from "@playwright/test"
 
 import { openEditItemDialog } from "./fixtures/dialogs"
 import { withTabItems } from "./fixtures/fake-sheets"
-import { boxesOf, levelWithOrUnder } from "./fixtures/layout"
+import { boxesOf, boxOf, levelWithOrUnder } from "./fixtures/layout"
 import {
   type Language,
   tokenColour,
@@ -150,13 +150,10 @@ test.describe("the mark's look", () => {
       const card = itemOf(page, "Minimal card")
       const title = card.getByRole("heading", { level: 3 })
       const offset = async () => {
-        const [cardBox, titleBox] = await Promise.all([
-          card.boundingBox(),
-          title.boundingBox(),
-        ])
+        const [cardBox, titleBox] = await boxesOf(card, title)
         return {
-          left: (titleBox?.x ?? 0) - (cardBox?.x ?? 0),
-          top: (titleBox?.y ?? 0) - (cardBox?.y ?? 0),
+          left: titleBox.x - cardBox.x,
+          top: titleBox.y - cardBox.y,
         }
       }
       const before = await offset()
@@ -211,7 +208,7 @@ test.describe("the mark's look", () => {
         if (short) {
           await expect(shortPart(row, language)).toBeVisible()
           // The whole label is read, not seen: one pixel, as `sr-only` draws it.
-          expect((await whole.boundingBox())?.width).toBeLessThanOrEqual(1)
+          expect((await boxOf(whole)).width).toBeLessThanOrEqual(1)
         } else {
           await expect(whole).toBeVisible()
           await expect(shortPart(row, language)).toBeHidden()

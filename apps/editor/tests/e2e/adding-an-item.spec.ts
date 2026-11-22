@@ -4,6 +4,7 @@ import {
   addItem,
   addItemButtons,
   clickOutside,
+  confirmPublish,
   editItemButton,
   openAddItemDialog,
   openEditItemDialog,
@@ -12,6 +13,7 @@ import {
 } from "./fixtures/dialogs"
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
 import { withTabItems } from "./fixtures/fake-sheets"
+import { escapeFrom } from "./fixtures/keyboard"
 import { useLanguage } from "./fixtures/look"
 import {
   goToList,
@@ -180,11 +182,7 @@ test("a Product Lead adds an item in the item dialog, pending until published (S
   // Publishing writes it in the one write, as a row after the roadmap's last.
   await main.getByRole("button", { name: "Publish changes" }).click()
   await expect(listedChanges(page)).toHaveText([`${CLINIC}New item`])
-  await page
-    .getByRole("alertdialog")
-    .getByRole("button", { name: "Publish changes" })
-    .click()
-  await expect(main.getByText(/^Changes published\./)).toBeVisible()
+  await confirmPublish(page)
   expect(sheets.writes).toHaveLength(1)
   const [row = []] = appendedRows(sheets.writes[0])
   expect(row).toContain(CLINIC)
@@ -256,17 +254,10 @@ test("the publish dialog lists a new item beside an edit; a co-lead's conflict p
 }) => {
   await openRoadmap(page, "producta")
   const main = page.getByRole("main")
-  const confirmPublish = async () => {
-    await main.getByRole("button", { name: "Publish changes" }).click()
-    await page
-      .getByRole("alertdialog")
-      .getByRole("button", { name: "Publish changes" })
-      .click()
-  }
   // Only an item with an ID can conflict: a first publish gives every item its ID.
   await addItem(page, CHECK_IN, "Now")
-  await confirmPublish()
-  await expect(main.getByText(/^Changes published\./)).toBeVisible()
+  await main.getByRole("button", { name: "Publish changes" }).click()
+  await confirmPublish(page)
   expect(sheets.writes).toHaveLength(1)
 
   const EDITED = "Card being explored"
@@ -289,11 +280,11 @@ test("the publish dialog lists a new item beside an edit; a co-lead's conflict p
     `${EDITED}Description`,
     `${CLINIC}New item, title only`,
   ])
-  await dialog.getByRole("button", { name: "Publish changes" }).click()
+  const notice = refusal(page)
+  await confirmPublish(page, notice)
 
   // The conflict publishes nothing; its review names the edit alone, and the new item
   // stays pending.
-  const notice = refusal(page)
   await expect(notice).toContainText(
     "Someone else has changed this roadmap too",
   )
@@ -315,8 +306,8 @@ test("the publish dialog lists a new item beside an edit; a co-lead's conflict p
   await expect(review).toBeHidden()
   await expect(newTag(itemCard(page, CLINIC), CLINIC)).toBeVisible()
   await expect(main.getByText("1 unpublished change")).toBeVisible()
-  await confirmPublish()
-  await expect(main.getByText(/^Changes published\./)).toBeVisible()
+  await main.getByRole("button", { name: "Publish changes" }).click()
+  await confirmPublish(page)
   expect(sheets.writes).toHaveLength(2)
   const [row = []] = appendedRows(sheets.writes[1])
   expect(row).toContain(CLINIC)
@@ -424,8 +415,7 @@ test("an empty roadmap's panel holds “Add an item”; its first item brings th
     .selectOption({ label: "Now" })
   await dialog.getByRole("button", { name: "Add and start another" }).click()
   await expect(dialog.getByRole("status")).not.toBeEmpty()
-  await page.keyboard.press("Escape")
-  await expect(dialog).toBeHidden()
+  await escapeFrom(dialog)
   await expect(addItemButtons(page)).toBeFocused()
 
   await expect(main.getByRole("heading", { level: 2 })).toHaveText([
@@ -500,11 +490,7 @@ test("the dialog stays through the session's end, and “Add item” still adds;
   const warning = page.getByRole("alertdialog", {
     name: "Your session is about to end",
   })
-  await expect(
-    warning.getByRole("button", { name: "Stay connected" }),
-  ).toBeFocused()
-  await page.keyboard.press("Escape")
-  await expect(warning).toBeHidden()
+  await escapeFrom(warning)
 
   await page.clock.fastForward(SESSION_WARNING_MS)
   // Said by the page behind, which only its text can reach.
@@ -602,11 +588,7 @@ test("the publish dialog marks a new item that has only a title, and publishing 
     `${CLINIC}New item, title only`,
     `${CHECK_IN}New item`,
   ])
-  await page
-    .getByRole("alertdialog")
-    .getByRole("button", { name: "Publish changes" })
-    .click()
-  await expect(main.getByText(/^Changes published\./)).toBeVisible()
+  await confirmPublish(page)
   expect(sheets.writes).toHaveLength(1)
   expect(appendedRows(sheets.writes[0])).toEqual([
     expect.arrayContaining([CLINIC, "Next"]),

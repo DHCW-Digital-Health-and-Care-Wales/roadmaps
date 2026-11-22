@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright"
 import type { Locator, Page } from "@playwright/test"
 
 import { openEditItemDialog, openEditRoadmapDialog } from "./fixtures/dialogs"
-import { tabTo } from "./fixtures/keyboard"
+import { escapeFrom, tabTo } from "./fixtures/keyboard"
 import { boxOf, contentRight, scrollsSideways } from "./fixtures/layout"
 import {
   fieldOf,
@@ -372,12 +372,11 @@ for (const [width, height] of [
     // do beneath the stretch.
     await row.getByRole("button", { name: /^Move / }).click()
     await expect(rowChevron(row)).toHaveAttribute("aria-expanded", "false")
-    await page.keyboard.press("Escape")
+    await escapeFrom(page.getByRole("menu"))
 
     await row.getByRole("button", { name: /^Edit / }).click()
     await expect(page.getByRole("dialog")).toBeVisible()
-    await page.keyboard.press("Escape")
-    await expect(page.getByRole("dialog")).toBeHidden()
+    await escapeFrom(page.getByRole("dialog"))
     await expect(rowChevron(row)).toHaveAttribute("aria-expanded", "false")
   })
 }

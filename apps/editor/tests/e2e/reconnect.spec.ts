@@ -1,12 +1,14 @@
 import type { Page } from "@playwright/test"
 
 import {
+  confirmPublish,
   openEditItemDialog,
   openEditRoadmapDialogFromMore,
   reconnectButton,
   reconnectDialog,
 } from "./fixtures/dialogs"
 import { sessionMs } from "./fixtures/fake-gis"
+import { escapeFrom } from "./fixtures/keyboard"
 import { useLanguage } from "./fixtures/look"
 import { moreButton, refreshRoadmap } from "./fixtures/roadmap-page"
 import { connect, expect, test } from "./fixtures/test"
@@ -85,8 +87,7 @@ test("Publish stays on offer, asks to reconnect, then asks to publish the change
   })
   await expect(confirm.getByText(EDITED)).toBeVisible()
   expect(sheets.writes).toEqual([])
-  await confirm.getByRole("button", { name: "Publish changes" }).click()
-  await expect(main.getByText(/^Changes published\./).first()).toBeVisible()
+  await confirmPublish(page)
   expect(sheets.writes).toHaveLength(1)
 })
 
@@ -192,8 +193,7 @@ test("in Welsh, by keyboard: the dialog keeps focus, and Escape gives it back (S
   await page.keyboard.press("Tab")
   await expect(reconnect).toBeFocused()
 
-  await page.keyboard.press("Escape")
-  await expect(dialog).toBeHidden()
+  await escapeFrom(dialog)
   await expect(publish).toBeFocused()
 
   await page.keyboard.press("Enter")

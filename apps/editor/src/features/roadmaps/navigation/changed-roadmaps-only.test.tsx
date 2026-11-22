@@ -280,7 +280,7 @@ describe("the count folded to a rail", () => {
     await user.click(circle)
 
     expect(count()).toHaveAttribute("aria-pressed", "true")
-    await expectOpeningFocus(count())
+    await expectOpeningFocus(() => count())
     expect(hasLink("Product C roadmap")).toBe(false)
     expect(hasLink("Product A roadmap")).toBe(true)
     expect(localStorage.getItem("roadmaps.navigation")).toBeNull()

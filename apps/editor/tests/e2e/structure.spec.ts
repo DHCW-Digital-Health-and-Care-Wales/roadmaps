@@ -3,6 +3,7 @@ import type { Locator, Page } from "@playwright/test"
 import { disconnectFromHeader, openAccountMenu } from "./fixtures/account-menu"
 import {
   askToRemove,
+  confirmPublish,
   openAddItemDialog,
   openAddRoadmapDialog,
   openEditItemDialog,
@@ -15,6 +16,7 @@ import {
   EXAMPLE_SPREADSHEET_WITH_LISTS,
   withRoadmapIndex,
 } from "./fixtures/fake-sheets"
+import { escapeFrom } from "./fixtures/keyboard"
 import { type Language, useLanguage } from "./fixtures/look"
 import {
   goToList,
@@ -372,11 +374,10 @@ test.describe("editing a roadmap (STY-025)", () => {
     await expect(dialog).toBeVisible()
     await expectStructure(dialog, "edit-publish-dialog.aria.yml")
 
-    await dialog.getByRole("button", { name: "Publish changes" }).click()
+    await confirmPublish(page)
     const notice = main
       .getByRole("status")
       .filter({ hasText: "Changes published" })
-    await expect(notice).toBeVisible()
     // Hovered, so it does not clear itself before the snapshot.
     await notice.hover()
     await expectStructure(notice, "edit-published.aria.yml")
@@ -386,12 +387,8 @@ test.describe("editing a roadmap (STY-025)", () => {
     const main = await openWithAChange(page)
     sheets.failWith(403)
     await main.getByRole("button", { name: "Publish changes" }).click()
-    await page
-      .getByRole("alertdialog")
-      .getByRole("button", { name: "Publish changes" })
-      .click()
     const alert = main.getByRole("alert")
-    await expect(alert).toBeVisible()
+    await confirmPublish(page, alert)
 
     await expectStructure(alert, "edit-publish-failed.aria.yml")
   })
@@ -408,12 +405,8 @@ test.describe("editing a roadmap (STY-025)", () => {
     // The edited item has no ID yet, so a new title leaves it unmatched.
     sheets.coLead("ProductA", ITEM, "Title", "Their card")
     await main.getByRole("button", { name: "Publish changes" }).click()
-    await page
-      .getByRole("alertdialog")
-      .getByRole("button", { name: "Publish changes" })
-      .click()
     const notice = refusal(page)
-    await expect(notice).toBeFocused()
+    await confirmPublish(page, notice)
     await expectStructure(notice, "edit-conflict-notice.aria.yml")
 
     const review = await openConflictReview(page)
@@ -442,12 +435,8 @@ test.describe("editing a roadmap (STY-025)", () => {
       await expect(dialog).toBeVisible()
       return dialog
     }
-    await (
-      await confirm()
-    )
-      .getByRole("button", { name: "Publish changes" })
-      .click()
-    await expect(main.getByText(/^Changes published\./)).toBeVisible()
+    await confirm()
+    await confirmPublish(page)
     await main
       .getByRole("button", { name: "Move Card awaiting release", exact: true })
       .click()
@@ -456,8 +445,7 @@ test.describe("editing a roadmap (STY-025)", () => {
 
     const dialog = await confirm()
     await expectStructure(dialog, "edit-order-publish-dialog.aria.yml")
-    await dialog.getByRole("button", { name: "Publish changes" }).click()
-    await expect(refusal(page)).toBeFocused()
+    await confirmPublish(page, refusal(page))
 
     const review = await openConflictReview(page)
     await expectStructure(review, "edit-order-conflict-review.aria.yml")
@@ -485,8 +473,7 @@ test.describe("editing a roadmap (STY-025)", () => {
     await main.getByRole("button", { name: "Publish changes" }).click()
     const publish = page.getByRole("alertdialog")
     await expectStructure(publish, "remove-item-publish-dialog.aria.yml")
-    await publish.getByRole("button", { name: "Publish changes" }).click()
-    await expect(refusal(page)).toBeFocused()
+    await confirmPublish(page, refusal(page))
     const review = await openConflictReview(page)
     await expectStructure(review, "remove-item-conflict-review.aria.yml")
   })
@@ -546,11 +533,9 @@ test("the account menu, open: connected, then signed out (STY-056)", async ({
   page,
 }) => {
   await page.goto("./")
-  await expectStructure(
-    await openAccountMenu(page),
-    "account-menu-signed-out.aria.yml",
-  )
-  await page.keyboard.press("Escape")
+  const menu = await openAccountMenu(page)
+  await expectStructure(menu, "account-menu-signed-out.aria.yml")
+  await escapeFrom(menu)
 
   await connect(page)
   await expect(roadmapCards(page)).toHaveCount(3)

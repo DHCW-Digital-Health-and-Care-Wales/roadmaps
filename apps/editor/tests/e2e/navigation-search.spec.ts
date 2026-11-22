@@ -1,6 +1,8 @@
 import type { Locator, Page } from "@playwright/test"
 
 import type { FakeSheets } from "./fixtures/fake-sheets"
+import { escapeFrom } from "./fixtures/keyboard"
+import { boxesOf, boxOf } from "./fixtures/layout"
 import { type Language, useLanguage } from "./fixtures/look"
 import { NAVIGATION_WORLD } from "./fixtures/navigation-world"
 import { connect, expect, test } from "./fixtures/test"
@@ -101,7 +103,7 @@ test.describe("on a desktop", () => {
     const fold = navigation(page).getByRole("button", {
       name: "Fold the navigation",
     })
-    const before = await searchBox(page).boundingBox()
+    const before = await boxOf(searchBox(page))
 
     await navigationList(page).evaluate((list) => {
       list.scrollTop = list.scrollHeight
@@ -112,14 +114,13 @@ test.describe("on a desktop", () => {
         name: "Families, categories and organisations",
       }),
     ).toBeInViewport()
-    expect(await searchBox(page).boundingBox()).toEqual(before)
+    expect(await boxOf(searchBox(page))).toEqual(before)
     await expect(searchBox(page)).toBeInViewport()
     await expect(fold).toBeInViewport()
     // On one row, the fold button to the search's right.
-    const search = await searchBox(page).boundingBox()
-    const button = await fold.boundingBox()
-    expect(button?.x).toBeGreaterThan((search?.x ?? 0) + (search?.width ?? 0))
-    expect(Math.abs((button?.y ?? 0) - (search?.y ?? 0))).toBeLessThan(1)
+    const [search, button] = await boxesOf(searchBox(page), fold)
+    expect(button.x).toBeGreaterThan(search.right)
+    expect(Math.abs(button.y - search.y)).toBeLessThan(1)
   })
 
   test("folded, scrolls its rail with no scrollbar, and its spyglass opens the search (S9)", async ({
@@ -170,17 +171,15 @@ test.describe("on a phone", () => {
 
     const close = drawer.getByRole("button", { name: "Close menu" })
     await expect(close).toBeFocused()
-    const search = await searchBox(page).boundingBox()
-    const button = await close.boundingBox()
-    expect(Math.abs((button?.y ?? 0) - (search?.y ?? 0))).toBeLessThan(1)
+    const [search, button] = await boxesOf(searchBox(page), close)
+    expect(Math.abs(button.y - search.y)).toBeLessThan(1)
 
     await searchBox(page).fill("care")
     await page.keyboard.press("Escape")
     await expect(searchBox(page)).toHaveValue("")
     await expect(drawer).toBeVisible()
 
-    await page.keyboard.press("Escape")
-    await expect(drawer).toBeHidden()
+    await escapeFrom(drawer)
   })
 })
 

@@ -1,6 +1,11 @@
 import type { Locator, Page } from "@playwright/test"
 
-import { openEditItemDialog, publishOnce } from "./fixtures/dialogs"
+import {
+  confirmPublish,
+  holdPublishDialogClosing,
+  openEditItemDialog,
+  publishOnce,
+} from "./fixtures/dialogs"
 import { withTabItems } from "./fixtures/fake-sheets"
 import { boxesOf } from "./fixtures/layout"
 import { tokenColour } from "./fixtures/look"
@@ -204,44 +209,59 @@ test.describe("a long placement (S1, STY-071 S4)", () => {
 
   for (const view of ["cards", "compact"] as const) {
     for (const by of ["pointer", "keyboard"] as const) {
-      test(`“To the top” from far down, in ${view}, chosen by ${by}: it travels and lands in the room between the bars, focus on its Move`, async ({
-        page,
-        sheets,
-      }) => {
-        sheets.spreadsheet = withTabItems(
-          "ProductA",
-          ["Minimal card", "Next"],
-          ...Array.from({ length: 20 }, (_, at): [string, string] => [
-            `Now item ${String(at + 1)}`,
-            "Now",
-          ]),
-        )
-        await recordTravels(page)
-        await open(page)
-        if (view === "compact") await chooseCompact(page)
-        const last = itemOf(page, "Now item 20")
+      for (const late of by === "keyboard" ? [false, true] : [false]) {
+        test(`“To the top” from far down, in ${view}, chosen by ${by}${late ? ", the publish dialog closing late (DEF-024 S1)" : ""}: it travels and lands in the room between the bars, focus on its Move`, async ({
+          page,
+          sheets,
+        }) => {
+          if (late) await holdPublishDialogClosing(page)
+          sheets.spreadsheet = withTabItems(
+            "ProductA",
+            ["Minimal card", "Next"],
+            ...Array.from({ length: 20 }, (_, at): [string, string] => [
+              `Now item ${String(at + 1)}`,
+              "Now",
+            ]),
+          )
+          await recordTravels(page)
+          await open(page)
+          if (view === "compact") await chooseCompact(page)
+          const last = itemOf(page, "Now item 20")
 
-        if (by === "pointer") {
-          await chooseFromMenu(page, "Now item 20", "To the top")
-        } else {
-          await moveButton(page, "Now item 20").focus()
-          await page.keyboard.press("Enter")
-          await page
-            .getByRole("menuitem", { name: "To the top", exact: true })
-            .focus()
-          await page.keyboard.press("Enter")
-        }
-        await landed(page)
+          if (by === "pointer") {
+            await chooseFromMenu(page, "Now item 20", "To the top")
+          } else {
+            await moveButton(page, "Now item 20").focus()
+            await page.keyboard.press("Enter")
+            await page
+              .getByRole("menuitem", { name: "To the top", exact: true })
+              .focus()
+            await page.keyboard.press("Enter")
+          }
+          await landed(page)
 
-        expect((await travels(page)).map((each) => each.types)).toEqual([
-          ["item-move"],
-        ])
-        await expect(last.getByText("Moved to the top")).toBeAttached()
-        await expect.poll(() => inRoom(last)).toBe(true)
-        await expect(moveButton(page, "Now item 20")).toBeFocused()
-      })
+          expect((await travels(page)).map((each) => each.types)).toEqual([
+            ["item-move"],
+          ])
+          await expect(last.getByText("Moved to the top")).toBeAttached()
+          await expect.poll(() => inRoom(last)).toBe(true)
+          await expect(moveButton(page, "Now item 20")).toBeFocused()
+        })
+      }
     }
   }
+})
+
+// `publishOnce`'s own test sits with the case whose scripted focus lost the race to it.
+test("publishing once hands over only when the notice has focus, however late the publish dialog closes (DEF-024 S1)", async ({
+  page,
+}) => {
+  await holdPublishDialogClosing(page)
+  await open(page)
+
+  expect(
+    await page.evaluate(() => document.activeElement?.textContent ?? ""),
+  ).toMatch(/^Changes published\./)
 })
 
 test.describe("a move to another placement travels the whole way (S2)", () => {
@@ -609,11 +629,7 @@ test.describe("nothing else travels (S5)", () => {
       .getByRole("button", { name: "Show the rest of A smaller card" })
       .click()
     await main(page).getByRole("button", { name: "Publish changes" }).click()
-    await page
-      .getByRole("alertdialog")
-      .getByRole("button", { name: "Publish changes" })
-      .click()
-    await expect(main(page).getByText(/^Changes published\./)).toBeVisible()
+    await confirmPublish(page)
 
     expect(await travels(page)).toEqual([])
   })

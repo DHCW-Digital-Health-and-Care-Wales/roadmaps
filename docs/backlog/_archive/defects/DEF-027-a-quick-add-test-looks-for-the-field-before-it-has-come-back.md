@@ -57,6 +57,6 @@ and passes
 ## Decisions
 
 - **D1** (owner, 2026-11-22, triage of STY-087's delivery): Superseded by
-  [CHO-030](../../chores/CHO-030-e2e-flakes-are-found-by-a-stress-run-not-by-ci.md),
+  [CHO-030](../chores/CHO-030-e2e-flakes-are-found-by-a-stress-run-not-by-ci.md),
   over fixing it next on its own or Won't fix — the flake audit holds S1, so the field's
   return is waited for with the rest of its kind.

@@ -12,7 +12,7 @@ type User = ReturnType<typeof userEvent.setup>
  */
 export async function expectWriteHold(title: string): Promise<HTMLElement> {
   const hold = await screen.findByRole("alertdialog", { name: title })
-  await expectOpeningFocus(
+  await expectOpeningFocus(() =>
     within(hold).getByRole("button", { name: "Refresh" }),
   )
   expect(screen.queryByRole("main")).toBeNull()

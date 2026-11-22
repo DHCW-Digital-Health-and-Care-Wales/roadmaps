@@ -12,7 +12,7 @@ import {
   openEditItemDialog,
   openEditRoadmapDialog,
 } from "./fixtures/dialogs"
-import { centre, settledBoxes } from "./fixtures/layout"
+import { centre, boxesOf } from "./fixtures/layout"
 import { useLanguage } from "./fixtures/look"
 import { connect, expect, test } from "./fixtures/test"
 
@@ -53,7 +53,7 @@ for (const [size, viewport] of [
     await expect(close).toBeVisible()
     expect(await isInView(page, close)).toBe(true)
     await expect(dialog.getByRole("textbox", { name: "Title" })).toBeFocused()
-    const [box, titleBox, dialogBox] = await settledBoxes(close, title, dialog)
+    const [box, titleBox, dialogBox] = await boxesOf(close, title, dialog)
     // At the dialog's right edge, level with the title, which keeps clear of it.
     expect(dialogBox.right - box.right).toBeLessThan(32)
     expect(Math.abs(centre(box) - centre(titleBox))).toBeLessThan(8)

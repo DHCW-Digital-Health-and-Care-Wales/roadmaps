@@ -169,7 +169,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
       expect(others).toEqual([])
       await user.click(inPanel)
 
-      await expectOpeningFocus(
+      await expectOpeningFocus(() =>
         dialog().getByRole("textbox", { name: "Product name" }),
       )
     })
@@ -257,7 +257,7 @@ describe("adding a roadmap from the list (STY-041)", () => {
     const form = await openDialog(user)
 
     const title = form.getByRole("textbox", { name: "Product name" })
-    await expectOpeningFocus(title)
+    await expectOpeningFocus(() => title)
     expect(title).toBeRequired()
     expect(title).toHaveAccessibleDescription("The name the public site shows.")
     expect(form.getByRole("textbox", { name: "Short name" })).toBeRequired()

@@ -18,6 +18,7 @@ import {
   EXAMPLE_SPREADSHEET_WITH_LISTS,
   withRoadmapIndex,
 } from "./fixtures/fake-sheets"
+import { escapeFrom } from "./fixtures/keyboard"
 import { useLanguage } from "./fixtures/look"
 import {
   productDetailsField,
@@ -290,11 +291,7 @@ test.describe("an expired session (S11)", () => {
     const warning = page.getByRole("alertdialog", {
       name: "Your session is about to end",
     })
-    await expect(
-      warning.getByRole("button", { name: "Stay connected" }),
-    ).toBeFocused()
-    await page.keyboard.press("Escape")
-    await expect(warning).toBeHidden()
+    await escapeFrom(warning)
     await expect(dialog).toBeVisible()
     await expect(title).toHaveValue("Community Nursing roadmap")
 

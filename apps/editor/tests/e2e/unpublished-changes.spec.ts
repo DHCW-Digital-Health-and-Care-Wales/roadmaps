@@ -2,7 +2,7 @@ import type { Page } from "@playwright/test"
 
 import { disconnectFromHeader } from "./fixtures/account-menu"
 import { changeItem, openEditItemDialog } from "./fixtures/dialogs"
-import { settledBoxes } from "./fixtures/layout"
+import { boxesOf } from "./fixtures/layout"
 import { tokenColour } from "./fixtures/look"
 import { openLongRoadmap } from "./fixtures/roadmap-page"
 import { connect, expect, test } from "./fixtures/test"
@@ -287,7 +287,7 @@ test.describe("on a phone", () => {
       name: "2 fap trywydd â newidiadau heb eu cyhoeddi",
     })
     await expect(entry).toBeVisible()
-    const [box, link] = await settledBoxes(drawer, entry)
+    const [box, link] = await boxesOf(drawer, entry)
     expect(link.right).toBeLessThanOrEqual(box.right)
     expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0)
   })

@@ -1,9 +1,10 @@
 import AxeBuilder from "@axe-core/playwright"
 import type { Locator, Page } from "@playwright/test"
 
-import { reconnectDialog } from "./fixtures/dialogs"
+import { confirmPublish, reconnectDialog } from "./fixtures/dialogs"
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
 import { type FakeTab, withTabItems } from "./fixtures/fake-sheets"
+import { escapeFrom } from "./fixtures/keyboard"
 import { boxesOf } from "./fixtures/layout"
 import { type Language, useTheme } from "./fixtures/look"
 import { openRoadmapIn, refreshRoadmap } from "./fixtures/roadmap-page"
@@ -142,11 +143,7 @@ for (const view of ["cards", "compact"] as const) {
     await expect(titlesUnder(page, "Next")).toHaveCount(3)
 
     await main(page).getByRole("button", { name: "Publish changes" }).click()
-    await page
-      .getByRole("alertdialog")
-      .getByRole("button", { name: "Publish changes" })
-      .click()
-    await expect(main(page).getByText(/^Changes published\./)).toBeVisible()
+    await confirmPublish(page)
     expect(sheets.writes).toHaveLength(1)
     await expect(titlesUnder(page, "Next")).toHaveText([
       "See your waiting time",
@@ -252,11 +249,7 @@ test("the session warning, opening as a title is typed, leaves the field and its
   const warning = page.getByRole("alertdialog", {
     name: "Your session is about to end",
   })
-  await expect(
-    warning.getByRole("button", { name: "Stay connected" }),
-  ).toBeFocused()
-  await page.keyboard.press("Escape")
-  await expect(warning).toBeHidden()
+  await escapeFrom(warning)
 
   await expect(field(page, "Next")).toHaveValue(HEARING)
   await field(page, "Next").focus()
@@ -421,8 +414,7 @@ test("“Add more details” opens the item dialog on the title and placement; c
     .getByRole("button", { name: "Add and start another", exact: true })
     .click()
   await expect(dialog.getByRole("status")).toContainText(CHECK_IN)
-  await page.keyboard.press("Escape")
-  await expect(dialog).toBeHidden()
+  await escapeFrom(dialog)
   await expect(quickAdd(page, "Later")).toBeFocused()
   await expect(field(page, "Later")).toHaveCount(0)
   await expect(titlesUnder(page, "Later")).toHaveText([
@@ -517,6 +509,7 @@ for (const theme of ["light", "dark"] as const) {
         .analyze()
       expect(results.violations).toEqual([])
       await page.keyboard.press("Escape")
+      await expect(field(page, "Next")).toHaveCount(0)
     }
   })
 

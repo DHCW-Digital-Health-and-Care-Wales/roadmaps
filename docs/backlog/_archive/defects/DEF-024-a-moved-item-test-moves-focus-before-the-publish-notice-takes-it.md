@@ -1,6 +1,6 @@
 # DEF-024: A moved item test moves focus before the publish notice has taken it
 
-- **Status**: Needs triage — found by STY-081's retro
+- **Status**: Done — with CHO-030 (D1)
 - **Severity**: Low — an E2E run fails now and then on a change that does not touch the
   move, and a retry passes; no user is affected
 - **Area**: E2E
@@ -8,7 +8,7 @@
 - **Depends on**: none
 - **Binding ADRs**: none
 - **Suggested model**: Sonnet — a wait in one shared test helper, checked by a stress run
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/242
 
 ## Summary
 
@@ -70,3 +70,33 @@ end between `.focus()` and the closing focus check) **When** the keyboard "far d
 run **Then** each passes; at `d6bbc69` the delay makes them fail every time
 
 ## Decisions
+
+- **D1** (owner, 2026-11-22, CHO-030 delivery): delivered with CHO-030, whose shared
+  helpers settle by construction, over a delivery of its own
+  ([CHO-030](../chores/CHO-030-e2e-flakes-are-found-by-a-stress-run-not-by-ci.md)).
+
+## Delivery
+
+The cause was as suspected. `publishOnce` (`apps/editor/tests/e2e/fixtures/dialogs.ts`)
+now ends with `confirmPublish`, which waits for the publish dialog to go and for the
+notice to have focus. That notice takes focus as the dialog finishes closing, in
+`onOpenChangeComplete`. CHO-030 moved the inline publish confirmations onto
+`confirmPublish` too, and made `editing.spec.ts`'s own confirming helper wait for its
+dialog to go, so the race is gone for those callers, not just this spec.
+
+### Departures
+
+- **Its red is the helper's** (agent): S1 asks that the delayed close make the keyboard
+  "far down" cases fail every time at the old helper. `holdPublishDialogClosing` pauses
+  the dialog's closing animation until a second after the notice shows. With it, the
+  old helper failed the far-down cases in 1 to 4 of 6 to 10 runs, not every time: the
+  case's own steps often outrun the notice. So the red that holds every time is a test
+  of the helper itself, which reads focus once, the moment `publishOnce` returns. It
+  failed 3 of 3 runs with the old helper. The far-down keyboard cases also run with the
+  hold, and pass.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                                                                           |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `apps/editor/tests/e2e/moved-travel.spec.ts` (`publishing once hands over only when the notice has focus, however late the publish dialog closes (DEF-024 S1)`; `“To the top” from far down, in cards/compact, chosen by keyboard, the publish dialog closing late (DEF-024 S1)`) |

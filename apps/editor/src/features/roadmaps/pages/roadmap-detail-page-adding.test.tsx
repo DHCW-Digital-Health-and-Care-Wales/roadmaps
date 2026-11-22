@@ -256,7 +256,7 @@ describe("The item dialog, adding (STY-046 S2)", () => {
     const form = await openAddItemDialog(user)
 
     const title = form.getByRole("textbox", { name: "Title" })
-    await expectOpeningFocus(title)
+    await expectOpeningFocus(() => title)
     for (const name of ["Title", "Description", "Expected outcome", "Phase"]) {
       expect(form.getByRole("textbox", { name })).toHaveValue("")
     }
@@ -1260,7 +1260,7 @@ describe("An empty roadmap (STY-046 S8)", () => {
 
     await user.click(inPanel)
     const form = addItemDialog()
-    await expectOpeningFocus(form.getByRole("textbox", { name: "Title" }))
+    await expectOpeningFocus(() => form.getByRole("textbox", { name: "Title" }))
     await user.click(form.getByRole("button", { name: "Cancel" }))
     await expectDialogClosed()
     await waitFor(() => {

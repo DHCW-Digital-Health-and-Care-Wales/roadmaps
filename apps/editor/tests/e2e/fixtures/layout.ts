@@ -1,5 +1,7 @@
 import type { Locator, Page } from "@playwright/test"
 
+import { expect } from "./test"
+
 /** Where a box sits in the viewport, with its right and bottom edges. */
 export interface Box {
   x: number
@@ -10,47 +12,12 @@ export interface Box {
   bottom: number
 }
 
-/** `locator`'s box in the viewport, failing when it has none. */
-export async function boxOf(locator: Locator): Promise<Box> {
-  const box = await locator.boundingBox()
-  if (!box) throw new Error("Not laid out")
-  return { ...box, right: box.x + box.width, bottom: box.y + box.height }
-}
-
-/**
- * The boxes of `locators` in the viewport, all read in one step. Read one at a time, they
- * are of different moments: the page may be scrolling to an item that was just moved.
- */
-export async function boxesOf<Locators extends Locator[]>(
-  ...locators: Locators
-): Promise<{ [At in keyof Locators]: Box }> {
-  const first = locators[0]
-  if (!first) return [] as unknown as { [At in keyof Locators]: Box }
-  const handles = await Promise.all(
-    locators.map((locator) => locator.elementHandle()),
-  )
-  try {
-    const boxes = await first.page().evaluate(
-      (elements) =>
-        elements.map((element) => {
-          const { x, y, width, height, right, bottom } =
-            element.getBoundingClientRect()
-          return { x, y, width, height, right, bottom }
-        }),
-      handles,
-    )
-    // One box for each locator, in order.
-    return boxes as unknown as { [At in keyof Locators]: Box }
-  } finally {
-    await Promise.all(handles.map((handle) => handle.dispose()))
-  }
-}
-
 /**
  * Resolves once every animation on the page that ends has ended. A dialog is ready as
  * focus reaches its first field, before it has slid or zoomed in: reduced motion cuts
  * that to 0.01 ms, but the first keyframe still holds until the next frame, which a
- * loaded runner delays (DEF-025). Animations that never end, a spinner's, are left.
+ * loaded runner delays (DEF-025). Animations that never end, a spinner's, and paused
+ * ones are left.
  */
 export async function animationsDone(page: Page): Promise<void> {
   await page.evaluate(async () => {
@@ -70,27 +37,55 @@ export async function animationsDone(page: Page): Promise<void> {
   })
 }
 
+/** The boxes of `locators`' elements, read in one step; `null` for one not laid out. */
+async function readBoxes(locators: Locator[]): Promise<(Box | null)[]> {
+  const first = locators[0]
+  if (!first) return []
+  const handles = await Promise.all(
+    locators.map((locator) => locator.elementHandle()),
+  )
+  try {
+    return await first.page().evaluate(
+      (elements) =>
+        elements.map((element) => {
+          if (!element.isConnected || element.getClientRects().length === 0) {
+            return null
+          }
+          const { x, y, width, height, right, bottom } =
+            element.getBoundingClientRect()
+          return { x, y, width, height, right, bottom }
+        }),
+      handles,
+    )
+  } finally {
+    await Promise.all(handles.map((handle) => handle.dispose()))
+  }
+}
+
 /**
  * The boxes of `locators` in the viewport, all read in one step once the page's
- * animations have ended (`animationsDone`). Read a popup's geometry with this, a
- * dialog's, a drawer's or a menu's, and `boxesOf` for what does not animate in.
+ * animations have ended (`animationsDone`) and each is laid out, retried until then.
+ * Read one at a time, they are of different moments: a dialog may be sliding in, or the
+ * page scrolling to an item that was just moved.
  */
-export async function settledBoxes<Locators extends Locator[]>(
+export async function boxesOf<Locators extends Locator[]>(
   ...locators: Locators
 ): Promise<{ [At in keyof Locators]: Box }> {
   const first = locators[0]
-  if (first) await animationsDone(first.page())
-  const boxes = await boxesOf(...locators)
-  // `boxesOf` reads a hidden element's box as zeros, where `boundingBox()` gave none.
-  if ((boxes as Box[]).some((box) => box.width === 0 && box.height === 0)) {
-    throw new Error("Not laid out")
-  }
-  return boxes
+  if (!first) return [] as unknown as { [At in keyof Locators]: Box }
+  let boxes: (Box | null)[] = []
+  await expect(async () => {
+    await animationsDone(first.page())
+    boxes = await readBoxes(locators)
+    expect(boxes.every(Boolean), "Not laid out").toBe(true)
+  }).toPass({ intervals: [50, 100, 250], timeout: 5_000 })
+  // One box for each locator, in order, none null.
+  return boxes as unknown as { [At in keyof Locators]: Box }
 }
 
-/** `locator`'s box in the viewport once the page's animations have ended. */
-export async function settledBox(locator: Locator): Promise<Box> {
-  const [box] = await settledBoxes(locator)
+/** `locator`'s box in the viewport, as `boxesOf` reads it. */
+export async function boxOf(locator: Locator): Promise<Box> {
+  const [box] = await boxesOf(locator)
   return box
 }
 

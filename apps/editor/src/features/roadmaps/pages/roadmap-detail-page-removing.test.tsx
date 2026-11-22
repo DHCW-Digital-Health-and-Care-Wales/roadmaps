@@ -146,7 +146,7 @@ describe("Remove asks first, with Not doing first (S1)", () => {
     expect(
       dialog.getAllByRole("button").map(({ textContent }) => textContent),
     ).toEqual(["Move to Not doing", "Remove", "Cancel", "Close"])
-    await expectOpeningFocus(
+    await expectOpeningFocus(() =>
       dialog.getByRole("button", { name: "Move to Not doing" }),
     )
   })
@@ -480,7 +480,7 @@ describe("A co-lead's change to a removed item (S6)", () => {
     expect(conflict.getAllByRole("definition")[1]).toHaveTextContent(
       "DescriptionTheir reason",
     )
-    await expectOpeningFocus(
+    await expectOpeningFocus(() =>
       conflict.getByRole("button", { name: `Remove anyway ${FAX}` }),
     )
     expect(

@@ -122,7 +122,7 @@ describe("OpeningField (EPC-009, a field that opens on request)", () => {
       within(group).getByRole("button", { name: "Remove Ada" }),
     ).toBeVisible()
     // Not the first control of the field, but the one the field names.
-    await expectOpeningFocus(
+    await expectOpeningFocus(() =>
       within(group).getByRole("textbox", { name: "Add a name" }),
     )
     const button = screen.getByRole("button", { name: "Close names" })
@@ -154,7 +154,7 @@ describe("OpeningField (EPC-009, a field that opens on request)", () => {
   it("moves focus to its button on shutting, where pressing a button does not focus it", async () => {
     const { user } = renderField({ initial: ["Ada"] })
     await user.click(screen.getByRole("button", { name: "Change names" }))
-    await expectOpeningFocus(
+    await expectOpeningFocus(() =>
       screen.getByRole("textbox", { name: "Add a name" }),
     )
 
@@ -184,7 +184,7 @@ describe("OpeningField (EPC-009, a field that opens on request)", () => {
     await user.tab()
     expect(screen.getByRole("button", { name: "Change names" })).toHaveFocus()
     await user.keyboard("{Enter}")
-    await expectOpeningFocus(
+    await expectOpeningFocus(() =>
       screen.getByRole("textbox", { name: "Add a name" }),
     )
 

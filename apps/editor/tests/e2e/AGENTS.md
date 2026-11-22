@@ -19,11 +19,12 @@ End-to-end tests of the production build, with Google faked (ADR-006).
   (`publishOnce` in `fixtures/dialogs.ts`) to give every item its ID, then calls
   `sheets.coLead`.
 - No sleeps. For back-off or expiry, `page.clock.install()` before `goto`, then
-  fast-forward; time still runs in real time until moved. Move the clock to a session's
-  end or its warning by `sessionMs()` and `SESSION_WARNING_MS` (`fixtures/fake-gis.ts`),
-  never a sum written in the spec. The warning opens two minutes before a session ends
-  and, being modal, hides the page from role queries: a grant shorter than about 180 s
-  opens it at once.
+  fast-forward; time still runs in real time until moved, so stop a fast-forward short
+  of a deadline by more than a loaded runner's steps take (seconds, not one), then move
+  the rest. Move the clock to a session's end or its warning by `sessionMs()` and
+  `SESSION_WARNING_MS` (`fixtures/fake-gis.ts`), never a sum written in the spec. The
+  warning opens two minutes before a session ends and, being modal, hides the page from
+  role queries: a grant shorter than about 180 s opens it at once.
 - `page.evaluate` runs with a user gesture, so it cannot exercise the popup-gesture
   check.
 - `sheets.reads`, `sheets.tokens` and `gis.tokenRequests` fill as requests arrive: await
@@ -45,6 +46,14 @@ End-to-end tests of the production build, with Google faked (ADR-006).
   by substring, so name "More" `exact`.
 - Run a layout check with `reducedMotion: "reduce"` too: no transition runs, so a class
   a bar gains takes effect in its own frame. Measure its border box.
+- What a step causes lands later, on a loaded runner much later: a popup takes focus a
+  frame after it shows, and Base UI returns focus, focuses a notice or acts on a menu's
+  choice only as the popup's closing animation ends. A helper that opens a popup returns
+  once focus is in it (`openDialog`, `openAccountMenu`); one that closes, chooses or
+  confirms returns once the popup has gone, by when what its closing causes has landed
+  (`chooseFromMore`, `confirmPublish`, `escapeFrom`). A spec waits the same way before
+  its next step acts, and presses Escape in a popup that holds focus with `escapeFrom`.
+- Read boxes compared with each other in one `boxesOf` call, so they are of one moment.
 
 ## Look checks
 

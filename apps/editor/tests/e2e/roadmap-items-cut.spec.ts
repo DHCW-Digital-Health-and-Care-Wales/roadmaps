@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright"
 import type { Locator, Page } from "@playwright/test"
 
 import { openEditItemDialog } from "./fixtures/dialogs"
-import { scrollsSideways } from "./fixtures/layout"
+import { boxOf, boxesOf, scrollsSideways } from "./fixtures/layout"
 import {
   cardOf,
   fieldOf,
@@ -83,7 +83,7 @@ for (const [width, height] of [
       ).toBe("3")
       expect(await scrollsSideways(page)).toBe(false)
 
-      const before = await field.boundingBox()
+      const before = await boxOf(field)
       await more.focus()
       await page.keyboard.press("Enter")
       const less = card.getByRole("button", {
@@ -93,9 +93,7 @@ for (const [width, height] of [
       await expect(less).toHaveAttribute("aria-expanded", "true")
       const { shown, whole } = await linesOf(field)
       expect(shown).toBe(whole)
-      expect((await field.boundingBox())?.height).toBeGreaterThan(
-        before?.height ?? Infinity,
-      )
+      expect((await boxOf(field)).height).toBeGreaterThan(before.height)
 
       await page.keyboard.press("Enter")
       await expect(more).toBeFocused()
@@ -140,11 +138,11 @@ for (const [width, height] of [
         "none",
       ])
       // The fourth is cut away by the list's height, below the field's third line.
-      const fourth = await field.getByText("Fourth").boundingBox()
-      const list = await field.locator(":scope > div").boundingBox()
-      expect(fourth?.y).toBeGreaterThanOrEqual(
-        (list?.y ?? Infinity) + (list?.height ?? 0) - 1,
+      const [fourth, list] = await boxesOf(
+        field.getByText("Fourth"),
+        field.locator(":scope > div"),
       )
+      expect(fourth.y).toBeGreaterThanOrEqual(list.bottom - 1)
     })
 
     test("a detail the cut falls within ends in an ellipsis on the third line (S3)", async ({

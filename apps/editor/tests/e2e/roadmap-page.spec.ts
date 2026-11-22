@@ -431,7 +431,7 @@ for (const theme of THEMES) {
       await tokenColour(page, "--border"),
     )
     // Compact: its heading, one line and the button, well short of a full panel.
-    expect((await panel.boundingBox())?.height).toBeLessThan(200)
+    expect((await boxOf(panel)).height).toBeLessThan(200)
 
     // An item a co-lead adds shows after Refresh, in the panel's place.
     sheets.spreadsheet = withTabItems("ProductA", ["First work", "Now"])

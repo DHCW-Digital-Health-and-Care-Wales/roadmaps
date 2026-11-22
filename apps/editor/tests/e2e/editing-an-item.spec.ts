@@ -6,6 +6,7 @@ import {
   openEditItemDialog,
 } from "./fixtures/dialogs"
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
+import { escapeFrom } from "./fixtures/keyboard"
 import { useLanguage } from "./fixtures/look"
 import { connect, expect, test } from "./fixtures/test"
 
@@ -158,11 +159,7 @@ test("the dialog stays through the session warning and the session's end, and Do
   const warning = page.getByRole("alertdialog", {
     name: "Your session is about to end",
   })
-  await expect(
-    warning.getByRole("button", { name: "Stay connected" }),
-  ).toBeFocused()
-  await page.keyboard.press("Escape")
-  await expect(warning).toBeHidden()
+  await escapeFrom(warning)
   await expect(outcome).toHaveValue(OUTCOME)
 
   await page.clock.fastForward(SESSION_WARNING_MS)

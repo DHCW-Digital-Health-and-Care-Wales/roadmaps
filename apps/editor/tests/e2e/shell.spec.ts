@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test"
 
+import { boxOf, boxesOf } from "./fixtures/layout"
 import { tokenColour, useLanguage } from "./fixtures/look"
 import { roadmapFacts } from "./fixtures/roadmap-page"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
@@ -55,8 +56,8 @@ for (const language of ["en", "cy"] as const) {
       const logo = banner.getByRole("img", { name: c.logo })
       await expect(logo).toBeVisible()
       // The full logo is wide; the icon is square.
-      const box = await logo.boundingBox()
-      expect(box?.width ?? 0).toBeGreaterThan((box?.height ?? 0) * 2)
+      const box = await boxOf(logo)
+      expect(box.width).toBeGreaterThan(box.height * 2)
       await expect(
         banner.getByRole("link", { name: c.home, exact: true }),
       ).toBeVisible()
@@ -67,18 +68,17 @@ for (const language of ["en", "cy"] as const) {
       // Left to right: the home link, the language, then the account menu: no chip, and
       // no Connect or Disconnect button of its own (the connection is announced only).
       await expect(banner.getByRole("button")).toHaveCount(2)
-      const xs = await Promise.all(
-        [
-          banner.getByRole("link", { name: c.home, exact: true }),
-          banner.getByRole("button").first(),
-          banner.getByRole("button", { name: c.account }),
-        ].map(async (locator) => (await locator.boundingBox())?.x ?? NaN),
+      const boxes = await boxesOf(
+        banner.getByRole("link", { name: c.home, exact: true }),
+        banner.getByRole("button").first(),
+        banner.getByRole("button", { name: c.account }),
       )
+      const xs = boxes.map((box) => box.x)
       expect(xs).toEqual([...xs].sort((a, b) => a - b))
       expect(new Set(xs).size).toBe(3)
       const status = banner.getByRole("status")
       await expect(status).toBeAttached()
-      expect((await status.boundingBox())?.width ?? 0).toBeLessThanOrEqual(1)
+      expect((await boxOf(status)).width).toBeLessThanOrEqual(1)
     })
 
     test("the narrow header keeps its rules at 375px (S2, D6)", async ({
@@ -96,7 +96,7 @@ for (const language of ["en", "cy"] as const) {
       // The icon, the short name and the two 32px buttons; the status is still announced.
       const icon = banner.getByRole("img", { name: c.logo })
       await expect(icon).toBeVisible()
-      expect((await icon.boundingBox())?.width ?? 0).toBeLessThan(48)
+      expect((await boxOf(icon)).width).toBeLessThan(48)
       await expect(
         banner.getByRole("button", { name: c.account }),
       ).toBeVisible()
@@ -202,15 +202,13 @@ test("a phase banner names the phase, with no feedback link when none is set (S3
     ),
   ).toBeVisible()
   // Below the header, above the main content.
-  const [headerBox, betaBox, mainBox] = await Promise.all([
-    banner.boundingBox(),
-    beta.boundingBox(),
-    page.getByRole("main").boundingBox(),
-  ])
-  expect(betaBox?.y ?? 0).toBeGreaterThanOrEqual(
-    (headerBox?.y ?? 0) + (headerBox?.height ?? 0),
+  const [headerBox, betaBox, mainBox] = await boxesOf(
+    banner,
+    beta,
+    page.getByRole("main"),
   )
-  expect(betaBox?.y ?? 0).toBeLessThan(mainBox?.y ?? 0)
+  expect(betaBox.y).toBeGreaterThanOrEqual(headerBox.bottom)
+  expect(betaBox.y).toBeLessThan(mainBox.y)
   // The build has no VITE_FEEDBACK_URL in the committed config.
   await expect(page.getByRole("link", { name: /Give feedback/ })).toHaveCount(0)
 })
@@ -236,11 +234,8 @@ for (const language of ["en", "cy"] as const) {
     // The button is the last of the banner's, at its right end.
     const button = banner.getByRole("button", { name: dismiss })
     await expect(banner.getByRole("button")).toHaveCount(1)
-    const bannerBox = await banner.boundingBox()
-    const buttonBox = await button.boundingBox()
-    expect((buttonBox?.x ?? 0) + (buttonBox?.width ?? 0)).toBeGreaterThan(
-      (bannerBox?.x ?? 0) + (bannerBox?.width ?? 0) - 40,
-    )
+    const [bannerBox, buttonBox] = await boxesOf(banner, button)
+    expect(buttonBox.right).toBeGreaterThan(bannerBox.right - 40)
 
     await button.click()
 
@@ -278,24 +273,24 @@ test.describe("DHCW's container and spacing (S6)", () => {
       await page.setViewportSize({ width, height: 800 })
       await page.goto("./")
       const h1 = page.getByRole("heading", { level: 1 })
-      expect((await h1.boundingBox())?.x).toBe(left)
+      expect((await boxOf(h1)).x).toBe(left)
 
       await page
         .getByRole("main")
         .getByRole("button", { name: "Connect Google" })
         .click()
       await expect(roadmapCards(page)).toHaveCount(3)
-      expect((await h1.boundingBox())?.x).toBe(left)
+      expect((await boxOf(h1)).x).toBe(left)
 
       await roadmapCards(page).first().click()
       await expect(h1).toHaveText("Product B roadmap")
-      expect((await h1.boundingBox())?.x).toBe(left)
+      expect((await boxOf(h1)).x).toBe(left)
       // The header block's facts line on the one left edge (STY-065 S1).
-      expect((await roadmapFacts(page).boundingBox())?.x).toBe(left)
+      expect((await boxOf(roadmapFacts(page))).x).toBe(left)
 
       await page.goto("./#/nowhere")
       await expect(h1).toHaveText("Page not found")
-      expect((await h1.boundingBox())?.x).toBe(left)
+      expect((await boxOf(h1)).x).toBe(left)
       expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0)
     })
   }
@@ -305,9 +300,9 @@ test.describe("DHCW's container and spacing (S6)", () => {
     await page.goto("./")
 
     // The navigation, then (1920 - 256 - 1200) / 2 margin, plus 40px of padding.
-    expect(
-      (await page.getByRole("heading", { level: 1 }).boundingBox())?.x,
-    ).toBe(256 + 232 + 40)
+    expect((await boxOf(page.getByRole("heading", { level: 1 }))).x).toBe(
+      256 + 232 + 40,
+    )
   })
 })
 

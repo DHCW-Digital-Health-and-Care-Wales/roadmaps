@@ -218,7 +218,7 @@ describe("Editing an item's details (STY-039)", () => {
     const only = field.getByRole("textbox", {
       name: "Detail 1 of 1, top level",
     })
-    await expectOpeningFocus(only)
+    await expectOpeningFocus(() => only)
     await user.keyboard("Evening clinics")
     await confirmItemEdit(user)
 
@@ -239,7 +239,7 @@ describe("Editing an item's details (STY-039)", () => {
         "Detail 4 of 4, top level",
       ],
     )
-    await expectOpeningFocus(box(field, FOLLOW_UP))
+    await expectOpeningFocus(() => box(field, FOLLOW_UP))
     expect(form.getByRole("button", { name: "Close details" })).toHaveAttribute(
       "aria-expanded",
       "true",

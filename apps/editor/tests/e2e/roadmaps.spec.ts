@@ -6,7 +6,7 @@ import {
   roadmapRow,
   withRoadmapIndex,
 } from "./fixtures/fake-sheets"
-import { boxOf } from "./fixtures/layout"
+import { boxesOf, boxOf } from "./fixtures/layout"
 import { useLanguage } from "./fixtures/look"
 import {
   productDetailsField,
@@ -307,11 +307,11 @@ test.describe("on a phone", () => {
         document.documentElement.clientWidth,
     )
     expect(overflow).toBeLessThanOrEqual(0)
-    const [badge, box] = await Promise.all([
-      page.getByText(/^In private beta/).boundingBox(),
-      card(page, "A roadmap with a very long title").boundingBox(),
-    ])
-    expect(badge?.width).toBeLessThanOrEqual(box?.width ?? 0)
+    const [badge, box] = await boxesOf(
+      page.getByText(/^In private beta/),
+      card(page, "A roadmap with a very long title"),
+    )
+    expect(badge.width).toBeLessThanOrEqual(box.width)
   })
 })
 
@@ -489,23 +489,23 @@ test.describe("the top of the roadmap list (STY-058)", () => {
     }) => {
       const { main, heading, count, add, refresh } = await openList(page, width)
 
-      const [h, c, a, r, first] = await Promise.all([
-        boxOf(heading),
-        boxOf(count),
-        boxOf(add),
-        boxOf(refresh),
-        boxOf(main.getByRole("heading", { level: 2 }).first()),
-      ])
+      const [h, c, a, r, first] = await boxesOf(
+        heading,
+        count,
+        add,
+        refresh,
+        main.getByRole("heading", { level: 2 }).first(),
+      )
       // A column: title, count, the row of actions, then the first family's heading.
-      expect(c.y).toBeGreaterThanOrEqual(h.y + h.height)
-      expect(a.y).toBeGreaterThanOrEqual(c.y + c.height)
-      expect(first.y).toBeGreaterThanOrEqual(a.y + a.height)
+      expect(c.y).toBeGreaterThanOrEqual(h.bottom)
+      expect(a.y).toBeGreaterThanOrEqual(c.bottom)
+      expect(first.y).toBeGreaterThanOrEqual(a.bottom)
       // One left edge.
       expect(c.x).toBeCloseTo(h.x, 0)
       expect(a.x).toBeCloseTo(h.x, 0)
       expect(first.x).toBeCloseTo(h.x, 0)
       // Add a roadmap then Refresh, on one row, both 40px high.
-      expect(r.x).toBeGreaterThan(a.x + a.width)
+      expect(r.x).toBeGreaterThan(a.right)
       expect(r.y).toBeCloseTo(a.y, 0)
       expect(a.height).toBeCloseTo(40, 0)
       expect(r.height).toBeCloseTo(40, 0)
@@ -518,9 +518,9 @@ test.describe("the top of the roadmap list (STY-058)", () => {
     page,
   }) => {
     const phone = await openList(page, 375)
-    const icon = await phone.refresh.boundingBox()
-    expect(icon?.width).toBeCloseTo(40, 0)
-    expect(icon?.height).toBeCloseTo(40, 0)
+    const icon = await boxOf(phone.refresh)
+    expect(icon.width).toBeCloseTo(40, 0)
+    expect(icon.height).toBeCloseTo(40, 0)
     await expect(phone.refresh).toHaveAccessibleName("Refresh")
     // Neither the filler nor the families link is under the title.
     await expect(
@@ -532,14 +532,14 @@ test.describe("the top of the roadmap list (STY-058)", () => {
       }),
     ).toHaveCount(0)
     // The label is there for assistive technology, not drawn.
-    const label = await phone.refresh.getByText("Refresh").boundingBox()
-    expect(label?.width ?? 0).toBeLessThanOrEqual(1)
+    const label = await boxOf(phone.refresh.getByText("Refresh"))
+    expect(label.width).toBeLessThanOrEqual(1)
 
     await page.setViewportSize({ width: 640, height: 800 })
-    const labelled = await phone.refresh.boundingBox()
-    expect(labelled?.width).toBeGreaterThan(70)
+    const labelled = await boxOf(phone.refresh)
+    expect(labelled.width).toBeGreaterThan(70)
     expect(
-      (await phone.refresh.getByText("Refresh").boundingBox())?.width ?? 0,
+      (await boxOf(phone.refresh.getByText("Refresh"))).width,
     ).toBeGreaterThan(40)
     await expect(phone.refresh).toHaveAccessibleName("Refresh")
     await expect(phone.refresh).toHaveText("Refresh")
@@ -557,9 +557,9 @@ test.describe("the top of the roadmap list (STY-058)", () => {
     const refresh = main.getByRole("button", { name: "Adnewyddu" })
     await expect(add).toBeVisible()
 
-    const [a, r] = await Promise.all([add.boundingBox(), refresh.boundingBox()])
-    expect(r?.y).toBeCloseTo(a?.y ?? NaN, 0)
-    expect((r?.x ?? 0) + (r?.width ?? 0)).toBeLessThanOrEqual(375)
+    const [a, r] = await boxesOf(add, refresh)
+    expect(r.y).toBeCloseTo(a.y, 0)
+    expect(r.right).toBeLessThanOrEqual(375)
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth - window.innerWidth,

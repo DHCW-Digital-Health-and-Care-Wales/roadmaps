@@ -7,6 +7,7 @@ import {
   askToRemove,
   changeItem,
   addItemButtons,
+  confirmPublish,
   openAddItemDialog,
   openAddRoadmapDialog,
   openEditItemDialog,
@@ -23,6 +24,7 @@ import {
   withRoadmapIndex,
   withTabItems,
 } from "./fixtures/fake-sheets"
+import { escapeFrom } from "./fixtures/keyboard"
 import { useDialog, useLanguage, useTheme } from "./fixtures/look"
 import {
   productDetailsField,
@@ -150,8 +152,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
 
       const panel = await openEditItemDialog(page, "Minimal card")
       await expectNoAxeViolations(page, theme)
-      await page.keyboard.press("Escape")
-      await expect(panel).toBeHidden()
+      await escapeFrom(panel)
 
       await page.setViewportSize({ width: 844, height: 390 })
       await openEditItemDialog(page, "Minimal card")
@@ -249,8 +250,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
         await moreButton(page).click()
         await expect(page.getByRole("menu")).toBeVisible()
         await expectNoAxeViolations(page, theme, { menuOpen: true })
-        await page.keyboard.press("Escape")
-        await expect(page.getByRole("menu")).toBeHidden()
+        await escapeFrom(page.getByRole("menu"))
 
         await page.getByRole("button", { name: "Dismiss message" }).click()
         await expect(page.locator("[data-slot=phase-banner]")).toHaveCount(0)
@@ -466,8 +466,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expect(dialog).toBeVisible()
       await expectNoAxeViolations(page, theme)
 
-      await dialog.getByRole("button", { name: "Publish changes" }).click()
-      await expect(main.getByText(/Changes published/)).toBeVisible()
+      await confirmPublish(page)
       await expectNoAxeViolations(page, theme)
     })
 
@@ -658,8 +657,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       const publish = page.getByRole("alertdialog")
       await expect(publish).toContainText("Removed")
       await expectNoAxeViolations(page, theme)
-      await publish.getByRole("button", { name: "Publish changes" }).click()
-      await expect(refusal(page)).toBeFocused()
+      await confirmPublish(page, refusal(page))
       const review = await openConflictReview(page)
       await expect(
         review.getByRole("button", {
@@ -725,8 +723,7 @@ for (const theme of ["light", "dark"] satisfies Theme[]) {
       await expect(dialog).toContainText("Order changed")
       await expectNoAxeViolations(page, theme)
 
-      await dialog.getByRole("button", { name: "Publish changes" }).click()
-      await expect(refusal(page)).toBeFocused()
+      await confirmPublish(page, refusal(page))
       await expectNoAxeViolations(page, theme)
 
       // The review opens in a dialog, which the page behind it gives way to.

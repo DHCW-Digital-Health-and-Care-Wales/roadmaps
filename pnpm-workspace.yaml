@@ -6,12 +6,24 @@ packages:
 catalog:
   "@eslint/js": ^10.0.1
   "@types/node": ^22.20.5
-  eslint: ^10.14.0
+  eslint: ^10.15.0
   eslint-config-prettier: ^10.1.8
   globals: ^17.14.0
   typescript: ~6.0.3
   typescript-eslint: ^8.72.1
   vitest: ^5.1.0
+
+# minimatch below 11.0.1 has a denial of service through glob patterns
+# (GHSA-g3hv-75wg-m249). These dependents have no release yet that takes minimatch 11,
+# so each is raised to it here; drop an entry once the dependent's own range does.
+overrides:
+  # Drop when the typescript-eslint catalog entry moves to ^8.73.0 (published
+  # 2026-11-16, so a week old on 2026-11-23).
+  "@typescript-eslint/typescript-estree>minimatch": ^11.0.1
+  # Drop when a release of eslint-plugin-jsx-a11y-x after 0.2.0 takes minimatch 11.
+  "eslint-plugin-jsx-a11y-x>minimatch": ^11.0.1
+  # Under shadcn's ts-morph 26. Drop when shadcn takes ts-morph 28 or later.
+  "@ts-morph/common>minimatch": ^11.0.1
 
 # Dependencies whose install scripts may run. lefthook's is denied: pnpm runs it only
 # when it first builds the package on a machine, so the root package's postinstall runs

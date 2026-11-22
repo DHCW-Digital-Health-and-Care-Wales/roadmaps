@@ -74,7 +74,7 @@ moves to `_archive/`, where its row here still points.
 | [CHO-031](chores/CHO-031-supply-chain-checks-on-every-pull-request.md)                            | Supply-chain checks on every pull request (dependency review, an OSV audit, CodeQL, release cooldowns) and secrets refused at push  | Proposed       |
 | [CHO-032](_archive/chores/CHO-032-a-security-review-for-a-pr-that-records-a-security-decision.md) | A security-relevant PR gets a security review lane (`threat-review`, Fable 5.2) beside correctness and quality                      | Done           |
 | [CHO-033](chores/CHO-033-the-markdown-link-check-checks-anchors.md)                               | The Markdown link check checks each link's anchor, not only its file                                                                | Proposed       |
-| [CHO-034](chores/CHO-034-every-package-takes-minimatch-11.md)                                     | Every package takes minimatch 11, so the dependency audit finds nothing to ignore                                                   | Proposed       |
+| [CHO-034](_archive/chores/CHO-034-every-package-takes-minimatch-11.md)                            | Every package takes minimatch 11, so the dependency audit finds nothing to ignore                                                   | Done           |
 
 Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status token.
 

@@ -53,7 +53,11 @@ writes_).
   lanes and rounds each PR takes.
 - Invoking `orchestrate` is the user's request for the new top-level thread it starts
   per item, overriding runtime guidance to start threads only when asked.
-- A PR is raised and left for the owner; babysit or merge it only when asked.
+- A PR is raised and left for the owner; babysit it only when asked. Merge only a PR
+  the owner authorised, through the owner's bypass, once _CI result_ has passed on the
+  head you inspected (implement-story's `references/pr-watch.md`).
+- Rulesets, branch protections and repository settings are owner steps: never change
+  them; a PR that needs one names it under _Needs you_.
 - A change to visible UI publishes before/after screenshots (implement-story's
   `references/screenshots.md`).
 - What a delivery learned goes to its narrowest home, by the ladder in

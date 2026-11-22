@@ -1,0 +1,71 @@
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
+
+import { describe, expect, it } from "vitest"
+import { parse } from "yaml"
+
+/**
+ * main's ruleset requires one check, CI result, which passes unless a job it needs
+ * failed (STY-087 D5, D11). A job left out of its needs could fail and still merge, and
+ * a gate renamed away from the ruleset's check would block every merge.
+ */
+const ROOT = join(import.meta.dirname, "..")
+const GATE = "ci-result"
+/** Runs only after the gate, on a push to main. */
+const AFTER_THE_GATE = new Set([GATE, "deploy"])
+/** GitHub Actions' app, so a status posted by anything else cannot pass the check. */
+const GITHUB_ACTIONS_INTEGRATION_ID = 15368
+
+interface Job {
+  name?: string
+  needs?: string | string[]
+  if?: string
+}
+interface Workflow {
+  jobs: Record<string, Job>
+}
+interface Ruleset {
+  rules: {
+    type: string
+    parameters?: {
+      required_status_checks?: { context: string; integration_id?: number }[]
+    }
+  }[]
+}
+
+function read(path: string): string {
+  return readFileSync(join(ROOT, path), "utf8")
+}
+
+const workflow = parse(read(".github/workflows/ci.yml")) as Workflow
+const gate = workflow.jobs[GATE]
+const ruleset = JSON.parse(read(".github/rulesets/main.json")) as Ruleset
+
+describe("ci.yml's CI result gate", () => {
+  it("needs every job that runs before it", () => {
+    const needs = new Set([gate?.needs ?? []].flat())
+    const missing = Object.keys(workflow.jobs).filter(
+      (job) => !AFTER_THE_GATE.has(job) && !needs.has(job),
+    )
+
+    expect(
+      missing,
+      `Add ${missing.join(", ")} to the needs of ${GATE} in .github/workflows/ci.yml, ` +
+        "or a failure there would not block a merge.",
+    ).toEqual([])
+  })
+
+  it("runs whatever the jobs it needs did", () => {
+    expect(gate?.if).toBe("always()")
+  })
+
+  it("is the one check main's ruleset requires, from GitHub Actions", () => {
+    const checks = ruleset.rules
+      .filter((rule) => rule.type === "required_status_checks")
+      .flatMap((rule) => rule.parameters?.required_status_checks ?? [])
+
+    expect(checks).toEqual([
+      { context: gate?.name, integration_id: GITHUB_ACTIONS_INTEGRATION_ID },
+    ])
+  })
+})

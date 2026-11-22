@@ -1,2 +1,19 @@
 packages:
   - apps/*
+
+# A version more than one package uses is named once here and referenced as `catalog:`
+# (ADR-016 Workspace tooling).
+catalog:
+  "@eslint/js": ^10.0.1
+  "@types/node": ^22.20.5
+  eslint: ^10.14.0
+  eslint-config-prettier: ^10.1.8
+  globals: ^17.14.0
+  typescript: ~6.0.3
+  typescript-eslint: ^8.72.1
+  vitest: ^5.1.0
+
+# Dependencies whose install scripts may run. lefthook's installs the Git hooks
+# (lefthook.yml), and skips itself in CI.
+allowBuilds:
+  lefthook: true

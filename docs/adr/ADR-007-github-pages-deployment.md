@@ -3,7 +3,8 @@
 - Status: Accepted
 - Date: 2026-11-10 (amended in STY-008: artifact built by Verify, base-path guard, no CNAME,
   SHA-pinned actions, Node 26; STY-009: vendor chunks; later: docs-only PRs run a Docs job;
-  STY-085: the base path `/roadmaps/`)
+  STY-085: the base path `/roadmaps/`; STY-087: CI as jobs per app behind one gate, in
+  place of the Docs job)
 
 ## Decision
 
@@ -18,7 +19,7 @@
 - A pull request whose changed files are all Markdown or under `docs/` runs a `docs` job
   (format check and the Markdown tests) instead of `verify` and `e2e`; a `changes` job
   decides. Pushes to `main` and manual runs always run the full suite, so every deploy
-  is fully checked.
+  is fully checked. (Replaced in STY-087, below.)
 - Vite `base` resolution, in order: explicit `VITE_BASE_PATH`; else `/` if the
   `PAGES_CUSTOM_DOMAIN` repository variable is set (a custom domain); else derived from
   `GITHUB_REPOSITORY` (`owner/owner.github.io` -> `/`, otherwise `/<repo>/`); else `/`.
@@ -83,6 +84,21 @@
   unchanged: the new path still comes from `GITHUB_REPOSITORY`, and no path is written
   into code or a workflow. The old address gets no redirect (ADR-016 _Rejected_); the
   origin, and so the OAuth client's Authorised JavaScript origins, are unchanged.
+
+### STY-087 amendment
+
+- **CI per app behind one gate** (ADR-016 _CI_): a Repository job runs on every run
+  (Prettier, the root package's typecheck, lint and tests, actionlint and zizmor), in
+  place of the Docs job. The editor's jobs, `editor-verify` and `editor-e2e`, run the
+  editor's own scripts, and skip on a pull request only when every changed file is
+  Markdown, under `docs/` or in another app's directory
+  (`scripts/ci/classify-changes.sh`, which fails closed). A gate job, _CI result_, needs
+  every other job but deploy, always runs and fails when any of them failed or was
+  cancelled; it is the one check `main`'s ruleset requires, and `deploy` needs it
+  (with `editor-verify`, for the artifact's name), so a deploy waits on every check.
+  `build/ci-workflow.test.ts` fails when a job is missing from the gate's `needs`.
+  Pushes to `main` and manual runs still run every job, and only a push to `main`
+  deploys.
 
 ## Consequences
 

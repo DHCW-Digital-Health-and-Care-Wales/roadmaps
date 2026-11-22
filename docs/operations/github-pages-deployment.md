@@ -10,28 +10,33 @@ fork or a custom domain. The decision behind it is
 dispatch:
 
 ```
-          ┌──► docs     (documentation-only PR: format:check · test:docs)
-changes ──┤
-          ├──► verify ──┐   typecheck · lint · format:check · test · build
-          │             ├──► deploy   (push to main only: deploy-pages → github-pages environment)
-          └──► e2e ─────┘   Playwright, in Playwright's pinned image
+repository ────────────────────┐   every run: format:check · the root's typecheck, lint, tests · actionlint · zizmor
+          ┌──► editor-verify ──┤   typecheck · lint · test · build
+changes ──┤                    │
+          └──► editor-e2e ─────┤   Playwright, in Playwright's pinned image
+                               ▼
+                           ci-result ──► deploy   (push to main only: deploy-pages → github-pages environment)
 ```
 
-- `changes` classifies a pull request's files. When every changed file is Markdown or
-  under `docs/`, only `docs` runs: Prettier and the Markdown tests (links, agent
-  guides). Any other file, a push to `main` or a manual run skips `docs` and runs
-  `verify` and `e2e`.
-- `verify` and `e2e` run in parallel. On a push to `main`, `verify` also reads the Pages
-  configuration, checks the build's base path against it and uploads `apps/editor/dist/` as the Pages
-  artifact.
-- `e2e` runs in `mcr.microsoft.com/playwright:v<version>-noble`, pinned by digest, which holds
+- `changes` classifies a pull request's files (`scripts/ci/classify-changes.sh`). The
+  editor's jobs skip only when every changed file is Markdown, under `docs/` or in
+  another app's directory; any other file, a push to `main` or a manual run runs them.
+- `repository` runs on every run, whatever changed.
+- `ci-result` (_CI result_) runs after every other job, whatever they did, and fails if
+  any failed or was cancelled; a job skipped by its paths passes. It is the one check
+  `main`'s ruleset requires ([protecting main](protecting-main.md)), so a new job joins
+  its `needs`, or the Repository job's tests fail.
+- `editor-verify` and `editor-e2e` run in parallel. On a push to `main`,
+  `editor-verify` also reads the Pages configuration, checks the build's base path
+  against it and uploads `apps/editor/dist/` as the Pages artifact.
+- `editor-e2e` runs in `mcr.microsoft.com/playwright:v<version>-noble`, pinned by digest, which holds
   that version's Chromium and its system packages, so the job installs neither. A
   `@playwright/test` bump changes the image tag and digest in `ci.yml` with it
   (`docker pull mcr.microsoft.com/playwright:v<version>-noble` prints the digest); the job's
   check step fails with that instruction when the image lacks the Chromium the installed
   Playwright needs.
-- `deploy` runs only after both pass, and only for pushes to `main`. It does not check
-  out or install anything; it publishes the artifact `verify` uploaded. It alone has
+- `deploy` runs only after `ci-result` passes, and only for pushes to `main`. It does
+  not check out or install anything; it publishes the artifact `editor-verify` uploaded. It alone has
   `pages: write` and `id-token: write`; everything else is read-only.
 - A new push to a pull request cancels its running checks. On `main` a running workflow
   is never cancelled; a newer push replaces one that is still waiting, so the latest
@@ -50,7 +55,7 @@ new repository.
 1. **Create the repository** on GitHub. Make it public, or use a plan that supports
    Pages for private repositories.
 2. **Enable Pages:** _Settings → Pages → Build and deployment → Source:_ **GitHub
-   Actions**. Do this before the first push to `main`, or the first `verify` fails at
+   Actions**. Do this before the first push to `main`, or the first `editor-verify` fails at
    "Read the Pages site configuration" (re-run it afterwards).
 3. **Push** to `main`.
 4. **Watch the run:** _Actions → CI/CD_. When `deploy` finishes, the run summary shows the
@@ -78,7 +83,7 @@ Vite's `base` set to `/<repo>/`. `apps/editor/build/resolve-base-path.ts` decide
 4. `/` (local development).
 
 Playwright uses the same function for its `baseURL`, so CI's E2E run tests the app under
-`/roadmaps/` exactly as deployed. Before uploading, `verify` checks the built
+`/roadmaps/` exactly as deployed. Before uploading, `editor-verify` checks the built
 `index.html` against the `base_path` that `actions/configure-pages` reports and fails on a
 mismatch, rather than deploying a site whose assets 404. A fork deploys to
 `/<fork-name>/` automatically, but needs its own OAuth client and spreadsheet in
@@ -95,7 +100,7 @@ mismatch, rather than deploying a site whose assets 404. A fork deploys to
 
 ## Troubleshooting
 
-| Symptom                                               | Cause and fix                                                                                                                                                                    |
-| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Deployed site is blank, assets 404                    | Base path mismatch, e.g. a custom domain without the `PAGES_CUSTOM_DOMAIN` variable. The `verify` job normally catches this ("Base path mismatch"). See [Base path](#base-path). |
-| `verify` fails at "Read the Pages site configuration" | Pages is not enabled with source **GitHub Actions**. Enable it, then re-run.                                                                                                     |
+| Symptom                                                      | Cause and fix                                                                                                                                                                           |
+| ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Deployed site is blank, assets 404                           | Base path mismatch, e.g. a custom domain without the `PAGES_CUSTOM_DOMAIN` variable. The `editor-verify` job normally catches this ("Base path mismatch"). See [Base path](#base-path). |
+| `editor-verify` fails at "Read the Pages site configuration" | Pages is not enabled with source **GitHub Actions**. Enable it, then re-run.                                                                                                            |

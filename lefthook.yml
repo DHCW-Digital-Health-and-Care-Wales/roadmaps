@@ -1,0 +1,28 @@
+# Git hooks (ADR-016 Workspace tooling, STY-087 S6). `pnpm install` installs them
+# through lefthook's own install script, which skips itself in CI; `LEFTHOOK=0` skips
+# them for one command. CI runs the same checks in full.
+
+pre-commit:
+  # In order: ESLint reads what Prettier has written.
+  piped: true
+  jobs:
+    - name: prettier
+      run: node_modules/.bin/prettier --write --ignore-unknown {staged_files}
+      stage_fixed: true
+
+    # Each package's ESLint, from its own directory, so its config is the one found.
+    - name: eslint (root)
+      glob: "*.ts"
+      exclude:
+        - "apps/**"
+      run: node_modules/.bin/eslint --max-warnings=0 --no-warn-ignored {staged_files}
+
+    - name: eslint (editor)
+      root: apps/editor/
+      glob: "*.{ts,tsx}"
+      run: node_modules/.bin/eslint --max-warnings=0 --no-warn-ignored {staged_files}
+
+pre-push:
+  jobs:
+    - name: typecheck
+      run: pnpm typecheck

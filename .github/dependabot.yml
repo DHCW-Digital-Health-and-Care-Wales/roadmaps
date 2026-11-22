@@ -1,10 +1,26 @@
-# Keeps the SHA-pinned actions in .github/workflows current (one grouped PR a month).
+# Keeps the SHA-pinned actions in .github/workflows and the workspace's pnpm
+# dependencies current: one grouped pull request a month for each. Every entry waits
+# out a cooldown, so a version is taken only once it is a week old (STY-087 D10, D12);
+# security updates are never held back by it.
 version: 2
 updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: monthly
+    cooldown:
+      default-days: 7
     groups:
       actions:
+        patterns: ["*"]
+
+  # pnpm's ecosystem is npm's; the root covers every package in the workspace.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 7
+    groups:
+      pnpm:
         patterns: ["*"]

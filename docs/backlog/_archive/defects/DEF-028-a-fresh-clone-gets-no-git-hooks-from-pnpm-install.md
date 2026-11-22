@@ -8,7 +8,7 @@
 - **Depends on**: none
 - **Binding ADRs**: ADR-016 §Workspace tooling
 - **Suggested model**: Sonnet — one install script, checked in a scratch clone
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/235
 
 ## Summary
 

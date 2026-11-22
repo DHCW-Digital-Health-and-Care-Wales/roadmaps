@@ -6,7 +6,7 @@ import react from "@vitejs/plugin-react"
 import tailwindcss from "@tailwindcss/vite"
 import { type DevPorts, resolveDevPorts } from "./scripts/dev-ports.ts"
 
-// The live data is made by `npm run sync` and never committed. ROADMAPS_DATA
+// The live data is made by `pnpm site:sync` and never committed. ROADMAPS_DATA
 // swaps in other data, so unit, end-to-end and visual tests use fixed example
 // data that a sheet edit can't change.
 const LIVE_DATA = ".data/roadmaps.json"
@@ -19,7 +19,7 @@ function roadmapsData(file: string): Plugin {
       if (source !== "virtual:roadmaps") return null
       if (!existsSync(file)) {
         throw new Error(
-          `${file} not found. Run \`npm run sync\`, or set ROADMAPS_DATA=e2e/fixtures/roadmaps.json to use the example data.`,
+          `${file} not found. Run \`pnpm site:sync\`, or set ROADMAPS_DATA=e2e/fixtures/roadmaps.json to use the example data.`,
         )
       }
       return resolve(file)

@@ -1,7 +1,7 @@
 # Example sheets
 
 These CSVs contain **fake example data**. The app does not read them: the site
-is built only from the live Google Sheet (see the [main README](../README.md)).
+is built only from the live Google Sheet (see [its README](../README.md)).
 They exist to show the sheet format and to bootstrap a new or test spreadsheet
 by hand.
 
@@ -22,36 +22,10 @@ by hand.
    naming each tab exactly as in the `Sheet` column of `Roadmaps`.
 4. **Share → Anyone with the link → Viewer**.
 5. Try it locally:
-   `SHEET_ID=<id from the spreadsheet URL> npm run sync && npm run dev`.
-   This overwrites `.data/roadmaps.json`, which is gitignored.
+   `SHEET_ID=<id from the spreadsheet URL> pnpm site:sync && pnpm site:dev`.
+   This overwrites `apps/public-site/.data/roadmaps.json`, which is ignored.
 
 Optionally add dropdowns (**Data → Data validation**) for the `Horizon`
-column and the `Category` column on `Roadmaps`. Column meanings are documented in the
-[main README](../README.md#sheet-format).
-
-The optional `Organisations` column on each roadmap tab, between `Labels` and
-`Details`, says who a card's work is for, so readers can filter by organisation. It takes one or more of these
-codes, comma separated, for example `CAVUHB, SBUHB`:
-
-| Code       | Organisation                                  |
-| ---------- | --------------------------------------------- |
-| `National` | All of Wales, such as national systems        |
-| `ABUHB`    | Aneurin Bevan University Health Board         |
-| `BCUHB`    | Betsi Cadwaladr University Health Board       |
-| `CAVUHB`   | Cardiff and Vale University Health Board      |
-| `CTMUHB`   | Cwm Taf Morgannwg University Health Board     |
-| `HDUHB`    | Hywel Dda University Health Board             |
-| `PTHB`     | Powys Teaching Health Board                   |
-| `SBUHB`    | Swansea Bay University Health Board           |
-| `VUNHST`   | Velindre University NHS Trust                 |
-| `WAST`     | Welsh Ambulance Services University NHS Trust |
-| `PHW`      | Public Health Wales                           |
-| `HEIW`     | Health Education and Improvement Wales        |
-| `DHCW`     | Digital Health and Care Wales                 |
-| `P&I`      | NHS Wales Performance and Improvement         |
-
-Use `National` for work that applies to every organisation, rather than
-listing them all. Leave the cell blank if the work isn't for particular
-organisations. Any other value is reported as a sheet warning and left out. A
-dropdown (**Data → Data validation → Dropdown**, with **Allow multiple
-selections**) keeps the codes right. It has no Welsh column.
+column and the `Category` column on `Roadmaps`, and for the `Organisations` column
+(**Dropdown**, with **Allow multiple selections**). Column meanings are documented in
+the [workspace README](../../../README.md#spreadsheet-format).

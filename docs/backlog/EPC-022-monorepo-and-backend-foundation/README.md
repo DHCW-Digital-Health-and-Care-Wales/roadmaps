@@ -1,9 +1,10 @@
 # EPC-022: Monorepo and backend foundation — an API and its database beside the Sheets editor
 
 - **Status**: Active — every binding ADR is accepted (owner, 2026-11-21); STY-085 to
-  STY-087 are done, STY-088 is Proposed, and the other placeholders' acceptance
-  criteria, then the schema, identity and endpoint stories, are written next
-- **Progress**: 3 of 11 terminal (STY-085 to STY-087); next selectable: STY-088
+  STY-088 are done, and the placeholders' acceptance criteria, then the schema,
+  identity and endpoint stories, are written next
+- **Progress**: 4 of 11 terminal (STY-085 to STY-088); next selectable: none until a
+  placeholder's acceptance criteria are written
 - **Binding ADRs**: ADR-015, ADR-016, ADR-017, ADR-018, ADR-019, ADR-020, ADR-002
 
 ## Summary
@@ -127,7 +128,8 @@ script.
 
 A new CI job joins the needs of the _CI result_ gate, which `build/ci-workflow.test.ts`
 checks, and an app's jobs run unless its output from `scripts/ci/classify-changes.sh` is
-`false`; STY-088 and STY-090 add their app's case, output and `--all` line, with tests. A package's commit check
+`false`; STY-088 added the public site's case, output (`site`) and `--all` line, and
+STY-090 adds the API's, with tests. A package's commit check
 is a job in `lefthook.yml`; every Dependabot entry carries the 7-day cooldown (STY-087
 D12, D13), and pnpm resolves no version younger than a week (CHO-031). A new lockfile is
 audited weekly without a change to the audit, and uv takes a 7-day `exclude-newer`.
@@ -146,7 +148,7 @@ the seeder for any table it creates.
 | STY-085 | [Rename the repository to roadmaps](../_archive/EPC-022-monorepo-and-backend-foundation/STY-085-rename-the-repository-to-roadmaps.md)      | CI/CD + Docs           | —           | ✅    |
 | STY-086 | [Move the editor into apps/editor](../_archive/EPC-022-monorepo-and-backend-foundation/STY-086-move-the-editor-into-a-pnpm-workspace.md)   | CI/CD + Docs           | STY-085     | ✅    |
 | STY-087 | [Workspace tooling and the ruleset](../_archive/EPC-022-monorepo-and-backend-foundation/STY-087-workspace-tooling-and-the-main-ruleset.md) | CI/CD                  | STY-086     | ✅    |
-| STY-088 | [Bring the public site in](STY-088-bring-the-public-site-into-the-workspace.md)                                                            | CI/CD + Docs           | STY-087     |       |
+| STY-088 | [Bring the public site in](../_archive/EPC-022-monorepo-and-backend-foundation/STY-088-bring-the-public-site-into-the-workspace.md)        | CI/CD + Docs           | STY-087     | ✅    |
 | STY-089 | [One copy of the spreadsheet fixtures](STY-089-one-copy-of-the-spreadsheet-fixtures.md)                                                    | Infrastructure + CI/CD | STY-088     |       |
 | STY-090 | [The API skeleton](STY-090-the-api-skeleton.md)                                                                                            | API + CI/CD            | STY-087     |       |
 | STY-091 | [Migrations, tenant listener, test harness](STY-091-migrations-tenant-listener-and-test-harness.md)                                        | API                    | STY-090     |       |
@@ -155,10 +157,11 @@ the seeder for any table it creates.
 | STY-094 | [Ask for access to a tenant](STY-094-ask-for-access-to-a-tenant.md)                                                                        | API                    | invitations |       |
 | STY-095 | [The public site adopts the conventions](STY-095-the-public-site-adopts-the-workspace-conventions.md)                                      | Features/UI + i18n     | STY-088     |       |
 
-_STY-085 to STY-087 are done; STY-088 is Proposed. STY-089 to STY-093 are
+_STY-085 to STY-088 are done. STY-089 to STY-093 are
 Placeholders until their acceptance criteria are written: ADR-016 (STY-089) and
 ADR-017 (STY-090–STY-093) are accepted. STY-094 is a Placeholder until the invitation
-story exists, and STY-095 until STY-088 shows what the imported site holds.
+story exists, and STY-095 until its acceptance criteria are written from what STY-088
+imported.
 Candidate scope, to split next: the first schema
 and its enforcement suite; people, identities, memberships, roles, assignments and
 invitations, with ADR-019's authorisation suite; the threat model, then sign-in with

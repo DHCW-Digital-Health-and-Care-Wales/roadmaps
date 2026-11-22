@@ -1,0 +1,5 @@
+# Formatting-only commits that `git blame` skips: GitHub reads this file, and locally
+# `git config blame.ignoreRevsFile .git-blame-ignore-revs` does the same.
+
+# The public site, formatted in the workspace's Prettier style on joining it
+61e2e6ff9da1d67f76c993cc0d9e4d2c65918a00

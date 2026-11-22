@@ -1,54 +1,48 @@
 # Contributing
 
-Thanks for helping improve the DHCW product roadmaps site.
+Thanks for helping improve DHCW's roadmaps: the Roadmap Editor (`apps/editor/`) and the
+public site (`apps/public-site/`).
 
 ## Content or code?
 
-- **Roadmap content** (cards, titles, dates, colours) lives in the Google Sheet.
-  Edit the sheet; the nightly deploy publishes it. See [README.md](README.md#sheet-format).
-- **Feedback on a roadmap**: use the "Give feedback" link on the site, which
-  opens a GitHub issue.
-- **Code, design, accessibility or interface text**: open a pull request as
-  described below.
+- **Roadmap content** (cards, titles, dates, colours) lives in the Google Sheet, not in
+  this repository. Product Leads edit it in the Roadmap Editor; sheet editors follow
+  [product-roadmaps' README](https://github.com/DHCW-Digital-Health-and-Care-Wales/product-roadmaps#readme).
+- **Feedback on a roadmap**: use the "Give feedback" link on the public site, which
+  opens an issue in `product-roadmaps`.
+- **Code, design, accessibility or interface text**: open a pull request here, as below.
 
 ## Making a change
 
-1. Create a branch from `main`. Use a short descriptive name, for example
-   `fix-focus-order`.
-2. Make your change. Run `npm run dev` to try it (see
-   [README.md](README.md#run-locally-codespaces)).
-3. Run `npm run check`. This runs type checks, lint, formatting and tests, the
-   same as CI.
-4. Open a pull request into `main` and fill in the template. Keep pull requests
-   small and focused on one change.
-5. A code owner (see [.github/CODEOWNERS](.github/CODEOWNERS)) reviews it. CI
-   must pass before merging, and `main` deploys straight to the live site.
+1. Set up the workspace ([Getting started](README.md#getting-started)) and create a
+   branch from `main` with a short descriptive name, for example `fix-focus-order`.
+2. Make your change, and try it with the app's dev server
+   ([the editor](apps/editor/README.md#getting-started),
+   [the public site](apps/public-site/README.md#run-locally)).
+3. Run the checks: `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test`, and
+   the E2E suite of each app you changed (`pnpm editor:test:e2e`, `pnpm site:test:e2e`).
+   CI runs the same checks, and the public site's Lighthouse budgets.
+4. Open a pull request into `main` and fill in the template. Keep it small and focused
+   on one change.
+5. The code owner ([`.github/CODEOWNERS`](.github/CODEOWNERS)) reviews it, and the _CI
+   result_ check must pass. It merges as a signed squash
+   ([protecting main](docs/operations/protecting-main.md)).
+
+A merged change to the editor deploys straight away. One to the public site goes public
+at the next run of `product-roadmaps`' deploy, nightly at 02:00 UTC or by hand.
 
 ## Standards
 
-- **Accessibility**: the site aims for WCAG 2.2 AA. Use semantic HTML, keep
-  everything usable with a keyboard, and don't rely on colour alone. Lint
-  includes `jsx-a11y` rules, and `src/App.test.tsx` runs axe on every page in
-  both languages. Automated checks only find some problems, so check UI
+- **Accessibility**: both apps aim for WCAG 2.2 AA. Use semantic HTML, keep everything
+  usable with a keyboard, and don't rely on colour alone. Lint includes `jsx-a11y` rules
+  and the tests run axe, but automated checks find only some problems, so check UI
   changes by hand too.
-- **Welsh**: every piece of interface text goes in
-  [src/lib/strings.ts](src/lib/strings.ts) with English and Welsh, and is
-  rendered with `<T value={…} />` (or `tr()` for attributes). A test fails if
-  any Welsh is missing. If you can't provide the Welsh, say so in the pull
-  request so it can be translated before merging.
-- **Tests**: add or update tests for changed behaviour. Parser and data tests
-  live next to the code in `scripts/`; component tests in `src/`; browser
-  journeys in `e2e/`. If you change page structure or text on purpose, update the
-  ARIA snapshots with `npm run test:e2e -- --update-snapshots` and check the
-  diff in `e2e/__snapshots__/` before committing it.
-- **Privacy**: don't add cookies, other analytics or calls to third-party
-  services. The only exception is the Simple Analytics script in
-  [index.html](index.html). Visitors' browsers should otherwise only load files
-  from this site.
+- **Welsh**: every piece of interface text has English and Welsh: the editor's in its
+  catalogues (`apps/editor/src/i18n/locales/`), the public site's in
+  [`strings.ts`](apps/public-site/src/lib/strings.ts). If you can't provide the Welsh,
+  say so in the pull request so it can be translated before merging.
+- **Tests**: add or update tests for changed behaviour. Each app's README says where
+  they live.
+- **Privacy**: the public site adds no cookies, analytics or third-party calls beyond the
+  Simple Analytics script in [its `index.html`](apps/public-site/index.html).
 - **Dependencies**: prefer none. Dependabot keeps existing ones up to date.
-
-## Branch protection
-
-`main` has a ruleset that requires a pull request with one code owner
-approval and passing **CI / check**, **CI / e2e** and **CI / lighthouse**
-statuses.

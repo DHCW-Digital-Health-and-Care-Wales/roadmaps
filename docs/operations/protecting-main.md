@@ -1,8 +1,10 @@
 # Protecting main
 
-How `main`'s ruleset is applied, changed and checked. The decision behind it is
+How `main`'s ruleset is applied, changed and checked, here and in `product-roadmaps`,
+which publishes the public site ([product-roadmaps](#product-roadmaps)). The decision
+behind it is
 [ADR-016](../adr/ADR-016-one-pnpm-workspace-for-the-editor-public-site-and-api.md)
-(_Who may change `main`_ and its STY-087 amendments). Only the owner does these steps;
+(_Who may change `main`_ and its STY-087 and STY-088 amendments). Only the owner does these steps;
 agents never change rulesets, branch protections or repository settings.
 
 ## What it holds
@@ -57,3 +59,39 @@ gh api "repos/$repo" --jq .allow_rebase_merge   # false once rebase merging is u
 
 Any of the organisation's owners can change a ruleset, so run the check after anyone
 reports a change, and before trusting the gate after a long gap.
+
+## product-roadmaps
+
+`product-roadmaps` decides what the public site publishes, so its `main` is protected as
+this one is: `.github/rulesets/product-roadmaps.json` is `main.json` less the required
+status check, which that repository has no CI to report (`build/ci-workflow.test.ts`
+keeps the two in step). Its `.github/CODEOWNERS` names only the owner, and its workflows
+read this repository's `main` with a read-only token
+([the public site](github-pages-deployment.md#the-public-site)).
+
+Apply it once, from a clone of this repository's `main`, signed in to `gh` as the owner.
+It replaces that repository's own `main-protection` ruleset in place; the enterprise's
+_Restrict Transfers_ ruleset, which its listing also shows, stays as it is:
+
+```sh
+repo=DHCW-Digital-Health-and-Care-Wales/product-roadmaps
+id="$(gh api "repos/$repo/rulesets" --jq '.[] | select(.name == "main-protection") | .id')"
+gh api --method PUT "repos/$repo/rulesets/$id" --input .github/rulesets/product-roadmaps.json
+gh api --method PUT "repos/$repo/actions/permissions/workflow" \
+  -f default_workflow_permissions=read -F can_approve_pull_request_reviews=false
+```
+
+Then untick _Settings → General → Pull Requests → Allow rebase merging_ there, as here.
+A later change to the file is applied with the same `PUT`.
+
+Check it as main's, with that repository and file; an empty diff means they match:
+
+```sh
+repo=DHCW-Digital-Health-and-Care-Wales/product-roadmaps
+id="$(gh api "repos/$repo/rulesets" --jq '.[] | select(.name == "main-protection") | .id')"
+fields='{name, target, enforcement, conditions, bypass_actors, rules: (.rules | sort_by(.type))}'
+diff <(jq -S "$fields" .github/rulesets/product-roadmaps.json) \
+  <(gh api "repos/$repo/rulesets/$id" | jq -S "$fields")
+gh api "repos/$repo" --jq .allow_rebase_merge  # false
+gh api "repos/$repo/actions/permissions/workflow" --jq .default_workflow_permissions  # read
+```

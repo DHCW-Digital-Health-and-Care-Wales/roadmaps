@@ -4,7 +4,8 @@
 - Date: 2026-11-10 (amended in STY-008: artifact built by Verify, base-path guard, no CNAME,
   SHA-pinned actions, Node 26; STY-009: vendor chunks; later: docs-only PRs run a Docs job;
   STY-085: the base path `/roadmaps/`; STY-087: CI as jobs per app behind one gate, in
-  place of the Docs job)
+  place of the Docs job; STY-088: the public site's jobs, and its publishing from
+  `product-roadmaps`)
 
 ## Decision
 
@@ -100,6 +101,25 @@
   Pushes to `main` and manual runs still run every job, and only a push to `main`
   deploys. `verify` and `e2e` above are now `editor-verify` and `editor-e2e`, and
   `deploy` needs `ci-result` and `editor-verify`.
+
+### STY-088 amendment
+
+- **The public site's jobs** (ADR-016 _The public site_): `site-verify` (typecheck,
+  lint, unit tests and a build of the example data), `site-e2e` (Playwright, in the
+  editor's E2E image) and `site-lighthouse` (Lighthouse CI from a pinned dev
+  dependency) run when a pull request can affect `apps/public-site`, by the same
+  fail-closed rule as the editor's, and feed _CI result_. Nothing here deploys the
+  public site.
+- **Publishing from `product-roadmaps`**: that repository's `deploy.yml`, nightly at
+  02:00 UTC and by hand, never on a push, checks out this repository's `main` at its
+  head (`repository` and `ref: refs/heads/main` named literally,
+  `persist-credentials: false`), runs `pnpm site:sync` and `pnpm site:build`, and
+  uploads `apps/public-site/dist` from a build job with no Pages permission; its deploy
+  job runs only `deploy-pages`, with `pages: write` and `id-token: write`. Its
+  `check-sheet.yml` checks out this repository the same way and runs the sync alone.
+  Both declare `permissions: contents: read` at the top. The site keeps its base path
+  `/product-roadmaps/`, written in its `vite.config.ts`, so it does not use the
+  editor's resolver.
 
 ### CHO-031 amendment
 

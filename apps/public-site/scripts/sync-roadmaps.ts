@@ -1,6 +1,6 @@
 /**
  * Downloads the roadmap Google Sheet and writes the parsed roadmaps to
- * .data/roadmaps.json, which is gitignored. Run with `npm run sync`; the
+ * .data/roadmaps.json, which is gitignored. Run with `pnpm site:sync`; the
  * deploy workflow does this before every build. Add `--include-disabled` to
  * also load roadmaps whose Enabled column is not "Yes" (local dev only).
  *

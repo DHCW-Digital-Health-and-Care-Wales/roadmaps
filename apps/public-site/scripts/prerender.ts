@@ -1,7 +1,7 @@
 /**
  * Writes static HTML for every page into dist/ after `vite build`, so the site
  * works without JavaScript and search engines and link previews see real
- * content. Run by `npm run build`, after the SSR build of src/entry-server.tsx.
+ * content. Run by `pnpm site:build`, after the SSR build of src/entry-server.tsx.
  */
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { dirname } from "node:path"

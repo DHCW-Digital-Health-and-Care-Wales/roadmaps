@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test"
 
 // Compares each page's accessibility tree (roles, names and text) with the
 // YAML in e2e/__snapshots__. After an intended change, run
-// `npm run test:e2e -- --update-snapshots` and review the diff.
+// `pnpm site:test:e2e --update-snapshots` and review the diff.
 const pages = {
   landing: "en/",
   product: "en/producta/",

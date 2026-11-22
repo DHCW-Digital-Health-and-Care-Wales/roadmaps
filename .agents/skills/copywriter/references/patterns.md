@@ -1,7 +1,7 @@
 # Copy patterns
 
 The shape each surface takes, with a complete example to start from. Every
-example is live copy from `src/i18n/locales/en.ts` — grep for the key to see it
+example is live copy from `apps/editor/src/i18n/locales/en.ts` — grep for the key to see it
 in context.
 
 ## Connect prompt

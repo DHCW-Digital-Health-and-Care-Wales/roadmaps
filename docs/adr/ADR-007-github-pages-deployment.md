@@ -24,7 +24,7 @@
   `GITHUB_REPOSITORY` (`owner/owner.github.io` -> `/`, otherwise `/<repo>/`); else `/`.
   No `CNAME` file is written (see below).
 - Public config (`VITE_GOOGLE_CLIENT_ID`, `VITE_GOOGLE_SPREADSHEET_ID`) is committed in
-  `.env.production` (public values, not secrets) with the same values in `.env.example`;
+  `apps/editor/.env.production` (public values, not secrets) with the same values in `apps/editor/.env.example`;
   validated at startup with Zod. `.env` / `.env.local` are git-ignored. No GitHub Secrets.
 
 ### STY-008 amendments
@@ -35,13 +35,13 @@
   `pages: write` + `id-token: write`. Permissions: `contents: read` at the top;
   `verify` adds `pages: read` (`configure-pages` reads the site URL); `e2e` keeps the
   default; `deploy` has only `pages: write` + `id-token: write`.
-- **Base path**: the resolver is `build/resolve-base-path.ts` (unit-tested), used by both
-  `vite.config.ts` and `playwright.config.ts`. `GITHUB_REPOSITORY` is always set in
+- **Base path**: the resolver is `apps/editor/build/resolve-base-path.ts` (unit-tested), used by both
+  `apps/editor/vite.config.ts` and `apps/editor/playwright.config.ts`. `GITHUB_REPOSITORY` is always set in
   Actions, so the E2E job tests the production base path (`/roadmaps/`) and local
   runs use `/`. `VITE_BASE_PATH` wins over `PAGES_CUSTOM_DOMAIN`. Blank values count as
   unset, since Actions expands an unset variable to `""`.
 - **`configure-pages` `base_path`** is a guard, not an input: after the build, `verify`
-  checks that `dist/index.html` loads assets from `<base_path>/assets/` and fails before
+  checks that `apps/editor/dist/index.html` loads assets from `<base_path>/assets/` and fails before
   deploying if not (for example, a custom domain configured in Settings but no
   `PAGES_CUSTOM_DOMAIN` variable). Feeding it into the build instead would make the
   deployed base differ from the one E2E and local builds use.
@@ -67,7 +67,7 @@
 
 ### STY-009 amendment
 
-- **Long-lived chunks**: `vite.config.ts` splits the build into `react` (React, ReactDOM,
+- **Long-lived chunks**: `apps/editor/vite.config.ts` splits the build into `react` (React, ReactDOM,
   scheduler), `vendor` (every other dependency) and the app's own chunks
   (`build.rolldownOptions.output.codeSplitting.groups`; TanStack Router's
   `autoCodeSplitting` already makes each route lazy). Pages serves assets with

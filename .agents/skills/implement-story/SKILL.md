@@ -72,7 +72,7 @@ Delivery section's Departures; preserve the original acceptance criteria.
 
 For a gate scenario ("a new X fails CI", "the value is held by a test"), build
 it at the highest rung that covers the same cases: a type error, an existing
-ESLint rule (including the layer blocks in `eslint.config.ts`), a Vitest test,
+ESLint rule (including the layer blocks in `apps/editor/eslint.config.ts`), a Vitest test,
 and only then a custom script. Choosing the rung is a routine agent decision;
 dropping a gate is the owner's.
 
@@ -113,7 +113,7 @@ If entering here for an ad-hoc change, capture the affected UI baselines per
 `references/screenshots.md` before implementation edits, just as in step 2.
 
 A defect fix, a change to `domain/` and a pending-edit rule (what
-`src/features/roadmaps/editing/` keeps, shows or drops while a change is
+`apps/editor/src/features/roadmaps/editing/` keeps, shows or drops while a change is
 pending) are test-first, even when it is a review fix: write the unit or
 component regression, observe its intended failure, then implement the smallest
 coherent change. Slice a large story (a new repository method, several routes, a
@@ -138,7 +138,7 @@ verification deletes its one-off scripts and rename guards in the same PR.
 Follow the owning guide and existing patterns; invoke `copywriter` before
 writing user-facing copy, `shadcn` for UI components and `domain-modeling` for
 terminology or ADRs, when their triggers apply. Update unit, component and E2E
-coverage, including the GIS and Sheets fakes in `tests/e2e/` when a UI or API
+coverage, including the GIS and Sheets fakes in `apps/editor/tests/e2e/` when a UI or API
 contract changes. Use deterministic scripts for simple textual replacements;
 use a cheaper worker when each site needs inspection. The main agent
 integrates and checks the result.
@@ -159,7 +159,7 @@ as `docs/AGENTS.md` says before archiving the epic. A record delivered in part
 or handed back blocked returns to `Proposed` (or
 `Needs grilling`), with a Decisions entry naming what remains. Commit only intended files with a conventional commit
 message (`feat(scope): …`); preserve unrelated work and generated outputs
-(commit `src/routeTree.gen.ts` when routes change).
+(commit `apps/editor/src/routeTree.gen.ts` when routes change).
 
 Completion: acceptance criteria covered, appropriate checks complete, tracked
 changes reviewed and a reviewable commit. An external blocker can leave a draft

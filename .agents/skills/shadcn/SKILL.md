@@ -6,7 +6,7 @@ user-invocable: false
 
 # shadcn/ui
 
-For this repository, the generated components in `src/components/ui/` (root `components.json`, style `base-nova`, primitives from Base UI per ADR-005) define the component contract. Add components with `pnpm dlx shadcn@latest add <name>` and keep them close to upstream: edit a generated file only for a reason the diff makes obvious, and say why in its header comment (ADR-010). Apply the upstream guidance below only where it matches what is installed: list `src/components/ui/` before reaching for a component; anything missing is a `shadcn add` away and arrives with its own rules.
+For this repository, the generated components in `apps/editor/src/components/ui/` (`apps/editor/components.json`, style `base-nova`, primitives from Base UI per ADR-005) define the component contract. Add components with `pnpm dlx shadcn@latest add <name> --cwd apps/editor` and keep them close to upstream: edit a generated file only for a reason the diff makes obvious, and say why in its header comment (ADR-010). Apply the upstream guidance below only where it matches what is installed: list `apps/editor/src/components/ui/` before reaching for a component; anything missing is a `shadcn add` away and arrives with its own rules.
 
 User-facing copy in any component goes through `t()` in English and Welsh (ADR-008); `components/ui` itself carries no copy.
 
@@ -17,7 +17,7 @@ A framework for building ui, components and design systems. Components are added
 ## Current Project Context
 
 ```json
-!`pnpm dlx shadcn@latest info --json 2>/dev/null || echo '{"error": "No shadcn project found. Run shadcn init first."}'`
+!`pnpm dlx shadcn@latest info --json --cwd apps/editor 2>/dev/null || echo '{"error": "No shadcn project found. Run shadcn init first."}'`
 ```
 
 The JSON above contains the project config and installed components. Use `npx shadcn@latest docs <component>` to get documentation and example URLs for any component.
@@ -67,7 +67,7 @@ These rules are **always enforced**. Each links to a file with Incorrect/Correct
 - **Use existing components before custom markup.** Check if a component exists before writing a styled `div`.
 - **Callouts use `Alert`.** Don't build custom styled divs.
 - **Empty states use `Empty`.** Don't build custom empty state markup.
-- **No toasts** (ADR-005): an outcome is an `Alert` at the top of the page in view, as `AuthNotice` (`src/features/auth/components/auth-notice.tsx`) shows.
+- **No toasts** (ADR-005): an outcome is an `Alert` at the top of the page in view, as `AuthNotice` (`apps/editor/src/features/auth/components/auth-notice.tsx`) shows.
 - **Use `Separator`** instead of `<hr>` or `<div className="border-t">`.
 - **Use `Skeleton`** for loading placeholders. No custom `animate-pulse` divs.
 - **Use `Badge`** instead of custom styled spans.
@@ -229,7 +229,7 @@ npx shadcn@latest docs button dialog select
 npx shadcn@latest view @shadcn/button
 ```
 
-**Named presets:** `base-nova` (this repository's `components.json` style; do not switch presets here without an ADR)
+**Named presets:** `base-nova` (this repository's `apps/editor/components.json` style; do not switch presets here without an ADR)
 **Templates:** `next`, `vite`, `start`, `react-router`, `astro` (all support `--monorepo`) and `laravel` (not supported for monorepo)
 **Preset codes:** Base62 strings starting with `a` (e.g. `a2r6bw`), from [ui.shadcn.com](https://ui.shadcn.com).
 

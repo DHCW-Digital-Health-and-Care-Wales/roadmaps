@@ -12,8 +12,9 @@ import { resolveDevPorts } from "./build/resolve-dev-ports.ts"
 const { version } = JSON.parse(
   readFileSync(new URL("./package.json", import.meta.url), "utf8"),
 ) as { version: string }
-// A parallel worktree's own ports (scripts/worktree/worktree.sh), else 5173 and 4173.
-const ports = resolveDevPorts(new URL("./.env.worktree", import.meta.url))
+// A parallel worktree's own ports, from the .env.worktree that the worktree script
+// (scripts/worktree/worktree.sh) writes at the repository's root, else 5173 and 4173.
+const ports = resolveDevPorts(new URL("../../.env.worktree", import.meta.url))
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -62,7 +63,6 @@ export default defineConfig({
     include: [
       "src/**/*.test.{ts,tsx}",
       "build/**/*.test.ts",
-      "scripts/**/*.test.ts",
       "tests/fixtures/**/*.test.ts",
     ],
     setupFiles: ["./src/test/setup.ts"],

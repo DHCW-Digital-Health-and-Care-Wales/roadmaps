@@ -5,11 +5,11 @@ import { createRequire } from "node:module"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 
-const repo = path.resolve(
+const editor = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
-  "../../../..",
+  "../../../../apps/editor",
 )
-const { chromium } = createRequire(path.join(repo, "package.json"))(
+const { chromium } = createRequire(path.join(editor, "package.json"))(
   "@playwright/test",
 )
 const CLOUD_CHROMIUM = "/opt/pw-browsers/chromium"

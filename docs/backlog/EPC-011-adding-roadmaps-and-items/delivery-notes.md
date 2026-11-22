@@ -19,13 +19,13 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
 - **The Sheets fake fails a test whose publish appends a bad row**: one on a tab no
   index row names, or without a title, one of the public site's `Horizon` values, or an
   `Item ID`, in the editor's format, that no other row of the tab holds
-  (`tests/fixtures/sheets/apply-batch-update.ts`). A test's new items take their IDs
+  (`apps/editor/tests/fixtures/sheets/apply-batch-update.ts`). A test's new items take their IDs
   from `createItemId`, or use `NEW_CLINIC` and `NEW_LETTERS`
   (`domain/roadmap/testing/test-new-item.ts`).
 - **An E2E spec that replaces `sheets.spreadsheet` keeps a `Template` tab** to add a
   roadmap: the example spreadsheet ends with one, and `withRoadmapIndex` keeps it.
 - **An E2E spec that needs a roadmap with other items, or none, uses `withTabItems`**
-  (`tests/e2e/fixtures/fake-sheets.ts`), or `withTabRows` for a tab's whole rows: it
+  (`apps/editor/tests/e2e/fixtures/fake-sheets.ts`), or `withTabRows` for a tab's whole rows: it
   does not map over `EXAMPLE_SPREADSHEET` itself.
 - **A dialog's closing and focus rules are `FormDialog`'s**, and a form's fields are
   `FormField`, `ChoiceField` and `FixedField`: STY-041's _Contract for dependents_
@@ -87,7 +87,7 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   `edit-dialog.ts` (with `expectDialogClosed` for a dialog closed another way than
   Done); in Playwright `openEditRoadmapDialog`, `editRoadmapButton`,
   `openEditItemDialog`, `editItemButton`, `openAddItemDialog`, `addItemButtons` and
-  `addItem` (`tests/e2e/fixtures/dialogs.ts`). Each takes the language, English or
+  `addItem` (`apps/editor/tests/e2e/fixtures/dialogs.ts`). Each takes the language, English or
   Welsh, but `editRoadmapText` and `editItemText`, which are English only. A test
   that needs a new item pending adds one with `addItem` (`item-dialog.ts`), which
   opens the adding form, fills it and waits for the dialog to go.
@@ -96,7 +96,7 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
 - **`user.selectOptions` matches an option's text as HTML**, so a name with `&` never
   matches: pass the option's element.
 - **A dialog's tests share their setup, not copy it** (CHO-011, whose _Contract for
-  dependents_ says how each piece is used). Playwright: `tests/e2e/fixtures/dialogs.ts`
+  dependents_ says how each piece is used). Playwright: `apps/editor/tests/e2e/fixtures/dialogs.ts`
   opens a dialog and clicks outside it, and holds each dialog's names and way in, so
   the next dialog's go there; `expectDialogTour` (`focus-indicator.spec.ts`) tours one.
   Vitest: the family and category lists are `domain/roadmap/testing/test-lists.ts`, and
@@ -124,7 +124,7 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
 - **The Sheets fake fails a test whose publish moves a row it should not**: a header
   row, a row above one, a column, or a row of a tab no index row names; and it
   refuses, as Google does, a move that leaves a row where it is
-  (`tests/fixtures/sheets/apply-batch-update.ts`). `sheets.refuseProtected()` makes
+  (`apps/editor/tests/fixtures/sheets/apply-batch-update.ts`). `sheets.refuseProtected()` makes
   the E2E fake refuse the next write as a protected cell or row is refused.
 - **A placement's order is `RoadmapChanges.orders`** (STY-050; its _Contract for
   dependents_, archived, says what `PlacementOrder`, `arrangedOrder`, `settleOrders`
@@ -164,7 +164,7 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   read, as the item dialog is (STY-049). It moves no focus as it closes: the page
   sends it to the card's control the choice leaves (`ItemControl`). Tests go through
   `askToRemove` and `confirmRemoval`: in Vitest `features/roadmaps/testing/removal-dialog.ts`,
-  in Playwright `tests/e2e/fixtures/dialogs.ts`.
+  in Playwright `apps/editor/tests/e2e/fixtures/dialogs.ts`.
 - **The Sheets fake allows deleting and clearing a roadmap tab's rows** (STY-070), as
   it does a tab the same write copied, and refuses, as Google does, a write that
   deletes every row that is not frozen; a test whose tab has a frozen header sets

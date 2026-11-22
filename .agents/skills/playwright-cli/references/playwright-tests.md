@@ -1,13 +1,13 @@
 # Running Playwright Tests
 
-To run Playwright tests, use `pnpm test:e2e` (it builds, serves on the checkout's preview port and fakes Google; see `tests/e2e/AGENTS.md`), or `pnpm exec playwright test` for flags such as a single spec. To avoid opening the interactive html report, use `PLAYWRIGHT_HTML_OPEN=never` environment variable.
+To run Playwright tests, use `pnpm editor:test:e2e` (it builds, serves on the checkout's preview port and fakes Google; see `apps/editor/tests/e2e/AGENTS.md`), or `pnpm --filter @roadmaps/editor exec playwright test` for flags such as a single spec. To avoid opening the interactive html report, use `PLAYWRIGHT_HTML_OPEN=never` environment variable.
 
 ```bash
 # Run all tests
-PLAYWRIGHT_HTML_OPEN=never pnpm exec playwright test
+PLAYWRIGHT_HTML_OPEN=never pnpm --filter @roadmaps/editor exec playwright test
 
 # Run all tests through the package script
-PLAYWRIGHT_HTML_OPEN=never pnpm test:e2e
+PLAYWRIGHT_HTML_OPEN=never pnpm editor:test:e2e
 ```
 
 # Debugging Playwright Tests
@@ -20,7 +20,7 @@ Once instructions containing a session name are printed, use `playwright-cli` to
 
 ```bash
 # Run the test
-PLAYWRIGHT_HTML_OPEN=never pnpm exec playwright test --debug=cli
+PLAYWRIGHT_HTML_OPEN=never pnpm --filter @roadmaps/editor exec playwright test --debug=cli
 # ...
 # ... debugging instructions for "tw-abcdef" session ...
 # ...

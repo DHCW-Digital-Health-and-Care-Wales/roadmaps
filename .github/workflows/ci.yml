@@ -20,9 +20,9 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
-  # Base path (build/resolve-base-path.ts): GitHub Actions sets GITHUB_REPOSITORY, so
-  # every build here, E2E included, is served under /<repo>/ unless this repository
-  # variable names a custom domain.
+  # The editor's base path (apps/editor/build/resolve-base-path.ts): GitHub Actions sets
+  # GITHUB_REPOSITORY, so every build here, E2E included, is served under /<repo>/ unless
+  # this repository variable names a custom domain.
   PAGES_CUSTOM_DOMAIN: ${{ vars.PAGES_CUSTOM_DOMAIN }}
 
 jobs:
@@ -120,7 +120,7 @@ jobs:
           PAGES_BASE_PATH: ${{ steps.pages.outputs.base_path }}
         run: |
           expected="${PAGES_BASE_PATH}/assets/"
-          if ! grep -qF "src=\"${expected}" dist/index.html; then
+          if ! grep -qF "src=\"${expected}" apps/editor/dist/index.html; then
             echo "::error title=Base path mismatch::GitHub Pages serves this site from '${PAGES_BASE_PATH}/', but the build does not load its assets from '${expected}'. For a custom domain, set the PAGES_CUSTOM_DOMAIN repository variable (see docs/operations/github-pages-deployment.md)."
             exit 1
           fi
@@ -135,7 +135,7 @@ jobs:
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           name: ${{ steps.pages-artifact.outputs.name }}
-          path: dist
+          path: apps/editor/dist
 
   e2e:
     name: E2E (Playwright)
@@ -166,6 +166,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Check the container has the Playwright browser
+        working-directory: apps/editor
         run: |
           node -e "
             const { chromium } = require('@playwright/test');
@@ -177,16 +178,16 @@ jobs:
             });
           "
 
-      # The Playwright web server builds the app and serves it with `vite preview`.
-      - run: pnpm test:e2e
+      # The Playwright web server builds the editor and serves it with `vite preview`.
+      - run: pnpm editor:test:e2e
       - name: Upload the Playwright report
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: playwright-report-attempt-${{ github.run_attempt }}
           path: |
-            playwright-report/
-            test-results/
+            apps/editor/playwright-report/
+            apps/editor/test-results/
           retention-days: 14
           if-no-files-found: ignore
 

@@ -1,33 +1,19 @@
 {
-  "name": "roadmaps",
+  "name": "@roadmaps/editor",
   "private": true,
   "version": "0.0.0",
   "description": "DHCW Roadmap Editor: Product Leads manage their public Now, Next, Later roadmaps.",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps.git"
-  },
   "type": "module",
-  "packageManager": "pnpm@12.18.0",
-  "engines": {
-    "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
-  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b",
     "lint": "eslint --max-warnings=0 .",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:docs": "vitest run build/markdown-links.test.ts build/agent-guides.test.ts",
-    "test:e2e": "playwright test",
-    "worktree:setup": "./scripts/worktree/worktree.sh setup",
-    "worktree:info": "./scripts/worktree/worktree.sh info",
-    "worktree:teardown": "./scripts/worktree/worktree.sh teardown"
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
@@ -71,8 +57,6 @@
     "globals": "^17.14.0",
     "jsdom": "^31.0.0",
     "msw": "^3.0.4",
-    "prettier": "^3.9.10",
-    "prettier-plugin-tailwindcss": "^0.8.1",
     "tailwindcss": "^4.3.5",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.72.1",

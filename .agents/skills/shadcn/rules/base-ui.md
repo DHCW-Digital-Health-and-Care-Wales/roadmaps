@@ -1,8 +1,8 @@
 # Base UI
 
-This repository's primitives are on Base UI (ADR-005), and the root `components.json` is the `base-nova` style, so `pnpm dlx shadcn@latest info` reads `base: base` and `add` fetches the Base UI variant into `src/components/ui/`. There is no Radix here: no `@radix-ui/*` import and no `asChild` prop. Where a generated file in `src/components/ui/` differs from the registry's, the generated file is what runs; keep it close to upstream.
+This repository's primitives are on Base UI (ADR-005), and `apps/editor/components.json` is the `base-nova` style, so `pnpm dlx shadcn@latest info --cwd apps/editor` reads `base: base` and `add` fetches the Base UI variant into `apps/editor/src/components/ui/`. There is no Radix here: no `@radix-ui/*` import and no `asChild` prop. Where a generated file in `apps/editor/src/components/ui/` differs from the registry's, the generated file is what runs; keep it close to upstream.
 
-Select, ToggleGroup, Slider and Accordion are not installed here yet; their rules below are the registry's and apply once `pnpm dlx shadcn@latest add` brings them in.
+Select, ToggleGroup, Slider and Accordion are not installed here yet; their rules below are the registry's and apply once `pnpm dlx shadcn@latest add --cwd apps/editor` brings them in.
 
 ## Contents
 
@@ -45,7 +45,7 @@ Select, ToggleGroup, Slider and Accordion are not installed here yet; their rule
 
 This applies to all trigger and close components: `DialogTrigger`, `SheetTrigger`, `AlertDialogTrigger`, `DropdownMenuTrigger`, `PopoverTrigger`, `TooltipTrigger`, `CollapsibleTrigger`, `DialogClose`, `SheetClose`, `NavigationMenuLink`, `BreadcrumbLink`, `SidebarMenuButton`, `Badge`, `Item`.
 
-In this repository `Button` is Base UI's `Button` with the registry's variants (`src/components/ui/button.tsx`), so it takes `render` like any Base UI part.
+In this repository `Button` is Base UI's `Button` with the registry's variants (`apps/editor/src/components/ui/button.tsx`), so it takes `render` like any Base UI part.
 
 ```tsx
 <DropdownMenuTrigger render={<Button variant="secondary" />}>

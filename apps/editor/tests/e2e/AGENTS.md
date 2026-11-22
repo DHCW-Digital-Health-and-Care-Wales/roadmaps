@@ -1,13 +1,13 @@
-# tests/e2e — Playwright
+# apps/editor/tests/e2e — Playwright
 
 End-to-end tests of the production build, with Google faked (ADR-006).
 
 - Import `test`, `expect`, `connect` and `roadmapCards` from `./fixtures/test`, never
   from `@playwright/test`, so every test gets the fakes and the hermetic guard. Import
-  nothing from `src/`: tests drive the app as a user does, through roles and copy.
+  nothing from `apps/editor/src/`: tests drive the app as a user does, through roles and copy.
 - `gis` (`fixtures/fake-gis.ts`) plays Google Identity Services and `sheets`
   (`fixtures/fake-sheets.ts`) the Sheets API, over the example spreadsheet in
-  `tests/fixtures/sheets/`; their docblocks are the API. A list load reads `metadata`,
+  `apps/editor/tests/fixtures/sheets/`; their docblocks are the API. A list load reads `metadata`,
   then `values:<first tab>` and a `Families` or `Categories` tab's; a roadmap's items
   read all of those again, then add `values:<its tab>` (ADR-011), so a roadmap's page
   is five reads on the example spreadsheet; a publish is one `batchUpdate`, recorded
@@ -33,8 +33,8 @@ End-to-end tests of the production build, with Google faked (ADR-006).
   changes `baseURL`.
 - The leave warning is a `beforeunload` dialog: `page.close({ runBeforeUnload: true })`
   raises it, and dismissing it in a `page.on("dialog")` handler keeps the page open.
-- Specs assert English copy from `src/i18n/locales/en.ts`. Before pushing a change to a
-  control's text or accessible name, grep `tests/e2e` for the old text and run every
+- Specs assert English copy from `apps/editor/src/i18n/locales/en.ts`. Before pushing a change to a
+  control's text or accessible name, grep `apps/editor/tests/e2e` for the old text and run every
   spec that reaches the control, or the whole suite when it is in the shell.
 
 - The header has no Connect or Disconnect button: `chooseFromAccountMenu` and
@@ -53,11 +53,11 @@ tours.
 
 - Each key screen has an aria snapshot in `structure.spec.ts-snapshots/`, matched
   exactly (`children: "deep-equal"`), so an element added or removed fails. After a
-  deliberate change run `pnpm test:e2e structure.spec.ts --update-snapshots` and review
+  deliberate change run `pnpm editor:test:e2e structure.spec.ts --update-snapshots` and review
   the YAML diff. That flag never writes a _new_ snapshot: use `--update-snapshots=all`,
   check `git status` lists it, and restore the others it rewrote with
   `git checkout -- <file>`. In each snapshot it writes, an update drops checks.
-  `build/aria-snapshot-literals.test.ts` fails the patterns and `text: ""` it writes in
+  `apps/editor/build/aria-snapshot-literals.test.ts` fails the patterns and `text: ""` it writes in
   place of a literal; text that is a control's only child is dropped
   (`button "Publish changes": Publish` to `button "Publish changes"`), which fails the
   next run. Put back the literal where the

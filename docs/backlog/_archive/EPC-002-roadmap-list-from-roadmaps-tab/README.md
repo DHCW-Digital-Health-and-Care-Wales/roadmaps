@@ -62,7 +62,7 @@ it, STY-011 fills it from the data source, STY-012 shows it.
 
 ### Example data only
 
-Tests, the E2E fake and screenshots use only [the example data](../../../../tests/fixtures/sheets/README.md)
+Tests, the E2E fake and screenshots use only [the example data](../../../../apps/editor/tests/fixtures/sheets/README.md)
 or inline rows, never the live spreadsheet; its README holds the rule and the examples.
 
 ### Copy

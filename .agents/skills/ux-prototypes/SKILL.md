@@ -28,13 +28,13 @@ Read these before drawing anything:
   this editor. State in the inventory which of the persona's assumptions each
   journey relies on. Keep connecting to Google out of the designs unless the
   journey is about it
-- the existing screens each journey touches, in `src/features/` and
-  `src/components/layout/`, for navigation, page layout and the components a
-  design would reuse (`src/components/ui/`). See them as the app draws them
+- the existing screens each journey touches, in `apps/editor/src/features/` and
+  `apps/editor/src/components/layout/`, for navigation, page layout and the components a
+  design would reuse (`apps/editor/src/components/ui/`). See them as the app draws them
   too, since class names alone misdraw the shell: capture each at 1280px and
   375px wide with Google faked, by the first paragraph of _Capture_ in
   `.agents/skills/implement-story/references/screenshots.md`. A scratch spec
-  that imports `tests/e2e/fixtures/test.ts`, run against the build served by
+  that imports `apps/editor/tests/e2e/fixtures/test.ts`, run against the build served by
   `vite preview` on a free port, is the shortest way
 
 A record not yet grilled has open questions where its scenarios will be. Ask
@@ -139,7 +139,7 @@ derived value agrees with the rows it counts.
 Draw by the shape's reference. In either shape:
 
 - **Copy.** Write the designs' copy in the product's voice from the copywriter
-  skill, reusing strings from `src/i18n/locales/en.ts` where a screen already
+  skill, reusing strings from `apps/editor/src/i18n/locales/en.ts` where a screen already
   says the thing. It is draft, in English; Welsh follows with the build. A
   frame drawn in Welsh to measure widths takes `cy.ts`'s strings whole where
   they say the thing, and draft Welsh for the rest, marked as draft in the
@@ -226,8 +226,8 @@ read or write, ADR decision reopened and option the record lacks.
 
 Format the page and the analysis with Prettier, which `pnpm format:check`
 holds them to. Then run the check on the page, in either shape. It uses
-`@playwright/test` from the root `pnpm install` and a Chromium
-(`./node_modules/.bin/playwright install chromium`). Write its screenshots to the
+`@playwright/test` from the `pnpm install` of `apps/editor` and a Chromium
+(`apps/editor/node_modules/.bin/playwright install chromium`). Write its screenshots to the
 scratchpad.
 
 ```bash

@@ -26,9 +26,9 @@ differs.
 ## Measurement
 
 At STY-051's delivery. `batchRequests`
-(`src/infrastructure/google-sheets/google-sheets-roadmap-repository.ts`) sends the
+(`apps/editor/src/infrastructure/google-sheets/google-sheets-roadmap-repository.ts`) sends the
 moves through `TabWriter.move` (`tab-writer.ts`);
-`tests/fixtures/sheets/apply-batch-update.ts` is the fake that stands in for Google.
+`apps/editor/tests/fixtures/sheets/apply-batch-update.ts` is the fake that stands in for Google.
 
 | Area                         | What the build assumes                                                                                                                               | How to judge                                                                                                                            |
 | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |

@@ -8,14 +8,14 @@ allowed-tools: Bash(playwright-cli:*) Bash(pnpm:*)
 
 In this repository, the repo's own guides and `pnpm` win over the upstream examples
 below. The E2E suite and its fakes for Google Identity Services and the Sheets API
-live in `tests/e2e/`; follow `tests/e2e/AGENTS.md` for its commands and conventions,
+live in `apps/editor/tests/e2e/`; follow `apps/editor/tests/e2e/AGENTS.md` for its commands and conventions,
 and use `pnpm` for project dependencies. Read only the `references/` file a task needs.
 
-Drive the app with `pnpm dev` (needs `.env.local`, see the root `AGENTS.md`) or a
-build served by `pnpm preview`. Real Google sign-in is not scriptable, so fake it as
+Drive the app with `pnpm editor:dev` (needs `apps/editor/.env.local`, see `apps/editor/AGENTS.md`) or a
+build served by `pnpm editor:preview`. Real Google sign-in is not scriptable, so fake it as
 the suite does: `playwright-cli route` or `run-code` with `page.route` for
 `https://accounts.google.com/gsi/client` and `https://sheets.googleapis.com/**`
-(`references/request-mocking.md`), or reuse `tests/e2e/fixtures/fake-gis.ts` and
+(`references/request-mocking.md`), or reuse `apps/editor/tests/e2e/fixtures/fake-gis.ts` and
 `fake-sheets.ts` from a Playwright script instead (`references/playwright-tests.md`).
 Do not paste real access tokens into a session or a capture.
 
@@ -31,7 +31,7 @@ Write every `--filename` output inside the repository, such as under
 In a cloud container, where `open` reports its browser is not installed and
 Chromium sits at `/opt/pw-browsers/chromium`, open with
 `--config=.agents/skills/playwright-cli/cloud-browser.json`. Locally, Playwright's own
-Chromium (`~/.cache/ms-playwright`, installed by `pnpm exec playwright install
+Chromium (`~/.cache/ms-playwright`, installed by `pnpm --filter @roadmaps/editor exec playwright install
 chromium`) is used and no config is needed.
 
 ## Quick start
@@ -305,7 +305,7 @@ playwright-cli kill-all
 ## Installation
 
 The CLI is not a dependency of this repository (only `@playwright/test`, pinned
-exactly; see `tests/e2e/AGENTS.md`), and `pnpm exec playwright-cli` finds nothing.
+exactly; see `apps/editor/tests/e2e/AGENTS.md`), and `pnpm exec playwright-cli` finds nothing.
 Without a global `playwright-cli`, run it ad hoc with a pinned version and no install
 into the repo: `pnpm dlx @playwright/cli@0.1.24 <command>` (0.1.24 was current when
 this was written). Do not add it to `package.json`. Examples below say

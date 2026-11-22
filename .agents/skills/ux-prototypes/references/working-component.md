@@ -23,7 +23,7 @@ node .agents/skills/ux-prototypes/scripts/component-page.mjs docs/analysis/{topi
 ```
 
 This writes the starter page, with the app's theme tokens copied from
-`src/styles/globals.css` onto every `.stage` under their own names, light and
+`apps/editor/src/styles/globals.css` onto every `.stage` under their own names, light and
 dark. Style the host and the designs with those tokens alone, as the app's
 components do, so a design looks as it will when built.
 
@@ -43,7 +43,7 @@ The starter holds one of each part the page needs; keep them all:
 
 ## Draw
 
-- **Host.** Draw the host from the component in `src/features/` that holds the
+- **Host.** Draw the host from the component in `apps/editor/src/features/` that holds the
   control, with enough of its other content to show how much room the control
   has. Keep the starter's styles for the app's controls and replace its host's.
   Compare the host with your captures of the app before drawing a design in

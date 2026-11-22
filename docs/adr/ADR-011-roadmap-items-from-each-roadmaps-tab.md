@@ -223,6 +223,6 @@ A roadmap-tab failure affects that roadmap's detail only; the roadmap list is un
   the list; the repository gains only `listRoadmapItems`, which ADR-002 records as an
   amendment when STY-020 delivers it.
 - The parser duplicates more of the public site's rules; a format change updates both
-  analyses, ADR-009, this ADR, `tests/fixtures/sheets/` and the parsers together.
+  analyses, ADR-009, this ADR, `apps/editor/tests/fixtures/sheets/` and the parsers together.
 - Item identity, editing and publishing are left to later records: ADR-012.
 - Delivered by [EPC-004](../backlog/_archive/EPC-004-roadmap-items/README.md).

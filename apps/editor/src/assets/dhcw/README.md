@@ -1,8 +1,8 @@
 # DHCW logo and icon
 
 The app's header shows the DHCW logo (`nhsw-logo.svg`, white, for the navy header) and
-the DHCW icon (`dhcw-icon-white.svg`, white, below the `sm` breakpoint). `public/favicon.svg`
-is the same icon in white on a DHCW navy tile, so it reads on light and dark browser chrome.
+the DHCW icon (`dhcw-icon-white.svg`, white, below the `sm` breakpoint).
+`apps/editor/public/favicon.svg` is the same icon in white on a DHCW navy tile, so it reads on light and dark browser chrome.
 
 ## Provenance and permission
 
@@ -16,7 +16,7 @@ is the same icon in white on a DHCW navy tile, so it reads on light and dark bro
 - **Changes:** none to the two copied files, which are byte-for-byte the pinned release's.
   Check any replacement for scripts and external references first. These two contain only
   the SVG namespace declaration and one `<style>` rule (`.cls-1{fill:#ffffff;}`): no
-  script, event handler, link or embedded image. `public/favicon.svg` is derived: the
+  script, event handler, link or embedded image. `apps/editor/public/favicon.svg` is derived: the
   icon's paths inside a navy rounded square.
-- **Upgrading:** when the DHCW pin moves (`src/styles/AGENTS.md`), compare these files with
+- **Upgrading:** when the DHCW pin moves (`apps/editor/src/styles/AGENTS.md`), compare these files with
   the new tag's `preview/assets/` and copy any that changed.

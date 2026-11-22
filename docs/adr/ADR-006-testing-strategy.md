@@ -22,4 +22,4 @@
 
 ## Consequences
 
-CI is hermetic. Live Google integration must be verified manually (documented in README).
+CI is hermetic. Live Google integration must be verified manually (documented in `apps/editor/README.md`).

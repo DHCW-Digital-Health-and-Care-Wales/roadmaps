@@ -28,8 +28,7 @@
     "vite.config.ts",
     "eslint.config.ts",
     "playwright.config.ts",
-    "build",
-    "scripts"
+    "build"
   ],
   // Deliberately off-brand snippets for build/design-token-lint.test.ts, never built.
   "exclude": ["build/fixtures"]

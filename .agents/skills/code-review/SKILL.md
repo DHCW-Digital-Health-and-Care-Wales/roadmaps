@@ -37,7 +37,7 @@ not post, change code, merge or message other people as part of reviewing.
    story, defect or chore (`docs/backlog/`, ids `STY-<nnn>`, `DEF-<nnn>`, `CHO-<nnn>`) with
    its acceptance criteria, the PR body and the binding ADRs in `docs/adr/`,
    following commit and PR references. Read the `AGENTS.md` along each changed
-   path's directory ancestry (root `AGENTS.md`, `tests/e2e/AGENTS.md`,
+   path's directory ancestry (root `AGENTS.md`, `apps/editor/AGENTS.md`, `apps/editor/tests/e2e/AGENTS.md`,
    `docs/AGENTS.md`), the epic's `delivery-notes.md` when there is one, and
    each _Repo contract_ below
    the diff reaches; repo invariants outrank generic preferences. Without a
@@ -57,8 +57,8 @@ not post, change code, merge or message other people as part of reviewing.
 5. **Verify plausible findings** with a concrete trigger and an observed or
    code-derived failure path. Run a focused test, minimal reproduction or
    computed-style check when useful, outputs and caches under `/tmp`:
-   `./node_modules/.bin/vitest related --run <files> --no-cache --fsModuleCachePath /tmp/<dir>`.
-   Run binaries from `./node_modules/.bin/`, never through pnpm (`pnpm exec`
+   `cd apps/editor && ./node_modules/.bin/vitest related --run <files> --no-cache --fsModuleCachePath /tmp/<dir>`.
+   Run binaries from `./node_modules/.bin/` (the editor's in `apps/editor/`), never through pnpm (`pnpm exec`
    or a `pnpm <script>`), which can reinstall the checkout's `node_modules`
    under the agent that shares it. Never run a command that changes state (a
    commit, a push, a deploy, a merge). Passing tests are evidence, not proof;
@@ -93,7 +93,7 @@ unverifiable; quote it for a mismatch and show the implementation path.
 Do not spend findings on these; check only that the change does not evade them
 (`eslint-disable`, `@ts-expect-error`, a cast, a moved file):
 
-- **Layer imports** (`eslint.config.ts`, `no-restricted-imports`, `@/` and
+- **Layer imports** (`apps/editor/eslint.config.ts`, `no-restricted-imports`, `@/` and
   relative paths alike): `domain/` imports no framework, TanStack, UI/copy
   package or other layer; `infrastructure/` imports no React/TanStack/UI,
   `features`, `app`, `routes`, `components` or `i18n`; `features/` imports no
@@ -101,16 +101,16 @@ Do not spend findings on these; check only that the change does not evade them
   `infrastructure`, `features`, `app` or `routes`; `lib/` imports no other
   layer.
 - **The `google` global** (including `window.google`) outside
-  `src/infrastructure/google-identity/`.
+  `apps/editor/src/infrastructure/google-identity/`.
 - **Literal copy**: `i18next/no-literal-string` rejects literal JSX text and
   literal `aria-label`, `title`, `alt`, `placeholder` and `label` attributes in
-  `src/**/*.tsx` (not tests, `src/test/`, `components/ui/`). It does **not**
+  `apps/editor/src/**/*.tsx` (not tests, `apps/editor/src/test/`, `components/ui/`). It does **not**
   cover `.ts` files, props other than those attributes, template strings, or
   strings built in hooks, so copy can still slip through.
-- **Design tokens** (`build/design-token-lint.ts`, ADR-010): Tailwind's
+- **Design tokens** (`apps/editor/build/design-token-lint.ts`, ADR-010): Tailwind's
   colours, type, radii and shadows, arbitrary design values, opacity tints,
   `dark:` colours, ad-hoc focus styles and design properties in inline styles
-  or SVG paint attributes, in `src/**` (not tests). It reads classes only
+  or SVG paint attributes, in `apps/editor/src/**` (not tests). It reads classes only
   where the plugin looks by default (`className`, `cn()`, `cva()` …), in a
   `…Variants({ className })` call and in variables named `…Classes` or
   `…_CLASSES`, and rejects a variable of any other name in a `className` or
@@ -198,13 +198,13 @@ General lenses:
 
 Read each where the diff reaches it; this skill does not restate them.
 
-- Root `AGENTS.md`: layering and conventions.
+- `apps/editor/AGENTS.md`: layering and conventions.
 - `docs/adr/` (index in its `README.md`): layers and ports, OAuth and the
   session, routing, UI stack, testing, Pages, i18n, the data source's tabs,
   the DHCW look and publishing. A deviation updates or supersedes the ADR in
   the same change.
 - The epic's `delivery-notes.md`: checks that hold only for that epic.
-- `tests/e2e/AGENTS.md`: fixture API, hermetic guard and conventions.
+- `apps/editor/tests/e2e/AGENTS.md`: fixture API, hermetic guard and conventions.
 - `docs/AGENTS.md`: the records guide, for backlog, ADR and run records.
 - `docs/backlog/`: the story, defect or chore being delivered, with its
   acceptance criteria and status.

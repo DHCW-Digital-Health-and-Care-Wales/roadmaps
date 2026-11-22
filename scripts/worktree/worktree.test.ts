@@ -22,6 +22,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest"
  * slot's real ports.
  */
 const SCRIPT = join(import.meta.dirname, "worktree.sh")
+const EDITOR_ENV_EXAMPLE = "VITE_GOOGLE_SPREADSHEET_ID=example\n"
 const run = promisify(execFile)
 
 let scratch: string
@@ -51,7 +52,11 @@ function worktree(name: string): string {
   const root = join(scratch, name)
   mkdirSync(join(root, "scripts", "worktree"), { recursive: true })
   copyFileSync(SCRIPT, join(root, "scripts", "worktree", "worktree.sh"))
-  writeFileSync(join(root, ".env.example"), "")
+  mkdirSync(join(root, "apps", "editor"), { recursive: true })
+  writeFileSync(
+    join(root, "apps", "editor", ".env.example"),
+    EDITOR_ENV_EXAMPLE,
+  )
   return root
 }
 
@@ -87,6 +92,18 @@ describe("worktree.sh setup", () => {
     expect(readdirSync(registry).filter((f) => /^\d+$/.test(f))).toEqual([
       String(slot),
     ])
+  })
+
+  it("writes the ports at the root and the editor's .env.local from its example", async () => {
+    const root = worktree("fresh")
+    const slot = await setup(root)
+
+    expect(readFileSync(join(root, ".env.worktree"), "utf8")).toContain(
+      `DEV_PORT=${String(21000 + slot * 10)}`,
+    )
+    expect(
+      readFileSync(join(root, "apps", "editor", ".env.local"), "utf8"),
+    ).toBe(EDITOR_ENV_EXAMPLE)
   })
 
   it("reclaims the slot of a worktree deleted without a teardown", async () => {

@@ -11,7 +11,7 @@
     },
     {
       "name": "Start dev server",
-      "command": "pnpm dev",
+      "command": "pnpm editor:dev",
       "icon": "play"
     },
     {

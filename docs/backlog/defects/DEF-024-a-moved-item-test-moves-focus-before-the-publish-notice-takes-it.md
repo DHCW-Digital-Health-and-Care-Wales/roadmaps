@@ -37,6 +37,10 @@ travel recorded. On main at `94d1e8c` it failed at line 241 instead: the move ha
 landed, and the notice held focus where the test expected Move. With `--workers=4`, 30
 runs of that case alone all passed.
 
+STY-087's delivery, which changed no editor code, saw it twice locally at `6d79b65`: in
+the full gate (669 of 670 passed) and in the spec alone at `--repeat-each=3` (71 of 72),
+each failing at line 236 with no travel recorded.
+
 ## Cause
 
 Suspected, not proven. The spec's `open` calls `publishOnce`

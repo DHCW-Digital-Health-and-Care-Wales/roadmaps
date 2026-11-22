@@ -1,14 +1,15 @@
 # STY-087: Workspace tooling, CI per app and the ruleset on main
 
-- **Status**: Proposed — acceptance criteria written from the owner's STY-087 grilling
-  and the review of its record (2026-11-21, D1–D12)
+- **Status**: Done — S1, S2 and S8 are observed once the owner applies the ruleset, S7
+  at Dependabot's first monthly run
 - **Type**: Refactor
 - **Area**: CI/CD
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
 - **Depends on**: STY-086 (hard); CHO-031 also changes `ci.yml` and
   `.github/dependabot.yml`, so whichever lands later rebases
 - **Binding ADRs**: ADR-016 §Workspace tooling, §CI, §Who may change main, ADR-007
 - **Suggested model**: Sonnet — configuration with known shapes, observed in runs
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/231
 
 ## Summary
 
@@ -165,6 +166,14 @@ passed on the head they inspected
   keeps every job in the gate's `needs`, and the linters are pinned. Over an allow-list
   filter and an unpinned check, which a skipped or a posted status could pass. Shapes
   S2–S5.
+- **D13** (agent, 2026-11-22, delivery): the cooldown is 7 days on every entry, the
+  least zizmor's `dependabot-cooldown` audit accepts, so the Repository job fails a
+  shorter one. Shapes S7.
+- **D14** (agent, 2026-11-22, delivery): the root package's own checks get root scripts
+  prefixed `repo:` (`repo:typecheck`, `repo:lint`, `repo:test`), and the editor's
+  `editor:typecheck`, `editor:lint` and `editor:test`, so each CI job runs one
+  package's checks through root scripts; `typecheck`, `lint` and `test` still run
+  every package. Shapes S4, S5.
 
 ## Starting point
 
@@ -208,3 +217,82 @@ repos/DHCW-Digital-Health-and-Care-Wales/product-roadmaps/rulesets/24720402`)
   protection: CHO-031.
 - The public site's jobs and `product-roadmaps`' protection: STY-088.
 - A separate identity for agents: declined (D9).
+
+## Delivery
+
+### Departures
+
+- **S4**: the Repository job also runs the root package's typecheck and lint, which
+  Verify ran before, so each check of the root package runs once, there; the Markdown
+  link check, the agent-guide budget and the worktree script's tests run in its
+  `pnpm repo:test` with the change classifier's and the gate's tests (agent).
+- **S4**: actionlint is pinned by version and checksum, downloaded in the job; zizmor
+  runs through `zizmorcore/zizmor-action`, pinned by SHA, with its version pinned and
+  its SARIF upload off, so a finding fails the job rather than going to code scanning.
+  Today's workflow had one finding (`undocumented-permissions` on deploy) and the
+  Dependabot file one (`dependabot-cooldown`); both are fixed, none justified (agent).
+- **S5**: the editor's jobs are `editor-verify` and `editor-e2e`, renamed from `verify`
+  and `e2e`, and run the editor's own scripts (`pnpm editor:typecheck`, …); `deploy`
+  needs _CI result_ as well as `editor-verify`, so a deploy waits on the Repository job
+  too (agent).
+- **S5**: the path rule is a script, `scripts/ci/classify-changes.sh`, with tests, in
+  place of the inline `grep`, so each app's rule is tested as STY-088 and STY-090 add
+  theirs; with `--all` it runs every app's jobs, for a push to `main` or a manual run.
+  Its step runs with `pipefail`, and an app's jobs skip only on an explicit `false`, so
+  a failing classifier runs them or fails the gate (agent, from review).
+- **S6**: lefthook's own install script installs the hooks (pnpm's `allowBuilds`), and
+  skips itself when `CI` is set, so CI never installs them. The commit hook runs
+  Prettier with `--ignore-unknown` on every staged file, then, in order, each package's
+  ESLint with `--no-warn-ignored` from its own directory, the root package's included
+  (agent).
+- **S7**: `@playwright/test` comes in a pull request of its own, beside the grouped
+  one, since its bump also needs the E2E job's image tag and digest and would hold the
+  rest of the group red until then (agent, from review).
+- **S7**: GitHub's options reference names `cooldown` for npm and Yarn, not pnpm, and
+  pnpm 12 writes `pnpm-lock.yaml` as two YAML documents; whether the pnpm entry's first
+  monthly run reads it and raises its pull request, held back by the cooldown, is
+  observed at that run (agent).
+- **S1, S2, S8**: the owner applies the ruleset (`docs/operations/protecting-main.md`);
+  this pull request holds the file and the commands, and the scenarios are observed
+  once it is applied, recorded below. The file copies the parameters of
+  `product-roadmaps`' live ruleset, so its first `POST` is also the test that the API
+  accepts them (agent).
+
+### Contract for dependents
+
+- **A new CI job** joins `ci-result`'s `needs` in `ci.yml`, or `build/ci-workflow.test.ts`
+  fails. An app's jobs run on `needs.changes.outputs.<app> != 'false'`, so they
+  skip only on an explicit `false` (`build/ci-workflow.test.ts` holds the form); STY-088 and
+  STY-090 add a case, an output and a line under `--all` for their app to
+  `scripts/ci/classify-changes.sh`, with tests, and stop `apps/*/*` skipping their own
+  directory. A file another app's tests read from outside its directory (STY-089's
+  shared fixtures) needs its own case, or `apps/*/*` skips that app for it.
+- **Root scripts**: `repo:typecheck`, `repo:lint` and `repo:test` run the root package's
+  own checks (the Repository job's); `<app>:typecheck`, `<app>:lint`, `<app>:test` and
+  `<app>:build` run one app's, as its CI job calls them. `typecheck`, `lint` and `test`
+  run the root's, then `pnpm -r`.
+- **Hooks**: `lefthook.yml` takes a commit job per package (ESLint from the package's
+  directory with `root:`, ruff for the API) and a push job per type checker (ty).
+- **Catalog**: a version two packages share is a `catalog:` entry in
+  `pnpm-workspace.yaml`.
+- **Dependabot**: every entry carries `cooldown: default-days: 7`; zizmor's
+  `dependabot-cooldown` audit fails the Repository job under 7 days.
+- **The ruleset** requires one check, _CI result_ from GitHub Actions (integration
+  15368); `build/ci-workflow.test.ts` holds the gate job's name to it.
+- **Worktrees on one host share `.git/hooks`**: lefthook writes it from whichever
+  checkout last ran `pnpm install`, naming that checkout's lefthook binary, which every
+  checkout's hooks then run until it is deleted. A checkout without `lefthook.yml` (an
+  older branch) prints lefthook's "No config files" notice and commits as before.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1, S2   | the applied ruleset, observed after the owner applies it (`docs/operations/protecting-main.md`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| S3       | `build/ci-workflow.test.ts` (`needs every job that runs before it`, `passes before deploy publishes anything`), red with `editor-e2e` left out of the gate's `needs`, with the gate left out of deploy's, and with `always()` in deploy's `if`; the gate's step run locally on sample `needs` (passes with jobs skipped; fails naming `repository: failure, editor-e2e: cancelled`, and `changes: failure`); manual run `45011093662`: attempt 1's _CI result_ failed with `editor-verify: failure` (DEF-027's flake), attempt 2's passed with every job passing |
+| S4       | manual run `45011093662`: the Repository job ran Prettier, the root package's typecheck, lint and tests (the Markdown links, the agent-guide budget, the worktree, classifier and gate tests), actionlint 1.7.12 (checksum checked) and zizmor 1.32.0 (auditor persona), all passing; zizmor locally on the base found the two findings _Departures_ names, and none on the head                                                                                                                                                                                 |
+| S5       | `scripts/ci/classify-changes.test.ts` (12 cases), red with the other-app case, the Markdown case, the `--all` line or the unterminated last line broken; `build/ci-workflow.test.ts` (`skip only on an explicit false …`), red with a job on `== 'true'`; manual run `45011093662` ran every job and skipped deploy; the classifier on a pull request's files is observed in this pull request's run                                                                                                                                                             |
+| S6       | observed locally: a staged file with bad formatting was rewritten and re-staged; `git commit` with an `any` in `build/` was refused by the root's ESLint, and one in `apps/editor/src/` by the editor's; a push of a commit with a type error to a scratch remote was refused by `pnpm typecheck`                                                                                                                                                                                                                                                                |
+| S7       | zizmor's `dependabot-cooldown` audit in the Repository job (every entry ≥ 7 days); the first monthly run of the pnpm entry, observed when it comes                                                                                                                                                                                                                                                                                                                                                                                                               |
+| S8       | the comparison in `docs/operations/protecting-main.md`, run after the owner applies the ruleset                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| S9       | the root `AGENTS.md` (_Delivery_)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |

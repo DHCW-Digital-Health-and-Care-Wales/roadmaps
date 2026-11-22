@@ -1,5 +1,8 @@
 # CI for pull requests and main; deploys main to GitHub Pages once every check passes
-# (ADR-007). Actions are pinned to commit SHAs; Dependabot keeps them current.
+# (ADR-007). The Repository job runs every time, each app's jobs when the app can be
+# affected, and CI result, the one check main's ruleset requires, fails when any of
+# them fails (.github/rulesets/main.json). Actions are pinned to commit SHAs;
+# Dependabot keeps them current.
 name: CI/CD
 
 on:
@@ -26,46 +29,42 @@ env:
   PAGES_CUSTOM_DOMAIN: ${{ vars.PAGES_CUSTOM_DOMAIN }}
 
 jobs:
-  # A pull request that changes only documentation (any Markdown file, or anything under
-  # docs/) runs the Docs job instead of Verify and E2E. Pushes to main and manual runs
-  # always run the full suite, since they build what deploys.
+  # Picks the app jobs a pull request runs: an app's jobs skip only when no changed file
+  # can affect it (scripts/ci/classify-changes.sh). Pushes to main and manual runs run
+  # every job, since they build what deploys.
   changes:
     name: Detect changes
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
-      code: ${{ steps.classify.outputs.code }}
+      editor: ${{ steps.classify.outputs.editor }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        if: github.event_name == 'pull_request'
         with:
           persist-credentials: false
-          # The PR's merge commit and its first parent, the base it merges into.
+          # A PR's merge commit and its first parent, the base it merges into.
           fetch-depth: 2
       - name: Classify the changed files
         id: classify
+        # bash, not the default `bash -e`, adds pipefail, so a failing classifier fails
+        # the job rather than leaving tee's success and no output.
+        shell: bash
         run: |
           if [ "$GITHUB_EVENT_NAME" != "pull_request" ]; then
-            echo "code=true" >> "$GITHUB_OUTPUT"
+            scripts/ci/classify-changes.sh --all | tee -a "$GITHUB_OUTPUT"
             exit 0
           fi
           # --no-renames lists a moved file's old path too, so code moved into docs/ counts.
           changed="$(git -c core.quotePath=false diff --no-renames --name-only HEAD^1 HEAD)"
           echo "Changed files:"
           echo "$changed"
-          # grep exits 1 when every file is docs; any other failure fails the job.
-          non_docs="$(printf '%s\n' "$changed" | { grep -vE '^docs/|\.md$' || [ $? -eq 1 ]; })"
-          if [ -n "$non_docs" ]; then
-            echo "code=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "Documentation only: skipping Verify and E2E."
-            echo "code=false" >> "$GITHUB_OUTPUT"
-          fi
+          printf '%s\n' "$changed" | scripts/ci/classify-changes.sh | tee -a "$GITHUB_OUTPUT"
 
-  docs:
-    name: Docs
-    needs: changes
-    if: needs.changes.outputs.code == 'false'
+  # The checks of the repository as a whole, on every run: formatting, the root
+  # package's own code and tests (the Markdown links, the agent-guide budget, the
+  # worktree and CI scripts, and that CI result needs every job) and the workflows.
+  repository:
+    name: Repository
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -79,13 +78,34 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm format:check
-      # test:docs lists every test that reads Markdown; a new one joins it.
-      - run: pnpm test:docs
+      - run: pnpm repo:typecheck
+      - run: pnpm repo:lint
+      - run: pnpm repo:test
+      # Pinned by version and checksum; actionlint runs shellcheck on each run: block.
+      - name: Lint the workflows with actionlint
+        env:
+          ACTIONLINT_VERSION: 1.7.12
+          ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+        run: |
+          archive="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          curl -sSfLO "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/${archive}"
+          echo "${ACTIONLINT_SHA256}  ${archive}" | sha256sum --check --strict
+          tar -xzf "${archive}" actionlint
+          ./actionlint -color
+      # Every audit, pedantic ones included; a finding is fixed or justified inline with
+      # a `zizmor: ignore[<audit>]` comment where it is raised.
+      - name: Audit the workflows and Dependabot with zizmor
+        uses: zizmorcore/zizmor-action@45d7276c9ca790aabd705e31ca99c6185c3e76dd # v0.8.1
+        with:
+          version: 1.32.0
+          persona: auditor
+          advanced-security: false
 
-  verify:
-    name: Verify
+  editor-verify:
+    name: "Editor: verify"
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    # Skips only on an explicit false, so a missing output runs the job.
+    if: needs.changes.outputs.editor != 'false'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -103,11 +123,10 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm typecheck
-      - run: pnpm lint
-      - run: pnpm format:check
-      - run: pnpm test
-      - run: pnpm build
+      - run: pnpm editor:typecheck
+      - run: pnpm editor:lint
+      - run: pnpm editor:test
+      - run: pnpm editor:build
 
       # Pages artifact, for pushes to main only. The deploy job runs no project code.
       - name: Read the Pages site configuration
@@ -137,10 +156,11 @@ jobs:
           name: ${{ steps.pages-artifact.outputs.name }}
           path: apps/editor/dist
 
-  e2e:
-    name: E2E (Playwright)
+  editor-e2e:
+    name: "Editor: E2E (Playwright)"
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    # Skips only on an explicit false, so a missing output runs the job.
+    if: needs.changes.outputs.editor != 'false'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     # Playwright's image holds the Chromium and the system packages of one Playwright
@@ -191,15 +211,38 @@ jobs:
           retention-days: 14
           if-no-files-found: ignore
 
+  # The one check main's ruleset requires. It needs every job but deploy, runs whatever
+  # they did, and fails when any failed or was cancelled; a job skipped by its paths
+  # passes, as no job would if the ruleset required each by name (STY-087 D5).
+  # build/ci-workflow.test.ts fails when a job is missing from needs.
+  ci-result:
+    name: CI result
+    needs: [changes, repository, editor-verify, editor-e2e]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check every job passed or was skipped
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          failed="$(jq -r 'to_entries[] | select(.value.result != "success" and .value.result != "skipped") | "\(.key): \(.value.result)"' <<< "$RESULTS")"
+          if [ -n "$failed" ]; then
+            echo "::error title=CI failed::${failed//$'\n'/, }"
+            exit 1
+          fi
+          echo "Every job passed or was skipped."
+
   deploy:
     name: Deploy to GitHub Pages
-    needs: [verify, e2e]
+    # CI result passes only when every check did, and none skips on a push to main.
+    needs: [editor-verify, ci-result]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
-      pages: write
-      id-token: write
+      pages: write # deploy-pages publishes the site
+      id-token: write # deploy-pages proves the run's identity to Pages
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -207,8 +250,8 @@ jobs:
       group: pages
       cancel-in-progress: false
     steps:
-      - name: Deploy the artifact uploaded by Verify
+      - name: Deploy the artifact uploaded by the editor's verify job
         id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
         with:
-          artifact_name: ${{ needs.verify.outputs.pages-artifact }}
+          artifact_name: ${{ needs.editor-verify.outputs.pages-artifact }}

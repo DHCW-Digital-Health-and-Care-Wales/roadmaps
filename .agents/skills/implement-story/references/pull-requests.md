@@ -30,7 +30,8 @@
    commit made on a detached HEAD reaches no branch.
 5. Stop there by default (SKILL step 5). Merge only through `pr-watch.md`, when
    the user asked for merging, and never when the user said to leave it
-   unmerged. Never approve, deploy, or change branch protections. If required
+   unmerged. Never approve, deploy, or change rulesets, branch protections or
+   repository settings. If required
    checks or independent reviews are unavailable, report them and create only
    a draft PR (`--draft`) with accurate limitations; a draft is never merged.
 

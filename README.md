@@ -36,19 +36,29 @@ cd roadmaps
 pnpm install --frozen-lockfile
 ```
 
+The install also installs the Git hooks (`lefthook.yml`): a commit formats its staged
+files with Prettier and runs the touched package's ESLint on them, and a push runs
+`pnpm typecheck`. `LEFTHOOK=0 git …` skips them for one command; CI runs the same
+checks in full.
+
 Each app's README says how to run it, starting with
 [the editor's](apps/editor/README.md#getting-started). Root scripts that run one app carry
-its prefix (`pnpm editor:dev`, `editor:build`, `editor:preview`, `editor:test:e2e`); the
-checks run across every package:
+its prefix (`pnpm editor:dev`, `editor:test`, `editor:build`, …), and those for the root
+package's own checks the prefix `repo:`; the checks below run across every package:
 
 ```sh
 pnpm typecheck      # TypeScript, every package
 pnpm lint           # ESLint, zero warnings allowed
 pnpm format:check   # Prettier over the whole repository (pnpm format to fix)
 pnpm test           # Vitest, every package
-pnpm test:docs      # the Markdown tests alone (links, agent guides), as CI runs on a docs-only PR
+pnpm test:docs      # the Markdown tests alone (links, agent guides)
 pnpm build          # every app's production build
 ```
+
+Pull requests into `main` merge as a signed squash, once the _CI result_ check passes
+and the owner approves; the owner, or an agent the owner authorises, can merge one past
+those conditions through a bypass that works only through a pull request
+(`.github/rulesets/main.json`, [protecting main](docs/operations/protecting-main.md)).
 
 ## Spreadsheet format
 

@@ -107,6 +107,7 @@ Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status toke
 | [DEF-024](defects/DEF-024-a-moved-item-test-moves-focus-before-the-publish-notice-takes-it.md)                      | A moved item test moves focus before the publish notice has taken it                             | Needs triage |
 | [DEF-025](_archive/defects/DEF-025-a-side-panel-test-measures-the-panel-before-it-has-slid-in.md)                   | A side panel test measures the panel before it has slid in                                       | Done         |
 | [DEF-026](_archive/defects/DEF-026-a-pinned-dialog-scrolls-its-title-out-of-view.md)                                | A pinned dialog can be scrolled so its title leaves the screen, out of reach                     | Done         |
+| [DEF-027](defects/DEF-027-a-quick-add-test-looks-for-the-field-before-it-has-come-back.md)                          | A quick add test looks for the field before it has come back                                     | Needs triage |
 
 A defect found during delivery is recorded in `defects/` with
 Status `Needs triage` and listed here until the owner triages it.

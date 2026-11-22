@@ -77,10 +77,10 @@ and removes it only on the owner's word, since CHO-014's S4 keeps every axe scan
 - **D1** (owner, 2026-11-22, CHO-014 D9): this chore is one of CHO-014's sub-chores,
   delivered alone.
 
-- **D2** (owner, 2026-11-22, this chore's PR, S2): the co-lead's review tour →
+- **D2** (owner, 2026-11-22, the delivery session, S2): the co-lead's review tour →
   renamed for the refusal notice it tours; the review dialog's controls are not
   toured.
-- **D3** (owner, 2026-11-22, this chore's PR, S3): "YES, remove the repeated axe
+- **D3** (owner, 2026-11-22, the delivery session, S3): "YES, remove the repeated axe
   scans you list", each named in the PR with the scan that holds its state → the
   four scans in Delivery are removed; every scan kept still runs in both themes
   (CHO-014 S4).
@@ -97,34 +97,40 @@ and removes it only on the owner's word, since CHO-014's S4 keeps every axe scan
   a first stop to a last), not a region by locator, since a stop of one page is no
   child of one container (the header, the banner and the title block are siblings). A
   stop it misses fails it: Tab lands on another stop, which is not the name expected.
-  A stop out of the Tab order by `tabindex="-1"` is, as in the whole-page tour,
-  left out of the stops found, not a miss.
+  As in the whole-page tour, a text field out of the Tab order is a miss, but a button
+  or link with `tabindex="-1"` is left out of the stops found (`NOT_A_STOP`).
 - S1: the not-published page tour keeps its four checks of one stop each and tours
   two ranges: the header to the last placement link (header, banner, title, Product
   details, Edit product details, Publish roadmap), then its empty section's button and
   its first card's three buttons. Its other cards, its navigation and its footer are of
   the kinds the tour of a change pending and the main page's tour walk.
-- S2: the test is named for the notice it tours (D2), and tours the notice's one stop,
-  "Review the changes", through the same helper; the rest of its page was the page
-  the tour of a change pending walks.
+- S2: the test is named for the notice it tours (D2), and tours, through the same
+  helper, the notice's one stop, "Review the changes", then the open product details'
+  "Undo changes" and "Edit" buttons, which the tour of a change pending, with its
+  product details shut, does not reach. The rest of its page is that tour's page.
 - S3: of the candidates in Measurement, four scans go (D3). Not removed, since the
   state each scans is no other scan's: the English scan of a roadmap's page on a phone
   (no other scan at 375 px has the page with nothing pending), the drawer tails of the
   navigation's search, families and count (each drawer holds a different list), and
   the in-between states of the tags and details tests. The tags test's locked-form scan
   stays as the one Welsh-locked scan.
+- Two archived records cite a test this chore removes or renames, and stay as they
+  were: DEF-002 S1's evidence names "the header at 375px wide in en" (its Welsh run,
+  and every English full-page scan at 375 px, still scan the header), and STY-039 names
+  "an item with no details, and one whose Welsh details can't be changed" (now "an item
+  with no details").
 - The item dialog's shut tour stays: it holds the wrap to the first stop (Measurement:
   optional).
 
 ### Scans removed (S3, S5, S9)
 
-| Removed                                                                     | Held by                                                                                                                                                                                   |
-| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `accessibility.spec.ts` "roadmap detail", both themes                       | the first scan of "the shell's navigation beside a roadmap's page", the same page and wait                                                                                                |
-| the Welsh-locked scan of "an item with no details…", both themes            | the Welsh-locked scan of "an item with no tags…": the same item's dialog, holding both notes. The note's text is asserted in `roadmap-detail-page-details.test.tsx` and `editing.spec.ts` |
-| the scan of the unplaced item's form in "an item's Move menu…", both themes | the first scan of "the item form as a side panel": the same dialog; the page behind it is the previous scan of the Move test                                                              |
-| the English run of "the header at 375px wide…", light                       | every full-page scan at 375 px in English, in both themes, such as "a roadmap's placement navigation on a phone": the header is the same one                                              |
-| `typography.spec.ts`, the body's font family                                | `styles.spec.ts` "the start page uses the header, button, page and font tokens", both themes                                                                                              |
+| Removed                                                                     | Held by                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `accessibility.spec.ts` "roadmap detail", both themes                       | the first scan of "the shell's navigation beside a roadmap's page", the same page and wait                                                                                                                                                                                                                                                                                                                                       |
+| the Welsh-locked scan of "an item with no details…", both themes            | the Welsh-locked scan of "an item with no tags…": the same item's dialog, holding both notes. The note's text is asserted in `roadmap-detail-page-details.test.tsx` and `editing.spec.ts`                                                                                                                                                                                                                                        |
+| the scan of the unplaced item's form in "an item's Move menu…", both themes | the first scan of "the item form as a side panel" (the same form, placed in Now, so its Horizon select has no placeholder) and the first scan of "adding an item" (the disabled placeholder option); the page behind it is the previous scan of the Move test. The test's title and its `toHaveValue("")` tail went with the scan: `roadmap-detail-page-moving.test.tsx` asserts an unplaced item's select shows its placeholder |
+| the English run of "the header at 375px wide…", light                       | every full-page scan at 375 px in English, in both themes, such as "a roadmap's placement navigation on a phone": the header is the same one                                                                                                                                                                                                                                                                                     |
+| `typography.spec.ts`, the body's font family                                | `styles.spec.ts` "the start page uses the header, button, page and font tokens", both themes                                                                                                                                                                                                                                                                                                                                     |
 
 Each holder runs through the fakes, so it outlives the switch from Google Sheets.
 `accessibility.spec.ts` and `styles.spec.ts` now take `THEMES`, `Theme` and

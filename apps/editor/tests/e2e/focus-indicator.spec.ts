@@ -213,10 +213,11 @@ async function expectEveryStopShowsAnIndicator(
  * Tours the tab stops of a page from `first` to `last`, `first` alone when `last` is
  * omitted, in the order of the page: each in turn shows one of the three indicators, and
  * Tab from one lands on the next. The stops are those the page offers between the two,
- * found first, so a stop the tour misses fails it, as one taken out of the Tab order
- * does: Tab skips it to the next, and the stop it lands on is not the one expected. For
- * the part of a page that no other tour walks; a page of its own stops is toured whole
- * by `expectEveryStopShowsAnIndicator`.
+ * found first, so a stop the tour misses fails it: Tab lands on another stop, not the
+ * one expected. A text field out of the Tab order is a stop it misses; any other control
+ * with `tabindex="-1"` is no stop (`NOT_A_STOP`), as in the whole-page tour. For the part
+ * of a page that no other tour walks; a page of its own stops is toured whole by
+ * `expectEveryStopShowsAnIndicator`.
  */
 async function expectStopsShowAnIndicator(
   page: Page,
@@ -469,7 +470,7 @@ for (const theme of THEMES) {
       await expectDialogTour(page, dialog)
     })
 
-    test("the notice of a publish a co-lead's change refused shows DHCW's focus indicator (STY-026)", async ({
+    test("the notice of a publish a co-lead's change refused, and the product details it leaves changed, show DHCW's focus indicator (STY-026)", async ({
       page,
       sheets,
     }) => {
@@ -486,11 +487,17 @@ for (const theme of THEMES) {
       await main.getByRole("button", { name: "Publish changes" }).click()
       await confirmPublish(page, main.getByRole("alert"))
 
-      // The notice's stops are the only ones this page adds to the page of a change
-      // pending, whose tour walks the rest.
+      // What this page has that the page of a change pending, whose tour walks the rest,
+      // does not: the notice, and the product details the edit left open, with its
+      // Undo changes and Edit buttons.
       await expectStopsShowAnIndicator(
         page,
         refusal(page).getByRole("button", { name: "Review the changes" }),
+      )
+      await expectStopsShowAnIndicator(
+        page,
+        main.getByRole("button", { name: "Undo changes Product details" }),
+        editRoadmapButton(page),
       )
     })
 

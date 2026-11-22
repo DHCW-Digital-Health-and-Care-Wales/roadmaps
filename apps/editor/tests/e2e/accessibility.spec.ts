@@ -656,7 +656,7 @@ for (const theme of THEMES) {
       await expectNoAxeViolations(page, theme)
     })
 
-    test("an item's Move menu, then the moved item and an unplaced item's form (STY-031)", async ({
+    test("an item's Move menu, then the moved item, on a page with an unplaced item (STY-031)", async ({
       page,
       sheets,
     }) => {
@@ -673,11 +673,6 @@ for (const theme of THEMES) {
       await page.getByRole("menuitem", { name: "Recently delivered" }).click()
       await expect(page.getByRole("menu")).toHaveCount(0)
       await expectNoAxeViolations(page, theme)
-
-      const form = await openEditItemDialog(page, "Minimal card")
-      await expect(
-        form.getByRole("combobox", { name: "Horizon or section" }),
-      ).toHaveValue("")
     })
 
     test("a placement's order: the Move menu's positions, the heading once it is changed, the publish dialog, then a co-lead's change to review, on a phone (STY-050)", async ({

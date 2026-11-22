@@ -8,7 +8,7 @@
 - **Depends on**: STY-087 (hard)
 - **Binding ADRs**: ADR-016 §The public site, ADR-007
 - **Suggested model**: Opus — a history merge and a cross-repository cut-over
-- **Delivered**: <PR URL>
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/245, with https://github.com/DHCW-Digital-Health-and-Care-Wales/product-roadmaps/pull/52
 
 ## Summary
 

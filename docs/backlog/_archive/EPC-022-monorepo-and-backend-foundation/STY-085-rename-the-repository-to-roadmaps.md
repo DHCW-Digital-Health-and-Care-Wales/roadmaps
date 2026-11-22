@@ -156,8 +156,8 @@ under the new base path, and S4's search.
 
 Observed at the cut-over on 2026-11-22 (Scope step 3). The owner renamed the
 repository, then merged the pull request (`2730f1e`) at 00:37:51Z, and its run on
-`main` succeeded (Actions run `44967558607`; Docs skipped, as on any run that is not
-docs-only).
+`main` succeeded (Actions run `44967558607`; Docs skipped, as on every push to `main`,
+which runs the full suite).
 
 - **S1**: `/roadmaps/` loads its assets from `/roadmaps/assets/` (200). The owner
   connected Google there with the existing OAuth client and saw their roadmaps. The

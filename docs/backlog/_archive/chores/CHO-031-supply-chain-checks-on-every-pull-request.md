@@ -90,6 +90,10 @@ Dependabot security updates are on in the repository's settings.
 - **D5** (owner, 2026-11-22, delivery question): GHSA-g3hv-75wg-m249 is recorded as
   [CHO-034](CHO-034-every-package-takes-minimatch-11.md) and fixed in its own thread
   now, over accepting it until 2027-01-15 or leaving the audit failing.
+- **D6** (owner, 2026-11-22, on PR #239): the dependency-graph residual is accepted:
+  dependency review and Dependabot rely on GitHub's graph reading pnpm 12's
+  two-document `pnpm-lock.yaml`, which it does today, with the post-merge OSV audit as
+  the check left should it stop.
 
 ## Out of scope
 
@@ -123,8 +127,8 @@ Dependabot security updates are on in the repository's settings.
   607 packages, lockfile-only ones included, and the compare for #236 named lodash
   under `pnpm-lock.yaml`. Should the graph stop reading it, dependency review passes
   without seeing a change and Dependabot's alerts and security updates (S5) go quiet
-  for every pnpm dependency, and the post-merge audit is the check left; the pull
-  request asks the owner to accept this residual (agent).
+  for every pnpm dependency, and the post-merge audit is the check left. The owner
+  accepted this residual (D6) (agent).
 - **S2**: the OSV audit is its own workflow, outside the gate (D4), and runs
   OSV-Scanner 2.7.1, pinned by version and checksum as actionlint is, with
   `--recursive`, so it finds `uv.lock` once the API adds it, and `--config`, since

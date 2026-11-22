@@ -9,7 +9,7 @@
 - **Binding ADRs**: ADR-006, ADR-008
 - **Suggested model**: Sonnet — each test is weighed against the page test that may
   hold it
-- **Delivered**: _(add on delivery)_
+- **Delivered**: [PR #250](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/250)
 
 ## Summary
 

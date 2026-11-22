@@ -19,6 +19,17 @@ describe("escapeRegExp", () => {
     expect(pattern.test(String.raw`a\xb`)).toBe(false)
   })
 
+  it.each(["u", "v"])(
+    "makes a pattern that compiles and matches under the %s flag, hyphen included",
+    (flags) => {
+      const text = "$space-2 (a-b)"
+      const pattern = new RegExp(`^${escapeRegExp(text)}$`, flags)
+
+      expect(pattern.test(text)).toBe(true)
+      expect(pattern.test("$space-3 (a-b)")).toBe(false)
+    },
+  )
+
   it("leaves a plain string as it was", () => {
     expect(escapeRegExp("abc 123")).toBe("abc 123")
   })

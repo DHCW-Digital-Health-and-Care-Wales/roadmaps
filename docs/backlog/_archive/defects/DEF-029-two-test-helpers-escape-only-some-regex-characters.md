@@ -75,9 +75,9 @@ included
 
 ## Delivery _(add on delivery; as in `story.md`)_
 
-**Departures.** None. The helper's escape class includes `/` and `-` beyond the regex
-metacharacters, so a pattern built from the text is also safe inside a character class
-or a literal.
+**Departures.** The helper's own test followed the code (see S2): a departure from
+test-first. Review found the first version's `\-` throwing under the `u` flag; that
+case was added test-first and the helper now writes a hyphen as `\x2d`.
 
 **Contract for dependents.** `escapeRegExp` in `apps/editor/tests/fixtures/escape-regexp.ts`
 is the one escape for unit and E2E tests; [CHO-035](../../chores/CHO-035-test-regexes-match-interpolated-strings-literally.md)
@@ -91,5 +91,5 @@ uses it. It gives way to `RegExp.escape` at ES2025 and Node 24.
   the PR's CodeQL run.
 - **S2**: `escape-regexp.test.ts` compiles the escape of every metacharacter, a
   backslash included, and matches it literally and nothing else. Test-first order was not
-  kept for this helper; red was shown by breaking the finished helper (a negated class):
+  kept for this helper; the first three cases' red was shown by breaking the finished helper (a negated class):
   3 of 3 failed, 3 passed once restored.

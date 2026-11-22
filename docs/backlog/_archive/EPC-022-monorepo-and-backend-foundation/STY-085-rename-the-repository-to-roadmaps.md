@@ -153,3 +153,24 @@ under the new base path, and S4's search.
 | S1, S2   | the live site, observed at the cut-over (Scope step 3); nothing in the editor names its address (`git grep` for `roadmaps-editor` in `src/`: no hits)                                                                                               |
 | S3       | `build/resolve-base-path.test.ts` (`serves a project site under the repository name`) derives `/roadmaps/` from `GITHUB_REPOSITORY`; the full E2E suite run with `GITHUB_REPOSITORY=…/roadmaps`; the deploy run on `main`, observed at the cut-over |
 | S4       | `git grep -n roadmaps-editor`, every hit in the exceptions S4 lists                                                                                                                                                                                 |
+
+Observed at the cut-over on 2026-11-22 (Scope step 3). The owner renamed the
+repository, then merged the pull request (`2730f1e`) at 00:37:51Z, and its run on
+`main` succeeded (Actions run `44967558607`; Docs skipped, as on every push to `main`,
+which runs the full suite).
+
+- **S1**: `/roadmaps/` loads its assets from `/roadmaps/assets/` (200). The owner
+  connected Google there with the existing OAuth client and saw their roadmaps. The
+  run's E2E held a deep link under `/roadmaps/` (`tests/e2e/roadmaps.spec.ts`, "a deep
+  link survives a reload"); the preferences were not tried live, and rest on the
+  unchanged origin (_Starting point_).
+- **S2**: `/roadmaps-editor/`, a deep link under it and its `assets/` answer 404, and
+  `gh repo view` of the old name resolves to `roadmaps`, so no repository holds it.
+  While the run was under way, `/roadmaps/` was seen serving the old build, whose
+  assets point at `/roadmaps-editor/`, which answered 404, so the page would be blank,
+  as _Starting point_ expected, until the deploy finished at 00:46:51Z; when that
+  window began, at the rename, is not recorded.
+- **S3**: the run checked out the repository as `roadmaps`; Verify's base-path guard
+  ran with `PAGES_BASE_PATH: /roadmaps` and passed; E2E passed, with one known flake
+  (`item-tags.spec.ts:282`, CHO-030) passing on its retry; and `deploy` published to
+  `https://dhcw-digital-health-and-care-wales.github.io/roadmaps/`.

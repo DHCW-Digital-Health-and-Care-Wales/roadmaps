@@ -91,5 +91,6 @@ uses it. It gives way to `RegExp.escape` at ES2025 and Node 24.
   the PR's CodeQL run.
 - **S2**: `escape-regexp.test.ts` compiles the escape of every metacharacter, a
   backslash included, and matches it literally and nothing else. Test-first order was not
-  kept for this helper; the first three cases' red was shown by breaking the finished helper (a negated class):
-  3 of 3 failed, 3 passed once restored.
+  kept for this helper; the metacharacter, backslash and plain-string cases' red was shown by breaking the finished helper (a negated class):
+  3 of 3 failed, 3 passed once restored. The `u` and `v` cases went red first, against
+  the helper's `\-` (a `SyntaxError`), then green with `\x2d`.

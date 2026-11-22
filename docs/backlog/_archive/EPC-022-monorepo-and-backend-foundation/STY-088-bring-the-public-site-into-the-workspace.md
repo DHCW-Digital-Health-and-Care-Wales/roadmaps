@@ -201,7 +201,7 @@ Audited at `product-roadmaps` `2548219` on 2026-11-21:
 
 - **S1**: the import branch is `product-roadmaps` at `2548219` plus one signed commit,
   `f6afeff`, that moves every file with `git mv` into `apps/public-site/`; the history
-  merge is `f7a041e`. What the workspace provides (the workflows, `.nvmrc`, the Prettier
+  merge is `b683f76`. What the workspace provides (the workflows, `.nvmrc`, the Prettier
   settings, the licence) and what is not imported (the skills, the pull request
   template, `CODEOWNERS`, the feedback template, which stays in `product-roadmaps`) go
   in the next commit, and `CONTRIBUTING.md` moves to the root with `git mv` before it
@@ -288,6 +288,9 @@ Audited at `product-roadmaps` `2548219` on 2026-11-21:
   jobs' image, which `build/ci-workflow.test.ts` holds to one.
 - **`.github/rulesets/product-roadmaps.json`** is `main.json` less the required check;
   `build/ci-workflow.test.ts` fails when the two drift.
+- **Interim versions**: the site keeps the versions npm resolved for it where the
+  catalog names none (S2's departure), so the two apps' shared dependencies differ;
+  STY-095 puts them on one version each (its D1).
 - **Interim conventions**: the site keeps its PascalCase files, its ESLint config
   (`eslint.config.js`) and `strings.ts` with `<T>` until STY-095; the root
   `eslint.base.ts` comes with it (D7).

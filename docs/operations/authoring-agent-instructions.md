@@ -137,8 +137,9 @@ something the delivery removes.
 - Rationale only where the rule looks wrong without it, and never more than a
   sentence
 - Keep a code sample only when it is the shortest correct statement of the rule
-- Write a path as plain `` `code` ``, never as a markdown link — the link form
-  spells the path twice; compact pointers preserve attention
+- Write a path from the repository root (a skill's own files from its folder, as
+  `` `references/…` ``), as plain `` `code` ``, never as a markdown link — the link
+  form spells the path twice; compact pointers preserve attention
 - Keep guidance runtime-neutral: name a capability ("a delegation tool that can
   start a reviewer on a named model"), not one product's tool, so it still
   holds when the runtime changes

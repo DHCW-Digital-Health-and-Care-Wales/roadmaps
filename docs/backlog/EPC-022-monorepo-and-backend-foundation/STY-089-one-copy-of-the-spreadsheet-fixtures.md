@@ -29,3 +29,8 @@ _Not acceptance criteria._
   apps' jobs (STY-087 S5).
 - The editor's copied CSVs and their provenance note go; its own `Template.csv` moves
   into the shared folder or stays beside the editor's tests.
+- An archived record links into the fixture folder (the EPC-002 README), and the
+  Markdown link check fails on it once the folder moves, while records under
+  `docs/backlog/_archive/` are never rewritten. Settle with the owner, when the
+  criteria are written, whether the move changes only that link's target; find every
+  such link with `rg -n '\]\([^)]*fixtures/sheets' docs/backlog/_archive docs/analysis/delivery-runs`.

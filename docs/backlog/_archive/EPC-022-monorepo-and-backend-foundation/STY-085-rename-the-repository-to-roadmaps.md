@@ -8,7 +8,7 @@
 - **Binding ADRs**: ADR-016 §Layout and name, ADR-007
 - **Suggested model**: Sonnet — a sweep of names and addresses, then an observed
   cut-over
-- **Delivered**: _(the PR, added once it exists)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/226
 
 ## Summary
 

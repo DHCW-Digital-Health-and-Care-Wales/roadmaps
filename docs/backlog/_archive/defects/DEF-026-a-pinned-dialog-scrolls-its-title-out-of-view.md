@@ -8,7 +8,7 @@
 - **Depends on**: none
 - **Binding ADRs**: ADR-010
 - **Suggested model**: Sonnet — one class on the dialog, held by a scroll into view
-- **Delivered**: _(the PR, added once it exists)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/226
 
 ## Summary
 

@@ -231,7 +231,11 @@ Audited at `product-roadmaps` `2548219` on 2026-11-21:
   and build output (agent).
 - **S4**: Dependency review failed `basic-ftp` 5.3.1, which `@lhci/cli` brings in
   through `proxy-agent` and `get-uri` 6; an override in `pnpm-workspace.yaml` raises it
-  to the fixed 6.2.4 and up, as the workspace's other overrides do (agent).
+  to the fixed 6.2.4 and up, as the workspace's other overrides do. It then failed
+  `extract-zip` 2.0.1 (GHSA-jmr9-qjv8-65gv, GHSA-7pqw-9j4j-h8q3), which has no fixed
+  release; `@puppeteer/browsers` imports it only to unpack a browser it downloads,
+  which Lighthouse never does here, so an override leaves it out of the tree, and
+  `pnpm site:lighthouse` ran its six audits and assertions without it (agent).
 - **S4**: Tailwind builds utilities from every word in the app's files, Markdown
   included, yet a pull request that changes only Markdown skips the site's jobs (S4),
   so `src/index.css` excludes Markdown from the scan (`@source not`); the built CSS is

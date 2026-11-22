@@ -33,6 +33,12 @@ overrides:
   # @lhci/cli's proxy-agent, takes basic-ftp 5; get-uri 8 takes the fix. Lighthouse
   # never fetches an ftp: address. Drop when @lhci/cli's tree takes get-uri 8 or later.
   "get-uri>basic-ftp": ^6.2.4
+  # extract-zip 2.0.1, the last release, writes outside its destination through symlink
+  # entries (GHSA-jmr9-qjv8-65gv, GHSA-7pqw-9j4j-h8q3), with no fix. @puppeteer/browsers,
+  # under @lhci/cli, imports it only to unpack a browser it downloads, which Lighthouse
+  # never does here (it launches the installed Chrome), so it is left out of the tree.
+  # Drop when a fixed release exists, or @puppeteer/browsers stops taking it.
+  "@puppeteer/browsers>extract-zip": "-"
 
 # A version published less than a week ago is neither resolved nor installed from the
 # lockfile, CI's frozen install included, as Dependabot's cooldown holds back its

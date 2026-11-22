@@ -1,6 +1,6 @@
 ---
 name: copywriter
-description: The product's voice and copy rules, in English and Welsh. Use whenever a task adds or edits a string in `src/i18n/locales/en.ts` or `cy.ts`, reviews copy, or asks whether wording is on-voice.
+description: The product's voice and copy rules, in English and Welsh. Use whenever a task adds or edits a string in `apps/editor/src/i18n/locales/en.ts` or `cy.ts`, reviews copy, or asks whether wording is on-voice.
 user-invocable: true
 ---
 
@@ -108,11 +108,11 @@ from the shape rather than from a blank line.
 
 ## Working order
 
-1. Write the English first, in `src/i18n/locales/en.ts`. It is the source of
+1. Write the English first, in `apps/editor/src/i18n/locales/en.ts`. It is the source of
    truth (ADR-008). Keys are camelCase, grouped by feature. Map codes with
    template keys (``t(`errors.${error.kind}`)``) so `satisfies Record<…>` makes
    a new kind without copy a type error.
-2. Add the Welsh to `src/i18n/locales/cy.ts` in the same change; `pnpm typecheck`
+2. Add the Welsh to `apps/editor/src/i18n/locales/cy.ts` in the same change; `pnpm typecheck`
    fails until you do. The voice rules apply unchanged. Reuse the established
    terms: roadmap = _map trywydd_, spreadsheet = _taenlen_, connect = _cysylltu_
    (and see the existing strings for the rest).
@@ -125,9 +125,9 @@ from the shape rather than from a blank line.
    strings in JSX or attributes; `.ts` files are not covered, so keep copy out
    of them).
 5. Update any Vitest test or Playwright spec asserting a string you changed;
-   E2E locates things by accessible name and visible copy (`tests/e2e/AGENTS.md`).
+   E2E locates things by accessible name and visible copy (`apps/editor/tests/e2e/AGENTS.md`).
 6. **Welsh is machine-assisted**, and a fluent speaker reads all of `cy.ts`
-   before launch (README, _Languages_). List the Welsh strings you added or
+   before launch (`apps/editor/README.md`, _Languages_). List the Welsh strings you added or
    changed in the PR's Copy section, with any doubt a reviewer raised about
    one; that read is the launch's, so it is no owner question.
 

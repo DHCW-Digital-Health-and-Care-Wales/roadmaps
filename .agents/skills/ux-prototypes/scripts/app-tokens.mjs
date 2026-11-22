@@ -1,4 +1,4 @@
-// The app's theme tokens, read from src/styles/globals.css as CSS for a
+// The app's theme tokens, read from apps/editor/src/styles/globals.css as CSS for a
 // prototype page: every token under its own name, on `lightSelector`, with
 // the dark theme's values on `darkSelector`.
 import { readFile } from "node:fs/promises"
@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url"
 
 const GLOBALS = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
-  "../../../../src/styles/globals.css",
+  "../../../../apps/editor/src/styles/globals.css",
 )
 // The blocks of globals.css that hold tokens.
 const BLOCK = /^(:root|@theme inline|\.dark) \{\n([\s\S]*?)^\}/gm

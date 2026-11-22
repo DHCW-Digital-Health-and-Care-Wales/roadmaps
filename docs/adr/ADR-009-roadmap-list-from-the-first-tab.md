@@ -145,7 +145,7 @@ API's own schema.
 - Two sequential reads per list load instead of one; both are small, and the first gives
   the missing-tab check.
 - The parser duplicates the public site's rules. A change to the format updates the
-  analysis, this ADR, `tests/fixtures/sheets/` and the parser together.
+  analysis, this ADR, `apps/editor/tests/fixtures/sheets/` and the parser together.
 - The glossary's **Roadmap**, **Roadmap list** and **Worksheet** entries change when
   EPC-002 is delivered; ADR-002's `Roadmap { id; name }` and worksheet mapping are
   superseded by this ADR.

@@ -22,7 +22,7 @@ changes ──┤
   guides). Any other file, a push to `main` or a manual run skips `docs` and runs
   `verify` and `e2e`.
 - `verify` and `e2e` run in parallel. On a push to `main`, `verify` also reads the Pages
-  configuration, checks the build's base path against it and uploads `dist/` as the Pages
+  configuration, checks the build's base path against it and uploads `apps/editor/dist/` as the Pages
   artifact.
 - `e2e` runs in `mcr.microsoft.com/playwright:v<version>-noble`, pinned by digest, which holds
   that version's Chromium and its system packages, so the job installs neither. A
@@ -40,7 +40,7 @@ changes ──┤
 - The Playwright report (and traces of failed tests) is uploaded as an artifact of every
   run that was not cancelled.
 
-No GitHub secrets are needed: the public config is committed in `.env.production`.
+No GitHub secrets are needed: the public config is committed in `apps/editor/.env.production`.
 
 ## First deployment
 
@@ -69,7 +69,7 @@ new repository.
 ## Base path
 
 A project site is served from `https://<owner>.github.io/<repo>/`, so the build needs
-Vite's `base` set to `/<repo>/`. `build/resolve-base-path.ts` decides it, in this order:
+Vite's `base` set to `/<repo>/`. `apps/editor/build/resolve-base-path.ts` decides it, in this order:
 
 1. `VITE_BASE_PATH`, if set (normalised to `/…/`);
 2. `/` if the `PAGES_CUSTOM_DOMAIN` repository variable is set;
@@ -82,7 +82,7 @@ Playwright uses the same function for its `baseURL`, so CI's E2E run tests the a
 `index.html` against the `base_path` that `actions/configure-pages` reports and fails on a
 mismatch, rather than deploying a site whose assets 404. A fork deploys to
 `/<fork-name>/` automatically, but needs its own OAuth client and spreadsheet in
-`.env.production`.
+`apps/editor/.env.production`.
 
 ## Custom domain
 

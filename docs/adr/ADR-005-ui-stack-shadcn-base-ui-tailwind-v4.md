@@ -7,9 +7,9 @@
 ## Decision
 
 - Tailwind CSS v4 via `@tailwindcss/vite`, CSS-first config (`@import "tailwindcss"`,
-  `@theme`, CSS variables) in `src/styles/globals.css`. No `tailwind.config.js`.
+  `@theme`, CSS variables) in `apps/editor/src/styles/globals.css`. No `tailwind.config.js`.
 - shadcn/ui initialised with the **Base UI** primitive library (`@base-ui/react`), not
-  Radix. Components are added via the shadcn CLI into `src/components/ui/`.
+  Radix. Components are added via the shadcn CLI into `apps/editor/src/components/ui/`.
 - Icons: `lucide-react`. No toasts (amended in STY-017): the app announces outcomes with
   a callout at the top of the page (the `Alert` component), as DHCW's notification
   banner does, and `sonner` was removed with its last toast. A failure stays until the
@@ -18,7 +18,7 @@
   notice" pattern.
 - Theme: light by default; a small `ThemeProvider` toggles the `dark` class on
   `<html>`, persists the preference (non-sensitive) in `localStorage`, and an inline
-  script in `index.html` avoids a flash of the wrong theme.
+  script in `apps/editor/index.html` avoids a flash of the wrong theme.
 - Visual direction (superseded by ADR-010): clean SaaS, neutral palette, a single restrained accent, subtle
   borders, visible focus rings, responsive grid, minimal animation (respect
   `prefers-reduced-motion`).

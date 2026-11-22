@@ -73,6 +73,7 @@ moves to `_archive/`, where its row here still points.
 | [CHO-030](chores/CHO-030-e2e-flakes-are-found-by-a-stress-run-not-by-ci.md)                       | E2E flakes of one kind (a check before the UI settles, a failure only under load) are found by an audit and a stress run            | Needs grilling |
 | [CHO-031](chores/CHO-031-supply-chain-checks-on-every-pull-request.md)                            | Supply-chain checks on every pull request (dependency review, an OSV audit, CodeQL, release cooldowns) and secrets refused at push  | Proposed       |
 | [CHO-032](_archive/chores/CHO-032-a-security-review-for-a-pr-that-records-a-security-decision.md) | A security-relevant PR gets a security review lane (`threat-review`, Fable 5.2) beside correctness and quality                      | Done           |
+| [CHO-033](chores/CHO-033-the-markdown-link-check-checks-anchors.md)                               | The Markdown link check checks each link's anchor, not only its file                                                                | Proposed       |
 
 Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status token.
 

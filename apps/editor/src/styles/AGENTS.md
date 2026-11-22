@@ -1,4 +1,4 @@
-# src/styles — design tokens
+# apps/editor/src/styles — design tokens
 
 `globals.css` holds the app's whole theme: DHCW's design system ported as tokens, never
 loaded (ADR-010). Its header comment names the three tiers; `tokens.test.ts` and
@@ -20,16 +20,16 @@ loaded (ADR-010). Its header comment names the three tiers; `tokens.test.ts` and
 - A new type, shadow or focus name also goes in `@/lib/utils`, so `cn` merges it as a size
   rather than a colour. Never name a shadow after a colour token: `shadow-popover` already
   sets the shadow's colour.
-- The design lint rules live in `build/design-token-lint.ts`; a changed rule changes a
-  line of `build/fixtures/design-token-lint/`, whose test proves each message. Their one
-  exception is `RoadmapSwatch`'s data colour, which `lint-exceptions.test.ts` lists.
+- The design lint rules live in `apps/editor/build/design-token-lint.ts`; a changed rule
+  changes a line of `apps/editor/build/fixtures/design-token-lint/`, whose test proves
+  each message. Their one exception is `RoadmapSwatch`'s data colour, which `lint-exceptions.test.ts` lists.
 
 ## Upgrading the DHCW pin
 
-1. `pnpm add -D "dhcw-design-system@github:DHCW-Digital-Health-and-Care-Wales/dhcw-design-system#v<x.y.z>"`,
+1. `pnpm --filter @roadmaps/editor add -D "dhcw-design-system@github:DHCW-Digital-Health-and-Care-Wales/dhcw-design-system#v<x.y.z>"`,
    an exact tag (DHCW is not on the npm registry).
-2. `pnpm exec vitest run src/styles`. Each failing primitive names its new value, or a
-   reference DHCW moved: update the value, or the `@source` and reference.
+2. `pnpm --filter @roadmaps/editor exec vitest run src/styles`. Each failing primitive
+   names its new value, or a reference DHCW moved: update the value, or the `@source` and reference.
 3. Compare the two tags' `src/tokens/`, `src/foundations/`, `src/utilities/` and
    `src/components/content/_tag.scss` on GitHub for values the app does not copy yet, and
    copy those it should.

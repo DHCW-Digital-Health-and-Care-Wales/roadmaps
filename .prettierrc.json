@@ -1,6 +1,13 @@
 {
   "semi": false,
-  "plugins": ["prettier-plugin-tailwindcss"],
-  "tailwindStylesheet": "./src/styles/globals.css",
-  "tailwindFunctions": ["cva", "cn"]
+  "overrides": [
+    {
+      "files": "apps/editor/**",
+      "options": {
+        "plugins": ["prettier-plugin-tailwindcss"],
+        "tailwindStylesheet": "./apps/editor/src/styles/globals.css",
+        "tailwindFunctions": ["cva", "cn"]
+      }
+    }
+  ]
 }

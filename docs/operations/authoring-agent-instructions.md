@@ -56,7 +56,7 @@ belongs in a comment at that site, where the next agent to touch it reads it.
   the rule itself. A rule that makes sense only with the story open is not yet
   written well enough.
 - **Rules a check already enforces** with a clear message — the layer
-  restrictions in `eslint.config.ts`, the `i18next/no-literal-string` rule,
+  restrictions in `apps/editor/eslint.config.ts`, the `i18next/no-literal-string` rule,
   the type error for a catalogue key missing in `cy`. The failure teaches the
   rule at the moment it applies.
 - **Directory listings and file inventories.** `ls` produces those on demand.
@@ -102,7 +102,7 @@ point here. Give a learning the first rung that holds it:
 4. **A skill or one of its references** when it governs one workflow, such as a
    review lens or a copy rule.
 5. **The `AGENTS.md` nearest the code** that covers it: a rule about the E2E
-   fakes belongs in `tests/e2e/AGENTS.md`. The root guide takes only a rule
+   fakes belongs in `apps/editor/tests/e2e/AGENTS.md`. The root guide takes only a rule
    that applies across most work.
 
 Read the `AGENTS.md` along each changed path's directory ancestry, including

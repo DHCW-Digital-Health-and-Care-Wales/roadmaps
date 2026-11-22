@@ -33,11 +33,11 @@ step took 2 min 32 s on PR #80's head, the build included.
 
 Find the candidates with:
 
-- `rg -n 'boundingBox\(\)|toBeInViewport' tests/e2e --glob '*.spec.ts'` (a position or
+- `rg -n 'boundingBox\(\)|toBeInViewport' apps/editor/tests/e2e --glob '*.spec.ts'` (a position or
   a size);
-- `rg -n 'documentElement\.scrollWidth' tests/e2e` (sideways scroll);
-- `rg -n 'setViewportSize|viewport:' tests/e2e --glob '*.spec.ts'` (a width);
-- `rg -n 'for \(const .* of' tests/e2e --glob '*.spec.ts'` (a loop: 25 hits, of which
+- `rg -n 'documentElement\.scrollWidth' apps/editor/tests/e2e` (sideways scroll);
+- `rg -n 'setViewportSize|viewport:' apps/editor/tests/e2e --glob '*.spec.ts'` (a width);
+- `rg -n 'for \(const .* of' apps/editor/tests/e2e --glob '*.spec.ts'` (a loop: 25 hits, of which
   those over a theme, a language or a width are the candidates).
 
 | Area                                  | Measurement                                                                                                                                                                                                                                                                                                                                                                            | Verdict                                                                 |
@@ -82,7 +82,7 @@ a layout that offers different controls (width)
 
 **Given** the screens checked for sideways scroll on a phone at `697fcc5`
 **When** the suite is slimmed
-**Then** each is still checked at 375 px, through one helper in `tests/e2e/fixtures/`
+**Then** each is still checked at 375 px, through one helper in `apps/editor/tests/e2e/fixtures/`
 
 ### S4: Nothing that guards a user is lost
 
@@ -104,7 +104,7 @@ gains a Decisions entry in that record, as STY-041 D9 does
 ### S6: The guide says when a repeat or a geometry check is earned
 
 **Given** an agent writing a new spec
-**When** it reads `tests/e2e/AGENTS.md`
+**When** it reads `apps/editor/tests/e2e/AGENTS.md`
 **Then** one rule tells it to run a journey once, and what earns a second theme,
 language or width, or a check of where something sits
 **And** the Visible UI row of

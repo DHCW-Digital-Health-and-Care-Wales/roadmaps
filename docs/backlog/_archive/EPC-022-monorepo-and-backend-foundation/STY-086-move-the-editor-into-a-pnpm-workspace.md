@@ -1,13 +1,13 @@
 # STY-086: Move the editor into apps/editor in one pnpm workspace
 
-- **Status**: Proposed — acceptance criteria written from the owner's STY-086 grilling
-  (2026-11-21, D1–D9)
+- **Status**: Done
 - **Type**: Refactor + Docs
 - **Area**: CI/CD + Docs
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
 - **Depends on**: STY-085 (hard)
 - **Binding ADRs**: ADR-016 §Layout and name, §Agent guides, ADR-007
 - **Suggested model**: Opus — one mechanical change with a wide blast radius
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/229
 
 ## Summary
 
@@ -152,6 +152,10 @@ read
 - **D10** (owner, 2026-11-21, STY-088 grilling, D7 there): lifting the shared
   TypeScript conventions out of the editor's guide moves from STY-088 to STY-095, when
   the public site has adopted them. Changes D6's "STY-088 lifts".
+- **D11** (owner, 2026-11-22, delivery question): S6's "every link resolves" against
+  "`_archive/` unchanged", for the one archived link into a moved file (the archived
+  EPC-002 README's link to the example spreadsheet) → change only that link's target,
+  keeping its text, over exempting it in the link check.
 
 ## Starting point
 
@@ -177,3 +181,66 @@ Audited at `cc11e44` on 2026-11-21:
 - The public site and its guide: STY-088. Lifting shared TypeScript conventions out of
   the editor's guide: STY-095 (D10).
 - Migrating existing checkouts: none, by D5.
+
+## Delivery
+
+### Departures
+
+- **S6**: one archived file changes. The archived EPC-002 README's link to
+  `tests/fixtures/sheets/README.md` now targets its `apps/editor/` path, its text
+  unchanged (owner, D11); every other file under `docs/backlog/_archive/` and
+  `docs/analysis/delivery-runs/` is unchanged.
+- **S6**: the editor's own code, configs and code comments keep paths relative to
+  `apps/editor/` (`src/…`, `tests/e2e`, `build/…`), where the tools that read them
+  resolve them; the guides, skills, records, ADRs, runbooks, READMEs and CI that S6
+  lists name `apps/editor/` paths (agent).
+- **S6**: citations a live record pins to an earlier commit keep their old paths, since
+  they state what was there then: an epic's _Findings_ "audited at" a commit (EPC-011,
+  EPC-022), CHO-014's measurements "at commit" `697fcc5`, DEF-024's reproduction at
+  `d6bbc69`, CHO-027's record of a past run, and the design-system alignment analysis's
+  evidence "at `22c3336`" (agent). The retro classifier's tests keep old command names
+  as samples of past session logs, which it must still classify, and CHO-030 keeps
+  `pnpm test:e2e:stress`, a proposed name inside its open question.
+- **S6**: acceptance criteria of live records gained only the `apps/editor/` path or
+  the prefixed script inside them, S6 asking for both (agent).
+- **S7**: the editor's guide states its paths from the repository root, so a path reads
+  the same in every guide an agent loads (agent).
+- **S3, D4**: the root package lints its own TypeScript (`build/`, `scripts/`) with a
+  small `eslint.config.ts` of its own, which the editor's config used to cover; it
+  ignores `apps/` (agent).
+- **D9**: the Tailwind plugin and stylesheet are a Prettier override for
+  `apps/editor/**` in the root `.prettierrc.json` (agent).
+- **S5**: review fixes, and the `Delivered` link that implement-story adds in a later
+  commit, are folded into the pull request's second commit, so it keeps the two
+  commits S5 names (agent).
+
+### Contract for dependents
+
+- A package joins the workspace's checks by having `typecheck`, `lint`, `test` and
+  `build` scripts: the root's run its own check first, then `pnpm -r <script>`, which
+  skips the root package. A script for one app joins the root as `<prefix>:<script>`
+  through `pnpm --filter`.
+- The root package's `tsconfig.json`, `eslint.config.ts` and `vitest.config.ts` cover
+  only `build/` and `scripts/`; each app keeps its own. Prettier runs once, from the
+  root, over every package; an app's own Prettier plugin is an override in
+  `.prettierrc.json`.
+- `.env.worktree` stays at the repository root, one file for every app; the editor
+  reads it as `../../.env.worktree` from its configs.
+- The worktree slot registry is `~/.local/state/roadmaps/worktree-slots`. Checkouts
+  and worktrees made before this story claimed slots in the old registry; D5 has each
+  deleted, so the two registries never share a host for long.
+- `@playwright/test` resolves only from `apps/editor/` (pnpm's default resolution), so
+  CI's browser check runs there.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                     |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | the full E2E suite, run as `pnpm editor:test:e2e` with `GITHUB_REPOSITORY=…/roadmaps`, served the built `apps/editor` under `/roadmaps/`; Verify's base-path guard on `apps/editor/dist`, and the editor loading, connecting and publishing at `/roadmaps/`, are observed in the first deploy run on `main` and recorded here then (EPC-022 delivery notes) |
+| S2       | observed runs of each prefixed script and of `pnpm lint`, `typecheck`, `test`, `build`, `format:check` and `test:docs` at the root; `pnpm dev` and `pnpm test:e2e` answer `Command "dev" not found` and `Command "test:e2e" not found`                                                                                                                      |
+| S3       | the root's `vitest.config.ts`, `tsconfig.json` and `eslint.config.ts`, which name only `build/` and `scripts/`; `pnpm test:docs` run at the root; `git grep apps/editor -- build scripts/worktree/worktree.test.ts` finds no import                                                                                                                         |
+| S4       | `scripts/worktree/worktree.test.ts` (`writes the ports at the root and the editor's .env.local from its example`); `vite.config.ts` and `playwright.config.ts` read `../../.env.worktree`; the registry path in `worktree.sh`                                                                                                                               |
+| S5       | the pull request's first commit, every one of its files a 100% rename (`git show --stat -M`), and `git log --follow` across it; its second commit holds every other change                                                                                                                                                                                  |
+| S6       | the Markdown link check over the live tree; the searches S6 names, every remaining hit one the Departures list or a path of another repository                                                                                                                                                                                                              |
+| S7       | `AGENTS.md` and `apps/editor/AGENTS.md`, each with its `CLAUDE.md`; `build/agent-guides.test.ts` holds the root guide's budget                                                                                                                                                                                                                              |
+| S8       | `README.md` and `apps/editor/README.md`; a scratch check of every relative link with an anchor in the live tree against its target's headings, since the link check drops anchors (CHO-033)                                                                                                                                                                 |

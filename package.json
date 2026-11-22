@@ -1,0 +1,44 @@
+{
+  "name": "roadmaps",
+  "private": true,
+  "version": "0.0.0",
+  "description": "The DHCW roadmaps workspace: the Roadmap Editor, where Product Leads manage their public Now, Next, Later roadmaps (apps/editor).",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps.git"
+  },
+  "type": "module",
+  "packageManager": "pnpm@12.18.0",
+  "engines": {
+    "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
+  },
+  "scripts": {
+    "editor:dev": "pnpm --filter @roadmaps/editor dev",
+    "editor:build": "pnpm --filter @roadmaps/editor build",
+    "editor:preview": "pnpm --filter @roadmaps/editor preview",
+    "editor:test:e2e": "pnpm --filter @roadmaps/editor test:e2e",
+    "typecheck": "tsc -p tsconfig.json && pnpm -r typecheck",
+    "lint": "eslint --max-warnings=0 . && pnpm -r lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run && pnpm -r test",
+    "test:docs": "vitest run build/markdown-links.test.ts build/agent-guides.test.ts",
+    "build": "pnpm -r build",
+    "worktree:setup": "./scripts/worktree/worktree.sh setup",
+    "worktree:info": "./scripts/worktree/worktree.sh info",
+    "worktree:teardown": "./scripts/worktree/worktree.sh teardown"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.20.5",
+    "eslint": "^10.14.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.14.0",
+    "prettier": "^3.9.10",
+    "prettier-plugin-tailwindcss": "^0.8.1",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.72.1",
+    "vitest": "^5.1.0"
+  }
+}

@@ -52,7 +52,7 @@ secrets, tokens and keys unread, values and metadata alike.
    (ADR-007), the database's isolation and
    history (ADR-015), the repository's ruleset (ADR-016), the API stack (ADR-017), sign-in
    and sessions (ADR-018), authorisation (ADR-019), origins and HTTP hardening
-   (ADR-020), with infrastructure-held protections in EPC-023; the root `AGENTS.md` rules on
+   (ADR-020), with infrastructure-held protections in EPC-023; the `apps/editor/AGENTS.md` rules on
    tokens and untrusted data. An accepted ADR's risks, and the exceptions it states (a
    value it lets travel in a URL, a request it exempts from a rule), are the owner's:
    not findings unless the change widens them or makes their statement false.

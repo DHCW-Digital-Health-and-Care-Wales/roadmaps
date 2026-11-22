@@ -7,10 +7,10 @@ working order, and grade and report findings as it sets.
   links are `#/roadmaps/<id>`; the router, `Link`s and E2E use relative URLs,
   never an absolute `/path` that ignores the base. The build base path comes
   from `resolveBasePath` (`/roadmaps/` in CI, `/` locally); assets,
-  `index.html` references, the inline theme script and any `fetch` of a static
+  `apps/editor/index.html` references, the inline theme script and any `fetch` of a static
   file must work under both. Route modules stay thin and delegate to feature
-  pages; `src/routeTree.gen.ts` is regenerated and committed when routes
-  change; files in `src/routes/` become routes, so tests do not live there.
+  pages; `apps/editor/src/routeTree.gen.ts` is regenerated and committed when routes
+  change; files in `apps/editor/src/routes/` become routes, so tests do not live there.
   Check params are validated (an unknown or malformed `roadmapId` renders the
   not-found state, not a crash), that links keep working on reload, and that
   workflow changes keep least-privilege permissions, pinned action SHAs and a

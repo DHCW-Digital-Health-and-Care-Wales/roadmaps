@@ -86,7 +86,7 @@ This applies to all group-based components:
 
 ## Outcomes are page notices, not toasts
 
-This repository has no toasts (ADR-005; DHCW has no toast pattern). An outcome — connected, a failure, later "saved" — is an `Alert` at the top of the page in view, persisting until the next attempt or a dismissal: see `src/features/auth/components/auth-notice.tsx`, composed in `src/routes/__root.tsx`. Its copy follows the copywriter skill's "Page notice" pattern.
+This repository has no toasts (ADR-005; DHCW has no toast pattern). An outcome — connected, a failure, later "saved" — is an `Alert` at the top of the page in view, persisting until the next attempt or a dismissal: see `apps/editor/src/features/auth/components/auth-notice.tsx`, composed in `apps/editor/src/routes/__root.tsx`. Its copy follows the copywriter skill's "Page notice" pattern.
 
 ---
 

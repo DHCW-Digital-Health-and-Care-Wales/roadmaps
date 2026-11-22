@@ -16,7 +16,7 @@ and English-only pluralisation are not acceptable.
   Pluralisation goes through `Intl.PluralRules`, which handles `cy` correctly, and message
   keys get compile-time types. No HTTP backend: both catalogues are small and bundled.
   No `i18next-browser-languagedetector`; a few lines of our own detection is enough.
-- **Location**: `src/i18n/`
+- **Location**: `apps/editor/src/i18n/`
   - `languages.ts`: `supportedLanguages = ['en', 'cy'] as const`, the `Language` type,
     `defaultLanguage = 'en'`, and endonyms (`English`, `Cymraeg`).
   - `locales/en.ts` is the source of truth (a nested `as const` object, keys grouped by
@@ -49,14 +49,14 @@ and English-only pluralisation are not acceptable.
   `satisfies Record<AppErrorKind, string>` (and likewise for auth statuses and codes), so a
   new kind without copy fails type checking. `eslint-plugin-i18next`'s
   `no-literal-string` (mode `jsx-only`) rejects literal JSX text and literal `aria-label`,
-  `title`, `alt`, `placeholder` and `label` attributes in `src/**/*.tsx`, except tests and
+  `title`, `alt`, `placeholder` and `label` attributes in `apps/editor/src/**/*.tsx`, except tests and
   `components/ui`. Endonyms in `languages.ts` are deliberately untranslated.
 - **Formatting**: any dates and numbers use `Intl` with the active language. None are
   needed yet.
 - **Google UI**: the OAuth popup is rendered by Google in the user's Google account
   language. We do not control it.
 - **Translation quality**: the initial Welsh strings are machine-assisted. They must be
-  reviewed by a fluent Welsh speaker before a public launch, and the README tracks this.
+  reviewed by a fluent Welsh speaker before a public launch, and `apps/editor/README.md` tracks this.
 
 ## Consequences
 

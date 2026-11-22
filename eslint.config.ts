@@ -1,0 +1,26 @@
+import js from "@eslint/js"
+import prettier from "eslint-config-prettier/flat"
+import { defineConfig, globalIgnores } from "eslint/config"
+import globals from "globals"
+import tseslint from "typescript-eslint"
+
+// The root package's own TypeScript. Each app under apps/ is linted by its own config.
+export default defineConfig(
+  globalIgnores(["apps"]),
+  {
+    files: ["**/*.ts"],
+    extends: [
+      js.configs.recommended,
+      tseslint.configs.strictTypeChecked,
+      tseslint.configs.stylisticTypeChecked,
+    ],
+    languageOptions: {
+      globals: globals.node,
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+  prettier,
+)

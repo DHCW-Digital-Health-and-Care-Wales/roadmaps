@@ -150,8 +150,8 @@ Omit when the change has no dependents._
 
 ### Scenario evidence
 
-| Scenario | Held by                                    |
-| -------- | ------------------------------------------ |
-| S1, S3   | `path/to/file.test.tsx` (`test name`)      |
-| S7       | `tests/e2e/roadmaps.spec.ts` (`test name`) |
-| S9       | observed run: <what was run and seen>      |
+| Scenario | Held by                                                |
+| -------- | ------------------------------------------------------ |
+| S1, S3   | `path/to/file.test.tsx` (`test name`)                  |
+| S7       | `apps/editor/tests/e2e/roadmaps.spec.ts` (`test name`) |
+| S9       | observed run: <what was run and seen>                  |

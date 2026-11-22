@@ -11,14 +11,14 @@ account, token or spreadsheet.
 ## Capture
 
 Use headless Playwright (Chromium is installed in `~/.cache/ms-playwright`)
-against `pnpm dev` (`cp .env.example .env.local` first if it is missing), or
+against `pnpm editor:dev` (`cp apps/editor/.env.example apps/editor/.env.local` first if it is missing), or
 the `playwright-cli` skill. Fake Google with `page.route`: serve a stub for
 `https://accounts.google.com/gsi/client` and fulfil
 `https://sheets.googleapis.com/**`, reusing `FakeGis` and `FakeSheets` from
-`tests/e2e/fixtures/` directly. Do not use `tests/e2e/fixtures/test.ts` against
+`apps/editor/tests/e2e/fixtures/` directly. Do not use `apps/editor/tests/e2e/fixtures/test.ts` against
 the dev server: its hermetic guard rejects Vite's HMR WebSocket. StrictMode in
 dev aborts and repeats the first fetch, consuming a queued Sheets reply, so
-route Sheets yourself or capture against `pnpm build && pnpm preview`. Keep
+route Sheets yourself or capture against `pnpm editor:build && pnpm editor:preview`. Keep
 capture scripts in a scratch directory, not in the repository, unless they are
 proper E2E tests. A scratch Playwright spec that imports the repository's
 fixtures loads only once that directory holds a `package.json` of
@@ -30,7 +30,7 @@ English name) waits out the whole test timeout. Bound a run with
 reports the test and the locator it was waiting on, where a killed run or a
 `tail` pipe shows nothing. Set `reducedMotion: "reduce"` in the config's
 `use`, or a dialog or menu is captured part-way through fading in. For a dark
-capture, call `useTheme(page, "dark")` from `tests/e2e/fixtures/look.ts` before
+capture, call `useTheme(page, "dark")` from `apps/editor/tests/e2e/fixtures/look.ts` before
 navigating: the app is light until the user chooses dark (ADR-005), so
 `colorScheme: "dark"` alone captures the light theme.
 
@@ -53,9 +53,9 @@ impossible, record the missing baseline and blocker; never reconstruct it from
 an already edited UI or label an after capture as before. Do not reset the
 checkout merely to obtain a baseline: extract the base revision into a scratch
 directory (`git archive <base> | tar -x -C <scratch-dir>`), symlink its
-`node_modules` to the checkout's, copy the checkout's ignored `.env*.local`
+`node_modules` (the root's and `apps/editor/`'s) to the checkout's, copy the checkout's ignored `apps/editor/.env*.local`
 files so both builds and the fakes share one config, and capture it with
-`pnpm build && pnpm preview --port <free port> --strictPort` run there (the
+`pnpm editor:build && pnpm editor:preview --port <free port> --strictPort` run there (the
 checkout's preview port, 4173 or its `PREVIEW_PORT`, belongs to E2E).
 
 After the review fixes, capture the matching after states with comparable

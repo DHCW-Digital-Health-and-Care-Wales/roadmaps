@@ -6,10 +6,10 @@ All but `Template.csv` are copied unchanged from the `sheets/` folder of
 (MIT licence, © 2026 Digital Health and Care Wales, kept in [`LICENSE`](LICENSE); commit
 `50e67f9`), the public site that
 publishes the same spreadsheet. The format is analysed in
-[the roadmap index analysis](../../../docs/analysis/roadmaps-tab-format.md) and
-[the roadmap tab analysis](../../../docs/analysis/roadmap-tab-format.md), and decided in
-[ADR-009](../../../docs/adr/ADR-009-roadmap-list-from-the-first-tab.md) and
-[ADR-011](../../../docs/adr/ADR-011-roadmap-items-from-each-roadmaps-tab.md).
+[the roadmap index analysis](../../../../../docs/analysis/roadmaps-tab-format.md) and
+[the roadmap tab analysis](../../../../../docs/analysis/roadmap-tab-format.md), and decided in
+[ADR-009](../../../../../docs/adr/ADR-009-roadmap-list-from-the-first-tab.md) and
+[ADR-011](../../../../../docs/adr/ADR-011-roadmap-items-from-each-roadmaps-tab.md).
 
 **Never put data from the live spreadsheet in this repository.** Unit tests, E2E fakes and
 screenshots use only these files or inline fakes.
@@ -22,7 +22,7 @@ screenshots use only these files or inline fakes.
 | `ProductC.csv` | `ProductC` | The tab of a roadmap whose `Enabled` is `No`                                                                                                                         |
 | `Template.csv` | `Template` | This repository's own stand-in for the live `Template` tab: `ProductA`'s header over two example rows, which the editor copies to start a roadmap (STY-040)          |
 
-The E2E Sheets fake (`tests/e2e/fixtures/fake-sheets.ts`) serves all five files as the
+The E2E Sheets fake (`apps/editor/tests/e2e/fixtures/fake-sheets.ts`) serves all five files as the
 example spreadsheet: `Roadmaps` first, the roadmap tabs (`Product*.csv`), then `Template`.
 The live spreadsheet's second tab, `Template`, has the same columns as `ProductA.csv`;
 the editor reads its header row alone, to check it, and copies it to start a roadmap
@@ -50,5 +50,5 @@ as a realistic test spreadsheet.
    `Roadmaps` and keep it first.
 3. Import each `Product*.csv` with **Insert new sheet(s)**, naming each tab exactly as the
    `Sheet` column of `Roadmaps` does, and `Template.csv` as `Template`, to add a roadmap.
-4. Put the spreadsheet's id in `.env.local` (`VITE_GOOGLE_SPREADSHEET_ID`) to try the app
+4. Put the spreadsheet's id in `apps/editor/.env.local` (`VITE_GOOGLE_SPREADSHEET_ID`) to try the app
    against it.

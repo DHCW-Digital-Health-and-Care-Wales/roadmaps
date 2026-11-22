@@ -8,7 +8,7 @@
 - **Depends on**: none; DEF-024 (Needs triage) fixes `publishOnce` first, and until it
   does the audit counts that flake as known
 - **Binding ADRs**: none
-- **Suggested model**: Sonnet — a search over `tests/e2e`, a stress script run, and one
+- **Suggested model**: Sonnet — a search over `apps/editor/tests/e2e`, a stress script run, and one
   guide line, once the owner chooses
 - **Delivered**: _(add on delivery)_
 
@@ -33,11 +33,11 @@ The audit is not done yet: it is the first step. At the delivery's commit, run t
 judge each hit by whether the next assertion can run before the thing it needs has
 finished (a notice taking focus, an animation ending, a menu opening):
 
-| Area              | Search or run                                                                                                                                                                                           | How to judge a hit                                                         |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| Shared helpers    | read each export of `tests/e2e/fixtures/` that triggers a close, publish or navigation                                                                                                                  | it returns before the focus or notice its action causes has arrived        |
-| Focus right after | `rg -n -B3 -e '\.focus\(\)' -e toBeFocused tests/e2e`                                                                                                                                                   | the line before is a click, keypress or helper that moves focus on its own |
-| Load              | `./node_modules/.bin/playwright test <spec> --repeat-each=20 --workers=12` per spec on an 8-core host (DEF-024's Reproduce used 40 repeats of one case); 44 specs at `843acf2`, so time it on one first | any failure that `--workers=4` does not show                               |
+| Area              | Search or run                                                                                                                                                                                                             | How to judge a hit                                                         |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Shared helpers    | read each export of `apps/editor/tests/e2e/fixtures/` that triggers a close, publish or navigation                                                                                                                        | it returns before the focus or notice its action causes has arrived        |
+| Focus right after | `rg -n -B3 -e '\.focus\(\)' -e toBeFocused apps/editor/tests/e2e`                                                                                                                                                         | the line before is a click, keypress or helper that moves focus on its own |
+| Load              | `cd apps/editor && ./node_modules/.bin/playwright test <spec> --repeat-each=20 --workers=12` per spec on an 8-core host (DEF-024's Reproduce used 40 repeats of one case); 44 specs at `843acf2`, so time it on one first | any failure that `--workers=4` does not show                               |
 
 Seen in CI so far: every finished CI run with an E2E job, 2026-11-19 18:14 to
 2026-11-20 17:09 UTC (29 runs, `gh run list --workflow ci.yml -L 60`), read from each
@@ -72,7 +72,7 @@ Delivery lists what was searched and found
 
 ### S2: The E2E guide names the rule
 
-**Given** `tests/e2e/AGENTS.md` **When** an agent writes a helper that closes a dialog or
+**Given** `apps/editor/tests/e2e/AGENTS.md` **When** an agent writes a helper that closes a dialog or
 publishes **Then** it says the helper returns only once the focus or notice its action
 causes has arrived
 

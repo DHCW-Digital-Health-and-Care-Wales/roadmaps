@@ -118,12 +118,12 @@ write, one all-or-nothing `spreadsheets.batchUpdate` holding only:
 It never writes `(cy)` cells, other columns, unchanged cells, another roadmap's rows or
 the `Template` tab. Since STY-036 it writes `Last updated` (a changed date, or today's
 when "Mark as updated today" is ticked) as `YYYY-MM-DD` text, or empty; see the README's
-_What the editor writes_ for every write since. The example data in `tests/fixtures/sheets/` stays
+_What the editor writes_ for every write since. The example data in `apps/editor/tests/fixtures/sheets/` stays
 the public site's copy, without `Item ID` (STY-023 D8).
 
 ### Example data
 
-`tests/fixtures/sheets/ProductA.csv`, `ProductB.csv` and `ProductC.csv` are roadmap tabs
+`apps/editor/tests/fixtures/sheets/ProductA.csv`, `ProductB.csv` and `ProductC.csv` are roadmap tabs
 in this layout (fake data, MIT). `ProductA` uses every column, every horizon value,
 nested details and Welsh columns; `ProductB` has no Welsh columns and no `Recently delivered` or `Not doing` items;
 `ProductC`'s header has no `Organisations` column. No fixture is a copy of the

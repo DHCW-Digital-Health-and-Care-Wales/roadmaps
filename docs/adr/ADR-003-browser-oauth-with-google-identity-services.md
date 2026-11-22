@@ -99,4 +99,4 @@ needs an OAuth access token with scope `https://www.googleapis.com/auth/spreadsh
   session ends (STY-017); otherwise they reconnect after it ends. Both are acceptable for
   this phase.
 - The full spreadsheets scope is sensitive and may require Google OAuth verification for
-  external, published apps (documented in README).
+  external, published apps (documented in `apps/editor/README.md`).

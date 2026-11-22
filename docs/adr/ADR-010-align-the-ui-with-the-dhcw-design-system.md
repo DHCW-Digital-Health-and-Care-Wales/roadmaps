@@ -26,7 +26,7 @@ _Visual direction_ bullet of [ADR-005](ADR-005-ui-stack-shadcn-base-ui-tailwind-
   - The source is pinned at a release tag (v0.1.104 at the time of writing). A Vitest
     drift test compares our copied values with the pinned source; upgrading the pin is a
     deliberate change that updates the values and the test together.
-- **Two token tiers in `src/styles/globals.css`:**
+- **Two token tiers in `apps/editor/src/styles/globals.css`:**
   - _Primitives:_ `--nhsw-*` holds values copied from DHCW, and `--app-dark-*` holds our
     own dark-theme values. Primitives are plain custom properties, not Tailwind theme
     colours, so no utility class exists for them.
@@ -36,7 +36,7 @@ _Visual direction_ bullet of [ADR-005](ADR-005-ui-stack-shadcn-base-ui-tailwind-
 - **The theme is locked.** Tailwind's default colours, font sizes, shadows, fonts and
   letter-spacing are removed, so only semantic tokens generate utilities.
   - Lint (`eslint-plugin-better-tailwindcss` plus `no-restricted-syntax` blocks in
-    `eslint.config.ts`) rejects:
+    `apps/editor/eslint.config.ts`) rejects:
     - unknown classes;
     - arbitrary values, in brackets or parentheses, for colour, type, radius, shadow or
       font;

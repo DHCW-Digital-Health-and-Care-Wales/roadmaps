@@ -26,7 +26,7 @@ Third-party services (Google Sheets, Google Identity Services) you don't control
 
 ## Seams in this repo
 
-`RoadmapRepository` and `AuthClient` (`src/domain/`) are real seams: each has a Google adapter in `src/infrastructure/` and a test double (`createInMemoryRoadmapRepository`, `createFakeAuthClient`), and a contract test keeps the adapters honest. A new port needs the same two adapters and a layer-rule home (root `AGENTS.md`, "Layering rules").
+`RoadmapRepository` and `AuthClient` (`apps/editor/src/domain/`) are real seams: each has a Google adapter in `apps/editor/src/infrastructure/` and a test double (`createInMemoryRoadmapRepository`, `createFakeAuthClient`), and a contract test keeps the adapters honest. A new port needs the same two adapters and a layer-rule home (`apps/editor/AGENTS.md`, "Layering").
 
 ## Seam discipline
 

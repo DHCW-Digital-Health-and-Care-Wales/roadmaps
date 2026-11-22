@@ -26,7 +26,7 @@ import {
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 // The structure of the key screens, held as aria snapshots in
-// `structure.spec.ts-snapshots/` (STY-018). Run `pnpm test:e2e --update-snapshots` after
+// `structure.spec.ts-snapshots/` (STY-018). Run `pnpm editor:test:e2e --update-snapshots` after
 // changing a screen's structure on purpose and review the YAML in the PR
 // (tests/e2e/AGENTS.md). Only the screens' own content is snapshot: the footer's version
 // differs from build to build, and the shell is held by its own snapshots below.

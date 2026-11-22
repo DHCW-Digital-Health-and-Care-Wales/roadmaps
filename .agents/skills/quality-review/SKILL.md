@@ -28,7 +28,7 @@ report in the conversation only.
   off"; never let it displace a quality finding.
 - **Anything a tool enforces.** ESLint (strict type-checked rules, React Hooks,
   `jsx-a11y`, the per-layer `no-restricted-imports` blocks, the `google` global
-  restriction and `i18next/no-literal-string` in `eslint.config.ts`), Prettier
+  restriction and `i18next/no-literal-string` in `apps/editor/eslint.config.ts`), Prettier
   (`pnpm format:check`), TypeScript strict (including `cy.ts` parity with
   `en.ts`) and `actionlint`. Flag only what the tool cannot see: copy built in
   `.ts` files, a layer leak through a re-export, an `eslint-disable` with no
@@ -46,7 +46,7 @@ report in the conversation only.
    same diff a range of lines at a time, until every line has arrived whole. A
    diff read through `head`, `cut` or a pattern filter still has lines unread.
    Read the root `AGENTS.md` and the `AGENTS.md`
-   along each changed path's directory ancestry (`tests/e2e/AGENTS.md`,
+   along each changed path's directory ancestry (`apps/editor/AGENTS.md`, `apps/editor/tests/e2e/AGENTS.md`,
    `docs/AGENTS.md`), the epic's `delivery-notes.md` when the change belongs
    to an epic, and the binding ADRs; cite the rule by file and line,
    never from memory. A docs-only diff is reviewed against `docs/AGENTS.md`
@@ -132,9 +132,9 @@ report in the conversation only.
      rather than placed beside related ones.
    - **Design-system drift.** Component, slot, spacing, typography and
      recipe choices, in class helpers and variant strings as well as JSX,
-     checked against `src/components/ui/` (stay close to upstream shadcn on
+     checked against `apps/editor/src/components/ui/` (stay close to upstream shadcn on
      Base UI; added with the shadcn CLI, never a hand-rolled competing
-     primitive, never Radix), ADR-005 and root `AGENTS.md`: theme tokens
+     primitive, never Radix), ADR-005 and `apps/editor/AGENTS.md`: theme tokens
      (ADR-010) over raw colours, `cn(buttonVariants())` for
      links styled as buttons, existing layout pieces (`AppShell`, `StatusPanel`,
      `StickyHeader`) over near-copies, sentence-case copy. Verify a suggested

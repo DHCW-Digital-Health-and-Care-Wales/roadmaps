@@ -40,7 +40,7 @@ runs of that case alone all passed.
 ## Cause
 
 Suspected, not proven. The spec's `open` calls `publishOnce`
-(`tests/e2e/fixtures/dialogs.ts`), which returns once the "Changes published" notice is
+(`apps/editor/tests/e2e/fixtures/dialogs.ts`), which returns once the "Changes published" notice is
 visible. The publish dialog sends focus to that notice in `onOpenChangeComplete`
 (`useFocusNoticeOnClose`), so only once its closing animation has ended, which under load
 can be some time later. Every step the case takes in between, from
@@ -48,10 +48,10 @@ can be some time later. Every step the case takes in between, from
 notice. A `publishOnce` that also waits for the notice to have focus would close the gap
 for every caller.
 
-- `rg -n "publishOnce\(" tests/e2e`: 17 calls in 6 specs (`moved-travel`, `editing`,
+- `rg -n "publishOnce\(" apps/editor/tests/e2e`: 17 calls in 6 specs (`moved-travel`, `editing`,
   `structure`, `removing-an-item`, `roadmap-controls`, `accessibility`), and the
   definition.
-- `rg -n -A8 "await open\(page\)" tests/e2e/moved-travel.spec.ts | rg "\.focus\(\)|keyboard"`:
+- `rg -n -A8 "await open\(page\)" apps/editor/tests/e2e/moved-travel.spec.ts | rg "\.focus\(\)|keyboard"`:
   `moved-travel.spec.ts:227` is the one call that moves focus by script straight after
   the publish. The case at line 323 opens its menu by pointer first.
 

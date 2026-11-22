@@ -62,8 +62,8 @@ else
   echo "==> Warning: pnpm install --frozen-lockfile failed (log: $install_log). Fix it before running any check."
 fi
 
-# `pnpm dev` needs .env.local: vite dev does not read .env.production.
-if [ ! -f .env.local ]; then
-  cp .env.example .env.local
-  echo "==> Created .env.local from .env.example."
+# `pnpm editor:dev` needs the editor's .env.local: vite dev does not read .env.production.
+if [ ! -f apps/editor/.env.local ]; then
+  cp apps/editor/.env.example apps/editor/.env.local
+  echo "==> Created apps/editor/.env.local from apps/editor/.env.example."
 fi
